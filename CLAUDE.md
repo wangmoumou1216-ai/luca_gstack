@@ -9,7 +9,7 @@ This file is read by Claude Code at the start of every session.
 1. Project Gate first: 老项目 / 已有项目 / 继续项目 → 先确认或切换项目。
 2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 4条件；满足任一不得直接执行。**
 3. Ambiguity third: 多候选 → 问用户，不自行判断。
-4. Single skill last: 只在高置信且不触发 Plan Agent 的前提下调用 skill。
+4. Single skill last: 只在高置信且不触发 Plan Agent 4条件的前提下调用 skill。
 5. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
 
 ---
