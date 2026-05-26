@@ -131,6 +131,60 @@ const cases = [
       assert.equal(decision.decision, 'NONE');
     },
   },
+  // --- ADR-0002 negative cases: longest-match-wins disambiguation ---
+  {
+    name: '设计调研 routes ux_research, NOT deepresearch (调研⊂设计调研)',
+    prompt: '帮我做一下设计调研',
+    expect: decision => {
+      // ux-research is a heavy orchestrator → SINGLE_SKILL becomes PLAN_CHECK.
+      assert.equal(decision.skill, '/ux-research');
+      assert.ok(!decision.candidates.includes('/deepresearch'),
+        `deepresearch should be shadowed, got ${JSON.stringify(decision.candidates)}`);
+    },
+  },
+  {
+    // ADR-0002 weight guard: 网页[web_access w9] is NOT shadowed by the longer
+    // 访问网页[agent_browser w7], because the longer trigger's route is LOWER
+    // weight. web_access wins by weight (baseline behavior preserved); the
+    // guard never silently drops the higher-weight candidate.
+    name: '访问网页: higher-weight web_access not shadowed by lower-weight agent_browser',
+    prompt: '帮我访问网页看看内容',
+    expect: decision => {
+      assert.ok(decision.candidates.includes('web-access'),
+        `web_access (w9) must survive, got ${JSON.stringify(decision.candidates)}`);
+    },
+  },
+  {
+    // ADR-0002 REGRESSION GUARD (quality-gate HIGH finding): 多维表格[lark_base
+    // w9] ⊂ 飞书多维表格[lark_sheets w9] are EQUAL weight. Generic longest-match
+    // would silently drop lark_base → confident WRONG route to lark_sheets. The
+    // strict weight guard keeps both → MULTI_SKILL (safe ambiguity), never a
+    // silent drop of an equal/higher-weight candidate.
+    name: '飞书多维表格 keeps lark_base candidate (equal-weight tie not shadowed)',
+    prompt: '用飞书多维表格做个数据看板',
+    expect: decision => {
+      assert.ok(decision.candidates.includes('lark-base'),
+        `lark_base must NOT be silently dropped, got ${JSON.stringify(decision.candidates)}`);
+    },
+  },
+  {
+    // KNOWN LIMITATION (deferred to ADR-0005): the English substring-in-word
+    // case is NOT fixed by this stopgap. normalize() strips spaces, so a \b
+    // check would also kill legitimate multi-word phrases like "deep research".
+    // This case documents that research-proof STILL misfires deepresearch.
+    name: 'KNOWN LIMITATION: research-proof still fires deepresearch (ADR-0005)',
+    prompt: 'please research-proof this sentence',
+    expect: decision => {
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    name: 'CJK 调研 keyword still fires deepresearch (true positive preserved)',
+    prompt: '帮我做一个全面调研',
+    expect: decision => {
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
 ];
 
 for (const testCase of cases) {

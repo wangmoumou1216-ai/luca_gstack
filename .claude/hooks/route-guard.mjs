@@ -223,9 +223,38 @@ function skillDecision(prompt) {
 
   const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'));
   const text = normalize(prompt);
-  const hits = routes
-    .filter(route => route.triggers.some(trigger => text.includes(normalize(trigger))))
-    .sort((a, b) => b.w - a.w);
+
+  // ADR-0002 stopgap: longest-match-wins disambiguation (CJK-safe; no \b).
+  // Collect, per matched route, the exact normalized triggers that matched.
+  let matched = routes
+    .map(route => ({ route, matchedTriggers: route.triggers.map(normalize).filter(t => t && text.includes(t)) }))
+    .filter(entry => entry.matchedTriggers.length);
+
+  // If a shorter matched trigger is a substring of a longer matched trigger
+  // from a DIFFERENT, STRICTLY HIGHER-WEIGHT route that also matched, the
+  // shorter one is shadowed (e.g. 调研[w6]⊂设计调研[w7]). Drop shadowed
+  // triggers; drop the route entirely if none survive. Generic — no
+  // hand-maintained blacklist.
+  // The strict weight guard (other.route.w > entry.route.w) is a safety net:
+  // never silently drop an equal/higher-weight candidate, else a safe
+  // ambiguity (tie → MULTI/STOP) collapses into a confident WRONG route.
+  // E.g. 多维表格[lark_base w9] ⊂ 飞书多维表格[lark_sheets w9] are a tie and
+  // must stay → STOP, not silently resolve to lark_sheets.
+  // Known limitation: English substring-in-word (research⊂research-proof)
+  // is NOT fixed here — normalize() strips spaces so \b is unreliable for
+  // multi-word English; deferred to ADR-0005 description-based routing.
+  const allMatched = matched.flatMap(e => e.matchedTriggers.map(t => ({ t, route: e.route })));
+  matched = matched
+    .map(entry => {
+      const surviving = entry.matchedTriggers.filter(t =>
+        !allMatched.some(other =>
+          other.route !== entry.route && other.t.length > t.length && other.t.includes(t)
+          && other.route.w > entry.route.w));
+      return { ...entry, matchedTriggers: surviving };
+    })
+    .filter(entry => entry.matchedTriggers.length);
+
+  const hits = matched.map(entry => entry.route).sort((a, b) => b.w - a.w);
 
   if (!hits.length) {
     const looksLikeTask = prompt.length > 5
