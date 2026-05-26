@@ -223,9 +223,9 @@ python3 .claude/observability/scripts/append_run_log.py \
 - `run-log.jsonl` 是冷存储，只有 `/evals`、`retro` 或调试历史时读取。
 - `rules.yaml` 是规则库，但常规 skill 只能通过 `get_rules.py` 加载相关短规则。
 
-### Hermes Growth Protocol（可选自成长层）
+### Skill 成长记录协议（可选自成长层）
 
-Hermes 用来将 skill-rule 沉淀为长期稳定规则（semantic memory domain:skill-rule）。
+用来将 skill-rule 沉淀为长期稳定规则（semantic memory domain:skill-rule）。
 
 触发时机：
 - 用户指出同类问题重复出现。
@@ -255,23 +255,7 @@ python3 memory/scripts/search_memory.py "<skill名> skill-rule" --limit 5
 python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
 ```
 
-注：原 `.claude/hermes/scripts/propose_growth.py` 已废弃，替代路径为上述命令。
-
-评审写入（旧 Hermes review 已废弃；semantic candidate 需通过 memory review 晋升）：
-
-```bash
-  --context-risk low|medium|high \
-  --rollback "<回滚条件>"
-```
-
-常规启动如需读取 Hermes 规则，只能运行：
-
-```bash
-python3 memory/scripts/search_memory.py "<skill名> skill-rule" --limit 5
-# 如 search 命中不足，再按需读取：
-python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
-# hermes/scripts/ 已废弃，改用 semantic memory skill-rule domain
-```
+注：旧的 `.claude/hermes/scripts/*` 路径（propose_growth / review_growth / get_growth_rules）已废弃删除，不要使用；一律改用上述 `memory/scripts/propose_semantic.py --domain skill-rule` 写入、`search_memory.py` / `get_memory.py --domain skill-rule` 读取，candidate 经 memory review 晋升。
 
 禁止：
 - 自动写 `CONTEXT.md`

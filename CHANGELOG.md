@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- 死代码清理（ADR-0001）：删除 orphan 脚本 `scripts/fix_long_lines.py`、`scripts/repair_backticks.py`；删除已废弃的 `.claude/hermes/` 目录（Procedural 记忆层已并入 semantic `domain:skill-rule`，不再委托 hermes）。
+
+### Fixed
+- 清理 `.claude/skills/office/SKILL.md` 与 `.agents/skills/office/SKILL.md` 中指向已删除 hermes 脚本的悬空引用、残留命令片段，并统一两侧"成长记录协议"小节的标题与触发列表。
+
 ## [0.2.0] - 2026-05-17
 
 ### Added

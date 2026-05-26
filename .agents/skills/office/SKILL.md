@@ -182,45 +182,39 @@ python3 .claude/observability/scripts/append_run_log.py \
 - `run-log.jsonl` 是冷存储，只有 `/evals`、`retro` 或调试历史时读取。
 - `rules.yaml` 是规则库，但常规 skill 只能通过 `get_rules.py` 加载相关短规则。
 
-### Hermes Growth Protocol（可选自成长层）
+### Skill 成长记录协议（可选自成长层）
 
-Hermes 用来记录候选成长，不直接改长期 context。
+用来将 skill-rule 沉淀为长期稳定规则（semantic memory domain:skill-rule）。
 
 触发时机：
 - 用户指出同类问题重复出现。
 - `/evals` 或 `redteam` 发现可复用流程缺陷。
 - `/retro` 形成明确下次改进动作。
 - 某 skill 发生 2 次以上同类 BLOCKED / DONE_WITH_CONCERNS。
+- Post-Completion Self-Reflection 发现高置信度规则。
 
 候选写入：
 
 ```bash
-python3 .claude/hermes/scripts/propose_growth.py \
-  --skill <skill-name> \
-  --source observation|evals|redteam|retro|user \
-  --task "<任务摘要>" \
-  --observation "<发生了什么>" \
-  --proposal "<下次怎么改>" \
-  --scope "<适用范围>"
+python3 memory/scripts/propose_semantic.py \
+  --domain skill-rule \
+  --fact "<skill名>: <规则描述>" \
+  --confidence high \
+  --evidence "<来源/复现>" \
+  --scope "<skill名>" \
+  --reviewer "<reviewer>" \
+  --tags "<skill名>,rule"
 ```
 
-评审写入：
+常规启动如需读取 skill-rule 规则，只运行：
 
 ```bash
-python3 .claude/hermes/scripts/review_growth.py \
-  --candidate <HC-ID> \
-  --reviewer self|redteam|user|subagent \
-  --decision discard|keep_candidate|promote_ready \
-  --reason "<理由>" \
-  --context-risk low|medium|high \
-  --rollback "<回滚条件>"
+python3 memory/scripts/search_memory.py "<skill名> skill-rule" --limit 5
+# 如 search 命中不足，再按需读取：
+python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
 ```
 
-常规启动如需读取 Hermes 规则，只能运行：
-
-```bash
-python3 .claude/hermes/scripts/get_growth_rules.py <skill-name> <scene>
-```
+注：旧的 `.claude/hermes/scripts/*` 路径（propose_growth / review_growth / get_growth_rules）已废弃删除，不要使用；一律改用上述 `propose_semantic.py --domain skill-rule` 写入、candidate 经 memory review 晋升。
 
 禁止：
 - 自动写 `CONTEXT.md`
