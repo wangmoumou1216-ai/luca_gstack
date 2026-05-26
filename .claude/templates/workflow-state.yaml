@@ -1,0 +1,154 @@
+# workflow-state.yaml
+# Per-project workflow state. luca_gstack exposes this through .claude/workflow-state.yaml symlink.
+
+topic: ""
+scene: ""
+iteration: 0
+mode: "standalone"
+workflow_graph: ""
+source_kind: ""
+
+nodes:
+  idea:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  deepresearch:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  brainstorm:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  challenge:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  ux-research:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  ux-brainstorm:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    interaction_architecture: ""
+  design-brief:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    ai_native_summary: ""
+  design-review:
+    status: PENDING
+    mode: ""
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  html-prototype:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  figma-demo:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    blueprint: ""
+  ux-audit:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    baseline_score: 0
+  figma-layer:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  tech-spec:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  task-plan:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  auto:
+    status: IDLE
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    description: "全自动多 Agent 编排"
+  magicpath:
+    status: IDLE
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    description: "设计产出（React canvas 组件）"
+  superpowers-brainstorming:
+    status: IDLE
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    description: "轻量 PRD（superpowers plugin）"
+  handoff-review:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+    result: ""
+  taste-review:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  evals:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  retro:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+  redteam:
+    status: PENDING
+    output: ""
+    completed_at: ""
+    gate_result: ""
+    handoff_path: ""
+
+last_updated: ""

@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+// Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
+import { homedir } from 'os';
+import { execSync } from 'child_process';
+
+const projectRoot = process.cwd();
+const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
+
+if (existsSync(stateFile)) {
+  const content = readFileSync(stateFile, 'utf8');
+  const inProgressMatch = content.match(/^  (\w[\w-]+):\s*\n\s+status:\s*IN_PROGRESS/m);
+  if (inProgressMatch) {
+    process.stdout.write(`[session-restore] ⚠️  上次 session 在 "${inProgressMatch[1]}" 节点中断，建议继续或重置状态。\n`);
+  }
+  const iterMatch = content.match(/^iteration:\s*(\d+)/m);
+  if (iterMatch && parseInt(iterMatch[1]) >= 3) {
+    process.stdout.write(`[session-restore] ⚠️  handoff-review 已连续失败 ${iterMatch[1]} 次。\n`);
+  }
+}
+
+// 每次 Session 启动重置轮次计数器（保证 Checkpoint 提醒每 session 都生效）
+const counterFile = join(projectRoot, '.claude', '.session-turn-count');
+try { writeFileSync(counterFile, '0'); } catch { }
+
+// 显示项目列表（docs/ 为 symlink 时读取当前激活项目）
+try {
+  const rawTarget = execSync('readlink docs 2>/dev/null || true', { cwd: projectRoot, encoding: 'utf8' }).trim();
+  const projectsRoot = join(homedir(), 'Desktop', '项目');
+  if (rawTarget && existsSync(projectsRoot)) {
+    const currentName = rawTarget.replace(/^.*Desktop\/项目\//, '').replace(/\/docs$/, '');
+    const entries = readdirSync(projectsRoot).filter(e => {
+      try { return statSync(join(projectsRoot, e)).isDirectory(); } catch { return false; }
+    });
+    const lines = entries.map(e => `  ${e === currentName ? '●' : '○'} ${e}${e === currentName ? '（当前激活）' : ''}`).join('\n');
+    process.stdout.write(`[session-restore] 📁 项目列表（当前激活: ${currentName}）:\n${lines}\n\n`);
+  }
+} catch { }
+
+// 读取 PROGRESS.md（实时任务进度）
+const progressFile = join(projectRoot, 'docs', 'PROGRESS.md');
+if (existsSync(progressFile)) {
+  try {
+    const progressContent = readFileSync(progressFile, 'utf8');
+    const lines = progressContent.split('\n');
+    // 显示前 25 行（包含核心状态）
+    const preview = lines.slice(0, 25).join('\n').trim();
+    if (preview) {
+      process.stdout.write(`[session-restore] 📋 PROGRESS.md 实时进度:\n${preview}\n\n`);
+    }
+  } catch { }
+}
+
+// Check for pending skill-rule extraction from last session.
+// This intentionally lives outside docs/handoff so startup does not treat it as upstream handoff context.
+const pendingExtraction = join(projectRoot, '.claude', 'observability', 'pending-extraction.md');
+if (existsSync(pendingExtraction)) {
+  try {
+    const content = readFileSync(pendingExtraction, 'utf8');
+    const firstLine = content.split('\n').find(l => l.startsWith('**Skills run:**'));
+    const hint = firstLine ? ` (${firstLine.replace('**Skills run:**', '').trim()})` : '';
+    process.stdout.write(`[session-restore] 📝 上次 session 有待提取的 skill-rule${hint}。文件: .claude/observability/pending-extraction.md\n`);
+  } catch { }
+}
+
+const memScript = join(projectRoot, 'memory', 'scripts', 'get_memory.py');
+if (existsSync(memScript)) {
+  try {
+    const summary = execSync(`python3 "${memScript}" --summary`, {
+      cwd: projectRoot, encoding: 'utf8', timeout: 4000, stdio: ['pipe', 'pipe', 'ignore']
+    }).trim();
+    if (summary) process.stdout.write(`[session-restore] 🧠 ${summary}\n`);
+  } catch (e) {
+    const reason = e.code === 'ETIMEDOUT' ? '超时 (>4s)' : `错误: ${e.message?.slice(0, 60)}`;
+    process.stderr.write(`[session-restore] ⚠️  记忆加载失败（${reason}）。回退至 CLAUDE.md「关键约束速查」节。\n`);
+  }
+}

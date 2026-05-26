@@ -1,0 +1,230 @@
+<!--
+  framework/shared-head.html
+  ══════════════════════════════════════════════════════════════
+  luca_gstack 统一 Head 模板 v3.0
+  所有母版的 <head> 中 tailwind.config + :root + @layer 从此文件复制。
+  品牌色 #FF8000 唯一定义点：:root 中的 --primary。
+  ══════════════════════════════════════════════════════════════
+  使用方式：
+  1. 新建母版时，复制本文件 SECTION A + SECTION B + SECTION C 到 <head> 中
+  2. 页面特有的 CSS（如 sidebar 样式）写在 SECTION C 之后的独立 <style> 中
+  3. 不要修改本文件中的 :root 变量值和 tailwind.config 结构
+-->
+
+<!-- ══ SECTION A: Tailwind CDN + Config ══ -->
+<script src="./assets/vendor/tailwindcss.com.js"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    /* shadcn 标准语义色 */
+                    background:  'hsl(var(--background))',
+                    foreground:  'hsl(var(--foreground))',
+                    card:        { DEFAULT: 'hsl(var(--card))',        foreground: 'hsl(var(--card-foreground))' },
+                    popover:     { DEFAULT: 'hsl(var(--popover))',     foreground: 'hsl(var(--popover-foreground))' },
+                    primary:     { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
+                    secondary:   { DEFAULT: 'hsl(var(--secondary))',   foreground: 'hsl(var(--secondary-foreground))' },
+                    muted:       { DEFAULT: 'hsl(var(--muted))',       foreground: 'hsl(var(--muted-foreground))' },
+                    accent:      { DEFAULT: 'hsl(var(--accent))',      foreground: 'hsl(var(--accent-foreground))' },
+                    destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                    border:      'hsl(var(--border))',
+                    input:       'hsl(var(--input))',
+                    ring:        'hsl(var(--ring))',
+                    'page-bg':   'hsl(var(--page-bg))',
+                    /* 纷享销客扩展语义色 */
+                    info:        { DEFAULT: 'hsl(var(--info))',    foreground: 'hsl(var(--info-foreground))' },
+                    success:     { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+                    warning:     { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+                },
+                borderRadius: {
+                    lg:   'var(--radius)',
+                    md:   'calc(var(--radius) - 2px)',
+                    sm:   'calc(var(--radius) - 4px)',
+                    full: '9999px',
+                },
+                fontSize: {
+                    /* 纷享销客字号系统（覆盖 Tailwind 默认） */
+                    xs:    ['11px', '16px'],   /* text-xs  → 弱信息 */
+                    sm:    ['12px', '18px'],   /* text-sm  → 时间戳/标签 */
+                    base:  ['13px', '20px'],   /* text-base → 正文/字段值 */
+                    lg:    ['14px', '22px'],   /* text-lg  → 次标题 */
+                    '15':  ['15px', '24px'],   /* text-15  → 区块标题（纷享销客） */
+                    xl:    ['16px', '24px'],
+                    '2xl': ['18px', '28px'],   /* text-2xl → 页面标题 */
+                },
+                ringOffsetColor: { background: 'hsl(var(--background))' },
+            }
+        }
+    }
+</script>
+
+<!-- ══ SECTION B: CSS Variables ══ -->
+<style>
+    /* ── shadcn CSS Variables (HSL, official spec) ── */
+    :root {
+        --background:             0 0% 100%;
+        --foreground:             222.2 84% 4.9%;
+        --card:                   0 0% 100%;
+        --card-foreground:        222.2 84% 4.9%;
+        --popover:                0 0% 100%;
+        --popover-foreground:     222.2 84% 4.9%;
+        --primary:                30 100% 50%;           /* #FF8000 品牌主色 */
+        --primary-foreground:     0 0% 100%;
+        --secondary:              210 40% 96.1%;
+        --secondary-foreground:   222.2 47.4% 11.2%;
+        --muted:                  210 40% 96.1%;
+        --muted-foreground:       215.4 16.3% 46.9%;
+        --accent:                 37 100% 94%;           /* #FFF7E6 品牌浅色 */
+        --accent-foreground:      30 100% 50%;
+        --destructive:            353 100% 64%;          /* #ff4a66 纷享销客危险色 */
+        --destructive-foreground: 0 0% 100%;
+        --border:                 220 13% 88%;
+        --input:                  220 13% 88%;
+        --ring:                   30 100% 50%;           /* #FF8000 focus ring */
+        --radius:                 0.375rem;
+        --page-bg:                220 14% 94%;           /* #EFF1F3 */
+
+        /* 纷享销客扩展语义色 */
+        --info:                   207 100% 55%;          /* #189dff */
+        --info-foreground:        0 0% 100%;
+        --success:                90 57% 51%;            /* #87cc3b */
+        --success-foreground:     0 0% 100%;
+        --warning:                24 100% 55%;           /* #ff7c19 */
+        --warning-foreground:     0 0% 100%;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Source Han Sans CN', 'PingFang SC', system-ui, -apple-system, sans-serif; }
+
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+</style>
+
+<!-- ══ SECTION C: shadcn Component Layer ══ -->
+<style type="text/tailwindcss">
+    @layer base {
+        * { @apply border-border; }
+        body { @apply bg-background text-foreground; }
+    }
+    @layer components {
+        /* ═══ Button ═══ */
+        .btn {
+            @apply inline-flex items-center justify-center whitespace-nowrap rounded-md
+                   text-sm font-medium ring-offset-background transition-colors
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                   focus-visible:ring-offset-2
+                   disabled:pointer-events-none disabled:opacity-50;
+        }
+        .btn-default     { @apply btn bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2; }
+        .btn-secondary   { @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 py-2; }
+        .btn-outline     { @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2; }
+        .btn-ghost       { @apply btn hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2; }
+        .btn-destructive { @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2; }
+        .btn-link        { @apply btn text-primary underline-offset-4 hover:underline h-9 px-0; }
+        .btn-sm          { @apply h-8 rounded-md px-3 text-xs; }
+        .btn-lg          { @apply h-10 rounded-md px-8 text-base; }
+        .btn-icon        { @apply h-9 w-9 p-0; }
+
+        /* ═══ Badge ═══ */
+        .badge {
+            @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold
+                   transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+        }
+        .badge-default     { @apply badge border-transparent bg-primary text-primary-foreground hover:bg-primary/80; }
+        .badge-secondary   { @apply badge border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80; }
+        .badge-destructive { @apply badge border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80; }
+        .badge-outline     { @apply badge text-foreground; }
+
+        /* ═══ Input / Textarea / Select ═══ */
+        .input {
+            @apply flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm
+                   shadow-sm transition-colors placeholder:text-muted-foreground
+                   focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                   disabled:cursor-not-allowed disabled:opacity-50;
+        }
+        .textarea {
+            @apply flex min-h-[60px] w-full rounded-md border border-input bg-transparent
+                   px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground
+                   focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                   disabled:cursor-not-allowed disabled:opacity-50;
+        }
+        .select-trigger {
+            @apply flex h-9 w-full rounded-md border border-input bg-background
+                   px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground
+                   focus:outline-none focus:ring-1 focus:ring-ring
+                   disabled:cursor-not-allowed disabled:opacity-50;
+        }
+        .label { @apply text-xs font-medium leading-none text-muted-foreground; }
+
+        /* ═══ Card ═══ */
+        .card             { @apply rounded-lg border bg-card text-card-foreground shadow-sm; }
+        .card-header      { @apply flex flex-col space-y-1.5 p-6; }
+        .card-title       { @apply font-semibold leading-none tracking-tight; }
+        .card-description { @apply text-sm text-muted-foreground; }
+        .card-content     { @apply p-6 pt-0; }
+        .card-footer      { @apply flex items-center p-6 pt-0; }
+
+        /* ═══ Table ═══ */
+        .table-wrap    { @apply w-full caption-bottom text-sm; }
+        .table-header  { @apply [&_tr]:border-b; }
+        .table-body    { @apply [&_tr:last-child]:border-0; }
+        .table-row     { @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted; }
+        .table-head    {
+            @apply h-10 px-4 text-left align-middle text-xs font-medium text-muted-foreground
+                   [&:has([role=checkbox])]:pr-0;
+        }
+        .table-cell    { @apply p-4 align-middle [&:has([role=checkbox])]:pr-0; }
+
+        /* ═══ Tabs ═══ */
+        .tabs-list {
+            @apply inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground;
+        }
+        .tabs-trigger {
+            @apply inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1
+                   text-sm font-medium ring-offset-background transition-all
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                   focus-visible:ring-offset-2
+                   disabled:pointer-events-none disabled:opacity-50
+                   data-[state=active]:bg-background data-[state=active]:text-foreground
+                   data-[state=active]:shadow;
+        }
+
+        /* ═══ Separator ═══ */
+        .separator-h { @apply shrink-0 bg-border h-px w-full; }
+        .separator-v { @apply shrink-0 bg-border w-px; }
+
+        /* ═══ Avatar ═══ */
+        .avatar          { @apply relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full; }
+        .avatar-fallback { @apply flex h-full w-full items-center justify-center rounded-full bg-muted text-xs font-medium; }
+
+        /* ═══ Skeleton ═══ */
+        .skeleton { @apply animate-pulse rounded-md bg-muted; }
+
+        /* ═══ CRM Sidebar ═══ */
+        .aside-item-url {
+            @apply flex items-center justify-between px-4 h-9 text-sm
+                   text-muted-foreground cursor-pointer transition-colors hover:bg-muted;
+            text-decoration: none; background: transparent; border: none;
+        }
+        .aside-item-url.cur {
+            @apply bg-accent text-primary font-medium;
+            border-left: 3px solid hsl(var(--primary));
+            padding-left: calc(1rem - 3px);
+        }
+        .a-tit {
+            @apply block px-3 pt-3 pb-1 text-[11px] uppercase tracking-wide text-muted-foreground;
+        }
+
+        /* n-scale utilities */
+        .text-n19 { color: #181c25; }
+        .text-n11 { color: #91959e; }
+        .text-n07 { color: #c1c5ce; }
+        .bg-n05   { background-color: #dee1e8; }
+        .bg-n02   { background-color: #f8f9fb; }
+        .ring-n05 { --tw-ring-color: #dee1e8; }
+        .border-n05 { border-color: #dee1e8; }
+    }
+</style>

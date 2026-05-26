@@ -1,0 +1,165 @@
+version: 1
+principle: "Workflow is optional. It recommends and validates handoff; it does not own standalone skill execution."
+
+design_output:
+  primary: magicpath          # 优先使用 MagicPath canvas 组件
+  fallback: html-prototype    # 备选：本地 HTML 文件（无 MagicPath 账号或 non-React 项目时）
+  fallback_trigger:           # 语义触发条件（声明层）；执行层检测命令见 plan-agent.md Gap 2
+    - "magicpath auth failed"
+    - "non-react project"
+    - "user requests local html"
+
+scenes:
+  A:
+    name: "new_feature"
+    recommended_paths:
+      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "magicpath"]
+      - ["idea", "brainstorm", "design-brief", "magicpath"]
+      - ["idea", "superpowers-brainstorming", "design-brief", "magicpath"]  # 轻量路径
+      - ["figma-demo", "figma-layer"]
+    engineering_paths:  # 工程链（与设计链并行，不替代）
+      - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
+    fallback_paths:
+      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype", "figma-layer"]
+      - ["idea", "brainstorm", "design-brief", "html-prototype"]
+  B:
+    name: "existing_feature_optimization"
+    recommended_paths:
+      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "magicpath"]
+      - ["ux-audit", "design-brief", "magicpath"]
+      - ["superpowers-brainstorming", "design-brief", "magicpath"]  # 轻量路径
+      - ["figma-demo", "figma-layer"]
+    engineering_paths:
+      - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
+    fallback_paths:
+      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
+      - ["ux-audit", "design-brief", "html-prototype"]
+  C:
+    name: "online_review_redesign"
+    recommended_paths:
+      - ["ux-audit", "design-brief", "magicpath", "figma-layer"]
+      - ["ux-audit", "figma-demo", "figma-layer"]
+    fallback_paths:
+      - ["ux-audit", "design-brief", "html-prototype", "figma-layer"]
+  D:
+    name: "agent_native_redesign"
+    recommended_paths:
+      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "magicpath"]
+      - ["ux-brainstorm", "design-brief", "magicpath"]
+      - ["figma-demo", "figma-layer"]
+    engineering_paths:
+      - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
+    fallback_paths:
+      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
+
+handoff_gates:
+  brainstorm_to_downstream:
+    applies_when: "workflow_mode"
+    block_if:
+      - "research_claim_coverage missing when research source exists"
+      - "prd_destination_matrix missing when research source exists"
+      - "any high-confidence source claim unmapped"
+      - "any selected or rejected approach decision unmapped"
+      - "prd_outstanding_questions.resolve_before_planning is not empty"
+    allow_standalone_override: true
+    override_requires: "user explicitly chooses standalone downstream with missing context acknowledged; no override allowed for fabrication or hidden omission risk"
+
+  ux_brainstorm_to_design_brief:
+    applies_when: "workflow_mode"
+    block_if:
+      - "ux_brainstorm.blocking_questions is not empty"
+      - "selected_approach missing"
+      - "interaction_architecture missing"
+    allow_standalone_override: true
+
+  design_brief_to_magicpath:
+    applies_when: "workflow_mode"
+    block_if:
+      - "design_generation_packet missing"
+      - "tool_consumption_contract missing"
+      - "packet contains facts absent from design_brief"
+      - "packet does not declare MagicPath as primary output path"
+      - "component_mapping missing"
+      - "decision_cards missing required fields"
+      - "traceability_matrix missing"
+      - "traceability_gate != PASS"
+      - "prototype_carrier missing"
+      - "required_state_coverage missing"
+      - "ux_brief not written to docs/decisions/"
+    allow_standalone_override: false
+    note: "MagicPath Phase 必须等此 gate PASS 后才能启动，严禁并发"
+
+  design_brief_to_html:
+    applies_when: "workflow_mode"
+    block_if:
+      - "design_generation_packet missing"
+      - "tool_consumption_contract missing"
+      - "packet contains facts absent from design_brief"
+      - "component_mapping missing"
+      - "decision_cards missing required fields"
+      - "traceability_matrix missing"
+      - "traceability_gate != PASS"
+      - "prototype_carrier missing"
+      - "required_state_coverage missing"
+    allow_standalone_override: true
+    standalone_override_block_if:
+      - "source is research report"
+      - "source is ux-brainstorm decisions"
+      - "user expects traceable delivery"
+    override_requires: "direct prototype brief that is not an upstream research/decision artifact, with missing traceability acknowledged"
+    standalone_alternatives:
+      - "standalone_brief"
+      - "standalone_mobile_prototype"
+      - "ux_audit"
+      - "screenshot_delta"
+      - "figma_demo_blueprint"
+
+  html_or_demo_to_figma:
+    applies_when: "workflow_mode"
+    block_if:
+      - "index_html missing"
+      - "prototype_spec missing"
+    allow_standalone_override: false
+
+  design_brief_to_tech_spec:
+    applies_when: "workflow_mode"
+    block_if:
+      - "design_brief gate_result != PASS"
+      - "decision_cards missing"
+      - "traceability_matrix missing"
+      - "traceability_gate != PASS"
+      - "prototype_carrier missing"
+      - "required_state_coverage missing"
+      - "prd_artifact missing"
+    allow_standalone_override: true
+    note: "standalone 时也必须提供 PRD + design-brief handoff；不得从 research/design-brief 编造 R/AE"
+
+  tech_spec_to_task_plan:
+    applies_when: "workflow_mode"
+    block_if:
+      - "traceability_matrix missing"
+      - "design_mapping missing"
+      - "design_brief_handoff missing when traceability_matrix references Design Decision / State"
+      - "any MUST requirement unmapped"
+      - "coverage_gate != PASS"
+    allow_standalone_override: false
+    note: "task-plan 必须等 tech-spec coverage gate PASS 后才能启动，严禁跳过"
+
+  task_plan_to_execution:
+    applies_when: "workflow_mode"
+    block_if:
+      - "any MUST requirement has no dev task"
+      - "any MVP design decision has no dev/assert coverage"
+      - "any required state has no dev/test coverage"
+      - "any dev task has no linked test task"
+      - "task_plan_gate != PASS"
+    allow_standalone_override: false
+    note: "执行 agent 必须等 task-plan gate PASS 后才能启动"
+
+quality_gates:
+  always_enforced:
+    - "no fabrication"
+    - "one question at a time where user input is required"
+    - "brand and design system constraints"
+    - "AI/Agent control: visible, pause, take over, undo when agentic execution exists"
+    - "artifact paths follow office/SKILL.md conventions"

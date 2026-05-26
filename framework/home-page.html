@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM首页</title>
+    <script src="./assets/vendor/tailwindcss.com.js"></script>
+    <script>
+        /* shadcn 官方 CSS 变量引用格式 */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background:  'hsl(var(--background))',
+                        foreground:  'hsl(var(--foreground))',
+                        card:        { DEFAULT: 'hsl(var(--card))',        foreground: 'hsl(var(--card-foreground))' },
+                        popover:     { DEFAULT: 'hsl(var(--popover))',     foreground: 'hsl(var(--popover-foreground))' },
+                        primary:     { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
+                        secondary:   { DEFAULT: 'hsl(var(--secondary))',   foreground: 'hsl(var(--secondary-foreground))' },
+                        muted:       { DEFAULT: 'hsl(var(--muted))',       foreground: 'hsl(var(--muted-foreground))' },
+                        accent:      { DEFAULT: 'hsl(var(--accent))',      foreground: 'hsl(var(--accent-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        border:    'hsl(var(--border))',
+                        input:     'hsl(var(--input))',
+                        ring:      'hsl(var(--ring))',
+                        'page-bg': 'hsl(var(--page-bg))',
+                        info:        { DEFAULT: 'hsl(var(--info))',    foreground: 'hsl(var(--info-foreground))' },
+                        success:     { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+                        warning:     { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+                    },
+                    borderRadius: {
+                        lg:   'var(--radius)',
+                        md:   'calc(var(--radius) - 2px)',
+                        sm:   'calc(var(--radius) - 4px)',
+                        full: '9999px',
+                    },
+                    fontSize: {
+                        '11': ['11px', { lineHeight: '16px' }],
+                        '12': ['12px', { lineHeight: '18px' }],
+                        '13': ['13px', { lineHeight: '20px' }],
+                        '14': ['14px', { lineHeight: '22px' }],
+                        '15': ['15px', { lineHeight: '24px' }],
+                        '18': ['18px', { lineHeight: '28px' }],
+                    },
+                    ringOffsetColor: { background: 'hsl(var(--background))' },
+                }
+            }
+        }
+    </script>
+    <style>
+    /* ── shadcn CSS Variables (HSL format — official spec) ── */
+    :root {
+        --background:             0 0% 100%;          /* #ffffff */
+        --foreground:             222.2 84% 4.9%;     /* #0f172a */
+        --card:                   0 0% 100%;
+        --card-foreground:        222.2 84% 4.9%;
+        --popover:                0 0% 100%;
+        --popover-foreground:     222.2 84% 4.9%;
+        --primary:                30 100% 50%;           /* #FF8000 品牌主色 */
+        --primary-foreground:     0 0% 100%;          /* #ffffff */
+        --secondary:              210 40% 96.1%;      /* #f1f5f9 */
+        --secondary-foreground:   222.2 47.4% 11.2%;  /* #1e293b */
+        --muted:                  210 40% 96.1%;      /* #f1f5f9 */
+        --muted-foreground:       215.4 16.3% 46.9%;  /* #64748b */
+        --accent:                 37 100% 94%;        /* #FFF7E6 */
+        --accent-foreground:      30 100% 50%;        /* #FF8000 */
+        --destructive:            353 100% 64%;        /* #ff4a66 纷享销客危险色 */
+        --destructive-foreground: 0 0% 100%;
+        --border:                 220 13% 88%;        /* #e2e8f0 */
+        --input:                  220 13% 88%;        /* #e2e8f0 */
+        --ring:                   30 100% 50%;        /* #FF8000 focus ring */
+        --radius:                 0.375rem;           /* 6px */
+        --page-bg:                220 14% 94%;        /* #EFF1F3 */
+
+        /* 纷享销客扩展语义色 */
+        --info:                   207 100% 55%;          /* #189dff */
+        --info-foreground:        0 0% 100%;
+        --success:                90 57% 51%;            /* #87cc3b */
+        --success-foreground:     0 0% 100%;
+        --warning:                24 100% 55%;           /* #ff7c19 */
+        --warning-foreground:     0 0% 100%;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'PingFang SC', system-ui, -apple-system, sans-serif; }
+
+        body {
+            font-family: system-ui, -apple-system, 'PingFang SC', sans-serif;
+        }
+        .aside-item-url {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            height: 2.25rem;
+            font-size: 0.875rem;
+            color: #475569;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .aside-item-url:hover {
+            background-color: #f1f5f9;
+        }
+        .aside-item-url.cur {
+            background-color: #FFF7E6;
+            color: #FF8000;
+            font-weight: 500;
+            position: relative;
+            padding-left: calc(1rem + 3px);
+        }
+        .aside-item-url.cur::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 3px;
+            background-color: #FF8000;
+            border-radius: 0 4px 4px 0;
+        }
+        .aside-item-url.group-a {
+            padding-left: 1.5rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        .badge-item {
+            font-size: 11px;
+            background-color: #f1f5f9;
+            color: #64748b;
+            padding-left: 0.375rem;
+            padding-right: 0.375rem;
+            border-radius: 9999px;
+            line-height: 1;
+        }
+        .a-tit {
+            display: block;
+            padding-left: 0.75rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.125rem;
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .chevron-down {
+            width: 12px;
+            height: 12px;
+            display: inline-block;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .activity-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .schedule-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .schedule-time {
+            font-size: 13px;
+            color: #64748b;
+            width: 50px;
+            flex-shrink: 0;
+        }
+        .schedule-content {
+            flex: 1;
+        }
+        .schedule-title {
+            font-size: 13px;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+        .schedule-tag {
+            display: inline-block;
+            font-size: 11px;
+            background-color: #f1f5f9;
+            color: #64748b;
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+        }
+    </style>
+
+    <!-- ── shadcn Component Layer (complete specification) ── -->
+    <style type="text/tailwindcss">
+        @layer base {
+            * { @apply border-border; }
+            body { @apply bg-background text-foreground; }
+        }
+        @layer components {
+            /* ═══ Button ═══ */
+            .btn {
+                @apply inline-flex items-center justify-center whitespace-nowrap rounded-md
+                       text-sm font-medium ring-offset-background transition-colors
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                       focus-visible:ring-offset-2
+                       disabled:pointer-events-none disabled:opacity-50;
+            }
+            .btn-default     { @apply btn bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2; }
+            .btn-secondary   { @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 py-2; }
+            .btn-outline     { @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2; }
+            .btn-ghost       { @apply btn hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2; }
+            .btn-destructive { @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4 py-2; }
+            .btn-link        { @apply btn text-primary underline-offset-4 hover:underline h-9 px-0; }
+            .btn-sm          { @apply h-8 rounded-md px-3 text-xs; }
+            .btn-lg          { @apply h-10 rounded-md px-8 text-base; }
+            .btn-icon        { @apply h-9 w-9 p-0; }
+
+            /* ═══ Badge ═══ */
+            .badge {
+                @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold
+                       transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+            }
+            .badge-default     { @apply badge border-transparent bg-primary text-primary-foreground hover:bg-primary/80; }
+            .badge-secondary   { @apply badge border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80; }
+            .badge-destructive { @apply badge border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80; }
+            .badge-outline     { @apply badge text-foreground; }
+
+            /* ═══ Input / Textarea / Select ═══ */
+            .input {
+                @apply flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm
+                       shadow-sm transition-colors placeholder:text-muted-foreground
+                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                       disabled:cursor-not-allowed disabled:opacity-50;
+            }
+            .input-readonly {
+                @apply flex h-9 w-full rounded-md border border-input bg-muted px-3 py-1 text-sm
+                       text-muted-foreground cursor-not-allowed;
+            }
+            .textarea {
+                @apply flex min-h-[60px] w-full rounded-md border border-input bg-transparent
+                       px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground
+                       focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+                       disabled:cursor-not-allowed disabled:opacity-50;
+            }
+            .select-trigger {
+                @apply flex h-9 w-full rounded-md border border-input bg-background
+                       px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground
+                       focus:outline-none focus:ring-1 focus:ring-ring
+                       disabled:cursor-not-allowed disabled:opacity-50;
+            }
+            .label { @apply text-xs font-medium leading-none text-muted-foreground; }
+
+            /* ═══ Card ═══ */
+            .card             { @apply rounded-lg border bg-card text-card-foreground shadow-sm; }
+            .card-header      { @apply flex flex-col space-y-1.5 p-6; }
+            .card-title       { @apply font-semibold leading-none tracking-tight; }
+            .card-description { @apply text-sm text-muted-foreground; }
+            .card-content     { @apply p-6 pt-0; }
+            .card-footer      { @apply flex items-center p-6 pt-0; }
+
+            /* ═══ Table ═══ */
+            .table-wrap    { @apply w-full caption-bottom text-sm; }
+            .table-header  { @apply [&_tr]:border-b; }
+            .table-body    { @apply [&_tr:last-child]:border-0; }
+            .table-footer  { @apply border-t bg-muted/50 font-medium; }
+            .table-row     { @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted; }
+            .table-head    {
+                @apply h-10 px-4 text-left align-middle text-xs font-medium text-muted-foreground
+                       [&:has([role=checkbox])]:pr-0;
+            }
+            .table-cell    { @apply p-4 align-middle [&:has([role=checkbox])]:pr-0; }
+            .table-caption { @apply mt-4 text-sm text-muted-foreground; }
+
+            /* ═══ Tabs ═══ */
+            .tabs-list {
+                @apply inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground;
+            }
+            .tabs-trigger {
+                @apply inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1
+                       text-sm font-medium ring-offset-background transition-all
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                       focus-visible:ring-offset-2
+                       disabled:pointer-events-none disabled:opacity-50
+                       data-[state=active]:bg-background data-[state=active]:text-foreground
+                       data-[state=active]:shadow;
+            }
+            .tabs-content {
+                @apply mt-2 ring-offset-background
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                       focus-visible:ring-offset-2;
+            }
+
+            /* ═══ Separator ═══ */
+            .separator-h { @apply shrink-0 bg-border h-px w-full; }
+            .separator-v { @apply shrink-0 bg-border w-px; }
+
+            /* ═══ Avatar ═══ */
+            .avatar          { @apply relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full; }
+            .avatar-fallback { @apply flex h-full w-full items-center justify-center rounded-full bg-muted text-xs font-medium; }
+
+            /* ═══ Skeleton ═══ */
+            .skeleton { @apply animate-pulse rounded-md bg-muted; }
+
+            /* ═══ CRM Sidebar — preserve production class names, inject shadcn styles ═══ */
+            .aside-item-url {
+                @apply flex items-center justify-between px-4 h-9 text-sm
+                       text-muted-foreground cursor-pointer transition-colors hover:bg-muted;
+                text-decoration: none; background: transparent; border: none;
+            }
+            .aside-item-url.cur {
+                @apply bg-accent text-primary font-medium;
+                border-left: 3px solid hsl(var(--primary));
+                padding-left: calc(1rem - 3px);
+            }
+            .a-tit {
+                @apply block px-3 pt-3 pb-1 text-[11px] uppercase tracking-wide text-muted-foreground;
+            }
+            .a-tit.selected  { @apply text-primary; }
+            .aside-item-badge { @apply text-xs bg-muted text-muted-foreground px-1.5 py-px rounded-full; }
+
+            /* n-scale utilities */
+            .text-n19 { color: #181c25; }
+            .text-n11 { color: #91959e; }
+            .text-n07 { color: #c1c5ce; }
+            .bg-n05   { background-color: #dee1e8; }
+            .bg-n02   { background-color: #f8f9fb; }
+            .ring-n05 { --tw-ring-color: #dee1e8; }
+            .border-n05 { border-color: #dee1e8; }
+        }
+    </style>
+</head>
+<body class="fx-theme-new fx-ui-2025 bg-[#EFF1F3] overflow-hidden h-screen">
+
+    <div class="app-wrapper fx-paasapp-index flex flex-col h-full">
+        <!-- Top Navigation -->
+        <div class="fx-g-topnav-container">
+            <div class="top-header-wrap fx-top-header-wrap h-12 bg-white border-b border-[#e2e8f0] flex items-center">
+                <!-- Logo & Company Name -->
+                <div class="enterprise-model d-flex align-items-center w-[220px] flex items-center gap-2 px-3 h-full border-r border-[#e2e8f0] flex-shrink-0">
+                    <div class="logo-wrap w-7 h-7 bg-[#FF8000] text-white rounded text-xs font-bold flex items-center justify-center">
+                        纷
+                    </div>
+                    <div class="main-title text-truncate text-sm text-foreground font-medium">
+                        北京易动纷享科技有限责任公司
+                    </div>
+                    <svg class="chevron-down" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <!-- Sort Box -->
+                <div class="sort-box flex-1"></div>
+
+                <!-- Global Search -->
+                <div class="top-nav-global-search px-4">
+                    <div class="fx-global-search relative w-[280px] bg-[#f1f5f9] rounded-md px-2 py-1 flex items-center gap-1">
+                        <span class="text-xs text-muted-foreground">全部 ▾</span>
+                        <input type="text" placeholder="搜索" class="flex-1 bg-transparent text-xs placeholder-muted-foreground outline-none">
+                    </div>
+                </div>
+
+                <!-- Tool Icons -->
+                <div class="tool-icon-list flex items-center gap-1 px-2">
+                    <button class="p-2 hover:bg-muted rounded-md transition-colors" title="消息">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H2C1.45 2 1 2.45 1 3V13C1 13.55 1.45 14 2 14H13L15 16V3C15 2.45 14.55 2 14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </svg>
+                    </button>
+                    <button class="p-2 hover:bg-muted rounded-md transition-colors" title="帮助">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                            <text x="8" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">?</text>
+                        </svg>
+                    </button>
+                    <button class="p-2 hover:bg-muted rounded-md transition-colors" title="速记">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 14H14M3 2H13V12H3V2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <circle cx="8" cy="7" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- AI Button -->
+                <div class="fx-aitopbtn-wrap flex items-center px-2">
+                    <div style="width: 1px; height: 20px; background-color: #e2e8f0; margin-right: 0.5rem;"></div>
+                    <button class="fx-aitopbtn text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        Share AI
+                    </button>
+                    <div style="width: 1px; height: 20px; background-color: #e2e8f0; margin-left: 0.5rem;"></div>
+                </div>
+
+                <!-- Avatar -->
+                <div class="avatar-box flex items-center h-full px-3">
+                    <span class="avatar-popover__trigger d-block w-100 h-100 flex items-center gap-1.5 cursor-pointer">
+                        <div class="_user-avatar w-7 h-7 rounded-full bg-[#FFF7E6] text-[#FF8000] flex items-center justify-center font-bold text-xs">
+                            石
+                        </div>
+                        <span class="_user-name text-xs text-foreground">
+                            石海宏
+                        </span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bd f-g-bd flex-1 overflow-hidden flex flex-col">
+            <header class="hd f-g-hd hidden"></header>
+            <div class="bd-inner app-inner flex-1 overflow-hidden flex flex-col" id="sub-tpl">
+                <div class="appframework-area flex flex-1 overflow-hidden">
+                    <!-- Left Sidebar -->
+                    <div class="appframework-left-area w-[220px] flex-shrink-0">
+                        <div class="crm-menu crm-aside crm-aside-new-ui unfold bg-white border-r border-[#e2e8f0] flex flex-col h-full">
+                            <div class="hover-wrap icon-fold-gray flex flex-col h-full">
+                                <!-- Sidebar Header -->
+                                <div class="crm-aside-sort d-flex align-items-center h-11 px-3 border-b border-[#f1f5f9] flex items-center">
+                                    <div class="view-switch text-sm text-foreground font-medium">
+                                        CRM ▾
+                                    </div>
+                                </div>
+
+                                <!-- Sidebar Content -->
+                                <div class="aside-wrap flex-1 overflow-hidden flex flex-col">
+                                    <div class="back-index p-2">
+                                        <a class="cur inline-flex items-center gap-1.5 h-8 px-2 rounded text-sm bg-[#FFF7E6] text-[#FF8000] font-medium no-underline">
+                                            ← 返回首页
+                                        </a>
+                                    </div>
+
+                                    <div class="d-flex align-items-center tool-bar p-2">
+                                        <div class="set-search-wrap w-full">
+                                            <input type="text" placeholder="搜索" class="w-full h-7 px-2 text-xs border border-[#e2e8f0] rounded-md outline-none focus:border-[#FF8000]">
+                                        </div>
+                                    </div>
+
+                                    <!-- Menu Items -->
+                                    <div class="crm-scroll-wrap flex-1 overflow-y-auto">
+                                        <a class="aside-item-url aside-item-log" href="#">
+                                            <span>CRM提醒</span>
+                                            <span class="badge-item">0</span>
+                                        </a>
+                                        <a class="aside-item-url aside-item-log" href="#">
+                                            <span>CRM待办</span>
+                                            <span class="badge-item">45</span>
+                                        </a>
+
+                                        <span class="a-tit">常用</span>
+
+                                        <a class="aside-item-url aside-item-log group-a" href="#">
+                                            联系人
+                                        </a>
+                                        <a class="aside-item-url aside-item-log group-a" href="#">
+                                            客户
+                                        </a>
+                                        <a class="aside-item-url aside-item-log cur" href="#">
+                                            首页
+                                        </a>
+                                        <a class="aside-item-url aside-item-log group-a" href="#">
+                                            市场活动
+                                        </a>
+                                        <a class="aside-item-url aside-item-log group-a" href="#">
+                                            销售线索
+                                        </a>
+                                        <a class="aside-item-url aside-item-log group-a" href="#">
+                                            商机
+                                        </a>
+                                    </div>
+
+                                    <div class="theme-set d-flex p-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Area -->
+                    <div class="appframework-main-area flex-1 min-w-0 flex flex-col overflow-hidden">
+                        <div class="appframework-main-top-area hidden"></div>
+                        <div class="appframework-main-bottom-area paasapp-page-content flex-1 overflow-hidden flex flex-col">
+                            <div class="paasapp-index flex-1 overflow-hidden flex flex-col">
+                                <div class="paaas-index-scroll flex-1 overflow-y-auto p-4 bg-[#EFF1F3]">
+                                    <!-- Content Grid -->
+                                    <div class="grid grid-cols-[1fr_0.54fr] gap-4 h-full">
+                                        <!-- Left Column -->
+                                        <div class="flex flex-col gap-3 overflow-y-auto">
+                                            <!-- Card 1: 数据概览 -->
+                                            <div class="bg-white rounded-lg border border-[#e2e8f0] overflow-hidden flex-shrink-0">
+                                                <div class="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
+                                                    <h2 class="text-sm font-semibold text-foreground">数据概览</h2>
+                                                    <button class="text-xs px-2 py-1 text-muted-foreground hover:bg-muted rounded-md transition-colors">
+                                                        本月 ▾
+                                                    </button>
+                                                </div>
+                                                <div class="grid grid-cols-4 gap-3 p-4">
+                                                    <!-- KPI 1 -->
+                                                    <div class="text-center">
+                                                        <div class="text-xs text-muted-foreground mb-1">我的客户</div>
+                                                        <div class="text-2xl font-bold text-foreground">128</div>
+                                                        <div class="text-xs text-green-600 mt-1">↑12%</div>
+                                                    </div>
+                                                    <!-- KPI 2 -->
+                                                    <div class="text-center">
+                                                        <div class="text-xs text-muted-foreground mb-1">本月新增</div>
+                                                        <div class="text-2xl font-bold text-foreground">23</div>
+                                                        <div class="text-xs text-green-600 mt-1">↑5%</div>
+                                                    </div>
+                                                    <!-- KPI 3 -->
+                                                    <div class="text-center">
+                                                        <div class="text-xs text-muted-foreground mb-1">跟进记录</div>
+                                                        <div class="text-2xl font-bold text-foreground">89</div>
+                                                        <div class="text-xs text-green-600 mt-1">↑18%</div>
+                                                    </div>
+                                                    <!-- KPI 4 -->
+                                                    <div class="text-center">
+                                                        <div class="text-xs text-muted-foreground mb-1">待办事项</div>
+                                                        <div class="text-2xl font-bold text-foreground">12</div>
+                                                        <div class="text-xs text-red-600 mt-1">紧急3</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card 2: 任务 -->
+                                            <div class="bg-white rounded-lg border border-[#e2e8f0] overflow-hidden flex-shrink-0">
+                                                <div class="px-4 py-3 border-b border-[#f1f5f9]">
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <h2 class="text-sm font-semibold text-foreground">任务</h2>
+                                                    </div>
+                                                    <!-- Tabs -->
+                                                    <div class="flex gap-4">
+                                                        <button class="text-xs text-[#FF8000] font-medium pb-2 border-b-2 border-[#FF8000]">待我执行的</button>
+                                                        <button class="text-xs text-muted-foreground hover:text-foreground pb-2">已完成的</button>
+                                                        <button class="text-xs text-muted-foreground hover:text-foreground pb-2">全部</button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Task Items -->
+                                                <div>
+                                                    <div class="task-item">
+                                                        <div class="task-checkbox"></div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="text-sm text-foreground">跟进 SFA体验优化客户需求</div>
+                                                        </div>
+                                                        <span class="text-xs bg-blue-50 text-blue-600 rounded-full px-2 py-0.5 flex-shrink-0">今天</span>
+                                                        <div class="w-6 h-6 rounded-full bg-[#FFF7E6] text-[#FF8000] flex items-center justify-center text-xs font-bold flex-shrink-0" title="石海宏">石</div>
+                                                    </div>
+                                                    <div class="task-item">
+                                                        <div class="task-checkbox"></div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="text-sm text-foreground">完成 Q4 续约方案 PPT</div>
+                                                        </div>
+                                                        <span class="text-xs bg-orange-50 text-orange-600 rounded-full px-2 py-0.5 flex-shrink-0">明天</span>
+                                                        <div class="w-6 h-6 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xs font-bold flex-shrink-0" title="王梓轩">王</div>
+                                                    </div>
+                                                    <div class="task-item">
+                                                        <div class="task-checkbox"></div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="text-sm text-foreground">准备产品演示材料</div>
+                                                        </div>
+                                                        <span class="text-xs bg-gray-50 text-gray-600 rounded-full px-2 py-0.5 flex-shrink-0">09-30</span>
+                                                        <div class="w-6 h-6 rounded-full bg-[#FFF7E6] text-[#FF8000] flex items-center justify-center text-xs font-bold flex-shrink-0" title="石海宏">石</div>
+                                                    </div>
+                                                    <div class="task-item">
+                                                        <div class="task-checkbox"></div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="text-sm text-foreground">发送报价单给测试一下网络</div>
+                                                        </div>
+                                                        <span class="text-xs bg-gray-50 text-gray-600 rounded-full px-2 py-0.5 flex-shrink-0">10-01</span>
+                                                        <div class="w-6 h-6 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center text-xs font-bold flex-shrink-0" title="张晓明">张</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card 3: 工具 -->
+                                            <div class="bg-white rounded-lg border border-[#e2e8f0] overflow-hidden flex-shrink-0">
+                                                <div class="px-4 py-3 border-b border-[#f1f5f9]">
+                                                    <h2 class="text-sm font-semibold text-foreground">工具</h2>
+                                                </div>
+                                                <div class="p-4 grid grid-cols-2 gap-3">
+                                                    <button class="border border-[#e2e8f0] rounded-md p-3 flex items-center gap-2 text-sm text-foreground hover:bg-muted transition-colors">
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                                        </svg>
+                                                        查重
+                                                    </button>
+                                                    <button class="border border-[#e2e8f0] rounded-md p-3 flex items-center gap-2 text-sm text-foreground hover:bg-muted transition-colors">
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M3 12V4C3 3.45 3.45 3 4 3H12C12.55 3 13 3.45 13 4V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                            <path d="M6 7L8 9L10 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                            <path d="M8 9V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                        </svg>
+                                                        导入
+                                                    </button>
+                                                    <button class="border border-[#e2e8f0] rounded-md p-3 flex items-center gap-2 text-sm text-foreground hover:bg-muted transition-colors">
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M3 2H13V14H3V2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                            <path d="M6 5H10M6 8H10M6 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                        </svg>
+                                                        导入查看
+                                                    </button>
+                                                    <button class="border border-[#e2e8f0] rounded-md p-3 flex items-center gap-2 text-sm text-foreground hover:bg-muted transition-colors">
+                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M2 3H14M3 3V13C3 13.55 3.45 14 4 14H12C12.55 14 13 13.55 13 13V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                            <path d="M6 6V11M10 6V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                        </svg>
+                                                        导入记录
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Column -->
+                                        <div class="flex flex-col gap-3 overflow-y-auto">
+                                            <!-- Card 4: 跟进动态 -->
+                                            <div class="bg-white rounded-lg border border-[#e2e8f0] overflow-hidden flex-shrink-0">
+                                                <div class="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
+                                                    <h2 class="text-sm font-semibold text-foreground">跟进动态</h2>
+                                                    <select class="text-xs px-2 py-1 text-muted-foreground border border-[#e2e8f0] rounded-md outline-none focus:border-[#FF8000]">
+                                                        <option>全部客户</option>
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <div class="activity-item">
+                                                        <div class="activity-avatar bg-[#FFF7E6] text-[#FF8000]">石</div>
+                                                        <div class="flex-1">
+                                                            <div class="text-xs text-foreground">
+                                                                <span class="font-semibold">石海宏Seth</span>
+                                                                <span class="text-muted-foreground"> 跟进了 </span>
+                                                                <span class="text-[#FF8000]">SFA体验优化</span>
+                                                            </div>
+                                                            <div class="text-xs text-muted-foreground mt-1">3小时前</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="activity-item">
+                                                        <div class="activity-avatar bg-purple-50 text-purple-600">王</div>
+                                                        <div class="flex-1">
+                                                            <div class="text-xs text-foreground">
+                                                                <span class="font-semibold">王梓轩Luca</span>
+                                                                <span class="text-muted-foreground"> 新建客户 </span>
+                                                                <span class="text-[#FF8000]">内测企业fktest8038</span>
+                                                            </div>
+                                                            <div class="text-xs text-muted-foreground mt-1">昨天</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="activity-item">
+                                                        <div class="activity-avatar bg-cyan-50 text-cyan-600">张</div>
+                                                        <div class="flex-1">
+                                                            <div class="text-xs text-foreground">
+                                                                <span class="font-semibold">张晓明</span>
+                                                                <span class="text-muted-foreground"> 发送了报价单</span>
+                                                            </div>
+                                                            <div class="text-xs text-muted-foreground mt-1">2天前</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Card 5: 我的日程 -->
+                                            <div class="bg-white rounded-lg border border-[#e2e8f0] overflow-hidden flex-shrink-0">
+                                                <div class="px-4 py-3 border-b border-[#f1f5f9]">
+                                                    <h2 class="text-sm font-semibold text-foreground">我的日程</h2>
+                                                    <div class="text-xs text-muted-foreground mt-1">今天 2025-09-30</div>
+                                                </div>
+
+                                                <div>
+                                                    <div class="schedule-item">
+                                                        <div class="schedule-time">10:00</div>
+                                                        <div class="schedule-content">
+                                                            <div class="schedule-title">产品演示 - SFA体验优化</div>
+                                                            <span class="schedule-tag">会议</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="schedule-item">
+                                                        <div class="schedule-time">14:00</div>
+                                                        <div class="schedule-content">
+                                                            <div class="schedule-title">客户拜访 - 内测企业fktest8038</div>
+                                                            <span class="schedule-tag">外勤</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="schedule-item">
+                                                        <div class="schedule-time">16:30</div>
+                                                        <div class="schedule-content">
+                                                            <div class="schedule-title">季度复盘会</div>
+                                                            <span class="schedule-tag">内部</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* DEPRECATED: 本文件为旧 --fx-* 命名体系，已被 shared-head.html 的 HSL 变量体系取代。
+   保留仅供历史参考。当前所有 HTML 模板均不引用本文件，请勿在新原型中使用。*/
+:root {
+  --fx-page-bg: #eff1f3;
+  --fx-surface: #ffffff;
+  --fx-primary: #ff8000;
+  --fx-primary-light: #fff7e6;
+  --fx-primary-border: #ffca7a;
+
+  --fx-magenta: #ff4a66;
+  --fx-magenta-bg: #fff0f0;
+  --fx-magenta-border: #ffc4c7;
+  --fx-warning: #ff7c19;
+  --fx-warning-bg: #fff5e6;
+  --fx-warning-border: #ffcd94;
+  --fx-info-green: #87cc3b;
+  --fx-info-green-bg: #fafff0;
+  --fx-info-green-border: #ddf2bb;
+  --fx-info-blue: #189dff;
+  --fx-info-blue-bg: #e6f9ff;
+  --fx-info-blue-border: #91dcff;
+  --fx-danger: #ff522a;
+  --fx-link: #0c6cff;
+
+  --fx-n01: #ffffff;
+  --fx-n05: #dee1e8;
+  --fx-n07: #c1c5ce;
+  --fx-n11: #91959e;
+  --fx-n15: #545861;
+  --fx-n19: #181c25;
+  --fx-special01: #f2f4fb;
+  --fx-row-line: #eaebee;
+
+  --fx-font-sans: "Source Han Sans CN", "PingFang SC", system-ui, sans-serif;
+  --fx-shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --fx-focus-ring: 0 0 0 2px #fff, 0 0 0 4px rgba(255, 128, 0, 0.35);
+}

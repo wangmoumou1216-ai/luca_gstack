@@ -1,0 +1,211 @@
+version: 1
+description: >
+  Universal skill routing map.
+  Authoritative keyword and invoke reference for route-guard.mjs.
+  Project context and complexity gates run before this skill map.
+  Sections: project context markers, project skills (luca_gstack), and built-in skills.
+
+project_context:
+  old_project_triggers: [老项目, 已有项目, 已有的项目, 旧项目, 继续项目, 上次那个项目, 接着上次, 上次的项目, 之前那个项目, 之前的项目, 之前那个]
+  new_project_triggers: [新项目, 新需求, 新功能, 我想做一个需求, 我想做一个项目]
+  current_project_triggers: [当前项目, 这个项目, 本项目]
+
+# ── luca_gstack project skills ───────────────────────────────────────────────
+project_skills:
+
+  auto:
+    invoke: "/auto"
+    weight: 10
+    triggers: [全流程, 自动做, auto, 一键, 帮我全部, 端到端, 完整设计, 全套方案, 功能设计]
+
+  idea:
+    invoke: "/idea"
+    weight: 6
+    triggers: [有个想法, 原始想法, 需求确认, 功能方向, idea, 一个功能, 需求分析]
+
+  brainstorm:
+    invoke: "/brainstorm"
+    weight: 6
+    triggers: [PRD, 需求文档, 产品需求, brainstorm, 写PRD, 需求梳理]
+
+  superpowers_brainstorming:
+    invoke: "superpowers:brainstorming"
+    weight: 6
+    triggers: [快速梳理, 轻量PRD, quick brainstorm, 简单需求梳理, superpowers brainstorm]
+
+  deepresearch:
+    invoke: "/deepresearch"
+    weight: 6
+    triggers: [深度研究, 调研, research, 深入研究, 全面调研, 多agent研究]
+
+  ux_research:
+    invoke: "/ux-research"
+    weight: 7
+    triggers: [UX研究, 竞品分析, 设计调研, 用户研究, 体验分析, UX调研, 看看竞品]
+
+  ux_brainstorm:
+    invoke: "/ux-brainstorm"
+    weight: 7
+    triggers: [设计方案, UI方案, 设计brainstorm, 界面方案, UX方案]
+
+  design_brief:
+    invoke: "/design-brief"
+    weight: 6
+    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档]
+
+  html_prototype:
+    invoke: "/html-prototype"
+    weight: 7
+    triggers: [做个原型, 生成HTML, HTML原型, prototype, 快速原型, 原型界面]
+
+  figma_demo:
+    invoke: "/figma-demo"
+    weight: 7
+    triggers: [figma demo, 演示demo, 汇报用原型, 口述做原型, figma演示]
+
+  ux_audit:
+    invoke: "/ux-audit"
+    weight: 7
+    triggers: [评审, UX问题, 页面评审, 体验评审, UX评审, 评审这个页面]
+
+  compare:
+    invoke: "/compare"
+    weight: 6
+    triggers: [对比, compare, 版本对比, 两个方案比较, 迭代对比]
+
+  figma_layer:
+    invoke: "/figma-layer"
+    weight: 5
+    triggers: [Figma, figma, 保险层, 推到figma, figma保险]
+
+  magicpath:
+    invoke: "magicpath"
+    weight: 8
+    triggers: [界面设计, UI设计, 做界面, 产出界面, 设计组件, MagicPath, magicpath, 生成组件, 做个界面, 直接产出, 界面产出, 原型界面]
+
+  tech_spec:
+    invoke: "/tech-spec"
+    weight: 7
+    triggers: [工程规格, 技术文档, tech spec, engineering spec, 技术合同, 工程合同, 开发规格, 技术规格]
+
+  task_plan:
+    invoke: "/task-plan"
+    weight: 7
+    triggers: [任务编排, 任务计划, 开发计划, task plan, 拆任务, 任务拆解, 编排任务, 开发编排, 任务分解]
+
+# ── Built-in Claude Code skills (globally installed) ─────────────────────────
+builtin_skills:
+
+  web_access:
+    skill: web-access
+    hint: "→ 建议使用内置 skill: web-access（联网搜索/网页抓取）"
+    weight: 9
+    triggers: [搜索, 查一下, 找找, 上网, 联网, 网页, 抓取, 爬取, google, 搜一下, 查资料]
+
+  agent_browser:
+    skill: agent-browser
+    hint: "→ 建议使用内置 skill: agent-browser（浏览器截图/交互）"
+    weight: 7
+    triggers: [截图, 竞品截图, 浏览网站, 访问网页, 打开网页, 浏览器操作]
+
+  lark_im:
+    skill: lark-im
+    hint: "→ 建议使用内置 skill: lark-im（飞书消息/群聊）"
+    weight: 9
+    triggers: [飞书消息, 发消息, 群聊, 飞书群, 即时消息, 发飞书]
+
+  lark_calendar:
+    skill: lark-calendar
+    hint: "→ 建议使用内置 skill: lark-calendar（飞书日历/日程）"
+    weight: 9
+    triggers: [日历, 日程, 会议, 安排时间, 空闲时间, 预约, 飞书日历]
+
+  lark_doc:
+    skill: lark-doc
+    hint: "→ 建议使用内置 skill: lark-doc（飞书文档）"
+    weight: 9
+    triggers: [飞书文档, lark文档, 创建文档, 飞书doc]
+
+  lark_wiki:
+    skill: lark-wiki
+    hint: "→ 建议使用内置 skill: lark-wiki（飞书知识库）"
+    weight: 9
+    triggers: [飞书wiki, 知识库, wiki页面, lark wiki]
+
+  lark_sheets:
+    skill: lark-sheets
+    hint: "→ 建议使用内置 skill: lark-sheets（飞书多维表格）"
+    weight: 9
+    triggers: [飞书表格, lark表格, 在线表格, 飞书多维表格]
+
+  lark_drive:
+    skill: lark-drive
+    hint: "→ 建议使用内置 skill: lark-drive（飞书云盘）"
+    weight: 9
+    triggers: [飞书云盘, 云盘文件, lark drive, 云盘]
+
+  lark_minutes:
+    skill: lark-minutes
+    hint: "→ 建议使用内置 skill: lark-minutes（飞书妙记）"
+    weight: 9
+    triggers: [妙记, 会议记录, 飞书妙记, minutes]
+
+  lark_base:
+    skill: lark-base
+    hint: "→ 建议使用内置 skill: lark-base（飞书多维表格/Base）"
+    weight: 9
+    triggers: [飞书base, 多维表格, lark base]
+
+  lark_task:
+    skill: lark-task
+    hint: "→ 建议使用内置 skill: lark-task（飞书任务）"
+    weight: 9
+    triggers: [飞书任务, lark task, 任务管理, 添加任务]
+
+  xlsx:
+    skill: xlsx
+    hint: "→ 建议使用内置 skill: xlsx（Excel 文件处理）"
+    weight: 8
+    triggers: [Excel, xlsx, xls, 电子表格, 表格文件]
+
+  pptx:
+    skill: pptx
+    hint: "→ 建议使用内置 skill: pptx（PowerPoint 处理）"
+    weight: 8
+    triggers: [PPT, pptx, 演示文稿, 幻灯片, powerpoint]
+
+  pdf:
+    skill: pdf
+    hint: "→ 建议使用内置 skill: pdf（PDF 读取/处理）"
+    weight: 8
+    triggers: [PDF, pdf文件, 读取PDF, 解析PDF]
+
+  docx:
+    skill: docx
+    hint: "→ 建议使用内置 skill: docx（Word 文档处理）"
+    weight: 8
+    triggers: [Word, docx, word文档, .docx]
+
+  claude_api:
+    skill: claude-api
+    hint: "→ 建议使用内置 skill: claude-api（Claude API / Anthropic SDK 开发）"
+    weight: 8
+    triggers: [Claude API, Anthropic SDK, anthropic, api调用, 接入Claude, claude接口]
+
+  find_skills:
+    skill: find-skills
+    hint: "→ 建议使用内置 skill: find-skills（发现可安装 skill）"
+    weight: 8
+    triggers: [有没有skill, 找个skill, 有什么能力, 装个skill, 发现skill, 安装skill]
+
+  update_config:
+    skill: update-config
+    hint: "→ 建议使用内置 skill: update-config（修改 Claude Code 配置/权限/hook）"
+    weight: 8
+    triggers: [改settings, 配置权限, 修改配置, hook配置, settings.json, 自动化行为, 添加权限]
+
+  frontend_slides:
+    skill: frontend-slides
+    hint: "→ 建议使用内置 skill: frontend-slides（生成前端幻灯片/演示）"
+    weight: 7
+    triggers: [前端幻灯片, frontend slides, 交互演示, 网页演示]

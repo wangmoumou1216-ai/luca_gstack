@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><!-- ASSEMBLY: INSERT TITLE --> — Demo</title>
+  <script src="./assets/vendor/tailwindcss.com.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#FF8000', foreground: '#FFFFFF' },
+            'n19': '#181C25',
+            'n15': '#545861',
+            'n11': '#91959E',
+            'n07': '#C1C5CE',
+            'n05': '#DEE1E8',
+            'page-bg': '#EFF1F3',
+            'surface': '#FFFFFF',
+            'special01': '#F2F4FB',
+            'magenta': '#FF4A66',
+            'magenta-bg': '#FFF0F0',
+            'magenta-border': '#FFC4C7',
+            'warning': '#FF7C19',
+            'warning-bg': '#FFF5E6',
+            'warning-border': '#FFCD94',
+            'info-green': '#87CC3B',
+            'info-green-bg': '#FAFFF0',
+            'info-green-border': '#DDF2BB',
+            'info-blue': '#189DFF',
+            'info-blue-bg': '#E6F9FF',
+            'info-blue-border': '#91DCFF',
+            'link': '#0C6CFF',
+            'row-line': '#EAEBEE',
+          },
+          fontSize: {
+            '11': ['11px', '14px'],
+            '12': ['12px', '18px'],
+            '13': ['13px', '18px'],
+            '14': ['14px', '20px'],
+            '15': ['15px', '24px'],
+            '18': ['18px', '28px'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* ========== 动效基础 ========== */
+    :root {
+      --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+      --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+      --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+      --duration-fast: 150ms;
+      --duration-std: 200ms;
+      --duration-slow: 300ms;
+      --duration-max: 400ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* ========== 节点容器 ========== */
+    .demo-node {
+      position: absolute;
+      inset: 0;
+      overflow: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: none;
+    }
+    .demo-node.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ========== 弹窗叠加层 ========== */
+    .demo-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+    }
+    .demo-overlay.active {
+      display: block;
+    }
+    .demo-overlay-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    /* ========== 过渡动画 ========== */
+    .transition-slide-left-enter {
+      transform: translateX(100%);
+    }
+    .transition-slide-left-exit {
+      transform: translateX(-100%);
+    }
+    .transition-slide-right-enter {
+      transform: translateX(-100%);
+    }
+    .transition-slide-right-exit {
+      transform: translateX(100%);
+    }
+    .transition-modal-up-enter {
+      transform: translateY(100%);
+    }
+    .transition-modal-down-exit {
+      transform: translateY(100%);
+    }
+    .transition-fade-enter {
+      opacity: 0;
+    }
+    .transition-scale-enter {
+      transform: scale(0.85);
+      opacity: 0;
+    }
+    .transition-scale-exit {
+      transform: scale(0.85);
+      opacity: 0;
+    }
+
+    /* ========== 演示控制栏 ========== */
+    .demo-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: rgba(24, 28, 37, 0.9);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 9999;
+      transition: transform 0.3s var(--ease-standard);
+      padding: 0 24px;
+    }
+    .demo-controls.hidden {
+      transform: translateY(100%);
+    }
+    .demo-controls button {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: color var(--duration-fast) var(--ease-standard),
+                  background var(--duration-fast) var(--ease-standard);
+    }
+    .demo-controls button:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .demo-controls button.active {
+      color: #FF8000;
+    }
+
+    /* 进度指示器 */
+    .demo-progress {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .demo-progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all var(--duration-std) var(--ease-standard);
+      cursor: pointer;
+    }
+    .demo-progress-dot.active {
+      background: #FF8000;
+      transform: scale(1.25);
+    }
+    .demo-progress-dot:hover {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    /* 节点名标签 */
+    .demo-node-label {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 12px;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    /* ========== ASSEMBLY: INSERT FRAGMENT STYLES HERE ========== */
+  </style>
+</head>
+<body class="bg-page-bg">
+
+  <!-- ========== Demo 容器 ========== -->
+  <div id="demo-container" class="relative w-full h-screen overflow-hidden">
+
+    <!-- ASSEMBLY: INSERT NODE CONTAINERS HERE -->
+    <!--
+      每个节点容器格式：
+      <div class="demo-node [active]" data-node="{node-id}" data-index="{N}">
+        {fragment.html 内容}
+      </div>
+
+      弹窗节点格式：
+      <div class="demo-overlay" data-node="{node-id}" data-overlay-for="{parent-node-id}">
+        <div class="demo-overlay-mask" onclick="DemoController.closeOverlay('{node-id}')"></div>
+        <div class="demo-overlay-content">
+          {fragment.html 内容}
+        </div>
+      </div>
+    -->
+
+  </div>
+
+  <!-- ========== 演示控制栏 ========== -->
+  <div class="demo-controls" id="demo-controls">
+    <button onclick="DemoController.prev()" title="上一步 (←)">
+      ‹ 上一步
+    </button>
+    
+    <div class="demo-progress" id="demo-progress">
+      <!-- ASSEMBLY: INSERT PROGRESS DOTS HERE -->
+    </div>
+    
+    <span class="demo-node-label" id="demo-node-label">
+      <!-- ASSEMBLY: 当前节点名 -->
+    </span>
+
+    <button onclick="DemoController.next()" title="下一步 (→)">
+      下一步 ›
+    </button>
+    
+    <button onclick="DemoController.toggleAutoPlay()" id="btn-autoplay" title="自动播放 (空格)">
+      ▶ 自动
+    </button>
+    
+    <button onclick="DemoController.toggleFullscreen()" title="全屏 (F11)">
+      ⛶ 全屏
+    </button>
+
+    <button onclick="DemoController.toggleControls()" title="隐藏控制栏">
+      ✕
+    </button>
+  </div>
+
+  <!-- 隐藏后的恢复按钮 -->
+  <button id="demo-restore-controls" 
+    style="display:none; position:fixed; bottom:12px; right:12px; z-index:9999;
+           background:rgba(24,28,37,0.7); color:rgba(255,255,255,0.7);
+           border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;"
+    onclick="DemoController.toggleControls()">
+    显示控制栏
+  </button>
+
+  <script>
+    // ========== Demo 控制器 ==========
+    const DemoController = {
+      nodes: [],
+      overlays: [],
+      nodeNames: {},     // ASSEMBLY: { "node-01-xxx": "启动页", ... }
+      currentIndex: 0,
+      isAutoPlaying: false,
+      autoPlayTimer: null,
+      autoPlayInterval: 3000,
+      controlsVisible: true,
+
+      // ASSEMBLY: INSERT TRANSITION MAP HERE
+      // 格式：{ "0→1": { type: "slide-left", duration: 350, easing: "..." }, ... }
+      transitions: {},
+
+      init() {
+        this.nodes = Array.from(document.querySelectorAll('.demo-node'));
+        this.overlays = Array.from(document.querySelectorAll('.demo-overlay'));
+        this.renderProgress();
+        this.updateLabel();
+        this.bindKeyboard();
+        
+        // 确保首节点显示
+        if (this.nodes.length > 0) {
+          this.nodes[0].classList.add('active');
+        }
+      },
+
+      bindKeyboard() {
+        document.addEventListener('keydown', (e) => {
+          // 如果焦点在输入框内，不拦截
+          if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+          
+          switch(e.key) {
+            case 'ArrowRight':
+              e.preventDefault();
+              this.next();
+              break;
+            case 'ArrowLeft':
+              e.preventDefault();
+              this.prev();
+              break;
+            case ' ':
+              e.preventDefault();
+              this.toggleAutoPlay();
+              break;
+            case 'Escape':
+              this.closeAllOverlays();
+              break;
+            case 'F11':
+              e.preventDefault();
+              this.toggleFullscreen();
+              break;
+          }
+        });
+      },
+
+      next() {
+        if (this.currentIndex < this.nodes.length - 1) {
+          this.goTo(this.currentIndex + 1);
+        }
+      },
+
+      prev() {
+        if (this.currentIndex > 0) {
+          this.goTo(this.currentIndex - 1);
+        }
+      },
+
+      goTo(index) {
+        if (index === this.currentIndex || index < 0 || index >= this.nodes.length) return;
+
+        const fromNode = this.nodes[this.currentIndex];
+        const toNode = this.nodes[index];
+        const key = `${this.currentIndex}→${index}`;
+        const reverseKey = `${index}→${this.currentIndex}`;
+        const transition = this.transitions[key] || this.transitions[reverseKey] || { type: 'crossfade', duration: 200 };
+
+        // 关闭所有叠加层
+        this.closeAllOverlays();
+
+        // 执行过渡
+        this.executeTransition(fromNode, toNode, transition, index > this.currentIndex);
+
+        this.currentIndex = index;
+        this.renderProgress();
+        this.updateLabel();
+      },
+
+      executeTransition(fromNode, toNode, transition, isForward) {
+        const { type, duration } = transition;
+        const easing = transition.easing || 'cubic-bezier(0.4, 0, 0.2, 1)';
+        const ms = duration || 200;
+
+        // 重置
+        fromNode.style.transition = '';
+        toNode.style.transition = '';
+        toNode.style.transform = '';
+        toNode.style.opacity = '';
+
+        switch (type) {
+          case 'slide-left':
+          case 'slide-right': {
+            const dir = (type === 'slide-left' && isForward) || (type === 'slide-right' && !isForward) ? -1 : 1;
+            toNode.style.transform = `translateX(${-dir * 100}%)`;
+            toNode.classList.add('active');
+            requestAnimationFrame(() => {
+              fromNode.style.transition = `transform ${ms}ms ${easing}`;
+              toNode.style.transition = `transform ${ms}ms ${easing}`;
+              fromNode.style.transform = `translateX(${dir * 100}%)`;
+              toNode.style.transform = 'translateX(0)';
+            });
+            setTimeout(() => {
+              fromNode.classList.remove('active');
+              fromNode.style.transform = '';
+              fromNode.style.transition = '';
+              toNode.style.transition = '';
+            }, ms + 50);
+            break;
+          }
+
+          case 'modal-up':
+          case 'modal-down': {
+            toNode.style.transform = 'translateY(100%)';
+            toNode.classList.add('active');
+            requestAnimationFrame(() => {
+              toNode.style.transition = `transform ${ms}ms ${easing}`;
+              toNode.style.transform = 'translateY(0)';
+            });
+            setTimeout(() => {
+              toNode.style.transition = '';
+              // modal 不隐藏前节点
+            }, ms + 50);
+            break;
+          }
+
+          case 'fade-in':
+          case 'fade-out':
+          case 'crossfade':
+          default: {
+            toNode.style.opacity = '0';
+            toNode.classList.add('active');
+            requestAnimationFrame(() => {
+              fromNode.style.transition = `opacity ${ms}ms ${easing}`;
+              toNode.style.transition = `opacity ${ms}ms ${easing}`;
+              fromNode.style.opacity = '0';
+              toNode.style.opacity = '1';
+            });
+            setTimeout(() => {
+              fromNode.classList.remove('active');
+              fromNode.style.opacity = '';
+              fromNode.style.transition = '';
+              toNode.style.transition = '';
+            }, ms + 50);
+            break;
+          }
+
+          case 'scale-in':
+          case 'scale-out': {
+            toNode.style.transform = 'scale(0.85)';
+            toNode.style.opacity = '0';
+            toNode.classList.add('active');
+            requestAnimationFrame(() => {
+              fromNode.style.transition = `transform ${ms}ms ${easing}, opacity ${ms}ms ${easing}`;
+              toNode.style.transition = `transform ${ms}ms ${easing}, opacity ${ms}ms ${easing}`;
+              fromNode.style.transform = 'scale(0.85)';
+              fromNode.style.opacity = '0';
+              toNode.style.transform = 'scale(1)';
+              toNode.style.opacity = '1';
+            });
+            setTimeout(() => {
+              fromNode.classList.remove('active');
+              fromNode.style.transform = '';
+              fromNode.style.opacity = '';
+              fromNode.style.transition = '';
+              toNode.style.transition = '';
+            }, ms + 50);
+            break;
+          }
+
+          case 'none': {
+            fromNode.classList.remove('active');
+            toNode.classList.add('active');
+            break;
+          }
+        }
+      },
+
+      // 弹窗叠加
+      showOverlay(nodeId) {
+        const overlay = document.querySelector(`.demo-overlay[data-node="${nodeId}"]`);
+        if (!overlay) return;
+        overlay.style.display = 'block';
+        requestAnimationFrame(() => {
+          overlay.classList.add('active');
+          const content = overlay.querySelector('.demo-overlay-content');
+          if (content) {
+            content.style.transition = `transform 400ms ${getComputedStyle(document.documentElement).getPropertyValue('--ease-decelerate')}`;
+            content.style.transform = 'translateY(0)';
+          }
+        });
+      },
+
+      closeOverlay(nodeId) {
+        const overlay = document.querySelector(`.demo-overlay[data-node="${nodeId}"]`);
+        if (!overlay) return;
+        overlay.classList.remove('active');
+        setTimeout(() => { overlay.style.display = 'none'; }, 350);
+      },
+
+      closeAllOverlays() {
+        this.overlays.forEach(o => {
+          o.classList.remove('active');
+          o.style.display = 'none';
+        });
+      },
+
+      // 自动播放
+      toggleAutoPlay() {
+        this.isAutoPlaying = !this.isAutoPlaying;
+        const btn = document.getElementById('btn-autoplay');
+        if (this.isAutoPlaying) {
+          btn.classList.add('active');
+          btn.textContent = '⏸ 暂停';
+          this.autoPlayTimer = setInterval(() => {
+            if (this.currentIndex < this.nodes.length - 1) {
+              this.next();
+            } else {
+              this.toggleAutoPlay(); // 到末尾自动停止
+            }
+          }, this.autoPlayInterval);
+        } else {
+          btn.classList.remove('active');
+          btn.textContent = '▶ 自动';
+          clearInterval(this.autoPlayTimer);
+        }
+      },
+
+      // 全屏
+      toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen();
+        }
+      },
+
+      // 控制栏显隐
+      toggleControls() {
+        this.controlsVisible = !this.controlsVisible;
+        const controls = document.getElementById('demo-controls');
+        const restore = document.getElementById('demo-restore-controls');
+        if (this.controlsVisible) {
+          controls.classList.remove('hidden');
+          restore.style.display = 'none';
+        } else {
+          controls.classList.add('hidden');
+          restore.style.display = 'block';
+        }
+      },
+
+      // 进度指示器
+      renderProgress() {
+        const container = document.getElementById('demo-progress');
+        if (!container) return;
+        container.innerHTML = this.nodes.map((_, i) =>
+          `<div class="demo-progress-dot ${i === this.currentIndex ? 'active' : ''}" 
+                onclick="DemoController.goTo(${i})" 
+                title="${this.nodeNames[this.nodes[i]?.dataset.node] || '节点 ' + (i+1)}"></div>`
+        ).join('');
+      },
+
+      // 节点名标签
+      updateLabel() {
+        const label = document.getElementById('demo-node-label');
+        if (!label) return;
+        const nodeId = this.nodes[this.currentIndex]?.dataset.node || '';
+        const name = this.nodeNames[nodeId] || `节点 ${this.currentIndex + 1}`;
+        label.textContent = `${this.currentIndex + 1} / ${this.nodes.length}  ${name}`;
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => DemoController.init());
+  </script>
+
+</body>
+</html>

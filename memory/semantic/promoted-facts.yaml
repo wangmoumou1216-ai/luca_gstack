@@ -1,0 +1,85 @@
+version: 1
+facts:
+  - id: SF-001
+    domain: crm
+    fact: "纷享销客品牌主色 #FF8000（橙色）、辅助色 #FF8C42、背景灰 #F5F5F5、文字色 #333333"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: brand-tokens.md
+
+  - id: SF-002
+    domain: fxui
+    fact: "HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: CLAUDE.md
+
+  - id: SF-003
+    domain: workflow
+    fact: "Skill-first, Graph-optional 架构：每个 skill 默认 standalone 可用，Workflow 仅在用户主动选择流程时启用"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: CLAUDE.md
+
+  - id: SF-004
+    domain: fxui
+    fact: "FxUI 组件库基于 framework/ 母版：list-page、detail-2col、detail-3col、form-page、home-page 五种布局"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: framework/
+
+  - id: SF-005
+    domain: crm
+    fact: "纷享销客产品设计场景四类：A=新功能、B=已有功能优化、C=线上评审改版、D=Agent化改造"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: CLAUDE.md
+  - id: SC-20260520-002
+    domain: skill-rule
+    fact: "brainstorm: 苏格拉底拷问顺序必须从用户目标出发，不得从技术方案出发"
+    confidence: high
+    stable: true
+    added: 2026-05-20
+    source: observation
+  - id: SC-20260522-001
+    domain: skill-rule
+    fact: 'task-plan: Phase 6 任务卡必须包含「读取清单」字段，将每个来源节点（REQ/STATE/DEC）映射到原始文档的具体节路径；plan-agent
+  U-block 必须携带 Read List；WA 执行时定向读指定节，不读全文，发现矛盾触发 NEEDS_CONTEXT'
+    confidence: high
+    stable: true
+    added: 2026-05-22
+    source: observation
+  - id: SC-20260523-001
+    domain: crm
+    fact: "CRM objects use stable IDs"
+    confidence: high
+    stable: true
+    added: 2026-05-23
+    source: observation
+  - id: SC-20260523-002
+    domain: skill-rule
+    fact: "route-guard: 老项目/已有项目/继续项目必须先触发 Project Gate，列出或确认项目；不得直接解释为场景B已有功能优化或进入单个 skill"
+    confidence: high
+    stable: true
+    added: 2026-05-23
+    source: observation
+    evidence: "用户在本轮明确指出老项目未路由到项目位置；route golden/project routing tests 已覆盖"
+    reviewer: "codex-main"
+    scope: "route-guard,project-gate"
+    tags: ["route-guard", "project-gate", "old-project", "routing"]
+  - id: SC-20260523-003
+    domain: skill-rule
+    fact: "memory: 稳定事实不得直接写 promoted-facts.yaml；必须先写 semantic candidate，经过 consolidate/review 的 promotion_ready 门禁后才能晋升；普通启动只用 summary/search，治理时才运行 consolidate_memory.py --json"
+    confidence: high
+    stable: true
+    added: 2026-05-23
+    source: observation
+    evidence: "整体质量检测 sub agent 指出 governance 规则未进入 semantic skill-rule，真实检索 memory 写入门禁 governance 召回不足"
+    reviewer: "codex-main"
+    scope: "memory,semantic,governance"
+    tags: ["memory", "governance", "write-gate", "semantic", "search"]

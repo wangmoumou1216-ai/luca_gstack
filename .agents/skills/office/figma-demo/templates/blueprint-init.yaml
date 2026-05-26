@@ -1,0 +1,86 @@
+# ============================================================
+# blueprint.yaml — Demo 级蓝图
+# 由 /figma-demo Phase 3 生成
+# 使用时复制本文件并填充实际值
+# ============================================================
+
+meta:
+  topic: ""
+  title: ""
+  created_at: ""
+  total_nodes: 0
+  current_progress: "0/0 LOCKED"
+  input_source: ""
+  presentation_target: ""
+
+  design_system:
+    color_primary: "#FF8000"
+    primary_usage_plan:
+      - ""
+      - ""
+      - ""
+    color_tokens: "gstack-standard"
+    custom_colors: []
+    typography: "L1:text-15/500 | L2:text-13/400 | L3:text-13/n11 | L4:text-12/n11"
+    spacing: "4/8/12/16/24/32/40px"
+    border_radius: ""
+    shadow_usage: []
+    animation_baseline:
+      fast: "150ms"
+      standard: "200ms"
+      slow: "300ms"
+      max: "400ms"
+      easing_standard: "cubic-bezier(0.4, 0, 0.2, 1)"
+      easing_decelerate: "cubic-bezier(0, 0, 0.2, 1)"
+      easing_accelerate: "cubic-bezier(0.4, 0, 1, 1)"
+
+  viewport_targets:
+    - 1440
+    - 1024
+
+global_decisions: []
+
+nodes: {}
+  # 填充格式：
+  # node-01-name:
+  #   name: ""
+  #   status: "PENDING"
+  #   complexity: ""
+  #   figma_frame: ""
+  #   figma_has_screenshot: false
+  #   description: ""
+  #   template: ""
+  #   replace_module: ""
+  #   sub_tasks: []
+  #   interface_in:
+  #     from: ""
+  #     transition: ""
+  #     duration: ""
+  #     easing: ""
+  #   interface_out:
+  #     to: ""
+  #     transition: ""
+  #     duration: ""
+  #     easing: ""
+  #   completed_at: ""
+  #   builder_session: ""
+  #   retry_count: 0
+  #   self_check_passed: false
+
+presentation:
+  mode: "keyboard"
+  sequence: []
+  transition_between_nodes: "crossfade"
+  auto_play_interval: null
+  show_progress: true
+  show_fullscreen: true
+  keyboard_bindings:
+    next: "ArrowRight"
+    prev: "ArrowLeft"
+    toggle_auto: "Space"
+    exit: "Escape"
+    fullscreen: "F11"
+
+last_updated: ""
+builder_sessions_total: 0
+assembly_status: "PENDING"

@@ -1,0 +1,23 @@
+{
+  "name": "luca-gstack",
+  "version": "0.1.0",
+  "description": "AI Design Workflow OS for CRM product design",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "verify": "bash scripts/verify.sh",
+    "validate:skills": "bash scripts/validate-skills.sh",
+    "lint:yaml": "python3 -c \"import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]\" .claude/workflow-state.yaml .claude/skill-os/optional-workflow-graph.yaml .claude/skill-os/input-modes.yaml",
+    "check:hooks": "node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node scripts/test-hooks.mjs",
+    "test:routes": "node scripts/test-route-guard.mjs",
+    "test:memory": "python3 -m unittest memory.tests.test_memory_system -v",
+    "check:memory-health": "python3 memory/scripts/check_memory_health.py",
+    "check:routing-map": "node scripts/check-routing-map.mjs",
+    "check:project-routing": "node scripts/check-project-routing.mjs",
+    "check:quality-gates": "node scripts/check-quality-gates.mjs",
+    "check:coding-discipline": "node scripts/check-coding-discipline.mjs",
+    "check:project-links": "node scripts/check-project-links.mjs"
+  }
+}

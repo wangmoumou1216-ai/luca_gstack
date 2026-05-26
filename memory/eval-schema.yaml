@@ -1,0 +1,76 @@
+# Eval Record Schema v1.0
+# 每次 skill 执行后由 record_eval.py 写入 memory/evals/eval-log.jsonl
+# 目的：为将来的 GEPA 自动优化积累结构化训练数据
+
+fields:
+  session_date:
+    type: string
+    format: "YYYY-MM-DD"
+    required: true
+
+  skill_name:
+    type: string
+    required: true
+    examples: [brainstorm, deepresearch, html-prototype, ux-research]
+
+  topic:
+    type: string
+    required: true
+    description: "来自 .claude/current-topic.txt"
+
+  scene:
+    type: string
+    enum: [A, B, C, D, unknown]
+    required: false
+    default: unknown
+
+  input_summary:
+    type: string
+    max_chars: 300
+    required: false
+    description: "用户原始需求的简短摘要（不是 PRD，是输入意图）"
+
+  output_paths:
+    type: array
+    items: string
+    required: true
+    description: "skill 产出的文件路径列表（来自 WA 完成报告的 outputs_produced）"
+
+  quality_gate_score:
+    type: number
+    min: 0
+    max: 10
+    required: false
+    nullable: true
+    description: "quality-gate 报告中的 Score 字段"
+
+  quality_gate_status:
+    type: string
+    enum: [PASS, FAIL, CONDITIONAL_PASS]
+    required: true
+
+  quality_gate_findings:
+    type: array
+    items: string
+    required: false
+    description: "quality-gate 报告的 Findings 列表（只记录 FAIL / WARN 项）"
+
+  execution_duration_est:
+    type: string
+    enum: [lightweight, medium, heavy]
+    required: false
+    default: medium
+    description: "lightweight=<2K tokens, medium=2K-20K, heavy=>20K"
+
+  user_adopted:
+    type: string
+    enum: ["true", "false", unknown]
+    required: false
+    default: unknown
+    description: "产出是否被用户实际采用（可在 session 结束后手动更新）"
+
+storage:
+  path: "memory/evals/eval-log.jsonl"
+  format: jsonl
+  rotation: none  # 单文件追加，按 session_date 过滤
+  index_by: [skill_name, session_date, quality_gate_status]

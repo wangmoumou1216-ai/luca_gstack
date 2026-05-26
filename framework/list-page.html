@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客户列表 - CRM</title>
+  <script src="./assets/vendor/tailwindcss.com.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background:  'hsl(var(--background))',
+            foreground:  'hsl(var(--foreground))',
+            card:        { DEFAULT: 'hsl(var(--card))',        foreground: 'hsl(var(--card-foreground))' },
+            popover:     { DEFAULT: 'hsl(var(--popover))',     foreground: 'hsl(var(--popover-foreground))' },
+            primary:     { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
+            secondary:   { DEFAULT: 'hsl(var(--secondary))',   foreground: 'hsl(var(--secondary-foreground))' },
+            muted:       { DEFAULT: 'hsl(var(--muted))',       foreground: 'hsl(var(--muted-foreground))' },
+            accent:      { DEFAULT: 'hsl(var(--accent))',      foreground: 'hsl(var(--accent-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            border:      'hsl(var(--border))',
+            input:       'hsl(var(--input))',
+            ring:        'hsl(var(--ring))',
+            'page-bg':   'hsl(var(--page-bg))',
+            info:        { DEFAULT: 'hsl(var(--info))',    foreground: 'hsl(var(--info-foreground))' },
+            success:     { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+            warning:     { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+          },
+          borderRadius: {
+            lg:   'var(--radius)',
+            md:   'calc(var(--radius) - 2px)',
+            sm:   'calc(var(--radius) - 4px)',
+            full: '9999px',
+          },
+          fontSize: {
+            '11': ['11px', '14px'],
+            '12': ['12px', '18px'],
+            '13': ['13px', '18px'],
+            '14': ['14px', '20px'],
+            '15': ['15px', '24px'],
+            '18': ['18px', '28px'],
+          },
+          ringOffsetColor: { background: 'hsl(var(--background))' },
+        },
+      },
+    };
+  </script>
+  <style>
+  /* ── shadcn CSS Variables (HSL, unified v3.0) ── */
+  :root {
+    --background:             0 0% 100%;
+    --foreground:             222.2 84% 4.9%;
+    --card:                   0 0% 100%;
+    --card-foreground:        222.2 84% 4.9%;
+    --popover:                0 0% 100%;
+    --popover-foreground:     222.2 84% 4.9%;
+    --primary:                30 100% 50%;           /* #FF8000 品牌主色 */
+    --primary-foreground:     0 0% 100%;
+    --secondary:              210 40% 96.1%;
+    --secondary-foreground:   222.2 47.4% 11.2%;
+    --muted:                  210 40% 96.1%;
+    --muted-foreground:       215.4 16.3% 46.9%;
+    --accent:                 37 100% 94%;           /* #FFF7E6 */
+    --accent-foreground:      30 100% 50%;
+    --destructive:            353 100% 64%;          /* #ff4a66 */
+    --destructive-foreground: 0 0% 100%;
+    --border:                 220 13% 88%;
+    --input:                  220 13% 88%;
+    --ring:                   30 100% 50%;
+    --radius:                 0.375rem;
+    --page-bg:                220 14% 94%;
+    --info:                   207 100% 55%;
+    --info-foreground:        0 0% 100%;
+    --success:                90 57% 51%;
+    --success-foreground:     0 0% 100%;
+    --warning:                24 100% 55%;
+    --warning-foreground:     0 0% 100%;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Source Han Sans CN', 'PingFang SC', system-ui, sans-serif; }
+
+    main.main-ue-canvas {
+      box-shadow: 0 0 12px 0 rgba(0, 0, 0, 0.15);
+    }
+    [data-module="mod-channel-apps"] img.channel-app-icon--neutral {
+      filter: grayscale(1) brightness(0.42) contrast(1.08);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c1c5ce; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #91959e; }
+
+    [data-module="mod-top-nav-tools"] button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    [data-module="mod-top-nav-tools"] button img {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      line-height: 18px;
+      color: #545861;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .menu-item img,
+    .menu-sub-item img {
+      width: 14px;
+      height: 14px;
+      opacity: 0.95;
+    }
+    .menu-item:hover {
+      background: #f2f4fb;
+      color: #181c25;
+    }
+    .menu-group-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 12px;
+      font-size: 13px;
+      line-height: 18px;
+      color: #181c25;
+      cursor: pointer;
+      font-weight: 400;
+    }
+    .menu-group-title > span {
+      width: 12px !important;
+      height: 12px !important;
+      flex-shrink: 0;
+    }
+    .menu-group-title:hover {
+      background: #f2f4fb;
+      border-radius: 6px;
+    }
+    .menu-sub-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px 7px 30px;
+      font-size: 13px;
+      line-height: 18px;
+      color: #545861;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .menu-sub-item:hover {
+      background: #f2f4fb;
+      color: #181c25;
+    }
+    .menu-sub-item.active {
+      background: #fff8ea;
+      color: #ff8000;
+      font-weight: 500;
+      border-radius: 2px;
+    }
+
+    /* ═══ shadcn 静态映射（与 detail-page-3col 同源，供列表区 Button / Card / Toggle / Badge / Checkbox）═══ */
+    [data-slot="card"] {
+      border-radius: 0.5rem;
+      border: 1px solid #dee1e8;
+      background: #ffffff;
+      color: #181c25;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+    [data-module="mod-crm-sidebar"],
+    [data-module="mod-list-card"] {
+      border: 0;
+    }
+    [data-slot="avatar"] {
+      position: relative;
+      display: inline-flex;
+      height: 20px;
+      width: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border-radius: 9999px;
+    }
+    [data-slot="avatar-image"] {
+      aspect-ratio: 1 / 1;
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+    }
+    [data-slot="button"] {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      white-space: nowrap;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      transition: color 150ms, background-color 150ms, border-color 150ms, opacity 150ms, box-shadow 150ms;
+      outline: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    [data-slot="button"]:focus-visible {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(255, 128, 0, 0.35);
+    }
+    [data-slot="button"][data-variant="default"] {
+      background-color: #ff8000;
+      color: #ffffff;
+    }
+    [data-slot="button"][data-variant="default"]:hover {
+      background-color: rgba(255, 128, 0, 0.92);
+    }
+    [data-slot="button"][data-variant="secondary"] {
+      background-color: #f2f4fb;
+      color: #181c25;
+      border-color: transparent;
+    }
+    [data-slot="button"][data-variant="secondary"]:hover {
+      background-color: #e8ecf5;
+    }
+    [data-slot="button"][data-variant="outline"] {
+      background-color: #ffffff;
+      color: #181c25;
+      border-color: #c1c5ce;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+    [data-slot="button"][data-variant="outline"]:hover {
+      background-color: #f7f8fa;
+    }
+    [data-slot="button"][data-variant="ghost"] {
+      background: transparent;
+      color: #545861;
+      border: none;
+      box-shadow: none;
+    }
+    [data-slot="button"][data-variant="ghost"]:hover {
+      background: rgba(24, 28, 37, 0.05);
+      color: #181c25;
+    }
+    [data-slot="button"][data-variant="link"] {
+      background: transparent;
+      border: none;
+      color: #0c6cff;
+      box-shadow: none;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 18px;
+      padding: 0;
+    }
+    [data-slot="button"][data-variant="link"]:hover {
+      text-decoration: underline;
+    }
+    [data-slot="button"][data-size="sm"] {
+      height: 28px;
+      padding-left: 10px;
+      padding-right: 10px;
+      font-size: 13px;
+      line-height: 18px;
+    }
+    [data-slot="button"][data-size="icon-sm"] {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+    }
+    [data-slot="button"][data-size="icon-28"] {
+      width: 28px;
+      height: 28px;
+      padding: 6px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+    }
+    [data-slot="button"][data-size="icon-28"]:hover {
+      background: #f2f4fb;
+    }
+    [data-slot="button"][data-size="icon-28"] img {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+    [data-slot="toggle-group"] {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+    [data-slot="toggle-group-item"] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      width: 28px;
+      background: white;
+      border: 1px solid #c1c5ce;
+      margin-left: -1px;
+      cursor: pointer;
+      transition: all 150ms;
+      outline: none;
+    }
+    [data-slot="toggle-group-item"]:first-child {
+      margin-left: 0;
+      border-radius: 6px 0 0 6px;
+    }
+    [data-slot="toggle-group-item"]:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+    [data-slot="toggle-group-item"]:hover {
+      background: #f2f4fb;
+    }
+    [data-slot="toggle-group-item"][data-state="on"] {
+      background: #fff7e6;
+    }
+    [data-slot="toggle-group-item"]:focus-visible {
+      z-index: 10;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #ff8000;
+    }
+    [data-slot="checkbox"] {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid #dee1e8;
+      background: #fff;
+      accent-color: #ff8000;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    [data-slot="badge"] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 18px;
+      font-weight: 500;
+      padding: 0 6px;
+      height: 22px;
+      white-space: nowrap;
+    }
+    [data-slot="badge"][data-variant="vip"] {
+      border: 1px solid #ffca7a;
+      background: #fff7e6;
+      color: #ff8000;
+    }
+    [data-slot="badge"][data-variant="success"] {
+      border: 1px solid #ddf2bb;
+      background: #fafff0;
+      color: #545861;
+    }
+    [data-slot="badge"][data-variant="outline"] {
+      border: 1px solid #dee1e8;
+      background: #ffffff;
+      color: #545861;
+    }
+    [data-slot="table"] {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      line-height: 18px;
+    }
+  
+    /* Keep local icons from stretching in flex/grid layouts */
+    img[src*="./assets/icons/"] {
+      object-fit: contain;
+      object-position: center;
+      flex-shrink: 0;
+    }
+
+    /* n-scale utilities */
+    .text-n19 { color: #181c25; }
+    .text-n11 { color: #91959e; }
+    .text-n07 { color: #c1c5ce; }
+    .bg-n05   { background-color: #dee1e8; }
+    .bg-n02   { background-color: #f8f9fb; }
+    .ring-n05 { --tw-ring-color: #dee1e8; }
+    .border-n05 { border-color: #dee1e8; }
+</style>
+</head>
+<body class="h-screen bg-page-bg overflow-hidden">
+  <div class="flex flex-col h-full" data-module="page-root">
+
+    <!-- TOP NAV — 与 detail-page-3col 一致 -->
+    <header class="h-12 bg-page-bg flex items-center justify-between px-3 shrink-0" data-module="mod-top-nav">
+      <div class="flex items-center gap-2" data-module="mod-top-nav-brand">
+        <div class="flex items-center gap-1">
+          <div class="h-5 w-[18.006px] relative shrink-0 overflow-hidden" aria-hidden="true">
+            <img alt="" class="absolute block max-w-none object-contain pointer-events-none" src="./assets/icons/enterprise.svg" style="inset:12.12% 0 0 0;" />
+          </div>
+        </div>
+        <span class="text-14 text-n19">北京易动纷享科技有限责任公司</span>
+      </div>
+
+      <div class="flex items-center gap-2" data-module="mod-top-nav-global">
+        <div class="flex items-center bg-[rgba(24,28,37,0.05)] rounded-[6px] overflow-hidden w-[290px]" data-module="mod-top-nav-search">
+          <div class="flex items-center gap-2 px-2 py-[5px] shrink-0">
+            <span class="text-13 text-n19 leading-[18px]">全部</span>
+            <span class="relative block size-[10px] shrink-0" aria-hidden="true">
+              <span class="pointer-events-none absolute inset-[28.13%_6.31%_26.32%_6.29%]">
+                <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/chevron-right.svg" />
+              </span>
+            </span>
+          </div>
+          <div class="w-px h-[14px] bg-n05 shrink-0"></div>
+          <div class="flex items-center gap-2 px-2 py-[5px] flex-1">
+            <span class="text-13 text-n11 leading-[18px] flex-1">搜索</span>
+            <span class="relative h-[14px] w-[14px] shrink-0">
+              <img alt="" class="absolute inset-0 block size-full max-w-none object-contain" src="./assets/icons/search.svg" />
+            </span>
+          </div>
+        </div>
+
+        <div class="flex h-12 items-center gap-[10px] shrink-0" data-module="mod-top-nav-tools">
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="CRM提醒">
+            <span class="relative block h-[18px] w-[18px] shrink-0">
+              <span class="pointer-events-none absolute inset-[0_9.38%_0_9.38%]">
+                <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/bell.svg" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="待办">
+            <span class="relative block h-[18px] w-[18px] shrink-0">
+              <span class="pointer-events-none absolute inset-[3.13%_0.92%_3.12%_3.13%]">
+                <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/todo.svg" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="草稿箱">
+            <span class="relative block h-[18px] w-[18px] shrink-0">
+              <span class="pointer-events-none absolute inset-[6.25%]">
+                <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/draft.svg" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="帮助">
+            <span class="relative block h-[18px] w-[18px] shrink-0">
+              <span class="pointer-events-none absolute inset-[2.08%]">
+                <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/help.svg" />
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <div class="flex h-3 w-0 items-center justify-center shrink-0">
+          <div class="flex-none rotate-90">
+            <img src="./assets/icons/chevron-right.svg" width="12" height="1" alt="" class="block max-w-none" />
+          </div>
+        </div>
+        <button type="button" data-module="mod-top-nav-ai" class="flex items-center gap-1 px-2 py-1 rounded-md border border-white" style="background: linear-gradient(96deg, rgba(49,188,255,0.12) 20%, rgba(150,118,255,0.12) 41%, rgba(190,100,254,0.12) 49%, rgba(225,87,203,0.12) 55%, rgba(239,87,148,0.12) 63%, rgba(253,104,63,0.12) 72%, rgba(254,124,43,0.12) 79%, rgba(255,161,11,0.12) 85%), white;" aria-label="纷享AI">
+          <img class="w-[13px] h-[13px] max-w-none" src="./assets/icons/ai.svg" alt="" />
+        </button>
+
+        <div class="flex h-3 w-0 items-center justify-center shrink-0">
+          <div class="flex-none rotate-90">
+            <img src="./assets/icons/chevron-right.svg" width="12" height="1" alt="" class="block max-w-none" />
+          </div>
+        </div>
+        <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-1 ring-n05" data-module="mod-top-nav-avatar">
+          <img src="./assets/icons/users.svg" width="32" height="32" alt="" class="size-full object-cover max-w-none" />
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden" data-module="page-body">
+
+      <!-- 64px 频道栏 — 与 detail-page-3col 一致 -->
+      <aside class="w-16 my-3 bg-page-bg flex flex-col items-start justify-between py-3 shrink-0 rounded-tl-xl" data-module="mod-channel-bar">
+        <div class="flex flex-col items-start w-full flex-1 pb-2" data-module="mod-channel-apps">
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg relative">
+              <span class="relative block h-[18px] w-[18px] shrink-0" aria-hidden="true">
+                <span class="pointer-events-none absolute inset-[3.13%_0_0_0]">
+                  <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                </span>
+              </span>
+              <span class="text-11 text-n19 text-center">企信</span>
+              <div class="absolute top-[2px] left-[28px] bg-[#ff522a] text-white text-[10px] font-bold leading-[14px] px-1 h-[14px] min-w-[14px] flex items-center justify-center rounded-lg">1</div>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/todo.svg" alt="" />
+              <span class="text-11 text-n19 text-center">待办</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg bg-white">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/crm-fill.svg" alt="" />
+              <span class="text-11 text-primary font-bold text-center">CRM</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/work.svg" alt="" />
+              <span class="text-11 text-n19 text-center">工作</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/calendar.svg" alt="" />
+              <span class="text-11 text-n19 text-center">日程</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/location.svg" alt="" />
+              <span class="text-11 text-n19 text-center">考勤</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="channel-app-icon--neutral w-[18px] h-[18px] max-w-none object-contain shrink-0" src="./assets/icons/ai.svg" alt="" />
+              <span class="text-11 text-n19 text-center leading-[14px]">培训助手</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/more.svg" alt="" />
+              <span class="text-11 text-n19 text-center">更多</span>
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-start w-full pt-4 pb-6" data-module="mod-channel-bottom-tools">
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/clock.svg" alt="" />
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/users.svg" alt="" />
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end w-full pl-1 -mb-2">
+            <div class="flex items-center justify-center shrink-0">
+              <div class="w-[6px] h-[6px] -scale-y-100">
+                <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg">
+              <img class="w-[18px] h-[18px] max-w-none" src="./assets/icons/settings.svg" alt="" />
+            </div>
+            <div class="w-[6px] h-[6px] shrink-0">
+              <img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt="" />
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CRM 二级侧栏 220px — 结构沿用原 list-page，色板对齐设计 token -->
+      <aside class="w-[220px] my-3 bg-white border border-n05 border-l-0 rounded-r-lg overflow-hidden flex flex-col shrink-0 min-h-0" data-module="mod-crm-sidebar" data-slot="card">
+        <div class="px-3 pt-3 pb-0 shrink-0">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-15 font-medium text-n19">CRM</span>
+            <button type="button" class="w-8 h-8 rounded-lg border border-n05 flex items-center justify-center hover:bg-special01" aria-label="快速新建" data-figma-node="1961:148555">
+              <span class="relative block size-[13px] shrink-0">
+                <span class="pointer-events-none absolute inset-[4.19%_4.15%_4.15%_4.19%]">
+                  <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                </span>
+              </span>
+            </button>
+          </div>
+          <div class="relative">
+            <input type="text" placeholder="搜索" class="w-full h-8 px-3 text-12 leading-[18px] bg-special01 rounded-md outline-none border border-transparent focus:border-n07" />
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto py-2 px-2 min-h-0">
+          <div class="menu-item">
+            <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+            首页
+          </div>
+          <div class="menu-item">
+            <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+            最近使用
+          </div>
+          <div class="menu-item">
+            <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+            CRM提醒
+          </div>
+          <div class="menu-item">
+            <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+            CRM待办
+          </div>
+
+          <div class="mt-2">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              交付实施项目
+            </div>
+          </div>
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              项目管理
+            </div>
+          </div>
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              CRM信息
+            </div>
+          </div>
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              数据驾驶舱
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              客户及商机管理
+            </div>
+            <div class="ml-2">
+              <div class="menu-sub-item active">
+                <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+                客户
+              </div>
+              <div class="menu-sub-item">
+                <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+                客户地址
+              </div>
+              <div class="menu-sub-item">
+                <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+                客户财务信息
+              </div>
+              <div class="menu-sub-item">
+                <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+                联系人
+              </div>
+              <div class="menu-sub-item">
+                <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+                商机
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              订单及回款管理
+            </div>
+          </div>
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              售前项目管理
+            </div>
+          </div>
+          <div class="mt-1">
+            <div class="menu-group-title">
+              <span class="relative block w-[14px] h-[14px] shrink-0">
+                <img class="absolute inset-0 block size-full max-w-none object-contain opacity-95" src="./assets/icons/settings.svg" alt="" />
+              </span>
+              项目损失管理
+            </div>
+          </div>
+
+          <div class="menu-item mt-1">
+            <img class="w-[14px] h-[14px] shrink-0" src="./assets/icons/more.svg" alt="" />
+            报价单
+          </div>
+        </div>
+
+        <div class="p-2 border-t border-n05 flex items-center justify-between shrink-0">
+          <button type="button" class="w-6 h-6 p-0 flex items-center justify-center text-n11 hover:text-n19 rounded hover:bg-special01" aria-label="布局">
+            <span class="relative block size-[14px] shrink-0">
+              <span class="pointer-events-none absolute inset-[12.5%_8.35%_12.51%_8.33%]">
+                <img class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" alt="" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="w-6 h-6 p-0 flex items-center justify-center text-n11 hover:text-n19 rounded hover:bg-special01" aria-label="收起">
+            <span class="relative block size-[14px] shrink-0">
+              <span class="pointer-events-none absolute inset-[19.52%_18.75%_19.5%_18.73%]">
+                <img class="absolute block size-full max-w-none object-contain" src="./assets/icons/chevron-left.svg" alt="" />
+              </span>
+            </span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- 主列表区 Figma 1:16759 · shadcn data-slot + Figma MCP 图标 -->
+      <main class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden p-3" data-module="mod-main-canvas">
+        <div class="main-ue-canvas flex flex-col flex-1 min-h-0 rounded-lg overflow-hidden bg-white" data-module="mod-list-card" data-slot="card">
+
+          <!-- 标题行 · Button｜按钮（W） -->
+          <div class="flex items-center justify-between gap-3 px-3 pt-3 pb-2 shrink-0" data-module="mod-list-title">
+            <div class="flex items-center min-w-0 gap-2 px-2">
+              <span class="text-15 font-medium text-n19 leading-6 shrink-0">客户</span>
+              <span class="w-px h-3 bg-n11 rounded-[1px] shrink-0" aria-hidden="true"></span>
+              <button type="button" data-slot="button" data-variant="ghost" data-size="sm" class="!px-1 gap-1 text-15 text-n19 font-normal !h-auto py-0">
+                <span class="truncate leading-6">全部客户</span>
+                <span class="relative block size-[10px] shrink-0">
+                  <span class="pointer-events-none absolute inset-[28.13%_6.31%_26.32%_6.29%]">
+                    <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                  </span>
+                </span>
+              </button>
+            </div>
+            <div class="flex items-center gap-2 shrink-0" data-module="mod-list-title-actions">
+              <button type="button" data-slot="button" data-variant="default" data-size="sm">新建</button>
+              <button type="button" data-slot="button" data-variant="secondary" data-size="sm">智能表单</button>
+              <button type="button" data-slot="button" data-variant="secondary" data-size="sm">导入</button>
+              <button type="button" data-slot="button" data-variant="secondary" data-size="icon-sm" class="!bg-special01 !border-transparent hover:!bg-[#e8ecf5]" aria-label="更多">
+                <span class="relative block size-[13px] shrink-0">
+                  <img alt="" class="absolute inset-0 block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 筛选 · Input｜搜索框（W） · Radiobutton｜视图切换（W） -->
+          <div class="flex flex-wrap items-center justify-between gap-3 px-3 py-2 shrink-0" data-module="mod-list-toolbar">
+            <div class="flex flex-wrap items-center gap-3 min-w-0 flex-1">
+              <button type="button" data-slot="button" data-variant="outline" data-size="sm">筛选</button>
+              <div class="flex h-7 min-w-[200px] flex-1 max-w-[299px] items-stretch rounded-md border border-n07 bg-white shadow-sm overflow-hidden" data-name="Input | 搜索框（W）" data-node-id="14141:20638">
+                <div class="flex max-w-[120px] shrink-0 items-center gap-1 border-r border-n07 px-2">
+                  <span class="text-14 text-n19 leading-5 truncate">全部</span>
+                  <span class="relative block size-3 shrink-0">
+                    <span class="pointer-events-none absolute inset-[28.13%_6.31%_26.32%_6.29%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/chevron-right.svg" />
+                    </span>
+                  </span>
+                </div>
+                <img src="./assets/icons/chevron-right.svg" alt="" class="h-7 w-px shrink-0 object-cover" />
+                <div class="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5">
+                  <input type="search" placeholder="搜索" class="min-w-0 flex-1 border-0 bg-transparent text-14 text-n19 placeholder:text-n07 outline-none leading-5" />
+                  <span class="relative h-[14px] w-3 shrink-0">
+                    <span class="pointer-events-none absolute inset-[4.17%_5.03%_5.03%_4.17%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-0 shrink-0">
+              <div data-slot="toggle-group" role="group" aria-label="视图切换">
+                <button type="button" data-slot="toggle-group-item" data-state="on" aria-label="列表视图">
+                  <span class="relative block size-4 shrink-0">
+                    <span class="pointer-events-none absolute inset-[14.37%_4.17%_14.79%_4.17%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                    </span>
+                  </span>
+                </button>
+                <button type="button" data-slot="toggle-group-item" data-state="off" aria-label="地图视图">
+                  <span class="relative block size-4 shrink-0">
+                    <span class="pointer-events-none absolute inset-[2.08%_11.46%_4.02%_11.46%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                    </span>
+                  </span>
+                </button>
+                <button type="button" data-slot="toggle-group-item" data-state="off" aria-label="阶段视图">
+                  <span class="relative block size-4 shrink-0">
+                    <span class="pointer-events-none absolute inset-[8.33%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                    </span>
+                  </span>
+                </button>
+                <button type="button" data-slot="toggle-group-item" data-state="off" aria-label="分屏视图">
+                  <span class="relative block size-4 shrink-0">
+                    <span class="pointer-events-none absolute inset-[12.5%_4.17%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                    </span>
+                  </span>
+                </button>
+                <button type="button" data-slot="toggle-group-item" data-state="off" aria-label="日历视图">
+                  <span class="relative block size-4 shrink-0">
+                    <span class="pointer-events-none absolute inset-[4.17%_6.25%_8.33%_6.25%]">
+                      <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                    </span>
+                  </span>
+                </button>
+              </div>
+              <button type="button" data-slot="button" data-size="icon-28" aria-label="设置">
+                <span class="relative block size-[14px] shrink-0">
+                  <span class="pointer-events-none absolute inset-[8.33%_2.72%]">
+                    <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                  </span>
+                </span>
+              </button>
+              <button type="button" data-slot="button" data-size="icon-28" aria-label="刷新">
+                <span class="relative block size-[14px] shrink-0">
+                  <span class="pointer-events-none absolute inset-[8.33%]">
+                    <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/refresh.svg" />
+                  </span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table｜表格(W) · Checkbox｜多选框 · Tag｜基础标签 -->
+          <div class="flex-1 min-h-0 overflow-auto px-3" data-module="mod-list-table-wrap">
+            <table data-slot="table" class="text-n19" data-module="mod-list-table">
+              <thead class="sticky top-0 z-[1] bg-white">
+                <tr class="border-b border-n05">
+                  <th class="w-10 py-[9px] pl-1 pr-2 text-left align-middle">
+                    <div class="flex items-center justify-center">
+                      <input type="checkbox" data-slot="checkbox" aria-label="全选" />
+                    </div>
+                  </th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle">客户名称</th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle">负责人</th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle">客户级别</th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle">负责人部门</th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle min-w-[200px]">产品名称</th>
+                  <th class="py-[9px] px-2 text-right font-bold align-middle whitespace-nowrap w-[112px]">金额(元)</th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle whitespace-nowrap w-[112px]">最后修改时间</th>
+                  <th class="py-[9px] px-2 text-left font-bold align-middle whitespace-nowrap w-[72px]">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">三门峡嘉浩咨询有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span data-slot="badge" data-variant="vip">VIP客户</span></td>
+                  <td class="py-[9px] px-2 align-middle">销售部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="罗技 (G) G604 LIGHTSPEED 无线游戏鼠标 16000DPI">罗技 (G) G604 LIGHTSPEED 无线游戏鼠标 16000DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">1,530.17</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-17</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">郑州云腾信息技术有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span data-slot="badge" data-variant="success">重要客户</span></td>
+                  <td class="py-[9px] px-2 align-middle">市场部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="Razer DeathAdder V2 无线游戏鼠标 20000DPI">Razer DeathAdder V2 无线游戏鼠标 20000DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">1,634.25</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-18</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">洛阳金桥工程咨询有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span class="text-n11">--</span></td>
+                  <td class="py-[9px] px-2 align-middle">研发部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="Corsair Dark Core RGB SE 无线游戏鼠标 18000DPI">Corsair Dark Core RGB SE 无线游戏鼠标 18000DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">1,745.89</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-19</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">南阳华瑞财务管理有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span data-slot="badge" data-variant="outline">一般客户</span></td>
+                  <td class="py-[9px] px-2 align-middle">人事部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="华硕 ROG Gladius III 有线游戏鼠标 26000DPI">华硕 ROG Gladius III 有线游戏鼠标 26000DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">1,862.47</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-20</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">焦作市智联科技有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span class="text-n11">--</span></td>
+                  <td class="py-[9px] px-2 align-middle">财务部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="HyperX Pulsefire Haste 无线游戏鼠标 16000DPI">HyperX Pulsefire Haste 无线游戏鼠标 16000DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">1,980.00</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-21</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">平顶山英才培训机构</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span data-slot="badge" data-variant="outline">一般客户</span></td>
+                  <td class="py-[9px] px-2 align-middle">客服部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="SteelSeries Rival 3 无线游戏鼠标 8500DPI">SteelSeries Rival 3 无线游戏鼠标 8500DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">2,101.56</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-22</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">新乡市创业投资有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span data-slot="badge" data-variant="success">重要客户</span></td>
+                  <td class="py-[9px] px-2 align-middle">IT部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="Cooler Master MM831 无线游戏鼠标 16000DPI">Cooler Master MM831 无线游戏鼠标 16000DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">2,224.19</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-23</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+                <tr class="border-b border-row-line hover:bg-[rgba(24,28,37,0.03)]">
+                  <td class="py-[9px] pl-1 pr-2 align-middle"><input type="checkbox" data-slot="checkbox" aria-label="选择行" /></td>
+                  <td class="py-[9px] px-2 align-middle"><a href="#" class="text-link hover:underline">信阳瑞丰文化传播有限公司</a></td>
+                  <td class="py-[9px] px-2 align-middle">
+                    <div class="flex items-center gap-2">
+                      <span data-slot="avatar">
+                        <img data-slot="avatar-image" src="./assets/figma/dcb2e168-3755-49d0-84b2-52c932fd507b.png" width="20" height="20" alt="" />
+                      </span>
+                      <span>文本</span>
+                    </div>
+                  </td>
+                  <td class="py-[9px] px-2 align-middle"><span data-slot="badge" data-variant="success">重要客户</span></td>
+                  <td class="py-[9px] px-2 align-middle">法务部</td>
+                  <td class="py-[9px] px-2 align-middle text-n15 max-w-[260px] truncate" title="Logitech G Pro X Superlight 无线游戏鼠标 25600DPI">Logitech G Pro X Superlight 无线游戏鼠标 25600DPI</td>
+                  <td class="py-[9px] px-2 align-middle text-right text-12 text-n19">2,349.99</td>
+                  <td class="py-[9px] px-2 align-middle">2023-12-24</td>
+                  <td class="py-[9px] px-2 align-middle whitespace-nowrap">
+                    <button type="button" data-slot="button" data-variant="link" class="mr-2">查看</button>
+                    <button type="button" data-slot="button" data-variant="link">编辑</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Scrollbar | 滚动条（W） -->
+          <div class="bg-white border-b border-row-line flex items-center pl-1 pr-[100px] py-[3px] shrink-0" data-module="mod-list-scrollbar">
+            <div class="h-[6px] flex-1 rounded-[4px] bg-n07 opacity-90"></div>
+          </div>
+
+          <!-- 分页器 · Figma 图标 -->
+          <div class="flex h-10 items-center justify-end gap-2 px-3 shrink-0 bg-white" data-module="mod-list-pagination">
+            <div class="inline-flex items-center gap-1 rounded px-1 py-0.5 text-12 text-n19">
+              <span>2/20</span>
+              <span class="relative block size-3 shrink-0">
+                <span class="pointer-events-none absolute inset-[28.13%_6.31%_26.32%_6.29%]">
+                  <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                </span>
+              </span>
+            </div>
+            <button type="button" class="flex items-center justify-center rounded-md border border-n05 p-1.5 opacity-40 cursor-not-allowed" disabled aria-label="上一页">
+              <span class="relative block size-3 shrink-0">
+                <span class="pointer-events-none absolute inset-[6.31%_37.78%_6.29%_16.67%]">
+                  <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                </span>
+              </span>
+            </button>
+            <button type="button" class="flex items-center justify-center rounded-md border border-n05 bg-white p-1.5 hover:bg-special01" aria-label="下一页">
+              <span class="relative block size-3 shrink-0">
+                <span class="pointer-events-none absolute inset-[6.31%_16.7%_6.29%_37.75%]">
+                  <img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/more.svg" />
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

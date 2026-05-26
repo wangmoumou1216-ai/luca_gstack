@@ -1,0 +1,193 @@
+version: 1
+principle: "Skill-first, Graph-optional"
+
+skills:
+  auto:
+    modes:
+      standalone:
+        required: ["natural_language_requirement"]
+        optional: ["scene", "existing_artifacts"]
+      workflow:
+        required: []
+        optional: ["topic", "scene"]
+    quality_gates: ["skill_pipeline_complete", "artifacts_produced"]
+
+  magicpath:
+    modes:
+      standalone:
+        required: ["ui_requirement"]
+        optional: ["design_brief_artifact", "brand_tokens"]
+      workflow:
+        required: ["design_brief_artifact"]
+        optional: ["ux_brainstorm_artifact"]
+    quality_gates: ["design_generation_packet", "tool_consumption_contract", "component_mapping", "state_coverage", "no_packet_fact_drift", "component_rendered", "react_canvas_valid"]
+
+  idea:
+    modes:
+      standalone:
+        required: ["user_raw_idea"]
+        optional: ["screenshots", "notes"]
+      workflow:
+        required: []
+        optional: ["current_topic", "scene"]
+    quality_gates: ["structured_need_list", "scene_capture"]
+
+  deepresearch:
+    modes:
+      standalone:
+        required: ["research_topic"]
+        optional: ["scope_constraints"]
+      workflow:
+        required: []
+        optional: ["idea_artifact", "prd_artifact"]
+    quality_gates: ["source_traceability", "search_log", "consensus_matrix"]
+
+  brainstorm:
+    modes:
+      standalone:
+        required: ["idea_or_problem_statement"]
+        optional: ["deepresearch_report", "idea_artifact"]
+      workflow:
+        required: []
+        optional: ["deepresearch_report", "idea_artifact"]
+    quality_gates: ["socratic_questions", "oracle_review", "stable_ids", "research_claim_coverage", "prd_destination_matrix", "no_unmapped_high_confidence_claims", "handoff_gate"]
+
+  superpowers-brainstorming:
+    source: "superpowers plugin"
+    invoke: "Skill tool → superpowers:brainstorming"
+    modes:
+      standalone:
+        required: ["idea_or_problem_statement"]
+        optional: ["idea_artifact", "deepresearch_report"]
+      workflow:
+        required: []
+        optional: ["idea_artifact"]
+    quality_gates: ["design_doc_written", "user_approved_design"]
+    notes: "/brainstorm 的轻量替代。不含 subagent、Oracle、AI Native 评估。适用场景 A/B。"
+
+  ux-research:
+    modes:
+      standalone:
+        required: ["design_question"]
+        optional: ["prd_artifact", "screenshots"]
+      workflow:
+        required: []
+        optional: ["prd_artifact", "brainstorm_output"]
+    quality_gates: ["human_research_plan_gate", "source_traceability", "consensus_matrix", "research_only"]
+
+  ux-brainstorm:
+    modes:
+      standalone:
+        required: ["design_problem_or_idea"]
+        optional: ["ux_research_report", "screenshots"]
+      workflow:
+        required: []
+        optional: ["ux_research_report", "prd_artifact"]
+    quality_gates: ["seven_ux_questions", "oracle_review", "stable_design_ids", "interaction_architecture"]
+
+  design-brief:
+    modes:
+      standalone:
+        required: ["design_input"]
+        optional: ["prd_artifact", "ux_research_report", "ux_audit_report", "ux_brainstorm_artifact", "pasted_solution"]
+      workflow:
+        required: ["prd_artifact"]
+        optional: ["ux_research_report", "ux_audit_report", "ux_brainstorm_artifact"]
+    modes_detail:
+      traceable_delivery:
+        required: ["prd_artifact"]
+        note: "Required when output will feed html-prototype, tech-spec, task-plan, or development."
+      standalone_light:
+        required: ["design_input"]
+        note: "May omit PRD, but must not claim end-to-end traceable delivery."
+    quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "component_mapping", "prototype_carrier_confirmation", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract"]
+
+  html-prototype:
+    modes:
+      standalone:
+        required: ["prototype_brief"]
+        optional: ["design_brief", "ux_audit_report", "screenshots", "figma_demo_blueprint"]
+      workflow:
+        required: []
+        optional: ["design_brief", "ux_audit_report", "prd_artifact"]
+    source_kinds: ["design_brief", "ux_audit", "screenshot_delta", "figma_demo_blueprint", "standalone_brief", "standalone_mobile_prototype"]
+    quality_gates: ["step0_cognitive_gate", "framework_contract", "design_system_contract", "design_generation_packet_gate", "prototype_carrier_respected", "decision_mapping_coverage", "state_mapping_coverage", "dynamic_reference_when_triggered", "prototype_qa"]
+
+  figma-demo:
+    modes:
+      standalone:
+        required: ["spoken_or_written_flow"]
+        optional: ["figma_link", "figma_screenshot"]
+      workflow:
+        required: []
+        optional: ["design_brief", "prototype_context"]
+    quality_gates: ["mapping_verification", "blueprint_schema", "builder_isolation", "assembly_no_new_design"]
+
+  figma-layer:
+    modes:
+      standalone:
+        required: ["index_html", "prototype_spec"]
+        optional: ["blueprint_yaml", "design_brief"]
+      workflow:
+        required: []
+        optional: ["html_prototype_output", "figma_demo_output"]
+    source_kinds: ["html-prototype", "figma-demo"]
+    quality_gates: ["read_actual_html", "figma_mcp_required", "source_specific_component_inventory"]
+
+  tech-spec:
+    modes:
+      standalone:
+        required: ["design_brief_handoff", "prd_artifact"]
+        optional: ["ai_spec_artifact"]
+      workflow:
+        required: ["prd_artifact", "design_brief_handoff"]
+        optional: ["prd_handoff"]
+    quality_gates: ["conflict_register", "architecture_view", "interface_contracts", "traceability_matrix", "design_mapping_coverage", "coverage_gate"]
+    output_path: "docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md"
+    handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md"
+
+  task-plan:
+    modes:
+      standalone:
+        required: ["tech_spec_handoff", "design_brief_handoff"]
+        optional: []
+      workflow:
+        required: ["tech_spec_handoff", "design_brief_handoff"]
+        optional: []
+    quality_gates: ["l0_index", "l1_source_index", "l2_node_index", "assertion_matrix", "task_cards", "design_decision_coverage", "state_coverage", "coverage_gate"]
+    output_path: "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md"
+    handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
+
+governance_tools:
+  ux-audit:
+    modes:
+      standalone:
+        required: ["screenshot_or_page_reference"]
+        optional: ["business_context"]
+      workflow:
+        required: []
+        optional: ["prototype_output", "current_page_context"]
+  redteam:
+    modes:
+      standalone:
+        required: ["target_artifacts_or_problem"]
+        optional: ["docs_context"]
+      workflow:
+        required: []
+        optional: ["docs_artifacts", "observability_recent"]
+  evals:
+    modes:
+      standalone:
+        required: ["target_artifacts"]
+        optional: ["workflow_state"]
+      workflow:
+        required: []
+        optional: ["workflow_state", "observability_recent"]
+  retro:
+    modes:
+      standalone:
+        required: ["completed_decision_or_project"]
+        optional: ["review_artifacts"]
+      workflow:
+        required: []
+        optional: ["design_brief", "handoff_review", "ux_audit"]

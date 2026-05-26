@@ -1,0 +1,32 @@
+version: 1
+rules:
+- id: R-20260522-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: [office]
+    scenes: [*]
+  rule: "office: CLAUDE.md 路由表与 SKILL.md Step 3 列表必须保持一致，任一变更须同步另一处"
+  source_observations:
+    - O-20260522-001
+- id: R-20260523-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: [office, idea, ux-audit, brainstorm]
+    scenes: [*]
+  rule: "office/route: 项目上下文门禁优先于场景B功能优化路由；“老项目/已有项目/继续项目”先确认或切换项目，再决定 skill。"
+  source_observations:
+    - O-20260523-001
+- id: R-20260525-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: [html-prototype]
+    scenes: [*]
+  rule: "html-prototype: 母版选择必须作为显式询问项；未获确认前不得把 framework/list-page.html 写成强制约束。"
+  source_observations:
+    - O-20260525-001

@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-yaml:
+    name: Validate YAML Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Lint YAML files
+        run: |
+          yamllint -d relaxed .claude/workflow-state.yaml
+          yamllint -d relaxed .claude/skill-os/optional-workflow-graph.yaml
+          yamllint -d relaxed .claude/skill-os/input-modes.yaml
+
+  validate-markdown:
+    name: Validate Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+      - name: Lint docs
+        run: markdownlint README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md --ignore node_modules
+
+  validate-skills:
+    name: Validate Skill Definitions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check all skills have SKILL.md
+        run: bash scripts/validate-skills.sh
+
+  validate-html:
+    name: Validate HTML Prototypes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check framework HTML files exist
+        run: |
+          for f in framework/list-page.html framework/detail-page-2col.html \
+                   framework/detail-page-3col.html framework/form-page.html \
+                   framework/home-page.html; do
+            [ -f "$f" ] || (echo "MISSING: $f" && exit 1)
+          done
+          echo "All framework HTML files present ✓"
+      - name: Validate HTML syntax
+        run: |
+          npm install -g html-validate
+          for f in framework/*.html; do
+            html-validate "$f" && echo "✓ $f" || echo "⚠ $f (warning only)"
+          done
+          # docs/prototype 中的原型（如有）也做检查
+          if ls docs/prototype/*.html 2>/dev/null | head -1 | grep -q .; then
+            for f in docs/prototype/*.html; do
+              html-validate "$f" && echo "✓ $f" || echo "⚠ $f (warning only)"
+            done
+          fi

@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>详情页_双列 - CRM</title>
+  <script src="./assets/vendor/tailwindcss.com.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background:  'hsl(var(--background))',
+            foreground:  'hsl(var(--foreground))',
+            card:        { DEFAULT: 'hsl(var(--card))',        foreground: 'hsl(var(--card-foreground))' },
+            popover:     { DEFAULT: 'hsl(var(--popover))',     foreground: 'hsl(var(--popover-foreground))' },
+            primary:     { DEFAULT: 'hsl(var(--primary))',     foreground: 'hsl(var(--primary-foreground))' },
+            secondary:   { DEFAULT: 'hsl(var(--secondary))',   foreground: 'hsl(var(--secondary-foreground))' },
+            muted:       { DEFAULT: 'hsl(var(--muted))',       foreground: 'hsl(var(--muted-foreground))' },
+            accent:      { DEFAULT: 'hsl(var(--accent))',      foreground: 'hsl(var(--accent-foreground))' },
+            destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+            border:      'hsl(var(--border))',
+            input:       'hsl(var(--input))',
+            ring:        'hsl(var(--ring))',
+            'page-bg':   'hsl(var(--page-bg))',
+            info:        { DEFAULT: 'hsl(var(--info))',    foreground: 'hsl(var(--info-foreground))' },
+            success:     { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
+            warning:     { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
+          },
+          borderRadius: {
+            lg:   'var(--radius)',
+            md:   'calc(var(--radius) - 2px)',
+            sm:   'calc(var(--radius) - 4px)',
+            full: '9999px',
+          },
+          fontSize: {
+            '11': ['11px', '14px'],
+            '12': ['12px', '18px'],
+            '13': ['13px', '18px'],
+            '14': ['14px', '20px'],
+            '15': ['15px', '24px'],
+            '18': ['18px', '28px'],
+          },
+          ringOffsetColor: { background: 'hsl(var(--background))' },
+        },
+      },
+    };
+  </script>
+  <style>
+  /* ── shadcn CSS Variables (HSL, unified v3.0) ── */
+  :root {
+    --background:             0 0% 100%;
+    --foreground:             222.2 84% 4.9%;
+    --card:                   0 0% 100%;
+    --card-foreground:        222.2 84% 4.9%;
+    --popover:                0 0% 100%;
+    --popover-foreground:     222.2 84% 4.9%;
+    --primary:                30 100% 50%;           /* #FF8000 品牌主色 */
+    --primary-foreground:     0 0% 100%;
+    --secondary:              210 40% 96.1%;
+    --secondary-foreground:   222.2 47.4% 11.2%;
+    --muted:                  210 40% 96.1%;
+    --muted-foreground:       215.4 16.3% 46.9%;
+    --accent:                 37 100% 94%;           /* #FFF7E6 */
+    --accent-foreground:      30 100% 50%;
+    --destructive:            353 100% 64%;          /* #ff4a66 */
+    --destructive-foreground: 0 0% 100%;
+    --border:                 220 13% 88%;
+    --input:                  220 13% 88%;
+    --ring:                   30 100% 50%;
+    --radius:                 0.375rem;
+    --page-bg:                220 14% 94%;
+    --info:                   207 100% 55%;
+    --info-foreground:        0 0% 100%;
+    --success:                90 57% 51%;
+    --success-foreground:     0 0% 100%;
+    --warning:                24 100% 55%;
+    --warning-foreground:     0 0% 100%;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Source Han Sans CN', 'PingFang SC', system-ui, sans-serif; }
+
+    main.main-ue-canvas { box-shadow: 0 0 12px 0 rgba(0, 0, 0, 0.15); }
+
+    /* 标题条：去掉白底与分割线 */
+    main.main-ue-canvas > section[data-module="mod-title-component"] {
+      box-sizing: border-box;
+      background-color: transparent;
+      border-bottom: none;
+    }
+
+    [data-module="mod-channel-apps"] img.channel-app-icon--neutral {
+      filter: grayscale(1) brightness(0.42) contrast(1.08);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c1c5ce; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #91959e; }
+
+    [data-module="mod-top-nav-tools"] button {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; padding: 0; flex-shrink: 0;
+    }
+
+    /* ── shadcn Switch ── */
+    [data-slot="switch"] {
+      display: inline-flex; height: 20px; width: 36px; flex-shrink: 0;
+      cursor: pointer; align-items: center; border-radius: 9999px;
+      border: 2px solid transparent; transition: all 150ms; outline: none;
+    }
+    [data-slot="switch"][data-state="unchecked"] { background-color: #dee1e8; }
+    [data-slot="switch"][data-state="checked"]   { background-color: #ff8000; }
+    [data-slot="switch-thumb"] {
+      pointer-events: none; display: block; height: 16px; width: 16px;
+      border-radius: 9999px; background-color: white;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); transition: transform 150ms;
+    }
+    [data-slot="switch"][data-state="unchecked"] [data-slot="switch-thumb"] { transform: translateX(0); }
+    [data-slot="switch"][data-state="checked"]   [data-slot="switch-thumb"] { transform: translateX(16px); }
+    [data-slot="switch"][data-size="sm"] {
+      height: 12px; width: 22px; border-radius: 16px; padding: 1px; border: none;
+    }
+    [data-slot="switch"][data-size="sm"][data-state="unchecked"] { background-color: #c1c5ce; }
+    [data-slot="switch"][data-size="sm"] [data-slot="switch-thumb"] {
+      height: 10px; width: 10px; border-radius: 32px;
+      box-shadow: 0 2px 4px rgba(0, 35, 11, 0.2);
+    }
+    [data-slot="switch"][data-size="sm"][data-state="unchecked"] [data-slot="switch-thumb"] { transform: translateX(0); }
+    [data-slot="switch"][data-size="sm"][data-state="checked"]   [data-slot="switch-thumb"] { transform: translateX(10px); }
+
+    /* ── shadcn Card ── */
+    [data-slot="card"] {
+      border-radius: 0.5rem; border: 1px solid #dee1e8;
+      background: #ffffff; color: #181c25;
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+
+    /* ── shadcn Button ── */
+    [data-slot="button"] {
+      display: inline-flex; flex-shrink: 0; align-items: center;
+      justify-content: center; gap: 0.5rem; white-space: nowrap;
+      border-radius: 0.375rem; font-weight: 500; cursor: pointer;
+      transition: color 150ms, background-color 150ms, border-color 150ms;
+      outline: none; border: 1px solid transparent;
+    }
+    [data-slot="button"] svg { pointer-events: none; flex-shrink: 0; }
+    [data-slot="button"] img { flex-shrink: 0; }
+    [data-slot="button"][data-variant="default"]  { background-color: #ff8000; color: #fff; border-color: transparent; }
+    [data-slot="button"][data-variant="default"]:hover { background-color: rgba(255,128,0,0.92); }
+    [data-slot="button"][data-variant="outline"]  { background-color: #fff; color: #181c25; border-color: #c1c5ce; box-shadow: 0 1px 2px 0 rgb(0 0 0/0.05); }
+    [data-slot="button"][data-variant="outline"]:hover { background-color: #f7f8fa; }
+    [data-slot="button"][data-variant="ghost"]    { background-color: transparent; color: #737c8c; border-color: transparent; box-shadow: none; }
+    [data-slot="button"][data-variant="ghost"]:hover  { background-color: rgba(24,28,37,0.05); color: #181c25; }
+    [data-slot="button"][data-size="sm"]      { height: 1.75rem; padding-left: 0.625rem; padding-right: 0.625rem; font-size: 13px; line-height: 18px; gap: 0.25rem; }
+    [data-slot="button"][data-size="icon-sm"] { width: 1.75rem; height: 1.75rem; padding: 0; }
+    [data-slot="button"][data-size="icon-round"] {
+      width: 2rem; height: 2rem; padding: 0; border-radius: 9999px;
+      border-color: #eef0f3; background: #fff; box-shadow: none;
+    }
+    [data-slot="button"][data-size="icon-round"] svg { width: 14px; height: 14px; flex-shrink: 0; }
+    [data-slot="button"][data-size="icon-24"] {
+      width: 24px; height: 24px; border-radius: 4px; border: none;
+      background: transparent; padding: 5px;
+    }
+    [data-slot="button"][data-size="icon-24"]:hover { background: #f7f8fa; }
+    .pager-icon-slot {
+      width: 12px;
+      height: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      line-height: 0;
+    }
+
+    /* ── shadcn Tabs ── */
+    [data-slot="tabs-list"] {
+      display: inline-flex; height: 36px; align-items: center;
+      border-bottom: 1px solid #dee1e8;
+    }
+    [data-slot="tabs-trigger"] {
+      display: inline-flex; align-items: center; justify-content: center;
+      white-space: nowrap; padding: 8px 8px; font-size: 13px; font-weight: 500;
+      line-height: 18px; color: #545861; background: transparent; border: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      cursor: pointer; transition: all 150ms; outline: none;
+    }
+    [data-slot="tabs-trigger"]:hover { color: #181c25; }
+    [data-slot="tabs-trigger"][data-state="active"] { color: #ff8000; border-bottom-color: #ff8000; }
+
+    /* ── shadcn Toggle Group ── */
+    [data-slot="toggle-group"] { display: inline-flex; align-items: center; border-radius: 6px; box-shadow: 0 1px 2px 0 rgb(0 0 0/0.05); }
+    [data-slot="toggle-group-item"] {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 28px; width: 28px; background: white;
+      border: 1px solid #c1c5ce; cursor: pointer; transition: all 150ms; outline: none;
+    }
+    [data-slot="toggle-group-item"]:first-child { border-radius: 6px 0 0 6px; }
+    [data-slot="toggle-group-item"]:last-child  { border-radius: 0 6px 6px 0; border-left: 0; }
+    [data-slot="toggle-group-item"]:hover { background: #f2f4fb; }
+    [data-slot="toggle-group-item"][data-state="on"] { background: #fff7e6; }
+
+    /* ── shadcn Collapsible ── */
+    [data-slot="collapsible-trigger"] {
+      display: flex; align-items: center; gap: 4px; width: 100%;
+      padding: 2px 4px; background: transparent; border: none;
+      border-radius: 4px; cursor: pointer; transition: background 150ms; outline: none;
+    }
+    [data-slot="collapsible-trigger"]:hover { background: #f2f4fb; }
+    [data-slot="collapsible-trigger"] .collapsible-chevron-wrap {
+      display: inline-flex;
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      background: #eef0f3;
+      transition: transform 200ms;
+    }
+    [data-slot="collapsible"][data-state="open"] [data-slot="collapsible-trigger"] .collapsible-chevron-wrap { transform: rotate(90deg); }
+
+    /* Figma 导出位图：固定槽位 + object-fit，避免 flex 子项 min-width / max-% 导致拉伸变形 */
+    .icon-figma-slot {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+    }
+    .icon-figma-slot--12 { width: 12px; height: 12px; }
+    .icon-figma-slot--14 { width: 14px; height: 14px; }
+    .icon-figma-slot img {
+      display: block;
+      flex-shrink: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    [data-slot="collapsible-content"] { overflow: hidden; }
+    [data-slot="collapsible"][data-state="closed"] [data-slot="collapsible-content"] { display: none; }
+
+    /* ── Field Separator ── */
+    .field-separator {
+      display: flex; align-items: center; height: 0;
+    }
+    .field-separator::before {
+      content: ''; width: 89px; border-bottom: 1px solid #dee1e8; flex-shrink: 0;
+    }
+    .field-separator::after {
+      content: ''; flex: 1; border-bottom: 1px solid #dee1e8;
+    }
+
+    /* 动态时间轴竖线：2px + rgba(242,244,251,1) */
+    .timeline-vline {
+      width: 2px;
+      flex-shrink: 0;
+      align-self: center;
+      flex: 1 1 auto;
+      min-height: 8px;
+      background-color: #f2f4fb;
+      border-radius: 0;
+    }
+    .timeline-vline.timeline-vline--stub {
+      flex: 0 0 auto;
+      min-height: 0;
+    }
+  
+    /* Keep local icons from stretching in flex/grid layouts */
+    img[src*="./assets/icons/"] {
+      object-fit: contain;
+      object-position: center;
+      flex-shrink: 0;
+    }
+
+    /* n-scale utilities */
+    .text-n19 { color: #181c25; }
+    .text-n11 { color: #91959e; }
+    .text-n07 { color: #c1c5ce; }
+    .bg-n05   { background-color: #dee1e8; }
+    .bg-n02   { background-color: #f8f9fb; }
+    .ring-n05 { --tw-ring-color: #dee1e8; }
+    .border-n05 { border-color: #dee1e8; }
+</style>
+</head>
+<body class="h-screen bg-page-bg overflow-hidden">
+  <div class="flex flex-col h-full" data-module="page-root">
+
+    <!-- TOP NAV (48px) -->
+    <header class="h-12 bg-page-bg flex items-center justify-between px-3 shrink-0" data-module="mod-top-nav">
+      <div class="flex items-center gap-2" data-module="mod-top-nav-brand">
+        <div class="h-5 w-[18.006px] relative shrink-0 overflow-hidden" aria-hidden="true">
+          <img alt="" class="absolute block max-w-none object-contain pointer-events-none" src="./assets/icons/enterprise.svg" style="inset:12.12% 0 0 0;">
+        </div>
+        <span class="text-14 text-n19">北京易动纷享科技有限责任公司</span>
+      </div>
+
+      <div class="flex items-center gap-2" data-module="mod-top-nav-global">
+        <div class="flex items-center bg-[rgba(24,28,37,0.05)] rounded-[6px] overflow-hidden w-[290px]" data-module="mod-top-nav-search">
+          <div class="flex items-center gap-2 px-2 py-[5px] shrink-0">
+            <span class="text-13 text-n19 leading-[18px]">全部</span>
+            <svg class="w-[10px] h-[10px] shrink-0 text-n19" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="w-px h-[14px] bg-n05 shrink-0"></div>
+          <div class="flex items-center gap-2 px-2 py-[5px] flex-1">
+            <span class="text-13 text-n11 leading-[18px] flex-1">搜索</span>
+            <span class="relative h-[14px] w-[14px] shrink-0">
+              <img alt="" class="absolute inset-0 block size-full max-w-none object-contain" src="./assets/icons/search.svg">
+            </span>
+          </div>
+        </div>
+
+        <div class="flex h-12 items-center gap-[10px] shrink-0" data-module="mod-top-nav-tools">
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="CRM提醒">
+            <span class="relative block h-[18px] w-[18px] shrink-0"><span class="pointer-events-none absolute inset-[0_9.38%_0_9.38%]"><img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/bell.svg"></span></span>
+          </button>
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="待办">
+            <span class="relative block h-[18px] w-[18px] shrink-0"><span class="pointer-events-none absolute inset-[3.13%_0.92%_3.12%_3.13%]"><img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/todo.svg"></span></span>
+          </button>
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="草稿箱">
+            <span class="relative block h-[18px] w-[18px] shrink-0"><span class="pointer-events-none absolute inset-[6.25%]"><img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/draft.svg"></span></span>
+          </button>
+          <button type="button" class="rounded-[8px] hover:bg-[rgba(24,28,37,0.05)]" aria-label="帮助">
+            <span class="relative block h-[18px] w-[18px] shrink-0"><span class="pointer-events-none absolute inset-[2.08%]"><img alt="" class="absolute block size-full max-w-none object-contain" src="./assets/icons/help.svg"></span></span>
+          </button>
+        </div>
+
+        <div class="flex h-3 w-0 items-center justify-center shrink-0">
+          <div class="flex-none rotate-90"><img src="./assets/icons/chevron-right.svg" width="12" height="1" alt="" class="block max-w-none"></div>
+        </div>
+        <button type="button" data-module="mod-top-nav-ai" class="flex items-center gap-1 px-2 py-1 rounded-md border border-white" style="background: linear-gradient(96deg, rgba(49,188,255,0.12) 20%, rgba(150,118,255,0.12) 41%, rgba(190,100,254,0.12) 49%, rgba(225,87,203,0.12) 55%, rgba(239,87,148,0.12) 63%, rgba(253,104,63,0.12) 72%, rgba(254,124,43,0.12) 79%, rgba(255,161,11,0.12) 85%), white;" aria-label="纷享AI">
+          <img class="w-[13px] h-[13px] max-w-none" src="./assets/icons/ai.svg" alt="">
+        </button>
+        <div class="flex h-3 w-0 items-center justify-center shrink-0">
+          <div class="flex-none rotate-90"><img src="./assets/icons/chevron-right.svg" width="12" height="1" alt="" class="block max-w-none"></div>
+        </div>
+        <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-1 ring-n05" data-module="mod-top-nav-avatar">
+          <img src="./assets/icons/users.svg" width="32" height="32" alt="" class="size-full object-cover max-w-none">
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden" data-module="page-body">
+
+      <!-- CHANNEL BAR (64px) -->
+      <aside class="w-16 bg-page-bg flex flex-col items-start justify-between py-3 shrink-0 rounded-tl-xl" data-module="mod-channel-bar">
+        <div class="flex flex-col items-start w-full flex-1 pb-2" data-module="mod-channel-apps">
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg relative"><svg class="shrink-0 text-n19" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg><span class="text-11 text-n19 text-center">企信</span><div class="absolute top-[2px] left-[28px] bg-[#ff522a] text-white text-[10px] font-bold leading-[14px] px-1 h-[14px] min-w-[14px] flex items-center justify-center rounded-lg">1</div></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg"><img class="w-[18px] h-[18px]" src="./assets/icons/todo.svg" alt=""><span class="text-11 text-n19 text-center">待办</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg bg-white"><img class="w-[18px] h-[18px]" src="./assets/icons/crm-fill.svg" alt=""><span class="text-11 text-primary font-bold text-center">CRM</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg"><img class="w-[18px] h-[18px]" src="./assets/icons/work.svg" alt=""><span class="text-11 text-n19 text-center">工作</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg"><img class="w-[18px] h-[18px]" src="./assets/icons/calendar.svg" alt=""><span class="text-11 text-n19 text-center">日程</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg"><img class="w-[18px] h-[18px]" src="./assets/icons/location.svg" alt=""><span class="text-11 text-n19 text-center">考勤</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg"><img class="channel-app-icon--neutral w-[18px] h-[18px]" src="./assets/icons/ai.svg" alt=""><span class="text-11 text-n19 text-center">培训助手</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+          <div class="flex flex-col items-end w-full pl-1 -mb-2"><div class="flex items-center justify-center shrink-0"><div class="w-[6px] h-[6px] -scale-y-100"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div><div class="flex flex-col gap-1 items-center justify-center w-full pr-1 py-2 rounded-l-lg"><img class="w-[18px] h-[18px]" src="./assets/icons/more.svg" alt=""><span class="text-11 text-n19 text-center">更多</span></div><div class="w-[6px] h-[6px] shrink-0"><img class="block size-full max-w-none" src="./assets/icons/pin.svg" alt=""></div></div>
+        </div>
+        <div class="flex flex-col items-start w-full pt-4 pb-6" data-module="mod-channel-bottom-tools">
+          <div class="w-full py-2 flex justify-center"><img class="w-[18px] h-[18px]" src="./assets/icons/clock.svg" alt=""></div>
+          <div class="w-full py-2 flex justify-center"><img class="w-[18px] h-[18px]" src="./assets/icons/users.svg" alt=""></div>
+          <div class="w-full py-2 flex justify-center"><img class="w-[18px] h-[18px]" src="./assets/icons/settings.svg" alt=""></div>
+        </div>
+      </aside>
+
+      <!-- MAIN CANVAS -->
+      <main class="main-ue-canvas flex-1 overflow-hidden flex flex-col" data-module="mod-main-canvas">
+
+        <!-- TITLE SECTION (h-104px) -->
+        <section class="h-[104px] px-3 py-3 shrink-0" data-module="mod-title-component">
+          <div class="h-[80px] flex flex-col justify-between">
+            <!-- Row 1: Badge + Title + Action Buttons -->
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <span data-slot="badge" class="inline-flex items-center px-2 h-5 rounded bg-[#189dff] text-white text-12 font-medium leading-[18px] shrink-0">客户</span>
+                <h1 class="text-18 font-bold text-n19 truncate" style="line-height:28px">深圳市腾讯计算机系统有限公司</h1>
+                <button data-slot="button" data-variant="outline" data-size="icon-sm" class="shrink-0 !bg-transparent !shadow-none">
+                  <img class="w-3 h-3" src="./assets/icons/settings.svg" alt="">
+                </button>
+                <button data-slot="button" data-variant="outline" data-size="icon-sm" class="shrink-0 !bg-transparent !shadow-none">
+                  <img class="w-[13px] h-[13px]" src="./assets/icons/more.svg" alt="">
+                </button>
+                <div class="flex items-center border border-n05 rounded-[6px] overflow-hidden shrink-0">
+                  <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-none hover:bg-[rgba(24,28,37,0.05)]" aria-label="上一条">
+                    <span class="pager-icon-slot" aria-hidden="true">
+                      <svg class="block w-[5.5px] h-[10.5px] text-n19 shrink-0" viewBox="0 0 6 11" fill="none">
+                        <path d="M0.140194 4.85821L0.164803 4.82891L4.38941 0.201179C4.6191 -0.0507745 5.00933 -0.0683527 5.26129 0.161335C5.51324 0.391022 5.53082 0.781257 5.30113 1.03321L1.45387 5.24962L5.30465 9.4543C5.53433 9.70509 5.51793 10.0953 5.26598 10.3262C5.01519 10.5559 4.62496 10.5395 4.3941 10.2875L0.162459 5.6668C-0.0484783 5.43712 -0.0519937 5.09141 0.140194 4.85821Z" fill="currentColor"/>
+                      </svg>
+                    </span>
+                  </button>
+                  <div class="w-px h-6 bg-n05 shrink-0"></div>
+                  <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-none hover:bg-[rgba(24,28,37,0.05)]" aria-label="下一条">
+                    <span class="pager-icon-slot" aria-hidden="true">
+                      <svg class="block w-[5.5px] h-[10.5px] text-n19 shrink-0" viewBox="0 0 6 11" fill="none">
+                        <path d="M5.32632 4.85821L5.30171 4.82891L1.0771 0.201179C0.847416 -0.0507745 0.457182 -0.0683527 0.205229 0.161335C-0.0467242 0.391022 -0.0643023 0.781257 0.165385 1.03321L4.01265 5.24962L0.16187 9.4543C-0.067818 9.70509 -0.0514117 10.0953 0.200541 10.3262C0.451323 10.5559 0.841557 10.5395 1.07242 10.2875L5.30406 5.6668C5.51499 5.43712 5.51851 5.09141 5.32632 4.85821Z" fill="currentColor"/>
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button data-slot="button" data-variant="default" data-size="sm">客群</button>
+                <button data-slot="button" data-variant="outline" data-size="sm">客户画像</button>
+                <button data-slot="button" data-variant="outline" data-size="sm">发起流程</button>
+                <button data-slot="button" data-variant="outline" data-size="icon-sm">
+                  <img class="w-[13px] h-[13px]" src="./assets/icons/settings.svg" alt="">
+                </button>
+                <button data-slot="button" data-variant="ghost" data-size="icon-sm">
+                  <img class="w-3 h-3" src="./assets/icons/refresh.svg" alt="">
+                </button>
+                <button data-slot="button" data-variant="ghost" data-size="icon-sm">
+                  <img class="w-3 h-3" src="./assets/icons/clock.svg" alt="">
+                </button>
+                <button data-slot="button" data-variant="ghost" data-size="icon-sm">
+                  <img class="w-3 h-3" src="./assets/icons/more.svg" alt="">
+                </button>
+              </div>
+            </div>
+            <!-- Row 2: Status info -->
+            <div class="flex items-center gap-2 text-14">
+              <span class="text-[#ff522a]">未成交</span>
+              <span class="w-px h-3 bg-n11"></span>
+              <span class="text-n19">高科技行业</span>
+              <span class="w-px h-3 bg-n11"></span>
+              <span class="text-n19">现代服务</span>
+              <span class="w-px h-3 bg-n11"></span>
+              <span class="text-n19">付费</span>
+            </div>
+            <!-- Row 3: Tags -->
+            <div class="flex items-center gap-1 flex-wrap">
+              <span data-slot="badge" class="h-5 px-2 rounded-[15px] bg-[#fff0f0] border border-[#ffc4c7] text-[#ff4a66] text-12 font-medium inline-flex items-center leading-[18px]">VIP客户</span>
+              <span data-slot="badge" class="h-5 px-2 rounded-[15px] bg-[#fff5e6] border border-[#ffcd94] text-[#ff7c19] text-12 font-medium inline-flex items-center leading-[18px]">数字营销</span>
+              <span data-slot="badge" class="h-5 px-2 rounded-[15px] bg-[#fafff0] border border-[#ddf2bb] text-[#87cc3b] text-12 font-medium inline-flex items-center leading-[18px]">419发布会线上直播</span>
+              <span data-slot="badge" class="h-5 px-2 rounded-[15px] bg-[#e6f9ff] border border-[#91dcff] text-[#189dff] text-12 font-medium inline-flex items-center leading-[18px]">1116行为管理</span>
+              <span data-slot="badge" class="h-5 px-2 rounded-[15px] bg-[#fff0f0] border border-[#ffc4c7] text-[#ff4a66] text-12 font-medium inline-flex items-center leading-[18px]">成交</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- TWO-COLUMN LAYOUT -->
+        <section class="flex-1 px-3 pb-3 flex gap-3 overflow-hidden" data-module="mod-two-col-layout">
+
+          <!-- LEFT COLUMN -->
+          <div class="flex-1 h-full flex flex-col gap-3 min-w-0 overflow-hidden">
+
+            <!-- KEY INFO CARD (Figma 1:5873, h-152px) -->
+            <div data-slot="card" class="p-3 h-[152px] border-0 shadow-sm overflow-hidden" data-module="mod-left-key-info">
+              <div class="text-15 font-bold text-n19 leading-6">关键信息</div>
+              <!-- 标题24 + mt-2(8) + 三行×28 + pb-3(12) = 128px 内容区，贴底留白 -->
+              <div class="flex flex-col gap-0 mt-2 pb-3">
+                <div class="flex gap-8 items-start w-full">
+                  <div class="flex flex-1 gap-2 items-start min-w-0">
+                    <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">成交状态</span></div>
+                    <div class="flex-1 py-[5px] min-w-0"><span class="text-13 text-n19 leading-[18px]">多次成交</span></div>
+                  </div>
+                  <div class="flex flex-1 gap-2 items-start min-w-0">
+                    <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">企业类型</span></div>
+                    <div class="flex-1 py-[5px] min-w-0"><span class="text-13 text-n19 leading-[18px]">付费</span></div>
+                  </div>
+                </div>
+                <div class="flex gap-8 items-start w-full">
+                  <div class="flex flex-1 gap-2 items-start min-w-0">
+                    <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">二级行业</span></div>
+                    <div class="flex-1 py-[5px] min-w-0"><span class="text-13 text-n19 leading-[18px]">现代服务</span></div>
+                  </div>
+                  <div class="flex flex-1 gap-2 items-start min-w-0">
+                    <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">服务中ARR</span></div>
+                    <div class="flex-1 py-[5px] min-w-0"><span class="text-13 text-n19 leading-[18px]">170,000.00</span></div>
+                  </div>
+                </div>
+                <div class="flex gap-8 items-start w-full">
+                  <div class="flex flex-1 gap-2 items-start min-w-0">
+                    <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">当前健康度</span></div>
+                    <div class="flex-1 py-[5px] min-w-0"><span class="text-13 text-n19 leading-[18px]">健康</span></div>
+                  </div>
+                  <div class="flex flex-1 gap-2 items-start min-w-0">
+                    <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">CRM截止日期</span></div>
+                    <div class="flex-1 py-[5px] min-w-0"><span class="text-13 text-n19 leading-[18px]">2026/01/07</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DETAIL PANEL CARD (Figma 1:5879) -->
+            <div data-slot="card" class="rounded-lg flex-1 flex flex-col gap-3 overflow-hidden px-3 pb-3 border-0 shadow-sm" data-module="mod-left-detail-panel">
+
+              <!-- Tabs -->
+              <div data-slot="tabs" class="w-full shrink-0">
+                <div data-slot="tabs-list" class="w-full">
+                  <button data-slot="tabs-trigger" data-state="active">详细信息</button>
+                  <button data-slot="tabs-trigger" data-state="inactive">联系人</button>
+                  <button data-slot="tabs-trigger" data-state="inactive">客户洞察</button>
+                  <button data-slot="tabs-trigger" data-state="inactive">相关业务</button>
+                  <button data-slot="tabs-trigger" data-state="inactive">经营管理</button>
+                  <button data-slot="tabs-trigger" data-state="inactive">经营数据</button>
+                  <button data-slot="tabs-trigger" data-state="inactive">跟进中的业务</button>
+                  <button data-slot="tabs-trigger" data-state="inactive" class="ml-auto flex items-center gap-1">
+                    更多
+                    <svg class="w-3 h-3" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab Content -->
+              <div class="flex flex-col gap-2 w-full flex-1 overflow-hidden">
+
+                <!-- Toolbar: Switch + Toggle Group -->
+                <div class="flex items-center justify-end gap-3 shrink-0">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <span class="text-12 text-n15 whitespace-nowrap">显示全部信息</span>
+                    <button data-slot="switch" data-state="checked" role="switch" aria-checked="true"
+                      onclick="this.dataset.state=this.dataset.state==='checked'?'unchecked':'checked';this.setAttribute('aria-checked',this.dataset.state==='checked')">
+                      <span data-slot="switch-thumb"></span>
+                    </button>
+                  </label>
+                  <div data-slot="toggle-group" role="group">
+                    <button data-slot="toggle-group-item" data-state="on" aria-label="双列视图">
+                      <svg class="w-[14px] h-4 text-n15" viewBox="0 0 14 16" fill="none">
+                        <rect x="1" y="3" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                        <rect x="8" y="3" width="5" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                      </svg>
+                    </button>
+                    <button data-slot="toggle-group-item" data-state="off" aria-label="宫格视图">
+                      <svg class="w-[14px] h-[14px] text-n15" viewBox="0 0 14 14" fill="none">
+                        <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                        <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                        <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                        <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Scrollable Fields -->
+                <div class="flex-1 overflow-y-auto">
+
+                  <!-- 基本信息 -->
+                  <div data-slot="collapsible" data-state="open" class="flex flex-col gap-2">
+                    <button data-slot="collapsible-trigger" onclick="const c=this.closest('[data-slot=collapsible]');c.dataset.state=c.dataset.state==='open'?'closed':'open'">
+                      <span class="collapsible-chevron-wrap" aria-hidden="true">
+                        <svg class="h-[7px] w-[7px] shrink-0 text-n19" viewBox="0 0 12 12" fill="none">
+                          <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </span>
+                      <span class="text-13 font-bold text-n19">基本信息</span>
+                    </button>
+                    <div data-slot="collapsible-content" class="pl-4 pr-1">
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">客户名称</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">北京天空之镜科技有限公司</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">销客企业名称</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">北京天空之境科技有限公司</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">二级行业</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">现代服务</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">三级行业</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">软件服务</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">行业旅程</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">战略</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">客户画像</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-primary cursor-pointer hover:underline leading-[18px]">专业服务-2022</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">细分类目</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">--</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">企业性质</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">民企/私企</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 客户标签数据 -->
+                  <div data-slot="collapsible" data-state="open" class="flex flex-col gap-2 mt-4">
+                    <button data-slot="collapsible-trigger" onclick="const c=this.closest('[data-slot=collapsible]');c.dataset.state=c.dataset.state==='open'?'closed':'open'">
+                      <span class="collapsible-chevron-wrap" aria-hidden="true">
+                        <svg class="h-[7px] w-[7px] shrink-0 text-n19" viewBox="0 0 12 12" fill="none">
+                          <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </span>
+                      <span class="text-13 font-bold text-n19">客户标签数据</span>
+                    </button>
+                    <div data-slot="collapsible-content" class="pl-4 pr-1">
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">客户级别</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">小微</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">服务中ARR</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">107,206.28</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">未开始ARR</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">0.00</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">客户级别-云专用</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">重要</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">新购日期</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">2019/07/31</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">最早付费日期_财务</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">2019/07/31</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px] flex items-center gap-0.5">
+                            <span class="text-13 text-n15 leading-[18px]">交接时间</span>
+                            <svg class="w-4 h-4 text-n11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5V9M8 11V11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                          </div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">2025/01/02</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">订单ARR金额_新购</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">35607.00</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 系统信息 -->
+                  <div data-slot="collapsible" data-state="open" class="flex flex-col gap-2 mt-4">
+                    <button data-slot="collapsible-trigger" onclick="const c=this.closest('[data-slot=collapsible]');c.dataset.state=c.dataset.state==='open'?'closed':'open'">
+                      <span class="collapsible-chevron-wrap" aria-hidden="true">
+                        <svg class="h-[7px] w-[7px] shrink-0 text-n19" viewBox="0 0 12 12" fill="none">
+                          <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </span>
+                      <span class="text-13 font-bold text-n19">系统信息</span>
+                    </button>
+                    <div data-slot="collapsible-content" class="pl-4 pr-1">
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">创建人</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">王雪</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">创建时间</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">2025-02-27 18:05:25</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">最后跟进时间</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">2025-02-28 18:04:49</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">成交状态</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">成交</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">最后修改时间</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">2025-02-28 18:04:51</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">最后修改人</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">王雪</span></div>
+                        </div>
+                      </div>
+                      <div class="flex gap-8"><div class="flex-1 field-separator"></div><div class="flex-1 field-separator"></div></div>
+                      <div class="flex gap-8">
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">转手次数</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">1</span></div>
+                        </div>
+                        <div class="flex-1 flex gap-2 py-1 items-start min-w-0">
+                          <div class="w-[81px] shrink-0 py-[5px]"><span class="text-13 text-n15 leading-[18px]">客户资料完善度</span></div>
+                          <div class="flex-1 min-w-0 py-[5px]"><span class="text-13 text-n19 leading-[18px]">56%</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div><!-- end scrollable -->
+              </div><!-- end tab content -->
+            </div><!-- end detail panel -->
+          </div><!-- end left column -->
+
+          <!-- RIGHT COLUMN (Figma 1:58457 pattern) -->
+          <div data-slot="card" class="w-[472px] h-full flex flex-col min-h-0 border-0 shadow-sm rounded-lg overflow-hidden shrink-0" data-module="mod-right-panel">
+
+            <!-- Tabs -->
+            <div class="px-3 shrink-0" data-module="mod-right-tabs">
+              <div data-slot="tabs" class="w-full">
+                <div data-slot="tabs-list" class="w-full">
+                  <button data-slot="tabs-trigger" data-state="active" class="px-4">动态</button>
+                  <button data-slot="tabs-trigger" data-state="inactive" class="px-4">相关团队</button>
+                  <button data-slot="tabs-trigger" data-state="inactive" class="px-4">审批流组件</button>
+                  <button data-slot="tabs-trigger" data-state="inactive" class="px-4">销售助手</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="px-3 py-3 flex items-center justify-between shrink-0" data-module="mod-right-quick-actions">
+              <div class="flex flex-col items-center gap-1 w-10">
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#eef0f3] bg-white" aria-label="写记录">
+                  <span class="icon-figma-slot icon-figma-slot--14" aria-hidden="true">
+                    <img alt="" src="./assets/icons/more.svg">
+                  </span>
+                </button>
+                <span class="text-12 text-n19 text-center leading-[18px]">写记录</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 w-10">
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#eef0f3] bg-white" aria-label="建任务">
+                  <span class="icon-figma-slot icon-figma-slot--14" aria-hidden="true">
+                    <img alt="" src="./assets/icons/more.svg">
+                  </span>
+                </button>
+                <span class="text-12 text-n19 text-center leading-[18px]">建任务</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 w-10">
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#eef0f3] bg-white" aria-label="打电话">
+                  <span class="icon-figma-slot icon-figma-slot--14" aria-hidden="true">
+                    <img alt="" src="./assets/icons/more.svg">
+                  </span>
+                </button>
+                <span class="text-12 text-n19 text-center leading-[18px]">打电话</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 w-10">
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#eef0f3] bg-white" aria-label="建外勤">
+                  <span class="icon-figma-slot icon-figma-slot--14" aria-hidden="true">
+                    <img alt="" src="./assets/icons/more.svg">
+                  </span>
+                </button>
+                <span class="text-12 text-n19 text-center leading-[18px]">建外勤</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 w-10">
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#eef0f3] bg-white" aria-label="会议">
+                  <span class="icon-figma-slot icon-figma-slot--14" aria-hidden="true">
+                    <img alt="" src="./assets/icons/more.svg">
+                  </span>
+                </button>
+                <span class="text-12 text-n19 text-center leading-[18px]">会议</span>
+              </div>
+              <div class="flex flex-col items-center gap-1 w-10">
+                <button type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#eef0f3] bg-white" aria-label="更多">
+                  <svg class="h-[14px] w-[14px] shrink-0 text-n19" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <rect x="1.1" y="1.1" width="4.8" height="4.8" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+                    <rect x="8.1" y="1.1" width="4.8" height="4.8" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+                    <rect x="1.1" y="8.1" width="4.8" height="4.8" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+                    <rect x="8.1" y="8.1" width="4.8" height="4.8" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+                  </svg>
+                </button>
+                <span class="text-12 text-n19 text-center leading-[18px]">更多</span>
+              </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="px-3 py-1 flex items-center justify-between shrink-0" data-module="mod-right-filter-bar">
+              <div class="flex items-center gap-1 rounded py-1 px-1 cursor-pointer hover:bg-[rgba(24,28,37,0.05)]">
+                <span class="text-12 font-medium text-n19 leading-[18px]">全部</span>
+                <span class="icon-figma-slot icon-figma-slot--12" aria-hidden="true">
+                  <img alt="" src="./assets/icons/dropdown.svg">
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <span class="text-12 text-n15">精简模式</span>
+                  <button data-slot="switch" data-size="sm" data-state="unchecked" role="switch" aria-checked="false"
+                    onclick="this.dataset.state=this.dataset.state==='checked'?'unchecked':'checked';this.setAttribute('aria-checked',this.dataset.state==='checked')">
+                    <span data-slot="switch-thumb"></span>
+                  </button>
+                </label>
+                <div class="flex items-center gap-1">
+                  <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded hover:bg-[rgba(24,28,37,0.05)]" aria-label="筛选">
+                    <span class="icon-figma-slot icon-figma-slot--14" aria-hidden="true">
+                      <img alt="" src="./assets/icons/more.svg">
+                    </span>
+                  </button>
+                  <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded hover:bg-[rgba(24,28,37,0.05)]" aria-label="搜索">
+                    <svg class="h-[14px] w-[14px] shrink-0 text-n19" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <circle cx="6.1" cy="6.1" r="4.9" stroke="currentColor" stroke-width="1.2"/>
+                      <path d="M9.7 9.7L12.8 12.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="flex-1 overflow-y-auto" data-module="mod-right-activity-feed">
+
+              <!-- 日程 -->
+              <div class="flex gap-3 pl-4 pr-3">
+                <div class="flex flex-col items-center isolate pt-3">
+                  <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#ff7383] p-[3.75px] z-10">
+                    <img alt="" class="h-[10px] w-[10px] object-contain" src="./assets/icons/pin.svg">
+                  </div>
+                  <div class="timeline-vline flex-1 min-h-[8px] z-0"></div>
+                </div>
+                <div class="flex-1 py-3">
+                  <div class="flex items-center gap-1">
+                    <span class="text-13 text-n19 whitespace-nowrap">日程 来自 王缪缪</span>
+                    <span class="text-12 text-n11 whitespace-nowrap">10月14日 15:13</span>
+                  </div>
+                  <div class="mt-2 p-3 bg-white border-2 border-special01 rounded-lg relative overflow-hidden">
+                    <p class="text-12 text-n19 leading-[18px]">主旨：同步业务侧Activity的基础方案，明确建设项分工及基础节奏主旨：同步业务侧Activity的基础方案，明确建设项分工及基础节奏旨：同步业务侧Activity的基础方案，明确建设项分工及基础节奏节奏...</p>
+                    <div class="absolute top-[-1px] right-[20px] px-2 py-[6px] bg-white rounded-[4px] shadow-[0px_1px_4px_0px_rgba(0,0,0,0.1)] cursor-pointer">
+                      <span class="text-[10px] text-n19 leading-[14px]">查看详情</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 日志 -->
+              <div class="flex gap-3 pl-4 pr-3">
+                <div class="flex flex-col items-center isolate">
+                  <div class="timeline-vline timeline-vline--stub h-3 z-0"></div>
+                  <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#7341de] p-[3.75px] z-10">
+                    <img alt="" class="h-[10px] w-[10px] object-contain" src="./assets/icons/pin.svg">
+                  </div>
+                  <div class="timeline-vline flex-1 min-h-[8px] z-0"></div>
+                </div>
+                <div class="flex-1 py-3">
+                  <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center gap-1 min-w-0">
+                      <span class="text-13 text-n19 whitespace-nowrap">日志 来自 王缪缪</span>
+                      <span class="text-12 text-n11 whitespace-nowrap">10月14日 15:13</span>
+                    </div>
+                    <span class="text-12 shrink-0 whitespace-nowrap"><span class="text-n15">日计划-</span><span class="text-primary">待点评</span></span>
+                  </div>
+                  <div class="mt-2 p-3 bg-white border-2 border-special01 rounded-lg">
+                    <p class="text-12 text-n19 leading-[18px]">安全测试概述定义与目的：安全测试是对产品的安全性能和防护措施进行全面检测和评估的过程，旨在发现产品潜在的安全漏洞和隐患，验证产品的安全防护能力，为产品的安全发布提供可靠保障。 - Web安全常见漏洞：  - SQL注入  - 跨站脚本攻击（XSS）  - 跨站点请求伪造（CSRF）</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 会议 -->
+              <div class="flex gap-3 pl-4 pr-3">
+                <div class="flex flex-col items-center isolate">
+                  <div class="timeline-vline timeline-vline--stub h-3 z-0"></div>
+                  <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#368dff] p-[3.75px] z-10">
+                    <img alt="" class="h-[10px] w-[10px] object-contain" src="./assets/icons/pin.svg">
+                  </div>
+                  <div class="timeline-vline flex-1 min-h-[8px] z-0"></div>
+                </div>
+                <div class="flex-1 py-3">
+                  <div class="flex items-center gap-1">
+                    <span class="text-13 text-n19 whitespace-nowrap">会议 来自 王缪缪</span>
+                    <span class="text-12 text-n11 whitespace-nowrap">10月12日 15:13</span>
+                  </div>
+                  <div class="mt-2 p-3 bg-white border-2 border-special01 rounded-lg">
+                    <div class="flex flex-col gap-3">
+                      <div>
+                        <p class="text-12 text-n11 leading-[18px]">内容</p>
+                        <p class="text-12 text-n19 leading-[18px]">
+                          主旨：同步业务侧Activity的基础方案，明确建设项分工及基础节奏<br>
+                          拟订议程：<br>
+                          &nbsp;&nbsp;1. 同步业务侧认知的Activity的整体方案<span class="text-[#0c6cff]">@李芳</span><br>
+                          &nbsp;&nbsp;2. Activity方案及后续计划的确定<span class="text-[#0c6cff]">@所有人</span><br>
+                          &nbsp;&nbsp;3. 标讯AI方案同步<span class="text-[#0c6cff]">@骆晶晶luojingjing</span><br>
+                          &nbsp;&nbsp;4. 基础技术框架方案的同步<span class="text-[#0c6cff]">@赵鹏欣</span><br>
+                          参考地址：<span class="text-[#0c6cff]">https://www.figma.com/design/RKKEAbHPSJN1KharumVf9R/...</span>
+                        </p>
+                      </div>
+                      <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2"><span class="text-12 text-n11 w-12 shrink-0">参与方</span><span class="text-12 text-[#0c6cff]">李芳</span><span class="text-12 text-[#0c6cff]">李四</span></div>
+                        <div class="flex items-center gap-2"><span class="text-12 text-n11 w-12 shrink-0">开始时间</span><span class="text-12 text-n19">2024-10-10 16:00 周四</span></div>
+                        <div class="flex items-center gap-2"><span class="text-12 text-n11 w-12 shrink-0">结束时间</span><span class="text-12 text-n19">2024-10-10 18:00 周四</span></div>
+                        <div class="flex items-center gap-2"><span class="text-12 text-n11 w-12 shrink-0">会议室</span><span class="text-12 text-n19">雍和宫</span></div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-12 text-n15">修改记录</span>
+                        <div class="flex items-center gap-3">
+                          <button type="button" class="text-n15 hover:text-n19 transition-colors">
+                            <img alt="" class="h-[14px] w-[14px] object-contain" src="./assets/icons/more.svg">
+                          </button>
+                          <button type="button" class="text-n15 hover:text-n19 transition-colors">
+                            <img alt="" class="h-[14px] w-[14px] object-contain" src="./assets/icons/more.svg">
+                          </button>
+                          <button type="button" class="text-n15 hover:text-n19 transition-colors">
+                            <img alt="" class="h-[14px] w-[14px] object-contain" src="./assets/icons/more.svg">
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- end activity feed -->
+          </div><!-- end right panel -->
+
+        </section><!-- end two-col layout -->
+      </main>
+    </div>
+  </div>
+</body>
+</html>
