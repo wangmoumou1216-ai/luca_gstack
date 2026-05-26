@@ -84,7 +84,7 @@ check S6 "auto/SKILL.md 存在且含 FILE_END 标记"    "grep -q 'FILE_END' .cl
 check S7 "route-guard.mjs 含空格归一化逻辑"        "grep -q 'replace.*\\\\s' .claude/hooks/route-guard.mjs"
 check S8 "work-agent-template 含 DONE_CRITERIA 守卫" "grep -q '前置守卫' .claude/agents/work-agent-template.md"
 check S9 "route golden tests 通过"                 "npm run test:routes --silent"
-check S10 "routing map 覆盖检查通过"              "npm run check:routing-map --silent"
+check S10 "routing map 覆盖 + skill 单一真相源一致性检查通过" "npm run check:routing-map --silent"
 check S11 "project routing dry-run 通过"           "npm run check:project-routing --silent"
 check S12 "memory 精细检索/写入门禁测试通过"       "npm run test:memory --silent"
 check S13 "memory stable facts 健康检查通过"       "npm run check:memory-health --silent"
