@@ -93,6 +93,7 @@ memory/episodic/sessions/*.md
 !memory/episodic/sessions/README.md
 memory/semantic/candidates.jsonl
 memory/semantic/reviews.jsonl
+memory/retrieval-log.jsonl
 
 # luca_gstack specific — docs/ is a symlink to external project dir, never tracked
 docs

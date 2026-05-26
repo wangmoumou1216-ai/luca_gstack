@@ -34,3 +34,20 @@ ROI：影响=5（决定整个记忆系统是否还有 ROI——否则 12 脚本 
 - 影响文件：`session-sync.mjs`（print→execute）、`propose_semantic.py`/`consolidate_memory.py`（接 LLM 预处理 + 计数触发）、eval 文件统一（与 ADR-0001 协同）。
 - 风险：中。Claude Code 无常驻进程——不能照搬 Letta 后台 run，改成 **hook 内一次性 LLM 调用写完即退**；文件型存储无向量库，自动**检索注入**保持关键词/recency，不引向量依赖；自动写入务必配确定性去重防文件膨胀。
 - 验证：跑 3-5 个真实 session 后，episode 与 candidate 计数应自动增长（无需手敲命令）；promotion 队列不再恒为 0；eval 文件被实际写入。
+
+## 度量先行实现（measure-first，当前已落地）
+
+> 上述「决策/后果」节是**被降级**的原方案，保留作上下文。当前实际落地的只有轻量埋点，不重建记忆系统、不在 hook 内调用 LLM、不改 session-sync 的 print→execute。
+
+埋点（全部在 `memory/scripts/search_memory.py`，fail-safe，绝不影响 search 输出）：
+1. 每次 `search_memory.py` 检索追加一条 JSONL 到 `memory/retrieval-log.jsonl`：`ts / type=search / session / query / result_count / top_id / top_score / top_layer`。任何写入失败（磁盘/权限）被吞掉，search stdout 字节级不变。
+2. `--mattered`：可选、最小的主观信号入口；为给定 query 追加一条 `type=mattered` 标注（不执行检索），用于记录「这次检索真的改变了某个动作」。
+3. `--retrieval-stats`：在日志上汇总 total searches / searches-with-hits / mattered 计数 / distinct sessions，足以套用下面的决策规则。
+4. `retrieval-log.jsonl` 为运行时数据，已在 `.gitignore` 与其他 episodic/candidate 运行时文件一致忽略。
+
+### 决策协议（review 时机与裁决）
+- **时机：** 约 10 个 distinct session（无真实 session id 时以 `--retrieval-stats` 的 distinct sessions = distinct 日期代理）后运行 `python3 memory/scripts/search_memory.py --retrieval-stats` 复盘。
+- **裁决（基于客观 + 主观双信号，沿用 DEBATE-CONCLUSION 第五节并修正）：**
+  - `mattered` ≥ ~3（检索确实改变了动作）→ 记忆值得喂，影响→4、Score 8 > 冻结 → 建 §4.2 的廉价重设计版。
+  - **客观低使用**：窗口内 `searches` ≈ 0（几乎没发生检索）或 `searches-with-hits` ≈ 0（检索几乎从不命中）→ 读侧客观上未被使用 → **冻结写侧候选**：删/归档 7 个写脚本，保留 2 个读脚本 + SF-001~005 静态 fallback。
+  - **`mattered` ≈ 0 但 `searches-with-hits` 不低** → **结论不充分（inconclusive），不得自动冻结**：缺主观标注 ≠ 读无用（`--mattered` 容易漏记）。处置：人工抽查这些命中检索是否真改变了动作，或延长测量窗口并主动用 `--mattered` 标注后再裁决。**严禁仅凭"mattered 计数为 0"就删除 7 个写脚本。**

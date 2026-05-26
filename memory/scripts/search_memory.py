@@ -19,6 +19,8 @@ MEMORY_DIR = ROOT / "memory"
 EPISODIC_INDEX = MEMORY_DIR / "episodic" / "index.jsonl"
 SEMANTIC_FACTS = MEMORY_DIR / "semantic" / "promoted-facts.yaml"
 EVAL_LOG = MEMORY_DIR / "evals" / "eval-log.jsonl"
+# ADR-0006 measure-first instrumentation: runtime retrieval-usefulness log.
+RETRIEVAL_LOG = MEMORY_DIR / "retrieval-log.jsonl"
 
 STOP_TOKENS = {
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -311,17 +313,123 @@ def print_human(rows: list[dict]) -> None:
         print(f"  path: {row['path']}")
 
 
+def _session_id() -> str:
+    # Best-effort, dependency-free session correlation. Never raises.
+    try:
+        sid = os.environ.get("CLAUDE_SESSION_ID") or os.environ.get("LUCA_SESSION_ID")
+        if sid:
+            return str(sid)
+        topic = ROOT / ".claude" / "current-topic.txt"
+        if topic.exists():
+            value = topic.read_text(encoding="utf-8").strip()
+            if value:
+                return value
+    except Exception:
+        pass
+    # No real session id (env unset, topic file empty). Fall back to a date
+    # bucket so the retrieval log keeps a meaningful time axis — distinct days
+    # act as a session proxy for the ~10-session decision checkpoint, instead of
+    # collapsing every record to a single "unknown".
+    try:
+        return f"date:{dt.date.today().isoformat()}"
+    except Exception:
+        return "unknown"
+
+
+def log_retrieval(query: str, rows: list[dict], record_type: str = "search", extra: Optional[dict] = None) -> None:
+    """Append ONE JSONL record about this retrieval. FULLY fail-safe:
+    any error (disk, perms, encoding) is swallowed and never affects search output."""
+    try:
+        top = rows[0] if rows else None
+        record = {
+            "ts": dt.datetime.now().isoformat(timespec="seconds"),
+            "type": record_type,
+            "session": _session_id(),
+            "query": query,
+            "result_count": len(rows),
+            "top_id": (top.get("id") if top else None),
+            "top_score": (top.get("score") if top else None),
+            "top_layer": (top.get("layer") if top else None),
+        }
+        if extra:
+            record.update(extra)
+        RETRIEVAL_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with RETRIEVAL_LOG.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+    except Exception:
+        # Instrumentation must never break or slow the search. Swallow everything.
+        pass
+
+
+def read_retrieval_log() -> list[dict]:
+    if not RETRIEVAL_LOG.exists():
+        return []
+    rows = []
+    try:
+        for line in RETRIEVAL_LOG.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict):
+                rows.append(value)
+    except Exception:
+        return rows
+    return rows
+
+
+def print_retrieval_stats() -> None:
+    """ADR-0006 decision-rule readout over the retrieval log."""
+    rows = read_retrieval_log()
+    searches = [r for r in rows if r.get("type", "search") == "search"]
+    with_hits = [r for r in searches if (r.get("result_count") or 0) > 0]
+    mattered = [r for r in rows if r.get("type") == "mattered" or r.get("mattered") is True]
+    sessions = {r.get("session") for r in rows if r.get("session")}
+    print("ADR-0006 retrieval stats (measure-first):")
+    print(f"  total searches:      {len(searches)}")
+    print(f"  searches with hits:  {len(with_hits)}")
+    print(f"  flagged 'mattered':  {len(mattered)}")
+    print(f"  distinct sessions:   {len(sessions)}")
+    print(f"  log: {RETRIEVAL_LOG}")
+    print("  decision rule (review after ~10 distinct sessions/days):")
+    print("    - mattered >= ~3                  -> build cheap self-turning version")
+    print("    - searches~=0 OR with-hits~=0     -> freeze write-side (objective: reads unused)")
+    print("    - mattered~=0 but with-hits high  -> INCONCLUSIVE; do NOT auto-freeze")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("query")
+    parser.add_argument("query", nargs="?", default="")
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--layer", choices=["episodic", "semantic", "eval", "all"], default="all")
     parser.add_argument("--skill", default="*")
     parser.add_argument("--topic", default="")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--retrieval-stats", action="store_true",
+                        help="ADR-0006: summarize retrieval-log.jsonl (no search performed)")
+    parser.add_argument("--mattered", action="store_true",
+                        help="ADR-0006: annotate that the given query's retrieval changed an action (no search performed)")
     args = parser.parse_args()
 
+    if args.retrieval_stats:
+        print_retrieval_stats()
+        return 0
+
+    if args.mattered:
+        # Optional, minimal subjective signal: log a 'mattered' annotation.
+        log_retrieval(args.query, [], record_type="mattered", extra={"mattered": True})
+        print(f"Recorded 'mattered' annotation for query: {args.query!r}")
+        return 0
+
+    if not args.query:
+        parser.error("query is required unless --retrieval-stats is used")
+
     rows = search(args.query, args.limit, args.layer, args.skill, args.topic)
+    # Fail-safe instrumentation: logged AFTER computing results, swallows all errors,
+    # and does not touch the search output below.
+    log_retrieval(args.query, rows)
     if args.json:
         print(json.dumps(rows, ensure_ascii=False, indent=2))
     else:
