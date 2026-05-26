@@ -2,7 +2,7 @@ version: 1
 facts:
   - id: SF-001
     domain: crm
-    fact: "纷享销客品牌主色 #FF8000（橙色）、辅助色 #FF8C42、背景灰 #F5F5F5、文字色 #333333"
+    fact: "纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25"
     confidence: high
     stable: true
     added: 2026-05-16

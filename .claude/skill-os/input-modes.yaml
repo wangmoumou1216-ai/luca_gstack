@@ -159,6 +159,17 @@ skills:
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
 
 governance_tools:
+  compare:
+    modes:
+      standalone:
+        required: ["comparison_targets"]
+        optional: ["skill_name"]
+      workflow:
+        required: []
+        optional: ["skill_name", "artifact_versions"]
+    quality_gates: ["both_files_read", "structured_diff", "read_only"]
+    notes: "方案/版本/截图对比。只读，不修改文件。输入为两个完整路径，或 skill 名称自动取最新两个版本。"
+
   ux-audit:
     modes:
       standalone:

@@ -28,7 +28,7 @@ project_skills:
     weight: 6
     triggers: [PRD, 需求文档, 产品需求, brainstorm, 写PRD, 需求梳理]
 
-  superpowers_brainstorming:
+  superpowers-brainstorming:
     invoke: "superpowers:brainstorming"
     weight: 6
     triggers: [快速梳理, 轻量PRD, quick brainstorm, 简单需求梳理, superpowers brainstorm]

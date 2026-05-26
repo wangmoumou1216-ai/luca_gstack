@@ -151,7 +151,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.summary:
-        ep = load_episodic(3)
+        ep = load_episodic(100000)
         sf = parse_semantic_facts("*")
         ep_str = f"{len(ep)} episodic sessions" if ep else "no episodic sessions"
         sf_str = f"{len(sf)} semantic facts" if sf else "no semantic facts"

@@ -188,7 +188,7 @@ python3 memory/scripts/propose_semantic.py \
 > 以下为 semantic memory 的静态副本，脚本可用时以 promoted-facts.yaml 为准；
 > 脚本不可用时此节优先。
 
-- [SF-001 / crm] 纷享销客品牌主色 #FF8000（橙色）、背景色 #EFF1F3、文字色 #181c25
+- [SF-001 / crm] 纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25
 - [SF-002 / fxui] HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改
 - [SF-003 / workflow] Skill-first, Graph-optional 架构：每个 skill 默认 standalone 可用，
   Workflow 仅在用户主动选择流程时启用
@@ -529,7 +529,8 @@ skill 均以交互模式（用户直接触发）为主。
     handoff/             ← 跨 skill/session 交接文件（Checkpoint 协议）
     adr/                 ← 架构决策记录
     engineering/         ← 工程文档（tech-spec 产出）
-    evals/               ← 隐藏/高级工具产出
+    evaluation/          ← ux-audit 产出（受保护 glob 路径，见 skill-invariants）
+    evals/               ← evals 隐藏/高级工具产出
     retro/               ← 隐藏/高级工具产出
     redteam/             ← 隐藏/高级工具产出
 ```
