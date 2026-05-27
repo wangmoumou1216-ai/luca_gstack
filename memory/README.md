@@ -62,6 +62,8 @@ python3 memory/scripts/search_memory.py "query" [--limit N] [--layer episodic|se
 
 输出字段包含 `layer`、`id`、`title` 或 `fact`、`score`、`reasons`、`source`、`path`。评分理由会展示关键词命中、skill/topic 过滤、semantic stable/confidence、eval gate_status 和 recency。默认输出人类可读文本；`--json` 输出 JSON list。脚本兼容 `MEMORY_ROOT`，并对 `promoted-facts.yaml` 做轻量容错解析，单条 YAML 异常不会导致整层检索为空。
 
+> **EVAL 子系统当前为 DEFERRED / 未接线（dormant，非损坏）。** `memory/scripts/record_eval.py`（写 `evals/eval-log.jsonl`）与 `memory/evals/scripts/collect_eval.py`（写 `evals/<skill>/pairs.jsonl`）是为 GEPA 能力预留的 eval-infra，目前仅在文档中提及（orchestrator.md、eval-schema），没有任何 hook/npm/CI 触发，从未产出过数据。二者写入**不同文件**（已知双写不一致，eval-log.jsonl vs pairs.jsonl）。这是**有意冻结**，等待 ADR-0007 W3 与 ADR-0006 ~10-session 检索度量结论后再决定是否统一/接线，**勿在度量结论出来前删除或修复**。注意：ADR-0006 的检索度量走的是独立路径（`search_memory.py` → `memory/retrieval-log.jsonl`），与此 eval-infra 无关。
+
 ## 记忆合并与 review queue
 
 ```bash
