@@ -382,21 +382,65 @@ def read_retrieval_log() -> list[dict]:
 
 def print_retrieval_stats() -> None:
     """ADR-0006 decision-rule readout over the retrieval log."""
+    # ADR-0006 decision protocol: review only after this many distinct sessions.
+    DECISION_MIN_SESSIONS = 10
+    DECISION_MATTERED_MIN = 3
     rows = read_retrieval_log()
     searches = [r for r in rows if r.get("type", "search") == "search"]
     with_hits = [r for r in searches if (r.get("result_count") or 0) > 0]
     mattered = [r for r in rows if r.get("type") == "mattered" or r.get("mattered") is True]
     sessions = {r.get("session") for r in rows if r.get("session")}
+    dates = {(r.get("ts") or "")[:10] for r in rows if r.get("ts")}
+    n_searches = len(searches)
+    n_with_hits = len(with_hits)
+    n_mattered = len(mattered)
+    n_sessions = len(sessions)
+    n_dates = len(dates)
+    # Robust time-axis: distinct sessions OR distinct calendar days, whichever
+    # is larger. Guards against a stable session id collapsing all records to 1
+    # (then distinct days still accumulate toward the ~10 review threshold).
+    n_window = max(n_sessions, n_dates)
     print("ADR-0006 retrieval stats (measure-first):")
-    print(f"  total searches:      {len(searches)}")
-    print(f"  searches with hits:  {len(with_hits)}")
-    print(f"  flagged 'mattered':  {len(mattered)}")
-    print(f"  distinct sessions:   {len(sessions)}")
+    print(f"  total searches:      {n_searches}")
+    print(f"  searches with hits:  {n_with_hits}")
+    print(f"  flagged 'mattered':  {n_mattered}")
+    print(f"  distinct sessions:   {n_sessions}")
+    print(f"  distinct days:       {n_dates}")
+    print(f"  review window (max): {n_window} / {DECISION_MIN_SESSIONS}")
     print(f"  log: {RETRIEVAL_LOG}")
     print("  decision rule (review after ~10 distinct sessions/days):")
     print("    - mattered >= ~3                  -> build cheap self-turning version")
     print("    - searches~=0 OR with-hits~=0     -> freeze write-side (objective: reads unused)")
     print("    - mattered~=0 but with-hits high  -> INCONCLUSIVE; do NOT auto-freeze")
+
+    # Self-computed verdict over the documented decision protocol.
+    if n_window < DECISION_MIN_SESSIONS:
+        verdict = "STILL-ACCUMULATING"
+        reason = (f"need >= {DECISION_MIN_SESSIONS} distinct sessions/days; "
+                  f"have {n_window}")
+        decision_due = False
+    elif n_mattered >= DECISION_MATTERED_MIN:
+        verdict = "BUILD"
+        reason = (f"mattered={n_mattered} >= {DECISION_MATTERED_MIN}; "
+                  "cheap self-turning version worth it")
+        decision_due = True
+    elif n_searches == 0 or n_with_hits == 0:
+        verdict = "FREEZE"
+        reason = (f"searches={n_searches}, with_hits={n_with_hits}; "
+                  "reads objectively unused -> freeze write-side")
+        decision_due = True
+    else:
+        verdict = "INCONCLUSIVE"
+        reason = (f"searches={n_searches}, with_hits={n_with_hits}, "
+                  f"mattered={n_mattered} < {DECISION_MATTERED_MIN}; "
+                  "reads hit but none flagged useful -> manual review / longer window")
+        decision_due = True
+
+    print(f"  computed verdict:    {verdict} ({reason})")
+    if decision_due:
+        print("  ⏰ DECISION DUE")
+    else:
+        print("  DECISION DUE: no")
 
 
 def main() -> int:
