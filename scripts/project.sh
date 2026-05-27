@@ -5,6 +5,7 @@
 #   ./scripts/project.sh switch <name>   切换到已有项目
 #   ./scripts/project.sh list            列出所有项目及当前激活
 #   ./scripts/project.sh status          显示当前项目链接状态
+#   ./scripts/project.sh deactivate      清除当前激活项目（下次启动走全新流程）
 
 set -euo pipefail
 
@@ -124,7 +125,18 @@ case "$cmd" in
   status)
     print_status
     ;;
+  deactivate)
+    current=$(current_project)
+    if [ -z "$current" ]; then
+      echo "没有激活的项目，无需操作。"
+      exit 0
+    fi
+    for link in "$DOCS_LINK" "$STATE_LINK" "$TOPIC_LINK"; do
+      if [ -L "$link" ]; then rm -f "$link"; fi
+    done
+    echo "✅ 项目 '$current' 已取消激活。下次启动 luca 将走全新流程。"
+    ;;
   *)
-    echo "用法: project.sh <new|switch|list|status> [name]"
+    echo "用法: project.sh <new|switch|list|status|deactivate> [name]"
     ;;
 esac
