@@ -11,7 +11,12 @@ function read(path) {
 
 const qualityGate = read('.claude/agents/quality-gate.md');
 const preflight = read('.claude/agents/preflight-agent.md');
-const workflowState = read('.claude/workflow-state.yaml');
+// workflow-state.yaml is a symlink to the active project's .luca/ dir; on a
+// clean CI checkout it is DANGLING. Guard so a missing/dangling target degrades
+// to '' (the DONE-node scan below then no-ops) instead of throwing ENOENT.
+const workflowState = existsSync(join(root, '.claude/workflow-state.yaml'))
+  ? read('.claude/workflow-state.yaml')
+  : '';
 
 assert.doesNotMatch(
   preflight,

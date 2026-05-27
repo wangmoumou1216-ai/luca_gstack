@@ -41,6 +41,43 @@ jobs:
       - name: Check all skills have SKILL.md
         run: bash scripts/validate-skills.sh
 
+  validate-framework-logic:
+    name: Validate Framework Logic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      # CI-safe subset only: these checks read committed repo files or run in
+      # tmpdir fixtures / route-guard dry-run, and degrade gracefully when the
+      # local-only docs/ and .claude/workflow-state.yaml symlinks are DANGLING
+      # on a clean runner. check:project-links and the full verify.sh (S16
+      # symlink check) are intentionally excluded — they validate those
+      # local-only symlink targets and cannot pass on a clean checkout.
+      # No `npm install` step: all wired scripts use only Node builtins /
+      # Python stdlib (package.json has no runtime deps). Adding a third-party
+      # import to any of them will require an install step here.
+      - name: Hook runtime side-effect tests
+        run: npm run check:hooks
+      - name: Route-guard golden tests
+        run: npm run test:routes
+      - name: Routing-map coverage + skill SSOT consistency
+        run: npm run check:routing-map
+      - name: Project routing dry-run
+        run: npm run check:project-routing
+      - name: Coding discipline contracts
+        run: npm run check:coding-discipline
+      - name: Quality gate contracts
+        run: npm run check:quality-gates
+      - name: Memory system tests
+        run: npm run test:memory
+      - name: Memory stable-facts health
+        run: npm run check:memory-health
+
   validate-html:
     name: Validate HTML Prototypes
     runs-on: ubuntu-latest
