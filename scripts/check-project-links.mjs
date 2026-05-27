@@ -17,6 +17,14 @@ assert.deepEqual(
   `root must not contain stale docs aliases: ${extraDocsAliases.join(", ")}`
 );
 
+// Tri-state: no project active (all 3 links absent) is a valid deactivated startup state.
+const projectLinks = [docsLink, stateLink, topicLink];
+const present = projectLinks.filter(p => existsSync(p) || lstatSync(p, { throwIfNoEntry: false })?.isSymbolicLink());
+if (present.length === 0) {
+  console.log('PASS project links: no project active (deactivated)');
+  process.exit(0);
+}
+
 function mustSymlink(path, label) {
   assert.ok(existsSync(path), `${label} missing: ${path}`);
   assert.ok(lstatSync(path).isSymbolicLink(), `${label} must be a symlink`);

@@ -76,7 +76,7 @@ echo ""
 
 echo "[ Skill 体系 ]"
 check S1 "CLAUDE.md 存在且非空"                    "[ -s CLAUDE.md ]"
-check S2 "workflow-state.yaml 存在"                "[ -f .claude/workflow-state.yaml ]"
+check S2 "workflow-state.yaml 存在或处于已取消激活态"  "[ -f .claude/workflow-state.yaml ] || { [ ! -L .claude/workflow-state.yaml ] && [ ! -e docs ] && [ ! -L docs ] && [ ! -e .claude/current-topic.txt ] && [ ! -L .claude/current-topic.txt ]; }"
 check S3 "skill-os 目录存在"                       "[ -d .claude/skill-os ]"
 warn  S4 "office skill 目录存在"                   "[ -d .claude/skills/office ]"
 check S5 "validate-skills.sh 通过"                 "bash scripts/validate-skills.sh"
