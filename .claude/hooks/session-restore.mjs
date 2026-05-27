@@ -24,6 +24,19 @@ if (existsSync(stateFile)) {
 const counterFile = join(projectRoot, '.claude', '.session-turn-count');
 try { writeFileSync(counterFile, '0'); } catch { }
 
+// 读取 PROGRESS.md（在清除 symlink 之前，docs/ 还存在时读取）
+const progressFile = join(projectRoot, 'docs', 'PROGRESS.md');
+if (existsSync(progressFile)) {
+  try {
+    const progressContent = readFileSync(progressFile, 'utf8');
+    const lines = progressContent.split('\n');
+    const preview = lines.slice(0, 25).join('\n').trim();
+    if (preview) {
+      process.stdout.write(`[session-restore] 📋 PROGRESS.md 实时进度:\n${preview}\n\n`);
+    }
+  } catch { }
+}
+
 // 每次启动自动清除激活项目，确保走全新项目流程
 const docsLink = join(projectRoot, 'docs');
 const stateLink = join(projectRoot, '.claude', 'workflow-state.yaml');
@@ -43,20 +56,6 @@ try {
     process.stdout.write(`[session-restore] 📁 项目列表（无激活项目，请告知要做什么）:\n${lines}\n\n`);
   }
 } catch { }
-
-// 读取 PROGRESS.md（实时任务进度）
-const progressFile = join(projectRoot, 'docs', 'PROGRESS.md');
-if (existsSync(progressFile)) {
-  try {
-    const progressContent = readFileSync(progressFile, 'utf8');
-    const lines = progressContent.split('\n');
-    // 显示前 25 行（包含核心状态）
-    const preview = lines.slice(0, 25).join('\n').trim();
-    if (preview) {
-      process.stdout.write(`[session-restore] 📋 PROGRESS.md 实时进度:\n${preview}\n\n`);
-    }
-  } catch { }
-}
 
 // Check for pending skill-rule extraction from last session.
 // This intentionally lives outside docs/handoff so startup does not treat it as upstream handoff context.
