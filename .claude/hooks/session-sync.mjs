@@ -75,44 +75,52 @@ if (existsSync(episodicDir)) {
 // Write pending-extraction.md so next session is reminded to extract skill rules.
 // Keep this outside docs/handoff; it is a governance reminder, not an upstream handoff summary.
 const observabilityDir = join(projectRoot, '.claude', 'observability');
+const pendingExtractionFile = join(observabilityDir, 'pending-extraction.md');
 try {
-  mkdirSync(observabilityDir, { recursive: true });
-  const extractionContent = [
-    `# Pending Skill-Rule Extraction`,
-    ``,
-    `> 自动生成于 ${now}。下次 session 启动时由 session-restore 提醒处理。`,
-    `> 处理后请删除此文件，或执行提取命令后手动删除。`,
-    ``,
-    `**Topic:** ${topic}`,
-    `**Skills run:** 未读取 run-log；如需复盘，请通过 observability 短规则或 memory search 定向检索。`,
-    ``,
-    `## 提取模板`,
-    ``,
-    `满足任一条件时填写并执行：`,
-    `- 发现 non-obvious blocker（不在 CLAUDE.md 中的约束）`,
-    `- 某类错误在本次或跨 session 重复出现`,
-    `- 执行时发现文件、路径、格式等隐性规则`,
-    ``,
-    `\`\`\`bash`,
-    `python3 memory/scripts/propose_semantic.py \\`,
-    `  --domain skill-rule \\`,
-    `  --fact "<skill名>: <规则描述>" \\`,
-    `  --confidence high \\`,
-    `  --evidence "<来源/复现>" \\`,
-    `  --scope "<skill名>" \\`,
-    `  --reviewer "<reviewer>" \\`,
-    `  --tags "<skill名>,rule"`,
-    `\`\`\``,
-    ``,
-    `## 完成后`,
-    ``,
-    `\`\`\`bash`,
-    `rm .claude/observability/pending-extraction.md`,
-    `\`\`\``,
-    ``,
-  ].join('\n');
-  writeFileSync(join(observabilityDir, 'pending-extraction.md'), extractionContent);
-  process.stdout.write(`[session-sync] 📝 已写入 .claude/observability/pending-extraction.md（下次 session 启动时提醒提取 skill-rule）\n`);
+  // Idempotent: only write if no unprocessed reminder exists. A pending reminder
+  // that hasn't been handled should NOT be re-timestamped every session; once it
+  // is processed and deleted, the next session recreates it.
+  if (existsSync(pendingExtractionFile)) {
+    process.stdout.write(`[session-sync] 📝 pending-extraction.md 已存在（待处理），保持不变\n`);
+  } else {
+    mkdirSync(observabilityDir, { recursive: true });
+    const extractionContent = [
+      `# Pending Skill-Rule Extraction`,
+      ``,
+      `> 自动生成于 ${now}。下次 session 启动时由 session-restore 提醒处理。`,
+      `> 处理后请删除此文件，或执行提取命令后手动删除。`,
+      ``,
+      `**Topic:** ${topic}`,
+      `**Skills run:** 未读取 run-log；如需复盘，请通过 observability 短规则或 memory search 定向检索。`,
+      ``,
+      `## 提取模板`,
+      ``,
+      `满足任一条件时填写并执行：`,
+      `- 发现 non-obvious blocker（不在 CLAUDE.md 中的约束）`,
+      `- 某类错误在本次或跨 session 重复出现`,
+      `- 执行时发现文件、路径、格式等隐性规则`,
+      ``,
+      `\`\`\`bash`,
+      `python3 memory/scripts/propose_semantic.py \\`,
+      `  --domain skill-rule \\`,
+      `  --fact "<skill名>: <规则描述>" \\`,
+      `  --confidence high \\`,
+      `  --evidence "<来源/复现>" \\`,
+      `  --scope "<skill名>" \\`,
+      `  --reviewer "<reviewer>" \\`,
+      `  --tags "<skill名>,rule"`,
+      `\`\`\``,
+      ``,
+      `## 完成后`,
+      ``,
+      `\`\`\`bash`,
+      `rm .claude/observability/pending-extraction.md`,
+      `\`\`\``,
+      ``,
+    ].join('\n');
+    writeFileSync(pendingExtractionFile, extractionContent);
+    process.stdout.write(`[session-sync] 📝 已写入 .claude/observability/pending-extraction.md（下次 session 启动时提醒提取 skill-rule）\n`);
+  }
 } catch (e) {
   process.stderr.write(`[session-sync] ⚠️  pending-extraction.md 写入失败: ${e.message?.slice(0, 60)}\n`);
 }
