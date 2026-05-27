@@ -38,7 +38,28 @@
 - 检索埋点 fail-safe 经 chmod 000 实测：search 仍 exit 0、输出字节不变。
 - 每项均为独立 commit，可单独 `git revert`。回退基线 `7295ec2`。
 
+## 治理续轮 — Tier-4 缺口（2026-05-27）
+
+> 审计发现但首轮未做的 Tier-4 项。每项同样走 fix→门禁→2轮辩论→判定→commit。
+
+| 项 | 结果 | commit / 处置 |
+|---|---|---|
+| T-CI 接 CI 执行测试/检查 | ✅ 完成 | `c1e5d9d`：8 项 CI-safe 检查接入；附带守住 check-quality-gates 的 unguarded readFileSync（CI dangling symlink 会崩） |
+| T-SPAWNED 清 LUCA_SPAWNED 死代码 | ✅ 完成 | `7115a0e`：30 探针 + 3 doc 节，0 残留；worktree 排除 |
+| T-ORPHAN orphan 记忆脚本 | ✅ 完成 | `deb2ef4`：删 mine_blockers（0-ref）；record_eval/collect_eval 是 deferred GEPA infra，保留+文档化，不 pre-empt gated 决策 |
+| T-VERIFY 对齐 verify.sh S2/S16 | ✅ 完成 | `6d2cbc5`：tri-state（deactivated=PASS / active+consistent=PASS / active+broken=FAIL）适配并行 auto-deactivate feature |
+| T-SYNCNOISE session-sync 噪声 | ✅ 完成 | `f954c08`：idempotent 写 + gitignore/untrack pending-extraction.md |
+| T-DUP 规则重复收敛 | ⏭️ 跳过（mirage） | 真重复已在 ADR-0003/0004 解决；剩余 #FF8000(50)/项目门禁(7) 绝大多数是功能性使用（HTML 色值、路由关键词、spec）。广泛 dedup 低值高险、反 subtract-first |
+| T-TIEBREAK route-guard ±1 窗口 | ⏭️ 跳过（counterproductive） | ±1 窗口是 intended MULTI-ask 的承载逻辑（figma 测试要求 MULTI[magicpath,html-prototype]）；收紧会破坏故意的 ask 并制造 confident-wrong-single，违反 ADR-0002 教训。A1 over-flagged |
+| T-PREFLIGHT preflight/quality-gate 重叠 | ⏸️ 推迟到 ADR-0007 W1 | 合并是 orchestration contract 的结构性改动 = 已 gated 的"编排瘦身"决策；piecemeal 做会 pre-empt 并打磨可能被整体瘦身的层 |
+
+环境事件：续轮中并行落地了 `feat(session-restore): auto-deactivate project on every startup`（外部 merge，移除项目 symlink + 改 hooksPath）。经用户确认为有意特性。已授权恢复 `core.hooksPath .githooks`（重启密钥扫描）。verify.sh S2/S16 已由 T-VERIFY 适配该特性。
+
+续轮元发现：审计 A1-A5 存在 over-flagging——T-DUP 与 T-TIEBREAK 经 scrutiny 不成立（功能性使用误判为重复 / 安全 MULTI-ask 误判为噪声）。剩余"仍开着"的项主要落在 deferred 的 ADR-0007 编排层 + A5 context bloat，非零散漏网。
+
 ## 后续待办（非本轮）
 1. ~10 个 distinct day 后跑 `search_memory.py --retrieval-stats`，按 ADR-0006 决策协议裁决记忆"建/冻/不充分"。
 2. 若要做 ADR-0005(b)：先建中文触发命中率测试 harness，通过后再迁 description 路由。
-3. ADR-0007 观望项按各自重评触发条件处理。
+3. ADR-0007 观望项（编排瘦身 W1，含 T-PREFLIGHT 合并 / turn-count→真实计量 / handoff 单一来源 / GEPA / 官方 skill 替换）按各自重评触发条件处理。
+4. A5 context bloat（CLAUDE.md/AGENTS.md ~5.8K + 仍在增长、启动 vs 懒加载矛盾）：与 ADR-0007 编排瘦身一并评估；注意 CLAUDE.md/AGENTS.md 正被并行特性改动，避免冲突。
+5. A3 hook 手写 YAML 正则脆弱：低优先；若做需避开并行改动的 session-restore.mjs。
