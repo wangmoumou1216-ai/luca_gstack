@@ -1,32 +1,46 @@
-# Framework Audit — Checkpoint
+# Framework Audit + 治理 — Checkpoint
 
-Last updated: 2026-05-26 (Phase 1 complete)
+Last updated: 2026-05-27（治理 6 项完成，准备继续 Tier-4 缺口）
 
 ## 已完成 ✅
-- **Phase 1 内部体检（A1-A5）** — 5 个 general-purpose subagent 并行，诊断卡全部落盘：
-  - ✅ `diagnostics/A1-skill-os-routing.md`
-  - ✅ `diagnostics/A2-agent-orchestration.md`
-  - ✅ `diagnostics/A3-hooks-scripts.md`
-  - ✅ `diagnostics/A4-memory-learning-loop.md`
-  - ✅ `diagnostics/A5-context-governance.md`
+**审计 + 辩论**（产出在 framework-audit/）：
+- diagnostics/A1-A5、research/B1-B3、CROSSWALK.md、DEBATE-CONCLUSION.md（3 critic × 4 轮对抗，工具验证）
 
-## 关键发现（跨子系统根因，Phase 3 综合用）
-1. **route-guard substring 匹配** [HIGH] — `text.includes()`（route-guard.mjs:227）导致误判；A3 实证复现了本 session 启动的 `PLAN CHECK /deepresearch` 误报。根因级。
-2. **学习闭环不自转** [HIGH] — session-sync.mjs:65-72 只打印命令不执行；晋升需手动 `--promote-ready`。两端都是手动 → Hermes 死因未修复只是搬家。自成长净产出=2 facts。
-3. **无单一真相源** — skill 列表手维护在 5 个配置面（routing-map/input-modes/workflow-graph/commands/CLAUDE.md 表）；#FF8000 在 26 文件；Plan Agent 4 条件在 3 处且已分叉。
-4. **空转/从不触发设计** — LUCA_SPAWNED 复制进 18+ 文件但无人 set；agent 规格 22-30% 是 paper-only（hierarchical 模式 + Worker Group）。
-5. **危险死代码** — active SKILL.md:258-273 仍指示运行已删除的 hermes 脚本（照做会 FileNotFound）；orphan Python 脚本 fix_long_lines/repair_backticks。
-6. **AGENTS.md↔CLAUDE.md 路由漂移** [HIGH] — Codex 和 Claude 会对同一请求做不同路由。
-7. **每 session 指令负载** ~5.8-6.1K tokens（用户开口前），触发 skill 后 ~8.1-8.4K。
-8. **一致性碎片** — compare 缺 input-modes、superpowers 3 种命名、品牌色 promoted-facts vs CLAUDE.md 不一致、docs/evals vs docs/evaluation 路径矛盾。
+**治理 6 项**（每项 fix-agent → 质量门禁 → 2 轮辩论 → 判定 → verify.sh → 独立 commit）：
+- ✅ ADR-0001 死代码 `1dc1475`
+- ✅ ADR-0004 一致性 `6e3683a`
+- ✅ ADR-0003 路由契约 `414e6dc`
+- ✅ ADR-0002 route-guard 权重护栏 `57aa76c`
+- ✅ ADR-0005a SSOT 漂移检测 `4115b5b`
+- ✅ ADR-0006 度量埋点 `135d928`
+- ✅ 治理日志 `e6fc2a3`
+- 回退基线 `7295ec2`；全程 verify.sh PASS=45 FAIL=0 WARN=1
+- 详见 framework-audit/GOVERNANCE-LOG.md
 
-## 进行中 🔄
-- Phase 2：B1-B3 源码级开源对标调研（即将启动）。
+## 关键决策（不可从代码推导）
+- promoted-facts.yaml SF-001 直改记为**授权 override**（更正错误事实，非新增）
+- CHANGELOG 0.2.0 不可变 → 改加 [Unreleased]
+- route-guard 用**严格权重护栏**（仅更高权重的更长触发词才 shadow），等权 tie 保持安全 STOP
+- ADR-0006 裁决规则：0-mattered = **不充分≠自动冻结**；冻结需客观证据（searches≈0）
 
-## 待执行
-- Phase 2：B1 编排框架 / B2 记忆系统 / B3 Claude Code skill 生态。
-- Phase 3：缺口×解法交叉表 + ROI 排序 + 写 ADR 到 framework-audit/adr/。
+## 待执行 🔄 —— Tier-4 缺口（审计发现但从未进入治理），按优先级
+> 用同样的治理闭环（fix-agent → 门禁强制提问 → 2 轮辩论 → 判定 → verify → commit）逐项做。
 
-## 恢复指令
-若 session 中断：读 framework-audit/diagnostics/*.md（已落盘的 Phase 1 全部证据），
-再读本 checkpoint 的"关键发现"，从 Phase 2 或 Phase 3 继续。不要重跑 Phase 1。
+1. **[最高] CI 缺口**：`.github/workflows/*.yml` 不跑 `check:hooks`/`test:routes`/`verify.sh`
+   → 本轮 route-guard 护栏 + SSOT 检测的测试在 CI 层**失效**。先补 CI 接线。
+2. **[高·纯减法] LUCA_SPAWNED/SPAWNED_SESSION 死代码**：仍在 **32 个文件**（grep 确认），从不触发。清理（含 18+ skill preamble bash 块 + 协议说明）。注意：SPAWNED_SESSION 有"未来预留"标注部分属设计取舍，需区分"误导性活引用"vs"明确预留"。
+3. **[中·减法] orphan 记忆脚本**：`mine_blockers.py`、`record_eval.py`、`collect_eval.py` 仍是未接线死脚本。删或接线——但与 ADR-0006 度量/eval 决策耦合，需先确认不影响 0006 度量路径。
+4. **[中] preflight + quality-gate 重叠**：两 agent md 都在，合并评估。
+5. **[中] 规则重复**：`#FF8000` 散落 **50 处**、Project Gate `老项目/已有项目` 在 **7 文件**。收敛到单一源（brand-tokens.md / routing 契约）。
+6. **[低] 其余**：hook 手写 YAML 正则脆弱、projectGate 过激 STOP、session-sync 每次写 pending-extraction 噪声、status.sh 重复渲染、tie-break ±1 窗口、skill 重叠（idea/brainstorm、deepresearch/ux-research、原型界面重复触发）。
+
+## 推迟（用户已确认 scope 外，勿动）
+- ADR-0005b description 路由迁移（待中文命中率测试）
+- ADR-0006 记忆重建/hook 内 LLM（待 ~10 session 度量）
+- ADR-0007 观望项（编排瘦身/token 计量/GEPA/官方 skill 替换）
+
+## 恢复指令（compaction / 新 session 后）
+1. 读本 checkpoint + framework-audit/GOVERNANCE-LOG.md
+2. `git log --oneline -8` 确认到 `e6fc2a3`；`bash scripts/verify.sh` 应 PASS=45
+3. 从"待执行 Tier-4"第 1 项（CI 缺口）继续，逐项走治理闭环
+4. 每项：stage 指定路径提交（勿 `git add -A`——会触发 .githooks 自身的 secret-scan 误报；`.env.example`/`.githooks/` 保持 untracked）
