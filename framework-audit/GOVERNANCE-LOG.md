@@ -52,13 +52,16 @@
 | T-DUP 规则重复收敛 | ⏭️ 跳过（mirage） | 真重复已在 ADR-0003/0004 解决；剩余 #FF8000(50)/项目门禁(7) 绝大多数是功能性使用（HTML 色值、路由关键词、spec）。广泛 dedup 低值高险、反 subtract-first |
 | T-TIEBREAK route-guard ±1 窗口 | ⏭️ 跳过（counterproductive） | ±1 窗口是 intended MULTI-ask 的承载逻辑（figma 测试要求 MULTI[magicpath,html-prototype]）；收紧会破坏故意的 ask 并制造 confident-wrong-single，违反 ADR-0002 教训。A1 over-flagged |
 | T-PREFLIGHT preflight/quality-gate 重叠 | ⏸️ 推迟到 ADR-0007 W1 | 合并是 orchestration contract 的结构性改动 = 已 gated 的"编排瘦身"决策；piecemeal 做会 pre-empt 并打磨可能被整体瘦身的层 |
+| T-DECISION 固化 ADR-0006 度量→裁决 | ✅ 完成 | `a13b1f3`：`--retrieval-stats` 自算裁决（STILL-ACCUMULATING/BUILD/FREEZE/INCONCLUSIVE）+「⏰ DECISION DUE」；review window=max(distinct sessions, distinct days) 防 stable-session-id 卡死 |
+
+**续轮验证（用户要求，独立复跑）：** 5 项已提交修复全部复验通过——不仅 happy-path，失败路径也确认会正确 FAIL（dangling workflow-state→S2 FAIL、active+broken→check-project-links FAIL、quality-gates 在 dangling 下 exit 0 守卫成立、session-sync idempotent md5 不变、LUCA_SPAWNED 0 残留、mine_blockers 0 live ref）。verify.sh PASS=45 FAIL=0；route 测试 18/18；CI 8 检查独立跑通；git tree 干净。
 
 环境事件：续轮中并行落地了 `feat(session-restore): auto-deactivate project on every startup`（外部 merge，移除项目 symlink + 改 hooksPath）。经用户确认为有意特性。已授权恢复 `core.hooksPath .githooks`（重启密钥扫描）。verify.sh S2/S16 已由 T-VERIFY 适配该特性。
 
 续轮元发现：审计 A1-A5 存在 over-flagging——T-DUP 与 T-TIEBREAK 经 scrutiny 不成立（功能性使用误判为重复 / 安全 MULTI-ask 误判为噪声）。剩余"仍开着"的项主要落在 deferred 的 ADR-0007 编排层 + A5 context bloat，非零散漏网。
 
 ## 后续待办（非本轮）
-1. ~10 个 distinct day 后跑 `search_memory.py --retrieval-stats`，按 ADR-0006 决策协议裁决记忆"建/冻/不充分"。
+1. ~10 个 distinct day 后跑 `search_memory.py --retrieval-stats`——现已**自算裁决**并标「⏰ DECISION DUE」（T-DECISION 完成）；到期时按其输出的 BUILD/FREEZE/INCONCLUSIVE 处置记忆写侧。此为解锁 ADR-0007 编排层的前置 gate。
 2. 若要做 ADR-0005(b)：先建中文触发命中率测试 harness，通过后再迁 description 路由。
 3. ADR-0007 观望项（编排瘦身 W1，含 T-PREFLIGHT 合并 / turn-count→真实计量 / handoff 单一来源 / GEPA / 官方 skill 替换）按各自重评触发条件处理。
 4. A5 context bloat（CLAUDE.md/AGENTS.md ~5.8K + 仍在增长、启动 vs 懒加载矛盾）：与 ADR-0007 编排瘦身一并评估；注意 CLAUDE.md/AGENTS.md 正被并行特性改动，避免冲突。
