@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
-import { readFileSync, existsSync, writeFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
@@ -24,17 +24,23 @@ if (existsSync(stateFile)) {
 const counterFile = join(projectRoot, '.claude', '.session-turn-count');
 try { writeFileSync(counterFile, '0'); } catch { }
 
-// 显示项目列表（docs/ 为 symlink 时读取当前激活项目）
+// 每次启动自动清除激活项目，确保走全新项目流程
+const docsLink = join(projectRoot, 'docs');
+const stateLink = join(projectRoot, '.claude', 'workflow-state.yaml');
+const topicLink = join(projectRoot, '.claude', 'current-topic.txt');
+for (const link of [docsLink, stateLink, topicLink]) {
+  try { if (lstatSync(link).isSymbolicLink()) unlinkSync(link); } catch { }
+}
+
+// 显示项目列表（无激活项目）
 try {
-  const rawTarget = execSync('readlink docs 2>/dev/null || true', { cwd: projectRoot, encoding: 'utf8' }).trim();
   const projectsRoot = join(homedir(), 'Desktop', '项目');
-  if (rawTarget && existsSync(projectsRoot)) {
-    const currentName = rawTarget.replace(/^.*Desktop\/项目\//, '').replace(/\/docs$/, '');
+  if (existsSync(projectsRoot)) {
     const entries = readdirSync(projectsRoot).filter(e => {
       try { return statSync(join(projectsRoot, e)).isDirectory(); } catch { return false; }
     });
-    const lines = entries.map(e => `  ${e === currentName ? '●' : '○'} ${e}${e === currentName ? '（当前激活）' : ''}`).join('\n');
-    process.stdout.write(`[session-restore] 📁 项目列表（当前激活: ${currentName}）:\n${lines}\n\n`);
+    const lines = entries.map(e => `  ○ ${e}`).join('\n');
+    process.stdout.write(`[session-restore] 📁 项目列表（无激活项目，请告知要做什么）:\n${lines}\n\n`);
   }
 } catch { }
 
