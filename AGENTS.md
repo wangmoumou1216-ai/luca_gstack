@@ -261,7 +261,7 @@ If the user explicitly points out a mistake or says to remember a future constra
 `write_observation.py`. If it is actionable and reusable, also append an active rule through the
 same script.
 
-### 4.6 Skill OS And Optional Workflow Graph
+### 4.6 Skill OS Standalone / Workflow Modes
 
 Use `.claude/skill-os/input-modes.yaml` to decide whether a skill is running in standalone or workflow mode.
 

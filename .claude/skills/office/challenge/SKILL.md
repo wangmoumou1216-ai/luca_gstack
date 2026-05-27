@@ -25,7 +25,6 @@ _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _PRD=$(ls -t docs/prd/*-prd.md 2>/dev/null | head -1)
 echo "BRANCH: $_BRANCH"
 echo "PRD: ${_PRD:-none}"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---

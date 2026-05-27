@@ -11,7 +11,6 @@ allowed-tools:
 
 ```bash
 echo "AGENT: assembly-agent"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---

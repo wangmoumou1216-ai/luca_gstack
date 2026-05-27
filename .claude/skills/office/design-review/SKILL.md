@@ -32,7 +32,6 @@ echo "TOPIC: $_TOPIC"
 echo "DECISION: ${_DECISION:-none}"
 echo "PROTOTYPE: ${_PROTOTYPE:-none}"
 echo "PRD: ${_PRD:-none}"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---

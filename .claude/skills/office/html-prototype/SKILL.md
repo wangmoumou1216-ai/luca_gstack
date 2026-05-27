@@ -41,7 +41,6 @@ echo "UX_AUDIT: ${_UX_AUDIT:-none}"
 ls framework/*.html 2>/dev/null && echo "FRAMEWORK_OK" || echo "FRAMEWORK_MISSING"
 _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
 echo "CURRENT_TOPIC: $_TOPIC"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 python3 .claude/observability/scripts/get_rules.py html-prototype "*" 2>/dev/null || true
 ```
 

@@ -18,7 +18,6 @@ _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
 echo "SESSION: $_SESSION_ID"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---
@@ -221,11 +220,6 @@ python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
 - 自动改 `CLAUDE.md` / `AGENTS.md`
 - 自动改 skill 主规则
 - 把一次性偏好晋升为长期规则
-
-### SPAWNED_SESSION 规则
-
-当前未启用 Orchestrator，此机制为未来扩展预留。
-所有 skill 均以交互模式运行（用户直接触发）。
 
 ### 场景标识
 

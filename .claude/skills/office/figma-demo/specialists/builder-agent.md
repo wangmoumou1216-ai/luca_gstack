@@ -12,7 +12,6 @@ allowed-tools:
 ```bash
 echo "AGENT: builder-agent"
 echo "TASK: ${BUILDER_TASK_ID:-unknown}"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---

@@ -41,7 +41,6 @@ echo "UX_RESEARCH: ${_UX_RESEARCH:-none}"
 echo "UX_BRAINSTORM: ${_UX_BRAINSTORM:-none}"
 _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
 echo "CURRENT_TOPIC: $_TOPIC"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null || true
 ```
 

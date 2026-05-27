@@ -36,7 +36,6 @@ _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
 echo "CURRENT_TOPIC: $_TOPIC"
 _EXISTING_BLUEPRINT=$(ls -t docs/prototype/*/blueprint.yaml 2>/dev/null | head -1)
 echo "EXISTING_BLUEPRINT: ${_EXISTING_BLUEPRINT:-none}"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---
@@ -122,7 +121,7 @@ echo "EXISTING_BLUEPRINT: ${_EXISTING_BLUEPRINT:-none}"
       │
       ▼
 ┌──────────────────────────────────────────────────────────┐
-│ Phase 4: Builder SubAgent 调度（逐节点，SPAWNED_SESSION） │
+│ Phase 4: Builder SubAgent 调度（逐节点）                  │
 │   • 每个节点独立调度一次 Builder SubAgent                  │
 │   • 输入：Constitution + Blueprint摘要 + Working Context  │
 │   • 产出：fragment.html + interface.yaml                   │

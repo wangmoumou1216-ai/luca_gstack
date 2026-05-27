@@ -41,7 +41,6 @@ echo "BLUEPRINT: ${_BLUEPRINT:-none}"
 echo "DECISION: ${_DECISION:-none}"
 _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
 echo "CURRENT_TOPIC: $_TOPIC"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null || true
 ```
 

@@ -34,7 +34,6 @@ echo "PROTOTYPE: ${_PROTOTYPE:-none}"
 echo "FIGMA_SPEC: ${_FIGMA:-none}"
 _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
 echo "CURRENT_TOPIC: $_TOPIC"
-[ -n "$LUCA_SPAWNED" ] && echo "SPAWNED_SESSION: true" || echo "SPAWNED_SESSION: false"
 ```
 
 ---
