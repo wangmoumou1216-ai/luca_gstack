@@ -191,6 +191,35 @@ for (const name of commandSkillNames) {
   }
 }
 
+// SSOT-7: Plan Agent trigger conditions must be present across 3 surfaces:
+//   plan-agent.md (source of truth, CN), CLAUDE.md (CN), AGENTS.md (EN).
+// Detects drift like "plan-agent.md v2 added '用户明确要求' but the other two
+// surfaces forgot to sync" (Audit 2026-05-28 finding C3).
+const planAgentMd = readFileSync('.claude/agents/plan-agent.md', 'utf8');
+const agentsMd = readFileSync('AGENTS.md', 'utf8');
+// Each anchor must be unique enough to identify the SPECIFIC trigger condition
+// (not just the general topic word). For drift-prone "example-only" rows like
+// user-explicit, use the example phrase ("先做个计划") instead of the generic
+// "用户明确要求" — the latter appears elsewhere in CLAUDE.md.
+const PLAN_AGENT_CONDITIONS = [
+  { id: '3-files',          cn: /≥\s*3\s*个文件/,                  en: /≥\s*3\s*files/ },
+  { id: '2-subagents',      cn: /≥\s*2\s*个独立\s*subagent/i,       en: /≥\s*2\s*independent\s*subagent/i },
+  { id: 'phase-dependency', cn: /阶段依赖/,                         en: /phase\s*dependency/i },
+  { id: 'irreversible',     cn: /不可逆操作/,                        en: /irreversible\s*operations/i },
+  { id: 'user-explicit',    cn: /先做个计划/,                        en: /先做个计划/ },
+];
+const SURFACES = [
+  { name: 'plan-agent.md', text: planAgentMd },
+  { name: 'CLAUDE.md',     text: claudeMd },
+  { name: 'AGENTS.md',     text: agentsMd },
+];
+for (const cond of PLAN_AGENT_CONDITIONS) {
+  for (const surface of SURFACES) {
+    const hit = cond.cn.test(surface.text) || cond.en.test(surface.text);
+    if (!hit) ssotErrors.push(`SSOT-7 ${surface.name} missing Plan Agent trigger condition "${cond.id}"`);
+  }
+}
+
 if (ssotErrors.length) {
   console.error('FAIL skill SSOT consistency:');
   for (const e of ssotErrors) console.error(`  - ${e}`);

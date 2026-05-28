@@ -34,11 +34,14 @@ const cases = [
     },
   },
   {
-    name: 'new natural project asks for project confirmation',
+    // Audit 2026-05-28 C1: with active project, "我想做一个 X" (X 不是泛词
+    // "需求/项目") 现行实现 (route-guard.mjs:187 守护 !currentProject) 让其
+    // fall through 到 skillDecision；具体 domain 词无 trigger 命中 → STOP。
+    // 主 Claude 应在 STOP 时询问用户是否新建项目/继续。
+    name: 'new natural idea with active project falls through to STOP',
     prompt: '我想做一个客户跟进助手',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'confirm_new_project');
+      assert.equal(decision.decision, 'STOP', `got ${decision.decision}`);
     },
   },
   {
@@ -185,10 +188,111 @@ const cases = [
       assert.equal(decision.skill, '/deepresearch');
     },
   },
+  // ─────────────────────────────────────────────────────────────────────────
+  // Audit 2026-05-28: regression cases for the 8 routing scenarios.
+  // Each maps to a specific finding in .claude/audit/2026-05-28-...md §2.
+  // Some are EXPECTED to FAIL until their corresponding Phase 3-9 is applied;
+  // they are listed in failing order to surface real implementation gaps.
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    // Audit C2: meta/audit task should NOT be blocked by Project Gate.
+    name: 'audit meta task escapes project gate (no current project)',
+    prompt: '评估当前路由是否合理',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP',
+        `meta task must escape project gate, got ${decision.decision}`);
+    },
+  },
+  {
+    // Audit C2: why-question is a meta task too.
+    name: 'meta why-question escapes project gate (no current project)',
+    prompt: '为什么这次没触发 plan mode',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP',
+        `meta why-question must escape project gate, got ${decision.decision}`);
+    },
+  },
+  {
+    // Audit M2: content-tool skill (/idea) is standalone-capable; should not
+    // be short-circuited by Project Gate when no current project.
+    name: 'idea standalone allowed without project (会议纪要)',
+    prompt: '会议纪要整理需求',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/idea');
+    },
+  },
+  {
+    // Audit M2: /compare is governance_tools, also standalone-capable.
+    name: 'compare standalone allowed without project',
+    prompt: '比较一下两个方案',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP',
+        `compare standalone must not be gated, got ${decision.decision}`);
+    },
+  },
+  {
+    // Audit C3: explicit user request for plan should enter PLAN_MODE.
+    // plan-agent.md:38 lists this as the 5th trigger condition but
+    // route-guard has no detection for "先做个计划/plan 一下/想清楚再做".
+    name: 'explicit user plan request triggers PLAN_MODE',
+    prompt: '先做个计划再说',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_MODE',
+        `explicit plan request must enter PLAN_MODE, got ${decision.decision}`);
+    },
+  },
+  {
+    // Audit M3: short-but-explicit complex new requirement should also trigger
+    // PLAN_MODE/planHint. Current capHits >= 4 misses UI vocab (登录/权限/
+    // 头像/侧边栏) which are real complexity signals.
+    name: 'short complex new requirement triggers PLAN_MODE/planHint',
+    prompt: '新项目想做用户管理，需要登录、权限、头像、侧边栏功能',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      const ok = decision.decision === 'PLAN_MODE'
+        || (decision.decision === 'PROJECT_STOP' && decision.planHint === true);
+      assert.ok(ok, `expected PLAN_MODE or PROJECT_STOP+planHint=true, got ${JSON.stringify(decision)}`);
+    },
+  },
+  {
+    // Verification: /auto trigger words (全流程) with active project already
+    // route to PLAN_CHECK via HEAVY_ORCHESTRATOR_SKILLS — confirms the audit
+    // §0 误诊 correction (no missing complexity signal).
+    name: '全流程做 with active project triggers PLAN_CHECK on /auto',
+    prompt: '全流程做客户管理',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_CHECK');
+      assert.equal(decision.skill, '/auto');
+    },
+  },
 ];
 
+let passCount = 0;
+let failCount = 0;
+const failures = [];
 for (const testCase of cases) {
-  const decision = route(testCase.prompt);
-  testCase.expect(decision);
-  console.log(`PASS ${testCase.name}`);
+  const decision = route(testCase.prompt, testCase.extraEnv || {});
+  try {
+    testCase.expect(decision);
+    console.log(`PASS ${testCase.name}`);
+    passCount++;
+  } catch (e) {
+    console.log(`FAIL ${testCase.name}: ${e.message?.split('\n')[0]}`);
+    failures.push({ name: testCase.name, error: e.message?.split('\n')[0] });
+    failCount++;
+  }
+}
+
+console.log(`\n=== test-route-guard summary: PASS=${passCount} FAIL=${failCount} ===`);
+if (failCount > 0) {
+  console.log('Failed cases:');
+  for (const f of failures) console.log(`  - ${f.name}`);
+  process.exit(1);
 }
