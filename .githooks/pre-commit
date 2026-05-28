@@ -1,0 +1,84 @@
+#!/bin/bash
+# pre-commit: 扫描暂存文件中的 API key 和敏感信息
+# 硬失败模式：不依赖任何编译产物
+
+set -e
+
+STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+FOUND_SECRETS=0
+
+for FILE in $STAGED_FILES; do
+  [ -f "$FILE" ] || continue
+
+  # 检测 Anthropic API key
+  if grep -qE "sk-ant-[a-zA-Z0-9]{40,}" "$FILE" 2>/dev/null; then
+    echo "ERROR: Possible Anthropic API key found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测通用 API key 赋值
+  if grep -qE "ANTHROPIC_API_KEY\s*=\s*['\"]?sk-" "$FILE" 2>/dev/null; then
+    echo "ERROR: ANTHROPIC_API_KEY assignment found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测 OpenAI key
+  if grep -qE "sk-[a-zA-Z0-9]{48}" "$FILE" 2>/dev/null; then
+    echo "ERROR: Possible OpenAI API key found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测私钥（严格 PEM 头：-----BEGIN ... PRIVATE KEY-----）
+  if grep -qE -- "-----BEGIN [A-Z ]+PRIVATE KEY-----" "$FILE" 2>/dev/null; then
+    echo "ERROR: Private key found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测 GitHub Personal Access Token
+  if grep -qE "ghp_[a-zA-Z0-9]{36}" "$FILE" 2>/dev/null; then
+    echo "ERROR: Possible GitHub Personal Access Token found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测 GitHub Fine-grained Token
+  if grep -qE "github_pat_[a-zA-Z0-9_]{82}" "$FILE" 2>/dev/null; then
+    echo "ERROR: Possible GitHub Fine-grained Token found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测 AWS Access Key ID
+  if grep -qE "AKIA[A-Z0-9]{16}" "$FILE" 2>/dev/null; then
+    echo "ERROR: Possible AWS Access Key ID found in $FILE"
+    FOUND_SECRETS=1
+  fi
+
+  # 检测通用 secret 赋值模式
+  if grep -qE "(SECRET|TOKEN|PASSWORD)\s*=\s*['\"][^'\"]{8,}" "$FILE" 2>/dev/null; then
+    echo "WARNING: Possible secret assignment found in $FILE — please review"
+  fi
+done
+
+if [ "$FOUND_SECRETS" -eq 1 ]; then
+  echo ""
+  echo "Commit blocked: sensitive data detected in staged files."
+  echo "Remove the secrets and try again."
+  exit 1
+fi
+
+echo "pre-commit: no secrets detected ✓"
+
+# Framework health: aggregates all check/test scripts.
+# Skip via FAST_COMMIT=1 only when committing audit notes / docs unrelated to
+# framework logic.
+if [ "${FAST_COMMIT:-0}" = "1" ]; then
+  echo "pre-commit: FAST_COMMIT=1 — skipping verify.sh"
+  exit 0
+fi
+echo ""
+echo "pre-commit: running scripts/verify.sh ..."
+exec bash scripts/verify.sh
