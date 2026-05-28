@@ -9,6 +9,20 @@ design_output:
     - "non-react project"
     - "user requests local html"
 
+research_default:
+  principle: "复杂且新颖任务，研究阶段(deepresearch/ux-research)是默认步骤，非可选。"
+  light_paths_apply_when:        # 不含研究节点的轻量 recommended_paths 仅适用于：
+    - "低不确定性"
+    - "核心机制有成熟先例"
+  require_research_when:         # 满足全部 → 必须走含 deepresearch 或 ux-research 的路径
+    - "命中 Plan Agent 任一触发条件（复杂）"
+    - "核心机制/交互无成熟先例（新颖）"
+  skip_requires: "在 Phase 计划中显式声明跳过理由并经用户确认；禁止静默省略研究节点"
+  tool_choice:
+    deepresearch: "广域多源/学术/技术可行性"
+    ux-research: "先例/竞品/UX/行为设计"
+    web_spike: "极窄单点事实"
+
 scenes:
   A:
     name: "new_feature"

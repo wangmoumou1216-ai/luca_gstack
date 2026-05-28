@@ -59,7 +59,7 @@ function loadRoutes(yamlPath) {
     }
     if (!currentSection || currentSection === 'context') continue;
 
-    const skillMatch = line.match(/^  (\w[\w_]+):(\s*)$/);
+    const skillMatch = line.match(/^  ([\w-]+):(\s*)$/);
     if (skillMatch) {
       if (currentEntry?.triggers?.length) routes.push(currentEntry);
       currentEntry = { type: currentSection, invoke: '', hint: '', triggers: [], w: 7 };
@@ -133,8 +133,47 @@ function projectGate(prompt, projects, currentProject) {
   const text = normalize(prompt);
   if (!text) return null;
   if (/当前项目|这个项目|本项目/.test(prompt)) return null;
+  // Audit C2: meta/audit/help questions are framework-level, not project work.
+  // Skip Project Gate so they route via the normal skill/STOP path instead of
+  // forcing "新项目还是继续老项目" on what is clearly a question about the system.
+  if (/^\s*(评估|审计|查看|看看|为什么|是什么|什么是|解释|说明|讲一下|讲讲|你能|你会|能不能告诉|帮我看看|帮我看一下)/.test(prompt)) {
+    return null;
+  }
+  // Audit M2: content-tool skills are standalone-capable — they don't need a
+  // project context (e.g. /idea ingesting meeting notes, /compare diffing two
+  // files, agent-browser/web-access fetching URLs). Let them route via
+  // skillDecision; don't short-circuit them through the project gate.
+  if (/会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取/.test(prompt)) {
+    return null;
+  }
 
-  const named = projects.find(name => text.includes(normalize(name)));
+  // New-project signals must not be misread as switching to an existing
+  // project whose name is a substring (e.g. "项目" ⊂ "新项目"). Strip the
+  // trigger words before matching existing project names.
+  const newProjectTriggers = ['新项目', '新需求', '新功能'];
+  const hasNewProjectSignal = newProjectTriggers.some(t => text.includes(normalize(t)));
+  let searchText = text;
+  for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
+
+  const named = projects.find(name => {
+    const normalizedName = normalize(name);
+    const idx = searchText.indexOf(normalizedName);
+    if (idx === -1) return false;
+    const charAfter = searchText[idx + normalizedName.length];
+    // Only English identifier-continuation chars count as "not a boundary".
+    // CJK chars after the name (e.g. "luca-dev 的任务") ARE a boundary, so
+    // common follow-up particles do not break the match.
+    const afterOk = charAfter === undefined || !/[a-z0-9_-]/i.test(charAfter);
+    // Short names (≤2 chars) keep the stricter CJK-also-extends check on both
+    // sides to avoid false positives like 名"AI"误中"AIxxx".
+    if (normalizedName.length <= 2) {
+      const charBefore = idx > 0 ? searchText[idx - 1] : undefined;
+      const beforeOk = charBefore === undefined || !/[一-鿿a-z0-9]/i.test(charBefore);
+      const strictAfterOk = charAfter === undefined || !/[一-鿿a-z0-9]/i.test(charAfter);
+      return strictAfterOk && beforeOk;
+    }
+    return afterOk;
+  });
   if (named && normalize(named) !== normalize(currentProject)) {
     return {
       decision: 'PROJECT_SWITCH',
@@ -163,13 +202,13 @@ function projectGate(prompt, projects, currentProject) {
     };
   }
 
-  if (/我想做一个.+|我想做个.+|我要做一个.+|我要做个.+/.test(prompt)) {
+  if (!currentProject && (hasNewProjectSignal || /我想做一个.+|我想做个.+|我要做一个.+|我要做个.+/.test(prompt))) {
     return {
       decision: 'PROJECT_STOP',
       projectAction: 'confirm_new_project',
       currentProject: currentProject || '',
       projects,
-      message: '这是新项目或当前项目里的新需求，请先确认项目归属。',
+      message: '这是新项目或当前项目里的新需求，请先确认项目归属；若是多能力复杂需求，确认后先读 .claude/agents/plan-agent.md 走 Plan Agent，不要直接进单个 skill。',
     };
   }
 
@@ -192,15 +231,33 @@ function complexityDecision(prompt) {
       name: '多模块',
       weight: 3,
       test: t => {
-        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '数据库', 'api', 'memory', '知识库', '定时', 'scheduler', '推送系统'];
+        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '桌面', 'desktop', 'claude', '卡片', '数据库', 'api', 'memory', '知识库', '定时', '调度', 'scheduler', '推送'];
         return sys.filter(s => t.includes(normalize(s))).length >= 2;
       },
     },
     { name: '规划意图', weight: 3, regex: /整体规划|整体设计|整体方案|全链路|端到端|系统设计|做个规划|规划一下|大框架|架构设计/ },
     { name: '多需求并列', weight: 2, regex: /第一.*第二|首先.*其次|一方面.*另一方面|(?:功能|模块|系统).{1,20}(?:功能|模块|系统)/ },
-    { name: '跨系统集成', weight: 3, regex: /定时.*推送|记录.*学习|学习路径|知识图谱|跨.*聚合|个性化.*推荐|每日.*定时/ },
+    { name: '跨系统集成', weight: 3, regex: /定时.*推送|记录.*学习|学习路径|知识图谱|跨.*聚合|个性化.*推荐|每日.*定时|每天.{0,4}[个张次]|一天.{0,4}[个张次]|设置.{0,8}时间|定时.{0,6}(吐|推|发|提醒|生成)/ },
     { name: '显式复杂', weight: 4, regex: /负责的功能|复杂的需求|复杂功能|plan\s*agent|task编排|多个skill|skill.*组合|这是一个复杂/ },
-    { name: '长输入', weight: 0, test: t => t.length > 400 },
+    // Audit C3: explicit user plan request — plan-agent.md:38 lists this as
+    // the 5th trigger condition. Standalone weight 6 puts it past the PLAN_MODE
+    // threshold; uses normalized-text regex (normalize() lowercases).
+    { name: '用户明确要求 plan', weight: 6, regex: /先做个计划|先做计划|plan\s*一下|想清楚再做|做个计划再说|做个规划再说/ },
+    {
+      name: '新项目复杂需求',
+      weight: 6,
+      test: t => {
+        if (!/新项目|新需求|新功能|想做一个|想做个|要做一个|要做个/.test(prompt)) return false;
+        const caps = ['然后', '可以', '还能', '并且', '以及', '入口', '形式', '设置', '支持', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
+          // Audit M3: UI/function nouns commonly enumerated in product reqs.
+          '登录', '注册', '权限', '头像', '侧边栏', '按钮', '弹窗', '列表', '详情', '表单', '搜索', '筛选', '编辑', '创建', '导出', '导入'];
+        const capHits = caps.filter(c => t.includes(normalize(c))).length;
+        // Audit M3: capHits >= 4 already is a strong signal — short prompts
+        // listing 4+ feature nouns ("新项目登录权限头像侧边栏") are clearly
+        // complex regardless of total length. Dropping the length >30 floor.
+        return capHits >= 4;
+      },
+    },
   ];
   let complexityScore = 0;
   const firedSignals = [];
@@ -215,6 +272,32 @@ function complexityDecision(prompt) {
     return { decision: 'PLAN_MODE', complexityScore, signals: firedSignals };
   }
   return { complexityScore, signals: firedSignals };
+}
+
+function softSkillDecision(prompt, routes) {
+  const text = normalize(prompt);
+  const scored = routes.map(route => {
+    let score = 0;
+    const matchedTokens = [];
+    for (const trigger of route.triggers) {
+      const t = normalize(trigger);
+      let bestLen = 0;
+      for (let len = Math.min(t.length, 6); len >= 3; len--) {
+        for (let i = 0; i <= t.length - len; i++) {
+          const sub = t.slice(i, i + len);
+          if (text.includes(sub)) { bestLen = len; matchedTokens.push(sub); break; }
+        }
+        if (bestLen) break;
+      }
+      score += bestLen;
+    }
+    return { route, score, matchedTokens: [...new Set(matchedTokens)] };
+  });
+  return scored
+    .filter(e => e.score >= 4)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(e => ({ skill: e.route.invoke || e.route.hint, tokens: e.matchedTokens }));
 }
 
 function skillDecision(prompt) {
@@ -260,9 +343,9 @@ function skillDecision(prompt) {
     const looksLikeTask = prompt.length > 5
       && !prompt.match(/^(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i)
       && !prompt.endsWith('?') && !prompt.endsWith('？');
-    return looksLikeTask
-      ? { decision: 'STOP', reason: 'no_keyword_match' }
-      : { decision: 'NONE' };
+    if (!looksLikeTask) return { decision: 'NONE' };
+    const softCandidates = softSkillDecision(prompt, routes);
+    return { decision: 'STOP', reason: 'no_keyword_match', softCandidates };
   }
 
   const topWeight = hits[0].w;
@@ -298,9 +381,21 @@ function buildDecision(prompt) {
   const projects = listProjects();
   const currentProject = readCurrentProject(projects);
   const gate = projectGate(prompt, projects, currentProject);
-  if (gate) return gate;
-
   const complexity = complexityDecision(prompt);
+
+  // The gate short-circuits before skill/complexity routing. Carry the
+  // complexity result through so a complex requirement bundled into a
+  // new-project / switch message still flags Plan Agent at the gate, instead
+  // of being silently downgraded once the project is confirmed.
+  if (gate) {
+    return {
+      ...gate,
+      complexityScore: complexity.complexityScore,
+      signals: complexity.signals,
+      planHint: complexity.complexityScore >= 6,
+    };
+  }
+
   if (complexity.decision === 'PLAN_MODE') return complexity;
 
   const skillResult = skillDecision(prompt);
@@ -321,10 +416,16 @@ function buildDecision(prompt) {
 
 function decisionToHints(decision) {
   switch (decision.decision) {
-    case 'PROJECT_STOP':
-      return [`[route-guard] 🧭 PROJECT GATE — ${decision.message}`];
-    case 'PROJECT_SWITCH':
-      return [`[route-guard] 🧭 PROJECT GATE — ${decision.message}\n确认后执行：./scripts/project.sh switch "${decision.project}"`];
+    case 'PROJECT_STOP': {
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}`;
+      if (!decision.planHint) return [base];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
+    }
+    case 'PROJECT_SWITCH': {
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n确认后执行：./scripts/project.sh switch "${decision.project}"`;
+      if (!decision.planHint) return [base];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
+    }
     case 'PLAN_MODE':
       return [
         `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）\n` +
@@ -349,13 +450,19 @@ function decisionToHints(decision) {
         '你必须在执行任何操作前，先主动询问用户选择哪个 skill，禁止自行判断。\n' +
         `候选列表（供用户选择）：${decision.candidates.join(', ')}`,
       ];
-    case 'STOP':
+    case 'STOP': {
+      const softCandidates = decision.softCandidates || [];
+      const candidateHint = softCandidates.length
+        ? '\n基于语义推断，最可能的 skill：\n' +
+          softCandidates.map((c, i) =>
+            `  ${i + 1}. ${c.skill}（参考词：${c.tokens.join('、')}）`
+          ).join('\n') +
+          '\n向用户展示候选列表，询问确认或请用户补充描述。'
+        : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n禁止在未询问的情况下自行判断并执行。';
       return [
-        '[route-guard] ❓ STOP — 路由置信度低（无关键词命中）。\n' +
-        '你必须在执行任何操作前，先主动询问用户想用哪个 skill。\n' +
-        '参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n' +
-        '禁止在未询问的情况下自行判断并执行。',
+        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint,
       ];
+    }
     default:
       return [];
   }

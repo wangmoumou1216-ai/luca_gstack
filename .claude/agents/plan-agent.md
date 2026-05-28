@@ -60,16 +60,17 @@ Plan Agent 接收以下信息（由主 Agent 组装传入）：
 
 | 产出物 | 路径 | 要求 | 溯源字段 |
 |--------|------|------|---------|
-| tech-spec handoff | `docs/handoff/*tech-spec-handoff.md` | **必须存在**，否则终止 | IF-NNN / R-NNN |
+| tech-spec handoff | `docs/handoff/*tech-spec-handoff.md` | **Scene A/B/D 必须存在**，否则终止；Scene C（仅设计改版）可缺失，标注 N/A 继续 | IF-NNN / R-NNN |
 | task-plan | `docs/engineering/*task-plan.md` | 存在时强制遵守，DEV-NNN 必须全覆盖 | DEV-NNN / TEST-NNN |
 | design-brief handoff | `docs/handoff/*design-brief-handoff.md` | 建议存在，缺失时告知后继续 | DEC-DXXX / STATE-SXX |
 | PRD handoff | `docs/handoff/*brainstorm-handoff.md` | 可选，有冲突时才读 | R-NNN / AE-NNN |
 
-**如 tech-spec handoff 不存在：**
+**如 tech-spec handoff 不存在（Scene A/B/D）：**
 ```
 ⛔ 缺少 tech-spec handoff。Plan Agent 无法确认工程接口约束。
 请先运行 /tech-spec，再运行计划。
 ```
+**Scene C（ux-audit → design-brief → 原型，无工程实现）：tech-spec handoff 不适用，标注 N/A 跳过此检查。**
 
 ---
 
@@ -375,10 +376,26 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 - 能并行的 subagent 同一消息并发启动
 - magicpath 使用前先询问用户是否可用
 
+**研究默认门（Research Default Gate）——必须遵守：**
+
+当任务**同时满足【复杂】且【新颖】**时，研究阶段是**默认步骤，不是可选项**：
+- **复杂** = 命中 Plan Agent 任一触发条件（≥3 文件 / ≥2 subagent / 阶段依赖 / 不可逆操作）。
+- **新颖** = 核心机制 / 交互无成熟先例，或用户明确在做"没人做过 / 自己没做过"的东西。
+
+研究强度按 fact-gap 自适应，不必每次都上重型 deepresearch：
+- 广域多源 / 学术 / 技术可行性 → `deepresearch`
+- 先例 / 竞品 / UX / 行为设计 → `ux-research`
+- 两者可并行；极窄的单点事实可降级为一次 web 联网 spike
+
+**禁止静默跳过研究。** 若判断不需要研究，必须在 Phase 计划里**显式写出跳过理由**并交用户确认；
+不得因"省成本 / 赶进度 / 决策能直接问用户"而默默删掉研究节点。
+> 反面教训：把"决策能从用户问出来"误当成"不需要外部研究"——新颖任务里，用户的偏好若没有
+> 先例垫底，只是"不知道前人踩过哪些坑"的偏好；研究恰恰是去风险处，不是该省处。
+
 **节点顺序硬性规则（必须遵守，不得跳步或合并）：**
 
 ```
-[研究阶段]  deepresearch / ux-research（按需选用，可并行）
+[研究阶段]  deepresearch / ux-research（复杂+新颖任务默认走此阶段，可并行；跳过须显式声明理由）
     ↓
 [产品阶段]  brainstorm → PRD
     ↓
@@ -397,7 +414,7 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 
 **设计 skill 全链路时的参考 Phase 拆分（Plan Agent 根据实际需求自主选用节点，但顺序不变）：**
 ```
-Phase 1: deepresearch（subagent）—— 信息密集型需求时使用
+Phase 1: deepresearch（subagent）—— 复杂且新颖任务默认包含；非新颖/低不确定性可显式声明跳过
 Phase 2: brainstorm（main_agent，依赖 Phase 1 产出）
 Phase 3: ux-research（subagent，依赖 Phase 2 PRD）—— 有 UX 设计要求时使用
 Phase 4: ux-brainstorm（main_agent，依赖 Phase 3 产出）

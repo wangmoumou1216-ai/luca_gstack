@@ -16,17 +16,18 @@ project_skills:
   auto:
     invoke: "/auto"
     weight: 10
-    triggers: [全流程, 自动做, auto, 一键, 帮我全部, 端到端, 完整设计, 全套方案, 功能设计]
+    triggers: [全流程, 自动做, auto, 一键, 帮我全部, 端到端, 完整设计, 全套方案, 全套功能设计, 完整功能设计, 全部搞定, 整套做]
 
   idea:
     invoke: "/idea"
     weight: 6
-    triggers: [有个想法, 原始想法, 需求确认, 功能方向, idea, 一个功能, 需求分析]
+    # 仅限"已有原始语料忠实结构化"场景；新想法/方向探索一律走 /brainstorm
+    triggers: [会议纪要, 会议语料, 语音稿, 语音转文字, 转文字稿, 原始语料, 讨论记录, 语料转需求, 整理这段记录, 梳理这段记录]
 
   brainstorm:
     invoke: "/brainstorm"
     weight: 6
-    triggers: [PRD, 需求文档, 产品需求, brainstorm, 写PRD, 需求梳理]
+    triggers: [PRD, 需求文档, 产品需求, brainstorm, 写PRD, 需求梳理, 有个想法, 原始想法, 功能方向, 一个功能, 需求分析, 需求确认, 分析需求, 想梳理, 梳理需求]
 
   superpowers-brainstorming:
     invoke: "superpowers:brainstorming"
@@ -41,7 +42,7 @@ project_skills:
   ux_research:
     invoke: "/ux-research"
     weight: 7
-    triggers: [UX研究, 竞品分析, 设计调研, 用户研究, 体验分析, UX调研, 看看竞品]
+    triggers: [UX研究, 竞品分析, 设计调研, 用户研究, 体验分析, UX调研]
 
   ux_brainstorm:
     invoke: "/ux-brainstorm"
@@ -51,7 +52,7 @@ project_skills:
   design_brief:
     invoke: "/design-brief"
     weight: 6
-    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档]
+    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档, 落地方案, 方案细化]
 
   html_prototype:
     invoke: "/html-prototype"
@@ -66,12 +67,12 @@ project_skills:
   ux_audit:
     invoke: "/ux-audit"
     weight: 7
-    triggers: [评审, UX问题, 页面评审, 体验评审, UX评审, 评审这个页面]
+    triggers: [评审, UX问题, 页面评审, 体验评审, UX评审, 评审这个页面, 挑毛病, 有什么问题, 给建议]
 
   compare:
     invoke: "/compare"
     weight: 6
-    triggers: [对比, compare, 版本对比, 两个方案比较, 迭代对比]
+    triggers: [对比, compare, 版本对比, 两个方案比较, 迭代对比, 比较一下, 看看区别, 哪个好]
 
   figma_layer:
     invoke: "/figma-layer"
@@ -81,7 +82,7 @@ project_skills:
   magicpath:
     invoke: "magicpath"
     weight: 8
-    triggers: [界面设计, UI设计, 做界面, 产出界面, 设计组件, MagicPath, magicpath, 生成组件, 做个界面, 直接产出, 界面产出, 原型界面]
+    triggers: [界面设计, UI设计, 做界面, 产出界面, 设计组件, MagicPath, magicpath, 生成组件, 做个界面, 界面产出, 原型界面, 管理界面, 列表界面, 详情界面, 业务界面]
 
   tech_spec:
     invoke: "/tech-spec"
@@ -106,19 +107,21 @@ builtin_skills:
     skill: agent-browser
     hint: "→ 建议使用内置 skill: agent-browser（浏览器截图/交互）"
     weight: 7
-    triggers: [截图, 竞品截图, 浏览网站, 访问网页, 打开网页, 浏览器操作]
+    triggers: [截图, 竞品截图, 浏览网站, 访问网页, 打开网页, 浏览器操作, 看看竞品]
 
   lark_im:
     skill: lark-im
     hint: "→ 建议使用内置 skill: lark-im（飞书消息/群聊）"
     weight: 9
-    triggers: [飞书消息, 发消息, 群聊, 飞书群, 即时消息, 发飞书]
+    triggers: [飞书消息, 发消息, 群聊, 飞书群, 即时消息, 发飞书, 飞书发]
 
   lark_calendar:
     skill: lark-calendar
     hint: "→ 建议使用内置 skill: lark-calendar（飞书日历/日程）"
     weight: 9
-    triggers: [日历, 日程, 会议, 安排时间, 空闲时间, 预约, 飞书日历]
+    # "会议" 单字触发被拆为"开会/会议安排/会议邀请" — 避免把"会议纪要/会议语料"
+    # 等内容工具语义抢成 calendar 调度语义。
+    triggers: [日历, 日程, 开会, 会议安排, 会议邀请, 安排时间, 空闲时间, 预约, 飞书日历]
 
   lark_doc:
     skill: lark-doc

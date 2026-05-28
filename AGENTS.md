@@ -431,7 +431,8 @@ Layered routing order:
 1. **Project context gate.** If the user says "老项目", "已有项目", "继续项目", or names an
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6), or `PLAN CHECK`
-   (a heavy skill was hit), or the hit skill is known to satisfy any of the Plan Agent 4 conditions,
+   (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/auto`, `/figma-demo`),
+   or the hit skill is known to satisfy any of the Plan Agent 4 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
    high-confidence single-skill hit, still check the Plan Agent 4 conditions; if any holds, do not
    execute the skill directly. The Plan Agent 4 conditions (任一满足即触发):
@@ -439,6 +440,12 @@ Layered routing order:
    - The task needs ≥ 2 independent subagents collaborating.
    - The task has an explicit phase dependency (B must wait for A).
    - The task involves irreversible operations (git operations, bulk file overwrite).
+   - The user explicitly requests a plan ("先做个计划", "plan 一下", "想清楚再做").
+   - **Research Default Gate:** when the task is both complex (any condition above) AND novel
+     (core mechanism/interaction has no established prior art), a research phase (`/deepresearch`
+     or `/ux-research`, scaled to the fact-gap) is the DEFAULT step. Skipping it requires an
+     explicit, user-confirmed reason in the plan — never silent. See
+     `.claude/agents/plan-agent.md`「研究默认门」.
 3. **Multi-skill ambiguity.** If route-guard reports competing candidates, ask the user to choose
    an order or suggest `/auto`.
 4. **Single-skill route.** Use `.claude/skill-os/skill-routing-map.yaml` as the keyword and invoke
