@@ -95,6 +95,36 @@ const cases = [
     },
   },
   {
+    // #16 (benchmark debate): lower-bound negative anchor — guards the >=6 gate
+    // against being silently lowered. '帮我做个整体规划' fires only 规划意图 (w3) =>
+    // score 3 < 6, must NOT be PLAN_MODE. If the threshold erodes toward <=3 this
+    // flips to PLAN_MODE and fails loudly. The suite previously had no <6 anchor.
+    name: 'single weak complexity signal stays below plan-mode threshold',
+    prompt: '帮我做个整体规划',
+    expect: decision => {
+      assert.ok(decision.complexityScore < 6, `expected complexityScore <6, got ${decision.complexityScore}`);
+      assert.notEqual(decision.decision, 'PLAN_MODE');
+    },
+  },
+  {
+    // #16 (benchmark debate): weight-degradation sentinel pinned at EXACTLY 6.
+    // '把飞书数据库定时推送给我' fires 多模块(w3)+跨系统集成(w3)=6 => PLAN_MODE.
+    // Pinned ===6 so any silent drift in either signal's weight (the git 10ba339
+    // class of weight edits the old suite caught zero of) breaks this and forces
+    // a deliberate review + pin update.
+    name: 'two w3 complexity signals sum to exactly the plan-mode threshold',
+    prompt: '把飞书数据库定时推送给我',
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_MODE');
+      // Tight golden pin: ONLY 多模块(w3)+跨系统集成(w3) fire => exactly 6. Pinning
+      // the signal set (not just the score) makes any drift — a weight change OR a
+      // new signal matching this prompt's tokens — fail loudly with the actual
+      // signals/score printed, so the reviewer sees exactly what moved.
+      assert.deepEqual([...decision.signals].sort(), ['多模块', '跨系统集成'].sort());
+      assert.equal(decision.complexityScore, 6);
+    },
+  },
+  {
     name: 'page review routes to ux-audit',
     prompt: '评审这个页面有什么 UX 问题',
     expect: decision => {

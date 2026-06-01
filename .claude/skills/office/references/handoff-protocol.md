@@ -48,6 +48,10 @@ completed_at: <ISO timestamp>
 - <风险1>
 （最多 3 条）
 
+## 待澄清（Deferred，下游须追踪）
+- <开放问题1>（上游合法放行但延后未答；下游在解决或显式继续延后前，不得据此做隐式假设）
+（可空；非空则下游必须追踪、不得静默丢弃。对应 PRD 的 `Outstanding Questions → Deferred to Planning`。）
+
 ## 产出路径
 - 主产出：<相对路径>
 - 附属产出：<相对路径>（如有）

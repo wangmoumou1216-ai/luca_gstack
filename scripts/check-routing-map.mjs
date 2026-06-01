@@ -39,6 +39,18 @@ assert.match(claudeHead, /Routing Contract TL;DR/, 'CLAUDE.md routing contract m
 assert.match(agentsHead, /Routing Contract TL;DR/, 'AGENTS.md routing contract must stay in first 40 lines');
 assert.match(claudeHead, /Project Gate first/, 'CLAUDE.md must front-load Project Gate priority');
 assert.match(agentsHead, /Project Gate first/, 'AGENTS.md must front-load Project Gate priority');
+// #14 (benchmark debate): anchor the SHARED TL;DR routing-contract items 2-5
+// across BOTH surfaces so the human-readable contract can't silently drift.
+// Items 1-5 are verbatim-identical in CLAUDE.md and AGENTS.md TL;DR. Item 6
+// (Scene) is intentionally CLAUDE-only (AGENTS carries it later in body), so it
+// is NOT anchored here — forcing it would wrongly inject a 6th item into
+// AGENTS.md's EN-adapted TL;DR (the rejected literal-equality form).
+for (const surface of [{ name: 'CLAUDE.md', head: claudeHead }, { name: 'AGENTS.md', head: agentsHead }]) {
+  assert.match(surface.head, /Complexity second/, `${surface.name} TL;DR missing shared item "Complexity second"`);
+  assert.match(surface.head, /Ambiguity third/, `${surface.name} TL;DR missing shared item "Ambiguity third"`);
+  assert.match(surface.head, /Single skill last/, `${surface.name} TL;DR missing shared item "Single skill last"`);
+  assert.match(surface.head, /Keyword source/, `${surface.name} TL;DR missing shared item "Keyword source"`);
+}
 
 console.log('PASS routing map coverage');
 
