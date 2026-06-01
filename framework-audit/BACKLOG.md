@@ -48,4 +48,12 @@
 ## 否决项（确认不做，仅备查）
 #5 delta-spec（8 项目 tech-spec 仅 1 次产出、re-spec 0 次，roam-cards 20+ 场景B commit 全零 spec）、#9 路由准确率虚荣指标、#10 解冻 eval（git 显式冻结 deb2ef4）、#11 失败自动回灌（违 human-in-the-loop）、#12 自动抽取候选记忆（无抽取源）、#13 矩阵↔断言闸（双写漂移前提假）、#15 OnFailAction（删人工控制点）。详见报告 §3.3。
 
+---
+
+## 🔔 记忆 candidate 复核提醒
+
+- **≥ 2026-06-08**（满 7 天冷却）复核两条 skill-rule candidate：`SC-20260601-001`（红队 over-kill → 多轮对抗辩论）、`SC-20260601-002`（改 skill 指令须行为级 A/B）。
+- 复核动作：跑 `python3 memory/scripts/consolidate_memory.py --json --dry-run` 看是否进 promotion_ready；若这两个模式在后续 session 已被复用确认且仍成立，标 stable + `review_candidates.py --promote --reviewer luca` 晋升；否则继续留候选或剔除。
+- 现状：两条均 `pending_review`，被 7 天冷却门正确挡住（不绕过）。
+
 <!-- FILE_END: BACKLOG -->
