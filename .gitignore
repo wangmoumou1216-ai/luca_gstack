@@ -85,8 +85,8 @@ api-project/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .claude/.session-turn-count
-.claude/current-topic.txt
-.claude/workflow-state.yaml
+.claude/current-topic*.txt
+.claude/workflow-state*.yaml
 
 # Memory system — ignore raw runtime data, keep scripts and stable knowledge
 memory/episodic/sessions/*.md
