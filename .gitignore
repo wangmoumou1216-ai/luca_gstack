@@ -94,8 +94,9 @@ memory/episodic/sessions/*.md
 memory/semantic/candidates.jsonl
 memory/semantic/reviews.jsonl
 memory/retrieval-log.jsonl
-# Observability — runtime session reminder, regenerated each session
+# Observability — runtime data, regenerated each session
 .claude/observability/pending-extraction.md
+.claude/observability/run-log.jsonl
 
 # luca_gstack specific — docs/ is a symlink to external project dir, never tracked
 docs
