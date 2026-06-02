@@ -43,6 +43,18 @@
 - **🔔 触发条件**：治理队列积压 **≥ 某非空阈值（如 ≥5 条 pending）** 且持续 → 再加**单行**提醒，并设非空阈值（队列 0 项时静默，不占提醒通道）。
 - **落地点**：`scripts/session-restore.mjs`。effort ~1 行 + 阈值判断。
 
+### #18 — IN_PROGRESS 崩溃恢复路径无 writer（reader/writer 失配）
+- **真实缺口**：三个 reader 消费 `status: IN_PROGRESS`（`session-restore.mjs:13` / `route-guard.mjs:477` / `session-sync.mjs:24,31`，后者据此写 `docs/handoff` checkpoint），但全仓**无 writer**——11 个含状态导出的 SKILL.md 一律 `export _STATUS="DONE"`，`write_state.py:76` 默认 DONE，无任何路径写 IN_PROGRESS。recovery 分支永不触发。`plan-agent.md:317` 又把 IN_PROGRESS 记为合法 Work-Agent 状态，故不是纯死代码而是**半接线 scaffold**。
+- **为何延后**：原"在 orchestrator/入口一处写"修法**不成立**——orchestrator 是 prompt 行为 prose 非进程（`orchestrator.md:4-7`），只管 workflow mode，而真实 4/4 项目均 `mode:"standalone"`；无 PreToolUse/Task hook 强制单写点。唯一可写点仍是 per-skill prose，且崩溃发生在 entry-write 之前仍丢状态。DONE-only 不写 handoff 是**有意设计且 test-locked**（`session-sync.mjs:30` + `test-hooks.mjs:79-81`）。
+- **🔔 触发条件**：真实 **workflow-mode** 运行中出现一次崩溃恢复需求（被打断后需从 IN_PROGRESS 节点续）→ 再**决断二选一**：要么各 skill 加 entry/exit 两段写接通 reader，要么删掉 orphan reader 分支（Simplicity-First）。在此之前不动。
+- **落地点**：各 SKILL.md 状态导出段 **或** 删 `session-restore.mjs:13` / `route-guard.mjs:477` 的 IN_PROGRESS 读取分支。来源：2026-06-02 红队对抗（plan `agnet-mutable-tarjan`，C4）。
+
+### #19 — failing_eval_patterns 无源与无失败不可分（并入 eval 冻结）
+- **真实缺口**：`consolidate_memory.py:533` `failing_eval_patterns(read_jsonl(EVAL_LOG))`，EVAL_LOG=不存在的 `eval-log.jsonl`，`read_jsonl` 缺文件返回 `[]`（32-34）→ 人看的 review 队列里"无 eval 源"与"无失败模式"**不可分**。
+- **为何延后/不是 bug**：**非 false-green**——grep 跨 `settings.json`/`hooks`/`scripts`/`package.json` **零自动消费者**，该 bucket 仅供 `print_human`/`--json` 给人看，不喂任何自动 gate。且 `eval-log.jsonl` 在 `memory/README.md:65` 冻结范围，明令"勿删除或修复"；现在加 source_absent 哨兵会触碰冻结面 + 破坏 `test_memory_system.py:777-778` 的 populated-path 契约。
+- **🔔 触发条件**：`README:65` eval 冻结**解冻**（ADR-0006 ~10-session 检索度量 + ADR-0007 W3 出结论）时，与"统一两个 eval writer"一并处理：让"无源"与"空结果"可区分。绑定 **#10**（解冻 eval，现否决）。
+- **落地点**：`consolidate_memory.py` `failing_eval_patterns` / `read_jsonl` 调用点。来源：2026-06-02 红队对抗（plan `agnet-mutable-tarjan`，C3）。
+
 ---
 
 ## 否决项（确认不做，仅备查）

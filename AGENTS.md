@@ -39,7 +39,7 @@ Core facts:
   project's `/Users/luca/Desktop/项目/<project>/.luca/workflow-state.yaml`.
 - Skill OS contracts: `.claude/skill-os/`.
 - Skill observability: `.claude/observability/`.
-- Hermes-style growth candidates: `.claude/hermes/`.
+- Growth candidates (Hermes-style): `memory/semantic/` (candidate→review→promote via `memory/scripts/propose_semantic.py`; legacy `.claude/hermes/` was removed in commit 1dc1475).
 - Brand primary color: `#FF8000`.
 - Brand color budget: use the primary color no more than 3 times per page unless a task explicitly overrides it.
 
