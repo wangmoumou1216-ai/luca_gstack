@@ -468,6 +468,67 @@ function decisionToHints(decision) {
   }
 }
 
+// Close the "inject" half of the learning loop: when a prompt routes to a
+// skill, auto-surface that skill's active observability rules (distilled from
+// past feedback) so they reach the agent deterministically at routing time,
+// instead of depending on the model to remember `get_rules.py`. JS-native parse
+// of rules.yaml (no subprocess); scene-agnostic (route-guard does not classify
+// scene); silent when a skill has no rules (no empty-channel noise).
+function loadRules(rulesPath) {
+  let text;
+  try {
+    text = readFileSync(rulesPath, 'utf8');
+  } catch {
+    return [];
+  }
+  return text.split(/^- id:/m).slice(1).map(b => {
+    const id = (b.match(/^\s*(\S+)/) || [])[1] || 'R-UNKNOWN';
+    const status = (b.match(/^\s+status:\s*(\S+)/m) || [])[1] || 'active';
+    const severity = (b.match(/^\s+severity:\s*(\S+)/m) || [])[1] || 'medium';
+    const skillsRaw = (b.match(/^\s+skills:\s*\[([^\]]*)\]/m) || [])[1] || '';
+    const skills = skillsRaw
+      .split(',')
+      .map(s => s.trim().replace(/^['"]|['"]$/g, ''))
+      .filter(Boolean);
+    const rule = ((b.match(/^\s+rule:\s*(.+?)\s*$/m) || [])[1] || '').replace(/^["']|["']$/g, '');
+    return { id, status, severity, skills, rule };
+  });
+}
+
+function ruleApplies(rule, skill) {
+  if ((rule.status || 'active') !== 'active') return false;
+  const skills = rule.skills || [];
+  if (skill !== '*' && skills.length && !skills.includes('*') && !skills.includes(skill)) return false;
+  return true;
+}
+
+function matchedSkills(decision) {
+  if (!decision) return [];
+  if (decision.decision === 'SINGLE_SKILL' || decision.decision === 'PLAN_CHECK') {
+    return decision.skill ? [decision.skill] : [];
+  }
+  return [];
+}
+
+function ruleHintsForSkills(skills) {
+  const all = loadRules(join(projectRoot, '.claude', 'observability', 'rules.yaml'));
+  if (!all.length) return [];
+  const seen = new Set();
+  const out = [];
+  for (const raw of skills) {
+    const skill = String(raw || '').replace(/^\//, '').trim();
+    if (!skill || seen.has(skill)) continue;
+    seen.add(skill);
+    const matches = all.filter(r => ruleApplies(r, skill));
+    if (!matches.length) continue;
+    out.push(
+      `[route-guard] 📏 ${skill} 活跃规则(${matches.length})（学习闭环自动注入，执行时必须遵守）：\n` +
+      matches.slice(0, 20).map(r => `  - ${r.id} [${r.severity}]: ${r.rule}`).join('\n')
+    );
+  }
+  return out;
+}
+
 const prompt = parsePrompt();
 const hints = [];
 
@@ -485,6 +546,7 @@ if (prompt) {
     process.exit(0);
   }
   hints.push(...decisionToHints(decision));
+  hints.push(...ruleHintsForSkills(matchedSkills(decision)));
 }
 
 if (!dryRun) {

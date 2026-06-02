@@ -15,6 +15,7 @@ import { join, resolve } from 'path';
 const projectRoot = process.cwd();
 const sessionSyncHook = resolve(projectRoot, '.claude/hooks/session-sync.mjs');
 const sessionRestoreHook = resolve(projectRoot, '.claude/hooks/session-restore.mjs');
+const routeGuardHook = resolve(projectRoot, '.claude/hooks/route-guard.mjs');
 
 function makeFixture({ topic = '"hook-test"', statuses = ['IN_PROGRESS', 'DONE'] } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'luca-gstack-hooks-'));
@@ -115,4 +116,80 @@ function runNode(scriptPath, cwd) {
   assert.doesNotMatch(result.stdout, /SHOULD_NOT_RUN/);
   assert.equal(existsSync(reviewMarker), false, 'session-restore must not run semantic candidate review');
   console.log('PASS session-restore stays memory-light on startup');
+}
+
+function makeRouteFixture() {
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-route-'));
+  mkdirSync(join(root, '.claude', 'observability'), { recursive: true });
+  mkdirSync(join(root, '.claude', 'skill-os'), { recursive: true });
+  writeFileSync(
+    join(root, '.claude', 'observability', 'rules.yaml'),
+    [
+      'version: 1',
+      'rules:',
+      '- id: R-TEST-001',
+      '  status: active',
+      '  severity: medium',
+      '  type: quality_rule',
+      '  scope:',
+      '    skills: [alpha]',
+      '    scenes: [*]',
+      '  rule: "alpha: 闭环注入回归测试规则"',
+      '',
+    ].join('\n')
+  );
+  writeFileSync(
+    join(root, '.claude', 'skill-os', 'skill-routing-map.yaml'),
+    [
+      'version: 1',
+      'project_skills:',
+      '',
+      '  alpha:',
+      '    invoke: "/alpha"',
+      '    weight: 6',
+      '    triggers: [对比]',
+      '',
+      '  beta:',
+      '    invoke: "/beta"',
+      '    weight: 6',
+      '    triggers: [比较一下]',
+      '',
+    ].join('\n')
+  );
+  return root;
+}
+
+function runRouteGuard(cwd, prompt) {
+  const env = { ...process.env };
+  delete env.ROUTE_GUARD_DRY_RUN;
+  const result = spawnSync('node', [routeGuardHook], {
+    cwd,
+    input: JSON.stringify({ prompt }),
+    encoding: 'utf8',
+    env,
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return result;
+}
+
+{
+  // alpha has an active rule scoped to it; "对比" both bypasses the project gate
+  // (Audit M2 content-tool exemption) and routes to alpha as SINGLE_SKILL, so the
+  // learning loop's distilled rule must be auto-surfaced at routing time.
+  const root = makeRouteFixture();
+  const result = runRouteGuard(root, '对比两个版本');
+  assert.match(result.stdout, /建议调用.*\/alpha/, 'should route to alpha');
+  assert.match(result.stdout, /📏 alpha 活跃规则/, 'should auto-surface alpha rules at routing time');
+  assert.match(result.stdout, /R-TEST-001/, 'should include the matched rule id');
+  console.log('PASS route-guard auto-injects active rules for the matched skill');
+}
+
+{
+  // beta has NO rule; "比较一下" routes to beta — the rule block must stay silent
+  // (no empty-channel noise per BACKLOG #17 lesson).
+  const root = makeRouteFixture();
+  const result = runRouteGuard(root, '比较一下两个版本');
+  assert.match(result.stdout, /建议调用.*\/beta/, 'should route to beta');
+  assert.doesNotMatch(result.stdout, /活跃规则/, 'no rule block for a skill without rules');
+  console.log('PASS route-guard stays silent when the matched skill has no rules');
 }
