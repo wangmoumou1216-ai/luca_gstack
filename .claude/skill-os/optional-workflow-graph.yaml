@@ -2,9 +2,10 @@ version: 1
 principle: "Workflow is optional. It recommends and validates handoff; it does not own standalone skill execution."
 
 design_output:
-  primary: magicpath          # 优先使用 MagicPath canvas 组件
-  fallback: html-prototype    # 备选：本地 HTML 文件（无 MagicPath 账号或 non-React 项目时）
+  primary: open-design        # 主力：交互文档 → OD 生成 HTML（OD UI 内人工判断）→ 落盘
+  fallback: [magicpath, html-prototype]   # 备选：OD daemon 不可达 / 用户要本地 HTML / non-React
   fallback_trigger:           # 语义触发条件（声明层）；执行层检测命令见 plan-agent.md Gap 2
+    - "open-design daemon unreachable"
     - "magicpath auth failed"
     - "non-react project"
     - "user requests local html"
@@ -27,43 +28,47 @@ scenes:
   A:
     name: "new_feature"
     recommended_paths:
-      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "magicpath"]
-      - ["idea", "brainstorm", "design-brief", "magicpath"]
-      - ["idea", "superpowers-brainstorming", "design-brief", "magicpath"]  # 轻量路径
+      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
+      - ["idea", "brainstorm", "design-brief", "open-design"]
+      - ["idea", "superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["figma-demo", "figma-layer"]
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:
+    fallback_paths:  # OD daemon 不可达 / 要本地 HTML 时降级（magicpath/html-prototype 保留不删）
+      - ["idea", "brainstorm", "design-brief", "magicpath"]
       - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype", "figma-layer"]
       - ["idea", "brainstorm", "design-brief", "html-prototype"]
   B:
     name: "existing_feature_optimization"
     recommended_paths:
-      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "magicpath"]
-      - ["ux-audit", "design-brief", "magicpath"]
-      - ["superpowers-brainstorming", "design-brief", "magicpath"]  # 轻量路径
+      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
+      - ["ux-audit", "design-brief", "open-design"]
+      - ["superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["figma-demo", "figma-layer"]
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:
+    fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
+      - ["ux-audit", "design-brief", "magicpath"]
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
       - ["ux-audit", "design-brief", "html-prototype"]
   C:
     name: "online_review_redesign"
     recommended_paths:
-      - ["ux-audit", "design-brief", "magicpath", "figma-layer"]
+      - ["ux-audit", "design-brief", "open-design", "figma-layer"]
       - ["ux-audit", "figma-demo", "figma-layer"]
-    fallback_paths:
+    fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
+      - ["ux-audit", "design-brief", "magicpath", "figma-layer"]
       - ["ux-audit", "design-brief", "html-prototype", "figma-layer"]
   D:
     name: "agent_native_redesign"
     recommended_paths:
-      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "magicpath"]
-      - ["ux-brainstorm", "design-brief", "magicpath"]
+      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
+      - ["ux-brainstorm", "design-brief", "open-design"]
       - ["figma-demo", "figma-layer"]
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:
+    fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
+      - ["ux-brainstorm", "design-brief", "magicpath"]
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
 
 handoff_gates:
@@ -103,6 +108,21 @@ handoff_gates:
     allow_standalone_override: false
     note: "MagicPath Phase 必须等此 gate PASS 后才能启动，严禁并发"
 
+  design_brief_to_open_design:
+    applies_when: "workflow_mode"
+    block_if:
+      - "design_generation_packet missing"
+      - "tool_consumption_contract missing"
+      - "packet contains facts absent from design_brief"
+      - "decision_cards missing required fields"
+      - "traceability_matrix missing"
+      - "traceability_gate != PASS"
+      - "prototype_carrier missing"
+      - "required_state_coverage missing"
+      - "ux_brief not written to docs/decisions/"
+    allow_standalone_override: true
+    note: "open-design 是 design_output 主力；OD daemon 不可达时按 design_output.fallback 回退 magicpath/html-prototype。本期只注入 FxUI 颜色/字体/字号 token，不要求组件库映射，故无 component_mapping/MagicPath-primary 门项。"
+
   design_brief_to_html:
     applies_when: "workflow_mode"
     block_if:
@@ -134,6 +154,7 @@ handoff_gates:
       - "index_html missing"
       - "prototype_spec missing"
     allow_standalone_override: false
+    note: "覆盖 html-prototype / figma-demo / open-design 三种来源 → figma-layer。"
 
   design_brief_to_tech_spec:
     applies_when: "workflow_mode"

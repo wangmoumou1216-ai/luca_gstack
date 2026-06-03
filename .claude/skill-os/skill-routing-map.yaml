@@ -84,6 +84,15 @@ project_skills:
     weight: 8
     triggers: [界面设计, UI设计, 做界面, 产出界面, 设计组件, MagicPath, magicpath, 生成组件, 做个界面, 界面产出, 原型界面, 管理界面, 列表界面, 详情界面, 业务界面]
 
+  open_design:
+    invoke: "/open-design"
+    weight: 8
+    # 这里只列「Open Design / OD」产品名提及，作为粗匹配粗网（与 design_brief「交互文档」/
+    # figma_layer「figma」隔离；禁用裸 "od"——substring 会误中 product/model/method）。
+    # 【单点交接】"把刚产出的 md 给 OD" 不在此写死交接措辞：它是【语义识别】，由 Claude 按
+    # CLAUDE.md「单点交接到 OD」规则结合上下文理解意图后路由（用户要求：结合语义，不靠词表）。
+    triggers: [Open Design, open design, opendesign, OpenDesign, OD生成, OD出图, OD设计, OD原型, 用OD做]
+
   tech_spec:
     invoke: "/tech-spec"
     weight: 7

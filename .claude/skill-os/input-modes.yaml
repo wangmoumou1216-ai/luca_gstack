@@ -22,6 +22,17 @@ skills:
         optional: ["ux_brainstorm_artifact"]
     quality_gates: ["design_generation_packet", "tool_consumption_contract", "component_mapping", "state_coverage", "no_packet_fact_drift", "component_rendered", "react_canvas_valid"]
 
+  open-design:
+    modes:
+      standalone:
+        required: ["design_source_artifact"]   # chain: design-brief 交互文档 | adhoc: 单点指定的方案 md
+        optional: ["od_skill", "od_design_system", "brand_tokens"]
+      workflow:
+        required: ["design_brief_artifact"]
+        optional: ["ux_brainstorm_artifact"]
+    quality_gates: ["input_source_resolved", "design_generation_packet_when_chain", "instruction_compiled", "fxui_brand_text_tokens_only", "platform_designsystem_user_selected", "designsystem_bound_verified", "od_daemon_reachable", "headless_generated", "prototype_spec_written", "no_source_fact_drift"]
+    notes: "design_output 主力，**headless 一次性出图**：luca 编译指令 → 评估并让用户选 Target platform + Design system → 建项目绑 designSystemId(建后验证) → 经 daemon /api/chat(带 agentId) headless 生成 → 回收落盘。人工判断后置(符合/迭代/停)。FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E，其余走所选 design system 不覆盖。两种进入 chain/adhoc。"
+
   idea:
     modes:
       standalone:

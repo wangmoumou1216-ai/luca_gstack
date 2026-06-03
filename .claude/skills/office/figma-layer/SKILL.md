@@ -4,20 +4,24 @@ preamble-tier: 2
 argument-hint: "[HTML prototype index.html 路径 + Figma file URL]"
 version: 1.0.0
 description: |
-  Figma 保险层搭建。一比一还原 HTML 原型，不是独立设计。必须读 index.html
-  实际代码，不能只读 spec。三层处理规则：shadcn → shadcn+Variables → HTML
-  自绘。Auto Layout 强制规范。品牌色 #FF8000 硬约束。场景A（新功能）和
-  场景C（评审改版）适用。(luca_gstack)
+  Figma 保险层搭建。一比一还原 HTML 原型（来源：html-prototype / figma-demo /
+  open-design 三选一），不是独立设计。必须读 index.html 实际代码，不能只读 spec。
+  三层处理规则：shadcn → shadcn+Variables → HTML 自绘。Auto Layout 强制规范。
+  通过新版 Figma MCP（use_figma）搭建；只叠 FxUI 品牌色 + 文字色 token（品牌色
+  #FF8000 硬约束），其余配色/字体/字号沿用上游 HTML 实际值不覆盖；本期不绑 FxUI 组件库。
+  场景A（新功能）和场景C（评审改版）适用。
+  (luca_gstack)
 allowed-tools:
   - Read
   - Write
   - Bash
   - AskUserQuestion
-  - mcp__figma__get_file
-  - mcp__figma__get_node
-  - mcp__figma__create_frame
-  - mcp__figma__update_node
-  - mcp__figma__authenticate
+  - mcp__figma__whoami
+  - mcp__figma__use_figma
+  - mcp__figma__get_design_context
+  - mcp__figma__get_screenshot
+  - mcp__figma__search_design_system
+  - mcp__figma__create_new_file
 context-cost:
   self: 3004
   runtime-estimate: 5000
@@ -51,8 +55,10 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 **来源：CLAUDE-figma-layer.md F-0「前置检查」节，直接迁移**
 
 ```
-□ Figma MCP 已连接且已认证？
-  → 未认证：调用 mcp__figma__authenticate 让用户授权
+□ Figma MCP 已连接且身份/席位就绪？
+  → 调用 mcp__figma__whoami 确认登录身份与席位（draft 任意席位可用；draft 外正式
+    文件需 Full seat + 编辑权限，席位不足必须在动手前提示，而非半途失败）
+  → 写入前必须先加载 /figma-use skill（新版 use_figma 的强制前置）
   → 工具不可用：
     【H-05 修复】不直接 BLOCKED，提供降级路径：
     「Figma MCP 当前不可用。你有以下选择：
@@ -73,9 +79,11 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
   → 必读「交接块」节
   → 否：BLOCKED — prototype-spec.md 缺失
 
-□ 确认上游来源：
-  → 如果存在 docs/prototype/YYYY-MM-DD-<topic>/blueprint.yaml，source=figma-demo
-  → 否则 source=html-prototype
+□ 确认上游来源（三选一）：
+  → 存在 docs/prototype/YYYY-MM-DD-<topic>/blueprint.yaml → source=figma-demo
+  → 否则读 prototype-spec.md 的「框架来源」或上游 handoff：
+    - 框架来源 = open-design（或存在 *-open-design-handoff.md）→ source=open-design
+    - 其它 → source=html-prototype
 
 □ source=html-prototype 时：已读取 design-brief.md，确认 shadcn 组件映射表存在？
   → 否：BLOCKED — 映射表缺失
@@ -83,6 +91,11 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 □ source=figma-demo 时：已读取 blueprint.yaml，确认 nodes / design_system / viewport_targets 存在？
   → 否：BLOCKED — blueprint.yaml 缺失或不完整
   → 注意：figma-demo 上游不要求 design-brief.md，也不要求 shadcn 组件映射表；组件清单来自 blueprint.yaml 和 prototype-spec.md 的节点清单。
+
+□ source=open-design 时：已读取 index.html 实际代码 + prototype-spec.md？
+  → 否：BLOCKED — open-design 来源必须读实际 HTML 和 spec
+  → 注意：open-design 上游不要求 design-brief 的 shadcn 组件映射表（OD 产出为 token-only/
+    自绘）；组件清单从 index.html 实际结构归纳，按三层规则还原；FxUI 只套颜色/字体/字号 token，不绑组件库。
 
 □ shadcn Figma UI Kit file key 已配置？
   → 否：BLOCKED — shadcn Figma UI Kit key 未配置
@@ -131,6 +144,8 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 - **source=html-prototype**：从 design-brief.md 映射表整理。
 - **source=figma-demo**：从 blueprint.yaml 的节点清单、design_system、各节点
   spec/interface，以及 prototype-spec.md 的节点清单整理；不要要求 design-brief.md。
+- **source=open-design**：从落盘的 index.html 实际结构归纳组件清单（多为「自绘区域」，
+  因本期不绑 FxUI 组件库）；不要求 design-brief.md 映射表。FxUI 只套颜色/字体/字号 token。
 
 ```markdown
 ## Figma 层组件清单
@@ -154,6 +169,10 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 ---
 
 ## Phase 3：搭建 Figma 画布
+
+**搭建机制（新版 Figma MCP）：** 先加载 `/figma-use` skill，再用 `mcp__figma__use_figma`
+在目标 draft / 文件内建图层；用 `mcp__figma__get_design_context` / `get_screenshot` 读现状校验。
+不再使用旧的 create_frame / update_node 接口。
 
 **三层处理规则（来自 CLAUDE-figma-layer.md，硬约束）：**
 
@@ -184,12 +203,13 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 □ 增删子元素后间距保持一致？
 ```
 
-**Figma Variables 覆盖（搭建前完成）：**
+**Figma Variables 覆盖（搭建前完成；FxUI 仅叠 品牌色 + 文字色 两类）：**
 ```
---primary: #FF8000
---primary-foreground: #FFFFFF
---ring: #FF8000
+品牌色 Variables：--primary #FF8000 · --primary-foreground #FFFFFF · --ring #FF8000
+文字色 Variables：主文字 #181C25 · 次要文字 #91959E
+（分割线/页面底/卡片底/字体/字号/语义色 一律不注入：沿用上游 index.html 实际值 / shadcn 默认，不覆盖）
 ```
+> 本期只叠品牌色 + 文字色两类 token，不搜 FxUI 组件库、不建组件映射（完整组件库绑定为远期 D4）。
 
 **搭建策略（来自 CLAUDE-figma-layer.md Step 2）：**
 
@@ -287,7 +307,7 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 
 **来源：CLAUDE-figma-layer.md 末尾核心约束，直接迁移**
 
-1. **本项目只使用 Figma MCP**（`mcp__figma__*`）
+1. **本项目只使用 Figma MCP**（`mcp__figma__*`，新版 use_figma；写入前先加载 /figma-use）
 2. **保险层 = 一比一还原，不是独立设计** — 必须读 index.html 实际代码
 3. **不能只读 prototype-spec.md** — 必须看到实际视觉效果
 4. **三层处理规则必须严格执行**

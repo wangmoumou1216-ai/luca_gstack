@@ -271,7 +271,7 @@ Use `.claude/skill-os/input-modes.yaml` to decide whether a skill is running in 
   artifacts. Validate handoff gates from `.claude/skill-os/optional-workflow-graph.yaml`.
 - Workflow gates are advisory unless the user chose workflow mode. Quality gates remain mandatory in both modes.
 - Do not silently force `/idea -> /brainstorm -> ...` when the user directly asks for
-  `/ux-research`, `/ux-brainstorm`, `/design-brief`, `/html-prototype`, or `/figma-demo`.
+  `/ux-research`, `/ux-brainstorm`, `/design-brief`, `/open-design`, `/html-prototype`, or `/figma-demo`.
 
 ### 4.7 Hermes-Style Growth
 
@@ -465,6 +465,12 @@ points to the exact skill file.
 When generating or editing prototypes:
 
 - Read `framework/README.md` before selecting or modifying a template.
+- For `/open-design` (design-output primary), read `.claude/skills/office/open-design/SKILL.md`;
+  it commissions the local Open Design daemon (via the `od mcp` MCP server, falling back to daemon
+  HTTP) to generate HTML from the design-brief, keeps a human judgment node in the OD UI, then lands
+  index.html + prototype-spec.md under docs/prototype/ for /figma-layer. Injects FxUI
+  color/font/size tokens only (no component-library binding). Falls back to magicpath/html-prototype
+  when the OD daemon is unreachable.
 - For `/html-prototype`, read `.claude/skills/office/html-prototype/SKILL.md`, then apply its
   dynamic reference protocol, current aesthetic rubric, and QA gate.
 - For `/figma-demo`, read `.claude/skills/office/figma-demo/SKILL.md`; its blueprint,
