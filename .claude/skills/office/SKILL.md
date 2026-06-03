@@ -365,7 +365,7 @@ AskUserQuestion：
 4. /ux-research    → UX多维度深度研究（5+1并行agent，共识矩阵，苏格拉底审查）
 5. /ux-brainstorm  → UX设计方案编排器（7个UX逼问，2-3方案，Oracle审查）
 6. /design-brief    → 轻量交互文档与原型决策（不跑 ux-brainstorm 时可独立使用）
-7. /open-design     → **首选**：交互文档 → OD 生成 HTML（UI 内人工判断）→ 落盘
+7. /open-design     → **首选**：交互文档 → OD headless 生成 HTML（判断后置）→ 落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成 HTML 原型
    /figma-demo     → （备选）口述 + Figma → HTML 演示 Demo
@@ -393,7 +393,7 @@ AskUserQuestion：
 4. /ux-research    → UX多维度深度研究（竞品+范式+用户行为+AI可行性）
 5. /ux-brainstorm  → UX设计方案编排器
 6. /design-brief    → 轻量交互文档与原型决策
-7. /open-design     → **首选**：交互文档 → OD 生成 HTML（UI 内人工判断）→ 落盘
+7. /open-design     → **首选**：交互文档 → OD headless 生成 HTML（判断后置）→ 落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成改版原型
    /figma-demo     → （备选）基于 Figma 截图/链接和口述生成演示 Demo
@@ -414,7 +414,7 @@ AskUserQuestion：
 1. /idea       → 记录要评审的页面信息和截图
 2. /ux-audit   → 系统评审页面（视觉/交互/业务三个维度）
 3. /design-brief → 基于评审结论生成轻量交互文档
-4. /open-design     → **首选**：交互文档 → OD 生成 HTML（UI 内人工判断）→ 落盘
+4. /open-design     → **首选**：交互文档 → OD headless 生成 HTML（判断后置）→ 落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）按评审清单逐条生成改版原型
    /figma-demo     → （备选）基于 Figma 截图/链接和口述生成演示 Demo
@@ -440,7 +440,7 @@ AskUserQuestion：
 5. /ux-research    → UX多维度深度研究（含AI Native/Agent Native可行性维度）
 6. /ux-brainstorm  → UX设计方案编排器（含Agent控制边界逼问）
 7. /design-brief → 轻量交互文档与原型决策（Cursor 锚点强制通过：可见/暂停/接管/撤销）
-8. /open-design     → **首选**：交互文档 → OD 生成 HTML（UI 内人工判断，含 Agent 专有状态）→ 落盘
+8. /open-design     → **首选**：交互文档 → OD headless 生成 HTML（判断后置，含 Agent 专有状态）→ 落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成原型
    /figma-demo     → （备选）口述 + Figma → Agent 化演示 Demo
@@ -527,10 +527,10 @@ luca_gstack — 一级可见 Skill 列表
 
 ── 原型实现 ────────────────────────────────────────────────────
 
-/open-design   A B C D **设计产出首选**：交互文档 → OD 生成 HTML（UI 内人工判断）→ 落盘
+/open-design   A B C D **设计产出首选**：交互文档 → OD headless 生成 HTML（判断后置）→ 落盘
                输入模式：standalone 或 workflow。输入 design-brief 交互文档；
                OD 生成 + 在 OD UI 内判断「是否符合需求」，通过才落盘 docs/prototype/
-               说明：注入 FxUI 颜色/字体/字号 token（不绑组件库）；OD daemon 不可达时退回 magicpath/html-prototype
+               说明：注入 FxUI 品牌色+文字色 token（不绑组件库）；OD daemon 不可达时退回 magicpath/html-prototype
 
 magicpath      A B C D 备选（OD 不可达时）：需求描述 → React canvas 组件
                输入模式：standalone 或 workflow。standalone 可直接描述界面；
@@ -550,7 +550,7 @@ magicpath      A B C D 备选（OD 不可达时）：需求描述 → React canv
                说明：适合汇报型 Demo、大型多节点 Demo、需要按 Figma
                画面拆节点并隔离构建上下文的场景
 
-/figma-layer   A   C   把 HTML 原型还原到 Figma，作为交付稿（套 FxUI 颜色/字体/字号 token）
+/figma-layer   A   C   把 HTML 原型还原到 Figma，作为交付稿（套 FxUI 品牌色+文字色 token）
                输入模式：standalone 转换工具或 workflow 下游。需要 /open-design、
                /html-prototype 或 /figma-demo 的 index.html + prototype-spec
                额外要求：需要 Figma MCP 已连接（新版 use_figma）

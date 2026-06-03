@@ -95,7 +95,7 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 □ source=open-design 时：已读取 index.html 实际代码 + prototype-spec.md？
   → 否：BLOCKED — open-design 来源必须读实际 HTML 和 spec
   → 注意：open-design 上游不要求 design-brief 的 shadcn 组件映射表（OD 产出为 token-only/
-    自绘）；组件清单从 index.html 实际结构归纳，按三层规则还原；FxUI 只套颜色/字体/字号 token，不绑组件库。
+    自绘）；组件清单从 index.html 实际结构归纳，按三层规则还原；FxUI 只叠品牌色+文字色 token，不绑组件库。
 
 □ shadcn Figma UI Kit file key 已配置？
   → 否：BLOCKED — shadcn Figma UI Kit key 未配置
@@ -145,7 +145,7 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 - **source=figma-demo**：从 blueprint.yaml 的节点清单、design_system、各节点
   spec/interface，以及 prototype-spec.md 的节点清单整理；不要要求 design-brief.md。
 - **source=open-design**：从落盘的 index.html 实际结构归纳组件清单（多为「自绘区域」，
-  因本期不绑 FxUI 组件库）；不要求 design-brief.md 映射表。FxUI 只套颜色/字体/字号 token。
+  因本期不绑 FxUI 组件库）；不要求 design-brief.md 映射表。FxUI 只叠品牌色+文字色 token。
 
 ```markdown
 ## Figma 层组件清单
