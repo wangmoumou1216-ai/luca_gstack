@@ -40,7 +40,7 @@
 | `.claude/skill-os/skill-routing-map.yaml` | builtin_skills 加 systematic-debugging（调试/报错/根因/debug…）+ tdd（tdd/测试驱动/写测试…），窄词、weight 7 | ✅ 已改 |
 | `.claude/observability/rules.yaml` | 加 R-20260607-001/002/003：把 #1/#3/#4 绑到设计·规格·研究节点并带品牌锁，经 get_rules.py 注入（不动受保护 SKILL.md 正文） | ✅ 已改 |
 | `.gitignore` | 加 `.extract-design-system/` `design-system/`，防竞品 token 污染 env repo | ✅ 已改 |
-| `~/.claude/agents/design-system-architect.md` | 品牌锁段——**全局生效，由你手动粘**（见下方片段） | ⏳ 待你粘 |
+| `~/.claude/agents/design-system-architect.md` | 品牌锁段（blockquote 置于 frontmatter 后，CRM 场景必读；非 luca/CRM 项目可忽略） | ✅ 已贴（2026-06-07，全局 subagent，repo 外不入 git） |
 | 本文件 | 落盘映射 | ✅ |
 
 **未碰**：1/3/4 不进 route-guard；office 各 SKILL.md 正文（invariants P1–P7）；framework/（只读）。
