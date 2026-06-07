@@ -106,3 +106,7 @@ memory/digests/
 
 # luca_gstack specific — docs/ is a symlink to external project dir, never tracked
 docs
+
+# external-skill: extract-design-system runtime output (竞品 tokens — keep out of env repo)
+.extract-design-system/
+design-system/

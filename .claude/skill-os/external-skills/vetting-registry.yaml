@@ -1,0 +1,871 @@
+meta:
+  generated: '2026-06-07'
+  run_id: wf_643ca739
+  mechanism: .claude/workflows/external-skill-scout.js
+  gate: '7-dim 门禁: HARD(safety/compatibility/non_redundancy) + SOFT(fit30/quality30/adoption20/maintenance20);
+    verdict APPROVED>=70, CONDITIONAL>=45'
+  stats:
+    raw: 75
+    unique: 55
+    verified: 32
+    approved: 7
+    conditional: 0
+    rejected: 25
+    dropped_for_cap: 23
+  star_data_note: gh stargazers_count cross-checked vs api.github.com (separate network path) for the
+    3 highest + a control (facebook/react 245657=245657); all matched within live-increment delta => REAL.
+    Scout C2/C3 "synthetic stars" warning was a FALSE ALARM (stale training prior vs 2026 ecosystem growth).
+    For monorepo/collection skills the star count is REPO-level, not per-skill.
+  dedup_note: approved deduped by repo+normalized-name (UI-UX-Pro-Max surfaced twice from two channels).
+approved:
+- name: UI-UX-Pro-Max
+  repo: nextlevelbuilder/ui-ux-pro-max-skill
+  url: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+  type: skill
+  category: design-frontend
+  weighted_score: 100
+  scores:
+    fit: 3
+    adoption: 3
+    maintenance: 3
+    quality: 3
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: PASS
+  evidence:
+    stars: 88271
+    last_commit: '2026-04-03T05:08:19Z'
+    license: MIT
+    open_issues: 172
+    archived: false
+    verified_at: '2026-06-07T08:47:07Z'
+    source_url: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+  why_useful: Gives a CRM product-design Claude Code workflow a queryable design-knowledge layer (161
+    color palettes, 57 font pairings, 99 a11y/UX rules, plus stack-specific shadcn/ui + Tailwind reasoning)
+    that the existing generators (open-design, magicpath, html-prototype) lack. For a CRM admin/dashboard,
+    you can pull WCAG-grade contrast, data-table sorting, form-error, and semantic-token rules on demand
+    to ground design decisions and review output before it ships.
+  caveat: 'Two honest reservations: (1) 88k stars on a repo created 2025-11-30 is anomalously high and
+    likely partly inflated/promoted, BUT genuine adoption is independently corroborated by 103,342 npm
+    downloads of uipro-cli last month, so the score holds. (2) The skill''s trigger description is extremely
+    broad and risks firing alongside the user''s existing design skills - mitigated by installing as a
+    non-routed global knowledge skill rather than a routing-map pipeline entry. Safety scan was clean:
+    only subprocess call is `npx shadcn@latest add` passed as an arg array (no shell=True, dry-run supported),
+    one local `node` token-gen execSync, and a Pexels search-URL string; CLI only hits api.github.com
+    releases. No rm -rf, no secret/env/.ssh/keychain reads, no curl-pipe-to-shell, no exfiltration.'
+  install_command: 'npx uipro-cli init --ai claude -g   (or: git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+    && cp -R ui-ux-pro-max-skill/.claude/skills/ui-ux-pro-max ~/.claude/skills/)'
+  integration_note: 'Install globally as a reference/knowledge skill at ~/.claude/skills/ui-ux-pro-max/
+    (SKILL.md + scripts/search.py + data/ CSVs). Needs only Python3 and npx, both already present. Do
+    NOT register it in .claude/skill-os/skill-routing-map.yaml as a pipeline stage: its description is
+    very broad (build/create/design/implement/review/fix UI) and would collide with the office design
+    pipeline (open-design / magicpath / ux-audit). Keep it as an on-demand knowledge source the agent
+    queries via `python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system`;
+    it complements, not replaces, the existing generation/review skills.'
+  verdict: APPROVED
+- name: impeccable (design collection)
+  repo: pbakaus/impeccable
+  url: https://skills.sh/pbakaus/impeccable/impeccable
+  type: collection
+  category: design-frontend
+  weighted_score: 90
+  scores:
+    fit: 2
+    adoption: 3
+    maintenance: 3
+    quality: 3
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: PASS
+  evidence:
+    stars: 35252
+    last_commit: '2026-06-06T01:11:15Z'
+    license: Apache-2.0
+    open_issues: 35
+    archived: false
+    verified_at: '2026-06-07T08:48:49Z'
+    source_url: https://github.com/pbakaus/impeccable
+  why_useful: 'Adds a deterministic, model-agnostic frontend anti-pattern detector (27 CLI rules over
+    HTML/CSS/JSX/Vue/Svelte: contrast, a11y, AI-slop tells, no API key) plus a shared design-refinement
+    vocabulary (/impeccable critique, audit, polish, typeset, harden) the user''s stack lacks, giving
+    a CRM product-design Claude Code workflow a fast objective craft/a11y gate on FxUI pages before/after
+    generation. It complements ux-audit (CRM-specific, screenshot-gated review) and the open-design/magicpath/html-prototype
+    generators rather than duplicating them.'
+  caveat: 'Fit is partial for THIS environment: impeccable''s init/palette brand-creation flow assumes
+    greenfield brand authoring and writes PRODUCT.md/DESIGN.md, which conflicts with the user''s locked
+    FxUI brand model; only the refinement + deterministic-detector pieces are high-value/low-conflict
+    here. It is also a heavy bundle (~120MB clone; ships a 403KB live-browser.js and an 89KB local live-server
+    for browser iteration) — more surface area than a typical single skill, though the local server is
+    localhost-only and the install footprint (cli/ only in npm package) is smaller. Stars (35k) reflect
+    broad GitHub popularity, not necessarily installs in a CRM context.'
+  install_command: 'npx impeccable skills install   (or: npx impeccable skills link --source=.impeccable
+    --providers=claude ; bare detector usable via `npx impeccable detect src/`)'
+  integration_note: 'Plugin-style collection. Lands in .claude/skills/impeccable/ (skill + 7 reference
+    files + ~40 scripts) and .claude/agents/ (impeccable-asset-producer, impeccable-manual-edit-applier
+    subagents). For this OS, treat it as a design-pipeline skill: add a skill-routing-map.yaml entry mapping
+    craft/critique/audit/polish/typeset keywords to /impeccable, and keep it OUT of the FxUI brand-genesis
+    path (brand-tokens.md #FF8000 is the read-only authority; the skill already defers to committed tokens).
+    Best wired as a post-generation audit/refinement node after open-design/magicpath/html-prototype,
+    parallel to ux-audit; optionally run `npx impeccable detect --json` in CI for the deterministic-only
+    pass.'
+  verdict: APPROVED
+- name: systematic-debugging
+  repo: obra/superpowers
+  url: https://skills.sh/obra/superpowers/systematic-debugging
+  type: skill
+  category: verification-redteam
+  weighted_score: 90
+  scores:
+    fit: 2
+    adoption: 3
+    maintenance: 3
+    quality: 3
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: PASS
+  evidence:
+    stars: 219944
+    last_commit: '2026-05-29T20:05:25Z'
+    license: MIT
+    open_issues: 263
+    archived: false
+    verified_at: '2026-06-07T08:47:51Z'
+    source_url: https://github.com/obra/superpowers/tree/main/skills/systematic-debugging
+  why_useful: Enforces a root-cause-first, 4-phase debugging gate ("NO FIXES WITHOUT ROOT CAUSE INVESTIGATION
+    FIRST") that the CRM design OS lacks — it would govern the code-bearing tail of the workflow (tech-spec/task-plan
+    implementation, hook/script fixes) and directly counters the user's own recurring "verify-your-verification
+    / whack-a-mole / claimed-done-without-running-tests" memory failures by forcing reproduce-investigate-hypothesize-test
+    before any patch.
+  caveat: 'Adoption score reflects the 219,944-star obra/superpowers MONOREPO, not this individual skill
+    in isolation — per-skill popularity is unknown. Fit is only moderate (2/3): the skill is a CODE-debugging
+    technique (test/build failures, npm test, codesign scripts, call-stack tracing), whereas this OS is
+    design-first (PRD/UX/Figma/HTML) and only touches code at the implementation tail; it does NOT address
+    red-teaming of design artifacts. Useful as a cross-project engineering safety net, marginal for pure
+    design tasks.'
+  install_command: npx skills add obra/superpowers@systematic-debugging -g -y
+  integration_note: General-purpose engineering discipline, not a design-pipeline skill — install to global
+    ~/.claude/skills/systematic-debugging/ (so it is available across projects, including non-design code
+    work), NOT into .claude/skills/office/. No skill-routing-map.yaml entry needed since the OS routes
+    design intents; it triggers on its own description (bug/test-failure/unexpected-behavior). Keep its
+    bundled siblings (find-polluter.sh, root-cause-tracing.md, defense-in-depth.md, condition-based-waiting.md)
+    in the same dir as SKILL.md references them by relative path. Pairs with the repo's superpowers:test-driven-development
+    and superpowers:verification-before-completion skills, which it cross-references.
+  verdict: APPROVED
+- name: ui-design (design-system-architect + visual-design-foundations + design-system-patterns + design-review)
+  repo: wshobson/agents
+  url: https://github.com/wshobson/agents/tree/HEAD/plugins/ui-design
+  type: plugin
+  category: design-frontend
+  weighted_score: 90
+  scores:
+    fit: 2
+    adoption: 3
+    maintenance: 3
+    quality: 3
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: PASS
+  evidence:
+    stars: 36457
+    last_commit: '2026-06-05T08:23:01Z'
+    license: MIT
+    open_issues: 6
+    archived: false
+    verified_at: '2026-06-07T08:49:08Z'
+    source_url: https://github.com/wshobson/agents/tree/HEAD/plugins/ui-design
+  why_useful: 'For a CRM product-design workflow, the design-system-architect subagent fills a real gap
+    the user''s stack lacks: systematic design-token architecture (primitive/semantic/component tiers),
+    multi-brand/dark-mode theming, and Style Dictionary token pipelines — turning the static brand-tokens.md
+    into engineered token infrastructure that downstream FxUI/OD/shadcn generation can consume consistently.
+    The visual-design-foundations and design-system-patterns skills add general type-scale, spacing, color,
+    and theming authoring guidance (with 8-15KB reference files) that complements the user''s generation-and-review-heavy
+    design skills.'
+  caveat: 'Bundled `design-review` command is a hard trigger-name collision with the user''s existing
+    design-review skill and must be excluded. Fit is adjacent, not core: the agent/skills assume greenfield
+    multi-brand component-library engineering (Style Dictionary, Storybook, monorepo, headless component
+    APIs), whereas the user''s actual loop is FxUI brand overlay → OD/MagicPath/HTML generation; value
+    is in token-architecture thinking, not the generation path. Token examples use generic blue (#2563eb),
+    so any FxUI use must respect the 纷享销客 #FF8000 brand authority in brand-tokens.md/promoted-facts (SF-001).
+    Non-redundancy passes only for the cherry-picked subagent + 2 skills; the full plugin would FAIL non-redundancy
+    due to the design-review collision and redundant mobile skills.'
+  install_command: '/plugin marketplace add wshobson/agents && /plugin install ui-design  (or cherry-pick:
+    git clone https://github.com/wshobson/agents /tmp/wshobson-agents && cp /tmp/wshobson-agents/plugins/ui-design/agents/design-system-architect.md
+    ~/.claude/agents/ && cp -r /tmp/wshobson-agents/plugins/ui-design/skills/visual-design-foundations
+    /tmp/wshobson-agents/plugins/ui-design/skills/design-system-patterns ~/.claude/skills/)'
+  integration_note: 'Do NOT install the whole ui-design plugin: it bundles 3 agents + 9 skills + 4 commands,
+    including a `design-review` command that directly collides with the user''s existing /Users/luca/Desktop/luca_gstack/.claude/skills/office/design-review/,
+    plus mobile-ios/android/react-native skills that are off-target for a CRM web product. Cherry-pick
+    instead. design-system-architect.md belongs in ~/.claude/agents/ (global subagent, auto-invoked by
+    description; no routing-map entry needed since it is a subagent, not a slash skill). The two skills
+    (visual-design-foundations, design-system-patterns) drop into ~/.claude/skills/ globally; they are
+    general design-system authoring helpers and do not need a skill-routing-map.yaml entry, but if you
+    want them in the office pipeline, add them under .claude/skills/office/ and register triggers (''design
+    tokens'',''design system'',''theming'',''token architecture'') — taking care NOT to overlap brand-tokens.md
+    / fxui-source-to-html authority over FxUI brand color + text color.'
+  verdict: APPROVED
+- name: tdd
+  repo: mattpocock/skills
+  url: https://skills.sh/mattpocock/skills/tdd
+  type: skill
+  category: code-engineering
+  weighted_score: 90
+  scores:
+    fit: 2
+    adoption: 3
+    maintenance: 3
+    quality: 3
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: PASS
+  evidence:
+    stars: 119761
+    last_commit: '2026-06-06T09:12:27Z'
+    license: MIT
+    open_issues: 60
+    archived: false
+    verified_at: '2026-06-07T08:50:12Z'
+    source_url: https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md
+  why_useful: Gives the CRM design workflow a disciplined red-green-refactor muscle for the moments it
+    crosses into code — e.g. building or hardening the project's own hooks/scripts (route-guard.mjs, memory
+    scripts) or prototyping logic behind a UI, where its "test behavior through public interfaces, vertical
+    tracer-bullet" guidance complements the existing run-the-app `verify` skill. It is engineering-execution
+    oriented, so its value is adjacent to (not central to) a design-output-first OS.
+  caveat: 'Candidate URL path "tdd" is inaccurate: the skill actually lives at skills/engineering/tdd
+    inside a 14-skill monorepo plugin (mattpocock-skills), so the 119k stars belong to the whole repo,
+    not this skill alone, and install is plugin-scoped rather than a clean one-skill drop. Fit is only
+    moderate — this is an engineering/test-authoring skill in an OS that is overwhelmingly CRM design-pipeline;
+    useful for the rare code-writing detours, not the core design flow. Content is methodology-only (safe,
+    but no executable tooling or evals shipped).'
+  install_command: npx skills add mattpocock/skills@tdd -g -y
+  integration_note: General engineering skill — lives in global ~/.claude/skills/tdd (or via the plugin's
+    plugin.json). It is NOT a design-pipeline skill, so do NOT add it to .claude/skills/office/ or skill-routing-map.yaml.
+    No office registration step needed; it triggers on its own frontmatter keywords (TDD, red-green-refactor,
+    test-first). Verify after install that the 5 bundled reference .md files (tests.md, mocking.md, deep-modules.md,
+    interface-design.md, refactoring.md) copied alongside SKILL.md, since the skill links to them.
+  verdict: APPROVED
+- name: extract-design-system
+  repo: arvindrk/extract-design-system
+  url: https://skills.sh/arvindrk/extract-design-system/extract-design-system
+  type: skill
+  category: design-frontend
+  weighted_score: 77
+  scores:
+    fit: 2.5
+    adoption: 1
+    maintenance: 3
+    quality: 2.5
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: PASS
+  evidence:
+    stars: 50
+    last_commit: '2026-05-25T18:09:14Z'
+    license: MIT
+    open_issues: 2
+    archived: false
+    verified_at: '2026-06-07T08:45:40Z'
+    source_url: https://github.com/arvindrk/extract-design-system
+  why_useful: In a CRM product-design workflow that already runs competitive analysis (the project has
+    a 竞品分析 screenshot pipeline), this turns a live competitor or reference site into a structured W3C
+    tokens.json + tokens.css (colors, type, spacing, radius, shadows) — a token-extraction capability
+    no existing skill provides; agent-browser/capture-open-tabs only screenshot. Its bonus `audit` command
+    (scan source for hardcoded values vs tokens) also complements enforcing brand-tokens.md consistency
+    in generated HTML/FxUI output.
+  caveat: Depends on an external third-party npm tool `dembrandt` plus `npx playwright install chromium`
+    (browser download, ~150MB) at runtime — not bundled, so the user must trust/install that dependency
+    chain. Adoption is modest (50 stars). Extraction is explicitly v1/starter-quality (the SKILL.md itself
+    warns it is not pixel-perfect and a single page is not a whole design system), and it outputs generic
+    CSS variables, not Fx brand tokens — output still needs manual reconciliation against the project's
+    authoritative brand-tokens.md (SF-001).
+  install_command: npx skills add arvindrk/extract-design-system
+  integration_note: 'General-purpose extraction skill, not a luca_gstack design-pipeline node: install
+    to global ~/.claude/skills via `npx skills add arvindrk/extract-design-system` (it follows Anthropic
+    Agent Skills format, valid frontmatter). Do NOT register it in .claude/skill-os/skill-routing-map.yaml
+    or expose it as a first-class /office command — keep it as a discoverable helper invoked during /ux-research
+    or 竞品分析 when a reference site''s tokens are wanted. Before running, ensure Playwright chromium is
+    installed (`npx playwright install chromium`) and the `dembrandt` dep resolves. Treat its tokens.css
+    as draft input — reconcile against the authoritative brand-tokens.md (Fx #FF8000), never overwrite
+    framework/ tokens.'
+  verdict: APPROVED
+rejected:
+- name: agent-skills (addyosmani)
+  repo: addyosmani/agent-skills
+  category: code-engineering
+  weighted_score: 100
+  hard:
+    safety: PASS
+    compatibility: FAIL
+    non_redundancy: FAIL
+  redundant_with: code-review, simplify, verify, security-review, review, task-plan, tech-spec, evals,
+    careful, redteam
+  reject_reasons:
+  - 'non_redundancy FAIL: the entire code-engineering lifecycle (TDD, code review, simplify, debug, security,
+    spec/plan/task-breakdown) is already covered by the user''s first-party OS-integrated skills (verify,
+    evals, careful, code-review, review, redteam, simplify, security-review, task-plan, tech-spec); this
+    is a generic re-implementation, not demonstrably better than purpose-built equivalents wired into
+    route-guard/handoff/memory'
+  - 'compatibility FAIL: trigger collisions — bundled /spec /plan /build /test /review /code-simplify
+    /ship commands and skills code-review-and-quality / code-simplification / security-and-hardening overlap
+    literally/semantically with existing review, code-review, simplify, security-review; full plugin also
+    ships an auto-running SessionStart hook injecting a meta-skill into every session'
+  verdict: REJECTED
+- name: context-engineering-kit
+  repo: NeoLabHQ/context-engineering-kit
+  category: claude-code-meta
+  weighted_score: 100
+  hard:
+    safety: FAIL
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: plan-agent.md (Supervisor/Hierarchical patterns) + task-plan + redteam + evals + retro
+    + careful + challenge + verify + auto orchestrator
+  reject_reasons:
+  - 'LICENSE FAIL (hard safety gate): repo is GPL-3.0, a copyleft / non-permissive license. The gate requires
+    a permissive license (MIT/Apache/BSD); GPL-3.0 carries real copyleft-contamination risk for a proprietary
+    CRM product-design workflow. The CODE itself is clean (no destructive bash, no exfiltration, no secret
+    harvesting; the only rm -rf strings are defensive command-blocking in the hook) — the failure is purely
+    licensing.'
+  - 'NON-REDUNDANCY FAIL: the user already owns a deep, bespoke meta/orchestration layer. sadd/multi-agent-patterns
+    duplicates plan-agent.md''s Supervisor/Hierarchical/Swarm guidance; reflexion duplicates retro+careful+evals;
+    kaizen (5-whys/root-cause) duplicates redteam/root-cause flows; sdd duplicates brainstorm+task-plan+tech-spec.
+    It is not demonstrably better than the existing, tightly-integrated stack (Hermes memory, route-guard,
+    project gates), so it adds maintenance surface without net new capability.'
+  - 'HOOK COLLISION (compatibility risk): reflexion''s Stop hook blocks session end to force /reflexion:reflect,
+    colliding with the user''s existing session-sync.mjs Stop hook that already blocks Stop for memory
+    extraction — double-blocking on every session end.'
+  verdict: REJECTED
+- name: Emil Kowalski's Skill
+  repo: emilkowalski/skill
+  category: design-frontend
+  weighted_score: 100
+  hard:
+    safety: FAIL
+    compatibility: PASS
+    non_redundancy: PASS
+  redundant_with: null
+  reject_reasons:
+  - 'No license: LICENSE content API and license API both return HTTP 404, repo metadata license=null.
+    Per rubric, missing/non-permissive license => safety FAIL regardless of code cleanliness. All-rights-reserved
+    by default; cannot be lawfully redistributed/installed into a corporate CRM workflow without an explicit
+    grant.'
+  - Overlaps in surface area with existing taste-review / design-review / ux-audit (review-format skills),
+    though it is materially deeper on motion craft — not the rejection driver, but worth noting for dedup.
+  verdict: REJECTED
+- name: Make Interfaces Feel Better
+  repo: jakubkrehel/make-interfaces-feel-better
+  category: design-frontend
+  weighted_score: 93
+  hard:
+    safety: FAIL
+    compatibility: PASS
+    non_redundancy: PASS
+  redundant_with: ''
+  reject_reasons:
+  - 'Safety hard gate FAIL: no LICENSE file in repo. README claims MIT but GitHub license API returns
+    404, /LICENSE and /LICENSE.md both 404, and SPDX license is null. The rubric requires an actually-present
+    permissive license; a README mention is not a license grant, so by default the work is all-rights-reserved
+    and not safely redistributable into the user''s OS.'
+  - Adoption is just below the >1k threshold (948 stars), so it scores adoption=2 rather than top-tier.
+  - open_issues=0 on a 948-star repo may indicate issues are disabled/untriaged rather than a healthy
+    backlog (low confidence, not dispositive).
+  verdict: REJECTED
+- name: superpowers (collection)
+  repo: obra/superpowers
+  category: claude-code-meta
+  weighted_score: 90
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: superpowers (already installed v5.1.0 via claude-plugins-official; CLAUDE.md already
+    exposes superpowers:brainstorming as a first-class entry)
+  reject_reasons:
+  - 'Redundant: the entire superpowers collection including the candidate using-superpowers skill is ALREADY
+    installed locally at the identical version v5.1.0 (cache at /Users/luca/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/,
+    all 14 skills present) — non_redundancy hard gate FAILS.'
+  - Not demonstrably better than what's installed because it IS what's installed (same version, same artifact).
+  - 'fit is partly off-target for a CRM product-DESIGN pipeline: superpowers is a software-development
+    methodology (red/green TDD, subagent-driven dev, code review, git worktrees) — useful for engineering
+    but not for the design-artifact generation this OS centers on.'
+  - The candidate skill specifically (using-superpowers) is a behavioral-override entry-point whose SessionStart
+    auto-injection collides with the user's Project-Gate-first routing contract and red line SC-20260523-002
+    — adopting its auto-trigger wholesale is a net negative for this OS even though the underlying skills
+    are fine.
+  verdict: REJECTED
+- name: frontend-design (impeccable)
+  repo: pbakaus/impeccable
+  category: design-frontend
+  weighted_score: 90
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: taste-review + design-review + ux-audit (overlapping craft/critique gate); generation
+    overlaps open-design / magicpath / html-prototype
+  reject_reasons:
+  - 'non_redundancy FAIL: critique/audit/polish core duplicates existing taste-review + design-review
+    + ux-audit; generation overlaps open-design/magicpath/html-prototype, and it is not clearly/demonstrably
+    better for this workflow'
+  - 'Its main differentiator (autonomous color/brand craft via palette.mjs OKLCH seed + cream-bg ban)
+    conflicts with brand-lock red lines: FxUI framework母版 read-only (SF-002), brand color fixed #FF8000,
+    open-design rule FxUI 只叠品牌色+文字色; the anti-slop detector would flag the user''s own committed FxUI
+    tokens'
+  - Broad always-on trigger surface (design/redesign/critique/audit/polish/typography/color/layout/a11y)
+    would collide with route-guard skill-routing-map and the /office pipeline if installed globally
+  - 'name mismatch: skills.sh labels it ''frontend-design'' but the actual installable skill is named
+    `impeccable` (single skill, 23 sub-commands), so any routing entry must use the real name'
+  verdict: REJECTED
+- name: skill-creator
+  repo: anthropics/skills
+  category: claude-code-meta
+  weighted_score: 90
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: skill-creator (already installed; identical name and identical description, same anthropics/skills
+    upstream)
+  reject_reasons:
+  - 'Exact duplicate of an already-installed skill: the live Skill registry lists ''skill-creator'' with
+    a frontmatter description byte-identical to this candidate''s, both from anthropics/skills.'
+  - non_redundancy hard gate FAILS — it is the same skill, so it cannot be 'demonstrably better' than
+    itself; reinstalling only risks a trigger collision and offers zero new capability.
+  - Repo-level license is null (the GitHub API returns no top-level SPDX license); the Apache-2.0 grant
+    relies solely on the per-skill skills/skill-creator/LICENSE.txt — adequate for this file but the umbrella
+    repo exposes no license via API.
+  - 'fit is only partial for THIS CRM product-design workflow: it is general skill-authoring tooling,
+    not a design-pipeline / subagent-orchestration / context-engineering / hook capability that fills
+    a genuine gap.'
+  verdict: REJECTED
+- name: Agent-Skills-for-Context-Engineering
+  repo: muratcankoylan/Agent-Skills-for-Context-Engineering
+  category: claude-code-meta
+  weighted_score: 85
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: 'User''s existing context-engineering OS: three-layer memory system (episodic/semantic/procedural
+    with consolidate/promote gates) ~= memory-systems; plan-agent.md + orchestrator.md (Supervisor/Hierarchical)
+    ~= multi-agent-patterns; Checkpoint/Compact/懒加载 context protocol ~= context-compression/context-optimization;
+    evals + careful + verify + redteam + handoff-review ~= evaluation/advanced-evaluation/harness-engineering;
+    skill-creator ~= tool-design. Coverage is ~1:1 and the user''s versions are concrete and battle-tested,
+    not generic.'
+  reject_reasons:
+  - 'non_redundancy FAIL: the user already runs a deeper, purpose-built equivalent of every core skill
+    (memory-systems, multi-agent-patterns, context-compression/optimization, evaluation/harness-engineering,
+    tool-design) via their three-layer memory system, plan-agent/orchestrator, Checkpoint/Compact protocol,
+    and evals/careful/redteam/handoff-review/skill-creator. Candidate is generic prose guidance, not demonstrably
+    better than the operational custom stack.'
+  - 'fit is weak (1.5/3): these are meta-skills for ENGINEERING agent frameworks, not for the user''s
+    actual job of CRM product design (FxUI brand tokens, Figma, HTML prototypes, PRDs). Off the primary
+    target.'
+  - 'trigger-collision risk: installing the plugin adds 15 broadly-scoped auto-activating skills (multi-agent,
+    memory, context optimization, harness, evaluation) that overlap the user''s plan-agent/orchestrator
+    routing contract and could fire alongside or against it.'
+  verdict: REJECTED
+- name: superpowers
+  repo: obra/superpowers
+  category: claude-code-meta
+  weighted_score: 80
+  hard:
+    safety: PASS
+    compatibility: FAIL
+    non_redundancy: FAIL
+  redundant_with: superpowers:brainstorming (already installed/referenced in CLAUDE.md) + brainstorm,
+    task-plan, auto/orchestrator, verify, careful, code-review/review, skill-creator
+  reject_reasons:
+  - 'NON-REDUNDANCY FAIL: the superpowers collection is already installed and documented in the user''s
+    CLAUDE.md (superpowers:brainstorming maps to /brainstorm); the user''s OS is itself Superpowers-inspired.
+    Every constituent skill maps to an existing user skill (brainstorming->brainstorm, writing-plans->task-plan,
+    executing/subagent->auto+orchestrator, TDD/verification->verify/careful, debugging->careful/code-review,
+    code-review->code-review/review, writing-skills->skill-creator, git-worktrees->EnterWorktree). Not
+    demonstrably better for this CRM-design use case.'
+  - 'COMPATIBILITY FAIL: behavior-overriding plugin. SessionStart hook injects <EXTREMELY_IMPORTANT> ''invoke
+    a skill before ANY response including clarifying questions''; brainstorming has a <HARD-GATE> blocking
+    implementation. These directly conflict with the user''s route-guard/Project-Gate/Plan-Agent routing
+    contract and collide with the existing /brainstorm + superpowers:brainstorming triggers.'
+  - 'FIT low (1/3): general SWE methodology (TDD/debug/worktrees/review), zero CRM or product-design angle,
+    no Claude-meta-authoring beyond skill-creator''s coverage.'
+  verdict: REJECTED
+- name: taste-skill (collection)
+  repo: leonxlnx/taste-skill
+  category: design-frontend
+  weighted_score: 80
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: taste-review, design-review (anti-slop/taste critique) + open-design, html-prototype,
+    magicpath (design-to-code generation)
+  reject_reasons:
+  - 'Fit fail: skill explicitly excludes dashboards/data-tables/multi-step product UI — the exact CRM
+    product-design surface the user builds; tuned for marketing landing pages and portfolios (Awwwards/agency
+    aesthetic).'
+  - 'Non-redundancy fail: taste/anti-slop guidance overlaps taste-review + design-review; design-to-code
+    overlaps open-design + html-prototype + magicpath + fxui-source-to-html. Not demonstrably better at
+    the user''s task, only at a different (marketing-site) task.'
+  - 'Constraint conflict: hardcodes React/Next.js RSC + Tailwind v4 + Motion + Phosphor icons, contradicting
+    the user''s framework/ HTML masters and FxUI brand-only override model (#FF8000, brand-tokens.md authority).'
+  verdict: REJECTED
+- name: Web Design Guidelines
+  repo: vercel-labs/agent-skills
+  category: design-frontend
+  weighted_score: 80
+  hard:
+    safety: FAIL
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: ux-audit
+  reject_reasons:
+  - 'SAFETY FAIL: repo has NO license — confirmed three ways: metadata license:null, the repos/vercel-labs/agent-skills/license
+    endpoint returns HTTP 404, and there is no LICENSE file in root contents. The safety gate requires
+    a permissive license present; missing license => safety FAIL, even though the 1231-byte SKILL.md ships
+    no scripts and contains no destructive/exfiltration/secret-harvest code.'
+  - 'NON_REDUNDANCY FAIL: directly duplicates the user''s existing ux-audit (UI/UX/a11y review), design-review,
+    and taste-review. Its trigger phrases (''review my UI'',''check accessibility'',''audit design'',''review
+    UX'') collide with ux-audit. It is NOT demonstrably better — a generic web-rules auditor with no CRM/FxUI/brand/shadcn/tailwind
+    specialization.'
+  - 'Architectural fragility: the skill body contains no rules; it WebFetches raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
+    on every run. Network dependency, remote content can change or vanish, and offline use is impossible.'
+  - Install pulls the entire vercel-labs/agent-skills pack (Vercel deploy / CLI-token skills included),
+    adding unnecessary skill surface and further trigger-collision risk.
+  - 'FIT is weak: it is a review/audit tool, not the design-systems / design-to-code / shadcn-tailwind
+    generation capability the stated gap targets.'
+  verdict: REJECTED
+- name: webapp-testing
+  repo: anthropics/skills
+  category: verification-redteam
+  weighted_score: 80
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: verify + run + agent-browser
+  reject_reasons:
+  - 'Off-target for the verification-redteam gap: this is functional UI/browser testing, NOT an eval harness
+    and NOT adversarial/red-team review.'
+  - Redundant with existing built-in skills verify (run app + observe behavior) and run (launch/drive/screenshot
+    app with browser-driven fallback), plus agent-browser for URL screenshotting; not demonstrably better
+    for this user.
+  - Poor fit for the actual design outputs (static HTML prototypes, Figma, Open Design, MagicPath React)
+    which are not running web apps needing dev-server lifecycle management.
+  - Requires Python+Playwright infra not guaranteed in this env; bundled examples write to /mnt/user-data/outputs/
+    which does not exist locally.
+  verdict: REJECTED
+- name: design-taste-frontend
+  repo: Leonxlnx/taste-skill
+  category: design-frontend
+  weighted_score: 80
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: taste-review (taste / anti-slop function) + open-design / fxui-source-to-html / html-prototype
+    (brand-locked interface generation); design-review covers craft review. The combination already delivers
+    this skill's value within the user's brand constraints, which this skill does not respect.
+  reject_reasons:
+  - 'non_redundancy FAIL: taste/anti-slop review is already covered by taste-review and design-review;
+    interface generation is covered by open-design + fxui-source-to-html + html-prototype + magicpath'
+  - 'Scope mismatch: skill Section 13 explicitly excludes dashboards, dense product UI, data tables, and
+    multi-step forms — i.e. the core of CRM product design — limiting it to landing/portfolio/marketing
+    pages'
+  - 'Constraint conflict: core directive ''do not look templated, reach past defaults toward Linear/Awwwards/brutalist''
+    contradicts the OS hard rule SF-002 that prototypes must reuse the read-only framework/ FxUI master
+    templates with only brand-color + text-color overrides'
+  - Not demonstrably better for THIS workflow than the incumbent brand-locked pipeline, so redundancy
+    is not overridden
+  verdict: REJECTED
+- name: ui-visual-validator
+  repo: wshobson/agents
+  category: verification-redteam
+  weighted_score: 80
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: 'ux-audit + design-review + taste-review + compare (visual/UX validation); for the verification-redteam
+    gap proper: redteam, evals, verify, code-review, challenge'
+  reject_reasons:
+  - 'non_redundancy FAIL: visual/accessibility UI validation is already covered by ux-audit, design-review,
+    taste-review and compare, and is not demonstrably better (no FxUI/brand-token awareness the existing
+    skills have)'
+  - 'fit weak (1/3): despite the verification-redteam category, this is a design-QA/visual validator,
+    not a code-verification / eval-harness / adversarial-code-review tool — off-target for the stated
+    gap'
+  - trigger collision risk with the existing design-review cluster in .claude/skills/office/
+  verdict: REJECTED
+- name: ClaudeCodeAgents (QA agents)
+  repo: darcyegb/ClaudeCodeAgents
+  category: verification-redteam
+  weighted_score: 73
+  hard:
+    safety: FAIL
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: verify + careful + redteam + handoff-review + task-plan gating (the user's memory already
+    encodes this exact "run tests before claiming done / verify your verification / red-team your own
+    analysis" discipline)
+  reject_reasons:
+  - 'SAFETY FAIL: no license file and license field is null; README ''License'' section says only ''provided
+    as-is for use with Claude Code'', which is not a recognized permissive license (MIT/Apache/BSD). Per
+    rubric, missing/non-permissive license => safety FAIL even though the agent code itself is clean (no
+    destructive bash, no exfiltration, no secret harvesting found in any of the 7 agent files).'
+  - 'NON-REDUNDANCY FAIL: Karen / Jenny / task-completion-validator are general-purpose ''detect bullshit
+    in claimed completions'' validators that overlap heavily with the user''s existing verify, careful,
+    redteam, and handoff-review skills, and are not demonstrably better. The user''s auto-memory already
+    encodes this discipline (run-tests-before-claiming-done, verify-your-verification, redteam-own-analysis-before-shipping).'
+  - 'Off-target for the specific gap: these validate code completion generically; they offer nothing CRM-
+    or product-design-specific, and bring no eval harness/test fixtures of their own.'
+  - ui-comprehensive-tester depends on Puppeteer/Playwright/Mobile MCP servers not present in this environment.
+  - 'Quality is medium: agents are well-written prompts but contain zero tests, evals, or examples beyond
+    inline usage scenarios; they are prompt stubs, not a tested harness.'
+  verdict: REJECTED
+- name: handoff
+  repo: mattpocock/skills
+  category: claude-code-meta
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: handoff-review + CLAUDE.md Checkpoint/handoff protocol (docs/handoff/ + references/handoff-protocol.md
+    + PROGRESS.md + session-restore.mjs)
+  reject_reasons:
+  - 'Redundant: duplicates the user''s existing `handoff-review` skill and the elaborate Checkpoint/handoff
+    protocol in CLAUDE.md (5-section template, project-scoped docs/handoff/, session-restore auto-load,
+    memory integration).'
+  - 'Not better than incumbent: 847-byte 6-line generic stub vs. the user''s structured, project-aware,
+    auto-restored handoff machinery — strictly a subset.'
+  - 'Active conflict: instructs saving the doc to the OS temp dir, contradicting the mandated docs/handoff/YYYY-MM-DD-<topic>-checkpoint.md
+    location.'
+  - 'Trigger collision risk: a skill named `handoff` competes with `handoff-review` and the CLAUDE.md
+    handoff routing.'
+  - 'Low standalone quality: no examples, no tests/evals, minimal body.'
+  verdict: REJECTED
+- name: verification-before-completion
+  repo: obra/superpowers
+  category: verification-redteam
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: verify (plus careful, code-review, redteam, evals) and the project's own auto-memory
+    files feedback_run-tests-before-claiming-done.md / feedback_verify-your-verification.md / feedback_redteam-own-analysis-before-shipping.md,
+    which already operationalize "evidence before completion claims" with project-specific, evidence-grounded
+    force.
+  reject_reasons:
+  - 'Non-redundancy FAIL: duplicates the user''s existing `verify` skill and collides with `careful`/`code-review`/`redteam`/`evals`.'
+  - Already operationalized in this project's promoted auto-memory (feedback_run-tests-before-claiming-done.md,
+    feedback_verify-your-verification.md, feedback_redteam-own-analysis-before-shipping.md) with stronger,
+    project-specific, evidence-grounded rules.
+  - 'Low fit: it is prose-only behavioral discipline with zero executable verification/eval/test-harness
+    or adversarial-review tooling — does not fill the ''testing, eval harnesses, adversarial review''
+    gap with any new capability.'
+  - 'Not demonstrably better than what exists: it is a generic codebase-agnostic restatement of rules
+    the user already wrote in a more rigorous, tailored form.'
+  verdict: REJECTED
+- name: frontend-design
+  repo: anthropics/skills
+  category: design-frontend
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: open-design / html-prototype / magicpath / ux-brainstorm (existing brand-constrained
+    design pipeline)
+  reject_reasons:
+  - 'non_redundancy FAIL: duplicates the existing design-output pipeline (open-design primary, html-prototype,
+    magicpath, ux-brainstorm) and is not demonstrably better'
+  - 'Aesthetic thesis conflicts with the brand-locked CRM workflow: skill demands BOLD/maximalist, distinctive
+    fonts, ''no design the same'', while the OS mandates framework/ master templates (read-only, SF-002)
+    + only brand color #FF8000 and text-color overrides'
+  - 'Off-target for the stated gap: never mentions shadcn, tailwind, or accessibility/a11y implementation;
+    it is a generic ''avoid AI slop'' creativity primer, not a design-system/design-to-code engineering
+    aid'
+  - 'Trigger collision: broad description (''build web components/pages/artifacts, React, HTML/CSS, style/beautify
+    any web UI'') overlaps html-prototype/magicpath/open-design routing'
+  - 'Thin content: only SKILL.md guidance prose, no examples, tests, evals, or scripts'
+  verdict: REJECTED
+- name: design-bridge
+  repo: VoltAgent/awesome-claude-code-subagents
+  category: design-frontend
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: open-design (already maps a chosen design system's DESIGN.md brand spec into actual
+    generated UI, integrated with the OS brand tokens); also overlaps design-brief and figma-layer for
+    the spec-to-build handoff
+  reject_reasons:
+  - 'non_redundancy FAIL: duplicates the DESIGN.md-to-UI-instruction concept already covered (functionally
+    and integrated) by open-design, and is strictly worse — it stops at prose for sibling agents that
+    do not exist in this OS'
+  - 'fit=1: does design-spec brand-cloning, NOT the requested gap (shadcn/tailwind/a11y/design-to-code
+    craft); produces zero code or components'
+  - 'broken core dependency: targets VoltAgent/awesome-design-md which returns 404 (verified); the real
+    catalog is VoltAgent/awesome-design'
+  - 'anti-pattern for this product: it clones third-party brand palettes (Stripe/Notion), directly conflicting
+    with the OS invariants SF-001/SF-002 that mandate the product''s own FxUI framework母版 + brand color
+    (#FF8000) only'
+  verdict: REJECTED
+- name: agent-skills (vercel-labs)
+  repo: vercel-labs/agent-skills
+  category: design-frontend
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: FAIL
+    non_redundancy: FAIL
+  redundant_with: ux-audit / design-review (web-design-guidelines duplicates UI/UX/a11y review without
+    being better; the rest of the collection is off-target Vercel-deploy / React-perf / writing skills)
+  reject_reasons:
+  - 'Non-redundancy FAIL: the only design-relevant skill (web-design-guidelines) overlaps the user''s
+    existing ux-audit, design-review and taste-review, and is not demonstrably better — it is a thin 1231-byte
+    WebFetch shim that pulls a generic web-interface checklist from web-interface-guidelines/main/command.md
+    at runtime, vs. the user''s purpose-built CRM/FxUI audit pipeline.'
+  - 'Compatibility concern: trigger collision — web-design-guidelines fires on ''review my UI'' / ''check
+    accessibility'' / ''audit design'' / ''review UX'', the same intents already routed to ux-audit and
+    design-review.'
+  - 'Fit weak (1/3): the collection is overwhelmingly Vercel deployment, React/Next perf, React Native,
+    and writing-style skills; no shadcn, tailwind, or design-to-code content. Only 1 of ~10 skills is
+    even in the design lane.'
+  - 'Collection-not-single-skill: npx skills add installs the entire bundle (deploy-to-vercel, vercel-cli-with-tokens,
+    vercel-optimize, react-best-practices, etc.), polluting the skill namespace to obtain one redundant
+    design skill.'
+  - License is declared only as text in README ('## License MIT') with no LICENSE/SPDX file, so GitHub
+    reports license=null (spdx_id null, /license endpoint 404) — machine tooling cannot verify it.
+  verdict: REJECTED
+- name: code-review-excellence
+  repo: wshobson/agents
+  category: code-engineering
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: code-review (plus review, security-review, redteam, challenge)
+  reject_reasons:
+  - 'non_redundancy FAIL: user already has an executable `code-review` skill (reviews the diff for correctness
+    bugs + reuse/simplification, supports --comment to post inline PR comments and --fix to apply changes
+    to the working tree, plus an ultra multi-agent cloud mode), as well as `review`, `security-review`,
+    `redteam`, `challenge`, and `careful`. This candidate is NOT demonstrably better: it is static prose
+    about review culture/etiquette with no ability to run, analyze a diff, post comments, or apply fixes.'
+  - 'fit weak (1/3): the real gap for this OS is code & engineering EXECUTION muscle (TDD, debugging,
+    refactoring, build/verify). This skill is human-team process guidance (sandwich method, collaborative
+    phrasing, PR-size etiquette, mentoring juniors) — a ''how to be a good reviewer'' playbook, not an
+    execution engine.'
+  - 'mislabeled: candidate was passed as type=subagent, but the file lives under plugins/developer-essentials/skills/
+    and is a SKILL.md with skill frontmatter, not a Claude subagent (.agents/ .md).'
+  - 'thin on hard deliverables: no tests, no evals; the ''code'' is illustrative anti-pattern snippets,
+    not actionable tooling.'
+  verdict: REJECTED
+- name: critique + audit (impeccable)
+  repo: pbakaus/impeccable
+  category: verification-redteam
+  weighted_score: 70
+  hard:
+    safety: PASS
+    compatibility: FAIL
+    non_redundancy: FAIL
+  redundant_with: 'For the design-review function: ux-audit + design-review + taste-review (already cover
+    Nielsen-style + taste critique of UI). For the stated verification/red-team gap: redteam + evals +
+    verify + code-review + security-review. Redundant on both readings and not demonstrably better for
+    this CRM/FxUI OS.'
+  reject_reasons:
+  - 'Mislabeled: ''critique'' is not a standalone skill — it is one of 23 sub-commands (reference/critique.md)
+    of a single skill named `impeccable`, with no own frontmatter; you cannot install it surgically.'
+  - 'Off-target category: impeccable is explicitly a FRONTEND DESIGN skill (frontmatter: design/redesign/polish/animate/colorize;
+    ''Not for backend-only or non-UI tasks''). critique/audit = UX design review (Nielsen heuristics,
+    AI-slop detection, a11y/perf), NOT code testing, eval harnesses, or adversarial logic/security red-teaming.
+    fit=0 for the verification-redteam gap.'
+  - 'non_redundancy FAIL: the design-review value duplicates the user''s existing ux-audit + design-review
+    + taste-review; the verification value is already covered by redteam + evals + verify + code-review
+    + security-review.'
+  - 'compatibility FAIL for the request: the named ''critique'' unit is not independently installable,
+    and the parent skill''s triggers (critique/audit/polish/design/layout) collide with /ux-audit, /design-review,
+    /taste-review, /design-brief, /html-prototype, /open-design.'
+  verdict: REJECTED
+- name: git-guardrails-claude-code
+  repo: mattpocock/skills
+  category: claude-code-meta
+  weighted_score: 63
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: update-config (authors the same hook) + the user's CLAUDE.md git policy ("Commit or
+    push only when the user asks; if on default branch, branch first")
+  reject_reasons:
+  - 'Redundant and not demonstrably better: a ~20-line bash hook the user could trivially generate via
+    their existing update-config skill, which integrates into their sophisticated hook stack (route-guard.mjs
+    24KB, session-sync.mjs); the candidate is a thinner, standalone version.'
+  - 'Intent already covered by policy: CLAUDE.md already mandates no unsolicited git push and branch-first
+    on default — the candidate only adds mechanical enforcement of an already-enforced-by-convention rule.'
+  - 'Adoption signal is monorepo-inflated: the 119,761 stars belong to mattpocock/skills as a whole, not
+    to this individual skill; true per-skill adoption is unknown.'
+  - 'Off the stated gap: provides zero value to the CRM product-design pipeline; it is a one-shot git-safety
+    setup recipe with no reusable design capability.'
+  - 'Thin skill: no automated tests/evals, verification is a single manual echo-pipe command.'
+  verdict: REJECTED
+- name: web-design-guidelines
+  repo: vercel-labs/agent-skills
+  category: verification-redteam
+  weighted_score: 60
+  hard:
+    safety: PASS
+    compatibility: FAIL
+    non_redundancy: FAIL
+  redundant_with: ux-audit (also design-review / taste-review)
+  reject_reasons:
+  - 'FIT: category is verification/red-teaming (testing, eval harnesses, adversarial review) but this
+    skill is a generic web-design/a11y rule checker — it runs no tests, builds no eval harness, and does
+    no adversarial review. Off-target.'
+  - 'FIT: not tailored to the CRM/FxUI design context — it pulls Vercel''s generic web-interface-guidelines,
+    ignoring the project''s framework/ 母版 and 纷享销客 brand tokens.'
+  - 'NON_REDUNDANCY: ''review my UI / audit design / review UX / check accessibility'' duplicates existing
+    /ux-audit (and design-review, taste-review). Not demonstrably better — it is a 1.2KB stub that delegates
+    all logic to a remote fetched file.'
+  - 'COMPATIBILITY: trigger-phrase collision with ux-audit/design-review/taste-review would cause routing
+    ambiguity in skill-routing-map.yaml.'
+  - 'COMPATIBILITY/ROBUSTNESS: hard dependency on live WebFetch to raw.githubusercontent.com every run;
+    no bundled ruleset means it breaks offline or if the upstream guideline file moves.'
+  - 'QUALITY: SKILL.md is a 1231-byte thin wrapper with no examples, no tests, no evals, and no embedded
+    rules — all substance lives in an external URL it fetches at runtime.'
+  - 'LICENSE hygiene: MIT is declared only in the README footer; there is no LICENSE file, so the GitHub
+    license API returns null/404. Permissive intent is stated but the repo lacks a proper license file.'
+  verdict: REJECTED
+- name: grill-me
+  repo: mattpocock/skills
+  category: verification-redteam
+  weighted_score: 50
+  hard:
+    safety: PASS
+    compatibility: PASS
+    non_redundancy: FAIL
+  redundant_with: brainstorm
+  reject_reasons:
+  - 'FIT=0: not a verification/red-team/eval/testing skill. It is a Socratic design-interview helper filed
+    under the repo''s ''productivity'' category (skills/productivity/grill-me), directly contradicting
+    the marketed category=''verification-redteam''. It interrogates the USER about their own plan rather
+    than adversarially reviewing artifacts, running tests, or eval harnesses.'
+  - 'NON_REDUNDANCY FAIL: the user''s existing /brainstorm skill is explicitly a 苏格拉底拷问式 (Socratic interrogation)
+    PRD tool that already does ''interview relentlessly, one question at a time, walk the decision tree.''
+    grill-me is a strict thin subset and is demonstrably NOT better — /brainstorm is a full multi-phase
+    skill with handoff + memory integration, whereas grill-me is 4 sentences. Also overlaps existing ''challenge''
+    and ''careful'' skills.'
+  - 'QUALITY=1: extreme stub — the entire skill body is 4 sentences (frontmatter + ~5 lines). No examples,
+    no tests, no evals, no edge-case handling, no scope boundaries. The 119k-star figure is the umbrella
+    mono-repo''s stars, not evidence of THIS skill''s adoption.'
+  - 'TRIGGER COLLISION: ''stress-test a plan / get grilled on your design'' competes with /brainstorm''s
+    routing keywords (需求梳理/需求确认/有个想法) for the same intent.'
+  verdict: REJECTED

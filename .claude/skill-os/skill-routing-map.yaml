@@ -221,3 +221,16 @@ builtin_skills:
     hint: "→ 建议使用内置 skill: frontend-slides（生成前端幻灯片/演示）"
     weight: 7
     triggers: [前端幻灯片, frontend slides, 交互演示, 网页演示]
+
+# ── External engineering skills (global ~/.claude/skills; 故意不收 design 词，避免劫持设计管线）──
+  systematic_debugging:
+    skill: systematic-debugging
+    hint: "→ 建议使用外部 skill: systematic-debugging（根因优先调试，改前先定位）"
+    weight: 7
+    triggers: [调试, 报错, 根因, debug, 排查, 找bug, 复现, 测试失败, 崩溃, 异常报错]
+
+  tdd:
+    skill: tdd
+    hint: "→ 建议使用外部 skill: tdd（测试先行，红绿重构）"
+    weight: 7
+    triggers: [tdd, 测试驱动, 写测试, 测试先行, 红绿重构, 单元测试]
