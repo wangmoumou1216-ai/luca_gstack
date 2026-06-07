@@ -151,16 +151,16 @@
 → 对齐状态：{aligned / partial / false}
 → 偏移说明：{如果不完全对齐，偏移了什么，如何在方案中弥补}
 
-### design-brief需要知道的
-→ 推荐方案：{Approach X}
-→ AI Native判定：{判定结果}
-→ Evaluability等级：{等级}
-→ 核心假设：{列出}
-→ 被否定的方向：{列出}
+### design-brief需要知道的（design-brief 将直接继承以下项，不重做）
+→ 推荐方案：{Approach X}（源：§6 方案）
+→ AI Native判定：{判定结果}（源：§5 AI-Native评估 — design-brief Phase 1 直接承接，不重算四层）
+→ Evaluability等级：{等级}（源：§5）
+→ 核心假设：{列出}（源：§10 假设前提 — design-brief Phase 2 仅 checkpoint 核对，不再挑战）
+→ 被否定的方向：{列出}（源：§9 被否定的方向 — design-brief 不得复活）
 → 演进路径摘要：{v1→v2→v3一句话}
 
-### design-brief不应该做的
-→ 不应该重新评估AI Native可行性（已在ux-research + ux-brainstorm中完成）
+### design-brief不应该做的（解耦红线）
+→ 不应该重新评估AI Native可行性（已在ux-research + ux-brainstorm中完成；有本产出时 design-brief Phase 1 切「继承+交互层复核」）
 → 不应该改变被否定的方向（除非出现新证据）
 → 不应该发明新的设计判断（如果需要 → 本PRD不够完整，应该回到ux-brainstorm）
 

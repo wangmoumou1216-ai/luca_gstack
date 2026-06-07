@@ -4,9 +4,11 @@ preamble-tier: 3
 argument-hint: "[path to PRD/ux-research/ux-audit markdown, or paste design ideas]"
 version: 2.0.0
 description: |
-  轻量交互文档与原型决策节点。用于在不运行重型 /ux-brainstorm 时，
-  基于 PRD / ux-research / ux-audit / 用户直接粘贴方案，产出可交给
-  MagicPath、Open Design、Claude Design、/html-prototype 和开发的跨工具交互契约。
+  收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 /
+  用户粘贴方案，收敛成可交给 MagicPath、Open Design、Claude Design、/html-prototype
+  和开发的规格契约（决策卡 / 状态覆盖 / 组件映射 / Generation Packet）。
+  可独立运行；若检测到上游 ux-brainstorm 产出，则继承其 AI-Native 判定与已验证假设，不重做发散分析。
+  复杂 / 多方案 / 高不确定 → 先用 /ux-brainstorm 发散，本 skill 负责收敛落地。
   执行顺序锁死：设计坐标系 →
   原生AI四层深度思考 → 假设挑战 → 体验验证 → 品味检查 →
   每条决策的 8 字段完整化 → 原型承载方式确认 → shadcn 组件映射 →
@@ -269,6 +271,17 @@ Phase 1 不是走过场的确认步骤，它有权否决 Phase A 的结论。
 **⚠️ 本 skill 的核心门禁。详细方法论见 `ai-native-design-framework.md` 第 4 节。
 本 Phase 只负责执行。**
 
+### Step 1.0：上游继承检查（解耦 ux-brainstorm，避免重做）
+
+preamble 已探测 `_UX_BRAINSTORM`（docs/decisions/*-ux-brainstorm.md）。据此分两支——phase 仍执行、顺序不变：
+
+- **有上游产出 → 继承模式**：读取其「§5 AI-Native评估」+「对下游交接（design-brief 需要知道的 / 不应该做的）」。
+  **承接** N→N' 压缩、范式判定、Evaluability 等级为**既定输入**，不再从零推导四层。
+  本 Phase 降级为「交互层复核」：只校验承接判定在本规格的组件/交互粒度是否仍成立。
+  保留否决权：若复核与承接结论**冲突** → 触发 `NEEDS_CONTEXT` 回 ux-brainstorm，**不得静默重算**或复活被否定方向。
+  下面【四层思考】只填"承接值 + 交互层复核结论"。
+- **无上游产出 → 独立模式**：按下面【四层思考】完整推导（design-brief standalone 原有行为）。
+
 ```
 【四层思考】
 
@@ -315,6 +328,10 @@ Layer D · 代理层（场景 D 和涉及 agent 的功能强制）：
 ---
 
 ## Phase 2：假设挑战
+
+**上游继承检查**：若存在 ux-brainstorm 产出，读其「§10 假设前提（用户已验证）」+「被否定的方向」。
+有上游 → 切「checkpoint 模式」：核对这些**已验证假设**在本规格下是否仍成立、被否定方向不复活，不从零再挑战；
+无上游 → 按下面流程做本 skill 自己的轻量假设挑战。
 
 读取选定的方案，识别 1-2 个核心假设：
 

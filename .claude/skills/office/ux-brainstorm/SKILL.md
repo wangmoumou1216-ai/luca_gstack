@@ -2,11 +2,12 @@
 name: ux-brainstorm
 preamble-tier: 3
 description: >
-  UX设计方案编排器。将ux-research报告（或设计想法）
-  转化为设计方案文档+交互架构文档。通过7个UX逼问（4必选+3条件触发）
-  审问设计假设，生成含稳定ID的设计方案，
-  经Oracle对抗性审查后生成交互架构文档。触发词：'ux-brainstorm', 'brainstorm
-  design', 'design from research', 'write design proposal', '设计方案'。
+  发散引擎（UX设计方案编排器）。将ux-research报告（或设计想法）发散为2-3个设计方案
+  + 交互架构文档：通过7个UX逼问（4必选+3条件触发）审问假设，生成含稳定ID的方案，
+  经Oracle对抗性审查，并产出 AI-Native 判定（供下游 design-brief 继承，不重做）。
+  分工：本 skill 负责发散+对抗+架构；design-brief 负责收敛落地为规格契约。
+  触发词：'ux-brainstorm', 'brainstorm design', 'design from research',
+  'write design proposal', '设计方案'。
 argument-hint: "[path to ux-research markdown file, or empty for cold-start mode]"
 context-cost:
   self: 20860

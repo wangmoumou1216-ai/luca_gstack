@@ -90,6 +90,7 @@ handoff_gates:
       - "selected_approach missing"
       - "interaction_architecture missing"
     allow_standalone_override: true
+    note: "design-brief=收敛引擎：检测到 ux-brainstorm 产出时继承其 §5 AI-Native 判定 / §10 假设 / §9 被否定方向（Phase1 切交互层复核, Phase2 切 checkpoint），不重做发散；无上游则 standalone 全量。二者不并列产同类文档。"
 
   design_brief_to_magicpath:
     applies_when: "workflow_mode"
