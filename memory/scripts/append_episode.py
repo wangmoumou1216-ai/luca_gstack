@@ -32,6 +32,22 @@ def slugify(text: str) -> str:
     return text[:40]
 
 
+def active_project() -> str:
+    """当前激活项目名，从 docs 软链目标 .../Desktop/项目/<name>/docs 推导。
+    无激活项目（软链缺失/损坏）时返回 ""。"""
+    docs = ROOT / "docs"
+    try:
+        target = os.readlink(docs)
+    except OSError:
+        return ""
+    marker = "/项目/"
+    idx = target.find(marker)
+    if idx == -1:
+        return ""
+    rest = target[idx + len(marker):]
+    return rest.split("/")[0]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--topic", required=True)
@@ -41,7 +57,10 @@ def main() -> int:
     parser.add_argument("--blockers", default="", help="comma-separated blockers encountered")
     parser.add_argument("--decision", default="", help="non-obvious judgment made this session (why, not what)")
     parser.add_argument("--next-risk", default="", help="anticipated risk or open question for next session")
+    parser.add_argument("--project", default="", help="项目作用域；留空则自动从 docs 软链推导")
     args = parser.parse_args()
+
+    project = args.project.strip() or active_project()
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     count = sum(1 for l in INDEX.read_text(encoding="utf-8").splitlines() if l.strip()) if INDEX.exists() else 0
@@ -59,6 +78,7 @@ def main() -> int:
         "id": ep_id,
         "date": today,
         "topic": args.topic,
+        **({"project": project} if project else {}),
         "skills_used": skills,
         "outcomes": outcomes,
         "blockers": blockers,

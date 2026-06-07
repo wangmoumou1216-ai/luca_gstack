@@ -268,9 +268,16 @@ def load_layer(layer: str) -> tuple[Path, list[dict]]:
     return EVAL_LOG, read_jsonl(EVAL_LOG)
 
 
-def passes_filters(layer: str, record: dict, skill: str, topic: str) -> bool:
+def passes_filters(layer: str, record: dict, skill: str, topic: str, project: str = "") -> bool:
     if topic and topic.lower() not in str(record.get("topic", "")).lower() and topic.lower() not in as_text(record):
         return False
+    if project and layer == "episodic":
+        rec_proj = str(record.get("project", "")).strip()
+        if rec_proj:
+            if project.lower() != rec_proj.lower():
+                return False
+        elif project.lower() not in str(record.get("topic", "")).lower():  # 历史记录无 project 字段：只在 topic 上兜底匹配
+            return False
     if not skill or skill == "*":
         return True
     if layer == "episodic":
@@ -280,14 +287,14 @@ def passes_filters(layer: str, record: dict, skill: str, topic: str) -> bool:
     return skill.lower() in str(record.get("skill_name", "")).lower()
 
 
-def search(query: str, limit: int, layer: str, skill: str, topic: str) -> list[dict]:
+def search(query: str, limit: int, layer: str, skill: str, topic: str, project: str = "") -> list[dict]:
     tokens = tokenize(query)
     layers = ["episodic", "semantic", "eval"] if layer == "all" else [layer]
     results = []
     for layer_name in layers:
         path, rows = load_layer(layer_name)
         for record in rows:
-            if not passes_filters(layer_name, record, skill, topic):
+            if not passes_filters(layer_name, record, skill, topic, project):
                 continue
             result = score_record(layer_name, record, query, tokens, path, skill, topic)
             has_query_match = any(
@@ -450,6 +457,7 @@ def main() -> int:
     parser.add_argument("--layer", choices=["episodic", "semantic", "eval", "all"], default="all")
     parser.add_argument("--skill", default="*")
     parser.add_argument("--topic", default="")
+    parser.add_argument("--project", default="", help="按项目作用域过滤 episodic（含历史记录文本兜底）")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--retrieval-stats", action="store_true",
                         help="ADR-0006: summarize retrieval-log.jsonl (no search performed)")
@@ -470,7 +478,7 @@ def main() -> int:
     if not args.query:
         parser.error("query is required unless --retrieval-stats is used")
 
-    rows = search(args.query, args.limit, args.layer, args.skill, args.topic)
+    rows = search(args.query, args.limit, args.layer, args.skill, args.topic, args.project)
     # Fail-safe instrumentation: logged AFTER computing results, swallows all errors,
     # and does not touch the search output below.
     log_retrieval(args.query, rows)

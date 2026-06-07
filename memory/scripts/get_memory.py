@@ -142,6 +142,7 @@ def main() -> int:
     parser.add_argument("--skill", default="*")
     parser.add_argument("--scene", default="*")
     parser.add_argument("--topic", default="")
+    parser.add_argument("--project", default="", help="按项目作用域过滤 episodic（含历史记录文本兜底）")
     parser.add_argument("--source", default="")
     parser.add_argument("--id", default="")
     parser.add_argument("--contains", default="")
@@ -167,6 +168,12 @@ def main() -> int:
 
     if args.layer == "episodic":
         entries = load_episodic(100000)
+        if args.project:
+            entries = [
+                e for e in entries
+                if (e.get("project", "").lower() == args.project.lower())
+                or (not e.get("project") and args.project.lower() in str(e.get("topic", "")).lower())
+            ]
         if args.topic:
             entries = [e for e in entries if args.topic.lower() in e.get("topic", "").lower()]
         if args.skill != "*":
