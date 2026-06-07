@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ⚠️ 可选 / 默认不需要。每日记忆治理的【默认机制已改为 SessionStart 触发】
+  （session-restore.mjs 在每天首次启动时后台跑 daily_governance.py，走 Claude Code
+  已获 Desktop 访问的 TCC 上下文，无需任何额外授权）。
+
+  本 launchd 模板仅在你想要「真·无人值守、不开 Claude 也每天跑」时才用，且有前提：
+  ⚠️ 本仓在 ~/Desktop 下，受 macOS TCC 保护；launchd agent 默认无 Full Disk Access，
+     直接跑会 EPERM「Operation not permitted」、连脚本都打不开（实测，见 review DG-01）。
+     必须先到「系统设置 → 隐私与安全性 → 完全磁盘访问」给 /bin/bash 勾选授权，本任务才跑得通。
+
+  安装（你自己执行，本框架不自动 load 系统级任务）：
+    cp scripts/launchd/com.luca.memory-governance.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.luca.memory-governance.plist
+    launchctl start com.luca.memory-governance   # 冒烟，跑完看 /tmp/luca-memory-governance.log
+  卸载：
+    launchctl unload ~/Library/LaunchAgents/com.luca.memory-governance.plist
+  日志：/tmp/luca-memory-governance.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.luca.memory-governance</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd /Users/luca/Desktop/luca_gstack &amp;&amp; /usr/bin/python3 memory/scripts/daily_governance.py &gt;&gt; /tmp/luca-memory-governance.log 2&gt;&amp;1</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>7</integer>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

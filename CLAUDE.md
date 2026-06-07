@@ -192,6 +192,26 @@ python3 memory/scripts/propose_semantic.py \
   --tags "html-prototype,framework"
 ```
 
+### 自动自成长（auto-grow，2026-06-05 起）
+
+> 经验沉淀**不再依赖用户开口提醒**。三个自动环节：
+
+1. **捕获（每 session 自动）：** Stop hook（`.claude/hooks/session-sync.mjs`）在「本 session 有实质工作
+   （≥3 轮 / 有编辑 / 有 workflow 节点）且尚未沉淀」时**拦截结束**，注入指令要求当前 Agent 先就地完成
+   提取再结束——把每条经验分 **项目级**（`append_episode.py --project`，自动从 docs 软链推导项目）
+   与 **通用**（`propose_semantic.py` 候选 ／ 全局 auto-memory `feedback_*.md`）两类落地，然后
+   `touch .claude/.episode-written-<sid>` 解锁。三重防循环：`stop_hook_active` ／ 本 session marker ／
+   `SESSION_SYNC_BLOCK=0` kill-switch；任何异常 fail-open（绝不卡住结束）。
+2. **治理 + 晋升（每日自动）：** `session-restore.mjs` 在每天首次 session 启动时后台 detached 跑
+   `daily_governance.py`（跑在 Claude 已获 Desktop 访问的 TCC 上下文，绕开 launchd 对 ~/Desktop 的 TCC 限制——见 review DG-01；
+   `scripts/launchd/com.luca.memory-governance.plist` 是可选的真·无人值守路径，但需手动授 Full Disk Access）：消化候选 → **只晋升 promotion_ready 门禁内的候选**（红线 SC-20260523-003 不变，
+   冲突/重复/borderline 留给你裁决）→ 写 `memory/digests/<date>.md`「成长摘要」。
+3. **回看（下次启动自动）：** `session-restore.mjs` 在 SessionStart 把最新 digest 提示一次。
+
+**项目级 vs 通用检索：** episodic 记录带 `project` 字段；
+`search_memory.py --project <名>` / `get_memory.py --layer episodic --project <名>` 按项目过滤
+（无字段的历史记录用文本兜底匹配）。
+
 ### 关键约束速查（Static Fallback — 脚本失败时此节仍有效）
 
 > 以下为 semantic memory 的静态副本，脚本可用时以 promoted-facts.yaml 为准；

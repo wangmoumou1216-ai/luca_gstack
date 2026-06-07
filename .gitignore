@@ -85,6 +85,10 @@ api-project/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .claude/.session-turn-count
+.claude/.session-edit-count
+.claude/.session-tool-count
+.claude/.episode-written-*
+.claude/.digest-shown-*
 .claude/current-topic*.txt
 .claude/workflow-state*.yaml
 
@@ -94,6 +98,8 @@ memory/episodic/sessions/*.md
 memory/semantic/candidates.jsonl
 memory/semantic/reviews.jsonl
 memory/retrieval-log.jsonl
+# Daily governance digests — regenerated from memory state each day
+memory/digests/
 # Observability — runtime data, regenerated each session
 .claude/observability/pending-extraction.md
 .claude/observability/run-log.jsonl
