@@ -6,7 +6,7 @@ rules:
   type: quality_rule
   scope:
     skills: [office]
-    scenes: [*]
+    scenes: ["*"]
   rule: "office: CLAUDE.md 路由表与 SKILL.md Step 3 列表必须保持一致，任一变更须同步另一处"
   source_observations:
     - O-20260522-001
@@ -16,7 +16,7 @@ rules:
   type: quality_rule
   scope:
     skills: [office, idea, ux-audit, brainstorm]
-    scenes: [*]
+    scenes: ["*"]
   rule: "office/route: 项目上下文门禁优先于场景B功能优化路由；“老项目/已有项目/继续项目”先确认或切换项目，再决定 skill。"
   source_observations:
     - O-20260523-001
@@ -26,7 +26,7 @@ rules:
   type: quality_rule
   scope:
     skills: [html-prototype]
-    scenes: [*]
+    scenes: ["*"]
   rule: "html-prototype: 母版选择必须作为显式询问项；未获确认前不得把 framework/list-page.html 写成强制约束。"
   source_observations:
     - O-20260525-001
@@ -35,9 +35,9 @@ rules:
   severity: medium
   type: quality_rule
   scope:
-    skills: [ux-brainstorm, design-brief, open-design, magicpath, html-prototype, ux-audit]
-    scenes: [*]
-  rule: "外部知识库 ui-ux-pro-max 在精确节点给决策垫底(只读)：ux-brainstorm Phase4 方案探索→每个方案 query #1 取 UX/图表/字体选型依据；design-brief Phase3 状态覆盖+Phase6 组件映射→query table/form/empty-state 规则与 --stack shadcn 映射；ux-audit→取规范当评审标尺。命令 python3 ~/.agents/skills/ui-ux-pro-max/scripts/search.py <q> --domain ux|typography|chart [--stack shadcn] -n N。品牌锁：其配色/风格输出为通用非绑定值必须丢弃，FxUI #FF8000+文字色+framework/母版唯一权威(SF-001/SF-002)；禁 --persist/--design-system。"
+    skills: [ux-brainstorm, design-brief, open-design, html-prototype, ux-audit, figma-demo]
+    scenes: ["*"]
+  rule: "外部知识库 ui-ux-pro-max 在精确节点给决策垫底(只读)：ux-brainstorm Phase4 方案探索→每个方案 query #1 取 UX/图表/字体选型依据；design-brief Phase3 状态覆盖+Phase6 组件映射→query table/form/empty-state 规则与 --stack shadcn 映射；ux-audit→取规范当评审标尺。命令 python3 ~/.agents/skills/ui-ux-pro-max/scripts/search.py <q> --domain ux|typography|chart [--stack shadcn] -n N。品牌锁：其配色/风格输出为通用非绑定值必须丢弃，FxUI #FF8000+文字色+framework/母版唯一权威(SF-001/SF-002)；禁 ui-ux-pro-max 的 --persist/--design-system 标志（指 search.py 的标志，与 open-design 的 designSystemId 选择无关）。"
   source_observations:
     - O-20260607-extskill
 - id: R-20260607-002
@@ -46,7 +46,7 @@ rules:
   type: quality_rule
   scope:
     skills: [design-brief, tech-spec]
-    scenes: [*]
+    scenes: ["*"]
   rule: "需要 token 体系工程化时可参考外部 subagent design-system-architect 及 skills(visual-design-foundations / design-system-patterns)。但 brand-tokens.md #FF8000 是固定输入不是可设计项；禁多品牌/暗色/白标；framework/ 只读；它们从属于 open-design + brand-tokens 权威。"
   source_observations:
     - O-20260607-extskill
@@ -55,8 +55,8 @@ rules:
   severity: high
   type: quality_rule
   scope:
-    skills: [ux-research]
-    scenes: [*]
+    skills: [ux-research, ux-audit]
+    scenes: ["*"]
   rule: "竞品分析可用外部 skill extract-design-system 抽竞品站 token 作研究输入(npx extract-design-system <url>，需 chromium)。输出仅参考必须回源对账 brand-tokens.md，#FF8000 与 ≤3 用色规则优先；禁止对本仓库/framework/ 跑 audit(它会建议覆盖品牌色)；仅在激活项目目录内运行，输出已 gitignore 勿入 env repo。"
   source_observations:
     - O-20260607-extskill

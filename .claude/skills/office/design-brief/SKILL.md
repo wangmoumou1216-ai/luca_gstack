@@ -275,7 +275,7 @@ Phase 1 不是走过场的确认步骤，它有权否决 Phase A 的结论。
 
 preamble 已探测 `_UX_BRAINSTORM`（docs/decisions/*-ux-brainstorm.md）。据此分两支——phase 仍执行、顺序不变：
 
-- **有上游产出 → 继承模式**：读取其「§5 AI-Native评估」+「对下游交接（design-brief 需要知道的 / 不应该做的）」。
+- **有上游产出 → 继承模式**：读取其「AI Native评估」节（N→N'/范式/Evaluability）+「对下游Skill的交接」节（design-brief 需要知道的 / 不应该做的）。
   **承接** N→N' 压缩、范式判定、Evaluability 等级为**既定输入**，不再从零推导四层。
   本 Phase 降级为「交互层复核」：只校验承接判定在本规格的组件/交互粒度是否仍成立。
   保留否决权：若复核与承接结论**冲突** → 触发 `NEEDS_CONTEXT` 回 ux-brainstorm，**不得静默重算**或复活被否定方向。
@@ -329,7 +329,7 @@ Layer D · 代理层（场景 D 和涉及 agent 的功能强制）：
 
 ## Phase 2：假设挑战
 
-**上游继承检查**：若存在 ux-brainstorm 产出，读其「§10 假设前提（用户已验证）」+「被否定的方向」。
+**上游继承检查**：若存在 ux-brainstorm 产出，读其「假设前提」节（用户已验证）+「被否定的方向」节。
 有上游 → 切「checkpoint 模式」：核对这些**已验证假设**在本规格下是否仍成立、被否定方向不复活，不从零再挑战；
 无上游 → 按下面流程做本 skill 自己的轻量假设挑战。
 

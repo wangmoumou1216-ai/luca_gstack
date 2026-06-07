@@ -29,7 +29,7 @@
 - **为什么对你**：你的 open-design / magicpath / html-prototype 是"生成器"，缺一个"该用什么配色/字号/a11y 规则"的**查表层**。CRM 后台/仪表盘可按需取 WCAG 级规则给设计/评审兜底。
 - **证据**：⭐88,275 ｜ MIT ｜ 最近提交 2026-04-03 ｜ npm `uipro-cli` 上月 10.3 万次下载（独立佐证热度真实）。安全扫描干净（仅 `npx shadcn add` 参数数组 + 本地 token 生成，无 shell 注入/外传/密钥读取）。
 - **装**：`npx uipro-cli init --ai claude -g`（或 git clone 后拷 `.claude/skills/ui-ux-pro-max` 到 `~/.claude/skills/`，注意解析 data/scripts 软链）。
-- **集成**：装**全局、不进路由表**——它的触发词极宽（build/create/design/review/fix），进 skill-routing-map 会和你的 office 设计管线撞车。当成"知识查询源"用：`python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system`。
+- **集成**：装**全局、不进路由表**——它的触发词极宽（build/create/design/review/fix），进 skill-routing-map 会和你的 office 设计管线撞车。当成"知识查询源"用：`python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain ux|typography|chart [--stack shadcn]`（禁 --design-system/--persist，会生成非品牌 token；权威见 rules.yaml R-20260607-001）。
 
 #### 2. impeccable（仅用确定性检测器）— `pbakaus/impeccable`  〔90/100〕
 - **是什么**：模型无关的前端**反模式/a11y 确定性检测器**（27 条 CLI 规则，跑 HTML/CSS/JSX/Vue/Svelte：对比度、a11y、"AI-slop"信号，**无需 API key**）+ 一套设计精修词汇（critique/audit/polish/typeset/harden）。

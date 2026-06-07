@@ -45,9 +45,9 @@
 
 **未碰**：1/3/4 不进 route-guard；office 各 SKILL.md 正文（invariants P1–P7）；framework/（只读）。
 
-## 待你手动粘贴的片段（#3 全局 subagent 品牌锁）
+## #3 全局 subagent 品牌锁片段（已贴 2026-06-07，留档）
 
-把下面这段加到 `~/.claude/agents/design-system-architect.md` 正文最前（frontmatter `---` 之后）：
+下面这段**已加到** `~/.claude/agents/design-system-architect.md` frontmatter 之后（blockquote 形式）：
 
 ```md
 ## ⛔ luca_gstack brand-lock (CRM 场景必读)
@@ -55,6 +55,19 @@
 绝不发明/覆盖主色板；**不做多品牌、暗色、白标**主题层；`framework/` 母版**只读**，绝不改。
 输出只在所选 design system 上叠**品牌色 + 文字色**。本 skill 的蓝/暗色示例仅为通用范式，落到本项目一律以 brand-tokens.md 为准。
 ```
+
+## 2026-06-07 地毯式审计 + 修复（4 subagent 并行：场景 / 绑定 / 冲突 / 解耦）
+
+审计发现并已修复（全部复验通过）：
+- **3 orphan 注入**：ux-audit / tech-spec 的 preamble 缺 `get_rules` → 已补（现 ux-audit 注入 R-001/003/523，tech-spec 注入 R-002）；magicpath 是外部插件委托无法消费 → 从 R-001 scope 移除（design-brief 上游已带 #1 进 packet）。
+- **§编号全错**：design-brief 继承分支 + 模板「对下游交接」块引用的 §5/§9/§10 与实际章节错位（模板标题本就无编号）→ 全改**按章节名引用**（已验 5 个章节名真实存在）。
+- **场景覆盖洞**：#4 加 `ux-audit` 进 R-003（scene C / 评审可达竞品 token 抽取）；#1 加 `figma-demo` 进 R-001。
+- **冲突**：RECOMMENDATIONS 示例 `--design-system`（R-001 已禁）→ 改 `--domain`；R-001 文本消歧（禁的是 search.py 的 flag，与 OD designSystemId 无关）。
+- **latent**：rules.yaml `scenes: [*]` 非法 YAML → 全部 `["*"]`（现标准 safe_load 通过）。
+- **R-001 scope 终值**：[ux-brainstorm, design-brief, open-design, html-prototype, ux-audit, figma-demo]。
+
+审计判定 **clean（无需改）**：routing 5/6 无 substring 冲突（w7 平局 = intended MULTI）；解耦 standalone 路径完整；运行可行性全 pass；品牌锁 guard 在位。
+**有意保留（LOW，已评估可接受）**：design-system-architect 正文仍含通用蓝/多品牌范式——guard 已声明「优先于下文一切通用范式」+「非 CRM 可忽略」+ R-002 双重注入，不重写上游 ~150 行；Phase A 仍自行推 AI 方向——Phase 1 继承四层 + NEEDS_CONTEXT 兜底已覆盖主要风险。
 
 ## 再跑/再扫机制
 

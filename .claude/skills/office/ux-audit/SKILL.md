@@ -30,6 +30,7 @@ _CONSTRAINTS=$(ls docs/prd/*-prd-constraints.md 2>/dev/null | head -1)
 echo "CONSTRAINTS: ${_CONSTRAINTS:-none}"
 _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
 echo "CURRENT_TOPIC: $_TOPIC"
+python3 .claude/observability/scripts/get_rules.py ux-audit "*" 2>/dev/null || true
 ```
 
 ---

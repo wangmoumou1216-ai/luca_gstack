@@ -26,6 +26,7 @@ echo "DESIGN_BRIEF_HANDOFF: ${_HANDOFF:-NOT FOUND}"
 # 找最新的 PRD
 _PRD=$(ls docs/prd/*prd.md 2>/dev/null | sort | tail -1)
 echo "PRD: ${_PRD:-NOT FOUND}"
+python3 .claude/observability/scripts/get_rules.py tech-spec "*" 2>/dev/null || true
 ```
 
 ---

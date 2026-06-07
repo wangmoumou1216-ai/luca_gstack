@@ -190,7 +190,7 @@ handoff_gates:
       - "any dev task has no linked test task"
       - "task_plan_gate != PASS"
     allow_standalone_override: false
-    note: "执行 agent 必须等 task-plan gate PASS 后才能启动"
+    note: "执行 agent 必须等 task-plan gate PASS 后才能启动。执行阶段：写新代码用 tdd（测试先行/红绿重构），遇 bug/测试失败用 systematic-debugging（根因优先）——经 route-guard 关键词触发（调试/报错/写测试/tdd），非节点强制。"
 
 quality_gates:
   always_enforced:

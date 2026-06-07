@@ -152,11 +152,11 @@
 → 偏移说明：{如果不完全对齐，偏移了什么，如何在方案中弥补}
 
 ### design-brief需要知道的（design-brief 将直接继承以下项，不重做）
-→ 推荐方案：{Approach X}（源：§6 方案）
-→ AI Native判定：{判定结果}（源：§5 AI-Native评估 — design-brief Phase 1 直接承接，不重算四层）
-→ Evaluability等级：{等级}（源：§5）
-→ 核心假设：{列出}（源：§10 假设前提 — design-brief Phase 2 仅 checkpoint 核对，不再挑战）
-→ 被否定的方向：{列出}（源：§9 被否定的方向 — design-brief 不得复活）
+→ 推荐方案：{Approach X}（源：「推荐方案」节）
+→ AI Native判定：{判定结果}（源：「AI Native评估」节 — design-brief Phase 1 直接承接，不重算四层）
+→ Evaluability等级：{等级}（源：「AI Native评估」节）
+→ 核心假设：{列出}（源：「假设前提」节 — design-brief Phase 2 仅 checkpoint 核对，不再挑战）
+→ 被否定的方向：{列出}（源：「被否定的方向」节 — design-brief 不得复活）
 → 演进路径摘要：{v1→v2→v3一句话}
 
 ### design-brief不应该做的（解耦红线）
