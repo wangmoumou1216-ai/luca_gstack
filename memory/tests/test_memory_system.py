@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -605,6 +606,10 @@ facts:
             self.assertEqual(promoted.count("Duplicate fact"), 1)
 
     def write_consolidation_fixture(self, tmp):
+        # 相对 now 计算日期：stale 窗口(>14d)不随运行日期漂移（根治绝对日期时间炸弹）。
+        now = datetime.now(timezone.utc)
+        stale_dt = (now - timedelta(days=30)).isoformat()  # 唯一应判 stale 的候选
+        fresh_dt = (now - timedelta(days=2)).isoformat()   # 其余：近期、非 stale
         mem = Path(tmp) / "memory"
         (mem / "semantic").mkdir(parents=True)
         (mem / "episodic").mkdir(parents=True)
@@ -615,7 +620,7 @@ facts:
                     json.dumps(
                         {
                             "id": "SC-old",
-                            "created_at": "2026-04-01T00:00:00+00:00",
+                            "created_at": stale_dt,
                             "domain": "crm",
                             "fact": "CRM objects use stable IDs",
                             "confidence": "medium",
@@ -625,7 +630,7 @@ facts:
                     json.dumps(
                         {
                             "id": "SC-dup",
-                            "created_at": "2026-05-20T00:00:00+00:00",
+                            "created_at": fresh_dt,
                             "domain": "crm",
                             "fact": "CRM objects use stable IDs",
                             "confidence": "high",
@@ -635,7 +640,7 @@ facts:
                     json.dumps(
                         {
                             "id": "SC-conflict",
-                            "created_at": "2026-05-20T00:00:00+00:00",
+                            "created_at": fresh_dt,
                             "domain": "skill-rule",
                             "fact": "html-prototype must use remote Tailwind CDN",
                             "confidence": "high",
@@ -645,7 +650,7 @@ facts:
                     json.dumps(
                         {
                             "id": "SC-ready",
-                            "created_at": "2026-05-22T00:00:00+00:00",
+                            "created_at": fresh_dt,
                             "domain": "fxui",
                             "fact": "FxUI tables keep row actions visible on hover",
                             "confidence": "high",
@@ -660,7 +665,7 @@ facts:
                     json.dumps(
                         {
                             "id": "SC-promoted",
-                            "created_at": "2026-05-21T00:00:00+00:00",
+                            "created_at": fresh_dt,
                             "domain": "crm",
                             "fact": "Old promoted candidate",
                             "confidence": "high",
@@ -670,7 +675,7 @@ facts:
                     json.dumps(
                         {
                             "id": "SC-rejected",
-                            "created_at": "2026-05-21T00:00:00+00:00",
+                            "created_at": fresh_dt,
                             "domain": "crm",
                             "fact": "Rejected candidate",
                             "confidence": "low",
