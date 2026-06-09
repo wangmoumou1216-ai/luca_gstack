@@ -67,29 +67,39 @@ function writeCheckpointIfInProgress() {
 
 // ---- 拦截用的「自成长提取」指令 ----
 function buildReason() {
-  const projLine = project
-    ? `「${project}」`
-    : `（当前无激活项目；项目级经验可暂不带 --project，记入 episodic 即可）`;
   const projArg = project ? `--project "${project}" ` : '';
+  // 项目级落点：有激活项目 → 持久事实进该项目本地记忆，单次经历进 episodic；
+  //            无激活项目 → 暂记 episodic 不带 --project，待项目激活后归位。
+  const projBullet = project
+    ? [
+        `  · 只对某个具体下游项目成立（部署坑 / 状态路径 / 项目结构等，仅适用「${project}」）→`,
+        `      持久事实 → 追加到该项目本地记忆：`,
+        `        ~/Desktop/项目/${project}/.luca/memory/MEMORY.md（加一行「- [标题](file.md) — 钩子」，必要时同目录建正文 .md）`,
+        `      单次经历流水 → python3 memory/scripts/append_episode.py ${projArg}--topic "<简述>" \\`,
+        `        --summary "<做了什么>" --skills "<skill>" --outcomes "<产出路径>" \\`,
+        `        --decision "<为什么这么判断>" --next-risk "<下次注意>"`,
+      ]
+    : [
+        `  · 只对某个具体下游项目成立 →（当前无激活项目）暂用 append_episode.py 记入 episodic 不带 --project，`,
+        `      待该项目激活后归位到其 ~/Desktop/项目/<name>/.luca/memory/MEMORY.md。`,
+      ];
   return [
     `本次 session 有实质工作但尚未沉淀经验。结束前必须就地完成「自成长提取」（仅一次，勿循环）：`,
     ``,
     `【1】反思本次 session：做了什么、做过哪些非显而易见的判断、踩了什么坑、有无可复用规律。`,
     `     若确为纯查询/闲聊/无判断 → 直接跳到【4】落 marker 结束。`,
     ``,
-    `【2】把值得记的经验分两类分别落地（单 session 通常 0–2 条，勿凑数）：`,
-    `  · 项目级（仅适用 ${projLine}）→`,
-    `      python3 memory/scripts/append_episode.py ${projArg}--topic "<简述>" \\`,
-    `        --summary "<做了什么>" --skills "<skill>" --outcomes "<产出路径>" \\`,
-    `        --decision "<为什么这么判断>" --next-risk "<下次注意>"`,
-    `  · 通用（跨项目可迁移：方法论 / skill 规则 / 复发教训）→ 二选一或都做：`,
-    `      a) 受控候选（勿直接写 promoted-facts.yaml，红线 SC-20260523-003）：`,
-    `         python3 memory/scripts/propose_semantic.py --domain skill-rule|tech|workflow \\`,
-    `           --fact "<规则>" --confidence high --evidence "<复现/来源>" \\`,
-    `           --scope "<适用范围>" --reviewer "luca" --tags "<tags>"`,
-    `      b) 跨项目的用户偏好/反馈/行为教训 → 写全局自动记忆：在`,
-    `         /Users/luca/.claude/projects/-Users-luca-Desktop-luca-gstack/memory/ 下`,
-    `         新建 feedback_<slug>.md（带 frontmatter）并在 MEMORY.md 索引追加一行。`,
+    `【2】每条经验先用「还原问题」判定归属，再分别落地（单 session 通常 0–2 条，勿凑数）：`,
+    `     判据：「换一个完全无关的项目、甚至重建 luca_gstack，这条还成立/有用吗？」`,
+    `  · 跟项目无关、跟框架无关，只关于 luca 这个人怎么工作（偏好/反复纠正/行为教训）→ 全局个人记忆：`,
+    `      在 /Users/luca/.claude/projects/-Users-luca-Desktop-luca-gstack/memory/ 下`,
+    `      新建 feedback_<slug>.md（带 frontmatter）并在 MEMORY.md 索引追加一行。`,
+    `  · 只在 luca_gstack 框架内成立（skill 规则 / 路由 / 品牌 / 跨项目方法论）→ 受控候选`,
+    `      （勿直接写 promoted-facts.yaml，红线 SC-20260523-003）：`,
+    `      python3 memory/scripts/propose_semantic.py --domain skill-rule|tech|workflow \\`,
+    `        --fact "<规则>" --confidence high --evidence "<复现/来源>" \\`,
+    `        --scope "<适用范围>" --reviewer "luca" --tags "<tags>"`,
+    ...projBullet,
     ``,
     `【3】只沉淀真有信息量的；占位/凑数的 episode 会被 consolidate 判为 noisy 归档。`,
     ``,
@@ -104,16 +114,15 @@ try {
   const markerFile = join(projectRoot, '.claude', `.episode-written-${sessionId}`);
   const alreadyExtracted = existsSync(markerFile);
 
-  let turns = 0, editCount = 0, toolCount = 0;
-  try { turns = parseInt(readFileSync(join(projectRoot, '.claude', '.session-turn-count'), 'utf8'), 10) || 0; } catch { }
+  let editCount = 0, toolCount = 0;
   try { editCount = parseInt(readFileSync(join(projectRoot, '.claude', '.session-edit-count'), 'utf8'), 10) || 0; } catch { }
   try { toolCount = parseInt(readFileSync(join(projectRoot, '.claude', '.session-tool-count'), 'utf8'), 10) || 0; } catch { }
-  const minTurns = parseInt(process.env.SESSION_SYNC_MIN_TURNS || '3', 10);
   const minTools = parseInt(process.env.SESSION_SYNC_MIN_TOOLS || '8', 10);
-  // 只看「本 session 的活动」：轮次 + 文件编辑 + 工具调用量。nodeStates(含 DONE)是跨 session 的历史状态，
-  // 不代表本次有实质工作——否则项目一旦跑过 workflow，每个空 session 都会被误拦（HOOK-002）。
-  // tool-count 兜住"重 Bash/subagent/MCP、零文件编辑、少轮次"的实质 session（V3：判据过窄）。
-  const substantive = (turns >= minTurns) || (editCount >= 1) || (toolCount >= minTools);
+  // 拦截（当场 block 强制提取）只看「本 session 有产出动作」：文件编辑 或 足量工具调用。
+  // 纯轮次(turns)不再触发拦截——「聊了几轮有结论」≠「有实质工作」，否则纯咨询会被误拦（HOOK-006 锁定）。
+  // 未拦截的 session 仍走下方 pending-extraction 软兜底（不打断结束，只下次启动提醒）。
+  // nodeStates(含 DONE)是跨 session 历史状态，同样不参与拦截（HOOK-002）。
+  const substantive = (editCount >= 1) || (toolCount >= minTools);
 
   // ---- 拦截：强制就地提取 ----
   if (!killSwitch && !stopHookActive && !alreadyExtracted && substantive) {

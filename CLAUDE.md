@@ -163,6 +163,19 @@ python3 memory/scripts/consolidate_memory.py --json
 
 ### 写入协议
 
+**写入前先裁决归属（三分，别二分）。** 每条待存经验先问一个还原问题：
+
+> **「换一个完全无关的项目、甚至重建 luca_gstack，这条还成立 / 还有用吗？」**
+
+| 这条经验是… | 存哪 | 落点 |
+|---|---|---|
+| 跟项目无关、跟框架无关，只关于 **luca 这个人怎么工作**（偏好 / 反复纠正 / 行为教训） | **全局个人记忆** | `~/.claude/projects/-Users-luca-Desktop-luca-gstack/memory/feedback_<slug>.md` + `MEMORY.md` 索引 |
+| 只在 **luca_gstack 框架内**成立（skill 规则 / 路由 / 品牌 / 跨项目方法论） | **框架 semantic 候选** | `propose_semantic.py`（走门禁晋升，红线 [SC-20260523-003]） |
+| 只对**某个具体下游项目**成立（部署坑 / 状态真值路径 / 项目结构） | **该项目本地记忆** | `~/Desktop/项目/<name>/.luca/memory/MEMORY.md`（只在该项目激活时注入）；单次经历另走 episodic |
+
+附加：**纯咨询 / 闲聊 / 无非显然判断的 session → 什么都不存。** session-sync 已据此放过（无文件产出且轮次不足不拦截、不提醒）。
+项目本地记忆与全局个人记忆的区别：全局每 session 无差别注入，项目本地只在 `project.sh switch/new` 激活该项目时注入——具体项目事实务必入项目本地，避免跨项目上下文污染。
+
 **Episodic**（session 结束时，由 agent 或用户触发）：
 ```bash
 python3 memory/scripts/append_episode.py \

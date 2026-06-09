@@ -67,9 +67,9 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   return result;
 }
 
-// ── HOOK-001（critical）：实质工作 → block 路径 stdout 是纯 JSON，旁路文本只在 stderr ──
+// ── HOOK-001（critical）：实质工作（有文件编辑）→ block 路径 stdout 是纯 JSON，旁路文本只在 stderr ──
 {
-  const root = makeFixture({ turns: 5, activeProject: 'testproj' });
+  const root = makeFixture({ turns: 5, edits: 1, activeProject: 'testproj' });
   const result = runNode(sessionSyncHook, root);
   let parsed;
   assert.doesNotThrow(() => { parsed = JSON.parse(result.stdout); },
@@ -109,7 +109,7 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
 
 // ── 三重防循环：marker / kill-switch / stop_hook_active 任一命中 → 不 block ──
 {
-  const base = () => makeFixture({ turns: 5, activeProject: 'testproj' });
+  const base = () => makeFixture({ turns: 5, edits: 1, activeProject: 'testproj' });
 
   const rMarker = base();
   writeFileSync(join(rMarker, '.claude', `.episode-written-date-${UTC_TODAY}`), '');
@@ -135,6 +135,18 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
     'tool-count 达阈值时应走 block 路径');
   assert.equal(parsed.decision, 'block', 'tool-count>=阈值的实质 session 必须 block');
   console.log('PASS V3 tool-count 兜住"重操作零编辑少轮次"的实质 session');
+}
+
+// ── HOOK-006：纯咨询（多轮、零编辑、少工具）→ 不再当场拦截（release），仅 pending 软兜底 ──
+{
+  const root = makeFixture({ turns: 6, edits: 0, tools: 2, activeProject: 'testproj' });
+  const result = runNode(sessionSyncHook, root);
+  assert.equal(result.stdout, '', '纯咨询(多轮零产出)必须放行，不得 block（轮次不再单独触发拦截）');
+  assert.ok(
+    existsSync(join(root, '.claude', 'observability', 'pending-extraction.md')),
+    '纯咨询 release 仍写 pending 软兜底'
+  );
+  console.log('PASS HOOK-006 纯咨询多轮零产出放行，不当场拦截');
 }
 
 // ── session-restore：memory-light 启动 + 兜底提醒带上真实 topic（V3 兜底 header 修复）──
