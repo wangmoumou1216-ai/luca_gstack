@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const claudeDir = join(process.cwd(), '.claude');
+const claudeDir = join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), '.claude');
 function bump(file) {
   try {
     const cf = join(claudeDir, file);

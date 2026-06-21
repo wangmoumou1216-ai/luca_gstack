@@ -76,9 +76,16 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
         【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，传入 skill_name + topic
         FAIL → 展示缺失项，等用户修复或明确说"跳过检查"后再继续，不启动 skill
         PASS → 继续
+        【用户参数前置收集】（execution_context == subagent 时必须执行，不得跳过）
+        扫描该 SKILL.md 中需用户选择的参数（AskUserQuestion 步骤 / "ask the user" 字样，
+        如 deepresearch 的 research_depth 档位）：
+          有 → 先在主会话向用户提问，将用户选择以显式参数写入 WA prompt；
+               禁止静默替用户选档、禁止依赖 skill 内 headless fallback 兜底
+               （来源：2026-06-12 用户指示"需要询问我是哪种调研档位，不允许静默处理"）
+          无 → 继续
         IF execution_context == subagent：
           用 work-agent-template 的 skill_execution 模式实例化 WA
-          填写 MODE=skill_execution、SKILL_TO_EXECUTE、SKILL_PATH
+          填写 MODE=skill_execution、SKILL_TO_EXECUTE、SKILL_PATH（+ 前置收集的用户参数）
           通过 Agent tool 启动 WA（subagent，冷启动隔离上下文）
         IF execution_context == main_agent：
           主 Agent 直接读取 SKILL.md，在当前对话上下文执行
@@ -124,8 +131,13 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
         python3 memory/scripts/propose_semantic.py \
           --domain skill-rule \
           --fact "<skill名>: <一句话规则>" \
-          --confidence high --stable
+          --confidence high --stable \
+          --evidence "<复现/来源>" --scope "<skill名>" --reviewer "luca"
+        （--stable 缺 evidence/scope/reviewer 会被 propose_semantic exit 2 拒收，三项必填）
       全否 → 跳过，继续 2d
+      注：以上三条件只产生 semantic 候选（宽进严出，晋升另有 promotion_ready 门禁），不受四信号
+      门槛约束；person 层（全局 feedback）/项目本地 MEMORY.md 写入须过
+      `.claude/skill-os/extraction-bar.md` 四信号门槛，且除信号①外不得在执行中途写。
 
   2d  Supervisor/Hierarchical 模式：人工确认检查点
       - 主 Agent 展示当前 Phase 的产出摘要 + 测试结果
@@ -141,7 +153,7 @@ Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
 
 ```
 Step 1  读取 parallel_skills 列表（见 plan-agent.md §并行 Skill 声明语法）
-Step 2  对每个 skill 运行 Pre-flight 检查（见 §2b Pre-flight），全部 PASS 才继续
+Step 2  对每个 skill 运行 Pre-flight 检查 + 用户参数前置收集（见 §2b），全部 PASS 才继续
 Step 3  同一条消息中并发启动所有 Work Agent（每个独立冷启动上下文）
         每个 WA 使用 skill_execution 模式，skill_name 不同
 Step 4  等待所有 WA 返回完成报告（全部 DONE 或有 BLOCKED）
@@ -335,12 +347,15 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 
 ## 5. 模型路由建议
 
-| 任务类型 | 建议模型 |
-|---------|---------|
-| 深度研究、设计决策、brainstorm | Opus |
-| 标准实现、HTML 原型、skill 执行 | Sonnet（默认）|
-| 机械执行、格式化、简单验证 | Haiku |
+真值源：`.claude/skill-os/model-routing.yaml`（能力档定义 + skill 归属；下表为速查快照，与真值源同步维护）。
 
+| 能力档 | 任务类型 | 当前解析（2026-06-10） |
+|---------|---------|---------|
+| reasoning-heavy | 深度研究、设计决策、brainstorm、红队 | Fable |
+| guided-execution | 标准实现、HTML 原型、框架指导的审查（默认）| Sonnet |
+| mechanical | 机械执行、格式化、简单验证 | Haiku |
+
+档位名是别名，运行时解析到该档当前最新模型。发现真值源未收录的档位变化时，先提示用户更新真值源再调度。
 调度时向用户展示：`"下一步是 <task>，推荐使用 <model>（原因：<reason>）"`
 
 ---

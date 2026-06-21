@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync } from 'fs';
 import { join } from 'path';
 
-const projectRoot = process.cwd();
+const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
 const dateStr = now.slice(0, 10);
 
@@ -65,46 +65,21 @@ function writeCheckpointIfInProgress() {
   } catch { }
 }
 
-// ---- 拦截用的「自成长提取」指令 ----
+// ---- 拦截用的「自成长提取」指令（短指针契约，HOOK-007 锁定 reason ≤900 字符）----
+// 不复制门槛/归属全文：四信号定义在 .claude/skill-os/extraction-bar.md（按需 Read），
+// 归属三分表在 CLAUDE.md「写入协议」（每 session 已在 context）。
+// 只动态注入两样真正只有 hook 知道的：激活项目落点、本 session 的 marker 文件名。
+// 改四信号速记必须同步 extraction-bar.md（HOOK-007 钉关键词）。
 function buildReason() {
-  const projArg = project ? `--project "${project}" ` : '';
-  // 项目级落点：有激活项目 → 持久事实进该项目本地记忆，单次经历进 episodic；
-  //            无激活项目 → 暂记 episodic 不带 --project，待项目激活后归位。
-  const projBullet = project
-    ? [
-        `  · 只对某个具体下游项目成立（部署坑 / 状态路径 / 项目结构等，仅适用「${project}」）→`,
-        `      持久事实 → 追加到该项目本地记忆：`,
-        `        ~/Desktop/项目/${project}/.luca/memory/MEMORY.md（加一行「- [标题](file.md) — 钩子」，必要时同目录建正文 .md）`,
-        `      单次经历流水 → python3 memory/scripts/append_episode.py ${projArg}--topic "<简述>" \\`,
-        `        --summary "<做了什么>" --skills "<skill>" --outcomes "<产出路径>" \\`,
-        `        --decision "<为什么这么判断>" --next-risk "<下次注意>"`,
-      ]
-    : [
-        `  · 只对某个具体下游项目成立 →（当前无激活项目）暂用 append_episode.py 记入 episodic 不带 --project，`,
-        `      待该项目激活后归位到其 ~/Desktop/项目/<name>/.luca/memory/MEMORY.md。`,
-      ];
+  const projLine = project
+    ? `【项目】当前激活项目「${project}」：项目级持久事实 → ~/Desktop/项目/${project}/.luca/memory/MEMORY.md；单次经历 → python3 memory/scripts/append_episode.py --project "${project}"；若本 session 实为框架/meta 工作（改 luca_gstack 自身），episodic 改用 --meta 防误标。`
+    : `【项目】当前无激活项目：项目级经验暂记 append_episode.py（不带 --project），待项目激活后归位到其 .luca/memory/MEMORY.md。`;
   return [
-    `本次 session 有实质工作但尚未沉淀经验。结束前必须就地完成「自成长提取」（仅一次，勿循环）：`,
-    ``,
-    `【1】反思本次 session：做了什么、做过哪些非显而易见的判断、踩了什么坑、有无可复用规律。`,
-    `     若确为纯查询/闲聊/无判断 → 直接跳到【4】落 marker 结束。`,
-    ``,
-    `【2】每条经验先用「还原问题」判定归属，再分别落地（单 session 通常 0–2 条，勿凑数）：`,
-    `     判据：「换一个完全无关的项目、甚至重建 luca_gstack，这条还成立/有用吗？」`,
-    `  · 跟项目无关、跟框架无关，只关于 luca 这个人怎么工作（偏好/反复纠正/行为教训）→ 全局个人记忆：`,
-    `      在 /Users/luca/.claude/projects/-Users-luca-Desktop-luca-gstack/memory/ 下`,
-    `      新建 feedback_<slug>.md（带 frontmatter）并在 MEMORY.md 索引追加一行。`,
-    `  · 只在 luca_gstack 框架内成立（skill 规则 / 路由 / 品牌 / 跨项目方法论）→ 受控候选`,
-    `      （勿直接写 promoted-facts.yaml，红线 SC-20260523-003）：`,
-    `      python3 memory/scripts/propose_semantic.py --domain skill-rule|tech|workflow \\`,
-    `        --fact "<规则>" --confidence high --evidence "<复现/来源>" \\`,
-    `        --scope "<适用范围>" --reviewer "luca" --tags "<tags>"`,
-    ...projBullet,
-    ``,
-    `【3】只沉淀真有信息量的；占位/凑数的 episode 会被 consolidate 判为 noisy 归档。`,
-    ``,
-    `【4】完成后写 marker 解除拦截，然后正常结束、勿重复本流程：`,
-    `      touch ".claude/.episode-written-${sessionId}"`,
+    `本 session 有实质工作但尚未沉淀经验。结束前就地完成一次「自成长提取」（仅一次，勿循环）：`,
+    `【门槛 · 默认不存】四强信号才提取：①用户明确纠正/对未来行为明确指示 ②同类问题复发 ③真实返工或不可逆险情 ④重获成本高且确定复用（定义与按层分级 → 读 .claude/skill-os/extraction-bar.md）。全不中（纯查询/闲聊/纯执行）→ 直接跳【解锁】。`,
+    `【归属】过门槛的经验按 CLAUDE.md「写入协议」三分表落地：全局个人记忆（仅① feedback_<slug>.md+MEMORY.md 索引；②③④ candidate_feedback_<slug>.md 不进索引）/ 框架 semantic 候选（propose_semantic.py，红线 SC-20260523-003）/ 项目本地。单 session 通常 0–2 条，勿凑数。`,
+    projLine,
+    `【解锁】完成后 touch ".claude/.episode-written-${sessionId}" 再正常结束。`,
   ].join('\n');
 }
 
@@ -156,7 +131,8 @@ try {
       writeFileSync(pending, [
         `# Pending Skill-Rule Extraction`, ``,
         `> 自动生成于 ${now}。下次 session 启动时由 session-restore 提醒处理。`,
-        `> Topic: ${topic}`, `> 处理后请删除此文件。`, ``,
+        `> Topic: ${topic}`, `> 处理后请删除此文件。`,
+        `> 提取前先过 .claude/skill-os/extraction-bar.md 四信号门槛，全不中则直接删除本文件。`, ``,
         `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<skill>: <规则>" \\`,
         `  --confidence high --evidence "<来源>" --scope "<skill>" --reviewer "luca" --tags "<skill>,rule"`, ``,
       ].join('\n'));
