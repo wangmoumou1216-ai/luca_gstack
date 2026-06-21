@@ -20,7 +20,7 @@ gaps:
     statement: "记忆晋升管线活故障：无候选被置 proposed_stable=True，consolidate_memory 从未晋升过任何一条(SC-20260615-001)。"
     severity: high
     desired_capability_keywords: [memory promotion, candidate review, knowledge consolidation, self-improving]
-    status: open
+    status: addressed   # 2026-06 内部修复 consolidate_memory.py --set-stable（人工批准闸门，晋升仍走 promotion_ready 门禁），解 SC-20260615-001
 
   - id: GAP-routing-fragmentation
     dimension: routing

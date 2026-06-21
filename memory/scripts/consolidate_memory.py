@@ -465,6 +465,31 @@ def promote_ready_candidates(candidates: list[dict], ready: list[dict], dry_run:
     return promoted
 
 
+def set_stable(ids: list, dry_run: bool) -> dict:
+    """人工复核后批准：把指定候选 id 的 proposed_stable 置 True（缺失的「候选→可晋升」人工闸门）。
+
+    SC-20260615-001：此前无任何路径把已存在候选置 True，导致 promotion_ready 永远为空、0 晋升。
+    红线 SC-20260523-003：本动作只翻转批准旗标，**不**直接写 promoted-facts；实际晋升仍由
+    promotion_ready 门禁（confidence=high + evidence/scope/reviewer + 非重复/冲突）裁决。
+    """
+    want = {str(i) for i in ids}
+    rows = read_jsonl_with_raw(CANDIDATES)
+    set_done, out_lines, found = [], [], set()
+    for candidate, raw in rows:
+        cid = str(candidate.get("id", ""))
+        if cid in want:
+            found.add(cid)
+            if candidate.get("proposed_stable") is not True:
+                candidate["proposed_stable"] = True
+                set_done.append(cid)
+            out_lines.append(json.dumps(candidate, ensure_ascii=False))
+        else:
+            out_lines.append(raw.rstrip())
+    if not dry_run and set_done:
+        CANDIDATES.write_text(("\n".join(out_lines) + "\n") if out_lines else "", encoding="utf-8")
+    return {"set_stable": set_done, "already_stable": sorted(found - set(set_done)), "not_found": sorted(want - found)}
+
+
 def archive_reviewed_candidates(candidate_rows: list[tuple[dict, str]], decisions: dict[str, str], promoted: list[dict], dry_run: bool) -> list[str]:
     promoted_id_set = promoted_ids(promoted)
     archived = []
@@ -552,8 +577,11 @@ def print_human(queue: dict, dry_run: bool) -> None:
         for row in rows:
             print(f"- {json.dumps(row, ensure_ascii=False)}")
     actions = queue.get("actions", {})
-    if actions.get("promoted") or actions.get("archived"):
+    if actions.get("promoted") or actions.get("archived") or actions.get("set_stable"):
         print("\nactions:")
+        ss = actions.get("set_stable")
+        if ss:
+            print(f"- set_stable: {', '.join(ss.get('set_stable', [])) or '-'} (not_found: {', '.join(ss.get('not_found', [])) or '-'})")
         print(f"- promoted: {', '.join(actions.get('promoted', [])) or '-'}")
         print(f"- archived: {', '.join(actions.get('archived', [])) or '-'}")
 
@@ -565,10 +593,18 @@ def main() -> int:
     parser.add_argument("--promote-ready", action="store_true", help="promote eligible candidates and record reviews")
     parser.add_argument("--archive-reviewed", action="store_true", help="move promoted/rejected candidates into semantic/archive")
     parser.add_argument("--archive-noisy", action="store_true", help="move noisy episodic records out of the hot index")
+    parser.add_argument("--set-stable", nargs="+", metavar="ID", default=None,
+                        help="人工复核后批准：把候选 ids 的 proposed_stable 置 True（晋升仍走 promotion_ready 门禁，不直接写 promoted-facts）")
     args = parser.parse_args()
 
-    write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy) and not args.dry_run
+    write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy or args.set_stable) and not args.dry_run
+
+    # set-stable 先于 build_queue：写盘后 promotion_ready 才能看到翻转的候选（支持 --set-stable X --promote-ready 单次完成）
+    set_stable_result = set_stable(args.set_stable, dry_run=not write_enabled) if args.set_stable else None
+
     queue, candidates, candidate_rows, promoted, decisions, episode_rows = build_queue()
+    if set_stable_result is not None:
+        queue["actions"]["set_stable"] = set_stable_result
 
     if args.promote_ready:
         queue["actions"]["promoted"] = promote_ready_candidates(candidates, queue["promotion_ready"], dry_run=not write_enabled)
