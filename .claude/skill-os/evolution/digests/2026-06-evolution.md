@@ -19,7 +19,16 @@
 
 **verify 层基础设施失败(诚实)**:12 个 verify agent 全因 Claude session limit 阵亡(resets 21:10 Asia/Shanghai)→ `verified:0` 是基础设施失败**不是**"没料"信号。上表是主 agent 内联临时裁决(gh 元数据+license+结构+fit),**完整对抗 verify(逐脚本 base64 安全扫 + 推荐红队)待 limit 重置后 resume**(发现 agent 已缓存,resume 便宜)。
 
-**结论**:扩面+公平棋盘后,前沿对你这几个 gap **真有料**——2 个真采纳/借鉴(CodeGraph 框架、pm-skills 应用)+ 2 个借范式。**首轮的"0"既是 rigged 棋盘也是源洞,现已证伪。**
+**结论**:扩面+公平棋盘后,前沿对你这几个 gap **真有料**。**首轮的"0"既是 rigged 棋盘也是源洞,现已证伪。**
+
+### 定论 verify（2026-06b resume，verify 真跑完，含纠偏）
+
+12 verified → 0 approved / **3 CONDITIONAL** / 1 opportunity / 9 rejected。
+- **3 CONDITIONAL 全在应用作业层**（GAP-design-methodology-review，全 adapt-idea/port-pattern）:DESIGN.md（Google 设计哲学,w90,port）、**pm-skills OST**（w90,adapt——已融合进 /ux-brainstorm）、agent-starter HCI/GOMS（w77,adapt）。
+- opportunity:**DGM 自进化回路**（agent 改自己代码 + 基准每个变体）→ 建议开 `self-evolution-hardening` gap。
+- strict 好 catch:**supermodeltools 真 exfil（safety 拦下,把整个 repo 上传外发）**、SocratiCode AGPL copyleft、cupcake/sem Rust 重二进制。
+- **纠偏 CodeGraph**:scout 定论 **REJECTED**（compatibility:非可落 skill/无 SKILL.md）。这暴露 **scout 兼容门 skill-centric 真 bug**——系统性误拒所有 MCP/工具候选（CodeGraph/cupcake/sem）。**已修**（verifyPrompt 加 install-as-MCP/tool 分支）。CodeGraph 重定性 = 下游推荐,非核心采纳。
+- 闭环价值:严格门拒 CodeGraph（skill-centric）→ 人工透明 override（它是 MCP）→ 分歧逼出真 gate bug 并当场修复——**human-in-the-loop 应有的样子**。
 
 ---
 
