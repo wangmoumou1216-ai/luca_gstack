@@ -13,7 +13,7 @@ context-cost:
   self: 1285
   runtime-estimate: 20000
   shared-refs: [ai-native-taste-anchors]
-  recommended-model: opus  # 对抗性思考
+  recommended-model: reasoning-heavy  # 对抗性思考
 ---
 
 ## Preamble (run first)

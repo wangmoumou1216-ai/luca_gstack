@@ -2,14 +2,15 @@
 name: open-design
 preamble-tier: 3
 argument-hint: "[design-brief 路径 | 要给 OD 的方案 md(单点交接) | 'recover/拉回来' 回收产物]"
-version: 3.0.0
+version: 3.1.0
 description: |
-  Open Design (OD) 连接器（**headless 一次性出图**）：把设计产出（design-brief 交互文档，或你单点指定
-  的方案 md）编译成干净 OD 指令；先评估并让你选 Target platform + Design system，再建项目绑定它，由本
-  skill 经 daemon 触发 OD headless 生成 HTML（不反问、一次出），回收落盘 docs/prototype/ 供 /figma-layer。
-  design 产出首选。**FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E；其余配色/字体/字号/布局全走所选
-  OD design system，不指定、不覆盖、不冲突。** 两种进入：chain（默认取最新 design-brief）/ adhoc（语义识别
-  的单点交接）。不接受 PRD 当设计源、不接受已生成 HTML。(luca_gstack)
+  Open Design (OD) 连接器（**默认桌面端生成；headless 为 opt-in**）：把设计产出（design-brief 交互文档，
+  或你单点指定的方案 md）编译成干净 OD 指令；先评估并让你选 Target platform + Design system，再建项目绑定它、
+  写 brief.md（=stage）；**默认让你在 OD 桌面端按生成（走订阅会话，可靠），完成说「拉回来」回收**；headless
+  一次性出图为显式 opt-in（实测不稳/慢，失败即降级桌面端）。回收落盘 docs/prototype/ 供
+  /figma-layer。design 产出首选。**FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E；其余配色/字体/字号/布局
+  全走所选 OD design system，不指定、不覆盖、不冲突。** 两种进入：chain（默认取最新 design-brief）/ adhoc
+  （语义识别的单点交接）。不接受 PRD 当设计源、不接受已生成 HTML。(luca_gstack)
 allowed-tools:
   - Read
   - Write
@@ -20,7 +21,7 @@ context-cost:
   self: 6500
   runtime-estimate: 9000
   shared-refs: [brand-tokens, handoff-protocol]
-  recommended-model: sonnet
+  recommended-model: guided-execution
 ---
 
 ## Preamble (run first)
@@ -42,10 +43,11 @@ done
 python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null || true
 ```
 
-> **模型（核心，headless）：** luca_gstack 负责「编译指令 → 评估并让你选 platform/Design system → 建项目绑定 →
-> headless 触发 OD 一次性生成 → 回收落盘」；OD 内层 agent **一次出图、不反问**（option ②）。**人工判断后置**：
-> 落盘后展示给你判断（符合/迭代/停）。与 magicpath/html-prototype 关系：三者同为 design_output 生成器，
-> open-design 主力，后两者备选（OD 不可用 / 要本地纯 HTML 时）。
+> **模型（核心）：** luca_gstack 负责「编译指令 → 评估并让你选 platform/Design system → 建项目绑定 + 写 brief.md
+> （=stage）→ **默认交你在 OD 桌面端按生成**（走订阅会话，可靠）→ 你说「拉回来」回收落盘」。headless 一次性出图
+> （经 daemon /api/chat）为 **opt-in**：仅你显式要求"让 agent 自动出/用 headless"才走（实测不稳/慢，失败即回落桌面端）。
+> **人工判断后置**：落盘后展示即止，迭代你在 OD 桌面端自行做（回收/下游由你点名）。与 magicpath/html-prototype 关系：
+> 三者同为 design_output 生成器，open-design 主力，后两者仅 OD daemon 真不可达 / 要本地纯 HTML 时备选。
 > **连接走 daemon HTTP（动态端口）；`od mcp` 已注册时也可用其工具，二选一即可。**
 
 ---
@@ -56,19 +58,24 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 - **chain（默认）**：用户没点名产物 → 取最新 `docs/decisions/*-design-brief.md`。
 - **adhoc（单点交接，语义识别非词表）**：用户自然语言表达「把某产物交给 OD 生成」（"把刚才那个 md 给 OD"／
   "让 OD 基于这个出图"／"丢进 OD" 等都算）。三要素：①有明确源产物 ②目标是 OD ③意图是交给它生成 → adhoc，源=该产物。
-- **recover（回收）**：用户说「拉回来/落盘/我在 OD 弄好了」→ 直接跳 Phase 5 回收，不重新编译。
+- **recover（回收）**：用户说「拉回来/落盘/我在 OD 弄好了」→ 直接跳 Phase 4 回收落盘，不重新编译（**不论 headless 还是桌面端生成的产物，首版与迭代都走此回收**）。
 - 源指代不明 → 一句话确认；尚未落盘的对话内容 → 先写盘再用，不静默重构。
 
 **0b. 前置检查：**
 ```
 □ [chain] 最新 design-brief 存在 + 含「Design Generation Packet」节？ 否→BLOCKED（先 /design-brief，或改单点交接）。
 □ [adhoc] 用户点名产物存在、非空、可读？ 否→BLOCKED 明确报错（不静默建空项目）。
-□ OD daemon 可达（Preamble OD_DAEMON=UP）？ DOWN→告知「请打开 OD 桌面端」，停。
+□ OD daemon 可达（Preamble OD_DAEMON=UP）？ DOWN→真·daemon-down，告知「请打开 OD 桌面端」，停（可退 magicpath/html-prototype）。
+□ 出图路径：**默认走 Phase 3D（OD 桌面端生成，可靠）**。仅当用户显式 opt-in headless（"让 agent 自动出图/用 headless"）
+   才走 Phase 3H（本 session 实测不稳：生成慢 >2.5-3min + daemon SIGTERM 重启；失败 retry 1 后回落 Phase 3D，daemon 既 UP 不退 magicpath）。
 ```
+
+> **headless 不稳的真因（本 session 实测）：生成慢（真实 brief Opus4.8/Sonnet4.6 均 >2.5-3min 未完成）+ daemon SIGTERM 重启打断；非鉴权。** 不必为它再造 auth/credit 探测——由 Phase 3H 的 retry 上限兜底。
+> 鉴权旁注：OD spawn 本机 claude 的 env 含**正确的 `USER`（=真实用户名 `luca`）** → 走订阅正常；仅当 `USER` 缺失/为空/错值才会回退到 API-credit 账户报「Credit balance is too low」（`LOGNAME` 不顶用）——OD 已满足该前置，故非本故障原因（早期一度误判为 credit 根因，系手工复现 `USER` 不对的产物，见 SC-20260616-001 勘误）。
 
 ---
 
-## Phase 1：编译 OD 指令（luca_gstack 核心活；headless 一次性）
+## Phase 1：编译 OD 指令（luca_gstack 核心活；一次性产出，桌面端/headless 通用）
 
 把输入源编译成一份干净、可直接 headless 发给 OD 的指令：
 - **chain**：抽交互文档的 **Design Generation Packet** 作主体；只用已定设计事实，不倒 PRD/research 原文。
@@ -83,8 +90,8 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 （不指定字体 family、不指定字号、不用 FxUI 的语义色/分割线/页面底/卡片底——这些一律交给所选 design system 默认）
 ```
 
-**headless 一次性（option ②）：** 指令末尾必须加：
-`【本次为 headless 一次性产出：以上细节已确认，请直接生成完整自包含 index.html，不必反问/不要 question-form。】`
+**一次性产出 tag（桌面端/headless 两条路径都加）：** 指令末尾必须加（让 OD 一次出、不反问）：
+`【本次为一次性产出：以上细节已确认，请直接生成完整自包含 index.html，不必反问/不要 question-form。】`
 
 把整段指令写到 `/tmp/od_brief.txt` 备用。
 
@@ -109,23 +116,44 @@ curl -s "$_OD_URL/api/design-systems" | python3 -c "import sys,json;[print(s.get
 
 ---
 
-## Phase 3：建项目绑定 + headless 触发生成
+## Phase 3D：建项目绑定 + 写 brief.md → 交 OD 桌面端生成（**默认路径**）
+
+把一切 staged 好，只把"按生成键"交给你在桌面端（走本机已登录订阅会话，可靠，不受 headless 子进程不稳影响）。
+
+**先定标识（贯穿 建项目→落盘→recover 同一 slug）：** `_TOPIC`=主题展示名（取 `.claude/current-topic.txt` 或本次主题）；`_SLUG`=ASCII 安全短名（如 `suji-biz-insight`，从主题罗马化/英译，≤64 字符）。下面 `<slug>`=`$_SLUG`、`<topic>`=`$_TOPIC`；建完务必把 `$_SLUG` 记进 Phase 6 handoff，供日后 recover 定位。
 
 ```bash
-# 1) 建项目并绑定所选 designSystem（designSystemId 是可绑字段；platform/fidelity 不是项目字段→已写进 brief 文本兜底）
+# 1) 建项目并绑定所选 designSystem（designSystemId 是可绑字段；platform/fidelity 写进 brief 文本兜底）
 curl -s -X POST "$_OD_URL/api/projects" -H 'content-type: application/json' \
   -d '{"id":"<slug>","name":"<topic>","designSystemId":"<选定DS>","platform":"<选定platform>","fidelity":"high"}'
 # 2) 验证绑定（必须看到 designSystemId=<选定DS>，否则 OD 用不到所选规范）
 curl -s "$_OD_URL/api/projects/<slug>" | python3 -c "import sys,json;p=json.load(sys.stdin).get('project',{});print('designSystemId=',p.get('designSystemId'))"
-# 3) 写 brief.md（= /tmp/od_brief.txt 全文，供 OD 内 @ 引用）
+# 3) 写 brief.md（= /tmp/od_brief.txt 全文，供桌面端 @ 引用）；**不触发 /api/chat**
 curl -s -X POST "$_OD_URL/api/projects/<slug>/files" -H 'content-type: application/json' \
   -d @<(python3 -c "import json;print(json.dumps({'name':'brief.md','content':open('/tmp/od_brief.txt').read(),'encoding':'utf8'}))")
+```
+staged 后一句话告知（不 AskUserQuestion、不阻塞）：
+1. 已在 OD 建好项目 `<slug>`、绑定 `<选定DS>`、写入 `brief.md`；
+2. 请在 OD 桌面端打开项目 `<slug>`、`@brief.md` 让它生成；
+3. 生成完成后说「拉回来」，我走 recover（Phase 4）回收最新 index.html 落盘。
+
+> daemon UP 且你要 OD 产出 → 降级/默认目标就是桌面端 OD，**不退** magicpath/html-prototype（那是 daemon 真不可达才退）。
+
+---
+
+## Phase 3H：headless 一次性触发生成（**opt-in**；仅你显式要求）
+
+> 你未显式要 headless → 跳过本节，走 Phase 3D。本路径本 session 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启）。
+
+```bash
+# step 1-3 同 Phase 3D（建项目 + 验证绑定 + 写 brief.md；conversationId 取『建项目 POST /api/projects 响应顶层的 conversationId』），随后：
 # 4) headless 触发：/api/chat 必须带 agentId（漏了→AGENT_UNAVAILABLE）；body 用文件避免转义
 python3 -c "import json;json.dump({'projectId':'<slug>','conversationId':'<建项目返回的cid>','message':open('/tmp/od_brief.txt').read(),'skillId':'web-artifacts-builder','agentId':'claude'},open('/tmp/od_chat.json','w'),ensure_ascii=False)"
 curl -sN --max-time 1800 -X POST "$_OD_URL/api/chat" -H 'content-type: application/json' --data @/tmp/od_chat.json > /tmp/od_stream.log 2>&1
 ```
-- 生成耗时几分钟，建议用后台任务跑 + 轮询 `/api/projects/<slug>/files` 直到出 `index.html`。
+- 生成耗时几分钟，建议后台任务跑 + 轮询 `/api/projects/<slug>/files` 直到出 `index.html`。
 - daemon 可能中途重启（端口变）→ 轮询/回收前**重新探测 `$_OD_URL`**。
+- 失败处理（**重试上限 1**）：首次 /api/chat 若立即 canceled（SIGTERM）或只出 brief.md 无 index.html → 确认无产物后**原样重试一次**；再次失败（failed/canceled/narrate-but-no-file）→ **不再硬重试**；项目+brief.md+DS 已在 step1-3 建好，**不要重建**，直接跳到 Phase 3D 的「告知用户在桌面端生成」那步（绕开不稳的 headless 子进程）。
 - `od mcp` 工具可用时，等价用 `create_project`/`write_file`/`start_run`/`get_run`/`get_artifact`。
 
 ---
@@ -133,10 +161,19 @@ curl -sN --max-time 1800 -X POST "$_OD_URL/api/chat" -H 'content-type: applicati
 ## Phase 4：回收落盘 + 写 prototype-spec.md
 
 ```bash
-mkdir -p "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"
-curl -s "$_OD_URL/api/projects/<slug>/files"   # 确认入口名
-curl -s "$_OD_URL/api/projects/<slug>/raw/index.html" -o "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
+# 0) recover 前重探端口（daemon 可能重启换端口）
+_PID=$(pgrep -f "prebundled/daemon/daemon-sidecar"|head -1); _P=$(lsof -nP -p "$_PID" 2>/dev/null|grep -oE '127.0.0.1:[0-9]+ \(LISTEN\)'|grep -oE ':[0-9]+'|tr -d ':'|head -1); [ -n "$_P" ] && _OD_URL="http://127.0.0.1:$_P"
+# 1) _SLUG 未知（跨 session recover）→ 优先用 handoff 记的 slug；否则按最近更新解析
+[ -z "$_SLUG" ] && _SLUG=$(curl -s "$_OD_URL/api/projects" | python3 -c "import sys,json;ps=json.load(sys.stdin).get('projects',[]);ps.sort(key=lambda p:p.get('updatedAt',0),reverse=True);print(ps[0]['id'] if ps else '')")
+# 2) 确认有真·产物（非 brief.md 的 html；优先 index.html，否则最新 html）再落盘——没有就别 DONE
+_ENTRY=$(curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;fs=json.load(sys.stdin).get('files',[]);h=[f for f in fs if f.get('name','').endswith('.html')];i=[f for f in h if f['name']=='index.html'];p=(i[0] if i else (sorted(h,key=lambda f:f.get('mtime',0))[-1] if h else None));print(p['name'] if p else '')")
+if [ -z "$_ENTRY" ]; then echo "OD 项目 $_SLUG 还没出 HTML 产物——请桌面端生成完再说『拉回来』；不落盘、不标 DONE"; else
+  mkdir -p "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"
+  curl -sf "$_OD_URL/api/projects/$_SLUG/raw/$_ENTRY" -o "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
+  [ -s "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html" ] && echo "回收 $_ENTRY → 落盘 OK" || echo "回收失败/空文件，未落盘——别标 DONE"
+fi
 ```
+> **守卫：** 只有真·HTML 入口被回收且文件非空，才进 Phase 5/6 标 DONE；否则告知用户产物还没出、不落盘、不写 handoff。
 **校验 FxUI 收窄口径**（抽查产物）：品牌橙 #FF8000 在（主操作）、文字色 #181C25/#91959E 在；
 **FxUI 语义色应为 0**（其余颜色/字体来自所选 DS=预期，不算违规）。
 
@@ -147,13 +184,18 @@ FxUI 仅品牌色+文字色、必须读 index.html 实际代码。
 
 ---
 
-## Phase 5：后置人工判断 → 下一步
+## Phase 5：落盘交付 → 迭代主体在用户（OD 桌面端）
 
-落盘后 `open` 产物给用户看，然后 AskUserQuestion：
-> OD 产出符合需求吗？ A）符合 → `/figma-layer`（推成带 Auto Layout + FxUI 品牌色/文字色的 Figma 图层）
-> B）要迭代 → 你说改哪，我改指令重跑 Phase 3（headless 再出一版） C）先停这里
+落盘后 `open` 产物给用户，一句话告知（**不阻塞提问、不 AskUserQuestion**）：
+1. 产物已落盘 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
+2. 要迭代请直接在 OD 桌面端继续改，改完说「拉回来」走 recover 入口回收最新版；
+3. 要推 Figma（`/figma-layer`）或回这里改字段布局时，点名即可。
 
-（recover 入口也汇入此处。选 B 回 Phase 1/3 重编译重跑。）
+> （若本次走 Phase 3D 桌面端生成：你首次说「拉回来」就是**首版回收**，同 Phase 4 逻辑，不是迭代。）
+
+> 依据 2026-06-10 luca 指示：「要迭代我会在 od 里面去迭代。如果真的需要回到这里改字段
+> 布局，我会在这里跟你说。」agent 不代理迭代轮、不替用户判断符合与否。
+> （recover 入口照旧汇入 Phase 4 回收逻辑。）
 
 ---
 
@@ -166,14 +208,15 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 ```
 **Handoff**（`docs/handoff/YYYY-MM-DD-<topic>-open-design-handoff.md` ≤2000 tokens）：决策（≤8：选的 platform/DS、
 用户判断结论、token 偏差）；约束（≤5：figma-layer 必读 index.html 路径、source=open-design、FxUI 仅品牌色+文字色）；
-风险（≤3：traceability best-effort、OD beta/动态端口、未还原项）；产出路径。
+风险（≤3：traceability best-effort、OD beta/动态端口、未还原项）；产出路径 + **OD 项目 slug=`$_SLUG`（供日后 recover 定位）**。
 
 ---
 
 ## ⚠️ 末尾核心约束
 
-1. **headless 一次性出图（option ②）**：经 daemon `/api/chat` 触发 OD 直接生成；指令末尾写明「不必反问/不要 question-form」。
-2. **人工判断后置**：落盘后展示给用户判断（符合/迭代/停），不在生成中途要用户输入。
+1. **默认桌面端生成；headless 为 opt-in**：默认 stage（建项目+brief.md+DS）后交你在 OD 桌面端按生成→「拉回来」回收；仅你显式要 headless 才经 daemon `/api/chat` 一次性出图（指令末尾写明「不必反问/不要 question-form」）——本 session 实测不稳（生成慢/daemon 重启），失败上限 1 后转桌面端。
+2. **人工判断后置，迭代主体=用户在 OD**：落盘后展示即止、不阻塞提问；用户在 OD 桌面端
+   自行迭代，回收（recover）/推 figma-layer 由用户点名触发（2026-06-10 luca 指示）。
 3. **FxUI 只叠 品牌色 #FF8000 + 文字色 #181C25/#91959E**；其余配色/字体/字号/布局全交所选 design system，
    **不指定、不覆盖、不与 OD 规范冲突**；FxUI 语义色/分割线/背景一律不注入。
 4. **必须先评估并让用户选 Target platform + Design system**（Phase 2 AskUserQuestion），选定后**建项目时绑 `designSystemId`**

@@ -17,7 +17,7 @@ context-cost:
   self: 2244
   runtime-estimate: 5000
   shared-refs: [none]
-  recommended-model: sonnet  # 需求解析和场景判断
+  recommended-model: guided-execution  # 需求解析和场景判断
 ---
 
 ## Preamble (run first)

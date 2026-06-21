@@ -15,7 +15,7 @@ context-cost:
   self: 1400
   runtime-estimate: 5000
   shared-refs: [none]
-  recommended-model: sonnet  # 基于约束验证
+  recommended-model: guided-execution  # 基于约束验证
 ---
 
 ## Preamble (run first)

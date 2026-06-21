@@ -15,7 +15,7 @@ context-cost:
   self: 2344
   runtime-estimate: 5000
   shared-refs: [ai-native-taste-anchors]
-  recommended-model: sonnet  # 基于规范审查
+  recommended-model: guided-execution  # 基于规范审查
 ---
 
 ## Preamble (run first)

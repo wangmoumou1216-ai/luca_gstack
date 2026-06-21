@@ -91,6 +91,8 @@ api-project/
 .claude/.digest-shown-*
 .claude/current-topic*.txt
 .claude/workflow-state*.yaml
+# code-hygiene skill cleanup reports — transient build artifacts
+.claude/cleanup-reports/
 
 # Memory system — ignore raw runtime data, keep scripts and stable knowledge
 memory/episodic/sessions/*.md

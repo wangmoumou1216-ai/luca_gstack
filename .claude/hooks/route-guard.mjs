@@ -11,7 +11,8 @@ import {
 import { join } from 'path';
 import { homedir } from 'os';
 
-const projectRoot = process.cwd();
+// cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
+const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const dryRun = process.env.ROUTE_GUARD_DRY_RUN === '1' || process.argv.includes('--dry-run');
 
 function normalize(value) {
@@ -133,17 +134,31 @@ function projectGate(prompt, projects, currentProject) {
   const text = normalize(prompt);
   if (!text) return null;
   if (/当前项目|这个项目|本项目/.test(prompt)) return null;
+  // 寒暄/确认类非任务输入不进项目门禁（与 skill 路由层 looksLikeTask 同口径；红队 C7 实测漏网）
+  if (/^\s*(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i.test(prompt)) {
+    return null;
+  }
   // Audit C2: meta/audit/help questions are framework-level, not project work.
   // Skip Project Gate so they route via the normal skill/STOP path instead of
   // forcing "新项目还是继续老项目" on what is clearly a question about the system.
-  if (/^\s*(评估|审计|查看|看看|为什么|是什么|什么是|解释|说明|讲一下|讲讲|你能|你会|能不能告诉|帮我看看|帮我看一下)/.test(prompt)) {
+  if (/^\s*(评估|审计|查看|看看|为什么|是什么|什么是|解释|说明|讲一下|讲讲|你能|你会|能不能告诉|帮我看看|帮我看一下|帮我解释|给我解释|帮我讲)/.test(prompt)) {
     return null;
   }
   // Audit M2: content-tool skills are standalone-capable — they don't need a
   // project context (e.g. /idea ingesting meeting notes, /compare diffing two
   // files, agent-browser/web-access fetching URLs). Let them route via
   // skillDecision; don't short-circuit them through the project gate.
-  if (/会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取/.test(prompt)) {
+  if (/会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取|翻译/.test(prompt)) {
+    return null;
+  }
+  // Audit M3: framework self-maintenance code-hygiene (清理/体检 luca 自身
+  // .mjs/.py/hooks/scripts) is a Meta task on luca_gstack itself, not project
+  // work. Exempt from Project Gate ONLY when a code-hygiene trigger CO-OCCURS
+  // with a framework path/artifact — so downstream-project cleanup (which DOES
+  // want a project) is not over-exempted. Lets /code-hygiene surface via skill
+  // routing for genuine self-maintenance with no active project.
+  if (/清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量/.test(prompt) &&
+      /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/.test(prompt)) {
     return null;
   }
 
@@ -549,7 +564,7 @@ if (prompt) {
   hints.push(...ruleHintsForSkills(matchedSkills(decision)));
 }
 
-if (!dryRun) {
+if (!dryRun && prompt) {
   const counterFile = join(projectRoot, '.claude', '.session-turn-count');
   let turns = 0;
   try {

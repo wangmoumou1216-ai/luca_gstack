@@ -21,7 +21,7 @@ context-cost:
   runtime-estimate: 30000
   shared-refs: [html-prototype-tokens]
   template: auto-detect
-  recommended-model: sonnet  # 技术复杂的builder执行
+  recommended-model: guided-execution  # 技术复杂的builder执行
 ---
 
 ## Preamble (run first)

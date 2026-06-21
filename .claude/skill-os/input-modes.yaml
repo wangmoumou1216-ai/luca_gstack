@@ -30,8 +30,8 @@ skills:
       workflow:
         required: ["design_brief_artifact"]
         optional: ["ux_brainstorm_artifact"]
-    quality_gates: ["input_source_resolved", "design_generation_packet_when_chain", "instruction_compiled", "fxui_brand_text_tokens_only", "platform_designsystem_user_selected", "designsystem_bound_verified", "od_daemon_reachable", "headless_generated", "prototype_spec_written", "no_source_fact_drift"]
-    notes: "design_output 主力，**headless 一次性出图**：luca 编译指令 → 评估并让用户选 Target platform + Design system → 建项目绑 designSystemId(建后验证) → 经 daemon /api/chat(带 agentId) headless 生成 → 回收落盘。人工判断后置(符合/迭代/停)。FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E，其余走所选 design system 不覆盖。两种进入 chain/adhoc。"
+    quality_gates: ["input_source_resolved", "design_generation_packet_when_chain", "instruction_compiled", "fxui_brand_text_tokens_only", "platform_designsystem_user_selected", "designsystem_bound_verified", "od_daemon_reachable", "artifact_generated", "prototype_spec_written", "no_source_fact_drift"]   # artifact_generated = desktop_generated_then_recovered(默认) OR headless_generated(opt-in)，产物落盘即 PASS
+    notes: "design_output 主力，**默认桌面端生成（headless opt-in）**：luca 编译指令 → 评估并让用户选 Target platform + Design system → 建项目绑 designSystemId(建后验证) + 写 brief.md → **默认交用户在 OD 桌面端按生成(订阅会话, 可靠) → '拉回来' recover 落盘**；headless 经 daemon /api/chat(带 agentId) 为 opt-in，本 session 实测不稳(生成慢/daemon重启)，失败上限 1 后降级桌面端。人工判断后置(符合/迭代/停)。FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E，其余走所选 design system 不覆盖。两种进入 chain/adhoc。"
 
   idea:
     modes:
@@ -168,6 +168,17 @@ skills:
     quality_gates: ["l0_index", "l1_source_index", "l2_node_index", "assertion_matrix", "task_cards", "design_decision_coverage", "state_coverage", "coverage_gate"]
     output_path: "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md"
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
+
+  code-hygiene:
+    modes:
+      standalone:
+        required: ["scope_or_mode"]
+        optional: ["target_paths"]
+      workflow:
+        required: []
+        optional: ["target_paths"]
+    quality_gates: ["verification_iron_law", "high_confidence_apply_only", "luca_guards_preserved", "clean_tree_for_apply"]
+    notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子。代码审查复用 quality-gate/redteam。"
 
 governance_tools:
   compare:

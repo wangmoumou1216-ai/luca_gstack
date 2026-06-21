@@ -57,7 +57,7 @@ project_skills:
   html_prototype:
     invoke: "/html-prototype"
     weight: 7
-    triggers: [做个原型, 生成HTML, HTML原型, prototype, 快速原型, 原型界面]
+    triggers: [做个原型, 生成HTML, HTML原型, prototype, 快速原型, 原型界面, 本地原型]
 
   figma_demo:
     invoke: "/figma-demo"
@@ -102,6 +102,12 @@ project_skills:
     invoke: "/task-plan"
     weight: 7
     triggers: [任务编排, 任务计划, 开发计划, task plan, 拆任务, 任务拆解, 编排任务, 开发编排, 任务分解]
+
+  code_hygiene:
+    invoke: "/code-hygiene"
+    weight: 6
+    # 工程域代码约束（非设计 skill）。Iron Law 完成前验证 + 8 清理算子。
+    triggers: [代码清理, 清理代码, 死代码, 删死代码, 代码去重, 弱类型, 代码质量, 代码体检, 工程体检, 完成前验证, 代码审查, cleanup, code-hygiene, 清理冗余]
 
 # ── Built-in Claude Code skills (globally installed) ─────────────────────────
 builtin_skills:
@@ -221,6 +227,13 @@ builtin_skills:
     hint: "→ 建议使用内置 skill: frontend-slides（生成前端幻灯片/演示）"
     weight: 7
     triggers: [前端幻灯片, frontend slides, 交互演示, 网页演示]
+
+  status_tool:
+    skill: status
+    hint: "→ 状态查询意图：运行 bash scripts/status.sh 或读取 workflow-state（状态工具，不是一级 skill）"
+    weight: 8
+    # 单字「状态/进度」易误中业务语义（如"订单状态页"），只收长形式；短形式由 CLAUDE.md 语义规则兜底
+    triggers: [做到哪了, 当前状态, 工作流状态, 当前进度, 项目进度, 进行到哪, 进度怎么样]
 
 # ── External engineering skills (global ~/.claude/skills; 故意不收 design 词，避免劫持设计管线）──
   systematic_debugging:

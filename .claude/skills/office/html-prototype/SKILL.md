@@ -21,7 +21,7 @@ context-cost:
   runtime-estimate: 20000
   shared-refs: [ai-native-design-framework, design-system-contract, html-prototype-tokens]
   template: auto-detect
-  recommended-model: sonnet  # 基于brief执行原型
+  recommended-model: guided-execution  # 基于brief执行原型
 ---
 
 ## Preamble (run first)

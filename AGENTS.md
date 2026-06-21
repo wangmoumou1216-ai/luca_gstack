@@ -466,11 +466,15 @@ When generating or editing prototypes:
 
 - Read `framework/README.md` before selecting or modifying a template.
 - For `/open-design` (design-output primary), read `.claude/skills/office/open-design/SKILL.md`;
-  it commissions the local Open Design daemon (via the `od mcp` MCP server, falling back to daemon
-  HTTP) to generate HTML from the design-brief, keeps a human judgment node in the OD UI, then lands
-  index.html + prototype-spec.md under docs/prototype/ for /figma-layer. Injects FxUI
-  color/font/size tokens only (no component-library binding). Falls back to magicpath/html-prototype
-  when the OD daemon is unreachable.
+  it stages an OD project (binds the design system, writes brief.md) and **by default has the user
+  generate in the OD desktop app (subscription session, reliable), then recovers on "拉回来"**;
+  headless one-shot via the daemon `/api/chat` is opt-in only; it was unreliable this session (slow
+  generation >2.5-3min + daemon SIGTERM restarts), so on failure it degrades to desktop (retry once),
+  not magicpath. (Auth aside: the spawned `claude` needs the **correct** `USER` (the real username) in its
+  env to use the subscription — empty/wrong USER falls back to API credit, LOGNAME won't
+  substitute; OD provides it, so auth is not the failure.) Lands index.html + prototype-spec.md under
+  docs/prototype/ for /figma-layer. Injects FxUI color/font/size tokens only (no component-library binding). Falls back to
+  magicpath/html-prototype only when the OD daemon is truly unreachable.
 - For `/html-prototype`, read `.claude/skills/office/html-prototype/SKILL.md`, then apply its
   dynamic reference protocol, current aesthetic rubric, and QA gate.
 - For `/figma-demo`, read `.claude/skills/office/figma-demo/SKILL.md`; its blueprint,
