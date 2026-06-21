@@ -108,10 +108,9 @@ gaps:
     statement: "behavioral_ab.py 硬钉 Sonnet(model!=sonnet→BLOCK)，但 reasoning-heavy skills(brainstorm/deepresearch/ux-brainstorm/redteam 等)实际跑 fable/opus——对它们的 prose 改动在 Sonnet 上 A/B 等于测错模型；且 baseline agent 未禁文件读会读到工作树 live 编辑污染 baseline。来源：SC-20260621-001 红队定论(候选作为'已成立事实'被拒，真实改进留此 GAP)。"
     severity: low
     desired_capability_keywords: [behavioral a/b, model tier, recommended-model, baseline isolation]
-    status: open
-    # 内部代码 TODO(非外部借鉴目标)：泛化 behavioral_ab.py 用被改 skill 的 recommended-model 档跑 A/B
-    # (guided-execution=sonnet 默认，reasoning-heavy=fable→opus 回退) + baseline 禁文件读 guard + selftest。
-    # 改 Sonnet 守卫须走 fusion preflight + 新 selftest + 同步 FUSION-RUNBOOK⑥/docstring，不可由记忆晋升驱动。
+    status: addressed   # 2026-06-21 已泛化 behavioral_ab.py：judge 加 --skill-tier，模型守卫按 TIER_MODELS 校验
+    # (reasoning-heavy=fable/opus · guided-execution=sonnet 默认 · mechanical=haiku)；selftest 7/7 过(含 reasoning-heavy-on-sonnet→BLOCK / -on-opus→PASS)；
+    # FUSION-RUNBOOK⑥ + docstring 同步(含 baseline 禁文件读)。SC-20260621-001 矛盾消解。
 
   - id: GAP-no-living-capability-truth
     dimension: skills
@@ -119,4 +118,4 @@ gaps:
     statement: "luca 的设计→工程链结构性 forward-only：每个产物是 docs/<stage>/YYYY-MM-DD-<topic>-*.md 的某次变更快照，ADR/CONTEXT 仅 append——无按 capability 维护的『该能力当前(已合并)如何工作』活真值，archive-merge-into-truth 闭环缺失。来源：2026-06-21 OpenSpec(Fission-AI/OpenSpec 55.8k★)借鉴评估红队 NARROW_BORROW 定论。"
     severity: low
     desired_capability_keywords: [living spec, capability truth, archive merge, as-built spec, brownfield delta]
-    status: proposed   # 待 luca 裁决是否 open(红队：仅借 archive-merge→living capability truth 一念，下游项目级 adapt-idea，非 luca harness 自身；不 install OpenSpec、不采其反 phase-gate 哲学)
+    status: proposed   # 2026-06-21 裁决(授权下,主 agent)：保持 proposed 不 open——这是下游产品项目的能力真值需求(各项目自维护活 spec)，非 luca harness 自身该长的面；开了会让月度 scout 替下游需求找借鉴=错配。红队 NARROW_BORROW：仅 archive-merge→living truth 一念作下游 adapt-idea；不 install OpenSpec、不采反 phase-gate 哲学

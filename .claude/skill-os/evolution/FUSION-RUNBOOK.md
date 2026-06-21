@@ -18,7 +18,7 @@
 | ③ | 实施融合 | Edit/Write（仅 worktree 内） | reuse_mode=install→落点接线；port-pattern→把模式搬进指定文件 |
 | ④ | 静态 + 契约门 | `bash scripts/verify.sh` + `npm run check:hooks/check:routing-map/check:quality-gates/check:coding-discipline/check:self-model` | 全绿 |
 | ⑤ | 漂移门 | `npm run check:routing-map` + `daily_governance.check_model_routing()` | 路由 5 文件 / 4 路 model 一致 |
-| ⑥ | 行为 A/B（prose 改动必做） | `behavioral_ab.py extract` → 在 **Sonnet** 上跑 baseline/candidate → `behavioral_ab.py judge` | verdict=PASS（no-op / 回归 → BLOCK） |
+| ⑥ | 行为 A/B（prose 改动必做） | `behavioral_ab.py extract` → 在**被改 skill 的档**（reasoning-heavy=fable→opus / guided-execution=sonnet / mechanical=haiku）跑 baseline/candidate（**baseline arm 禁文件读**，否则读到工作树 live 编辑污染）→ `judge --skill-tier <档>` | verdict=PASS（no-op / 回归 / 档位不符 → BLOCK） |
 | ⑦ | 对抗审查 | `preflight-agent`（入口）+ `quality-gate` agent（Sonnet，断言）+ `redteam` skill（Fable，diff） | PASS / 无 BLOCKING |
 | ⑧ | 回滚就绪落地 | `git tag pre-fuse-<id> <主HEAD>` → 从 worktree squash-merge 单提交（`Fuses: <id> @ <sha>`） | 单提交落地 |
 | ⑨ | 反馈记录 + **可达性验收** | append `.claude/skill-os/evolution/adoption-log.jsonl` `{...}` + 过 FM-11 可达性门 | 行已写 + 场景可调到 |
