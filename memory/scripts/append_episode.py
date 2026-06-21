@@ -57,10 +57,12 @@ def main() -> int:
     parser.add_argument("--blockers", default="", help="comma-separated blockers encountered")
     parser.add_argument("--decision", default="", help="non-obvious judgment made this session (why, not what)")
     parser.add_argument("--next-risk", default="", help="anticipated risk or open question for next session")
-    parser.add_argument("--project", default="", help="项目作用域；留空则自动从 docs 软链推导")
+    parser.add_argument("--project", default="", help="项目作用域；留空则自动从 docs 软链推导（框架级 session 用 --meta 禁止推导）")
+    parser.add_argument("--meta", action="store_true",
+                        help="框架级/meta session：不归属任何项目，跳过 docs 软链自动推导（防误标，见 EP-20260605-011）")
     args = parser.parse_args()
 
-    project = args.project.strip() or active_project()
+    project = "" if args.meta else (args.project.strip() or active_project())
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     count = sum(1 for l in INDEX.read_text(encoding="utf-8").splitlines() if l.strip()) if INDEX.exists() else 0

@@ -71,6 +71,19 @@
 2. **GAP-promotion-deadend 建议内部 plumbing 修复**（scout 范围外）：consolidate/propose_semantic 加 batch set-stable 入口，解 SC-20260615-001。
 3. 发现层 gh 多词查询 AND 合并致空 → sources-registry S1 查询可改单关键词；scout loader 已加读 candidate-log 防再现已拒项。
 
+## v4 (2026-06-21b) — 融合执行 + 红队批量裁决 + OpenSpec 评估（人工触发轮，非 scout propose-only）
+
+**新采纳 — code-hygiene skill（GAP-code-layer-constraint → addressed）:** port agent-starter cleanup-* 8 算子 + superpowers verification Iron Law，by-property luca 护栏，routed 工程 skill。全门禁过 + 红队 **FIX_THEN_STANDS**（4 fix 已落）+ **可达性实测**（route-guard active-project surface /code-hygiene + M3 框架自维护无 project 豁免；下游清理仍 gate）。详见 ADOPTED.md。
+
+**红队批量裁决（6 项 · 2 轮对抗 + 主 agent 裁决 · user-mandated）:**
+- 4 semantic 候选：**SC-001 REJECT**（A/B 跑 skill 档主张与已提交 behavioral_ab.py Sonnet-pin 硬冲突＝未实现愿望非事实；红队跑 selftest 实证 → 改进留 `GAP-behavioral-ab-tier`）；**SC-002/003/004 REFINE→PROMOTE**（过 promotion_ready 门晋升 promoted-facts.yaml）；**SC-005**（by-property guards）新候选 pending。
+- SC-003 衍生修复：`external-skill-scout.js` sibling compatibility 门补 reuse_mode 分支（**闭环**，两 scout 均已修）。
+- FUSION-RUNBOOK 硬化：**FM-10**（deletion-type WIP 落地陷阱）+ **FM-11**（采纳后可达性验收门）。
+
+**OpenSpec 借鉴评估（user 追加）:** Fission-AI/OpenSpec 55.8k★ → 红队 **NARROW_BORROW / 下游级**。仅借「archive-merge→living capability truth」一念作下游 adapt-idea；**拒** install / per-change-proposal / 「fluid 非 phase-gated」哲学（冲突 luca gate-heavy 核心）。新 gap `GAP-no-living-capability-truth`（proposed，待 luca open）。
+
+**DGM 自硬化（GAP-self-evolution-hardening）:** 本轮**显式不追**（已融样本仅 3 条，benchmark 无意义）；重访条件 adoption-log ≥5 条。
+
 ## 采纳复盘（上 N 次融合）
-（无：本期 0 融合落地。下期起，每有融合落地，此节用 adoption-log.jsonl 复盘 keep/watch/revert。）
+本期 **3 融合落地**（live-uncommitted，随用户 skill-refactor WIP 一起提交）：OST→`/ux-brainstorm` · GOMS→`/ux-audit` · **code-hygiene（新 routed skill）**。CodeGraph/OpenSpec = 下游推荐（非 luca 核心采纳）。下期 digest 首节用 `adoption-log.jsonl` 对这 3 条复盘 keep/watch/revert。
 <!-- FILE_END: 2026-06-evolution -->

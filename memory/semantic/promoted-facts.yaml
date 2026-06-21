@@ -83,3 +83,79 @@ facts:
     reviewer: "codex-main"
     scope: "memory,semantic,governance"
     tags: ["memory", "governance", "write-gate", "semantic", "search"]
+  - id: SC-20260612-002
+    domain: skill-rule
+    fact: "skill-execution subagent: .claude/workflow-state.yaml symlink 对 subagent 写入受保护，skill 内部更新节点状态须直写项目真实路径 ~/Desktop/项目/<名>/.luca/workflow-state.yaml"
+    confidence: high
+    stable: true
+    added: 2026-06-14
+    source: observation
+    evidence: "2026-06-12 WA-1 deepresearch completion notes: 经 symlink 写入被拒，改项目真实路径写入成功"
+    reviewer: "luca"
+    scope: "skill-execution subagent"
+  - id: SC-20260612-003
+    domain: skill-rule
+    fact: "orchestrator: 派发 skill_execution subagent 前，SKILL.md 中声明的用户选择参数（如 deepresearch research_depth 档位）必须先在主会话向用户询问，并将选择注入 WA prompt；headless subagent 无 AskUserQuestion 通道，不得让 skill fallback 替用户选档"
+    confidence: high
+    stable: true
+    added: 2026-06-14
+    source: observation
+    evidence: "2026-06-12 研究情报官 Phase 1：deepresearch 派 subagent 后用户质询'档位为什么没让我选'；WA headless 自选 moderate"
+    reviewer: "luca"
+    scope: "orchestrator skill_execution"
+    tags: ["orchestrator", "deepresearch", "subagent"]
+  - id: SC-20260612-004
+    domain: skill-rule
+    fact: "orchestrator/skill 收尾: 长 session 中若有并行 Claude session 启动，session-restore 会清掉三条项目软链（docs/workflow-state/current-topic），后续 Write 会把 docs 重建成实体目录导致产出落错位置；重型 skill 写 handoff 前必须先跑 npm run check:project-links 验证软链，FAIL 则先 project.sh switch 重建"
+    confidence: high
+    stable: true
+    added: 2026-06-14
+    source: observation
+    evidence: "2026-06-12 研究情报官 Phase 2：16:07 软链被清，brainstorm handoff 落入实体 docs/，quality-gate 捕获后救回"
+    reviewer: "luca"
+    scope: "orchestrator skill-handoff"
+    tags: ["orchestrator", "symlink", "session-restore"]
+  - id: SC-20260614-001
+    domain: skill-rule
+    fact: "open-design: headless /api/chat 出图依赖 OD 自己 spawn 的 Claude Code 子进程，该子进程环境易坏（profile/CLAUDE_CONFIG_DIR 不对→子进程提前退出；或 daemon 中途重启 SIGTERM；或内层 narrate 完成但 tool_use 仅1次、index.html 不落盘）。诊断口径：流日志 event:end status=failed/canceled，或 files 接口只有 brief.md 无 index.html。重试上限~2次后不再硬重试，降级路径=让用户在 OD 桌面端手动生成（项目+brief.md+DS 绑定已就绪，桌面端走本机已登录会话绕开坏子进程）再说'拉回来'走 recover"
+    confidence: high
+    stable: true
+    added: 2026-06-14
+    source: observation
+    evidence: "2026-06-14 研究情报官 Phase 5：headless 三次失败(failed/canceled/narrate-but-no-file)，第1次报错明示 set CLAUDE_CONFIG_DIR；改桌面端手动"
+    reviewer: "luca"
+    scope: "open-design"
+    tags: ["open-design", "headless", "daemon", "fallback"]
+  - id: SC-20260621-002
+    domain: skill-rule
+    fact: "FUSION-RUNBOOK 落地: 目标文件分支 WIP 为删除/精简型时,checkout-HEAD+reapply 干净抽离会复活已删行(反噬)→fusion 编辑留 live 随 WIP 提交,或用 git add -p / git stash -p 逐 hunk 抽离;仅纯新增型 WIP 可整文件抽离单独提交。(fusion landing 专属,非通用 git 规则)"
+    confidence: high
+    stable: true
+    added: 2026-06-21
+    source: observation
+    evidence: "2026-06-21 OST→ux-brainstorm:HEAD含锚点但WIP=34增/208删,checkout+reapply 会 resurrect 208删除行;红队 /tmp 隔离仓实证复现+carve-out(纯增量型无害)成立;FUSION-RUNBOOK FM-10 已固化"
+    reviewer: "claude"
+    scope: "FUSION-RUNBOOK 落地 (fusion landing, 非通用 git 规则)"
+    tags: ["fusion", "landing", "wip-entanglement", "git"]
+  - id: SC-20260621-003
+    domain: skill-rule
+    fact: "外部能力 vetting 的 compatibility 门必须按候选 reuse_mode 分支判定:install-as-MCP/tool/npm/CLI 只验真实可装+wire as MCP/tool(不强求 SKILL.md);install-as-skill/subagent 才需 valid frontmatter+droppable;port-pattern/adapt-idea 验 pattern 可抽离不拖整框架。缺分支的 skill-centric 门会系统性误拒所有 MCP/工具候选(2026-06-21 CodeGraph 52k/cupcake/sem 三连被误拒)。"
+    confidence: high
+    stable: true
+    added: 2026-06-21
+    source: observation
+    evidence: "commit 5eb9726 framework-evolution-scout.js:280 + external-skill-scout.js:214 均已加 reuse_mode 分支(本 session 补 sibling);CodeGraph/cupcake/sem 误拒留痕 candidate-log/digest 2026-06/ADOPTED.md"
+    reviewer: "claude"
+    scope: "framework-evolution-scout.js + external-skill-scout.js compatibility gate (两 scout 均已加 reuse_mode 分支)"
+    tags: ["scout", "vetting", "compatibility", "mcp", "reuse_mode", "gate-design"]
+  - id: SC-20260621-004
+    domain: skill-rule
+    fact: "采纳/融合外部能力:'记录采纳'≠'能力可达'。每个采纳须在 luca 顶层验证'对应场景能否实际路由/调用到'(skill→routing-map invoke;MCP→session-connect+skill body 引用 mcp__*),否则是 orphan。验收门必须含可达性检查,不止文件落地"
+    confidence: high
+    stable: true
+    added: 2026-06-21
+    source: observation
+    evidence: "2026-06-21 CodeGraph 采纳后 grep 全 routing/config 零接线、任何场景调不到;ux-brainstorm/ux-audit 因在 routing-map invoke 才可达"
+    reviewer: "claude"
+    scope: "FUSION-RUNBOOK · framework-evolution-scout 采纳验收门 (FM-11; monthly cadence; NOT global per-session)"
+    tags: ["fusion", "adoption", "reachability", "routing", "mcp"]
