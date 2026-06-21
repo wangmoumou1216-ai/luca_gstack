@@ -5,8 +5,16 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 
-const projectRoot = process.cwd();
+const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
+
+// hooks 日志 size-cap：4 个 hook 共写 2>>，~27KB/天；/tmp 周期清理按 mtime 判老，对活跃追加文件永不命中
+try {
+  const hookLog = '/tmp/luca-gstack-hooks.log';
+  if (statSync(hookLog).size > 524288) {
+    writeFileSync(hookLog, readFileSync(hookLog, 'utf8').slice(-65536));
+  }
+} catch { }
 
 if (existsSync(stateFile)) {
   const content = readFileSync(stateFile, 'utf8');
@@ -111,6 +119,45 @@ try {
   }
 } catch { }
 
+// 月度框架自进化：SessionStart 到期探测 + 升级提示（助理式，FM-8）。
+// 不在此 headless 跑 scout——发现需 agent harness（Workflow），纯后台 python 驱动不了；
+// 这里只「探测到期 + 提示在 session 内运行」。digest 缺失即为待办真值（不另立 marker，遵循最小文件）。
+try {
+  const evoDir = join(projectRoot, '.claude', 'skill-os', 'evolution');
+  const selfModel = join(evoDir, 'self-model.yaml');
+  const evoDigests = join(evoDir, 'digests');
+  if (existsSync(selfModel)) {  // 仅当演进子系统已启用才提示
+    const now = new Date();
+    const ym = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
+    const curY = now.getUTCFullYear(), curM = now.getUTCMonth() + 1;
+    const curMonth = ym(curY, curM);
+    if (!existsSync(join(evoDigests, `${curMonth}-evolution.md`))) {
+      let missing = 0;  // 最近 3 个月（含本月）缺失数 → 升级提示
+      for (let i = 0; i < 3; i++) {
+        let y = curY, m = curM - i;
+        while (m <= 0) { m += 12; y -= 1; }
+        if (!existsSync(join(evoDigests, `${ym(y, m)}-evolution.md`))) missing++;
+      }
+      const cmd = `Workflow({name:'framework-evolution-scout', args:{date:'${curMonth}'}})`;
+      if (missing >= 2) {
+        process.stdout.write(`[session-restore] ⚠️ 已跳过 ${missing} 次月度演进扫描（最近含本月 ${curMonth}）。在 session 内运行：${cmd}\n`);
+      } else {
+        process.stdout.write(`[session-restore] 🧬 月度演进扫描到期 (${curMonth}) — 在 session 内运行：${cmd}\n`);
+      }
+    }
+  }
+} catch { }
+
+// person 层记忆候选提示（独立于 digest 预览——digest 只显示前 14 行且每份只展示一次，候选排后面会不可见）
+try {
+  const globalMemDir = process.env.GLOBAL_MEMORY_DIR
+    || join(homedir(), '.claude', 'projects', '-Users-luca-Desktop-luca-gstack', 'memory');
+  const candidates = readdirSync(globalMemDir).filter(f => f.startsWith('candidate_feedback_') && f.endsWith('.md'));
+  if (candidates.length > 0) {
+    process.stdout.write(`[session-restore] 🧍 ${candidates.length} 条 person 记忆候选待裁决（见最新 digest，或直接看 ${globalMemDir}/candidate_feedback_*.md）\n`);
+  }
+} catch { }
+
 // 展示最新「成长摘要」digest（每个 digest 只在第一次启动时展示一次）
 try {
   const digestsDir = join(projectRoot, 'memory', 'digests');
@@ -118,6 +165,15 @@ try {
     const files = readdirSync(digestsDir).filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).sort();
     const newest = files[files.length - 1];
     if (newest) {
+      // 清理过期 marker：必须保留 newest 对应的——全删会致当日 digest 每 session 重展示
+      try {
+        const keep = `.digest-shown-${newest.replace('.md', '')}`;
+        for (const f of readdirSync(join(projectRoot, '.claude'))) {
+          if (f.startsWith('.digest-shown-') && f !== keep) {
+            try { unlinkSync(join(projectRoot, '.claude', f)); } catch { }
+          }
+        }
+      } catch { }
       const shownMarker = join(projectRoot, '.claude', `.digest-shown-${newest.replace('.md', '')}`);
       if (!existsSync(shownMarker)) {
         const preview = readFileSync(join(digestsDir, newest), 'utf8').split('\n').slice(0, 14).join('\n').trim();
