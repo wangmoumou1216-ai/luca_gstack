@@ -1,0 +1,69 @@
+# luca_gstack 自模型真值源（Single Source of Truth: what luca_gstack IS + 演进面）
+#
+# 用途：framework-evolution-scout 的「匹配基底」。门禁从「是否泛泛地好」升级为
+# 「是否填补一个已登记的已知缺口(gaps-register) 且不与 already_have 冗余」。
+#
+# 所有权分工（避免生成器与人冲突）：
+#   - 本文件 = 人工拥有：identity / surface(7 维语义+真值文件+守卫) / already_have_static / 复核元数据
+#   - self-model.generated.yaml = scripts/build-self-model.mjs 生成、人勿手改：
+#       already_have_ondisk(office/global skills、agents、hooks 实时清单) + generated_at
+#   - gaps-register.yaml = 人工拥有：open 缺口登记
+#   - sources-registry.yaml = 人工拥有：发现源
+# scout 的有效 existing = already_have_static ∪ generated.already_have_ondisk ∪ vetting-registry(approved/rejected/conditional)
+#
+# daily_governance.check_self_model() 每日校验 updated 复核期限（>review_after_days 入 digest）。
+
+version: 1
+updated: 2026-06-21
+review_after_days: 35
+
+identity:
+  purpose: "面向纷享销客 CRM 产品设计(PRD→UX→原型→工程规格)的 Claude Code Skill-OS"
+  architecture: "Skill-first, Graph-optional；环境/项目剥离(docs/state/topic 三软链)"
+  brand_authority: "brand-tokens.md #FF8000；framework/ 只读(SF-001/SF-002)"
+  default_model: sonnet            # 镜像 model-routing default_tier=guided-execution
+
+# 七维演进面：每维指向真实文件 + 守卫 + 什么样的外部能帮它
+surface:
+  skills:
+    truth: .claude/skill-os/skill-routing-map.yaml
+    dir: .claude/skills/office/
+    install_targets: ["~/.claude/skills (全局)", ".claude/skills/office (路由)"]
+    external_help: 可安装的设计/工程/验证 skill
+  hooks:
+    files: [session-restore.mjs, route-guard.mjs, post-edit.mjs, session-sync.mjs]
+    registry: .claude/settings.json
+    external_help: hook 模式 / 平台新 hook 事件
+  routing:
+    truth_files: [skill-routing-map.yaml, input-modes.yaml, optional-workflow-graph.yaml, .claude/observability/rules.yaml]
+    snapshots: [CLAUDE.md, AGENTS.md]
+    guard: scripts/check-routing-map.mjs
+    external_help: 声明式路由 / DAG 编排思想
+  memory:
+    layers: [episodic, semantic, skill-rule]
+    promote_gate: memory/scripts/consolidate_memory.py
+    governance: memory/scripts/daily_governance.py
+    external_help: 记忆/自成长(Hermes-like)模式、向量检索
+  observability:
+    rules: .claude/observability/rules.yaml
+    inject: .claude/observability/scripts/get_rules.py
+    external_help: 反馈闭环 / 结构化追踪
+  orchestration:
+    agents: [orchestrator, plan-agent, work-agent-template, quality-gate, preflight-agent]
+    external_help: 多 agent 编排 / 状态机 / 对抗校验模式
+  testing:
+    suite: scripts/verify.sh
+    npm: [check:hooks, test:routes, test:memory, check:routing-map, check:quality-gates, check:coding-discipline, check:project-links, check:memory-health]
+    external_help: 行为级 eval/A-B、契约测试、property-based
+
+# 不在磁盘上、无法由生成器推导的既有能力（claude-code 内置 + persona）
+already_have_static:
+  builtins: [code-review, simplify, verify, security-review, review, init, run, skill-creator,
+             find-skills, update-config, keybindings-help, statusline-setup, loop, schedule,
+             fewer-permission-prompts, claude-api, deep-research, agent-browser, web-access]
+  personas: [elon-musk-perspective, steve-jobs-perspective, naval-perspective, ilya-sutskever-perspective]
+
+pointers:
+  generated: .claude/skill-os/evolution/self-model.generated.yaml
+  gaps: .claude/skill-os/evolution/gaps-register.yaml
+  sources: .claude/skill-os/evolution/sources-registry.yaml

@@ -45,7 +45,7 @@ echo "════════════════════════�
 echo ""
 
 echo "[ Git 基础设施 ]"
-check G1 "Git 仓库已初始化" "[ -d .git ]"
+check G1 "Git 仓库已初始化" "git rev-parse --is-inside-work-tree >/dev/null 2>&1"
 check G2 "hooks 路径配置正确" "git config --get core.hooksPath | grep -q '\.githooks'"
 check G3 ".gitignore 覆盖 .DS_Store" "grep -q '\.DS_Store' .gitignore"
 check G4 ".gitignore 覆盖 .env" "grep -q '\.env' .gitignore"

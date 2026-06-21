@@ -1,0 +1,58 @@
+# 缺口登记表（Single Source of Truth: luca_gstack 的已知演进缺口）
+#
+# 人工拥有。framework-evolution-scout 的 gap_addressed 硬门 + fit-to-gap 软分匹配本表。
+# 开/关由人裁决（检测自动、判断归人）：候选只能映射到 status: open 的缺口。
+# 种子来自 2026-06-21 地毯式审计（三路 Explore + Plan agent 红队）。
+
+version: 1
+updated: 2026-06-21
+
+gaps:
+  - id: GAP-behavioral-verification
+    dimension: testing
+    statement: "无行为级 A/B：prose-only 改 skill 指令可通过全部静态/路由/记忆测试却不真正改变 LLM 行为(SC-20260601-002)。"
+    severity: high
+    desired_capability_keywords: [prompt eval, behavioral test, llm-as-judge, a/b harness, regression, eval]
+    status: addressed   # 2026-06 本 session 自建 memory/scripts/behavioral_ab.py（Sonnet A/B + no-op/回归判定，selftest 5/5）
+
+  - id: GAP-promotion-deadend
+    dimension: memory
+    statement: "记忆晋升管线活故障：无候选被置 proposed_stable=True，consolidate_memory 从未晋升过任何一条(SC-20260615-001)。"
+    severity: high
+    desired_capability_keywords: [memory promotion, candidate review, knowledge consolidation, self-improving]
+    status: open
+
+  - id: GAP-routing-fragmentation
+    dimension: routing
+    statement: "路由逻辑分散在 5 文件(skill-routing-map/input-modes/optional-workflow-graph/rules.yaml/CLAUDE.md+AGENTS.md)，手工同步税高、漂移风险大。"
+    severity: medium
+    desired_capability_keywords: [declarative routing, single source of truth, dag, config validation]
+    status: open
+
+  - id: GAP-no-rollback
+    dimension: testing
+    statement: "采纳外部能力后无版本钉/回滚/落地后集成测试——一旦坏掉难以安全回退。"
+    severity: medium
+    desired_capability_keywords: [rollback, version pin, integration test, dependency safety]
+    status: addressed   # 2026-06 本 session 自建 FUSION-RUNBOOK git-tag 回滚 + worktree + pinned_sha（drill 验证）
+
+  - id: GAP-no-feedback-loop
+    dimension: observability
+    statement: "无闭环追踪：采纳的能力到底有没有帮到/有没有惹祸，没有数据反馈。"
+    severity: medium
+    desired_capability_keywords: [feedback loop, adoption tracking, telemetry, outcome metrics]
+    status: addressed   # 2026-06 本 session 自建 adoption-log.jsonl + digest 采纳复盘节
+
+  - id: GAP-soft-enforcement
+    dimension: routing
+    statement: "Plan-Agent/Research-Default/品牌锁均为文档软约束，非工具强制，易静默漂移。"
+    severity: medium
+    desired_capability_keywords: [policy enforcement, guardrails, pre-commit, lint, validation hook]
+    status: open
+
+  - id: GAP-eval-frozen
+    dimension: testing
+    statement: "eval 子系统有意冻结(ADR-0006/0007)，待检索度量结论。"
+    severity: low
+    desired_capability_keywords: [eval infrastructure]
+    status: deferred   # 有意冻结，候选不得匹配此项
