@@ -2,14 +2,16 @@
 #
 # 人工拥有。framework-evolution-scout 的 gap_addressed 硬门 + fit-to-gap 软分匹配本表。
 # 开/关由人裁决（检测自动、判断归人）：候选只能映射到 status: open 的缺口。
-# 种子来自 2026-06-21 地毯式审计（三路 Explore + Plan agent 红队）。
+# layer = framework（OS 运行时 harness/agent-loop）| application（skill-os 设计作业层）。
+# 种子来自 2026-06-21 地毯式审计；2026-06-21 复盘新增双层 gap（应用作业层 + 框架自维护）。
 
-version: 1
+version: 2
 updated: 2026-06-21
 
 gaps:
   - id: GAP-behavioral-verification
     dimension: testing
+    layer: framework
     statement: "无行为级 A/B：prose-only 改 skill 指令可通过全部静态/路由/记忆测试却不真正改变 LLM 行为(SC-20260601-002)。"
     severity: high
     desired_capability_keywords: [prompt eval, behavioral test, llm-as-judge, a/b harness, regression, eval]
@@ -17,6 +19,7 @@ gaps:
 
   - id: GAP-promotion-deadend
     dimension: memory
+    layer: framework
     statement: "记忆晋升管线活故障：无候选被置 proposed_stable=True，consolidate_memory 从未晋升过任何一条(SC-20260615-001)。"
     severity: high
     desired_capability_keywords: [memory promotion, candidate review, knowledge consolidation, self-improving]
@@ -24,6 +27,7 @@ gaps:
 
   - id: GAP-routing-fragmentation
     dimension: routing
+    layer: framework
     statement: "路由逻辑分散在 5 文件(skill-routing-map/input-modes/optional-workflow-graph/rules.yaml/CLAUDE.md+AGENTS.md)，手工同步税高、漂移风险大。"
     severity: medium
     desired_capability_keywords: [declarative routing, single source of truth, dag, config validation]
@@ -31,6 +35,7 @@ gaps:
 
   - id: GAP-no-rollback
     dimension: testing
+    layer: framework
     statement: "采纳外部能力后无版本钉/回滚/落地后集成测试——一旦坏掉难以安全回退。"
     severity: medium
     desired_capability_keywords: [rollback, version pin, integration test, dependency safety]
@@ -38,6 +43,7 @@ gaps:
 
   - id: GAP-no-feedback-loop
     dimension: observability
+    layer: framework
     statement: "无闭环追踪：采纳的能力到底有没有帮到/有没有惹祸，没有数据反馈。"
     severity: medium
     desired_capability_keywords: [feedback loop, adoption tracking, telemetry, outcome metrics]
@@ -45,13 +51,32 @@ gaps:
 
   - id: GAP-soft-enforcement
     dimension: routing
+    layer: framework
     statement: "Plan-Agent/Research-Default/品牌锁均为文档软约束，非工具强制，易静默漂移。"
     severity: medium
     desired_capability_keywords: [policy enforcement, guardrails, pre-commit, lint, validation hook]
     status: open
 
+  # —— 2026-06-21 复盘新增：双层补全（之前 6 个 gap 全是 framework 层，应用作业层为零） ——
+  - id: GAP-fusion-impact-automation
+    dimension: testing
+    layer: framework
+    statement: "fusion 影响分析/隐式耦合检测(FM-6)目前靠 fusion-preflight.py 手写清单，缺自动依赖/代码图谱(随仓库变更自动同步)。"
+    severity: medium
+    desired_capability_keywords: [code graph, dependency graph, impact analysis, codebase index, knowledge graph]
+    status: open
+
+  - id: GAP-design-methodology-review
+    dimension: skills
+    layer: application
+    statement: "应用作业层设计 skills(ideation/PRD/UX研究/发散收敛/原型/设计批判)的方法论，从未对外部 state-of-art 做过吸收评估——自进化此前对作业层全盲。"
+    severity: medium
+    desired_capability_keywords: [ux research method, prd elicitation, design critique, prototyping, design-to-code, product design methodology, design system]
+    status: open
+
   - id: GAP-eval-frozen
     dimension: testing
+    layer: framework
     statement: "eval 子系统有意冻结(ADR-0006/0007)，待检索度量结论。"
     severity: low
     desired_capability_keywords: [eval infrastructure]

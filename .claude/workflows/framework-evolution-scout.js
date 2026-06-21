@@ -190,12 +190,14 @@ const REDTEAM_SCHEMA = {
 
 // ── Phase Discover：按 source.discovery.method 生成通道 ──────────────────────
 const DISCOVER_PREAMBLE =
-  'You are a DISCOVERY SCOUT for luca_gstack (a Claude Code Skill-OS for CRM 产品设计). Find external projects/capabilities/patterns that fill a KNOWN, OPEN gap below — NOT generically "good" things.\n\n' +
-  'OPEN GAPS (a candidate MUST map to one of these gap_id, else set gap_id="none" and skip it):\n' + gapsText + '\n\n' +
+  'You are a DISCOVERY SCOUT for luca_gstack (a Claude Code Skill-OS for CRM 产品设计). Primarily find external projects/capabilities/patterns that fill a KNOWN, OPEN gap below. ALSO surface genuinely high-signal/impressive projects that fit NO open gap as OPPORTUNITIES (gap_id="none") — do NOT silently drop them; a human will judge whether to register a new gap.\n\n' +
+  'OPEN GAPS (map a candidate to one if it fits; if it is high-signal but fits none, set gap_id="none" and STILL return it as an opportunity — only drop true low-signal off-topic noise):\n' + gapsText + '\n\n' +
   'HARD RULES:\n' +
-  '- Only return things you ACTUALLY OBSERVED in real tool output. Never invent repos/stars from memory.\n' +
+  '- Only return things you ACTUALLY OBSERVED in real tool output. Never invent repos/stars from memory. VERIFY a repo actually exists before returning it.\n' +
+  '- Do NOT return closed-source / proprietary platform built-in features (e.g. Claude Code managed settings / built-in flags) as candidates — they have no installable artifact and are not adoptable.\n' +
+  '- gh search repos AND-joins terms → use SINGLE-keyword or ≤2-word queries (loop per term); 3+ word queries silently return [].\n' +
   '- 热度 ≠ 适配：do NOT rank by raw star count. Prefer multi-signal: recency (pushed within the source freshness window), forks/dependents (real adoption, not just stars), maintenance. Record what you saw in "signals".\n' +
-  '- For each candidate: set gap_id to the OPEN gap it fills, dimension to that gap\'s surface dimension, reuse_mode per the source, fit_score 0-3 (3 = directly fills that gap).\n' +
+  '- For each candidate: set gap_id to the OPEN gap it fills (or "none" for an opportunity), dimension to its surface dimension, reuse_mode per the source, fit_score 0-3 (3 = directly fills that gap).\n' +
   '- Drop anything already covered by EXISTING (below) unless demonstrably better.\n' +
   '- For web pages, FIRST run ToolSearch with query "select:WebFetch,WebSearch" then use them. Bash has `gh` (authenticated) and `npx`.\n\n' +
   'EXISTING (drop dupes early; non-redundancy is hard-gated downstream): ' + [...existingNames].join(', ') + '\n'
@@ -207,7 +209,7 @@ function channelPrompt(src) {
   let method = ''
   const m = (src.discovery && src.discovery.method) || ''
   if (m === 'gh-search') {
-    method = 'CHANNEL METHOD = gh repo search. Run `gh search repos "<q>" --sort stars --limit 30 --json fullName,stargazersCount,forksCount,description,url,updatedAt,pushedAt` for each query in discovery.queries. KEEP ONLY repos pushed within ' + window + ' months (recency filter). Capture forks (real adoption) not just stars into "signals".'
+    method = 'CHANNEL METHOD = gh repo search + hub deep-dive. (a) Run `gh search repos "<q>" --sort stars --limit 30 --json fullName,stargazersCount,forksCount,description,url,updatedAt,pushedAt` for EACH query in discovery.queries SEPARATELY (do not concatenate terms). KEEP repos pushed within ' + window + ' months. (b) Then deep-dive EACH hub in discovery.hubs: `gh api repos/OWNER/REPO --jq "{stars:.stargazers_count,forks:.forks_count,pushed:.pushed_at,desc:.description}"` + enumerate members via `gh api "repos/OWNER/REPO/git/trees/HEAD?recursive=1" --jq ".tree[].path"`, pick standout skills/patterns (these big skill collections were under-surfaced before). Capture forks (real adoption) not just stars into "signals".'
   } else if (m === 'webfetch-diff') {
     method = 'CHANNEL METHOD = official-platform diff. Load WebFetch, fetch each url in discovery.targets (Anthropic docs/changelog/cookbook, MCP). Identify NEW or recently-changed platform CAPABILITIES (new hook events, plugins, subagent features, MCP servers) within ' + window + ' months. These are reuse_mode=install or adapt-idea; repo = the canonical repo/url; map each to the gap_id its capability would fill. This source is authority=official: low noise, but still must map to an OPEN gap.'
   } else if (m === 'known-hub-deepdive') {
@@ -236,21 +238,26 @@ log('Discovery: ' + raw.length + ' raw candidates across ' + sources.length + ' 
 // ── merge + dedup（drop existing names/repos + 无 open gap 的早删）──────────────
 raw.sort((a, b) => (b.fit_score || 0) - (a.fit_score || 0))
 const norm = s => String(s || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]/g, '')
-const seen = new Set(); const perRepo = {}; const deduped = []
-let droppedExisting = 0, droppedNoGap = 0
+const seen = new Set(); const perRepo = {}; const deduped = []; const opportunities = []
+let droppedExisting = 0
 for (const c of raw) {
   const repo = String(c.repo || '').toLowerCase()
   const nm = norm(c.name)
   if (!repo) continue
-  if (!c.gap_id || c.gap_id === 'none' || !openGapIds.includes(c.gap_id)) { droppedNoGap++; continue } // gap_addressed 预筛
   if (existingRepos.has(repo) || existingNames.has(nm) || existingNames.has(String(c.name || '').toLowerCase())) { droppedExisting++; continue }
   const key = repo + '#' + nm
   if (seen.has(key)) continue
+  seen.add(key)
+  if (!c.gap_id || c.gap_id === 'none' || !openGapIds.includes(c.gap_id)) {
+    // 不静默丢：高信号无 gap → 机会项（人审是否开新 gap），轻量持久化、不进严格 verify
+    if (opportunities.length < 10) opportunities.push({ name: c.name, repo: c.repo, url: c.url, dimension: c.dimension, reuse_mode: c.reuse_mode, source_id: c.source_id, why_notable: c.one_line_value, signals: c.signals || '' })
+    continue
+  }
   if ((perRepo[repo] || 0) >= 4) continue
-  seen.add(key); perRepo[repo] = (perRepo[repo] || 0) + 1; deduped.push(c)
+  perRepo[repo] = (perRepo[repo] || 0) + 1; deduped.push(c)
 }
 const shortlist = deduped.slice(0, MAX_VERIFY)
-log('Deduped: ' + deduped.length + ' unique (dropped ' + droppedExisting + ' existing, ' + droppedNoGap + ' no-open-gap); verifying ' + shortlist.length)
+log('Deduped: ' + deduped.length + ' gap-mapped (dropped ' + droppedExisting + ' existing); ' + opportunities.length + ' opportunities (no-gap, surfaced for review); verifying ' + shortlist.length)
 
 // ── Phase Verify：对抗式、证据落地核验（含 gap_addressed + provenance 新硬门）──
 function verifyPrompt(c) {
@@ -349,7 +356,7 @@ return {
     raw: raw.length, unique: deduped.length, verified: judged.length,
     approved: approved.length, conditional: conditional.length,
     rejected: rejected.length + killed.length, killed_by_redteam: killed.length,
-    dropped_existing: droppedExisting, dropped_no_gap: droppedNoGap,
+    dropped_existing: droppedExisting, opportunities: opportunities.length,
   },
   source_yield: sourceYield,
   gaps_covered: gapsCovered,
@@ -357,6 +364,8 @@ return {
   approved: approved.slice(0, TOP_DIGEST),
   approved_overflow: approved.slice(TOP_DIGEST),
   conditional,
+  opportunities,  // 高信号无 gap → 人审是否开新 gap（恢复"借鉴"能力，非自动采纳）
   killed: killed.map(k => ({ name: k.name, repo: k.repo, gap_id: k.gap_id, reason: k.redteam.reason })),
-  rejected_summary: rejected.map(r => ({ name: r.name, repo: r.repo, gap_id: r.gap_id, reasons: r.reject_reasons || [], redundant_with: r.redundant_with })),
+  // 持久化结构化裁决（对抗裁判认定的真 delta）：hard{} + weighted + scores 落进可复查产物
+  rejected_summary: rejected.map(r => ({ name: r.name, repo: r.repo, gap_id: r.gap_id, weighted_score: r.weighted_score, hard: r.hard, scores: r.scores, reasons: r.reject_reasons || [], redundant_with: r.redundant_with })),
 }

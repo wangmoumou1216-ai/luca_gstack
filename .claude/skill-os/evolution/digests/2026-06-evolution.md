@@ -4,7 +4,26 @@
 > 运行: framework-evolution-scout（24 agents / 278 tool-uses / ~12min；2026-06-21）
 > 红线: 热度≠适配——star 只是发现先验，录取要 fit-to-gap + 跨源收敛 + 过硬门
 
-## 结论：本期 0 录取（APPROVED 0 / CONDITIONAL 0）—— 门禁严格的体现，非发现失败
+## 🔁 公平复跑(v2，2026-06-21)——修源+双层 gap 后
+
+> 触发:独立审计纠正(4/6 gap 自关→首轮 0 是数学必然) + 用户点破源洞(superpowers 234k/codegraph 52k 首轮全漏)。
+> 改:源扩面+skill 合集 hub、4 open gap(含应用作业层 GAP-design-methodology-review + 框架自维护 GAP-fusion-impact-automation)、opportunities 不静默丢、provenance 前置门、持久化结构化裁决。
+
+**发现层已修好(你的质疑被实证回应)**:跨**两层**都打中——
+| 候选 | 层 | gap | star/fork | license | 复用 | 临时裁决(主 agent 内联,非对抗 verify) |
+|---|---|---|---|---|---|---|
+| **CodeGraph** colbymchenry/codegraph | 框架 | fusion-impact-automation | 52486 / 3197 | MIT | install(MCP) | **采纳-下游/自仓可选**:真采纳,自动代码图谱>手写 fusion-preflight;但自仓小(md/yaml)边际,下游代码项目强 |
+| **pm-skills** phuryn/pm-skills | **应用作业** | design-methodology-review | 20230 / 2055 | MIT | adapt-idea | **借鉴(作业层赢点)**:SKILL.md 合集(create-prd/OST/assumption-testing),吸收方法论进 /brainstorm /idea /ux-audit;与现有 Socratic 流水线部分冗余→挑着吸,不整装 |
+| **cupcake** eqtylab/cupcake | 框架 | soft-enforcement | 271 / 23 | Apache-2.0 | port-pattern | **仅借范式**:policy-as-code 对口,但重(Rust+Rego)+采纳低+Rego 编码不了语义规则(Plan-Agent/research-default 需 LLM 判断) |
+| **agent-starter** raintree-technology/agent-starter | 框架 | routing-fragmentation | 80 / 9 | MIT | port-pattern | **仅借范式**:agent.json 单清单→生成各 config 是 routing-frag 的对症解,但 80★ 低采纳→搬范式不依赖 |
+
+**verify 层基础设施失败(诚实)**:12 个 verify agent 全因 Claude session limit 阵亡(resets 21:10 Asia/Shanghai)→ `verified:0` 是基础设施失败**不是**"没料"信号。上表是主 agent 内联临时裁决(gh 元数据+license+结构+fit),**完整对抗 verify(逐脚本 base64 安全扫 + 推荐红队)待 limit 重置后 resume**(发现 agent 已缓存,resume 便宜)。
+
+**结论**:扩面+公平棋盘后,前沿对你这几个 gap **真有料**——2 个真采纳/借鉴(CodeGraph 框架、pm-skills 应用)+ 2 个借范式。**首轮的"0"既是 rigged 棋盘也是源洞,现已证伪。**
+
+---
+
+## 首轮(v1)结论：本期 0 录取（APPROVED 0 / CONDITIONAL 0）—— 门禁严格的体现，非发现失败
 
 发现 21 → 去重 19 → 核验 19 → **全部 REJECTED**（0 红队击杀：无候选达 APPROVED）。原因分两类：
 

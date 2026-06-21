@@ -34,8 +34,12 @@ sources:
     authority_tier: raw-search          # 裸搜索：信任最低、甄别最严
     discovery:
       method: gh-search
-      queries: ["claude skill", "claude-code subagent", "claude code agents", "agent skills"]
+      # ≤2 词/查询（gh 多词 AND 合并致空）；首轮漏了 codegraph(52k)/mcp 类，故扩面
+      queries: ["claude skill", "claude subagent", "claude code", "agent skills", "agentic skills",
+                "code graph", "knowledge graph", "claude mcp", "claude hook"]
       sort: stars
+      # skill 合集 hub deep-dive：首轮漏了 obra/superpowers(234k)
+      hubs: [obra/superpowers, anthropics/skills, vercel-labs/agent-skills, wshobson/agents, VoltAgent/awesome-claude-code-subagents]
       also: [skills.sh leaderboard, "npx skills find", awesome-claude-code lists]
     freshness_window_months: 18
     discrimination:                     # S1 专属甄别链条（是否为我所用）
