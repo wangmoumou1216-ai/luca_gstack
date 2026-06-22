@@ -170,9 +170,11 @@ def _sync_claude_md_fallback(fact_id: str, domain: str, fact: str) -> None:
     marker = "> 维护规则："
     if marker not in content:
         return
+    allow = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
+    allowed = {ln.split("#", 1)[0].strip() for ln in allow.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()} if allow.exists() else set()
     new_line = f"- [{fact_id} / {domain}] {fact}\n"
-    # 避免重复插入
-    if fact_id in content:
+    # 避免重复插入；非白名单(宪法级/红线)事实不进每-session SF（只留 promoted-facts.yaml 走 search）
+    if fact_id in content or fact_id not in allowed:
         return
     content = content.replace(marker, new_line + "\n" + marker)
     claude_md.write_text(content, encoding="utf-8")

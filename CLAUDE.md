@@ -235,85 +235,23 @@ python3 memory/scripts/propose_semantic.py \
 
 ### 关键约束速查（Static Fallback — 脚本失败时此节仍有效）
 
-> 以下为 semantic memory 的静态副本，脚本可用时以 promoted-facts.yaml 为准；
-> 脚本不可用时此节优先。
+> 本节为 semantic memory 的**关键子集**（宪法级：品牌锁 / framework 只读 / 架构 / 红线），
+> 由 `memory/semantic/static-fallback-allowlist.txt` 白名单管控、每 session 注入；脚本失效时此节优先。
+> **完整稳定事实见 `promoted-facts.yaml`，按需 `search_memory.py` 检索——niche 操作型事实不进本节。**
 
 - [SF-001 / crm] 纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25
 - [SF-002 / fxui] HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改
-- [SF-003 / workflow] Skill-first, Graph-optional 架构：每个 skill 默认 standalone 可用，
-  Workflow 仅在用户主动选择流程时启用
-- [SF-004 / fxui] FxUI 组件库基于 framework/ 母版：list-page、detail-2col、detail-3col、
-  form-page、home-page 五种布局
-- [SF-005 / crm] 纷享销客产品设计场景四类：A=新功能、B=已有功能优化、
-  C=线上评审改版、D=Agent化改造
-
-- [SC-20260520-002 / skill-rule] brainstorm: 苏格拉底拷问顺序必须从用户目标出发，
-  不得从技术方案出发
-
-- [SC-20260522-001 / skill-rule] task-plan: Phase 6 任务卡必须包含「读取清单」字段，将每个来源节点（REQ/STATE/DEC）映射到原始文档的具体节路径；plan-agent U-block 必须携带 Read List；WA 执行时定向读指定节，不读全文，发现矛盾触发 NEEDS_CONTEXT
-
+- [SF-003 / workflow] Skill-first, Graph-optional 架构：每个 skill 默认 standalone 可用，Workflow 仅在用户主动选择流程时启用
+- [SF-004 / fxui] FxUI 组件库基于 framework/ 母版：list-page、detail-2col、detail-3col、form-page、home-page 五种布局
+- [SF-005 / crm] 纷享销客产品设计场景四类：A=新功能、B=已有功能优化、C=线上评审改版、D=Agent化改造
 - [SC-20260523-001 / crm] CRM objects use stable IDs
-
 - [SC-20260523-002 / skill-rule] route-guard: 老项目/已有项目/继续项目必须先触发 Project Gate，列出或确认项目；不得直接解释为场景B已有功能优化或进入单个 skill
-
 - [SC-20260523-003 / skill-rule] memory: 稳定事实不得直接写 promoted-facts.yaml；必须先写 semantic candidate，经过 consolidate/review 的 promotion_ready 门禁后才能晋升；普通启动只用 summary/search，治理时才运行 consolidate_memory.py --json
 
-- [SC-20260612-002 / skill-rule] skill-execution subagent: .claude/workflow-state.yaml symlink 对 subagent 写入受保护，skill 内部更新节点状态须直写项目真实路径 ~/Desktop/项目/<名>/.luca/workflow-state.yaml
-
-- [SC-20260612-003 / skill-rule] orchestrator: 派发 skill_execution subagent 前，SKILL.md 中声明的用户选择参数（如 deepresearch research_depth 档位）必须先在主会话向用户询问，并将选择注入 WA prompt；headless subagent 无 AskUserQuestion 通道，不得让 skill fallback 替用户选档
-
-- [SC-20260612-004 / skill-rule] orchestrator/skill 收尾: 长 session 中若有并行 Claude session 启动，session-restore 会清掉三条项目软链（docs/workflow-state/current-topic），后续 Write 会把 docs 重建成实体目录导致产出落错位置；重型 skill 写 handoff 前必须先跑 npm run check:project-links 验证软链，FAIL 则先 project.sh switch 重建
-
-- [SC-20260614-001 / skill-rule] open-design: headless /api/chat 出图依赖 OD 自己 spawn 的 Claude Code 子进程，该子进程环境易坏（profile/CLAUDE_CONFIG_DIR 不对→子进程提前退出；或 daemon 中途重启 SIGTERM；或内层 narrate 完成但 tool_use 仅1次、index.html 不落盘）。诊断口径：流日志 event:end status=failed/canceled，或 files 接口只有 brief.md 无 index.html。重试上限~2次后不再硬重试，降级路径=让用户在 OD 桌面端手动生成（项目+brief.md+DS 绑定已就绪，桌面端走本机已登录会话绕开坏子进程）再说'拉回来'走 recover
-
-- [SC-20260621-002 / skill-rule] FUSION-RUNBOOK 落地: 目标文件分支 WIP 为删除/精简型时,checkout-HEAD+reapply 干净抽离会复活已删行(反噬)→fusion 编辑留 live 随 WIP 提交,或用 git add -p / git stash -p 逐 hunk 抽离;仅纯新增型 WIP 可整文件抽离单独提交。(fusion landing 专属,非通用 git 规则)
-
-- [SC-20260621-003 / skill-rule] 外部能力 vetting 的 compatibility 门必须按候选 reuse_mode 分支判定:install-as-MCP/tool/npm/CLI 只验真实可装+wire as MCP/tool(不强求 SKILL.md);install-as-skill/subagent 才需 valid frontmatter+droppable;port-pattern/adapt-idea 验 pattern 可抽离不拖整框架。缺分支的 skill-centric 门会系统性误拒所有 MCP/工具候选(2026-06-21 CodeGraph 52k/cupcake/sem 三连被误拒)。
-
-- [SC-20260621-004 / skill-rule] 采纳/融合外部能力:'记录采纳'≠'能力可达'。每个采纳须在 luca 顶层验证'对应场景能否实际路由/调用到'(skill→routing-map invoke;MCP→session-connect+skill body 引用 mcp__*),否则是 orphan。验收门必须含可达性检查,不止文件落地
-
-- [SC-20260527-002 / skill-rule] design-brief 非 CRM 项目三点守卫：当激活项目与纷享销客 CRM 无关时，design-brief 执行前必须显式确认三项——① 产出/追加目标是否为当前项目 docs/，不得写入 luca_gstack 全局 CONTEXT.md（环境/项目剥离）；② 品牌色和原型承载方式不默认 #FF8000 / framework 母版 / shadcn，需按项目性质显式选择（如 standalone HTML 全自绘）；③ Phase 6 承载方式 AskUserQuestion 必须出现，不得静默继承 CRM framework 选项。判断信号：PRD/需求与纷享销客 CRM 无关。
-
-- [SC-20260527-003 / skill-rule] html-prototype verify-prototype.mjs 的颜色/字号/灰度/蓝色 lint（第 72-76 行）全部基于 Tailwind utility class 正则匹配（bg/text/border-blue-*、text-xs/sm/base/…、bg/text/border-gray-*）；纯内联 CSS 或 CSS 变量写法不含这些 class，lint 不会误报——非 CRM 独立原型使用自有色板时无需规避，静态 lint 天然 PASS。
-
-- [SC-20260601-002 / skill-rule] 改 skill 指令/schema 的改动，静态门禁(verify.sh)+独立对抗复核可能全 SHIP 但实际 LLM 行为无变化。验证 prose 指令是否真改变行为须做行为级 A/B（behavioral_ab.py）：旧指令 vs 新指令在 Sonnet（guided-execution 钉档，非 Opus/Fable；非 Sonnet→BLOCK）上跑真实日志输入（eval-log/episodic 优先，不可用时降级合成）对比两臂；A/B prompt 必须中性，framing 暗示答案会污染控制臂。
-
-- [SC-20260605-002 / tech] Claude Code Stop hook 实现"强制主 Agent 结束前完成提取"的关键模式：hook 返回 {decision:block, reason:<指令文本>} 即可让 CC 在结束前把 reason 注入 Agent 执行；安全必备三要素：① 三重防循环（stop_hook_active 标志 + 每 session marker 文件 + 环境变量 kill-switch） ② 任何异常 fail-open（try/catch 全包，异常则不输出 JSON、exit 0，绝不卡住 session 结束） ③ 拦截路径 stdout 必须是纯 JSON，不得混入任何文本（否则 CC 解析 decision 失败）。
-
-- [SC-20260607-001 / tech] figma use_figma 写 CJK 文本前必须先 listAvailableFontsAsync 探查可用字体，不得假设 PingFang SC 存在（macOS Figma 沙箱字体库因环境不同可能为空）；Inter 默认字体不支持简体中文会渲染成豆腐块；应按优先级探查 'Noto Sans SC'、'PingFang SC' 等 CJK 字体族，取第一个有 styles 的执行 loadFontAsync 后再 setCharacters。
-
-- [SC-20260607-002 / workflow] 向用户已有的大 Figma 画布写入新节点时：(1) 优先将节点放置在用户 URL node-id 所指区域附近，勿甩到画布最右侧空白处；(2) 写完后主动返回带 node-id 的跳转链接（figma.com/design/<key>/<name>?node-id=A-B）。Figma 写入后不自动移动视野，若节点位置偏离用户当前视口，用户将无法直接看到新节点，易误判写入失败。
-
-- [SC-20260607-003 / workflow] Agent 门禁/评审/外部资源推荐 workflow 的可复现设计：评分 rubric 与最终裁决用确定性代码写在 orchestrator/workflow（adjudicate()），agent 只做取证+逐维打分；硬门禁（安全/兼容/非冗余）任一 FAIL 即拒、与软加权分解耦，裁决才可复现。非冗余门禁必须把「用户已有能力清单」喂给 verifier，否则会推荐已内置的能力。外部仓库星标/提交时间/license 由 verifier 用 gh/web 实测并带时间戳，禁用训练记忆（随知识截止漂移）。
-
-- [SC-20260607-004 / skill-rule] luca_gstack 外部 skill 集成分两通道：① 工程类（systematic-debugging / tdd 等触发词干净、无品牌面）→ 进 skill-routing-map.yaml builtin_skills，窄触发词 weight:7；route-guard skillDecision 用 text.includes(整词) 精确匹配，softSkillDecision 的 len≥3 滑窗仅在无精确命中时兜底。② brand-blind 设计类（ui-ux-pro-max / extract-design-system / design-system-architect）→ 绝不进 route-guard（其触发词会劫持设计管线），改在 observability/rules.yaml 加 scoped 规则（scope.skills 用连字符 skill 名），经各 office skill preamble 的 get_rules.py 在对应节点注入"绑定 + 品牌锁"。适用范围：任何新外部 skill 集成时的通道决策。
-
-- [SC-20260607-006 / skill-rule] rules.yaml skill 绑定两条持久审计规则：①scope.skills 绑定后必须逐 skill 验证可达性——grep 该 SKILL.md 是否有 get_rules.py preamble 调用，无法消费的委托型 skill（如外部插件）须移出 scope 改由上游 skill 在产物 packet 中带入规则；②SKILL.md 章节引用不得用 §N 序号（模板无编号时序号全靠猜，实测偏移 ±1），一律改按章节名引用。
-
-- [SC-20260608-001 / workflow] 调研「原生移动App真实UI」（非响应式web）时，静态 curl 对应用商店/APK镜像不可靠：Apple App Store 页 curl 会混入邻位推荐App的图，Play/Uptodown 直链JS门控，apkcombo/APKPure 被 Cloudflare/403 拦。可靠取证三路=① web-access CDP 浏览器驱动商店真实gallery+apkmirror下载流 ② APK解包+jadx反编译看真实screen/导航/string结构 ③ 真实演示录屏 ffmpeg 抽帧。响应式 web≠原生交互，不可作原生移动端调研代源。
-
-- [SC-20260609-002 / workflow] 用 OD/headless 生成「带 {{变量}} 占位符的模板」时,别直接让 OD 渲染占位符字面量(它会画丑框或自作主张修正)。正确两步:先喂真实示例内容让 OD 生成填满版 HTML(OD 负责视觉规范=布局/品牌色/排版),再把真实内容挖回 {{变量}} 得到模板。信息架构(章节大纲+每槽类型:标量 vs 区块组件+固定文案)必须人工先定义,OD 猜不出。
-
-- [SC-20260609-003 / skill-rule] 跨多 skill 的 HTML/UI 规范必须分两层：① 视觉层（颜色/字号/间距/品牌）走中心继承——brand-tokens.md + framework/tokens.css + office/SKILL.md 品牌与技术约束节——禁止逐 skill 复制（会漂移，违反 DRY），不得新建专门"规范 skill"；② 内容结构层（每个报告/产出的章节骨架与占位变量）天生 per-skill，各 skill 自带 references/ 或 templates/ 子目录存放模板文件（格式按产出类型：md 模板或 html 模板均可），先例：figma-demo/templates/demo-template.html（HTML）、deepresearch/references/report-template.md（md）。通用 skill 无法预知每个报告的内容结构，专门规范 skill 属错误耦合。
-
-- [SC-20260610-001 / skill-rule] figma-layer 路由边界：该 skill 仅适用于「已有 HTML 原型（来源：html-prototype / figma-demo / open-design）一比一还原到 Figma」；用户要求独立设计直接写入 Figma（无上游 index.html）时不走 figma-layer，改走 figma-generate-design / figma-use。routing-map 含裸词「Figma」触发器，存在结构性误命中风险；执行前必须 pre-flight 核查 docs/prototype/*/index.html 是否存在，不存在则拒绝路由并提示用户先出原型或改用独立设计 skill。
-
-- [SC-20260612-001 / skill-rule] skill-os 文档拆分判据：外移收益取决于模板使用时机——「执行到 Phase N 才加载」的外移有真实跳过收益（brainstorm/ux-brainstorm/design-brief Phase-gated 模板均属此类）；「读完主文件立刻全用」的外移是零收益改加载顺序+多一次工具调用（plan-agent 出计划模板即此类，已在 2026-06-11 拆分审计中确认暂缓）。提任何文件拆分候选前先核使用时机。
-
-- [SC-20260615-001 / skill-rule] memory: daily_governance 晋升是两步解耦流程——surfacing（digest 超期提醒）自动运行，drain（实际晋升）须人工显式触发：先运行 `python3 memory/scripts/consolidate_memory.py --set-stable <id1> [<id2>...]` 把候选 proposed_stable 置 True，再由 promotion_ready() 门禁（proposed_stable=True + confidence=high + 非冗余 + 非超期）放行晋升。不经 --set-stable 的候选无论滞留多久都不会被 daily loop 自动晋升。
-
-- [SC-20260615-002 / skill-rule] loop-engineering: luca_gstack 定位为 HARNESS（非 Loop）。广义自主 loop（cron 工作发现 / run-while-you-sleep / 自动验证到绿）对其设计主域是净负：发散品味域无 green-test oracle → verification collapse，与人在环安全模型相悖。worktrees 经对抗评估后刻意拒绝。唯一正向例外：会话内有界 oracle-gated evaluator-optimizer，已实例化为 handoff-review auto-revise-once（cap=1；含 taste 项或节3失败即跳过交人；绝不二次循环）。再遇"给 gstack 加 automation/loop/worktree"提案，直接引用此判定，无需重跑全评估。
-
-- [SC-20260616-002 / skill-rule] spawn claude -p（无人值守/定时/子进程调用）必须在执行环境中携带正确的 USER=<真实用户名>（如 USER=luca），否则回退到 API-credit 账户报 'Credit balance is too low'(exit 1)。launchd、env -i、子进程剥离环境等场景均可触发此问题。解法：显式在 plist EnvironmentVariables / env 注入 USER=真实用户名；LOGNAME 不顶用。注意 launchd 还有独立的 TCC/EPERM 障碍（~/Desktop 需 Full Disk Access），与认证无关。
-
-- [SC-20260616-003 / skill-rule] claude -p 的 Max 订阅认证（凭证在 macOS Keychain）在任何 GUI 登录会话进程中均可用——Finder 双击 / osascript do-shell-script / Electron app 启动皆可——只要进程环境保留 PATH+HOME。真正失因是 env 被剥光（env -i、裸 launchd）破坏安全会话与 Keychain 的关联，而非 GUI-vs-终端的区分。Electron 封装 claude -p 完全可行：主进程启动时用 `$SHELL -ilc 'printf %s "$PATH"'` 抓取登录 shell 的 PATH 注入 `process.env.PATH`，spawn 的 claude 进程即可继承并走订阅认证。
-
-- [SC-20260616-004 / skill-rule] Electron app 打包(asar)后 __dirname 指向只读的 app.asar 内部——任何运行时写盘(缓存/日志/状态/诊断文件)若用 path.join(__dirname,...) 会抛 ENOTDIR/EROFS。所有写路径必须用外部绝对路径(项目目录 / app.getPath('userData') 等);仅 dev 用的诊断模式要用 !app.isPackaged 守卫。额外坑:写盘崩若未捕获会让进程不 quit → 残留僵尸实例占住 macOS 单实例锁,导致用户双击应用'打不开'(pkill + open -n 可解)。
-
-- [SC-20260621-005 / skill-rule] 护栏/guardrails 必须按属性非按文件名:任何 cleanup/死代码/legacy 算子对 fail-open catch 块或有意 fallback 的保护,须按结构属性匹配(catch 体仅 exit(0)/return/静默放行,或函数/邻近注释含 fail-open|绝不卡住|Static Fallback|兼容语义|档位回退),绝不按具名文件清单——具名清单会静默放过同属性但未列名的代码(如 memory/scripts/*.py 的 fail-open except)
-
-> 维护规则：每次 promoted-facts.yaml 新增一条 stable fact，
-> 同步在此节追加一行，格式 `- [ID / domain] 内容`。
+> 维护规则：本节只镜像 `static-fallback-allowlist.txt` 白名单内的宪法级/红线事实。新晋升的 stable
+> fact **默认只入 promoted-facts.yaml（search-only），不自动进本节**；三个 sync 写入口
+> （consolidate/review/propose）均按白名单门控。要让某事实进每-session SF，须人工把其 id 加入白名单
+> （改白名单 = 改每 session context 注入面，慎重）。
 
 > 详细脚本用法见 memory/README.md
 

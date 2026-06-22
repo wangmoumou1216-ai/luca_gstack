@@ -50,6 +50,19 @@ def main() -> int:
             if "..." in text.splitlines():
                 errors.append(f"{fact_id}: contains YAML document marker in fact text")
 
+        # Static Fallback 白名单一致性（防漂移）：白名单 ⊆ promoted ids；CLAUDE.md SF ⊆ 白名单
+        import re
+        allowlist_path = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
+        if allowlist_path.exists():
+            allow_ids = {ln.split("#", 1)[0].strip() for ln in allowlist_path.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()}
+            for aid in sorted(allow_ids - seen):
+                errors.append(f"static-fallback-allowlist: {aid} 不在 promoted-facts.yaml")
+            claude_md_path = ROOT / "CLAUDE.md"
+            if claude_md_path.exists():
+                sf_ids = set(re.findall(r"^- \[([A-Z0-9-]+) /", claude_md_path.read_text(encoding="utf-8"), re.M))
+                for sid in sorted(sf_ids - allow_ids):
+                    errors.append(f"CLAUDE.md SF: {sid} 不在白名单（SF 须为白名单子集）")
+
     if errors:
         print(json.dumps({"status": "FAIL", "errors": errors}, ensure_ascii=False, indent=2))
         return 1

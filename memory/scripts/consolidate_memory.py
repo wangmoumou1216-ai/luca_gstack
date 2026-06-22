@@ -403,7 +403,10 @@ def sync_claude_fallback(candidate: dict) -> None:
     content = claude_md.read_text(encoding="utf-8")
     marker = "> 维护规则："
     fact_id = str(candidate.get("id", ""))
-    if marker not in content or not fact_id or fact_id in content:
+    allow = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
+    allowed = {ln.split("#", 1)[0].strip() for ln in allow.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()} if allow.exists() else set()
+    # 非白名单(宪法级/红线)事实不镜像进每-session SF；只留 promoted-facts.yaml 走 search_memory
+    if marker not in content or not fact_id or fact_id in content or fact_id not in allowed:
         return
     new_line = f"- [{fact_id} / {candidate.get('domain', '')}] {candidate.get('fact', '')}\n"
     claude_md.write_text(content.replace(marker, new_line + "\n" + marker), encoding="utf-8")
