@@ -140,6 +140,7 @@ When executing a task, keep the operating prompt explicit and bounded:
   - Scene A: new feature design.
   - Scene B: existing feature optimization.
   - Scene C: online page review and redesign.
+  - Scene D: agent-ification — turn an existing manual feature into user-supervised agent operation.
 - State assumptions only when they affect output or risk.
 - Ask at most one necessary blocking question at a time.
 - Prefer concrete file paths, module names, and output names over vague descriptions.
@@ -531,7 +532,7 @@ At the start of a task, silently check:
 [ ] If workflow-related, read .claude/skills/office/SKILL.md.
 [ ] If slash-command-like, read .claude/commands/<command>.md.
 [ ] If skill-like, read .claude/skills/office/<skill>/SKILL.md.
-[ ] Identify scene A/B/C if relevant.
+[ ] Identify scene A/B/C/D if relevant.
 [ ] Identify output path before writing.
 [ ] Verify after writing.
 ```
