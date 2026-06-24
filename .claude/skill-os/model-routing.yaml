@@ -32,7 +32,7 @@ tiers:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的执行与审查（默认档）
     skills: [idea, ux-research, ux-audit, open-design, figma-demo, html-prototype,
-             challenge, taste-review, design-review, handoff-review]
+             challenge, taste-review, design-review, handoff-review, code-hygiene]
 
   mechanical:
     resolves_to: haiku

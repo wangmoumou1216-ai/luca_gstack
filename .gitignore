@@ -102,6 +102,8 @@ memory/semantic/reviews.jsonl
 memory/retrieval-log.jsonl
 # Daily governance digests — regenerated from memory state each day
 memory/digests/
+# Monthly framework-evolution HTML reports — generated visual artifacts (evolution/digests/*.md is the tracked truth)
+.claude/skill-os/evolution/report-*.html
 # Observability — runtime data, regenerated each session
 .claude/observability/pending-extraction.md
 .claude/observability/run-log.jsonl

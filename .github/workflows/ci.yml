@@ -15,8 +15,9 @@ jobs:
       - name: Install yamllint
         run: pip install yamllint
       - name: Lint YAML files
+        # .claude/workflow-state.yaml is a local-only gitignored symlink (absent on
+        # clean runners) — lint only committed framework yaml, never the symlink.
         run: |
-          yamllint -d relaxed .claude/workflow-state.yaml
           yamllint -d relaxed .claude/skill-os/optional-workflow-graph.yaml
           yamllint -d relaxed .claude/skill-os/input-modes.yaml
 
