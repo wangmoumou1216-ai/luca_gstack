@@ -16,9 +16,9 @@ final line when a task depends on it. -->
 ## Routing Contract TL;DR
 
 1. Project Gate first: 老项目 / 已有项目 / 继续项目 → 先确认或切换项目。
-2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 4条件；满足任一不得直接执行。**
+2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 5条件；满足任一不得直接执行。**
 3. Ambiguity third: 多候选 → 问用户，不自行判断。
-4. Single skill last: 只在高置信且不触发 Plan Agent 4条件的前提下调用 skill。
+4. Single skill last: 只在高置信且不触发 Plan Agent 5条件的前提下调用 skill。
 5. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
 
 ---
@@ -433,10 +433,10 @@ Layered routing order:
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6), or `PLAN CHECK`
    (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/auto`, `/figma-demo`),
-   or the hit skill is known to satisfy any of the Plan Agent 4 conditions,
+   or the hit skill is known to satisfy any of the Plan Agent 5 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
-   high-confidence single-skill hit, still check the Plan Agent 4 conditions; if any holds, do not
-   execute the skill directly. The Plan Agent 4 conditions (任一满足即触发):
+   high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not
+   execute the skill directly. The Plan Agent 5 conditions (任一满足即触发):
    - The task creates or modifies ≥ 3 files.
    - The task needs ≥ 2 independent subagents collaborating.
    - The task has an explicit phase dependency (B must wait for A).

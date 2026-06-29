@@ -303,4 +303,37 @@ function runRouteGuard(cwd, prompt) {
   console.log('PASS search_memory --project 作用域过滤有区分性（含历史记录 topic 兜底）');
 }
 
+// ── POST-EDIT：自成长「活动信号」Writer —— edit-count 仅文件编辑工具递增、
+//    tool-count 任何命中工具递增、framework/ 编辑触发只读警告（此前该 Writer 零覆盖）──
+{
+  const peHook = resolve(projectRoot, '.claude/hooks/post-edit.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-postedit-'));
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  const readCount = (f) => {
+    const p = join(root, '.claude', f);
+    return existsSync(p) ? parseInt(readFileSync(p, 'utf8'), 10) || 0 : 0;
+  };
+  const fire = (toolName, filePath) =>
+    runNode(peHook, root, {
+      env: { CLAUDE_PROJECT_DIR: root },
+      input: JSON.stringify({ tool_name: toolName, tool_input: filePath ? { file_path: filePath } : {} }),
+    });
+
+  fire('Edit', join(root, 'a.txt'));
+  assert.equal(readCount('.session-edit-count'), 1, 'Edit 应使 edit-count=1');
+  assert.equal(readCount('.session-tool-count'), 1, 'Edit 应使 tool-count=1');
+
+  fire('Bash');
+  assert.equal(readCount('.session-edit-count'), 1, 'Bash 不应递增 edit-count');
+  assert.equal(readCount('.session-tool-count'), 2, 'Bash 应使 tool-count=2');
+
+  fire('Write', join(root, 'b.txt'));
+  assert.equal(readCount('.session-edit-count'), 2, 'Write 应使 edit-count=2');
+  assert.equal(readCount('.session-tool-count'), 3, 'Write 应使 tool-count=3');
+
+  const fw = fire('Write', join(root, 'framework', 'list-page.html'));
+  assert.match(fw.stdout, /framework\//, 'framework/ 编辑应触发只读警告');
+  console.log('PASS post-edit Writer：edit-count 仅文件编辑递增、tool-count 全工具递增、framework/ 警告');
+}
+
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

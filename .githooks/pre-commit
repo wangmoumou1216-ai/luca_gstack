@@ -16,7 +16,7 @@ for FILE in $STAGED_FILES; do
   [ -f "$FILE" ] || continue
 
   # 检测 Anthropic API key
-  if grep -qE "sk-ant-[a-zA-Z0-9]{40,}" "$FILE" 2>/dev/null; then
+  if grep -qE "sk-ant-[a-zA-Z0-9_-]{20,}" "$FILE" 2>/dev/null; then
     echo "ERROR: Possible Anthropic API key found in $FILE"
     FOUND_SECRETS=1
   fi
@@ -28,7 +28,7 @@ for FILE in $STAGED_FILES; do
   fi
 
   # 检测 OpenAI key
-  if grep -qE "sk-[a-zA-Z0-9]{48}" "$FILE" 2>/dev/null; then
+  if grep -qE "sk-(proj|svcacct|admin)?-?[a-zA-Z0-9_-]{32,}" "$FILE" 2>/dev/null; then
     echo "ERROR: Possible OpenAI API key found in $FILE"
     FOUND_SECRETS=1
   fi

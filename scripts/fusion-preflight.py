@@ -25,7 +25,7 @@ IMPLICIT_COUPLING = [
 GATE_SEQUENCE = [
     "④ 静态+契约：bash scripts/verify.sh + npm run check:hooks/check:routing-map/check:quality-gates/check:coding-discipline/check:self-model",
     "⑤ 漂移：npm run check:routing-map + daily_governance.check_model_routing()",
-    "⑥ 行为A/B（prose 改动必做）：behavioral_ab.py，在 Sonnet 上 baseline vs candidate",
+    "⑥ 行为A/B（prose 改动必做）：behavioral_ab.py --skill-tier <候选 skill 档：reasoning-heavy=fable/opus · guided-execution=sonnet · mechanical=haiku>，在该档上 baseline vs candidate（勿固定 Sonnet，否则给 reasoning-heavy skill 测错模型，见 GAP-behavioral-ab-tier）",
     "⑦ 对抗：preflight-agent + quality-gate(Sonnet) + redteam(Fable)",
     "⑧ 回滚就绪：git tag pre-fuse-<id> → worktree squash-merge 单提交",
     "⑨ 反馈：append adoption-log.jsonl",

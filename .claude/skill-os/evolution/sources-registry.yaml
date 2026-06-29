@@ -47,7 +47,7 @@ sources:
       - 仓龄-star 异常：created_at vs star 曲线异常 → 标记（防灌水），不自动拒
       - 真采纳深度：forks/dependents/npm downloads/issue-PR 活跃，不只看 star
       - 命中 open 缺口：映射到 gaps-register open GAP，否则不进门
-      - 非冗余：与现有 25 office skill 不重，除非明显更优
+      - 非冗余：与现有 office skill 不重，除非明显更优（数量以 self-model.generated.yaml 为准，不硬编码计数）
       - 内容实查：base64 解码读 SKILL.md 真身，验名实相符
     yield_stats: { runs: 1, surfaced: 5, approved: 0 }   # 2026-06 首跑
     status: active

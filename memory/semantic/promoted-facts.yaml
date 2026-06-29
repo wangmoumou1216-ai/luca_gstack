@@ -379,3 +379,14 @@ facts:
     reviewer: "claude"
     scope: "code-hygiene, skill-guardrails"
     tags: ["code-hygiene", "guardrails", "by-property", "cleanup", "fail-open"]
+  - id: SC-20260628-001
+    domain: skill-rule
+    fact: "worktree/branch 用法（澄清 SC-20260615-002，不取代，worktree 拒绝仍全效）：① feature-branch 是标准 git 卫生、与 worktree 无关；大项目每个大功能开分支再 merge 回主干本就该做，luca 已在用（feat/* 分支），框架无需新增能力。② git worktree（多工作树同时性）唯一用途=多 agent 同刻并行改同一代码库不争树；luca_gstack 不做 worktree 自动判断，保持 harness 层 Agent(isolation:'worktree') 手动 opt-in。理由：(a) 主域设计产出落 docs/ 本就隔离无编译冲突，代码工作外科式单线程，无并行争树需求信号；(b) 与 feedback_subagent-tool-visibility 透明度优先于并行 正面冲突——worktree 把 agent 甩进隔离树看不见；(c) 能力 harness 已即取即用，框架化=做成 automation，正是 SC-20260615-002 拒绝项；(d) 按需手动用是固化成规则前的验证门（同 FUSION-RUNBOOK propose-only 哲学）。重启评估触发线（三条全中才翻为加规则）：常态化 ≥2 agent 同刻并行改同一库 + 反复撞树靠模块切分挡不住 + 愿放宽前台内联可见偏好。"
+    confidence: high
+    stable: true
+    added: 2026-06-29
+    source: observation
+    evidence: "本 session 咨询评估：git worktree list 仅主树；plan-agent/orchestrator 用 subagent 上下文隔离+Parallel Fan-out（同树非 worktree）；FUSION-RUNBOOK 是唯一 worktree 用途（框架自我演进手动门控）；当前 git 分支 feat/memory-3way-taxonomy 证 luca 已用 feature-branch；feedback_subagent-tool-visibility.md 透明度偏好；luca 会话中拍板路径3"
+    reviewer: "luca"
+    scope: "luca_gstack 架构方向 / worktree·branch·并行实现"
+    tags: ["worktree", "branch", "architecture", "parallel-implementation", "harness", "human-in-the-loop", "transparency"]

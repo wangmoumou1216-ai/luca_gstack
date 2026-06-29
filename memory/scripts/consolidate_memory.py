@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import tempfile
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +28,26 @@ EPISODIC_ARCHIVE = MEMORY_DIR / "episodic" / "archive"
 NEGATIVE_MARKERS = ("不得", "不能", "禁止", "不应", "must not", "cannot", "can't", "not", "never")
 POSITIVE_MARKERS = ("必须", "应当", "需要", "must", "should", "required")
 POLARITY_MARKERS = NEGATIVE_MARKERS + POSITIVE_MARKERS
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    """崩溃安全写：先写同目录临时文件并 fsync，再 os.replace 原子替换目标。
+    避免 truncate→write 窗口被中断时丢失整份文件（candidates/reviews/index 被 gitignore，
+    无 git 兜底，旧 write_text 截断重写在无人值守崩溃下会静默不可逆丢队列）。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -317,6 +338,37 @@ def promotion_ready(candidates: list[dict], duplicate_ids: set[str], conflict_id
     return ready
 
 
+def awaiting_approval(candidates: list[dict], duplicate_ids: set[str], conflict_ids: set[str], decisions: dict[str, str]) -> list[dict]:
+    """候选满足全部晋升条件但 proposed_stable 仍为 False —— 即提案者已 --stable 请求晋升，
+    却未经人工闸门 consolidate --set-stable 批准。红线 SC-20260523-003：proposed_stable
+    只能由人工翻转，提案者自评不得直接晋升。本桶让"待你批准"候选在治理命令中可见，
+    供人工 `consolidate_memory.py --set-stable <id>` 放行后才进 promotion_ready。"""
+    pending = []
+    for candidate in candidates:
+        cid = str(candidate.get("id", ""))
+        if decisions.get(cid) in {"promoted", "rejected"}:
+            continue
+        if cid in duplicate_ids or cid in conflict_ids:
+            continue
+        if candidate.get("proposed_stable") is True:
+            continue  # 已批准 → 属 promotion_ready
+        if not candidate.get("stable_requested"):
+            continue  # 提案者未请求 stable
+        if str(candidate.get("confidence", "")).lower() != "high":
+            continue
+        if not has_review_metadata(candidate):
+            continue
+        pending.append(
+            {
+                "id": cid,
+                "domain": candidate.get("domain", ""),
+                "fact": candidate.get("fact", ""),
+                "reviewer": candidate.get("reviewer", ""),
+            }
+        )
+    return pending
+
+
 def noisy_episodes(episodes: list[dict]) -> list[dict]:
     queue = []
     for episode in episodes:
@@ -489,7 +541,7 @@ def set_stable(ids: list, dry_run: bool) -> dict:
         else:
             out_lines.append(raw.rstrip())
     if not dry_run and set_done:
-        CANDIDATES.write_text(("\n".join(out_lines) + "\n") if out_lines else "", encoding="utf-8")
+        atomic_write_text(CANDIDATES, ("\n".join(out_lines) + "\n") if out_lines else "")
     return {"set_stable": set_done, "already_stable": sorted(found - set(set_done)), "not_found": sorted(want - found)}
 
 
@@ -515,7 +567,7 @@ def archive_reviewed_candidates(candidate_rows: list[tuple[dict, str]], decision
             with (archive_dir / f"candidates-{year}.jsonl").open("a", encoding="utf-8") as handle:
                 for line in lines:
                     handle.write(line.rstrip() + "\n")
-        CANDIDATES.write_text(("\n".join(remaining) + "\n") if remaining else "", encoding="utf-8")
+        atomic_write_text(CANDIDATES, ("\n".join(remaining) + "\n") if remaining else "")
     return archived
 
 
@@ -538,7 +590,7 @@ def archive_noisy_episode_rows(episode_rows: list[tuple[dict, str]], noisy: list
             with (EPISODIC_ARCHIVE / f"noisy-{year}.jsonl").open("a", encoding="utf-8") as handle:
                 for line in lines:
                     handle.write(line.rstrip() + "\n")
-        EPISODIC_INDEX.write_text(("\n".join(remaining) + "\n") if remaining else "", encoding="utf-8")
+        atomic_write_text(EPISODIC_INDEX, ("\n".join(remaining) + "\n") if remaining else "")
     return archived
 
 
@@ -557,6 +609,7 @@ def build_queue() -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict],
         "conflicts": conflict_queue,
         "stale_candidates": stale_candidates(candidates, decisions),
         "promotion_ready": promotion_ready(candidates, duplicate_ids, conflict_ids, decisions),
+        "awaiting_approval": awaiting_approval(candidates, duplicate_ids, conflict_ids, decisions),
         "noisy_episodes": noisy_episodes(episodes),
         "failing_eval_patterns": failing_eval_patterns(read_jsonl(EVAL_LOG)),
         "actions": {"promoted": [], "archived": [], "archived_noisy": []},
@@ -572,6 +625,7 @@ def print_human(queue: dict, dry_run: bool) -> None:
         "conflicts",
         "stale_candidates",
         "promotion_ready",
+        "awaiting_approval",
         "noisy_episodes",
         "failing_eval_patterns",
     ):
