@@ -23,7 +23,7 @@ bump('.session-tool-count');
 
 let raw = '';
 try {
-  raw = readFileSync('/dev/stdin', { encoding: 'utf8', flag: 'r' });
+  raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
 } catch {
   // stdin 不可用（非交互式）：已记 tool-count，保守退出。
   process.exit(0);

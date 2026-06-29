@@ -21,7 +21,7 @@ function normalize(value) {
 
 function parsePrompt() {
   try {
-    const raw = readFileSync('/dev/stdin', { encoding: 'utf8', flag: 'r' });
+    const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
     try {
       const data = JSON.parse(raw || '{}');
       return String(data.prompt || data.message || '');

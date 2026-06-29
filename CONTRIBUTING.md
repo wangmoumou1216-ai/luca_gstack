@@ -45,6 +45,7 @@ bash scripts/verify.sh
 ```
 
 **示例：**
+
 ```
 feat(skill): add competitor-analysis skill
 fix(workflow): correct state recovery on session restart
@@ -82,4 +83,4 @@ docs: update CONTRIBUTING with branch naming rules
 
 - Bug 报告：使用 GitHub Issue 的 `bug_report` 模板
 - 新 skill 请求：使用 `skill_request` 模板
-- 安全漏洞：**不要**公开提 Issue，直接发邮件至 wangzixuan0828@gmail.com
+- 安全漏洞：**不要**公开提 Issue，直接发邮件至 <wangzixuan0828@gmail.com>

@@ -17,7 +17,8 @@ const dateStr = now.slice(0, 10);
 
 // ---- 读取 Stop 事件 payload（stdin）----
 let payload = {};
-try { payload = JSON.parse(readFileSync('/dev/stdin', 'utf8') || '{}'); } catch { }
+// fd 0 直读 stdin：比 '/dev/stdin' 路径在 CI runner / 非交互管道下更可移植
+try { payload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const stopHookActive = payload.stop_hook_active === true;
 const sessionId =
   (payload.session_id && String(payload.session_id).replace(/[^\w-]/g, '').slice(0, 32)) ||
