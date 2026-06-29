@@ -390,3 +390,4 @@ facts:
     reviewer: "luca"
     scope: "luca_gstack 架构方向 / worktree·branch·并行实现"
     tags: ["worktree", "branch", "architecture", "parallel-implementation", "harness", "human-in-the-loop", "transparency"]
+    provenance_note: "SC-20260523-003 人工门修复(86c481b)之前，由 daily_governance 按旧逻辑自动晋升；内容为 luca 会话内 worktree/branch 决策，经 2026-06-29 keep-vs-revert 复核后 grandfathered 保留。修复后自评候选不再自动晋升。"
