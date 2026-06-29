@@ -19,7 +19,7 @@ context-cost:
   self: 326
   runtime-estimate: 5000
   shared-refs: [none]
-  recommended-model: haiku  # 格式合规检查
+  recommended-model: mechanical  # 格式合规检查
 ---
 
 ## 执行协议

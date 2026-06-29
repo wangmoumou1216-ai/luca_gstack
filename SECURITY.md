@@ -10,7 +10,7 @@
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Please report vulnerabilities by emailing **wangzixuan0828@gmail.com**. Include the following in your report:
+Please report vulnerabilities by emailing **<wangzixuan0828@gmail.com>**. Include the following in your report:
 
 - A clear description of the vulnerability
 - Steps to reproduce the issue
@@ -48,4 +48,4 @@ This project employs the following security measures at system boundaries:
 - **Write detection for protected directories** (e.g., `framework/`) — alerts when read-only template files are modified
 - **YAML schema validation** to ensure workflow state integrity
 
-For questions about this policy, contact wangzixuan0828@gmail.com.
+For questions about this policy, contact <wangzixuan0828@gmail.com>.

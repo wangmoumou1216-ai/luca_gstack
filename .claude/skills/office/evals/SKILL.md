@@ -14,7 +14,7 @@ context-cost:
   self: 1786
   runtime-estimate: 5000
   shared-refs: [ai-native-taste-anchors]
-  recommended-model: haiku  # 基于指标打分
+  recommended-model: mechanical  # 基于指标打分
 ---
 
 ## Preamble (run first)

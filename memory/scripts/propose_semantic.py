@@ -62,7 +62,7 @@ def main() -> int:
     parser.add_argument("--fact", required=True)
     parser.add_argument("--confidence", choices=["high", "medium", "low"], default="medium")
     parser.add_argument("--source", default="observation")
-    parser.add_argument("--stable", action="store_true", help="mark candidate as proposed stable; review is still required")
+    parser.add_argument("--stable", action="store_true", help="请求晋升为 stable（仅记 stable_requested 意图）；proposed_stable 只能由人工 consolidate --set-stable 批准翻转，提案者不得自评晋升")
     parser.add_argument("--evidence", default="", help="source path, quote, or observation that supports the fact")
     parser.add_argument("--scope", default="", help="applicability scope, e.g. crm, html-prototype, scene:A")
     parser.add_argument("--reviewer", default="", help="human or agent reviewer required for proposed stable facts")
@@ -98,7 +98,10 @@ def main() -> int:
         "tags": [tag.strip() for tag in args.tags.split(",") if tag.strip()],
         "valid_until": args.valid_until,
         "supersedes": args.supersedes,
-        "proposed_stable": bool(args.stable),
+        # 红线 SC-20260523-003：提案者不得自评晋升。--stable 仅记意图，
+        # proposed_stable 只能由人工闸门 consolidate --set-stable 翻转（见 set_stable docstring）。
+        "proposed_stable": False,
+        "stable_requested": bool(args.stable),
         "status": "CANDIDATE",
     }
 
@@ -138,44 +141,6 @@ def is_duplicate(domain: str, fact: str) -> bool:
         if record.get("domain") == domain and normalize_fact(record.get("fact", "")) == needle:
             return True
     return False
-
-
-def _promote(fact_id: str, domain: str, fact: str, confidence: str, source: str) -> None:
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    fact_yaml = json.dumps(str(fact), ensure_ascii=False)
-    entry = (
-        f"  - id: {fact_id}\n"
-        f"    domain: {domain}\n"
-        f"    fact: {fact_yaml}\n"
-        f"    confidence: {confidence}\n"
-        f"    stable: true\n"
-        f"    added: {today}\n"
-        f"    source: {source}\n"
-    )
-    if not PROMOTED.exists():
-        PROMOTED.write_text(f"version: 1\nfacts:\n{entry}", encoding="utf-8")
-    else:
-        content = PROMOTED.read_text(encoding="utf-8")
-        if "facts:" not in content:
-            content += "\nfacts:\n"
-        PROMOTED.write_text(content.rstrip() + "\n" + entry, encoding="utf-8")
-    _sync_claude_md_fallback(fact_id, domain, fact)
-
-
-def _sync_claude_md_fallback(fact_id: str, domain: str, fact: str) -> None:
-    claude_md = ROOT / "CLAUDE.md"
-    if not claude_md.exists():
-        return
-    content = claude_md.read_text(encoding="utf-8")
-    marker = "> 维护规则："
-    if marker not in content:
-        return
-    new_line = f"- [{fact_id} / {domain}] {fact}\n"
-    # 避免重复插入
-    if fact_id in content:
-        return
-    content = content.replace(marker, new_line + "\n" + marker)
-    claude_md.write_text(content, encoding="utf-8")
 
 
 if __name__ == "__main__":

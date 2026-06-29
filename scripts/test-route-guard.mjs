@@ -78,6 +78,27 @@ const cases = [
     },
   },
   {
+    // Fix: an audit-verb (查看/看看/评估…) query that NAMES an existing project
+    // must still trigger the Project Gate switch, not be short-circuited by the
+    // C2 meta-verb exemption (红线 SC-20260523-002).
+    name: 'audit-verb naming an existing project switches, not C2-exempted',
+    prompt: '查看 luca-dev 的列表页 UX 问题',
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
+      assert.equal(decision.project, 'luca-dev');
+    },
+  },
+  {
+    // Guard the other side: audit-verb with NO existing project named stays
+    // C2-exempt (framework/meta question) — must not force the Project Gate.
+    name: 'audit-verb without a named project stays C2-exempt',
+    prompt: '查看 route-guard 的实现逻辑',
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
+      assert.notEqual(decision.decision, 'PROJECT_STOP', `got ${decision.decision}`);
+    },
+  },
+  {
     name: 'named existing project is handled before skill routing',
     prompt: '继续 luca-dev 的任务计划',
     expect: decision => {

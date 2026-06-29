@@ -49,11 +49,23 @@ current_project() {
 ensure_project() {
   local name="$1"
   local root="$PROJECTS_ROOT/$name"
-  mkdir -p "$root/docs/handoff" "$root/.luca"
+  mkdir -p "$root/docs/handoff" "$root/.luca/memory"
   if [ ! -f "$root/.luca/workflow-state.yaml" ]; then
     cp "$STATE_TEMPLATE" "$root/.luca/workflow-state.yaml"
   fi
   touch "$root/.luca/current-topic.txt"
+  # 项目本地记忆索引：只在该项目激活时加载（见 activate_project 注入），
+  # 与全局个人记忆（每 session 无差别注入）分离，避免跨项目上下文污染。
+  if [ ! -f "$root/.luca/memory/MEMORY.md" ]; then
+    cat > "$root/.luca/memory/MEMORY.md" <<EOF
+# $name — 项目本地记忆
+
+> 只存「只对本项目成立」的事实（部署坑 / 状态真值路径 / 项目结构 / 本项目专属约束）。
+> 跨项目工作偏好 → 全局个人记忆；luca_gstack 框架规则 → semantic candidate。
+> 一行一条：- [标题](file.md) — 一句钩子
+
+EOF
+  fi
 }
 
 replace_symlink() {
@@ -78,6 +90,20 @@ activate_project() {
   cleanup_stale_docs_aliases
 }
 
+# 注入项目本地记忆：激活后打印该项目 MEMORY.md（含正文行）到 stdout，
+# 让运行 switch/new 的 agent 把它纳入上下文。只在该项目激活时加载。
+inject_project_memory() {
+  local root="$PROJECTS_ROOT/$1"
+  local mem="$root/.luca/memory/MEMORY.md"
+  [ -f "$mem" ] || return 0
+  # 仅当索引区有真实条目（以 "- " 开头的行）才注入，空模板不打扰。
+  if grep -q '^- ' "$mem" 2>/dev/null; then
+    echo ""
+    echo "🧠 项目本地记忆（$1）:"
+    cat "$mem"
+  fi
+}
+
 print_status() {
   local current
   current=$(current_project)
@@ -97,6 +123,7 @@ case "$cmd" in
     git -C "$PROJECTS_ROOT/$name" init -q 2>/dev/null || true
     activate_project "$name"
     echo "✅ 项目 '$name' 已创建，docs/ 和 workflow-state 已切换"
+    inject_project_memory "$name"
     ;;
   switch)
     name="${2:-}"
@@ -107,6 +134,7 @@ case "$cmd" in
     fi
     activate_project "$name"
     echo "✅ 已切换到项目 '$name'"
+    inject_project_memory "$name"
     ;;
   list)
     current=$(current_project)

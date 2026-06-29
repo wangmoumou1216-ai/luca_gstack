@@ -16,9 +16,9 @@ final line when a task depends on it. -->
 ## Routing Contract TL;DR
 
 1. Project Gate first: 老项目 / 已有项目 / 继续项目 → 先确认或切换项目。
-2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 4条件；满足任一不得直接执行。**
+2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 5条件；满足任一不得直接执行。**
 3. Ambiguity third: 多候选 → 问用户，不自行判断。
-4. Single skill last: 只在高置信且不触发 Plan Agent 4条件的前提下调用 skill。
+4. Single skill last: 只在高置信且不触发 Plan Agent 5条件的前提下调用 skill。
 5. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
 
 ---
@@ -140,6 +140,7 @@ When executing a task, keep the operating prompt explicit and bounded:
   - Scene A: new feature design.
   - Scene B: existing feature optimization.
   - Scene C: online page review and redesign.
+  - Scene D: agent-ification — turn an existing manual feature into user-supervised agent operation.
 - State assumptions only when they affect output or risk.
 - Ask at most one necessary blocking question at a time.
 - Prefer concrete file paths, module names, and output names over vague descriptions.
@@ -432,10 +433,10 @@ Layered routing order:
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6), or `PLAN CHECK`
    (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/auto`, `/figma-demo`),
-   or the hit skill is known to satisfy any of the Plan Agent 4 conditions,
+   or the hit skill is known to satisfy any of the Plan Agent 5 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
-   high-confidence single-skill hit, still check the Plan Agent 4 conditions; if any holds, do not
-   execute the skill directly. The Plan Agent 4 conditions (任一满足即触发):
+   high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not
+   execute the skill directly. The Plan Agent 5 conditions (任一满足即触发):
    - The task creates or modifies ≥ 3 files.
    - The task needs ≥ 2 independent subagents collaborating.
    - The task has an explicit phase dependency (B must wait for A).
@@ -466,11 +467,15 @@ When generating or editing prototypes:
 
 - Read `framework/README.md` before selecting or modifying a template.
 - For `/open-design` (design-output primary), read `.claude/skills/office/open-design/SKILL.md`;
-  it commissions the local Open Design daemon (via the `od mcp` MCP server, falling back to daemon
-  HTTP) to generate HTML from the design-brief, keeps a human judgment node in the OD UI, then lands
-  index.html + prototype-spec.md under docs/prototype/ for /figma-layer. Injects FxUI
-  color/font/size tokens only (no component-library binding). Falls back to magicpath/html-prototype
-  when the OD daemon is unreachable.
+  it stages an OD project (binds the design system, writes brief.md) and **by default has the user
+  generate in the OD desktop app (subscription session, reliable), then recovers on "拉回来"**;
+  headless one-shot via the daemon `/api/chat` is opt-in only; it was unreliable this session (slow
+  generation >2.5-3min + daemon SIGTERM restarts), so on failure it degrades to desktop (retry once),
+  not magicpath. (Auth aside: the spawned `claude` needs the **correct** `USER` (the real username) in its
+  env to use the subscription — empty/wrong USER falls back to API credit, LOGNAME won't
+  substitute; OD provides it, so auth is not the failure.) Lands index.html + prototype-spec.md under
+  docs/prototype/ for /figma-layer. Injects FxUI color/font/size tokens only (no component-library binding). Falls back to
+  magicpath/html-prototype only when the OD daemon is truly unreachable.
 - For `/html-prototype`, read `.claude/skills/office/html-prototype/SKILL.md`, then apply its
   dynamic reference protocol, current aesthetic rubric, and QA gate.
 - For `/figma-demo`, read `.claude/skills/office/figma-demo/SKILL.md`; its blueprint,
@@ -527,7 +532,7 @@ At the start of a task, silently check:
 [ ] If workflow-related, read .claude/skills/office/SKILL.md.
 [ ] If slash-command-like, read .claude/commands/<command>.md.
 [ ] If skill-like, read .claude/skills/office/<skill>/SKILL.md.
-[ ] Identify scene A/B/C if relevant.
+[ ] Identify scene A/B/C/D if relevant.
 [ ] Identify output path before writing.
 [ ] Verify after writing.
 ```

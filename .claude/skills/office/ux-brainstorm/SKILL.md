@@ -10,10 +10,10 @@ description: >
   'write design proposal', '设计方案'。
 argument-hint: "[path to ux-research markdown file, or empty for cold-start mode]"
 context-cost:
-  self: 20860
+  self: 16320
   runtime-estimate: 60000
   shared-refs: [ai-native-design-framework]
-  recommended-model: opus  # 交互方案创造性探索
+  recommended-model: reasoning-heavy  # 交互方案创造性探索
 ---
 
 ## Preamble (run first)
@@ -74,93 +74,19 @@ AI Native不等于「加一个AI按钮」。它意味着：
 
 ## Architecture Overview
 
-```
-ux-research*.md（或设计想法）
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 0: 读取输入 & 分类规模                              │
-│   • 读取ux-research*.md（或进入冷启动模式）                │
-│   • 分类：Lightweight / Standard / Deep-feature /         │
-│          Deep-product                                    │
-│   • 按规模路由问题集                                      │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 1: 上下文扫描 & 查漏（并行后台agent）                │
-│   • Agent A: 从研究中提取设计约束与信号                    │
-│   • Agent B: 识别隐性设计假设                             │
-│   • Agent C: 对照设计方案检查清单找缺口                    │
-│   • 可选：缺口严重时补充研究                               │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 2: 内部压力测试（自主进行，不对用户可见）             │
-│   • 对研究本身做分级压力测试                               │
-│   • AI时代范式透镜检查                                    │
-│   • 产出：Phase 3该重点追问什么                            │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 2.5: AI Native评估（自主进行，不对用户可见）          │
-│   • 决策路径分析（执行步 vs 判断步）                       │
-│   • 路径压缩可行性（N→N', delta ≥ 2?）                    │
-│   • 判定：fully/partially/assisted/not_suitable           │
-│   • Agent介入检查                                        │
-│   • 产出：Phase 4 + Phase 6的路由信号                     │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 3: 设计追问（用户参与，一次一个问题）                 │
-│   • 7个UX逼问（4必选+3条件触发），一次只问一个          │
-│   • 使用AskUserQuestion，优先单选                         │
-│   • 应用反奉承 + 反驳模式                                │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 4: 方案探索                                        │
-│   • 生成2-3个方案（保守 / 理想 / 非显而易见）              │
-│   • 至少一个非显而易见角度                                │
-│   • 至少一个满足范式转变约束                              │
-│   • 先呈现方案，再给推荐                                  │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 5: 对抗性审查（Oracle，前台阻塞）                    │
-│   • Oracle从5个维度审查方案                               │
-│   • 最多3轮，收敛保护                                    │
-│   • 分类处理：safe_auto / gated / manual / fyi            │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 6: 写设计方案文档                                   │
-│   • 加载references/design-proposal-template.md            │
-│   • 按规模分级填写各章节                                  │
-│   • 写入docs/decisions/YYYY-MM-DD-{slug}-ux-brainstorm.md │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 7: 生成交互架构文档                                 │
-│   • 加载references/interaction-architecture-template.md   │
-│   • 基于选定方案展开结构层设计                            │
-│   • 写入docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 8: 交接菜单                                        │
-│   • 有blocking问题时锁定交接                             │
-│   • 选项：修订 / 手动审阅 / 完成                         │
-└──────────────────────────────────────────────────────────┘
-```
+线性流程（无分支）：ux-research*.md（或设计想法）→ Phase 0 → 1 → 2 → 2.5 → 3 → 4 → 5 → 6 → 7 → 8
+
+- **Phase 0: 读取输入 & 分类规模** — 读取ux-research*.md（或进入冷启动模式）· 分类：Lightweight / Standard / Deep-feature / Deep-product · 按规模路由问题集
+- **Phase 1: 上下文扫描 & 查漏（并行后台agent）** — Agent A: 从研究中提取设计约束与信号 · Agent B: 识别隐性设计假设 · Agent C: 对照设计方案检查清单找缺口 · 可选：缺口严重时补充研究
+- **Phase 2: 内部压力测试（自主进行，不对用户可见）** — 对研究本身做分级压力测试 · AI时代范式透镜检查 · 产出：Phase 3该重点追问什么
+- **Phase 2.5: AI Native评估（自主进行，不对用户可见）** — 决策路径分析（执行步 vs 判断步）· 路径压缩可行性（N→N', delta ≥ 2?）· 判定：fully/partially/assisted/not_suitable · Agent介入检查 · 产出：Phase 4 + Phase 6的路由信号
+- **Phase 3: 设计追问（用户参与，一次一个问题）** — 7个UX逼问（4必选+3条件触发），一次只问一个 · 使用AskUserQuestion，优先单选 · 应用反奉承 + 反驳模式
+- **Phase 3.6: 机会映射（OST，自主，出方案之前）** — 借鉴 Opportunity Solution Tree：从研究+Phase3回答映射 3-7 个客户机会（问题非功能）· Opportunity Score 排序取 top 2-3 · 供 Phase 4 锚定
+- **Phase 4: 方案探索** — 生成2-3个方案（保守 / 理想 / 非显而易见），**锚定到 Phase 3.6 已排序机会** · 至少一个非显而易见角度 · 至少一个满足范式转变约束 · 先呈现方案，再给推荐
+- **Phase 5: 对抗性审查（Oracle，前台阻塞）** — Oracle从5个维度审查方案 · 最多3轮，收敛保护 · 分类处理：safe_auto / gated / manual / fyi
+- **Phase 6: 写设计方案文档** — 加载references/design-proposal-template.md · 按规模分级填写各章节 · 写入docs/decisions/YYYY-MM-DD-{slug}-ux-brainstorm.md
+- **Phase 7: 生成交互架构文档** — 加载references/interaction-architecture-template.md · 基于选定方案展开结构层设计 · 写入docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
+- **Phase 8: 交接菜单** — 有blocking问题时锁定交接 · 选项：修订 / 手动审阅 / 完成
 
 | 边界 | 值 |
 |------|---|
@@ -222,7 +148,8 @@ ux-research*.md（或设计想法）
 
 13. **懒加载references。** 不在会话开始时读取
     `references/design-proposal-template.md`、`references/pressure-test.md`、
-    `references/adversarial-review.md`、`references/interaction-architecture-template.md`。
+    `references/adversarial-review.md`、`references/interaction-architecture-template.md`、
+    `references/phase1-agent-prompts.md`。
     各自在相关Phase开始时才加载。这为追问本身保留context。
 
 </rules>
@@ -286,123 +213,9 @@ Slug规则：小写、连字符分隔、去非字母数字、最长50字符。
   顺序执行每个agent的prompt作为内部推理，输出相同XML格式。
   逻辑完全相同——只是失去并行性。
 
-```
-Subagent调度：3个并行后台agent
-每个agent接收完整的研究内容（或冷启动想法），产出结构化XML。
-
---- Agent A: 提取设计约束与信号 ---
-task(
-  category="unspecified-high",
-  load_skills=[],
-  run_in_background=true,
-  description="Extract design constraints and signals from research",
-  prompt=`I am the ux-brainstorm skill's Phase 1 extractor (Agent A).
-
-INPUT: <research>
-{paste full content of ux-research report, OR user's cold-start idea}
-</research>
-
-GOAL: List every design constraint, validated paradigm, user behavior finding, and design signal the research states or strongly implies. Focus on findings that directly constrain or inform design briefs.
-
-ALIGNMENT CHECK (MANDATORY):
-Compare the research report's design problem definition with the user's actual input/need description.
-- Are they asking the same question?
-- If there is a gap or drift between the two, flag it in a separate <alignment_check> block.
-- Example of drift: research asks "Agent Native大入口的交互设计" but user's need is "AX和GUI如何协作共存" — overlapping but not identical.
-
-OUTPUT FORMAT (XML):
-<alignment_check>
-  <research_question>{research report's design problem definition}</research_question>
-  <user_need>{user's actual input/need as stated}</user_need>
-  <aligned>{true | false | partial}</aligned>
-  <drift_description>{if not fully aligned: what's the gap}</drift_description>
-</alignment_check>
-
-<design_signals>
-  <signal id="S1">
-    <text>{design constraint or signal in active voice}</text>
-    <source>{which research dimension: D1-D6}</source>
-    <source_finding>{finding ID from research report}</source_finding>
-    <confidence>{consensus | strong | disputed | unverified}</confidence>
-    <design_impact>{how this constrains or informs design direction}</design_impact>
-  </signal>
-</design_signals>
-
-RULES:
-- Do not infer signals — only extract from research.
-- Preserve the research's terminology.
-- Mark confidence honestly, matching the research report's consensus status.
-- Focus on actionable design signals, not general observations.`)
-
---- Agent B: 识别隐性设计假设 ---
-task(
-  category="unspecified-high",
-  load_skills=[],
-  run_in_background=true,
-  description="Surface implicit design assumptions in research",
-  prompt=`I am the ux-brainstorm skill's Phase 1 assumption-surfacer (Agent B).
-
-INPUT: <research>
-{same content}
-</research>
-
-GOAL: Identify design assumptions the research makes that are NOT explicitly stated. These are candidates for Phase 3 interrogation.
-
-OUTPUT FORMAT (XML):
-<implicit_assumptions>
-  <assumption id="A1">
-    <statement>{what the research assumes about user behavior or interaction feasibility}</statement>
-    <evidence>{what in the research implies this assumption}</evidence>
-    <risk_if_wrong>{what design direction breaks if this assumption fails}</risk_if_wrong>
-  </assumption>
-</implicit_assumptions>
-
-RULES:
-- Surface, do not validate. It's fine to flag assumptions that ARE true.
-- Focus on assumptions about: user mental models, interaction patterns, AI feasibility, trust, control.
-- 3-10 assumptions is typical. More than 10 means you're pattern-matching on noise.`)
-
---- Agent C: 对照设计方案检查清单找缺口 ---
-task(
-  category="unspecified-high",
-  load_skills=[],
-  run_in_background=true,
-  description="Identify design-proposal-readiness gaps",
-  prompt=`I am the ux-brainstorm skill's Phase 1 gap-finder (Agent C).
-
-INPUT: <research>
-{same content}
-</research>
-
-GOAL: Identify what is MISSING from the research relative to a design proposal checklist. Your output shapes which questions Phase 3 must ask the designer.
-
-DESIGN PROPOSAL CHECKLIST:
-- Design problem definition (is the design problem clearly stated, separate from solutions?)
-- User behavior evidence (do we have behavioral evidence of how users act in this scenario?)
-- Current interaction pain points (what's the specific friction in current flow?)
-- Target user specificity (a named role with context, not a segment)
-- Cognitive load analysis (which step has highest cognitive burden?)
-- Mental model clarity (what do users compare this to?)
-- AI feasibility evidence (is AI intervention validated or assumed?)
-- Trust mechanism (how does user trust get established?)
-- Failure mode coverage (what happens when things go wrong?)
-- Scope boundaries (explicit in/out lists)
-
-OUTPUT FORMAT (XML):
-<gaps>
-  <gap id="G1">
-    <checklist_item>{item from list above}</checklist_item>
-    <status>{missing | partially_covered | thin}</status>
-    <what_exists>{what the research does say, if anything}</what_exists>
-    <what_is_missing>{specific gap}</what_is_missing>
-    <suggested_question>{question to ask designer in Phase 3}</suggested_question>
-  </gap>
-</gaps>
-
-RULES:
-- Only flag genuine gaps — not stylistic preferences.
-- Suggested questions must be answerable by a UX designer (not a PM or engineer).`)
-```
+**Load `references/phase1-agent-prompts.md` now — Phase 1 发射并行 agent 前必须完整读取。**
+它包含 Agent A / B / C 的完整 `task()` 调度模板（含 prompt 与输出 XML schema），
+按模板逐字构造三个调度。
 
 **发射这三个task后结束当前响应。** 等待 `<system-reminder>`
 通知所有agent完成，然后用 `background_output(task_id="...")` 收集每个结果。
@@ -559,13 +372,26 @@ agent获取外部上下文——但仅限于关于事实的缺口（用户行为
 ### 3.4 — 过渡到Phase 4
 
 路由问题集用完（或逃生舱触发）后，声明：
-> 「信息够了，我来构思2-3个方案。」
+> 「信息够了，我先把机会空间理一理，再构思方案。」
 
 不要问「准备好了吗？」——直接继续。
+
+## Phase 3.6: 机会映射（OST，自主进行，出方案之前）
+
+借鉴 Opportunity Solution Tree（Teresa Torres,《Continuous Discovery Habits》）——在发散方案**之前**先框定问题空间，防"跳到第一个方案"。自主步骤（不向用户提问），输出供 Phase 4 锚定。
+
+1. **确认单一 desired outcome** — 一个可测指标（来自研究 / Phase 3 回答），不一次解决所有。
+2. **映射机会** — 从 ux-research 发现 + Phase 1/3 信号提炼 3-7 个客户**机会**（需求/痛点，用户视角「我难以…/我希望…」）。**是问题，不是功能。** 每条须可追溯到研究发现或 Phase 3 回答（不捏造，遵守 CRITICAL RULE 2）。
+3. **排序** — Opportunity Score = Importance ×（1 − Satisfaction）（Dan Olsen，归一 0-1）或定性判断，聚焦 top 2-3 机会。
+4. **产出**（内部 scratchpad，并写入 Phase 6 文档的「机会」小节）：已排序机会清单 → Phase 4 每个方案锚定到其中某机会。
+
+**守卫：** 发散前的问题框定，**不替代** Phase 3 的 7 逼问（逼问由 `references/pressure-test.md` 管辖、不可侵犯），**不替代** AI Native 透镜。研究信号不足以支撑机会映射时，标记 GAP 并在 Phase 4 声明假设。
 
 ## Phase 4: 方案探索
 
 ### 4.1 — 生成方案
+
+**先锚定机会**：每个方案须对应 Phase 3.6 的某个已排序机会（opportunities not features，避免「第一个想法陷阱」）；同一机会鼓励对比 ≥2 个方案再择优。
 
 起草2-3个方案，满足以下全部条件：
 

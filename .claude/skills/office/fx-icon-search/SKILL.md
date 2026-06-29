@@ -10,7 +10,7 @@ context-cost:
   self: 475
   runtime-estimate: 5000
   shared-refs: [none]
-  recommended-model: haiku  # 图标搜索
+  recommended-model: mechanical  # 图标搜索
 ---
 
 # Fx Icon Search

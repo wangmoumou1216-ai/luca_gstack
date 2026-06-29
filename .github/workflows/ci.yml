@@ -15,8 +15,9 @@ jobs:
       - name: Install yamllint
         run: pip install yamllint
       - name: Lint YAML files
+        # .claude/workflow-state.yaml is a local-only gitignored symlink (absent on
+        # clean runners) — lint only committed framework yaml, never the symlink.
         run: |
-          yamllint -d relaxed .claude/workflow-state.yaml
           yamllint -d relaxed .claude/skill-os/optional-workflow-graph.yaml
           yamllint -d relaxed .claude/skill-os/input-modes.yaml
 
@@ -52,6 +53,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install Python deps (PyYAML)
+        # 语义记忆以 promoted-facts.yaml 为真值源；check_memory_health /
+        # propose_semantic / review_candidates 需 PyYAML 解析。setup-python 的
+        # 全新解释器不含 pyyaml（仅系统 python 自带），故显式安装。
+        run: pip install pyyaml
       # CI-safe subset only: these checks read committed repo files or run in
       # tmpdir fixtures / route-guard dry-run, and degrade gracefully when the
       # local-only docs/ and .claude/workflow-state.yaml symlinks are DANGLING

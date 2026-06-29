@@ -2,13 +2,19 @@ version: 1
 principle: "Workflow is optional. It recommends and validates handoff; it does not own standalone skill execution."
 
 design_output:
-  primary: open-design        # 主力：交互文档 → OD headless 生成 HTML（判断后置）→ 落盘
-  fallback: [magicpath, html-prototype]   # 备选：OD daemon 不可达 / 用户要本地 HTML / non-React
-  fallback_trigger:           # 语义触发条件（声明层）；执行层检测命令见 plan-agent.md Gap 2
+  primary: open-design        # 主力：交互文档 → OD 生成 HTML（判断后置）→ 落盘。**默认桌面端生成；headless opt-in**
+  fallback: [magicpath, html-prototype]   # 仅「真·daemon-down / 用户要本地 HTML / non-React」才退这两个
+  fallback_trigger:           # 退 magicpath/html-prototype 的条件（仅 daemon 真不可达类）；执行层检测命令见 plan-agent.md Gap 2
     - "open-design daemon unreachable"
     - "magicpath auth failed"
     - "non-react project"
     - "user requests local html"
+  od_headless_unavailable:    # daemon UP 但 headless 不能出图 → 降级目标是 OD 桌面端生成（同栈），不退 magicpath/html-prototype
+    trigger:
+      - "headless 实测不稳：生成慢 >2.5-3min 或 daemon SIGTERM 重启"
+      - "headless /api/chat 重试 1 次仍失败（failed/canceled/narrate-but-no-file）"
+    degrade_target: open-design-desktop-generate   # SKILL.md Phase 3D：项目+brief.md+DS staged，用户桌面端生成后说"拉回来" recover
+    rationale: "用户要的就是 OD 产出且桌面端 OD 走订阅会话可靠；headless 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启；鉴权非故障原因）。daemon 既 UP，正确降级是同栈桌面端，而非换 magicpath/html-prototype。"
 
 research_default:
   principle: "复杂且新颖任务，研究阶段(deepresearch/ux-research)是默认步骤，非可选。"

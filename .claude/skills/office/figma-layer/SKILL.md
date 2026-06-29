@@ -2,7 +2,7 @@
 name: figma-layer
 preamble-tier: 2
 argument-hint: "[HTML prototype index.html 路径 + Figma file URL]"
-version: 1.0.0
+version: 1.2.0
 description: |
   Figma 保险层搭建。一比一还原 HTML 原型（来源：html-prototype / figma-demo /
   open-design 三选一），不是独立设计。必须读 index.html 实际代码，不能只读 spec。
@@ -26,7 +26,7 @@ context-cost:
   self: 3004
   runtime-estimate: 5000
   shared-refs: [none]
-  recommended-model: haiku  # 图层命名+ID复制
+  recommended-model: mechanical  # 图层命名+ID复制
 ---
 
 ## Preamble (run first)
@@ -173,6 +173,19 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 **搭建机制（新版 Figma MCP）：** 先加载 `/figma-use` skill，再用 `mcp__figma__use_figma`
 在目标 draft / 文件内建图层；用 `mcp__figma__get_design_context` / `get_screenshot` 读现状校验。
 不再使用旧的 create_frame / update_node 接口。
+
+**骨架先行（首个写入调用，2026-06-10 经验）：** 第一个 use_figma 调用只建根 frame +
+各区块 placeholder shimmer（不含文本节点、无字体依赖），让用户立刻看到进度；字体侦察
+（listAvailableFontsAsync）与 HTML 精读随后续逐段填充推进。强制前置（/figma-use 加载、
+whoami、读 index.html 实际代码）仍不可跳过，只是把「可见进度」提前。
+
+**捕获快路径分流（generate_figma_design，2026-06-10 实验验证）：** 源是本地 HTML 时，
+可先用 `generate_figma_design` 捕获（本地 http.server + 副本注入 capture.js + hash URL 打开，
+全程 ~1 分钟）得到像素级帧——文本/字体真实可编辑（捕获的是浏览器实际渲染栈）。按需求分流：
+- **评审/预览级**：捕获帧直接交付，跳过手搭（省 ~15 分钟）；
+- **保险层级**（本 skill 的 Auto Layout 强制规范）：捕获帧只作对照参考，仍走手搭三层规则
+  ——实测捕获结构约 4 成容器为绝对定位、带视口外壳与捕获工具条残留，重构成本不低于重建；
+- 交付保险层前删除或明确标注捕获帧，避免两版混淆。
 
 **三层处理规则（来自 CLAUDE-figma-layer.md，硬约束）：**
 

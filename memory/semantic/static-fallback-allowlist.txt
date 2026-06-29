@@ -1,0 +1,19 @@
+# Static Fallback 白名单 — 只有宪法级/红线事实才镜像进 CLAUDE.md 的每-session「关键约束速查」节。
+#
+# 准则：换任何任务都必须遵守、且脚本失效时也必须在场的事实——品牌锁 / framework 只读 /
+# 架构定位 / 路由红线 / 记忆红线。niche 操作型事实（figma 字体、OD headless、claude -p、
+# 融合落地坑等）只留 promoted-facts.yaml，按需 search_memory.py 检索，不进本节。
+#
+# 三个 sync 写入口（consolidate_memory / review_candidates / propose_semantic）都按本白名单门控：
+# 不在此列的新晋升 stable fact **不会**自动进 CLAUDE.md SF。要让某事实进每-session SF，
+# 把其 id 加到下面一行——**改这里 = 改每个 session 的 context 注入面，慎重；人工拥有**。
+#
+# 一行一个 id；# 开头或行内 # 之后为注释。
+SF-001
+SF-002
+SF-003
+SF-004
+SF-005
+SC-20260523-001
+SC-20260523-002
+SC-20260523-003

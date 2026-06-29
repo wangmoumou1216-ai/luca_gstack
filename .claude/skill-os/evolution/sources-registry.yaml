@@ -1,0 +1,122 @@
+# 获取源真值源（Single Source of Truth for discovery sources）
+#
+# framework-evolution-scout 从本表生成发现通道，不在 workflow 里硬编码源。
+# 调整「从哪些源发现 / 为什么这些源 / 各源权重」只改本文件。
+#
+# 两条铁律：
+# 1. 热度 ≠ 适配：star/install 热度只是「去哪儿快速筛」的发现先验，只买候选一张
+#    「进门禁考试」的票；录取必须「跨源收敛 + 过 fit-to-gap + 过候选硬门(Gate A/B)」。
+#    没有任何单一信号（尤其 star 绝对值）能录取。
+# 2. 源也要过门禁（源选择门禁）：
+#    - authority_tier：official > curated > raw-search > frontier-noise；层越高信任越高、噪声预算越大。
+#    - 维度覆盖：每源必须 feeds 至少一个 gaps-register 的 open 缺口维度，否则下线（无孤儿源）。
+#    - yield 追踪剪枝：连续 N 轮零产出 → 降权/下线，且写进 digest 不静默（no silent caps）。
+#    - 近期热而非历史热：按 freshness_window_months 过滤 pushed_at/updated。
+#    - 抗灌水：排序信号(star/install)对 authority 降权；仓龄-star 异常仅标记不自动拒。
+#
+# 比 star 更严的多信号（rigor_signals，跨所有源；star 只当第一张网）：
+#   - trend/velocity：star-history 加速度（不是绝对值）
+#   - 真采纳深度：forks、dependents、npm downloads、used-by、fork-to-star 比
+#   - 跨源收敛：同一项目在多个独立源命中 = 远强于单源高 star
+#   - 维护者履历：release 节奏、bus-factor、其他项目质量
+#   - 内容实查：base64 解码读 SKILL.md/源码真身，验名实相符
+#   - 负信号检测：archived / 单提交 / link-farm / 教程仓伪装工具 / 星曲线异常
+
+version: 1
+updated: 2026-06-21
+review_after_days: 35
+
+sources:
+  - id: S1-github-stars
+    class: cc-skill-registry
+    feeds_dimensions: [skills]
+    reuse_mode: [install]
+    authority_tier: raw-search          # 裸搜索：信任最低、甄别最严
+    discovery:
+      method: gh-search
+      # ≤2 词/查询（gh 多词 AND 合并致空）；首轮漏了 codegraph(52k)/mcp 类，故扩面
+      queries: ["claude skill", "claude subagent", "claude code", "agent skills", "agentic skills",
+                "code graph", "knowledge graph", "claude mcp", "claude hook"]
+      sort: stars
+      # skill 合集 hub deep-dive：首轮漏了 obra/superpowers(234k)
+      hubs: [obra/superpowers, anthropics/skills, vercel-labs/agent-skills, wshobson/agents, VoltAgent/awesome-claude-code-subagents]
+      also: [skills.sh leaderboard, "npx skills find", awesome-claude-code lists]
+    freshness_window_months: 18
+    discrimination:                     # S1 专属甄别链条（是否为我所用）
+      - 近期热过滤：pushed_at/updated 落在 freshness_window 内，滤掉历史巨头
+      - 仓龄-star 异常：created_at vs star 曲线异常 → 标记（防灌水），不自动拒
+      - 真采纳深度：forks/dependents/npm downloads/issue-PR 活跃，不只看 star
+      - 命中 open 缺口：映射到 gaps-register open GAP，否则不进门
+      - 非冗余：与现有 office skill 不重，除非明显更优（数量以 self-model.generated.yaml 为准，不硬编码计数）
+      - 内容实查：base64 解码读 SKILL.md 真身，验名实相符
+    yield_stats: { runs: 1, surfaced: 5, approved: 0 }   # 2026-06 首跑
+    status: active
+
+  - id: S2-anthropic-platform
+    class: official-platform
+    feeds_dimensions: [hooks, routing, orchestration, skills, observability]
+    reuse_mode: [install, adapt-idea]
+    authority_tier: official            # 最高信任、噪声预算最大
+    discovery:
+      method: webfetch-diff             # 按「自上次运行以来新增」diff，非 star
+      targets:
+        - "https://docs.anthropic.com/en/docs/claude-code (changelog/release notes)"
+        - "https://github.com/anthropics/claude-cookbook"
+        - "https://github.com/anthropics/skills"
+        - "https://github.com/modelcontextprotocol (servers/spec)"
+    freshness_window_months: 6
+    discrimination:                     # S2 专属：能力对应哪个维度、要不要跟
+      - 新平台能力映射到哪个演进维度（新 hook 事件→hooks；plugins→skills 安装；subagent 新特性→orchestration；MCP→集成）
+      - 判「补 open 缺口」vs「锦上添花」：前者纳入，后者记录待议
+      - 跟进前仍过「是否触碰受保护不变量（framework/、P1-P7、品牌锁）」
+    yield_stats: { runs: 1, surfaced: 8, approved: 0 }   # 2026-06 首跑
+    status: active
+
+  - id: S3-agent-frameworks
+    class: architecture-pattern
+    feeds_dimensions: [orchestration, memory, observability, testing]
+    reuse_mode: [port-pattern, adapt-idea]   # 不可安装，只搬模式
+    authority_tier: curated
+    discovery:
+      method: known-hub-deepdive
+      hubs: [langchain-ai/langgraph, letta-ai/letta, promptfoo/promptfoo, confident-ai/deepeval, openai/swarm]
+      also: ["gh-search: agent memory / llm eval harness / agent orchestration / self-improving agent"]
+    freshness_window_months: 18
+    discrimination:                     # S3 专属：值不值得搬、会不会带复杂度
+      - 这个模式解的问题=某 open 缺口吗（尤其 behavioral-A/B、晋升、eval、编排状态机）
+      - 搬入复杂度成本 vs 收益：抗「把重框架整体搬进来」
+      - 能否「只取模式不取依赖」（纯 idea/小脚本 port，不引入整个 runtime）
+      - 框架成熟度（release 节奏、生产采用）作 authority
+    yield_stats: { runs: 1, surfaced: 5, approved: 0 }   # 2026-06 首跑
+    status: active
+
+  - id: S4-design-craft
+    class: domain-craft
+    feeds_dimensions: [skills]          # + 品牌/framework 层
+    reuse_mode: [install, adapt-idea]
+    authority_tier: curated
+    discovery:
+      method: known-hub-deepdive
+      hubs: [amzn/style-dictionary, tokens-studio, shadcn-ui/ui]
+      also: ["gh-search: design tokens / design to code / accessibility audit / design system"]
+    freshness_window_months: 18
+    discrimination:                     # S4 专属：改善哪环 + 品牌冲突
+      - 改善 CRM 设计交付的哪一环
+      - 品牌冲突检测：带自有默认色/暗色/多品牌 → 必须品牌锁守卫(FM-7)，走 rules.yaml 注入+blockquote，绝不进 route-guard
+      - 与 framework/ 母版兼容性
+    yield_stats: { runs: 1, surfaced: 3, approved: 0 }   # 2026-06 首跑
+    status: active
+
+  - id: S5-frontier
+    class: frontier-signal
+    feeds_dimensions: [orchestration, memory, observability, testing]
+    reuse_mode: [adapt-idea]
+    authority_tier: frontier-noise      # 噪声最高，最严卡 + 限额
+    discovery:
+      method: webfetch-curated
+      targets: ["arXiv cs.AI agent/memory/eval", "高信号实践帖", "HN（重过滤）"]
+    freshness_window_months: 6
+    discrimination:
+      - 仅 adapt-idea；封顶极少量；bar 最高；「有趣」≠「可落地」
+    yield_stats: { runs: 0, surfaced: 0, approved: 0 }
+    status: off                         # 用户暂不开，后续按需启用

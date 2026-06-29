@@ -1,0 +1,43 @@
+# 模型路由真值源（Single Source of Truth）
+#
+# 规则：
+# 1. 按「能力档（tier）」定义路由，不写死模型版本号。resolves_to 是 Claude Code
+#    档位别名（fable/opus/sonnet/haiku），运行时自动解析到该档当前最新模型——
+#    档位内升级（如 Opus 4.7→4.8）零维护，自动跟随。
+# 2. CLAUDE.md「模型路由」节、orchestrator.md §5 的速查表、各 SKILL.md frontmatter
+#    的 recommended-model 均引用本文件的 tier 名；调整路由只改本文件（速查快照同步）。
+# 3. 会话兜底（活规则）：Claude 在 session 中发现 known_lineup 之外的档位变化
+#    （新档位发布/档位退役/能力代际漂移），主动向用户提示更新本文件，不得沉默沿用。
+# 4. daily_governance.py 每日校验本文件 ↔ skill frontmatter 一致性与复核期限，
+#    异常写入 memory/digests/ 等用户裁决——检测自动化，重映射判断留给人。
+
+version: 1
+updated: 2026-06-10
+review_after_days: 90   # 超过此天数未复核 → digest 提醒重新核对档位映射
+
+# Claude Code 当前已知档位阵容（能力高→低）。会话中发现阵容变化时更新此表。
+known_lineup: [fable, opus, sonnet, haiku]
+
+# 未声明 recommended-model 的 skill 默认归属
+default_tier: guided-execution
+
+tiers:
+  reasoning-heavy:
+    resolves_to: fable
+    description: 创造性/对抗性/开放式推理——深度研究、设计决策、苏格拉底拷问、红队
+    note: 2026-06-10 经用户裁决由 opus 升档 fable（成本约 2×）；opus 为回退档
+    skills: [deepresearch, brainstorm, ux-brainstorm, design-brief, redteam]
+
+  guided-execution:
+    resolves_to: sonnet
+    description: 有框架/checklist/规范指导的执行与审查（默认档）
+    skills: [idea, ux-research, ux-audit, open-design, figma-demo, html-prototype,
+             challenge, taste-review, design-review, handoff-review, code-hygiene]
+
+  mechanical:
+    resolves_to: haiku
+    description: 机械执行、格式检查、打分、检索
+    skills: [evals, careful, retro, figma-layer, fx-icon-search]
+
+# 硬性 pin（不走 tier，登记备查）：
+# - .claude/agents/quality-gate.md frontmatter `model: sonnet`（断言执行，独立 context）

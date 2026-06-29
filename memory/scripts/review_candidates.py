@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Review semantic memory candidates.
 
@@ -67,7 +68,10 @@ def promote(candidate: dict, reviewer: str) -> None:
     if claude_md.exists():
         content = claude_md.read_text(encoding="utf-8")
         marker = "> 维护规则："
-        if marker in content and fact_id not in content:
+        allow = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
+        allowed = {ln.split("#", 1)[0].strip() for ln in allow.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()} if allow.exists() else set()
+        # 非白名单(宪法级/红线)事实不进每-session SF（只留 promoted-facts.yaml 走 search）
+        if marker in content and fact_id not in content and fact_id in allowed:
             new_line = f"- [{fact_id} / {domain}] {fact}\n"
             content = content.replace(marker, new_line + "\n" + marker)
             claude_md.write_text(content, encoding="utf-8")

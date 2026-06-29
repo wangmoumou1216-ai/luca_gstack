@@ -1,0 +1,121 @@
+# 缺口登记表（Single Source of Truth: luca_gstack 的已知演进缺口）
+#
+# 人工拥有。framework-evolution-scout 的 gap_addressed 硬门 + fit-to-gap 软分匹配本表。
+# 开/关由人裁决（检测自动、判断归人）：候选只能映射到 status: open 的缺口。
+# layer = framework（OS 运行时 harness/agent-loop）| application（skill-os 设计作业层）。
+# 种子来自 2026-06-21 地毯式审计；2026-06-21 复盘新增双层 gap（应用作业层 + 框架自维护）。
+
+version: 2
+updated: 2026-06-21
+
+gaps:
+  - id: GAP-behavioral-verification
+    dimension: testing
+    layer: framework
+    statement: "无行为级 A/B：prose-only 改 skill 指令可通过全部静态/路由/记忆测试却不真正改变 LLM 行为(SC-20260601-002)。"
+    severity: high
+    desired_capability_keywords: [prompt eval, behavioral test, llm-as-judge, a/b harness, regression, eval]
+    status: addressed   # 2026-06 本 session 自建 memory/scripts/behavioral_ab.py（Sonnet A/B + no-op/回归判定，selftest 5/5）
+
+  - id: GAP-promotion-deadend
+    dimension: memory
+    layer: framework
+    statement: "记忆晋升管线活故障：无候选被置 proposed_stable=True，consolidate_memory 从未晋升过任何一条(SC-20260615-001)。"
+    severity: high
+    desired_capability_keywords: [memory promotion, candidate review, knowledge consolidation, self-improving]
+    status: addressed   # 2026-06 内部修复 consolidate_memory.py --set-stable（人工批准闸门，晋升仍走 promotion_ready 门禁），解 SC-20260615-001
+
+  - id: GAP-routing-fragmentation
+    dimension: routing
+    layer: framework
+    statement: "路由逻辑分散在 5 文件(skill-routing-map/input-modes/optional-workflow-graph/rules.yaml/CLAUDE.md+AGENTS.md)，手工同步税高、漂移风险大。"
+    severity: medium
+    desired_capability_keywords: [declarative routing, single source of truth, dag, config validation]
+    status: open
+
+  - id: GAP-no-rollback
+    dimension: testing
+    layer: framework
+    statement: "采纳外部能力后无版本钉/回滚/落地后集成测试——一旦坏掉难以安全回退。"
+    severity: medium
+    desired_capability_keywords: [rollback, version pin, integration test, dependency safety]
+    status: addressed   # 2026-06 本 session 自建 FUSION-RUNBOOK git-tag 回滚 + worktree + pinned_sha（drill 验证）
+
+  - id: GAP-no-feedback-loop
+    dimension: observability
+    layer: framework
+    statement: "无闭环追踪：采纳的能力到底有没有帮到/有没有惹祸，没有数据反馈。"
+    severity: medium
+    desired_capability_keywords: [feedback loop, adoption tracking, telemetry, outcome metrics]
+    status: addressed   # 2026-06 本 session 自建 adoption-log.jsonl + digest 采纳复盘节
+
+  - id: GAP-soft-enforcement
+    dimension: routing
+    layer: framework
+    statement: "Plan-Agent/Research-Default/品牌锁均为文档软约束，非工具强制，易静默漂移。"
+    severity: medium
+    desired_capability_keywords: [policy enforcement, guardrails, pre-commit, lint, validation hook]
+    status: open
+
+  # —— 2026-06-21 复盘新增：双层补全（之前 6 个 gap 全是 framework 层，应用作业层为零） ——
+  - id: GAP-fusion-impact-automation
+    dimension: testing
+    layer: framework
+    statement: "fusion 影响分析/隐式耦合检测(FM-6)目前靠 fusion-preflight.py 手写清单，缺自动依赖/代码图谱(随仓库变更自动同步)。"
+    severity: medium
+    desired_capability_keywords: [code graph, dependency graph, impact analysis, codebase index, knowledge graph]
+    status: open
+
+  - id: GAP-design-methodology-review
+    dimension: skills
+    layer: application
+    statement: "应用作业层设计 skills(ideation/PRD/UX研究/发散收敛/原型/设计批判)的方法论，从未对外部 state-of-art 做过吸收评估——自进化此前对作业层全盲。"
+    severity: medium
+    desired_capability_keywords: [ux research method, prd elicitation, design critique, prototyping, design-to-code, product design methodology, design system]
+    status: open
+
+  - id: GAP-code-layer-constraint
+    dimension: testing
+    layer: framework
+    statement: "代码层（luca 自身 .mjs/.py/.js + 下游实现）工程约束偏薄：有 careful/coding-discipline/systematic-debugging/tdd/code-review，但缺代码清理/死代码/弱类型/去重/完成前验证仪式。用户明确需要工程域 skill 约束代码层（reachable via routing，非 MCP）。对口:agent-starter cleanup-* 套件 + superpowers verification-before-completion/code-review。"
+    severity: medium
+    desired_capability_keywords: [code cleanup, dead code, type safety, dedupe, verification before completion, code review ritual, lint, refactor]
+    status: addressed   # 2026-06-21 本 session 建 /code-hygiene skill（office，routed 工程 skill）：8 清理算子(port agent-starter cleanup-*)+完成前验证 Iron Law(port superpowers, 接 luca verify.sh/check:*/bats/pytest 真值)+by-property luca 护栏；wired routing-map/command/input-modes/CLAUDE.md；route-guard 实测可达(active project surface + M3 框架自维护无 project 豁免)；过红队 FIX_THEN_STANDS(4 fix 已落)
+
+  - id: GAP-self-evolution-hardening
+    dimension: observability
+    layer: framework
+    statement: "演进子系统采纳后无经验基准/变体对比来度量改动是否真改善结果（DGM 式自硬化）；adoption-log 记 helped/caused_issue 但无 A/B 基准闭环。来源：2026-06b opportunity jennyzzt/dgm。"
+    severity: low
+    desired_capability_keywords: [self-improving agent, empirical benchmark, variant comparison, self-evolution, ablation]
+    status: open
+    # 2026-06-21 裁决：本轮**不追**（显式不静默砍）。DGM 式变体对比需一个**已融合候选基准语料**做 ablation；
+    # 当前只有 OST/GOMS/code-hygiene 3 条，样本太小，benchmark 无意义。已有 adoption-log(helped/caused_issue)
+    # + behavioral_ab.py(逐融合 A/B) 已是部分闭环。重访条件：adoption-log 累计 ≥5 条已融合候选后再建经验基准。
+
+  - id: GAP-eval-frozen
+    dimension: testing
+    layer: framework
+    statement: "eval 子系统有意冻结(ADR-0006/0007)，待检索度量结论。"
+    severity: low
+    desired_capability_keywords: [eval infrastructure]
+    status: deferred   # 有意冻结，候选不得匹配此项
+
+  # —— 2026-06-21 红队批量裁决衍生 ——
+  - id: GAP-behavioral-ab-tier
+    dimension: testing
+    layer: framework
+    statement: "behavioral_ab.py 硬钉 Sonnet(model!=sonnet→BLOCK)，但 reasoning-heavy skills(brainstorm/deepresearch/ux-brainstorm/redteam 等)实际跑 fable/opus——对它们的 prose 改动在 Sonnet 上 A/B 等于测错模型；且 baseline agent 未禁文件读会读到工作树 live 编辑污染 baseline。来源：SC-20260621-001 红队定论(候选作为'已成立事实'被拒，真实改进留此 GAP)。"
+    severity: low
+    desired_capability_keywords: [behavioral a/b, model tier, recommended-model, baseline isolation]
+    status: addressed   # 2026-06-21 已泛化 behavioral_ab.py：judge 加 --skill-tier，模型守卫按 TIER_MODELS 校验
+    # (reasoning-heavy=fable/opus · guided-execution=sonnet 默认 · mechanical=haiku)；selftest 7/7 过(含 reasoning-heavy-on-sonnet→BLOCK / -on-opus→PASS)；
+    # FUSION-RUNBOOK⑥ + docstring 同步(含 baseline 禁文件读)。SC-20260621-001 矛盾消解。
+
+  - id: GAP-no-living-capability-truth
+    dimension: skills
+    layer: application
+    statement: "luca 的设计→工程链结构性 forward-only：每个产物是 docs/<stage>/YYYY-MM-DD-<topic>-*.md 的某次变更快照，ADR/CONTEXT 仅 append——无按 capability 维护的『该能力当前(已合并)如何工作』活真值，archive-merge-into-truth 闭环缺失。来源：2026-06-21 OpenSpec(Fission-AI/OpenSpec 55.8k★)借鉴评估红队 NARROW_BORROW 定论。"
+    severity: low
+    desired_capability_keywords: [living spec, capability truth, archive merge, as-built spec, brownfield delta]
+    status: proposed   # 2026-06-21 裁决(授权下,主 agent)：保持 proposed 不 open——这是下游产品项目的能力真值需求(各项目自维护活 spec)，非 luca harness 自身该长的面；开了会让月度 scout 替下游需求找借鉴=错配。红队 NARROW_BORROW：仅 archive-merge→living truth 一念作下游 adapt-idea；不 install OpenSpec、不采反 phase-gate 哲学

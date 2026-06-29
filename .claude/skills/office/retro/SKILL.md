@@ -13,7 +13,7 @@ context-cost:
   self: 1088
   runtime-estimate: 5000
   shared-refs: [none]
-  recommended-model: haiku  # 回顾总结
+  recommended-model: mechanical  # 回顾总结
 ---
 
 ## Preamble (run first)

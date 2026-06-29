@@ -7,7 +7,15 @@
 
 ## 写入时机
 
-每个 skill 标记 `status: DONE` 之前，必须先写 handoff summary 文件。
+Workflow 模式（workflow-state 有本 skill 节点）的 skill 标记 `status: DONE` 之前，
+必须先写 handoff summary 文件。
+
+## 豁免规则
+
+standalone 模式 + 轻量 skill（frontmatter `context-cost: lightweight`
+或 `runtime-estimate ≤ 5000`）+ 产出为终端交付（无下游 skill 消费）→ 免写 handoff，
+DONE 合法。compare / status 即此规则的既有实例。standalone 重型 skill 仍须写
+（跨 session 恢复依赖 handoff）。
 
 ## 文件路径
 
@@ -98,7 +106,9 @@ HANDOFF_EOF
 
 ## 在 SKILL.md 共享规范中的嵌入位置
 
-在 `.claude/skills/office/SKILL.md` 的 `## 共通 completion 步骤` 章节末尾添加 handoff 写入要求。
+在 `.claude/skills/office/SKILL.md` 的 `### Completion Status Protocol` 章节末尾添加 handoff 写入要求
+（该文件已无「共通 completion 步骤」节，Completion 规范即此节；Handoff 要求本体在其后的
+`### Handoff Summary Protocol` 节）。
 
 ---
 

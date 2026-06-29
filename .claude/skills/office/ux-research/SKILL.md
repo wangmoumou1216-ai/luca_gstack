@@ -18,7 +18,7 @@ context-cost:
   self: 13023
   runtime-estimate: 30000
   shared-refs: [ai-native-design-framework]
-  recommended-model: sonnet  # 有框架指导的用户研究
+  recommended-model: guided-execution  # 有框架指导的用户研究
 ---
 
 ## Preamble (run first)

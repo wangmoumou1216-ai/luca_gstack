@@ -12,10 +12,10 @@ description: >
   PRD', 'let's brainstorm', 'help me write a PRD', 'PRD from this research'.
 argument-hint: "[path to research markdown file, or empty for cold-start mode]"
 context-cost:
-  self: 22327
+  self: 18344
   runtime-estimate: 75000
   shared-refs: [ai-native-design-framework]
-  recommended-model: opus  # 苏格拉底式多方案探索
+  recommended-model: reasoning-heavy  # 苏格拉底式多方案探索
 ---
 
 ## Preamble (run first)
@@ -84,91 +84,16 @@ YC-style interrogation questions are sacrosanct.
 
 ```
 deepresearch*.md (or idea)
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 0: Ingest & Classify Scope                         │
-│   • Read deepresearch*.md (or enter cold-start mode)          │
-│   • Classify: Lightweight / Standard / Deep-feature /    │
-│              Deep-product                                │
-│   • Route question set by tier                           │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 1: Context & Gap Scan (parallel background agents) │
-│   • Agent A: extract stated requirements from research   │
-│   • Agent B: identify implicit assumptions               │
-│   • Agent C: find gaps vs PRD checklist                  │
-│   • Optional: additional research if gaps are severe     │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 1.5: Research & Decision Coverage Index            │
-│   • Inventory high-confidence research claims            │
-│   • Inventory selected/rejected approach decisions       │
-│   • Assign every core item a PRD disposition + target    │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 2: Internal Pressure Test (self-directed)          │
-│   • Run tier-appropriate pressure-test questions on the  │
-│     research itself — scratchpad, not surfaced to user   │
-│   • Output: which forcing questions to sharpen           │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 2.5: AI Native Assessment (self-directed)          │
-│   • Decision path analysis (execution vs judgment steps) │
-│   • Path compression viability (N→N', delta ≥ 2?)       │
-│   • Landing judgment (fully/partially/assisted/not)      │
-│   • Agent involvement check                              │
-│   • Output: routing signals for Phase 4 + Phase 6        │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 3: Collaborative Interrogation (USER IN LOOP)      │
-│   • Ask 2-6 forcing questions, ONE AT A TIME             │
-│   • Use AskUserQuestion, prefer single-select     │
-│   • Apply anti-sycophancy + pushback patterns            │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 4: Approach Exploration                            │
-│   • Generate 2-3 approaches (minimal / ideal / lateral)  │
-│   • At least one non-obvious angle                       │
-│   • Present options BEFORE recommendation                │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 5: Adversarial Review (Oracle, foreground)         │
-│   • Oracle reviews draft on 5 dimensions                 │
-│   • Max 3 rounds with convergence guard                  │
-│   • Classify findings: safe_auto / gated / manual / fyi  │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 6: Write PRD + Conditional AI Spec                 │
-│   • Load references/prd-template.md                      │
-│   • Fill per Section Matrix for scope tier               │
-│   • Write PRD to docs/prd/{date}-{slug}-prd.md           │
-│   • If AI Native/Partial: load references/ai-spec-       │
-│     template.md, write docs/prd/{date}-{slug}-prd-ai-spec.md │
-└──────────────────────────────────────────────────────────┘
-      │
-      ▼
-┌──────────────────────────────────────────────────────────┐
-│ Phase 7: Handoff Menu                                    │
-│   • Gated if Resolve-Before-Planning is non-empty        │
-│   • Options: Plan / More Questions / Revise / Done       │
-└──────────────────────────────────────────────────────────┘
+→ Phase 0: Ingest & Classify Scope — • Read deepresearch*.md (or enter cold-start mode) • Classify: Lightweight / Standard / Deep-feature / Deep-product • Route question set by tier
+→ Phase 1: Context & Gap Scan (parallel background agents) — • Agent A: extract stated requirements from research • Agent B: identify implicit assumptions • Agent C: find gaps vs PRD checklist • Optional: additional research if gaps are severe
+→ Phase 1.5: Research & Decision Coverage Index — • Inventory high-confidence research claims • Inventory selected/rejected approach decisions • Assign every core item a PRD disposition + target
+→ Phase 2: Internal Pressure Test (self-directed) — • Run tier-appropriate pressure-test questions on the research itself — scratchpad, not surfaced to user • Output: which forcing questions to sharpen
+→ Phase 2.5: AI Native Assessment (self-directed) — • Decision path analysis (execution vs judgment steps) • Path compression viability (N→N', delta ≥ 2?) • Landing judgment (fully/partially/assisted/not) • Agent involvement check • Output: routing signals for Phase 4 + Phase 6
+→ Phase 3: Collaborative Interrogation (USER IN LOOP) — • Ask 2-6 forcing questions, ONE AT A TIME • Use AskUserQuestion, prefer single-select • Apply anti-sycophancy + pushback patterns
+→ Phase 4: Approach Exploration — • Generate 2-3 approaches (minimal / ideal / lateral) • At least one non-obvious angle • Present options BEFORE recommendation
+→ Phase 5: Adversarial Review (Oracle, foreground) — • Oracle reviews draft on 5 dimensions • Max 3 rounds with convergence guard • Classify findings: safe_auto / gated / manual / fyi
+→ Phase 6: Write PRD + Conditional AI Spec — • Load references/prd-template.md • Fill per Section Matrix for scope tier • Write PRD to docs/prd/{date}-{slug}-prd.md • If AI Native/Partial: load references/ai-spec-template.md, write docs/prd/{date}-{slug}-prd-ai-spec.md
+→ Phase 7: Handoff Menu — • Gated if Resolve-Before-Planning is non-empty • Options: Plan / More Questions / Revise / Done
 ```
 
 | Boundary | Value |
@@ -302,115 +227,12 @@ Do NOT read `references/prd-template.md` yet — it's not needed until Phase 6.
 
 **Subagent dispatch compatibility:**
 - If the environment supports `task()` (e.g., Claude Code with subagent API): use `task()` with
-  `run_in_background=true` as shown below.
+  `run_in_background=true` as shown in `references/phase1-dispatch-prompts.md`.
 - If the environment does NOT support `task()` (e.g., Claude.ai chat): execute each agent's prompt
   sequentially as internal reasoning, wrapping output in the same XML format. The skill's logic is
   identical — only parallelism is lost.
 
-```
-Subagent dispatch: 3 parallel background agents
-Each agent receives the full research content (or cold-start idea) and produces structured XML output.
-
-# If environment supports task(): use the prompts below with task(run_in_background=true)
-# If environment does NOT support task(): execute each prompt sequentially as internal reasoning
-
---- Agent A: Extract stated requirements ---
-task(
-  category="unspecified-high",
-  load_skills=[],
-  run_in_background=true,
-  description="Extract stated requirements from research",
-  prompt=`I am the brainstorm skill's Phase 1 extractor (Agent A).
-
-INPUT: <research>
-{paste full content of research.md, OR user's cold-start idea}
-</research>
-
-GOAL: List every explicit requirement, capability, or user-facing behavior the research states or strongly implies. Do NOT add requirements not supported by the text.
-
-OUTPUT FORMAT (XML):
-<stated_requirements>
-  <requirement id="S1">
-    <text>{requirement in active voice}</text>
-    <source_quote>{direct quote from research}</source_quote>
-    <confidence>{explicit | strongly_implied}</confidence>
-  </requirement>
-</stated_requirements>
-
-RULES:
-- Do not infer requirements — only extract.
-- Preserve the user's terminology.
-- Mark confidence honestly.`
-)
-
-task(
-  category="unspecified-high",
-  load_skills=[],
-  run_in_background=true,
-  description="Surface implicit assumptions in research",
-  prompt=`I am the brainstorm skill's Phase 1 assumption-surfacer (Agent B).
-
-INPUT: <research>
-{same content}
-</research>
-
-GOAL: Identify assumptions the research makes that are NOT explicitly stated. These are candidates for premises in the PRD or for Phase 3 interrogation.
-
-OUTPUT FORMAT (XML):
-<implicit_assumptions>
-  <assumption id="A1">
-    <statement>{what the research assumes to be true}</statement>
-    <evidence>{what in the research implies this assumption}</evidence>
-    <risk_if_wrong>{what breaks if this assumption fails}</risk_if_wrong>
-  </assumption>
-</implicit_assumptions>
-
-RULES:
-- Surface, do not validate. It's fine to flag assumptions that ARE true.
-- Focus on assumptions about users, market, technical feasibility, or adoption.
-- 3-10 assumptions is typical. More than 10 means you're pattern-matching on noise.`
-)
-
-task(
-  category="unspecified-high",
-  load_skills=[],
-  run_in_background=true,
-  description="Identify PRD-readiness gaps",
-  prompt=`I am the brainstorm skill's Phase 1 gap-finder (Agent C).
-
-INPUT: <research>
-{same content}
-</research>
-
-GOAL: Identify what is MISSING from the research relative to a standard PRD checklist. Your output shapes which questions Phase 3 must ask the user.
-
-PRD CHECKLIST:
-- Problem frame (is the problem itself clearly stated?)
-- Demand evidence (is there behavioral evidence someone wants this?)
-- Status quo / current workarounds
-- Target user specificity (a named role, not a segment)
-- Narrowest wedge (smallest marketable slice)
-- Constraints (technical, business, legal, user-experience)
-- Success criteria (measurable outcomes)
-- Scope boundaries (in/out lists)
-- Distribution plan (how users discover/adopt)
-
-OUTPUT FORMAT (XML):
-<gaps>
-  <gap id="G1">
-    <checklist_item>{item from list above}</checklist_item>
-    <status>{missing | partially_covered | thin}</status>
-    <what_exists>{what the research does say, if anything}</what_exists>
-    <what_is_missing>{specific gap}</what_is_missing>
-    <suggested_question>{question to ask user in Phase 3}</suggested_question>
-  </gap>
-</gaps>
-
-RULES:
-- Only flag genuine gaps — not stylistic preferences.
-- Suggested questions must follow the one-at-a-time, single-select format (see Phase 3 rules).`
-)
-```
+**Load `references/phase1-dispatch-prompts.md`** now — it contains the verbatim dispatch prompt templates for Agents A/B/C. Read it fully before firing the three tasks.
 
 **End your response** after firing these three tasks. Wait for the `<system-reminder>` notification
 that all three have completed, then continue with `background_output(task_id="...")` for each.

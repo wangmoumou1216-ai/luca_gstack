@@ -11,7 +11,7 @@ context-cost:
   self: 9459
   runtime-estimate: 150000
   shared-refs: [none]
-  recommended-model: opus  # 多agent深度研究
+  recommended-model: reasoning-heavy  # 多agent深度研究
 ---
 
 ## Preamble (run first)
@@ -167,6 +167,14 @@ AskUserQuestion:
 
 Record selection as `research_depth: deep | moderate`. This variable controls thresholds in all
 subsequent phases per the Research Depth Modes table above.
+
+**Headless fallback (when the user cannot be asked):** If AskUserQuestion is unavailable
+(e.g. running inside a subagent), check the dispatch prompt for an injected `research_depth`
+parameter:
+- Injected → use it directly and record it as the selection.
+- Not injected → do NOT silently pick a depth. Stop and return a BLOCKED report with blocker:
+  `"research_depth not injected and user cannot be asked — dispatcher must collect the user's
+  depth choice in the main session first (see orchestrator.md 用户参数前置收集)."`
 
 ### Step 0.3: Decompose into Research Angles
 

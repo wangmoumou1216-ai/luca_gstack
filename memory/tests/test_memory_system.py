@@ -417,7 +417,9 @@ facts:
             )
             self.assertIn("candidate", accepted.stdout)
             candidates = Path(tmp, "memory", "semantic", "candidates.jsonl").read_text(encoding="utf-8")
-            self.assertIn('"proposed_stable": true', candidates)
+            # 红线 SC-20260523-003：--stable 仅记意图，不得自评晋升（proposed_stable 须保持 false）
+            self.assertIn('"proposed_stable": false', candidates)
+            self.assertIn('"stable_requested": true', candidates)
             self.assertFalse(Path(tmp, "memory", "semantic", "promoted-facts.yaml").exists())
 
             duplicate = self.run_script(
@@ -800,6 +802,36 @@ facts:
             self.assertIn('"candidate_id": "SC-ready"', reviews)
             self.assertIn('"decision": "promoted"', reviews)
             self.assertEqual(queue["actions"]["promoted"], ["SC-ready"])
+
+    def test_propose_stable_does_not_auto_promote_until_human_set_stable(self):
+        # 置信度晋升洞回归：propose --stable 仅表达意图(stable_requested)；proposed_stable
+        # 只能由人工 set_stable 翻转。无人值守 --promote-ready 不得晋升提案者自评候选。
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": str(Path(tmp))}
+            out = self.run_script(
+                "propose_semantic.py",
+                "--domain", "skill-rule",
+                "--fact", "regression: self-cert must not auto-promote",
+                "--confidence", "high",
+                "--stable",
+                "--evidence", "audit 2026-06-28",
+                "--scope", "memory",
+                "--reviewer", "luca",
+                env=env,
+            )
+            cid = json.loads(out.stdout)["candidate"]
+
+            # 无人值守 promote-ready：候选只进 awaiting_approval，不进 promotion_ready，不被晋升
+            q1 = json.loads(self.run_script("consolidate_memory.py", "--promote-ready", "--json", env=env).stdout)
+            self.assertIn(cid, [i["id"] for i in q1["awaiting_approval"]])
+            self.assertNotIn(cid, [i["id"] for i in q1["promotion_ready"]])
+            self.assertEqual(q1["actions"]["promoted"], [])
+            self.assertFalse(Path(tmp, "memory", "semantic", "promoted-facts.yaml").exists())
+
+            # 人工 set_stable 批准后才进 promotion_ready 并被晋升
+            q2 = json.loads(self.run_script("consolidate_memory.py", "--set-stable", cid, "--promote-ready", "--json", env=env).stdout)
+            self.assertEqual(q2["actions"]["promoted"], [cid])
+            self.assertIn(cid, Path(tmp, "memory", "semantic", "promoted-facts.yaml").read_text(encoding="utf-8"))
 
     def test_consolidate_memory_archive_reviewed_moves_candidates(self):
         with tempfile.TemporaryDirectory() as tmp:

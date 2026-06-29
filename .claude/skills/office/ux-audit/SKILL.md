@@ -17,7 +17,7 @@ context-cost:
   self: 5540
   runtime-estimate: 20000
   shared-refs: [crm-business-criteria, design-system-contract]
-  recommended-model: sonnet  # 基于framework评估
+  recommended-model: guided-execution  # 基于framework评估
 ---
 
 ## Preamble (run first)
@@ -141,6 +141,8 @@ Module A 完成：得分 {N}/100，AI Slop {N}/100，P0 {N}条
 
 ```
 读取 .claude/skills/office/ux-audit/specialists/module-b-interaction.md 并按照其中的指令执行。
+
+**借鉴 GOMS/KLM 量化交互成本（Card-Moran-Newell）：** 对主任务流额外做一次操作子计数——标记每步 KLM 操作子（K 键击/点击 · P 指向 · M 心理准备 · H 换设备 · R 系统等待 · V 视觉确认），对比「当前方法 vs 建议方法」的操作子数与等待数，建议移除操作子/等待的最小改动（先数被移除的操作子与阻塞等待，不过拟合精确耗时）。把「当前 N 操作子 → 建议 N'（省 X）」写进交互发现。
 
 输入：
 - 截图：{用户提供的截图}
