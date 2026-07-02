@@ -21,5 +21,8 @@
     "check:project-links": "node scripts/check-project-links.mjs",
     "build:self-model": "node scripts/build-self-model.mjs",
     "check:self-model": "node scripts/build-self-model.mjs --check"
+  },
+  "dependencies": {
+    "playwright": "^1.61.1"
   }
 }
