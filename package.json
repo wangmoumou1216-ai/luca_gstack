@@ -20,7 +20,8 @@
     "check:coding-discipline": "node scripts/check-coding-discipline.mjs",
     "check:project-links": "node scripts/check-project-links.mjs",
     "build:self-model": "node scripts/build-self-model.mjs",
-    "check:self-model": "node scripts/build-self-model.mjs --check"
+    "check:self-model": "node scripts/build-self-model.mjs --check",
+    "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs"
   },
   "dependencies": {
     "playwright": "^1.61.1"

@@ -74,7 +74,7 @@ luca 追问"路径2会不会用到路径1的skill"时，发现并修复了一处
 - `references/html-prototype-tokens.md`——`muse-proto-gen` 的 `shared-refs` 直接引用，不重复定义 token 速查表。
 
 **约定/模式借鉴级依赖（沿用设计但零代码调用关系，需注意后续维护漂移风险）：**
-- `html-prototype` Phase 3 的防 slop 检查清单 + `DECISION:D-NNN` 注释格式——`muse-proto-gen` 文本承诺"同一份，不另造"，但没有代码级强制同步机制；`html-prototype` 未来若改清单，`muse-proto-gen` 需要人工同步，否则会漂移。**这是本次梳理新发现的一处待办风险，暂未建自动化检测，先记录。**
+- `html-prototype` Phase 3 的防 slop 检查清单 + `DECISION:D-NNN` 注释格式——`muse-proto-gen` 文本承诺"同一份，不另造"，但没有代码级强制同步机制；`html-prototype` 未来若改清单，`muse-proto-gen` 需要人工同步，否则会漂移。**自动化检测已建（2026-07-02）：`npm run check:muse-loop-sync`（`scripts/check-muse-loop-sync.mjs`）锚点检查 5 个共享面——allowedModes / 防 slop 防火墙节 / DECISION 格式 / shared-ref 完整性 / muse-proto-gen 自身声明；上游改版时检查响铃，同步后需一并更新锚点。**
 - `quality-gate.md` 的 agent 定义写法（frontmatter + Task 工具冷启动）——`muse-proto-judge` 照抄这个模式，不调用 quality-gate 本身。
 - 母版 `orchestrator.md` 的"扫描待办→查门禁→dispatch→更新状态" prose 模式——`muse-loop-orchestrate` 状态机设计哲学借鉴，明确不复用其代码/`workflow-state.yaml`。
 - Oracle 模式（`brainstorm`/`ux-brainstorm` 的 `adversarial-review.md`）——`muse-proto-judge` 内循环收敛"形状"（轮数上限3、连续两轮不变退出）借鉴，不借用其 PRD 专属判据内容。
