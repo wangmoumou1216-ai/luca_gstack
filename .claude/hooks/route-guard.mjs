@@ -394,6 +394,9 @@ const HEAVY_ORCHESTRATOR_SKILLS = new Set([
   '/ux-research', 'ux-research',
   '/auto', 'auto',
   '/figma-demo', 'figma-demo',
+  // muse fork 专属新增：muse-loop-orchestrate 满足同样的 ≥2 subagent + 多阶段依赖标准。
+  // 此改动仅存在于 fork 自己的 route-guard.mjs 副本，母版对应文件零改动（见 muse-loop/ARCHITECTURE.md）。
+  '/muse-loop-orchestrate', 'muse-loop-orchestrate',
 ]);
 
 function buildDecision(prompt) {

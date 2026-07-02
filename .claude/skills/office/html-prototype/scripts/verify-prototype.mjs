@@ -34,7 +34,7 @@ const blueprint = fs.existsSync(blueprintPath)
 const inferredMode = /\/figma-demo|figma-demo|Figma Demo Prototype Spec/i.test(prototypeSpec) || Boolean(blueprint)
   ? "figma-demo"
   : "html-prototype";
-const allowedModes = new Set(["html-prototype", "figma-demo", "standalone-mobile", "ux-audit", "screenshot-delta"]);
+const allowedModes = new Set(["html-prototype", "figma-demo", "standalone-mobile", "ux-audit", "screenshot-delta", "muse-proto-gen"]);
 const mode = explicitMode && allowedModes.has(explicitMode) ? explicitMode : inferredMode;
 
 const checks = [];

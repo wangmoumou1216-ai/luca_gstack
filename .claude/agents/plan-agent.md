@@ -368,6 +368,7 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 | `design-brief` | 中型·交互 | 有明确方案需要落成交互规格时 | main_agent |
 | `magicpath` | 产出型 | 需要 React 组件级别的原型产出时（先询问是否可用） | subagent |
 | `html-prototype` | 产出型 | magicpath 不可用时的降级方案 | subagent |
+| `muse-req-triage`（muse fork 专属） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion GATE-1，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
 
 **编排原则：**
 - 需求越复杂、信息越模糊 → 越需要重型 skill

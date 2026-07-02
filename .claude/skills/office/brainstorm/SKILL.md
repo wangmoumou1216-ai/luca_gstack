@@ -184,6 +184,7 @@ Parse `<research_input>` (from `$ARGUMENTS`):
 - **If it's a topic/idea string with no file path**: enter **cold-start mode**.
 - **If empty**: ask the user via the AskUserQuestion:
   > "Provide either (1) a path to a research markdown file, or (2) a description of the idea to brainstorm. Which?"
+- **If it's actually a raw batch of many candidate requirements** (a workshop transcript, a backlog dump, many unrelated asks at once) rather than one already-chosen topic: this skill has no batch-triage mode — consider `muse-req-triage` (muse fork only) first to cheaply pre-filter which candidates are worth a full Brainstorm session each, then come back here per accepted candidate.
 
 When in cold-start mode, treat the user's initial message as the "research input" and mark the
 PRD's `Source Research` field as `cold-start (no research provided)`. Cold-start mode does NOT skip

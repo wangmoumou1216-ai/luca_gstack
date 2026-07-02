@@ -180,6 +180,28 @@ skills:
     quality_gates: ["verification_iron_law", "high_confidence_apply_only", "luca_guards_preserved", "clean_tree_for_apply"]
     notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子。代码审查复用 quality-gate/redteam。"
 
+  muse-loop-orchestrate:
+    modes:
+      standalone:
+        required: ["corpus_or_instruction"]
+        optional: ["existing_req_id"]
+      workflow:
+        required: []
+        optional: ["existing_req_id"]
+    quality_gates: ["gate1_triage_confirmed", "gate2_design_map_confirmed", "traceable_delivery_required", "cold_start_judge_isolation"]
+    notes: "muse fork 专属新增。独立正向单趟状态机（extract→triage→map→gen→judge），零接入母版 Orchestrator。"
+
+  muse-req-triage:
+    modes:
+      standalone:
+        required: ["candidate_requirements_or_raw_corpus"]
+        optional: []
+      workflow:
+        required: ["candidate_requirements"]
+        optional: []
+    quality_gates: ["gate1_human_decision", "no_rice_fabrication", "brainstorm_phase15_firewall"]
+    notes: "muse fork 专属新增。standalone 模式：本 skill 自己读原始语料+算信号，accept 项格式化为话题字符串送进 /brainstorm。workflow 模式：被 muse-loop-orchestrate dispatch，接收已抽取候选，输出走 docs/loop/specs/。"
+
 governance_tools:
   compare:
     modes:
@@ -224,3 +246,20 @@ governance_tools:
       workflow:
         required: []
         optional: ["design_brief", "handoff_review", "ux_audit"]
+
+  # muse fork 专属新增（muse-loop 内部阶段 skill）：不进 project_skills / 不设独立
+  # command 文件 / 不进 skill-routing-map.yaml——只由 muse-loop-orchestrate 内部
+  # dispatch。按本仓 redteam/evals/retro 的 Tier-A 隐藏先例，仅在此登记
+  # governance_tools 契约，保持可治理可见性。muse-req-triage 已提升为
+  # project_skills（见上方），不再在此重复登记。
+  muse_proto_gen:
+    modes:
+      workflow:
+        required: ["design_map_output"]
+        optional: ["prior_judge_gap_feedback"]
+    quality_gates: ["controlled_vocabulary_only", "decision_id_traceable", "verify_prototype_qa"]
+
+  # muse-proto-judge 已转为 .claude/agents/muse-proto-judge.md（同 quality-gate 的
+  # agent 定义模式：Task 工具冷启动调度，非 Skill 工具+command 文件路径）。
+  # agents/ 目录下的定义不在 input-modes.yaml 治理范围内（quality-gate 本身也
+  # 不在此文件登记），故本条目已移除，不在此重复。
