@@ -226,6 +226,10 @@ Phase 6.75：Design Generation Packet + Tool Consumption Contract
 
 **场景 C：Phase A → Phase 1 → Phase 4 → Phase 5 → Phase 6 → Phase 6.5**
 
+> 场景专属前置 Step（场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2）执行在 Phase A 之前，
+> 属合法顺序，不算违反"Phase A 必须第一步"——它们是"进入 Phase 序列前的现状核对"，
+> 不是 Phase 序列本身的一员。
+
 **这是 A 级验收项。任意顺序错误或场景 D 缺 Layer D → 产出无效，打回重做。**
 
 ---
