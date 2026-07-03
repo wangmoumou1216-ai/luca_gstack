@@ -45,6 +45,26 @@ def render_item(x):
     return str(x)
 
 
+STALE_ESCALATE_DAYS = 5  # 超过这个天数，从"平铺一行"升级为"带一键裁决命令的显眼行"
+
+
+def render_stale(x):
+    """超期候选按 age_days 分级呈现——2026-07-03 治理降频修复：R5 发现同一候选连续 9 天
+    逐字复读仍推不动裁决（告警疲劳）；age_days>=阈值时升级呈现+给可执行命令，而不是原样重复。"""
+    if not isinstance(x, dict):
+        return str(x)
+    cid = x.get("id", "?")
+    age = x.get("age_days")
+    fact = (x.get("fact") or "")[:80]
+    if isinstance(age, (int, float)) and age >= STALE_ESCALATE_DAYS:
+        return (f"🔴 **{cid}**（已超期 {int(age)} 天未处理）— {fact}\n"
+                f"  一键晋升：`python3 memory/scripts/consolidate_memory.py --set-stable {cid} --reviewer <你的名字>`"
+                f" / 明确拒绝请在 `memory/semantic/reviews.jsonl` 记一行 decision=rejected")
+    if isinstance(age, (int, float)):
+        return f"{cid}（{int(age)}天）— {fact}"
+    return render_item(x)
+
+
 def recent_episodes(today: str):
     if not EPISODIC_INDEX.exists():
         return []
@@ -206,8 +226,34 @@ def check_person_memory():
     return issues
 
 
+FORCE_WEEKLY_DAYS = 7  # 无状态变化也至少每 N 天写一次心跳 digest，确认管线存活
+
+
+def last_digest_date():
+    """最近一份已写 digest 的日期（不含仅 touch 的 .checked-* 标记）。"""
+    if not DIGESTS.exists():
+        return None
+    dates = []
+    for p in DIGESTS.glob("*.md"):
+        try:
+            dates.append(datetime.strptime(p.stem, "%Y-%m-%d"))
+        except ValueError:
+            continue
+    return max(dates) if dates else None
+
+
 def main() -> int:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_dt = datetime.strptime(today, "%Y-%m-%d")
+
+    # 每次调用都留一个"今天已检查过"的轻量标记（不含内容），让 session-restore 的
+    # 每日一次触发节流独立于"今天是否真的写了 digest"——否则降频后会变成每个
+    # session 都重跑 consolidate（2026-07-03 治理降频修复，见 CLAUDE.md P2-4）。
+    DIGESTS.mkdir(parents=True, exist_ok=True)
+    try:
+        (DIGESTS / f".checked-{today}").touch()
+    except OSError:
+        pass
 
     # 应用治理：晋升合格候选 + 归档已审/noisy（全部在 consolidate 的门禁内）
     result = run_consolidate(["--promote-ready", "--archive-reviewed", "--archive-noisy"])
@@ -223,11 +269,28 @@ def main() -> int:
     person_issues = check_person_memory()
     eps = recent_episodes(today)
 
+    has_change = bool(
+        promoted or archived or archived_noisy or conflicts or dups or stale
+        or routing_issues or self_model_issues or person_issues or eps
+    )
+    last_dt = last_digest_date()
+    days_since = (today_dt - last_dt).days if last_dt else FORCE_WEEKLY_DAYS
+    # 2026-07-03 治理降频（全量搭建 review P2-4）：R5 实测每日治理近4周只产生2次真实状态
+    # 变化、空转率>90%——改为"有状态变化才写 + 周度强制心跳"，不再逐日复读同一份空 digest。
+    if not has_change and days_since < FORCE_WEEKLY_DAYS and not result.get("_error"):
+        print(json.dumps({
+            "skipped": "无状态变化，未到周度强制心跳",
+            "days_since_last_digest": days_since,
+        }, ensure_ascii=False))
+        return 0
+
     by_project = {}
     for e in eps:
         by_project.setdefault(e.get("project", "(未分项目)") or "(未分项目)", []).append(e)
 
     lines = [f"# 成长摘要 — {today}", ""]
+    if not has_change:
+        lines += [f"> 🫀 周度强制心跳：连续 {days_since} 天无状态变化，仍照跑一次确认管线存活（非真实变化）", ""]
     if result.get("_error"):
         lines += [f"> ⚠️ consolidate 调用异常：{result['_error']}", ""]
 
@@ -244,7 +307,7 @@ def main() -> int:
         lines += [f"- {render_item(d)}" for d in dups]
     if stale:
         lines.append("**超期候选（久未晋升/处理）：**")
-        lines += [f"- {render_item(s)}" for s in stale]
+        lines += [f"- {render_stale(s)}" for s in stale]
     if routing_issues:
         lines.append("**模型路由（真值源一致性/复核）：**")
         lines += [f"- {i}" for i in routing_issues]

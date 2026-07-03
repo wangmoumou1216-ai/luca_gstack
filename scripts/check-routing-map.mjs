@@ -8,6 +8,8 @@ const content = readFileSync('.claude/skill-os/skill-routing-map.yaml', 'utf8');
 const claudeMd = readFileSync('CLAUDE.md', 'utf8');
 const claudeHead = claudeMd.split('\n').slice(0, 40).join('\n');
 const agentsHead = readFileSync('AGENTS.md', 'utf8').split('\n').slice(0, 40).join('\n');
+// /compare, magicpath, /figma-demo removed 2026-07-03 (full-review P2-6): demoted to
+// hidden skills (zero episodic use in 30 days) — no longer required project_skills.
 const requiredInvokes = [
   '/auto',
   '/idea',
@@ -16,12 +18,9 @@ const requiredInvokes = [
   'superpowers:brainstorming',
   '/ux-research',
   '/ux-audit',
-  '/compare',
   '/ux-brainstorm',
   '/design-brief',
-  'magicpath',
   '/html-prototype',
-  '/figma-demo',
   '/figma-layer',
   '/tech-spec',
   '/task-plan',

@@ -7,6 +7,7 @@ facts:
     stable: true
     added: 2026-05-16
     source: brand-tokens.md
+    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
 
   - id: SF-002
     domain: fxui
@@ -31,14 +32,16 @@ facts:
     stable: true
     added: 2026-05-16
     source: framework/
+    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
 
   - id: SF-005
-    domain: crm
-    fact: "纷享销客产品设计场景四类：A=新功能、B=已有功能优化、C=线上评审改版、D=Agent化改造"
+    domain: workflow
+    fact: "产品设计场景四类（产品中性，跨项目适用）：A=新功能、B=已有功能优化、C=线上评审改版、D=Agent化改造；route-guard 本身 scene-agnostic，分类由用户/上下文确认，非绑定任何具体产品"
     confidence: high
     stable: true
     added: 2026-05-16
     source: CLAUDE.md
+    reworded: "2026-07-03: 原文绑定'纷享销客产品设计场景四类'，经 review 确认场景分类本身产品中性（个人 app 项目 REQ-008 已实战验证走场景B），仅措辞收窄，语义不变"
   - id: SC-20260520-002
     domain: skill-rule
     fact: "brainstorm: 苏格拉底拷问顺序必须从用户目标出发，不得从技术方案出发"

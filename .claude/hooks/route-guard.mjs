@@ -389,10 +389,20 @@ function skillDecision(prompt) {
 
 // Skills that always require Plan Agent check regardless of keyword complexity score.
 // These skills spawn ≥2 subagents and have multi-phase dependencies by design.
+//
+// '/auto' deliberately excluded (2026-07-03, full-review P2-5): its own SKILL.md
+// Step 2 "Plan Output" already shows a Phase plan and blocks on user confirmation
+// whenever it runs Hierarchical (≥3 Phase) — stacking route-guard's PLAN_CHECK on
+// top made it structurally impossible for /auto to ever run "automatically" even
+// for simple, non-Hierarchical requests (50-session audit: zero real usage, the
+// redundant external gate — not lack of demand — was the cause). Removing it here
+// does not remove the safety net: /auto's internal gate still fires for complex
+// (Hierarchical) runs; simple runs can now genuinely proceed without a second,
+// external confirmation loop. deepresearch/ux-research/figma-demo keep the
+// external gate — they have no equivalent internal plan-confirmation step.
 const HEAVY_ORCHESTRATOR_SKILLS = new Set([
   '/deepresearch', 'deepresearch',
   '/ux-research', 'ux-research',
-  '/auto', 'auto',
   '/figma-demo', 'figma-demo',
 ]);
 

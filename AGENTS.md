@@ -432,7 +432,9 @@ Layered routing order:
 1. **Project context gate.** If the user says "老项目", "已有项目", "继续项目", or names an
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6), or `PLAN CHECK`
-   (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/auto`, `/figma-demo`),
+   (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/figma-demo` — **not**
+   `/auto`, which since 2026-07-03 relies on its own internal Step 2 Phase-confirmation gate
+   instead of a redundant external PLAN_CHECK),
    or the hit skill is known to satisfy any of the Plan Agent 5 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
    high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not

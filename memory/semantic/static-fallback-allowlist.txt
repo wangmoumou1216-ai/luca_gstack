@@ -9,10 +9,12 @@
 # 把其 id 加到下面一行——**改这里 = 改每个 session 的 context 注入面，慎重；人工拥有**。
 #
 # 一行一个 id；# 开头或行内 # 之后为注释。
-SF-001
+# 2026-07-03（全量搭建 review P2-3）：SF-001/SF-004 是 CRM/FxUI profile 专属细节
+# （品牌色具体值/组件库布局清单），非"换任何任务都必须遵守"的宪法级——移出白名单，
+# 转 search-only（memory/scripts/search_memory.py "brand" / "fxui"）。CRM 任务激活时
+# 按 CONTEXT.md「激活条件」读取 brand-tokens.md/component-map.md 全文，不依赖本节镜像。
 SF-002
 SF-003
-SF-004
 SF-005
 SC-20260523-001
 SC-20260523-002
