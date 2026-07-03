@@ -74,7 +74,7 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 1. 抽取步骤：**不直接调用 `/idea`**（它是交互型 main_agent，会阻塞，且每次运行覆写项目级单例状态）。按 `muse-loop/references/req-extraction-principles.md` 的三铁律做忠实抽取，先判断本轮输入是"单次静态语料"还是"跨轮演化多源流"。
 2. dispatch `muse-req-triage`（走它的**入口B/workflow 模式**——已抽取候选直接进 Phase 1 打分，跳过它自己的语料读取步骤；`muse-req-triage` 2026-07-01 起已提升为项目级 skill，独立使用时走入口A，两者共用同一套打分+分类+GATE-1逻辑，仅入口和输出形态不同，见其 SKILL.md）：rule-based 打分 + 独立 triage 分类。
 
-**GATE-1（人类卡点，不可省略）：** 就是 dispatch `muse-req-triage`（入口B）时它自己 Phase 3 触发的 `AskUserQuestion`——**呈现内容以 `muse-req-triage` SKILL.md Phase 3 为唯一权威定义**（一句话陈述+来源引用+Phase 1信号+Phase 2分类+EARS校验+design_reference一行+入口B专属的brownfield问法），本节不复述、不另定义。用户确认后得到最终 `human_decision`（accept/defer/reject）。`allow_standalone_override: false`——这条卡点不可绕过，源方案明确写着"这个人类卡点不可省略，它是 Loop 质量的底线"。
+**GATE-1（人类卡点，不可省略）：** 就是 dispatch `muse-req-triage`（入口B）时它自己 Phase 3 触发的 `AskUserQuestion`。**呈现内容以 `muse-req-triage` SKILL.md Phase 3 为唯一权威定义，本节不复述其内容、不另定义**——下面括号只是索引这份权威清单包含哪 6 个条目名（一句话陈述/来源引用/Phase 1信号/Phase 2分类/EARS校验/design_reference一行/入口B专属brownfield问法），每项的具体展示格式、校验规则、问法原文一律以 triage Phase 3 为准，本文件不重复。用户确认后得到最终 `human_decision`（accept/defer/reject）。`allow_standalone_override: false`——这条卡点不可绕过，源方案明确写着"这个人类卡点不可省略，它是 Loop 质量的底线"。
 
 **本节只定义 Loop 场景专属的编排逻辑——brownfield 问法何时触发、答案如何驱动下游**（呈现文案本身在 triage Phase 3，此处不重复措辞）：
 
