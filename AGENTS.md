@@ -440,7 +440,10 @@ Layered routing order:
    high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not
    execute the skill directly. The Plan Agent 5 conditions (任一满足即触发):
    - The task creates or modifies ≥ 3 files.
-   - The task needs ≥ 2 independent subagents collaborating.
+   - The task needs ≥ 2 independent subagents collaborating (**except `/auto` itself** — orchestrating
+     multiple skills is its core function, so this condition is trivially true for every legitimate
+     `/auto` call; `/auto`'s own Step 2 already has a Phase-count-scaled confirmation gate, see
+     `.claude/agents/plan-agent.md`; `/auto` still triggers this gate if any of the other 4 conditions hold).
    - The task has an explicit phase dependency (B must wait for A).
    - The task involves irreversible operations (git operations, bulk file overwrite).
    - The user explicitly requests a plan ("先做个计划", "plan 一下", "想清楚再做").

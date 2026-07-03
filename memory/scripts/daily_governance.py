@@ -45,7 +45,11 @@ def render_item(x):
     return str(x)
 
 
-STALE_ESCALATE_DAYS = 5  # 超过这个天数，从"平铺一行"升级为"带一键裁决命令的显眼行"
+# consolidate_memory.py 的 stale_candidates() 硬编码 days=14（无 CLI 覆盖）作为"进入超期列表"
+# 的门槛——本函数看到的候选已经保证 >=14 天。阈值须定在 14 之上才有实际二级区分（独立核验
+# 发现：曾设为 5 时该分支在生产环境永远不可达，凡进这里的都已 >=14 天，"平铺"档位形同虚设）。
+STALE_ESCALATE_DAYS = 21  # 在 14 天门槛上再多逾期 7 天才升级为一键命令显眼行，给"刚满14天"
+                          # 和"拖了3周+"一个真实可区分的呈现档位
 
 
 def render_stale(x):

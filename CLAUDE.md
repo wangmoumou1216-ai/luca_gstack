@@ -45,7 +45,9 @@ This file is read by Claude Code at the start of every session.
 断言列表），复杂任务（Supervisor/Hierarchical 模式）
 暂停等用户确认后再执行：
 - 任务涉及 ≥ 3 个文件的创建或修改
-- 任务需要 ≥ 2 个独立 subagent 协作
+- 任务需要 ≥ 2 个独立 subagent 协作（**`/auto` 本身除外**——它把编排多 skill 设计成核心功能，
+  这条对它恒真等于每次都强制触发；`/auto` 自身 Step 2 已有按 Phase 数缩放的确认门，见
+  `.claude/agents/plan-agent.md` 详细说明；若 `/auto` 同时满足其余 4 条件之一仍正常触发）
 - 任务有明确的阶段依赖（B 必须等 A 完成）
 - 任务涉及不可逆操作（git 操作、文件批量覆盖）
 - 用户明确要求：「先做个计划」、「plan 一下」、「想清楚再做」

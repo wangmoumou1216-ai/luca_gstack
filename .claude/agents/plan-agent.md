@@ -37,6 +37,15 @@ Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 | 任务涉及不可逆操作 | git 操作、批量覆盖文件 |
 | 用户明确要求 | "先做个计划"、"plan 一下"、"想清楚再做" |
 
+**「≥2 subagent」条件对 `/auto` 本身不生效（2026-07-03 修复）：** `/auto` 把"编排多个 skill"
+设计成自己的核心功能——按其自身 SKILL.md「激活条件」，任何真正该走 `/auto` 的任务本就需要
+≥2 个 subagent，条件 2 对它必然恒真，等同于"每次调用 /auto 都强制走本文件"。这与 `/auto` 自身
+Step 2 已有的按 Phase 数缩放的确认门（Hierarchical≥3 Phase 才等确认）重复叠加，是 2026-07-03
+全量搭建 review 发现 `/auto` 50-session 零使用的结构性成因之一（另一半成因是 route-guard.mjs
+的 `HEAVY_ORCHESTRATOR_SKILLS`，已同期修复——见该文件注释）。**当目标 skill 就是 `/auto` 本身
+时，条件 2 不适用**；`/auto` 若同时满足其余 4 条件之一（如涉及不可逆操作、用户明确要求先做计划）
+仍正常触发本文件。
+
 **不触发的情况：**
 - 单文件编辑（Solo Mode，直接执行）
 - 问答类任务
