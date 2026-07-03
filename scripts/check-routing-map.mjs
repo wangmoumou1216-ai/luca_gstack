@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync, readdirSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { join } from 'path';
 import assert from 'assert/strict';
 
@@ -94,7 +95,9 @@ function parseHiddenSkills(md) {
 const HIDDEN_SKILLS = parseHiddenSkills(claudeMd);
 // Skills invoked via the Skill tool / external plugins: they live in
 // routing-map + input-modes but have neither a local skill dir nor a command.
-const EXTERNAL_SKILLS = new Set(['superpowers-brainstorming']);
+// Derived below from routing-map itself (invoke contains ':') — same
+// single-source philosophy as parseHiddenSkills, no second hand-kept list.
+let EXTERNAL_SKILLS;
 // Non-skill directories under skills/office that must not be treated as skills.
 const NOT_A_SKILL_DIR = new Set(['references']);
 
@@ -156,6 +159,7 @@ for (const file of readdirSync(cmdDir).filter(f => f.endsWith('.md'))) {
 }
 
 const projectSkills = parseProjectSkills(content);
+EXTERNAL_SKILLS = new Set(projectSkills.filter(s => s.invoke && s.invoke.includes(':')).map(s => s.canonical));
 const inputModesText = readFileSync('.claude/skill-os/input-modes.yaml', 'utf8');
 const inputModeKeys = new Set([
   ...parseTopKeys(inputModesText, 'skills'),
@@ -231,6 +235,72 @@ for (const cond of PLAN_AGENT_CONDITIONS) {
     if (!hit) ssotErrors.push(`SSOT-7 ${surface.name} missing Plan Agent trigger condition "${cond.id}"`);
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SSOT-8/9: skill-NAME references in satellite yamls (2026-07 evolution scout
+// byproduct: these two files had zero checker coverage; renamed skill → silent
+// dangling entries). Real YAML parse via python3+PyYAML — regex shape-lints
+// break on legal reformatting (quoted scalars / block lists) and go blind on
+// block-style paths (2026-07-02 redteam, 6 confirmed defects in the regex v1).
+// PyYAML is already required by lint:yaml locally and installed by the same CI
+// job that runs this script.
+// ─────────────────────────────────────────────────────────────────────────────
+function parseYamlViaPython(path) {
+  const out = execFileSync('python3', ['-c',
+    'import yaml,json,sys; print(json.dumps(yaml.safe_load(open(sys.argv[1]))))', path],
+    { encoding: 'utf8' });
+  return JSON.parse(out);
+}
+
+// Valid skill-name set also admits builtin skills (routing-map builtin_skills
+// section: web-access / agent-browser / tdd / lark-* …) — they are legal path
+// nodes even though they are not project skills.
+const routingDoc = parseYamlViaPython('.claude/skill-os/skill-routing-map.yaml');
+const builtinSkillNames = Object.values(routingDoc.builtin_skills || {}).map(e => e && e.skill).filter(Boolean);
+const validSkillNames = new Set([...routingCanon, ...HIDDEN_SKILLS, ...EXTERNAL_SKILLS, ...builtinSkillNames, 'office']);
+
+// SSOT-8 contract: scenes.*.{recommended,engineering,fallback}_paths[*][*],
+// design_output.primary and design_output.fallback[*] carry ONLY skill names.
+// Other graph fields (degrade_target, tool_choice keys, handoff_gates ids) are
+// concept identifiers and are intentionally NOT validated — renaming a skill
+// still requires a hand check of those (documented limitation).
+const graph = parseYamlViaPython('.claude/skill-os/optional-workflow-graph.yaml');
+const graphRefs = [];
+for (const [sceneKey, scene] of Object.entries(graph.scenes || {})) {
+  for (const [field, val] of Object.entries(scene || {})) {
+    if (!field.endsWith('_paths') || !Array.isArray(val)) continue;
+    for (const path of val) for (const name of [].concat(path)) {
+      graphRefs.push({ name, where: `scenes.${sceneKey}.${field}` });
+    }
+  }
+}
+const dOut = graph.design_output || {};
+if (dOut.primary) graphRefs.push({ name: dOut.primary, where: 'design_output.primary' });
+for (const name of [].concat(dOut.fallback || [])) graphRefs.push({ name, where: 'design_output.fallback' });
+for (const ref of graphRefs) {
+  if (!validSkillNames.has(String(ref.name))) {
+    ssotErrors.push(`SSOT-8 optional-workflow-graph.yaml ${ref.where} references unknown skill "${ref.name}"`);
+  }
+}
+
+// SSOT-9 contract: rules[*].scope.skills — get_rules.py matches by exact string
+// ("*" = wildcard), so every name must be a canonical skill name. The list must
+// also stay FLOW-style ([a, b]): get_rules.py's hand-rolled parser mis-reads a
+// block list (attaches it to the rule top level → scope.skills reads empty →
+// the rule silently applies to EVERY skill).
+const rulesDoc = parseYamlViaPython('.claude/observability/rules.yaml');
+for (const rule of rulesDoc.rules || []) {
+  for (const name of (rule.scope && rule.scope.skills) || []) {
+    if (name !== '*' && !validSkillNames.has(String(name))) {
+      ssotErrors.push(`SSOT-9 rules.yaml rule ${rule.id || '?'} scope.skills references unknown skill "${name}"`);
+    }
+  }
+}
+readFileSync('.claude/observability/rules.yaml', 'utf8').split('\n').forEach((ln, i) => {
+  if (/^\s+skills:\s*(#.*)?$/.test(ln)) {
+    ssotErrors.push(`SSOT-9 rules.yaml:${i + 1} scope.skills must be flow-style ([a, b]) — get_rules.py mis-reads block lists as apply-to-all`);
+  }
+});
 
 if (ssotErrors.length) {
   console.error('FAIL skill SSOT consistency:');
