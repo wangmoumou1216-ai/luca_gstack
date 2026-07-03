@@ -183,6 +183,21 @@ AskUserQuestion：
 > B）竞品启发
 > C）两份都参考（每条决策注明来源）
 
+**场景 B 前置步骤（锁死，在 Phase A 之前执行）：**
+
+```
+Step B-0：当前功能状态确认（强制，对齐场景 C 的 Step C-1）
+          → 采集被优化功能的真实现状：线上页面截图 / Figma 现行稿 + 操作路径
+          → 后续每条优化决策必须能落到现状中的具体模块（改动区）；
+            不受影响部分显式归入保持区，禁止只凭 PRD 转述臆测现有 UI 结构
+          → 真实现状无法获取时不静默继续：AskUserQuestion 请用户提供入口
+            （链接 / 截图 / Figma），或由用户显式确认「无现状可依，按新建处理」
+```
+
+> 依据：场景 B 与场景 C 同样是对已有功能动刀；只有评审改版看现状、优化不看，
+> 会让整条决策链建立在 PRD 转述的臆想 UI 上（真实案例：把历史记录分类标签
+> 误当首页入口按钮，MUST 级需求 6 条中 3 条映射失败）。
+
 **场景 B 输入读取顺序锁死（不可调换）：**
 1. prd-constraints.md（第一，建立围栏）
 2. ux-audit 报告（了解现有问题）
@@ -210,6 +225,10 @@ Phase 6.75：Design Generation Packet + Tool Consumption Contract
 ```
 
 **场景 C：Phase A → Phase 1 → Phase 4 → Phase 5 → Phase 6 → Phase 6.5**
+
+> 场景专属前置 Step（场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2）执行在 Phase A 之前，
+> 属合法顺序，不算违反"Phase A 必须第一步"——它们是"进入 Phase 序列前的现状核对"，
+> 不是 Phase 序列本身的一员。
 
 **这是 A 级验收项。任意顺序错误或场景 D 缺 Layer D → 产出无效，打回重做。**
 
@@ -739,8 +758,10 @@ AskUserQuestion：
    假设挑战 → Phase 3 体验验证 → Phase 4 品味检查 → Phase 5 决策 8 字段化
    → Phase 6 原型承载方式 + 组件映射 → Phase 6.5 可追踪完整门禁
    → Phase 6.75 Design Generation Packet
+   （**例外**：场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2 执行在 Phase A 之前，
+   是进入本序列前的现状核对，不算违反本条——见「⚠️ 执行顺序锁死」节）
 2. **必读 references 4 份，读完才能开始** — 未读完 SELF_CHECK_PASSED 不得写 YES
-3. **Phase A 设计坐标系必须第一步** — 不写坐标系直接跳进决策 = 没有设计
+3. **Phase A 设计坐标系必须第一步**（**场景 B/C 的前置 Step 除外，见上条**）— 不写坐标系直接跳进决策 = 没有设计
 4. **Phase 1 四层深度思考** — Layer A/B 必填，Layer C 所有 AI 功能必填，Layer D
    场景 D 和 agent 功能必填
 5. **场景 B / D 输入顺序锁死** — prd-constraints 第一

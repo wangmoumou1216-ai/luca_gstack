@@ -7,10 +7,22 @@
 
 ## 项目基本信息
 
-**产品：** 纷享销客 CRM
-**技术栈：** FxUI Vue 2.0（生产）/ 纯 HTML + Tailwind CDN（原型）
-**设计体系：** shadcn 组件映射 → FxUI（见 component-map.md）
-**品牌色：** #FF8000（主色），全页 ≤3 处
+**luca_gstack 是多项目个人开发环境**，不绑定单一"产品"（2026-07-03 修正，见下方"身份声明落地"）。
+下游项目各自在 `~/Desktop/项目/<name>/` 独立记忆与约束，本文件只记跨项目的框架层约束。
+
+**CRM（纷享销客）是一个可选休眠 profile**，非当前默认场景：
+- **技术栈：** FxUI Vue 2.0（生产）/ 纯 HTML + Tailwind CDN（原型）
+- **设计体系：** shadcn 组件映射 → FxUI（见 component-map.md）
+- **品牌色：** #FF8000（主色），全页 ≤3 处
+- **磁盘资产原地保留、零 per-session 成本**：`framework/` 母版、`brand-tokens.md`、
+  `fxui-source-to-html`/`fx-icon-search` skill——不删，只是不再默认注入每-session 上下文。
+- **激活条件**：用户任务显式提及"纷享/CRM/FxUI"或指向 `framework/` 目录时，读取
+  component-map.md 与 brand-tokens.md 生效；其余 session 视为不相关，不注入 CRM 专属约束。
+
+**身份声明落地（2026-07-03，luca_gstack 全量搭建 review 的 P2 项，framework-audit/2026-07-03-full-review.md）：**
+6-28 健康度体检已发现"CRM 专属层冬眠、通用脊柱已迁个人 app"（episodic 50 个 session 零纯
+CRM 设计任务），当时留待人工拍板是否收窄声明；本次 review 确认磁盘资产保留、只收窄每-session
+注入面（不删除，"全删"会断供 muse fork 对 FxUI token 规则的依赖）。
 
 ---
 
@@ -19,8 +31,8 @@
 > 以下为项目级硬约束，违反即停。每条指向权威源；新增红线追加一行并注明来源。
 > （quality-gate 的约束合规维度 grep 本节，故本节不得空置。）
 
-1. **framework/ 母版只读**：不得直接修改 `framework/` 任何文件（SF-002）。原型须复制母版，不在原地改。
-2. **品牌主色 #FF8000 全页 ≤3 处**（CONTEXT 项目基本信息 / SF-001）。
+1. **framework/ 母版只读**：不得直接修改 `framework/` 任何文件（SF-002）。原型须复制母版，不在原地改。此条不因 CRM profile 是否激活而失效——它保护的是磁盘资产完整性，与场景无关。
+2. **品牌主色 #FF8000 全页 ≤3 处**——**仅当 CRM profile 激活时生效**（见上「激活条件」）；非 CRM 任务不适用。
 3. **稳定 ID 永不重编/复用**：R-/AE-/IF-/CMP-/DEC-/DEV- 等已分配编号（前缀为代表，非穷尽）不得改号或回收（brainstorm「Renumbering stable IDs」CRITICAL / quality-gate ID 稳定性维度）。
 4. **最小文件 + 读前先写 + Surgical Changes**：不创建非任务必要文件，优先编辑已有文件；编辑前必先 Read；只改与目标直接相关的行（CLAUDE.md 核心行为原则 / Coding Discipline）。
 5. **稳定事实走受控晋升**：不得直接写 `promoted-facts.yaml` 或本文件；先 `propose_semantic.py` 写 candidate，经 review/consolidate 门禁才晋升（SC-20260523-003）。

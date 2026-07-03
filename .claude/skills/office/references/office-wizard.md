@@ -180,9 +180,6 @@ luca_gstack — 一级可见 Skill 列表
 /ux-audit      B C     评审一个已有页面，找出视觉、交互、业务上的问题
                输入模式：standalone 或 workflow。需要页面截图/页面参考（质量 gate）
 
-/compare       A B C D 方案对比：两个设计方案/版本/截图并排比较，找差异和优劣
-               输入模式：standalone。可接受两个 HTML/截图/文档路径
-
 ── 设计决策 ────────────────────────────────────────────────────
 
 /ux-brainstorm   A B D   UX设计方案编排器（7个UX逼问，2-3方案，Oracle审查）
@@ -205,25 +202,14 @@ luca_gstack — 一级可见 Skill 列表
 /open-design   A B C D **设计产出首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
                输入模式：standalone 或 workflow。输入 design-brief 交互文档；
                默认在 OD 桌面端生成 + 在 OD UI 内判断「是否符合需求」，说「拉回来」落盘 docs/prototype/（headless 为 opt-in）
-               说明：注入 FxUI 品牌色+文字色 token（不绑组件库）；OD daemon 不可达时退回 magicpath/html-prototype
-
-magicpath      A B C D 备选（OD 不可达时）：需求描述 → React canvas 组件
-               输入模式：standalone 或 workflow。standalone 可直接描述界面；
-               workflow 必须消费 design-brief 的 Design Generation Packet
-               说明：有 MagicPath canvas 环境时使用；不可用时退回 /html-prototype
+               说明：注入 FxUI 品牌色+文字色 token（不绑组件库）；OD daemon 不可达时内部退回
+               隐藏 skill `magicpath`/`html-prototype`（见下方"隐藏/高级 skill"，非一级入口）
 
 /html-prototype A B C  生成可在浏览器查看的 HTML 原型（OD/MagicPath 不可用时备选）
                输入模式：standalone 或 workflow。可接 design-brief / ux-audit /
                screenshot_delta / figma-demo blueprint / standalone brief
                质量 gate：Step0认知门禁、framework契约、设计系统、动态参考、QA
                不因 standalone 取消
-
-/figma-demo    A B C D 口述 + Figma → HTML 演示 Demo 编排器
-               输入模式：standalone 优先。口述流程 + Figma 截图/链接；没有 Figma
-               时可降级为纯口述
-               产出：requirement.md + mapping-proof.md + blueprint.yaml + index.html + prototype-spec.md
-               说明：适合汇报型 Demo、大型多节点 Demo、需要按 Figma
-               画面拆节点并隔离构建上下文的场景
 
 /figma-layer   A   C   把 HTML 原型还原到 Figma，作为交付稿（套 FxUI 品牌色+文字色 token）
                输入模式：standalone 转换工具或 workflow 下游。需要 /open-design、
@@ -239,6 +225,11 @@ magicpath      A B C D 备选（OD 不可达时）：需求描述 → React canv
 /task-plan     A B D   任务编排计划：渐进式索引 + 断言矩阵 + 开发/测试任务卡
                输入模式：standalone 或 workflow。执行前必须通过门禁
                产出：docs/engineering/{topic}-task-plan.md
+
+/code-hygiene  —      代码层工程约束：完成前验证铁律（声明 done 前必须有当场跑出的
+               证据）+ 8 清理算子（死代码/循环依赖/去重/类型/弱类型/防御性/遗留/slop，
+               只自动应用 HIGH 置信）。不是设计场景 skill，代码/工程任务专用
+               输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
 
 ── 外部 Skill（superpowers plugin）─────────────────────────
 

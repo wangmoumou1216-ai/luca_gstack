@@ -65,8 +65,13 @@ def main() -> int:
     project = "" if args.meta else (args.project.strip() or active_project())
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    count = sum(1 for l in INDEX.read_text(encoding="utf-8").splitlines() if l.strip()) if INDEX.exists() else 0
-    ep_id = f"EP-{today.replace('-', '')}-{count + 1:03d}"
+    # 行数当序号会在归档移行/并发追加后撞号（EP-20260701-051 曾重复）；扫 index+archive 取最大序号+1 保证单调
+    seq = 0
+    for src in (INDEX, *(sorted(ARCHIVE.glob("*.jsonl")) if ARCHIVE.exists() else ())):
+        if src.exists():
+            for m in re.finditer(r'"EP-\d{8}-(\d{3})"', src.read_text(encoding="utf-8")):
+                seq = max(seq, int(m.group(1)))
+    ep_id = f"EP-{today.replace('-', '')}-{seq + 1:03d}"
     slug = slugify(args.topic)
     session_file = f"sessions/{today}-{slug}.md"
 

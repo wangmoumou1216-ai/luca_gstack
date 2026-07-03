@@ -103,13 +103,17 @@ if (existsSync(memScript)) {
 }
 
 // 每日记忆治理：SessionStart 触发（跑在 Claude Code 已获 Desktop 访问的 TCC 上下文里，
-// 绕开 launchd agent 对 ~/Desktop 的 TCC 限制——见 review DG-01）。仅当今日 digest 不存在时跑一次，
-// detached 后台执行不阻塞启动；本次启动展示的是上一份 digest，今日 digest 下次启动可见。
+// 绕开 launchd agent 对 ~/Desktop 的 TCC 限制——见 review DG-01）。仅当今日尚未检查过时跑一次，
+// detached 后台执行不阻塞启动；本次启动展示的是上一份 digest，今日 digest（如果真的写了）下次启动可见。
+// 2026-07-03 治理降频：daily_governance.py 现在只在"有状态变化"或"周度强制心跳"时才写
+// today.md——若仍只拿 todayDigest 存在与否当节流闸，降频后会变成每个 session 都重跑 consolidate。
+// 改用 .checked-<date> 轻量标记（daily_governance.py 每次调用无条件 touch）判断"今天是否已跑过"。
 try {
   const today = new Date().toISOString().slice(0, 10); // UTC，与 daily_governance 的 digest 文件名一致
   const govScript = join(projectRoot, 'memory', 'scripts', 'daily_governance.py');
   const todayDigest = join(projectRoot, 'memory', 'digests', `${today}.md`);
-  if (existsSync(govScript) && !existsSync(todayDigest)) {
+  const todayChecked = join(projectRoot, 'memory', 'digests', `.checked-${today}`);
+  if (existsSync(govScript) && !existsSync(todayDigest) && !existsSync(todayChecked)) {
     // detached 子进程的 stderr 重定向到日志文件（而非 'ignore'），否则 governance 崩溃/失败完全静默无痕（V4）。
     let govErr = 'ignore';
     try { govErr = openSync('/tmp/luca-gstack-governance.log', 'a'); } catch { }

@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import os
 import subprocess
@@ -9,6 +10,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_daily_governance():
+    """Load daily_governance.py by file path (avoids sys.path pollution across tests)."""
+    spec = importlib.util.spec_from_file_location(
+        "daily_governance_under_test", ROOT / "memory" / "scripts" / "daily_governance.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class MemorySystemTests(unittest.TestCase):
@@ -886,6 +897,62 @@ facts:
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("invalid promoted-facts.yaml", result.stdout)
+
+    # --- daily_governance.py de-frequencing logic (2026-07-03 full-review P2-4) ---
+    # consolidate_memory.py's stale_candidates() hardcodes a 14-day floor with no CLI
+    # override, so anything render_stale() ever sees in production is already >=14 days
+    # old — the escalation threshold must sit above that floor to have any real effect
+    # (independent verification caught STALE_ESCALATE_DAYS=5 as unreachable dead code).
+    def test_daily_governance_stale_escalation_threshold_is_above_the_14_day_floor(self):
+        dg = _load_daily_governance()
+        self.assertGreater(
+            dg.STALE_ESCALATE_DAYS, 14,
+            "STALE_ESCALATE_DAYS must exceed consolidate_memory.py's hardcoded 14-day "
+            "stale floor, otherwise the 'plain' render branch is unreachable dead code "
+            "for every real candidate that ever reaches render_stale().",
+        )
+
+    def test_daily_governance_render_stale_escalates_only_past_threshold(self):
+        dg = _load_daily_governance()
+        below = dg.render_stale({"id": "SC-X", "age_days": dg.STALE_ESCALATE_DAYS - 1, "fact": "recent-ish stale"})
+        at = dg.render_stale({"id": "SC-Y", "age_days": dg.STALE_ESCALATE_DAYS, "fact": "long overdue"})
+        above = dg.render_stale({"id": "SC-Z", "age_days": dg.STALE_ESCALATE_DAYS + 10, "fact": "very overdue"})
+        self.assertNotIn("🔴", below)
+        self.assertNotIn("consolidate_memory.py --set-stable", below)
+        self.assertIn("🔴", at)
+        self.assertIn("consolidate_memory.py --set-stable SC-Y", at)
+        self.assertIn("🔴", above)
+        # Non-dict / missing age_days must not crash (fail-open rendering).
+        self.assertEqual(dg.render_stale("not-a-dict"), "not-a-dict")
+        self.assertIn("SC-W", dg.render_stale({"id": "SC-W", "fact": "no age field"}))
+
+    def test_daily_governance_last_digest_date_picks_max_and_ignores_checked_markers(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            digests_dir = Path(tmp) / "digests"
+            digests_dir.mkdir()
+            for name in ["2026-06-20.md", "2026-07-01.md", "2026-06-15.md"]:
+                (digests_dir / name).write_text("# digest", encoding="utf-8")
+            (digests_dir / ".checked-2026-07-03").touch()  # must not be parsed as a digest date
+            (digests_dir / "not-a-date.md").write_text("# junk", encoding="utf-8")
+            original_digests = dg.DIGESTS
+            try:
+                dg.DIGESTS = digests_dir
+                result = dg.last_digest_date()
+                self.assertEqual(result, datetime(2026, 7, 1))
+            finally:
+                dg.DIGESTS = original_digests
+
+    def test_daily_governance_last_digest_date_none_when_no_digests_exist(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            empty_dir = Path(tmp) / "digests"
+            original_digests = dg.DIGESTS
+            try:
+                dg.DIGESTS = empty_dir  # directory doesn't even exist yet
+                self.assertIsNone(dg.last_digest_date())
+            finally:
+                dg.DIGESTS = original_digests
 
 
 if __name__ == "__main__":

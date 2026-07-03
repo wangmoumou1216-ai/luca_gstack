@@ -113,7 +113,7 @@ review queue 包含：
 
 | 层 | 写入命令 |
 |---|---|
-| Episodic | `python3 memory/scripts/append_episode.py --topic "..." --summary "..." --skills "..."` |
+| Episodic | `python3 memory/scripts/append_episode.py --topic "..." --summary "..." --skills "..." --outcomes "..." --decision "..." --next-risk "..." --project "..." --meta` |
 | Semantic | `python3 memory/scripts/propose_semantic.py --domain crm --fact "..." --confidence high --evidence "..." --scope "..." --reviewer "..."` |
 | Procedural | `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "..." --confidence high --evidence "..." --scope "<skill>" --reviewer "..." --tags "<skill>,rule"` |
 

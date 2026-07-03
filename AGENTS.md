@@ -432,13 +432,18 @@ Layered routing order:
 1. **Project context gate.** If the user says "老项目", "已有项目", "继续项目", or names an
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6), or `PLAN CHECK`
-   (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/auto`, `/figma-demo`),
+   (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/figma-demo` — **not**
+   `/auto`, which since 2026-07-03 relies on its own internal Step 2 Phase-confirmation gate
+   instead of a redundant external PLAN_CHECK),
    or the hit skill is known to satisfy any of the Plan Agent 5 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
    high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not
    execute the skill directly. The Plan Agent 5 conditions (任一满足即触发):
    - The task creates or modifies ≥ 3 files.
-   - The task needs ≥ 2 independent subagents collaborating.
+   - The task needs ≥ 2 independent subagents collaborating (**except `/auto` itself** — orchestrating
+     multiple skills is its core function, so this condition is trivially true for every legitimate
+     `/auto` call; `/auto`'s own Step 2 already has a Phase-count-scaled confirmation gate, see
+     `.claude/agents/plan-agent.md`; `/auto` still triggers this gate if any of the other 4 conditions hold).
    - The task has an explicit phase dependency (B must wait for A).
    - The task involves irreversible operations (git operations, bulk file overwrite).
    - The user explicitly requests a plan ("先做个计划", "plan 一下", "想清楚再做").

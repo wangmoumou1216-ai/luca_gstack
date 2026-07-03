@@ -7,6 +7,7 @@ facts:
     stable: true
     added: 2026-05-16
     source: brand-tokens.md
+    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
 
   - id: SF-002
     domain: fxui
@@ -31,14 +32,16 @@ facts:
     stable: true
     added: 2026-05-16
     source: framework/
+    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
 
   - id: SF-005
-    domain: crm
-    fact: "纷享销客产品设计场景四类：A=新功能、B=已有功能优化、C=线上评审改版、D=Agent化改造"
+    domain: workflow
+    fact: "产品设计场景四类（产品中性，跨项目适用）：A=新功能、B=已有功能优化、C=线上评审改版、D=Agent化改造；route-guard 本身 scene-agnostic，分类由用户/上下文确认，非绑定任何具体产品"
     confidence: high
     stable: true
     added: 2026-05-16
     source: CLAUDE.md
+    reworded: "2026-07-03: 原文绑定'纷享销客产品设计场景四类'，经 review 确认场景分类本身产品中性（个人 app 项目 REQ-008 已实战验证走场景B），仅措辞收窄，语义不变"
   - id: SC-20260520-002
     domain: skill-rule
     fact: "brainstorm: 苏格拉底拷问顺序必须从用户目标出发，不得从技术方案出发"
@@ -391,3 +394,14 @@ facts:
     scope: "luca_gstack 架构方向 / worktree·branch·并行实现"
     tags: ["worktree", "branch", "architecture", "parallel-implementation", "harness", "human-in-the-loop", "transparency"]
     provenance_note: "SC-20260523-003 人工门修复(86c481b)之前，由 daily_governance 按旧逻辑自动晋升；内容为 luca 会话内 worktree/branch 决策，经 2026-06-29 keep-vs-revert 复核后 grandfathered 保留。修复后自评候选不再自动晋升。"
+  - id: SC-20260615-003
+    domain: skill-rule
+    fact: "figma 大 canvas 读文案优化（适用条件：node-id 解析为含大量近似重复 version frame 的整页 canvas/section，get_metadata 落盘 >1MB）：已落盘的 get_metadata XML 中，text 节点的 name 字段通常即其字面文案，可直接 python 解析提取，避免重复 get_design_context/get_screenshot 试错。重要前提：若设计师曾手动重命名文本节点，name 与字面文案不符，此时此方法会静默产生错误文案；使用前应先抽样 1-2 个节点用 get_design_context 交叉验证 name 与实际内容一致再大批量提取。"
+    confidence: high
+    stable: true
+    added: 2026-07-02
+    source: observation
+    evidence: "本 session 从 2.8MB metadata 的 202:10074 子树 text 节点 name 直接提取关键信号 7 条逐字文案, 比逐帧渲染快且更准(screenshot OCR 把'代理作业'误读成'CRM理作业'); 注意caveat: 设计师重命名过的文本节点 name 可能非字面文案, 故 confidence=medium；2026-07-02 治理裁决升 high：规则文本自带「先抽样1-2节点交叉验证再批量提取」护栏，作为带前置检查的操作规程整体可信；medium 原指裸提取无校验路径"
+    reviewer: "self"
+    scope: "figma 读取/取文案"
+    tags: ["figma", "metadata", "text-extraction"]

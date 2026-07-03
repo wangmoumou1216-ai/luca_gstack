@@ -154,11 +154,10 @@ const cases = [
     },
   },
   {
-    name: 'magicpath wins direct interface output',
+    name: '2026-07-03: magicpath demoted to hidden (full-review P2-6, zero 30-day use) — direct interface wording now STOPs, no keyword left to match',
     prompt: '直接产出一个线索管理界面',
     expect: decision => {
-      assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, 'magicpath');
+      assert.equal(decision.decision, 'STOP');
     },
   },
   {
@@ -170,12 +169,11 @@ const cases = [
     },
   },
   {
-    name: 'figma prototype wording asks among candidates',
+    name: '2026-07-03: figma prototype wording — magicpath demoted, /html-prototype now wins alone (no more multi-candidate)',
     prompt: '做一个 Figma 原型界面',
     expect: decision => {
-      assert.equal(decision.decision, 'MULTI_SKILL');
-      assert.ok(decision.candidates.includes('magicpath'));
-      assert.ok(decision.candidates.includes('/html-prototype'));
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/html-prototype');
     },
   },
   {
@@ -312,14 +310,15 @@ const cases = [
     },
   },
   {
-    // Verification: /auto trigger words (全流程) with active project already
-    // route to PLAN_CHECK via HEAVY_ORCHESTRATOR_SKILLS — confirms the audit
-    // §0 误诊 correction (no missing complexity signal).
-    name: '全流程做 with active project triggers PLAN_CHECK on /auto',
+    // 2026-07-03 (full-review P2-5): /auto removed from HEAVY_ORCHESTRATOR_SKILLS —
+    // it now resolves to SINGLE_SKILL, letting /auto's own internal Step 2 Plan
+    // Output gate (Hierarchical ≥3 Phase) be the single confirmation point instead
+    // of stacking a redundant external PLAN_CHECK before /auto even starts.
+    name: '全流程做 with active project routes SINGLE_SKILL to /auto (internal Phase gate handles confirmation, not route-guard)',
     prompt: '全流程做客户管理',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PLAN_CHECK');
+      assert.equal(decision.decision, 'SINGLE_SKILL');
       assert.equal(decision.skill, '/auto');
     },
   },
