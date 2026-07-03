@@ -9,7 +9,7 @@ description: |
 model: sonnet
 tools:
   - Read
-  - Bash
+  - Bash   # 仅用于渲染/截图取证（如无头浏览器截图核对视觉状态），禁止用于写文件；无 Edit/Write 权限，与"永不静默自动应用修复"的只读承诺一致
 ---
 
 # muse-proto-judge Subagent v1.0

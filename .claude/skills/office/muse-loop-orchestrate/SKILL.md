@@ -74,22 +74,17 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 1. 抽取步骤：**不直接调用 `/idea`**（它是交互型 main_agent，会阻塞，且每次运行覆写项目级单例状态）。按 `muse-loop/references/req-extraction-principles.md` 的三铁律做忠实抽取，先判断本轮输入是"单次静态语料"还是"跨轮演化多源流"。
 2. dispatch `muse-req-triage`（走它的**入口B/workflow 模式**——已抽取候选直接进 Phase 1 打分，跳过它自己的语料读取步骤；`muse-req-triage` 2026-07-01 起已提升为项目级 skill，独立使用时走入口A，两者共用同一套打分+分类+GATE-1逻辑，仅入口和输出形态不同，见其 SKILL.md）：rule-based 打分 + 独立 triage 分类。
 
-**GATE-1（人类卡点，不可省略）：** 用 `AskUserQuestion` 呈现 triage 建议，等用户确认最终 `human_decision`（accept/defer/reject）。`allow_standalone_override: false`——这条卡点不可绕过，源方案明确写着"这个人类卡点不可省略，它是 Loop 质量的底线"。
+**GATE-1（人类卡点，不可省略）：** 就是 dispatch `muse-req-triage`（入口B）时它自己 Phase 3 触发的 `AskUserQuestion`——**呈现内容以 `muse-req-triage` SKILL.md Phase 3 为唯一权威定义**（一句话陈述+来源引用+Phase 1信号+Phase 2分类+EARS校验+design_reference一行+入口B专属的brownfield问法），本节不复述、不另定义。用户确认后得到最终 `human_decision`（accept/defer/reject）。`allow_standalone_override: false`——这条卡点不可绕过，源方案明确写着"这个人类卡点不可省略，它是 Loop 质量的底线"。
 
-**GATE-1 呈现时附带的质量提示（2026-07-02 补，红队裁定 CLEAR_ADD 但只做最小机制）：** triage 信号（mention_count/emphasis_level/requester_role/explicitly_flagged）全是"这条被说得多响/多频繁"，不检查需求陈述本身够不够格——容易让人只看"响不响"就点确认。在同一个 `AskUserQuestion` 提示里，**顺手**附加以下检查（不新建阶段、不新建文件、不阻塞、只是让人类确认时多看一眼）：
-- 先跑 `node scripts/check-ears-syntax.mjs`（2026-07-02 补的确定性linter，纯规则匹配，不靠LLM判断）对 `statement_ears` 做机械校验——缺"应当"/不匹配任何EARS模板会被直接标 FAIL，模糊动词/模糊指代会被标 WARN，这一步不需要人读原文就能筛掉明显不合规的陈述。
-- 机械检查过了之后，再让人类多看一眼：该需求的 `statement_ears` 是否有可衡量的动词/目标、是否有清楚的触发条件和响应（这部分linter抓不出来，需要人判断语义是否到位）
-若这几点都缺，只在确认提示里多写一句"这条需求的陈述本身比较空泛，建议确认前先看一眼原始语料"，不阻断、不打回、不建独立门禁——真正的严格校验交给下游 `/brainstorm` Phase 1.5 做，这里只是不让人类在只看"响不响"的情况下点头。
+**本节只定义 Loop 场景专属的编排逻辑——brownfield 问法何时触发、答案如何驱动下游**（呈现文案本身在 triage Phase 3，此处不重复措辞）：
 
-**GATE-1 呈现必含 design_reference 状态（v0.5 机制，2026-07-02 第一条真实端到端 REQ 的缺口修复）：** 呈现里加一行该需求的 `design_reference`（L1 卡字段，triage 忠实抽取所得）。
-
-**触发判定（注意：GATE-1 时刻场景 A/B/C/D 还没被正式分类——那是 design-brief Phase 0 的事，不能引用一个还不存在的分类，此处用 GATE-1 时刻真实可得的信号）：** `design_reference` 为 null，**且**满足以下任一 brownfield 信号 → 必须问：
+**触发判定（注意：GATE-1 时刻场景 A/B/C/D 还没被正式分类——那是 design-brief Phase 0 的事，不能引用一个还不存在的分类，此处用 GATE-1 时刻真实可得的信号）：** `design_reference` 为 null，**且**满足以下任一 brownfield 信号 → 触发 triage Phase 3 的 brownfield 问法：
 - `entailment.compared_against: shipped_product_behavior`（需求明确对照现有产品行为）
 - `source_trace` 含 `type: existing_product`
 - 语料/陈述里出现"改/优化/调整/替换现有…"这类对已有功能动刀的表述
 - 以上都没有但机器拿不准 → 也问（宁多问一句，不静默假设全新——本次真实教训的方向就是"漏问"不是"多问"）
 
-问法（并入 GATE-1 同一个 `AskUserQuestion`）："这条需求要改的现有UI在哪？① Figma 链接 ② 线上地址 ③ 我提供截图 ④ 确认这是全新功能（无现有UI）"——只有用户显式选 ④，才允许按 `none_confirmed_greenfield` 处理；机器不得代选、不得因用户没提就默认全新（本次真实教训：整条链没看过真实 Figma，把历史记录标签当成了入口按钮）。**用户的回答同时就是 brownfield/greenfield 的权威判定**（①②③=有现有UI，走基线采集；④=全新，显式跳过）——后续"场景 B/C 必做"的所有子步骤，触发依据都是这个 GATE-1 判定结果，不是等 design-brief Phase 0 的场景分类。
+问法文案见 triage Phase 3（四选项：①Figma链接 ②线上地址 ③截图 ④确认全新功能）。**答案的编排语义（本节权威）：** 只有用户显式选④，才允许按 `none_confirmed_greenfield` 处理；机器不得代选、不得因用户没提就默认全新（本次真实教训：整条链没看过真实 Figma，把历史记录标签当成了入口按钮）。**用户的回答同时就是 brownfield/greenfield 的权威判定**（①②③=有现有UI，走基线采集；④=全新，显式跳过）——后续"场景 B/C 必做"的所有子步骤，触发依据都是这个 GATE-1 判定结果，不是等 design-brief Phase 0 的场景分类。
 
 ## 「基线采集」子步骤（GATE-1 通过后、Phase 1.5 之前——场景 B/C 必做，2026-07-02 新增）
 
@@ -101,7 +96,7 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
    - `live_html` → 读取页面 + 截图
    - `screenshot` → 用户提供截图；**不给不继续**（复用 `ux-audit` 的强制截图阻塞契约先例）
 2. 盘点范围按 BMAD 规模规则：小面积→全量盘点；大页面→只盘与本 REQ 相关区域并显式声明边界。
-3. 机器盘点结果给用户**人工校正**（轻量确认，Kiro steering 模式：自动生成→人工校正→才可用）——机器采集必然有错，未经校正的基线不可信。
+3. 机器盘点结果给用户**人工校正**（轻量确认；借鉴 Kiro steering 的"自动生成→人工校正"模式，但校正在本机制里是**强制**的——Kiro 原文校正是可选 Refine，本 Loop 判断"未经校正的基线不可信"，主动收紧为不可省略，这是本机制自己的加严选择，不是 Kiro 本身的强制要求）——机器采集必然有错。
 4. `none_confirmed_greenfield` → 显式跳过本步骤并在 REQ 目录记录一行"经人类确认为全新功能，无基线"，**非静默跳过**。
 
 ## Phase 1.5（approved → prd_ready）：dispatch `/brainstorm`，产出真实 PRD（补丁：2026-07-01 修复的内部矛盾）
