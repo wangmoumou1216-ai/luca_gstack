@@ -758,8 +758,10 @@ AskUserQuestion：
    假设挑战 → Phase 3 体验验证 → Phase 4 品味检查 → Phase 5 决策 8 字段化
    → Phase 6 原型承载方式 + 组件映射 → Phase 6.5 可追踪完整门禁
    → Phase 6.75 Design Generation Packet
+   （**例外**：场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2 执行在 Phase A 之前，
+   是进入本序列前的现状核对，不算违反本条——见「⚠️ 执行顺序锁死」节）
 2. **必读 references 4 份，读完才能开始** — 未读完 SELF_CHECK_PASSED 不得写 YES
-3. **Phase A 设计坐标系必须第一步** — 不写坐标系直接跳进决策 = 没有设计
+3. **Phase A 设计坐标系必须第一步**（**场景 B/C 的前置 Step 除外，见上条**）— 不写坐标系直接跳进决策 = 没有设计
 4. **Phase 1 四层深度思考** — Layer A/B 必填，Layer C 所有 AI 功能必填，Layer D
    场景 D 和 agent 功能必填
 5. **场景 B / D 输入顺序锁死** — prd-constraints 第一
