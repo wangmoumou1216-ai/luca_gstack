@@ -90,9 +90,16 @@ try {
   const markerFile = join(projectRoot, '.claude', `.episode-written-${sessionId}`);
   const alreadyExtracted = existsSync(markerFile);
 
-  let editCount = 0, toolCount = 0;
-  try { editCount = parseInt(readFileSync(join(projectRoot, '.claude', '.session-edit-count'), 'utf8'), 10) || 0; } catch { }
-  try { toolCount = parseInt(readFileSync(join(projectRoot, '.claude', '.session-tool-count'), 'utf8'), 10) || 0; } catch { }
+  // 并发隔离（G2，2026-07-04）：stdin 带真实 session_id 时只读本 session 的 per-sid 计数
+  // （post-edit 同 sid 写入；缺文件=本 session 无产出动作，不回退共享文件——否则会把并行
+  // legacy session 的计数误算进来）；无 sid（测试/管道）读共享旧文件名。
+  const hasSid = Boolean(payload.session_id);
+  const readCount = (name) => {
+    const f = hasSid ? `${name}-${sessionId}` : name;
+    try { return parseInt(readFileSync(join(projectRoot, '.claude', f), 'utf8'), 10) || 0; } catch { return 0; }
+  };
+  const editCount = readCount('.session-edit-count');
+  const toolCount = readCount('.session-tool-count');
   const minTools = parseInt(process.env.SESSION_SYNC_MIN_TOOLS || '8', 10);
   // 拦截（当场 block 强制提取）只看「本 session 有产出动作」：文件编辑 或 足量工具调用。
   // 纯轮次(turns)不再触发拦截——「聊了几轮有结论」≠「有实质工作」，否则纯咨询会被误拦（HOOK-006 锁定）。
@@ -123,21 +130,26 @@ try {
       `[session-sync] 💡 如需手动沉淀：python3 memory/scripts/append_episode.py --topic "${topic}" --summary "..." --decision "..." --next-risk "..."\n`
     );
   }
-  const pending = join(projectRoot, '.claude', 'observability', 'pending-extraction.md');
+  // 并发隔离（G2，2026-07-04）：pending 文件按 session 命名——全局单文件会被并发 session
+  // 互相吞写、topic 张冠李戴；session-restore 按 glob pending-extraction*.md 逐个提醒（兼容旧名）。
+  const pending = join(projectRoot, '.claude', 'observability',
+    hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
   try {
     if (existsSync(pending)) {
-      process.stderr.write(`[session-sync] 📝 pending-extraction.md 已存在（待处理），保持不变\n`);
+      process.stderr.write(`[session-sync] 📝 ${pending.split('/').pop()} 已存在（待处理），保持不变\n`);
     } else {
       mkdirSync(join(projectRoot, '.claude', 'observability'), { recursive: true });
       writeFileSync(pending, [
         `# Pending Skill-Rule Extraction`, ``,
         `> 自动生成于 ${now}。下次 session 启动时由 session-restore 提醒处理。`,
-        `> Topic: ${topic}`, `> 处理后请删除此文件。`,
+        `> Topic: ${topic}`,
+        ...(project ? [`> Project: ${project}`] : []),
+        `> 处理后请删除此文件。`,
         `> 提取前先过 .claude/skill-os/extraction-bar.md 四信号门槛，全不中则直接删除本文件。`, ``,
         `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<skill>: <规则>" \\`,
         `  --confidence high --evidence "<来源>" --scope "<skill>" --reviewer "luca" --tags "<skill>,rule"`, ``,
       ].join('\n'));
-      process.stderr.write(`[session-sync] 📝 已写入 pending-extraction.md（下次启动提醒）\n`);
+      process.stderr.write(`[session-sync] 📝 已写入 ${pending.split('/').pop()}（下次启动提醒）\n`);
     }
   } catch { }
   process.exit(0);

@@ -11,6 +11,7 @@ import {
   readdirSync,
   readFileSync,
   symlinkSync,
+  utimesSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -390,6 +391,162 @@ function runRouteGuard(cwd, prompt) {
   assert.equal(broken.stdout, 'Applicable rules for alpha: none\n', '坏 YAML 时按无规则继续');
   assert.match(broken.stderr, /解析失败/, '坏 YAML 须在 stderr 留痕');
   console.log('PASS RULES-001 get_rules.py 输出格式契约 + retired 过滤 + 坏 YAML fail-open');
+}
+
+// ══════════════ G2 并发隔离回归（2026-07-04 流程优化）══════════════
+
+// ── CONC-001：post-edit 双 sid 计数隔离——并行 session 互不污染 ──
+{
+  const peHook = resolve(projectRoot, '.claude/hooks/post-edit.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-conc1-'));
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  const fire = (sid, toolName) => runNode(peHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root },
+    input: JSON.stringify({ session_id: sid, tool_name: toolName, tool_input: { file_path: join(root, 'x.txt') } }),
+  });
+  fire('sess-A', 'Edit');
+  fire('sess-A', 'Edit');
+  fire('sess-B', 'Bash');
+  const rc = (f) => { try { return parseInt(readFileSync(join(root, '.claude', f), 'utf8'), 10); } catch { return -1; } };
+  assert.equal(rc('.session-edit-count-sess-A'), 2, 'A 的 edit-count 应=2');
+  assert.equal(rc('.session-tool-count-sess-A'), 2, 'A 的 tool-count 应=2');
+  assert.equal(rc('.session-tool-count-sess-B'), 1, 'B 的 tool-count 应=1，不受 A 污染');
+  assert.equal(rc('.session-edit-count-sess-B'), -1, 'B 无编辑，不应有 edit-count 文件');
+  assert.equal(rc('.session-edit-count'), -1, '有 sid 时不得写 legacy 文件');
+  console.log('PASS CONC-001 post-edit 双 sid 计数隔离，互不污染且不落 legacy');
+}
+
+// ── CONC-002：session-sync per-sid 读取——A 的实质工作不使 B 被误拦 ──
+{
+  const root = makeFixture({ activeProject: 'testproj' });
+  writeFileSync(join(root, '.claude', '.session-edit-count-sess-A'), '3');
+  const rB = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-B' }) });
+  assert.equal(rB.stdout, '', 'B 无自己的计数 → 放行，不得因 A 的编辑被 block');
+  const rA = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-A' }) });
+  const parsedA = JSON.parse(rA.stdout);
+  assert.equal(parsedA.decision, 'block', 'A 有自己的编辑计数 → block');
+  assert.match(parsedA.reason, /\.episode-written-sess-A/, 'A 的解锁 marker 名须带自己的 sid');
+  console.log('PASS CONC-002 session-sync 只认本 sid 计数：A 实质 B 放行');
+}
+
+// ── CONC-003：session-restore marker/计数器按 mtime GC——只删过期，不删并行 session 的活状态 ──
+{
+  const root = makeFixture({ activeProject: 'testproj' });
+  const cl = join(root, '.claude');
+  const old = Date.now() / 1000 - 72 * 3600; // 72h 前
+  writeFileSync(join(cl, '.episode-written-oldsess'), '');
+  utimesSync(join(cl, '.episode-written-oldsess'), old, old);
+  writeFileSync(join(cl, '.episode-written-freshsess'), '');
+  writeFileSync(join(cl, '.session-tool-count-freshsess'), '5');
+  const oldCounter = join(cl, '.session-tool-count-staleold');
+  writeFileSync(oldCounter, '9');
+  utimesSync(oldCounter, Date.now() / 1000 - 8 * 24 * 3600, Date.now() / 1000 - 8 * 24 * 3600);
+  runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  assert.ok(!existsSync(join(cl, '.episode-written-oldsess')), '>48h 的 marker 应被 GC');
+  assert.ok(existsSync(join(cl, '.episode-written-freshsess')), '新鲜 marker 必须保留（并行 session 的守卫）');
+  assert.ok(existsSync(join(cl, '.session-tool-count-freshsess')), '新鲜 per-sid 计数必须保留');
+  assert.equal(readFileSync(join(cl, '.session-tool-count-freshsess'), 'utf8'), '5', '保留的计数值不得被清零');
+  assert.ok(!existsSync(oldCounter), '>7天的 per-sid 计数应被 GC');
+  console.log('PASS CONC-003 启动 GC 只删过期状态，绝不清并行 session 的活 marker/计数');
+}
+
+// ── CONC-004：digest-shown O_EXCL 抢占——marker 已存在则静默，不重复展示 ──
+{
+  const root = makeFixture({ activeProject: 'testproj' });
+  mkdirSync(join(root, 'memory', 'digests'), { recursive: true });
+  writeFileSync(join(root, 'memory', 'digests', '2026-01-01.md'), '# 成长摘要 — 测试digest正文');
+  const r1 = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  assert.match(r1.stdout, /成长摘要 \(2026-01-01\.md/, '首个 session 应展示 digest');
+  assert.ok(existsSync(join(root, '.claude', '.digest-shown-2026-01-01')), '展示后应留 marker');
+  const r2 = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  assert.doesNotMatch(r2.stdout, /成长摘要 \(2026-01-01\.md/, '第二个 session 不得重复展示（wx 抢占失败即静默）');
+  console.log('PASS CONC-004 digest 展示 O_EXCL 抢占：先到先得，后到静默');
+}
+
+// ── CONC-005：governance .checked O_EXCL 认领——已被认领则不再 spawn ──
+{
+  const root = makeFixture({ activeProject: 'testproj' });
+  mkdirSync(join(root, 'memory', 'scripts'), { recursive: true });
+  mkdirSync(join(root, 'memory', 'digests'), { recursive: true });
+  writeFileSync(join(root, 'memory', 'scripts', 'daily_governance.py'), 'import sys; sys.exit(0)\n');
+  const today = UTC_TODAY;
+  writeFileSync(join(root, 'memory', 'digests', `.checked-${today}`), '');
+  const r = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  assert.doesNotMatch(r.stderr, /已后台触发每日记忆治理/, '.checked 已存在（他 session 认领）→ 不得重复 spawn');
+  const root2 = makeFixture({ activeProject: 'testproj' });
+  mkdirSync(join(root2, 'memory', 'scripts'), { recursive: true });
+  writeFileSync(join(root2, 'memory', 'scripts', 'daily_governance.py'), 'import sys; sys.exit(0)\n');
+  const r2 = runNode(sessionRestoreHook, root2, { env: { CLAUDE_PROJECT_DIR: root2 } });
+  assert.match(r2.stderr, /已后台触发每日记忆治理/, '无人认领时应 spawn');
+  assert.ok(existsSync(join(root2, 'memory', 'digests', `.checked-${today}`)), 'spawn 方应原子创建 .checked 认领');
+  console.log('PASS CONC-005 governance 触发 O_EXCL 认领：单日单 spawn');
+}
+
+// ── CONC-006：route-guard 轮次计数 per-sid + pending-extraction per-sid 全链 ──
+{
+  const root = makeFixture({ activeProject: 'testproj' });
+  runNode(routeGuardHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    input: JSON.stringify({ session_id: 'sess-R', prompt: '做一个登录页原型' }),
+  });
+  const turnFile = join(root, '.claude', '.session-turn-count-sess-R');
+  assert.ok(existsSync(turnFile), '有 sid 时轮次计数应写 per-sid 文件');
+  assert.equal(readFileSync(turnFile, 'utf8'), '1', '首轮应=1');
+
+  // pending per-sid：trivial session 放行时写 pending-extraction-<sid>.md，restore 逐个提醒
+  const rSync = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-R' }) });
+  assert.equal(rSync.stdout, '', 'trivial + sid → 放行');
+  const pendingFile = join(root, '.claude', 'observability', 'pending-extraction-sess-R.md');
+  assert.ok(existsSync(pendingFile), 'pending 应带 sid 后缀');
+  const rRestore = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  assert.match(rRestore.stdout, /pending-extraction-sess-R\.md/, 'restore 应按 glob 提醒 per-sid pending');
+  console.log('PASS CONC-006 route-guard 轮次 + pending 全链 per-sid');
+}
+
+// ── CONC-007：project.sh 并发 switch——锁串行化 + 原子替换后三链一致、无 tmp 残留 ──
+{
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-conc7-'));
+  mkdirSync(join(root, 'scripts'), { recursive: true });
+  mkdirSync(join(root, '.claude', 'templates'), { recursive: true });
+  writeFileSync(join(root, '.claude', 'templates', 'workflow-state.yaml'), 'topic: ""\nnodes:\n');
+  const projectsRoot = join(root, '项目');
+  mkdirSync(projectsRoot, { recursive: true });
+  // 复制 project.sh 进 fixture（PROJECT_ROOT 由脚本位置推导=root），只重写 PROJECTS_ROOT 一行
+  const scriptSrc = readFileSync(resolve(projectRoot, 'scripts/project.sh'), 'utf8')
+    .replace('PROJECTS_ROOT="$HOME/Desktop/项目"', `PROJECTS_ROOT="${projectsRoot}"`);
+  const scriptPath = join(root, 'scripts', 'project.sh');
+  writeFileSync(scriptPath, scriptSrc, { mode: 0o755 });
+
+  const run = (args) => spawnSync('bash', [scriptPath, ...args], { encoding: 'utf8' });
+  assert.equal(run(['new', 'projA']).status, 0, 'new projA 应成功');
+  assert.equal(run(['new', 'projB']).status, 0, 'new projB 应成功');
+
+  // 并发 10 次交替 switch + 同时读者探测：readlink 永不悬空（原子替换的核心承诺）
+  const stress = spawnSync('bash', ['-c', [
+    `set -e`,
+    `for i in 1 2 3 4 5; do`,
+    `  bash "${scriptPath}" switch projA >/dev/null 2>&1 &`,
+    `  bash "${scriptPath}" switch projB >/dev/null 2>&1 &`,
+    `done`,
+    `for j in $(seq 1 40); do`,
+    `  if [ -L "${root}/docs" ]; then readlink "${root}/docs" >/dev/null || echo "DANGLING"; fi`,
+    `  sleep 0.05`,
+    `done`,
+    `wait`,
+  ].join('\n')], { encoding: 'utf8' });
+  assert.doesNotMatch(stress.stdout, /DANGLING/, '并发 switch 期间 docs 链不得悬空（原子替换）');
+  const leftovers = readdirSync(root).filter(f => f.includes('.tmp.'));
+  assert.equal(leftovers.length, 0, `不得残留临时链: ${leftovers}`);
+  assert.ok(!existsSync(join(root, '.claude', '.project-switch.lock')), '锁目录应已释放');
+  // 终态一致性：三链同项目
+  const linkTarget = (p) => { try { return readFileSync(join(root, p), 'utf8') && ''; } catch { return ''; } };
+  const docsT = spawnSync('readlink', [join(root, 'docs')], { encoding: 'utf8' }).stdout.trim();
+  const stateT = spawnSync('readlink', [join(root, '.claude', 'workflow-state.yaml')], { encoding: 'utf8' }).stdout.trim();
+  const topicT = spawnSync('readlink', [join(root, '.claude', 'current-topic.txt')], { encoding: 'utf8' }).stdout.trim();
+  const projOf = (t) => (t.match(/项目\/([^/]+)\//) || [])[1] || '';
+  assert.ok(projOf(docsT) && projOf(docsT) === projOf(stateT) && projOf(docsT) === projOf(topicT),
+    `并发 switch 终态三链必须同项目: docs=${docsT} state=${stateT} topic=${topicT}`);
+  console.log('PASS CONC-007 project.sh 并发 switch：锁串行化 + 原子替换 + 终态一致');
 }
 
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

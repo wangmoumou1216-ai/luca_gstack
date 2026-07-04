@@ -19,11 +19,15 @@ function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
 }
 
+// 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
+// per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
+let hookSessionId = '';
 function parsePrompt() {
   try {
     const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
     try {
       const data = JSON.parse(raw || '{}');
+      hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
       return String(data.prompt || data.message || '');
     } catch {
       process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);
@@ -581,7 +585,9 @@ if (prompt) {
 }
 
 if (!dryRun && prompt) {
-  const counterFile = join(projectRoot, '.claude', '.session-turn-count');
+  // 并发隔离（G2）：有 sid 时轮次计数 per-session；无 sid（测试/管道）回退共享旧文件名
+  const counterFile = join(projectRoot, '.claude',
+    hookSessionId ? `.session-turn-count-${hookSessionId}` : '.session-turn-count');
   let turns = 0;
   try {
     turns = parseInt(readFileSync(counterFile, 'utf8').trim()) || 0;
