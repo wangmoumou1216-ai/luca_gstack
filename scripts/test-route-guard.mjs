@@ -183,6 +183,86 @@ const cases = [
       assert.equal(decision.decision, 'NONE');
     },
   },
+  // --- G3 (2026-07-04) 对话延续/状态询问豁免：>5字 check-in 不再 STOP/PROJECT_STOP ---
+  {
+    name: 'G3: 现在进度如何 (6字check-in) → NONE，不再 PROJECT_STOP',
+    prompt: '现在进度如何',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE', `check-in 应静默，got ${decision.decision}`);
+    },
+  },
+  {
+    name: 'G3: 全部做完了吗 (6字check-in，无项目态) → NONE',
+    prompt: '全部做完了吗',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 现在怎么样了 → NONE',
+    prompt: '现在怎么样了',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3 反例: 继续做个原型 (含实义任务词) → 照常路由 /html-prototype',
+    prompt: '继续做个原型',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/html-prototype');
+    },
+  },
+  {
+    name: 'G3 反例: 继续项目 → 仍走老项目 PROJECT_STOP（上游专有检查先赢）',
+    prompt: '继续项目',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+    },
+  },
+  {
+    name: 'G3 反例: >10字陈述句不豁免（长度闸）→ 仍 PROJECT_STOP',
+    prompt: '把昨天没写完的那个报告接着写完整理好',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+    },
+  },
+  // --- G3-C2 latin 词边界：产品名子串不再误报 soft candidate ---
+  {
+    name: 'G3-C2: designer 不得诱发 design 系 soft candidate',
+    prompt: '帮我看看那位designer的排期表怎么安排',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP');
+      const skills = (decision.softCandidates || []).map(c => c.skill).join(',');
+      assert.ok(!/design/.test(skills), `designer 子串不应产出 design 系候选: ${skills}`);
+    },
+  },
+  {
+    name: 'G3-C2: 提到 claude 一词不得诱发 claude-api soft candidate',
+    prompt: '记录一下这次和claude协作的心得体会',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      const skills = (decision.softCandidates || []).map(c => c.skill).join(',');
+      assert.ok(!/claude-api/.test(skills), `claude 子串不应产出 claude-api 候选: ${skills}`);
+    },
+  },
+  // --- G3-C3 claude 从复杂度信号词除名 ---
+  {
+    name: 'G3-C3: 用 claude 分析 api 文档 → 不再计多模块信号',
+    prompt: '在当前项目用 claude 分析这个 api 文档',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.ok(!(decision.signals || []).includes('多模块'),
+        `claude+api 不应再凑成多模块信号: ${JSON.stringify(decision.signals)}`);
+    },
+  },
   // --- ADR-0002 negative cases: longest-match-wins disambiguation ---
   {
     name: '设计调研 routes ux_research, NOT deepresearch (调研⊂设计调研)',
