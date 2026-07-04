@@ -275,13 +275,15 @@ const cases = [
     },
   },
   {
-    // Audit M2: /compare is governance_tools, also standalone-capable.
-    name: 'compare standalone allowed without project',
+    // 2026-07-03: compare demoted to hidden (full-review P2-6) — no trigger left,
+    // so this prompt falls through to STOP. The M2 content-tool exemption (比较一下)
+    // still keeps it out of the project gate, which is the half worth pinning.
+    name: 'compare hidden since 2026-07-03 — M2 exemption keeps it out of project gate, no trigger left → STOP',
     prompt: '比较一下两个方案',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.notEqual(decision.decision, 'PROJECT_STOP',
-        `compare standalone must not be gated, got ${decision.decision}`);
+      assert.equal(decision.decision, 'STOP',
+        `hidden compare prompt should fall through to STOP, got ${decision.decision}`);
     },
   },
   {

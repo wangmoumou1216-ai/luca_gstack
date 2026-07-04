@@ -336,4 +336,60 @@ function runRouteGuard(cwd, prompt) {
   console.log('PASS post-edit Writer：edit-count 仅文件编辑递增、tool-count 全工具递增、framework/ 警告');
 }
 
+// ── SETTINGS-001：PostToolUse matcher 必须覆盖 Agent（2026-07-04 修复 Task→Agent 工具名漂移）──
+// settings.json 此前零测试覆盖；subagent 工具名已从 Task 演化为 Agent，matcher 漏配会让
+// 纯 subagent 扇出的 session tool-count 漏计 → session-sync 误判"无实质工作"跳过记忆提取。
+{
+  const settings = JSON.parse(readFileSync(resolve(projectRoot, '.claude/settings.json'), 'utf8'));
+  const matcher = settings.hooks.PostToolUse[0].matcher;
+  const re = new RegExp(matcher);
+  for (const mustMatch of ['Agent', 'Task', 'Bash', 'Write', 'mcp__figma__use_figma']) {
+    assert.ok(re.test(mustMatch), `PostToolUse matcher 必须匹配 ${mustMatch}，当前: ${matcher}`);
+  }
+  for (const mustNotMatch of ['Read', 'Glob', 'Grep', 'AskUserQuestion']) {
+    assert.ok(!re.test(mustNotMatch), `PostToolUse matcher 不应匹配只读工具 ${mustNotMatch}`);
+  }
+  console.log('PASS SETTINGS-001 PostToolUse matcher 覆盖 Agent+Task，不误匹配只读工具');
+}
+
+// ── RULES-001：get_rules.py 真 YAML 解析后行为契约——正常输出格式 + 坏 YAML fail-open ──
+{
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-getrules-'));
+  mkdirSync(join(root, 'observability', 'scripts'), { recursive: true });
+  const getRules = readFileSync(resolve(projectRoot, '.claude/observability/scripts/get_rules.py'), 'utf8');
+  writeFileSync(join(root, 'observability', 'scripts', 'get_rules.py'), getRules);
+  writeFileSync(join(root, 'observability', 'rules.yaml'), [
+    'version: 1',
+    'rules:',
+    '- id: R-TEST-001',
+    '  status: active',
+    '  severity: high',
+    '  scope:',
+    '    skills: [alpha, beta]',
+    '    scenes: ["*"]',
+    '  rule: "alpha: test rule text"',
+    '- id: R-TEST-002',
+    '  status: retired',
+    '  scope:',
+    '    skills: [alpha]',
+    '  rule: "retired rule must not surface"',
+    '',
+  ].join('\n'));
+  const runPy = (args) => spawnSync('python3', [join(root, 'observability', 'scripts', 'get_rules.py'), ...args], { encoding: 'utf8' });
+
+  const hit = runPy(['alpha']);
+  assert.equal(hit.status, 0);
+  assert.match(hit.stdout, /^Applicable rules for alpha:\n- R-TEST-001 \[high\]: alpha: test rule text\n$/,
+    `输出格式契约漂移: ${JSON.stringify(hit.stdout)}`);
+  const miss = runPy(['gamma']);
+  assert.equal(miss.stdout, 'Applicable rules for gamma: none\n');
+
+  writeFileSync(join(root, 'observability', 'rules.yaml'), 'rules:\n  - id: [broken\n    unclosed');
+  const broken = runPy(['alpha']);
+  assert.equal(broken.status, 0, '坏 YAML 必须 fail-open exit 0');
+  assert.equal(broken.stdout, 'Applicable rules for alpha: none\n', '坏 YAML 时按无规则继续');
+  assert.match(broken.stderr, /解析失败/, '坏 YAML 须在 stderr 留痕');
+  console.log('PASS RULES-001 get_rules.py 输出格式契约 + retired 过滤 + 坏 YAML fail-open');
+}
+
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');
