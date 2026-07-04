@@ -23,7 +23,7 @@ allowed-tools:
   - mcp__figma__search_design_system
   - mcp__figma__create_new_file
 context-cost:
-  self: 3004
+  self: 14787  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 5000
   shared-refs: [none]
   recommended-model: mechanical  # 图层命名+ID复制

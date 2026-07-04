@@ -10,7 +10,7 @@ description: >
   'write design proposal', '设计方案'。
 argument-hint: "[path to ux-research markdown file, or empty for cold-start mode]"
 context-cost:
-  self: 16320
+  self: 36990  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 60000
   shared-refs: [ai-native-design-framework]
   recommended-model: reasoning-heavy  # 交互方案创造性探索
