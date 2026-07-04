@@ -651,9 +651,16 @@ if (!dryRun && prompt) {
       let pin = null;
       try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
 
+      const inheritFile = join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`);
+      const inherited = existsSync(inheritFile); // session-restore 只在真保留态（活跃并行）写此标记
       if (cur && !pin) {
-        // 继承态：首次见到激活项目而本 session 没 pin 过 → 明确告知这是继承来的
-        hints.push(`[route-guard] 🔗 本 session 继承了激活项目「${cur}」（由并行 session 保留）。若你要做的是别的项目，请显式 ./scripts/project.sh switch <项目>；确认就是它则无需操作。`);
+        // 区分"真继承"（有 session-restore 写的标记）vs"self-switch"（本 session 自己 switch，无标记）
+        // ——只对真继承提示，避免单 session 正常流程 Msg2 的假阳性 + 多余确认（终验独立核验实证）。
+        // 无论哪种都写 pin。
+        if (inherited) {
+          hints.push(`[route-guard] 🔗 本 session 继承了激活项目「${cur}」（由并行 session 保留）。若你要做的是别的项目，请显式 ./scripts/project.sh switch <项目>；确认就是它则无需操作。`);
+          try { unlinkSync(inheritFile); } catch {} // 一次性，读后删
+        }
         try { writeFileSync(pinFile, cur); } catch {}
       } else if (cur && pin && cur !== pin) {
         // 漂移：本 session 认过 pin，但 docs 被切走了 → 提示 N 次后自愈收敛（R7-①）

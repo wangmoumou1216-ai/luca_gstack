@@ -339,9 +339,19 @@ try {
   const agentsCtx = cond2Ctx(agentsMd, 'internal-HITL orchestrator skills');
   if (!claudeCtx) ssotErrors.push('SSOT-10 CLAUDE.md 条件 2 缺「内部 HITL 编排类 skill 除外」豁免段');
   if (!agentsCtx) ssotErrors.push('SSOT-10 AGENTS.md 条件 2 缺 "internal-HITL orchestrator skills" 豁免段');
-  for (const name of roster.filter(n => STRICT.test(n))) {
-    if (claudeCtx && !claudeCtx.includes(name)) ssotErrors.push(`SSOT-10 CLAUDE.md 条件 2 豁免名单缺 "${name}"`);
-    if (agentsCtx && !agentsCtx.includes(name)) ssotErrors.push(`SSOT-10 AGENTS.md 条件 2 豁免名单缺 "${name}"`);
+  // (b) 双向名单同步（2026-07-04 终验修：独立核验发现原实现只查 CLAUDE/AGENTS ⊇ roster，
+  //     反向不查——从 plan-agent.md roster 删项 checker 仍绿，而 CLAUDE.md 是运行时真读的，
+  //     stale 豁免留在那里持续误导 agent 却 CI 绿。现改为双向精确相等）。
+  const claudeNames = new Set([...(claudeCtx.matchAll(/`(\/[a-z][\w-]*)`/g))].map(m => m[1]));
+  const agentsNames = new Set([...(agentsCtx.matchAll(/`?(\/[a-z][\w-]*)`?/g))].map(m => m[1]));
+  const rosterStrict = roster.filter(n => STRICT.test(n));
+  for (const name of rosterStrict) {
+    if (claudeCtx && !claudeNames.has(name)) ssotErrors.push(`SSOT-10 CLAUDE.md 条件 2 豁免名单缺 "${name}"（roster 有）`);
+    if (agentsCtx && !agentsNames.has(name)) ssotErrors.push(`SSOT-10 AGENTS.md 条件 2 豁免名单缺 "${name}"（roster 有）`);
+  }
+  // 反向：CLAUDE.md 列了但 roster 没有 = stale 豁免，运行时误导 agent（更危险方向）
+  for (const name of claudeNames) {
+    if (!rosterStrict.includes(name)) ssotErrors.push(`SSOT-10 CLAUDE.md 条件 2 列了 "${name}" 但不在 plan-agent.md roster——stale 豁免须删或补进 roster`);
   }
   // (c) 每-skill 专属 HITL 门语句锚（本地 skill 才查目录）
   const HITL_ANCHOR = {
@@ -350,6 +360,10 @@ try {
     '/ux-research': /不可跳过/,
     '/figma-demo': /唯一一次/,
   };
+  // 反向：HITL_ANCHOR 有键但 roster 没有 = checker 与真值源脱节
+  for (const key of Object.keys(HITL_ANCHOR)) {
+    if (!rosterStrict.includes(key)) ssotErrors.push(`SSOT-10 HITL_ANCHOR 登记了 "${key}" 但不在 plan-agent.md roster——checker 与真值源脱节`);
+  }
   for (const name of roster.filter(n => STRICT.test(n))) {
     const anchor = HITL_ANCHOR[name];
     if (!anchor) {

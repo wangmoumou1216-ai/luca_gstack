@@ -641,16 +641,30 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-007 transcript-mtime 活跃信号触发保留');
 }
 
-// STICKY-008：pin 继承提示（route-guard）——docs 有链 + 本 sid 无 pin → 首条消息提示继承
+// STICKY-008：真继承（有 session-restore 写的继承标记）→ 首条消息提示 + 删标记 + 写 pin
 {
   const root = makeFixture({ activeProject: 'projA' });
+  writeFileSync(join(root, '.claude', '.session-inherited-sess-I'), 'projA'); // session-restore 保留态写的
   const r = runNode(routeGuardHook, root, {
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-I', prompt: '随便说点什么' }),
   });
-  assert.match(r.stdout, /继承了激活项目「projA」/, '继承态首条消息应提示');
+  assert.match(r.stdout, /继承了激活项目「projA」/, '真继承态首条消息应提示');
   assert.ok(existsSync(join(root, '.claude', '.session-project-sess-I')), '应写 pin');
-  console.log('PASS STICKY-008 pin 继承提示 + 写 pin');
+  assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-I')), '继承标记应一次性读后删');
+  console.log('PASS STICKY-008 真继承（有标记）→ 提示 + 删标记 + 写 pin');
+}
+
+// STICKY-008b：self-switch（无继承标记）→ 静默写 pin，不误报"由并行 session 保留"（终验核验修）
+{
+  const root = makeFixture({ activeProject: 'projA' }); // docs→projA 但无继承标记
+  const r = runNode(routeGuardHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
+    input: JSON.stringify({ session_id: 'sess-S', prompt: '随便说点什么' }),
+  });
+  assert.doesNotMatch(r.stdout, /继承了激活项目/, 'self-switch 不得误报继承');
+  assert.ok(existsSync(join(root, '.claude', '.session-project-sess-S')), 'self-switch 仍应静默写 pin');
+  console.log('PASS STICKY-008b self-switch 无标记 → 静默写 pin，不误报继承');
 }
 
 // STICKY-009：SessionEnd 清理本 sid 计数 + pin（R H2 僵尸窗口归零）

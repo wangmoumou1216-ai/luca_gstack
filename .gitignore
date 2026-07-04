@@ -93,6 +93,7 @@ api-project/
 .claude/.session-tool-count-*
 .claude/.session-project-*
 .claude/.session-projnag-*
+.claude/.session-inherited-*
 .claude/.project-switch.lock/
 .claude/observability/pending-extraction*.md
 .claude/.episode-written-*

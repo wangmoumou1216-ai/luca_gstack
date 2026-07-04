@@ -26,6 +26,7 @@ try {
     `.session-tool-count-${sid}`,
     `.session-project-${sid}`,
     `.session-projnag-${sid}`,
+    `.session-inherited-${sid}`,
   ];
   for (const f of targets) {
     try { unlinkSync(join(claudeDir, f)); } catch { } // 不存在即跳过

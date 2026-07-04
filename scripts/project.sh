@@ -98,7 +98,7 @@ acquire_switch_lock() {
   local tries=0
   while ! mkdir "$SWITCH_LOCK" 2>/dev/null; do
     local lock_mtime now_s
-    lock_mtime=$(stat -f %m "$SWITCH_LOCK" 2>/dev/null || echo 0)
+    lock_mtime=$(stat -f %m "$SWITCH_LOCK" 2>/dev/null || stat -c %Y "$SWITCH_LOCK" 2>/dev/null || echo 0)
     now_s=$(date +%s)
     if [ $((now_s - lock_mtime)) -gt 60 ]; then
       rm -rf "$SWITCH_LOCK" 2>/dev/null || true

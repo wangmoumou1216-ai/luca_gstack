@@ -52,7 +52,7 @@ try {
   for (const f of readdirSync(claudeDir)) {
     const isMarker = f.startsWith('.episode-written-');
     const isSidCounter = /^\.session-(turn|edit|tool)-count-./.test(f);
-    const isPin = /^\.session-(project|projnag)-./.test(f); // G6-R7②：pin/nag 文件同样按 mtime GC，防永久堆积
+    const isPin = /^\.session-(project|projnag|inherited)-./.test(f); // G6-R7②：pin/nag/继承标记同样按 mtime GC，防永久堆积
     if (!isMarker && !isSidCounter && !isPin) continue;
     try {
       const age = nowMs - statSync(join(claudeDir, f)).mtimeMs;
@@ -132,6 +132,11 @@ try {
   if (m) activeProject = m[1];
   docsDangling = !existsSync(docsLink); // existsSync 跟随链：目标不存在=悬空
 } catch { /* 无链=无激活项目 */ }
+// 终验核验修：三链任一悬空即视为悬空态（原只查 docs——部分悬空态如 state/topic 目标被删而
+// docs 正常 + source=resume 会走保留分支留下悬空链）。
+for (const l of [stateLink, topicLink]) {
+  try { if (lstatSync(l).isSymbolicLink() && !existsSync(l)) docsDangling = true; } catch { }
+}
 
 const hasActiveLinks = [docsLink, stateLink, topicLink].some(l => {
   try { return lstatSync(l).isSymbolicLink(); } catch { return false; }
@@ -163,6 +168,11 @@ if (hasActiveLinks) {
   } else if (hasActiveParallelSession()) {
     // 冷启动但检测到活跃并行 session → 保留 + 显式告知（R2/R4：不再谎称"无激活项目"）
     process.stdout.write(`[session-restore] 🔗 当前激活项目: ${activeProject || '(未知)'}（检测到活跃并行 session，已保留；如需切换请显式运行 ./scripts/project.sh switch <项目>）\n\n`);
+    // 一次性继承标记（终验核验修）：只有"为并行 session 而保留"才是真继承；route-guard 认此标记
+    // 而非 cur&&!pin，避免把 self-switch 误判成继承（单 session 正常流程 Msg2 假阳性）。
+    if (ownSid) {
+      try { writeFileSync(join(projectRoot, '.claude', `.session-inherited-${ownSid}`), activeProject || ''); } catch { }
+    }
   } else {
     // 冷启动 + 无活跃并行 → 清，走全新项目流程（原始设计意图）
     doClear(); cleared = true;
