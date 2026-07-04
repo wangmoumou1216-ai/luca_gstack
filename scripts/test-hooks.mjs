@@ -631,6 +631,15 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-006 source 缺失 → 保留 + canary');
 }
 
+// STICKY-006b：未知非空 source（如 harness 把 'startup' 改名）→ 保留 + canary（A1 加固，决策红队）
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const r = STICKY(root, 'launch', 'me'); // 'launch' = 假设的改名值，非 startup/resume/clear/compact
+  assert.ok(isSymlink(join(root, 'docs')), '未知 source 应保守保留（不静默走冷启动清除）');
+  assert.match(r.stderr, /source 值未知/, '未知 source 应有 canary 警告，不得静默保留');
+  console.log('PASS STICKY-006b 未知 source → 保留 + canary（堵 A1 改名盲区）');
+}
+
 // STICKY-007：transcript-mtime 活跃信号（R1）——他-sid transcript 新鲜 → 保留
 {
   const root = makeFixture({ activeProject: 'projA' });

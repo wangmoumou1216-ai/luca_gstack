@@ -158,13 +158,17 @@ if (hasActiveLinks) {
     process.stderr.write(`[session-restore] 🧹 检测到悬空项目链（目标已删/改名），已清除，走全新流程\n`);
   } else if (alwaysClear) {
     doClear(); cleared = true; // kill-switch：无条件回退旧行为
-  } else if (startSource && startSource !== 'startup' && startSource !== 'clear') {
-    // resume / compact / 其它已知非冷启动值 → 保留（本 session 自己的上下文，清它是 bug）
+  } else if (startSource === 'resume' || startSource === 'compact') {
+    // resume / compact → 保留（本 session 自己的上下文，清它是 bug；不打扰）
+  } else if (startSource === 'clear') {
+    // /clear 只清对话不切项目 → 保留激活项目（红队 H1）
   } else if (!startSource) {
     // source 缺失（stdin 读不到）→ 安全侧保留 + canary（防未来 harness 语义漂移静默误清）
     process.stderr.write(`[session-restore] ⚠️ SessionStart 未拿到 source 字段，保守保留激活项目 ${activeProject || '(未知)'}（如需清除：SESSION_RESTORE_ALWAYS_CLEAR=1）\n`);
-  } else if (startSource === 'clear') {
-    // /clear 只清对话不切项目 → 保留激活项目（红队 H1）
+  } else if (startSource !== 'startup') {
+    // A1 加固（决策红队）：未知非空 source（如 harness 把 'startup' 改名——Task→Agent 同型漂移的
+    // 可能形态）→ 安全侧保留 + canary。旧代码此处会静默保留无警告，冷启动被误判成继承旧项目。
+    process.stderr.write(`[session-restore] ⚠️ SessionStart source 值未知（"${startSource}"，非 startup/resume/clear/compact）——疑似 harness 语义漂移，保守保留激活项目 ${activeProject || '(未知)'}（如确为冷启动需清除：SESSION_RESTORE_ALWAYS_CLEAR=1）\n`);
   } else if (hasActiveParallelSession()) {
     // 冷启动但检测到活跃并行 session → 保留 + 显式告知（R2/R4：不再谎称"无激活项目"）
     process.stdout.write(`[session-restore] 🔗 当前激活项目: ${activeProject || '(未知)'}（检测到活跃并行 session，已保留；如需切换请显式运行 ./scripts/project.sh switch <项目>）\n\n`);
