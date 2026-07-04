@@ -87,8 +87,10 @@ tradeoff** / 状态覆盖 / PRD 约束引用。
 | `references/design-system-contract.md`（品牌/间距/字体/组件硬约束） | **Phase 5** 决策 8 字段化前 |
 
 **任一已执行 Phase 的挂载 reference 未在该 Phase 开始前读完 → SELF_CHECK_PASSED 不得写 YES。**
-（所有 Phase 都会执行，终态门与原"4 份全部读完"等价；场景 C 跳过 Phase 3 时
-state-coverage 挂载顺延到 Phase 5 前——决策的状态覆盖字段仍需要它。）
+（场景 A/B/D 执行全部 Phase，四份都会被读；**场景 C 跳过 Phase 2+3**——此时 state-coverage 的挂载点
+顺延到 **Phase 5 前**（决策的「状态覆盖」字段仍需要它，Phase 5 约束检查会验），taste-anchors/
+design-system-contract 挂载不变。**场景 C 下 state-coverage 仍是必读，不因 Phase 3 被跳过而豁免**。
+终态语义与原"4 份全部读完"等价：每一份都在其决策被产出前读完。）
 
 ---
 
