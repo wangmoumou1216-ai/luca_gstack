@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
-import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
+
+// 会话粘性（G6，2026-07-04）：读 SessionStart stdin JSON 拿 source + session_id。
+// source 用于"仅 startup 清 symlink"的 allowlist 判断（安全侧：未知/缺失 → 不清 + canary）；
+// session_id 用于活跃探测时排除本 session 自己的计数/transcript。sanitize 与其余 hook 逐字一致。
+let startPayload = {};
+try { startPayload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
+const startSource = typeof startPayload.source === 'string' ? startPayload.source : '';
+const ownSid = String(startPayload.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
 
 // hooks 日志 size-cap：4 个 hook 共写 2>>，~27KB/天；/tmp 周期清理按 mtime 判老，对活跃追加文件永不命中
 try {
@@ -44,10 +52,12 @@ try {
   for (const f of readdirSync(claudeDir)) {
     const isMarker = f.startsWith('.episode-written-');
     const isSidCounter = /^\.session-(turn|edit|tool)-count-./.test(f);
-    if (!isMarker && !isSidCounter) continue;
+    const isPin = /^\.session-(project|projnag)-./.test(f); // G6-R7②：pin/nag 文件同样按 mtime GC，防永久堆积
+    if (!isMarker && !isSidCounter && !isPin) continue;
     try {
       const age = nowMs - statSync(join(claudeDir, f)).mtimeMs;
-      if (age > (isMarker ? MARKER_TTL : COUNTER_TTL)) unlinkSync(join(claudeDir, f));
+      const ttl = isMarker ? MARKER_TTL : COUNTER_TTL; // pin 同 counter 7天
+      if (age > ttl) unlinkSync(join(claudeDir, f));
     } catch { }
   }
 } catch { }
@@ -65,25 +75,113 @@ if (existsSync(progressFile)) {
   } catch { }
 }
 
-// 每次启动自动清除激活项目，确保走全新项目流程
+// 会话粘性（G6，2026-07-04）：活跃并行 session 探测——两路信号取 OR（红队 R1：
+// 单靠计数器 mtime 在"纯读研究/权限等待/流式生成"期间死寂，两分钟即假死）：
+//  ① 他-sid 计数文件 mtime（严格正则 + 排除本 ownSid + 排除 legacy 无后缀——R3）
+//  ② 他-sid transcript mtime（~/.claude/projects/<repo-path>/<sid>.jsonl，每个事件都刷新，
+//     覆盖只读/权限/流式全部盲区——R1 修正）
+// 窗口 env 可调（仿 SESSION_SYNC_MIN_TOOLS 先例）。返回 true=有活跃并行 session。
+function hasActiveParallelSession() {
+  const windowMs = (parseInt(process.env.SESSION_STICKY_WINDOW_MIN, 10) || 15) * 60 * 1000;
+  const nowMs = Date.now();
+  const claudeDir = join(projectRoot, '.claude');
+  const sidRe = /^\.session-(turn|edit|tool)-count-(.+)$/;
+  try {
+    for (const f of readdirSync(claudeDir)) {
+      const m = f.match(sidRe);
+      if (!m || m[2] === ownSid) continue; // 严格：只认带-sid 后缀；排除本 session 自己
+      try { if (nowMs - statSync(join(claudeDir, f)).mtimeMs < windowMs) return true; } catch { }
+    }
+  } catch { }
+  // transcript 目录：repo 绝对路径把 / 换成 -（CC projects 目录命名规则）；
+  // env 覆盖仅供测试注入（避免污染真实 ~/.claude/projects）。
+  try {
+    const projDir = process.env.SESSION_STICKY_TRANSCRIPT_DIR
+      || join(homedir(), '.claude', 'projects', projectRoot.replace(/\//g, '-'));
+    for (const f of readdirSync(projDir)) {
+      if (!f.endsWith('.jsonl')) continue;
+      const sid = f.slice(0, -6);
+      if (sid === ownSid) continue;
+      try { if (nowMs - statSync(join(projDir, f)).mtimeMs < windowMs) return true; } catch { }
+    }
+  } catch { }
+  return false;
+}
+
+// ── 激活项目清除决策（G6 会话粘性，2026-07-04；红队定稿）──
+// 原设计：每次启动无条件清三个共享 symlink，"走全新项目流程"。但多并发 session 下，
+// 任一新 session 启动即清空其它 session 正在用的项目上下文（昨日实测撞 3 次）。
+// 改为决策树——清 symlink 当且仅当以下全部成立（否则保留）：
+//  0. 悬空链（readlink 目标不存在）→ 无视下面直接清（R5：安全 gate，非粘性范围，
+//     否则 gate ① 会静默继续一个已删项目、session-sync 会穿悬空链复活已删目录树）。
+//  1. kill-switch SESSION_RESTORE_ALWAYS_CLEAR=1 → 无条件清（一键回退旧行为）。
+//  2. source === 'startup'（冷启动）——allowlist（H1）：resume/compact 清自己上下文本就是
+//     bug（session_id 跨 resume 不变，文档确认）；clear 是清对话非切项目，保留；未知/缺失
+//     source → 保留 + canary（安全侧：误清摧毁并行活 session 数据面不可逆，误保留可 switch 恢复）。
+//  3. 无活跃并行 session（hasActiveParallelSession()=false）——有则保留 + 警告（R1+R2 核心）。
 const docsLink = join(projectRoot, 'docs');
 const stateLink = join(projectRoot, '.claude', 'workflow-state.yaml');
 const topicLink = join(projectRoot, '.claude', 'current-topic.txt');
-for (const link of [docsLink, stateLink, topicLink]) {
-  try { if (lstatSync(link).isSymbolicLink()) unlinkSync(link); } catch { }
+const alwaysClear = process.env.SESSION_RESTORE_ALWAYS_CLEAR === '1';
+
+// 当前 docs 链指向的激活项目名（用于保留时的提示；悬空判断也用它）
+let activeProject = '', docsDangling = false;
+try {
+  const tgt = readlinkSync(docsLink); // 悬空链 readlink 仍成功
+  const m = tgt.match(/\/项目\/([^/]+)/);
+  if (m) activeProject = m[1];
+  docsDangling = !existsSync(docsLink); // existsSync 跟随链：目标不存在=悬空
+} catch { /* 无链=无激活项目 */ }
+
+const hasActiveLinks = [docsLink, stateLink, topicLink].some(l => {
+  try { return lstatSync(l).isSymbolicLink(); } catch { return false; }
+});
+
+const doClear = () => {
+  for (const link of [docsLink, stateLink, topicLink]) {
+    try { if (lstatSync(link).isSymbolicLink()) unlinkSync(link); } catch { }
+  }
+};
+// 决策树顺序关键（STICKY-004 回归钉死）：悬空 gate 与 kill-switch 必须**优先于**所有
+// 保留条件——否则 source=resume 时悬空链会被 resume 分支先保留，绕过安全 gate。
+let cleared = false;
+if (hasActiveLinks) {
+  if (docsDangling && !alwaysClear) {
+    // R5 安全 gate：目标已删/改名 → 无视 source/活跃度直接清（否则 gate ① 静默继续已删项目、
+    // session-sync 穿悬空链复活已删目录树）。最高优先。
+    doClear(); cleared = true;
+    process.stderr.write(`[session-restore] 🧹 检测到悬空项目链（目标已删/改名），已清除，走全新流程\n`);
+  } else if (alwaysClear) {
+    doClear(); cleared = true; // kill-switch：无条件回退旧行为
+  } else if (startSource && startSource !== 'startup' && startSource !== 'clear') {
+    // resume / compact / 其它已知非冷启动值 → 保留（本 session 自己的上下文，清它是 bug）
+  } else if (!startSource) {
+    // source 缺失（stdin 读不到）→ 安全侧保留 + canary（防未来 harness 语义漂移静默误清）
+    process.stderr.write(`[session-restore] ⚠️ SessionStart 未拿到 source 字段，保守保留激活项目 ${activeProject || '(未知)'}（如需清除：SESSION_RESTORE_ALWAYS_CLEAR=1）\n`);
+  } else if (startSource === 'clear') {
+    // /clear 只清对话不切项目 → 保留激活项目（红队 H1）
+  } else if (hasActiveParallelSession()) {
+    // 冷启动但检测到活跃并行 session → 保留 + 显式告知（R2/R4：不再谎称"无激活项目"）
+    process.stdout.write(`[session-restore] 🔗 当前激活项目: ${activeProject || '(未知)'}（检测到活跃并行 session，已保留；如需切换请显式运行 ./scripts/project.sh switch <项目>）\n\n`);
+  } else {
+    // 冷启动 + 无活跃并行 → 清，走全新项目流程（原始设计意图）
+    doClear(); cleared = true;
+  }
 }
 
-// 显示项目列表（无激活项目）
-try {
-  const projectsRoot = join(homedir(), 'Desktop', '项目');
-  if (existsSync(projectsRoot)) {
-    const entries = readdirSync(projectsRoot).filter(e => {
-      try { return statSync(join(projectsRoot, e)).isDirectory(); } catch { return false; }
-    });
-    const lines = entries.map(e => `  ○ ${e}`).join('\n');
-    process.stdout.write(`[session-restore] 📁 项目列表（无激活项目，请告知要做什么）:\n${lines}\n\n`);
-  }
-} catch { }
+// 显示项目列表（仅在真清除后——保留态已在上面告知激活项目，不再谎称"无激活"，R4）
+if (cleared || !hasActiveLinks) {
+  try {
+    const projectsRoot = join(homedir(), 'Desktop', '项目');
+    if (existsSync(projectsRoot)) {
+      const entries = readdirSync(projectsRoot).filter(e => {
+        try { return statSync(join(projectsRoot, e)).isDirectory(); } catch { return false; }
+      });
+      const lines = entries.map(e => `  ○ ${e}`).join('\n');
+      process.stdout.write(`[session-restore] 📁 项目列表（无激活项目，请告知要做什么）:\n${lines}\n\n`);
+    }
+  } catch { }
+}
 
 // Check for pending skill-rule extraction from previous sessions.
 // This intentionally lives outside docs/handoff so startup does not treat it as upstream handoff context.

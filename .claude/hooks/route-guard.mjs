@@ -7,6 +7,7 @@ import {
   readdirSync,
   statSync,
   writeFileSync,
+  unlinkSync,
 } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
@@ -635,6 +636,42 @@ if (!dryRun && prompt) {
   } catch {}
   if (turns === 20 || turns === 30 || (turns > 30 && turns % 10 === 0)) {
     hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议执行 /compact 或写入 Checkpoint。`);
+  }
+
+  // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04）──
+  // session-restore 现在会保留并行 session 的激活项目 → 新 session 可能"继承"一个自己
+  // 从未确认过的项目。pin 记录本 session 认过的项目，用于两件事：
+  //  (a) 继承检测：首轮消息时 docs 有链但本 sid 无 pin = 继承态 → 一次性提示（防静默写错项目）
+  //  (b) 漂移对账：docs 链被别的 session switch 走后与本 sid pin 不符 → 提示（携带计数收敛）
+  if (hookSessionId) {
+    try {
+      const pinFile = join(projectRoot, '.claude', `.session-project-${hookSessionId}`);
+      const projects = listProjects();
+      const cur = readCurrentProject(projects); // docs 链当前指向
+      let pin = null;
+      try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
+
+      if (cur && !pin) {
+        // 继承态：首次见到激活项目而本 session 没 pin 过 → 明确告知这是继承来的
+        hints.push(`[route-guard] 🔗 本 session 继承了激活项目「${cur}」（由并行 session 保留）。若你要做的是别的项目，请显式 ./scripts/project.sh switch <项目>；确认就是它则无需操作。`);
+        try { writeFileSync(pinFile, cur); } catch {}
+      } else if (cur && pin && cur !== pin) {
+        // 漂移：本 session 认过 pin，但 docs 被切走了 → 提示 N 次后自愈收敛（R7-①）
+        const nagFile = join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`);
+        let nag = 0;
+        try { nag = parseInt(readFileSync(nagFile, 'utf8').trim()) || 0; } catch {}
+        if (nag < 3) {
+          hints.push(`[route-guard] ⚠️ 本 session 原在项目「${pin}」，当前激活已被切到「${cur}」（第 ${nag + 1}/3 次提醒）。如非预期请 switch 回「${pin}」。`);
+          try { writeFileSync(nagFile, String(nag + 1)); } catch {}
+        } else {
+          // 收敛：连续提醒 3 次未纠正 → 接受新值为本 session pin，停止刷屏
+          try { writeFileSync(pinFile, cur); unlinkSync(nagFile); } catch {}
+        }
+      } else if (cur && pin && cur === pin) {
+        // 一致：刷新 pin mtime（供 SessionEnd/GC 判活）
+        try { writeFileSync(pinFile, cur); } catch {}
+      }
+    } catch {}
   }
 }
 

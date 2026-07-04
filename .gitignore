@@ -87,10 +87,12 @@ api-project/
 .claude/.session-turn-count
 .claude/.session-edit-count
 .claude/.session-tool-count
-# per-session 后缀变体（G2 并发隔离）与切换互斥锁
+# per-session 后缀变体（G2 并发隔离）与切换互斥锁 + G6 会话粘性 pin/nag
 .claude/.session-turn-count-*
 .claude/.session-edit-count-*
 .claude/.session-tool-count-*
+.claude/.session-project-*
+.claude/.session-projnag-*
 .claude/.project-switch.lock/
 .claude/observability/pending-extraction*.md
 .claude/.episode-written-*

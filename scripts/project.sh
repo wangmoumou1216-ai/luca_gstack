@@ -5,7 +5,8 @@
 #   ./scripts/project.sh switch <name>   切换到已有项目
 #   ./scripts/project.sh list            列出所有项目及当前激活
 #   ./scripts/project.sh status          显示当前项目链接状态
-#   ./scripts/project.sh deactivate      清除当前激活项目（下次启动走全新流程）
+#   ./scripts/project.sh deactivate      清除当前激活项目（显式取消激活；G6 后启动不再无条件清，
+#                                        故需要"走全新流程"时用本命令，而非依赖每次启动自动清）
 
 set -euo pipefail
 

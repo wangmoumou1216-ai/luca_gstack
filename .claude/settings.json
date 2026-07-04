@@ -49,6 +49,16 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      }
     ]
   }
 }

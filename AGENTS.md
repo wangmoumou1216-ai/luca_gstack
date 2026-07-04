@@ -33,7 +33,12 @@ Core facts:
 - Prototype stack: plain HTML + local Tailwind CDN + native JavaScript.
 - Prototype framework: `framework/`.
 - Workflow outputs: `docs/`, which must be a symlink to the active project at
-  `/Users/luca/Desktop/项目/<project>/docs`.
+  `/Users/luca/Desktop/项目/<project>/docs`. Session stickiness (G6, 2026-07-04): `session-restore.mjs`
+  clears the three project symlinks on SessionStart only when `source === 'startup'` AND no active
+  parallel session is detected (other-session counter/transcript mtime < 15min) AND
+  `SESSION_RESTORE_ALWAYS_CLEAR` is unset; a dangling link is cleared unconditionally. When the link
+  is preserved, the session "inherits" the active project — route-guard warns on the first message;
+  do not silently start work under an inherited project without confirming it is the intended one.
 - Long-term memory: `CONTEXT.md`.
 - Claude workflow state: `.claude/workflow-state.yaml`, which must be a symlink to the active
   project's `/Users/luca/Desktop/项目/<project>/.luca/workflow-state.yaml`.
