@@ -19,11 +19,15 @@ function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
 }
 
+// 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
+// per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
+let hookSessionId = '';
 function parsePrompt() {
   try {
     const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
     try {
       const data = JSON.parse(raw || '{}');
+      hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
       return String(data.prompt || data.message || '');
     } catch {
       process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);
@@ -116,7 +120,9 @@ function listProjects() {
 }
 
 function readCurrentProject(projects) {
-  if (process.env.ROUTE_GUARD_CURRENT_PROJECT) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
+  // 显式设置（含空串="无激活项目"）即生效——空串回退真实 symlink 会让 dry-run 测试
+  // 依赖宿主机的项目状态（G3 修复测试时发现）。
+  if (process.env.ROUTE_GUARD_CURRENT_PROJECT !== undefined) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
   try {
     const docsPath = join(projectRoot, 'docs');
     const target = readlinkSync(docsPath);
@@ -128,6 +134,16 @@ function readCurrentProject(projects) {
   } catch {
     return '';
   }
+}
+
+// 对话延续/状态询问豁免（G3，2026-07-04）：整句就是"继续/停/问进度"类 check-in 时不注入
+// 路由提示——此前 >5 字、非?结尾的陈述句一律 STOP/PROJECT_STOP，实测几乎每条对话性消息
+// 都吃一段噪音注入。双闸防误豁免：① 整句锚定（前缀限 都/全部/现在，尾部限语气助词）
+// ② 长度 ≤10。「继续做个原型」含实义任务词、锚定失败 → 照常路由；「继续项目」被上游
+// 老项目正则先捕获 → 仍走 Project Gate。
+const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀了的！!。.？?…\s]*$/;
+function isContinuation(prompt) {
+  return prompt.length <= 10 && CONTINUATION_RE.test(prompt.trim());
 }
 
 function projectGate(prompt, projects, currentProject) {
@@ -231,6 +247,10 @@ function projectGate(prompt, projects, currentProject) {
     };
   }
 
+  // 对话延续豁免（G3）：放在所有具名项目/老项目/新项目专有检查之后——那些必须先赢；
+  // 只拦下面这个"一切>5字陈述句都 PROJECT_STOP"的兜底网。
+  if (isContinuation(prompt)) return null;
+
   if (!currentProject && prompt.length > 5 && !prompt.endsWith('?') && !prompt.endsWith('？')) {
     return {
       decision: 'PROJECT_STOP',
@@ -250,7 +270,9 @@ function complexityDecision(prompt) {
       name: '多模块',
       weight: 3,
       test: t => {
-        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '桌面', 'desktop', 'claude', '卡片', '数据库', 'api', 'memory', '知识库', '定时', '调度', 'scheduler', '推送'];
+        // G3-C3（2026-07-04）：'claude' 从系统词除名——助手自身名字在 meta 提问里高频出现，
+        // 与任一其他系统词共现即误发多模块(w3)，把闲聊/咨询误升级 PLAN_MODE。
+        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '桌面', 'desktop', '卡片', '数据库', 'api', 'memory', '知识库', '定时', '调度', 'scheduler', '推送'];
         return sys.filter(s => t.includes(normalize(s))).length >= 2;
       },
     },
@@ -295,15 +317,30 @@ function complexityDecision(prompt) {
 
 function softSkillDecision(prompt, routes) {
   const text = normalize(prompt);
+  const promptLower = prompt.toLowerCase();
   const scored = routes.map(route => {
     let score = 0;
     const matchedTokens = [];
     for (const trigger of route.triggers) {
       const t = normalize(trigger);
+      // G3-C2（2026-07-04）：纯 latin trigger 不做 3-6 字滑窗子串——那是 'design'⊂'designer'、
+      // 'claude'⊂'claude-api' 类误报的根源。改为完整 trigger + 词边界匹配（保留空格的小写原文）；
+      // CJK/混合 trigger 维持子串逻辑（中文无词边界，滑窗是刻意设计）。
+      if (/^[a-z0-9 ._-]+$/i.test(trigger)) {
+        const esc = trigger.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(promptLower)) {
+          score += Math.min(t.length, 6);
+          matchedTokens.push(trigger.toLowerCase());
+        }
+        continue;
+      }
       let bestLen = 0;
       for (let len = Math.min(t.length, 6); len >= 3; len--) {
         for (let i = 0; i <= t.length - len; i++) {
           const sub = t.slice(i, i + len);
+          // 混合 trigger（如'接入Claude'）滑出的纯 latin 碎片（'claude'）与 C2 同病——
+          // 纯 ASCII 窗口一律跳过，latin 匹配只走上面的完整 trigger + 词边界路径。
+          if (!/[^\x00-\x7f]/.test(sub)) continue;
           if (text.includes(sub)) { bestLen = len; matchedTokens.push(sub); break; }
         }
         if (bestLen) break;
@@ -361,7 +398,8 @@ function skillDecision(prompt) {
   if (!hits.length) {
     const looksLikeTask = prompt.length > 5
       && !prompt.match(/^(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i)
-      && !prompt.endsWith('?') && !prompt.endsWith('？');
+      && !prompt.endsWith('?') && !prompt.endsWith('？')
+      && !isContinuation(prompt); // G3：整句延续/状态询问不当任务，静默放行
     if (!looksLikeTask) return { decision: 'NONE' };
     const softCandidates = softSkillDecision(prompt, routes);
     return { decision: 'STOP', reason: 'no_keyword_match', softCandidates };
@@ -581,7 +619,9 @@ if (prompt) {
 }
 
 if (!dryRun && prompt) {
-  const counterFile = join(projectRoot, '.claude', '.session-turn-count');
+  // 并发隔离（G2）：有 sid 时轮次计数 per-session；无 sid（测试/管道）回退共享旧文件名
+  const counterFile = join(projectRoot, '.claude',
+    hookSessionId ? `.session-turn-count-${hookSessionId}` : '.session-turn-count');
   let turns = 0;
   try {
     turns = parseInt(readFileSync(counterFile, 'utf8').trim()) || 0;

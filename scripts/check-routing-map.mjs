@@ -284,9 +284,11 @@ for (const ref of graphRefs) {
 
 // SSOT-9 contract: rules[*].scope.skills — get_rules.py matches by exact string
 // ("*" = wildcard), so every name must be a canonical skill name. The list must
-// also stay FLOW-style ([a, b]): get_rules.py's hand-rolled parser mis-reads a
-// block list (attaches it to the rule top level → scope.skills reads empty →
-// the rule silently applies to EVERY skill).
+// also stay FLOW-style ([a, b]): route-guard.mjs's loadRules() is a hand-rolled
+// JS regex parser that only recognizes flow lists — a block list silently breaks
+// its rule injection. (get_rules.py switched to real YAML 2026-07-04 and no
+// longer cares, but the route-guard parser is the surviving consumer this
+// format pin protects. Do not delete this check while route-guard parses by regex.)
 const rulesDoc = parseYamlViaPython('.claude/observability/rules.yaml');
 for (const rule of rulesDoc.rules || []) {
   for (const name of (rule.scope && rule.scope.skills) || []) {
@@ -297,7 +299,7 @@ for (const rule of rulesDoc.rules || []) {
 }
 readFileSync('.claude/observability/rules.yaml', 'utf8').split('\n').forEach((ln, i) => {
   if (/^\s+skills:\s*(#.*)?$/.test(ln)) {
-    ssotErrors.push(`SSOT-9 rules.yaml:${i + 1} scope.skills must be flow-style ([a, b]) — get_rules.py mis-reads block lists as apply-to-all`);
+    ssotErrors.push(`SSOT-9 rules.yaml:${i + 1} scope.skills must be flow-style ([a, b]) — route-guard.mjs's regex parser only recognizes flow lists`);
   }
 });
 

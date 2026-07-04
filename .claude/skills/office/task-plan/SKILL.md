@@ -12,7 +12,9 @@ allowed-tools:
   - Write
   - Bash
   - AskUserQuestion
-context-cost: medium
+context-cost:
+  self: 12240  # 实测字节数 wc -c，统一口径 2026-07-04（G5；原字符串 medium 与其余 skill 结构不一致）
+  runtime-estimate: 15000
 ---
 
 ## Preamble（每次调用时执行）

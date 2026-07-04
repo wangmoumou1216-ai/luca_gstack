@@ -18,7 +18,7 @@ allowed-tools:
   - AskUserQuestion
   - WebFetch
 context-cost:
-  self: 6500
+  self: 18364  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 9000
   shared-refs: [brand-tokens, handoff-protocol]
   recommended-model: guided-execution

@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // 工具调用后：累计本 session 的「活动信号」，供 Stop hook 判断"是否有实质工作"。
-//  · .session-edit-count —— 仅文件编辑类工具（Write/Edit/MultiEdit/NotebookEdit）
-//  · .session-tool-count —— 任何被 matcher 命中的工具（Bash/Task/MCP/web…）；用于兜住
-//    "重 Bash/subagent/MCP、零文件编辑、少轮次"的实质 session（V3：substantive 判据过窄）。
-// 两个计数都在 SessionStart 由 session-restore 清零。
-// Claude Code 的 PostToolUse hook 通过 stdin 传入 JSON: { tool_name, tool_input }
+//  · .session-edit-count[-<sid>] —— 仅文件编辑类工具（Write/Edit/MultiEdit/NotebookEdit）
+//  · .session-tool-count[-<sid>] —— 任何被 matcher 命中的工具（Bash/Task/Agent/MCP/web…）；
+//    用于兜住"重 Bash/subagent/MCP、零文件编辑、少轮次"的实质 session（V3）。
+// 并发隔离（G2，2026-07-04）：stdin 带 session_id（PostToolUse 公共字段，已实测）时计数文件
+// 带 -<sid> 后缀——并行 session 互不污染；无 sid（非交互管道/测试）回退共享旧文件名，
+// 该 legacy 路径仍由 session-restore 启动清零。sid sanitize 表达式必须与
+// session-sync.mjs / route-guard.mjs 逐字一致：replace(/[^\w-]/g,'').slice(0,32)。
+// Claude Code 的 PostToolUse hook 通过 stdin 传入 JSON: { session_id, tool_name, tool_input, … }
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -18,28 +21,37 @@ function bump(file) {
   } catch { }
 }
 
-// 任何命中本 hook 的工具都算一次"活动"。
-bump('.session-tool-count');
-
 let raw = '';
 try {
   raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
 } catch {
-  // stdin 不可用（非交互式）：已记 tool-count，保守退出。
+  // stdin 不可用（非交互式）：无从取 sid，记 legacy tool-count 后保守退出。
+  bump('.session-tool-count');
   process.exit(0);
 }
 
+let data = {};
+let parsed = true;
 try {
-  const data = JSON.parse(raw || '{}');
+  data = JSON.parse(raw || '{}');
+} catch {
+  parsed = false;
+  process.stderr.write(`[post-edit] ⚠️  stdin JSON 解析失败，按 legacy 计数。\n`);
+}
+const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
+const suffix = sid ? `-${sid}` : '';
+
+// 任何命中本 hook 的工具都算一次"活动"。
+bump(`.session-tool-count${suffix}`);
+
+if (parsed) {
   const toolName = data?.tool_name || '';
   const editedFile = data?.tool_input?.file_path || '';
   // 仅文件编辑类工具额外计入 edit-count。
   if (/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(toolName)) {
-    bump('.session-edit-count');
+    bump(`.session-edit-count${suffix}`);
   }
   if (editedFile.includes('/framework/') || editedFile.includes('\\framework\\')) {
     process.stdout.write(`[post-edit] ⚠️  framework/ 是只读模板目录，请确认此次编辑是有意为之。\n`);
   }
-} catch {
-  process.stderr.write(`[post-edit] ⚠️  stdin JSON 解析失败，跳过检测。\n`);
 }

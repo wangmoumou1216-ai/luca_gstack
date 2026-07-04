@@ -19,7 +19,7 @@ allowed-tools:
   - Bash
   - AskUserQuestion
 context-cost:
-  self: 20586
+  self: 35022  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 20000
   shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, design-system-contract]
   recommended-model: reasoning-heavy  # 设计决策核心+AI Native判断
@@ -73,20 +73,24 @@ tradeoff** / 状态覆盖 / PRD 约束引用。
 
 ---
 
-## 必读 references（Phase 1 之前读完）
+## 必读 references（按 Phase 挂载，lazy-load——2026-07-04 流程优化 G5）
 
-```
-□ .claude/skills/office/references/ai-native-design-framework.md
-  （核心方法论：四范式、判定矩阵、四层思考、AI 专有状态、Slop 反模式）
-□ .claude/skills/office/references/ai-native-taste-anchors.md
-  （8 锚点品味体系：Ryo Lu/Linear/Attio/Notion/Raycast + Perplexity/Cursor/Granola）
-□ .claude/skills/office/references/ai-native-state-coverage.md
-  （12 状态清单：5 传统 + 7 AI 专有）
-□ .claude/skills/office/references/design-system-contract.md
-  （品牌/间距/字体/组件硬约束）
-```
+> **Do NOT read these at skill start.**（移植 brainstorm 既有先例）此前 4 份共 ~52KB 在写下
+> 第一条决策前全量入 context——启动税全仓最重。改为：**每份在其挂载 Phase 开始前必须读完**，
+> 之前不读。质量门语义不变：用到之前必须读完，只是"用到"从"skill 启动"精确到"对应 Phase"。
 
-**不读完 references 就开始决策 → SELF_CHECK_PASSED 不得写 YES。**
+| reference | 挂载点（该 Phase 开始前读完） |
+|---|---|
+| `references/ai-native-design-framework.md`（四范式/判定矩阵/四层思考/Slop 反模式） | **Phase A** 设计坐标系前 |
+| `references/ai-native-state-coverage.md`（12 状态清单：5 传统 + 7 AI 专有） | **Phase 3** 体验验证前 |
+| `references/ai-native-taste-anchors.md`（8 锚点品味体系） | **Phase 4** 品味检查前 |
+| `references/design-system-contract.md`（品牌/间距/字体/组件硬约束） | **Phase 5** 决策 8 字段化前 |
+
+**任一已执行 Phase 的挂载 reference 未在该 Phase 开始前读完 → SELF_CHECK_PASSED 不得写 YES。**
+（场景 A/B/D 执行全部 Phase，四份都会被读；**场景 C 跳过 Phase 2+3**——此时 state-coverage 的挂载点
+顺延到 **Phase 5 前**（决策的「状态覆盖」字段仍需要它，Phase 5 约束检查会验），taste-anchors/
+design-system-contract 挂载不变。**场景 C 下 state-coverage 仍是必读，不因 Phase 3 被跳过而豁免**。
+终态语义与原"4 份全部读完"等价：每一份都在其决策被产出前读完。）
 
 ---
 
@@ -760,7 +764,7 @@ AskUserQuestion：
    → Phase 6.75 Design Generation Packet
    （**例外**：场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2 执行在 Phase A 之前，
    是进入本序列前的现状核对，不算违反本条——见「⚠️ 执行顺序锁死」节）
-2. **必读 references 4 份，读完才能开始** — 未读完 SELF_CHECK_PASSED 不得写 YES
+2. **必读 references 4 份，按挂载表在对应 Phase 开始前读完**（lazy-load，勿在 skill 启动时全量读）— 任一已执行 Phase 的挂载 ref 未读完 → SELF_CHECK_PASSED 不得写 YES
 3. **Phase A 设计坐标系必须第一步**（**场景 B/C 的前置 Step 除外，见上条**）— 不写坐标系直接跳进决策 = 没有设计
 4. **Phase 1 四层深度思考** — Layer A/B 必填，Layer C 所有 AI 功能必填，Layer D
    场景 D 和 agent 功能必填

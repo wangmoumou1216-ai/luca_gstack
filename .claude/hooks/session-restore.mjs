@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
-import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
@@ -28,19 +28,27 @@ if (existsSync(stateFile)) {
   }
 }
 
-// 每次 Session 启动重置轮次计数器（保证 Checkpoint 提醒每 session 都生效）
-const counterFile = join(projectRoot, '.claude', '.session-turn-count');
-try { writeFileSync(counterFile, '0'); } catch { }
-
-// 重置本 session 编辑/工具计数 + 清除上一 session 的自成长 marker（保证 Stop hook 的拦截守卫是「每 session 一次」）
+// 并发隔离（G2，2026-07-04）：真实 session 的计数/marker 已按 -<sid> 后缀隔离
+// （post-edit/route-guard/session-sync），启动时**绝不**触碰带后缀文件——那是并行
+// session 的活状态，无差别清零/删除正是昨日三次互踩事故的根因。这里只做两件事：
+//  1. 清零 legacy 无后缀计数器（无 sid 环境——测试/管道——的旧语义保持不变）
+//  2. 按 mtime GC 过期残留（marker >48h、per-sid 计数器 >7天），只删死文件不删活的
+try { writeFileSync(join(projectRoot, '.claude', '.session-turn-count'), '0'); } catch { }
 try { writeFileSync(join(projectRoot, '.claude', '.session-edit-count'), '0'); } catch { }
 try { writeFileSync(join(projectRoot, '.claude', '.session-tool-count'), '0'); } catch { }
 try {
   const claudeDir = join(projectRoot, '.claude');
+  const nowMs = Date.now();
+  const MARKER_TTL = 48 * 3600 * 1000;
+  const COUNTER_TTL = 7 * 24 * 3600 * 1000;
   for (const f of readdirSync(claudeDir)) {
-    if (f.startsWith('.episode-written-')) {
-      try { unlinkSync(join(claudeDir, f)); } catch { }
-    }
+    const isMarker = f.startsWith('.episode-written-');
+    const isSidCounter = /^\.session-(turn|edit|tool)-count-./.test(f);
+    if (!isMarker && !isSidCounter) continue;
+    try {
+      const age = nowMs - statSync(join(claudeDir, f)).mtimeMs;
+      if (age > (isMarker ? MARKER_TTL : COUNTER_TTL)) unlinkSync(join(claudeDir, f));
+    } catch { }
   }
 } catch { }
 
@@ -77,17 +85,28 @@ try {
   }
 } catch { }
 
-// Check for pending skill-rule extraction from last session.
+// Check for pending skill-rule extraction from previous sessions.
 // This intentionally lives outside docs/handoff so startup does not treat it as upstream handoff context.
-const pendingExtraction = join(projectRoot, '.claude', 'observability', 'pending-extraction.md');
-if (existsSync(pendingExtraction)) {
-  try {
-    const content = readFileSync(pendingExtraction, 'utf8');
-    const firstLine = content.split('\n').find(l => l.startsWith('> Topic:'));
-    const hint = firstLine ? ` (${firstLine.replace('> Topic:', '').trim()})` : '';
-    process.stdout.write(`[session-restore] 📝 上次 session 有待提取的 skill-rule${hint}。文件: .claude/observability/pending-extraction.md\n`);
-  } catch { }
-}
+// 并发隔离（G2）：pending 文件按 session 命名（pending-extraction-<sid>.md），glob 逐个提醒；
+// 兼容旧的单文件名 pending-extraction.md。最多列 3 个防刷屏，超出报总数。
+try {
+  const obsDir = join(projectRoot, '.claude', 'observability');
+  const pendings = existsSync(obsDir)
+    ? readdirSync(obsDir).filter(f => f.startsWith('pending-extraction') && f.endsWith('.md')).sort()
+    : [];
+  for (const f of pendings.slice(0, 3)) {
+    let hint = '';
+    try {
+      const content = readFileSync(join(obsDir, f), 'utf8');
+      const topicLine = content.split('\n').find(l => l.startsWith('> Topic:'));
+      if (topicLine) hint = ` (${topicLine.replace('> Topic:', '').trim()})`;
+    } catch { }
+    process.stdout.write(`[session-restore] 📝 有待提取的 skill-rule${hint}。文件: .claude/observability/${f}\n`);
+  }
+  if (pendings.length > 3) {
+    process.stdout.write(`[session-restore] 📝 …另有 ${pendings.length - 3} 个 pending-extraction 文件待处理\n`);
+  }
+} catch { }
 
 const memScript = join(projectRoot, 'memory', 'scripts', 'get_memory.py');
 if (existsSync(memScript)) {
@@ -113,13 +132,25 @@ try {
   const govScript = join(projectRoot, 'memory', 'scripts', 'daily_governance.py');
   const todayDigest = join(projectRoot, 'memory', 'digests', `${today}.md`);
   const todayChecked = join(projectRoot, 'memory', 'digests', `.checked-${today}`);
-  if (existsSync(govScript) && !existsSync(todayDigest) && !existsSync(todayChecked)) {
-    // detached 子进程的 stderr 重定向到日志文件（而非 'ignore'），否则 governance 崩溃/失败完全静默无痕（V4）。
-    let govErr = 'ignore';
-    try { govErr = openSync('/tmp/luca-gstack-governance.log', 'a'); } catch { }
-    const child = spawn('python3', [govScript], { cwd: projectRoot, detached: true, stdio: ['ignore', 'ignore', govErr] });
-    child.unref();
-    process.stderr.write(`[session-restore] 🌱 已后台触发每日记忆治理（今日首次启动；失败留痕 /tmp/luca-gstack-governance.log）\n`);
+  if (existsSync(govScript) && !existsSync(todayDigest)) {
+    // 并发隔离（G2，2026-07-04）：两个 session 近同时启动都读到 !exists → 都 spawn 治理
+    // （TOCTOU）。改为 O_EXCL 原子认领 .checked-<date>：抢到的 spawn，EEXIST 的静默跳过；
+    // 目录先 mkdir（全新环境首日两个 session 也要能正确竞争同一把锁）；
+    // 其他异常 → fail-open 照旧 spawn（宁重复不静默丢，governance 自身幂等）。
+    let claimed = false;
+    try {
+      mkdirSync(join(projectRoot, 'memory', 'digests'), { recursive: true });
+      closeSync(openSync(todayChecked, 'wx'));
+      claimed = true;
+    } catch (e) { claimed = !e || e.code !== 'EEXIST'; }
+    if (claimed) {
+      // detached 子进程的 stderr 重定向到日志文件（而非 'ignore'），否则 governance 崩溃/失败完全静默无痕（V4）。
+      let govErr = 'ignore';
+      try { govErr = openSync('/tmp/luca-gstack-governance.log', 'a'); } catch { }
+      const child = spawn('python3', [govScript], { cwd: projectRoot, detached: true, stdio: ['ignore', 'ignore', govErr] });
+      child.unref();
+      process.stderr.write(`[session-restore] 🌱 已后台触发每日记忆治理（今日首次启动；失败留痕 /tmp/luca-gstack-governance.log）\n`);
+    }
   }
 } catch { }
 
@@ -179,10 +210,14 @@ try {
         }
       } catch { }
       const shownMarker = join(projectRoot, '.claude', `.digest-shown-${newest.replace('.md', '')}`);
-      if (!existsSync(shownMarker)) {
+      // 并发隔离（G2，2026-07-04）：原 check-then-print-then-write 两 session 竞争会双展示或
+      // 都不展示。改 O_EXCL 先抢占：成功才打印；EEXIST 静默；其他异常（权限等）按旧行为
+      // 打印但不写 marker（fail-open——宁多展示一次不静默丢摘要）。
+      let show = false;
+      try { closeSync(openSync(shownMarker, 'wx')); show = true; } catch (e) { show = !e || e.code !== 'EEXIST'; }
+      if (show) {
         const preview = readFileSync(join(digestsDir, newest), 'utf8').split('\n').slice(0, 14).join('\n').trim();
         process.stdout.write(`[session-restore] 🌱 成长摘要 (${newest}，每个 digest 只提示一次):\n${preview}\n\n`);
-        try { writeFileSync(shownMarker, ''); } catch { }
       }
     }
   }
