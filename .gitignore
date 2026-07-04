@@ -106,6 +106,7 @@ api-project/
 # Memory system — ignore raw runtime data, keep scripts and stable knowledge
 memory/episodic/sessions/*.md
 !memory/episodic/sessions/README.md
+memory/episodic/.index.lock
 memory/semantic/candidates.jsonl
 memory/semantic/reviews.jsonl
 memory/retrieval-log.jsonl
