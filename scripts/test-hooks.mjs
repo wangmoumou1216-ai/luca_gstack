@@ -650,6 +650,23 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-007 transcript-mtime 活跃信号触发保留');
 }
 
+// STICKY-007b：真走【生产路径】——用 payload 的 transcript_path 定位 transcript 目录（不靠 env 覆盖）。
+// 决策红队 killer：原 STICKY-007 靠 SESSION_STICKY_TRANSCRIPT_DIR 覆盖，从不走生产推导，掩盖了
+// projectRoot.replace(/\//g,'-') 只换斜杠不换下划线的笔误（真实 CC 目录 luca_gstack→luca-gstack），
+// 导致 transcript 信号在生产环境静默失效却测试全绿。本用例强制走 payload.transcript_path 分支。
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const tdir = mkdtempSync(join(tmpdir(), 'luca-gstack-tx-'));
+  writeFileSync(join(tdir, 'other-sid.jsonl'), '{}'); // 新鲜他-sid transcript（活跃并行）
+  writeFileSync(join(tdir, 'me.jsonl'), '{}');        // 本 session transcript，transcript_path 指向它
+  const r = runNode(sessionRestoreHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root }, // 不设 SESSION_STICKY_TRANSCRIPT_DIR，强制走生产路径
+    input: JSON.stringify({ source: 'startup', session_id: 'me', transcript_path: join(tdir, 'me.jsonl') }),
+  });
+  assert.ok(isSymlink(join(root, 'docs')), 'payload.transcript_path 应让生产路径正确定位 transcript 目录 → 保留');
+  console.log('PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）');
+}
+
 // STICKY-008：真继承（有 session-restore 写的继承标记）→ 首条消息提示 + 删标记 + 写 pin
 {
   const root = makeFixture({ activeProject: 'projA' });

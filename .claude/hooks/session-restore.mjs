@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
 import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 
@@ -93,11 +93,14 @@ function hasActiveParallelSession() {
       try { if (nowMs - statSync(join(claudeDir, f)).mtimeMs < windowMs) return true; } catch { }
     }
   } catch { }
-  // transcript 目录：repo 绝对路径把 / 换成 -（CC projects 目录命名规则）；
-  // env 覆盖仅供测试注入（避免污染真实 ~/.claude/projects）。
+  // transcript 目录：优先用 SessionStart payload 的 transcript_path 取其父目录（最稳，无需推导）；
+  // 缺失时回退到路径推导——CC 把绝对路径里【所有非字母数字】都换成 -（不只是 /，下划线/CJK 亦然，
+  // 如 luca_gstack→luca-gstack、项目→----）。原来只换 / 会算出不存在的目录，静默让 transcript
+  // 信号失效（决策红队 killer，2026-07-04 修）。env 覆盖仅供测试注入。
   try {
     const projDir = process.env.SESSION_STICKY_TRANSCRIPT_DIR
-      || join(homedir(), '.claude', 'projects', projectRoot.replace(/\//g, '-'));
+      || (startPayload.transcript_path ? dirname(startPayload.transcript_path)
+          : join(homedir(), '.claude', 'projects', projectRoot.replace(/[^a-zA-Z0-9]/g, '-')));
     for (const f of readdirSync(projDir)) {
       if (!f.endsWith('.jsonl')) continue;
       const sid = f.slice(0, -6);
