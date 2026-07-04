@@ -7,6 +7,9 @@ const baseEnv = {
   ROUTE_GUARD_DRY_RUN: '1',
   ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示',
   ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示',
+  // G4-R6: 显式钉空——HEAVY set 现由 env 初始化，若开发者 shell/CI 恰好导出该变量会污染
+  // 默认用例（假红/假绿）。注入用例通过 extraEnv 覆盖。
+  ROUTE_GUARD_HEAVY_SKILLS: '',
 };
 
 function route(prompt, extraEnv = {}) {
@@ -268,7 +271,9 @@ const cases = [
     name: '设计调研 routes ux_research, NOT deepresearch (调研⊂设计调研)',
     prompt: '帮我做一下设计调研',
     expect: decision => {
-      // ux-research is a heavy orchestrator → SINGLE_SKILL becomes PLAN_CHECK.
+      // G4 (2026-07-04): HEAVY set 母版默认空 → ux-research 关键词命中现在是 SINGLE_SKILL
+      // （此前 heavy orchestrator 会升 PLAN_CHECK；.skill 字段两态都带，故此断言跨改动稳定）。
+      assert.equal(decision.decision, 'SINGLE_SKILL');
       assert.equal(decision.skill, '/ux-research');
       assert.ok(!decision.candidates.includes('/deepresearch'),
         `deepresearch should be shadowed, got ${JSON.stringify(decision.candidates)}`);
@@ -402,6 +407,36 @@ const cases = [
     expect: decision => {
       assert.equal(decision.decision, 'SINGLE_SKILL');
       assert.equal(decision.skill, '/auto');
+    },
+  },
+  // --- G4 (2026-07-04) HEAVY_ORCHESTRATOR_SKILLS 母版默认空 + env 扩展点 ---
+  {
+    // R7: 钉「新默认」——空 env 下 deepresearch 直呼不再升级 PLAN_CHECK（此前主线零 PLAN_CHECK 断言）
+    name: 'G4: 母版默认空 HEAVY set → /deepresearch 直呼是 SINGLE_SKILL，不叠外部 PLAN_CHECK',
+    prompt: '/deepresearch',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    // R7: 钉「分支机制」——env 注入成员即恢复 PLAN_CHECK（fork/测试回归该分支的唯一路径）
+    name: 'G4: env 注入 ROUTE_GUARD_HEAVY_SKILLS 后 /deepresearch → PLAN_CHECK（扩展点可达）',
+    prompt: '/deepresearch',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示', ROUTE_GUARD_HEAVY_SKILLS: 'deepresearch' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_CHECK');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    // R10: env 自动补全双形态——只写不带斜杠也能命中带斜杠的直呼
+    name: 'G4: env 成员不带前导斜杠也命中带斜杠直呼（双形态自动补全）',
+    prompt: '/ux-research',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示', ROUTE_GUARD_HEAVY_SKILLS: 'ux-research' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_CHECK');
     },
   },
 ];

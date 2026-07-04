@@ -303,6 +303,69 @@ readFileSync('.claude/observability/rules.yaml', 'utf8').split('\n').forEach((ln
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SSOT-10 (2026-07-04 G4): 条件 2 豁免名单三表同步 tripwire。
+// 真值源 = plan-agent.md「当前符合：」行的反引号名单。断言：
+//   (a) 每个名字是严格 skill token /^\/[a-z][\w-]*$/（防把 `SKILL.md`/路径吸进名单，R9）；
+//   (b) CLAUDE.md 与 AGENTS.md 的条件 2 附近含同一名单（三表同步）；
+//   (c) 名单里每个 skill 各自的 SKILL.md 命中其【专属】HITL 门语句锚（不是泛四词联合——
+//       泛词会被"描述如何绕过 HITL"的反证文本满足，R2/R3）。
+// 职责边界（红队 R2/R3 裁决）：这是"名单同步 + 门语句存在"的 tripwire，**不**替代对
+// "门是否真实/足够"的人工判断——名单变更本身走 PR review（plan-agent.md 豁免段是文档）。
+// 每-skill 专属锚定，措辞一旦定稿即冻结（如同隐藏 skill 声明行）。
+try {
+  const marker = '当前符合：';
+  const mi = planAgentMd.indexOf(marker);
+  if (mi === -1) throw new Error('plan-agent.md 缺「当前符合：」名单行——SSOT-10 无真值源');
+  const spanEnd = planAgentMd.indexOf('。', mi);
+  const span = planAgentMd.slice(mi, spanEnd === -1 ? mi + 200 : spanEnd);
+  const roster = [...span.matchAll(/`([^`]+)`/g)].map(m => m[1].trim());
+  if (!roster.length) throw new Error('plan-agent.md「当前符合：」行无反引号 skill 名');
+
+  // (a) 严格 token
+  const STRICT = /^\/[a-z][\w-]*$/;
+  for (const name of roster) {
+    if (!STRICT.test(name)) {
+      ssotErrors.push(`SSOT-10 豁免名单含非法 token "${name}"（须匹配 /^\\/[a-z][\\w-]*$/）`);
+    }
+  }
+  // (b) 三表同步：CLAUDE.md / AGENTS.md 条件 2 区域含同一名单
+  //     锚定各文件里"条件 2"上下文的一段（避免全文误匹配）。
+  const cond2Ctx = (md, kw) => {
+    const i = md.indexOf(kw);
+    return i === -1 ? '' : md.slice(i, i + 600);
+  };
+  const claudeCtx = cond2Ctx(claudeMd, '内部 HITL 编排类 skill 除外');
+  const agentsCtx = cond2Ctx(agentsMd, 'internal-HITL orchestrator skills');
+  if (!claudeCtx) ssotErrors.push('SSOT-10 CLAUDE.md 条件 2 缺「内部 HITL 编排类 skill 除外」豁免段');
+  if (!agentsCtx) ssotErrors.push('SSOT-10 AGENTS.md 条件 2 缺 "internal-HITL orchestrator skills" 豁免段');
+  for (const name of roster.filter(n => STRICT.test(n))) {
+    if (claudeCtx && !claudeCtx.includes(name)) ssotErrors.push(`SSOT-10 CLAUDE.md 条件 2 豁免名单缺 "${name}"`);
+    if (agentsCtx && !agentsCtx.includes(name)) ssotErrors.push(`SSOT-10 AGENTS.md 条件 2 豁免名单缺 "${name}"`);
+  }
+  // (c) 每-skill 专属 HITL 门语句锚（本地 skill 才查目录）
+  const HITL_ANCHOR = {
+    '/auto': /等用户确认/,
+    '/deepresearch': /AskUserQuestion/,
+    '/ux-research': /不可跳过/,
+    '/figma-demo': /唯一一次/,
+  };
+  for (const name of roster.filter(n => STRICT.test(n))) {
+    const anchor = HITL_ANCHOR[name];
+    if (!anchor) {
+      ssotErrors.push(`SSOT-10 豁免名单含未登记专属锚的 skill "${name}"——新增豁免须在 check-routing-map.mjs HITL_ANCHOR 里登记其门语句锚`);
+      continue;
+    }
+    const skillPath = `.claude/skills/office/${name.replace(/^\//, '')}/SKILL.md`;
+    if (!existsSync(skillPath)) continue; // 外部/隐藏无目录的跳过 body 检查（名单同步已由 b 覆盖）
+    if (!anchor.test(readFileSync(skillPath, 'utf8'))) {
+      ssotErrors.push(`SSOT-10 ${name} 的 SKILL.md 未命中其 HITL 门语句锚 ${anchor}——豁免前提（内含确认门）可能已失效`);
+    }
+  }
+} catch (e) {
+  ssotErrors.push(`SSOT-10 校验异常: ${e.message}`);
+}
+
 if (ssotErrors.length) {
   console.error('FAIL skill SSOT consistency:');
   for (const e of ssotErrors) console.error(`  - ${e}`);

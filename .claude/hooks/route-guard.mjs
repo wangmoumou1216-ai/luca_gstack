@@ -425,24 +425,27 @@ function skillDecision(prompt) {
   };
 }
 
-// Skills that always require Plan Agent check regardless of keyword complexity score.
-// These skills spawn ≥2 subagents and have multi-phase dependencies by design.
+// PLAN_CHECK 扩展点：命中此 set 的 SINGLE_SKILL 会被升级为 PLAN_CHECK（外部计划确认门）。
 //
-// '/auto' deliberately excluded (2026-07-03, full-review P2-5): its own SKILL.md
-// Step 2 "Plan Output" already shows a Phase plan and blocks on user confirmation
-// whenever it runs Hierarchical (≥3 Phase) — stacking route-guard's PLAN_CHECK on
-// top made it structurally impossible for /auto to ever run "automatically" even
-// for simple, non-Hierarchical requests (50-session audit: zero real usage, the
-// redundant external gate — not lack of demand — was the cause). Removing it here
-// does not remove the safety net: /auto's internal gate still fires for complex
-// (Hierarchical) runs; simple runs can now genuinely proceed without a second,
-// external confirmation loop. deepresearch/ux-research/figma-demo keep the
-// external gate — they have no equivalent internal plan-confirmation step.
-const HEAVY_ORCHESTRATOR_SKILLS = new Set([
-  '/deepresearch', 'deepresearch',
-  '/ux-research', 'ux-research',
-  '/figma-demo', 'figma-demo',
-]);
+// 母版默认【空】（2026-07-04 流程优化 G4，红队裁决后定稿）：原成员 deepresearch/
+// ux-research/figma-demo 已全部迁入 plan-agent.md「条件 2 豁免（内部 HITL 编排类）」
+// 名单——三者 SKILL.md 各自内含 fan-out 前的用户确认门（ux-research 介入点1 研究规划
+// 确认不可跳过；figma-demo Step 2.3 映射确认；deepresearch Step 0.2 深度问询——内门较弱、
+// 只问深度不问计划，但该 skill 纯只读无不可逆操作，Plan Agent 其余 4 条件经 CLAUDE.md
+// ③ 仍适用，buildDecision 的复杂度硬门也先于本 set 生效，接受这一取舍）。
+// 这修正了 2026-07-03 注释"它们无等价内部确认步骤"的说法——那一版把"内容确认"与
+// "计划确认"混为一谈；真实差异是内门强弱，不是有无（G4 红队 R4 裁决，正面改写不静默覆盖）。
+//
+// ⚠️ 本 set + 下方 PLAN_CHECK 分支是 fork/env 扩展点，**勿当死代码清理**（code-hygiene
+// 死代码算子注意）：muse fork 的副本在此处有自己的成员（/auto、/muse-loop-orchestrate），
+// 依赖分支机制本身；母版测试经 ROUTE_GUARD_HEAVY_SKILLS 注入回归该分支。
+// env 格式：ASCII 逗号分隔 skill 名；带不带前导 / 均可——下方初始化自动补全双形态。
+const HEAVY_ORCHESTRATOR_SKILLS = new Set(
+  envList('ROUTE_GUARD_HEAVY_SKILLS').flatMap(s => {
+    const bare = s.replace(/^\//, '');
+    return [bare, `/${bare}`];
+  })
+);
 
 function buildDecision(prompt) {
   const projects = listProjects();
@@ -495,16 +498,16 @@ function decisionToHints(decision) {
     }
     case 'PLAN_MODE':
       return [
-        `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）\n` +
+        `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}；关键词近似判定，权威口径以 .claude/agents/plan-agent.md 触发条件表为准）\n` +
         '禁止直接路由到单个 skill。必须先读取 .claude/agents/plan-agent.md，输出 Phase 分解计划。\n' +
         '等用户确认计划后，再进入 Orchestrator 模式执行。',
       ];
     case 'PLAN_CHECK': {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
       return [
-        `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，但该 skill 是重型编排器（多 subagent + 多阶段）。\n` +
-        '执行前必须检查 Plan Agent 4条件（≥2 subagent / phase deps / ≥3文件 / 不可逆操作）。\n' +
-        '满足任一 → 先读 .claude/agents/plan-agent.md，输出 Phase 计划，等用户确认后再执行。',
+        `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，该 skill 被登记为需外部计划确认的重型编排器。\n` +
+        '执行前先读 .claude/agents/plan-agent.md 的「触发条件」表（唯一权威口径，本提示不复述），\n' +
+        '满足任一条件 → 输出 Phase 计划，等用户确认后再执行。',
       ];
     }
     case 'SINGLE_SKILL': {
