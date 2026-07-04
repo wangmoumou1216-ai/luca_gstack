@@ -515,6 +515,61 @@ facts:
             self.assertIn("session 0", archived)
             self.assertIn("session 1", archived)
 
+    def test_concurrent_appends_are_atomic_no_dup_no_lost(self):
+        """并发原子性:N 个进程同时 append_episode → 序号必须互异(无 dup-ID)且
+        无丢行(rotate 整文件覆盖不踩踏)。小 MAX_EPISODES 强制并发期间反复 rotate 施压。
+        WITH flock 恒过；摘掉 flock 会 FAIL(变异校验，见 handoff)。"""
+        import re as _re
+        n = 20
+        with tempfile.TemporaryDirectory() as tmp:
+            env = os.environ.copy()
+            env.update({"MEMORY_ROOT": str(Path(tmp)), "MEMORY_MAX_EPISODES": "5"})
+            script = str(ROOT / "memory" / "scripts" / "append_episode.py")
+            procs = [
+                subprocess.Popen(
+                    [sys.executable, script, "--topic", f"concurrent-{i}",
+                     "--summary", f"summary {i}", "--skills", "memory", "--meta"],
+                    cwd=ROOT, text=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
+                )
+                for i in range(n)
+            ]
+            for p in procs:
+                _out, err = p.communicate(timeout=60)
+                self.assertEqual(p.returncode, 0, f"append failed: {err}")
+
+            ep_dir = Path(tmp, "memory", "episodic")
+            sources = [ep_dir / "index.jsonl", *sorted((ep_dir / "archive").glob("*.jsonl"))]
+            ids = []
+            for src in sources:
+                if src.exists():
+                    for line in src.read_text(encoding="utf-8").splitlines():
+                        if line.strip():
+                            ids.append(json.loads(line)["id"])
+            # 无丢行：index + archive 合计恰好 n 条（rotate 覆盖丢行会 < n）
+            self.assertEqual(len(ids), n, f"lost/extra appends: got {len(ids)} want {n}")
+            # 无 dup-ID：全部互异
+            self.assertEqual(len(set(ids)), n, f"duplicate ids: {sorted(ids)}")
+            # 单调连续：序号恰为 001..n（撞号或丢行都会破坏连续性）
+            seqs = sorted(int(_re.search(r"-(\d{3})$", i).group(1)) for i in ids)
+            self.assertEqual(seqs, list(range(1, n + 1)), f"non-contiguous seqs: {seqs}")
+
+    def test_index_lock_fail_open_when_fcntl_unavailable(self):
+        """fail-open:flock 不可用(非 POSIX / import 失败)时 index_lock 仍 yield 不崩,
+        绝不因加锁让记忆写入失败。"""
+        spec = importlib.util.spec_from_file_location(
+            "append_episode_failopen", ROOT / "memory" / "scripts" / "append_episode.py"
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as tmp:
+            mod.LOCK = Path(tmp) / "nonexistent-subdir" / ".index.lock"  # 父目录尚不存在
+            mod.fcntl = None  # 模拟 fcntl 不可用
+            entered = []
+            with mod.index_lock():
+                entered.append(True)
+            self.assertEqual(entered, [True], "fail-open 分支未 yield")
+
     def test_candidate_review_requires_metadata_and_records_decision(self):
         with tempfile.TemporaryDirectory() as tmp:
             mem = Path(tmp) / "memory" / "semantic"
