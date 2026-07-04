@@ -8,7 +8,7 @@
 // 该 legacy 路径仍由 session-restore 启动清零。sid sanitize 表达式必须与
 // session-sync.mjs / route-guard.mjs 逐字一致：replace(/[^\w-]/g,'').slice(0,32)。
 // Claude Code 的 PostToolUse hook 通过 stdin 传入 JSON: { session_id, tool_name, tool_input, … }
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, readlinkSync } from 'fs';
 import { join } from 'path';
 
 const claudeDir = join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), '.claude');
@@ -53,5 +53,21 @@ if (parsed) {
   }
   if (editedFile.includes('/framework/') || editedFile.includes('\\framework\\')) {
     process.stdout.write(`[post-edit] ⚠️  framework/ 是只读模板目录，请确认此次编辑是有意为之。\n`);
+  }
+  // 会话粘性 pin-vs-docs 校验（G6-R7③，2026-07-04）：长时间自治运行（批量预授权、无
+  // 用户消息）期间 route-guard 不触发 → pin 提示不出现；若此间 docs 链被并行 session
+  // switch 走，写入会静默落错项目。post-edit 每次工具调用都触发（stdout 对模型可见），
+  // 对写入 docs/ 的编辑顺带比对本 sid pin 与 docs 当前指向，不一致即当场告警。
+  if (sid && /^(Write|Edit|MultiEdit|NotebookEdit)$/.test(toolName) &&
+      (editedFile.includes('/docs/') || editedFile.includes('\\docs\\'))) {
+    try {
+      const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+      const pin = readFileSync(join(claudeDir, `.session-project-${sid}`), 'utf8').trim();
+      const tgt = readlinkSync(join(projectRoot, 'docs'));
+      const cur = (tgt.match(/\/项目\/([^/]+)/) || [])[1] || '';
+      if (pin && cur && pin !== cur) {
+        process.stdout.write(`[post-edit] ⚠️  本 session pin 的项目是「${pin}」，但 docs/ 当前指向「${cur}」——写入 ${editedFile} 可能落错项目。确认前请核对 ./scripts/project.sh status。\n`);
+      }
+    } catch { } // 无 pin / 无 docs 链 / 读失败 → 跳过（fail-open）
   }
 }

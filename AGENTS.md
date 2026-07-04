@@ -33,7 +33,12 @@ Core facts:
 - Prototype stack: plain HTML + local Tailwind CDN + native JavaScript.
 - Prototype framework: `framework/`.
 - Workflow outputs: `docs/`, which must be a symlink to the active project at
-  `/Users/luca/Desktop/项目/<project>/docs`.
+  `/Users/luca/Desktop/项目/<project>/docs`. Session stickiness (G6, 2026-07-04): `session-restore.mjs`
+  clears the three project symlinks on SessionStart only when `source === 'startup'` AND no active
+  parallel session is detected (other-session counter/transcript mtime < 15min) AND
+  `SESSION_RESTORE_ALWAYS_CLEAR` is unset; a dangling link is cleared unconditionally. When the link
+  is preserved, the session "inherits" the active project — route-guard warns on the first message;
+  do not silently start work under an inherited project without confirming it is the intended one.
 - Long-term memory: `CONTEXT.md`.
 - Claude workflow state: `.claude/workflow-state.yaml`, which must be a symlink to the active
   project's `/Users/luca/Desktop/项目/<project>/.luca/workflow-state.yaml`.
@@ -431,19 +436,23 @@ Layered routing order:
 
 1. **Project context gate.** If the user says "老项目", "已有项目", "继续项目", or names an
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
-2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6), or `PLAN CHECK`
-   (a heavy orchestrator skill was hit: `/deepresearch`, `/ux-research`, `/figma-demo` — **not**
-   `/auto`, which since 2026-07-03 relies on its own internal Step 2 Phase-confirmation gate
-   instead of a redundant external PLAN_CHECK),
+2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6, keyword-approximation only),
+   or `PLAN CHECK` (a skill in the `HEAVY_ORCHESTRATOR_SKILLS` extension point was hit — **empty by
+   default in the mother repo** as of 2026-07-04: deepresearch/ux-research/figma-demo/auto all rely on
+   their own internal HITL gates now, see plan-agent.md "条件 2 豁免"; the set is retained as a fork/env
+   extension point),
    or the hit skill is known to satisfy any of the Plan Agent 5 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
    high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not
-   execute the skill directly. The Plan Agent 5 conditions (任一满足即触发):
+   execute the skill directly. The plan-agent.md trigger table is the single authoritative source;
+   PLAN MODE is its keyword approximation and the research-default gate = these 5 conditions + novelty.
+   The Plan Agent 5 conditions (任一满足即触发):
    - The task creates or modifies ≥ 3 files.
-   - The task needs ≥ 2 independent subagents collaborating (**except `/auto` itself** — orchestrating
-     multiple skills is its core function, so this condition is trivially true for every legitimate
-     `/auto` call; `/auto`'s own Step 2 already has a Phase-count-scaled confirmation gate, see
-     `.claude/agents/plan-agent.md`; `/auto` still triggers this gate if any of the other 4 conditions hold).
+   - The task needs ≥ 2 independent subagents collaborating (**except internal-HITL orchestrator skills**:
+     `/auto`, `/deepresearch`, `/ux-research`, `/figma-demo` — orchestrating multiple subagents is their
+     core function, so this condition is trivially true; each has a user confirmation gate before fan-out.
+     Condition 2 does not apply to them; the other 4 conditions still do. Principle + roster authority:
+     `.claude/agents/plan-agent.md` "条件 2 豁免").
    - The task has an explicit phase dependency (B must wait for A).
    - The task involves irreversible operations (git operations, bulk file overwrite).
    - The user explicitly requests a plan ("先做个计划", "plan 一下", "想清楚再做").
