@@ -57,10 +57,16 @@ function makeFixture({
 }
 
 function runNode(scriptPath, cwd, { env = {}, input } = {}) {
+  // Hermetic env: strip the ambient SESSION_SYNC_BLOCK kill-switch so a dev shell
+  // exporting SESSION_SYNC_BLOCK=0 can't leak into block-expecting tests (C11 root
+  // cause). The 三重防循环 kill-switch case passes it explicitly via `env`, which
+  // still wins in the spread below.
+  const baseEnv = { ...process.env };
+  delete baseEnv.SESSION_SYNC_BLOCK;
   const result = spawnSync('node', [scriptPath], {
     cwd,
     encoding: 'utf8',
-    env: { ...process.env, ...env },
+    env: { ...baseEnv, ...env },
     ...(input != null ? { input } : {}),
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
