@@ -10,14 +10,19 @@ cd "$(git rev-parse --show-toplevel)"
 git pull --rebase --autostash origin main
 [ -f scripts/build-self-model.mjs ] && node scripts/build-self-model.mjs || true
 
-git add -- \
+# 逐条暂存：git add 对多路径是原子的——只要有一条路径不存在(如新克隆缺 eval-log)，
+# 整条命令 exit 128 且「一个都不暂存」，配合 || true 会伪装成「无变化」而漏同步。
+# 分路径 add，缺失的只跳过自己，不连累其它脏文件。
+for p in \
   memory/episodic/index.jsonl \
   memory/episodic/archive \
   memory/semantic/promoted-facts.yaml \
   memory/semantic/archive \
   memory/evals/eval-log.jsonl \
   .claude/skill-os/evolution \
-  .claude/observability/observations.jsonl 2>/dev/null || true
+  .claude/observability/observations.jsonl; do
+  [ -e "$p" ] && git add -- "$p" 2>/dev/null || true
+done
 
 if git diff --cached --quiet; then
   echo "✅ 记忆/演进状态无变化，无需同步。"
