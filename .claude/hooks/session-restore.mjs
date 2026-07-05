@@ -294,6 +294,9 @@ try {
       } else {
         process.stdout.write(`[session-restore] 🧬 月度演进扫描到期 (${curMonth}) — 在 session 内运行：${cmd}\n`);
       }
+      // scout 是 propose-only 的（workflow 无 fs，只 return 数据）：跑完的持久化靠调用方手动做，
+      // 曾漏做（2026-07 写了 digest 却没追加 candidate-log → 跨月去重失效）。在此显式提示两步落盘。
+      process.stdout.write(`[session-restore] ↳ 跑完务必落盘两处：① 写 digests/${curMonth}-evolution.md；② 按既有 schema 把 rejected/killed/approved/conditional/opportunities 追加进 candidate-log.jsonl（loader 靠它跨月去重，漏写会让下月重复捞已否决的 repo）。\n`);
     }
   }
 } catch { }
