@@ -109,6 +109,14 @@ project_skills:
     # 工程域代码约束（非设计 skill）。Iron Law 完成前验证 + 8 清理算子。
     triggers: [代码清理, 清理代码, 死代码, 删死代码, 代码去重, 弱类型, 代码质量, 代码体检, 工程体检, 完成前验证, 代码审查, cleanup, code-hygiene, 清理冗余]
 
+  code_recon:
+    invoke: "/code-recon"
+    weight: 6
+    # Brownfield 正门（非设计 skill）：现有代码 → 架构 brief → 喂设计管线。触发全为复合短语，
+    # 语义锁「理解/读懂现有代码结构」，与 code_hygiene(清理/死代码)、systematic-debugging(调试/找bug)、
+    # deepresearch(联网调研) 隔离；不含裸"代码"单字避免广撞。
+    triggers: [理解现有代码, 读懂代码库, 读懂现有代码, 摸清代码结构, 现有代码结构, 基于现有代码, 逆向现有代码, 代码结构梳理, 读一下这个代码库, 理解这个代码库, brownfield]
+
   muse_loop_orchestrate:
     invoke: "/muse-loop-orchestrate"
     weight: 7

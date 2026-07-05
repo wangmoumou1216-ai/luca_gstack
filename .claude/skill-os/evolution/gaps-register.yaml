@@ -119,3 +119,11 @@ gaps:
     severity: low
     desired_capability_keywords: [living spec, capability truth, archive merge, as-built spec, brownfield delta]
     status: proposed   # 2026-06-21 裁决(授权下,主 agent)：保持 proposed 不 open——这是下游产品项目的能力真值需求(各项目自维护活 spec)，非 luca harness 自身该长的面；开了会让月度 scout 替下游需求找借鉴=错配。红队 NARROW_BORROW：仅 archive-merge→living truth 一念作下游 adapt-idea；不 install OpenSpec、不采反 phase-gate 哲学
+
+  - id: GAP-brownfield-design-entry
+    dimension: skills
+    layer: application
+    statement: "pipeline 缺『从现有代码起步』的正门：现有 skills 默认从需求/语料起步(idea/brainstorm)，没有『先读懂已有代码结构，再在其上做产品设计』的入口。brownfield 场景(已有代码→理解→增量设计→生成代码)无法忠实接入设计管线。来源：2026-07-05 Graphify/codegraph 评估中 luca 补充 brownfield 场景后识别。"
+    severity: medium
+    desired_capability_keywords: [brownfield, existing code understanding, architecture brief, code-to-design, reverse engineering, codebase orientation]
+    status: addressed   # 2026-07-05 建 /code-recon skill(office, routed, native-first 并行只读 recon → 架构 brief → 喂 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入)；规模阈值命中≥2 才提示下游装 codegraph MCP(不硬装/不进 gstack)；wired routing-map/command/input-modes/CLAUDE.md。与 GAP-fusion-impact-automation 分工：本 gap 只解『设计入口』，代码图谱能力仍归后者(open, 下游 MCP 可选)

@@ -90,7 +90,7 @@ skills:
     modes:
       standalone:
         required: ["design_problem_or_idea"]
-        optional: ["ux_research_report", "screenshots"]
+        optional: ["ux_research_report", "screenshots", "architecture_brief"]
       workflow:
         required: []
         optional: ["ux_research_report", "prd_artifact"]
@@ -100,7 +100,7 @@ skills:
     modes:
       standalone:
         required: ["design_input"]
-        optional: ["prd_artifact", "ux_research_report", "ux_audit_report", "ux_brainstorm_artifact", "pasted_solution"]
+        optional: ["prd_artifact", "ux_research_report", "ux_audit_report", "ux_brainstorm_artifact", "pasted_solution", "architecture_brief"]
       workflow:
         required: ["prd_artifact"]
         optional: ["ux_research_report", "ux_audit_report", "ux_brainstorm_artifact"]
@@ -149,7 +149,7 @@ skills:
     modes:
       standalone:
         required: ["design_brief_handoff", "prd_artifact"]
-        optional: ["ai_spec_artifact"]
+        optional: ["ai_spec_artifact", "architecture_brief"]
       workflow:
         required: ["prd_artifact", "design_brief_handoff"]
         optional: ["prd_handoff"]
@@ -179,6 +179,17 @@ skills:
         optional: ["target_paths"]
     quality_gates: ["verification_iron_law", "high_confidence_apply_only", "luca_guards_preserved", "clean_tree_for_apply"]
     notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子。代码审查复用 quality-gate/redteam。"
+
+  code-recon:
+    modes:
+      standalone:
+        required: ["target_codebase_path"]
+        optional: ["design_intent", "scope_paths"]
+      workflow:
+        required: []
+        optional: ["design_intent", "scope_paths"]
+    quality_gates: ["size_probe_decision", "parallel_recon", "verified_vs_inferred_audit", "architecture_brief_written", "native_first_no_forced_mcp"]
+    notes: "Brownfield 正门（非设计 skill）：现有代码 → 架构 brief → 作 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入。native-first；codegraph MCP 仅规模阈值命中≥2 时提示、装下游不进 gstack。只读 recon 不改代码。"
 
   muse-loop-orchestrate:
     modes:
