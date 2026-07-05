@@ -10,6 +10,7 @@
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync } from 'fs';
 import { join } from 'path';
+import { execSync } from 'child_process';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -117,6 +118,17 @@ try {
   // ---- 放行 ----
   process.stderr.write(`[session-sync] Session 结束于 ${now}。topic: ${topic}${project ? ` · 项目: ${project}` : ''}\n`);
   writeCheckpointIfInProgress();
+
+  // 未提交的记忆/演进状态提醒（纯提醒、非阻塞、fail-open）：本机正常使用会写这些
+  // git-tracked 状态文件，与 GitHub 漂移；收尾用 scripts/sync.sh 一条命令推回。
+  // 只走 stderr —— stdout 在 Stop 路径专用于 block 决策 JSON（见文件头契约）。
+  try {
+    const dirty = execSync(
+      'git status --porcelain -- memory/episodic/index.jsonl memory/episodic/archive memory/semantic/promoted-facts.yaml memory/semantic/archive memory/evals/eval-log.jsonl .claude/skill-os/evolution .claude/observability/observations.jsonl',
+      { cwd: projectRoot, encoding: 'utf8' }
+    ).trim();
+    if (dirty) process.stderr.write('[session-sync] 🔔 有未提交的记忆/演进状态 — 收尾请跑 `bash scripts/sync.sh` 推到 GitHub。\n');
+  } catch { }
 
   if (alreadyExtracted) {
     process.stderr.write(`[session-sync] ✅ 本 session 经验已沉淀（marker 命中），放行。\n`);
