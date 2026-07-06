@@ -2,7 +2,7 @@
 name: muse-req-triage
 preamble-tier: 3
 argument-hint: "[候选需求语料/清单 (原始语料，或已抽取的候选需求列表)]"
-version: 2.2.0
+version: 2.3.0
 description: |
   批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/
   优先级裁定留给人类。两种触发方式：① 独立使用（你手头有一堆候选需求/原始
@@ -15,9 +15,13 @@ description: |
   v2.2.0（2026-07-02，fork内）：Phase 0 新增设计参照引用的忠实抽取（填入
   L1 卡 design_reference 字段，语料没有就 null，机器永不自标 greenfield）——
   第一条真实端到端 REQ 暴露"整条链没看过现有UI"缺口的上游修复点。
+  v2.3.0（2026-07-06，fork内）：加 Bash 权限，修复"Phase 3 要求跑
+  node scripts/check-ears-syntax.mjs 做机械 EARS 校验，但 allowed-tools
+  无 Bash、校验根本执行不了"的工具契约缺口（与 v2.1.0 加 Write 同类）。
 allowed-tools:
   - Read
   - Write
+  - Bash
   - AskUserQuestion
 context-cost:
   self: 10000

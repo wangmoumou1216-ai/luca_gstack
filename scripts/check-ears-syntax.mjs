@@ -28,13 +28,19 @@ function checkStatement(statement) {
     findings.push('FAIL: 缺少 "应当"（EARS 的 SHALL 对应词），不是合规的 EARS 陈述');
     return { pass: false, findings };
   }
+  // "应当"（SHALL）后必须有可执行/可衡量的系统响应，否则是无响应的空壳陈述
+  // （通用型模板 /^[^,，]*应当/ 只校验存在性，会放过裸"应当"/"系统应当"；此门补齐）
+  const afterShall = statement.split('应当')[1] || '';
+  if (afterShall.trim().length === 0) {
+    findings.push('FAIL: "应当"后没有任何响应内容（EARS 要求 SHALL 后必须有系统响应，如"应当<动作><对象>"）');
+    return { pass: false, findings };
+  }
   const matched = TEMPLATES.filter((t) => t.re.test(statement));
   if (matched.length === 0) {
     findings.push('FAIL: 不匹配任何一种 EARS 模板（事件驱动/状态驱动/条件驱动/通用型）');
   } else {
     findings.push(`PASS: 匹配模板 [${matched.map((t) => t.name).join(', ')}]`);
   }
-  const afterShall = statement.split('应当')[1] || '';
   for (const verb of VAGUE_VERBS) {
     if (afterShall.includes(verb) && afterShall.trim().length < verb.length + 6) {
       findings.push(`WARN: "应当"后紧跟模糊动词"${verb}"且缺少具体宾语，响应部分可能不够可衡量`);
