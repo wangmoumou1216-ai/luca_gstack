@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // muse-proto-gen 声明与 html-prototype「同一份」的共享面锚点检查——
-// 上游改清单/改名/改格式时在这里响，而不是运行时静默漂移（见 muse-loop/ARCHITECTURE.md 依赖清单）
+// 检测锚点被【改名/删除/移除】（子串存在性检查）；注意：锚点标题不变、但其下清单条目被
+// 增删改（intra-anchor 内容漂移）本检查捕捉不到——那类须人工复核（见 muse-loop/ARCHITECTURE.md 依赖清单）
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
