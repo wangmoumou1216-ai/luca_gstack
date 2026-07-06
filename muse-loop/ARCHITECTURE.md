@@ -1,13 +1,13 @@
 # muse-loop · 隔离架构与加法纪律（决策文档）
 
 > 本目录 `muse-loop/` 及下述脚手架是 **muse fork 专属新增**，只落 fork、绝不回污母版 luca_gstack。
-> 母版 = `/Users/luca/Desktop/luca_gstack`（只读升级源）；本 fork = `~/Desktop/项目/muse/gstack`（muse 分支）。
+> 母版 = GitHub `wangmoumou1216-ai/luca_gstack`（`upstream` 远程，只读升级源；2026-07-06 从本地 clone 切到 GitHub 云端）；本 fork = `~/Desktop/项目/muse/gstack`（muse 分支）。本地 `~/Desktop/luca_gstack` clone 仍在，仅作可选验证副本。
 
 ## 隔离 + 继承机制（已落地）
 - **隔离**：本 fork 是母版的独立 git 克隆。muse app 内嵌 claude 的 cwd = 本 fork，所有改动物理上到不了母版。
 - **继承**：`upstream` 远程指母版；`./sync-upstream.sh [母版分支]` 把母版升级 merge 进来（未改文件干净合入 = 直接引用，仅 muse 改过的文件才冲突，在 fork 内解决）。
 - **经验层共享**：muse app 给 pty 注入 `MEMORY_ROOT` + `GLOBAL_MEMORY_DIR` 指母版 → memory/semantic/全局个人记忆与母版一套，不分叉。
-- **验证**：改 fork 任意文件 → `cd ~/Desktop/luca_gstack && git status` 母版零变化。
+- **验证**：改 fork 任意文件 → `cd ~/Desktop/luca_gstack && git status` 本地母版 clone 零变化（隔离性验证，依赖本地 clone 存在；权威母版现为 GitHub upstream 远程）。
 
 ## 加法纪律（最小化 merge 冲突——关键约定）
 母版升级最常改 3 个集中真值源：`skill-routing-map.yaml`、`CLAUDE.md`(+`AGENTS.md`)、`scripts/check-routing-map.mjs`。
@@ -27,7 +27,7 @@ muse 的"需求→原型 Loop"新增应**尽量少碰**它们，以让每次 `sy
 
 ## 落地顺序（后续独立大任务，非本次）
 方案主张"先建判官(proto-judge)再向输入端倒着建"，Phase 0-4，判官校准一致率 <75% 则 Loop 不成立。
-详见母版旁的 `~/Desktop/luca_gstack_需求到原型Loop_深度解决方案.md`。
+详见母版旁的 `~/Desktop/luca_gstack_需求到原型Loop_深度解决方案.md`（历史方案文档，可能已移除/归档）。
 
 ---
 
@@ -74,7 +74,7 @@ luca 追问"路径2会不会用到路径1的skill"时，发现并修复了一处
 - `references/html-prototype-tokens.md`——`muse-proto-gen` 的 `shared-refs` 直接引用，不重复定义 token 速查表。
 
 **约定/模式借鉴级依赖（沿用设计但零代码调用关系，需注意后续维护漂移风险）：**
-- `html-prototype` Phase 3 的防 slop 检查清单 + `DECISION:D-NNN` 注释格式——`muse-proto-gen` 文本承诺"同一份，不另造"，但没有代码级强制同步机制；`html-prototype` 未来若改清单，`muse-proto-gen` 需要人工同步，否则会漂移。**自动化检测已建（2026-07-02）：`npm run check:muse-loop-sync`（`scripts/check-muse-loop-sync.mjs`）锚点检查 5 个共享面——allowedModes / 防 slop 防火墙节 / DECISION 格式 / shared-ref 完整性 / muse-proto-gen 自身声明；上游改版时检查响铃，同步后需一并更新锚点。**
+- `html-prototype` Phase 3 的防 slop 检查清单 + `DECISION:D-NNN` 注释格式——`muse-proto-gen` 文本承诺"同一份，不另造"，但没有代码级强制同步机制；`html-prototype` 未来若改清单，`muse-proto-gen` 需要人工同步，否则会漂移。**自动化检测已建（2026-07-02；2026-07-06 接入 `verify.sh` S17，随每次 commit 的 pre-commit 自动跑）：`npm run check:muse-loop-sync`（`scripts/check-muse-loop-sync.mjs`）子串锚点检查 5 个共享面——allowedModes / 防 slop 防火墙节 / DECISION 格式 / shared-ref 完整性 / muse-proto-gen 自身声明；只在锚点被改名/删除时响，锚点标题不变、其下条目内容漂移捕捉不到，那类须人工复核。同步后须一并更新锚点。**
 - `quality-gate.md` 的 agent 定义写法（frontmatter + Task 工具冷启动）——`muse-proto-judge` 照抄这个模式，不调用 quality-gate 本身。
 - 母版 `orchestrator.md` 的"扫描待办→查门禁→dispatch→更新状态" prose 模式——`muse-loop-orchestrate` 状态机设计哲学借鉴，明确不复用其代码/`workflow-state.yaml`。
 - Oracle 模式（`brainstorm`/`ux-brainstorm` 的 `adversarial-review.md`）——`muse-proto-judge` 内循环收敛"形状"（轮数上限3、连续两轮不变退出）借鉴，不借用其 PRD 专属判据内容。
