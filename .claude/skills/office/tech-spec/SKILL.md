@@ -1,13 +1,16 @@
 ---
 name: tech-spec
 preamble-tier: 2
-version: 1.0.1
+version: 1.0.2
 description: |
   工程规格节点。把 PRD + design-brief → 技术合同。
   强制验证所有 MUST 级需求的覆盖率，不允许静默跳过。
   产出：docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md
   v1.0.1（2026-07-02，fork内）：design-brief handoff 查找加 topic 过滤+同日多份告警，
   修复同一天多份 design-brief handoff 时"取最新"取错的回归风险。
+  v1.0.2（2026-07-06，fork内）：修复 v1.0.1 告警的死子路径——current-topic.txt
+  非空但过滤无命中时会静默回退全局最新且不告警。告警条件改绑「过滤是否真正命中」
+  （_FILTERED 标志），topic 非空却没匹配上也会告警。
 allowed-tools:
   - Read
   - Write
@@ -26,16 +29,19 @@ echo "BRANCH: $_BRANCH | SESSION: $_SESSION_ID"
 # 避免同一天出现多份 design-brief handoff 时取错（muse-loop 这类编排器可能一天内对多个
 # REQ 各跑一次 design-brief，产生多份同日 handoff——2026-07-02 修复的真实回归风险）。
 _TOPIC_HINT=$(cat .claude/current-topic.txt 2>/dev/null || echo "")
+_FILTERED=0
 if [ -n "$_TOPIC_HINT" ]; then
   _HANDOFF=$(ls docs/handoff/*design-brief-handoff.md 2>/dev/null | grep -F "$_TOPIC_HINT" | sort | tail -1)
+  [ -n "${_HANDOFF:-}" ] && _FILTERED=1   # 仅当 topic 过滤真命中才算过滤成功
 fi
 if [ -z "${_HANDOFF:-}" ]; then
   _HANDOFF=$(ls docs/handoff/*design-brief-handoff.md 2>/dev/null | sort | tail -1)
 fi
 echo "DESIGN_BRIEF_HANDOFF: ${_HANDOFF:-NOT FOUND}"
 _TODAY_COUNT=$(ls docs/handoff/"$(date +%Y-%m-%d)"-*design-brief-handoff.md 2>/dev/null | wc -l | tr -d ' ')
-if [ "${_TODAY_COUNT:-0}" -gt 1 ] && [ -z "$_TOPIC_HINT" ]; then
-  echo "⚠️ 今天已有 $_TODAY_COUNT 份 design-brief handoff，且没有 current-topic.txt 可用于过滤——上面取到的『最新』可能不是你要的那条。请向用户确认具体要哪条 topic 的 handoff，不要静默假设。"
+# 告警绑定「过滤是否真正命中」而非「hint 是否为空」：topic 非空却没匹配上时同样回退了全局最新，必须一并告警
+if [ "${_TODAY_COUNT:-0}" -gt 1 ] && [ "$_FILTERED" -ne 1 ]; then
+  echo "⚠️ 今天已有 $_TODAY_COUNT 份 design-brief handoff，未能按 current-topic.txt 过滤到唯一一份（topic 为空、或 topic='$_TOPIC_HINT' 无匹配）——上面取到的『最新』可能不是你要的那条。请向用户确认具体要哪条 topic 的 handoff，不要静默假设。"
 fi
 # 找最新的 PRD
 _PRD=$(ls docs/prd/*prd.md 2>/dev/null | sort | tail -1)
