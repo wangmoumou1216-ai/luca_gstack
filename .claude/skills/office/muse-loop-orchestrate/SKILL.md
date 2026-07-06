@@ -47,10 +47,10 @@ ls docs/loop/specs/ 2>/dev/null && echo "SPECS_DIR_OK" || echo "SPECS_DIR_EMPTY_
 draft ──[抽取]──▶ triaged ──[GATE-1(含design_reference确认)]──▶ approved
     ──[场景B/C:基线采集→baseline.md]──[/brainstorm 完整跑一遍(B/C附baseline)]──▶ prd_ready
     ──[场景B/C:变更映射→change-map.md+轻量确认]──[design-map]──▶
-    designed ──[GATE-2]──▶ approved_design ──[open-design生成(主)/proto-gen(fallback)+judge核对]──▶ built ──▶ verified
+    designed ──[GATE-2]──[open-design生成(主)/proto-gen(fallback)+judge核对]──▶ built ──▶ verified
 ```
 
-（基线采集/变更映射是子步骤不是新状态——状态枚举不变，红队裁定 A2：产物文件存在性即是前置条件，镜像 traceable_delivery 模式。）
+（基线采集/变更映射/GATE-2 都是子步骤不是新状态——状态枚举不变，红队裁定 A2：产物文件存在性即是前置条件，镜像 traceable_delivery 模式。GATE-2 是 designed→built 之间的门，不新增 approved_design 枚举，与 schema.md 的 status 枚举保持一致。）
 
 - **只有 gen↔judge 是循环**（`muse-proto-gen` ↔ `muse-proto-judge`，见下）。其余全是**只能往前走**的单向链，不回退到更早阶段——这个设计选择是刻意的：既匹配报告原始设想（"其余全自动，只有2个人类卡点"），也避免了套用母版 Orchestrator 时会撞见的"无回退机制"限制。
 - 每个 REQ 的状态字段存在**它自己的 spec 文件**里（`status:` 字段，见 `muse-loop/schema.md` v0.5），不是一个全局共享的 `workflow-state.yaml`——这样多个 REQ 可以各自处于不同阶段，互不干扰。
@@ -134,7 +134,7 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 2. 若该 R# 没有关联 AE#（PRD 当时判断"无边缘情况"未触发 Acceptance Examples 一节）→ 退回从这条决策的"决策内容/排除方案/tradeoff/状态覆盖"机械推导 Given/When/Then，但**必须**标注 `source: derived-fallback`——不能冒充跟 AE# 关联的一样可信，`muse-proto-judge` 打分时看到 `derived-fallback` 标注应该对该条结果打折扣看待，不当作和 `ae#` 来源同等确定性。
 3. 若 PRD 当时的 Acceptance Examples 判断确实遗漏了真实边缘情况（如本次首条 REQ 就补过），優先回到 PRD 补 AE#，而不是长期靠 `derived-fallback` 撑着——这是实例级修复，不是本步骤要自动做的事。
 
-## Phase 3（approved_design → built → verified）：open-design 生成（主） + muse-proto-judge 核对
+## Phase 3（designed →[GATE-2]→ built → verified）：open-design 生成（主） + muse-proto-judge 核对
 
 **2026-07-02 重大修正（真实端到端跑第一条REQ时发现的真实架构错误）：** 本 Phase 最初设计成"muse-proto-gen 直写HTML ↔ muse-proto-judge 自动内循环"，luca 看完真实原型后指出：这不是他真实的设计产出流程——他真实的流程是设计产出交给 **Open Design (OD)** 生成，他在 OD 里确认，再回写 Figma。已读完 `.claude/skills/office/open-design/SKILL.md` 全文改正如下。
 
