@@ -5,7 +5,8 @@
 #   ./scripts/project.sh switch <name>   切换到已有项目
 #   ./scripts/project.sh list            列出所有项目及当前激活
 #   ./scripts/project.sh status          显示当前项目链接状态
-#   ./scripts/project.sh deactivate      清除当前激活项目（下次启动走全新流程）
+#   ./scripts/project.sh deactivate      清除当前激活项目（显式取消激活；G6 后启动不再无条件清，
+#                                        故需要"走全新流程"时用本命令，而非依赖每次启动自动清）
 
 set -euo pipefail
 
@@ -68,6 +69,11 @@ EOF
   fi
 }
 
+# 并发安全（G2，2026-07-04）：原 rm -f + ln -s 两步替换存在"链接短暂不存在"的窗口——
+# 并发 session 的 hook/verify 在窗口内 readlink 会失败（昨日实测三次互踩的成因之一）。
+# 改为"建临时链 + rename(2) 原子替换"：读者任意时刻要么看到旧链要么看到新链，永不悬空。
+# 注意不能用 mv——macOS mv 对"指向目录的既有 symlink"会跟随目标（把临时链挪进 docs/ 里），
+# python3 os.replace 直接调 rename(2) 不解引用。
 replace_symlink() {
   local link_path="$1"
   local target="$2"
@@ -75,14 +81,44 @@ replace_symlink() {
     echo "❌ $link_path 不是 symlink。请先迁移或备份后再切换。"
     exit 1
   fi
-  rm -f "$link_path"
-  ln -s "$target" "$link_path"
+  local tmp="${link_path}.tmp.$$"
+  rm -f "$tmp"
+  ln -s "$target" "$tmp"
+  if ! python3 -c 'import os,sys; os.replace(sys.argv[1], sys.argv[2])' "$tmp" "$link_path"; then
+    rm -f "$tmp"
+    echo "❌ 原子替换 $link_path 失败"
+    exit 1
+  fi
+}
+
+# 切换互斥锁：mkdir 原子性防两个并发 switch 交错（三链分三次替换，跨链一致性靠锁串行化）。
+# stale 锁（>60s，持有者已死）按 mtime 抢占。project.sh 是用户脚本非 hook，锁不到可响亮报错。
+SWITCH_LOCK="$PROJECT_ROOT/.claude/.project-switch.lock"
+acquire_switch_lock() {
+  local tries=0
+  while ! mkdir "$SWITCH_LOCK" 2>/dev/null; do
+    local lock_mtime now_s
+    lock_mtime=$(stat -f %m "$SWITCH_LOCK" 2>/dev/null || stat -c %Y "$SWITCH_LOCK" 2>/dev/null || echo 0)
+    now_s=$(date +%s)
+    if [ $((now_s - lock_mtime)) -gt 60 ]; then
+      rm -rf "$SWITCH_LOCK" 2>/dev/null || true
+      continue
+    fi
+    tries=$((tries + 1))
+    if [ "$tries" -gt 50 ]; then
+      echo "❌ 另一个 project.sh 正在切换项目（锁: .claude/.project-switch.lock）。稍候重试，或确认无切换进行中后手动删除该目录。"
+      exit 1
+    fi
+    sleep 0.1
+  done
+  trap 'rm -rf "$SWITCH_LOCK"' EXIT
 }
 
 activate_project() {
   local name="$1"
   local root="$PROJECTS_ROOT/$name"
   ensure_project "$name"
+  acquire_switch_lock
   cleanup_stale_docs_aliases
   replace_symlink "$DOCS_LINK" "$root/docs"
   replace_symlink "$STATE_LINK" "$root/.luca/workflow-state.yaml"
@@ -159,6 +195,7 @@ case "$cmd" in
       echo "没有激活的项目，无需操作。"
       exit 0
     fi
+    acquire_switch_lock
     for link in "$DOCS_LINK" "$STATE_LINK" "$TOPIC_LINK"; do
       if [ -L "$link" ]; then rm -f "$link"; fi
     done

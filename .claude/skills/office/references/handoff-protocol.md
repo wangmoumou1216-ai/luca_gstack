@@ -112,8 +112,26 @@ HANDOFF_EOF
 
 ---
 
+## Checkpoint 格式（与 handoff 并存的第二种交接产物，2026-07-04 补定义）
+
+`docs/handoff/` 下同时存放两类文件——`*-handoff.md`（本协议管辖，须带 `gate_result`）与
+`*-checkpoint.md`（跨-session 恢复用，**不受** ≤2000 tokens 约束、**不进** check-quality-gates
+的 `gate_result` 校验——该 checker 只扫 `*-handoff.md` 后缀）。checkpoint 分两种：
+
+1. **自动 checkpoint**（`session-sync.mjs` 在 Stop 时写 `<date>-auto-checkpoint.md`）：
+   四段固定结构——标题（Auto Checkpoint + 时间）/ `**Topic:**` / `## 节点状态`（workflow-state
+   各节点 status 列表）/ `## 恢复指令`（读 state → verify.sh → 继续 IN_PROGRESS 节点 → 读
+   PROGRESS.md）。仅当存在 IN_PROGRESS 节点且有激活项目时写入（HOOK-005）。
+2. **手动 checkpoint**（`<date>-<topic>-checkpoint.md`）：格式真值源是 CLAUDE.md
+   「Context 工程协议 → Checkpoint 写法」的五段结构（已完成✅/进行中/待执行/关键决策/恢复指令），
+   此处不复制全文，防双源漂移。
+
+命名约定：checkpoint 文件名必须以 `-checkpoint.md` 结尾——误用 `-handoff.md` 后缀会被
+check-quality-gates 按 handoff 校验 `gate_result` 而假红。
+
 ## 变更日志
 
+- v3.1 (2026-07-04): 补 Checkpoint 格式定义（auto/manual 两种），明确与 handoff 的校验边界
 - v3.0 (2026-05-08): 首次创建，作为 Context 存活工程的核心协议
 
 <!-- FILE_END: handoff-protocol.md -->

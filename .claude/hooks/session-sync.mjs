@@ -10,6 +10,7 @@
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync } from 'fs';
 import { join } from 'path';
+import { execSync } from 'child_process';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -90,9 +91,16 @@ try {
   const markerFile = join(projectRoot, '.claude', `.episode-written-${sessionId}`);
   const alreadyExtracted = existsSync(markerFile);
 
-  let editCount = 0, toolCount = 0;
-  try { editCount = parseInt(readFileSync(join(projectRoot, '.claude', '.session-edit-count'), 'utf8'), 10) || 0; } catch { }
-  try { toolCount = parseInt(readFileSync(join(projectRoot, '.claude', '.session-tool-count'), 'utf8'), 10) || 0; } catch { }
+  // 并发隔离（G2，2026-07-04）：stdin 带真实 session_id 时只读本 session 的 per-sid 计数
+  // （post-edit 同 sid 写入；缺文件=本 session 无产出动作，不回退共享文件——否则会把并行
+  // legacy session 的计数误算进来）；无 sid（测试/管道）读共享旧文件名。
+  const hasSid = Boolean(payload.session_id);
+  const readCount = (name) => {
+    const f = hasSid ? `${name}-${sessionId}` : name;
+    try { return parseInt(readFileSync(join(projectRoot, '.claude', f), 'utf8'), 10) || 0; } catch { return 0; }
+  };
+  const editCount = readCount('.session-edit-count');
+  const toolCount = readCount('.session-tool-count');
   const minTools = parseInt(process.env.SESSION_SYNC_MIN_TOOLS || '8', 10);
   // 拦截（当场 block 强制提取）只看「本 session 有产出动作」：文件编辑 或 足量工具调用。
   // 纯轮次(turns)不再触发拦截——「聊了几轮有结论」≠「有实质工作」，否则纯咨询会被误拦（HOOK-006 锁定）。
@@ -111,6 +119,17 @@ try {
   process.stderr.write(`[session-sync] Session 结束于 ${now}。topic: ${topic}${project ? ` · 项目: ${project}` : ''}\n`);
   writeCheckpointIfInProgress();
 
+  // 未提交的记忆/演进状态提醒（纯提醒、非阻塞、fail-open）：本机正常使用会写这些
+  // git-tracked 状态文件，与 GitHub 漂移；收尾用 scripts/sync.sh 一条命令推回。
+  // 只走 stderr —— stdout 在 Stop 路径专用于 block 决策 JSON（见文件头契约）。
+  try {
+    const dirty = execSync(
+      'git status --porcelain -- memory/episodic/index.jsonl memory/episodic/archive memory/semantic/promoted-facts.yaml memory/semantic/archive memory/evals/eval-log.jsonl .claude/skill-os/evolution .claude/observability/observations.jsonl',
+      { cwd: projectRoot, encoding: 'utf8' }
+    ).trim();
+    if (dirty) process.stderr.write('[session-sync] 🔔 有未提交的记忆/演进状态 — 收尾请跑 `bash scripts/sync.sh` 推到 GitHub。\n');
+  } catch { }
+
   if (alreadyExtracted) {
     process.stderr.write(`[session-sync] ✅ 本 session 经验已沉淀（marker 命中），放行。\n`);
     process.exit(0);
@@ -123,21 +142,26 @@ try {
       `[session-sync] 💡 如需手动沉淀：python3 memory/scripts/append_episode.py --topic "${topic}" --summary "..." --decision "..." --next-risk "..."\n`
     );
   }
-  const pending = join(projectRoot, '.claude', 'observability', 'pending-extraction.md');
+  // 并发隔离（G2，2026-07-04）：pending 文件按 session 命名——全局单文件会被并发 session
+  // 互相吞写、topic 张冠李戴；session-restore 按 glob pending-extraction*.md 逐个提醒（兼容旧名）。
+  const pending = join(projectRoot, '.claude', 'observability',
+    hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
   try {
     if (existsSync(pending)) {
-      process.stderr.write(`[session-sync] 📝 pending-extraction.md 已存在（待处理），保持不变\n`);
+      process.stderr.write(`[session-sync] 📝 ${pending.split('/').pop()} 已存在（待处理），保持不变\n`);
     } else {
       mkdirSync(join(projectRoot, '.claude', 'observability'), { recursive: true });
       writeFileSync(pending, [
         `# Pending Skill-Rule Extraction`, ``,
         `> 自动生成于 ${now}。下次 session 启动时由 session-restore 提醒处理。`,
-        `> Topic: ${topic}`, `> 处理后请删除此文件。`,
+        `> Topic: ${topic}`,
+        ...(project ? [`> Project: ${project}`] : []),
+        `> 处理后请删除此文件。`,
         `> 提取前先过 .claude/skill-os/extraction-bar.md 四信号门槛，全不中则直接删除本文件。`, ``,
         `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<skill>: <规则>" \\`,
         `  --confidence high --evidence "<来源>" --scope "<skill>" --reviewer "luca" --tags "<skill>,rule"`, ``,
       ].join('\n'));
-      process.stderr.write(`[session-sync] 📝 已写入 pending-extraction.md（下次启动提醒）\n`);
+      process.stderr.write(`[session-sync] 📝 已写入 ${pending.split('/').pop()}（下次启动提醒）\n`);
     }
   } catch { }
   process.exit(0);

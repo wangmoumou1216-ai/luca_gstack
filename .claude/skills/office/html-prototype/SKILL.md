@@ -17,7 +17,7 @@ allowed-tools:
   - WebFetch
   - AskUserQuestion
 context-cost:
-  self: 15122
+  self: 38684  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 20000
   shared-refs: [ai-native-design-framework, design-system-contract, html-prototype-tokens]
   template: auto-detect
@@ -129,10 +129,12 @@ B）我直接粘贴问题清单
 
 **场景A：**
 ```
-□ 读取 framework/README.md（框架使用说明，必读；即使最终不调用母版，也要读取 token/资源约束）
-□ 读取 .claude/skills/office/references/html-prototype-tokens.md（颜色/字体/间距/AI状态速查，必读）
-□ 读取 .claude/skills/office/html-prototype/references/dynamic-reference-protocol.md（动态参考协议，必读）
-□ 读取 .claude/skills/office/html-prototype/references/current-aesthetic-rubric.md（当前 B2B SaaS / AI UI 审美基准，必读）
+□ 确认以下 4 份 reference 文件存在（此处只查存在性，不读取——lazy-load，2026-07-04 G5：
+  每份在其消费点已各自有"必须读取"强制，启动全量前读是重复税；挂载点见下方注）
+  · framework/README.md                    → 挂载：框架选择逻辑前 +（如走母版）写 HTML 前
+  · references/html-prototype-tokens.md    → 挂载：Phase 2.5 设计系统宣告前
+  · html-prototype/references/dynamic-reference-protocol.md → 挂载：Phase 2.1 动态参考扫描前
+  · html-prototype/references/current-aesthetic-rubric.md   → 挂载：Phase 2.25 审美校准前
 □ Workflow mode + source_kind=design_brief 时：
   - 读取 PRD，确认「设计范围」字段：{全新页面/局部改动/独立组件}
   - 读取 design-brief.md，确认以下两个字段：

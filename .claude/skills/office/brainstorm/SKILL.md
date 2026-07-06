@@ -12,7 +12,7 @@ description: >
   PRD', 'let's brainstorm', 'help me write a PRD', 'PRD from this research'.
 argument-hint: "[path to research markdown file, or empty for cold-start mode]"
 context-cost:
-  self: 18344
+  self: 37372  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 75000
   shared-refs: [ai-native-design-framework]
   recommended-model: reasoning-heavy  # 苏格拉底式多方案探索

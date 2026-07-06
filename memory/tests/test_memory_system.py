@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import os
 import subprocess
@@ -9,6 +10,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_daily_governance():
+    """Load daily_governance.py by file path (avoids sys.path pollution across tests)."""
+    spec = importlib.util.spec_from_file_location(
+        "daily_governance_under_test", ROOT / "memory" / "scripts" / "daily_governance.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class MemorySystemTests(unittest.TestCase):
@@ -504,6 +515,61 @@ facts:
             self.assertIn("session 0", archived)
             self.assertIn("session 1", archived)
 
+    def test_concurrent_appends_are_atomic_no_dup_no_lost(self):
+        """并发原子性:N 个进程同时 append_episode → 序号必须互异(无 dup-ID)且
+        无丢行(rotate 整文件覆盖不踩踏)。小 MAX_EPISODES 强制并发期间反复 rotate 施压。
+        WITH flock 恒过；摘掉 flock 会 FAIL(变异校验，见 handoff)。"""
+        import re as _re
+        n = 20
+        with tempfile.TemporaryDirectory() as tmp:
+            env = os.environ.copy()
+            env.update({"MEMORY_ROOT": str(Path(tmp)), "MEMORY_MAX_EPISODES": "5"})
+            script = str(ROOT / "memory" / "scripts" / "append_episode.py")
+            procs = [
+                subprocess.Popen(
+                    [sys.executable, script, "--topic", f"concurrent-{i}",
+                     "--summary", f"summary {i}", "--skills", "memory", "--meta"],
+                    cwd=ROOT, text=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
+                )
+                for i in range(n)
+            ]
+            for p in procs:
+                _out, err = p.communicate(timeout=60)
+                self.assertEqual(p.returncode, 0, f"append failed: {err}")
+
+            ep_dir = Path(tmp, "memory", "episodic")
+            sources = [ep_dir / "index.jsonl", *sorted((ep_dir / "archive").glob("*.jsonl"))]
+            ids = []
+            for src in sources:
+                if src.exists():
+                    for line in src.read_text(encoding="utf-8").splitlines():
+                        if line.strip():
+                            ids.append(json.loads(line)["id"])
+            # 无丢行：index + archive 合计恰好 n 条（rotate 覆盖丢行会 < n）
+            self.assertEqual(len(ids), n, f"lost/extra appends: got {len(ids)} want {n}")
+            # 无 dup-ID：全部互异
+            self.assertEqual(len(set(ids)), n, f"duplicate ids: {sorted(ids)}")
+            # 单调连续：序号恰为 001..n（撞号或丢行都会破坏连续性）
+            seqs = sorted(int(_re.search(r"-(\d{3})$", i).group(1)) for i in ids)
+            self.assertEqual(seqs, list(range(1, n + 1)), f"non-contiguous seqs: {seqs}")
+
+    def test_index_lock_fail_open_when_fcntl_unavailable(self):
+        """fail-open:flock 不可用(非 POSIX / import 失败)时 index_lock 仍 yield 不崩,
+        绝不因加锁让记忆写入失败。"""
+        spec = importlib.util.spec_from_file_location(
+            "append_episode_failopen", ROOT / "memory" / "scripts" / "append_episode.py"
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as tmp:
+            mod.LOCK = Path(tmp) / "nonexistent-subdir" / ".index.lock"  # 父目录尚不存在
+            mod.fcntl = None  # 模拟 fcntl 不可用
+            entered = []
+            with mod.index_lock():
+                entered.append(True)
+            self.assertEqual(entered, [True], "fail-open 分支未 yield")
+
     def test_candidate_review_requires_metadata_and_records_decision(self):
         with tempfile.TemporaryDirectory() as tmp:
             mem = Path(tmp) / "memory" / "semantic"
@@ -886,6 +952,62 @@ facts:
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("invalid promoted-facts.yaml", result.stdout)
+
+    # --- daily_governance.py de-frequencing logic (2026-07-03 full-review P2-4) ---
+    # consolidate_memory.py's stale_candidates() hardcodes a 14-day floor with no CLI
+    # override, so anything render_stale() ever sees in production is already >=14 days
+    # old — the escalation threshold must sit above that floor to have any real effect
+    # (independent verification caught STALE_ESCALATE_DAYS=5 as unreachable dead code).
+    def test_daily_governance_stale_escalation_threshold_is_above_the_14_day_floor(self):
+        dg = _load_daily_governance()
+        self.assertGreater(
+            dg.STALE_ESCALATE_DAYS, 14,
+            "STALE_ESCALATE_DAYS must exceed consolidate_memory.py's hardcoded 14-day "
+            "stale floor, otherwise the 'plain' render branch is unreachable dead code "
+            "for every real candidate that ever reaches render_stale().",
+        )
+
+    def test_daily_governance_render_stale_escalates_only_past_threshold(self):
+        dg = _load_daily_governance()
+        below = dg.render_stale({"id": "SC-X", "age_days": dg.STALE_ESCALATE_DAYS - 1, "fact": "recent-ish stale"})
+        at = dg.render_stale({"id": "SC-Y", "age_days": dg.STALE_ESCALATE_DAYS, "fact": "long overdue"})
+        above = dg.render_stale({"id": "SC-Z", "age_days": dg.STALE_ESCALATE_DAYS + 10, "fact": "very overdue"})
+        self.assertNotIn("🔴", below)
+        self.assertNotIn("consolidate_memory.py --set-stable", below)
+        self.assertIn("🔴", at)
+        self.assertIn("consolidate_memory.py --set-stable SC-Y", at)
+        self.assertIn("🔴", above)
+        # Non-dict / missing age_days must not crash (fail-open rendering).
+        self.assertEqual(dg.render_stale("not-a-dict"), "not-a-dict")
+        self.assertIn("SC-W", dg.render_stale({"id": "SC-W", "fact": "no age field"}))
+
+    def test_daily_governance_last_digest_date_picks_max_and_ignores_checked_markers(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            digests_dir = Path(tmp) / "digests"
+            digests_dir.mkdir()
+            for name in ["2026-06-20.md", "2026-07-01.md", "2026-06-15.md"]:
+                (digests_dir / name).write_text("# digest", encoding="utf-8")
+            (digests_dir / ".checked-2026-07-03").touch()  # must not be parsed as a digest date
+            (digests_dir / "not-a-date.md").write_text("# junk", encoding="utf-8")
+            original_digests = dg.DIGESTS
+            try:
+                dg.DIGESTS = digests_dir
+                result = dg.last_digest_date()
+                self.assertEqual(result, datetime(2026, 7, 1))
+            finally:
+                dg.DIGESTS = original_digests
+
+    def test_daily_governance_last_digest_date_none_when_no_digests_exist(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            empty_dir = Path(tmp) / "digests"
+            original_digests = dg.DIGESTS
+            try:
+                dg.DIGESTS = empty_dir  # directory doesn't even exist yet
+                self.assertIsNone(dg.last_digest_date())
+            finally:
+                dg.DIGESTS = original_digests
 
 
 if __name__ == "__main__":

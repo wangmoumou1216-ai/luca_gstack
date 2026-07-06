@@ -15,7 +15,7 @@ allowed-tools:
   - Bash
   - AskUserQuestion
 context-cost:
-  self: 13023
+  self: 22732  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 30000
   shared-refs: [ai-native-design-framework]
   recommended-model: guided-execution  # 有框架指导的用户研究

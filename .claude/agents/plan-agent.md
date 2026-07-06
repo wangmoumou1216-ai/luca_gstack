@@ -37,6 +37,33 @@ Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 | 任务涉及不可逆操作 | git 操作、批量覆盖文件 |
 | 用户明确要求 | "先做个计划"、"plan 一下"、"想清楚再做" |
 
+**「≥2 subagent」条件对 `/auto` 本身不生效（2026-07-03 修复）：** `/auto` 把"编排多个 skill"
+设计成自己的核心功能——按其自身 SKILL.md「激活条件」，任何真正该走 `/auto` 的任务本就需要
+≥2 个 subagent，条件 2 对它必然恒真，等同于"每次调用 /auto 都强制走本文件"。这与 `/auto` 自身
+Step 2 已有的按 Phase 数缩放的确认门（Hierarchical≥3 Phase 才等确认）重复叠加，是 2026-07-03
+全量搭建 review 发现 `/auto` 50-session 零使用的结构性成因之一（另一半成因是 route-guard.mjs
+的 `HEAVY_ORCHESTRATOR_SKILLS`，已同期修复——见该文件注释）。**当目标 skill 就是 `/auto` 本身
+时，条件 2 不适用**；`/auto` 若同时满足其余 4 条件之一（如涉及不可逆操作、用户明确要求先做计划）
+仍正常触发本文件。
+
+**条件 2 豁免（内部 HITL 编排类，2026-07-04 G4 原则化——本行是 SSOT-10 checker 真值源）：**
+上一段对 `/auto` 的单点规则推广为可判定原则。凡目标 skill 同时满足以下三点，条件 2 不适用
+（其余 4 条件照常）：
+(a) 多 subagent 编排是其 SKILL.md **声明的核心机制**（条件 2 对其恒真）；
+(b) 在**首次 fan-out 之前**存在覆盖范围或成本的用户确认点（允许按规模缩放——如 `/auto` 的
+    Hierarchical≥3 Phase 条件门即属此类）；
+(c) 名单变更必须人工 review，并在下方逐项记录理由——SSOT-10 只校验三表名单同步与门语句锚
+    存在（tripwire），**不能**替代对"门是否真实/足够"的人工判断。
+当前符合：`/auto`、`/deepresearch`、`/ux-research`、`/figma-demo`。
+- `/auto`：Step 2 Plan Output，Hierarchical≥3 Phase 等用户确认后再执行（规模缩放门）。
+- `/ux-research`：介入点1「研究规划确认」不可跳过，fan-out 前逐维度确认（最强内门）。
+- `/figma-demo`：Step 2.3 映射确认——"唯一一次打扰设计师的地方"，Blueprint 生成前强制。
+  （2026-07-04 补入：该 skill 虽已隐藏，直接斜杠调用仍可达，不入名单则条件 2 对其恒真，
+  与其"只打扰一次"的自我契约矛盾。）
+- `/deepresearch`：Step 0.2 深度问询（A 深研/B 中研）。**内门较弱**——只确认深度与成本档，
+  不确认研究角度；接受理由：纯只读 skill、无不可逆操作，其余 4 条件（尤其"用户明确要求
+  计划"）仍适用，route-guard 复杂度硬门先于路由生效。
+
 **不触发的情况：**
 - 单文件编辑（Solo Mode，直接执行）
 - 问答类任务

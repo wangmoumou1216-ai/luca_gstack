@@ -8,7 +8,7 @@ description: >
   challenge assumptions and expose gaps. Generates structured markdown report. Triggers: 'deep
   research', 'research [topic]', 'deepresearch'.
 context-cost:
-  self: 9459
+  self: 22149  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 150000
   shared-refs: [none]
   recommended-model: reasoning-heavy  # 多agent深度研究

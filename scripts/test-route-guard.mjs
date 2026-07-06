@@ -7,6 +7,9 @@ const baseEnv = {
   ROUTE_GUARD_DRY_RUN: '1',
   ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示',
   ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示',
+  // G4-R6: 显式钉空——HEAVY set 现由 env 初始化，若开发者 shell/CI 恰好导出该变量会污染
+  // 默认用例（假红/假绿）。注入用例通过 extraEnv 覆盖。
+  ROUTE_GUARD_HEAVY_SKILLS: '',
 };
 
 function route(prompt, extraEnv = {}) {
@@ -154,11 +157,10 @@ const cases = [
     },
   },
   {
-    name: 'magicpath wins direct interface output',
+    name: '2026-07-03: magicpath demoted to hidden (full-review P2-6, zero 30-day use) — direct interface wording now STOPs, no keyword left to match',
     prompt: '直接产出一个线索管理界面',
     expect: decision => {
-      assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, 'magicpath');
+      assert.equal(decision.decision, 'STOP');
     },
   },
   {
@@ -170,12 +172,11 @@ const cases = [
     },
   },
   {
-    name: 'figma prototype wording asks among candidates',
+    name: '2026-07-03: figma prototype wording — magicpath demoted, /html-prototype now wins alone (no more multi-candidate)',
     prompt: '做一个 Figma 原型界面',
     expect: decision => {
-      assert.equal(decision.decision, 'MULTI_SKILL');
-      assert.ok(decision.candidates.includes('magicpath'));
-      assert.ok(decision.candidates.includes('/html-prototype'));
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/html-prototype');
     },
   },
   {
@@ -185,12 +186,94 @@ const cases = [
       assert.equal(decision.decision, 'NONE');
     },
   },
+  // --- G3 (2026-07-04) 对话延续/状态询问豁免：>5字 check-in 不再 STOP/PROJECT_STOP ---
+  {
+    name: 'G3: 现在进度如何 (6字check-in) → NONE，不再 PROJECT_STOP',
+    prompt: '现在进度如何',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE', `check-in 应静默，got ${decision.decision}`);
+    },
+  },
+  {
+    name: 'G3: 全部做完了吗 (6字check-in，无项目态) → NONE',
+    prompt: '全部做完了吗',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 现在怎么样了 → NONE',
+    prompt: '现在怎么样了',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3 反例: 继续做个原型 (含实义任务词) → 照常路由 /html-prototype',
+    prompt: '继续做个原型',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/html-prototype');
+    },
+  },
+  {
+    name: 'G3 反例: 继续项目 → 仍走老项目 PROJECT_STOP（上游专有检查先赢）',
+    prompt: '继续项目',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+    },
+  },
+  {
+    name: 'G3 反例: >10字陈述句不豁免（长度闸）→ 仍 PROJECT_STOP',
+    prompt: '把昨天没写完的那个报告接着写完整理好',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+    },
+  },
+  // --- G3-C2 latin 词边界：产品名子串不再误报 soft candidate ---
+  {
+    name: 'G3-C2: designer 不得诱发 design 系 soft candidate',
+    prompt: '帮我看看那位designer的排期表怎么安排',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP');
+      const skills = (decision.softCandidates || []).map(c => c.skill).join(',');
+      assert.ok(!/design/.test(skills), `designer 子串不应产出 design 系候选: ${skills}`);
+    },
+  },
+  {
+    name: 'G3-C2: 提到 claude 一词不得诱发 claude-api soft candidate',
+    prompt: '记录一下这次和claude协作的心得体会',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      const skills = (decision.softCandidates || []).map(c => c.skill).join(',');
+      assert.ok(!/claude-api/.test(skills), `claude 子串不应产出 claude-api 候选: ${skills}`);
+    },
+  },
+  // --- G3-C3 claude 从复杂度信号词除名 ---
+  {
+    name: 'G3-C3: 用 claude 分析 api 文档 → 不再计多模块信号',
+    prompt: '在当前项目用 claude 分析这个 api 文档',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.ok(!(decision.signals || []).includes('多模块'),
+        `claude+api 不应再凑成多模块信号: ${JSON.stringify(decision.signals)}`);
+    },
+  },
   // --- ADR-0002 negative cases: longest-match-wins disambiguation ---
   {
     name: '设计调研 routes ux_research, NOT deepresearch (调研⊂设计调研)',
     prompt: '帮我做一下设计调研',
     expect: decision => {
-      // ux-research is a heavy orchestrator → SINGLE_SKILL becomes PLAN_CHECK.
+      // G4 (2026-07-04): HEAVY set 母版默认空 → ux-research 关键词命中现在是 SINGLE_SKILL
+      // （此前 heavy orchestrator 会升 PLAN_CHECK；.skill 字段两态都带，故此断言跨改动稳定）。
+      assert.equal(decision.decision, 'SINGLE_SKILL');
       assert.equal(decision.skill, '/ux-research');
       assert.ok(!decision.candidates.includes('/deepresearch'),
         `deepresearch should be shadowed, got ${JSON.stringify(decision.candidates)}`);
@@ -277,13 +360,15 @@ const cases = [
     },
   },
   {
-    // Audit M2: /compare is governance_tools, also standalone-capable.
-    name: 'compare standalone allowed without project',
+    // 2026-07-03: compare demoted to hidden (full-review P2-6) — no trigger left,
+    // so this prompt falls through to STOP. The M2 content-tool exemption (比较一下)
+    // still keeps it out of the project gate, which is the half worth pinning.
+    name: 'compare hidden since 2026-07-03 — M2 exemption keeps it out of project gate, no trigger left → STOP',
     prompt: '比较一下两个方案',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.notEqual(decision.decision, 'PROJECT_STOP',
-        `compare standalone must not be gated, got ${decision.decision}`);
+      assert.equal(decision.decision, 'STOP',
+        `hidden compare prompt should fall through to STOP, got ${decision.decision}`);
     },
   },
   {
@@ -312,15 +397,46 @@ const cases = [
     },
   },
   {
-    // Verification: /auto trigger words (全流程) with active project already
-    // route to PLAN_CHECK via HEAVY_ORCHESTRATOR_SKILLS — confirms the audit
-    // §0 误诊 correction (no missing complexity signal).
-    name: '全流程做 with active project triggers PLAN_CHECK on /auto',
+    // 2026-07-03 (full-review P2-5): /auto removed from HEAVY_ORCHESTRATOR_SKILLS —
+    // it now resolves to SINGLE_SKILL, letting /auto's own internal Step 2 Plan
+    // Output gate (Hierarchical ≥3 Phase) be the single confirmation point instead
+    // of stacking a redundant external PLAN_CHECK before /auto even starts.
+    name: '全流程做 with active project routes SINGLE_SKILL to /auto (internal Phase gate handles confirmation, not route-guard)',
     prompt: '全流程做客户管理',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PLAN_CHECK');
+      assert.equal(decision.decision, 'SINGLE_SKILL');
       assert.equal(decision.skill, '/auto');
+    },
+  },
+  // --- G4 (2026-07-04) HEAVY_ORCHESTRATOR_SKILLS 母版默认空 + env 扩展点 ---
+  {
+    // R7: 钉「新默认」——空 env 下 deepresearch 直呼不再升级 PLAN_CHECK（此前主线零 PLAN_CHECK 断言）
+    name: 'G4: 母版默认空 HEAVY set → /deepresearch 直呼是 SINGLE_SKILL，不叠外部 PLAN_CHECK',
+    prompt: '/deepresearch',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    // R7: 钉「分支机制」——env 注入成员即恢复 PLAN_CHECK（fork/测试回归该分支的唯一路径）
+    name: 'G4: env 注入 ROUTE_GUARD_HEAVY_SKILLS 后 /deepresearch → PLAN_CHECK（扩展点可达）',
+    prompt: '/deepresearch',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示', ROUTE_GUARD_HEAVY_SKILLS: 'deepresearch' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_CHECK');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    // R10: env 自动补全双形态——只写不带斜杠也能命中带斜杠的直呼
+    name: 'G4: env 成员不带前导斜杠也命中带斜杠直呼（双形态自动补全）',
+    prompt: '/ux-research',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示', ROUTE_GUARD_HEAVY_SKILLS: 'ux-research' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_CHECK');
     },
   },
 ];

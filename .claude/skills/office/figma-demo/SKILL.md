@@ -17,7 +17,7 @@ allowed-tools:
   - Agent
   - AskUserQuestion
 context-cost:
-  self: 31482
+  self: 35677  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 30000
   shared-refs: [html-prototype-tokens]
   template: auto-detect

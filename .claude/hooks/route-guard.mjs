@@ -7,6 +7,7 @@ import {
   readdirSync,
   statSync,
   writeFileSync,
+  unlinkSync,
 } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
@@ -19,11 +20,15 @@ function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
 }
 
+// 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
+// per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
+let hookSessionId = '';
 function parsePrompt() {
   try {
     const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
     try {
       const data = JSON.parse(raw || '{}');
+      hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
       return String(data.prompt || data.message || '');
     } catch {
       process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);
@@ -116,7 +121,9 @@ function listProjects() {
 }
 
 function readCurrentProject(projects) {
-  if (process.env.ROUTE_GUARD_CURRENT_PROJECT) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
+  // 显式设置（含空串="无激活项目"）即生效——空串回退真实 symlink 会让 dry-run 测试
+  // 依赖宿主机的项目状态（G3 修复测试时发现）。
+  if (process.env.ROUTE_GUARD_CURRENT_PROJECT !== undefined) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
   try {
     const docsPath = join(projectRoot, 'docs');
     const target = readlinkSync(docsPath);
@@ -128,6 +135,16 @@ function readCurrentProject(projects) {
   } catch {
     return '';
   }
+}
+
+// 对话延续/状态询问豁免（G3，2026-07-04）：整句就是"继续/停/问进度"类 check-in 时不注入
+// 路由提示——此前 >5 字、非?结尾的陈述句一律 STOP/PROJECT_STOP，实测几乎每条对话性消息
+// 都吃一段噪音注入。双闸防误豁免：① 整句锚定（前缀限 都/全部/现在，尾部限语气助词）
+// ② 长度 ≤10。「继续做个原型」含实义任务词、锚定失败 → 照常路由；「继续项目」被上游
+// 老项目正则先捕获 → 仍走 Project Gate。
+const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀了的！!。.？?…\s]*$/;
+function isContinuation(prompt) {
+  return prompt.length <= 10 && CONTINUATION_RE.test(prompt.trim());
 }
 
 function projectGate(prompt, projects, currentProject) {
@@ -231,6 +248,10 @@ function projectGate(prompt, projects, currentProject) {
     };
   }
 
+  // 对话延续豁免（G3）：放在所有具名项目/老项目/新项目专有检查之后——那些必须先赢；
+  // 只拦下面这个"一切>5字陈述句都 PROJECT_STOP"的兜底网。
+  if (isContinuation(prompt)) return null;
+
   if (!currentProject && prompt.length > 5 && !prompt.endsWith('?') && !prompt.endsWith('？')) {
     return {
       decision: 'PROJECT_STOP',
@@ -250,7 +271,9 @@ function complexityDecision(prompt) {
       name: '多模块',
       weight: 3,
       test: t => {
-        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '桌面', 'desktop', 'claude', '卡片', '数据库', 'api', 'memory', '知识库', '定时', '调度', 'scheduler', '推送'];
+        // G3-C3（2026-07-04）：'claude' 从系统词除名——助手自身名字在 meta 提问里高频出现，
+        // 与任一其他系统词共现即误发多模块(w3)，把闲聊/咨询误升级 PLAN_MODE。
+        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '桌面', 'desktop', '卡片', '数据库', 'api', 'memory', '知识库', '定时', '调度', 'scheduler', '推送'];
         return sys.filter(s => t.includes(normalize(s))).length >= 2;
       },
     },
@@ -295,15 +318,30 @@ function complexityDecision(prompt) {
 
 function softSkillDecision(prompt, routes) {
   const text = normalize(prompt);
+  const promptLower = prompt.toLowerCase();
   const scored = routes.map(route => {
     let score = 0;
     const matchedTokens = [];
     for (const trigger of route.triggers) {
       const t = normalize(trigger);
+      // G3-C2（2026-07-04）：纯 latin trigger 不做 3-6 字滑窗子串——那是 'design'⊂'designer'、
+      // 'claude'⊂'claude-api' 类误报的根源。改为完整 trigger + 词边界匹配（保留空格的小写原文）；
+      // CJK/混合 trigger 维持子串逻辑（中文无词边界，滑窗是刻意设计）。
+      if (/^[a-z0-9 ._-]+$/i.test(trigger)) {
+        const esc = trigger.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(promptLower)) {
+          score += Math.min(t.length, 6);
+          matchedTokens.push(trigger.toLowerCase());
+        }
+        continue;
+      }
       let bestLen = 0;
       for (let len = Math.min(t.length, 6); len >= 3; len--) {
         for (let i = 0; i <= t.length - len; i++) {
           const sub = t.slice(i, i + len);
+          // 混合 trigger（如'接入Claude'）滑出的纯 latin 碎片（'claude'）与 C2 同病——
+          // 纯 ASCII 窗口一律跳过，latin 匹配只走上面的完整 trigger + 词边界路径。
+          if (!/[^\x00-\x7f]/.test(sub)) continue;
           if (text.includes(sub)) { bestLen = len; matchedTokens.push(sub); break; }
         }
         if (bestLen) break;
@@ -361,7 +399,8 @@ function skillDecision(prompt) {
   if (!hits.length) {
     const looksLikeTask = prompt.length > 5
       && !prompt.match(/^(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i)
-      && !prompt.endsWith('?') && !prompt.endsWith('？');
+      && !prompt.endsWith('?') && !prompt.endsWith('？')
+      && !isContinuation(prompt); // G3：整句延续/状态询问不当任务，静默放行
     if (!looksLikeTask) return { decision: 'NONE' };
     const softCandidates = softSkillDecision(prompt, routes);
     return { decision: 'STOP', reason: 'no_keyword_match', softCandidates };
@@ -387,17 +426,27 @@ function skillDecision(prompt) {
   };
 }
 
-// Skills that always require Plan Agent check regardless of keyword complexity score.
-// These skills spawn ≥2 subagents and have multi-phase dependencies by design.
-const HEAVY_ORCHESTRATOR_SKILLS = new Set([
-  '/deepresearch', 'deepresearch',
-  '/ux-research', 'ux-research',
-  '/auto', 'auto',
-  '/figma-demo', 'figma-demo',
-  // muse fork 专属新增：muse-loop-orchestrate 满足同样的 ≥2 subagent + 多阶段依赖标准。
-  // 此改动仅存在于 fork 自己的 route-guard.mjs 副本，母版对应文件零改动（见 muse-loop/ARCHITECTURE.md）。
-  '/muse-loop-orchestrate', 'muse-loop-orchestrate',
-]);
+// PLAN_CHECK 扩展点：命中此 set 的 SINGLE_SKILL 会被升级为 PLAN_CHECK（外部计划确认门）。
+//
+// 母版默认【空】（2026-07-04 流程优化 G4，红队裁决后定稿）：原成员 deepresearch/
+// ux-research/figma-demo 已全部迁入 plan-agent.md「条件 2 豁免（内部 HITL 编排类）」
+// 名单——三者 SKILL.md 各自内含 fan-out 前的用户确认门（ux-research 介入点1 研究规划
+// 确认不可跳过；figma-demo Step 2.3 映射确认；deepresearch Step 0.2 深度问询——内门较弱、
+// 只问深度不问计划，但该 skill 纯只读无不可逆操作，Plan Agent 其余 4 条件经 CLAUDE.md
+// ③ 仍适用，buildDecision 的复杂度硬门也先于本 set 生效，接受这一取舍）。
+// 这修正了 2026-07-03 注释"它们无等价内部确认步骤"的说法——那一版把"内容确认"与
+// "计划确认"混为一谈；真实差异是内门强弱，不是有无（G4 红队 R4 裁决，正面改写不静默覆盖）。
+//
+// ⚠️ 本 set + 下方 PLAN_CHECK 分支是 fork/env 扩展点，**勿当死代码清理**（code-hygiene
+// 死代码算子注意）：muse fork 的副本在此处有自己的成员（/auto、/muse-loop-orchestrate），
+// 依赖分支机制本身；母版测试经 ROUTE_GUARD_HEAVY_SKILLS 注入回归该分支。
+// env 格式：ASCII 逗号分隔 skill 名；带不带前导 / 均可——下方初始化自动补全双形态。
+const HEAVY_ORCHESTRATOR_SKILLS = new Set(
+  envList('ROUTE_GUARD_HEAVY_SKILLS').flatMap(s => {
+    const bare = s.replace(/^\//, '');
+    return [bare, `/${bare}`];
+  })
+);
 
 function buildDecision(prompt) {
   const projects = listProjects();
@@ -450,16 +499,16 @@ function decisionToHints(decision) {
     }
     case 'PLAN_MODE':
       return [
-        `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）\n` +
+        `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}；关键词近似判定，权威口径以 .claude/agents/plan-agent.md 触发条件表为准）\n` +
         '禁止直接路由到单个 skill。必须先读取 .claude/agents/plan-agent.md，输出 Phase 分解计划。\n' +
         '等用户确认计划后，再进入 Orchestrator 模式执行。',
       ];
     case 'PLAN_CHECK': {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
       return [
-        `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，但该 skill 是重型编排器（多 subagent + 多阶段）。\n` +
-        '执行前必须检查 Plan Agent 5条件（≥3文件 / ≥2 subagent / phase deps / 不可逆操作 / 用户明确要求）。\n' +
-        '满足任一 → 先读 .claude/agents/plan-agent.md，输出 Phase 计划，等用户确认后再执行。',
+        `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，该 skill 被登记为需外部计划确认的重型编排器。\n` +
+        '执行前先读 .claude/agents/plan-agent.md 的「触发条件」表（唯一权威口径，本提示不复述），\n' +
+        '满足任一条件 → 输出 Phase 计划，等用户确认后再执行。',
       ];
     }
     case 'SINGLE_SKILL': {
@@ -574,7 +623,9 @@ if (prompt) {
 }
 
 if (!dryRun && prompt) {
-  const counterFile = join(projectRoot, '.claude', '.session-turn-count');
+  // 并发隔离（G2）：有 sid 时轮次计数 per-session；无 sid（测试/管道）回退共享旧文件名
+  const counterFile = join(projectRoot, '.claude',
+    hookSessionId ? `.session-turn-count-${hookSessionId}` : '.session-turn-count');
   let turns = 0;
   try {
     turns = parseInt(readFileSync(counterFile, 'utf8').trim()) || 0;
@@ -585,6 +636,49 @@ if (!dryRun && prompt) {
   } catch {}
   if (turns === 20 || turns === 30 || (turns > 30 && turns % 10 === 0)) {
     hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议执行 /compact 或写入 Checkpoint。`);
+  }
+
+  // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04）──
+  // session-restore 现在会保留并行 session 的激活项目 → 新 session 可能"继承"一个自己
+  // 从未确认过的项目。pin 记录本 session 认过的项目，用于两件事：
+  //  (a) 继承检测：首轮消息时 docs 有链但本 sid 无 pin = 继承态 → 一次性提示（防静默写错项目）
+  //  (b) 漂移对账：docs 链被别的 session switch 走后与本 sid pin 不符 → 提示（携带计数收敛）
+  if (hookSessionId) {
+    try {
+      const pinFile = join(projectRoot, '.claude', `.session-project-${hookSessionId}`);
+      const projects = listProjects();
+      const cur = readCurrentProject(projects); // docs 链当前指向
+      let pin = null;
+      try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
+
+      const inheritFile = join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`);
+      const inherited = existsSync(inheritFile); // session-restore 只在真保留态（活跃并行）写此标记
+      if (cur && !pin) {
+        // 区分"真继承"（有 session-restore 写的标记）vs"self-switch"（本 session 自己 switch，无标记）
+        // ——只对真继承提示，避免单 session 正常流程 Msg2 的假阳性 + 多余确认（终验独立核验实证）。
+        // 无论哪种都写 pin。
+        if (inherited) {
+          hints.push(`[route-guard] 🔗 本 session 继承了激活项目「${cur}」（由并行 session 保留）。若你要做的是别的项目，请显式 ./scripts/project.sh switch <项目>；确认就是它则无需操作。`);
+          try { unlinkSync(inheritFile); } catch {} // 一次性，读后删
+        }
+        try { writeFileSync(pinFile, cur); } catch {}
+      } else if (cur && pin && cur !== pin) {
+        // 漂移：本 session 认过 pin，但 docs 被切走了 → 提示 N 次后自愈收敛（R7-①）
+        const nagFile = join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`);
+        let nag = 0;
+        try { nag = parseInt(readFileSync(nagFile, 'utf8').trim()) || 0; } catch {}
+        if (nag < 3) {
+          hints.push(`[route-guard] ⚠️ 本 session 原在项目「${pin}」，当前激活已被切到「${cur}」（第 ${nag + 1}/3 次提醒）。如非预期请 switch 回「${pin}」。`);
+          try { writeFileSync(nagFile, String(nag + 1)); } catch {}
+        } else {
+          // 收敛：连续提醒 3 次未纠正 → 接受新值为本 session pin，停止刷屏
+          try { writeFileSync(pinFile, cur); unlinkSync(nagFile); } catch {}
+        }
+      } else if (cur && pin && cur === pin) {
+        // 一致：刷新 pin mtime（供 SessionEnd/GC 判活）
+        try { writeFileSync(pinFile, cur); } catch {}
+      }
+    } catch {}
   }
 }
 

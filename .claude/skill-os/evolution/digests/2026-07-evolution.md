@@ -31,9 +31,9 @@ langgraph 本体被拒（编译期校验被本仓原生更强覆盖 + 与"路由
 - 契约显式注释：graph 的 degrade_target/tool_choice/gate id 是概念标识**不校验**（文档化局限）
 - 验证：**10 用例变异矩阵全对**（4 假阳转 PASS、2 漏报转 FAIL、4 回归保持）+ verify.sh 全绿
 
-## ⚠️ CONDITIONAL 1（记录待裁决，无行动）
+## ✅ CONDITIONAL 1 已裁决：不采纳，归档
 
-**feishu-whiteboard-pro**（GAP-design-methodology-review，adapt-idea，w70→红队 downgraded）：「生成型 skill 内嵌独立批判 gate」样本。红队：3 个自称新颖机制里 2 个已存在于 ux-audit/quality-gate/handoff-review；仓龄 16 天 50★ 无维护记录；剩余真 delta 很薄（对抗式最弱轴批判 + 显式停止条件）。**建议：不采纳，留档下周期看其存活度。**
+**feishu-whiteboard-pro**（GAP-design-methodology-review，adapt-idea，w70→红队 downgraded）：「生成型 skill 内嵌独立批判 gate」样本。红队：3 个自称新颖机制里 2 个已存在于 ux-audit/quality-gate/handoff-review；剩余真 delta 很薄（对抗式最弱轴批判 + 显式停止条件）。**裁决（2026-07-03 复查后确认，非仅沿用建议）：不采纳。** 复查时重新拉取仓库现状：创建于 2026-06-16，最后一次 push 2026-06-18，距今 15+ 天零提交、star 数原地不动（仍 50）——红队当初"仓龄16天、无维护记录"的疑虑不但没解决，反而被"之后半个月零动静"进一步坐实。留档不再需要"下周期看存活度"，已有足够新证据支持终裁；若该仓未来重新活跃且核心 delta 有实质增厚，可重新提案评估。
 
 ## 💡 opportunities 6（无 gap 映射，仅记录）
 
@@ -52,4 +52,6 @@ Medusa（AI-first 安全扫描，含 .claude/ 供应链检测）· obsidian-skil
 2. ~~sem 安装~~ → **红队击杀，不采纳**（理由已核实）
 3. ~~check-routing-map 扩展~~ → **已落地 SSOT-8/9**（含红队 v2 重写 + 10 用例变异矩阵）
 4. ~~11 个候选补验~~ → **已 resume 补齐**（19/19 verified）
-5. feishu-whiteboard-pro → 建议不采纳留档，**待 luca 确认**
+5. ~~feishu-whiteboard-pro~~ → **不采纳，已归档终裁**（2026-07-03 复查仓库现状后确认，见上）
+
+**本月演进 digest 全部裁决项已闭环。**

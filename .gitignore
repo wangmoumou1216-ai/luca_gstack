@@ -87,6 +87,15 @@ api-project/
 .claude/.session-turn-count
 .claude/.session-edit-count
 .claude/.session-tool-count
+# per-session 后缀变体（G2 并发隔离）与切换互斥锁 + G6 会话粘性 pin/nag
+.claude/.session-turn-count-*
+.claude/.session-edit-count-*
+.claude/.session-tool-count-*
+.claude/.session-project-*
+.claude/.session-projnag-*
+.claude/.session-inherited-*
+.claude/.project-switch.lock/
+.claude/observability/pending-extraction*.md
 .claude/.episode-written-*
 .claude/.digest-shown-*
 .claude/current-topic*.txt
@@ -97,6 +106,7 @@ api-project/
 # Memory system — ignore raw runtime data, keep scripts and stable knowledge
 memory/episodic/sessions/*.md
 !memory/episodic/sessions/README.md
+memory/episodic/.index.lock
 memory/semantic/candidates.jsonl
 memory/semantic/reviews.jsonl
 memory/retrieval-log.jsonl
@@ -105,7 +115,7 @@ memory/digests/
 # Monthly framework-evolution HTML reports — generated visual artifacts (evolution/digests/*.md is the tracked truth)
 .claude/skill-os/evolution/report-*.html
 # Observability — runtime data, regenerated each session
-.claude/observability/pending-extraction.md
+# (pending-extraction*.md 含 per-session 后缀变体，见上方 G2 并发隔离节)
 .claude/observability/run-log.jsonl
 
 # luca_gstack specific — docs/ is a symlink to external project dir, never tracked

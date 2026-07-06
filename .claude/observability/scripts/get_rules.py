@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import re
 import sys
 from pathlib import Path
 
@@ -7,59 +6,20 @@ ROOT = Path(__file__).resolve().parents[2]
 RULES = ROOT / "observability" / "rules.yaml"
 
 
-def parse_scalar(value):
-    value = value.strip()
-    if value in ("[]", ""):
-        return []
-    if value.startswith("[") and value.endswith("]"):
-        body = value[1:-1].strip()
-        if not body:
-            return []
-        return [item.strip().strip('"').strip("'") for item in body.split(",")]
-    return value.strip('"').strip("'")
-
-
 def load_rules():
+    """真 YAML 解析（2026-07-04 换掉手写 parser——只认 flow-style/硬编码4空格缩进/
+    单层 section/裸值 split(:) 截断 四类脆弱，见 framework-audit 遗留债务盘点）。
+    fail-open：规则加载失败绝不阻断 skill 执行——警告落 stderr，返回空列表。"""
     if not RULES.exists():
         return []
-    rules = []
-    current = None
-    section = None
-    for raw in RULES.read_text(encoding="utf-8").splitlines():
-        line = raw.rstrip()
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or stripped in ("version: 1", "rules: []", "rules:"):
-            continue
-        if stripped.startswith("- id:"):
-            if current:
-                rules.append(current)
-            current = {"id": parse_scalar(stripped.split(":", 1)[1])}
-            section = None
-            continue
-        if current is None:
-            continue
-        if re.match(r"^[a-zA-Z_]+:\s*$", stripped):
-            section = stripped[:-1]
-            current.setdefault(section, {})
-            continue
-        if stripped.startswith("- ") and section:
-            current.setdefault(section, [])
-            if isinstance(current[section], list):
-                current[section].append(parse_scalar(stripped[2:]))
-            continue
-        if ":" in stripped:
-            key, value = stripped.split(":", 1)
-            key = key.strip()
-            value = parse_scalar(value)
-            is_nested = raw.startswith("    ") or raw.startswith("\t")
-            if section and is_nested and isinstance(current.get(section), dict):
-                current[section][key] = value
-            else:
-                section = None
-                current[key] = value
-    if current:
-        rules.append(current)
-    return rules
+    try:
+        import yaml
+        doc = yaml.safe_load(RULES.read_text(encoding="utf-8")) or {}
+        rules = doc.get("rules") or []
+        return [r for r in rules if isinstance(r, dict)]
+    except Exception as e:  # noqa: BLE001 — fail-open 契约
+        print(f"[get_rules] rules.yaml 解析失败，按无规则继续: {e}", file=sys.stderr)
+        return []
 
 
 def applies(rule, skill, scene):

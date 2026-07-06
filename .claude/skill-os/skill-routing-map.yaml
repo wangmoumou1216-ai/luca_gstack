@@ -59,30 +59,21 @@ project_skills:
     weight: 7
     triggers: [做个原型, 生成HTML, HTML原型, prototype, 快速原型, 原型界面, 本地原型]
 
-  figma_demo:
-    invoke: "/figma-demo"
-    weight: 7
-    triggers: [figma demo, 演示demo, 汇报用原型, 口述做原型, figma演示]
-
   ux_audit:
     invoke: "/ux-audit"
     weight: 7
     triggers: [评审, UX问题, 页面评审, 体验评审, UX评审, 评审这个页面, 挑毛病, 有什么问题, 给建议]
-
-  compare:
-    invoke: "/compare"
-    weight: 6
-    triggers: [对比, compare, 版本对比, 两个方案比较, 迭代对比, 比较一下, 看看区别, 哪个好]
 
   figma_layer:
     invoke: "/figma-layer"
     weight: 5
     triggers: [Figma, figma, 保险层, 推到figma, figma保险]
 
-  magicpath:
-    invoke: "magicpath"
-    weight: 8
-    triggers: [界面设计, UI设计, 做界面, 产出界面, 设计组件, MagicPath, magicpath, 生成组件, 做个界面, 界面产出, 原型界面, 管理界面, 列表界面, 详情界面, 业务界面]
+  # figma_demo / compare / magicpath 2026-07-03 移出一级路由（全量搭建 review P2-6，
+  # framework-audit/2026-07-03-full-review.md）：近30天 episodic skills_used 零调用，
+  # 降级为隐藏 skill（磁盘目录/命令逻辑零删除，仅撤销 /office 展示+关键词触发+slash
+  # command 入口；仍可被 open-design/design-brief/html-prototype 等内部 Skill 工具按
+  # 名 dispatch，如 open-design 的界面产出备选链）。见 CLAUDE.md「隐藏/高级 skill」。
 
   open_design:
     invoke: "/open-design"
