@@ -458,7 +458,7 @@ function decisionToHints(decision) {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
       return [
         `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，但该 skill 是重型编排器（多 subagent + 多阶段）。\n` +
-        '执行前必须检查 Plan Agent 4条件（≥2 subagent / phase deps / ≥3文件 / 不可逆操作）。\n' +
+        '执行前必须检查 Plan Agent 5条件（≥3文件 / ≥2 subagent / phase deps / 不可逆操作 / 用户明确要求）。\n' +
         '满足任一 → 先读 .claude/agents/plan-agent.md，输出 Phase 计划，等用户确认后再执行。',
       ];
     }
