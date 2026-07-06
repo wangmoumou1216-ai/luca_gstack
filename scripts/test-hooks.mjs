@@ -681,7 +681,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-I', prompt: '随便说点什么' }),
   });
-  assert.match(r.stdout, /继承了激活项目「projA」/, '真继承态首条消息应提示');
+  assert.match(r.stdout, /当前激活项目「projA」（并行 session 保留）/, '真继承态首条消息应提示');
+  assert.match(r.stdout, /命名即切换已生效/, '继承提示应说明命名即切换（2026-07-06）');
   assert.ok(existsSync(join(root, '.claude', '.session-project-sess-I')), '应写 pin');
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-I')), '继承标记应一次性读后删');
   console.log('PASS STICKY-008 真继承（有标记）→ 提示 + 删标记 + 写 pin');
@@ -694,9 +695,29 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-S', prompt: '随便说点什么' }),
   });
-  assert.doesNotMatch(r.stdout, /继承了激活项目/, 'self-switch 不得误报继承');
+  assert.doesNotMatch(r.stdout, /当前激活项目「projA」（并行/, 'self-switch 不得误报继承（新措辞）');
   assert.ok(existsSync(join(root, '.claude', '.session-project-sess-S')), 'self-switch 仍应静默写 pin');
   console.log('PASS STICKY-008b self-switch 无标记 → 静默写 pin，不误报继承');
+}
+
+// STICKY-008c（命名即切换 2026-07-06）：本 session 主动切到具名项目 → emit 立即切换（无"确认后"）；
+// pin 记成【目标】项目（非当前），清继承标记 + 清残留漂移计数，且本轮不误报漂移。
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  writeFileSync(join(root, '.claude', '.session-inherited-sess-N'), 'projA'); // 继承态
+  writeFileSync(join(root, '.claude', '.session-projnag-sess-N'), '2');       // 预置残留漂移计数
+  const r = runNode(routeGuardHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA,projB' },
+    input: JSON.stringify({ session_id: 'sess-N', prompt: '继续 projB 的任务' }),
+  });
+  assert.match(r.stdout, /命名即切换/, '应 emit 命名即切换（立即切换，非"确认后执行"）');
+  assert.match(r.stdout, /switch "projB"/, '应给出切到 projB 的命令');
+  assert.doesNotMatch(r.stdout, /原在项目/, '自己主动切不得报"被切走"漂移');
+  const pin = readFileSync(join(root, '.claude', '.session-project-sess-N'), 'utf8').trim();
+  assert.equal(pin, 'projB', 'pin 应记成【目标】projB，而非当前 projA');
+  assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-N')), '自切应清继承标记');
+  assert.ok(!existsSync(join(root, '.claude', '.session-projnag-sess-N')), '自切应清残留漂移计数');
+  console.log('PASS STICKY-008c 命名即切换 self-switch → pin=目标 + 清标记 + 不报漂移');
 }
 
 // STICKY-009：SessionEnd 清理本 sid 计数 + pin（R H2 僵尸窗口归零）

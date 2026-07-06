@@ -493,7 +493,7 @@ function decisionToHints(decision) {
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
     }
     case 'PROJECT_SWITCH': {
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n确认后执行：./scripts/project.sh switch "${decision.project}"`;
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n命名即切换（点到已有项目名＝切过去，无需确认）：立即执行 ./scripts/project.sh switch "${decision.project}"`;
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
     }
@@ -612,8 +612,9 @@ if (existsSync(stateFile) && !dryRun) {
   } catch {}
 }
 
+let decision = null; // 提升到外层：pin 层（另一 if 块）需读它判定"命名即切换自切"
 if (prompt) {
-  const decision = buildDecision(prompt);
+  decision = buildDecision(prompt);
   if (dryRun) {
     process.stdout.write(JSON.stringify(decision, null, 2) + '\n');
     process.exit(0);
@@ -638,45 +639,56 @@ if (!dryRun && prompt) {
     hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议执行 /compact 或写入 Checkpoint。`);
   }
 
-  // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04）──
-  // session-restore 现在会保留并行 session 的激活项目 → 新 session 可能"继承"一个自己
-  // 从未确认过的项目。pin 记录本 session 认过的项目，用于两件事：
+  // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04；命名即切换扩展 2026-07-06）──
+  // session-restore 会保留并行 session 的激活项目 → 新 session 可能"继承"一个自己从未确认过的
+  // 项目。pin 记录本 session 认过的项目，用于三件事：
   //  (a) 继承检测：首轮消息时 docs 有链但本 sid 无 pin = 继承态 → 一次性提示（防静默写错项目）
   //  (b) 漂移对账：docs 链被别的 session switch 走后与本 sid pin 不符 → 提示（携带计数收敛）
+  //  (c) 命名即切换自切：本轮 route-guard 判定要切到具名项目（PROJECT_SWITCH）时，switch 由主
+  //      Agent 在本轮之后执行、docs 链此刻仍是旧项目——故不做 cur 比对，直接把 pin 记成目标项目
+  //      并跳过漂移对账，避免"自己主动切"下一轮被 (b) 误报成"被并行 session 切走"。并行 session
+  //      不受影响（它本轮没发 PROJECT_SWITCH，照常走 (b) 告警）。
   if (hookSessionId) {
     try {
       const pinFile = join(projectRoot, '.claude', `.session-project-${hookSessionId}`);
-      const projects = listProjects();
-      const cur = readCurrentProject(projects); // docs 链当前指向
-      let pin = null;
-      try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
+      const selfSwitchTo = (decision && decision.decision === 'PROJECT_SWITCH' && decision.project) ? decision.project : null;
+      if (selfSwitchTo) {
+        try { writeFileSync(pinFile, selfSwitchTo); } catch {}
+        try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch {} // 自切即认领，继承态清除
+        try { unlinkSync(join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`)); } catch {} // 清可能残留的漂移计数
+      } else {
+        const projects = listProjects();
+        const cur = readCurrentProject(projects); // docs 链当前指向
+        let pin = null;
+        try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
 
-      const inheritFile = join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`);
-      const inherited = existsSync(inheritFile); // session-restore 只在真保留态（活跃并行）写此标记
-      if (cur && !pin) {
-        // 区分"真继承"（有 session-restore 写的标记）vs"self-switch"（本 session 自己 switch，无标记）
-        // ——只对真继承提示，避免单 session 正常流程 Msg2 的假阳性 + 多余确认（终验独立核验实证）。
-        // 无论哪种都写 pin。
-        if (inherited) {
-          hints.push(`[route-guard] 🔗 本 session 继承了激活项目「${cur}」（由并行 session 保留）。若你要做的是别的项目，请显式 ./scripts/project.sh switch <项目>；确认就是它则无需操作。`);
-          try { unlinkSync(inheritFile); } catch {} // 一次性，读后删
+        const inheritFile = join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`);
+        const inherited = existsSync(inheritFile); // session-restore 只在真保留态（活跃并行）写此标记
+        if (cur && !pin) {
+          // 区分"真继承"（有 session-restore 写的标记）vs"self-switch"（本 session 自己 switch，无标记）
+          // ——只对真继承提示，避免单 session 正常流程 Msg2 的假阳性 + 多余确认（终验独立核验实证）。
+          // 无论哪种都写 pin。
+          if (inherited) {
+            hints.push(`[route-guard] 🔗 本 session 当前激活项目「${cur}」（并行 session 保留）。命名即切换已生效：你一提别的项目名我就自动切过去，无需手动 switch。`);
+            try { unlinkSync(inheritFile); } catch {} // 一次性，读后删
+          }
+          try { writeFileSync(pinFile, cur); } catch {}
+        } else if (cur && pin && cur !== pin) {
+          // 漂移：本 session 认过 pin，但 docs 被别的 session 切走了 → 提示 N 次后自愈收敛（R7-①）
+          const nagFile = join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`);
+          let nag = 0;
+          try { nag = parseInt(readFileSync(nagFile, 'utf8').trim()) || 0; } catch {}
+          if (nag < 3) {
+            hints.push(`[route-guard] ⚠️ 本 session 原在项目「${pin}」，当前激活已被切到「${cur}」（第 ${nag + 1}/3 次提醒）。如非预期请 switch 回「${pin}」。`);
+            try { writeFileSync(nagFile, String(nag + 1)); } catch {}
+          } else {
+            // 收敛：连续提醒 3 次未纠正 → 接受新值为本 session pin，停止刷屏
+            try { writeFileSync(pinFile, cur); unlinkSync(nagFile); } catch {}
+          }
+        } else if (cur && pin && cur === pin) {
+          // 一致：刷新 pin mtime（供 SessionEnd/GC 判活）
+          try { writeFileSync(pinFile, cur); } catch {}
         }
-        try { writeFileSync(pinFile, cur); } catch {}
-      } else if (cur && pin && cur !== pin) {
-        // 漂移：本 session 认过 pin，但 docs 被切走了 → 提示 N 次后自愈收敛（R7-①）
-        const nagFile = join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`);
-        let nag = 0;
-        try { nag = parseInt(readFileSync(nagFile, 'utf8').trim()) || 0; } catch {}
-        if (nag < 3) {
-          hints.push(`[route-guard] ⚠️ 本 session 原在项目「${pin}」，当前激活已被切到「${cur}」（第 ${nag + 1}/3 次提醒）。如非预期请 switch 回「${pin}」。`);
-          try { writeFileSync(nagFile, String(nag + 1)); } catch {}
-        } else {
-          // 收敛：连续提醒 3 次未纠正 → 接受新值为本 session pin，停止刷屏
-          try { writeFileSync(pinFile, cur); unlinkSync(nagFile); } catch {}
-        }
-      } else if (cur && pin && cur === pin) {
-        // 一致：刷新 pin mtime（供 SessionEnd/GC 判活）
-        try { writeFileSync(pinFile, cur); } catch {}
       }
     } catch {}
   }

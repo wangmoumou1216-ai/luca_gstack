@@ -37,8 +37,14 @@ Core facts:
   clears the three project symlinks on SessionStart only when `source === 'startup'` AND no active
   parallel session is detected (other-session counter/transcript mtime < 15min) AND
   `SESSION_RESTORE_ALWAYS_CLEAR` is unset; a dangling link is cleared unconditionally. When the link
-  is preserved, the session "inherits" the active project — route-guard warns on the first message;
-  do not silently start work under an inherited project without confirming it is the intended one.
+  is preserved, the session "inherits" the active project — route-guard notes it on the first message.
+  Name-to-switch (2026-07-06): naming an existing project (or semantically describing another/new
+  project) makes the main agent switch/create decisively without asking (a new project detaches the
+  current one). Only confirm once when the message points at no project yet you must do real work
+  under the never-confirmed inherited project. The active project is still a global shared symlink
+  (lightweight fix, not per-session isolation): switching overwrites a parallel session's pointer, but
+  no longer silently — the switched-away session gets a route-guard drift warning next turn and a
+  post-edit "may write to wrong project" warning on any docs/ write.
 - Long-term memory: `CONTEXT.md`.
 - Claude workflow state: `.claude/workflow-state.yaml`, which must be a symlink to the active
   project's `/Users/luca/Desktop/项目/<project>/.luca/workflow-state.yaml`.
@@ -436,6 +442,12 @@ Layered routing order:
 
 1. **Project context gate.** If the user says "老项目", "已有项目", "继续项目", or names an
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
+   Name-to-switch + semantic self-judgment (2026-07-06): project attribution is a **semantic** judgment,
+   not keyword-matching — even when route-guard emits STOP, act decisively on what the language means:
+   naming/implying an existing project → `project.sh switch` immediately (no confirm); explicitly a new
+   project → `project.sh new {name}` (detaches current) immediately; a big new requirement you judge to
+   be a new project but the user did not explicitly say so → one-line confirm, then create; a new
+   requirement inside the current project → stay. Only the self-judged-new-project case confirms.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6, keyword-approximation only),
    or `PLAN CHECK` (a skill in the `HEAVY_ORCHESTRATOR_SKILLS` extension point was hit — **empty by
    default in the mother repo** as of 2026-07-04: deepresearch/ux-research/figma-demo/auto all rely on
