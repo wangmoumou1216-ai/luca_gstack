@@ -47,6 +47,7 @@ priority:                              # type=open_question 时本段可省略
     emphasis_level: low | medium | high
     repetition_count: 0
     explicitly_flagged_as_priority: false
+    requester_role: null                 # 提出者角色（客户/销售/产品/内部脑爆），无则 null；triage Phase 1 计算并在 GATE-1 呈现，此处为其落盘位
   moscow: must | should | could | wont
   human_decision: null                 # 人类卡点裁定（GATE-1），null = 未裁定
   decided_by: null
