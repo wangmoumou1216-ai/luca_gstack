@@ -5,6 +5,13 @@
 > 方法：5 维度并行 find（路径完整性 / 运行时冲突 / 配置冲突 / skill文档冲突 / muse独有自洽）
 > → 每条 finding 独立对抗式 verify（重跑证据、试图证伪）。33 agent，27 原始 → 24 存活、3 证伪。
 
+> **更新 2026-07-06（同日）**：已执行方向 A 合并母版 `upstream/main`（merge commit `e54e9e5`）。
+> 下方"留待合并母版时处理"的 5 项（D2-1 / D3-4 / D3-5 / D2-3 / D2-4）已全部收口——route-guard
+> 冲突按 D2-1 解法解决（取母版 env 驱动 HEAVY + plan-agent.md hint）+ `.claude/settings.json` 注入
+> `ROUTE_GUARD_HEAVY_SKILLS=auto,muse-loop-orchestrate`，muse-loop/auto 保住 PLAN_CHECK（已验证）。
+> muse 现 **0 落后 main**；test-hooks ALL PASS、verify.sh 48/0；9 个 fork 修复全部存活。
+> 可回滚锚点：`muse-backup-pre-merge-20260706`。
+
 ## 结论
 
 **换母版这个动作本身没弄坏任何东西**——`git remote set-url` 只改 `.git/config`，
