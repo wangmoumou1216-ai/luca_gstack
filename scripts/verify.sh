@@ -72,6 +72,9 @@ check C8 "session-sync.mjs 语法合法"     "node --check .claude/hooks/session
 check C9 "CLAUDE.md 含 Skill 调用规则"  "grep -q 'Skill 调用规则' CLAUDE.md"
 check C10 "CLAUDE.md 含 /auto 入口"     "grep -q '/auto' CLAUDE.md"
 check C11 "Claude hooks 运行时副作用测试通过" "npm run check:hooks --silent"
+check C12 "settings.json 有 PreToolUse hook（会话级项目隔离）" "grep -q 'PreToolUse' .claude/settings.json"
+check C13 "project-scope-guard.mjs 语法合法" "node --check .claude/hooks/project-scope-guard.mjs"
+check C14 "会话级项目隔离回归通过（重定向/deny/跨session/fail-open）" "npm run test:project-scope --silent"
 echo ""
 
 echo "[ Skill 体系 ]"

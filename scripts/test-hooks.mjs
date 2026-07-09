@@ -673,7 +673,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）');
 }
 
-// STICKY-008：真继承（有 session-restore 写的继承标记）→ 首条消息提示 + 删标记 + 写 pin
+// STICKY-008（方案A 2026-07-08）：继承态（有 session-restore 写的标记）+ 首条消息未点名项目
+// → 提示"仅供参考/尚未绑定" + 删标记 + **不写 pin**（A 下继承≠绑定，绝不静默 adopt 软链目标）
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-inherited-sess-I'), 'projA'); // session-restore 保留态写的
@@ -681,22 +682,32 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-I', prompt: '随便说点什么' }),
   });
-  assert.match(r.stdout, /继承了激活项目「projA」/, '真继承态首条消息应提示');
-  assert.ok(existsSync(join(root, '.claude', '.session-project-sess-I')), '应写 pin');
+  assert.match(r.stdout, /全局激活项目「projA」仅供参考/, '继承态首条消息应提示"仅供参考"');
+  assert.match(r.stdout, /尚未绑定/, '应说明本 session 尚未绑定项目');
+  assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-I')), 'A 下继承态不写 pin（未绑定）');
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-I')), '继承标记应一次性读后删');
-  console.log('PASS STICKY-008 真继承（有标记）→ 提示 + 删标记 + 写 pin');
+  console.log('PASS STICKY-008 继承态未点名 → 提示"仅供参考/未绑定" + 删标记 + 不写 pin');
 }
 
-// STICKY-008b：self-switch（无继承标记）→ 静默写 pin，不误报"由并行 session 保留"（终验核验修）
+// STICKY-008b（方案A）：pin 只在"显式声明/确认项目"时写，永不从软链 auto-adopt（跨 session 污染根因）
 {
-  const root = makeFixture({ activeProject: 'projA' }); // docs→projA 但无继承标记
-  const r = runNode(routeGuardHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
-    input: JSON.stringify({ session_id: 'sess-S', prompt: '随便说点什么' }),
+  // (i) 无标记 + 首条消息点名当前项目 projA → 静默写 pin=projA（确认即绑定）
+  const rootA = makeFixture({ activeProject: 'projA' });
+  runNode(routeGuardHook, rootA, {
+    env: { CLAUDE_PROJECT_DIR: rootA, ROUTE_GUARD_PROJECTS: 'projA' },
+    input: JSON.stringify({ session_id: 'sess-Sa', prompt: '继续 projA 的列表' }),
   });
-  assert.doesNotMatch(r.stdout, /继承了激活项目/, 'self-switch 不得误报继承');
-  assert.ok(existsSync(join(root, '.claude', '.session-project-sess-S')), 'self-switch 仍应静默写 pin');
-  console.log('PASS STICKY-008b self-switch 无标记 → 静默写 pin，不误报继承');
+  assert.ok(existsSync(join(rootA, '.claude', '.session-project-sess-Sa')), '点名当前项目应写 pin');
+
+  // (ii) ★no-adopt★ 无标记 + 不点名任何项目（cur=projA 仍在软链）→ 不写 pin（保持未绑定）
+  const rootB = makeFixture({ activeProject: 'projA' });
+  const rB = runNode(routeGuardHook, rootB, {
+    env: { CLAUDE_PROJECT_DIR: rootB, ROUTE_GUARD_PROJECTS: 'projA' },
+    input: JSON.stringify({ session_id: 'sess-Sb', prompt: '随便说点什么' }),
+  });
+  assert.ok(!existsSync(join(rootB, '.claude', '.session-project-sess-Sb')), 'A 下不再从软链 auto-adopt pin');
+  assert.doesNotMatch(rB.stdout, /继承了激活项目|并行 session 保留/, '不得残留旧继承措辞');
+  console.log('PASS STICKY-008b pin 仅在点名/确认项目时写，永不从软链 auto-adopt');
 }
 
 // STICKY-009：SessionEnd 清理本 sid 计数 + pin（R H2 僵尸窗口归零）
@@ -715,7 +726,9 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-009 SessionEnd 只清本 sid 状态');
 }
 
-// STICKY-010：post-edit pin-vs-docs 警告（R7③ 自治运行盲区）
+// STICKY-010（方案A 2026-07-08）：docs/ 落点已由 PreToolUse project-scope-guard 重定向到 pin 项目，
+// post-edit 原先的"pin≠docs 软链 → 可能落错项目"事后告警失去意义（A 下 pin≠软链是常态、写入落 pin），
+// 已移除 → 断言 post-edit 不再吐该告警（真兜底见 test-project-scope-guard.mjs）。
 {
   const root = makeFixture({ activeProject: 'projB' }); // docs → projB
   writeFileSync(join(root, '.claude', '.session-project-auto'), 'projA'); // pin=projA，与 docs 不符
@@ -723,8 +736,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root },
     input: JSON.stringify({ session_id: 'auto', tool_name: 'Write', tool_input: { file_path: join(root, 'docs', 'x.md') } }),
   });
-  assert.match(r.stdout, /pin 的项目是「projA」，但 docs\/ 当前指向「projB」/, 'pin≠docs 写 docs/ 应告警');
-  console.log('PASS STICKY-010 post-edit pin-vs-docs 自治盲区告警');
+  assert.doesNotMatch(r.stdout, /可能落错项目|pin 的项目是/, 'A 下 post-edit 不再事后告警 pin≠docs（兜底前移到 PreToolUse）');
+  console.log('PASS STICKY-010 post-edit 不再吐 pin≠docs 事后告警（A 下由重定向兜底）');
 }
 
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');
