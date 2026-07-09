@@ -41,7 +41,7 @@ try { raw = readFileSync(0, 'utf8'); } catch { passThrough(); }
 let data = {};
 try { data = JSON.parse(raw || '{}'); } catch { passThrough(); }
 
-const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
+const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
 const toolName = data?.tool_name || '';
 const input = data?.tool_input || {};
 
