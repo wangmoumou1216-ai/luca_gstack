@@ -29,6 +29,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit|NotebookEdit|Read|Grep|Glob|Bash)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "^(Write|Edit|MultiEdit|NotebookEdit|Bash|Task|Agent|WebFetch|WebSearch|mcp__.*)$",
