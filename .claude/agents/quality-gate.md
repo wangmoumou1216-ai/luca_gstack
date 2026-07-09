@@ -211,14 +211,14 @@ fx_count=$(grep -c "\-\-fx-" "$output_path")
 **Free Task Mode（有 phase_id，无 skill-name）：**
 ```markdown
 ## Quality Gate: Phase <phase_id>
-Status: PASS | FAIL | CONDITIONAL_PASS
-Score: <N>/10
+Status: PASS | FAIL | CONDITIONAL_PASS（通过率 <pass>/<total>）
 
 ### Findings
 - [PASS] <断言 ID>：<说明>
 - [FAIL] <断言 ID>：<具体问题>
   → 建议：<修复建议>
 - [WARN] <断言 ID>：<不阻塞但需注意的问题>
+- [UNKNOWN] <criteria ID>：<judge 无法判定的原因>（产出质量 criteria 允许 UNKNOWN，不许硬判）
 
 ### Recommendation
 <PASS: 可继续 | FAIL: 必须修复 | CONDITIONAL_PASS: 记录后可继续>
@@ -227,21 +227,26 @@ Score: <N>/10
 **Skill Mode（有 skill-name，无 phase_id）：**
 ```markdown
 ## Quality Gate: <skill-name>
-Status: PASS | FAIL | CONDITIONAL_PASS
-Score: <N>/10
+Status: PASS | FAIL | CONDITIONAL_PASS（通过率 <pass>/<total>）
 
 ### Findings
-- [PASS] 完整性：<说明>
-- [PASS] 约束合规：<说明>
+- [PASS] 完整性：<说明>（附证据：引用/行号/命令输出）
+- [PASS] 约束合规：<说明>（附证据）
 - [FAIL] <维度>：<具体问题>
   → 建议：<修复建议>
 - [WARN] <维度>：<不阻塞但需注意的问题>
+- [UNKNOWN] <维度>：<无法判定的原因>（合法，不许硬判）
 
 ### Recommendation
 <PASS: 可继续 | FAIL: 必须修复 | CONDITIONAL_PASS: 记录后可继续>
 ```
 
 **报告硬约束：≤500 tokens。** 只报告事实和建议，不复述 skill 内容。
+**评分口径（2026-07-09 E5）：** 每个检查维度即一条 criterion——逐条二元判定 + 附证据，
+总判只报**通过率**（如 `PASS (5/6)`）；**无 rubric 的 `Score: N/10` 整体主观分已废止**
+（全仓从无 10 分制标尺定义，主观分与客观覆盖率分混用曾致口径不清）。方法论见
+`.claude/skill-os/eval-methodology.md`；判定结果同步进该 skill handoff 的 `criteria:` 块
+（handoff-protocol v3.2）。
 
 ---
 

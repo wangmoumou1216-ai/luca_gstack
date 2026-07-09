@@ -32,6 +32,11 @@ docs/handoff/YYYY-MM-DD-<topic>-<skill-name>-handoff.md
 topic: <topic-slug>
 scene: <A/B/C/D>
 completed_at: <ISO timestamp>
+gate_result: PASS | FAIL | CONDITIONAL_PASS
+criteria:
+  - "[C1] <二元判定句> → PASS（证据: <引用/行号/输出>）"
+  - "[C2] <二元判定句> → FAIL（证据: ...）"
+  - "[C3] <二元判定句> → UNKNOWN（原因: ...）"
 
 ## 决策（做了什么）
 - [D-001] <一句话决策> | 理由：<一句话> | 否决：<被否决的方向> | 状态：PROPOSED
@@ -68,6 +73,20 @@ completed_at: <ISO timestamp>
 - 范式：<A/B/C/D/无>
 - 影响的状态：<列出受影响的 AI 专有状态>
 ```
+
+## 质量评估块（gate_result + criteria，2026-07-09 E1）
+
+`gate_result` 不再是孤立单值——**新写的 handoff 必须带 `criteria:` 逐条判定块**（存量不回溯）：
+
+- **3-7 条**，每条是可 true/false 判定的一句话，绑一个真实 failure mode；
+- 每条**附证据**（引用/行号/命令输出），judge 不确定时判 `UNKNOWN`（合法，不许硬判）；
+- `gate_result` 总判可附通过率（如 `PASS (5/6)`）；
+- criteria 从哪来、grader 怎么选（code / llm-judge / human）：见
+  `.claude/skill-os/eval-methodology.md`（方法论参考；触发保证在本协议 + check-quality-gates）。
+
+这是评估体系的**主绑定点**：handoff 是重型 skill 完成的唯一强制产物（workflow 必写 +
+standalone 重型必写，见「写入时机/豁免规则」），`scripts/check-quality-gates.mjs`
+（verify.sh S14 / CI）对新 handoff 校验 criteria 存在性（WARN 起步）。
 
 ## 为什么 ≤2000 tokens？
 
@@ -131,6 +150,8 @@ check-quality-gates 按 handoff 校验 `gate_result` 而假红。
 
 ## 变更日志
 
+- v3.2 (2026-07-09): gate_result 扩展为必带 criteria 逐条判定块（评估主绑定点，final-plan E1；
+  方法论见 skill-os/eval-methodology.md；存量 handoff 不回溯）
 - v3.1 (2026-07-04): 补 Checkpoint 格式定义（auto/manual 两种），明确与 handoff 的校验边界
 - v3.0 (2026-05-08): 首次创建，作为 Context 存活工程的核心协议
 
