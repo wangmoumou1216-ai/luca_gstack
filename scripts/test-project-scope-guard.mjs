@@ -135,5 +135,36 @@ check('no session_id → treated as no-pin (docs denied)', () => {
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
 });
 
+// 13. 放宽（#2）：无 pin READ docs/ → pass-through（纯对话/审计可读当前项目 docs，跟软链）
+check('no-pin Read docs/ → pass-through (relaxed read)', () => {
+  const env = makeEnv();
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: 'docs/PROGRESS.md' } });
+  assert.equal(o, null, '无 pin 读类应放行');
+});
+
+// 14. 放宽仅限读：无 pin Grep path=docs → pass-through；但无 pin Write docs → 仍 deny（不变）
+check('no-pin Grep path=docs → pass-through; Write still deny', () => {
+  const env = makeEnv();
+  const g = run(env, { session_id: 'NP', tool_name: 'Grep', tool_input: { pattern: 'x', path: 'docs' } });
+  assert.equal(g, null, '无 pin Grep 应放行');
+  const w = run(env, { session_id: 'NP', tool_name: 'Write', tool_input: { file_path: 'docs/x.md', content: 'x' } });
+  assert.equal(w.hookSpecificOutput.permissionDecision, 'deny', '无 pin 写仍 deny');
+});
+
+// 15. 收紧（#4）：project.sh switch 出现在 echo 字符串里 → 不误置 pin
+check('project.sh switch inside echo string → NOT claimed', () => {
+  const env = makeEnv();
+  run(env, { session_id: 'E', tool_name: 'Bash', tool_input: { command: 'echo "run ./scripts/project.sh switch mobile-list"' } });
+  assert.ok(!existsSync(join(env.gstack, '.claude', '.session-project-E')), 'echo 里的 project.sh 不得置 pin');
+});
+
+// 16. 收紧后真调用仍认领：命令段起始位（含 && 后一段）的 project.sh switch → 置 pin
+check('real project.sh switch (after &&) still claims pin', () => {
+  const env = makeEnv();
+  run(env, { session_id: 'R', tool_name: 'Bash', tool_input: { command: 'echo start && ./scripts/project.sh switch mobile-list' } });
+  const pin = readFileSync(join(env.gstack, '.claude', '.session-project-R'), 'utf8').trim();
+  assert.equal(pin, 'mobile-list');
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
