@@ -1,7 +1,7 @@
 # muse-loop · 隔离架构与加法纪律（决策文档）
 
 > 本目录 `muse-loop/` 及下述脚手架是 **muse fork 专属新增**，只落 fork、绝不回污母版 luca_gstack。
-> 母版 = GitHub `wangmoumou1216-ai/luca_gstack`（`upstream` 远程，只读升级源；2026-07-06 从本地 clone 切到 GitHub 云端）；本 fork = `~/Desktop/项目/muse/gstack`（muse 分支）。本地 `~/Desktop/luca_gstack` clone 仍在，仅作可选验证副本。
+> 母版 = GitHub `wangmoumou1216-ai/luca_gstack`（`upstream` 远程，只读升级源；2026-07-06 从本地 clone 切到 GitHub 云端）；本 fork = `~/Desktop/项目/muse/lucagstack`（muse 分支）。本地 `~/Desktop/luca_gstack` clone 仍在，仅作可选验证副本。
 
 ## 隔离 + 继承机制（已落地）
 - **隔离**：本 fork 是母版的独立 git 克隆。muse app 内嵌 claude 的 cwd = 本 fork，所有改动物理上到不了母版。

@@ -11,7 +11,7 @@
 
   安装（你自己执行，本框架不自动 load 系统级任务）：
     ⚠️ 下方 ProgramArguments 的 `cd` 路径硬编码为母版 /Users/luca/Desktop/luca_gstack。
-       安装前确认它指向你要治理的仓库：本 fork 根是 ~/Desktop/项目/muse/gstack，默认 SessionStart
+       安装前确认它指向你要治理的仓库：本 fork 根是 ~/Desktop/项目/muse/lucagstack，默认 SessionStart
        已在 fork 根治理 fork 的 memory；本 launchd 若保持母版路径则治理的是母版那套 memory
        （记忆层拓扑见 muse-loop/ARCHITECTURE.md，按需自行改这一行，本框架不替你决定）。
     cp scripts/launchd/com.luca.memory-governance.plist ~/Library/LaunchAgents/
