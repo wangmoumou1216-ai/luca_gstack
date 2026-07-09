@@ -43,7 +43,7 @@ AskUserQuestion：
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成 HTML 原型
-   /figma-demo     → （备选）口述 + Figma → HTML 演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）口述 + Figma → HTML 演示 Demo
 8. /figma-layer    → 还原到 Figma
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
@@ -71,7 +71,7 @@ AskUserQuestion：
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成改版原型
-   /figma-demo     → （备选）基于 Figma 截图/链接和口述生成演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）基于 Figma 截图/链接和口述生成演示 Demo
 /brainstorm 可以直接用，不需要先跑 /idea。需求范围明确时可用 superpowers:brainstorming 替代。
 ```
 
@@ -92,7 +92,7 @@ AskUserQuestion：
 4. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）按评审清单逐条生成改版原型
-   /figma-demo     → （备选）基于 Figma 截图/链接和口述生成演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）基于 Figma 截图/链接和口述生成演示 Demo
 5. /figma-layer → 还原到 Figma
 从 /idea 开始？
 ```
@@ -118,7 +118,7 @@ AskUserQuestion：
 8. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认，含 Agent 专有状态 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成原型
-   /figma-demo     → （备选）口述 + Figma → Agent 化演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）口述 + Figma → Agent 化演示 Demo
 Agent 化设计的核心红线：用户必须始终能 看见 / 暂停 / 接管 / 撤销 AI 的动作。
 ```
 

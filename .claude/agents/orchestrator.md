@@ -204,6 +204,7 @@ Step 7  记录 eval（每个 skill 各记一条）
 | `ux-research` | `.claude/skills/office/ux-research/SKILL.md` |
 | `ux-brainstorm` | `.claude/skills/office/ux-brainstorm/SKILL.md` |
 | `design-brief` | `.claude/skills/office/design-brief/SKILL.md` |
+| `open-design` | `.claude/skills/office/open-design/SKILL.md` |
 | `html-prototype` | `.claude/skills/office/html-prototype/SKILL.md` |
 | `figma-demo` | `.claude/skills/office/figma-demo/SKILL.md` |
 | `figma-layer` | `.claude/skills/office/figma-layer/SKILL.md` |
@@ -247,9 +248,11 @@ Step 7  记录 eval（每个 skill 各记一条）
 ### 3.1 适用场景
 
 专用于 luca_gstack 设计工作流 skill 链路：
-`idea → brainstorm → ux-research → ux-brainstorm → design-brief → magicpath → figma-layer`
+`idea → brainstorm → ux-research → ux-brainstorm → design-brief → open-design → figma-layer`
 
-`html-prototype` 仅在 MagicPath 不可用、非 React/Canvas 场景或用户明确要求本地 HTML 时作为 fallback。
+`open-design` 是设计产出首选（optional-workflow-graph.yaml `design_output.primary`）；
+`magicpath` / `html-prototype` 仅在 OD daemon 不可达或用户明确要求本地 HTML 时按
+`design_output.fallback`（magicpath → html-prototype）降级。
 
 ### 3.2 启动流程
 
@@ -273,13 +276,15 @@ Step 6  执行技能循环（见 §3.4）
 | 信息量 | 详细需求文档 | 一句话需求 |
 
 ```
-Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → magicpath → figma-layer]
-Scene A 中复杂度 → [idea → brainstorm → design-brief → magicpath]
-Scene B 高复杂度 → [brainstorm → ux-audit → ux-research → ux-brainstorm → design-brief → magicpath]
-Scene B 低复杂度 → [ux-audit → design-brief → magicpath]
-Scene C            → [ux-audit → design-brief → magicpath → figma-layer]
+Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → open-design → figma-layer]
+Scene A 中复杂度 → [idea → brainstorm → design-brief → open-design]
+Scene B 高复杂度 → [brainstorm → ux-audit → ux-research → ux-brainstorm → design-brief → open-design]
+Scene B 低复杂度 → [ux-audit → design-brief → open-design]
+Scene C            → [ux-audit → design-brief → open-design → figma-layer]
 Scene D            → 全量路径（Agent化本身是高复杂度）
 ```
+
+OD daemon 不可达时按 optional-workflow-graph.yaml 各 scene 的 `fallback_paths` 降级（magicpath → html-prototype）。
 
 ### 3.4 Skill 执行循环
 

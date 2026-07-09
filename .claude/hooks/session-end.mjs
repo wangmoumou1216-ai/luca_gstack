@@ -15,7 +15,7 @@ try {
   let sid = '';
   try {
     const payload = JSON.parse(readFileSync(0, 'utf8') || '{}');
-    sid = String(payload.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
+    sid = String(payload.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
   } catch { }
   if (!sid) process.exit(0); // 无 sid 无从定位本 session 文件，安全退出（GC 会兜底）
 

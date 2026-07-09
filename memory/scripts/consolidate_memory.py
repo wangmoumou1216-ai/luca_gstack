@@ -4,7 +4,14 @@ import argparse
 import json
 import os
 import re
+import sys
 import tempfile
+from contextlib import contextmanager
+
+try:
+    import fcntl
+except ImportError:  # 非 POSIX 环境 fail-open（与 append_episode 同策略）
+    fcntl = None
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,6 +35,40 @@ EPISODIC_ARCHIVE = MEMORY_DIR / "episodic" / "archive"
 NEGATIVE_MARKERS = ("不得", "不能", "禁止", "不应", "must not", "cannot", "can't", "not", "never")
 POSITIVE_MARKERS = ("必须", "应当", "需要", "must", "should", "required")
 POLARITY_MARKERS = NEGATIVE_MARKERS + POSITIVE_MARKERS
+
+
+@contextmanager
+def episodic_index_lock():
+    """与 append_episode.index_lock 争同一把 .index.lock（ROOT 派生）：
+    串行化 index 的 read→rewrite 与并发追加（audit F2-03）。
+    fail-open：flock 不可用则无锁继续，绝不因加锁让治理崩。"""
+    fd = None
+    if fcntl is not None:
+        try:
+            lock = EPISODIC_INDEX.parent / ".index.lock"
+            lock.parent.mkdir(parents=True, exist_ok=True)
+            fd = os.open(str(lock), os.O_CREAT | os.O_RDWR, 0o644)
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        except OSError as e:
+            if fd is not None:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+                fd = None
+            sys.stderr.write(f"[consolidate] ⚠️ index lock 不可用 ({e})；无锁继续\n")
+    try:
+        yield
+    finally:
+        if fd is not None:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+            try:
+                os.close(fd)
+            except OSError:
+                pass
 
 
 def atomic_write_text(path: Path, text: str) -> None:
@@ -458,10 +499,16 @@ def sync_claude_fallback(candidate: dict) -> None:
     allow = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
     allowed = {ln.split("#", 1)[0].strip() for ln in allow.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()} if allow.exists() else set()
     # 非白名单(宪法级/红线)事实不镜像进每-session SF；只留 promoted-facts.yaml 走 search_memory
-    if marker not in content or not fact_id or fact_id in content or fact_id not in allowed:
+    if not fact_id or fact_id not in allowed:
+        return  # by design：非白名单静默跳过是正确行为
+    if marker not in content:
+        # 应镜像但镜像通道断了 → 不再静默（audit F2-08）
+        sys.stderr.write(f"[consolidate] ⚠️ CLAUDE.md 缺 '> 维护规则：' marker，白名单事实 {fact_id} 无法镜像进 SF 节\n")
         return
+    if fact_id in content:
+        return  # 已在 CLAUDE.md（注意：全文匹配，prose 引用会误判已镜像——audit F2-08，反向校验挂 BACKLOG）
     new_line = f"- [{fact_id} / {candidate.get('domain', '')}] {candidate.get('fact', '')}\n"
-    claude_md.write_text(content.replace(marker, new_line + "\n" + marker), encoding="utf-8")
+    atomic_write_text(claude_md, content.replace(marker, new_line + "\n" + marker))
 
 
 def promoted_ids(promoted: list[dict]) -> set[str]:
@@ -482,12 +529,12 @@ def append_promoted(candidate: dict) -> None:
     entry = append_optional_metadata(entry, candidate)
     PROMOTED.parent.mkdir(parents=True, exist_ok=True)
     if not PROMOTED.exists():
-        PROMOTED.write_text(f"version: 1\nfacts:\n{entry}", encoding="utf-8")
+        atomic_write_text(PROMOTED, f"version: 1\nfacts:\n{entry}")
     else:
         content = PROMOTED.read_text(encoding="utf-8")
         if "facts:" not in content:
             content = content.rstrip() + "\nfacts:\n"
-        PROMOTED.write_text(content.rstrip() + "\n" + entry, encoding="utf-8")
+        atomic_write_text(PROMOTED, content.rstrip() + "\n" + entry)
     sync_claude_fallback(candidate)
 
 
@@ -586,11 +633,26 @@ def archive_noisy_episode_rows(episode_rows: list[tuple[dict, str]], noisy: list
             remaining.append(raw)
     if not dry_run and archived:
         EPISODIC_ARCHIVE.mkdir(parents=True, exist_ok=True)
-        for year, lines in by_year.items():
-            with (EPISODIC_ARCHIVE / f"noisy-{year}.jsonl").open("a", encoding="utf-8") as handle:
-                for line in lines:
-                    handle.write(line.rstrip() + "\n")
-        atomic_write_text(EPISODIC_INDEX, ("\n".join(remaining) + "\n") if remaining else "")
+        # 与 append_episode 争同一把 .index.lock：锁内**重读**→归档→重写。
+        # 无锁的 stale read→rewrite 会吞掉并行 Stop 链路刚追加的行（audit F2-03）。
+        with episodic_index_lock():
+            fresh_rows = read_jsonl_with_raw(EPISODIC_INDEX)
+            archived = []
+            remaining = []
+            by_year = defaultdict(list)
+            for episode, raw in fresh_rows:
+                eid = str(episode.get("id", ""))
+                if eid in noisy_ids:
+                    archived.append(eid)
+                    parsed = parse_datetime(episode.get("date", "")) or datetime.now(timezone.utc)
+                    by_year[parsed.strftime("%Y")].append(raw)
+                else:
+                    remaining.append(raw)
+            for year, lines in by_year.items():
+                with (EPISODIC_ARCHIVE / f"noisy-{year}.jsonl").open("a", encoding="utf-8") as handle:
+                    for line in lines:
+                        handle.write(line.rstrip() + "\n")
+            atomic_write_text(EPISODIC_INDEX, ("\n".join(remaining) + "\n") if remaining else "")
     return archived
 
 

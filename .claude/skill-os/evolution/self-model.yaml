@@ -31,7 +31,7 @@ surface:
     install_targets: ["~/.claude/skills (全局)", ".claude/skills/office (路由)"]
     external_help: 可安装的设计/工程/验证 skill
   hooks:
-    files: [session-restore.mjs, route-guard.mjs, post-edit.mjs, session-sync.mjs]
+    files: [session-restore.mjs, route-guard.mjs, post-edit.mjs, session-sync.mjs, session-end.mjs, project-scope-guard.mjs]
     registry: .claude/settings.json
     external_help: hook 模式 / 平台新 hook 事件
   routing:
@@ -53,7 +53,7 @@ surface:
     external_help: 多 agent 编排 / 状态机 / 对抗校验模式
   testing:
     suite: scripts/verify.sh
-    npm: [check:hooks, test:routes, test:memory, check:routing-map, check:quality-gates, check:coding-discipline, check:project-links, check:memory-health]
+    npm: [check:hooks, test:routes, test:memory, check:routing-map, check:quality-gates, check:coding-discipline, check:project-links, check:memory-health, check:self-model]
     external_help: 行为级 eval/A-B、契约测试、property-based
 
 # 不在磁盘上、无法由生成器推导的既有能力（claude-code 内置 + persona）

@@ -198,7 +198,9 @@ def rotate_index(today: str) -> None:
     with archive_path.open("a", encoding="utf-8") as f:
         for line in overflow:
             f.write(line + "\n")
-    INDEX.write_text("\n".join(keep) + "\n", encoding="utf-8")
+    # 崩溃安全（audit F2-04）：rotate 重写走原子替换，truncate→write 中断不再丢整份 index
+    from consolidate_memory import atomic_write_text
+    atomic_write_text(INDEX, "\n".join(keep) + "\n")
 
 
 if __name__ == "__main__":

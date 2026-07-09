@@ -277,7 +277,9 @@ Use `.claude/skill-os/input-modes.yaml` to decide whether a skill is running in 
   artifacts. Validate handoff gates from `.claude/skill-os/optional-workflow-graph.yaml`.
 - Workflow gates are advisory unless the user chose workflow mode. Quality gates remain mandatory in both modes.
 - Do not silently force `/idea -> /brainstorm -> ...` when the user directly asks for
-  `/ux-research`, `/ux-brainstorm`, `/design-brief`, `/open-design`, `/html-prototype`, or `/figma-demo`.
+  `/ux-research`, `/ux-brainstorm`, `/design-brief`, `/open-design`, or `/html-prototype`.
+  (`figma-demo` is hidden since 2026-07-03 — no slash entry; reachable only via internal
+  Skill-tool dispatch.)
 
 ### 4.7 Hermes-Style Growth
 
@@ -467,8 +469,10 @@ Layered routing order:
    source. Do not duplicate its full trigger table here.
 5. **STOP / low confidence.** Ask one concise routing question before executing.
 
-Hidden skill semantics still require explicit user intent: `handoff-review`, `taste-review`,
-`redteam`, `retro`, and `fx-icon-search` are not proactive first-level routes.
+Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
+`design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`, `fx-icon-search`,
+`compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 12-item
+hidden/advanced roster as CLAUDE.md).
 
 For slash-command-like requests, read `.claude/commands/<command>.md` first. That command usually
 points to the exact skill file.
@@ -492,7 +496,8 @@ When generating or editing prototypes:
   magicpath/html-prototype only when the OD daemon is truly unreachable.
 - For `/html-prototype`, read `.claude/skills/office/html-prototype/SKILL.md`, then apply its
   dynamic reference protocol, current aesthetic rubric, and QA gate.
-- For `/figma-demo`, read `.claude/skills/office/figma-demo/SKILL.md`; its blueprint,
+- For `figma-demo` (hidden skill — no slash entry; reachable only via internal Skill-tool
+  dispatch), read `.claude/skills/office/figma-demo/SKILL.md`; its blueprint,
   mapping-proof, Builder/Assembly, and QA requirements override generic prototype generation flow.
 - Copy the correct template into `docs/prototype/YYYY-MM-DD-<topic>/index.html`.
 - Copy required assets into the prototype directory when the page must be portable.
@@ -507,7 +512,7 @@ When generating or editing prototypes:
 - For `/html-prototype`, run
   `node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs <prototype-dir>/index.html <design-brief.md>` when Node is
   available.
-- For `/figma-demo`, run
+- For `figma-demo`, run
   `node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs <prototype-dir>/index.html --mode=figma-demo` when Node is
   available.
 - Record pass/fail and residual risks.
