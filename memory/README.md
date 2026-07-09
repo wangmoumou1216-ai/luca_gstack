@@ -1,14 +1,15 @@
-# luca_gstack 三层记忆系统
+# luca_gstack 记忆系统
 
 渐进式记忆架构，模仿 Hermes 自成长机制的 Observe → Evaluate → Commit 管道。
 
-## 三层架构
+## 分层架构
 
 | 层 | 目录 | 功能 | 管道 |
 |---|---|---|---|
 | Episodic | `episodic/` | 会话事件记录 | append-first → index 结构化 |
 | Semantic | `semantic/` | CRM/FxUI 领域知识 | Hermes-lite：候选 → 评审 → 晋升 |
 | Procedural | ~~已并入 Semantic domain:skill-rule~~ | Skill 操作模式 | 读取 semantic layer 的 domain:skill-rule |
+| Working | 每项目 `.luca/workflow-state.yaml` + `docs/PROGRESS.md` + `.luca/current-topic.txt` | session/任务内短期状态（流程节点、实时进度、当前主题） | 项目本地，随 skill/任务写入；**不治理、不进检索、不跨项目**（2026-07-09 命名收口，仅概念命名——IN_PROGRESS 恢复路径维持 BACKLOG #18 现状） |
 
 ## 懒加载（节省 context）
 
