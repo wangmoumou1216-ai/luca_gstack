@@ -107,22 +107,32 @@ function rewriteBash(cmd, pin) {
   return { changed: next !== cmd, cmd: next, hasScoped };
 }
 
+// 只把"命令段起始位"的 project.sh switch/new 当真调用 —— 防 echo/heredoc 里的字符串误置 pin。
+// 按 \n ; & | 切段，每段去掉前导 bash/sh，要求以（可选路径）project.sh 开头才算数
+// （`echo "...project.sh switch x"` 之类整段以 echo 开头，不再误触）。
+function detectProjectSwitch(cmd) {
+  for (let seg of String(cmd).split(/[\n;&|]+/)) {
+    seg = seg.trim().replace(/^(?:bash|sh)\s+/, '');
+    const m = seg.match(/^\.?\/?(?:[\w.一-龥/-]*\/)?project\.sh\s+(?:switch|new)\s+["']?([^\s"'&;|]+)/);
+    if (m) { const p = m[1].replace(/[^\w一-龥.-]/g, '').slice(0, 64); if (p) return p; }
+  }
+  return null;
+}
+
 function main() {
   let pin = readPin();
 
-  // Bash 先处理，且优先识别显式 project.sh switch/new —— 直接 CLI 切换（! 命令）route-guard 看不到，
+  // Bash 先处理，且优先识别命令位的 project.sh switch/new —— 直接 CLI 切换（! 命令）route-guard 看不到，
   // 在此认领 pin，闭合"CLI 切换后 pin 不更新"的洞。识别后立即用新 pin 继续本命令的重写。
   if (toolName === 'Bash') {
     const cmd = String(input.command || '');
-    const m = cmd.match(/project\.sh\s+(switch|new)\s+["']?([^\s"'&;|]+)/);
-    if (m && sid) {
-      const proj = m[2].replace(/[^\w一-龥.-]/g, '').slice(0, 64);
-      if (proj) { try { writeFileSync(join(claudeDir, `.session-project-${sid}`), proj); } catch { } pin = proj; }
-    }
+    const claimed = detectProjectSwitch(cmd);
+    if (claimed && sid) { try { writeFileSync(join(claudeDir, `.session-project-${sid}`), claimed); } catch { } pin = claimed; }
     const r = rewriteBash(cmd, pin);
     if (r.hasScoped && !pin) {
+      // Bash 无 pin 一律 deny：shell 字符串里读/写难可靠区分，从严防写泄漏；纯读某项目 docs 请改用 Read 工具。
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: '本 session 未绑定任何项目，不能操作 docs/·workflow-state·current-topic。先 ./scripts/project.sh switch <项目>（或 new <项目>）声明本 session 在哪个项目工作；纯对话/框架任务无需碰这些路径。' } });
+        permissionDecisionReason: '本 session 未绑定任何项目，Bash 不能操作 docs/·workflow-state·current-topic。先 ./scripts/project.sh switch <项目>（或 new <项目>）声明；仅想读某项目 docs 可直接用 Read 工具（读类不绑定也放行）。' } });
     }
     if (r.changed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: r.cmd } } });
@@ -131,6 +141,8 @@ function main() {
   }
 
   // 文件类工具：精确重写 file_path / notebook_path / path
+  // 注：无 path 的 Grep/Glob（搜整个 gstack 树）会经 docs 软链搜到当前全局项目 —— 已知的读/搜索侧
+  //     局限（非写入损坏）；不在此拦（拦了会破坏"搜整个框架树"的正常用途）。记录于 CLAUDE.md 与回归说明。
   const pathField = toolName === 'NotebookEdit' ? 'notebook_path'
     : (toolName === 'Grep' || toolName === 'Glob') ? 'path'
     : 'file_path';
@@ -141,9 +153,12 @@ function main() {
   if (!c.scoped) passThrough(); // 非项目路径 → 放行（.claude/skills、memory、scripts、framework、任意文件）
 
   if (!c.redirected) {
-    // 项目作用域但本 session 无 pin → deny（绝不跟软链落到别人项目）
+    // 项目作用域但本 session 无 pin：读类工具（Read/Grep/Glob）放行 —— 纯对话/审计 session 可读当前
+    // 全局项目 docs（跟软链），摩擦更小；写类（Write/Edit/MultiEdit/NotebookEdit）仍 deny，绝不静默
+    // 把写落到别人项目。
+    if (/^(Read|Grep|Glob)$/.test(toolName)) passThrough();
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-      permissionDecisionReason: `本 session 未绑定任何项目，不能读写「${target}」。先 ./scripts/project.sh switch <项目>（或 new <项目>）声明本 session 在哪个项目工作；纯对话/框架任务无需碰 docs/。` } });
+      permissionDecisionReason: `本 session 未绑定任何项目，不能写「${target}」。先 ./scripts/project.sh switch <项目>（或 new <项目>）声明本 session 在哪个项目工作；纯对话/框架任务无需写 docs/。` } });
   }
 
   return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, [pathField]: c.redirected } } });
