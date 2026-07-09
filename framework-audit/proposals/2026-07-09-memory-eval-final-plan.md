@@ -4,7 +4,7 @@
 > 本文件自足：执行 session **只需读本文件**即可开工，不必重读 v1 提案或对话历史。
 > 调研档案（背景细节需要时才看）：`framework-audit/proposals/2026-07-09-memory-eval-architecture-proposal.md`（v1，已被本文件取代）。
 > 分两批执行，每批 ≤0.5 框架 session（月度 ≤2 次纯框架 session 软上限内）。
-> 执行状态：批次1 done (2026-07-09, commit 08e1fb2) ｜ 批次2 done (2026-07-09, 见后续 commit)
+> 执行状态：批次1 done (2026-07-09, commit 08e1fb2) ｜ 批次2 done (2026-07-09, commit 86827eb)
 > 执行注记：①经用户批准，两批在同一 session 连续执行（原"分两个 session"为预算建议非硬约束）；
 > ②E5 连带的 score 字段写入者实为 memory/scripts/record_eval.py（plan 笔误写作 collect_eval.py）；
 > ③E1 行为级验证已做（subagent 扮演 skill 完成时刻，产出真 FAIL/UNKNOWN 判定非模板）；
