@@ -18,13 +18,16 @@ memory-eval M1 已定案并执行：fork 4 条 union 迁入母版、fork 留 `re
 收口写入指向。本 session 写的 `never-switch-parallel-session-projects` 也已迁母版 canonical + 索引。
 **遗留**：harness auto-memory 实际注入面（`GLOBAL_MEMORY_DIR`）已指母版，与定案一致。
 
-### 3. 记忆单一权威 store（F5-02 / F5-03）— **采纳（原则）+ 待办（执行）**
+### 3. 记忆单一权威 store（F5-02 / F5-03）— **采纳（原则）+ 已执行（2026-07-09，commit 266b5b1）**
 **决策**：**母版 = 全部记忆层（episodic/semantic/person）的单一权威**。muse app 注入
 `MEMORY_ROOT=母版` 已让 fork session 的记忆读写落母版，实践上即单 store；三头分裂只在「裸 CLI 跑
 fork（无 MEMORY_ROOT）」时出现。
-**待办**（BACKLOG）：把 `memory/episodic/**`、`memory/semantic/**` 从 sync-upstream 的合并面排除
-（或标记 fork 工作区这些文件为 stale-snapshot 不写），根除 append-only jsonl 每次 merge 冲突。
-需谨慎（涉及 .gitignore / sync 脚本语义），留独立小任务。
+**执行（已落地 266b5b1）**：`.gitattributes` 给 append-only 流水标 `merge=ours`（sync-upstream 时
+保 fork 版、不与母版冲突）+ sync-upstream.sh 幂等注册 `merge.ours.driver=true`。**收窄范围**（评估
+发现决策原文「memory/semantic/** 整体」过宽会踩坑）：仅 `episodic/index.jsonl`、`episodic/archive/**`、
+`semantic/archive/**`（纯流水）设 merge=ours；策展文件 `promoted-facts.yaml`/`static-fallback-allowlist.txt`/
+README **不排除、仍正常继承母版**，避免 fork 静默漂移继承不到母版新晋升的框架事实。真实 3-way merge
+测试验证：流水保 fork 版（零冲突）、策展继承母版。未动 .gitignore（文件仍 git 追踪，备份安全）。
 
 ## 其余 20 项逐条
 
