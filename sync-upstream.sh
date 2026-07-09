@@ -10,6 +10,11 @@ cd "$(dirname "$0")"
 BRANCH="${1:-main}"        # 默认=main（audit 2026-07-07 F5-01：原默认 feat/memory-3way-taxonomy 已全量并入 main、落后 ~24 条，merge 恒 no-op 假报"已是最新"；GitHub 默认分支实为 main）
 export GIT_LFS_SKIP_SMUDGE=1                     # 母版配了 lfs 但无实际文件 → 跳过防挂
 
+# 记忆单一权威 store（2026-07-09）：注册 merge=ours 驱动，让 .gitattributes 标记的 append-only
+# 记忆流水（episodic index/archive、semantic archive）合并时保 fork 版、不与母版冲突。幂等。
+# 策展文件（promoted-facts/allowlist/README）不受影响，仍正常继承母版。
+git config merge.ours.driver true
+
 CUR="$(git rev-parse --abbrev-ref HEAD)"
 if [ "$CUR" != "muse" ]; then
   echo "⚠ 当前不在 muse 分支（在 $CUR）。先 git checkout muse 再同步。"; exit 1
