@@ -166,5 +166,18 @@ check('real project.sh switch (after &&) still claims pin', () => {
   assert.equal(pin, 'mobile-list');
 });
 
+// 17. ★回归★（sid 截断 bug，2026-07-09）：真实 36 字符 UUID sid。route-guard 用 slice(0,36)
+//     写 pin，本 hook 必须以同长度读到它。曾有 slice(0,32) 砍掉 UUID 末段 4 位 → 读不到 pin →
+//     误判"未绑定" → docs 写被 deny（架空命名即切换）。前面用例的短 sid（<32 字符）令
+//     slice(0,32)==slice(0,36) 掩盖了它，故此处必须用满 36 字符方能守住回归。
+check('REGRESSION: 36-char UUID sid pin is read, not truncated to 32', () => {
+  const uuid = 'aabbccdd-1122-4a55-9c66-778899aabbcc'; // 36 字符；第 33-36 位若被截掉即读不到 pin
+  const env = makeEnv({ pins: { [uuid]: 'muse' } });
+  const o = run(env, { session_id: uuid, tool_name: 'Write', tool_input: { file_path: 'docs/x.md', content: 'x' } });
+  assert.ok(o && o.hookSpecificOutput && o.hookSpecificOutput.updatedInput,
+    '36 字符 sid 的 pin 必须被读到并重定向；截断到 32 会读不到 → 误 deny（正是本次修复的 bug）');
+  assert.equal(o.hookSpecificOutput.updatedInput.file_path, abs(env, 'muse', 'docs/x.md'));
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
