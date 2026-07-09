@@ -20,7 +20,7 @@ import os
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from consolidate_memory import build_queue, promote_ready_candidates
+from consolidate_memory import build_queue, promote_ready_candidates, atomic_write_text
 
 ROOT = Path(os.environ.get("MEMORY_ROOT", Path(__file__).resolve().parents[2]))
 CANDIDATES = ROOT / "memory" / "semantic" / "candidates.jsonl"
@@ -57,12 +57,12 @@ def promote(candidate: dict, reviewer: str) -> None:
         f"    source: {source}\n"
     )
     if not PROMOTED.exists():
-        PROMOTED.write_text(f"version: 1\nfacts:\n{entry}", encoding="utf-8")
+        atomic_write_text(PROMOTED, f"version: 1\nfacts:\n{entry}")
     else:
         content = PROMOTED.read_text(encoding="utf-8")
         if "facts:" not in content:
             content += "\nfacts:\n"
-        PROMOTED.write_text(content.rstrip() + "\n" + entry, encoding="utf-8")
+        atomic_write_text(PROMOTED, content.rstrip() + "\n" + entry)
     # Sync CLAUDE.md static fallback section
     claude_md = ROOT / "CLAUDE.md"
     if claude_md.exists():
@@ -74,7 +74,11 @@ def promote(candidate: dict, reviewer: str) -> None:
         if marker in content and fact_id not in content and fact_id in allowed:
             new_line = f"- [{fact_id} / {domain}] {fact}\n"
             content = content.replace(marker, new_line + "\n" + marker)
-            claude_md.write_text(content, encoding="utf-8")
+            atomic_write_text(claude_md, content)
+        elif fact_id in allowed and marker not in content:
+            # 应镜像但通道断了 → 不再静默（audit F2-08）
+            import sys
+            sys.stderr.write(f"[review] ⚠️ CLAUDE.md 缺 '> 维护规则：' marker，白名单事实 {fact_id} 无法镜像进 SF 节\n")
     record_review(fact_id, "promoted", reviewer, "metadata present and candidate selected for promotion")
 
 

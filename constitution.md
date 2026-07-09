@@ -4,7 +4,7 @@
 
 ## 1. 设计哲学
 
-- **Loop 是"带卡点的 workflow"，不是自由 agent。** 主干（extract→triage→brainstorm→design-map→gen/judge）是单向链，只能往前走；只有 `muse-proto-gen`↔`muse-proto-judge` 是有界内循环（evaluator-optimizer 模式，轮数上限3）。这是红队验证过的拓扑选型，理由：母版 Orchestrator 的"节点顺序只能前进"硬规则、以及"能画出决策树的任务就不该交给 agent 自由探索"（Anthropic Building Effective Agents 的判据）。
+- **Loop 是"带卡点的 workflow"，不是自由 agent。** 主干（extract→triage→brainstorm→design-map→原型生成+judge核对）是单向链，只能往前走。原型段（2026-07-02 OD 改造后的现行拓扑）：**默认路径 = `open-design` 生成 + `muse-proto-judge` 核对 + 用户主导迭代**（agent 不代理迭代轮），「轮数上限3」在默认路径的含义 = **最多帮用户跑 3 轮 judge 核对**，不是自动重生成；`muse-proto-gen`↔`muse-proto-judge` 的自动内循环（evaluator-optimizer 模式，轮数上限3）**仅作为 OD daemon 不可达时的 fallback 存在**。这是红队验证过的拓扑选型，理由：母版 Orchestrator 的"节点顺序只能前进"硬规则、以及"能画出决策树的任务就不该交给 agent 自由探索"（Anthropic Building Effective Agents 的判据）。
 - **2个人类卡点不可省略**：GATE-1（需求 triage 后，人裁真伪/优先级）、GATE-2（design-map 后，人审映射）。这是 Loop 质量的底线，不是可选项，`allow_standalone_override` 恒为 `false`。
 - **机器只提议，人类裁定。** 真伪/优先级判断，机器只做三件事：可回溯性检查、rule-based 打分、提议分类——绝不代替人类拍板。
 

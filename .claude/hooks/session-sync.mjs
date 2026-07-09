@@ -8,7 +8,7 @@
 //  · 任何异常一律 fail-open —— 不输出 JSON、exit 0，绝不卡住 session 结束。
 //  · 三重防循环：stop_hook_active（CC 已在拦截续跑）/ 本 session marker / 环境变量 SESSION_SYNC_BLOCK=0 kill-switch。
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 
@@ -22,7 +22,7 @@ let payload = {};
 try { payload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const stopHookActive = payload.stop_hook_active === true;
 const sessionId =
-  (payload.session_id && String(payload.session_id).replace(/[^\w-]/g, '').slice(0, 32)) ||
+  (payload.session_id && String(payload.session_id).replace(/[^\w-]/g, '').slice(0, 36)) ||
   `date-${dateStr}`;
 
 // ---- 解析 topic + workflow 节点状态 ----
@@ -116,6 +116,11 @@ try {
   }
 
   // ---- 放行 ----
+  // kill-switch 可见性（audit 2026-07-07 F1-02）：环境残留 SESSION_SYNC_BLOCK=0 曾静默关停
+  // 自成长拦截一整个 session（EP-20260706-057 当事记录自认）。命中时留痕，不再无声。
+  if (killSwitch) {
+    process.stderr.write(`[session-sync] ⚠️ SESSION_SYNC_BLOCK=0 生效——自成长拦截已被环境变量禁用（如非有意设置，请在启动终端 unset 后重开进程）。\n`);
+  }
   process.stderr.write(`[session-sync] Session 结束于 ${now}。topic: ${topic}${project ? ` · 项目: ${project}` : ''}\n`);
   writeCheckpointIfInProgress();
 
@@ -131,6 +136,12 @@ try {
   } catch { }
 
   if (alreadyExtracted) {
+    // 提取已完成 → 回收本 sid 早先回合落下的 pending 兜底文件，防已处理仍被提醒（audit F1-03）
+    try {
+      const stalePending = join(projectRoot, '.claude', 'observability',
+        hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
+      if (existsSync(stalePending)) unlinkSync(stalePending);
+    } catch { }
     process.stderr.write(`[session-sync] ✅ 本 session 经验已沉淀（marker 命中），放行。\n`);
     process.exit(0);
   }
@@ -144,6 +155,10 @@ try {
   }
   // 并发隔离（G2，2026-07-04）：pending 文件按 session 命名——全局单文件会被并发 session
   // 互相吞写、topic 张冠李戴；session-restore 按 glob pending-extraction*.md 逐个提醒（兼容旧名）。
+  // 只对 substantive-但-未拦截（kill-switch / stop_hook_active）写软兜底；trivial session 不写——
+  // 与 CLAUDE.md「无文件产出且工具调用不足不拦截、不提醒」对齐（audit F1-03；原 HOOK-006 时
+  // 「未拦截一律写」在 Stop 按回合触发下会让每个 session 首回合都落一个 stub，只增不减）。
+  if (!substantive) process.exit(0);
   const pending = join(projectRoot, '.claude', 'observability',
     hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
   try {

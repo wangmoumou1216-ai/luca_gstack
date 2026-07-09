@@ -56,7 +56,13 @@ function checkStatement(statement) {
 }
 
 function extractStatementsFromFile(path) {
-  const content = readFileSync(path, 'utf8');
+  let content;
+  try {
+    content = readFileSync(path, 'utf8');
+  } catch (err) {
+    console.error(`错误: 无法读取文件 "${path}"（${err.code || err.message}）。文件尚未落盘时请用 stdin 模式：echo "<statement_ears>" | node scripts/check-ears-syntax.mjs -`);
+    process.exit(1);
+  }
   const matches = [...content.matchAll(/statement_ears:\s*"([^"]*)"/g)];
   return matches.map((m) => m[1]);
 }

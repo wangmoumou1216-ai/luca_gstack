@@ -8,21 +8,32 @@ import { execSync, spawn } from 'child_process';
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
 
+// 记忆数据根（audit 2026-07-07 F2-01/P0）：memory 脚本全部以 MEMORY_ROOT 为最高优先解析数据根
+// （muse app 有意注入以共享母版经验层），但本 hook 原先用 projectRoot 认领 .checked-<date> 与找
+// digest，daily_governance 却继承 env 把 digest 写到 MEMORY_ROOT——同一天 fork 只落 0 字节标记、
+// 母版落真 digest 的 split-brain（2026-07-08 实测）。治理触发/展示路径统一走 memoryRoot。
+const memoryRoot = process.env.MEMORY_ROOT || projectRoot;
+if (memoryRoot !== projectRoot) {
+  process.stderr.write(`[session-restore] ⚠️ MEMORY_ROOT 重定向生效 → ${memoryRoot}（episodic/semantic 读写与每日治理均落该仓，非本仓 ${projectRoot}）\n`);
+}
+
 // 会话粘性（G6，2026-07-04）：读 SessionStart stdin JSON 拿 source + session_id。
 // source 用于"仅 startup 清 symlink"的 allowlist 判断（安全侧：未知/缺失 → 不清 + canary）；
 // session_id 用于活跃探测时排除本 session 自己的计数/transcript。sanitize 与其余 hook 逐字一致。
 let startPayload = {};
 try { startPayload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const startSource = typeof startPayload.source === 'string' ? startPayload.source : '';
-const ownSid = String(startPayload.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
+const ownSid = String(startPayload.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
 
-// hooks 日志 size-cap：4 个 hook 共写 2>>，~27KB/天；/tmp 周期清理按 mtime 判老，对活跃追加文件永不命中
-try {
-  const hookLog = '/tmp/luca-gstack-hooks.log';
-  if (statSync(hookLog).size > 524288) {
-    writeFileSync(hookLog, readFileSync(hookLog, 'utf8').slice(-65536));
-  }
-} catch { }
+// hooks 日志 size-cap：5 个 hook 共写 2>>，~27KB/天；/tmp 周期清理按 mtime 判老，对活跃追加文件永不命中。
+// 两个候选名都 cap：母版写 hooks.log，fork（muse）写 hooks.muse.log——分文件防两仓混写互截（audit F1-11）。
+for (const hookLog of ['/tmp/luca-gstack-hooks.log', '/tmp/luca-gstack-hooks.muse.log']) {
+  try {
+    if (statSync(hookLog).size > 524288) {
+      writeFileSync(hookLog, readFileSync(hookLog, 'utf8').slice(-65536));
+    }
+  } catch { }
+}
 
 if (existsSync(stateFile)) {
   const content = readFileSync(stateFile, 'utf8');
@@ -58,6 +69,15 @@ try {
       const age = nowMs - statSync(join(claudeDir, f)).mtimeMs;
       const ttl = isMarker ? MARKER_TTL : COUNTER_TTL; // pin 同 counter 7天
       if (age > ttl) unlinkSync(join(claudeDir, f));
+    } catch { }
+  }
+  // pending-extraction 软兜底文件同样 TTL GC（7天）：写后无人处理会无限堆积并制造启动提醒
+  //（audit F1-03：7 天实测积压 11 个，多为 trivial session stub）
+  const obsDir = join(claudeDir, 'observability');
+  for (const f of readdirSync(obsDir)) {
+    if (!f.startsWith('pending-extraction') || !f.endsWith('.md')) continue;
+    try {
+      if (nowMs - statSync(join(obsDir, f)).mtimeMs > COUNTER_TTL) unlinkSync(join(obsDir, f));
     } catch { }
   }
 } catch { }
@@ -245,8 +265,10 @@ if (existsSync(memScript)) {
 try {
   const today = new Date().toISOString().slice(0, 10); // UTC，与 daily_governance 的 digest 文件名一致
   const govScript = join(projectRoot, 'memory', 'scripts', 'daily_governance.py');
-  const todayDigest = join(projectRoot, 'memory', 'digests', `${today}.md`);
-  const todayChecked = join(projectRoot, 'memory', 'digests', `.checked-${today}`);
+  // 治理触发路径走 memoryRoot（非 projectRoot）：daily_governance 以 MEMORY_ROOT 解析数据根，
+  // 认领标记/digest 探测必须与其一致，否则 redirect 生效时触发侧与写入侧分裂（F2-01/P0）
+  const todayDigest = join(memoryRoot, 'memory', 'digests', `${today}.md`);
+  const todayChecked = join(memoryRoot, 'memory', 'digests', `.checked-${today}`);
   if (existsSync(govScript) && !existsSync(todayDigest)) {
     // 并发隔离（G2，2026-07-04）：两个 session 近同时启动都读到 !exists → 都 spawn 治理
     // （TOCTOU）。改为 O_EXCL 原子认领 .checked-<date>：抢到的 spawn，EEXIST 的静默跳过；
@@ -254,7 +276,7 @@ try {
     // 其他异常 → fail-open 照旧 spawn（宁重复不静默丢，governance 自身幂等）。
     let claimed = false;
     try {
-      mkdirSync(join(projectRoot, 'memory', 'digests'), { recursive: true });
+      mkdirSync(join(memoryRoot, 'memory', 'digests'), { recursive: true });
       closeSync(openSync(todayChecked, 'wx'));
       claimed = true;
     } catch (e) { claimed = !e || e.code !== 'EEXIST'; }
@@ -313,7 +335,7 @@ try {
 
 // 展示最新「成长摘要」digest（每个 digest 只在第一次启动时展示一次）
 try {
-  const digestsDir = join(projectRoot, 'memory', 'digests');
+  const digestsDir = join(memoryRoot, 'memory', 'digests'); // 与治理写入侧一致（F2-01）
   if (existsSync(digestsDir)) {
     const files = readdirSync(digestsDir).filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).sort();
     const newest = files[files.length - 1];

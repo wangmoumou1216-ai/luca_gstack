@@ -26,13 +26,15 @@ tiers:
     resolves_to: fable
     description: 创造性/对抗性/开放式推理——深度研究、设计决策、苏格拉底拷问、红队
     note: 2026-06-10 经用户裁决由 opus 升档 fable（成本约 2×）；opus 为回退档
-    skills: [deepresearch, brainstorm, ux-brainstorm, design-brief, redteam]
+    skills: [deepresearch, brainstorm, ux-brainstorm, design-brief, redteam,
+             muse-loop-orchestrate]
 
   guided-execution:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的执行与审查（默认档）
     skills: [idea, ux-research, ux-audit, open-design, figma-demo, html-prototype,
-             challenge, taste-review, design-review, handoff-review, code-hygiene]
+             challenge, taste-review, design-review, handoff-review, code-hygiene,
+             code-recon, muse-req-triage, muse-proto-gen]
 
   mechanical:
     resolves_to: haiku

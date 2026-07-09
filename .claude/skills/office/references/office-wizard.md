@@ -43,11 +43,13 @@ AskUserQuestion：
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成 HTML 原型
-   /figma-demo     → （备选）口述 + Figma → HTML 演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）口述 + Figma → HTML 演示 Demo
 8. /figma-layer    → 还原到 Figma
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
 需求范围明确、不需要重型拷问时，可以用 superpowers:brainstorming 替代第3步。
+muse fork 专属：手头是一批候选需求想先筛一遍再进 /brainstorm → /muse-req-triage；
+要从需求到原型端到端自治跑完整闭环（含 GATE-1/GATE-2 人类卡点）→ /muse-loop-orchestrate。
 ```
 
 AskUserQuestion：
@@ -71,7 +73,7 @@ AskUserQuestion：
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成改版原型
-   /figma-demo     → （备选）基于 Figma 截图/链接和口述生成演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）基于 Figma 截图/链接和口述生成演示 Demo
 /brainstorm 可以直接用，不需要先跑 /idea。需求范围明确时可用 superpowers:brainstorming 替代。
 ```
 
@@ -92,7 +94,7 @@ AskUserQuestion：
 4. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）按评审清单逐条生成改版原型
-   /figma-demo     → （备选）基于 Figma 截图/链接和口述生成演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）基于 Figma 截图/链接和口述生成演示 Demo
 5. /figma-layer → 还原到 Figma
 从 /idea 开始？
 ```
@@ -118,7 +120,7 @@ AskUserQuestion：
 8. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认，含 Agent 专有状态 / headless opt-in）→「拉回来」落盘
    magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成原型
-   /figma-demo     → （备选）口述 + Figma → Agent 化演示 Demo
+   figma-demo      → （备选·隐藏 skill，内部 dispatch）口述 + Figma → Agent 化演示 Demo
 Agent 化设计的核心红线：用户必须始终能 看见 / 暂停 / 接管 / 撤销 AI 的动作。
 ```
 
@@ -230,6 +232,22 @@ luca_gstack — 一级可见 Skill 列表
                证据）+ 8 清理算子（死代码/循环依赖/去重/类型/弱类型/防御性/遗留/slop，
                只自动应用 HIGH 置信）。不是设计场景 skill，代码/工程任务专用
                输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
+
+── muse fork 专属（本 fork 独有，母版无）───────────────────────
+
+/muse-loop-orchestrate  —  需求→原型自治 Loop 编排器：extract→triage→map→gen→judge
+               单向链（gen↔judge 有界内循环），自带两个不可省略人类卡点（GATE-1/GATE-2）
+               输入模式：standalone。触发短语见 .claude/skill-os/skill-routing-map.yaml
+               （复合词，不撞现有 brainstorm/html-prototype/design-brief 词条）
+               语义兜底："从需求到原型跑一遍完整流程/闭环"这类端到端自治编排意图
+
+/muse-req-triage  —  批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单
+               输入模式：standalone（入口A，筛过再投 /brainstorm）或被
+               /muse-loop-orchestrate 内部 dispatch（入口B）
+               语义兜底："筛一遍这堆需求"、"要不要先过一遍再进 brainstorm"这类批量需求预筛意图
+
+               说明：muse-proto-gen（隐藏，仅 OD daemon 不可达时被 /muse-loop-orchestrate
+               内部 dispatch）与 muse-proto-judge（agent 定义，仅内部调用）不对用户暴露
 
 ── 外部 Skill（superpowers plugin）─────────────────────────
 

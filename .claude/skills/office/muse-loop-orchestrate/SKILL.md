@@ -5,7 +5,9 @@ argument-hint: "[语料/需求描述，或已有 REQ-* 的下一步指令]"
 version: 1.0.0
 description: |
   需求→原型自治 Loop 的独立正向单趟编排器（muse fork 专属新增）。
-  extract→triage→map→gen→judge 一次性单向链，只有 gen↔judge 做有界内循环。
+  extract→triage→map→open-design生成+judge核对 一次性单向链（2026-07-02 OD 改造后
+  默认路径=open-design 生成+judge 核对+用户主导迭代，「轮数上限3」=最多3轮 judge 核对；
+  gen↔judge 自动内循环仅为 OD daemon 不可达时的 fallback）。
   自行 dispatch 子任务、自带 Plan-Agent 等效门禁，零接入母版 Orchestrator
   的 Skill Workflow Mode，零改动 workflow-state.yaml/orchestrator.md。
   触发短语（fork 内 skill-routing-map.yaml 注册）：'muse loop'、'muse自进化循环'、
@@ -86,11 +88,13 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 
 问法文案见 triage Phase 3（四选项：①Figma链接 ②线上地址 ③截图 ④确认全新功能）。**答案的编排语义（本节权威）：** 只有用户显式选④，才允许按 `none_confirmed_greenfield` 处理；机器不得代选、不得因用户没提就默认全新（本次真实教训：整条链没看过真实 Figma，把历史记录标签当成了入口按钮）。**用户的回答同时就是 brownfield/greenfield 的权威判定**（①②③=有现有UI，走基线采集；④=全新，显式跳过）——后续"场景 B/C 必做"的所有子步骤，触发依据都是这个 GATE-1 判定结果，不是等 design-brief Phase 0 的场景分类。
 
+**回填契约（2026-07-08 补）：** triage 机器判定阶段永不自填 `design_reference`（见其 SKILL.md Phase 0）；GATE-1 人类作答后，**本编排器立即用 Write 更新该 REQ 的 `requirement.md`**——按答案回填 `design_reference.type/ref`（选④则填 `none_confirmed_greenfield`，`decided_by` 记人类）与 `captured_at`，回填完成后才进入基线采集与后续 Phase。
+
 ## 「基线采集」子步骤（GATE-1 通过后、Phase 1.5 之前——场景 B/C 必做，2026-07-02 新增）
 
 **为什么在这（不在设计阶段）：** 第一条真实 REQ 的错误是在 PRD 层进来的——`/brainstorm` 对现有UI一无所知，把假设写进了 PRD，下游全部继承。外部依据：BMAD brownfield 工作流的第一步就是 `document-project`（"Always Document First"，先文档化现状再写增强PRD）。
 
-对每条 `human_decision: approved` 且场景 B/C 的需求：
+对每条 `human_decision: accept` 且场景 B/C 的需求：
 1. 按 `design_reference.type` 采集真实UI → 写 `docs/loop/specs/REQ-*/baseline.md`（格式见 `muse-loop/schema.md` v0.5）：
    - `figma` → Figma MCP `get_metadata` + `get_screenshot`（真实节点结构+截图）
    - `live_html` → 读取页面 + 截图
@@ -101,7 +105,7 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 
 ## Phase 1.5（approved → prd_ready）：dispatch `/brainstorm`，产出真实 PRD（补丁：2026-07-01 修复的内部矛盾）
 
-**这一步是必须的，不是可选项。** `muse-req-triage` 自己的防火墙规则写着"被接受的需求最终都要经过 `/brainstorm` 真实的 Phase 1.5，才能让下游门禁信任这条数据"——但 Phase 2 的 `traceable_delivery` 硬约束（下方）需要一份真实 PRD 才能满足，而这份 PRD 只能来自 `/brainstorm` 真正跑一遍，不能凭空生成。所以对每条 GATE-1 通过（`human_decision: approved`）的需求，dispatch **`/brainstorm`**（路径1里原有的 skill，**完整跑它自己的 Phase 0-5**，不是简化版；用 GATE-1 产出的一句话陈述+来源引用作为 cold-start 输入）。
+**这一步是必须的，不是可选项。** `muse-req-triage` 自己的防火墙规则写着"被接受的需求最终都要经过 `/brainstorm` 真实的 Phase 1.5，才能让下游门禁信任这条数据"——但 Phase 2 的 `traceable_delivery` 硬约束（下方）需要一份真实 PRD 才能满足，而这份 PRD 只能来自 `/brainstorm` 真正跑一遍，不能凭空生成。所以对每条 GATE-1 通过（`human_decision: accept`）的需求，dispatch **`/brainstorm`**（路径1里原有的 skill，**完整跑它自己的 Phase 0-5**，不是简化版；用 GATE-1 产出的一句话陈述+来源引用作为 cold-start 输入）。
 
 **场景 B/C 的 cold-start 输入必须附上 `baseline.md`（2026-07-02 新增，本次失败的直接修复点）：** `/brainstorm` 的输入=一句话陈述+来源引用+**现状基线清单**——PRD 里对"现有结构长什么样"的一切陈述必须扎根基线的真实盘点（真实入口数量/真实名称/真实锚点），不允许再凭会议语料的转述臆想现有UI。
 
@@ -150,6 +154,9 @@ dispatch /open-design（chain：源=本REQ对应的 docs/decisions/*-design-brie
   → Phase 3D（默认）：建OD项目绑定+写brief.md → 交用户在OD桌面端按生成键 → 用户说"拉回来"
     [OD daemon 真不可达时的 fallback：见下]
   → Phase 4：回收落盘 docs/prototype/YYYY-MM-DD-<topic>/index.html + prototype-spec.md
+  → Phase 4 收尾（本编排器，2026-07-08 补）：将回收的最终 index.html 复制一份为
+    docs/loop/specs/REQ-*/prototype.html（保持 REQ 目录 L3 契约与 traceability 引用有效），
+    并在 requirement.md 记录 prototype_source 指向 docs/prototype/ 原始落点
   ↓
 dispatch muse-proto-judge（Task 工具冷启动，仅传回收的原型路径 + AC，不可见 open-design 的生成过程）
   ↓
@@ -161,9 +168,11 @@ dispatch muse-proto-judge（Task 工具冷启动，仅传回收的原型路径 +
                      "轮数上限3"在这条路径下的含义改为"最多帮你跑3轮judge核对"，不是"自动重生成3轮"。
 ```
 
-**Fallback 路径（仅当 open-design 的 preamble 探测 `OD_DAEMON: DOWN` 时）：** dispatch `muse-proto-gen`（`.claude/skills/office/muse-proto-gen/`，Skill 工具）直接写HTML，走原来的"muse-proto-gen ↔ muse-proto-judge 自动内循环"（轮数上限3，判官打回自动重生成——这条路径不涉及用户手动生成，机制上允许自动重试）。**必须明确告知用户"OD daemon 不可达，降级到本地直接生成"，不静默切换路径。**
+**Fallback 路径（仅当 open-design 的 preamble 探测 `OD_DAEMON: DOWN` 时）：** dispatch `muse-proto-gen`（`.claude/skills/office/muse-proto-gen/`，Skill 工具）直接写HTML，走原来的"muse-proto-gen ↔ muse-proto-judge 自动内循环"（轮数上限3，判官打回自动重生成——这条路径不涉及用户手动生成，机制上允许自动重试）。**必须明确告知用户"OD daemon 不可达，降级到本地直接生成"，不静默切换路径。** **Loop 场景下 open-design 探测到 `OD_DAEMON: DOWN` 即停并交还控制权给本编排器，禁用 open-design 自有的 magicpath/html-prototype 备选链——Loop 的 fallback 只走 `muse-proto-gen`**（其产物才带 `DECISION: D-NNN` 追溯注释与受控词汇表，judge 的 AC 契约不断裂）。
 
 `muse-proto-judge` 永不静默自动应用修复——无论走哪条路径，是否重新生成/如何处理gap，由本编排器的收敛逻辑（或用户，视路径而定）决定，不是判官自己执行。
+
+**scorecard.md（L4）落盘责任在本编排器（2026-07-08 补）：** `muse-proto-judge` 无 Write 工具，只**返回**评分卡内容；每轮判定后（无论默认路径还是 fallback 路径），由本编排器用 Write 将其落盘到 `docs/loop/specs/REQ-*/scorecard.md`（多轮时追加，格式见 `muse-loop/schema.md`「scorecard.md」节）。
 
 **flip 到 `verified` 前的范围完整性清单（2026-07-02 补，红队裁定 CLEAR_DEFER 完整自动化机制、但先上这个零成本版本）：** `muse-proto-judge` 只对**预先给定的 AC 列表**逐条打分，AC 列表本身若漏了 design-map 阶段规划过的某个组件（比如映射表里有但没人写 AC 的一个状态/组件），判官不会、也不可能发现——它没被问过。全自动的"产出↔规划范围"结构化比对（借鉴 Spec Kit `/converge`）暂不建（红队判定：零端到端跑过的系统上建第二套没验证过的比对机制，跟已经否决的"快速路径"是同类过早施工）。**现在只做**：flip 到 `verified` 前，把这条 REQ 的组件映射表（design-map 产出）和 prototype.html 实际包含的组件并排给用户看一眼，人工确认没有"规划过但没做"的遗漏，再确认。等真跑过 2-3 条 REQ、事后比对真的发现过 AC 列表本身漏东西，再考虑建自动化版本。
 
@@ -171,7 +180,7 @@ dispatch muse-proto-judge（Task 工具冷启动，仅传回收的原型路径 +
 
 ## 自带 Plan-Agent 等效门禁（不依赖母版 route-guard 的 HEAVY_ORCHESTRATOR_SKILLS 硬编码名单——但仍需注册）
 
-本 skill 本身满足 Plan Agent 5 条件里的"≥2 个独立 subagent 协作"+"明确的阶段依赖"，**已注册进 fork 自己的 `route-guard.mjs` 的 `HEAVY_ORCHESTRATOR_SKILLS`**（见 `muse-loop/ARCHITECTURE.md` 注册记录，仅改 fork 副本，母版对应文件零改动）。命中后会被强制升级到 `PLAN_CHECK`，执行前需与用户确认——这是本 skill 依赖母版 **hook 机制**（route-guard 的门禁模式）的唯一一处。**这不等于"唯一外部依赖"**——本 skill 在 Phase 1.5/Phase 2 还真实 dispatch 了两个母版 **skill**（`/brainstorm`、`/design-brief`），完整依赖清单见 `muse-loop/ARCHITECTURE.md`「路径2对路径1(母版) skill 的依赖清单」一节。
+本 skill 本身满足 Plan Agent 5 条件里的"≥2 个独立 subagent 协作"+"明确的阶段依赖"，**经 `.claude/settings.json` 的 `ROUTE_GUARD_HEAVY_SKILLS` env 注入注册进 route-guard 的 `HEAVY_ORCHESTRATOR_SKILLS`**（route-guard.mjs 该 Set 全由 env 构建，机制见其 ~:441 注释；见 `muse-loop/ARCHITECTURE.md` 注册记录，仅改 fork 副本，母版对应文件零改动）。命中后会被强制升级到 `PLAN_CHECK`，执行前需与用户确认——这是本 skill 依赖母版 **hook 机制**（route-guard 的门禁模式）的唯一一处。**这不等于"唯一外部依赖"**——本 skill 在 Phase 1.5/Phase 2 还真实 dispatch 了两个母版 **skill**（`/brainstorm`、`/design-brief`），完整依赖清单见 `muse-loop/ARCHITECTURE.md`「路径2对路径1(母版) skill 的依赖清单」一节。
 
 ## 命名与调用
 

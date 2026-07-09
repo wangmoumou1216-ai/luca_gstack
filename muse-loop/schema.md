@@ -1,6 +1,6 @@
-# muse-loop L1/L2 Schema + REQ 目录产物格式（v0.5，2026-07-02）
+# muse-loop L1/L2 Schema + REQ 目录产物格式（v0.6，2026-07-08）
 
-> Phase 0 产出。v0.1（源自深度解决方案报告原始设计）经 3 条真实会议语料（速记项目妙记 `obcnhby93v6426u4y3za998v`）手填测试，暴露 3 处缺口，v0.2 已修复；v0.3 补 EARS 四模板 + prd_ready 状态；v0.4 补 rejected/withdrawn 终止态 + AC source 标注；v0.5（2026-07-02）补 `design_reference` 字段 + `baseline.md`/`change-map.md` 格式（第一条真实端到端 REQ 暴露的"从未核对现有UI"缺口修复，调研+红队依据见 `ARCHITECTURE.md` Phase 2.4）。验证过程见 `schema-validation-examples.md`。
+> Phase 0 产出。v0.1（源自深度解决方案报告原始设计）经 3 条真实会议语料（速记项目妙记 `obcnhby93v6426u4y3za998v`）手填测试，暴露 3 处缺口，v0.2 已修复；v0.3 补 EARS 四模板 + prd_ready 状态；v0.4 补 rejected/withdrawn 终止态 + AC source 标注；v0.5（2026-07-02）补 `design_reference` 字段 + `baseline.md`/`change-map.md` 格式（第一条真实端到端 REQ 暴露的"从未核对现有UI"缺口修复，调研+红队依据见 `ARCHITECTURE.md` Phase 2.4）；v0.6（2026-07-08，契约审计修复）：`human_decision` 定枚举（accept/defer/reject）+ `status` 补 `reviewer_concerns` 终局 + 补 `scorecard.md`（L4）格式与写入者指派。验证过程见 `schema-validation-examples.md`。
 
 ## L1 需求卡
 
@@ -49,18 +49,20 @@ priority:                              # type=open_question 时本段可省略
     explicitly_flagged_as_priority: false
     requester_role: null                 # 提出者角色（客户/销售/产品/内部脑爆），无则 null；triage Phase 1 计算并在 GATE-1 呈现，此处为其落盘位
   moscow: must | should | could | wont
-  human_decision: null                 # 人类卡点裁定（GATE-1），null = 未裁定
+  human_decision: accept | defer | reject | null   # 人类卡点裁定（GATE-1 产出，v0.6 定枚举），null = 未裁定
   decided_by: null
   decided_at: null
 
-status: draft | triaged | approved | prd_ready | designed | built | verified | open | rejected | withdrawn
+status: draft | triaged | approved | prd_ready | designed | built | verified | reviewer_concerns | open | rejected | withdrawn
   # prd_ready 为 v0.3 新增（2026-07-01 修复内部矛盾时补）：approved 之后先经 /brainstorm 完整跑一遍产出真实 PRD，Phase 2 design-map 的 traceable_delivery 硬约束才有真实输入可喂；
   # open 为 v0.2 新增，专属 type=open_question，不进入常规流水线，直到被拍板转成真正 requirement；
   # rejected | withdrawn 为 v0.4 新增（2026-07-02，"完美标准"复查时发现的真实缺口，参照 Shape Up 电路熔断/RFC终止态）：
   #   之前的枚举只有前进态，一条 REQ 被 approved 甚至 designed/built 之后，若团队主动决定不做了，没有合法状态可标——只能卡在原状态或被静默删除，丢失"何时+为何主动终止"的可审计记录。
   #   rejected = 在 verified 之前的任意阶段，团队主动决定不做（区别于 priority.moscow=wont——那是triage阶段"本轮不做"的优先级判断，不代表已经进入流水线又被叫停）；
   #   withdrawn = 已经 verified，但后续因某种原因（如上游需求变了）被撤回，不算失败，只是不再需要。
-  #   两个状态都必须在 docs/loop/traceability.md 追加一行记录终止原因和时间，不允许静默消失（同verified/Reviewer Concerns一样走收尾流程）。
+  #   两个状态都必须在 docs/loop/traceability.md 追加一行记录终止原因和时间，不允许静默消失（同 verified/reviewer_concerns 一样走收尾流程）；
+  #   reviewer_concerns 为 v0.6 新增（2026-07-08）：gen⇄judge 轮数耗尽（或用户选择接受现状）仍未全过 AC 的合法终局，与 verified 并列——
+  #   区别于 rejected（团队主动决定不做）：reviewer_concerns 是"做了但判官仍有未消解的关切"，须在 traceability.md 记录未过的 AC。
 ```
 
 ## L2 设计卡（映射 + eval 源头，本次仅做初步验证，未大改）
@@ -155,4 +157,29 @@ acceptance_criteria:
 ## 人工确认记录
 - 确认人/时间: <...>
 - 呈现方式: 映射表 + 基线截图并排（三联对照）
+```
+
+## scorecard.md（判官评分卡，L4，v0.6 新增——补齐"声明了 L4 交付物却无格式定义/无写入者"的契约缺口）
+
+> 落点：`docs/loop/specs/REQ-*/scorecard.md`。**写入者：`muse-loop-orchestrate`（编排器）**——`muse-proto-judge` 无 Write 工具，
+> 只返回评分卡内容，每轮判定后由编排器落盘（多轮时追加），judge 侧输出契约见 `.claude/agents/muse-proto-judge.md`「输出」节。
+
+```markdown
+# Scorecard: REQ-<id>
+
+- req_id: REQ-<id>
+- date: <YYYY-MM-DD HH:MM>
+- prototype_path: <被判定的原型文件路径>
+- rounds: <本轮为第几轮判定/累计轮数（默认OD路径=judge核对轮，fallback路径=自动重生成轮，上限均为3）>
+
+## AC 判定（每条 AC 一行，逐条覆盖，不允许省略）
+| id | source | verdict | evidence |
+|----|--------|---------|----------|
+| AC-1 | ae# 或 derived-fallback | PASS / FAIL / PARTIAL | <具体截图区域/HTML片段引用；derived-fallback 须注明可信度打折> |
+
+## overall
+<verified / reviewer_concerns / 未收敛（进入下一轮）>
+
+## gaps
+- <未全过时的结构化 gap 列表（交还调度方决定处理路径）；全部通过则写"无">
 ```

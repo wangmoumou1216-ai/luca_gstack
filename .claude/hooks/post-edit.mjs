@@ -6,7 +6,7 @@
 // 并发隔离（G2，2026-07-04）：stdin 带 session_id（PostToolUse 公共字段，已实测）时计数文件
 // 带 -<sid> 后缀——并行 session 互不污染；无 sid（非交互管道/测试）回退共享旧文件名，
 // 该 legacy 路径仍由 session-restore 启动清零。sid sanitize 表达式必须与
-// session-sync.mjs / route-guard.mjs 逐字一致：replace(/[^\w-]/g,'').slice(0,32)。
+// session-sync.mjs / route-guard.mjs 逐字一致：replace(/[^\w-]/g,'').slice(0,36)。
 // Claude Code 的 PostToolUse hook 通过 stdin 传入 JSON: { session_id, tool_name, tool_input, … }
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -38,7 +38,7 @@ try {
   parsed = false;
   process.stderr.write(`[post-edit] ⚠️  stdin JSON 解析失败，按 legacy 计数。\n`);
 }
-const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
+const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
 const suffix = sid ? `-${sid}` : '';
 
 // 任何命中本 hook 的工具都算一次"活动"。

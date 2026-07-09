@@ -68,6 +68,10 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   // still wins in the spread below.
   const baseEnv = { ...process.env };
   delete baseEnv.SESSION_SYNC_BLOCK;
+  // 同 C11 理由（audit F2-01）：MEMORY_ROOT/GLOBAL_MEMORY_DIR 残留会把 hook 的记忆/治理路径
+  // 重定向出测试 fixture；需要它们的测试均已显式经 `env` 传入（spread 仍然生效）。
+  delete baseEnv.MEMORY_ROOT;
+  delete baseEnv.GLOBAL_MEMORY_DIR;
   const result = spawnSync('node', [scriptPath], {
     cwd,
     encoding: 'utf8',
@@ -96,17 +100,34 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   console.log('PASS HOOK-001 block 路径 stdout 纯 JSON，checkpoint 仅在 stderr');
 }
 
-// ── HOOK-001 反面 + HOOK-005：trivial session → release，stdout 空，pending 落 observability ──
+// ── HOOK-001 反面 + HOOK-005：trivial session → release，stdout 空，且**不写** pending ──
+// （audit 2026-07-07 F1-03：trivial 也写 pending 会让每 session 首个 stop 落一个 stub 无限堆积，
+//  与 CLAUDE.md「无文件产出且工具调用不足不拦截、不提醒」矛盾。pending 兜底只留给
+//  substantive-但-未拦截（kill-switch / stop_hook_active）的情形。）
 {
   const root = makeFixture({ activeProject: 'testproj' }); // 无任何计数 → 非实质
   const result = runNode(sessionSyncHook, root);
   assert.equal(result.stdout, '', 'trivial session 放行时 stdout 必须为空（无 block JSON）');
-  assert.ok(
+  assert.equal(
     existsSync(join(root, '.claude', 'observability', 'pending-extraction.md')),
-    'release 路径应写 pending-extraction 兜底'
+    false,
+    'trivial session 不得写 pending-extraction（F1-03）'
   );
   assert.match(result.stderr, /Session 结束/, '放行信息应在 stderr');
-  console.log('PASS release 路径 stdout 为空，pending 兜底落 .claude/observability');
+  console.log('PASS release 路径 stdout 为空，trivial 不落 pending（F1-03）');
+}
+
+// ── F1-03 正面：substantive + kill-switch → 放行但写 pending 兜底；kill-switch 需 stderr 留痕（F1-02）──
+{
+  const root = makeFixture({ edits: 1, activeProject: 'testproj' });
+  const result = runNode(sessionSyncHook, root, { env: { ...process.env, SESSION_SYNC_BLOCK: '0' } });
+  assert.equal(result.stdout, '', 'kill-switch 下放行 stdout 必须为空');
+  assert.ok(
+    existsSync(join(root, '.claude', 'observability', 'pending-extraction.md')),
+    'substantive + kill-switch 应写 pending-extraction 兜底'
+  );
+  assert.match(result.stderr, /SESSION_SYNC_BLOCK=0 生效/, 'kill-switch 生效必须 stderr 留痕（F1-02）');
+  console.log('PASS substantive+kill-switch 落 pending 且 stderr 留痕（F1-02/F1-03）');
 }
 
 // ── HOOK-002（high）：只有 DONE 节点的空 session 不被误拦，无项目不落杂散 checkpoint ──
@@ -153,11 +174,12 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   const root = makeFixture({ turns: 6, edits: 0, tools: 2, activeProject: 'testproj' });
   const result = runNode(sessionSyncHook, root);
   assert.equal(result.stdout, '', '纯咨询(多轮零产出)必须放行，不得 block（轮次不再单独触发拦截）');
-  assert.ok(
+  assert.equal(
     existsSync(join(root, '.claude', 'observability', 'pending-extraction.md')),
-    '纯咨询 release 仍写 pending 软兜底'
+    false,
+    '纯咨询(非 substantive)不得写 pending——与 CLAUDE.md「不拦截、不提醒」对齐（audit F1-03）'
   );
-  console.log('PASS HOOK-006 纯咨询多轮零产出放行，不当场拦截');
+  console.log('PASS HOOK-006 纯咨询多轮零产出放行，不当场拦截也不落 pending');
 }
 
 // ── HOOK-007：block reason 为短指针（四信号速记 + 真值源路径 + marker），不再整段注入说明书 ──
@@ -503,9 +525,14 @@ function runRouteGuard(cwd, prompt) {
   assert.ok(existsSync(turnFile), '有 sid 时轮次计数应写 per-sid 文件');
   assert.equal(readFileSync(turnFile, 'utf8'), '1', '首轮应=1');
 
-  // pending per-sid：trivial session 放行时写 pending-extraction-<sid>.md，restore 逐个提醒
-  const rSync = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-R' }) });
-  assert.equal(rSync.stdout, '', 'trivial + sid → 放行');
+  // pending per-sid：substantive-但-未拦截（kill-switch）时写 pending-extraction-<sid>.md，restore 逐个提醒
+  //（F1-03 后 trivial 不再写 pending，这里用 edit-count + kill-switch 构造软兜底路径）
+  writeFileSync(join(root, '.claude', '.session-edit-count-sess-R'), '1');
+  const rSync = runNode(sessionSyncHook, root, {
+    input: JSON.stringify({ session_id: 'sess-R' }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: root, SESSION_SYNC_BLOCK: '0' },
+  });
+  assert.equal(rSync.stdout, '', 'kill-switch + sid → 放行');
   const pendingFile = join(root, '.claude', 'observability', 'pending-extraction-sess-R.md');
   assert.ok(existsSync(pendingFile), 'pending 应带 sid 后缀');
   const rRestore = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });

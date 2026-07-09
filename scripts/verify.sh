@@ -75,6 +75,8 @@ check C11 "Claude hooks 运行时副作用测试通过" "npm run check:hooks --s
 check C12 "settings.json 有 PreToolUse hook（会话级项目隔离）" "grep -q 'PreToolUse' .claude/settings.json"
 check C13 "project-scope-guard.mjs 语法合法" "node --check .claude/hooks/project-scope-guard.mjs"
 check C14 "会话级项目隔离回归通过（重定向/deny/跨session/fail-open）" "npm run test:project-scope --silent"
+check C15 "session-end.mjs 语法合法"   "node --check .claude/hooks/session-end.mjs"
+check C16 "self-model 与磁盘一致（audit F4-05）" "npm run check:self-model --silent"
 echo ""
 
 echo "[ Skill 体系 ]"

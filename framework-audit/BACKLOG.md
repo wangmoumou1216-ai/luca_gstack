@@ -42,6 +42,16 @@
 - **为何延后**：队列实测近空（1 stale / 0 其余）；session-restore 已发 5 个启动 stdout 块，第 6 个会饱和提醒通道、淹没承重的 Project Gate 提醒。且原方案依赖**已否决的 #12**（自动抽取候选记忆）。
 - **🔔 触发条件**：治理队列积压 **≥ 某非空阈值（如 ≥5 条 pending）** 且持续 → 再加**单行**提醒，并设非空阈值（队列 0 项时静默，不占提醒通道）。
 - **落地点**：`scripts/session-restore.mjs`。effort ~1 行 + 阈值判断。
+- **2026-07-09 审计更新（F1-03/F2-06）**：触发条件曾被确定性满足（pending-extraction 积压 11 个）而无提醒——但根因是 trivial session 也写 stub + 无 GC，已修（trivial 不写 + marker 回收 + 7 天 TTL GC），存量 7 天内自然排干。本条降级为观察项：修复生效后若队列仍复积压再启用。
+
+### #20 — sync_claude_fallback 反向校验（audit 2026-07-07 F2-08）
+- **缺口**：`fact_id in content` 全文匹配会把 CLAUDE.md prose 引用误判为「已镜像」（路由节确实引用 SC-20260523-002/003 这类写法）；check_memory_health 只做两个单向差集，缺「白名单已晋升事实必须出现在 SF 节」的反向校验。
+- **已做**：镜像通道断裂（marker 缺失）时不再静默、有 stderr 告警。
+- **待做**：check_memory_health 加反向校验（匹配限定 SF 节而非全文）。effort ~15 行。
+
+### #21 — archive 后 episode 检索不可见（audit F2-09，DECIDE）
+- **缺口**：search_memory/get_memory 只读热 index（50 条满），archive/2026.jsonl 的 7 条真实决策记录对任务检索不可见；而 append_episode 分配 seq 时扫 archive——archive 被视为数据但检索层未跟上。
+- **候选修法**：search_memory 默认并入 archive，或加 `--include-archive`。待 luca 裁决（涉及检索性能与噪音权衡）。
 
 ### #18 — IN_PROGRESS 崩溃恢复路径无 writer（reader/writer 失配）
 - **真实缺口**：三个 reader 消费 `status: IN_PROGRESS`（`session-restore.mjs:13` / `route-guard.mjs:477` / `session-sync.mjs:24,31`，后者据此写 `docs/handoff` checkpoint），但全仓**无 writer**——11 个含状态导出的 SKILL.md 一律 `export _STATUS="DONE"`，`write_state.py:76` 默认 DONE，无任何路径写 IN_PROGRESS。recovery 分支永不触发。`plan-agent.md:317` 又把 IN_PROGRESS 记为合法 Work-Agent 状态，故不是纯死代码而是**半接线 scaffold**。

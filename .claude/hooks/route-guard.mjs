@@ -28,7 +28,7 @@ function parsePrompt() {
     const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
     try {
       const data = JSON.parse(raw || '{}');
-      hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 32);
+      hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
       return String(data.prompt || data.message || '');
     } catch {
       process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);

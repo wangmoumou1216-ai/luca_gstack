@@ -71,7 +71,7 @@ tools:
 
 ## 输出
 
-评分卡（每条 AC 的 pass/fail + 证据）+ 若未全过，一份结构化 gap 列表交还调度方。
+评分卡（每条 AC 的 pass/fail + 证据）+ 若未全过，一份结构化 gap 列表交还调度方。本 agent 无 Write 工具，**评分卡由调度方落盘**（Loop 场景：`muse-loop-orchestrate` 写入 `docs/loop/specs/REQ-*/scorecard.md`，格式见 `muse-loop/schema.md`「scorecard.md」节）。
 
 ## 校准状态
 

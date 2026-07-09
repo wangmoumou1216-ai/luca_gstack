@@ -7,7 +7,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-BRANCH="${1:-feat/memory-3way-taxonomy}"        # 默认=GitHub 默认分支(upstream/HEAD)；注意它落后 main ~24 条，要全量升级请显式传 main
+BRANCH="${1:-main}"        # 默认=main（audit 2026-07-07 F5-01：原默认 feat/memory-3way-taxonomy 已全量并入 main、落后 ~24 条，merge 恒 no-op 假报"已是最新"；GitHub 默认分支实为 main）
 export GIT_LFS_SKIP_SMUDGE=1                     # 母版配了 lfs 但无实际文件 → 跳过防挂
 
 CUR="$(git rev-parse --abbrev-ref HEAD)"

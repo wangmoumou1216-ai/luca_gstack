@@ -43,7 +43,7 @@ muse 的"需求→原型 Loop"新增应**尽量少碰**它们，以让每次 `sy
   **⚠️ 2026-07-01 用户反馈：认为"拆两个 skill 很奇怪"，要求 Phase 2 执行前重新想清楚融合 vs 独立——"跳过重建"已被红队否决，但"design-brief 完整跑一遍、把 L2 schema 作为 Phase 6/6.5 正常产出的副产品"这条路径尚未被红队正面验证过，是 Phase 2 规划下一步优先核验项。**
 - **proto-gen**（强重叠，`/html-prototype` Phase 3/4.5 已是"设计→交互原型+QA"）：不能给 html-prototype 加旁路 flag 跳过人工确认（该 skill 自身文本明确"任何模式下质量 gate 不可跳过"，直接矛盾）。本仓已有解法：`figma-demo` 精确复刻这种"同引擎、不同触发场景"的需求——独立瘦身 skill、自己 frontmatter、`shared-refs` 引用 html-prototype 的防 slop/token 规则、复用 `verify-prototype.mjs`（`allowedModes` 加新模式）。**这不是凭空拆分——是复用本仓已验证的先例**（proto-gen 类比 figma-demo，html-prototype 不变）。
 - **proto-judge**（唯一确认的真新能力）：与 ux-audit 须显式区分职责（proto-judge 只对 Loop 验收标准打分，ux-audit 保留通用截图评审），永不静默自动应用任何发现到已产出 HTML/CSS（沿用 ux-audit"P0 必须用户确认"先例，figma-layer 下游也消费同一份 HTML）。内循环收敛借鉴 Oracle 模式"形状"（轮数上限 3、同一发现连续两轮不变则强制退出），不照搬其 PRD 专属分类维度（需新一套：视觉保真度/品牌 token 合规/交互状态覆盖/可访问性）。
-- **muse-loop-orchestrate**：独立正向单趟 skill（extract→triage→map→gen→judge 一次性单向链，只有 gen↔judge 有界内循环）；不接入现有 Orchestrator 的 Skill Workflow Mode（终止型、skill-keyed DAG，无回退早期阶段机制，套用需改 plan-agent.md 现有"节点顺序只能前进"绝对规则）。有专属 `/muse-loop-orchestrate` 命令 + fork 的 `skill-routing-map.yaml` 一个词条（触发短语用复合词，不含裸"需求"/"原型"子串）+ fork 自己 `route-guard.mjs` 的 `HEAVY_ORCHESTRATOR_SKILLS` 一行（绝不碰母版对应文件）。5 个流水线阶段 skill 不单独注册，由 muse-loop-orchestrate 内部 dispatch。命名不缩写成"loop"（本环境已有内置 `loop` 定时调度 skill，命名相邻会误触发）。
+- **muse-loop-orchestrate**：独立正向单趟 skill（extract→triage→map→gen→judge 一次性单向链，只有 gen↔judge 有界内循环）；不接入现有 Orchestrator 的 Skill Workflow Mode（终止型、skill-keyed DAG，无回退早期阶段机制，套用需改 plan-agent.md 现有"节点顺序只能前进"绝对规则）。有专属 `/muse-loop-orchestrate` 命令 + fork 的 `skill-routing-map.yaml` 一个词条（触发短语用复合词，不含裸"需求"/"原型"子串）+ 经 `.claude/settings.json` 的 `ROUTE_GUARD_HEAVY_SKILLS` env 注入注册进 route-guard 的 `HEAVY_ORCHESTRATOR_SKILLS`（该 Set 全由 env 构建，机制见 route-guard.mjs ~:441 注释；绝不碰母版对应文件）。5 个流水线阶段 skill 不单独注册，由 muse-loop-orchestrate 内部 dispatch。命名不缩写成"loop"（本环境已有内置 `loop` 定时调度 skill，命名相邻会误触发）。
 
 ### 用户已裁定的 5 个真判断分歧（AskUserQuestion，2026-07-01）
 
@@ -80,7 +80,7 @@ luca 追问"路径2会不会用到路径1的skill"时，发现并修复了一处
 - Oracle 模式（`brainstorm`/`ux-brainstorm` 的 `adversarial-review.md`）——`muse-proto-judge` 内循环收敛"形状"（轮数上限3、连续两轮不变退出）借鉴，不借用其 PRD 专属判据内容。
 
 **Hook 机制级依赖（不是 skill，是钩子行为模式）：**
-- 母版 `route-guard.mjs` 的 `HEAVY_ORCHESTRATOR_SKILLS` 门禁模式——fork 内已加 `muse-loop-orchestrate` 一项，母版对应文件零改动。
+- 母版 `route-guard.mjs` 的 `HEAVY_ORCHESTRATOR_SKILLS` 门禁模式——`muse-loop-orchestrate` 经 `.claude/settings.json` 的 `ROUTE_GUARD_HEAVY_SKILLS` env 注入注册（route-guard.mjs 该 Set 全由 env 构建，机制见其 ~:441 注释），母版对应文件零改动。
 
 **明确区分、非依赖关系（只是写了对比说明，互不调用）：**
 - `ux-audit`——`muse-proto-judge` 的文件里专门写了一段职责区分，两者不互相调用。
@@ -110,7 +110,7 @@ luca 连续追问三层："新增skill来源是什么"→"Kiro三件套为什么
 **穷尽核对结果（6大类核查，2真缺陷+4非缺陷）：**
 - ✅ 非缺陷：design.md 的架构/时序图/测试策略内容——确认是刻意范围边界（`design-brief`自己声明"非代码交付节点"+`tech-spec`的Architecture View+`task-plan`的Test Task Cards三处独立确认一致）；"Complexity Tracking"式豁免机制——GATE-1/GATE-2是人类审批卡点非agent自主宪法，豁免机制等于绕开人类审批，已被`allow_standalone_override:false`否决，同"快速路径"一样过早；Design-First入口——21条真实测试样本全部源自已表述的决策/批注，从未有"纯视觉倒推意图"的情形，且违反抽取"不推断意图"铁律；constitution.md条件加载——上述已述。
 - ❗ 真缺陷1（Spec Kit `/converge` 对应）：Phase 3 判官只对预先给定的AC打分，design-map规划过、但没人写AC的组件，判官发现不了——**红队裁定 CLEAR_DEFER 全自动比对机制**（零端到端运行的系统上建第二套未验证机制，跟已否决的快速路径同类过早），**但先加零成本版本**：flip到verified前人工核对一次组件映射表vs实际原型，已写入 `muse-loop-orchestrate/SKILL.md` Phase 3。
-- ❗ 真缺陷2（Spec Kit `/checklist` 对应）：GATE-1只检查"这条需求被说得多响"（triage信号全是loudness），不检查需求陈述本身够不够格——**红队裁定 CLEAR_ADD 但只做最小机制**：不建独立阻断门禁，只在GATE-1现有确认提示里顺手加2条质量提示（有无可衡量目标/有无清楚触发-响应），已写入 `muse-loop-orchestrate/SKILL.md` GATE-1。
+- ❗ 真缺陷2（Spec Kit `/checklist` 对应）：GATE-1只检查"这条需求被说得多响"（triage信号全是loudness），不检查需求陈述本身够不够格——**红队裁定 CLEAR_ADD 但只做最小机制**：不建独立阻断门禁，只在GATE-1现有确认提示里顺手加2条质量提示（有无可衡量目标/有无清楚触发-响应）——初落 `muse-loop-orchestrate/SKILL.md` GATE-1，后随 GATE-1 呈现权威移交（f294de7）迁至 `muse-req-triage/SKILL.md` Phase 3 第 4 条目（EARS 校验旁的人工语义质量提示，2026-07-08 补回）。
 - ❗ 真缺陷3（Kiro tasks.md 依赖图/并发波次对应，`task-plan`——既有母版skill非muse-loop自建）：现状只有自由文本"依赖"描述，且发现的候选方案里举例的ID格式（`TASK-03`）跟真实约定（`DEV-NNN`）对不上——**红队裁定 CLEAR_DEFER 自动依赖图/并发调度算法**（`muse-loop`目录里没有任何dispatcher/执行代码，"并发执行时序错误"是对不存在的系统的假想），**但先加零成本结构化字段**：任务卡"输入"里拆出独立的"依赖任务"字段（`DEV-NNN`列表），已写入 `task-plan/SKILL.md`（v1.0.1）。
 
 `schema.md` 同时修复了一处真实文档缺口（非判断类）：EARS语法实际有4种模板（事件驱动WHEN/状态驱动WHILE/条件驱动IF-THEN/通用型），之前3条测试样例恰好全是事件驱动型，掩盖了另外3种从未被文档化的事实——已在 `schema.md` 补全4种模板的选用说明。

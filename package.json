@@ -10,7 +10,7 @@
     "verify": "bash scripts/verify.sh",
     "validate:skills": "bash scripts/validate-skills.sh",
     "lint:yaml": "python3 -c \"import sys, os, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:] if not f.endswith('workflow-state.yaml') or os.path.exists(f)]\" .claude/workflow-state.yaml .claude/skill-os/optional-workflow-graph.yaml .claude/skill-os/input-modes.yaml .claude/skill-os/evolution/self-model.yaml .claude/skill-os/evolution/gaps-register.yaml .claude/skill-os/evolution/sources-registry.yaml .claude/skill-os/model-routing.yaml",
-    "check:hooks": "node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node --check .claude/hooks/project-scope-guard.mjs && node scripts/test-hooks.mjs",
+    "check:hooks": "node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node --check .claude/hooks/session-end.mjs && node --check .claude/hooks/project-scope-guard.mjs && node scripts/test-hooks.mjs",
     "test:routes": "node scripts/test-route-guard.mjs",
     "test:project-scope": "node scripts/test-project-scope-guard.mjs",
     "test:memory": "python3 -m unittest memory.tests.test_memory_system -v",
