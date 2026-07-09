@@ -46,8 +46,17 @@ if (existsSync(handoffDir)) {
     .slice(0, 20);
   for (const name of handoffs) {
     const content = readFileSync(join(handoffDir, name), 'utf8');
-    assert.match(content, /gate_result:\s*(PASS|FAIL|CONDITIONAL_PASS)/, `${name} missing gate_result`);
     const dateMatch = name.match(/^(\d{4}-\d{2}-\d{2})-/);
+    const GATE_RE = /gate_result:\s*(PASS|FAIL|CONDITIONAL_PASS)/;
+    // gate_result：新 handoff（>=CRITERIA_SINCE 或无日期前缀）硬断言；存量按文件名日期豁免为 WARN，
+    // 与下方 criteria 块同一"存量按日期豁免"口径对齐。docs/ 是共享软链，pre-commit 时可能指向任一活跃
+    // 项目，原无条件硬断言会因某跨链项目（如 todo-capsule）的存量 handoff 缺字段而非确定性硬崩
+    // （flaky，2026-07-09 定位：muse 自身 8 份 handoff 全合规，崩的是软链临时指到的别的项目）。
+    if (!dateMatch || dateMatch[1] >= CRITERIA_SINCE) {
+      assert.match(content, GATE_RE, `${name} missing gate_result`);
+    } else if (!GATE_RE.test(content)) {
+      console.warn(`WARN ${name}: legacy handoff missing gate_result (pre-${CRITERIA_SINCE}, grandfathered)`);
+    }
     if (dateMatch && dateMatch[1] >= CRITERIA_SINCE) {
       const hasCriteriaBlock = /^criteria:/m.test(content);
       const hasCriterionLine = /\[C\d+\].*(PASS|FAIL|UNKNOWN)/.test(content);
