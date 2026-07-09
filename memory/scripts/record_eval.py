@@ -31,7 +31,10 @@ def main():
     parser.add_argument("--scene", default="unknown", choices=["A", "B", "C", "D", "unknown"])
     parser.add_argument("--input-summary", default="", help="输入意图摘要（≤300字）")
     parser.add_argument("--output-paths", nargs="*", default=[], metavar="PATH")
-    parser.add_argument("--gate-score", type=float, default=None, help="Quality gate 分数 0-10")
+    # 2026-07-09 E5 语义切换：新值 = 0-1 通过率（pass_count/total，来自逐 criteria 二元判定）；
+    # 历史值 10.0/8.0 为旧制无 rubric 主观分（2026-06-12/14 六条）；None 语义不变（未跑 judge）。
+    parser.add_argument("--gate-score", type=float, default=None,
+                        help="Quality gate 通过率 0-1（旧制 0-10 主观分已废止，历史数据保留原值）")
     parser.add_argument("--gate-status", required=True,
                         choices=["PASS", "FAIL", "CONDITIONAL_PASS"])
     parser.add_argument("--gate-findings", nargs="*", default=[], metavar="FINDING",

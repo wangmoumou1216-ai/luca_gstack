@@ -63,8 +63,44 @@ ensure_project() {
 
 > 只存「只对本项目成立」的事实（部署坑 / 状态真值路径 / 项目结构 / 本项目专属约束）。
 > 跨项目工作偏好 → 全局个人记忆；luca_gstack 框架规则 → semantic candidate。
+> 决策历史（为什么这么定）在 decisions.md，按需 Read，不进注入面。
 > 一行一条：- [标题](file.md) — 一句钩子
 
+EOF
+  fi
+  # 项目 context 套装（2026-07-09 final-plan M3）：CONTEXT.md=激活时注入的长期约束；
+  # decisions.md=just-in-time 决策台账。均 if-not-exists 保护，不覆盖已有内容（如 todo-capsule 的 CONTEXT.md）。
+  if [ ! -f "$root/CONTEXT.md" ]; then
+    cat > "$root/CONTEXT.md" <<EOF
+# $name — CONTEXT
+
+> 项目级长期约束与共识。激活/绑定本项目时注入（硬预算 ≤80 行，超了精简或外移）。
+> 与 docs/decisions/（skill 产出稿目录）不同：本文件只放约束与共识，不放产出文档。
+
+## 概览
+- 一句话：<这个项目是什么、给谁、解决什么问题>
+- 当前阶段：<idea / 原型 / 开发 / 上线维护>
+
+## 技术栈与禁用项
+- 栈：<语言/框架/关键依赖>
+- 禁用：<明确不用的方案，防 agent 推荐偏离>
+
+## 目录结构要点
+- <关键目录>：<一句话作用>（完整结构按需现场结构侦察（ls/grep 或专用侦察 skill），不在此维护长清单）
+
+## 红线
+- <本项目不可违反的硬约束，每条一行>
+EOF
+  fi
+  if [ ! -f "$root/.luca/memory/decisions.md" ]; then
+    cat > "$root/.luca/memory/decisions.md" <<EOF
+# $name — 决策台账（ADR-lite）
+
+> 只记「为什么这么定」且不可从代码/产出文档推导的决策。被推翻的标 superseded_by，不删除。
+> 来源：session 结束裁决时，episodic --decision 中归属本项目的条目同步一行至此（一源两视图）。
+> 与 docs/decisions/（skill 产出稿目录）不同：此处只放一句话决策+why。
+
+- [D-YYYYMMDD-N] <决策一句话> — why: <一句话>
 EOF
   fi
 }
@@ -131,12 +167,22 @@ activate_project() {
 inject_project_memory() {
   local root="$PROJECTS_ROOT/$1"
   local mem="$root/.luca/memory/MEMORY.md"
-  [ -f "$mem" ] || return 0
-  # 仅当索引区有真实条目（以 "- " 开头的行）才注入，空模板不打扰。
-  if grep -q '^- ' "$mem" 2>/dev/null; then
+  local ctx="$root/CONTEXT.md"
+  if [ -f "$mem" ]; then
+    # 仅当索引区有真实条目（以 "- " 开头的行）才注入，空模板不打扰。
+    if grep -q '^- ' "$mem" 2>/dev/null; then
+      echo ""
+      echo "🧠 项目本地记忆（$1）:"
+      cat "$mem"
+    fi
+  fi
+  # CONTEXT.md（2026-07-09 M3）：仅当有占位符之外的实际内容行才注入
+  # （过滤标题/引用/注释/空行后，存在不含 "<" 的行 = 已被真实填写；空骨架不打扰）。
+  # head -100 是注入安全帽（模板头部已约束作者 ≤80 行）。
+  if [ -f "$ctx" ] && grep -Ev '^(#|>|<!--)' "$ctx" 2>/dev/null | grep -v '^[[:space:]]*$' | grep -qv '<'; then
     echo ""
-    echo "🧠 项目本地记忆（$1）:"
-    cat "$mem"
+    echo "📌 项目 CONTEXT（$1）:"
+    head -n 100 "$ctx"
   fi
 }
 

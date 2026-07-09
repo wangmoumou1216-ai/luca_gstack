@@ -328,6 +328,22 @@ grep -ql "gate_result" docs/handoff/*-<skill>-handoff.md 2>/dev/null && echo "PA
 ```
 - 不应存在的内容是否已清除
 
+**产出质量 criteria 子类（llm-judge 型，2026-07-09 E3）：** shell 断言只覆盖存在性/覆盖率/
+语法这类可机判项；断言列表还必须附一个 **criteria 子块**评产出质量——3-7 条二元 criterion，
+每条绑一个真实 failure mode + 证据要求（faithfulness / completeness / consistency 等，
+来源与格式见 `.claude/skill-os/eval-methodology.md`）。它们**不是 bash 命令**：任务完成后由
+quality-gate（Free Task Mode 附带执行）或主 agent 收尾**逐条判定**（pass / fail / unknown +
+证据），结果写入收尾 handoff 的 `criteria:` 块（与 handoff-protocol v3.2 主绑定点汇合）。
+写不出二元判定句的 criterion 退回重写；judge 不确定时判 UNKNOWN，不许硬判。
+
+```yaml
+# 产出质量 criteria 示例（计划阶段定义，完成后判定）
+criteria:
+  - "[C1] 报告每条结论都有 ≥1 个带 URL 的来源支撑（防幻觉引用）"
+  - "[C2] 全部 MUST 需求在方案中有对应设计段（防静默丢需求）"
+  - "[C3] 未引入计划外的新依赖/新文件（防 scope 蔓延）"
+```
+
 ### 块 4 — 失败策略 + Completion Status
 
 **断言失败处理：**
