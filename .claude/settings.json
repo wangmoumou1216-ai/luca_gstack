@@ -1,4 +1,7 @@
 {
+  "env": {
+    "MEMORY_ROOT": "/Users/luca/Desktop/luca_gstack"
+  },
   "permissions": {
     "allow": [
       "WebSearch",

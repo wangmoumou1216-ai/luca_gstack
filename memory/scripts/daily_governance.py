@@ -277,15 +277,18 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
                 "——逐个按 extraction-bar 四信号裁决后清零"
             )
 
-        # 3. 写路径核验：只报告解析到哪个 root，不 auto-fix（E1 真发现：MEMORY_ROOT 残留把写重定向到母版）
-        env_tag = f"MEMORY_ROOT={env_memory_root}" if env_memory_root else "MEMORY_ROOT 未设，用默认"
-        if resolved_root.resolve() != fork_home.resolve():
+        # 3. 写路径核验（2026-07-10 语义翻转）：记忆单一权威 store = 母版（luca 07-09 拍板，
+        # fork 经 .claude/settings.json env 注入 MEMORY_ROOT 指过去）。异常 = 未设（回落 fork
+        # 本地 → 分裂脑）或设了但路径不存在；指向母版 = by-design，只作标注。不 auto-fix。
+        if not env_memory_root:
             anomalies.append(
-                f"写路径重定向：{env_tag} 把 marker/digest 落到 {resolved_root}（非本 fork {fork_home}）"
-                "——07-09 有 session 活动却无 marker 的疑因；不自动改，请核对 MEMORY_ROOT"
+                f"MEMORY_ROOT 未设：memory 读写回落本仓库 {fork_home}，脱离单一权威 store（母版）"
+                "——检查 .claude/settings.json env 注入是否丢失"
             )
+        elif not resolved_root.is_dir():
+            anomalies.append(f"MEMORY_ROOT={env_memory_root} 指向不存在的路径——memory 读写将失败")
         else:
-            notes.append(f"写路径 OK：marker/digest 落在本 fork {resolved_root}（{env_tag}）")
+            notes.append(f"写路径 OK：MEMORY_ROOT={env_memory_root}（单一权威 store，by design 2026-07-09）")
 
         # 2. 双向陈旧度：最新 episodic 日期 vs 最新 digest/.checked marker 日期（ISO 日期串可直接比较）
         ep_dates = []
@@ -323,11 +326,11 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
                 f"双向陈旧度：episodic 最新 {ep_newest or '无'}（距今 {ep_stale if ep_stale is not None else '—'} 天）"
                 f" / marker 最新 {marker_newest or '无'}（距今 {mk_stale if mk_stale is not None else '—'} 天）"
             )
-        # 方向一（写路径/治理断）：最新 episodic 活动日(<今天) 在本 fork 无对应 marker
+        # 方向一（治理断）：最新 episodic 活动日(<今天) 在权威 store 无对应 marker
         if ep_newest and ep_newest < today and ep_newest not in marker_dates:
             anomalies.append(
-                f"episodic 最新活动 {ep_newest} 在本 fork 无对应 governance marker（.checked/digest）"
-                "——该日 session 未被本 fork 治理，疑写路径重定向"
+                f"episodic 最新活动 {ep_newest} 在权威 store 无对应 governance marker（.checked/digest）"
+                "——该日 session 未被治理，疑治理未跑或写路径分裂"
             )
         # 方向二（capture 断）：marker 明显领先 episodic → 治理在跑却无新经验落盘
         if ep_dt and mk_dt and (mk_dt - ep_dt).days >= LOOP_STALE_DAYS:
