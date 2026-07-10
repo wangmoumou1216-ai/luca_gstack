@@ -133,6 +133,41 @@ def check_model_routing():
             if skill not in declared:
                 issues.append(f"model-routing: 真值源登记了 {skill} 但其 SKILL.md 无 recommended-model 声明")
 
+        # 新场景入场 tripwire（2026-07-10 new_scenario_protocol）：
+        # ① office skill 目录既无 frontmatter 声明也未在真值源登记 → 待评估档位
+        non_dispatch = set(data.get("non_dispatchable") or [])
+        if skills_dir.is_dir():
+            for sk in sorted(skills_dir.iterdir()):
+                if not (sk / "SKILL.md").is_file():
+                    continue
+                if sk.name in non_dispatch:
+                    continue  # 只读参考资产目录等非可调度项，无模型档
+                if sk.name not in declared and sk.name not in registered:
+                    issues.append(f"model-routing: 新场景待评估档位——office/{sk.name} 未声明 recommended-model 且未在真值源登记（按 new_scenario_protocol 三问定档）")
+        # ② agents/*.md（有 frontmatter 的）：pin 值须与 agents: 登记一致；无 pin 须在 agents_no_pin
+        agents_dir = ROOT / ".claude" / "agents"
+        pinned = {k: str(v) for k, v in (data.get("agents") or {}).items()}
+        no_pin = set(data.get("agents_no_pin") or [])
+        if agents_dir.is_dir():
+            for af in sorted(agents_dir.glob("*.md")):
+                text = af.read_text(encoding="utf-8")
+                if not text.startswith("---") or text.count("---") < 2:
+                    continue  # 无 frontmatter 的行为模式文档（如 plan-agent）不在机检范围
+                fm = text.split("---", 2)[1]
+                fm_model = None
+                for l in fm.splitlines():
+                    if l.strip().startswith("model:"):
+                        fm_model = l.split(":", 1)[1].split("#", 1)[0].strip()
+                        break
+                stem = af.stem
+                if fm_model:
+                    if stem not in pinned:
+                        issues.append(f"model-routing: agents/{af.name} 有 pin={fm_model} 但真值源 agents: 未登记")
+                    elif pinned[stem] != fm_model:
+                        issues.append(f"model-routing: agents/{af.name} pin={fm_model} 与真值源登记={pinned[stem]} 不一致")
+                elif stem not in no_pin:
+                    issues.append(f"model-routing: 新场景待评估档位——agents/{af.name} 无 model pin 且未在 agents_no_pin 登记（按 new_scenario_protocol 三问定档）")
+
         # markdown 速查快照与真值源同步（CLAUDE.md / orchestrator.md 双写点）
         for md_rel in ("CLAUDE.md", ".claude/agents/orchestrator.md"):
             md_path = ROOT / md_rel

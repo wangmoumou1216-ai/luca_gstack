@@ -5,6 +5,8 @@ description: |
   Called by Orchestrator before any skill_execution or standalone skill invocation.
   Returns PASS or FAIL with specific missing items and fix suggestions.
   Lightweight: only uses Read and Bash tools.
+model: haiku   # 2026-07-10 模型路由：纯机械前置检查（mechanical 档）
+effort: low
 ---
 
 # Preflight Agent — Skill 前置条件检查器

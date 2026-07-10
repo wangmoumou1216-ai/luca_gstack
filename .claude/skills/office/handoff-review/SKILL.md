@@ -19,7 +19,7 @@ context-cost:
   self: 4616
   runtime-estimate: 20000
   shared-refs: [none]
-  recommended-model: guided-execution  # 基于checklist审查
+  recommended-model: core-execution  # 2026-07-10 交付验收升档；oracle环节按fable_whitelist P0
 ---
 
 ## Preamble (run first)

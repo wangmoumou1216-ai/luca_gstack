@@ -21,7 +21,7 @@ context-cost:
   runtime-estimate: 20000
   shared-refs: [ai-native-design-framework, design-system-contract, html-prototype-tokens]
   template: auto-detect
-  recommended-model: guided-execution  # 基于brief执行原型
+  recommended-model: core-execution  # 2026-07-10 承重执行档：自写HTML原型
 ---
 
 ## Preamble (run first)

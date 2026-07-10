@@ -44,7 +44,8 @@ EVAL_LOG = ROOT / "memory" / "evals" / "eval-log.jsonl"
 # 能力档 → 可接受的 A/B 模型（被改 skill 的 recommended-model 档决定 A/B 跑哪个模型；
 # reasoning-heavy 设计 skill 实际跑 fable/opus，在 sonnet 上 A/B=测错模型。源 SC-20260621-001 / GAP-behavioral-ab-tier）
 TIER_MODELS = {
-    "reasoning-heavy": {"fable", "opus"},   # fable 主，opus 回退
+    "reasoning-heavy": {"fable", "opus"},   # fable 主，opus 回退（降级链，2026-07-10 手术刀版仅剩判定场景）
+    "core-execution": {"opus"},             # 2026-07-10 新增：承重执行档（brainstorm 系/deepresearch 自 reasoning-heavy 迁入）
     "guided-execution": {"sonnet"},
     "mechanical": {"haiku"},
 }

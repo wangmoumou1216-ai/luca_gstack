@@ -11,7 +11,7 @@ context-cost:
   self: 22149  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 150000
   shared-refs: [none]
-  recommended-model: reasoning-heavy  # 多agent深度研究
+  recommended-model: core-execution  # 2026-07-10 Fable手术刀：研究fan-out是最大fable漏点，降opus（翻2026-06-10裁决，记录在model-routing.yaml）
 ---
 
 ## Preamble (run first)

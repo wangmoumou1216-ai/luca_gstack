@@ -10,9 +10,21 @@
 #    （新档位发布/档位退役/能力代际漂移），主动向用户提示更新本文件，不得沉默沿用。
 # 4. daily_governance.py 每日校验本文件 ↔ skill frontmatter 一致性与复核期限，
 #    异常写入 memory/digests/ 等用户裁决——检测自动化，重映射判断留给人。
+# 5. 【2026-07-10 Fable 手术刀改版】fable 配额稀缺，物尽其用：fable 只用于
+#    fable_whitelist 枚举的判定场景；dispatch 传 model: fable 的唯一合法依据是
+#    白名单条目。生成/研究/编排/checklist 审查/交互引导一律 ≤ opus。
+# 6. 【降级链】fable 不可用（配额耗尽/模型报错/被 availableModels 排除）→
+#    自动降一级到 opus 重试，并在产出中告知用户本次判定运行在降级档。
+# 7. 【native_precedence · 原生优先】Claude Code 原生已有 opusplan（plan=opus/
+#    执行=sonnet 的模式级双档）。当原生出现更通用的动态模型调控（auto/复杂度
+#    路由/fableplan 类特性）时：主动告知用户 → 提案将本文件降级为语义补充层，
+#    Claude 原生逻辑优先，不得与原生机制抢控制权。
+#
+# 【双仓注记】muse fork 的同名文件另含 fork 专属条目（muse-loop-orchestrate/
+# muse-req-triage/muse-proto-gen/code-recon/muse-proto-judge）；本文件是母版视图。
 
-version: 1
-updated: 2026-06-10
+version: 2
+updated: 2026-07-10
 review_after_days: 90   # 超过此天数未复核 → digest 提醒重新核对档位映射
 
 # Claude Code 当前已知档位阵容（能力高→低）。会话中发现阵容变化时更新此表。
@@ -24,20 +36,106 @@ default_tier: guided-execution
 tiers:
   reasoning-heavy:
     resolves_to: fable
-    description: 创造性/对抗性/开放式推理——深度研究、设计决策、苏格拉底拷问、红队
-    note: 2026-06-10 经用户裁决由 opus 升档 fable（成本约 2×）；opus 为回退档
-    skills: [deepresearch, brainstorm, ux-brainstorm, design-brief, redteam]
+    fallback: opus   # 降级链：fable 不可用 → opus（规则 6）
+    description: 仅判定场景——对抗/裁决/出门前回验/规划期（fable_whitelist 是唯一授权清单）
+    note: |
+      2026-06-10 用户裁决 opus→fable（当时含全部设计 skill）；
+      2026-07-10 用户裁决收严为手术刀——整场交互 skill（brainstorm 系）与研究 fan-out
+      （deepresearch）迁出至 core-execution，fable 只留判定时刻（单次 5-30k token、
+      判断杠杆极高的点位），配额消耗降约 80-95%。
+    skills: [redteam]
+
+  core-execution:
+    resolves_to: opus
+    description: 承重执行与整场交互——写代码/工程合同/原型/外部设计工具编排/交互式设计 skill/研究 fan-out/判官常规模式；主循环推荐常驻档
+    note: |
+      2026-07-10 新增（用户裁决执行分两级：承重执行 opus / 轻执行 sonnet；
+      open-design 与 Claude Design 外部工具编排点名用 opus）。
+      brainstorm 系与 deepresearch 自 reasoning-heavy 迁入（Fable 手术刀，
+      见 reasoning-heavy.note）；其内部判定环节（苏格拉底审查/Oracle 对抗）按
+      fable_whitelist P1 单独 dispatch fable 微判官。
+    skills: [brainstorm, ux-brainstorm, design-brief, deepresearch, tech-spec,
+             task-plan, open-design, html-prototype, handoff-review, code-hygiene,
+             auto]
 
   guided-execution:
     resolves_to: sonnet
-    description: 有框架/checklist/规范指导的执行与审查（默认档）
-    skills: [idea, ux-research, ux-audit, open-design, figma-demo, html-prototype,
-             challenge, taste-review, design-review, handoff-review, code-hygiene]
+    description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
+    skills: [idea, ux-research, ux-audit, figma-demo, challenge, taste-review,
+             design-review, compare, magicpath]
 
   mechanical:
     resolves_to: haiku
     description: 机械执行、格式检查、打分、检索
     skills: [evals, careful, retro, figma-layer, fx-icon-search]
 
-# 硬性 pin（不走 tier，登记备查）：
-# - .claude/agents/quality-gate.md frontmatter `model: sonnet`（断言执行，独立 context）
+# ─── Fable 使用白名单（2026-07-10，dispatch 传 model: fable 的唯一合法依据）───
+# 评估维度：单次 token 量级 × 判断杠杆 × 错判代价。全部是"小上下文、高杠杆"点位。
+fable_whitelist:
+  P0_出门前裁决:
+    - "期末合同回验（orchestrator Step 3b 的 RTM 判定 dispatch）"
+    - "交付验收裁决（handoff-review 的 oracle 环节等）"
+    - "不可逆操作前复审（git 批量/发布/覆盖前的独立 review dispatch）"
+  P1_对抗判定:
+    - "redteam skill 全程"
+    - "refute/judge/oracle 型 subagent（brainstorm 苏格拉底审查、ux-brainstorm Oracle、judge panel 裁定）"
+  P2_复审与规划:
+    - "翻案复审（用户质疑结论/要求高模型复审时的 review dispatch）"
+    - "plan-mode 规划期 dispatch（Explore / Plan agent）——2026-07-10 用户点名"
+  # 此外一律不用 fable；拿不准 → 用 opus（宁降不越权）。
+
+# ─── Agent frontmatter pin 登记（与 .claude/agents/*.md 保持一致，governance 机检）───
+agents:
+  quality-gate: opus        # 判官≥执行者；合同回验模式由调用方参数升 fable（P0）
+  preflight-agent: haiku    # 纯机械前置检查（effort: low）
+
+# 有意不 pin 的 agent（机检白名单——不在 agents: 也不在此表的 agent 文件 → tripwire 告警）：
+# orchestrator=主循环行为模式（继承主循环）；plan-agent 被 spawn 时按白名单 P2 传 fable；
+# work-agent 按 Phase 的 model_tier 由 dispatch 参数决定（默认 core-execution）。
+agents_no_pin: [orchestrator, plan-agent, work-agent-template]
+
+# 非可调度目录（有 SKILL.md 但不可作为独立 skill 调用，无模型档——tripwire 豁免）
+non_dispatchable: [references]
+
+# ─── Dispatch 规则（执行层，2026-07-10 起为强制，非建议）───
+dispatch_rules:
+  principle: |
+    spawn 任何 subagent 时，调度方必须解析 tier→alias 并显式传 Agent tool 的
+    model 参数（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin，如 Step 3b
+    对 quality-gate 传 fable）。不确定归属 → 省略参数继承主循环，不得猜 fable。
+  skill_execution: "按该 skill 的 recommended-model tier 解析"
+  task_execution: "按 Plan Agent 计划中该 Phase 的 model_tier 解析（默认 core-execution）"
+  builtin_agents:
+    explore_plan_mode: fable    # plan-mode 规划期（白名单 P2，用户点名）
+    plan_agent_plan_mode: fable # 同上
+    explore_general: sonnet     # 非规划期的一般检索/理解 fan-out
+    mechanical_fanout: haiku    # 机械批量（格式/计数/存在性检查）
+    judge_adversarial: fable    # 判定型（白名单 P0/P1）
+    judge_checklist: opus       # checklist 型判官（quality-gate 常规）
+  workflow_tool: "豁免——Workflow 脚本 agent() 保持自身 omit/inherit 逻辑（用户点名 dynamicworkflow 除外）"
+  main_loop: |
+    主循环模型为用户 /model 主权，框架不自动切（原生无此机制）。推荐 opus 常驻
+    （指挥官档），fable 全部经白名单点状 dispatch；重大架构/审查日可手动
+    /model fable 起 session（逃生阀，可选）。
+
+# ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
+new_scenario_protocol:
+  rule: |
+    luca_gstack 新增任何场景逻辑（新 skill / 新 agent / 新 workflow 节点 / 新 dispatch
+    类型）时，创建者必须在创建的同一次改动中完成档位评估并显式声明——skill 写
+    recommended-model frontmatter，agent 写 model pin 或在本文件 agents: 登记
+    "无 pin+理由"，节点写进 dispatch_rules。不得静默落 default_tier。
+  evaluation_rubric: |
+    三问定档（与 fable_whitelist 同一评估维度）：
+    ① 单次 token 量级？（整场交互/fan-out=大 → 禁 fable）
+    ② 判断杠杆？（对抗/裁决/回验=极高；生成/编排=中；检索/格式=低）
+    ③ 错判代价？（不可逆/出门前=极高 → 白名单候选）
+    大token+中杠杆 → core-execution；小token+极高杠杆+高代价 → 提案进 fable_whitelist
+    （白名单变更须用户批准）；有框架指导的轻活 → guided-execution；机械 → mechanical。
+  tripwire: |
+    daily_governance.check_model_routing 扫描未声明档位的 skill/agent → digest 告警
+    "新场景待评估档位"，留用户裁决（机械兜底，创建时纪律为主路径；不做实时 hook——
+    新增场景是低频事件，为其加每-prompt hook 不符合复杂度自证）。
+
+# 硬性 pin 历史备注：quality-gate 原 pin sonnet（2026-06 登记），
+# 2026-07-10 判官升档 opus（验证不对称：判官上下文小、判定杠杆大、错判代价高）。
