@@ -53,7 +53,7 @@ tiers:
       fable_whitelist P1 单独 dispatch fable 微判官。
     skills: [brainstorm, ux-brainstorm, design-brief, muse-loop-orchestrate,
              deepresearch, tech-spec, task-plan, open-design, html-prototype,
-             handoff-review, code-hygiene, auto]
+             handoff-review, code-hygiene, auto, muse-x-digest]
 
   guided-execution:
     resolves_to: sonnet
