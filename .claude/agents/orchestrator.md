@@ -145,6 +145,16 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
 
 Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
         Orchestrator 汇总并展示：PASS N / FAIL M / WARN K
+
+Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时（Scene A/B/D）：
+        回读 tech-spec §RTM「测试准则」列，逐条判 pass / fail + 证据，三维框架——
+        completeness（需求全实现）/ correctness（符合 spec 意图与边界）/
+        coherence（设计决策反映在代码）。
+        结果写入收尾 handoff 的 criteria: 块（handoff-protocol v3.2 既有绑定点，不造新格式）。
+        - FAIL 项 → 呈用户裁决；判定为蓄意偏离 → 在 tech-spec「Coverage Gate Result」节
+          追加 delta 行：MODIFIED: <原准则> → <新准则> (reason)
+        - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
+        - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
 ```
 
 ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）

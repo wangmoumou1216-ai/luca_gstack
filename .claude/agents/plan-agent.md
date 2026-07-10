@@ -165,6 +165,25 @@ Step 3  输出覆盖率报告（写入计划文件开头）：
 - 遗漏 MUST 级 DEV-NNN → **CRITICAL：计划不允许输出，必须补充对应 U-block**
 - 遗漏 PARTIAL 级 DEV-NNN → WARNING：记录到计划 `DONE_WITH_CONCERNS` 的 defer 项，可继续
 
+### 块 1.6 — ASSERT/TEST-NNN 反向覆盖检查 ⚠️（与块 1.5 同构，2026-07-10 验收闭环）
+
+**当输入中存在 task-plan.md 时，强制执行此步骤，不可跳过。**
+
+```
+Step 1  从 task-plan.md 的 Assertion Matrix 枚举所有 MUST 级 ASSERT-NNN
+Step 2  逐条检查：本计划中是否有 ①一条 BLOCKING bash 断言 或 ②一条 criteria 条目
+        （E3 llm-judge 型，见块 3）与之对应？
+Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头）：
+        assertion 覆盖检查（反向）：
+          task-plan MUST 级 ASSERT: N 条
+          映射关系: ASSERT-001→断言<ID>/criteria[Cn], ...
+          遗漏的 ASSERT: （无 | 列出）
+```
+
+**判定规则：**
+- 遗漏 MUST 级 ASSERT-NNN → **CRITICAL：计划不允许输出，必须补充对应断言或 criteria**
+- 遗漏 PARTIAL 级 ASSERT-NNN → WARNING：记录到 `DONE_WITH_CONCERNS` 的 defer 项，可继续
+
 ---
 
 ### 块 2 — Phase 分解
@@ -582,6 +601,9 @@ ACTUAL=$(ls /tmp/magicpath-<workdir>/src/components/generated/*.tsx 2>/dev/null 
 
 每条模板示例均带有 `[BLOCKING]` 或 `[WARNING]` 级别注释头。实际使用时按业务重要程度选择。
 
+**行为级断言规则（2026-07-10 验收闭环）：** 涉及代码实现的 Phase，每个 MUST 需求 ≥1 条
+**行为级**断言（跑真实测试套件/脚本，见库尾模板）；artifact 级（存在性/语法/grep）不充抵。
+
 ```bash
 # [BLOCKING] <ID> — 文件存在
 [ -f <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
@@ -618,4 +640,18 @@ bash <script> && echo "PASS <ID>" || echo "FAIL <ID>"
 
 # [WARNING] <ID> — git hooks 路径配置
 git config --get core.hooksPath | grep -q "<path>" && echo "PASS <ID>" || echo "FAIL <ID>"
+
+# —— 行为级模板（跑真实测试，2026-07-10 验收闭环）——
+
+# [BLOCKING] <ID> — npm 测试套件通过
+npm test --silent && echo "PASS <ID>" || echo "FAIL <ID>"
+
+# [BLOCKING] <ID> — pytest 套件通过
+python3 -m pytest -q && echo "PASS <ID>" || echo "FAIL <ID>"
+
+# [BLOCKING] <ID> — swift 测试套件通过
+swift test && echo "PASS <ID>" || echo "FAIL <ID>"
+
+# [BLOCKING] <ID> — 项目 verify 脚本通过
+bash scripts/verify.sh && echo "PASS <ID>" || echo "FAIL <ID>"
 ```

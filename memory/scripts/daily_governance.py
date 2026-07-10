@@ -246,6 +246,109 @@ def last_digest_date():
     return max(dates) if dates else None
 
 
+AUTHORITATIVE_MEMORY_ROOT = "/Users/luca/Desktop/luca_gstack"  # 记忆单一权威 store（07-09 拍板）；双仓同一逻辑
+LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
+LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
+DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
+
+
+def check_loop_health(observability_dir, episodic_index, digests_dir,
+                      resolved_root, fork_home, env_memory_root, today):
+    """Loop 健康自检（A2）：只查可观测工件，任何异常 fail-open（吞掉、不打断治理）。
+
+    返回 (anomalies, notes)：anomalies 非空才由调用方追加「⚙️ Loop 健康」小节，且不改 digest 的
+    写入判定（遵守既有"有真实状态变化才写"降频，不 regress）；notes 是随小节一起呈现的上下文行。
+    DORMANT 白名单（muse-loop gen↔judge）by-design 零运行，永不进 anomalies（固定标注）。
+    路径全部由参数传入，便于对临时 fixture 目录做测试而不碰真实状态。
+    """
+    anomalies, notes = [], []
+    try:
+        observability_dir = Path(observability_dir)
+        episodic_index = Path(episodic_index)
+        digests_dir = Path(digests_dir)
+        resolved_root = Path(resolved_root)
+        fork_home = Path(fork_home)
+        today_dt = datetime.strptime(today, "%Y-%m-%d")
+
+        # 1. pending-extraction 积压
+        pend = sorted(observability_dir.glob("pending-extraction-*.md")) if observability_dir.is_dir() else []
+        if len(pend) >= LOOP_PENDING_ALERT:
+            anomalies.append(
+                f"pending-extraction 积压 {len(pend)} 个（≥{LOOP_PENDING_ALERT}，捕获→消化链疑似断）"
+                "——逐个按 extraction-bar 四信号裁决后清零"
+            )
+
+        # 3. 写路径核验（2026-07-10 双仓统一逻辑）：异常 = 解析 root ≠ 权威库
+        # AUTHORITATIVE_MEMORY_ROOT（fork 未设 env 会回落本地=分裂脑、env 指错同理；
+        # 母版本体默认解析即权威 → 天然 OK）。不 auto-fix。
+        auth = Path(AUTHORITATIVE_MEMORY_ROOT)
+        env_tag = f"MEMORY_ROOT={env_memory_root}" if env_memory_root else "MEMORY_ROOT 未设，用默认"
+        if not auth.is_dir():
+            anomalies.append(f"权威 store {AUTHORITATIVE_MEMORY_ROOT} 不存在——检查目录是否改名/迁移")
+        elif resolved_root.resolve() != auth.resolve():
+            anomalies.append(
+                f"写路径脱离单一权威 store：{env_tag} 解析到 {resolved_root}"
+                f"（≠ {AUTHORITATIVE_MEMORY_ROOT}）——memory 读写将分裂；fork 侧检查 .claude/settings.json env 注入"
+            )
+        else:
+            notes.append(f"写路径 OK：{resolved_root}（单一权威 store，by design 2026-07-09；{env_tag}）")
+
+        # 2. 双向陈旧度：最新 episodic 日期 vs 最新 digest/.checked marker 日期（ISO 日期串可直接比较）
+        ep_dates = []
+        if episodic_index.is_file():
+            for line in episodic_index.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    d = json.loads(line).get("date")
+                except Exception:  # noqa: BLE001
+                    continue
+                if d:
+                    ep_dates.append(d)
+        marker_dates = set()
+        if digests_dir.is_dir():
+            for p in digests_dir.glob("*.md"):
+                marker_dates.add(p.stem)
+            for p in digests_dir.glob(".checked-*"):
+                marker_dates.add(p.name[len(".checked-"):])
+        ep_newest = max(ep_dates) if ep_dates else None
+        marker_newest = max(marker_dates) if marker_dates else None
+
+        def _parse(d):
+            try:
+                return datetime.strptime(d, "%Y-%m-%d")
+            except Exception:  # noqa: BLE001
+                return None
+        ep_dt = _parse(ep_newest) if ep_newest else None
+        mk_dt = _parse(marker_newest) if marker_newest else None
+        if ep_newest or marker_newest:
+            ep_stale = (today_dt - ep_dt).days if ep_dt else None
+            mk_stale = (today_dt - mk_dt).days if mk_dt else None
+            notes.append(
+                f"双向陈旧度：episodic 最新 {ep_newest or '无'}（距今 {ep_stale if ep_stale is not None else '—'} 天）"
+                f" / marker 最新 {marker_newest or '无'}（距今 {mk_stale if mk_stale is not None else '—'} 天）"
+            )
+        # 方向一（治理断）：最新 episodic 活动日(<今天) 在权威 store 无对应 marker
+        if ep_newest and ep_newest < today and ep_newest not in marker_dates:
+            anomalies.append(
+                f"episodic 最新活动 {ep_newest} 在权威 store 无对应 governance marker（.checked/digest）"
+                "——该日 session 未被治理，疑治理未跑或写路径分裂"
+            )
+        # 方向二（capture 断）：marker 明显领先 episodic → 治理在跑却无新经验落盘
+        if ep_dt and mk_dt and (mk_dt - ep_dt).days >= LOOP_STALE_DAYS:
+            anomalies.append(
+                f"marker 已到 {marker_newest} 但 episodic 停在 {ep_newest}（滞后 {(mk_dt - ep_dt).days} 天）"
+                "——治理在跑却无新经验落盘，疑 capture(Stop hook/SESSION_SYNC) 停摆"
+            )
+
+        # 4. DORMANT 白名单：固定标注，永不告警
+        notes.append(f"DORMANT 白名单：{DORMANT_LOOPS} 零真实运行属 by-design 待首用，不告警")
+    except Exception as e:  # noqa: BLE001 — 健康自检绝不打断治理
+        anomalies.append(f"loop 健康自检异常（已 fail-open）：{e}")
+    return anomalies, notes
+
+
 def main() -> int:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     today_dt = datetime.strptime(today, "%Y-%m-%d")
@@ -339,6 +442,22 @@ def main() -> int:
 
     lines += [f"## 📥 归档", "", f"- 已审候选归档：{len(archived)}", f"- noisy episode 归档：{len(archived_noisy)}", ""]
 
+    # A2 loop 健康自检（fail-open）：只在已决定写 digest 的路径上跑，且只在有异常时追加小节——
+    # 不参与 has_change 判定，不改 digest 写入门槛（遵守既有降频，零异常时不写任何额外内容）。
+    loop_anomalies, loop_notes = check_loop_health(
+        observability_dir=ROOT / ".claude" / "observability",
+        episodic_index=EPISODIC_INDEX,
+        digests_dir=DIGESTS,
+        resolved_root=ROOT,
+        fork_home=Path(__file__).resolve().parents[2],
+        env_memory_root=os.environ.get("MEMORY_ROOT"),
+        today=today,
+    )
+    if loop_anomalies:
+        lines += ["## ⚙️ Loop 健康", "", "**异常（需处理）：**"] + [f"- {a}" for a in loop_anomalies] + [""]
+        if loop_notes:
+            lines += ["**上下文：**"] + [f"- {n}" for n in loop_notes] + [""]
+
     digest_path = DIGESTS / f"{today}.md"
     if result.get("_error") and digest_path.exists():
         # DG-02：consolidate 失败且今日已有好 digest → 不用退化版覆盖它
@@ -352,6 +471,7 @@ def main() -> int:
         "promoted": len(promoted),
         "pending_human": pending,
         "new_episodes": len(eps),
+        "loop_anomalies": len(loop_anomalies),
     }, ensure_ascii=False))
     return 0
 

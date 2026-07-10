@@ -97,6 +97,7 @@ check S13 "memory stable facts 健康检查通过"       "npm run check:memory-h
 check S14 "quality gate 合同检查通过"             "npm run check:quality-gates --silent"
 check S15 "coding discipline 合同检查通过"        "npm run check:coding-discipline --silent"
 check S16 "项目 docs/state symlink 一致"          "npm run check:project-links --silent"
+check S17 "双仓能力奇偶校验（capability parity）"  "node scripts/check-capability-parity.mjs"
 echo ""
 
 echo "[ CI/CD 基础设施 ]"

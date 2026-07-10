@@ -198,6 +198,14 @@ handoff_gates:
     allow_standalone_override: false
     note: "执行 agent 必须等 task-plan gate PASS 后才能启动。执行阶段：写新代码用 tdd（测试先行/红绿重构），遇 bug/测试失败用 systematic-debugging（根因优先）——经 route-guard 关键词触发（调试/报错/写测试/tdd），非节点强制。"
 
+  execution_to_acceptance:
+    applies_when: "workflow_mode"
+    block_if:
+      - "any MUST RTM row lacks pass/fail verdict"
+      - "any FAIL verdict without user adjudication"
+    allow_standalone_override: true
+    note: "期末合同回验（orchestrator §2.2 Step 3b，2026-07-10 验收闭环）：回读 tech-spec RTM 测试准则逐条判定，结果入收尾 handoff criteria: 块；全 PASS → tech-spec 标 SHIPPED，蓄意偏离记 delta 行（MODIFIED: 原→新 (reason)）。standalone 免强制。推荐（非强制）后置工具：redteam（对抗审计）、code-hygiene（完成前验证铁律）。"
+
 quality_gates:
   always_enforced:
     - "no fabrication"
