@@ -517,6 +517,14 @@ handoff/adr/engineering/evals/retro/redteam 等按 skill 产出分子目录，`P
 
 ---
 
+## luca app 集成（muse fork 专属）
+
+用户要求"打开/查看某个文件"（常见 md，尤其说"在 app / luca / 新页签里看"）时，
+运行 `bash scripts/luca-open.sh <绝对路径>` —— luca app 会在新页签打开只读预览。
+相对路径先解析为绝对路径；文件不存在时报错勿猜路径。此能力为 muse app 侧集成，不回流母版。
+
+---
+
 ## 规则优先级体系
 
 1. **用户最新明确请求** — 最高优先级
