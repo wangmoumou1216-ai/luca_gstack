@@ -530,19 +530,23 @@ handoff/adr/engineering/evals/retro/redteam 等按 skill 产出分子目录，`P
 
 ---
 
-## 模型路由
+## 模型路由（Fable 手术刀，2026-07-10）
 
-真值源：`.claude/skill-os/model-routing.yaml`（按能力档定义，不写死版本；调整路由只改该文件，下表为速查快照，须同步维护）。
+真值源：`.claude/skill-os/model-routing.yaml`（能力档 + fable_whitelist + dispatch_rules + new_scenario_protocol；调整路由只改该文件，下表为速查快照，须同步维护）。
 
-| 能力档 | 任务类型 | 当前解析（2026-06-10） |
+| 能力档 | 任务类型 | 当前解析（2026-07-10） |
 |---------|---------|---------|
-| reasoning-heavy | 深度研究、设计决策、brainstorm、红队 | Fable |
-| guided-execution | 框架指导的执行与审查；未声明 skill 的默认档 | Sonnet |
-| mechanical | 机械执行、格式化、打分、检索 | Haiku |
+| reasoning-heavy | **仅判定场景**（fable_whitelist：出门前裁决/对抗判定/翻案复审/plan-mode 规划期）| Fable（不可用→降级 Opus）|
+| core-execution | 承重执行与整场交互（写代码、tech-spec/task-plan、原型、OD/Claude Design 编排、brainstorm 系交互 skill、deepresearch、判官常规）；主循环推荐常驻档 | Opus |
+| guided-execution | 轻执行/checklist 审查/一般检索；未声明 skill 的默认档 | Sonnet |
+| mechanical | 机械执行、格式化、打分、preflight | Haiku |
 
-- 档位名（fable/opus/sonnet/haiku）是**别名**，运行时解析到该档当前最新模型；档位内升级（如 Opus 4.7→4.8）自动跟随，零维护。
-- SKILL.md frontmatter 的 `recommended-model` 写档名（tier），按本表/真值源解析。
-- **活规则：** 会话中发现 `known_lineup` 未收录的档位变化（新档位发布、档位退役、能力代际漂移）时，主动向用户提示是否更新 model-routing.yaml，不得沉默沿用旧映射。
+- **Fable 白名单纪律：** dispatch 传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist`（P0 出门前裁决 / P1 对抗判定 / P2 翻案复审+plan-mode 规划期）。此外一律 ≤ opus；拿不准用 opus，不得猜 fable。**降级链：** fable 不可用（配额/报错）→ 自动降一级 opus 并告知用户。
+- **主循环策略：** 主循环模型是用户 /model 主权，框架无法自动中途切（原生限制）。推荐 opus 常驻（指挥官档）；fable 全部经白名单点状 dispatch（微型判官，单次 5-30k token）；重大架构/审查日可手动 `/model fable` 起 session（逃生阀）。
+- **强制传参：** spawn subagent 必须按真值源解析 tier→alias 显式传 Agent tool `model` 参数（有 frontmatter pin 的可省略；参数可覆盖 pin）——见 orchestrator.md §5 与 dispatch_rules。Workflow 工具豁免（保持自身 omit/inherit 逻辑）。
+- **新场景入场：** 新增 skill/agent/节点必须在同一次改动中按 `new_scenario_protocol` 三问（token 量级×判断杠杆×错判代价）评估并显式声明档位，不得静默吃默认档；daily_governance tripwire 兜底告警。
+- 档位名（fable/opus/sonnet/haiku）是**别名**，运行时解析到该档当前最新模型；档位内升级（如 Opus 4.7→4.8）自动跟随，零维护。SKILL.md frontmatter 的 `recommended-model` 写档名（tier）。
+- **活规则：** ①会话中发现 `known_lineup` 未收录的档位变化（新档位发布、退役、代际漂移）→ 主动提示更新真值源，不得沉默沿用；②**原生优先（native_precedence）**：发现 Claude Code 原生动态模型调控（auto/复杂度路由/fableplan 类，现有 opusplan 已登记）发布 → 主动告知用户并提案本路由层让位为语义补充，Claude 原生逻辑优先。
 - 漂移看护：`daily_governance.py` 每日校验真值源 ↔ frontmatter 一致性与复核期限，异常写入成长摘要待裁决。
 
 <!-- FILE_END: CLAUDE.md -->

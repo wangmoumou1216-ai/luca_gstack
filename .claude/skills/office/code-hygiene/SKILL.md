@@ -21,7 +21,7 @@ context-cost:
   self: 4200
   runtime-estimate: 15000
   shared-refs: [none]
-  recommended-model: guided-execution  # 框架指导的执行+审查；判断密度中等
+  recommended-model: core-execution  # 2026-07-10 承重执行档：代码清理+完成前验证
 ---
 
 ## 定位（先读）

@@ -6,7 +6,7 @@ description: |
   永不静默自动应用任何修复。冷启动隔离上下文调度（同 quality-gate 的调度
   方式）——调度方只传"原型路径 + acceptance_criteria 列表"，绝不传生成过程/
   推理链。muse fork 专属新增，母版 luca_gstack 无此 agent。
-model: sonnet
+model: opus  # 2026-07-10 判官升档（同 quality-gate）；REQ 终验含验收裁决时由调用方参数升 fable（fable_whitelist P0）
 tools:
   - Read
   - Bash   # 仅用于渲染/截图取证（如无头浏览器截图核对视觉状态），禁止用于写文件；无 Edit/Write 权限，与"永不静默自动应用修复"的只读承诺一致

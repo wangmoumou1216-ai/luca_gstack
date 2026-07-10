@@ -2,6 +2,7 @@
 name: auto
 preamble-tier: 2
 argument-hint: "[需求描述，或多个任务组合描述]"
+recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：整场多agent编排（大token+中判断杠杆），同 muse-loop-orchestrate
 ---
 
 # /auto — 全自动多 Agent 设计编排器

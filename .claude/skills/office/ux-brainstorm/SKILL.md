@@ -13,7 +13,7 @@ context-cost:
   self: 36990  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 60000
   shared-refs: [ai-native-design-framework]
-  recommended-model: reasoning-heavy  # 交互方案创造性探索
+  recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场交互降opus，Oracle对抗环节按fable_whitelist P1单独dispatch fable
 ---
 
 ## Preamble (run first)

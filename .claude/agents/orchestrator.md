@@ -155,6 +155,8 @@ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时
           追加 delta 行：MODIFIED: <原准则> → <新准则> (reason)
         - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
         - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
+        - 模型：判定环节 dispatch quality-gate 时传 model: fable（fable_whitelist P0
+          出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
 ```
 
 ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
@@ -360,18 +362,24 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 
 ---
 
-## 5. 模型路由建议
+## 5. 模型路由（强制传参，2026-07-10 起非建议）
 
-真值源：`.claude/skill-os/model-routing.yaml`（能力档定义 + skill 归属；下表为速查快照，与真值源同步维护）。
+真值源：`.claude/skill-os/model-routing.yaml`（能力档 + fable_whitelist + dispatch_rules；下表为速查快照，与真值源同步维护）。
 
-| 能力档 | 任务类型 | 当前解析（2026-06-10） |
+| 能力档 | 任务类型 | 当前解析（2026-07-10） |
 |---------|---------|---------|
-| reasoning-heavy | 深度研究、设计决策、brainstorm、红队 | Fable |
-| guided-execution | 标准实现、HTML 原型、框架指导的审查（默认）| Sonnet |
-| mechanical | 机械执行、格式化、简单验证 | Haiku |
+| reasoning-heavy | **仅判定场景**（fable_whitelist：出门前裁决/对抗判定/翻案复审/plan-mode 规划期）| Fable（不可用→降级 Opus）|
+| core-execution | 承重执行：写代码、tech-spec/task-plan、原型、OD/Claude Design 编排、交互式设计 skill、deepresearch、判官常规 | Opus |
+| guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
+| mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
 
-档位名是别名，运行时解析到该档当前最新模型。发现真值源未收录的档位变化时，先提示用户更新真值源再调度。
-调度时向用户展示：`"下一步是 <task>，推荐使用 <model>（原因：<reason>）"`
+**Dispatch 规则（强制）：**
+1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
+2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
+3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。
+4. **降级链**：fable 调用失败（配额/不可用）→ 自动降 opus 重试，并在产出中告知用户本次判定运行在降级档。
+5. 发现真值源未收录的档位变化 → 先提示用户更新真值源再调度（活规则）。
+调度时向用户展示：`"下一步是 <task>，使用 <model>（依据：<tier/白名单条目>）"`
 
 ---
 

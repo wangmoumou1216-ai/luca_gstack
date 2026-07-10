@@ -5,7 +5,7 @@ description: |
   Two modes: Free Task Mode (runs Plan Agent assertions) + Skill Mode (checks skill output quality).
   Runs in independent context — does not pollute the main session.
   Returns a short PASS/FAIL report with specific findings.
-model: sonnet
+model: opus  # 2026-07-10 判官升档（验证不对称：判官上下文小、判定杠杆大）；合同回验模式由调用方参数升 fable（fable_whitelist P0）
 tools:
   - Read
   - Bash
