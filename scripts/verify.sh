@@ -98,6 +98,7 @@ check S14 "quality gate 合同检查通过"             "npm run check:quality-g
 check S15 "coding discipline 合同检查通过"        "npm run check:coding-discipline --silent"
 check S16 "项目 docs/state symlink 一致"          "npm run check:project-links --silent"
 check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
+check S18 "双仓能力奇偶校验（capability parity）"  "node scripts/check-capability-parity.mjs"
 echo ""
 
 echo "[ CI/CD 基础设施 ]"

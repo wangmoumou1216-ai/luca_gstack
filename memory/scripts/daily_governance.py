@@ -246,6 +246,7 @@ def last_digest_date():
     return max(dates) if dates else None
 
 
+AUTHORITATIVE_MEMORY_ROOT = "/Users/luca/Desktop/luca_gstack"  # 记忆单一权威 store（07-09 拍板）；双仓同一逻辑
 LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
 LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
 DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
@@ -277,18 +278,20 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
                 "——逐个按 extraction-bar 四信号裁决后清零"
             )
 
-        # 3. 写路径核验（2026-07-10 语义翻转）：记忆单一权威 store = 母版（luca 07-09 拍板，
-        # fork 经 .claude/settings.json env 注入 MEMORY_ROOT 指过去）。异常 = 未设（回落 fork
-        # 本地 → 分裂脑）或设了但路径不存在；指向母版 = by-design，只作标注。不 auto-fix。
-        if not env_memory_root:
+        # 3. 写路径核验（2026-07-10 双仓统一逻辑）：异常 = 解析 root ≠ 权威库
+        # AUTHORITATIVE_MEMORY_ROOT（fork 未设 env 会回落本地=分裂脑、env 指错同理；
+        # 母版本体默认解析即权威 → 天然 OK）。不 auto-fix。
+        auth = Path(AUTHORITATIVE_MEMORY_ROOT)
+        env_tag = f"MEMORY_ROOT={env_memory_root}" if env_memory_root else "MEMORY_ROOT 未设，用默认"
+        if not auth.is_dir():
+            anomalies.append(f"权威 store {AUTHORITATIVE_MEMORY_ROOT} 不存在——检查目录是否改名/迁移")
+        elif resolved_root.resolve() != auth.resolve():
             anomalies.append(
-                f"MEMORY_ROOT 未设：memory 读写回落本仓库 {fork_home}，脱离单一权威 store（母版）"
-                "——检查 .claude/settings.json env 注入是否丢失"
+                f"写路径脱离单一权威 store：{env_tag} 解析到 {resolved_root}"
+                f"（≠ {AUTHORITATIVE_MEMORY_ROOT}）——memory 读写将分裂；fork 侧检查 .claude/settings.json env 注入"
             )
-        elif not resolved_root.is_dir():
-            anomalies.append(f"MEMORY_ROOT={env_memory_root} 指向不存在的路径——memory 读写将失败")
         else:
-            notes.append(f"写路径 OK：MEMORY_ROOT={env_memory_root}（单一权威 store，by design 2026-07-09）")
+            notes.append(f"写路径 OK：{resolved_root}（单一权威 store，by design 2026-07-09；{env_tag}）")
 
         # 2. 双向陈旧度：最新 episodic 日期 vs 最新 digest/.checked marker 日期（ISO 日期串可直接比较）
         ep_dates = []

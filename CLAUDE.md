@@ -26,6 +26,10 @@ This file is read by Claude Code at the start of every session.
 
 **最小注释原则：** 默认不写注释；只在"为什么这样做"不明显时写一行说明。
 
+**双仓一致原则（2026-07-10）：** 框架能力改动同 session 落双仓（母版 `~/Desktop/luca_gstack` +
+muse fork `~/Desktop/项目/muse/lucagstack`，最新能力为准），新能力锚点登记进
+`.claude/skill-os/capability-parity.json`；`scripts/check-capability-parity.mjs` 为 verify 门守护。
+
 ### Coding Discipline（Karpathy-inspired）
 
 适用范围：写代码、改文档、改 skill、review、refactor、原型文件修改。
