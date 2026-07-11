@@ -530,6 +530,11 @@ handoff/adr/engineering/evals/retro/redteam 等按 skill 产出分子目录，`P
 运行 `bash scripts/luca-open.sh <绝对路径>` —— luca app 会在新页签打开只读预览。
 相对路径先解析为绝对路径；文件不存在时报错勿猜路径。此能力为 muse app 侧集成，不回流母版。
 
+**HTML 产物主动推送预览（2026-07-11）：** 每当产出或修改 `.html` 文件（原型/演示页等），
+完成后**主动**运行 `bash scripts/luca-open.sh <该文件绝对路径>` —— .html 会作为 app 侧栏
+浏览器面板的预览页签打开（左终端对话、右侧即时看效果）。该文件后续再被修改时预览**自动热刷新**，
+同一文件重复 open 会复用页签，因此每个文件只需 open 一次，迭代改动无需重复调用。
+
 ---
 
 ## 规则优先级体系
