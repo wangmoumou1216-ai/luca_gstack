@@ -513,6 +513,24 @@ handoff/adr/engineering/evals/retro/redteam 等按 skill 产出分子目录，`P
 
 ---
 
+## luca app 集成
+
+**侧栏当前页感知（claude 拉取，2026-07-11，双仓能力；依赖 luca app 运行中）：** 用户说
+"看看我侧栏/当前打开的页面/基于侧栏这个页做…"（语义识别非词表，route-guard STOP 不豁免；
+不进路由表、无斜杠命令）时：
+① 先跑 `bash scripts/luca-sidebar.sh`（默认 meta）——返回激活面板、当前页 URL/标题、全部页签
+清单（输出首行为结果 md 路径；15s 超时 = app 未运行/异常，如实报告，绝不臆造页面内容）。
+② 取内容**源头优先于 DOM**：GitHub → `gh` 拉源头；公网文档/文章 → WebFetch；X /status/ 页 →
+FxTwitter（`api.fxtwitter.com/<handle>/status/<id>` 无 key 恢复全文）；本地 HTML 预览页签 →
+直接 Read meta 给的本地路径；登录墙/动态页无法重取 → `bash scripts/luca-sidebar.sh capture`
+抓 DOM 正文兜底。
+③ 下游接轨：诉求为"评估纳入 skill os / 工作流" → 接 `external-skill-scout`（Workflow）；评估
+通过要采纳 → 走既有治理轨道（双仓落地 + routing-map 词条 + /office 登记 + workflow-graph +
+model-routing 三问 + parity 锚点），不为此新建机制。
+④ 激活面板非网页（如会话面板）→ 如实告知，列页签清单请用户指定。
+
+---
+
 ## 规则优先级体系
 
 1. **用户最新明确请求** — 最高优先级
