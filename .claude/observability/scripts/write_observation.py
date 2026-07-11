@@ -30,8 +30,8 @@ def append_rule(args, observation_id):
     text = RULES.read_text(encoding="utf-8")
     if "rules: []" in text:
         text = text.replace("rules: []", "rules:")
-    skills = ", ".join(args.applies_to or [args.skill])
-    scenes = ", ".join(args.scenes or ["*"])
+    skills = ", ".join(yaml_quote(s) for s in (args.applies_to or [args.skill]))
+    scenes = ", ".join(yaml_quote(s) for s in (args.scenes or ["*"]))
     block = [
         f"- id: {rule_id}",
         "  status: active",
