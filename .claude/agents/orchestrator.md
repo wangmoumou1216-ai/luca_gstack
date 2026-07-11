@@ -138,6 +138,8 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
       注：以上三条件只产生 semantic 候选（宽进严出，晋升另有 promotion_ready 门禁），不受四信号
       门槛约束；person 层（全局 feedback）/项目本地 MEMORY.md 写入须过
       `.claude/skill-os/extraction-bar.md` 四信号门槛，且除信号①外不得在执行中途写。
+      补漏回验：本 Phase 若发生过「用户打断纠正产出物」且归因判为 L3/L4 但治理动作尚未落地
+      （协议：.claude/skill-os/correction-attribution.md），在此补跑对应处置；已落地则跳过（幂等）。
 
   2d  Supervisor/Hierarchical 模式：人工确认检查点
       - 主 Agent 展示当前 Phase 的产出摘要 + 测试结果

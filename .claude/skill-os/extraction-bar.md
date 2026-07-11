@@ -19,6 +19,7 @@
 - 框架 semantic 候选（propose_semantic.py）：维持宽进严出（orchestrator §2c-obs 照旧），晋升另有 promotion_ready 门禁
 - episodic：低门槛日志层，session 流水照常
 【时机】person/项目层只在 Stop 拦截时统一裁决一次；对话中途仅信号①允许即写；semantic 候选提议不受此限
+【归因指针】信号①为「中途打断纠正产出物」形态时，修复后另须过 `.claude/skill-os/correction-attribution.md` 归因阶梯（产出物 vs skill/框架根因 → 决定治理轨道）；归因 ≠ 提取，两道裁决互不替代。
 
 ## Cooling-off 协议（person 层候选）
 
