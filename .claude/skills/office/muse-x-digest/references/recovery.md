@@ -26,20 +26,42 @@ curl -s --max-time 20 "https://api.fxtwitter.com/<handle>/status/<id>" \
    每块 `.text` 按 `.type` 映射为 markdown 保留结构——
    `header-one..six→#..######`、`unstyled→段落`、`unordered-list-item→- `、
    `ordered-list-item→1. `、`blockquote→> `、code-block 保留为代码块围栏。段间空行分隔。
-   （`.tweet.article.media_entities` 是文内插图，需要时一并说明。）
+   - **⚠️ atomic 块是头号静默漏内容源（2026-07-11 实测教训）：** `type=="atomic"` 的块 `.text` **恒为空**，
+     真实内容（内嵌图 **和内嵌代码/命令块**）在 **`.tweet.article.content.entityMap`**，按该块
+     `.entityRanges[0].key` 反查。**只拼 `blocks[].text` 会静默丢掉全部内嵌代码块**——而对教程/命令类长文，
+     这些 `MARKDOWN` 代码块（/goal、/loop 模板等）正是全文核心载荷，漏了就等于把不完整当完整交付。
+     entityMap 各实体：`MARKDOWN→data.markdown`（代码块，必取）、`MEDIA→data.mediaItems[0].mediaId`
+     （内嵌图，标注即可）、`TWEMOJI→emoji`。
+   （`.tweet.article.media_entities` 是文内插图清单，需要时一并说明。）
 2. 否则 `.tweet.note_tweet.text`（>280 字长推全文；base `.tweet.text` 是截断的）。
 3. 否则 `.tweet.text`（普通短推）。
 
-一段 jq 参考（长文全文）：
+一段 jq 参考（长文全文，**已含 atomic→entityMap 解析**，缺它必漏代码块）：
 ```bash
-jq -r 'if .tweet.article then
-         (.tweet.article.title // "") + "\n\n" +
-         ([.tweet.article.content.blocks[]
-           | (if (.type // "")|startswith("header") then "## " else "" end) + .text]
-          | join("\n\n"))
-       elif .tweet.note_tweet then .tweet.note_tweet.text
-       else .tweet.text end' /tmp/muse-x-fx.json
+jq -r '
+  if .tweet.article then
+    (reduce (.tweet.article.content.entityMap // [])[] as $e ({}; .[$e.key] = $e.value)) as $emap
+    | (.tweet.article.title // "") + "\n\n" +
+      ([ .tweet.article.content.blocks[]
+         | (.type // "unstyled") as $t | (.text // "") as $x
+         | if   ($t|startswith("header"))  then "## " + $x
+           elif $t=="unordered-list-item"  then "- " + $x
+           elif $t=="ordered-list-item"    then "1. " + $x
+           elif $t=="blockquote"           then "> " + $x
+           elif $t=="code-block"           then "```\n" + $x + "\n```"
+           elif $t=="atomic" then
+             ( ($emap[(.entityRanges[0].key|tostring)]) as $ent
+               | if   $ent.type=="MARKDOWN" then $ent.data.markdown
+                 elif $ent.type=="MEDIA"    then "[图: mediaId=" + ($ent.data.mediaItems[0].mediaId // "?") + "]"
+                 elif $ent.type=="TWEMOJI"  then ""
+                 else "" end )
+           else $x end
+       ] | join("\n\n"))
+  elif .tweet.note_tweet then .tweet.note_tweet.text
+  else .tweet.text end' /tmp/muse-x-fx.json
 ```
+> 收尾自检（阶段 5 preflight 追加一条）：**统计 `blocks[]` 里 `type=="atomic"` 的数量，逐一确认其
+> entityMap 实体已解析**——凡 `MARKDOWN` 实体（代码块）必须出现在最终产出里，否则就是漏了核心内容。
 
 ## 校验再采用（借 qiaomu「先校验、不行再降级」）
 - 恢复文本实质**明显多于** DOM 捕获（长度、信息量）才替换正文；否则视为恢复无效。
