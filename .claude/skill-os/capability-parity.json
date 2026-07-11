@@ -5,9 +5,11 @@
     "/Users/luca/Desktop/项目/muse/lucagstack"
   ],
   "files": {
-    "CLAUDE.md": ["## Loop 宪法", "平凡任务豁免", "命名即切换", "双仓一致原则", "Fable 手术刀"],
+    "CLAUDE.md": ["## Loop 宪法", "平凡任务豁免", "命名即切换", "双仓一致原则", "Fable 手术刀", "correction-attribution"],
     ".claude/agents/plan-agent.md": ["块 1.6 — ASSERT/TEST-NNN 反向覆盖", "行为级断言规则", "model_tier"],
-    ".claude/agents/orchestrator.md": ["Step 3b 【合同回验", "模型路由（强制传参"],
+    ".claude/agents/orchestrator.md": ["Step 3b 【合同回验", "模型路由（强制传参", "correction-attribution"],
+    ".claude/skill-os/extraction-bar.md": ["correction-attribution"],
+    ".claude/skill-os/correction-attribution.md": ["纠正归因阶梯", "还会复现吗", "L4 框架层"],
     ".claude/skill-os/optional-workflow-graph.yaml": ["execution_to_acceptance"],
     ".claude/skill-os/model-routing.yaml": ["core-execution", "fable_whitelist", "new_scenario_protocol", "native_precedence", "agents_no_pin"],
     "memory/scripts/daily_governance.py": ["check_loop_health", "AUTHORITATIVE_MEMORY_ROOT", "新场景待评估档位"],

@@ -157,6 +157,13 @@ session-restore.mjs 自动跑；`search_memory.py`/`get_memory.py --layer`/`cons
 一次性问答、答案可从文档重推、纯执行无判断 → 一律不存。
 提取时机：person/项目层只在 session 结束 Stop 拦截时统一裁决一次，对话中途仅信号①允许即写。
 
+**信号①的中途形态——用户打断纠正产出物/行为时，修完必须归因（L1-L4 阶梯，全文
+`.claude/skill-os/correction-attribution.md`，勿在别处复制全文）。** 判定一句：「同样输入重跑
+这个环节还会复现吗？」不复现→L1 产出物/L2 上游产物（只修内容，一行带过）；复现→L3 skill 层
+（observability 快车道 --rule 立即生效或 semantic 候选；小而明确可提议当场修 SKILL.md，守
+skill-invariants 保护区）/L4 框架层（semantic --stable 候选进 digest 待裁决）。
+归因 ≠ 提取：存不存仍走四信号 + 三分表。
+
 **写入前先裁决归属（三分，别二分）。** 每条待存经验先问一个还原问题：
 
 > **「换一个完全无关的项目、甚至重建 luca_gstack，这条还成立 / 还有用吗？」**
