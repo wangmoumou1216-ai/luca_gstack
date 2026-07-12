@@ -869,3 +869,21 @@ rejected:
   - 'TRIGGER COLLISION: ''stress-test a plan / get grilled on your design'' competes with /brainstorm''s
     routing keywords (需求梳理/需求确认/有个想法) for the same intent.'
   verdict: REJECTED
+
+# ── 2026-07-12 全仓对标记录（mattpocock/skills，51 单元全量深评）──
+- name: mattpocock-skills-full-benchmark-2026-07
+  repo: mattpocock/skills
+  type: full-repo-benchmark
+  category: framework-benchmark
+  pinned: 391a2701dd948f94f56a39f7533f8eea9a859c87
+  verdict: BENCHMARKED
+  summary: "51 单元（39 skill+12 机制）全量深评：6 adopt / 15 merge / 30 leave / 0 常规 replace（1 替换候选经 GATE-2 裁 port）。红队 2 killed+12 downgraded+14 stands+2 revive；fable 出门前复审 SHIP-WITH-FIXES 已修。八机器断言全绿（含引文 grep 回验）。"
+  evidence_dir: framework-audit/mattpocock-benchmark-2026-07/   # per-unit verdicts+dossiers+rubric+裁决包+编排集成规划（muse fork）
+  reconciliations:
+  - "tdd: APPROVED-90 维持；'批而未装'实地推翻（当天已装但 stale）→ 刷新 391a2701(+seam门+tautological,-3文件 用户拍板)；integration_note 与 routing 词条漂移已记录"
+  - "handoff: 壳 REJECT 维持；'strictly a subset' 措辞被推翻（3 非子集元素）→ 2 微机制 port 进 handoff-protocol（用户例外权批准，排后批）"
+  - "grill-me: REJECT 维持（复核后仍拒）；旧文两处事实偏差已记录不影响结论"
+  - "git-guardrails: 壳 REJECT 维持且加固（政策反转使裸 push 拦截成反目标）；原拟 careful port 经红队 killed 全部不落地"
+  gates_opened: [GAP-skill-authoring-craft(addressed同批), GAP-registration-sync, GAP-lightweight-research, GAP-issue-tracker-integration]
+  first_batch_landed: "installs(codebase-design/resolving-merge-conflicts/teach)+tdd刷新+skill-authoring.md+code-hygiene增强(双轴+会咬)+diagnosing-bugs四机制port进systematic-debugging；A/B: skill-authoring PASS(0.91)/code-hygiene PASS(0.65)/port 见 adoption-log"
+  lesson: "P2 采证机制级 grep 漏查 skill 级已装 counterpart（diagnosing-bugs 空缺口假设被红队推翻）→ 未来 scout/对标的非冗余核验必须含 ls ~/.claude/skills + vetting-registry 双查"
