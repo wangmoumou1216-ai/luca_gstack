@@ -64,11 +64,23 @@
   就完了，要完美落入使用场景和流程"→ P5.0 交付 ORCHESTRATION-INTEGRATION.md（可达性从路由层
   扩展到编排层），每个能力给：简单任务触达/复杂任务位置/场景适用/登记动作/可达性验收。
 
+- ✅ P5.0 编排集成规划：ORCHESTRATION-INTEGRATION.md（每能力五件套 + 后续批次编排位 +
+  研究门三档设计 + 编排层 FM-11 验收总则）
+- ✅ P5.1 installs：codebase-design/resolving-merge-conflicts/teach 装 + tdd 刷新（不留副本）；
+  routing 词条双仓 + FM-11 双实测 PASS + 三登记面 + RUNBOOK 指针 + self-model 重建 +
+  双仓 verify 54/53 全绿 + 批①双仓已提交（tag pre-fuse-mattpocock-batch1）
+- ✅ P5.2 skill-authoring.md：新建（六机制一文件）+ CLAUDE.md 指针 + RUNBOOK 步③ + parity 锚
+  双仓绿；**行为 A/B PASS delta=0.9112**
+- ✅ P5.3 code-hygiene v1.1.0：会咬三段证据条款（fail-open 兼容）+ 双轴分派 + Fowler 基线，
+  双仓；**行为 A/B PASS delta=0.6534（护栏场景 + must-hold 无回归）**
+- ✅ P5.4 诊断 port：4 机制入 systematic-debugging + hitl 脚本 + CREATION-LOG 溯源，
+  routing 零新词条（去重原则）；**行为 A/B PASS delta=0.8344**
+- ✅ P6 SSOT：vetting-registry 对标总记录（append，双仓）+ gaps-register 四条（1 addressed +
+  3 open，双仓）+ adoption-log ×7（双仓）+ CHANGELOG 条目（双仓）
+
 ## 进行中 🔄
 
-- 🔄 P5.0 编排集成规划 → P5.1-5.4 首批 FUSION（installs / skill-authoring / code-hygiene /
-  诊断 port）→ P6 SSOT 回写（registry append + gaps-register 四条 + adoption-log + CHANGELOG
-  + episodic --meta）
+- 🔄 收尾：批②③④双仓提交 + push + episodic --meta 写回
 
 ## P4 组装须携带的要点（防遗漏）
 

@@ -1,7 +1,7 @@
 ---
 name: code-hygiene
 preamble-tier: 1
-version: 1.0.0
+version: 1.1.0
 description: |
   代码层工程约束 skill：对工程代码（luca_gstack 自身 .mjs/.py/.js 神经系统 + 下游实现）
   做「清理 + 完成前验证」的工程体检。两半：
@@ -119,6 +119,20 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 | 「subagent 说成功了」| 独立查 diff 验证 |
 | 「换了说法所以不适用」| 精神高于字面 |
 
+### 护栏/检查类改动：证明会咬（prove it bites）
+
+凡新增/修改 **hook、checker、lint 规则、拦截脚本、断言**，Iron Law 的完成判据升级为三段证据：
+1. 先观察 **pass**（干净输入通过）；
+2. **故意制造一次违规**，观察它以**期望的确切方式**失败（确切 exit code / 报错样式——
+   如 careful 的 exit 2、checker 的 FAIL 行），"跑起来不报错"不算；
+3. 还原后再 **pass**。
+三段证据俱在才可声明 done——**不会在违规上失败的检查一文不值**。
+⚠️ fail-open 兼容（护栏第 3 条的延伸）：对 fail-open hook，"证明会咬"= 证明其在**预期触发
+路径**上拒掉违规（如 careful 对危险命令 exit 2），**不得**解读为要求 fail-open hook 在自身
+异常时也阻塞（那是逼 fail-open 变 fail-closed，违反承重不变量）。
+> 源：mattpocock/skills prove-it-bites 内核（MIT，对标采纳 2026-07-12）；本审计自身实践在先
+> （check-coverage.py 上线前先用捏造引文验证会 FAIL）。
+
 > 与 luca 记忆呼应：`feedback_run-tests-before-claiming-done`、`feedback_verify-your-verification`、
 > `feedback_redteam-own-analysis-before-shipping`。本铁律是它们的执行版。
 
@@ -164,6 +178,18 @@ BASE_SHA=$(git rev-parse HEAD~1); HEAD_SHA=$(git rev-parse HEAD)
 
 派发时附：DESCRIPTION（建了什么）/ PLAN_OR_REQUIREMENTS（应满足什么）/ BASE_SHA / HEAD_SHA。
 反馈处理：Critical 立即修 → Important 继续前修 → Minor 记下 → reviewer 错了带理由反推。
+
+**双轴分派（diff 有 spec 上游时启用；无 spec 上游维持上面的单轴择一）：** 当被审 diff 存在
+书面上游（tech-spec / PRD / task-plan 卡），**同一条消息并发两个审查 agent**、各自隔离上下文：
+- **Standards 轴**：8 清理算子 + 下方 Fowler 具名 smell 基线（每条都是 judgement call；
+  **仓库文档标准与 luca 护栏显式覆盖基线**——护栏优先关系不变）；
+- **Spec 轴**：只对照上游忠实性（需求→实现有无静默丢失/擅自扩量）。
+聚合时两份报告**分列呈现，禁 merge/禁 rerank/禁跨轴选单一赢家**——分开正是为了防一轴掩盖
+另一轴。（源：mattpocock code-review 两轴抗偏见结构，MIT，对标采纳 2026-07-12）
+
+Fowler smell 基线（Standards 轴内容，零文档仓库也生效）：Mysterious Name / Duplicated Code /
+Feature Envy / Data Clumps / Primitive Obsession / Repeated Switches / Shotgun Surgery /
+Divergent Change / Speculative Generality / Message Chains / Middle Man / Refused Bequest。
 
 ---
 

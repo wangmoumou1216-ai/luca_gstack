@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- mattpocock/skills 对标（51 单元全量深评，评估链在 muse fork framework-audit/mattpocock-benchmark-2026-07/）
+  首批落地：install codebase-design + resolving-merge-conflicts（routing 词条+FM-11 实测）、tdd 刷新
+  391a2701、新建 .claude/skill-os/skill-authoring.md（写 skill 手艺 doctrine）、code-hygiene v1.1.0
+  （双轴审查+护栏会咬条款）、diagnosing-bugs 四机制 port 进 systematic-debugging——为什么：对方在
+  工程纪律线（调试反馈环/竖切/写作元词汇）上有我方可验证缺席的机制，全部经红队+行为 A/B 后按 GATE-2
+  裁决落地；四个 gap 开启（skill-authoring=addressed / registration-sync / lightweight-research /
+  issue-tracker=open）
+
 ## [0.2.1] - 2026-07-05
 
 ### Added

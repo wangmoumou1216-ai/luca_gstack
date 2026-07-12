@@ -127,3 +127,36 @@ gaps:
     severity: medium
     desired_capability_keywords: [brownfield, existing code understanding, architecture brief, code-to-design, reverse engineering, codebase orientation]
     status: addressed   # 2026-07-05 建 /code-recon skill(office, routed, native-first 并行只读 recon → 架构 brief → 喂 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入)；规模阈值命中≥2 才提示下游装 codegraph MCP(不硬装/不进 gstack)；wired routing-map/command/input-modes/CLAUDE.md。与 GAP-fusion-impact-automation 分工：本 gap 只解『设计入口』，代码图谱能力仍归后者(open, 下游 MCP 可选)
+
+  # ── 2026-07-12 mattpocock 对标 GATE-2 开启（四条，luca 逐条批准）──
+  - id: GAP-skill-authoring-craft
+    dimension: skill-quality
+    layer: framework
+    statement: "缺'如何写好 skill'的正面词汇/诊断体系（skill-invariants 只守边界不教手艺；写作质量靠隐性品味）。对口:mattpocock writing-great-skills 元词汇体系。"
+    severity: medium
+    desired_capability_keywords: [skill authoring, predictability, failure modes, pruning, leading word, information hierarchy]
+    status: addressed   # 2026-07-12 同批落地 .claude/skill-os/skill-authoring.md（六机制汇一处：根德性/六失败模式/信息层级/修剪/dual-load/leading word/_Avoid_）+ CLAUDE.md Coding Discipline 指针 + FUSION-RUNBOOK 步③指针 + parity 锚点；行为 A/B PASS(delta 0.91)
+
+  - id: GAP-registration-sync
+    dimension: governance
+    layer: framework
+    statement: "治理轨道六动作的登记面（routing-map//office 表/input-modes/commands//workflow-graph/model-routing/parity）4-5 面无已提交 checker，靠散文自觉——反向红队实证:对方（有明文契约的自律作者）resolving-merge-conflicts 漏登记 README/plugin.json，证明散文契约必漂移。需 check-registration-sync 类 tripwire 接 verify 门。"
+    severity: medium
+    desired_capability_keywords: [registration sync, tripwire, checker, office table, input-modes, commands consistency]
+    status: open   # 2026-07-12 GATE-2 批准开启；落地排 adoption 队列（触面 S-M 零承重墙）
+
+  - id: GAP-lightweight-research
+    dimension: research
+    layer: framework
+    statement: "轻量研究档缺位：web spike 内联无纪律、bg Agent 是裸原语非研究 skill、deepresearch 重型且认识论相反（多源共识 vs primary 纯度）——'查一下X文档/API 事实'类高频诉求无 right-sized 承接。对口:mattpocock research（后台单 agent+primary-source 纪律+落盘约定）。"
+    severity: medium
+    desired_capability_keywords: [lightweight research, background agent, primary source, api docs lookup]
+    status: open   # 2026-07-12 GATE-2 批准开启；落地=新建轻量研究 skill（编排槽位=研究默认门第三档 spike<轻研<deepresearch，见 ORCHESTRATION-INTEGRATION），用 skill-authoring+skill-creator 建（吃狗粮首例），排 adoption 队列
+
+  - id: GAP-issue-tracker-integration
+    dimension: infrastructure
+    layer: framework
+    statement: "是否引入可选的 tracker 承载工作项层（统一适配器+状态 label+原生 blocking+共享地图）——对方 setup/to-spec/to-tickets/triage/wayfinder 五 skill 预设此基础设施；与我方 /Users/luca/Desktop/项目/muse/docs/**+稳定ID+handoff 承重设计的关系须先裁。证据锚:framework-audit/mattpocock-benchmark-2026-07/ 五单元 dossier。"
+    severity: low
+    desired_capability_keywords: [issue tracker, work item layer, blocking links, ready-for-agent, shared map]
+    status: open   # 2026-07-12 GATE-2 批准开启探索；tracker 簇候选下轮 evolution 周期按 fit-to-gap 重入

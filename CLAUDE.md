@@ -43,6 +43,9 @@ muse fork `~/Desktop/项目/muse/lucagstack`，最新能力为准），新能力
   既有死代码。只清理本次改动新产生的孤儿 import / 变量 / 函数。
 - **Goal-Driven Execution**：执行前明确完成状态；实现后用测试、脚本、读回文件或
   可观察检查验证。每个非平凡改动都应能追溯到用户请求或验证标准。
+- **写/改 skill 先读手艺与保护区**：编辑任何 SKILL.md 或框架文档前，读
+  `.claude/skill-os/skill-authoring.md`（正面手艺：根德性/六失败模式/修剪纪律）与
+  `skill-invariants.md`（保护区 P1-P7）。
 
 **Plan Agent 原则：** 满足以下任一条件时，在执行前先读取
 `.claude/agents/plan-agent.md`，输出结构化计划（阶段分解 + 编排模式 +

@@ -23,6 +23,7 @@
 | ⑧ | 回滚就绪落地 | `git tag pre-fuse-<id> <主HEAD>` → 从 worktree squash-merge 单提交（`Fuses: <id> @ <sha>`） | 单提交落地 |
 | ⑨ | 反馈记录 + **可达性验收** | append `.claude/skill-os/evolution/adoption-log.jsonl` `{...}` + 过 FM-11 可达性门 | 行已写 + 场景可调到 |
 
+> 步③ 实施涉及写/改 skill prose → 先读 `.claude/skill-os/skill-authoring.md`（手艺）+ `skill-invariants.md`（保护区）。
 > 步⑧ squash-merge 遇冲突 → 用已装 `resolving-merge-conflicts` skill（按意图溯源解决，先读 commit/PR 原意；harness 层 git 纪律优先）。
 
 ## 落地陷阱 + 采纳验收（FM-10 / FM-11，硬规则）
