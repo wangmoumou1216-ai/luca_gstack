@@ -1,0 +1,50 @@
+id: skill:in-progress/claude-handoff
+kind: skill
+tier: C
+opponent_sha256: bbb25773158d78f610461e4041ffb56fe871cb297626e1f52b0535a9083b7996
+opponent_summary: >
+  一个 draft stub（in-progress，18 行，disable-model-invocation: true）：把当前对话写成一份 handoff
+  summary，但不落盘保存，而是直接用 `claude --bg --name "<name>" "<summary>"` 启一个后台 agent、以
+  summary 作为其 prompt 立刻接手，起在当前工作目录、立即返回，由 `claude agents` 管理。要求 summary
+  里含 "suggested skills" 段、不重复其它 artifact（PRD/plan/ADR/issue/commit/diff，改为引用路径/URL）、
+  redact 敏感信息（summary 会变成 agent 的 prompt）。单个 SKILL.md，无 support_files。
+our_summary: >
+  matrix 标 counterpart=handoff-review，但严格说我方真正的概念对应是 handoff-protocol：每个 skill
+  完成时写一份决策摘要到 docs/handoff/，供下游 skill 启动时从磁盘加载（"用文件系统传递状态"）——
+  这是"写摘要落盘、下游读"，而非"立刻拉起一个活的后台 agent 接管"。handoff-review 则是另一回事
+  （交付审查 gate，非交接书写）。我方无 `claude --bg` 后台 agent 拉起原语（grep 0 命中）；跨 session
+  交接靠 handoff 文件 + session 启动协议读取，不靠 CLI 后台进程。
+mechanisms:
+  - name: handoff-to-immediate-background-agent
+    summary: 不落盘，直接把 summary 当 prompt 启一个后台 claude agent 立即接手工作。
+    opponent_evidence:
+      - path: skills/in-progress/claude-handoff/SKILL.md
+        quote: "launch a background agent seeded with the summary as its prompt"
+    absence_proof:
+      pattern: 'claude --bg|--bg --name'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方用 `claude --bg` CLI 后台进程把交接变成"立即拉起下一个活 agent"。我方无此原语（0 命中）：
+      交接是"写 handoff 文件落盘 → 下一个 session/skill 主动读"，异步且经磁盘，而非同进程拉起后台
+      agent。这是交接拓扑的实质差异（活进程接力 vs 文件传状态）。
+  - name: handoff-summary-hygiene
+    summary: summary 须引用而非复制其它 artifact、redact 敏感信息、附 suggested-skills 段。
+    opponent_evidence:
+      - path: skills/in-progress/claude-handoff/SKILL.md
+        quote: "Do not duplicate content already captured in other artifacts (PRDs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead."
+      - path: skills/in-progress/claude-handoff/SKILL.md
+        quote: "Redact any sensitive information, such as API keys, passwords, or personally identifiable information"
+    our_evidence:
+      - path: .claude/skills/office/references/handoff-protocol.md
+        quote: "用文件系统传递状态，不依赖 context window 的连续性。"
+    delta: >
+      两边都主张交接摘要"引用 artifact 别复制、控制体量"。我方 handoff-protocol 有 ≤2000 tokens 硬约束
+      与文件路径规范，但落点是 docs/handoff/ 磁盘文件、无 secret-redaction 明文规则、也无"把 summary
+      当后台 agent 的 prompt"这一步——因为我方交接不喂进一个即启的进程，redaction 风险面不同。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  'claude --bg|--bg --name' → 0。matrix counterpart 记的是 handoff-review，但核实后真正对应是
+  handoff-protocol（写摘要落盘 vs 拉起后台 agent），handoff-review 是交付审查 gate、语义不同——已在
+  our_summary/notes 标明此 counterpart 归属偏差。draft stub，机制=后台 agent 接力，快裁。无 support_files。
+  self-check check-coverage.py 通过。

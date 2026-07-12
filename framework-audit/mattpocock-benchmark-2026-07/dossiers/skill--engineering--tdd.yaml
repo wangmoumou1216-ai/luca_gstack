@@ -1,0 +1,150 @@
+id: skill:engineering/tdd
+kind: skill
+tier: A
+opponent_sha256: 5363bb2775679fe9311fbb67947f95359169c6e7f1fac77c0f25e190bca6cf2f
+opponent_summary: >
+  mattpocock/skills 的 tdd 是一个 model-invoked 的「参考型」skill，围绕红→绿循环产出「值得保留的测试」。
+  SKILL.md 定义四块：什么是好测试（通过公共接口验证行为、能扛住重构）、测试放在哪（seam=公共边界，写测试前先
+  写下并与用户确认 seam）、三个反模式（implementation-coupled / tautological / horizontal-slicing）、以及循环
+  规则（先红后绿、每次一个垂直切片、refactoring 归 code-review 不进红绿循环）。两个 support 文件：tests.md
+  给好/坏测试与 tautological 例子，mocking.md 规定只在 system boundary mock + 依赖注入 + SDK 风格接口。
+  纯方法论 prose，无可执行工具/eval；探索代码时读 CONTEXT.md 以对齐领域词汇。
+our_summary: >
+  matrix 映射的 counterpart 是 [code-hygiene, verify]。code-hygiene 是工程「代码约束」skill，两半：完成前验证
+  铁律（Iron Law——声明 done/通过前必须有本条消息内当场跑出的证据）+ 8 个清理算子；它在「定位」节明确声明自己
+  不是测试方法论、把「测试先行」交还给「全局 tdd」。verify 是 Claude Code harness 内建 skill（仓库内无文件），
+  通过端到端驱动真实应用来观察行为，而非编写测试。两者都不涉及在 seam/公共接口处编写测试、不定义 TDD 反模式、
+  不覆盖 mocking 指南。补充事实（详见 notes，非本仓 counterpart 能力）：对方 tdd skill 本体已单独装在全局
+  ~/.claude/skills/tdd，且 skill-routing-map.yaml 存在一个指向该外部 skill 的路由词条。
+mechanisms:
+  - name: interface-is-test-surface
+    summary: 好测试通过公共接口验证行为、不碰实现细节，因此能扛住重构；implementation-coupled 是其反模式。
+    opponent_evidence:
+      - path: skills/engineering/tdd/SKILL.md
+        quote: "Tests verify behavior through public interfaces, not implementation details. Code can change entirely; tests shouldn't."
+      - path: skills/engineering/tdd/tests.md
+        quote: "Test through real interfaces, not mocks of internal parts."
+    absence_proof:
+      pattern: "survives? refactor|verify behavior through"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方把「测试在公共接口而非内部结构处观察行为、以扛重构」作为好测试的第一定义，并给出 implementation-coupled
+      反模式判据（重构后测试破但行为没变即 tell）。我方 code-hygiene 的 Iron Law 是「声明 done 前跑验证」，verify
+      是端到端驱动真实应用观察行为——概念上都指向「看行为不看内部」，但都不是「如何写一个绑在公共接口上的测试」的
+      方法论。仓库全 scope grep 该机制关键短语 0 命中。
+  - name: test-at-pre-agreed-seam
+    summary: seam=测试所在的公共边界；写任何测试前先写下 seam 清单并与用户确认，把测试力气集中到关键路径。
+    opponent_evidence:
+      - path: skills/engineering/tdd/SKILL.md
+        quote: "A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside."
+      - path: skills/engineering/tdd/SKILL.md
+        quote: "Before writing any test, write down the seams under test and confirm them with the user."
+    absence_proof:
+      pattern: "agreed seam|seams under test|which seams should"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方把「seam=可观察行为的公共边界」抽象成一等概念，并要求写测试前先与用户确认 seam 清单（未确认的 seam 不写
+      测试）——这是一个人类卡点式的测试范围协商机制。我方 counterpart 中无 seam 概念、无「写测试前确认边界」的仪式；
+      code-hygiene 的 Phase 0 是确认清理模式/范围，不是确认测试边界。仓库全 scope grep 0 命中。
+  - name: tautological-test-antipattern
+    summary: 断言若按代码同样的方式重算期望值（自证），则永远无法与代码分歧；期望值必须来自独立真值源。
+    opponent_evidence:
+      - path: skills/engineering/tdd/SKILL.md
+        quote: "Expected values must come from an independent source of truth — a known-good literal, a worked example, the spec."
+      - path: skills/engineering/tdd/tests.md
+        quote: "Expected value restates the implementation, so the test passes by construction."
+    absence_proof:
+      pattern: "tautolog|independent source of truth|recompute"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方专门点名 tautological 反模式：期望值若以代码相同算法重算（含手算 snapshot、常量等于自身）则测试凭构造通过、
+      毫无鉴别力；要求期望值来自独立真值源（已知字面量/手工样例/spec），并在 tests.md 给 GOOD/BAD 对照代码。我方
+      counterpart 完全无此概念——Iron Law 只要求「跑了并读了输出」，不判别测试断言本身是否自证。仓库全 scope grep 0 命中。
+  - name: vertical-slice-red-green-loop
+    summary: 先红后绿、每次一个垂直切片（一测试→一实现→重复，tracer bullet），horizontal-slicing 是反模式，refactoring 归 code-review。
+    opponent_evidence:
+      - path: skills/engineering/tdd/SKILL.md
+        quote: "Write the failing test first, then only enough code to pass it."
+      - path: skills/engineering/tdd/SKILL.md
+        quote: "one test → one implementation → repeat"
+    absence_proof:
+      pattern: "red before green|one slice at a time|failing test first"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方给出红绿循环的具体节律：先写失败测试再写刚好够过的代码、每循环一个垂直切片（tracer bullet 响应上一轮所学）、
+      批量先写全部测试是 horizontal-slicing 反模式、refactoring 不进红绿循环而归 code-review skill。我方 code-hygiene
+      的清理算子里有 refactoring/去重相关算子，但没有「红绿循环节律」这一测试驱动开发流程；verify 只在改动后驱动应用。
+      仓库全 scope grep 0 命中。
+  - name: mock-at-system-boundaries
+    summary: 只在系统边界（外部 API/DB/时间随机/文件系统）mock，不 mock 自有类/内部协作者；依赖注入 + SDK 风格接口以易于 mock。
+    opponent_evidence:
+      - path: skills/engineering/tdd/mocking.md
+        quote: "Mock at **system boundaries** only"
+      - path: skills/engineering/tdd/mocking.md
+        quote: "Pass external dependencies in rather than creating them internally"
+    absence_proof:
+      pattern: "mock at.*boundar|system boundaries|dependency injection"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方用整份 mocking.md 规定 mock 边界（外部 API/DB/时间/文件系统 mock；自有模块/内部协作者不 mock），并给出可
+      mock 设计（依赖注入、SDK 风格逐端点接口 vs 通用 fetcher）。我方 counterpart 无任何 mocking 指南；仓库内唯一
+      "mock" 命中在 handoff-review/specialists/prototype-quality.md，指原型 mockup 语境，与测试 mock 无关。仓库全 scope
+      grep 该机制关键短语 0 命中。
+prior_verdict_response: |
+  旧裁决（2026-06-07，vetting-registry 内 name: tdd 条目）：verdict APPROVED，weighted_score 90
+  （fit 2 / adoption 3 / maintenance 3 / quality 3），hard gates safety=PASS、compatibility=PASS、
+  non_redundancy=PASS，verified_at 2026-06-07。逐条事实核对（只核事实，不下新结论）：
+
+  1) 理由「non_redundancy=PASS，价值与设计 OS 相邻而非核心，补充 run-the-app verify skill」——
+     事实今仍成立：本仓对 5 个 TDD 测试编写机制全 scope grep 均 0 命中（命令见 notes）。且 2026-06-07
+     之后新增的 code-hygiene 在「定位」节明确声明自己不是测试方法论、把「测试先行」交还「全局 tdd」，
+     等于把这条 gap 显式写进了框架，而非填平。非冗余的事实基础完好且现已有文档背书。
+
+  2) integration_note 的处置计划「装到全局 ~/.claude/skills/tdd；不要加进 office/ 或 skill-routing-map.yaml」——
+     两处事实与今天现状有出入：
+     (a) 全局安装确实发生：~/.claude/skills/tdd 为 symlink，时间戳 2026-06-07 17:14（即批准当天），
+         解析到 ~/.agents/skills/tdd 且文件齐全。因此 matrix 的「批而未装」若按字面「根本没装」理解并不准确；
+         「未装」仅在「未接入 luca_gstack 仓库 office 管线」这个更窄意义上成立。
+     (b) 与 note 的「不要加进 skill-routing-map.yaml」相反，routing-map 里确有 tdd 词条
+         （skill-routing-map.yaml 260-264：skill: tdd，hint 建议使用外部 skill: tdd，triggers
+         [tdd, 测试驱动, 写测试, 测试先行, 红绿重构, 单元测试]）。即 route-guard 会在命中触发词时建议它；
+         但它未进 office/SKILL.md 一级表。净事实：比 note 处方更集成（多了一个 route-guard 指针），但仍非一级 office skill。
+
+  3) integration_note 事实性叮嘱「校验 5 个捆绑参考文件（tests.md, mocking.md, deep-modules.md,
+     interface-design.md, refactoring.md）都拷到位」——
+     (a) 全局安装的那份（冻结在 2026-06-07）确含全部 6 文件：SKILL.md + 上述 5 个 .md。
+     (b) 但当前对方仓库（commit 391a2701）该 skill 只剩 SKILL.md + mocking.md + tests.md 三件；
+         deep-modules.md / interface-design.md / refactoring.md 已被上游删除，refactoring 现委托给独立的
+         code-review skill（该 skill 在对方仓存在）。故已安装的那份相对上游已 stale，「5 个参考文件」这一事实
+         不再描述当前上游形态。
+
+  4) 内容质量理由「methodology-only（安全，但无可执行工具/eval）」——事实今仍成立：当前上游 tdd 为
+     SKILL.md + mocking.md + tests.md 纯 prose，无脚本、无 eval。
+
+  5) 机制层新事实（旧裁决当时不存在）：已安装的 2026-06-07 版 SKILL.md/tests.md grep 无 seam、无 tautolog
+     （只有 tracer bullet / vertical slice / horizontal slicing）。当前上游新增了「Seams——test only at
+     pre-agreed seams，与用户确认」整节，以及带「independent source of truth」的 tautological 反模式。
+     即本 dossier 里的 test-at-pre-agreed-seam 与 tautological-test-antipattern 两个机制比 2026-06-07
+     批准/安装的版本更新，是安装后上游演进出来的。
+
+  6) adoption 依据「stars 119761，属整仓」——事实未变：119k star 属 mattpocock/skills 14-skill 单仓插件，
+     非该 skill 独占；未做实时复核（registry verified_at 2026-06-07）。
+notes: >
+  采证跑过的命令：grep -rilE 逐机制关键短语跑 scope=".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"，
+  5 个机制 pattern 均 hits=0（M1 survives?refactor|verify behavior through；M2 agreed seam|seams under
+  test|which seams should；M3 tautolog|independent source of truth|recompute；M4 red before green|one slice
+  at a time|failing test first；M5 mock at.*boundar|system boundaries|dependency injection）。宽 grep 曾命中
+  的都是无关假阳：M1 命中 brainstorm/deepresearch 模板里的 "seamless"/"implementation detail"（产品语境）；
+  M4 命中仅在 external-skills 审计台账（vetting-registry / RECOMMENDATIONS，描述本 skill 本身，非我方能力）；
+  "mock" 唯一命中在 handoff-review/specialists/prototype-quality.md（原型 mockup，非测试 mock）。
+  harness 内建 counterpart 说明：verify 是 Claude Code 内建 skill，仓库内无文件，故未为其编造引文，仅在
+  our_summary/delta 用文字说明其「驱动真实应用观察行为」的定位。意外事实（采证途中直接观测）：
+  (1) ~/.claude/skills/tdd symlink 存在（2026-06-07 17:14，批准当天）→ ~/.agents/skills/tdd，含 6 文件，
+  是安装态但冻结在旧版；(2) 当前上游仓 391a2701 该 skill 只剩 3 文件，deep-modules/interface-design/refactoring
+  已删、refactoring 委托给对方仓的 code-review skill；(3) skill-routing-map.yaml 260-264 存在 tdd 路由词条，
+  与 2026-06-07 integration_note 的「不要加进 routing-map」相左。自验：check-coverage.py --dossier 输出见下。

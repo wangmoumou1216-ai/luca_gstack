@@ -1,0 +1,105 @@
+id: skill:productivity/writing-great-skills
+kind: skill
+tier: A
+opponent_sha256: 4d6ccbc3760b1bd4107c495a79872286ea69494003f3b0a719fc95b147457061
+opponent_summary: >
+  对方 writing-great-skills 是一个 user-invoked（frontmatter `disable-model-invocation: true`）的
+  纯 reference skill，加一个 disclosed 的 GLOSSARY.md，教「怎么写好/改好一个 skill」。它把
+  Predictability——agent 每次跑走同一个 process（不是产同一个 output）——立为根德性，其余每个杠杆
+  （invocation 选择、information hierarchy、leading word、pruning）都被框成服务这个根德性。SKILL.md
+  依次讲 invocation 成本模型、写 description、information-hierarchy 阶梯（in-file steps / in-file
+  reference / 经 context pointer disclosed 的 reference）、何时拆分、pruning、leading words；GLOSSARY.md
+  给约 25 个 bold 术语定义，每条附一个 `_Avoid_` 同义词收敛表。单列一节「Failure modes」给出六个具名
+  诊断（premature completion / duplication / sediment / sprawl / no-op / negation）。该 skill 自身
+  全是 reference、无 steps，是它所描述的 flat peer-set 排布的现身示范。
+our_summary: >
+  我方两个被点名的 counterpart 从相反方向切入 skill 质量——守边界、控记忆，而非正面教 skill 手艺。
+  skill-invariants.md 枚举「不得修改」的保护区（frontmatter / 输出路径 / preamble bash / handoff 协议 /
+  FILE_END / Phase 顺序 / workflow-state 写入）外加各 skill 的可进化区。extraction-bar.md 是「一条经验
+  值不值得提取进记忆」的四信号门槛，自称唯一真值源。两者都没有为 skill 声明根德性，没有给 skill 内容
+  排布的 information-hierarchy 阶梯，也没有诊断 skill 的 failure-mode 分类。框架确实持有几个「相邻但用
+  在别的域」的原语：CLAUDE.md 的懒加载/渐进披露式 context 管理、跨配置文件的「唯一真值源 + 只放指针不
+  复制」纪律、以及 code-hygiene 的代码清理算子分类——但都不是针对 skill 文本本身的写作学。
+mechanisms:
+  - name: predictability-root-virtue
+    summary: 把 Predictability（每次跑同一 process 而非同一 output）立为 skill 唯一根德性，其余每个杠杆都从它派生。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "A skill exists to wrangle determinism out of a stochastic system."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "The root virtue every other term serves"
+    absence_proof:
+      pattern: "root virtue|根德性|根本德性"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      对方把整套写-skill 学说锚在一个明说的根德性（process 级 predictability）上，成本、可维护性、以及
+      每一种技法都被推导为它的仆从。我方 counterpart 从不为 skill 声明根德性：skill-invariants 守突变
+      边界、extraction-bar 控记忆门槛。`grep -rn "root virtue|根德性|根本德性" .claude/skills
+      .claude/skill-os CLAUDE.md` = 0。我方在操作层追求确定性（route-guard、invariants），但从未把它
+      articulate 成一个组织写-skill 的纲领性原则。
+  - name: information-hierarchy-ladder
+    summary: 一条排布 skill 内容的具名阶梯——in-file steps / in-file reference / 经 context pointer disclosed 的 reference——配 progressive disclosure 与 co-location 两个落位动作。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "a ladder ranked by how immediately the agent needs the material"
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "so the top stays legible"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "只在真正需要某文件内容时才 Read"
+      - path: CLAUDE.md
+        quote: "长文件（> 200 行）先读前 50 行确认结构，再按需读具体段落"
+    delta: >
+      对方给出一条三级具名阶梯（steps / in-file reference / disclosed reference）、以及 context pointer
+      （其措辞而非目标决定 agent 何时/多可靠地够到材料）与 co-location，全部作为「skill 如何排布自身内容」
+      的写作学。我方有懒加载/渐进披露原则，但作用域是 runtime context 与记忆管理（「只在真正需要...才
+      Read」「先读前 50 行」），不是一个 SKILL.md 文件如何排布它自己的内容。我方没有具名的 rung 阶梯，
+      没有「context pointer 措辞」概念，也没有针对 skill 文件的 co-location 规则。
+  - name: failure-mode-taxonomy
+    summary: 六个具名的写-skill 常见失败模式（premature completion / duplication / sediment / sprawl / no-op / negation）作为诊断 skill 问题的可复用词汇，每个配一个 cure。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "Use these to diagnose issues the user may be having with the skill."
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "stale layers that settle because adding feels safe and removing feels risky"
+    absence_proof:
+      pattern: "premature completion|sediment|sprawl"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      对方供了六个具名 failure mode 作为可复用诊断分类，每个都配对一个 cure。我方 counterpart 无任何针对
+      skill 的 failure-mode 分类；三个最具辨识度的名字（premature completion / sediment / sprawl）grep = 0。
+      最接近的邻近资产是 code-hygiene 的 8 个代码清理算子（死代码/循环/去重/类型/弱类型/防御性/遗留/slop），
+      但那诊断的是代码 diff 而非 skill 文本，也不含这些写-skill 失败模式。（"no-op" 在我方有 6 命中，但全落
+      在框架自进化 A/B 判定文件里，与 skill 写作无关——见 notes。）
+  - name: pruning-discipline
+    summary: 一套把 skill 保持精简的正向纪律——每个含义单一真值源、逐行 relevance 检查、逐句激进猎杀 no-op。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "one authoritative place, so changing the behaviour is a one-place edit"
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "Be aggressive — most prose that fails should go, not be rewritten."
+    our_evidence:
+      - path: .claude/skill-os/extraction-bar.md
+        quote: "只放指针，不复制全文"
+      - path: .claude/skill-os/extraction-bar.md
+        quote: "唯一全文真值源"
+    delta: >
+      两侧都持有「单一真值源 / 只放指针不复制」这一原则：extraction-bar 自称「唯一全文真值源」并规定
+      CLAUDE.md/orchestrator/模板「只放指针，不复制全文」。我方缺的是对方 pruning 纪律里针对 skill 文本
+      的其余部分：逐行 relevance 检验、以及逐句激进猎杀 no-op（「删掉整句而不是裁词」「most prose that
+      fails should go」）。我方的真值源用法是给权威配置文件定名，不是修剪一个 skill 自身散文的例行动作。
+
+notes: >
+  读全对方 SKILL.md（84 行）+ GLOSSARY.md（202 行），读全我方 skill-invariants.md + extraction-bar.md。
+  sha256 与 inventory 逐字一致（4d6ccbc3…）。实跑的 absence grep（repo root）：
+  `grep -rn "root virtue|根德性|根本德性" .claude/skills .claude/skill-os CLAUDE.md` = 0；
+  `grep -rin "premature completion|sediment|sprawl" .claude/skills .claude/skill-os CLAUDE.md` = 0。
+  意外事实：`grep -ri "no-op"` 在我方有 6 命中，但全部落在 .claude/skill-os/evolution/*（behavioral_ab.py
+  的框架自进化 A/B「候选是不是 no-op 改进」判定），与 skill 写作的 no-op failure mode 是同名异域，故 absence
+  pattern 只取 premature completion|sediment|sprawl 三个无歧义词以保 hits=0。code-hygiene 的 8 清理算子是最
+  接近的邻近资产但针对代码 diff 非 skill 文本，仅在 delta 文字提及、未取其引文。本单元 counterpart 均为真实
+  文件，无 harness 内建对位需说明。invocation-cost-model / leading-word / metavocab 另有独立 mech 单元，本
+  skill dossier 刻意不重复采其证据（Invocation 与 leading word 两节因此不单列机制）。check-coverage.py
+  --dossier 自验 PASS。

@@ -1,0 +1,123 @@
+id: mech:prove-it-bites
+kind: mechanism
+tier: A
+dossier: dossiers/mech--prove-it-bites.yaml
+
+scores:
+  D: 3
+  I: 9
+  C: S
+  E: 3
+score_derivation: |
+  D=3：
+  - observe-fail-before-pass：+2。"先跑通→故意制造违规看它变红→还原再绿，不会失败的检查
+    一文不值"作为 skill 完成判据——我方中间态如实：红绿理念经指针外派给外部 tdd skill，
+    code-hygiene Iron Law 只要求"跑过验证"不要求"先观察一次失败"；护栏/checker 类改动
+    没有"证明会咬"的成文门。
+  - assert-specific-exit-code：+1。断言**确切**退出码/症状（exit 2 / 能对这个 bug 变红）
+    vs 我方通用退出码判定（0=过）——具体场景固定期望码的判据缺席。
+  - run-and-paste-evidence：+0（Iron Law 高度等价，措辞差异）。
+  I=9（Iron Law+行为级断言+quality-gate 全链）。C=S。E=3（三 skill 复现=成熟内核，
+  其一 in-progress 不减分——另两处 promoted）。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=3 ✓；机制 ≥2 ✓；加法——是 Iron Law 的强化条款非替代。
+  本对标自身已实践此纪律（check-coverage.py 上线前先用捏造引文验证它会 FAIL）——
+  内核与我方验证文化同向，落地阻力低。
+
+merge_scope: |
+  code-hygiene Iron Law 增一条款「护栏/检查类改动必须证明会咬」：凡新增/修改 hook、
+  checker、lint 规则、拦截脚本，完成判据 = 先观察 pass → 故意制造一次违规观察它以**期望的
+  确切方式**失败（exit code/报错样式）→ 还原再 pass，三段证据俱在才可声明 done。
+  （与 git-guardrails verdict merge ②的 careful 自测一行天然配套。）
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/code-hygiene/SKILL.md"]
+  ab_runs_needed: 1   # 与 code-review verdict 的 code-hygiene 改动可合并为同一次 FUSION
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强现任论证：code-hygiene 的 Iron Law（IDENTIFY→RUN→READ 查 exit code 数失败条数→
+    VERIFY→下结论 + 合理化拦截表）已构成一套「声明 done 前必须有当场证据」的完成门；
+    behavioral_ab.py 更进一步——判定「baseline prose vs candidate prose 是否产生可测行为差
+    且未回归」，含 SC-20260601-002「绿≠改了行为」的自觉。可否论证「我方够用、prove-it-bites
+    只是给 Iron Law 加一条同义仪式、纯 magnitude 计分」？——把它推到极限：
+
+    唯一能翻桶的攻击 = 把 observe-fail-before-pass 从 +2 折成 +1（对齐 code-review 红队对
+    refuse-cross-axis 的邻近折减先例），则 D=1+1+0=2 < 3 → 补强合并硬门槛（D≥3）破 → 应改 leave。
+    这是本 verdict 唯一的击杀路径，我真打了它，结论是**折减不成立**，理由三条：
+
+    1) 折减先例的适用条件是「同表面的邻近纪律」。code-review 的 refuse-cross-axis 之所以折 +1，
+       是因为 quality-gate 的「逐维度二元判定」与它作用在**同一表面**（代码审查）。而 observe-fail
+       的所有邻近物都在**别的表面**：behavioral_ab 作用在「skill prose→LLM 行为」的 with/without
+       差分（两臂都产出、从不观察一次 FAIL，已读源码 head 确认）；tdd 红绿是**外部 skill 指针**、
+       针对写新特性代码、非 code-hygiene 完成门。在**本机制的相关表面**（护栏/checker/lint 代码的
+       完成判据）上，「先观察它在违规上变红再接受绿」grep 全仓 0 命中（.claude/skills·skill-os·
+       agents·CLAUDE.md，已回验）→ 作为完成门**整体缺席**，不是邻近部分覆盖 → +2 站得住、不该折。
+    2) assert-specific-exit-code 的 +1 独立于观点 1 且**干净无争议**：git-guardrails 的 exit-2 护栏
+       自测在我方 careful 上 grep 0（careful 是写死固定表、无自测——见 git-guardrails verdict 已核），
+       且该 skill verdict 已 killed 并**把自测机制显式 defer 到本 verdict**。故这条 +1 无处双重计分、
+       只落在这里。仅凭它 + observe-fail 的 +1 下限，D 已 = 2 且**清一色净增**；observe-fail 拿 +2 使
+       D=3——即便对 +2 最苛刻的读者，D 也落在 2–3、机制均为加法。
+    3) **致命的反面**：本 mech 是两个姊妹 skill（setup-ts-deep-modules=leave、git-guardrails=killed）
+       **一致 defer 过来的规范落地家**——leave/killed 的理由都写明「机制经 prove-it-bites 落地即可」。
+       杀掉本 verdict = 让一条 grep-0 缺席、双侧引文齐备、且被审计自身实践过（check-coverage.py
+       上线前先用捏造引文验证会 FAIL）的护栏自测纪律**无家可归**，纯粹因 D 卡在 3 而非 4。这与
+       rubric §3.5「判据满足即采纳、不得为怕动结构而保守回避」正相反。
+
+    为何不致命（对杀）：D=3 落在补强合并硬门槛的地板上，但**地板≠虚高**——两条独立机制（观点1、2）
+    双侧引文齐备、均在相关表面 grep-0 缺席、均只落本处不双计。折减攻击依赖「跨表面邻近=同表面邻近」
+    的错误类比，被观点1证伪。桶=merge 成立。
+  attack_notes: |
+    ① 双重计分（机制单元最该查）——三路 umbrella 全部核过，无一双计：
+    - setup-ts-deep-modules（observe-fail 主锚）：skill verdict=leave，bucket_rationale 亲口
+      「其最高价值机制 prove-rules-bite 已由 mech:prove-it-bites merge 先行落地，不等它」→ 不双计 ✓
+    - git-guardrails（exit-2 主锚）：skill verdict=killed，merge_scope②「careful 自测一行——与
+      mech:prove-it-bites 重复计分，机制经 prove-it-bites 落地即可」→ 显式让位本处、不双计 ✓
+    - diagnosing-bugs（run-and-paste 主锚，本 verdict 计 +0）：skill verdict=adopt（install 整装）。
+      潜在重叠点 = 其 Phase-1「assert exact symptom / Not runs without erroring」。核后判无重叠：
+      (a) 本 verdict 对 run-and-paste 计 **+0**（Iron Law 等价），diagnosing-bugs 的贡献只作 exit-code
+      机制的**次锚**、主锚仍是 git-guardrails 的 exit-2；(b) 表面不同——diagnosing-bugs route-guard 触发
+      「诊断/调试/debug/复现 bug」，写一条**新** hook/checker 不是 debug 任务、不会触发它，其 Phase-1 是
+      为**既有 bug**造复现、非「观察我新写的护栏拒掉一次违规」。故 code-hygiene 的护栏-会咬条款填的是
+      diagnosing-bugs install **覆盖不到**的表面 → 不双计 ✓
+    - 姊妹 mech：与 avoid-alias-table/leading-word/metavocab/invocation-cost 等共用 skill-authoring
+      落地的机制**无关**——本 mech 落 code-hygiene，非 skill-authoring 资产，无姊妹机制共用同一 A/B ✓
+
+    ② fit（无宪法冲突、落点真存在）：
+    - 承重墙未触碰：落点 code-hygiene「Iron Law」是正文可进化区——不在 skill-invariants per-skill
+      清单（仅 html-prototype/brainstorm/deepresearch/ux-audit/idea），也不碰 P1 frontmatter/P2 输出
+      路径/P3 preamble bash/P5 FILE_END/P6 Phase 锁/P7 workflow-state；不改 Loop 宪法/Static Fallback
+      正文。加一条完成判据是**加法**（P4「必含项可增不可减」同向）。C=S 正确。
+    - Loop 宪法双向自证：新增须可测改善——「护栏会咬」条款由 ab_runs=1 验证真改行为，可测 ✓；且是薄
+      完成门非新机器（Outer loop 薄）✓。
+    - dual_repo=true 正确：code-hygiene 在母版 /Users/luca/Desktop/luca_gstack 同路径存在（非 fork
+      专属——CLAUDE.md fork 专属清单只列 muse-* 与隐藏 muse-proto-*），未踩「fork 专属误标双仓」陷阱 ✓
+    - **收敛要求（FUSION 交接约束，非 scope 缩减）**：会咬条款须尊重 luca 的 fail-open 护栏——
+      对 fail-open hook，「证明会咬」= 证明其在**预期触发路径**上拒掉违规，**不得**被解读为逼 fail-open
+      hook 变 fail-closed（否则撞 code-hygiene 算子6/7 护栏与 Loop 宪法「fail-open 承重不变量」）。
+      条款措辞须显式排除此误读。
+
+    ③ 集成成本：
+    - ab_runs=1 **未被 §5 BLOCK**（机制层 prose 吸收有 A/B）✓——门槛守住。
+    - 但注释「与 code-review 改动可合并为同一次 FUSION」**混淆了文件批处理与 A/B 共享**：两者同落
+      code-hygiene/SKILL.md，FILE 编辑可批；但 code-review 的 A/B（Fowler-smell + spec-mismatch 复合 diff）
+      **无法**验证本 verdict 的「改一个 checker→模型现在要求先观察它变红」——这是不同的行为场景。**收敛要求**：
+      本 mech 的 behavioral_ab 必须跑一条**改动护栏/checker 并断言模型索要 fail-观察**的独立场景（或与
+      code-review 合成一条同时触发两者的复合 diff），不能靠 code-review 那一跑顺带过。仍是 ab_runs=1、
+      不升 2，只约束覆盖面。
+    - touched_files=1 略乐观（叠 dual_repo 母版+fork 同文件 + capability-parity.json 锚点登记），但仍
+      ≤2–3 文件、不越 S/M 边界；parity 锚是微登记（对齐 code-review 红队同款判断）→ C=S 不改判。
+
+    结论：唯一击杀路径（observe-fail 折 +1→D=2）被「跨表面邻近≠同表面邻近」证伪，D=3 站在地板但非虚高；
+    三路 umbrella 无双计、姊妹机制无共用、承重墙未触、A/B 未被 BLOCK、dual_repo 正确。本 mech 且是两个
+    leave/killed 姊妹 skill 一致 defer 的规范落地家，杀之即孤儿化一条 grep-0 缺席的护栏自测纪律。保守
+    起见**只记收敛要求、不砍任何子项**（两条收敛 = fail-open 护栏兼容 + A/B 须打护栏场景，均作 FUSION
+    交接约束）。verdict=stands。

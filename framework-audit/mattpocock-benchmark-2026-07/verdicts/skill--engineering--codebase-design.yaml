@@ -1,0 +1,94 @@
+id: skill:engineering/codebase-design
+kind: skill
+tier: B
+opponent_sha256: a8d50abac5a4018f60e1d911d4b6f4e36454ca14d6c390c0695a578c7de65dad
+dossier: dossiers/skill--engineering--codebase-design.yaml
+
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+soft: { fit: 2, quality: 3, adoption: 2, maintenance: 3 }
+weighted_score: 83
+
+score_derivation: |
+  硬门全 PASS（纯 reference prose；标准 frontmatter；counterpart=none，四机制全干净缺席
+  ——deep module/seam/deletion test/ports&adapters/design-it-twice 相关 grep 全 0，
+  两个假阳性已被 dossier 排除）。
+  软分：fit=2——工程执行线真实受益（深模块词汇 + deletion test + 依赖分类测试策略直接
+  服务框架自建脚本与下游实现）；扣 1 分因设计主干不用此词汇，主要消费者是本批其他采纳项
+  （tdd 的 seam、improve 的 deletion test、diagnosing-bugs 的 correct seam）。
+  quality=3（8 词受控 glossary + rejected framings 显式拒绝行数比定义 + 两个按需展开
+  support 文件 + design-it-twice 并行接口探索——是"共享词汇 primitive"的教科书实现）。
+  adoption=2（promoted + 被 3 个 sibling skill 复用）。maintenance=3。
+  weighted = 20+30+13.3+20 ≈ 83。
+
+bucket: adopt
+bucket_rationale: |
+  7 维门禁 APPROVED（83 ≥ 70）。**它是本批采纳簇的词汇地基**：diagnosing-bugs 的
+  correct-seam、tech-spec merge 的 seam 前置步、improve-codebase-architecture merge 的
+  deletion test、tdd 刷新版的 seam 门全都引用此词汇——不采它，四处的 seam/deep-module
+  都是无根术语。
+
+adopt_scope: |
+  install 型（全局 ~/.claude/skills/，同 tdd/diagnosing-bugs 定位）+ routing-map 词条
+  （触发词：深模块/seam/模块边界——红队收窄：删设计邻词「接口设计」，见 redteam）。MIT 署名。
+  注意不与 FxUI/设计管线词汇混淆：它只在代码/工程语境被引用（词条不含设计类触发词）。
+  落位 routing-map 既有「External engineering skills」段（line 253，与 tdd/systematic-debugging
+  同段，遵该段"故意不收 design 词，避免劫持设计管线"约定）；落地前 grep 现有 routing-map 核验剩余
+  触发词无与设计管线词条碰撞。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: install
+  touched_files_estimate: ["~/.claude/skills/codebase-design(全局)", ".claude/skill-os/skill-routing-map.yaml(词条)", "母版同词条"]
+  ab_runs_needed: 0
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强"现有已够/纯加噪音"论证：codebase-design 对设计主干使用率 0%；luca 极少说
+    "seam/深模块"；fit 里"直接服务框架自建脚本"是推测（母版脚本多为 .mjs/.py 胶水，
+    deep-module/deletion-test 词汇未必真被援引）。其一切具体价值都是派生的——只是给"本批
+    其他采纳项"当胶水。故可论：别装独立 glossary skill，让 4 个 sibling 各自内联一行术语即可，
+    codebase-design 只带来重复 + 一个易被 60 天"使用即留任"降级的孤儿 skill。
+    为何不致命：① 4 个消费者 sibling 均已落地并文本依赖此词汇——diagnosing-bugs(adopt)、
+    tdd(adopt)、improve(merge)、to-spec(merge) 的 verdict 都写"依赖 codebase-design 词汇/
+    seam 概念依赖 codebase-design"；把 glossary 内联复制 4 份违反 DRY，正是"共享词汇 primitive"
+    要消除的。② 成本近零（纯 MIT reference prose，无代码/依赖，maintenance=3 名副其实）。
+    ③ 分数稳健：0-3 档下 fit=2→20/30。即便按最狠可辩读法把 fit 砍到 1（论"框架自建用途≈0"）
+    仍得 10+30+13.3+20≈73 ≥70 APPROVED；要跌破 70 须 fit→1 且 adoption→1 双砍，而 adoption=2
+    有实据（promoted + 3 个落地 sibling 复用 = 真生态+本批采纳，非 aspirational），双砍不诚实。
+    → primitive 承重、廉价、稳过线，桶 adopt 存活，kill(→leave) 不可支持（杀它会让 4 个已落地
+    sibling 的 seam/deep-module 变无根术语，正是 bucket_rationale 所述）。
+  attack_notes: |
+    【②fit 假设】
+    - 联动契约（满足但须 GATE-2 锁）：fit 与 adoption 都倚"sibling 复用"。核查已满足——
+      diagnosing-bugs/tdd(adopt)、improve/to-spec(merge) 落地且依赖此词汇，非空头。但记 GATE-2
+      联动：若 GATE-2 把全部消费词汇的 sibling 都 kill/leave，codebase-design 即沦为孤儿 primitive
+      → 不得独立 install（它靠文本被援引而非作为 subagent 被调用，episodic 大概率 skills_used=0，
+      正撞 60 天"使用即留任"降级）。adopt 应显式条件化为"≥1 个消费词汇的 sibling 同批落地"。
+    - 重复计分（真实，已被同批标注）：deletion-test/seam 在 codebase-design(fit=2 采纳理由)与
+      improve/to-spec/tdd(D/merge) 两侧同时取信；improve verdict line 90-91 已自曝"deletion-test
+      在两 verdict 间做双重 justification…GATE-2 联动裁决时勿对同一 primitive 二次加权"。对称补记：
+      本 verdict 不因此虚高（glossary 是其定义归属地），但 GATE-2 合并加权时须去重，勿把同一
+      primitive 在 codebase-design 与其消费者 verdict 间叠加计分。
+    - 宪法 fit 无冲突：install MIT reference prose；propose-only 守住（本 verdict 是提案，GATE-2
+      人类签字在）；机制层不触人类卡点/双仓/词表承重红线。dual_repo=true 正确（通用工程 skill，
+      routing 词条镜像母版；非 fork 专属，勿误标）。
+    【③集成成本 + 收缩驱动】
+    - 路由碰撞（scope 收缩=downgrade 触发）：adopt_scope 原触发词含「接口设计」，但 routing-map
+      既有「External engineering skills」段(line 253)明文"故意不收 design 词，避免劫持设计管线"，
+      同段 tdd/systematic-debugging 触发词严格代码域。「接口设计」是设计邻词（用户"帮我设计接口"
+      UI/API 歧义），会把设计管线流量劫持到代码 skill，而 routing 表宪法级承重。verdict 自相矛盾：
+      一边写"词条不含设计类触发词"一边列「接口设计」。→ 已删「接口设计」，保留代码域 深模块/seam/
+      模块边界，落地前 grep 核验并入 line-253 段遵其无-design-词约定。
+    - ab_runs_needed=0 正确：红线"机制层 prose 吸收无 A/B 一律 BLOCK"针对 merge/fusion 把 prose
+      吸收进既有 skill；此为 counterpart=none 的干净独立 install，非吸收，无需 A/B。
+    - touched_files 公允：install 全局 + routing 词条(双仓)，纯加法；不触 skill-invariants P1-P7
+      （P 区管 SKILL.md 的 frontmatter/输出路径/preamble/handoff/FILE_END/Phase 序/workflow-state；
+      routing-map 是 skill-os 配置，承重但非 P 区；新 skill 文件 + 新词条不改任何既有受保护路径）。
+      全局-install 由项目 routing 解析已是既有可用模式（tdd/systematic-debugging 同段在册），
+      无本单元独有隐藏成本。
+    收缩结论：桶 adopt 不变；删触发词「接口设计」+ 落 GATE-2 联动锁（消费者 sibling 归零则不装 +
+      不跨 verdict 二次加权同一 primitive）。

@@ -1,0 +1,47 @@
+id: skill:in-progress/writing-shape
+kind: skill
+tier: C
+opponent_sha256: 67d34422bbe43cfd523dea9fe7b3ec5260791aed8ea52309b5b85f9d76f32745
+opponent_summary: >
+  写作三部曲的 exploit 阶段（in-progress，disable-model-invocation: true）。输入一份 raw material（只读，
+  不改）；跑一个 shaping session 逐段（paragraph by paragraph）长出一篇独立文章：先读全 pile，settle
+  prerequisites（grounding 机制，与 writing-beats 同源），draft 2-3 个候选开头各含不同 thesis 让用户选，
+  然后逐段问"给定这个开头，读者接下来需要听什么"，从 pile 里挖料填、边写边 append。核心增量是一节
+  Format arguments（要显式与用户争论的格式取舍：prose vs list / inline vs callout / table vs 重复结构 /
+  quote vs paraphrase / code block vs inline），把每个格式选择变成可辩护的决策。conversational feel 是
+  反向 grilling（"这段为读者做了上一段没做的什么？""删了会断什么？"）。无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内无逐段塑形/format-argument 写作机制（grep 0 命中）。
+  设计管线不含 prose 文章的逐段成形层；我方"格式取舍"存在于设计/文档规范里，但没有把 prose vs list /
+  table vs 重复结构等作为每段显式争论的写作 skill。
+mechanisms:
+  - name: paragraph-by-paragraph-shaping
+    summary: 从选定开头起逐段生长，每段问"读者接下来需要听什么"、从 pile 挖料、边写边 append，用户决定何时完。
+    opponent_evidence:
+      - path: skills/in-progress/writing-shape/SKILL.md
+        quote: "Grow paragraph by paragraph"
+    absence_proof:
+      pattern: 'paragraph by paragraph'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方逐段增长、每段须"为读者做上一段没做的事"否则砍，是反向 grilling 的塑形循环。我方无逐段
+      塑形写作循环（0 命中）；这是 exploit 侧的 shape 变体（与 writing-beats 的 beat 旅程并列）。
+  - name: explicit-format-arguments
+    summary: 每个 block 的格式取舍（prose/list/callout/table/quote/code）须与用户出声争论、成为可辩护决策。
+    opponent_evidence:
+      - path: skills/in-progress/writing-shape/SKILL.md
+        quote: "Prose carries argument; lists carry parallel items."
+    absence_proof:
+      pattern: 'Prose vs. list|Format arguments'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方把"prose vs list / table vs 重复结构 / quote vs paraphrase"等格式选择显式化成每段要辩的决策——
+      是本 skill 相对 writing-beats 的独有增量。我方无此格式-取舍写作机制（0 命中）；我方 code-hygiene/
+      设计规范里有格式约束，但不是逐 block 与用户争论格式的写作 skill。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  'paragraph by paragraph' → 0；'Prose vs. list|Format arguments' → 0。matrix 判 tier C / counterpart
+  none，理由写作方法论——核实成立。三部曲分工：fragments=explore，beats/shape=exploit（beats 走 beat
+  旅程、shape 走逐段塑形+format 争论），grounding 为共享底座。无 support_files。self-check 通过。

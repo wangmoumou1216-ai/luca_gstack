@@ -1,0 +1,61 @@
+id: skill:engineering/implement
+kind: skill
+tier: A
+opponent_sha256: 6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3
+opponent_summary: >
+  skill:engineering/implement 是 mattpocock/skills engineering bucket 下一个 16 行、
+  user-invoked（frontmatter disable-model-invocation: true）的薄壳 skill。正文只有 5 条祈使句：
+  按 spec/tickets 实现工作、在预先约定的 seam 处尽量用 /tdd、按节奏跑 typecheck 与单测
+  （随手 typecheck + 随手单测文件 + 收尾跑一次全量测试）、完成后用 /code-review 复审、
+  最后把工作提交到当前分支。本体不含任何独立机制、脚本或 support_files，
+  纯粹把 /tdd、typecheck、/code-review、commit 四个 primitive 串成一条固定的
+  实现→验证→提交序列。
+our_summary: >
+  我方无同名 /implement 命名入口（.claude/skills/office/ 下无 implement 目录）；
+  matrix 指定的 counterpart 是 orchestrator（主 agent 多步执行行为模式）+
+  work-agent-template（单相任务执行子 agent 模板）。orchestrator 的 Free Task Mode 提供
+  通用的 execute→quality-gate 断言→record_eval→观察提取 Phase 执行环；work-agent-template
+  提供 execute→Self-Verify Done-Criteria→Completion Report 的执行协议。二者共同覆盖
+  "实现 + 验证"编排，但都是通用多步任务壳，不针对"按 spec/tickets 写代码"收窄，
+  也不内建 red-green /tdd、"pre-agreed seams"、分级 typecheck 节奏或自动 commit
+  （提交在本仓由 harness 层用户显式请求才做）。/tdd 相关能力另有独立 counterpart
+  （code-hygiene，见 skill:engineering/tdd 单元）。
+mechanisms:
+  - name: shell-increment
+    summary: >
+      薄壳单元：评估这个 user-invoked 入口相对它调用的 primitive（/tdd、typecheck、
+      /code-review、commit）是否有额外增值。
+    opponent_evidence:
+      - path: skills/engineering/implement/SKILL.md
+        quote: "Use /tdd where possible, at pre-agreed seams."
+      - path: skills/engineering/implement/SKILL.md
+        quote: "Run typechecking regularly, single test files regularly, and the full test suite once at the end."
+      - path: skills/engineering/implement/SKILL.md
+        quote: "Commit your work to the current branch."
+    our_evidence:
+      - path: .claude/agents/orchestrator.md
+        quote: "Free Task Mode（通用多步任务执行）"
+      - path: .claude/agents/orchestrator.md
+        quote: "触发 quality-gate 执行本 Phase 的断言"
+      - path: .claude/agents/work-agent-template.md
+        quote: "对照 Section 5 Done Criteria，逐条检查。"
+    delta: >
+      对方 implement 是一个 user-invoked、disable-model-invocation 的命名薄壳入口，把 /tdd
+      （在预先约定的 seam 处）、分级 typecheck 节奏（随手 typecheck + 单测文件 + 收尾跑全量）、
+      /code-review、以及"提交到当前分支"串成一条固定的实现→验证→提交序列，其增值是这条序列本身
+      加上 seam 提示、typecheck 节奏与自动 commit 终点。我方无同名 /implement 命名入口，对应能力
+      分散在 orchestrator 的 Free Task Mode 执行环（execute→quality-gate 断言→eval→观察提取）
+      与 work-agent-template 的 Self-Verify Done-Criteria 里，是通用多步任务壳而非面向
+      "按 spec/tickets 实现代码"的收窄入口。我方 orchestrator/work-agent 均不含 commit 指令
+      （提交由 harness 层用户显式请求才做），也不内建 red-green /tdd 循环、"pre-agreed seams"
+      或分级 typecheck 节奏这类实现期节拍指引。
+
+notes: >
+  thin_shell=true，按规范只出一个机制 shell-increment。跑过的 grep（cwd=仓库根）：
+  (1) `ls .claude/skills/office/ | grep -i implement` → 无 implement 目录，证我方无同名命名入口；
+  (2) `grep -rin commit .claude/agents/orchestrator.md .claude/agents/work-agent-template.md` → 0 命中，
+  证我方编排链不内建 commit（与本仓 git 纪律"用户明确要求才提交"一致）；
+  (3) `grep -rl tdd .claude/skills .claude/agents` → 仅 code-hygiene/SKILL.md 命中，
+  /tdd 相关能力归属独立 counterpart（skill:engineering/tdd）而非本单元。对方调用的 /tdd、typecheck、
+  /code-review、commit 属 Claude Code harness 内建/工具层 primitive，仓库内无对应文件，故 delta 用文字说明。
+  counterpart 非 none（orchestrator + work-agent-template 均存在），故用 our_evidence 而非 absence_proof。

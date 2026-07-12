@@ -1,0 +1,31 @@
+id: mech:docs-as-distributed-router
+kind: mechanism
+tier: A
+dossier: dossiers/mech--docs-as-distributed-router.yaml
+
+scores:
+  D: 2
+  I: 10
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - defining-constraint-line：+2。"每个 skill 必点一行 defining constraint（使它区别于
+    默认行为的那个事实），绝不省略"——我方只有易混对的临时消歧注记（ux-brainstorm vs
+    design-brief、/idea 边界），无普适规则。这是本单元的隐藏珍珠：直接可用于我方
+    SKILL.md description/office 表/routing hint 的写作质量。
+  - distributed-router-nodes：+0。分布式路由拓扑与我方中央路由（route-guard+词表 SSOT+
+    office）**正面冲突**——我方拓扑是承重墙，冲突不计缺口。
+  - fixed-frame-adaptable-middle：+0（我方中央表列结构同职能，粒度取舍）。
+  - absolute-links-when-published：+0（前提缺席：我方不发布 per-skill docs 页）。
+  I=10（中央路由全链 satu 现任）。C=S。E=3。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。分布式路由主体明确不采（承重冲突）。defining-constraint-line
+  作为写作规则收进 skill-authoring 资产（搭车 writing-great-skills 落地——它本来就是该
+  词汇体系的近亲），并在落地时顺手给 office 表/易混 skill 消歧注记做一次 defining-
+  constraint 视角的补写检查（该动作属 skill-authoring 落地的验收项，不另立 FUSION）。
+
+reconciliation: null
+landing_estimate: null

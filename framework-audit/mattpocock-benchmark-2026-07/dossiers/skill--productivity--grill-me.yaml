@@ -1,0 +1,98 @@
+id: skill:productivity/grill-me
+kind: skill
+tier: A
+opponent_sha256: 6189dfceb7304a6e5558f75d87e68fa3bc7fcf7ba120e44f21f8a61fe01eba54
+opponent_summary: >
+  grill-me is a user-invoked (disable-model-invocation:true) thin shell whose entire body is a single
+  directive — "Run a `/grilling` session." It carries a curated one-line description ("A relentless
+  interview to sharpen a plan or design.") but delegates all substance to the sibling `grilling`
+  primitive. grilling is the model-invoked skill that holds the actual protocol: interview the user
+  relentlessly one question at a time, walk each branch of the design tree resolving dependencies,
+  look up facts in the codebase but leave decisions to the user, and do not enact the plan until a
+  shared understanding is confirmed. So grill-me is only a manual slash entry point over grilling;
+  the interrogation logic lives entirely in the primitive, not in the shell.
+our_summary: >
+  Our counterpart is brainstorm, a 724-line full multi-phase skill (not a thin shell). It runs
+  one-question-at-a-time Socratic dialogue using 6 adapted YC-style forcing questions, classifies
+  scope into Lightweight/Standard/Deep-feature/Deep-product, generates 2-3 approaches, and writes a
+  PRD with stable R#/A#/F# IDs plus handoff and memory integration. The interrogation substance that
+  grilling delegates to is folded directly into brainstorm ("I interrogate before I synthesize. I
+  ask one question at a time."). We have no separate thin-shell wrapper that merely invokes
+  brainstorm — the user-invocable /brainstorm entry and the substance are the same artifact.
+mechanisms:
+  - name: shell-increment
+    summary: >
+      grill-me's whole body is "Run a `/grilling` session"; its only increment over the grilling
+      primitive is a user-only invocation gate plus a curated one-line description — no protocol of
+      its own.
+    opponent_evidence:
+      - path: skills/productivity/grill-me/SKILL.md
+        quote: "Run a `/grilling` session."
+      - path: skills/productivity/grill-me/SKILL.md
+        quote: "disable-model-invocation: true"
+      - path: skills/productivity/grilling/SKILL.md
+        quote: "Interview me relentlessly about every aspect of this plan"
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "I interrogate before I synthesize. I ask one question at a time."
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "runs one-question-at-a-time Socratic dialogue using 6 adapted"
+    delta: >
+      grill-me adds nothing over the grilling primitive except a user-only invocation gate
+      (disable-model-invocation:true) and the curated description "A relentless interview to sharpen a
+      plan or design."; the entire interrogation protocol (one question at a time, walk the design
+      tree, decisions stay with the user) lives in grilling/SKILL.md, a separate file. Our side folds
+      that same one-question-at-a-time Socratic interrogation directly into brainstorm, a full
+      multi-phase skill with scope classification, forcing questions, PRD output, handoff and memory —
+      not into a delegating shell. We therefore have the interrogation substance but no equivalent
+      standalone thin-shell entry that only re-exposes it under a distinct user-invoked name.
+prior_verdict_response: |
+  Prior verdict: REJECTED (2026-06-07, vetting-registry:847-864), redundant_with brainstorm,
+  hard NON_REDUNDANCY=FAIL, weighted_score 50. Four reject_reasons, each checked at fact level below
+  (no new conclusion drawn — reconciliation only):
+
+  1. "FIT=0: not a verification/red-team/eval/testing skill ... filed under 'productivity' ...
+     interrogates the USER about their own plan rather than adversarially reviewing artifacts."
+     — Fact still holds. Inventory files this unit as bucket=productivity (skills/productivity/grill-me),
+     and grilling/SKILL.md confirms it interrogates the user's plan ("The *decisions*, though, are
+     mine"), not artifacts/tests. New fact: the current benchmark re-frames this unit as tier-A
+     thin_shell with counterpart=brainstorm, i.e. the old "fit to verification-redteam category" lens
+     is not the lens applied here; the value now under examination is the shell-over-primitive
+     increment, not category fit.
+
+  2. "NON_REDUNDANCY FAIL: existing /brainstorm is a Socratic interrogation PRD tool that already does
+     'interview relentlessly, one question at a time' ... grill-me is a strict thin subset ... whereas
+     grill-me is 4 sentences."
+     — Fact still holds and is now sharper. brainstorm still runs one-question-at-a-time Socratic
+     dialogue (SKILL.md lines 8, 37, 133) and remains a 724-line full multi-phase skill with
+     handoff+memory. New fact: the old verdict's "4 sentences" conflated grill-me with grilling.
+     grill-me's own body is a single line ("Run a `/grilling` session."); the ~5-sentence interrogation
+     substance lives in the separate grilling primitive. So grill-me is a pure delegation shell, even
+     thinner than the old verdict recorded.
+
+  3. "QUALITY=1: extreme stub — entire skill body is 4 sentences ... no examples, no tests, no evals,
+     no edge-case handling, no scope boundaries. The 119k-star figure is the umbrella mono-repo's."
+     — Fact-level: the "4 sentences" count mixed grill-me (1 line) and grilling (5 lines). Confirmed
+     no tests/evals/examples on either: both directories contain only SKILL.md and inventory lists
+     support_files: [] for grill-me. Star-count caveat unverified here (out of scope for this dossier).
+
+  4. "TRIGGER COLLISION: 'stress-test a plan / get grilled on your design' competes with /brainstorm's
+     routing keywords (需求梳理/需求确认/有个想法)."
+     — Fact nuance the old verdict did not separate: grill-me itself is disable-model-invocation:true
+     (user-invoked only), so at the harness level the shell does not auto-compete in model-invocation
+     routing. The model-invoked trigger phrases live on the grilling primitive
+     ("Use when the user ... uses any 'grill' trigger phrases"), not on grill-me. Our brainstorm
+     routing keywords still exist. So any routing-collision concern attaches to grilling, not to the
+     user-invoked grill-me shell.
+notes: >
+  thin_shell=true → single mechanism `shell-increment` per task spec (matrix gave no subverdicts for
+  this row). All 3 opponent quotes and both our-side quotes grep-verified verbatim (grep -c == 1)
+  before writing: opponent from skills/productivity/grill-me/SKILL.md and
+  skills/productivity/grilling/SKILL.md; ours from .claude/skills/office/brainstorm/SKILL.md
+  (lines 37 and 8). grilling is a real repo sibling file (skills/productivity/grilling/SKILL.md,
+  inventory sha256 5a35925d...), NOT a Claude Code harness built-in, so citing it is legitimate. Key
+  fact surfaced while reading: grill-me's whole body is one line ("Run a `/grilling` session.") — the
+  interrogation substance the 2026-06-07 verdict attributed to grill-me actually lives in the separate
+  grilling primitive; the shell only adds a user-only invocation gate + a curated description.
+  opponent_sha256 copied verbatim from inventory.yaml line 396. counterpart=brainstorm exists so no
+  absence_proof needed (our_evidence supplied instead).

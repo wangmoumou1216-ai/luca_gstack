@@ -1,0 +1,96 @@
+id: skill:productivity/grilling
+kind: skill
+tier: A
+opponent_sha256: 5a35925d03a391bcfa46940868b649b72dba89ec9c19525e785bbb6bd3a7f478
+dossier: dossiers/skill--productivity--grilling.yaml
+
+scores:
+  D: 5
+  I: 8
+  C: M
+  E: 3
+score_derivation: |
+  D=5（锚 A 预注册 8，dossier 复核后下调，桶不变——见 anchor_recalibration）：
+  - reusable-primitive：+3。我方有逼问"行为"（内嵌 brainstorm Phase 3）但无"抽取-复用"架构形态；
+    muse-loop 需要逼问时 dispatch 整个 brainstorm Phase 0-5（dossier mechanisms[4] 双侧引文）。
+  - facts-vs-decisions-split：+1（非 +3/4）。dossier 证实我方已有同一区分（"only the user can
+    answer those"），差异仅是显式度/位置（对方一条居中规则 vs 我方散在 Phase 2/2.5），非有无。
+  - one-question-at-a-time：+0。我方不弱于对方（CRITICAL RULE #3 + AskUserQuestion 绑定）。
+  - confirmation-gate：+0。我方双门（永不实现 HARD GATE + gated handoff）覆盖同一意图。
+  - 咬过人证据：+1。CHANGELOG #464 记载 confirmation gate 与 facts/decisions split 是后补的
+    （实际踩过 agent 自问自答/抢跑才加），E 类实证。
+  I=8：routing-map invoke 行(+2) / P3 preamble+observability 接线(+2) / P1-P7 约束(+2) /
+  重度使用史(+2) / 无 brainstorm 专属行为回归测试(0)。
+  C=M：触 brainstorm/SKILL.md + 新建共享 primitive 参考文件 + muse-loop 指针，2-4 文件。
+  E=3：promoted(+1) + CHANGELOG 演进记录(+1) + 非 draft(+1)。
+
+anchor_recalibration: |
+  锚 A 预注册 D=8 的依据（"我方未显式抽出 facts/decisions 分离"）被 dossier 双侧引文部分推翻：
+  分离存在、只是分散。D 8→5。桶不变（merge），判据仍满足；按 rubric「锚被推翻回 GATE 重校准」
+  条款评估：bucket 层未翻，属分数校准非结论翻转，于 GATE-2 显式呈报而非中断回 GATE-1。
+  后续所有单元按此校准后的尺度打分（D≥7 保留给"机制簇整体缺席"）。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=5 ≥ 3 ✓；独立引证机制 ≥2（reusable-primitive、explicit-split-form）✓；
+  融合方案不移除 brainstorm 任何既有行为（抽 primitive + 显式化规则均为加法）→ FUSION 步⑥
+  A/B 非回归可背书。不满足替换五条（支配测试不成立：one-question/confirmation-gate 轴上
+  brainstorm 更强），替换不适用——与锚 A 标尺含义一致：D 高但非 Pareto 支配 → 补强不替换。
+
+merge_scope: |
+  ① 把 facts-vs-decisions 分离从分散规则提为 brainstorm 逼问环的一条居中显式规则（一行）。
+    ——红队后本单元**唯一承重、立即落地**项；落 brainstorm Phase 3/2.5 可进化措辞区。
+  ②（红队砍→ deferred-conditional）抽逼问环为共享 primitive：**"独立轻量 skill"选项删除**
+    （撞 fork 输入面收窄/使用即留任纪律），仅保留 references/grilling-loop.md 形态，且**只在
+    FUSION preflight 证出 brainstorm 之外第二个真实消费者时才落地**；否则逼问保持内嵌 brainstorm，
+    不抽取。muse-loop 非有效消费者：它整跑 /brainstorm 是为拿真实可追溯 PRD（traceable_delivery
+    硬约束），瘦 primitive 对它零收益（详见 redteam）。
+
+reconciliation: null   # 本单元无既有裁决（grill-me 的 REJECT 不覆盖 grilling primitive 本体）
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/brainstorm/SKILL.md", ".claude/skills/office/muse-loop-orchestrate/SKILL.md(指针，可选)"]  # 红队砍 grilling-loop.md（deferred-conditional，见 redteam）；承重落点收缩为 1 文件 → C 应 M→S
+  ab_runs_needed: 1
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    现有 brainstorm 已够用，本 merge 的承重项（item ② 抽 primitive）是"形态搬运"而非能力补齐：
+    - 逼问全部行为机制 brainstorm 已具备且不弱——one-question（CRITICAL RULE #3 绑定
+      AskUserQuestion "exactly once per question" + Anti-Pattern 列为 CRITICAL 违规）、facts/decisions
+      分离（SKILL.md:291「only the user can answer those」）、抢跑防御（Rule 1 HARD GATE 永不实现 +
+      Phase 7 gated handoff）。dossier 四机制里三项自评 +0/「不弱」，唯一真差异是"抽取-复用架构形态"。
+    - rubric D 定义明确警告"把'形态差异'算成'能力缺口'"。reusable-primitive 的 +3 正是这一误算：
+      dossier 自己把它归为"架构形态"而非"行为"，且承认 brainstorm 已具备行为。
+    - 致命处：形态价值 = 可组合复用，复用价值需要 ≥2 真实消费者。luca_gstack 内 grill 系 primitive
+      消费者 = 0（dossier grep 仅命中 2 处外部评估记录）。唯一被点名的 would-be 消费者 muse-loop 实为
+      **误读**：muse-loop Phase 1.5 整跑 /brainstorm 不是"只想逼问却被迫整跑"，而是它 Phase 2 的
+      traceable_delivery 硬约束需要一份真实、扎根 baseline、可追溯的 PRD，"这份 PRD 只能来自
+      /brainstorm 真正跑一遍"（muse-loop SKILL.md:108）。即使抽出瘦 grilling primitive，muse-loop
+      仍必须整跑 brainstorm 拿 PRD——瘦 primitive 对它零收益。
+    → 抽 primitive 的唯一 caller 只会是 brainstorm 自己 = 教科书级 premature abstraction，直撞
+      最小文件原则 + Simplicity First「不添加抽象层」。故 item ② 应砍。
+    为何不 kill：item ①（facts/decisions 从分散提为逼问环一条居中显式规则）是真实、加法、廉价、
+    且有对方"咬过人"CHANGELOG #464 背书的硬化（防 agent 自问自答决策），落 brainstorm Phase 3 可
+    进化区、不碰 P1-P7 与不可进化清单。这一条足以维持 merge 底线（opponent 单元 D 仍 ≥3），但承重项
+    从"抽 primitive"降为"一行显式化"，故 downgrade 而非 kill。
+  attack_notes: |
+    ② fit：merge_scope item ② 的"独立轻量 skill"选项与 fork 既定纪律正面冲突——2026-07-03 输入面
+    收窄刚把 compare/figma-demo/magicpath 因零调用降级隐藏，"使用即留任"对连续 60 天零用 L1 降级；
+    在此 fork 新建仅单一 caller 的 grilling skill 自相矛盾。**该选项删除**，item ② 仅保留
+    references/grilling-loop.md 形态并**改为 deferred-conditional**（仅当 preflight 证出 brainstorm
+    之外第二个真实消费者才落地）。item ① 落点安全：facts/decisions 显式化在 Phase 3/2.5 可进化措辞区，
+    不触「必须等待用户回答」「PRD 输出路径」「Outstanding Questions 分类」等不可进化项，不碰 P1-P7。
+    ③ 成本：砍 item ② 的新 reference 文件后，承重落点仅 brainstorm/SKILL.md（+ 可选 muse-loop 指针），
+    C 应 M→S（≤2 文件）。dual_repo=true 正确（brainstorm 母版+fork 双有、references/ 双有；muse-loop
+    指针 fork-only 但仅可选、非承重）。ab_runs=1 正确（item ① 机制层 prose 吸收，带 A/B 非回归，未违
+    "无 A/B 一律 BLOCK"红线）。二者均不构成 kill 点。
+    校准影响：本单元是锚 A（"清晰采纳"标尺）。判官已 8→5 一次；红队再降 D 5→3（reusable-primitive
+    +3→+1，形态非能力、零真实消费者）、C M→S。**未移动尺度锚点**（"D≥7=机制簇整体缺席"不变），仅纠正
+    本单元在尺度上的过高定位。GATE-2 应知悉：这个"清晰采纳"样板经两轮复核后实为一条一行显式化的边际
+    merge，承重的 primitive 抽取 deferred——采纳 digest 里它不再是强 merge 范例。
+    收缩汇总（只删不加）：merge_scope 砍 item ② 主动形态（删"独立轻量 skill"、reference 转
+    deferred-conditional）；touched_files 去掉新建 reference；bucket 保持 merge（底线由 item ① 承）。

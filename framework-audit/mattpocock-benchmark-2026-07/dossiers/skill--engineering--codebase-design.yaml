@@ -1,0 +1,117 @@
+id: skill:engineering/codebase-design
+kind: skill
+tier: B
+opponent_sha256: a8d50abac5a4018f60e1d911d4b6f4e36454ca14d6c390c0695a578c7de65dad
+opponent_summary: >-
+  一个"共享词汇"型工程 skill：为设计 deep module（小接口后面藏大量行为，放在干净 seam 上、
+  通过接口可测）提供一套精确术语与设计原则。SKILL.md 是核心，含 8 词 glossary（Module/Interface/
+  Implementation/Depth/Seam/Adapter/Leverage/Locality，规定"必须原样使用这些词、不得替换为
+  component/service/API/boundary"）、deep-vs-shallow 图示、原则（deletion test、interface 即测试面、
+  一/二适配器 seam 判定）、可测性三条、关系图与 rejected framings（明确拒绝 Ousterhout 的行数比定义）。
+  两个 support 文件按需展开：DEEPENING.md 给依赖分类（in-process/local-substitutable/remote-owned/
+  true-external）与 ports&adapters + replace-don't-layer 测试策略；DESIGN-IT-TWICE.md 给并行 sub-agent
+  探索多套接口再对比的流程。description 显式声明"或当另一个 skill 需要 deep-module 词汇时"被复用。
+our_summary: >-
+  我方无对应物。matrix our_counterpart=none。工程侧 skill 只有 /code-hygiene（8 清理算子 + 完成前验证
+  铁律）与 /code-recon（把已有代码逆向成架构 brief）；产品/设计侧有 /tech-spec、/design-brief、
+  /ux-brainstorm 等。全仓无 deep-module 共享词汇 primitive：无 module/interface/seam/adapter/depth 的
+  受控术语表，无 deletion test，无依赖分类/ports&adapters 的 deepening 方法，无"设计两次"式的并行接口
+  探索。唯一沾边处是 /ux-brainstorm 的并行 agent 发散（2-3 方案 + Oracle 对抗），但那是产品/UX 概念发散，
+  非代码模块接口设计，且不共享任何 deep-module 词汇。
+mechanisms:
+  - name: shared-deep-module-vocabulary
+    summary: >-
+      一套 8 词受控术语表（Module/Interface/Implementation/Depth/Seam/Adapter/Leverage/Locality），
+      强制"原样使用、不得替换"，作为可被其他 skill 复用的架构语言 primitive。
+    opponent_evidence:
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: >-
+          Use these terms exactly
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: >-
+          anything with an interface and an implementation. Deliberately scale-agnostic: a function, class, package, or tier-spanning slice.
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: >-
+          don't substitute "component," "service," "API," or "boundary." Consistent language is the whole point.
+    absence_proof:
+      pattern: "deep module|\\bseam\\b"
+      scope: ".claude/skills"
+      hits: 0
+    delta: >-
+      对方把架构设计术语固定成一份"必须原样使用"的 glossary，并通过 description 让其他 skill 显式借用
+      （counterpart_note 指其被 tdd/improve 复用）。我方无任何 module/interface/seam/adapter/depth 的
+      受控词汇 primitive，各 skill 用自己的措辞谈接口与边界，不存在跨 skill 共享的架构语言层。
+  - name: depth-principles-and-deletion-test
+    summary: >-
+      判定模块深浅与放置 seam 的启发式：deletion test、interface 即测试面、一适配器=假 seam/二适配器=真
+      seam、以及"接受依赖不自造/返回结果不产副作用"的可测性规则。
+    opponent_evidence:
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: >-
+          The deletion test.** Imagine deleting the module. If complexity vanishes, it was a pass-through.
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: >-
+          One adapter means a hypothetical seam. Two adapters means a real one.
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: >-
+          The interface is the test surface.** Callers and tests cross the same seam.
+    absence_proof:
+      pattern: "deletion test|depth.{0,3}as.{0,3}leverage"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >-
+      对方给出可操作的模块设计判据（删除测试判 pass-through、双适配器判真 seam、接口即测试面）。我方
+      /code-hygiene 有"完成前验证铁律"和死代码/去重等 8 清理算子，但那是代码卫生层算子，不含判定模块
+      深度/seam 位置/可测性接口形状的设计判据；无 deletion test 或适配器计数这类语汇。
+  - name: deepening-dependency-categories
+    summary: >-
+      DEEPENING.md：按依赖类型（in-process/local-substitutable/remote-owned/true-external）决定如何跨
+      seam 测试，配 ports&adapters 与"replace, don't layer"（删旧浅模块单测、只在深接口写新测试）。
+    opponent_evidence:
+      - path: skills/engineering/codebase-design/DEEPENING.md
+        quote: >-
+          When assessing a candidate for deepening, classify its dependencies.
+      - path: skills/engineering/codebase-design/DEEPENING.md
+        quote: >-
+          Define a **port** (interface) at the seam. The deep module owns the logic; the transport is injected as an **adapter**.
+      - path: skills/engineering/codebase-design/DEEPENING.md
+        quote: >-
+          Write new tests at the deepened module's interface. The **interface is the test surface**.
+    absence_proof:
+      pattern: "ports? (and|&) adapters?|deepen"
+      scope: ".claude/skills .claude/skill-os"
+      hits: 0
+    delta: >-
+      对方把"合并浅模块变深"这件事按依赖类别系统化，并给出跨 seam 的测试落地方式（in-memory/HTTP 适配器、
+      删旧测试只留接口测试）。我方无 deepening 方法学，无依赖分类，无 ports&adapters 或 replace-don't-layer
+      的测试策略；/code-recon 只做只读架构逆向 brief，不给重构/深化模块的执行方法。
+  - name: design-it-twice-parallel-interface-exploration
+    summary: >-
+      DESIGN-IT-TWICE.md：为选定深化候选并行 spawn 3+ sub-agent，各给一套 radically different 接口
+      （最小化/最大灵活/最常见调用者/端口适配器），再按 depth/locality/seam 位置对比并给强观点推荐。
+    opponent_evidence:
+      - path: skills/engineering/codebase-design/DESIGN-IT-TWICE.md
+        quote: >-
+          Spawn 3+ sub-agents in parallel using the Agent tool. Each must produce a **radically different** interface for the deepened module.
+      - path: skills/engineering/codebase-design/DESIGN-IT-TWICE.md
+        quote: >-
+          Contrast by **depth** (leverage at the interface), **locality** (where change concentrates), and **seam placement**.
+    absence_proof:
+      pattern: "design it twice|radically different interface"
+      scope: ".claude/skills .claude/skill-os"
+      hits: 0
+    delta: >-
+      对方用并行 sub-agent 对同一模块产出多套差异化接口再对比，明确以 depth/locality/seam 三维度收敛。
+      我方 /ux-brainstorm 有并行 agent 发散 + Oracle 对抗的形态，但对象是产品/UX 概念方案（2-3 方案），
+      不针对代码模块接口，也不用 depth/locality/seam 词汇或维度对比；工程侧无任何"设计两次接口"的编排。
+notes: >-
+  counterpart=none，四机制全用 absence_proof。跑过的 grep（cd 仓库根）：
+  `grep -riE 'deep module|\bseam\b' .claude/skills` = 0；
+  `grep -riE 'deletion test|depth.{0,3}as.{0,3}leverage' .claude/skills .claude/skill-os CLAUDE.md` = 0；
+  `grep -riE 'ports? (and|&) adapters?|deepen' .claude/skills .claude/skill-os` = 0；
+  `grep -riE 'design it twice|radically different interface' .claude/skills .claude/skill-os` = 0。
+  意外事实：宽松 `grep -ril 'deep module'` 会命中 .claude/skill-os/external-skills/vetting-registry.yaml，
+  但那是对方另一个 skill（tdd 插件 bundle 的 deep-modules.md 文件名）的外部评估记录，非我方自有 primitive，
+  故 M1 scope 收窄到 .claude/skills 排除之；`grep 'seam' brainstorm/references/pressure-test.md` 命中的是
+  "seamless" 一词（\bseam\b 已验证不匹配 seamless）。这两个都是假阳性，不构成 counterpart。
+  三个 support/anchor 文件（SKILL.md 114 行 / DEEPENING.md 38 行 / DESIGN-IT-TWICE.md 44 行）均逐行读完。

@@ -1,0 +1,93 @@
+id: mech:writing-great-skills-metavocab
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+
+opponent_summary: >
+  对方 writing-great-skills 是一个专讲"如何写好 skill"的 user-invoked 参考 skill
+  （disable-model-invocation: true）。SKILL.md 立一个根德性 Predictability（agent 每次跑走同一个
+  process，而非产同样 output），并声明其下每个杠杆都服务于它；正文按 Invocation / Information
+  hierarchy / When to split / Pruning / Leading words / Failure modes 分节讲写作原则。配套
+  GLOSSARY.md 是这套写作学的领域模型：20+ 个术语按 4 条轴（Invocation / Information Hierarchy /
+  Steering / Pruning）分组，每个术语给定义、交叉引用其他加粗术语、并附 _Avoid_ 别名表。6 个 failure
+  mode（premature completion / duplication / sediment / sprawl / no-op / negation）每个 tag 为
+  _failure mode_ 且紧贴治它的那个杠杆，供诊断 skill 问题用。整套是可教、可拿来做 code-review 的共享词汇。
+
+our_summary: >
+  matrix 指定的 counterpart 是 skill-invariants.md + extraction-bar.md。skill-invariants.md 是
+  "SKILL.md 中不得修改的保护区"清单（frontmatter / 输出路径 / preamble / handoff / FILE_END /
+  Phase 顺序 / workflow-state），是边界守护式的负面约定（规定不许动什么），不是"如何写好 skill"的
+  正面词汇；extraction-bar.md 是经验提取的四信号门槛，与 skill 写作学无关。我方无单一命名的 skill
+  写作根德性、无按轴分组交叉引用的 skill 写作术语表、无命名的 skill 写作 failure mode 诊断目录。相邻
+  概念散落他处：eval-methodology.md 有"每条 eval 判据绑一个真实 failure mode"的通用槽位；
+  behavioral_ab.py 有基于 A/B 的 no-op/回归判定（一种测试裁决），但均非 skill 写作元词汇。
+
+mechanisms:
+  - name: root-virtue-predictability
+    summary: 立单一命名根德性 Predictability（同一 process 而非同一 output），并声明其下每个杠杆都服务于它，作为整套写作学的组织公理。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "is the root virtue; every lever below serves it."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "The root virtue every other term serves — cost and maintainability are symptoms of it, not rivals."
+    our_evidence: null
+    absence_proof:
+      pattern: "root.?virtue|根德性|predictability|根本德性"
+      scope: ".claude/skill-os, .claude/skills/office, CLAUDE.md"
+      hits: 0
+    delta: >
+      对方把"可预测性/同一 process"命名为单一根德性并让全部写作杠杆挂在它下面，形成一个自证的组织公理。
+      我方在 .claude/skill-os / .claude/skills/office / CLAUDE.md 内 grep 该概念 0 命中——虽有并发原则、
+      最小文件原则、Coding Discipline 等分散的行为原则，但没有一个统摄 skill 写作的命名根德性。
+
+  - name: teachable-skill-authoring-metavocab
+    summary: 一套正面的、可教/可 code-review 的 skill 写作领域模型词汇——20+ 术语按 4 条轴分组、加粗互相交叉引用。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "The domain model for what makes a skill great."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "The terms are grouped by axis:"
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "**Bold terms** in any definition are themselves defined in this glossary; find them by their heading."
+    our_evidence:
+      - path: .claude/skill-os/skill-invariants.md
+        quote: "# Skill Invariants — Protected Zones"
+      - path: .claude/skill-os/skill-invariants.md
+        quote: "定义 SKILL.md 中**不得修改**的区域，适用于人工编辑和自动优化（如 GEPA）。"
+    delta: >
+      对方 GLOSSARY.md 是一套正面的 skill 写作领域模型：按 Invocation / Information Hierarchy /
+      Steering / Pruning 四轴组织 20+ 命名术语，术语间加粗交叉引用，可作为教学与 code-review 的共享语言。
+      我方 counterpart skill-invariants.md 也是 skill 层的写作约定，但取向是边界守护——枚举 SKILL.md
+      中"不得修改"的保护区（路径/frontmatter/Phase 顺序等），是负面清单而非"如何写好"的正面词汇；
+      我方无按轴分组、交叉引用、带定义的 skill 写作术语表。
+
+  - name: failure-mode-diagnostic-catalog
+    summary: 6 个命名的 skill 写作 failure mode，各 tag 为 _failure mode_ 且紧贴治它的杠杆，供诊断 skill 问题。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "Use these to diagnose issues the user may be having with the skill."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "Each **failure mode** lives beside the lever that cures it, tagged _failure mode_."
+    our_evidence:
+      - path: .claude/skill-os/eval-methodology.md
+        quote: "每条绑一个真实 failure mode"
+      - path: .claude/skill-os/evolution/FUSION-RUNBOOK.md
+        quote: "no-op / 回归 / 档位不符 → BLOCK"
+    delta: >
+      对方给出一个命名的 skill 写作 failure mode 目录（premature completion / duplication / sediment /
+      sprawl / no-op / negation），每个 tag 为 _failure mode_ 且与治它的杠杆 co-located，明确用途是诊断
+      skill 问题。我方无对应的命名写作 failure mode 目录：eval-methodology.md 的 "failure mode" 是让每条
+      eval 判据绑一个真实失败的通用槽位（eval 设计用），behavioral_ab.py / FUSION-RUNBOOK 的 "no-op" 是
+      prose 改动 A/B 测试的裁决词（经验上操作了对方 No-Op 那条"是否改变默认行为"的判据，但是测试裁决
+      而非写作词汇），二者都不是按 skill 写作学分类、贴着杠杆的诊断目录。
+
+notes: >
+  跑过的 grep：(1) grep -rilE "root.?virtue|根德性|predictability|根本德性" .claude/skill-os
+  .claude/skills/office CLAUDE.md → 0 命中（mech1 absence_proof）。(2) grep -rilE
+  "failure.?mode|premature.?completion|sediment|sprawl|no-?op|negation" 命中 eval-methodology.md
+  与 evolution/ 若干文件，但逐条查证：eval-methodology 的 failure_mode 是 eval 判据绑定槽位、
+  no-op 是 behavioral_ab A/B 测试裁决，均非 skill 写作 failure mode 目录（mech3 用作 our_evidence 佐证
+  相邻但不同的概念）。所有 11 条引文已 grep -F 逐字回验通过。此单元 matrix 无 thin_shell 字段（非薄壳），
+  故正常出 3 机制；kind=mechanism 无 opponent_sha256。leading-word 与 avoid-alias-table 是独立 matrix
+  单元、各有 dossier，本 umbrella 单元刻意不重复它们，只采证 3 个 metavocab-level 机制（根德性/正面写作
+  领域模型/failure-mode 诊断目录）。

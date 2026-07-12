@@ -1,0 +1,56 @@
+id: skill:deprecated/ubiquitous-language
+kind: skill
+tier: C
+opponent_sha256: 2449e2345b96b9f1e861c697b5eab50d03ae1254481a4306b6f815684e523b3a
+opponent_summary: >
+  已弃用 skill（user-invoked，disable-model-invocation: true）。从当前对话抽 DDD 风格的 ubiquitous
+  language 词汇表：扫对话找 domain 名词/动词/概念，标出歧义（一词多义/多词一义/含糊）、给出 opinionated
+  的规范术语，写进 UBIQUITOUS_LANGUAGE.md。输出用表格（Term / Definition / Aliases to avoid，按子域/
+  生命周期/actor 分多表）、加一段 dev↔domain expert 的 example dialogue 演示术语精确用法、一节 Flagged
+  ambiguities。规则：opinionated 挑最佳词把其余列为 aliases、定义一句话讲"是什么非做什么"、只收 domain
+  相关术语。re-run 时读旧文件增量更新。单个 SKILL.md，无 support_files。
+our_summary: >
+  matrix 标 counterpart=CONTEXT.md。我方 CONTEXT.md 是项目长期记忆（跨 session 持久化、每次启动自动读、
+  由 retro/skill 写入的散文式项目约束+红线+累积洞察），是 prose 不是术语对照表；无 Term/Definition/
+  Aliases 三列词汇表、无 UBIQUITOUS_LANGUAGE.md、无 DDD 歧义 flagging 表（grep 0 命中）。术语一致性
+  在我方靠稳定 ID + 品牌锁 + Static Fallback，非一张 DDD 词汇表。
+mechanisms:
+  - name: DDD-glossary-as-table
+    summary: 把 domain 术语抽成 Term/Definition/Aliases-to-avoid 三列表格、按子域分多表、opinionated 定规范词。
+    opponent_evidence:
+      - path: skills/deprecated/ubiquitous-language/SKILL.md
+        quote: "list the others as aliases to avoid"
+      - path: skills/deprecated/ubiquitous-language/SKILL.md
+        quote: "Write to `UBIQUITOUS_LANGUAGE.md`"
+    absence_proof:
+      pattern: 'Aliases to avoid|UBIQUITOUS_LANGUAGE'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方产物是一张固定的 DDD 术语对照表（+Aliases to avoid 列）写进 UBIQUITOUS_LANGUAGE.md。我方无
+      此表、无该文件（0 命中）；术语规范在我方是分散的稳定 ID/品牌约束/Static Fallback，不集中成词汇表。
+  - name: opinionated-glossary-in-prose-memory
+    summary: 我方用散文式长期记忆承载项目语言/约束，而非表格式冻结词汇表。
+    opponent_evidence:
+      - path: skills/deprecated/ubiquitous-language/SKILL.md
+        quote: "**Be opinionated.** When multiple words exist for the same concept, pick the best one and list the others as aliases to avoid."
+    our_evidence:
+      - path: CONTEXT.md
+        quote: "CONTEXT.md — 项目长期记忆"
+      - path: CONTEXT.md
+        quote: "此文件跨 session 持久化。"
+    delta: >
+      对方把项目语言冻结成一张 opinionated 词汇表快照。我方 CONTEXT.md 是散文式、随 retro 增量演进的
+      项目长期记忆——记的是约束/红线/累积洞察而非术语三列表。这是"静态词表 vs 活文档"的取舍：我方
+      与 matt 的后继选择（见 notes）一致，都倒向 prose/活过程。
+notes: >
+  【matt 为何弃用 + 对我方信号】deprecated/README.md 明写 "Skills I no longer use."。弃用理由=被拆成两
+  个更活的 skill 取代：CHANGELOG.md 记新增 codebase-design（深模块词汇：module/interface/depth/seam/
+  adapter）与 domain-modeling（"actively build and sharpen a project's domain model, stress-testing terms
+  against the glossary and keeping CONTEXT.md and ADRs current"）。即静态的 UBIQUITOUS_LANGUAGE.md 词汇
+  表被"持续维护 domain model + 把术语写进 CONTEXT.md/ADR 的活过程"取代。信号：领域语言不该固化成一张
+  冻结的术语表快照，而应是一个不断 stress-test 术语、随理解演进更新 prose（CONTEXT.md）与决策记录
+  （ADR）的活过程——这正对应我方 CONTEXT.md=散文长期记忆 + decisions.md 决策台账 + retro 增量写入的
+  设计（prose 而非 table），是对我方现有取舍的正向背书，也提示"术语一致性"可考虑挂到 domain-modeling
+  式的活维护而非一次性词表导出。跑过的 grep（repo 根，同上 scope）：'Aliases to avoid|UBIQUITOUS_
+  LANGUAGE' → 0。无 support_files。self-check 通过。

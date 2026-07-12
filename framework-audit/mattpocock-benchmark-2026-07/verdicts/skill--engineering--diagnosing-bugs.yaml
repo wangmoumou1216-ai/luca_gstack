@@ -1,0 +1,94 @@
+id: skill:engineering/diagnosing-bugs
+kind: skill
+tier: B
+opponent_sha256: 7a0779480f323a66d109404646bcc1a14bf0232b45b3e3ea93b652a035718acb
+dossier: dossiers/skill--engineering--diagnosing-bugs.yaml
+
+hard: { safety: PASS, compatibility: PASS, non_redundancy: REVIEW }  # 红队 2026-07-12 降级：已装 counterpart systematic-debugging，见 redteam
+soft: { fit: 3, quality: 3, adoption: 2, maintenance: 3 }
+weighted_score: 93
+
+score_derivation: |
+  硬门：safety PASS（方法论 prose + 良性 HITL bash 模板，无危险模式）；compatibility PASS
+  （标准 SKILL.md + model-invoked frontmatter，install-as-skill 就绪）；non_redundancy PASS
+  （counterpart=none；6 机制中 3 条干净缺席 grep 0，其余 3 条的"相关物"经 dossier 核实
+  全是异域——Iron Law 是修后验证门非诊断前置门、falsifiable 在 PRD 评审、HITL 在编排层）。
+  软分：fit=3——新透镜下满分：调试 route-guard.mjs/hooks/memory 脚本是框架自建的真实高频
+  工作，下游项目实现期同样直接受益；"没有 red-capable 命令不许进假设阶段"直击 agent
+  读码即扔理论的失败模式。quality=3（6 阶段纪律 + 硬门禁 + 10 级反馈环构造阶梯 + 附
+  可执行 HITL 模板脚本 + tagged-log 可 grep 清理——机制密度全仓最高之一）。
+  adoption=2（promoted + docs 页 + CHANGELOG 活跃；星数 monorepo 通胀不能归单 skill）。
+  maintenance=3（2026-07-10 仍在演进）。
+  weighted = 30+30+13.3+20 ≈ 93。
+
+bucket: adopt
+bucket_rationale: |
+  【红队 2026-07-12 降级修正】原判「全仓无诊断纪律是真实缺口」为假：obra/superpowers 的
+  systematic-debugging 已物理安装 ~/.claude/skills/ + vetting-registry 90/100 APPROVED +
+  routing-map line 254-258 接线，是已装 counterpart（详见 redteam）。故本单元非 Tier B 空缺口
+  新增，而是与 systematic-debugging 的头对头；7 维 weighted 93 含"填补空白"成分，视为高估，不再
+  作 autonomous install 依据。仍留在 adopt 家族（非 leave）仅因 M2 多假设等净增机制对
+  systematic-debugging 可验证更优；但采纳收窄为 GATE-2 reconciliation（replace 或 port）。
+
+adopt_scope: |
+  【红队收缩】撤销 autonomous install-型空缺口采纳。所有与 systematic_debugging 现有触发词
+  （调试/debug/复现/找bug/报错/根因/排查；systematic-debugging 亦覆盖 performance problems 故
+  "性能回归"同撞）撞车的 routing-map 词条一律删除——无干净非撞独占触发词可留，不新增任何触发词。
+  是否落地由 GATE-2 reconciliation 裁定（见 reconciliation 字段）；MIT 署名仅在 GATE-2 批准
+  replace/port 后才进 ADOPTED.md。联动：seam 依赖 codebase-design 词汇，仍成立但从属于 GATE-2 决策。
+
+reconciliation: |
+  强制 GATE-2 二选一（红队 2026-07-12 新增，替代原 null）：
+  A) replace——用 diagnosing-bugs 整体替换已装 systematic-debugging，须过 rubric §3 替换门（D≥7 +
+     支配测试逐轴 + 现任独有行为逐条 ported/written-off 用户签字 + 回归证明）。systematic-debugging
+     独有须逐条 port 或 written-off：root-cause-tracing.md 反向追栈 / defense-in-depth /
+     condition-based-waiting / find-polluter.sh / "3+ 次失败即质疑架构"计数器 / 合理化反例表。
+  B) port——只把 systematic-debugging 干净缺席的 4 机制搬入其使用：M2 3-5 排序可证伪假设（反其
+     Phase 3 single-hypothesis）/ M3 [DEBUG-] 打标+grep 清理 / M4 seam 诚实度 / M6
+     hitl-loop.template.sh；机制层 prose 吸收按 rubric §5 强制行为 A/B，无 A/B 一律 BLOCK。
+  两条均须先解决与 systematic-debugging 的 routing 词表去重，避免每个 debug 意图两 skill 抢词。
+
+landing_estimate:
+  reuse_mode: gate2-reconcile  # 原 install 前提（空缺口）失效
+  touched_files_estimate: ["(GATE-2 定) ~/.claude/skills/ replace 或 systematic-debugging port", ".claude/skill-os/skill-routing-map.yaml(去重非新增)", "母版同步", "replace 路径另触 vetting-registry/INTEGRATION-MAP/code-hygiene·code-recon 交叉引用改写"]
+  ab_runs_needed: "port 路径必需（机制层 prose 吸收，rubric §5，无 A/B 一律 BLOCK）；纯 replace 走支配测试+回归证明"
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强论证（为何仍值得动、不是纯噪音，把它从 killed 拦回 downgraded）：diagnosing-bugs 对已装的
+    systematic-debugging 并非纯冗余——它在一条承重轴上实打实更强。systematic-debugging Phase 3
+    明令"Form Single Hypothesis"（单假设），diagnosing-bugs 恰把"3-5 条排序可证伪假设、先给用户
+    复核"作为反纪律，直击 single-hypothesis 锚定（M2，候选 > 现任）。另有 4 处 systematic-debugging
+    干净缺席的机制：seam 诚实度（M4）、[DEBUG-] 打标+单次 grep 清理（M3）、hitl-loop.template.sh
+    （M6）、10 级反馈环构造阶梯+tighten-the-loop 产品化（M1 增量部分）。採纳雄心明确反对因怕动结构
+    而丢弃可验证真实增量，故不致命到"leave 什么都不做"。这半个论证成立——但只支撑"经 GATE-2
+    reconciliation 捕获增量"，不支撑"空缺口 autonomous install"。
+  attack_notes: |
+    致命一击（击穿 fit=3 与 non_redundancy=PASS 地基）：dossier 三处核心前提经一手核验为假——
+    ① our_summary「我方无独立的 debug/诊断 skill（counterpart=none）」假；② bucket_rationale
+    「全仓无诊断纪律是真实缺口」假；③ non_redundancy=PASS 误判。反证：obra/superpowers 的
+    systematic-debugging 已物理安装于 ~/.claude/skills/systematic-debugging/（SKILL.md + 4 助手脚本，
+    Jun-7 日期），vetting-registry 90/100 APPROVED，routing-map line 254-258 以 triggers
+    [调试,报错,根因,debug,排查,找bug,复现,测试失败,崩溃,异常报错] 接线，code-hygiene/code-recon/
+    optional-workflow-graph 三处显式标其为"根因优先调试"承重件，同批 codebase-design verdict 亦当
+    既有 incumbent。它执行 root-cause-first 4 阶段硬门（NO FIXES WITHOUT ROOT CAUSE INVESTIGATION
+    FIRST），与本候选 6 阶段核心（reproduce→hypothesise→minimal-change→failing-test→architecture-
+    handoff）重叠约 65%。dossier 只做机制级 grep（[DEBUG-]/seam/hitl-loop 均 0——属实），却漏查
+    skill 级 counterpart 存在性，故 our_summary 假、Tier B 定档错（应 Tier A 头对头）。
+    ② fit 假设：这非 Tier B 空缺口，weighted 93 含"填补空白"成分，地基抽掉后 fit=3 不成立。
+    ③ 集成成本被 ab_runs=0/无碰撞低估：adopt_scope 提议触发词 诊断/调试/debug/复现 与
+    systematic_debugging 现有触发词直接撞车，落地即造成每个 debug 意图两 skill 抢词的 Multi-Skill
+    歧义；systematic-debugging 已覆盖 performance problems 故"性能回归"亦非独占。Loop 宪法 #3
+    （复杂度双向自证）：装第二个 65% 重叠调试 skill 须可测更优，纯 install-as-new 不满足。
+    收缩项（保守只删不加）：
+    - hard.non_redundancy PASS → REVIEW（已装重叠 counterpart，须头对头对账）。
+    - 删「全仓无诊断纪律是真实缺口 / counterpart=none」空缺口叙事；weighted 93、fit=3 视为高估。
+    - 删 adopt_scope 中与 systematic_debugging 撞车的全部路由触发词，不新增任何触发词。
+    - reconciliation null → 强制 GATE-2 二选一 replace / port（见 reconciliation 字段）；
+      autonomous 空缺口 install 撤销。
+    - landing_estimate：ab_runs=0 仅对"纯 install 不改 prose"成立，port 路径须补 A/B；touched_files
+      增 systematic-debugging 对账面（routing 去重 + replace 则改 vetting-registry/INTEGRATION-MAP/
+      code-hygiene·code-recon 交叉引用），实际触面 > 原估。

@@ -1,0 +1,101 @@
+id: skill:engineering/domain-modeling
+kind: skill
+tier: A
+opponent_sha256: 152e2c97239affb12a60c5f4a7e74ab546a49ae169688c81f4e2ccc42dafa579
+opponent_summary: >
+  一个 model-invoked 的工程 skill，用于在设计过程中主动构建并打磨项目领域模型（ubiquitous
+  language）。核心是"主动纪律"：当用户用词与现有术语冲突时当场质问、把模糊/重载词收敛成精确的
+  canonical term、用具体场景压测概念边界、拿代码与陈述交叉验证。术语一旦定案立即 inline 写进
+  CONTEXT.md（按 CONTEXT-FORMAT.md：opinionated 单一术语 + `_Avoid_` 列同义词），不批处理。
+  另按 ADR-FORMAT.md 处理架构决策，但只在"难以逆转 + 无背景会令人费解 + 真实权衡"三者全真时才
+  提议建 ADR。文件懒创建（有内容才建）；单/多 context 由 CONTEXT-MAP.md 是否存在推断。
+our_summary: >
+  我方无独立的领域建模 skill；对位是 CONTEXT.md（项目长期记忆）+ office/references/ 目录。我方
+  CONTEXT.md 是"红线 + 累积洞察"式长期约束文件，由 /retro 和各 skill 在复盘/发现洞察时被动写入，
+  不是术语表、无 `_Avoid_` 同义词收敛约定。术语挑战只在 brainstorm 的 Oracle 审查里以 ephemeral
+  的"terminology drift"形式出现，不落成持久 glossary。经验/决策提取按 extraction-bar 四信号，在
+  Stop 拦截时统一批处理裁决；项目决策台账是 `.luca/memory/decisions.md` 的一行式 `[D-YYYYMMDD-N]
+  决策 — why` 账本，由 episodic --decision 自动同步，无"三条件全真才提议"的 ADR 提议门。
+mechanisms:
+  - name: active-modeling-vs-passive-consumption
+    summary: >
+      对方把领域建模定义为主动纪律——当场质问冲突术语、压测边界、与代码交叉验证；我方 CONTEXT.md
+      是被动写入的长期记忆，仅 brainstorm 内有 ephemeral 的术语漂移检测。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "This is the *active* discipline — challenging terms, inventing edge-case scenarios, and writing the glossary and decisions down the moment they crystallise."
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "When the user uses a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately."
+    our_evidence:
+      - path: CONTEXT.md
+        quote: "由 /retro 和各 skill 在复盘或发现重要洞察时写入"
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "Oracle finds 2 medium findings (terminology drift"
+    delta: >
+      对方有一个专门 skill 把"改动领域模型"作为一等纪律：主动挑战术语、发明边缘场景、拿代码验证
+      陈述。我方 CONTEXT.md 是被动的长期记忆，明文由 /retro 和各 skill 在复盘时写入，不主动质问
+      术语。我方唯一的术语挑战存在于 brainstorm 的 Oracle 审查（terminology drift），但那是单次
+      会话内的 ephemeral 发现，不沉淀成持久领域词汇表，也不跨会话维护。
+  - name: avoid-alias-convergence
+    summary: >
+      对方术语表要求 opinionated——多词同义时选定唯一 canonical term，其余列进 `_Avoid_`；我方无
+      此格式约定。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/CONTEXT-FORMAT.md
+        quote: "When multiple words exist for the same concept, pick the best one and list the others under `_Avoid_`"
+      - path: skills/engineering/domain-modeling/CONTEXT-FORMAT.md
+        quote: "_Avoid_: Bill, payment request"
+    absence_proof:
+      pattern: "_Avoid_"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方明确规定术语表要"opinionated"：同一概念多个词时钦定一个最佳词、把其余同义词列在
+      `_Avoid_` 下形成收敛。我方仓库无 `_Avoid_` 格式约定，也无"选定 canonical term + 列同义词"
+      的收敛机制——grep `_Avoid_` 与 canonical/统一术语/规范术语 概念词在 .claude/skills、
+      .claude/skill-os、CLAUDE.md、CONTEXT.md 均 0 命中。我方 CONTEXT.md 本身不是术语表。
+  - name: inline-not-batch-update
+    summary: >
+      对方要求术语一定案就地更新 CONTEXT.md、明确"别攒批"；我方经验/决策提取在 Stop 拦截时统一
+      批处理裁决。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "When a term is resolved, update `CONTEXT.md` right there. Don't batch these up — capture them as they happen."
+    our_evidence:
+      - path: .claude/skill-os/extraction-bar.md
+        quote: "person/项目层只在 Stop 拦截时统一裁决一次"
+    delta: >
+      对方要求捕获即写、明令"Don't batch these up"，术语定案的瞬间就 inline 更新 CONTEXT.md。我方
+      的记忆/决策写入时机相反：extraction-bar 规定 person/项目层"只在 Stop 拦截时统一裁决一次"，
+      即会话结束时批处理；CONTEXT.md 也由 /retro 在复盘时成批写入。两侧的写入节律是即时 inline
+      vs 会话末批处理的直接对照。
+  - name: adr-offer-three-part-test
+    summary: >
+      对方只在"难逆转 + 无背景费解 + 真实权衡"三条件全真时才提议建 ADR；我方决策台账是自动同步的
+      一行式账本，无这套提议门。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "Only offer to create an ADR when all three are true:"
+      - path: skills/engineering/domain-modeling/ADR-FORMAT.md
+        quote: "**Hard to reverse** — the cost of changing your mind later is meaningful"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "项目决策台账在 `.luca/memory/decisions.md`"
+      - path: .claude/skill-os/extraction-bar.md
+        quote: "同一来源同步一行到该项目 `.luca/memory/decisions.md`"
+    delta: >
+      对方为架构决策记录设了显式的三条件合取提议门（难以逆转 + 无背景会令人费解 + 真实权衡，缺一
+      不建），且 ADR 格式独立成文（ADR-FORMAT.md）。我方对位是 `.luca/memory/decisions.md` 一行式
+      `[D-YYYYMMDD-N] 决策 — why` 台账，由 episodic --decision 在 Stop 时自动同步一行，判定是否
+      沉淀走的是 extraction-bar 四信号（含"不可逆险情"），但没有"三条件全真才提议 ADR"的专门
+      reversibility/surprise/trade-off 合取门，也无分级 ADR 文档格式。
+
+notes: >
+  跑过的 grep：`grep -rl "_Avoid_" .claude/skills .claude/skill-os CLAUDE.md CONTEXT.md` → exit 1
+  (0 命中)，佐证 avoid-alias-convergence 缺席；另 `grep -rliE "pick the best|canonical
+  term|统一术语|规范术语|唯一术语|同义词收敛"` 同范围 → exit 1 (0 命中)，确认概念层也无对位。
+  意外事实：我方仓库无 docs/adr/ 目录或 ADR 文件（find 0 命中），文中出现的 ADR-0001/0005/0006
+  仅是框架自身演进决策的编号引用（CHANGELOG/audit/gaps-register），不是 domain-modeling 式的
+  逐决策 ADR 文件体系；gaps-register 还自陈"ADR/CONTEXT 仅 append，无按 capability 维护的活真值"。
+  matrix 该行无 thin_shell 字段，故按多机制分解（4 个）而非 shell-increment。本单元无 prior_verdict。
+  opponent_sha256 逐字复制自 inventory.yaml 第 102 行的 SKILL.md unit-level sha256。

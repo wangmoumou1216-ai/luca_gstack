@@ -1,0 +1,80 @@
+id: mech:changelog-rationale-archive
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >-
+  对方把「设计决策的演进 rationale」沉淀在一套 @changesets 工具链驱动的档案里。工作流为：每次改动写一个 `.changeset/<name>.md`
+  文件（YAML frontmatter 声明 semver bump 类型如 `"mattpocock-skills": minor`，正文用散文叙述改动的理由），这些待发布文件累积后在版本升级时
+  被 changesets CLI 合并进版本化的 `CHANGELOG.md`。CHANGELOG 每条记录的不只是「改了什么」而是「为什么改」——skill 的重命名
+  （decision-mapping→wayfinder、to-prd→to-spec、diagnose→diagnosing-bugs）、搬迁（in-progress/→engineering/）、reframe、删除
+  （caveman/zoom-out）都附带设计理由与 Breaking 标记。每条 rationale 条目自动挂 PR 号、commit 短哈希与作者署名（`Thanks [@mattpocock]`），
+  使每次决策可追溯回其源改动。配置在 `.changeset/config.json`（changelog-github、baseBranch main）。
+our_summary: >-
+  我方演进 rationale 分散在多处、非工具链驱动。我方有一份手工维护的 `CHANGELOG.md`（Keep a Changelog + SemVer 风格，0.1.0/0.2.0/0.2.1），
+  其 Removed/Fixed 段带轻量理由（如「死代码清理（ADR-0001）」），但不成体系记录 skill 重命名/reframe，无 PR/commit 链接。更厚的决策
+  rationale 落在 `framework-audit/`（如 `2026-07-09-decide-ledger.md` 的逐条裁决台账）与 `.claude/skill-os/evolution/adoption-log.jsonl`
+  （每条采纳记录带 verdict/note/gates/rollback_ref/pinned commit）。CLAUDE.md 提到项目级决策台账 `.luca/memory/decisions.md`（just-in-time，
+  当前 luca_gstack 根无此文件）。我方无 `.changeset/` 目录、无 @changesets 依赖、无「per-change 累积文件→自动合并进版本化 CHANGELOG」的管线。
+mechanisms:
+  - name: changesets-tooling-pipeline
+    summary: >-
+      @changesets 工具链：per-change 的 `.changeset/*.md`（带 semver bump frontmatter）累积后在版本升级时自动合并进版本化 CHANGELOG。
+    opponent_evidence:
+      - path: .changeset/config.json
+        quote: '"@changesets/changelog-github",'
+      - path: .changeset/prototype-primary-source.md
+        quote: '"mattpocock-skills": minor'
+      - path: .changeset/README.md
+        quote: 'help you version and publish your code'
+    our_evidence:
+      - path: CHANGELOG.md
+        quote: 'The format is based on [Keep a Changelog]'
+    delta: >-
+      对方用 @changesets CLI 做「per-change 累积文件（.changeset/*.md，含 semver bump 类型）→ 版本升级时自动合并进版本化 CHANGELOG」的管线，
+      配置化（config.json changelog-github/baseBranch）。我方 CHANGELOG.md 是手工维护的 Keep a Changelog + SemVer 文本，无 `.changeset/` 目录、
+      无 @changesets 依赖、无 per-change 累积文件与自动合并步骤（grep 确认 0 命中）。两侧都有版本化 changelog 这一制品，差异在是否有工具链驱动的累积→合并管线。
+  - name: design-rationale-narration
+    summary: >-
+      档案条目叙述改动的「为什么」（重命名/reframe/删除的设计理由），而非仅记 diff。
+    opponent_evidence:
+      - path: CHANGELOG.md
+        quote: 'only one ticket type is actually a decision'
+      - path: CHANGELOG.md
+        quote: 'is now the single through-line term'
+      - path: .changeset/prototype-primary-source.md
+        quote: 'the prototype is a primary source'
+    our_evidence:
+      - path: framework-audit/2026-07-09-decide-ledger.md
+        quote: '先落母版、fork 走 sync-upstream 继承'
+      - path: .claude/skill-os/evolution/adoption-log.jsonl
+        quote: 'NARROW_BORROW(红队2lens+综合)'
+      - path: CHANGELOG.md
+        quote: '死代码清理（ADR-0001）：删除 orphan 脚本'
+    delta: >-
+      对方在面向用户的 CHANGELOG 里系统地叙述 skill 生命周期变更的设计理由（如「decision-map 术语 jargony 且不准确、只有一种 ticket 类型才是 decision」
+      作为 decision-mapping→wayfinder 重命名的理由），reframe/rename/remove 逐条带 rationale。我方也记录决策 rationale，但落在 framework-audit
+      裁决台账与 adoption-log.jsonl 的 verdict/note 字段里（审计/记忆层），而非面向用户的 CHANGELOG；我方 CHANGELOG 的理由较薄（如 ADR-0001 引用一句带过），
+      且不成体系跟踪 skill 重命名/reframe（grep 我方 CHANGELOG 的「重命名/rename/reframe」为 0 命中）。差异在 rationale 的承载位置与对 skill 生命周期覆盖的系统性。
+  - name: provenance-attribution-links
+    summary: >-
+      每条 rationale 条目自动挂 PR 号 + commit 短哈希 + 作者署名，使决策可追溯回源改动。
+    opponent_evidence:
+      - path: CHANGELOG.md
+        quote: 'Thanks [@mattpocock](https://github.com/mattpocock)!'
+      - path: CHANGELOG.md
+        quote: '/commit/930a450089f77a49af09001d955db8452a4b867d'
+    our_evidence:
+      - path: .claude/skill-os/evolution/adoption-log.jsonl
+        quote: '"rollback_ref": "git tag pre-fuse-ost-uxb"'
+      - path: .claude/skill-os/evolution/adoption-log.jsonl
+        quote: '"pinned": "v1.0.1@a1489f77a6d69538bfe29020b8366ee034f90860"'
+    delta: >-
+      对方（经 changelog-github）在每条 CHANGELOG rationale 上自动挂 PR 链接、commit 短哈希与作者署名，条目与源改动一一可追溯。我方 CHANGELOG.md
+      本身无 PR/commit 链接；追溯信息落在 adoption-log.jsonl 的 rollback_ref（git tag）与 pinned（commit 哈希）字段，是采纳记录级而非 changelog 条目级，
+      且需手工写、非工具自动生成。两侧都有 commit 级溯源能力，差异在是否与 changelog 条目自动绑定、是否含作者署名。
+notes: >-
+  跑的 grep：本机 `ls .changeset`→ABSENT；`grep -rl "@changesets" package.json .claude`→0 命中；`grep -ril "changeset" .claude CLAUDE.md CHANGELOG.md scripts`→0 命中，
+  确认我方无 changesets 工具链。`grep -c "重命名\|rename\|reframe\|renamed" CHANGELOG.md`→0，我方 CHANGELOG 不用 skill 生命周期变更词汇。意外事实：我方其实
+  已有一份手工 CHANGELOG.md（Keep a Changelog/SemVer），故 mech A/B/C 均给 our_evidence 而非纯 absence——counterpart 部分存在但形态不同（手工 vs 工具链、
+  审计层 rationale vs 面向用户 CHANGELOG）。matrix our_counterpart 列的 `decisions.md` 在 luca_gstack 根不存在（CLAUDE.md 指其为项目级 `.luca/memory/decisions.md`，
+  just-in-time 注入，当前根无此文件），故用 framework-audit 决策台账 `2026-07-09-decide-ledger.md` 作为最贴近的 rationale 档案 counterpart 取证。

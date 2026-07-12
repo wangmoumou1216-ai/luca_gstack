@@ -1,0 +1,112 @@
+id: mech:leading-word
+kind: mechanism
+tier: A
+dossier: dossiers/mech--leading-word.yaml
+
+scores:
+  D: 4
+  I: 6
+  C: S
+  E: 3
+score_derivation: |
+  D=4：
+  - compact-concept-token-anchor：+2。"裸 token 反复出现累积分布式定义、招募预训练先验"
+    的成文技法缺席（grep 0）；我方实践中已非正式在用（红线 ×7、薄壳、护栏）但从未命名
+    机理——dossier 的 corroborating grep 直接证实这点。
+  - prefer-pretrained-priors-over-coined：+1。"预训练词 > 自造词"的显式取舍缺席；我方
+    大量自造词（命名即切换/读前先写/双仓一致）从未论证过这笔 token 账。
+  - dual-anchor-execution-invocation：+1。"同一词在正文锚 execution、在 description 锚
+    invocation"维度缺席——我方靠确定性词表路由（承重设计，不动），但语义兜底层与 skill
+    正文写作可受益。
+  I=6：无 meta 写作文档；routing 词表强但功能不同。C=S（skill-authoring 资产一节）。E=3。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=4 ≥ 3 ✓；机制 ≥2 ✓；加法——leading-word 技法**补充**词表路由
+  （管 skill 正文行为锚定与语义兜底触发质量），不替换 route-guard 确定性匹配（承重墙）。
+
+merge_scope: |
+  skill-authoring 资产（共用落地）收录 leading-word 一节：技法定义 + 预训练词优先取舍 +
+  双锚定用法 + 我方现存 leitwort 盘点（红线/薄壳/护栏——顺带把"已在用但未命名"的实践
+  显式化）。
+
+reconciliation: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强"我方够用/这个 mech 单元只是加噪音"论证，以及为何不致命：
+    - **invocation-axis 冗余攻击（最锋利）**：dual-anchor 的 invocation 半边（同一词在
+      description + prompt/docs/codebase 出现→模型自主链接→触发更可靠）在我方是 route-guard
+      + skill-routing-map 确定性关键词路由**已覆盖，且确定性 > 模型随机链接**——dossier 自己
+      承认"我方靠确定性词表路由（承重设计，不动）"。按此，leading-word 在 invocation 维度不是
+      净增量，是更弱的随机替代。
+    - **为何不致命**：dual-anchor 的真净增量在另两处，与 route-guard 正交：① **execution 半边**
+      ——同一 leitwort 作裸 token 在 skill **正文**反复出现以锚定行为区，我方无任何"正文如何用
+      leitwort 锚 execution"的写作学（grep 0）；② **语义兜底层**（CLAUDE.md 明写"route-guard
+      词表不中时同样适用"）**恰恰依赖模型自主链接**，此处 description leitwort 与真实用户词汇对齐
+      能提升兜底触发。derivation 诚实圈定此边界（"语义兜底层与 skill 正文写作可受益，不替换
+      route-guard 确定性匹配（承重墙）"）。故 dual-anchor 保 +1。
+    - **compact-concept +2 的 bite 缺失（诚实 deflation）**：rubric §2 D 规则 = 每机制挂双侧
+      引文 +1，另需"咬过人"实证（CHANGELOG 记录/复现实例）才 +1。leading-word dossier 的
+      opponent_evidence = GLOSSARY 定义句 + 一条 diagnosing-bugs 示范句 + wayfinder/diagnosing-bugs
+      两个示范 skill——均为**技法在用的示范**，非锚 A 定义的战伤 bite（CHANGELOG 记录某规则为修
+      特定失败而加）。严格计 compact-concept 应折 +1。deflated D = 1(compact) + 1(prefer-priors)
+      + 1(dual-anchor) = **3，仍 ≥3，merge 桶不动**。D 诚实区间 3-4，与姊妹 verdict（skill/metavocab
+      同款 deflation 标注、判非致命）保持一致。
+    - **双重计分复核（task 明令检查）——三路均非双记**：
+      ① vs umbrella skill verdict：skill D=7 计的是 predictability/failure-mode/info-hierarchy/
+         pruning 四机制，**leading-word 不在其中**；skill bucket_rationale 明写"与 mech:leading-word
+         的裁决独立（dossier 刻意未重复采证）"。D 无重叠，设计即分离。
+      ② vs 姊妹 metavocab：metavocab 独有单元 = teachable-metavocab = GLOSSARY **四轴结构**
+         （分轴 + 交叉引用 + _Avoid 装置）；leading-word 计的是 Leading Word **该术语的技法内容**。
+         含容-相邻但计的是不同对象（结构 vs 术语内容），可分离（有结构无 leading-word 技法、
+         或有技法无结构均可能）。且冻结 rubric 的 D = "对方单元中**我方 counterpart** 不具备的
+         机制部分"，非"净于其它对方单元"（metavocab+skill 两红队均确立此矩阵口径）——即使相邻
+         亦非致命。
+      ③ vs 姊妹 invocation-cost：二者都碰"Invocation"轴，但 binary-invocation-axis（description
+         在/否闸控模型可达性）≠ dual-anchor（同一词词法对齐提升触发）；granularity 引"distinct
+         leading word to trigger"但计的是 load-spending 切分原则，非 leitwort 技法本身。同轴异
+         机制，非同一能力二采。
+    **核心裁决（共用 skill-authoring.md 落地、收录 leading-word 一节）在最严 deflation 下存活。**
+  attack_notes: |
+    ② fit 假设——全部通过，不构成 kill：
+    - propose-only / 人类卡点：本单元是 verdict/提案，GATE-2 用户签字，无自动编辑 luca_gstack，
+      宪法立场不破。
+    - Static Fallback SF-002（framework/ 只读保护区）零冲突：落地物 skill-authoring.md 在
+      .claude/skill-os/，非 framework/。
+    - **承重墙 clean**：landing 是 skill-authoring.md 被动 documentation prose；route-guard +
+      skill-routing-map 确定性匹配面**显式保留**（bucket_rationale"不替换 route-guard 确定性
+      匹配（承重墙）"）。继承 skill verdict 的 P3-downgraded 承重墙-clean 落点（该处已移除
+      skill-invariants.md 一行指针）——leading-word 不编辑 skill-invariants.md、不触任何 P1-P7
+      （P1-P7 护的是各 SKILL.md 的区、非 skill-authoring.md 正文），无 high_integration_risk
+      触发。C=S 成立。
+    - dual_repo=true 正确：skill 写作学是**通用框架能力**（非 muse fork 专属如 luca-app/
+      muse-loop），母版已确认同有 skill-invariants.md counterpart，落双仓合规。
+    ③ 集成成本——ab_runs=0 经核合规（非红线 BLOCK），已对 skill verdict 主源回验：
+    - 红线"机制层 prose 吸收无 A/B 一律 BLOCK"的满足：leading-word 是 skill verdict **单次
+      whole-file 非回归 A/B**（skill ab_runs=1）折入的单元之一——skill 红队 line 94"另三单元
+      ab=0 折入这次同一 A/B"，metavocab 红队进一步订正折入为四单元并**点名 leading-word**。
+      skill-authoring.md 为被动 reference 不改运行期 skill 行为，1 次整文件非回归 A/B 覆盖含
+      leading-word 一节在内的全部折入 prose。**ab_runs=0 是共用落地记账口径，非"无 A/B"**，
+      not BLOCK。
+    - touched_files="共用 skill-authoring 资产落地"正确：无独立文件，与 skill verdict 同一
+      landing，无重复落地、无重复计成本。
+    - new_gap_proposal=null 正确：归 skill verdict 提的 GAP-skill-authoring-craft 同一 gap，
+      不重复提案、不绕 gaps-register 人工拥有权。
+    - **非阻断性 labeling 观察（供 GATE-2，属"加"不属"删"，故不作 downgrade 编辑）**：bucket=merge
+      而物理落地是**新建文件** skill-authoring.md（按 skill verdict 属 adopt）；姊妹 metavocab
+      为对齐已标 adopt。leading-word 的"merge"是概念框（技法增补 route-guard 的 invocation 哲学）
+      + reuse_mode=port-pattern；merge/adopt 同为 APPROVE 级、共用同一 landing，此区分不改 scope/
+      cost，故保守不翻 label。
+    结论：三问均未致命。D 严格 deflate 到 floor 3（merge 存活）；fit 全通过、承重墙零触碰、
+    route-guard 确定性路由保留；ab_runs=0 经 skill 主源回验为继承合规；三路双记复核均非同一能力
+    二采（skill-D 设计即排除 leading-word，姊妹重叠相邻-非同一 + 冻结 rubric 计我方缺席）。
+    裁决 **stands**，无 scope 收缩、无子项砍除。
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: ["共用 skill-authoring 资产落地"]
+  ab_runs_needed: 0
+  dual_repo: true
+  new_gap_proposal: null   # 归 GAP-skill-authoring-craft

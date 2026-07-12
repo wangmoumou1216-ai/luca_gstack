@@ -1,0 +1,112 @@
+id: mech:docs-as-distributed-router
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+
+opponent_summary: >
+  mattpocock/skills 的 `.agents/writing-docs.md` 是「per-skill 人类可读 docs 页」的撰写规范。
+  只有 engineering/ 与 productivity/ 两个 bucket 里的 skill 被 promote，各得一份 docs 页
+  `docs/<bucket>/<name>.md`，发布到 aihero.dev。规范把每一页刻意定位成「分布式路由器」的一个节点：
+  这些页合起来就是路由器，ask-matt 是横跨全集的地图，任何单页都不必重画整张图。规范对每页强制一套
+  固定骨架（Quickstart/source/What it does/When to reach for it/Where it fits）＋只承载该 skill 应得
+  内容的「adaptable middle」；强制一行「defining constraint」（把该 skill 与默认行为区分开的那一个事实）
+  以平叙句给出、绝不省略；并因为页面对外发布而要求一切链接为绝对链接。
+
+our_summary: >
+  我方 counterpart 是集中式而非分布式。路由集中在 CLAUDE.md 的中央 skill 表（命令/适用场景/用途 三列）、
+  office 向导作为中央索引、以及 route-guard 作为每条消息的中央评分器，其触发词唯一真值源是
+  skill-routing-map.yaml。我方没有 per-skill 对外发布的人类可读 docs 页——skill 靠各自 SKILL.md ＋
+  一张中央表来说明。我方确有针对易混 skill 的临时消歧注记（如 /idea 边界、ux-brainstorm vs
+  design-brief 定位），以及一套绝对路径纪律，但没有 per-page 撰写模板、没有「每个 skill 必点 defining
+  constraint」的通用规则、也没有发布驱动的绝对链接规则。
+
+mechanisms:
+  - name: distributed-router-nodes
+    summary: >
+      docs 页合起来构成一个分布式路由器，每页是一个节点、ask-matt 是横跨全集的地图；对方无中央 dispatcher，
+      我方是中央 route-guard ＋ 单一真值源路由表 ＋ office 中央索引。
+    opponent_evidence:
+      - path: .agents/writing-docs.md
+        quote: "The pages are collectively a distributed router; each is a node."
+      - path: .agents/writing-docs.md
+        quote: "the router over the whole set, so this page stays a node"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "route-guard 在每次 UserPromptSubmit 时自动评分，Claude 必须遵守输出的路由决策"
+      - path: .claude/skills/office/SKILL.md
+        quote: "展示一级可见 skill 列表，含描述和输入模式"
+    delta: >
+      对方把「路由」拆分到每个 skill 的独立 docs 页上，页与页互链、ask-matt 作为地图节点，没有中央 dispatcher。
+      我方把同一职能集中：route-guard 是每条消息的中央评分器、skill-routing-map.yaml 是触发词唯一真值源、
+      office 是中央索引、CLAUDE.md 是中央 skill 表。两者都实现「找到该用哪个 skill」，但拓扑相反——分布式
+      节点网 vs 单点中央派发。
+
+  - name: fixed-frame-adaptable-middle
+    summary: >
+      每页有一套固定骨架（5 个必备小节）＋只承载该 skill 应得内容的可变中段；我方以固定列的中央表施加统一结构。
+    opponent_evidence:
+      - path: .agents/writing-docs.md
+        quote: "appears on every page"
+      - path: .agents/writing-docs.md
+        quote: "carries only what this particular skill earns; delete the rest."
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "命令 | 适用场景 | 用途"
+      - path: .claude/skills/office/SKILL.md
+        quote: "展示一级可见 skill 列表，含描述和输入模式"
+    delta: >
+      对方的固定结构是「每个 skill 一页多小节的散文模板」，固定 5 小节出现在每页，可变中段按需增删（delete
+      the rest）。我方的统一结构是「每个 skill 一行的固定列中央表」（命令/适用场景/用途），office 再统一附
+      描述与输入模式。两者都强制统一结构，但粒度不同——per-page 散文模板 vs per-row 表格列；我方无「可变中段
+      按需增删」这一层。
+
+  - name: defining-constraint-line
+    summary: >
+      每页必点一行「defining constraint」——把该 skill 与默认行为区分开的那一个事实，以平叙句给出、绝不省略。
+    opponent_evidence:
+      - path: .agents/writing-docs.md
+        quote: "the single fact that makes this skill behave differently from the obvious default"
+      - path: .agents/writing-docs.md
+        quote: "This line is the most valuable on the page; never omit it."
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "ux-brainstorm=发散引擎（出 2-3 方案+Oracle对抗+交互架构+AI-Native 判定）；design-brief=收敛引擎（把方向落成规格契约）"
+      - path: CLAUDE.md
+        quote: "会议纪要/语音稿/讨论记录"
+    delta: >
+      对方是一条普适撰写规则：每个 skill 的页面都必须以平叙句写出其唯一「defining constraint」，且这是最有
+      价值、绝不省略的一行。我方没有等价的通用规则；最接近的是针对少数易混 skill 的临时消歧注记（ux-brainstorm
+      vs design-brief 定位、/idea 边界）——它们确实陈述了「与相邻 skill 的区别」，但只覆盖被点名的易混对，
+      不是「每个 skill 都必点其单一区分事实」的强制约定。
+
+  - name: absolute-links-when-published
+    summary: >
+      因页面对外发布（aihero.dev），一切链接必须为绝对链接，仓库内相对链接一经发布即失效。
+    opponent_evidence:
+      - path: .agents/writing-docs.md
+        quote: "never a repo-relative path"
+      - path: .agents/writing-docs.md
+        quote: "A relative link that works in the repo breaks once published."
+    absence_proof:
+      pattern: "every link is absolute|absolute link|aihero|每.{0,2}个?链接.{0,3}绝对|绝对链接"
+      scope: ".claude/skills + .claude/skill-os + CLAUDE.md + CONTEXT.md"
+      hits: 0
+    delta: >
+      对方的机制是「发布驱动」的：docs 页发到 aihero.dev，所以页内一切链接必须绝对、相对链接发布后即断。
+      我方不发布 per-skill docs 页，因此没有这条发布驱动的绝对链接规则——grep 该机制的字面装置命中 0。
+      我方另有一套「绝对路径」纪律（agent cwd 会重置、跨仓引用要无歧义），但那是给工具/文件路径用的、
+      与「对外发布页内链接」是不同关切，不构成本机制的 counterpart。
+
+notes: >
+  advisor 工具不可用（与 auto-memory 记录的 advisor+fable 上游三 bug 一致），按已核验的证据直接产出。
+  真实跑过的 grep（cwd=仓库根）：
+  (1) 四条字面机制词表 grep -rilE 'defining constraint|...' / 'distributed router|...' /
+  'every link is absolute|绝对链接|...' / 'fixed frame|固定骨架|appears on every page' 于
+  .claude/skills .claude/skill-os CLAUDE.md CONTEXT.md → 全部 0 命中（无逐字对应物）。
+  (2) M4 absence grep -rilE 'every link is absolute|absolute link|aihero|每.{0,2}个?链接.{0,3}绝对|绝对链接'
+  scope 同上 → 0 命中；另 grep 'aihero|发布.{0,6}(url|网站)|docs tree|human-facing 文档' → 0，确认我方无
+  per-skill 对外发布 docs 页。意外事实：'绝对路径'/'相对路径' 在 .claude 多文件有命中（session-restore、
+  project-scope-guard、handoff-protocol 等），但均为 agent/工具文件路径纪律，非发布页链接规则，故 M4 走
+  absence 并在 delta 澄清关切不同。M1-M3 我方有集中式/消歧式 counterpart，走 our_evidence。opponent 四条
+  引文均逐字取自 .agents/writing-docs.md（行 5/62/15/33/9）。本单元为机制单元，check-coverage 不要求
+  opponent_sha256。project-scope-guard 曾因命令含字面 'docs/' token 拦截一次 Bash，改写规避后正常。

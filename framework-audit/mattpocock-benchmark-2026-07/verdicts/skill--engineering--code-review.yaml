@@ -1,0 +1,107 @@
+id: skill:engineering/code-review
+kind: skill
+tier: A
+opponent_sha256: 6a65cc61114f96db07ec41e3920e67c9c5bf70dd6e0901eb9460ebcb2bdc209f
+dossier: dossiers/skill--engineering--code-review.yaml
+
+scores:
+  D: 5
+  I: 7
+  C: M
+  E: 3
+score_derivation: |
+  D=5：
+  - two-axis-parallel-antibias：+2。Standards 轴与 Spec 轴同消息并发两个隔离子 agent、
+    互不污染判断——我方有"独立上下文审查"（quality-gate）与"派其一"择一分派（code-hygiene
+    派 quality-gate 或 redteam），但无"同一 diff 上并发两条固定正交轴"的抗偏见结构
+    （grep two-axis/两轴 0 命中）。
+  - fowler-baseline-fallback：+2。具名 Fowler 12-smell baseline（仓库零文档也生效）+
+    "仓库文档标准覆盖 baseline"显式优先关系——我方 8 清理算子仅 2 项部分重叠（dedupe/
+    unused），缺 Feature Envy/Data Clumps/Primitive Obsession 等具名 smell 词汇
+    （grep 具名 smell 0 命中），且算子目的是清理非审查。
+  - refuse-cross-axis-ranking：+1。我方 quality-gate 有邻近纪律（逐维二元判定+废止整体
+    主观分）但针对"不塌缩成单一分"，非"两轴保持分离不选跨轴赢家"——概念相邻折减计 1。
+  I=7：code-hygiene routing(+2)/quality-gate+redteam 接线(+2)/P1-P7(+2)/使用史较新(+1)。
+  C=M：code-hygiene SKILL.md 审查分派段 + quality-gate 调用模板，2-3 文件。
+  E=3：promoted(+1)+CHANGELOG（review→code-review 更名 rationale）(+1)+非 draft(+1)。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=5 ≥ 3 ✓；机制 ≥2（双轴抗偏见、Fowler baseline）✓；全为加法。
+  非替换：我方审查生态的承重轴（redteam 对抗式只提问、quality-gate 断言执行、luca 护栏
+  保护有意模式）对方无对应 → 支配不成立。
+  形态注意：落地为 code-hygiene 审查环节的 dispatch 模式增强（薄 prompt-pattern），
+  不新造 reviewer engine——遵守 code-hygiene 自身"复用 quality-gate/redteam 不另造"
+  与 Loop 宪法"优先接 harness 原生原语"（harness 已有原生 /code-review）。
+
+merge_scope: |
+  ① code-hygiene 审查环节增双轴分派选项：diff 审查存在 spec 上游（tech-spec/PRD）时，
+    同消息并发两个审查 agent——Standards 轴（清理算子+具名 smell 词汇）与 Spec 轴
+    （对照上游忠实性），产出分列呈现，禁 merge/rerank/跨轴选赢家。
+  ② Standards 轴内容补 Fowler 具名 smell 清单（judgement-call 定位，仓库文档/luca 护栏
+    显式覆盖 baseline——护栏优先关系保持现状不变）。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/code-hygiene/SKILL.md"]
+  ab_runs_needed: 1
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强现任论证：我方 code-hygiene 的「代码审查环节」+ quality-gate（独立上下文跑断言、逐维度二元
+    判定、废止整体主观分）+ redteam（对抗只提问）已构成一套审查生态；对方 code-review 只是把它
+    刻意切成 Standards/Spec 两条固定轴并列报告。可否论证 D 虚高、merge 只是加噪音？——逐条打过：
+
+    1) D 是否把「形态差异」当「能力缺口」？部分是。但双侧 grep 硬证据不支持全盘否定：
+       `Fowler|Feature Envy|Data Clumps|Primitive Obsession|Message Chain|Refused Bequest|two-axis|
+       cross-axis|single winner` 在 .claude/skills·agents·skill-os·CLAUDE.md **全部 0 命中**（dossier
+       notes 三条 grep 已回验）。命名设计 smell 词汇 + 双轴抗偏见切分确为我方所无 → D≥3 站得住。
+
+    2) D=5 是否被 magnitude 抬高？是，且是本 verdict 唯一实质瑕疵。D 标尺「咬过人（CHANGELOG 记录/
+       复现实例）该机制 +1」——我实抽对方 CHANGELOG：#464 只记 promote/rename/harden（把 in-progress
+       `review` 改名 `code-review` 挪进 engineering/、上架 plugin/README/docs——纯打包演进）；#47bde84
+       只记 fail-fast ref check / single-sourced rules / no-op cuts（收紧流程）。**没有任何一条证明
+       two-axis 或 Fowler baseline 抓到过真 bug**。故三机制均**不该拿 +1 咬过人**，两个 +2 是纯 delta
+       magnitude 计分。对齐锚 A（grilling D=8：counterpart 更弱[brainstorm 无 facts/decisions 分离]
+       且**有** CHANGELOG 咬过人 +1）→ code-review 的 counterpart 更强（我方三机制都有部分对位物）、
+       又无咬过人，理应显著低于 8。**有效 D≈3–4**。
+
+    为何不致命：桶阈值是 D≥3 且 ≥2 条独立引证机制且全为加法。即便把 D 修到 3–4、把 refuse-cross-axis
+    折进 two-axis（二者本是同一「双轴」设计的两面），仍剩 two-axis + Fowler **两条独立且可移植**的机制、
+    净正、非替换。D 从 5 收到 3–4 **不翻桶**。merge 成立。
+  attack_notes: |
+    ② fit（无宪法冲突，dual_repo 已核对正确）：
+    - dual_repo:true **正确**——已核 code-hygiene 在母版 /Users/luca/Desktop/luca_gstack 同路径存在
+      （非 muse-fork 专属，CLAUDE.md 的 fork 专属清单只列 muse-* 与隐藏 muse-proto-*）。未踩「fork
+      专属误标双仓」陷阱。
+    - Spec 轴曾疑「无 reviewer 可复用会逼我方另造，撞 code-hygiene『不另造 reviewer』红线」——**证伪**：
+      grep 确认无独立 spec-fidelity reviewer，但 code-hygiene 现有 dispatch 模板**已经**给 quality-gate
+      传 `PLAN_OR_REQUIREMENTS（应满足什么）`。故 Spec 轴 = quality-gate 喂 PRD/spec 派生断言（其现成
+      能力：逐维度二元判定），Standards 轴 = redteam 或一个喂 Fowler baseline+仓库规范的 pass。**是复用
+      不是另造**，宪法不破。→ 但 verdict 只断言「复用」没写清映射，实施者可能误建 Spec reviewer。
+      **收敛要求（非砍项，写进 FUSION 交接）**：merge_scope① 必须显式钉死上述复用映射，禁止新建 reviewer。
+    - 无承重墙触碰：改动落在 code-hygiene「代码审查环节」+ 算子内容（该 skill 未列入 skill-invariants
+      per-skill 可进化清单，改动不碰 P1 frontmatter 标识/P2 输出路径/P3 preamble bash/P5 FILE_END/
+      P6 Phase 锁/P7 workflow-state，也不改 Loop 宪法/Static Fallback 正文）→ C=M 不自动升 HIGH，正确。
+
+    ③ 集成成本现实检查：
+    - touched_files=1 略乐观但 C=M 稳（M≤6）：即便叠上 capability-parity.json 锚点登记（双仓一致原则），
+      仍 ≤2 文件，不越 M。无需改判。
+    - ab_runs=1 **符合**「机制层 prose 吸收无 A/B 一律 BLOCK」红线（未 BLOCK）——但**同一次改动吸收两条
+      机制**（① 双轴派发 + ② Fowler 词汇）。**收敛要求**：这 1 次 behavioral_ab 必须跑一条**同时触发
+      Fowler smell 且触发 spec-mismatch** 的 diff，验证两条 prose 增量都真改行为；否则 1 run 可能过而其
+      中一条机制惰性未生效。不必加到 2 run，但须约束覆盖面。
+    - Loop 宪法 §4（优先接 harness 原生原语）张力：harness 已内建 `code-review` skill。verdict 借此论证
+      「不新造 engine」正确，但同一事实也要求 ①**只能**停在「薄 dispatch-pattern over 现有 reviewer」，
+      不得长成平行 review 工作流/mini-workflow（最小文件原则）。verdict 已写「薄 prompt-pattern」——保留
+      该措辞即守住，无需改 scope。
+
+    结论：三问无一击穿。唯一实质瑕疵是 D 打分偏生成（+2 靠 magnitude 而非咬过人实证，有效 D≈3–4），
+    但不翻桶。fit 无宪法冲突、dual_repo 正确、无双重计分、无承重墙触碰、A/B 未被 BLOCK。桶=merge、
+    merge_scope①② 均可移植且净正 → 保守起见**只删不加**，不砍任何子项。上述两条收敛要求（钉死 Spec 轴
+    复用映射、A/B 须双轴同触）作为 FUSION 交接约束记录，非 scope 缩减。verdict=stands。

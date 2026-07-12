@@ -1,0 +1,52 @@
+id: skill:deprecated/request-refactor-plan
+kind: skill
+tier: C
+opponent_sha256: d59de4ba6cc1fe2dd267e8b9b5a1fd88e3e739e2130bc9dd78061d2a072830b8
+opponent_summary: >
+  已弃用 skill。通过访谈式流程做一份重构计划再落成 GitHub issue：问用户长而详的问题描述+方案设想→
+  探码验证其断言→问是否考虑过别的方案并给出备选→详尽访谈实现细节→敲定 scope（改什么/不改什么）→
+  查该区测试覆盖不足则问测试计划→把实现拆成"尽可能小的 commit"计划（引 Martin Fowler：每步尽量小以
+  始终看到程序可用）→用固定模板建 GitHub issue（Problem/Solution/Commits/Decision Document/Testing
+  Decisions/Out of Scope），模板明令不含文件路径/代码片段（易过时）。单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内无 refactor-plan / tiny-commits / Martin Fowler /
+  refactor-plan-template 机制（grep 0 命中）。我方 task-plan 做任务编排（渐进式索引+断言矩阵+任务卡），
+  tech-spec 做技术合同，但都不是"访谈式重构 RFC→拆极小 commit→建 GitHub issue"这一重构专用规划器。
+mechanisms:
+  - name: tiny-commits-refactor-plan
+    summary: 把重构拆成尽可能小、每步都让代码保持可用的 commit 计划（引 Martin Fowler）。
+    opponent_evidence:
+      - path: skills/deprecated/request-refactor-plan/SKILL.md
+        quote: "Break the implementation into a plan of tiny commits."
+      - path: skills/deprecated/request-refactor-plan/SKILL.md
+        quote: "make each refactoring step as small as possible, so that you can always see the program working"
+    absence_proof:
+      pattern: 'Martin Fowler|tiniest commits'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方的核心产物是"极小 commit、每步可用"的重构步骤计划。我方无 tiny-commits/Martin Fowler 规划
+      机制（0 命中）；task-plan 的任务卡是功能切片+断言，非"重构专用、每 commit 保持绿"的增量重构序列。
+  - name: refactor-plan-as-github-issue-template
+    summary: 用固定模板（Problem/Solution/Commits/Decision Document/Testing/Out of Scope）落成 GitHub issue，禁写文件路径/代码。
+    opponent_evidence:
+      - path: skills/deprecated/request-refactor-plan/SKILL.md
+        quote: "Create a GitHub issue with the refactor plan."
+    absence_proof:
+      pattern: 'refactor-plan-template'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方把重构计划固化成一个 GitHub issue 模板并明令"不含文件路径/代码片段（易过时）"。我方规划产物
+      落 docs/ artifact（tech-spec/task-plan），不建 GitHub issue、无此 refactor-plan 模板（0 命中）。
+notes: >
+  【matt 为何弃用 + 对我方信号】deprecated/README.md 明写 "Skills I no longer use."。弃用理由=被统一
+  规划管线取代：CHANGELOG.md 记 "to-prd is renamed to to-spec"、"to-plan and to-issues are merged into
+  one to-tickets skill, and to-issues is deleted"，主流 idea → /to-spec → /to-tickets → /implement。即
+  重构专用的 request-refactor-plan 被通用 spec→tickets（tickets 为 tracer-bullet 垂直切片、带 blocking
+  边、可写进 GitHub 或本地 tickets.md）流水线吞并——重构只是一种规划，不再需要专用 skill。信号：
+  按意图各造一个规划器（重构 RFC / PRD / plan / issues 分家）会碎片化，应收敛成一条 spec→tickets 通用
+  管线用一个产物两读（本地 md 手工顺序 vs tracker 原生 blocking 并行）。这对我方直接印证 tech-spec +
+  task-plan 双节点（合同→断言矩阵任务卡）的单一规划脊柱设计，警惕再为"重构/迁移"等子类另开规划 skill。
+  跑过的 grep（repo 根，同上 scope）：'Martin Fowler|tiniest commits' → 0；'refactor-plan-template' → 0。
+  无 support_files。self-check 通过。

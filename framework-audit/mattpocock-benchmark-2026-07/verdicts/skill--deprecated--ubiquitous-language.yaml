@@ -1,0 +1,14 @@
+id: skill:deprecated/ubiquitous-language
+kind: skill
+tier: C
+opponent_sha256: 2449e2345b96b9f1e861c697b5eab50d03ae1254481a4306b6f815684e523b3a
+dossier: dossiers/skill--deprecated--ubiquitous-language.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: FAIL }
+bucket: leave
+bucket_rationale: |
+  快裁：对方已弃用——被 domain-modeling（活维护）+ CONTEXT.md prose 取代（静态 DDD
+  术语表快照 → 活过程）。**弃用教训（对本轮裁决有直接输入）**：词汇表的价值在"活维护"
+  不在"表格式"——这正是本轮 domain-modeling merge（主动建模 + inline 更新）优先于
+  任何静态词表引入的裁决依据；同时正向背书我方 CONTEXT.md prose 长期记忆的形态取舍。
+reconciliation: null
+landing_estimate: null

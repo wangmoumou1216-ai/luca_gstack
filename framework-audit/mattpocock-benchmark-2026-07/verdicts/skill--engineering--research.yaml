@@ -1,0 +1,94 @@
+id: skill:engineering/research
+kind: skill
+tier: A
+opponent_sha256: af378829f015775a3bcd65ff466826722e99359017ae6bae227ca4c9bd14049c
+dossier: dossiers/skill--engineering--research.yaml
+
+scores:
+  D: 2
+  I: 9
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - background-agent-non-blocking：+1。"研究挂后台、你回主任务"的轻量单 agent 委派形态
+    我方无独立 skill；但 harness Agent tool 原生支持后台委派（主 agent 日常在用），且
+    plan-agent 研究默认门已有"极窄单点事实降级为一次 web spike"通道——形态缺席、能力可达。
+  - primary-source-trace：+1。"纯 primary source、拒绝二手转述"的纯度纪律与我方"多源
+    冗余+共识分级"哲学不同侧重；对 API/文档类事实查证，primary 纯度规则我方未成文。
+  - convention-matching-output：+0。自适应落盘与我方 P2 固定路径（下游 glob 依赖）正面
+    冲突——我方设计有意为之，不计缺口。
+  I=9：deepresearch 重型现任（agent≥5 不可进化+使用史+quality-gate 记录）。C=S。E=3。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。轻量研究委派已被 harness 原生能力 + 研究默认门 spike 通道覆盖
+  （Loop 宪法：优先接 harness 原生原语，不为已覆盖形态建薄壳）；primary-source 纯度规则
+  单条价值不足以立独立采纳，若未来 deepresearch 修订可顺带收录为来源类型守则一行（记
+  opportunity，不进本轮落地）。
+
+reconciliation: null
+landing_estimate: null
+
+redteam:
+  verdict: revive
+  reverse_attack: |
+    LEAVE 的地基是一个未经核实的"已覆盖"前提，且核实后为假——这正是 diagnosing-bugs 教训的
+    镜像（那次是"空缺口"为假：其实已装；这次是"已覆盖"为假：其实没装/没覆盖）。逐条核验：
+
+    1. "研究默认门 spike 通道覆盖" —— 假。web spike 唯一出处 plan-agent.md:458 +
+       optional-workflow-graph.yaml:31，原文"极窄的单点事实可降级为一次 web 联网 spike"：
+       (a) 是 INLINE 联网（主 agent 自己查），不是对方卖点的"background 非阻塞委派——你继续干活它去读"；
+       (b) 不带任何 primary-source 纪律（不排斥二手、不追 owning source）；
+       (c) 不带 capture-to-cited-markdown 契约；
+       (d) scope 被锁在"复杂 AND 新颖"的研究默认门内部，只是重型 deepresearch 的降级选项，
+       根本不覆盖日常 standalone 的"reading legwork"场景（写代码时要查一条 API/spec 事实）。
+
+    2. "harness Agent tool bg 原生能力覆盖" —— 混淆 primitive 与 skill 的范畴错误。核问题
+       "Agent tool bg 是否真等价 primary-source 纪律"：不等价。bg 是纯执行原语（"把某 agent 挂后台跑"），
+       零来源纪律、零 capture 契约。把"我们有 bg 原语"当成"我们有带一手来源纪律的研究能力"，正是
+       本框架自己编目的 thin-orchestration-thick-primitive 哲学所警告的——skill 的价值恰在那层薄编排
+       （命名"reading legwork"场景 + 挂上 primary-purity + cited-capture 契约），不在原语本身。
+
+    3. Loop 宪法被反读。leave 引"优先接 harness 原生原语，不建薄壳"来否决；但 Loop 宪法 #4 原文
+       ("优先接 harness 原生原语…不自建平行机器")恰恰 ENDORSE 一个"薄 skill 包住 bg 原语 + 加纪律"的
+       形态——这正是 /loop、schedule、Workflow 的做法（薄 skill 罩原生调度）。对方 research 不建平行机器，
+       它接 bg 原语再加一手来源纪律。leave 把宪法推荐的形态倒读成宪法禁止的形态。
+
+    4. deepresearch 不覆盖，且认识论相反。其 description 自证：5-8 并行 agent + consensus matrix +
+       Socratic + 固定路径 docs/research/…，494 行 BLOCKING 编排——查一条 API/spec 事实是荒谬 overkill；
+       且它欢迎 blog/news 二手来源打 homogeneous 标做 same-source degradation（"多源冗余+共识分级"），
+       与对方"primary 纯度、拒斥二手"是相反的认识论姿态。对"官方文档/spec/源码到底怎么说"这类事实，
+       primary 纯度才是对的姿态，共识-of-blogs 是错的（summary of a summary）。核验：全框架无独立
+       lightweight research skill（只有 deepresearch/ux-research）；"reject secondhand" 一手纯度对
+       standalone 查证未成文（仅存在于 deepresearch 内某 agent persona，且 html-prototype 反而明写
+       "再看高质量二手分析"）；对方 research 未被安装（vetting-registry 无、无 research/ 目录）——
+       与 diagnosing-bugs 相反方向的同一病灶：假的"已覆盖"。
+
+    5. D 被压。convention-matching-output 记 +0 说是与我方固定路径"正面冲突/有意为之"——误判。
+       docs/research/deepresearch-{slug}-{date}.md 是 luca_gstack 自身产物的路径；对方场景是在
+       *下游 repo* 里做 lightweight research，那里没有本框架 glob 依赖、固定路径根本不适用——所以是
+       "缺覆盖"不是"冲突"。诚实计 +1 → D=3，跨过 merge 门槛。即便保守留 D=2，另两条 +1 机制经核验
+       确为真且未覆盖。
+
+    6. §3.5 姿态违规。verdict 自己承认 primary-source 规则有价值（"若未来 deepresearch 修订可顺带
+       收录为来源类型守则一行"）却 park 为"opportunity，不进本轮"。§3.5 明禁为"怕动结构"把结果往
+       leave/merge 更安全方向压；一个被承认有价值、服务主线（喂 brainstorm/design + 工程执行线要查
+       API/spec 事实）、且 harness 高频的机制，应升 GATE-2 裁，不该静默 defer。
+
+    结论：REVIVE。反向攻击成立——leave 建立在"已覆盖"假前提上，核实后三个覆盖来源（web spike /
+    bg 原语 / deepresearch）没一个真覆盖"右尺寸的 lightweight 非阻塞研究委派 + 一手来源纯度 +
+    cited capture"这个高频主线能力。
+
+    建议桶（不改 bucket，交 GATE-2 裁）：最低 merge（D≥3：把 primary-source 纯度作为来源类型守则一行 +
+    下游 repo 的 convention-matching capture 并入我方研究能力）；但诚实落点更可能是 adopt 一个新的
+    右尺寸 lightweight standalone research skill（deepresearch 的轻量姊妹）——因为把"非阻塞轻量模式"
+    硬塞进 494 行 blocking 编排器违反 Simplicity First，两者形态差异过大。
+    capability_type: skill（新增右尺寸 lightweight research skill）+ framework（primary-source 纯度
+    纪律作为可复用守则）。scope: S（native-first：按 Loop 宪法 #4 罩 harness bg 原语；新增 ~15 行 skill +
+    routing-map 词条 + /office 登记，或改为向 deepresearch 加一个轻量模式+一行守则；不触承重墙）。
+
+    核验记录：plan-agent.md:458、optional-workflow-graph.yaml:31、deepresearch/SKILL.md（494 行、
+    description、无 lightweight 模式）、routing-map（仅 deepresearch/ux-research）、vetting-registry
+    （无 research）、对方 SKILL.md 13 行全文 + docs/engineering/research.md 均已实地 read/grep。
+    advisor 工具本次 unavailable，未做外部复核，论证基于双侧原文自证 + 实地核验。

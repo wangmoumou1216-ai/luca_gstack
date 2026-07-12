@@ -1,0 +1,71 @@
+id: skill:engineering/research
+kind: skill
+tier: A
+opponent_sha256: af378829f015775a3bcd65ff466826722e99359017ae6bae227ca4c9bd14049c
+opponent_summary: >
+  对方的 research 是一个 13 行的极薄 model-invoked skill。它做一件事：把一个待查问题委派给一个
+  background agent 去读资料，主线程不阻塞、继续干别的活。那个 background agent 的职责被压成三条：
+  (1) 只查 primary source（官方文档、源码、规范、first-party API），拒绝二手转述，每个断言都追回其
+  owning source；(2) 把发现写成单个 Markdown 文件，逐条断言标注来源；(3) 存到 repo 已有存放此类笔记
+  的地方、沿用既有约定，若无约定则放个合理位置并说明放哪。没有 phase、没有 consensus、没有多 agent。
+our_summary: >
+  我方 counterpart 是 deepresearch —— 一个重型多 agent 研究编排器（SKILL.md 约 494 行）。它把主题拆成
+  5-8 个研究角度，每角度派一个 background agent（run_in_background=true）并行跑 3 轮结构化搜索协议，然后
+  用 consensus matrix 交叉验证（CONSENSUS/STRONG/DISPUTED/UNVERIFIED/CONTRADICTED + same-source
+  degradation + source type diversity），再过 Oracle 的 Socratic 审查，最后写报告。它同样强调"每个断言
+  必须追到来源、NO FABRICATION"，但编排器本身是阻塞式（派完 agent 后 end response 等全部返回才进下一
+  phase），输出走固定路径 docs/research/deepresearch-{slug}-{date}.md，且默认要多源交叉验证而非纯 primary。
+mechanisms:
+  - name: background-agent-non-blocking
+    summary: >
+      把研究委派给 background agent，好让主线程/主 agent 在它读资料时继续推进本职工作——委派是为了不阻塞当前任务。
+    opponent_evidence:
+      - path: skills/engineering/research/SKILL.md
+        quote: "Spin up a **background agent** to do the research, so you keep working while it reads."
+    our_evidence:
+      - path: .claude/skills/office/deepresearch/SKILL.md
+        quote: "5-8 per topic, ALL `run_in_background=true`"
+      - path: .claude/skills/office/deepresearch/SKILL.md
+        quote: "**DO NOT proceed to Phase 2 until ALL research agents have returned.**"
+    delta: >
+      两侧都用 background agent 跑研究。对方的整个卖点是"非阻塞委派"：主 agent 派出去后自己继续干别的活。
+      我方 deepresearch 把 background agent 用在内部并行 fan-out（5-8 个 run_in_background=true），但编排器
+      本身是阻塞式工作流——派完后 end response 等待全部返回、不返回不进下一 phase，其交付物是那份报告而非
+      "让你腾出手做别的"。我方没有对方那种"研究挂在后台、你回到主任务"的轻量单 agent 委派形态。
+  - name: primary-source-trace
+    summary: >
+      只查 primary source（官方文档/源码/规范/first-party API），拒绝二手转述，每个断言追回其 owning source。
+    opponent_evidence:
+      - path: skills/engineering/research/SKILL.md
+        quote: "official docs, source code, specs, first-party APIs — not a secondary write-up of them."
+      - path: skills/engineering/research/SKILL.md
+        quote: "Follow every claim back to the source that owns it."
+    our_evidence:
+      - path: .claude/skills/office/deepresearch/SKILL.md
+        quote: "Every factual claim must trace to a source URL or reference."
+      - path: .claude/skills/office/deepresearch/SKILL.md
+        quote: "Must trace to authoritative sources (RFC, ISO, official docs, peer-reviewed) — no vague definitions"
+    delta: >
+      两侧都要求"每个断言追回来源、不编造"。差异在来源哲学：对方明确排斥二手转述、要求纯 primary source
+      并把每个断言追回 owning source。我方 deepresearch 要求 source URL 可追溯，但核心是多源交叉验证——它
+      欢迎 blog/news 等来源类型，只是对同类型来源打 homogeneous 标并做 same-source degradation，并不禁止
+      二手写作。对方是"primary 纯度"，我方是"多源冗余 + 共识分级"，两条追溯纪律都在但侧重不同。
+  - name: convention-matching-output
+    summary: >
+      产出写成单个 Markdown，存到 repo 已有存放此类笔记的地方、沿用既有约定；若无约定则放合理位置并说明。
+    opponent_evidence:
+      - path: skills/engineering/research/SKILL.md
+        quote: "Save it where the repo already keeps such notes; match the existing convention, and if there is none, put it somewhere sensible and say where."
+    our_evidence:
+      - path: .claude/skills/office/deepresearch/SKILL.md
+        quote: "docs/research/deepresearch-{topic-slug}-{YYYY-MM-DD}.md"
+    delta: >
+      对方的输出放置是自适应的：读 repo 已有笔记约定、就地沿用，无约定才自选并声明位置。我方 deepresearch
+      把输出硬编码到固定路径 docs/research/deepresearch-{slug}-{date}.md，附固定命名约定，不探测也不适配下游
+      项目的既有笔记惯例。对方"沿用既有约定"的行为我方没有对应物；我方是"框架强制统一路径"。
+
+notes: >
+  对方 research/SKILL.md 仅 13 行、inventory 标 support_files 为空，已逐行读完（读到最后一行 line 12/13）。
+  advisor 工具本次不可用（返回 unavailable），未做外部复核，机制拆解基于两侧全文自证。三机制取 subverdicts
+  提示的 background-agent-non-blocking / primary-source-trace 两条，另据实际读到的 job 第 3 条增补
+  convention-matching-output（输出放置自适应 vs 我方固定路径）。所有引文经 check-coverage.py 自验通过。

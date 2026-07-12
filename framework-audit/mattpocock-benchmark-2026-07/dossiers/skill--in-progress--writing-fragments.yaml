@@ -1,0 +1,47 @@
+id: skill:in-progress/writing-fragments
+kind: skill
+tier: C
+opponent_sha256: c61b6608f227b0eee1b832273360cf5088ad68c343c15ec9c06673086662e64e
+opponent_summary: >
+  写作三部曲的 explore 阶段（in-progress，disable-model-invocation: true）。纯 explore：不定结构，跑一个
+  grilling session 不停拷问用户想写什么，把两侧对话冒出的 fragment 追加进单个 markdown 文件（H1 工作
+  标题 + 用 `\n---\n` 分隔、无内部标题无 tag 无顺序）。fragment 定义刻意异质（一句金句/一个带一行论据
+  的断言/一个 vignette/半个想法/一句引语/一串靠感觉聚拢的观察/一个 leading word）。核心洞见：leading
+  word（一个能承载整篇的紧凑隐喻或造词，如 tracer bullets / fog of war）是最有价值的 fragment，load-
+  bearing，在 explore 命中会贯穿整个 exploit。静默追加、每写前重读磁盘保留用户编辑。无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内无 fragment/leading-word 写作探索机制（grep 0 命中）。
+  我方 brainstorm 是苏格拉底式 PRD 拷问、产出结构化需求，不是"不定结构、异质 fragment 沉淀"的写作
+  explore；无"造一个 leading word 承载整篇"的显式动作。
+mechanisms:
+  - name: leading-word-as-load-bearing-fragment
+    summary: leading word（承载整篇的紧凑隐喻/造词）是最有价值的 fragment，命中后贯穿整个 exploit。
+    opponent_evidence:
+      - path: skills/in-progress/writing-fragments/SKILL.md
+        quote: "Of these, the leading word is the most valuable fragment to land."
+    absence_proof:
+      pattern: 'leading word|leading-word'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方把"造一个 leading word（命名整个 pattern 的紧凑隐喻）"当 explore 阶段最高价值动作——它 load-
+      bearing 地塑造后续结构/过渡/标题。我方框架无 leading-word 概念（0 命中）；这是本 skill 归 M3 的
+      核心可迁移洞见（matrix 已标 leading-word 洞见归 M3），但作为独立写作 skill 无转移面。
+  - name: heterogeneous-fragments-explore-append
+    summary: explore 只沉淀异质 fragment 到单文件、不定结构，静默追加、每写前重读磁盘保留用户编辑。
+    opponent_evidence:
+      - path: skills/in-progress/writing-fragments/SKILL.md
+        quote: "Fragments are deliberately heterogeneous."
+    absence_proof:
+      pattern: 'deliberately heterogeneous'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方 explore/exploit 分离——explore 只准发散冒 fragment、committing 是 exploit 别的 skill 的活。
+      我方 brainstorm 拷问直接收敛到结构化 PRD，无"纯发散、异质碎片、不定结构"的独立 explore 阶段
+      （0 命中）。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  'leading word|leading-word' → 0；'deliberately heterogeneous' → 0。matrix 判 tier C / counterpart
+  none，理由写作方法论，但 leading-word 洞见归 M3——核实成立：leading-word（load-bearing coinage）是
+  三部曲里最可能对我方 brainstorm/命名有借鉴的碎片，已在 M1 delta 标注归口。无 support_files。self-check 通过。

@@ -1,0 +1,28 @@
+id: skill:in-progress/setup-ts-deep-modules
+kind: skill
+tier: B
+opponent_sha256: 2c6e39ccdd77f85337c13a4877c222d47dcd26e31619157af9688798244192d5
+dossier: dossiers/skill--in-progress--setup-ts-deep-modules.yaml
+
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+soft: { fit: 2, quality: 2, adoption: 1, maintenance: 3 }
+weighted_score: 67
+
+score_derivation: |
+  硬门全 PASS（dependency-cruiser 标准接线；draft 但含完整可用 config；我方无任何
+  import/module 边界 linter，grep 0）。
+  软分：fit=2——下游 TS 项目实现期直接适用（研究情报官已定 Electron+TS 全栈，M0+ 即有
+  真实用武之地）；框架仓自身非 packages monorepo 不适用。quality=2（四 error 规则 config
+  实用 + prove-rules-bite 完成判据是范例级，但 in-progress 未完成打磨）。adoption=1
+  （in-progress 非 promoted）。maintenance=3。
+  weighted = 20+20+6.7+20 ≈ 67。
+
+bucket: leave
+bucket_rationale: |
+  7 维门禁 CONDITIONAL（67，差 3 分过线，draft 状态是主要扣分源）。裁决：进 adoption
+  backlog 带触发条件——**下游 TS 项目（如研究情报官）进入 M0 实现期时复议**，届时对方
+  可能已从 in-progress 毕业（其 changeset add-setup-deep-modules-skill 正在推进）。
+  其最高价值机制（prove-rules-bite）已经由 mech:prove-it-bites merge 先行落地，不等它。
+
+reconciliation: null
+landing_estimate: null

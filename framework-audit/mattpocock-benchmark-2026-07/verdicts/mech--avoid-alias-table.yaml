@@ -1,0 +1,100 @@
+id: mech:avoid-alias-table
+kind: mechanism
+tier: A
+dossier: dossiers/mech--avoid-alias-table.yaml
+
+scores:
+  D: 3
+  I: 5
+  C: S
+  E: 3
+score_derivation: |
+  D=3（redteam 修正，原评 4——扣 avoid-alias-line 无据 bite bonus 1 分；见 redteam 块）：
+  - avoid-alias-line：+1（原 +2）。逐术语 `_Avoid_:` 行装置全仓 0 命中（四条递进 grep 全空）；
+    最接近物（muse-proto-gen 受控组件词汇表 / deepresearch canonical statements）经
+    honesty-check 逐行核对均为异物。**bite bonus 撤销**：三份 opponent 引文是格式规范模板
+    （成熟度证据，已计入 E=3），非该装置咬过真实同义漂移的复现 → 只给 base +1。
+  - be-opinionated-convergence-rule：+1。"多词同义→钦定 canonical、其余降级"通用规则
+    缺席；我方仅有单点命名锁（MEMORY 的 luca_gstack 禁缩写 gstack——**恰是一条没有格式
+    可挂的 _Avoid_ 条目**，实证需求存在）。
+  - consistent-usage-enforcement：+1。canonical 词行文强制（don't substitute）缺席。
+  I=5：相邻资产散在（受控词汇表/命名锁），无同位现任。C=S。E=3（三格式文件复现=约定
+  成熟度证据）。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=3 ≥ 3 ✓（redteam 通缩后仍达门槛）；机制 ≥2 ✓；加法。落地收窄至
+  共用 skill-authoring 资产一节（`_Avoid_` 装置说明），与 leading-word/invocation-cost 同一
+  skill-authoring.md 同构；CONTEXT.md 骨架落点经 redteam 砍除（见 redteam 块）。
+
+merge_scope: |
+  skill-authoring 资产（共用落地，与 leading-word/invocation-cost/metavocab 同一
+  skill-authoring.md）收录 `_Avoid_` 装置一节（写 skill/框架文档时的可选收敛格式）。
+  # redteam 砍除（保守只删不加，理由见 redteam 块）：
+  #   原① 项目 CONTEXT.md 骨架采装置+规则行——与 ≤80 行硬预算及 mech:context-md-domain-glossary
+  #     (leave) 的"CONTEXT.md 不做词汇表"承重裁决冲突。
+  #   原③ luca_gstack 命名锁迁入框架 CONTEXT.md——人层记忆错置+重复注入，留 auto-memory 原位。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: ["共用 skill-authoring 资产（不重复计）"]   # redteam：去 scripts/project.sh + CONTEXT.md（随 scope ①③ 砍）
+  ab_runs_needed: 0   # redteam 1→0：唯一存活落点折入 writing-great-skills 的同一次 whole-file A/B（metavocab redteam 已账），非红线 BLOCK
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强"我方够用/加噪音"论证 + 为何不致命：
+    - 需求实证只有一条、且已有家：三机制全指向同一件事——`_Avoid_` glossary 收敛。我方在真正
+      吃劲处已收敛词汇（muse-proto-gen 受控组件表约束 agent 选名、deepresearch canonical
+      statements claim 去重），且 verdict 自陈整个"实证需求"就是**一条** luca_gstack 命名锁——
+      它已活在人层 auto-memory（feedback-say-luca-gstack-not-gstack.md，每 session 注入），工作
+      正常。我方 leitwort 多为无同义竞争的自造词（命名即切换/读前先写/双仓一致），"多词/概念→挑
+      canonical"这问题在我方语境本就稀薄。→ 净值真实但小。
+    - 为何不致命：merge 门槛只要净正 + D≥3 + ≥2 独立引证机制 + 加法。`_Avoid_` 作为 skill 写作
+      手艺的一节并入正在新建的 skill-authoring.md（写 skill/框架文档时的可选格式），折进
+      writing-great-skills 的同一次 whole-file A/B，成本近零、缺席 grep 复核为真（0 命中）→ 达门槛。
+      且杀到 leave 会**自相矛盾**：leading-word(D=4)/invocation-cost(D=4) 同样只落 skill-authoring.md、
+      同样 merge 未被杀——同构落点不能选择性击杀。故降级收 scope，不击杀。
+  attack_notes: |
+    ①D 虚高（4→3，扣 1 分）：
+      avoid-alias-line +2 内含**无据 bite bonus**。rubric D 的 +1 bite 需 CHANGELOG/复现实例证明
+      装置"咬过人"（对齐锚 A grilling 的 self-answering CHANGELOG）；本单元 opponent_evidence 挂的是
+      三份**格式规范文件**（codebase-design SKILL / domain-modeling CONTEXT-FORMAT / teach
+      GLOSSARY-FORMAT）里的 `_Avoid_:` 模板行——那是"装置被 3 处规定"（成熟度/adoption，已计入
+      E=3"三格式文件复现"），**不是**装置抓到真实同义漂移的复现。rubric "每 1 分挂 1 组双侧引文"是
+      每分的**下限**、非"N 引文=N 分"；单一机制 base +1，多文件出现喂 E 不喂 D。→ 剥 bite，
+      avoid-alias-line +2→+1，D=3。此步与 domain-modeling redteam 撤 active-modeling bite bonus 是
+      同一手法、同一 benchmark 内既有先例。（be-opinionated 与 consistent-usage 是选定 vs 强制两步、
+      我方两者皆缺，**不折**——保守不过度通缩；D 诚实底为 3，merge 存活，够不上 kill。）
+    ②fit：两处落点越界，收窄（保守只删不加）：
+      - scope ③（命名锁迁入框架 CONTEXT.md）— 砍：luca_gstack 禁缩写是**人层**纠正（"两次纠正
+        7-11"），按 CLAUDE.md 三分归属属全局个人记忆，现正住 auto-memory 每 session 注入。迁进框架
+        CONTEXT.md = 人层→框架层错置 + 重复注入（memory 已注一次）；且稳定事实直写 CONTEXT.md 与
+        SC-20260523-003 propose-only 治理精神相悖。留 memory 原位。
+      - scope ①（项目 CONTEXT.md 骨架采装置+规则行）— 砍：project.sh 的 CONTEXT.md 骨架有**硬预算
+        ≤80 行**（scripts/project.sh:77，注入安全帽 head -100），每 session 激活即注入；为一条至今
+        未在项目级出现的 glossary 需求给每个项目骨架塞装置+规则+示范条目，正是"structure for its own
+        sake"，直吃 context 预算。更硬冲突：姊妹裁决 mech:context-md-domain-glossary（D=2 **leave**）
+        已明判"'CONTEXT.md 只做词汇表'纯粹性主张**明确不采**——CONTEXT.md 的约束/记忆角色是 session
+        启动协议承重件"，只允许"`_Avoid_` 装置随 avoid-alias 落地时**一行说明**顺带"。本 verdict 的
+        骨架模板扩张远超那"一行"。→ 砍 scope ①。
+      - 留 scope ②：`_Avoid_` 装置作为写作手艺一节并入共用 skill-authoring.md——与
+        leading-word/invocation-cost 并入同文件同构（各自独立 merge verdict、touched_files 共用不
+        重复计），承重墙零触、词表路由不动、无 P1-P7 触碰。
+    ③集成成本：
+      - ab_runs 1→0：唯一存活落点是 skill-authoring.md 的一节；metavocab redteam（stands）已明账
+        "avoid-alias-table 与 leading-word/invocation-cost/metavocab 四单元的 prose 折入
+        writing-great-skills 的**同一次 whole-file 非回归 A/B**（ab_runs=1），无需增跑"。故本单元 ab=0
+        （与 leading-word/invocation-cost 同口径），非红线 BLOCK（被吸收 prose 有 A/B、按共用落地记
+        一次）。原 ab=1 两种读法结论都归 0：若指 skill-authoring.md 段则与该共用 A/B 双计、若指
+        CONTEXT.md 段则随 scope ① 一并砍。
+      - touched_files 收窄为 ["共用 skill-authoring 资产（不重复计）"]，去掉 scripts/project.sh 与
+        CONTEXT.md（随 ①③ 砍）。C=S 更干净、无墙触。dual_repo=true 正确（skill 写作手艺是通用框架
+        能力、非 muse fork 专属，母版同有 skill-invariants counterpart）。
+    结论：桶维持 merge（D=3 达门槛、`_Avoid_` 手艺一节净正加法、无红线破坏），非击杀；收缩项＝
+    D 4→3、砍 scope ①③（CONTEXT.md 骨架扩张 + 人层命名锁错置迁移）、ab 1→0、touched_files 收至
+    共用 skill-authoring 一处。

@@ -1,0 +1,66 @@
+id: mech:thin-orchestration-thick-primitive
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >-
+  这三个 skill（grill-me、grill-with-docs、implement）都极薄——正文只有 1 到几行散文。
+  每个都带 frontmatter `disable-model-invocation: true`，即只在用户显式敲斜杠命令时运行，
+  模型永不自动挑选它们（用户触发入口）。正文用 `/skill` 式散文把完整能力委托给更厚的 primitive
+  skill：grill-me → `/grilling`；grill-with-docs → `/grilling` + `/domain-modeling`；
+  implement → 有序调用 `/tdd` + `/code-review` 再 commit。薄编排壳因此靠组合 model-invoked 的
+  厚 primitive 拿到完整行为，自己不重新实现任何东西。
+our_summary: >-
+  我方最接近的对位是共享 `references/` 资产目录 + 「Skill-first, Graph-optional」架构原则。
+  `references/` 是只读参考文档库，供其他 skill 用 `参考 references/` 散文读取，它明确「不可直接调用」
+  且「没有可执行的 Phase 或流程」——这里复用的是被动内容，不是可执行 primitive。我方 skill 多为
+  厚/自足；确有 skill 间委托时走的是重型编排器（如 muse-loop-orchestrate 内部 dispatch /brainstorm、
+  /design-brief、muse-req-triage），不是几行的薄壳。我方无 `disable-model-invocation` frontmatter
+  标志；对 model-invocation 的门控改由路由表达（隐藏 skill、references 标注「不可直接调用」）。
+mechanisms:
+  - name: user-gated-entry-disable-model-invocation
+    summary: >-
+      三个 skill 用 `disable-model-invocation: true` frontmatter，使其只在用户显式调用斜杠命令时运行，
+      模型不会自动挑选。
+    opponent_evidence:
+      - path: skills/productivity/grill-me/SKILL.md
+        quote: "disable-model-invocation: true"
+      - path: skills/engineering/implement/SKILL.md
+        quote: "disable-model-invocation: true"
+    absence_proof:
+      pattern: "disable-model-invocation"
+      scope: ".claude/ + CLAUDE.md"
+      hits: 0
+    delta: >-
+      对方用该 frontmatter 标志把每个薄壳标为「仅用户触发」。我方任何地方都没有这个标志。
+      我方的功能近似物在种类上不同：隐藏 skill 靠路由配置不暴露斜杠入口，而 references/ 被标为
+      「不可直接调用」（根本不能被调用），而非「仅用户触发」。
+  - name: prose-delegation-to-thick-primitive
+    summary: >-
+      几行散文正文通过 `/skill` 引用把完整能力委托给更厚的 model-invoked primitive skill，
+      靠组合而非重新实现。
+    opponent_evidence:
+      - path: skills/productivity/grill-me/SKILL.md
+        quote: "Run a `/grilling` session."
+      - path: skills/engineering/grill-with-docs/SKILL.md
+        quote: "Run a `/grilling` session, using the `/domain-modeling` skill."
+      - path: skills/engineering/implement/SKILL.md
+        quote: "Once done, use /code-review to review the work."
+    our_evidence:
+      - path: .claude/skills/office/references/SKILL.md
+        quote: "此目录包含只读参考文件，供各 skill 的 SKILL.md 中 `参考 references/` 指令使用。"
+      - path: .claude/skills/office/references/SKILL.md
+        quote: "**不可直接调用。** 没有可执行的 Phase 或流程。"
+      - path: CLAUDE.md
+        quote: "**架构原则：Skill-first, Graph-optional。**"
+    delta: >-
+      对方的薄壳靠散文调用其他 skill（/grilling、/domain-modeling、/tdd、/code-review）拿到完整行为。
+      我方的复用机制是用 `参考 references/` 载入的共享参考文档——被动内容、无可执行 Phase，不是厚
+      primitive。我方也做 skill 间委托，但只经重型多 Phase 编排器（muse-loop-orchestrate → /brainstorm、
+      /design-brief），从无几行薄壳；且架构立场是 Skill-first 独立可用 + 可选图，而非薄壳组合。
+notes: >-
+  跑过的 grep：`grep -ril "disable-model-invocation" .claude CLAUDE.md` → 0 命中（exit 1），
+  确认 absence_proof。三个对方文件都极短（grill-me 7 行、grill-with-docs 8 行、implement 16 行），已读到最后一行。
+  意外事实：我方确有 skill→skill 委托（muse-loop-orchestrate 内部 dispatch /brainstorm、/design-brief、
+  muse-req-triage、muse-proto-gen），但都是厚编排器而非「几行薄壳」，故不构成本机制对位。
+  harness 说明：对方被调的 primitive（/grilling、/tdd、/code-review、/domain-modeling）是其自有 skill，
+  非 Claude Code 内建；本单元不涉及 harness 内建 skill。

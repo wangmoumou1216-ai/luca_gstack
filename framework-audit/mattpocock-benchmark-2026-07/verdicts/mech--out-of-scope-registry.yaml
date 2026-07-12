@@ -1,0 +1,92 @@
+id: mech:out-of-scope-registry
+kind: mechanism
+tier: A
+dossier: dossiers/mech--out-of-scope-registry.yaml
+
+scores:
+  D: 4
+  I: 7
+  C: S
+  E: 3
+score_derivation: |
+  D=4：
+  - rejected-request-registry-as-artifact：+2。"被拒的**用户功能请求**"一等制品缺席——我方
+    vetting-registry 记被拒外部 skill、gaps-register 记缺口，对象域不同；muse-req-triage 的
+    TRIAGE_REJECT 判完即散，拒绝理由不落盘、重复提交不会自动对照历史。
+  - concept-similarity-dedup-anti-relitigation：+1。我方 scout 去重是精确 repo 键静默丢弃；
+    "概念相似度匹配 + surface 旧决定给人重议"的界面缺席。
+  - write-and-reconsideration-discipline：+1。anti-poisoning 写入门（"已实现"绝不当拒绝记录）
+    与"删文件即重议"生命周期缺席——注意我方 TRIAGE_DUPLICATE 与 TRIAGE_REJECT 的区分恰是
+    anti-poisoning 的半成品（已实现→DUPLICATE 不→REJECT），差成文纪律与持久化。
+  I=7（vetting-registry+gaps-register+scout dedup 接线）。C=S。E=3（3 个真实实例文件 +
+  triage 全流程集成 = 成熟约定）。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=4 ≥ 3 ✓；机制 ≥2 ✓；加法。与 skill:engineering/triage verdict 的
+  merge 联动（该 verdict D 维的 out-of-scope-dedup-kb 项落地在此）。
+
+merge_scope: |
+  ① muse-req-triage 增被拒需求登记：TRIAGE_REJECT 定案时把"概念 + 拒绝理由 + 来源引用"落
+    一行进项目 `.luca/memory/` 下的 rejected-reqs 台账（一概念一条，非一次一条）；Phase 1
+    对新候选先按概念对照台账，命中则 surface 旧决定供人 confirm/reconsider（不静默丢）。
+  ② anti-poisoning 写入门成文：已被实现的候选走 TRIAGE_DUPLICATE 引用实现处，**绝不**进
+    rejected-reqs（防假拒绝污染去重）；人改主意 → 删该行即重议。
+  ③ 框架级（vetting-registry 概念相似度 surface）记 opportunity，不进本轮。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/muse-req-triage/SKILL.md", "项目 .luca/memory 台账约定（一段）"]
+  ab_runs_needed: 1   # 与 triage verdict 的 merge 合并为同一次改动/A-B
+  dual_repo: false    # muse-req-triage 为 fork 专属
+  new_gap_proposal: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强现任辩护——"muse-req-triage 已够用，此 merge 只加噪音"——两条主攻均非致命：
+    (a) 主攻【E 虚高 / 机制是纸面 aspiration】：我实测追杀"三个实例文件是否真存在"。
+        dossier/verdict 的 E=3 有一支撑句是"3 个真实实例文件 = 成熟约定"，若那三文件不存在，
+        则 .out-of-scope有理由(+1) 崩、"成熟约定"框定假、机制退化为纯文档 aspiration → E 应降。
+        **实测结论：攻击失败。** 三实例文件真实存在于克隆 repo 根 `.out-of-scope/`
+        （mainstream-issue-trackers-only / question-limits / setup-skill-verify-mode，我首轮 ls
+        找错目录——它挂在 repo 根不在 triage skill 目录下），且各带实质拒绝理由 + Prior requests
+        实证（#99 dex tracker、#44 "Codex 问了我 200 个问题"）＝ rubric D 的"咬过人"实证。
+        更关键：CHANGELOG.md 第 59 行明记 "a redundancy check resolves already-implemented
+        requests to wontfix without polluting the out-of-scope knowledge base"——**anti-poisoning
+        写入门是 CHANGELOG 记录在案的已发货特性**，非草稿。故 E=3 三支全立（CHANGELOG+1 /
+        .out-of-scope有理由+1 / 非in-progress非deprecated+1），matt 自 dogfood 该机制，"aspiration
+        prose"指控伪。D 的 rejected-registry +2 = 制品 base+1 + 实例带 Prior-requests 的实证+1，
+        结构合法。
+    (b) 主攻【我方够用 / 只加噪音】：muse-req-triage 现状 TRIAGE_REJECT"判完即散"（verdict/
+        score_derivation 自陈拒绝理由不落盘），同一条客户反馈/backlog 项下批复现时人类须从零重裁、
+        无历史对照——真实机构记忆缺口。持久化"为何拒 + 来源引用"是净正。故非噪音。
+    结论：两条最强攻击（尤其可实测的 E 攻击）经一手核验双双证伪，D=4/E=3 诚实，桶不动。
+  attack_notes: |
+    ② 攻击 fit：CLEAN（含一处已中和的软点）。
+    - 概念错配软点：对方语境是 OSS issue triage 的**持久架构级拒绝**（"永不做 dark mode"，
+      反复辩论浪费维护者注意力 → anti-relitigation 有价值）；我方 muse-req-triage 是**产品需求批量
+      预筛**，拒绝多为本轮优先级判断，产品语境下需求 re-evaluate 才是健康默认，anti-relitigation
+      偏见有反向风险。**两点中和该软点，不致命：** (1) merge_scope ① 只登记 TRIAGE_REJECT
+      （"建议不做"）而非 TRIAGE_DEFER（"值得做但本轮不做"）——恰好是更接近"持久拒绝"的正确子集；
+      (2) 命中时"surface 旧决定供人 confirm/reconsider（不静默丢）"，保留人类拍板、只呈信息不代裁，
+      与 constitution"机器 surface 信号 / 人类拍板"一致，不违人类卡点。
+    - 落点/宪法核验：.luca/memory 台账＝三分表"项目本地记忆"正确归属（拒绝事实是项目专属，不污染
+      跨项目）；dual_repo:false 正确（muse-req-triage 母版 luca_gstack 无此文件，fork 专属，双仓
+      一致原则不适用）；不新增 skill/斜杠命令，仅给既有 fork skill 加行为 → 不违输入面收窄/使用即
+      留任/最小文件；③ 框架级 vetting-registry surface 已显式让渡出本轮（记 opportunity）＝保守正确。
+    ③ 集成成本：realistic-to-conservative，零承重墙触碰。
+    - skill-invariants：muse-req-triage 不在 P6 顺序锁名单（仅 html-prototype/tech-spec/task-plan/
+      ux-audit）→ 加 Phase 前置对照 + 定案写台账不违 P6；台账落 .luca/memory 非 docs/ → 非 P2
+      保护路径；frontmatter 无需改（Read/Write/Bash 已在 v2.3.0 allowed-tools，读台账/写一行皆有权）
+      → P1 clean；P3 preamble/P4 handoff/P5 FILE_END/P7 workflow-state 均不动。
+    - A/B：ab_runs_needed:1（非 0）满足"机制层 prose 吸收无 A/B 一律 BLOCK"红线；与 triage verdict
+      共用同一次 A/B 合法（两 merge 皆落 muse-req-triage/SKILL.md、须一并测，triage verdict 已显式
+      "落地归 mech:out-of-scope-registry 单元统一裁，此处不重复落地"——双**计分**非双**落地**，不
+      inflate 本 verdict）。
+    - 残留非致命软点（记录不砍）：C=S 偏乐观——若把 .luca/memory 台账约定算作独立触碰产物则 M 更
+      稳，但实质承重编辑仅 muse-req-triage/SKILL.md 一文件，S 可辩护，不改裁决。merge_scope 三项各
+      挂已核验的真 delta（① 制品缺席 grep-0 + 实例实证；② anti-poisoning CHANGELOG 在案我方无；③ 已
+      让渡），无"只删不加"的诚实可砍项 → 砍任一项即"为杀而杀"，不为。

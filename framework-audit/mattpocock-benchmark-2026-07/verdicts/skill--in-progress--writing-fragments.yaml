@@ -1,0 +1,14 @@
+id: skill:in-progress/writing-fragments
+kind: skill
+tier: C
+opponent_sha256: c61b6608f227b0eee1b832273360cf5088ad68c343c15ec9c06673086662e64e
+dossier: dossiers/skill--in-progress--writing-fragments.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：写作三部曲之 explore 阶段（异质 fragment 单文件累积、不上结构；"leading word 是
+  最有价值的 fragment"）。draft；同 writing-beats 理由不采。其 leading-word 洞见已由
+  mech:leading-word 单元独立评估并落地（merge 进 skill-authoring 资产），本单元无残余
+  增量。
+reconciliation: null
+landing_estimate: null

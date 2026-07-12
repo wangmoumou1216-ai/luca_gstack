@@ -1,0 +1,105 @@
+id: skill:engineering/triage
+kind: skill
+tier: A
+opponent_sha256: d45827c299c021f77b0f146fefa3ee679b13f99e9a2ffdf48e8de2347adeefe1
+dossier: dossiers/skill--engineering--triage.yaml
+
+scores:
+  D: 6
+  I: 7
+  C: M
+  E: 3
+score_derivation: |
+  D=6：
+  - verify-before-grill：+2。对方在 grill 前实证核验声称（bug 复现/PR 检出跑测试，confirmed/
+    failed/insufficient 三态）；我方 muse-req-triage 只做 EARS 机械校验+可回溯性检查，全程无
+    复现/执行步（dossier 双侧引文）。这是"花人类注意力之前先验真"的前置门，我方真缺。
+  - redundancy-check-by-domain-concept：+1。对方按领域概念（非措辞）检索**已实现代码**判
+    already-implemented；我方 TRIAGE_DUPLICATE 只对 REQ/PRD 规格层去重，不查源码。
+  - out-of-scope-dedup-kb：+1（能力缺席 grep 0 命中；**落地归 mech:out-of-scope-registry
+    单元统一裁，此处不重复落地**）。
+  - agent-brief-drift-resistance：+1。path-free/behavioral/acceptance-criteria 抗漂移契约
+    纪律我方 L1 需求卡无；但我方卡喂上游设计而非 AFK 实现 agent，适用面折减。
+  - triage-classification-taxonomy：+1。状态机+live tracker label 迁移形态我方无（我方 5 值
+    枚举+人类拍板，对象是需求语料）；形态差异部分抵消。
+  I=7：routing-map invoke(+2)/P1-P7+preamble(+2 内 P3 preamble 合并计)/fork 使用史(+1)/
+  v2.1-v2.3 工具契约迭代但无自动化测试(+2 拆半计 P 约束+接线)。
+  C=M：muse-req-triage/SKILL.md + muse-loop/schema.md 邻接，≤6 文件。
+  E=3：promoted(+1)+CHANGELOG（qa 被 triage 吸收的演进记录）(+1)+非 draft(+1)。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=6 ≥ 3 ✓；独立机制 ≥2（verify-before-grill、domain-concept 冗余检索、
+  drift-resistant brief）✓；全为加法，不动"机器只打分/分类、人类拍板"的宪法边界（verify 提供
+  证据给人裁，不代裁）。非替换：muse-req-triage 的 rule-based proxy 打分（真实信号不套 RICE）、
+  双入口（独立/被 loop dispatch）、5 值含 ESCALATE 是现任独有承重轴，对方无对应 → 支配不成立。
+
+merge_scope: |
+  ① muse-req-triage Phase 2 前增 verify-before-grill 前置门：候选需求若声称"现状已坏/已有实现"，
+    先做可机验核查（grep 现有 REQ/PRD/实现锚点），核验结果作为信号呈给人类（不改变人类拍板边界；
+    在 SKILL.md 角色声明中归入"可回溯性检查"，不新开机器权限类目）。
+  ② TRIAGE_DUPLICATE 去重面从 REQ/PRD 扩到"已实现能力"。
+    （红队删去原文"按领域概念检索 skill-os/skills 现状"——检索域错误：triage 对象是下游项目的
+    产品需求，"已实现"参照物是当前激活项目的 shipped/prototype 现状，非框架 skill 清单；落地
+    应接 schema.md L1 卡既有槽位 authenticity.entailment.compared_against=shipped_product_behavior，
+    不另造机制。）
+  （③ 已被红队砍掉：原"入口 B 的 L1 需求卡增 drift-resistance 一行（描述行为与验收判据，不引
+  文件路径/行号）"——见 redteam.attack_notes。）
+  （更正：dossier 曾报 constitution.md dangling reference，主线程复核为**假阴性**——文件
+  存在于 fork 根 /constitution.md（4.7KB v1.0），loop-me dossier 的引文也经 grep 回验证实。
+  无需伴生修复。）
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/muse-req-triage/SKILL.md", "muse-loop/schema.md(L1 卡格式一行)"]
+  ab_runs_needed: 1
+  dual_repo: false   # muse-req-triage 是 fork 专属 skill，母版无此文件（伴生修复同理）
+  new_gap_proposal: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强现任辩护——"muse-req-triage 已够用，此 merge 只加噪音"——三点拆解，均非致命：
+    (a) D=6 略慷慨但桶稳健。逐项核：verify-before-grill +2 是真 delta（我方 pre-grill 无任何
+        premise 前置核验，仅 EARS 语法校验）；domain-concept redundancy +1 真；out-of-scope-
+        dedup-kb +1 与 mech:out-of-scope-registry 单元同底机制重复**计分**（该单元 D=4 已含），
+        但落地已显式让渡（"此处不重复落地"）故无双重**落地**，D 和仅偏高不改桶；agent-brief-
+        drift +1 是被 ③ 写掉的 delta（我方 L1 卡确无 drift 纪律为真，但"喂上游设计非 AFK 实现
+        agent"使适用面折减 → ③ 已砍）；taxonomy +1 是纯形态差异（对方状态机+live-label 迁移
+        vs 我方 5 值枚举），verdict 自认"部分抵消"——live-tracker 形态是我方刻意非目标、非能力
+        缺口。严格重估 D≈4-4.5，仍 ≥3，且真正落地的两条独立机制（verify-before-grill、
+        domain-concept 冗余）净正，rubric §3 merge 门槛稳健满足。
+    (b) 不是把 aspirational prose 当实绩：triage 位于 skills/engineering/（非 in-progress/），
+        verify-before-grill 有 CHANGELOG"咬过人"实证，机制为 matt 已发货非草稿，E=3 站得住。
+    结论：D 慷慨但桶不动，最强攻击非致命。
+  attack_notes: |
+    ② 攻击 fit：CLEAN。merge 全程保"机器 surface 信号 / 人类拍板"边界（Phase 3 AskUserQuestion
+    权威源未动）；① 归入既有"可回溯性检查"、② 扩既有"提议分类"(TRIAGE_DUPLICATE)，均落既有机器
+    权限类目、不开新权限，与 constitution"机器只打分/分类"不冲突。dual_repo:false 正确（SKILL.md
+    自述"母版 luca_gstack 无此 skill"，fork 专属，双仓一致原则不适用）。propose-only / GATE-2 /
+    最小文件 / 输入面收窄均不违（不新增 skill 或斜杠命令，只给既有 fork skill 加行为）。
+    ③ 集成成本：realistic-to-conservative，无承重墙触碰。muse-req-triage 不在 P6 顺序锁名单
+    （仅 html-prototype/tech-spec/task-plan/ux-audit），加 pre-Phase-2 门不违 P6；不动 P1-P5/P7；
+    Bash 已在 allowed-tools(v2.3.0)，故 ① 的 grep 门无需改 frontmatter。ab_runs_needed:1（非 0）
+    不触"机制层 prose 吸收无 A/B 一律 BLOCK"红线，且与 out-of-scope merge 合并为同一次 A/B 合理。
+    —— 承接前轮修剪，独立复核确认两处均正确、予以保留：
+    - ② 检索域更正 CONFIRMED：triage 对象是下游项目产品需求，"已实现"参照物应为当前项目
+      shipped/prototype 现状，非框架 skill 清单；落点 schema.md L1 卡 authenticity.entailment.
+      compared_against=shipped_product_behavior 经核**该槽位已存在**（schema.md v0.2 拆出，line 29），
+      故"不另造机制"属实。附带指出：touched_files 列 "schema.md(L1 卡格式一行)" 与"既有槽位"轻微
+      自相矛盾——槽位既在则 schema 无需改，实际触面仅 muse-req-triage/SKILL.md，C 偏保守（M 可，
+      S 亦足），不影响裁决，故不改分。
+    - ③ agent-brief drift-resistance 砍除 CONFIRMED：该机制目标是 AFK 实现 agent 的抗代码漂移
+      契约（path-free / behavioral / acceptance-criteria）；muse-req-triage 产物喂上游 /brainstorm
+      设计步而非实现 agent，drift-resistance 无落地对象，砍除正确（原悬空引用至此解析）。
+    —— 残留软点（记录，未致命、不再砍）：① verify-before-grill 门与 ② redundancy 共用同一次
+    "grep 现有 REQ/PRD/shipped 锚点"，"已有实现"分支与 ② 重叠；① 真正不与 ② 重叠的部分（"现状已坏"
+    缺陷前提核验）grep 无法动态确认——但 ① 措辞诚实（"核验结果作为信号呈给人类"，非判定），surface
+    锚点供人判 premise 仍净正；且对方机制的动态本体（复现 bug / 执行测试）本就无法移植进"不执行任何
+    东西"的语料 triage，落地为静态 grep 是合理降级而非虚报。故保留 ①，但落地时应与 ② 合并为一次
+    grep 编辑（非两次独立能力）；"≥2 独立机制"的桶依据落在 whole-skill delta（verify + domain-concept
+    冗余两条 dossier 双侧引证）而非两次文件编辑，此点成立。
+    —— constitution.md 悬空引用复核 CONFIRMED 为假阴性：文件确存 fork 根 /constitution.md
+    （4719B），SKILL.md line 39 引它为真伪/优先级信号权威源，无需伴生修复。

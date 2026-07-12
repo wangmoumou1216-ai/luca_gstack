@@ -1,0 +1,101 @@
+id: mech:invocation-cost-model
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >
+  对方把 skill 的"调用方式"建成一条二元轴 + 显式双成本经济学。.agents/invocation.md
+  定义该轴——user-invoked（frontmatter 设 disable-model-invocation:true，剥掉
+  description，只有人类打名字能到）vs model-invoked（默认，保留 description，模型和用户都能到）。
+  writing-great-skills SKILL.md 与 GLOSSARY.md 给每一侧标价：model-invoked 付 context load
+  （description 每轮常驻窗口，花 token 与注意力），user-invoked 付 cognitive load
+  （人类是那个必须记住 skill 存在的索引）。于是调用选择变成一道成本权衡：只有当 agent 必须自主
+  够到时才 model-invoke，否则 user-invoke、不付 context load。cognitive load 由 router skill
+  （一个点名其余 user-invoked skill 的 user-invoked skill）治愈；granularity（skill 分得多细）
+  同样由这两种 load 支配——每切一刀就花掉其中一种。
+our_summary: >
+  我方有一条类似二元轴——一级可见 skill（斜杠命令 + /office 展示 + route-guard 关键词表）vs
+  隐藏/高级 skill（无斜杠命令、不在 /office 展示、不主动推荐，由 agent 读文件或 Skill 工具按名调用），
+  在 CLAUDE.md 定义。/office 是向导式入口，展示一级可见 skill 列表，充当 router 类比物。这层可见面
+  由使用数据治理（使用即留任原则：一级 skill 连续 60 天零调用 → 降级为隐藏），而非按切分计 load。
+  route-guard.mjs + skill-routing-map.yaml 驱动关键词路由建议，但不含任何成本理论。我方无显式的
+  context-load-vs-cognitive-load 经济学：这条可见性二分控制的是"主动路由/用户可见面"，而非模型可达性
+  （隐藏 skill 仍可被模型按名调用）。
+mechanisms:
+  - name: binary-invocation-axis
+    summary: 把 skill 沿"谁能够到"分成两类的二元轴——对方 user/model-invoked，我方一级可见/隐藏。
+    opponent_evidence:
+      - path: .agents/invocation.md
+        quote: "**User-invoked** — reachable **only by the human typing its name**. Set `disable-model-invocation: true` in the frontmatter."
+      - path: .agents/invocation.md
+        quote: "**Model-invoked** — reachable by **model or user**. The default: omit `disable-model-invocation`."
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "这些不作为一级斜杠命令暴露，不在 `/office` 展示，不主动推荐"
+      - path: CLAUDE.md
+        quote: "每个一级可见 skill 默认可以 standalone 使用"
+    delta: >
+      两侧都把 skill 二分。对方的轴由 frontmatter 的 description/disable-model-invocation 定义，
+      控制的是模型自动调用的可达性——user-invoked skill 对模型和其它 skill 均不可见。我方的一级可见/
+      隐藏轴由斜杠命令 + /office 展示 + route-guard 关键词表成员身份定义，控制的是主动路由/用户可见面；
+      隐藏 skill 仍可被模型按名调用（agent 读文件或用 Skill 工具）。我方不以 description 字段闸控模型
+      可达性，也无 disable-model-invocation 这一机制。
+  - name: dual-load-cost-model
+    summary: 给二元轴每一侧标显式成本——model-invoked 付 context load，user-invoked 付 cognitive load——使调用选择成为成本权衡。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "It contributes to **context load** — the description sits in the window every turn."
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "Zero context load, but it spends **cognitive load**: _you_ are the index that must remember it exists."
+    absence_proof:
+      pattern: "context.?load|认知负[荷载]|cognitive.?load|disable-model-invocation"
+      scope: ".claude/skill-os CLAUDE.md .claude/hooks/route-guard.mjs"
+      hits: 0
+    delta: >
+      对方给二元轴的每一侧挂一个显式成本——model-invoked 付 context load（description 每轮在窗口里花
+      token 与注意力），user-invoked 付 cognitive load（人类当索引），并把调用选择建成两者之间的权衡。
+      我方定义 skill 可见性的文件（CLAUDE.md、skill-os、route-guard）里没有这套双 load 词汇；一级可见/
+      隐藏的取舍由"不主动推荐"与使用即留任来论证，而非 context-load/cognitive-load 经济学。我方确有
+      context-cost frontmatter 字段与按-agent 的 context 预算，但那些管的是 dispatch/session 预算，
+      不管调用-可见性的选择。
+  - name: router-skill
+    summary: 一个点名其余 user-invoked skill 的 user-invoked skill，作为 cognitive load 的解药。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "cured by a **router skill**: one user-invoked skill that names the others and when to reach for each."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "A **user-invoked** skill whose job is to point at your other user-invoked skills — naming each and when to reach for it"
+    our_evidence:
+      - path: .claude/skills/office/SKILL.md
+        quote: "luca_gstack 入口。向导式：先问你想做什么，推荐对应 workflow。"
+      - path: CLAUDE.md
+        quote: "| `/office` | — | 显示一级可见 skill |"
+    delta: >
+      两侧都有一个菜单/入口 skill（对方的 router skill；我方的 /office）。对方的 router 之所以存在，正是
+      因为 user-invoked skill 对模型不可见、只能由人类够到，故 router 只能提示、永远无法触发它们。我方
+      /office 列出的一级可见 skill 本就可经 route-guard 被模型独立够到，所以它是"对可达 skill 的向导/
+      推荐器"，而非唯一够到路径。我方无"router 作为累积 cognitive load 解药"的对应设定。
+  - name: granularity-load-spending
+    summary: skill 分得多细由两种 load 支配——每切一刀花掉其中一种，值回票价才切。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/SKILL.md
+        quote: "**Granularity** is how finely you divide skills, and each cut spends one of the two loads, so split only when the cut earns it."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "Finer division spends one of the two loads"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "任一一级 skill 连续 60 天 `skills_used` 零记录 → 下次治理复盘时降级为隐藏"
+      - path: CLAUDE.md
+        quote: "降级为隐藏 skill——磁盘目录与逻辑零删除，只撤销一级入口"
+    delta: >
+      对方把 granularity（skill 分多细）框成"每切一刀花掉两种 load 之一，切之前值回那份 load 才切"。
+      我方的可见面管理是基于使用的使用即留任降级（60 天零调用 → 隐藏）加可逆再曝光——一条以 episodic
+      调用计数为键的运行期治理规则，而非设计期按切分计 load。我方没有"每次切分花掉一份 context/cognitive
+      load"这类指导何时新建 skill 的原则。
+notes: >
+  跑过的 grep：`grep -rniE "context.?load|认知负[荷载]|cognitive.?load|disable-model-invocation"
+  .claude/skill-os CLAUDE.md .claude/hooks/route-guard.mjs` → exit 1（零命中），证 dual-load-cost-model
+  机制在我方定义 skill 可见性的文件里缺席。旁证：`grep -ril "认知负荷|cognitive load"` 在
+  .claude/skills 下有一处命中（ux-brainstorm/references/phase1-agent-prompts.md），但那是产品-UX 语境
+  的"用户认知负荷"，与 skill 调用成本无关，且在上述 absence scope 之外。四个 counterpart（route-guard.mjs、
+  CLAUDE.md 隐藏/高级 skill 段、skill-routing-map.yaml、/office SKILL.md）均为真实文件，无 harness 内建物
+  需文字说明。opponent 三锚点文件（.agents/invocation.md、writing-great-skills SKILL.md/GLOSSARY.md）逐个读到末行。

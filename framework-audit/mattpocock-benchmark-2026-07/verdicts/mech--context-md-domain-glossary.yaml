@@ -1,0 +1,29 @@
+id: mech:context-md-domain-glossary
+kind: mechanism
+tier: A
+dossier: dossiers/mech--context-md-domain-glossary.yaml
+
+scores:
+  D: 2
+  I: 8
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - context-md-as-first-class-glossary：+1。词汇表**节**的形态缺席（我方 CONTEXT.md 是
+    约束/长期记忆文件）；但"glossary and nothing else"纯粹性与我方 CONTEXT.md 的承重角色
+    （红线+洞察+session 注入）正面冲突——冲突不计缺口，只计"词汇节"这一可加部分。
+  - dogfooding 词汇治理段（Relationships/Flagged ambiguities）：+1。
+  - active-vs-passive：+0（已计入 skill:engineering/domain-modeling verdict，不重复）。
+  I=8（CONTEXT.md 每 session 注入+项目机制成熟）。C=S。E=3（对方自仓真实运转）。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3，且可取部分已由联动 verdict 全覆盖：词汇节+_Avoid_ 装置落地在
+  mech:avoid-alias-table（CONTEXT.md 词汇节+骨架模板），主动建模行为落地在
+  skill:engineering/domain-modeling。"CONTEXT.md 只做词汇表"的纯粹性主张**明确不采**——
+  我方 CONTEXT.md 的约束/记忆角色是 session 启动协议的承重件。Flagged-ambiguities 段
+  作为词汇节的可选子结构随 avoid-alias 落地时顺带（一行说明，不另立项）。
+
+reconciliation: null
+landing_estimate: null

@@ -1,0 +1,85 @@
+id: mech:leading-word
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >
+  该单元记录 "leading word / Leitwort" 这一 skill 写作技法。GLOSSARY.md（writing-great-skills 的
+  disclosed 领域模型）把 Leading Word 定义为一个已存在于模型预训练里的压缩概念，agent 在跑 skill 时
+  用它思考；它作为裸 token 被反复出现（never as a sentence），从而在整篇 skill 里累积出分布式定义、
+  锚定一整片行为区域，用最少 token 招募模型已持有的先验来编码一条行为原则。技法主张优先选已存在的
+  预训练词、而非自造词（自造词招募不到先验、还要花定义 token），并指出 leading word 服务
+  predictability 两次——在正文锚定 execution、在 description 锚定 invocation，当同一个词同时出现在
+  prompt/docs/codebase 时触发更可靠。它还与 No-Op 交叉：一个弱到打不过模型默认行为的 leading word 就是
+  no-op。两个示范 skill 把它实例化：wayfinder 建立在 "fog of war"/"destination"/"the map"/"frontier"
+  上，diagnosing-bugs 建立在 "feedback loop"/"tight, red-capable loop" 上。
+our_summary: >
+  我方框架（luca_gstack）没有显式的 leading-word/Leitwort 写作契约——对技法命名
+  （leitwort/leading-word/先导词/领头词）和其先验招募理由（招募先验/预训练先验/pretrain）的 grep 在
+  .claude/skills、.claude/skill-os、CLAUDE.md、CONTEXT.md 全部 0 命中，也没有任何 meta "如何写 skill"
+  的文档。实践上我方确实非正式地反复使用锚定 token（如 红线 在 CLAUDE.md 出现约 7 次；薄壳、命名即切换、
+  读前先写、护栏），但没有把它们框定为一种 token-anchor 技法的成文原则，也没有"优先预训练词而非自造词"
+  的表述（我方多数是自造词）。在 invocation 维度我方有一个不同的机制：显式的 keyword→skill 路由表
+  （skill-routing-map.yaml）由 route-guard.mjs hook 确定性触发，而非靠模型自主链接一个共享的自然 leitwort。
+mechanisms:
+  - name: compact-concept-token-anchor
+    summary: >
+      把 skill 锚在一个压缩的预训练概念上，作为裸 token 反复出现以累积分布式定义、用最少 token 招募模型
+      已有先验来锚定一整片行为。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "It encodes a behavioural principle in the fewest possible tokens by invoking priors the model already holds"
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "Repeated as a token, never as a sentence, it accumulates a distributed definition across the skill and anchors a whole region of behaviour."
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "Build the right feedback loop, and the bug is 90% fixed."
+    absence_proof:
+      pattern: "leitwort|leading[- ]word|先导词|领头词"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方把"用裸 token 反复出现的压缩概念锚定行为"写成一条成文技法，并配有 wayfinder/diagnosing-bugs
+      两个通篇围绕单一 leitwort（fog of war、feedback loop）构建的示范。我方无此成文技法、无示范，且没有
+      任何 meta skill 写作文档。我方在实践中确实非正式地反复使用锚定 token（红线约 7 次、薄壳、命名即切换、
+      护栏），但从未把它命名为一种技法或说明其机理。
+  - name: prefer-pretrained-priors-over-coined
+    summary: >
+      优先选已存在于预训练里的词；自造词招募不到先验，要用定义 token 去偿付预训练词免费给的东西。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "a made-up word recruits no priors — you pay in definition tokens what a pretrained word gives free. Reach for an existing word first."
+    absence_proof:
+      pattern: "招募.{0,4}先验|预训练先验|recruit.{0,10}prior|pretrain"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方给出一条明确取舍：预训练词 > 自造词，并解释代价（自造词的定义 token 成本 vs 预训练词的免费先验）。
+      我方无此原则的任何表述；我方的锚定 token 里既有招募真实先验的（红线=red line），也有大量自造词
+      （命名即切换、读前先写、薄壳、双仓一致），但这种选择从未被自觉记录或论证。
+  - name: dual-anchor-execution-and-invocation
+    summary: >
+      同一个 leading word 服务 predictability 两次——正文里锚定 execution、description 里锚定 invocation；
+      当同一词同时活在 prompt/docs/codebase 时，skill 触发更可靠。
+    opponent_evidence:
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "when the same word lives in your prompts, your docs, and your codebase, the agent links that shared language to the skill and fires it more reliably."
+      - path: skills/productivity/writing-great-skills/GLOSSARY.md
+        quote: "Word a description with the leading words you actually use when you want the skill."
+    our_evidence:
+      - path: .claude/skill-os/skill-routing-map.yaml
+        quote: "Authoritative keyword and invoke reference for route-guard.mjs."
+      - path: CLAUDE.md
+        quote: "按 yaml 词表匹配后输出路由提示（含内置/外部 skill 建议），Claude 应遵守输出的建议。"
+    delta: >
+      两侧都想让 skill 从用户语言里可靠触发，但机制不同：对方靠一个共享的自然 leitwort 同时出现在
+      description 与日常 prompt/docs/codebase，由模型自主做语义链接来提高触发率，且同一个词还在正文锚定
+      execution。我方是一个显式 keyword→skill 词表（skill-routing-map.yaml）+ route-guard.mjs hook 做
+      确定性外部匹配注入路由提示，不依赖模型自主链接、也没有"同一词兼做正文行为锚"的维度。
+notes: >
+  三个 grep 均实跑确认 0 命中（grep -ril，均排除 framework-audit/）：(A) "leitwort|leading[- ]word" 与
+  "招募.{0,4}先验|预训练先验|压缩概念|先导词|领头词" 在 .claude/skills .claude/skill-os CLAUDE.md CONTEXT.md
+  → 0；(B) "recruit.{0,10}prior|pretrain" → 0；(C) 全 .claude 下 "招募.*先验|leitwort|leading[- ]word|
+  如何写 skill|skill 写作|writing.*skill.*doctrine" → 0（确认无 meta 写作文档）。意外事实：.claude/skill-os
+  无 "writing skills" 类 meta 文档，最接近的 skill-invariants.md 只管保护区不管写作技法。我方 red-line
+  token 用法：grep -c "薄壳|红线" CLAUDE.md = 7 行，其中 grep -n 薄壳 CLAUDE.md 为空，故 7 处均为 红线，
+  印证 red-line 是我方非正式反复使用的 leitwort 式锚定 token（但无成文技法）。opponent_evidence 全部取
+  GLOSSARY 定义原句 + 一条 diagnosing-bugs 示范句，逐字复制、避开 markdown 加粗以防 grep 回验漂移。

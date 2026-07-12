@@ -1,0 +1,148 @@
+id: skill:productivity/handoff
+kind: skill
+tier: A
+opponent_sha256: 57c9f1f392d7352cdc85b1e39ca49eddc70ce1dc278bd9653fb4f23dfc2560fc
+opponent_summary: >
+  mattpocock/handoff 是一个 6 行、847 字节的 user-invoked skill（disable-model-invocation:true，
+  带 argument-hint "下一个 session 用来做什么"）。它把当前对话压缩成一份"交接文档"，写给一个全新的
+  agent 接手继续工作。指令包含五条：文档写到用户操作系统的临时目录（不是当前 workspace）、在文档里加一个
+  "suggested skills" 节推荐下游该调用哪些 skill、不重复其它 artifact（spec/plan/ADR/issue/commit/diff）
+  已有的内容而是用 path/URL 引用、脱敏（API key/密码/PII）、以及若用户传了参数则把它当作下个 session 的
+  焦点来裁剪文档。无 support_files、无示例、无测试。
+our_summary: >
+  我方 counterpart 是三件套：(1) handoff-protocol.md v3.2——workflow/重型 standalone skill 完成时
+  必写的决策摘要协议，写到 workspace 内 docs/handoff/YYYY-MM-DD-<topic>-<skill>-handoff.md，硬约束
+  ≤2000 tokens，格式含 决策/约束/风险/待澄清(Deferred)/产出路径/gate_result+criteria，并含 Checkpoint
+  格式定义；(2) handoff-review skill——这是一个"交付审查"质量门（对照 PRD 核查原型/Figma 一致性、
+  auto-revise-once），与"把对话压成交接文档"是不同职能；(3) CLAUDE.md Checkpoint——跨 session 恢复的
+  五要素文档，也写到 workspace 内 docs/handoff/...-checkpoint.md，由 session-restore.mjs 自动加载。
+  三者都未强制脱敏、都不把文档写到 OS 临时目录、都不在文档内嵌 "suggested skills" 节。
+mechanisms:
+  - name: handoff-doc-for-fresh-agent
+    summary: 核心机制——把当前对话压缩成一份持久交接文档，供一个全新 agent 接手；区别于 in-context 的 compact。
+    opponent_evidence:
+      - path: skills/productivity/handoff/SKILL.md
+        quote: "Write a handoff document summarising the current conversation so a fresh agent can continue the work."
+      - path: skills/productivity/handoff/SKILL.md
+        quote: "Compact the current conversation into a handoff document for another agent to pick up."
+    our_evidence:
+      - path: .claude/skills/office/references/handoff-protocol.md
+        quote: "用文件系统传递状态，不依赖 context window 的连续性。"
+      - path: CLAUDE.md
+        quote: "Compact 前必须先写 Checkpoint（确保状态不丢失）"
+    delta: >
+      两侧都产出"持久文档以跨 context 边界传递状态"这一核心。opponent 用一句话把它定义为
+      "compact conversation → doc for another agent to pick up"（用户手动触发）。我方把同一职能拆在
+      handoff-protocol（skill 间/跨 session）与 CLAUDE.md Checkpoint（跨 session 恢复，且明确"compact
+      前必先写 checkpoint"从而与 compact 区分）两处，格式更结构化（决策/约束/风险/criteria）。
+      opponent 无格式模板、无 token 约束。
+  - name: save-to-os-temp-not-workspace
+    summary: opponent 明确要求把交接文档写到操作系统临时目录、而非当前 workspace。
+    opponent_evidence:
+      - path: skills/productivity/handoff/SKILL.md
+        quote: "Save to the temporary directory of the user's OS - not the current workspace."
+    our_evidence:
+      - path: .claude/skills/office/references/handoff-protocol.md
+        quote: "docs/handoff/YYYY-MM-DD-<topic>-<skill-name>-handoff.md"
+      - path: CLAUDE.md
+        quote: "Checkpoint 写入 `docs/handoff/YYYY-MM-DD-<topic>-checkpoint.md`"
+    delta: >
+      落盘位置两侧相反。opponent 把交接文档放 OS 临时目录（不进 workspace，不进 git）；我方 handoff 与
+      checkpoint 都强制写进 workspace 内 docs/handoff/（随项目、可 git 追踪、被 session-restore 自动加载）。
+      这是 prior verdict 标记的"active conflict"所在。opponent 未提供 workspace 内落盘选项，我方未提供 OS
+      临时目录选项。
+  - name: suggested-skills-section
+    summary: opponent 要求在交接文档里嵌入一个 "suggested skills" 节，推荐下个 agent 该调用哪些 skill。
+    opponent_evidence:
+      - path: skills/productivity/handoff/SKILL.md
+        quote: 'Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.'
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "用于推荐路径、handoff gate、"
+    delta: >
+      opponent 把"推荐下游 skill"作为交接文档内部的一个固定节，随文档本体交给下个 agent。我方也有下游推荐，
+      但在 workflow 层（optional-workflow-graph 的"推荐路径/下游建议"，仅 workflow 模式启用），不嵌进 handoff
+      文档模板本身——handoff-protocol 的格式规范（决策/约束/风险/待澄清/产出路径/AI Native）里没有"suggested
+      skills"字段。差异是"文档内嵌 vs workflow-graph 层"。
+  - name: no-duplicate-reference-only
+    summary: 不重复其它 artifact 已有的内容，改用 path/URL 引用它们，避免交接文档膨胀。
+    opponent_evidence:
+      - path: skills/productivity/handoff/SKILL.md
+        quote: "Do not duplicate content already captured in other artifacts (specs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead."
+    our_evidence:
+      - path: .claude/skills/office/references/handoff-protocol.md
+        quote: "## 格式规范（硬约束 ≤2000 tokens ≈ 8000 chars）"
+      - path: .claude/skills/office/references/handoff-protocol.md
+        quote: "绝不读取上游 skill 的完整 SKILL.md 或完整产出文件。"
+    delta: >
+      同一"不重复、只摘要/引用"原则两侧都有。opponent 表述为"别重复其它 artifact，用 path/URL 引用"。我方
+      用 ≤2000 tokens 硬约束 + "产出路径"节（主产出用相对路径引用）+ "绝不读取上游完整产出"来强制同一效果，
+      量化到 token 上限。opponent 显式点名了 spec/plan/ADR/issue/commit/diff 这些引用对象类型，我方未逐类列举。
+  - name: redact-sensitive-info
+    summary: opponent 要求脱敏交接文档中的敏感信息（API key、密码、PII）。
+    opponent_evidence:
+      - path: skills/productivity/handoff/SKILL.md
+        quote: "Redact any sensitive information, such as API keys, passwords, or personally identifiable information."
+    absence_proof:
+      pattern: "脱敏|redact|敏感信息|PII|API key|密码"
+      scope: ".claude/skills/office/references/handoff-protocol.md, .claude/skills/office/handoff-review/SKILL.md, CLAUDE.md(Checkpoint/handoff sections)"
+      hits: 0
+    delta: >
+      opponent 有显式脱敏指令。我方 handoff/checkpoint 产出面（handoff-protocol.md、handoff-review、
+      CLAUDE.md 的 Checkpoint 段）均无任何脱敏/redact/敏感信息处理要求——交接文档若含密钥/PII 不会被主动
+      清除。这是我方在交接产物这一职能上确实缺席的一条。
+  - name: argument-tailoring
+    summary: opponent 通过 argument-hint 接收"下个 session 的焦点"参数，并据此裁剪交接文档内容。
+    opponent_evidence:
+      - path: skills/productivity/handoff/SKILL.md
+        quote: "If the user passed arguments, treat them as a description of what the next session will focus on and tailor the doc accordingly."
+    our_evidence:
+      - path: .claude/skills/office/references/handoff-protocol.md
+        quote: "待澄清（Deferred，下游须追踪）"
+      - path: CLAUDE.md
+        quote: "进行中 / 待执行 / 关键决策 / 恢复指令"
+    delta: >
+      opponent 让用户传一段自由文本描述"下个 session 要聚焦什么"，用它来裁剪文档。我方 handoff/checkpoint
+      也捕获前向内容（待澄清 Deferred 项、checkpoint 的"进行中/待执行/恢复指令"），但这些由 workflow 状态与
+      产出自动派生，不接受"下个 session 焦点"这一显式入参。差异是"显式焦点入参驱动裁剪 vs 从状态自动派生前向内容"。
+prior_verdict_response: |
+  本单元 2026-06-07 旧裁决 REJECTED（vetting-registry.yaml handoff 条目，weighted_score 70，
+  hard.non_redundancy FAIL）。逐条核对旧理由今日事实是否仍成立（只核事实，不下新结论）：
+
+  reject_reason 1 —— "Redundant: 重复用户已有的 handoff-review skill 与 CLAUDE.md 里精细的
+  Checkpoint/handoff 协议（5 段模板、项目域 docs/handoff/、session-restore 自动加载、记忆集成）"。
+  事实核对：CLAUDE.md Checkpoint（五要素、docs/handoff/、session-restore.mjs 自动加载）与
+  handoff-protocol.md（决策摘要协议）今日仍在、职能确与 opponent 的"对话→交接文档"重叠。但 handoff-review
+  今日读全文后是一个"交付审查"质量门（frontmatter："交付审查。启动时询问场景（A/C）+ 激活哪几节（多选，
+  串行执行）。"，对照 PRD 核查原型/Figma 一致性 + auto-revise-once），并非"把对话压成交接文档"的写手——
+  把它列为 opponent 的冗余对位在职能层面并不精确；真正重叠的是 handoff-protocol.md + Checkpoint 两处。
+
+  reject_reason 2 —— "Not better than incumbent：847 字节 6 行通用 stub vs 结构化/项目感知/自动恢复
+  机器，严格是子集(strictly a subset)"。事实核对：inventory 记录本单元 support_files: []、SKILL.md 为
+  6 行指令，"通用 stub"与"我方机器更结构化"事实成立。但"严格子集"今日不完全准确——opponent 含 ≥3 条我方
+  交接产出面当前不具备的元素：(a) 写 OS 临时目录（我方写 workspace，方向相反）、(b) 文档内嵌 "suggested
+  skills" 节（我方推荐在 workflow-graph 层、不入文档模板）、(c) 脱敏 API key/密码/PII（我方 handoff/
+  checkpoint 面 grep 脱敏|redact|敏感信息 = 0 命中）。这三条使"严格子集"这一措辞在事实层不再成立（不评价
+  其价值）。
+
+  reject_reason 3 —— "Active conflict：指示写 OS 临时目录，与强制的 docs/handoff/...checkpoint.md
+  位置冲突"。事实核对：仍成立。opponent："Save to the temporary directory of the user's OS - not the
+  current workspace."；我方 handoff-protocol 与 CLAUDE.md 均强制 workspace 内 docs/handoff/。落盘位置
+  今日仍相反。
+
+  reject_reason 4 —— "Trigger collision：名为 handoff 的 skill 会与 handoff-review 及 CLAUDE.md 的
+  handoff 路由撞词"。事实核对：结构上仍成立——我方有 handoff-review skill 及 CLAUDE.md 中多处 handoff/
+  Checkpoint 路由与协议引用，一个裸名 handoff 命令存在命名/路由撞车面。
+
+  reject_reason 5 —— "Low standalone quality：无示例、无测试/eval、正文极简"。事实核对：仍成立。
+  inventory support_files: []、SKILL.md 6 行、无任何示例或测试。
+notes: >
+  跑过的 grep：(1) grep -rilE "脱敏|redact|API key|密钥|password|敏感信息|PII" 于
+  handoff-protocol.md/handoff-review/CLAUDE.md = 0 命中；扩到 .claude/skills .claude/skill-os CLAUDE.md
+  仅命中 evolution/ADOPTED.md、adoption-log.jsonl、external-skills/RECOMMENDATIONS 与 vetting-registry
+  ——全是"对本 skill 做审查/记录"的 meta 文件，非任何交接产出指令，故 redact 机制的 absence_proof 成立。
+  (2) grep suggested skills/推荐路径 命中 CLAUDE.md 247 行"用于推荐路径、handoff gate、…下游建议"——
+  证实我方下游推荐在 workflow 层而非文档内嵌。意外事实：prior verdict 把 handoff-review 当作 opponent 的
+  冗余对位，但读全文后 handoff-review 是"交付审查质量门"而非"对话→交接文档写手"，二者职能不同（已在
+  prior_verdict_response 逐条核对，未下新结论）。opponent 单元 support_files 为空，SKILL.md 已逐行读到
+  argument-tailoring 末句。未打分、未落桶、未写采纳/拒绝建议。

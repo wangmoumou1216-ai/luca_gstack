@@ -75,3 +75,12 @@
 Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting-registry 去重，只报新东西
 ```
 配套文件：`RECOMMENDATIONS-2026-06-07.md`（推荐报告）、`vetting-registry.yaml`（已审清单）。
+
+## 2026-07-12 增补（mattpocock/skills 对标首批，vetting 见 framework-audit/mattpocock-benchmark-2026-07/）
+
+| # | Skill | 场景 | plan-agent 节点 | 角色 | 护栏 |
+|---|---|---|---|---|---|
+| 7 | codebase-design | 跨场景·工程段 | [工程规格]tech-spec seam 步·[技术实现]task_execution（WA 设计模块接口）·[brownfield]code-recon deletion-test | 深模块**词汇 primitive**（seam/接口即测试面/deletion test），被 tdd/systematic-debugging(port)/tech-spec/code-recon 引用 | 无品牌面；routing 词条**纯工程词**（红队裁定不收「接口设计」类设计邻词，防劫持设计管线） |
+| 8 | resolving-merge-conflicts | 框架自维护 + 工程尾段 | FUSION-RUNBOOK 步⑧（squash 冲突）·sync-upstream 双仓合并·WA git 冲突 | 按意图解决冲突（先溯源 commit/PR/issue 原意，绝不发明行为） | 「never --abort」绝对化已在 vetting 记录与 sync-upstream 逃生口的冲突——harness 层用户主权优先 |
+
+（另装 teach=个人 user-invoked 零框架触面不进本表；tdd 同日刷新至 391a2701：+seam 确认门 +tautological 反模式，-deep-modules/-interface-design/-refactoring〔用户拍板不留副本；deep-modules 内容由 #7 更完整覆盖〕）

@@ -1,0 +1,112 @@
+id: skill:in-progress/loop-me
+kind: skill
+tier: A
+opponent_sha256: 2b2c725f8b6e8b8f3f6e6bc2c18f0cf3ab029a270b5ac23132fbebdeb6b443aa
+opponent_summary: >
+  loop-me is a draft (in-progress bucket), user-invoked, model-invocation-disabled skill that
+  runs a stateful /grilling session whose only output is workflow specs. It supplies a "loop lens"
+  (a life is loops within loops; predictable loops are worth delegating) and a small shared
+  vocabulary reached for only when a workflow calls for it: Trigger (event vs schedule), Checkpoint,
+  Push right, Brief. It mandates nothing structural — a workflow gets no AI, no checkpoint and no
+  schedule unless the grilling proves it needs one. Specs live in workflows/*.md as source of truth;
+  NOTES.md holds the user's world model, interviewed first when thin. A spec is done only when an
+  implementer agent could build it without asking a single question.
+our_summary: >
+  The counterpart is muse-loop-orchestrate (a fork-only state-machine orchestrator running
+  extract to triage to design-map to open-design-generate + judge) plus the harness built-in
+  `loop` (a recurring-interval scheduler with no repo file). muse-loop starts one step downstream
+  of loop-me: its input is an already-articulated 语料/需求 (a REQ), not the discovery of
+  delegatable life-loops, and it never proposes loops the user did not raise. It mandates two
+  non-skippable human checkpoints (GATE-1/GATE-2, allow_standalone_override permanently false) —
+  the inverse of loop-me's "mandate nothing." The socratic one-question-at-a-time grilling analog
+  lives in a separate general skill, /brainstorm, which muse-loop dispatches at Phase 1.5 to build
+  a PRD. There is no push-right / deferred-checkpoint discipline and no decision-ready-brief concept.
+mechanisms:
+  - name: loop-lens-and-world-model
+    summary: >
+      The loop lens reframes a life as recurring, delegatable loops and drives proactive discovery
+      plus a NOTES.md world model interviewed before any spec is written.
+    opponent_evidence:
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "Picturing a life as loops within loops reveals how predictable its activities really are"
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "interview them about their world before specifying anything"
+    our_evidence:
+      - path: .claude/skills/office/muse-loop-orchestrate/SKILL.md
+        quote: "语料/需求描述，或已有 REQ-* 的下一步指令"
+    delta: >
+      loop-me starts from a life-loop lens: it hunts for recurring patterns worth delegating,
+      proposes loops the user has not noticed, and keeps a NOTES.md world model interviewed up front.
+      muse-loop-orchestrate starts one step downstream — its input is an already-articulated
+      语料/需求 (REQ); it never proposes loops the user did not raise and keeps no persistent
+      world-model file. Both aim at build-ready specs, but the discovery/framing front-end is absent
+      on our side.
+  - name: push-right-defer-human-checkpoint
+    summary: >
+      Push the single human checkpoint as late as possible, doing maximal work first, then present
+      a decision-ready brief (never the raw draft) so review is fast.
+    opponent_evidence:
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "defer the checkpoint as far as it will go. Do maximal work before involving the human"
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "The user reads a brief, not a draft. Speed of review is imperative."
+    absence_proof:
+      pattern: "push.right|defer the checkpoint|maximal work before"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      loop-me makes checkpoint placement a design variable: defer it, do maximal work first, and hand
+      the human a tight decision-ready brief rather than a draft. muse-loop-orchestrate instead fixes
+      its two checkpoints at set early stages (GATE-1 right after triage, GATE-2 right after
+      design-map) and has no brief-not-draft review-speed discipline. A grep for
+      push-right / defer-the-checkpoint / maximal-work-before across .claude/skills, .claude/skill-os
+      and CLAUDE.md returns 0.
+  - name: mandate-nothing-structural
+    summary: >
+      A workflow gets no AI, no checkpoint and no schedule unless the grilling proves it needs one —
+      structure is opt-in per spec.
+    opponent_evidence:
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "a workflow needs no AI, no checkpoint, and no schedule unless the grilling shows it does"
+    our_evidence:
+      - path: constitution.md
+        quote: "2个人类卡点不可省略"
+      - path: muse-loop/ARCHITECTURE.md
+        quote: "豁免机制等于绕开人类审批"
+    delta: >
+      loop-me mandates nothing structural — AI, checkpoints and schedules are all opt-in, added only
+      when grilling shows a given workflow needs them. muse-loop-orchestrate takes the inverse stance:
+      two human checkpoints are declared non-skippable (allow_standalone_override permanently false)
+      and an exemption mechanism was explicitly rejected as "绕开人类审批." Our structure is a fixed
+      floor for every REQ; loop-me's is a per-workflow variable.
+  - name: grilling-specialization-and-done-bar
+    summary: >
+      loop-me is a stateful /grilling session specialized to emit only workflow specs, done solely
+      when an implementer could build without a single open question.
+    opponent_evidence:
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "Use the grilling discipline — relentless, one question at a time, a recommended answer attached to each"
+      - path: skills/in-progress/loop-me/SKILL.md
+        quote: "A workflow spec is done when an implementer agent could build it without asking a single question"
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "I interrogate before I synthesize. I ask one question at a time."
+    delta: >
+      loop-me's engine is grilling (relentless, one-question-at-a-time, each with a recommended
+      answer) pointed at a single output type — workflow specs — with a zero-open-questions done bar.
+      On our side that socratic grilling lives in a separate general-purpose skill, /brainstorm, which
+      muse-loop-orchestrate dispatches at Phase 1.5 to produce a PRD; muse-loop itself is an
+      orchestrator/state-machine, not a grilling interviewer, and its output is REQ-to-prototype specs
+      rather than delegatable-workflow specs.
+
+notes: >
+  Opponent support_files is empty; only SKILL.md read (to last line). loop-me delegates to a separate
+  /grilling skill (not in this unit's file set, so not read). Counterpart `loop` is the Claude Code
+  harness built-in recurring-interval scheduler (no repo file) — it maps only to loop-me's Trigger
+  "schedule" vocabulary item (running on an interval), not to loop-me's spec-grilling nature. The
+  referenced constitution.md lives at fork root (/constitution.md), not under muse-loop/; ARCHITECTURE.md
+  and constitution.md both sit under the repo, verified. Greps run (all from repo root): absence for
+  push-right — grep -rilE "push.right|defer the checkpoint|maximal work before" .claude/skills
+  .claude/skill-os CLAUDE.md => 0 hits; loop-lens discovery ("loops within loops"/"delegat") absent in
+  .claude/skills, .claude/skill-os, CLAUDE.md. All opponent and our quotes were grep -F confirmed
+  (count 1) before writing.

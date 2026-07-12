@@ -1,0 +1,140 @@
+id: skill:misc/git-guardrails-claude-code
+kind: skill
+tier: A
+opponent_sha256: 03c4de7613c712aea336d64c467ea3ed14be2cbd52345925fe949c75c01c29f7
+opponent_summary: >
+  一个 model-invoked 的"安装配方"型 skill：把一段 PreToolUse Bash hook
+  (block-dangerous-git.sh) 装进 Claude Code 的 settings.json。这段约 25 行的 bash
+  从 stdin 读 tool_input.command，用 grep -qE 去撞一张固定的危险 git 模式表（git push
+  所有变体、reset --hard、clean -f/-fd、branch -D、checkout ./restore ./push --force），
+  命中就往 stderr 打 BLOCKED 消息并 exit 2，在命令执行前否决它。SKILL.md 把用户走一遍五步：
+  问安装范围（本项目 .claude/settings.json vs 全局 ~/.claude/settings.json）、拷贝并 chmod
+  脚本、把 hook 合并进 settings.json 的 PreToolUse 数组而不覆盖其它设置、问是否增删拦截模式、
+  最后用一条手动 echo-pipe 测试验证退出码为 2。
+our_summary: >
+  最近对应物是 careful skill（.claude/skills/office/careful），它自己也带一段 PreToolUse
+  Bash hook（check-careful.sh），通过 SKILL.md frontmatter 声明。这段 hook 同样从 stdin 读、
+  用一条 grep -Eiq 正则去撞、命中即 exit 2 拦截——但它的集合是 rm -rf、git reset --hard、
+  git push --force（只拦 force，不拦裸 push）、DROP TABLE、kubectl delete。它是 skill 作用域的：
+  经 careful skill 的 frontmatter 注册，只在 careful 被激活时生效，并非对每次 Bash 常开。项目
+  .claude/settings.json 与全局 ~/.claude/settings.json 都没有注册任何常开的 git 拦截 hook（它们
+  的 PreToolUse 只跑 project-scope-guard 和一个通知器）。harness 内建的 update-config skill 可以
+  按需生成这样一个 settings.json hook，CLAUDE.md 也把 git push 列为需写 checkpoint 的不可逆操作，
+  但两者都没有装一个常开的裸 git push 拦截。
+mechanisms:
+  - name: exit-code-2-block
+    summary: 命中危险模式即向 stderr 打消息并 exit 2，在命令执行前否决——即 subverdict "prove-it-bites-exit-code-2"。
+    opponent_evidence:
+      - path: skills/misc/git-guardrails-claude-code/scripts/block-dangerous-git.sh
+        quote: 'The user has prevented you from doing this." >&2'
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'Should exit with code 2 and print a BLOCKED message to stderr.'
+    our_evidence:
+      - path: .claude/skills/office/careful/bin/check-careful.sh
+        quote: 'Careful blocked a potentially destructive command.'
+      - path: .claude/skills/office/careful/bin/check-careful.sh
+        quote: 'if this operation is intentional. EOF exit 2'
+    delta: >
+      两侧都真"咬"：对方脚本命中即 exit 2，我方 check-careful.sh 命中危险命令时也走 exit 2 拦截，
+      机制形态一致（stdin 读命令 → grep → exit 2）。此机制层面我方有等价物，不缺席。差异在触发
+      集合与作用域，见下两个机制。
+  - name: git-danger-pattern-set
+    summary: 被拦截的具体 git 模式集合——对方是纯 git 且覆盖裸 push，我方 careful 更窄（只 force-push）但含非 git 项。
+    opponent_evidence:
+      - path: skills/misc/git-guardrails-claude-code/scripts/block-dangerous-git.sh
+        quote: '"git push" "git reset --hard"'
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'git push` (all variants including `--force`)'
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'git branch -D'
+    our_evidence:
+      - path: .claude/skills/office/careful/bin/check-careful.sh
+        quote: 'rm[[:space:]]+-rf|git[[:space:]]+reset[[:space:]]+--hard|git[[:space:]]+push[^[:cntrl:]]*--force|DROP[[:space:]]+TABLE|kubectl[[:space:]]+delete'
+      - path: .claude/skills/office/careful/SKILL.md
+        quote: 'rm -rf、DROP TABLE、force-push、git reset --hard、kubectl delete'
+    delta: >
+      对方专攻 git，拦裸 git push（所有变体）、reset --hard、clean -f/-fd、branch -D、
+      checkout ./restore .。我方 careful 拦 git 项只有 reset --hard 和 push --force（正则
+      要求 push 后必须跟 --force，裸 push 不命中），且额外覆盖 rm -rf、DROP TABLE、kubectl
+      delete 这些非 git 项。因此对方独有：裸 push、git clean、branch -D、checkout ./restore .；
+      我方独有：rm -rf、DROP TABLE、kubectl delete（对方按设计只管 git）。
+  - name: always-on-settings-install
+    summary: 对方是把 hook 装进 settings.json 使其对每次 Bash 常开的安装配方；我方无常开 git 拦截 hook，careful hook 只在 skill 激活时生效。
+    opponent_evidence:
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'install for **this project only** (`.claude/settings.json`) or **all projects**'
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'merge the hook into existing `hooks.PreToolUse` array'
+    absence_proof:
+      pattern: 'git .*(push|clean|branch -D|checkout \.|restore \.)'
+      scope: '.claude/hooks .claude/settings.json .claude/settings.local.json'
+      hits: 0
+    delta: >
+      对方让用户选安装范围（项目 vs 全局）并把 hook 合并进 settings.json 的 PreToolUse，从而对
+      每次 Bash 调用常开、与是否激活某 skill 无关。我方两个 settings.json 的 PreToolUse 都不含任何
+      git 拦截逻辑（只跑 project-scope-guard 与通知器），careful 的 hook 是经 SKILL.md frontmatter
+      的 skill 作用域注册，只在 careful 被调用时才生效。harness 内建 update-config 可按需生成同款
+      settings hook，但当前并未安装任何常开的裸 git 拦截。
+  - name: customize-and-verify-recipe
+    summary: 对方作为交互式配方，额外问用户是否增删拦截模式、并给一条手动 echo-pipe 自测；我方 careful 是固定表、无这两步。
+    opponent_evidence:
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'Ask if user wants to add or remove any patterns from the blocked list.'
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: 'Run a quick test:'
+    absence_proof:
+      pattern: 'add or remove|customiz|Ask (if|the) user|quick test'
+      scope: '.claude/skills/office/careful'
+      hits: 0
+    delta: >
+      对方是一段有安装向导的配方：装完主动问用户要不要增删模式（并据此改脚本），再给一条
+      echo-pipe 手动自测确认退出码 2。我方 careful 只有一张写死的固定表，没有面向用户的
+      customization 提问步骤，也没有随附的自测配方；改 careful 的拦截集合需要直接编辑其脚本。
+prior_verdict_response: |
+  本单元 2026-06-07 旧裁决 REJECTED（vetting-registry.yaml:798-819，hard.non_redundancy=FAIL），
+  逐条理由 + 今日事实核对（只核事实，不下新结论）：
+
+  1) 旧理由「Redundant and not demonstrably better：一段 ~20 行 bash hook，用户可用现有
+     update-config trivially 生成，能接进其成熟 hook stack（route-guard.mjs 24KB、session-sync.mjs）；
+     候选是更薄的 standalone 版」。
+     事实核对：脚本今日实测 26 行（含 shebang/空行，有效逻辑约 13 行），确为薄壳。update-config
+     今日仍作为 harness 内建 skill 存在、可 author settings.json hook——但事实上当前两个 settings.json
+     都没有安装任何常开 git 拦截 hook（grep 0 命中）。我方最近的既有拦截物是 careful 的 skill 作用域
+     hook，它 exit 2 会咬，但只拦 push --force、不拦裸 push，且非常开。所以"可 trivially 生成"成立，
+     "已经生成/已常开覆盖裸 push"不成立。
+
+  2) 旧理由「Intent already covered by policy：CLAUDE.md 已强制无提示不 git push、默认分支先开分支；
+     候选只是把约定俗成的规则加了机械执行」。
+     事实核对：该措辞（"Commit or push only when the user asks; if on default branch, branch first"）
+     今日在项目 CLAUDE.md 里查不到——项目 CLAUDE.md 关于 git push 只有第 86 行把它列为写 checkpoint
+     的不可逆操作；那条 push-only-when-asked 政策的原文实际在 harness 系统提示（Bash/git 段），不是仓库
+     文件。且有一条新事实与旧理由方向相反：auto-memory MEMORY.md 现有条目
+     "高置信改动默认 commit+push"（2026-07-11）——验证过且方向已授权的改动做完直接提交并推送、不逐次
+     开口（force-push/换分支仍要问）。即今日的个人记忆默认允许非提示 push（高置信场景），与旧理由所依据的
+     "政策已禁止无提示 push"这一事实基础发生了变化。
+
+  3) 旧理由「Adoption signal is monorepo-inflated：119,761 stars 属于 mattpocock/skills 整仓、非本 skill；
+     真实 per-skill 采用未知」。
+     事实核对：本次仍是对 mattpocock/skills 整仓的浅克隆（commit 391a2701），本 skill 只是其中一个目录；
+     从仓库文件无法把单 skill 采用数从整仓 star 数里分离出来——该事实今日仍成立。star 绝对值今日无法从
+     本地文件复核（无网络）。
+
+  4) 旧理由「Off the stated gap：对 CRM 产品设计管线零价值，是一次性 git 安全配方、无可复用设计能力」。
+     事实核对：本次对标的透镜已由 matrix 标为 revisit-under-new-lens（reconciliation_kind），不再是
+     "CRM 产品设计管线"这一旧口径，而是框架能力审计。"是 git 安全配方、无设计能力"这一对象事实本身没变；
+     变的是评估透镜。
+
+  5) 旧理由「Thin skill：无自动化测试/evals，验证只是一条手动 echo-pipe 命令」。
+     事实核对：今日仍成立。SKILL.md 的验证步骤是单条 echo-pipe 手动测试（第 92 行），本单元 support_files
+     只有脚本本身、无测试/eval 文件。（附注：我方 careful 侧同样没有随附自测配方——见 customize-and-verify-recipe
+     机制的 absence_proof。）
+notes: >
+  跑过的 grep：(a) grep -rniE "git .*(push|clean|branch -D|checkout \.|restore \.)"
+  .claude/hooks .claude/settings.json .claude/settings.local.json → 0 命中（mech
+  always-on-settings-install 的 absence_proof）；(b) grep -rniE "add or remove|customiz|Ask
+  (if|the) user|quick test" .claude/skills/office/careful → 0 命中（mech customize-and-verify-recipe）。
+  意外事实：careful 的 hook 是 skill 作用域（SKILL.md frontmatter 里用 ${CLAUDE_SKILL_DIR} 注册），
+  两个 settings.json 的 PreToolUse 都不含 git 拦截（项目侧只有 project-scope-guard.mjs，全局侧只有
+  swiftbar 通知器）——即我方无常开 git guardrail。careful 正则要求 push 后必跟 --force，裸 git push
+  不被拦。update-config 与 verify/loop 均为 harness 内建 skill、仓库无文件，只在文字层面说明，未编造引文。
+  另一新事实：auto-memory MEMORY.md 现默认高置信验证改动可直接 commit+push（与旧裁决理由2的政策事实基础相反）。

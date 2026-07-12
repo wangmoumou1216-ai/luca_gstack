@@ -1,0 +1,29 @@
+id: mech:hard-soft-dependency-adr
+kind: mechanism
+tier: A
+dossier: dossiers/mech--hard-soft-dependency-adr.yaml
+
+scores:
+  D: 2
+  I: 6
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - hard-vs-soft-dependency-classification：+1。缺席成立（grep 0），但**前提条件也缺席**
+    ——该分类管的是"skill 对 /setup 播种配置的依赖强度"，我方无 per-repo setup 配置层
+    （GAP-issue-tracker-integration 提案未裁前无被分类物）。我方 standalone/workflow、
+    handoff 分级按不同轴分层，主职能覆盖。
+  - setup-pointer-anti-cargo-cult：+1。"指针只放承重处"的反冗余原则本身可取；与我方
+    最小注释/懒加载/只放指针同向，缺的是"依赖指针"这一具体应用场景的成文。
+  I=6。C=S。E=3（ADR 在对方仓真实约束行为，双向证据）。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。前提基础设施（setup 播种层）不存在，分类无处着力；若
+  GAP-issue-tracker-integration 获裁开启，此 ADR 模式随 tracker 簇一并复议。
+  anti-cargo-cult 原则作为一行收进 skill-authoring 资产的修剪节（搭车 writing-great-skills
+  落地，不单独立项）。
+
+reconciliation: null
+landing_estimate: null

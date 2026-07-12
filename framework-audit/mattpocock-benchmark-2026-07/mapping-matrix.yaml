@@ -1,0 +1,516 @@
+# P1 映射矩阵 — 对方 51 单元 → 我方 counterpart + tier + prior_verdict
+# counterpart 为 P1 断言（据两侧底账），P2 逐行双侧证据核验。
+# tier: A=有现任 counterpart 头对头深评 / B=无 counterpart 走 7 维门禁 / C=快裁（读全文+双侧证据+一段式）
+# 机制单元一律 Tier A 处理（问：我方有无此约定/技法）。
+# thin-shell 标注：其价值 = 所调 primitive + M9(薄编排)，dossier 只答"组合入口是否额外增值"。
+
+meta:
+  opponent_commit: 391a2701dd948f94f56a39f7533f8eea9a859c87
+  tier_counts: { A_skill: 20, B_skill: 6, C_skill: 13, mechanism: 12 }
+  reconciliation_units: [skill:productivity/handoff, skill:productivity/grill-me, skill:misc/git-guardrails-claude-code, skill:engineering/tdd]
+
+rows:
+
+# ========== Tier A skills（有现任 counterpart，头对头深评）==========
+
+- id: skill:engineering/ask-matt
+  kind: skill
+  tier: A
+  our_counterpart: [office, .claude/hooks/route-guard.mjs, .claude/skill-os/skill-routing-map.yaml]
+  counterpart_note: "router over skills；我方路由是 route-guard 词表+语义兜底+office 向导，非 user-invoked skill 形态"
+  prior_verdict: none
+  subverdicts: [router-as-user-skill-vs-hook-routing]
+  tier_rationale: 直接功能对位（路由/发现），机制形态不同值得头对头
+  status: mapped
+
+- id: skill:engineering/grill-with-docs
+  kind: skill
+  tier: A
+  thin_shell: true
+  our_counterpart: [brainstorm]
+  counterpart_note: "薄壳=/grilling+/domain-modeling；价值 rolls into skill:grilling + skill:domain-modeling + M9"
+  prior_verdict: none
+  tier_rationale: 有 counterpart(brainstorm)，但深度在其 primitive
+  status: mapped
+
+- id: skill:engineering/triage
+  kind: skill
+  tier: A
+  our_counterpart: [muse-req-triage]
+  counterpart_note: "★直接对位：批量 issue/需求 triage 状态机 vs muse-req-triage 打分+分类；对方有 verify-before-grill + .out-of-scope 检查"
+  prior_verdict: none
+  subverdicts: [verify-before-grill, redundancy-prior-rejection-check, agent-brief-drift-resistance]
+  tier_rationale: 最强直接对位，双方都是 triage 骨架
+  status: mapped
+
+- id: skill:engineering/improve-codebase-architecture
+  kind: skill
+  tier: A
+  our_counterpart: [code-recon, ux-audit]
+  counterpart_note: "找 deepening opportunities + HTML 报告；code-recon 是只读逆向(无 deepening)，ux-audit 是评审报告范式"
+  prior_verdict: none
+  subverdicts: [deletion-test, html-report-to-tmp, vocab-forcing-never-say-list]
+  tier_rationale: 部分对位(recon+audit)，机制(deletion-test/报告)可分裁
+  status: mapped
+
+- id: skill:engineering/setup-matt-pocock-skills
+  kind: skill
+  tier: A
+  our_counterpart: [scripts/project.sh, CONTEXT.md]
+  counterpart_note: "per-repo 配置注入(issue-tracker/labels/domain 布局) vs project.sh new/switch 建骨架+注入记忆"
+  prior_verdict: none
+  subverdicts: [recommend-answer-then-one-word-accept, tracker-agnostic-adapters]
+  tier_rationale: 功能对位(项目配置注入)，交互手法可借
+  status: mapped
+
+- id: skill:engineering/to-spec
+  kind: skill
+  tier: A
+  our_counterpart: [tech-spec, brainstorm]
+  counterpart_note: "对话→spec/PRD 发布到 tracker；defining constraint=不重新访谈只综合，与我方 brainstorm→PRD、tech-spec 对位"
+  prior_verdict: none
+  subverdicts: [no-re-interview-constraint, seam-sketch-reuse-highest-seam]
+  tier_rationale: 双方都有 需求→规格 节点
+  status: mapped
+
+- id: skill:engineering/to-tickets
+  kind: skill
+  tier: A
+  our_counterpart: [task-plan]
+  counterpart_note: "★spec→tracer-bullet 票+blocking edges vs task-plan DEV-NNN+断言矩阵+依赖字段；对方有 blast-radius/expand-contract"
+  prior_verdict: none
+  subverdicts: [tracer-bullet-vertical-slice, blast-radius-expand-contract, native-blocking-links-parallel-agents]
+  tier_rationale: 强对位(任务拆解)，竖切/爆炸半径机制高价值
+  status: mapped
+
+- id: skill:engineering/wayfinder
+  kind: skill
+  tier: A
+  our_counterpart: [.claude/agents/plan-agent.md, PROGRESS.md, docs/handoff]
+  counterpart_note: "★多 session fog-of-war 规划(共享地图/investigation tickets) vs plan-agent+PROGRESS；fog-of-war 建模我方无"
+  prior_verdict: none
+  subverdicts: [fog-of-war-frontier-destination, single-ticket-per-session, name-not-hash-reference, plan-dont-do]
+  tier_rationale: 对位(规划)但设计密度最高，多机制可分裁
+  status: mapped
+
+- id: skill:engineering/implement
+  kind: skill
+  tier: A
+  thin_shell: true
+  our_counterpart: [orchestrator, work-agent-template]
+  counterpart_note: "薄壳=tdd+typecheck+code-review+commit 编排；价值 rolls into 那些 primitive + M9"
+  prior_verdict: none
+  tier_rationale: 有 counterpart(orchestrator)，深度在 primitive
+  status: mapped
+
+- id: skill:engineering/prototype
+  kind: skill
+  tier: A
+  our_counterpart: [html-prototype, open-design]
+  counterpart_note: "一次性代码回答一个设计问题(logic TUI / UI 变体) vs 我方精修设计原型；哲学不同(丢弃 vs 精修)"
+  prior_verdict: none
+  subverdicts: [throwaway-answers-one-question, structurally-different-variants, throwaway-branch-primary-source]
+  tier_rationale: 对位(原型)但定位对立，值得头对头
+  status: mapped
+
+- id: skill:engineering/research
+  kind: skill
+  tier: A
+  our_counterpart: [deepresearch]
+  counterpart_note: "轻量 background-agent 主线不阻塞查 primary source vs 我方 deepresearch 重型 5-8 agent+共识矩阵；轻重对比"
+  prior_verdict: none
+  subverdicts: [background-agent-non-blocking, primary-source-trace]
+  tier_rationale: 对位(研究)，轻量委托手法可借
+  status: mapped
+
+- id: skill:engineering/tdd
+  kind: skill
+  tier: A
+  our_counterpart: [code-hygiene, verify]
+  counterpart_note: "red-green TDD 参考 vs code-hygiene 验证铁律+verify 跑应用；对方 tautological-test 反模式我方无"
+  prior_verdict: "APPROVED-90 (2026-06-07, vetting-registry:210-250)"
+  needs_reconciliation: true
+  reconciliation_kind: execution-debt
+  subverdicts: [tautological-test-antipattern, test-at-agreed-seam, interface-is-test-surface]
+  tier_rationale: 已 APPROVED 但批而未装；深评回答新透镜下 fit 变化 + 是否现在装
+  status: mapped
+
+- id: skill:engineering/domain-modeling
+  kind: skill
+  tier: A
+  our_counterpart: [CONTEXT.md, .claude/skills/office/references/]
+  counterpart_note: "主动建领域模型(挑战词汇/收敛/压测边界/inline 更新 CONTEXT) vs 我方 CONTEXT.md 被动写；active-vs-passive 差异"
+  prior_verdict: none
+  subverdicts: [active-vs-passive-modeling, avoid-alias-convergence, inline-not-batch-update]
+  tier_rationale: 对位(CONTEXT.md)但主动建模机制我方缺
+  status: mapped
+
+- id: skill:engineering/code-review
+  kind: skill
+  tier: A
+  our_counterpart: [code-hygiene, redteam, quality-gate, design-review]
+  counterpart_note: "★两轴(standards+spec)并行子 agent 防偏见+拒绝跨轴排名 vs 我方多个审查 skill；两轴隔离设计我方无"
+  prior_verdict: none
+  subverdicts: [two-axis-parallel-antibias, refuse-cross-axis-ranking, fowler-baseline-fallback]
+  tier_rationale: 强对位(代码审查)，防偏见架构高价值
+  status: mapped
+
+- id: skill:productivity/writing-great-skills
+  kind: skill
+  tier: A
+  our_counterpart: [.claude/skill-os/skill-invariants.md, .claude/skill-os/extraction-bar.md]
+  counterpart_note: "★★写 skill 的元词汇(Predictability+20 术语+6 failure mode) vs skill-invariants(守哪些不能改)；视角互补：教怎么写 vs 守边界"
+  prior_verdict: none
+  subverdicts: [predictability-root-virtue, failure-mode-taxonomy, information-hierarchy-ladder]
+  tier_rationale: 最高价值元资产；与 invariants 视角互补非替换
+  status: mapped
+
+- id: skill:productivity/grilling
+  kind: skill
+  tier: A
+  our_counterpart: [brainstorm]
+  counterpart_note: "★可复用逼问 primitive(被 5 skill 调用) vs brainstorm 内嵌逼问环；facts/decisions 分离+confirmation gate 我方未显式抽出"
+  prior_verdict: none
+  subverdicts: [facts-vs-decisions-split, one-question-at-a-time, confirmation-gate-no-run-before-consensus, reusable-primitive]
+  tier_rationale: 对位(逼问)但 primitive 抽象+抢跑防御高价值
+  status: mapped
+
+- id: skill:productivity/handoff
+  kind: skill
+  tier: A
+  our_counterpart: [.claude/skills/office/references/handoff-protocol.md, handoff-review, "CLAUDE.md Checkpoint"]
+  counterpart_note: "对话→handoff 文档(写 OS temp/不重复已存在内容/脱敏) vs 我方 handoff-protocol+Checkpoint"
+  prior_verdict: "REJECTED (2026-06-07, vetting-registry:630-644, redundant_with handoff-review+Checkpoint)"
+  needs_reconciliation: true
+  reconciliation_kind: revisit-under-new-lens
+  subverdicts: [handoff-vs-compact-distinction, no-duplicate-reference-only]
+  tier_rationale: 已 REJECTED；新透镜下是否翻案须逐条对账
+  status: mapped
+
+- id: skill:productivity/grill-me
+  kind: skill
+  tier: A
+  thin_shell: true
+  our_counterpart: [brainstorm]
+  counterpart_note: "薄壳=/grilling(无代码库)；价值 rolls into skill:grilling + M9"
+  prior_verdict: "REJECTED (2026-06-07, vetting-registry:847-864, redundant_with brainstorm)"
+  needs_reconciliation: true
+  reconciliation_kind: revisit-under-new-lens
+  tier_rationale: 已 REJECTED；薄壳深度在 grilling primitive
+  status: mapped
+
+- id: skill:misc/git-guardrails-claude-code
+  kind: skill
+  tier: A
+  our_counterpart: [careful, update-config]
+  counterpart_note: "装 PreToolUse hook 拦危险 git vs careful skill(危险操作警告)+update-config(能生成同款 hook)"
+  prior_verdict: "REJECTED (2026-06-07, vetting-registry:798-819)"
+  needs_reconciliation: true
+  reconciliation_kind: revisit-under-new-lens
+  subverdicts: [prove-it-bites-exit-code-2]
+  tier_rationale: 已 REJECTED；新透镜下重估
+  status: mapped
+
+- id: skill:in-progress/loop-me
+  kind: skill
+  tier: A
+  our_counterpart: [muse-loop-orchestrate, loop]
+  counterpart_note: "grill 成 workflow 规格(push-right/checkpoint) vs muse-loop-orchestrate 需求→原型 loop；push-right 手法可借；对方是 draft"
+  prior_verdict: none
+  subverdicts: [push-right-defer-human-checkpoint, mandate-nothing-structural]
+  tier_rationale: 有 counterpart(muse-loop)，draft 质量由 E 维封顶
+  status: mapped
+
+# ========== Tier B skills（无 counterpart，7 维门禁）==========
+
+- id: skill:engineering/diagnosing-bugs
+  kind: skill
+  tier: B
+  our_counterpart: none
+  absence_proof_hint: "grep -ril 'diagnos\\|debug' .claude/skills → 无调试 skill"
+  counterpart_note: "★纪律化调试(red-capable 反馈环硬门禁+falsifiable 假设+tagged-log) 我方完全无对应"
+  prior_verdict: none
+  tier_rationale: 无现任，高价值新候选，走 7 维门禁
+  status: mapped
+
+- id: skill:engineering/codebase-design
+  kind: skill
+  tier: B
+  our_counterpart: none
+  absence_proof_hint: "grep -ril 'deep module\\|seam' .claude/skills → 无深模块词汇"
+  counterpart_note: "深模块共享词汇(8 词 glossary+deletion test) 被 tdd/improve 复用；我方工程侧无此词汇 primitive"
+  prior_verdict: none
+  tier_rationale: 无现任，新候选
+  status: mapped
+
+- id: skill:engineering/resolving-merge-conflicts
+  kind: skill
+  tier: B
+  our_counterpart: none
+  absence_proof_hint: "careful 只拦危险 git，无冲突解决 skill"
+  counterpart_note: "按意图非文本解决 merge 冲突(回溯 primary source) 我方无"
+  prior_verdict: none
+  tier_rationale: 无现任，新候选（注：对方自身 promoted 契约缺口）
+  status: mapped
+
+- id: skill:productivity/teach
+  kind: skill
+  tier: B
+  our_counterpart: none
+  absence_proof_hint: "无教学 skill；luca 有 Obsidian wiki 但非 gstack 内"
+  counterpart_note: "跨 session 教学工作区(认知科学:storage strength/ZPD/spacing) 我方无"
+  prior_verdict: none
+  tier_rationale: 无现任，新候选（与 luca 个人 wiki 相关但环境外）
+  status: mapped
+
+- id: skill:misc/setup-pre-commit
+  kind: skill
+  tier: B
+  our_counterpart: none
+  absence_proof_hint: "我方有 hooks 但无 pre-commit 安装器"
+  counterpart_note: "装 Husky+lint-staged+Prettier pre-commit hook；工程 setup 类"
+  prior_verdict: none
+  tier_rationale: 无现任，新候选
+  status: mapped
+
+- id: skill:in-progress/setup-ts-deep-modules
+  kind: skill
+  tier: B
+  our_counterpart: none
+  absence_proof_hint: "无 TS 深模块/dependency-cruiser 接线"
+  counterpart_note: "dependency-cruiser 接入使包成深模块(4 error 规则+'证明规则咬人') 我方无；draft 但 prove-it-bites 范例"
+  prior_verdict: none
+  tier_rationale: 无现任，新候选（draft）
+  status: mapped
+
+# ========== Tier C skills（快裁：读全文+双侧证据+一段式，只过硬门）==========
+
+- id: skill:misc/migrate-to-shoehorn
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "作者自己库(@total-typescript/shoehorn)的测试迁移器；作者环境绑定"
+  prior_verdict: none
+  tier_rationale: author-specific，无转移价值，快裁
+  status: mapped
+
+- id: skill:misc/scaffold-exercises
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "作者 aihero 课程平台专用脚手架；环境绑定"
+  prior_verdict: none
+  tier_rationale: author-specific，快裁
+  status: mapped
+
+- id: skill:personal/edit-article
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "编辑文章(信息 DAG/≤240 字符段)；personal bucket；与 luca wiki/写作有微弱切点"
+  prior_verdict: none
+  tier_rationale: personal，快裁（写作机制在 in-progress 写作三部曲已覆盖）
+  status: mapped
+
+- id: skill:personal/obsidian-vault
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "管理作者 Obsidian vault(硬编码路径)；luca 也有 Obsidian wiki（巧合，但对方环境绑定）"
+  prior_verdict: none
+  tier_rationale: author-env-bound，快裁（但记录 luca-wiki 切点供 opportunity）
+  status: mapped
+
+- id: skill:in-progress/claude-handoff
+  kind: skill
+  tier: C
+  our_counterpart: [handoff-review]
+  counterpart_note: "handoff 变体：spawn 后台 agent 立即接手(claude --bg) vs 我方 Agent tool bg spawn；draft stub 18 行"
+  prior_verdict: none
+  tier_rationale: draft-stub，机制=后台交接，快裁
+  status: mapped
+
+- id: skill:in-progress/wizard
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "生成交互式 bash wizard(template.sh 库固定/只填 stage)；draft，prove-it-bites 切点"
+  prior_verdict: none
+  tier_rationale: draft-stub，工程 setup 工具，快裁
+  status: mapped
+
+- id: skill:in-progress/writing-beats
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "写作 exploit 阶段(beat 旅程+grounding)；写作方法论三部曲之一"
+  prior_verdict: none
+  tier_rationale: 写作方法论(非 gstack 设计管线核心)，快裁
+  status: mapped
+
+- id: skill:in-progress/writing-fragments
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "写作 explore 阶段(异质 fragment/leading word 最有价值)；写作三部曲"
+  prior_verdict: none
+  tier_rationale: 写作方法论，快裁（但 leading-word 洞见归 M3）
+  status: mapped
+
+- id: skill:in-progress/writing-shape
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "写作 exploit(逐段塑形+争论 format)；写作三部曲"
+  prior_verdict: none
+  tier_rationale: 写作方法论，快裁
+  status: mapped
+
+- id: skill:deprecated/design-an-interface
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "并行子 agent 生成多个极端不同接口；★已被 codebase-design/DESIGN-IT-TWICE 吸收——弃用理由=机制信号"
+  prior_verdict: none
+  tier_rationale: deprecated，快裁须答"matt 弃用理由对我方教训"
+  status: mapped
+
+- id: skill:deprecated/qa
+  kind: skill
+  tier: C
+  our_counterpart: [ux-audit]
+  counterpart_note: "交互 QA→开 GitHub issue；★已被 triage 吸收——bucket 生命周期信号"
+  prior_verdict: none
+  tier_rationale: deprecated，快裁须答弃用教训
+  status: mapped
+
+- id: skill:deprecated/request-refactor-plan
+  kind: skill
+  tier: C
+  our_counterpart: none
+  counterpart_note: "访谈式极小 commit 重构计划；★已被 to-spec/to-tickets 取代——毕业信号"
+  prior_verdict: none
+  tier_rationale: deprecated，快裁须答弃用教训
+  status: mapped
+
+- id: skill:deprecated/ubiquitous-language
+  kind: skill
+  tier: C
+  our_counterpart: [CONTEXT.md]
+  counterpart_note: "从对话抽 DDD 词汇表(表格式)；★被 domain-modeling+CONTEXT.md(prose 非表格)取代——设计取舍信号"
+  prior_verdict: none
+  tier_rationale: deprecated，快裁须答弃用教训（prose vs table 取舍对我方有借鉴）
+  status: mapped
+
+# ========== 机制单元（12，跨切框架约定/技法，Tier A 处理）==========
+
+- id: mech:invocation-cost-model
+  kind: mechanism
+  tier: A
+  our_counterpart: [.claude/hooks/route-guard.mjs, CLAUDE.md "隐藏/高级 skill", .claude/skill-os/skill-routing-map.yaml]
+  counterpart_note: "user vs model-invoked 显式成本模型(context load vs cognitive load) vs 我方一级可见/隐藏 skill 二分(无显式成本理论)"
+  prior_verdict: none
+  tier_rationale: 我方有隐藏机制但无成本理论，头对头
+  status: mapped
+
+- id: mech:writing-great-skills-metavocab
+  kind: mechanism
+  tier: A
+  our_counterpart: [.claude/skill-os/skill-invariants.md, .claude/skill-os/extraction-bar.md]
+  counterpart_note: "写 skill 的可教元词汇 vs skill-invariants(守边界)+extraction-bar(经验门槛)；我方无'如何写好 skill'的正面词汇"
+  prior_verdict: none
+  tier_rationale: 最高价值机制，与现任互补
+  status: mapped
+
+- id: mech:leading-word
+  kind: mechanism
+  tier: A
+  our_counterpart: none
+  absence_proof_hint: "我方 SKILL.md 无 leading-word/Leitwort 显式约定"
+  counterpart_note: "把 skill 锚在压缩概念招募预训练先验(fog-of-war/tracer-bullet/deep-module) 我方无显式手法"
+  prior_verdict: none
+  tier_rationale: 写作技法，我方无对应
+  status: mapped
+
+- id: mech:avoid-alias-table
+  kind: mechanism
+  tier: A
+  our_counterpart: none
+  absence_proof_hint: "我方无 _Avoid_ 别名收敛表约定"
+  counterpart_note: "选 canonical 词+列避免同义词强制语言收敛 我方无(CONTEXT.md 有词汇但无 _Avoid_ 结构)"
+  prior_verdict: none
+  tier_rationale: 语言收敛技法，我方无
+  status: mapped
+
+- id: mech:out-of-scope-registry
+  kind: mechanism
+  tier: A
+  our_counterpart: [.claude/skill-os/evolution/gaps-register.yaml, .out-of-scope handling in vetting-registry]
+  counterpart_note: "★.out-of-scope/ 被拒需求库(防反复重议) vs 我方 gaps-register(缺口)+vetting-registry(已审)；概念相近但我方无'被拒需求'专库"
+  prior_verdict: none
+  tier_rationale: 机构记忆机制，部分对位
+  status: mapped
+
+- id: mech:promoted-contract
+  kind: mechanism
+  tier: A
+  our_counterpart: [.claude/skill-os/capability-parity.json, scripts/check-capability-parity.mjs, "治理轨道六动作"]
+  counterpart_note: "README/plugin.json/docs 三处机器可校验同步 vs 我方 capability-parity 双仓锚点+治理轨道六动作登记；同构(一致性契约)"
+  prior_verdict: none
+  tier_rationale: 一致性契约，强对位
+  status: mapped
+
+- id: mech:hard-soft-dependency-adr
+  kind: mechanism
+  tier: A
+  our_counterpart: none
+  absence_proof_hint: "我方无 hard/soft 依赖显式区分的 ADR"
+  counterpart_note: "hard vs soft 依赖 ADR(避免 cargo-cult setup 指针) 我方无显式区分"
+  prior_verdict: none
+  tier_rationale: 依赖管理约定，我方无
+  status: mapped
+
+- id: mech:prove-it-bites
+  kind: mechanism
+  tier: A
+  our_counterpart: [code-hygiene "验证铁律", .claude/agents/plan-agent.md "行为级断言", verify]
+  counterpart_note: "★观察到 fail 再 pass/验 exit code/粘命令+输出 vs 我方完成前验证铁律+行为级断言；理念高度一致，可互证强化"
+  prior_verdict: none
+  tier_rationale: 验证纪律，强对位（可能是补强而非新增）
+  status: mapped
+
+- id: mech:thin-orchestration-thick-primitive
+  kind: mechanism
+  tier: A
+  our_counterpart: [.claude/skills/office/references/, "Skill-first Graph-optional"]
+  counterpart_note: "薄壳散文调 primitive vs 我方 shared-refs 复用+Skill-first；我方靠 references 复用但无'薄壳 user-invoked 入口'模式"
+  prior_verdict: none
+  tier_rationale: 组合架构，部分对位
+  status: mapped
+
+- id: mech:changelog-rationale-archive
+  kind: mechanism
+  tier: A
+  our_counterpart: [.claude/skill-os/evolution/adoption-log.jsonl, framework-audit/, "decisions.md"]
+  counterpart_note: "CHANGELOG/changesets 记 skill 重命名/搬迁/reframe 理由 vs 我方 adoption-log+framework-audit+decisions.md；我方演进档案分散"
+  prior_verdict: none
+  tier_rationale: 演进 rationale 档案，部分对位
+  status: mapped
+
+- id: mech:context-md-domain-glossary
+  kind: mechanism
+  tier: A
+  our_counterpart: [CONTEXT.md, .claude/skills/office/references/]
+  counterpart_note: "CONTEXT.md 领域词汇表一等制品+吃狗粮 vs 我方 CONTEXT.md(项目约束为主，非纯 glossary)"
+  prior_verdict: none
+  tier_rationale: 与 skill:domain-modeling 呼应，机制层看约定
+  status: mapped
+
+- id: mech:docs-as-distributed-router
+  kind: mechanism
+  tier: A
+  our_counterpart: [office, CLAUDE.md skill 表]
+  counterpart_note: "docs 页作分布式路由节点(固定骨架/defining constraint/绝对链接) vs 我方 office+CLAUDE.md 集中表；对方无中央 dispatcher"
+  prior_verdict: none
+  tier_rationale: 路由哲学对比（分布 vs 集中），我方是集中式
+  status: mapped

@@ -1,0 +1,93 @@
+id: skill:engineering/to-spec
+kind: skill
+tier: A
+opponent_sha256: 267638edd513b5918de626ad5605d261952abb7428cb308869c663ca924e93e7
+dossier: dossiers/skill--engineering--to-spec.yaml
+
+scores:
+  D: 4
+  I: 9
+  C: M
+  E: 3
+score_derivation: |
+  D=4：
+  - seam-sketch-reuse-highest-seam：+2。写 spec 前显式勾画测试 seam（优先已有/用最高/理想
+    仅一个/与用户确认）——counterpart 目录 grep 0 命中；tech-spec 有 IF-NNN 接口契约与逐
+    需求测试判据，但无"选最高测试边界并与用户确认"的前置协商步。与 tdd verdict 的 seam 门
+    同主题（那边管写测试时，这边管写 spec 时）。
+  - no-re-interview-constraint：+1。"对话直接→spec、不重新访谈"的路径我方无单一对应
+    （tech-spec 从书面上游合成✓但不吃裸对话；brainstorm 吃对话但要访谈；/idea 吃语料但
+    出结构化需求非工程 spec）——形态缺口窄，计 1。
+  - publish-to-tracker：+1（tracker 簇，归 GAP-issue-tracker-integration 统一裁，此处
+    不落地）。
+  - spec-template-structure：+0（我方锁定节+稳定 ID+覆盖率门更强；user-story 列表形态
+    是取舍非缺口）。
+  I=9：tech-spec P5 门禁+锁定节保护+使用史；brainstorm 同强。
+  C=M。E=3（promoted+docs 页+非 draft）。
+
+bucket: merge   # 红队复核后维持 merge，但落地 scope 收缩（详见 redteam 块 + merge_scope）
+bucket_rationale: |
+  rubric §3 补强合并：D=4 ≥ 3 ✓；机制 ≥2 ✓；加法。非替换：MUST 覆盖率验证门、追溯矩阵、
+  稳定 ID 是现任独有承重轴，对方模板无任何覆盖率概念 → 支配不成立。
+  【红队 downgraded 2026-07-12】桶不变（诚实 D 仍 ≥3：spec-time seam 残留 + no-re-interview 真缺口），
+  但 scope 收缩：砍 merge_scope②（+0 机制的可选子项、muse 专属）、①确认门条件化+限定 spec-time
+  （不复制本轮 tdd adopt 已带的 test-time seam 门）。D=4 处天花板、seam 与 tdd 同轮共用"我方无 seam"
+  缺口（absence_proof 欠采样全局 tdd）——详见 redteam。
+
+merge_scope: |
+  【红队 downgrade 后收缩，2026-07-12】唯一落地项 = ①（收窄版）。
+  ① tech-spec 增 seam 前置步（Phase 序不动，加在接口契约节内）：起草 IF-NNN 前先列测试
+    seam 清单（优先已有 seam/取最高边界/趋向单一）——**限定为 spec-time 勾画，明确不复制
+    tdd（本轮 adopt 刷新已带 test-time seam 确认门）的 test-time 确认**；与逐需求测试判据
+    互补（判据管"测什么"，seam 管"在哪测"）。**确认门条件化**：交互（有用户在场）运行才
+    AskUserQuestion 确认；编排器 headless 运行（muse-loop dispatch tech-spec）则把 seam 清单
+    写入产出、不强阻塞——避免向 orchestrator 节点插入计划外人类卡点。
+  ② 【红队砍除】prototype-snippet 例外：源机制 spec-template-structure 计分 +0、原判据标为
+    "可选一行"、且为 muse 专属原型→spec 流（污染 dual_repo 判定）——落地范围超出 D 支撑，
+    按"保守起见只删不加"移出落地面，归入不落地。
+  ③ 不落地：tracker publish（归 gap 提案）、user-story 模板（取舍非缺口）、
+    prototype-snippet 例外（见②，+0 机制不落地）。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/tech-spec/SKILL.md"]
+  ab_runs_needed: 1   # 收缩后仅①一处 prose 吸收，1 run 足；未触 A/B 红线（≥1，非 BLOCK）
+  dual_repo: true     # tech-spec 为母版+fork 共有核心 skill，①为通用改动→双仓成立（砍除②后无 muse 专属残留）
+  new_gap_proposal: null   # tracker 簇引用 setup 单元的 GAP-issue-tracker-integration
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强"够用/加噪音"论证：现任 tech-spec 的 Phase 4 追踪矩阵已对每条需求给"可执行测试准则"，
+    Phase 3 接口合同已定"服务边界/IF-NNN/降级行为"——"在哪测/测什么"两轴我方已各有承载物；且
+    **本轮 tdd verdict（bucket=adopt）刷新全局 ~/.claude/skills/tdd 已把 test-time seam 确认门带进
+    生态**。于是对方 seam 机制的"我方全生态无 seam 概念"这一 D 支撑被本轮另一裁决部分抵消：
+    to-spec 的 absence_proof 只 grep 了 `.claude/skills/office/tech-spec + brainstorm`（0 命中），
+    **结构性排除了本轮即将拿到 seam 门的全局 tdd 安装**——absence 证据欠采样。
+    为何不致命（不改判 leave）：即便扣掉 tdd 的 test-time seam，残留的 **spec-time seam 勾画**
+    （起草工程合同前先择最高测试边界、趋向单一、deep-module 机会）在 tech-spec 里确无对应——
+    matt 链路本就把"spec 时勾画(to-spec)"与"test 时确认(tdd)"分置两处，二者互补非冗余。叠加
+    no-re-interview 的真缺口（见下），D 诚实仍 ≥3、≥2 条带引证机制、行为可保留（ab=1）→ merge
+    桶成立，但 D=4 处天花板、且落地面此前超出 D 支撑 → 降级为"桶不变、scope 收缩"。
+  attack_notes: |
+    ①【D 天花板 + 与 tdd 同轮重复计分邻域】seam 机制 +2 是 D 最大分项，却：(a) 仅挂单一 delta 对
+      （对方 seam 三引 vs 我方 0 命中），无"咬过人"实证（无 CHANGELOG/复现）——按 rubric §2"1 分=1 组
+      双侧引文，咬过人 +1"本应封 +1；(b) 同一 seam 概念在 **tdd verdict 计 +1**、to-spec 计 +2，
+      同轮两裁决用同一"我方无 seam"缺口各自取信；(c) absence_proof 欠采样全局 tdd 安装。→ 交付到
+      tech-spec 的**净新增**实为 spec-time 残留（约 +1），非 +2。未强改分数（+2 对"richer 起源机制"
+      尚可辩），但记录其处天花板、且落地必须限定 spec-time、不复制 tdd 的 test-time 确认门。
+    ②【fit 冲突：headless orchestrator 卡点】原 merge_scope ① 的"AskUserQuestion 确认后再展开契约"
+      向 tech-spec 内插一道强制人类卡点。tech-spec 会被 muse-loop-orchestrate dispatch（其 preamble
+      注释自承"muse-loop 这类编排器可能一天内对多个 REQ 各跑一次"），编排器期望该节点跑到完成、
+      人类卡点在 loop 边界(GATE-1/2)而非节点内。→ 已把确认门**条件化**（交互运行才 Ask、headless
+      写清单不阻塞），避免与 orchestrator 设计冲突。
+    ③【落地面收缩：砍 merge_scope ②】prototype-snippet 例外源自 spec-template-structure 机制（计分
+      **+0**）、原文自标"可选一行"、且属 muse 专属原型→spec 流（与"tech-spec 为双仓共有核心 skill"的
+      dual_repo:true 相冲，muse 专属子项不应双仓落）。落地范围超出 D 支撑 → 按"保守起见只删不加"移出
+      落地面，归③不落地。收缩后落地仅①（收窄版），ab=1 未触 A/B 红线，dual_repo:true 干净成立。
+    ④【未动项复核】no-re-interview（+1）是真缺口——tech-spec 缺正式 PRD(R/AE 编号)时 **硬 BLOCK**
+      （Phase 0），而 matt to-spec 从裸对话直接合成；但该 +1 本就不在 merge_scope（无落地动作），
+      不影响桶。承重墙：①加在 Phase 3 节内、不改 Phase 0→6 顺序 → 不触 P6；不改路径/frontmatter/
+      handoff → 不触 P1/P2/P4。tracker +1 已正确归 gap 不在此落。

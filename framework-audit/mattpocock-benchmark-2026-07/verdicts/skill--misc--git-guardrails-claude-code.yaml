@@ -1,0 +1,76 @@
+id: skill:misc/git-guardrails-claude-code
+kind: skill
+tier: A
+opponent_sha256: 03c4de7613c712aea336d64c467ea3ed14be2cbd52345925fe949c75c01c29f7
+dossier: dossiers/skill--misc--git-guardrails-claude-code.yaml
+
+scores:
+  D: 3
+  I: 7
+  C: S
+  E: 2
+score_derivation: |
+  D=3：
+  - git-danger-pattern-set：+1。对方独有拦截项：git clean -f/-fd、branch -D、checkout ./
+    restore .（careful 只拦 reset --hard 与 push --force）。裸 push 拦截见 bucket_rationale
+    ——与 luca 现行工作流冲突，不计增量。
+  - customize-and-verify-recipe：+1。装后问增删模式 + echo-pipe exit-2 自测配方——careful
+    是写死固定表、无自测（absence grep 0 命中）。自测配方是 prove-it-bites 的直接应用。
+  - always-on-settings-install：+1。常开 settings.json 安装形态 vs careful 的 skill 作用域
+    ——形态缺席成立；但常开裸 push 拦截的**适配性为负**（见下）。
+  - exit-code-2-block：+0（careful 等价机制在，双侧引文证实同形态）。
+  I=7：careful hook 真实咬（exit 2）+ frontmatter 注册 + tier0；但无自测、模式表窄。
+  C=S（careful 脚本 + SKILL.md 两文件）。E=2：非 promoted（misc bucket）(0)+CHANGELOG 有
+  记录(+1)+非 draft(+1)。
+
+bucket: leave  # 红队 killed（原 merge，见文末 redteam 块）：剥反目标+去重后独立机制仅 1 条，破 §3 补强合并硬门槛
+bucket_rationale: |
+  rubric §3 补强合并（微量级，壳拒+机制摘取——同 handoff 模式）：D=3 ✓；机制 ≥2（模式集
+  扩展、自测配方）✓；加法。
+  **裸 push 拦截明确不取**：dossier 核出关键新事实——旧裁决理由 2 的政策事实基础已反转
+  （MEMORY 2026-07-11"高置信改动默认 commit+push"），常开裸 push 拦截会与 luca 的现行
+  授权工作流正面打架。这不是缺口，是反目标。
+
+merge_scope: |
+  VOID（红队 killed，桶改 leave）。原拟两子项均不落地：
+  ① careful 拦截表扩展——剥掉反目标(always-on)与去重(self-test)后，这是唯一独立机制，
+    单机制不足补强合并 §3 硬门槛（需 ≥2 独立机制）；E=2 投机加固、careful 为隐藏 opt-in
+    hook 极少触发；其中 git branch -D 另与已剔除的裸 push 同类（reflog 可恢复+常规分支清理）。
+  ② careful 自测一行——与独立 verdict mech:prove-it-bites 的 code-hygiene Iron Law 条款
+    重复计分（该 verdict merge_scope 亲口"与 git-guardrails merge ②天然配套"），机制经
+    prove-it-bites 落地即可，非 git-guardrails 独立增量。
+
+reconciliation: |
+  旧裁决：REJECTED（2026-06-07，vetting-registry:798-819，non_redundancy FAIL）。
+  新透镜复核：**作为 skill（安装配方）维持 REJECT**——理由 1（update-config 可平凡生成）、
+  理由 3（monorepo 星数通胀）、理由 5（无测试薄壳）今日全部仍成立（dossier 逐条核对）。
+  理由 2 需**更正事实基础**：旧文引的"CLAUDE.md 已禁无提示 push"原文今日在项目 CLAUDE.md
+  查无（该政策实际在 harness 系统提示层），且 luca 个人记忆现默认高置信改动直接 commit+push
+  ——政策方向已反转，这使"常开裸 push 拦截"从冗余变为**反目标**，加固而非动摇 REJECT。
+  理由 4 的透镜口径已变（CRM 管线→框架能力审计），但对象事实（一次性 git 安全配方）未变。
+  改判部分**经红队否决**（2026-07-12 killed）：原拟 2 个微机制均不落地——①模式表扩展是
+  剥离反目标与去重后的唯一独立机制，破 §3 ≥2 硬门槛；②自测行归 mech:prove-it-bites 落地。
+  REJECT 全面维持；careful 模式表扩展记 opportunity（用户可在 GATE-2 点名恢复=显式否决红队）。
+
+landing_estimate: null   # 红队 killed，无落地（原 port-pattern 估算随 kill 作废）
+
+redteam:
+  verdict: killed
+  provenance: |
+    【重建说明，主线程 2026-07-12】执行本单元的红队 agent（二批 opus）完成了 bucket 改写
+    （merge→leave）与 merge_scope 作废（含完整击杀理由 ①②），但在写本块前撞用量限额阵亡，
+    致"见文末 redteam 块"一度悬空（fable 出门前复审官捕获）。本块由主线程按该 agent 留下的
+    修剪注释原文 + mech:prove-it-bites 红队块的交叉引用重建，**非独立复攻**；击杀理由的
+    独立佐证 = prove-it-bites 红队块亲口引用本单元"merge_scope②与 prove-it-bites 重复计分，
+    机制经 prove-it-bites 落地即可"。
+  steelman_incumbent: |
+    （据击杀 agent 留下的理由重建）careful 已有等价 exit-2 拦截机制（dossier 双侧引文证实
+    同形态）；剥掉反目标项（always-on 裸 push 拦截——与 luca autocommit 授权正面冲突）与
+    重复项（自测行——归 prove-it-bites 的 Iron Law"护栏会咬"条款）后，唯一独立净增量只剩
+    模式表扩展一条（clean -f/branch -D/checkout .），单机制不足 §3 补强合并 ≥2 独立机制
+    硬门槛；且 E=2 偏投机、careful 为隐藏 opt-in hook 极少触发、branch -D 与已剔除的裸
+    push 同类（reflog 可恢复）。
+  attack_notes: |
+    击杀落点：merge → leave。壳 REJECT 维持（reconciliation 三理由 + 政策反转加固）；
+    ②自测机制显式让位 prove-it-bites（该处落地覆盖 careful 场景）；①模式表扩展记
+    opportunity，GATE-2 可点名恢复（= 用户显式否决红队，微成本项）。

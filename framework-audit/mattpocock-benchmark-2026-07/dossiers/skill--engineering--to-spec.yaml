@@ -1,0 +1,126 @@
+id: skill:engineering/to-spec
+kind: skill
+tier: A
+opponent_sha256: 267638edd513b5918de626ad5605d261952abb7428cb308869c663ca924e93e7
+opponent_summary: >
+  to-spec is a user-invoked engineering skill (disable-model-invocation: true) that turns the
+  current conversation plus codebase understanding into a spec/PRD and publishes it to the
+  project's issue tracker with a `ready-for-agent` triage label. Its defining constraint is that
+  it does NOT re-interview the user — it only synthesizes what has already been discussed. Before
+  writing, it sketches the seams at which the feature will be tested (preferring existing seams,
+  the highest seam, ideally one; hunting for deep-module opportunities) and checks those seams
+  with the user. The spec follows one fixed template (Problem Statement / Solution / an extensive
+  numbered User Stories list / Implementation Decisions / Testing Decisions / Out of Scope /
+  Further Notes). It is a mid-chain step: grill-with-docs → to-spec → to-tickets → implement →
+  code-review.
+our_summary: >
+  Our requirement→spec node is split across two skills. tech-spec transforms upstream PRD +
+  design-brief into an engineering contract (conflict register / architecture view / interface
+  contracts / requirement-traceability matrix) gated by a MUST-coverage quality gate, synthesizing
+  from written upstream artifacts without re-interviewing. brainstorm is the requirement→PRD node
+  but takes the opposite stance — it interrogates the user one question at a time (Socratic
+  forcing questions) before synthesizing. Neither skill uses a test-seam / deep-module concept,
+  and neither publishes to an external issue tracker or applies a triage label; both write local
+  docs/ markdown (docs/engineering/, docs/prd/) and pass state via handoff-summary files.
+mechanisms:
+  - name: no-re-interview-constraint
+    summary: >
+      to-spec's defining constraint — convert the conversation already had into a spec by pure
+      synthesis, with no fresh round of questions.
+    opponent_evidence:
+      - path: skills/engineering/to-spec/SKILL.md
+        quote: 'Do NOT interview the user — just synthesize what you already know.'
+      - path: docs/engineering/to-spec.md
+        quote: 'It does **not** interview you again.'
+    our_evidence:
+      - path: .claude/skills/office/tech-spec/SKILL.md
+        quote: '负责把产品和设计意图转化为工程实现合同'
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: 'I interrogate before I synthesize. I ask one question at a time.'
+    delta: >
+      to-spec synthesizes directly from the live conversation context with no interview. Our
+      tech-spec holds the no-re-interview stance but synthesizes from written upstream artifacts
+      (PRD + design-brief handoff), not the raw conversation. Our other requirement→PRD
+      counterpart, brainstorm, takes the opposite stance and interrogates the user one question at
+      a time before synthesizing. No single skill of ours turns the current conversation into a
+      spec without either upstream artifacts or fresh interrogation.
+  - name: seam-sketch-reuse-highest-seam
+    summary: >
+      Before writing, sketch the test seams, prefer existing over new, use the highest seam
+      (ideally one), hunt deep-module opportunities, and confirm the seams with the user.
+    opponent_evidence:
+      - path: skills/engineering/to-spec/SKILL.md
+        quote: 'Existing seams should be preferred to new ones. Use the highest seam possible.'
+      - path: skills/engineering/to-spec/SKILL.md
+        quote: 'Check with the user that these seams match their expectations.'
+      - path: docs/engineering/to-spec.md
+        quote: 'It prefers existing seams to new ones and the highest seam possible, ideally just one across the whole change.'
+    absence_proof:
+      pattern: '\bseams?\b|test seam|highest seam|existing seam'
+      scope: '.claude/skills/office/tech-spec .claude/skills/office/brainstorm'
+      hits: 0
+    delta: >
+      to-spec makes test-seam selection an explicit pre-write step (prefer existing, use the
+      highest, minimize toward one, hunt deep modules) and checks it with the user. Our
+      counterparts carry no seam concept: tech-spec instead specifies service boundaries and
+      per-interface contracts (IF-NNN) with per-requirement executable test criteria in a
+      traceability matrix; brainstorm has no testing-seam step. Choosing a single highest test
+      boundary and confirming it with the user before writing is absent on our side.
+  - name: spec-template-structure
+    summary: >
+      to-spec fills one fixed spec template centered on an extensive numbered user-story list, and
+      bans file paths / code snippets from implementation decisions.
+    opponent_evidence:
+      - path: skills/engineering/to-spec/SKILL.md
+        quote: 'As an <actor>, I want a <feature>, so that <benefit>'
+      - path: skills/engineering/to-spec/SKILL.md
+        quote: 'Do NOT include specific file paths or code snippets.'
+    our_evidence:
+      - path: .claude/skills/office/tech-spec/SKILL.md
+        quote: '文件必须包含以下节（节名锁定，不得改动）'
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: 'R#, A#, F#, AE# IDs are never renumbered'
+    delta: >
+      Both sides emit a structured template. to-spec's is a single fixed markdown block built
+      around an extensive numbered user-story list ("As an actor, I want... so that...") and
+      explicitly bans file paths / code snippets (with a narrow exception for prototype-encoded
+      decision snippets). Our tech-spec uses a locked engineering-contract section set
+      (architecture / interface contracts / traceability matrix + coverage-gate result), and
+      brainstorm uses a scope-tiered PRD template with never-renumbered stable R#/A#/F# IDs.
+      Neither of ours produces the user-story list, and to-spec has no stable-ID or coverage-gate
+      scheme.
+  - name: publish-to-tracker-ready-for-agent
+    summary: >
+      to-spec's terminal action is external — it publishes the finished spec into the project's
+      issue tracker and self-applies the `ready-for-agent` triage label.
+    opponent_evidence:
+      - path: skills/engineering/to-spec/SKILL.md
+        quote: 'publish it to the project issue tracker. Apply the `ready-for-agent` triage label'
+      - path: docs/engineering/to-spec.md
+        quote: 'It applies the `ready-for-agent` label itself — no separate triage pass needed.'
+    absence_proof:
+      pattern: 'issue tracker|ready-for-agent'
+      scope: '.claude/skills .claude/skill-os CLAUDE.md'
+      hits: 0
+    delta: >
+      to-spec writes into an external issue tracker and applies a triage label, making the spec a
+      live, agent-consumable ticket with no separate triage pass. Our tech-spec and brainstorm
+      both write to local docs/ markdown (docs/engineering/, docs/prd/) and hand off via
+      handoff-summary files; there is no issue-tracker integration and no label mechanism.
+      Downstream discovery on our side is via the docs/ folder plus handoff summaries, not a
+      tracker query.
+
+notes: >
+  Read both opponent files in full (SKILL.md + docs/engineering/to-spec.md; inventory lists
+  support_files: [] but the docs page exists and was used for evidence). Read both counterparts
+  in full (tech-spec/SKILL.md, brainstorm/SKILL.md). Ran absence greps from repo root:
+  `grep -riE '\bseams?\b|test seam|highest seam|existing seam' .claude/skills/office/tech-spec
+  .claude/skills/office/brainstorm` → 0 hits (the only prior "seam" match repo-wide was "seamless"
+  inside brainstorm/references/pressure-test.md, a false positive); and
+  `grep -rilE 'issue tracker|ready-for-agent' .claude/skills .claude/skill-os CLAUDE.md` → 0 hits.
+  Expanded past the 2 subverdict hints to 4 mechanisms after reading full text: the fixed
+  spec-template and the tracker-publish are distinct mechanisms beyond the no-interview and
+  seam hints. Noticed but did not split out: to-spec's prototype-snippet exception in
+  Implementation Decisions ("if a prototype produced a snippet that encodes a decision more
+  precisely than prose can... inline it") — folded into the template mechanism delta; it is
+  relevant to the muse fork's prototype→spec flow. verify: check-coverage.py --dossier → PASS.

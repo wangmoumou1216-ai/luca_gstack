@@ -1,0 +1,26 @@
+id: skill:misc/setup-pre-commit
+kind: skill
+tier: B
+opponent_sha256: 872f4037cb7e6e0e340d4175c086550072959925dffc87b160d1a30dc9f63bbd
+dossier: dossiers/skill--misc--setup-pre-commit.yaml
+
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+soft: { fit: 1, quality: 2, adoption: 1, maintenance: 3 }
+weighted_score: 57
+
+score_derivation: |
+  硬门全 PASS（标准工具链安装；我方 .githooks/pre-commit 是自用密钥扫描器，用途/接线均
+  不同，非冗余对位）。
+  软分：fit=1——下游 JS/TS 项目进实现期时是标准工序（工程执行线间接受益），但频次低、
+  且 harness update-config 可按需生成同类配置。quality=2（完整 how-to + 冒烟提交收尾，
+  无 support 文件）。adoption=1（misc bucket，非 promoted）。maintenance=3。
+  weighted = 10+20+6.7+20 ≈ 57。
+
+bucket: leave
+bucket_rationale: |
+  7 维门禁 CONDITIONAL（57）。裁决：不预装、不占路由词条——**按需引用**（进 adoption
+  backlog：下游项目实现期需要 pre-commit 工具链时，从 backlog 取用一次性执行，或由
+  update-config 现场生成）。预装一个低频 setup 配方违反最小输入面原则。
+
+reconciliation: null
+landing_estimate: null

@@ -1,0 +1,14 @@
+id: skill:in-progress/writing-beats
+kind: skill
+tier: C
+opponent_sha256: 668185cfb6eb6a324b8d864404c398e21f3cddbb637b760e39b7784c8c5e4fee
+dossier: dossiers/skill--in-progress--writing-beats.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：写作三部曲之 exploit 阶段（beat 旅程 + grounding：概念先 grounded 才能被依赖）。
+  draft；写作方法论不在框架三维度（设计主干/工程线/框架自建）内。grounding 概念与我方
+  教学式渐进披露理念同向但无落点。不采；三部曲整体记 opportunity（若 luca 未来要
+  写作管线，成套评估）。
+reconciliation: null
+landing_estimate: null

@@ -1,0 +1,119 @@
+id: skill:productivity/handoff
+kind: skill
+tier: A
+opponent_sha256: 57c9f1f392d7352cdc85b1e39ca49eddc70ce1dc278bd9653fb4f23dfc2560fc
+dossier: dossiers/skill--productivity--handoff.yaml
+
+scores:
+  D: 3
+  I: 9
+  C: S
+  E: 2
+score_derivation: |
+  D=3（锚 C 预估 3-4，dossier 复核落定 3）：
+  - redact-sensitive-info：+1。我方交接产出面（handoff-protocol/handoff-review/Checkpoint 段）
+    脱敏指令 grep 0 命中（absence_proof 成立）——handoff 文档含密钥/PII 不会被主动清除，真缺席。
+  - suggested-skills-section：+1。对方嵌文档内随本体交接；我方下游推荐在 workflow-graph 层，
+    standalone/跨 session 交接文档本身不携带。
+  - argument-tailoring：+1。显式"下个 session 焦点"入参驱动裁剪 vs 我方从状态自动派生。
+  - handoff-doc 本体 / no-duplicate：+0（我方更结构化：五要素+≤2000 tokens 硬约束）。
+  - save-to-os-temp：+0，且为**方向冲突**非缺口——我方 workspace 落盘是 session-restore 自动
+    加载的承重设计，对方反向。
+  I=9：handoff-protocol 受 P4 保护(+2)+session-restore 接线(+2)+routing/协议引用(+2)+
+  使用史(+2)+validate-skills 覆盖(+1)。
+  C=S：仅 handoff-protocol.md 一文件加法。E=2：promoted(+1)+非 draft(+1)，无 CHANGELOG 演进记录(0)。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=3 ≥ 3 ✓（临界达标）；独立机制 ≥2（redact、suggested-skills、
+  argument-tailoring 三条）✓；全为 P4 允许的"只增"加法，无既有行为移除。
+  **skill 本体不引入**（见 reconciliation——作为可装 skill 的旧 REJECT 维持）；merge 对象是
+  3 个微机制 port 进 handoff-protocol.md。
+
+merge_scope: |
+  handoff-protocol.md 增补（P4 只增不减合规）：① 脱敏一行（交接/checkpoint 文档不得含
+  API key/密码/PII，发现即替换为占位符）；② 可选 "suggested skills / 下游建议" 节——仅
+  descriptive 下游指针，明确 subordinate to route-guard/skill-routing-map（词表唯一真值源），
+  不构成 routing authority、不在 session-restore 阶段自动执行。
+  【红队下调 2026-07-12】原 ③ 焦点参数约定已砍——fit 失败：我方 handoff 由完成 skill 在
+  completion 步骤非交互自动写入（write-script `cat > handoff.md`，零 user 交互），无 user-arg
+  面可承接；opponent 该机制本质耦合于 user-invoked slash command（disable-model-invocation
+  + argument-hint），无法 port 进自动生成协议。前向焦点已由 Deferred + 恢复指令从上下文自动
+  派生覆盖，净增量≈0（形态非能力）。
+
+reconciliation: |
+  旧裁决：REJECTED（2026-06-07，vetting-registry:630-644，non_redundancy FAIL，weighted 70）。
+  新透镜复核：**作为 skill 装入维持 REJECT**——冗余主体（对话→交接文档职能我方两件套已覆盖且
+  更结构化）、落盘方向冲突（OS temp vs workspace 承重设计）、裸名 handoff 撞词，三条今日全部
+  仍成立（dossier 逐条核对）。
+  **改判的部分（这正是新透镜+机制粒度带来的）**：旧文"strictly a subset"措辞被事实推翻——
+  dossier 列出 3 项非子集元素（脱敏/文档内嵌 suggested-skills/焦点入参），全部我方缺席且与
+  workspace 设计不冲突。裁决从"整体拒"细化为"壳拒 + 3 微机制以 port-pattern 并入
+  handoff-protocol.md"。另记：旧文把 handoff-review 列为冗余对位在职能层不精确（它是交付审查
+  质量门非交接文档写手）——真正重叠的是 handoff-protocol + Checkpoint 两处；不影响结论。
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/references/handoff-protocol.md"]
+  ab_runs_needed: 1
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强现任论证：我方两件套（handoff-protocol.md + CLAUDE.md Checkpoint）已独占核心职能——
+    持久文档跨 context 边界传状态，且更结构化（决策/约束/风险/criteria/Deferred/产出路径）、
+    token 硬顶 ≤2000、被 session-restore 自动加载、带 gate_result+criteria 质量门绑定与 P2-V
+    版本管理。对手是 6 行 847 字节 stub、无模板/无 token 约束/无测试。三条 D 机制里有两条被
+    dossier 自己的 delta 文本点名为**形态差异**而非能力缺口：
+    - suggested-skills：delta 原话"差异是'文档内嵌 vs workflow-graph 层'"——我方有下游推荐，
+      只是治理在 workflow-graph 层（SF-003 Graph-optional），未内嵌进每份文档。
+    - argument-tailoring：delta 原话"差异是'显式焦点入参驱动裁剪 vs 从状态自动派生'"——我方有
+      前向内容捕获（Deferred + 恢复指令），从上下文自动派生；对手净增仅一个 CLI arg 面。
+    故 D=3 是刀刃临界（verdict 自认"临界达标"），且 3 条里 2 条是"形态差异被当能力缺口"——
+    正是任务①警示的 D 虚高向量。
+
+    为何不致命（不 kill）：redact 是**真能力缺口**而非形态差异——absence_proof grep 0 命中已回验，
+    且关键在于我方 handoff/checkpoint 落 git-tracked 的 docs/handoff/（对手落 OS-temp 不进 git），
+    因此我方文档若含 API key 是**已提交的真实泄露面**，脱敏对我方价值高于对手。该机制无方向冲突、
+    纯 P4 增量合规。单这一条即真净正，merge 不是纯噪音——只是不该由三条一起扛。故 downgrade 非 kill。
+  attack_notes: |
+    裁决=downgraded：bucket 维持 merge，scope 收缩到「redact（实打实）+ 受约束的 suggested-skills」，
+    砍掉 argument-tailoring。D 有效值 3→2（保留原 score_derivation 作 P2.5 记录，本块为 P3 红队调整层）。
+
+    ② fit 攻击——砍 argument-tailoring（决定性）：
+      我方 handoff 由完成 skill 在 completion 步骤**非交互自动写入**（handoff-protocol.md 写脚本
+      `cat > handoff.md`，零 user prompt），协议内根本不存在 user-argument 面。对手该机制本质耦合于
+      "user-invoked slash command"（frontmatter disable-model-invocation:true + argument-hint）——
+      把"显式 arg 面"port 进一个自动生成协议，须加一个与协议自动化设计相矛盾的交互步。且其底层价值
+      （前向焦点内容）我方已具备：完成 skill 持有全对话上下文，用户若说"下一步做 X"，已可/应写进
+      恢复指令/Deferred。净增量对现任≈0（形态非能力）。→ 3 机制降为 2。
+
+    ② fit 攻击——收窄 suggested-skills（保留但加约束）：
+      作为边界形态差异存活，但受宪法约束绑定。CLAUDE.md 宪法"触发词唯一真值源：skill-routing-map.yaml"，
+      route-guard 是权威路由器；文档内 free-text "suggested skills" 节是一条**平行、未受治理的路由信号**，
+      fresh agent 可能在 session-restore 阶段照它行动而绕过 route-guard——与词表路由承重 + SF-003
+      Graph-optional 存在 fit 张力。仅允许作 descriptive 下游指针 port，明确 subordinate to
+      route-guard/skill-routing-map，不构成 routing authority、不在 session-restore 自动执行。
+
+    ③ 集成成本现实核查：
+      - dual_repo: true —— **正确**，无攻击。已核验母版 /Users/luca/Desktop/luca_gstack/.claude/
+        skills/office/references/handoff-protocol.md 存在（7189 bytes），是核心双仓能力非 fork 专属。
+      - touched_files: [handoff-protocol.md] —— **低估 redact 的真实触面**。manual-checkpoint 的
+        格式真值源在 CLAUDE.md（"Checkpoint 写法"节，line 90），checkpoint 同样落 git-tracked
+        docs/handoff/ 且 redact grep 0 命中；redact 只 port 进 handoff-protocol.md 会留下 checkpoint
+        面（absence_proof 自身 scope 明列 "CLAUDE.md(Checkpoint/handoff sections)"）未覆盖。按"只删不加"
+        不扩 scope，仅记为 redact port 的已知覆盖盲点（merge_scope ① 文案称"交接/checkpoint 文档"与
+        touched_files 单文件存在内部不一致，落地时须知 checkpoint 面暂未真正闭合）。
+      - ab_runs_needed: 1 —— 过"机制层 prose 吸收无 A/B 一律 BLOCK"红线（rubric §5）。砍掉
+        argument-tailoring 后，1 次 A/B 覆盖缩减面（redact + 受约束 suggested-skills）足够。
+      - P1-P7 承重墙：无触碰。对 handoff-protocol.md 的增补属 P4 只增（"必须包含 list 不得减少，可增加"），
+        未改任何受保护路径/格式引用/Phase 顺序。
+
+    附核（任务①其余向量，均未发现问题）：
+      - 重复计分：无。redact/suggested-skills/argument-tailoring 均 handoff 专属，与 grilling 锚
+        （facts/decisions 分离）及其它单元无同机制跨单落地。
+      - aspirational prose 当实绩：无。E=2（无 CHANGELOG），三条机制均只给 +1 base、无一条拿"咬过人"
+        +1 bonus——D 打分在这条上是克制的。本次 D 虚高来自"形态差异当能力缺口"（argument-tailoring/
+        部分 suggested-skills），非 prose 当实绩。

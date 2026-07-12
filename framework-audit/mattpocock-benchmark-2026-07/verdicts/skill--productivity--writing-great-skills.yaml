@@ -1,0 +1,107 @@
+id: skill:productivity/writing-great-skills
+kind: skill
+tier: A
+opponent_sha256: 4d6ccbc3760b1bd4107c495a79872286ea69494003f3b0a719fc95b147457061
+dossier: dossiers/skill--productivity--writing-great-skills.yaml
+
+scores:
+  D: 7
+  I: 8
+  C: M
+  E: 3
+score_derivation: |
+  D=7：
+  - predictability-root-virtue：+2。"skill 存在的目的是从随机系统里拧出确定性；每次跑同一
+    process 非同一 output"作为纲领性根德性——我方在操作层追求确定性（route-guard/invariants）
+    但从未 articulate 成写-skill 的组织原则（grep 根德性 0 命中）。
+  - failure-mode-taxonomy：+2。六具名失败模式（premature completion/duplication/sediment/
+    sprawl/no-op/negation）各配 cure 的诊断词汇——我方无任何针对 skill 文本的 failure-mode
+    分类（三个无歧义词 grep 0；no-op 命中全在 A/B 判定域，同名异域）。
+  - information-hierarchy-ladder：+2。三级具名阶梯（in-file steps/in-file reference/disclosed
+    reference）+ context pointer 措辞学 + co-location——我方懒加载是 runtime context 管理，
+    非"SKILL.md 如何排布自身内容"的写作学。
+  - pruning-discipline：+1。SSOT/只放指针我方已有（extraction-bar 引文）；缺的是逐行
+    relevance 检验 + 逐句猎杀 no-op 的修剪例行。
+  I=8：skill-invariants 由 validate-skills.sh 守护(+2)/parity 锚点(+2)/extraction-bar 全流程
+  接线(+2)/持续使用(+2)——但注意二者与对方**功能互补非同位**（守边界 vs 教手艺）。
+  C=M：新建一份适配版权威文件 + invariants/CLAUDE.md 各一行指针，3-4 文件。
+  E=3：promoted(+1)+CHANGELOG 富演进记录(+1)+非 draft(+1)。
+
+bucket: adopt
+bucket_rationale: |
+  形态判定：现任（skill-invariants/extraction-bar）与对方是**互补关系不是同位竞争**——我方守
+  "哪些不能改"，对方教"怎么写好"；把教学词汇灌进保护性 SSOT 会污染其职能。故落桶 adopt
+  （新建互补资产）而非 merge（增改现任）；non_redundancy 成立（功能象限空缺，grep 佐证）。
+  reuse_mode=port-pattern 而非 install：必须适配我方语境（中文 skill 体系、preamble/P1-P7
+  约定、office 管线术语），原文照搬会与既有约定脱节。
+  与 mech:writing-great-skills-metavocab 单元**共用同一落地**（该 mech verdict 指针到此，
+  不重复落）；与 mech:leading-word / mech:invocation-cost-model 的裁决独立（dossier 刻意
+  未重复采证）。
+
+adopt_scope: |
+  新建 `.claude/skill-os/skill-authoring.md`（名称落地时定）：适配翻译四机制——root virtue
+  （predictability）+ 六 failure mode 诊断表 + information-hierarchy 三级阶梯 + 修剪纪律，
+  并挂到我方语境（写/改 SKILL.md 时的正面手艺参照，与 skill-invariants 保护区互为表里）。
+  互指（"怎么写好→skill-authoring；哪些不能改→skill-invariants"）落在 **CLAUDE.md 的可选一行**，
+  **不编辑 skill-invariants.md**——它在承重墙清单上，SCHEMA 规定触墙须挂 high_integration_risk
+  flag；红队按"只删不加"改为不触墙（P3-downgrade，见 redteam）。MIT 署名进文件头 + ADOPTED.md。
+
+reconciliation: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强"我方已够用/merge 只是加噪音"论证，以及为何不致命：
+    - 攻击 D 虚高：predictability-root-virtue 的两条对方引文（"wrangle determinism out of a
+      stochastic system" + "The root virtue every other term serves"）其实是同一个组织原则的
+      两次复述，按"净增量部分"记只值 +1 而非 +2。若成立，D=7→6。**但不致命**：adopt 桶只要
+      净正（D≥3），D=6 不跨任何桶阈值；且三条 absence 证明红队已复跑复核（root virtue=0、
+      premature completion|sediment|sprawl=0），info-hierarchy 三级阶梯/context-pointer/
+      co-location 与 pruning 逐句猎杀 no-op 是我方 counterpart（守边界的 skill-invariants +
+      控记忆的 extraction-bar）确实没有的正面手艺——形态差异（保护性 SSOT vs 写作学）是真缺口
+      不是虚记。pruning 已因与 SSOT 原则部分重叠被诚实折到 +1，说明打分有克制、非一律 +2。
+    - 重复计分：predictability(+2)/failure-mode(+2) 在 metavocab 单元(D=6)同样计分，表面像双
+      记；但两 verdict **共用同一落地物 skill-authoring.md（bucket_rationale 与 metavocab 互相
+      声明"不重复落"）**，采纳侧不双落——D 分是"按单元评净增量"的矩阵设计（skill 评整体、mech
+      评元词汇），不是把同一能力采纳两次。故对**桶判定**无影响。steelman 因此失败：缺口真实、
+      桶正确。核心裁决（adopt skill-authoring.md）**存活**。
+  attack_notes: |
+    ② fit 假设——全部通过，不构成 kill：
+    - 最小文件原则：新建 skill-authoring.md 表面违反"优先编辑已有"，但 8+ 单元（本 skill +
+      metavocab + invocation-cost-model + leading-word + avoid-alias-table + docs-as-router +
+      hard-soft-dep + thin-orch + writing-fragments）**共汇一个文件**，正是反 sprawl 的最小解——
+      若拆进 skill-invariants/extraction-bar/CLAUDE.md 反而污染保护性 SSOT。原则满足。
+    - propose-only：本单元是 verdict/提案，GATE-2 用户签字，无自动编辑，宪法立场不破。
+    - 词表路由承重：skill-authoring.md 是被动 reference，无路由词条、route-guard 确定性匹配
+      不动（invocation-cost-model 单元亦显式声明"词表路由承重不动"）。人类卡点(GATE-2)保留。
+    - 使用即留任/输入面收窄：仅约束一级可见 routed skill，reference 文档不适用。
+    - dual_repo=true 正确：skill 写作学是通用框架能力（非 muse fork 专属如 luca-app/
+      muse-loop），双仓母版已确认同有 skill-invariants.md，落双仓合规。
+    ③ 集成成本——**发现一处规则符合性缺口，触发本次 downgrade（只删不加，桶不变）**：
+    - adopt_scope 原含"skill-invariants.md 头部加一行互指"。skill-invariants.md 在承重墙清单上
+      （task 明列 + Static Fallback 治理文件）；SCHEMA.md 第16行硬规定"触承重墙加 flag
+      high_integration_risk: true"，rubric §2 C "触碰承重墙自动 HIGH-INTEGRATION-RISK（无论
+      文件数）"。原 verdict C=M 却**未挂 high_integration_risk flag**，即编辑承重墙而漏标风险。
+      注：该编辑并不触碰任何 P1-P7（P1-P7 保护的是各 SKILL.md 的区，非 skill-invariants.md 自身
+      正文），且仅为附加式 header 指针、不改载重语义；但 SCHEMA 的触墙 flag 规则是机械判据，
+      冻结 rubric 未开"仅文档指针"豁免口。
+    - 收缩项（保守只删不加）：**从 adopt_scope 与 touched_files 移除 skill-invariants.md 一行
+      指针**；互指改落已列为"可选一行"的 CLAUDE.md，承重墙零触碰。收缩后 C=M 干净（新建1 +
+      CLAUDE.md可选1 ≤2 文件，无墙触），无需 high_integration_risk flag。此项对 verdict 价值零
+      损失（可发现性由 CLAUDE.md 指针承担）。
+    - ab_runs=1 合规、非红线：机制层 prose 吸收需强制 A/B（无 A/B 一律 BLOCK），本单元是锚
+      落地、ab_runs=1（非 0），另三单元 ab=0 折入这次同一 A/B；skill-authoring.md 为被动 reference
+      不改运行期 skill 行为，1 次非回归 A/B 足够，路由架构级改动（description 闸控）已显式
+      defer 出本轮。not BLOCK。
+    - new_gap_proposal 合规：grep 确认现 gaps-register 无 skill-authoring gap，走 rubric §5
+      "提案新 gap，GATE-2 先裁"，未绕过人工拥有权。
+    残留观察（非本桶降级项，供 GATE-2）：8+ 单元共汇 skill-authoring.md，该文件本身有变成
+    sediment/sprawl 的风险——落地时须让它自身遵守它所教的 information-hierarchy 与 pruning 纪律
+    （dogfood）。
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skill-os/skill-authoring.md(新建)", "CLAUDE.md(可选一行互指)"]   # P3-downgrade：移除 skill-invariants.md(一行指针)——承重墙不触
+  ab_runs_needed: 1
+  dual_repo: true
+  new_gap_proposal: "GAP-skill-authoring-craft（我方无'如何写好 skill'的正面词汇/诊断体系；现 gaps-register 无对应 open gap）"

@@ -1,0 +1,107 @@
+id: mech:invocation-cost-model
+kind: mechanism
+tier: A
+dossier: dossiers/mech--invocation-cost-model.yaml
+
+scores:
+  D: 4
+  I: 9
+  C: S
+  E: 3
+score_derivation: |
+  D=4：
+  - dual-load-cost-model：+2。context load（description 每轮驻窗口）vs cognitive load
+    （人当索引）的显式经济学——我方定义 skill 可见面的文件 grep 0 命中；我方 context-cost
+    frontmatter 管 dispatch 预算，不管调用-可见性取舍。
+  - granularity-load-spending：+1。"每切一刀花掉一种 load，值回才切"的设计期切分原则——
+    我方只有运行期使用即留任（60 天零调用降级），无新建 skill 时的成本论证原则。
+  - binary-invocation-axis：+1。模型可达性闸控维度（disable-model-invocation 剥 description）
+    我方无——我方隐藏 skill 仍可被模型按名调用且 description 仍占上下文。
+  - router-skill：+0（/office 同构已有）。
+  I=9：route-guard+routing-map+/office+使用即留任治理全链，双 checker。
+  C=S：落 skill-authoring 资产一节 + CLAUDE.md 可选一行。E=3。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=4 ≥ 3 ✓；机制 ≥2 ✓；加法——双 load 词汇成为我方"一级可见/隐藏"
+  轴的**论证层**（为什么切/为什么藏），使用即留任仍是运行期治理者，route-guard 词表路由
+  承重不动。
+
+merge_scope: |
+  ① skill-authoring 资产（writing-great-skills adopt 落地物）收录 dual-load 成本模型 +
+    granularity 切分原则一节：新建/拆分/隐藏 skill 时用两种 load 论证。
+  # ② 已由红队砍除（原"引入 description 级闸控"opportunity 注记）：其前提"隐藏 skill
+  #   description 仍占每 session 上下文"经核验存疑 + 本就 null-scope 不进本轮——保守只删不加。见 redteam。
+
+reconciliation: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强"我方够用 / merge 只是加噪音"论证，以及为何不致命：
+    - **双重计分攻击（最锋利，task 直接点名 leading-word/metavocab/invocation-cost 共用
+      skill-authoring 落地）**：本单元四机制（dual-load +2 / granularity +1 / binary-axis +1 /
+      router +0）是否与姊妹单元或 umbrella skill verdict 重记？逐单元核：
+      · writing-great-skills skill verdict D=7 = predictability + failure-mode + info-hierarchy +
+        pruning——**零机制与本单元重叠**。
+      · metavocab mech D=6 = root-virtue + teachable-metavocab + failure-mode。唯一可疑项
+        teachable-metavocab(+2) = GLOSSARY 四轴（Invocation/Info-Hierarchy/Steering/Pruning）
+        **分组元结构**；metavocab 红队已明判它计的是"结构/分组/交叉引用"，并把 dual-load 内容
+        **显式让渡给"其他 mech verdict"**（即本单元）。故 metavocab 评"货架"、本单元评"Invocation
+        轴的货"——分工不重叠。若真有影子重记，落在 metavocab（评结构却蹭内容），**不落本单元**：
+        本单元是 Invocation 轴内容的**primary owner**，absence grep 复跑 exit=1（context.?load|
+        cognitive.?load|disable-model-invocation 我方零命中），D 锚在机读缺席上、非蹭姊妹分。
+      · leading-word D=4 = token-anchor + pretrained-priors + dual-anchor——**零机制与本单元重叠**。
+      → 结论：invocation-cost **不是**双重计分方，站在正确一侧。
+    - **D 虚高攻击**：dual-load 两条引文（"context load — description sits in window" +
+      "cognitive load — you are the index"）会否像姊妹红队折 root-virtue 那样 2→1？**不会**：
+      root-virtue 两引文是同一公理复述（"is the root virtue" ≈ "root virtue every term serves"），
+      而 context-load 与 cognitive-load 是**两笔真不同的成本**（token 常驻 vs 人脑索引），非复述，
+      合法保 +2。即便最恶意把 granularity(+1) 当 dual-load 的纯推论折 0，D = 2+0+1(binary) = 3 ≥ 3，
+      merge 阈值不破。**要跌到 D<3 须同时把 dual-load 折 +1 且 granularity 折 0——这自相矛盾**
+      （dual-load 两半若各是真成本就是 +2；granularity 若是独立设计原则就是 +1，不能两头恶意取）。
+      D 在原则性 deflation 下地板 = 3，桶（merge）稳。
+    steelman 三路（双重计分 / D 虚高 / 结构双落）全部失败：本单元是 Invocation-轴内容 primary
+    owner、缺席机读、D 地板 ≥3、共用单一 landing 不双落。核心裁决（把 dual-load + granularity
+    切分原则并入 skill-authoring 资产，作为我方"一级可见/隐藏"轴的论证层）**存活**。
+  attack_notes: |
+    ② fit 假设——全部通过，不构成 kill：
+    - 宪法/承重墙：本单元 merge_scope ① 只往 skill-authoring 被动 reference 加一节，**零触碰**
+      route-guard 确定性词表路由（承重设计，verdict 已显式声明不动）、skill-invariants.md
+      （P1-P7 保护的是各 SKILL.md 的区，本单元不编辑任一 SKILL.md，也不像 skill verdict 那样
+      需触 skill-invariants.md 头部——本单元从未提议触墙，天然 clean）、Static Fallback、Loop 宪法
+      （只加词汇，不建平行机器）。承重墙零触，无需 high_integration_risk flag，C=S 干净。
+    - binary-axis(+1) 计 D 但**不进 merge_scope** 是正确的、非矛盾：opponent 确有
+      disable-model-invocation（剥 description + 对模型不可达）这一机制、我方确无（实证：本 session
+      available-skills 列表里"隐藏"skill magicpath 仍带完整 description 且 Skill 工具可按名调用
+      → 我方隐藏 pole 仍付 context load 且模型可达），故 +1 缺席真实；但"引入 description 级闸控"
+      是路由架构级改动，前一轮红队已把该 opportunity（原 scope ②）保守砍除（只删不加）、显式 defer
+      出本轮。D 记"对方有此机制"，scope 不港"我方要采此机制"——两者一致不冲突。
+    - propose-only + 人类卡点：本单元是 verdict/提案，GATE-2 用户签字，无自动编辑 luca_gstack。
+    - dual_repo=true 正确：skill 写作学（含 dual-load 论证）是**通用框架能力**（非 muse fork 专属
+      如 luca-app/muse-loop），母版已确认同有 skill-invariants/skill 体系 counterpart，落双仓合规。
+    ③ 集成成本——ab_runs=0 经核合规（非红线 BLOCK），无 scope 可收：
+    - 红线"机制层 prose 吸收无 A/B 一律 BLOCK"的满足方式：本单元 dual-load/granularity prose 折入
+      skill verdict 的**单次 whole-file 非回归 A/B**（skill landing ab_runs=1）。skill-authoring.md
+      是被动 reference、不改运行期 skill 行为，整文件跑 1 次非回归 A/B 即覆盖折入的全部 prose。
+      **ab_runs=0 是共用落地的记账口径（避免同一次 A/B 重复计成本，正合 task"别重复计"要求），
+      不是"无 A/B"**，not BLOCK。折入 skill verdict 单次 A/B 的机制单元 = invocation-cost +
+      leading-word + avoid-alias + metavocab 四家，落地时须在 A/B 记录里列全四来源。
+    - touched_files=["skill-authoring 资产（共用落地）"]、new_gap_proposal=null（归
+      GAP-skill-authoring-craft 同一 gap）均正确，无独立文件、不重复提 gap、不绕 gaps-register。
+    - merge_scope 已自剪：原 opportunity ② 前一轮已砍（保守只删不加），存活的 ① 最小且净正，
+      无可再收缩项——downgrade 无处下刀。
+    残留观察（属"加"不属"删"，不触发 downgrade 编辑，供 GATE-2）：dual-load 的
+    context-load/cognitive-load 二分**不与我方"一级可见/隐藏"轴 bijection**——因我方缺
+    disable-model-invocation，隐藏 pole 仍付 context load（非对方 user-invoked 的"零 context load"
+    pole）。故落地时该框成"推理辅助词汇 + 指出隐藏只偿还路由/认知面 load、未偿还 context load
+    （呼应已 defer 的 description 级闸控机会）"，**不得**表述成"我方轴已实现两成本权衡"，以免误导。
+    结论：三问均未致命，D 地板 ≥3，桶（merge）稳，fit 全通过，ab_runs=0 经继承证成合规。
+    裁决 **stands**，无 scope 收缩、无子项砍除。
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: ["skill-authoring 资产（共用落地）"]
+  ab_runs_needed: 0   # 并入 skill-authoring 资产的同一次 A/B
+  dual_repo: true
+  new_gap_proposal: null   # 归 GAP-skill-authoring-craft（writing-great-skills 单元）

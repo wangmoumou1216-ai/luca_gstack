@@ -1,0 +1,90 @@
+id: skill:engineering/prototype
+kind: skill
+tier: A
+opponent_sha256: 03074862d4b6e4eaf472aa75146e1d193dd9e3bba0e4303a9b2425562d1d44cc
+opponent_summary: >
+  mattpocock 的 prototype skill 把原型定义为「回答一个设计问题的一次性代码」，问题决定形态。
+  SKILL.md 是分流器：'这个逻辑/状态模型对不对？' → LOGIC.md（手驱动状态机的交互式终端 TUI，把逻辑抽进可移植纯模块）；
+  '它该长什么样？' → UI.md（在单一路由上生成若干结构性不同的 UI 变体，用 ?variant= 搜索参数 + 浮动底栏切换）。
+  两分支共享六条规则：day-one 即一次性且明确标注、一条命令可跑、默认无持久化、跳过打磨（无测试/无错误处理/无抽象）、
+  每次动作后暴露完整状态、完成后捕获。收尾时把已验证决策折进真实代码，再把原型本身作为 primary source 提交到 main 之外的丢弃分支，
+  只在 issue 上留一个指向该分支的上下文指针，main 只保留已验证的决策。
+our_summary: >
+  我方对位是两个 HTML/设计原型生成器。html-prototype 是重流程精修管线：强制场景询问、Step 0 认知门禁、
+  动态参考扫描、当前审美校准（Aesthetic Score ≥24/30）、设计系统宣告、骨架确认、每条 design-brief 决策强制 DECISION 注释、
+  状态覆盖 harness、Phase 4.5 可观测 QA，产物落 docs/prototype/ 并写 handoff + workflow-state。
+  open-design 是 Open Design 连接器：编译指令 → 选 platform/design system → OD 生成完整自包含 index.html → 回收落盘供 figma-layer。
+  两者都是视觉 HTML 原型、面向可交付且可追踪的产物；均无终端 TUI/逻辑原型分支，无「单路由多变体切换」，无「丢弃分支 primary source」处置。
+mechanisms:
+  - name: throwaway-answers-one-question
+    summary: 原型是回答单一设计问题的一次性代码，跳过一切打磨（无测试/无错误处理/无抽象），问题决定形态。
+    opponent_evidence:
+      - path: skills/engineering/prototype/SKILL.md
+        quote: 'A prototype is **throwaway code that answers a question**. The question decides the shape.'
+      - path: skills/engineering/prototype/SKILL.md
+        quote: 'No tests, no error handling beyond what makes the prototype _runnable_, no abstractions.'
+    our_evidence:
+      - path: .claude/skills/office/html-prototype/SKILL.md
+        quote: '**Current Aesthetic Score ≥ 24/30**'
+      - path: .claude/skills/office/html-prototype/SKILL.md
+        quote: '每个来自 `design-brief` 的设计决策，都必须在 HTML 对应实现位置加入注释'
+      - path: .claude/skills/office/open-design/SKILL.md
+        quote: '请直接生成完整自包含 index.html'
+    delta: >
+      对方把原型定位为一次性、答一个问题、明确不打磨（无测试/无错误处理/无抽象），优化「快速学到一件事然后丢弃」。
+      我方两个 counterpart 占据同一「原型」槽位但哲学相反：html-prototype 强制审美评分 ≥24/30、逐决策 DECISION 注释、可观测 QA 门；
+      open-design 产出完整自包含 index.html 并回收落盘供下游。两侧都做原型，但对方求「用完即弃」、我方求「可交付可追踪的精修产物」。
+  - name: structurally-different-variants
+    summary: UI 分支在单一路由上生成若干结构性不同（非只换色）的 UI 变体，用 ?variant= + 浮动底栏切换、键盘循环、生产环境隐藏。
+    opponent_evidence:
+      - path: skills/engineering/prototype/UI.md
+        quote: 'Generate **several radically different UI variations** on a single route, switchable from a floating bottom bar.'
+      - path: skills/engineering/prototype/UI.md
+        quote: 'Variants must be **structurally different** — different layout, different information hierarchy, different primary affordance, not just different colours.'
+    absence_proof:
+      pattern: 'radically different|\?variant=|floating (bottom )?bar|多个结构不同'
+      scope: '.claude/skills/office/html-prototype .claude/skills/office/open-design'
+      hits: 0
+    delta: >
+      对方在同一路由上并列生成多个结构性差异（布局/信息层级/主操作各异）的 UI 变体，靠 ?variant= + 浮动底栏让用户翻看比较。
+      我方 counterpart 无此物：html-prototype 的 data-prototype-state 切换器切的是「状态」（默认/空/加载/错误），不是多个设计「变体」；
+      open-design 每次只经 OD 出一份设计。counterpart 目录内检索多变体切换器相关词零命中（SCHEMA.md 唯一的 variant 是 shadcn 组件变体列，非本机制）。
+  - name: throwaway-branch-primary-source
+    summary: 收尾时把已验证决策折进真实代码，原型本身作为 primary source 提交到 main 之外的丢弃分支，只在 issue 留上下文指针。
+    opponent_evidence:
+      - path: skills/engineering/prototype/SKILL.md
+        quote: 'capture the prototype itself as a **primary source**: commit it to a throwaway branch, out of main'
+      - path: skills/engineering/prototype/UI.md
+        quote: 'so it lands on the throwaway branch, not the bin'
+    absence_proof:
+      pattern: 'throwaway branch|primary source|丢弃分支|一次性分支'
+      scope: '.claude/skills/office/html-prototype .claude/skills/office/open-design'
+      hits: 0
+    delta: >
+      对方对原型有明确「资产处置」协议：已验证决策折进 main，原型代码作为 primary source 移到 main 之外的丢弃分支并留 issue 指针，
+      避免变体/切换器残留污染主干。我方 counterpart 把产物固定留在仓内 docs/prototype/ 目录并写 handoff + workflow-state（交付并保留），
+      没有「丢弃分支 / primary source / 决策与原型分离处置」的概念；counterpart 目录检索相关词零命中。
+  - name: logic-branch-portable-module
+    summary: LOGIC 分支用手驱动状态机的交互式终端 TUI 探业务逻辑/状态，把核心逻辑抽进可移植纯模块，TUI 只是薄壳。
+    opponent_evidence:
+      - path: skills/engineering/prototype/LOGIC.md
+        quote: 'A tiny interactive terminal app that lets the user drive a state model by hand.'
+      - path: skills/engineering/prototype/LOGIC.md
+        quote: 'Keep the TUI as a thin shell over a pure module.'
+    absence_proof:
+      pattern: '\bTUI\b|terminal app|reducer|state machine|状态机'
+      scope: '.claude/skills/office/html-prototype .claude/skills/office/open-design'
+      hits: 0
+    delta: >
+      对方整套 skill 的一半是非视觉的逻辑原型分支：一个手驱动状态机/reducer 的终端 TUI，核心逻辑抽成可后续 lift-out 的纯模块，
+      TUI 仅作薄壳、答完即弃而逻辑模块留用。我方两个 counterpart 全是视觉 HTML 原型，完全没有终端 TUI / 逻辑原型这一形态，
+      也没有「纯逻辑模块 vs 一次性外壳」的分离方法；counterpart 目录检索 TUI/reducer/state machine/状态机 零命中。
+
+notes: >
+  跑过的 absence grep（均 0 命中，scope=两个 counterpart 目录）：
+  grep -rniE "radically different|\?variant=|floating (bottom )?bar|多个结构不同" .claude/skills/office/html-prototype .claude/skills/office/open-design（M2）；
+  grep -rniE "throwaway branch|primary source|丢弃分支|一次性分支" .claude/skills/office/html-prototype .claude/skills/office/open-design（M3）；
+  grep -rniE "\bTUI\b|terminal app|reducer|state machine|状态机" .claude/skills/office/html-prototype .claude/skills/office/open-design（M4）。
+  意外事实：counterpart 内唯一含 "variant" 的是 html-prototype/SCHEMA.md 的 shadcn 组件 variant 列，与「多设计变体切换」机制无关，故 M2 判缺席成立。
+  机制拆分：以 matrix 三条 subverdicts 为起点，读全 LOGIC.md 后新增第 4 条 logic-branch-portable-module（对方 skill 的另一半、subverdicts 未覆盖）。
+  thin_shell 非本单元（matrix 未标），故做完整机制分解。matrix 的 our_counterpart=[html-prototype, open-design] 两个 SKILL.md 均逐行读完。

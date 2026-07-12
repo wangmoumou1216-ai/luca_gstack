@@ -1,0 +1,64 @@
+id: mech:hard-soft-dependency-adr
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >-
+  一份单页 ADR（.agents/adr/0001），记录对方如何处理"引擎类 skill 依赖 per-repo 配置
+  （issue tracker / triage 标签词表 / 领域文档布局），这些配置由 /setup-matt-pocock-skills 播种"
+  这一问题。ADR 把 skill 显式二分为 hard-dependency（没配置就无法正确工作，如 to-tickets/to-spec/
+  triage）与 soft-dependency（没配置只是输出不够锐利，如 diagnose/tdd/improve-codebase-architecture）。
+  hard-dependency skill 内嵌一句明确的 setup 指针（"run /setup-matt-pocock-skills if not"），
+  soft-dependency skill 只用模糊散文引用"领域词表""相关 ADR"并优雅降级。该分法让 soft 侧保持
+  token 轻量，避免把 setup 指针 cargo-cult 到不承重的地方。
+our_summary: >-
+  我方 counterpart = none。我方无 per-repo setup 播种命令（无 /setup-* 类配置 seeding 步骤），
+  也无把 skill 按"对某个 setup/配置的硬依赖 vs 软依赖"显式二分的 ADR 或规则。相关但不同的现有概念是
+  standalone/workflow 双模式、handoff 分级（轻量 skill 免写 handoff）、Skill-first Graph-optional，
+  它们按"是否需要上游产物 / 是否流程化"分层，而非按"缺了配置能否工作"分层。仓库中出现的"硬依赖"字样
+  （figma-demo 指 prototype-spec.md 这个下游产物的数据流硬依赖；vetting-registry 指某外部 skill 对
+  live WebFetch 的运行时硬依赖）语义均与本 ADR 无关。我方也无 .agents/adr/ 目录、无 cargo-cult 提法。
+mechanisms:
+  - name: hard-vs-soft-dependency-classification
+    summary: >-
+      把 skill 显式二分为"缺了 setup 配置就无法正确工作（hard）"与"缺了只是输出不锐利、可优雅降级（soft）"
+      两类。
+    opponent_evidence:
+      - path: .agents/adr/0001-explicit-setup-pointer-only-for-hard-dependencies.md
+        quote: "We split these into **hard-dependency** and **soft-dependency** skills:"
+      - path: .agents/adr/0001-explicit-setup-pointer-only-for-hard-dependencies.md
+        quote: "Others only use it to sharpen output (vocabulary, ADR awareness) and degrade gracefully without it."
+    absence_proof:
+      pattern: "hard vs soft|hard.?dependency.*soft.?dependency|soft.?dependency.*hard.?dependency|(硬|软)依赖 skill"
+      scope: ".claude/skills .claude/skill-os .claude/agents CLAUDE.md scripts"
+      hits: 0
+    delta: >-
+      对方按"是否需要 setup 播种的配置才能正确工作"把 skill 二分为 hard/soft，这是我方不具备的。
+      我方有 standalone/workflow、handoff 分级、Skill-first Graph-optional 等按上游产物/流程化程度分层的机制，
+      但没有按"配置缺失下能否工作"的依赖强度分类。前置条件本身也不同：我方无 /setup-* 类 per-repo 配置播种步骤。
+  - name: setup-pointer-anti-cargo-cult
+    summary: >-
+      仅 hard-dependency skill 内嵌明确的 /setup 指针一行；soft 侧只用模糊散文，避免把 setup 指针
+      cargo-cult 到不承重的地方以保持 token 轻量。
+    opponent_evidence:
+      - path: .agents/adr/0001-explicit-setup-pointer-only-for-hard-dependencies.md
+        quote: "include an explicit one-liner"
+      - path: .agents/adr/0001-explicit-setup-pointer-only-for-hard-dependencies.md
+        quote: "The split keeps soft-dependency skills token-light and avoids cargo-culting the setup pointer into places where it isn't load-bearing."
+    absence_proof:
+      pattern: "cargo.?cult|setup pointer|load-bearing.*pointer|一刀切.*setup"
+      scope: ".claude/skills .claude/skill-os .claude/agents CLAUDE.md scripts"
+      hits: 0
+    delta: >-
+      对方有"只在承重处放 setup 指针、其余不放以避免 cargo-cult"这条显式反冗余规则，我方无对应物
+      （无 setup 指针可放，故也无"该不该放"的规则）。我方 CLAUDE.md 有"最小文件/最小注释/懒加载"等
+      通用节流原则，但没有针对 setup/配置指针是否 load-bearing 的分类式取舍规则。我方仓库无 cargo-cult 提法。
+
+notes: >-
+  跑过的 grep（均在仓库根 /Users/luca/Desktop/项目/muse/lucagstack 下）：
+  M1 absence: grep -rilE "hard vs soft|hard.?dependency.*soft.?dependency|soft.?dependency.*hard.?dependency|(硬|软)依赖 skill" .claude/skills .claude/skill-os .claude/agents CLAUDE.md scripts → 0；
+  M2 absence: grep -rilE "cargo.?cult|setup pointer|load-bearing.*pointer|一刀切.*setup" ... → 0；
+  ls .agents/adr → 不存在（我方无 ADR 目录）。
+  意外事实：宽松搜 "硬依赖/hard.?dependency" 命中两处但语义无关——figma-demo/SKILL.md 指 prototype-spec.md
+  这一下游产物的数据流硬依赖；external-skills/vetting-registry.yaml 是对某外部 skill 运行时依赖 live
+  WebFetch 的红队记录；二者都不是"skill 对 setup 配置的依赖分类"，故不构成 counterpart。
+  counterpart=none 与 matrix 一致，两个机制均用 absence_proof。

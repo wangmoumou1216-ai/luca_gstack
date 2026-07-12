@@ -1,0 +1,13 @@
+id: skill:personal/edit-article
+kind: skill
+tier: C
+opponent_sha256: e10fba546f45357fe0aaa7494b9e186910d4525818d19f9b2ad6f28cc506aa5e
+dossier: dossiers/skill--personal--edit-article.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：personal bucket 文章编辑器（信息 DAG 排序 + ≤240 字符段）。与 luca wiki/写作有
+  微弱切点但非框架能力；其"信息当 DAG 尊重依赖排序"的洞见价值已在 mech:leading-word /
+  写作三部曲的 delta 中归档。不采。
+reconciliation: null
+landing_estimate: null

@@ -1,0 +1,45 @@
+id: skill:misc/scaffold-exercises
+kind: skill
+tier: C
+opponent_sha256: 75f5c9d771606fb9762f16522efc954df11c324f87148d8ff069bce166257de9
+opponent_summary: >
+  作者 aihero 课程平台专用的目录脚手架 skill：从一份 plan 解析出章节/练习名，用 `mkdir -p` 建出
+  `XX-section-name/XX.YY-exercise-name/{problem,solution,explainer}` 目录树，每个 variant 子目录写一份
+  非空 readme.md（有真实内容、无死链），跑 `pnpm ai-hero-cli internal lint` 校验并迭代到通过，
+  最后 `git commit`。附一节 lint 规则摘要（禁 .gitkeep / speaker-notes / 死链等）与用 `git mv`
+  重命名保留 git 历史。绑作者课程平台的私有 CLI，单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内没有 ai-hero-cli，也没有任何课程/练习目录
+  脚手架（grep 0 命中）。此 skill 的核心 gate 是作者私有 CLI 的 internal lint，环境绑定，转移价值近零。
+mechanisms:
+  - name: exercise-tree-scaffold-gated-by-private-cli
+    summary: 从 plan 建练习目录树 + 非空 readme stub，用作者私有 `pnpm ai-hero-cli internal lint` 迭代到通过。
+    opponent_evidence:
+      - path: skills/misc/scaffold-exercises/SKILL.md
+        quote: "Create exercise directory structures that pass `pnpm ai-hero-cli internal lint`"
+      - path: skills/misc/scaffold-exercises/SKILL.md
+        quote: "When stubbing, default to `explainer/` unless the plan specifies otherwise."
+    absence_proof:
+      pattern: 'ai-hero-cli'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方的脚手架其正确性由作者课程平台私有 CLI 的 internal lint 定义。我方无 ai-hero-cli（0 命中），
+      也无任何练习/课程目录脚手架；此 skill 完全绑作者平台，无环境无关机制。
+  - name: git-mv-history-preservation
+    summary: 重命名/移动练习目录用 `git mv` 而非 `mv`，以保留 git 历史。
+    opponent_evidence:
+      - path: skills/misc/scaffold-exercises/SKILL.md
+        quote: "Use `git mv` (not `mv`) to rename directories - preserves git history"
+    absence_proof:
+      pattern: 'git mv.{0,20}preserves|explainer/'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方在移动练习目录时坚持 `git mv` 保留历史。这是一条通用小卫生，但我方框架层无 skill 明文
+      写此约定（0 命中）——它对我方唯一可迁移的碎片，也仅是"重命名用 git mv"这一条常识。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  'ai-hero-cli' → 0；'git mv.{0,20}preserves|explainer/' → 0。matrix 判 tier C / counterpart none，
+  理由 author-specific 环境绑定——核实成立：核心 gate 是作者私有 CLI，除 git-mv 常识外无可迁移机制。
+  无 support_files。self-check check-coverage.py 通过。

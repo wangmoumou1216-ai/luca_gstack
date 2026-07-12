@@ -1,0 +1,51 @@
+id: skill:deprecated/qa
+kind: skill
+tier: C
+opponent_sha256: d9727aac6503981bf69bdd8b37e0d85b32b8fbd353a57528c252dac1337ab761
+opponent_summary: >
+  已弃用 skill。跑一个交互 QA session：用户口语化描述遇到的问题，agent 轻度澄清（≤2-3 问），后台开
+  Explore 子 agent 摸相关代码区学 domain language（不为修，只为写好 issue），判断单 issue 还是拆多个，
+  然后 `gh issue create` 直接建 GitHub issue（不让用户先审、建完发 URL）。issue 必须 durable（大重构后
+  仍成立）、写用户视角、用项目 domain language、不引文件路径/行号、reproduce 步骤强制。拆分时偏好"多而
+  薄"、按依赖序建以引真实 issue 号标 blocking、最大化并行。单个 SKILL.md，无 support_files。
+our_summary: >
+  matrix 标 counterpart=ux-audit，但两者机制不同：我方 ux-audit 是 CRM 页面 UX 评审（视觉合规/交互
+  可访问性/CRM 业务专项三模块、截图强制输入），直接产出一份评审报告，不建 GitHub issue、不做对话式
+  bug intake。我方无 `gh issue create` 式的对话报 bug→自动开 issue 流（grep 0 命中）。
+mechanisms:
+  - name: conversational-bug-to-github-issue
+    summary: 用户口语报 bug，agent 澄清+后台摸码，直接 gh issue create 建 durable、用户视角、domain-language 的 issue。
+    opponent_evidence:
+      - path: skills/deprecated/qa/SKILL.md
+        quote: "Create issues with `gh issue create`. Do NOT ask the user to review first — just file and share URLs."
+      - path: skills/deprecated/qa/SKILL.md
+        quote: "file GitHub issues that are durable, user-focused"
+    absence_proof:
+      pattern: 'gh issue create'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方把对话式 bug 汇报直接落成 GitHub issue（gh issue create，建完即发 URL 不预审）。我方无任何
+      gh issue create 流（0 命中）；ux-audit 产出的是评审报告文档，不建 issue，intake 也非口语报 bug。
+  - name: single-vs-breakdown-issue-with-blocking-order
+    summary: 判断单 issue 还是拆多个，偏好多而薄、按依赖序建、诚实标 blocking、最大化并行。
+    opponent_evidence:
+      - path: skills/deprecated/qa/SKILL.md
+        quote: "**Prefer many thin issues over few thick ones**"
+    our_evidence:
+      - path: .claude/skills/office/ux-audit/SKILL.md
+        quote: "ux-audit直接产出最终报告，不需要再合并"
+    delta: >
+      对方把一个 QA 报告拆成多而薄、带 blocking 边、可并行认领的 issue 集。我方 ux-audit 反向——直接
+      产出单份最终报告、不拆不合并、无 blocking 依赖图；"多薄 ticket + blocking 并行"这套在我方是
+      task-plan/tech-spec 的断言矩阵在管，而非 QA intake skill。故 matrix 记的 ux-audit counterpart 只在
+      "都涉质量/评审"层面松匹配，机制层实为不同物。
+notes: >
+  【matt 为何弃用 + 对我方信号】deprecated/README.md 明写 "Skills I no longer use."。弃用理由=被 triage
+  吸收：CHANGELOG.md 记 triage 把"the bug-only 'reproduce' step is generalized into a single 'verify the
+  claim' step"、并把 issue 与外部 PR 纳入同一套 roles + state machine（PR 视作带代码的 issue 走同一状态
+  机）。即 qa 的"对话报 bug→建 issue"被 triage 的通用请求-分诊状态机收编，独立 QA skill 作废。信号：
+  多个重叠的"intake→建单"skill 应收敛成一个统一状态机 skill（一个 verify-the-claim 步吃掉 bug/PR/请求
+  各自的 reproduce 变体）——对我方是 anti-fragmentation 警示：别为每种 intake 各造一个 skill；也印证我方
+  muse-req-triage 走"统一打分+分类"单入口的方向。跑过的 grep（repo 根，同上 scope）：'gh issue create'
+  → 0。无 support_files。self-check 通过。

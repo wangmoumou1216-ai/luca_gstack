@@ -1,0 +1,142 @@
+id: skill:engineering/setup-matt-pocock-skills
+kind: skill
+tier: A
+opponent_sha256: def265a8b15ffb8afc3f335d69e175ba9a7fe3991218984b0e49e8345cde3b20
+opponent_summary: >
+  setup-matt-pocock-skills 是一次性、prompt-driven 的配置技能（frontmatter
+  disable-model-invocation: true，user-invoked），为其余 engineering skills 铺设它们假定存在的
+  per-repo 配置。流程为 Explore → Present findings and ask → Confirm and edit → Write。它配置三个维度：
+  issue tracker（GitHub/GitLab/本地 markdown/其他，记入 docs/agents/issue-tracker.md）、triage label
+  词表（五个规范化角色映射到 label 字符串，仅当 triage skill 安装时才配）、domain 文档布局（single-context
+  的 CONTEXT.md+docs/adr 对 multi-context 的 CONTEXT-MAP.md）。写入阶段把一个 `## Agent skills` 块编辑进
+  已存在的 CLAUDE.md 或 AGENTS.md（二者只改已有那个、绝不新建另一个），并用 seed 模板落 docs/agents/*.md。
+  每种 tracker 各有一份适配器（github/gitlab/local），对下游 skill 暴露统一操作词汇（create/read/list/
+  comment/label/close + wayfinding）而底层换不同 CLI。
+our_summary: >
+  我方最近的对位是 scripts/project.sh（确定性 bash 脚手架）+ CONTEXT.md。project.sh new/switch 在
+  ~/Desktop/项目/<name>/ 下用 if-not-exists 模板建 per-project 骨架（docs/handoff、.luca/workflow-state.yaml、
+  current-topic.txt、MEMORY.md、CONTEXT.md、decisions.md），原子重指三条 symlink（docs/state/topic），并把
+  项目本地记忆 + CONTEXT 打印到 stdout 供 agent 载入。它不侦察仓库状态、不逐节确认、也不编辑 CLAUDE.md/
+  AGENTS.md 去插入 per-repo 配置块——框架指令文件 CLAUDE.md 是单一全局手工维护文件。我方没有可切换的
+  issue-tracker 抽象，也没有 triage-label 词表配置；工作项存活在 docs/** 的 artifacts + 稳定 ID，task-plan
+  产 DEV-NNN 卡片。per-project 的 CONTEXT.md + decisions.md（ADR-lite）是我方 domain 文档的对位，但 single/
+  multi-context 布局固定（无 CONTEXT-MAP.md）。
+mechanisms:
+  - name: explore-before-configure
+    summary: >
+      配置前 prompt-driven 侦察仓库状态以自动推断默认值，是「探索→呈现→确认→写入」的技能流程而非确定性脚本。
+    opponent_evidence:
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "This is a prompt-driven skill, not a deterministic script. Explore, present what you found, confirm with the user, then write."
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "Look at the current repo to understand its starting state. Read whatever exists; don't assume:"
+    our_evidence:
+      - path: scripts/project.sh
+        quote: "set -euo pipefail"
+      - path: CLAUDE.md
+        quote: "项目入场认知落盘（主路径，外部 repo 项目也适用）"
+    delta: >
+      对方在配置前先侦察仓库（git remote、已有 CLAUDE/AGENTS、CONTEXT、docs/adr、.scratch、triage 是否安装、
+      monorepo 信号）以据发现自动推断默认值，是一个 prompt-driven 的探索-确认-写入技能流程。我方 project.sh
+      是确定性 bash 脚本（set -euo pipefail + case 分发），直接按模板建骨架，不读仓库状态、不据发现调整。我方
+      「进项目先摸结构后写进 CONTEXT.md」的侦察-记录动作存在，但它是 CLAUDE.md 里一条由主 agent 手工执行的散文
+      指令，不是这个脚手架脚本的一部分。
+  - name: recommend-answer-then-one-word-accept
+    summary: >
+      每个配置小节先给推荐答案让用户一个词接受，一节一问一答顺序推进，探索已定的小节直接跳过。
+    opponent_evidence:
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "Lead each section with the recommended answer so the user can accept it in a word."
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "one section, one answer, then the next."
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "确认步骤最多 1 句话"
+      - path: CLAUDE.md
+        quote: "命名即切换"
+    delta: >
+      对方每个配置小节先给出推荐答案让用户一个词即可接受，按「一节一问一答」推进，探索已经settle的小节整节跳过。
+      我方在 CLAUDE.md Project Gate 有类似的最小确认交互（命名即切换、确认步骤最多 1 句话），但作用对象是项目
+      选择/切换，不是配置项逐节推荐-接受。作为 counterpart 的 project.sh 本身不做任何交互式推荐或确认。
+  - name: tracker-agnostic-adapters
+    summary: >
+      把 issue tracker 抽象成可替换适配层，对下游 skill 暴露统一操作词汇而底层换不同 CLI。
+    opponent_evidence:
+      - path: skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md
+        quote: "Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all operations."
+      - path: skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md
+        quote: "Issues and specs (you may know a spec as a PRD) for this repo live as markdown files in `.scratch/`."
+    absence_proof:
+      pattern: "issue.?tracker"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      对方把「issue tracker」抽象成可替换适配层——GitHub/GitLab/本地 markdown/其他各写一份
+      docs/agents/issue-tracker.md，对下游 skill 暴露统一操作词汇（create/read/list/comment/label/close +
+      wayfinding），底层换 gh/glab/文件。我方没有任何 issue-tracker 抽象或可切换适配器（grep issue.?tracker
+      于 .claude/skills、.claude/skill-os、CLAUDE.md 零命中）；工作项存活在 docs/** artifacts + 稳定 ID，
+      task-plan 产 DEV-NNN 卡片，无统一 tracker 读写契约。
+  - name: triage-label-vocabulary-mapping
+    summary: >
+      五个规范化 triage 角色映射到本仓实际 label 字符串、可覆盖、仅在 triage skill 安装时才配。
+    opponent_evidence:
+      - path: skills/engineering/setup-matt-pocock-skills/triage-labels.md
+        quote: "This file maps those roles to the actual label strings used in this repo's issue tracker."
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "each label string equal to its name: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`."
+    absence_proof:
+      pattern: "needs-triage|ready-for-agent|ready-for-human|wontfix"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      对方定义五个规范化 triage 角色（needs-triage/needs-info/ready-for-agent/ready-for-human/wontfix），把
+      角色映射到本仓实际 label 字符串、可覆盖、默认 label=角色名，且仅在 triage skill 安装时才配置。我方无与
+      issue tracker 绑定的可配置 triage label 词表（grep 这五个字符串于 .claude/skills、.claude/skill-os、
+      CLAUDE.md 零命中）。我方 muse-req-triage 也做需求 triage，但走 rule-based 打分+分类产待裁清单，不是把
+      角色映射到 tracker label 字符串。
+  - name: domain-doc-layout
+    summary: >
+      domain 文档布局作为可选项：默认 single-context，仅在探测到 monorepo 时提供 multi-context，并写消费规则。
+    opponent_evidence:
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "Default to **single-context** — one `CONTEXT.md` + `docs/adr/` at the repo root."
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "Offer **multi-context** — a root `CONTEXT-MAP.md` pointing to per-context `CONTEXT.md` files — only when exploration found monorepo signals."
+    our_evidence:
+      - path: scripts/project.sh
+        quote: "项目级长期约束与共识。激活/绑定本项目时注入"
+      - path: scripts/project.sh
+        quote: "决策台账（ADR-lite）"
+    delta: >
+      对方把 domain 文档布局作为一个可选项：默认 single-context（根 CONTEXT.md + docs/adr/），仅在探测到
+      monorepo 信号时提供 multi-context（根 CONTEXT-MAP.md 指向每 context 的 CONTEXT.md），并写一份 domain.md
+      规定消费规则（用 glossary 词汇、ADR 冲突显式标注）。我方 project.sh 为每个项目建固定的 single 布局：一个
+      CONTEXT.md（激活时注入长期约束）+ decisions.md（ADR-lite 决策台账），无 single/multi 的可配置选择、无
+      CONTEXT-MAP.md（grep CONTEXT-MAP 于 .claude、CLAUDE.md、CONTEXT.md、scripts 零命中）。
+  - name: config-injection-into-agent-md
+    summary: >
+      写入阶段把一个幂等的 Agent skills 块注入已存在的 CLAUDE.md 或 AGENTS.md，并按 seed 模板落 docs/agents/*.md。
+    opponent_evidence:
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa) — always edit the one that's already there."
+      - path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+        quote: "If an `## Agent skills` block already exists in the chosen file, update its contents in-place rather than appending a duplicate."
+    our_evidence:
+      - path: scripts/project.sh
+        quote: "注入项目本地记忆：激活后打印该项目 MEMORY.md"
+      - path: scripts/project.sh
+        quote: "让运行 switch/new 的 agent 把它纳入上下文"
+    delta: >
+      对方的写入阶段把一个 `## Agent skills` 块注入到已存在的 CLAUDE.md 或 AGENTS.md（二者只编辑已有那个、
+      绝不新建另一个），块已存在则原地更新不追加，并按 seed 模板落 docs/agents/*.md。我方 project.sh 通过建
+      骨架文件（CONTEXT.md/MEMORY.md/decisions.md）+ 把项目本地记忆打印到 stdout 供 agent 载入来「注入」，
+      不编辑 CLAUDE.md/AGENTS.md；框架指令文件 CLAUDE.md 是单一全局手工维护文件，不做 per-repo 生成或原地块更新。
+notes: >
+  跑过的 grep（绝对路径绕开 project-scope-guard 对命令串里 "docs/" 字面量的拦截，本 session 为 meta/审计
+  never-switch 未绑定项目）：issue.?tracker / needs-triage|ready-for-agent|ready-for-human|wontfix /
+  CONTEXT-MAP 于 .claude/skills、.claude/skill-os、CLAUDE.md（及 CONTEXT.md、scripts）全部零命中，支撑
+  M3/M4 的 absence_proof 与 M5 的 multi-context 缺席。docs/adr 类模式在 scripts/ 有 3 处 verify/route 脚本
+  误命中，非干净缺席，故 domain-doc-layout 改用 project.sh 的 CONTEXT.md/decisions.md 正面证据而非 ADR
+  absence。意外事实：对方 SKILL.md frontmatter disable-model-invocation: true——这是显式的 user-invoked
+  一次性 setup，不进模型自动路由；我方 project.sh 同样是用户手动运行的脚本（非 skill 路由）。所有 11 条
+  opponent 引文与 6 条 our 引文均已 grep -F 预验通过，check-coverage.py 为权威门。

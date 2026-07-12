@@ -1,0 +1,83 @@
+id: skill:engineering/ask-matt
+kind: skill
+tier: A
+opponent_sha256: 4465bad6bb9f7426743c1013d88740594da34e0f9934d375d93bbf981d5317b5
+dossier: dossiers/skill--engineering--ask-matt.yaml
+
+scores:
+  D: 2
+  I: 10
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - prose-flowmap（叙事条件路由）：+1。手写主流-匝道拓扑叙事地图我方无；但我方 CLAUDE.md
+    语义兜底规则承担同类"叙事判断"职能，且 /office 向导承担用户侧咨询——形态缺席、职能覆盖。
+  - skill-relationship-topology：+1。我方拓扑数据存在（optional-workflow-graph
+    recommended_paths）但与路由器分居两个 artifact，无叙事化用户可读地图。
+  - user-invoked-vs-automatic：+0（我方双路都有：route-guard 自动 + /office 用户invoked）。
+  - context-hygiene-smart-zone：+0（我方等价纪律更自动化：20 轮起 hook 提醒 + Checkpoint 协议）。
+  I=10：满分现任——route-guard 每消息运行(+2)/routing-map SSOT(+2)/check-routing-map.mjs +
+  test-route-guard.mjs 双 checker(+2)/office 向导(+2)/FM-11 可达性验收制度(+2)。
+  C=S / E=3。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。对方最有价值的配套约定——"skill 增删必须回头更新 ask-matt，否则
+  就是会撒谎的路由器"——我方已有同构且更机器化的对应物（FM-11 可达性验收 + check-routing-map
+  tripwire），无需引入。/office 向导若未来要增强"推荐路径叙事"，workflow-graph 数据已在，
+  属既有能力的呈现优化，非本次采纳项。
+
+reconciliation: null
+landing_estimate: null
+
+redteam:
+  verdict: stands
+  reverse_attack: |
+    反向攻击目标：证明这个 leave 错杀了 ask-matt 的真价值（用户可读叙事流程地图 + 相似
+    skill 辨异 + router 维护契约）。逐条查后，攻击不成立——leave 的每个事实前提都经核实，
+    且与 diagnosing-bugs 那种"空缺口地基为假"的错杀模式相反。
+
+    最强复活论证（我先把它立到最高）：ask-matt 唯一我方没有的，是**单一 user-invoked
+    consult**——给它一个"我忘了该用哪个 skill"的模糊处境，它 ① 把你放到某条 flow 的某一步
+    ② 辨析相似 skill（grill-me vs grill-with-docs、triage vs to-tickets"别 triage 掉
+    to-tickets 产出的票"）。我方等价物是**散的**：/office 向导（场景菜单+扁平清单）、
+    CLAUDE.md 路由规则（有辨异但是框架指令文件）、optional-workflow-graph（机读序列数据）。
+    没有任何单一产物给人一张"你在这里、这是全图"的可读地图。且 CHANGELOG #406 证明这地图
+    load-bearing 到 matt 用治理规则（router-lies，opponent CLAUDE.md:20，已核实非杜撰）维护它。
+    若给 skill-relationship-topology 记 +1 base +1「咬过人」(#406 地图曾漏 5 个 skill: tdd/
+    diagnosing-bugs/domain-modeling/codebase-design/grilling) = +2，叠 prose-flowmap +1 → D=3，
+    越过阈值 → 应改 merge。
+
+    为何攻击仍不成立（steelman-incumbent 后 verdict=stands）：
+    1. **前提全部核实、无假地基**：本 dossier 4 个机制**零 absence_proof**——它从不主张"空
+       缺口"，只主张"我方有、只是拆包不同"。我逐条核实这些 counterpart 全部实在：route-guard.mjs
+       (UserPromptSubmit 每消息触发)、skill-routing-map.yaml、/office 向导 (office-wizard.md
+       Step1 场景菜单 + 末尾"描述你想做的事我帮你判断用哪个")、optional-workflow-graph.yaml
+       (scenes recommended_paths)、CLAUDE.md「Skill 调用规则」的相似 skill 辨异、
+       check-routing-map.mjs、FM-11。这与 diagnosing-bugs（判 adopt 却查出 counterpart
+       systematic-debugging 已装、缺口为假）**方向相反**：那里地基塌了，这里地基实。
+    2. **「咬过人」是双刃、不干净给分**：#406 记录的是地图**失效**（悄悄过时漏 5 skill），
+       是对"手维护 prose 地图"这一**形态的反证**，不是地图 orienting 价值**成功命中**的复现例。
+       rubric「咬过人 +1」奖励的是机制**奏效**的实证；这条更像"prose 形态是负债"的证据——
+       而我方 check-routing-map.mjs 正是它的解药：SSOT-1（route 不得指向不存在的 skill=不 stale）
+       + SSOT-2（每个一级 skill 必须在 router 有命令文件=不 orphan）**双向自动**兜住 router-lies
+       两个失效模式，ask-matt 靠人重读 SKILL.md。维护轴我方**严格更强**，故 #406 不抬高我方 D。
+    3. **决定性架构不对称——现任独有承重轴**：ask-matt 的存在理由（docs/ask-matt.md 原话）是
+       "user-invoked skills，nothing fires those for you，*你*得记得它们存在，ask-matt 是你
+       offload 的记忆"。我方 route-guard **每条 UserPromptSubmit 都自动评分路由**——ask-matt
+       专治的"你得记得用哪个 skill"认知负荷，被我方 always-on 自动路由器更激进地解决了。ask-matt
+       是**纯 user-invoked**（disable-model-invocation:true），我方是"自动 hook + 用户可调
+       /office"双路。"自动路由器"是我方独有、ask-matt 完全没有的承重轴（rubric §3 支配测试口径：
+       现任在此轴真赢）。所以 leave 是证据结论、不是保守回避。
+    4. **即便宽读到 D=3 也只是 merge=呈现优化，非采纳项**：序列数据 + 辨异规则均已在库，唯一
+       delta 是把它们**并置**成一张更可读的 /office 地图。这是既有能力的 presentation refactor，
+       净值边际；bucket_rationale 已点名"属既有能力的呈现优化"。§3.5 采纳雄心要的是
+       "高价值+高置信才别保守"——此项价值边际（功能已交付、核心问题已被自动路由器解决）、
+       非能力缺口，不过"高价值"这半门槛。
+
+    结论：反向攻击不成立，leave 站得住。ask-matt 的净增量 = 把已存在的路由/序列/辨异能力
+    co-locate 成一张 user-invoked prose 地图（形态 delta，已由 M2/M3 各 +1 计入 D=2）；其核心
+    价值主张（记忆 offload）在我方 always-on route-guard 架构下大部分已被更优解替代。无值得
+    落地的新机制。若未来要增强 /office 的"推荐路径叙事"，workflow-graph 数据已在，属呈现优化、
+    非本轮采纳。

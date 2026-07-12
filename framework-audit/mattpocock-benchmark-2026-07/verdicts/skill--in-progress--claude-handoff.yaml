@@ -1,0 +1,14 @@
+id: skill:in-progress/claude-handoff
+kind: skill
+tier: C
+opponent_sha256: bbb25773158d78f610461e4041ffb56fe871cb297626e1f52b0535a9083b7996
+dossier: dossiers/skill--in-progress--claude-handoff.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: FAIL }
+bucket: leave
+bucket_rationale: |
+  快裁：18 行 draft stub——handoff 的"直接派生后台 agent 接手"变体（claude --bg）。
+  采证修正：真正概念对位是 handoff-protocol（写摘要落盘、下游读）而非 handoff-review；
+  但"派后台 agent 接力"能力 harness Agent tool（bg spawn + SendMessage）原生已有，
+  Loop 宪法④：不为 harness 原生原语建薄壳。non_redundancy FAIL（原生覆盖）。不采。
+reconciliation: null
+landing_estimate: null

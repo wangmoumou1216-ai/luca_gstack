@@ -1,0 +1,105 @@
+id: skill:productivity/grilling
+kind: skill
+tier: A
+opponent_sha256: 5a35925d03a391bcfa46940868b649b72dba89ec9c19525e785bbb6bd3a7f478
+opponent_summary: >
+  grilling 是一个仅 12 行正文的 model-invoked skill：一场"逼问式"访谈，一次只问一个问题，
+  沿设计树逐个分支走、逐一解决决策间的依赖，并为每个问题附上一个推荐答案。它把 fact（能在
+  代码库里查到的事实就自己查，不问用户）和 decision（决策归用户所有，逐个抛给用户并等待回答）
+  显式二分。在用户确认"达成共识"之前不得执行计划。它本身是被抽出的可复用访谈循环——grill-me、
+  grill-with-docs、wayfinder、triage、improve-codebase-architecture、ask-matt 等多个 skill
+  都通过 `/grilling` 调用它。
+our_summary: >
+  我方最接近的对位是 brainstorm skill——一个约 700 行的 research-to-PRD 编排器。它把逼问内嵌为
+  Phase 3（Collaborative Interrogation），用 CRITICAL RULE #3 + AskUserQuestion 强制"一次一问"。
+  facts-vs-decisions 以分散形态存在（追加研究只针对用户拿不到的事实、不针对产品决策；Phase 2 的
+  preanswered-questions）。抢跑防御表现为一个绝对的 HARD GATE（永不实现——只产出 PRD）加一个 Phase 7
+  的 gated handoff（未解决阻断性问题前禁止交付下游）。逼问逻辑没有被抽成独立 primitive：当
+  muse-loop-orchestrate 需要它时，是把整个 brainstorm（Phase 0-5）完整 dispatch 一遍。
+mechanisms:
+  - name: facts-vs-decisions-split
+    summary: >
+      能查的事实自己查、决策留给人；grilling 用两行把 fact 与 decision 显式二分，brainstorm 以
+      分散规则表达同一意图。
+    opponent_evidence:
+      - path: skills/productivity/grilling/SKILL.md
+        quote: "If a *fact* can be found by exploring the codebase, look it up rather than asking me."
+      - path: skills/productivity/grilling/SKILL.md
+        quote: "The *decisions*, though, are mine"
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "the gap is about facts the user probably doesn't have (market size, competitive landscape)"
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "not about product decisions (only the user can answer those)"
+    delta: >
+      两侧都把"可查的事实去查/研究、决策只由用户回答"这条区分落进了 skill。grilling 用一条并列的
+      两行规则显式表达（fact→查、decision→抛给人），位于 12 行正文的核心。brainstorm 具备相同意图，
+      但分散在 Phase 2.5 的追加研究守则（"只针对用户拿不到的事实、不针对产品决策"）与 Phase 2 的
+      preanswered-questions 概念里，未抽成一条居中的显式规则。差异是显式度与位置，不是有无。
+  - name: one-question-at-a-time
+    summary: >
+      一次只问一个问题、等到回答再问下一个；两侧规则一致，brainstorm 额外加了工具约束与 CRITICAL
+      反模式。
+    opponent_evidence:
+      - path: skills/productivity/grilling/SKILL.md
+        quote: "Ask the questions one at a time, waiting for feedback on each question before continuing."
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "One question at a time."
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "Wait for the answer before asking the next. Never batch multiple questions into a single prompt."
+    delta: >
+      两侧的核心纪律完全相同：一次一问、等答再问、不批量提问。grilling 以一句裸指令表达；brainstorm
+      把它硬化为 CRITICAL RULE #3、绑定 AskUserQuestion "exactly once per question"，并在 Anti-Patterns
+      表里把"一条消息问多个问题"列为 CRITICAL 违规。这是我方对位不弱于对方的一个机制。
+  - name: confirmation-gate-no-run-before-consensus
+    summary: >
+      达成共识前不执行计划；grilling 的门是"确认共识→再执行"，brainstorm 的门是"永不执行 + 未解决
+      阻断项前禁止下游交付"。
+    opponent_evidence:
+      - path: skills/productivity/grilling/SKILL.md
+        quote: "Do not enact the plan until I confirm we have reached a shared understanding."
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "The skill does NOT write code, scaffold projects, run builds, invoke implementation skills"
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "Handoff to downstream design skills is blocked until those items are resolved by the user."
+    delta: >
+      共同点是"未获用户签字前不抢跑"。但门控对象不同：grilling 是条件门——达成共识后它确实会去执行
+      计划；brainstorm 有两个相关但不同的门：(a) 一个绝对的 HARD GATE，根本不实现（它是纯 PRD skill，
+      "共识前不 run"被"永不 run"吸收），(b) 一个 gated handoff，未解决阻断性 Outstanding Questions
+      前禁止把 PRD 交给下游。因此 brainstorm 缺少 grilling 那个"达成共识→现在执行"的状态跃迁，因为它
+      从不执行；被门控的是"下游交付"而非"实现计划本身"。
+  - name: reusable-primitive
+    summary: >
+      grilling 是被抽出、供多个 skill 复用的独立访谈 primitive；我方把逼问内嵌在 brainstorm 里，
+      未抽成可被组合调用的 primitive。
+    opponent_evidence:
+      - path: README.md
+        quote: "The reusable loop behind `grill-me` and `grill-with-docs`."
+      - path: skills/productivity/grill-me/SKILL.md
+        quote: "Run a `/grilling` session."
+      - path: skills/engineering/improve-codebase-architecture/SKILL.md
+        quote: "run the `/grilling` skill to walk the design tree with them"
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "Phase 3: Collaborative Interrogation (USER IN LOOP)"
+      - path: .claude/skills/office/muse-loop-orchestrate/SKILL.md
+        quote: "完整跑它自己的 Phase 0-5"
+    delta: >
+      对方把访谈抽成一个独立的 model-invoked `grilling` skill，被 grill-me、grill-with-docs、wayfinder、
+      triage、improve-codebase-architecture、ask-matt 等 5+ 个 skill 通过 `/grilling` 直接调用，是一个
+      按组合复用的共享 primitive。我方没有这样一个被抽出的 primitive：逼问以 Phase 3 内嵌在 700 行的
+      brainstorm 单体里；当 muse-loop-orchestrate 需要逼问时，它 dispatch 的是整个 brainstorm（完整跑
+      Phase 0-5）而非一个瘦访谈循环。即我方具备逼问"行为"，但不具备对方"抽取-复用"的架构形态。
+
+notes: >
+  跑过的 grep：grep -ril "grill" .claude/skills .claude/skill-os CLAUDE.md 仅命中 2 处
+  （.claude/skill-os/external-skills/vetting-registry.yaml 与 RECOMMENDATIONS-2026-06-07.md），
+  二者均为对 mattpocock grill 系 skill 的外部评估记录，非我方自有 primitive——佐证 reusable-primitive
+  缺席。grep -rn "grilling" skills/ 于对方仓库证实 `/grilling` 被 grill-me/grill-with-docs/wayfinder/
+  triage/improve-codebase-architecture/ask-matt/loop-me 等多 skill 调用；CHANGELOG 亦记载 grilling 被
+  "Exposed as a model-invoked skill — the reusable interview loop behind grill-me and grill-with-docs"，
+  且 #464 分别加了 confirmation gate 与 facts-vs-decisions split（与三个内容机制对应）。support_files 为
+  空，仅 SKILL.md；reusable-primitive 的 opponent 证据取自 README/调用方 skill（同 clone 内，路径合法）。
+  matrix subverdicts 四项全部保留、未增删，读全文后与实际内容一致。

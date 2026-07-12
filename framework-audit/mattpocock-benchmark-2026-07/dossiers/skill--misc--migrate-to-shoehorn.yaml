@@ -1,0 +1,46 @@
+id: skill:misc/migrate-to-shoehorn
+kind: skill
+tier: C
+opponent_sha256: de4da4c11d924fac79c924b2ee3d2db4a5cb98386eb490a599119463d036ae72
+opponent_summary: >
+  一个作者专属的窄工程 how-to skill：把测试文件里的 `as` 类型断言批量迁移到作者自己维护的库
+  @total-typescript/shoehorn。给出三条替换规则（`as Type`→`fromPartial()`、`as unknown as Type`
+  →`fromAny()`、需完整对象时 `fromExact()`），一张 when-to-use 表，和一段 workflow（先 grep 出
+  含 `as` 的 .test.ts/.spec.ts，逐条替换，加 import，跑 typecheck 验证）。强调仅限测试代码、
+  绝不用于生产代码。单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内没有任何 shoehorn / fromPartial / fromAny /
+  @total-typescript 迁移器（grep 0 命中），也没有任何针对 TS 测试断言的库特定重构器。此 skill
+  绑死作者自家 npm 包，转移价值近零——除非我方下游项目正好用 shoehorn，否则无接入面。
+mechanisms:
+  - name: as-to-shoehorn-typed-migration
+    summary: 把测试里的 `as` 断言按三条规则替换成 shoehorn 的 fromPartial/fromAny，保持 TS 类型安全下传部分数据。
+    opponent_evidence:
+      - path: skills/misc/migrate-to-shoehorn/SKILL.md
+        quote: "It replaces `as` assertions with type-safe alternatives."
+      - path: skills/misc/migrate-to-shoehorn/SKILL.md
+        quote: "Replace `as Type` with `fromPartial()`"
+    absence_proof:
+      pattern: 'fromPartial|fromAny'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方提供一套把 TS 测试 `as` 断言迁移到 shoehorn API 的确定性替换规则。我方框架无任何 shoehorn
+      迁移逻辑（fromPartial/fromAny 0 命中），也无等价的库特定测试重构器；这是绑作者自家包的窄工具。
+  - name: test-only-guardrail
+    summary: 硬性约束——shoehorn 只用于测试代码，绝不进生产代码。
+    opponent_evidence:
+      - path: skills/misc/migrate-to-shoehorn/SKILL.md
+        quote: "**Test code only.** Never use shoehorn in production code."
+    absence_proof:
+      pattern: 'shoehorn|@total-typescript'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方给这条迁移设了 test-only 护栏。我方无 shoehorn 概念（0 命中），故此护栏无附着点。
+notes: >
+  跑过的 grep（repo 根 /Users/luca/Desktop/项目/muse/lucagstack，scope=.claude/skills .claude/skill-os
+  scripts CLAUDE.md .claude/agents）：'shoehorn|fromPartial|fromAny|@total-typescript' → 0 命中。
+  matrix 判 tier C / counterpart none，理由 author-specific 无转移价值——核实成立：绑死
+  @total-typescript/shoehorn 作者自家包，无环境无关的可复用机制。无 support_files。
+  self-check check-coverage.py 通过。

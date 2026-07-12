@@ -1,0 +1,37 @@
+id: skill:productivity/grill-me
+kind: skill
+tier: A
+opponent_sha256: 6189dfceb7304a6e5558f75d87e68fa3bc7fcf7ba120e44f21f8a61fe01eba54
+dossier: dossiers/skill--productivity--grill-me.yaml
+
+scores:
+  D: 1
+  I: 8
+  C: S
+  E: 3
+score_derivation: |
+  D=1：薄壳全文一行 "Run a `/grilling` session."（dossier shell-increment 双侧引文）。唯一
+  增量 = user-only 入口形态（disable-model-invocation + 精修 description）。该形态的价值在
+  mech:invocation-cost-model 单元单独评，不在壳上重复计分；壳本身对我方（/brainstorm 斜杠
+  入口与实体同一 artifact）无额外增值。
+  I=8：brainstorm 现任极强（routing+接线+P1-P7+使用史）。
+  C=S / E=3（promoted+CHANGELOG+非 draft）。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=1 < 3。与锚 B 标尺一致：薄壳的净增量归其 primitive（grilling 已单独
+  merge），壳本身 D→0-1。
+
+reconciliation: |
+  旧裁决：REJECTED（2026-06-07，vetting-registry:847-864，non_redundancy FAIL，
+  redundant_with brainstorm，weighted 50）。
+  新透镜复核：**维持 REJECT，不翻案**。透镜变宽（工程线/框架建造入列）不改变本单元性质——
+  它对任何一条线都只是 brainstorm 已覆盖能力的重复入口。
+  但记录旧裁决的两处事实性偏差（dossier prior_verdict_response 核出，不影响结论）：
+  ① 旧文把 grilling 的 5 句访谈实质算在 grill-me 头上（"4 sentences"）——实际壳只有 1 行，
+    比旧记录更薄，更支持 REJECT；
+  ② 旧文的 trigger-collision 担忧挂错对象——壳是 user-invoked 无触发词，路由撞词面在
+    grilling primitive 上，而 grilling 本次以 merge 方式吸收（非装入 skill），撞词不发生。
+  结论：旧 REJECT 在新透镜下"复核后仍拒"，属合法对账（锚 B 标尺含义）。
+
+landing_estimate: null   # leave 桶无落地

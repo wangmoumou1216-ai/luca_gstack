@@ -1,0 +1,82 @@
+id: skill:productivity/teach
+kind: skill
+tier: B
+opponent_sha256: 6d2dbe5e03084cf26fef66b535127b36cd1bcbe9478e26b0626029cd51dc2259
+dossier: dossiers/skill--productivity--teach.yaml
+
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+soft: { fit: 0, quality: 3, adoption: 2, maintenance: 3 }
+weighted_score: 63
+
+score_derivation: |
+  硬门全 PASS（教学工作区无危险面；标准 frontmatter；教人类学外部主题的能力我方全缺席，
+  五组 absence grep 全 0——我方记忆体系记的是 agent 学到什么，非教用户什么）。
+  软分：fit=0——**按 GATE-1 冻结透镜诚实打分**：教学能力对设计主干/工程执行线/框架自建
+  三维度均无直接贡献；luca 个人有学习实践（Obsidian wiki）是相邻事实但在框架环境外。
+  quality=3（认知科学深度：storage strength/ZPD/spaced retrieval 全部操作化；5 文件格式
+  体系完整——纯质量本批前列）。adoption=2（promoted）。maintenance=3。
+  weighted = 0+30+13.3+20 ≈ 63。
+
+bucket: leave
+bucket_rationale: |
+  7 维门禁 CONDITIONAL（63，45-69 区间）。裁决：**不进框架采纳轨道**（fit=0 是结构性的，
+  不是证据不足）；作为**个人可选项**呈报 GATE-2——若 luca 想要，全局装（user-invoked、
+  零 context load、不进 office/routing-map/治理轨道，与框架零耦合），装与不装是个人
+  生产力选择非框架决策。
+
+reconciliation: null
+landing_estimate: null   # 若 luca 选装：install 全局，零框架触面
+
+redteam:
+  verdict: stands
+  reverse_attack: |
+    抽中怀疑点：CONDITIONAL 63 fit=0——检验透镜三维度是否对 teach 过窄，把真价值错杀。
+    结论：反向攻击四路全部不成立，leave 正确。逐路核验：
+
+    ① fit 是否被窄透镜压低？—— 否，且方向相反。fit 在 external-skill-scout 里定义为
+       "does it genuinely fill THIS gap ... 0 if off-target"（.claude/workflows/external-skill-scout.js:213；
+       fit_score:78 "3 = directly fills a focus gap"），focus gap 取自 gaps-register open 项。
+       实地核验 gaps-register.yaml 全 13 条：无一条是"教一个真人学外部主题"。唯一沾设计的
+       GAP-design-methodology-review 的 keywords 是 ux research/prd/design critique/prototyping/
+       design-to-code——是**设计方法论**，非**教人学习的教学法**，teach 映射不上。且判官
+       score_derivation 明写"按 GATE-1 冻结透镜诚实打分"，用的是 §0 已**加宽**的透镜（通用产品设计
+       工程框架＝设计主干∨工程执行线∨框架自建），比 workflow 里字面残留的 "CRM product-design"
+       更宽——加宽后 teach 仍 fit=0，证明 fit=0 不是旧窄透镜遗留物，是**正交**（off-target）而非
+       **被排除**。攻击①失败。
+
+    ② 判官自由裁量是否越 rubric？—— 否，判官反而偏慷慨。quality=3 / adoption=2(promoted) /
+       maintenance=3 全给足，只有 fit 卡在机械正确的 off-target=0。无任何"为回避采纳而发明的裁量
+       carve-out"。攻击②失败。
+
+    ③ "价值已由他 verdict 覆盖"是否真覆盖？—— 真覆盖，且落点正确。teach 五机制中唯一**框架可移植**
+       的一条（canonical-glossary-with-`_Avoid_`）已被独立抽为 mech:avoid-alias-table，其 verdict=
+       **merge**（并入共用 skill-authoring.md 的写作手艺一节，实地读过 verdicts/mech--avoid-alias-table.yaml）。
+       即 teach 里对框架有用的那点，已在**机制粒度**被收割——这正是对的粒度：teach 作为整体是一个
+       面向真人的教学工作区（MISSION/RESOURCES/lessons/learning-records/ZPD），其余四机制
+       （stateful-teaching-workspace / cognitive-science-model / learning-records-and-zpd /
+       knowledge-skills-wisdom-sourcing）全是"教真人学外部主题"，无框架消费者。leave 不 orphan 任何
+       框架价值。攻击③失败。
+
+    ④ leave 事实前提是否经核实（对齐 diagnosing-bugs 教训）？—— 经核实，且与 diagnosing-bugs 相反。
+       diagnosing-bugs 的错在"空缺口"为假（systematic-debugging 已装）。teach 的缺口独立复跑三组
+       grep 全 0：无 teaching/pedagogy skill、无 teach/learn/tutor/lesson skill 目录、无 `_Avoid_`
+       表、无 storage strength/ZPD 等认知科学词汇（.claude/skills .claude/skill-os CLAUDE.md）。
+       缺口**真存在**（不是假缺口），但缺的是"教真人"这件事——而框架不做这件事，故真缺口 × fit=0
+       并存无矛盾。luca 个人确有学习实践（Obsidian Vault，全局 CLAUDE.md 引用，位于 gstack 仓外的
+       独立个人系统），leave 已诚实处理：路由 GATE-2 作**个人可选安装**（全局装、零 office/routing-map/
+       治理触面）。这既不丢该选项、也不把面向真人的教学工作区塞进产品设计工程框架的 skill-os。攻击④失败。
+
+    §3.5 采纳雄心压力测试（最强 revive steelman + 为何仍不 revive）：
+      knife-edge 敏感度真实——fit 0→1 即 weighted 73≥70 翻 APPROVED（新增 skill）。最强 revive 论证：
+      teach 的教学法 + "自包含精美 HTML lesson"产出可复用于**框架自身 onboarding/文档**（教 luca 或
+      新队友读懂庞大的 luca_gstack）。但此论证撑不起 §3.5 要求的"高置信"：(a) teach 明令知识取自
+      curated 外部 RESOURCES.md、"never trust parametric knowledge"、wisdom 委派外部 community——
+      而框架自身就是被文档化的 parametric 知识、无外部 community，把 teach 挪去教框架是**逆其设计**
+      使用；(b) 无论怎么挪，gaps-register 里**没有**"框架自教/onboarding"这条 open gap，映射不上→
+      fit 仍机械判 0；(c) 整体采纳会引入 MISSION/lessons/learning-records 一整套无框架消费者的用户态
+      结构，直撞 Loop 宪法#3（复杂度须可测自证）与最小文件原则＝structure for its own sake。故
+      fit0→1 只能靠低置信拉伸，§3.5 明说"门槛是保高置信不是压结果"——低置信的翻案不被 §3.5 授权。
+      真价值（avoid-alias 手艺）已由 mech:avoid-alias-table=merge 以正确粒度落地，无需为它复活整个 skill。
+
+    最终：stands。leave 是"真缺口 + 零框架 fit + 已按机制粒度收割可移植价值 + 个人选项正确路由 GATE-2"
+    的证据结论，非"怕动结构的保守回避"。不 revive。

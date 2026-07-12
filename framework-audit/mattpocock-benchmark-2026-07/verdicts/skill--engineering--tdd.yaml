@@ -1,0 +1,95 @@
+id: skill:engineering/tdd
+kind: skill
+tier: A
+opponent_sha256: 5363bb2775679fe9311fbb67947f95359169c6e7f1fac77c0f25e190bca6cf2f
+dossier: dossiers/skill--engineering--tdd.yaml
+
+scores:
+  D: 2   # 红队下修（原 3）：删"文件集 6→3"点，见 redteam
+  I: 6
+  C: S
+  E: 3
+score_derivation: |
+  D=2（红队修正，原判 3；相对**有效现任**=code-hygiene + harness verify + 已安装的全局
+  ~/.claude/skills/tdd 旧版——dossier 实地核出安装态，见 reconciliation）：
+  - test-at-pre-agreed-seam：+1。上游 2026-06-07 后新增（安装版无 seam 概念，grep 证实）；
+    "写测试前与用户确认 seam 清单"是人类卡点式测试范围协商，我方全生态无。
+  - tautological-test-antipattern：+1。同为安装后上游新增；"期望值必须来自独立真值源"直击
+    agent 写自证测试的高频失败模式，我方 Iron Law 只管"跑了没"不管"断言是否自证"。
+  - ~~上游结构演进（文件集 6→3）：+1~~ → **红队删（+0）**：非 5 机制单元之一、无双侧引文（违
+    rubric §2 证据铁律"任何计分维度得分而无双侧引文=verdict 无效"）；verdict 自认"形态漂移"，
+    而 D 量的是能力缺口非形态差；且实为内容**减量**——刷新会删 deep-modules.md(1239B, Ousterhout
+    深模块) + interface-design.md(653B, DI-可测性)两份真实非冗余内容，把删除记成增量方向反了。
+  - 其余机制（interface-is-test-surface/红绿循环/mock 边界）：+0——安装版已含，非净增量。
+  I=6：全局安装存在(+2)/routing-map tdd 词条存在（route-guard 可 surface，FM-11 达成）(+2)/
+  code-hygiene 显式边界声明（"测试先行交还全局 tdd"）(+2)/但安装版冻结 stale(0)/无更新机制(0)。
+  C=S：刷新全局安装（npx skills update 或重链），0 个仓内文件。
+  E=3：promoted(+1)+CHANGELOG 活跃演进(+1)+非 draft(+1)。
+
+bucket: adopt
+bucket_rationale: |
+  性质=**既有采纳的维护刷新**，非新裁决：旧 APPROVED-90 成立且已执行（安装态实证）。
+  adopt 范围 = 把全局安装刷新到 391a2701 版**只为拿到 seam 门 + tautological 两个新机制**
+  （红队收窄：删原"对齐新文件集"表述——该刷新同时删 deep-modules/interface-design 两份真实内容，
+  是取舍非中性对齐，须用户闸门，见 refresh_caveat）。非冗余成立如旧（5 机制仓内 grep 全 0，
+  code-hygiene 文档显式让位）。
+
+reconciliation: |
+  旧裁决：APPROVED-90（2026-06-07，vetting-registry:210-250）。**维持 APPROVED，无翻案**。
+  但 P1 矩阵的"批而未装=执行债"假设被 dossier 实地核验**推翻一半**：
+  ① 安装真实发生——~/.claude/skills/tdd symlink 批准当天（2026-06-07 17:14）即建，指向
+    ~/.agents/skills/tdd，6 文件齐全。"未装"仅在"未接入 office 一级管线"这一窄义上成立
+    （而这正是 integration_note 的原意，合规）。
+  ② integration_note 说"不要加 routing-map"，但 skill-routing-map.yaml:260-264 存在 tdd
+    词条（触发词：tdd/测试驱动/写测试/测试先行/红绿重构/单元测试）——比处方更集成一步。
+    该词条实际达成 FM-11 可达性，未见负面效应；记录漂移，建议保留词条并在 registry 该条目
+    追加一行备注更正 integration_note（append-only）。
+  ③ 真正的执行债是**stale install**：安装版冻结在 2026-06-07，上游已删 3 文件
+    （deep-modules/interface-design/refactoring→委托 code-review）并新增 seam 确认门 +
+    tautological 反模式两个高价值机制。刷新即可收割，成本 S。
+
+landing_estimate:
+  reuse_mode: install
+  touched_files_estimate: ["~/.claude/skills/tdd(全局刷新，仓外)", "vetting-registry.yaml(追加备注一行)"]
+  refresh_caveat: |
+    红队补（scope 收窄）：刷新到 391a2701 会**删除** deep-modules.md + interface-design.md
+    ——两份为当前上游已无的真实非冗余内容（深模块哲学 / DI-可测性，后者与 mock 边界机制的 DI 指南重叠）。
+    刷新前须让用户就"保留/放弃这两份"明确取舍，不得作为"文件集对齐"静默带走。
+  ab_runs_needed: 0   # 红队核实：正确。install 整取、框架按 code-hygiene 委托刻意外置 TDD，仓内零 skill prose 吸收 → 不触机制层 A/B（非 BLOCK 情形）
+  dual_repo: false    # 全局安装本身与仓库无关；红队订正：vetting-registry.yaml 双仓皆有（母版+fork 均验在），那一行台账备注须按 fork-local 审计记账处理或双落，不可默认 false 一笔带过
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强"现任够用/刷新只是加噪音"论：已安装的 2026-06-07 旧版 tdd 已携 TDD 全部核心——
+    interface-is-test-surface、红绿循环、mock 边界三机制都在（grep 安装版实证）。这次刷新净
+    增只有 2 个边角机制：seam 确认（写测试前多一道人类卡点仪式）+ tautological 一条反模式警示；
+    与此同时刷新**删掉** deep-modules.md + interface-design.md 两份设计内容。故可论：现任（安装旧版）
+    已够，刷新是"多一个仪式+一条警示、换掉两份设计文档"的近乎等价交换，framework 层面几乎无净得。
+    为何**不致命**：① seam 与 tautological 经双侧引文核实在仓内 AND 安装旧版**双双缺席**（非重复计分），
+    tautological 直击 agent 写自证测试这一高频真实失败，价值非噪音；② 框架对这个外置 skill 有**活的
+    接线依赖**——skill-routing-map.yaml:260-264 有 weight-7 tdd 词条（route-guard 会 surface）、
+    code-hygiene 正文显式把"测试先行"让位给"全局 tdd"，即框架架构主动依赖它；以成本 S 刷新一个活依赖
+    去收 2 个真实机制是正当维护。→ 把桶砍到"不动"会白丢便宜的真实价值，属"为杀而杀"。故**桶存**，
+    但 verdict 对净增量的量化被夸大，须收窄。
+  attack_notes: |
+    裁决=downgraded：桶 adopt 存，收窄三处（只删不加）。
+    ① D 3→2（承重下修）：第 3 个 D 点"上游结构演进/文件集 6→3 +1"应删——
+       (a) 违 rubric §2 证据铁律：它不是 dossier 5 个双侧引文机制单元之一，"计分维度得分而无双侧
+           引文=verdict 无效"；(b) verdict 自己写"形态漂移"，D 量的是**能力缺口**不是形态差；
+       (c) 方向反了——刷新实为内容**减量**：会删 deep-modules.md(1239B)+interface-design.md(653B)，
+           二者经实地核验在安装版存在、当前上游已无，是真实非冗余内容，把删除算成增量不成立。
+       净增量只剩 seam + tautological = 2。（注：若改用"仓内为基线"框架 D 反而更高，但 verdict 选
+       "安装旧版为现任"是保守取向，此下修只打第 3 点的方向性错误，不翻这个基线选择。）
+    ② fit（无宪法冲突，但 merge_scope 掩盖了删除）：seam 确认是人类卡点，与"人类卡点承重"一致不冲突；
+       框架按 code-hygiene 委托刻意把 TDD 外置，故 reuse_mode=install 整取是对的落法，非违最小文件/
+       输入面收窄。**但** bucket_rationale 原写"对齐新文件集"把一次内容删除粉饰成中性对齐——已收窄为
+       "只为 seam+tautological"，并加 refresh_caveat 要求删除前用户闸门取舍。
+    ③ 集成成本核实：touched_files 诚实（仓外全局 + 1 行台账）；**未触** skill-invariants P1-P7
+       保护区（全局安装非仓内 SKILL.md；routing 词条已存非新增；台账 append-only）。ab_runs=0
+       **正确**——install 整取、仓内零 skill prose 吸收，不触机制层 prose A/B，非 BLOCK 红线情形
+       （这条给 verdict 记功，不是攻击点）。dual_repo=false 对全局安装成立，但订正：vetting-registry.yaml
+       经核**双仓皆在**（/Users/luca/Desktop/luca_gstack 与 fork 均验在），那一行台账备注须按 fork-local
+       审计记账或双落处理，不可 false 一笔盖过。
+    未 kill 理由：新旧两透镜下 fit 均真、stale 属实、2 个新机制真实且刷新成本低、框架有活接线依赖值得刷。

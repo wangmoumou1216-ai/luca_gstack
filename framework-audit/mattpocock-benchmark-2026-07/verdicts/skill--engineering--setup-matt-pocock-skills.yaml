@@ -1,0 +1,122 @@
+id: skill:engineering/setup-matt-pocock-skills
+kind: skill
+tier: A
+opponent_sha256: def265a8b15ffb8afc3f335d69e175ba9a7fe3991218984b0e49e8345cde3b20
+dossier: dossiers/skill--engineering--setup-matt-pocock-skills.yaml
+
+scores:
+  D: 6
+  I: 10
+  C: L
+  E: 3
+score_derivation: |
+  D=6（但增量分布见 bucket_rationale——多数属同一基础设施簇）：
+  - tracker-agnostic-adapters：+2。可替换 issue-tracker 适配层（统一操作词汇，底层换 CLI）
+    grep 0 命中——我方工作项活在 docs/** artifacts + 稳定 ID，无 tracker 抽象。
+  - triage-label-vocabulary：+1。五规范角色→label 映射缺席（同簇）。
+  - explore-before-configure：+1。prompt-driven 探索→呈现→确认→写入流程；我方 project.sh
+    是确定性脚本 + CLAUDE.md"入场认知落盘"散文指令，无脚手架内侦察适配。
+  - domain-doc-layout：+1。single/multi-context 可选布局（CONTEXT-MAP.md）缺席；我方固定
+    single。
+  - config-injection-into-agent-md：+1。幂等块注入已有 CLAUDE/AGENTS 缺席；我方 stdout 注入
+    是不同且有意的机制。
+  - recommend-answer-one-word-accept：+0（我方 AskUserQuestion 约定已"推荐项置首"，
+    Project Gate 已"确认最多 1 句话"——同构已有）。
+  I=10：project.sh + 三软链 + session-restore/project-scope-guard 接线 + 专属回归测试
+  （test-project-scope-guard.mjs）——现任是框架最重的基础设施之一。
+  C=L：tracker 抽象是基础设施级触面。E=3。
+
+bucket: leave
+bucket_rationale: |
+  D=6 机械达标 merge 必要条件，但 judge 裁定 leave + 升 gap 提案，理由显式记录（供 P3 红队
+  攻击与 GATE-2 复核）：
+  ① 增量的 4/6 分属**同一基础设施簇**——"要不要一个 tracker 承载的工作项层"。这不是某个
+    skill 的补强，是框架级架构选择（我方现行 docs/**+稳定ID+handoff 是 Skill-first 的承重
+    设计）。按 F6 纪律（候选只能映射 open gap；无 gap → 先提案 gap、人裁 gap、候选下轮
+    再入）——**先裁 gap 再谈采纳**，不得由单个 skill verdict 后门引入基础设施。
+  ② 同簇证据横跨 4 个单元（to-spec 的 publish、to-tickets 的 native blocking、triage 的
+    label 状态机、wayfinder 的 tracker 地图）——聚合成一个 gap 提案比四处零散 merge 诚实。
+  ③ 簇外余量（explore-before-configure/domain-doc-layout/config-injection，D 合计 3）
+    独立价值低：project.sh 确定性 + CLAUDE.md 入场认知落盘已覆盖主职能，multi-context 无
+    现实需求（我方项目结构单 context）。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: null
+  touched_files_estimate: []
+  ab_runs_needed: 0
+  dual_repo: false
+  new_gap_proposal: "GAP-issue-tracker-integration（框架是否引入可选的 tracker 承载工作项层：统一适配器 + 状态 label + 原生 blocking + 共享地图；证据锚点=对方 setup/to-spec/to-tickets/triage/wayfinder 五单元 dossier；与现行 docs/**+稳定ID 架构的关系须先裁）"
+
+redteam:
+  verdict: stands
+  reverse_attack: |
+    反向红队官（opus）——抽中理由：D=6 机械达 merge 却 leave，检验 judge 自由裁量
+    （tracker 簇升 gap 提案）是否站得住、tracker 工作项层是否真该整体推迟。带 diagnosing-bugs
+    教训（那次 adopt 建在"空缺口地基为假"上——已装 systematic-debugging）同等怀疑度审此 leave。
+
+    == 最强复活论证（steelman revive）==
+    (R1) D=6 机械满足 §3 补强合并（D≥3 且 ≥2 独立机制），judge 用"cluster"抽象把 4 个机制
+    捆成 gap 推迟、把其余斥为"低价值"——疑似把真缺口伪装成"形态差异/架构冲突"以回避采纳。
+    (R2) tracker-agnostic-adapter 是真价值：Matt 整套 engineering skill（to-spec/to-tickets/
+    triage/wayfinder）都假定它存在。推迟到一个"可能永不裁决"的 gap（gaps-register 里多条
+    gap 挂 open/proposed 数月）≈ 静默杀死。
+    (R3) §3.5 采纳雄心明令 framework 能力被鼓励；tracker 层正是 framework 能力；"别默认 leave
+    安全"。若答案只是"没敢动 docs/**+稳定ID 架构"，应翻 revive（capability_type: framework）。
+
+    == 逐点证伪（实地核验，非机制级 grep 复读）==
+    (F1 交叉引用真覆盖——攻击方向③) 读了全部 4 个兄弟 verdict 的 merge_scope，tracker 相关
+    机制**一致被排除**、并显式转 gap，无一处把 tracker-依赖机制 merge 进落地面：
+      · to-spec ③ 原文："不落地：tracker publish（归 gap 提案）"
+      · to-tickets redteam attack_notes①："对方最环境绑定的部分（tracker 发布/native blocking/
+        ready-for-agent 标签）已被 scope 舍弃，未被 D 分走私进落地面"
+      · triage merge_scope 只落 verify-before-grill + TRIAGE_DUPLICATE 去重；label 状态机未 merge
+      · wayfinder ③："不引入：…tracker 地图（基础设施成本）"
+    → judge 的"cluster 横跨 4 单元、聚合成一个 gap 比四处零散 merge 诚实"不是发明的遮羞布，
+      是 4 个独立 verdict 各自证实的横切事实。R1"伪装"指控被证伪：兄弟们主动把 tracker 部分
+      让渡给 gap，无双重计分、无别处偷 merge。
+    (F2 leave 的事实前提经核实——对齐 diagnosing-bugs 教训) 逐条查真伪：
+      · "无 tracker 抽象"：grep issue.?tracker = 0 命中属实，且我方 docs/**+稳定ID+task-plan
+        DEV-NNN 是**有意的 Skill-first 设计**（非缺失）——绝对真缺席，非 diagnosing-bugs 式假缺席。
+      · "无对应 open gap"：读 gaps-register.yaml 全表，open 项（routing-fragmentation/
+        soft-enforcement/fusion-impact-automation/design-methodology-review/self-evolution-
+        hardening）+ proposed（no-living-capability-truth）**无一匹配 issue-tracker 集成**。
+        故 §5"机制无 open gap → 提案新 gap、GATE-2 先裁"是被**强制**的正道，不是回避。
+      → 与 diagnosing-bugs 的关键差异：那次是"假缺席"（我方已有能力被漏查而误判 adopt）；
+        此处是"真缺席 + 真无 gap"，leave 的地基经三处一手核验为真，非假前提。
+    (F3 簇外余量 leave 是否越界) 若按"3/6 在簇"读，簇外 = explore-before-configure(+1)+
+    domain-doc-layout(+1)+config-injection(+1)=D3，机械够 merge。但逐机制审：
+      · config-injection：把 `## Agent skills` 块注入已有 CLAUDE.md/AGENTS.md，与我方"CLAUDE.md
+        单一全局手工维护 + project.sh 走 stdout 注入"是**架构冲突**，port 进去会打架（违反
+        §3 补强"融合后既有行为全保留"）——正当 leave。
+      · domain-doc-layout：multi-context/CONTEXT-MAP.md 我方项目结构单 context 无现实需求——正当 leave。
+      · explore-before-configure：唯一弱覆盖点（CLAUDE.md"入场认知落盘"是文档习惯，非 config-time
+        侦察推默认值，覆盖不全）。但它是**单条 D1 机制** + 把确定性 project.sh 改成交互侦察=重设计，
+        单机制不满足 §3"≥2 独立机制"merge 门槛，且架构摩擦大——不构成可 revive 的干净切片。
+      → 簇外 3 分实为"2 分正当 leave（冲突/无需求）+ 1 分弱覆盖但不够 merge 门槛"，judge 斥为
+        "低独立价值"的裁量成立。
+
+    == 为何 revive 反而是错（§3.5 姿态校正的正确读法）==
+    §3.5 明写"结构化门槛…是用来保证'高置信'这半个条件的"，且把"机制层的 gap 提案"列为
+    正当结构化门。tracker 层不是"install 一个 skill"，是把 lucagstack 工作项表示从
+    docs/**+稳定ID **重写为 tracker 承载层**的框架级架构改写。这正是必须走人类 GATE-2、
+    不得由 P3 红队单方采纳的那类决策。leave + gap 提案（带 5 份 dossier 锚点交 GATE-2）
+    = §3.5 对 framework 级能力的**合规表达**，不是"怕动结构的保守回避"——它把价值**升级给
+    人类裁**而非杀死。反之 revive-to-adopt 会同时：① 违反 §5（gaps-register 人工拥有权、
+    禁单 skill verdict 后门引入基础设施）② 越 P3 红队权限（红队不该单方重写工作项架构）
+    ③ 与有意的 Skill-first 架构冲突。故此处 revive 才是越界，leave 是正解。
+
+    == 一处瑕疵（不改判，供 GATE-2 留意）==
+    bucket_rationale ①"增量的 4/6 分属同一基础设施簇"与 ③"簇外余量…D 合计 3"（=簇内 3/6）
+    数字自相矛盾（4/6 vs 3/6，取决于 config-injection 归簇内还是簇外）。两种读法下 leave 都成立
+    （3/6 读法簇外 D3 已由 F3 逐机制证伪其 merge 资格；4/6 读法簇外仅 D2 < 3 直接 §3 不动门槛），
+    故不改判；建议主线程在升 GATE-2 时顺手订正该数字，并确保 GAP-issue-tracker-integration
+    真正进入 gaps-register 待裁队列（勿让 framework 级价值卡在"提了没入册"而静默流失）。
+
+    == 结论 ==
+    反向攻击不成立。leave 建在三处一手核验为真的前提（真缺席 + 无 open gap + 4 兄弟一致
+    让渡 tracker 部分）上，非 diagnosing-bugs 式假地基；judge 的簇聚合裁量由 4 个独立 verdict
+    证实、gap 路由由 §5 强制、与 §3.5 采纳雄心一致（framework 级能力升 GATE-2 是正道非回避）。
+    verdict = stands（leave 维持）。tracker 承载工作项层的价值未被杀死，已锚定 5 份 dossier
+    经 GAP-issue-tracker-integration 交 GATE-2 人裁——这是它唯一合法的采纳路径。

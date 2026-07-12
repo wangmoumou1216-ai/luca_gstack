@@ -1,0 +1,77 @@
+id: skill:misc/setup-pre-commit
+kind: skill
+tier: B
+opponent_sha256: 872f4037cb7e6e0e340d4175c086550072959925dffc87b160d1a30dc9f63bbd
+opponent_summary: >
+  这是一个具体、逐步的工程 how-to skill，把一套 git pre-commit 工具链接入当前 JS/TS 仓库。
+  它先从 lockfile 探测包管理器（npm/pnpm/yarn/bun），把 husky + lint-staged + prettier 装为
+  devDependencies，运行 `npx husky init`，再写 `.husky/pre-commit`（lint-staged → typecheck →
+  test）、`.lintstagedrc`，以及在缺失时写一份默认 `.prettierrc`。命令按探测到的包管理器改写，
+  仓库若无 typecheck/test 脚本则省略对应行并告知用户。收尾是一张验证 checklist，以及一次
+  “提交即冒烟测试”——commit 会跑过刚装好的 hook。单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内没有任何可复用的 husky/lint-staged/prettier
+  安装器，也没有基于 lockfile 的包管理器探测（grep 0 命中）。我方本仓自带一个定制 git
+  pre-commit hook `.githooks/pre-commit`——一个扫 API key 的密钥扫描器，经原生
+  `core.hooksPath=.githooks` 接线，由 `scripts/verify.sh` 门禁 G5 断言存在且可执行；但它是框架
+  自用的 self-hook，不是把 hook 装进下游项目的可移植 skill，其用途（密钥扫描）也不同于
+  格式化/类型检查/测试。我方 package.json 用纯 npm scripts，无 `prepare:"husky"`。
+mechanisms:
+  - name: package-manager-detection
+    summary: 从 lockfile 探测 npm/pnpm/yarn/bun，并据此改写所有安装/运行命令。
+    opponent_evidence:
+      - path: skills/misc/setup-pre-commit/SKILL.md
+        quote: 'Check for `package-lock.json` (npm), `pnpm-lock.yaml` (pnpm), `yarn.lock` (yarn), `bun.lockb` (bun).'
+    absence_proof:
+      pattern: 'pnpm-lock|bun\.lockb|yarn\.lock|package-lock'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md'
+      hits: 0
+    delta: >
+      对方从各自 lockfile 探测包管理器、默认 npm，并把安装与运行命令适配到该管理器。我方框架在
+      skills/skill-os/scripts/CLAUDE.md 内无任何基于 lockfile 的包管理器探测（0 命中），也没有任何
+      按 npm/pnpm/yarn/bun 分支命令的逻辑。
+  - name: husky-toolchain-install
+    summary: 装 husky+lint-staged+prettier 为 devDeps，husky init，并 scaffold .lintstagedrc 与默认 .prettierrc。
+    opponent_evidence:
+      - path: skills/misc/setup-pre-commit/SKILL.md
+        quote: 'npx husky init'
+      - path: skills/misc/setup-pre-commit/SKILL.md
+        quote: 'This creates `.husky/` dir and adds `prepare: "husky"` to package.json.'
+      - path: skills/misc/setup-pre-commit/SKILL.md
+        quote: '### 5. Create `.lintstagedrc`'
+    absence_proof:
+      pattern: 'husky|lint-staged|lintstagedrc|prettierrc'
+      scope: '.claude/skills .claude/skill-os .claude/hooks scripts CLAUDE.md'
+      hits: 0
+    delta: >
+      对方把 husky+lint-staged+prettier 装为 devDeps、运行 `npx husky init`、并 scaffold
+      `.lintstagedrc` 加一份默认 `.prettierrc`。我方框架完全没有 husky/lint-staged/prettier，也没有
+      等价的 scaffolder（0 命中）；本仓 package.json 用纯 npm scripts、无 `prepare:"husky"`。我方无任何
+      把这套 JS 格式化/暂存区 lint 工具链装进或配置进任一仓库的 skill。
+  - name: precommit-hook-and-smoke-commit
+    summary: 写 .husky/pre-commit 跑 lint-staged→typecheck→test，并以一次 commit 作为跑过新 hook 的冒烟测试。
+    opponent_evidence:
+      - path: skills/misc/setup-pre-commit/SKILL.md
+        quote: 'The pre-commit runs lint-staged first (fast, staged-only), then full typecheck and tests'
+      - path: skills/misc/setup-pre-commit/SKILL.md
+        quote: 'Stage all changed/created files and commit with message: `Add pre-commit hooks (husky + lint-staged + prettier)`'
+    our_evidence:
+      - path: .githooks/pre-commit
+        quote: '扫描暂存文件中的 API key 和敏感信息'
+      - path: scripts/verify.sh
+        quote: 'check G5 "pre-commit 存在且可执行" "[ -x .githooks/pre-commit ]"'
+    delta: >
+      对方写的 `.husky/pre-commit` 依次跑 lint-staged、typecheck、test，并以一次 commit 作为跑过新
+      hook 的冒烟测试收尾。我方确有一个 git pre-commit hook（`.githooks/pre-commit`，由 verify.sh 门禁
+      G5 断言），但它是本框架仓库自用的固定密钥扫描器，经原生 hooksPath 而非 husky 接线，且不作为可
+      安装的 skill 交付。我方 hook 内无 format/typecheck/test 组合，也没有把“提交即冒烟测试”这一步打包
+      进某个 setup skill 的约定。
+notes: >
+  跑过的 grep（均在 repo 根 /Users/luca/Desktop/项目/muse/lucagstack）：
+  (A) grep -rilE "husky|lint-staged|lintstagedrc|prettierrc" .claude/skills .claude/skill-os .claude/hooks scripts CLAUDE.md → 0 命中；
+  (B) grep -rilE "pnpm-lock|bun\.lockb|yarn\.lock|package-lock" .claude/skills .claude/skill-os scripts CLAUDE.md → 0 命中；
+  (C) grep -rilE "pre-commit" 同范围 → 4 命中，逐条核实均非 husky 安装器：scripts/verify.sh(G5 断言自用 hook 存在)、
+  scripts/check-quality-gates.mjs(注释提及 pre-commit 时软链状态)、gaps-register.yaml(把 pre-commit 列为期望能力关键词)、
+  FUSION-RUNBOOK.md(提到 worktree 提交被 pre-commit 写脏)。意外事实：我方本仓自带 .githooks/pre-commit 密钥扫描器，经
+  core.hooksPath=.githooks 接线（verify.sh G2/G5），是 self-hook 而非可移植安装器，且我方无 husky/lint-staged/prettier
+  与包管理器探测。counterpart=none，已在 M1/M2 提供 absence_proof（各 0 命中）。无 support_files。self-check check-coverage.py 通过。

@@ -1,0 +1,13 @@
+id: skill:personal/obsidian-vault
+kind: skill
+tier: C
+opponent_sha256: 7bed1d552aa5e9345e493cd62cb13e65c5d829d153c349afdb2cb91c809fa6c4
+dossier: dossiers/skill--personal--obsidian-vault.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：管理**作者自己**的 Obsidian vault（硬编码其机器路径）。与 luca 的 Obsidian wiki
+  仅"同用 Obsidian"巧合——路径不同、在框架仓外、luca 已有自己的 wiki 规则文件
+  （Obsidian Vault/CLAUDE.md，ingest/query/lint 指令体系），无共享机制可借。不采。
+reconciliation: null
+landing_estimate: null

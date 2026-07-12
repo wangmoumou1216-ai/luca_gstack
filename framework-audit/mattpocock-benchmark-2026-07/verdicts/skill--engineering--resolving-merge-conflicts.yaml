@@ -1,0 +1,80 @@
+id: skill:engineering/resolving-merge-conflicts
+kind: skill
+tier: B
+opponent_sha256: c7c9ba81362a786aac05d2223123bf1bd2f8a99c3243a72882ede9c68bedfb24
+dossier: dossiers/skill--engineering--resolving-merge-conflicts.yaml
+
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+soft: { fit: 2, quality: 2, adoption: 2, maintenance: 3 }
+weighted_score: 73
+
+score_derivation: |
+  硬门：safety PASS（标准 git 冲突解决流程，无破坏性模式；"never --abort"是纪律主张非
+  危险操作）；compatibility PASS；non_redundancy PASS（三机制全干净缺席，宽 grep 含
+  <<<<<<< /rerere 也 0——我方 careful 只警告不解决，研究 skill 的 primary source 是引用
+  独立性异域）。
+  软分：fit=2——真实复发场景在框架自身运维：sync-upstream.sh 母版→fork merge、FUSION
+  worktree squash-merge、memory merge=ours 属性，冲突是双仓架构的固有摩擦点；"按意图非
+  文本解决 + 回溯 primary source"直接适用。quality=2（15 行 crisp 但薄，无示例无 support）。
+  adoption=2（engineering bucket + docs 页；注意它是对方 promoted 契约的漏登记者——
+  README/plugin.json 缺席，属对方的一致性缺口非质量问题）。maintenance=3（最新加入）。
+  weighted = 20+20+13.3+20 ≈ 73。
+
+bucket: adopt
+bucket_rationale: |
+  7 维门禁 APPROVED（73 ≥ 70，临界过线）。采纳理由是**场景实存**（双仓 merge 摩擦）而非
+  机制密度；install 成本趋零。
+  对齐注记：其"finish 后 stage+commit"与我方 git 纪律（用户请求才提交/高置信例外）在
+  harness 层已有权威规则——采纳不改变该优先级（规则优先级体系：runtime 约束 > SKILL.md）。
+
+adopt_scope: |
+  install 型（全局）+ routing-map 词条（触发词：merge 冲突/rebase 冲突/解决冲突）。MIT 署名。
+  收缩（红队 downgraded，只删不加）：不导入 step3「never `--abort`」绝对化——与
+  sync-upstream.sh:32 逃生口冲突；step5「stage+commit」让位 harness git 纪律（bucket_rationale 已述）。
+  净采纳面 = step2 primary-source intent-tracing + step3 hunk 纪律（去 never-abort）+ step4 verify。
+
+reconciliation: |
+  红队发现（downgraded）：对方 step3「Always resolve; never `--abort`」与我方
+  sync-upstream.sh:32「或放弃 git merge --abort」直接冲突，且冲突就落在该 skill 唯一真实
+  复发场景（母版→fork sync）上。采纳时不导入 never-abort 绝对化，--abort 保留为逃生口
+  （遵从既有工具约定）；保留 intent-tracing + hunk 纪律 + verify-finish 核心。
+
+landing_estimate:
+  reuse_mode: install
+  touched_files_estimate: ["~/.claude/skills/resolving-merge-conflicts(全局)", ".claude/skill-os/skill-routing-map.yaml(词条)", "母版同词条"]
+  ab_runs_needed: 0
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强现任论证："我方 careful + verify.sh + sync-upstream.sh 已覆盖 git 摩擦，这个 15 行
+    skill 只是通用工程常识加噪音。" 检验后不致命：non_redundancy 真干净（双侧 grep 0 命中，
+    careful 只警告不解决冲突，intent-tracing 只存在于 research skill 与 git 无关）——这是能力
+    真缺席，非"形态差异冒充能力缺口"。对方是完整 5 步过程、非 aspirational in-progress draft，
+    Tier B 也无 D 封顶问题。install 成本趋零。故 bucket=adopt 存活，不 killed。但 ②③ 迫使 scope 收缩。
+  attack_notes: |
+    ② fit 假设 / 与既有工具冲突（承重发现）：
+    - fit 举证虚高。三个"真实复发场景"里只有 sync-upstream.sh 母版→fork 是真复发冲突
+      （:28 `git merge --no-edit upstream/$BRANCH`、:32 打印手动解冲突指引）。另两个站不住：
+      memory merge=ours 是框架**已工程化消除**的冲突类（.gitattributes 注释原文「根除每次
+      merge 冲突」，git 自动取 fork 版、无人工 intent-tracing）——把它算成"需要本 skill 的
+      场景"恰好反了；FUSION step⑧ squash-merge 的是从当前 HEAD 隔离出、基点未分叉的 worktree
+      分支，极少冲突（回滚走 `reset --hard` 而非解冲突）。fit=2 靠 sync-upstream 单场景勉强撑住
+      （未跌破 1），但应以单场景为准，不采信三场景堆叠。
+    - 直接冲突（reconciliation 原为 null，实存）：对方 step3「never `--abort`」与我方
+      sync-upstream.sh:32「或放弃 git merge --abort」在**同一真实场景**上正面冲突。收缩：
+      不导入 never-abort 绝对化，--abort 保留逃生口（已改 adopt_scope + reconciliation）。
+    - git 纪律/人类卡点：step5「stage everything and commit」与 harness「用户请求才提交」冲突，
+      verdict 已述让位 harness（规则优先级 runtime > SKILL.md），故 step5 采纳后基本 inert。
+      净采纳面收窄到 step2（primary-source intent-tracing）+ step3（去 never-abort 的 hunk 纪律）+ step4。
+    ③ 集成成本核检（无 kill 项，均通过）：
+    - 未触 skill-invariants P1-P7：新 skill 全局 install + routing-map 词条（routing-map 非保护区）。
+    - ab_runs=0 正确：reuse_mode=install 是整装新 skill 落地，非"机制层 prose 吸收进既有 SKILL.md"，
+      故不触"无 A/B 一律 BLOCK"红线（该红线针对 port-pattern 融合，不针对 install）。
+    - dual_repo=true 正确：通用工程 skill，非 fork 专属（对比 muse-loop-orchestrate），routing
+      词条双仓 + global install 用户级共享。adoption=2 亦核实：对方 README.md/package.json 均不
+      提及此 skill（真·非 promoted），按 2 计未虚高到 3。
+    裁决：downgraded——bucket 仍 adopt（三攻击均不致命），收缩 adopt_scope（去 never-abort 绝对化）、
+    reconciliation 由 null 改为记录 never-abort↔sync-upstream 冲突、fit 举证以 sync-upstream 单场景为准。

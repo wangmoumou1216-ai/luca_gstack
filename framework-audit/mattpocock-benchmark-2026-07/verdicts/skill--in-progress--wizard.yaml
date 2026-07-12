@@ -1,0 +1,14 @@
+id: skill:in-progress/wizard
+kind: skill
+tier: C
+opponent_sha256: e113612095b14178e680022153f2409fb14ea8b992e55d59ad8ce94071ffaf49
+dossier: dossiers/skill--in-progress--wizard.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：draft——生成交互式 bash wizard 领人走手工流程（template.sh 211 行库固定、agent
+  只填 stage）。"库固定只填内容"的模板契约有品味，但我方无高频"领人手工 setup"场景
+  （项目配置走 project.sh 确定性脚本）；draft 状态 + 低频 → 不采。记 opportunity：
+  若未来 muse app 需要引导式配置流，此模板契约模式可回头参考（连同其静态 trace 验证）。
+reconciliation: null
+landing_estimate: null

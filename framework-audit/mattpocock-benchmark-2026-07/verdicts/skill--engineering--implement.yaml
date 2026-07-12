@@ -1,0 +1,30 @@
+id: skill:engineering/implement
+kind: skill
+tier: A
+opponent_sha256: 6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3
+dossier: dossiers/skill--engineering--implement.yaml
+
+scores:
+  D: 2
+  I: 9
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - 固定实现序列（tdd→typecheck→code-review→commit）作为命名入口：+1。我方对应能力散在
+    orchestrator Free Task Mode + work-agent-template，无"按 spec 实现"收窄入口——但这是
+    编排形态差异，我方 Plan Agent→Orchestrator 链有意更通用。
+  - 分级 typecheck 节奏（随手 typecheck+单测文件+收尾全量）：+1。work-agent Self-Verify
+    管"done 前验证"，无实现期节拍指引。
+  - auto-commit 终点：+0。与我方 git 纪律**有意相反**（用户请求才提交；MEMORY 的高置信
+    autocommit 是 luca 个人层授权，非框架默认）——冲突不计缺口。
+  - seam 提示：+0（归 tdd/to-spec verdict 的 seam 主题）。
+  I=9（orchestrator+work-agent+quality-gate 全链）。C=S。E=3。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。typecheck 节奏一行可在未来 work-agent-template 修订时顺带收录
+  （记 opportunity，不值一次独立 FUSION）。
+
+reconciliation: null
+landing_estimate: null

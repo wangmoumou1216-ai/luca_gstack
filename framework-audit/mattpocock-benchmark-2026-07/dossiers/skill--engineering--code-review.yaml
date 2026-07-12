@@ -1,0 +1,93 @@
+id: skill:engineering/code-review
+kind: skill
+tier: A
+opponent_sha256: 6a65cc61114f96db07ec41e3920e67c9c5bf70dd6e0901eb9460ebcb2bdc209f
+opponent_summary: >
+  对方 code-review 是一个单文件、model-invoked 的代码审查 skill：对「HEAD 与用户指定的固定点
+  （commit/branch/tag/merge-base）之间的 diff」沿两条正交轴审查——Standards（是否符合本仓文档化的
+  编码规范）与 Spec（是否忠实实现原始 issue/PRD）。流程 5 步：pin 固定点（先 rev-parse 确认 ref 解析
+  且 diff 非空，坏 ref/空 diff 在此失败而非落到子 agent 里）→ 定位 spec 来源（commit 里的 issue 引用
+  → 用户传入路径 → docs/specs/.scratch 下匹配文件 → 都没有则问，仍没有则 Spec 轴跳过报 no spec）→
+  定位 standards 来源（外加一套固定的 Fowler 12 code smell baseline，即使仓库零文档也生效）→ **同一条
+  消息里并发起两个 general-purpose 子 agent**（各自隔离上下文，各限 400 字）→ 聚合：两份报告分列
+  `## Standards` 与 `## Spec`，不合并不重排，结尾只给每轴内 finding 数与该轴内最严重项，绝不跨轴选单一
+  赢家。设计理由「Why two axes」：一个改动可能一轴过一轴挂，分开报告避免一轴掩盖另一轴。
+our_summary: >
+  我方无单一对位物，对标能力散落在 4 个组件里：code-hygiene（skill，代码层清理 + 完成前验证铁律 + 8
+  清理算子，且「代码审查环节」明确复用而非新造 reviewer——派 quality-gate 或 redteam）、redteam
+  （skill，Fable 对抗质疑当前决策链路，只提问不给方案）、quality-gate（agent，独立上下文跑断言 /
+  审查 skill 产出质量，逐维度二元判定 + 只报通过率）、design-review（skill，前置/后置两模式审查设计
+  决策与原型质量）。这些覆盖了「审查在独立上下文进行、复用现成 reviewer、逐维度判定不给单一主观分」
+  等要素，但均无「Standards vs Spec 双轴并发子 agent + 抗偏见隔离 + 拒绝跨轴排名」这一整套结构，也无
+  显式的 Fowler smell baseline。
+mechanisms:
+  - name: two-axis-parallel-antibias
+    summary: Standards 与 Spec 两轴各自派并发子 agent、隔离上下文，避免一轴污染另一轴的判断。
+    opponent_evidence:
+      - path: skills/engineering/code-review/SKILL.md
+        quote: "Both axes run as **parallel sub-agents** so they don't pollute each other's context"
+      - path: skills/engineering/code-review/SKILL.md
+        quote: "Send a single message with two `Agent` tool calls. Use the `general-purpose` subagent for both."
+    our_evidence:
+      - path: .claude/agents/quality-gate.md
+        quote: "Runs in independent context — does not pollute the main session."
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "派 `quality-gate` agent（Sonnet）跑断言** 或 **`redteam` skill（Fable）对 diff 做对抗"
+    delta: >
+      对方把审查刻意拆成 Standards 与 Spec 两条正交轴，同一条消息并发起两个 general-purpose 子 agent，
+      各自隔离上下文，目的就是让两轴互不污染判断。我方有「独立上下文审查」这一半（quality-gate 声明在
+      independent context 运行、不污染主 session），且 code-hygiene 会派 quality-gate 或 redteam 复用现成
+      reviewer；但这是「派其一」的择一分派，不是同一 diff 上并发两条固定轴。我方不存在 Standards vs Spec
+      的双轴切分，也没有「两轴并发以防交叉偏见」的隔离设计。
+  - name: refuse-cross-axis-ranking
+    summary: 聚合时两份报告并列呈现，不合并不重排 finding，结尾不跨轴选单一赢家。
+    opponent_evidence:
+      - path: skills/engineering/code-review/SKILL.md
+        quote: "Do **not** merge or rerank findings — the two axes are deliberately separate"
+      - path: skills/engineering/code-review/SKILL.md
+        quote: "Don't pick a single winner across axes — that's the reranking the separation exists to prevent."
+    our_evidence:
+      - path: .claude/agents/quality-gate.md
+        quote: "每个检查维度即一条 criterion——逐条二元判定 + 附证据"
+      - path: .claude/agents/quality-gate.md
+        quote: "无 rubric 的 `Score: N/10` 整体主观分已废止"
+    delta: >
+      对方明令聚合阶段不得 merge 或 rerank 两轴 finding、结尾不得跨轴挑单一赢家，因为「分开」正是为了防止
+      一轴掩盖另一轴。我方 quality-gate 有一条相邻纪律：逐维度二元判定 + 只报通过率、废止无 rubric 的整体
+      主观分（拒绝把多维 finding 塌缩成一个主观分）。但这针对的是「不给单一主观评分」而非「不跨两条审查轴
+      排名」——我方根本没有 Standards/Spec 双轴架构，也就没有「保持两轴分离、不选跨轴赢家」这条具体规则。
+  - name: fowler-baseline-fallback
+    summary: Standards 轴始终附带一套固定的 Fowler 12-smell baseline，即使仓库零文档也生效，仓库文档标准可覆盖它。
+    opponent_evidence:
+      - path: skills/engineering/code-review/SKILL.md
+        quote: "the Standards axis always carries the **smell baseline** below — a fixed set of Fowler code smells"
+      - path: skills/engineering/code-review/SKILL.md
+        quote: "**The repo overrides.** A documented repo standard always wins"
+    our_evidence:
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "每算子 = 检测（专用工具）→ 写评估报告"
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "只自动抽 **token 完全相同 ≥30 行** 的块"
+    delta: >
+      对方在 Standards 轴上钉了一套固定的 Fowler 12-smell baseline（Mysterious Name/Duplicated Code/
+      Feature Envy/Data Clumps/Primitive Obsession/Repeated Switches/Shotgun Surgery/Divergent Change/
+      Speculative Generality/Message Chains/Middle Man/Refused Bequest），即使仓库零文档也生效，并显式
+      叠加「仓库文档标准覆盖 baseline + 每条都是 judgement call」两条规则。我方 code-hygiene 有 8 个固定
+      清理算子（unused/cycles/dedupe/types/weak-types/defensive/legacy/slop），只自动应用 HIGH 置信，也是
+      一套「无论仓库文档与否都可跑」的固定基线；但仅 dedupe≈Duplicated Code、unused/legacy≈Speculative
+      Generality 部分重叠，缺 Feature Envy/Data Clumps/Primitive Obsession/Message Chains/Middle Man/
+      Refused Bequest 等具名 smell，也没有「仓库文档标准覆盖 baseline」这层显式关系（我方的覆盖是 luca
+      护栏保护有意模式，非文档化仓库规范压过 baseline）。
+
+notes: >
+  对方单元只有 1 个 SKILL.md（support_files 为空，目录内确认仅 SKILL.md），sha256 与 inventory 逐字一致
+  （6a65cc61…）。三机制均用 our_evidence（部分对位物）而非 absence_proof，因 counterpart 非 none。
+  跑过的 corroborating grep（均 0 命中，佐证 delta 中的缺席描述）：
+  `grep -rin "Feature Envy|Data Clumps|Primitive Obsession|Shotgun Surgery|Divergent Change|Message Chain|Refused Bequest|Fowler|Mysterious Name" .claude/skills .claude/agents .claude/skill-os CLAUDE.md`（0，确认无 Fowler 具名 smell 分类）；
+  `grep -rin "parallel sub-agent|两轴|two-axis|two axes" .claude/skills .claude/agents CLAUDE.md`（0，确认无双轴并发切分）；
+  `grep -rin "rerank|cross-axis|single winner|pick a winner" .claude/skills .claude/agents .claude/skill-os CLAUDE.md`（0，确认无跨轴排名拒绝措辞）。
+  意外事实：matrix our_counterpart 列出的 quality-gate 是 agent（.claude/agents/quality-gate.md）而非
+  skill，仓库无 quality-gate/SKILL.md；design-review 是设计域审查（design-brief/原型），与代码 diff 审查
+  不同域，故未取其引文，仅在 our_summary 中列名。harness 内建 counterpart 说明：Claude Code 原生有
+  `verify`/`code-review`/`review`/`simplify` 内建 skill（仓库无文件），其中原生 `code-review` 概念上最接近
+  对方，但按任务规则不为无仓库文件的内建 skill 编造引文，只文字说明。check-coverage.py --dossier 自验 PASS。

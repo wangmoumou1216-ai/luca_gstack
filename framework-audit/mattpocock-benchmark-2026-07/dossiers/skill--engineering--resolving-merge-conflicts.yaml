@@ -1,0 +1,93 @@
+id: skill:engineering/resolving-merge-conflicts
+kind: skill
+tier: B
+opponent_sha256: c7c9ba81362a786aac05d2223123bf1bd2f8a99c3243a72882ede9c68bedfb24
+opponent_summary: >
+  A model-invoked (non-promoted), 15-line engineering skill triggered when the user
+  needs to resolve an in-progress git merge/rebase conflict. It runs a five-step
+  procedure: (1) inspect the current merge/rebase state and the conflicting files;
+  (2) for each conflict, find the primary sources — commit messages, PRs, original
+  issues/tickets — to understand deeply why each change was made and what the original
+  intent was; (3) resolve each hunk by intent, preserving both intents where possible,
+  picking the one matching the merge's stated goal when incompatible, never inventing
+  behaviour, always resolving and never `--abort`; (4) discover and run the project's
+  automated checks (typecheck, then tests, then format) and fix merge breakage;
+  (5) finish the merge/rebase by staging, committing, and continuing the rebase to
+  completion. Its distinctive stance is resolving conflicts by traced original intent,
+  not by textual merging.
+our_summary: >
+  We have no merge-conflict-resolution skill or procedure. The nearest git-related
+  asset is the `careful` skill, which only warns the user before dangerous commands
+  (rm -rf, force-push, git reset --hard, etc.) and lets them override — it never
+  resolves conflicts. "primary source" tracing exists in our repo only inside research
+  skills (deepresearch/ux-research) for citation independence, unrelated to git.
+  `.claude/settings.local.json` permits `git merge *` but no guidance wraps it. There
+  is no `--abort`/rebase-continue/hunk-resolution/"finish the merge" procedure anywhere
+  in `.claude`, `CLAUDE.md`, `CONTEXT.md`, or `scripts`.
+mechanisms:
+  - name: primary-source-intent-tracing
+    summary: >
+      Before touching a conflict, trace each side's original intent by reading commit
+      messages, PRs, and issues/tickets — resolve by intent, not by text.
+    opponent_evidence:
+      - path: skills/engineering/resolving-merge-conflicts/SKILL.md
+        quote: "Find the primary sources** for each conflict. Understand deeply why each change was made, and what the original intent was."
+      - path: skills/engineering/resolving-merge-conflicts/SKILL.md
+        quote: "Read the commit messages, check the PRs, check original issues/tickets."
+    absence_proof:
+      pattern: "merge conflict|conflicting file|conflict hunk|primary source.{0,30}conflict|conflict.{0,30}(commit message|original intent)"
+      scope: ".claude CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      The opponent traces each conflicting change back to its primary source (commit/PR/issue)
+      to reconstruct original intent before resolving. Our framework has no merge-conflict
+      workflow at all; the only "primary source" tracing we own lives in research skills for
+      citation independence, not git. We have nothing that maps a conflict hunk to the intent
+      behind it.
+  - name: intent-preserving-hunk-resolution
+    summary: >
+      Resolve each hunk preserving both intents where possible; where incompatible, pick the
+      merge's stated goal, invent no new behaviour, and always resolve rather than `--abort`.
+    opponent_evidence:
+      - path: skills/engineering/resolving-merge-conflicts/SKILL.md
+        quote: "Preserve both intents where possible. Where incompatible, pick the one matching the merge's stated goal and note the trade-off."
+      - path: skills/engineering/resolving-merge-conflicts/SKILL.md
+        quote: "Do **not** invent new behaviour. Always resolve; never `--abort`."
+    absence_proof:
+      pattern: "preserve both intent|resolve each hunk|git .{0,10}--abort|never .{0,5}--abort|invent new behaviou?r"
+      scope: ".claude CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      The opponent prescribes hunk-level resolution discipline: keep both intents when compatible,
+      defer to the merge goal when not, add nothing new, and never escape via `--abort`. Our side
+      has no hunk-resolution guidance and no "always resolve / never abort" stance; `careful` only
+      warns before destructive git commands and does not govern how a conflict is resolved.
+  - name: verify-and-finish-merge
+    summary: >
+      After resolving, discover and run the project's automated checks (typecheck/tests/format),
+      fix breakage, then stage, commit, and drive the rebase to completion.
+    opponent_evidence:
+      - path: skills/engineering/resolving-merge-conflicts/SKILL.md
+        quote: "Discover the project's **automated checks** and run them — typically typecheck, then tests, then format. Fix anything the merge broke."
+      - path: skills/engineering/resolving-merge-conflicts/SKILL.md
+        quote: "Finish the merge/rebase.** Stage everything and commit. If rebasing, continue the rebase process until all commits are rebased."
+    absence_proof:
+      pattern: "finish the merge|continue the rebase|rebase --continue|stage everything and commit|finish.{0,10}rebase"
+      scope: ".claude CLAUDE.md CONTEXT.md scripts"
+      hits: 0
+    delta: >
+      The opponent closes the loop: run the project's own checks to catch merge breakage, then
+      stage/commit and continue the rebase until done. Our framework has generic verify assets
+      (verify.sh, quality gates) but none scoped to finishing a merge/rebase; there is no
+      "finish the merge", rebase-continue, or stage-and-commit-the-merge orchestration anywhere.
+notes: >
+  Opponent SKILL.md is 15 lines, read in full. our_counterpart=none per matrix (tier B).
+  Ran three real absence greps from repo root, all 0 hits (excluding framework-audit/):
+  grep -riE "merge conflict|conflicting file|conflict hunk|primary source.{0,30}conflict|conflict.{0,30}(commit message|original intent)" .claude CLAUDE.md CONTEXT.md;
+  grep -riE "preserve both intent|resolve each hunk|git .{0,10}--abort|never .{0,5}--abort|invent new behaviou?r" .claude CLAUDE.md CONTEXT.md;
+  grep -riE "finish the merge|continue the rebase|rebase --continue|stage everything and commit|finish.{0,10}rebase" .claude CLAUDE.md CONTEXT.md scripts.
+  Broad "merge conflict|--abort|rerere|<<<<<<<" grep over .claude/.skill-os/agents/CLAUDE.md/CONTEXT.md also returned 0.
+  Incidental finds: `careful` (.claude/skills/office/careful/SKILL.md) only warns before dangerous
+  git (force-push, reset --hard); "primary source" appears only in deepresearch/ux-research for
+  citation tracing; `.claude/settings.local.json` allows `git merge *` with no wrapping guidance.
+  No harness-builtin counterpart applies (verify/loop are generic, not merge-conflict-specific).

@@ -1,0 +1,63 @@
+id: skill:engineering/grill-with-docs
+kind: skill
+tier: A
+opponent_sha256: 610d091047bcfb9db0f75c057d15538481a721111579fc5ec7f83ad9131a2165
+opponent_summary: >
+  grill-with-docs is a 7-line thin-shell skill whose entire body is one sentence:
+  "Run a /grilling session, using the /domain-modeling skill." Its frontmatter sets
+  disable-model-invocation: true, so it is user-invoked only. It composes two separate
+  model-invoked primitives — /grilling (a relentless one-question-at-a-time interview
+  that recommends answers, looks up facts in code but leaves decisions to the user) and
+  /domain-modeling (actively build a glossary/CONTEXT.md and write ADRs inline as the
+  design crystallises). Net effect: a stress-test interview that simultaneously captures
+  ADRs and glossary docs as it goes. The shell itself adds no new instruction text beyond
+  naming and binding the two primitives.
+our_summary: >
+  Our mapped counterpart is brainstorm, a 724-line monolithic Socratic PRD skill. It runs
+  one-question-at-a-time forcing-question interrogation (the grilling half) with
+  recommend-then-options framing and anti-sycophancy pushback, then writes a PRD to
+  docs/prd/. It does NOT create ADRs or a per-project glossary/CONTEXT.md domain model
+  inline during the interview — its primary output is a markdown PRD file. It is a single
+  self-contained skill, not a thin shell that composes two independently named primitives,
+  and our repo has no grilling+domain-modeling compose entrypoint.
+mechanisms:
+  - name: shell-increment
+    summary: >
+      The thin shell's only increment over its primitives is binding /grilling +
+      /domain-modeling into one user-invoked named entry so the relentless interview and
+      the ADR/glossary doc-capture happen together in a single session.
+    opponent_evidence:
+      - path: skills/engineering/grill-with-docs/SKILL.md
+        quote: "Run a `/grilling` session, using the `/domain-modeling` skill."
+      - path: skills/engineering/grill-with-docs/SKILL.md
+        quote: "A relentless interview to sharpen a plan or design, which also creates docs (ADR's and glossary) as we go."
+      - path: skills/engineering/grill-with-docs/SKILL.md
+        quote: "disable-model-invocation: true"
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "I interrogate before I synthesize. I ask one question at a time."
+      - path: .claude/skills/office/brainstorm/SKILL.md
+        quote: "implementation actions — my primary output is a markdown PRD file."
+    delta: >
+      The opponent shell contributes no new prose of its own; its increment is purely
+      compositional — one user-invoked (disable-model-invocation) entry that fires
+      /grilling and /domain-modeling together so ADRs and a glossary are captured during
+      the same interview. Our side has the relentless one-at-a-time interrogation half
+      inside brainstorm, but brainstorm's output is a PRD (docs/prd/), not inline ADRs or a
+      glossary/CONTEXT.md domain model, and it is a monolithic skill rather than a shell
+      composing two named primitives. We have no domain-modeling-during-grill doc-capture
+      skill and no two-skill compose entrypoint; the docs-as-you-go half is absent.
+
+notes: >
+  All five quotes grep-verified byte-exact and passed check-coverage.py --dossier. Opponent
+  is a genuine thin shell: body = one line, no support_files. The two primitives it names
+  are separate mattpocock skills read in full — skills/productivity/grilling/SKILL.md
+  (one-at-a-time relentless interview, recommend answers, look up facts not decisions) and
+  skills/engineering/domain-modeling/SKILL.md (build glossary/CONTEXT.md + offer ADRs
+  sparingly, inline). grep -rilE "ADR|ubiquitous language|glossary|domain model" over
+  .claude/skills .claude/skill-os CLAUDE.md hit only framework evolution registry files
+  (evolution/gaps-register.yaml, ADOPTED.md, digests/2026-07-evolution.md) — not any live
+  skill mechanism — confirming our brainstorm counterpart lacks the domain-modeling
+  docs-as-you-go half (gaps-register even records the archive-merge-into-truth闭环缺失 gap).
+  /grilling and /domain-modeling are Claude Code /skill-style user commands, not harness
+  builtins.

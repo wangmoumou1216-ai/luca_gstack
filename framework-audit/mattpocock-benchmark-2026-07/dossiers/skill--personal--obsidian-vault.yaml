@@ -1,0 +1,50 @@
+id: skill:personal/obsidian-vault
+kind: skill
+tier: C
+opponent_sha256: 7bed1d552aa5e9345e493cd62cb13e65c5d829d153c349afdb2cb91c809fa6c4
+opponent_summary: >
+  管理作者个人 Obsidian vault 的 personal skill：硬编码路径 `/mnt/d/Obsidian Vault/AI Research/`
+  （WSL 路径），扁平无文件夹，用 Title Case 命名、`[[wikilinks]]` 关联、index note 聚合相关主题。
+  给出 find/grep 搜索片段（按文件名、按内容、找 backlink、找 index note）和建新笔记流程。
+  绑作者机器的具体 vault 路径，环境绑定。单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架仓库内无任何 Obsidian vault 管理器（grep 0 命中）。
+  巧合的是 luca 也有个人 Obsidian 知识库（全局 ~/.claude/CLAUDE.md 指向 `/Users/luca/Documents/
+  Obsidian Vault/`，规则在该 vault 的 CLAUDE.md），但那是 luca 个人 wiki、路径与作者不同、且不在
+  luca_gstack 框架仓库内、非框架 skill——对方此 skill 同样绑作者机器硬编码路径，两者只是"都用
+  Obsidian"的巧合，无共享机制可迁移。
+mechanisms:
+  - name: hardcoded-vault-path-note-manager
+    summary: 绑作者机器硬编码 WSL 路径的 vault 增删查，扁平无文件夹。
+    opponent_evidence:
+      - path: skills/personal/obsidian-vault/SKILL.md
+        quote: "`/mnt/d/Obsidian Vault/AI Research/`"
+      - path: skills/personal/obsidian-vault/SKILL.md
+        quote: "No folders for organization - use links and index notes instead"
+    absence_proof:
+      pattern: '/mnt/d/Obsidian|Obsidian Vault/AI Research'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方 skill 把 vault 路径硬编码进 skill 正文，绑作者机器。我方框架仓库无此路径（0 命中）；luca 的
+      Obsidian wiki 路径不同、且经全局 ~/.claude/CLAUDE.md 注入而非框架 skill——是"都用 Obsidian"的
+      巧合，非可迁移机制。
+  - name: wikilink-and-index-note-organization
+    summary: 用 [[wikilinks]] 关联 + index note 聚合替代文件夹层级。
+    opponent_evidence:
+      - path: skills/personal/obsidian-vault/SKILL.md
+        quote: "Use Obsidian `[[wikilinks]]` syntax: `[[Note Title]]`"
+    absence_proof:
+      pattern: 'wikilink|Index notes'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方用 wikilink + index note 做无文件夹的关联式组织。我方框架仓库无 wikilink/index-note 机制
+      （0 命中）；我方跨项目记忆用 memory/** + episodic/semantic 结构化层，不是 Obsidian 式关联笔记。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  '/mnt/d/Obsidian|Obsidian Vault/AI Research' → 0；'wikilink|Index notes' → 0。matrix 判 tier C /
+  counterpart none，理由 author-env-bound——核实成立。opportunity 切点：luca 有个人 Obsidian wiki
+  （~/.claude/CLAUDE.md 指向 /Users/luca/Documents/Obsidian Vault/，收到 ingest/query/lint 指令时读
+  该 vault 的 CLAUDE.md），但那是 luca 私有 wiki 层、不在框架仓库、非框架 skill；对方此 skill 硬编码
+  自己机器路径，两者仅"同用 Obsidian"巧合，无共享机制。无 support_files。self-check 通过。

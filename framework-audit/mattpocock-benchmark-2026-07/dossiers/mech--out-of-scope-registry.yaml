@@ -1,0 +1,88 @@
+id: mech:out-of-scope-registry
+kind: mechanism
+tier: A
+opponent_summary: >-
+  对方在 repo 根维护一个 `.out-of-scope/` 目录，把"被拒的功能请求"沉淀为一等制品。它服务两个目的：
+  (1) 机构记忆——记下某功能为何被拒，issue 关闭后理由不丢；(2) 去重——新 issue 进来若匹配到既往拒绝，
+  triage 时把旧决定 surface 出来，而不是重新辩论一遍。约定：一概念一文件（非一 issue 一文件），
+  用放松可读的短设计文档风格写"为何 out of scope"+ escape hatches + Prior requests(附 issue 号)。
+  写入门槛严格：只在 enhancement(非 bug) 被判 wontfix 时写；被判 wontfix 但其实"已实现"的绝不写入
+  （否则会用假拒绝污染去重）。维护者改主意=删除该文件，历史 issue 不必重开。仓内已有三个实例文件
+  （mainstream-issue-trackers-only / question-limits / setup-skill-verify-mode），各带 Prior requests。
+our_summary: >-
+  我方无"被拒需求"专库，但有两个概念相近的机构记忆制品。
+  `.claude/skill-os/external-skills/vetting-registry.yaml` 是 external-skill-scout 的产出：含 approved/
+  rejected 两列，每条被拒候选带 reject_reasons/redundant_with/hard-gate/verdict:REJECTED——是"被拒外部
+  skill 候选"的持久拒绝记忆。`.claude/skill-os/evolution/gaps-register.yaml` 是人工拥有的缺口登记表，
+  记 open/addressed/deferred/proposed 及"本轮不追（显式不静默砍）"式裁决。两者都是持久的拒绝/裁决记忆，
+  但对象是外部 skill 候选与演进缺口，不是用户功能请求/issue；去重靠 framework-evolution-scout 自动把
+  既往拒绝的 repo 标识并入 existing_repos 静默不再 surface，非概念相似度 + 人工重议。无一等"被拒需求库"、
+  无 anti-poisoning 写入门、无"删文件即重议"生命周期。
+mechanisms:
+  - name: rejected-request-registry-as-artifact
+    summary: >-
+      把"被拒功能请求"沉淀成持久一等制品（一概念一文件、durable 拒绝理由、Prior requests 台账），
+      作为机构记忆使 issue 关闭后拒绝理由不丢失。
+    opponent_evidence:
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "stores persistent records of rejected feature requests"
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "why a feature was rejected, so the reasoning isn't lost when the issue is closed"
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "Multiple issues requesting the same thing are grouped under one file."
+    our_evidence:
+      - path: .claude/skill-os/external-skills/vetting-registry.yaml
+        quote: "verdict: REJECTED"
+      - path: .claude/skill-os/external-skills/vetting-registry.yaml
+        quote: "redundant_with: handoff-review + CLAUDE.md Checkpoint/handoff protocol"
+    delta: >-
+      对方的制品记录"被拒的用户功能请求/issue"（被判 wontfix 的 enhancement），一概念一 markdown 散文文件，
+      附 Prior requests issue 号台账；我方 vetting-registry 记录的是"被拒的外部 skill 候选(repo)"，
+      单一 YAML 按 scout run 组织，带 reject_reasons/redundant_with/hard-gate。二者同为持久拒绝记忆，
+      但对象域不同：我方无面向用户需求/issue 的"被拒需求"专库。
+  - name: concept-similarity-dedup-anti-relitigation
+    summary: >-
+      triage 时用概念相似度（非关键字）把新 issue 匹配到既往拒绝，把旧决定 surface 给维护者以避免重新辩论。
+    opponent_evidence:
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "when a new issue comes in that matches a prior rejection, the skill can surface the previous decision instead of re-litigating it"
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "Matching is by concept similarity, not keyword"
+    our_evidence:
+      - path: .claude/workflows/framework-evolution-scout.js
+        quote: "so prior-rejected repos are NOT re-surfaced next run"
+      - path: .claude/skill-os/evolution/gaps-register.yaml
+        quote: "候选不得匹配此项"
+    delta: >-
+      对方按概念相似度匹配并把旧拒绝 surface 给人，走 confirm/reconsider/disagree 的人工重议分支；
+      我方 framework-evolution-scout 按精确 repo 标识(owner/repo)自动把既往拒绝并入 existing_repos 静默丢弃、
+      不再 surface，gaps-register 则让 deferred 缺口"候选不得匹配"。二者都防止既往拒绝被重复处理，
+      但我方是机器精确键的静默去重、对象是外部 repo/缺口，无概念相似度匹配、无 human-in-loop 重议界面。
+  - name: write-and-reconsideration-discipline
+    summary: >-
+      写入门与生命周期纪律：只在 enhancement 被拒 wontfix 时写，"已实现"绝不写入以免假拒绝污染去重；
+      维护者改主意即删除该文件、历史 issue 不重开。
+    opponent_evidence:
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "recording it would poison the dedup checks with false rejections."
+      - path: skills/engineering/triage/OUT-OF-SCOPE.md
+        quote: "The skill does not need to reopen old issues"
+    our_evidence:
+      - path: .claude/skill-os/evolution/gaps-register.yaml
+        quote: "开/关由人裁决（检测自动、判断归人）"
+      - path: .claude/skill-os/evolution/gaps-register.yaml
+        quote: "显式不静默砍"
+    delta: >-
+      我方 gaps-register 有人工把关的 open/close 生命周期与"显式不静默砍"纪律，但那是缺口登记表的裁决纪律；
+      对方针对拒绝库特有的两条纪律我方均无：一是 anti-poisoning 写入门（"已实现"绝不当作拒绝记录，
+      避免污染去重），二是"删文件即重议、历史 issue 不重开"的重议生命周期。我方无区分"被拒 vs 已实现"的
+      写入判据，也无对拒绝记录的 delete-on-reconsideration 流程。
+notes: >-
+  跑过的关键 grep：(1) grep -rnil 'out-of-scope|被拒|wontfix|rejected|重议|poison|already.implemented'
+  .claude/skills .claude/skill-os CLAUDE.md——我方"out of scope"命中均为设计 scope 设定(brainstorm/design-brief)
+  与 UI 状态 checklist(design-review '已实现')，非拒绝库，确认无"被拒需求"专库。
+  (2) 意外真发现：framework-evolution-scout.js:85 "Merge into existing_repos so prior-rejected repos are
+  NOT re-surfaced next run." 与 :84 读 vetting-registry EVERY repo under any status——这是真实的
+  dedup-against-prior-rejection 机制，故 M2 用 our_evidence 而非 absence（但按精确 repo 键、自动静默丢弃，
+  对象是外部 repo，非概念相似度 + 人工重议）。四个对方 anchor 文件(OUT-OF-SCOPE.md + 三实例)全读到末行。
+  所有引文已逐字 grep 回验命中。

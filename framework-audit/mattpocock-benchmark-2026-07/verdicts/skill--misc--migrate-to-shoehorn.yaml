@@ -1,0 +1,13 @@
+id: skill:misc/migrate-to-shoehorn
+kind: skill
+tier: C
+opponent_sha256: de4da4c11d924fac79c924b2ee3d2db4a5cb98386eb490a599119463d036ae72
+dossier: dossiers/skill--misc--migrate-to-shoehorn.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：作者自有库（@total-typescript/shoehorn）的专用测试迁移器——author-specific，
+  对我方无转移价值（我方不用该库）。作为"单一用途能力保持专属不通用化"的旁证与 luca
+  既有 feedback 记忆一致。
+reconciliation: null
+landing_estimate: null

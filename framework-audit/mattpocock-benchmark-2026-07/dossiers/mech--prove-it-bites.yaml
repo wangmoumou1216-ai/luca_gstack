@@ -1,0 +1,85 @@
+id: mech:prove-it-bites
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >
+  对方把「验证纪律」以散文形式反复固化进三个不同 skill 的完成判据里：
+  setup-ts-deep-modules 的 Step 6「Prove the rules bite」要求先在干净样例上跑通（pass）、
+  再故意加一条越界 import 观察它报错（fail）、还原后再跑通（pass），并明说「不会在违规时失败的配置一文不值」；
+  diagnosing-bugs 的 Phase 1 完成判据要求点名一条**已经至少跑过一次**、并**贴出调用与输出**的命令，
+  且该命令必须「能对这个 bug 变红」——不是「跑起来不报错」，而是要能捕获用户描述的确切症状；
+  git-guardrails 的 Step 5 用一行 echo 管道喂给脚本、断言它**以 exit code 2 退出**并向 stderr 打印 BLOCKED。
+  三处共享同一内核：观察到 fail 再 pass、验确切 exit code/症状、粘命令+输出，绝不接受「应该能工作」。
+our_summary: >
+  我方对应物是 code-hygiene 的「完成前验证铁律（Iron Law）」加 plan-agent 的「行为级断言」。
+  Iron Law 规定「没有当场跑出的新鲜证据，就不准声明完成/修好/通过/应该可以了」，并给出五步门函数
+  IDENTIFY→RUN→READ（读全部输出、查 exit code、数失败条数）→VERIFY→下结论，配一张「合理化拦截」表
+  逐条驳斥「现在应该好了/我有信心/lint 过了」等借口。plan-agent 的行为级断言要求每个 MUST 需求 ≥1 条跑
+  真实测试套件/脚本的断言，artifact 级（存在性/语法/grep）不充抵，断言体裁一律 `cmd && echo PASS || echo FAIL`
+  即以退出码判定。红绿「先观察失败再修」这一环，我方经 routing-map/workflow-graph 指向外部 harness skill
+  `tdd`（测试先行/红绿重构），而 code-hygiene 明确声明其铁律「不是写测试方法论」，未把「先见红再声明绿」
+  内建进自身 skill 的完成门。
+mechanisms:
+  - name: observe-fail-before-pass
+    summary: >
+      要求先观察到「红」（在违规/bug 上确实失败）再接受「绿」——不会失败的检查一文不值；
+      我方把红绿「先见失败」这一环外派给外部 tdd skill，未内建进自身完成门。
+    opponent_evidence:
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "you have observed a pass, then a fail on the deep import, then a pass again"
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "a config that doesn't fail on a violation is worthless"
+    our_evidence:
+      - path: .claude/skill-os/optional-workflow-graph.yaml
+        quote: "写新代码用 tdd（测试先行/红绿重构）"
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "不是写测试方法论"
+    delta: >
+      对方把「先跑通→故意制造违规看它变红→还原再跑通」直接写成 skill 的完成判据（setup-ts-deep-modules
+      Step 6、diagnosing-bugs Phase 5「Watch it fail / Watch it pass」），且以「不会失败的检查一文不值」把
+      红绿升到不变量高度。我方也持有红绿理念，但把它外派给外部 harness skill `tdd`（测试先行/红绿重构），仅经
+      routing-map/workflow-graph 以指针形式引用；code-hygiene 的 Iron Law 明确声明「不是写测试方法论」，只
+      要求完成前跑验证，不要求先观察一次失败——即「先见红再声明绿」未内建进我方任一 skill 自身的完成门。
+  - name: assert-specific-exit-code
+    summary: >
+      验证要断言**确切的退出码/症状**（如 git-guardrail 必须 exit 2），而非「跑起来不报错」。
+    opponent_evidence:
+      - path: skills/misc/git-guardrails-claude-code/SKILL.md
+        quote: "Should exit with code 2 and print a BLOCKED message to stderr"
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: 'Not "runs without erroring"'
+    our_evidence:
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "查 exit code、数失败条数"
+    delta: >
+      两侧都拒绝「跑起来不报错就算过」并都检查退出码：我方 Iron Law 门函数 READ 步明确要「查 exit code、
+      数失败条数」，plan-agent 断言体裁 `cmd && echo PASS || echo FAIL` 亦以退出码判定。对方多出的部分是
+      针对护栏类脚本断言一个**具体**退出码（exit 2）并要求命令断言用户的**确切症状**（能对这个 bug 变红），
+      把「不是 runs without erroring」写成明文判据。我方检查退出码偏通用（0=过），未在 skill 里针对具体
+      场景固定期望码。
+  - name: run-and-paste-evidence
+    summary: >
+      完成判据要求命令**已经跑过**并把调用与输出**贴进对话**，直接拒绝「应该能工作」这类无证据声明。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "(paste the invocation and its output)"
+    our_evidence:
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "没有当场跑出的新鲜证据，就不准声明"
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "如果你在本条消息里没有亲自跑过验证命令，你就不能声称它通过"
+    delta: >
+      此机制两侧高度一致：都要求当场/本轮亲自跑过、以新鲜证据下结论，都点名驳斥「应该能工作/现在应该好了」。
+      对方把「贴出调用与其输出」写成 Phase 1 的显式完成物；我方 Iron Law 要求 RUN+READ（读全部输出）并在
+      本条消息内亲自跑过，但「把调用与输出粘进 transcript」是隐含要求而非像对方那样列为明文交付项。差异属
+      措辞/仪式细节，核心纪律等价。
+notes: >
+  三个 anchor 文件全读完（setup-ts-deep-modules 103 行、diagnosing-bugs 135 行、
+  git-guardrails 96 行）。我方 counterpart 读全 code-hygiene/SKILL.md 与 plan-agent.md；
+  counterpart 里的 `verify` 是 Claude Code harness 内建 skill、仓库内无文件，其语义等价于对方
+  「贴命令+输出、驱动真实流程观察行为」，与 code-hygiene Iron Law 同向（列表内 verify 未单列机制，
+  已并入上述 run-and-paste-evidence 描述）。跑过的验证 grep（grep -c，均命中 1）：三条 opponent 引文
+  + 我方 5 条引文逐字回验全部命中；另 grep 我方 red-green 存在性得知「红绿重构」仅经 routing-map
+  (line 264)/optional-workflow-graph (line 199)/external-skills INTEGRATION-MAP 以外部 tdd skill 指针
+  出现，我方仓内无自建 tdd 文件——故 M1 用 our_evidence（指针+disclaimer）而非 absence_proof，如实呈现
+  「有指针但未内建进完成门」的中间态。未打分、未落桶、未写建议。

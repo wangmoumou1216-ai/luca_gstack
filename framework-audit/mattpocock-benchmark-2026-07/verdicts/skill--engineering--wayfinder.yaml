@@ -1,0 +1,95 @@
+id: skill:engineering/wayfinder
+kind: skill
+tier: A
+opponent_sha256: bef437de697fb6984a8a90b7fd82f128609148d6e02f635ce419d03555b351e1
+dossier: dossiers/skill--engineering--wayfinder.yaml
+
+scores:
+  D: 6
+  I: 8
+  C: M
+  E: 3
+score_derivation: |
+  D=6：
+  - fog-of-war-frontier-destination：+3。机制簇整体缺席（grep 证实）：把未知显式建模为
+    "刻意不完整的地图"——命名 destination 先定 scope、frontier 是当下可取的已知边缘、
+    未锐化问题在 "Not yet specified" 雾里等毕业。我方 plan-agent 是一次性全量分解
+    （Phase+Wave 静态图），无渐进揭示、无雾类持有区、无一等 destination 制品。
+  - shared-map-on-tracker：+2。tracker 承载的跨 session 共享地图 + 按 assignment 认领票
+    防并发冲突——我方跨 session 状态是本地 markdown（PROGRESS/checkpoint）单写者模式，
+    并发控制是 session-project pin（不同关注点），无票级认领。
+  - single-ticket-per-session：+1。每 session 最多解决一票 + 票按 ~100K token session
+    定大小（absence_proof 0 命中）；与我方 Wave 内并行模型冲突，计缺席但适配性存疑。
+  - plan-dont-do：+0（双方同有规划/执行硬边界）。
+  - name-not-hash-reference：+0。与我方冻结稳定 ID 纪律**正面冲突**——我方 U-ID 永不重编
+    是下游跨 session 引用的承重设计；对方人读性论点可取处仅是"显示时名并列 ID"的小改良，
+    不计净增量。
+  I=8：route-guard PLAN MODE 接线(+2)/parity 锚点(+2)/使用史极重(+2)/SSOT-10 checker(+1)/
+  appendix 契约(+1)。
+  C=M：narrowed merge scope（见下）触 plan-agent.md + PROGRESS 模板约定 2-3 文件；若含
+  tracker 化则 L——已裁掉。
+  E=3：promoted(+1)+CHANGELOG（decision-mapping→wayfinder 更名 rationale）(+1)+非 draft(+1)。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=6 ≥ 3 ✓；机制 ≥2（fog-of-war 簇、shared-map 概念）✓。非替换：
+  plan-agent 的断言列表（bash 可执行）、DEV/ASSERT 反向覆盖门、U-ID 冻结、模式分级（Solo→
+  Hierarchical）是现任独有承重轴 → 支配不成立。
+  **merge 范围刻意收窄**：只吸收 fog-of-war 概念层（词汇+PROGRESS 约定），不做 tracker 化
+  ——tracker 承载地图需引入 issue-tracker 基础设施，触 Loop 宪法"优先接 harness 原生原语"
+  与最小文件原则，成本/收益不成立；tracker 化按 opportunity 记录，不进落地提案。
+
+merge_scope: |
+  ① plan-agent Deep tier 增"探索型长任务"分支词汇：命名 destination（完成状态已有，提为
+    一等锚）+ fog 区（PROGRESS.md 增可选 "尚未锐化（fog）" 节——在 scope 内但还提不成
+    精确问题的项，与"待执行"区分）+ frontier 语义（阻塞全清的 U-block，与 to-tickets
+    merge ③ 共用一条）。
+  ② 判据一行："雾 vs 任务"的毕业判准 = 能否现在精确陈述问题（非能否回答）——防把模糊项
+    伪装成任务卡。
+  ③ 不引入：每 session 单票上限（与 Wave 并行冲突）、name-not-ID（与 U-ID 冻结冲突）、
+    tracker 地图（基础设施成本）。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/agents/plan-agent.md", "PROGRESS 模板约定（claude-md-appendix.md）"]
+  ab_runs_needed: 1
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强现任论证："我方已有四个未决事项持有区——brainstorm PRD 的 Outstanding Questions
+    （blocking/deferred 双档 + gated handoff，brainstorm/SKILL.md:153,499 实查）、plan-agent
+    的 DONE_WITH_CONCERNS defer 项、NEEDS_CONTEXT escalation、CONTEXT.md 假设风险——fog 只是
+    第五个池子，merge 徒增'该放哪个池子'的路由噪音。"且 D=6 确有虚高：
+    (a) single-ticket-per-session +1 违反本 benchmark 自己的"冲突不计缺口"先例——同一 verdict
+    对 name-not-hash 因冲突记 +0，loop-me verdict 还明引"同 wayfinder name-vs-ID"为先例；
+    single-ticket 与 Wave 内并行正面冲突（verdict 自己承认"适配性存疑"）却计 +1，按己例应 +0。
+    (b) "机制簇整体缺席"言过其实——dossier 自认 frontier≈Wave 静态拓扑、destination≈topic/
+    完成状态 loose equivalent，真正全缺的是 fog 持有区 + 渐进揭示范式。
+    (c) frontier 语义在 to-tickets D 已计 +2，此处 fog 簇 +3 含部分重叠计分。
+    诚实修正 D≈4-5。**为何不致命**：merge 门槛 = D≥3 + ≥2 条独立引证机制——fog 持有区
+    （absence grep 0 命中）与 shared-map 均为真缺席、引文已机验，修正后仍稳过线且桶判据
+    不动摇。"第五个池子"攻击被 merge_scope ② 的毕业判准直接消解：Outstanding Questions 按
+    wayfinder 自己的判准（能否精确陈述，非能否回答）恰是"已锐化未回答"= ticket 级，与 fog
+    收留的"提不成精确问题"项不同池，判据可执行不混淆。旁证：对方 CHANGELOG#464 亲证 matt
+    本人把 wayfinder 定位为 situational on-ramp 而非主干入口（"crowning wayfinder as the
+    default spine is a v2-sized move"）——verdict 只吸收概念层，与源头自我定位一致，非高估。
+  attack_notes: |
+    ② fit 攻击不成立：三个宪法冲突项（tracker 基础设施/单票上限/name-not-ID）已全部被
+    merge_scope ③ 显式排除；tracker 化正确让渡给 setup 单元的 GAP-issue-tracker-integration
+    聚合提案，无重复落地；frontier 语义与 to-tickets merge ③ 共用一条，落地层已去重。
+    plan-agent.md 非 SKILL.md，P1-P7 保护区不适用；fog 项非 U-block，不触溯源规则（No
+    Fabrication）与块 1.5/1.6 覆盖门（仅 task-plan 存在时生效），无门禁冲突。
+    ③ 成本核查：touched_files 略乐观——claude-md-appendix.md 明言"不随 session 注入"，
+    PROGRESS 格式真身在 docs/PROGRESS.md（项目级软链），appendix-only 的 fog 约定弱执行；
+    实际落地需 CLAUDE.md 一行指针（session 注入面）+ capability-parity.json 锚点（双仓
+    原则），实际 3-4 文件——仍在 C=M（≤6）内，不改分档。ab_runs=1 满足"机制层 prose 吸收
+    无 A/B 一律 BLOCK"红线（最小但合法）；dual_repo=true 正确（plan-agent.md 为双仓框架
+    能力文件，非 fork 专属）。
+    遗留记录（不改桶、不缩 scope，供 GATE-2 参考）：D 按"冲突不计缺口"先例诚实值为 5 而非
+    6（single-ticket 应 +0）；frontier 与 to-tickets 存在 D 层部分重叠计分（落地层无重复）；
+    落地时 touched_files 应补 CLAUDE.md 指针行与 parity 锚点。

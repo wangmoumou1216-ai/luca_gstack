@@ -1,0 +1,28 @@
+id: mech:thin-orchestration-thick-primitive
+kind: mechanism
+tier: A
+dossier: dossiers/mech--thin-orchestration-thick-primitive.yaml
+
+scores:
+  D: 2
+  I: 8
+  C: S
+  E: 3
+score_derivation: |
+  D=2：
+  - prose-delegation-to-thick-primitive：+2。我方复用两形态（被动 references/ 内容 +
+    重型编排器 dispatch），无"几行薄壳组合可执行 primitive"形态；grilling 单元已证实
+    其后果（muse-loop 要逼问只能整跑 brainstorm Phase 0-5）。
+  - user-gated-entry（disable-model-invocation）：+0（已计入 mech:invocation-cost-model
+    的 binary-invocation-axis，不重复）。
+  I=8（references 资产 + Skill-first 原则 + 编排器生态成熟）。C=S。E=3。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。且该模式的**唯一高价值具体应用已在落地**：grilling verdict 的
+  merge scope ②（把逼问环抽成可复用 primitive）正是 thin-orchestration 模式的实例——
+  模式经由实例进来，不需要作为通用架构立项（通用化薄壳入口与 2026-07-03 输入面收窄决议
+  相悖：每个薄壳都是新入口）。"组合优于重复"原则一行收进 skill-authoring 资产（搭车）。
+
+reconciliation: null
+landing_estimate: null

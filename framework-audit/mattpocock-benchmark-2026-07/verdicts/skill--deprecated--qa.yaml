@@ -1,0 +1,14 @@
+id: skill:deprecated/qa
+kind: skill
+tier: C
+opponent_sha256: d9727aac6503981bf69bdd8b37e0d85b32b8fbd353a57528c252dac1337ab761
+dossier: dossiers/skill--deprecated--qa.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: FAIL }
+bucket: leave
+bucket_rationale: |
+  快裁：对方已弃用——被 triage 状态机吸收（bug-only 的 reproduce 泛化成 verify-the-claim）。
+  matrix 记的 counterpart ux-audit 经采证核实为松匹配（ux-audit 出评审报告不建 issue，
+  机制层异物）。**弃用教训**：anti-fragmentation——同一 intake 面不开两个入口，泛化机制
+  吸收特化 skill；直接印证我方 muse-req-triage 单入口设计与"不为子场景另开 skill"纪律。
+reconciliation: null
+landing_estimate: null

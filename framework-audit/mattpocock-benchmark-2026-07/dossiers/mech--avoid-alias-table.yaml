@@ -1,0 +1,85 @@
+id: mech:avoid-alias-table
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+
+opponent_summary: >
+  mattpocock/skills 用一套 `_Avoid_` 别名表约定强制语言收敛：在 glossary / CONTEXT / 领域建模的
+  术语定义文件里，每个术语给一句紧定义，紧跟一行 `_Avoid_:` 列出该概念下**禁止使用**的同义词。
+  该装置在三份格式规范里复现——codebase-design 的 deep-module glossary（Module/Interface/Seam
+  各带 `_Avoid_`）、domain-modeling 的 CONTEXT.md 格式、teach 的 GLOSSARY.md 格式。一条统辖规则
+  「Be opinionated」要求：一个概念存在多个词时，挑最好的 canonical 词，其余全部降级为要避免的别名。
+  收敛还延伸到行文——「don't substitute」被禁词、canonical 词要用在包括其他定义在内的一切地方，
+  目的是让人与 AI 共享同一套词汇。
+
+our_summary: >
+  我方无 counterpart（matrix our_counterpart=none）。全仓无 `_Avoid_` 别名表 / 逐术语禁同义词约定：
+  grep `_Avoid_` 在 .claude、memory、CLAUDE.md、CONTEXT.md 命中 0。存在的是相邻但不同性质的词汇纪律：
+  muse-proto-gen 的「受控词汇表」（component-mapping-taxonomy 限定 agent 只能从固定组件集里选名，不是逐
+  术语挂禁用同义词）、deepresearch 把相似 claim 归并为「canonical statements」（是 claim 去重、非行文术语
+  统一）、以及 auto-memory 里一条单点命名锁「luca_gstack 写全、禁缩写 gstack」。CONTEXT.md 载有项目词汇与
+  红线，但无 `_Avoid_` 结构，也无「选一个 canonical 词、其余降级」的通用收敛规则。
+
+mechanisms:
+  - name: avoid-alias-line
+    summary: >
+      逐术语的 `_Avoid_:` 行装置——每个定义后紧跟一行列出该概念下被禁用的同义词，在三份格式规范里复现。
+    opponent_evidence:
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: "_Avoid_: API, signature"
+      - path: skills/engineering/domain-modeling/CONTEXT-FORMAT.md
+        quote: "_Avoid_: Client, buyer, account"
+      - path: skills/productivity/teach/GLOSSARY-FORMAT.md
+        quote: "_Avoid_: Bulking, getting big"
+    absence_proof:
+      pattern: "_Avoid_"
+      scope: ".claude/ (skills, skill-os, agents) + memory/ + CLAUDE.md + CONTEXT.md"
+      hits: 0
+    delta: >
+      对方有一个字面级的逐术语 `_Avoid_:` 行装置，把被禁同义词直接挂在每个定义下，且在 3 份格式文件里一致复现。
+      我方无此装置——grep `_Avoid_` 命中 0。我方最接近的结构是 muse-proto-gen 的受控组件词汇表，它约束「从固定
+      集合里选名」，但不把一串禁用同义词绑定到单个被定义的术语上。
+
+  - name: be-opinionated-convergence-rule
+    summary: >
+      统辖规则：一个概念有多个词时，刻意挑最好的 canonical 词、其余降级为要避免的别名。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/CONTEXT-FORMAT.md
+        quote: "pick the best one and list the others under"
+      - path: skills/productivity/teach/GLOSSARY-FORMAT.md
+        quote: "pick the best one and list the rest as aliases to avoid"
+    absence_proof:
+      pattern: "pick the best|canonical (word|term)|列.{0,3}避免.{0,3}同义词|同义词.{0,6}避免"
+      scope: ".claude/skills + .claude/skill-os + CLAUDE.md + CONTEXT.md"
+      hits: 0
+    delta: >
+      对方在 CONTEXT-FORMAT 与 GLOSSARY-FORMAT 两处都明写这条统辖规则（「Be opinionated」：挑最好的词、
+      其余列为要避免的别名）。我方无「选一个 canonical 词、把同义词降级」的通用约定——该收敛规则措辞 grep 命中 0。
+      我方仅有一条单点命名锁（auto-memory 里 luca_gstack 不缩写 gstack），但未在 skills/skill-os 里落成通用规则。
+
+  - name: consistent-usage-enforcement
+    summary: >
+      把 canonical 词强制进行文——禁止替换被禁词、canonical 词要用在包括其他定义在内的一切地方。
+    opponent_evidence:
+      - path: skills/engineering/codebase-design/SKILL.md
+        quote: "Use these terms exactly"
+      - path: skills/productivity/teach/GLOSSARY-FORMAT.md
+        quote: "Once a term is in the glossary, prefer it everywhere"
+    absence_proof:
+      pattern: "do not substitute|use these terms exactly|不得替换|统一术语"
+      scope: ".claude/skills + .claude/skill-os + CLAUDE.md + CONTEXT.md"
+      hits: 0
+    delta: >
+      对方把 canonical 词强制进行文——「don't substitute」被禁词、「use the glossary's own terms inside
+      definitions / prefer it everywhere」。我方无与 glossary 绑定的行文替换禁令——相关措辞 grep 命中 0。
+      deepresearch 把 claim 归并为「canonical statements」是 claim 去重，非在写作中强制一套固定术语。
+
+notes: >
+  our_counterpart=none，三个机制均走 absence_proof。真实跑过的 grep（cwd=仓库根，全部 0 命中）：
+  (A) grep -rl '_Avoid_' .claude memory CLAUDE.md CONTEXT.md → 0；
+  (B) grep -rilE 'pick the best|canonical (word|term)|列.{0,3}避免.{0,3}同义词|同义词.{0,6}避免' .claude/skills .claude/skill-os CLAUDE.md CONTEXT.md → 0；
+  (C) grep -rilE 'do not substitute|use these terms exactly|不得替换|统一术语' .claude/skills .claude/skill-os CLAUDE.md CONTEXT.md → 0；
+  (D) 最松 grep -rilE '避免使用.{0,4}(以下|这些)?.{0,4}(词|同义|别名)' .claude memory CLAUDE.md CONTEXT.md → 0。
+  意外事实：honesty-check grep 'glossary|术语表|词汇表|canonical' 有命中，但逐行核对全是无关物——
+  muse-proto-gen 的「受控词汇表」是固定组件选择集、deepresearch 的「canonical statements」是 claim 去重，
+  均非逐术语禁同义词的 `_Avoid_` 别名表。此单元为机制单元，check-coverage 不要求 opponent_sha256。

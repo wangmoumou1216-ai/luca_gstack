@@ -1,0 +1,12 @@
+id: skill:in-progress/writing-shape
+kind: skill
+tier: C
+opponent_sha256: 67d34422bbe43cfd523dea9fe7b3ec5260791aed8ea52309b5b85f9d76f32745
+dossier: dossiers/skill--in-progress--writing-shape.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：写作三部曲之 exploit 阶段（逐段塑形 + 每步争论 format 选择 prose/list/table/
+  callout）。draft；同三部曲理由不采，随三部曲整体记 opportunity。
+reconciliation: null
+landing_estimate: null

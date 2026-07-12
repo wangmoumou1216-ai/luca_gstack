@@ -1,0 +1,55 @@
+id: skill:deprecated/design-an-interface
+kind: skill
+tier: C
+opponent_sha256: a2596e9fa2d50e23ba014f64a5b8f9df4eb56b846a52cad152899ef5eb97b085
+opponent_summary: >
+  已弃用 skill。基于《A Philosophy of Software Design》的 "Design It Twice"：第一个想法多半不是最好的，
+  故用并行子 agent（Task 工具 spawn 3+ 个，每个分配一个不同约束：最小方法数/最大灵活/优化最常见场景/
+  借鉴某范式）为一个 module 生成多个 radically different 的接口设计，再顺序展示、按接口简洁性/通用 vs
+  专用/实现效率/depth（小接口藏大复杂=深模块）/易正确用 vs 易误用对比，最后综合。反模式：不许子 agent
+  产出相似设计、不许跳过对比、不许实现。单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内无 "design it twice" / radically-different 接口设计
+  机制（grep 0 命中）。我方 ux-brainstorm 会出 2-3 个发散方案 + Oracle 对抗，但那是产品/UX 方向发散，
+  非"为一个代码 module 的接口 spawn 并行子 agent 出多个极端不同 API 形状再按 depth 对比"的代码接口
+  设计；两者概念相邻但对象不同（UX 方案 vs module interface）。
+mechanisms:
+  - name: parallel-subagents-radically-different-designs
+    summary: 并行 spawn 3+ 子 agent，各带一个不同约束，强制产出 radically different 的接口设计再对比。
+    opponent_evidence:
+      - path: skills/deprecated/design-an-interface/SKILL.md
+        quote: "Each must produce a **radically different** approach."
+      - path: skills/deprecated/design-an-interface/SKILL.md
+        quote: "your first idea is unlikely to be the best"
+    absence_proof:
+      pattern: 'radically different'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方用"并行子 agent + 每个强制不同约束"逼出多个极端不同的 module 接口，价值在对比。我方虽重度
+      用并行子 agent（auto/ux-research），但无"为代码接口 design-it-twice"这一具体机制（radically
+      different 0 命中）；ux-brainstorm 的多方案发散对象是产品/UX 方向，非 module API 形状。
+  - name: depth-based-interface-evaluation
+    summary: 按 depth（小接口藏大复杂=深模块好）、简洁性、通用 vs 专用、易正确用 vs 易误用评估接口。
+    opponent_evidence:
+      - path: skills/deprecated/design-an-interface/SKILL.md
+        quote: "Small interface hiding significant complexity = deep module (good). Large interface with thin implementation = shallow module (avoid)."
+    absence_proof:
+      pattern: 'design it twice|Design It Twice'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方的接口评估标准来自 Ousterhout 深模块理论（depth/seam）。我方框架无 deep-module 评估词汇与
+      design-it-twice 流程（0 命中）；我方设计评审（taste-review/design-review）审美/交付质量，不审代码
+      接口 depth。
+notes: >
+  【matt 为何弃用 + 对我方信号】对方 deprecated/README.md 明写 "Skills I no longer use."。弃用理由=能力
+  被吸收：clone 里 skills/engineering/codebase-design/DESIGN-IT-TWICE.md 已存在，内容 "Based on \"Design
+  It Twice\" (Ousterhout)... use this parallel sub-agent pattern"，且 codebase-design/SKILL.md 与
+  improve-codebase-architecture/SKILL.md（"use its design-it-twice parallel sub-agent pattern"）都指向它
+  ——即这个独立 skill 的唯一机制（并行子 agent 出多接口）被折进更宽的 codebase-design skill 当一个子
+  引用文件，故独立入口作废。信号：一个只承载单一机制的 standalone skill，当该机制天然属于某个更宽
+  skill 的一部分时，应被吸收进后者、而非保留为顶层独立条目——这正对应我方"使用即留 + niche 能力保持
+  专属不通用化"与"隐藏/降级不删文件"的治理：我方近期把 compare/figma-demo/magicpath 降级为隐藏
+  （撤一级入口、留磁盘），是同一"入口收窄、能力保留"思路的镜像。跑过的 grep（repo 根，同上 scope）：
+  'radically different' → 0；'design it twice|Design It Twice' → 0。无 support_files。self-check 通过。

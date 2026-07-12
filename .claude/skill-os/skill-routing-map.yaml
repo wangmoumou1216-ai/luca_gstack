@@ -262,3 +262,16 @@ builtin_skills:
     hint: "→ 建议使用外部 skill: tdd（测试先行，红绿重构）"
     weight: 7
     triggers: [tdd, 测试驱动, 写测试, 测试先行, 红绿重构, 单元测试]
+
+  codebase_design:
+    skill: codebase-design
+    hint: "→ 建议使用外部 skill: codebase-design（深模块词汇：seam/接口即测试面/deletion test）"
+    weight: 7
+    # 纯工程词——红队裁定不收设计邻词（如「接口设计」），避免劫持设计管线
+    triggers: [深模块, 浅模块, 模块边界, seam, 模块拆分, 接口可测性]
+
+  resolving_merge_conflicts:
+    skill: resolving-merge-conflicts
+    hint: "→ 建议使用外部 skill: resolving-merge-conflicts（按意图解决冲突：先溯源 commit/PR 原意）"
+    weight: 7
+    triggers: [merge冲突, 合并冲突, rebase冲突, 解决冲突, 冲突了]

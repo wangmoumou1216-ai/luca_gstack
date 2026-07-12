@@ -1,0 +1,97 @@
+id: mech:writing-great-skills-metavocab
+kind: mechanism
+tier: A
+dossier: dossiers/mech--writing-great-skills-metavocab.yaml
+
+scores:
+  D: 6
+  I: 8
+  C: M
+  E: 3
+score_derivation: |
+  D=6：
+  - root-virtue-predictability：+2（absence grep 0——我方有分散行为原则，无统摄 skill
+    写作的命名根德性）。
+  - teachable-skill-authoring-metavocab：+2（20+ 术语四轴交叉引用的正面领域模型——我方
+    skill-invariants 是负面保护清单，取向互补非同位）。
+  - failure-mode-diagnostic-catalog：+2（六具名写作失败模式贴杠杆 co-locate——我方
+    eval-methodology 的 failure mode 是判据绑定槽位、behavioral_ab 的 no-op 是测试裁决词，
+    同名异域，均非写作诊断目录）。
+  I=8 / C=M / E=3。
+
+bucket: adopt
+bucket_rationale: |
+  与 skill:productivity/writing-great-skills verdict **共用同一落地**（matrix 设计如此：
+  skill 单元评整体、本机制单元评元词汇本身；两 verdict 一个 landing，防重复落地）。
+  bucket 同为 adopt（新建互补资产，non_redundancy 成立），判据与该 verdict 一致。
+
+adopt_scope: |
+  见 verdicts/skill--productivity--writing-great-skills.yaml 的 adopt_scope——
+  `.claude/skill-os/skill-authoring.md` 单一落地物承载：根德性 + 四轴术语表（适配版）+
+  六 failure mode 诊断表 + 修剪纪律 + （来自其他 mech verdict 的）dual-load 成本模型、
+  leading-word 技法、_Avoid_ 装置说明。**一个文件收拢全部 skill 写作学机制**，避免碎片化。
+
+reconciliation: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强"我方够用/这个 mech 单元只是加噪音"论证，以及为何不致命：
+    - **redundant-shadow 攻击（最锋利）**：本 mech 单元 D=6 里，root-virtue-predictability(+2)
+      与 failure-mode-diagnostic-catalog(+2) 是 skill verdict（D=7）已计的同两个机制——4/6 分是
+      对姊妹单元的重打。本单元真正独有的净增量只有 teachable-skill-authoring-metavocab(+2)，
+      单看只有 2 分，低于 adopt 的 D≥3 线。若按"单元独立自证"读，它够不上采纳门。
+    - **为何不致命**：① rubric 冻结的 D 定义是"对方单元中**我方 counterpart**（skill-invariants/
+      extraction-bar）不具备的机制部分"，**不是**"净于其它对方单元"。三机制我方全无——absence grep
+      复核：root virtue|根德性=0、premature completion|sediment|sprawl=0——按冻结口径 D=6 成立。
+      ② matrix **设计本身**就造 skill+mech 配对共用一个 landing（"skill 单元评整体、本机制单元评
+      元词汇本身；两 verdict 一个 landing，防重复落地"）；以"与自己配对的 skill 单元冗余"为由杀
+      mech，等于推翻 GATE-1 冻结的矩阵设计。③ 本单元独有的 teachable-metavocab = GLOSSARY.md
+      四轴（Invocation/Information Hierarchy/Steering/Pruning）分组的可教领域模型结构——实测为
+      201 行、约 25 个交叉引用术语、附 _Avoid_ 收敛表的**已发布实绩非 aspirational draft**；skill
+      verdict 的 adopt_scope 只列"根德性 + 六 failure mode + info-hierarchy 阶梯 + 修剪纪律"，**未**
+      枚举这套"术语按轴分组的领域模型"元结构——所以本单元确实为 skill-authoring.md 增添真实落地
+      内容，非纯噪音。④ 即便按最严"同一原则的复述折成 +1"读（root-virtue→+1、failure-mode→+1），
+      D=4 仍 ≥3，桶（adopt）不动。**核心裁决（共用 skill-authoring.md 落地、承载四轴术语表）存活。**
+    - D 生成偏宽的诚实标注（不改桶、供 GATE-2）：root-virtue 的两条对方引文（SKILL "is the root
+      virtue" + GLOSSARY "root virtue every other term serves"）是同一组织公理的两次复述，failure-mode
+      的两条（"use these to diagnose" + "lives beside the lever that cures it"）是同一目录的目的+结构
+      两面——严格计各可折 +1，D 诚实区间是 4-6。skill verdict 红队已就 root-virtue 复述做同款标注并
+      判非致命，此处保持一致。
+  attack_notes: |
+    ② fit 假设——全部通过，不构成 kill：
+    - propose-only / 人类卡点：本单元是 verdict/提案，GATE-2 用户签字，无自动编辑 luca_gstack，宪法
+      立场不破。
+    - 词表路由承重不动：landing 是 skill-authoring.md 被动 reference（对方原 skill disable-model-
+      invocation），无路由词条、route-guard 确定性匹配面零改动。
+    - skill-invariants / 承重墙 / P1-P7 零触碰：本单元 adopt_scope 显式 defer 到 skill verdict 的
+      adopt_scope，而该 scope 已被其红队 P3-downgrade **移除了 skill-invariants.md 的一行指针**，互指
+      改落 CLAUDE.md 可选一行。本 mech 单元继承此承重墙-clean 落点，不重开触墙口；且 P1-P7 保护的是
+      各 SKILL.md 的区、非 skill-invariants.md 正文，本单元也不编辑任何 SKILL.md。
+    - 最小文件原则：不新增独立文件——8+ 写作学单元共汇 skill-authoring.md 一个文件，正是反 sprawl 的
+      最小解；本单元 touched_files="共用...不重复计"与之一致。
+    - dual_repo=true 正确：skill 写作元词汇是**通用框架能力**（非 muse fork 专属如 luca-app/muse-loop），
+      母版已确认同有 skill-invariants.md counterpart，落双仓合规；非 fork 专属文件误标。
+    - new_gap_proposal=null 正确：归入 skill verdict 提的 GAP-skill-authoring-craft 同一 gap，不重复
+      提案、不绕 gaps-register 人工拥有权。
+    ③ 集成成本——ab_runs=0 经核为合规（非红线 BLOCK），附一处非阻断性会计澄清：
+    - 红线"机制层 prose 吸收无 A/B 一律 BLOCK"的满足方式：本单元的四轴术语表 prose 折入 skill
+      verdict 的**单次 whole-file 非回归 A/B**（skill landing_estimate ab_runs=1）。skill-authoring.md
+      是被动 reference、不改运行期 skill 行为，对整文件跑 1 次非回归 A/B 即覆盖折入其中的全部 prose
+      （含本单元四轴术语表）——红线要"被吸收的 prose 有 A/B"，此处有（继承、按 landing 计一次），故
+      **ab_runs=0 是共用落地的记账口径，不是"无 A/B"**，not BLOCK。
+    - 非阻断澄清（供 GATE-2，属"加"不属"删"，故不作 downgrade 编辑）：skill verdict 红队记"另三单元
+      ab=0 折入这次同一 A/B"，实际折入的机制单元含本 metavocab 单元应为**四单元**（invocation-cost-
+      model / leading-word / avoid-alias-table + 本单元）。此为姊妹 verdict 的计数措辞需订正一字，物理
+      上仍是同一次 whole-file 非回归 A/B，无需增跑；建议落地时在 skill-authoring.md 的 A/B 记录里显式
+      列全四单元来源，杜绝本单元 ab_runs=0 被孤立读作红线违规。
+    - touched_files="共用...不重复计"正确：共享 skill verdict 落地，无独立文件，无重复计成本。
+    结论：三问均未致命。D 偏宽但桶（adopt）在最严 deflation 下仍稳；fit 全通过；ab_runs=0 经继承证成
+    合规。裁决 **stands**，无 scope 收缩、无子项砍除。
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: ["共用 skill:writing-great-skills 落地，不重复计"]
+  ab_runs_needed: 0
+  dual_repo: true
+  new_gap_proposal: null   # 归 GAP-skill-authoring-craft（同一 gap）

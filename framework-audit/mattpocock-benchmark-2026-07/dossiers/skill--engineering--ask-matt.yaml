@@ -1,0 +1,118 @@
+id: skill:engineering/ask-matt
+kind: skill
+tier: A
+opponent_sha256: 4465bad6bb9f7426743c1013d88740594da34e0f9934d375d93bbf981d5317b5
+opponent_summary: >
+  ask-matt is a user-invoked (disable-model-invocation:true) "router over the skills in this repo":
+  the user asks which skill or flow fits their situation and reads back a hand-written prose map.
+  The map frames every skill as part of a topology — one "main flow" (idea → ship: grill-with-docs →
+  branch on prototype detour → to-spec/to-tickets/implement) with two "on-ramps" (triage,
+  diagnosing-bugs, wayfinder) merging onto it, plus codebase-health, vocabulary-underneath,
+  crossing-sessions, standalone, and precondition layers. It routes by narrative conditional
+  questions ("can you settle every question in conversation?") the model reasons over, not by
+  keyword scoring, and it embeds context-hygiene guidance (the ~120k "smart zone", keep steps 1–3
+  in one unbroken window, handoff vs compact).
+our_summary: >
+  Our counterpart splits routing across three artifacts. route-guard.mjs is an automatic
+  UserPromptSubmit hook that fires on every prompt, scores the message against keyword triggers,
+  and emits a route hint (SINGLE_SKILL / MULTI / STOP / PLAN). skill-routing-map.yaml is the
+  authoritative keyword+weight table it scores against. /office is a user-invoked wizard that asks
+  the user what they want and recommends a workflow. Skill-to-skill sequencing lives in a separate
+  file, optional-workflow-graph.yaml (recommended_paths per scene). Context-hygiene lives in
+  CLAUDE.md's Context 工程协议 (Checkpoint + Compact triggers). So our routing is
+  automatic-hook-plus-wizard over a keyword table, not a single user-invoked prose flow-map.
+mechanisms:
+  - name: user-invoked-vs-automatic-routing
+    summary: >
+      ask-matt is a deliberate on-demand consult you invoke when you forget which skill fits;
+      our primary router is an automatic hook that fires unprompted on every message.
+    opponent_evidence:
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "disable-model-invocation: true"
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "You don't remember every skill, so ask."
+    our_evidence:
+      - path: .claude/hooks/route-guard.mjs
+        quote: "UserPromptSubmit hook: project context gate + route hints + checkpoint reminder"
+      - path: .claude/skills/office/SKILL.md
+        quote: "向导式：先问你想做什么，推荐对应 workflow"
+    delta: >
+      ask-matt is invoked by the user on demand (disable-model-invocation:true) and answers "which
+      skill fits". Our main router (route-guard) is the opposite: it runs automatically on every
+      UserPromptSubmit, unprompted. Our user-invoked equivalent, /office, is a wizard that asks the
+      user questions rather than handing back a static prose flow-map. We have both an auto path and
+      a user-invoked path; ask-matt has only the user-invoked one.
+  - name: prose-flowmap-vs-keyword-scoring
+    summary: >
+      ask-matt routes by narrative conditional reasoning the model reads; ours routes by
+      deterministic keyword-trigger weight scoring.
+    opponent_evidence:
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "A **flow** is a path through the skills."
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "can you settle every question in conversation?"
+    our_evidence:
+      - path: .claude/skill-os/skill-routing-map.yaml
+        quote: "Authoritative keyword and invoke reference for route-guard.mjs."
+      - path: .claude/hooks/route-guard.mjs
+        quote: "sort((a, b) => b.w - a.w)"
+    delta: >
+      ask-matt's routing substrate is prose: branch questions ("can you settle every question in
+      conversation?") the model reasons over, with no scoring or thresholds. Ours is a keyword table
+      (skill-routing-map.yaml) scored by weight with longest-match disambiguation and a numeric
+      threshold in route-guard.mjs. ask-matt has no keyword/weight machinery; our route-guard has no
+      hand-written narrative decision tree.
+  - name: skill-relationship-topology
+    summary: >
+      ask-matt encodes how skills connect and sequence (a main-flow spine with on-ramps merging
+      onto it); our route-guard matches single skills, with sequences held in a separate graph file.
+    opponent_evidence:
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "It moves issues through triage roles and produces agent-ready issues"
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "Then it merges onto the main flow at"
+    our_evidence:
+      - path: .claude/skill-os/optional-workflow-graph.yaml
+        quote: "It recommends and validates handoff; it does not own standalone skill execution."
+      - path: .claude/skill-os/optional-workflow-graph.yaml
+        quote: '["idea", "brainstorm", "design-brief", "open-design"]'
+    delta: >
+      ask-matt bakes skill-to-skill topology into one prose document — triage feeds implement,
+      on-ramps merge onto the main flow at to-spec. Our route-guard only classifies a single message
+      into SINGLE/MULTI-skill; the equivalent sequencing (recommended_paths per scene) lives in a
+      separate file, optional-workflow-graph.yaml, that route-guard does not read. We have the
+      sequence data; it is factored into a different artifact than the router, and expressed as scene
+      path arrays rather than a narrated main-flow/on-ramp map.
+  - name: context-hygiene-smart-zone
+    summary: >
+      ask-matt embeds context-window discipline (smart zone, one unbroken window, handoff vs compact)
+      inside the router; ours lives in a separate CLAUDE.md protocol.
+    opponent_evidence:
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "within which the model still reasons sharply"
+      - path: skills/engineering/ask-matt/SKILL.md
+        quote: "don't compact or clear until after"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "Compact 前必须先写 Checkpoint（确保状态不丢失）"
+      - path: CLAUDE.md
+        quote: "完成一个完整 Phase 后，如果接下来还有 ≥ 2 个 Phase，执行 `/compact`"
+    delta: >
+      ask-matt attaches context-hygiene guidance to the flow itself — name a concrete budget (~120k
+      "smart zone"), tell you to keep steps 1–3 in one unbroken window and not compact until after
+      to-tickets, and distinguish handoff (fork) from compact (continue). We have equivalent rules
+      (Checkpoint-before-compact, per-Phase compact triggers, a 60%/20-turn signal) but they live in
+      CLAUDE.md's Context 工程协议, decoupled from any skill map. Both sides have the discipline;
+      ask-matt co-locates it with routing while ours is a standalone global protocol.
+
+notes: >
+  All 8 opponent quotes and all our-side quotes were grep-verified verbatim (grep -c == 1 each)
+  before writing: opponent from skills/engineering/ask-matt/SKILL.md; ours from route-guard.mjs,
+  skill-routing-map.yaml, optional-workflow-graph.yaml, office/SKILL.md, CLAUDE.md.
+  Decomposed into 4 mechanisms (matrix gave 1 subverdict hint router-as-user-skill-vs-hook-routing);
+  incremented to 4 after reading the full skill — the file carries distinct axes: invocation form,
+  routing substrate (prose vs keyword), skill-relationship topology, and embedded context-hygiene.
+  optional-workflow-graph.yaml is not in the matrix our_counterpart list but is the topology
+  contract that office/SKILL.md reads (line 48), so it is cited as our-side evidence for mechanism 3.
+  /grill-with-docs, /to-tickets, /handoff, /compact referenced by ask-matt are its own primitives
+  (compact is the Claude Code built-in); no fabricated citations for harness built-ins.

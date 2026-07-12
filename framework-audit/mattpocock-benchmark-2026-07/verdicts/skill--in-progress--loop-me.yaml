@@ -1,0 +1,87 @@
+id: skill:in-progress/loop-me
+kind: skill
+tier: A
+opponent_sha256: 2b2c725f8b6e8b8f3f6e6bc2c18f0cf3ab029a270b5ac23132fbebdeb6b443aa
+dossier: dossiers/skill--in-progress--loop-me.yaml
+
+scores:
+  D: 2
+  I: 7
+  C: M
+  E: 1
+score_derivation: |
+  D=2（draft 单元 D 封顶 3；实际计 2）：
+  - loop-lens-and-world-model：+1。"生活即嵌套循环，可预测循环值得委托"的发现型前端 +
+    NOTES.md 世界模型——muse-loop 从已表述的 REQ 起步（下游一步），无主动发现、无持久
+    世界模型文件。
+  - push-right-defer-checkpoint：+1。"卡点位置是设计变量：尽量右推、先做最大量工作、给
+    决策级 brief 非草稿"——grep 0 命中。注意其中"brief-not-draft"我方 GATE 实践已在做
+    （triage 待裁清单/裁决包），缺的是成文纪律。
+  - mandate-nothing-structural：+0。与我方宪法立场**有意相反**（muse-loop 两卡点
+    allow_standalone_override 永 false、豁免机制被显式否决为"绕开人类审批"）——
+    冲突不计缺口（同 wayfinder name-vs-ID、prototype 审美门先例）。
+  - grilling-specialization：+0（归 grilling/brainstorm 单元）。
+  I=7（muse-loop 宪法级卡点+fork 路由）。C=M。E=1：非 promoted(0)+无演进记录(0)+draft(0)
+  ——修正 +1 给"有明确 leading word 设计"，计 1。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。对方是 draft（E=1），其最有价值的两个想法走向不同归宿：
+  ① push-right/brief-not-draft 词汇——记 opportunity，未来 muse-loop 或 plan-agent 修订
+    HITL 呈现规范时顺带成文（我方实践已符合，只差命名）；
+  ② loop 发现型前端（"帮我找生活/工作里值得委托的循环"）——记 opportunity，是 muse-loop
+    的潜在上游 Phase 0，等真实需求出现再议（研究默认门适用）。
+
+reconciliation: null
+landing_estimate: null
+
+redteam:
+  verdict: stands
+  reverse_attack: |
+    反向红队目标：论证 leave 错杀了真价值。四个攻击向量全部核验后均不成立，leave 站得住。
+
+    最强复活论证（构造后被自我击穿）：
+    "brief-not-draft 是一条干净、非冲突、廉价的 HITL 呈现纪律，verdict 自己承认有价值
+    （'顺带成文'）却因 D=2<3 的打包技术性把它推给'someday'——这正是 §3.5 警告的保守回避；
+    把 brief-not-draft 从争议的 push-right 里拆出来单独 merge 进 GATE 呈现/plan-agent 即可。"
+    击穿：① brief-not-draft 我方已实测在做——GATE-1（muse-req-triage Phase 3：陈述+来源/信号/
+    分类/EARS/design_reference 的紧凑待裁清单）与 GATE-2（呈现设计映射结果）呈现的都是决策级
+    摘要不是 raw draft，净增量只剩"给它起个名"，且无 CHANGELOG/无"咬过人"实证（对比 grilling
+    item① 尚有 #464 自问自答实证仍被砍到"一行显式化"，本条更薄）。② §3.5 判据是高价值 AND 高置信：
+    brief-not-draft = 高置信但低价值（已做）；不过 AND。故"记 opportunity"是 §3.5-正确处置，非回避。
+
+    ① D 是否被压低 → 否，反而偏高。唯一松动是 push-right 计 +1，但 push-right（"把唯一卡点尽量
+    右推、最后问一次"）与我方宪法直接对立（GATE-1/GATE-2 两个不可省略的早/中卡点，豁免被显式
+    否决为"绕开人类审批"）——与 mandate-nothing 同属 loop-me"最小化/延后结构强制"的哲学，按
+    verdict 自己给 mandate-nothing 记 +0（冲突）的逻辑，push-right 也应 +0。修正后 D 向 1 走，
+    leave 更硬。不存在任何把 D 抬到 ≥3 的欠计——只有 push-right 的过计 + brief-not-draft 的
+    "已做" + grilling 的"已被覆盖"。打包拆分也救不回：拆出的 brief-not-draft 近 0、push-right
+    是冲突、NOTES 世界模型虽是真空缺但属草稿低置信（见下）。
+
+    ② judge 自由裁量 → 只在慷慨方向越界，不在压制方向。E=1 系判官在 rubric 三条 E 判据（均 0：
+    in-progress/无CHANGELOG/无.out-of-scope）之外额外 +1"有 leading word 设计"，是加分不是减分
+    （且 E 不入桶）；push-right +1 同为慷慨。无一处自由裁量把真缺口说成形态差异来压 D。§5 校验：
+    loop-me 三机制在 gaps-register 映射 0 个 open gap（GAP-no-feedback-loop 指 adoption telemetry，
+    与 loop-me 的"生活循环"不同义）——人类拥有的缺口册对"发现委托循环/世界模型/brief 纪律"零拉力，
+    "无 open gap → 非落地目标"与 §5 一致，defer-as-opportunity 不越权。
+
+    ③ "已由其他 verdict 覆盖"交叉引用 → 真覆盖。grilling verdict = D=5 merge，实吸收
+    one-question/facts-decisions/confirmation-gate 苏格拉底引擎；grilling-specialization 记 +0
+    是真归属不是丢弃。
+
+    ④ leave 的事实前提是否经核实（对齐 diagnosing-bugs 教训）→ 全部经核实，无假地基。
+    与 diagnosing-bugs"adopt 建立在假缺口（已装 systematic-debugging）"相反，本 leave 的前提是
+    真的：brief-not-draft 已做（读 GATE-1/GATE-2 原文证实）、grilling 已覆盖（读 grilling verdict
+    证实）、push-right 缺席且与设计对立（grep 0 + 宪法对读）、loop 发现前端缺席（grep 0）。唯一
+    真空缺 = loop-lens 发现型前端 + NOTES 世界模型（+1），但它是 in-progress 草稿（E=1、matt 自己
+    repo 里都未落地、无实证），且服务的是"发现值得委托的生活/工作循环 → /loop·schedule 自动化"这个
+    与 muse-loop"REQ→原型设计管线"不同的产品方向（loop-me 的循环=处理邮件/handle issues 这类
+    agentic 委托，非产品功能设计）；即便放到 CLAUDE.md Loop 宪法/harness 原生 loop·schedule 这个
+    最近的落点，宪法立场是"Outer loop 默认薄、优先接原生原语"，草稿式增厚的 spec 前端既低置信又
+    偏离主线，研究默认门适用。§3.5 高价值 AND 高置信：loop-lens = 潜在高价值但低置信（草稿+异产品+
+    无 luca 需求证据），不过 AND。故亦为 opportunity 正确。
+
+    结论：四向攻击 0 命中。leave 的两条处置（brief-not-draft 已做只差命名 → opportunity；loop
+    发现前端 → 潜在上游 Phase 0 等真实需求+研究门）恰是 §3.5-纪律下的正确答案，而非"怕动结构"的
+    保守回避——§3.5 的结构化门是用来保"高置信"，本单元两条候选各缺 AND 的一半（一个低价值、一个
+    低置信），无一构成高价值 AND 高置信的可采纳能力。leave stands。

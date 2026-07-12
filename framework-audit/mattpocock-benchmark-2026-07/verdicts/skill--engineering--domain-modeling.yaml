@@ -1,0 +1,100 @@
+id: skill:engineering/domain-modeling
+kind: skill
+tier: A
+opponent_sha256: 152e2c97239affb12a60c5f4a7e74ab546a49ae169688c81f4e2ccc42dafa579
+dossier: dossiers/skill--engineering--domain-modeling.yaml
+
+scores:
+  D: 3
+  I: 7
+  C: M
+  E: 3
+score_derivation: |
+  D=3（redteam 修正，原评 5——扣掉双重计分与无据 bite bonus 各 1 分；推导见 redteam 块）：
+  - active-modeling-vs-passive：+1（原 +2）。主动纪律（当场质问冲突术语/发明边缘场景压测/代码
+    交叉验证）我方无——CONTEXT.md 被动写入（/retro+复盘），唯一术语挑战是 brainstorm Oracle 的
+    ephemeral drift 检测，不沉淀不跨会话。**bite bonus 撤销**：rubric 的 +1 需"CHANGELOG 记录/
+    复现实例"证明该机制咬过人（对齐锚 A grilling），dossier 只挂 SKILL.md prose 两引；对方
+    CHANGELOG 记的是 skill 创建+被 grill-with-docs/improve-codebase 依赖（adoption 证据），
+    不是 challenge-terms 行为抓到真实冲突的复现 → 只给 base +1。
+  - avoid-alias-convergence：+0（原 +1，**双重计分撤销**）。同一"opinionated canonical 收敛"
+    能力已在 mech:avoid-alias-table 计 +3（avoid-alias-line+be-opinionated-convergence-rule）；
+    审计自身反双计约定（mech:context-md-domain-glossary 对 active-vs-passive 记"+0 已计入
+    skill verdict 不重复"）要求同一机制只在一处计分。本 verdict 自陈"落地归 mech:avoid-alias-
+    table 单元" → 计分也应归零，只留交叉引用。
+  - inline-not-batch-update：+1。术语定案即写 vs 我方 Stop 时批处理。注意非全冲突：
+    extraction-bar 的批处理管的是**记忆提取**，术语表 inline 更新是另一对象——可并存。
+  - adr-offer-three-part-test：+1。三条件合取提议门（难逆+费解+真权衡）我方 decisions.md
+    一行台账无此门；dossier 另证实我方无任何 docs/adr 体系（find 0 命中）。
+  I=7：CONTEXT.md session 启动注入(+2)/project.sh 项目 CONTEXT 机制(+2)/retro+skill 写入
+  使用史(+2)/appendix 契约(+1)/无 checker(0)。
+  C=M：CLAUDE.md「写入时机」段 + 项目 CONTEXT 骨架约定 + brainstorm Oracle 一行，≤4 文件。
+  E=3：promoted(+1)+CHANGELOG（ubiquitous-language→domain-modeling 演进）(+1)+非 draft(+1)。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=5 ≥ 3 ✓；机制 ≥2（active-modeling、inline 术语更新、ADR 提议门）✓；
+  全为加法（extraction-bar 批处理红线不动——术语表与记忆是不同对象，dossier 已辨析）。
+  非替换：我方 CONTEXT.md 的"红线+项目约束"职能、三层记忆治理、决策自动同步是现任独有承重
+  轴，对方（纯 glossary+ADR）无对应 → 支配不成立。
+
+merge_scope: |
+  ① CLAUDE.md「写入时机」增一条：术语/领域词汇冲突当场收敛并 inline 写入激活项目 CONTEXT.md
+    的词汇节（不攒批——与 extraction-bar 的记忆批处理并行不悖，对象不同）。
+  ② brainstorm Oracle 的 terminology-drift 发现从 ephemeral 升级：定案术语落项目 CONTEXT.md
+    （一行动作，不新增 Phase）。
+  ③ decisions.md 写入判据补三条件提议门（难逆+无背景费解+真权衡全真 → 主动提议记录决策），
+    与四信号并存（四信号管提取门槛，三条件管"何时主动开口提议"）。
+  ④ `_Avoid_` 格式落地归 mech:avoid-alias-table 单元（共用）。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: ["CLAUDE.md(写入时机一条)", ".claude/skills/office/brainstorm/SKILL.md(Oracle 一行)", ".claude/skill-os/extraction-bar.md(三条件门一段)"]
+  ab_runs_needed: 3  # redteam 上调（原 2）：三个行为独立的 prose 吸收（challenge-terms / Oracle-persist / ADR-offer-gate）各需一次 A/B，否则未测项按 rubric §5 红线 BLOCK
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    现有能力已覆盖大半，merge 的净增量被高估但未归零：
+    - brainstorm 是主动苏格拉底拷问 skill（Phase 3 强迫问题 + Oracle 术语漂移检测），
+      "设计中主动质问"并非全无；缺的只是"对持久 glossary 质问"+"术语 vs 代码交叉验证"这条窄缝。
+    - CONTEXT.md 已有多条 inline 直写触发（入场认知落盘 / design-brief 追加 / retro 追加），
+      "捕获即写"的通用能力已在，merge_scope ① 的"术语 inline 写词汇节"是这一既有模式的窄化延伸，
+      不是新范式。
+    - decisions.md 四信号已含"不可逆险情/重获成本高"，与 ADR 三条件门的 reversibility 维度部分重叠。
+    - 最有肉的部分——结构化 glossary（canonical + `_Avoid_`）——**根本不在本 verdict 落地**，
+      已由 mech:avoid-alias-table(D=4 merge) 承接；本 skill verdict 的独有净值是 challenge/inline/ADR
+      三条窄机制。
+    为何不致命：rubric §3 merge 门槛只要"净正 + D≥3 + ≥2 独立引证机制 + 加法"——不对称刻意留在
+    "替换"侧，不在合并侧。修正后 D=3、三条 grep 验证缺席的加法机制仍在、无红线破坏 → merge 在门槛
+    线上成立，达不到 leave（需 D<3 或红队 killed 或红线破坏，三者我都无法诚实建立）。故降级不击杀。
+  attack_notes: |
+    ①D 虚高确认（5→3，扣 2 分）：
+      (a) avoid-alias-convergence +1 是跨 verdict 双重计分——同一 opinionated-canonical 收敛能力
+          已在 mech:avoid-alias-table 计 +3；审计自身反双计约定（context-md-domain-glossary 对
+          active-vs-passive 记"+0 已计入 skill verdict 不重复"）要求同机制单处计分。撤 −1。
+      (b) active-modeling +2 的 bite bonus 无据——rubric +1 bite 需 CHANGELOG/复现实例证明机制
+          咬过人（锚 A grilling 有 self-answering CHANGELOG）；对方 CHANGELOG 只记创建+被依赖
+          （adoption，非 challenge 行为抓冲突的复现），dossier 仅挂 prose 两引。撤 −1 → base +1。
+      修正后 D=3（active-modeling 1 + inline 1 + adr 1），恰在 merge 门槛线，非原文暗示的"从容 5"。
+    ②fit 大体成立、一处边界须收窄（不砍项，收口）：
+      - merge_scope ①② 往 CONTEXT.md 词汇节 inline 直写术语：与既有"写入时机"直写触发同类，非
+        propose-only 红线(SC-20260523-003，仅管 promoted-facts.yaml 语义层)破坏 → 不砍。但 glossary
+        是**项目级稳定事实**，须落"当前激活项目"的 CONTEXT.md 词汇节（走 project-scope-guard 重定向，
+        非母版根 CONTEXT.md），且保持"当场收敛→提议/写入"而非静默旁路批处理纪律。落地须显式绑定
+        激活项目路径，别把项目术语写进框架级 CONTEXT.md（污染跨项目注入面）。
+      - merge_scope ② 落 brainstorm Oracle：Oracle prompt 属 skill-invariants 可进化区、且"不新增
+        Phase"守 P6，未碰"必须等用户回答"约束 → 无 P1-P7 破坏。仅提示：给 Oracle 加持久化副作用，
+        A/B 须验证不回归其纯检测契约。
+    ③集成成本修正：
+      - ab_runs 2→3：三条行为独立 prose 吸收各需 A/B，rubric §5"无 A/B 一律 BLOCK"，原 2 欠预算。
+      - extraction-bar.md 非 skill-invariants P1-P7 字面承重墙，但是记忆治理核心文件（Static Fallback
+        红线邻接）；merge_scope ③ 须为**新增一段**且与四信号并存（verdict 已声明"并存"），不得改写
+        四信号判据本身——按此约束 C=M 可接受，不升 HIGH。
+      - dual_repo=true 正确：三个 touched_files 均母版框架文件（非 muse fork 专属），符合双仓一致原则。
+    结论：桶维持 merge（D=3 达门槛、机制加法、无红线破坏），非击杀；收缩项＝D 5→3、ab_runs 2→3、
+    ①② 术语直写须绑激活项目 CONTEXT.md 词汇节且守 Stop 纪律、④ 保持纯委派不重复落地。

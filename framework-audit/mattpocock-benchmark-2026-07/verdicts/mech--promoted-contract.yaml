@@ -1,0 +1,83 @@
+id: mech:promoted-contract
+kind: mechanism
+tier: A
+dossier: dossiers/mech--promoted-contract.yaml
+
+scores:
+  D: 2
+  I: 9
+  C: S
+  E: 2
+score_derivation: |
+  D=2（P1 初判假设被 dossier 推翻——诚实下调）：
+  - promoted-bucket-sync-contract：+1。**关键实证**：对方的"三处同步契约"实为纯散文指令、
+    零已提交校验脚本（scripts/ 仅 link-skills.sh/list-skills.sh，均不校验同步）——侦察期
+    "机器可校验一致性"的假设不成立。我方反而已有已提交 tripwire（check-capability-parity/
+    check-routing-map + FM-11 验收）。剩余净增量仅是"同仓多登记面单脚本全覆盖"的想法
+    （office 表/input-modes/commands 尚无专项 checker）——且这想法我方轨道上自然可达。
+  - bucket-lifecycle-model：+1。in-progress/deprecated/personal 桶区分缺席；我方两层可见度
+    + 使用即留任覆盖降级主职能（文件不删=等效 deprecated 保留），draft 桶边际价值低。
+  I=9：parity/routing 双 tripwire 已提交入 verify 门——此轴我方**强于对方**。C=S。
+  E=2：约定在对方仓真实运转(+1)+非 draft(+1)，但无机器校验(0)。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=2 < 3。这是一次**反向确认**：深证据显示对方在一致性契约上弱于我方既有
+  机制（散文契约 vs 已提交 tripwire；对方还有 resolving-merge-conflicts 漏登记的实际缺口在
+  案，恰证散文契约会漂移）。唯一可取想法记 opportunity：为治理轨道六动作的其余登记面
+  （/office 表、input-modes、commands/）补一个 check-office-sync 脚本——属我方既有 tripwire
+  模式的自然延伸，无需引用对方任何内容。
+
+reconciliation: null
+landing_estimate: null
+
+redteam:
+  verdict: revive
+  reverse_attack: |
+    结论：revive（窄口径）——leave 对机制②(bucket-lifecycle)正确、对机制①(sync-contract)错杀。
+    ①应从「leave + 散文 opportunity note」升为 framework gap 提案交 GATE-2，与同轮 setup verdict
+    同款处置（setup D=6 也 leave，却给了正式 new_gap_proposal 供 GATE-2 复核；本单元缺口更具体
+    却被埋成一句散文、landing_estimate=null）。
+
+    ── 最强复活论证 ──
+    1) 「我方已有已提交 tripwire、故我方更强」是换轴自利。实读三个 checker 核实：
+       - check-capability-parity.mjs 校验锚点字符串在【两个仓库】间齐备（母版 vs fork），非同一仓内
+         README/plugin/docs/router 之间一致——与对方机制不在同一面（dossier 自己承认，见 delta）。
+       - check-routing-map.mjs 只校验 13 个 invoke 在 routing-map 存在 + CLAUDE.md/AGENTS.md TL;DR
+         平价，未覆盖 /office 表·input-modes·commands/·workflow-graph·model-routing 的登记一致。
+       - validate-skills.sh 只查每 skill 目录有非 stub 的 SKILL.md；check-muse-loop-sync 只锚
+         muse-proto-gen↔html-prototype 一对特定串（其 header 自认抓不到 intra-anchor 内容漂移）。
+       结论：在对方机制真正所在的轴（同仓多登记面一致性）上，我方是【散文六动作 + 仅 1-2/6 面有
+       checker】，并不强于对方。judge 拿我方的【跨仓】脚本去比对方的【同仓】散文契约、宣告"我方更
+       强"=换轴。gap（judge 亲口："/office 表·input-modes·commands 尚无专项 checker"）真实存在。
+    2) 「散文契约会漂移→对方弱」把 rubric 的 D 加分规则用反了。实地核验对方仓证实：
+       resolving-merge-conflicts 落在 promoted 的 engineering/ 桶、有 docs/engineering 页、CHANGELOG
+       (commit 47bde84) 宣告新增，却【README grep 0 命中、plugin.json grep 0 命中】——4 面同步实际
+       只到 2 面。这正是 rubric「对方有咬过人的实证（复现实例）该机制 +1」所指的复现实例：它证明
+       【登记漂移是真实发生的失效模式】而非假想，且【连有明文契约的自律作者尚且漂移】——直接推出
+       我方散文六动作（4-5 面无 checker）必同样漂移。drift 抬高该机制的净价值与紧迫性，judge 却反
+       用为下调理由。据此机制① D 至少 +2（基 +1 + 咬过人 +1），叠加机制② +1 → D≥3，已过 merge 必要
+       门槛（D≥3 且 ≥2 独立机制）。即便有人否掉咬过人 +1，下述第 3 条独立成立、单独足以翻案。
+    3) 处置不对称 = §3.5 明禁的「往 leave/merge 更安全方向压」。同轮 setup(D=6) 同样 leave，却把
+       同簇价值升为正式 GAP-issue-tracker-integration 交 GATE-2 听证；本单元缺口更具体（judge 亲自
+       点名 "check-office-sync 脚本"）、更自足（纯延伸既有 tripwire 模式、零承重墙、零架构冲突），
+       反而 landing_estimate=null、只留散文 note、无 GATE-2 听证。rubric 第129行「机制单元无对应
+       open gap → P4 提案新 gap，GATE-2 先裁」被跳过。「我方轨道自然可达」既无 open gap 亦无路线图
+       承诺 = 等于漂进永不做；对方 drift 恰是"自律作者尚且漂移"的经验证据，反证"自然可达"不可靠。
+
+    ── 诚实回检（不通杀，对齐 diagnosing-bugs 教训：只翻站得住的那半）──
+    机制②bucket-lifecycle 维持 leave 正确：我方基于调用量的自动降级是对方所无的承重轴（dossier
+    line 58），整体套用文件夹六桶会回退我方刻意的 Skill-first/隐藏不删设计；author-intent 状态
+    （in-progress 防止未完成 skill 被零调用误降）是真实但窄的增量，边际，不足以单独翻案，也不主张
+    采纳对方文件夹桶模型。翻案只落在机制①。
+
+    ── revive 落点（不改 bucket，供主线程升 GATE-2 裁）──
+    - 值得落地的机制：① promoted-bucket-sync-contract 所验证的【同仓多登记面一致性需求】（非移植
+      对方散文契约——对方无脚本且已漂移；移植的是"需求已被经验证实"这一结论）。
+    - capability_type: framework（skill-os / 治理 tripwire 层）。
+    - scope: 新增已提交 checker（如 check-registration-sync.mjs）——校验每个一级 skill 在治理轨道
+      全部登记面（routing-map · /office 表 · input-modes · commands/ · optional-workflow-graph ·
+      model-routing · parity）上一致存在/缺席，把现有 check-routing-map / check-capability-parity 的
+      tripwire 模式补到全覆盖，接入 verify.sh 门。触面 S–M，不碰承重墙。
+    - 建议桶：leave → gap 提案（与 setup 同款 new_gap_proposal），GATE-2 裁定后按 framework merge
+      落地；不采纳对方文件夹桶生命周期模型（机制②维持拒）。

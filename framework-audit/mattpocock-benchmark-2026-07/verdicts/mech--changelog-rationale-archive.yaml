@@ -1,0 +1,90 @@
+id: mech:changelog-rationale-archive
+kind: mechanism
+tier: A
+dossier: dossiers/mech--changelog-rationale-archive.yaml
+
+scores:
+  D: 3
+  I: 8
+  C: S
+  E: 3
+score_derivation: |
+  D=3：
+  - design-rationale-narration：+1。skill 生命周期变更（重命名/reframe/降级/删除）的
+    "为什么"系统性叙述——我方 rationale 厚在审计层（framework-audit 台账/adoption-log
+    verdict 字段），面向使用者的 CHANGELOG 薄（rename/reframe 词汇 grep 0）。
+  - provenance-attribution-links：+1。changelog 条目级 commit/PR 挂链缺席（我方溯源在
+    adoption-log 记录级，手工）。
+  - changesets-tooling-pipeline：+1。工具链形态缺席——但需求存疑：我方非发布型 npm 包，
+    per-change 累积→自动合并管线的复杂度须自证（Loop 宪法③），本轮不引工具链。
+  I=8（adoption-log+audit 台账+手工 CHANGELOG 已存在且运转）。C=S。E=3。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并（最小口径）：D=3 ✓；机制 ≥2 ✓；纯约定加法。**不引 @changesets 工具链**
+  ——私有框架仓无发布管线，复杂度不过自证门；取的是"生命周期变更带 rationale+commit 引用"
+  这条约定内核。
+
+merge_scope: |
+  CHANGELOG.md 头部增一行维护约定：skill/能力的生命周期变更（新增采纳/重命名/reframe/
+  降级隐藏/删除）在 CHANGELOG 记一条"变更 + 为什么"（一行式，与 adoption-log 互补：那边
+  是采纳审计记录，这边是面向使用者的策展式演进叙事）。
+  [redteam downgrade 2026-07-12] 收 scope——从原 scope 删除"commit 短哈希"手工挂链要求：
+  ① 无 @changesets 类工具链时手工抄哈希正是 dossier 自陈的"手工写、非工具自动生成"脆弱负担
+     （易抄错、无校验）；② CHANGELOG.md 本身受 git 版管，条目源改动经 git blame/log 即可回溯，
+     且哈希已在 adoption-log 的 pinned/rollback_ref 字段——手工内嵌是三重冗余；③ mattpocock 敢
+     逐条挂链仅因 changelog-github 自动生成（零负担、恒准），我方无此前提，硬搬只留负担不留其
+     自动性。保留唯一真净增量（skill 生命周期变更的"为什么"策展叙事，CHANGELOG grep 重命名/
+     rename/reframe = 0 证实真空白），去掉最冗余最脆的 provenance 环。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: ["CHANGELOG.md(头部约定一段)"]
+  ab_runs_needed: 0   # 纯文档约定，无 skill 行为面；A/B 不适用（显式豁免：非 prose-behavior 改动）
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强现任辩护——"我方 rationale 已足、CHANGELOG 加约定只是噪音"——比预期更有牙，
+    但未致命，故 downgrade 而非 kill：
+    - I=8 属实，且演进 rationale 承载点已有四处：git commit message 本身带丰富中文理由
+      （git log 实证："docs(claude-md): 瘦身——删过时 checklist 块…"、"fix(muse-x-digest):
+      FxTwitter 恢复补…"、"feat(sidebar-awareness): 侧栏当前页感知——…"，why 已在 subject 里）、
+      adoption-log.jsonl（verdict/note/pinned/rollback_ref）、CLAUDE.md 内联（figma-demo/compare/
+      magicpath 降级隐藏一段就带完整"近30天零调用→降级、零删除"理由）、framework-audit 裁决台账。
+      dossier 双侧 delta 自陈"两侧都有 commit 级溯源能力/都记录 rationale，差异在承载位置"——这
+      正是打分须警惕的"把形态差异当能力缺口"；D 的 2 个被采纳机制实为 location/systematicity 差，
+      非能力空洞。
+    - 为何仍不致命（保留 merge 而非改 leave）：存在一条 git log 与散落台账都不提供的真净增量——
+      CHANGELOG.md 里"skill 生命周期变更（rename/reframe/降级/删除）的策展式人读时间线"确为空白
+      （grep 重命名/rename/reframe = 0），且近月生命周期 churn 不少（/prd→/brainstorm 兼容语义、
+      figma-demo/compare/magicpath 降级隐藏、fork 新增 muse-* 系列）却无一条落 CHANGELOG（
+      [Unreleased] 为空、末版停在 0.2.1 而其后 git 大量提交）。策展 changelog ≠ 原始 git log，
+      成熟项目常两者并存 → 净正的 sliver 真实存在 → merge 桶成立，只收 scope。
+  attack_notes: |
+    ① 双重计分核查（机制层重点）：CLEAN。逐个比对姊妹 mech——hard-soft-dependency-adr（依赖
+       强度分类，落 skill-authoring，非 changelog）、out-of-scope-registry（被拒需求台账，落
+       muse-req-triage）、prove-it-bites（护栏证明会咬，落 code-hygiene）、promoted-contract
+       （同步契约，leave）——无一与本单元的 design-rationale-narration / provenance-attribution-
+       links / changesets-pipeline 共享落地或引文。本 mech 无 umbrella skill verdict，不存在双计。
+       "与其他 verdict 冗余"这条攻击证伪。
+    ② fit / 宪法：无冲突，落点真实。CHANGELOG.md 双仓皆存在（fork 已核，3748B，Keep-a-Changelog
+       体例），dual_repo:true 正确；非 SKILL.md、非 docs/ 产出路径、非 workflow-state → 零触
+       P1-P7 承重墙；最小文件原则不违（编辑既有文件非新建）。changesets 工具链的拒绝（Loop 宪法③
+       复杂度双向自证：私有非发布框架无 per-change→自动合并管线收益）是本 verdict 的强项，予以确认
+       ——不引工具链正确。
+    ③ 集成成本 + A/B：ab_runs:0 的豁免是全 verdict 最软点，但可辩护、不改桶。rubric §5 红线
+       "机制层 prose 吸收无 A/B 一律 BLOCK"的目标是拦截"改 skill 决策行为却无回归验证"；本约定落
+       CHANGELOG.md 头部、不进任何 SKILL.md 执行流、无 skill 决策输出面可回归，"非 prose-behavior
+       改动"豁免与 prove-it-bites/out-of-scope（都落 SKILL.md 改执行行为、故 ab=1）的对照成立。残留
+       风险如实记录：该约定是被动文档纪律，落在一份已明显停更的 CHANGELOG（0.2.1 后 churn 未跟）上，
+       "约定被遵守"无强制——但这是所有文档约定的通病，非本 merge 独有致命伤。
+    【downgrade 判定 + 砍什么】收 scope：从 merge_scope 删除"commit 短哈希"手工挂链要求，只保留
+    "变更 + 为什么"的生命周期叙事约定（详见 merge_scope 内 redteam 注三条依据）。这是"只删不加"的
+    诚实收缩：去掉与 git 版管 + adoption-log pinned 三重冗余、且无自动生成前提的脆弱 provenance 环，
+    保住 CHANGELOG grep-0 证实的真空白（策展式生命周期 rationale 叙事）。未连坐砍 design-rationale-
+    narration——它是唯一 git log 与散落台账都不提供的策展式净增量，砍它即"为杀而杀"，不为。

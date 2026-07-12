@@ -1,0 +1,102 @@
+id: skill:engineering/prototype
+kind: skill
+tier: A
+opponent_sha256: 03074862d4b6e4eaf472aa75146e1d193dd9e3bba0e4303a9b2425562d1d44cc
+dossier: dossiers/skill--engineering--prototype.yaml
+
+scores:
+  D: 6
+  I: 10
+  C: M
+  E: 3
+score_derivation: |
+  D=6：
+  - structurally-different-variants：+2。单路由多个结构性不同变体（布局/信息层级/主操作
+    各异，非换色）+ ?variant= 切换条——counterpart 目录 grep 0 命中；html-prototype 的
+    data-prototype-state 切的是状态非设计变体，open-design 一次一份。对 ux-brainstorm
+    "2-3 方案对比"是天然接轨点（方案现在只是文档，不可切换体验）。
+  - throwaway-answers-one-question：+2。"一次性代码答一个问题、明确不打磨"的原型**模式**
+    我方整体缺席（我方两个 counterpart 全是精修交付哲学）；对方 changeset 显示该机制仍在
+    强化（prototype-primary-source）。
+  - throwaway-branch-primary-source：+1。原型资产处置协议（决策折进 main、原型进丢弃分支
+    留指针）缺席。
+  - logic-branch-portable-module：+1。TUI 手驱动状态机 + 纯逻辑模块分离的非视觉原型分支
+    缺席；对设计管线适用面中等（对工程线/muse-loop 更高）。
+  I=10：满分现任——routing(+2)/P2+P6 保护(+2)/preamble(+2)/重度使用史(+2)/
+  verify-prototype.mjs QA checker(+2)。
+  C=M：变体模式为 html-prototype 加法分支；但 throwaway 模式触"审美≥24/30 不可进化"
+  保护区（见 bucket_rationale 的范围裁剪）。
+  E=3：promoted(+1)+changeset 活跃演进(+1)+非 draft(+1)。
+
+bucket: leave  # 红队击杀（原判 merge）——见 redteam 块
+bucket_rationale: |
+  rubric §3 补强合并：D=6 ≥ 3 ✓；机制 ≥2 ✓。非替换：I=10 满分现任，审美门/QA harness/
+  DECISION 注释追踪全是对方缺的承重轴 → 支配远不成立。
+  **范围裁剪（承重墙纪律）**：throwaway 无打磨模式与 html-prototype "审美≥24/30 + QA 列表
+  不可进化"保护区正面冲突（skill-invariants 明载）——不落地、不豁免、不为它开新 skill
+  （2026-07-03 输入面收窄决议在先）；连同 TUI 逻辑分支一起记 opportunity（若未来工程线/
+  muse-loop 有真实需求再议）。落地只取兼容加法：变体比较模式 + 变体处置协议。
+
+merge_scope: |
+  红队击杀，无落地项。四机制全记 opportunity（若未来工程线/muse-loop 有真实需求，
+  另立 gap + 非交付物输出路径再议，不 graft 进精修 html-prototype）：
+  ① 变体比较模式——不落地（原拟落地，红队撤销）：切换器 primitive 我方已有
+    （data-prototype-state-switcher 左右按钮），发散能力上游已有（ux-brainstorm 2-3 方案）；
+    唯一新价值（cheap throwaway 变体）与 ③ 同撞审美≥24/30 保护区；净正不成立（见 redteam）。
+  ② 变体处置一行——不落地：仅因 ① 存在才有意义，① 撤则 ② 无对象可处置。
+  ③ throwaway 无打磨模式、TUI 逻辑原型分支、丢弃分支协议——不落地（原判即 opportunity）。
+
+reconciliation: |
+  红队复核：原判 merge 的落地范围（① 变体比较 + ② 变体处置）经 steelman-incumbent 后不成立净正——
+  landed 形态是被剥离 throwaway 灵魂的空壳（polish-gated 变体 = 3× 精修成本，非对方机制），
+  valued 形态（cheap throwaway 变体）与审美≥24/30 保护区正撞（与 ③ 同因被否）。
+  bucket 改 leave，四机制转 opportunity。
+
+landing_estimate:
+  reuse_mode: none  # 红队击杀，无落地
+  touched_files_estimate: []
+  ab_runs_needed: 0
+  dual_repo: false  # 无落地则不涉双仓（原判 dual_repo=true 本身正确：html-prototype/ux-brainstorm 均母版 skill）
+  new_gap_proposal: null
+
+redteam:
+  verdict: killed
+  steelman_incumbent: |
+    现有能力已够用，这个 merge 是加噪音——三点最强论证：
+    (1) 发散已在上游：管线纪律是 ux-brainstorm 发散(2-3 方案+Oracle 对抗) → design-brief 收敛到一份
+        (Design Generation Packet) → html-prototype 精修那一份。html-prototype 刻意只消费"已收敛的一份"。
+        "单路由 N 变体切换比较"= 把发散重复搬进收敛后的昂贵精修步，倒置 diverge→converge→polish 纪律。
+    (2) 切换器 primitive 我方已有：html-prototype 已有 <nav data-prototype-state-switcher> 左右按钮
+        toggle data-prototype-state(hidden)。dossier 把"切的是状态非变体"当缺席 +2，实为"切换机器已在，
+        只是标签不同"——这是把形态差异(切什么)算成能力缺口(缺切换器)，structurally-different-variants
+        的 +2 有虚高（切换设施在我方、发散在上游，两半都已覆盖，只是没接线）。
+    (3) 对方切换器 framework-coupled 且 throwaway-by-design：UI.md 用 router.replace/navigate/
+        process.env.NODE_ENV!=='production'/?variant= URL 参数——html-prototype 是纯 HTML+Tailwind CDN+
+        原生 JS，无 router/无 build/无 production env，机制不 as-is port，落地即退化成"已有的 hidden 切换"。
+    致命性：verdict 正确地因撞审美≥24/30 保护区丢弃了 throwaway 无打磨模式(③)，却未看到 UI.md 白纸黑字
+    证明"变体本就是 throwaway"（"throws the rest away""written under prototype constraints (no tests,
+    minimal error handling)""free to throw out the layout""sharing too much code defeats the point"）。
+    变体机制与 throwaway 语义不可分割。verdict 把切换器从 throwaway 灵魂上剥下来，假装剥离后的空壳既能
+    落地又还是同一能力——两者皆非：landed 形态(每变体过 Step0+审美≥24/30+动态扫描+设计系统宣告+骨架确认
+    +Phase4.5 QA+DECISION 注释 = 3× 精修)不是对方机制，valued 形态(cheap throwaway)与 ③ 同撞保护区。
+    → 致命。落地范围站不住。
+  attack_notes: |
+    ② fit：与宪法/既有决策冲突。
+    - 输入面收窄(2026-07-03「使用即留任」)：无任何 demonstrated need，加未请求的模式违"使用即留任"精神。
+    - 最小文件原则：为无需求的模式给保护区密集的 skill 加分支。
+    - 收敛纪律：design-brief 存在的全部理由就是在昂贵原型步之前收敛到一份；① 把 3 路发散推过收敛门。
+    - "run 三次已可行"：P2-V 同日多次 -001/-002/-003 序号已支持出多份 index.html，产出级能力并不缺席；
+      缺的只是"切换器打包"，而切换器是 dev-only chrome，必须从"可追踪交付物"里剥除，反给一个身份即
+      "干净可追踪交付"的 skill 引入交付物污染新失败面。净正不成立（marginal-at-best + 实打实下行）。
+    ③ 集成成本：verdict 低估。
+    - Phase 序(P6，锁定 0→1→2→2.1→2.25→2.5→2.75→3→4→4.5→5)：N 变体各需 Phase2.75 骨架确认
+      (AskUserQuestion)×N + Phase4.5 QA(verify-prototype.mjs)×N，"加法分支不改 Phase 序"是手挥；
+      多变体循环触碰多个受保护 Phase 的交互，C=M 偏乐观（贴近承重墙）。
+    - ab_runs=1 偏乐观：新行为(多变体生成+切换器注入 HTML+dev-only chrome 剥除+默认单产出路径非回归)，
+      1 次 A/B 难覆盖；但 rubric §5 只要求 ≥1，非红线违反，故非致命点（列为乐观非阻断）。
+    诚实边界（不为杀而杀）：
+    - dossier 的 D=6 双侧引文真实，缺席证明成立——absence 是真的；击杀走 rubric「红队 killed → 不动」
+      路径（与 D 独立），非重写 D 到 0。D 分保留，仅记 structurally-different-variants 的 +2 有虚高。
+    - dual_repo=true 原判正确（html-prototype/ux-brainstorm 均母版 skill，非 muse-fork 专属）——此点无错。
+    - 无残余可落地净正 sliver：② 依附 ①，① killed 则 ② 无对象；downgrade 会产出空 scope 的 merge（不自洽），
+      故内部一致的结论是 leave，非 downgrade。四机制转 opportunity（与 verdict 原本对 ③④ 的处置一致）。

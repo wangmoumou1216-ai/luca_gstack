@@ -1,0 +1,12 @@
+id: skill:misc/scaffold-exercises
+kind: skill
+tier: C
+opponent_sha256: 75f5c9d771606fb9762f16522efc954df11c324f87148d8ff069bce166257de9
+dossier: dossiers/skill--misc--scaffold-exercises.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: PASS }
+bucket: leave
+bucket_rationale: |
+  快裁：作者 aihero 课程平台专用脚手架（绑定 pnpm ai-hero-cli internal lint）——
+  环境绑定，无转移价值。
+reconciliation: null
+landing_estimate: null

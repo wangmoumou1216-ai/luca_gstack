@@ -1,0 +1,127 @@
+id: skill:engineering/improve-codebase-architecture
+kind: skill
+tier: A
+opponent_sha256: 0026900866ed2a542af0559cef11dd7ae707633b75cc6f668c2e7c0a33e35032
+opponent_summary: >-
+  A user-invoked skill (disable-model-invocation) that scans a codebase for "deepening
+  opportunities" — refactors turning shallow modules into deep ones for testability and
+  AI-navigability. Process: (1) an Explore sub-agent walks the code noting friction and
+  applies the deletion test to spot shallow modules; (2) candidates are rendered as a
+  self-contained visual HTML report (Tailwind + Mermaid via CDN) written to the OS temp
+  dir so nothing lands in the repo, with per-candidate before/after diagrams, recommendation-
+  strength badges, and a top-recommendation section, then opened for the user; (3) once the
+  user picks a candidate it runs the /grilling skill and keeps the domain model current
+  inline — lazily adding named concepts to CONTEXT.md and offering an ADR on load-bearing
+  rejection. It forces a shared architecture vocabulary (module/interface/depth/seam/adapter/
+  leverage/locality) borrowed from /codebase-design and bans substitute words. It delegates
+  heavily to sibling skills (/codebase-design, /grilling, /domain-modeling).
+our_summary: >-
+  Two counterparts each cover part of this. code-recon is a read-only brownfield reverse-
+  engineering skill: parallel Explore agents produce a markdown "architecture brief"
+  (docs/engineering/) with a VERIFIED-vs-INFERRED honesty audit, feeding downstream design
+  skills — but it has no "deepening opportunity" framing, no deletion test, and no HTML
+  report. ux-audit produces a weighted UX review report (markdown, docs/evaluation/) via
+  serially-dispatched module specialists and mandatory screenshots — a report paradigm, but
+  for UI/UX not architecture. Neither writes a visual HTML report to a temp dir, and neither
+  enforces an architecture-design vocabulary with a never-substitute list. Adjacent pieces
+  exist elsewhere: ux-brainstorm's banned-phrase pre-send scan+rewrite (anti-sycophancy
+  voice), figma-demo's term-mapping dictionary, and CLAUDE.md's CONTEXT.md-writeback timing
+  plus a project decisions.md ledger.
+mechanisms:
+  - name: deletion-test
+    summary: >-
+      A specific heuristic for identifying shallow modules — would deleting it concentrate
+      complexity or just move it — where "concentrates" is the signal to deepen.
+    opponent_evidence:
+      - path: skills/engineering/improve-codebase-architecture/SKILL.md
+        quote: "would deleting it concentrate complexity, or just move it? A \"yes, concentrates\" is the signal you want."
+    absence_proof:
+      pattern: "deletion test|删除测试|deepening|shallow module|深模块|浅模块"
+      scope: ".claude/skills .claude/skill-os .claude/agents CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >-
+      The opponent carries an explicit named heuristic (the deletion test) plus the whole
+      shallow/deep-module framing that motivates it. Our repo has no deletion test and no
+      shallow/deep-module or "deepening opportunity" vocabulary anywhere in skills, skill-os,
+      agents, CLAUDE.md, or CONTEXT.md (grep 0 hits). code-hygiene detects dead code but by a
+      different lens (remove unused), not "would deletion concentrate complexity."
+  - name: html-report-to-tmp
+    summary: >-
+      Candidates are presented as a self-contained visual HTML report written to the OS temp
+      dir (not the repo) with per-candidate before/after diagrams and recommendation badges.
+    opponent_evidence:
+      - path: skills/engineering/improve-codebase-architecture/SKILL.md
+        quote: "Write a self-contained HTML file to the OS temp directory so nothing lands in the repo."
+      - path: skills/engineering/improve-codebase-architecture/SKILL.md
+        quote: "side-by-side, custom-drawn, illustrating the shallowness and the deepening"
+    our_evidence:
+      - path: .claude/skills/office/ux-audit/SKILL.md
+        quote: "产出：写入 docs/evaluation/YYYY-MM-DD-<topic>-ux-audit-module-a.md"
+      - path: .claude/skills/office/code-recon/SKILL.md
+        quote: "把各 recon agent 的返回合成一份 brief，写："
+    delta: >-
+      Both sides produce a review artifact, but ours are markdown reports persisted INTO the
+      repo (ux-audit → docs/evaluation/, code-recon → docs/engineering/), whereas the opponent
+      writes a visual HTML report (Tailwind + Mermaid, per-candidate before/after diagrams,
+      recommendation-strength badges) to the OS temp dir specifically so nothing lands in the
+      repo, then auto-opens it. We have no architecture-review HTML report, no before/after
+      diagram spec, and no tmp-dir / no-repo-pollution / auto-open behavior for this use.
+  - name: vocab-forcing-never-say-list
+    summary: >-
+      Forces an exact architecture vocabulary (module/interface/depth/seam/adapter/leverage/
+      locality) and pairs it with an explicit never-substitute ban list.
+    opponent_evidence:
+      - path: skills/engineering/improve-codebase-architecture/HTML-REPORT.md
+        quote: "module, interface, implementation, depth, deep, shallow, seam, adapter, leverage, locality."
+      - path: skills/engineering/improve-codebase-architecture/HTML-REPORT.md
+        quote: "component, service, unit (for module) · API, signature (for interface) · boundary (for seam)"
+    our_evidence:
+      - path: .claude/skills/office/ux-brainstorm/SKILL.md
+        quote: "发送前扫描每条消息中的禁用词。如果检测到，重写。"
+      - path: .claude/skills/office/ux-brainstorm/references/pressure-test.md
+        quote: "## Part 5: Banned Phrases (ABSOLUTE — applies to Phase 3 and Phase 4)"
+    delta: >-
+      We do have the "enforce vocabulary via a banned list" pattern — ux-brainstorm scans each
+      message for banned phrases and rewrites on detection, and figma-demo maps informal terms
+      to canonical ones — but ours target voice/tone (anti-sycophancy) and design-animation
+      params, not domain terms. The opponent forces a positive architecture glossary AND a
+      paired negative substitution ban (never say component/service/API/boundary/layer/wrapper)
+      tied to a shared /codebase-design vocabulary; we have no such architecture-term forcing.
+  - name: living-domain-model-side-effects
+    summary: >-
+      During the grilling loop the skill keeps the domain model current inline — lazily adding
+      newly-named concepts to CONTEXT.md and offering an ADR when a candidate is rejected for a
+      load-bearing reason.
+    opponent_evidence:
+      - path: skills/engineering/improve-codebase-architecture/SKILL.md
+        quote: "Add the term to `CONTEXT.md`. Create the file lazily if it doesn't exist."
+      - path: skills/engineering/improve-codebase-architecture/SKILL.md
+        quote: "Want me to record this as an ADR so future architecture reviews don't re-suggest it?"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "任何设计假设被推翻 → 追加到 CONTEXT.md"
+      - path: CLAUDE.md
+        quote: "项目决策台账在 `.luca/memory/decisions.md`"
+    delta: >-
+      Both sides update a domain glossary (CONTEXT.md) and keep a decision ledger to prevent
+      re-litigation (opponent = ADRs in docs/adr/, ours = .luca/memory/decisions.md). But ours
+      are checklist writeback moments (e.g. assumption overturned → append) plus a separate
+      ledger, invoked at session-lifecycle points; the opponent ties the update to the live
+      design conversation — lazily capturing a term the instant a deepened module is named, and
+      framing the ADR offer specifically to stop future reviews re-suggesting the rejected item.
+      We have no grilling-driven inline term capture and no "offer to record an ADR" prompt.
+
+notes: >-
+  Greps run from repo root. Opponent quotes all confirmed verbatim with grep -cF (each count=1)
+  against the clone. Our quotes confirmed with grep -cF (each count=1). Absence for
+  deletion-test: `grep -rilE 'deletion test|删除测试|deepening|shallow module|深模块|浅模块'
+  .claude/skills .claude/skill-os .claude/agents CLAUDE.md CONTEXT.md` → 0 hits. Note: the
+  project-scope-guard blocked one Bash grep whose pattern contained the literal "docs/"; I
+  verified the ux-audit quote via its tail (YYYY-MM-DD-<topic>-ux-audit-module-a.md, count=1)
+  plus the Read of line 105. Matrix listed 3 subverdicts (deletion-test, html-report-to-tmp,
+  vocab-forcing-never-say-list); after reading the full skill I added a 4th mechanism
+  (living-domain-model-side-effects) covering step-3's inline CONTEXT.md/ADR side-effects,
+  which has real our-side counterparts worth documenting. The skill delegates to sibling
+  skills /codebase-design, /grilling, /domain-modeling (not part of this unit's files);
+  our counterparts code-recon and ux-audit each cover only a slice (read-only recon brief;
+  UX review report) — no direct 1:1 for the deepening-opportunity + visual-HTML-report combo.

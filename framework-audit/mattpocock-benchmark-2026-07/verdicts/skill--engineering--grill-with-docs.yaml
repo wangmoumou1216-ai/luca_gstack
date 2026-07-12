@@ -1,0 +1,85 @@
+id: skill:engineering/grill-with-docs
+kind: skill
+tier: A
+opponent_sha256: 610d091047bcfb9db0f75c057d15538481a721111579fc5ec7f83ad9131a2165
+dossier: dossiers/skill--engineering--grill-with-docs.yaml
+
+scores:
+  D: 1
+  I: 8
+  C: S
+  E: 3
+score_derivation: |
+  D=1：薄壳正文一行（"Run a /grilling session, using the /domain-modeling skill."）。
+  唯一增量 = 组合绑定形态（访谈 + 边访谈边落 ADR/词汇表）。其两半的实质缺口已分别在别处
+  计分与落地：访谈 primitive → skill:productivity/grilling（merge）；docs-as-you-go 领域
+  建模 → skill:engineering/domain-modeling（merge scope ② Oracle 术语 inline 落 CONTEXT.md）。
+  壳本身对我方无额外增值（薄壳净增量归 primitive——锚 B 标尺）。
+  I=8（brainstorm 现任强）。C=S。E=3。
+
+bucket: leave
+bucket_rationale: |
+  rubric §3 不动：D=1 < 3。它的价值拼图（逼问 primitive 化 + 边访谈边建模）已由 grilling
+  与 domain-modeling 两个 merge verdict 覆盖——二者落地后，"grill-with-docs 的能力"在我方
+  等于 brainstorm 增强版，无需组合壳入口。组合形态本身归 mech:thin-orchestration-thick-
+  primitive 单元评。
+
+reconciliation: null
+landing_estimate: null
+
+redteam:
+  verdict: stands
+  reverse_attack: |
+    反向红队职责：论证 leave 是否错杀真价值。结论——leave 站得住，四个攻击方向全部不成立，
+    且对齐 diagnosing-bugs 教训独立复核了 leave 的两条承重事实前提，均为真。
+
+    【最强复活论证（我能构造的天花板）】
+    grill-with-docs 的独特交付不是"两半能力"，而是"一场 relentless forcing-question 访谈，
+    其**主产物就是耦合的 ADRs+glossary**（不是 PRD）"。两 merge 落地后：brainstorm 仍被 HARD
+    GATE 强制产出 PRD（SKILL.md:112「primary output is ONE markdown PRD file」）；glossary 落
+    ambient CONTEXT.md 词汇节；ADR 门落 ambient decisions.md。**没有任何单一入口重建"访谈即
+    ADR 生成器、无 PRD"这一耦合形态**——它掉进三个 merge 之间的缝里。这是攻击④（组合入口是否
+    真无额外价值）能打到的最痛点。
+
+    【为何该论证不成立 → stands】
+    ① D 未被压低（攻击①不成立）：实读对方 SKILL.md 全文 = frontmatter + 唯一正文一行
+    「Run a `/grilling` session, using the `/domain-modeling` skill.」，零自有 prose——与冻结
+    锚 B（grill-me，正文「Run a /grilling session」）**结构同构**。锚 B 已定标"薄壳净增量归其
+    primitive，壳本身 D→0/1"。把"绑定形态"算成能力缺口 = 直接违反冻结 rubric 锚 + D 维明文
+    警告（"把'形态差异'算成'能力缺口'"）。D=1 是锚一致，非 judge 压分。
+    ② "两半已覆盖"经一手复核为真，非 diagnosing-bugs 式假前提：
+      - 访谈半 = brainstorm **原生**（SKILL.md:37「I ask one question at a time」+ Phase 3
+        Collaborative Interrogation + forcing questions + anti-sycophancy），**不依赖 grilling
+        merge 是否落地**。承重前提独立成立。
+      - docs-as-you-go 半 = domain-modeling merge，落点为 **ambient**（CLAUDE.md「写入时机」
+        术语 inline + decisions.md 三条件 ADR 提议门 + brainstorm Oracle 术语持久化）。ambient
+        比"单一 compose 壳入口"**严格更泛**——任何设计会话都触发，故 grill-with-docs 的净效果
+        被 subsume（不是丢失）。diagnosing-bugs 翻案靠的是"假的缺席"（说 counterpart=none 实则
+        systematic-debugging 已装）；这里相反：docs 半的缺席是 grep 0 **确证**（催生 merge），
+        访谈半的存在我独立读文件**确证**。无假前提可击穿。
+    ③ 唯一真残值 = **打包差异**（"访谈主产物是 ADR、不出 PRD"），交付它须同时反转两个已定
+    决策：(a) 抽 grilling 为独立 primitive——已被 grilling merge 红队降为 deferred-conditional
+    （无第二消费者=过早抽象）；(b) 新增薄壳入口——正撞 fork 2026-07-03 输入面收窄纪律（每个薄壳
+    =新入口）。grill-with-docs 自身零 prose，无法自带缺失的 primitive；拿它当"第二消费者"去
+    解封抽象是**循环 bootstrap**（+1 入口 +1 抽象层，只为交付一个已 ambient 的能力）——负价值，
+    撞 Simplicity First + 最小文件原则。grilling 红队已裁 muse-loop 非有效消费者，同理 grill-
+    with-docs 亦非增值消费者。
+    ④ §3.5 采纳雄心（2026-07-12）已计入，仍不改判：§3.5 明文"判据不变，姿态校正"，不为 D=1
+    薄壳开路（够不上 merge D≥3、够不上 replace 支配测试、够不上 7 维门禁 ≥70）。"高价值+高置信"
+    两条都不满足——价值边际（已 ambient）、对新入口的置信低（须反转两决策）。不是"怕动结构"的
+    保守，是查过支配测试后残值确为打包差异的证据结论。
+    ⑤ 攻击②（judge 自由裁量越界）不成立：本 verdict 是机械 D<3→leave，无 setup 式"tracker 簇"
+    类裁量，无回避。
+
+    【交叉引用核验（攻击③命中一处 blemish，但不翻案）】
+    mech:thin-orchestration-thick-primitive 的 bucket_rationale 称"该模式唯一高价值具体应用已在
+    落地：grilling merge scope ②（抽逼问环为 primitive）"——但 grilling verdict 红队已把 scope ②
+    降为 **deferred-conditional**（无第二消费者不落地）。故该交叉引用**已过期**。然而不影响本
+    verdict：mech 单元 D=2<3 立足于"复用形态非能力缺口"+ 输入面收窄，两者均独立于 scope ② 是否
+    落地；grill-with-docs 委派给 mech 单元的是"组合形态本身归零"这一结论，该结论不依赖过期引用。
+    建议主线程顺手修 mech 单元该句措辞（把"已在落地"改为"经由实例进来、且实例本身 deferred 亦不
+    改本判"），但**非 grill-with-docs 复活理由**。
+
+    【裁决】stands。bucket 不动（leave）。反向攻击的天花板（耦合打包形态）经冻结锚 B + §3.5
+    判据双重判定为"薄壳打包差异、净增量归 primitive"，两 primitive 半均已落地（一原生一 ambient），
+    无真价值被错杀。

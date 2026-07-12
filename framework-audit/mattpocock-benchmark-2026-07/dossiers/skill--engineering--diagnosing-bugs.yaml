@@ -1,0 +1,144 @@
+id: skill:engineering/diagnosing-bugs
+kind: skill
+tier: B
+opponent_sha256: 7a0779480f323a66d109404646bcc1a14bf0232b45b3e3ea93b652a035718acb
+opponent_summary: >
+  一个 model-invoked 的工程 skill，把"诊断难 bug/性能回归"编成 6 阶段强纪律流程：Phase 1 先造一个
+  tight + red-capable 的反馈环（10 种构造法阶梯从失败测试到 HITL bash 脚本，附收紧/去随机/非确定性
+  处理），并设硬门禁——"没有已跑过一次、能对准用户症状变红的单条命令，就不许进 Phase 2"；Phase 2
+  复现并最小化（逐项删减直到每个残余元素都 load-bearing）；Phase 3 先生成 3-5 条可证伪、带预测的
+  排序假设再测；Phase 4 埋点每变量一改、每条 debug 日志打唯一前缀 [DEBUG-xxxx] 便于收尾单次 grep，
+  性能分支先测量后修；Phase 5 有"正确 seam"才先写回归测试（无 seam 本身即是发现）；Phase 6 清理
+  post-mortem 清单 + 把正确假设写进 commit + 追问"什么本可预防此 bug"并 handoff。核心自陈：反馈环
+  是整个 skill，其余都是机械步骤。附一个 hitl-loop.template.sh（step/capture 两个 helper 驱动人做
+  手动复现、输出回喂 agent）。
+our_summary: >
+  我方无独立的 debug/诊断 skill（matrix 定 counterpart=none）。最接近的相关物是分散的：code-hygiene
+  的"完成前验证铁律"（声明 done 前须有当场跑出的证据）提供了 post-fix 的证据门，但不是 diagnosis
+  阶段"先造 red-capable 反馈环再假设"的前置门；harness 内建 verify skill 也是驱动改动端到端验证、
+  非诊断编排。brainstorm 的 adversarial-review 把"可证伪"用作 PRD 评审 finding 的评分维度，非 bug
+  假设排序纪律。code-hygiene 的外科清理只清理"本次改动新产生的孤儿"、/retro 做复盘，但都无 bug 专属
+  的 [DEBUG-] 埋点清理清单、无"correct seam / 无 seam 即发现"的回归测试 seam 诚实度、无 HITL 复现
+  bash 驱动脚本。整体：我方有零散的验证/清理/复盘规范，但无一条纪律化调试反馈环流水线。
+mechanisms:
+  - name: feedback-loop-first-gate
+    summary: >
+      对方把"先造一个 tight+red-capable 的反馈环"定为整个 skill 的核心，并设硬门禁：没有已跑过一次、
+      能对准用户症状变红的单条命令就不许进假设阶段。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "**This is the skill.** Everything else is mechanical."
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "No red-capable command, no Phase 2."
+    our_evidence:
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "任何「修好了/通过了/done」的声明前必须有当场跑出的证据，否则=撒谎"
+    delta: >
+      对方的机制是"诊断前先造 red-capable 反馈环"的前置硬门（在建立能变红的复现命令之前禁止读代码
+      建理论），并把它当作整个 skill 的重心。我方最接近的是 code-hygiene 的"完成前验证铁律"——声明
+      done 前须有当场跑出的证据——但那是修复后的验证门，位置与语义都不同：它不要求在诊断开始前先
+      构造一个能对准用户症状变红的复现环，也不含 10 种反馈环构造法阶梯、收紧/去随机/非确定性提率
+      的方法。我方无"先有 red-capable 命令才准进入假设"的门禁。
+  - name: ranked-falsifiable-hypotheses
+    summary: >
+      对方要求在测试任何假设前先生成 3-5 条排序假设，每条必须可证伪、带明确预测，并展示给用户复核。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "Generate **3–5 ranked hypotheses** before testing any of them."
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "Each hypothesis must be **falsifiable**: state the prediction it makes."
+    our_evidence:
+      - path: .claude/skills/office/brainstorm/references/adversarial-review.md
+        quote: "Finding is backed by direct textual evidence in the PRD and falsifiable."
+    delta: >
+      对方在调试语境里有一条"先生成 3-5 条排序假设、每条可证伪并陈述预测、测试前展示给用户"的纪律，
+      用来对抗锚定在第一个貌似合理想法。我方"可证伪"这个概念只出现在 brainstorm 的 adversarial-review
+      里，作为 PRD 评审 finding 的一个评分维度（backed by evidence and falsifiable），既非调试用途，
+      也没有"多假设排序 + 预测格式 If X then changing Y + 测前给用户复核"的结构。
+  - name: tagged-instrumentation
+    summary: >
+      对方要求每条 debug 日志打唯一前缀（如 [DEBUG-a4f2]）以便收尾单次 grep 清除，且每次只改一个变量、
+      每个探针对准一条假设预测。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "**Tag every debug log** with a unique prefix, e.g. `[DEBUG-a4f2]`. Cleanup at the end becomes a single grep."
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "Each probe must map to a specific prediction from Phase 3. **Change one variable at a time.**"
+    absence_proof:
+      pattern: "\\[DEBUG-|tag every|unique prefix"
+      scope: ".claude CLAUDE.md scripts"
+      hits: 0
+    delta: >
+      对方有一条埋点纪律：debug 日志一律打唯一前缀 [DEBUG-xxxx]，让清理退化成一次 grep，同时每次只改
+      一个变量、每个探针映射到一条假设预测。我方仓库无任何"给临时调试日志打可 grep 前缀"的约定——
+      grep `\[DEBUG-|tag every|unique prefix` 在 .claude、CLAUDE.md、scripts 全 0 命中。我方 code-hygiene
+      虽会清理本次改动的孤儿，但没有"给临时探针打标以便定向清除"的正向埋点纪律。
+  - name: regression-seam-honesty
+    summary: >
+      对方要求先写回归测试再修——但只在存在"正确 seam"（测试在真实调用点复现真实 bug 模式）时；若无
+      正确 seam，这本身就是一个要上报的发现，不硬写一个给假信心的测试。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "Write the regression test **before the fix** — but only if there is a **correct seam** for it."
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "**If no correct seam exists, that itself is the finding.**"
+    absence_proof:
+      pattern: "\\bseam\\b"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      对方对"回归测试挂在哪"有一条 seam 诚实度纪律：只有当 seam 能在真实调用点复现真实 bug 模式时才写
+      回归测试，否则宁可把"没有正确 seam"记成架构发现，也不写一个浅到给假信心的测试。我方仓库无 seam
+      这个概念——grep `\bseam\b` 在 .claude/skills、.claude/skill-os、CLAUDE.md 全 0 命中；我方虽有
+      code-hygiene/verify 的验证证据规范，但无"测试挂点是否正确、无正确挂点即是发现"这一判定。
+  - name: cleanup-postmortem-handoff
+    summary: >
+      对方 Phase 6 设收尾清单（重跑复现环确认不再复现、grep 清除 [DEBUG-] 埋点、删临时原型），并把正确
+      假设写进 commit，最后追问"什么本可预防此 bug"并按需 handoff 到架构改进 skill。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "All `[DEBUG-...]` instrumentation removed (`grep` the prefix)"
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "**Then ask: what would have prevented this bug?**"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "只清理本次改动新产生的孤儿 import / 变量 / 函数"
+      - path: .claude/skills/office/SKILL.md
+        quote: "evals / redteam / retro 可作为流程后置，也可单独调用"
+    delta: >
+      对方 Phase 6 有一份 bug 专属的收尾+post-mortem 清单：重跑 Phase 1 复现环确认不再复现、grep 清掉
+      所有 [DEBUG-] 埋点、删临时原型、把命中的正确假设写进 commit，再追问"什么本可预防此 bug"并 handoff。
+      我方有相关但分散的对位——code-hygiene 只清理"本次改动新产生的孤儿"、/retro 可作复盘后置——但没有
+      对准调试的清单（无 [DEBUG-] 埋点清除项、无"重跑复现环"步骤、无"把正确假设写进 commit 供下个调试者
+      学习"），也无"追问预防 + handoff 到架构改进"的固定收尾触发。
+  - name: hitl-loop-harness
+    summary: >
+      对方为"必须人来点击"的最后手段复现提供一个 hitl-loop.template.sh 脚本（step/capture 两个 helper），
+      让 agent 跑脚本、人跟提示操作、捕获输出回喂 agent，使手动复现仍是结构化的。
+    opponent_evidence:
+      - path: skills/engineering/diagnosing-bugs/SKILL.md
+        quote: "**HITL bash script.** Last resort. If a human must click, drive _them_ with `scripts/hitl-loop.template.sh` so the loop is still structured."
+      - path: skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh
+        quote: "The agent runs the script; the user follows prompts in their terminal."
+    absence_proof:
+      pattern: "hitl-loop|Enter when done"
+      scope: ".claude scripts CLAUDE.md"
+      hits: 0
+    delta: >
+      对方发货了一个具体工具：hitl-loop.template.sh，用 step/capture 两个 bash helper 把"人手动复现 bug"
+      结构化——agent 跑脚本、人按提示做、输出以 KEY=VALUE 回喂 agent，作为反馈环阶梯的最后一档。我方
+      仓库无此类脚本——grep `hitl-loop|Enter when done` 在 .claude、scripts、CLAUDE.md 全 0 命中。我方
+      "human-in-the-loop"一词只出现在 orchestrator/plan-agent 里指编排层的人类审批卡点，语义是流程 gate，
+      不是驱动人做手动复现、把输出回喂 agent 的 bash 复现脚本。
+
+notes: >
+  跑过的 grep（均 0 命中，佐证三条 absence_proof）：`grep -rnE "\[DEBUG-|tag every|unique prefix"
+  .claude CLAUDE.md scripts`；`grep -rniE "\bseam\b" .claude/skills .claude/skill-os CLAUDE.md`；
+  `grep -rniE "hitl-loop|Enter when done" .claude scripts CLAUDE.md`。宽词 grep 的"命中"经核实均为
+  无关物：gaps-register 的 "feedback loop" 是框架演进 telemetry 关键词、adversarial-review 的
+  "falsifiable" 是 PRD 评审评分维度、orchestrator/plan-agent 的 "human-in-the-loop" 是编排审批卡点、
+  ux-research 的 "post-mortem" 是 UX 研究复盘——都非调试语境，故 M1/M2/M5 改用最接近的相关-但-不同物
+  作 our_evidence 并在 delta 显式标注差异，M3/M4/M6 为干净缺席用 absence_proof。harness 内建 verify
+  skill（仓库无文件）与 code-hygiene 完成前验证铁律是我方仅有的"证据门"，但都是 post-fix 验证、非
+  诊断前置反馈环编排。matrix 该行无 thin_shell 字段，按多机制分解（6 个）。本单元 prior_verdict=none。
+  opponent_sha256 逐字复制自 inventory.yaml 第 90 行 SKILL.md unit-level sha256。

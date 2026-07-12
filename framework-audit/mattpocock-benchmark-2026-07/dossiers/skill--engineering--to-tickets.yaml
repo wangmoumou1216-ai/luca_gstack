@@ -1,0 +1,93 @@
+id: skill:engineering/to-tickets
+kind: skill
+tier: A
+opponent_sha256: 1846d215e24ec1219b199a708329ca915db93138d4f3675af29db4d32ee41391
+opponent_summary: >
+  to-tickets 把一份 plan / spec / 当前对话拆成一组 tracer-bullet 票，每张票声明自己的
+  blocking edges（阻塞它的其他票），并发布到已配置的 tracker。流程五步：从上下文/引用取材 →
+  （可选）探代码库并用领域词汇命名 → 起草竖切票（vertical slice）→ 以编号列表 quiz 用户、迭代到
+  用户批准 → 按依赖顺序发布（本地一票一文件写 .scratch/，或真实 tracker 用原生 blocking/子问题
+  关系并打 ready-for-agent 标签）。wide refactor 作为竖切的例外，用 expand-contract 按 blast
+  radius 分批。收尾建议用 /implement 逐张按 frontier 清理。
+our_summary: >
+  我方 counterpart 是 /task-plan（.claude/skills/office/task-plan/SKILL.md）：把上游 PRD +
+  design-brief + tech-spec 转成渐进式索引（L0/L1/L2 节点）+ 断言矩阵 + 开发/测试任务卡，核心是
+  Phase 7 覆盖率门禁（每个 MUST 需求必须有 dev task + test task + 可执行断言，模糊标题/断言直接
+  FAIL）。任务卡是 DEV-NNN/TEST-NNN，绑定来源节点、Tech Section、断言 ID，带规模估算（S/M/L）与
+  2026-07-02 新增的结构化「依赖任务」字段（Task ID 列表）。产出落 docs/engineering/ 并写 handoff。
+  它不发布到任何 issue tracker，不做竖切/可单独 demo 的切分，不建依赖图/并发调度，也无 wide
+  refactor 的 expand-contract 处理。
+mechanisms:
+  - name: tracer-bullet-vertical-slice
+    summary: >
+      每张票是一条竖切——narrow 但穿透 schema/API/UI/tests 每一层的完整路径，能独立 demo/验证，
+      且大小恰好塞进一个全新 context window。
+    opponent_evidence:
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests) — vertical, NOT a horizontal slice of one layer"
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "A completed slice is demoable or verifiable on its own"
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "Each slice is sized to fit in a single fresh context window"
+    our_evidence:
+      - path: .claude/skills/office/task-plan/SKILL.md
+        quote: "标题: <具体动词 + 具体对象>（不允许写「实现XXX模块」）"
+      - path: .claude/skills/office/task-plan/SKILL.md
+        quote: "估算规模: S（< 4h）| M（4-8h）| L（> 8h）"
+    delta: >
+      我方 task-plan 也把工作拆成任务卡（DEV-NNN）并有规模估算（按工时 S/M/L），但拆分单位是
+      「来源节点覆盖」——每张卡绑定 REQ/STATE/DEC 节点与一个 Tech Section §X.X，本质按需求/层追踪。
+      对方的「竖切」三条硬约束——穿透每一层的完整路径、可独立 demo/验证、大小塞进单个 context
+      window——我方均无对应表述；我方无 vertical-slice 概念，也不以「可单独 demo」或「单 context
+      window」作为切分粒度准则。
+  - name: blast-radius-expand-contract
+    summary: >
+      wide refactor（一次性机械改动、blast radius 扫全库）作为竖切的例外，用 expand-contract
+      序列处理：先 expand 并存新旧、按 blast radius 分批迁移、最后 contract 删旧，保持 CI 逐批常绿。
+    opponent_evidence:
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "whose **blast radius** fans across the whole codebase"
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius"
+    absence_proof:
+      pattern: "expand.contract|blast.radius|prefactor|扩张.收缩|爆炸半径"
+      scope: ".claude/skills .claude/skill-os .claude/agents CLAUDE.md CONTEXT.md"
+      hits: 0
+    delta: >
+      对方对「无法竖切的宽面重构」给了一条独立处置路径（expand-contract 三段 + 按 blast radius
+      分批 + 共享 integration 分支的兜底）。我方 task-plan 及框架能力文件里无任何 wide refactor /
+      expand-contract / blast radius / prefactor 概念，grep 0 命中；我方所有任务一律按需求节点拆卡，
+      不区分竖切票与宽面机械改动，也不提供保持 CI 逐批常绿的迁移序列。
+  - name: native-blocking-links-parallel-agents
+    summary: >
+      按依赖顺序发布到 tracker：本地一票一文件写「Blocked by」文本，真实 tracker 用原生 blocking/
+      子问题关系并打 ready-for-agent 标签；执行时 work the frontier（阻塞全清的票），票天然可被
+      agent 抓取。
+    opponent_evidence:
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "Use the platform's native blocking / sub-issue relationship where it has one"
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "Apply the `ready-for-agent` triage label unless instructed otherwise"
+      - path: skills/engineering/to-tickets/SKILL.md
+        quote: "Work the **frontier**: any ticket whose blockers are all done"
+    our_evidence:
+      - path: .claude/skills/office/task-plan/SKILL.md
+        quote: "依赖任务: <本卡片实际依赖的 Task ID 列表，逗号分隔"
+      - path: .claude/skills/office/task-plan/SKILL.md
+        quote: "暂不建自动依赖图/并发分组算法"
+    delta: >
+      我方 task-plan 有结构化的「依赖任务」字段（逗号分隔的 Task ID 列表），记录卡间依赖，但文件明说
+      这是「零成本结构化」、暂不建自动依赖图/并发分组算法。对方独有的是把票发布到外部 tracker
+      （GitHub/Linear）、用平台原生 blocking/子问题关系表达依赖、打 ready-for-agent 标签让票可被
+      agent 抓取、并以 frontier（阻塞全清即可起）作为并发执行调度语义；这些我方 counterpart 均无——
+      我方产出是单一 task-plan.md 文档，依赖仅为文本字段，不发布 tracker、无原生 blocking link、
+      无 frontier 调度、无 agent-grabbable 标签。
+
+notes: >
+  跑了三条 grep（scope 同 absence_proof）：blast-radius/expand-contract/prefactor 在
+  .claude/skills .claude/skill-os .claude/agents CLAUDE.md CONTEXT.md 下 0 命中（exit=1）；
+  vertical-slice/tracer 仅命中 external-skills 的 RECOMMENDATIONS/vetting-registry（是审计侧对
+  mattpocock 自身的记录，非我方能力）；frontier/ready-for-agent 命中一批 design-brief/html-prototype
+  文件但均为无关语义（设计「frontier」等），非票据调度。对方单元只有 1 个 SKILL.md、support_files
+  为空，已逐行读到末行（收尾 /implement work the frontier）。8 条对方引文 + 4 条我方引文均用
+  grep -Fq 逐字核验通过后才写入。三机制起点即 matrix subverdicts，读全文后判定与实际内容一致，未增删。

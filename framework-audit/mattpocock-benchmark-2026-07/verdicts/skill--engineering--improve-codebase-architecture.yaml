@@ -1,0 +1,95 @@
+id: skill:engineering/improve-codebase-architecture
+kind: skill
+tier: A
+opponent_sha256: 0026900866ed2a542af0559cef11dd7ae707633b75cc6f668c2e7c0a33e35032
+dossier: dossiers/skill--engineering--improve-codebase-architecture.yaml
+
+scores:
+  D: 4
+  I: 7
+  C: M
+  E: 3
+score_derivation: |
+  D=4：
+  - deletion-test：+2。具名启发式（删掉它会集中复杂度还是只挪走）+ 深浅模块整套框架 grep
+    全仓 0 命中；code-hygiene 的死代码算子是不同透镜（删无用 vs 删了看复杂度走向）。
+    **落地依赖 codebase-design（Tier B）的词汇采纳**——deletion test 引用 deep-module 词汇。
+  - html-report-to-tmp：+1。可视化架构报告（before/after 图 + 推荐徽章，自包含 HTML）缺席；
+    我方报告全是入库 markdown。**muse fork 协同点**：luca-open.sh 的 HTML 预览页签（热刷新）
+    正好是这类报告的展示面。
+  - vocab-forcing-never-say-list：+1。"正面术语表+负面替换禁列"的架构词汇强制缺席（我方
+    banned-phrase 模式存在但作用域是语气/动效参数，非领域术语）。
+  - living-domain-model-side-effects：+0（inline CONTEXT 捕获 + ADR 提议已在
+    skill:engineering/domain-modeling verdict 的 merge scope 计入，不重复）。
+  I=7：code-recon routing+新近使用(+3)/ux-audit 保护+使用(+4)。C=M。E=3。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3 补强合并：D=4 ≥ 3 ✓；机制 ≥2（deletion-test、HTML 报告）✓；加法。
+  非替换：code-recon 的 VERIFIED/INFERRED 诚实审计、ux-audit 的权重评审是现任独有轴。
+  **依赖声明**：merge ①② 中 deletion-test 依赖 codebase-design（Tier B）verdict 获批采纳
+  ——词汇 primitive 不进来，deletion-test 就是无根术语；GATE-2 联动裁决。
+
+merge_scope: |
+  ① code-recon 增可选「深化机会」透镜：recon 产出架构 brief 时，对疑似浅模块跑 deletion
+    test 标注 deepening candidates（依赖 codebase-design 词汇采纳）。
+  ② HTML 可视化输出——【红队 downgraded 砍除】form difference（HTML vs md）+ 框架已有
+    HTML-gen 能力（html-prototype/luca-open）+ 最小文件原则；其标志特征"写 tmp 不落库"与
+    我方 artifact-passing 架构冲突且本已从 scope 剔除。理由全文见 redteam 块。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/code-recon/SKILL.md"]
+  ab_runs_needed: 1
+  dual_repo: true   # ①主体双仓；② 及其 luca-open 推送行已由红队砍除
+  new_gap_proposal: null
+
+redteam:
+  verdict: downgraded
+  steelman_incumbent: |
+    最强"够用/纯加噪音"论证：本单元宣称的三机制里，两个是形态差异冒充能力缺口、一个是
+    跨机制重复计分，真正净新的只剩 deletion-test 一条。
+    - html-report(+1)：双方都产架构评审报告（我方 md 入 docs/engineering/），差异只是
+      HTML vs md + before/after 图 + 写 tmp。而"写 tmp 不落库"这条标志性特征恰恰与我方
+      artifact-passing 架构（P2 glob 发现、docs/ 持久化）对撞，merge_scope 自己已把它剔除
+      （"md 主产物不变"）；剩下的"顺带渲染成 HTML"框架早有能力（html-prototype 自包含
+      HTML + luca-open.sh 预览）。这正是 rubric 攻击①点名的"把形态差异算成能力缺口"。
+    - vocab-forcing(+1)：dossier 自认 ux-brainstorm 已有 banned-list 扫描重写、figma-demo
+      已有术语映射——机制我方具备，新的只是"架构领域词"这层内容填充；且它根本不在
+      merge_scope（bucket_rationale 只列 deletion-test+HTML），被计入 D=4 却不落地。
+    - deletion-test(+2)：第二分 = "深浅模块整套框架"，而"deep/shallow"正是 vocab-forcing
+      glossary 逐字枚举的词（dossier line 44 framing ↔ line 75 glossary）——同一词汇在两个
+      机制重复计分。按证据铁律"每 1 分挂 1 组双侧引文"，deletion-test 只有 1 组引文（1 quote
+      + absence_proof），应 +1 不是 +2。
+    honest D ≈ deletion-test(1) + 至多 html-report/vocab-forcing 各名义 +1（均属形态/内容
+    差异）≈ 2-3，远非 4——D=4 虚高。
+    为何仍不致命（不 kill）：deletion-test 是一条真实缺席（grep 0 已验）、自足、极廉价的
+    诊断启发式（"删了它是集中复杂度还是只挪走"），code-recon Phase-2 记 friction 时确无此
+    透镜；其唯一依赖（codebase-design 词汇）在同批已 adopt（weighted 83）满足。merge 判据
+    只要"净正即可"，deletion-test 单条即净正。整单元判 leave 会把一条真实改进连同洗澡水一起
+    倒掉——证据不支持 kill。
+  attack_notes: |
+    裁决 = downgraded：桶保持 merge，但 scope 收缩——砍除 merge_scope ②（HTML 可视化输出），
+    只留 ①（deletion-test 深化透镜）。D 应由 4 修正为 ~3（去掉 deletion-test 重复计分的第二分；
+    此处只在 redteam 块记录修正，不改 P2.5 judge 的 scores 原始记录）。
+    ② 砍除理由（攻击①②③汇总）：
+    - fit(②)：形态差异非能力缺口；标志特征"写 tmp 不落库"与 artifact-passing 架构冲突、
+      本已剔除；框架已有 HTML-gen；② 的收益（luca-open 预览页签）是 fork-only 却被标
+      dual_repo 主体——收益面与落地面错配。为"阅读体验"给只读 recon 加 HTML 渲染路径
+      （模板 + Mermaid before/after 生成）违最小文件原则/输入面收窄。
+    - integration(②)：landing_estimate touched_files=1 只列 code-recon SKILL.md，但 ② 落地
+      实需新增 HTML 报告模板/生成逻辑（≥1 文件）+ fork luca-open 推送行，原估算偏乐观；
+      砍 ② 后 touched_files=1 反而变准确。
+    ① 保留且核查通过（未触承重墙、依赖已满足）：
+    - 承重墙：code-recon 输出 docs/engineering/<date>-<topic>-architecture-brief.md 不在 P2
+      保护清单（P2 该目录只护 tech-spec/task-plan）；① 仅向 Phase-2/3 加 prose 透镜，不碰
+      P1-P7。无 HIGH-INTEGRATION-RISK。
+    - 依赖：① 依赖 codebase-design 词汇——该 verdict = adopt（weighted 83, install 全局），
+      依赖在同批满足；但注意 deletion-test 在两 verdict 间做双重 justification（codebase-design
+      fit=2 也把 deletion-test 列为采纳理由），GATE-2 联动裁决时勿对同一 primitive 二次加权。
+    - ab_runs：① 是单条 additive 透镜 prose 吸收，A/B=1 足够验现任 recon 行为非回归；无
+      "机制层 prose 吸收无 A/B" 的 BLOCK 风险。dual_repo(①)=true 正确（code-recon 两仓皆有、
+      deletion-test 通用）。
+    保留项净判：merge 成立于 deletion-test 单条净正；D 虚高与 ② 的形态噪音已剥离。

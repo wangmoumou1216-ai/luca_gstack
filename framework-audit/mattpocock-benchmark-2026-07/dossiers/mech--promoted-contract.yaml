@@ -1,0 +1,66 @@
+id: mech:promoted-contract
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: |
+  对方把 skills 归入六个 bucket 文件夹（engineering/、productivity/ 为「promoted」提升桶；misc/、
+  personal/、in-progress/、deprecated/ 为非提升桶）。落在提升桶的 skill 必须在四处同步存在：顶层
+  README.md 的链接条目、.claude-plugin/plugin.json 的数组条目、docs/<bucket>/<skill>.md 的人向文档页、
+  以及 ask-matt 路由器；非提升桶的 skill 四处都不得出现。bucket 迁移有机械后果：迁入提升桶即获得
+  docs 页与 README/plugin 条目，迁出即丢失；rename 会连带移动 docs 文件（发布 URL 跟随 skill 名）。
+  这套契约以散文指令写在 CLAUDE.md 与 .agents/writing-docs.md 里，靠 agent 每次改动时手动 re-sync；
+  scripts/ 只有 link-skills.sh 与 list-skills.sh，无任何脚本机器校验 README/plugin/docs 三处是否同步。
+our_summary: |
+  我方最近的对位是「双仓一致原则」机械 tripwire + 散文「治理轨道六动作」登记清单。capability-parity.json
+  按文件登记新能力的锚点字符串，check-capability-parity.mjs 是已提交的 verify 门脚本，两仓（母版
+  luca_gstack + muse fork）任一缺锚点即 FAIL。另有 CLAUDE.md 规定采纳新能力时走六动作治理轨道——
+  双仓落地 + routing-map 词条 + /office 登记 + workflow-graph + model-routing 三问 + parity 锚点——即
+  「一个能力须在 N 处同步登记」的思路。skill 生命周期上，CLAUDE.md 定义两层可见度模型（一级可见 / 隐藏）
+  加基于调用量的降级规则（30/60 天零调用 → 降为隐藏，磁盘文件不删、可逆）。我方无提升/非提升的文件夹
+  分类，无「每 skill 一个 docs 页」的耦合，也无 in-progress/deprecated/personal 之类 bucket 区分。
+mechanisms:
+  - name: promoted-bucket-sync-contract
+    summary: 提升桶 skill 必须在 README + plugin.json + docs 页 + 路由器四处同步存在、非提升桶四处缺席的一致性契约。
+    opponent_evidence:
+      - path: CLAUDE.md
+        quote: "must have a reference in the top-level `README.md` and an entry in `.claude-plugin/plugin.json`"
+      - path: CLAUDE.md
+        quote: "a new skill it never mentions, or a stale one it still routes to, is a router that lies"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "走既有治理轨道（双仓落地 + routing-map 词条 + /office 登记 + workflow-graph +"
+      - path: .claude/skill-os/capability-parity.json
+        quote: "框架能力改动须同 session 落双仓；新能力在此登记锚点"
+    delta: |
+      对方的同步覆盖同一仓内的 README + plugin.json + docs 页 + ask-matt 路由器四处，以提升桶成员资格为门，
+      且（实读发现）只靠 agent 散文指令手动 re-sync，无任何已提交校验脚本（scripts/ 仅 link-skills.sh 与
+      list-skills.sh，均不校验同步）。我方有 check-capability-parity.mjs 作为已提交机械 tripwire，但它校验的是
+      锚点字符串在「两个仓库」间是否齐备（母版 vs muse fork），而非同一仓内 README/plugin/docs 之间的一致；
+      六动作登记（routing-map + /office + workflow-graph + model-routing + parity）是散文清单，仅 parity-锚点
+      子动作被脚本校验；我方无 promoted/非-promoted 门控，也无 bucket 成员资格与 docs 页生成的耦合。
+  - name: bucket-lifecycle-model
+    summary: 六桶分类法 + 提升/降级迁移，bucket 成员资格机械决定 docs 页存否与 README 分组。
+    opponent_evidence:
+      - path: CLAUDE.md
+        quote: "`misc/` — kept around but rarely used, not promoted"
+      - path: .agents/writing-docs.md
+        quote: "A skill moving *out* of one of them into `engineering/` or `productivity/` gains a page; one moving the other way loses it"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "近 30 天 episodic 零调用记录，降级为隐藏 skill——磁盘目录与逻辑零删除，只撤销一级入口"
+      - path: CLAUDE.md
+        quote: "任一一级 skill 连续 60 天"
+    delta: |
+      对方有显式六桶文件夹分类法（engineering/productivity/misc/personal/in-progress/deprecated），bucket
+      成员资格机械决定 docs 页存否、README 分组（User-invoked / Model-invoked）与 plugin.json 是否收录；
+      提升/降级 = 移动文件夹，由作者意图/成熟度驱动（in-progress=草稿、personal=私人 setup、deprecated=弃用）。
+      我方是两层可见度模型（一级可见 / 隐藏），降级由观测调用量驱动（30/60 天零调用 → 降为隐藏、可逆、不删文件）。
+      我方缺 drafts/deprecated/personal 之类区分与「文件夹成员→docs 页」耦合；对方缺基于调用量的自动降级触发。
+
+notes: |
+  跑过：grep -rl "plugin.json|README" scripts/（0 命中）+ find 全仓脚本，确认对方 scripts/ 仅
+  link-skills.sh、list-skills.sh，二者均不校验 README/plugin/docs 同步——「机器可校验同步」实为 agent
+  散文指令驱动，无committed check 脚本（意外事实，写入 delta）。read 了 CLAUDE.md/.claude-plugin/plugin.json/
+  .agents/writing-docs.md 三个 anchor + 旁证 .agents/invocation.md、scripts/link-skills.sh 全文。我方
+  counterpart 三项（capability-parity.json、check-capability-parity.mjs、CLAUDE.md「治理轨道六动作」段
+  第533-534行）逐个读全。check-coverage.py 对引文做 whitespace-normalize + lowercase substring 匹配。

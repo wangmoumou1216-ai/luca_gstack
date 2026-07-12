@@ -1,0 +1,46 @@
+id: skill:in-progress/writing-beats
+kind: skill
+tier: C
+opponent_sha256: 668185cfb6eb6a324b8d864404c398e21f3cddbb637b760e39b7784c8c5e4fee
+opponent_summary: >
+  写作三部曲的 exploit 阶段之一（in-progress，disable-model-invocation: true）。输入是一份 raw material
+  markdown；跑一个 beat-by-beat、choose-your-own-adventure 式旅程：先与用户settle prerequisites（读者
+  进门已知的 grounded 概念），再写 2-3 个候选起始 beat（各只能倚靠已 grounded 概念、标注各自 ground
+  什么新概念），用户挑一个后只把那一个 beat 写入文章文件、停；每轮从磁盘重读文章、再给 2-3 个可达的
+  next beat，循环到自然结束。核心是 grounding 机制（概念须先 grounded 才能被 beat 倚靠，形成概念 DAG）
+  与 beat 的定义（一次一个动作，一句到多段按需）。单个 SKILL.md，无 support_files。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内无 beat/grounding 写作方法论（grep 0 命中），
+  设计管线（brainstorm/design-brief/tech-spec…）不含 prose 写作的逐 beat 塑形层。此 skill 属作者写作
+  方法论，非 luca_gstack 的产品设计/工程管线核心。
+mechanisms:
+  - name: grounding-concept-DAG
+    summary: 每个概念须在某 beat 先 grounded，后续 beat 才能倚靠它；候选 next beat 必须从当前 grounded 集可达。
+    opponent_evidence:
+      - path: skills/in-progress/writing-beats/SKILL.md
+        quote: "has to be **grounded** before a beat can lean on it"
+    absence_proof:
+      pattern: 'grounded before a beat'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方把写作建模成概念 DAG——一个 beat 只能倚靠已 grounded 概念，选一个 ground 了 X 的 beat 会解锁
+      所有等待 X 的 beat。这与 personal/edit-article 的"信息 DAG 依赖排序"同源、更细化。我方无 grounding
+      机制（0 命中），无 prose 依赖排序写作层。
+  - name: beat-by-beat-choose-your-own-adventure
+    summary: 逐 beat 增量写，每轮给 2-3 候选方向让用户选，写一个就停、重读磁盘再续，旅程完则止（非池空则止）。
+    opponent_evidence:
+      - path: skills/in-progress/writing-beats/SKILL.md
+        quote: "Then run a beat-by-beat journey, choose-your-own-adventure style"
+    absence_proof:
+      pattern: 'choose-your-own-adventure|beat-by-beat'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方的写作是一次一 beat、每步给分叉选项的交互旅程，且"每次写前从磁盘重读、绝对保留用户编辑"。
+      我方无此逐 beat 交互写作循环（0 命中）；写作方法论整体不在 gstack 设计管线内。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  'grounded before a beat' → 0；'choose-your-own-adventure|beat-by-beat' → 0。matrix 判 tier C /
+  counterpart none，理由写作方法论非 gstack 设计管线核心——核实成立。grounding=概念 DAG 是三部曲的
+  统一洞见（与 writing-shape 共享、与 edit-article 同源）。无 support_files。self-check 通过。

@@ -1,0 +1,150 @@
+id: skill:engineering/wayfinder
+kind: skill
+tier: A
+opponent_sha256: bef437de697fb6984a8a90b7fd82f128609148d6e02f635ce419d03555b351e1
+opponent_summary: >
+  Wayfinder plans a chunk of work too big for one agent session as a "shared map"
+  of investigation tickets living on the repo's issue tracker. The map is a single
+  `wayfinder:map` issue that indexes decisions and points at child-issue tickets;
+  work proceeds one ticket per session, each ticket resolving a decision (not a
+  deliverable) until the way to a named destination is clear. It models the unknown
+  as "fog of war" — deliberately incomplete, graduating fog into fresh tickets as
+  the frontier advances. Ticket types (research/prototype/grilling/task) mark AFK vs
+  HITL work. Everything the human reads is referred to by its issue name, never a
+  bare id. Native tracker blocking edges render the frontier visually and let
+  concurrent sessions claim tickets by assignment.
+our_summary: >
+  Our nearest counterpart is Plan Agent (.claude/agents/plan-agent.md) plus the
+  cross-session state artifacts docs/PROGRESS.md and docs/handoff checkpoints. Plan
+  Agent is a pure planner ("不执行任务") that decomposes a task fully upfront into
+  Phases + dependency-ordered Waves + an assertion list, then hands off to the
+  Orchestrator for execution. PROGRESS.md (五要素: 已完成/进行中/待执行/关键决策/恢复指令)
+  and handoff checkpoints are local-markdown artifacts that carry state across
+  sessions. We reference work units by frozen stable IDs (U-NNN/DEV-NNN) precisely
+  so cross-session traceability survives — the opposite of wayfinder's name
+  convention. We have no fog-of-war modeling, no one-work-unit-per-session cap, and
+  no issue-tracker-based concurrent ticket claim.
+mechanisms:
+  - name: fog-of-war-frontier-destination
+    summary: >
+      Models the unknown as a deliberately-incomplete map — a named destination
+      fixes scope, the frontier is the current takeable edge, and un-sharp questions
+      wait in "Not yet specified" fog that graduates into tickets as resolutions
+      clear the view ahead.
+    opponent_evidence:
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "Beyond the live tickets lies the **fog of war** — the dim view of decisions and investigations you can tell are coming but can't yet pin down"
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "the **frontier** is the open, unblocked, unclaimed children — the edge of the known"
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "naming it is the first act of charting — it shapes every ticket"
+    our_evidence:
+      - path: .claude/agents/plan-agent.md
+        quote: "分析任务 → 拆分阶段 → 选择编排模式 → 输出断言列表"
+      - path: .claude/agents/plan-agent.md
+        quote: "Wave 分组（拓扑排序，Wave 内可并行）"
+    delta: >
+      Our Plan Agent decomposes the whole task upfront into Phases and
+      dependency-ordered Waves computed once, then executes; wayfinder charts only
+      what it can currently see and progressively reveals the rest. Our Wave
+      dependency ordering is the nearest analog to "frontier" but it is a static
+      pre-computed graph, not an advancing edge of the known. We have no
+      "fog of war" / "Not yet specified" holding pen for questions that are in-scope
+      but not yet sharp enough to state, and no first-class scope-fixing
+      "destination" artifact (topic/完成状态 is the loose equivalent).
+  - name: plan-dont-do
+    summary: >
+      Planning is separated from doing by default — each unit resolves a decision,
+      and the effort is done when nothing remains to decide, producing decisions
+      rather than deliverables.
+    opponent_evidence:
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "Wayfinder is **planning** by default: each ticket resolves a decision"
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "produce decisions, not deliverables"
+    our_evidence:
+      - path: .claude/agents/plan-agent.md
+        quote: "主 Agent 在执行复杂任务前调用的规划能力"
+      - path: .claude/agents/plan-agent.md
+        quote: "输出计划后，由 Orchestrator（Free Task Mode）负责执行"
+    delta: >
+      Both sides draw a hard planning/execution boundary: wayfinder produces
+      decisions and Plan Agent explicitly does not execute ("不执行任务"), handing
+      off to the Orchestrator. The difference is what the plan is: Plan Agent emits a
+      full executable plan (Phases + Waves + bash assertions) to be run in the same
+      effort, whereas wayfinder emits a map of decision-tickets resolved one per
+      session and stops when "the way is clear," treating the pull to just do the
+      work as the signal to hand off.
+  - name: single-ticket-per-session
+    summary: >
+      A session resolves at most one ticket, and each ticket's body is sized to fit
+      a single agent session's context.
+    opponent_evidence:
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "never resolve more than one ticket per session"
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "sized to one 100K token agent session"
+    absence_proof:
+      pattern: "one[^.]*per session|per session[^.]*only one|每[^ ]*session[^ ]*(只|仅)[^ ]*一|never resolve more than one"
+      scope: ".claude/skills .claude/skill-os .claude/agents CLAUDE.md"
+      hits: 0
+    delta: >
+      Wayfinder imposes an explicit cap of one resolved ticket per session and sizes
+      each ticket to one ~100K-token session. We have no such per-session work-unit
+      cap: our Wave model runs multiple U-blocks in parallel within a session
+      ("Wave 内可并行"), and our session boundary is governed by context-budget /
+      compact triggers rather than a one-unit rule. The one-unit-per-session concept
+      returns 0 hits across .claude and CLAUDE.md.
+  - name: name-not-hash-reference
+    summary: >
+      Every map and ticket is referred to by its human-readable issue name, never by
+      a bare id, number, or slug, because a wall of ids is illegible.
+    opponent_evidence:
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "refer to it by that name, never by a bare id, number, or slug"
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "A wall of `#42, #43, #44` is illegible; names read at a glance"
+    our_evidence:
+      - path: .claude/agents/plan-agent.md
+        quote: "U-ID 一旦分配永不重编"
+      - path: .claude/agents/plan-agent.md
+        quote: "execute skill 跨 session 按 U-ID 引用任务，重编导致追踪链断裂"
+    delta: >
+      The two conventions are diametrically opposed to the same cross-session
+      reference problem. Wayfinder mandates human-readable names and explicitly bans
+      bare ids as illegible. Our framework mandates the opposite: frozen stable IDs
+      (U-NNN/DEV-NNN) that are never renumbered precisely because downstream skills
+      reference tasks by U-ID across sessions and renumbering would break the trace
+      chain. We have no name-first reading convention.
+  - name: shared-map-on-tracker
+    summary: >
+      The cross-session shared artifact is a live issue-tracker map (map issue +
+      child-ticket issues with native blocking edges) that concurrent sessions
+      collaborate on by claiming tickets via assignment.
+    opponent_evidence:
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "labelled `wayfinder:map` — the canonical artifact. Its tickets are child issues of the map"
+      - path: skills/engineering/wayfinder/SKILL.md
+        quote: "A session **claims** a ticket by assigning it to the dev driving the map, **first**, before any work, so concurrent sessions skip it"
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "多 Phase 长任务（≥3 Phase）开始时初始化 `docs/PROGRESS.md`，每 Phase 完成后更新"
+      - path: CLAUDE.md
+        quote: "Checkpoint 写入 `docs/handoff/YYYY-MM-DD-<topic>-checkpoint.md`，五要素"
+    delta: >
+      Our shared cross-session state lives in local-markdown artifacts —
+      docs/PROGRESS.md plus docs/handoff checkpoints — that are single-source and
+      human-authored. Wayfinder's canonical artifact is the repo issue tracker
+      itself: a `wayfinder:map` issue with child-ticket issues, native dependency
+      edges that render the frontier visually in the tracker UI, and per-ticket
+      claim-by-assignment so multiple sessions edit the tracker concurrently without
+      colliding. We have no issue-tracker backing, no native blocking edges, and no
+      ticket-level claim mechanism (our concurrency control is session-project pin
+      isolation, a different concern).
+notes: >
+  Read opponent SKILL.md (support_files empty) in full and our counterparts
+  plan-agent.md, docs/PROGRESS.md, and the checkpoint/PROGRESS sections of CLAUDE.md
+  + claude-md-appendix.md; also read handoff checkpoint 2026-07-06 as a concrete
+  cross-session-state example. All 11 opponent quotes and all our_evidence quotes
+  grep-verified (grep -c == 1) before writing. single-ticket-per-session uses an
+  absence_proof — ran `grep -rEil "one[^.]*per session|per session[^.]*only one|每[^ ]*session[^ ]*(只|仅)[^ ]*一|never resolve more than one" .claude/skills .claude/skill-os .claude/agents CLAUDE.md` → 0 hits. Also confirmed "fog of war"/"frontier" as a planning concept is absent (the only "frontier" hits are authority_tier "frontier-noise" in .claude/skill-os/evolution/sources-registry.yaml, unrelated). Note: docs/ is a symlink to ../muse/docs and this is an unbound meta/framework-audit session, so Bash reads through docs/ paths are blocked by project-scope-guard; verified those quotes via the Read tool instead.

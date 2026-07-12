@@ -1,0 +1,81 @@
+id: skill:in-progress/setup-ts-deep-modules
+kind: skill
+tier: B
+opponent_sha256: 2c6e39ccdd77f85337c13a4877c222d47dcd26e31619157af9688798244192d5
+opponent_summary: >
+  这是一个 draft（in-progress、disable-model-invocation、user-invoked）skill，把 dependency-cruiser
+  接进 TypeScript repo，使每个 package 成为"深模块"：公共面 = package 根目录下的入口点文件，任何子文件夹里的东西都私有。
+  它随附一份可复用的 dependency-cruiser.config.cjs，含四条 `error` 规则（app→包入口边界、包间入口边界、
+  tests-through-entrypoints、no-circular），全部基于路径深度判定，扩展名无关，只需改 PACKAGES_ROOT。
+  7 步流程：探测环境（包管理器/packages 根/已有配置不覆盖）→ 安装 → 写配置 → 把 lint:boundaries 折进已跑 typecheck 的
+  伞形 check 命令 → 脚手架一个 copy-me 示例包 → 证明规则会咬人（干净示例 pass → 注入深层 import 必须 fail → 撤销再 pass）
+  → 写 packages 目录级 README 并在 CLAUDE.md/AGENTS.md 加一行 context pointer。
+our_summary: >
+  our_counterpart 为 none。luca_gstack 内没有 dependency-cruiser 接线、没有任何 import/module 边界 linter、
+  也没有"深模块/仅入口点导入"这类包结构强制——在 .claude、CLAUDE.md、CONTEXT.md、scripts 范围内 dependency-cruiser|depcruise
+  0 命中。我方框架层确有两点方法论近似物：code-hygiene 的"完成前验证铁律（Iron Law，声明 done 前必须有当场跑出的证据）"
+  近似其"证明规则会咬人"，CLAUDE.md/CONTEXT.md 作为每-session 读取的 agent-instructions/上下文文件近似其"context pointer
+  让 agent 发现规则"。但这两点都未应用到代码模块边界这个场景上。
+mechanisms:
+  - name: depcruiser-deep-module-rules
+    summary: >
+      一整套 dependency-cruiser 边界配置：四条 error 规则按路径深度把 package 根文件设为唯一公共入口、
+      子文件夹一律私有，扩展名无关、只需改 PACKAGES_ROOT。
+    opponent_evidence:
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "code outside a package (app code or another package) may import only that package's entry points (its root files), never anything in its subfolders."
+      - path: skills/in-progress/setup-ts-deep-modules/dependency-cruiser.config.cjs
+        quote: "App/root code may import a package's entry points (its root files), but nothing inside its subfolders."
+    absence_proof:
+      pattern: "dependency-cruiser\\|depcruise"
+      scope: ".claude CLAUDE.md CONTEXT.md scripts"
+      hits: 0
+    delta: >
+      对方提供一份完整的 dependency-cruiser 四规则深模块边界配置（app→包、包间、tests-through-entrypoints、no-circular），
+      靠路径深度而非命名判定公私。我方在 .claude/CLAUDE.md/CONTEXT.md/scripts 范围内无 dependency-cruiser 接线、
+      无任何 import/module 边界 linter、无"深模块/仅入口点"包结构强制。缺席为真（grep 0 命中）。
+  - name: prove-rules-bite
+    summary: >
+      完成判据是"证明规则会咬人"——干净示例先 pass，临时注入一次深层 import 必须 fail，撤销后再 pass；
+      不会在违规上失败的配置视为无价值。
+    opponent_evidence:
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "This is the completion criterion for the whole skill — a config that doesn't fail on a violation is worthless."
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "you have observed a pass, then a fail on the deep import, then a pass again."
+    our_evidence:
+      - path: .claude/skills/office/code-hygiene/SKILL.md
+        quote: "任何「修好了/通过了/done」的声明前必须有当场跑出的证据，否则=撒谎"
+      - path: CLAUDE.md
+        quote: "执行前明确完成状态；实现后用测试、脚本、读回文件或"
+    delta: >
+      对方把"注入一个违规、观测到 linter 失败、再撤销"这一具体负向测试作为整个 skill 的完成判据。
+      我方有通用铁律（声明 done 前必须有当场跑出的证据 / 用测试脚本读回文件或可观察检查验证），
+      但没有针对边界 linter 的"注入一个违规以确认守卫会拒绝"这一具体负测形态（negative-test "must fail" 在我方
+      skills/skill-os 检索 0 命中）。
+  - name: agent-discovery-pointer
+    summary: >
+      除在 packages 目录写 README 说明边界约定外，还在 repo 的 agent-instructions 文件（CLAUDE.md 或 AGENTS.md）
+      加一行 context pointer，使 agent 主动发现边界规则而不是撞上它。
+    opponent_evidence:
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "add a **context pointer** to it from the repo's agent-instructions file"
+      - path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+        quote: "This is what makes an agent discover the boundary rule instead of tripping over it."
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "This file is read by Claude Code at the start of every session."
+      - path: CLAUDE.md
+        quote: "项目根目录的 `CONTEXT.md` 是跨 session 的长期项目约束文件"
+    delta: >
+      对方为某条代码边界规则专门产出 packages/README，并从 CLAUDE.md/AGENTS.md 指过去的单行 pointer。
+      我方已有 CLAUDE.md（每 session 读取）与 CONTEXT.md（跨 session 长期约束）作为通用 agent-instructions/
+      上下文指针基础设施，但没有针对代码模块边界的等价 README+pointer 产物。
+
+notes: >
+  counterpart=none，跑了三组 absence grep：dependency-cruiser|depcruise 在 `.claude CLAUDE.md CONTEXT.md scripts`
+  0 命中；`import boundary|module boundary|boundary lint` 0 命中；negative-test `must fail|注入违规|negative test`
+  在 skills/skill-os 0 命中。唯一 `deep module` 相关命中是 .claude/skill-os/external-skills/vetting-registry.yaml
+  第 248 行提到另一个 mattpocock skill 随附的 deep-modules.md 参考文件，与本单元无关、非 counterpart。
+  code-hygiene SKILL.md 与 CLAUDE.md Goal-Driven Execution 提供 prove-rules-bite 的通用近似 our_evidence；
+  CLAUDE.md 自身 + CONTEXT.md 提供 agent-discovery-pointer 的近似 our_evidence。opponent_sha256 逐字取自 inventory.yaml。

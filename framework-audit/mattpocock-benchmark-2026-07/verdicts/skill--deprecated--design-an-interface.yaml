@@ -1,0 +1,15 @@
+id: skill:deprecated/design-an-interface
+kind: skill
+tier: C
+opponent_sha256: a2596e9fa2d50e23ba014f64a5b8f9df4eb56b846a52cad152899ef5eb97b085
+dossier: dossiers/skill--deprecated--design-an-interface.yaml
+hard: { safety: PASS, compatibility: PASS, non_redundancy: FAIL }
+bucket: leave
+bucket_rationale: |
+  快裁：对方已弃用——被吸收进 codebase-design/DESIGN-IT-TWICE.md（单机制 skill 折进更宽
+  skill）。其能力随 codebase-design 采纳（Tier B APPROVED）一并进来，独立引入即冗余
+  （non_redundancy FAIL 对"再装它"而言）。**弃用教训**（dossier notes 实证）：单机制
+  skill 应折进承载它的更宽 skill——镜像我方"入口收窄、能力保留"的降级治理，互为印证；
+  我方 compare/figma-demo/magicpath 降级走的正是同一逻辑。
+reconciliation: null
+landing_estimate: null

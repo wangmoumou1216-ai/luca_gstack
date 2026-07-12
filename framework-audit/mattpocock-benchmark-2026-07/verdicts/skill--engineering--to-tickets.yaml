@@ -1,0 +1,86 @@
+id: skill:engineering/to-tickets
+kind: skill
+tier: A
+opponent_sha256: 1846d215e24ec1219b199a708329ca915db93138d4f3675af29db4d32ee41391
+dossier: dossiers/skill--engineering--to-tickets.yaml
+
+scores:
+  D: 7
+  I: 8
+  C: M
+  E: 3
+score_derivation: |
+  D=7：
+  - tracer-bullet-vertical-slice：+3。竖切三硬判准（穿透每层的完整路径/可独立 demo/大小塞进
+    单个 fresh context window）我方 task-plan 完全无对应——我方按"来源节点覆盖"拆卡（REQ/STATE/
+    DEC 绑定），无竖切概念、无 demoable 判准、无 context-window 粒度准则（dossier 双侧引文）。
+    其中 context-window-sized 是 agent-native 的切分准则，直接服务我方 U-block/任务卡执行。
+  - blast-radius-expand-contract：+2。宽面机械重构的独立处置路径（expand 并存→按爆炸半径
+    分批迁移→contract 删旧，CI 逐批常绿）grep 全仓 0 命中，完全缺席。
+  - native-blocking-links-frontier：+2。我方有结构化"依赖任务"字段但明示"暂不建自动依赖图/
+    并发分组"；对方的 frontier 执行语义（阻塞全清即可起）+ tracker 原生 blocking + agent 可抓
+    标签我方无。折减说明：plan-agent Wave 拓扑排序已覆盖"静态依赖分组"一半，故 +2 非 +3。
+  I=8：routing(+2)/P5 门禁+P2 输出路径保护(+2)/preamble 接线(+2)/使用史+v1.0.1 迭代(+2)。
+  C=M：task-plan/SKILL.md 为主，或加 plan-agent 一行 frontier 语义，≤6 文件。
+  E=3：promoted(+1)+CHANGELOG（to-plan+to-issues→to-tickets 合并 rationale）(+1)+非 draft(+1)。
+
+bucket: merge
+bucket_rationale: |
+  rubric §3：D=7 达替换分数线但**支配测试不成立**——task-plan 的承重轴"Phase 7 覆盖率门禁
+  （每 MUST 需求必有 dev+test+可执行断言，模糊即 FAIL）"、"渐进式索引 L0/L1/L2"、"断言矩阵"
+  对方完全没有（对方票无覆盖率验证概念）→ 现任在关键轴上强胜，替换五条第 2 条即死。
+  按锚 A 标尺：D 高但非 Pareto 支配 → 补强合并。机制 ≥2 ✓，全为加法 ✓。
+
+merge_scope: |
+  ① task-plan 拆卡判准增竖切三判准（优先竖切：穿层完整路径/可独立 demo 或验证/单 context
+    window 大小），与现有"来源节点覆盖"并列（覆盖率门禁不动）。
+  ② 增 wide-refactor 例外通道：无法竖切的机械大改 → expand-contract 三段 + 按 blast radius
+    分批的任务卡模板（新卡型，不动既有 DEV/TEST 卡）。
+  ③ "依赖任务"字段加一行 frontier 执行语义注记（阻塞全清的卡即可并行起）——只做语义标注供
+    orchestrator 调度参考，**不建自动依赖图**（尊重 2026-07-02 "零成本结构化"的既有决策）。
+
+reconciliation: null
+
+landing_estimate:
+  reuse_mode: port-pattern
+  touched_files_estimate: [".claude/skills/office/task-plan/SKILL.md"]
+  ab_runs_needed: 1
+  dual_repo: true
+  new_gap_proposal: null
+
+redteam:
+  verdict: stands
+  steelman_incumbent: |
+    最强现任论证（三路都打了，均不致命）：
+    (a) "可独立验证"已被部分覆盖——task-plan 每卡绑定可执行断言、Phase 7 强制每 MUST 有
+    dev+test+断言，"verifiable on its own"非全新。但复核原文（SKILL.md L202-216）：拆分轴是
+    来源节点覆盖 + 人时 S/M/L，卡完全可以是水平层切（"实现 X 数据模型"一卡、"实现 X API"一卡，
+    只要标题具体、节点覆盖即过门禁）；穿层完整路径 + 单 context window 粒度（agent-native，
+    非人时）确证缺席，+3 有实证支撑。即便激进折价（mech1 +2/mech3 +1 → D=5），D≥3 且 ≥2
+    机制、全加法——merge 桶纹丝不动。
+    (b) frontier 已被 plan-agent Wave 拓扑排序（plan-agent.md L300-304）覆盖大半——已验证该折减
+    真实存在且 verdict 已诚实计入（+2 非 +3）；剩余 delta（逐卡阻塞清零即起，细于逐 Wave）真实但小，
+    scope ③ 相应只取一行注记，罪罚相当。
+    (c) 重复计分检查：全 verdicts grep——wayfinder 的 frontier 是 fog-of-war 探索边缘（不同机制）；
+    implement verdict D=2 落 leave 且显式把重叠主题让渡（"seam 归 tdd/to-spec"），无一处双重计分。
+    (d) E=3 的 "promoted(+1)" 标签不准确，但按 rubric 三轴逐项核验成立：CHANGELOG #464 有实质
+    合并 rationale(+1)、.out-of-scope/mainstream-issue-trackers-only.md 有涉 to-tickets 拒绝
+    理由(+1)、非 in-progress 非 deprecated(+1)——分数站得住，仅措辞欠精确。
+    支配测试判定正确：覆盖率门禁/渐进式索引/断言矩阵对方全无 → 替换死于第 2 条，merge 是唯一
+    合法落点。最强攻击打完，桶与 scope 均存活。
+  attack_notes: |
+    fit 与成本攻击的发现（均非致命，但 FUSION 执行时为硬约束）：
+    ① scope 设计本身已最保守：③ 显式尊重 2026-07-02"零成本结构化/不建自动依赖图"决策，
+    注记一行符合 Loop 宪法薄外环；对方最环境绑定的部分（tracker 发布/native blocking/
+    ready-for-agent 标签）已被 scope 舍弃，未被 D 分走私进落地面。dual_repo: true 正确
+    （已验证母版 ~/Desktop/luca_gstack 同路径存在 task-plan/SKILL.md，非 fork 专属）。
+    ② 真实摩擦点（FUSION 必须显式处理，否则 scope ② 不可用或弱化门禁）：宽面机械重构
+    （改列名/重打类型）常无对应 REQ/STATE/DEC 节点，而现卡模板强制"来源节点: 至少一个"
+    （SKILL.md L202）且 Phase 7 按 MUST 逐项验卡。新卡型模板必须写明 expand/migrate/contract
+    卡如何满足或豁免来源节点绑定——豁免须窄限定于 wide-refactor 卡型，不得触碰 Phase 7 门禁
+    逻辑本身（P6 Phase 顺序与 P2 输出路径均未触碰，已核 skill-invariants，无 HIGH-INTEGRATION-RISK）。
+    ③ ab_runs_needed=1 偏乐观：scope ② 是例外通道，常规 feature 输入的 A/B 永远不会触发它。
+    诚实口径是 2 轮（一轮常规输入验非回归 + 一轮 wide-refactor 场景专门打通新卡型过 Phase 7）。
+    非红线违反（A/B 存在，非零），故不动桶，但 FUSION 步⑥ 应按 2 轮执行。
+    另记：C=M 偏保守（1-2 文件按 rubric 实为 S），方向无害；touched_files 若采纳 plan-agent
+    一行注记则为 2 文件，仍 ≤2。

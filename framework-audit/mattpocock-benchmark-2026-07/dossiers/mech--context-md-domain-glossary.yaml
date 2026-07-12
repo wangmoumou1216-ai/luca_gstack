@@ -1,0 +1,91 @@
+id: mech:context-md-domain-glossary
+kind: mechanism
+tier: A
+# mechanism 单元无 opponent_sha256
+opponent_summary: >-
+  对方把 repo 根的 CONTEXT.md 定位为一等制品的领域词汇表（ubiquitous language glossary），
+  格式由 domain-modeling/CONTEXT-FORMAT.md 硬性规定：每个术语给一句到两句紧凑定义，用 `_Avoid_`
+  列出被舍弃的同义词，只收录项目专属概念、不收通用编程概念。domain-modeling/SKILL.md 明确
+  CONTEXT.md “is a glossary and nothing else”，且区分“主动建模”（会话中挑战术语、锐化模糊词、
+  发明边界场景、和代码交叉核对、术语一定案立刻 inline 写回）与“被动读取”（读 CONTEXT.md 取词汇
+  只是任何 skill 的一行习惯，不算本 skill）。多 context 仓用 CONTEXT-MAP.md 组织。整套东西吃自己
+  狗粮——skills 仓自己根目录的 CONTEXT.md 就是一份真实的领域词汇表（Issue tracker / Issue /
+  Triage role，含 Relationships 与 Flagged ambiguities 段）。
+our_summary: >-
+  我方 counterpart 是 luca_gstack 根目录的 CONTEXT.md，但它是“项目长期记忆 / 跨 session 约束”
+  文件，不是领域词汇表：内容为项目基本信息、红线硬约束、累积洞察，由 /retro 和各 skill 在复盘时
+  写入，每次 session 启动自动读取。全仓没有 `_Avoid_` / canonical-term 挑选这类 opinionated 词汇
+  表格式，也没有 domain-modeling 这类主动领域建模 skill（.claude/skills 无对应目录）。
+  另一 counterpart .claude/skills/office/references/ 是 shared references（ai-native-*、
+  crm-business-criteria、handoff-protocol 等参考文档），非领域词汇表。我方“词汇表”一词只出现在
+  muse-loop 的组件映射 taxonomy（shadcn/自绘组件受控词表），属于组件分类语义，不是领域 ubiquitous
+  language。
+mechanisms:
+  - name: context-md-as-first-class-glossary
+    summary: >-
+      CONTEXT.md 被规定为一等制品的领域词汇表，格式 opinionated（挑 canonical 词、`_Avoid_`
+      列被弃词、定义紧凑、只收项目专属概念），且“is a glossary and nothing else”。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/CONTEXT-FORMAT.md
+        quote: "**Be opinionated.** When multiple words exist for the same concept, pick the best one and list the others under `_Avoid_`."
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "It is a glossary and nothing else."
+    our_evidence:
+      - path: CONTEXT.md
+        quote: "# CONTEXT.md — 项目长期记忆"
+      - path: CONTEXT.md
+        quote: "本文件只记跨项目的框架层约束"
+    delta: >-
+      对方的 CONTEXT.md 是有强制格式（`_Avoid_`、canonical 词、紧凑定义、只收专属概念、无实现细节）
+      的领域词汇表；我方同名文件是项目约束/长期记忆（红线、洞察、跨 session 状态），承载完全不同的内容
+      角色。我方全仓无 `_Avoid_`/canonical-term 这类 opinionated 词汇表格式（grep 0 命中，见 notes）。
+      我方 CONTEXT.md 里也混入了实现层约束与项目状态，与对方“glossary and nothing else”的纯粹性相反。
+  - name: active-vs-passive-domain-modeling
+    summary: >-
+      一个专门的 domain-modeling skill 把“主动建模”（挑战术语、锐化模糊词、发明场景、和代码交叉核对、
+      inline 写回词汇表）与“被动读 CONTEXT.md”区分开。
+    opponent_evidence:
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "This is the *active* discipline — challenging terms, inventing edge-case scenarios, and writing the glossary and decisions down the moment they crystallise."
+      - path: skills/engineering/domain-modeling/SKILL.md
+        quote: "When the user uses a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately."
+    absence_proof:
+      pattern: "domain-modeling|领域建模|challenge.*glossary|ubiquitous language"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >-
+      对方有一个独立 skill 承载“主动领域建模”行为：会话中挑战与现有 glossary 冲突的术语、锐化模糊词、
+      发明边界场景压测、与代码交叉核对、术语定案即 inline 写回。我方没有任何领域建模 skill，也没有
+      “挑战术语/维护 ubiquitous language”这类行为约定（.claude/skills / .claude/skill-os / CLAUDE.md
+      grep 0 命中）。我方最接近的是 brainstorm 的稳定 ID/术语纪律，但不针对领域词汇表的主动构建。
+  - name: dogfooding-glossary-on-own-repo
+    summary: >-
+      skills 仓自己根目录的 CONTEXT.md 就是一份真实运行的领域词汇表（术语定义 + `_Avoid_` +
+      Relationships + Flagged ambiguities），吃自己的狗粮。
+    opponent_evidence:
+      - path: CONTEXT.md
+        quote: "The tool that hosts a repo's issues — GitHub Issues, Linear, a local `.scratch/` markdown convention, or similar."
+      - path: CONTEXT.md
+        quote: "_Avoid_: backlog manager, backlog backend, issue host"
+    our_evidence:
+      - path: CONTEXT.md
+        quote: "此文件跨 session 持久化。Claude Code 每次启动时自动读取。"
+      - path: CONTEXT.md
+        quote: "由 /retro 和各 skill 在复盘或发现重要洞察时写入。"
+    delta: >-
+      对方在自己仓上真正落地了这套格式：根 CONTEXT.md 定义 Issue tracker / Issue / Triage role 术语、
+      带 `_Avoid_` 舍弃词、Relationships 段和 Flagged ambiguities（记录曾经歧义如何 resolved）。
+      我方 CONTEXT.md 同样是被吃狗粮的活文件（每 session 自动读取、由 /retro 写入），但吃的是
+      “约束/长期记忆”格式，不是术语词汇表，也没有 Relationships / Flagged ambiguities 这类词汇治理段。
+
+notes: >-
+  跑过的 grep（均在 repo root 执行）：`grep -ril "_Avoid_" .claude/skills .claude/skill-os
+  CLAUDE.md CONTEXT.md` → 0 命中；`grep -rilE "domain-modeling|domain modeling|领域建模|
+  challenge.*glossary|ubiquitous language" .claude/skills .claude/skill-os CLAUDE.md` → 0 命中；
+  `grep -rilE "_Avoid_|canonical term|pick the best (one|word)|list the others" .claude CONTEXT.md
+  CLAUDE.md` → 0 命中。意外事实：我方仓“词汇表”一词仅出现在 muse-loop 的 component-mapping-taxonomy
+  （shadcn/自绘组件受控词表），是组件分类语义，非领域 ubiquitous language，故不构成本机制的对应物。
+  counterpart .claude/skills/office/references/ 是 shared reference 文档目录（ai-native-*、
+  crm-business-criteria、handoff-protocol、office-wizard 等），无领域词汇表。opponent 三锚点文件
+  （CONTEXT.md / CONTEXT-FORMAT.md / domain-modeling SKILL.md）已逐行读完。check-coverage --dossier
+  自验 PASS。

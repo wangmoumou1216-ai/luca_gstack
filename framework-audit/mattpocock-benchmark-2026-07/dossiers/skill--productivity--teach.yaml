@@ -1,0 +1,132 @@
+id: skill:productivity/teach
+kind: skill
+tier: B
+opponent_sha256: 6d2dbe5e03084cf26fef66b535127b36cd1bcbe9478e26b0626029cd51dc2259
+opponent_summary: >
+  A user-invoked (disable-model-invocation) skill that turns the current directory into a
+  stateful, cross-session teaching workspace for teaching the human user a topic. It defines a
+  fixed file taxonomy: MISSION.md (why the user learns), RESOURCES.md (curated trusted sources),
+  learning-records/ (ADR-style insights), lessons/*.html (the primary teaching unit), reference/
+  and GLOSSARY (compressed knowledge), assets/ (reusable components), NOTES.md (preferences). Its
+  pedagogy is explicitly grounded in cognitive science: fluency vs storage strength, desirable
+  difficulty (retrieval practice, spacing, interleaving), and the zone of proximal development. It
+  separates Knowledge (from high-trust resources, never parametric), Skills (tight feedback loops)
+  and Wisdom (delegated to real-world communities). Four support files spec the MISSION, GLOSSARY,
+  LEARNING-RECORD and RESOURCES formats.
+our_summary: >
+  We have no counterpart. There is no teaching skill and no user-facing learning workspace anywhere
+  in the gstack skill set. Our memory/decision infrastructure (three-layer episodic/semantic memory,
+  per-project .luca/memory/decisions.md decision ledger, CONTEXT.md) is structurally ADR-like and
+  cross-session, but it is entirely agent/project-facing — it accumulates what the AGENT learned about
+  the framework/project, not what the human USER is being taught about an external topic. None of the
+  pedagogical apparatus (storage strength, ZPD, spaced retrieval, curated learning resources,
+  community-delegated wisdom, canonical glossary with avoid-aliases) exists on our side. luca's personal
+  Obsidian wiki is a learning store but lives outside the gstack environment.
+mechanisms:
+  - name: stateful-teaching-workspace
+    summary: >
+      Turns the working directory into a persistent, multi-session teaching workspace with a fixed
+      file taxonomy (MISSION/RESOURCES/learning-records/lessons/reference/assets/NOTES).
+    opponent_evidence:
+      - path: skills/productivity/teach/SKILL.md
+        quote: "This is a stateful request - they intend to learn the topic over multiple sessions."
+      - path: skills/productivity/teach/SKILL.md
+        quote: "Treat the current directory as a teaching workspace."
+    absence_proof:
+      pattern: "teaching workspace|stateful request|multiple sessions"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      Opponent scaffolds an entire user-facing learning workspace with a named file layout that persists
+      teaching state across sessions. We have cross-session state (workflow-state, docs/handoff, memory)
+      but it is workflow/agent state, never a workspace for teaching the human a topic. The concept of a
+      per-topic learning directory is absent on our side.
+  - name: cognitive-science-learning-model
+    summary: >
+      Pedagogy grounded in explicit cognitive science — fluency vs storage strength and desirable
+      difficulty via retrieval practice, spacing, interleaving.
+    opponent_evidence:
+      - path: skills/productivity/teach/SKILL.md
+        quote: "storage strength is the real goal. Try to design lessons which build long-term retention by desirable difficulty"
+      - path: skills/productivity/teach/SKILL.md
+        quote: "Using retrieval practice (recall from memory)"
+    absence_proof:
+      pattern: "storage strength|desirable difficulty|retrieval practice|zone of proximal"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      Opponent names and operationalizes memory-science constructs to design lessons for long-term human
+      retention. We have zero pedagogical/cognitive-science vocabulary anywhere; our "learning" language is
+      about the agent consolidating framework facts, not about calibrating difficulty to build a human's
+      durable retention.
+  - name: learning-records-and-zpd
+    summary: >
+      ADR-style sequential learning records that capture decision-grade insights about what the user
+      knows, and are used to calculate the zone of proximal development for future sessions.
+    opponent_evidence:
+      - path: skills/productivity/teach/SKILL.md
+        quote: "These should be used to calculate the zone of proximal development."
+      - path: skills/productivity/teach/LEARNING-RECORD-FORMAT.md
+        quote: "They are the teaching equivalent of ADRs: they capture non-obvious lessons, key insights, and stated prior knowledge that will steer future sessions."
+    our_evidence:
+      - path: CLAUDE.md
+        quote: "项目决策台账在 `.luca/memory/decisions.md`"
+      - path: CLAUDE.md
+        quote: "渐进式记忆，模仿 Hermes 自成长机制"
+    delta: >
+      Both sides keep sequential, ADR-like, cross-session decision/insight records with supersession
+      thinking. Ours (decisions.md ledger, episodic/semantic memory) records what the AGENT learned about
+      the project/framework and steers future agent behavior. Opponent's learning-records record what the
+      HUMAN USER understood and steer what to teach next by computing their zone of proximal development —
+      a user-modeling / difficulty-calibration purpose we have no analog for.
+  - name: knowledge-skills-wisdom-sourcing
+    summary: >
+      Splits learning into Knowledge (from curated trusted RESOURCES.md, never parametric), Skills (tight
+      feedback loops), and Wisdom (default-delegated to real-world communities).
+    opponent_evidence:
+      - path: skills/productivity/teach/SKILL.md
+        quote: "Never trust your parametric knowledge."
+      - path: skills/productivity/teach/SKILL.md
+        quote: "your default posture should be to attempt to answer - but to ultimately delegate to a"
+      - path: skills/productivity/teach/RESOURCES-FORMAT.md
+        quote: "Knowledge for explainers should be drawn from here, not from parametric guesses."
+    absence_proof:
+      pattern: "delegate to a .*communit|high-reputation communit|acquiring wisdom"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      Opponent frames teaching around three learning sources and routes the user out to human communities
+      for wisdom, backing every claim with a curated per-topic resource list. We share the "never trust
+      parametric knowledge" ethos (deepresearch verifies against sources) but only for the agent's own
+      research; we have no curated per-topic learning-resource file and no community-delegation posture for
+      the user.
+  - name: canonical-glossary-with-avoid-aliases
+    summary: >
+      A per-workspace canonical glossary that is opinionated language compression — pick one canonical term
+      and list synonyms to avoid, enforced across all lessons.
+    opponent_evidence:
+      - path: skills/productivity/teach/GLOSSARY-FORMAT.md
+        quote: "the canonical language for this teaching workspace"
+      - path: skills/productivity/teach/GLOSSARY-FORMAT.md
+        quote: "When several words exist for the same concept, pick the best one and list the rest as aliases to avoid."
+    absence_proof:
+      pattern: "_Avoid_"
+      scope: ".claude/skills .claude/skill-os CLAUDE.md"
+      hits: 0
+    delta: >
+      Opponent enforces a canonical, opinionated vocabulary per learning topic with an explicit _Avoid_
+      alias table, doubling as a comprehension check on the user. We use controlled vocabulary internally
+      (skill names, model tiers as "别名") but have no _Avoid_ alias-table format and no notion of a
+      user-authored glossary whose growth is itself evidence of the user's understanding.
+
+notes: >
+  Counterpart is none (matrix our_counterpart=none). Read all 5 opponent files in full (SKILL.md +
+  4 FORMAT support files). Absence greps run from repo root, all 0 hits:
+  grep -rilE "zone of proximal|storage strength|fluency strength|desirable difficulty|interleav|spaced repetition|pedagog|curriculum|lesson plan|learning record" .claude/skills .claude/skill-os CLAUDE.md;
+  grep -rilE "teach the user|teaching workspace|teach a (new )?(skill|concept)" ... (0);
+  grep -rlE "_Avoid_" ... (0);
+  grep -rilE "delegate to a .*communit|high-reputation communit|acquiring wisdom" ... (0).
+  Partial structural analog found only for learning-records-and-zpd: our .luca/memory/decisions.md ledger
+  and three-layer Hermes-style memory are ADR-like and cross-session but agent/project-facing, not
+  user-learning-facing — cited as our_evidence with the facing difference recorded in delta. No harness
+  built-in counterpart applies here (teach is a domain skill, not a harness primitive).

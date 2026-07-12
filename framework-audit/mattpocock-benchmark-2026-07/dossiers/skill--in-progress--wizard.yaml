@@ -1,0 +1,53 @@
+id: skill:in-progress/wizard
+kind: skill
+tier: C
+opponent_sha256: e113612095b14178e680022153f2409fb14ea8b992e55d59ad8ce94071ffaf49
+opponent_summary: >
+  一个 draft（in-progress，disable-model-invocation: true）+ 一份固定库 template.sh。skill 生成一个
+  交互式 bash wizard：领人一步步走完手动流程（第三方 setup / 一次性迁移 / A→B 状态迁移），打开 URL、
+  说明点哪里复制什么、捕获值、写进 .env 与 GitHub Actions secrets、每步确认、显示剩余进度。关键设计：
+  UX 已由 template.sh 完全解决（进度+剩余时间、确认门、跨平台开 URL 含 WSL、隐藏密钥输入、幂等 .env
+  upsert、gh secret/variable 写入、收尾摘要），STAGES marker 以上的库在每个 wizard 里逐字相同、绝不
+  hand-edit；skill 的活只是 scope 流程 + 用库 helper（stage/open_url/ask_secret/write_env/set_secret/
+  confirm）填 stages。附静态验证（bash -n + shellcheck，不端到端跑）。
+our_summary: >
+  我方无对应 skill（our_counterpart: none）。框架内无交互式 bash wizard 生成器，无 template.sh 库、
+  无 write_env/set_secret/ask_secret/TOTAL_STAGES 等 helper（grep 0 命中）。我方有 setup 类脚本
+  （project.sh/verify.sh）但都是自动化非交互式领人向导；无"生成一个一次性 human-in-the-loop 手动流程
+  脚本"这一能力。
+mechanisms:
+  - name: fixed-library-template-authored-stages-only
+    summary: template.sh 库（STAGES marker 以上）逐字固定绝不 hand-edit，skill 只 scope 流程并填 stages。
+    opponent_evidence:
+      - path: skills/in-progress/wizard/SKILL.md
+        quote: "The library above the `STAGES` marker is identical in every wizard"
+      - path: skills/in-progress/wizard/template.sh
+        quote: "TOTAL_STAGES=0"
+    absence_proof:
+      pattern: 'TOTAL_STAGES'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方把"难做又难向 AI 复述"的手动流程固化成一个 UX 已解决的固定库 + 只填 stages 的作者面——这是
+      "库固定、只填变化点"的模板生成范式。我方无 template.sh/TOTAL_STAGES（0 命中），无等价的固定库脚手架。
+  - name: interactive-wizard-captures-to-env-and-gh-secrets
+    summary: wizard 开 URL、捕获值、幂等写 .env、把 CI 真正要的值写成 gh secret，每步确认。
+    opponent_evidence:
+      - path: skills/in-progress/wizard/SKILL.md
+        quote: "opening URLs, capturing values, confirming each step, and writing .env files and GitHub Actions secrets"
+      - path: skills/in-progress/wizard/SKILL.md
+        quote: "`write_env` every persisted value, `set_secret` only the values CI actually needs"
+    absence_proof:
+      pattern: 'write_env|set_secret|ask_secret'
+      scope: '.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents'
+      hits: 0
+    delta: >
+      对方的 wizard 是 human-in-the-loop 手动 setup 的自动化领航（开 URL→捕获→写 .env/gh secret→确认）。
+      我方无此交互式采集写入机制（0 命中）；我方 setup 脚本是全自动、无逐步人机确认与密钥采集向导。
+      matrix 记的 prove-it-bites 切点即在此：wizard 的"确认门 + 静态 trace 而非端到端跑"验证纪律与我方
+      code-hygiene 的"完成前须有当场证据"同源，但对方落在 bash setup 场景、我方无此场景 skill。
+notes: >
+  跑过的 grep（repo 根，scope=.claude/skills .claude/skill-os scripts CLAUDE.md .claude/agents）：
+  'TOTAL_STAGES' → 0；'write_env|set_secret|ask_secret' → 0。matrix 判 tier C / counterpart none，理由
+  draft-stub 工程 setup 工具——核实成立。support_files: template.sh（sha 4ebf795271ea5be1326e42de60608ab5
+  f01dd6e070ee6d16168e618dca70a14f），已作为 M1 opponent_evidence 引用（TOTAL_STAGES=0）。self-check 通过。
