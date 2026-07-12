@@ -16,6 +16,7 @@
     "test:memory": "python3 -m unittest memory.tests.test_memory_system -v",
     "check:memory-health": "python3 memory/scripts/check_memory_health.py",
     "check:routing-map": "node scripts/check-routing-map.mjs",
+    "check:registration": "node scripts/check-registration-sync.mjs",
     "check:project-routing": "node scripts/check-project-routing.mjs",
     "check:quality-gates": "node scripts/check-quality-gates.mjs",
     "check:coding-discipline": "node scripts/check-coding-discipline.mjs",

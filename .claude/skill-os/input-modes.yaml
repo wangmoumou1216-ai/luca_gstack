@@ -53,6 +53,13 @@ skills:
         optional: ["idea_artifact", "prd_artifact"]
     quality_gates: ["source_traceability", "search_log", "consensus_matrix"]
 
+  quick-research:
+    modes:
+      standalone:
+        required: ["research_question"]
+        optional: ["scope_constraints"]
+    quality_gates: ["primary_source_only", "per_claim_attribution"]
+
   brainstorm:
     modes:
       standalone:

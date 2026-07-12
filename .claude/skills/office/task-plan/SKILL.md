@@ -211,6 +211,14 @@ MVP 状态: MUST | PARTIAL
 估算规模: S（< 4h）| M（4-8h）| L（> 8h）
 ```
 
+**拆卡判准增补（2026-07-12 对标 merge，源 to-tickets tracer-bullet，与「来源节点覆盖」并列，覆盖率门禁不动）：**
+- **优先竖切**：一张卡尽量是一条竖切——穿透所需各层的**完整路径**、**可独立 demo 或验证**、
+  **大小塞进单个 fresh context window**；避免"实现 X 数据模型"+"实现 X API"式水平层切。
+- **宽面重构例外卡型（expand-contract）**：无法竖切的机械大改（改列名/重打类型等 blast radius
+  扫全库的）用三段卡：`expand` 卡（新旧并存不破坏）→ `migrate` 卡（按 blast radius 分批迁移，
+  每批 CI 常绿）→ `contract` 卡（删旧）。**来源节点绑定豁免仅限此卡型**（此类改动常无对应
+  REQ/STATE/DEC 节点——豁免写在卡上、注明"wide-refactor"，Phase 7 门禁逻辑本身不动）。
+
 **Task 标题规范**：
 - ✅ 「实现 ChromaDB node 的 FSRS 字段 schema 和写入接口」
 - ✅「构建 Indexing Agent 的 folder→tag 映射逻辑（folder_tag_vector_graph 策略）」

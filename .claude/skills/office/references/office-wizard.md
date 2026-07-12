@@ -34,6 +34,9 @@ AskUserQuestion：
 
 1. /idea           → （可选）把原始语料整理成结构化需求清单
 2. /deepresearch   → （可选）对主题做多 Agent 深度研究
+/quick-research —     轻量研究：单 agent 后台查 primary source（官方文档/源码/规范），
+               逐条溯源落盘单文件。三档研究的中档：spike < quick-research < deepresearch
+               输入模式：standalone（research_question 必填）
 3. /brainstorm     → 苏格拉底拷问式产品思考，写成 PRD
    superpowers:brainstorming → （轻量替代）需求明确时用这个快速出设计文档，
    跳过 subagent 和 Oracle
@@ -229,6 +232,11 @@ luca_gstack — 一级可见 Skill 列表
 /code-hygiene  —      代码层工程约束：完成前验证铁律（声明 done 前必须有当场跑出的
                证据）+ 8 清理算子（死代码/循环依赖/去重/类型/弱类型/防御性/遗留/slop，
                只自动应用 HIGH 置信）。不是设计场景 skill，代码/工程任务专用
+               输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
+
+/code-recon    —      Brownfield 正门：并行只读 recon 把已有代码库逆向成架构 brief
+               （入口/模块/关键流程/数据模型/扩展点，标 VERIFIED vs INFERRED），喂给
+               ux-brainstorm/design-brief/tech-spec。只读不改代码
                输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
 
 ── 外部 Skill（superpowers plugin）─────────────────────────

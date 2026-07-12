@@ -273,6 +273,15 @@ Phase N（parallel_skill_execution — 多个非交互 skill 并行）:
 - Tier = Standard 且 Phase 预计耗时 > 4h
 - Tier = Deep（强制展开）
 
+**探索型长任务词汇（fog-of-war，2026-07-12 对标 merge，源 wayfinder；只吸收概念层，不引
+tracker/单票上限/name-not-ID）：** 跨多 session、终点明确但路径多雾的工作适用三词——
+**destination**（先命名完成状态，它划定 scope）；**fog**（在 scope 内但还提不成精确问题的项，
+PROGRESS.md 可增可选「尚未锐化（fog）」节收留，与「待执行」区分）；**frontier**（阻塞全清的
+U-block/任务卡可并行起）。**毕业判准一句**：fog 项能否**现在精确陈述问题**（非能否回答）——
+能 → 升任务/U-block；不能 → 留 fog（防把模糊项伪装成任务卡）。
+**守卫**：fog 词汇只组织规划输入，**不改变块 1-4 输出契约**——断言列表照产、不可逆操作照配
+BLOCKING 断言与 Supervisor 验证、溯源规则照守。
+
 **每个 U-block 格式：**
 ```
 U-NNN:
@@ -451,7 +460,8 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 - **复杂** = 命中 Plan Agent 任一触发条件（≥3 文件 / ≥2 subagent / 阶段依赖 / 不可逆操作）。
 - **新颖** = 核心机制 / 交互无成熟先例，或用户明确在做"没人做过 / 自己没做过"的东西。
 
-研究强度按 fact-gap 自适应，不必每次都上重型 deepresearch：
+研究强度按 fact-gap 自适应（三档，2026-07-12 起），不必每次都上重型 deepresearch：
+- 明确单题/需读一手文档源码/值得落盘 → `quick-research`（单 agent 后台，primary-source 纪律）
 - 广域多源 / 学术 / 技术可行性 → `deepresearch`
 - 先例 / 竞品 / UX / 行为设计 → `ux-research`
 - 两者可并行；极窄的单点事实可降级为一次 web 联网 spike

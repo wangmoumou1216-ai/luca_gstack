@@ -16,6 +16,9 @@
 - 全局个人记忆（每 session 全量注入，最贵）：仅信号①当场直写 feedback_<slug>.md + MEMORY.md 索引行；信号②③④只写 candidate_feedback_<slug>.md（同目录、带 frontmatter、不进 MEMORY.md 索引、零 context 成本），由每日治理列入 digest 待 luca 裁决，点头后才改名入册
 - 项目本地 MEMORY.md：同四信号门槛；Stop 裁决时若 episodic `--decision` 非空且项目归属明确 →
   同一来源同步一行到该项目 `.luca/memory/decisions.md`（`[D-YYYYMMDD-N] 决策 — why`，一源两视图，不另行裁决）
+  **主动提议门（2026-07-12 增，源 domain-modeling ADR 三条件）：** 会话中一项决定若同时满足
+  「难以逆转 + 无背景会令人费解 + 存在真实权衡」，**当场主动提议**记入 decisions.md（不等 Stop
+  批处理）——三条件管"何时主动开口提议"，四信号仍管"存不存"，二者并行。
 - 框架 semantic 候选（propose_semantic.py）：维持宽进严出（orchestrator §2c-obs 照旧），晋升另有 promotion_ready 门禁
 - episodic：低门槛日志层，session 流水照常
 【时机】person/项目层只在 Stop 拦截时统一裁决一次；对话中途仅信号①允许即写；semantic 候选提议不受此限

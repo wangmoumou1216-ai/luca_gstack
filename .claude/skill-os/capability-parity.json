@@ -22,7 +22,8 @@
     ".claude/agents/plan-agent.md": [
       "块 1.6 — ASSERT/TEST-NNN 反向覆盖",
       "行为级断言规则",
-      "model_tier"
+      "model_tier",
+      "探索型长任务词汇"
     ],
     ".claude/agents/orchestrator.md": [
       "Step 3b 【合同回验",
@@ -60,6 +61,14 @@
       "六个失败模式",
       "Leading word",
       "修剪纪律"
+    ],
+    ".claude/skills/office/tech-spec/SKILL.md": [
+      "seam 前置步"
+    ],
+    ".claude/skills/office/quick-research/SKILL.md": [
+      "Defining constraint",
+      "primary source",
+      "升降级链"
     ]
   }
 }

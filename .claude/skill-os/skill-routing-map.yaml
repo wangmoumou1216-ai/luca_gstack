@@ -38,6 +38,13 @@ project_skills:
     invoke: "/deepresearch"
     weight: 6
     triggers: [深度研究, 调研, research, 深入研究, 全面调研, 多agent研究]
+  quick_research:
+    skill: quick-research
+    invoke: "/quick-research"
+    hint: "→ /quick-research（轻量研究：单 agent 后台查 primary source，落盘单文件；发散题升 /deepresearch）"
+    weight: 6
+    # 刻意窄词——"查一下"太宽会劫持日常问答；宽表述靠语义兜底
+    triggers: [快速调研, 轻量研究, 查文档确认, 查一下资料, 查下官方文档, 帮我查证]
 
   ux_research:
     invoke: "/ux-research"
