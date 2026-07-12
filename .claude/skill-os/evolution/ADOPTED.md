@@ -48,4 +48,12 @@
 - **明确拒**: ① 不 install OpenSpec（TS CLI+/opsx+openspec/ 会与 docs/ 软链真值源打架）② 不采 per-change proposal 机制（冗余于 tech-spec RTM+task-plan+ADR+CONTEXT+propose_semantic 治理，且 luca 的更严）③ **显式拒「fluid 非 phase-gated」哲学**（与 luca 刻意的 Plan-Agent/handoff/coverage/traceability gate 核心冲突；GAP-soft-enforcement 要 gate 更硬不更软）
 - ⚠️ 顶层可达性: **N/A by design** — 下游推荐，非 luca 核心采纳（同 CodeGraph 模式）。可选 in-harness hook（终端 optional 节点写 `docs/specs/<capability>/spec.md` 活真值）**留给 luca 裁决**，未自动实现
 
+## mattpocock/skills 对标首批（2026-07-12，全量深评 51 单元后 GATE-2 批准）
+- repo: `mattpocock/skills` · MIT · pin `391a2701`（2026-07-10）· 全流程：framework-audit/mattpocock-benchmark-2026-07/（inventory→matrix→rubric→51 dossier→51 verdict→红队→fable 复审→GATE-2 七项裁决）
+- **install**: codebase-design（深模块词汇 primitive，3 文件）+ resolving-merge-conflicts（按意图解冲突，1 文件）→ ~/.claude/skills/；routing 词条双仓 + FM-11 实测 PASS（seam 类/冲突类输入均 surface）
+- **refresh**: tdd → 391a2701（+seam 门 +tautological；-3 旧文件，用户拍板不留副本）
+- **personal**: teach（5 文件，user-invoked 零框架触面，不进 routing/office/治理轨道）
+- MIT 署名：本条即署名记录（内容原样拷贝自 pin commit，未改动）
+- 回滚：双仓 tag `pre-fuse-mattpocock-batch1`；编排集成契约见 benchmark 目录 ORCHESTRATION-INTEGRATION.md
+
 <!-- FILE_END: ADOPTED -->

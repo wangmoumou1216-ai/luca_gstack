@@ -23,6 +23,8 @@
 | ⑧ | 回滚就绪落地 | `git tag pre-fuse-<id> <主HEAD>` → 从 worktree squash-merge 单提交（`Fuses: <id> @ <sha>`） | 单提交落地 |
 | ⑨ | 反馈记录 + **可达性验收** | append `.claude/skill-os/evolution/adoption-log.jsonl` `{...}` + 过 FM-11 可达性门 | 行已写 + 场景可调到 |
 
+> 步⑧ squash-merge 遇冲突 → 用已装 `resolving-merge-conflicts` skill（按意图溯源解决，先读 commit/PR 原意；harness 层 git 纪律优先）。
+
 ## 落地陷阱 + 采纳验收（FM-10 / FM-11，硬规则）
 
 **FM-10 落地陷阱（deletion-type WIP，源 SC-20260621-002）：** 步 ⑧ 抽离前先看目标文件的分支 WIP 性质。
