@@ -286,18 +286,26 @@ function complexityDecision(prompt) {
     // threshold; uses normalized-text regex (normalize() lowercases).
     { name: '用户明确要求 plan', weight: 6, regex: /先做个计划|先做计划|plan\s*一下|想清楚再做|做个计划再说|做个规划再说/ },
     {
-      name: '新项目复杂需求',
+      // 2026-07-12：'新项目复杂需求' → '多功能需求'。原信号被"新项目/新需求"前缀锁死，
+      // 已有项目里的多功能需求（"给现有系统加订单查询、库存管理、报表导出"）拿不到分 →
+      // route-guard STOP → 静默直接执行（用户实测根因）。改为 build/add 意图门 + 双阈值，
+      // 覆盖已有项目。weight 6 单独命中即 PLAN_MODE（Plan Agent 人类卡点，误报只花一次确认）。
+      name: '多功能需求',
       weight: 6,
       test: t => {
-        if (!/新项目|新需求|新功能|想做一个|想做个|要做一个|要做个/.test(prompt)) return false;
-        const caps = ['然后', '可以', '还能', '并且', '以及', '入口', '形式', '设置', '支持', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
-          // Audit M3: UI/function nouns commonly enumerated in product reqs.
-          '登录', '注册', '权限', '头像', '侧边栏', '按钮', '弹窗', '列表', '详情', '表单', '搜索', '筛选', '编辑', '创建', '导出', '导入'];
+        // build/add 意图：原新项目前缀词 ∪ 明确构建动词（刻意不含"支持"等宽词，避免劫持单功能编辑）
+        if (!/新项目|新需求|新功能|想做一个|想做个|要做一个|要做个|新做一个|新做个|新建|新增|搭建|开发|实现|做一个|做个|加一个|加个|加上|构建|上线|集成|添加|增加/.test(prompt)) return false;
+        const caps = ['然后', '可以', '还能', '并且', '以及', '入口', '形式', '设置', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
+          // UI/function nouns commonly enumerated in product reqs.
+          '登录', '注册', '权限', '头像', '侧边栏', '按钮', '弹窗', '列表', '详情', '表单', '搜索', '筛选', '编辑', '创建', '导出', '导入',
+          // 2026-07-12：补自然产品功能域名词，让"订单查询/库存管理/报表导出"等真需求可计分。
+          '订单', '库存', '报表', '消息', '通知', '审批', '看板', '报销', '结算', '对账', '仪表盘', '工作流', '下单', '支付', '退款', '收藏', '标签', '角色', '菜单', '评论'];
         const capHits = caps.filter(c => t.includes(normalize(c))).length;
-        // Audit M3: capHits >= 4 already is a strong signal — short prompts
-        // listing 4+ feature nouns ("新项目登录权限头像侧边栏") are clearly
-        // complex regardless of total length. Dropping the length >30 floor.
-        return capHits >= 4;
+        // 顿号枚举数（在 raw prompt 上数 '、'，normalize 虽保留 '、' 但 raw 更稳）。>=2 ≈ >=3 项枚举。
+        const enumCount = (prompt.match(/、/g) || []).length;
+        // capHits>=4：4+ 功能名词即复杂（不论长度）。enum 路径要求至少 1 个真功能词，
+        // 避免占位符枚举（"加个红、黄、蓝"）过报。
+        return capHits >= 4 || (enumCount >= 2 && capHits >= 1);
       },
     },
   ];
@@ -482,7 +490,7 @@ function buildDecision(prompt) {
     };
   }
 
-  return { ...skillResult, complexityScore: complexity.complexityScore, signals: complexity.signals };
+  return { ...skillResult, complexityScore: complexity.complexityScore, signals: complexity.signals, hasActiveProject: !!currentProject };
 }
 
 function decisionToHints(decision) {
@@ -530,8 +538,13 @@ function decisionToHints(decision) {
           ).join('\n') +
           '\n向用户展示候选列表，询问确认或请用户补充描述。'
         : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n禁止在未询问的情况下自行判断并执行。';
+      // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
+      // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
+      const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
+        ? `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`
+        : '';
       return [
-        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint,
+        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + complexReminder,
       ];
     }
     default:

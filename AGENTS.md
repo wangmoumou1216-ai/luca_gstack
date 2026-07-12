@@ -467,7 +467,16 @@ Layered routing order:
    an order or suggest `/auto`.
 4. **Single-skill route.** Use `.claude/skill-os/skill-routing-map.yaml` as the keyword and invoke
    source. Do not duplicate its full trigger table here.
-5. **STOP / low confidence.** Ask one concise routing question before executing.
+5. **STOP / low confidence — semantic routing contract (2026-07-12).** route-guard is a keyword-only
+   coarse net that runs before I read the prompt: honor its PLAN/MULTI/SINGLE hits, but its **STOP /
+   miss never exempts my own semantic assessment**. On every request — and mid-execution whenever a
+   new sub-goal, scope shift, or fresh design/engineering need surfaces — judge by **meaning** whether
+   the request maps to a skill or a flow (design chain / engineering chain / Plan Agent) and route
+   there, without waiting for the exact trigger word. Two-way discernment: ① STOP/miss ≠ "no skill" —
+   if the meaning fits, route; ② genuinely single-file / mechanical / one-off trivial edits take the
+   trivial-task exemption, don't force a skill/flow (multi-file features / cross-stage / multi-feature
+   requirements do NOT qualify). Resolve: high confidence → route directly; several plausible → ask one
+   question; substantial feature/code requirement → check the Plan Agent 5 conditions first.
 
 Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
 `design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`, `fx-icon-search`,
