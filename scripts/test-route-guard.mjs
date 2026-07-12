@@ -439,6 +439,57 @@ const cases = [
       assert.equal(decision.decision, 'PLAN_CHECK');
     },
   },
+  // ─────────────────────────────────────────────────────────────────────────
+  // 2026-07-12（B：多功能需求门召回修复）：'新项目复杂需求'→'多功能需求'，前缀锁改为
+  // build/add 意图门 + 双阈值（capHits>=4 || (enum>=2 && capHits>=1)），覆盖已有项目。
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    // 正向：已有项目里的自然口语多功能需求，此前得 0 分 → STOP，现在应 PLAN_MODE（caps>=4 路径）。
+    name: 'B: 已有项目多功能需求（caps>=4）触发 PLAN_MODE',
+    prompt: '帮我加上订单查询、库存管理、报表导出三个功能',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+      assert.ok((decision.signals || []).includes('多功能需求'),
+        `应含 多功能需求 信号: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // 顿号路径独立锚：capHits 不足 4，靠 enum>=2 && capHits>=1 触发——单独钉住枚举分支。
+    name: 'B: 顿号枚举路径（enum>=2 + capHits>=1）触发 PLAN_MODE',
+    prompt: '帮我新增 收藏夹、分享、评论 三个功能',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+      assert.ok((decision.signals || []).includes('多功能需求'),
+        `应含 多功能需求 信号: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // 下界负锚（防未来 cap 词表扩张把单功能编辑静默推进 PLAN_MODE；哲学同上面 '帮我做个整体规划' <6）：
+    // '加个登录按钮' 命中 trigger 加个，但 capHits=2（登录/按钮）、顿号=0 → 不触发多功能需求。
+    name: 'B 下界负锚: 单功能编辑（加个登录按钮）不得进 PLAN_MODE',
+    prompt: '帮我加个登录按钮',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok(decision.complexityScore < 6, `expected <6, got ${decision.complexityScore}`);
+      assert.notEqual(decision.decision, 'PLAN_MODE');
+      assert.ok(!(decision.signals || []).includes('多功能需求'),
+        `单功能不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // 刻意取舍文档化：裸名词枚举（无 build/add 动词）拿不到分 → STOP，由 CLAUDE.md 语义路由契约兜底，
+    // 非 B 兜底。钉住"TRIGGER 门"这个取舍，防未来有人误以为它该被 B 命中。
+    name: 'B 取舍: 裸枚举无动词（订单查询、库存管理、报表导出）落 STOP（语义契约兜底）',
+    prompt: '订单查询、库存管理、报表导出',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP', `got ${decision.decision}`);
+      assert.ok(!(decision.signals || []).includes('多功能需求'),
+        `无动词裸枚举不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
+    },
+  },
 ];
 
 let passCount = 0;
