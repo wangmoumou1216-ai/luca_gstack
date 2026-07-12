@@ -50,6 +50,12 @@ criteria:
 
 **写入时机：** skill 完成时先写 PROPOSED。用户确认后，由 Orchestrator 或下一个 skill 更新为 ADOPTED/REJECTED。
 
+**脱敏（2026-07-12 增，源 mattpocock handoff，GATE-2 例外批准）：** 交接/checkpoint 文档不得含
+API key/密码/PII——发现即替换为 `<REDACTED>` 占位符（本目录 git-tracked，泄露面真实）。
+
+**「下游建议」可选节（描述性，不担路由职能）：** standalone 交接可在文档尾附 `## suggested skills`
+——描述性列出下游可能用到的 skill 与一句理由；**路由仍由 route-guard/词表承担**，本节只随文档携带上下文。
+
 **为什么标记很重要？** 未来遇到类似 topic 时，Pre-Task Context Retrieval 会检索历史 handoff 中 [ADOPTED] 的决策作为参考起点，避免重复探索被否决的方向。这是 Ruflo SONA 学习系统的轻量等价物。
 
 ## 约束（下游必须遵守）

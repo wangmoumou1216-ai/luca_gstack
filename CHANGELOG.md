@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **维护约定（2026-07-12，源 mattpocock changesets 叙事内核，MIT）：** skill/能力的生命周期
+> 变更（新增采纳/重命名/reframe/降级隐藏/删除）在本文件记一条「变更 + 为什么」（一行式）。
+> 与 adoption-log 互补：那边是采纳审计记录，这边是面向使用者的演进叙事。
+
 ## [Unreleased]
 
 ### Added

@@ -15,6 +15,8 @@
 ## PROGRESS.md 更新规则
 
 - 每完成一个 Phase → 移入"已完成 ✅"，更新 Last updated 时间戳
+- 探索型长任务（fog-of-war，见 plan-agent.md）→ 可增「尚未锐化（fog）」节；fog 项过毕业判准
+  （能精确陈述问题）才移入"待执行"
 - 遇到卡点/决策 → 记录在"进行中 🔄"的说明内
 - session 结束前 → 更新"恢复指令"
 

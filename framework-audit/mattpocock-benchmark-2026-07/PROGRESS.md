@@ -78,6 +78,25 @@
 - ✅ P6 SSOT：vetting-registry 对标总记录（append，双仓）+ gaps-register 四条（1 addressed +
   3 open，双仓）+ adoption-log ×7（双仓）+ CHANGELOG 条目（双仓）
 
+## P7 adoption 队列全量执行（2026-07-12，luca 指令"执行排队和后续"）
+
+- ✅ #6 CHANGELOG 生命周期约定（双仓）
+- ✅ #10 check-registration-sync.mjs（REG-1/2/3）+ verify S19 + check:registration；会咬三段
+  证据俱在；**首战捕获真漂移**：code-recon 漏 office-wizard 展示行（已修双仓）
+- ✅ #1-#5/#8/#9 八管线 merge 双仓（task-plan 竖切+宽面卡型+frontier〔frontier 注记 fork-only，
+  依赖任务字段系 v1.0.1 fork 专属〕/tech-spec seam 前置步/brainstorm facts-decisions+Oracle
+  术语持久化/handoff 脱敏+下游建议/CLAUDE.md 术语写入时机/extraction-bar 主动提议门/
+  plan-agent fog 词汇/code-recon deletion-test〔fork-only，母版无此 skill〕）
+- ✅ #7 muse-req-triage（fork）：verify-before-grill 门 + DUPLICATE 扩已实现 + rejected-reqs
+  台账（anti-poisoning + 概念去重 surface）
+- ✅ #11 /quick-research 新 skill（skill-authoring 狗粮首例）：七登记面双仓 + 研究门三档
+  （workflow-graph + plan-agent）+ FM-11 实测 PASS；fork 18/母版 15 一级 skill 门禁全绿
+- ✅ gaps：registration-sync + lightweight-research 翻 addressed（双仓）
+- ✅ 行为 A/B：22 臂零失败；判定 **10/11 PASS**（delta 0.64-0.96）；plan-agent-a 首判 BLOCK
+  （fog 结构挤掉断言/Supervisor 配对提及——A/B 真咬）→ 加"不改变块 1-4 输出契约"守卫行
+  （双仓）→ 复判 **PASS 0.853**（must-hold BLOCKING|断言+溯源无回归）→ **11/11 全 PASS**
+- ✅ adoption-log 队列 11 条（双仓）；self-model 重建
+
 ## 状态：✅ 全流程完成（2026-07-12）
 
 - ✅ 双仓提交+推送：母版 origin/main 83b04a8；fork backup/muse 816440d

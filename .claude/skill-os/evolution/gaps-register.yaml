@@ -143,7 +143,7 @@ gaps:
     statement: "治理轨道六动作的登记面（routing-map//office 表/input-modes/commands//workflow-graph/model-routing/parity）4-5 面无已提交 checker，靠散文自觉——反向红队实证:对方（有明文契约的自律作者）resolving-merge-conflicts 漏登记 README/plugin.json，证明散文契约必漂移。需 check-registration-sync 类 tripwire 接 verify 门。"
     severity: medium
     desired_capability_keywords: [registration sync, tripwire, checker, office table, input-modes, commands consistency]
-    status: open   # 2026-07-12 GATE-2 批准开启；落地排 adoption 队列（触面 S-M 零承重墙）
+    status: addressed   # 2026-07-12 同日落地：scripts/check-registration-sync.mjs（REG-1/2/3）接 verify S19 + package.json check:registration；会咬三段证据俱在（pass→故意破坏 CLAUDE.md 表行 FAIL→还原 pass）；首战捕获真实漂移（code-recon 漏 office-wizard 展示行，已修双仓）
 
   - id: GAP-lightweight-research
     dimension: research
@@ -151,7 +151,7 @@ gaps:
     statement: "轻量研究档缺位：web spike 内联无纪律、bg Agent 是裸原语非研究 skill、deepresearch 重型且认识论相反（多源共识 vs primary 纯度）——'查一下X文档/API 事实'类高频诉求无 right-sized 承接。对口:mattpocock research（后台单 agent+primary-source 纪律+落盘约定）。"
     severity: medium
     desired_capability_keywords: [lightweight research, background agent, primary source, api docs lookup]
-    status: open   # 2026-07-12 GATE-2 批准开启；落地=新建轻量研究 skill（编排槽位=研究默认门第三档 spike<轻研<deepresearch，见 ORCHESTRATION-INTEGRATION），用 skill-authoring+skill-creator 建（吃狗粮首例），排 adoption 队列
+    status: addressed   # 2026-07-12 同日落地：/quick-research（office skill，按 skill-authoring doctrine 建——defining constraint/三档定位表/升降级链/primary-source 纪律）；治理轨道七面全登记（routing/command/input-modes/CLAUDE.md 表/office-wizard/workflow-graph 三档/plan-agent 研究门三档/parity）；FM-11 实测 PASS（"快速调研"→surface）
 
   - id: GAP-issue-tracker-integration
     dimension: infrastructure

@@ -28,7 +28,8 @@ research_default:
   tool_choice:
     deepresearch: "广域多源/学术/技术可行性"
     ux-research: "先例/竞品/UX/行为设计"
-    web_spike: "极窄单点事实"
+    quick-research: "明确单题、需读一手文档/源码、值得落盘（三档中档，2026-07-12 增）"
+    web_spike: "极窄单点事实（就地一查，不落盘）"
 
 scenes:
   A:
