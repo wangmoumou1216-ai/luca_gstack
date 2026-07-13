@@ -28,6 +28,9 @@
 {"id":"kw-observability-build","input":"新增监控看板：展示异常统计、延迟分布、报错列表、故障详情","expected":"PLAN_MODE","layer":"keyword","scene":"A","note":"B-F5：可观测域构建需求召回（诊断反担保 v2 改句式框架后不再整域压制）"}
 {"id":"kw-search-feature","input":"帮我加个搜索功能","expected":"direct","layer":"keyword","scene":"B","note":"web_access 裸'搜索'宽词修复锚：功能需求含'搜索'二字不得被误路由 web-access（2026-07-13 遗留修复）"}
 {"id":"kw-web-search","input":"帮我搜索一下 React 19 的新特性","expected":"web-access","layer":"keyword","scene":"B","note":"web_access 意图锚定形召回保留（搜索一下）"}
+{"id":"kw-audit-not-web","input":"你再审查一下，还有问题没有","expected":"direct","layer":"keyword","scene":"C","note":"'查一下'⊂'审查一下'子串复发修复锚（2026-07-13 用户消息实测误路由 web-access，纠正→fixture 管道首例）"}
+{"id":"kw-find-cause","input":"帮我找找原因","expected":"direct","layer":"keyword","scene":"B","note":"'找找'裸词无法锚定已删——找找原因/找找灵感都撞（实测），语义层兜底"}
+{"id":"kw-web-lookup","input":"帮我查一下 React 19 什么时候发布","expected":"web-access","layer":"keyword","scene":"B","note":"'帮我查一下'锚定形召回保留"}
 {"id":"sem-feature-login","input":"给这个项目加一个完整的用户登录注册体系","expected":"PLAN_MODE","layer":"semantic","scene":"A","note":"实质多文件特性，口语无枚举→route-guard STOP，靠语义过 Plan Agent 5 条件"}
 {"id":"sem-code-api","input":"给后端设计并实现一整套订单管理的接口","expected":"PLAN_MODE","layer":"semantic","scene":"D","note":"实质工程需求，口语→STOP，靠语义进工程链/Plan Agent"}
 {"id":"sem-flow-full","input":"帮我把这个需求从头到原型完整跑一遍","expected":"flow:design-chain|/auto","layer":"semantic","scene":"A","note":"标签官#18：母版语境两者同等合理（DEBATABLE 对），expected 多选任一即中；muse fork 版真值不同（/muse-loop-orchestrate 首选），fixture 按仓分叉"}
