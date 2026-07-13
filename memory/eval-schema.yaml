@@ -74,3 +74,32 @@ storage:
   format: jsonl
   rotation: none  # 单文件追加，按 session_date 过滤
   index_by: [skill_name, session_date, quality_gate_status]
+
+# ─────────────────────────────────────────────────────────────────────────
+# Routing eval 扩展（2026-07-12）：甲类语义路由命中率度量，由 eval_routing.py 产出。
+# 向后兼容——现有 skill-exec 记录无这些字段、不受影响；GEPA pairs 层不涉及（冻结，见 README:66）。
+# fixtures 在 memory/evals/routing/fixtures.jsonl；judge 工作单/结果在同目录。
+# ─────────────────────────────────────────────────────────────────────────
+routing_eval_fields:
+  eval_kind:
+    type: string
+    enum: [routing]
+    description: "标记路由命中率记录（区别于上方 skill-exec 记录，后者无此字段）"
+  input:
+    type: string
+    description: "自然语言请求（fixture 输入意图）"
+  expected_capability:
+    type: string
+    description: "该命中的能力：/skill | PLAN_MODE | project:switch | special:* | direct 等"
+  actual_capability:
+    type: string
+    description: "实际路由到的能力（keyword 层=route-guard 输出映射；semantic 层=judge 判模型路由）"
+  routing_layer:
+    type: string
+    enum: [keyword, semantic]
+    description: "keyword=route-guard 确定性达（grader:code）；semantic=靠模型判断（grader:llm-judge）"
+  verdict:
+    type: string
+    enum: [pass, fail]
+    nullable: true
+    description: "semantic 层由 llm-judge 回填 pass/fail；keyword 层由 grader:code 确定"

@@ -489,7 +489,13 @@ Layered routing order:
    if the meaning fits, route; ② genuinely single-file / mechanical / one-off trivial edits take the
    trivial-task exemption, don't force a skill/flow (multi-file features / cross-stage / multi-feature
    requirements do NOT qualify). Resolve: high confidence → route directly; several plausible → ask one
-   question; substantial feature/code requirement → check the Plan Agent 5 conditions first.
+   question; substantial feature/code requirement → check the Plan Agent 5 conditions first. This one
+   reflex unifies all semantic special-case handoffs declared in this file — OD single-point handoff,
+   project self-judgment, sidebar sensing, luca-open file preview, HTML preview push. **Boundary (乙 —
+   NOT dispatch targets):** memory-retrieval timing, model-tier selection, checkpoint/compact, the
+   research-default gate, observability rules, Coding Discipline, and handoff/parity are standing
+   process disciplines — enforced by deterministic hooks or the orchestration layer, never "routed by
+   meaning"; do not force them through semantic dispatch.
 
 Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
 `design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`, `fx-icon-search`,
