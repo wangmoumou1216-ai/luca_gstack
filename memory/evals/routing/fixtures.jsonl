@@ -26,6 +26,9 @@
 {"id":"kw-observability-build","input":"新增监控看板：展示异常统计、延迟分布、报错列表、故障详情","expected":"PLAN_MODE","layer":"keyword","scene":"A","note":"B-F5：可观测域构建需求召回（诊断反担保 v2 改句式框架后不再整域压制）"}
 {"id":"kw-search-feature","input":"帮我加个搜索功能","expected":"direct","layer":"keyword","scene":"B","note":"web_access 裸'搜索'宽词修复锚：功能需求含'搜索'二字不得被误路由 web-access（2026-07-13 遗留修复）"}
 {"id":"kw-web-search","input":"帮我搜索一下 React 19 的新特性","expected":"web-access","layer":"keyword","scene":"B","note":"web_access 意图锚定形召回保留（搜索一下）"}
+{"id":"kw-audit-not-web","input":"你再审查一下，还有问题没有","expected":"direct","layer":"keyword","scene":"C","note":"'查一下'⊂'审查一下'子串复发修复锚（2026-07-13 用户消息实测误路由 web-access，纠正→fixture 管道首例）"}
+{"id":"kw-find-cause","input":"帮我找找原因","expected":"direct","layer":"keyword","scene":"B","note":"'找找'裸词无法锚定已删——找找原因/找找灵感都撞（实测），语义层兜底"}
+{"id":"kw-web-lookup","input":"帮我查一下 React 19 什么时候发布","expected":"web-access","layer":"keyword","scene":"B","note":"'帮我查一下'锚定形召回保留"}
 {"id":"kw-od-handoff","input":"把刚才那个方案交给 OD 出图","expected":"/open-design","layer":"keyword","scene":"A","note":"OD 交接含 OD 关键词→route-guard 确定性达 /open-design（特例本就关键词可达）"}
 {"id":"kw-od-2","input":"用 open design 基于这个 md 生成设计","expected":"/open-design","layer":"keyword","scene":"A","note":"open design 关键词命中"}
 {"id":"sem-sidebar","input":"看看我侧栏当前打开的那个页面","expected":"special:sidebar","layer":"semantic","scene":"B","note":"muse 专属：侧栏感知，语义识别非词表"}

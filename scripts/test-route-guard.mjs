@@ -593,6 +593,27 @@ const cases = [
       assert.equal(decision.skill, 'web-access');
     },
   },
+  {
+    // 2026-07-13 同日复发（信号②）：'查一下'⊂'审查一下'——用户消息"你再审查一下"实测被误路由
+    // web-access。≤3 字裸动词短语类修复的第二例（第一例'搜索'）。
+    name: 'web_access 复发修复: 审查一下/检查一下 不得误命中 web-access',
+    prompt: '你再审查一下，还有问题没有',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok(!(decision.candidates || []).includes('web-access'),
+        `审查一下不应命中 web-access: ${JSON.stringify(decision.candidates)}`);
+    },
+  },
+  {
+    // 锚定形召回保留：帮我查一下（真查询意图）仍确定性可达。
+    name: 'web_access 复发修复: 帮我查一下（真查询意图）仍命中 web-access',
+    prompt: '帮我查一下 React 19 什么时候发布',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL', `got ${decision.decision}`);
+      assert.equal(decision.skill, 'web-access');
+    },
+  },
 ];
 
 let passCount = 0;

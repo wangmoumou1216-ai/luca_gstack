@@ -45,6 +45,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
+# 刻意用文件相对 REPO_ROOT、不理 MEMORY_ROOT env（memory/scripts/* 其余脚本走 MEMORY_ROOT→权威
+# 记忆根）：routing fixture 必须配本仓的 route-guard/routing-map 评，跟着记忆根走会跨仓错评。
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROUTE_GUARD = REPO_ROOT / ".claude" / "hooks" / "route-guard.mjs"
 FIXTURES = REPO_ROOT / "memory" / "evals" / "routing" / "fixtures.jsonl"
