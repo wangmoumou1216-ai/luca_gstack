@@ -477,11 +477,13 @@ Layered routing order:
    trivial-task exemption, don't force a skill/flow (multi-file features / cross-stage / multi-feature
    requirements do NOT qualify). Resolve: high confidence → route directly; several plausible → ask one
    question; substantial feature/code requirement → check the Plan Agent 5 conditions first. This one
-   reflex unifies all semantic special-case handoffs declared in this file — OD single-point handoff and
-   project self-judgment. **Boundary (乙 — NOT dispatch targets):** memory-retrieval timing, model-tier
+   reflex unifies the semantic special-case handoffs declared in this file (currently: OD single-point
+   handoff, project self-judgment, sidebar sensing, etc.) and covers mapping to a skill / a flow / a
+   declared tool action. **Boundary (乙 — NOT dispatch targets):** memory-retrieval timing, model-tier
    selection, checkpoint/compact, the research-default gate, observability rules, Coding Discipline, and
    handoff/parity are standing process disciplines — enforced by deterministic hooks or the orchestration
-   layer, never "routed by meaning"; do not force them through semantic dispatch.
+   layer, never "routed by meaning"; do not force them through semantic dispatch (explicit user naming
+   of any item still executes it — the exclusion targets semantic recognition, not refusal).
 
 Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
 `design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`, `fx-icon-search`,

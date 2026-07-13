@@ -293,23 +293,32 @@ function complexityDecision(prompt) {
       name: '多功能需求',
       weight: 6,
       test: t => {
-        // 诊断/事故语境反担保（2026-07-13 fable review 实测）：'增加/上线'等动词出现在
-        // "为什么变慢/报错/延迟"类叙述里不是构建意图，误升 PLAN_MODE 是纯噪声。压制后落
-        // STOP，由语义路由契约兜底（该走调试类语义而非 Plan Agent）。
-        if (/为什么|怎么回事|变慢|报错|出错|异常|故障|延迟|排查|诊断|崩溃/.test(prompt)) return false;
+        // 摄入语境反担保（2026-07-13 fable review B-F4）：会议纪要/语料整理是 /idea 的地盘，
+        // 枚举功能点是其常态，不是构建请求。
+        if (/会议纪要|语音稿|讨论记录|原始语料|整理(这|一)段/.test(prompt)) return false;
+        // 汇报文语境（B-F3 部分缓解；门级贴文噪声仍是已知残留——所有复杂度信号共有）。
+        if (/周报|日报|评审报告/.test(prompt)) return false;
+        // 诊断/事故语境反担保 v2（B-F5：v1 裸名词'异常/故障/延迟'误伤可观测域构建需求——
+        // "新增监控看板：异常统计、延迟分布"被整域压制。改句式框架：名词仅在"出现了/发生了"
+        // 叙述框架内才算诊断语境；'排查/诊断'要求祈使形'一下'）。压制后落回 skillDecision
+        // （可能 STOP 或关键词命中），由语义路由契约兜底。
+        if (/为什么|怎么回事|变慢|都报错|报错了|出错|崩溃|失败了|排查一下|诊断一下|(出现|发生)了.{0,8}(延迟|异常|故障|问题)/.test(prompt)) return false;
         // build/add 意图：原新项目前缀词 ∪ 明确构建动词（刻意不含"支持"等宽词，避免劫持单功能编辑）
         if (!/新项目|新需求|新功能|想做一个|想做个|要做一个|要做个|新做一个|新做个|新建|新增|搭建|开发|实现|做一个|做个|加一个|加个|加上|构建|上线|集成|添加|增加/.test(prompt)) return false;
-        const caps = ['然后', '可以', '还能', '并且', '以及', '入口', '形式', '设置', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
+        // 连接词单列（B-F2：连接词混在 caps 里让 enum 路径被"然后"击穿——"加个红、黄、蓝，然后保存"
+        // 曾误升 PLAN_MODE）。连接词仍计入 capHits>=4 总门（保持既有行为），但不算"真功能词"。
+        const connectors = ['然后', '可以', '还能', '并且', '以及'];
+        const caps = [...connectors, '入口', '形式', '设置', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
           // UI/function nouns commonly enumerated in product reqs.
           '登录', '注册', '权限', '头像', '侧边栏', '按钮', '弹窗', '列表', '详情', '表单', '搜索', '筛选', '编辑', '创建', '导出', '导入',
           // 2026-07-12：补自然产品功能域名词，让"订单查询/库存管理/报表导出"等真需求可计分。
           '订单', '库存', '报表', '消息', '通知', '审批', '看板', '报销', '结算', '对账', '仪表盘', '工作流', '下单', '支付', '退款', '收藏', '标签', '角色', '菜单', '评论'];
         const capHits = caps.filter(c => t.includes(normalize(c))).length;
+        const featureHits = caps.filter(c => !connectors.includes(c) && t.includes(normalize(c))).length;
         // 顿号枚举数（在 raw prompt 上数 '、'，normalize 虽保留 '、' 但 raw 更稳）。>=2 ≈ >=3 项枚举。
         const enumCount = (prompt.match(/、/g) || []).length;
-        // capHits>=4：4+ 功能名词即复杂（不论长度）。enum 路径要求至少 1 个真功能词，
-        // 避免占位符枚举（"加个红、黄、蓝"）过报。
-        return capHits >= 4 || (enumCount >= 2 && capHits >= 1);
+        // capHits>=4：4+ 功能名词即复杂（不论长度）。enum 路径要求至少 1 个真功能词（连接词不算）。
+        return capHits >= 4 || (enumCount >= 2 && featureHits >= 1);
       },
     },
   ];
@@ -479,7 +488,11 @@ function buildDecision(prompt) {
     };
   }
 
-  if (complexity.decision === 'PLAN_MODE') return complexity;
+  // 2026-07-13 fable review B-F1：显式斜杠直呼 = 用户最新明确请求（规则优先级 #1），不被
+  // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
+  // 为 /auto 设计的较软 PLAN_CHECK 门。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
+  const directCall = /^\/[a-z][\w-]*/i.test(prompt);
+  if (!directCall && complexity.decision === 'PLAN_MODE') return complexity;
 
   const skillResult = skillDecision(prompt);
   if (
@@ -494,7 +507,7 @@ function buildDecision(prompt) {
     };
   }
 
-  return { ...skillResult, complexityScore: complexity.complexityScore, signals: complexity.signals, hasActiveProject: !!currentProject };
+  return { ...skillResult, complexityScore: complexity.complexityScore, signals: complexity.signals, hasActiveProject: !!currentProject, planHint: complexity.complexityScore >= 6 };
 }
 
 function decisionToHints(decision) {
@@ -525,7 +538,10 @@ function decisionToHints(decision) {
     }
     case 'SINGLE_SKILL': {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
-      return [`[route-guard] ✅ 高置信命中 → 建议调用${prefix}${decision.skill}`];
+      const base = `[route-guard] ✅ 高置信命中 → 建议调用${prefix}${decision.skill}`;
+      // 直呼+复杂内容（B-F1）：直呼已归还，复杂度以提醒附加，权威口径仍是 plan-agent.md。
+      if (!decision.planHint) return [base];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：直呼已尊重；执行前按 plan-agent.md 触发条件表自查，满足任一先出计划。`];
     }
     case 'MULTI_SKILL':
       return [
@@ -540,7 +556,7 @@ function decisionToHints(decision) {
           softCandidates.map((c, i) =>
             `  ${i + 1}. ${c.skill}（参考词：${c.tokens.join('、')}）`
           ).join('\n') +
-          '\n向用户展示候选列表，询问确认或请用户补充描述。'
+          '\n语义映射清晰可按 CLAUDE.md「语义路由契约」直接路由；否则展示候选请用户确认或补充。'
         : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
       // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
       // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。

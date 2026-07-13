@@ -13,7 +13,8 @@
       "Fable 手术刀",
       "correction-attribution",
       "侧栏当前页感知",
-      "skill-authoring.md"
+      "skill-authoring.md",
+      "语义路由契约"
     ],
     "scripts/luca-sidebar.sh": [
       "sidebar-spool",
@@ -69,6 +70,20 @@
       "Defining constraint",
       "primary source",
       "升降级链"
+    ],
+    ".claude/hooks/route-guard.mjs": [
+      "多功能需求",
+      "语义路由契约」路由"
+    ],
+    "memory/scripts/eval_routing.py": [
+      "keyword-layer",
+      "回归门不允许真空通过"
+    ],
+    "memory/evals/routing/fixtures.jsonl": [
+      "kw-multifeature-1"
+    ],
+    "scripts/verify.sh": [
+      "S20"
     ]
   }
 }

@@ -10,6 +10,9 @@ const baseEnv = {
   // G4-R6: 显式钉空——HEAVY set 现由 env 初始化，若开发者 shell/CI 恰好导出该变量会污染
   // 默认用例（假红/假绿）。注入用例通过 extraEnv 覆盖。
   ROUTE_GUARD_HEAVY_SKILLS: '',
+  // 2026-07-13 fable review A-F1 同款：route-guard 的 projectRoot 优先读 CLAUDE_PROJECT_DIR，
+  // session 锚在别的仓时会用错误仓的路由词表评本仓 golden（假红/假绿）。钉到本仓。
+  CLAUDE_PROJECT_DIR: process.cwd(),
 };
 
 function route(prompt, extraEnv = {}) {
@@ -510,6 +513,63 @@ const cases = [
       assert.notEqual(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
       assert.ok(!(decision.signals || []).includes('多功能需求'),
         `事故报告不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  // ─────────────────────────────────────────────────────────────────────────
+  // 2026-07-13 fable review 第二轮（冷上下文对抗审查 B 的实证发现）修复锚点。
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    // B-F1：显式斜杠直呼 = 用户最新明确请求，不被复杂度门替换——复杂度降级为 planHint 附加。
+    name: 'B-F1: 斜杠直呼+枚举不被 PLAN_MODE 劫持（直呼归还，planHint 附加）',
+    prompt: '/brainstorm 新增登录、权限、导出、通知功能的需求',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL', `got ${decision.decision}`);
+      assert.equal(decision.skill, '/brainstorm');
+      assert.equal(decision.planHint, true, 'planHint 应为 true（提醒仍在）');
+    },
+  },
+  {
+    // B-F1 fork 面：HEAVY 成员的斜杠直呼+复杂内容走 PLAN_CHECK（较软门），不被 PLAN_MODE 压过。
+    name: 'B-F1: HEAVY 成员直呼+枚举 → PLAN_CHECK（fork 设计恢复，不被 PLAN_MODE 吞）',
+    prompt: '/auto 新增订单、库存、报表管理',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示', ROUTE_GUARD_HEAVY_SKILLS: 'auto,muse-loop-orchestrate' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_CHECK', `got ${decision.decision}`);
+      assert.equal(decision.skill, '/auto');
+    },
+  },
+  {
+    // B-F2：连接词（然后/并且…）不算"真功能词"——占位符枚举+连接词曾击穿 enum 路径。
+    name: 'B-F2: 占位符枚举+连接词（红、黄、蓝然后保存）不得进 PLAN_MODE',
+    prompt: '帮我加个红、黄、蓝三个主题色，然后保存',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+      assert.ok(!(decision.signals || []).includes('多功能需求'),
+        `连接词不应凑成多功能需求: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // B-F4：会议纪要摄入语境是 /idea 的地盘（纪要天然枚举功能点，非构建请求）。
+    name: 'B-F4: 会议纪要+功能枚举 → /idea 不被多功能需求劫持',
+    prompt: '帮我把这段会议纪要整理成需求：大家讨论决定新增订单查询、库存管理、报表导出',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL', `got ${decision.decision}`);
+      assert.equal(decision.skill, '/idea');
+    },
+  },
+  {
+    // B-F5：诊断反担保 v2 改句式框架后，可观测域的构建需求（异常/延迟/报错作为功能名词）
+    // 不再被整域压制——召回恢复。
+    name: 'B-F5: 可观测域构建需求（监控看板：异常统计、延迟分布…）→ PLAN_MODE 召回恢复',
+    prompt: '新增监控看板：展示异常统计、延迟分布、报错列表、故障详情',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+      assert.ok((decision.signals || []).includes('多功能需求'),
+        `应含多功能需求: ${JSON.stringify(decision.signals)}`);
     },
   },
 ];

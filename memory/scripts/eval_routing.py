@@ -19,13 +19,21 @@ grader 选型（keyword=code / semantic=llm-judge）。不碰冻结的 GEPA（co
   python3 memory/scripts/eval_routing.py --report          # 全报告：keyword 命中率 + semantic-dependent 清单
   python3 memory/scripts/eval_routing.py --judge           # 导出 semantic-dependent judge 工作单
 
-fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON）：
+fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头为注释行，仅本脚本可读）：
   {"id","input","expected","layer","scene","note", 可选 "env":{...}}
     layer=keyword  → route-guard 关键词网应确定性到达 expected（算入 keyword 命中率）
     layer=semantic → route-guard 设计上 STOP/漏（无触发词），命中只能靠模型；本脚本挑出交 judge
-    expected 取值：具体 skill "/brainstorm" | 决策 "PLAN_MODE"/"PLAN_CHECK"/"project:switch"/"project:stop"
-                   | 语义特例 "special:od"/"special:sidebar"/"special:luca-open"/"special:html"
-                   | 平凡任务负样本 "direct"（期望 route-guard 不强路由，落 STOP/NONE，防过度路由）
+    expected 取值（2026-07-13 二轮审查后词表）：
+      具体 skill "/brainstorm"（含隐藏 skill 名如 "redteam"）
+      决策 "PLAN_MODE"/"PLAN_CHECK"/"project:switch"/"project:stop"
+      多候选 "MULTI:<按字母序逗号拼接>"（如 "MULTI:/tech-spec,systematic-debugging"）
+      流程 "flow:design-chain" 等 | 语义特例 "special:sidebar"/"special:luca-open"
+      平凡任务负样本 "direct"（期望 route-guard 不强路由，落 STOP/NONE，防过度路由）
+      歧义多选 "A|B"（任一即中；标签对抗审查确认存在同等合理路由时使用）
+    已删词条：special:od（僵尸——OD 交接本就关键词可达 → "/open-design"）；special:html
+    （HTML 预览推送是"产出即推"的执行途中反射、乙类过程纪律，无路由真值，不作 fixture）。
+judge 工作单不内嵌能力面——dispatch 判官时由 orchestrator 在 prompt 提供（真值 = CLAUDE.md
+skill 表 + 语义特例节 + 语义兜底段；fork 判官面必须含 /muse-loop-orchestrate，标签审查 #18 教训）。
 """
 
 import argparse
@@ -41,10 +49,10 @@ ROUTE_GUARD = REPO_ROOT / ".claude" / "hooks" / "route-guard.mjs"
 FIXTURES = REPO_ROOT / "memory" / "evals" / "routing" / "fixtures.jsonl"
 RESULTS_DIR = REPO_ROOT / "memory" / "evals" / "routing"
 
-# keyword 层命中率回归门阈值：低于此 --keyword-only 退 1。
-# 2026-07-13 fable review：0.85 容忍 2 个静默回归（实测 17/18 仍 PASS）→ 提到 0.95，
-# 当前 fixture 规模下任一 keyword 回归即红。特殊情况用 env 逃生阀。
-KEYWORD_HIT_THRESHOLD = float(os.environ.get("ROUTING_KEYWORD_THRESHOLD", "0.95"))
+# keyword 层回归门语义（2026-07-13 二轮 A-F3）：比例阈值在 N≥21 时静默失效（20/21=0.952≥0.95
+# 又能容忍单条回归，且无人提醒调阈值）。改为绝对计数 misses ≤ ALLOWED_MISSES（默认 0 =
+# 任一回归即红，与 N 无关）；env 是显式逃生阀。
+ALLOWED_MISSES = int(os.environ.get("ROUTING_ALLOWED_MISSES", "0"))
 
 
 def run_route_guard(prompt, env_extra=None):
@@ -58,14 +66,20 @@ def run_route_guard(prompt, env_extra=None):
         # shell/CI 恰好导出 ROUTE_GUARD_HEAVY_SKILLS 会把 SINGLE_SKILL 假翻 PLAN_CHECK
         # （kw-deepresearch 实测翻车）。显式钉空；fixture 自带 env 仍可覆盖。
         "ROUTE_GUARD_HEAVY_SKILLS": "",
+        # 二轮 A-F1（实测 8/19 假红）：route-guard 的 projectRoot 优先读 CLAUDE_PROJECT_DIR，
+        # session 锚在别的仓时会用错误仓的 skill-routing-map 评本仓 fixture。钉到本仓根。
+        "CLAUDE_PROJECT_DIR": str(REPO_ROOT),
     })
     if env_extra:
         env.update(env_extra)
-    out = subprocess.run(
-        ["node", str(ROUTE_GUARD)],
-        input=json.dumps({"prompt": prompt}),
-        capture_output=True, text=True, env=env, cwd=str(REPO_ROOT),
-    )
+    try:
+        out = subprocess.run(
+            ["node", str(ROUTE_GUARD)],
+            input=json.dumps({"prompt": prompt}),
+            capture_output=True, text=True, env=env, cwd=str(REPO_ROOT),
+        )
+    except FileNotFoundError:
+        return {"decision": "NODE_MISSING", "_stderr": "node 不在 PATH"}
     try:
         return json.loads(out.stdout)
     except Exception:
@@ -91,23 +105,31 @@ def routed_capability(decision):
 
 
 def keyword_correct(fixture, actual):
-    """keyword 层是否命中：确定性二元判定（grader:code）。"""
-    exp = fixture["expected"]
-    if exp == "direct":
-        # 平凡任务：route-guard 正确的行为是不强路由（落 STOP/NONE），交给模型按语义契约判分寸。
-        # 若 route-guard 把琐事关键词命中到某 skill/PLAN_MODE = 过度路由 = 错。
-        return actual in ("STOP", "NONE")
-    return actual == exp
+    """keyword 层是否命中：确定性二元判定（grader:code）。expected 支持 'A|B' 任一即中（歧义项）。"""
+    for exp in str(fixture["expected"]).split("|"):
+        if exp == "direct":
+            # 平凡任务：route-guard 正确的行为是不强路由（落 STOP/NONE），交给模型按语义契约判分寸。
+            # 若 route-guard 把琐事关键词命中到某 skill/PLAN_MODE = 过度路由 = 错。
+            if actual in ("STOP", "NONE"):
+                return True
+        elif actual == exp:
+            return True
+    return False
 
 
 def load_fixtures():
     if not FIXTURES.exists():
         return []
     rows = []
-    for line in FIXTURES.read_text(encoding="utf-8").splitlines():
+    # 二轮 A-F6：坏行报文件行号（json.loads 只报行内位置，永远 "line 1"，定位极差）。
+    for lineno, line in enumerate(FIXTURES.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
-        if line and not line.startswith("//"):
+        if not line or line.startswith("//"):
+            continue
+        try:
             rows.append(json.loads(line))
+        except json.JSONDecodeError as e:
+            raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行 JSON 非法: {e}")
     return rows
 
 
@@ -125,6 +147,8 @@ def evaluate(fixtures):
                 **fx,
                 "actual": actual,
                 "correct": keyword_correct(fx, actual),
+                # 二轮 A-F6：PARSE_ERR/NODE_MISSING 时把 stderr 带到 miss 行，别让用户猜。
+                "diag": decision.get("_stderr", "") if actual in ("PARSE_ERR", "NODE_MISSING") else "",
             })
     return keyword_results, semantic_pending
 
@@ -147,11 +171,13 @@ def cmd_keyword_only():
     rate = keyword_rate(kw)
     misses = [r for r in kw if not r["correct"]]
     print(f"[eval_routing] keyword-layer 命中率: {rate:.3f} "
-          f"({sum(1 for r in kw if r['correct'])}/{len(kw)})  阈值={KEYWORD_HIT_THRESHOLD}")
+          f"({sum(1 for r in kw if r['correct'])}/{len(kw)})  容忍回归数={ALLOWED_MISSES}")
     for m in misses:
-        print(f"  ✗ {m['id']}: expected={m['expected']} actual={m['actual']}  ⤷ {m['input']}")
-    if rate < KEYWORD_HIT_THRESHOLD:
-        print(f"[eval_routing] FAIL: keyword 命中率 {rate:.3f} < 阈值 {KEYWORD_HIT_THRESHOLD}")
+        diag = f"  [{m['diag']}]" if m.get("diag") else ""
+        print(f"  ✗ {m['id']}: expected={m['expected']} actual={m['actual']}{diag}  ⤷ {m['input']}")
+    if len(misses) > ALLOWED_MISSES:
+        print(f"[eval_routing] FAIL: {len(misses)} 条 keyword 回归 > 容忍数 {ALLOWED_MISSES}"
+              f"（重跑看明细: python3 memory/scripts/eval_routing.py --keyword-only）")
         return 1
     print("[eval_routing] PASS")
     return 0
@@ -183,18 +209,25 @@ def cmd_judge():
     out_path = RESULTS_DIR / f"judge-queue-{date.today()}.jsonl"
     with open(out_path, "w", encoding="utf-8") as f:
         for s in sem:
+            # 二轮 A-F4：补 scene/note（token 语义线索）+ actual_capability/reason 回填位
+            # （与 eval-schema routing_eval_fields 对齐）。能力面不内嵌——由 orchestrator
+            # dispatch 判官时在 prompt 提供（见文件头注；fork 面必须含 /muse-loop-orchestrate）。
             f.write(json.dumps({
                 "eval_kind": "routing",
                 "id": s["id"],
                 "input": s["input"],
+                "scene": s.get("scene", "unknown"),
+                "note": s.get("note", ""),
                 "expected_capability": s["expected"],
                 "routing_layer": "semantic",
                 "route_guard_actual": s["route_guard_actual"],
                 "judge_question": (
-                    f"给定框架能力面，用户请求「{s['input']}」按含义应路由到哪个能力？"
-                    f"（对照 expected={s['expected']}，判 pass/fail + 一句理由）"
+                    f"给定框架能力面（由 dispatch 方提供），用户请求「{s['input']}」按含义应路由到"
+                    f"哪个能力？（对照 expected={s['expected']}，判 pass/fail + 一句理由）"
                 ),
-                "verdict": None,  # 由 judge 填 pass/fail
+                "actual_capability": None,  # 由 judge 回填：它认为该路由到的能力
+                "verdict": None,            # 由 judge 回填 pass/fail
+                "reason": None,             # 由 judge 回填一句理由
             }, ensure_ascii=False) + "\n")
     print(f"[eval_routing] 已导出 {len(sem)} 条 judge 工作单 → {out_path}")
     print("下一步：由 orchestrator/主循环对每条起独立 llm-judge（冷启动隔离），回填 verdict，"
