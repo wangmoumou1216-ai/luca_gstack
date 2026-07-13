@@ -84,6 +84,11 @@
     ],
     "scripts/verify.sh": [
       "S20"
+    ],
+    ".claude/skill-os/routing-chain-check.md": [
+      "研究前置",
+      "OD-first",
+      "Ask 纪律"
     ]
   }
 }

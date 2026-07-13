@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 路由链路检查（routing-chain-check.md：dispatch 前三规则——R1 研究前置仅两裸奔点 brainstorm/
+  ux-brainstorm、R2 设计产出 OD-first 执行面、R3 端到端意图确认门 + Ask 纪律防双重打扰）——为什么：
+  用户指出单 skill 命中会坍缩链路意图；逐 skill 输入契约调查证实其余 skill 自带硬门禁，路由层只补
+  skill 管不到的 dispatch 前 junction；semantic fixture +5 度量（ask:/flow:od-design 形态）。
 - 语义路由契约（CLAUDE.md/AGENTS.md 通用反射：route-guard STOP/漏命中不豁免模型语义评估，甲类能力
   按含义路由 + 乙类过程纪律显式排除）+ 路由命中率度量基建（eval_routing.py keyword 层回归门进
   verify S20 / semantic 层 judge 工作单 / fixtures 按仓分叉）+ route-guard 多功能需求信号（已有项目
