@@ -489,7 +489,10 @@ Layered routing order:
    if the meaning fits, route; ② genuinely single-file / mechanical / one-off trivial edits take the
    trivial-task exemption, don't force a skill/flow (multi-file features / cross-stage / multi-feature
    requirements do NOT qualify). Resolve: high confidence → route directly; several plausible → ask one
-   question; substantial feature/code requirement → check the Plan Agent 5 conditions first. This one
+   question; substantial feature/code requirement → check the Plan Agent 5 conditions first; before
+   dispatch, run the chain-check (R1 research-first for the two bare spots brainstorm/ux-brainstorm /
+   R2 OD-first for design output / R3 end-to-end confirm — full text
+   `.claude/skill-os/routing-chain-check.md`). This one
    reflex unifies the semantic special-case handoffs declared in this file (currently: OD single-point
    handoff, project self-judgment, sidebar sensing, luca-open file preview, etc.) and covers mapping to
    a skill / a flow / a declared tool action. **Boundary (乙 — NOT dispatch targets):** memory-retrieval
