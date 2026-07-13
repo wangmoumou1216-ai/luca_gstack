@@ -25,6 +25,11 @@
 | L3 skill 层 | SKILL.md 指令/模板/门禁/示例缺陷，任何人重跑同 skill 都会犯 | 快车道：`python3 .claude/observability/scripts/write_observation.py --skill <s> --message "<用户原话>" --rule "<s>: <蒸馏规则>" --applies-to <s> --severity medium`（立即 active，下次同 skill Preamble 注入即验证）。规则小而明确且用户在场→可提议当场修 SKILL.md（响应式改进，豁免框架建设预算；遵守 skill-invariants.md 保护区，保护区内→只落 rule 并提请 luca）。reusable 拿不准→降级 `propose_semantic.py --domain skill-rule` 候选 |
 | L4 框架层 | 路由/编排协议/hook/记忆协议等结构缺陷，跨 skill 复现 | `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<规则>" --confidence high --stable --evidence "<本次纠正+复现推理>" --scope "<范围>" --reviewer luca`（进 digest「待你裁决」）；重大结构问题→额外**提议**写 framework-audit/proposals/（提议即止，不自动写 gaps-register.yaml / BACKLOG.md——那是人工裁决面） |
 
+**路由类纠正附加动作（2026-07-13，源 fable 审查 V3 循环性裁决）**：纠正对象是「路由去哪」
+（该命中的 skill/流程/能力没命中，或误命中）时，除上表治理写入外，**顺手把真实输入 + 正确
+expected 追加为 `memory/evals/routing/fixtures.jsonl` 一条 fixture**（keyword 可达标
+`layer=keyword`，否则 `semantic`）——现实出题是根治「fixture 由被测者手写」循环性的唯一来源。
+
 ## 处置默认（2026-07-11 luca 拍板：记录为主 + 条件当场修）
 
 L3/L4 默认只做治理写入（一条命令），项目继续跑不中断；仅当缺陷会立刻再坑本次项目的

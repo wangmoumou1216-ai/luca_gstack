@@ -114,7 +114,9 @@ builtin_skills:
     skill: web-access
     hint: "→ 建议使用内置 skill: web-access（联网搜索/网页抓取）"
     weight: 9
-    triggers: [搜索, 查一下, 找找, 上网, 联网, 网页, 抓取, 爬取, google, 搜一下, 查资料]
+    # 2026-07-13 fable review 遗留修复：裸'搜索'子串命中任何含该二字的句子（"加个搜索功能"
+    # 被误路由 web-access w9）。改意图锚定形；裸祈使"搜索X"落 STOP 由语义契约兜底。
+    triggers: [搜索一下, 帮我搜索, 网上搜, 查一下, 找找, 上网, 联网, 网页, 抓取, 爬取, google, 搜一下, 查资料]
 
   agent_browser:
     skill: agent-browser

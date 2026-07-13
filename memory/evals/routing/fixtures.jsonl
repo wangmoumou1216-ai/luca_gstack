@@ -14,7 +14,7 @@
 {"id":"kw-multifeature-1","input":"帮我加上订单查询、库存管理、报表导出三个功能","expected":"PLAN_MODE","layer":"keyword","scene":"B","note":"B 多功能需求门（caps>=4）"}
 {"id":"kw-multifeature-2","input":"在这个项目里加个登录、再加权限管理、还要支持数据导出和消息通知","expected":"PLAN_MODE","layer":"keyword","scene":"B","note":"多功能需求"}
 {"id":"kw-explicit-plan","input":"先做个计划再说","expected":"PLAN_MODE","layer":"keyword","scene":"D","note":"用户显式要求 plan"}
-{"id":"kw-project-switch","input":"切到 crm 项目继续做","expected":"project:switch","layer":"keyword","scene":"B","note":"命名即切换","env":{"ROUTE_GUARD_PROJECTS":"crm,demo","ROUTE_GUARD_CURRENT_PROJECT":"demo"}}
+{"id":"kw-project-switch","input":"切到 crm 项目继续做","expected":"project:switch:crm","layer":"keyword","scene":"B","note":"命名即切换（A-F9：精确校验切到 crm，防切错项目也 PASS）","env":{"ROUTE_GUARD_PROJECTS":"crm,demo","ROUTE_GUARD_CURRENT_PROJECT":"demo"}}
 {"id":"kw-od-handoff","input":"把刚才那个方案交给 OD 出图","expected":"/open-design","layer":"keyword","scene":"A","note":"OD 交接含 OD 关键词→route-guard 确定性达 /open-design（特例本就关键词可达）"}
 {"id":"kw-od-2","input":"用 open design 基于这个 md 生成设计","expected":"/open-design","layer":"keyword","scene":"A","note":"open design 关键词命中"}
 {"id":"kw-trivial-button","input":"帮我加个导出按钮","expected":"direct","layer":"keyword","scene":"B","note":"平凡任务：route-guard 不该强路由，落 STOP（防过度路由）"}
@@ -26,6 +26,8 @@
 {"id":"kw-connector-noise","input":"帮我加个红、黄、蓝三个主题色，然后保存","expected":"direct","layer":"keyword","scene":"B","note":"B-F2：连接词'然后'不算真功能词，占位符枚举不得过报"}
 {"id":"kw-idea-minutes","input":"帮我把这段会议纪要整理成需求：大家讨论决定新增订单查询、库存管理、报表导出","expected":"/idea","layer":"keyword","scene":"A","note":"B-F4：会议纪要摄入语境归 /idea，功能枚举是纪要常态非构建请求"}
 {"id":"kw-observability-build","input":"新增监控看板：展示异常统计、延迟分布、报错列表、故障详情","expected":"PLAN_MODE","layer":"keyword","scene":"A","note":"B-F5：可观测域构建需求召回（诊断反担保 v2 改句式框架后不再整域压制）"}
+{"id":"kw-search-feature","input":"帮我加个搜索功能","expected":"direct","layer":"keyword","scene":"B","note":"web_access 裸'搜索'宽词修复锚：功能需求含'搜索'二字不得被误路由 web-access（2026-07-13 遗留修复）"}
+{"id":"kw-web-search","input":"帮我搜索一下 React 19 的新特性","expected":"web-access","layer":"keyword","scene":"B","note":"web_access 意图锚定形召回保留（搜索一下）"}
 {"id":"sem-feature-login","input":"给这个项目加一个完整的用户登录注册体系","expected":"PLAN_MODE","layer":"semantic","scene":"A","note":"实质多文件特性，口语无枚举→route-guard STOP，靠语义过 Plan Agent 5 条件"}
 {"id":"sem-code-api","input":"给后端设计并实现一整套订单管理的接口","expected":"PLAN_MODE","layer":"semantic","scene":"D","note":"实质工程需求，口语→STOP，靠语义进工程链/Plan Agent"}
 {"id":"sem-flow-full","input":"帮我把这个需求从头到原型完整跑一遍","expected":"flow:design-chain|/auto","layer":"semantic","scene":"A","note":"标签官#18：母版语境两者同等合理（DEBATABLE 对），expected 多选任一即中；muse fork 版真值不同（/muse-loop-orchestrate 首选），fixture 按仓分叉"}
