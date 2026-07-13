@@ -41,8 +41,10 @@ ROUTE_GUARD = REPO_ROOT / ".claude" / "hooks" / "route-guard.mjs"
 FIXTURES = REPO_ROOT / "memory" / "evals" / "routing" / "fixtures.jsonl"
 RESULTS_DIR = REPO_ROOT / "memory" / "evals" / "routing"
 
-# keyword 层命中率回归门阈值：低于此 --keyword-only 退 1。初值保守，随 fixture 集稳定后上调。
-KEYWORD_HIT_THRESHOLD = float(os.environ.get("ROUTING_KEYWORD_THRESHOLD", "0.85"))
+# keyword 层命中率回归门阈值：低于此 --keyword-only 退 1。
+# 2026-07-13 fable review：0.85 容忍 2 个静默回归（实测 17/18 仍 PASS）→ 提到 0.95，
+# 当前 fixture 规模下任一 keyword 回归即红。特殊情况用 env 逃生阀。
+KEYWORD_HIT_THRESHOLD = float(os.environ.get("ROUTING_KEYWORD_THRESHOLD", "0.95"))
 
 
 def run_route_guard(prompt, env_extra=None):
@@ -52,6 +54,10 @@ def run_route_guard(prompt, env_extra=None):
         "ROUTE_GUARD_DRY_RUN": "1",
         "ROUTE_GUARD_CURRENT_PROJECT": "demo",
         "ROUTE_GUARD_PROJECTS": "demo",
+        # G4-R6 同款防污染（2026-07-13 fable review 实测）：HEAVY set 由 env 初始化，开发者
+        # shell/CI 恰好导出 ROUTE_GUARD_HEAVY_SKILLS 会把 SINGLE_SKILL 假翻 PLAN_CHECK
+        # （kw-deepresearch 实测翻车）。显式钉空；fixture 自带 env 仍可覆盖。
+        "ROUTE_GUARD_HEAVY_SKILLS": "",
     })
     if env_extra:
         env.update(env_extra)
@@ -132,6 +138,11 @@ def keyword_rate(keyword_results):
 
 def cmd_keyword_only():
     fixtures = load_fixtures()
+    # 2026-07-13 fable review：文件缺失/为空时 0/0 曾算 1.0 真空通过——输入消失还发绿的
+    # 回归门是坏门。显式变红。
+    if not fixtures:
+        print(f"[eval_routing] FAIL: fixtures 为空或缺失（{FIXTURES}）——回归门不允许真空通过")
+        return 1
     kw, _ = evaluate(fixtures)
     rate = keyword_rate(kw)
     misses = [r for r in kw if not r["correct"]]

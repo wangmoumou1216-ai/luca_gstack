@@ -490,6 +490,28 @@ const cases = [
         `无动词裸枚举不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
     },
   },
+  {
+    // 2026-07-13 fable review 反担保：诊断句里的'增加'是叙述不是构建意图——曾实测误升 PLAN_MODE。
+    name: 'B 反担保: 诊断句（为什么增加缓存后列表、详情、搜索变慢）不得进 PLAN_MODE',
+    prompt: '帮我看看为什么增加了缓存后列表、详情、搜索都变慢了',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+      assert.ok(!(decision.signals || []).includes('多功能需求'),
+        `诊断句不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // 同上：事故报告里的'上线之后'是时间状语不是构建意图。
+    name: 'B 反担保: 事故报告（上线之后订单、库存、报表都延迟）不得进 PLAN_MODE',
+    prompt: '上线之后订单、库存、报表都出现了延迟',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+      assert.ok(!(decision.signals || []).includes('多功能需求'),
+        `事故报告不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
+    },
+  },
 ];
 
 let passCount = 0;
