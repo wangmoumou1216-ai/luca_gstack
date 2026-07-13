@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 语义路由契约（CLAUDE.md/AGENTS.md 通用反射：route-guard STOP/漏命中不豁免模型语义评估，甲类能力
+  按含义路由 + 乙类过程纪律显式排除）+ 路由命中率度量基建（eval_routing.py keyword 层回归门进
+  verify S20 / semantic 层 judge 工作单 / fixtures 按仓分叉）+ route-guard 多功能需求信号（已有项目
+  多功能口语需求 → PLAN_MODE，直呼优先不劫持斜杠命令）——为什么：用户实测"项目里自然语言描述需求
+  经常不命中 skill/流程"，深度评估判定真问题是"甲类语义路由的统一与可度量"；经 fable 两轮对抗审查
+  （4 独立审查官 20+ 发现全部实证修复/登记）后落地，golden 52 例 + keyword fixture 24 例守护。
 - mattpocock/skills 对标（51 单元全量深评，评估链在 muse fork framework-audit/mattpocock-benchmark-2026-07/）
   首批落地：install codebase-design + resolving-merge-conflicts（routing 词条+FM-11 实测）、tdd 刷新
   391a2701、新建 .claude/skill-os/skill-authoring.md（写 skill 手艺 doctrine）、code-hygiene v1.1.0
