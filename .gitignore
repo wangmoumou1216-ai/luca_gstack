@@ -34,6 +34,9 @@ __pycache__/
 .cache/
 .pnpm-store/
 
+# Routing eval 运行产出（fixtures.jsonl 跟踪；judge 工作单是每次运行的临时产物，不跟踪）
+memory/evals/routing/judge-queue-*.jsonl
+
 # SQLite / Database
 *.db
 *.db-journal

@@ -90,6 +90,7 @@ check S6 "auto/SKILL.md 存在且含 FILE_END 标记"    "grep -q 'FILE_END' .cl
 # 真正的归一化行为覆盖在 S9（npm run test:routes 的 golden tests）。
 check S8 "work-agent-template 含 DONE_CRITERIA 守卫" "grep -q '前置守卫' .claude/agents/work-agent-template.md"
 check S9 "route golden tests 通过"                 "npm run test:routes --silent"
+check S20 "甲类路由命中率 keyword 层回归门"         "python3 memory/scripts/eval_routing.py --keyword-only"
 check S10 "routing map 覆盖 + skill 单一真相源一致性检查通过" "npm run check:routing-map --silent"
 check S19 "治理轨道登记面同步（REG-1/2/3）"        "npm run check:registration --silent"
 check S11 "project routing dry-run 通过"           "npm run check:project-routing --silent"
