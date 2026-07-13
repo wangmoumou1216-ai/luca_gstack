@@ -572,6 +572,27 @@ const cases = [
         `应含多功能需求: ${JSON.stringify(decision.signals)}`);
     },
   },
+  {
+    // 2026-07-13 web_access 裸'搜索'宽词修复：功能需求含'搜索'二字不再被误路由 web-access。
+    name: 'web_access 修复: 加个搜索功能 → 不再误命中 web-access（落 STOP）',
+    prompt: '帮我加个搜索功能',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP', `got ${decision.decision}`);
+      assert.ok(!(decision.candidates || []).includes('web-access'),
+        `搜索功能不应命中 web-access: ${JSON.stringify(decision.candidates)}`);
+    },
+  },
+  {
+    // 意图锚定形召回保留：真联网搜索意图仍确定性可达。
+    name: 'web_access 修复: 搜索一下（真检索意图）仍命中 web-access',
+    prompt: '帮我搜索一下 React 19 的新特性',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL', `got ${decision.decision}`);
+      assert.equal(decision.skill, 'web-access');
+    },
+  },
 ];
 
 let passCount = 0;
