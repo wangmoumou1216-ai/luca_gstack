@@ -89,6 +89,10 @@
       "研究前置",
       "OD-first",
       "Ask 纪律"
+    ],
+    ".claude/hooks/session-sync.mjs": [
+      "增量重拦",
+      "SESSION_SYNC_REARM"
     ]
   }
 }
