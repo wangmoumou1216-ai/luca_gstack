@@ -15,7 +15,7 @@ grader 选型（keyword=code / semantic=llm-judge）。不碰冻结的 GEPA（co
 
 用法：
   python3 memory/scripts/eval_routing.py --selftest       # 内置小样例自检（断言 keyword 计算正确）
-  python3 memory/scripts/eval_routing.py --keyword-only    # 只算 keyword 层命中率；< 阈值 exit 1（verify 门）
+  python3 memory/scripts/eval_routing.py --keyword-only    # 只算 keyword 层命中率；回归数>容忍值 exit 1（verify 门）
   python3 memory/scripts/eval_routing.py --report          # 全报告：keyword 命中率 + semantic-dependent 清单
   python3 memory/scripts/eval_routing.py --judge           # 导出 semantic-dependent judge 工作单
 
