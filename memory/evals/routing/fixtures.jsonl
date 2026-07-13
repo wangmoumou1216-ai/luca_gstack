@@ -18,6 +18,7 @@
 {"id":"kw-trivial-button","input":"帮我加个导出按钮","expected":"direct","layer":"keyword","scene":"B","note":"平凡任务：route-guard 不该强路由，落 STOP（防过度路由）"}
 {"id":"kw-trivial-bug","input":"修一下登录失败的 bug","expected":"direct","layer":"keyword","scene":"B","note":"平凡任务"}
 {"id":"kw-trivial-async","input":"把这个函数改成异步的","expected":"direct","layer":"keyword","scene":"B","note":"平凡任务"}
+{"id":"kw-diagnostic-noise","input":"上线之后订单、库存、报表都出现了延迟","expected":"direct","layer":"keyword","scene":"B","note":"事故报告反担保：'上线'是时间状语非构建意图，不得被多功能需求门推进 PLAN_MODE（2026-07-13 fable review；另一诊断句变体含'搜索'会撞 web_access 既有宽词，见 golden 反担保）"}
 {"id":"kw-od-handoff","input":"把刚才那个方案交给 OD 出图","expected":"/open-design","layer":"keyword","scene":"A","note":"OD 交接含 OD 关键词→route-guard 确定性达 /open-design（特例本就关键词可达）"}
 {"id":"kw-od-2","input":"用 open design 基于这个 md 生成设计","expected":"/open-design","layer":"keyword","scene":"A","note":"open design 关键词命中"}
 {"id":"sem-sidebar","input":"看看我侧栏当前打开的那个页面","expected":"special:sidebar","layer":"semantic","scene":"B","note":"muse 专属：侧栏感知，语义识别非词表"}

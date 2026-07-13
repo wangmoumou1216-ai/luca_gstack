@@ -293,6 +293,10 @@ function complexityDecision(prompt) {
       name: '多功能需求',
       weight: 6,
       test: t => {
+        // 诊断/事故语境反担保（2026-07-13 fable review 实测）：'增加/上线'等动词出现在
+        // "为什么变慢/报错/延迟"类叙述里不是构建意图，误升 PLAN_MODE 是纯噪声。压制后落
+        // STOP，由语义路由契约兜底（该走调试类语义而非 Plan Agent）。
+        if (/为什么|怎么回事|变慢|报错|出错|异常|故障|延迟|排查|诊断|崩溃/.test(prompt)) return false;
         // build/add 意图：原新项目前缀词 ∪ 明确构建动词（刻意不含"支持"等宽词，避免劫持单功能编辑）
         if (!/新项目|新需求|新功能|想做一个|想做个|要做一个|要做个|新做一个|新做个|新建|新增|搭建|开发|实现|做一个|做个|加一个|加个|加上|构建|上线|集成|添加|增加/.test(prompt)) return false;
         const caps = ['然后', '可以', '还能', '并且', '以及', '入口', '形式', '设置', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
@@ -537,7 +541,7 @@ function decisionToHints(decision) {
             `  ${i + 1}. ${c.skill}（参考词：${c.tokens.join('、')}）`
           ).join('\n') +
           '\n向用户展示候选列表，询问确认或请用户补充描述。'
-        : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n禁止在未询问的情况下自行判断并执行。';
+        : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
       // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
       // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
