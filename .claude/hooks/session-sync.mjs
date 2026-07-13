@@ -72,16 +72,20 @@ function writeCheckpointIfInProgress() {
 // 归属三分表在 CLAUDE.md「写入协议」（每 session 已在 context）。
 // 只动态注入两样真正只有 hook 知道的：激活项目落点、本 session 的 marker 文件名。
 // 改四信号速记必须同步 extraction-bar.md（HOOK-007 钉关键词）。
-function buildReason() {
+function buildReason(rearm = false, deltaEdit = 0, deltaTool = 0) {
   const projLine = project
     ? `【项目】当前激活项目「${project}」：项目级持久事实 → ~/Desktop/项目/${project}/.luca/memory/MEMORY.md；单次经历 → python3 memory/scripts/append_episode.py --project "${project}"；若本 session 实为框架/meta 工作（改 luca_gstack 自身），episodic 改用 --meta 防误标。`
     : `【项目】当前无激活项目：项目级经验暂记 append_episode.py（不带 --project），待项目激活后归位到其 .luca/memory/MEMORY.md。`;
   return [
-    `本 session 有实质工作但尚未沉淀经验。结束前就地完成一次「自成长提取」（仅一次，勿循环）：`,
+    rearm
+      ? `自上次提取裁决后，本 session 又新增大量实质工作（Δedit=${deltaEdit}, Δtool=${deltaTool}）。对【新增部分】再做一次「自成长提取」裁决（仅一次，勿循环）：`
+      : `本 session 有实质工作但尚未沉淀经验。结束前就地完成一次「自成长提取」（仅一次，勿循环）：`,
     `【门槛 · 默认不存】四强信号才提取：①用户明确纠正/对未来行为明确指示 ②同类问题复发 ③真实返工或不可逆险情 ④重获成本高且确定复用（定义与按层分级 → 读 .claude/skill-os/extraction-bar.md）。全不中（纯查询/闲聊/纯执行）→ 直接跳【解锁】。`,
     `【归属】过门槛的经验按 CLAUDE.md「写入协议」三分表落地：全局个人记忆（仅① feedback_<slug>.md+MEMORY.md 索引；②③④ candidate_feedback_<slug>.md 不进索引）/ 框架 semantic 候选（propose_semantic.py，红线 SC-20260523-003）/ 项目本地。单 session 通常 0–2 条，勿凑数。`,
     projLine,
-    `【解锁】完成后 touch ".claude/.episode-written-${sessionId}" 再正常结束。`,
+    rearm
+      ? `【解锁】计数基线已自动刷新（同一增量至多拦一次）——完成后直接正常结束即可。`
+      : `【解锁】完成后 touch ".claude/.episode-written-${sessionId}" 再正常结束。`,
   ].join('\n');
 }
 
@@ -108,10 +112,36 @@ try {
   // nodeStates(含 DONE)是跨 session 历史状态，同样不参与拦截（HOOK-002）。
   const substantive = (editCount >= 1) || (toolCount >= minTools);
 
-  // ---- 拦截：强制就地提取 ----
-  if (!killSwitch && !stopHookActive && !alreadyExtracted && substantive) {
+  // ---- 增量重拦（2026-07-13 M1，SC-20260713-001 落地）----
+  // marker 只免"已裁决过的工作量"：内容 = 上次裁决时的计数基线（首次 touch 创建为空 →
+  // 下一次 Stop 补写基线）。此后增量超阈值 → 再拦一次。防循环：拦截前由 hook 自己刷新
+  // 基线，同一增量至多拦一次（agent 忽略或只 touch 都不会二次拦）。SESSION_SYNC_REARM=0 关闭。
+  // 背景：马拉松 session 首次裁决后 marker 曾使后续实质工作零兜底（2026-07-13 实证）。
+  let rearm = false, deltaEdit = 0, deltaTool = 0;
+  if (alreadyExtracted && process.env.SESSION_SYNC_REARM !== '0') {
+    let base = null;
+    try {
+      const m = readFileSync(markerFile, 'utf8').trim().match(/^(\d+)\s+(\d+)$/);
+      if (m) base = { edit: parseInt(m[1], 10), tool: parseInt(m[2], 10) };
+    } catch { }
+    if (!base) {
+      try { writeFileSync(markerFile, `${editCount} ${toolCount}`); } catch { }
+    } else {
+      deltaEdit = editCount - base.edit;
+      deltaTool = toolCount - base.tool;
+      const rearmEdits = parseInt(process.env.SESSION_SYNC_REARM_EDITS || '10', 10);
+      const rearmTools = parseInt(process.env.SESSION_SYNC_REARM_TOOLS || '50', 10);
+      if (deltaEdit >= rearmEdits || deltaTool >= rearmTools) {
+        rearm = true;
+        try { writeFileSync(markerFile, `${editCount} ${toolCount}`); } catch { }
+      }
+    }
+  }
+
+  // ---- 拦截：强制就地提取（首次裁决 或 增量重拦）----
+  if (!killSwitch && !stopHookActive && ((!alreadyExtracted && substantive) || rearm)) {
     writeCheckpointIfInProgress();
-    process.stdout.write(JSON.stringify({ decision: 'block', reason: buildReason() }));
+    process.stdout.write(JSON.stringify({ decision: 'block', reason: buildReason(rearm, deltaEdit, deltaTool) }));
     process.exit(0);
   }
 

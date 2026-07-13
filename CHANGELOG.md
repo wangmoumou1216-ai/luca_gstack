@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Stop 提取增量重拦（session-sync：marker 记录裁决时计数基线，后续增量超阈值→再拦一次，拦前刷新
+  基线防循环，SESSION_SYNC_REARM=0 关断）——为什么：马拉松 session 首次裁决后 marker 曾使后续
+  实质工作零兑底（既不拦也不写 pending，实证靠用户点破），SC-20260713-001 经用户裁决落地。
 - 路由链路检查（routing-chain-check.md：dispatch 前三规则——R1 研究前置仅两裸奔点 brainstorm/
   ux-brainstorm、R2 设计产出 OD-first 执行面、R3 端到端意图确认门 + Ask 纪律防双重打扰）——为什么：
   用户指出单 skill 命中会坍缩链路意图；逐 skill 输入契约调查证实其余 skill 自带硬门禁，路由层只补
