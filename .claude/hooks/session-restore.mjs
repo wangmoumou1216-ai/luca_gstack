@@ -319,7 +319,7 @@ try {
       // scout 是 propose-only 的（workflow 无 fs，只 return 数据）：簿记落盘走确定性脚本
       // evolution-bookkeep.mjs（曾靠人手动追加 candidate-log 而漏做 → 跨月去重失效，故脚本化）；
       // digest 仍人工写，但首节三件套（采纳复盘/opportunities 裁决/addressed 复核）是强制项。
-      process.stdout.write(`[session-restore] ↳ 跑完落盘：① 把 Workflow 返回 JSON 存文件后跑 node scripts/evolution-bookkeep.mjs <json路径>（自动追加 candidate-log + 更新 yield_stats/streak，替代手工）；② 写 digests/${curMonth}-evolution.md，首节必含三件套：采纳复盘（返回值 adoption_review）+ 上期 opportunities 逐条裁决（prior_opportunities_to_adjudicate：开 gap/归档/观察）+ addressed 复核（addressed_recheck）。\n`);
+      process.stdout.write(`[session-restore] ↳ 跑完落盘：① 把 Workflow 返回 JSON 存文件后跑 node scripts/evolution-bookkeep.mjs <json路径>（自动追加 candidate-log + 更新 yield_stats/streak，替代手工）；② 写 digests/${curMonth}-evolution.md，首节必含三件套：采纳复盘（返回值 adoption_review）+ 上期 opportunities 逐条裁决（prior_opportunities_to_adjudicate：开 gap/对标深评(高信号 hub→BENCHMARK-RUNBOOK 模式2)/归档/观察）+ addressed 复核（addressed_recheck）。\n`);
     }
   }
 } catch { }
