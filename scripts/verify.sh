@@ -100,6 +100,7 @@ check S14 "quality gate 合同检查通过"             "npm run check:quality-g
 check S15 "coding discipline 合同检查通过"        "npm run check:coding-discipline --silent"
 check S16 "项目 docs/state symlink 一致"          "npm run check:project-links --silent"
 check S17 "双仓能力奇偶校验（capability parity）"  "node scripts/check-capability-parity.mjs"
+check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
 echo ""
 
 echo "[ CI/CD 基础设施 ]"
