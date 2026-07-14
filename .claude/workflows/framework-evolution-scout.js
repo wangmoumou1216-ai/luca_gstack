@@ -81,7 +81,7 @@ const LOADER_SCHEMA = {
     prior_opportunities: {
       type: 'array',
       items: { type: 'object', properties: { name: { type: 'string' }, repo: { type: 'string' }, note: { type: 'string' }, date: { type: 'string' } } },
-      description: 'opportunity entries from the MOST RECENT prior run in candidate-log — digest 必须逐条裁决（开 gap/归档/观察）',
+      description: 'opportunity entries from the MOST RECENT prior run in candidate-log — digest 必须逐条裁决（开 gap / 对标深评[高信号 hub→BENCHMARK-RUNBOOK 模式2] / 归档 / 观察）',
     },
     addressed_recheck: {
       type: 'array',
