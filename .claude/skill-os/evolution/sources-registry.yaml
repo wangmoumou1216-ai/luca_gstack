@@ -10,7 +10,10 @@
 # 2. 源也要过门禁（源选择门禁）：
 #    - authority_tier：official > curated > raw-search > frontier-noise；层越高信任越高、噪声预算越大。
 #    - 维度覆盖：每源必须 feeds 至少一个 gaps-register 的 open 缺口维度，否则下线（无孤儿源）。
-#    - yield 追踪剪枝：连续 N 轮零产出 → 降权/下线，且写进 digest 不静默（no silent caps）。
+#    - yield 追踪剪枝（N=3）：zero_yield_streak ≥ 3（连续 3 轮零录取，录取=approved+conditional）
+#      → 下期 digest 提议降权/下线（人裁，写进 digest 不静默 no silent caps）。
+#      yield_stats 由 scripts/evolution-bookkeep.mjs 机械更新（runs/surfaced/approved/zero_yield_streak），
+#      人勿手改数值；本文件其余字段（discovery/discrimination/status）仍人工拥有。
 #    - 近期热而非历史热：按 freshness_window_months 过滤 pushed_at/updated。
 #    - 抗灌水：排序信号(star/install)对 authority 降权；仓龄-star 异常仅标记不自动拒。
 #
@@ -23,7 +26,7 @@
 #   - 负信号检测：archived / 单提交 / link-farm / 教程仓伪装工具 / 星曲线异常
 
 version: 1
-updated: 2026-06-21
+updated: 2026-07-14
 review_after_days: 35
 
 sources:
@@ -49,7 +52,8 @@ sources:
       - 命中 open 缺口：映射到 gaps-register open GAP，否则不进门
       - 非冗余：与现有 office skill 不重，除非明显更优（数量以 self-model.generated.yaml 为准，不硬编码计数）
       - 内容实查：base64 解码读 SKILL.md 真身，验名实相符
-    yield_stats: { runs: 1, surfaced: 5, approved: 0 }   # 2026-06 首跑
+    # 2026-07-14 回填 2026-07 轮（digest 数据：S1 14→0）；streak 自下轮起由 bookkeep 脚本维护
+    yield_stats: { runs: 2, surfaced: 19, approved: 0, zero_yield_streak: 0 }
     status: active
 
   - id: S2-anthropic-platform
@@ -69,7 +73,8 @@ sources:
       - 新平台能力映射到哪个演进维度（新 hook 事件→hooks；plugins→skills 安装；subagent 新特性→orchestration；MCP→集成）
       - 判「补 open 缺口」vs「锦上添花」：前者纳入，后者记录待议
       - 跟进前仍过「是否触碰受保护不变量（framework/、P1-P7、品牌锁）」
-    yield_stats: { runs: 1, surfaced: 8, approved: 0 }   # 2026-06 首跑
+    # 2026-07-14 回填 2026-07 轮（digest 数据：S2 8→0）
+    yield_stats: { runs: 2, surfaced: 16, approved: 0, zero_yield_streak: 0 }
     status: active
 
   - id: S3-agent-frameworks
@@ -87,7 +92,8 @@ sources:
       - 搬入复杂度成本 vs 收益：抗「把重框架整体搬进来」
       - 能否「只取模式不取依赖」（纯 idea/小脚本 port，不引入整个 runtime）
       - 框架成熟度（release 节奏、生产采用）作 authority
-    yield_stats: { runs: 1, surfaced: 5, approved: 0 }   # 2026-06 首跑
+    # 2026-07-14 回填 2026-07 轮（digest 数据：S3 10→0）
+    yield_stats: { runs: 2, surfaced: 15, approved: 0, zero_yield_streak: 0 }
     status: active
 
   - id: S4-design-craft
@@ -104,7 +110,8 @@ sources:
       - 改善 CRM 设计交付的哪一环
       - 品牌冲突检测：带自有默认色/暗色/多品牌 → 必须品牌锁守卫(FM-7)，走 rules.yaml 注入+blockquote，绝不进 route-guard
       - 与 framework/ 母版兼容性
-    yield_stats: { runs: 1, surfaced: 3, approved: 0 }   # 2026-06 首跑
+    # 2026-07-14 回填 2026-07 轮（digest 数据：S4 8→0）
+    yield_stats: { runs: 2, surfaced: 11, approved: 0, zero_yield_streak: 0 }
     status: active
 
   - id: S5-frontier
@@ -118,5 +125,5 @@ sources:
     freshness_window_months: 6
     discrimination:
       - 仅 adapt-idea；封顶极少量；bar 最高；「有趣」≠「可落地」
-    yield_stats: { runs: 0, surfaced: 0, approved: 0 }
+    yield_stats: { runs: 0, surfaced: 0, approved: 0, zero_yield_streak: 0 }
     status: off                         # 用户暂不开，后续按需启用

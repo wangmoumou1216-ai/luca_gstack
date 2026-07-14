@@ -12,6 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 对标深评制度化为演进模式 2（BENCHMARK-RUNBOOK.md：目标取自 opportunities 池/高信号 hub，六步流程
+  复用 mattpocock 先例结构）+ scout 增 AdoptionReview phase（读 adoption-log 出 keep/watch/revert）
+  + digest 首节三件套强制（采纳复盘 / 上期 opportunities 逐条裁决 / addressed 满 90 天复核窗）——
+  为什么：深度评审实证 scout 主管线 APPROVED 转化率为 0、最高价值采纳全来自体系外对标（其 gap 是
+  对标反向创造的），且采纳复盘在首个到期周期即漏执行（adoption-log helped 全 unknown）。
+- 演进簿记确定性脚本 scripts/evolution-bookkeep.mjs（candidate-log 追加 + yield_stats/
+  zero_yield_streak 机械更新 + N=3 连续零录取剪枝告警；幂等守卫/--dry-run/--force，fixture 8 断言
+  实测）——为什么：propose-only 曾把安全簿记也推给人工（2026-07 漏追加 candidate-log 致跨月去重
+  失效）；红线精确化为「行为面零编辑，簿记走人触发脚本」。
+
+### Fixed
+- 演进 scout 五处机制缺陷（2026-07-14 评审加固轮）：硬门改 default-deny（schema enum PASS/FAIL +
+  非规范串一律 FAIL——原 ==='FAIL' 判定可被 "FAIL (…)"/"UNKNOWN" 静默绕过）；redteam agent 未返回
+  由默认 stands 改保守 downgraded（2026-07 实证红队是唯一砍掉全部幸存者的决定层，静默失败≠无异议）；
+  评分权重按 reuse_mode 分档（port-pattern/adapt-idea 免 adoption/maintenance 重罚——历史最高价值
+  采纳全是小仓借想法，原权重令其结构性够不到 APPROVED 线）；candidate-log 永久拉黑改分级
+  （REJECTED 183 天 TTL 后可重浮、opportunities 永不拉黑——原机制与 digest「可重新提案」承诺直接
+  矛盾）；external-skill-scout 非冗余硬门改读 self-model 活真值（硬编码清单已漂移，缺 code-hygiene/
+  quick-research/muse-* 等 2026-06 后新增能力）。演进面文件同步登记 capability-parity 锚点，
+  顺带治愈母版 gaps-register 缺 GAP-brownfield-design-entry 的既有漂移。
 - Stop 提取增量重拦（session-sync：marker 记录裁决时计数基线，后续增量超阈值→再拦一次，拦前刷新
   基线防循环，SESSION_SYNC_REARM=0 关断）——为什么：马拉松 session 首次裁决后 marker 曾使后续
   实质工作零兑底（既不拦也不写 pending，实证靠用户点破），SC-20260713-001 经用户裁决落地。
