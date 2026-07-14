@@ -421,6 +421,51 @@ function runRouteGuard(cwd, prompt) {
   console.log('PASS SETTINGS-001 PostToolUse matcher 覆盖 Agent+Task，不误匹配只读工具');
 }
 
+// ── SETTINGS-002：hooks 布线契约（S22 手法延伸，2026-07-14）——六 hook 挂对事件 + README §8 表
+//    与真实布线一致。背景：README 曾把 project-scope-guard 写成 PostToolUse、session-end 写成
+//    Stop（重定向必须在工具执行前，写错是语义级误导），手写表零机检漂移了未知时长。
+//    本块两仓逐字一致：fork 专属断言（HEAVY set 注入）以 muse-loop-orchestrate skill 目录存在与否条件化。
+{
+  const settings = JSON.parse(readFileSync(resolve(projectRoot, '.claude/settings.json'), 'utf8'));
+  const wiring = {
+    SessionStart: 'session-restore.mjs',
+    UserPromptSubmit: 'route-guard.mjs',
+    PreToolUse: 'project-scope-guard.mjs',
+    PostToolUse: 'post-edit.mjs',
+    Stop: 'session-sync.mjs',
+    SessionEnd: 'session-end.mjs',
+  };
+  for (const [event, script] of Object.entries(wiring)) {
+    const entries = settings.hooks[event];
+    assert.ok(entries && entries.length, `settings.json 必须有 ${event} hook`);
+    const cmds = entries.flatMap(e => e.hooks.map(h => h.command)).join('\n');
+    assert.ok(cmds.includes(script), `${event} 必须挂 ${script}，实际: ${cmds}`);
+  }
+  // PreToolUse matcher 必须覆盖读写与 Bash（重定向/deny 的作用面）
+  const preRe = new RegExp(settings.hooks.PreToolUse[0].matcher);
+  for (const t of ['Write', 'Edit', 'Read', 'Bash', 'Grep', 'Glob']) {
+    assert.ok(preRe.test(t), `PreToolUse matcher 必须匹配 ${t}`);
+  }
+  // fork（muse-loop-orchestrate 在场）必须经 env 注入 HEAVY set（PLAN_CHECK 双保险）；母版无此目录自动跳过
+  const upCmd = settings.hooks.UserPromptSubmit[0].hooks[0].command;
+  if (existsSync(resolve(projectRoot, '.claude/skills/office/muse-loop-orchestrate'))) {
+    assert.match(upCmd, /ROUTE_GUARD_HEAVY_SKILLS=\S*muse-loop-orchestrate/,
+      'muse fork 必须注入 muse-loop-orchestrate 进 ROUTE_GUARD_HEAVY_SKILLS');
+  }
+  // README §8 表的「时机」行不得与真实布线矛盾
+  const readme = readFileSync(resolve(projectRoot, 'README.md'), 'utf8');
+  for (const [row, script] of [
+    ['PreToolUse', 'project-scope-guard'],
+    ['PostToolUse', 'post-edit'],
+    ['Stop', 'session-sync'],
+    ['SessionEnd', 'session-end'],
+  ]) {
+    assert.ok(new RegExp(`\\|\\s*\\*\\*${row}\\*\\*\\s*\\|\\s*${script}`).test(readme),
+      `README §8 表 ${row} 行必须挂 ${script}（布线↔文档契约）`);
+  }
+  console.log('PASS SETTINGS-002 hooks 布线契约：六事件挂对脚本 + README §8 表一致');
+}
+
 // ── RULES-001：get_rules.py 真 YAML 解析后行为契约——正常输出格式 + 坏 YAML fail-open ──
 {
   const root = mkdtempSync(join(tmpdir(), 'luca-gstack-getrules-'));
@@ -821,6 +866,90 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   });
   assert.doesNotMatch(r.stdout, /可能落错项目|pin 的项目是/, 'A 下 post-edit 不再事后告警 pin≠docs（兜底前移到 PreToolUse）');
   console.log('PASS STICKY-010 post-edit 不再吐 pin≠docs 事后告警（A 下由重定向兜底）');
+}
+
+// ══════════════ Stop 链 pin-aware + 提醒盲区修复（方案A 补全，2026-07-14）══════════════
+
+// ── SYNC-PIN-001：pin=projA、软链=projB（并行切走形态）→ 归因/checkpoint/topic 全以 pin 为真值 ──
+{
+  const home = mkdtempSync(join(tmpdir(), 'luca-gstack-syncpin-'));
+  const root = join(home, 'gstack');
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  const projBdocs = join(home, 'Desktop', '项目', 'projB', 'docs');
+  mkdirSync(projBdocs, { recursive: true });
+  symlinkSync(projBdocs, join(root, 'docs'));
+  const projA = join(home, 'Desktop', '项目', 'projA');
+  mkdirSync(join(projA, '.luca'), { recursive: true });
+  mkdirSync(join(projA, 'docs'), { recursive: true });
+  writeFileSync(join(projA, '.luca', 'workflow-state.yaml'),
+    ['topic: "pin-topic"', 'nodes:', '  node-pin:', '    status: IN_PROGRESS', 'iteration: 1', ''].join('\n'));
+  writeFileSync(join(root, '.claude', '.session-project-sessPIN'), 'projA');
+  writeFileSync(join(root, '.claude', '.session-edit-count-sessPIN'), '1');
+  const r = runNode(sessionSyncHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, HOME: home },
+    input: JSON.stringify({ session_id: 'sessPIN' }),
+  });
+  const parsed = JSON.parse(r.stdout);
+  assert.match(parsed.reason, /项目\/projA\/\.luca\/memory/, '归因必须指向 pin 项目 projA');
+  assert.doesNotMatch(parsed.reason, /projB/, '归因不得指向软链项目 projB（P2 实证回归）');
+  const ckDir = join(projA, 'docs', 'handoff');
+  assert.ok(existsSync(ckDir) && readdirSync(ckDir).some(n => n.endsWith('-auto-checkpoint.md')),
+    'checkpoint 必须落 pin 项目 projA 的 docs/handoff');
+  const ckFile = readdirSync(ckDir).find(n => n.endsWith('-auto-checkpoint.md'));
+  assert.match(readFileSync(join(ckDir, ckFile), 'utf8'), /pin-topic/,
+    'topic 必须读自 pin 项目的 .luca/workflow-state.yaml（与落点同源）');
+  assert.ok(!existsSync(join(home, 'Desktop', '项目', 'projB', 'docs', 'handoff')),
+    '软链项目 projB 不得被写入');
+  console.log('PASS SYNC-PIN-001 Stop 链 pin 优先：归因/checkpoint/topic 与 pin 同源，projB 零写入');
+}
+
+// ── SYNC-PIN-002：失效 pin（项目目录已删）→ 回退软链，不复活幽灵目录 ──
+{
+  const home = mkdtempSync(join(tmpdir(), 'luca-gstack-syncgh-'));
+  const root = join(home, 'gstack');
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  const projBdocs = join(home, 'Desktop', '项目', 'projB', 'docs');
+  mkdirSync(projBdocs, { recursive: true });
+  symlinkSync(projBdocs, join(root, 'docs'));
+  writeFileSync(join(root, '.claude', '.session-project-sessGH'), 'ghost'); // 指向不存在的项目
+  writeFileSync(join(root, '.claude', '.session-edit-count-sessGH'), '1');
+  const r = runNode(sessionSyncHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, HOME: home },
+    input: JSON.stringify({ session_id: 'sessGH' }),
+  });
+  assert.match(JSON.parse(r.stdout).reason, /projB/, '失效 pin 应回退软链项目 projB');
+  assert.ok(!existsSync(join(home, 'Desktop', '项目', 'ghost')), '不得为失效 pin 创建幽灵项目目录');
+  console.log('PASS SYNC-PIN-002 失效 pin 回退软链，不复活幽灵目录');
+}
+
+// ── SYNC-MEM-001：MEMORY_ROOT 重定向时脏记忆提醒必须查该仓（P3 实证回归：fork 写脏母版无人提醒）──
+{
+  const root = makeFixture({}); // trivial → release 路径（提醒只在放行侧发）
+  const memRoot = mkdtempSync(join(tmpdir(), 'luca-gstack-memdirty-'));
+  mkdirSync(join(memRoot, 'memory', 'episodic'), { recursive: true });
+  spawnSync('git', ['init', '-q'], { cwd: memRoot, encoding: 'utf8' });
+  writeFileSync(join(memRoot, 'memory', 'episodic', 'index.jsonl'), '{}'); // untracked = 脏
+  const r = runNode(sessionSyncHook, root, { env: { CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: memRoot } });
+  assert.match(r.stderr, /MEMORY_ROOT 仓（.*）有未提交的记忆/, 'MEMORY_ROOT 仓脏时提醒必须响且点名该仓');
+  const rClean = runNode(sessionSyncHook, makeFixture({}));
+  assert.doesNotMatch(rClean.stderr, /🔔/, '非 git/干净环境不得误响（fail-open）');
+  console.log('PASS SYNC-MEM-001 MEMORY_ROOT 仓脏 → 提醒点名该仓（split-brain 提醒盲区修复）');
+}
+
+// ── STICKY-011（P5 修复回归 2026-07-14）：affirmsCur 词边界匹配——裸子串不再误绑 pin ──
+{
+  const root = makeFixture({ activeProject: 'muse' });
+  const fire = (prompt) => runNode(routeGuardHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'muse', ROUTE_GUARD_CURRENT_PROJECT: 'muse' },
+    input: JSON.stringify({ session_id: 'sess-SUB', prompt }),
+  });
+  fire('我在读amusement相关的代码');
+  assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-SUB')),
+    '子串（amusement ⊃ muse）不得绑 pin（P5 实证回归）');
+  fire('继续 muse 的任务');
+  assert.equal(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8').trim(), 'muse',
+    '真点名（词边界成立）仍须正常绑 pin');
+  console.log('PASS STICKY-011 pin 绑定词边界：amusement 不误绑，点名 muse 正常绑');
 }
 
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

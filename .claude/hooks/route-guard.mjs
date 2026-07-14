@@ -20,6 +20,29 @@ function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
 }
 
+// 项目名词边界匹配（2026-07-14 P5 修复）：projectGate 具名匹配与 pin 层 affirmsCur 共用同一套
+// 严谨度——此前 affirmsCur 用裸 includes()，"amusement" 会误绑 pin=muse（实证）。参数为已
+// normalize 的文本；边界规则与原 projectGate 逐字一致（长名只查后界 latin 延续，短名 ≤2 双侧严查）。
+function nameMatchesIn(text, name) {
+  const normalizedName = normalize(name);
+  const idx = text.indexOf(normalizedName);
+  if (idx === -1) return false;
+  const charAfter = text[idx + normalizedName.length];
+  // Only English identifier-continuation chars count as "not a boundary".
+  // CJK chars after the name (e.g. "luca-dev 的任务") ARE a boundary, so
+  // common follow-up particles do not break the match.
+  const afterOk = charAfter === undefined || !/[a-z0-9_-]/i.test(charAfter);
+  // Short names (≤2 chars) keep the stricter CJK-also-extends check on both
+  // sides to avoid false positives like 名"AI"误中"AIxxx".
+  if (normalizedName.length <= 2) {
+    const charBefore = idx > 0 ? text[idx - 1] : undefined;
+    const beforeOk = charBefore === undefined || !/[一-鿿a-z0-9]/i.test(charBefore);
+    const strictAfterOk = charAfter === undefined || !/[一-鿿a-z0-9]/i.test(charAfter);
+    return strictAfterOk && beforeOk;
+  }
+  return afterOk;
+}
+
 // 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
 // per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
 let hookSessionId = '';
@@ -163,25 +186,7 @@ function projectGate(prompt, projects, currentProject) {
   let searchText = text;
   for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
 
-  const named = projects.find(name => {
-    const normalizedName = normalize(name);
-    const idx = searchText.indexOf(normalizedName);
-    if (idx === -1) return false;
-    const charAfter = searchText[idx + normalizedName.length];
-    // Only English identifier-continuation chars count as "not a boundary".
-    // CJK chars after the name (e.g. "luca-dev 的任务") ARE a boundary, so
-    // common follow-up particles do not break the match.
-    const afterOk = charAfter === undefined || !/[a-z0-9_-]/i.test(charAfter);
-    // Short names (≤2 chars) keep the stricter CJK-also-extends check on both
-    // sides to avoid false positives like 名"AI"误中"AIxxx".
-    if (normalizedName.length <= 2) {
-      const charBefore = idx > 0 ? searchText[idx - 1] : undefined;
-      const beforeOk = charBefore === undefined || !/[一-鿿a-z0-9]/i.test(charBefore);
-      const strictAfterOk = charAfter === undefined || !/[一-鿿a-z0-9]/i.test(charAfter);
-      return strictAfterOk && beforeOk;
-    }
-    return afterOk;
-  });
+  const named = projects.find(name => nameMatchesIn(searchText, name));
 
   // Audit C2: meta/audit/help questions are framework-level, not project work.
   // Skip Project Gate so they route via the normal skill/STOP path instead of
@@ -711,7 +716,8 @@ if (!dryRun && prompt) {
         // project-scope-guard deny 并提示先 switch/new，绝不静默落错项目。
         const projects = listProjects();
         const cur = readCurrentProject(projects);
-        const affirmsCur = cur && normalize(prompt).includes(normalize(cur));
+        // 词边界匹配（P5，2026-07-14）：与 projectGate 具名匹配同源，裸子串不再误绑（amusement⊅muse）。
+        const affirmsCur = cur && nameMatchesIn(normalize(prompt), cur);
         if (affirmsCur) {
           try { writeFileSync(pinFile, cur); } catch {}
           try { unlinkSync(inheritFile); } catch {}

@@ -102,7 +102,27 @@
     ],
     ".claude/hooks/route-guard.mjs": [
       "多功能需求",
-      "语义路由契约」路由"
+      "语义路由契约」路由",
+      "命名即切换",
+      "nameMatchesIn"
+    ],
+    ".claude/hooks/project-scope-guard.mjs": [
+      "会话级项目隔离",
+      "updatedInput",
+      "已知误伤"
+    ],
+    ".claude/hooks/post-edit.mjs": [
+      "活动信号",
+      "并发隔离"
+    ],
+    ".claude/hooks/session-end.mjs": [
+      ".session-project-",
+      "fail-open"
+    ],
+    "scripts/test-hooks.mjs": [
+      "SETTINGS-002",
+      "STICKY-008c",
+      "SYNC-PIN-001"
     ],
     "memory/scripts/eval_routing.py": [
       "keyword-layer",
@@ -128,7 +148,9 @@
     ],
     ".claude/hooks/session-sync.mjs": [
       "增量重拦",
-      "SESSION_SYNC_REARM"
+      "SESSION_SYNC_REARM",
+      "pin 优先",
+      "MEMORY_ROOT 仓"
     ],
     ".claude/workflows/framework-evolution-scout.js": [
       "default-deny",
