@@ -48,7 +48,8 @@ blockers:    <Work Agent 完成报告中的 blockers（如有）>
 
 ```
 Step 1  检查 Work Agent 完成报告
-        - status == BLOCKED → 直接返回 FAIL，列出 blockers，不执行断言
+        - status == BLOCKED / NEEDS_CONTEXT → 直接返回 FAIL，列出 blockers，不执行断言
+          （NEEDS_CONTEXT 由 Orchestrator 按 plan-agent.md §4 Escalation Format 上报用户）
         - status == DONE → 继续
 
 Step 2  验证 outputs_produced 中的每个文件是否实际存在
@@ -113,7 +114,7 @@ Handoff 标题允许以下项目内常用变体：
 - 决策：`## 核心决策`、`## 决策`、`## 关键决策`
 - 约束：`## 下游约束`、`## 核心约束`、`## 执行约束`、`## 约束`
 
-#### 前端产出检查（html-prototype, figma-demo）
+#### 前端产出检查（html-prototype, open-design, figma-demo）
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
@@ -134,9 +135,10 @@ Handoff 标题允许以下项目内常用变体：
 |------|---------|---------|
 | **AI Native** | 是否显式处理了 AI 专有状态 | 搜索 "streaming/partial/error/empty/loading/skeleton" 关键词 |
 
-#### Brief 合规检查（html-prototype, figma-demo —— 参考 Ruflo ADR Compliance）
+#### Brief 合规检查（html-prototype, open-design, figma-demo —— 参考 Ruflo ADR Compliance）
 
-**触发条件：** 当前 skill 是 html-prototype 或 figma-demo，且上游有 design-brief 的 handoff summary。
+**触发条件：** 当前 skill 是 html-prototype、open-design 或 figma-demo，且上游有 design-brief 的 handoff summary。
+（open-design 2026-07-14 补入——OD 拉回的 HTML 是设计产出主产物，此前恰好绕过品牌合规与 Brief 合规两组检查。）
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
@@ -194,8 +196,8 @@ cat .claude/workflow-state.yaml
 
 # 5. 如果是前端产出 → 额外检查品牌色和配色体系
 #    判定标准来自 §2.1：品牌色 ≤3 处可见使用；无 --fx-* 变量
-brand_count=$(grep -ci "#ff8000\|hsl(30" "$output_path")
-fx_count=$(grep -c "\-\-fx-" "$output_path")
+brand_count=$(grep -oi "#ff8000\|hsl(30" "$output_path" | wc -l | tr -d ' ')   # -o 数出现次数；-c 数行会低估同行多次
+fx_count=$(grep -o "\-\-fx-" "$output_path" | wc -l | tr -d ' ')
 [ "$brand_count" -le 3 ] && echo "PASS 品牌色: ${brand_count}/3" || echo "FAIL 品牌色超限: ${brand_count} 处（阈值 ≤3）"
 [ "$fx_count" -eq 0 ] && echo "PASS 无 --fx-* 变量" || echo "FAIL 发现 --fx-* 变量: ${fx_count} 处"
 

@@ -21,7 +21,8 @@
 #    Claude 原生逻辑优先，不得与原生机制抢控制权。
 #
 # 【双仓注记】muse fork 的同名文件另含 fork 专属条目（muse-loop-orchestrate/
-# muse-req-triage/muse-proto-gen/code-recon/muse-proto-judge）；本文件是母版视图。
+# muse-req-triage/muse-proto-gen/muse-proto-judge）；本文件是母版视图。
+# （code-recon 曾被误记为 fork 专属——它是双仓能力，2026-07-14 S22 抓到漂移后落齐母版。）
 
 version: 2
 updated: 2026-07-10
@@ -62,7 +63,7 @@ tiers:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
     skills: [idea, ux-research, ux-audit, figma-demo, challenge, taste-review,
-             design-review, compare, magicpath]
+             design-review, code-recon, compare, magicpath]
 
   mechanical:
     resolves_to: haiku

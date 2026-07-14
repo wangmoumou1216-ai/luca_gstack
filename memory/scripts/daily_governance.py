@@ -475,6 +475,37 @@ def main() -> int:
     else:
         lines += ["_无_", ""]
 
+    # 编排层 eval 消费（2026-07-14 编排体系评审）：record_eval.py 落的 eval-log 此前零消费——
+    # 又一个"写而不读的台账"。此节只随 digest 顺带呈现（fail-open，不参与 has_change 判定、
+    # 不改 digest 写入门槛；7 天强制心跳保证至少每周被读一次）。
+    try:
+        eval_log = ROOT / "memory" / "evals" / "eval-log.jsonl"
+        if eval_log.is_file():
+            cutoff = (datetime.strptime(today, "%Y-%m-%d") - timedelta(days=30)).strftime("%Y-%m-%d")
+            counts, recent_fails = {}, []
+            for ln in eval_log.read_text(encoding="utf-8").splitlines():
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    ev = json.loads(ln)
+                except Exception:
+                    continue
+                if str(ev.get("session_date", "")) < cutoff:
+                    continue
+                st = str(ev.get("quality_gate_status", "?"))
+                counts[st] = counts.get(st, 0) + 1
+                if st != "PASS":
+                    recent_fails.append(f"{ev.get('session_date')} {ev.get('skill_name')}（{st}）")
+            if counts:
+                total = sum(counts.values())
+                parts = " / ".join(f"{k} {v}" for k, v in sorted(counts.items()))
+                lines += [f"## 🧪 Skill 评估消费（近30天 {total} 条）", "", f"- {parts}"]
+                lines += [f"- 非 PASS：{f}" for f in recent_fails[:5]]
+                lines.append("")
+    except Exception:
+        pass  # fail-open：eval 消费失败不打断治理
+
     lines += [f"## 📥 归档", "", f"- 已审候选归档：{len(archived)}", f"- noisy episode 归档：{len(archived_noisy)}", ""]
 
     # A2 loop 健康自检（fail-open）：只在已决定写 digest 的路径上跑，且只在有异常时追加小节——

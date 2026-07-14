@@ -1,15 +1,9 @@
----
-name: orchestrator
-description: |
-  Multi-step task execution coordinator — the main agent's execution behavior mode.
-  Two modes: Free Task Mode (executes Plan Agent's plan) + Skill Workflow Mode (executes design skill graph).
-  NOT a subagent dispatcher. Skills and work agents manage their own internal subagents.
-  This agent is used as the main session behavior mode when running any multi-step task.
----
-
-# Orchestrator — 多步任务执行协调器 v4.0
+# Orchestrator — 多步任务执行协调器 v4.1
 
 **定位：** 主 Agent 进入"多步执行模式"时的行为规范。
+**本文件是行为模式文档，不注册为 subagent**（无 frontmatter 是有意的——2026-07-14 双重身份修复：
+此前 frontmatter 使其可被 `subagent_type: orchestrator` spawn，与"NOT a subagent dispatcher、
+主 session 行为模式"的自我定义矛盾；行为语义不变，只撤销误导性注册面）。
 **两种运行模式：**
 - **Free Task Mode** — 执行任何复杂任务（以 Plan Agent 的计划为输入）
 - **Skill Workflow Mode** — 执行设计工作流（以 skill 图谱为输入）
@@ -40,7 +34,7 @@ workflow-state.yaml → skill 图谱 → Orchestrator Skill Workflow Mode → ha
 | 情况 | 处理方式 |
 |------|---------|
 | 单文件编辑 / 问答 | Solo Mode，主 Agent 直接执行 |
-| 2-3 文件无依赖可并行 | Parallel Fan-out，主 Agent 同一消息并发调用，不进入 Orchestrator |
+| 2 文件无依赖可并行 | Parallel Fan-out，主 Agent 同一消息并发调用，不进入 Orchestrator（≥3 文件即命中 Plan Agent 触发条件 1） |
 | 用户直接调用单个 skill | Standalone 模式，skill 自行运行，不走 Orchestrator |
 
 > **冲突解决规则：** 若 workflow-state 有 PENDING 节点且用户同时点名某个 skill：优先执行该 standalone skill，完成后询问用户是否恢复 workflow。不自动进入 Orchestrator。
@@ -108,6 +102,8 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
           PASS → 标记该 Phase 完成，继续下一个 Phase
           FAIL(BLOCKING) → 停止，展示 findings，等用户决策（修复/跳过/终止）
                           如状态为 BLOCKED/NEEDS_CONTEXT，按 plan-agent.md §4 Escalation Format 输出
+                          同一 Phase 连续 2 次 FAIL(BLOCKING)、或修复涉及计划变更 →
+                          走 plan-agent.md「增量重规划」协议（delta 重规划，不推倒全案）
           FAIL(WARNING) → 记录 findings，继续执行
           CONDITIONAL_PASS → 记录 findings 到当前 Phase 日志，继续执行（与 Skill Workflow Mode 处理方式一致）
 
@@ -225,6 +221,9 @@ Step 7  记录 eval（每个 skill 各记一条）
 | `magicpath` | `.claude/skills/office/magicpath/SKILL.md` |
 | `task-plan` | `.claude/skills/office/task-plan/SKILL.md` |
 | `tech-spec` | `.claude/skills/office/tech-spec/SKILL.md` |
+| `ux-audit` | `.claude/skills/office/ux-audit/SKILL.md` |
+| `quick-research` | `.claude/skills/office/quick-research/SKILL.md` |
+| `code-recon` | `.claude/skills/office/code-recon/SKILL.md` |
 
 注入格式：`- <路径> — <何时调用该 skill>`（每个 skill 一行）。未指定时填"无"。
 
@@ -323,7 +322,8 @@ WHILE 有 PENDING 节点:
         - 更新 workflow-state.yaml → status: DONE
         - 调度 @quality-gate subagent 验证产出
         - quality-gate PASS → 观察提取（同 2c-obs 三条检查）→ 继续
-        - quality-gate FAIL → 询问用户
+        - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS 再询问用户
+          （修复 / 跳过=DONE_WITH_CONCERNS / 终止）——不留"DONE 但 gate FAIL"的矛盾态
 
   3.4e  human-in-the-loop 检查点（以下 skill 完成后必须等确认）：
         brainstorm / ux-brainstorm / design-brief / html-prototype

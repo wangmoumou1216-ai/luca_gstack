@@ -187,6 +187,17 @@ skills:
     quality_gates: ["verification_iron_law", "high_confidence_apply_only", "luca_guards_preserved", "clean_tree_for_apply"]
     notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子。代码审查复用 quality-gate/redteam。"
 
+  code-recon:
+    modes:
+      standalone:
+        required: ["target_codebase_path"]
+        optional: ["design_intent", "scope_paths"]
+      workflow:
+        required: []
+        optional: ["design_intent", "scope_paths"]
+    quality_gates: ["size_probe_decision", "parallel_recon", "verified_vs_inferred_audit", "architecture_brief_written", "native_first_no_forced_mcp"]
+    notes: "Brownfield 正门（非设计 skill）：现有代码 → 架构 brief → 作 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入。native-first；codegraph MCP 仅规模阈值命中≥2 时提示、装下游不进 gstack。只读 recon 不改代码。"
+
 governance_tools:
   compare:
     modes:
