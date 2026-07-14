@@ -189,14 +189,16 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 
 ### 8. Session 生命周期 hooks
 
-四个生命周期节点各有 hook 编织，你几乎无感但状态从不丢：
+六个生命周期事件各有 hook 编织，你几乎无感但状态从不丢：
 
 | 时机 | hook | 做什么 |
 |------|------|--------|
 | **SessionStart** | session-restore | 加载记忆摘要、恢复流程状态、显示 PROGRESS、清理悬空软链 |
 | **UserPromptSubmit** | route-guard | 打分路由 + 项目门禁 + 轮数追踪提醒 |
-| **PostToolUse** | post-edit / project-scope-guard | 编辑后校验、读写重定向到 pin 项目 |
-| **Stop** | session-sync / session-end | 拦截未沉淀的实质工作、就地裁决记忆、提示同步 |
+| **PreToolUse** | project-scope-guard | 工具执行**前**把 docs/state 读写重定向到本 session 的 pin 项目；未绑定写 docs/ 直接拦 |
+| **PostToolUse** | post-edit | 累计活动信号（edit/tool 计数，供 Stop 判"实质工作"）+ framework/ 只读警告 |
+| **Stop** | session-sync | 拦截未沉淀的实质工作、就地裁决记忆、写 checkpoint、提示同步 |
+| **SessionEnd** | session-end | 会话真正结束时清理本 session 的计数/pin 残留（僵尸窗口归零） |
 
 ### 9. 框架自进化（propose-only）
 

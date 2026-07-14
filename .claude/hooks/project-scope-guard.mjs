@@ -22,6 +22,9 @@
 // （行首/空白/引号/重定向符 后紧跟 docs/），覆盖 mkdir -p docs/…、cat > docs/…、"docs/…" 等常见形态；
 // 文件类工具（Write/Edit/Read/…）的 file_path 重写是**精确**的。含空格的项目名在无引号 Bash 场景下
 // 可能不完美（罕见，kebab 命名不受影响）。
+// 已知误伤（2026-07-14 实证，接受的权衡）：docs/ 作为**字符串字面量**（grep 模式/echo 文本/JSON
+// payload）同样命中 anchor——未绑定被 deny、绑定被静默改写。anchor 无法区分"模式"与"路径"，收窄
+// anchor 会漏真路径（安全侧优先）；处置=deny 文案给出改写指引，不改重写逻辑。
 //
 // Claude Code PreToolUse 契约（已核）：stdin JSON = { session_id, tool_name, tool_input }；
 //  重定向：stdout 打印 {"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{…整份输入…}}}
@@ -132,7 +135,7 @@ function main() {
     if (r.hasScoped && !pin) {
       // Bash 无 pin 一律 deny：shell 字符串里读/写难可靠区分，从严防写泄漏；纯读某项目 docs 请改用 Read 工具。
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: '本 session 未绑定任何项目，Bash 不能操作 docs/·workflow-state·current-topic。先 ./scripts/project.sh switch <项目>（或 new <项目>）声明；仅想读某项目 docs 可直接用 Read 工具（读类不绑定也放行）。' } });
+        permissionDecisionReason: '本 session 未绑定任何项目，Bash 不能操作 docs/·workflow-state·current-topic。先 ./scripts/project.sh switch <项目>（或 new <项目>）声明；仅想读某项目 docs 可直接用 Read 工具（读类不绑定也放行）。若命中的 docs/ 只是命令里的字符串字面量（grep 模式/echo 文本等）而非真实路径，属保守匹配的已知误伤——改写命令避开该字样即可（如拆成 "do""cs/" 或改用其它过滤词）。' } });
     }
     if (r.changed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: r.cmd } } });

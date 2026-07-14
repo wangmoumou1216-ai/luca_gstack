@@ -12,6 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- hooks 布线契约回归 SETTINGS-002（2026-07-14 hooks 层评审，S22 手法延伸）：settings.json 六 hook
+  挂对事件 + PreToolUse matcher 覆盖面 + fork HEAVY set 注入（条件化，两仓同文件）+ README §8 表
+  与真实布线一致；capability-parity 补 project-scope-guard/post-edit/session-end/test-hooks 四文件
+  锚点与 route-guard「命名即切换」锚——为什么：README 手写表把 project-scope-guard 写成 PostToolUse
+  （重定向必须在工具执行**前**，语义级误导）、session-end 写成 Stop，零机检漂移无人察觉；且三个
+  hook 文件此前完全不在 parity 锚点内，「命名即切换」漂移 8 天 S18 抓不到。
+
+### Fixed
+- Session 生命周期 hooks 五处真问题（2026-07-14 hooks 层评审，全部先实证复现再修）：①「命名即切换」
+  route-guard 实现 2026-07-06 起只落 fork，母版 hint 仍发「确认后执行」与母版 CLAUDE.md 自相矛盾
+  （补齐母版 + STICKY-008c 回归随行）；② Stop 链（session-sync）项目真值仍读共享软链——pin=projA
+  时拦截归因/checkpoint/topic 全指向软链的 projB（方案A 补全：pin 优先、失效 pin 回退不复活幽灵
+  目录，SYNC-PIN-001/002 回归）；③ MEMORY_ROOT 重定向下 fork session 写脏母版记忆无人提醒（前日
+  A11 WARN 即此症；改两仓都查并点名脏仓，SYNC-MEM-001 回归）；④ README §8 表两处布线张冠李戴（见
+  Added 条）；⑤ route-guard pin 绑定用裸子串——"amusement" 实证误绑 pin=muse（改与 projectGate 同源
+  的词边界匹配 nameMatchesIn，STICKY-011 回归）。另 project-scope-guard Bash 保守重写把字符串字面量
+  当路径位（本 session 三次实证 deny/静默改写 grep 模式）裁决为接受的安全侧权衡：不改重写逻辑，
+  deny 文案给出字面量误伤自救指引 + 头注补记。会咬证据链：新测试×母版旧状态按序精准红
+  （SETTINGS-002→STICKY-008c→SYNC-PIN-001），逐项修复逐项转绿。
 - Agent 编排体系能力升级（2026-07-14 编排层评审）：Plan Agent 三新增——块 0 前提门（先判「该不该解/
   更小替代」+ kill-assumption，premise-first 两次纠正升格为结构化步骤）、增量重规划协议（gate 连败/
   NEEDS_CONTEXT/前提翻车 → delta 只重规划受影响 U-block，U-ID 冻结照守，不推倒全案）、块 5 出门自检

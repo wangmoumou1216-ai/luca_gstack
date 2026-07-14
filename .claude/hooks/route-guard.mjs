@@ -20,6 +20,29 @@ function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
 }
 
+// 项目名词边界匹配（2026-07-14 P5 修复）：projectGate 具名匹配与 pin 层 affirmsCur 共用同一套
+// 严谨度——此前 affirmsCur 用裸 includes()，"amusement" 会误绑 pin=muse（实证）。参数为已
+// normalize 的文本；边界规则与原 projectGate 逐字一致（长名只查后界 latin 延续，短名 ≤2 双侧严查）。
+function nameMatchesIn(text, name) {
+  const normalizedName = normalize(name);
+  const idx = text.indexOf(normalizedName);
+  if (idx === -1) return false;
+  const charAfter = text[idx + normalizedName.length];
+  // Only English identifier-continuation chars count as "not a boundary".
+  // CJK chars after the name (e.g. "luca-dev 的任务") ARE a boundary, so
+  // common follow-up particles do not break the match.
+  const afterOk = charAfter === undefined || !/[a-z0-9_-]/i.test(charAfter);
+  // Short names (≤2 chars) keep the stricter CJK-also-extends check on both
+  // sides to avoid false positives like 名"AI"误中"AIxxx".
+  if (normalizedName.length <= 2) {
+    const charBefore = idx > 0 ? text[idx - 1] : undefined;
+    const beforeOk = charBefore === undefined || !/[一-鿿a-z0-9]/i.test(charBefore);
+    const strictAfterOk = charAfter === undefined || !/[一-鿿a-z0-9]/i.test(charAfter);
+    return strictAfterOk && beforeOk;
+  }
+  return afterOk;
+}
+
 // 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
 // per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
 let hookSessionId = '';
@@ -163,25 +186,7 @@ function projectGate(prompt, projects, currentProject) {
   let searchText = text;
   for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
 
-  const named = projects.find(name => {
-    const normalizedName = normalize(name);
-    const idx = searchText.indexOf(normalizedName);
-    if (idx === -1) return false;
-    const charAfter = searchText[idx + normalizedName.length];
-    // Only English identifier-continuation chars count as "not a boundary".
-    // CJK chars after the name (e.g. "luca-dev 的任务") ARE a boundary, so
-    // common follow-up particles do not break the match.
-    const afterOk = charAfter === undefined || !/[a-z0-9_-]/i.test(charAfter);
-    // Short names (≤2 chars) keep the stricter CJK-also-extends check on both
-    // sides to avoid false positives like 名"AI"误中"AIxxx".
-    if (normalizedName.length <= 2) {
-      const charBefore = idx > 0 ? searchText[idx - 1] : undefined;
-      const beforeOk = charBefore === undefined || !/[一-鿿a-z0-9]/i.test(charBefore);
-      const strictAfterOk = charAfter === undefined || !/[一-鿿a-z0-9]/i.test(charAfter);
-      return strictAfterOk && beforeOk;
-    }
-    return afterOk;
-  });
+  const named = projects.find(name => nameMatchesIn(searchText, name));
 
   // Audit C2: meta/audit/help questions are framework-level, not project work.
   // Skip Project Gate so they route via the normal skill/STOP path instead of
@@ -518,7 +523,7 @@ function decisionToHints(decision) {
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
     }
     case 'PROJECT_SWITCH': {
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n确认后执行：./scripts/project.sh switch "${decision.project}"`;
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n命名即切换（点到已有项目名＝切过去，无需确认）：立即执行 ./scripts/project.sh switch "${decision.project}"`;
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
     }
@@ -645,7 +650,7 @@ if (existsSync(stateFile) && !dryRun) {
   } catch {}
 }
 
-let decision = null; // 提升到外层：pin 层（另一 if 块）需读它判定 PROJECT_SWITCH 自切（方案A）
+let decision = null; // 提升到外层：pin 层（另一 if 块）需读它判定"命名即切换自切"
 if (prompt) {
   decision = buildDecision(prompt);
   if (dryRun) {
@@ -672,40 +677,52 @@ if (!dryRun && prompt) {
     hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议执行 /compact 或写入 Checkpoint。`);
   }
 
-  // ── 会话粘性 pin 层（G6）+ 会话级项目隔离（方案A，2026-07-08）──
-  // pin 是 session 属性，是 PreToolUse 的 project-scope-guard 重定向 docs/·workflow-state·current-topic
-  // 的唯一真值。**pin 只在用户显式声明/确认项目时写，永不从共享软链派生**——否则新 session 会静默
-  // 继承别的 session 恰好切成的全局激活项目（"随意切到其他项目"，已否决）。
+  // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04；命名即切换扩展 2026-07-06）──
+  // session-restore 会保留并行 session 的激活项目 → 新 session 可能"继承"一个自己从未确认过的
+  // 项目。pin 记录本 session 认过的项目，用于三件事：
+  //  (a) 继承检测：首轮消息时 docs 有链但本 sid 无 pin = 继承态 → 一次性提示（防静默写错项目）
+  //  (b) 漂移对账：docs 链被别的 session switch 走后与本 sid pin 不符 → 提示（携带计数收敛）
+  //  (c) 命名即切换自切：本轮 route-guard 判定要切到具名项目（PROJECT_SWITCH）时，switch 由主
+  //      Agent 在本轮之后执行、docs 链此刻仍是旧项目——故不做 cur 比对，直接把 pin 记成目标项目
+  //      并跳过漂移对账，避免"自己主动切"下一轮被 (b) 误报成"被并行 session 切走"。并行 session
+  //      不受影响（它本轮没发 PROJECT_SWITCH，照常走 (b) 告警）。
   if (hookSessionId) {
     try {
       const pinFile = join(projectRoot, '.claude', `.session-project-${hookSessionId}`);
       const inheritFile = join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`);
+      // 方案A（会话级项目隔离，2026-07-08）：pin 是 session 属性，是 project-scope-guard 重定向
+      // docs/·workflow-state·current-topic 的唯一真值。**pin 只在用户显式声明/确认项目时写，永不从
+      // 共享软链派生**——否则新 session 会静默继承别的 session 恰好切成的全局激活项目（正是 luca 否决
+      // 的"随意切到其他项目"）。
       const selfSwitchTo = (decision && decision.decision === 'PROJECT_SWITCH' && decision.project) ? decision.project : null;
       let pin = null;
       try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
 
       if (selfSwitchTo) {
-        // 切到别的已有项目（PROJECT_SWITCH）：写权威 pin。project-scope-guard 也会在 `project.sh
-        // switch/new` Bash 命令上认领 pin（闭合 ! 直接 CLI 切换的洞），两者幂等。
+        // 切到别的已有项目（PROJECT_SWITCH）：写权威 pin。switch 由主 Agent 本轮后执行、docs 链此刻仍
+        // 是旧项目，故不做 cur 比对。project-scope-guard 也会在 `project.sh switch/new` Bash 命令上认领
+        // pin（闭合 ! 直接 CLI 切换的洞），两者幂等。
         try { writeFileSync(pinFile, selfSwitchTo); } catch {}
         try { unlinkSync(inheritFile); } catch {}
         try { unlinkSync(join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`)); } catch {}
       } else if (pin) {
-        // 已绑定：刷新 mtime 供 GC 判活。**不再做 pin-vs-软链漂移对账/告警/自动认领**——A 下 pin≠软链
-        // 是常态（别的 session 切走软链与本 session 无关，重定向已兜住落点）。旧的"3 次后认领劫持者
-        // 项目"是跨 session 污染元凶，已移除。
+        // 已绑定：刷新 mtime 供 GC 判活。**不再做 pin-vs-软链漂移对账/告警/自动认领**——A 下 pin≠软链是
+        // 常态（别的 session 切走软链与本 session 无关，重定向已兜住落点）。旧的"3 次后认领劫持者项目"
+        // 逻辑是跨 session 污染的元凶，在此彻底移除。
         try { writeFileSync(pinFile, pin); } catch {}
       } else {
-        // 未绑定 session：只在用户**确认地提到当前全局项目名**时才绑定（安全——用户点名的、已在展示的
-        // 项目，非随机软链目标）。其余保持无 pin；碰 docs/ 由 project-scope-guard deny 并提示先 switch/new。
+        // 未绑定 session：只在用户**确认地提到当前全局项目名**时才绑定（安全——是用户点名的、且就是已在
+        // 展示的项目，非随机软链目标）。其余保持无 pin：纯对话/框架任务照常；若碰 docs/ 由
+        // project-scope-guard deny 并提示先 switch/new，绝不静默落错项目。
         const projects = listProjects();
         const cur = readCurrentProject(projects);
-        const affirmsCur = cur && normalize(prompt).includes(normalize(cur));
+        // 词边界匹配（P5，2026-07-14）：与 projectGate 具名匹配同源，裸子串不再误绑（amusement⊅muse）。
+        const affirmsCur = cur && nameMatchesIn(normalize(prompt), cur);
         if (affirmsCur) {
           try { writeFileSync(pinFile, cur); } catch {}
           try { unlinkSync(inheritFile); } catch {}
         } else if (existsSync(inheritFile)) {
-          hints.push(`[route-guard] 🔗 全局激活项目「${cur || '(未知)'}」仅供参考——本 session 尚未绑定项目。提项目名即绑定；绑定前对 docs/ 的读写会被拦以防落错项目，纯对话/框架任务不受影响。`);
+          hints.push(`[route-guard] 🔗 全局激活项目「${cur || '(未知)'}」仅供参考——本 session 尚未绑定项目。提项目名即绑定（命名即切换）；绑定前对 docs/ 的读写会被拦以防落错项目，纯对话/框架任务不受影响。`);
           try { unlinkSync(inheritFile); } catch {}
         }
       }
