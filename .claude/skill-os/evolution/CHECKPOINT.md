@@ -1,7 +1,21 @@
-# 月度自进化子系统 — Checkpoint（2026-06-21b，代码层采纳轮完成）
+# 月度自进化子系统 — Checkpoint（2026-07-14，评审加固轮完成）
 
 > 性质:Meta/框架任务,产物落 luca_gstack 仓内;不创建下游项目。
-> 接续读本文件 + `ADOPTED.md` / `adoption-log.jsonl` / `digests/2026-06-evolution.md`(v4) / `gaps-register.yaml`。
+> 接续读本文件 + `ADOPTED.md` / `adoption-log.jsonl` / `digests/2026-07-evolution.md` / `gaps-register.yaml`。
+
+## 2026-07-14 — 评审加固轮（用户令「真问题全部修正」，九项全落地双仓）✅
+
+- **修正**：硬门 default-deny+schema enum / redteam null→保守 downgraded / 权重按 reuse_mode 分档 /
+  candidate-log 分级拉黑(REJECTED 183d TTL·opportunities 免疫) / gaps addressed_at+90 天复核窗 /
+  AdoptionReview phase+digest 首节三件套强制 / 簿记脚本 evolution-bookkeep.mjs(幂等+zero_yield_streak
+  N=3 告警) / external-skill-scout 读 self-model 活真值 / 演进面 parity 锚点登记（顺带治愈母版
+  gaps-register 缺 GAP-brownfield 漂移）
+- **新文件**：BENCHMARK-RUNBOOK.md（对标深评=演进模式 2，unknown-unknown 通道）+ scripts/evolution-bookkeep.mjs
+- **验证**：双仓 verify 全绿（fork 56/0、母版 55/0）；bookkeep fixture 8 断言（含幂等守卫真 bug 修复：
+  JSON.stringify 无空格格式匹配）；workflow 按 harness 语义（async 包裹）过 node --check
+- **下轮注意**：scout 返回值新增 `adoption_review` / `prior_opportunities_to_adjudicate` /
+  `addressed_recheck` 三字段=digest 首节强制裁决项；落盘改跑 `node scripts/evolution-bookkeep.mjs
+  <返回json>`，**勿再手工追加 candidate-log**；GAP-issue-tracker-integration 仍 open 待下轮 fit-to-gap
 
 ## 本轮完成（2026-06-21b，全门禁绿 + 红队裁决）
 

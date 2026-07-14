@@ -3,6 +3,7 @@ export const meta = {
   description: '月度框架自进化侦察：从 sources-registry 生成发现通道(S1-S4)，按 gaps-register 做 fit-to-gap 门禁，gh 证据核验 + 供应链 + 推荐级红队，产出 propose-only 演进 digest。零自动编辑 luca_gstack。args 可选 {date,focus_gaps}。',
   phases: [
     { title: 'Load' },
+    { title: 'AdoptionReview' },
     { title: 'Discover' },
     { title: 'Verify' },
     { title: 'Redteam' },
@@ -11,14 +12,23 @@ export const meta = {
 
 // ── 红线 ────────────────────────────────────────────────────────────────────
 // 1. propose-only：本工作流只「发现 + 门禁 + 红队 + 出 digest 数据」，绝不编辑任何
-//    luca_gstack 文件，绝不安装任何东西。落地(融合)是另一条人工触发的管线。
+//    luca_gstack **行为面**文件（skills/hooks/routing/registry 判断字段），绝不安装任何东西。
+//    簿记落盘（candidate-log 追加 + yield_stats 计数）由人工触发的确定性脚本
+//    scripts/evolution-bookkeep.mjs 完成（喂本工作流的返回 JSON）；gaps-register 的
+//    status 开关仍由人裁决后落笔。落地(融合)是另一条人工触发的管线。
 // 2. 不走 consolidate_memory 晋升门(FM-2)：演进 digest 是独立 artifact。
 // 3. 热度 ≠ 适配：star 只买「进门禁考试票」，录取要 fit-to-gap + 跨源信号 + 过硬门。
 // 真值源：.claude/skill-os/evolution/{sources-registry,self-model,self-model.generated,gaps-register}.yaml
 //        + .claude/skill-os/external-skills/vetting-registry.yaml
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GATE_WEIGHTS = { fit: 30, quality: 30, adoption: 20, maintenance: 20 }
+// 权重按 reuse_mode 分档：借想法(port-pattern/adapt-idea)不需要源仓热度——adoption/maintenance
+// 对其是错误信号（历史最高价值采纳全是小仓 adapt-idea，如 agent-starter 80★→GOMS/code-hygiene）。
+// reuse_mode 缺失/未知 → 按 install 档（对小仓更苛刻的那档，保持怀疑默认）。
+const GATE_WEIGHTS = {
+  install: { fit: 30, quality: 30, adoption: 20, maintenance: 20 },
+  pattern: { fit: 40, quality: 40, adoption: 10, maintenance: 10 },
+}
 const MAX_VERIFY = 32
 const TOP_DIGEST = 3 // FM-9 防橡皮图章：digest 封顶 top-3 APPROVED
 
@@ -67,7 +77,17 @@ const LOADER_SCHEMA = {
       },
     },
     existing_names: { type: 'array', items: { type: 'string' }, description: 'lowercased skill/agent names already present (office+global+static)' },
-    existing_repos: { type: 'array', items: { type: 'string' }, description: 'owner/repo previously vetted (any status), lowercased' },
+    existing_repos: { type: 'array', items: { type: 'string' }, description: 'owner/repo to BLOCK from re-surfacing: all vetting-registry repos + candidate-log REJECTED/KILLED within TTL. Opportunities and stale rejects excluded (分级拉黑, 见 loader prompt #6)' },
+    prior_opportunities: {
+      type: 'array',
+      items: { type: 'object', properties: { name: { type: 'string' }, repo: { type: 'string' }, note: { type: 'string' }, date: { type: 'string' } } },
+      description: 'opportunity entries from the MOST RECENT prior run in candidate-log — digest 必须逐条裁决（开 gap/归档/观察）',
+    },
+    addressed_recheck: {
+      type: 'array',
+      items: { type: 'object', properties: { id: { type: 'string' }, addressed_at: { type: 'string' }, statement: { type: 'string' } } },
+      description: 'gaps with status=addressed whose addressed_at is >90 days old — 自建方案定期接受外部挑战的复核窗',
+    },
     load_notes: { type: 'string' },
   },
   required: ['sources', 'gaps', 'existing_names', 'existing_repos'],
@@ -76,14 +96,16 @@ const LOADER_SCHEMA = {
 const loaderPrompt =
   'You are a LOADER. Read luca_gstack 真值文件 and return structured JSON. Use Bash with python3 to parse YAML deterministically, e.g.:\n' +
   '  python3 -c "import yaml,json;print(json.dumps(yaml.safe_load(open(P))))"\n\n' +
-  'Read and extract:\n' +
+  'Read and extract (RUN_DATE for date math = the date below; if "unknown", use `date -u +%Y-%m-%d`):\n' +
   '1. .claude/skill-os/evolution/sources-registry.yaml → sources where status=="active": {id,class,feeds_dimensions,reuse_mode,authority_tier,discovery,freshness_window_months,discrimination}. DROP status:off.\n' +
-  '2. .claude/skill-os/evolution/gaps-register.yaml → gaps where status=="open": {id,dimension,statement,severity,desired_capability_keywords}. DROP deferred/closed.\n' +
+  '2. .claude/skill-os/evolution/gaps-register.yaml → gaps where status=="open": {id,dimension,statement,severity,desired_capability_keywords}. DROP deferred/closed. ALSO: gaps with status=="addressed" whose addressed_at is MORE than 90 days before RUN_DATE (python datetime) → return in addressed_recheck {id,addressed_at,statement}（自建方案的复核窗，不进候选匹配）.\n' +
   '3. .claude/skill-os/evolution/self-model.yaml → already_have_static.builtins + already_have_static.personas.\n' +
   '4. .claude/skill-os/evolution/self-model.generated.yaml → already_have_ondisk.{skills_office,skills_global,agents,hooks}.\n' +
   '5. .claude/skill-os/external-skills/vetting-registry.yaml → EVERY repo identifier (owner/repo) under any status (approved/conditional/rejected/…). If the YAML shape is unclear, grep for "repo:" / "owner" / github URLs and collect them.\n' +
-  '6. .claude/skill-os/evolution/candidate-log.jsonl (if present) → every "repo" field (previously surfaced/rejected by this scout). Merge into existing_repos so prior-rejected repos are NOT re-surfaced next run.\n\n' +
-  'RETURN: sources (active), gaps (open), existing_names = lowercased union of all names from #3+#4, existing_repos = lowercased owner/repo list from #5 + #6. load_notes = anything that failed to parse. Do NOT invent; if a file is missing, return what you have and note it.'
+  '6. .claude/skill-os/evolution/candidate-log.jsonl (if present) → 分级拉黑 (tiered blocking, use python datetime vs RUN_DATE): merge into existing_repos ONLY the "repo" fields of entries whose verdict/type indicates REJECTED or KILLED* AND whose date is within 183 days of RUN_DATE. Do NOT block: type=="opportunity"/verdict=="OPPORTUNITY" entries (never blocked), APPROVED/CONDITIONAL entries older than 183 days, or rejects older than 183 days（仓会成熟；resurface 时 verify 层会重新全量安全筛查兜底）. In load_notes, note how many stale rejects became resurfaceable.\n' +
+  '7. From candidate-log.jsonl also extract prior_opportunities = the opportunity entries (type=="opportunity" or verdict=="OPPORTUNITY") belonging to the MOST RECENT prior run tag: {name,repo,note(=note/why_notable/reason),date}. The digest author MUST adjudicate each one.\n\n' +
+  'RETURN: sources (active), gaps (open), existing_names = lowercased union of all names from #3+#4, existing_repos = lowercased owner/repo list from #5 + #6 (tiered), prior_opportunities (#7), addressed_recheck (#2). load_notes = anything that failed to parse. Do NOT invent; if a file is missing, return what you have and note it.\n' +
+  'RUN_DATE: ' + runDate
 
 phase('Load')
 const ctx = await agent(loaderPrompt, { label: 'load:truth-files', phase: 'Load', schema: LOADER_SCHEMA })
@@ -142,8 +164,9 @@ const VERDICT_SCHEMA = {
     hard: {
       type: 'object',
       properties: {
-        safety: { type: 'string' }, compatibility: { type: 'string' }, non_redundancy: { type: 'string' },
-        gap_addressed: { type: 'string' }, provenance: { type: 'string' },
+        safety: { type: 'string', enum: ['PASS', 'FAIL'] }, compatibility: { type: 'string', enum: ['PASS', 'FAIL'] },
+        non_redundancy: { type: 'string', enum: ['PASS', 'FAIL'] },
+        gap_addressed: { type: 'string', enum: ['PASS', 'FAIL'] }, provenance: { type: 'string', enum: ['PASS', 'FAIL'] },
       },
       required: ['safety', 'compatibility', 'non_redundancy', 'gap_addressed', 'provenance'],
     },
@@ -188,6 +211,34 @@ const REDTEAM_SCHEMA = {
   required: ['redteam_verdict', 'integration_risk', 'reason'],
 }
 
+// ── Phase AdoptionReview：读 adoption-log 出 keep/watch/revert 复盘（propose-only）──
+const ADOPTION_REVIEW_SCHEMA = {
+  type: 'object',
+  properties: {
+    entries: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          fused_candidate_id: { type: 'string' },
+          recommendation: { type: 'string', enum: ['keep', 'watch', 'revert'] },
+          evidence: { type: 'string', description: 'OBSERVED evidence of help/harm, or "unknown" — never invent' },
+          helped_update: { type: 'string', description: 'proposed new value for the helped field (yes|no|unknown), propose-only' },
+        },
+        required: ['fused_candidate_id', 'recommendation', 'evidence'],
+      },
+    },
+    review_notes: { type: 'string' },
+  },
+  required: ['entries', 'review_notes'],
+}
+const adoptionReviewPrompt =
+  'You are the ADOPTION REVIEWER (propose-only: read/inspect only, edit NOTHING). Read .claude/skill-os/evolution/adoption-log.jsonl. For EACH fused entry produce keep/watch/revert with OBSERVED evidence only:\n' +
+  '1. Is the fused content still in place? grep the target file(s) named in "target" for the fused mechanism.\n' +
+  '2. Any sign of help/harm since fusion: `git log --oneline -- <target files>` (reverts? follow-up fixes?); search memory/episodic/index.jsonl for the skill/candidate name; note quality-gate/regression mentions if any.\n' +
+  '3. helped currently "unknown" + no evidence found → recommendation="watch", evidence="unknown". Recommend "revert" ONLY with concrete regression evidence.\n' +
+  'review_notes = coverage + what was uncheckable. Never invent outcomes.'
+
 // ── Phase Discover：按 source.discovery.method 生成通道 ──────────────────────
 const DISCOVER_PREAMBLE =
   'You are a DISCOVERY SCOUT for luca_gstack (a Claude Code Skill-OS for CRM 产品设计). Primarily find external projects/capabilities/patterns that fill a KNOWN, OPEN gap below. ALSO surface genuinely high-signal/impressive projects that fit NO open gap as OPPORTUNITIES (gap_id="none") — do NOT silently drop them; a human will judge whether to register a new gap.\n\n' +
@@ -228,7 +279,13 @@ function channelPrompt(src) {
 }
 
 phase('Discover')
-const discovered = await parallel(sources.map(src => () => agent(channelPrompt(src), { label: 'disc:' + src.id, phase: 'Discover', schema: CANDIDATE_SCHEMA })))
+// AdoptionReview 与 Discover 无数据依赖，并入同一批并发（各自用 opts.phase 分组）
+const discoverResults = await parallel([
+  () => agent(adoptionReviewPrompt, { label: 'adoption-review', phase: 'AdoptionReview', schema: ADOPTION_REVIEW_SCHEMA }),
+  ...sources.map(src => () => agent(channelPrompt(src), { label: 'disc:' + src.id, phase: 'Discover', schema: CANDIDATE_SCHEMA })),
+])
+const adoptionReview = discoverResults[0]
+const discovered = discoverResults.slice(1)
 const channelNotes = discovered.map((d, i) => sources[i].id + ': ' + ((d && d.channel_notes) || 'NO RESULT'))
 const raw = discovered.filter(Boolean).flatMap(d => d.candidates || [])
 const sourceSurfaced = {}
@@ -293,11 +350,14 @@ const verdicts = await parallel(shortlist.map(c => () =>
 
 function adjudicate(v) {
   const h = v.hard || {}
-  const hardFail = h.safety === 'FAIL' || h.compatibility === 'FAIL' || h.non_redundancy === 'FAIL' || h.gap_addressed === 'FAIL' || h.provenance === 'FAIL'
+  // default-deny：硬门任何非规范 "PASS"（含 "FAIL (…)"、"UNKNOWN"、缺字段）一律按 FAIL
+  const HARD_KEYS = ['safety', 'compatibility', 'non_redundancy', 'gap_addressed', 'provenance']
+  const hardFail = HARD_KEYS.some(k => h[k] !== 'PASS')
   const s = v.scores || {}
+  const W = /^(port-pattern|adapt-idea)/.test(String(v.reuse_mode || '')) ? GATE_WEIGHTS.pattern : GATE_WEIGHTS.install
   const weighted = Math.round(
-    ((s.fit || 0) / 3) * GATE_WEIGHTS.fit + ((s.quality || 0) / 3) * GATE_WEIGHTS.quality +
-    ((s.adoption || 0) / 3) * GATE_WEIGHTS.adoption + ((s.maintenance || 0) / 3) * GATE_WEIGHTS.maintenance
+    ((s.fit || 0) / 3) * W.fit + ((s.quality || 0) / 3) * W.quality +
+    ((s.adoption || 0) / 3) * W.adoption + ((s.maintenance || 0) / 3) * W.maintenance
   )
   let verdict
   if (hardFail) verdict = 'REJECTED'
@@ -332,7 +392,7 @@ phase('Redteam')
 const pool = approved.concat(conditional)
 const redteamed = await parallel(pool.map(v => () =>
   agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })
-    .then(r => Object.assign({}, v, { redteam: r || { redteam_verdict: 'stands', integration_risk: 'UNKNOWN', reason: 'redteam agent returned null' } }))
+    .then(r => Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }))
 ))
 // apply red-team verdicts
 const killed = redteamed.filter(v => v.redteam.redteam_verdict === 'killed')
@@ -351,7 +411,11 @@ for (const g of gaps) gapsCovered[g.id] = approved.filter(v => v.gap_id === g.id
 
 return {
   run_date: runDate,
-  red_lines: 'propose-only; NOT routed through consolidate_memory; 热度≠适配',
+  red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); NOT routed through consolidate_memory; 热度≠适配',
+  // digest 首节三件套（均为强制裁决项，不是可选附录）：
+  adoption_review: adoptionReview || { entries: [], review_notes: 'adoption-review agent 未返回' },
+  prior_opportunities_to_adjudicate: (ctx.prior_opportunities || []),
+  addressed_recheck: (ctx.addressed_recheck || []),
   stats: {
     raw: raw.length, unique: deduped.length, verified: judged.length,
     approved: approved.length, conditional: conditional.length,

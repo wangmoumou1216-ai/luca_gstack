@@ -93,6 +93,34 @@
     ".claude/hooks/session-sync.mjs": [
       "增量重拦",
       "SESSION_SYNC_REARM"
+    ],
+    ".claude/workflows/framework-evolution-scout.js": [
+      "default-deny",
+      "GATE_WEIGHTS",
+      "prior_opportunities",
+      "AdoptionReview",
+      "addressed_recheck"
+    ],
+    ".claude/workflows/external-skill-scout.js": [
+      "FALLBACK_EXISTING",
+      "load:existing",
+      "default-deny"
+    ],
+    "scripts/evolution-bookkeep.mjs": [
+      "zero_yield_streak",
+      "bookkeep"
+    ],
+    ".claude/skill-os/evolution/BENCHMARK-RUNBOOK.md": [
+      "演进模式 2",
+      "GATE 逐项裁决"
+    ],
+    ".claude/skill-os/evolution/FUSION-RUNBOOK.md": [
+      "FM-10",
+      "FM-11"
+    ],
+    ".claude/hooks/session-restore.mjs": [
+      "evolution-bookkeep.mjs",
+      "prior_opportunities_to_adjudicate"
     ]
   }
 }

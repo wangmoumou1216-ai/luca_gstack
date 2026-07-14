@@ -2,6 +2,7 @@ export const meta = {
   name: 'external-skill-scout',
   description: 'Hunt GitHub for useful Claude Code skills/subagents, gate them on a 7-dim 门禁, evidence-verify each candidate with gh, synthesize ranked recommendations. args: string focus OR {focus:[],existing_skills:[],date}.',
   phases: [
+    { title: 'Load' },
     { title: 'Discover' },
     { title: 'Verify' },
   ],
@@ -13,8 +14,9 @@ export const meta = {
 // Verdict: hardFail->REJECTED; else weighted>=70 APPROVED; >=45 CONDITIONAL; else REJECTED.
 const GATE_WEIGHTS = { fit: 30, quality: 30, adoption: 20, maintenance: 20 }
 
-// Existing capabilities the user ALREADY has (non-redundancy hard gate).
-const DEFAULT_EXISTING = [
+// FALLBACK ONLY（loader 失败时兜底）：硬编码清单必然漂移（GAP-registration-sync 教训）。
+// 非冗余硬门的正常路径是 Load phase 从 self-model 真值文件读活清单。
+const FALLBACK_EXISTING = [
   // luca office skills
   'idea','brainstorm','deepresearch','ux-research','ux-brainstorm','design-brief','design-review',
   'taste-review','open-design','magicpath','html-prototype','figma-demo','figma-layer','fx-icon-search',
@@ -44,17 +46,42 @@ if (typeof args === 'string' && args.trim()) {
   if (t[0] === '{' || t[0] === '[') { try { parsedArgs = JSON.parse(t) } catch (e) { parsedArgs = t } }
   else parsedArgs = t
 }
-let focus, existing, runDate
+let focus, runDate, extraExisting
 if (typeof parsedArgs === 'string') {
   focus = [parsedArgs]
-  existing = DEFAULT_EXISTING.slice()
+  extraExisting = []
   runDate = 'unknown'
 } else {
   focus = (parsedArgs && parsedArgs.focus) || ['claude-code-meta', 'code-engineering', 'design-frontend', 'verification-redteam']
-  existing = DEFAULT_EXISTING.concat((parsedArgs && parsedArgs.existing_skills) || [])
+  extraExisting = (parsedArgs && parsedArgs.existing_skills) || []
   runDate = (parsedArgs && parsedArgs.date) || 'unknown'
 }
 const focusText = focus.map(f => '- ' + f + ': ' + (FOCUS_LABEL[f] || f)).join('\n')
+
+// ── Phase 0: 从 self-model 真值文件读活的既有能力清单（非冗余硬门的判定基准）──
+const EXISTING_LOADER_SCHEMA = {
+  type: 'object',
+  properties: {
+    existing_names: { type: 'array', items: { type: 'string' } },
+    load_notes: { type: 'string' },
+  },
+  required: ['existing_names'],
+}
+phase('Load')
+const loadedExisting = await agent(
+  'You are a LOADER. Read luca_gstack truth files with Bash+python3 (yaml.safe_load; e.g. python3 -c "import yaml,json;print(json.dumps(yaml.safe_load(open(P))))") and return existing capability names:\n' +
+  '1. .claude/skill-os/evolution/self-model.yaml → already_have_static.builtins + already_have_static.personas\n' +
+  '2. .claude/skill-os/evolution/self-model.generated.yaml → already_have_ondisk.{skills_office,skills_global,agents}\n' +
+  'RETURN existing_names = lowercased union of all names. Do NOT invent; if a file is missing, return what you have and note it in load_notes.',
+  { label: 'load:existing', phase: 'Load', schema: EXISTING_LOADER_SCHEMA }
+)
+let existing
+if (loadedExisting && loadedExisting.existing_names && loadedExisting.existing_names.length) {
+  existing = loadedExisting.existing_names.concat(extraExisting)
+} else {
+  existing = FALLBACK_EXISTING.concat(extraExisting)
+  log('existing loader failed — falling back to hardcoded FALLBACK_EXISTING (may be stale; non-redundancy verdicts less reliable)')
+}
 const existingText = existing.join(', ')
 
 // ── schemas ───────────────────────────────────────────────────────────────
@@ -100,9 +127,9 @@ const VERDICT_SCHEMA = {
     hard: {
       type: 'object',
       properties: {
-        safety: { type: 'string', description: 'PASS or FAIL' },
-        compatibility: { type: 'string', description: 'PASS or FAIL' },
-        non_redundancy: { type: 'string', description: 'PASS or FAIL' },
+        safety: { type: 'string', enum: ['PASS', 'FAIL'] },
+        compatibility: { type: 'string', enum: ['PASS', 'FAIL'] },
+        non_redundancy: { type: 'string', enum: ['PASS', 'FAIL'] },
       },
       required: ['safety', 'compatibility', 'non_redundancy'],
     },
@@ -227,7 +254,8 @@ const verdicts = await parallel(
 // ── adjudicate verdicts deterministically (gate logic lives in the mechanism) ─
 function adjudicate(v) {
   const h = v.hard || {}
-  const hardFail = h.safety === 'FAIL' || h.compatibility === 'FAIL' || h.non_redundancy === 'FAIL'
+  // default-deny：硬门任何非规范 "PASS"（含 "FAIL (…)"、"UNKNOWN"、缺字段）一律按 FAIL
+  const hardFail = ['safety', 'compatibility', 'non_redundancy'].some(k => h[k] !== 'PASS')
   const s = v.scores || {}
   const weighted = Math.round(
     ((s.fit || 0) / 3) * GATE_WEIGHTS.fit +

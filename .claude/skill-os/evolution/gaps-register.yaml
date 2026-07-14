@@ -2,11 +2,14 @@
 #
 # 人工拥有。framework-evolution-scout 的 gap_addressed 硬门 + fit-to-gap 软分匹配本表。
 # 开/关由人裁决（检测自动、判断归人）：候选只能映射到 status: open 的缺口。
+# status 变更（open/addressed/deferred）由人裁决后落笔；scout/主 agent 不得先改后请示。
+# addressed 必须带 addressed_at: YYYY-MM-DD——满 90 天进 scout 的 addressed_recheck 复核窗
+# （自建方案定期接受外部 state-of-art 挑战，防 addressed 棘轮：一关了之永不复查）。
 # layer = framework（OS 运行时 harness/agent-loop）| application（skill-os 设计作业层）。
 # 种子来自 2026-06-21 地毯式审计；2026-06-21 复盘新增双层 gap（应用作业层 + 框架自维护）。
 
 version: 2
-updated: 2026-06-21
+updated: 2026-07-14
 
 gaps:
   - id: GAP-behavioral-verification
@@ -16,6 +19,7 @@ gaps:
     severity: high
     desired_capability_keywords: [prompt eval, behavioral test, llm-as-judge, a/b harness, regression, eval]
     status: addressed   # 2026-06 本 session 自建 memory/scripts/behavioral_ab.py（Sonnet A/B + no-op/回归判定，selftest 5/5）
+    addressed_at: 2026-06-21
 
   - id: GAP-promotion-deadend
     dimension: memory
@@ -24,6 +28,7 @@ gaps:
     severity: high
     desired_capability_keywords: [memory promotion, candidate review, knowledge consolidation, self-improving]
     status: addressed   # 2026-06 内部修复 consolidate_memory.py --set-stable（人工批准闸门，晋升仍走 promotion_ready 门禁），解 SC-20260615-001
+    addressed_at: 2026-06-21
 
   - id: GAP-routing-fragmentation
     dimension: routing
@@ -40,6 +45,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [rollback, version pin, integration test, dependency safety]
     status: addressed   # 2026-06 本 session 自建 FUSION-RUNBOOK git-tag 回滚 + worktree + pinned_sha（drill 验证）
+    addressed_at: 2026-06-21
 
   - id: GAP-no-feedback-loop
     dimension: observability
@@ -48,6 +54,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [feedback loop, adoption tracking, telemetry, outcome metrics]
     status: addressed   # 2026-06 本 session 自建 adoption-log.jsonl + digest 采纳复盘节
+    addressed_at: 2026-06-21
 
   - id: GAP-soft-enforcement
     dimension: routing
@@ -81,6 +88,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [code cleanup, dead code, type safety, dedupe, verification before completion, code review ritual, lint, refactor]
     status: addressed   # 2026-06-21 本 session 建 /code-hygiene skill（office，routed 工程 skill）：8 清理算子(port agent-starter cleanup-*)+完成前验证 Iron Law(port superpowers, 接 luca verify.sh/check:*/bats/pytest 真值)+by-property luca 护栏；wired routing-map/command/input-modes/CLAUDE.md；route-guard 实测可达(active project surface + M3 框架自维护无 project 豁免)；过红队 FIX_THEN_STANDS(4 fix 已落)
+    addressed_at: 2026-06-21
 
   - id: GAP-self-evolution-hardening
     dimension: observability
@@ -109,6 +117,7 @@ gaps:
     severity: low
     desired_capability_keywords: [behavioral a/b, model tier, recommended-model, baseline isolation]
     status: addressed   # 2026-06-21 已泛化 behavioral_ab.py：judge 加 --skill-tier，模型守卫按 TIER_MODELS 校验
+    addressed_at: 2026-06-21
     # (reasoning-heavy=fable/opus · guided-execution=sonnet 默认 · mechanical=haiku)；selftest 7/7 过(含 reasoning-heavy-on-sonnet→BLOCK / -on-opus→PASS)；
     # FUSION-RUNBOOK⑥ + docstring 同步(含 baseline 禁文件读)。SC-20260621-001 矛盾消解。
 
@@ -127,6 +136,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [brownfield, existing code understanding, architecture brief, code-to-design, reverse engineering, codebase orientation]
     status: addressed   # 2026-07-05 建 /code-recon skill(office, routed, native-first 并行只读 recon → 架构 brief → 喂 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入)；规模阈值命中≥2 才提示下游装 codegraph MCP(不硬装/不进 gstack)；wired routing-map/command/input-modes/CLAUDE.md。与 GAP-fusion-impact-automation 分工：本 gap 只解『设计入口』，代码图谱能力仍归后者(open, 下游 MCP 可选)
+    addressed_at: 2026-07-05
 
   # ── 2026-07-12 mattpocock 对标 GATE-2 开启（四条，luca 逐条批准）──
   - id: GAP-skill-authoring-craft
@@ -136,6 +146,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [skill authoring, predictability, failure modes, pruning, leading word, information hierarchy]
     status: addressed   # 2026-07-12 同批落地 .claude/skill-os/skill-authoring.md（六机制汇一处：根德性/六失败模式/信息层级/修剪/dual-load/leading word/_Avoid_）+ CLAUDE.md Coding Discipline 指针 + FUSION-RUNBOOK 步③指针 + parity 锚点；行为 A/B PASS(delta 0.91)
+    addressed_at: 2026-07-12
 
   - id: GAP-registration-sync
     dimension: governance
@@ -144,6 +155,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [registration sync, tripwire, checker, office table, input-modes, commands consistency]
     status: addressed   # 2026-07-12 同日落地：scripts/check-registration-sync.mjs（REG-1/2/3）接 verify S19 + package.json check:registration；会咬三段证据俱在（pass→故意破坏 CLAUDE.md 表行 FAIL→还原 pass）；首战捕获真实漂移（code-recon 漏 office-wizard 展示行，已修双仓）
+    addressed_at: 2026-07-12
 
   - id: GAP-lightweight-research
     dimension: research
@@ -152,6 +164,7 @@ gaps:
     severity: medium
     desired_capability_keywords: [lightweight research, background agent, primary source, api docs lookup]
     status: addressed   # 2026-07-12 同日落地：/quick-research（office skill，按 skill-authoring doctrine 建——defining constraint/三档定位表/升降级链/primary-source 纪律）；治理轨道七面全登记（routing/command/input-modes/CLAUDE.md 表/office-wizard/workflow-graph 三档/plan-agent 研究门三档/parity）；FM-11 实测 PASS（"快速调研"→surface）
+    addressed_at: 2026-07-12
 
   - id: GAP-issue-tracker-integration
     dimension: infrastructure
