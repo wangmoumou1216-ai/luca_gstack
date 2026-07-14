@@ -24,7 +24,8 @@
     "build:self-model": "node scripts/build-self-model.mjs",
     "check:self-model": "node scripts/build-self-model.mjs --check",
     "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs",
-    "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs"
+    "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs",
+    "check:agent-contracts": "node scripts/check-agent-contracts.mjs"
   },
   "dependencies": {
     "playwright": "^1.61.1"

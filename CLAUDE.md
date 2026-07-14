@@ -53,7 +53,7 @@ muse fork `~/Desktop/项目/muse/lucagstack`，最新能力为准），新能力
 暂停等用户确认后再执行：
 - 任务涉及 ≥ 3 个文件的创建或修改
 - 任务需要 ≥ 2 个独立 subagent 协作（**内部 HITL 编排类 skill 除外**：`/auto`、`/deepresearch`、
-  `/ux-research`、`/figma-demo`——它们把多 subagent 编排设计成核心功能，这条对其恒真等于每次强制
+  `/ux-research`、`/figma-demo`、`/muse-loop-orchestrate`——它们把多 subagent 编排设计成核心功能，这条对其恒真等于每次强制
   触发，且各自 SKILL.md 内含 fan-out 前的用户确认门；条件 2 对它们不适用，其余 4 条件仍正常触发。
   判定原则与名单的权威源见 `.claude/agents/plan-agent.md`「条件 2 豁免」段）
 - 任务有明确的阶段依赖（B 必须等 A 完成）

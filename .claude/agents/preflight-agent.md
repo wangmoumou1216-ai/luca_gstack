@@ -63,16 +63,26 @@ Step 4  汇总 → 输出报告
 | `html-prototype` | design-brief handoff 存在且 gate_result PASS | `grep -ql "gate_result.*PASS" docs/handoff/*-design-brief-handoff.md 2>/dev/null` |
 | `html-prototype` | brand-tokens.md 非空 | `[ -s brand-tokens.md ]` |
 | `html-prototype` | framework/ 含母版文件 | `[ -f framework/list-page.html ]` |
-| `magicpath` | design-brief handoff 存在且 gate_result PASS | `grep -ql "gate_result.*PASS" docs/handoff/*-design-brief-handoff.md 2>/dev/null` |
+| `open-design` | workflow 模式：design-brief handoff 存在且 gate_result PASS（standalone/adhoc 单点交接只需源产物存在，本行不执行） | `grep -ql "gate_result.*PASS" docs/handoff/*-design-brief-handoff.md 2>/dev/null` |
+| `magicpath` | （隐藏·降级备选）design-brief handoff 存在且 gate_result PASS | `grep -ql "gate_result.*PASS" docs/handoff/*-design-brief-handoff.md 2>/dev/null` |
 | `figma-layer` | HTML 原型存在 | `ls docs/prototype/*/index.html 2>/dev/null \| grep -q . \|\| ls docs/prototype/index.html 2>/dev/null \| grep -q .` |
-| `figma-demo` | 无特殊前置 | — |
+| `figma-demo` | （隐藏，仅内部 dispatch）无特殊前置 | — |
 | `tech-spec` | design-brief handoff 存在且 gate_result PASS | `grep -ql "gate_result.*PASS" docs/handoff/*-design-brief-handoff.md 2>/dev/null` |
 | `task-plan` | tech-spec handoff 存在且 coverage_gate PASS | `grep -ql "coverage_gate.*PASS" docs/handoff/*-tech-spec-handoff.md 2>/dev/null` |
 | `deepresearch` | 无特殊前置 | — |
 | `brainstorm` | 无特殊前置 | — |
 | `idea` | 无特殊前置 | — |
 | `ux-audit` | 无特殊前置 | — |
-| `compare` | 无特殊前置 | — |
+| `compare` | （隐藏，仅内部 dispatch）无特殊前置 | — |
+| `quick-research` | 无特殊前置 | — |
+| `code-recon` | 无特殊前置（只读 recon，不改代码） | — |
+| `code-hygiene` | 无特殊前置 | — |
+| `muse-req-triage`（muse fork 专属） | 无特殊前置（入口A 语料由用户指定） | — |
+| `muse-loop-orchestrate`（muse fork 专属） | 需求语料可用（由 skill 自身 Phase 0 校验） | — |
+
+**未列出的 skill：** 只执行通用检查，且报告必须带一行
+`⚠ WARN: <skill_name> 无专属检查行——若该 skill 有上游依赖，请在本表补行`
+（防新增 skill 前置检查静默裸奔，2026-07-14 编排层评审）。
 
 ---
 

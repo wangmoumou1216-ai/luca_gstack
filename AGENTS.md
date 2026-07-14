@@ -464,7 +464,7 @@ Layered routing order:
    The Plan Agent 5 conditions (任一满足即触发):
    - The task creates or modifies ≥ 3 files.
    - The task needs ≥ 2 independent subagents collaborating (**except internal-HITL orchestrator skills**:
-     `/auto`, `/deepresearch`, `/ux-research`, `/figma-demo` — orchestrating multiple subagents is their
+     `/auto`, `/deepresearch`, `/ux-research`, `/figma-demo`, `/muse-loop-orchestrate` — orchestrating multiple subagents is their
      core function, so this condition is trivially true; each has a user confirmation gate before fan-out.
      Condition 2 does not apply to them; the other 4 conditions still do. Principle + roster authority:
      `.claude/agents/plan-agent.md` "条件 2 豁免").

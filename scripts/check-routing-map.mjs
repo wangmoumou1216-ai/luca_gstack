@@ -359,6 +359,9 @@ try {
     '/deepresearch': /AskUserQuestion/,
     '/ux-research': /不可跳过/,
     '/figma-demo': /唯一一次/,
+    // muse fork 专属（2026-07-14 编排层评审收编）：GATE-1 经 muse-req-triage Phase 3 触发，
+    // 此锚是其「不可绕过」承诺的原文；PLAN_CHECK 双保险仍由 ROUTE_GUARD_HEAVY_SKILLS 保留。
+    '/muse-loop-orchestrate': /allow_standalone_override: false/,
   };
   // 反向：HITL_ANCHOR 有键但 roster 没有 = checker 与真值源脱节
   for (const key of Object.keys(HITL_ANCHOR)) {

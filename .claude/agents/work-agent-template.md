@@ -1,13 +1,9 @@
----
-name: work-agent
-description: |
-  Work Agent — single-phase task executor. Spawned by Orchestrator for a bounded, well-defined task.
-  Fills in {{variables}} before spawning. Returns a structured Completion Report.
-  NOT an orchestrator. Does not spawn subagents. Does not plan.
----
-
 # Work Agent (WA-{{PHASE_ID}})
 
+> **本文件是 prompt 模板，不注册为 subagent**（无 frontmatter 是有意的——2026-07-14 双重身份修复：
+> 模板含未填变量，若注册为 agent type 被直接 `subagent_type: work-agent` spawn，系统提示词就是
+> 未填模板。正确用法：Orchestrator 填完全部变量后，经 Agent tool 的 prompt 字段传入完整 prompt）。
+>
 > **Orchestrator 填写说明：**
 > 在生成 Work Agent prompt 之前，将所有 `{{VARIABLE}}` 替换为具体值。
 > 不得保留任何占位符。Work Agent 启动时接收到的是已填写完毕的版本。
@@ -165,6 +161,20 @@ Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
 }
 ```
 
+如果缺少信息或有歧义、无法判断如何执行（2026-07-14 补齐——与 plan-agent 六值状态对齐，
+此前上游要求 WA 触发 NEEDS_CONTEXT 但本报告只定义了两值，WA 按合同发不出该状态）：
+
+```json
+{
+  "phase_id": "WA-{{PHASE_ID}}",
+  "status": "NEEDS_CONTEXT",
+  "outputs_produced": ["<已完成的部分>"],
+  "outputs_skipped": ["<未完成的产物>"],
+  "blockers": ["<缺什么信息 / 哪两份文档矛盾，具体到文件与字段>"],
+  "notes": ""
+}
+```
+
 ---
 
 ## SECTION 3 — 执行协议（Execution Protocol）
@@ -205,7 +215,7 @@ Step 5  [Self-Verify]
 
 Step 6  [Completion Report]
         输出 Section 2 定义的完成报告 JSON。
-        Status = DONE（全部完成）或 BLOCKED（有无法解决的阻塞）。
+        Status = DONE（全部完成）/ BLOCKED（外部阻塞）/ NEEDS_CONTEXT（缺信息或歧义）。
 ```
 
 ---
@@ -263,13 +273,14 @@ Step 6  [Completion Report]
 | 情况 | 处理方式 |
 |------|---------|
 | 输入文件不存在 | 记录到 blockers，输出 BLOCKED 报告 |
-| 任务描述有歧义，无法判断如何执行 | 记录到 blockers，说明具体歧义点 |
+| 任务描述有歧义，无法判断如何执行 | 输出 NEEDS_CONTEXT 报告，blockers 说明具体歧义点 |
+| Read List 指定节与任务卡描述矛盾 | 输出 NEEDS_CONTEXT 报告（plan-agent Read List 规则），不自行裁决 |
 | 需要修改 Scope 以外的文件才能完成 | 记录到 notes，完成 Scope 内可完成的部分，标注 BLOCKED |
 | Self-Verify 连续 2 次失败 | 输出 BLOCKED 报告，说明失败的 Done Criteria 项 |
 
 **Failure Protocol 执行步骤：**
 1. 完成当前 Scope 内已可完成的部分
-2. 输出 BLOCKED 状态的完成报告
+2. 输出 BLOCKED / NEEDS_CONTEXT 状态的完成报告
 3. blockers 字段必须具体（"文件 X 不存在" 而非 "出错了"）
 
 ---

@@ -102,6 +102,7 @@ check S16 "项目 docs/state symlink 一致"          "npm run check:project-lin
 check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
 check S18 "双仓能力奇偶校验（capability parity）"  "node scripts/check-capability-parity.mjs"
 check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
+check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）" "npm run check:agent-contracts --silent"
 echo ""
 
 echo "[ CI/CD 基础设施 ]"

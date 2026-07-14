@@ -14,7 +14,12 @@
       "correction-attribution",
       "侧栏当前页感知",
       "skill-authoring.md",
-      "语义路由契约"
+      "语义路由契约",
+      "Brownfield 正门"
+    ],
+    ".claude/skills/office/code-recon/SKILL.md": [
+      "Brownfield",
+      "native-first"
     ],
     "scripts/luca-sidebar.sh": [
       "sidebar-spool",
@@ -24,12 +29,35 @@
       "块 1.6 — ASSERT/TEST-NNN 反向覆盖",
       "行为级断言规则",
       "model_tier",
-      "探索型长任务词汇"
+      "探索型长任务词汇",
+      "块 0 — 前提门",
+      "增量重规划（Replan Protocol",
+      "块 5 — 出门自检",
+      "open-design"
     ],
     ".claude/agents/orchestrator.md": [
       "Step 3b 【合同回验",
       "模型路由（强制传参",
-      "correction-attribution"
+      "correction-attribution",
+      "不注册为 subagent",
+      "增量重规划"
+    ],
+    ".claude/agents/preflight-agent.md": [
+      "open-design",
+      "无专属检查行"
+    ],
+    ".claude/agents/quality-gate.md": [
+      "open-design",
+      "NEEDS_CONTEXT"
+    ],
+    ".claude/agents/work-agent-template.md": [
+      "NEEDS_CONTEXT",
+      "不注册为 subagent"
+    ],
+    "scripts/check-agent-contracts.mjs": [
+      "OD-first",
+      "状态枚举",
+      "双重身份"
     ],
     ".claude/skill-os/extraction-bar.md": [
       "correction-attribution"
@@ -52,7 +80,8 @@
     "memory/scripts/daily_governance.py": [
       "check_loop_health",
       "AUTHORITATIVE_MEMORY_ROOT",
-      "新场景待评估档位"
+      "新场景待评估档位",
+      "Skill 评估消费"
     ],
     ".claude/skill-os/claude-md-appendix.md": [
       "CLAUDE.md 附录"
@@ -84,7 +113,8 @@
     ],
     "scripts/verify.sh": [
       "S20",
-      "S21"
+      "S21",
+      "S22"
     ],
     "scripts/check-evolution-adjudication.mjs": [
       "default-deny",

@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Agent 编排体系能力升级（2026-07-14 编排层评审）：Plan Agent 三新增——块 0 前提门（先判「该不该解/
+  更小替代」+ kill-assumption，premise-first 两次纠正升格为结构化步骤）、增量重规划协议（gate 连败/
+  NEEDS_CONTEXT/前提翻车 → delta 只重规划受影响 U-block，U-ID 冻结照守，不推倒全案）、块 5 出门自检
+  （六条机械核对，散落 MUST 收拢成出门动作）；verify S22 agent 契约常驻回归（45 断言守护 OD-first
+  三处锚/六值状态枚举同步/触发边界/双重身份/orchestrator 路径映射逐行落盘/模型档快照；会咬证据：
+  故意退化恰好 1 条红 exit=1→还原绿）；daily_governance 增 eval-log 消费节（record_eval 台账此前
+  零读取，又一个写而不读的台账；fail-open、不改 digest 写入门槛）——为什么：编排层评审发现五份
+  agent 文件是手写散文互相引用、无机器守护跨文件契约，7 月路由大改三处漏同步三周无人察觉。
+- muse-loop-orchestrate 收编条件 2 豁免名单（SSOT-10 四处同步：plan-agent roster + CLAUDE.md +
+  AGENTS.md + HITL_ANCHOR 锚 `allow_standalone_override: false`；fork 专属条目）——为什么：符合
+  豁免三要件（多 subagent 编排是声明核心机制 + GATE-1 在 fan-out 前不可绕过），不收编则条件 2
+  对其恒真、复刻 /auto 当年 50-session 零使用的结构性成因；PLAN_CHECK 双保险保留（豁免只解条件 2，
+  其余 4 条件照常检查）。
 - 对标深评制度化为演进模式 2（BENCHMARK-RUNBOOK.md：目标取自 opportunities 池/高信号 hub，六步流程
   复用 mattpocock 先例结构）+ scout 增 AdoptionReview phase（读 adoption-log 出 keep/watch/revert）
   + digest 首节三件套强制（采纳复盘 / 上期 opportunities 逐条裁决 / addressed 满 90 天复核窗）——
@@ -23,6 +36,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   失效）；红线精确化为「行为面零编辑，簿记走人触发脚本」。
 
 ### Fixed
+- Agent 编排体系六处真问题（2026-07-14 编排层评审）：plan-agent 设计产出路由整体 OD-first 重写
+  （原文 0 次提及 open-design、25 次提及已降级的 magicpath——规划器与执行面两套真值打架；Gap 2 改
+  OD daemon→MagicPath→html-prototype 三级降级检测）；preflight 检查表补 open-design/quick-research/
+  code-recon/code-hygiene 行 + 「未列出 skill 报 WARN」防新 skill 前置检查静默裸奔；quality-gate
+  品牌合规/Brief 合规触发补 open-design（OD 拉回的主产物恰好绕过两组检查）；WA 完成报告补
+  NEEDS_CONTEXT 状态（plan-agent 要求 WA 触发、WA 合同只有两值发不出——契约裂缝）；plan-agent
+  上游 tech-spec 硬门限定产品设计链任务（原字面覆盖一切任务被常态忽略，失信规则比没有更糟）；
+  orchestrator/work-agent-template 撤 frontmatter（行为模式文档/未填模板被注册为可 spawn subagent
+  的双重身份）。gate FAIL 状态回滚 IN_PROGRESS、2/3 文件触发边界对齐 CLAUDE.md、品牌色 grep -o
+  计数（-c 数行低估同行多次）一并修。
+- 母版 code-recon 整体缺失漂移（S22 首跑即咬到）：adoption-log 记了采纳、gaps-register 标了
+  addressed，但 skill 本体/CLAUDE.md 段落/routing 词条/model-routing/input-modes/office-wizard
+  六件套从未落母版——「装完就完不算数」红线在母版真实发生；以 fork 为准全量补齐，并纠正母版
+  model-routing 双仓注记（曾把 code-recon 误记为 fork 专属）。
 - 演进 scout 五处机制缺陷（2026-07-14 评审加固轮）：硬门改 default-deny（schema enum PASS/FAIL +
   非规范串一律 FAIL——原 ==='FAIL' 判定可被 "FAIL (…)"/"UNKNOWN" 静默绕过）；redteam agent 未返回
   由默认 stands 改保守 downgraded（2026-07 实证红队是唯一砍掉全部幸存者的决定层，静默失败≠无异议）；
