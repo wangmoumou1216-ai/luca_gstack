@@ -23,7 +23,8 @@
     "check:project-links": "node scripts/check-project-links.mjs",
     "build:self-model": "node scripts/build-self-model.mjs",
     "check:self-model": "node scripts/build-self-model.mjs --check",
-    "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs"
+    "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs",
+    "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs"
   },
   "dependencies": {
     "playwright": "^1.61.1"

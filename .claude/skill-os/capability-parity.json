@@ -83,7 +83,13 @@
       "kw-multifeature-1"
     ],
     "scripts/verify.sh": [
-      "S20"
+      "S20",
+      "S21"
+    ],
+    "scripts/check-evolution-adjudication.mjs": [
+      "default-deny",
+      "权重分档",
+      "redteam null 兜底"
     ],
     ".claude/skill-os/routing-chain-check.md": [
       "研究前置",
