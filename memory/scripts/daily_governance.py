@@ -716,7 +716,9 @@ def main() -> int:
                     continue
                 src = str(ev.get("source", "live"))
                 qtext = str(ev.get("query", ""))
-                if src != "live" or "e2e" in qtext.lower() or "agent-e2e-test" in str(ev.get("cwd_tail", "")):
+                # 与 --retrieval-stats 同口径：无 source 字段的 legacy 行（采集升级前，
+                # 54% 测试污染不可分）一并排除，只计打过标的新行
+                if "source" not in ev or src != "live" or "e2e" in qtext.lower() or "agent-e2e-test" in str(ev.get("cwd_tail", "")):
                     excluded += 1
                     continue
                 if ev.get("type") == "mattered" or ev.get("mattered") is True:

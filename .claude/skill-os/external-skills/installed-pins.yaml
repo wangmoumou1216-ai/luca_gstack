@@ -23,7 +23,7 @@ units:
   install_path: ~/.agents/skills/tdd
   pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
   watch_sha: bd453a6742fb8660bf618c298f1e2b80fb9f35e3
-  ack_sha: null
+  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
   pinned_at: '2026-07-12'
   source: adoption-log
   note: 2026-07-12 refresh 到 391a2701（+seam 门 +tautological）
@@ -34,7 +34,7 @@ units:
   install_path: ~/.claude/skills/codebase-design
   pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
   watch_sha: ee8bae40062cd6b435073368ed0c540f48c35862
-  ack_sha: null
+  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
   pinned_at: '2026-07-12'
   source: adoption-log
   note: null
@@ -45,7 +45,7 @@ units:
   install_path: ~/.claude/skills/resolving-merge-conflicts
   pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
   watch_sha: 81ddacb08b3878d07ac4fa2de60bd8a53bacba5b
-  ack_sha: null
+  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
   pinned_at: '2026-07-12'
   source: adoption-log
   note: null
@@ -56,7 +56,7 @@ units:
   install_path: ~/.claude/skills/teach
   pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
   watch_sha: aa024cb1954fedbc8221967c080fa40b9867f994
-  ack_sha: null
+  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
   pinned_at: '2026-07-12'
   source: adoption-log
   note: personal install（零框架触面）
@@ -110,7 +110,9 @@ units:
 - name: superpowers
   kind: plugin
   plugin_key: superpowers@claude-plugins-official
-  last_vetted_version: '5.1.0'
-  pinned_at: '2026-06-07'
-  note: 对比 ~/.claude/plugins/installed_plugins.json 当前 version（纯本地零网络）；
-    插件管理器会静默自动升级——vetting 停在 5.1.0 而实装已 6.1.1 正是本 watcher 的立项实证
+  last_vetted_version: '6.1.1'
+  pinned_at: '2026-07-15'
+  note: 对比 ~/.claude/plugins/installed_plugins.json 当前 version（纯本地零网络）；插件管理器会
+    静默自动升级（5.1.0→6.1.1 无人察觉 37 天是本 watcher 立项实证）。2026-07-15 补审通过：官方
+    marketplace 渠道、6.x 自带 plugin hooks 已与框架 hooks 实测共存数周（全 hook 回归绿）、
+    原 vetting 结论为"冗余于已装"非安全议题
