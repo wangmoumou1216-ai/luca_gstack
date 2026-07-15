@@ -20,7 +20,7 @@ import os
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from consolidate_memory import build_queue, promote_ready_candidates, atomic_write_text
+from consolidate_memory import build_queue, promote_ready_candidates
 
 ROOT = Path(os.environ.get("MEMORY_ROOT", Path(__file__).resolve().parents[2]))
 CANDIDATES = ROOT / "memory" / "semantic" / "candidates.jsonl"
@@ -37,49 +37,6 @@ def load_promoted_ids() -> set:
         if line.startswith("- id:") or (line.startswith("id:") and not line.startswith("id: null")):
             ids.add(line.split(":", 1)[1].strip().strip('"'))
     return ids
-
-
-def promote(candidate: dict, reviewer: str) -> None:
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    fact_id = candidate.get("id", "")
-    domain = candidate.get("domain", "")
-    fact = candidate.get("fact", "")
-    confidence = candidate.get("confidence", "high")
-    source = candidate.get("source", "review")
-    fact_yaml = json.dumps(str(fact), ensure_ascii=False)
-    entry = (
-        f"  - id: {fact_id}\n"
-        f"    domain: {domain}\n"
-        f"    fact: {fact_yaml}\n"
-        f"    confidence: {confidence}\n"
-        f"    stable: true\n"
-        f"    added: {today}\n"
-        f"    source: {source}\n"
-    )
-    if not PROMOTED.exists():
-        atomic_write_text(PROMOTED, f"version: 1\nfacts:\n{entry}")
-    else:
-        content = PROMOTED.read_text(encoding="utf-8")
-        if "facts:" not in content:
-            content += "\nfacts:\n"
-        atomic_write_text(PROMOTED, content.rstrip() + "\n" + entry)
-    # Sync CLAUDE.md static fallback section
-    claude_md = ROOT / "CLAUDE.md"
-    if claude_md.exists():
-        content = claude_md.read_text(encoding="utf-8")
-        marker = "> 维护规则："
-        allow = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
-        allowed = {ln.split("#", 1)[0].strip() for ln in allow.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()} if allow.exists() else set()
-        # 非白名单(宪法级/红线)事实不进每-session SF（只留 promoted-facts.yaml 走 search）
-        if marker in content and fact_id not in content and fact_id in allowed:
-            new_line = f"- [{fact_id} / {domain}] {fact}\n"
-            content = content.replace(marker, new_line + "\n" + marker)
-            atomic_write_text(claude_md, content)
-        elif fact_id in allowed and marker not in content:
-            # 应镜像但通道断了 → 不再静默（audit F2-08）
-            import sys
-            sys.stderr.write(f"[review] ⚠️ CLAUDE.md 缺 '> 维护规则：' marker，白名单事实 {fact_id} 无法镜像进 SF 节\n")
-    record_review(fact_id, "promoted", reviewer, "metadata present and candidate selected for promotion")
 
 
 def record_review(candidate_id: str, decision: str, reviewer: str, reason: str) -> None:
@@ -146,10 +103,11 @@ def main() -> int:
         if age_days < args.days:
             skipped.append((cid, f"age={age_days}d < {args.days}d threshold"))
             continue
+        # 缺元数据 = 可补救状态，只 skip 不落 rejected review——rejected 是终审决定
+        # （decisions 永久排除该 id 且随 --archive-reviewed 静默归档，不可逆），
+        # 由元数据缺失自动触发是误伤（评审切面 a 问题 5，2026-07-15）。
         if not has_review_metadata(c):
-            skipped.append((cid, "missing review metadata"))
-            if args.promote:
-                record_review(cid, "rejected", args.reviewer, "missing evidence/scope/reviewer metadata")
+            skipped.append((cid, "missing review metadata（补齐 evidence/scope/reviewer 后可晋升）"))
             continue
         if c.get("proposed_stable") is not True:
             skipped.append((cid, "not proposed_stable"))

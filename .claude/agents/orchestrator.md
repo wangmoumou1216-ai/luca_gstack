@@ -107,17 +107,11 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
           FAIL(WARNING) → 记录 findings，继续执行
           CONDITIONAL_PASS → 记录 findings 到当前 Phase 日志，继续执行（与 Skill Workflow Mode 处理方式一致）
 
-  2c-eval 【Eval 记录】quality-gate 完成后，立即运行：
-        python3 memory/scripts/record_eval.py \
-          --skill <skill_name> \
-          --topic <current_topic> \
-          --scene <scene A/B/C/D 或 unknown> \
-          --gate-status <PASS|FAIL|CONDITIONAL_PASS> \
-          --gate-score <N 或省略> \
-          --output-paths <outputs_produced 列表> \
-          --gate-findings <FAIL/WARN 项列表> \
-          --duration <lightweight|medium|heavy>
-        （脚本失败不阻塞流程，记录到 notes 后继续）
+  2c-eval 【Eval 记录】落账已内置于 quality-gate agent 定义 §4b（2026-07-15 BUILD-lite：
+        prose 约定实证 2026-06-28 起失守，改为 agent 自己确定性执行）。此处只做兜底核对：
+        quality-gate 报告末尾应有 `eval-log: recorded` 行；若显示 skipped/缺失且当前在
+        luca_gstack 环境，由 Orchestrator 手动补跑 record_eval.py（参数见 quality-gate.md §4b），
+        脚本失败不阻塞流程。
 
   2c-obs  【观察提取（Hermes-lite）】质量验证通过后，主 Agent 快速检查：
       ① Work Agent 完成报告里有没有 non-obvious blockers？

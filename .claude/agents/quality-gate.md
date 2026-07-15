@@ -252,6 +252,29 @@ Status: PASS | FAIL | CONDITIONAL_PASS（通过率 <pass>/<total>）
 
 ---
 
+## 4b. Eval 落账（报告生成后必做，两种模式都执行）
+
+报告生成后，用 Bash 把判定结果落进 eval-log（BUILD-lite，2026-07-15 记忆层评审 C5：
+此前落账靠 orchestrator prose 约定、实证 2026-06-28 起失守——之后 3 个 quality-gate
+session 零记录；改由本 agent 自己确定性执行，不再依赖调用方记得）：
+
+```bash
+[ -f memory/scripts/record_eval.py ] && python3 memory/scripts/record_eval.py \
+  --skill "<skill_name 或 phase_id>" \
+  --topic "<topic；Free Task Mode 用任务一句话概括>" \
+  --scene "<scene；未知用 unknown>" \
+  --gate-status <PASS|FAIL|CONDITIONAL_PASS> \
+  --gate-score <通过率 0-1，如 5/6 写 0.83> \
+  --gate-findings <FAIL/WARN 项各一个参数，无则省略该 flag> \
+  --duration <lightweight|medium|heavy> \
+  || echo "eval-log: skipped"
+```
+
+- 脚本不存在（非 luca_gstack/下游环境）或执行失败 → 跳过，不影响报告返回（fail-open）。
+- 报告末尾加一行注明结果：`eval-log: recorded` 或 `eval-log: skipped`。
+
+---
+
 ## 5. 结果处理（由 Orchestrator 执行）
 
 | Gate 结果 | Orchestrator 行为 |

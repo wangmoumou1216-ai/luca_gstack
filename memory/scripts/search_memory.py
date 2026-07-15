@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Natural-language search across luca_gstack memory layers."""
+"""Keyword search across luca_gstack memory layers.
+
+关键词+子串匹配引擎（含中文 bigram），非语义/自然语言检索——整句丢进来靠 bigram 兜底，
+但 query 拆成关键词效果最好（2026-07-15 记忆层评审 B5：旧自述 natural-language 与实现不符，
+正是「拿整句用户 prompt 当 query → 十连 miss」的调用方心智根源）。"""
 import argparse
 import datetime as dt
 import json
@@ -27,24 +31,42 @@ STOP_TOKENS = {
     "a", "b", "c", "d", "i", "v", "x",
 }
 
+# 2026-07-15 记忆层评审 B3：移除裸 "project"/"gate" 宽词——它们把「质量门禁」类 query
+# 扩展成整组项目门禁词、污染排序；保留 "project-gate" 复合词。
 SYNONYM_GROUPS = [
-    ("老项目", "已有项目", "旧项目", "继续项目", "上次项目", "之前项目", "project-gate", "project", "gate", "项目上下文门禁", "项目门禁"),
+    ("老项目", "已有项目", "旧项目", "继续项目", "上次项目", "之前项目", "project-gate", "项目上下文门禁", "项目门禁"),
     ("路由", "route", "routing", "route-guard", "skill-routing", "skill路由"),
     ("治理", "governance", "review", "review-queue", "质量门禁", "写入门禁"),
     ("记忆", "memory", "三层记忆", "semantic", "episodic"),
     ("原型", "prototype", "html-prototype", "framework", "母版"),
 ]
 
+_CJK_RE = re.compile(r"[一-鿿]+")
+# 中文虚词 bigram 黑名单字符：两字皆属此集的 bigram 不产出（纯功能词无检索信息量）
+_CJK_STOP_CHARS = set("的了吗呢吧是在有和对把这那个我你他它们与及就都还也很要能会用去来上下中为到从请帮给个一")
+
 
 def tokenize(text: str) -> list[str]:
-    raw_tokens = [token for token in re.findall(r"[\w#-]+", text.lower()) if token]
+    """拉丁/数字词 + 中文 bigram。旧实现 `[\\w#-]+` 把连续中文（含粘连英文）整体吞成一个
+    巨 token（'给muse项目生成一个进度html' → 1 个 token），巨 token 永不是任何记录的子串
+    → 整句中文 query 必然零命中，真实流量漏检 ~15%（2026-07-15 记忆层评审 B2，26 miss 尸检）。"""
+    lowered = text.lower()
     tokens = []
-    for token in raw_tokens:
+    for token in re.findall(r"[a-z0-9_#-]+", lowered):
         if token in STOP_TOKENS or len(token) == 1:
             continue
         tokens.append(token)
+    for run in _CJK_RE.findall(text):
+        if len(run) < 2:
+            continue
+        if len(run) <= 4:
+            tokens.append(run)  # 短语级中文词（如「路由」「触发词」）整体保留
+        for i in range(len(run) - 1):
+            bigram = run[i:i + 2]
+            if bigram[0] in _CJK_STOP_CHARS and bigram[1] in _CJK_STOP_CHARS:
+                continue
+            tokens.append(bigram)
     expanded = set(tokens)
-    lowered = text.lower()
     for group in SYNONYM_GROUPS:
         if any(term.lower() in lowered or term.lower() in expanded for term in group):
             expanded.update(term.lower() for term in group)
@@ -183,13 +205,28 @@ def record_date(record: dict) -> Optional[dt.datetime]:
 
 
 def keyword_score(record: dict, query: str, tokens: list[str]) -> tuple[int, list[str]]:
+    """打分与分词同批调（B2 实证：只加 bigram 救查全杀精度）：
+    - 同一 SYNONYM_GROUP 的多个命中折叠计 1 次（旧行为 route/routing/route-guard 各 +10，
+      让老 stable fact 靠同义组刷分碾压新 episodic——B3 排序偏置的主源）；
+    - 中文 bigram 命中计 5 分（半权：泛 bigram 如「项目」「生成」信息量低）；
+    - exact-phrase 要求 query ≥2 字符（旧行为单字符 'x' 作为裸子串命中几乎一切记录）。"""
     text = as_text(record)
-    hits = [token for token in tokens if token in text]
-    score = len(set(hits)) * 10
+    hits = {token for token in tokens if token in text}
+    remaining = set(hits)
+    group_hits = 0
+    for group in SYNONYM_GROUPS:
+        group_terms = {term.lower() for term in group}
+        if remaining & group_terms:
+            group_hits += 1
+            remaining -= group_terms
+    full = {t for t in remaining if not (_CJK_RE.fullmatch(t) and len(t) == 2)}
+    bigrams = remaining - full
+    score = (group_hits + len(full)) * 10 + len(bigrams) * 5
     reasons = []
     if hits:
-        reasons.append(f"keyword hits: {', '.join(sorted(set(hits)))}")
-    if query.lower() in text:
+        reasons.append(f"keyword hits: {', '.join(sorted(hits))}")
+    q = query.strip().lower()
+    if len(q) >= 2 and q in text:
         score += 15
         reasons.append("exact query phrase")
     return score, reasons
@@ -200,8 +237,10 @@ def recency_score(record: dict) -> tuple[int, list[str]]:
     if not value:
         return 0, []
     age_days = max((dt.datetime.now(value.tzinfo) - value).days, 0)
+    # 2026-07-15 B3 同批调：7 天内 5→10，让近期直接相关的 episodic 能与
+    # stable(+10)+confidence(+8) 的老 facts 竞争（旧权重下 2 天前的相关记录排不进前 4）
     if age_days <= 7:
-        score = 5
+        score = 10
     elif age_days <= 30:
         score = 3
     else:
@@ -357,6 +396,11 @@ def log_retrieval(query: str, rows: list[dict], record_type: str = "search", ext
             "top_id": (top.get("id") if top else None),
             "top_score": (top.get("score") if top else None),
             "top_layer": (top.get("layer") if top else None),
+            # 2026-07-15 记忆层评审 B1c 修采集：miss 归因需要检索参数；测试流量打标
+            # （e2e harness 设 MEMORY_SEARCH_SOURCE=test）+ cwd 尾巴兜底识别。
+            # 无 source 字段的历史行 = 采集升级前的 legacy（54% 测试污染，决策统计只计新行）。
+            "source": os.environ.get("MEMORY_SEARCH_SOURCE", "live"),
+            "cwd_tail": "/".join(Path.cwd().parts[-2:]),
         }
         if extra:
             record.update(extra)
@@ -392,7 +436,14 @@ def print_retrieval_stats() -> None:
     # ADR-0006 decision protocol: review only after this many distinct sessions.
     DECISION_MIN_SESSIONS = 10
     DECISION_MATTERED_MIN = 3
-    rows = read_retrieval_log()
+    all_rows = read_retrieval_log()
+    # 2026-07-15 B1b 修采集：决策统计只计「采集升级后的干净行」——legacy 行（无 source 字段）
+    # 混有 54% e2e 测试流量且无法可靠区分；测试行（source≠live / e2e cwd）显式排除。
+    legacy = [r for r in all_rows if "source" not in r]
+    tagged = [r for r in all_rows if "source" in r]
+    test_rows = [r for r in tagged
+                 if str(r.get("source")) != "live" or "agent-e2e-test" in str(r.get("cwd_tail", ""))]
+    rows = [r for r in tagged if r not in test_rows]
     searches = [r for r in rows if r.get("type", "search") == "search"]
     with_hits = [r for r in searches if (r.get("result_count") or 0) > 0]
     mattered = [r for r in rows if r.get("type") == "mattered" or r.get("mattered") is True]
@@ -408,6 +459,7 @@ def print_retrieval_stats() -> None:
     # (then distinct days still accumulate toward the ~10 review threshold).
     n_window = max(n_sessions, n_dates)
     print("ADR-0006 retrieval stats (measure-first):")
+    print(f"  excluded:            {len(legacy)} legacy rows（采集升级前，~54% 测试污染不可靠） + {len(test_rows)} tagged test rows")
     print(f"  total searches:      {n_searches}")
     print(f"  searches with hits:  {n_with_hits}")
     print(f"  flagged 'mattered':  {n_mattered}")
@@ -480,12 +532,27 @@ def main() -> int:
 
     rows = search(args.query, args.limit, args.layer, args.skill, args.topic, args.project)
     # Fail-safe instrumentation: logged AFTER computing results, swallows all errors,
-    # and does not touch the search output below.
-    log_retrieval(args.query, rows)
+    # and does not touch the search output below. 检索参数一并入 log（miss 归因需要）。
+    log_retrieval(args.query, rows, extra={
+        "layer": args.layer, "skill": args.skill, "topic": args.topic,
+        "project": args.project, "limit": args.limit,
+    })
     if args.json:
         print(json.dumps(rows, ensure_ascii=False, indent=2))
     else:
         print_human(rows)
+        # B4：归档层不在检索面——miss 时无法与「真无」区分，至少让检索者知道还有一层
+        if args.layer in ("all", "episodic"):
+            try:
+                archive_dir = MEMORY_DIR / "episodic" / "archive"
+                n_arch = sum(
+                    1 for p in archive_dir.glob("*.jsonl")
+                    for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()
+                ) if archive_dir.is_dir() else 0
+                if n_arch:
+                    print(f"（另有 {n_arch} 条已归档 episodic 不在检索面——查更早经验可 grep memory/episodic/archive/）")
+            except Exception:
+                pass
     return 0
 
 

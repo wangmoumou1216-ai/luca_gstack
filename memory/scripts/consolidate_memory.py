@@ -108,7 +108,9 @@ def read_jsonl(path: Path) -> list[dict]:
     return rows
 
 
-def read_jsonl_with_raw(path: Path) -> list[tuple[dict, str]]:
+def read_jsonl_with_raw(path: Path) -> list[tuple[dict | None, str]]:
+    """返回 (parsed, raw)；解析失败/非 dict 的行以 (None, raw) 保留——重写路径必须原样带走
+    这些行，否则整文件重写会把手滑的半截行静默蒸发（candidates/reviews 被 gitignore，无 git 兜底）。"""
     if not path.exists():
         return []
     rows = []
@@ -118,9 +120,9 @@ def read_jsonl_with_raw(path: Path) -> list[tuple[dict, str]]:
         try:
             value = json.loads(line)
         except json.JSONDecodeError:
+            rows.append((None, line))
             continue
-        if isinstance(value, dict):
-            rows.append((value, line))
+        rows.append((value if isinstance(value, dict) else None, line))
     return rows
 
 
@@ -524,7 +526,7 @@ def append_promoted(candidate: dict) -> None:
         f"    confidence: {candidate.get('confidence', 'high')}\n"
         f"    stable: true\n"
         f"    added: {today}\n"
-        f"    source: {candidate.get('source') or candidate.get('evidence') or 'consolidate_memory'}\n"
+        f"    source: {yaml_scalar(candidate.get('source') or candidate.get('evidence') or 'consolidate_memory')}\n"
     )
     entry = append_optional_metadata(entry, candidate)
     PROMOTED.parent.mkdir(parents=True, exist_ok=True)
@@ -567,17 +569,22 @@ def promote_ready_candidates(candidates: list[dict], ready: list[dict], dry_run:
     return promoted
 
 
-def set_stable(ids: list, dry_run: bool) -> dict:
+def set_stable(ids: list, dry_run: bool, reviewer: str = "") -> dict:
     """人工复核后批准：把指定候选 id 的 proposed_stable 置 True（缺失的「候选→可晋升」人工闸门）。
 
     SC-20260615-001：此前无任何路径把已存在候选置 True，导致 promotion_ready 永远为空、0 晋升。
     红线 SC-20260523-003：本动作只翻转批准旗标，**不**直接写 promoted-facts；实际晋升仍由
     promotion_ready 门禁（confidence=high + evidence/scope/reviewer + 非重复/冲突）裁决。
+    批准留痕：每次翻转写一条 decision=approved_stable 的 review 记录（操作者=--reviewer），
+    否则晋升台账里的 reviewer 只剩提案者自填字段，人工闸门不可审计。
     """
     want = {str(i) for i in ids}
     rows = read_jsonl_with_raw(CANDIDATES)
     set_done, out_lines, found = [], [], set()
     for candidate, raw in rows:
+        if candidate is None:
+            out_lines.append(raw.rstrip())
+            continue
         cid = str(candidate.get("id", ""))
         if cid in want:
             found.add(cid)
@@ -589,7 +596,23 @@ def set_stable(ids: list, dry_run: bool) -> dict:
             out_lines.append(raw.rstrip())
     if not dry_run and set_done:
         atomic_write_text(CANDIDATES, ("\n".join(out_lines) + "\n") if out_lines else "")
+        for cid in set_done:
+            append_review(cid, reviewer or "unattributed", "approved_stable", "人工闸门放行：proposed_stable 置 True")
     return {"set_stable": set_done, "already_stable": sorted(found - set(set_done)), "not_found": sorted(want - found)}
+
+
+def reject_candidates(ids: list, reason: str, reviewer: str, dry_run: bool) -> dict:
+    """人工拒绝：写 reviews.jsonl decision=rejected（拒绝与批准对称留痕）。
+    候选本体不在此处删除——随 --archive-reviewed 按 decisions 归档移出队列。
+    此前拒绝只能手工编辑 jsonl（8 条历史手工拒绝为证），本函数是缺失的机器动词。"""
+    want = {str(i) for i in ids}
+    rows = read_jsonl_with_raw(CANDIDATES)
+    existing = {str(c.get("id", "")) for c, _raw in rows if c is not None}
+    rejected = sorted(want & existing)
+    if not dry_run:
+        for cid in rejected:
+            append_review(cid, reviewer or "unattributed", "rejected", reason or "人工拒绝（未附理由）")
+    return {"rejected": rejected, "not_found": sorted(want - existing)}
 
 
 def archive_reviewed_candidates(candidate_rows: list[tuple[dict, str]], decisions: dict[str, str], promoted: list[dict], dry_run: bool) -> list[str]:
@@ -598,6 +621,9 @@ def archive_reviewed_candidates(candidate_rows: list[tuple[dict, str]], decision
     remaining = []
     by_year = defaultdict(list)
     for candidate, raw in candidate_rows:
+        if candidate is None:
+            remaining.append(raw)  # 畸形行原样保留在队列文件，绝不归档/丢弃
+            continue
         cid = str(candidate.get("id", ""))
         status = str(candidate.get("status", "")).lower()
         reviewed = cid in promoted_id_set or decisions.get(cid) in {"promoted", "rejected"} or status in {"promoted", "rejected"}
@@ -624,8 +650,8 @@ def archive_noisy_episode_rows(episode_rows: list[tuple[dict, str]], noisy: list
     remaining = []
     by_year = defaultdict(list)
     for episode, raw in episode_rows:
-        eid = str(episode.get("id", ""))
-        if eid in noisy_ids:
+        eid = str(episode.get("id", "")) if episode is not None else ""
+        if episode is not None and eid in noisy_ids:
             archived.append(eid)
             parsed = parse_datetime(episode.get("date", "")) or datetime.now(timezone.utc)
             by_year[parsed.strftime("%Y")].append(raw)
@@ -641,8 +667,8 @@ def archive_noisy_episode_rows(episode_rows: list[tuple[dict, str]], noisy: list
             remaining = []
             by_year = defaultdict(list)
             for episode, raw in fresh_rows:
-                eid = str(episode.get("id", ""))
-                if eid in noisy_ids:
+                eid = str(episode.get("id", "")) if episode is not None else ""
+                if episode is not None and eid in noisy_ids:
                     archived.append(eid)
                     parsed = parse_datetime(episode.get("date", "")) or datetime.now(timezone.utc)
                     by_year[parsed.strftime("%Y")].append(raw)
@@ -658,9 +684,9 @@ def archive_noisy_episode_rows(episode_rows: list[tuple[dict, str]], noisy: list
 
 def build_queue() -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict], dict[str, str], list[tuple[dict, str]]]:
     candidate_rows = read_jsonl_with_raw(CANDIDATES)
-    candidates = [row for row, _raw in candidate_rows]
+    candidates = [row for row, _raw in candidate_rows if row is not None]
     episode_rows = read_jsonl_with_raw(EPISODIC_INDEX)
-    episodes = [row for row, _raw in episode_rows]
+    episodes = [row for row, _raw in episode_rows if row is not None]
     promoted = parse_promoted_facts(PROMOTED)
     reviews = read_jsonl(REVIEWS)
     decisions = review_decisions(reviews)
@@ -696,11 +722,14 @@ def print_human(queue: dict, dry_run: bool) -> None:
         for row in rows:
             print(f"- {json.dumps(row, ensure_ascii=False)}")
     actions = queue.get("actions", {})
-    if actions.get("promoted") or actions.get("archived") or actions.get("set_stable"):
+    if actions.get("promoted") or actions.get("archived") or actions.get("set_stable") or actions.get("rejected"):
         print("\nactions:")
         ss = actions.get("set_stable")
         if ss:
             print(f"- set_stable: {', '.join(ss.get('set_stable', [])) or '-'} (not_found: {', '.join(ss.get('not_found', [])) or '-'})")
+        rj = actions.get("rejected")
+        if rj:
+            print(f"- rejected: {', '.join(rj.get('rejected', [])) or '-'} (not_found: {', '.join(rj.get('not_found', [])) or '-'})")
         print(f"- promoted: {', '.join(actions.get('promoted', [])) or '-'}")
         print(f"- archived: {', '.join(actions.get('archived', [])) or '-'}")
 
@@ -714,16 +743,30 @@ def main() -> int:
     parser.add_argument("--archive-noisy", action="store_true", help="move noisy episodic records out of the hot index")
     parser.add_argument("--set-stable", nargs="+", metavar="ID", default=None,
                         help="人工复核后批准：把候选 ids 的 proposed_stable 置 True（晋升仍走 promotion_ready 门禁，不直接写 promoted-facts）")
+    parser.add_argument("--reject", nargs="+", metavar="ID", default=None,
+                        help="人工拒绝候选：写 reviews.jsonl decision=rejected（配合 --archive-reviewed 同次归档）")
+    parser.add_argument("--reason", default="", help="--reject 的拒绝理由（写入审计记录）")
+    parser.add_argument("--reviewer", default="", metavar="NAME",
+                        help="操作者署名：--set-stable/--reject 必填，写入 reviews.jsonl 审计记录")
     args = parser.parse_args()
 
-    write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy or args.set_stable) and not args.dry_run
+    if (args.set_stable or args.reject) and not args.reviewer.strip():
+        print("--set-stable/--reject 需要 --reviewer <你的名字>（人工闸门审计留痕）", file=sys.stderr)
+        return 2
 
-    # set-stable 先于 build_queue：写盘后 promotion_ready 才能看到翻转的候选（支持 --set-stable X --promote-ready 单次完成）
-    set_stable_result = set_stable(args.set_stable, dry_run=not write_enabled) if args.set_stable else None
+    write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy
+                     or args.set_stable or args.reject) and not args.dry_run
+
+    # set-stable/reject 先于 build_queue：写盘后 promotion_ready/decisions 才能看到结果
+    # （支持 --set-stable X --promote-ready、--reject Y --archive-reviewed 单次完成）
+    set_stable_result = set_stable(args.set_stable, dry_run=not write_enabled, reviewer=args.reviewer) if args.set_stable else None
+    reject_result = reject_candidates(args.reject, args.reason, args.reviewer, dry_run=not write_enabled) if args.reject else None
 
     queue, candidates, candidate_rows, promoted, decisions, episode_rows = build_queue()
     if set_stable_result is not None:
         queue["actions"]["set_stable"] = set_stable_result
+    if reject_result is not None:
+        queue["actions"]["rejected"] = reject_result
 
     if args.promote_ready:
         queue["actions"]["promoted"] = promote_ready_candidates(candidates, queue["promotion_ready"], dry_run=not write_enabled)

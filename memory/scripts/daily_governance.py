@@ -63,7 +63,7 @@ def render_stale(x):
     if isinstance(age, (int, float)) and age >= STALE_ESCALATE_DAYS:
         return (f"🔴 **{cid}**（已超期 {int(age)} 天未处理）— {fact}\n"
                 f"  一键晋升：`python3 memory/scripts/consolidate_memory.py --set-stable {cid} --reviewer <你的名字>`"
-                f" / 明确拒绝请在 `memory/semantic/reviews.jsonl` 记一行 decision=rejected")
+                f" / 明确拒绝：`python3 memory/scripts/consolidate_memory.py --reject {cid} --reason \"<理由>\" --reviewer <你的名字>`")
     if isinstance(age, (int, float)):
         return f"{cid}（{int(age)}天）— {fact}"
     return render_item(x)
@@ -305,11 +305,18 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         fork_home = Path(fork_home)
         today_dt = datetime.strptime(today, "%Y-%m-%d")
 
-        # 1. pending-extraction 积压
-        pend = sorted(observability_dir.glob("pending-extraction-*.md")) if observability_dir.is_dir() else []
+        # 1. pending-extraction 积压——捕获侧(session-sync)把 pending 写在各自 projectRoot，
+        # 真实 session 多在 fork：只查权威库会在事故最可能发生的仓失明（评审切面 c C1，2026-07-15）。
+        # fork_home 由调用方经 GOVERNANCE_CALLER_ROOT 传入（session-restore spawn 时注入自己的
+        # projectRoot）；母版自跑时两目录相同，union 退化为单目录。
+        pend_dirs = {observability_dir, Path(fork_home) / ".claude" / "observability"}
+        pend = []
+        for pd in pend_dirs:
+            if Path(pd).is_dir():
+                pend += sorted(Path(pd).glob("pending-extraction-*.md"))
         if len(pend) >= LOOP_PENDING_ALERT:
             anomalies.append(
-                f"pending-extraction 积压 {len(pend)} 个（≥{LOOP_PENDING_ALERT}，捕获→消化链疑似断）"
+                f"pending-extraction 积压 {len(pend)} 个（≥{LOOP_PENDING_ALERT}，跨 {len(pend_dirs)} 个仓查得，捕获→消化链疑似断）"
                 "——逐个按 extraction-bar 四信号裁决后清零"
             )
 
@@ -345,8 +352,15 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         if digests_dir.is_dir():
             for p in digests_dir.glob("*.md"):
                 marker_dates.add(p.stem)
+            # .checked 是 session-restore spawn 前抢建的「认领」痕；治理跑完才写入结果 JSON。
+            # 空 marker = 认领后未完成（进程崩了）——不算已治理，否则崩溃日被自己的认领痕
+            # 掩蔽且永不重试（评审切面 c C3，2026-07-15）。
             for p in digests_dir.glob(".checked-*"):
-                marker_dates.add(p.name[len(".checked-"):])
+                try:
+                    if p.stat().st_size > 0:
+                        marker_dates.add(p.name[len(".checked-"):])
+                except OSError:
+                    pass
         ep_newest = max(ep_dates) if ep_dates else None
         marker_newest = max(marker_dates) if marker_dates else None
 
@@ -384,13 +398,23 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
     return anomalies, notes
 
 
+def _write_marker_result(today: str, payload: dict) -> None:
+    """治理健康跑完后把结果 JSON 写进 .checked marker——空 marker = 认领后未完成（崩溃痕）。
+    loop-health 方向一检测只认非空 marker，session-restore 启动时对陈旧空 marker 提示补跑。"""
+    try:
+        (DIGESTS / f".checked-{today}").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        pass
+
+
 def main() -> int:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     today_dt = datetime.strptime(today, "%Y-%m-%d")
 
-    # 每次调用都留一个"今天已检查过"的轻量标记（不含内容），让 session-restore 的
-    # 每日一次触发节流独立于"今天是否真的写了 digest"——否则降频后会变成每个
-    # session 都重跑 consolidate（2026-07-03 治理降频修复，见 CLAUDE.md P2-4）。
+    # 每次调用都留一个"今天已检查过"的轻量标记，让 session-restore 的每日一次触发节流
+    # 独立于"今天是否真的写了 digest"——否则降频后会变成每个 session 都重跑 consolidate
+    # （2026-07-03 治理降频修复，见 CLAUDE.md P2-4）。此时只 touch（认领/刷新 mtime）；
+    # 健康跑完由 _write_marker_result 写入结果，空 marker 即崩溃痕。
     DIGESTS.mkdir(parents=True, exist_ok=True)
     try:
         (DIGESTS / f".checked-{today}").touch()
@@ -406,31 +430,51 @@ def main() -> int:
     conflicts = result.get("conflicts", []) or []
     dups = result.get("duplicate_candidates", []) or []
     stale = result.get("stale_candidates", []) or []
+    awaiting = result.get("awaiting_approval", []) or []
     routing_issues = check_model_routing()
     self_model_issues = check_self_model()
     person_issues = check_person_memory()
     eps = recent_episodes(today)
 
+    # A2 loop 健康自检（fail-open）——在降频判定之前跑：异常本身构成写 digest 的理由。
+    # 此前只在"已决定写"的路径上跑，而「capture 停摆」类异常恰与 has_change=False 高度相关
+    # （捕获断→无新经验→无状态变化），最需要报警时被降频压到 7 天心跳、最坏 8 天盲窗
+    # （评审切面 c C2，2026-07-15）。全部检测均为本地文件读，无网络抖动强制写入的风险。
+    loop_anomalies, loop_notes = check_loop_health(
+        observability_dir=ROOT / ".claude" / "observability",
+        episodic_index=EPISODIC_INDEX,
+        digests_dir=DIGESTS,
+        resolved_root=ROOT,
+        fork_home=Path(os.environ.get("GOVERNANCE_CALLER_ROOT") or Path(__file__).resolve().parents[2]),
+        env_memory_root=os.environ.get("MEMORY_ROOT"),
+        today=today,
+    )
+
     has_change = bool(
-        promoted or archived or archived_noisy or conflicts or dups or stale
+        promoted or archived or archived_noisy or conflicts or dups or stale or awaiting
         or routing_issues or self_model_issues or person_issues or eps
     )
     last_dt = last_digest_date()
     days_since = (today_dt - last_dt).days if last_dt else FORCE_WEEKLY_DAYS
     # 2026-07-03 治理降频（全量搭建 review P2-4）：R5 实测每日治理近4周只产生2次真实状态
     # 变化、空转率>90%——改为"有状态变化才写 + 周度强制心跳"，不再逐日复读同一份空 digest。
-    if not has_change and days_since < FORCE_WEEKLY_DAYS and not result.get("_error"):
-        print(json.dumps({
+    if not has_change and not loop_anomalies and days_since < FORCE_WEEKLY_DAYS and not result.get("_error"):
+        skip_payload = {
             "skipped": "无状态变化，未到周度强制心跳",
             "days_since_last_digest": days_since,
-        }, ensure_ascii=False))
+        }
+        _write_marker_result(today, skip_payload)
+        print(json.dumps(skip_payload, ensure_ascii=False))
         return 0
 
     by_project = {}
     for e in eps:
         by_project.setdefault(e.get("project", "(未分项目)") or "(未分项目)", []).append(e)
 
-    lines = [f"# 成长摘要 — {today}", ""]
+    # 标题行带异常计数：session-restore 预览只显示前 14 行，⚙️ 小节固定在 digest 尾部
+    # 必被截断——计数进标题才保证异常在预览可见（评审切面 c C2 第二层，2026-07-15）。
+    title_suffix = f"（⚙️ Loop 异常 {len(loop_anomalies)}）" if loop_anomalies else ""
+    lines = [f"# 成长摘要 — {today}{title_suffix}", ""]
     if not has_change:
         lines += [f"> 🫀 周度强制心跳：连续 {days_since} 天无状态变化，仍照跑一次确认管线存活（非真实变化）", ""]
     if result.get("_error"):
@@ -439,8 +483,19 @@ def main() -> int:
     lines += [f"## 🟢 自动晋升的稳定事实（{len(promoted)}）", ""]
     lines += ([f"- {render_item(p)}" for p in promoted] or ["_无_"]) + [""]
 
-    pending = len(conflicts) + len(dups) + len(stale) + len(routing_issues) + len(self_model_issues) + len(person_issues)
+    pending = len(conflicts) + len(dups) + len(stale) + len(awaiting) + len(routing_issues) + len(self_model_issues) + len(person_issues)
     lines += [f"## ⏳ 待你裁决（需人工，{pending}）", ""]
+    if awaiting:
+        # awaiting_approval 桶：提案者已 --stable 请求、条件齐备、只差人工闸门放行。
+        # 此前该桶建了却从不进 digest，候选 0-14 天窗口对人完全不可见、只能等 14 天后
+        # 以超期身份浮出（评审切面 a 问题 3，2026-07-15）。
+        lines.append("**待批准晋升（提案者已请求 stable，条件齐备，等你放行/拒绝）：**")
+        for a in awaiting:
+            aid = a.get("id", "?") if isinstance(a, dict) else str(a)
+            afact = (a.get("fact", "") or "")[:80] if isinstance(a, dict) else ""
+            lines.append(f"- **{aid}** — {afact}\n"
+                         f"  放行：`python3 memory/scripts/consolidate_memory.py --set-stable {aid} --reviewer <你的名字>`"
+                         f" / 拒绝：`... --reject {aid} --reason \"<理由>\" --reviewer <你的名字>`")
     if conflicts:
         lines.append("**冲突：**")
         lines += [f"- {render_item(c)}" for c in conflicts]
@@ -503,22 +558,47 @@ def main() -> int:
                 lines += [f"## 🧪 Skill 评估消费（近30天 {total} 条）", "", f"- {parts}"]
                 lines += [f"- 非 PASS：{f}" for f in recent_fails[:5]]
                 lines.append("")
-    except Exception:
-        pass  # fail-open：eval 消费失败不打断治理
+    except Exception as e:  # noqa: BLE001
+        # fail-open 但留残留信号：整段静默吞掉会让「节消失」被误读成「近30天无 eval」（C6）
+        lines += [f"> ⚠️ eval 消费节异常（fail-open）：{e}", ""]
+
+    # 检索度量消费（2026-07-15 记忆层评审）：retrieval-log 此前只写不读，ADR-0006 裁决检查点
+    # 无 owner（158 次检索 0 次 mattered 标注、裁决过期 2.6 倍无人知晓）。此节只随 digest 顺带
+    # 呈现（fail-open，不参与写入判定）；排除测试流量（source 非 live / e2e 特征 query）。
+    try:
+        rlog = ROOT / "memory" / "retrieval-log.jsonl"
+        if rlog.is_file():
+            searches = misses = mattered_n = excluded = 0
+            for ln in rlog.read_text(encoding="utf-8").splitlines():
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    ev = json.loads(ln)
+                except Exception:
+                    continue
+                src = str(ev.get("source", "live"))
+                qtext = str(ev.get("query", ""))
+                if src != "live" or "e2e" in qtext.lower() or "agent-e2e-test" in str(ev.get("cwd_tail", "")):
+                    excluded += 1
+                    continue
+                if ev.get("type") == "mattered" or ev.get("mattered") is True:
+                    mattered_n += 1
+                elif ev.get("type") == "search":
+                    searches += 1
+                    if ev.get("result_count") == 0:
+                        misses += 1
+            if searches or mattered_n:
+                lines += [f"## 🔎 检索度量（ADR-0006）", "",
+                          f"- 真实检索 {searches} 次 / miss {misses} / mattered 标注 {mattered_n}（已排除测试流量 {excluded} 条）",
+                          f"- 裁决入口：`python3 memory/scripts/search_memory.py --retrieval-stats`；检索改变了行动请补 `--mattered \"<query>\"`",
+                          ""]
+    except Exception as e:  # noqa: BLE001
+        lines += [f"> ⚠️ 检索度量节异常（fail-open）：{e}", ""]
 
     lines += [f"## 📥 归档", "", f"- 已审候选归档：{len(archived)}", f"- noisy episode 归档：{len(archived_noisy)}", ""]
 
-    # A2 loop 健康自检（fail-open）：只在已决定写 digest 的路径上跑，且只在有异常时追加小节——
-    # 不参与 has_change 判定，不改 digest 写入门槛（遵守既有降频，零异常时不写任何额外内容）。
-    loop_anomalies, loop_notes = check_loop_health(
-        observability_dir=ROOT / ".claude" / "observability",
-        episodic_index=EPISODIC_INDEX,
-        digests_dir=DIGESTS,
-        resolved_root=ROOT,
-        fork_home=Path(__file__).resolve().parents[2],
-        env_memory_root=os.environ.get("MEMORY_ROOT"),
-        today=today,
-    )
+    # ⚙️ 小节呈现（loop_anomalies 已在降频判定前算出——异常本身构成写 digest 的理由）
     if loop_anomalies:
         lines += ["## ⚙️ Loop 健康", "", "**异常（需处理）：**"] + [f"- {a}" for a in loop_anomalies] + [""]
         if loop_notes:
@@ -526,19 +606,22 @@ def main() -> int:
 
     digest_path = DIGESTS / f"{today}.md"
     if result.get("_error") and digest_path.exists():
-        # DG-02：consolidate 失败且今日已有好 digest → 不用退化版覆盖它
+        # DG-02：consolidate 失败且今日已有好 digest → 不用退化版覆盖它。
+        # 不写完成痕：本次运行未健康完成，marker 留由早前成功运行写的内容（若有）。
         print(json.dumps({"skipped": "consolidate 失败，保留今日已有 digest", "error": result["_error"]}, ensure_ascii=False))
         return 0
     DIGESTS.mkdir(parents=True, exist_ok=True)
     digest_path.write_text("\n".join(lines), encoding="utf-8")
 
-    print(json.dumps({
+    summary = {
         "digest": f"memory/digests/{today}.md",
         "promoted": len(promoted),
         "pending_human": pending,
         "new_episodes": len(eps),
         "loop_anomalies": len(loop_anomalies),
-    }, ensure_ascii=False))
+    }
+    _write_marker_result(today, summary)
+    print(json.dumps(summary, ensure_ascii=False))
     return 0
 
 

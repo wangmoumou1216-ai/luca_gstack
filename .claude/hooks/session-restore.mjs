@@ -281,12 +281,27 @@ try {
       claimed = true;
     } catch (e) { claimed = !e || e.code !== 'EEXIST'; }
     if (claimed) {
-      // detached 子进程的 stderr 重定向到日志文件（而非 'ignore'），否则 governance 崩溃/失败完全静默无痕（V4）。
+      // detached 子进程的 stdout/stderr 都重定向到日志文件（而非 'ignore'）：stderr 静默 = 崩溃无痕（V4）；
+      // stdout 静默 = 结果 JSON（含 loop_anomalies 计数）丢弃（评审切面 c C2 第三层，2026-07-15）。
       let govErr = 'ignore';
       try { govErr = openSync('/tmp/luca-gstack-governance.log', 'a'); } catch { }
-      const child = spawn('python3', [govScript], { cwd: projectRoot, detached: true, stdio: ['ignore', 'ignore', govErr] });
+      const child = spawn('python3', [govScript], {
+        cwd: projectRoot, detached: true, stdio: ['ignore', govErr, govErr],
+        // 显式告知治理脚本调用方仓根：loop-health 的 pending 积压检查须覆盖捕获侧真正写入的仓
+        env: { ...process.env, GOVERNANCE_CALLER_ROOT: projectRoot },
+      });
       child.unref();
-      process.stderr.write(`[session-restore] 🌱 已后台触发每日记忆治理（今日首次启动；失败留痕 /tmp/luca-gstack-governance.log）\n`);
+      // stdout 才是用户可见通道（stderr 进 /tmp 死信日志，无人读——评审切面 c C4）
+      process.stdout.write(`[session-restore] 🌱 已后台触发每日记忆治理（今日首次启动；运行留痕 /tmp/luca-gstack-governance.log）\n`);
+    } else {
+      // C3 可见性（2026-07-15 记忆层评审）：marker 已被认领但内容为空且超过 2 小时——
+      // 治理健康跑完会把结果 JSON 写进 marker，空 = 认领方中断。提示补跑，不自动重试。
+      try {
+        const st = statSync(todayChecked);
+        if (st.size === 0 && Date.now() - st.mtimeMs > 2 * 3600 * 1000) {
+          process.stdout.write(`[session-restore] ⚠️ 今日治理认领后未完成（.checked 空且超2小时，疑中断）——补跑：python3 ${govScript}\n`);
+        }
+      } catch { }
     }
   }
 } catch { }
