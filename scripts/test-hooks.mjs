@@ -584,15 +584,16 @@ function runRouteGuard(cwd, prompt) {
   writeFileSync(join(root, 'memory', 'scripts', 'daily_governance.py'), 'import sys; sys.exit(0)\n');
   const today = UTC_TODAY;
   writeFileSync(join(root, 'memory', 'digests', `.checked-${today}`), '');
+  // 2026-07-15 记忆层评审 C4：🌱 触发通知从 stderr（死信日志）迁到 stdout（用户可见通道）
   const r = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
-  assert.doesNotMatch(r.stderr, /已后台触发每日记忆治理/, '.checked 已存在（他 session 认领）→ 不得重复 spawn');
+  assert.doesNotMatch(r.stdout + r.stderr, /已后台触发每日记忆治理/, '.checked 已存在（他 session 认领）→ 不得重复 spawn');
   const root2 = makeFixture({ activeProject: 'testproj' });
   mkdirSync(join(root2, 'memory', 'scripts'), { recursive: true });
   writeFileSync(join(root2, 'memory', 'scripts', 'daily_governance.py'), 'import sys; sys.exit(0)\n');
   const r2 = runNode(sessionRestoreHook, root2, { env: { CLAUDE_PROJECT_DIR: root2 } });
-  assert.match(r2.stderr, /已后台触发每日记忆治理/, '无人认领时应 spawn');
+  assert.match(r2.stdout, /已后台触发每日记忆治理/, '无人认领时应 spawn（通知走 stdout 用户可见通道）');
   assert.ok(existsSync(join(root2, 'memory', 'digests', `.checked-${today}`)), 'spawn 方应原子创建 .checked 认领');
-  console.log('PASS CONC-005 governance 触发 O_EXCL 认领：单日单 spawn');
+  console.log('PASS CONC-005 governance 触发 O_EXCL 认领：单日单 spawn（通知在 stdout）');
 }
 
 // ── CONC-006：route-guard 轮次计数 per-sid + pending-extraction per-sid 全链 ──

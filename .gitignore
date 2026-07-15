@@ -111,8 +111,9 @@ memory/episodic/sessions/*.md
 !memory/episodic/sessions/README.md
 memory/episodic/.index.lock
 memory/semantic/candidates.jsonl
-memory/semantic/reviews.jsonl
-memory/retrieval-log.jsonl
+# reviews.jsonl / retrieval-log.jsonl 自 2026-07-15 入库（记忆层评审）：前者是晋升/拒绝
+# 审计轨迹（被审计对象 promoted-facts 有备份、审计轨迹自己是单机孤本说不通），
+# 后者喂 ADR-0006 架构裁决（决策数据集不可审计=裁决不可信）。candidates 仍属易变队列不入库。
 # Daily governance digests — regenerated from memory state each day
 memory/digests/
 # Monthly framework-evolution HTML reports — generated visual artifacts (evolution/digests/*.md is the tracked truth)

@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 记忆决策通道三件套 + 拒绝动词（2026-07-15 记忆+自成长层评审）：consolidate 新增 `--reviewer`
+  （--set-stable/--reject 必填署名）、`--reject ID --reason`（写 rejected review + 同次可归档）、
+  set-stable 落 approved_stable 审计记录；digest「待你裁决」新增 awaiting_approval 桶渲染（放行/
+  拒绝双命令就地给出）——为什么：31 条 review 全 promoted 是结构必然（拒绝无机器动词、只能手工改
+  jsonl）、待批候选 0-14 天窗口对人完全不可见、人工闸门零留痕不可审计，三者叠加把晋升吞吐掐死
+  （13 天零晋升、21 条积压）。回归钉 test_memory_system MemoryReviewRound2026_07_15（含「digest
+  生成的命令必须过目标 argparse」契约钉——一键晋升命令带未定义 --reviewer 是同类命令级错误第二次）。
+- 检索中文分词 + 度量闭环接线（同评审）：tokenize 拉丁/CJK 分离 + 中文 bigram + 虚词过滤（旧
+  `[\w#-]+` 把整句中文吞成巨 token，整句 query 必然零命中，26 条 miss 尸检实证真实流量漏检 ~15%）；
+  同批调权重（同义组多命中折叠计一、bigram 半权、exact-phrase ≥2 字符、7 天内 recency 5→10）；
+  retrieval-log 增记检索参数 + source 打标（MEMORY_SEARCH_SOURCE=test 免污染，legacy 行排除出
+  决策统计——历史 158 条中 54% 是 e2e 测试流量）；--mattered 接线（CLAUDE.md 读取协议 + digest
+  「🔎 检索度量」节，ADR-0006 裁决从此有 owner）；reviews.jsonl/retrieval-log.jsonl 移出 gitignore
+  入库（审计轨迹不再单机孤本）。
+- eval-log BUILD-lite（同评审三台账裁决）：record_eval 触发从 orchestrator prose 迁入 quality-gate
+  agent 定义 §4b（确定性自落账 + fail-open）——为什么：prose 约定实证 2026-06-28 起失守（其后 3 个
+  quality-gate session 零记录），「有意冻结」是对既成断链的追认；run-log 维持 FREEZE（0 字节本身即
+  裁决票据）；retrieval 走修采集。record_eval 顺修 ROOT 默认 cwd→仓根 + 本地时区→UTC。
 - hooks 布线契约回归 SETTINGS-002（2026-07-14 hooks 层评审，S22 手法延伸）：settings.json 六 hook
   挂对事件 + PreToolUse matcher 覆盖面 + fork HEAVY set 注入（条件化，两仓同文件）+ README §8 表
   与真实布线一致；capability-parity 补 project-scope-guard/post-edit/session-end/test-hooks 四文件
@@ -20,6 +38,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hook 文件此前完全不在 parity 锚点内，「命名即切换」漂移 8 天 S18 抓不到。
 
 ### Fixed
+- 自成长闭环「异常→人看见」最后一公里四断点（2026-07-15 记忆+自成长层评审，先实证复现再修）：
+  ① check_loop_health 的 pending 积压检测只查权威库而捕获侧写在 fork（事故最可能发生的仓失明；
+  fork_home 参数 07-10 出生即悬空）——改查两仓并集 + spawn 显式传 GOVERNANCE_CALLER_ROOT；
+  ② 异常可见性三层串联断（skip 降频压制/预览 14 行截断/stdout 丢弃，最坏 8 天盲窗）——loop 检查
+  前移到降频判定前且异常构成写 digest 理由、标题行带异常计数、spawn stdout 接 governance.log；
+  ③ .checked 认领痕双语义掩蔽崩溃日——治理完成写结果 JSON 进 marker（空=崩溃痕）、方向一检测只认
+  非空、session-restore 对陈旧空 marker 提示补跑；④ 🌱 通知等"给人看的"信号全走 stderr 死信——迁
+  stdout 用户可见通道（test-hooks CONC-005 契约随行更新）。回归钉 2 条（fork 积压/空 marker）。
+- 记忆管道数据完整性三暗坑（同评审）：畸形 jsonl 行整文件重写静默蒸发（实证 22 行变 21 行零告警；
+  read_jsonl_with_raw 保留 (None, raw) 原样带走）；promoted-facts source 裸写含冒号毒化 YAML 严格
+  解析（yaml_scalar 引号化）；review_candidates --promote 把缺元数据候选自动写 rejected 终审并
+  静默归档（可补救状态改只 skip 不落 review）。另删 review_candidates 死代码 promote()（从未被
+  调用且已与主实现漂移：丢元数据/漏 source 字段/自带第二份 SF-sync 实现）。
 - Session 生命周期 hooks 五处真问题（2026-07-14 hooks 层评审，全部先实证复现再修）：①「命名即切换」
   route-guard 实现 2026-07-06 起只落 fork，母版 hint 仍发「确认后执行」与母版 CLAUDE.md 自相矛盾
   （补齐母版 + STICKY-008c 回归随行）；② Stop 链（session-sync）项目真值仍读共享软链——pin=projA

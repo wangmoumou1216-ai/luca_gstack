@@ -14,6 +14,9 @@
 ## 目标选择
 
 优先级：上期 opportunities 池 > 月度 scout 反复出现的同源 hub > 用户点名。
+候选源另含 **vetting-registry rejected 池**（weighted_score≥80 且 non_redundancy FAIL——
+「与自有 skill 重叠但质量信号高」正是对标的最佳素材，mattpocock 首批即人工从此池挖出；
+2026-07-15 记忆层评审 B2 裁决：不改 scout 采集，这里补消费入口即可）。
 选型标准：对方是**成体系**的实践（skill 集 / 框架 / 方法论），且与 luca_gstack 有可比面——
 单点工具走模式 1 的 fit-to-gap 即可，不值得对标。
 

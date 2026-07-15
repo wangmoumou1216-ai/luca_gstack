@@ -894,10 +894,17 @@ facts:
             self.assertEqual(q1["actions"]["promoted"], [])
             self.assertFalse(Path(tmp, "memory", "semantic", "promoted-facts.yaml").exists())
 
-            # 人工 set_stable 批准后才进 promotion_ready 并被晋升
-            q2 = json.loads(self.run_script("consolidate_memory.py", "--set-stable", cid, "--promote-ready", "--json", env=env).stdout)
+            # 人工 set_stable 批准后才进 promotion_ready 并被晋升（2026-07-15 起闸门必须署名）
+            q2 = json.loads(self.run_script("consolidate_memory.py", "--set-stable", cid, "--reviewer", "tester", "--promote-ready", "--json", env=env).stdout)
             self.assertEqual(q2["actions"]["promoted"], [cid])
             self.assertIn(cid, Path(tmp, "memory", "semantic", "promoted-facts.yaml").read_text(encoding="utf-8"))
+            # 闸门留痕：approved_stable 记录带操作者署名（评审切面 a 问题 4）
+            reviews = Path(tmp, "memory", "semantic", "reviews.jsonl").read_text(encoding="utf-8")
+            self.assertIn('"decision": "approved_stable"', reviews)
+            self.assertIn('"reviewer": "tester"', reviews)
+            # 无署名的闸门操作直接被 argparse 层拒绝
+            bare = self.run_script("consolidate_memory.py", "--set-stable", cid, env=env, check=False)
+            self.assertEqual(bare.returncode, 2)
 
     def test_consolidate_memory_archive_reviewed_moves_candidates(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1008,6 +1015,193 @@ facts:
                 self.assertIsNone(dg.last_digest_date())
             finally:
                 dg.DIGESTS = original_digests
+
+
+class MemoryReviewRound2026_07_15(unittest.TestCase):
+    """记忆+自成长层评审（2026-07-15）修复的回归钉：决策通道/数据完整性/检索/可见性。"""
+
+    run_script = MemorySystemTests.run_script
+
+    def _minimal_candidate(self, tmp, cid="SC-fix", **overrides):
+        sem = Path(tmp) / "memory" / "semantic"
+        sem.mkdir(parents=True, exist_ok=True)
+        c = {
+            "id": cid, "domain": "skill-rule", "fact": f"fact for {cid}",
+            "confidence": "high", "proposed_stable": False, "stable_requested": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "evidence": "review 2026-07-15", "scope": "memory", "reviewer": "proposer",
+            "status": "CANDIDATE",
+        }
+        c.update(overrides)
+        with (sem / "candidates.jsonl").open("a", encoding="utf-8") as f:
+            f.write(json.dumps(c, ensure_ascii=False) + "\n")
+        return c
+
+    def test_reject_verb_writes_review_and_archives(self):
+        # 评审切面 a 问题 2：拒绝此前没有机器动词，只能手工编辑 jsonl
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            self._minimal_candidate(tmp, "SC-to-reject")
+            out = json.loads(self.run_script(
+                "consolidate_memory.py", "--reject", "SC-to-reject",
+                "--reason", "过时", "--reviewer", "tester", "--archive-reviewed", "--json",
+                env=env).stdout)
+            self.assertEqual(out["actions"]["rejected"]["rejected"], ["SC-to-reject"])
+            reviews = Path(tmp, "memory", "semantic", "reviews.jsonl").read_text(encoding="utf-8")
+            self.assertIn('"decision": "rejected"', reviews)
+            self.assertIn('"reviewer": "tester"', reviews)
+            self.assertIn("过时", reviews)
+            # 同次 --archive-reviewed 直接归档（decisions 在 reject 写盘后构建）
+            self.assertNotIn("SC-to-reject", Path(tmp, "memory", "semantic", "candidates.jsonl").read_text(encoding="utf-8"))
+            self.assertIn("SC-to-reject", Path(tmp, "memory", "semantic", "archive", "candidates-2026.jsonl").read_text(encoding="utf-8"))
+
+    def test_digest_stale_commands_pass_target_argparse(self):
+        # 评审切面 a 问题 1 的契约钉：digest 生成的每条命令必须能通过目标脚本 argparse
+        # （史前 --approve 误写、本次 --reviewer 未定义，同类命令级错误第三次不允许发生）
+        import re as _re
+        import shlex as _shlex
+        dg = _load_daily_governance()
+        rendered = dg.render_stale({"id": "SC-cmd", "age_days": dg.STALE_ESCALATE_DAYS + 1, "fact": "f"})
+        cmds = _re.findall(r"`python3 memory/scripts/(\S+) ([^`]+)`", rendered)
+        self.assertGreaterEqual(len(cmds), 2, f"应至少含晋升+拒绝两条命令：{rendered}")
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            Path(tmp, "memory", "semantic").mkdir(parents=True)
+            for script, argstr in cmds:
+                argstr = argstr.replace("<你的名字>", "tester").replace("<理由>", "r")
+                result = self.run_script(script, *_shlex.split(argstr), env=env, check=False)
+                self.assertNotEqual(result.returncode, 2,
+                                    f"digest 命令未通过 {script} argparse：{argstr}\n{result.stderr}")
+
+    def test_review_candidates_missing_metadata_not_auto_rejected(self):
+        # 评审切面 a 问题 5：缺元数据是可补救状态，--promote 不得写下不可逆的 rejected 终审
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            old = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+            self._minimal_candidate(tmp, "SC-no-meta", evidence="", scope="", reviewer="", created_at=old)
+            out = self.run_script("review_candidates.py", "--promote", "--reviewer", "tester", env=env)
+            self.assertIn("missing review metadata", out.stdout)
+            reviews_path = Path(tmp, "memory", "semantic", "reviews.jsonl")
+            if reviews_path.exists():
+                self.assertNotIn('"decision": "rejected"', reviews_path.read_text(encoding="utf-8"))
+
+    def test_malformed_candidate_line_survives_rewrite(self):
+        # 评审切面 a 问题 7：整文件重写不得静默蒸发畸形行（实测曾 22 行变 21 行零告警）
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            self._minimal_candidate(tmp, "SC-good")
+            broken = '{"id": "SC-broken", "fact": "half a line'
+            cand = Path(tmp, "memory", "semantic", "candidates.jsonl")
+            with cand.open("a", encoding="utf-8") as f:
+                f.write(broken + "\n")
+            self.run_script("consolidate_memory.py", "--set-stable", "SC-good", "--reviewer", "tester", env=env)
+            content = cand.read_text(encoding="utf-8")
+            self.assertIn(broken, content, "畸形行在 set-stable 重写后消失")
+            # 归档重写路径同样保留
+            self.run_script("consolidate_memory.py", "--archive-reviewed", env=env)
+            self.assertIn(broken, cand.read_text(encoding="utf-8"), "畸形行在 archive 重写后消失")
+
+    def test_promoted_source_with_colon_yields_valid_yaml(self):
+        # 评审切面 a 问题 8：source 含冒号曾毒化 promoted-facts.yaml 严格解析
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            self._minimal_candidate(tmp, "SC-colon", source="deepresearch 2026-05: notes")
+            self.run_script("consolidate_memory.py", "--set-stable", "SC-colon", "--reviewer", "tester",
+                            "--promote-ready", env=env)
+            import yaml as _yaml
+            parsed = _yaml.safe_load(Path(tmp, "memory", "semantic", "promoted-facts.yaml").read_text(encoding="utf-8"))
+            self.assertTrue(any(f.get("id") == "SC-colon" for f in parsed["facts"]))
+
+    def test_awaiting_approval_renders_in_digest_and_marker_gets_content(self):
+        # 评审切面 a 问题 3（正门装门铃）+ 切面 c C3（marker 完成痕）
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            scripts_dir = Path(tmp, "memory", "scripts")
+            scripts_dir.mkdir(parents=True)
+            shutil.copy(ROOT / "memory" / "scripts" / "consolidate_memory.py", scripts_dir)
+            self._minimal_candidate(tmp, "SC-await")  # stable_requested=True, proposed_stable=False
+            self.run_script("daily_governance.py", env=env)
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            digest = Path(tmp, "memory", "digests", f"{today}.md").read_text(encoding="utf-8")
+            self.assertIn("待批准晋升", digest)
+            self.assertIn("SC-await", digest)
+            self.assertIn("--set-stable SC-await --reviewer", digest)
+            marker = Path(tmp, "memory", "digests", f".checked-{today}")
+            self.assertTrue(marker.exists())
+            self.assertGreater(marker.stat().st_size, 0, "治理健康完成后 marker 必须带结果 JSON（空=崩溃痕）")
+
+    def test_loop_health_pending_backlog_checks_caller_repo(self):
+        # 评审切面 c C1：捕获侧把 pending 写在 fork，只查权威库 = 事故最可能发生的仓失明
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            auth = Path(tmp) / "auth"
+            fork = Path(tmp) / "fork"
+            (auth / ".claude" / "observability").mkdir(parents=True)
+            fork_obs = fork / ".claude" / "observability"
+            fork_obs.mkdir(parents=True)
+            for i in range(dg.LOOP_PENDING_ALERT):
+                (fork_obs / f"pending-extraction-{i}.md").write_text("x", encoding="utf-8")
+            anomalies, _notes = dg.check_loop_health(
+                observability_dir=auth / ".claude" / "observability",
+                episodic_index=auth / "index.jsonl", digests_dir=auth / "digests",
+                resolved_root=Path(dg.AUTHORITATIVE_MEMORY_ROOT), fork_home=fork,
+                env_memory_root=None, today="2026-07-15")
+            self.assertTrue(any("pending-extraction 积压" in a for a in anomalies),
+                            f"fork 侧积压未被发现：{anomalies}")
+
+    def test_loop_health_ignores_empty_checked_markers(self):
+        # 评审切面 c C3：空 marker = 认领后未完成，不得算「已治理」而掩蔽崩溃日
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".claude" / "observability").mkdir(parents=True)
+            digests = root / "digests"
+            digests.mkdir()
+            (root / "index.jsonl").write_text(json.dumps({"id": "EP-x", "date": "2026-07-14"}) + "\n", encoding="utf-8")
+            (digests / ".checked-2026-07-14").write_text("", encoding="utf-8")  # 认领痕（空=崩溃）
+            kwargs = dict(observability_dir=root / ".claude" / "observability",
+                          episodic_index=root / "index.jsonl", digests_dir=digests,
+                          resolved_root=Path(dg.AUTHORITATIVE_MEMORY_ROOT), fork_home=root,
+                          env_memory_root=None, today="2026-07-15")
+            anomalies, _ = dg.check_loop_health(**kwargs)
+            self.assertTrue(any("无对应 governance marker" in a for a in anomalies),
+                            f"空 marker 掩蔽了崩溃日：{anomalies}")
+            (digests / ".checked-2026-07-14").write_text('{"ok": 1}', encoding="utf-8")
+            anomalies2, _ = dg.check_loop_health(**kwargs)
+            self.assertFalse(any("无对应 governance marker" in a for a in anomalies2))
+
+    def test_tokenize_cjk_sentence_query_hits(self):
+        # 评审切面 b B2：旧分词把整句中文吞成巨 token，整句 query 必然零命中（漏检 ~15%）
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp}
+            ep = Path(tmp, "memory", "episodic")
+            ep.mkdir(parents=True)
+            (ep / "index.jsonl").write_text(json.dumps({
+                "id": "EP-progress", "date": "2026-07-10", "topic": "muse 项目进度页 html 原型",
+                "skills_used": ["html-prototype"], "decision": "进度页用 framework 母版",
+            }, ensure_ascii=False) + "\n", encoding="utf-8")
+            out = json.loads(self.run_script(
+                "search_memory.py", "给muse项目生成一个进度html", "--json", env=env).stdout)
+            self.assertTrue(out, "整句中文+粘连英文 query 应命中（muse/html/进度 bigram）")
+            self.assertEqual(out[0]["id"], "EP-progress")
+            # 单字符 query 不得靠裸子串 exact-phrase 命中一切
+            out2 = json.loads(self.run_script("search_memory.py", "x", "--json", env=env).stdout)
+            self.assertEqual(out2, [])
+
+    def test_retrieval_log_records_params_and_source_tag(self):
+        # 评审切面 b B1：log 不记参数则 miss 不可归因；测试流量必须可打标排除
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"MEMORY_ROOT": tmp, "MEMORY_SEARCH_SOURCE": "test"}
+            Path(tmp, "memory", "episodic").mkdir(parents=True)
+            Path(tmp, "memory", "episodic", "index.jsonl").write_text("", encoding="utf-8")
+            self.run_script("search_memory.py", "任意查询词", "--layer", "episodic", "--limit", "3", env=env)
+            log_lines = Path(tmp, "memory", "retrieval-log.jsonl").read_text(encoding="utf-8").strip().splitlines()
+            rec = json.loads(log_lines[-1])
+            self.assertEqual(rec["source"], "test")
+            self.assertEqual(rec["layer"], "episodic")
+            self.assertEqual(rec["limit"], 3)
+            self.assertIn("cwd_tail", rec)
 
 
 if __name__ == "__main__":

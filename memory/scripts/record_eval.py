@@ -20,7 +20,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import date
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -46,7 +46,8 @@ def main():
     args = parser.parse_args()
 
     record = {
-        "session_date": str(date.today()),
+        # UTC 对齐全链（episodic/governance 均 UTC；旧本地时区在时差边界会错一天）
+        "session_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "skill_name": args.skill,
         "topic": args.topic,
         "scene": args.scene,
@@ -59,7 +60,9 @@ def main():
         "user_adopted": args.user_adopted,
     }
 
-    root = Path(os.environ.get("MEMORY_ROOT", "."))
+    # 默认仓根而非 cwd（旧默认 "." 在任意目录跑会产生杂散 ./memory/evals/ 目录，
+    # 且与 append_episode/daily_governance 的 parents[2] 惯例不一致）
+    root = Path(os.environ.get("MEMORY_ROOT", Path(__file__).resolve().parents[2]))
     log_path = root / "memory" / "evals" / "eval-log.jsonl"
     log_path.parent.mkdir(parents=True, exist_ok=True)
 

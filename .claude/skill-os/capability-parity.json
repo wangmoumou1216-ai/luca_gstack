@@ -48,7 +48,8 @@
     ],
     ".claude/agents/quality-gate.md": [
       "open-design",
-      "NEEDS_CONTEXT"
+      "NEEDS_CONTEXT",
+      "record_eval"
     ],
     ".claude/agents/work-agent-template.md": [
       "NEEDS_CONTEXT",
@@ -81,7 +82,11 @@
       "check_loop_health",
       "AUTHORITATIVE_MEMORY_ROOT",
       "新场景待评估档位",
-      "Skill 评估消费"
+      "Skill 评估消费",
+      "待批准晋升",
+      "GOVERNANCE_CALLER_ROOT",
+      "_write_marker_result",
+      "检索度量"
     ],
     ".claude/skill-os/claude-md-appendix.md": [
       "CLAUDE.md 附录"
@@ -178,7 +183,29 @@
     ],
     ".claude/hooks/session-restore.mjs": [
       "evolution-bookkeep.mjs",
-      "prior_opportunities_to_adjudicate"
+      "prior_opportunities_to_adjudicate",
+      "GOVERNANCE_CALLER_ROOT",
+      "认领后未完成"
+    ],
+    "memory/scripts/consolidate_memory.py": [
+      "reject_candidates",
+      "approved_stable",
+      "畸形行"
+    ],
+    "memory/scripts/search_memory.py": [
+      "_CJK_RE",
+      "MEMORY_SEARCH_SOURCE",
+      "keyword_score"
+    ],
+    "memory/scripts/review_candidates.py": [
+      "可补救状态"
+    ],
+    "memory/scripts/record_eval.py": [
+      "UTC 对齐全链"
+    ],
+    "memory/tests/test_memory_system.py": [
+      "MemoryReviewRound2026_07_15",
+      "digest_stale_commands_pass_target_argparse"
     ]
   }
 }

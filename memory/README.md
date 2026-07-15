@@ -40,30 +40,48 @@ python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
 python3 memory/scripts/consolidate_memory.py --json
 ```
 
-## 自然语言统一检索
+## 关键词统一检索
+
+> 关键词+子串匹配引擎（含中文 bigram），**非语义检索**——query 拆成关键词效果最好，
+> 整句自然语言靠 bigram 兜底（2026-07-15 记忆层评审：旧称"自然语言检索"名不副实，
+> 曾直接导致整句 query 十连 miss）。
 
 ```bash
 python3 memory/scripts/search_memory.py "Project Gate route guard"
 python3 memory/scripts/search_memory.py "Project Gate" --limit 5 --layer all
 python3 memory/scripts/search_memory.py "framework templates" --layer semantic --skill html-prototype
 python3 memory/scripts/search_memory.py "quality gate fail" --layer eval --topic prototype --json
+python3 memory/scripts/search_memory.py "路由 触发词" --project muse   # 中文按词拆开 + 项目过滤
 ```
 
 `search_memory.py` 同时检索：
 
-- `episodic/index.jsonl`
+- `episodic/index.jsonl`（热窗口；归档层 `episodic/archive/` 不在检索面，miss 时会提示条数）
 - `semantic/promoted-facts.yaml`
 - `evals/eval-log.jsonl`
 
 支持参数：
 
 ```text
-python3 memory/scripts/search_memory.py "query" [--limit N] [--layer episodic|semantic|eval|all] [--skill X] [--topic X] [--json]
+python3 memory/scripts/search_memory.py "query" [--limit N] [--layer episodic|semantic|eval|all] [--skill X] [--topic X] [--project X] [--json]
 ```
 
 输出字段包含 `layer`、`id`、`title` 或 `fact`、`score`、`reasons`、`source`、`path`。评分理由会展示关键词命中、skill/topic 过滤、semantic stable/confidence、eval gate_status 和 recency。默认输出人类可读文本；`--json` 输出 JSON list。脚本兼容 `MEMORY_ROOT`，并对 `promoted-facts.yaml` 做轻量容错解析，单条 YAML 异常不会导致整层检索为空。
 
-> **EVAL 子系统当前为 DEFERRED / 未接线（dormant，非损坏）。** `memory/scripts/record_eval.py`（写 `evals/eval-log.jsonl`）与 `memory/evals/scripts/collect_eval.py`（写 `evals/<skill>/pairs.jsonl`）是为 GEPA 能力预留的 eval-infra，目前仅在文档中提及（orchestrator.md、eval-schema），没有任何 hook/npm/CI 触发。产数现状（2026-07-09 勘误）：`eval-log.jsonl` 实有 6 条（2026-06-12/14「研究情报官」workflow，经 orchestrator prose 触发 record_eval；`quality_gate_score` 旧制 0-10 主观分已于 2026-07-09 E5 切换为 0-1 通过率）；`pairs.jsonl` 仍 0 条、`judge_eval.py` 不存在——"从未产数"仅对 GEPA pairs 管线成立。二者写入**不同文件**（已知双写不一致，eval-log.jsonl vs pairs.jsonl）。这是**有意冻结**，等待 ADR-0007 W3 与 ADR-0006 ~10-session 检索度量结论后再决定是否统一/接线，**勿在度量结论出来前删除或修复**。注意：ADR-0006 的检索度量走的是独立路径（`search_memory.py` → `memory/retrieval-log.jsonl`），与此 eval-infra 无关。
+**ADR-0006 度量闭环（2026-07-15 接线）：** 每次检索自动埋点进 `memory/retrieval-log.jsonl`
+（含检索参数与 source 标记；测试环境请设 `MEMORY_SEARCH_SOURCE=test` 免污染决策数据）。
+**检索结果实际改变了你的行动时，补跑一次
+`python3 memory/scripts/search_memory.py --mattered "<query>"`**——这是 BUILD/FREEZE 裁决的
+唯一主观信号，没有它裁决永远 INCONCLUSIVE。裁决入口：`--retrieval-stats`（每日 digest 也会
+呈现一行摘要）。
+
+> **EVAL 子系统状态（2026-07-15 记忆层评审裁决，BUILD-lite）。** `record_eval.py`（写
+> `evals/eval-log.jsonl`）已接确定性触发：quality-gate agent 定义 §4b 内置落账步骤（此前靠
+> orchestrator prose 约定、实证 2026-06-28 起失守——冻结是对既成断链的追认而非原因）；消费侧
+> 走每日 digest「🧪 Skill 评估消费」节。历史勘误与旧制分值语义见 git 历史。GEPA pairs 管线
+> （`collect_eval.py` → `pairs.jsonl`，0 条）与 `run-log.jsonl`（0 字节）仍 **FREEZE**——
+> 后者的持续零写入本身就是裁决票据，勿新建采集。ADR-0006 检索度量是独立路径
+> （`search_memory.py` → `retrieval-log.jsonl`），见上节。
 
 ## 记忆合并与 review queue
 

@@ -148,6 +148,7 @@ session-restore.mjs 自动跑；`search_memory.py`/`get_memory.py --layer`/`cons
 按需手调）。规则（强制，不可从脚本用法反推省略）：
 - 启动协议只使用 `get_memory.py --summary`，不得全量读取 episodic/semantic/eval 长历史。
 - 具体任务优先运行 `search_memory.py "<task/skill/topic>" --limit 5`，再决定是否读取命中的层或文件。
+- **检索改变了行动时补跑 `search_memory.py --mattered "<query>"`**（ADR-0006 唯一主观信号；query 拆关键词，引擎是关键词匹配非语义）。
 - `get_memory.py --layer ...` 只用于明确需要某层内容时；不得替代任务相关检索。
 - `consolidate_memory.py --json` 是治理入口，默认只读 dry-run；普通 skill 启动不运行。
 - 不直接读取 `memory/episodic/index.jsonl`、`semantic/candidates.jsonl`、`semantic/reviews.jsonl`、`evals/eval-log.jsonl` 等长文件，除非进入治理/复盘/调试场景。
