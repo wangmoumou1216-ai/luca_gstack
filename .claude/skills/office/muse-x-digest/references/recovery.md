@@ -6,14 +6,19 @@
   - 含 `⚠️ 未抓到正文` 或 `注意：线程可能不完整` 警告块 → PARTIAL/EMPTY 强嫌疑。
   - `## 正文` 是 `(未抓到正文文本)` → EMPTY 正文。
   - `类型: image` 且来源为 `/status/` 页 → 强嫌疑（很可能长文/长推/线程，正文不在推文节点里）。
+  - `类型: article` → **恒进阶段 3 校验**（capture 带 `[长文(Article)：正文为 DOM 兜底序列化…]`
+    提示行）：DOM 序列化正文可能非空甚至字符数与全文一致，但会丢 `atomic` 内嵌代码块与
+    列表/引用结构；恢复成功即以 API 结构化版为准，FxTwitter 失败才用 DOM 文本并亮红旗。
 - **体感**（借 mozilla readability `isProbablyReaderable`）：现有正文 + 图 OCR 文字，
   **够不够构成一条自足完整信息**？一张观点海报=自足=COMPLETE；一张"课程封面图 + Full course"
   字样=明显正文在别处=PARTIAL。
-- **判定**：COMPLETE → 直接进阶段 4。PARTIAL/EMPTY → 进恢复。
+- **判定**：COMPLETE（且非 article）→ 直接进阶段 4。PARTIAL/EMPTY 或 article → 进恢复。
 
 ## FxTwitter 恢复配方（阶段 3）
-FxTwitter/FxEmbed 无 key 无登录返回 X 完整结构（长文在 `article`、长推在 `note_tweet`，
-这些**都不在** DOM 可见 tweet 文本里——正是 DOM 抓取漏掉正文的根因）。
+FxTwitter/FxEmbed 无 key 无登录返回 X 完整结构（长文在 `article`、长推在 `note_tweet`）。
+长推/线程首条正文**不在** DOM 可见 tweet 文本里；Article 自 2026-07 起 X 会内联渲染在 status 页
+（DraftJS `div[data-block]`，app 已做 DOM 兜底序列化），但**结构化权威全文（含 atomic 内嵌
+代码块/entityMap）只有 API 有**——DOM 版只配当 FxTwitter 不可达时的降级文本。
 
 ```bash
 # handle 与 id 从 capture.md「来源」URL 抽取：https://x.com/<handle>/status/<id>
