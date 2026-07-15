@@ -1204,5 +1204,146 @@ class MemoryReviewRound2026_07_15(unittest.TestCase):
             self.assertIn("cwd_tail", rec)
 
 
+class UpstreamDriftWatcherTests(unittest.TestCase):
+    """B1 上游漂移侦测（2026-07-15）：propose-only watcher 行为契约（比较键/节流/静音/fail-open）。"""
+
+    def _write_pins(self, tmp, units):
+        import yaml
+        p = Path(tmp) / "installed-pins.yaml"
+        p.write_text(yaml.safe_dump({"units": units}, allow_unicode=True), encoding="utf-8")
+        return p
+
+    def _skill_unit(self, name="tdd", watch="a" * 40, **over):
+        u = {"name": name, "kind": "skill", "repo": "o/r", "path": f"skills/{name}",
+             "install_path": None, "pinned_sha": None, "watch_sha": watch,
+             "ack_sha": None, "pinned_at": "2026-07-15", "source": "backfill", "note": None}
+        u.update(over)
+        return u
+
+    def _run(self, tmp, units, fetch, plugins=None, marker_name="marker"):
+        dg = _load_daily_governance()
+        pins = self._write_pins(tmp, units)
+        pj = Path(tmp) / "installed_plugins.json"
+        pj.write_text(json.dumps(plugins or {}), encoding="utf-8")
+        return dg.check_upstream_drift(pins, pj, Path(tmp) / marker_name, "2026-07-15", fetch_latest=fetch)
+
+    def test_drift_reported_when_watch_sha_moves(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            issues = self._run(tmp, [self._skill_unit(watch="a" * 40)], lambda r, p: "b" * 40)
+            self.assertEqual(len(issues), 1)
+            self.assertIn("tdd", issues[0])
+            self.assertIn("a" * 8, issues[0])
+            self.assertIn("b" * 8, issues[0])
+            self.assertIn("compare/", issues[0])
+            self.assertIn("FUSION", issues[0])
+
+    def test_silent_when_unchanged_and_ack_silences(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(self._run(tmp, [self._skill_unit(watch="a" * 40)], lambda r, p: "a" * 40), [])
+        with tempfile.TemporaryDirectory() as tmp:
+            # 已裁决不采纳（ack_sha）→ 静音；上游再动到第三个版本才重新告警
+            unit = self._skill_unit(watch="a" * 40, ack_sha="b" * 40)
+            self.assertEqual(self._run(tmp, [unit], lambda r, p: "b" * 40), [])
+            issues = self._run(tmp, [unit], lambda r, p: "c" * 40, marker_name="m2")
+            self.assertEqual(len(issues), 1)
+
+    def test_plugin_check_is_local_zero_network(self):
+        calls = []
+        def fetch(r, p):
+            calls.append(r)
+            return "a" * 40
+        with tempfile.TemporaryDirectory() as tmp:
+            plugin = {"name": "superpowers", "kind": "plugin",
+                      "plugin_key": "superpowers@claude-plugins-official",
+                      "last_vetted_version": "5.1.0", "pinned_at": "2026-06-07"}
+            plugins_json = {"superpowers@claude-plugins-official": [{"version": "6.1.1"}]}
+            issues = self._run(tmp, [plugin], fetch, plugins=plugins_json)
+            self.assertEqual(len(issues), 1)
+            self.assertIn("6.1.1", issues[0])
+            self.assertIn("5.1.0", issues[0])
+            self.assertEqual(calls, [], "plugin 检查必须纯本地零网络")
+
+    def test_throttle_marker_three_states_and_cache_replay(self):
+        calls = []
+        def fetch(r, p):
+            calls.append(r)
+            return "a" * 40
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "marker"
+            # 新鲜 marker（旧格式非 JSON）→ 零网络调用、无缓存可回放
+            marker.write_text("2026-07-15", encoding="utf-8")
+            issues = self._run(tmp, [self._skill_unit()], fetch)
+            self.assertEqual(calls, [])
+            self.assertEqual(issues, [])
+            # marker 缺失 → 实跑且成功后写入（含缓存 JSON）
+            marker.unlink()
+            self._run(tmp, [self._skill_unit()], fetch)
+            self.assertEqual(len(calls), 1)
+            self.assertTrue(marker.exists(), "成功后 marker 应被写")
+            # 全失败 → marker 不 touch（次日重试）
+            marker.unlink()
+            def boom(r, p):
+                raise RuntimeError("offline")
+            issues = self._run(tmp, [self._skill_unit()], boom)
+            self.assertFalse(marker.exists(), "全失败不得刷新节流 marker")
+            self.assertTrue(any("全失败" in i for i in issues))
+        with tempfile.TemporaryDirectory() as tmp:
+            # 缓存回放：实跑发现漂移 → 节流期内重跑（零网络）仍返回同一条漂移行，
+            # 否则同日 digest 重写会把漂移行洗掉
+            drift_calls = []
+            def drift_fetch(r, p):
+                drift_calls.append(r)
+                return "b" * 40
+            first = self._run(tmp, [self._skill_unit(watch="a" * 40)], drift_fetch)
+            self.assertEqual(len(first), 1)
+            def must_not_call(r, p):
+                raise AssertionError("节流期不得打网络")
+            replay = self._run(tmp, [self._skill_unit(watch="a" * 40)], must_not_call)
+            self.assertEqual(replay, first, "节流期应回放缓存的漂移行")
+
+    def test_fail_open_family(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            # pins 缺失 → 空返回无异常
+            self.assertEqual(dg.check_upstream_drift(
+                Path(tmp) / "nope.yaml", Path(tmp) / "nope.json", Path(tmp) / "m", "2026-07-15",
+                fetch_latest=lambda r, p: "x"), [])
+            # pins 畸形 → 折叠单条异常 issue
+            bad = Path(tmp) / "bad.yaml"
+            bad.write_text("units: [->{{", encoding="utf-8")
+            issues = dg.check_upstream_drift(bad, Path(tmp) / "n.json", Path(tmp) / "m1", "2026-07-15",
+                                             fetch_latest=lambda r, p: "x")
+            self.assertEqual(len(issues), 1)
+            self.assertIn("fail-open", issues[0])
+        with tempfile.TemporaryDirectory() as tmp:
+            # 单源异常不吞全局：另一源照常判漂移；失败源单列供应链信号
+            def fetch(r, p):
+                if "dead" in p:
+                    raise RuntimeError("HTTP 404")
+                return "b" * 40
+            issues = self._run(tmp, [self._skill_unit("dead"), self._skill_unit("alive", watch="a" * 40)], fetch)
+            self.assertTrue(any("alive" in i and "compare/" in i for i in issues))
+            self.assertTrue(any("dead" in i and "404" in i and "供应链" in i for i in issues))
+        with tempfile.TemporaryDirectory() as tmp:
+            # 空串结果 ≠ 无漂移：判 repo/path 疑错
+            issues = self._run(tmp, [self._skill_unit()], lambda r, p: "")
+            self.assertTrue(any("疑错" in i for i in issues), issues)
+
+    def test_propose_only_never_mutates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pins = self._write_pins(tmp, [self._skill_unit(watch="a" * 40)])
+            before = pins.read_bytes()
+            entries_before = sorted(p.name for p in Path(tmp).iterdir())
+            pj = Path(tmp) / "installed_plugins.json"
+            pj.write_text("{}", encoding="utf-8")
+            dg = _load_daily_governance()
+            dg.check_upstream_drift(pins, pj, Path(tmp) / "marker", "2026-07-15",
+                                    fetch_latest=lambda r, p: "b" * 40)
+            self.assertEqual(pins.read_bytes(), before, "watcher 不得改 pins")
+            entries_after = sorted(p.name for p in Path(tmp).iterdir())
+            self.assertEqual(set(entries_after) - set(entries_before) - {"installed_plugins.json"},
+                             {"marker"}, "除节流 marker 外不得产生任何新文件")
+
+
 if __name__ == "__main__":
     unittest.main()

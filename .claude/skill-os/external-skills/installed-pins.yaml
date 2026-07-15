@@ -1,0 +1,116 @@
+# watcher 唯一真值：已装外部 skill/plugin 的上游锚（daily_governance.check_upstream_drift 消费）。
+# 纯数据，不放 verdict/score（vetting 真值在 vetting-registry.yaml；采纳审计在 evolution/adoption-log.jsonl）。
+#
+# 维护义务：
+# - FUSION refresh 落地后必须更新对应行 watch_sha/pinned_sha/pinned_at（FUSION-RUNBOOK 步⑨）。
+# - 裁决「看过、不采纳」→ 把上游当前 SHA 填 ack_sha：静音该版本，上游再动才重新告警。
+# - plugin 补审后同步 last_vetted_version（双写点：vetting-registry 散文 + 此处机读；watcher 本身会盯出不同步）。
+# - repo 改名须手动更新（GitHub API 自动重定向可续跑，旧名被回收才失真）。
+#
+# 字段语义：
+# - watch_sha  比较键 = touching path 的最后一次 commit（与 watcher 同款查询取得：
+#              gh api "repos/O/R/commits?per_page=1&path=P" --jq ".[0].sha"；path 空 = 整仓）。
+#              不用 repo HEAD：6/8 单元来自天天动的 monorepo，repo 级比较 = 永久假漂移。
+# - pinned_sha vetting/refresh 锚（FUSION diff 基线），不参与漂移比较。
+# - ack_sha    已裁决「不采纳」的静音版本，null = 无。
+# - source     adoption-log = 装机时钉过版本；backfill = 2026-07-15 回填（基线为回填日上游状态，
+#              非装机版本——装机早于回填的单元本地内容可能落后于基线，refresh 时以 FUSION 实 diff 为准）。
+units:
+- name: tdd
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/tdd
+  install_path: ~/.agents/skills/tdd
+  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
+  watch_sha: bd453a6742fb8660bf618c298f1e2b80fb9f35e3
+  ack_sha: null
+  pinned_at: '2026-07-12'
+  source: adoption-log
+  note: 2026-07-12 refresh 到 391a2701（+seam 门 +tautological）
+- name: codebase-design
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/codebase-design
+  install_path: ~/.claude/skills/codebase-design
+  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
+  watch_sha: ee8bae40062cd6b435073368ed0c540f48c35862
+  ack_sha: null
+  pinned_at: '2026-07-12'
+  source: adoption-log
+  note: null
+- name: resolving-merge-conflicts
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/resolving-merge-conflicts
+  install_path: ~/.claude/skills/resolving-merge-conflicts
+  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
+  watch_sha: 81ddacb08b3878d07ac4fa2de60bd8a53bacba5b
+  ack_sha: null
+  pinned_at: '2026-07-12'
+  source: adoption-log
+  note: null
+- name: teach
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/productivity/teach
+  install_path: ~/.claude/skills/teach
+  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
+  watch_sha: aa024cb1954fedbc8221967c080fa40b9867f994
+  ack_sha: null
+  pinned_at: '2026-07-12'
+  source: adoption-log
+  note: personal install（零框架触面）
+- name: systematic-debugging
+  kind: skill
+  repo: obra/superpowers
+  path: skills/systematic-debugging
+  install_path: ~/.agents/skills/systematic-debugging
+  pinned_sha: null
+  watch_sha: 90e1721817ff783a200017e395911b9af858285a
+  ack_sha: null
+  pinned_at: '2026-07-15'
+  source: backfill
+  note: local_mods——2026-07-12 mattpocock diagnosing-bugs port 加了 CREATION-LOG.md + scripts/；
+    refresh 须走 FUSION 步⑧ resolving-merge-conflicts 合并，不能盲覆盖
+- name: design-system-architect
+  kind: skill
+  repo: wshobson/agents
+  path: plugins/ui-design/agents/design-system-architect.md
+  install_path: ~/.claude/agents/design-system-architect.md
+  pinned_sha: null
+  watch_sha: 56848874a27cf0812b20a067ff3cf4eb8e0a7858
+  ack_sha: null
+  pinned_at: '2026-07-15'
+  source: backfill
+  note: 上游该文件最后一动 2026-01-19（早于 2026-06-07 装机），基线即装机版本；
+    本地文件头贴有品牌锁 blockquote（外注入，refresh 时须保留）
+- name: ui-ux-pro-max
+  kind: skill
+  repo: nextlevelbuilder/ui-ux-pro-max-skill
+  path: null
+  install_path: ~/.agents/skills/ui-ux-pro-max
+  pinned_sha: null
+  watch_sha: f8ac5e1266dba8354ea96e19994d9f4345e7ec31
+  ack_sha: null
+  pinned_at: '2026-07-15'
+  source: backfill
+  note: 上游 2026-07-14 仍在动、装机 2026-06-07——本地内容大概率落后于基线，首次 refresh 前
+    以 FUSION 实 diff 为准
+- name: extract-design-system
+  kind: skill
+  repo: arvindrk/extract-design-system
+  path: null
+  install_path: ~/.agents/skills/extract-design-system
+  pinned_sha: null
+  watch_sha: 1873741ba8dea755e35e6e15134f7918cd58e036
+  ack_sha: null
+  pinned_at: '2026-07-15'
+  source: backfill
+  note: 上游最后一动 2026-06-19（装机 2026-06-07 之后），本地可能落后于基线
+- name: superpowers
+  kind: plugin
+  plugin_key: superpowers@claude-plugins-official
+  last_vetted_version: '5.1.0'
+  pinned_at: '2026-06-07'
+  note: 对比 ~/.claude/plugins/installed_plugins.json 当前 version（纯本地零网络）；
+    插件管理器会静默自动升级——vetting 停在 5.1.0 而实装已 6.1.1 正是本 watcher 的立项实证

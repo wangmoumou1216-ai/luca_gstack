@@ -86,7 +86,8 @@
       "待批准晋升",
       "GOVERNANCE_CALLER_ROOT",
       "_write_marker_result",
-      "检索度量"
+      "检索度量",
+      "check_upstream_drift"
     ],
     ".claude/skill-os/claude-md-appendix.md": [
       "CLAUDE.md 附录"
@@ -179,7 +180,8 @@
     ],
     ".claude/skill-os/evolution/FUSION-RUNBOOK.md": [
       "FM-10",
-      "FM-11"
+      "FM-11",
+      "installed-pins.yaml"
     ],
     ".claude/hooks/session-restore.mjs": [
       "evolution-bookkeep.mjs",
@@ -206,6 +208,11 @@
     "memory/tests/test_memory_system.py": [
       "MemoryReviewRound2026_07_15",
       "digest_stale_commands_pass_target_argparse"
+    ],
+    ".claude/skill-os/external-skills/installed-pins.yaml": [
+      "watch_sha",
+      "superpowers",
+      "ack_sha"
     ]
   }
 }

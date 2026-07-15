@@ -13,6 +13,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -282,6 +283,142 @@ def last_digest_date():
 
 
 AUTHORITATIVE_MEMORY_ROOT = "/Users/luca/Desktop/luca_gstack"  # 记忆单一权威 store（07-09 拍板）；双仓同一逻辑
+UPSTREAM_DRIFT_INTERVAL_DAYS = 7   # skill 类上游查询节流：marker mtime ≥7 天才实跑（plugin 检查纯本地不节流）
+UPSTREAM_FETCH_TIMEOUT = 10        # 单源 gh api 超时（秒）
+UPSTREAM_TOTAL_BUDGET = 45         # 整轮网络查询总预算（秒），超预算剩余单元折叠"部分跳过"
+
+
+def _gh_latest_commit(repo: str, path):
+    """与 installed-pins.yaml watch_sha 同款查询：touching path 的最后一次 commit SHA。"""
+    url = f"repos/{repo}/commits?per_page=1" + (f"&path={path}" if path else "")
+    proc = subprocess.run(["gh", "api", url, "--jq", ".[0].sha"],
+                          capture_output=True, text=True, timeout=UPSTREAM_FETCH_TIMEOUT)
+    if proc.returncode != 0:
+        raise RuntimeError(f"gh exit {proc.returncode}: {(proc.stderr or '').strip()[:120]}")
+    return (proc.stdout or "").strip()
+
+
+def check_upstream_drift(pins_path, plugins_json_path, marker_path, today, fetch_latest=None):
+    """外部 skill/plugin 上游漂移侦测（2026-07-15 B1）。propose-only：只产 digest 行供人裁，
+    watcher 永不改任何 skill 文件——已装 skill 带本地护栏/增量改造、上游是未审供应链，
+    盲自动更新会同时破坏两者；refresh 走 FUSION 九步。
+
+    比较键 = pins 的 watch_sha（path 域 commit，与本函数同款查询），不用 repo HEAD
+    （6/8 单元来自天天动的 monorepo，repo 级比较=永久假漂移=第一周就告警疲劳）。
+    ack_sha = 已裁决「不采纳」的静音版本。节流：marker mtime ≥7 天才实跑网络查询，
+    成功才 touch（全失败次日重试）；最坏可见延迟 ≈ 7（节流）+ 7（digest 心跳）天。
+    fail-open：任何异常折叠成 issue/注记，绝不打断治理。路径与 fetch 全参数化可测。
+    """
+    issues = []
+    try:
+        pins_path = Path(pins_path)
+        if not pins_path.is_file():
+            return issues
+        import yaml
+        units = (yaml.safe_load(pins_path.read_text(encoding="utf-8")) or {}).get("units") or []
+
+        def _find_plugin_entry(obj, key):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    if k == key and isinstance(v, list) and v and isinstance(v[0], dict):
+                        return v[0]
+                    hit = _find_plugin_entry(v, key)
+                    if hit:
+                        return hit
+            elif isinstance(obj, list):
+                for item in obj:
+                    hit = _find_plugin_entry(item, key)
+                    if hit:
+                        return hit
+            return None
+
+        # plugin 单元：读 installed_plugins.json 纯本地对比，零网络、不受节流——
+        # 插件管理器随时静默升级（superpowers 5.1.0→6.1.1 无人察觉 37 天是立项实证）
+        for u in units:
+            if u.get("kind") != "plugin":
+                continue
+            uname = u.get("name", "?")
+            try:
+                plugins = json.loads(Path(plugins_json_path).read_text(encoding="utf-8"))
+                entry = _find_plugin_entry(plugins, str(u.get("plugin_key")))
+                current = str(entry.get("version")) if entry else ""
+                vetted = str(u.get("last_vetted_version") or "")
+                if current and current != vetted:
+                    issues.append(
+                        f"{uname}: 插件已静默升级到 {current}（vetting 停在 {vetted}）"
+                        f"——补审后同步 vetting-registry + installed-pins 的 last_vetted_version")
+            except Exception as e:  # noqa: BLE001
+                issues.append(f"{uname}: 插件版本检查异常（fail-open）：{e}")
+
+        skill_units = [u for u in units if u.get("kind") == "skill"]
+        if not skill_units:
+            return issues
+        marker = Path(marker_path)
+        if marker.exists():
+            age_days = (datetime.now(timezone.utc).timestamp() - marker.stat().st_mtime) / 86400
+            if age_days < UPSTREAM_DRIFT_INTERVAL_DAYS:
+                # 节流窗口内回放上次实跑的缓存结果——否则同日/同周 digest 重写时查询被跳过，
+                # 漂移行会从新 digest 里消失（人看到的是"没货"的版本）
+                try:
+                    cached = json.loads(marker.read_text(encoding="utf-8")).get("issues") or []
+                    issues.extend(cached)
+                except Exception:  # noqa: BLE001 — 旧格式/损坏 marker 视作无缓存
+                    pass
+                return issues
+
+        fetch = fetch_latest or _gh_latest_commit
+        deadline = time.monotonic() + UPSTREAM_TOTAL_BUDGET
+        any_success = False
+        failures = []
+        skill_issues = []
+        for u in skill_units:
+            uname = u.get("name", "?")
+            if time.monotonic() > deadline:
+                skill_issues.append(f"上游漂移检查部分跳过（总预算 {UPSTREAM_TOTAL_BUDGET}s 用尽，{uname} 起未查）")
+                break
+            ipath_raw = str(u.get("install_path") or "")
+            if ipath_raw and not Path(os.path.expanduser(ipath_raw)).exists():
+                skill_issues.append(f"{uname}: install_path 不存在（疑已卸载）——installed-pins 该行待清理")
+                continue
+            try:
+                current = fetch(u.get("repo", ""), u.get("path"))
+            except Exception as e:  # noqa: BLE001
+                failures.append(f"{uname}（{e}）")
+                continue
+            any_success = True
+            if not current:
+                # 空 ≠ 等值：path 拼错/移动时查询返回空，判成"无漂移"就是静默漏报
+                skill_issues.append(f"{uname}: 上游查询返回空（repo/path 疑错或已移动）——检查 installed-pins 该行")
+                continue
+            watch = str(u.get("watch_sha") or "")
+            ack = str(u.get("ack_sha") or "")
+            if current != watch and current != ack:
+                repo = u.get("repo", "")
+                loc = f"{repo} · {u['path']}" if u.get("path") else repo
+                skill_issues.append(
+                    f"{uname}: 上游 {loc} 有新提交 {current[:8]}（pin {u.get('pinned_at', '?')} @ {watch[:8]}）"
+                    f"——refresh 走 FUSION 九步；不采纳则把 {current[:8]} 填 ack_sha 静音。"
+                    f"对比 https://github.com/{repo}/compare/{watch[:8]}...{current[:8]}（force-push 时链接可能失效）")
+        if failures:
+            if any_success:
+                skill_issues.append("上游无法访问（同批其他源正常——404 即删库/私有化/改名的供应链信号，请人工核查）："
+                                    + "、".join(failures))
+            else:
+                skill_issues.append(f"上游漂移检查跳过（{len(failures)} 源全失败，疑离线/gh 未认证——marker 不刷新，下次重试）")
+        issues.extend(skill_issues)
+        if any_success:
+            # 成功才写 marker（全失败次日重试）；内容缓存本轮结果供节流期回放
+            try:
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                marker.write_text(json.dumps({"checked_at": today, "issues": skill_issues}, ensure_ascii=False),
+                                  encoding="utf-8")
+            except OSError:
+                pass
+    except Exception as e:  # noqa: BLE001 — 漂移检查绝不打断治理
+        issues.append(f"上游漂移检查异常（已 fail-open）：{e}")
+    return issues
+
+
 LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
 LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
 DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
@@ -597,6 +734,21 @@ def main() -> int:
         lines += [f"> ⚠️ 检索度量节异常（fail-open）：{e}", ""]
 
     lines += [f"## 📥 归档", "", f"- 已审候选归档：{len(archived)}", f"- noisy episode 归档：{len(archived_noisy)}", ""]
+
+    # 外部 skill 上游漂移（2026-07-15 B1）：propose-only 顺带呈现支路——不参与写入判定
+    # （网络抖动不得强制写 digest），有货才出小节；节流/比较键/静音语义见函数 docstring。
+    try:
+        drift = check_upstream_drift(
+            pins_path=ROOT / ".claude" / "skill-os" / "external-skills" / "installed-pins.yaml",
+            plugins_json_path=Path.home() / ".claude" / "plugins" / "installed_plugins.json",
+            marker_path=DIGESTS / ".upstream-drift-checked",
+            today=today,
+        )
+        if drift:
+            lines += ["## 📦 外部 skill 上游漂移（propose-only；refresh 走 FUSION 九步，watcher 永不自动改）", ""]
+            lines += [f"- {i}" for i in drift] + [""]
+    except Exception as e:  # noqa: BLE001
+        lines += [f"> ⚠️ 上游漂移检查异常（fail-open）：{e}", ""]
 
     # ⚙️ 小节呈现（loop_anomalies 已在降频判定前算出——异常本身构成写 digest 的理由）
     if loop_anomalies:
