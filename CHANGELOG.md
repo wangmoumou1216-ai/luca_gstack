@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 外部 skill 上游漂移侦测 watcher（2026-07-15 skill 自进化 B1）：新真值 `external-skills/
+  installed-pins.yaml`（9 单元：8 skill 回填 watch_sha + superpowers 插件行）+ daily_governance
+  `check_upstream_drift`（digest「📦 上游漂移」节，propose-only 人裁走 FUSION 九步，watcher 永不
+  自动改 skill）——为什么：已装外部 skill 无人盯上游（superpowers 插件管理器静默 5.1.0→6.1.1
+  无人察觉 37 天是立项实证），且首批三件连装机 SHA 都没有。设计要点：比较键=path 域 commit
+  （6/8 单元来自天天动的 monorepo，repo HEAD 比较=永久假漂移）；ack_sha 静音字段（裁决"不采纳"
+  不复读告警）；plugin 检查纯本地零网络；7 天节流 marker 缓存结果供同窗口 digest 重写回放；
+  fail-open 全族（离线跳过/404 单列供应链信号/空结果判路径疑错/预算 45s 部分跳过）。上线即产
+  5 条真实信号（superpowers 版本漂移 + 四个 mattpocock 单元上游 07-13 动过）。FUSION 步⑨ 加
+  pins 更新义务（防 refresh 后忘更→永久假告警）；BENCHMARK-RUNBOOK 候选源补 vetting rejected
+  高分池（B2 零成本替代，自有 skill 对标信号消费入口）。回归钉 6 条（UpstreamDriftWatcherTests）。
 - 记忆决策通道三件套 + 拒绝动词（2026-07-15 记忆+自成长层评审）：consolidate 新增 `--reviewer`
   （--set-stable/--reject 必填署名）、`--reject ID --reason`（写 rejected review + 同次可归档）、
   set-stable 落 approved_stable 审计记录；digest「待你裁决」新增 awaiting_approval 桶渲染（放行/

@@ -21,7 +21,7 @@
 | ⑥ | 行为 A/B（prose 改动必做） | `behavioral_ab.py extract` → 在**被改 skill 的档**（reasoning-heavy=fable→opus / guided-execution=sonnet / mechanical=haiku）跑 baseline/candidate（**baseline arm 禁文件读**，否则读到工作树 live 编辑污染）→ `judge --skill-tier <档>` | verdict=PASS（no-op / 回归 / 档位不符 → BLOCK） |
 | ⑦ | 对抗审查 | `preflight-agent`（入口）+ `quality-gate` agent（Sonnet，断言）+ `redteam` skill（Fable，diff） | PASS / 无 BLOCKING |
 | ⑧ | 回滚就绪落地 | `git tag pre-fuse-<id> <主HEAD>` → 从 worktree squash-merge 单提交（`Fuses: <id> @ <sha>`） | 单提交落地 |
-| ⑨ | 反馈记录 + **可达性验收** | append `.claude/skill-os/evolution/adoption-log.jsonl` `{...}` + 过 FM-11 可达性门 | 行已写 + 场景可调到 |
+| ⑨ | 反馈记录 + **可达性验收** | append `.claude/skill-os/evolution/adoption-log.jsonl` `{...}` + 过 FM-11 可达性门 + **install/refresh 类须更新 `external-skills/installed-pins.yaml` 对应行（watch_sha/pinned_sha/pinned_at）**——漏更 = 上游漂移 watcher 永久假告警直至烂掉 | 行已写 + 场景可调到 + pins 已同步 |
 
 > 步③ 实施涉及写/改 skill prose → 先读 `.claude/skill-os/skill-authoring.md`（手艺）+ `skill-invariants.md`（保护区）。
 > 步⑧ squash-merge 遇冲突 → 用已装 `resolving-merge-conflicts` skill（按意图溯源解决，先读 commit/PR 原意；harness 层 git 纪律优先）。
