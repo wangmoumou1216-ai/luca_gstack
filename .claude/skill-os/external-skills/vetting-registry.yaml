@@ -383,7 +383,7 @@ rejected:
     safety: PASS
     compatibility: PASS
     non_redundancy: FAIL
-  redundant_with: superpowers (already installed v5.1.0 via claude-plugins-official; CLAUDE.md already
+  redundant_with: superpowers (already installed v5.1.0（2026-07-15 补审：插件管理器已自动升至 6.1.1，官方渠道+hooks 共存实测绿，last_vetted 同步进 installed-pins.yaml） via claude-plugins-official; CLAUDE.md already
     exposes superpowers:brainstorming as a first-class entry)
   reject_reasons:
   - 'Redundant: the entire superpowers collection including the candidate using-superpowers skill is ALREADY

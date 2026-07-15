@@ -62,7 +62,7 @@ tiers:
   guided-execution:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
-    skills: [idea, ux-research, ux-audit, figma-demo, challenge, taste-review,
+    skills: [quick-research, idea, ux-research, ux-audit, figma-demo, challenge, taste-review,
              design-review, code-recon, compare, magicpath]
 
   mechanical:
