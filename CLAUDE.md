@@ -28,8 +28,8 @@ This file is read by Claude Code at the start of every session.
 
 **单真值源 + 双检出原则（2026-07-16，取代双仓一致）：** `main` 是唯一真值源；
 `~/Desktop/luca_gstack`（框架/meta + 记忆权威 store）与 `~/Desktop/项目/muse/lucagstack`
-（luca app 运行时）是其两个检出。**框架改动只从母版检出 commit+push，muse 检出只 pull**；
-漂移=落后 origin（tripwire 检测）。风险实验用分支/worktree，不开永久 fork；
+（luca app 运行时）是其两个检出。**框架改动任一检出可做：改前 pull、改完即 commit+push**；
+漂移有 tripwire，冲突推送被 git 拒绝。风险实验用分支/worktree，不开永久 fork；
 capability-parity 降级为仓内锚点自检。
 
 ### Coding Discipline（Karpathy-inspired）

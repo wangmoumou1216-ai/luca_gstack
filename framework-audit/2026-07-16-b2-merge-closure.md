@@ -36,8 +36,10 @@
   统一 .log）——D2-1 静默降级面根治：HEAVY 门两检出一致生效，无本地配置可丢。
 - 机制处置：capability-parity 降级仓内锚点自检（S18）；behind tripwire 新增（verify S23 +
   session-restore 软提醒）；`.gitattributes`/`sync-upstream.sh` 退役。
-- 新纪律（CLAUDE.md「单真值源 + 双检出原则」）：框架改动只从母版检出 commit+push，muse 检出
-  只 pull；风险实验用分支/worktree + 备份 remote，不再开永久 fork。
+- 新纪律（CLAUDE.md「单真值源 + 双检出原则」）：框架改动初版定"只从母版检出 commit+push"，
+  **同日 luca 拍板放宽为任一检出皆可做**（动手前先 pull、做完立即 commit+push、另一侧开工前
+  pull）——自成长/经验修正常发生在 muse 检出现场，强制切母版会打断闭环；押注 git 非-FF 拒绝 +
+  tripwire 兜住双端并发。风险实验用分支/worktree + 备份 remote，不再开永久 fork。
 
 ## 连带消解
 
