@@ -405,3 +405,56 @@ facts:
     reviewer: "self"
     scope: "figma 读取/取文案"
     tags: ["figma", "metadata", "text-extraction"]
+  - id: SC-20260622-001
+    domain: skill-rule
+    fact: "记忆治理晋升候选前须做时效/一致性核对(不止冗余核对):候选可能描述已被后续修复的旧 bug、已被取代的机制、或尚未实现的设计愿望——直接晋升会注入与当前代码/状态冲突的'事实',须 grep 相关代码确认机制现在仍成立。并行 triage 的产出(refined 措辞/命令)主 agent 必须复核,subagent 会 hallucinate 具体 flag/path。"
+    confidence: high
+    stable: true
+    added: 2026-07-15
+    source: "observation"
+    evidence: "2026-06-22 governance triage 28 候选:SC-20260621-001 主张 A/B 跑 skill 档但已提交 behavioral_ab.py 硬钉 Sonnet(红队跑 selftest 实证冲突)→REJECT;SC-20260615-001 triage refined 把真实 --set-stable 误写 --approve,主 agent 复核修正"
+    reviewer: "claude"
+    scope: "memory governance / consolidate / 候选晋升 triage"
+    tags: ["memory", "governance", "promotion", "validity-check", "subagent-verify"]
+  - id: SC-20260628-002
+    domain: skill-rule
+    fact: "大型 Workflow 的终端'单个综合 agent 吞下全部 findings 再写长报告'是脆弱点(本次 53 候选场景该步 3 次未完成:先撞 session 限额、后两次 hang)。对策:①把终端综合拆小/增量写盘,别让一个 agent 既聚合又产长文;②该步失败时不要整轮重跑——从转录目录 agent-*.jsonl 里抽各 agent 的结构化输出(StructuredOutput tool_use input)+其 prompt 内嵌的入参,在主循环手工组装报告,分析数据零损失。"
+    confidence: high
+    stable: true
+    added: 2026-07-15
+    source: "observation"
+    evidence: "framework-audit/2026-06-28-health-checkup.md §10;run wf_2d4af56e-435;scratchpad/extract.py 实证可从 agent-*.jsonl 还原 15 探针+53 裁决"
+    reviewer: "luca"
+    scope: "Workflow 工具/多 Agent 编排的报告综合阶段"
+    tags: ["workflow", "synthesis", "resume", "salvage", "resilience"]
+  - id: SC-20260629-001
+    domain: skill-rule
+    fact: "luca_gstack hooks 读 stdin payload 必须用 readFileSync(0)(fd 0 直读)而非 readFileSync('/dev/stdin'):后者在 CI ubuntu runner 上读管道 stdin 不可靠(常返空)→ stop_hook_active 等 payload 字段被误判 false → Hook runtime 测试本地过、CI 失败。session-sync/route-guard/post-edit 已统一改 fd0;新增任何读 stdin 的 hook 同此。"
+    confidence: high
+    stable: true
+    added: 2026-07-15
+    source: "observation"
+    evidence: "本 session CI 排障:Framework Logic 'stop_hook_active 应放行' CI 失败本地通过,改 readFileSync(0) 后 CI 转绿(commit 8cd5905);三 hook 改动 + node 管道读验证"
+    reviewer: "luca"
+    scope: "hooks (.claude/hooks/*.mjs 读 stdin payload)"
+    tags: ["hooks", "stdin", "ci", "portability", "readFileSync"]
+  - id: SC-20260714-001
+    domain: skill-rule
+    fact: "框架层手写互引文档（agent 编排/演进面）的跨文件契约必须配 verify 常驻契约回归（测已发货原文+会咬三段证据，S21/S22 手法），否则数周内漂移无人察觉；采纳集成五件套须双仓各自落地验证，台账记录≠能力可达"
+    confidence: high
+    stable: true
+    added: 2026-07-15
+    source: "observation"
+    evidence: "2026-07 路由大改 plan-agent(open-design 0次/magicpath 25次)/preflight/quality-gate 三处漏同步三周无人察觉；S22 首跑母版即咬到 code-recon 六件套整体缺失（adoption-log 已记采纳、gaps-register 已标 addressed）"
+    reviewer: "luca"
+    scope: "framework-verify"
+  - id: SC-20260715-001
+    domain: skill-rule
+    fact: "新建度量/信号/告警面（埋点、桶、参数、台账）必须在同一改动内接通消费端并指定 owner（谁读、何时读、断了谁看见）——只建采集端会退化成写而不读台账，且裁决类基建会死锁在永远 INCONCLUSIVE。验收问一句：这个信号断了/到期了，人会在哪个必经界面看到？"
+    confidence: high
+    stable: true
+    added: 2026-07-15
+    source: "observation"
+    evidence: "2026-07-15 记忆层评审四连实证：awaiting_approval 桶建了未接 digest（候选 0-14 天不可见）、--mattered 建了全库零接线（ADR-0006 裁决过期 2.6 倍无人知）、check_loop_health 的 fork_home 参数出生即悬空、eval-log prose 触发 06-28 起失守；同谱系先例：编排轮五台账、hooks 轮半链演进（SC-20260714-002 管改动传播，本条管新建完整性）"
+    reviewer: "claude"
+    scope: "framework/所有新增度量与信号面"

@@ -378,3 +378,14 @@ try {
     }
   }
 } catch { }
+
+// ── 单真值源 behind 软提醒（2026-07-16 B2 合并）：本检出落后 tracking 分支 → 提示 pull。
+// 只查本地 ref 不 fetch（session 启动零网络零延迟；有网刷新交给 verify S23）。fail-open。
+try {
+  const cwd = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+  const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(), 10);
+  if (behind > 0) {
+    process.stdout.write(`[session-restore] ⚠ 本检出落后 ${up} ${behind} 条——建议 git pull（单真值源纪律）\n`);
+  }
+} catch { }

@@ -222,7 +222,7 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 - **完成前验证铁律**：声明"做完了"之前，必须有当场跑出的证据（测试 / 脚本 / 读回文件 / 可观察检查）。
 - **保护区**：`framework/` HTML 母版只读、`docs/evaluation/` 受保护、`skill-invariants.md` P1-P7 保护区、
   记忆红线（稳定事实不得直接写长期上下文）。
-- **双仓一致**：框架能力改动同 session 落双仓（母版 + fork），`check-capability-parity.mjs` 是 verify 门守护。
+- **单真值源 + 双检出**：`main` 是唯一真值源，两个本地目录均为其检出（框架改动只从母版检出 commit+push，muse 检出只 pull）；`check-capability-parity.mjs` 降级为仓内能力锚点自检（verify 门 S18），behind tripwire 见 `check-behind-upstream.sh`（S23）。
 
 ---
 

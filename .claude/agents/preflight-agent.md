@@ -77,8 +77,8 @@ Step 4  汇总 → 输出报告
 | `quick-research` | 无特殊前置 | — |
 | `code-recon` | 无特殊前置（只读 recon，不改代码） | — |
 | `code-hygiene` | 无特殊前置 | — |
-| `muse-req-triage`（muse fork 专属） | 无特殊前置（入口A 语料由用户指定） | — |
-| `muse-loop-orchestrate`（muse fork 专属） | 需求语料可用（由 skill 自身 Phase 0 校验） | — |
+| `muse-req-triage`（muse） | 无特殊前置（入口A 语料由用户指定） | — |
+| `muse-loop-orchestrate`（muse） | 需求语料可用（由 skill 自身 Phase 0 校验） | — |
 
 **未列出的 skill：** 只执行通用检查，且报告必须带一行
 `⚠ WARN: <skill_name> 无专属检查行——若该 skill 有上游依赖，请在本表补行`

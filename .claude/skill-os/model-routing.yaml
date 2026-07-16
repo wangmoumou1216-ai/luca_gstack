@@ -85,7 +85,7 @@ fable_whitelist:
 # ─── Agent frontmatter pin 登记（与 .claude/agents/*.md 保持一致，governance 机检）───
 agents:
   quality-gate: opus        # 判官≥执行者；合同回验模式由调用方参数升 fable（P0）
-  muse-proto-judge: opus    # AC 判官（muse fork 专属）
+  muse-proto-judge: opus    # AC 判官（muse）
   preflight-agent: haiku    # 纯机械前置检查（effort: low）
 
 # 有意不 pin 的 agent（机检白名单——不在 agents: 也不在此表的 agent 文件 → tripwire 告警）：
@@ -120,7 +120,7 @@ dispatch_rules:
 # ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
 new_scenario_protocol:
   rule: |
-    lucagstack 新增任何场景逻辑（新 skill / 新 agent / 新 workflow 节点 / 新 dispatch
+    luca_gstack 新增任何场景逻辑（新 skill / 新 agent / 新 workflow 节点 / 新 dispatch
     类型）时，创建者必须在创建的同一次改动中完成档位评估并显式声明——skill 写
     recommended-model frontmatter，agent 写 model pin 或在本文件 agents: 登记
     "无 pin+理由"，节点写进 dispatch_rules。不得静默落 default_tier。

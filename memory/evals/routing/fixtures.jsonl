@@ -1,7 +1,7 @@
 // 甲类语义路由命中率 fixture 集。逐行 JSON。见 memory/scripts/eval_routing.py 头注。
 // layer=keyword：route-guard 关键词网应确定性到达 expected（算入命中率回归门）。
 // layer=semantic：route-guard 设计上 STOP/漏（无触发词），命中只能靠模型判断（--judge 度量）。
-// muse fork 专属特例（special:sidebar / luca-open / html）母版版本不含。
+// 单真值源（2026-07-16 B2 合并）：含 muse app 集成特例（special:sidebar / luca-open）；fixture 不再按仓分叉。
 {"id":"kw-tech-spec","input":"帮我写一份技术规格文档","expected":"/tech-spec","layer":"keyword","scene":"D","note":"显式工程术语"}
 {"id":"kw-task-plan","input":"做一个任务编排计划","expected":"/task-plan","layer":"keyword","scene":"D","note":"显式术语"}
 {"id":"kw-code-hygiene","input":"清理一下死代码和重复代码","expected":"/code-hygiene","layer":"keyword","scene":"B","note":"清理术语"}
@@ -20,7 +20,7 @@
 {"id":"kw-trivial-async","input":"把这个函数改成异步的","expected":"direct","layer":"keyword","scene":"B","note":"平凡任务"}
 {"id":"kw-diagnostic-noise","input":"上线之后订单、库存、报表都出现了延迟","expected":"direct","layer":"keyword","scene":"B","note":"事故报告反担保：'上线'是时间状语非构建意图，不得被多功能需求门推进 PLAN_MODE（2026-07-13 fable review；另一诊断句变体含'搜索'会撞 web_access 既有宽词，见 golden 反担保）"}
 {"id":"kw-slash-direct","input":"/brainstorm 新增登录、权限、导出、通知功能的需求","expected":"/brainstorm","layer":"keyword","scene":"A","note":"B-F1：显式斜杠直呼不被 PLAN_MODE 劫持（复杂度降级为 planHint 附加）"}
-{"id":"kw-auto-plancheck","input":"/auto 新增订单、库存、报表管理","expected":"PLAN_CHECK","layer":"keyword","scene":"A","note":"B-F1+A-F2：fork 生产 env 下 HEAVY 成员直呼+复杂内容走 PLAN_CHECK 较软门，不被 PLAN_MODE 压过（fork 专属 fixture）","env":{"ROUTE_GUARD_HEAVY_SKILLS":"auto,muse-loop-orchestrate"}}
+{"id":"kw-auto-plancheck","input":"/auto 新增订单、库存、报表管理","expected":"PLAN_CHECK","layer":"keyword","scene":"A","note":"B-F1+A-F2：HEAVY 成员直呼+复杂内容走 PLAN_CHECK 较软门，不被 PLAN_MODE 压过（生产 env 由 tracked settings.json 注入，此处 env 复现同值）","env":{"ROUTE_GUARD_HEAVY_SKILLS":"auto,muse-loop-orchestrate"}}
 {"id":"kw-connector-noise","input":"帮我加个红、黄、蓝三个主题色，然后保存","expected":"direct","layer":"keyword","scene":"B","note":"B-F2：连接词'然后'不算真功能词，占位符枚举不得过报"}
 {"id":"kw-idea-minutes","input":"帮我把这段会议纪要整理成需求：大家讨论决定新增订单查询、库存管理、报表导出","expected":"/idea","layer":"keyword","scene":"A","note":"B-F4：会议纪要摄入语境归 /idea，功能枚举是纪要常态非构建请求"}
 {"id":"kw-observability-build","input":"新增监控看板：展示异常统计、延迟分布、报错列表、故障详情","expected":"PLAN_MODE","layer":"keyword","scene":"A","note":"B-F5：可观测域构建需求召回（诊断反担保 v2 改句式框架后不再整域压制）"}
@@ -37,7 +37,7 @@
 // 触发源是 agent 自己的写文件动作、非用户语义——乙类过程纪律，无路由真值，不作路由 fixture。
 {"id":"sem-feature-login","input":"给这个项目加一个完整的用户登录注册体系","expected":"PLAN_MODE","layer":"semantic","scene":"A","note":"实质多文件特性，口语无枚举→route-guard STOP，靠语义过 Plan Agent 5 条件"}
 {"id":"sem-code-api","input":"给后端设计并实现一整套订单管理的接口","expected":"PLAN_MODE","layer":"semantic","scene":"D","note":"实质工程需求，口语→STOP，靠语义进工程链/Plan Agent"}
-{"id":"sem-flow-full","input":"帮我把这个需求从头到原型完整跑一遍","expected":"/muse-loop-orchestrate|flow:design-chain","layer":"semantic","scene":"A","note":"标签官#18 修正：本 fork CLAUDE.md 语义兜底逐字规定'从需求到原型跑一遍完整流程'→/muse-loop-orchestrate（首选真值）；flow:design-chain 为可辩护次选。判官能力面必须含 muse-loop-orchestrate，否则答案空间放水"}
+{"id":"sem-flow-full","input":"帮我把这个需求从头到原型完整跑一遍","expected":"/muse-loop-orchestrate|flow:design-chain","layer":"semantic","scene":"A","note":"标签官#18 修正：CLAUDE.md 语义兜底逐字规定'从需求到原型跑一遍完整流程'→/muse-loop-orchestrate（首选真值）；flow:design-chain 为可辩护次选。判官能力面必须含 muse-loop-orchestrate，否则答案空间放水"}
 {"id":"sem-redteam","input":"把这个改动对抗性地审一遍找问题","expected":"redteam","layer":"semantic","scene":"C","note":"隐藏 skill，用户点名意图，靠语义"}
 {"id":"sem-prd-novel","input":"给我们要做的 AI 语音助手写个完整 PRD","expected":"ask:research-first","layer":"semantic","scene":"A","note":"chain-check R1：目标 brainstorm+复杂且新颖+无研究输入→正确响应是先问'先调研还是直接开始'，不是直接进 brainstorm 静默 cold-start"}
 {"id":"sem-prd-simple","input":"给登录页改版写个 PRD","expected":"/brainstorm","layer":"semantic","scene":"B","note":"chain-check R1 负样本：有成熟先例→直接进 brainstorm 不打扰（防过度 ask）"}

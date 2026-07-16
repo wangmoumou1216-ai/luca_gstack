@@ -1,15 +1,11 @@
 {
-  "_comment": "双仓一致原则（CLAUDE.md 核心行为原则）：框架能力改动须同 session 落双仓；新能力在此登记锚点。scripts/check-capability-parity.mjs 校验两仓锚点齐备（verify 门）。",
-  "repos": [
-    "/Users/luca/Desktop/luca_gstack",
-    "/Users/luca/Desktop/项目/muse/lucagstack"
-  ],
+  "_comment": "单真值源锚点自检（2026-07-16 B2 合并，取代双仓奇偶校验）：关键能力小节的存在性 tripwire（防误删/误改名）。scripts/check-capability-parity.mjs 在本仓内自检；verify 门 S18。",
   "files": {
     "CLAUDE.md": [
       "## Loop 宪法",
       "平凡任务豁免",
       "命名即切换",
-      "双仓一致原则",
+      "单真值源 + 双检出原则",
       "Fable 手术刀",
       "correction-attribution",
       "侧栏当前页感知",

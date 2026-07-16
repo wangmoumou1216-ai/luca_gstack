@@ -446,11 +446,11 @@ function runRouteGuard(cwd, prompt) {
   for (const t of ['Write', 'Edit', 'Read', 'Bash', 'Grep', 'Glob']) {
     assert.ok(preRe.test(t), `PreToolUse matcher 必须匹配 ${t}`);
   }
-  // fork（muse-loop-orchestrate 在场）必须经 env 注入 HEAVY set（PLAN_CHECK 双保险）；母版无此目录自动跳过
-  const upCmd = settings.hooks.UserPromptSubmit[0].hooks[0].command;
+  // muse-loop-orchestrate 在场时 HEAVY set 必须经 tracked env 块注入（PLAN_CHECK 双保险；
+  // 2026-07-16 B2 合并起从行内前缀升级为 settings.env——两检出一致生效，无本地配置可丢）
   if (existsSync(resolve(projectRoot, '.claude/skills/office/muse-loop-orchestrate'))) {
-    assert.match(upCmd, /ROUTE_GUARD_HEAVY_SKILLS=\S*muse-loop-orchestrate/,
-      'muse fork 必须注入 muse-loop-orchestrate 进 ROUTE_GUARD_HEAVY_SKILLS');
+    assert.match(settings.env?.ROUTE_GUARD_HEAVY_SKILLS ?? '', /(^|,)muse-loop-orchestrate(,|$)/,
+      'settings.json env 块必须注入 muse-loop-orchestrate 进 ROUTE_GUARD_HEAVY_SKILLS');
   }
   // README §8 表的「时机」行不得与真实布线矛盾
   const readme = readFileSync(resolve(projectRoot, 'README.md'), 'utf8');

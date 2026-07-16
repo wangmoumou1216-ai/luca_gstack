@@ -1,36 +1,29 @@
 #!/usr/bin/env node
-// 双仓能力奇偶校验：CLAUDE.md「双仓一致原则」的机械 tripwire（2026-07-10）。
-// 清单：.claude/skill-os/capability-parity.json；两仓任一缺锚点 → FAIL。
-// 某仓目录不存在（CI/单仓环境）→ SKIP 该仓（parity 只在本机双仓在位时可全量校验）。
+// 能力锚点自检：CLAUDE.md「单真值源 + 双检出原则」下的仓内 tripwire（2026-07-16 B2 合并，
+// 前身为双仓奇偶校验）。清单：.claude/skill-os/capability-parity.json；本仓任一缺锚点 → FAIL。
+// 防的是关键能力小节被误删/误改名后无人察觉（127 锚点=历史双仓期沉淀的护栏，保留复用）。
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const repoRoot = join(here, "..");
 const manifest = JSON.parse(
-  readFileSync(join(here, "..", ".claude", "skill-os", "capability-parity.json"), "utf8"),
+  readFileSync(join(repoRoot, ".claude", "skill-os", "capability-parity.json"), "utf8"),
 );
 const missing = [];
-let skipped = false;
-for (const repo of manifest.repos) {
-  if (!existsSync(repo)) {
-    console.log(`SKIP: 仓库不存在（CI/单仓环境）: ${repo}`);
-    skipped = true;
+for (const [file, anchors] of Object.entries(manifest.files)) {
+  const p = join(repoRoot, file);
+  if (!existsSync(p)) {
+    for (const a of anchors) missing.push(`${file} 缺文件（锚点「${a}」）`);
     continue;
   }
-  for (const [file, anchors] of Object.entries(manifest.files)) {
-    const p = join(repo, file);
-    if (!existsSync(p)) {
-      for (const a of anchors) missing.push(`${repo} :: ${file} 缺文件（锚点「${a}」）`);
-      continue;
-    }
-    const text = readFileSync(p, "utf8");
-    for (const a of anchors) if (!text.includes(a)) missing.push(`${repo} :: ${file} 缺锚点「${a}」`);
-  }
+  const text = readFileSync(p, "utf8");
+  for (const a of anchors) if (!text.includes(a)) missing.push(`${file} 缺锚点「${a}」`);
 }
 if (missing.length) {
-  console.error("❌ 双仓能力奇偶校验 FAIL——框架能力改动须同 session 落双仓（CLAUDE.md 双仓一致原则）：");
+  console.error(`❌ 能力锚点自检 FAIL（${missing.length} 处，防误删关键小节）：`);
   for (const m of missing) console.error("  - " + m);
   process.exit(1);
 }
-console.log(skipped ? "capability-parity: 部分仓库跳过，可校验范围内 OK" : "capability-parity: 双仓全部锚点齐备 ✓");
+console.log("能力锚点自检: 全部锚点在位 ✓");

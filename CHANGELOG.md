@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-07-16 · B2 双仓合并终裁）
+
+- **单真值源 + 双检出取代双仓拓扑**（F6-04 终裁闭环）：muse 分支 merge 回 main（union 保双方全部
+  新增），此后 `main` 是唯一真值源；母版目录（框架/meta + 记忆权威 store）与 muse 目录（luca app
+  运行时）降为 main 的两个检出。为什么：同一修复两仓各打一遍复发两例、72h 双仓 57-59 框架 commit、
+  parity 网 41 文件/127 锚点纯人力维护（F5/F6 审计实锤）；fork 沙盒使命（muse-loop 隔离孵化）已随
+  其成熟完成。muse 产品线（muse-loop-orchestrate/req-triage/proto-gen/x-digest/proto-judge +
+  luca-open）随单分支全树可用。
+- **settings.json 三键统一进 tracked**：`MEMORY_ROOT` + `ROUTE_GUARD_HEAVY_SKILLS` 入 env 块
+  （两检出一致生效，根治 D2-1「muse-loop 计划门静默降级」面），hook 日志统一 `.log`。
+- **capability-parity 降级为仓内锚点自检**（S18，127 锚点护栏保留防误删）；新增 behind tripwire
+  （verify S23 + session-restore 软提醒）。`.gitattributes merge=ours` 与 `sync-upstream.sh` 退役
+  （单真值源后无跨分支 merge 语义）。风险实验纪律：分支/worktree + 备份 remote，不再开永久 fork。
+
 ### Added
 - 外部 skill 上游漂移侦测 watcher（2026-07-15 skill 自进化 B1）：新真值 `external-skills/
   installed-pins.yaml`（9 单元：8 skill 回填 watch_sha + superpowers 插件行）+ daily_governance
@@ -82,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   零读取，又一个写而不读的台账；fail-open、不改 digest 写入门槛）——为什么：编排层评审发现五份
   agent 文件是手写散文互相引用、无机器守护跨文件契约，7 月路由大改三处漏同步三周无人察觉。
 - muse-loop-orchestrate 收编条件 2 豁免名单（SSOT-10 四处同步：plan-agent roster + CLAUDE.md +
-  AGENTS.md + HITL_ANCHOR 锚 `allow_standalone_override: false`；fork 专属条目）——为什么：符合
+  AGENTS.md + HITL_ANCHOR 锚 `allow_standalone_override: false`）——为什么：符合
   豁免三要件（多 subagent 编排是声明核心机制 + GATE-1 在 fan-out 前不可绕过），不收编则条件 2
   对其恒真、复刻 /auto 当年 50-session 零使用的结构性成因；PLAN_CHECK 双保险保留（豁免只解条件 2，
   其余 4 条件照常检查）。

@@ -499,7 +499,7 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 | `open-design` | 产出型·交互 | **设计产出首选**：OD 桌面端生成 + 「拉回来」落盘（headless 为 opt-in） | main_agent |
 | `magicpath` | 产出型（隐藏·降级） | OD daemon 真不可达且需 React 组件级原型时（先询问是否可用） | subagent |
 | `html-prototype` | 产出型（末级降级） | OD 与 magicpath 均不可用时的本地 HTML 方案 | subagent |
-| `muse-req-triage`（muse fork 专属） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion GATE-1，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
+| `muse-req-triage`（muse） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion GATE-1，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
 
 **编排原则：**
 - 需求越复杂、信息越模糊 → 越需要重型 skill

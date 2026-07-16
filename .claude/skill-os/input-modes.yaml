@@ -207,7 +207,7 @@ skills:
         required: []
         optional: ["existing_req_id"]
     quality_gates: ["gate1_triage_confirmed", "gate2_design_map_confirmed", "traceable_delivery_required", "cold_start_judge_isolation"]
-    notes: "muse fork 专属新增。独立正向单趟状态机（extract→triage→map→gen→judge），零接入母版 Orchestrator。"
+    notes: "muse 专属。独立正向单趟状态机（extract→triage→map→gen→judge），零接入母版 Orchestrator。"
 
   muse-req-triage:
     modes:
@@ -218,7 +218,7 @@ skills:
         required: ["candidate_requirements"]
         optional: []
     quality_gates: ["gate1_human_decision", "no_rice_fabrication", "brainstorm_phase15_firewall"]
-    notes: "muse fork 专属新增。standalone 模式：本 skill 自己读原始语料+算信号，accept 项格式化为话题字符串送进 /brainstorm。workflow 模式：被 muse-loop-orchestrate dispatch，接收已抽取候选，输出走 docs/loop/specs/。"
+    notes: "muse 专属。standalone 模式：本 skill 自己读原始语料+算信号，accept 项格式化为话题字符串送进 /brainstorm。workflow 模式：被 muse-loop-orchestrate dispatch，接收已抽取候选，输出走 docs/loop/specs/。"
 
 governance_tools:
   compare:

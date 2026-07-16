@@ -118,7 +118,7 @@ project_skills:
   muse_loop_orchestrate:
     invoke: "/muse-loop-orchestrate"
     weight: 7
-    # muse fork 专属新增（需求→原型自治 Loop 编排器）。触发短语全部为复合词，
+    # muse 专属（需求→原型自治 Loop 编排器）。触发短语全部为复合词，
     # 不含裸"需求"/"原型"单字——避免撞 brainstorm(需求)/html-prototype·design-brief·
     # magicpath·open-design(原型) 的现有词条。不缩写成"loop"，避免撞内置 loop 定时调度 skill。
     triggers: [muse loop, muse自进化循环, 需求到原型闭环, 跑一下muse loop]
@@ -126,7 +126,7 @@ project_skills:
   muse_req_triage:
     invoke: "/muse-req-triage"
     weight: 6
-    # muse fork 专属新增。/brainstorm 一次只吃一个输入(md路径/单个话题字符串)，
+    # muse 专属。/brainstorm 一次只吃一个输入(md路径/单个话题字符串)，
     # 缺一道"批量候选需求先筛一遍再决定投入哪条"的便宜前置筛选——本条补这个缺口，
     # 不与 brainstorm/idea 竞争同一场景。复合触发短语，避免裸"需求"单字。
     triggers: [候选需求批量筛选, 需求清单先筛一遍, 一堆需求要不要做, 批量需求triage, 需求batch筛选]

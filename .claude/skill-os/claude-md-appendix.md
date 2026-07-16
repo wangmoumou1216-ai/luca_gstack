@@ -84,23 +84,48 @@
 > **后果（分两种）：**
 > - **冷启动 + 无并行**：呈"无激活项目"，第一条消息触发 Project Gate（同旧行为）。
 > - **保留态**（继承并行 session 的激活项目）：启动打印"当前激活项目: X（检测到活跃并行
->   session 已保留）"；此时首条消息 route-guard 提示"全局激活项目 X 仅供参考，本 session 尚未绑定"。
->   **命名即切换（2026-07-06）后无需手动 switch**：你一提别的项目名 / 语义上描述别的项目或新项目，
->   主 Agent 就按 Project Gate ②③ **自动切换/新建**（新建会 detach 当前）；消息不指向任何项目、又要
->   在这个继承（未绑定）态下做实质项目任务时，先声明/switch 再动手（否则对 `docs/` 的写会被
->   project-scope-guard 直接 deny）。Meta/审计/内容工具 skill 例外分支不变。
->   **并行安全（会话级项目隔离 = 真隔离，2026-07-08 方案A，取代旧"命名即切换 + 告警"）：** 激活项目
->   已从"工作目录属性"（全局共享软链）升级为"session 属性"——每个 session 的
->   `.claude/.session-project-<sid>` pin 是唯一真值，PreToolUse 的 `project-scope-guard.mjs` 据此把该
->   session 对 `docs/`·workflow-state·current-topic 的读写**重定向到它自己 pin 项目的绝对路径**。于是
->   N 个 session 可同时在 N 个不同项目上干活、互不串扰；别的 session 怎么 switch 翻共享软链，都改不动
->   本 session 的落点（软链退化为纯展示）。未绑定 session（纯对话/框架任务）碰 `docs/` 直接 deny（绝不
->   静默跟软链落到别人项目），非项目路径（`.claude/skills`、`memory/`、`scripts/`、`framework/`…）原样
->   放行。pin **只在用户显式声明/确认项目时写、永不从软链派生、漂移永不自动认领**（旧的"3 次后接管
->   劫持者项目"是跨 session 污染的元凶，已删）。Bash 里字符串写 `docs/` 是唯一 best-effort 边（路径位
->   token 保守重写 + 无 pin 时 deny），文件类工具精确重定向。**未绑定 session 的读（Read/Grep/Glob）
->   放行、写 deny**；无 path 的 Grep/Glob 会经软链搜到当前项目（已知读/搜索侧局限，非写入损坏）。
->   回归：`scripts/test-project-scope-guard.mjs`。
+>   session 已保留）"；此时首条消息 route-guard 会额外提示"全局激活项目 X 仅供参考——本 session
+>   尚未绑定项目"（方案A 下继承≠绑定）——你要在某项目上干活就提它的名字 / switch 一次即绑定。
+>   Meta/审计/内容工具 skill 例外分支不变。
+>
+> **会话级项目隔离（方案A，2026-07-08 —— 真隔离，取代旧"告警不阻止"）：** 激活项目从"工作目录属性"
+> （全局共享软链）升级为"session 属性"——每个 session 的 `.claude/.session-project-<sid>` pin 是唯一
+> 真值，PreToolUse 的 `project-scope-guard.mjs` 据此把该 session 对 `docs/`·workflow-state·current-topic
+> 的读写**重定向到它自己 pin 项目的绝对路径**。于是 N 个并行 session 可同时在不同项目上工作互不
+> 串扰；别的 session 怎么 switch 翻共享软链都改不动本 session 的落点（软链退化为纯展示）。未绑定
+> session（纯对话/框架任务）碰 `docs/` 直接 deny；非项目路径（`.claude/skills`、`memory/`、`scripts/`、
+> `framework/`…）原样放行。pin **只在显式声明/确认项目时写、永不从软链派生、漂移永不自动认领**。
+> Bash 里字符串写 `docs/` 是唯一 best-effort 边，文件类工具精确重定向。**未绑定 session 的读
+> （Read/Grep/Glob）放行、写 deny**；无 path 的 Grep/Glob 会经软链搜到当前项目（已知读/搜索侧局限，
+> 非写入损坏）。回归 `scripts/test-project-scope-guard.mjs`。
+
+## Project Gate 附则（被「命名即切换」升级取代的原文存档，2026-07-10）
+
+> 以下为母版 2026-07-10 同步「命名即切换 + 语义自判」（fork 2026-07-06 能力）前的原行为契约，
+> 原样存档；现行契约以 CLAUDE.md Project Gate ①-⑤ 为准。
+
+**旧 ①（G6 继承态例外，确认制）：**
+→ **例外（G6，2026-07-04）：若激活项目是"继承"来的**（route-guard 提示"本 session 继承了
+  激活项目 X"，即本 session 从未确认过它、是并行 session 保留的），**不要静默继续**——先用
+  一句话确认「当前继承激活项目 X，你要做的是它吗？还是切到别的项目？」再动手。判据：见到
+  那条继承提示 = 继承态；没见到（本 session 自己 switch/确认过的）= 已确认，正常静默继续。
+
+**绑定即注入（2026-07-09 M2 原文）：** 确认/绑定项目时（含上面继承态的确认、或点名当前已激活
+项目这类"没跑过 switch"的路径），若本 session 尚未注入该项目本地记忆 → 幂等执行
+`./scripts/project.sh switch {name}`（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
+切到当前已激活的同名项目不改软链目标）。②/③ 分支本就跑 switch/new，注入天然覆盖。
+**边界（2026-07-09 红队修订）：仅适用于真正要在该项目上做实质工作的 session。**
+meta/框架/审计 session 不适用——只需读某项目记忆做参考时，直接 Read 其项目根 `CONTEXT.md`
+与 `.luca/memory/MEMORY.md`，**不得 switch**：switch 翻全局共享软链，已 pin session 免疫，
+但未 pin 的并行读 session 会被拖走，且方案A 已移除漂移告警，误切无人点名
+（person 记忆 never-switch-parallel-session-projects，luca 标注严重问题）。
+
+**旧 ②（确认制切换）：** 消息中包含已有项目名 → 提示切换：「切换到 {name}」→ 用户确认后执行
+`./scripts/project.sh switch {name}` → 继续
+
+**旧 ③（一律确认制新建）：** 消息描述新项目/新需求/新功能，或直接调用了 skill 且没有明确当前项目
+→ 新项目信号；从描述/skill 参数推断候选名 → 一句话确认：「这是新项目，建议叫 {name}，确认？」
+→ 用户确认（或给出其他名字）→ `./scripts/project.sh new {name}` → 执行原始请求
 
 ## Project Gate 附则：总原则 + 绑定即注入（全文）
 
@@ -119,3 +144,4 @@
 > 与 `.luca/memory/MEMORY.md`，**不得 switch**：switch 翻全局共享软链，已 pin session 免疫，
 > 但未 pin 的并行读 session 会被拖走，且方案A 已移除漂移告警，误切无人点名
 > （person 记忆 never-switch-parallel-session-projects，luca 标注严重问题）。
+

@@ -51,8 +51,8 @@ muse-proto-judge = `grader: llm-judge`；taste-review / ux-audit = `grader: huma
 2. **llm-judge**（品质类：faithfulness / completeness / consistency——用业界标准指标名，
    不自造轮子）：**逐 criteria 二元判定 + 每条附证据 + unknown 逃生口 + 偏见规避**
    （位置/长度/自我偏好）。格式参考 `muse-proto-judge` 的评分卡（逐 AC 二元+证据+
-   4 类偏见规避+冷启动隔离——注意：该 judge 校准仍是 aspirational，只作**格式参考**，
-   不当作已验证组件）。禁止无 rubric 的 1-10 整体打分（旧 `Score: N/10` 模式，2026-07-09 废止）。
+   4 类偏见规避+冷启动隔离，同见 handoff-protocol v3.2 criteria 块 / quality-gate Skill Mode——
+   该格式的 judge 校准仍是 aspirational，只作**格式参考**，不当作已验证组件）。禁止无 rubric 的 1-10 整体打分（旧 `Score: N/10` 模式，2026-07-09 废止）。
 3. **human + 锚点**（品味/主观域）：taste-review / ux-audit 保持现状，兼作 llm-judge 校准源。
 
 **end-state 优先原则**：grade what the agent produced, not the path——评产出不评过程

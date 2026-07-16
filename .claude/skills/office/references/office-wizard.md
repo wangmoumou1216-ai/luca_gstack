@@ -241,7 +241,7 @@ luca_gstack — 一级可见 Skill 列表
                ux-brainstorm/design-brief/tech-spec。只读不改代码
                输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
 
-── muse fork 专属（本 fork 独有，母版无）───────────────────────
+── muse 专属 ───────────────────────────────────────────────
 
 /muse-loop-orchestrate  —  需求→原型自治 Loop 编排器：extract→triage→map→gen→judge
                单向链（gen↔judge 有界内循环），自带两个不可省略人类卡点（GATE-1/GATE-2）

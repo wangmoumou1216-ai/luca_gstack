@@ -1,6 +1,7 @@
 {
   "env": {
-    "MEMORY_ROOT": "/Users/luca/Desktop/luca_gstack"
+    "MEMORY_ROOT": "/Users/luca/Desktop/luca_gstack",
+    "ROUTE_GUARD_HEAVY_SKILLS": "auto,muse-loop-orchestrate"
   },
   "permissions": {
     "allow": [
@@ -17,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.muse.log || true"
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
       }
@@ -27,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ROUTE_GUARD_HEAVY_SKILLS=auto,muse-loop-orchestrate node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.muse.log || true"
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
       }
@@ -38,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.muse.log || true"
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
       }
@@ -49,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.muse.log || true"
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
       }
@@ -59,7 +60,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.muse.log || true"
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
       }
@@ -69,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.muse.log || true"
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
       }

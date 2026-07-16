@@ -451,11 +451,11 @@ Layered routing order:
    be a new project but the user did not explicitly say so → one-line confirm, then create; a new
    requirement inside the current project → stay. Only the self-judged-new-project case confirms.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6, keyword-approximation only),
-   or `PLAN CHECK` (a skill in the `HEAVY_ORCHESTRATOR_SKILLS` extension point was hit — **in this
-   fork the set is injected via settings.json as `ROUTE_GUARD_HEAVY_SKILLS=auto,muse-loop-orchestrate`;
-   hitting either escalates to PLAN_CHECK**. The mother repo keeps the set empty by default as of
-   2026-07-04 — deepresearch/ux-research/figma-demo/auto rely on their own internal HITL gates, see
-   plan-agent.md "条件 2 豁免" — and retains it as a fork/env extension point),
+   or `PLAN CHECK` (a skill in the `HEAVY_ORCHESTRATOR_SKILLS` extension point was hit — **the set
+   is injected via tracked settings.json `env` as `ROUTE_GUARD_HEAVY_SKILLS=auto,muse-loop-orchestrate`,
+   effective identically in both checkouts; hitting either escalates to PLAN_CHECK**.
+   deepresearch/ux-research/figma-demo rely on their own internal HITL gates, see
+   plan-agent.md "条件 2 豁免"),
    or the hit skill is known to satisfy any of the Plan Agent 5 conditions,
    read `.claude/agents/plan-agent.md` and produce a phase plan before any single skill. Even on a
    high-confidence single-skill hit, still check the Plan Agent 5 conditions; if any holds, do not
@@ -497,7 +497,7 @@ Layered routing order:
    handoff, project self-judgment, sidebar sensing, luca-open file preview, etc.) and covers mapping to
    a skill / a flow / a declared tool action. **Boundary (乙 — NOT dispatch targets):** memory-retrieval
    timing, model-tier selection, checkpoint/compact, the research-default gate, observability rules,
-   Coding Discipline, handoff/parity, and the HTML-output preview push are standing process disciplines
+   Coding Discipline, handoff/single-truth-source discipline, and the HTML-output preview push are standing process disciplines
    — enforced by deterministic hooks or the orchestration layer, never "routed by meaning"; do not
    force them through semantic dispatch (explicit user naming of any item still executes it — the
    exclusion targets semantic recognition, not refusal).
@@ -507,7 +507,7 @@ Hidden skill semantics still require explicit user intent: `challenge`, `handoff
 `compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 12-item
 hidden/advanced roster as CLAUDE.md).
 
-Muse fork additions (this fork only — the mother repo `luca_gstack` has none of these files):
+Muse additions (muse product line — on the single truth source `main` since 2026-07-16):
 
 - `/muse-loop-orchestrate` — requirement→prototype autonomous Loop orchestrator:
   extract→triage→map→gen→judge one-way chain (bounded gen↔judge inner loop), with two

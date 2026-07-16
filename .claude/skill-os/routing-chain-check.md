@@ -28,7 +28,7 @@ non-React）才落 `html-prototype` / `magicpath`。重要设计场景 = OD。
 
 **R3 · 端到端意图（确认门）**
 「从需求到成品 / 完整跑一遍 / 闭环」类意图 → 列出 `optional-workflow-graph.yaml` 对应场景的
-recommended_path（本 fork 的端到端自治编排意图另有 CLAUDE.md 语义兜底 → `/muse-loop-orchestrate`；
+recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜底 → `/muse-loop-orchestrate`；
 多产物组合诉求可建议 `/auto`），**问一句确认后进入**——确认即 SF-003「用户主动选择」，
 红线：不得跳过确认静默进整链。
 
