@@ -11,6 +11,7 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { execSync } from 'child_process';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -729,5 +730,14 @@ if (!dryRun && prompt) {
     } catch {}
   }
 }
+
+// ── 单真值源 behind 兜底提醒（2026-07-16 luca 点名）：落后 tracking 分支即每条消息提醒，
+// pull 后自动消失。只查本地 ref（~10ms，fetch 由 session-restore 后台刷新 + verify S23 负责）。fail-open。
+try {
+  const gitOpt = { cwd: projectRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] };
+  const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', gitOpt).trim();
+  const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, gitOpt).trim(), 10);
+  if (behind > 0) hints.push(`[route-guard] ⬇️ 本检出落后 ${up} ${behind} 条——动框架前请先 git pull（单真值源纪律，pull 后本提醒消失）。`);
+} catch {}
 
 if (hints.length > 0) process.stdout.write(hints.join('\n') + '\n');

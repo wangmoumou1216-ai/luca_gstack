@@ -384,6 +384,9 @@ try {
 try {
   const cwd = process.env.CLAUDE_PROJECT_DIR || process.cwd();
   const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+  // 后台静默 fetch（detached 不阻塞启动）：让本地 ref 保持新鲜，本条与 route-guard 的
+  // 每消息 behind 提醒在下一次检查时即拿到准确落后数。离线/失败静默。
+  try { spawn('git', ['fetch', '-q', '--no-tags', up.split('/')[0]], { cwd, detached: true, stdio: 'ignore' }).unref(); } catch { }
   const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(), 10);
   if (behind > 0) {
     process.stdout.write(`[session-restore] ⚠ 本检出落后 ${up} ${behind} 条——建议 git pull（单真值源纪律）\n`);
