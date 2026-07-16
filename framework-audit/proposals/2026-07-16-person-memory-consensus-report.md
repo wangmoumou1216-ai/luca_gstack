@@ -151,4 +151,4 @@ Fable 主循环复审 R4 裁决：认可「未收敛」判决（两条 blocking 
 执行记录全文见 `2026-07-16-person-memory-plan-v5-exec.md` §6：drill A/B/C 全 PASS 后，
 M3-0 / M3-a（四门全绿，copied 9 / 索引 27→36）/ M3-b（key 合入 + canary）当日执行完毕，
 fork store 冻结为回滚点。卡点 3 = 先并后剪、卡点 5 = 保留两份（luca 拍板）。
-**待验**：A5 canary（luca 下次 fork 交互 session）；**待办**：luca 亲手 reject SC-20260715-005（§7.3）。
+**A5 验证通过 ✅（2026-07-16 当日）**：luca 的 fork 交互 session 实证 canary 在场 + harness 记忆目录解析到 canonical——key 在部署 scope 生效，S4 治愈，本案技术面全闭合。**余项**：luca 亲手 reject SC-20260715-005（§7.3）；key 静默失效无自动检测（明标盲区，靠定期肉眼复验）。

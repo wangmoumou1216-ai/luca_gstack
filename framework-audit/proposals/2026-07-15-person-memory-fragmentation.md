@@ -169,7 +169,7 @@ R4 期间（约 14:00–17:20）两 store 冻结保持为真——5/5 视角以 
 - **M3-b**：fork 仓 `settings.local.json` 合并 `autoMemoryDirectory` → canonical（gitignore 实验仍挡）；
   canonical MEMORY.md 末行放 A5 canary；`~/.claude/settings.json` 窗口内 pin autoDream、事后字节级还原。
 - 备份/manifest/marker：`~/.claude/person-store-merge-2026-07-16/`（不在 git / iCloud 树）。
-- **待验**：A5 canary 由 luca 下次 fork 交互 session 亲验；失败回滚 = 删 key 一行（no-op 退回现状）。
+- **A5 验证通过 ✅**（2026-07-16 当日，luca 的 fork 交互 session：canary 行在场 + harness 记忆目录实解析到 canonical）——key 在部署 scope 实证生效，**S4 治愈**；canary 行验后已删。残余：key 静默失效无自动检测（明标盲区）。
 
 **仍是孤儿（未处理，非本 session 产物）：** fork 的 `candidate_feedback_grep-cjk-silent-false-negative.md`（7-11）—— 治理至今看不见它。未镜像，因为不是我的活且属「不动残留」出界项；一并列入待裁决。
 

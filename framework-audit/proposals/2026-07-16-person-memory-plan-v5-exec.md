@@ -97,7 +97,7 @@ P. 读 ~/.claude/settings.json 记录原值 → 写 autoDreamEnabled:false（窗
   - M3-a：A0 双 PASS → copied 9（与 drill C 文件集 assert 相等）→ appended 9 行、索引 27→36 → **A1/A2/A3-live/A4 全 PASS**。
   - M3-b：rescan 命中 0 → gitignore 验挡 → `autoMemoryDirectory` 合入 fork `settings.local.json`（JSON 复验有效）→ A5 canary 已放 canonical MEMORY.md 末行 → `~/.claude/settings.json` 还原为 pin 前字节（比对 True）→ 终检 A3-live PASS（窗口内 fork 零变化）。
   - 备份面：`~/.claude/person-store-merge-2026-07-16/`（canonical-backup / fork-backup / fork-live-manifest.tsv / m3a.marker / 两份 settings 原件）。
-  - **待验（luca）**：A5——下次在 muse fork 仓开交互 session，看注入的 MEMORY.md 是否含 `A5-canary-2026-07-16` 行：看得见 = key 生效（S4 治愈）；看不见 = 删 settings.local.json 里那一行 key = 无害退回现状。
+  - **A5 验证通过 ✅（2026-07-16，luca 的 fork 交互 session 亲验——正是部署 scope）**：两条证据 ① 该 session 注入的 MEMORY.md 含 canary 行；② harness 给该 session 的记忆目录 = canonical store 路径（非 fork 派生路径）——`autoMemoryDirectory` key 在部署 scope 实证生效，**S4 治愈**。canary 行已按「验完可删」由验证 session 删除，其余索引未动。M3-b 从「未验赌注」转为「已观测机制」。残余盲区不变：key 日后静默失效无自动检测，靠再次肉眼验证。
   - 本 session 剩余时间对 person 记忆的写入一律直接写 canonical（本 session 的 harness 解析已 memoize 到 fork store，不受新 key 影响）。
 
 <!-- FILE_END: 2026-07-16-person-memory-plan-v5-exec -->
