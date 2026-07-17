@@ -132,3 +132,5 @@
 1. `Workflow({scriptPath: "~/.claude/projects/-Users-luca-Desktop----muse-lucagstack/3bd9eeb7-b7ce-4bfc-90c7-79c9b7b3df01/workflows/scripts/w7-skeptic-verify-wf_3944ae14-e15.js", resumeFromRunId: "wf_ba8b55cd-cbb"})`
 2. 完成后 `python3 <scratchpad>/w7_writeback.py <新 journal> --write` 验票回写（13/13 VALID 才关 W7），commit+push。
 3. PLAUSIBLE>0 → W8.5 定向取证至 0 悬置 → W9-10 饱和轮（照计划文件）。
+
+**授权升级（2026-07-18 01:2x，luca 原话）**：「到了限额以后恢复以后把中断所有的没完成的事情完成就好了。不要有任何的遗漏。」——恢复后 W7 补跑→W8.5→W9-10 饱和→W11 修复→W12 delta→W13 组装验收全链自主完成，不再等确认；DECIDE 项攒清单不阻塞；再撞限额则状态落盘+按新重置时间接力，直至八指标全部达标。
