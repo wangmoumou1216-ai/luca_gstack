@@ -14,8 +14,9 @@
 - **技术栈：** FxUI Vue 2.0（生产）/ 纯 HTML + Tailwind CDN（原型）
 - **设计体系：** shadcn 组件映射 → FxUI（见 component-map.md）
 - **品牌色：** #FF8000（主色），全页 ≤3 处
-- **磁盘资产原地保留、零 per-session 成本**：`framework/` 母版、`brand-tokens.md`、
-  `fxui-source-to-html`/`fx-icon-search` skill——不删，只是不再默认注入每-session 上下文。
+- **磁盘资产原地保留、零 per-session 成本**：`framework/` 母版、`brand-tokens.md`——不删，
+  只是不再默认注入每-session 上下文。`fxui-source-to-html`/`fx-icon-search` skill 已于
+  2026-07-17 删除（skills_used 实测零使用；图标检索直接 find `framework/assets/` 三个图标目录）。
 - **激活条件**：用户任务显式提及"纷享/CRM/FxUI"或指向 `framework/` 目录时，读取
   component-map.md 与 brand-tokens.md 生效；其余 session 视为不相关，不注入 CRM 专属约束。
 

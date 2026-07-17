@@ -98,7 +98,7 @@ assets/icons/       → 通用功能图标（SVG）
 assets/ai-notes/    → AI速记专属图标
 assets/figma-icons/ → Figma 专用图标（录音工作页用）
 用法：<img src="./assets/icons/search.svg" class="w-[18px] h-[18px]" alt="" />
-找不到：显式调用隐藏图标检索 skill `fx-icon-search` 查找 fx-icon-xxx class
+找不到：对上述三个 assets 图标目录 find + rg 全量检索
 ```
 
 ---
@@ -232,4 +232,4 @@ mod-col-right             右栏 400px
 2. **颜色用 alias** — 优先 `text-n19`、`bg-primary`，不手写 `#181c25`
 3. **字号用自定义尺寸** — 用 `text-13`、`text-15`，不用 `text-sm`
 4. **不修改顶栏/频道栏** — 超出原型范围
-5. **图标来源顺序** — 先查 `assets/icons/`（或 `assets/ai-notes/`），找不到再显式调用隐藏图标检索 skill `fx-icon-search`
+5. **图标来源顺序** — 先查 `assets/icons/`（或 `assets/ai-notes/`），找不到再对三个 assets 图标目录 find + rg 全量检索

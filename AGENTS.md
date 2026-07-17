@@ -503,8 +503,8 @@ Layered routing order:
    exclusion targets semantic recognition, not refusal).
 
 Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
-`design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`, `fx-icon-search`,
-`compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 12-item
+`design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`,
+`compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 11-item
 hidden/advanced roster as CLAUDE.md).
 
 Muse additions (muse product line — on the single truth source `main` since 2026-07-16):

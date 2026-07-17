@@ -160,7 +160,6 @@ const statusVariants = {
 
 ```yaml
 library: framework/assets/icons + framework/assets/figma-icons + framework/assets/ai-notes
-skill: .claude/skills/office/fx-icon-search
 default_size: 16px
 ```
 

@@ -65,7 +65,7 @@ tiers:
   mechanical:
     resolves_to: haiku
     description: 机械执行、格式检查、打分、检索
-    skills: [evals, careful, retro, figma-layer, fx-icon-search]
+    skills: [evals, careful, retro, figma-layer]
 
 # ─── Fable 使用白名单（2026-07-10，dispatch 传 model: fable 的唯一合法依据）───
 # 评估维度：单次 token 量级 × 判断杠杆 × 错判代价。全部是"小上下文、高杠杆"点位。
