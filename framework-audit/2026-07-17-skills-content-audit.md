@@ -117,3 +117,18 @@
 
 **216 条 findings：P0×0 / P1×12 / P2×119 / P3×85**；lens 分布 semantic-integrity 59 / duplication 45 / invariant-violation 43 / sediment 37 / 其余 32；39 个 unit（skill/共享面/references 文件）有 finding。全部 status=open，**未经对抗验证，尚不足采信**（历史校准：自审翻车率 4/9~6/11）。
 下一步（等 luca 指令）：W7-8 fable skeptic 按 skill/主题批量对抗验证（默认立场=驳倒、当场 grep 核真引文）→ W8.5 定向取证 → 饱和轮 → 集中修复。
+
+## W7 — 对抗验证（进行中，2026-07-18 凌晨）
+
+**编排**：13 主题批（负载全部 ≤15 文件/≤5.8k 行，吸收 W5W6 拆分教训）；skeptic=fable effort=high，默认立场=驳倒，强制流程 = grep 逐字核真每条引文 → 读上下文防断章取义 → 穷尽 7 条驳倒路径 → 三态判决；批次文件 scratchpad `w7/batch_*.json` + `batches_meta.json`；run `wf_ba8b55cd-cbb`（首次发射 args 序列化错 0 agent 即败已弃，改 manifest 内嵌脚本）。
+
+**首轮结果（1.81M tokens）：6 批 VALID 86 verdict 已回写台账（commit de2aa5b）**：
+- **CONFIRMED 68（FIX-NOW 48 / DECIDE 19 / KNOWN-BOUNDARY 1）/ REFUTED 18 / PLAUSIBLE 0**；severity 修正 15 条（全部降级，P1→P2 ×4、P2→P3 ×11）；grep 未核真 0。
+- 抽查 REFUTED 质量过硬（行级反证：双 0-4 标度自带消歧定义、FILE_END 保护区只锁 SKILL.md 非 SCHEMA、「四锚点」节名是显式锁死的兼容契约非陈旧引用、双 AI-Slop 清单是正交仪器非重复实现）——对抗层在真杀误报，非橡皮图章。
+- **B01-figma-demo 残票**（5 个 fid 被缩写 FW6-sim-01≠FW6-sim-figma-demo-01，FID_MISMATCH 整票作废按⑤重跑）；**6 批撞订阅限额阵亡**（B03/B04/B08/B11/B12/B13，resets 5:30；**限额中断计数 2**）。
+- 复跑批 prompt 已加 fid 逐字纪律条款（有效 6 批 prompt 逐字节不变，resume 走缓存回放）。
+
+**恢复指令（冷启动兜底；会话内已排 5:36 一次性 cron 自动触发）**：
+1. `Workflow({scriptPath: "~/.claude/projects/-Users-luca-Desktop----muse-lucagstack/3bd9eeb7-b7ce-4bfc-90c7-79c9b7b3df01/workflows/scripts/w7-skeptic-verify-wf_3944ae14-e15.js", resumeFromRunId: "wf_ba8b55cd-cbb"})`
+2. 完成后 `python3 <scratchpad>/w7_writeback.py <新 journal> --write` 验票回写（13/13 VALID 才关 W7），commit+push。
+3. PLAUSIBLE>0 → W8.5 定向取证至 0 悬置 → W9-10 饱和轮（照计划文件）。
