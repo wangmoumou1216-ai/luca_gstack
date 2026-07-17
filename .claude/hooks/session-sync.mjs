@@ -100,7 +100,7 @@ function buildReason(rearm = false, deltaEdit = 0, deltaTool = 0) {
     rearm
       ? `自上次提取裁决后，本 session 又新增大量实质工作（Δedit=${deltaEdit}, Δtool=${deltaTool}）。对【新增部分】再做一次「自成长提取」裁决（仅一次，勿循环）：`
       : `本 session 有实质工作但尚未沉淀经验。结束前就地完成一次「自成长提取」（仅一次，勿循环）：`,
-    `【门槛 · 默认不存】四强信号才提取：①用户明确纠正/对未来行为明确指示 ②同类问题复发 ③真实返工或不可逆险情 ④重获成本高且确定复用（定义与按层分级 → 读 .claude/skill-os/extraction-bar.md）。全不中（纯查询/闲聊/纯执行）→ 直接跳【解锁】。`,
+    `【门槛 · 默认不存】四强信号才提取：①用户明确纠正/对未来行为明确指示 ②同类问题复发 ③真实返工或不可逆险情 ④重获成本高且确定复用（定义与按层分级 → 读 .claude/skill-os/extraction-bar.md）。绕行所得先问源头：根因在自有系统→修源头，记忆只存指针+兜底（correction-attribution.md L5）。全不中（纯查询/闲聊/纯执行）→ 直接跳【解锁】。`,
     `【归属】过门槛的经验按 CLAUDE.md「写入协议」三分表落地：全局个人记忆（仅① feedback_<slug>.md+MEMORY.md 索引；②③④ candidate_feedback_<slug>.md 不进索引）/ 框架 semantic 候选（propose_semantic.py，红线 SC-20260523-003）/ 项目本地。单 session 通常 0–2 条，勿凑数。`,
     projLine,
     rearm

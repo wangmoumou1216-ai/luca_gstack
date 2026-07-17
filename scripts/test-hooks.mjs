@@ -224,7 +224,7 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   const parsed = JSON.parse(runNode(sessionSyncHook, root).stdout);
   assert.equal(parsed.decision, 'block');
   for (const kw of ['默认不存', '明确纠正', '复发', '返工', '候选', 'candidate_feedback_',
-    'extraction-bar.md', '写入协议', '.episode-written-']) {
+    'extraction-bar.md', '写入协议', '修源头', '.episode-written-']) {
     assert.ok(parsed.reason.includes(kw), `短指针 reason 必须含「${kw}」，实际缺失`);
   }
   assert.ok(parsed.reason.includes('testproj/.luca/memory/MEMORY.md'), '有激活项目时必须注入项目本地落点');
