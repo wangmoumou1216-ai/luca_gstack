@@ -4,7 +4,7 @@ preamble-tier: 3
 argument-hint: "[场景 A/B/C + design-brief 路径]"
 version: 1.0.0
 description: |
-  HTML 原型生成与可观测 QA。它是 MagicPath 不可用、非 React/Canvas 场景、
+  HTML 原型生成与可观测 QA。它是 Open Design 与 MagicPath 皆不可用、非 React/Canvas 场景、
   或用户明确要求本地 HTML 时的 fallback。三种场景行为完全不同：A（新功能，Step0认知门禁+
   原型承载方式确认+全量状态）；B（优化现有，区分改动区/保持区+对照截图）；
   C（评审改版，按 ux-audit报告逐条实现+每处注释FIX-ID）。启动时强制询问场景。

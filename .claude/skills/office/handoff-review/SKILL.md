@@ -25,6 +25,7 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+python3 .claude/observability/scripts/get_rules.py handoff-review "*" 2>/dev/null || true
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"

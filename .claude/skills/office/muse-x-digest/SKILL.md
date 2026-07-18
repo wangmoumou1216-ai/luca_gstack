@@ -10,7 +10,6 @@ description: |
   捕获伪装成完整交付。同一 skill 同时服务深度长文与简短帖，按内容实质缩放披露量。
   Deep 档产出写 md 文件并经 luca-open 在 app 新页签以 md 阅览态打开（长文读起来更舒适）；简短档直接 session 内联。
   仅由 muse app 注入调用——不进 /office、不进用户路由 (skill-routing-map)、无斜杠命令。
-  muse fork 专属新增，母版 luca_gstack 无此 skill。
 allowed-tools:
   - Read
   - Write

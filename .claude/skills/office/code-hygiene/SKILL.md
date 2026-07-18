@@ -17,6 +17,7 @@ allowed-tools:
   - Grep
   - Glob
   - Agent
+  - AskUserQuestion
 context-cost:
   self: 4200
   runtime-estimate: 15000

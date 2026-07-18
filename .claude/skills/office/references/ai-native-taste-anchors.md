@@ -1,6 +1,6 @@
 # AI Native 品味锚点（4 + 3 体系）
 
-> 共享 reference。被 /taste-review、/design-brief、/ux-brainstorm、/design-review 引用。
+> 共享 reference。被 /taste-review、/design-brief、/design-review、/evals、redteam 引用。
 > 本文件用 **诊断 + 处方** 双栏结构。不只告诉你"什么是不好的"，
 > 还告诉你"具体怎么做能通过"。
 > 每个处方按"低/中/高实现成本"分级，配 B2B 销售场景的具体示例。

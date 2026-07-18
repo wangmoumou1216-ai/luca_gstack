@@ -80,6 +80,8 @@ AskUserQuestion：
 □ 包含「体验验证结论」节（含状态覆盖表）？
 □ 包含「品味检查四锚点」节？
 □ 包含「shadcn 组件映射表」节？
+□ 包含「Design Generation Packet」节？（缺则下游 design_brief_to_* gate 硬 block）
+□ 包含「Tool Consumption Contract」节？（缺则下游同一 gate 硬 block）
 □ 包含「交接块」节？
 
 任意缺失 → 标注 MISSING，说明下游 /html-prototype 会受到什么影响

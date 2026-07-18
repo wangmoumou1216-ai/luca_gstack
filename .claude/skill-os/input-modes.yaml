@@ -148,8 +148,8 @@ skills:
         optional: ["blueprint_yaml", "design_brief"]
       workflow:
         required: []
-        optional: ["html_prototype_output", "figma_demo_output"]
-    source_kinds: ["html-prototype", "figma-demo"]
+        optional: ["html_prototype_output", "figma_demo_output", "open_design_output"]
+    source_kinds: ["html-prototype", "figma-demo", "open-design"]
     quality_gates: ["read_actual_html", "figma_mcp_required", "source_specific_component_inventory"]
 
   tech-spec:

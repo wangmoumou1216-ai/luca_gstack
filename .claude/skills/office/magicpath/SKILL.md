@@ -2,7 +2,7 @@
 name: magicpath
 preamble-tier: 3
 description: |
-  MagicPath 界面产出：需求描述 → React canvas 组件。设计产出首选。
+  MagicPath 界面产出：需求描述 → React canvas 组件。界面产出备选（OD daemon 不可达时的 React canvas 降级路径；隐藏 skill，仅内部 dispatch）。
   workflow 模式下必须消费 design-brief 的 Design Generation Packet。
   本 skill 是外部插件 `magicpath` 的本地占位，供 orchestrator 路径解析用。
 recommended-model: guided-execution  # 2026-07-10 new_scenario_protocol 定档：生成外包给MagicPath平台，本体是轻编排

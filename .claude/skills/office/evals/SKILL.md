@@ -74,6 +74,9 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 | Attio | ✅/⚠️/❌ |
 | Notion | ✅/⚠️/❌ |
 | Raycast | ✅/⚠️/❌ |
+| Perplexity | ✅/⚠️/❌/N/A |
+| Granola | ✅/⚠️/❌/N/A |
+| Cursor | ✅/⚠️/❌/N/A |
 
 ## 原生AI思维应用
 
@@ -125,10 +128,6 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 ```
 
 写入 `docs/evals/YYYY-MM-DD-<topic>-evals.md`。
-
-<!-- FILE_END: evals/SKILL.md -->
-
-
 
 **workflow-state 写入：**
 

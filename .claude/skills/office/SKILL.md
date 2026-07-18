@@ -341,4 +341,4 @@ docs/figma/YYYY-MM-DD-<topic>/figma-spec.md
 
 处理 `/office` 命令时，**必须完整读取并执行** `references/office-wizard.md`（含 Step 1-3 向导流程与一级 Skill 列表）。其他 skill 的共享规范到此为止，无需读取向导文件。
 
-<!-- FILE_END: SKILL.md -->
+<!-- FILE_END: office/SKILL.md -->

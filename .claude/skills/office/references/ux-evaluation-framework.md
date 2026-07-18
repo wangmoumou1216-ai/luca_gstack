@@ -1,5 +1,7 @@
 # UX 评审框架
 
+> **迁移前原件，运行时不加载。** 视觉评审规则真值源 = .claude/skills/office/ux-audit/specialists/module-a-visual.md（模块A）与 module-c-crm.md（模块C）。本文件仅存档，勿据此评审或作规则真值源。
+
 模块A：视觉系统合规（是否遵守设计规范，不判断可用性）
 模块C：CRM 业务专项（CRM 场景独有问题，不涉及通用可用性）
 

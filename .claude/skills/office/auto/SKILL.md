@@ -186,6 +186,7 @@ Work Agent 收到指令后必须按以下顺序执行：
 | `BLOCKED` — 首次 | **重试一次**（重新启动同一 WA，传入相同参数） |
 | `BLOCKED` — 重试后仍失败 | **停止当前 Pipeline**，向用户报告：阻塞 Phase、blockers 列表、建议操作（手动执行该 skill / 跳过该 Phase）|
 | 超时无响应（> 5min） | 同 BLOCKED 首次处理 |
+| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后重跑该 WA；不盲目重试 |
 
 **不允许无限重试**：单个 WA 最多重试 1 次，失败后必须上报，不得静默跳过。
 

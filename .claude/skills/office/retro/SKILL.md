@@ -25,6 +25,7 @@ _DECISION=$(ls -t docs/decisions/*-design-brief.md 2>/dev/null | head -1)
 _REVIEW=$(ls -t docs/review/*-handoff-review.md 2>/dev/null | head -1)
 echo "DECISION: ${_DECISION:-none}"
 echo "REVIEW: ${_REVIEW:-none}"
+python3 .claude/observability/scripts/get_rules.py retro "*" 2>/dev/null || true
 ```
 
 ---

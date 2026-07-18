@@ -263,4 +263,4 @@ ask → 等用户确认                             / workflow-state
 
 ---
 
-<!-- FILE_END: prd/SCHEMA-arch.md -->
+<!-- FILE_END: ai-spec-template.md -->
