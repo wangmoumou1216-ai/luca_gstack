@@ -113,6 +113,8 @@ summary 文件。** 无 handoff 的 DONE 视为不完整。
 DONE 合法。compare / status 即此规则的既有实例。standalone 重型 skill 仍须写
 （跨 session 恢复依赖 handoff）。
 
+> 本豁免规则与 `references/handoff-protocol.md`「豁免规则」保持同步：阈值（`runtime-estimate ≤ 5000` 等）以 handoff-protocol.md 为详版真值源，改阈值须同步两处。
+
 写入路径：`docs/handoff/YYYY-MM-DD-<topic>-<skill-name>-handoff.md`
 格式规范：见 `references/handoff-protocol.md`
 硬约束：≤2000 tokens（≈8000 chars）
@@ -278,6 +280,8 @@ python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
 
 ### 产出路径约定
 
+> 受保护产出路径的真值源见 `.claude/skill-os/skill-invariants.md` P2；本清单为速查、不含全部 glob（如 `docs/engineering/…-tech-spec.md`、`…-task-plan.md`）。新增产出路径先登记 P2，勿把本清单当完整索引。
+
 ```
 docs/idea/YYYY-MM-DD-<topic>-idea.md
 docs/research/deepresearch-<topic>-YYYY-MM-DD.md
@@ -291,13 +295,15 @@ docs/decisions/YYYY-MM-DD-<topic>-design-brief.md
 docs/evaluation/YYYY-MM-DD-<topic>-ux-audit.md
 docs/prototype/YYYY-MM-DD-<topic>/index.html
 docs/prototype/YYYY-MM-DD-<topic>/prototype-spec.md
-docs/prototype/YYYY-MM-DD-<topic>/blueprint.yaml          ← /figma-demo 专有
-docs/prototype/YYYY-MM-DD-<topic>/mapping-proof.md        ← /figma-demo 专有
-docs/prototype/YYYY-MM-DD-<topic>/requirement.md          ← /figma-demo 专有
+docs/prototype/YYYY-MM-DD-<topic>/blueprint.yaml          ← figma-demo 专有（隐藏，内部 dispatch）
+docs/prototype/YYYY-MM-DD-<topic>/mapping-proof.md        ← figma-demo 专有（隐藏，内部 dispatch）
+docs/prototype/YYYY-MM-DD-<topic>/requirement.md          ← figma-demo 专有（隐藏，内部 dispatch）
 docs/figma/YYYY-MM-DD-<topic>/figma-spec.md
 ```
 
 ### 品牌与技术约束（所有 skill 强制遵守）
+
+> ⚠ **品牌 token 唯一真值源 = `framework/shared-head.html`**（token 母版，verify.sh F6 守护、所有原型页依赖）+ 运行时镜像 `framework/tokens.css`。以下品牌色 / 字体 / 间距为**速查副本**：任何 token 变更改母版并同步本表；下游 skill 与 reference 引用 token 应指向母版、勿再复制字面值（此前多处硬编码已发生漂移）。
 
 **品牌色：**
 - 主色：`#FF8000`（Tailwind: `bg-primary / text-primary`）
@@ -326,8 +332,8 @@ docs/figma/YYYY-MM-DD-<topic>/figma-spec.md
 ```
 
 **原型技术栈：** 纯 HTML + 本地 Tailwind CDN（`framework/assets/vendor/tailwindcss.com.js`）+ 原生 JS
-**可用母版（5个）：** 列表页 / 详情页（两列）/ 详情页（三列）/ 表单页 / 首页/仪表盘。AI速记入口页 / 录音工作页当前无整页母版，需走局部改动/独立组件或先补齐母版。
-**图标：** 先查 `framework/assets/icons/`，找不到再使用隐藏图标检索工具
+**可用母版（5个）：** 列表页 / 详情页（两列）/ 详情页（三列）/ 表单页 / 首页/仪表盘。AI速记入口页 / 录音工作页当前无整页母版，需走局部改动/独立组件或先补齐母版。（母版清单以本处为唯一真值源；design-brief / figma-demo / html-prototype 引用勿复述，补齐新母版只改此处。）
+**图标：** 先查 `framework/assets/icons/`，找不到则如实说明缺图标、不臆造（原隐藏图标检索工具 fx-icon-search 已于 commit 5aa61a7 删除，勿调用）
 
 ---
 
