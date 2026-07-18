@@ -472,6 +472,9 @@ Expected orchestration:
 **标记 DONE 之前必须执行，无 handoff 的 DONE 视为不完整。**
 
 **Step 1 — 写入 handoff summary：**
+```bash
+mkdir -p docs/handoff
+```
 ```
 路径：docs/handoff/YYYY-MM-DD-<topic>-deepresearch-handoff.md
 格式：见 .claude/skills/office/references/handoff-protocol.md（≤2000 tokens）

@@ -114,7 +114,7 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
 
 ## Phase 3：合成架构 brief
 
-把各 recon agent 的返回合成一份 brief，写：
+把各 recon agent 的返回合成一份 brief（先 `mkdir -p docs/engineering`），写：
 `docs/engineering/<YYYY-MM-DD>-<topic>-architecture-brief.md`
 
 结构：
@@ -144,7 +144,7 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
 
 ## Phase 5：交接 + 记忆
 
-- **handoff**：brief 作为下游设计 skill 的输入 artifact。workflow 模式写
+- **handoff**：brief 作为下游设计 skill 的输入 artifact。workflow 模式先 `mkdir -p docs/handoff` 再写
   `docs/handoff/<date>-<topic>-code-recon-handoff.md`（含 gate_result + 产出路径 + 关键架构决策/风险）；
   standalone 轻量模式（终端交付、无下游消费）可免 handoff。之后建议路由到
   `/ux-brainstorm` 或 `/design-brief`（它们把这份 brief 作为 `architecture_brief` optional 输入消费）。

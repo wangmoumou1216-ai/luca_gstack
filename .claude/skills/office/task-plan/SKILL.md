@@ -32,6 +32,7 @@ echo "TECH_SPEC_HANDOFF: ${_TS_HANDOFF:-NOT FOUND}"
 # 找最新 tech-spec 文件
 _TS=$(ls docs/engineering/*tech-spec.md 2>/dev/null | sort | tail -1)
 echo "TECH_SPEC: ${_TS:-NOT FOUND}"
+python3 .claude/observability/scripts/get_rules.py task-plan "*" 2>/dev/null || true
 ```
 
 ---

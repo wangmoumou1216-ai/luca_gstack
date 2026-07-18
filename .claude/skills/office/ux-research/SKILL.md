@@ -543,6 +543,11 @@ AskUserQuestion：
 
 **标记 DONE 之前必须执行，无 handoff 的 DONE 视为不完整。**
 
+**Step 0 — 确保 handoff 目录存在：**
+```bash
+mkdir -p docs/handoff
+```
+
 **Step 1 — 写入 handoff summary：**
 ```
 路径：docs/handoff/YYYY-MM-DD-<topic>-ux-research-handoff.md

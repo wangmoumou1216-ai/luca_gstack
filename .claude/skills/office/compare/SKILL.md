@@ -55,9 +55,9 @@ Step 3  确认两个文件均为非空
 
 | 文件类型 | 提取内容 |
 |---------|---------|
-| PRD / brainstorm | 目标用户、核心功能列表（R-NNN）、假设条件、Outstanding Questions |
+| PRD / brainstorm | 目标用户、核心功能列表（R1/R2 形式）、假设条件、Outstanding Questions |
 | UX 方案 / ux-brainstorm | 方案选项（A/B/C）、选型决策、交互约束 |
-| Design Brief | 决策卡片（DEC-DXXX，ADOPTED/REJECTED）、组件映射、约束列表 |
+| Design Brief | 决策卡片（D-NNN，采纳/预留/REMOVED）、组件映射、约束列表 |
 | Tech Spec | 接口定义（IF-NNN）、需求覆盖率、MUST/PARTIAL 分类 |
 | Task Plan | DEV-NNN 卡片列表、MVP 状态、Wave 分组 |
 | Handoff | gate_result、关键决策摘要、约束列表 |
