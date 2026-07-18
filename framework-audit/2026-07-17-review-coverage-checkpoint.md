@@ -39,7 +39,7 @@
 | 优先级 | 动作 | 理由 |
 |---|---|---|
 | **P0** | **muse-loop 第一次真跑**（拿真实需求语料完整走一遍 Loop，GATE-1/GATE-2 人在环） | 07-07 审计最大欠账；「唯一能证明 2000+ 行建设值不值的方式」；比任何新审计便宜且信息量更大 |
-| **P1** | **office skills 本体内容质量深审**：~16 个一级 skill 的 SKILL.md 对照 `skill-authoring.md`（根德性/六失败模式/修剪纪律）逐个审 | 唯一真空白（07-03 只审接线未审内容）；核心资产，每次设计任务都在消费 |
+| ~~**P1**~~ ✅ 完成 07-18 | ~~**office skills 本体内容质量深审**~~ → 见 `2026-07-17-skills-content-audit.md` + `2026-07-18-W13-DECIDE-list.md`：269 findings，222 CONFIRMED（130 FIX-NOW 全修+独立复审 / 83 DECIDE 交 luca / 9 KB）+ 47 REFUTED，八指标全达标 | 唯一真空白已补齐 |
 | **P2** | BACKLOG 两个小尾巴：#20 反向校验（~15 行）+ #21 archive 检索可见性（一个裁决） | 顺手收，成本极低 |
 | **P3** | scripts + observability 工具层专项（~20 个 check-* 活性盘点 + get_rules.py 消费链可达性） | 死代码/维护税，fail-open 不伤产出，不急 |
 | **P4** | model-routing 首次运行复核 | 07-10 刚立，daily_governance tripwire 看护中，攒数据 |
