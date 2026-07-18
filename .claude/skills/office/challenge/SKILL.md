@@ -176,10 +176,10 @@ PRD 文件名 `docs/prd/*-prd.md` 推断 topic slug**，而非从 brainstorm-fir
 export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 # 如果 _TOPIC 为空或是占位符，从最新 idea 文件名推断
 [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/idea/*.md 2>/dev/null | head -1 | \
+  _TOPIC=$(ls -t docs/prd/*-prd.md 2>/dev/null | head -1 | \
            xargs basename 2>/dev/null | \
            sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-idea\.md$//' || echo "unknown")
+           sed 's/-prd\.md$//' || echo "unknown")
 export _NODE="challenge"
 export _STATUS="DONE"
 export _OUTPUT="docs/prd/*-challenge.md"

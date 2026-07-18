@@ -98,8 +98,6 @@ AskUserQuestion：
 来源：{topic} 项目复盘
 ```
 
-<!-- FILE_END: retro/SKILL.md -->
-
 
 
 **workflow-state 写入：**
