@@ -145,3 +145,16 @@
 1. **subagent 串行**：此后所有 subagent 一个一个跑、不并行（限额撞死时最多损失 1 个在飞 agent）。
 2. **模型分配**：剩余 5 批按判断杠杆×错判代价选 3 批留 fable——B04 界面产出链（34 条、多 P1、SSOT/OD-first 系统性）、B03 需求侧（23 条、主链入口）、B11 评审治理类（17 条、invariant/保护区交界）；B13/B12 降为 opus。
 - 第三轮脚本：scratchpad `w7_round3_serial.js`（串行 for-await + 每批 model 字段，顺序 B13→B12→B11→B03→B04 小票先行做金丝雀）；12:03 一次性 cron 已排（会话态；冷启动照本节执行同样步骤）。
+
+## W7 关闭 + W8.5 + W9 饱和 — 发现层终态（2026-07-18，逐轮 commit 已入库）
+
+> 逐轮明细在 commit message + jsonl 台账；本节只记收尾与终态，避免 md 重复长历史。
+
+- **W7 第三轮关闭（commit 409cd46）**：13/13 批全票有效，96 verdict 入账 → 168 CONFIRMED / 45 REFUTED / 3 分歧转 W8.5 / 0 open。
+- **W8.5 关闭（commit 626fa14）**：3 条双票分歧定向终审 —— FW3-037 CONFIRMED / FW3-031 + FW4-155 REFUTED → **0 未裁决（指标③达标）**。
+- **W9-10 饱和轮（commit 7e932db 起，R1-R9）**：自由狩猎（扣留标准文档）+ 正交 lens + novelty 判官。**分层饱和真相**：P0 全程 = 0；承重层（P0/P1）跨 R1-R9 仅 2 条全新 P1（3.8%）→ 承重层判定饱和；P2/P3 长尾（一致性磨损/打磨）数学上无法收敛，按 Loop 宪法 §3「不划算就砍」声明为**响应式维护**，不再刷轮。
+- **对抗层信度旁证**：W7 意外双票 test-retest 稳定率 96.5%（86 条双判，3 条翻转全部转 W8.5 定向复核）。
+
+**发现层终态台账（268 条，本次收尾提交）**：**221 CONFIRMED**（FIX-NOW 141 / DECIDE 71 / KNOWN-BOUNDARY 9）+ **47 REFUTED** + **0 未裁决**。severity（CONFIRMED）：P1 14 / P2 131 / P3 76。
+
+**发现层关闭，进入 W11 集中修复。** 26 条晚期饱和轮 FIX-NOW（FW3-050/056/057/059 + 全部 FW9-*）无预置 proposed_fix，W11 逐条读 claim+failure_scenario 现场拟修。
