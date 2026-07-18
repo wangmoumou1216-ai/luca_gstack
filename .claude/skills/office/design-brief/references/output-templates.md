@@ -82,8 +82,8 @@
 **生成目标**
 - 页面 / 组件名称：{name}
 - 目标平台：{desktop CRM / mobile / embedded component}
-- 默认产出路径：MagicPath React canvas component
-- fallback：本地 HTML prototype（仅 MagicPath 不可用、非 React/Canvas、或用户明确要求）
+- 默认产出路径：Open Design（首选，见 CLAUDE.md 界面产出备选链）
+- fallback：MagicPath React canvas → 本地 HTML prototype（Open Design 不可达时依次降级，或非 React/Canvas、用户明确要求）
 
 **产品与用户目标**
 - 用户角色：{primary user}

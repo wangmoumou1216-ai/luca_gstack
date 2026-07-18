@@ -434,7 +434,9 @@ Layer D · 代理层（场景 D 和涉及 agent 的功能强制）：
   不通过点：{列出具体}
 ```
 
-### 严重性判断（按 ai-native-taste-anchors.md 第 9 节）
+### 严重性判断（按 ai-native-taste-anchors.md §5 严重性分级）
+
+> 真值源 = ai-native-taste-anchors.md §5；下方阻断/警告清单为执行副本，改动须先改 §5 再同步本处。
 
 - **阻断锚点不通过** → 必须先调整方案，不得进入 Phase 5：Linear / Raycast /
   Perplexity / Cursor / Granola
