@@ -38,7 +38,7 @@ cat .claude/current-topic.txt 2>/dev/null || true
 | deepresearch | 广域多源/学术/可行性，需共识矩阵 | 单点问题（杀鸡用牛刀） |
 
 **升降级链**：题目在研究中发散/需交叉验证 → 停下，建议升 `/deepresearch`；
-反向：deepresearch Step 0.2 问询判定题目过窄 → 降到本 skill。
+反向：题目过窄（单点事实、一源即答）→ 用本 skill 而非 deepresearch（deepresearch 无内建降级出口，窄题应在入口/路由处直接选本 skill）。
 
 ## 流程
 

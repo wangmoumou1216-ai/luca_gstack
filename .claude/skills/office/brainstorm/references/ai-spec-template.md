@@ -9,7 +9,7 @@
 > Engineering decides: infrastructure, libraries, deployment, performance optimization.
 >
 > Companion documents:
-> - `{slug}-prd-{date}.md` — the PRD (product decisions)
+> - `YYYY-MM-DD-{slug}-prd.md` — the PRD (product decisions)
 > - **This file** — AI system architecture thinking (product × engineering bridge)
 
 Generated: {YYYY-MM-DD HH:MM}
@@ -67,7 +67,7 @@ Agent 身份：{一句话}
 | 调用外部 API | {allow / ask / deny} | {理由} |
 | 读取他人数据 | {deny} | {理由} |
 
-**与 prd-constraints.md 的一致性检查：**
+**与 prd-constraints.md 的一致性检查（条件性）：** `prd-constraints.md` 由下游 `design-brief`（场景 B）产出，`brainstorm` 上游阶段通常尚不存在。仅当该文件已存在时才做下面两项核对；否则改为从本 PRD 的 Scope Boundaries / Agent Boundary Declaration 推导"不做什么"再核对 Permission 表。
 ```
 □ prd-constraints 的"不做什么"里的每一项，在 Permission 表里都是 deny？
 □ 没有 prd-constraints 说"不做"但 Permission 表给了 allow 的矛盾？
@@ -251,7 +251,7 @@ ask → 等用户确认                             / workflow-state
 ## 产出后检查清单
 
 ```
-□ Permission 表和 prd-constraints.md 的"不做什么"不矛盾？
+□ （若 prd-constraints.md 存在，通常来自下游 design-brief）Permission 表和其"不做什么"不矛盾；不存在时改从本 PRD 的 Scope Boundaries 推导核对？
 □ 每个 deny 权限都有对应的 Hook 拦截？
 □ MCP 接入的外部服务都有 fallback？
 □ context 预算总和 < 模型 context 窗口 80%？

@@ -76,7 +76,7 @@ const forbidden = [
   ["No raw Tailwind gray in generated area (use n-scale)", !/\b(text|bg|border|ring)-(gray|slate|zinc|neutral)-(50|100|200|300|400|500|600|700|800|900|950)\b/.test(generatedHtml), "Use n-scale tokens: text-n19 / text-n11 / text-n07 / bg-n05 / bg-n02 / border-n05 / ring-n05 instead of Tailwind gray utilities."],
   ["No Lorem Ipsum", !/lorem ipsum/i.test(html), "Use realistic CRM copy or marked data placeholders."],
   ["No emoji icons", !/[\u{1F300}-\u{1FAFF}]/u.test(html), "Use local icon assets or text placeholders."],
-  ["Prototype spec exists", fs.existsSync(prototypeSpecPath), "prototype-spec.md is required."]
+  ["Prototype spec exists", mode === "muse-proto-gen" || fs.existsSync(prototypeSpecPath), "prototype-spec.md is required (muse-proto-gen exempt: it outputs HTML + qa-results.json only)."]
 ];
 for (const [name, passed, detail] of forbidden) addCheck(name, passed, detail);
 addCheck(
@@ -110,7 +110,7 @@ const allStates = uniq([...stateMatches, ...stateCommentMatches]);
 if (mode === "figma-demo") {
   const blueprintNodeIds = uniq([...blueprint.matchAll(/\bnode-\d{2,}[-\w]*\b/gi)].map((m) => m[0]));
   const htmlNodeIds = uniq([
-    ...[...html.matchAll(/data-demo-node=["']([^"']+)["']/g)].map((m) => m[1]),
+    ...[...html.matchAll(/data-(?:demo-)?node=["']([^"']+)["']/g)].map((m) => m[1]),
     ...[...html.matchAll(/NODE:\s*([^\n<]+)/g)].map((m) => m[1].trim())
   ]);
   addCheck("Figma demo blueprint exists", Boolean(blueprint), "blueprint.yaml is required for figma-demo mode.");
@@ -124,6 +124,8 @@ if (mode === "figma-demo") {
     blueprintNodeIds.length > 0 || /nodes\s*:/i.test(blueprint),
     `Blueprint node hints: ${blueprintNodeIds.join(", ") || "nodes key not found"}.`
   );
+} else if (mode === "muse-proto-gen") {
+  addCheck("State coverage recorded (informational)", true, `States: ${allStates.join(", ") || "none"}. muse-proto-gen requires no state markers; AC-level state coverage is muse-proto-judge's job, not this deterministic gate.`);
 } else {
   addCheck("State coverage markers present", allStates.length >= 5, `Found states: ${allStates.join(", ") || "none"}.`);
 }

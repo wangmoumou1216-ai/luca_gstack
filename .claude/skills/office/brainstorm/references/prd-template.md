@@ -1,6 +1,6 @@
 # PRD Template — Right-Sized, Stable-ID, Handoff-Ready
 
-This file is loaded in **Phase 6: Write PRD**. Do not load it earlier — it pollutes context.
+This file is first loaded in **Phase 5.1** (to self-run the Finalization Checklist as the pre-Oracle pre-gate) and again in **Phase 6: Write PRD**. Do not load it before Phase 5.1 — it pollutes context.
 
 ## Scoping Preface — READ FIRST
 
@@ -44,8 +44,10 @@ Match the document's weight to the problem's ambiguity. There are three scope ti
 
 **Triggered sections fire when:**
 - **Actors**: more than one distinct role interacts
-- **Research & Decision Coverage Matrix**: required for Standard+; required for Lightweight when
-  a `deepresearch`, research report, idea artifact, or prior brainstorm decision source exists
+- **Research & Decision Coverage Matrix**: required for Standard+ regardless of research source —
+  in cold-start (no research) it is built from Phase-4 approach decisions + user answers, with
+  research-claim rows added when a `deepresearch`, research report, idea artifact, or prior
+  brainstorm decision source exists. For Lightweight it is triggered only when such a source exists
 - **Key Flows**: sequence/timing matters for correctness
 - **Acceptance Examples**: edge cases or numeric thresholds exist
 - **Premises**: a non-obvious assumption underlies the approach

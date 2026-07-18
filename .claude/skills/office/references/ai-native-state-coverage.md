@@ -1,6 +1,6 @@
 # AI 专有状态清单
 
-> 共享 reference。被 /ux-brainstorm、/design-brief、/html-prototype 引用。
+> 共享 reference。直接消费者 = /design-brief（shared-refs 声明）；/html-prototype 经 html-prototype-tokens 间接触达。真值源以各 skill frontmatter 的 shared-refs 为准。
 > 传统的"默认/空/加载/错误/成功"不够用于 AI 功能。本文件定义 AI 专有的 7 个状态。
 
 ---

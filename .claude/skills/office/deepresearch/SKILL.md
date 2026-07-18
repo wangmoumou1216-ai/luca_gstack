@@ -54,7 +54,7 @@ Phase 4: Report Generation → Write .md file
 | Search log | MANDATORY — every agent must output `<search_log>` recording all queries, webfetch URLs, and verification actions |
 | Minimum findings | ≥5 per angle, each with evidence_strength rating |
 | Validation | Consensus matrix: CONSENSUS / STRONG / DISPUTED / CONTRADICTED / UNVERIFIED + same-source degradation + source type diversity check |
-| Socratic depth | 5 question categories + evidence quality assessment + synthesis narrative, applied to ALL key findings |
+| Socratic depth | 5 question categories + evidence quality assessment + synthesis narrative, applied to CONSENSUS + DISPUTED + CONTRADICTED findings (see Research Depth Modes → Socratic scope; STRONG/UNVERIFIED excluded) |
 | Tool failure | Stop and fix — never skip a failed tool call |
 | Output | `docs/research/deepresearch-{topic-slug}-{YYYY-MM-DD}.md` |
 | Report language | Match the user's language (detect from their input) |
@@ -92,6 +92,7 @@ entirely.
 - NO SINGLE-SOURCE TRUST: unchanged
 
 **When `research_depth = moderate`, the following CRITICAL RULES adjust thresholds:**
+> 阈值数值真值源 = 上方 Research Depth Modes 表；下列仅标注 moderate 覆盖哪几条 CRITICAL RULE，改数值只改该表并同步此处。
 - Rule 7: findings ≥3 (instead of ≥5)
 - Rule 8: webfetch ≥1 (instead of ≥3)
 - Rule 9: 2 rounds (instead of 3 — skip Round 3 verification)
@@ -125,8 +126,9 @@ All other rules apply identically in both modes.
    discover new leads. Round 3 (verify): targeted verification of weak/contradictory findings. All
    rounds must be logged in `<search_log>`.
 10. **SAME-SOURCE DEGRADATION**: If multiple agents' confirmations trace to the same original
-    source (same article, same report, same author's same claim), auto-degrade to UNVERIFIED in the
-    consensus matrix. 3 agents citing the same NNG article ≠ 3 independent confirmations.
+    source, auto-degrade to UNVERIFIED in the consensus matrix. Authoritative criteria + examples
+    live in Phase 2 "Same-Source Degradation (CRITICAL)" (single operational anchor — do not restate
+    the criteria here).
 11. **SOURCE TYPE DIVERSITY CHECK**: If all confirmations of a claim come from the same source type
     (e.g., all blogs, no academic or official_docs), flag as "source type homogeneous ⚠️" in
     the consensus matrix. Socratic examination must apply extra evidence questioning to such claims.

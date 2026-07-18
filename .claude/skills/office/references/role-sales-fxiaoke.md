@@ -617,3 +617,5 @@ quality_gate_checklist:
 | V5.6更新说明 | https://www.fxiaoke.com/mob/guide/crmupdate/5.6/5.6.html |
 | 纷享AI发布说明 | https://www.cnblogs.com/fxiaoke/p/18294033 |
 | 官方客服热线 | 400-1122-778 |
+
+<!-- FILE_END: role-sales-fxiaoke.md -->

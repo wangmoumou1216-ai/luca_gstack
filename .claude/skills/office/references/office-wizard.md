@@ -44,9 +44,7 @@ AskUserQuestion：
 5. /ux-brainstorm  → UX设计方案编排器（7个UX逼问，2-3方案，Oracle审查）
 6. /design-brief    → 轻量交互文档与原型决策（不跑 ux-brainstorm 时可独立使用）
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
-   magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成 HTML 原型
-   figma-demo      → （备选·隐藏 skill，内部 dispatch）口述 + Figma → HTML 演示 Demo
 8. /figma-layer    → 还原到 Figma
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
@@ -74,9 +72,7 @@ AskUserQuestion：
 5. /ux-brainstorm  → UX设计方案编排器
 6. /design-brief    → 轻量交互文档与原型决策
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
-   magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成改版原型
-   figma-demo      → （备选·隐藏 skill，内部 dispatch）基于 Figma 截图/链接和口述生成演示 Demo
 /brainstorm 可以直接用，不需要先跑 /idea。需求范围明确时可用 superpowers:brainstorming 替代。
 ```
 
@@ -95,9 +91,7 @@ AskUserQuestion：
 2. /ux-audit   → 系统评审页面（视觉/交互/业务三个维度）
 3. /design-brief → 基于评审结论生成轻量交互文档
 4. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
-   magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）按评审清单逐条生成改版原型
-   figma-demo      → （备选·隐藏 skill，内部 dispatch）基于 Figma 截图/链接和口述生成演示 Demo
 5. /figma-layer → 还原到 Figma
 从 /idea 开始？
 ```
@@ -121,9 +115,7 @@ AskUserQuestion：
 6. /ux-brainstorm  → UX设计方案编排器（含Agent控制边界逼问）
 7. /design-brief → 轻量交互文档与原型决策（Cursor 锚点强制通过：可见/暂停/接管/撤销）
 8. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认，含 Agent 专有状态 / headless opt-in）→「拉回来」落盘
-   magicpath       → （备选）需求描述 → React canvas 组件（OD 不可达时）
    /html-prototype → （备选）生成原型
-   figma-demo      → （备选·隐藏 skill，内部 dispatch）口述 + Figma → Agent 化演示 Demo
 Agent 化设计的核心红线：用户必须始终能 看见 / 暂停 / 接管 / 撤销 AI 的动作。
 ```
 
@@ -165,6 +157,12 @@ luca_gstack — 一级可见 Skill 列表
                idea/PRD 作为范围约束
                产出：docs/research/deepresearch-{topic}-{date}.md
                说明：可在 /brainstorm 之前使用，研究报告可作为 brainstorm 的输入
+
+/quick-research A B D     轻量研究：单 agent 后台查 primary source（官方文档/源码/规范/一手 API），
+               逐条溯源落盘单文件。三档研究的中档：spike < quick-research < deepresearch
+               输入模式：standalone（research_question 必填）
+               产出：docs/research/quick-research-{topic}-{date}.md
+               说明：题目发散/需多源交叉验证 → 升 /deepresearch
 
 /brainstorm    A B D     苏格拉底拷问式 PRD（替代原 /prd）
                输入模式：standalone 或 workflow。可接受 deepresearch 报告、/idea 产出、或直接描述
@@ -208,7 +206,7 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone 或 workflow。输入 design-brief 交互文档；
                默认在 OD 桌面端生成 + 在 OD UI 内判断「是否符合需求」，说「拉回来」落盘 docs/prototype/（headless 为 opt-in）
                说明：注入 FxUI 品牌色+文字色 token（不绑组件库）；OD daemon 不可达时内部退回
-               隐藏 skill `magicpath`/`html-prototype`（见下方"隐藏/高级 skill"，非一级入口）
+               隐藏 skill `magicpath`（OD daemon 不可达时内部 dispatch，非一级入口）
 
 /html-prototype A B C  生成可在浏览器查看的 HTML 原型（OD/MagicPath 不可用时备选）
                输入模式：standalone 或 workflow。可接 design-brief / ux-audit /

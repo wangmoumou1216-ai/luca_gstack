@@ -1,7 +1,9 @@
 # ============================================================
-# blueprint.yaml — Demo 级蓝图
+# blueprint.yaml — Demo 级蓝图（骨架示意，非权威）
 # 由 /figma-demo Phase 3 生成
-# 使用时复制本文件并填充实际值
+# ⚠️ 结构/字段/枚举/必填/默认值的唯一真值源 = references/blueprint-schema.md
+#    Phase 3 Step 3.4 以 blueprint-schema.md 为准生成 blueprint.yaml；
+#    勿以本文件的具体取值（如 viewport_targets）为准，可能滞后于 schema。
 # ============================================================
 
 meta:

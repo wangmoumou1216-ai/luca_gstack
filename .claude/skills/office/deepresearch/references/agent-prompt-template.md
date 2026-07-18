@@ -2,7 +2,7 @@
 
 > Loaded by deepresearch skill at Phase 1. Do NOT load at Phase 0.
 > When `research_depth = moderate`: findings ≥3, webfetch ≥1, 2 rounds (skip Round 3), first 2
-> keywords mandatory (rest optional).
+> keywords mandatory (rest optional). (阈值真值源 = SKILL.md Research Depth Modes 表；改数值须同步此处。)
 
 ---
 
@@ -63,11 +63,11 @@ Requirements:
   - If Round 2 new leads opened a new direction, do 1-2 targeted searches
 Output: Revised findings + final contradictions and gaps
 
-TOOL USAGE:
-- websearch_web_search_exa: For web content. Use descriptive queries, not just keywords.
-- webfetch: To read full content of promising URLs. (Round 2: MANDATORY ≥3 full-text reads)
-- context7_resolve-library-id + context7_query-docs: For library/framework documentation.
-- grep_app_searchGitHub: For real code examples (use literal code patterns, not keywords).
+TOOL USAGE (use whatever equivalent tools THIS environment exposes — the names below are illustrative, not hard requirements):
+- web search tool (e.g. WebSearch / websearch_web_search_exa): For web content. Use descriptive queries, not just keywords.
+- full-page fetch tool (e.g. WebFetch / webfetch): To read full content of promising URLs. (Round 2: MANDATORY ≥3 full-text reads)
+- library/framework docs tool (e.g. context7): For official library/framework documentation.
+- code-search tool (e.g. grep_app_searchGitHub): For real code examples (use literal code patterns, not keywords).
 
 OUTPUT FORMAT (MANDATORY — return EXACTLY this structure):
 
@@ -167,7 +167,7 @@ Each agent MUST use ALL of the following keyword combinations in Round 1 (each e
 - "[topic] academic definition peer-reviewed"
 
 **Agent 2 (Current State):**
-- "[topic] latest developments 2025 2026"
+- "[topic] latest developments [current year] [current year-1]"  (use the actual year the skill runs, not a hardcoded one)
 - "[topic] market data statistics"
 - "[topic] recent trends analysis"
 

@@ -1,7 +1,9 @@
 # DESIGN-SYSTEM-CONTRACT.md
 # 设计系统执行合约 v1.0
-# 适用范围：design-implementation-agent
+# 适用范围：设计实现约束（经 shared-refs 由 design-brief Phase5 / html-prototype / ux-audit 加载）
 # 本文件为硬性约束，所有实现必须严格遵守
+# 栈范围：§二~§十 的品牌/字体/间距/颜色/图标 token 约束栈无关且权威；shadcn/@components/ui/tsx/React 专有条款（§一、init 命令、禁 style={{}} 等）仅适用 React 实现路径，
+#   纯 HTML 消费者（html-prototype = 纯 HTML + 本地 Tailwind CDN + 原生 JS）只取 token 约束、忽略 shadcn/React 专有条款
 
 ---
 
@@ -11,7 +13,7 @@
 1. **结构框架**：保持现有页面布局框架（有卡片用卡片，有侧栏用侧栏，
    未经用户确认不得更改）
 2. **组件实现**：使用 shadcn/ui 实现框架内元素
-3. **视觉节奏**：完整执行 `UI-DESIGN-SYSTEM.md` 数值，覆盖 shadcn 默认值
+3. **视觉节奏**：完整执行本合约 §三（字体）/ §四（间距）数值（真值源 framework/tokens.css + references/html-prototype-tokens.md），覆盖 shadcn 默认值
 4. **品牌色**：`#FF8000` 替换所有 shadcn primary 位置
 
 **冲突原则**：你们规范 > shadcn 默认（以下例外项已明确声明）
@@ -31,6 +33,9 @@ tailwind: css-variables 模式
 ---
 
 ## 二、品牌色（写入 globals.css）
+
+> 品牌色/功能色为速查副本；唯一真值源 framework/shared-head.html（verify.sh F6 认证的 token 母版）+ 运行时镜像 framework/tokens.css，值以真值源为准、变更须同步。
+> 已知历史漂移（以真值源为准）：`--destructive` 母版为 #FF4A66（本处 #FF522A）；`--success` 母版为 #87CC3B（本处 #30C776，母版全仓无 #30C776 出处）；`--info` 母版为 #189DFF（本处 #0C6CFF＝link 而非 info）。
 
 ```css
 :root {
@@ -60,7 +65,10 @@ tailwind: css-variables 模式
 
 ---
 
-## 三、字体系统（完整执行 UI-DESIGN-SYSTEM.md §一）
+## 三、字体系统
+
+> 字体四级（L1–L4）为速查副本；唯一真值源 references/html-prototype-tokens.md §2「字号速查表」（与 framework 对齐）。
+> 已知 line-height 冲突待人工裁定（不单方选边）：L1 本处 18px vs 真值源 24px；L2/L3 本处 1.5 vs 真值源 18px。以真值源为准、变更须同步。
 
 ```css
 .text-l1 { font-size:15px; font-weight:500; color:#181C25; line-height:18px; }
@@ -77,7 +85,9 @@ tailwind: css-variables 模式
 
 ---
 
-## 四、间距系统（完整执行 UI-DESIGN-SYSTEM.md §三）
+## 四、间距系统
+
+> 间距 7 档为速查副本；唯一真值源 references/html-prototype-tokens.md §3「间距速查表」+ framework/tokens.css，变更须同步。
 
 合法间距值：`4 / 8 / 12 / 16 / 24 / 32 / 40` px
 

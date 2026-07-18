@@ -92,14 +92,14 @@ deepresearch*.md (or idea)
 → Phase 3: Collaborative Interrogation (USER IN LOOP) — • Ask 2-6 forcing questions, ONE AT A TIME • Use AskUserQuestion, prefer single-select • Apply anti-sycophancy + pushback patterns
 → Phase 4: Approach Exploration — • Generate 2-3 approaches (minimal / ideal / lateral) • At least one non-obvious angle • Present options BEFORE recommendation
 → Phase 5: Adversarial Review (Oracle, foreground) — • Oracle reviews draft on 5 dimensions • Max 3 rounds with convergence guard • Classify findings: safe_auto / gated / manual / fyi
-→ Phase 6: Write PRD + Conditional AI Spec — • Load references/prd-template.md • Fill per Section Matrix for scope tier • Write PRD to docs/prd/{date}-{slug}-prd.md • If AI Native/Partial: load references/ai-spec-template.md, write docs/prd/{date}-{slug}-prd-ai-spec.md
-→ Phase 7: Handoff Menu — • Gated if Resolve-Before-Planning is non-empty • Options: Plan / More Questions / Revise / Done
+→ Phase 6: Write PRD + Conditional AI Spec — • Load references/prd-template.md • Fill per Section Matrix for scope tier • Write PRD to docs/prd/{date}-{slug}-prd.md • If AI Native/Partial: load references/ai-spec-template.md, write docs/prd/{date}-{slug}-prd-ai-spec.md • Write handoff summary (heavy skill, before DONE)
+→ Phase 7: Next-Step Menu — • Gated if Resolve-Before-Planning is non-empty • Options: Plan / More Questions / Revise / Done
 ```
 
 | Boundary | Value |
 |---|---|
 | Input | `deepresearch*.md` path (optional — cold-start mode allowed) |
-| Output | One markdown PRD file + conditional `prd-ai-spec.md` (when AI Native) + verbal Handoff menu |
+| Output | One markdown PRD file + conditional `prd-ai-spec.md` (when AI Native) + handoff summary (heavy skill) + verbal next-step menu |
 | Code editing | **NONE** — this skill never writes code |
 | User interaction | MANDATORY in Phase 3; optional gate in Phase 5 (manual findings) and Phase 7 |
 | Subagent dispatch | 3 parallel background (Phase 1) + 1 foreground Oracle (Phase 5) |
@@ -190,7 +190,7 @@ Parse `<research_input>` (from `$ARGUMENTS`):
 - **If it's a topic/idea string with no file path**: enter **cold-start mode**.
 - **If empty**: ask the user via the AskUserQuestion:
   > "Provide either (1) a path to a research markdown file, or (2) a description of the idea to brainstorm. Which?"
-- **If it's actually a raw batch of many candidate requirements** (a workshop transcript, a backlog dump, many unrelated asks at once) rather than one already-chosen topic: this skill has no batch-triage mode — consider `muse-req-triage` (muse fork only) first to cheaply pre-filter which candidates are worth a full Brainstorm session each, then come back here per accepted candidate.
+- **If it's actually a raw batch of many candidate requirements** (a workshop transcript, a backlog dump, many unrelated asks at once) rather than one already-chosen topic: this skill has no batch-triage mode — consider `muse-req-triage` first to cheaply pre-filter which candidates are worth a full Brainstorm session each, then come back here per accepted candidate.
 
 When in cold-start mode, treat the user's initial message as the "research input" and mark the
 PRD's `Source Research` field as `cold-start (no research provided)`. Cold-start mode does NOT skip
@@ -456,9 +456,11 @@ Draft 2-3 approaches that satisfy all of:
 - At least one **Ideal Architecture**: the version assuming full budget and no constraints
 - At least one **Lateral / Non-Obvious**: apply inversion, constraint-removal, or cross-domain analogy
 
-For Lightweight tier: 2 approaches (Minimal + one other) are acceptable.
-For Standard / Deep-feature: exactly 3.
-For Deep-product: 3+ with at least one Lateral.
+How many land in the PRD's written **Approaches Considered** section follows the Section Matrix in
+`references/prd-template.md`（真值源，勿在此重复分档计数）: Standard / Deep-feature ≥2 (aim for the
+full Minimal/Ideal/Lateral triad), Deep-product ≥3 with at least one Lateral. For Lightweight the
+written section is skipped — explore ≥2 internally, but the Phase 5.1 pre-gate does not require the
+section for Lightweight.
 
 **Lateral angle generation techniques:**
 - **Inversion**: what would the opposite approach look like? (e.g., instead of adding features,
@@ -501,10 +503,10 @@ Apply one of three labels:
 
 Before invoking Oracle, verify the in-memory PRD draft has:
 - All requirements assigned stable R# IDs
-- At least one Acceptance Example (for Standard+)
+- At least one Acceptance Example for Deep-feature+ (Standard / Lightweight only when the AE trigger applies — edge cases or numeric thresholds exist, per the Section Matrix)
 - Outstanding Questions split into blocking vs deferred
-- Approaches Considered populated with Recommended Approach selected
-- Research & Decision Coverage Matrix drafted when a research source exists
+- Approaches Considered populated with Recommended Approach selected (for Standard+; Lightweight skips this section per the Section Matrix)
+- Research & Decision Coverage Matrix drafted (Standard+: always — from Phase-4 approach decisions + user answers; research-claim rows added when a research source exists)
 - Every high-confidence source claim has a disposition and PRD destination
 - Every selected/rejected approach decision has a coverage row
 - Finalization Checklist in `references/prd-template.md` self-run — note any items that fail
@@ -621,7 +623,24 @@ If prd-ai-spec.md was also written:
 
 Do not summarize the PRD content — the user will read it.
 
-## Phase 7: Handoff Menu
+### 6.5 — Write handoff summary (heavy skill — workflow AND standalone)
+
+`brainstorm` is a heavy skill (`runtime-estimate: 75000`), so `references/handoff-protocol.md`
+requires a handoff summary before DONE in **both** workflow and standalone mode — the
+lightweight / terminal-delivery exemption does NOT apply. Ensure the handoff directory exists
+(`mkdir -p docs/handoff`) and write `docs/handoff/YYYY-MM-DD-<topic>-brainstorm-handoff.md` in the
+format defined by `references/handoff-protocol.md`:
+- `gate_result` + a 3-7 line `criteria:` block (mirror the Phase 6.1 Finalization Checklist
+  outcomes; PASS when `Outstanding Questions → Resolve Before Planning` is empty, otherwise
+  CONDITIONAL_PASS / FAIL);
+- decisions (Recommended Approach + rejected directions), constraints, and risks;
+- Deferred questions mirroring the PRD's `Outstanding Questions → Deferred to Planning`;
+- output paths (the PRD path, plus the ai-spec path if one was written).
+
+This persisted artifact is distinct from the Phase 7 menu below (which is verbal). Write it before
+presenting the menu.
+
+## Phase 7: Next-Step Menu
 
 ### 7.1 — Determine gate state
 

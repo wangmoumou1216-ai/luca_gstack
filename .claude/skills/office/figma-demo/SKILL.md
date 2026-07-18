@@ -72,6 +72,8 @@ python3 .claude/observability/scripts/get_rules.py figma-demo "*" 2>/dev/null ||
   （Builder SubAgent 的完整 System Prompt，了解它的能力边界）
 □ .claude/skills/office/figma-demo/references/blueprint-schema.md
   （blueprint.yaml 的完整字段定义）
+□ .claude/skills/office/figma-demo/references/mapping-verification.md
+  （Phase 2 映射验证的权威真值源：PASS/WEAK/FAIL 评分标准 + 节点级判定 + >50% WEAK 回退门）
 □ .claude/skills/office/figma-demo/references/interface-schema.md
   （节点间接口定义规范）
 □ .claude/skills/office/references/html-prototype-tokens.md
@@ -375,6 +377,11 @@ B）放弃重新开始
 
 ### Step 2.1：逐节点 5 问自验证
 
+> **评分与判定门（做 5 问前必须读 `references/mapping-verification.md` 到 FILE_END）：** 每问按
+> PASS/WEAK/FAIL 评分，节点级判定（**任何 FAIL → 节点不通过，标记 NEEDS_CLARIFICATION**）与 Demo 级
+> 回退门（**>50% 节点有 WEAK → 回到 Phase 1 重译**）以该文件为唯一真值源。「通过」在本 skill 内的
+> 定义 = 该文件的节点级判定，不得凭含糊回答自判通过。
+
 对 requirement.md 中的每个节点，回答以下 5 个问题。**必须写出答案，不能跳过。**
 
 ```
@@ -426,7 +433,7 @@ Q5 — 必要性
 
 ### Step 2.3：映射确认（唯一一次打扰设计师的地方）
 
-**如果所有节点都通过 5 问验证，无歧义：**
+**如果所有节点都通过 5 问验证（判定标准见 mapping-verification.md 节点级判定：任何 FAIL → NEEDS_CLARIFICATION，无 FAIL 即通过），无歧义：**
 
 输出可视化映射图（文字版），AskUserQuestion 确认：
 
@@ -963,14 +970,11 @@ AskUserQuestion：
 - **产出路径**：Demo HTML 文件路径 + prototype-spec.md 路径 + blueprint 路径
 
 **Step 2 — 更新 workflow-state.yaml：**
-```yaml
-figma-demo:
-  status: DONE
-  output: "docs/prototype/<filename>"
-  completed_at: "<YYYY-MM-DD>"
-  gate_result: PASS
-  handoff_path: "docs/handoff/<filename>"
-  blueprint: "docs/figma/<blueprint-filename>"
-```
+
+workflow-state 写入以 **Phase 6.2 的 `write_state.py` 为唯一真值源**（写 `nodes.figma-demo`：
+status / output=docs/prototype/<topic>/index.html / completed_at + `_EXTRA_JSON` 里的
+`blueprint`=docs/prototype/<topic>/blueprint.yaml）。Phase 6.2 已完成写入，**不要在此另手写一套
+顶层 YAML 字段**——手写顶层 `figma-demo:` 键会与脚本产物（`nodes.figma-demo`）结构漂移，且
+blueprint 会写成错误的 `docs/figma/` 路径（该目录是 /figma-layer 的 figma-spec 位置，从不产出 blueprint）。
 
 <!-- FILE_END: figma-demo/SKILL.md -->

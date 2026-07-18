@@ -123,6 +123,7 @@ skill 在执行过程中按需读取特定段落。
 DATE=$(date +%Y-%m-%d)
 TOPIC=$(grep "^topic:" .claude/workflow-state.yaml | awk '{print $2}' | tr -d '"')
 SKILL_NAME="<当前skill名>"
+mkdir -p docs/handoff
 cat > "docs/handoff/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md" << 'HANDOFF_EOF'
 # Handoff: <skill-name> → downstream
 ...（按格式填写）

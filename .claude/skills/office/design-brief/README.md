@@ -99,6 +99,10 @@
 
 完整的端到端示例见 `examples/2026-04-23-ai-followup-design-brief.md`。
 
+> 注：该示例顶部「前置依赖：native-design/… 与 inspired-design/…」是旧「原生推导 + 竞品启发」
+> 双阶段管线的残留，当前 design-brief 已是单阶段收敛流程、无此两道上游产物（对应文件全仓不存在）；
+> 阅读时忽略该前置块与正文里的 native-design/inspired-design 引用，只看 design-brief 本身的结构即可。
+
 场景："AI 智能跟进建议"。这是 3 份示例里最全面的一份，展示了：
 - Phase A 设计坐标系（必须解决的问题 / 可借鉴的范式 / 不能碰的范围 / AI 方向）
 - 四层深度思考（Layer A/B/C 全填，Layer D 写 N/A + 原因）
@@ -113,16 +117,19 @@
 新用户或外部设计师想理解"什么叫专业的 AI Native 设计决策文档"，
 看这一份就够了。
 
-**产出文件必须包含 9 节**（第 2/3/4/5/7 节名锁死，下游高级审查依赖）：
+**产出文件必须包含 12 节**（第 2/3/4/5/7 节名锁死，下游高级审查依赖；节清单唯一真值源 = SKILL.md Phase 7）：
 1. 设计坐标系
-2. 原生AI深度思考（节名锁死）
+2. 原生AI深度思考小结（节名锁死）
 3. 假设挑战结论（节名锁死）
 4. 体验验证结论（节名锁死，含 12 状态覆盖表）
 5. 品味检查四锚点（节名锁死，内部扩展为 8 锚点）
 6. 设计决策清单（每条 8 字段）
 7. shadcn 组件映射表（节名锁死）
-8. REMOVED 记录
-9. 交接块
+8. 可追踪完整矩阵（Phase 6.5）
+9. Design Generation Packet（Phase 6.75）
+10. Tool Consumption Contract（Phase 6.75）
+11. REMOVED 记录
+12. 交接块
 
 ## 引用的共享 reference
 
@@ -135,7 +142,7 @@
 
 - `/html-prototype` — 读组件映射表和 12 状态，生成 HTML 原型
 - `/figma-layer` — 基于原型还原 Figma
-- 高级 design-review — 前置审查检查 9 节完整性，后置验收对照实现
+- 高级 design-review — 前置审查检查 12 节完整性，后置验收对照实现
 - 高级 taste-review — 可在任意阶段重新跑 8 锚点品味检查
 - 高级 redteam — 质疑本次决策的最脆弱假设
 

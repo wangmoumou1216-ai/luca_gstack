@@ -108,7 +108,7 @@ AskUserQuestion：
 - 主要操作流程
 ```
 
-### 询问 4（仅场景C）：确认 ux-audit 文件
+### 询问 3（仅场景C）：确认 ux-audit 文件
 
 ```bash
 cat "$_UX_AUDIT" 2>/dev/null | head -60
@@ -132,9 +132,9 @@ B）我直接粘贴问题清单
 □ 确认以下 4 份 reference 文件存在（此处只查存在性，不读取——lazy-load，2026-07-04 G5：
   每份在其消费点已各自有"必须读取"强制，启动全量前读是重复税；挂载点见下方注）
   · framework/README.md                    → 挂载：框架选择逻辑前 +（如走母版）写 HTML 前
-  · references/html-prototype-tokens.md    → 挂载：Phase 2.5 设计系统宣告前
-  · html-prototype/references/dynamic-reference-protocol.md → 挂载：Phase 2.1 动态参考扫描前
-  · html-prototype/references/current-aesthetic-rubric.md   → 挂载：Phase 2.25 审美校准前
+  · .claude/skills/office/references/html-prototype-tokens.md    → 挂载：Phase 2.5 设计系统宣告前
+  · .claude/skills/office/html-prototype/references/dynamic-reference-protocol.md → 挂载：Phase 2.1 动态参考扫描前
+  · .claude/skills/office/html-prototype/references/current-aesthetic-rubric.md   → 挂载：Phase 2.25 审美校准前
 □ Workflow mode + source_kind=design_brief 时：
   - 读取 PRD，确认「设计范围」字段：{全新页面/局部改动/独立组件}
   - 读取 design-brief.md，确认以下两个字段：
@@ -150,8 +150,8 @@ B）我直接粘贴问题清单
 □ 如承载方式为 framework 母版：framework/ 目录存在且包含目标母版文件
   → 否：BLOCKED — 目标母版不存在
 □ 如承载方式为 standalone mobile prototype / 局部组件：不要求目标母版存在，但必须在 prototype-spec.md 中声明不调用母版的原因
-□ brand-tokens.md 存在
-  → 否：BLOCKED — brand-tokens.md 缺失
+□ framework/tokens.css 存在（Phase 3 token 真值源镜像，独立组件/移动端原型引用它）
+  → 否：BLOCKED — framework/tokens.css 缺失
 ```
 
 **承载方式询问（仅当 design-brief 未填原型承载方式 / 母版时触发）：**
@@ -212,8 +212,6 @@ AskUserQuestion：
 
 ## Phase 2：Step 0 认知门禁（强制，不可跳过）
 
-**来源：CLAUDE-prototype.md Step 0 + CLAUDE-prototype-optimize.md Step 0，原文迁移**
-
 **这一步全部是思考，不调用任何工具，不写任何 HTML。**
 
 **未完成 Step 0 四个阶段，不得写 HTML。违反返回：`BLOCKED: Step 0 未通过`**
@@ -254,9 +252,9 @@ AskUserQuestion：
 ### 阶段三：建立信息层次（L1/L2/L3）
 
 ```
-L1（主角）每屏 1-2 个：大字号/高对比度/Button primary
-L2（配角）每屏 3-5 个：中字号/muted-foreground/Button outline
-L3（背景）不限：text-muted-foreground/text-xs/Button ghost
+L1（主角）每屏 1-2 个：text-15/text-n19（高对比）/Button primary
+L2（配角）每屏 3-5 个：text-13/text-n19/Button outline
+L3（背景）不限：text-12/text-n11/Button ghost
 ```
 
 ### 阶段四：规划自绘区域
@@ -541,7 +539,7 @@ AskUserQuestion：
 
 ```html
 <!-- 本地 Tailwind CDN（不用外部 CDN）-->
-<script src="../../framework/assets/vendor/tailwindcss.com.js"></script>
+<script src="../../../framework/assets/vendor/tailwindcss.com.js"></script>
 <!-- 如果是复制 framework 文件，路径改为 ./assets/vendor/tailwindcss.com.js -->
 ```
 
@@ -708,14 +706,14 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 
 独立组件（弹窗/抽屉）：
   完整 <html> 骨架
-  引用 ../../framework/assets/vendor/tailwindcss.com.js
-  引用 ../../framework/tokens.css（或内联 tokens）
+  引用 ../../../framework/assets/vendor/tailwindcss.com.js
+  引用 ../../../framework/tokens.css（或内联 tokens）
   不使用任何框架文件的页面结构
 
 独立移动端原型（standalone mobile prototype）：
   完整 <html> 骨架
   视口宽度按移动设备设计，推荐 375/390px 内容宽度
-  引用 ../../framework/assets/vendor/tailwindcss.com.js 或复制到本地 assets 后引用
+  引用 ../../../framework/assets/vendor/tailwindcss.com.js 或复制到本地 assets 后引用
   内联必要 token，不调用任何 framework 母版页面结构
   prototype-spec.md 必须声明：
     - 不调用母版的原因
@@ -875,7 +873,7 @@ docs/prototype/YYYY-MM-DD-<topic>/screenshots/mobile.png    （Playwright 可用
 ```
 □ console errors = 0
 □ design decisions mapped = N/N
-□ states implemented ≥ 5，且 required AI states 均有 data-prototype-state
+□ states implemented ≥ 5（脚本仅计数 data-prototype-state 与 STATE: 标记；required AI states 是否均有 data-prototype-state 脚本不校验，须人工对照 design-brief 状态覆盖表交叉核对）
 □ primary color usage ≤ 3
 □ token lint violations = 0
 □ no external CDN
@@ -952,6 +950,9 @@ AskUserQuestion：
 - **产出路径**：prototype HTML 文件完整路径 + prototype-spec.md 路径
 
 **Step 2 — 更新 workflow-state.yaml：**
+
+> 单写入口：workflow-state 仅由 Phase 4 的 `write_state.py` 写入一次（落 `nodes.html-prototype`）。下方 YAML 是该节点的目标形态示意——`gate_result` / `handoff_path` 为 handoff 附加字段，如 write_state.py 未覆盖则补写到同一节点下；**不要另手写顶层 `html-prototype:` 键造成双写**。
+
 ```yaml
 html-prototype:
   status: DONE

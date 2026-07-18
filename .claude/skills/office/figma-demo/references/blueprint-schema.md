@@ -68,7 +68,7 @@ global_decisions: []                 # [自动] 由 Builder 在执行中产生
 nodes:
   node-01-{name}:                    # [必填] 节点 ID 格式：node-{序号}-{英文短名}
     name: ""                         # [必填] 节点中文名（设计师原话）
-    status: "PENDING"                # [必填] PENDING/ACTIVE/REVIEW/APPROVED/REVISION/LOCKED
+    status: "PENDING"                # [必填] PENDING/ACTIVE/REVIEW/LOCKED/BLOCKED/REVISION（与下文状态机+更新规则一致）
     complexity: ""                   # [必填] S / M / L
     figma_frame: ""                  # [可选] 对应的 Figma Frame 名或编号，多个用逗号分隔
     figma_has_screenshot: false      # [必填] 是否有 Figma 截图可参考

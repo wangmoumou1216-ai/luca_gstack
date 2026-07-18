@@ -2,7 +2,7 @@
 
 生成时间：YYYY-MM-DD HH:MM
 设计范围：{全新页面/局部改动/独立组件}
-上游来源：{html-prototype / figma-demo}
+上游来源：{html-prototype / figma-demo / open-design}
 对应 HTML 原型：docs/prototype/YYYY-MM-DD-{topic}/index.html
 对应 Blueprint（figma-demo 时）：docs/prototype/YYYY-MM-DD-{topic}/blueprint.yaml / N/A
 

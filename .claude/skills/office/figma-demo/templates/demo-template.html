@@ -97,36 +97,8 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
-    /* ========== 过渡动画 ========== */
-    .transition-slide-left-enter {
-      transform: translateX(100%);
-    }
-    .transition-slide-left-exit {
-      transform: translateX(-100%);
-    }
-    .transition-slide-right-enter {
-      transform: translateX(-100%);
-    }
-    .transition-slide-right-exit {
-      transform: translateX(100%);
-    }
-    .transition-modal-up-enter {
-      transform: translateY(100%);
-    }
-    .transition-modal-down-exit {
-      transform: translateY(100%);
-    }
-    .transition-fade-enter {
-      opacity: 0;
-    }
-    .transition-scale-enter {
-      transform: scale(0.85);
-      opacity: 0;
-    }
-    .transition-scale-exit {
-      transform: scale(0.85);
-      opacity: 0;
-    }
+    /* 过渡动画由 DemoController.executeTransition 用内联 style 实现（见页尾脚本），
+       此处不再定义 .transition-* CSS 类——它们不被 JS 添加，属死样式。 */
 
     /* ========== 演示控制栏 ========== */
     .demo-controls {
