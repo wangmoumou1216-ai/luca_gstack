@@ -36,6 +36,17 @@ echo "PRD: ${_PRD:-none}"
 
 ---
 
+## Pre-Task：加载 observability 短规则
+
+启动时只热加载短规则，不读长日志（与 office 共享 Observability Protocol 一致，
+防用户曾纠正写成 active rule 后再次运行本 skill 时复犯）：
+
+```bash
+python3 .claude/observability/scripts/get_rules.py design-review "*" 2>/dev/null || true
+```
+
+---
+
 ## Phase 0：模式确认
 
 AskUserQuestion：
@@ -114,6 +125,12 @@ AskUserQuestion：
 ```
 
 **审查维度：**
+
+> 原型质量判据（组件映射一致性 / 品牌色 ≤3 处 / 空·加载·错误·成功·默认五态完整）与
+> `handoff-review` 节2「原型质量核查」、`ux-audit` Module A 共享同一批判据；调整任一条判据
+> 须三处同步，避免只改一处导致三个 skill 对同一原型给出不一致结论。**各自 defining
+> constraint：** design-review 后置验收 = 对照 design-brief 决策的实现符合性；handoff-review
+> = PRD 锚定的多节交付 gate + 迭代计数；据此路由，不因判据同批而混用。
 
 ### 1. 实现与决策一致性
 

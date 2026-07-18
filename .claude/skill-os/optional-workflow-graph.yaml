@@ -38,7 +38,6 @@ scenes:
       - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["idea", "brainstorm", "design-brief", "open-design"]
       - ["idea", "superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
-      - ["figma-demo", "figma-layer"]
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达 / 要本地 HTML 时降级（magicpath/html-prototype 保留不删）
@@ -51,7 +50,6 @@ scenes:
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["ux-audit", "design-brief", "open-design"]
       - ["superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
-      - ["figma-demo", "figma-layer"]
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
@@ -62,7 +60,6 @@ scenes:
     name: "online_review_redesign"
     recommended_paths:
       - ["ux-audit", "design-brief", "open-design", "figma-layer"]
-      - ["ux-audit", "figma-demo", "figma-layer"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
       - ["ux-audit", "design-brief", "magicpath", "figma-layer"]
       - ["ux-audit", "design-brief", "html-prototype", "figma-layer"]
@@ -71,7 +68,6 @@ scenes:
     recommended_paths:
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["ux-brainstorm", "design-brief", "open-design"]
-      - ["figma-demo", "figma-layer"]
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）

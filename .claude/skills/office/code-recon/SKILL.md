@@ -68,11 +68,18 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 
 有明确设计意图时，recon 的「扩展点」维度要围绕它展开（"要加 X 该在哪插、会碰哪些现有面"）。
 
+**确定 `<topic>`（供 Phase 3/5 产出文件名 `<date>-<topic>-architecture-brief.md` 用）：** 优先读
+`.claude/current-topic.txt`；为空则从「仓名 + 设计意图」派生一个 2-4 词 kebab-case topic
+（如仓名 `acme-crm` + 意图"加导出" → `acme-crm-export`）。**同一代码库固定复用同一 topic**，
+保证 brief 文件名稳定、下游 ux-brainstorm/design-brief 按名可匹配 `architecture_brief`。
+
 ---
 
 ## Phase 1：规模探针 + 路径决策（native vs codegraph MCP）
 
-用 Preamble 的 `SRC_FILES` + 粗 LOC，按**升级信号**判路径。
+用 Preamble 的 `SRC_FILES`（源文件数）按**升级信号**判路径。**注：** signal #1 的「LOC」半支
+Preamble 未预算，需要时现算（如 `git ls-files | xargs wc -l`）；文件数已过 ~400 阈值即可直接判定、
+不必等 LOC。
 
 **默认 native recon。** 命中 **≥ 2 条**信号才建议 Path B（下游装 codegraph MCP）：
 

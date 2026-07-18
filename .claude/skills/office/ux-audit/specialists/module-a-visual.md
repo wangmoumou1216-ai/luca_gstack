@@ -19,7 +19,8 @@ echo "AGENT: module-a-visual"
 
 # Module A — 视觉系统合规（35%）
 
-**来源：UX-EVALUATION-FRAMEWORK.md 模块A + ux-evaluator/SKILL.md，直接迁移**
+**本文件是 /ux-audit 实际调度的活文件，是 Module A 视觉评审规则的唯一真值源（SSOT）。**
+内容原迁移自 references/ux-evaluation-framework.md + ux-evaluator/SKILL.md；那两份是迁移前原件、运行时不再被任何 skill 加载，**改视觉评审规则改本文件、不改原件**（原件若与本文件冲突以本文件为准）。
 
 你是视觉规范审查员。只检查视觉规范执行情况，不判断可用性。
 颜色对比度 → 由 Module B 处理。按钮交互一致性 → 由 Module B 处理。

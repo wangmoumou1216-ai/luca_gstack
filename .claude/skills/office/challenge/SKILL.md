@@ -29,6 +29,17 @@ echo "PRD: ${_PRD:-none}"
 
 ---
 
+## Pre-Task：加载 observability 短规则
+
+启动时只热加载短规则，不读长日志（与 office 共享 Observability Protocol 一致，
+防用户曾纠正写成 active rule 后再次运行本 skill 时复犯）：
+
+```bash
+python3 .claude/observability/scripts/get_rules.py challenge "*" 2>/dev/null || true
+```
+
+---
+
 ## Phase 0：确认前置 + 场景检查
 
 **【L-04 修复】场景检查：**
@@ -130,8 +141,9 @@ AskUserQuestion：
 
 ## Phase 3：产出记录
 
-将范围审查结论写入：
-`docs/prd/*-challenge.md`
+将范围审查结论写入（`<topic>` 用下方 workflow-state 段解析出的实际 topic slug，日期取当天，
+不得把字面 `*` 或 `<topic>` 写进文件名；docs/prd/ 目录与 -challenge.md 后缀约定不变）：
+`docs/prd/YYYY-MM-DD-<topic>-challenge.md`
 
 ```markdown
 # 范围审查记录
@@ -156,8 +168,9 @@ AskUserQuestion：
 
 **workflow-state 写入：**
 
-Claude 在执行前必须确定实际 `_TOPIC`（从 `current-topic.txt` 读取，
-或根据当前功能名推断 topic slug），然后执行：
+Claude 在执行前必须确定实际 `_TOPIC`（优先读 `current-topic.txt`；为空时**从 Preamble 已取到的
+PRD 文件名 `docs/prd/*-prd.md` 推断 topic slug**，而非从 brainstorm-first 流程下常为空的
+`docs/idea/` 推断——challenge 恒有 PRD 前置，PRD 才是本 skill 的可靠 topic 源），然后执行：
 
 ```bash
 export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)

@@ -300,11 +300,30 @@ C）暂停，等待更多用户反馈后再迭代
 
 ---
 
+## Phase 2.6：写入 Handoff Summary
+
+> 本 skill 是重型 skill（runtime-estimate 20000）且写 workflow-state 节点 DONE，按
+> `.claude/skills/office/references/handoff-protocol.md`：**workflow 模式必写 handoff**；
+> standalone 轻量终端交付可免（免写规则真值源见该 protocol，此处不复制）。
+
+```bash
+mkdir -p docs/handoff
+```
+
+写入 `docs/handoff/YYYY-MM-DD-<topic>-handoff-review-handoff.md`，格式遵循
+`.claude/skills/office/references/handoff-protocol.md`，至少含：
+- 决策：审查场景（A/B/C）+ 执行的节 + 最终结果（PASSED/FAILED；含 Phase 2.5 是否自动修复过一次）
+- 约束：FAILED 时未通过项须在下游修正前处理
+- 风险：跳过/未执行的节、连续失败次数（iteration）
+- 产出路径：指向本次 review 文件 `docs/review/YYYY-MM-DD-<topic>-handoff-review.md`
+
+---
+
 ## Phase 3：告知下一步
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-/handoff-review 完成
+handoff-review 完成
 场景：{A / B / C}
 执行节：{1/2/3 列出已执行的}
 结果：{PASSED / FAILED}
@@ -318,7 +337,7 @@ AskUserQuestion：
 
 > Handoff Review 通过。下一步？
 >
-> A）**/retro** — 设计决策复盘
+> A）**retro** — 设计决策复盘（隐藏 skill，说「复盘」或按名调用触发，无斜杠命令）
 > B）先停这里
 
 **如果 FAILED：**
@@ -332,7 +351,7 @@ AskUserQuestion：
 
 > 有 {N} 项未通过{；已自动尝试修复一次仍未通过 / ；含需人工判断项未自动修复}。
 >
-> A）修正后重新运行 /handoff-review
+> A）修正后重新运行 handoff-review（隐藏 skill，按名调用，无斜杠命令）
 > B）记录问题，继续进行（接受已知风险）
 
 ---

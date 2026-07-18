@@ -25,8 +25,8 @@ INSTRUCTIONS:
 3. 每条发现必须有来源URL
 4. 发现矛盾信息时，两方都记录
 5. 优先权威来源（见TOOL USAGE）
-6. 如果发现与B2B销售高压场景的特殊性相关，明确标注
-7. **最少产出5条findings**（D6维度最少3条，AI Native/Agent Native场景下D4最少7条）。如果不够，在<gaps>中说明原因
+6. 如果发现与目标场景（如B2B销售高压环境）的特殊性相关，明确标注
+7. **产出的findings数量必须满足上方 YOUR DEPTH REQUIREMENT 规定的该维度最低数**。如果不够，在<gaps>中说明原因
 8. **检查深度标尺达标标准**：你的findings是否满足上方DEPTH REQUIREMENT列出的来源类型要求？如果不满足，继续搜索
 
 TOOL FAILURE RULE（强制，适用于所有轮次）:
@@ -38,7 +38,7 @@ TOOL FAILURE RULE（强制，适用于所有轮次）:
   - 其他tool error → 重试1次，仍失败则在<gaps>中记录具体失败原因和尝试过的解决方式
 解决后才继续执行当前轮次的剩余步骤。
 
-MANDATORY SEARCH PROTOCOL（3轮迭代，每轮有明确目标）:
+MANDATORY SEARCH PROTOCOL（deep 3轮 / moderate 2轮跳过Round 3，每轮有明确目标）:
 
 === ROUND 1：广搜（建立基础认知）===
 目标：用所有指定关键词组合建立基础认知，找到核心来源
@@ -50,12 +50,12 @@ MANDATORY SEARCH PROTOCOL（3轮迭代，每轮有明确目标）:
 === ROUND 2：深读（全文阅读，发现新线索）===
 目标：对Round 1识别出的高价值来源做全文阅读，从全文中发现新线索
 要求：
-  - 至少对3个来源执行webfetch读取完整页面内容（不是snippet）
+  - 至少对3个来源执行webfetch读取完整页面内容（deep模式≥3；moderate模式≥1）（不是snippet）
   - 从全文中提取：新关键词、新引用来源、新数据点、和Round 1结论矛盾的信息
   - 基于全文中发现的新线索，构造1-2个新的搜索查询
 产出：补充findings + 从全文中发现的新方向/新关键词
 
-=== ROUND 3：验证（交叉验证薄弱证据）===
+=== ROUND 3：验证（交叉验证薄弱证据）——moderate 模式跳过本轮 ===
 目标：定向验证Round 1-2中证据薄弱或有矛盾的发现
 要求：
   - 对每条LOW置信度的finding，做定向搜索寻找佐证或反驳
@@ -91,7 +91,7 @@ OUTPUT FORMAT（强制，严格遵守此结构）:
   </round>
   <round number="2">
     <webfetch_urls>
-      [实际用webfetch读取全文的URL列表，最少3个]
+      [实际用webfetch读取全文的URL列表，deep≥3 / moderate≥1]
     </webfetch_urls>
     <new_leads>
       [从全文中发现的新线索：新关键词/新引用来源/矛盾信息]
@@ -100,7 +100,7 @@ OUTPUT FORMAT（强制，严格遵守此结构）:
       [基于新线索构造的追加搜索查询]
     </followup_queries>
   </round>
-  <round number="3">
+  <round number="3"> <!-- moderate 模式省略整个 Round 3 块 -->
     <verification_targets>
       [定向验证的finding ID和验证方向]
     </verification_targets>
@@ -113,7 +113,7 @@ OUTPUT FORMAT（强制，严格遵守此结构）:
   </round>
   <totals>
     <total_websearches>[总websearch调用次数]</total_websearches>
-    <total_webfetches>[总webfetch调用次数，必须≥3]</total_webfetches>
+    <total_webfetches>[总webfetch调用次数，deep≥3 / moderate≥1]</total_webfetches>
   </totals>
 </search_log>
 
@@ -125,7 +125,7 @@ OUTPUT FORMAT（强制，严格遵守此结构）:
   <confidence>HIGH | MEDIUM | LOW</confidence>
   <evidence_strength>STRONG | MODERATE | WEAK</evidence_strength>
   <evidence_basis>[为什么是这个强度：来源权威性 + 数据质量 + 时效性]</evidence_basis>
-  <b2b_relevance>[这个发现对B2B销售高压场景的特殊意义，如无关写N/A]</b2b_relevance>
+  <b2b_relevance>[这个发现对目标场景（如B2B销售高压环境）的特殊意义，如无关写N/A]</b2b_relevance>
   <design_signal>[这个发现告诉设计师需要考虑什么，不是设计建议，是研究信号]</design_signal>
 </finding>
 
@@ -168,7 +168,7 @@ YOUR SEARCH STRATEGY:
 → 搜索真实用户行为研究（不是设计建议）
 → 重点找：用户访谈报告、可用性测试报告、行为数据研究
 → 特别关注：用户的workaround行为（绕过设计意图的使用方式）
-→ B2B销售场景：搜索销售人员在高压工作环境下的行为特征研究
+→ 目标场景（如B2B销售高压环境）：搜索该场景用户在真实工作环境下的行为特征研究
 → 心智模型：用户把新功能类比成什么已知事物？期待什么行为？
 → 关键词组合（Round 1必须全部使用，每个至少执行1次websearch）：
   "[场景] user behavior research"
@@ -195,7 +195,7 @@ YOUR SEARCH STRATEGY:
 → 搜索学术研究和行业标准，不是竞品案例
 → 重点找：CHI/UIST论文、NNG研究报告、Baymard Institute报告
 → 范式识别：Command-based / Intent-based / Ambient / Collaborative
-→ 特别关注：哪些范式在B2B、高频、高压场景下被验证有效
+→ 特别关注：哪些范式在目标场景（如B2B、高频、高压）下被验证有效
 → Evaluability研究：Nielsen的「用户3秒内判断AI输出对错」研究
 → 关键词组合（Round 1必须全部使用，每个至少执行1次websearch）：
   "[interaction type] design pattern research"
@@ -256,13 +256,13 @@ YOUR SEARCH STRATEGY:
 → 重点找：Evaluability研究（用户能多快判断AI输出对错）
 → 信任机制：用户如何建立对AI输出的信任？失去信任的触发点是什么？
 → Agent Native：用户对Agent自主执行的接受度研究
-→ B2B特殊性：销售场景中用户对AI介入的信任阈值研究
+→ 目标场景特殊性：该场景中用户对AI介入的信任阈值研究
 → 关键词组合（Round 1必须全部使用，每个至少执行1次websearch）：
   "AI UX user trust research"
   "AI Native interaction pattern case study"
   "agent UX control [场景]"
   "AI [场景] user acceptance study"
-  "AI automation trust B2B"
+  "AI automation trust [场景]"
   "AI UX failure case study"
   "[场景] AI copilot evaluation"
 

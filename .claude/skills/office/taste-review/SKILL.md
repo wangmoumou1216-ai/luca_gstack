@@ -31,6 +31,20 @@ echo "PROTOTYPE: ${_PROTOTYPE:-none}"
 
 ---
 
+## Pre-Task：加载 observability 短规则
+
+启动时只热加载短规则，不读长日志（与 office 共享 Observability Protocol 一致，
+防用户曾纠正写成 active rule 后再次运行本 skill 时复犯）：
+
+```bash
+python3 .claude/observability/scripts/get_rules.py taste-review "*" 2>/dev/null || true
+```
+
+> workflow-state 豁免：taste-review 是可在流程任意节点运行的浮动品味检查节点，
+> 不占固定流程节点，故不写 workflow-state（无固定节点状态可落）。
+
+---
+
 ## 必读 reference（Phase 1 之前读完）
 
 ```
@@ -146,7 +160,7 @@ L2 和 L3 的区分稳定性：{跨页面稳定 / 不稳定（不合格）}
 
 ---
 
-### 锚点 5 · Raycast — AI 入口位置（场景 B/C 必检，场景 A 写 N/A）
+### 锚点 5 · Raycast — AI 入口位置（模式 2/3 必检，模式 1 写 N/A）
 
 AI 入口必须在任务上下文内；AI 介入后路径只能变短或持平，不能变长。
 
@@ -163,7 +177,7 @@ AI 介入后路径：{变短 / 持平 / 变长（不合格）}
 
 ---
 
-## 信任维度（2 锚点，场景 B/C 强制）
+## 信任维度（2 锚点，模式 2/3 强制）
 
 ### 锚点 6 · Perplexity — 可追溯
 
@@ -251,7 +265,7 @@ AI 功能：{有/无 — 无则本锚点 N/A}
 
 ---
 
-## AI Slop 反模式扫描（场景 B/C 强制）
+## AI Slop 反模式扫描（模式 2/3 强制）
 
 对照 `ai-native-design-framework.md` 第 8 节的 10 项反模式清单，对审查对象做一次全扫描：
 
@@ -352,7 +366,9 @@ Slop 总数：{N}
 
 ---
 
-## 严重性分级（参照 `ai-native-taste-anchors.md` 第 9 节）
+## 严重性分级（参照 `ai-native-taste-anchors.md` §5 严重性分级）
+
+> 权威真值源在 `ai-native-taste-anchors.md` §5；下表为执行副本，改动须先改 §5 再同步本表。
 
 | 锚点 | 严重性 | 不通过时动作 |
 |-----|------|-----------|
@@ -370,6 +386,10 @@ Slop 总数：{N}
 ---
 
 ## 产出路径
+
+**先解析 `<topic>`（不得把字面 `<topic>` 写进文件名）：** 读取 `.claude/current-topic.txt`；
+为空或为占位符 `<topic>` 时，从 Preamble 取到的审查对象路径（`_DECISION` / `_PROTOTYPE`）文件名里的
+`YYYY-MM-DD-<topic>-` 段推断；仍无法得到则用 `unknown`。
 
 - 如果本次是独立运行（不在其他 skill 流程中），写入：
   `docs/review/YYYY-MM-DD-<topic>-taste-review.md`
