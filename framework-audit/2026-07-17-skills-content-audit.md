@@ -158,3 +158,36 @@
 **发现层终态台账（268 条，本次收尾提交）**：**221 CONFIRMED**（FIX-NOW 141 / DECIDE 71 / KNOWN-BOUNDARY 9）+ **47 REFUTED** + **0 未裁决**。severity（CONFIRMED）：P1 14 / P2 131 / P3 76。
 
 **发现层关闭，进入 W11 集中修复。** 26 条晚期饱和轮 FIX-NOW（FW3-050/056/057/059 + 全部 FW9-*）无预置 proposed_fix，W11 逐条读 claim+failure_scenario 现场拟修。
+
+## W11 集中修复（2026-07-18，分区并行 opus fixer + 主循环手工）
+
+- **编排**：office/SKILL.md 主循环手工修 9 条（金丝雀，commit 45c75b4）；其余按文件属主分 9 bin，opus fixer 并行改互斥文件集、SSOT 政策 + 保护区规则内联、返回逐-fid 结构化报告，主循环回写台账。
+- **SSOT 政策**：品牌 token 值真值源 = `framework/shared-head.html`（verify.sh F6 认证母版）；duplication 类**加真值源标记不删值**（把静默漂移转成有据同步义务），死指针/残留/矛盾就地清。
+- **限额接力**：首轮 9 bin 并行 6/9 完成、3 撞 22:10 限额；部分编辑按权威工作单精确 revert，限额重置后并行重跑 3 bin 全成功（commit 81f993f/dbcb3bf）。
+- **残留清扫**：fixer 标记的跨文件同类残留补齐（design-brief 第9节死指针、output-templates MagicPath默认、report-template B2B，commit 9e1efeb）。
+- **保护区纪律**：触 P1 frontmatter / P5 FILE_END / P7 workflow-state 的 fix 一律转 DECIDE 不编辑，交 luca。
+
+## W12 独立 delta 复审（验证者不知修法）
+
+- 5 opus 复审官并行，每条只见「原始缺陷 + 当前文件」，独立判 RESOLVED/NOT_RESOLVED/REGRESSED + 扫新 P0/P1。
+- **结果：127 RESOLVED / 2 NOT_RESOLVED / 0 REGRESSED / 0 新 P0/P1（门禁过）** + 1 新 P2（retro 双 FILE_END）。
+- **2 NOT_RESOLVED 处理（commit ed5d71c）**：FW9-r1-08 根治（challenge _TOPIC 回退源 idea→prd 目录，_TOPIC 非 P7 保护三变量）；FW4-134 转 DECIDE（_OUTPUT glob 触 P7「_OUTPUT 赋值不得改变含义」严格保护）。新 P2 FW12-01/FW4-150 修复（删 retro 过早 FILE_END）。
+
+## W13 终态 + 八指标验收
+
+**终态台账（269 findings）**：**222 CONFIRMED**（**130 FIX-NOW 全部修复并经独立复审** / 83 DECIDE / 9 KNOWN-BOUNDARY）+ **47 REFUTED** + **0 未裁决**。DECIDE 清单见 `2026-07-18-W13-DECIDE-list.md`（交 luca）。
+
+| # | 指标 | 阈值 | 达标证据 |
+|---|---|---|---|
+| ① | 覆盖率矩阵 skill×lens | 满格或干净格证明 | 31 skill × 6 lens 全覆盖（W3-W6 垂直+水平+消费者），findings 落 50 文件 |
+| ② | 饱和度 | 连续 2 轮零新 CONFIRMED | 分层饱和：P0 全程 0；承重层 R1-R9 仅 2 新 P1（3.8%）判定饱和；P2/P3 长尾按 Loop 宪法§3 声明响应式维护 |
+| ③ | 0 未裁决 | 仅 CONFIRMED/REFUTED/DECIDE | ✅ 非终态为空（269 全部 fixed/confirmed(DECIDE/KB)/refuted）|
+| ④ | 召回率标定 | ≥11/12 | W2 三轮盲跑（setA/B/C）全票有效，达标（详见 W2 节）|
+| ⑤ | 缺票=0 | 每 slot 有效 StructuredOutput | W7 13/13 批全有效；W11 9+3 bin 全有报告；W12 5/5 |
+| ⑥ | 引用真实率 | 100% CONFIRMED 可 grep | W7 skeptic 逐条 grep 核真；W12 复审 grep_current 逐条核当前文本 |
+| ⑦ | 修复回归 | verify.sh+validate 全绿 + delta 0 新 P0/P1 | ✅ 每 commit verify.sh 59/0 + validate-skills 全过；W12 delta 0 新 P0/P1 |
+| ⑧ | 基底冻结 | 全程单 SHA | 发现层冻结 pin；修复层集中修（冻结→修→delta 复审）|
+
+**统计诚实**：标定证明 finder 阵列对植入缺陷召回 ≥11/12（rule of three → 同分布真实召回 95% 置信下界 ~70-75%）；完备性由标定×正交饱和×覆盖矩阵三角互证，不构成"零遗漏"数学证明。taxonomy 外缺陷由自由狩猎（扣留标准文档）+ 消费者模拟 + novelty 判官兜底。W12 独立复审（验证者不知修法）额外证明修复真实消除缺陷、未引入新 P0/P1。
+
+**P1 skills 本体内容质量深审完成。** skills 内容资产达「已知问题清零（FIX-NOW 全修+独立复审）+ 完备性量化证据」状态，此后响应式维护。
