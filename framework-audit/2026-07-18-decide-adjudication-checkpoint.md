@@ -50,3 +50,22 @@
 ## 恢复指令
 
 compact 后：读本文件 + DECIDE 清单 → 从未完成的 Phase 继续；已修的看 findings.jsonl status=fixed + git log；红队结论看 workflow journal。scratchpad 脚本：triage_verdicts.json（Phase1 裁决）、gen_redteam.py→redteam_workflow.js（Phase2 备用）、apply_writeback.py（回写）。
+
+---
+
+## 进度更新（2026-07-20，红队单轮完成 + 落地 + 呈报）
+
+**恢复背景**：scratchpad 跨 session 被清空（redteam_workflow.js / triage_verdicts.json / workflow journal 全失），唯一存活 = git 台账，且台账无 triage 分桶字段 → 改为**对全部 51 条剩余 DECIDE 跑一轮全新对抗红队**（更稳、无需信任已丢的旧分桶）。
+
+**红队 wf_1575e419-f36**（serial fable 8 bin，8/8，0 err，612k tok）：**19 APPLY / 29 LUCA_DECISION / 3 DROP**（47 HIGH / 4 MED）。
+
+**落地（commit 00245cb，verify.sh 59/0 + validate 全过，逐条 grep 核实落地）**：
+- **12 条净正向机械修应用**：FILE_END×4(ux-research 子文件)、figma-demo 补 handoff mkdir + 隐藏注、open-design _TOPIC 跨块兜底×3、handoff-review 审查文件入参×3、design-brief 单写入口注、去 CRM 硬编码(module-a / role-sales 休眠头注)、module-b WCAG 分母修正、history.sh 补 figma-layer/figma-demo 分支。
+- 2 条 DROP=already_fixed → status=fixed；1 条 DROP=net_negative（FW5-dc-designA-04 allowed-tools 省略 by-design）→ KNOWN-BOUNDARY。
+- **全部 51 verdict 写入 `ledger.redteam_verdict`**（防 scratchpad 再 wipe，durable）。
+
+**留 luca 裁决 36 条**（报告 `framework-audit/2026-07-20-DECIDE-36-post-redteam-for-luca.md`，6 桶）：① 保护区精确编辑 5（⚑ 红队 APPLY 但我未自行落地）② allowed-tools 权限面 7 ③ 删孤儿文件 6 ④ 门/行为逻辑 10 ⑤ CRM 定位 3 ⑥ 产品/架构杂项 5。跨条冲突已标注（FW3-022↔FW3-044 方向相反 / FW3-039↔已落地 FW3-045 / careful hook FW9-r1-05+r4-18 合并）。
+
+**终态**：FIX-NOW 累计 **176 全 fixed**（P1 深审 130 + DECIDE-P3a 32 + P3b 14）；DECIDE 剩 **36** 待裁；KNOWN-BOUNDARY 10；REFUTED 47。
+
+**下一步**：luca 逐桶裁决 36 条 → 我按裁决落地（保护区/删除项须逐条点头）→ 更新台账 + episodic。scratchpad 脚本（本轮，wipe 易失）：redteam_workflow_final.js（红队）、verdicts.json（51 裁决，另已入 ledger）、writeback.py（回写）、gen_report.py（呈报）。
