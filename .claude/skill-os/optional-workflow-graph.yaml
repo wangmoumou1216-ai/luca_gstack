@@ -26,10 +26,15 @@ research_default:
     - "核心机制/交互无成熟先例（新颖）"
   skip_requires: "在 Phase 计划中显式声明跳过理由并经用户确认；禁止静默省略研究节点"
   tool_choice:
-    deepresearch: "广域多源/学术/技术可行性"
-    ux-research: "先例/竞品/UX/行为设计"
+    deepresearch: "广域多源/学术/技术可行性（外部对象）"
+    ux-research: "先例/竞品/UX/行为设计（外部对象）"
     quick-research: "明确单题、需读一手文档/源码、值得落盘（三档中档，2026-07-12 增）"
     web_spike: "极窄单点事实（就地一查，不落盘）"
+    insight-synthesis: "用户自己的一手定性数据(访谈/工单/回访)→洞察（第三**对象角度**：内部一手，非深度档；2026-07-20 追加项 C）"
+  angle_orchestration:            # 追加项 C（2026-07-20）：诉求→对象角度动态组合，非写死路径
+    principle: "给一个诉求时，Plan Agent 块2「研究方向编排」把诉求映射到三对象角度{deepresearch=外部知识 / ux-research=外部UX / insight-synthesis=内部一手}，默认只跑匹配到的最小集（不自动全跑防烧 token），盲区角度骑 Plan Agent 计划确认门主动推荐（不新增单独提问）。"
+    hard_guard: "简单/平凡诉求 → 平凡任务豁免，绝不触发研究编排、不提示。"
+    note: "recommended_paths 是写死静态启发式；诉求→动态编排是净新增行为，真值逻辑在 plan-agent.md 块2，此处仅登记对象角度与原则。tool_choice 列 5 项 = 3 对象角度（deep/ux/insight）× 深度档——quick-research/web_spike 是 deepresearch 外部角度的降档变体，非独立对象角度。"
 
 scenes:
   A:
@@ -38,6 +43,7 @@ scenes:
       - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["idea", "brainstorm", "design-brief", "open-design"]
       - ["idea", "superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
+      - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "open-design"]  # 自带一手定性数据：先综合出洞察再 PRD（追加项 C）
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达 / 要本地 HTML 时降级（magicpath/html-prototype 保留不删）
@@ -50,6 +56,7 @@ scenes:
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["ux-audit", "design-brief", "open-design"]
       - ["superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
+      - ["insight-synthesis", "ux-research", "ux-brainstorm", "design-brief", "open-design"]  # 有工单/回访一手数据：综合洞察 + 外部竞品（追加项 C）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
@@ -68,6 +75,7 @@ scenes:
     recommended_paths:
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["ux-brainstorm", "design-brief", "open-design"]
+      - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "open-design"]  # 有一手用户/使用数据：先综合洞察再 Agent 化设计（追加项 C）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）

@@ -220,6 +220,17 @@ skills:
     quality_gates: ["gate1_human_decision", "no_rice_fabrication", "brainstorm_phase15_firewall"]
     notes: "muse 专属。standalone 模式：本 skill 自己读原始语料+算信号，accept 项格式化为话题字符串送进 /brainstorm。workflow 模式：被 muse-loop-orchestrate dispatch，接收已抽取候选，输出走 docs/loop/specs/。"
 
+  insight-synthesis:
+    modes:
+      standalone:
+        required: ["primary_qualitative_data"]
+        optional: ["research_question"]
+      workflow:
+        required: ["primary_qualitative_data"]
+        optional: ["research_question"]
+    quality_gates: ["observation_interpretation_split", "theme_confirmation_gate", "no_confidence_fabrication"]
+    notes: "研究段第三对象角度（内部一手定性）。数据一律用户提供、skill 不自采。单 agent 六步：编码→亲和聚类→用户确认主题(AskUserQuestion 卡点)→解读跃迁；observation 带原文引用、interpretation 带置信度，两层永不混。"
+
 governance_tools:
   compare:
     modes:

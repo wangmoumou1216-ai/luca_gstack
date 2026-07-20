@@ -131,6 +131,14 @@ project_skills:
     # 不与 brainstorm/idea 竞争同一场景。复合触发短语，避免裸"需求"单字。
     triggers: [候选需求批量筛选, 需求清单先筛一遍, 一堆需求要不要做, 批量需求triage, 需求batch筛选]
 
+  insight_synthesis:
+    invoke: "/insight-synthesis"
+    weight: 6
+    # 一手定性综合：用户提供的访谈/工单/回访 → observation(原文引用)+interpretation(置信度)两层。
+    # 研究段第三"对象角度"（内部一手）。与 idea 划界=忠实vs解读；与 muse-req-triage 靠意图消歧(筛/综合)。
+    # 复合触发短语，避免裸"用户"单字（撞 ux-research）。
+    triggers: [访谈综合, 访谈洞察, 工单综合, 定性综合, 一手资料提炼洞察, 把访谈变成洞察, 区分观察与解读, 亲和图]
+
 # ── Built-in Claude Code skills (globally installed) ─────────────────────────
 builtin_skills:
 

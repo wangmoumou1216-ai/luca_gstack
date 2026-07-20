@@ -52,7 +52,7 @@ tiers:
       见 reasoning-heavy.note）；其内部判定环节（苏格拉底审查/Oracle 对抗）按
       fable_whitelist P1 单独 dispatch fable 微判官。
     skills: [brainstorm, ux-brainstorm, design-brief, muse-loop-orchestrate,
-             deepresearch, tech-spec, task-plan, open-design, html-prototype,
+             deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype,
              handoff-review, code-hygiene, auto, muse-x-digest]
 
   guided-execution:

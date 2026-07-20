@@ -7,8 +7,8 @@ description: |
   批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/
   优先级裁定留给人类。两种触发方式：① 独立使用（你手头有一堆候选需求/原始
   语料，想在投入 /brainstorm 前先筛一遍）② 被 muse-loop-orchestrate 内部
-  dispatch（Loop 场景，接收已抽取的候选需求）。muse fork 专属新增，母版
-  luca_gstack 无此 skill。触发词见 skill-routing-map.yaml。
+  dispatch（Loop 场景，接收已抽取的候选需求）。muse 产品线 skill（2026-07-16
+  F6-04 已并入 main 单真值源）。触发词见 skill-routing-map.yaml。
   v2.1.0（2026-07-02，fork内）：加 Write 权限，修复"Phase 4 声称写入
   requirement.md 但自己没有 Write 工具"的责任缺口——写入由本 skill 自己
   完成，不依赖调度方（muse-loop-orchestrate）代写。

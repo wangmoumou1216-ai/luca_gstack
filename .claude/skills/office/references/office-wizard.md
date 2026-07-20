@@ -164,6 +164,12 @@ luca_gstack — 一级可见 Skill 列表
                产出：docs/research/quick-research-{topic}-{date}.md
                说明：题目发散/需多源交叉验证 → 升 /deepresearch
 
+/insight-synthesis A B D  一手定性综合：用户提供的访谈/工单/回访 → observation（带原文引用）
+               与 interpretation（带置信度）两层洞察；研究段第三对象角度（内部一手）
+               输入模式：standalone（primary_qualitative_data 必填，数据一律用户提供、skill 不自采）
+               产出：docs/research/insight-synthesis-{slug}-{date}.md
+               说明：与 /idea 划界=忠实 vs 解读；外部源/发散题走 deepresearch/ux-research
+
 /brainstorm    A B D     苏格拉底拷问式 PRD（替代原 /prd）
                输入模式：standalone 或 workflow。可接受 deepresearch 报告、/idea 产出、或直接描述
                产出：PRD .md + 条件产出 prd-ai-spec.md（涉及 AI Native 时）

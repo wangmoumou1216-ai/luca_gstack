@@ -840,6 +840,11 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 
 如果任何 design decision 或 required state 未实现，QA 不得 PASS。
 
+**开发交接补全（仅下游=开发/场景1 时追加，非硬 QA 项）**：若原型将进自家开发链（tech-spec/task-plan），
+在 prototype-spec.md 追加一节，补 **组件 props / 响应式断点 / design token 清单 / 动效** 四维
+（从已产出 HTML 抽取，逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`）；
+下游=Figma（场景2）**不触发**。
+
 ---
 
 ## Phase 4.5：可观测 QA（强制）
