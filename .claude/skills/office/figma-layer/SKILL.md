@@ -17,12 +17,13 @@ allowed-tools:
   - Bash
   - Skill
   - AskUserQuestion
-  - mcp__figma__whoami
-  - mcp__figma__use_figma
-  - mcp__figma__get_design_context
-  - mcp__figma__get_screenshot
-  - mcp__figma__search_design_system
-  - mcp__figma__create_new_file
+  - mcp__plugin_figma_figma__whoami
+  - mcp__plugin_figma_figma__use_figma
+  - mcp__plugin_figma_figma__get_design_context
+  - mcp__plugin_figma_figma__get_screenshot
+  - mcp__plugin_figma_figma__search_design_system
+  - mcp__plugin_figma_figma__create_new_file
+  - mcp__plugin_figma_figma__generate_figma_design
 context-cost:
   self: 14787  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 5000
@@ -55,7 +56,7 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 
 ```
 □ Figma MCP 已连接且身份/席位就绪？
-  → 调用 mcp__figma__whoami 确认登录身份与席位（draft 任意席位可用；draft 外正式
+  → 调用 mcp__plugin_figma_figma__whoami 确认登录身份与席位（draft 任意席位可用；draft 外正式
     文件需 Full seat + 编辑权限，席位不足必须在动手前提示，而非半途失败）
   → 写入前必须先加载 /figma-use skill（新版 use_figma 的强制前置）
   → 工具不可用：
@@ -169,8 +170,8 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
 
 ## Phase 3：搭建 Figma 画布
 
-**搭建机制（新版 Figma MCP）：** 先加载 `/figma-use` skill，再用 `mcp__figma__use_figma`
-在目标 draft / 文件内建图层；用 `mcp__figma__get_design_context` / `get_screenshot` 读现状校验。
+**搭建机制（新版 Figma MCP）：** 先加载 `/figma-use` skill，再用 `mcp__plugin_figma_figma__use_figma`
+在目标 draft / 文件内建图层；用 `mcp__plugin_figma_figma__get_design_context` / `get_screenshot` 读现状校验。
 不再使用旧的 create_frame / update_node 接口。
 
 **骨架先行（首个写入调用，2026-06-10 经验）：** 第一个 use_figma 调用只建根 frame +
@@ -315,7 +316,7 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 > 本节是 Phase 0/1/3 关键门禁的**速查 recap**；**权威以各 Phase 正文为准**（三层规则/Auto Layout/
 > F-0/Step 0 门的单一真值源在对应 Phase）。规则变更改 Phase 正文，本节须同步；两处不一致时以 Phase 正文管辖。
 
-1. **本项目只使用 Figma MCP**（`mcp__figma__*`，新版 use_figma；写入前先加载 /figma-use）
+1. **本项目只使用 Figma MCP**（`mcp__plugin_figma_figma__*`，新版 use_figma；写入前先加载 /figma-use）
 2. **保险层 = 一比一还原，不是独立设计** — 必须读 index.html 实际代码
 3. **不能只读 prototype-spec.md** — 必须看到实际视觉效果
 4. **三层处理规则必须严格执行**
