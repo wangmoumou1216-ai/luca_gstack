@@ -165,6 +165,7 @@ curl -sN --max-time 1800 -X POST "$_OD_URL/api/chat" -H 'content-type: applicati
 _PID=$(pgrep -f "prebundled/daemon/daemon-sidecar"|head -1); _P=$(lsof -nP -p "$_PID" 2>/dev/null|grep -oE '127.0.0.1:[0-9]+ \(LISTEN\)'|grep -oE ':[0-9]+'|tr -d ':'|head -1); [ -n "$_P" ] && _OD_URL="http://127.0.0.1:$_P"
 # 1) _SLUG 未知（跨 session recover）→ 优先用 handoff 记的 slug；否则按最近更新解析
 [ -z "$_SLUG" ] && _SLUG=$(curl -s "$_OD_URL/api/projects" | python3 -c "import sys,json;ps=json.load(sys.stdin).get('projects',[]);ps.sort(key=lambda p:p.get('updatedAt',0),reverse=True);print(ps[0]['id'] if ps else '')")
+[ -z "$_TOPIC" ] && _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 # 2) 确认有真·产物（非 brief.md 的 html；优先 index.html，否则最新 html）再落盘——没有就别 DONE
 _ENTRY=$(curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;fs=json.load(sys.stdin).get('files',[]);h=[f for f in fs if f.get('name','').endswith('.html')];i=[f for f in h if f['name']=='index.html'];p=(i[0] if i else (sorted(h,key=lambda f:f.get('mtime',0))[-1] if h else None));print(p['name'] if p else '')")
 if [ -z "$_ENTRY" ]; then echo "OD 项目 $_SLUG 还没出 HTML 产物——请桌面端生成完再说『拉回来』；不落盘、不标 DONE"; else
@@ -176,6 +177,7 @@ fi
 > **守卫：** 只有真·HTML 入口被回收且文件非空，才进 Phase 5/6 标 DONE；否则告知用户产物还没出、不落盘、不写 handoff。
 **校验 FxUI 收窄口径**（可执行门，非目测）：品牌橙 #FF8000 与文字色 #181C25/#91959E 允许出现；**FxUI 语义色（success/info/warning/danger/link 的 FxUI 专有 hex）应为 0**（其余颜色/字体来自所选 DS=预期，不算违规）：
 ```bash
+[ -z "$_TOPIC" ] && _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 _P="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
 _LEAK=$(grep -ioE '#(87cc3b|189dff|ff7c19|ff4a66|0c6cff)' "$_P" | sort -u | tr '\n' ' ')
 [ -z "$_LEAK" ] && echo "FxUI 语义色泄漏检查: 0 ✓" || echo "FxUI 语义色泄漏: $_LEAK — 需回查（应来自所选 DS 而非 FxUI 注入），未清零不标 DONE"
@@ -206,6 +208,7 @@ FxUI 仅品牌色+文字色、必须读 index.html 实际代码。
 ## Phase 6：handoff + 更新 workflow-state（落盘后）
 
 ```bash
+export _TOPIC="${_TOPIC:-$(cat .claude/current-topic.txt 2>/dev/null)}"
 export _NODE="open-design"; export _STATUS="DONE"
 export _OUTPUT="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
 python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"

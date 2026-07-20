@@ -113,3 +113,5 @@ OUTPUT FORMAT:
 
 </socratic_examination>
 ```
+
+<!-- FILE_END: ux-research/references/socratic-prompt.md -->

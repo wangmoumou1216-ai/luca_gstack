@@ -108,8 +108,9 @@ AskUserQuestion：
 输入：
 - PRD：{最新 PRD 文件路径}
 - HTML 原型：{prototype/index.html 路径}
+- 审查文件：{orchestrator 按 Preamble 的 _TOPIC 与当日日期解析出的实际路径，形如 docs/review/YYYY-MM-DD-<真实topic>-handoff-review.md}
 
-产出：写入交付审查文件的「需求核查」节
+产出：写入上述审查文件的「需求核查」节（不得自行臆造 topic 或写占位符文件名）
 完成后返回：
   STATUS: DONE / BLOCKED
   通过：{N}条 | 未通过：{N}条
@@ -131,8 +132,9 @@ AskUserQuestion：
 - PRD：{PRD 文件路径}
 - HTML 原型：{prototype/index.html 路径}
 - prototype-spec.md：{prototype-spec.md 路径}
+- 审查文件：{orchestrator 按 Preamble 的 _TOPIC 与当日日期解析出的实际路径，形如 docs/review/YYYY-MM-DD-<真实topic>-handoff-review.md}
 
-产出：写入交付审查文件的「原型质量核查」节
+产出：写入上述审查文件的「原型质量核查」节（不得自行臆造 topic 或写占位符文件名）
 完成后返回：
   STATUS: DONE / BLOCKED
   通过：{N}条 | 未通过：{N}条（列出未通过的关键项）
@@ -153,8 +155,9 @@ AskUserQuestion：
 - figma-spec.md：{figma-spec.md 路径}
 - prototype-spec.md：{prototype-spec.md 路径}
 - PRD：{PRD 文件路径}
+- 审查文件：{orchestrator 按 Preamble 的 _TOPIC 与当日日期解析出的实际路径，形如 docs/review/YYYY-MM-DD-<真实topic>-handoff-review.md}
 
-产出：写入交付审查文件的「Figma 一致性核查」节
+产出：写入上述审查文件的「Figma 一致性核查」节（不得自行臆造 topic 或写占位符文件名）
 完成后返回：
   STATUS: DONE / BLOCKED
   通过：{N}条 | 未通过：{N}条

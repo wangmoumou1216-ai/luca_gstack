@@ -190,3 +190,4 @@
 → [空白2]：...
 ````
 
+<!-- FILE_END: ux-research/references/report-template.md -->

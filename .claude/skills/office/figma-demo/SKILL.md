@@ -8,8 +8,7 @@ description: |
   结构化翻译→Socratic映射验证→Blueprint生成→SubAgent逐节点构建→
   组装完整HTML Demo（含演示模式）。大型Demo的节点拆分、Context隔离、
   状态管理、接口校验全部内置。技术约束继承gstack全局token体系。
-  触发词：'figma-demo', 'figma demo', '做个demo', '口述做原型',
-  '演示demo', 'demo from figma', '汇报用的原型'。(luca_gstack)
+  隐藏 skill：2026-07-03 移出一级路由，不经 route-guard 触发词匹配，按名/语义调用。(luca_gstack)
 allowed-tools:
   - Read
   - Write
@@ -961,6 +960,10 @@ AskUserQuestion：
 ```
 路径：docs/handoff/YYYY-MM-DD-<topic>-figma-demo-handoff.md
 格式：见 .claude/skills/office/references/handoff-protocol.md（≤2000 tokens）
+```
+
+```bash
+mkdir -p docs/handoff
 ```
 
 必须包含：

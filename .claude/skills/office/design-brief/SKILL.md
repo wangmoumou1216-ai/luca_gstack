@@ -812,6 +812,8 @@ AskUserQuestion：
 - **AI Native 判断**：是否采用 AI Native 范式及核心理由（必填）
 
 **Step 2 — 更新 workflow-state.yaml：**
+> 单写入口：workflow-state 仅由 Phase 7 的 `write_state.py` 写入一次（落 `nodes.design-brief`）。下方 YAML 是该节点的目标形态示意——`gate_result` / `handoff_path` / `ai_native_summary` 为 handoff 附加字段，如 write_state.py 未覆盖则补写到同一节点下（可经 `_EXTRA_JSON`）；**不要另手写顶层 `design-brief:` 键造成双写**（session-restore 只读 `nodes.*`，顶层块永不被读到）。
+
 ```yaml
 design-brief:
   status: DONE

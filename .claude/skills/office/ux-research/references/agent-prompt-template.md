@@ -335,3 +335,4 @@ YOUR SEARCH STRATEGY:
 
 ---
 
+<!-- FILE_END: ux-research/references/agent-prompt-template.md -->

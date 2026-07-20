@@ -6,6 +6,8 @@
 # 适用范围：business-evaluator agent · quality-gate-agent ·
 任何需要「纷享销客销售视角」的 AI 推理任务
 
+> **CRM 休眠件（2026-07-03 去 CRM 身份裁定）。运行时不加载、无任何 skill 消费本文件；产品中性任务勿注入本角色 prompt。** 是否移入 CRM 休眠层/删除待 luca 裁决。
+
 ---
 
 ## 📐 设计原则总览

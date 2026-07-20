@@ -167,3 +167,5 @@
 
 ### 研究空白
 → {空白1}：{需要一手研究验证的领域}
+
+<!-- FILE_END: ux-research/SCHEMA.md -->

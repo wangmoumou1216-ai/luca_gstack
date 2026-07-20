@@ -95,7 +95,7 @@ echo "AGENT: module-b-interaction"
 写入 `docs/evaluation/YYYY-MM-DD-<topic>-ux-audit-module-b.md`。
 
 **得分计算：**
-Nielsen 归一化（平均分 ÷ 4，得 0–1）× 25 + Norman 合规率（✅数/7）× 30 + WCAG 通过率（✅数/7）× 45
+Nielsen 归一化（平均分 ÷ 4，得 0–1）× 25 + Norman 合规率（✅数/7）× 30 + WCAG 通过率（✅数 ÷ 可判定项数，「无法从截图判断」的项不计入分母）× 45
 
 （三项各自归一化到 0–1 后加权，满分 25+30+45 = 100，不会越界；与 Module A/C 的 0–100 标度一致）
 

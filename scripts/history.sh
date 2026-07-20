@@ -10,7 +10,7 @@ if [ -z "$SKILL" ]; then
   echo ""
   echo "支持的 skill: brainstorm, deepresearch, ux-research, ux-brainstorm,"
   echo "              design-brief, html-prototype, tech-spec, task-plan,"
-  echo "              ux-audit, figma-demo, figma-layer, magicpath"
+  echo "              ux-audit, figma-demo, figma-layer"
   exit 1
 fi
 
@@ -69,6 +69,14 @@ case "$SKILL" in
   ux-audit)
     FILES=$(ls -t docs/evaluation/*ux-audit*.md 2>/dev/null || true)
     LABEL="UX 评审报告"
+    ;;
+  figma-layer)
+    FILES=$(ls -t docs/figma/*/figma-spec.md 2>/dev/null || true)
+    LABEL="Figma 规格"
+    ;;
+  figma-demo)
+    FILES=$(ls -t docs/prototype/*/blueprint.yaml 2>/dev/null || true)
+    LABEL="Figma Demo 蓝图"
     ;;
   *)
     FILES=""
