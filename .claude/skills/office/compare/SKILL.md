@@ -3,7 +3,7 @@ name: compare
 description: |
   对比两个 skill 产出（或同一 skill 的两个版本），输出结构化差异分析。
   适用场景：两次 brainstorm 方案对比、两个 design-brief 对比、评审迭代前后对比。
-allowed-tools: Read, Bash
+allowed-tools: Read, Bash, Write
 context-cost: lightweight
 recommended-model: guided-execution  # 2026-07-10 new_scenario_protocol 定档：checklist式对比分析（轻审查）
 ---
