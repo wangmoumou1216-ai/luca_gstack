@@ -15,6 +15,7 @@ allowed-tools:
   - Read
   - Write
   - Bash
+  - Skill
   - AskUserQuestion
   - mcp__figma__whoami
   - mcp__figma__use_figma
@@ -83,8 +84,10 @@ python3 .claude/observability/scripts/get_rules.py figma-layer "*" 2>/dev/null |
     - 框架来源 = open-design（或存在 *-open-design-handoff.md）→ source=open-design
     - 其它 → source=html-prototype
 
-□ source=html-prototype 时：已读取 design-brief.md，确认 shadcn 组件映射表存在？
-  → 否：BLOCKED — 映射表缺失
+□ source=html-prototype 时：design-brief.md 存在 → 已读取并确认 shadcn 组件映射表存在？
+  → 否（design-brief.md 存在但缺映射表）：BLOCKED — 映射表缺失
+  → design-brief.md 不存在（html-prototype 独立跑/场景C，无上游 design-brief）→ 降级：从 prototype-spec.md +
+    index.html 实际结构归纳组件清单（同 open-design 来源逻辑），不 BLOCKED
 
 □ source=figma-demo 时：已读取 blueprint.yaml，确认 nodes / design_system / viewport_targets 存在？
   → 否：BLOCKED — blueprint.yaml 缺失或不完整

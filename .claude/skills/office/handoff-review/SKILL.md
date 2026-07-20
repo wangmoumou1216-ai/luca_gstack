@@ -234,8 +234,9 @@ AskUserQuestion：
 1. 汇总所有 oracle 型失败项 + 各自 fix 建议，组成定向 diff 清单。
 2. 用 Agent tool 派**上游 skill 定向重生成**（节2 失败 → html-prototype；需求/范围类 →
    design-brief）；prompt 只含失败清单与目标文件路径，**不附完整会话**。
-3. **只重跑失败的那 1–2 个 specialist**（节1/节2），不整轮复审；用 Agent tool 调度对应
-   `specialists/*.md`，输入同 Phase 1。
+3. **重跑本次选中的全部 specialist**（节1/节2）——步骤2 由上游 skill 产出的是**整份新产物**
+   （html-prototype/design-brief 每次生成完整文件），先前 PASS 的 specialist 审的是旧产物、结论已失效，
+   须全部复审才算数；用 Agent tool 调度对应 `specialists/*.md`，输入同 Phase 1。
 4. 重算通过判断：全部 oracle 项现在通过 → **最终结果改为 PASSED**（修复成功）；
    仍有未通过 → **最终结果保持 FAILED**（已尝试一次，记录之）。
 

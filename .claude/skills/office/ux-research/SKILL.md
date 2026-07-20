@@ -13,7 +13,10 @@ allowed-tools:
   - Read
   - Write
   - Bash
+  - Agent
   - AskUserQuestion
+  - WebFetch
+  - WebSearch
 context-cost:
   self: 22732  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 30000

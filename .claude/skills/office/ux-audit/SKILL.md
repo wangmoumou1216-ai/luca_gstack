@@ -3,8 +3,8 @@ name: ux-audit
 preamble-tier: 2
 version: 1.0.0
 description: |
-  CRM页面UX评审。启动时询问：场景（优化参考B/改版基线C）+ 激活哪些模块（多选）。
-  三个模块：A视觉系统合规（35%）/ B交互与可访问性（40%）/ C CRM业务专项（25%）。
+  页面UX评审。启动时询问：场景（优化参考B/改版基线C）+ 激活哪些模块（多选）。
+  三个模块：A视觉系统合规（35%）/ B交互与可访问性（40%）/ C 业务领域专项（25%，可选，profile 定，默认 CRM）。
   串行执行，每个模块用Agent tool调度对应specialists/文件。截图是强制输入。
   ux-audit直接产出最终报告，不需要再合并。(luca_gstack)
 allowed-tools:
@@ -77,7 +77,7 @@ AskUserQuestion：
 > B）**Module B — 交互与可访问性**（40%权重）
 >    Nielsen 10条 / Norman 7条 / WCAG 2.1 AA
 >
-> C）**Module C — CRM业务专项**（25%权重）
+> C）**Module C — 业务领域专项**（25%权重，可选，仅业务类项目；默认 CRM profile）
 >    首屏字段可见性/高频操作路径/数据可信度/列表专项
 >
 > 选全部（A+B+C）综合评分才有意义。单选只产出该模块分数。
@@ -235,6 +235,7 @@ export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 export _BASELINE=$(grep "综合 UX 得分\|综合.*得分" \
   "docs/evaluation/$(date +%Y-%m-%d)-${_TOPIC}-ux-audit.md" 2>/dev/null | \
   grep -o '[0-9]\+' | head -1 || echo "0")
+# _NODE/_STATUS 为 P7 契约标记；下方 python 块硬编码同义值（'ux-audit'/'DONE'），改这两行不影响实际写入
 export _NODE="ux-audit"
 export _STATUS="DONE"
 export _OUTPUT="docs/evaluation/$(date +%Y-%m-%d)-${_TOPIC}-ux-audit.md"

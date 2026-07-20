@@ -10,6 +10,7 @@ description: |
 allowed-tools:
   - Read
   - Write
+  - Bash
   - AskUserQuestion
 context-cost:
   self: 4581

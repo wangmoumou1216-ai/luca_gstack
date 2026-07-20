@@ -18,6 +18,9 @@ _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
 echo "SESSION: $_SESSION_ID"
+_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+echo "CURRENT_TOPIC: $_TOPIC"
+python3 .claude/observability/scripts/get_rules.py office "*" 2>/dev/null || true
 ```
 
 ---

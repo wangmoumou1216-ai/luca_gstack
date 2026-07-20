@@ -22,7 +22,7 @@ context-cost:
   self: 35022  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 20000
   shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, design-system-contract]
-  recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场收敛降opus，judge/oracle环节按fable_whitelist P1单独dispatch fable
+  recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场收敛opus；本 skill 无 judge/oracle 环节
 ---
 
 ## Preamble (run first)

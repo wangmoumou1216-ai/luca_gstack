@@ -182,7 +182,7 @@ export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
            sed 's/-prd\.md$//' || echo "unknown")
 export _NODE="challenge"
 export _STATUS="DONE"
-export _OUTPUT="docs/prd/*-challenge.md"
+export _OUTPUT="docs/prd/$(date +%Y-%m-%d)-${_TOPIC}-challenge.md"
 python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
 ```
 

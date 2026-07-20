@@ -881,10 +881,9 @@ node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs \
 ```bash
 export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/idea/*.md 2>/dev/null | head -1 | \
+  _TOPIC=$(ls -td docs/prototype/*/ 2>/dev/null | head -1 | \
            xargs basename 2>/dev/null | \
-           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-idea\.md$//' || echo "unknown")
+           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' || echo "unknown")
 export _NODE="figma-demo"
 export _STATUS="DONE"
 export _OUTPUT="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"

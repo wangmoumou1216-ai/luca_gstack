@@ -99,7 +99,7 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 |------|------|---------|
 | A 视觉合规 | {N}/100 | {P0 N条} |
 | B 交互可访问性 | {N}/100 | {P0 N条} |
-| C CRM业务专项 | {N}/100 | {P0 N条} |
+| C 业务领域专项 | {N}/100 | {P0 N条} |
 | 综合 | {N}/100 | |
 
 ## Observability

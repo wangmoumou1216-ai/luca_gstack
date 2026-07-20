@@ -2,6 +2,8 @@
 name: auto
 preamble-tier: 2
 argument-hint: "[需求描述，或多个任务组合描述]"
+description: |
+  全自动多 Agent 设计编排器：自然语言需求 → 自动分解任务 → 映射 skill → 编排 Work Agent 并行/串行 → 聚合产出。luca_gstack 顶层自动化入口，用户无需手动选 skill。(luca_gstack)
 recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：整场多agent编排（大token+中判断杠杆），同 muse-loop-orchestrate
 ---
 
