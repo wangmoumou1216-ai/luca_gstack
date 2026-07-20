@@ -202,9 +202,10 @@ AskUserQuestion：
 □ 已有截图（对话里有截图附件）？
   → 否：告知用户「请先上传截图再继续」，等待截图
 □ 已读取 design-brief.md（如果存在）
-□ 场景B 必须有 prd-constraints.md：
-  → _CONSTRAINTS 为 none → BLOCKED — 场景B需要 prd-constraints.md 约束防火墙。
-    请先运行 /brainstorm（场景B）生成约束文件后再继续。
+□ 场景B 建议有 prd-constraints.md（约束防火墙 = Not-Do List）：
+  → _CONSTRAINTS 为 none → ⚠️ 软警告（不 BLOCKED）：当前 skill 集暂无自动生产 prd-constraints.md 的节点，
+    缺它则 Not-Do List 防火墙不生效。可手写一份 docs/prd/*-prd-constraints.md 再跑；否则继续生成，
+    但须在产出里显式标注「未受约束防火墙保护」，供人工复核。
 ```
 **场景C：** 确认已有 ux-audit 报告
 
