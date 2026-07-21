@@ -79,7 +79,8 @@ gaps:
     statement: "应用作业层设计 skills(ideation/PRD/UX研究/发散收敛/原型/设计批判)的方法论，从未对外部 state-of-art 做过吸收评估——自进化此前对作业层全盲。"
     severity: medium
     desired_capability_keywords: [ux research method, prd elicitation, design critique, prototyping, design-to-code, product design methodology, design system]
-    status: open
+    status: addressed   # 2026-07-21 作业层首次外部方法论吸收评估：采纳 insight-synthesis(借社区 interview-synthesis 观察-解读纪律,新一级 skill)+design-handoff 注入(借 Anthropic 官方 7 维,横切 open-design/html-prototype/tech-spec)；破"全盲"(评估 design-handoff/research-synthesis 两外部 skill→裁决替换/结合/新增)。commit bcde014,5 轮独立红队 CLEAN,verify 59/0。scope 诚实：首次吸收,非全作业层普查——ideation/PRD-elicitation/design-critique 等子域尚未逐一评估,由 90 天 addressed_recheck + 后续 scout 周期接续
+    addressed_at: 2026-07-21
 
   - id: GAP-code-layer-constraint
     dimension: testing
