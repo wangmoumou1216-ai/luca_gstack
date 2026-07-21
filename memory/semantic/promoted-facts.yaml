@@ -458,3 +458,25 @@ facts:
     evidence: "2026-07-15 记忆层评审四连实证：awaiting_approval 桶建了未接 digest（候选 0-14 天不可见）、--mattered 建了全库零接线（ADR-0006 裁决过期 2.6 倍无人知）、check_loop_health 的 fork_home 参数出生即悬空、eval-log prose 触发 06-28 起失守；同谱系先例：编排轮五台账、hooks 轮半链演进（SC-20260714-002 管改动传播，本条管新建完整性）"
     reviewer: "claude"
     scope: "framework/所有新增度量与信号面"
+  - id: SC-20260721-001
+    domain: skill-rule
+    fact: "OD 交付边界（luca 2026-07-21 明确纠正）：open-design 的 OD 是『UI 生成器』——针对前置设计方案做设计执行，但自带强设计规范与 UI 能力（绑定 design system + 自身 UI 专业度），不是被动渲染器。交付给 OD 的产物必须是 UI 之前的调研/研究/设计事实（需求、用户、场景、交互逻辑、状态语义、IA），不得携带 UI 执行细则（逐字文案清单/布局指令/组件级微规定）去锁死 OD 的 UI 自由度。给 OD 喂知识 = 增强上游研究与设计思考层（ux-research/ux-brainstorm/design-brief 语义层），不给 OD 下 UI 微指令。"
+    confidence: high
+    stable: true
+    added: 2026-07-21
+    source: "luca 口头纠正 @ designer-skills 适配方案评审（session 45c656f8）"
+    evidence: "luca 原话：『od的定义是UI生成器。他对会针对前置的设计方案来进行设计执行。但是他有设计规范和UI的强大的skill。你交付给od的，不能把他的能力限制住。你给他的更偏向在做UI之前，所有调研、研究』"
+    reviewer: "luca"
+    scope: "open-design,design-brief,ux-brainstorm"
+    tags: ["od", "open-design", "交付边界", "generation-packet", "设计链"]
+  - id: SC-20260721-002
+    domain: workflow
+    fact: "新能力接入判据（luca 2026-07-21 驳回『零新增 skill』原则后确立）：按使用形态分流——①独立可点名的交付物生产者（用户会单独说『帮我出访谈提纲/检查这段文案』）→ 建一级 skill（窄复合词路由，照 systematic-debugging/tdd 等工程四件的活跃先例），且必须评估进流程被命中的位置，不是孤岛斜杠命令；②宿主流程中途消费的底料知识 → references 吸收挂 live skill。休眠教训的正确归因是 rules.yaml-advisory 通道弱，不是『是个独立 skill』本身。luca 流程重心：PRD 产出后的设计工作很广很重，是结合深度方法论的产出物（非直接产 HTML 界面）——新设计能力优先考虑挂进这一段。"
+    confidence: high
+    stable: true
+    added: 2026-07-21
+    source: "luca 明确纠正 @ designer-skills 适配 v2→v3（session 45c656f8）"
+    evidence: "luca 原话：『我不觉得你没有新增skill这个方案是对的』『一级可见是绝对的…是否需要在我的流程里被命中，这个是你需要深度思考的。我的流程有很重的一个环节是在prd产出后的设计工作…不是直接产出html的ux界面，而是结合了深度的方法论的产出物。别忘了，我是一个顶级的产品设计师』"
+    reviewer: "luca"
+    scope: "skill-os,routing,office"
+    tags: ["新skill判据", "使用形态", "流程接入", "post-PRD设计段"]
