@@ -1204,6 +1204,101 @@ class MemoryReviewRound2026_07_15(unittest.TestCase):
             self.assertIn("cwd_tail", rec)
 
 
+class ConsolidationPass2026_07_21(unittest.TestCase):
+    """收口 Pass（2026-07-21）的回归钉：归档检索开关 + gaps 复核观察者。
+
+    独立验收批评本批改动"零回归覆盖"——正则/算术无 checker 咬住。这里补上。
+    """
+
+    run_script = MemorySystemTests.run_script
+
+    def _archive_fixture(self, tmp):
+        ep = Path(tmp) / "memory" / "episodic"
+        (ep / "archive").mkdir(parents=True, exist_ok=True)
+        hot = {"id": "EP-HOT-001", "topic": "热窗条目 zebrahot", "date": "2026-07-01"}
+        arch = {"id": "EP-ARCH-001", "topic": "归档独有 zebraarch", "date": "2026-05-01"}
+        noisy = {"id": "EP-NOISY-001", "topic": "噪音归档 zebranoisy", "date": "2026-05-02"}
+        dup = {"id": "EP-HOT-001", "topic": "热窗条目 zebrahot", "date": "2026-07-01"}
+        (ep / "index.jsonl").write_text(json.dumps(hot, ensure_ascii=False) + "\n", encoding="utf-8")
+        (ep / "archive" / "2026.jsonl").write_text(
+            json.dumps(arch, ensure_ascii=False) + "\n" + json.dumps(dup, ensure_ascii=False) + "\n",
+            encoding="utf-8")
+        (ep / "archive" / "noisy-2026.jsonl").write_text(json.dumps(noisy, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    def test_archive_hidden_by_default_and_visible_with_flag(self):
+        # BACKLOG #21：归档默认不在检索面；--include-archive 才并入（零默认噪音）
+        with tempfile.TemporaryDirectory() as tmp:
+            self._archive_fixture(tmp)
+            env = {"MEMORY_ROOT": tmp}
+            off = self.run_script("search_memory.py", "zebraarch", "--layer", "episodic", env=env)
+            self.assertNotIn("EP-ARCH-001", off.stdout, "默认档不得检索到归档条目")
+            self.assertIn("--include-archive", off.stdout, "miss 提示必须指向新开关（消费面接线）")
+            on = self.run_script("search_memory.py", "zebraarch", "--layer", "episodic",
+                                 "--include-archive", env=env)
+            self.assertIn("EP-ARCH-001", on.stdout, "开关打开后归档条目必须可检索")
+            self.assertIn("archive/2026.jsonl", on.stdout, "归档命中的溯源路径须指向档案文件而非 index")
+
+    def test_archive_excludes_noisy_and_dedupes_against_hot_window(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._archive_fixture(tmp)
+            env = {"MEMORY_ROOT": tmp}
+            noisy = self.run_script("search_memory.py", "zebranoisy", "--layer", "episodic",
+                                    "--include-archive", env=env)
+            self.assertNotIn("EP-NOISY-001", noisy.stdout, "noisy-*.jsonl 因是噪音而归档，不得并入检索面")
+            dup = self.run_script("search_memory.py", "zebrahot", "--layer", "episodic",
+                                  "--include-archive", env=env)
+            self.assertEqual(dup.stdout.count("EP-HOT-001"), 1,
+                             "同 id 同时在 index 与 archive 时不得返回双份（各占一个 limit 名额）")
+
+    def _gaps_fixture(self, tmp, body):
+        d = Path(tmp) / ".claude" / "skill-os" / "evolution"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "gaps-register.yaml").write_text(body, encoding="utf-8")
+
+    def _gap_issues(self, tmp):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "dg_probe", ROOT / "memory" / "scripts" / "daily_governance.py")
+        os.environ["MEMORY_ROOT"] = str(tmp)
+        try:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod.check_gap_recheck()
+        finally:
+            os.environ.pop("MEMORY_ROOT", None)
+
+    def test_gap_recheck_reports_overdue_met_and_bad_date_independently(self):
+        # 一条坏日期曾让整轮检查失明（超期项与 MET 项双双静默丢失）——三分支必须互不遮蔽
+        self.maxDiff = None
+        with tempfile.TemporaryDirectory() as tmp:
+            self._gaps_fixture(tmp, (
+                "gaps:\n"
+                "  - id: GAP-BAD\n    dimension: t\n    severity: low\n"
+                "    status: addressed\n    addressed_at: not-a-date\n"
+                "  - id: GAP-OVERDUE\n    dimension: t\n    severity: high\n"
+                "    status: addressed\n    addressed_at: 2024-01-01\n"
+                "  - id: GAP-MET\n    dimension: t\n    severity: low\n"
+                "    status: open\n    revisit_when: \"cond\"\n    revisit_status: \"MET — x\"\n"
+            ))
+            blob = "\n".join(self._gap_issues(tmp))
+            self.assertIn("GAP-BAD", blob, "坏日期须点名报错，不得静默跳过")
+            self.assertIn("GAP-OVERDUE", blob, "坏日期不得让超期项失明")
+            self.assertIn("GAP-MET", blob, "坏日期不得让 revisit-MET 项失明")
+
+    def test_gap_recheck_silent_when_nothing_due_and_when_file_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._gaps_fixture(tmp, (
+                "gaps:\n"
+                "  - id: GAP-FRESH\n    dimension: t\n    severity: low\n"
+                "    status: addressed\n    addressed_at: "
+                + datetime.now(timezone.utc).date().isoformat() + "\n"
+                "  - id: GAP-PLAIN\n    dimension: t\n    severity: low\n    status: open\n"
+            ))
+            self.assertEqual(self._gap_issues(tmp), [], "无到期项时须静默，不得制造噪音")
+        with tempfile.TemporaryDirectory() as tmp2:
+            self.assertEqual(self._gap_issues(tmp2), [], "gaps-register 缺失须 fail-open 静默")
+
+
 class UpstreamDriftWatcherTests(unittest.TestCase):
     """B1 上游漂移侦测（2026-07-15）：propose-only watcher 行为契约（比较键/节流/静音/fail-open）。"""
 
