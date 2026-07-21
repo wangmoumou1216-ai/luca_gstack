@@ -61,7 +61,10 @@
 - **🔴 2026-07-21：触发条件当前确定性满足，且送达链实测断开** —— 实跑 `consolidate_memory.py --json`（只读 dry-run，权威 store）：`stale=7 / awaiting_approval=2`，共 **9 条 pending ≫ 阈值 5**，最老 `SC-20260630-001` 已 21 天。
   「已被每日 digest 覆盖」**不成立**：`session-restore.mjs:375` 的 digest 预览是 `slice(0, 14)`，而 07-21 digest 的「超期候选」节标题在第 14 行、条目在**第 15-20 行**——正好切在窗外；且 digest 送达是每检出每天一次给任意先到 session。
   pending-extraction 那一支确已修好（两检出均 0 个 stub），积压**转移**到了 candidates 队列本身。
-  **红队否决「就地关闭」**：在触发器正响的那一刻关掉条目，是本 Pass 自我服务偏差最重的一条。已列入 DECIDE 清单（选项：扩预览窗 / 比照 person 层加独立单行提示 / 建批量放行入口）。
+  **红队否决「就地关闭」**：在触发器正响的那一刻关掉条目，是本 Pass 自我服务偏差最重的一条。
+- **✅ 送达链已修（2026-07-21，luca 裁决 D1）**：`session-restore.mjs` 的 digest 预览不再是固定 `slice(0,14)`，改为**按「待你裁决」整节收尾**（找不到该节时退回 14 行，硬上限 40 行防刷屏）。
+  实测对 07-21 digest：窗口 14 → 23 行，可见候选 id 从 7 → 13，此前被切掉的 6 条超期候选（`SC-20260630-001` 等）现已进入启动提示。**未新增第 6 个 stdout 块**（正是本条当初担心的通道饱和）。
+  仍开着的是本体：「提醒到了也没人裁」属人工节奏，不是机制缺口。
 
 ### #20 — sync_claude_fallback 反向校验（audit 2026-07-07 F2-08）
 - **缺口**：`fact_id in content` 全文匹配会把 CLAUDE.md prose 引用误判为「已镜像」（路由节确实引用 SC-20260523-002/003 这类写法）；check_memory_health 只做两个单向差集，缺「白名单已晋升事实必须出现在 SF 节」的反向校验。
@@ -74,7 +77,10 @@
 - **缺口**：search_memory/get_memory 只读热 index（50 条满），archive/2026.jsonl 的 7 条真实决策记录对任务检索不可见；而 append_episode 分配 seq 时扫 archive——archive 被视为数据但检索层未跟上。
 - **候选修法**：search_memory 默认并入 archive，或加 `--include-archive`。待 luca 裁决（涉及检索性能与噪音权衡）。
 - **观察者**：`search_memory.py:547-553` 的 miss 提示行（"另有 N 条已归档不在检索面"）——只在检索发生时提示，属弱观察者。
-- **📈 2026-07-21 实测：问题在放大** —— archive 从本条写就时的 **7 条 → 46 条**（+`noisy-2026.jsonl` 4 条），而热窗 `index.jsonl` 恰好 50 条已满：**不可检索面已与可检索面等量**。裁决悬置已逾 7 周，2026-07-17 覆盖盘点再次点名仍无动作。已列入收口 Pass DECIDE 清单当面收口。
+- **📈 2026-07-21 实测：问题在放大** —— archive 从本条写就时的 **7 条 → 46 条**（+`noisy-2026.jsonl` 4 条），而热窗 `index.jsonl` 恰好 50 条已满：**不可检索面已与可检索面等量**。
+- **✅ 已裁决并落地（2026-07-21，luca 裁决 D2）**：加 `--include-archive` 开关，**不默认并入**（零默认噪音、零性能回归）。
+  `search_memory.py` 新增 `load_archive_episodes()`（逐行标 `_src` 真实来源）+ `--include-archive` 参数；`search()` 按行溯源，归档命中的 `source/path` 指向 `archive/2026.jsonl` 而非 index（防指错文件）。开关开启时不再打印「不在检索面」提示。
+  会咬双向：归档独有条目 `EP-20260516-001`「标准开发规范升级」——不带 flag 检索不到（只返回噪音），带 flag 命中 score 51（exact query phrase）。`npm run test:memory` 41/41 通过，默认行为零变化。
 
 ### #18 — IN_PROGRESS 崩溃恢复路径无 writer（reader/writer 失配）
 - **真实缺口**：三个 reader 消费 `status: IN_PROGRESS`（`session-restore.mjs:13` / `route-guard.mjs:477` / `session-sync.mjs:24,31`，后者据此写 `docs/handoff` checkpoint），但全仓**无 writer**——11 个含状态导出的 SKILL.md 一律 `export _STATUS="DONE"`，`write_state.py:76` 默认 DONE，无任何路径写 IN_PROGRESS。recovery 分支永不触发。`plan-agent.md:317` 又把 IN_PROGRESS 记为合法 Work-Agent 状态，故不是纯死代码而是**半接线 scaffold**。

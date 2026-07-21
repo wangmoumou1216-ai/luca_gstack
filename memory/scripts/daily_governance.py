@@ -225,6 +225,56 @@ def check_self_model():
     return issues
 
 
+def check_gap_recheck():
+    """gaps-register 到期项：addressed 满 90 天的复核窗 + open gap 自设重访条件已满足。
+
+    此前 90 天算术只存在于 framework-evolution-scout 的 loader prompt（给 LLM 的自然语言指令），
+    月度 scout 不跑或算漏就无人知；open gap 的自设重访条件更是零执行者（曾写在 YAML 注释里）。
+    这里补一个**每日确定性观察者**，接已有 digest 消费面（2026-07-21 收口 Pass，BACKLOG 触发器纪律：
+    延后项的触发条件必须有人在必经界面看得见）。检测 only，不改 gaps-register（人工拥有）。
+    fail-open：任何异常折叠成一条 issue，绝不打断治理。
+    """
+    issues = []
+    try:
+        import yaml
+        gaps_path = ROOT / ".claude" / "skill-os" / "evolution" / "gaps-register.yaml"
+        if not gaps_path.exists():
+            return issues  # 未启用演进子系统时静默跳过
+        data = yaml.safe_load(gaps_path.read_text(encoding="utf-8")) or {}
+        gaps = data.get("gaps", []) or []
+        today_d = datetime.now(timezone.utc).date()
+        recheck_days = int(data.get("addressed_recheck_days", 90))
+        due = []
+        for g in gaps:
+            if not isinstance(g, dict):
+                continue
+            gid = g.get("id", "?")
+            status = str(g.get("status", "")).strip()
+            if status == "addressed":
+                at = g.get("addressed_at")
+                if not at:
+                    issues.append(f"gaps-register: {gid} 标 addressed 但缺 addressed_at，复核窗无法计算")
+                    continue
+                at_d = at if hasattr(at, "year") else datetime.strptime(str(at), "%Y-%m-%d").date()
+                age = (today_d - at_d).days
+                if age > recheck_days:
+                    due.append(f"{gid}({age}天)")
+            elif status == "open" and str(g.get("revisit_status") or "").strip().upper().startswith("MET"):
+                issues.append(
+                    f"gaps-register: {gid} 自设重访条件已满足（{g.get('revisit_when') or '见 revisit_status'}）"
+                    f"——须裁决开工/改条件/关闭，勿再留在 open 里空转"
+                )
+        if due:
+            shown = ", ".join(due[:5]) + (f" 等 {len(due)} 个" if len(due) > 5 else "")
+            issues.append(
+                f"gaps-register: {len(due)} 个 addressed gap 到期复核（>{recheck_days}天）：{shown}"
+                f"——按 severity 分批裁决，勿逐个开工"
+            )
+    except Exception as e:  # noqa: BLE001 — 校验绝不打断治理
+        issues.append(f"gaps-register 复核校验异常：{e}")
+    return issues
+
+
 def check_person_memory():
     """person 层（全局个人记忆）看护：candidate_feedback 候选清单 + MEMORY.md 软上限。
 
@@ -588,7 +638,7 @@ def main() -> int:
     stale = result.get("stale_candidates", []) or []
     awaiting = result.get("awaiting_approval", []) or []
     routing_issues = check_model_routing()
-    self_model_issues = check_self_model()
+    self_model_issues = check_self_model() + check_gap_recheck()
     person_issues = check_person_memory()
     eps = recent_episodes(today)
 

@@ -299,9 +299,35 @@ def score_record(layer: str, record: dict, query: str, tokens: list[str], path: 
     return result
 
 
+INCLUDE_ARCHIVE = False  # 由 main() 按 --include-archive 置位；默认关，零默认噪音/零性能回归
+
+
+def load_archive_episodes() -> list[dict]:
+    """归档 episodic（memory/episodic/archive/*.jsonl）。默认不进检索面。
+
+    BACKLOG #21：归档层随时间增长到与热窗等量（2026-07-21 实测 archive 50 条 vs index 50 条），
+    默认并入会引入噪音与性能回归，故做成显式开关而非默认行为。fail-open：读不动就当空。
+    """
+    archive_dir = MEMORY_DIR / "episodic" / "archive"
+    if not archive_dir.is_dir():
+        return []
+    rows: list[dict] = []
+    for path in sorted(archive_dir.glob("*.jsonl")):
+        try:
+            for row in read_jsonl(path):
+                row["_src"] = path       # 逐行标注真实来源，供 search() 正确溯源
+                rows.append(row)
+        except Exception:
+            continue
+    return rows
+
+
 def load_layer(layer: str) -> tuple[Path, list[dict]]:
     if layer == "episodic":
-        return EPISODIC_INDEX, read_jsonl(EPISODIC_INDEX)
+        rows = read_jsonl(EPISODIC_INDEX)
+        if INCLUDE_ARCHIVE:
+            rows = rows + load_archive_episodes()
+        return EPISODIC_INDEX, rows
     if layer == "semantic":
         return SEMANTIC_FACTS, parse_semantic_facts(SEMANTIC_FACTS)
     return EVAL_LOG, read_jsonl(EVAL_LOG)
@@ -335,7 +361,10 @@ def search(query: str, limit: int, layer: str, skill: str, topic: str, project: 
         for record in rows:
             if not passes_filters(layer_name, record, skill, topic, project):
                 continue
-            result = score_record(layer_name, record, query, tokens, path, skill, topic)
+            # 归档行的溯源路径必须是它自己的文件，否则 --include-archive 的命中会指着
+            # index.jsonl 让人去错文件里找（_src 由 load_archive_episodes 逐行标注）
+            rec_path = record.get("_src") or path
+            result = score_record(layer_name, record, query, tokens, rec_path, skill, topic)
             has_query_match = any(
                 reason.startswith("keyword hits:") or reason == "exact query phrase"
                 for reason in result["reasons"]
@@ -510,6 +539,8 @@ def main() -> int:
     parser.add_argument("--skill", default="*")
     parser.add_argument("--topic", default="")
     parser.add_argument("--project", default="", help="按项目作用域过滤 episodic（含历史记录文本兜底）")
+    parser.add_argument("--include-archive", action="store_true",
+                        help="把 memory/episodic/archive/*.jsonl 并入 episodic 检索面（默认关；BACKLOG #21）")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--retrieval-stats", action="store_true",
                         help="ADR-0006: summarize retrieval-log.jsonl (no search performed)")
@@ -530,6 +561,9 @@ def main() -> int:
     if not args.query:
         parser.error("query is required unless --retrieval-stats is used")
 
+    global INCLUDE_ARCHIVE
+    INCLUDE_ARCHIVE = bool(args.include_archive)
+
     rows = search(args.query, args.limit, args.layer, args.skill, args.topic, args.project)
     # Fail-safe instrumentation: logged AFTER computing results, swallows all errors,
     # and does not touch the search output below. 检索参数一并入 log（miss 归因需要）。
@@ -542,7 +576,7 @@ def main() -> int:
     else:
         print_human(rows)
         # B4：归档层不在检索面——miss 时无法与「真无」区分，至少让检索者知道还有一层
-        if args.layer in ("all", "episodic"):
+        if args.layer in ("all", "episodic") and not INCLUDE_ARCHIVE:
             try:
                 archive_dir = MEMORY_DIR / "episodic" / "archive"
                 n_arch = sum(

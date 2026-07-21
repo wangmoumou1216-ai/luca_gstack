@@ -372,7 +372,18 @@ try {
       let show = false;
       try { closeSync(openSync(shownMarker, 'wx')); show = true; } catch (e) { show = !e || e.code !== 'EEXIST'; }
       if (show) {
-        const preview = readFileSync(join(digestsDir, newest), 'utf8').split('\n').slice(0, 14).join('\n').trim();
+        // 预览窗按「待你裁决」整节收尾，而非固定 14 行（2026-07-21 BACKLOG #17 实证：该节标题
+        // 恰在第 14 行、条目在 15-20 行，全部被切在窗外——队列"每日贴脸"20 天实为从未送达）。
+        // 硬上限 40 行防刷屏；找不到该节时退回原 14 行行为。
+        const digestLines = readFileSync(join(digestsDir, newest), 'utf8').split('\n');
+        let end = 14;
+        const decideAt = digestLines.findIndex(l => /^#{1,3}\s.*待你裁决/.test(l));
+        if (decideAt >= 0) {
+          let sectionEnd = digestLines.findIndex((l, i) => i > decideAt && /^#{1,3}\s/.test(l));
+          if (sectionEnd < 0) sectionEnd = digestLines.length;
+          end = Math.min(Math.max(end, sectionEnd), 40);
+        }
+        const preview = digestLines.slice(0, end).join('\n').trim();
         process.stdout.write(`[session-restore] 🌱 成长摘要 (${newest}，每个 digest 只提示一次):\n${preview}\n\n`);
       }
     }
