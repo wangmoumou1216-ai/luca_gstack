@@ -98,7 +98,7 @@ const loaderPrompt =
   '  python3 -c "import yaml,json;print(json.dumps(yaml.safe_load(open(P))))"\n\n' +
   'Read and extract (RUN_DATE for date math = the date below; if "unknown", use `date -u +%Y-%m-%d`):\n' +
   '1. .claude/skill-os/evolution/sources-registry.yaml → sources where status=="active": {id,class,feeds_dimensions,reuse_mode,authority_tier,discovery,freshness_window_months,discrimination}. DROP status:off.\n' +
-  '2. .claude/skill-os/evolution/gaps-register.yaml → gaps where status=="open": {id,dimension,statement,severity,desired_capability_keywords}. DROP deferred/closed. ALSO: gaps with status=="addressed" whose addressed_at is MORE than 90 days before RUN_DATE (python datetime) → return in addressed_recheck {id,addressed_at,statement}（自建方案的复核窗，不进候选匹配）.\n' +
+  '2. .claude/skill-os/evolution/gaps-register.yaml → gaps where status=="open": {id,dimension,statement,severity,desired_capability_keywords,revisit_when,revisit_status}（后两个字段可缺省；缺省时省略，不要编造）. DROP deferred/closed. 任何 revisit_status 以 "MET" 开头的 gap 必须在 digest 首节单列为「到期待裁决」，不得只当普通匹配目标. ALSO: gaps with status=="addressed" whose addressed_at is MORE than 90 days before RUN_DATE (python datetime) → return in addressed_recheck {id,addressed_at,statement}（自建方案的复核窗，不进候选匹配）.\n' +
   '3. .claude/skill-os/evolution/self-model.yaml → already_have_static.builtins + already_have_static.personas.\n' +
   '4. .claude/skill-os/evolution/self-model.generated.yaml → already_have_ondisk.{skills_office,skills_global,agents,hooks}.\n' +
   '5. .claude/skill-os/external-skills/vetting-registry.yaml → EVERY repo identifier (owner/repo) under any status (approved/conditional/rejected/…). If the YAML shape is unclear, grep for "repo:" / "owner" / github URLs and collect them.\n' +

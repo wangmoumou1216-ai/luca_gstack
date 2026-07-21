@@ -218,9 +218,14 @@ python3 .claude/observability/scripts/write_observation.py \
   --scenes <A|B|C|D|*>
 ```
 
-**收尾时记录轻量 run log：**
+**收尾时记录轻量 run log —— ⛔ 已冻结，勿执行：**
+
+> `run-log.jsonl` 处于 FREEZE（`memory/README.md`）：**它的持续零写入本身就是裁决票据**，
+> 明令勿新建采集。而 `append_run_log.py` 会 `mkdir + open("a")` 直接创建该文件——照做即抹掉
+> 冻结依据。本块保留仅为说明该通道的形态；解冻前任何 skill 收尾都**不要**运行它。
 
 ```bash
+# 冻结中，勿运行
 python3 .claude/observability/scripts/append_run_log.py \
   --skill <skill-name> \
   --status DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT \

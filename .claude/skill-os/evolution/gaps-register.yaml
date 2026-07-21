@@ -98,6 +98,10 @@ gaps:
     severity: low
     desired_capability_keywords: [self-improving agent, empirical benchmark, variant comparison, self-evolution, ablation]
     status: open
+    # 重访条件从下方 `#` 注释提升为结构化字段（2026-07-21 收口 Pass）：写在注释里的条件 yaml.safe_load
+    # 会丢弃、scout loader 也不抽取 → 条件 2026-07-12 起已满足却无人可能发现。字段化后由 loader 抽取进 digest。
+    revisit_when: "adoption-log 累计 ≥5 条已融合候选"
+    revisit_status: "MET — 2026-07-21 实测 distinct fused_candidate_id=23（超阈值 4.6 倍），待裁决；注意同批 helped/landing_status 近乎全空，建基准前须先修回填纪律"
     # 2026-06-21 裁决：本轮**不追**（显式不静默砍）。DGM 式变体对比需一个**已融合候选基准语料**做 ablation；
     # 当前只有 OST/GOMS/code-hygiene 3 条，样本太小，benchmark 无意义。已有 adoption-log(helped/caused_issue)
     # + behavioral_ab.py(逐融合 A/B) 已是部分闭环。重访条件：adoption-log 累计 ≥5 条已融合候选后再建经验基准。
