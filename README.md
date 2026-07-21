@@ -231,10 +231,16 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 ### 设计链与工程链（并行，不互相替代）
 
 ```text
-设计链   idea → deepresearch → brainstorm → ux-research → ux-brainstorm
-              → design-brief → open-design → figma-layer
+设计链     idea → deepresearch → brainstorm → ux-research → ux-brainstorm
+                → design-brief → open-design → figma-layer
 
-工程链   brainstorm → design-brief → tech-spec → task-plan → 执行 → 验收回验
+一手研究环  brainstorm（假设）→ research-kit（采集工具）→ [你亲自采集]
+                → insight-synthesis（洞察）→ 回到设计链
+
+内容维度   ux-writing（语义规范产在 design-brief 之前、被其继承进 Packet；
+                逐字文案只喂 html-prototype 本地路径——OD 的生成自由度不被锁）
+
+工程链     brainstorm → design-brief → tech-spec → task-plan → 执行 → 验收回验
 ```
 
 **发散 vs 收敛的分工**：`ux-brainstorm` 是发散引擎（出 2-3 方案 + Oracle 对抗 + 交互架构 + AI-Native 判定）；
@@ -273,10 +279,13 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 | `/idea` | A B | 已有原始语料忠实结构化（会议纪要/语音稿转需求，不延展不推断）|
 | `/deepresearch` | A B D | 多 Agent 深度研究报告 |
 | `/quick-research` | A B D | 轻量研究（单 agent 查 primary source，三档研究的中档）|
+| `/insight-synthesis` | A B D | 一手定性综合：你提供的访谈/工单/回访 → observation+interpretation 两层洞察 |
+| `/research-kit` | A B D | 一手研究工具设计：假设 → 访谈提纲/问卷/可用性测试计划/卡片分类法（三不产：不产发现/不产解读/不采集）|
 | `/brainstorm` | A B D | 苏格拉底拷问式 PRD |
 | `/ux-research` | A B D | 多维度 UX 深度研究（5+1 并行 agent，共识矩阵）|
 | `/ux-brainstorm` | A B D | 发散引擎：2-3 方案 + Oracle 对抗 + AI-Native 判定 |
 | `/design-brief` | A B C D | 收敛引擎：方向 → 规格契约（决策卡/状态/组件映射）|
+| `/ux-writing` | A B C D | 内容与语言设计：voice/tone 规范 + 微文案系统 + 文案评审改写（语义规范跑在 design-brief 前被继承进 Packet；逐字层只喂本地生成，不锁 OD）|
 | `/open-design` | A B C D | Open Design 产出（设计产出首选）：需求 → HTML →（可选）Figma |
 | `/html-prototype` | A B C | HTML 原型生成（备选，OD 不可用时）|
 | `/ux-audit` | B C | UX 评审（多选模块）|
