@@ -80,7 +80,9 @@ mkdir -p docs/handoff
 按 `.claude/skills/office/references/handoff-protocol.md` 写
 `docs/handoff/YYYY-MM-DD-<topic>-ux-writing-handoff.md`，**必含**：语义层结论清单（design-brief
 Step 1.0b 的继承输入）、逐字层适用范围声明（仅本地路径）、未收敛的术语冲突。
-workflow-state 由编排层更新（同 insight-synthesis 先例，本 skill 不自写）。
+**不写 workflow-state**（原则，非仅循先例）：本 skill 是可选内容规范节点、轻量单文档终端交付，
+无"中断后从此节点续跑"的语义可落——与 taste-review「不占固定流程节点，故不写 workflow-state」同类。
+重型多阶段的固定节点（deepresearch/ux-research/design-brief 等）才写。节点状态由编排层维护。
 
 ## 末尾约束
 

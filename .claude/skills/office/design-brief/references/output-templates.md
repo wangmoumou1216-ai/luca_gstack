@@ -124,7 +124,10 @@
 > **OD 交付边界**：接收方（尤其 Open Design）是自带 design system 与 UI 专业能力的 UI 生成器。Packet 只承载 **UI 之前的设计事实**。灰区判据——这条是在陈述「用户/交互/内容必须达成什么」（可写），还是在替生成工具决定「界面长什么样」（不可写）？px/pt 值、对齐与列布局指令、具体控件选型、逐字文案**不得写入任何块**。显式例外：经验证的 ux-audit P0 问题可携带**验收标准**进入，但不得写成布局处方。
 > **交互结构·信息架构子字段**：按 interaction-architecture 的 IA 判据（§1.6）填——层级 ≤3、命名取用户词汇、含混项显式标出；写「必须达成什么」，不画菜单树。
 > **状态覆盖块**：每状态的 UI expectation 写**语义期望**（如"空态含引导动作""错误可单击重试且保留输入"），内容语义以 brief 正文 Phase 3 的声明为源（Packet 不得含正文没有的事实）。
-> **既有越界警示**：「组件结构」块的 shadcn 词表与「品牌与视觉约束」第 2 行（design-system-contract/spacing/type scale）与 open-design 的 DS 让渡口径存在张力（登记在案的独立议题）——面向 Open Design 输出时，此两处内容由 open-design 编译逻辑按其 FxUI 收窄口径处理，**本模板新填内容不得加剧此两块**。
+> **两块按消费方分流填写（2026-07-21 裁决，解决 shadcn 词表 ↔ OD 的 DS 让渡口径之争）**：Packet 服务多个生成器（见块首），二者要的东西本就不同，门禁已印证——`design_brief_to_magicpath` 门**要求** `component_mapping`，`design_brief_to_open_design` 门**明确不要求**。据此：
+> - **「组件结构」块**：面向 **shadcn 栈**（magicpath / html-prototype）**必填**；面向 **Open Design** 填 `N/A — 组件选型交所选 design system`（OD 自带 DS，压 shadcn 词表进去=拿我们的栈锁它的 UI 能力）。
+> - **「品牌与视觉约束」第 2 行**：面向 shadcn 栈适用；面向 **Open Design 只保留** #FF8000 ≤3 处 + 文字色，`design-system-contract / spacing / type scale` 一行**改写为** `其余视觉（配色/字体/字号/间距/布局）交所选 design system` —— 与 open-design SKILL.md 的 FxUI 收窄口径对齐。
+> - 不确定消费方时按**最不锁能力**的一侧填（即 OD 口径），下游要 shadcn 映射时再补。
 
 ---
 

@@ -88,7 +88,9 @@ mkdir -p docs/handoff
 按 `.claude/skills/office/references/handoff-protocol.md` 写
 `docs/handoff/YYYY-MM-DD-<topic>-research-kit-handoff.md`，**必含**：研究问题清单、
 工具类型与文件路径、目标对象与建议样本量、下游（insight-synthesis）定标输入指引。
-workflow-state 由编排层更新（同 insight-synthesis 先例，本 skill 不自写）。
+**不写 workflow-state**（原则，非仅循先例）：本 skill 是可选研究工具节点、轻量单文档终端交付，
+无"中断后从此节点续跑"的语义可落——与 taste-review「不占固定流程节点，故不写 workflow-state」同类。
+重型多阶段的固定节点（deepresearch/ux-research/design-brief 等）才写。节点状态由编排层维护。
 
 ## 末尾约束
 

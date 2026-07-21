@@ -31,7 +31,7 @@ rules:
   source_observations:
     - O-20260525-001
 - id: R-20260607-001
-  status: active
+  status: retired  # 2026-07-21 裁决：外部知识件三年休眠（不路由/无门禁/实证零使用），advisory 注入=假信号，停用规则、保留磁盘安装
   severity: medium
   type: quality_rule
   scope:
@@ -41,7 +41,7 @@ rules:
   source_observations:
     - O-20260607-extskill
 - id: R-20260607-002
-  status: active
+  status: retired  # 2026-07-21 裁决：外部知识件三年休眠（不路由/无门禁/实证零使用），advisory 注入=假信号，停用规则、保留磁盘安装
   severity: medium
   type: quality_rule
   scope:
@@ -51,7 +51,7 @@ rules:
   source_observations:
     - O-20260607-extskill
 - id: R-20260607-003
-  status: active
+  status: retired  # 2026-07-21 裁决：外部知识件三年休眠（不路由/无门禁/实证零使用），advisory 注入=假信号，停用规则、保留磁盘安装
   severity: high
   type: quality_rule
   scope:

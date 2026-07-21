@@ -118,6 +118,14 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 - **design-ops（9）**：全未采纳——6 个团队仪式类 solo 不适配；handoff-spec=handoff-protocol 已覆盖；design-qa-checklist≈verify-prototype；design-debt-audit≈ux-audit+retro。
 - **prototyping-testing（8）**：全未采纳——heuristic-evaluation=module-b（Nielsen 0-4 已 live）；wireframe-spec/user-flow-diagram/prototype-strategy=html-prototype/ux-brainstorm 已覆盖；a-b-test-design/click-test-plan/test-scenario 需真实被试；accessibility-test-plan 的 AT 协议 latent（无被试场景）。
 
+### 2026-07-21 追加裁决（原「独立议题」三件已裁，下方原文保留作背景）
+
+| 议题 | 裁决 | 依据 |
+|---|---|---|
+| **三件休眠外部件** | **停用其 rules.yaml 条目（R-20260607-001/002/003 → `status: retired`），保留磁盘安装** | 成本非零且是**假信号**：三条规则合计 ~306 tokens，按 scope 注入 ux-brainstorm/design-brief/open-design/html-prototype/ux-audit/figma-demo/tech-spec/ux-research 八个 skill 的每次路由；**本 session 实证**——open-design 路由时 R-001 被真实注入，而全程无人跑 `search.py`。写着"必须遵守"却从不遵守的规则，训练的是"规则可以不看"。停用后实测 `get_rules.py design-brief` 返回 `none`。磁盘安装零成本保留，随时可手动调用；INTEGRATION-MAP 记录仍在，可逆。 |
+| **Packet 两处越界** | **不删块，改为按消费方分流填写**（规则已写入 `output-templates.md` 围栏外指引） | Packet 本就服务多个生成器，二者需求不同**且门禁已印证**：`design_brief_to_magicpath` 要求 `component_mapping`，`design_brief_to_open_design` 明确不要求。原"越界"实为**模板没说明消费方条件**，非内容错误。规则：组件结构块面向 shadcn 栈必填、面向 OD 填 N/A；视觉约束第 2 行面向 OD 收窄为"其余视觉交所选 DS"；消费方不明时按最不锁能力一侧填。 |
+| **姊妹库 `ai-design-skills`** | **暂不侦察（响应式触发，非定期）** | 两条依据：①**预算纪律**——CLAUDE.md 框架建设预算 ≤2 次/月，本 session 已耗一次重型 slot，Loop 宪法「响应式优先于预防式」；②**预期产出低**——本轮实证 luca 的 AI-native 层是全框架最厚处（`ai-native-design-framework.md` / `ai-native-state-coverage.md` 12 态含 7 个 AI 专有 / `ai-native-taste-anchors.md` 8 锚点 / ux-brainstorm 与 design-brief 双 AI-Native 判定），与 design-practice 那 96 个的结论同理，大概率仍是高冗余。**触发条件（满足任一即启动侦察）**：muse 遇到现有 AI-native 层答不出的 agent 交互设计问题；或场景 D 任务连续两次感到方法论不足。届时侦察必须沿用本轮的「对真实运行链核实、不采信休眠件」判据。 |
+
 ### 附带登记（独立议题，非本次改动面）
 
 1. **三件休眠实证**（2026-06-07 批次）：ui-ux-pro-max / design-system-architect / extract-design-system 全部处于休眠——不在路由、仅 rules.yaml advisory 注入、无 gate，实际零使用（luca 证言+机制核验 route-guard soft-candidate 不读 description）。处置（蒸馏/卸载/保留）待另立治理 session 裁决。**教训已入库**：advisory 通道=休眠轨迹；enforced 缝隙=路由/SKILL.md 强制 load/blocking gate。
