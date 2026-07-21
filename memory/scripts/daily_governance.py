@@ -420,6 +420,9 @@ def check_upstream_drift(pins_path, plugins_json_path, marker_path, today, fetch
 
 
 LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
+CLAUDE_MD_SOFT_BUDGET = 44 * 1024  # CLAUDE.md 软预算早警阈值（B1 硬门 45KB，软门给 1KB 撞墙前预警）；
+                                   # 超此即 digest 告警，把撞墙式硬门升级成早警防贴墙（2026-07-21，
+                                   # 2026-07-20 加 skill 贴到剩 2 字节的教训；实测安全 offload floor≈42.8KB）
 LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
 DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
 
@@ -471,6 +474,22 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
             )
         else:
             notes.append(f"写路径 OK：{resolved_root}（单一权威 store，by design 2026-07-09；{env_tag}）")
+
+        # 4. CLAUDE.md 预算早警（2026-07-21）：每-session 注入面贴 45KB 硬门（verify.sh B1）前先软警。
+        # 硬门撞墙式（不到 45KB 不响）；软目标提前告警，creep 早发现别贴到墙。fail-open，任何异常吞掉。
+        try:
+            claude_md = auth / "CLAUDE.md"
+            if claude_md.is_file():
+                sz = claude_md.stat().st_size
+                if sz > CLAUDE_MD_SOFT_BUDGET:
+                    anomalies.append(
+                        f"CLAUDE.md {sz/1024:.1f}KB 超软目标 {CLAUDE_MD_SOFT_BUDGET//1024}KB、逼近 45KB 硬门（B1）"
+                        "——每-session 注入面接近预算墙，把参考细节 offload 到 claude-md-appendix.md（lazy-load）腾 headroom"
+                    )
+                else:
+                    notes.append(f"CLAUDE.md 预算 OK：{sz/1024:.1f}KB（软 {CLAUDE_MD_SOFT_BUDGET//1024}KB / 硬 45KB）")
+        except Exception:  # noqa: BLE001
+            pass
 
         # 2. 双向陈旧度：最新 episodic 日期 vs 最新 digest/.checked marker 日期（ISO 日期串可直接比较）
         ep_dates = []

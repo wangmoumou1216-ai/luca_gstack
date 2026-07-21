@@ -260,9 +260,10 @@ const validSkillNames = new Set([...routingCanon, ...HIDDEN_SKILLS, ...EXTERNAL_
 
 // SSOT-8 contract: scenes.*.{recommended,engineering,fallback}_paths[*][*],
 // design_output.primary and design_output.fallback[*] carry ONLY skill names.
-// Other graph fields (degrade_target, tool_choice keys, handoff_gates ids) are
-// concept identifiers and are intentionally NOT validated — renaming a skill
-// still requires a hand check of those (documented limitation).
+// research_default.tool_choice keys + angle_orchestration.object_angles ALSO
+// carry skill names — validated by SSOT-8b below (concept-key allowlist covers
+// non-skill keys like web_spike). Remaining concept identifiers (degrade_target,
+// handoff_gates ids) are still NOT validated — hand check on rename (2026-07-21).
 const graph = parseYamlViaPython('.claude/skill-os/optional-workflow-graph.yaml');
 const graphRefs = [];
 for (const [sceneKey, scene] of Object.entries(graph.scenes || {})) {
@@ -279,6 +280,25 @@ for (const name of [].concat(dOut.fallback || [])) graphRefs.push({ name, where:
 for (const ref of graphRefs) {
   if (!validSkillNames.has(String(ref.name))) {
     ssotErrors.push(`SSOT-8 optional-workflow-graph.yaml ${ref.where} references unknown skill "${ref.name}"`);
+  }
+}
+
+// SSOT-8b (2026-07-21): research_default carries skill-name refs the path-only
+// SSOT-8 missed — a skill rename would silently dangle here (found: 2026-07-20
+// insight-synthesis adoption review). Validate tool_choice keys (skills) +
+// angle_orchestration.object_angles. tool_choice mixes skill names with genuine
+// concept keys (web_spike = a "就地一查" concept, not a skill) — allowlist those.
+const RESEARCH_CONCEPT_KEYS = new Set(['web_spike']);
+const rd = graph.research_default || {};
+for (const key of Object.keys(rd.tool_choice || {})) {
+  if (RESEARCH_CONCEPT_KEYS.has(key)) continue;
+  if (!validSkillNames.has(key)) {
+    ssotErrors.push(`SSOT-8b optional-workflow-graph.yaml research_default.tool_choice references unknown skill "${key}" (add to RESEARCH_CONCEPT_KEYS if it is a non-skill concept key)`);
+  }
+}
+for (const name of (rd.angle_orchestration && rd.angle_orchestration.object_angles) || []) {
+  if (!validSkillNames.has(String(name))) {
+    ssotErrors.push(`SSOT-8b optional-workflow-graph.yaml research_default.angle_orchestration.object_angles references unknown skill "${name}"`);
   }
 }
 

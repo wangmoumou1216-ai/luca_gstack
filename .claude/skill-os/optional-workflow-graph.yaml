@@ -32,6 +32,7 @@ research_default:
     web_spike: "极窄单点事实（就地一查，不落盘）"
     insight-synthesis: "用户自己的一手定性数据(访谈/工单/回访)→洞察（第三**对象角度**：内部一手，非深度档；2026-07-20 追加项 C）"
   angle_orchestration:            # 追加项 C（2026-07-20）：诉求→对象角度动态组合，非写死路径
+    object_angles: [deepresearch, ux-research, insight-synthesis]  # 结构化 skill 引用（SSOT-8b 校验；prose 不可靠校验故单列此字段，改名即被 checker 抓）
     principle: "给一个诉求时，Plan Agent 块2「研究方向编排」把诉求映射到三对象角度{deepresearch=外部知识 / ux-research=外部UX / insight-synthesis=内部一手}，默认只跑匹配到的最小集（不自动全跑防烧 token），盲区角度骑 Plan Agent 计划确认门主动推荐（不新增单独提问）。"
     hard_guard: "简单/平凡诉求 → 平凡任务豁免，绝不触发研究编排、不提示。"
     note: "recommended_paths 是写死静态启发式；诉求→动态编排是净新增行为，真值逻辑在 plan-agent.md 块2，此处仅登记对象角度与原则。tool_choice 列 5 项 = 3 对象角度（deep/ux/insight）× 深度档——quick-research/web_spike 是 deepresearch 外部角度的降档变体，非独立对象角度。"
