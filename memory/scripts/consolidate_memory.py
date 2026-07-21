@@ -580,7 +580,7 @@ def set_stable(ids: list, dry_run: bool, reviewer: str = "") -> dict:
     """
     want = {str(i) for i in ids}
     rows = read_jsonl_with_raw(CANDIDATES)
-    set_done, out_lines, found = [], [], set()
+    set_done, out_lines, found, reviewer_filled = [], [], set(), []
     for candidate, raw in rows:
         if candidate is None:
             out_lines.append(raw.rstrip())
@@ -591,14 +591,29 @@ def set_stable(ids: list, dry_run: bool, reviewer: str = "") -> dict:
             if candidate.get("proposed_stable") is not True:
                 candidate["proposed_stable"] = True
                 set_done.append(cid)
+            # 2026-07-21：人工放行同时回填候选本体的 reviewer。
+            # 缺口实证：promotion_ready 的 has_review_metadata 要求候选自带 evidence/scope/reviewer；
+            # 提案时未传 --reviewer 的候选（reviewer=""）即便人工 --set-stable 放行，仍永远卡在门禁外，
+            # 而署名只写进了 reviews.jsonl、不回流本体——与 SC-20260615-001 同型（缺一条写入路径）。
+            # 落盘条件必须含本回填：已 proposed_stable 的候选 set_done 为空，只按 set_done 落盘会把回填丢在内存里。
+            if reviewer and not str(candidate.get("reviewer", "")).strip():
+                candidate["reviewer"] = reviewer
+                reviewer_filled.append(cid)
             out_lines.append(json.dumps(candidate, ensure_ascii=False))
         else:
             out_lines.append(raw.rstrip())
-    if not dry_run and set_done:
+    if not dry_run and (set_done or reviewer_filled):
         atomic_write_text(CANDIDATES, ("\n".join(out_lines) + "\n") if out_lines else "")
         for cid in set_done:
             append_review(cid, reviewer or "unattributed", "approved_stable", "人工闸门放行：proposed_stable 置 True")
-    return {"set_stable": set_done, "already_stable": sorted(found - set(set_done)), "not_found": sorted(want - found)}
+        for cid in reviewer_filled:
+            append_review(cid, reviewer or "unattributed", "reviewer_backfilled", "人工放行时回填候选 reviewer（解 has_review_metadata 门禁）")
+    return {
+        "set_stable": set_done,
+        "reviewer_filled": reviewer_filled,
+        "already_stable": sorted(found - set(set_done)),
+        "not_found": sorted(want - found),
+    }
 
 
 def reject_candidates(ids: list, reason: str, reviewer: str, dry_run: bool) -> dict:
