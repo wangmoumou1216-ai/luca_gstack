@@ -126,3 +126,4 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 4. **insight-synthesis 两处既有漂移**：AGENTS.md 全文零出现（新 skill 已同步，它未同步）；frontmatter `self: 1800` 单位异常（实测 6094B，G5 字节口径不符）。
 5. **使用即留任预声明**：/research-kit 天然低频（kit 与 synthesis 之间隔着 luca 亲自采集）——60 天零 `skills_used` 属预期节奏，治理复盘按此判读不误降。
 6. **workflow-state 口径**：两新 skill 照 insight-synthesis 先例不自写 workflow-state（由编排层更新）——与 R3-② M2 原修法的显式偏差，依据=最新一级 skill 活先例。
+7. **窄词条已接受触达缺口**：「设计一份问卷」类倒序 prompt 零词表命中 → STOP → 语义路由契约兜底（窄词条防劫持的已接受代价；词表设计注释见 routing-map research_kit/ux_writing 条目）。

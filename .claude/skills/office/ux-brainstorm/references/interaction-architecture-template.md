@@ -76,7 +76,7 @@
 
 ### 1.6 信息架构判据（IA Heuristics）
 
-> 蒸馏自 Owl-Listener/designer-skills（MIT）information-architecture + navigation-patterns。
+> 蒸馏自 Owl-Listener/designer-skills（MIT）information-architecture（navigation-patterns 仅参考未采纳）。
 > **判据不是导航处方**——§1.3 的场景空间仍是主模型；本节用于检验场景/信息的组织质量，
 > 结论以「必须达成什么」句式写进本文档与 Packet 信息架构子字段，不替生成工具画菜单。
 
