@@ -51,6 +51,9 @@ AskUserQuestion：
 需求范围明确、不需要重型拷问时，可以用 superpowers:brainstorming 替代第3步。
 muse fork 专属：手头是一批候选需求想先筛一遍再进 /brainstorm → /muse-req-triage；
 要从需求到原型端到端自治跑完整闭环（含 GATE-1/GATE-2 人类卡点）→ /muse-loop-orchestrate。
+有假设想先做一手验证（访谈/问卷/可用性测试）→ 第3步后跑 /research-kit 设计采集工具，
+采回数据投 /insight-synthesis；要定产品内容/文案规范（voice/微文案/hedging）→ 第6步前跑
+/ux-writing（design-brief 会继承其语义结论进 Packet）。
 ```
 
 AskUserQuestion：
@@ -169,6 +172,19 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone（primary_qualitative_data 必填，数据一律用户提供、skill 不自采）
                产出：docs/research/insight-synthesis-{slug}-{date}.md
                说明：与 /idea 划界=忠实 vs 解读；外部源/发散题走 deepresearch/ux-research
+
+/research-kit  A B D     一手研究工具设计：PRD 假设/研究问题 → 访谈提纲/问卷/可用性测试
+               计划/卡片分类法方案（采集之前；三不产：不产发现/不产解读/不采集）
+               输入模式：standalone（research_question_or_hypothesis 必填）
+               产出：docs/research/research-kit-<topic>-<date>.md
+               说明：kit 武装你去采集，采回数据投 /insight-synthesis 出洞察
+
+/ux-writing    A B C D   内容与语言设计：voice/tone 规范 + 微文案系统（错误/空态/CTA/
+               hedging）+ 界面文案评审改写；D=agent 状态/hedging 文案主战场
+               输入模式：standalone；双相位（语义规范 pre-brief / 评审改写随时）
+               产出：docs/decisions/YYYY-MM-DD-<topic>-voice-copy-spec.md 或
+               docs/evaluation/YYYY-MM-DD-<topic>-ux-writing-review.md
+               说明：语义结论经 design-brief 继承进 Packet；逐字层只喂本地生成，不进 OD
 
 /brainstorm    A B D     苏格拉底拷问式 PRD（替代原 /prd）
                输入模式：standalone 或 workflow。可接受 deepresearch 报告、/idea 产出、或直接描述

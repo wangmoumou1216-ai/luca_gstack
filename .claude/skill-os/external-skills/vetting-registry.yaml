@@ -887,3 +887,15 @@ rejected:
   gates_opened: [GAP-skill-authoring-craft(addressed同批), GAP-registration-sync, GAP-lightweight-research, GAP-issue-tracker-integration]
   first_batch_landed: "installs(codebase-design/resolving-merge-conflicts/teach)+tdd刷新+skill-authoring.md+code-hygiene增强(双轴+会咬)+diagnosing-bugs四机制port进systematic-debugging；A/B: skill-authoring PASS(0.91)/code-hygiene PASS(0.65)/port 见 adoption-log"
   lesson: "P2 采证机制级 grep 漏查 skill 级已装 counterpart（diagnosing-bugs 空缺口假设被红队推翻）→ 未来 scout/对标的非冗余核验必须含 ls ~/.claude/skills + vetting-registry 双查"
+
+# ── 2026-07-21 手工追加（评估经 4 轮红队收敛循环，非 scout run；scout 重跑请对本条去重）──
+manual_vetting_2026_07_21:
+  - name: designer-skills (collection)
+    repo: Owl-Listener/designer-skills
+    url: https://github.com/Owl-Listener/designer-skills
+    type: collection
+    verdict: DISTILL-ADOPTED   # 零安装：不装任何 plugin；17 个源 SKILL.md 蒸馏成 3 references + 2 新一级 skill + 2 处增补
+    evidence: {stars: 1869, license: MIT, skills: 96, plugins: 9, verified_at: "2026-07-21", pushed_at: "2026-06-14"}
+    rationale: "冗余判定基于真实运行链（live prose+enforced 缝隙），不采信休眠件；~70% 冗余/低适配（solo 无团队无被试；OD 委托 DS 决定视觉），真 gap=HCI 力学/微文案/IA 判据/composition 评审/一手研究工具。96-skill 逐簇台账见 INTEGRATION-MAP.md 2026-07-21 节（scout 防重评以台账为准）。"
+    adopted_into: [interaction-mechanics.md, ux-writing.md, research-kit(new skill), ux-writing(new skill), interaction-architecture-template §1.6, module-a A6, output-templates Packet 指引]
+    sibling_repos_not_evaluated: [ai-design-skills, ux-pgm-skills, design-leadership-skills, inclusive-design-skills]  # ai-design-skills 或更贴 muse AI-native，后续可选侦察

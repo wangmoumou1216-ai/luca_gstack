@@ -48,7 +48,8 @@ cat .claude/current-topic.txt 2>/dev/null || true
 
 一手定性数据**一律由用户提供**：粘贴原文 / 单文件路径 / 目录批量。本 skill **不自行采集**——
 真正的数据获取（约访谈/发问卷/跑可用性测试）不是 skill 能替代的。外部系统（工单系统/研究库）
-接入属**下游项目的 MCP、opt-in**，不进 luca_gstack。拿不到数据 → 停下问用户要，不臆造语料。
+接入属**下游项目的 MCP、opt-in**，不进 luca_gstack。拿不到数据 → 停下问用户要，不臆造语料
+（还没采集？可先跑 `/research-kit` 设计采集工具——访谈提纲/问卷/测试计划，采回来再进本 skill）。
 
 ## 流程（单 agent 六步，不 fan-out）
 

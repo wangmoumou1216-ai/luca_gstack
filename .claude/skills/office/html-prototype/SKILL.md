@@ -17,9 +17,9 @@ allowed-tools:
   - WebFetch
   - AskUserQuestion
 context-cost:
-  self: 38684  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
-  runtime-estimate: 20000
-  shared-refs: [ai-native-design-framework, design-system-contract, html-prototype-tokens]
+  self: 40230  # 实测字节数 wc -c，统一口径 2026-07-04（G5）；2026-07-21 复测（ux-writing 逐字层挂载）
+  runtime-estimate: 22000  # 2026-07-21：+ux-writing（4048B，Phase 3 文案块挂载）
+  shared-refs: [ai-native-design-framework, design-system-contract, html-prototype-tokens, ux-writing]
   template: auto-detect
   recommended-model: core-execution  # 2026-07-10 承重执行档：自写HTML原型
 ---
@@ -665,6 +665,8 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 - ❌ Lorem Ipsum 填充正文（用真实的 B2B 销售场景文案）
 - ❌ 无意义的 placeholder 数据（如"客户 A"、"订单 1"）
 - ✅ 数据位置用 `[数据]` 或真实感示例（如"北京海淀科技有限公司"）
+
+**Load `.claude/skills/office/references/ux-writing.md` now — 写页面真实文案前必须完整读取**（本地生成路径逐字执行其「逐字层」：CTA=动词+宾语、错误/空态/确认文案模板、语域规范；有 voice-copy-spec 上游产物时以其为准）。
 
 **自检清单（Phase 4 产出前必过）：**
 

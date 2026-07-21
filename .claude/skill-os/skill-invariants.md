@@ -35,6 +35,9 @@
 - `docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md`
 - `docs/engineering/YYYY-MM-DD-<topic>-task-plan.md`
 - `docs/handoff/YYYY-MM-DD-<topic>-<skill>-handoff.md`
+- `docs/research/research-kit-<topic>-<YYYY-MM-DD>.md`（2026-07-21 新增；docs/research 沿用 name-first 约定）
+- `docs/decisions/YYYY-MM-DD-<topic>-voice-copy-spec.md`（2026-07-21 新增；design-brief Step 1.0b 以 `*-voice-copy-spec.md` 后缀 glob 探测）
+- `docs/evaluation/YYYY-MM-DD-<topic>-ux-writing-review.md`（2026-07-21 新增；不与 ux-audit 产出模式冲突）
 
 #### P2-V — 版本管理规则（同日多次运行）
 

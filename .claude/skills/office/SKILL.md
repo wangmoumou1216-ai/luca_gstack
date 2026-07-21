@@ -292,6 +292,9 @@ docs/prd/YYYY-MM-DD-<topic>-prd.md
 docs/prd/YYYY-MM-DD-<topic>-prd-ai-spec.md             ← AI Native 时条件产出
 docs/prd/YYYY-MM-DD-<topic>-prd-constraints.md        ← 场景B专有
 docs/research/ux-research-<topic>-YYYY-MM-DD.md
+docs/research/research-kit-<topic>-YYYY-MM-DD.md
+docs/decisions/YYYY-MM-DD-<topic>-voice-copy-spec.md    ← ux-writing 相位1
+docs/evaluation/YYYY-MM-DD-<topic>-ux-writing-review.md ← ux-writing 相位2
 docs/decisions/YYYY-MM-DD-<topic>-ux-brainstorm.md
 docs/decisions/YYYY-MM-DD-<topic>-interaction-architecture.md
 docs/decisions/YYYY-MM-DD-<topic>-design-brief.md

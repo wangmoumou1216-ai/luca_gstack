@@ -60,7 +60,7 @@ tiers:
     description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
     skills: [quick-research, idea, ux-research, ux-audit, figma-demo, challenge, taste-review,
              design-review, code-recon, muse-req-triage, muse-proto-gen,
-             compare, magicpath]
+             compare, magicpath, research-kit, ux-writing]
 
   mechanical:
     resolves_to: haiku

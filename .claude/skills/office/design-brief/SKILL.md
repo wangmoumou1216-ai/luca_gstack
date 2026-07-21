@@ -19,9 +19,9 @@ allowed-tools:
   - Bash
   - AskUserQuestion
 context-cost:
-  self: 35022  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
-  runtime-estimate: 20000
-  shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, design-system-contract]
+  self: 39572  # 实测字节数 wc -c，统一口径 2026-07-04（G5）；2026-07-21 复测（interaction-mechanics 挂载 + Step 1.0b + 内容语义规则）
+  runtime-estimate: 24000  # 2026-07-21：+interaction-mechanics（10826B ≈ +3.6K tokens，Phase 3 挂载）
+  shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, design-system-contract, interaction-mechanics]
   recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场收敛opus；本 skill 无 judge/oracle 环节
 ---
 
@@ -83,6 +83,7 @@ tradeoff** / 状态覆盖 / PRD 约束引用。
 |---|---|
 | `references/ai-native-design-framework.md`（四范式/判定矩阵/四层思考/Slop 反模式） | **Phase A** 设计坐标系前 |
 | `references/ai-native-state-coverage.md`（12 状态清单：5 传统 + 7 AI 专有） | **Phase 3** 体验验证前 |
+| `.claude/skills/office/references/interaction-mechanics.md`（HCI 交互力学：状态建模/错误恢复/决策分块/响应时序/搜索/表单校验语义） | **Phase 3** 体验验证前（场景 C 同 state-coverage 顺延到 **Phase 5 前**）。**禁转写句：其中标 `[仅供推理]` 的内容（px/对齐/布局/控件选型）不得转写进 D-series 或 Packet——那是 OD/DS 执行层；本 reference 用于状态语义推导与交互完整性评估** |
 | `references/ai-native-taste-anchors.md`（8 锚点品味体系） | **Phase 4** 品味检查前 |
 | `references/design-system-contract.md`（品牌/间距/字体/组件硬约束） | **Phase 5** 决策 8 字段化前 |
 
@@ -287,6 +288,14 @@ preamble 已探测 `_UX_BRAINSTORM`（docs/decisions/*-ux-brainstorm.md）。据
   下面【四层思考】只填"承接值 + 交互层复核结论"。
 - **无上游产出 → 独立模式**：按下面【四层思考】完整推导（design-brief standalone 原有行为）。
 
+### Step 1.0b：上游 voice-spec 继承检查（解耦 /ux-writing，同款继承模式）
+
+正文探测（不动 preamble）：`_VOICE_SPEC=$(ls -t docs/decisions/*-voice-copy-spec.md 2>/dev/null | head -1)`。
+
+- **有上游 voice-spec → 继承模式**：读取其「语义层结论」节，**承接**为既定内容语义输入——Phase 3 状态声明中的空态/错误/拒答等描述直接引用其结论（落入 brief 正文，Packet 因此可追溯）。发现冲突 → 向用户确认，不得静默覆盖。
+- **无上游 → 兜底模式**：Phase 3 用内联「内容语义规则」（见该节）自行声明。
+- **消歧**：ux-writing 语义规范与本 skill 内联规则**不并列产同类文档**——有上游则继承不重做，无则内联兜底。
+
 ```
 【四层思考】
 
@@ -381,6 +390,14 @@ Layer D · 代理层（场景 D 和涉及 agent 的功能强制）：
 ### 状态覆盖声明（12 状态全必须声明）
 
 **来源：`ai-native-state-coverage.md`。N/A 的要写原因。**
+
+**内容语义规则（写各状态「方案处理方式」时必须满足；有上游 voice-spec 则以其语义层结论为准——见 Step 1.0b；场景 C 跳过本 Phase 时本规则顺延至 Phase 5 决策的状态覆盖字段）：**
+- 错误态/幻觉兜底态描述必须含三要素：何事 + 为何（有助才写）+ 怎么办；不指责用户、无空话
+- 空态描述必须含引导动作（这里会出现什么 + 下一步）
+- 拒答态/低置信态必须用 hedging 语气（"根据…可能…"，不断言）并给出路
+- 成功态给轻确认，可逆操作附撤销语义
+- 语域统一中文 B2B（真实业务词汇，非 Lorem/口语）
+- **只声明语义（内容必须达成什么），不写逐字文案**——逐字文案属 /ux-writing 逐字层与生成阶段
 
 | 状态 | 方案处理方式 | 是否需要单独设计 |
 |------|-----------|---------------|

@@ -231,6 +231,28 @@ skills:
     quality_gates: ["observation_interpretation_split", "theme_confirmation_gate", "no_confidence_fabrication"]
     notes: "研究段第三对象角度（内部一手定性）。数据一律用户提供、skill 不自采。单 agent 六步：编码→亲和聚类→用户确认主题(AskUserQuestion 卡点)→解读跃迁；observation 带原文引用、interpretation 带置信度，两层永不混。"
 
+  research-kit:
+    modes:
+      standalone:
+        required: ["research_question_or_hypothesis"]
+        optional: ["prd_outstanding_questions", "target_audience"]
+      workflow:
+        required: ["research_question_or_hypothesis"]
+        optional: ["prd_outstanding_questions", "target_audience"]
+    quality_gates: ["non_leading_question_check", "every_item_maps_to_research_question"]
+    notes: "一手研究工具设计（采集之前）。三不产：不产发现/不产解读/不采集——kit 武装 luca 去采集，insight-synthesis 消化采回的数据，中间是人工步骤。产出 docs/research/research-kit-<topic>-<date>.md。"
+
+  ux-writing:
+    modes:
+      standalone:
+        required: ["product_context_or_copy_to_review"]
+        optional: ["prd_artifact", "ux_brainstorm_artifact", "screenshots"]
+      workflow:
+        required: ["prd_artifact"]
+        optional: ["ux_brainstorm_artifact"]
+    quality_gates: ["semantic_verbatim_layer_split", "verbatim_never_enters_packet"]
+    notes: "内容与语言设计，双相位：相位1 语义规范 pre-brief（产 voice-copy-spec，design-brief Step 1.0b 继承）；相位2 评审改写 standalone。逐字层仅 html-prototype 本地路径，永不进 OD 编译。"
+
 governance_tools:
   compare:
     modes:

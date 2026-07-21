@@ -84,3 +84,45 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 | 8 | resolving-merge-conflicts | 框架自维护 + 工程尾段 | FUSION-RUNBOOK 步⑧（squash 冲突）·sync-upstream 双仓合并·WA git 冲突 | 按意图解决冲突（先溯源 commit/PR/issue 原意，绝不发明行为） | 「never --abort」绝对化已在 vetting 记录与 sync-upstream 逃生口的冲突——harness 层用户主权优先 |
 
 （另装 teach=个人 user-invoked 零框架触面不进本表；tdd 同日刷新至 391a2701：+seam 确认门 +tautological 反模式，-deep-modules/-interface-design/-refactoring〔用户拍板不留副本；deep-modules 内容由 #7 更完整覆盖〕）
+
+## 2026-07-21 Owl-Listener/designer-skills 蒸馏采纳（DISTILL-ADOPTED，零安装）+ 2 新一级 skill
+
+> 评估：4 路第一手 fit-to-gap + 4 轮红队收敛循环（R1×3/R2×2/R3×2/R4 终验 CONVERGED；全记录
+> `~/.claude/plans/iterative-sauteeing-pond.md`）。裁决基准=**真实运行链**（live prose + enforced 缝隙），
+> 不采信休眠件覆盖。来源 MIT，https://github.com/Owl-Listener/designer-skills ，96 skill / 9 plugin。
+> **纳入判据（luca 拍板）**：使用形态——独立可点名的交付物生产者→一级 skill；宿主流程中途消费的底料→references 蒸馏。不装任何 plugin（advisory 通道=休眠陷阱，见下"三件休眠实证"）。
+
+### 蒸馏映射表（reference/skill ↔ 源 ↔ 挂载节点）
+
+| 落点 | 源（designer-skills） | 挂载/曝光 |
+|---|---|---|
+| `office/references/interaction-mechanics.md`（9 主题两组，含 Packet 可写性 tag） | interaction-design×9：form-design/state-machine/doherty-threshold/loading-states/search-ux/fitts-law/hicks-law/millers-law/error-handling-ux | ux-brainstorm Phase 7 强制 load + design-brief 必读表 Phase 3（场景 C 顺延 Phase 5 前）；禁转写句随指针 |
+| `office/references/ux-writing.md`（语义/逐字双层） | designer-toolkit/ux-writing + 本框架碎片收拢 | html-prototype Phase 3 文案块强制 load；design-brief 只内联 ≤10 行语义规则（Phase 3）+ Step 1.0b voice-spec 继承 |
+| interaction-architecture-template §1.6 IA 判据 | ux-strategy/information-architecture（+navigation-patterns 参考） | ux-brainstorm Phase 7 模板内 |
+| module-a A6 构图节 + 具名律注记 | visual-critique/critique-composition | ux-audit Module A（checklist 自引、不参与升级、权重不变） |
+| **新一级 skill /research-kit** + `references/instruments.md` | design-research×4：interview-script/survey-design/usability-test-plan/card-sort-analysis | 六处登记全套；流程位=brainstorm→kit→[人工采集]→insight-synthesis |
+| **新一级 skill /ux-writing**（双相位） | 同 ux-writing reference | 六处登记全套；相位1 pre-brief（design-brief Step 1.0b 继承）/相位2 standalone 评审 |
+| output-templates.md 围栏外 Packet 填写指引（OD 交付边界） | 红队 R1-③ 起草 + luca OD 纠偏 | design-brief Phase 6.75 消费 |
+
+新 skill 六处登记 = routing-map 窄复合词条 + `.claude/commands/` + office-wizard Step2+3 + CLAUDE.md 一级表 + input-modes.yaml + model-routing.yaml guided-execution（frontmatter 写 tier 名）。AGENTS.md 已同步两行。
+
+### 96-skill 全量台账（scout 防重评；verdict 见 vetting-registry DISTILL-ADOPTED 条目）
+
+- **interaction-design（16）**：蒸馏 9（上表）；参考未采纳 1（navigation-patterns→仅 IA 判据参考）；未采纳 6：animation-principles（tokens §7 动效已覆盖）/feedback-patterns（Norman N5+Nielsen H1 live）/gesture-patterns（桌面 CRM 低适配）/interfaces-that-feel（taste-anchors 情感层已覆盖）/micro-interaction-spec（interaction-architecture §3.2 状态流转已覆盖）/onboarding-design（冷启动态+首信任事件已覆盖，文案面归 ux-writing）。
+- **design-research（12）**：蒸馏 4→/research-kit；冗余 2：affinity-diagram/summarize-interview（insight-synthesis 两层综合更深）；未采纳 6：user-persona/journey-map（interaction-architecture §1.1-1.2 旅程线已覆盖）/jobs-to-be-done（insight-synthesis 可选 JTBD）/empathy-map/research-repository（memory 系统）/diary-study-plan（niche）。
+- **ux-strategy（12）**：蒸馏 1（information-architecture）；未采纳 11：design-brief（撞名+严格更浅于本框架 8-phase 契约）/competitive-analysis（ux-research 已含）/service-blueprint（**luca 裁决跳过**）/opportunity-framework（≈muse-req-triage）/content-strategy（部分归 ux-writing）/business-design/design-principles/experience-map/metrics-definition/north-star-vision/stakeholder-alignment（solo/企业组织语境不适配）。
+- **designer-toolkit（7）**：蒸馏 1（ux-writing）；未采纳 6：design-rationale（=design-brief 8 字段决策卡）/design-token-audit（≈verify-prototype token lint）/case-study/presentation-deck/design-negotiation/design-system-adoption（团队/作品集语境）。
+- **visual-critique（7）**：蒸馏 1（critique-composition→A6）；未采纳 6：critique-color/typography/visual-hierarchy（module-a+design-system-contract live 已覆盖）/information-density（taste-anchors Attio）/affordance（module-b Norman N1/N2/N7）/brand-consistency（预设 mood/voice 文件本框架不产）。
+- **ui-design（14）**：全未采纳——字阶/色板/间距/层级由 live `design-system-contract.md`+`html-prototype-tokens.md` 覆盖，data-visualization 由内置 dataviz（含可跑 CVD validator）覆盖，且 OD 架构把视觉决策委托所选 DS；Gestalt proximity 已以具名律注记进 module-a，von Restorff/common-region 等法则名未采纳（机制已 live，仅缺名）。
+- **design-systems（11）**：全未采纳——原型优先架构不维护常驻多品牌 DS；accessibility-audit=module-b WCAG 2.1 AA 已覆盖。若未来转向常驻 DS 维护再议（governance/token/theming/i18n/motion 挑件）。
+- **design-ops（9）**：全未采纳——6 个团队仪式类 solo 不适配；handoff-spec=handoff-protocol 已覆盖；design-qa-checklist≈verify-prototype；design-debt-audit≈ux-audit+retro。
+- **prototyping-testing（8）**：全未采纳——heuristic-evaluation=module-b（Nielsen 0-4 已 live）；wireframe-spec/user-flow-diagram/prototype-strategy=html-prototype/ux-brainstorm 已覆盖；a-b-test-design/click-test-plan/test-scenario 需真实被试；accessibility-test-plan 的 AT 协议 latent（无被试场景）。
+
+### 附带登记（独立议题，非本次改动面）
+
+1. **三件休眠实证**（2026-06-07 批次）：ui-ux-pro-max / design-system-architect / extract-design-system 全部处于休眠——不在路由、仅 rules.yaml advisory 注入、无 gate，实际零使用（luca 证言+机制核验 route-guard soft-candidate 不读 description）。处置（蒸馏/卸载/保留）待另立治理 session 裁决。**教训已入库**：advisory 通道=休眠轨迹；enforced 缝隙=路由/SKILL.md 强制 load/blocking gate。
+2. **Packet 既有两处越界**（先于本计划）：output-templates「组件结构」块 shadcn 词表压进 OD 主输入；「品牌与视觉约束」第 2 行与 open-design SKILL 的 FxUI 收窄口径矛盾。已在围栏外指引中加警示；是否收窄两块待 luca 裁决。
+3. **module-a 分数漂移提示**：A6 新增后可检出项变多→与历史 audit 分数不可直接比（基线不连续点 2026-07-21）。
+4. **insight-synthesis 两处既有漂移**：AGENTS.md 全文零出现（新 skill 已同步，它未同步）；frontmatter `self: 1800` 单位异常（实测 6094B，G5 字节口径不符）。
+5. **使用即留任预声明**：/research-kit 天然低频（kit 与 synthesis 之间隔着 luca 亲自采集）——60 天零 `skills_used` 属预期节奏，治理复盘按此判读不误降。
+6. **workflow-state 口径**：两新 skill 照 insight-synthesis 先例不自写 workflow-state（由编排层更新）——与 R3-② M2 原修法的显式偏差，依据=最新一级 skill 活先例。

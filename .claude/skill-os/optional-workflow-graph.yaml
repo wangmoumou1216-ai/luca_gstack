@@ -31,6 +31,7 @@ research_default:
     quick-research: "明确单题、需读一手文档/源码、值得落盘（三档中档，2026-07-12 增）"
     web_spike: "极窄单点事实（就地一查，不落盘）"
     insight-synthesis: "用户自己的一手定性数据(访谈/工单/回访)→洞察（第三**对象角度**：内部一手，非深度档；2026-07-20 追加项 C）"
+    research-kit: "一手采集**工具设计**（访谈提纲/问卷/测试计划/卡片分类）——内部一手角度的**采集之前**环节：还没有一手数据、需要 luca 亲自去采时先跑它；产出喂[人工采集]→insight-synthesis（2026-07-21）"
   angle_orchestration:            # 追加项 C（2026-07-20）：诉求→对象角度动态组合，非写死路径
     object_angles: [deepresearch, ux-research, insight-synthesis]  # 结构化 skill 引用（SSOT-8b 校验；prose 不可靠校验故单列此字段，改名即被 checker 抓）
     principle: "给一个诉求时，Plan Agent 块2「研究方向编排」把诉求映射到三对象角度{deepresearch=外部知识 / ux-research=外部UX / insight-synthesis=内部一手}，默认只跑匹配到的最小集（不自动全跑防烧 token），盲区角度骑 Plan Agent 计划确认门主动推荐（不新增单独提问）。"
@@ -45,6 +46,8 @@ scenes:
       - ["idea", "brainstorm", "design-brief", "open-design"]
       - ["idea", "superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "open-design"]  # 自带一手定性数据：先综合出洞察再 PRD（追加项 C）
+      - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "design-brief", "open-design"]  # PRD 假设→采集工具→[luca 亲自采集]→洞察（research-kit 2026-07-21）
+      - ["idea", "brainstorm", "ux-brainstorm", "ux-writing", "design-brief", "open-design"]  # 内容规范 pre-brief：voice-copy-spec 产出后 design-brief Step 1.0b 继承（ux-writing 2026-07-21）
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达 / 要本地 HTML 时降级（magicpath/html-prototype 保留不删）
@@ -58,6 +61,7 @@ scenes:
       - ["ux-audit", "design-brief", "open-design"]
       - ["superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["insight-synthesis", "ux-research", "ux-brainstorm", "design-brief", "open-design"]  # 有工单/回访一手数据：综合洞察 + 外部竞品（追加项 C）
+      - ["research-kit", "insight-synthesis", "ux-brainstorm", "design-brief", "open-design"]  # 先设计采集工具摸问题→[采集]→洞察（research-kit 2026-07-21）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
@@ -77,6 +81,7 @@ scenes:
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
       - ["ux-brainstorm", "design-brief", "open-design"]
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "open-design"]  # 有一手用户/使用数据：先综合洞察再 Agent 化设计（追加项 C）
+      - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "ux-writing", "design-brief", "open-design"]  # Agent 化全链：摸用户心智 + hedging/agent 状态文案规范（2026-07-21）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
@@ -94,6 +99,13 @@ handoff_gates:
       - "prd_outstanding_questions.resolve_before_planning is not empty"
     allow_standalone_override: true
     override_requires: "user explicitly chooses standalone downstream with missing context acknowledged; no override allowed for fabrication or hidden omission risk"
+
+  research_kit_to_insight_synthesis:
+    applies_when: "workflow_mode"
+    block_if:
+      - "research_questions missing in research-kit output"
+    allow_standalone_override: true
+    note: "kit 与 synthesis 之间隔着 luca 亲自采集（人工步骤，gate 不阻塞等待、不设时限）；synthesis 拿别处数据可独立跑，kit 单独出工具也合法。kit 产出的研究问题清单是 synthesis Step 1 定标输入。"
 
   ux_brainstorm_to_design_brief:
     applies_when: "workflow_mode"

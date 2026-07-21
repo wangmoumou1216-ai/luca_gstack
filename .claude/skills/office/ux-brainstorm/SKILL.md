@@ -10,9 +10,9 @@ description: >
   'write design proposal', '设计方案'。
 argument-hint: "[path to ux-research markdown file, or empty for cold-start mode]"
 context-cost:
-  self: 36990  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
-  runtime-estimate: 60000
-  shared-refs: [ai-native-design-framework]
+  self: 37861  # 实测字节数 wc -c，统一口径 2026-07-04（G5）；2026-07-21 复测（interaction-mechanics 挂载）
+  runtime-estimate: 64000  # 2026-07-21：+interaction-mechanics（10826B，Phase 7 挂载）
+  shared-refs: [ai-native-design-framework, interaction-mechanics]
   recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场交互降opus，Oracle对抗环节按fable_whitelist P1单独dispatch fable
 ---
 
@@ -563,6 +563,8 @@ Phase 5不可跳过。即使用户在Phase 3触发了逃生舱，Oracle审查仍
 ## Phase 7: 生成交互架构文档
 
 **加载 `references/interaction-architecture-template.md`。**
+**Load `.claude/skills/office/references/interaction-mechanics.md` now — 交互架构设计前必须完整读取。**
+（边界注：其中标 `[仅供推理]` 的内容——px/对齐/布局/控件选型——**禁入一切下游交付物**（含本交互架构文档），仅用于方案推理；只有 `[语义可入 Packet]` 的结论可以「必须达成什么」句式写进架构文档。）
 
 ### 7.1 — 前置条件
 

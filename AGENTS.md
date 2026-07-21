@@ -284,6 +284,11 @@ Use `.claude/skill-os/input-modes.yaml` to decide whether a skill is running in 
 - Workflow gates are advisory unless the user chose workflow mode. Quality gates remain mandatory in both modes.
 - Do not silently force `/idea -> /brainstorm -> ...` when the user directly asks for
   `/ux-research`, `/ux-brainstorm`, `/design-brief`, `/open-design`, or `/html-prototype`.
+- New first-class skills (2026-07-21, same routing semantics as CLAUDE.md 一级表): `/research-kit`
+  (一手研究工具设计——访谈提纲/问卷/可用性测试计划/卡片分类法；三不产：不产发现/不产解读/不采集；
+  triggers: 访谈提纲/访谈脚本/问卷设计/可用性测试计划/卡片分类法) and `/ux-writing`（内容与语言设计
+  ——voice/tone 规范+微文案+文案评审；语义层 pre-brief 供 design-brief 继承，逐字层仅本地生成不进 OD；
+  triggers: 微文案/界面文案/UX文案/空态文案/错误文案/文案规范）。
   (`figma-demo` is hidden since 2026-07-03 — no slash entry; reachable only via internal
   Skill-tool dispatch.)
 

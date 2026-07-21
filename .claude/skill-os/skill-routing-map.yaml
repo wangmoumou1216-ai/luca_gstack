@@ -139,6 +139,22 @@ project_skills:
     # 复合触发短语，避免裸"用户"单字（撞 ux-research）。
     triggers: [访谈综合, 访谈洞察, 工单综合, 定性综合, 一手资料提炼洞察, 把访谈变成洞察, 区分观察与解读, 亲和图]
 
+  research_kit:
+    invoke: "/research-kit"
+    weight: 6
+    # 一手研究工具设计（2026-07-21）：假设→采集工具（访谈提纲/问卷/测试计划/卡片分类法）。三不产：不产发现/不产解读/不采集。
+    # 故意不收裸"访谈/问卷/可用性测试"——裸访谈与 insight_synthesis 复合词 substring 撞（等权 tie→MULTI）、裸词太泛。
+    # "卡片分类"收窄为"卡片分类法/开放式卡片分类"——裸词兼是 UI 布局措辞（"列表按卡片分类展示"会误发）。
+    triggers: [访谈提纲, 访谈脚本, 问卷设计, 可用性测试计划, 卡片分类法, 开放式卡片分类]
+
+  ux_writing:
+    invoke: "/ux-writing"
+    weight: 6
+    # 内容与语言设计（2026-07-21）：voice/tone 规范 + 微文案系统 + 界面文案评审改写。双相位：语义规范 pre-brief / 逐字评审 standalone。
+    # 故意不收裸"文案/copy/tone"——通用词劫持无关 prompt（copy this file 类）。
+    # 已知误触边："错误文案"在排障语境可能命中（"页面上错误文案显示 undefined"）——回归 prompt 已登记，误发率可接受（该语境多半也确是文案问题）。
+    triggers: [微文案, 界面文案, UX文案, 空态文案, 错误文案, 文案规范]
+
 # ── Built-in Claude Code skills (globally installed) ─────────────────────────
 builtin_skills:
 
