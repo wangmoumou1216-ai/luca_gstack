@@ -86,4 +86,26 @@
 - **Wave 2 复核员自身留了痕迹**：`settings.local.json` 多一行（harness 自动追加 permissions）。该文件行数不适合作为稳定计数证据。
 - **待办（本 Pass 收尾清单，不靠记性）**：本轮核心发现（「延后项的触发器从未被验证是否可观测」）是 `SC-20260715-001` 在延后决定上的复发，属**适用面扩展**。源头已修（BACKLOG 抬头新纪律），故不新增 semantic 事实；若后续再复发一次，走 `propose_semantic.py` 提候选。
 
+---
+
+## 七、Wave 4 独立复审结果（复审者不知修复过程，只拿原始问题描述验现状）
+
+判决：**2 RESOLVED / 2 PARTIALLY_RESOLVED / 1 NOT_RESOLVED**。已按结果补修，补修后复测全绿。
+
+### 抓到的两个真问题（已修，均有双向咬合证据）
+
+1. **NOT_RESOLVED → 已真接线**：GAP 重访条件字段化那步是**假修复**——我给 loader prompt 加了抽取指令，但 `LOADER_SCHEMA.gaps.items.properties` 没声明 `revisit_when`/`revisit_status`，结构化输出会被 schema 剥掉；且下游 `gapsText`/`openGapIds`/`gapsCovered` 全不读它，工作流 return 里也没有。
+   **这正是 `SC-20260715-001`（只建采集端不接消费端）在我自己手上复发一次，而本 Pass 的主题就是修它。**
+   补修：schema 声明两字段 + 计算 `revisitDue` + 落进 `return.revisit_due` + `session-restore` 的 digest 强制项从「三件套」升为「四件套」。用代码同款过滤逻辑对真实 `gaps-register.yaml` 跑通，`GAP-self-evolution-hardening` 正确浮出。
+2. **误报 bug（真 bug）**：`supersedes` 判空写成 `str(fact.get(field, "")).strip()`，YAML 里 `supersedes:`（空值）解析为 `None` → `str(None) == "None"` → 判非空 → **合法状态下误 FAIL**。改为 `str(fact.get(field) or "").strip()`（与 `consolidate_memory.py` 同款）。双向咬合：空值 → PASS（不再误报）；真值 → 仍 FAIL（绊线未失效）。
+
+### 复审指出的遗留（未修，如实记）
+
+- **#1 后半段未修**：`consolidate_memory.py:510-511` 的 `fact_id in content` 全文匹配仍在（写侧误判"已镜像"）。净效果是「静默消失」这一危害已被读侧硬门堵住，**源头 bug 未修**。
+- **⚠️ 新增的工作流摩擦（值得你知道）**：`sync_claude_fallback` 只在晋升那一刻被调用。对一条**已晋升**的事实往白名单里加 id，会立刻让 verify/pre-commit/CI 变红，且没有工具能补做镜像，只能手改 CLAUDE.md。**白名单编辑从此必须与 CLAUDE.md 同一次改动**（原子操作）。
+- **#2 核心症状未变**：读侧仍不消费 `supersedes`，新旧事实照样并列返回。本 Pass 加的是**绊线**（发生即硬失败），不是过滤器。写侧 `--supersedes` 能力事实上被封，直到读侧补齐。
+- **#3 只覆盖本地**：CI 显式排除 `verify.sh`（依赖本地软链），CI 的 yaml job 仍只覆盖 2 个文件 → 那 4 个真值源的语法门只存在于**本地 pre-commit**，且 `FAST_COMMIT=1` 可绕过。按原问题字面（"无任何自动调用者"）已解决，按"CI 覆盖"未解决。
+- **#5 无回归护栏**：`append_run_log.py` 本体零改动零守卫，谁跑了都照样建文件；且将来谁把那段 ⛔ 说明删回原样，没有检查会发现。要真闭合，最省事是脚本入口加 FREEZE 拒绝执行 + 一条能力锚点断言。
+- **环境事实**：`.claude/settings.json` 的 `env` 写死 `MEMORY_ROOT=/Users/luca/Desktop/luca_gstack` → 本检出跑 `check:memory-health` 用的是**本检出的脚本 + 母版的数据/CLAUDE.md**。两处 CLAUDE.md 当前一致故无害，但**母版检出尚未 pull**，它自己跑 verify.sh 时用的还是旧脚本——建议在母版跑一次 `git pull`。
+
 <!-- FILE_END: 2026-07-21-consolidation-close -->

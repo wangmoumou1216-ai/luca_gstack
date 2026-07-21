@@ -72,6 +72,10 @@ const LOADER_SCHEMA = {
           statement: { type: 'string' },
           severity: { type: 'string' },
           desired_capability_keywords: { type: 'array', items: { type: 'string' } },
+          // 自设重访条件（可缺省）。曾写在 YAML `#` 注释里 → safe_load 丢弃、schema 不声明即被剥掉，
+          // 条件满足也无人可能发现（2026-07-21 实证：GAP-self-evolution 超阈值 4.6 倍无人知）。
+          revisit_when: { type: 'string' },
+          revisit_status: { type: 'string' },
         },
         required: ['id', 'dimension', 'severity'],
       },
@@ -120,6 +124,12 @@ const existingNames = new Set((ctx.existing_names || []).map(s => String(s).toLo
 const existingRepos = new Set((ctx.existing_repos || []).map(s => String(s).toLowerCase()))
 const gapsText = gaps.map(g => `- ${g.id} [${g.dimension}/${g.severity}] ${g.statement || ''} (keywords: ${(g.desired_capability_keywords || []).join(', ')})`).join('\n')
 const openGapIds = gaps.map(g => g.id)
+// 自设重访条件已满足的 gap → 进 digest 首节强制裁决项（与 addressed_recheck 同级）。
+// 只声明字段不接消费端 = SC-20260715-001 红线，故此处必须落到 return。
+const revisitDue = gaps
+  .filter(g => String(g.revisit_status || '').trim().toUpperCase().startsWith('MET'))
+  .map(g => ({ id: g.id, revisit_when: g.revisit_when || '', revisit_status: g.revisit_status, statement: g.statement || '' }))
+if (revisitDue.length) log(`⚠️ ${revisitDue.length} 个 gap 的自设重访条件已满足，须在 digest 首节单列待裁：${revisitDue.map(g => g.id).join(', ')}`)
 log(`Loaded ${sources.length} active sources, ${gaps.length} open gaps, ${existingNames.size} existing names, ${existingRepos.size} vetted repos`)
 
 // ── schemas ─────────────────────────────────────────────────────────────────
@@ -412,10 +422,11 @@ for (const g of gaps) gapsCovered[g.id] = approved.filter(v => v.gap_id === g.id
 return {
   run_date: runDate,
   red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); NOT routed through consolidate_memory; 热度≠适配',
-  // digest 首节三件套（均为强制裁决项，不是可选附录）：
+  // digest 首节四件套（均为强制裁决项，不是可选附录）：
   adoption_review: adoptionReview || { entries: [], review_notes: 'adoption-review agent 未返回' },
   prior_opportunities_to_adjudicate: (ctx.prior_opportunities || []),
   addressed_recheck: (ctx.addressed_recheck || []),
+  revisit_due: revisitDue,   // 自设重访条件已满足的 open gap（2026-07-21 补；此前字段无消费端）
   stats: {
     raw: raw.length, unique: deduped.length, verified: judged.length,
     approved: approved.length, conditional: conditional.length,

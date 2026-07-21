@@ -58,7 +58,9 @@ def main() -> int:
             if not isinstance(fact, dict):
                 continue
             for field in ("supersedes", "valid_until"):
-                if str(fact.get(field, "")).strip():
+                # `or ""` 而非 get(field, "")：YAML 里写 `supersedes:` 空值解析成 None，
+                # str(None) == "None" 会被判非空而误触发（与 consolidate_memory.py 同一写法对齐）
+                if str(fact.get(field) or "").strip():
                     errors.append(
                         f"{fact.get('id', '?')}: 带 {field} 但读侧过滤尚未实现（BACKLOG #2）——"
                         f"先补 get_memory/search_memory 的 parse_semantic_facts 过滤，再解除本断言"
