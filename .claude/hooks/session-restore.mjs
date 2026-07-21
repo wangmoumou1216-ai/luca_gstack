@@ -339,7 +339,8 @@ try {
   }
 } catch { }
 
-// person 层记忆候选提示（独立于 digest 预览——digest 只显示前 14 行且每份只展示一次，候选排后面会不可见）
+// person 层记忆候选提示（独立于 digest 预览——digest 预览虽已覆盖「待你裁决」整节，但仍有 40 行上限
+// 且每份只展示一次，person 候选排在该节之后仍可能不可见）
 try {
   const globalMemDir = process.env.GLOBAL_MEMORY_DIR
     || join(homedir(), '.claude', 'projects', '-Users-luca-Desktop-luca-gstack', 'memory');
@@ -375,15 +376,25 @@ try {
         // 预览窗按「待你裁决」整节收尾，而非固定 14 行（2026-07-21 BACKLOG #17 实证：该节标题
         // 恰在第 14 行、条目在 15-20 行，全部被切在窗外——队列"每日贴脸"20 天实为从未送达）。
         // 硬上限 40 行防刷屏；找不到该节时退回原 14 行行为。
-        const digestLines = readFileSync(join(digestsDir, newest), 'utf8').split('\n');
-        let end = 14;
-        const decideAt = digestLines.findIndex(l => /^#{1,3}\s.*待你裁决/.test(l));
-        if (decideAt >= 0) {
-          let sectionEnd = digestLines.findIndex((l, i) => i > decideAt && /^#{1,3}\s/.test(l));
+        const digestPath = join(digestsDir, newest);
+        const digestLines = readFileSync(digestPath, 'utf8').split('\n');
+        const MAX_PREVIEW = 40;   // 硬上限防刷屏
+        const decideAt = digestLines.findIndex(l => /^#{1,6}\s.*待.*裁决/.test(l));
+        let picked;
+        if (decideAt < 0) {
+          picked = digestLines.slice(0, 14);   // 无该节 → 退回原行为
+        } else {
+          let sectionEnd = digestLines.findIndex((l, i) => i > decideAt && /^#{1,6}\s/.test(l));
           if (sectionEnd < 0) sectionEnd = digestLines.length;
-          end = Math.min(Math.max(end, sectionEnd), 40);
+          const head = digestLines.slice(0, Math.min(14, decideAt));
+          const section = digestLines.slice(decideAt, Math.min(sectionEnd, decideAt + Math.max(0, MAX_PREVIEW - head.length)));
+          const skipped = decideAt - head.length;
+          picked = skipped > 0 ? [...head, `…（略过 ${skipped} 行）`, ...section] : [...head, ...section];
+          // 截断必须可见：静默停在半截等于把 #17 的原故障（待办被切在窗外且看不出）原样重装一遍
+          const cut = sectionEnd - (decideAt + section.length);
+          if (cut > 0) picked.push(`…（「待你裁决」还有 ${cut} 行未显示，全文见 ${digestPath}）`);
         }
-        const preview = digestLines.slice(0, end).join('\n').trim();
+        const preview = picked.join('\n').trim();
         process.stdout.write(`[session-restore] 🌱 成长摘要 (${newest}，每个 digest 只提示一次):\n${preview}\n\n`);
       }
     }

@@ -311,10 +311,21 @@ def load_archive_episodes() -> list[dict]:
     archive_dir = MEMORY_DIR / "episodic" / "archive"
     if not archive_dir.is_dir():
         return []
+    # noisy-*.jsonl 是「因是噪音而归档」的记录，与本开关初衷相悖，不并入检索面
+    hot_ids = {str(r.get("id")) for r in read_jsonl(EPISODIC_INDEX) if r.get("id")}
     rows: list[dict] = []
+    seen: set[str] = set()
     for path in sorted(archive_dir.glob("*.jsonl")):
+        if path.name.startswith("noisy"):
+            continue
         try:
             for row in read_jsonl(path):
+                rid = str(row.get("id") or "")
+                # 与热窗同 id 的归档副本跳过，否则同一条经验返回两行、各占一个 limit 名额
+                if rid and (rid in hot_ids or rid in seen):
+                    continue
+                if rid:
+                    seen.add(rid)
                 row["_src"] = path       # 逐行标注真实来源，供 search() 正确溯源
                 rows.append(row)
         except Exception:
@@ -584,7 +595,7 @@ def main() -> int:
                     for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip()
                 ) if archive_dir.is_dir() else 0
                 if n_arch:
-                    print(f"（另有 {n_arch} 条已归档 episodic 不在检索面——查更早经验可 grep memory/episodic/archive/）")
+                    print(f"（另有 {n_arch} 条已归档 episodic 不在检索面——加 --include-archive 并入本次检索，或 grep memory/episodic/archive/）")
             except Exception:
                 pass
     return 0

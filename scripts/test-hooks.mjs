@@ -953,4 +953,28 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-011 pin 绑定词边界：amusement 不误绑，点名 muse 正常绑');
 }
 
+// ── DIGEST-001（BACKLOG #17 送达链，2026-07-21）：digest「待你裁决」标题的**生产端与消费端必须咬住** ──
+// 生产端 daily_governance.py 写标题、消费端 session-restore.mjs 用正则定位它来决定预览窗。
+// 二者此前零耦合：改标题措辞/层级 → 预览静默退回 14 行、待办重新被切在窗外且无人察觉。
+{
+  const govSrc = readFileSync(resolve(projectRoot, 'memory/scripts/daily_governance.py'), 'utf8');
+  const restoreSrc = readFileSync(sessionRestoreHook, 'utf8');
+
+  const headingLine = govSrc.split('\n').find(l => l.includes('待') && l.includes('裁决') && l.includes('##'));
+  assert.ok(headingLine, '生产端 daily_governance.py 必须仍写出「待…裁决」小节标题');
+  // 还原成 digest 里的真实字面量（f-string 占位符换成样例值）
+  const rendered = headingLine.slice(headingLine.indexOf('##')).replace(/\{[^}]*\}/g, '7').replace(/["'\],]+\s*$/, '');
+
+  const reMatch = restoreSrc.match(/const decideAt = digestLines\.findIndex\(l => (\/.+?\/)\.test\(l\)\)/);
+  assert.ok(reMatch, '消费端 session-restore.mjs 必须仍用正则定位该节（预览窗算法未被改走）');
+  const consumerRe = new RegExp(reMatch[1].slice(1, -1));
+  assert.ok(consumerRe.test(rendered),
+    `消费端正则 ${reMatch[1]} 匹配不到生产端标题 ${JSON.stringify(rendered)}——送达链已断：` +
+    'digest 预览会静默退回 14 行，「待你裁决」条目重新被切在窗外（BACKLOG #17 原故障）');
+
+  assert.ok(/还有 \$\{cut\} 行未显示|未显示/.test(restoreSrc),
+    '预览截断必须可见（带剩余行数指示），否则等于把 #17「看不出被切」的原故障重装一遍');
+  console.log('PASS DIGEST-001 「待你裁决」标题生产端↔消费端正则咬合，且截断可见');
+}
+
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

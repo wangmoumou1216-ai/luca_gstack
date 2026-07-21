@@ -255,7 +255,13 @@ def check_gap_recheck():
                 if not at:
                     issues.append(f"gaps-register: {gid} 标 addressed 但缺 addressed_at，复核窗无法计算")
                     continue
-                at_d = at if hasattr(at, "year") else datetime.strptime(str(at), "%Y-%m-%d").date()
+                # 逐 gap 容错：单条坏日期不得让整轮检查失明（否则一个 'not-a-date'
+                # 会把其余所有超期项与 revisit-MET 项一起静默吞掉，且报错不含犯错 id）
+                try:
+                    at_d = at if hasattr(at, "year") else datetime.strptime(str(at), "%Y-%m-%d").date()
+                except Exception:
+                    issues.append(f"gaps-register: {gid} 的 addressed_at={at!r} 不是合法日期（YYYY-MM-DD），该条复核窗无法计算")
+                    continue
                 age = (today_d - at_d).days
                 if age > recheck_days:
                     due.append(f"{gid}({age}天)")
@@ -677,7 +683,7 @@ def main() -> int:
     for e in eps:
         by_project.setdefault(e.get("project", "(未分项目)") or "(未分项目)", []).append(e)
 
-    # 标题行带异常计数：session-restore 预览只显示前 14 行，⚙️ 小节固定在 digest 尾部
+    # 标题行带异常计数：session-restore 预览覆盖「待你裁决」整节（上限 40 行），⚙️ 小节固定在 digest 尾部
     # 必被截断——计数进标题才保证异常在预览可见（评审切面 c C2 第二层，2026-07-15）。
     title_suffix = f"（⚙️ Loop 异常 {len(loop_anomalies)}）" if loop_anomalies else ""
     lines = [f"# 成长摘要 — {today}{title_suffix}", ""]
