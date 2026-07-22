@@ -138,7 +138,7 @@
 
 | 设计师口语 | 组件类型 | 默认行为 |
 |-----------|---------|---------|
-| 大按钮 / 主按钮 | Button primary | bg-primary text-white rounded-md py-2 px-4 |
+| 大按钮 / 主按钮 | Button primary | bg-primary text-primary-foreground rounded-md py-2 px-4 ⚠️见下注 |
 | 小按钮 / 次要按钮 | Button outline | border border-n05 text-n19 rounded-md py-1.5 px-3 |
 | 文字按钮 / 链接按钮 | Button ghost | text-primary hover:underline |
 | 输入框 / 搜索框 | Input | border border-n05 rounded-md p-2 text-13 |
@@ -147,6 +147,11 @@
 | 标签 / Tag | Badge | bg-page-bg text-n15 rounded px-2 py-0.5 text-12 |
 | 头像 | Avatar | rounded-full overflow-hidden |
 | 分割线 / 横线 | Divider | border-t border-n05 |
+
+> **⚠️ 主按钮前景色注记（2026-07-22）：** 原值 `text-white` 已改为 `text-primary-foreground`（走 token，不再写死白）。
+> 注意 token 默认仍是白色，而 `#FF8000` + 白字实测 **2.52:1**，不满足 WCAG AA。
+> **面向欧美 / 受 EAA·ADA 影响的项目必须覆盖为近黑 `#181C25`（6.77:1）**。
+> 完整实测表与两条合规解见 `brand-tokens.md` §无障碍合规注记。
 | 卡片 | Card | bg-white rounded-lg border border-n05 p-4 |
 | 弹窗 / 模态框 | Modal | fixed inset-0 + 遮罩 + 居中卡片 |
 | 抽屉 / 侧边抽屉 | Drawer | fixed right-0 top-0 h-full + 遮罩 |

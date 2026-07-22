@@ -85,7 +85,13 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 **FxUI Token 块（只叠这两类，其余全交所选 design system，不指定、不覆盖、不冲突）：**
 ```
 ## FxUI 品牌叠加（仅两类；其余配色/字体/字号/布局沿用本项目所选 design system，不要指定、不要覆盖它）
-- 品牌色：#FF8000（主按钮/主操作/激活/品牌强调，其上文字白色；替代 design system 原强调色；全页≤3处）
+- 品牌色：#FF8000（主按钮/主操作/激活/品牌强调；替代 design system 原强调色；全页≤3处）
+  **其上文字色必须显式声明，不得留空、不得默认白色**（白字实测 2.52:1，不满足 WCAG AA 正文 4.5:1，
+  连非文本 3:1 都不过）。二选一，按项目市场取：
+  · **近黑 `#181C25`（6.77:1 ✓）** — 面向欧美 / 受 EAA·ADA 影响 / 客户合同写明无障碍要求时**必须**用这条；
+    品牌色值零改动，与 Carbon `warning #F1C21B`、Polaris `caution #FFE600` 处理亮暖色的做法一致
+  · 白色 `#FFFFFF`（2.52:1 ✗ 不合规） — 仅国内市场且项目显式接受该风险时可用，**必须在 brief 里写明是有意选择**
+  （上游 design-brief 的 Packet 若已声明前景色，以它为准，不在此二选）
 - 文字颜色：主文字 #181C25；次要文字 #91959E
 （不指定字体 family、不指定字号、不用 FxUI 的语义色/分割线/页面底/卡片底——这些一律交给所选 design system 默认）
 ```
