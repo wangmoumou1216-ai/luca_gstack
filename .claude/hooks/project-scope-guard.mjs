@@ -32,7 +32,7 @@
 //  拒绝：  {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"…"}}
 //         （reason 会展示给模型，模型可据此改用 switch/new）。
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 function out(obj) { try { process.stdout.write(JSON.stringify(obj) + '\n'); } catch { } }
@@ -122,7 +122,48 @@ function detectProjectSwitch(cmd) {
   return null;
 }
 
+// framework/ 只读母版保护（SF-002 宪法红线，保护磁盘母版资产）。与项目隔离正交——纯拒绝、不重定向。
+// 此前只有 post-edit 事后 stdout 警告（还只覆盖 Write/Edit、对 Bash 向量全盲）；这里升级为 PreToolUse
+// 事前 deny。保守边界（宁漏勿误伤）：Write/Edit 走 file_path 精确判定（零误伤）；Bash 只拦 framework/
+// 紧跟明确写信号（重定向 / sed -i / tee / rm|truncate|dd），**故意不拦 cp/mv**——它们的 framework/
+// 可能在读源位（html-prototype 复制母版是 `cp framework/src dest`），字符串难区分源/目标，拦了误伤高频
+// 读源。漏防 cp/mv 写目标是接受的权衡（罕见），等真发生一次再收紧。
+// escape：marker 文件 .claude/.allow-framework-write 或 env ALLOW_FRAMEWORK_WRITE=1（母版正当维护）。
+function isFrameworkPath(p) {
+  const s = String(p || '').replace(/^\.\//, '');
+  return s === 'framework' || s.startsWith('framework/') || s.includes('/framework/');
+}
+function frameworkEscapeActive() {
+  if (process.env.ALLOW_FRAMEWORK_WRITE === '1') return true;
+  try { return existsSync(join(claudeDir, '.allow-framework-write')); } catch { return false; }
+}
+function frameworkWriteDeny(tool, inp) {
+  if (frameworkEscapeActive()) return null;
+  if (/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(tool)) {
+    const p = inp.file_path || inp.notebook_path || '';
+    return isFrameworkPath(p) ? String(p) : null;
+  }
+  if (tool === 'Bash') {
+    const cmd = String(inp.command || '');
+    const writeSignals = [
+      />>?\s*framework\//,                              // > framework/  >> framework/
+      /\btee\s+(?:-\S+\s+)*framework\//,                 // tee framework/
+      /\bsed\s+-i\S*\s+[^|;&]*\bframework\//,             // sed -i ... framework/
+      /\b(?:rm|truncate|dd)\s+[^|;&]*\bframework\//,      // rm/truncate/dd ... framework/
+    ];
+    return writeSignals.some((re) => re.test(cmd)) ? 'framework/（Bash 写信号）' : null;
+  }
+  return null;
+}
+
 function main() {
+  // framework/ 只读保护先于项目隔离（正交，两者都可能命中同一次调用；framework 写一律不放行）
+  const fwHit = frameworkWriteDeny(toolName, input);
+  if (fwHit) {
+    return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+      permissionDecisionReason: `framework/ 是只读母版保护区（SF-002 宪法红线）：「${fwHit}」被拒。原型/演示应把母版复制到项目目录再改，绝不原地写 framework/。确需维护母版本身 → touch .claude/.allow-framework-write（改完 rm）或设 env ALLOW_FRAMEWORK_WRITE=1 后重试。` } });
+  }
+
   let pin = readPin();
 
   // Bash 先处理，且优先识别命令位的 project.sh switch/new —— 直接 CLI 切换（! 命令）route-guard 看不到，

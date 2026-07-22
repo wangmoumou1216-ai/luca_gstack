@@ -128,3 +128,4 @@ docs
 # external-skill: extract-design-system runtime output (竞品 tokens — keep out of env repo)
 .extract-design-system/
 design-system/
+.claude/.allow-framework-write

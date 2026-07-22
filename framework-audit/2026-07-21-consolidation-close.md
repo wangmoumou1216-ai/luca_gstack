@@ -60,14 +60,14 @@
 |---|---|---|
 | **D1** | ✅ **做了** | `session-restore.mjs` 预览从 `slice(0,14)` 改为按「待你裁决」整节收尾（上限 40、截断可见）。窗口 14→23，6 条超期候选进入启动提示。未加第 6 个 stdout 块。补 `DIGEST-001` 回归断言咬住生产端↔消费端 |
 | **D2** | ✅ **做了** | `search_memory.py --include-archive`，不默认并入。含溯源修正 + noisy 排除 + 同 id 去重。补 2 个回归用例 |
-| **D3** | 🔻 **裁不做（两方案都不选）** | ①append observations 是**假解决**——`post-edit.mjs:54` 只在 Write/Edit 执行，真正漏的 Bash 向量（`sed -i`/重定向）时 `file_path` 为空、该行不跑、append 也不发生，盖不住红队②自己指出的缺口，且无自动消费者；②PreToolUse deny 撞硬闸 + 被防事件 0 历史命中。触发条件改为人可报告判据。**🔓 决定权交回**：真缺口（Bash 向量全盲）是真的，要盖住须放开硬闸加 deny，你说一声我加 |
-| **D4** | 🔻 **裁不做（不用「永久」）** | 一致性面已自动化到位（`daily_governance` 7 类检查 + 超期提醒），无需动作。行为面**当前不接**：唯一数据源是 harness transcript（仓外、格式非契约、可能轮转），接它是架构承诺 + 撞硬闸；当前一致性面 0 issue、无真实误配案例。**留待有真实 dispatch 误配时重估**（回应红队「别用永久免做工」——这是 measure-first 延后，不是永久放弃）。**🔓 决定权交回**：要不要让框架依赖 harness 内部存储 |
+| **D3** | ✅ **改判：做了**（2026-07-22 luca「正向就解决」） | **我之前判错了。** 三个错误：①「0 历史命中=死代码」是谬误——保护区价值在**一旦命中的代价**（SF-002 宪法红线），且 0 命中恰因 Write/Edit 有警告提示、**Bash 向量是唯一无声面**；②「撞硬闸」是挡箭牌——可扩展已有 `project-scope-guard`（PreToolUse），不是新建机器；③红队①方案（append observations）确是假解决（盖不住 Bash 向量）。**落地**：`project-scope-guard` 加 framework/ 只读拦截——Write/Edit 精确 deny（零误伤）+ Bash 只拦明确写信号（`>`/`sed -i`/`tee`/`rm`）+ marker/env 双 escape + fail-open。实弹三态验过，9 个新回归用例 + 更新 1 个旧用例（framework/ 从放行改 deny）。**诚实漏防**：Bash `cp/mv x framework/`（写目标）故意不拦——难与 `cp framework/src dest`（读源，html-prototype 复制母版）区分，宁漏勿误伤高频读源，等真发生一次再收紧 |
+| **D4** | ✅ **一次性核对做了（常驻机制仍不做，负向）** | **拆两半判**：常驻行为采集是**负向**（数据源=harness transcript，仓外/非契约/可轮转/归因难），不做；但**一次性行为核对是正向、低成本**，已做——本 session 我 dispatch 并指定档位的 7 个 agent，model 与声明 **100% 符合**（S2 传 `fable`→真 `claude-fable-5`；WA1/WA2/WA3/S1/复审/验收 继承 opus→真 `claude-opus-4-8`）。**P4 行为面一次性确认通过、无漂移。** 一致性面已由 `daily_governance` 7 类检查常驻守护。**🔓 若要常驻行为监控**（依赖 harness 内部存储）须你拍——我建议不做（脆弱依赖 > 边际收益，一致性面已覆盖主漂移路径）|
 | **D5** | ✅ **做了** | `consolidate_memory.py` 加 `eval_source_present`，print 区分「无源」vs「有源无失败」。三情形验过，45 测试不破。**未决观察**：07-15 接线后 eval-log 0 新增，写侧是否真跑通须下次真跑 quality-gate 时验 |
 | **D6** | ✅ **做了**（上一轮，luca 已批 D6） | `daily_governance.check_gap_recheck()` 把 90 天算术从 LLM prompt 挪进确定性脚本，接已有 digest 消费面。三分支实测互不遮蔽 |
-| **D7** | 🔻 **裁不做基准，根因定位** | 不建 DGM 基准——样本无输入（helped 5 占位符/18 缺键、landing_status 19 空）。**根因已定位**：AdoptionReview（scout）读 adoption-log 出复盘但**不回写 helped**（propose-only 架构）。真「修回填纪律」= 加人确认后回填通道，触 propose-only 红线、是独立工程。gaps-register 该项转 `ADJUDICATED`（不再每日刷告警）。**🔓 决定权交回**：要不要立项做回填通道 |
+| **D7** | 🔻 **弱正向但时机未到（数据未就绪，非硬闸）** | 不建 DGM 基准——样本无输入。回填通道价值真实（采纳闭环），但**现在建是空管道**——23 条采纳多为 07-12 批量、才 10 天，helped 大多只能填 too-early。**理由从「撞硬闸」精确到「数据未就绪」**：真触发点是「第一条采纳经足够使用周期、可判非 too-early 的 helped 时」，那时建通道立刻有数据。gaps-register 该项转 `ADJUDICATED` + 两段重访条件（数据就绪→建通道；通道跑满→建基准）。**🔓 决定权交回**：你若认为「先建通道让复盘纪律成型」比「等数据」更重要，说一声我建（复用 evolution-bookkeep，不违反 propose-only）|
 | **D8** | ✅ **做了** | FUSION-RUNBOOK 指针补进 `framework-evolution-scout.js` 落地注释（采纳流程入口→融合门）；`luca-open.sh` 补 capability-parity 锚点（`open-spool`，会咬）；P5 转入 BACKLOG #22，触发条件=**人可报告判据**（刻意不设「muse 30 天无 commit 即审」——那是又一个无自动观察者的跨项目假触发器，正是本 Pass 消除的模式） |
 
-**三条「裁不做」的共性**：真解决都要放开 luca 在本 Pass 拍板的硬闸（新 hook / 读 harness 存储 / 触 propose-only）。按硬闸裁不做 + 把真缺口和决定权显性交回，不是自我服务偏差——决定权在你，任一条你说「放开硬闸做」我即做。
+**价值重判修正（2026-07-22，luca「正向就解决」）**：上一版我把三条都「裁不做」，理由主要是「撞硬闸」。luca 一句「从价值上说正向就做」戳破了这个——**硬闸是防元层复利自增的手段，不是挡住正确事的目的**。逐条真实价值判断后：**D3 改判该做**（我犯了「0命中=死代码」谬误 + 用硬闸当挡箭牌，实际可扩展已有 hook）→ 已做；**D4 一次性核对该做**（常驻机制才负向）→ 已做，7/7 档位符合；**D7 时机未到**（真理由是数据未就绪的空管道，不是硬闸）。这次修正本身是本 Pass「独立审查推翻自己」链条的第四环——这回推翻我的是 luca 的一个价值追问。
 
 ---
 

@@ -103,7 +103,7 @@ gaps:
     revisit_when: "adoption-log 累计 ≥5 条已融合候选"
     # 前缀 ADJUDICATED（不以 MET 开头）→ check_gap_recheck / scout loader 不再每日报「须裁决」（已裁决，防噪音）。
     # 重新审时把前缀改回 MET 即重新进告警。
-    revisit_status: "ADJUDICATED(2026-07-21) — 曾 MET：实测 distinct fused_candidate_id=23（超阈值 4.6 倍）。裁决(D7,luca授权收口)：本轮**仍不建 DGM 基准**，因样本无输入——23 条里 helped 5 条全占位符/18 条缺键、landing_status 19 条空，基准建了也没数据喂。根因已定位：AdoptionReview phase（scout）读 adoption-log 出 keep/watch/revert 复盘但**不回写 helped 字段**（propose-only 架构，不自动改文件）→ 字段永远空。真『修回填纪律』= 加一条人确认后回填的通道（类比 candidate 晋升的 --set-stable），触及 propose-only 红线、是独立工程，不在本 Pass 硬闸内。重访条件转为：先落地回填通道让 helped 有值，再谈建基准。"
+    revisit_status: "ADJUDICATED(2026-07-21) — 曾 MET：实测 distinct fused_candidate_id=23（超阈值 4.6 倍）。裁决(D7,luca授权收口)：本轮**仍不建 DGM 基准**，因样本无输入——23 条里 helped 5 条全占位符/18 条缺键、landing_status 19 条空，基准建了也没数据喂。根因已定位：AdoptionReview phase（scout）读 adoption-log 出 keep/watch/revert 复盘但**不回写 helped 字段**（propose-only 架构，不自动改文件）→ 字段永远空。真『修回填纪律』= 加一条人确认后回填的通道（类比 candidate 晋升的 --set-stable），触及 propose-only 红线、是独立工程。重访条件两段：①（数据就绪触发）第一条采纳经足够使用周期、AdoptionReview 能给非 too-early 的 helped 判断时 → 落地回填通道（复用 evolution-bookkeep + digest 贴人确认命令，不违反 propose-only）；②回填跑满 ≥5 条有 helped 的采纳后 → 再谈建基准。当前卡在①之前：23 条采纳多为 07-12 批量、才 10 天，现在建通道是空管道，故 measure-first 等数据就绪，非撞硬闸。"
     # 2026-06-21 裁决：本轮**不追**（显式不静默砍）。DGM 式变体对比需一个**已融合候选基准语料**做 ablation；
     # 当前只有 OST/GOMS/code-hygiene 3 条，样本太小，benchmark 无意义。已有 adoption-log(helped/caused_issue)
     # + behavioral_ab.py(逐融合 A/B) 已是部分闭环。重访条件：adoption-log 累计 ≥5 条已融合候选后再建经验基准。

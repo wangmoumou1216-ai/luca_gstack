@@ -67,8 +67,10 @@ check('no-pin Write docs/ → deny', () => {
   assert.match(o.hookSpecificOutput.permissionDecisionReason, /未绑定|switch/);
 });
 
-// 4. 非项目路径（.claude/skills、memory、scripts、framework、任意）→ 放行不改写
-for (const p of ['.claude/skills/office/x.md', 'memory/episodic/index.jsonl', 'scripts/x.sh', 'framework/base.html', 'CLAUDE.md']) {
+// 4. 非项目路径（.claude/skills、memory、scripts、任意）→ 放行不改写
+//    注：framework/ 曾在此列（项目隔离视其为「非 docs 路径」放行），2026-07-22 起有独立只读保护（D3），
+//    Write framework/ 改为 deny —— 由下方 FW-WRITE 用例覆盖；此处换 docs/adr（另一非 scoped 路径）验原意。
+for (const p of ['.claude/skills/office/x.md', 'memory/episodic/index.jsonl', 'scripts/x.sh', 'CLAUDE.md']) {
   check(`pass-through non-project path: ${p}`, () => {
     const env = makeEnv({ pins: { S1: 'muse' } });
     const o = run(env, { session_id: 'S1', tool_name: 'Write', tool_input: { file_path: p, content: 'x' } });
@@ -177,6 +179,57 @@ check('REGRESSION: 36-char UUID sid pin is read, not truncated to 32', () => {
   assert.ok(o && o.hookSpecificOutput && o.hookSpecificOutput.updatedInput,
     '36 字符 sid 的 pin 必须被读到并重定向；截断到 32 会读不到 → 误 deny（正是本次修复的 bug）');
   assert.equal(o.hookSpecificOutput.updatedInput.file_path, abs(env, 'muse', 'docs/x.md'));
+});
+
+// ── framework/ 只读母版保护（2026-07-22，D3）：写 framework/ → deny；读放行；escape 生效；无误伤 ──
+check('FW-WRITE: Write 到 framework/ → deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: 'framework/list-page.html', content: 'x' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /只读母版|SF-002/);
+});
+check('FW-WRITE: Edit 绝对路径 framework/ → deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Edit', tool_input: { file_path: join(env.gstack, 'framework', 'shared-head.html'), old_string: 'a', new_string: 'b' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('FW-READ: Read framework/ → 放行（读不拦）', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Read', tool_input: { file_path: 'framework/list-page.html' } });
+  assert.equal(o, null, 'Read framework/ 必须放行');
+});
+check('FW-BASH: 重定向写 framework/ → deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'echo x > framework/list-page.html' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('FW-BASH: sed -i framework/ → deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: "sed -i 's/a/b/' framework/home-page.html" } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('FW-BASH: cat framework/（读）→ 放行', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'cat framework/list-page.html' } });
+  assert.equal(o, null, 'cat 读 framework/ 不得拦');
+});
+check('FW-BASH: cp framework/src dest（读源，html-prototype 复制母版）→ 不误伤', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'cp framework/list-page.html docs/proto/x.html' } });
+  // framework/ 在源位；命令还含 docs/ 会被项目隔离重定向，但绝不能是 framework deny
+  assert.notEqual(o && o.hookSpecificOutput && o.hookSpecificOutput.permissionDecision, 'deny',
+    'cp 读 framework/ 源不得被 framework 保护误伤');
+});
+check('FW-NOISE: framework-audit/ 不被误命中', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: 'framework-audit/x.md', content: 'x' } });
+  assert.equal(o, null, 'framework-audit/ 不是 framework/，必须放行');
+});
+check('FW-ESCAPE: marker 文件放行母版维护', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  writeFileSync(join(env.gstack, '.claude', '.allow-framework-write'), '');
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: 'framework/list-page.html', content: 'x' } });
+  assert.equal(o, null, 'escape marker 存在时 framework/ 写放行');
 });
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
