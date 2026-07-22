@@ -172,14 +172,24 @@ _PID=$(pgrep -f "prebundled/daemon/daemon-sidecar"|head -1); _P=$(lsof -nP -p "$
 # 1) _SLUG 未知（跨 session recover）→ 优先用 handoff 记的 slug；否则按最近更新解析
 [ -z "$_SLUG" ] && _SLUG=$(curl -s "$_OD_URL/api/projects" | python3 -c "import sys,json;ps=json.load(sys.stdin).get('projects',[]);ps.sort(key=lambda p:p.get('updatedAt',0),reverse=True);print(ps[0]['id'] if ps else '')")
 [ -z "$_TOPIC" ] && _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-# 2) 确认有真·产物（非 brief.md 的 html；优先 index.html，否则最新 html）再落盘——没有就别 DONE
-_ENTRY=$(curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;fs=json.load(sys.stdin).get('files',[]);h=[f for f in fs if f.get('name','').endswith('.html')];i=[f for f in h if f['name']=='index.html'];p=(i[0] if i else (sorted(h,key=lambda f:f.get('mtime',0))[-1] if h else None));print(p['name'] if p else '')")
-if [ -z "$_ENTRY" ]; then echo "OD 项目 $_SLUG 还没出 HTML 产物——请桌面端生成完再说『拉回来』；不落盘、不标 DONE"; else
-  mkdir -p "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"
-  curl -sf "$_OD_URL/api/projects/$_SLUG/raw/$_ENTRY" -o "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
-  [ -s "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html" ] && echo "回收 $_ENTRY → 落盘 OK" || echo "回收失败/空文件，未落盘——别标 DONE"
-fi
+# 2) 列出全部 html 产物（OD 可能一次出多个方案 + 一个导航页，别假设只有一个）
+curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;fs=json.load(sys.stdin).get('files',[]);[print(f\"{f['name']}\t{f.get('size',0)}\") for f in fs if f.get('name','').endswith('.html')]"
+# 3) 全部回收到同一目录（保住彼此的同级相对链接），不要只取 index.html
+_DIR="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"; mkdir -p "$_DIR"; _N=0
+for _f in $(curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;[print(f['name']) for f in json.load(sys.stdin).get('files',[]) if f.get('name','').endswith('.html')]"); do
+  curl -sf "$_OD_URL/api/projects/$_SLUG/raw/$_f" -o "$_DIR/$_f" && [ -s "$_DIR/$_f" ] && { echo "回收 $_f"; _N=$((_N+1)); }
+done
+[ "$_N" = "0" ] && echo "OD 项目 $_SLUG 还没出 HTML 产物——请桌面端生成完再说『拉回来』；不落盘、不标 DONE"
+# 4) 判形态：STATE 注释数/体积区分「导航页」与「原型本体」，据此定谁是 index.html
+grep -c "STATE:" "$_DIR"/*.html 2>/dev/null
 ```
+> **多产物处置（2026-07-22 实证补入，SC-20260722-004）：** OD **会**一次产出多个设计方向 + 一个导航页
+> （实测：`index.html` 8KB 导航页 + 两个 ~55KB 方案，STATE 注释数 1 / 8 / 8）。旧脚本「优先 index.html」
+> 只会落盘那个导航页，**两个真原型留在 OD 里丢失，且落盘后导航页的同级相对链接全断，还会标 DONE**。
+> 规则：① **全部回收、同目录放置**（保住相对链接）② 用 STATE 注释数/体积**判形态**，别按文件名假设
+> ③ 多方案时 prototype-spec 与 handoff **必须显式写「未收敛，进 figma-layer 或工程前须先定方案」**
+> ④ 用户选定后，把选定方案 **`mv`（不是 `cp`）到 `index.html`**（下游按此固定路径发现），
+> 原导航页改名保留并修正其链接——`mv` 是为了避免两份副本日后漂移。
 > **守卫：** 只有真·HTML 入口被回收且文件非空，才进 Phase 5/6 标 DONE；否则告知用户产物还没出、不落盘、不写 handoff。
 **校验 FxUI 收窄口径**（可执行门，非目测）：品牌橙 #FF8000 与文字色 #181C25/#91959E 允许出现；**FxUI 语义色（success/info/warning/danger/link 的 FxUI 专有 hex）应为 0**（其余颜色/字体来自所选 DS=预期，不算违规）：
 ```bash
