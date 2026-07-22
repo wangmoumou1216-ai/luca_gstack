@@ -50,3 +50,5 @@
 {"candidate_id": "SC-20260721-002", "decision": "reviewer_backfilled", "reviewer": "luca", "reason": "人工放行时回填候选 reviewer（解 has_review_metadata 门禁）", "reviewed_at": "2026-07-21T08:55:50.002651+00:00", "source": "consolidate_memory.py"}
 {"candidate_id": "SC-20260721-001", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-21T08:55:50.198740+00:00", "source": "consolidate_memory.py"}
 {"candidate_id": "SC-20260721-002", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-21T08:55:50.199410+00:00", "source": "consolidate_memory.py"}
+{"candidate_id": "SC-20260722-001", "decision": "approved_stable", "reviewer": "luca", "reason": "人工闸门放行：proposed_stable 置 True", "reviewed_at": "2026-07-22T02:54:05.303775+00:00", "source": "consolidate_memory.py"}
+{"candidate_id": "SC-20260722-001", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-22T02:55:07.942393+00:00", "source": "consolidate_memory.py"}
