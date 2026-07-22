@@ -123,15 +123,22 @@ function detectProjectSwitch(cmd) {
 }
 
 // framework/ 只读母版保护（SF-002 宪法红线，保护磁盘母版资产）。与项目隔离正交——纯拒绝、不重定向。
-// 此前只有 post-edit 事后 stdout 警告（还只覆盖 Write/Edit、对 Bash 向量全盲）；这里升级为 PreToolUse
-// 事前 deny。保守边界（宁漏勿误伤）：Write/Edit 走 file_path 精确判定（零误伤）；Bash 只拦 framework/
-// 紧跟明确写信号（重定向 / sed -i / tee / rm|truncate|dd），**故意不拦 cp/mv**——它们的 framework/
-// 可能在读源位（html-prototype 复制母版是 `cp framework/src dest`），字符串难区分源/目标，拦了误伤高频
-// 读源。漏防 cp/mv 写目标是接受的权衡（罕见），等真发生一次再收紧。
+// 定位（诚实）：**咨询式「防手滑」守卫**，不是对抗性守卫（fail-open + agent 可 touch marker 自解）。
+// 目标是挡住意外覆盖母版的常见向量，不追求防有意绕过。
+// 覆盖（2026-07-22 安全验收后收紧）：
+//   · Write/Edit/MultiEdit/NotebookEdit：file_path 精确判定，**锚定仓根 framework/**（不误伤
+//     src/framework、/tmp/framework、别项目 framework——B#4 误伤修复），大小写不敏感（APFS）。
+//   · Bash 写信号：重定向(含 ./ 前缀) / sed -i / tee / rm|truncate|dd / **cp|mv|install|ln|rsync 目标位**
+//     （framework/ 在命令末尾≈写目标；源位 `cp framework/src dest` 的 framework/ 后还有 dest，放行，
+//     不误伤 html-prototype 复制母版），全部大小写不敏感。
+// 已知边界（咨询守卫不追，诚实声明）：Bash 里绝对路径 / $PWD/ / `..` 穿越写 framework、解释器写
+//   （python -c / node -e）——这些是「有意」而非「手滑」，agent 有意写母版会自己 touch marker。
 // escape：marker 文件 .claude/.allow-framework-write 或 env ALLOW_FRAMEWORK_WRITE=1（母版正当维护）。
 function isFrameworkPath(p) {
-  const s = String(p || '').replace(/^\.\//, '');
-  return s === 'framework' || s.startsWith('framework/') || s.includes('/framework/');
+  const low = String(p || '').replace(/^\.\//, '').toLowerCase();  // 大小写不敏感（APFS 上 FRAMEWORK==framework）
+  const fwAbsLow = join(gstackRoot, 'framework').toLowerCase();
+  // 只匹配**仓根** framework/：相对仓根 或 <gstackRoot>/framework —— 不匹配 src/framework、/tmp/framework、别项目
+  return low === 'framework' || low.startsWith('framework/') || low === fwAbsLow || low.startsWith(fwAbsLow + '/');
 }
 function frameworkEscapeActive() {
   if (process.env.ALLOW_FRAMEWORK_WRITE === '1') return true;
@@ -145,11 +152,14 @@ function frameworkWriteDeny(tool, inp) {
   }
   if (tool === 'Bash') {
     const cmd = String(inp.command || '');
+    const fw = '(?:\\./)?framework/';   // 含 ./ 前缀（A#2 部分）
     const writeSignals = [
-      />>?\s*framework\//,                              // > framework/  >> framework/
-      /\btee\s+(?:-\S+\s+)*framework\//,                 // tee framework/
-      /\bsed\s+-i\S*\s+[^|;&]*\bframework\//,             // sed -i ... framework/
-      /\b(?:rm|truncate|dd)\s+[^|;&]*\bframework\//,      // rm/truncate/dd ... framework/
+      new RegExp('>>?\\s*' + fw, 'i'),                              // > framework/  >> ./framework/
+      new RegExp('\\btee\\s+(?:-\\S+\\s+)*' + fw, 'i'),              // tee framework/
+      new RegExp('\\bsed\\s+-i\\S*\\s+[^|;&]*\\b' + fw, 'i'),         // sed -i ... framework/
+      new RegExp('\\b(?:rm|truncate|dd)\\s+[^|;&]*\\b' + fw, 'i'),    // rm/truncate/dd ... framework/
+      // cp/mv/install/ln/rsync 写目标位：framework/ 在命令末尾（后接命令边界）≈ 目标；源位不在末尾→放行
+      new RegExp('\\b(?:cp|mv|install|rsync|ln)\\b[^|;&]*\\s' + fw + '\\S*\\s*(?:$|[;&|])', 'i'),
     ];
     return writeSignals.some((re) => re.test(cmd)) ? 'framework/（Bash 写信号）' : null;
   }

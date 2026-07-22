@@ -231,6 +231,54 @@ check('FW-ESCAPE: marker 文件放行母版维护', () => {
   const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: 'framework/list-page.html', content: 'x' } });
   assert.equal(o, null, 'escape marker 存在时 framework/ 写放行');
 });
+// ── 2026-07-22 安全验收后收紧：B#4 误伤锚定 + A#1 cp/mv 目标 + A#4 大小写 + A#2 ./ ──
+check('FW-B4: Write src/framework/ → 放行（不误伤下游项目的 framework 模块）', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: 'src/framework/x.js', content: 'x' } });
+  assert.equal(o, null, 'src/framework/ 不是仓根 framework/，必须放行（B#4 误伤修复）');
+});
+check('FW-B4: Write /tmp/framework/ → 放行（仓外 framework 不误伤）', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: '/tmp/framework/x', content: 'x' } });
+  assert.equal(o, null, '仓外 /tmp/framework/ 必须放行');
+});
+check('FW-B4: Write <仓根>/framework/ 绝对路径 → 仍 deny（真母版）', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: join(env.gstack, 'framework', 'x.html'), content: 'x' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', '仓根 framework/ 绝对路径必须拦');
+});
+check('FW-A1: cp x framework/y（写目标）→ deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'cp /tmp/evil framework/list-page.html' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', 'cp 写 framework 目标位必须拦（A#1 核心漏防）');
+});
+check('FW-A1: mv/install/ln 写 framework 目标 → deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  for (const cmd of ['mv /tmp/x framework/y', 'install -m644 evil framework/x', 'ln -sf /tmp/evil framework/x']) {
+    const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: cmd } });
+    assert.equal(o && o.hookSpecificOutput && o.hookSpecificOutput.permissionDecision, 'deny', cmd + ' 必须拦');
+  }
+});
+check('FW-A1: cp framework/src dest（读源）→ 仍放行（不误伤复制母版）', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'cp framework/list-page.html /tmp/x.html' } });
+  assert.equal(o, null, 'cp 读 framework 源位必须放行（framework/ 不在命令末尾）');
+});
+check('FW-A4: Write FRAMEWORK/（大小写变体，APFS 真能覆盖）→ deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Write', tool_input: { file_path: 'FRAMEWORK/list-page.html', content: 'x' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', '大小写变体必须拦（case-insensitive）');
+});
+check('FW-A2: echo > ./framework/（./ 前缀）→ deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'echo x > ./framework/list-page.html' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', './framework/ 前缀必须拦');
+});
+check('FW-NOISE2: Bash 读 src/framework（下游）不误命中', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'cat src/framework/x.js' } });
+  assert.equal(o, null, 'src/framework/ 读不拦');
+});
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
