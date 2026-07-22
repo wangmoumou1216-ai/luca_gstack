@@ -279,6 +279,16 @@ check('FW-NOISE2: Bash 读 src/framework（下游）不误命中', () => {
   const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'cat src/framework/x.js' } });
   assert.equal(o, null, 'src/framework/ 读不拦');
 });
+check('FW-A2abs: Bash 绝对路径写仓根 framework → deny', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: `echo x > ${join(env.gstack, 'framework', 'list-page.html')}` } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', '仓根绝对路径写 framework 必须拦（A#2 手滑级）');
+});
+check('FW-A2abs: Bash 绝对路径写仓外 framework → 放行（不越界）', () => {
+  const env = makeEnv({ pins: { s: 'muse' } });
+  const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'echo x > /tmp/framework/x' } });
+  assert.equal(o, null, '仓外 framework 绝对路径不拦（只保护本仓母版）');
+});
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

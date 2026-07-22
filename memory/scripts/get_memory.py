@@ -37,6 +37,24 @@ def load_episodic(limit: int = 5) -> list[dict]:
     return entries
 
 
+def filter_superseded_expired(facts: list[dict]) -> list[dict]:
+    """读侧 bi-temporal 过滤（BACKLOG #2 闭合）：剔除被取代(supersedes)与已过期(valid_until<today)
+    的事实，防新旧两版并列污染检索。悬空 supersedes（指向 store 里不存在的 id）安全——集合判定只
+    影响真实存在的旧事实。ISO date 字符串字典序==日期序。"""
+    from datetime import date
+    today = date.today().isoformat()
+    superseded = {str(f.get("supersedes") or "").strip() for f in facts if str(f.get("supersedes") or "").strip()}
+    out = []
+    for f in facts:
+        if str(f.get("id") or "") in superseded:
+            continue
+        vu = str(f.get("valid_until") or "").strip()
+        if vu and vu < today:
+            continue
+        out.append(f)
+    return out
+
+
 def parse_semantic_facts(domain: str = "*") -> list[dict]:
     if not SEMANTIC_FACTS.exists():
         return []
@@ -56,7 +74,7 @@ def parse_semantic_facts(domain: str = "*") -> list[dict]:
         facts = parse_semantic_facts_fallback(text)
     if domain != "*":
         facts = [f for f in facts if f.get("domain") == domain]
-    return [f for f in facts if f.get("stable", False)]
+    return filter_superseded_expired([f for f in facts if f.get("stable", False)])
 
 
 def parse_semantic_facts_fallback(text: str) -> list[dict]:

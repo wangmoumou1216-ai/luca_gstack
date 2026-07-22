@@ -152,7 +152,9 @@ function frameworkWriteDeny(tool, inp) {
   }
   if (tool === 'Bash') {
     const cmd = String(inp.command || '');
-    const fw = '(?:\\./)?framework/';   // 含 ./ 前缀（A#2 部分）
+    // fw 匹配：仓根绝对路径 <gstackRoot>/framework/（A#2 手滑级绝对路径）或 (./)framework/（相对）
+    const escAbs = join(gstackRoot, 'framework').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const fw = '(?:' + escAbs + '/|(?:\\./)?framework/)';
     const writeSignals = [
       new RegExp('>>?\\s*' + fw, 'i'),                              // > framework/  >> ./framework/
       new RegExp('\\btee\\s+(?:-\\S+\\s+)*' + fw, 'i'),              // tee framework/

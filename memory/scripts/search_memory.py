@@ -105,6 +105,22 @@ def clean_scalar(value: str):
     return value
 
 
+def filter_superseded_expired(facts: list[dict]) -> list[dict]:
+    """读侧 bi-temporal 过滤（BACKLOG #2 闭合）：剔除被取代(supersedes)与已过期(valid_until<today)
+    的事实。悬空 supersedes 安全（集合判定只影响真实存在的旧事实）。ISO date 字符串字典序==日期序。"""
+    today = dt.date.today().isoformat()
+    superseded = {str(f.get("supersedes") or "").strip() for f in facts if str(f.get("supersedes") or "").strip()}
+    out = []
+    for f in facts:
+        if str(f.get("id") or "") in superseded:
+            continue
+        vu = str(f.get("valid_until") or "").strip()
+        if vu and vu < today:
+            continue
+        out.append(f)
+    return out
+
+
 def parse_semantic_facts(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -118,7 +134,7 @@ def parse_semantic_facts(path: Path) -> list[dict]:
                 facts = data
             else:
                 facts = []
-            return [fact for fact in facts if isinstance(fact, dict) and fact.get("stable") is True]
+            return filter_superseded_expired([fact for fact in facts if isinstance(fact, dict) and fact.get("stable") is True])
         except Exception:
             pass
     facts = []
@@ -158,7 +174,7 @@ def parse_semantic_facts(path: Path) -> list[dict]:
         current_key = key
     if current:
         facts.append(current)
-    return [fact for fact in facts if fact.get("stable") is True]
+    return filter_superseded_expired([fact for fact in facts if fact.get("stable") is True])
 
 
 def as_text(value) -> str:

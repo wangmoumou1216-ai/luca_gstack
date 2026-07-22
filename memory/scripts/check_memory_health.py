@@ -50,21 +50,21 @@ def main() -> int:
             if "..." in text.splitlines():
                 errors.append(f"{fact_id}: contains YAML document marker in fact text")
 
-        # Bi-temporal 读侧未接通的看门人（BACKLOG #2）：写侧 propose_semantic/consolidate 已能写
-        # supersedes/valid_until，读侧 get_memory/search_memory 的 parse_semantic_facts 尚不消费——
-        # 一旦有事实带上这两个字段，被取代的旧事实仍会被检索出来与新事实并列。此断言让"第一次真正
-        # 写入"当场可见，而不是静默生效。补完读侧过滤后连同本断言一起解除。
+        # Bi-temporal 一致性（BACKLOG #2 已闭合 2026-07-22）：读侧 get_memory/search_memory 的
+        # parse_semantic_facts 现已消费 supersedes/valid_until（filter_superseded_expired 过滤被取代/
+        # 过期的事实）。原"读侧未实现→带字段即 FAIL"的绊线已解除。这里改为轻校验：supersedes 指向的
+        # 旧 id 若**仍作为 stable fact 存在于 promoted-facts**，提示应归档（读侧会过滤掉它，但留在文件里
+        # 是冗余/易误解）——不阻断，只列 warning 级 error 供治理清理。悬空 supersedes（目标不在 store）静默放过。
+        promoted_ids = {str(f.get("id") or "") for f in facts if isinstance(f, dict)}
         for fact in facts:
             if not isinstance(fact, dict):
                 continue
-            for field in ("supersedes", "valid_until"):
-                # `or ""` 而非 get(field, "")：YAML 里写 `supersedes:` 空值解析成 None，
-                # str(None) == "None" 会被判非空而误触发（与 consolidate_memory.py 同一写法对齐）
-                if str(fact.get(field) or "").strip():
-                    errors.append(
-                        f"{fact.get('id', '?')}: 带 {field} 但读侧过滤尚未实现（BACKLOG #2）——"
-                        f"先补 get_memory/search_memory 的 parse_semantic_facts 过滤，再解除本断言"
-                    )
+            sup = str(fact.get("supersedes") or "").strip()
+            if sup and sup in promoted_ids:
+                errors.append(
+                    f"{fact.get('id', '?')}: supersedes={sup}，而 {sup} 仍作为 stable 留在 promoted-facts"
+                    f"（读侧已过滤，但应 consolidate 归档旧事实以免冗余）"
+                )
 
         # Static Fallback 白名单一致性（防漂移）：白名单 ⊆ promoted ids；白名单 ⇔ CLAUDE.md SF 节
         import re

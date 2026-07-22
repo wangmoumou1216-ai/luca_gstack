@@ -1285,6 +1285,29 @@ class ConsolidationPass2026_07_21(unittest.TestCase):
             self.assertIn("GAP-OVERDUE", blob, "坏日期不得让超期项失明")
             self.assertIn("GAP-MET", blob, "坏日期不得让 revisit-MET 项失明")
 
+    def test_bitemporal_readside_filters_superseded_and_expired(self):
+        # BACKLOG #2 闭合：读侧过滤被取代(supersedes)与过期(valid_until)的事实；悬空引用保留自己
+        with tempfile.TemporaryDirectory() as tmp:
+            sem = Path(tmp) / "memory" / "semantic"
+            sem.mkdir(parents=True, exist_ok=True)
+            (sem / "promoted-facts.yaml").write_text(
+                "facts:\n"
+                "  - id: SC-NEW\n    domain: skill-rule\n    fact: zebrabitemp new\n"
+                "    confidence: high\n    stable: true\n    added: 2026-07-22\n    source: t\n    supersedes: SC-OLD\n"
+                "  - id: SC-OLD\n    domain: skill-rule\n    fact: zebrabitemp old\n"
+                "    confidence: high\n    stable: true\n    added: 2026-07-01\n    source: t\n"
+                "  - id: SC-EXPIRED\n    domain: skill-rule\n    fact: zebrabitemp expired\n"
+                "    confidence: high\n    stable: true\n    added: 2026-07-01\n    source: t\n    valid_until: 2026-07-10\n"
+                "  - id: SC-DANGLING\n    domain: skill-rule\n    fact: zebrabitemp dangling\n"
+                "    confidence: high\n    stable: true\n    added: 2026-07-22\n    source: t\n    supersedes: SC-NOEXIST\n",
+                encoding="utf-8")
+            r = self.run_script("search_memory.py", "zebrabitemp", "--layer", "semantic", "--limit", "10",
+                                env={"MEMORY_ROOT": tmp})
+            self.assertIn("SC-NEW", r.stdout, "取代方须保留")
+            self.assertIn("SC-DANGLING", r.stdout, "悬空 supersedes 须保留自己")
+            self.assertNotIn("SC-OLD", r.stdout, "被取代的旧事实必须被读侧过滤（BACKLOG #2）")
+            self.assertNotIn("SC-EXPIRED", r.stdout, "过期事实必须被读侧过滤")
+
     def test_gap_recheck_silent_when_nothing_due_and_when_file_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
             self._gaps_fixture(tmp, (

@@ -28,11 +28,10 @@
 - **真实缺口**：写侧 `consolidate_memory.py:388` 已解析 `valid_until` / `supersedes`，读侧 `get_memory.py` / `search_memory.py` 的 `parse_semantic_facts()` 不消费 → 已作废/过期的旧事实仍会被检索出来污染当前判断。
 - **为何延后**：当前 `promoted-facts.yaml` 里 **0 条** 事实带这两个字段。现在加 ~20 行读侧过滤 = 未经测试的死代码，无法验证真生效。
 - **🔔 触发条件**：晋升流程**第一次真正写入** `supersedes` 或 `valid_until`（即出现第一条被取代的事实）→ 立即补读侧过滤 + 用该真实数据做一次过滤回归测试。
-- **观察者**：`check_memory_health.py` 的 supersedes 断言 → `verify.sh` S13 → `.githooks/pre-commit`（2026-07-21 接通；此前**零观察者**，写入会静默生效）。
-- **⚠️ 触发器已上膛（2026-07-21 实测）**：`candidates.jsonl` 已有 2 条带非空 `supersedes`——`SC-20260715-006`(→004)、`SC-20260716-001`(→005)，且**正是今日 digest 贴出 `--set-stable` 命令的那两条**。luca 一旦放行并晋升，promoted-facts 即带该字段。
-  **预期行为：那一刻 verify.sh 会转红**并指名要补读侧过滤——这是有意的门，不是 bug。补完 ~20 行过滤后连同 `check_memory_health.py` 里的该断言一并解除。
-  另注：被取代的 `SC-20260715-004/005` 既不在 promoted 也不在 candidates（只在 reviews.jsonl）→ 首次写入很可能是**悬空引用**，读侧过滤须容错。
-- **落地点**：`memory/scripts/get_memory.py` / `search_memory.py` 的 `parse_semantic_facts()`。effort ~20 行 + 1 测试。
+- **✅ 已闭合（2026-07-22，luca「一并解决」授权）**：读侧过滤已落地——`get_memory.py` / `search_memory.py`（两处 parse_semantic_facts + fallback）加 `filter_superseded_expired`：剔除被取代（id 在任一活跃 fact 的 supersedes 集）与过期（`valid_until < today`）的事实。悬空 supersedes（目标不在 store）容错——集合判定只影响真实存在的旧事实。
+  会咬（临时 promoted-facts 造 NEW(supersedes OLD)+OLD+EXPIRED+DANGLING）：get_memory 与 search_memory 均只返回 NEW+DANGLING，OLD/EXPIRED 被过滤。回归钉 `test_bitemporal_readside_filters_superseded_and_expired`（46/46）。
+  `check_memory_health.py` 原「带 supersedes 即 FAIL」绊线**已解除**，改为轻校验（supersedes 目标若仍作为 stable 留在 promoted-facts → 提示归档，不阻断）。
+  **结果**：放行 `SC-20260715-006`/`SC-20260716-001` 后 verify **不再转红**，且被取代的旧事实真退场（此前只是绊线提示，未真过滤）。
 
 ### #4 — framework/ PreToolUse 硬阻断
 - **真实缺口**：`framework/` 只读目前只有 PostToolUse 警告（事后），无 PreToolUse deny（事前硬阻断）。
