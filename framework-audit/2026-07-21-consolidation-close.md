@@ -52,18 +52,22 @@
 
 ---
 
-## 四、需要你拍板的 8 条
+## 四、D1–D8 终态（luca 2026-07-22「这两件都解决」授权后处置）
 
-| # | 议题 | 我的建议 |
+**5 条落地（纯接线/无新机器）+ 3 条裁不做（真解决须放开硬闸，决定权交回）。** 分野原则：不撞硬闸的直接做；真解决须新建机器或触 propose-only 红线的，裁不做并把决定权交回 luca——**不替他免掉工，也不为收口好看而硬做撞硬闸的东西**。
+
+| # | 处置 | 落地/裁决 |
 |---|---|---|
-| **D1** | **#17 治理积压**：9 条 pending（阈值 5），最老 21 天；「已被 digest 覆盖」实测不成立——`session-restore.mjs:375` 预览是 `slice(0,14)`，超期候选在第 15-20 行，**切在窗外** | 比照 person 层已有的独立单行提示，给 semantic 队列加一条（**不是**第 6 个 stdout 块，是把已有 digest 预览窗从 14 扩到能覆盖该节）。真问题其实是「提醒到了也没人裁」——要不要我做个批量放行入口？ |
-| **D2** | **#21 archive 检索**：7 → **46 条**，与热窗 50 条等量，裁决悬 7 周 | 加 `--include-archive` 开关（零默认噪音、零性能回归，`search_memory.py:547` 已有目录扫描代码可复用）。不建议默认并入 |
-| **D3** | **#4 framework/ 硬阻断**：关闭提案已被红队否决 | 二选一：①`post-edit.mjs` 命中时同时 append 一条到已存在的 `observations.jsonl`（~3 行，即成可查事实）；②承认无自动观察者，触发条件改为「你亲口报告一次误写」。**附带**：现有警告对 Bash 向量（`sed -i`/重定向）全盲，而被提议放弃的 PreToolUse deny 恰是唯一能盖住它的设计 |
-| **D4** | **P4 行为面**：transcript 里有 model 数据，技术上可做 | 但这是**读 harness 内部存储**（仓外、格式非契约、可能轮转）。我建议先不接——把 P4 结论限定为「一致性面已自动化到位、无需动作」，行为面等有真实误配案例再说。要接的话须单独立项（属新机器，撞硬闸） |
-| **D5** | **#19 eval 歧义**：冻结已解、`eval-log.jsonl` 实存，原阻塞理由消失 | 做掉最小修（`consolidate_memory.py` 区分「无源」与「空结果」）。**顺带查一件事**：6 条记录全是 06-12/06-14，07-15 接线后 0 新增——写侧可能根本没跑通 |
-| **D6** | **addressed_recheck 90 天窗**：执行链存在但算术在 LLM prompt 里、无 checker 验 digest 真含该节；**2026-09-19 会一次性弹出 6 个到期 gap**（全表 11 个待复核） | 把 90 天算术挪进 `daily_governance.check_self_model()`（~8 行，接已有 digest 消费面）。另提前定好到期怎么批处理——按 severity 分批，别逐个开工 |
-| **D7** | **GAP-self-evolution 已到期**：23 条已融合候选 ≫ 阈值 5 | **先别建基准**——同批 `helped` 5 条全是占位符、18 条连键都没有，`landing_status` 19 条空。基准建了也没输入。建议先修 adoption-log 回填纪律 |
-| **D8** | **两个零覆盖尾巴**：`FUSION-RUNBOOK.md` 在六个入口面零引用（采纳外部能力时找不到融合门）；`luca-open.sh` 在 `capability-parity.json` 出现 0 次 | 各挂一行指针到已 LIVE 的面。P5 本身维持延后（muse 近 14 天 33 个 commit，延后理由仍成立），但触发条件从"靠记性"改为可查判据：**「muse 侧栏面连续 30 天无 commit 即审」** |
+| **D1** | ✅ **做了** | `session-restore.mjs` 预览从 `slice(0,14)` 改为按「待你裁决」整节收尾（上限 40、截断可见）。窗口 14→23，6 条超期候选进入启动提示。未加第 6 个 stdout 块。补 `DIGEST-001` 回归断言咬住生产端↔消费端 |
+| **D2** | ✅ **做了** | `search_memory.py --include-archive`，不默认并入。含溯源修正 + noisy 排除 + 同 id 去重。补 2 个回归用例 |
+| **D3** | 🔻 **裁不做（两方案都不选）** | ①append observations 是**假解决**——`post-edit.mjs:54` 只在 Write/Edit 执行，真正漏的 Bash 向量（`sed -i`/重定向）时 `file_path` 为空、该行不跑、append 也不发生，盖不住红队②自己指出的缺口，且无自动消费者；②PreToolUse deny 撞硬闸 + 被防事件 0 历史命中。触发条件改为人可报告判据。**🔓 决定权交回**：真缺口（Bash 向量全盲）是真的，要盖住须放开硬闸加 deny，你说一声我加 |
+| **D4** | 🔻 **裁不做（不用「永久」）** | 一致性面已自动化到位（`daily_governance` 7 类检查 + 超期提醒），无需动作。行为面**当前不接**：唯一数据源是 harness transcript（仓外、格式非契约、可能轮转），接它是架构承诺 + 撞硬闸；当前一致性面 0 issue、无真实误配案例。**留待有真实 dispatch 误配时重估**（回应红队「别用永久免做工」——这是 measure-first 延后，不是永久放弃）。**🔓 决定权交回**：要不要让框架依赖 harness 内部存储 |
+| **D5** | ✅ **做了** | `consolidate_memory.py` 加 `eval_source_present`，print 区分「无源」vs「有源无失败」。三情形验过，45 测试不破。**未决观察**：07-15 接线后 eval-log 0 新增，写侧是否真跑通须下次真跑 quality-gate 时验 |
+| **D6** | ✅ **做了**（上一轮，luca 已批 D6） | `daily_governance.check_gap_recheck()` 把 90 天算术从 LLM prompt 挪进确定性脚本，接已有 digest 消费面。三分支实测互不遮蔽 |
+| **D7** | 🔻 **裁不做基准，根因定位** | 不建 DGM 基准——样本无输入（helped 5 占位符/18 缺键、landing_status 19 空）。**根因已定位**：AdoptionReview（scout）读 adoption-log 出复盘但**不回写 helped**（propose-only 架构）。真「修回填纪律」= 加人确认后回填通道，触 propose-only 红线、是独立工程。gaps-register 该项转 `ADJUDICATED`（不再每日刷告警）。**🔓 决定权交回**：要不要立项做回填通道 |
+| **D8** | ✅ **做了** | FUSION-RUNBOOK 指针补进 `framework-evolution-scout.js` 落地注释（采纳流程入口→融合门）；`luca-open.sh` 补 capability-parity 锚点（`open-spool`，会咬）；P5 转入 BACKLOG #22，触发条件=**人可报告判据**（刻意不设「muse 30 天无 commit 即审」——那是又一个无自动观察者的跨项目假触发器，正是本 Pass 消除的模式） |
+
+**三条「裁不做」的共性**：真解决都要放开 luca 在本 Pass 拍板的硬闸（新 hook / 读 harness 存储 / 触 propose-only）。按硬闸裁不做 + 把真缺口和决定权显性交回，不是自我服务偏差——决定权在你，任一条你说「放开硬闸做」我即做。
 
 ---
 

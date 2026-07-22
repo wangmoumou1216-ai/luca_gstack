@@ -715,6 +715,9 @@ def build_queue() -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict],
         "awaiting_approval": awaiting_approval(candidates, duplicate_ids, conflict_ids, decisions),
         "noisy_episodes": noisy_episodes(episodes),
         "failing_eval_patterns": failing_eval_patterns(read_jsonl(EVAL_LOG)),
+        # 区分「无源」与「有源无失败」：二者此前同为空 list，人看不出是 eval 没接通还是真没失败模式
+        # （BACKLOG #19；冻结已于 2026-07-15 解除，eval-log 现为活跃写入面）
+        "eval_source_present": EVAL_LOG.exists(),
         "actions": {"promoted": [], "archived": [], "archived_noisy": []},
     }
     return queue, candidates, candidate_rows, promoted, decisions, episode_rows
@@ -733,7 +736,10 @@ def print_human(queue: dict, dry_run: bool) -> None:
         "failing_eval_patterns",
     ):
         rows = queue.get(key, [])
-        print(f"\n{key}: {len(rows)}")
+        suffix = ""
+        if key == "failing_eval_patterns" and not queue.get("eval_source_present", True):
+            suffix = "  (eval-log 不存在——无源，非『有源无失败』)"
+        print(f"\n{key}: {len(rows)}{suffix}")
         for row in rows:
             print(f"- {json.dumps(row, ensure_ascii=False)}")
     actions = queue.get("actions", {})

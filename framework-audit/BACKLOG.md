@@ -40,8 +40,11 @@
 - **🔔 触发条件（2026-07-21 修订，原文两臂均不可用）**：
   - ~~`run-log.jsonl` 出现命中~~ —— **永不可能成立**：该文件被 `memory/README.md` 显式 FREEZE 且明令勿新建采集，本检出磁盘上根本不存在。此臂作废。
   - post-edit 警告首次命中 —— **可回查但无自动观察者**：`post-edit.mjs:54-55` 只 `process.stdout.write`、仓内零落盘，但该警告以 `hookEvent:PostToolUse` **持久落在 harness transcript**（`~/.claude/projects/**/*.jsonl`，实测可 grep 到 framework/ 相关 PostToolUse 记录）。即"有痕迹、但只有人做取证才看得见"。
-- **观察者**：**none**（待裁决，见收口 Pass DECIDE 清单）。二选一：①`post-edit.mjs` 命中时同时 append 一条到已存在的 `observations.jsonl`（~3 行，即成可查事实）；②承认无自动观察者，把触发条件改为「luca 亲口报告一次 framework/ 误写」。
-- **⚠️ 2026-07-21 红队否决了「就地关闭」提案**：触发器坏掉 ≠ 被防风险消失。另指出现有警告对 **Bash 向量全盲**（`post-edit.mjs` 只取 `tool_input.file_path`，`sed -i` / 重定向写 framework/ 不触发），而被提议放弃的 PreToolUse deny 恰是唯一能盖住该向量的设计。
+- **✅ 2026-07-21 裁决（D3，luca 授权收口）：两个候选方案都不做，理由如下。触发条件改为人可报告判据。**
+  - **不做 append observations（红队①方案）—— 因为它是假解决**：`post-edit.mjs:54` 只在 Write/Edit（有 `tool_input.file_path`）时执行。而真正漏的是 **Bash 向量**（`sed -i`/重定向写 framework/，`file_path` 为空，该行根本不执行）——那时 append 也不会发生。所以①方案只覆盖**已经有 transcript 痕迹**的 Write/Edit 向量，对真正漏的 Bash 向量照样漏。它盖不住红队②自己指出的缺口，是冗余 + 无自动消费者（本 Pass 反复批判的"写了没人读"模式）。
+  - **不做 PreToolUse deny —— 撞硬闸 + measure-first**：deny 是唯一能盖 Bash 向量的设计，但 = 新 hook = 新机器（本 Pass 硬闸：默认不新建机器），且被防事件在 luca_gstack 历史 **0 次真实命中**（红队找到的 2 次 PostToolUse 命中归属存疑、且在 todo-capsule/muse-gstack 别的项目）。防从未发生的事 = 死代码。
+  - **触发条件（最终）**：「luca 报告一次 framework/ 误写」**或**「首次在 transcript grep 到本仓 framework/ 的真实误写命中」。观察者=luca（人）+ harness transcript（可回查）。
+- **🔓 决定权交回 luca**：真实缺口（Bash 向量全盲）是真的，盖住它需要放开硬闸加 PreToolUse deny。若你认为该防患于未然（哪怕 0 历史命中），说一声我加（~30 行 hook + 显式 escape 保护母版正当维护）。默认按 measure-first 不加。
 - **落地点**：新增 PreToolUse hook（~30 行）。
 
 ### #8 — 失败 Phase 重跑前产物归档
@@ -101,6 +104,12 @@
   ①「EVAL_LOG=**不存在的** eval-log.jsonl」**现在是错的**——`memory/evals/eval-log.jsonl` 实存 2648 B / 6 行（两检出一致）。
   ②「eval 冻结」**已解**——`memory/README.md` 2026-07-15 记忆层评审裁决（BUILD-lite）写明 `record_eval.py` 已接确定性触发（quality-gate agent 定义 §4b 内置落账），只有 GEPA pairs 与 `run-log.jsonl` 仍 FREEZE，eval-log 被显式排除在冻结外。原「会触碰冻结面」的阻塞理由随之消失。
   歧义本体仍未修：缺文件与空结果仍同为 `[]`。附带发现：6 条记录全是 06-12/06-14，07-15 接线后 **0 新增** → 写侧是否真跑通未经实证。**已列入 DECIDE 清单**（修 source_absent 哨兵 + 顺带验证写侧）。
+
+### #22 — luca app 集成层复审（P5，2026-07-21 收口 Pass 转入）
+- **缺口**：`scripts/luca-open.sh` / `scripts/luca-sidebar.sh` + CLAUDE.md:526-538 三条使用约定 + appendix 侧栏感知，是活跃演进中的集成层，从未做过专项复审。
+- **为何延后（理由现仍成立，有硬数据）**：被审对象每周在变形——muse app 近 14 天 33 个 commit，侧栏面 7 月内 ≥3 次改动直接影响 `luca-sidebar.sh` 返回语义。现在审很快过时；框架侧两脚本反而稳（11 天未动）。
+- **🔔 触发条件（人可报告判据，不设跨项目自动监控）**：`luca-open`/`luca-sidebar` 行为异常被 luca 报告一次，**或**下次真在该集成层做实质工作时顺带复审。**刻意不设「muse 侧栏面连续 30 天无 commit 即审」**——那需要 luca_gstack 治理去监控下游 muse app 的 commit 历史，是又一个无自动观察者的假触发器（本 Pass 正在消除的模式）；跨项目、low severity，不值得建监控。
+- **观察者**：luca（人）。已顺手收的两个小尾巴：`luca-open.sh` 补 capability-parity 锚点（本 Pass，`open-spool`，防误删）；`reference_claude-artifact-content-retrieval.md` 的「2d3c683 待重启验证」仍开着，属一次性动作（app 已在该 HEAD，重启验一次即降为指针）。
 
 ---
 

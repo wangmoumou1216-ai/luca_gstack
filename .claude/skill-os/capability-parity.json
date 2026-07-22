@@ -21,6 +21,9 @@
       "sidebar-spool",
       "result.md"
     ],
+    "scripts/luca-open.sh": [
+      "open-spool"
+    ],
     ".claude/agents/plan-agent.md": [
       "块 1.6 — ASSERT/TEST-NNN 反向覆盖",
       "行为级断言规则",

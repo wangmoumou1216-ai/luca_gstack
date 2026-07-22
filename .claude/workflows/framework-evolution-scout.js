@@ -15,7 +15,9 @@ export const meta = {
 //    luca_gstack **行为面**文件（skills/hooks/routing/registry 判断字段），绝不安装任何东西。
 //    簿记落盘（candidate-log 追加 + yield_stats 计数）由人工触发的确定性脚本
 //    scripts/evolution-bookkeep.mjs 完成（喂本工作流的返回 JSON）；gaps-register 的
-//    status 开关仍由人裁决后落笔。落地(融合)是另一条人工触发的管线。
+//    status 开关仍由人裁决后落笔。落地(融合)是另一条人工触发的管线：
+//    approved 候选的落地步骤走 .claude/skill-os/evolution/FUSION-RUNBOOK.md（发现→落地的唯一
+//    入口指针——此前该 runbook 在所有主入口面零引用，采纳时找不到融合门）。
 // 2. 不走 consolidate_memory 晋升门(FM-2)：演进 digest 是独立 artifact。
 // 3. 热度 ≠ 适配：star 只买「进门禁考试票」，录取要 fit-to-gap + 跨源信号 + 过硬门。
 // 真值源：.claude/skill-os/evolution/{sources-registry,self-model,self-model.generated,gaps-register}.yaml
