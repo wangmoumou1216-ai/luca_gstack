@@ -1,5 +1,6 @@
 # watcher 唯一真值：已装外部 skill/plugin 的上游锚（daily_governance.check_upstream_drift 消费）。
 # 纯数据，不放 verdict/score（vetting 真值在 vetting-registry.yaml；采纳审计在 evolution/adoption-log.jsonl）。
+# repo 级对标基线另见 evolution/benchmark-registry.yaml（check_benchmark_drift 消费）——本文件仍只管已装 unit 的 path 域，勿混填。
 #
 # 维护义务：
 # - FUSION refresh 落地后必须更新对应行 watch_sha/pinned_sha/pinned_at（FUSION-RUNBOOK 步⑨）。

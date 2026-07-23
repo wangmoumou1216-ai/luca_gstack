@@ -1463,5 +1463,80 @@ class UpstreamDriftWatcherTests(unittest.TestCase):
                              {"marker"}, "除节流 marker 外不得产生任何新文件")
 
 
+class BenchmarkDriftWatcherTests(unittest.TestCase):
+    """check_benchmark_drift（repo 级对标基线复审窗，2026-07-23）。"""
+
+    def _write_registry(self, tmp, targets, interval=90):
+        import yaml
+        p = Path(tmp) / "benchmark-registry.yaml"
+        p.write_text(yaml.safe_dump(
+            {"version": 1, "review_interval_days": interval, "targets": targets},
+            allow_unicode=True), encoding="utf-8")
+        return p
+
+    def _target(self, repo="mattpocock/skills", reviewed="e" * 40,
+                reviewed_at="2026-07-23", **over):
+        t = {"repo": repo, "status": "active", "review_interval_days": None,
+             "ack_commit": None,
+             "last_review": {"kind": "window", "reviewed_commit": reviewed,
+                             "reviewed_at": reviewed_at, "upstream_commit_date": "2026-07-21",
+                             "adopted": "3 merge", "evidence": "framework-audit/x.md",
+                             "vetting_entry": None},
+             "history": [], "note": None}
+        t.update(over)
+        return t
+
+    def _run(self, tmp, targets, fetch, today, marker_name="bm-marker", interval=90):
+        dg = _load_daily_governance()
+        reg = self._write_registry(tmp, targets, interval=interval)
+        return dg.check_benchmark_drift(reg, Path(tmp) / marker_name, today, fetch_latest=fetch)
+
+    def test_window_not_due_is_silent_and_zero_network(self):
+        calls = []
+        def fetch(repo):
+            calls.append(repo)
+            return "f" * 40, "2026-08-01"
+        with tempfile.TemporaryDirectory() as tmp:
+            issues = self._run(tmp, [self._target(reviewed_at="2026-07-23")], fetch, "2026-07-23")
+            self.assertEqual(issues, [])
+            self.assertEqual(calls, [], "窗口未到期必须零网络查询")
+
+    def test_due_with_new_upstream_reports_with_compare_url(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            issues = self._run(tmp, [self._target(reviewed="e" * 40)],
+                               lambda r: ("f" * 40, "2026-10-01"), "2026-10-25")
+            self.assertEqual(len(issues), 1)
+            self.assertIn("compare/" + "e" * 8 + "..." + "f" * 8, issues[0])
+            self.assertIn("BENCHMARK-RUNBOOK", issues[0])
+            self.assertIn("2026-10-01", issues[0])
+
+    def test_due_but_unchanged_or_acked_is_silent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            # 上游没动（前缀容错：短 SHA 基线 vs 全长返回）
+            issues = self._run(tmp, [self._target(reviewed="e" * 12)],
+                               lambda r: ("e" * 40, "2026-07-21"), "2026-10-25")
+            self.assertEqual(issues, [])
+        with tempfile.TemporaryDirectory() as tmp:
+            issues = self._run(tmp, [self._target(ack_commit="f" * 40)],
+                               lambda r: ("f" * 40, "2026-10-01"), "2026-10-25")
+            self.assertEqual(issues, [], "ack_commit 应静音")
+
+    def test_missing_registry_is_silent(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(dg.check_benchmark_drift(
+                Path(tmp) / "nope.yaml", Path(tmp) / "m", "2026-07-23",
+                fetch_latest=lambda r: ("x", "")), [])
+
+    def test_bad_date_isolated_does_not_blind_others(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            targets = [self._target(repo="o/bad", reviewed_at="not-a-date"),
+                       self._target(repo="o/good", reviewed="e" * 40)]
+            issues = self._run(tmp, targets, lambda r: ("f" * 40, "2026-10-01"), "2026-10-25")
+            self.assertEqual(len(issues), 2, issues)
+            self.assertTrue(any("o/bad" in i and "不是合法日期" in i for i in issues), issues)
+            self.assertTrue(any("o/good" in i and "compare/" in i for i in issues), issues)
+
+
 if __name__ == "__main__":
     unittest.main()

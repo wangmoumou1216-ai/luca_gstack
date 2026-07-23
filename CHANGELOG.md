@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-07-23 · 对标自我成长 SOP 制度化）
+
+- **benchmark-registry.yaml（repo 级对标基线活登记）+ check_benchmark_drift（每日观察者）+
+  BENCHMARK-RUNBOOK「更新对标（窗口复审）」W①-W⑨ 一级节**（luca 指令：每次对标必录对方更新
+  日期+我们更新了什么，固化科学严谨的标准流程）。为什么：对标 commit 此前只冻结在
+  framework-audit/*/inventory.yaml（零消费者），「更新对标」只是无执行者的 inline 补注——
+  基线必须「机读活登记+确定性消费者」同时成立；流程教训（枚举穷尽断言/血统落点直读/need-first
+  三问门/FACT-INFERENCE-CLAIM 靶子/红队+fable 终审编排）自 07-23 mattpocock 窗口复审实证固化。
+
 ### Changed（2026-07-23 · mattpocock 更新对标第二批）
 
 - **plan-agent 毕业判准加决策/执行类型闸；brainstorm Rule 3 事实源扩至工具；code-recon 加 churn

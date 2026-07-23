@@ -475,6 +475,129 @@ def check_upstream_drift(pins_path, plugins_json_path, marker_path, today, fetch
     return issues
 
 
+def _gh_latest_commit_with_date(repo: str):
+    """repo 级最新 commit（SHA + 日期）——benchmark-registry 比较键。repo 域在此合法：
+    区别于 _gh_latest_commit 的 path 域（NF2：pins 的 ack_sha 永不用 repo HEAD，本表反之）。"""
+    proc = subprocess.run(["gh", "api", f"repos/{repo}/commits?per_page=1",
+                           "--jq", '.[0].sha + " " + .[0].commit.committer.date'],
+                          capture_output=True, text=True, timeout=UPSTREAM_FETCH_TIMEOUT)
+    if proc.returncode != 0:
+        raise RuntimeError(f"gh exit {proc.returncode}: {(proc.stderr or '').strip()[:120]}")
+    out = (proc.stdout or "").strip()
+    if not out:
+        return "", ""
+    parts = out.split()
+    return parts[0], (parts[1][:10] if len(parts) > 1 else "")
+
+
+def check_benchmark_drift(registry_path, marker_path, today, fetch_latest=None):
+    """已对标 repo 的复审窗观察者（2026-07-23，源 luca「对标基线制度化」指令）。propose-only：
+    只产 digest 行供人裁，复审走 BENCHMARK-RUNBOOK「更新对标（窗口复审）」节，永不自动改。
+
+    与 check_upstream_drift 分工：那边盯「已装 unit 的 path 域」——任何新 commit 即告警、
+    出口是 FUSION refresh；这边盯「已对标 repo 级」——复审窗到期 **且** 上游确有新 commit
+    双条件才出一行（防疲劳）、覆盖零安装的对标目标、出口是窗口复审。ack_commit 是 repo 域
+    HEAD 静音（本表比较键本就是 repo 级，合法；NF2 禁的是 repo HEAD 进 pins 的 path 域）。
+    窗口未到期不发网络查询（省预算）；节流 marker 7 天 + 缓存回放；fail-open。
+    """
+    issues = []
+    try:
+        registry_path = Path(registry_path)
+        if not registry_path.is_file():
+            return issues  # 未启用即静默
+        import yaml
+        data = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+        targets = data.get("targets") or []
+        default_interval = int(data.get("review_interval_days", 90))
+        try:
+            today_d = datetime.strptime(str(today), "%Y-%m-%d").date()
+        except Exception:  # noqa: BLE001
+            today_d = datetime.now(timezone.utc).date()
+
+        marker = Path(marker_path)
+        if marker.exists():
+            age_days = (datetime.now(timezone.utc).timestamp() - marker.stat().st_mtime) / 86400
+            if age_days < UPSTREAM_DRIFT_INTERVAL_DAYS:
+                # 节流窗口内回放缓存（同 check_upstream_drift：否则周内 digest 重写时提醒行消失）
+                try:
+                    issues.extend(json.loads(marker.read_text(encoding="utf-8")).get("issues") or [])
+                except Exception:  # noqa: BLE001
+                    pass
+                return issues
+
+        def _sha_eq(a, b):
+            a, b = str(a or ""), str(b or "")
+            return bool(a) and bool(b) and (a.startswith(b) or b.startswith(a))
+
+        fetch = fetch_latest or _gh_latest_commit_with_date
+        deadline = time.monotonic() + UPSTREAM_TOTAL_BUDGET
+        any_fetch_success = False
+        any_fetch_attempted = False
+        failures = []
+        found = []
+        for t in targets:
+            if not isinstance(t, dict):
+                continue
+            repo = str(t.get("repo") or "?")
+            if str(t.get("status") or "active") != "active":
+                continue
+            lr = t.get("last_review") or {}
+            reviewed = str(lr.get("reviewed_commit") or "")
+            at = lr.get("reviewed_at")
+            if not reviewed or not at:
+                found.append(f"{repo}: benchmark-registry 行不完整（缺 reviewed_commit/reviewed_at）——补齐后复审窗才可计算")
+                continue
+            # 逐 target 容错：单条坏日期不得让整轮失明（同 check_gap_recheck 教训）
+            try:
+                at_d = at if hasattr(at, "year") else datetime.strptime(str(at), "%Y-%m-%d").date()
+            except Exception:  # noqa: BLE001
+                found.append(f"{repo}: reviewed_at={at!r} 不是合法日期（YYYY-MM-DD），该条复审窗无法计算")
+                continue
+            interval = int(t.get("review_interval_days") or default_interval)
+            age = (today_d - at_d).days
+            if age < interval:
+                continue  # 窗口未到期：零网络查询
+            if time.monotonic() > deadline:
+                found.append(f"对标基线检查部分跳过（总预算 {UPSTREAM_TOTAL_BUDGET}s 用尽，{repo} 起未查）")
+                break
+            any_fetch_attempted = True
+            try:
+                current, cdate = fetch(repo)
+            except Exception as e:  # noqa: BLE001
+                failures.append(f"{repo}（{e}）")
+                continue
+            any_fetch_success = True
+            if not current:
+                found.append(f"{repo}: 上游查询返回空（repo 疑改名/删除）——检查 benchmark-registry 该行")
+                continue
+            if _sha_eq(current, reviewed) or _sha_eq(current, t.get("ack_commit")):
+                continue  # 上游没动 / 已静音：窗口到期但无增量 = 无事可审
+            found.append(
+                f"{repo}: 对标基线已 {age} 天（{lr.get('kind', '?')} @ {reviewed[:8]}，{at}），"
+                f"上游最新 {current[:8]}（{cdate or '?'}）——开窗口复审走 BENCHMARK-RUNBOOK「更新对标」节；"
+                f"本窗口不审则把 {current[:8]} 填 ack_commit 静音。"
+                f"对比 https://github.com/{repo}/compare/{reviewed[:8]}...{current[:8]}")
+        if failures:
+            if any_fetch_success:
+                found.append("对标目标上游无法访问（同批其他源正常——404 即删库/私有化/改名的供应链信号，请人工核查）："
+                             + "、".join(failures))
+            else:
+                found.append(f"对标基线检查跳过（{len(failures)} 源全失败，疑离线/gh 未认证——marker 不刷新，下次重试）")
+        issues.extend(found)
+        # 与 upstream 的 marker 差异：窗口全部未到期（零 fetch）也算健康完成，写 marker 缓存空结果；
+        # 有 fetch 且全失败才不刷新（次日重试）。
+        if any_fetch_success or not any_fetch_attempted:
+            try:
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                marker.write_text(json.dumps({"checked_at": today, "issues": found}, ensure_ascii=False),
+                                  encoding="utf-8")
+            except OSError:
+                pass
+    except Exception as e:  # noqa: BLE001 — 检查绝不打断治理
+        issues.append(f"对标基线检查异常（已 fail-open）：{e}")
+    return issues
+
+
 LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
 CLAUDE_MD_SOFT_BUDGET = 44 * 1024  # CLAUDE.md 软预算早警阈值（B1 硬门 45KB，软门给 1KB 撞墙前预警）；
                                    # 超此即 digest 告警，把撞墙式硬门升级成早警防贴墙（2026-07-21，
@@ -826,6 +949,20 @@ def main() -> int:
             lines += [f"- {i}" for i in drift] + [""]
     except Exception as e:  # noqa: BLE001
         lines += [f"> ⚠️ 上游漂移检查异常（fail-open）：{e}", ""]
+
+    # 对标基线复审窗（2026-07-23）：repo 级观察者，与 📦（unit path 级）分工见函数 docstring；
+    # 同样不参与写入判定（网络抖动不得强制写 digest）。
+    try:
+        bdrift = check_benchmark_drift(
+            registry_path=ROOT / ".claude" / "skill-os" / "evolution" / "benchmark-registry.yaml",
+            marker_path=DIGESTS / ".benchmark-drift-checked",
+            today=today,
+        )
+        if bdrift:
+            lines += ["## 🧭 对标基线到期（propose-only；复审走 BENCHMARK-RUNBOOK「更新对标」节，观察者永不自动改）", ""]
+            lines += [f"- {i}" for i in bdrift] + [""]
+    except Exception as e:  # noqa: BLE001
+        lines += [f"> ⚠️ 对标基线检查异常（fail-open）：{e}", ""]
 
     # ⚙️ 小节呈现（loop_anomalies 已在降频判定前算出——异常本身构成写 digest 的理由）
     if loop_anomalies:

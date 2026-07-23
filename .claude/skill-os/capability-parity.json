@@ -175,7 +175,13 @@
     ],
     ".claude/skill-os/evolution/BENCHMARK-RUNBOOK.md": [
       "演进模式 2",
-      "GATE 逐项裁决"
+      "GATE 逐项裁决",
+      "窗口复审",
+      "基线推进"
+    ],
+    ".claude/skill-os/evolution/benchmark-registry.yaml": [
+      "last_review",
+      "review_interval_days"
     ],
     ".claude/skill-os/evolution/FUSION-RUNBOOK.md": [
       "FM-10",

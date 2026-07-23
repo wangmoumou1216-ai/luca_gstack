@@ -1,0 +1,53 @@
+# 对标基线台账（repo 级活登记，SSOT）：做过 BENCHMARK-RUNBOOK 对标（全量/窗口）的目标仓唯一真值。
+# 立项依据：2026-07-23 luca 指令「每次对标后记录对方更新日期 + 我们更新了什么，下次成长有增量起点」；
+# 病灶实证：对标 commit 此前只冻结在 framework-audit/*/inventory.yaml（零消费者）。
+#
+# 写入者：BENCHMARK-RUNBOOK 出口「基线推进」步骤（每轮对标/复审收口时人裁落笔；全量首轮建行，
+#         窗口复审推进行——旧 last_review 压入 history 头部）。漏写 = 下次成长无增量起点，
+#         与 FUSION 步⑨「漏更 pins = watcher 烂掉」同级维护义务。
+# 消费者：memory/scripts/daily_governance.py::check_benchmark_drift（每日确定性观察者，
+#         复审窗到期 且 上游确有新 commit 双条件才在 digest 出一行；propose-only）。
+#
+# 与 installed-pins.yaml 分工边界（勿混淆）：
+#   pins + check_upstream_drift = 「已装 unit 的 path 域」——装了才盯，path 任何新 commit 即告警，
+#     出口是 FUSION refresh；
+#   本表 + check_benchmark_drift = 「已对标 repo 的整体」——对标过就盯（含零安装目标），
+#     出口是 BENCHMARK-RUNBOOK「更新对标（窗口复审）」。同一 repo 可同时在两处
+#     （mattpocock/skills 即是），两条告警两个出口，互不吞并。
+#
+# 字段规范：
+#   reviewed_commit 存全长 SHA（历史回填允许短 SHA，比较逻辑前缀容错）；
+#   upstream_commit_date = reviewed_commit 的上游 commit 日期（必录项①「对方的更新日期」）；
+#   adopted + evidence = 我们更新了什么的一句摘要 + 全档指针（必录项②）；
+#   ack_commit = 已裁决「本窗口不复审」的上游 repo HEAD 静音——本表比较键本就是 repo 级，
+#     用 repo HEAD 合法（NF2 禁的是把 repo HEAD 填进 pins 的 path 域 ack_sha，两域各归各）；
+#   history 追加式、最近在前；窗口语义 = 上一条 reviewed_commit → 本条 reviewed_commit。
+version: 1
+review_interval_days: 90   # 默认复审窗（与 gaps-register addressed_recheck_days=90 同节奏）
+targets:
+- repo: mattpocock/skills
+  status: active            # active=盯 | retired=不盯（上游死亡/裁决退出；留档不删行）
+  review_interval_days: null   # per-target 覆盖（null=用顶层默认）
+  ack_commit: null
+  last_review:
+    kind: window
+    reviewed_commit: ed37663cc5fbef691ddfecd080dff42f7e7e350d
+    reviewed_at: '2026-07-23'
+    upstream_commit_date: '2026-07-21'
+    adopted: "3 merge（plan-agent 毕业类型闸 / brainstorm 事实源扩工具 / code-recon churn 富化）
+      / 2 reject（batch-grill-me KILL 带重启触发器、YAGNI branch(b)）/ 1 gap（GAP-decision-questionnaire）
+      / 血统复核 4 条（wayfinder no-op 被 OVERTURNED 补吸收）/ plugin 渠道不切"
+    evidence: framework-audit/2026-07-23-mattpocock-update-consensus.md
+    vetting_entry: mattpocock-skills-update-review-2026-07-23
+  history:
+  - kind: full
+    reviewed_commit: 391a2701dd948f94f56a39f7533f8eea9a859c87
+    reviewed_at: '2026-07-12'
+    upstream_commit_date: '2026-07-10'
+    adopted: "51 单元全量深评 GATE-2：install codebase-design/resolving-merge-conflicts + refresh tdd
+      + personal teach + merge 吸收 8 落点（fog 概念层/facts-decisions/竖切+expand-contract/deletion-test
+      /seam 前置/skill-authoring 等）+ 4 新 gap"
+    evidence: framework-audit/mattpocock-benchmark-2026-07/FINAL-VERDICT-PACK.md
+    vetting_entry: mattpocock-skills-full-benchmark-2026-07
+  note: 4 已装 unit 另在 installed-pins path 域盯守（双覆盖、不同出口——pins→FUSION refresh，
+    本表→窗口复审）；07-23 轮 path 域 ack=697d4ce9 经实测维持有效
