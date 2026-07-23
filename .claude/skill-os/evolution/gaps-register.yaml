@@ -9,7 +9,7 @@
 # 种子来自 2026-06-21 地毯式审计；2026-06-21 复盘新增双层 gap（应用作业层 + 框架自维护）。
 
 version: 2
-updated: 2026-07-14
+updated: 2026-07-23
 
 gaps:
   - id: GAP-behavioral-verification
@@ -180,3 +180,12 @@ gaps:
     severity: low
     desired_capability_keywords: [issue tracker, work item layer, blocking links, ready-for-agent, shared map]
     status: open   # 2026-07-12 GATE-2 批准开启探索；tracker 簇候选下轮 evolution 周期按 fit-to-gap 重入
+
+  # ── 2026-07-23 mattpocock 更新对标衍生（fable 终审 D4；luca 批准落笔「按照计划执行」）──
+  - id: GAP-decision-questionnaire
+    dimension: skills
+    layer: application
+    statement: "PRD 逼问/规划产生的待决问题挂在具名他人处时，无第三出口（决策问卷制品——把 luca 答不了的决策变成给具名知识持有者异步填的文档）；近似实例 EP-20260722-098（品牌方接受度/欧美销售可用性测试等待决挂具名他人处）。对口:mattpocock to-questionnaire（in-progress，grill-the-send 手法+异步单程模板）。"
+    severity: low
+    desired_capability_keywords: [decision questionnaire, stakeholder elicitation, async knowledge capture, grill the send]
+    status: open   # 延迟采纳非拒绝。触发=第一次真实出现「luca 要把待决递给具名知识持有者」→ 取上游 to-questionnaire 全文 merge 吸收，届时按 SC-20260721-002 判据②裁卡型进 research-kit 正文 vs references 底料。证据锚:framework-audit/2026-07-23-mattpocock-update-consensus.md §A-D4

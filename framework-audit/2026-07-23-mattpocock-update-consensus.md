@@ -87,7 +87,8 @@ git push && test -z "$(git status --porcelain)"
 - P3：vetting-registry `manual_vetting_2026_07_23` 追加；ADOPTED.md 第二批节；adoption-log 3 条；
   CHANGELOG [Unreleased] 一行式。
 - P4：断言 A1-A7 全 PASS（含 check-routing-map / check-registration-sync 回归绿、教义未误伤 grep）。
-- Completion Status：**DONE_WITH_CONCERNS**——defer 项唯一：GAP-decision-questionnaire 写入
-  gaps-register 待 luca 一句话批准（提案全文见 §A-D4）。
+- Completion Status：**DONE**——原 defer 项 GAP-decision-questionnaire 已经 luca 批准
+  （「按照计划执行」）写入 gaps-register.yaml（status: open，触发条件与落法裁决内联），
+  本轮采纳闭环无剩余挂起项。
 
 <!-- FILE_END: 2026-07-23-mattpocock-update-consensus.md -->
