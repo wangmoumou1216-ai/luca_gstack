@@ -181,6 +181,16 @@ gaps:
     desired_capability_keywords: [issue tracker, work item layer, blocking links, ready-for-agent, shared map]
     status: open   # 2026-07-12 GATE-2 批准开启探索；tracker 簇候选下轮 evolution 周期按 fit-to-gap 重入
 
+  # ── 2026-07-23 单点评估入口缺口（同日 plan 获批人裁开启并落地）──
+  - id: GAP-punctual-candidate-eval
+    dimension: governance
+    layer: framework
+    statement: "「用户点名单个 repo 做采纳评估」无 SOP 入口：BENCHMARK-RUNBOOK 把单点工具指向模式1 fit-to-gap，但 scout workflow 仅收 {date,focus_gaps} 扫描入参——评估段门禁（Verify五硬门/default-deny/推荐级红队/candidate-log 落笔）单点场景够不到；历史4次单点评估全靠即兴（红队覆盖 0-5 轮方差），candidate-log/vetting-registry 零落笔、scout 查重全盲。证据锚：2026-07-23 session 深度审查（tirth8205/code-review-graph 评估缺红队+落笔实证；EP-20260723-103）。"
+    severity: medium
+    desired_capability_keywords: [punctual evaluation, single candidate, adoption gate, candidate bookkeeping]
+    status: addressed   # 2026-07-23 同日落地模式1b：framework-evolution-scout args.target_repos 单点分支（Load→Intake→复用 Verify/adjudicate/Redteam 全门禁，零复制）+ evolution-bookkeep punctual 摄入（run tag punctual-YYYY-MM-DD，跳 yield_stats）+ BENCHMARK-RUNBOOK 悬空路由句改具名指针 + 历史4先例 backfill 补 candidate-log 查重面；验收=tirth8205/code-review-graph 真实钻孔
+    addressed_at: 2026-07-23
+
   # ── 2026-07-23 mattpocock 更新对标衍生（fable 终审 D4；luca 批准落笔「按照计划执行」）──
   - id: GAP-decision-questionnaire
     dimension: skills

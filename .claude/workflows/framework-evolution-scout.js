@@ -1,10 +1,11 @@
 export const meta = {
   name: 'framework-evolution-scout',
-  description: '月度框架自进化侦察：从 sources-registry 生成发现通道(S1-S4)，按 gaps-register 做 fit-to-gap 门禁，gh 证据核验 + 供应链 + 推荐级红队，产出 propose-only 演进 digest。零自动编辑 luca_gstack。args 可选 {date,focus_gaps}。',
+  description: '月度框架自进化侦察：从 sources-registry 生成发现通道(S1-S4)，按 gaps-register 做 fit-to-gap 门禁，gh 证据核验 + 供应链 + 推荐级红队，产出 propose-only 演进 digest。零自动编辑 luca_gstack。args 可选 {date,focus_gaps}；args.target_repos=模式1b 单点候选评估（用户点名 repo 时用：跳过发现段，同门禁 Verify+红队+bookkeep 落笔）。',
   phases: [
     { title: 'Load' },
     { title: 'AdoptionReview' },
     { title: 'Discover' },
+    { title: 'Intake' },
     { title: 'Verify' },
     { title: 'Redteam' },
   ],
@@ -42,6 +43,13 @@ if (typeof args === 'string' && args.trim()) {
 }
 const runDate = (parsed && parsed.date) || 'unknown'
 const focusGaps = (parsed && parsed.focus_gaps) || null // 可选：只跑某些 GAP-id
+// 模式1b 单点评估：用户点名 repo（string 或 array）→ 跳过发现段，走同一套门禁（分支在 schema 定义之后）
+const targetRepos = (() => {
+  const t = parsed && parsed.target_repos
+  if (!t) return null
+  const arr = (Array.isArray(t) ? t : [t]).map(s => String(s).trim()).filter(Boolean)
+  return arr.length ? arr : null
+})()
 
 // ── Phase Load：workflow 无 fs，派一个 loader agent 用 Bash+python 读真值文件 ──
 const LOADER_SCHEMA = {
@@ -109,7 +117,7 @@ const loaderPrompt =
   '4. .claude/skill-os/evolution/self-model.generated.yaml → already_have_ondisk.{skills_office,skills_global,agents,hooks}.\n' +
   '5. .claude/skill-os/external-skills/vetting-registry.yaml → EVERY repo identifier (owner/repo) under any status (approved/conditional/rejected/…). If the YAML shape is unclear, grep for "repo:" / "owner" / github URLs and collect them.\n' +
   '6. .claude/skill-os/evolution/candidate-log.jsonl (if present) → 分级拉黑 (tiered blocking, use python datetime vs RUN_DATE): merge into existing_repos ONLY the "repo" fields of entries whose verdict/type indicates REJECTED or KILLED* AND whose date is within 183 days of RUN_DATE. Do NOT block: type=="opportunity"/verdict=="OPPORTUNITY" entries (never blocked), APPROVED/CONDITIONAL entries older than 183 days, or rejects older than 183 days（仓会成熟；resurface 时 verify 层会重新全量安全筛查兜底）. In load_notes, note how many stale rejects became resurfaceable.\n' +
-  '7. From candidate-log.jsonl also extract prior_opportunities = the opportunity entries (type=="opportunity" or verdict=="OPPORTUNITY") belonging to the MOST RECENT prior run tag: {name,repo,note(=note/why_notable/reason),date}. The digest author MUST adjudicate each one.\n\n' +
+  '7. From candidate-log.jsonl also extract prior_opportunities = the opportunity entries (type=="opportunity" or verdict=="OPPORTUNITY") belonging to the MOST RECENT prior SWEEP run tag — EXCLUDE runs whose tag starts with "punctual-" or "backfill-" (single-target/backfill bookkeeping, not sweep rounds; they carry no opportunities and must not shadow the real prior sweep): {name,repo,note(=note/why_notable/reason),date}. The digest author MUST adjudicate each one.\n\n' +
   'RETURN: sources (active), gaps (open), existing_names = lowercased union of all names from #3+#4, existing_repos = lowercased owner/repo list from #5 + #6 (tiered), prior_opportunities (#7), addressed_recheck (#2). load_notes = anything that failed to parse. Do NOT invent; if a file is missing, return what you have and note it.\n' +
   'RUN_DATE: ' + runDate
 
@@ -221,6 +229,61 @@ const REDTEAM_SCHEMA = {
     reason: { type: 'string' },
   },
   required: ['redteam_verdict', 'integration_risk', 'reason'],
+}
+
+// ── 模式1b 单点候选评估（BENCHMARK-RUNBOOK「单点工具走模式1」的实际入口）─────────
+// 跳过 AdoptionReview+Discover；Intake 构造候选后复用下方同一套 verifyPrompt/adjudicate/
+// redteamPrompt（function 声明提升，此处可直接调用）——门禁零复制，sweep 路径零改动。
+if (targetRepos) {
+  const priorEntryHints = targetRepos.filter(r => existingRepos.has(String(r).toLowerCase()))
+  if (priorEntryHints.length) log('⚠️ 已有评估记录（vetting-registry/candidate-log 命中），本轮按复评跑：' + priorEntryHints.join(', '))
+  phase('Intake')
+  const intakePrompt = r =>
+    'You are the INTAKE agent for a PUNCTUAL (user-pointed) candidate evaluation. The user asked luca_gstack to evaluate ONE specific repo: "' + r + '".\n' +
+    'Using REAL tool output only (gh api repos/' + r + ' ; README via gh api repos/' + r + '/readme), produce EXACTLY ONE candidate object describing what this repo IS:\n' +
+    '- name / repo(owner/repo) / url / kind (skill | subagent | pattern | capability | collection | tool)\n' +
+    '- gap_id: map to ONE of the OPEN GAPS below only if it genuinely fits; else "none" — do NOT force-fit, "none" is a legitimate answer and downstream hard gates handle it\n' +
+    '- dimension, reuse_mode (install | port-pattern | adapt-idea), one_line_value, fit_hypothesis, fit_score 0-3, signals (stars/forks/pushed as observed), evidence_url\n\n' +
+    'OPEN GAPS:\n' + gapsText + '\n\n' +
+    'Return via schema: candidates=[that ONE object], channel_notes=what you observed vs could not verify.'
+  const intake = await parallel(targetRepos.map(r => () =>
+    agent(intakePrompt(r), { label: 'intake:' + r, phase: 'Intake', schema: CANDIDATE_SCHEMA })))
+  const targets = intake.filter(Boolean).flatMap(d => d.candidates || []).filter(c => c && c.repo)
+  if (!targets.length) { log('INTAKE FAILED — no candidate constructed'); return { run_date: runDate, mode: 'punctual', error: 'intake_failed', target_repos: targetRepos } }
+  for (const c of targets) if (!c.gap_id || !openGapIds.includes(c.gap_id)) c.gap_id = 'none'
+  phase('Verify')
+  const pVerdicts = await parallel(targets.map(c => () =>
+    agent(verifyPrompt(c), { label: 'verify:' + c.repo, phase: 'Verify', schema: VERDICT_SCHEMA })
+      .then(v => (v ? Object.assign({}, c, v) : null))))
+  const pJudged = pVerdicts.filter(Boolean).map(adjudicate)
+  if (!pJudged.length) { log('VERIFY FAILED — no verdict returned'); return { run_date: runDate, mode: 'punctual', error: 'verify_failed', target_repos: targetRepos } }
+  phase('Redteam')
+  const pRedteamed = await parallel(pJudged.map(v => () =>
+    agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })
+      .then(r => Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }))))
+  for (const v of pRedteamed) {
+    // 无 open gap 对口 → 机械封顶 REJECTED（与 sweep 的 opportunities 分流同义；不依赖 verify LLM 自觉 FAIL）
+    if (v.gap_id === 'none') { v.verdict = 'REJECTED'; v.no_open_gap_note = '无 open gap 对口：结论最多 opportunity/开 gap 提案，不可采纳（机械封顶，非 LLM 裁量）' }
+    if (v.redteam.redteam_verdict === 'killed') { v.verdict = 'REJECTED'; v.killed_by_redteam = true }
+    // 白名单语义与 sweep 对齐：APPROVED 只有精确 'stands' 才保得住，任何非规范字符串一律降档
+    else if (v.verdict === 'APPROVED' && v.redteam.redteam_verdict !== 'stands') v.verdict = 'CONDITIONAL'
+  }
+  return {
+    run_date: runDate,
+    mode: 'punctual',
+    red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); 热度≠适配; 采纳另行人裁走 FUSION-RUNBOOK',
+    target_repos: targetRepos,
+    prior_entry_hint: priorEntryHints,
+    stats: {
+      raw: targets.length, unique: targets.length, verified: pJudged.length,
+      approved: pRedteamed.filter(v => v.verdict === 'APPROVED').length,
+      conditional: pRedteamed.filter(v => v.verdict === 'CONDITIONAL').length,
+      rejected: pRedteamed.filter(v => v.verdict === 'REJECTED').length,
+      killed_by_redteam: pRedteamed.filter(v => v.killed_by_redteam).length,
+      dropped_existing: 0, opportunities: 0,
+    },
+    results: pRedteamed,
+  }
 }
 
 // ── Phase AdoptionReview：读 adoption-log 出 keep/watch/revert 复盘（propose-only）──

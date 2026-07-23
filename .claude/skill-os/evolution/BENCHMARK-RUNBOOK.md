@@ -19,7 +19,8 @@
 「与自有 skill 重叠但质量信号高」正是对标的最佳素材，mattpocock 首批即人工从此池挖出；
 2026-07-15 记忆层评审 B2 裁决：不改 scout 采集，这里补消费入口即可）。
 选型标准：对方是**成体系**的实践（skill 集 / 框架 / 方法论），且与 luca_gstack 有可比面——
-单点工具走模式 1 的 fit-to-gap 即可，不值得对标。
+单点工具走**模式 1b 单点评估**（Workflow `framework-evolution-scout`，args `{target_repos:["owner/repo"], date}`：
+跳过发现段，同门禁 Verify 五硬门 + 推荐级红队，簿记 `evolution-bookkeep.mjs` 落 candidate-log），不值得对标。
 
 ## 流程（六步，复用 mattpocock 先例的结构）
 

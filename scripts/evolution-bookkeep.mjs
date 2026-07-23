@@ -36,13 +36,23 @@ for (const p of [logPath, registryPath]) {
 let ret;
 try { ret = JSON.parse(readFileSync(jsonPath, 'utf8')); }
 catch (e) { console.error(`返回 JSON 解析失败: ${e.message}`); process.exit(2); }
-if (!ret.stats || !ret.source_yield) {
-  console.error('返回 JSON 缺 stats/source_yield 字段——这不是 framework-evolution-scout 的返回值。');
+// 模式1b 单点评估返回（mode:'punctual'）：无 source_yield（没跑发现通道），验 stats+results
+const isPunctual = ret.mode === 'punctual';
+if (!ret.stats || (isPunctual ? !Array.isArray(ret.results) : !ret.source_yield)) {
+  console.error(isPunctual
+    ? '返回 JSON 缺 stats/results 字段——这不是 framework-evolution-scout 单点评估（mode:punctual）的返回值。'
+    : '返回 JSON 缺 stats/source_yield 字段——这不是 framework-evolution-scout 的返回值。');
   process.exit(2);
 }
 
-const run = ret.run_date && ret.run_date !== 'unknown' ? String(ret.run_date) : new Date().toISOString().slice(0, 7);
 const date = new Date().toISOString().slice(0, 10);
+// punctual run tag 掺入 repo 身份：同日评估不同 repo 是常态，纯日期 tag 会被幂等守卫误杀并诱导 --force 开闸
+const repoSlug = isPunctual
+  ? (ret.target_repos || []).map(r => String(r).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')).join('+').slice(0, 80)
+  : '';
+const run = isPunctual
+  ? `punctual-${ret.run_date && ret.run_date !== 'unknown' ? String(ret.run_date) : date}-${repoSlug || 'unnamed'}`
+  : (ret.run_date && ret.run_date !== 'unknown' ? String(ret.run_date) : new Date().toISOString().slice(0, 7));
 
 // ── 幂等守卫：同 run 已由本脚本落过盘 → 拒绝重复追加 ──
 // 注意匹配 JSON.stringify 的无空格格式（"run":"…"），手写行的带空格格式不在守卫范围。
@@ -55,6 +65,18 @@ if (!force && existingLog.split('\n').some(l => l.includes(`"run":"${run}"`) && 
 // ── 组装追加行（schema 对齐既有 candidate-log 手写行）──
 const trim = (s, n = 240) => String(s || '').replace(/\s+/g, ' ').slice(0, n);
 const lines = [];
+if (isPunctual) {
+  lines.push({ date, run, type: 'run_summary', bookkeep: true, mode: 'punctual', target_repos: ret.target_repos, prior_entry_hint: ret.prior_entry_hint || [], ...ret.stats });
+  for (const v of ret.results) {
+    lines.push({
+      date, run, type: 'candidate', mode: 'punctual', name: v.name, repo: v.repo, gap_id: v.gap_id,
+      verdict: v.verdict, killed_by_redteam: v.killed_by_redteam || undefined,
+      weighted_score: v.weighted_score, hard: v.hard, reuse_mode: v.reuse_mode,
+      reason: trim((v.redteam && v.redteam.reason) || v.why_useful),
+      note: v.no_open_gap_note || undefined,
+    });
+  }
+} else {
 lines.push({ date, run, type: 'run_summary', bookkeep: true, ...ret.stats });
 for (const v of [...(ret.approved || []), ...(ret.approved_overflow || [])]) {
   lines.push({ date, run, type: 'candidate', name: v.name, repo: v.repo, gap_id: v.gap_id, verdict: 'APPROVED', weighted_score: v.weighted_score, reuse_mode: v.reuse_mode, reason: trim((v.redteam && v.redteam.reason) || v.why_useful) });
@@ -71,9 +93,10 @@ for (const r of ret.rejected_summary || []) {
 for (const o of ret.opportunities || []) {
   lines.push({ date, run, type: 'opportunity', name: o.name, repo: o.repo, dimension: o.dimension, verdict: 'OPPORTUNITY', note: trim(o.why_notable), signals: trim(o.signals, 120) });
 }
+}
 const appendText = lines.map(l => JSON.stringify(l)).join('\n') + '\n';
 
-// ── yield_stats 机械更新（录取 = approved + conditional；只改数值行）──
+// ── yield_stats 机械更新（录取 = approved + conditional；只改数值行）；punctual 无发现通道，跳过 ──
 const conditionalBySource = {};
 for (const v of ret.conditional || []) {
   if (v.source_id) conditionalBySource[v.source_id] = (conditionalBySource[v.source_id] || 0) + 1;
@@ -81,7 +104,7 @@ for (const v of ret.conditional || []) {
 let registry = readFileSync(registryPath, 'utf8');
 const yieldUpdates = [];
 const pruneWarnings = [];
-for (const [sid, sy] of Object.entries(ret.source_yield)) {
+for (const [sid, sy] of Object.entries(isPunctual ? {} : ret.source_yield)) {
   // 定位该 source 块内的 yield_stats 行（块 = 本 id 行到下一个 "- id:" 之间）
   const blockRe = new RegExp(`(- id: ${sid}[\\s\\S]*?)(yield_stats: \\{[^}]*\\})`);
   const m = registry.match(blockRe);
@@ -109,7 +132,7 @@ if (dryRun) {
 }
 
 appendFileSync(logPath, appendText);
-writeFileSync(registryPath, registry);
+if (!isPunctual) writeFileSync(registryPath, registry);
 console.log(`✅ candidate-log.jsonl +${lines.length} 行（run=${run}）`);
 console.log(`✅ yield_stats 已更新：\n${yieldUpdates.map(u => '   ' + u).join('\n') || '   （无）'}`);
 pruneWarnings.forEach(w => console.error(w));
