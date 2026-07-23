@@ -14,13 +14,13 @@
 # daily_governance.check_self_model() 每日校验 updated 复核期限（>review_after_days 入 digest）。
 
 version: 1
-updated: 2026-06-21
+updated: 2026-07-23   # 本次复核：identity 对齐 CONTEXT.md 2026-07-03 身份修正 + 全档快检（testing.npm 补两门）
 review_after_days: 35
 
 identity:
-  purpose: "面向纷享销客 CRM 产品设计(PRD→UX→原型→工程规格)的 Claude Code Skill-OS"
+  purpose: "多项目个人开发环境的 Claude Code Skill-OS（设计→工程链：PRD→UX→原型→工程规格）；CRM（纷享销客）为可选休眠 profile，非默认场景"
   architecture: "Skill-first, Graph-optional；环境/项目剥离(docs/state/topic 三软链)"
-  brand_authority: "brand-tokens.md #FF8000；framework/ 只读(SF-001/SF-002)"
+  brand_authority: "brand-tokens.md #FF8000 仅 CRM profile 激活时生效；framework/ 只读(SF-002)恒成立、与场景无关"
   default_model: sonnet            # 镜像 model-routing default_tier=guided-execution
 
 # 七维演进面：每维指向真实文件 + 守卫 + 什么样的外部能帮它
@@ -53,7 +53,7 @@ surface:
     external_help: 多 agent 编排 / 状态机 / 对抗校验模式
   testing:
     suite: scripts/verify.sh
-    npm: [check:hooks, test:routes, test:memory, check:routing-map, check:quality-gates, check:coding-discipline, check:project-links, check:memory-health, check:self-model]
+    npm: [check:hooks, test:routes, test:memory, check:routing-map, check:registration, check:quality-gates, check:coding-discipline, check:project-links, check:memory-health, check:self-model, lint:yaml]
     external_help: 行为级 eval/A-B、契约测试、property-based
 
 # 不在磁盘上、无法由生成器推导的既有能力（claude-code 内置 + persona）
