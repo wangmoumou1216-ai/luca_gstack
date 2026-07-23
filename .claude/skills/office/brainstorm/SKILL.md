@@ -131,9 +131,10 @@ deepresearch*.md (or idea)
     a source claim was included, deferred, rejected, or removed.
 
 3. **One question at a time.** During Phase 3, use the AskUserQuestion exactly once per question.
-   **Facts vs decisions（2026-07-12 显式化，源 grilling）：** 能查到的**事实**（代码库/文档/
-   已有研究可得）自己查，不消耗提问机会；**决策**永远属于用户——逐个抛出并等待回答。
-   判据一句：答案能被检索到 → fact；答案取决于用户偏好/取舍 → decision。
+   **Facts vs decisions（2026-07-12 显式化，源 grilling；2026-07-23 事实源扩至工具，源其
+   environment 放宽）：** 能查到的**事实**（代码库/文档/已有研究，以及跑命令/调工具/web 检索
+   可当场确立的）自己查，不消耗提问机会；**决策**永远属于用户——逐个抛出并等待回答。
+   判据一句：答案能被检索**或用工具当场确立** → fact；答案取决于用户偏好/取舍 → decision。
 3b. **Oracle 术语定案即持久化（2026-07-12，源 domain-modeling）：** Phase 5 Oracle 的
    terminology-drift 发现一经定案（选定 canonical 词），当场 inline 写入激活项目 CONTEXT.md
    词汇节（`**术语**: 定义 _Avoid_: 别名`）——不再是会话内 ephemeral 修正。

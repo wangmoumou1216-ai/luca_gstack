@@ -56,4 +56,11 @@
 - MIT 署名：本条即署名记录（内容原样拷贝自 pin commit，未改动）
 - 回滚：双仓 tag `pre-fuse-mattpocock-batch1`；编排集成契约见 benchmark 目录 ORCHESTRATION-INTEGRATION.md
 
+## mattpocock/skills 更新对标第二批（2026-07-23，窗口 391a2701→ed37663c）
+- 流程：靶子→红队 R1-R4 并行 refute→fable 终审逐项 verdict，全档 framework-audit/2026-07-23-mattpocock-update-{review,redteam-findings,consensus}.md
+- **merge ×3**：wayfinder decision-ticket 正名→`plan-agent.md` 毕业判准类型闸（决策型永不毕业成自主执行 U-block）；grilling environment 放宽→`brainstorm` Rule 3 事实源扩「跑命令/调工具/web 检索」；improve-codebase-architecture churn→`code-recon` 有方向富化信号一行
+- **reject ×2**：batch-grill-me（KILL 含 Part-6 升档，重启触发器在 consensus D1）；improve-codebase-architecture branch(b) 无方向 fallback（Phase 0 结构性预置）
+- **gap 提案（待 luca 落笔）**：GAP-decision-questionnaire（to-questionnaire 延迟采纳，触发=首次真实递出需求，近似实例 EP-20260722-098）
+- MIT 署名：三处 merge 均为概念级吸收并在落点注明源与日期；行为 A/B 豁免显式记录（一句级增量，以断言 grep + check-routing-map/check-registration-sync 回归替代）
+
 <!-- FILE_END: ADOPTED -->

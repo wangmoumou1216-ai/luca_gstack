@@ -33,6 +33,10 @@
 
 产物统一落 `framework-audit/<target>-benchmark-YYYY-MM/`。
 
+> 步①补注（2026-07-23，源更新对标 R1 透镜盲点）：对已 benchmark 目标做**窗口更新对标**时，
+> inventory 除 diff 净新增 SKILL.md 外，还须 diff bucket 成员资格/promotion 状态——转正可能
+> 只表现为 README/plugin manifest 接线，SKILL.md 路径零变动。
+
 ## 出口接线（对标不是终点）
 
 - **开新 gap** → gaps-register（人裁落笔，带证据锚）

@@ -899,3 +899,20 @@ manual_vetting_2026_07_21:
     rationale: "冗余判定基于真实运行链（live prose+enforced 缝隙），不采信休眠件；~70% 冗余/低适配（solo 无团队无被试；OD 委托 DS 决定视觉），真 gap=HCI 力学/微文案/IA 判据/composition 评审/一手研究工具。96-skill 逐簇台账见 INTEGRATION-MAP.md 2026-07-21 节（scout 防重评以台账为准）。"
     adopted_into: [interaction-mechanics.md, ux-writing.md, research-kit(new skill), ux-writing(new skill), interaction-architecture-template §1.6, module-a A6, output-templates Packet 指引]
     sibling_repos_not_evaluated: [ai-design-skills, ux-pgm-skills, design-leadership-skills, inclusive-design-skills]  # ai-design-skills 或更贴 muse AI-native，后续可选侦察
+
+# ── 2026-07-23 窗口更新对标（mattpocock/skills 391a2701→ed37663c；红队 R1-R4 并行 refute + fable 终审）──
+manual_vetting_2026_07_23:
+  - name: mattpocock-skills-update-review-2026-07-23
+    repo: mattpocock/skills
+    type: window-update-review
+    window: 391a2701..ed37663c   # 2026-07-10 → 2026-07-21，排除 openai.yaml 后 31 文件
+    verdict: "3 merge / 2 reject / 1 gap-proposal / 血统复核 4 条（1 条 no-op 被 OVERTURNED 补吸收）"
+    evidence_dir: framework-audit/   # 2026-07-23-mattpocock-update-{review,redteam-findings,consensus}.md
+    outcomes:
+    - "batch-grill-me: REJECTED（KILL 含 Part-6 升档变体；痛点量级证伪——06-12 实跑时 SKILL 已是 2-6 问上限；串行是 Phase 2 sharpening 承重件；上游作者同 repo A/B 后把逐题版转正。重启触发器见 consensus D1）"
+    - "to-questionnaire: DEFERRED-GAP（场景消费零实发；GAP-decision-questionnaire 提案待 luca 落笔；近似实例 EP-20260722-098）"
+    - "wayfinder decision-ticket 正名 → plan-agent 毕业判准类型闸（merge；R2 证实我方吸收曾把决策洗成执行专用 U-block）"
+    - "grilling environment 放宽 → brainstorm Rule 3 事实源扩工具（merge）"
+    - "improve-codebase-architecture YAGNI: branch(b) 无方向 fallback 不采（Phase 0 结构性预置）；churn 有方向富化信号 → code-recon（merge）"
+    - "plugin 渠道不切（订阅自动更新=watcher 立项实证所防对象）；roster 校验 gap 核销（check-routing-map+check-registration-sync 已覆盖）"
+    - "已装 4 单元 path 域零实质变动；ack 697d4ce9 经 path 域当前 SHA 核验维持有效（NF2：ack 永不用 repo HEAD）"

@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-07-23 · mattpocock 更新对标第二批）
+
+- **plan-agent 毕业判准加决策/执行类型闸；brainstorm Rule 3 事实源扩至工具；code-recon 加 churn
+  富化信号**（源 mattpocock/skills 391a2701→ed37663c 窗口对标，红队 R1-R4+fable 终审）。为什么：
+  R2 证实我方 fog 吸收把「决策」洗成执行专用 U-block（正是上游 decision-ticket 正名针对的混淆）；
+  Rule 3 事实源是静态闭枚举、漏「工具可当场确立的事实」；churn 是零行为风险的只读富化。同轮拒
+  batch-grill-me（痛点量级证伪+上游自己 A/B 后弃批轮）、to-questionnaire 记 gap 提案待裁、
+  plugin 渠道不切（护 pin+watcher 受控刷新）。全档：framework-audit/2026-07-23-mattpocock-update-consensus.md
+
 ### Changed（2026-07-16 · B2 双仓合并终裁）
 
 - **单真值源 + 双检出取代双仓拓扑**（F6-04 终裁闭环）：muse 分支 merge 回 main（union 保双方全部
