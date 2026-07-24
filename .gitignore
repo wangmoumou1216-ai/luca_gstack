@@ -129,3 +129,5 @@ docs
 .extract-design-system/
 design-system/
 .claude/.allow-framework-write
+# standalone/cloud opt-in marker（勿提交；判别器据此把 auth-absent 从 anomaly 降 note，R8/R3A-1）
+.claude/.memory-standalone

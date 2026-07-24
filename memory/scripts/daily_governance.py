@@ -26,6 +26,19 @@ GLOBAL_MEMORY_DIR = Path(os.environ.get(
     str(Path.home() / ".claude" / "projects" / "-Users-luca-Desktop-luca-gstack" / "memory"),
 ))
 
+# 裂脑判别器（P1/FIX-1，2026-07-24 跨-agent 适配）。robust import：subprocess 调用下
+# sys.path[0]=memory/scripts 可直接 from（review_candidates 已同款）；测试经
+# spec_from_file_location 加载本文件时 sys.path 不含 memory/scripts，故 ImportError 兜底按
+# 路径加载 _memroot（不污染 sys.path，与测试自身加载 daily_governance 同法）。
+try:
+    from _memroot import memory_anomaly_verdict
+except ImportError:
+    import importlib.util as _ilu
+    _ms = _ilu.spec_from_file_location("_memroot", Path(__file__).resolve().parent / "_memroot.py")
+    _mm = _ilu.module_from_spec(_ms)
+    _ms.loader.exec_module(_mm)
+    memory_anomaly_verdict = _mm.memory_anomaly_verdict
+
 
 def run_consolidate(extra_args):
     try:
@@ -639,20 +652,15 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
                 "——逐个按 extraction-bar 四信号裁决后清零"
             )
 
-        # 3. 写路径核验（2026-07-10 双仓统一逻辑）：异常 = 解析 root ≠ 权威库
-        # AUTHORITATIVE_MEMORY_ROOT（fork 未设 env 会回落本地=分裂脑、env 指错同理；
-        # 母版本体默认解析即权威 → 天然 OK）。不 auto-fix。
+        # 3. 写路径核验（2026-07-24 跨-agent：判别器 FAIL-SAFE 向检测 + standalone opt-in）：
+        # auth 缺失时**缺 opt-in 一律报 anomaly**——本地 master 改名/删除、fork 配错仍大声报；
+        # cloud（master 天然不存在）与本地-master-改名两态对 committed MEMORY_ROOT 逐位同态，
+        # 唯一区分器是正向 MEMORY_STANDALONE=1（deploy 注入）或 gitignored marker
+        # .claude/.memory-standalone，有它才降 note（R2F2-1）。auth 在但 resolved≠auth → 分裂脑 anomaly。
+        # AUTHORITATIVE_MEMORY_ROOT 保持硬编码哨兵（不 env 化，否则自我拆台）。
         auth = Path(AUTHORITATIVE_MEMORY_ROOT)
-        env_tag = f"MEMORY_ROOT={env_memory_root}" if env_memory_root else "MEMORY_ROOT 未设，用默认"
-        if not auth.is_dir():
-            anomalies.append(f"权威 store {AUTHORITATIVE_MEMORY_ROOT} 不存在——检查目录是否改名/迁移")
-        elif resolved_root.resolve() != auth.resolve():
-            anomalies.append(
-                f"写路径脱离单一权威 store：{env_tag} 解析到 {resolved_root}"
-                f"（≠ {AUTHORITATIVE_MEMORY_ROOT}）——memory 读写将分裂；fork 侧检查 .claude/settings.json env 注入"
-            )
-        else:
-            notes.append(f"写路径 OK：{resolved_root}（单一权威 store，by design 2026-07-09；{env_tag}）")
+        _verdict, _msg = memory_anomaly_verdict(auth, resolved_root, os.environ)
+        (anomalies if _verdict == "ANOMALY" else notes).append(_msg)
 
         # 4. CLAUDE.md 预算早警（2026-07-21）：每-session 注入面贴 45KB 硬门（verify.sh B1）前先软警。
         # 硬门撞墙式（不到 45KB 不响）；软目标提前告警，creep 早发现别贴到墙。fail-open，任何异常吞掉。

@@ -4,6 +4,7 @@ import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkS
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
+import { resolveMemoryRoot } from './lib/memroot.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
@@ -12,7 +13,13 @@ const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
 // （muse app 有意注入以共享母版经验层），但本 hook 原先用 projectRoot 认领 .checked-<date> 与找
 // digest，daily_governance 却继承 env 把 digest 写到 MEMORY_ROOT——同一天 fork 只落 0 字节标记、
 // 母版落真 digest 的 split-brain（2026-07-08 实测）。治理触发/展示路径统一走 memoryRoot。
-const memoryRoot = process.env.MEMORY_ROOT || projectRoot;
+// FIX-1（2026-07-24 跨-agent 适配）：经 memroot.mjs 解析——fallbackRoot=projectRoot 保沙箱/生产/云端
+// 三态一致；MEMORY_ROOT 指不存在的 master（cloud）时回落本仓、不再建幻影 digest 树（R3B-1）。
+const _mem = resolveMemoryRoot(process.env, {
+  fallbackRoot: projectRoot,
+  loud: (msg) => process.stderr.write(`[session-restore] ${msg}\n`),
+});
+const memoryRoot = _mem.path;
 if (memoryRoot !== projectRoot) {
   process.stderr.write(`[session-restore] ⚠️ MEMORY_ROOT 重定向生效 → ${memoryRoot}（episodic/semantic 读写与每日治理均落该仓，非本仓 ${projectRoot}）\n`);
 }

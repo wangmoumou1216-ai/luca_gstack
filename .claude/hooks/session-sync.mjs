@@ -11,6 +11,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
+import { resolveMemoryRoot } from './lib/memroot.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -178,7 +179,7 @@ try {
   // 只走 stderr —— stdout 在 Stop 路径专用于 block 决策 JSON（见文件头契约）。
   // MEMORY_ROOT 重定向时记忆写入落的是那个仓（session-restore F2-01 同款 split-brain）：
   // 两仓都查，否则 fork session 写脏母版永远无人提醒（2026-07-14 P3 实证，前日 A11 WARN 即此症）。
-  const memoryRoot = process.env.MEMORY_ROOT || projectRoot;
+  const memoryRoot = resolveMemoryRoot(process.env, { fallbackRoot: projectRoot }).path;
   for (const repo of [...new Set([projectRoot, memoryRoot])]) {
     try {
       const dirty = execSync(
