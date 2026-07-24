@@ -22,7 +22,8 @@
       "result.md"
     ],
     "scripts/luca-open.sh": [
-      "open-spool"
+      "open-spool",
+      "--url"
     ],
     ".claude/agents/plan-agent.md": [
       "块 1.6 — ASSERT/TEST-NNN 反向覆盖",

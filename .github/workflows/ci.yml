@@ -83,6 +83,8 @@ jobs:
         run: npm run test:memory
       - name: Memory stable-facts health
         run: npm run check:memory-health
+      - name: luca-open --url shim regression
+        run: npm run check:luca-open
 
   validate-html:
     name: Validate HTML Prototypes
