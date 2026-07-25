@@ -253,13 +253,27 @@ try {
 const memScript = join(projectRoot, 'memory', 'scripts', 'get_memory.py');
 if (existsSync(memScript)) {
   try {
+    // stderr 改 pipe（原 'ignore'）：失败时需要它来区分「无 python3 / 缺 PyYAML / 其它」，
+    // 否则 e.message 只有 "Command failed: python3 …"，补救建议只能给一句废话（WS-B4）。
     const summary = execSync(`python3 "${memScript}" --summary`, {
-      cwd: projectRoot, encoding: 'utf8', timeout: 4000, stdio: ['pipe', 'pipe', 'ignore']
+      cwd: projectRoot, encoding: 'utf8', timeout: 4000, stdio: ['pipe', 'pipe', 'pipe']
     }).trim();
     if (summary) process.stdout.write(`[session-restore] 🧠 ${summary}\n`);
   } catch (e) {
-    const reason = e.code === 'ETIMEDOUT' ? '超时 (>4s)' : `错误: ${e.message?.slice(0, 60)}`;
-    process.stderr.write(`[session-restore] ⚠️  记忆加载失败（${reason}）。回退至 CLAUDE.md「关键约束速查」节。\n`);
+    // WS-B4（2026-07-25）：依赖缺失曾只走 stderr → 被 settings.json 的 `2>>` 吞进 temp 日志，
+    // 用户永远看不到"记忆整层没在跑"。改判具体成因并**发到 stdout**（模型可见），给可执行补救。
+    const msg = String(e.message || '') + ' ' + String(e.stderr || '');
+    let reason, fix;
+    if (e.code === 'ETIMEDOUT') {
+      reason = '超时 (>4s)'; fix = '检查 memory/ 是否在慢盘/网络盘上';
+    } else if (/command not found|ENOENT|not recognized/i.test(msg)) {
+      reason = '未找到 python3'; fix = '安装 python3（记忆层整体不可用）';
+    } else if (/No module named ['"]?yaml|ModuleNotFoundError/i.test(msg)) {
+      reason = '缺 PyYAML'; fix = 'pip install pyyaml';
+    } else {
+      reason = `错误: ${msg.slice(0, 60)}`; fix = '手动跑 python3 memory/scripts/get_memory.py --summary 看详情';
+    }
+    process.stdout.write(`[session-restore] ⚠️ 记忆加载失败（${reason}）→ 本 session 回退至 CLAUDE.md「关键约束速查」节；补救：${fix}\n`);
   }
 }
 

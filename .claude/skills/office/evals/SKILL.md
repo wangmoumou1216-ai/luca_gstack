@@ -35,7 +35,7 @@ echo "EXISTING_EVALS: $_EVALS"
 同时读取 observability 的短规则和近期冷日志摘要：
 
 ```bash
-python3 .claude/observability/scripts/get_rules.py "*" "*"
+python3 .claude/observability/scripts/get_rules.py "*" "*" 2>/dev/null || true
 tail -50 .claude/observability/run-log.jsonl 2>/dev/null
 tail -50 .claude/observability/observations.jsonl 2>/dev/null
 ```
