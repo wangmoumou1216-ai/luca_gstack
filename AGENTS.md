@@ -25,7 +25,10 @@ final line when a task depends on it. -->
 
 ## 0. Repository Identity
 
-This repository is a design and prototype workspace for **纷享销客 CRM**.
+This repository is **luca_gstack** — a product-neutral Skill OS (design/engineering workflow runtime).
+Product-specific facts (brand tokens, component maps, domain vocabulary) are **profile-activated**
+via the active project's `CONTEXT.md`, never hardcoded here (SF-001/SF-004 were deliberately moved
+out of the Static-Fallback allowlist to search-only for exactly this reason).
 
 Core facts:
 
@@ -33,26 +36,32 @@ Core facts:
 - Prototype stack: plain HTML + local Tailwind CDN + native JavaScript.
 - Prototype framework: `framework/`.
 - Workflow outputs: `docs/`, which must be a symlink to the active project at
-  `/Users/luca/Desktop/项目/<project>/docs`. Session stickiness (G6, 2026-07-04): `session-restore.mjs`
-  clears the three project symlinks on SessionStart only when `source === 'startup'` AND no active
-  parallel session is detected (other-session counter/transcript mtime < 15min) AND
-  `SESSION_RESTORE_ALWAYS_CLEAR` is unset; a dangling link is cleared unconditionally. When the link
-  is preserved, the session "inherits" the active project — route-guard notes it on the first message.
-  Name-to-switch (2026-07-06): naming an existing project (or semantically describing another/new
-  project) makes the main agent switch/create decisively without asking (a new project detaches the
-  current one). Only confirm once when the message points at no project yet you must do real work
-  under the never-confirmed inherited project. The active project is still a global shared symlink
-  (lightweight fix, not per-session isolation): switching overwrites a parallel session's pointer, but
-  no longer silently — the switched-away session gets a route-guard drift warning next turn and a
-  post-edit "may write to wrong project" warning on any docs/ write.
+  `<PROJECTS_ROOT>/<project>/docs`, where **PROJECTS_ROOT = `$LUCA_PROJECTS_ROOT` or `$HOME/Desktop/项目`**
+  (WS-B2, 2026-07-25: overridable so cloud/headless checkouts can point at a writable root; all 7 sites —
+  4 identity parsers + project-scope-guard + project.sh + check-project-links — resolve it from one place).
+  Session stickiness (G6, 2026-07-04): `session-restore.mjs` clears the three project symlinks on SessionStart
+  only when `source === 'startup'` AND no active parallel session is detected AND `SESSION_RESTORE_ALWAYS_CLEAR`
+  is unset; a dangling link is cleared unconditionally.
+  **Session-level project isolation (方案A, 2026-07-08 — supersedes the earlier "global shared symlink" model):**
+  the per-session pin `.claude/.session-project-<sid>` is the single truth for "which project is this session on".
+  `project-scope-guard` (PreToolUse) rewrites every docs/ · workflow-state · current-topic path to the pinned
+  project's absolute path, and **denies** those writes when the session has no pin — so the shared symlink
+  degrades to display only and a parallel `switch` can no longer pull another session onto the wrong project.
+  The pin is written only when the user explicitly names/confirms a project, **never derived from the symlink**.
+  Name-to-switch (2026-07-06): naming an existing project (or semantically describing another/new project) makes
+  the main agent switch/create decisively without asking (a new project detaches the current one). Only confirm
+  once when the message points at no project yet you must do real work under a never-confirmed inherited project.
+  Project identity is resolved by **one canonical rule** shared by all sites (FIX-2): strip `/docs`, take the path
+  after PROJECTS_ROOT, longest-prefix-match against known projects, fall back to the first segment; segments
+  `.`/`..`/empty are rejected (fail-closed).
 - Long-term memory: `CONTEXT.md`.
 - Claude workflow state: `.claude/workflow-state.yaml`, which must be a symlink to the active
   project's `/Users/luca/Desktop/项目/<project>/.luca/workflow-state.yaml`.
 - Skill OS contracts: `.claude/skill-os/`.
 - Skill observability: `.claude/observability/`.
 - Growth candidates (Hermes-style): `memory/semantic/` (candidate→review→promote via `memory/scripts/propose_semantic.py`; legacy `.claude/hermes/` was removed in commit 1dc1475).
-- Brand primary color: `#FF8000`.
-- Brand color budget: use the primary color no more than 3 times per page unless a task explicitly overrides it.
+- Brand/visual constraints: **profile-activated** — read the active project's `CONTEXT.md` and, when a
+  design profile is active, `brand-tokens.md` / `framework/tokens.css`. Do not assume any specific brand.
 
 Do not treat this as a generic app repository. Most work here is product/design workflow execution,
 prototype generation, review, or handoff preparation.
@@ -197,8 +206,8 @@ Use a layered context strategy:
 
 Keep these facts active during the whole task:
 
-- Product is 纷享销客 CRM.
-- Brand primary is `#FF8000`, limited to no more than 3 visible uses per page.
+- Product context comes from the **active project's `CONTEXT.md`** (product-neutral runtime; no hardcoded product).
+- Brand/visual constraints are profile-activated (see §0); read them before any visual output.
 - Prototype outputs belong under `docs/prototype/YYYY-MM-DD-<topic>/`.
 - Workflow artifacts belong under the path conventions defined in `.claude/skills/office/SKILL.md`.
 - `framework/` contains source templates and should generally be treated as read-only.
@@ -310,6 +319,67 @@ Default behavior:
   directly during normal startup.
 
 ---
+
+## 4.8 Governance Parity（治理平价 — 与 CLAUDE.md 同源，指针优先）
+
+CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback 外一律用指针引用单一源**
+（复制散文 = 复制漂移，正是 §0 身份与 G6 块曾变陈旧的机制）。
+
+### 4.8.1 记忆写入门禁（extraction bar / 归因 / 三分归属）
+
+写记忆前必须过门槛，**默认不存**：
+
+- **四强信号**（命中任一才提取）：①用户明确纠正或对未来行为明确指示 ②同类问题二次复发
+  ③真实返工或不可逆险情 ④重获成本高且确定复用。定义与按层分级以
+  `.claude/skill-os/extraction-bar.md` 为准（唯一真值源，勿在别处复制全文）。
+- **归因阶梯 L1–L5**：中途纠正与绕行入库都先过 `.claude/skill-os/correction-attribution.md`
+  ——根因在自有系统则**修源头**，记忆只存指针 + 兜底。归因 ≠ 提取，仍须过四信号。
+- **三分归属**（先问"换个项目/重建 luca_gstack 这条还成立吗"）：
+  · 只关于 luca 这个人怎么工作 → 全局个人记忆（仅信号① 直写 `feedback_<slug>.md` + 索引；
+    ②③④ 写 `candidate_feedback_<slug>.md`，不进索引）
+  · 只在 luca_gstack 框架内成立 → `memory/scripts/propose_semantic.py` 候选（**红线
+    SC-20260523-003**：稳定事实不得直接写 `promoted-facts.yaml`，必须走 candidate→review→promote）
+  · 只对某个下游项目成立 → 该项目 `.luca/memory/MEMORY.md`
+- **检索改变了行动时**补跑 `search_memory.py --mattered "<query>"`（ADR-0006 唯一主观信号）。
+
+### 4.8.2 Model routing（能力档意图 — Codex 无 model dispatch 参数，按意图自选）
+
+真值源 `.claude/skill-os/model-routing.yaml`。Codex 侧**无法**传 per-agent model 参数，故档位
+分派本身不可移植（见 §11 Non-goals）；可移植的是**意图**——按判断杠杆选强弱：
+
+- 出门前裁决 / 对抗判定 / 翻案复审 / 规划期 → **reasoning-heavy**（最强档）
+- 写代码 / 规格 / 原型 / 编排 / 研究 / 判官常规 → **core-execution**（承重常驻档）
+- 轻执行 / checklist 审查 / 一般检索 → **guided-execution**
+- 机械执行 / 格式化 / 打分 / preflight → **mechanical**
+
+纪律：拿不准就选更强档，不猜最强档；档位变更须用户批准（同 `model-routing.yaml` 白名单纪律）。
+
+### 4.8.3 Session/项目隔离（方案A pin）
+
+见 §0 Repository Identity 的 pin 段（per-session pin 是唯一真值、PreToolUse 重写/deny、
+pin 永不从软链派生、canonical 身份裁决 fail-closed）。**Codex 侧若无等价 PreToolUse 写拦截，
+此保护降级为「agent 必须自觉遵守的文档规则」——弱于 Claude，须显式声明而非假装等价。**
+
+### 4.8.4 Human gates（缺结构化工具 ≠ 自动裁决许可）
+
+任何**机器不可代选**的人类决策门（open-design 的 platform/design-system 选择、design-brief
+决策卡、ux-audit Phase-0、muse-loop GATE-1/GATE-2 等），当前 harness 若无结构化提问工具
+（AskUserQuestion），**必须以纯文本停下提问并等待真实回复**——绝不因缺 widget 而替用户决定。
+门的不变量（停下问、机器提议人定夺）不随 widget 降级而降级。
+
+### 4.8.5 关键约束速查（Static Fallback — 脚本失效时此节仍有效）
+
+> 本节是 semantic memory 的**宪法级子集**，由 `memory/semantic/static-fallback-allowlist.txt`
+> 白名单管控（改白名单 = 改每 session 注入面，人工拥有）。**唯一 inline 而非指针的一段**：
+> 它的语义就是"脚本/检索失效时也必须在场"，指针在该场景下不可靠。
+
+- [SF-002 / fxui] HTML 原型必须基于 `framework/` 母版；`framework/` 为**只读保护区**，不得直接修改
+- [SF-003 / workflow] **Skill-first, Graph-optional**：每个 skill 默认 standalone 可用，Workflow 仅在用户主动选择流程时启用
+- [SF-005 / workflow] 产品设计场景四类（产品中性）：A=新功能 / B=已有功能优化 / C=线上评审改版 / D=Agent化改造；分类由用户/上下文确认
+- [SC-20260523-001 / crm] CRM objects use stable IDs（仅 CRM profile 激活时适用）
+- [SC-20260523-002 / skill-rule] route-guard：老项目/已有项目/继续项目**必须先触发 Project Gate**，列出或确认项目；不得直接解释为场景B或进入单个 skill
+- [SC-20260523-003 / skill-rule] memory：稳定事实不得直接写 `promoted-facts.yaml`；必须先写 semantic candidate，经 consolidate/review 的 promotion_ready 门禁后才能晋升
+
 
 ## 5. Harness Engineering Contract
 

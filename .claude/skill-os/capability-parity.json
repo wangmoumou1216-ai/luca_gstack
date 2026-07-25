@@ -219,6 +219,15 @@
       "watch_sha",
       "superpowers",
       "ack_sha"
+    ],
+    "AGENTS.md": [
+      "Governance Parity",
+      "extraction-bar.md",
+      "correction-attribution.md",
+      "model-routing.yaml",
+      "关键约束速查",
+      "缺结构化工具",
+      ".session-project-"
     ]
   }
 }
