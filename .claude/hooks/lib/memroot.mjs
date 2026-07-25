@@ -2,47 +2,60 @@
 // 与 py 孪生 `memory/scripts/_memroot.py` **同算法**（cross-lang parity 由
 // scripts/test-memroot-parity.mjs 保证）。
 //
-// FIX-1 核心：fallback = **脚本相对仓根**（import.meta.url 上 3 级 = lib→hooks→.claude→repo），
-// 与 py 侧 parents[2] BY-CONSTRUCTION 同根，与 cwd / CLAUDE_PROJECT_DIR 无关。
-// 旧代码用 `MEMORY_ROOT || (CLAUDE_PROJECT_DIR||cwd)`：cloud/Codex 下 CLAUDE_PROJECT_DIR 未注入
-// + 非仓 cwd 时 JS 回落到 cwd、py 回落到 script-location → 同一 store 裂成两根。改脚本相对后消除。
+// FIX-1 核心：fallback = **脚本相对仓根**（import.meta.url 上 3 级 = lib→hooks→.claude→repo，
+// 且 realpathSync 解符号链接与 py `.resolve()` 对齐），与 py 侧 parents[2] BY-CONSTRUCTION 同根，
+// 与 cwd / CLAUDE_PROJECT_DIR 无关。hook 传 fallbackRoot=projectRoot 保生产/云端/沙箱三态一致。
+//
+// 深审 R1 修复（2026-07-24）：① env 命中路径经 normalizeAbs 规范化（去尾斜杠/折叠 //、.），
+// 与 py PurePosixPath(str) 逐字对齐，杜绝下游裸字符串比较误判；② 相对 MEMORY_ROOT 一律拒绝回落
+// （相对路径按各自进程 cwd 解析会 JS/py 裂脑）；③ SCRIPT_REPO_ROOT realpathSync 解符号链接。
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { statSync } from 'fs';
+import { dirname, join, isAbsolute } from 'path';
+import { statSync, realpathSync } from 'fs';
 
 // memroot.mjs 在 .claude/hooks/lib/ → 上 3 级 = 仓根（lib→hooks→.claude→repo）
-export const SCRIPT_REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const _lexicalRepoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+// realpath 解符号链接，与 py `Path(__file__).resolve().parents[2]` 对齐（realpath 失败退词法值）
+export const SCRIPT_REPO_ROOT = (() => {
+  try { return realpathSync(_lexicalRepoRoot); } catch { return _lexicalRepoRoot; }
+})();
 
+// 绝对路径词法规范化，与 py PurePosixPath(str) 一致：折叠 // 与 .、去尾斜杠、保留 ..（不解符号链接）
+function normalizeAbs(p) {
+  const segs = String(p).split('/').filter((s) => s !== '' && s !== '.');
+  return '/' + segs.join('/');
+}
 function isDir(p) {
   try { return statSync(p).isDirectory(); } catch { return false; }
 }
-// store-shape 哨兵：真 store 必有 memory/ 子目录（真实 checkout 有 memory/{semantic,episodic}，
-// 测试 fixture 亦建 memory/）。用父级 memory/ 而非 memory/semantic/ 以兼容 partial fixture；
-// 真·bogus 根（如 /tmp、随机目录）无 memory/ 仍被拒。wrong-but-valid-store 由 daily_governance
-// 判别器（硬编码 auth 对比）兜底（R3B-3）。
+// store-shape 哨兵：**目录存在即接受**（用户显式设 MEMORY_ROOT = 明确意图，含首次 bootstrap 的
+// 空 store：下游脚本会在其下惰性创建 memory/，深审#61）。只对"不存在/不可访问"回落——那是
+// cloud/误配的真故障（R3B-1 幻影树根因）。wrong-but-existing store 由 daily_governance 判别器
+// （硬编码 auth 对比）兜底（R3B-3 已证该组合 fail-safe）。此处不再额外要求 memory/ 子目录，
+// 否则会把"指向全新 store / 测试沙箱 temp 根"误判为非-store 而逃逸回真实仓（实测回归）。
 function isStore(p) {
-  return isDir(join(p, 'memory'));
+  return isDir(p);
 }
 
 // 返回 { path, mode }；mode ∈ {'env','repo-fallback'}。
-// opts.fallbackRoot（可选）：回落根。默认 = 脚本相对仓根（与 py `_memroot.py` parents[2] 同根，
-//   供独立脚本/parity 用）。**hook 传入 projectRoot（=CLAUDE_PROJECT_DIR||cwd）**——这样：
-//   ① 生产态 CLAUDE_PROJECT_DIR=checkout=脚本相对根 → 与 py 一致；
-//   ② cloud（MEMORY_ROOT 指不存在 master）projectRoot=cwd=repo → 回落到 repo、消幻影树（R3B-1）；
-//   ③ 测试沙箱 projectRoot=temp → 记忆操作留在沙箱，不打到真实仓。
-//   仅当 fallbackRoot ≠ 脚本相对根且真走回落时 LOUD-warn（沙箱=有意；误配=暴露，不静默裂 store）。
+// opts.fallbackRoot（可选）：回落根。默认 = 脚本相对仓根（与 py parents[2] 同根）。
+//   hook 传 projectRoot（=CLAUDE_PROJECT_DIR||cwd）→ 生产态=checkout、云端=cwd/repo（消幻影树）、
+//   测试沙箱=temp（记忆留沙箱）。仅当 fallbackRoot≠脚本相对根且真走回落时 LOUD-warn。
 export function resolveMemoryRoot(env = process.env, opts = {}) {
   const fallbackRoot = opts.fallbackRoot || SCRIPT_REPO_ROOT;
   const loud = opts.loud || ((m) => process.stderr.write(m + '\n'));
   const m = env.MEMORY_ROOT;
   let result;
-  if (m && isDir(m) && isStore(m)) {
-    result = { path: m, mode: 'env' };
+  if (m && !isAbsolute(m)) {
+    loud(`[memroot] MEMORY_ROOT=${m} 非绝对路径（相对按 cwd 解析会 JS/py 裂脑）→回落 ${fallbackRoot}`);
+    result = { path: fallbackRoot, mode: 'repo-fallback' };
+  } else if (m && isDir(m) && isStore(m)) {
+    result = { path: normalizeAbs(m), mode: 'env' };
   } else if (m && isDir(m)) {
-    loud(`[memroot] MEMORY_ROOT=${m} 存在但非记忆 store 形状（缺 memory/semantic/）→回落 ${fallbackRoot}`);
+    loud(`[memroot] MEMORY_ROOT=${m} 存在但非记忆 store 形状（缺 memory/ 子目录）→回落 ${fallbackRoot}`);
     result = { path: fallbackRoot, mode: 'repo-fallback' };
   } else if (m) {
-    loud(`[memroot] MEMORY_ROOT=${m} 不存在→回落 ${fallbackRoot}`);
+    loud(`[memroot] MEMORY_ROOT=${m} 不存在/不可访问→回落 ${fallbackRoot}`);
     result = { path: fallbackRoot, mode: 'repo-fallback' };
   } else {
     result = { path: fallbackRoot, mode: 'repo-fallback' };
@@ -54,7 +67,9 @@ export function resolveMemoryRoot(env = process.env, opts = {}) {
 }
 
 // 供 parity 测试直接 import 调用；命令行入口打印 {path}\n{mode}
-if (import.meta.url === `file://${process.argv[1]}`) {
+// 注：用 fileURLToPath 比对而非 `file://${argv[1]}` 字符串拼接——后者对含非 ASCII（如中文目录）
+// 的路径不成立（import.meta.url 是 percent-encoded），会让 CLI 入口静默失效（深审 F11 抓出）。
+if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
   const r = resolveMemoryRoot();
   process.stdout.write(r.path + '\n' + r.mode + '\n');
 }

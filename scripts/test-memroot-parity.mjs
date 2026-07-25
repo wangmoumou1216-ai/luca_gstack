@@ -9,7 +9,9 @@ import { tmpdir } from 'os';
 
 const REPO = SCRIPT_REPO_ROOT;
 const PY = join(REPO, 'memory', 'scripts', '_memroot.py');
-const norm = (p) => { try { return realpathSync(p); } catch { return String(p); } };
+// 深审#86：比 **raw 字符串**（不经 realpathSync），才能抓出 env 路径规范化（尾斜杠/// 等）发散；
+// env 模式两侧已 normalizeAbs/str(Path) 同规范，fallback 两侧已 realpath/resolve 同根 → raw 即应逐字相等。
+const norm = (p) => String(p);
 
 // 干净 base env：剥掉可能污染的 3 个键，再叠 fixture
 function childEnv(memEnv) {
@@ -35,7 +37,11 @@ const fixtures = [
     expect: { path: REPO, mode: 'repo-fallback' } },
   { name: 'F3 MEMORY_ROOT=仓根(store 形) → env', memEnv: { MEMORY_ROOT: REPO }, cwd: REPO,
     expect: { path: REPO, mode: 'env' } },
-  { name: 'F4 MEMORY_ROOT=存在但非 store → repo-fallback(哨兵)', memEnv: { MEMORY_ROOT: nonStore }, cwd: REPO,
+  // 哨兵语义（深审#61 + 沙箱回归修正）：目录**存在即接受**（显式意图，含 bootstrap 空 store /
+  // 测试沙箱 temp 根）；只有"不存在/不可访问"才回落。wrong-but-existing 由判别器兜底。
+  { name: 'F4 MEMORY_ROOT=存在的空目录（bootstrap/沙箱）→ env（不逃逸回真实仓）', memEnv: { MEMORY_ROOT: nonStore }, cwd: REPO,
+    expect: { path: nonStore, mode: 'env' } },
+  { name: 'F4b MEMORY_ROOT=普通文件（非目录）→ repo-fallback', memEnv: { MEMORY_ROOT: join(REPO, 'package.json') }, cwd: REPO,
     expect: { path: REPO, mode: 'repo-fallback' } },
   // FIX-1 决定性：非仓 cwd + CLAUDE_PROJECT_DIR 未注入 + MEMORY_ROOT 不存在
   //  → py 子进程从 /tmp 跑仍归脚本相对仓根（非 cwd）；JS 亦然。二者相等 = 分裂根消除。
@@ -44,6 +50,20 @@ const fixtures = [
     expect: { path: REPO, mode: 'repo-fallback' } },
   { name: 'F6 [FIX-1] 非仓 cwd + MEMORY_ROOT 未设 → 皆脚本相对仓根（不取 cwd）',
     memEnv: {}, cwd: tmpdir(),
+    expect: { path: REPO, mode: 'repo-fallback' } },
+  // 深审#86：尾斜杠 env——JS 曾原样回传带斜杠、py Path 规范化去斜杠 → raw 发散（被旧 realpathSync 掩盖）
+  { name: 'F7 [深审] MEMORY_ROOT 带尾斜杠 → 两侧规范化同值（raw 逐字相等）',
+    memEnv: { MEMORY_ROOT: REPO + '/' }, cwd: REPO,
+    expect: { path: REPO, mode: 'env' } },
+  { name: 'F8 [深审] MEMORY_ROOT 含 // 与 /./ → 两侧规范化同值',
+    memEnv: { MEMORY_ROOT: REPO.replace('/Users', '//Users') + '/./' }, cwd: REPO,
+    expect: { path: REPO, mode: 'env' } },
+  // 深审#93：相对 MEMORY_ROOT 按各自进程 cwd 解析 → 一侧 env 一侧 fallback = 裂脑。现两侧一律拒绝回落。
+  { name: 'F9 [深审] 相对 MEMORY_ROOT="." 从仓内跑 → 两侧均拒绝、回落（不因 cwd 而 env）',
+    memEnv: { MEMORY_ROOT: '.' }, cwd: REPO,
+    expect: { path: REPO, mode: 'repo-fallback' } },
+  { name: 'F10 [深审] 相对 MEMORY_ROOT="." 从 /tmp 跑 → 与 F9 同解（cwd 不改变结论）',
+    memEnv: { MEMORY_ROOT: '.' }, cwd: tmpdir(),
     expect: { path: REPO, mode: 'repo-fallback' } },
 ];
 
@@ -63,6 +83,18 @@ for (const fx of fixtures) {
     console.log(`     EXPECT={path:${expPath}, mode:${fx.expect.mode}}  parity=${parity} correct=${correct}`);
   }
 }
+// ── [深审 M2 存活缺口] JS fallback **源**必须是脚本相对根，不是进程 cwd ──
+// 旧 fixture 的 JS 侧是 in-process 调用（cwd 恒=仓根），故 `SCRIPT_REPO_ROOT` 换成 `process.cwd()`
+// 的 mutation 测不出来。这里真在非仓 cwd **spawn node 子进程**跑 memroot CLI，cwd 与脚本根分离。
+{
+  const MJS = join(REPO, '.claude', 'hooks', 'lib', 'memroot.mjs');
+  const out = execFileSync('node', [MJS], { env: childEnv({}), cwd: tmpdir(), encoding: 'utf8' });
+  const [p, mode] = out.trim().split('\n');
+  const ok = norm(p) === norm(REPO) && mode === 'repo-fallback';
+  if (!ok) fail++;
+  console.log(`${ok ? 'PASS' : 'FAIL'} F11 [深审M2] node 子进程 cwd=/tmp + 未设 MEMORY_ROOT → 回落脚本相对仓根（非 cwd）${ok ? '' : `  got={${p}, ${mode}} exp={${REPO}, repo-fallback}`}`);
+}
+
 // ── 判别器（py-only，daily_governance 用）：FAIL-SAFE 向检测 + standalone opt-in ──
 // 现有 test:memory 在本机 auth（master）存在下从不触发 auth-absent 分支，故此处专项覆盖，
 // 否则该分支 mutation（如"auth 缺一律 NOTE"）测试不会变红 = 静默裂脑回归漏网。
@@ -90,6 +122,6 @@ for (const d of dcases) {
   console.log(`${ok ? 'PASS' : 'FAIL'} ${d.n}${ok ? '' : `  got=${got} exp=${d.exp}`}`);
 }
 
-const total = fixtures.length + dcases.length;
-console.log(`\n=== test-memroot summary: PASS=${total - fail} FAIL=${fail}（parity ${fixtures.length} + discriminator ${dcases.length}）===`);
+const total = fixtures.length + dcases.length + 1; // +1 = F11 子进程 fallback-源断言
+console.log(`\n=== test-memroot summary: PASS=${total - fail} FAIL=${fail}（parity ${fixtures.length}+F11 + discriminator ${dcases.length}）===`);
 process.exit(fail ? 1 : 0);

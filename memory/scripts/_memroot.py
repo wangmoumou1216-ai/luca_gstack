@@ -2,59 +2,65 @@
 """单一记忆根解析器 + 裂脑判别器（P1 / FIX-1，2026-07-24 跨-agent 适配）。
 
 与 JS 孪生 `.claude/hooks/lib/memroot.mjs` **同算法**（cross-lang parity 由
-`scripts/test-memroot-parity.mjs` 保证）。
+`scripts/test-memroot-parity.mjs` 保证）。生产 10 个记忆脚本的 ROOT 解析统一走
+`resolve_memory_root`（消 JS/py 裂脑与 cloud 幻影树）。
 
 设计要点：
-- fallback = **脚本相对仓根** `Path(__file__).resolve().parents[2]`（cwd 无关），
-  与 JS 侧 `import.meta.url` 上 3 级 = lib→hooks→.claude→repo **BY-CONSTRUCTION 同根**。
-  这是 FIX-1 的核心：cloud/Codex 下 CLAUDE_PROJECT_DIR 未注入 + 非仓 cwd 时，py 与 JS
-  都归到脚本相对仓根，不再一个用 cwd、一个用 script-location 而裂开。
-- store-shape 哨兵：MEMORY_ROOT 指向"存在但非记忆 store 形状"（缺 memory/semantic/）时
-  LOUD 回落，防"错-但-存在目录/网络挂载抖动"静默写错根（R2F2-6）。
-- 判别器 FAIL-SAFE 向检测：auth 缺失时，**缺 opt-in 一律保 LOUD anomaly**（本地 master
-  改名/删除、fork 配错仍大声报）；仅正向 `MEMORY_STANDALONE=1`（deploy 注入）或
-  gitignored marker `.claude/.memory-standalone` 才降 note（R2F2-1 / R3A-1）。
+- fallback = **脚本相对仓根** `Path(__file__).resolve().parents[2]`（cwd 无关、解符号链接），
+  与 JS 侧 `import.meta.url` 上 3 级 + realpathSync = lib→hooks→.claude→repo **同根**。
+- store-shape 哨兵：MEMORY_ROOT 指向"存在但非记忆 store 形状"（缺 memory/）时 LOUD 回落。
+- 相对 MEMORY_ROOT 一律拒绝回落（相对路径按各自进程 cwd 解析会 JS/py 裂脑，深审 R1）。
+- 判别器 FAIL-SAFE 向检测：auth 缺失时缺 opt-in 一律 ANOMALY，仅正向 MEMORY_STANDALONE=1 /
+  gitignored marker 才降 note。
 """
 import os
 import sys
 from pathlib import Path
 
-# _memroot.py 在 memory/scripts/ → parents[2] = 仓根（与全 10 记忆脚本旧惯例 parents[2] 一致）
+# _memroot.py 在 memory/scripts/ → parents[2] = 仓根（.resolve() 解符号链接）
 SCRIPT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _normalize_abs(p) -> str:
+    """绝对路径词法规范化，与 JS normalizeAbs 逐字一致：折叠 // 与 .、去尾斜杠、保留 ..（不解符号链接）。
+    不用 str(Path(p))——POSIX 下 Path 会保留双前导斜杠 `//x`（标准语义），与 JS 折叠行为发散（深审 F8）。"""
+    segs = [s for s in str(p).split("/") if s not in ("", ".")]
+    return "/" + "/".join(segs)
+
+
 def _is_store(p: Path) -> bool:
-    """记忆 store 形状哨兵：真 store 必有 memory/ 子目录（真实 checkout 有 memory/{semantic,episodic}，
-    测试 fixture 亦建 memory/）。用父级 memory/ 兼容 partial fixture；真·bogus 根无 memory/ 仍被拒。
-    wrong-but-valid-store 由 daily_governance 判别器（硬编码 auth 对比）兜底。"""
+    """store 哨兵：**目录存在即接受**（用户显式设 MEMORY_ROOT = 明确意图，含首次 bootstrap 的空
+    store）。只对"不存在/不可访问"回落——那是 cloud/误配的真故障。wrong-but-existing store 由
+    daily_governance 判别器（硬编码 auth 对比）兜底。不额外要求 memory/ 子目录，否则会把"全新
+    store / 测试沙箱 temp 根"误判为非-store 而逃逸回真实仓。与 JS isStore 同语义。"""
     try:
-        return (p / "memory").is_dir()
+        return p.is_dir()
     except OSError:
         return False
 
 
 def resolve_memory_root(env=None, loud=None):
-    """解析记忆数据根。返回 (Path, mode)；mode ∈ {'env', 'repo-fallback'}。
-
-    loud: 可选回调（默认写 stderr），用于回落时的可见告警。
-    """
+    """解析记忆数据根。返回 (Path, mode)；mode ∈ {'env', 'repo-fallback'}。"""
     if env is None:
         env = os.environ
     if loud is None:
         loud = lambda m: sys.stderr.write(m + "\n")
     m = env.get("MEMORY_ROOT")
     if m:
+        if not os.path.isabs(m):
+            loud(f"[memroot] MEMORY_ROOT={m} 非绝对路径（相对按 cwd 解析会 JS/py 裂脑）→回落 {SCRIPT_REPO_ROOT}")
+            return SCRIPT_REPO_ROOT, "repo-fallback"
         mp = Path(m)
         try:
             is_dir = mp.is_dir()
         except OSError:
             is_dir = False
         if is_dir and _is_store(mp):
-            return mp, "env"
+            return Path(_normalize_abs(m)), "env"
         if is_dir:
-            loud(f"[memroot] MEMORY_ROOT={m} 存在但非记忆 store 形状（缺 memory/semantic/）→回落 {SCRIPT_REPO_ROOT}")
+            loud(f"[memroot] MEMORY_ROOT={m} 存在但非记忆 store 形状（缺 memory/ 子目录）→回落 {SCRIPT_REPO_ROOT}")
             return SCRIPT_REPO_ROOT, "repo-fallback"
-        loud(f"[memroot] MEMORY_ROOT={m} 不存在→回落 {SCRIPT_REPO_ROOT}")
+        loud(f"[memroot] MEMORY_ROOT={m} 不存在/不可访问→回落 {SCRIPT_REPO_ROOT}")
         return SCRIPT_REPO_ROOT, "repo-fallback"
     return SCRIPT_REPO_ROOT, "repo-fallback"
 

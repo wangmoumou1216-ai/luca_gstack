@@ -37,7 +37,31 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(os.environ.get("MEMORY_ROOT", Path(__file__).resolve().parents[2]))
+def _resolve_root():
+    """记忆根解析（P1/FIX-1）：统一走 _memroot.resolve_memory_root——含 store-shape 哨兵、
+    相对路径拒绝、脚本相对回落，与 JS 侧 memroot.mjs 同算法（防 JS/py 裂脑与 cloud 幻影树）。
+    robust import：subprocess 下 sys.path[0]=memory/scripts 可直接 import；spec 加载等
+    上下文回退按路径加载（不污染 sys.path）。"""
+    try:
+        from _memroot import resolve_memory_root
+    except ImportError:
+        import importlib.util as _ilu
+        _p = Path(__file__).resolve().parent / "_memroot.py"
+        if not _p.is_file():
+            # 三级兜底：脚本被复制到别处单独运行（测试 fixture 会这么做）时 _memroot.py 不在同目录。
+            # 内联等价解析，fail-open——绝不因辅助模块缺失而崩（旧行为亦是纯 env 读取）。
+            _env = os.environ.get("MEMORY_ROOT")
+            if _env and os.path.isabs(_env) and Path(_env).is_dir():
+                return Path("/" + "/".join(s for s in _env.split("/") if s not in ("", ".")))
+            return Path(__file__).resolve().parents[2]
+        _s = _ilu.spec_from_file_location("_memroot", _p)
+        _m = _ilu.module_from_spec(_s)
+        _s.loader.exec_module(_m)
+        resolve_memory_root = _m.resolve_memory_root
+    return resolve_memory_root()[0]
+
+
+ROOT = _resolve_root()
 EPISODIC = ROOT / "memory" / "episodic" / "index.jsonl"
 EVAL_LOG = ROOT / "memory" / "evals" / "eval-log.jsonl"
 

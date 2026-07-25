@@ -977,4 +977,24 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS DIGEST-001 「待你裁决」标题生产端↔消费端正则咬合，且截断可见');
 }
 
+// ── MEMROOT-WIRING-001（深审 M5 存活缺口，2026-07-24）：session-restore 的 memoryRoot **必须**
+// 经 resolveMemoryRoot 解析，而非裸 `process.env.MEMORY_ROOT || projectRoot`。
+// 判据：MEMORY_ROOT 指向**不存在**的路径（cloud 常态：committed env 指向本机没有的 master）时，
+// 治理/digest 路径必须落回 projectRoot，而不是在幻影路径上 mkdir（R3B-1 幻影树 + 治理每 session
+// 重 spawn + 成长摘要永不展示）。把 wiring 换回裸 env 逻辑，本用例即变红（M5 mutant 被杀）。
+{
+  const root = makeFixture();
+  const phantom = join(tmpdir(), `luca-gstack-phantom-${Date.now()}`); // 故意不创建
+  mkdirSync(join(root, 'memory', 'digests'), { recursive: true });
+  writeFileSync(join(root, 'memory', 'digests', '2026-01-02.md'), '# 成长摘要 — wiring 测试正文');
+  const r = runNode(sessionRestoreHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: phantom },
+  });
+  assert.equal(existsSync(phantom), false,
+    'MEMORY_ROOT 指向不存在路径时，绝不能在该幻影路径上创建目录树（R3B-1 幻影树回归）');
+  assert.match(r.stdout, /成长摘要 \(2026-01-02\.md/,
+    'memoryRoot 必须回落 projectRoot 才能找到本仓 digest；裸 `MEMORY_ROOT||projectRoot` 会指向幻影路径而找不到（M5 wiring 缺口）');
+  console.log('PASS MEMROOT-WIRING-001 session-restore 经 resolveMemoryRoot 解析（幻影 MEMORY_ROOT 回落本仓，不建幻影树）');
+}
+
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

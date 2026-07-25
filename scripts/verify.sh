@@ -108,6 +108,11 @@ check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径�
 # （CI 的 validate-yaml 只覆盖其中 2 个）。2026-06-28 体检 HC-21/HC-25 已两次点名，此处接线。
 check S24 "skill-os yaml 语法合法（8 个真值源）"    "npm run lint:yaml --silent"
 check S25 "luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）" "npm run check:luca-open --silent"
+check S26 "记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）" "npm run check:memroot --silent"
+# S27（深审 R1）：standalone opt-in 绝不能进版本控制——写进 committed settings.json 会让每个
+# checkout（含 master 改名/fork 配错）把 auth-absent 从 ANOMALY 静默降 NOTE，defeats FAIL-SAFE。
+# marker 侧已由 .gitignore 覆盖；此门把"勿写 committed settings.json"的注释护栏升级为确定性 CI 门。
+check S27 "MEMORY_STANDALONE 未泄漏进 tracked settings.json（opt-in 防泄漏门）" "! git ls-files -z '.claude/settings*.json' | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q ."
 warn  S23 "单真值源同步（不落后 tracking 分支）" "bash scripts/check-behind-upstream.sh"
 echo ""
 
