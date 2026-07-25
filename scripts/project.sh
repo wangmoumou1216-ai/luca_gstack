@@ -10,7 +10,10 @@
 
 set -euo pipefail
 
-PROJECTS_ROOT="$HOME/Desktop/项目"
+# WS-B2/FIX-2：与 hooks 共用同一根（LUCA_PROJECTS_ROOT 覆盖）——写方与读方必须同源，
+# 否则 override 下 project.sh 建的项目对 hooks 不可见、check:project-links 必失败。
+PROJECTS_ROOT="${LUCA_PROJECTS_ROOT:-$HOME/Desktop/项目}"
+PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DOCS_LINK="$PROJECT_ROOT/docs"

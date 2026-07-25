@@ -49,12 +49,24 @@ const toolName = data?.tool_name || '';
 const input = data?.tool_input || {};
 
 const gstackRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-const PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
+// WS-B2/FIX-2（2026-07-25 深审）：与 4 个身份解析站点共用同一根，支持 LUCA_PROJECTS_ROOT 覆盖。
+// 半接线（此处硬编码而别处已覆盖）会造成"写落 A 根、身份判 B 根"的分裂——正是本 hook 要消灭的症状。
+// 动态 import 失败时回落硬编码默认，保 fail-open（本 hook 任何异常都不得阻断工具调用）。
+let PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
+try {
+  const sub = await import('./lib/project-substrate.mjs');
+  if (sub?.PROJECTS_ROOT) PROJECTS_ROOT = sub.PROJECTS_ROOT;
+} catch { /* fail-open：用默认根 */ }
 const claudeDir = join(gstackRoot, '.claude');
 
 function readPin() {
   if (!sid) return '';
-  try { return readFileSync(join(claudeDir, `.session-project-${sid}`), 'utf8').trim(); } catch { return ''; }
+  try {
+    const p = readFileSync(join(claudeDir, `.session-project-${sid}`), 'utf8').trim();
+    // fail-closed：'.'/'..'/含分隔符的 pin 会把重定向落点推出 projects 根（深审实证可写到根外）
+    if (p === '.' || p === '..' || p.includes('/') || p.includes('\\')) return '';
+    return p;
+  } catch { return ''; }
 }
 
 // 本 session 绑定项目的绝对落点

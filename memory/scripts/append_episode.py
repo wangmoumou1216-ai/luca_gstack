@@ -109,9 +109,9 @@ def active_project() -> str:
         import importlib.util as _ilu
         _p = Path(__file__).resolve().parent / "_project.py"
         if not _p.is_file():
-            marker = "/项目/"
-            idx = target.find(marker)
-            return target[idx + len(marker):].split("/")[0] if idx >= 0 else ""
+            # 不复制会漂移的旧算法（深审：那是第 5 种解析，永不被测）；按"无项目"处理并告警。
+            sys.stderr.write("[append_episode] ⚠️ _project.py 缺失，无法裁决项目 → 按无激活项目处理\n")
+            return ""
         _s = _ilu.spec_from_file_location("_project", _p)
         _m = _ilu.module_from_spec(_s)
         _s.loader.exec_module(_m)

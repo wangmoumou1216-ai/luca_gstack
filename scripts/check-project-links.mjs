@@ -5,7 +5,8 @@ import { homedir } from 'os';
 import { join, relative } from 'path';
 
 const root = process.cwd();
-const projectsRoot = join(homedir(), 'Desktop', '项目');
+// WS-B2/FIX-2：与 hooks/project.sh 共用同一根（LUCA_PROJECTS_ROOT 覆盖），去尾斜杠归一。
+const projectsRoot = (process.env.LUCA_PROJECTS_ROOT || join(homedir(), 'Desktop', '项目')).replace(/\/+$/, '');
 const docsLink = join(root, 'docs');
 const stateLink = join(root, '.claude', 'workflow-state.yaml');
 const topicLink = join(root, ".claude", "current-topic.txt");

@@ -13,7 +13,11 @@ DOCS_TARGET=$(readlink docs 2>/dev/null || true)
 STATE_TARGET=$(readlink .claude/workflow-state.yaml 2>/dev/null || true)
 TOPIC_TARGET=$(readlink .claude/current-topic.txt 2>/dev/null || true)
 if [ -n "$DOCS_TARGET" ]; then
-  CURRENT_PROJECT=$(basename "$(dirname "$DOCS_TARGET")")
+  # WS-B2/FIX-2：与 hooks canonical 同源——去 PROJECTS_ROOT 前缀 + 去 /docs 取首段，
+  # 而非 basename(dirname)（后者在嵌套 checkout 布局下会返回 checkout 名而非项目名）。
+  _PR="${LUCA_PROJECTS_ROOT:-$HOME/Desktop/项目}"; _PR="${_PR%/}"
+  _REST="${DOCS_TARGET%/docs}"; _REST="${_REST#$_PR/}"
+  CURRENT_PROJECT="${_REST%%/*}"
   echo "📁 Project: $CURRENT_PROJECT"
   echo "   docs -> $DOCS_TARGET"
   echo "   state -> ${STATE_TARGET:-(未设置)}"

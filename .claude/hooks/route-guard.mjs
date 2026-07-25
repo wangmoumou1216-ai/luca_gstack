@@ -10,7 +10,6 @@ import {
   unlinkSync,
 } from 'fs';
 import { join } from 'path';
-import { homedir } from 'os';
 import { execSync } from 'child_process';
 import { PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
 
