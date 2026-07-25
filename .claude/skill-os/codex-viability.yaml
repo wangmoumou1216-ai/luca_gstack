@@ -1,0 +1,59 @@
+# Codex 存活性 registry（P0 / WS-A0b，2026-07-25）
+#
+# 【只存不可派生量】tier 裁决 + degrade 路径 / 锁死 reason。
+# **可派生量（fanout / mcp / web / askUser / daemon / workflow）不写在这里**——由
+# scripts/check-codex-viability.mjs 从 SKILL.md 的 allowed-tools + 正文实时派生，单一来源
+# 就是 skill 文件本身。registry 若复述可派生量必然漂移（深审 R3C-5 已证：手维护的能力表
+# 当场与代码不符）。
+#
+# tier 语义：
+#   1      = 干净移植（Codex 上按原样跑）
+#   2      = 可降级（**必须写 degrade**：具体降级路径，且诚实标注强度弱于 Claude）
+#   report = 能力探针门控（缺的能力一旦挂上即恢复，如 MCP server）
+#   3      = 真锁死（**必须写 reason**：点名原因 + 恢复触发器）
+#
+# tripwire（verify.sh S30）：磁盘上每个 skill 必须定档；派生出阻断性能力（fanout/mcp/daemon/
+# workflow）者不得判 tier-1；tier-2 必须有 degrade；tier-3 必须有 reason。新增 skill 未定档即红。
+
+skills:
+  # ── tier-1：干净移植（无阻断能力；askUser/web 属可降级的软依赖，见 AGENTS.md §4.8.4）──
+  challenge: {tier: 1}
+  compare: {tier: 1}
+  design-brief: {tier: 1}
+  design-review: {tier: 1}
+  evals: {tier: 1}
+  idea: {tier: 1}
+  insight-synthesis: {tier: 1}
+  muse-req-triage: {tier: 1}
+  muse-x-digest: {tier: 1}
+  redteam: {tier: 1}
+  research-kit: {tier: 1}
+  retro: {tier: 1}
+  task-plan: {tier: 1}
+  taste-review: {tier: 1}
+  tech-spec: {tier: 1}
+  ux-writing: {tier: 1}
+  html-prototype: {tier: 1}
+  magicpath: {tier: 1}
+
+  # ── tier-2：可降级（degrade 必填）──
+  deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}
+  ux-research: {tier: 2, degrade: "正文自带顺序回退（环境不支持时顺序执行，逻辑不变）"}
+  brainstorm: {tier: 2, degrade: "3+1 agent 无 ≥5 锁；Oracle 对抗可顺序化/内联"}
+  ux-brainstorm: {tier: 2, degrade: "同 brainstorm：3+1 可顺序化"}
+  quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明**，强度弱于 deepresearch"}
+  code-recon: {tier: 2, degrade: "并行 recon fan-out → 可顺序 recon；skill 正文未写明"}
+  code-hygiene: {tier: 2, degrade: "8 算子本就内联；review 段派 quality-gate → 可退单轴/内联"}
+  handoff-review: {tier: 2, degrade: "每节串行 dispatch → 可退内联读 specialist"}
+  ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
+  figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}
+  careful: {tier: 2, degrade: "deny 挂 Bash-PreToolUse；Codex 对 Bash 触发 PreToolUse（与 N7b 的 apply_patch 臂相反）⇒ 可恢复"}
+  muse-proto-gen: {tier: 2, degrade: "直写 HTML 无 Agent 依赖；仅 OD daemon 不可达时被 muse-loop 内部调用"}
+
+  # ── report：能力探针门控 ──
+  figma-layer: {tier: report, degrade: "7 个 mcp__plugin_figma_figma__* 绑定；Codex 挂同一 figma MCP 即恢复"}
+
+  # ── tier-3：真锁死（reason 必填，含恢复触发器）──
+  open-design: {tier: 3, reason: "OD 桌面 daemon（动态端口 sidecar）+ USER=luca 订阅会话；headless 实测不稳。云端与 Codex 皆断。需求经 OD→magicpath→html-prototype 回退链覆盖（地板 html-prototype 为 tier-1）。恢复触发器：OD 出可靠 headless/云端点"}
+  auto: {tier: 3, reason: "多 Work-Agent 并行/串行编排 + 聚合，自身即重编排器。恢复触发器：Codex 暴露 Workflow 等价 + 子 dispatch 成熟"}
+  muse-loop-orchestrate: {tier: 3, reason: "自驱状态机 + 内部 dispatch 多 sub-skill + 两个不可省略人类卡点 + route-guard HEAVY 登记；且依赖 OD daemon。恢复触发器：同 auto"}
