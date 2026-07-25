@@ -161,7 +161,16 @@ try {
   // ---- 拦截：强制就地提取（首次裁决 或 增量重拦）----
   if (!killSwitch && !stopHookActive && ((!alreadyExtracted && substantive) || rearm)) {
     writeCheckpointIfInProgress();
-    process.stdout.write(JSON.stringify({ decision: 'block', reason: buildReason(rearm, deltaEdit, deltaTool) }));
+    const reason = buildReason(rearm, deltaEdit, deltaTool);
+    // harness 门（P0/WS-A0 接线，2026-07-25）：decision:block 是 CC 专有动词，正向确定是 Codex
+    // 时降级为纯文本 advisory（claude/unknown 照常 block——失效方向偏向保住自成长捕获强制）。
+    let canBlock = true;
+    try { canBlock = (await import('./lib/harness.mjs')).canEmitControlVerb(process.env); } catch { }
+    if (canBlock) {
+      process.stdout.write(JSON.stringify({ decision: 'block', reason }));
+    } else {
+      process.stderr.write(`[session-sync] ⚠️ 本 session 有实质工作但未沉淀经验（当前 harness 无 Stop-block 强制能力，此为 advisory）：\n${reason}\n`);
+    }
     process.exit(0);
   }
 

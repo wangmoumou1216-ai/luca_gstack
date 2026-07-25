@@ -8,14 +8,32 @@
 import assert from 'assert/strict';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 
-const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+// 深审：用 CLAUDE_PROJECT_DIR 定位会在双检出下验错仓并报绿（实测）。改脚本相对：
+// 本文件在 scripts/ → 上 1 级 = 仓根，与被验文件恒同仓。
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const agents = readFileSync(join(ROOT, 'AGENTS.md'), 'utf8');
 let pass = 0, fail = 0;
 const check = (name, cond, detail = '') => {
   if (cond) { pass++; console.log(`PASS ${name}`); }
   else { fail++; console.log(`FAIL ${name}${detail ? ` — ${detail}` : ''}`); }
 };
+
+// ⓪ 反空壳门（深审：裸 includes 可被 12 行空壳骗过 —— 只要把关键词堆在一起就 15/15 全绿）。
+// 治理段落必须有**实质体量**且结构完整，光有关键词不算。
+{
+  const govStart = agents.indexOf('## 4.8 Governance Parity');
+  const govEnd = agents.indexOf('\n## 5.', govStart > 0 ? govStart : 0);
+  const gov = govStart > 0 && govEnd > govStart ? agents.slice(govStart, govEnd) : '';
+  check('anti-shell: §4.8 存在且成节', gov.length > 0, '找不到 §4.8 Governance Parity 到 §5 之间的内容');
+  check('anti-shell: §4.8 有实质体量（≥1500 字符）', gov.length >= 1500, `实际 ${gov.length} 字符——疑似被掏空成关键词壳`);
+  const subs = ['4.8.1', '4.8.2', '4.8.3', '4.8.4', '4.8.5'];
+  const missSub = subs.filter((x) => !gov.includes(x));
+  check('anti-shell: §4.8 五个子节齐全', missSub.length === 0, `缺 ${missSub.join(',')}`);
+  check('anti-shell: AGENTS.md 整体未被掏空（≥400 行）', agents.split('\n').length >= 400,
+    `实际 ${agents.split('\n').length} 行`);
+}
 
 // ① 治理段落存在性锚点（内容删了/改跑题即红）
 const ANCHORS = [

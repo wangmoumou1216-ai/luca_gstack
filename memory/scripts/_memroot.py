@@ -8,7 +8,8 @@
 设计要点：
 - fallback = **脚本相对仓根** `Path(__file__).resolve().parents[2]`（cwd 无关、解符号链接），
   与 JS 侧 `import.meta.url` 上 3 级 + realpathSync = lib→hooks→.claude→repo **同根**。
-- store-shape 哨兵：MEMORY_ROOT 指向"存在但非记忆 store 形状"（缺 memory/）时 LOUD 回落。
+- MEMORY_ROOT 目录存在即接受（显式意图，含 bootstrap 空 store）；只对"不存在/不可访问/非绝对"
+  回落。wrong-but-existing store 由 daily_governance 判别器（硬编码 auth 对比）兜底。
 - 相对 MEMORY_ROOT 一律拒绝回落（相对路径按各自进程 cwd 解析会 JS/py 裂脑，深审 R1）。
 - 判别器 FAIL-SAFE 向检测：auth 缺失时缺 opt-in 一律 ANOMALY，仅正向 MEMORY_STANDALONE=1 /
   gitignored marker 才降 note。
@@ -28,17 +29,6 @@ def _normalize_abs(p) -> str:
     return "/" + "/".join(segs)
 
 
-def _is_store(p: Path) -> bool:
-    """store 哨兵：**目录存在即接受**（用户显式设 MEMORY_ROOT = 明确意图，含首次 bootstrap 的空
-    store）。只对"不存在/不可访问"回落——那是 cloud/误配的真故障。wrong-but-existing store 由
-    daily_governance 判别器（硬编码 auth 对比）兜底。不额外要求 memory/ 子目录，否则会把"全新
-    store / 测试沙箱 temp 根"误判为非-store 而逃逸回真实仓。与 JS isStore 同语义。"""
-    try:
-        return p.is_dir()
-    except OSError:
-        return False
-
-
 def resolve_memory_root(env=None, loud=None):
     """解析记忆数据根。返回 (Path, mode)；mode ∈ {'env', 'repo-fallback'}。"""
     if env is None:
@@ -55,11 +45,9 @@ def resolve_memory_root(env=None, loud=None):
             is_dir = mp.is_dir()
         except OSError:
             is_dir = False
-        if is_dir and _is_store(mp):
-            return Path(_normalize_abs(m)), "env"
         if is_dir:
-            loud(f"[memroot] MEMORY_ROOT={m} 存在但非记忆 store 形状（缺 memory/ 子目录）→回落 {SCRIPT_REPO_ROOT}")
-            return SCRIPT_REPO_ROOT, "repo-fallback"
+            # 目录存在即接受（显式意图，含 bootstrap 空 store）；wrong-but-existing 由判别器兜底
+            return Path(_normalize_abs(m)), "env"
         loud(f"[memroot] MEMORY_ROOT={m} 不存在/不可访问→回落 {SCRIPT_REPO_ROOT}")
         return SCRIPT_REPO_ROOT, "repo-fallback"
     return SCRIPT_REPO_ROOT, "repo-fallback"

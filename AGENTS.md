@@ -32,7 +32,7 @@ out of the Static-Fallback allowlist to search-only for exactly this reason).
 
 Core facts:
 
-- Product domain: CRM, enterprise sales workflows, AI-assisted productivity.
+- Product domain: **whatever the active project declares** in its `CONTEXT.md` (this runtime is product-neutral).
 - Prototype stack: plain HTML + local Tailwind CDN + native JavaScript.
 - Prototype framework: `framework/`.
 - Workflow outputs: `docs/`, which must be a symlink to the active project at
@@ -693,6 +693,10 @@ Only report this checklist to the user if it affects the work or the user asks.
 - Do not duplicate every Claude skill body here.
 - Do not pretend Codex can directly execute Claude slash commands.
 - Do not use this file to store task-specific notes.
+- **Do not attempt per-agent model-tier dispatch.** The capability tiers in §4.8.2 are *intent*, not
+  a dispatch mechanism: `.claude/skill-os/model-routing.yaml` + the `recommended-model` frontmatter
+  are consumed by Claude-side CI and the orchestrator prompt only. Codex has no per-agent `model`
+  parameter, so tier **dispatch** is a documented Non-goal here; honor the intent, do not fake the wiring.
 - Do not edit `CLAUDE.md` or `.claude/skills/office/*` unless the user explicitly asks to change
   the Claude workflow itself.
 

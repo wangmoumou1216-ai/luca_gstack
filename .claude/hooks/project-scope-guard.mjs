@@ -35,7 +35,28 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-function out(obj) { try { process.stdout.write(JSON.stringify(obj) + '\n'); } catch { } }
+// harness 门（P0/WS-A0 接线，2026-07-25）：CC 专有强制动词（permissionDecision:deny /
+// updatedInput）只在**正向确定是 Codex** 时降级为纯文本 advisory——claude/unknown 照常输出，
+// 失效方向偏向"保住强制"（详见 lib/harness.mjs 头注）。动态 import 失败即视为可输出（fail-open）。
+let _canEmitVerb = true;
+try {
+  const h = await import('./lib/harness.mjs');
+  _canEmitVerb = h.canEmitControlVerb(process.env);
+} catch { /* fail-open：保持 CC 形输出 */ }
+
+function out(obj) {
+  try {
+    if (!_canEmitVerb) {
+      // Codex：吐 harness-agnostic 纯文本到 stderr，绝不吐它解析不了的 CC JSON
+      const o = obj?.hookSpecificOutput || obj || {};
+      const msg = o.permissionDecisionReason || o.reason
+        || (obj?.updatedInput ? `路径应重定向到 ${JSON.stringify(obj.updatedInput)}` : JSON.stringify(obj));
+      process.stderr.write(`[project-scope-guard] ⚠️ ${msg}（当前 harness 无 PreToolUse 强制能力，此为 advisory：请自行遵守项目边界）\n`);
+      return;
+    }
+    process.stdout.write(JSON.stringify(obj) + '\n');
+  } catch { }
+}
 function passThrough() { process.exit(0); } // 不输出 = 默认放行
 
 // ── 读 stdin（fail-open：读不到就放行）──

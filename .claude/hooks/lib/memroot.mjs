@@ -28,14 +28,6 @@ function normalizeAbs(p) {
 function isDir(p) {
   try { return statSync(p).isDirectory(); } catch { return false; }
 }
-// store-shape 哨兵：**目录存在即接受**（用户显式设 MEMORY_ROOT = 明确意图，含首次 bootstrap 的
-// 空 store：下游脚本会在其下惰性创建 memory/，深审#61）。只对"不存在/不可访问"回落——那是
-// cloud/误配的真故障（R3B-1 幻影树根因）。wrong-but-existing store 由 daily_governance 判别器
-// （硬编码 auth 对比）兜底（R3B-3 已证该组合 fail-safe）。此处不再额外要求 memory/ 子目录，
-// 否则会把"指向全新 store / 测试沙箱 temp 根"误判为非-store 而逃逸回真实仓（实测回归）。
-function isStore(p) {
-  return isDir(p);
-}
 
 // 返回 { path, mode }；mode ∈ {'env','repo-fallback'}。
 // opts.fallbackRoot（可选）：回落根。默认 = 脚本相对仓根（与 py parents[2] 同根）。
@@ -49,11 +41,10 @@ export function resolveMemoryRoot(env = process.env, opts = {}) {
   if (m && !isAbsolute(m)) {
     loud(`[memroot] MEMORY_ROOT=${m} 非绝对路径（相对按 cwd 解析会 JS/py 裂脑）→回落 ${fallbackRoot}`);
     result = { path: fallbackRoot, mode: 'repo-fallback' };
-  } else if (m && isDir(m) && isStore(m)) {
-    result = { path: normalizeAbs(m), mode: 'env' };
   } else if (m && isDir(m)) {
-    loud(`[memroot] MEMORY_ROOT=${m} 存在但非记忆 store 形状（缺 memory/ 子目录）→回落 ${fallbackRoot}`);
-    result = { path: fallbackRoot, mode: 'repo-fallback' };
+    // 目录存在即接受（显式设 MEMORY_ROOT = 明确意图，含首次 bootstrap 的空 store）。
+    // wrong-but-existing store 由 daily_governance 判别器（硬编码 auth 对比）兜底。
+    result = { path: normalizeAbs(m), mode: 'env' };
   } else if (m) {
     loud(`[memroot] MEMORY_ROOT=${m} 不存在/不可访问→回落 ${fallbackRoot}`);
     result = { path: fallbackRoot, mode: 'repo-fallback' };

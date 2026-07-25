@@ -520,7 +520,7 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 
 ---
 
-## luca app 集成
+## luca app 集成（**仅 `LUCA_APP=1` 或用户要「在 app/侧栏看」时适用；云端/headless/非-Claude 跳过**）
 
 用户要求"打开/查看某个文件"（常见 md，尤其说"在 app / luca / 新页签里看"）时，
 运行 `bash scripts/luca-open.sh <绝对路径>` —— luca app 会在新页签打开只读预览。
@@ -531,7 +531,7 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 完成后**主动**运行 `bash scripts/luca-open.sh <该文件绝对路径>` —— .html 会作为 app 侧栏
 浏览器面板的预览页签打开（左终端对话、右侧即时看效果）。该文件后续再被修改时预览**自动热刷新**，
 同一文件重复 open 会复用页签，因此每个文件只需 open 一次，迭代改动无需重复调用。
-**收窄（07-24）：** app 内嵌会话（`LUCA_APP=1`）的 Write/Edit 产物已由 post-edit hook 自动打开，本规则仅剩 Bash 产物与非 app 会话适用。
+**收窄（07-24）：** app 内嵌会话的 Write/Edit 产物已由 post-edit hook 自动打开，本规则仅剩 Bash 产物适用。
 
 **Figma 写入后主动开侧栏（乙类，同 HTML 推送）：** 凡向 Figma 写入（`use_figma`/`create_new_file`/`generate_figma_design`）完成后，主动在侧栏打开结果，不等用户开口。做法（含 `luca-open.sh --url` 推 URL、点名镜像同纪律、默认不推）全文见 appendix「luca app 侧栏感知」。
 

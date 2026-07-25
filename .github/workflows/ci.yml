@@ -86,6 +86,21 @@ jobs:
       - name: luca-open --url shim regression
         run: npm run check:luca-open
 
+      - name: Memory root cross-language parity + split-brain discriminator
+        run: npm run check:memroot
+
+      - name: Project identity single-adjudication (4 sites canonical + JS/py parity)
+        run: npm run check:substrate
+
+      - name: AGENTS.md governance parity (memory gate / SF cross-source / stale regression)
+        run: npm run check:agents-parity
+
+      - name: Harness detection + Codex viability registry
+        run: npm run check:harness
+
+      - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
+        run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
+
   validate-html:
     name: Validate HTML Prototypes
     runs-on: ubuntu-latest

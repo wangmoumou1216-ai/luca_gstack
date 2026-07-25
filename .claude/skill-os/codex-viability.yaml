@@ -34,21 +34,22 @@ skills:
   tech-spec: {tier: 1}
   ux-writing: {tier: 1}
   html-prototype: {tier: 1}
-  magicpath: {tier: 1}
 
   # ── tier-2：可降级（degrade 必填）──
   deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}
   ux-research: {tier: 2, degrade: "正文自带顺序回退（环境不支持时顺序执行，逻辑不变）"}
   brainstorm: {tier: 2, degrade: "3+1 agent 无 ≥5 锁；Oracle 对抗可顺序化/内联"}
   ux-brainstorm: {tier: 2, degrade: "同 brainstorm：3+1 可顺序化"}
-  quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明**，强度弱于 deepresearch"}
+  quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明该回退**，故 Codex 上强度弱于 Claude 上的同一 skill"}
   code-recon: {tier: 2, degrade: "并行 recon fan-out → 可顺序 recon；skill 正文未写明"}
   code-hygiene: {tier: 2, degrade: "8 算子本就内联；review 段派 quality-gate → 可退单轴/内联"}
   handoff-review: {tier: 2, degrade: "每节串行 dispatch → 可退内联读 specialist"}
   ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
   figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}
-  careful: {tier: 2, degrade: "deny 挂 Bash-PreToolUse；Codex 对 Bash 触发 PreToolUse（与 N7b 的 apply_patch 臂相反）⇒ 可恢复"}
+  careful: {tier: 2, degrade: "其 deny 挂 Bash-PreToolUse hook，但该 hook 由 **Claude 读 SKILL.md frontmatter 注册**且路径用 ${CLAUDE_SKILL_DIR}——Codex 无此加载器，故降级为「文档规则+人工自觉」，弱于 Claude；若 Codex 提供等价 skill-hook 注册则可恢复"}
   muse-proto-gen: {tier: 2, degrade: "直写 HTML 无 Agent 依赖；仅 OD daemon 不可达时被 muse-loop 内部调用"}
+
+  magicpath: {tier: report, degrade: "外部 magicpath 插件的本地占位（经 Skill 工具 dispatch 全局插件）；Codex 侧装上同名插件即恢复，未装则不可用——不是「按原样跑」"}
 
   # ── report：能力探针门控 ──
   figma-layer: {tier: report, degrade: "7 个 mcp__plugin_figma_figma__* 绑定；Codex 挂同一 figma MCP 即恢复"}
