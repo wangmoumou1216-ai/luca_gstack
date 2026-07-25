@@ -12,6 +12,7 @@ import {
 import { join } from 'path';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
+import { PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -128,7 +129,7 @@ function envList(name) {
 function listProjects() {
   const fromEnv = envList('ROUTE_GUARD_PROJECTS');
   if (fromEnv.length) return fromEnv;
-  const projectsRoot = join(homedir(), 'Desktop', '项目');
+  const projectsRoot = PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖（cloud/异机）
   try {
     return readdirSync(projectsRoot)
       .filter(name => {
@@ -151,11 +152,10 @@ function readCurrentProject(projects) {
   try {
     const docsPath = join(projectRoot, 'docs');
     const target = readlinkSync(docsPath);
-    const marker = 'Desktop/项目/';
-    const idx = target.indexOf(marker);
-    if (idx >= 0) return target.slice(idx + marker.length).replace(/\/docs$/, '');
-    const match = projects.find(name => target.endsWith(`/${name}/docs`));
-    return match || '';
+    // FIX-2：4 个 marker 站点统一走单一裁决 helper（known-projects 最长前缀匹配，无命中回退首段）。
+    // 旧实现在此做多段 slice + endsWith 兜底，与其余 3 站的首段正则在**嵌套**路径下发散
+    // （…/项目/muse/lucagstack/docs → 'muse/lucagstack' vs 'muse'）= cross-hook 项目身份分裂。
+    return projectNameFromLink(target, { projects });
   } catch {
     return '';
   }

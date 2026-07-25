@@ -5,6 +5,7 @@ import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
+import { PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
@@ -158,8 +159,7 @@ const alwaysClear = process.env.SESSION_RESTORE_ALWAYS_CLEAR === '1';
 let activeProject = '', docsDangling = false;
 try {
   const tgt = readlinkSync(docsLink); // 悬空链 readlink 仍成功
-  const m = tgt.match(/\/项目\/([^/]+)/);
-  if (m) activeProject = m[1];
+  activeProject = projectNameFromLink(tgt); // FIX-2：与其余 3 站同一 canonical 裁决
   docsDangling = !existsSync(docsLink); // existsSync 跟随链：目标不存在=悬空
 } catch { /* 无链=无激活项目 */ }
 // 终验核验修：三链任一悬空即视为悬空态（原只查 docs——部分悬空态如 state/topic 目标被删而
@@ -216,7 +216,7 @@ if (hasActiveLinks) {
 // 显示项目列表（仅在真清除后——保留态已在上面告知激活项目，不再谎称"无激活"，R4）
 if (cleared || !hasActiveLinks) {
   try {
-    const projectsRoot = join(homedir(), 'Desktop', '项目');
+    const projectsRoot = PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖
     if (existsSync(projectsRoot)) {
       const entries = readdirSync(projectsRoot).filter(e => {
         try { return statSync(join(projectsRoot, e)).isDirectory(); } catch { return false; }

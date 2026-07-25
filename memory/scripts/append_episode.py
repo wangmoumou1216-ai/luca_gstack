@@ -101,12 +101,22 @@ def active_project() -> str:
         target = os.readlink(docs)
     except OSError:
         return ""
-    marker = "/项目/"
-    idx = target.find(marker)
-    if idx == -1:
-        return ""
-    rest = target[idx + len(marker):]
-    return rest.split("/")[0]
+    # FIX-2：与 3 个 JS 站点走同一 canonical 裁决（known-projects 最长前缀匹配，无命中回退首段），
+    # 消嵌套路径下的 cross-hook 项目身份分裂。robust import 同 _resolve_root（脚本可能被复制运行）。
+    try:
+        from _project import project_name_from_link
+    except ImportError:
+        import importlib.util as _ilu
+        _p = Path(__file__).resolve().parent / "_project.py"
+        if not _p.is_file():
+            marker = "/项目/"
+            idx = target.find(marker)
+            return target[idx + len(marker):].split("/")[0] if idx >= 0 else ""
+        _s = _ilu.spec_from_file_location("_project", _p)
+        _m = _ilu.module_from_spec(_s)
+        _s.loader.exec_module(_m)
+        project_name_from_link = _m.project_name_from_link
+    return project_name_from_link(target)
 
 
 def main() -> int:

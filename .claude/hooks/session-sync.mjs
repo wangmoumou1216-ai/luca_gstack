@@ -12,6 +12,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, unlin
 import { join } from 'path';
 import { execSync } from 'child_process';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
+import { PROJECTS_ROOT as SUBSTRATE_PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -32,7 +33,7 @@ const sessionId =
 // 否则并行 session 切走软链时，提取归因/checkpoint/topic 会落到别人的项目（实证：pin=projA
 // 而 reason 指向软链的 projB）。hook 是直接 fs 写、不走工具调用，PreToolUse 重定向兜不住。
 // 失效 pin（项目目录已删）按无 pin 处理，绝不复活幽灵目录。
-const PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
+const PROJECTS_ROOT = SUBSTRATE_PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖
 let project = '';
 let projectFromPin = false;
 if (hasSid) {
@@ -43,8 +44,7 @@ if (hasSid) {
 }
 if (!project) {
   try {
-    const m = readlinkSync(join(projectRoot, 'docs')).match(/\/项目\/([^/]+)/);
-    if (m) project = m[1];
+    project = projectNameFromLink(readlinkSync(join(projectRoot, 'docs'))); // FIX-2：同一 canonical 裁决
   } catch { }
 }
 
