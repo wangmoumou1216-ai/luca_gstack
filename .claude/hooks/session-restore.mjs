@@ -253,8 +253,11 @@ try {
 const memScript = join(projectRoot, 'memory', 'scripts', 'get_memory.py');
 if (existsSync(memScript)) {
   try {
-    // stderr 改 pipe（原 'ignore'）：失败时需要它来区分「无 python3 / 缺 PyYAML / 其它」，
-    // 否则 e.message 只有 "Command failed: python3 …"，补救建议只能给一句废话（WS-B4）。
+    // stderr 改 pipe（原 'ignore'）：失败时需要它来区分「无 python3 / 其它」，否则 e.message 只有
+    // "Command failed: python3 …"，补救建议只能给一句废话（WS-B4）。
+    // 注（审计 Round2）：缺 PyYAML **不是**失败路径——get_memory.py 用 try/except ImportError 吞掉
+    // 缺 yaml 并降级、--summary 退出 0，故此处 catch 永不因缺 yaml 触发。真正会传播到这里的是
+    // 无 python3（ENOENT）/ 超时 / 脚本真崩溃。
     const summary = execSync(`python3 "${memScript}" --summary`, {
       cwd: projectRoot, encoding: 'utf8', timeout: 4000, stdio: ['pipe', 'pipe', 'pipe']
     }).trim();
@@ -268,9 +271,9 @@ if (existsSync(memScript)) {
       reason = '超时 (>4s)'; fix = '检查 memory/ 是否在慢盘/网络盘上';
     } else if (/command not found|ENOENT|not recognized/i.test(msg)) {
       reason = '未找到 python3'; fix = '安装 python3（记忆层整体不可用）';
-    } else if (/No module named ['"]?yaml|ModuleNotFoundError/i.test(msg)) {
-      reason = '缺 PyYAML'; fix = 'pip install pyyaml';
     } else {
+      // 通用兜底：任何传播到此的错误（含未来某依赖真缺失的 ModuleNotFoundError）都 surface 出来，
+      // 附上 stderr 前 60 字 + 手动复跑指令（比一句"pip install pyyaml"更不易误导）。
       reason = `错误: ${msg.slice(0, 60)}`; fix = '手动跑 python3 memory/scripts/get_memory.py --summary 看详情';
     }
     process.stdout.write(`[session-restore] ⚠️ 记忆加载失败（${reason}）→ 本 session 回退至 CLAUDE.md「关键约束速查」节；补救：${fix}\n`);

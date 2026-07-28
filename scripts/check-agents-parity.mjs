@@ -80,8 +80,12 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   // §4.8.2 model routing 段（到 §4.8.3 前）
   const i2 = agents.indexOf('4.8.2'); const i3 = agents.indexOf('4.8.3');
   const mdSec = i2 >= 0 && i3 > i2 ? agents.slice(i2, i3) : '';
-  check('hedge: §4.8.2 model dispatch 断言带未核验 hedge', hedge.test(mdSec) && /model/i.test(mdSec),
-    '§4.8.2 model 句缺 hedge → 恐退回「Codex 无 model 参数」既成事实断言');
+  // Round2 强化：hedge 就近判定，而非整段存在性——整段别处有 hedge 词、而 model 参数句本身被翻成
+  // 既成事实断言时，旧的整段检查会误 PASS（Round2 COSMETIC finding）。
+  const mIdx = mdSec.search(/per-agent model|model 参数/i);
+  const mWin = mIdx >= 0 ? mdSec.slice(Math.max(0, mIdx - 140), mIdx + 140) : '';
+  check('hedge: §4.8.2「per-agent model 参数」断言就近带未核验 hedge', mIdx >= 0 && hedge.test(mWin),
+    '§4.8.2 model 参数句就近(±140)缺 hedge → 恐退回既成事实断言（整段别处有 hedge 词不算）');
   // §11 Non-goal 的 per-agent model dispatch 条目
   const ng = agents.indexOf('per-agent model-tier dispatch');
   const ngSec = ng >= 0 ? agents.slice(ng, ng + 500) : '';
@@ -92,8 +96,10 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
 // ⑥ 无字面绝对路径（审计 CR0022 的门守护）：项目路径应全用 <PROJECTS_ROOT>；仅 PROJECTS_ROOT
 // 定义行（$HOME/Desktop/项目 或 LUCA_PROJECTS_ROOT）允许出现字面 Desktop/项目。
 {
+  // Round2 收窄：只豁免 PROJECTS_ROOT 定义行（含 LUCA_PROJECTS_ROOT）。旧版还豁免任意含 $HOME/Desktop
+  // 的行 → 一行既含字面 /Users/luca/Desktop 又含 $HOME/Desktop 会被漏放（Round2 gate-weakness finding）。
   const bad = agents.split('\n').filter((l) =>
-    l.includes('/Users/luca/Desktop') && !l.includes('$HOME/Desktop') && !l.includes('LUCA_PROJECTS_ROOT'));
+    l.includes('/Users/luca/Desktop') && !l.includes('LUCA_PROJECTS_ROOT'));
   check('no-abs-path: 无字面 /Users/luca/Desktop 硬编码（除 PROJECTS_ROOT 定义行）',
     bad.length === 0, `残留 ${bad.length} 行硬编码绝对路径`);
 }
