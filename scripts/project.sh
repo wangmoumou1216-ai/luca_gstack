@@ -10,7 +10,8 @@
 
 set -euo pipefail
 
-# WS-B2/FIX-2：与 hooks 共用同一根（LUCA_PROJECTS_ROOT 覆盖）——写方与读方必须同源，
+# WS-B2/FIX-2：与 hooks 共用同一根（LUCA_PROJECTS_ROOT 覆盖）——写方与读方根一致（current_project
+# 取首段是 hooks canonical 的简化子集，见 status.sh 注；生产单段项目名等价），
 # 否则 override 下 project.sh 建的项目对 hooks 不可见、check:project-links 必失败。
 PROJECTS_ROOT="${LUCA_PROJECTS_ROOT:-$HOME/Desktop/项目}"
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"

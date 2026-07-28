@@ -13,8 +13,10 @@ DOCS_TARGET=$(readlink docs 2>/dev/null || true)
 STATE_TARGET=$(readlink .claude/workflow-state.yaml 2>/dev/null || true)
 TOPIC_TARGET=$(readlink .claude/current-topic.txt 2>/dev/null || true)
 if [ -n "$DOCS_TARGET" ]; then
-  # WS-B2/FIX-2：与 hooks canonical 同源——去 PROJECTS_ROOT 前缀 + 去 /docs 取首段，
-  # 而非 basename(dirname)（后者在嵌套 checkout 布局下会返回 checkout 名而非项目名）。
+  # WS-B2/FIX-2：与 hooks 取**同一首段口径**（去 PROJECTS_ROOT 前缀 + 去 /docs 取首段）。
+  # 注（审计 Round2）：这是 hooks canonical(projectNameFromLink) 的**简化子集**——hooks 还做
+  # known-projects 最长前缀匹配 + fail-closed 段校验（拒 ''/'.'/'..'），本处只取首段；对生产
+  # 单段项目名二者等价，仅嵌套/病态布局下可能分叉。非完全同算法。
   _PR="${LUCA_PROJECTS_ROOT:-$HOME/Desktop/项目}"; _PR="${_PR%/}"
   _REST="${DOCS_TARGET%/docs}"; _REST="${_REST#$_PR/}"
   CURRENT_PROJECT="${_REST%%/*}"
