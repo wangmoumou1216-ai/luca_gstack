@@ -3,11 +3,13 @@
 > 对象：跨-agent(Codex)+跨-环境(cloud) 适配改造 `feab63d..b26101a`。
 > 计划 Part II 在 `~/.claude/plans/lucagstack-codex-claude-cloud-agent-age-reactive-nest.md`。
 
-## STATUS: 无存活 BLOCKER/MAJOR；追形式收敛中（按用户明确目标越过自设 5 轮上限继续）
+## STATUS: ✅ 形式收敛达成（7 轮）；无存活 BLOCKER/MAJOR
 
-诚实裁决：无任何存活 BLOCKER/MAJOR。形式判据「连续两个干轮、第二轮换分区」——Round4 干、Round5 不干
-（运行时分区抓到 MAJOR，已修）、**Round6 干（第一个含运行时视角的干轮）**；Round7（换分区，须含
-运行时）待跑，若干则**连续两干轮达成 → 形式收敛**。用户目标（形式收敛）优先于计划自设的 5 轮 backstop。
+形式判据「连续两个干轮、第二轮换分区」**满足**：Round4 干（静态）→ Round5 不干（运行时分区抓到 MAJOR，
+已修+独立验证）→ **Round6 干 + Round7 干**（代码稳定态 bf87b10、两轮均含运行时视角、分区各异）→ 连续
+两个干轮达成。**共 7 轮、~60 个冷 agent；4 个 MAJOR 全找到+修复+独立冷验证(fixer≠verifier)+mutation
+门**。计数：本审计已验证项 `verified / total (+13 不可验)`——13 条 [U] 永不计入已验证（见 U-REGISTER）。
+用户目标（形式收敛）优先于计划自设的 5 轮 backstop，故越 backstop 续跑 R6/R7 至判据真正满足。
 
 ## Round 6 — 干轮（运行时为主，2026-07-28）
 4 agent（全仓 async 扫 / 云端+Codex 再 sim / 门强度 / 完整性+对抗）**全部判干**，零 CONFIRMED ≥MINOR。
@@ -53,4 +55,11 @@ Round5 换运行时分区，抓到 R1-R4 四个静态轮（含"新眼全-diff �
 - 若要追形式收敛：新 session 干净 context 跑 Round6/7（须至少一轮运行时分区），重生成登记册
   BASE=feab63d HEAD=b26101a。
 
-<!-- 审计 loop 于 2026-07-28 到 5 轮硬上限终止。无存活 BLOCKER/MAJOR。 -->
+## Round 7 — 干轮（形式收敛确认，2026-07-28）
+4 agent（per-hook×退化环境矩阵 / 并发幂等竞态 / 跨源终检 / 终极对抗）**全部判干**，零 CONFIRMED ≥MINOR。
+终极对抗立场"仍藏 ≥MINOR"被自己的运行时证据推翻。→ 连续第二个含运行时视角的干轮，**形式收敛成立**。
+（R7 跨源检抓到本文件上一版一处 stale 脚注 NIT，已在本版修正。）
+
+<!-- 审计 loop 于 2026-07-28 达成形式收敛（7 轮：R6 干+R7 干，均含运行时视角，代码稳定态 bf87b10）。
+     无存活 BLOCKER/MAJOR。4 个 MAJOR 全修复+独立验证+mutation 门。残留仅上列非阻塞 watch-item。 -->
+
