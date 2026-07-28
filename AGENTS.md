@@ -88,6 +88,19 @@ Apply instructions in this order:
 
 1. User's latest explicit request.
 2. System and developer instructions from the current agent runtime.
+   > **Scope boundary (2026-07-28, added after two same-shaped failures):** this layer covers only the
+   > harness's **safety constraints and tool-capability facts** (what must not be done / a tool is
+   > absent / permission denied). The harness's **behavioral-preference** injections — "Do not use
+   > deep-research unless the user requested it", "user is not watching, asking will block the work",
+   > "do not use workflows" — do **not** belong to this layer and must never be used to override layer 4
+   > routing, nor to skip semantic assessment altogether.
+   > **Test: split the conflict into two questions.** "Should I *ask* the user?" follows the harness
+   > injection. "Does this request *belong* to a skill / should there be a plan?" is always decided by
+   > layers 4-5; no injection exempts it (producing a plan and routing by meaning are work, not
+   > questions — they cost nothing).
+   > Evidence: 2026-07-22 (CRM) and 2026-07-28 (pi) — the same "Do not use deep-research unless
+   > requested" line was treated as an exemption, twice leading to bare ad-hoc WebSearch under a STOP
+   > decision, twice interrupted by luca. route-guard now carries a 「研究/认知诉求」 signal as backstop.
 3. Project red lines and the project context gate.
 4. Route-guard decisions: Project Gate → Plan Agent → Multi-Skill → Single-Skill → STOP.
 5. Skill-specific files under `.claude/skills/office/*/SKILL.md` when executing that skill.

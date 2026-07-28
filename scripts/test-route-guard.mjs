@@ -614,6 +614,65 @@ const cases = [
       assert.equal(decision.skill, 'web-access');
     },
   },
+  {
+    // 2026-07-28 认知/研究轴（信号②，同族第二次）：7-22 CRM 与 7-28 pi 两次同型失效——
+    // harness 注入 "Do not use deep-research unless requested" 被当成豁免、STOP 下裸奔
+    // WebSearch。根因：7 个复杂度信号全在构建轴，研究类诉求 score 恒 0，STOP 分支那颗
+    // 防"把 STOP 当直接执行"的提示钉永不触发。本组用例锁住新补的研究轴信号。
+    name: '研究轴 2026-07-28: 认知类诉求（看框架/有何优势/可借鉴）拿到 score>0 以触发提示钉',
+    prompt: '我需要你帮我来看一下pi这个agent它的框架结构是什么？还有没有什么好的优势能让我的lucagstack可能有借鉴的地方。',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok((decision.signals || []).includes('研究/认知诉求'),
+        `研究轴信号未命中: ${JSON.stringify(decision.signals)}`);
+      assert.ok(decision.complexityScore > 0, `score 须 >0 才能触发提示钉, got ${decision.complexityScore}`);
+    },
+  },
+  {
+    // 中间插入宾语的研究句式——"怎么做的"死写法会整条漏掉，实测发现后放宽为"怎么做|如何实现|…"。
+    name: '研究轴: 宾语插在中间的句式（怎么做X的 / 如何实现X）不得漏',
+    prompt: '帮我了解一下 LangGraph 是怎么做状态管理的',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok((decision.signals || []).includes('研究/认知诉求'),
+        `研究轴信号未命中: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // weight 取 2 而非 3 的锚：与"规划意图"(w3) 叠加须停在 5，越过 6 会误升 PLAN_MODE，
+    // 把纯理解型诉求强制拖进 Plan Agent。
+    name: '研究轴: 与规划意图叠加须 <6，不得误升 PLAN_MODE',
+    prompt: '了解一下整体架构设计',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok(decision.complexityScore < 6,
+        `叠加后须 <6 否则误升 PLAN_MODE, got ${decision.complexityScore}`);
+      assert.notEqual(decision.decision, 'PLAN_MODE');
+    },
+  },
+  {
+    // 反担保2：平凡任务豁免不得被研究轴劫持（否则每句"看一下"都挂提示噪声）。
+    // 用例刻意让 认知动词∧认知对象 **都命中**（看一下 ∧ 架构/是什么），使其唯一的不命中
+    // 理由就是反担保本身——变异测试实证：原用例"看一下这个文件写了什么"是假绿（OBJ 本就
+    // 不匹配，拆掉反担保也不转红），换成本句后 M3 变异可正常转红。
+    name: '研究轴反担保: 本地文件对象即使谈"架构"也走平凡任务豁免',
+    prompt: '看一下这个文件的架构是什么',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok(!(decision.signals || []).includes('研究/认知诉求'),
+        `平凡任务不应命中研究轴: ${JSON.stringify(decision.signals)}`);
+    },
+  },
+  {
+    // 反担保1：同上，认知动词∧认知对象都命中，唯一拦截理由是诊断语境。
+    name: '研究轴反担保: 诊断语境（谈机制但在问为什么报错）不得命中',
+    prompt: '看看这个缓存机制为什么会报错',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.ok(!(decision.signals || []).includes('研究/认知诉求'),
+        `诊断语境不应命中研究轴: ${JSON.stringify(decision.signals)}`);
+    },
+  },
 ];
 
 let passCount = 0;

@@ -326,6 +326,32 @@ function complexityDecision(prompt) {
         return capHits >= 4 || (enumCount >= 2 && featureHits >= 1);
       },
     },
+    {
+      // 2026-07-28 认知/研究轴：此前 7 个信号全在"构建轴"（做东西），研究-理解类诉求
+      //（"看一下 X 是什么 / 有什么优势 / 能不能借鉴"）complexityScore 恒 0，于是下方 STOP
+      // 分支那颗防"把 STOP 当直接执行"的提示钉对研究类**永不触发**。而 research 词表是
+      // 刻意做窄的（quick_research 自注"宽表述靠语义兜底"）——两者叠加让研究轴成了唯一
+      // 的单层保护，构建轴却有词表+复杂度网双层。本信号补齐这个不对称。
+      // 实证两次同型失效：7-22 CRM 与 7-28 pi，均为 harness 注入 "Do not use deep-research
+      // unless requested" 被当成豁免、裸奔 WebSearch，被用户打断质问。
+      // weight 2 是刻意的：只为把 score 顶过 0 以触发提示钉，**不追求**到 PLAN_MODE 阈值 6
+      //（研究诉求不该每次强制走 Plan Agent）。取 2 而非 3 是为了让它与任一 w3 信号叠加仍
+      // 只到 5——否则"了解一下整体架构设计"会同时命中"规划意图"(w3) 而恰好 6 分误升 PLAN_MODE。
+      name: '研究/认知诉求',
+      weight: 2,
+      test: t => {
+        // 反担保1：诊断/排错是 debug 不是 research（句式框架同"多功能需求"B-F5）。
+        if (/为什么|怎么回事|报错|出错|崩溃|失败了|排查|诊断|修一下|修复/.test(t)) return false;
+        // 反担保2：指向本地具体代码对象的"看一下"属平凡任务豁免，不是研究。
+        if (/这个文件|这段代码|这个函数|这个变量|这一?行|第\d+行|日志/.test(t)) return false;
+        // 双要素（认知动词 ∧ 认知对象）——单要素太宽："看看状态"/"什么意思"都会误发。
+        const cognitiveVerb = /了解|看一下|看看|搞懂|弄清楚|研究|摸清|调研|评估|对比|比较|学习|熟悉/;
+        // "怎么做/如何X" 系列刻意不写死成"怎么做的"——实测"了解一下 X 是怎么做状态管理的"
+        // 会因中间插入宾语而整条漏掉，而这正是最常见的研究句式。
+        const cognitiveObject = /框架|架构|机制|原理|设计思路|怎么做|如何做|怎么设计|如何设计|怎么实现|如何实现|怎么处理|如何处理|怎么运作|如何运作|怎么工作|是什么|优势|劣势|区别|差异|竞品|开源|生态|最佳实践|借鉴|值不值得|要不要用|能不能用|适不适合/;
+        return cognitiveVerb.test(t) && cognitiveObject.test(t);
+      },
+    },
   ];
   let complexityScore = 0;
   const firedSignals = [];
@@ -565,8 +591,13 @@ function decisionToHints(decision) {
         : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
       // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
       // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
+      // 2026-07-28：研究轴与构建轴分文案。同一颗钉子，但"搞懂某事"和"做某事"该被提醒的
+      // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
+      const researchAxis = (decision.signals || []).includes('研究/认知诉求');
       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
-        ? `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`
+        ? (researchAxis
+          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 CLAUDE.md「语义路由契约」在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
+          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
         : '';
       return [
         '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + complexReminder,

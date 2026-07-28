@@ -195,6 +195,52 @@ luca 连问「你置入到 figma 里面了吗」「打开浏览器到侧边栏�
   不是 a-priori 可判定的规则，是我的判断被此审计线 bound。
 - **teardown**：作用域在 session 结束 + 显式任务切换时失效；话题切换后要再推前先**重确认**（"还在盯 X 吗？"）。
   无持久 latch、靠我追踪，属**纪律非结构保证**。
+
+---
+
+## harness 注入边界（规则优先级第 2 层的适用范围，2026-07-28）
+
+> CLAUDE.md「规则优先级体系」第 2 层写作「当前 agent runtime 的 system/developer 安全与工具约束」。
+> 本节界定它**不包含**什么。CLAUDE.md 正文因 B1 context-budget 门（45KB，改前仅余 4 字节）无法内联，
+> 该条的**确定性投递由 route-guard STOP 分支的研究轴提示钉承担**（见下"结构承载"）；
+> AGENTS.md 第 2 层已内联同一套语义的英文全文。
+
+**属于第 2 层（可压第 4 层路由）：** harness 的**安全约束与工具能力事实**——不许做什么、
+工具不存在、权限不足、沙箱边界、不可逆操作的门。
+
+**不属于第 2 层（无权压第 4 层路由）：** harness 的**行为偏好类**注入，例如
+`Do not use workflows or deep-research unless the user requested it`、
+`user is not watching, asking will block the work`、`Do not call the AgentTool unless requested`。
+这些约束的是**我要不要自作主张升级重型编排 / 要不要停下来提问**，
+**不是**「这个请求属不属于某个 skill」，更不是「要不要有计划」。
+
+**判据（把冲突拆成两问）：**
+
+| 问题 | 由谁裁 |
+|---|---|
+| 要不要**问**用户 / 要不要**升重型编排** | harness 注入（第 2 层）说了算 |
+| 这题**属不属于**某 skill / 该不该**有计划** | 永远由第 4-5 层裁，注入无权豁免 |
+
+第二问永远零成本可做：**产出计划、按含义识别 skill 都是干活，不是提问。**
+
+**两次实证（同一条注入，6 天内两次同型失效）：**
+- **2026-07-22（CRM 三列表改造）**：拿 `Do not use deep-research unless requested` +
+  `user is not watching` 当豁免 → 跳过 route-guard 的 MULTI 门 → 裸奔 ad-hoc WebSearch → 被打断三次。
+  处置：写 person 记忆 `feedback_skill_routing_verify` 第 4 条。
+- **2026-07-28（pi agent 框架调研）**：同一条注入被扩大解释成"这题不属于 research 类" →
+  STOP 下裸奔 WebSearch → 被打断两次。**证明"只写记忆"这条处置不足够**，遂补结构承载。
+
+**结构承载（为什么这条不只是纪律）：** route-guard `complexityDecision()` 的 7 个信号原本全在
+**构建轴**（做东西），研究-理解类诉求 complexityScore 恒 0，导致 STOP 分支那颗防
+"把 STOP 当直接执行"的提示钉对研究类**永不触发**——而 research 词表是刻意做窄的
+（`quick_research` 自注"宽表述靠语义兜底"）。两者叠加使研究轴成为**唯一的单层保护**，
+构建轴却是词表+复杂度网双层。2026-07-28 补「研究/认知诉求」信号（weight 2，双要素
+认知动词∧认知对象 + 两条反担保）补齐该不对称，并在提示钉里直接写明本节判据。
+回归锁：`scripts/test-route-guard.mjs` 5 条研究轴用例（含 weight 取 2 的边界锚——
+取 3 会与"规划意图"叠加到 6 而误升 PLAN_MODE）。
+
+**已知残留（不粉饰）：** 窄正则追不上自然语言，措辞刁钻的研究诉求仍会漏；
+提示钉提高叫醒率但**不保证**叫醒。本节是降低复发率的手段，不是消除。
 - **诚实定性**：机器无 ambient 自发是结构性的（脚本非调不发）；"我不 over-invoke"是纪律
   （同 pre-hook HTML 推送可靠性类）、非保证，可接受**因 blast radius 低（一个可关页签）**。
 - **审计否定**：未点名不得调 `--url`；调用前须能引用 luca 点名原话；lookup 不镜像即便顶层；话题切换后重确认。
