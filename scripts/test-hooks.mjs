@@ -1005,9 +1005,13 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
 {
   const root = makeFixture();
   writeFileSync(join(root, 'memory', 'scripts', 'get_memory.py'), 'print("ok")\n'); // 脚本本身能跑，只让 python3 不可达
-  const nodeDir = dirname(process.execPath); // PATH 只留 node 所在目录 → 无 python3
+  // hermetic（Round3 修 test-portability）：不用 dirname(node)——homebrew/conda 下 node 与 python3
+  // 同目录会让 python3 一并可达、用例假绿。改建一个**只含 node 软链**的临时空目录当 PATH，python3
+  // 无论宿主布局都不可达。
+  const binDir = mkdtempSync(join(tmpdir(), 'wsb4-nobin-'));
+  symlinkSync(process.execPath, join(binDir, 'node'));
   const r = runNode(sessionRestoreHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, PATH: nodeDir },
+    env: { CLAUDE_PROJECT_DIR: root, PATH: binDir },
   });
   assert.match(r.stdout, /记忆加载失败（未找到 python3）/,
     'python3 不在 PATH（真实可达失败）→ stdout 必须分类为「未找到 python3」（WS-B4 失败分类）');

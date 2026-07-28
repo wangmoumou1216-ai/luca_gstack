@@ -272,9 +272,11 @@ if (existsSync(memScript)) {
     } else if (/command not found|ENOENT|not recognized/i.test(msg)) {
       reason = '未找到 python3'; fix = '安装 python3（记忆层整体不可用）';
     } else {
-      // 通用兜底：任何传播到此的错误（含未来某依赖真缺失的 ModuleNotFoundError）都 surface 出来，
-      // 附上 stderr 前 60 字 + 手动复跑指令（比一句"pip install pyyaml"更不易误导）。
-      reason = `错误: ${msg.slice(0, 60)}`; fix = '手动跑 python3 memory/scripts/get_memory.py --summary 看详情';
+      // 通用兜底：surface 真实成因。e.message 以 "Command failed: python3 <绝对路径>" 开头（远超 60 字），
+      // 取 (message+stderr) 头部只会显示命令+路径、把真正的异常截在窗口外（Round3 修）。改取 **stderr
+      // 末行**（python Traceback 最后一行 = 真正的异常，含依赖名）。
+      const errTail = String(e.stderr || '').trim().split('\n').filter(Boolean).pop() || String(e.message || '').slice(0, 80);
+      reason = `错误: ${errTail.slice(0, 100)}`; fix = '手动跑 python3 memory/scripts/get_memory.py --summary 看详情';
     }
     process.stdout.write(`[session-restore] ⚠️ 记忆加载失败（${reason}）→ 本 session 回退至 CLAUDE.md「关键约束速查」节；补救：${fix}\n`);
   }

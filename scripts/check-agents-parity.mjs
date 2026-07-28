@@ -80,26 +80,29 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   // §4.8.2 model routing 段（到 §4.8.3 前）
   const i2 = agents.indexOf('4.8.2'); const i3 = agents.indexOf('4.8.3');
   const mdSec = i2 >= 0 && i3 > i2 ? agents.slice(i2, i3) : '';
-  // Round2 强化：hedge 就近判定，而非整段存在性——整段别处有 hedge 词、而 model 参数句本身被翻成
-  // 既成事实断言时，旧的整段检查会误 PASS（Round2 COSMETIC finding）。
+  // Round2 强化 + Round3 加固：hedge 就近判定 **且** 就近不得出现既成事实反措辞。整段/整窗只查 hedge
+  // 存在性时，半回退（把 model 句翻成"无法传/已确认/has no"、却在窗口别处保留一个 hedge 词）会误 PASS。
+  const revert = /无法.{0,4}传|已(?:经)?确认|Codex has no per-agent|Codex cannot .{0,12}model/i;
   const mIdx = mdSec.search(/per-agent model|model 参数/i);
-  const mWin = mIdx >= 0 ? mdSec.slice(Math.max(0, mIdx - 140), mIdx + 140) : '';
-  check('hedge: §4.8.2「per-agent model 参数」断言就近带未核验 hedge', mIdx >= 0 && hedge.test(mWin),
-    '§4.8.2 model 参数句就近(±140)缺 hedge → 恐退回既成事实断言（整段别处有 hedge 词不算）');
-  // §11 Non-goal 的 per-agent model dispatch 条目
+  const mWin = mIdx >= 0 ? mdSec.slice(Math.max(0, mIdx - 160), mIdx + 160) : '';
+  check('hedge: §4.8.2「per-agent model 参数」就近带 hedge 且无既成事实反措辞',
+    mIdx >= 0 && hedge.test(mWin) && !revert.test(mWin),
+    '§4.8.2 model 句就近缺 hedge 或现既成事实措辞（无法传/已确认）→ 恐退回断言');
+  // §11 Non-goal：整条目查 hedge 存在性 **+ 反措辞检测**（Round3 加固）。反措辞是真防护——半回退把
+  // 本句翻成"Codex has no per-agent model"既成事实时，即便条目别处留 hedge 词也会被 revert 检测抓住。
   const ng = agents.indexOf('per-agent model-tier dispatch');
-  const ngSec = ng >= 0 ? agents.slice(ng, ng + 500) : '';
-  check('hedge: §11 model dispatch Non-goal 带未核验 hedge', hedge.test(ngSec),
-    '§11 model dispatch 缺 hedge');
+  const ngItem = ng >= 0 ? agents.slice(ng, ng + 600) : '';
+  check('hedge: §11 model dispatch Non-goal 带 hedge 且无既成事实反措辞',
+    ng >= 0 && hedge.test(ngItem) && !revert.test(ngItem),
+    '§11 model dispatch 缺 hedge 或现既成事实断言（Codex has no per-agent model）');
 }
 
 // ⑥ 无字面绝对路径（审计 CR0022 的门守护）：项目路径应全用 <PROJECTS_ROOT>；仅 PROJECTS_ROOT
 // 定义行（$HOME/Desktop/项目 或 LUCA_PROJECTS_ROOT）允许出现字面 Desktop/项目。
 {
-  // Round2 收窄：只豁免 PROJECTS_ROOT 定义行（含 LUCA_PROJECTS_ROOT）。旧版还豁免任意含 $HOME/Desktop
-  // 的行 → 一行既含字面 /Users/luca/Desktop 又含 $HOME/Desktop 会被漏放（Round2 gate-weakness finding）。
-  const bad = agents.split('\n').filter((l) =>
-    l.includes('/Users/luca/Desktop') && !l.includes('LUCA_PROJECTS_ROOT'));
+  // Round3 零豁免：无任何合法行需要字面 /Users/luca/Desktop（PROJECTS_ROOT 定义行用 $HOME/Desktop，
+  // 非字面 /Users/luca）。旧 LUCA_PROJECTS_ROOT 豁免是死豁免且开旁路（同行硬编码绝对路径会被漏放）→ 删。
+  const bad = agents.split('\n').filter((l) => l.includes('/Users/luca/Desktop'));
   check('no-abs-path: 无字面 /Users/luca/Desktop 硬编码（除 PROJECTS_ROOT 定义行）',
     bad.length === 0, `残留 ${bad.length} 行硬编码绝对路径`);
 }
