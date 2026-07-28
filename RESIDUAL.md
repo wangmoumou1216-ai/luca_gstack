@@ -3,10 +3,23 @@
 > 对象：跨-agent(Codex)+跨-环境(cloud) 适配改造 `feab63d..b26101a`。
 > 计划 Part II 在 `~/.claude/plans/lucagstack-codex-claude-cloud-agent-age-reactive-nest.md`。
 
-## STATUS: 无存活 BLOCKER/MAJOR；形式收敛（连续两干轮）**未在 5 轮硬上限内达成**
+## STATUS: 无存活 BLOCKER/MAJOR；追形式收敛中（按用户明确目标越过自设 5 轮上限继续）
 
-诚实裁决：**不是** NOT CONVERGED（无任何存活 BLOCKER/MAJOR），但**也不能**声称"已证收敛"——
-形式判据「连续两个干轮、第二轮换分区」未满足（Round4 干、Round5 不干）。
+诚实裁决：无任何存活 BLOCKER/MAJOR。形式判据「连续两个干轮、第二轮换分区」——Round4 干、Round5 不干
+（运行时分区抓到 MAJOR，已修）、**Round6 干（第一个含运行时视角的干轮）**；Round7（换分区，须含
+运行时）待跑，若干则**连续两干轮达成 → 形式收敛**。用户目标（形式收敛）优先于计划自设的 5 轮 backstop。
+
+## Round 6 — 干轮（运行时为主，2026-07-28）
+4 agent（全仓 async 扫 / 云端+Codex 再 sim / 门强度 / 完整性+对抗）**全部判干**，零 CONFIRMED ≥MINOR。
+R5 修复三项运行时实证生效；全仓仅 2 处 async spawn 均已守卫。**3 条非阻塞 watch-item（不修，记录）：**
+- **[UNCERTAIN] governance spawn 1/168 flaky 崩溃**：守卫（.on('error')）在场且 167 次验证成立，1 次
+  首跑观测到 unhandled 'error' 逃逸、无法复现。冷 agent 判证据不足、不达 CONFIRMED。**不加顶层
+  uncaughtException 网**——它会掩盖 R5 的 GOVERNANCE-SPAWN-FAILOPEN 回归门（吞 mutation→死断言）。
+  重开触发器：若能稳定复现，再评估顶层网 vs 保专用门锐利的权衡。
+- **[NIT] 治理"已后台触发"消息在缺 python3 时误导**：pre-existing（早于 feab63d，不在审计 range），
+  上方"未找到 python3→记忆层整体不可用"已大声暴露同根因，无静默失效。可选低优先改条件打印。
+- **[NIT] route-guard/session-sync 静态 import lib 无 fail-open**：前瞻加固（libs 现全有效、parity
+  全绿、无当前 BLAST）；project-scope-guard 已用 fail-open 动态 import。backlog 一致性项。
 
 ## 轮次与发现（5 轮，硬上限）
 | 轮 | 分区 | 结果 |
