@@ -3,7 +3,7 @@
 // 返回**同一 {path, mode}**（比 COMPOSED ALGORITHM，非仅 isDir）。含 FIX-1 决定性 fixture。
 import { resolveMemoryRoot, SCRIPT_REPO_ROOT } from '../.claude/hooks/lib/memroot.mjs';
 import { execFileSync } from 'child_process';
-import { realpathSync, mkdtempSync } from 'fs';
+import { realpathSync, mkdtempSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -122,6 +122,29 @@ for (const d of dcases) {
   console.log(`${ok ? 'PASS' : 'FAIL'} ${d.n}${ok ? '' : `  got=${got} exp=${d.exp}`}`);
 }
 
-const total = fixtures.length + dcases.length + 1; // +1 = F11 子进程 fallback-源断言
+// ── AR0162 分叉门（审计 Round1）：10 个 memory 脚本各内联一份 byte-identical 的 _resolve_root()
+// 三级兜底（含记忆根算法第 4 副本，仅 _memroot.py 缺失时可达）。无门时任一份可静默漂移，JS/py 再度
+// 裂脑而 parity 测触不到（parity 只测 _memroot.py 本体，不测这 10 份内联兜底）。断言 10 份逐字节一致。
+{
+  const memDir = join(REPO, 'memory', 'scripts');
+  const carriers = readdirSync(memDir)
+    .filter((f) => f.endsWith('.py') && !f.startsWith('_'))
+    .filter((f) => readFileSync(join(memDir, f), 'utf8').includes('def _resolve_root'));
+  const extract = (src) => {
+    const L = src.split('\n');
+    const st = L.findIndex((l) => l.startsWith('def _resolve_root'));
+    let end = st + 1;
+    while (end < L.length && (L[end].startsWith('    ') || L[end].trim() === '')) end++;
+    return L.slice(st, end).join('\n').replace(/\s+$/, '');
+  };
+  const blocks = carriers.map((f) => [f, extract(readFileSync(join(memDir, f), 'utf8'))]);
+  const ref = blocks.length ? blocks[0][1] : '';
+  const drift = blocks.filter(([, b]) => b !== ref).map(([f]) => f);
+  const okDrift = drift.length === 0 && carriers.length >= 10;
+  if (!okDrift) fail++;
+  console.log(`${okDrift ? 'PASS' : 'FAIL'} AR0162 ${carriers.length} 个 memory 脚本 _resolve_root 块逐字节一致（防第4副本漂移）${okDrift ? '' : ` drift=${drift} n=${carriers.length}`}`);
+}
+
+const total = fixtures.length + dcases.length + 2; // +1 F11 子进程 fallback-源 +1 AR0162 分叉门
 console.log(`\n=== test-memroot summary: PASS=${total - fail} FAIL=${fail}（parity ${fixtures.length}+F11 + discriminator ${dcases.length}）===`);
 process.exit(fail ? 1 : 0);
