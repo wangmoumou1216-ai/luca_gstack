@@ -72,5 +72,31 @@ check('no-stale: 已被取代的共享软链模型未复活',
 check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents),
   '缺「弱于 Claude」声明 → 降级被写成等价');
 
+// ⑤ [U] hedge 守护（审计 Round1 验证 agent 发现的 MISSING_GATE）：AGENTS.md 关于 Codex per-agent
+// model 参数的断言必须带未核验 hedge——该 Codex 事实本仓从未 spike，无门则未来编辑可静默退回
+// 「Codex 无 model 参数」的既成事实断言，翻掉 §0.5b「model-tier LOCKS」而无告警。
+{
+  const hedge = /未核验|尚未.{0,4}核验|unverified|pending.{0,6}spike|保守假设/i;
+  // §4.8.2 model routing 段（到 §4.8.3 前）
+  const i2 = agents.indexOf('4.8.2'); const i3 = agents.indexOf('4.8.3');
+  const mdSec = i2 >= 0 && i3 > i2 ? agents.slice(i2, i3) : '';
+  check('hedge: §4.8.2 model dispatch 断言带未核验 hedge', hedge.test(mdSec) && /model/i.test(mdSec),
+    '§4.8.2 model 句缺 hedge → 恐退回「Codex 无 model 参数」既成事实断言');
+  // §11 Non-goal 的 per-agent model dispatch 条目
+  const ng = agents.indexOf('per-agent model-tier dispatch');
+  const ngSec = ng >= 0 ? agents.slice(ng, ng + 500) : '';
+  check('hedge: §11 model dispatch Non-goal 带未核验 hedge', hedge.test(ngSec),
+    '§11 model dispatch 缺 hedge');
+}
+
+// ⑥ 无字面绝对路径（审计 CR0022 的门守护）：项目路径应全用 <PROJECTS_ROOT>；仅 PROJECTS_ROOT
+// 定义行（$HOME/Desktop/项目 或 LUCA_PROJECTS_ROOT）允许出现字面 Desktop/项目。
+{
+  const bad = agents.split('\n').filter((l) =>
+    l.includes('/Users/luca/Desktop') && !l.includes('$HOME/Desktop') && !l.includes('LUCA_PROJECTS_ROOT'));
+  check('no-abs-path: 无字面 /Users/luca/Desktop 硬编码（除 PROJECTS_ROOT 定义行）',
+    bad.length === 0, `残留 ${bad.length} 行硬编码绝对路径`);
+}
+
 console.log(`\n=== check-agents-parity summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
