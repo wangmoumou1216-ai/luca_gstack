@@ -36,7 +36,9 @@ function projectNameFromTarget(target, suffix, label) {
   assert.ok(target.startsWith(projectsRoot + '/'), `${label} target must be under ${projectsRoot}: ${target}`);
   assert.ok(target.endsWith(suffix), `${label} target must end with ${suffix}: ${target}`);
   const rel = relative(projectsRoot, target);
-  return rel.slice(0, -suffix.length).replace(/\/$/, '');
+  // canonical 首段（与 hooks 的 projectNameFromLink 同口径）：嵌套 docs 软链下不返回多段 rest，
+  // 使 7 站身份口径真正统一（审计 CR0109/CR0340）。三链一致性检查仍成立（各链均取首段再比对）。
+  return rel.slice(0, -suffix.length).replace(/\/$/, '').split('/')[0];
 }
 
 const docsTarget = mustSymlink(docsLink, 'docs');

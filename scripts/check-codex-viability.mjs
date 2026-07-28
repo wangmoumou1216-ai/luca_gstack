@@ -42,7 +42,13 @@ export function deriveCaps(src) {
   if (/mcp__/.test(at) || /mcp__/.test(body)) caps.add('mcp');
   if (/WebSearch|WebFetch/.test(at) || /WebSearch|WebFetch/.test(body)) caps.add('web');
   if (/AskUserQuestion/.test(at) || /AskUserQuestion/.test(body)) caps.add('askUser');
-  if (/daemon|pgrep .*sidecar|订阅会话/.test(body)) caps.add('daemon');
+  // daemon：改行级 + 排除 fallback 语境。全文级匹配会把"当 OD daemon 探测为 DOWN 时才被 dispatch
+  // 作为降级方案"这类**反向依赖**（daemon 挂了它才顶上）误判为依赖 daemon（muse-proto-gen 实测）。
+  const DAEMON_RE = /daemon|pgrep .*sidecar|订阅会话/;
+  const DAEMON_DENY = /DOWN|fallback|降级|回退|不可达|不可用|探测/i;
+  for (const line of body.split('\n')) {
+    if (DAEMON_RE.test(line) && !DAEMON_DENY.test(line)) { caps.add('daemon'); break; }
+  }
   if (/Workflow\(\{?\s*name/.test(body)) caps.add('workflow');
   return [...caps].sort();
 }

@@ -56,7 +56,7 @@ Core facts:
   `.`/`..`/empty are rejected (fail-closed).
 - Long-term memory: `CONTEXT.md`.
 - Claude workflow state: `.claude/workflow-state.yaml`, which must be a symlink to the active
-  project's `/Users/luca/Desktop/项目/<project>/.luca/workflow-state.yaml`.
+  project's `<PROJECTS_ROOT>/<project>/.luca/workflow-state.yaml`.
 - Skill OS contracts: `.claude/skill-os/`.
 - Skill observability: `.claude/observability/`.
 - Growth candidates (Hermes-style): `memory/semantic/` (candidate→review→promote via `memory/scripts/propose_semantic.py`; legacy `.claude/hermes/` was removed in commit 1dc1475).
@@ -342,10 +342,11 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
   · 只对某个下游项目成立 → 该项目 `.luca/memory/MEMORY.md`
 - **检索改变了行动时**补跑 `search_memory.py --mattered "<query>"`（ADR-0006 唯一主观信号）。
 
-### 4.8.2 Model routing（能力档意图 — Codex 无 model dispatch 参数，按意图自选）
+### 4.8.2 Model routing（能力档意图 — Codex 的 model dispatch 参数尚未核验，按意图自选）
 
-真值源 `.claude/skill-os/model-routing.yaml`。Codex 侧**无法**传 per-agent model 参数，故档位
-分派本身不可移植（见 §11 Non-goals）；可移植的是**意图**——按判断杠杆选强弱：
+真值源 `.claude/skill-os/model-routing.yaml`。**Codex 是否能传 per-agent model 参数尚未在真 Codex
+上核验**（当前按"不能"保守假设），故档位分派本身暂判不可移植（见 §11 Non-goals；真-Codex spike
+证伪则复审）；可移植的是**意图**——按判断杠杆选强弱：
 
 - 出门前裁决 / 对抗判定 / 翻案复审 / 规划期 → **reasoning-heavy**（最强档）
 - 写代码 / 规格 / 原型 / 编排 / 研究 / 判官常规 → **core-execution**（承重常驻档）
@@ -487,7 +488,7 @@ Environment/project split:
 
 - `luca_gstack` stores the operating environment: skills, hooks, framework, scripts, memory, and
   observability.
-- Active project artifacts and workflow state live under `/Users/luca/Desktop/项目/<project>/`.
+- Active project artifacts and workflow state live under `<PROJECTS_ROOT>/<project>/`.
 - `docs` and `.claude/workflow-state.yaml` are compatibility symlinks. Do not replace them with
   real directories/files.
 - Run `npm run check:project-links` after project switching or state migration.
@@ -695,8 +696,9 @@ Only report this checklist to the user if it affects the work or the user asks.
 - Do not use this file to store task-specific notes.
 - **Do not attempt per-agent model-tier dispatch.** The capability tiers in §4.8.2 are *intent*, not
   a dispatch mechanism: `.claude/skill-os/model-routing.yaml` + the `recommended-model` frontmatter
-  are consumed by Claude-side CI and the orchestrator prompt only. Codex has no per-agent `model`
-  parameter, so tier **dispatch** is a documented Non-goal here; honor the intent, do not fake the wiring.
+  are consumed by Claude-side CI and the orchestrator prompt only. Whether Codex exposes a per-agent
+  `model` parameter is **unverified on a real Codex (currently assumed "no", pending a spike)**, so tier
+  **dispatch** is a Non-goal here until that spike; honor the intent, do not fake the wiring.
 - Do not edit `CLAUDE.md` or `.claude/skills/office/*` unless the user explicitly asks to change
   the Claude workflow itself.
 

@@ -44,7 +44,7 @@ current_project() {
   local target
   target=$(readlink "$DOCS_LINK" 2>/dev/null)
   if [ -n "$target" ]; then
-    echo "$target" | sed "s|$PROJECTS_ROOT/||" | sed 's|/docs$||'
+    echo "$target" | sed "s|$PROJECTS_ROOT/||" | sed 's|/docs$||' | sed 's|/.*||'
   else
     echo ""
   fi

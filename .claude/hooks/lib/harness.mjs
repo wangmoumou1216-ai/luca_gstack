@@ -13,8 +13,6 @@
 // 若 unknown 关掉强制动词，后果是**主路径上静默丢失治理强制**（Stop 的自成长捕获环不再拦、
 // PreToolUse 不再 deny 落错项目）——这比"在未知 harness 上多吐一行它解析不了的 JSON"严重得多。
 // 失效方向要偏向**保住强制**，不偏向保住整洁。
-import { statSync } from 'fs';
-import { join } from 'path';
 
 export const HARNESS = {
   CLAUDE: 'claude',
@@ -54,15 +52,4 @@ export function capabilities(harness = detectHarness()) {
 // 调用方必须改吐 harness-agnostic 纯文本。
 export function canEmitControlVerb(env = process.env) {
   return capabilities(detectHarness(env)).blockVerb;
-}
-
-// 读 skill 的 Codex 存活性 registry（声明式，非派生量：只存 {tier, degrade}）
-export function readViability(repoRoot) {
-  try {
-    const p = join(repoRoot, '.claude', 'skill-os', 'codex-viability.yaml');
-    statSync(p);
-    return p;
-  } catch {
-    return null;
-  }
 }
