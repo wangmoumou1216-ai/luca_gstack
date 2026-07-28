@@ -316,6 +316,10 @@ try {
         // 显式告知治理脚本调用方仓根：loop-health 的 pending 积压检查须覆盖捕获侧真正写入的仓
         env: { ...process.env, GOVERNANCE_CALLER_ROOT: projectRoot },
       });
+      // detached spawn 的 ENOENT（python3 缺失，云端/精简镜像常态）走 **async 'error' 事件**，外层
+      // try/catch 拦不住 → 未捕获会让整个 hook 崩、退出 1、吐 Node 栈盖过"未找到 python3"告警（Round5
+      // 云端运行时 sim 抓到的 MAJOR）。吞掉它保 fail-open——治理是尽力而为，缺 python3 静默跳过即可。
+      child.on('error', () => {});
       child.unref();
       // stdout 才是用户可见通道（stderr 进 /tmp 死信日志，无人读——评审切面 c C4）
       process.stdout.write(`[session-restore] 🌱 已后台触发每日记忆治理（今日首次启动；运行留痕 /tmp/luca-gstack-governance.log）\n`);
@@ -434,7 +438,8 @@ try {
   const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
   // 后台静默 fetch（detached 不阻塞启动）：让本地 ref 保持新鲜，本条与 route-guard 的
   // 每消息 behind 提醒在下一次检查时即拿到准确落后数。离线/失败静默。
-  try { spawn('git', ['fetch', '-q', '--no-tags', up.split('/')[0]], { cwd, detached: true, stdio: 'ignore' }).unref(); } catch { }
+  // 同 governance spawn：git 缺失时 ENOENT 走 async 'error' 事件，try/catch 拦不住 → 加 .on('error')（Round5）。
+  try { const gc = spawn('git', ['fetch', '-q', '--no-tags', up.split('/')[0]], { cwd, detached: true, stdio: 'ignore' }); gc.on('error', () => {}); gc.unref(); } catch { }
   const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(), 10);
   if (behind > 0) {
     process.stdout.write(`[session-restore] ⚠ 本检出落后 ${up} ${behind} 条——建议 git pull（单真值源纪律）\n`);

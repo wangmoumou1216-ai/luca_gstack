@@ -1019,4 +1019,23 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS WS-B4-CLASSIFY session-restore 记忆加载失败分类可见（python3 缺失=真实可达路径）');
 }
 
+// ── GOVERNANCE-SPAWN-FAILOPEN（审计 Round5 MAJOR）：云端 python3 缺失时，daily_governance 的
+// **detached spawn** 的 async ENOENT 'error' 事件必须被 .on('error') 吞掉——否则 hook 崩溃退出 1、
+// 吐 Node 栈盖过干净的"未找到 python3"告警（既报告又崩溃，违反系列 fail-open 契约）。删掉 spawn 的
+// .on('error') 本用例即红。前四轮静态审计全 declared-dry、只有 Round5 运行时分区抓到此 MAJOR。
+{
+  const root = makeFixture();
+  writeFileSync(join(root, 'memory', 'scripts', 'daily_governance.py'), 'print("gov")\n'); // govScript 存在 → 触发治理 spawn
+  const binDir = mkdtempSync(join(tmpdir(), 'gov-nopy-'));
+  symlinkSync(process.execPath, join(binDir, 'node')); // PATH 只含 node → python3 不可达
+  const r = runNode(sessionRestoreHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root, PATH: binDir },
+  });
+  assert.equal(r.status, 0,
+    `session-restore 在 python3 缺失+governance 触发下必须 fail-open 退出 0（detached spawn 的 async ENOENT 须被 .on('error') 吞掉），实际 status=${r.status}`);
+  assert.doesNotMatch(String(r.stderr || ''), /Unhandled 'error'|spawn python3 ENOENT|node:events/,
+    'detached governance spawn 崩溃栈绝不能泄漏到 stderr（会盖过干净告警、被 SessionStart 展示给用户）');
+  console.log('PASS GOVERNANCE-SPAWN-FAILOPEN session-restore 云端 python3 缺失下 detached spawn fail-open（Round5 MAJOR 回归门）');
+}
+
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

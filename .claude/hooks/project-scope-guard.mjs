@@ -49,8 +49,10 @@ function out(obj) {
     if (!_canEmitVerb) {
       // Codex：吐 harness-agnostic 纯文本到 stderr，绝不吐它解析不了的 CC JSON
       const o = obj?.hookSpecificOutput || obj || {};
+      // Round5 NIT 修：updatedInput 嵌在 hookSpecificOutput（即 o）里，原查 obj.updatedInput 恒空 →
+      // 友好文案是死分支、永远整体转储裸 JSON。改查 o.updatedInput 让"路径应重定向到"分支可达。
       const msg = o.permissionDecisionReason || o.reason
-        || (obj?.updatedInput ? `路径应重定向到 ${JSON.stringify(obj.updatedInput)}` : JSON.stringify(obj));
+        || (o.updatedInput ? `路径应重定向到 ${JSON.stringify(o.updatedInput)}` : JSON.stringify(obj));
       process.stderr.write(`[project-scope-guard] ⚠️ ${msg}（当前 harness 无 PreToolUse 强制能力，此为 advisory：请自行遵守项目边界）\n`);
       return;
     }

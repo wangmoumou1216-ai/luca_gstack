@@ -29,6 +29,15 @@
 （576 行）与 `.claude/skills/office/magicpath/SKILL.md`（49 行）是两份 git-tracked、内容分叉的副本
 ——「Codex 读同一棵树」未必成立。真 Codex spike 的**第一项检查**须厘清 `.agents/skills/` 分叉。
 
+## harness 门加固覆盖面（审计 Round5 登记）
+CC 专有强制动词的 harness 降级门只加固了 **2/3** 个 emitter：`session-sync`（decision:block）与
+`project-scope-guard`（deny/updatedInput）——两个 .mjs 已按 `detectHarness` 降级为纯文本 advisory。
+**第 3 个 emitter `.claude/skills/office/careful/bin/check-careful.sh`**（经 careful SKILL.md
+frontmatter 注册为 PreToolUse hook、吐 `permissionDecision:"ask"` CC-JSON）**未做 harness 降级**。
+是否构成真实故障取决于 [U-02]（Codex 是否 Bash-PreToolUse deny）+ [U-13]（careful hook 在 Codex
+上能否自动注册）——二者未核验，故此项 UNVERIFIABLE_U。若 U-13 证实不能注册则不触发、无输出（间接安全）；
+若能注册则 check-careful.sh 需读 `CODEX_*` env 做同款纯文本降级。真 Codex spike 时按 U-13 先验证。
+
 ## 计数纪律
 本审计的最终计数永远写成 `verified/total (+k 不可验)` 形式，绝不把这 13 条 [U] 折进 verified 或 total 的任一数。
 
