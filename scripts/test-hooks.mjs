@@ -997,4 +997,20 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS MEMROOT-WIRING-001 session-restore 经 resolveMemoryRoot 解析（幻影 MEMORY_ROOT 回落本仓，不建幻影树）');
 }
 
+// ── WS-B4-CLASSIFY（审计 Round1 CR0044）：记忆加载失败的分类（缺 PyYAML / 未找到 python3 / 超时）
+// 此前只被成功路径覆盖，失败分支在 CI（强制 pip install pyyaml）永不执行 → 无回归门。构造真失败
+// （get_memory.py 抛 ModuleNotFoundError('yaml')）断言 stdout 分类为「缺 PyYAML」且附可执行补救。
+// 把 session-restore 的分类分支改回统一兜底文案，本用例即变红。
+{
+  const root = makeFixture();
+  writeFileSync(join(root, 'memory', 'scripts', 'get_memory.py'),
+    'raise ModuleNotFoundError("No module named \'yaml\'")\n');
+  const r = runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  assert.match(r.stdout, /记忆加载失败（缺 PyYAML）/,
+    'get_memory 抛 ModuleNotFoundError(yaml) → stdout 必须分类为「缺 PyYAML」（WS-B4 失败分类，此前无门）');
+  assert.match(r.stdout, /pip install pyyaml/,
+    '缺 PyYAML 分类必须附可执行补救 pip install pyyaml');
+  console.log('PASS WS-B4-CLASSIFY session-restore 记忆加载失败分类可见（缺 PyYAML → stdout + 补救）');
+}
+
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');
