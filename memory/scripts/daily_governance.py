@@ -636,9 +636,10 @@ def check_benchmark_drift(registry_path, marker_path, today, fetch_latest=None):
 
 
 LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
-CLAUDE_MD_SOFT_BUDGET = 44 * 1024  # CLAUDE.md 软预算早警阈值（B1 硬门 45KB，软门给 1KB 撞墙前预警）；
-                                   # 超此即 digest 告警，把撞墙式硬门升级成早警防贴墙（2026-07-21，
-                                   # 2026-07-20 加 skill 贴到剩 2 字节的教训；实测安全 offload floor≈42.8KB）
+CLAUDE_MD_SOFT_BUDGET = 43562  # CLAUDE.md 软预算早警阈值 = 落点 42,026 + 1.5KiB（claude5-unhobble
+                               # Phase 5 棘轮；B1 硬门 = 落点 + 3KiB = 45,098，verify.sh:136 单源）。
+                               # 软硬之间留 1.5KiB 告警带、落点之上留 1.5KiB 静默带（R5-①M3：
+                               # 软≡落点会 +1 字节永鸣；2026-07-20 贴剩 2 字节教训沿革保留）
 LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
 DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
 
@@ -686,19 +687,19 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         _verdict, _msg = memory_anomaly_verdict(auth, resolved_root, os.environ)
         (anomalies if _verdict == "ANOMALY" else notes).append(_msg)
 
-        # 4. CLAUDE.md 预算早警（2026-07-21）：每-session 注入面贴 45KB 硬门（verify.sh B1）前先软警。
-        # 硬门撞墙式（不到 45KB 不响）；软目标提前告警，creep 早发现别贴到墙。fail-open，任何异常吞掉。
+        # 4. CLAUDE.md 预算早警：贴 B1 硬门（45,098B，verify.sh 单源）前先软警。
+        # 硬门撞墙式；软目标提前告警，creep 早发现别贴到墙。fail-open，任何异常吞掉。
         try:
             claude_md = auth / "CLAUDE.md"
             if claude_md.is_file():
                 sz = claude_md.stat().st_size
                 if sz > CLAUDE_MD_SOFT_BUDGET:
                     anomalies.append(
-                        f"CLAUDE.md {sz/1024:.1f}KB 超软目标 {CLAUDE_MD_SOFT_BUDGET//1024}KB、逼近 45KB 硬门（B1）"
+                        f"CLAUDE.md {sz/1024:.1f}KB 超软目标 {CLAUDE_MD_SOFT_BUDGET/1024:.1f}KB、逼近 44.0KiB 硬门（B1）"
                         "——每-session 注入面接近预算墙，把参考细节 offload 到 claude-md-appendix.md（lazy-load）腾 headroom"
                     )
                 else:
-                    notes.append(f"CLAUDE.md 预算 OK：{sz/1024:.1f}KB（软 {CLAUDE_MD_SOFT_BUDGET//1024}KB / 硬 45KB）")
+                    notes.append(f"CLAUDE.md 预算 OK：{sz/1024:.1f}KB（软 {CLAUDE_MD_SOFT_BUDGET/1024:.1f}KB / 硬 44.0KiB）")
         except Exception:  # noqa: BLE001
             pass
 

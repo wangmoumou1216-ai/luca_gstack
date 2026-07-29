@@ -137,7 +137,7 @@ check F3 "home-page.html 存在" "[ -f framework/home-page.html ]"
 check F4 "detail-page-3col.html 存在" "[ -f framework/detail-page-3col.html ]"
 check F5 "form-page.html 存在" "[ -f framework/form-page.html ]"
 check F6 "shared-head.html 存在（品牌 token 母版，所有页面依赖）" "[ -f framework/shared-head.html ]"
-check B1 "CLAUDE.md ≤ 45KB（context-budget 回归守护）" "[ \$(wc -c < CLAUDE.md) -le 46080 ]"
+check B1 "CLAUDE.md ≤ 45,098B（实测落点+3KiB 棘轮，claude5-unhobble Phase 5）" "[ \$(wc -c < CLAUDE.md) -le 45098 ]"
 check B2 "无 office SKILL.md 超 45KB（context-budget 回归守护）" "! find .claude/skills/office -name SKILL.md -size +45k | grep -q ."
 echo ""
 

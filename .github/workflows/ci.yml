@@ -104,7 +104,7 @@ jobs:
         run: |
           SZ=$(wc -c < CLAUDE.md)
           echo "CLAUDE.md=$SZ bytes"
-          [ "$SZ" -le 46080 ]
+          [ "$SZ" -le 45098 ]
       - name: Capability-parity anchors (S18 remote)
         run: node scripts/check-capability-parity.mjs
       - name: Skill registration sync (S19 remote)
