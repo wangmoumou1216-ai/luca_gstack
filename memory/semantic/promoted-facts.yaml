@@ -491,3 +491,133 @@ facts:
     reviewer: "luca"
     scope: "CLAUDE.md 规则优先级体系, 全框架元原则"
     tags: ["value-orientation", "meta-principle", "rule-vs-value", "HITL", "constitution"]
+  - id: SC-20260630-001
+    domain: skill-rule
+    fact: "memory治理: MEMORY.md 索引按每条价值剪、不为凑 >N 这个软代理数字剪(context成本由每条长度主导非行数);删条目要文件+索引一起删别造孤儿;别把一条带独立关键词的教训合并进主题不同的胖条目——会让它按错误主题永远召回不到,该拆分(渲染哨兵半句并进verify,可达性独立成条)"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "2026-06-30 记忆治理 session: 我原建议为凑20删最便宜一行+合并候选进verify;两个对立红队镜头独立判同一错+裁决agent确认,改为按价值拆分"
+    reviewer: "luca"
+    scope: "memory-governance"
+    tags: ["memory", "governance", "recall"]
+  - id: SC-20260703-001
+    domain: skill-rule
+    fact: "checker/lint 脚本校验 yaml 内的引用完整性时必须真 YAML 解析（python3+PyYAML 桥或等价），不得用正则匹配手写形态——正则 lint 对合法重排版（quoted 标量/块列表）产假阳、对块式写法致盲漏报；同时校验语义须与 runtime 消费方的真实解析语义对齐（如消费方是手写 parser 只认 flow-style，则 checker 要把该格式契约一并钉死）"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "2026-07-02 SSOT-8/9 初版正则 lint 被红队打出 7 条 CONFIRMED（16 用例对抗 harness）,整段重写为 PyYAML 桥后 10 用例变异矩阵全对; get_rules.py 手写 parser 误读块列表为 apply-to-all 是 checker-runtime 语义错位实例"
+    reviewer: "luca"
+    scope: "框架 checker/lint 脚本（check-routing-map 等）"
+    tags: ["checker", "yaml", "lint", "redteam"]
+  - id: SC-20260703-002
+    domain: skill-rule
+    fact: "luca_gstack 全量框架自审（'走查一遍整体建设思路'类任务）执行方法论：5个独立评审员并行覆盖不同轴（如架构哲学/诉求偏差/调研质量/skill接线/治理复杂度），每人给file:line或运转数据实证；重大发现（尤其会推翻早期结论或涉及高风险改动的）必须再过一轮对抗核实（独立refuter或运行时实证），不能直接采信初审结果；修复阶段每项修复也要独立、不知情的agent重新核验（只给原始finding+当前状态，不告知修了什么），而非自己签字——本次13项修复中2项被独立核验揪出'部分解决'（文档局部同步遗漏、同一问题的第二条触发路径未堵）"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "2026-07-03 全量搭建review(5轴并行+2处对抗核实收窄发现如CLAUDE.md瘦身幅度/砍skill之争)+13项修复独立核验(4/6一次通过,2组抓出真缺口:design-brief末尾重复断言、/auto的Plan Agent 5条件第二路径)"
+    reviewer: "claude"
+    scope: "luca_gstack 框架自审/全量review类任务"
+    tags: ["review", "methodology", "independent-verification", "redteam"]
+  - id: SC-20260703-003
+    domain: skill-rule
+    fact: "verify.sh 的 S14(quality-gate) 依赖当前 docs/ symlink 指向的项目——多个并发 Claude Code session 共享同一套项目上下文 symlink 机制时,S14 FAIL 可能只是因为 docs/ 当前指向另一个(不相关)项目里缺 gate_result 的历史文档,不是本次改动引入的真回归。诊断顺序:先 readlink docs 确认当前指向,若指向的项目与本次改动无关,改用针对性检查(npm run check:routing-map / check:coding-discipline / check:hooks)确认改动本身健康,再用 pre-commit 自带的 FAST_COMMIT=1 环境变量跳过完整 verify.sh(不是 --no-verify,是仓库自己文档化的逃生口),commit message 里写明跳过原因。本 session 母版+fork 各撞到过一次(分别因并发session把docs指到muse/todo-capsule)。"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "2026-07-03 全量review修复阶段3次遇到: fork docs指向todo-capsule(S14 FAIL)、母版docs先指muse后又被并发session切到todo-capsule(S14 FAIL) — 均用readlink docs确认+针对性检查+FAST_COMMIT=1解决,验证改动本身健康"
+    reviewer: "claude"
+    scope: "luca_gstack 多session并发开发场景下的 verify.sh/pre-commit 诊断"
+    tags: ["verify", "docs-symlink", "concurrent-session", "fast-commit"]
+  - id: SC-20260706-001
+    domain: skill-rule
+    fact: "session-sync.mjs 的 Stop 硬拦截门禁受 SESSION_SYNC_BLOCK 环境变量 kill-switch 控制；若该变量在当前 shell 进程环境里被设为 '0'（不一定写在任何 .zshrc/settings.json 里，可能是某次手动 export 残留在长期存活的终端进程中），硬拦截会永久失效，钩子只会反复写 pending-extraction 占位文件（软提醒），从不强制 Agent 停下来沉淀经验。诊断信号：/tmp/luca-gstack-hooks.log 里长期只见'pending-extraction...已存在（待处理）'、从未出现 decision:block；且 .claude/.session-edit-count-<sid> 明显超过 substantive 门槛。排查时应先用 env | grep SESSION_SYNC_BLOCK 确认，而不是假设规则本身失效。"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "本 session 实测：79 次编辑/219 次工具调用远超门槛，但 hooks.log 里几十次触发全部走软路径；env 直接确认 SESSION_SYNC_BLOCK=0；在 Bash 工具的子 shell 里 unset 后 hooks.log 下一次触发仍未硬拦截，证明该变量污染的是 Claude Code 自身进程环境而非可通过 Bash 工具子进程修复"
+    reviewer: "luca"
+    scope: "skill-rule,memory-system"
+    tags: ["session-sync", "memory-hook", "kill-switch", "env-pollution", "diagnostic"]
+  - id: SC-20260709-001
+    domain: skill-rule
+    fact: "会话级项目隔离（方案A，2026-07-08）：当前项目是 session 属性而非工作目录属性——.claude/.session-project-<sid> pin 是唯一真值，PreToolUse 的 project-scope-guard.mjs 把该 session 对 /Users/luca/Desktop/项目/muse/docs/·workflow-state·current-topic 的读写重定向到本 pin 项目绝对路径；N 个并行 session 可同时在不同项目上工作互不串扰。pin 只在用户显式声明/确认项目时写，永不从共享软链派生、漂移永不自动认领（旧 route-guard '3 次后接管劫持者项目' 已删——它是跨 session 污染元凶）。未绑定 session 碰 /Users/luca/Desktop/项目/muse/docs/ 直接 deny；非项目路径放行；hook 全程 fail-open。"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "session-2026-07-08-project-isolation"
+    evidence: "luca 明确否决旧'命名即切换+告警'非隔离设计（截图: 并行 session 把 mobile-list 切进 muse 上的 session）；实现见 .claude/hooks/project-scope-guard.mjs + route-guard pin 块重写 + post-edit 去除误报；回归 scripts/test-project-scope-guard.mjs 16/16 pass（含 cross-session 隔离）"
+    reviewer: "luca"
+    scope: "framework,session-isolation,project-gate"
+    tags: ["project-isolation", "session-pin", "pretooluse", "redirect", "route-guard", "parallel-session"]
+  - id: SC-20260710-002
+    domain: skill-rule
+    fact: "lucagstack 模型路由是纯约定零运行时强制：无 hook 在 spawn 时注入或校验 model 参数（settings.json 的 PreToolUse matcher 不含 Agent/Task），daily_governance.check_model_routing 只核 yaml↔frontmatter 文档一致性、不核运行时；但 Agent 工具的 model 参数实测被 harness 认（2026-07-10 探针：主循环 opus，传 model:haiku 的 general-purpose subagent 实跑 claude-haiku-4-5-20251001）。故'换档机制'真实可用，但'路由是否被正确套用'全靠编排 agent 每次手动传参、漏传即静默回退、无运行时兜底。"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "settings.json PreToolUse matcher=^(Write|Edit|MultiEdit|NotebookEdit|Read|Grep|Glob|Bash)$ 不含 Agent/Task；daily_governance.py:91 check_model_routing 仅文档一致性；haiku 探针 subagent_tokens=33274 回报 MODEL_ID=claude-haiku-4-5-20251001"
+    reviewer: "luca"
+    scope: "skill-rule"
+    tags: ["model-routing", "fable", "subagent", "dispatch", "enforcement", "convention"]
+  - id: SC-20260711-001
+    domain: skill-rule
+    fact: "observability 层（write_observation.py/rules.yaml）是仓内解析（script parents[2]），不吃 MEMORY_ROOT 重定向——与 memory/** 双仓统一权威 store 不同；correction-attribution L3 快车道规则只在写入仓生效，另一仓重跑同 skill 不会注入该规则"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "2026-07-11 协议干跑测试实测：MEMORY_ROOT=母版时 propose_semantic 落母版、write_observation 仍落 fork 本仓"
+    reviewer: "luca"
+    scope: "correction-attribution L3 / observability"
+  - id: SC-20260711-002
+    domain: skill-rule
+    fact: "新能力归属判断（2026-07-11 luca 纠正侧栏感知计划得出）：框架侧脚本/CLAUDE.md 契约即使服务于 app 桥接，默认按双仓一致原则落双仓+parity 登记，fork-only 须论证；判据两问=①旗舰使用场景在哪跑（框架演进/治理工作常在母版 session）②通道是否机器级（~/.luca 全局 spool 非仓级）。另：上下文获取原语类能力设计须显式打通下游治理链路（如评估纳入→external-skill-scout→routing/登记/parity），流程不得死在'分析完了'"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "session 2026-07-11 侧栏感知计划评审，luca 明确纠正'并非 muse fork 专属'并要求按真理决策"
+    evidence: "母版 effc52c / fork 691dd97：luca-sidebar.sh+契约双仓落地并过 S17/S18 parity 门"
+    reviewer: "luca"
+    scope: "capability-placement"
+    tags: ["双仓一致", "capability-parity", "能力归属", "app桥接"]
+  - id: SC-20260712-001
+    domain: skill-rule
+    fact: "外部能力 vetting/对标的非冗余(counterpart)核验不能只做机制级 grep——必须双查已装 skill 级 counterpart:ls ~/.claude/skills(全局装的外部 skill) + vetting-registry.yaml(已审记录)。机制级关键词 grep 只发现'我方有无某机制',发现不了'已装了某个功能重叠的完整 skill'。补 SC-20260607-003(非冗余门要喂已有能力清单)的具体失效模式与方法。"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "mattpocock 对标 EP-20260712-068"
+    evidence: "diagnosing-bugs 原判 adopt-空缺口(dossier 只做 [DEBUG-]/seam/hitl grep 全0),红队实地查出 obra/superpowers systematic-debugging 已装(~/.claude/skills,vetting 90 已批,routing weight-7 接线,~65%重叠)→GATE-2 改 port;P2 采证系统性漏查 skill 级 counterpart 存在性"
+    reviewer: "luca"
+    scope: "external-skill-scout, framework-benchmark, vetting"
+    tags: ["non-redundancy", "counterpart-detection", "installed-skills"]
+  - id: SC-20260714-002
+    domain: skill-rule
+    fact: "链式能力演进（真值切换/重定向/双仓类）落地时必须枚举链条全部消费点（读侧/写侧/提醒侧/文档表/两仓）逐一改齐并配契约回归——只改一半即新漂移源。三次实证：方案A pin 真值只改 PreToolUse 漏 Stop 链（归因落错项目）、MEMORY_ROOT 重定向只改写侧漏 session-sync 提醒侧（母版脏无人报）、命名即切换只落 fork 漏母版 8 天（与母版 CLAUDE.md 自相矛盾）"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "2026-07-14 hooks 层评审 P1/P2/P3 三项实证 + fork 991d908/母版 4d3406d 修复"
+    reviewer: "luca"
+    scope: "framework"
+    tags: ["hooks", "capability-parity", "evolution"]
+  - id: SC-20260713-002
+    domain: skill-rule
+    fact: "route-guard 触发词表禁用 ≤3 字裸动词短语（搜索/查一下/找找类）——normalize 后子串匹配必误撞常用复合词（搜索功能/审查一下/检查一下/找找原因），新增触发词一律用意图锚定形（帮我X/X一下+宾语域），裸祈使召回损失由语义路由契约兜底"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "observation"
+    evidence: "两例实测复发：2026-07-13 '搜索'撞'加个搜索功能'（fable审查发现）；同日'查一下'撞用户消息'你再审查一下'误路由 web-access + '找找'撞'找找原因/找找灵感'（7句probe坐实）"
+    reviewer: "luca"
+    scope: "route-guard 词表"
