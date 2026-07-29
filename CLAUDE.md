@@ -14,17 +14,22 @@ This file is read by Claude Code at the start of every session.
 6. Scene (A=新功能 / B=已有优化 / C=线上评审 / D=Agent化) **由用户或上下文确认**，
    route-guard 不做自动分类；不得把"老项目"直接解释为场景 B（见 SC-20260523-002）。
 
+## 仓库概览与非显然的坑
+
+luca_gstack = luca 的个人 Skill OS：`.claude/skills/office/` 一级 skill 集 + hooks +
+`memory/` 三层记忆 + `framework/`（只读母版）。`main` 单真值源、双检出。**非显然的坑**：
+`docs/`·workflow-state·current-topic 是指向激活项目的软链（**软链空≠项目空**）；本文件被
+8+ 个脚本当**数据结构**解析（节标题/表行/字面锚，消费者清单见
+`framework-audit/2026-07-29-claude5-unhobble-inventory.md`）。**放置协议**：新增常驻规则
+默认落 appendix/skill-os，进正文须在 commit message 声明 `B1-余量:`；因帽进不了正文的
+宪法级内容必留正文一行指针。harness 注入边界（规则优先级第 2 层不含行为偏好注入）全文见
+appendix「harness 注入边界」。
+
 ---
 
 ## 核心行为原则
 
-**并发原则：** 所有相互独立的工具调用必须在同一条消息中并发执行，不得串行等待。
-
 **最小文件原则：** 不创建任何非任务必要的文件；优先编辑已有文件，而非新建。
-
-**读前先写原则：** 编辑任何文件前，必须先用 Read 工具读取当前内容，再 Edit。
-
-**最小注释原则：** 默认不写注释；只在"为什么这样做"不明显时写一行说明。
 
 **单真值源 + 双检出原则（2026-07-16，取代双仓一致）：** `main` 是唯一真值源；
 `~/Desktop/luca_gstack`（框架/meta + 记忆权威 store）与 `~/Desktop/项目/muse/lucagstack`
@@ -89,31 +94,23 @@ capability-parity 降级为仓内锚点自检。
 - 当前 session 已启动 ≥ 2 个重型 Agent（每个 runtime > 5K tokens）
 - 多 Phase 任务完成一个 Phase 后
 - 即将执行不可逆操作（git push、批量文件覆盖）前
-- 感知到 context 已消耗约 60%（以对话轮数 > 20 作为近似指标；route-guard 在第
-  20 轮起、每 10 轮自动提醒（无上限））
+- 感知到 context 已消耗约 60%（以对话轮数 > 20 作为近似指标；route-guard 在第 20/40 轮
+  及此后每 20 轮提醒，100 轮封顶）
 
 ### Checkpoint 写法 与 PROGRESS.md
 
+- 执行 `/compact` 前必须先写 Checkpoint（确保状态不丢失）
 - Checkpoint 写入 `docs/handoff/YYYY-MM-DD-<topic>-checkpoint.md`，五要素：已完成✅ /
   进行中 / 待执行 / 关键决策 / 恢复指令
 - 多 Phase 长任务（≥3 Phase）开始时初始化 `docs/PROGRESS.md`，每 Phase 完成后更新；
   session-restore.mjs 启动时自动显示前 25 行
-- 写法模板与更新规则全文：`.claude/skill-os/claude-md-appendix.md`
+- 写法模板与更新规则全文见 appendix「Checkpoint 写法」「PROGRESS.md 更新规则」
 
 ### 懒加载原则（节省 context）
 
 不在 session 开头全量读；只在真需要时 Read；长文件（>200 行）先读前 50 行确认结构再按需读具体段落；Agent 的 prompt 只传其实际需要的上下文，不传完整会话历史。
 
-### Agent Context 预算
-
-Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens（原则：只给该 agent 实际需要的
-目标与路径，不给决策背景；细表见 appendix）。
-
-### Compact 触发规则
-
-- 完成一个完整 Phase 后，如果接下来还有 ≥ 2 个 Phase，执行 `/compact`
-- 超过 30 轮对话后，在下一个 Phase 开始前执行 `/compact`
-- Compact 前必须先写 Checkpoint（确保状态不丢失）
+Agent prompt 预算细表见 appendix「Agent Context 预算」。
 
 ### 新 Session 恢复协议
 
@@ -123,21 +120,15 @@ Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens（原则：只给该 
 
 ### 框架建设预算（2026-07-03 P2-8）
 
-纯框架自建 session **每月建议 ≤2 次**（软上限；红线/CI 红/安全修复不受限；响应式优先于预防式）；治理产出批处理、攒批到季度裁决。依据全文见 appendix。
+纯框架自建 session **每月建议 ≤2 次**（软上限；红线/CI 红/安全修复不受限；响应式优先于预防式）；治理产出批处理、攒批到季度裁决。依据全文见 appendix「框架建设预算」。
 
 ---
 
 ## 三层记忆系统
 
-> 渐进式记忆，模仿 Hermes 自成长机制。懒加载优先，避免 session 开头全量读取。
-
-### 三层结构
-
-| 层 | 何时读 | 何时写 | 数据源 |
-|---|---|---|---|
-| Episodic | session 摘要/任务相关检索命中时 | session 结束后 | `memory/episodic/index.jsonl` |
-| Semantic | session 摘要/任务相关检索命中时 | 候选通过 review 后晋升 | `memory/semantic/promoted-facts.yaml` |
-| Procedural | ~~已并入 Semantic domain:skill-rule~~ | — | `get_memory.py --layer semantic --domain skill-rule` |
+三层：**Episodic**（session 结束写，`memory/episodic/`）/ **Semantic**（候选过 review
+晋升，`promoted-facts.yaml`）/ **Procedural**（已并入 Semantic domain:skill-rule）。
+懒加载优先，避免 session 开头全量读取。
 
 ### 读取协议（懒加载）
 
@@ -175,14 +166,14 @@ Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens（原则：只给该 
 附加：**默认不存——四信号全不中（含纯咨询 / 闲聊 / 纯执行）→ 什么都不存，落 marker 直接结束。** session-sync 已据此放过（无文件产出且工具调用不足不拦截、不提醒）。
 项目本地记忆与全局个人记忆的区别：全局每 session 无差别注入，项目本地只在 `project.sh switch/new` 激活该项目时注入——具体项目事实务必入项目本地，避免跨项目上下文污染。
 
-**写入脚本**：`append_episode.py`=Episodic（session 结束）、`propose_semantic.py --domain <...>`=Semantic 候选/Procedural(skill-rule)；完整参数见 `memory/README.md`。`--decision`/`--next-risk` 有非显而易见判断时必填。
+**写入脚本**：`append_episode.py`=Episodic、`propose_semantic.py --domain <...>`=Semantic
+候选（参数见 `memory/README.md`；`--decision`/`--next-risk` 有非显而易见判断时必填）。
 
 ### 自动自成长（auto-grow）
 
-三环自动闭环：**捕获**（Stop hook 裁决未沉淀 session）→ **治理+晋升**（`daily_governance.py` 只晋升
-门禁内候选/降频 digest/Loop 健康自检）→ **回看**（启动提示最新 digest）。机制细节全文见
-`.claude/skill-os/claude-md-appendix.md`。**项目级检索**：episodic 带 `project` 字段，
-`search_memory.py --project <名>` 过滤（无字段历史用文本兜底）。
+三环闭环：**捕获**（Stop hook）→**治理+晋升**（`daily_governance.py` 只晋升门禁内候选）→
+**回看**（启动提示 digest）；机制细节全文见 appendix「自动自成长」。**项目级检索**：
+`search_memory.py --project <名>`。
 
 ### 关键约束速查（Static Fallback — 脚本失败时此节仍有效）
 
@@ -218,8 +209,6 @@ Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens（原则：只给该 
 
 本项目使用 luca_gstack skill 集。skill 集位于 `.claude/skills/office/`。
 
-**架构原则：Skill-first, Graph-optional。**
-
 **环境/项目剥离原则：**
 `luca_gstack` 是运行环境，只保留 skills、hooks、framework、scripts、memory 和
 observability。项目产出和项目状态属于当前激活项目，固定放在
@@ -254,7 +243,7 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 | `/idea` | A B | 已有原始语料忠实结构化（会议纪要/语音稿/讨论记录转需求，不延展不推断；新想法的方向探索/需求梳理走 /brainstorm，不走 /idea）|
 | `/deepresearch` | A B D | 多 Agent 深度研究（产出研究报告，可作为 brainstorm 输入）|
 | `/quick-research` | A B D | 轻量研究（单 agent 后台查 primary source，单文件落盘；三档研究的中档，发散题升 deepresearch）|
-| `/insight-synthesis` | A B D | 一手定性综合：用户提供的访谈/工单/回访 → observation+interpretation 两层洞察（第三对象角度·内部一手；idea/deep-ux/triage 消歧见 appendix）|
+| `/insight-synthesis` | A B D | 一手定性综合：用户提供的访谈/工单/回访 → observation+interpretation 两层洞察（第三对象角度·内部一手；消歧见 appendix「insight-synthesis 划界」）|
 | `/research-kit` | A B D | 一手研究工具设计：假设→访谈提纲/问卷/可用性测试计划/卡片分类法（采集之前；三不产：不产发现/解读/不采集；采回数据投 insight-synthesis）|
 | `/ux-writing` | A B C D | 内容与语言设计：voice/tone+微文案系统+文案评审改写；双相位（语义规范 pre-brief 供 design-brief 继承进 Packet / 逐字层仅本地生成不进 OD；D=hedging 主战场）|
 | `/brainstorm` | A B D | 苏格拉底拷问式 PRD（替代原 /prd）|
@@ -347,12 +336,10 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
   「竞品分析/UX研究」→ `/ux-research`（完整多维研究）
 - **ux-brainstorm vs design-brief 定位（避免误用）：** ux-brainstorm=发散引擎（出 2-3 方案+Oracle对抗+交互架构+AI-Native 判定）；design-brief=收敛引擎（把方向落成规格契约）。决策规则：① 简单/单方案明确 → design-brief 单独跑；② 复杂/多方案/高不确定 → 先 /ux-brainstorm 再 /design-brief（design-brief 自动继承上游 AI-Native 判定与已验证假设，不重做发散）；③ 二者永不并列产同类文档。
 - 提到「Open Design / OD」要出设计 → `/open-design`（**设计产出首选**：交互文档 → OD 出 HTML →（可选）Figma）。
-- **单点交接到 OD（语义识别，不写死关键词）**：当你从用户的自然语言判断出「把刚产出/刚讨论出的
-  某个产物（md/方案/文档）交给 Open Design 去生成设计」的意图——**措辞不限**（"给 OD"／"让 OD
-  跑一下这个"／"用 OD 基于这个出图"／"丢进 OD"……都算）——路由到 `/open-design` 的 adhoc 单点交接。
-  语义识别三要素：① 有明确源产物（刚产出或被点名）② 目标是 Open Design/OD ③ 意图是"交给它生成设计"。
-  执行前先用一句话确认源产物（"用 OD 基于 <file> 生成，对吗？"）再路由。**这是语义判断不是词表匹配**：
-  即使 route-guard 因无关键词输出 STOP，只要三要素清晰仍按本规则识别（这正是"结合语义、不靠词表"）。
+- **单点交接到 OD（语义识别非词表）**：用户以**任何措辞**表达「把刚产出/被点名的产物交给
+  Open Design 生成设计」→ `/open-design` adhoc 单点交接。三要素：①明确源产物 ②目标是
+  OD ③意图是"交它生成设计"；执行前一句话确认源产物（"用 OD 基于 <file> 生成，对吗？"）
+  再路由；三要素清晰时 route-guard STOP 不豁免本判断。
 - **界面产出备选链：** 首选 `/open-design`；OD 不可达 → `magicpath`；二者都不可用 → `/html-prototype`
 - **状态工具意图：** 「状态/进度/做到哪了」→ 运行 `scripts/status.sh` 或读取 workflow-state，
   不是一级 skill
@@ -365,12 +352,10 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 直接执行，不强制过 skill；拿不准就声明「按平凡任务直接做」。**多文件特性/跨阶段/多功能诉求不适用**——
 按上文「语义路由契约」评估该走的 skill/流程。
 
-**自动提示机制：** `route-guard.mjs` 在每次 `UserPromptSubmit` 时读取用户 prompt，
-按 yaml 词表匹配后输出路由提示（含内置/外部 skill 建议），Claude 应遵守输出的建议。
-route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路由层级兜底路由。
+**route-guard 提示应遵守**；其失效（无 hint 输出）时，按本节语义规则 + 上节路由层级兜底路由。
 
-**自动 Checkpoint 提醒：** route-guard 追踪每 session 的对话轮数，在第 20 轮起每
-10 轮自动提醒执行 `/compact` 或写入 Checkpoint。
+**自动 Checkpoint 提醒：** route-guard 在第 20/40 轮及此后每 20 轮提醒写 Checkpoint
+（100 轮封顶；harness 已原生自动摘要，不再建议 /compact）。
 
 ---
 
@@ -387,35 +372,15 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 
 **按顺序执行以下步骤：**
 
-0. **读取 memory summary**（轻量历史索引）
-   - 运行 `python3 memory/scripts/get_memory.py --summary`
-   - 只看摘要，不读取 memory 长文件
-   - 第一条用户任务明确后，优先运行
-     `python3 memory/scripts/search_memory.py "<task/skill/topic>" --limit 5`
-     做任务相关检索
-
-1. **读取 `CONTEXT.md`**（长期项目约束）
-   - 特别注意「红线」节，红线约束当前 session 的所有操作
-
-2. **读取 `.claude/workflow-state.yaml`**（流程状态恢复）【C-04 修复】
-   - 检查 `topic` 和 `scene` — 确定当前项目的上下文
-   - 扫描各节点的 `status` — 了解流程执行到哪一步
-   - 如果有节点状态为 `IN_PROGRESS` — 告知用户「上次 session 在 {节点名}
-     中断，是否继续？」
-   - 如果 `iteration ≥ 3` — 告知用户「handoff-review 已连续失败 {N} 次」
-
-3. **读取上游 handoff summary**（跨 session 状态传递）
-   - 如果 workflow-state 中有 DONE 的节点 → 读取 `docs/handoff/` 中最新的 handoff summary
-   - 如果 handoff 文件不存在或 `docs/handoff/` 为空 → 跳过此步，继续执行第 4 步，不报错
-   - handoff summary 包含上游的决策、约束和风险，下游 skill 必须遵守其中的约束
-   - **不读取上游完整 SKILL.md 或完整产出文件**（用 handoff summary 替代）
-
-4. **读取全局 `.claude/skills/office/SKILL.md`**（共享规范）
-   - 仅在用户涉及 skill 操作时执行
-   - 如果执行具体 skill，按 Observability Protocol 运行
-     `.claude/observability/scripts/get_rules.py <skill-name> <scene>`，只加载输出的短规则
-   - 如果需要历史经验，使用
-     `memory/scripts/search_memory.py "<skill/topic>" --limit 5`，不要读取长日志或完整历史
+0. `python3 memory/scripts/get_memory.py --summary`（只看摘要不读长文件）；首条任务明确后
+   `python3 memory/scripts/search_memory.py "<task/topic>" --limit 5` 做任务相关检索。
+1. 读 `CONTEXT.md`——「红线」节约束本 session 全部操作。
+2. 读 `.claude/workflow-state.yaml`：`topic`/`scene` 定当前上下文；有 `IN_PROGRESS` 节点 → 告知用户「上次 session 在
+   {节点名} 中断，是否继续？」；`iteration ≥ 3` → 告知「handoff-review 已连续失败 {N} 次」。
+3. 有 DONE 节点 → 读 `docs/handoff/` 最新 handoff summary 并遵守其约束（缺文件跳过不报错；
+   不读上游完整 SKILL.md 或产出全文，用 handoff summary 替代）。
+4. 涉及 skill 操作时读 `.claude/skills/office/SKILL.md`（共享规范）；执行具体 skill 前跑
+   `.claude/observability/scripts/get_rules.py <skill> <scene>`，只加载输出的短规则。
 
 5. **项目上下文门禁**（第一条用户消息后执行，任何 skill 运行前必须通过）
 
@@ -461,31 +426,19 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 
 ## Orchestrator 模式
 
-当用户通过 `/office` 选择推荐流程，
-或说"继续流程/进入下一步/从断点恢复"时，进入 Orchestrator 模式。
-详细规范见 `.claude/agents/orchestrator.md`。
-
-**关键约束：**
-- Orchestrator 是主 session 的行为模式，**不是** subagent dispatcher
-- skill 内部可以自由使用 subagent（deepresearch/brainstorm/ux-research/figma-demo 都有内部 subagent）
-- 每个 skill 完成后必须写 handoff summary（见 `.claude/skills/office/references/handoff-protocol.md`）
-- 连续执行 2 个重型 skill（runtime > 20K tokens）后，建议 compact 或新 session
-- **每个 Phase/Skill 完成后执行观察提取**（Hermes-lite）：检查 non-obvious
-  blocker、重复风险、未记录约束 → 满足任一则
-  `propose_semantic.py --domain skill-rule`（详见 orchestrator.md §2c-obs）
+用户经 `/office` 选流程或说"继续流程/进入下一步/从断点恢复"时进入；详细规范
+`.claude/agents/orchestrator.md`。关键约束：Orchestrator 是主 session 行为模式**不是**
+subagent dispatcher；skill 内部可自由用 subagent；每 skill 完成必写 handoff summary
+（`references/handoff-protocol.md`）；连续 2 个重型 skill（>20K tokens）后建议 compact
+或新 session；每 Phase/Skill 完成后执行观察提取（orchestrator.md §2c-obs）。
 
 ## Standalone / Workflow 执行模式
 
-所有 skill 均以交互模式（用户直接触发）运行。
-
-执行原则：
-- 用户直接点名某个 skill → standalone mode 优先。
-- 用户选择 `/office` 推荐流程或明确说“按流程走” → workflow mode。
-- workflow mode 可以检查上游产物、状态和 handoff gate。
-- standalone mode 只要求该 skill 自己的输入和质量 gate，不强制补齐完整上游链路。
-- handoff 分级：workflow 模式必写；standalone 模式 + 轻量 skill（frontmatter
-  `context-cost: lightweight` 或 `runtime-estimate ≤ 5000`）+ 产出为终端交付
-  （无下游 skill 消费）→ 免写 handoff，DONE 合法；standalone 重型 skill 仍须写。
+用户点名 skill → standalone 优先（只要求该 skill 自己的输入与质量 gate，不强制补齐上游
+链路）；选 `/office` 流程或说"按流程走" → workflow mode（可检查上游产物/状态/handoff
+gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 skill（frontmatter
+`context-cost: lightweight` 或 `runtime-estimate ≤ 5000`）+ 产出为终端交付
+（无下游 skill 消费）→ 免写 handoff，DONE 合法；standalone 重型 skill 仍须写。
 
 ---
 
@@ -506,11 +459,6 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
   CONTEXT.md 词汇节（`**术语**: 定义 _Avoid_: 别名`），**不攒批**——与 extraction-bar 的记忆
   批处理并行不悖（对象是术语表非记忆）
 
-稳定事实写入不直接修改 `CONTEXT.md` 或 `promoted-facts.yaml`。先运行
-`memory/scripts/propose_semantic.py` 写 candidate，再通过 review / consolidate 治理晋升。
-需要检查记忆治理队列时运行 `python3 memory/scripts/consolidate_memory.py --json`；
-该命令默认作为只读 dry-run 使用，不属于普通 session 启动步骤。
-
 ---
 
 ## 产出目录结构
@@ -522,24 +470,17 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 
 ## luca app 集成（**仅 `LUCA_APP=1` 或用户要「在 app/侧栏看」时适用；云端/headless/非-Claude 跳过**）
 
-用户要求"打开/查看某个文件"（常见 md，尤其说"在 app / luca / 新页签里看"）时，
-运行 `bash scripts/luca-open.sh <绝对路径>` —— luca app 会在新页签打开只读预览。
-相对路径先解析为绝对路径；文件不存在时报错勿猜路径。
-
-**HTML 产物主动推送预览（2026-07-11；乙类过程纪律——触发源是产出动作非用户语义，非路由目标）：**
-每当产出或修改 `.html` 文件（原型/演示页等），
-完成后**主动**运行 `bash scripts/luca-open.sh <该文件绝对路径>` —— .html 会作为 app 侧栏
-浏览器面板的预览页签打开（左终端对话、右侧即时看效果）。该文件后续再被修改时预览**自动热刷新**，
-同一文件重复 open 会复用页签，因此每个文件只需 open 一次，迭代改动无需重复调用。
-**收窄（07-24）：** app 内嵌会话的 Write/Edit 产物已由 post-edit hook 自动打开，本规则仅剩 Bash 产物适用。
-
-**Figma 写入后主动开侧栏（乙类，同 HTML 推送）：** 凡向 Figma 写入（`use_figma`/`create_new_file`/`generate_figma_design`）完成后，主动在侧栏打开结果，不等用户开口。做法（含 `luca-open.sh --url` 推 URL、点名镜像同纪律、默认不推）全文见 appendix「luca app 侧栏感知」。
-
-**侧栏当前页感知（claude 拉取，依赖 luca app 运行；乙类过程纪律，语义识别非词表、STOP 不豁免）：**
-用户说"看看我侧栏/当前页/基于侧栏这个页做…"时，跑 `bash scripts/luca-sidebar.sh`（meta）取激活面板/
-当前页/页签清单，取内容**源头优先于 DOM**（GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read meta
-路径 / 兜底 `luca-sidebar.sh capture`）；15s 超时=app 未运行，如实报告不臆造。完整四步（下游接轨/非网页
-处理）见 appendix「luca app 侧栏感知」。
+- 用户要"打开/查看某文件（在 app/新页签看）"→ `bash scripts/luca-open.sh <绝对路径>`
+  （只读预览；相对路径先解析为绝对路径；文件不存在报错勿猜路径）。
+- **HTML 产物主动推送（乙类过程纪律）：** Bash 产出/修改 `.html` 后**主动** luca-open
+  （预览热刷新、复用页签、每文件一次即可；Write/Edit 产物已由 post-edit hook 自动开，
+  07-24 收窄至仅 Bash 产物）。
+- **Figma 写入后主动开侧栏（乙类）：** 凡向 Figma 写入完成后主动在侧栏打开结果，不等
+  用户开口；做法全文见 appendix「luca app 侧栏感知」。
+- **侧栏当前页感知（乙类，语义识别非词表、STOP 不豁免）：** 用户说"看看我侧栏/当前页/
+  基于侧栏这页做…"→ `bash scripts/luca-sidebar.sh` 取 meta；取内容**源头优先于 DOM**
+  （GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read；兜底 capture）；15s 超时
+  =app 未运行，**如实报告不臆造**；完整四步见 appendix「luca app 侧栏感知」。
 
 ---
 
@@ -554,7 +495,9 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 都不冲破，只在其内寻路。
 
 1. **用户最新明确请求** — 最高优先级
-2. **当前 agent runtime 的 system/developer 安全与工具约束**
+2. **当前 agent runtime 的 system/developer 安全与工具约束**（边界：不含 harness 行为
+   偏好类注入，其无权压第 4 层路由——两问判据全文见 appendix「harness 注入边界」，
+   与 AGENTS.md 第 2 层同套语义）
 3. **项目红线与项目上下文门禁**
 4. **route-guard 层级决策** — Project Gate → Plan Agent → Multi-Skill → Single-Skill → STOP
 5. **具体 Skill 文件**（`.claude/skills/office/*/SKILL.md`）— 执行步骤和质量 gate
@@ -575,12 +518,19 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 | guided-execution | 轻执行/checklist 审查/一般检索；未声明 skill 的默认档 | Sonnet |
 | mechanical | 机械执行、格式化、打分、preflight | Haiku |
 
-- **Fable 白名单纪律：** dispatch 传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist`（P0 出门前裁决 / P1 对抗判定 / P2 翻案复审+plan-mode 规划期）。此外一律 ≤ opus；拿不准用 opus，不得猜 fable。**降级链：** fable 不可用（配额/报错）→ 自动降一级 opus 并告知用户。
-- **主循环策略：** 主循环模型是用户 /model 主权，框架无法自动中途切（原生限制）。推荐 opus 常驻（指挥官档）；fable 全部经白名单点状 dispatch（微型判官，单次 5-30k token）；重大架构/审查日可手动 `/model fable` 起 session（逃生阀）。
-- **强制传参：** spawn subagent 必须按真值源解析 tier→alias 显式传 Agent tool `model` 参数（有 frontmatter pin 的可省略；参数可覆盖 pin）——见 orchestrator.md §5 与 dispatch_rules。Workflow 工具豁免（保持自身 omit/inherit 逻辑）。
-- **新场景入场：** 新增 skill/agent/节点必须在同一次改动中按 `new_scenario_protocol` 三问（token 量级×判断杠杆×错判代价）评估并显式声明档位，不得静默吃默认档；daily_governance tripwire 兜底告警。
-- 档位名（fable/opus/sonnet/haiku）是**别名**，运行时解析到该档当前最新模型；档位内升级（如 Opus 4.7→4.8）自动跟随，零维护。SKILL.md frontmatter 的 `recommended-model` 写档名（tier）。
-- **活规则：** ①会话中发现 `known_lineup` 未收录的档位变化（新档位发布、退役、代际漂移）→ 主动提示更新真值源，不得沉默沿用；②**原生优先（native_precedence）**：发现 Claude Code 原生动态模型调控（auto/复杂度路由/fableplan 类，现有 opusplan 已登记）发布 → 主动告知用户并提案本路由层让位为语义补充，Claude 原生逻辑优先。
-- 漂移看护：`daily_governance.py` 每日校验真值源 ↔ frontmatter 一致性与复核期限，异常写入成长摘要待裁决。
+- **Fable 白名单纪律：** `model: fable` 唯一合法依据=真值源 `fable_whitelist`（P0 出门前
+  裁决/P1 对抗判定/P2 翻案复审+plan-mode 规划期）；此外一律 ≤ opus，拿不准用 opus；
+  fable 不可用 → 自动降 opus 并告知用户。
+- **主循环：** /model 是用户主权（框架无法中途切）；推荐 opus 常驻，fable 经白名单点状
+  dispatch；重大架构/审查日可手动 `/model fable` 起 session。
+- **强制传参：** spawn subagent 按真值源解析 tier→alias 显式传 Agent tool `model` 参数
+  （frontmatter pin 可省略；Workflow 工具豁免）——见 orchestrator.md §5 与 dispatch_rules。
+- **新场景入场：** 新增 skill/agent/节点须同一改动中按 `new_scenario_protocol` 三问声明
+  档位，不得静默吃默认档；daily_governance tripwire 兜底告警+每日校验真值源一致性。
+- 档位名是**别名**（档内升级自动跟随零维护）；SKILL.md frontmatter `recommended-model`
+  写档名（tier）。
+- **活规则：** ①发现 `known_lineup` 未收录的档位变化 → 主动提示更新真值源，不得沉默沿用；
+  ②**原生优先（native_precedence）**：Claude Code 原生动态模型调控发布 → 主动告知并提案
+  本路由层让位为语义补充。
 
 <!-- FILE_END: CLAUDE.md -->

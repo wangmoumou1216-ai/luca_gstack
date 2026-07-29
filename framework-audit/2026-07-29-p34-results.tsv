@@ -1,0 +1,18 @@
+fixture	arm	pass	fail	rate	notes
+F1	old	4	4	0.500	
+F1	new	6	2	0.750	i8:场景B-affirm
+F2	old	4	4	0.500	
+F2	new	3	5	0.375	
+F3	old	8	0	1.000	
+F3	new	8	0	1.000	
+F4	old	8	0	1.000	
+F4	new	8	0	1.000	
+F5	old	7	1	0.875	
+F5	new	8	0	1.000	
+F6	old	8	0	1.000	
+F6	new	8	0	1.000	
+F7	old	8	0	1.000	
+F7	new	8	0	1.000	
+F8	old	8	0	1.000	
+F8	new	8	0	1.000	
+F1	control	6	2	0.750	i7:场景B-affirm;i8:场景B-affirm

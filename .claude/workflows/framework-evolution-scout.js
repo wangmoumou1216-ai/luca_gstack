@@ -256,11 +256,14 @@ if (targetRepos) {
     agent(verifyPrompt(c), { label: 'verify:' + c.repo, phase: 'Verify', schema: VERDICT_SCHEMA })
       .then(v => (v ? Object.assign({}, c, v) : null))))
   const pJudged = pVerdicts.filter(Boolean).map(adjudicate)
-  if (!pJudged.length) { log('VERIFY FAILED — no verdict returned'); return { run_date: runDate, mode: 'punctual', error: 'verify_failed', target_repos: targetRepos } }
+  if (!pJudged.length) { log('VERIFY FAILED — no verdict returned'); return { run_date: runDate, mode: 'punctual', error: 'verify_failed', target_repos: targetRepos, run_status: 'INCOMPLETE' } }
   phase('Redteam')
+  // G1 相位完整性（claude5-unhobble）：fallback 替换计数——null 被保守默认吞掉后按返回数
+  // 计数恒 100%，必须数替换本身（07-02 事故机理：整相位未跑仍发布裁决）
+  let pRedteamFallbacks = 0
   const pRedteamed = await parallel(pJudged.map(v => () =>
     agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })
-      .then(r => Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }))))
+      .then(r => { if (!r) pRedteamFallbacks++; return Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }) })))
   for (const v of pRedteamed) {
     // 无 open gap 对口 → 机械封顶 REJECTED（与 sweep 的 opportunities 分流同义；不依赖 verify LLM 自觉 FAIL）
     if (v.gap_id === 'none') { v.verdict = 'REJECTED'; v.no_open_gap_note = '无 open gap 对口：结论最多 opportunity/开 gap 提案，不可采纳（机械封顶，非 LLM 裁量）' }
@@ -282,6 +285,9 @@ if (targetRepos) {
       killed_by_redteam: pRedteamed.filter(v => v.killed_by_redteam).length,
       dropped_existing: 0, opportunities: 0,
     },
+    // G1：分母=targets.length（派发面；pJudged 是 filter(Boolean) 幸存后集合，会放行 Verify 损耗）
+    run_status: (pJudged.length === targets.length && pRedteamFallbacks === 0) ? 'COMPLETE' : 'INCOMPLETE',
+    phases_completed: { verify: `${pJudged.length}/${targets.length}`, redteam_fallbacks: pRedteamFallbacks },
     results: pRedteamed,
   }
 }
@@ -465,9 +471,11 @@ function redteamPrompt(v) {
 
 phase('Redteam')
 const pool = approved.concat(conditional)
+// G1 相位完整性：fallback 替换计数（按返回数计数恒 100%，须数替换本身——07-02 事故机理）
+let sweepRedteamFallbacks = 0
 const redteamed = await parallel(pool.map(v => () =>
   agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })
-    .then(r => Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }))
+    .then(r => { if (!r) sweepRedteamFallbacks++; return Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }) })
 ))
 // apply red-team verdicts
 const killed = redteamed.filter(v => v.redteam.redteam_verdict === 'killed')
@@ -484,6 +492,13 @@ for (const v of approved) if (sourceYield[v.source_id]) sourceYield[v.source_id]
 const gapsCovered = {}
 for (const g of gaps) gapsCovered[g.id] = approved.filter(v => v.gap_id === g.id).length
 
+// G1 相位完整性契约（claude5-unhobble；07-02 事故：13 agent 阵亡首跑发布 2 APPROVED 终版全反转）
+// 分母=shortlist.length（实际派发面；unique 含 MAX_VERIFY 帽/droppedExisting 合法衰减不可用）
+const verifyDeaths = shortlist.length - judged.length
+const runStatus = (verifyDeaths === 0 && sweepRedteamFallbacks === 0) ? 'COMPLETE' : 'INCOMPLETE'
+const quarantined = runStatus !== 'COMPLETE'
+if (quarantined) log(`⚠️ run INCOMPLETE（verify 阵亡 ${verifyDeaths}/${shortlist.length}、redteam fallback ${sweepRedteamFallbacks}）——采纳裁决隔离，bookkeep 将拒登记`)
+
 return {
   run_date: runDate,
   red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); NOT routed through consolidate_memory; 热度≠适配',
@@ -498,11 +513,14 @@ return {
     rejected: rejected.length + killed.length, killed_by_redteam: killed.length,
     dropped_existing: droppedExisting, opportunities: opportunities.length,
   },
+  run_status: runStatus,
+  phases_completed: { verify: `${judged.length}/${shortlist.length}`, redteam_fallbacks: sweepRedteamFallbacks },
   source_yield: sourceYield,
   gaps_covered: gapsCovered,
   channel_notes: channelNotes,
-  approved: approved.slice(0, TOP_DIGEST),
-  approved_overflow: approved.slice(TOP_DIGEST),
+  approved: quarantined ? [] : approved.slice(0, TOP_DIGEST),
+  approved_overflow: quarantined ? [] : approved.slice(TOP_DIGEST),
+  approved_quarantined: quarantined ? approved : [],
   conditional,
   opportunities,  // 高信号无 gap → 人审是否开新 gap（恢复"借鉴"能力，非自动采纳）
   killed: killed.map(k => ({ name: k.name, repo: k.repo, gap_id: k.gap_id, reason: k.redteam.reason })),

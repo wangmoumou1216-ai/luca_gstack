@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   （单真值源后无跨分支 merge 语义）。风险实验纪律：分支/worktree + 备份 remote，不再开永久 fork。
 
 ### Added
+
 - 外部 skill 上游漂移侦测 watcher（2026-07-15 skill 自进化 B1）：新真值 `external-skills/
   installed-pins.yaml`（9 单元：8 skill 回填 watch_sha + superpowers 插件行）+ daily_governance
   `check_upstream_drift`（digest「📦 上游漂移」节，propose-only 人裁走 FUSION 九步，watcher 永不
@@ -81,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hook 文件此前完全不在 parity 锚点内，「命名即切换」漂移 8 天 S18 抓不到。
 
 ### Fixed
+
 - 自成长闭环「异常→人看见」最后一公里四断点（2026-07-15 记忆+自成长层评审，先实证复现再修）：
   ① check_loop_health 的 pending 积压检测只查权威库而捕获侧写在 fork（事故最可能发生的仓失明；
   fork_home 参数 07-10 出生即悬空）——改查两仓并集 + spawn 显式传 GOVERNANCE_CALLER_ROOT；
@@ -119,8 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   对其恒真、复刻 /auto 当年 50-session 零使用的结构性成因；PLAN_CHECK 双保险保留（豁免只解条件 2，
   其余 4 条件照常检查）。
 - 对标深评制度化为演进模式 2（BENCHMARK-RUNBOOK.md：目标取自 opportunities 池/高信号 hub，六步流程
-  复用 mattpocock 先例结构）+ scout 增 AdoptionReview phase（读 adoption-log 出 keep/watch/revert）
-  + digest 首节三件套强制（采纳复盘 / 上期 opportunities 逐条裁决 / addressed 满 90 天复核窗）——
+  复用 mattpocock 先例结构）+ scout 增 AdoptionReview phase（读 adoption-log 出 keep/watch/revert）+ digest 首节三件套强制（采纳复盘 / 上期 opportunities 逐条裁决 / addressed 满 90 天复核窗）——
   为什么：深度评审实证 scout 主管线 APPROVED 转化率为 0、最高价值采纳全来自体系外对标（其 gap 是
   对标反向创造的），且采纳复盘在首个到期周期即漏执行（adoption-log helped 全 unknown）。
 - 演进簿记确定性脚本 scripts/evolution-bookkeep.mjs（candidate-log 追加 + yield_stats/
@@ -128,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   实测）——为什么：propose-only 曾把安全簿记也推给人工（2026-07 漏追加 candidate-log 致跨月去重
   失效）；红线精确化为「行为面零编辑，簿记走人触发脚本」。
 
-### Fixed
+### Fixed（编排层）
+
 - Agent 编排体系六处真问题（2026-07-14 编排层评审）：plan-agent 设计产出路由整体 OD-first 重写
   （原文 0 次提及 open-design、25 次提及已降级的 magicpath——规划器与执行面两套真值打架；Gap 2 改
   OD daemon→MagicPath→html-prototype 三级降级检测）；preflight 检查表补 open-design/quick-research/

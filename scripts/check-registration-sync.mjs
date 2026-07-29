@@ -24,10 +24,21 @@ const uniq = [...new Set(invokes)];
 
 const errors = [];
 const warns = [];
+// REG-1 定界化（claude5-unhobble C4）：全文件 substring 护不住表行（14/21 skill 在 prose
+// 也出现，删表行仍绿）。注册行两类：① 表行 `| \`/name\` |`；② 具名 prose 注册段——行含
+// `：**` 且其后首个反引号 token 为 `/name`（:272 /code-hygiene、:274 /code-recon 形态）。
+// 名点段（如「隐藏/高级 skill」枚举、语义兜底句内提及）不计为注册。
+const regLines = claudeMd.split('\n').filter(l =>
+  /^\|\s*`\/[a-z0-9-]+`/.test(l.trim()) ||
+  /：\*\*\s*`\/[a-z0-9-]+`/.test(l)
+);
+const registered = new Set();
+for (const l of regLines) {
+  for (const m of l.matchAll(/`\/([a-z0-9-]+)`/g)) { registered.add(m[1]); break; }
+}
 for (const name of uniq) {
-  // REG-1: CLAUDE.md 表行（`/name` 反引号包裹或表格行内出现）
-  if (!claudeMd.includes('/' + name)) {
-    errors.push(`REG-1 CLAUDE.md 缺一级 skill 表行: /${name}`);
+  if (!registered.has(name)) {
+    errors.push(`REG-1 CLAUDE.md 缺一级 skill 注册行（表行或具名 prose 注册段）: /${name}`);
   }
   // REG-2: recommended-model 申报（office 本地 skill 才有 SKILL.md；外部/内置跳过）
   const skillMd = `.claude/skills/office/${name}/SKILL.md`;

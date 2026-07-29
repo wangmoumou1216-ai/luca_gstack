@@ -50,6 +50,7 @@ check G2 "hooks 路径配置正确" "git config --get core.hooksPath | grep -q '
 check G3 ".gitignore 覆盖 .DS_Store" "grep -q '\.DS_Store' .gitignore"
 check G4 ".gitignore 覆盖 .env" "grep -q '\.env' .gitignore"
 check G5 "pre-commit 存在且可执行" "[ -x .githooks/pre-commit ]"
+check G5b "commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）" "[ -x .githooks/commit-msg ]"
 echo ""
 
 echo "[ 标准文档 ]"
@@ -101,6 +102,9 @@ check S15 "coding discipline 合同检查通过"        "npm run check:coding-di
 check S16 "项目 docs/state symlink 一致"          "npm run check:project-links --silent"
 check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
 check S18 "能力锚点自检（capability anchors，防误删关键小节）"  "node scripts/check-capability-parity.mjs"
+check S31 "appendix 指针奇偶校验（前向孤儿+后向丢指针，claude5-unhobble C1）" "node scripts/check-appendix-pointers.mjs"
+check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）" "awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
+check S33 "CLAUDE.md 模型档表 4 行在场且含当前 alias（C5，.mjs 强断言）" "node scripts/check-model-table.mjs"
 check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
 check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）" "npm run check:agent-contracts --silent"
 # S24：lint:yaml 的能力早已写好（package.json 覆盖 7 个 skill-os yaml），但从无自动调用者——
@@ -133,7 +137,7 @@ check F3 "home-page.html 存在" "[ -f framework/home-page.html ]"
 check F4 "detail-page-3col.html 存在" "[ -f framework/detail-page-3col.html ]"
 check F5 "form-page.html 存在" "[ -f framework/form-page.html ]"
 check F6 "shared-head.html 存在（品牌 token 母版，所有页面依赖）" "[ -f framework/shared-head.html ]"
-check B1 "CLAUDE.md ≤ 45KB（context-budget 回归守护）" "[ \$(wc -c < CLAUDE.md) -le 46080 ]"
+check B1 "CLAUDE.md ≤ 45,098B（实测落点+3KiB 棘轮，claude5-unhobble Phase 5）" "[ \$(wc -c < CLAUDE.md) -le 45098 ]"
 check B2 "无 office SKILL.md 超 45KB（context-budget 回归守护）" "! find .claude/skills/office -name SKILL.md -size +45k | grep -q ."
 echo ""
 

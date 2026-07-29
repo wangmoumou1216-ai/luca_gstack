@@ -98,6 +98,27 @@ jobs:
       - name: Harness detection + Codex viability registry
         run: npm run check:harness
 
+      # claude5-unhobble C7：远端补 B1/S18/S19——守 CLAUDE.md 预算/parity 锚/skill 注册
+      # 的三个关键 checker 此前只在本地 verify.sh（FAST_COMMIT 可跳），CI 兜底为事后信号
+      - name: CLAUDE.md byte budget (B1 remote)
+        run: |
+          SZ=$(wc -c < CLAUDE.md)
+          echo "CLAUDE.md=$SZ bytes"
+          [ "$SZ" -le 45098 ]
+      - name: Capability-parity anchors (S18 remote)
+        run: node scripts/check-capability-parity.mjs
+      - name: Skill registration sync (S19 remote)
+        run: npm run check:registration
+      # Phase6 MINOR-3：三个新门补远端网（此前 S31/S32/S33 仅本地、FAST_COMMIT 可跳）
+      - name: Appendix pointer parity (S31 remote)
+        run: node scripts/check-appendix-pointers.mjs
+      - name: CONTEXT red-line gate (S32 remote)
+        run: |
+          c=$(awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md)
+          [ "$(echo "$c" | grep -c '^[0-9]\.')" -ge 6 ]
+          echo "$c" | grep -q 'SF-002' && echo "$c" | grep -q 'SC-20260523-002' && echo "$c" | grep -q 'SC-20260523-003'
+      - name: Model-table alias sync (S33 remote)
+        run: node scripts/check-model-table.mjs
       - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
         run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
 
