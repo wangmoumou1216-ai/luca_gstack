@@ -114,15 +114,9 @@ capability-parity 降级为仓内锚点自检。
 
 ## 三层记忆系统
 
-> 渐进式记忆，模仿 Hermes 自成长机制。懒加载优先，避免 session 开头全量读取。
-
-### 三层结构
-
-| 层 | 何时读 | 何时写 | 数据源 |
-|---|---|---|---|
-| Episodic | session 摘要/任务相关检索命中时 | session 结束后 | `memory/episodic/index.jsonl` |
-| Semantic | session 摘要/任务相关检索命中时 | 候选通过 review 后晋升 | `memory/semantic/promoted-facts.yaml` |
-| Procedural | ~~已并入 Semantic domain:skill-rule~~ | — | `get_memory.py --layer semantic --domain skill-rule` |
+三层：**Episodic**（session 结束写，`memory/episodic/`）/ **Semantic**（候选过 review
+晋升，`promoted-facts.yaml`）/ **Procedural**（已并入 Semantic domain:skill-rule）。
+懒加载优先，避免 session 开头全量读取。
 
 ### 读取协议（懒加载）
 
@@ -160,14 +154,14 @@ capability-parity 降级为仓内锚点自检。
 附加：**默认不存——四信号全不中（含纯咨询 / 闲聊 / 纯执行）→ 什么都不存，落 marker 直接结束。** session-sync 已据此放过（无文件产出且工具调用不足不拦截、不提醒）。
 项目本地记忆与全局个人记忆的区别：全局每 session 无差别注入，项目本地只在 `project.sh switch/new` 激活该项目时注入——具体项目事实务必入项目本地，避免跨项目上下文污染。
 
-**写入脚本**：`append_episode.py`=Episodic（session 结束）、`propose_semantic.py --domain <...>`=Semantic 候选/Procedural(skill-rule)；完整参数见 `memory/README.md`。`--decision`/`--next-risk` 有非显而易见判断时必填。
+**写入脚本**：`append_episode.py`=Episodic、`propose_semantic.py --domain <...>`=Semantic
+候选（参数见 `memory/README.md`；`--decision`/`--next-risk` 有非显而易见判断时必填）。
 
 ### 自动自成长（auto-grow）
 
-三环自动闭环：**捕获**（Stop hook 裁决未沉淀 session）→ **治理+晋升**（`daily_governance.py` 只晋升
-门禁内候选/降频 digest/Loop 健康自检）→ **回看**（启动提示最新 digest）。机制细节全文见
-`.claude/skill-os/claude-md-appendix.md`。**项目级检索**：episodic 带 `project` 字段，
-`search_memory.py --project <名>` 过滤（无字段历史用文本兜底）。
+三环闭环：**捕获**（Stop hook）→**治理+晋升**（`daily_governance.py` 只晋升门禁内候选）→
+**回看**（启动提示 digest）；机制细节全文见 appendix。**项目级检索**：
+`search_memory.py --project <名>`。
 
 ### 关键约束速查（Static Fallback — 脚本失败时此节仍有效）
 
@@ -330,12 +324,10 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
   「竞品分析/UX研究」→ `/ux-research`（完整多维研究）
 - **ux-brainstorm vs design-brief 定位（避免误用）：** ux-brainstorm=发散引擎（出 2-3 方案+Oracle对抗+交互架构+AI-Native 判定）；design-brief=收敛引擎（把方向落成规格契约）。决策规则：① 简单/单方案明确 → design-brief 单独跑；② 复杂/多方案/高不确定 → 先 /ux-brainstorm 再 /design-brief（design-brief 自动继承上游 AI-Native 判定与已验证假设，不重做发散）；③ 二者永不并列产同类文档。
 - 提到「Open Design / OD」要出设计 → `/open-design`（**设计产出首选**：交互文档 → OD 出 HTML →（可选）Figma）。
-- **单点交接到 OD（语义识别，不写死关键词）**：当你从用户的自然语言判断出「把刚产出/刚讨论出的
-  某个产物（md/方案/文档）交给 Open Design 去生成设计」的意图——**措辞不限**（"给 OD"／"让 OD
-  跑一下这个"／"用 OD 基于这个出图"／"丢进 OD"……都算）——路由到 `/open-design` 的 adhoc 单点交接。
-  语义识别三要素：① 有明确源产物（刚产出或被点名）② 目标是 Open Design/OD ③ 意图是"交给它生成设计"。
-  执行前先用一句话确认源产物（"用 OD 基于 <file> 生成，对吗？"）再路由。**这是语义判断不是词表匹配**：
-  即使 route-guard 因无关键词输出 STOP，只要三要素清晰仍按本规则识别（这正是"结合语义、不靠词表"）。
+- **单点交接到 OD（语义识别非词表）**：用户以**任何措辞**表达「把刚产出/被点名的产物交给
+  Open Design 生成设计」→ `/open-design` adhoc 单点交接。三要素：①明确源产物 ②目标是
+  OD ③意图是"交它生成设计"；执行前一句话确认源产物（"用 OD 基于 <file> 生成，对吗？"）
+  再路由；三要素清晰时 route-guard STOP 不豁免本判断。
 - **界面产出备选链：** 首选 `/open-design`；OD 不可达 → `magicpath`；二者都不可用 → `/html-prototype`
 - **状态工具意图：** 「状态/进度/做到哪了」→ 运行 `scripts/status.sh` 或读取 workflow-state，
   不是一级 skill
@@ -512,12 +504,19 @@ gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 sk
 | guided-execution | 轻执行/checklist 审查/一般检索；未声明 skill 的默认档 | Sonnet |
 | mechanical | 机械执行、格式化、打分、preflight | Haiku |
 
-- **Fable 白名单纪律：** dispatch 传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist`（P0 出门前裁决 / P1 对抗判定 / P2 翻案复审+plan-mode 规划期）。此外一律 ≤ opus；拿不准用 opus，不得猜 fable。**降级链：** fable 不可用（配额/报错）→ 自动降一级 opus 并告知用户。
-- **主循环策略：** 主循环模型是用户 /model 主权，框架无法自动中途切（原生限制）。推荐 opus 常驻（指挥官档）；fable 全部经白名单点状 dispatch（微型判官，单次 5-30k token）；重大架构/审查日可手动 `/model fable` 起 session（逃生阀）。
-- **强制传参：** spawn subagent 必须按真值源解析 tier→alias 显式传 Agent tool `model` 参数（有 frontmatter pin 的可省略；参数可覆盖 pin）——见 orchestrator.md §5 与 dispatch_rules。Workflow 工具豁免（保持自身 omit/inherit 逻辑）。
-- **新场景入场：** 新增 skill/agent/节点必须在同一次改动中按 `new_scenario_protocol` 三问（token 量级×判断杠杆×错判代价）评估并显式声明档位，不得静默吃默认档；daily_governance tripwire 兜底告警。
-- 档位名（fable/opus/sonnet/haiku）是**别名**，运行时解析到该档当前最新模型；档位内升级（如 Opus 4.7→4.8）自动跟随，零维护。SKILL.md frontmatter 的 `recommended-model` 写档名（tier）。
-- **活规则：** ①会话中发现 `known_lineup` 未收录的档位变化（新档位发布、退役、代际漂移）→ 主动提示更新真值源，不得沉默沿用；②**原生优先（native_precedence）**：发现 Claude Code 原生动态模型调控（auto/复杂度路由/fableplan 类，现有 opusplan 已登记）发布 → 主动告知用户并提案本路由层让位为语义补充，Claude 原生逻辑优先。
-- 漂移看护：`daily_governance.py` 每日校验真值源 ↔ frontmatter 一致性与复核期限，异常写入成长摘要待裁决。
+- **Fable 白名单纪律：** `model: fable` 唯一合法依据=真值源 `fable_whitelist`（P0 出门前
+  裁决/P1 对抗判定/P2 翻案复审+plan-mode 规划期）；此外一律 ≤ opus，拿不准用 opus；
+  fable 不可用 → 自动降 opus 并告知用户。
+- **主循环：** /model 是用户主权（框架无法中途切）；推荐 opus 常驻，fable 经白名单点状
+  dispatch；重大架构/审查日可手动 `/model fable` 起 session。
+- **强制传参：** spawn subagent 按真值源解析 tier→alias 显式传 Agent tool `model` 参数
+  （frontmatter pin 可省略；Workflow 工具豁免）——见 orchestrator.md §5 与 dispatch_rules。
+- **新场景入场：** 新增 skill/agent/节点须同一改动中按 `new_scenario_protocol` 三问声明
+  档位，不得静默吃默认档；daily_governance tripwire 兜底告警+每日校验真值源一致性。
+- 档位名是**别名**（档内升级自动跟随零维护）；SKILL.md frontmatter `recommended-model`
+  写档名（tier）。
+- **活规则：** ①发现 `known_lineup` 未收录的档位变化 → 主动提示更新真值源，不得沉默沿用；
+  ②**原生优先（native_precedence）**：Claude Code 原生动态模型调控发布 → 主动告知并提案
+  本路由层让位为语义补充。
 
 <!-- FILE_END: CLAUDE.md -->
