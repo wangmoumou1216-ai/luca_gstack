@@ -99,6 +99,7 @@ capability-parity 降级为仓内锚点自检。
 
 ### Checkpoint 写法 与 PROGRESS.md
 
+- 执行 `/compact` 前必须先写 Checkpoint（确保状态不丢失）
 - Checkpoint 写入 `docs/handoff/YYYY-MM-DD-<topic>-checkpoint.md`，五要素：已完成✅ /
   进行中 / 待执行 / 关键决策 / 恢复指令
 - 多 Phase 长任务（≥3 Phase）开始时初始化 `docs/PROGRESS.md`，每 Phase 完成后更新；
@@ -109,8 +110,7 @@ capability-parity 降级为仓内锚点自检。
 
 不在 session 开头全量读；只在真需要时 Read；长文件（>200 行）先读前 50 行确认结构再按需读具体段落；Agent 的 prompt 只传其实际需要的上下文，不传完整会话历史。
 
-执行 `/compact` 前必须先写 Checkpoint（确保状态不丢失）。Agent prompt 预算细表见
-appendix「Agent Context 预算」。
+Agent prompt 预算细表见 appendix「Agent Context 预算」。
 
 ### 新 Session 恢复协议
 
@@ -375,7 +375,7 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 0. `python3 memory/scripts/get_memory.py --summary`（只看摘要不读长文件）；首条任务明确后
    `python3 memory/scripts/search_memory.py "<task/topic>" --limit 5` 做任务相关检索。
 1. 读 `CONTEXT.md`——「红线」节约束本 session 全部操作。
-2. 读 `.claude/workflow-state.yaml`：有 `IN_PROGRESS` 节点 → 告知用户「上次 session 在
+2. 读 `.claude/workflow-state.yaml`：`topic`/`scene` 定当前上下文；有 `IN_PROGRESS` 节点 → 告知用户「上次 session 在
    {节点名} 中断，是否继续？」；`iteration ≥ 3` → 告知「handoff-review 已连续失败 {N} 次」。
 3. 有 DONE 节点 → 读 `docs/handoff/` 最新 handoff summary 并遵守其约束（缺文件跳过不报错；
    不读上游完整 SKILL.md 或产出全文，用 handoff summary 替代）。
@@ -471,7 +471,7 @@ gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 sk
 ## luca app 集成（**仅 `LUCA_APP=1` 或用户要「在 app/侧栏看」时适用；云端/headless/非-Claude 跳过**）
 
 - 用户要"打开/查看某文件（在 app/新页签看）"→ `bash scripts/luca-open.sh <绝对路径>`
-  （只读预览；文件不存在报错勿猜路径）。
+  （只读预览；相对路径先解析为绝对路径；文件不存在报错勿猜路径）。
 - **HTML 产物主动推送（乙类过程纪律）：** Bash 产出/修改 `.html` 后**主动** luca-open
   （预览热刷新、复用页签、每文件一次即可；Write/Edit 产物已由 post-edit hook 自动开，
   07-24 收窄至仅 Bash 产物）。

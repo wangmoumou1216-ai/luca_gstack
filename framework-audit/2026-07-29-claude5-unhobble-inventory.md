@@ -81,3 +81,31 @@
 - P3 仓外 claude -p 双臂（8 fixture×2×8+8 对照+16 批判≈152；逐 fixture 触发率差 <75% 打回；
   canary 双向；MEMORY.md 盲区已披露——Q4 项靠 P4 非 P3）☐
 - P4 对抗（20 prompt+provenance-unreachable 实证）☐
+
+
+## G. CLAUDE.md 机器消费者权威清单（MAJOR-1 修复；正文「非显然坑」指针的落点）
+
+| 消费者 | 读什么 |
+|---|---|
+| scripts/check-routing-map.mjs | TL;DR 前 40 行 6 断言；隐藏 skill 声明段（`。`终止解析）；SSOT-7 五短语；SSOT-10 600 字符窗口 |
+| scripts/check-registration-sync.mjs | REG-1 注册行（表行+具名 prose 段） |
+| scripts/check-coding-discipline.mjs | 6 正则（5 原则名+skill-routing-map 字面） |
+| scripts/check-capability-parity.mjs (+capability-parity.json) | 10 字面锚 |
+| scripts/check-appendix-pointers.mjs | appendix「节题」witness ×12 行 |
+| scripts/verify.sh | C9/C10 grep；B1 字节帽；S32/S33 |
+| memory/scripts/check_memory_health.py | SF 节定界+条目格式双向 |
+| memory/scripts/consolidate_memory.py | 「维护规则」插入锚（fail-soft） |
+| memory/scripts/daily_governance.py | 档表 4 行 f-string 尾空格解析+字节软预算（读母版检出） |
+| .githooks/commit-msg | 字节增长验值（帽从 verify.sh check B1 行解析） |
+| hooks（route-guard/session-restore/session-sync/scope-guard） | 节名引用与逐字引 |
+| scripts/check-agents-parity.mjs | AGENTS.md 镜像面（SF id 集合等值） |
+| tests（test-route-guard/test-hooks/test-project-scope-guard） | fixture 断言 |
+| skill-os/optional-workflow-graph.yaml + observability/rules.yaml | research_default 引用/路由表一致性 |
+
+## 执行核销（MINOR-5：台账打勾+verifier）
+
+§A A1-A8 done（verifier：P4 20 探针+双臂门 GATE-PASS+知识保全盲审 CONTRACT-VERIFIED）；
+§B 7 节 done（verifier：知识保全盲审逐 hunk+16 锁定块字节比对+10 锚站点数=基线）；
+§C C1/C2/C4/C5/C6 done（活体 mutation+工程盲审独立复现）；C7/C8 done；§D D1/D2 done、
+D3 不做；§E done（G1 双态 mutation）；§F P1 done（mutation 全套）P2 done（九轮红队溯源，
+pre-baseline 走 P4 实证）P3/P4 done（GATE-PASS，334 文件落盘）。

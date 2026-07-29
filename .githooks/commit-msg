@@ -22,9 +22,9 @@ BASE=$(git cat-file -s "HEAD:CLAUDE.md" 2>/dev/null || echo 0)
 NEW=$(git show :CLAUDE.md 2>/dev/null | wc -c | tr -d ' ')
 [ "$NEW" -gt "$BASE" ] || exit 0   # 非增长（缩减/持平）放行
 
-# 帽从 verify.sh B1 单源解析（防双写漂移）
-CAP=$(grep -o '\-le [0-9]*' scripts/verify.sh | head -1 | grep -o '[0-9]*')
-[ -n "$CAP" ] || CAP=46080
+# 帽从 verify.sh 的 check B1 行单源解析（锚行 id 非位置——防未来新增 -le 检查静默改帽，R9/Phase6 MINOR-6）
+CAP=$(grep 'check B1 ' scripts/verify.sh | grep -o '\-le [0-9]*' | grep -o '[0-9]*')
+[ -n "$CAP" ] || CAP=45098
 REMAIN=$((CAP - NEW))
 
 DECLARED=$(grep -o 'B1-余量: *-*[0-9]*' "$MSG_FILE" | head -1 | grep -o '\-*[0-9]*$')
