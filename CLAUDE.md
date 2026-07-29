@@ -103,13 +103,14 @@ capability-parity 降级为仓内锚点自检。
   进行中 / 待执行 / 关键决策 / 恢复指令
 - 多 Phase 长任务（≥3 Phase）开始时初始化 `docs/PROGRESS.md`，每 Phase 完成后更新；
   session-restore.mjs 启动时自动显示前 25 行
-- 写法模板与更新规则全文：`.claude/skill-os/claude-md-appendix.md`
+- 写法模板与更新规则全文见 appendix「Checkpoint 写法」「PROGRESS.md 更新规则」
 
 ### 懒加载原则（节省 context）
 
 不在 session 开头全量读；只在真需要时 Read；长文件（>200 行）先读前 50 行确认结构再按需读具体段落；Agent 的 prompt 只传其实际需要的上下文，不传完整会话历史。
 
-执行 `/compact` 前必须先写 Checkpoint（确保状态不丢失）。Agent prompt 预算细表见 appendix。
+执行 `/compact` 前必须先写 Checkpoint（确保状态不丢失）。Agent prompt 预算细表见
+appendix「Agent Context 预算」。
 
 ### 新 Session 恢复协议
 
@@ -119,7 +120,7 @@ capability-parity 降级为仓内锚点自检。
 
 ### 框架建设预算（2026-07-03 P2-8）
 
-纯框架自建 session **每月建议 ≤2 次**（软上限；红线/CI 红/安全修复不受限；响应式优先于预防式）；治理产出批处理、攒批到季度裁决。依据全文见 appendix。
+纯框架自建 session **每月建议 ≤2 次**（软上限；红线/CI 红/安全修复不受限；响应式优先于预防式）；治理产出批处理、攒批到季度裁决。依据全文见 appendix「框架建设预算」。
 
 ---
 
@@ -171,7 +172,7 @@ capability-parity 降级为仓内锚点自检。
 ### 自动自成长（auto-grow）
 
 三环闭环：**捕获**（Stop hook）→**治理+晋升**（`daily_governance.py` 只晋升门禁内候选）→
-**回看**（启动提示 digest）；机制细节全文见 appendix。**项目级检索**：
+**回看**（启动提示 digest）；机制细节全文见 appendix「自动自成长」。**项目级检索**：
 `search_memory.py --project <名>`。
 
 ### 关键约束速查（Static Fallback — 脚本失败时此节仍有效）
@@ -242,7 +243,7 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 | `/idea` | A B | 已有原始语料忠实结构化（会议纪要/语音稿/讨论记录转需求，不延展不推断；新想法的方向探索/需求梳理走 /brainstorm，不走 /idea）|
 | `/deepresearch` | A B D | 多 Agent 深度研究（产出研究报告，可作为 brainstorm 输入）|
 | `/quick-research` | A B D | 轻量研究（单 agent 后台查 primary source，单文件落盘；三档研究的中档，发散题升 deepresearch）|
-| `/insight-synthesis` | A B D | 一手定性综合：用户提供的访谈/工单/回访 → observation+interpretation 两层洞察（第三对象角度·内部一手；idea/deep-ux/triage 消歧见 appendix）|
+| `/insight-synthesis` | A B D | 一手定性综合：用户提供的访谈/工单/回访 → observation+interpretation 两层洞察（第三对象角度·内部一手；消歧见 appendix「insight-synthesis 划界」）|
 | `/research-kit` | A B D | 一手研究工具设计：假设→访谈提纲/问卷/可用性测试计划/卡片分类法（采集之前；三不产：不产发现/解读/不采集；采回数据投 insight-synthesis）|
 | `/ux-writing` | A B C D | 内容与语言设计：voice/tone+微文案系统+文案评审改写；双相位（语义规范 pre-brief 供 design-brief 继承进 Packet / 逐字层仅本地生成不进 OD；D=hedging 主战场）|
 | `/brainstorm` | A B D | 苏格拉底拷问式 PRD（替代原 /prd）|

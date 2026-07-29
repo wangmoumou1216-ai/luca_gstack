@@ -50,6 +50,7 @@ check G2 "hooks 路径配置正确" "git config --get core.hooksPath | grep -q '
 check G3 ".gitignore 覆盖 .DS_Store" "grep -q '\.DS_Store' .gitignore"
 check G4 ".gitignore 覆盖 .env" "grep -q '\.env' .gitignore"
 check G5 "pre-commit 存在且可执行" "[ -x .githooks/pre-commit ]"
+check G5b "commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）" "[ -x .githooks/commit-msg ]"
 echo ""
 
 echo "[ 标准文档 ]"
@@ -101,6 +102,9 @@ check S15 "coding discipline 合同检查通过"        "npm run check:coding-di
 check S16 "项目 docs/state symlink 一致"          "npm run check:project-links --silent"
 check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
 check S18 "能力锚点自检（capability anchors，防误删关键小节）"  "node scripts/check-capability-parity.mjs"
+check S31 "appendix 指针奇偶校验（前向孤儿+后向丢指针，claude5-unhobble C1）" "node scripts/check-appendix-pointers.mjs"
+check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2）" "awk '/^## 红线/,/^## [^红]/' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
+check S33 "CLAUDE.md 模型档表 4 行在场且含当前 alias（C5）" "node -e \"const f=require('fs');const md=f.readFileSync('CLAUDE.md','utf8');const y=f.readFileSync('.claude/skill-os/model-routing.yaml','utf8');for(const t of ['reasoning-heavy','core-execution','guided-execution','mechanical']){const row=md.split('\\n').find(l=>l.trim().startsWith('| '+t+' '));if(!row)throw new Error('缺档表行 '+t);const m=y.match(new RegExp(t+'[\\\\s\\\\S]{0,200}?resolves_to:\\\\s*(\\\\S+)'));if(m&&!row.toLowerCase().includes(m[1].toLowerCase().replace(/[\\\"']/g,'')))throw new Error(t+' 行缺当前 alias '+m[1])}\""
 check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
 check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）" "npm run check:agent-contracts --silent"
 # S24：lint:yaml 的能力早已写好（package.json 覆盖 7 个 skill-os yaml），但从无自动调用者——

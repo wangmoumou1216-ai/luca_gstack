@@ -1,0 +1,40 @@
+#!/bin/sh
+# commit-msg 验值 hook（claude5-unhobble C6，2026-07-29）
+# CLAUDE.md 暂存后字节增长 → commit message 必须含 `B1-余量: <N>` 且 N == 帽 − 新尺寸（验值非仅存在）。
+# 基线=HEAD（hook 时点 commit 未生成，HEAD 即前态；R4-①M2 scratch 实验定）；比较面=index（git show :CLAUDE.md）。
+# 选择接受的旁路（拦未申报常规增长非对抗规避）：--amend / --no-verify / rebase / cherry-pick / revert。
+# merge 判别：MERGE_HEAD（worktree-safe --git-path）；根 commit（HEAD 不可解析）放行。
+
+MSG_FILE="$1"
+[ -f "$MSG_FILE" ] || exit 0
+
+# merge commit 放行（git merge 也会触发本 hook）
+MERGE_HEAD_PATH=$(git rev-parse --git-path MERGE_HEAD 2>/dev/null)
+[ -n "$MERGE_HEAD_PATH" ] && [ -f "$MERGE_HEAD_PATH" ] && exit 0
+
+# 根 commit 放行
+git rev-parse -q --verify HEAD >/dev/null 2>&1 || exit 0
+
+# CLAUDE.md 未暂存 → 与本 hook 无关
+git diff --cached --name-only | grep -qx 'CLAUDE.md' || exit 0
+
+BASE=$(git cat-file -s "HEAD:CLAUDE.md" 2>/dev/null || echo 0)
+NEW=$(git show :CLAUDE.md 2>/dev/null | wc -c | tr -d ' ')
+[ "$NEW" -gt "$BASE" ] || exit 0   # 非增长（缩减/持平）放行
+
+# 帽从 verify.sh B1 单源解析（防双写漂移）
+CAP=$(grep -o '\-le [0-9]*' scripts/verify.sh | head -1 | grep -o '[0-9]*')
+[ -n "$CAP" ] || CAP=46080
+REMAIN=$((CAP - NEW))
+
+DECLARED=$(grep -o 'B1-余量: *-*[0-9]*' "$MSG_FILE" | head -1 | grep -o '\-*[0-9]*$')
+if [ -z "$DECLARED" ]; then
+  printf '[commit-msg] CLAUDE.md grew %sB (%s -> %s), message missing "B1-余量: <N>".\n' "$((NEW - BASE))" "$BASE" "$NEW" >&2
+  printf '[commit-msg] 放置协议: 新常驻规则默认落 appendix/skill-os; 确须进正文请加一行: B1-余量: %s\n' "$REMAIN" >&2
+  exit 1
+fi
+if [ "$DECLARED" != "$REMAIN" ]; then
+  printf '[commit-msg] B1-余量 declared %s != actual %s (cap %s - new %s). 请改为: B1-余量: %s\n' "$DECLARED" "$REMAIN" "$CAP" "$NEW" "$REMAIN" >&2
+  exit 1
+fi
+exit 0
