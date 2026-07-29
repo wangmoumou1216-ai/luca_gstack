@@ -703,6 +703,30 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         except Exception:  # noqa: BLE001
             pass
 
+        # 4b. person 记忆 key 静默失效检测（SC-20260716-001 终局明标盲区，luca 2026-07-29 裁「解决」补上）：
+        # M3-b 的 autoMemoryDirectory key 写在各检出 gitignored 的 settings.local.json——重 clone/误删即
+        # 静默回到分裂态且四门全绿。逐检出断言 key 在场且指向 canonical。fail-open。
+        try:
+            _canonical = "/Users/luca/.claude/projects/-Users-luca-Desktop-luca-gstack/memory"
+            # 母版检出免检：其 git 根 slug 天然解析到 canonical（M3-b 只在 fork 侧需要 key）
+            for _co in (Path("/Users/luca/Desktop/项目/muse/lucagstack"),):
+                _slj = _co / ".claude" / "settings.local.json"
+                if not _co.is_dir():
+                    continue
+                _ok = False
+                if _slj.is_file():
+                    try:
+                        _ok = json.loads(_slj.read_text()).get("autoMemoryDirectory") == _canonical
+                    except Exception:  # noqa: BLE001
+                        _ok = False
+                if not _ok:
+                    anomalies.append(
+                        f"person 记忆 key 失效：{_slj} 缺 autoMemoryDirectory→canonical（M3-b 静默回退分裂态，"
+                        "修法=补 key，见 framework-audit/proposals/2026-07-16-person-memory-plan-v5-exec.md）"
+                    )
+        except Exception:  # noqa: BLE001
+            pass
+
         # 2. 双向陈旧度：最新 episodic 日期 vs 最新 digest/.checked marker 日期（ISO 日期串可直接比较）
         ep_dates = []
         if episodic_index.is_file():

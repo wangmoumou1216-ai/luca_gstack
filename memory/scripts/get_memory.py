@@ -199,13 +199,10 @@ def main() -> int:
         ep_str = f"{len(ep)} episodic sessions" if ep else "no episodic sessions"
         sf_str = f"{len(sf)} semantic facts" if sf else "no semantic facts"
         print(f"Memory: {ep_str}, {sf_str}, procedural → semantic domain:skill-rule")
-        if ep:
-            last = ep[-1]
-            print(f"  Last session: {last.get('date', '?')} — {last.get('topic', '?')}")
-            if last.get("decision"):
-                print(f"  Decision: {last['decision']}")
-            if last.get("next_risk"):
-                print(f"  Next risk: {last['next_risk']}")
+        # SC-20260715-006（luca 2026-07-29 裁决：屏蔽）：Last session/Decision/Next risk 取自
+        # 全局 ep[-1] 零项目过滤——多窗口并行下每次启动确定性注入「别的 session 的在途上下文」，
+        # 正是 feedback_stay_in_session_scope 教育 agent 不要做的事。整块屏蔽；需要历史时
+        # search_memory.py 按需检索（--project 过滤可用）。
         return 0
 
     if args.layer == "episodic":
