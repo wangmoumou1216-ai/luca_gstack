@@ -98,6 +98,17 @@ jobs:
       - name: Harness detection + Codex viability registry
         run: npm run check:harness
 
+      # claude5-unhobble C7：远端补 B1/S18/S19——守 CLAUDE.md 预算/parity 锚/skill 注册
+      # 的三个关键 checker 此前只在本地 verify.sh（FAST_COMMIT 可跳），CI 兜底为事后信号
+      - name: CLAUDE.md byte budget (B1 remote)
+        run: |
+          SZ=$(wc -c < CLAUDE.md)
+          echo "CLAUDE.md=$SZ bytes"
+          [ "$SZ" -le 46080 ]
+      - name: Capability-parity anchors (S18 remote)
+        run: node scripts/check-capability-parity.mjs
+      - name: Skill registration sync (S19 remote)
+        run: npm run check:registration
       - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
         run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
 

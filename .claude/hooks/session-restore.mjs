@@ -269,7 +269,8 @@ if (existsSync(memScript)) {
     let reason, fix;
     if (e.code === 'ETIMEDOUT') {
       reason = '超时 (>4s)'; fix = '检查 memory/ 是否在慢盘/网络盘上';
-    } else if (/command not found|ENOENT|not recognized/i.test(msg)) {
+    // dash（Ubuntu /bin/sh）输出 "python3: not found" 无 "command" 字样——C7 修分类非放松断言
+    } else if (/command not found|not found|ENOENT|not recognized/i.test(msg)) {
       reason = '未找到 python3'; fix = '安装 python3（记忆层整体不可用）';
     } else {
       // 通用兜底：surface 真实成因。e.message 以 "Command failed: python3 <绝对路径>" 开头（远超 60 字），
