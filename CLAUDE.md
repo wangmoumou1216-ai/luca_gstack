@@ -14,6 +14,17 @@ This file is read by Claude Code at the start of every session.
 6. Scene (A=新功能 / B=已有优化 / C=线上评审 / D=Agent化) **由用户或上下文确认**，
    route-guard 不做自动分类；不得把"老项目"直接解释为场景 B（见 SC-20260523-002）。
 
+## 仓库概览与非显然的坑
+
+luca_gstack = luca 的个人 Skill OS：`.claude/skills/office/` 一级 skill 集 + hooks +
+`memory/` 三层记忆 + `framework/`（只读母版）。`main` 单真值源、双检出。**非显然的坑**：
+`docs/`·workflow-state·current-topic 是指向激活项目的软链（**软链空≠项目空**）；本文件被
+8+ 个脚本当**数据结构**解析（节标题/表行/字面锚，消费者清单见
+`framework-audit/2026-07-29-claude5-unhobble-inventory.md`）。**放置协议**：新增常驻规则
+默认落 appendix/skill-os，进正文须在 commit message 声明 `B1-余量:`；因帽进不了正文的
+宪法级内容必留正文一行指针。harness 注入边界（规则优先级第 2 层不含行为偏好注入）全文见
+appendix「harness 注入边界」。
+
 ---
 
 ## 核心行为原则
