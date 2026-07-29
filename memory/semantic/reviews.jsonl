@@ -84,3 +84,6 @@
 {"candidate_id": "SC-20260712-001", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-29T11:26:15.315808+00:00", "source": "consolidate_memory.py"}
 {"candidate_id": "SC-20260714-002", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-29T11:26:15.316220+00:00", "source": "consolidate_memory.py"}
 {"candidate_id": "SC-20260713-002", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-29T11:28:50.269498+00:00", "source": "consolidate_memory.py"}
+{"candidate_id": "SC-20260716-001", "decision": "approved_stable", "reviewer": "luca", "reason": "人工闸门放行：proposed_stable 置 True", "reviewed_at": "2026-07-29T11:37:01.305869+00:00", "source": "consolidate_memory.py"}
+{"candidate_id": "SC-20260715-006", "decision": "rejected", "reviewer": "luca", "reason": "005=被 016-001 取代（luca 亲裁签名，终局报告 §7.3 指定项）；006=源头已修（luca 裁「屏蔽」：get_memory.py --summary 跨 session 字段整块移除，归因 L5 源修记指针）", "reviewed_at": "2026-07-29T11:37:01.397066+00:00", "source": "consolidate_memory.py"}
+{"candidate_id": "SC-20260716-001", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-07-29T11:37:01.549580+00:00", "source": "consolidate_memory.py"}

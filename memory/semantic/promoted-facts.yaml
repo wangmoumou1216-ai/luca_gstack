@@ -621,3 +621,15 @@ facts:
     evidence: "两例实测复发：2026-07-13 '搜索'撞'加个搜索功能'（fable审查发现）；同日'查一下'撞用户消息'你再审查一下'误路由 web-access + '找找'撞'找找原因/找找灵感'（7句probe坐实）"
     reviewer: "luca"
     scope: "route-guard 词表"
+  - id: SC-20260716-001
+    domain: skill-rule
+    fact: "person 层分裂根因修正（supersedes SC-20260715-005，其『目录名由 cwd 派生、不接受任何 env 覆盖』两处皆错；原候选仍在 digest 待裁决且带可粘贴 --set-stable，勿直接点头，reject 须 luca 人工签名）：①harness auto-memory 目录由官方 settings key autoMemoryDirectory 控制，解析链 policy>flag>(信任门内 local>project)>user、??短路——验证必须在部署 scope 做，flagSettings 探针对 user/local scope 零证明力；另有未文档化 env 覆盖 CLAUDE_COWORK_MEMORY_PATH_OVERRIDE（Ry() 内最高优先）。②未设 key 时 slug 派生自 git 仓库根（tp(rc())??rc()，非 cwd），非 ASCII 逐字→'-'、≤200 字符无 hash（中文路径同长同位即碰撞），仓改名即孤儿、无迁移。③005 其余维持有效：19 目录互不可见、CLAUDE.md:177 硬编码致读写分裂、GLOBAL_MEMORY_DIR 只作用读侧、parity 零守护、07-09 M1 复发。④修法经 3 轮对抗：全机塌缩 scope=A 被证伪（project 事实压倒性存在于各库 MEMORY.md 名下，ls project_* 尺子无效；目录名即 provenance，塌缩不可逆）；现行候选=v3 三级阶梯 M3-0/a/b，残余分歧与七卡点见 consensus-report，待 luca 裁决。"
+    confidence: high
+    stable: true
+    added: 2026-07-29
+    source: "framework-audit/proposals/2026-07-16-person-memory-plan-v3.md §2 V1/V3 + REDTEAM + consensus-report；bundle 2.1.211 本人直读"
+    evidence: "KFh()/Ry()/hHc() 反编译直读：policy>flag>(信任门内 local>project)>user 的 ?? 链；真机探针 repo1/sub → -repo1 slug（repo 根派生实证）；flagSettings CANARY 双向通（仅证 flag scope，对 user/local scope 零证明力）；CLAUDE_COWORK_MEMORY_PATH_OVERRIDE 在 Ry() 优先级最高；scope=A 证伪：5 个 code-* 库 100% project 事实存于各自 MEMORY.md 名下"
+    reviewer: "luca"
+    supersedes: "SC-20260715-005"
+    scope: "memory"
+    tags: ["memory", "person-layer", "fork", "fragmentation", "harness", "automemorydirectory"]
