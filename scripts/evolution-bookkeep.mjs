@@ -38,6 +38,13 @@ try { ret = JSON.parse(readFileSync(jsonPath, 'utf8')); }
 catch (e) { console.error(`返回 JSON 解析失败: ${e.message}`); process.exit(2); }
 // 模式1b 单点评估返回（mode:'punctual'）：无 source_yield（没跑发现通道），验 stats+results
 const isPunctual = ret.mode === 'punctual';
+// G1 fail-closed 门（claude5-unhobble）：run_status !== 'COMPLETE'（含字段缺失=旧版返回）
+// → 整脚本 abort，先于 :134 appendFileSync 与全部登记面（conditional 泄漏路径 R5-③W3）。
+// 两模式统一；07-02 事故（残缺 run 发布 2 APPROVED 终版反转）是本门的正当性证据。
+if (ret.run_status !== 'COMPLETE') {
+  console.error(`run_status=${ret.run_status ?? '(缺失)'} ≠ COMPLETE——残缺 run 拒登记（相位: ${JSON.stringify(ret.phases_completed ?? {})}）。补齐相位后 resume 重跑再 bookkeep。`);
+  process.exit(3);
+}
 if (!ret.stats || (isPunctual ? !Array.isArray(ret.results) : !ret.source_yield)) {
   console.error(isPunctual
     ? '返回 JSON 缺 stats/results 字段——这不是 framework-evolution-scout 单点评估（mode:punctual）的返回值。'
