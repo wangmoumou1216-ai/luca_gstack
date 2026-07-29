@@ -704,8 +704,9 @@ if (!dryRun && prompt) {
   try {
     writeFileSync(counterFile, String(turns));
   } catch {}
-  if (turns === 20 || turns === 30 || (turns > 30 && turns % 10 === 0)) {
-    hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议执行 /compact 或写入 Checkpoint。`);
+  // 4c（claude5-unhobble）：20/40/每20、100 封顶；harness 已原生自动摘要，不再建议 /compact
+  if (turns === 20 || turns === 40 || (turns > 40 && turns % 20 === 0 && turns <= 100)) {
+    hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议写入 Checkpoint。`);
   }
 
   // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04；命名即切换扩展 2026-07-06）──

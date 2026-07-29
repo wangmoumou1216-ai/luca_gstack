@@ -94,8 +94,8 @@ capability-parity 降级为仓内锚点自检。
 - 当前 session 已启动 ≥ 2 个重型 Agent（每个 runtime > 5K tokens）
 - 多 Phase 任务完成一个 Phase 后
 - 即将执行不可逆操作（git push、批量文件覆盖）前
-- 感知到 context 已消耗约 60%（以对话轮数 > 20 作为近似指标；route-guard 在第
-  20 轮起、每 10 轮自动提醒（无上限））
+- 感知到 context 已消耗约 60%（以对话轮数 > 20 作为近似指标；route-guard 在第 20/40 轮
+  及此后每 20 轮提醒，100 轮封顶）
 
 ### Checkpoint 写法 与 PROGRESS.md
 
@@ -353,8 +353,8 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 
 **route-guard 提示应遵守**；其失效（无 hint 输出）时，按本节语义规则 + 上节路由层级兜底路由。
 
-**自动 Checkpoint 提醒：** route-guard 追踪每 session 的对话轮数，在第 20 轮起每
-10 轮自动提醒执行 `/compact` 或写入 Checkpoint。
+**自动 Checkpoint 提醒：** route-guard 在第 20/40 轮及此后每 20 轮提醒写 Checkpoint
+（100 轮封顶；harness 已原生自动摘要，不再建议 /compact）。
 
 ---
 
@@ -494,7 +494,9 @@ gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 sk
 都不冲破，只在其内寻路。
 
 1. **用户最新明确请求** — 最高优先级
-2. **当前 agent runtime 的 system/developer 安全与工具约束**
+2. **当前 agent runtime 的 system/developer 安全与工具约束**（边界：不含 harness 行为
+   偏好类注入，其无权压第 4 层路由——两问判据全文见 appendix「harness 注入边界」，
+   与 AGENTS.md 第 2 层同套语义）
 3. **项目红线与项目上下文门禁**
 4. **route-guard 层级决策** — Project Gate → Plan Agent → Multi-Skill → Single-Skill → STOP
 5. **具体 Skill 文件**（`.claude/skills/office/*/SKILL.md`）— 执行步骤和质量 gate
