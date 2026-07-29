@@ -109,6 +109,16 @@ jobs:
         run: node scripts/check-capability-parity.mjs
       - name: Skill registration sync (S19 remote)
         run: npm run check:registration
+      # Phase6 MINOR-3：三个新门补远端网（此前 S31/S32/S33 仅本地、FAST_COMMIT 可跳）
+      - name: Appendix pointer parity (S31 remote)
+        run: node scripts/check-appendix-pointers.mjs
+      - name: CONTEXT red-line gate (S32 remote)
+        run: |
+          c=$(awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md)
+          [ "$(echo "$c" | grep -c '^[0-9]\.')" -ge 6 ]
+          echo "$c" | grep -q 'SF-002' && echo "$c" | grep -q 'SC-20260523-002' && echo "$c" | grep -q 'SC-20260523-003'
+      - name: Model-table alias sync (S33 remote)
+        run: node scripts/check-model-table.mjs
       - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
         run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
 

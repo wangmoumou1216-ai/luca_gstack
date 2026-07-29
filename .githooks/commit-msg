@@ -2,7 +2,9 @@
 # commit-msg 验值 hook（claude5-unhobble C6，2026-07-29）
 # CLAUDE.md 暂存后字节增长 → commit message 必须含 `B1-余量: <N>` 且 N == 帽 − 新尺寸（验值非仅存在）。
 # 基线=HEAD（hook 时点 commit 未生成，HEAD 即前态；R4-①M2 scratch 实验定）；比较面=index（git show :CLAUDE.md）。
-# 选择接受的旁路（拦未申报常规增长非对抗规避）：--amend / --no-verify / rebase / cherry-pick / revert。
+# 选择接受的旁路（拦未申报常规增长非对抗规避）：--no-verify / rebase / cherry-pick / revert。
+# --amend 实测会正常触发本 hook（增长照拦，Phase6 工程盲审复测）；已知残口：growth commit 落地后
+# 仅改 message 的 amend 因 NEW==BASE 放行，可事后篡改声明值——接受（声明行仅供人审计非机器消费）。
 # merge 判别：MERGE_HEAD（worktree-safe --git-path）；根 commit（HEAD 不可解析）放行。
 
 MSG_FILE="$1"
