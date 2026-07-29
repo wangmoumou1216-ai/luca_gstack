@@ -18,13 +18,7 @@ This file is read by Claude Code at the start of every session.
 
 ## 核心行为原则
 
-**并发原则：** 所有相互独立的工具调用必须在同一条消息中并发执行，不得串行等待。
-
 **最小文件原则：** 不创建任何非任务必要的文件；优先编辑已有文件，而非新建。
-
-**读前先写原则：** 编辑任何文件前，必须先用 Read 工具读取当前内容，再 Edit。
-
-**最小注释原则：** 默认不写注释；只在"为什么这样做"不明显时写一行说明。
 
 **单真值源 + 双检出原则（2026-07-16，取代双仓一致）：** `main` 是唯一真值源；
 `~/Desktop/luca_gstack`（框架/meta + 记忆权威 store）与 `~/Desktop/项目/muse/lucagstack`
@@ -104,16 +98,7 @@ capability-parity 降级为仓内锚点自检。
 
 不在 session 开头全量读；只在真需要时 Read；长文件（>200 行）先读前 50 行确认结构再按需读具体段落；Agent 的 prompt 只传其实际需要的上下文，不传完整会话历史。
 
-### Agent Context 预算
-
-Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens（原则：只给该 agent 实际需要的
-目标与路径，不给决策背景；细表见 appendix）。
-
-### Compact 触发规则
-
-- 完成一个完整 Phase 后，如果接下来还有 ≥ 2 个 Phase，执行 `/compact`
-- 超过 30 轮对话后，在下一个 Phase 开始前执行 `/compact`
-- Compact 前必须先写 Checkpoint（确保状态不丢失）
+执行 `/compact` 前必须先写 Checkpoint（确保状态不丢失）。Agent prompt 预算细表见 appendix。
 
 ### 新 Session 恢复协议
 
@@ -217,8 +202,6 @@ Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens（原则：只给该 
 ## luca_gstack
 
 本项目使用 luca_gstack skill 集。skill 集位于 `.claude/skills/office/`。
-
-**架构原则：Skill-first, Graph-optional。**
 
 **环境/项目剥离原则：**
 `luca_gstack` 是运行环境，只保留 skills、hooks、framework、scripts、memory 和
@@ -365,9 +348,7 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 直接执行，不强制过 skill；拿不准就声明「按平凡任务直接做」。**多文件特性/跨阶段/多功能诉求不适用**——
 按上文「语义路由契约」评估该走的 skill/流程。
 
-**自动提示机制：** `route-guard.mjs` 在每次 `UserPromptSubmit` 时读取用户 prompt，
-按 yaml 词表匹配后输出路由提示（含内置/外部 skill 建议），Claude 应遵守输出的建议。
-route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路由层级兜底路由。
+**route-guard 提示应遵守**；其失效（无 hint 输出）时，按本节语义规则 + 上节路由层级兜底路由。
 
 **自动 Checkpoint 提醒：** route-guard 追踪每 session 的对话轮数，在第 20 轮起每
 10 轮自动提醒执行 `/compact` 或写入 Checkpoint。
@@ -505,11 +486,6 @@ route-guard 失效（无 hint 输出）时，按本节语义规则 + 上节路�
 - 术语/领域词汇冲突当场收敛（2026-07-12，源 domain-modeling）→ 定案即 inline 写入激活项目
   CONTEXT.md 词汇节（`**术语**: 定义 _Avoid_: 别名`），**不攒批**——与 extraction-bar 的记忆
   批处理并行不悖（对象是术语表非记忆）
-
-稳定事实写入不直接修改 `CONTEXT.md` 或 `promoted-facts.yaml`。先运行
-`memory/scripts/propose_semantic.py` 写 candidate，再通过 review / consolidate 治理晋升。
-需要检查记忆治理队列时运行 `python3 memory/scripts/consolidate_memory.py --json`；
-该命令默认作为只读 dry-run 使用，不属于普通 session 启动步骤。
 
 ---
 
