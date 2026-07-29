@@ -368,35 +368,15 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 
 **按顺序执行以下步骤：**
 
-0. **读取 memory summary**（轻量历史索引）
-   - 运行 `python3 memory/scripts/get_memory.py --summary`
-   - 只看摘要，不读取 memory 长文件
-   - 第一条用户任务明确后，优先运行
-     `python3 memory/scripts/search_memory.py "<task/skill/topic>" --limit 5`
-     做任务相关检索
-
-1. **读取 `CONTEXT.md`**（长期项目约束）
-   - 特别注意「红线」节，红线约束当前 session 的所有操作
-
-2. **读取 `.claude/workflow-state.yaml`**（流程状态恢复）【C-04 修复】
-   - 检查 `topic` 和 `scene` — 确定当前项目的上下文
-   - 扫描各节点的 `status` — 了解流程执行到哪一步
-   - 如果有节点状态为 `IN_PROGRESS` — 告知用户「上次 session 在 {节点名}
-     中断，是否继续？」
-   - 如果 `iteration ≥ 3` — 告知用户「handoff-review 已连续失败 {N} 次」
-
-3. **读取上游 handoff summary**（跨 session 状态传递）
-   - 如果 workflow-state 中有 DONE 的节点 → 读取 `docs/handoff/` 中最新的 handoff summary
-   - 如果 handoff 文件不存在或 `docs/handoff/` 为空 → 跳过此步，继续执行第 4 步，不报错
-   - handoff summary 包含上游的决策、约束和风险，下游 skill 必须遵守其中的约束
-   - **不读取上游完整 SKILL.md 或完整产出文件**（用 handoff summary 替代）
-
-4. **读取全局 `.claude/skills/office/SKILL.md`**（共享规范）
-   - 仅在用户涉及 skill 操作时执行
-   - 如果执行具体 skill，按 Observability Protocol 运行
-     `.claude/observability/scripts/get_rules.py <skill-name> <scene>`，只加载输出的短规则
-   - 如果需要历史经验，使用
-     `memory/scripts/search_memory.py "<skill/topic>" --limit 5`，不要读取长日志或完整历史
+0. `python3 memory/scripts/get_memory.py --summary`（只看摘要不读长文件）；首条任务明确后
+   `python3 memory/scripts/search_memory.py "<task/topic>" --limit 5` 做任务相关检索。
+1. 读 `CONTEXT.md`——「红线」节约束本 session 全部操作。
+2. 读 `.claude/workflow-state.yaml`：有 `IN_PROGRESS` 节点 → 告知用户「上次 session 在
+   {节点名} 中断，是否继续？」；`iteration ≥ 3` → 告知「handoff-review 已连续失败 {N} 次」。
+3. 有 DONE 节点 → 读 `docs/handoff/` 最新 handoff summary 并遵守其约束（缺文件跳过不报错；
+   不读上游完整 SKILL.md 或产出全文，用 handoff summary 替代）。
+4. 涉及 skill 操作时读 `.claude/skills/office/SKILL.md`（共享规范）；执行具体 skill 前跑
+   `.claude/observability/scripts/get_rules.py <skill> <scene>`，只加载输出的短规则。
 
 5. **项目上下文门禁**（第一条用户消息后执行，任何 skill 运行前必须通过）
 
@@ -442,31 +422,19 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 
 ## Orchestrator 模式
 
-当用户通过 `/office` 选择推荐流程，
-或说"继续流程/进入下一步/从断点恢复"时，进入 Orchestrator 模式。
-详细规范见 `.claude/agents/orchestrator.md`。
-
-**关键约束：**
-- Orchestrator 是主 session 的行为模式，**不是** subagent dispatcher
-- skill 内部可以自由使用 subagent（deepresearch/brainstorm/ux-research/figma-demo 都有内部 subagent）
-- 每个 skill 完成后必须写 handoff summary（见 `.claude/skills/office/references/handoff-protocol.md`）
-- 连续执行 2 个重型 skill（runtime > 20K tokens）后，建议 compact 或新 session
-- **每个 Phase/Skill 完成后执行观察提取**（Hermes-lite）：检查 non-obvious
-  blocker、重复风险、未记录约束 → 满足任一则
-  `propose_semantic.py --domain skill-rule`（详见 orchestrator.md §2c-obs）
+用户经 `/office` 选流程或说"继续流程/进入下一步/从断点恢复"时进入；详细规范
+`.claude/agents/orchestrator.md`。关键约束：Orchestrator 是主 session 行为模式**不是**
+subagent dispatcher；skill 内部可自由用 subagent；每 skill 完成必写 handoff summary
+（`references/handoff-protocol.md`）；连续 2 个重型 skill（>20K tokens）后建议 compact
+或新 session；每 Phase/Skill 完成后执行观察提取（orchestrator.md §2c-obs）。
 
 ## Standalone / Workflow 执行模式
 
-所有 skill 均以交互模式（用户直接触发）运行。
-
-执行原则：
-- 用户直接点名某个 skill → standalone mode 优先。
-- 用户选择 `/office` 推荐流程或明确说“按流程走” → workflow mode。
-- workflow mode 可以检查上游产物、状态和 handoff gate。
-- standalone mode 只要求该 skill 自己的输入和质量 gate，不强制补齐完整上游链路。
-- handoff 分级：workflow 模式必写；standalone 模式 + 轻量 skill（frontmatter
-  `context-cost: lightweight` 或 `runtime-estimate ≤ 5000`）+ 产出为终端交付
-  （无下游 skill 消费）→ 免写 handoff，DONE 合法；standalone 重型 skill 仍须写。
+用户点名 skill → standalone 优先（只要求该 skill 自己的输入与质量 gate，不强制补齐上游
+链路）；选 `/office` 流程或说"按流程走" → workflow mode（可检查上游产物/状态/handoff
+gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 skill（frontmatter
+`context-cost: lightweight` 或 `runtime-estimate ≤ 5000`）+ 产出为终端交付
+（无下游 skill 消费）→ 免写 handoff，DONE 合法；standalone 重型 skill 仍须写。
 
 ---
 
@@ -498,24 +466,17 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 
 ## luca app 集成（**仅 `LUCA_APP=1` 或用户要「在 app/侧栏看」时适用；云端/headless/非-Claude 跳过**）
 
-用户要求"打开/查看某个文件"（常见 md，尤其说"在 app / luca / 新页签里看"）时，
-运行 `bash scripts/luca-open.sh <绝对路径>` —— luca app 会在新页签打开只读预览。
-相对路径先解析为绝对路径；文件不存在时报错勿猜路径。
-
-**HTML 产物主动推送预览（2026-07-11；乙类过程纪律——触发源是产出动作非用户语义，非路由目标）：**
-每当产出或修改 `.html` 文件（原型/演示页等），
-完成后**主动**运行 `bash scripts/luca-open.sh <该文件绝对路径>` —— .html 会作为 app 侧栏
-浏览器面板的预览页签打开（左终端对话、右侧即时看效果）。该文件后续再被修改时预览**自动热刷新**，
-同一文件重复 open 会复用页签，因此每个文件只需 open 一次，迭代改动无需重复调用。
-**收窄（07-24）：** app 内嵌会话的 Write/Edit 产物已由 post-edit hook 自动打开，本规则仅剩 Bash 产物适用。
-
-**Figma 写入后主动开侧栏（乙类，同 HTML 推送）：** 凡向 Figma 写入（`use_figma`/`create_new_file`/`generate_figma_design`）完成后，主动在侧栏打开结果，不等用户开口。做法（含 `luca-open.sh --url` 推 URL、点名镜像同纪律、默认不推）全文见 appendix「luca app 侧栏感知」。
-
-**侧栏当前页感知（claude 拉取，依赖 luca app 运行；乙类过程纪律，语义识别非词表、STOP 不豁免）：**
-用户说"看看我侧栏/当前页/基于侧栏这个页做…"时，跑 `bash scripts/luca-sidebar.sh`（meta）取激活面板/
-当前页/页签清单，取内容**源头优先于 DOM**（GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read meta
-路径 / 兜底 `luca-sidebar.sh capture`）；15s 超时=app 未运行，如实报告不臆造。完整四步（下游接轨/非网页
-处理）见 appendix「luca app 侧栏感知」。
+- 用户要"打开/查看某文件（在 app/新页签看）"→ `bash scripts/luca-open.sh <绝对路径>`
+  （只读预览；文件不存在报错勿猜路径）。
+- **HTML 产物主动推送（乙类过程纪律）：** Bash 产出/修改 `.html` 后**主动** luca-open
+  （预览热刷新、复用页签、每文件一次即可；Write/Edit 产物已由 post-edit hook 自动开，
+  07-24 收窄至仅 Bash 产物）。
+- **Figma 写入后主动开侧栏（乙类）：** 凡向 Figma 写入完成后主动在侧栏打开结果，不等
+  用户开口；做法全文见 appendix「luca app 侧栏感知」。
+- **侧栏当前页感知（乙类，语义识别非词表、STOP 不豁免）：** 用户说"看看我侧栏/当前页/
+  基于侧栏这页做…"→ `bash scripts/luca-sidebar.sh` 取 meta；取内容**源头优先于 DOM**
+  （GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read；兜底 capture）；15s 超时
+  =app 未运行，**如实报告不臆造**；完整四步见 appendix「luca app 侧栏感知」。
 
 ---
 
