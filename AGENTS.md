@@ -585,7 +585,10 @@ Layered routing order:
    reflex unifies the semantic special-case handoffs declared in this file (currently: OD single-point
    handoff, project self-judgment, sidebar sensing, luca-open file preview, etc.; in Claude app-embedded
    sessions these app actions prefer the `mcp__muse__*` tool channel when visible — agents without it,
-   including Codex, use the shell-script paths as the documented degrade route; sidebar-delivery rule:
+   including Codex, use the shell-script paths as the documented degrade route (the channel now exposes
+   six tools — workspace_state / preview_screenshot / open_in_view / web_locate / sidebar_read /
+   sidebar_navigate; read-side tools default to not stealing focus, and claude.ai is hard-refused for
+   agent read/screenshot); sidebar-delivery rule:
    show-intent URL opens go to the app sidebar — `open_in_view(url)` or `luca-open.sh --url` — and any
    browser-automation end state gets pulled back into the sidebar; Chrome automation itself is
    Claude-only tooling, out of scope for Codex) and covers mapping to

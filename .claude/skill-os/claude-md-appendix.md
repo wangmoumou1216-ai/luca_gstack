@@ -182,21 +182,32 @@ luca 连问「你置入到 figma 里面了吗」「打开浏览器到侧边栏�
 ## muse 工具通道（MCP，2026-07-30）
 
 app 内嵌 claude session 由 app 注入 `--mcp-config`（`~/.luca/mcp/muse-<实例哈希>.json`，
-app 启动时生成），暴露 3 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
+app 启动时生成），暴露 6 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
 
 | 工具 | 用途 | 何时用 |
 |---|---|---|
 | `workspace_state` | 工作台现状 JSON（panes/分屏/侧栏/预览页签） | 指挥动作前置读；用户提"当前打开的/侧栏/分屏" |
-| `preview_screenshot` | 截预览页签真实像素（返回图 + 全尺寸 PNG 路径）；**会打开侧栏并激活目标页签** | **改 HTML 后自验 UI（以像素为准），代替"让 luca 看"** |
+| `preview_screenshot` | 截**预览页签或网页页签**真实像素（返回图 + 全尺寸 PNG 路径）；**恒激活目标页签**；产帧探针+纯色帧拒绝，本地预览带源文件 mtime、远程页只带抓取时刻 | **改 HTML 后自验 UI（以像素为准），代替"让 luca 看"**；也可自验侧栏网页渲染 |
 | `open_in_view` | 开文件/URL（HTML→侧栏预览，md→文件页签，`target:"split"` 分屏——**split 仅对本地文件生效**） | 替代 luca-open 的模型主动路径 |
+| `web_locate` | 定位侧栏页签回 tabKey/URL/pageOrigin/标题/rect；`reveal:false`（默认）**不切面板不抢焦点** | **开页前查重（纪律③的执行手段）**；`reveal:true`＝把已开页签调到前面给 luca 看 |
+| `sidebar_read` | 读**指定**页签正文（含跨域子帧）；不切页签；正文按不可信输入披露 | 用户说"基于侧栏那页"而该页非激活页签时（纪律④ 的执行手段） |
+| `sidebar_navigate` | 已有页签内导航（等加载完）；跨分区目标改新开正确分区页签 | 想移动已有页签而非堆新页签 |
+
+**读面安全边界（2026-07-30 A 批落地）**：`claude.ai` 域的 `sidebar_read`/`preview_screenshot`
+**一律硬拒**（该登录态属 Claude 自身通道，判据取页签当前 URL 不信入参）；figma 走独立分区
+`persist:figma`（跨分区 in-tab 导航被守卫拦下改新开页签，含页内链接/地址栏/工具三入口）。
+**写面（点击/输入）本批不存在**——需权限门先落地，见 muse
+`docs/plans/2026-07-30-sidebar-automation-plan.md` B 批。
 
 **降级链**（工具不可见时逐级回落，均如实报告）：① 终端 session / Codex / 云端 → 本表动作走
 既有脚本（luca-open.sh / luca-sidebar.sh）；② app 内嵌 session 里 `/exit` 落 shell 后手动重跑
 `claude` → 无 `--mcp-config`，工具消失属预期非故障，走脚本；③ 工具调用报"app 未运行/通道
 不可用" → 如实报告，不臆造工作台状态；④ **内嵌 session 里工具静默缺席** = config 守卫
 fail-open（坏 config 裸启动）或 app 尚未重启到含 MCP 的版本 → 预期非故障，走脚本。
-**与 luca-sidebar.sh 的分工**：meta 面（面板/页签清单）二者重叠——工具可见时 workspace_state
-优先；capture 面（网页正文抓取）仍归 luca-sidebar.sh，工具不覆盖。
+**与 luca-sidebar.sh 的分工（2026-07-30 改口）**：meta 面（面板/页签清单）二者重叠——工具可见时
+workspace_state 优先；capture 面**已部分吸收**——`sidebar_read` 覆盖**浏览器面板的指定页签**
+（脚本只能读当前激活面板），而 **X / YouTube / Claude Design 三个面板的正文抓取仍归
+`luca-sidebar.sh capture`**，工具不覆盖那三个面板。
 可达性口径（FM-11 内建能力改编版，by-design 不进 skill body）：CLAUDE.md 契约引用 + 内嵌
 session 实调成功即为可达。实现与方案记录：muse 仓 `app/main.js`、`app/mcp-shim.cjs`、
 `docs/plans/2026-07-30-muse-mcp-substrate-plan.md`。
@@ -258,10 +269,13 @@ claude-in-chrome＝act 面（自动化）。判断路径＝语义路由契约的
   mirror shim 亦存活）——需把注意力引到页面具体句子时带上。
 - **交互纪律**：①开页必配一句话告知并引用页面标题，禁静默开页；②先答后开、逐级升不跳级——
   栏内能说清的不开页，页面只用于必须看原件/可视化/需用户操作的场景；③开页前查
-  `workspace_state` 防同 URL 重复开——已开且激活不再开，已开未激活按标题告知「《X》已在
-  侧栏打开」（现无激活工具，缺口由拓展层 web_locate 补，不按序数指称）；④读侧栏页面前声明
-  读的是哪个页签（标题+域名）。焦点：用户显式要求看→切换合理（现 url 分支固定抢焦点）；
-  主动推送场景的「不抢焦点+角标」需 app 层支持，暂以「开完即告知」兜底。
+  `workspace_state` 防同 URL 重复开——已开且激活不再开，已开未激活用
+  `web_locate(url, reveal:true)` 调到前面并按标题告知「《X》已在侧栏打开」（不按序数指称；
+  **关闭页签仍无工具**，收尾只报账不清理）；④读侧栏页面前声明读的是哪个页签（标题+域名）
+  ——非激活页签用 `sidebar_read(url|tabKey)`，X/YouTube/Design 面板仍走
+  `luca-sidebar.sh capture`。焦点：用户显式要求看→切换合理（现 url 分支固定抢焦点）；
+  主动推送场景的「不抢焦点+角标」需 app 层支持（B 批 C1/C2），暂以「开完即告知」兜底；
+  **读面工具已默认不抢焦点**（`reveal:false`，真机实证 display:none 的页签照常可读）。
 - **与「浏览器点名镜像」划界**：镜像管「跟随 luca 自己的浏览」（default-off 防打扰，其
   「未点名不得调 `--url`」审计条款限定在镜像语境）；本条管「我主动要交付/展示的 URL」
   （default-on 交付收口）。对象不同，不冲突，不受「更严格者为准」互吃。

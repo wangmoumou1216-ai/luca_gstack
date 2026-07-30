@@ -482,8 +482,9 @@ gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 sk
   （GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read；兜底 capture）；15s 超时
   =app 未运行，**如实报告不臆造**；完整四步见 appendix「luca app 侧栏感知」。
 - **muse 工具通道（MCP，可见即优先）：** `mcp__muse__*` 工具可见（app 内嵌 session）时，
-  查工作台/截预览像素自验 UI/开文件/网页/分屏 → 优先调工具（workspace_state /
-  preview_screenshot / open_in_view）；不可见（终端/降级/Codex）→ 走上列脚本。
+  查工作台/截像素自验 UI/开文件网页分屏/定位读取导航侧栏页签 → 优先调工具（6 个：
+  workspace_state / preview_screenshot / open_in_view / web_locate / sidebar_read /
+  sidebar_navigate）；不可见（终端/降级/Codex）→ 走上列脚本。
   清单与降级链见 appendix「muse 工具通道」。**侧栏交付面（甲类）：展示类打开归侧栏
   （agent_browser SINGLE 命中不豁免）、Chrome 归自动化、终态拉回侧栏——全文见 appendix
   「luca app 侧栏感知」。**
