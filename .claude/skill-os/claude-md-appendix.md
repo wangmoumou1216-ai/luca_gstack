@@ -177,6 +177,23 @@ luca 连问「你置入到 figma 里面了吗」「打开浏览器到侧边栏�
 
 ---
 
+## muse 工具通道（MCP，2026-07-30）
+
+app 内嵌 claude session 由 app 注入 `--mcp-config`（`~/.luca/mcp/muse-<实例哈希>.json`，
+app 启动时生成），暴露 3 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
+
+| 工具 | 用途 | 何时用 |
+|---|---|---|
+| `workspace_state` | 工作台现状 JSON（panes/分屏/侧栏/预览页签） | 指挥动作前置读；用户提"当前打开的/侧栏/分屏" |
+| `preview_screenshot` | 截预览页签真实像素（返回图 + 全尺寸 PNG 路径） | **改 HTML 后自验 UI（以像素为准），代替"让 luca 看"** |
+| `open_in_view` | 开文件/URL（HTML→侧栏预览，md→文件页签，`target:"split"` 分屏） | 替代 luca-open 的模型主动路径 |
+
+**降级链**（工具不可见时逐级回落，均如实报告）：① 终端 session / Codex / 云端 → 本表动作走
+既有脚本（luca-open.sh / luca-sidebar.sh）；② app 内嵌 session 里 `/exit` 落 shell 后手动重跑
+`claude` → 无 `--mcp-config`，工具消失属预期非故障，走脚本；③ 工具调用报"app 未运行/通道
+不可用" → 如实报告，不臆造工作台状态。侧栏**网页内容**感知仍走 luca-sidebar.sh（capture 面
+向 web 面板，与本表工具互补不重叠）。
+
 ## luca app 侧栏感知（全文，2026-07-11）
 
 用户说"看看我侧栏/当前打开的页面/基于侧栏这个页做…"（语义识别非词表，route-guard STOP 不豁免；不进路由表、无斜杠命令）时：

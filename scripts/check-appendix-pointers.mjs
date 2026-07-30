@@ -28,6 +28,7 @@ const MAPPING = new Map([
   // 引用错位 tie-break：Figma 节经邻节题发现（:536/:542 同串，计数 2 防删一漏一）
   ['Figma 写入后主动开侧栏看结果（全文，2026-07-22 luca 明确指示）', { witness: '「luca app 侧栏感知」', minCount: 2 }],
   ['luca app 侧栏感知（全文，2026-07-11）', { witness: '「luca app 侧栏感知」', minCount: 2 }],
+  ['muse 工具通道（MCP，2026-07-30）', { witness: '「muse 工具通道」', minCount: 1 }],
   ['harness 注入边界（规则优先级第 2 层的适用范围，2026-07-28）', { witness: '「harness 注入边界」', minCount: 1 }],
 ]);
 

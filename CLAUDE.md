@@ -481,6 +481,10 @@ gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 sk
   基于侧栏这页做…"→ `bash scripts/luca-sidebar.sh` 取 meta；取内容**源头优先于 DOM**
   （GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read；兜底 capture）；15s 超时
   =app 未运行，**如实报告不臆造**；完整四步见 appendix「luca app 侧栏感知」。
+- **muse 工具通道（MCP，可见即优先）：** `mcp__muse__*` 工具可见（app 内嵌 session）时，
+  查工作台/截预览像素自验 UI/开文件开分屏 → 优先调工具（workspace_state /
+  preview_screenshot / open_in_view）；不可见（终端/降级/Codex）→ 走上列脚本。
+  清单与降级链见 appendix「muse 工具通道」。
 
 ---
 
