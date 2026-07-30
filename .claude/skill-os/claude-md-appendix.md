@@ -185,19 +185,24 @@ app 启动时生成），暴露 3 个 `mcp__muse__*` 工具（server：app 内 u
 | 工具 | 用途 | 何时用 |
 |---|---|---|
 | `workspace_state` | 工作台现状 JSON（panes/分屏/侧栏/预览页签） | 指挥动作前置读；用户提"当前打开的/侧栏/分屏" |
-| `preview_screenshot` | 截预览页签真实像素（返回图 + 全尺寸 PNG 路径） | **改 HTML 后自验 UI（以像素为准），代替"让 luca 看"** |
-| `open_in_view` | 开文件/URL（HTML→侧栏预览，md→文件页签，`target:"split"` 分屏） | 替代 luca-open 的模型主动路径 |
+| `preview_screenshot` | 截预览页签真实像素（返回图 + 全尺寸 PNG 路径）；**会打开侧栏并激活目标页签** | **改 HTML 后自验 UI（以像素为准），代替"让 luca 看"** |
+| `open_in_view` | 开文件/URL（HTML→侧栏预览，md→文件页签，`target:"split"` 分屏——**split 仅对本地文件生效**） | 替代 luca-open 的模型主动路径 |
 
 **降级链**（工具不可见时逐级回落，均如实报告）：① 终端 session / Codex / 云端 → 本表动作走
 既有脚本（luca-open.sh / luca-sidebar.sh）；② app 内嵌 session 里 `/exit` 落 shell 后手动重跑
 `claude` → 无 `--mcp-config`，工具消失属预期非故障，走脚本；③ 工具调用报"app 未运行/通道
-不可用" → 如实报告，不臆造工作台状态。侧栏**网页内容**感知仍走 luca-sidebar.sh（capture 面
-向 web 面板，与本表工具互补不重叠）。
+不可用" → 如实报告，不臆造工作台状态；④ **内嵌 session 里工具静默缺席** = config 守卫
+fail-open（坏 config 裸启动）或 app 尚未重启到含 MCP 的版本 → 预期非故障，走脚本。
+**与 luca-sidebar.sh 的分工**：meta 面（面板/页签清单）二者重叠——工具可见时 workspace_state
+优先；capture 面（网页正文抓取）仍归 luca-sidebar.sh，工具不覆盖。
+可达性口径（FM-11 内建能力改编版，by-design 不进 skill body）：CLAUDE.md 契约引用 + 内嵌
+session 实调成功即为可达。实现与方案记录：muse 仓 `app/main.js`、`app/mcp-shim.cjs`、
+`docs/plans/2026-07-30-muse-mcp-substrate-plan.md`。
 
 ## luca app 侧栏感知（全文，2026-07-11）
 
 用户说"看看我侧栏/当前打开的页面/基于侧栏这个页做…"（语义识别非词表，route-guard STOP 不豁免；不进路由表、无斜杠命令）时：
-① 先跑 `bash scripts/luca-sidebar.sh`（默认 meta）——返回激活面板、当前页 URL/标题、全部页签清单（输出首行为结果 md 路径；15s 超时 = app 未运行/异常，如实报告，绝不臆造页面内容）。
+① 先跑 `bash scripts/luca-sidebar.sh`（默认 meta）——返回激活面板、当前页 URL/标题、全部页签清单（输出首行为结果 md 路径；15s 超时 = app 未运行/异常，如实报告，绝不臆造页面内容）。**`mcp__muse__workspace_state` 可见时本步用它等价代替**（meta 同源超集，见「muse 工具通道」）。
 ② 取内容**源头优先于 DOM**：GitHub → `gh` 拉源头；公网文档/文章 → WebFetch；X /status/ 页 → FxTwitter（`api.fxtwitter.com/<handle>/status/<id>` 无 key 恢复全文）；本地 HTML 预览页签 → 直接 Read meta 给的本地路径；登录墙/动态页无法重取 → `bash scripts/luca-sidebar.sh capture` 抓 DOM 正文兜底。
 ③ 下游接轨：诉求为"评估纳入 skill os / 工作流" → 接 `external-skill-scout`（Workflow）；评估通过要采纳 → 走既有治理轨道（main 落地 + routing-map + /office + workflow-graph + model-routing 三问 + parity 锚点），不为此新建机制。
 ④ 激活面板非网页（如会话面板）→ 如实告知，列页签清单请用户指定。
