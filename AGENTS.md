@@ -585,7 +585,10 @@ Layered routing order:
    reflex unifies the semantic special-case handoffs declared in this file (currently: OD single-point
    handoff, project self-judgment, sidebar sensing, luca-open file preview, etc.; in Claude app-embedded
    sessions these app actions prefer the `mcp__muse__*` tool channel when visible — agents without it,
-   including Codex, use the shell-script paths as the documented degrade route) and covers mapping to
+   including Codex, use the shell-script paths as the documented degrade route; sidebar-delivery rule:
+   show-intent URL opens go to the app sidebar — `open_in_view(url)` or `luca-open.sh --url` — and any
+   browser-automation end state gets pulled back into the sidebar; Chrome automation itself is
+   Claude-only tooling, out of scope for Codex) and covers mapping to
    a skill / a flow / a declared tool action. **Boundary (乙 — NOT dispatch targets):** memory-retrieval
    timing, model-tier selection, checkpoint/compact, the research-default gate, observability rules,
    Coding Discipline, handoff/single-truth-source discipline, and the HTML-output preview push are standing process disciplines

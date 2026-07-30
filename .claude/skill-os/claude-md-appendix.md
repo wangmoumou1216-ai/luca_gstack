@@ -161,11 +161,13 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 不等用户开口。写完不看等于没交付——与「HTML 产物主动推送预览」「能力必须落到日常在用的制品」同源。
 
 **操作接口（2026-07-24 起）：`scripts/luca-open.sh --url <http(s)-url>` 可直接把公开 URL 推进侧栏**
-（内部写唯一路径 meta-refresh shim 再走既有预览管道；仅接 http(s)）。**Figma 开侧栏仍用下方 meta-refresh
-跳转页做法**——保留 file key / node id 兜底链接，跳转失败时仍有信息价值，不迁 `--url`。
+（内部写唯一路径 meta-refresh shim 再走既有预览管道；仅接 http(s)）。**Figma 开侧栏首选
+`open_in_view(url)` 深链直开（2026-07-30 修订，取代原「不迁 --url」裁决；全链与已知边界见
+「luca app 侧栏感知 › 侧栏交付面」）**；下方 meta-refresh 跳转页降为**兜底做法**——保留
+file key / node id 兜底链接，app 接管插页/渲染异常时仍有信息价值。
 `scripts/luca-sidebar.sh` 是**只读**的（只有 `meta` / `capture` 两个模式，问当前开了什么），不写。
 
-**可行做法（2026-07-22 实测跳转生效）：**
+**兜底做法（2026-07-22 实测跳转生效；首选深链直开见上）：**
 1. 在本次 Figma 产出目录写一个跳转页（如 `open-figma.html`）：
    `<meta http-equiv="refresh" content="0; url=https://www.figma.com/design/<fileKey>">`
    加一个可点的兜底按钮（附 file key / 母版帧 node id，跳转失败时仍有信息价值）
@@ -217,6 +219,52 @@ session 实调成功即为可达。实现与方案记录：muse 仓 `app/main.js
   不是 a-priori 可判定的规则，是我的判断被此审计线 bound。
 - **teardown**：作用域在 session 结束 + 显式任务切换时失效；话题切换后要再推前先**重确认**（"还在盯 X 吗？"）。
   无持久 latch、靠我追踪，属**纪律非结构保证**。
+- **诚实定性**：机器无 ambient 自发是结构性的（脚本非调不发）；"我不 over-invoke"是纪律
+  （同 pre-hook HTML 推送可靠性类）、非保证，可接受**因 blast radius 低（一个可关页签）**。
+- **审计否定（限镜像语境，见下「侧栏交付面」划界）**：未点名不得调 `--url`；调用前须能引用 luca 点名原话；lookup 不镜像即便顶层；话题切换后重确认。
+- **边界（须让 luca 知情）**：镜像是**同 URL 在你自己 app session live 载入、跟随主线导航**，
+  **非**我 Claude-in-Chrome 独立浏览器里逐帧点击直播（要逐帧需截图流）；当前 DEFER 实现走预览面板
+  `persist:aihot`，claude.ai 等登录页会显示未登录（要登录态正确须升 BUILD 版走 browser 面板）。
+- **不重复既有 push**：该 URL 若已被 auto-push 覆盖（本地 .html 产物已在预览 / Figma 已开）→ 跳过不双开。
+
+> 以上四条 bullets 原错落在「harness 注入边界」节尾（2026-07-28 插入时被劈开），2026-07-30 归位。
+
+### 侧栏交付面：展示归侧栏，Chrome 归自动化（2026-07-30）
+
+**app 内嵌 session（`mcp__muse__*` 可见）下的双轨分工**：侧栏＝present 面（一切交付与展示），
+claude-in-chrome＝act 面（自动化）。判断路径＝语义路由契约的每请求通用反射——「展示类打开 X」
+是 CLAUDE.md 声明的工具动作（甲类路由目标）；「终态拉回侧栏」是乙类交付纪律（与「HTML 产物
+主动推送」「Figma 写入后开侧栏」同构同源）。
+
+- **展示意图**（任何措辞的「打开/看看/预览 X 给我看」，语义识别非词表）→ `open_in_view(url)`；
+  工具不可见 → `bash scripts/luca-open.sh --url <url>`；两者均不可用 → 才开 Chrome 并如实
+  说明。（本条＝「muse 工具通道」4 级降级链对 URL 展示类的**链尾扩展**，非新链。）
+- **Chrome（claude-in-chrome）正面用途**：需要页内交互、登录态操作、console/网络取证的
+  **自动化**（查找/定位/验证/抓取）。反例：仅为「打开给 luca 看」开 Chrome＝错误路由。
+  **route-guard 对 agent_browser 的 SINGLE 命中不豁免本判断**——展示类语义改道侧栏；
+  SINGLE 照常遵守的对象是自动化语义（语义路由契约原文只写了 STOP 不豁免，本句补齐）。
+- **终态拉回**：Chrome 查找/操作结束后把最终 URL `open_in_view` 进侧栏——Chrome 是查找
+  工具，不是交付面。
+- **Figma 定位链**：先查本地线索（docs/handoff、figma-layer 产出、memory 的 fileKey/node-id）
+  拼深链 `figma.com/design/<fileKey>?node-id=<id>` 侧栏直开（零 Chrome）；线索不足才 Chrome
+  查找，查到即拉回。Figma 页内自动化走 figma MCP，不做侧栏点击。
+  **已知边界（2026-07-30 实测）**：file URL 直开可能命中「桌面 App 接管插页」（非登录墙）——
+  告知 luca 在该页签点一次「Open here instead」（一次性、永久记住浏览器偏好）；即时兜底用
+  embed viewer `figma.com/embed?embed_host=luca&url=<URL-escaped file url>`（已实测渲染画布、
+  登录态正常）。
+- **登录墙**：`persist:aihot` 分区遇登录墙如实报告（capture 输出自带启发式警告），给两条路：
+  luca 侧栏登录一次（密码保险箱可用）或本次改 Chrome 交付。
+- **指给你看**：`#:~:text=` Text Fragment 深链在侧栏 webview 生效（2026-07-30 像素实测，经
+  mirror shim 亦存活）——需把注意力引到页面具体句子时带上。
+- **交互纪律**：①开页必配一句话告知并引用页面标题，禁静默开页；②先答后开、逐级升不跳级——
+  栏内能说清的不开页，页面只用于必须看原件/可视化/需用户操作的场景；③开页前查
+  `workspace_state` 防同 URL 重复开——已开且激活不再开，已开未激活按标题告知「《X》已在
+  侧栏打开」（现无激活工具，缺口由拓展层 web_locate 补，不按序数指称）；④读侧栏页面前声明
+  读的是哪个页签（标题+域名）。焦点：用户显式要求看→切换合理（现 url 分支固定抢焦点）；
+  主动推送场景的「不抢焦点+角标」需 app 层支持，暂以「开完即告知」兜底。
+- **与「浏览器点名镜像」划界**：镜像管「跟随 luca 自己的浏览」（default-off 防打扰，其
+  「未点名不得调 `--url`」审计条款限定在镜像语境）；本条管「我主动要交付/展示的 URL」
+  （default-on 交付收口）。对象不同，不冲突，不受「更严格者为准」互吃。
 
 ---
 
@@ -264,11 +312,7 @@ session 实调成功即为可达。实现与方案记录：muse 仓 `app/main.js
 
 **已知残留（不粉饰）：** 窄正则追不上自然语言，措辞刁钻的研究诉求仍会漏；
 提示钉提高叫醒率但**不保证**叫醒。本节是降低复发率的手段，不是消除。
-- **诚实定性**：机器无 ambient 自发是结构性的（脚本非调不发）；"我不 over-invoke"是纪律
-  （同 pre-hook HTML 推送可靠性类）、非保证，可接受**因 blast radius 低（一个可关页签）**。
-- **审计否定**：未点名不得调 `--url`；调用前须能引用 luca 点名原话；lookup 不镜像即便顶层；话题切换后重确认。
-- **边界（须让 luca 知情）**：镜像是**同 URL 在你自己 app session live 载入、跟随主线导航**，
-  **非**我 Claude-in-Chrome 独立浏览器里逐帧点击直播（要逐帧需截图流）；当前 DEFER 实现走预览面板
-  `persist:aihot`，claude.ai 等登录页会显示未登录（要登录态正确须升 BUILD 版走 browser 面板）。
-- **不重复既有 push**：该 URL 若已被 auto-push 覆盖（本地 .html 产物已在预览 / Figma 已开）→ 跳过不双开。
+
+> （原挂此处的四条「浏览器点名镜像」bullets 系 2026-07-28 本节插入时被劈开的错位段，
+> 2026-07-30 已归位回「luca app 侧栏感知 › 浏览器点名镜像」节，约束原文不变。）
 

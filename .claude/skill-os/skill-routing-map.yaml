@@ -171,6 +171,10 @@ builtin_skills:
     skill: agent-browser
     hint: "→ 建议使用内置 skill: agent-browser（浏览器截图/交互）"
     weight: 7
+    # 2026-07-30 侧栏交付面：app 内嵌 session（mcp__muse__* 可见）下，"打开网页"类词若语义为
+    # 展示类打开（给 luca 看）→ 由 CLAUDE.md「侧栏交付面」改道 open_in_view 侧栏，SINGLE 命中
+    # 不豁免该语义裁决；本词条继续承载自动化语义（页内交互/截图取证）。词表本体不动（route-guard
+    # 无法表达工具可见性条件，分流只能在语义层做）。
     triggers: [截图, 竞品截图, 浏览网站, 访问网页, 打开网页, 浏览器操作, 看看竞品]
 
   lark_im:
