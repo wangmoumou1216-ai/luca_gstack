@@ -1,17 +1,20 @@
 # Routing Chain-Check — dispatch 前链路检查（唯一真值源）
 
 > **Defining constraint：只补被逐 skill 契约调查证实的缝隙——两个裸奔点的研究前置、设计产出的
-> OD-first 执行面、端到端意图的确认门；其余 skill 自带硬门禁（`NEEDS_CONTEXT`/`BLOCKED`/`⛔`），
-> 路由层不重复拦。** CLAUDE.md 语义路由契约只放速记指针，勿在别处复制全文。
+> OD-first 执行面、端到端意图的确认门、评审请求的对象分流；其余 skill 自带硬门禁
+> （`NEEDS_CONTEXT`/`BLOCKED`/`⛔`），路由层不重复拦。** CLAUDE.md 语义路由契约只放速记指针，
+> 勿在别处复制全文。
 > 背景：2026-07-13 luca——单 skill 命中会坍缩链路意图（写 PRD 前该不该先调研？出设计该走 OD 全链），
 > 但逐 skill 读输入契约后确认多数 skill 自拦，路由层只该管 skill 管不到的 dispatch 前 junction。
 
 ## 触发
 
-语义路由把意图映射到目标能力之后、dispatch 之前，过一遍下面三规则。全部是语义判断
-（route-guard 关键词层不参与）；keyword 层 fixture 不测本协议，semantic 层 fixture 测。
+**R1/R2/R3** 在语义路由把意图映射到目标能力之后、dispatch 之前过一遍——它们是"已选定目标后的
+junction"。**R4 在映射阶段就生效**（评审请求的失效形态恰恰是"没映射上"或"映射错"：STOP 漏网、
+或词表 SINGLE 命中了对象不符的 skill），故它在 R1-R3 之前先跑。全部是语义判断（route-guard
+关键词层不参与决策，只出提示钉）；keyword 层 fixture 不测本协议，semantic 层 fixture 测。
 
-## 三规则
+## 四规则
 
 **R1 · 研究前置（仅裸奔点 brainstorm / ux-brainstorm）**
 这两个 skill 缺研究输入时会静默 cold-start 产薄产物、不报警（其 SKILL.md Phase 0.1 声明的行为）。
@@ -32,7 +35,34 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 多产物组合诉求可建议 `/auto`），**问一句确认后进入**——确认即 SF-003「用户主动选择」，
 红线：不得跳过确认静默进整链。
 
-## Ask 纪律（与三规则同权重）
+**R4 · 评审请求（资产索引 + 证据标准，非决策树）**
+意图 = 让我评审/复审/review 已产出的东西 → 先判**评审对象**再定形态。语义判断：STOP 不豁免，
+**词表 SINGLE 命中同样不豁免**（"评审"类泛词曾把任何评审意图送进 ux-audit）。
+
+*框架里有这些评审资产*（**索引不是决策树**——它们各有既定契约，对上了直接用、省得重造；
+**对不上时自建评审编排优于硬套**，如按场景定制攻击维度的独立 agent。表内资产不是白名单）：
+
+| 评审对象 | 资产 | 契约要点 |
+|---|---|---|
+| 代码/改动批（含框架文件） | `/code-hygiene` 模式 D | 输入三选一：`WORKTREE_DIFF`（默认，覆盖"刚改完没提交"）/ `BASE_SHA`+`HEAD_SHA` / `FILE_SET` |
+| 设计决策文档 / 提案 / 计划 | `redteam`（按名调用） | 有显式 target 即以 target 为对象；框架治理场景产出落 `framework-audit/` |
+| 渲染页面 / 原型 | `/ux-audit` | 截图为强制输入（其 Phase 0 自拦） |
+| workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
+| 正式 PR / 整分支 | 提示用户可跑原生 `/code-review` | 计费、仅用户可触发，我不代跑 |
+| 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
+
+*证据标准（**下限非上限**——做得更多永远合法；严禁用打勾替代"针对这个场景该攻什么"的思考）*：
+①验证者独立于修复者，冷启动派发、不给会话历史与实现过程（07-03）②default-REFUTE，证伪不了才放行
+③有可运行物时深审须含真跑运行时分区，纯静态视角会集体漏运行时崩溃（07-28）④基建故障导致的缺票轮
+不算完成轮，先补票再出结论（07-16）⑤评审后的任何改动都要发回做终版闭合，循环上限 2 轮（07-24/07-30）
+⑥宣称"测试覆盖了"时做 mutation 抽查（把代码改坏看测试转不转红，07-24）⑦复犯检查：过一遍
+observability active rules，看有没有重犯用户已明确指出过的问题。模型档位与串并行规则**不在此处**——
+真值源 `model-routing.yaml` + `feedback_serial-subagents-default`。
+
+*退场条件*：harness 原生具备评审分流能力，或实测显示本索引的判断劣于直接语义判断 → 分流部分退场，
+只留资产索引与证据标准（比照 `model-routing.yaml` 的 `native_precedence` 活规则）。
+
+## Ask 纪律（与四规则同权重）
 
 - 只问「要不要加上游 / 走哪条链」这**一个**决定，一次问清。
 - 输入、场景、深度**由各 skill Phase 0 自问**——路由层问了就是双重打扰（唯一反例：R1 那一句
@@ -49,6 +79,8 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 - 判据永远指针到 `optional-workflow-graph.yaml`（research_default / design_output /
   recommended_paths），本文件不复述其内容。
 - 本协议的度量归 `memory/evals/routing/` semantic 层 fixture（`ask:research-first` /
-  `flow:od-design` 形态）；路由类纠正按 correction-attribution 附加动作回流 fixture。
+  `flow:od-design` / `review:dispatch` 形态）；路由类纠正按 correction-attribution 附加动作回流 fixture。
+- R4 的资产表随框架资产变动同步（新增/退役评审资产改这一处）；证据标准条目只收**用户明确指示过
+  且从真实返工提炼**的，不收推想出来的"好实践"——凑条数会把下限清单变成打勾表。
 
 <!-- FILE_END: skill-os/routing-chain-check.md -->

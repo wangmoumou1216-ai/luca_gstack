@@ -580,7 +580,8 @@ Layered routing order:
    requirements do NOT qualify). Resolve: high confidence → route directly; several plausible → ask one
    question; substantial feature/code requirement → check the Plan Agent 5 conditions first; before
    dispatch, run the chain-check (R1 research-first for the two bare spots brainstorm/ux-brainstorm /
-   R2 OD-first for design output / R3 end-to-end confirm — full text
+   R2 OD-first for design output / R3 end-to-end confirm / R4 review requests routed by review
+   *object* — an asset index, not a decision tree — full text
    `.claude/skill-os/routing-chain-check.md`). This one
    reflex unifies the semantic special-case handoffs declared in this file (currently: OD single-point
    handoff, project self-judgment, sidebar sensing, luca-open file preview, etc.; in Claude app-embedded
@@ -602,7 +603,9 @@ Layered routing order:
 Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
 `design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`,
 `compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 11-item
-hidden/advanced roster as CLAUDE.md).
+hidden/advanced roster as CLAUDE.md). **Review carve-out:** when the user explicitly asks for a
+review, picking a review asset per routing-chain-check R4 is not "proactive recommendation" — the
+user asked for the review; which asset serves it is an execution detail.
 
 Muse additions (muse product line — on the single truth source `main` since 2026-07-16):
 

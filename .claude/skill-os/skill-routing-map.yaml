@@ -69,7 +69,11 @@ project_skills:
   ux_audit:
     invoke: "/ux-audit"
     weight: 7
-    triggers: [评审, UX问题, 页面评审, 体验评审, UX评审, 评审这个页面, 挑毛病, 有什么问题, 给建议]
+    # 2026-07-31 撤四个零对象泛词（评审/挑毛病/有什么问题/给建议）：它们把**任何**评审意图硬映射到
+    #   这个强制截图的页面 skill（实测 `评审代码`/`帮我评审一下刚才那份计划` 全 SINGLE 落此，
+    #   EP-20260714-075 实录误报）。撤后落 STOP → route-guard 评审轴提示钉 → routing-chain-check R4
+    #   按评审对象分流（页面对象仍回本 skill）。保留的复合词全部含"页面/UX/体验"对象信息。
+    triggers: [UX问题, 页面评审, 体验评审, UX评审, 评审这个页面, 页面有什么问题, 页面挑毛病]
 
   figma_layer:
     invoke: "/figma-layer"
@@ -104,8 +108,13 @@ project_skills:
   code_hygiene:
     invoke: "/code-hygiene"
     weight: 6
-    # 工程域代码约束（非设计 skill）。Iron Law 完成前验证 + 8 清理算子。
-    triggers: [代码清理, 清理代码, 死代码, 删死代码, 代码去重, 弱类型, 代码质量, 代码体检, 工程体检, 完成前验证, 代码审查, cleanup, code-hygiene, 清理冗余]
+    # 工程域代码约束（非设计 skill）。Iron Law 完成前验证 + 8 清理算子 + 模式 D 改动评审。
+    # 2026-07-31 只收**对象绑定**的评审词。不收泛动词（review一遍/你review/审一遍/复查一遍）：
+    #   ①零对象却硬编码目的地 = 重造 ux_audit 那种误路由陷阱，与 R4 按对象分流自相矛盾；
+    #   ②`preview一下` ⊃ `review一下`、`preview代码` ⊃ `review代码`（子串匹配，muse 语境高频）；
+    #   ③`审一遍` ⊂ `评审一遍`，会把"评审一遍这个页面"高置信误派来这里。
+    #   泛动词 review 意图走 STOP → 评审轴提示钉 → R4 语义分流。`检查一下` 亦不收（撞 web_access `查一下`）。
+    triggers: [代码清理, 清理代码, 死代码, 删死代码, 代码去重, 弱类型, 代码质量, 代码体检, 工程体检, 完成前验证, 代码审查, 代码评审, 评审代码, 代码review, cleanup, code-hygiene, 清理冗余]
 
   code_recon:
     invoke: "/code-recon"

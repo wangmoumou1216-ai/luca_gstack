@@ -210,7 +210,15 @@ function projectGate(prompt, projects, currentProject) {
   // with a framework path/artifact — so downstream-project cleanup (which DOES
   // want a project) is not over-exempted. Lets /code-hygiene surface via skill
   // routing for genuine self-maintenance with no active project.
-  if (/清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量/.test(prompt) &&
+  // Guarded by !named (same as C2 above): naming an existing project must still
+  // gate — else "清理一下 muse 里 scripts/ 的死代码" silently swallows the switch
+  // and runs against the wrong project (红线 SC-20260523-002). 2026-07-31: 评审动词
+  // 同批纳入（否则框架自评审在无激活项目时被 PROJECT_STOP，而 meta session 又不得
+  // switch）；latin 词写容空格形，因本处读原文 prompt 而词表读 normalize 去空格后的
+  // 文本，不容空格会出现"词表中了、豁免没中"的错配。边界：仍要求共现框架路径/制品词，
+  // 故"评审一下我刚做的框架改动"（无路径字样）仍走 gate——有意保守，不为评审拆松 gate。
+  if (!named &&
+      /清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量|代码审查|代码评审|评审代码|代码\s*review/.test(prompt) &&
       /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/.test(prompt)) {
     return null;
   }
@@ -541,10 +549,25 @@ function buildDecision(prompt) {
   return { ...skillResult, complexityScore: complexity.complexityScore, signals: complexity.signals, hasActiveProject: !!currentProject, planHint: complexity.complexityScore >= 6 };
 }
 
+// 评审轴提示钉（2026-07-31）。刻意是**独立分支**：不进 complexityScore、不挂 hasActiveProject——
+//   ① 7 个复杂度信号全在构建轴，"review 一遍你做的内容"恒 0 分，挂上去钉子永不出现；
+//   ② 若做成第 9 个复杂度信号，会把"评审一下这个复杂功能"从 4 分推到 6 分误触 PLAN_MODE；
+//   ③ STOP 与 PROJECT GATE 两条路径都要出——框架/meta session 常无激活项目，评审请求会被 gate
+//      的">5字陈述句"兜底网吃掉；gate 决策不动（评审下游项目代码同样该先确认项目），但提示跟到。
+//   覆盖面含被撤的 ux_audit 泛词语义（挑毛病/有什么问题/给建议）：撤词是为停掉"任何评审意图→
+//   截图 skill"的错误确定性，若提示钉不接住，这些句子就从"错的确定"退成"完全裸奔"=净变差。
+//   latin 词必须带边界（preview⊃review）；研究轴优先（"评估一下这个架构设计"属研究不属评审）。
+//   只出提示、不参与路由决策，故误报代价仅一行多余提示——宁宽勿窄。
+function reviewAxisHint(decision) {
+  if ((decision.signals || []).includes('研究/认知诉求')) return '';
+  if (!/评审|复审|审一遍|审查一下|复查|把关|挑毛病|有什么问题|有没有问题|给建议|(^|[^a-z])review([^a-z]|$)/i.test(prompt)) return '';
+  return '\n[route-guard] 🔎 评审请求信号——按 CLAUDE.md「语义路由契约」过 .claude/skill-os/routing-chain-check.md R4：先判**评审对象**（代码/设计文档/页面/skill 产出/翻案），对上既有资产就用，对不上自建评审编排；证据标准（验证者独立于修复者、default-REFUTE、有可运行物须含真跑分区、缺票轮不算完成轮、改动后发回终版闭合）是下限不是上限。';
+}
+
 function decisionToHints(decision) {
   switch (decision.decision) {
     case 'PROJECT_STOP': {
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}`;
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}` + reviewAxisHint(decision);
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
     }
@@ -593,14 +616,16 @@ function decisionToHints(decision) {
       // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
       // 2026-07-28：研究轴与构建轴分文案。同一颗钉子，但"搞懂某事"和"做某事"该被提醒的
       // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
+      // 2026-07-31：评审轴走共享 helper reviewAxisHint（STOP 与 PROJECT GATE 两路复用，见其上注释）。
       const researchAxis = (decision.signals || []).includes('研究/认知诉求');
+      const reviewReminder = reviewAxisHint(decision);
       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
         ? (researchAxis
           ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 CLAUDE.md「语义路由契约」在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
           : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
         : '';
       return [
-        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + complexReminder,
+        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + reviewReminder + complexReminder,
       ];
     }
     default:

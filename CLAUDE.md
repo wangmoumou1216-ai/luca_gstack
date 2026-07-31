@@ -275,7 +275,9 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 `redteam`、`evals`、`retro`、`careful`、`compare`、`figma-demo`、`magicpath`。
 这些不作为一级斜杠命令暴露，不在 `/office` 展示，不主动推荐；需要时由
 agent 直接读取对应 skill 文件或用 Skill 工具按名调用（如 `open-design` 的界面产出
-备选链仍可内部 dispatch `magicpath`）。
+备选链仍可内部 dispatch `magicpath`）。**评审 carve-out：** 用户明确要求评审/复审时，按
+routing-chain-check R4 复用其中的评审资产不受"不主动推荐"限制——用户要的就是评审，选哪个资产
+是执行细节不是主动推销。
 **兼容语义：** 用户说「写 PRD」时路由到 `/brainstorm`；不再暴露独立 `/prd` 命令。
 
 **使用即留任原则（skill 输入面治理）：** 一级 skill 连续 60 天 `skills_used` 零记录 → 治理复盘时降级为隐藏（撤一级入口：斜杠命令+路由词表+/office 展示；磁盘目录/逻辑零删除）；用户明确要求恢复一级曝光随时可逆（加回路由词条+命令+表行）。
@@ -310,7 +312,8 @@ route-guard 是跑在我读到 prompt 前的关键词粗网、无语义能力：
 / 工程链 / Plan Agent）/ 本文件声明的工具动作（含 muse 工具通道），据此路由，不等用户说对触发词。分寸闸双向：① STOP /
 漏命中 ≠「无 skill」，含义对上就路由；② 真·单文件 / 机械 / 一次性小改动走平凡任务豁免、不硬套 skill/流程。
 裁决：高置信直接路由；多个合理一次一问；实质功能 / 代码需求先过 Plan Agent 5 条件；dispatch 前过
-**链路检查**（R1 研究前置-仅裸奔点 / R2 OD-first / R3 端到端确认，全文 `.claude/skill-os/routing-chain-check.md`）。
+**链路检查**（R1 研究前置-仅裸奔点 / R2 OD-first / R3 端到端确认 / R4 评审请求按对象分流-资产索引非决策树，
+全文 `.claude/skill-os/routing-chain-check.md`）。
 **边界（乙类不适用）**：
 记忆检索时机、模型选档、checkpoint、research 门、observability、Coding Discipline、handoff/单真值源纪律是
 **常驻过程纪律、非路由目标**，靠 hook 确定性或编排层强制，不塞进"按含义路由"（用户显式点名某项仍照做——
@@ -345,7 +348,8 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
   不是一级 skill
 
 隐藏/高级 skill 不做主动入口；除非用户明确要求使用某个高级 skill，
-否则优先路由到一级可见 skill。
+否则优先路由到一级可见 skill。（评审场景例外同上：用户要评审即可按 R4 选评审资产，
+不必点名具体 skill。）
 
 **不得直接回答用户请求而绕过对应 skill。Skill 有专门的执行流程。**
 **平凡任务豁免（EP-20260703-056）：** **仅**真·单文件/纯机械/一次性小改动且 skill 流程不增值 →
