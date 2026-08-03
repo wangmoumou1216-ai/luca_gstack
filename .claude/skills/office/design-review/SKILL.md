@@ -234,8 +234,13 @@ output = os.environ.get('_OUTPUT', '')
 mode = os.environ.get('_MODE', '')
 try:
     state = yaml.safe_load(open('.claude/workflow-state.yaml')) or {}
-except:
-    state = {}
+except Exception as e:
+    # 解析失败绝不能落到 state={}：下面是整文件 yaml.dump 覆写，
+    # 空字典会把 topic/scene 与其它全部节点一次性擦除（实测可复现）。
+    # 失败时报错退出、保留原文件，由人工修复后重跑。
+    import sys
+    print(f'ERROR: workflow-state.yaml 解析失败，已放弃写入以免擦除既有状态: {e}', file=sys.stderr)
+    sys.exit(1)
 state.setdefault('nodes', {})[node] = {
     'status': status,
     'mode': mode,

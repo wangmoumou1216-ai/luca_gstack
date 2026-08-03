@@ -275,8 +275,14 @@ topic = os.environ.get('_TOPIC', 'unknown')
 result = os.environ.get('_RESULT', 'FAILED')
 try:
     state = yaml.safe_load(open('.claude/workflow-state.yaml')) or {}
-except:
-    state = {}
+except Exception as e:
+    # 解析失败绝不能落到 state={}：下面是整文件 yaml.dump 覆写，空字典会擦除
+    # topic/scene 与其它全部节点；更糟的是 state.get('iteration', 0) 会读到 0，
+    # 把连续失败计数静默归零——session-restore.mjs 的「已连续失败 N 次」告警随之失效。
+    # 失败时报错退出、保留原文件，由人工修复后重跑。
+    import sys
+    print(f'ERROR: workflow-state.yaml 解析失败，已放弃写入以免擦除既有状态与 iteration 计数: {e}', file=sys.stderr)
+    sys.exit(1)
 current_iter = state.get('iteration', 0)
 state['iteration'] = (current_iter + 1) if result == 'FAILED' else 0
 state.setdefault('nodes', {})['handoff-review'] = {

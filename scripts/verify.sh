@@ -78,6 +78,7 @@ check C13 "project-scope-guard.mjs 语法合法" "node --check .claude/hooks/pro
 check C14 "会话级项目隔离回归通过（重定向/deny/跨session/fail-open）" "npm run test:project-scope --silent"
 check C15 "session-end.mjs 语法合法"   "node --check .claude/hooks/session-end.mjs"
 check C16 "self-model 与磁盘一致（audit F4-05）" "npm run check:self-model --silent"
+check C17 "workflow-state 写入块坏 yaml 时拒写（不擦除既有状态）" "python3 scripts/test-workflow-state-guard.py"
 echo ""
 
 echo "[ Skill 体系 ]"
