@@ -53,13 +53,6 @@ nodes:
     gate_result: ""
     handoff_path: ""
     ai_native_summary: ""
-  design-review:
-    status: PENDING
-    mode: ""
-    output: ""
-    completed_at: ""
-    gate_result: ""
-    handoff_path: ""
   html-prototype:
     status: PENDING
     output: ""
@@ -119,19 +112,6 @@ nodes:
     gate_result: ""
     handoff_path: ""
     description: "轻量 PRD（superpowers plugin）"
-  handoff-review:
-    status: PENDING
-    output: ""
-    completed_at: ""
-    gate_result: ""
-    handoff_path: ""
-    result: ""
-  taste-review:
-    status: PENDING
-    output: ""
-    completed_at: ""
-    gate_result: ""
-    handoff_path: ""
   evals:
     status: PENDING
     output: ""

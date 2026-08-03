@@ -142,8 +142,8 @@
 
 - `/html-prototype` — 读组件映射表和 12 状态，生成 HTML 原型
 - `/figma-layer` — 基于原型还原 Figma
-- 高级 design-review — 前置审查检查 12 节完整性，后置验收对照实现
-- 高级 taste-review — 可在任意阶段重新跑 8 锚点品味检查
+- `redteam` — 给它这份 design-brief 当 target，会自动挂载 12 节完整性核查与 8 锚点判据
+  （见 `redteam/SKILL.md` 判据挂载表；2026-08-03 起取代原 design-review / taste-review 两个零使用 skill）
 - 高级 redteam — 质疑本次决策的最脆弱假设
 
 ## 这个 skill 的立场

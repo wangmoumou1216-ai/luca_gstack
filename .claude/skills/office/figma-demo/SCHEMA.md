@@ -151,10 +151,10 @@ QA JSON：docs/prototype/YYYY-MM-DD-{topic}/qa-results.json
 **本步决定了什么：**
 {流程节点结构、节点间过渡关系、所有交互逻辑、演示模式}
 
-**高级 handoff-review 需要知道：**
+**下游交付审查（redteam，target=figma 产出）需要知道：**
 {节点总数、状态覆盖情况、母版使用情况、Builder调度中的特殊决策}
 
-**高级 handoff-review 不应该做：**
+**下游交付审查不应该做：**
 {不应质疑已通过Socratic验证的映射关系、不应要求修改演示模式的键位绑定}
 
 **下游 /figma-layer 需要知道：**

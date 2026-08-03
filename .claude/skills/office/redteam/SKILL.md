@@ -32,6 +32,24 @@ echo "BRANCH: $_BRANCH"
 不去扫 docs/ 全量（对齐 `input-modes.yaml` 的 `target_artifacts_or_problem`）。没给 target →
 读 docs/ 下所有已产出文件，建立当前决策链路的完整图谱。
 
+**判据挂载（确定对象后按下表取用，只读命中行、不全量加载）**：框架已积累的领域判据分散在各专用
+评审资产内，而那些资产的流程外壳（截图门 / 固定 Phase / 上游产物契约）常拦住它们被用到；本表让
+判据本身在评审时可达，与那些外壳无关。**判据是输入不是门**——读了用于提高质疑质量，不产生阻断。
+
+| target 是 | 取用 |
+|---|---|
+| 渲染页面 / 原型 HTML | `ux-audit/specialists/module-a-visual.md`（间距白名单 / 品牌色 ≤3 处 / 排版 L1-L4 / 构图 8 锚点）+ `module-b-interaction.md`（Nielsen 10 · Norman 7 · WCAG 2.1 AA 7 项） |
+| 上行 + 属 CRM 业务页 | 加 `ux-audit/specialists/module-c-crm.md` 或 `references/crm-business-criteria.md` §1.2-1.5（首屏必要字段 / 高频操作路径 / 信息层级） |
+| 设计决策文档（design-brief / 交互方案 / 原型描述） | `references/ai-native-taste-anchors.md`（8 品味锚点 + §4b 取证表 + 严重性分级）+ `references/ai-native-design-framework.md` §8（AI Slop 10 项反模式）+ `references/ai-native-state-coverage.md`（12 状态覆盖） |
+| target 就是一份 design-brief 产出 | 加一项**完整性核查**：对照 `design-brief/SKILL.md` Phase 7 声明的 12 节清单逐节核对（生产者自己声明了节名锁死，但框架里没有别的角色在查）；若同时有原型，核实现与决策映射表是否一致（组件 variant / 类名） |
+| 代码 / hook / skill 规则 / 计划 / 提案 | **不挂判据表**，用通用对抗（本 skill 的默认形态） |
+
+**发现问题之后**：要决定「自己修还是交人」时读 `references/oracle-vs-taste-criteria.md`——
+oracle 型（可机械核对）才允许自动修，taste 型必须交人，**有歧义一律按 taste 处理**。
+
+上表路径相对 `.claude/skills/office/`。`references/ux-evaluation-framework.md` 是迁移前原件、运行时
+不加载，**不要取用**（其真值源已在上表的 module-a / module-c）。
+
 读取 observability 的短规则和近期反馈摘要，用来检查复犯：
 
 ```bash

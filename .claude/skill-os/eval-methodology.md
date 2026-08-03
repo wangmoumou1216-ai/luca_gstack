@@ -29,7 +29,7 @@ eval:
 
 对照现状归类：tech-spec Phase 5 / task-plan Phase 7 / plan-agent shell 断言 =
 `grader: code` 的 Eval（客观覆盖率，已达标，零改动只归类）；quality-gate Skill Mode /
-muse-proto-judge = `grader: llm-judge`；taste-review / ux-audit = `grader: human`（锚点法）。
+muse-proto-judge = `grader: llm-judge`；ux-audit / redteam 品味锚点检查 = `grader: human`（锚点法）。
 
 ## 2. 轻量四步法
 
@@ -40,7 +40,7 @@ muse-proto-judge = `grader: llm-judge`；taste-review / ux-audit = `grader: huma
 
 **Step 2 — 轻量失败归类（criteria 的唯一合法来源）。**
 禁止脱离数据拍脑袋写 rubric。做法：翻**已发生的真实失败**——episodic 记录、
-`observations.jsonl`、门禁 FAIL 记录、handoff-review FAILED 项、redteam findings——
+`observations.jsonl`、门禁 FAIL 记录、redteam findings——
 归类命名，**失败类别即 criteria 来源；有多少用多少，不凑数**（个人 OS 规模下不搞
 20-50 case 仪式与 open/axial coding 全套编码流程——那是给有海量 trace 的团队设计的）。
 归因约定：只记 **first upstream failure**（LLM 管线是因果系统，级联下游不重复记）。
@@ -53,7 +53,7 @@ muse-proto-judge = `grader: llm-judge`；taste-review / ux-audit = `grader: huma
    （位置/长度/自我偏好）。格式参考 `muse-proto-judge` 的评分卡（逐 AC 二元+证据+
    4 类偏见规避+冷启动隔离，同见 handoff-protocol v3.2 criteria 块 / quality-gate Skill Mode——
    该格式的 judge 校准仍是 aspirational，只作**格式参考**，不当作已验证组件）。禁止无 rubric 的 1-10 整体打分（旧 `Score: N/10` 模式，2026-07-09 废止）。
-3. **human + 锚点**（品味/主观域）：taste-review / ux-audit 保持现状，兼作 llm-judge 校准源。
+3. **human + 锚点**（品味/主观域）：ux-audit 与 design-brief Phase 4 品味检查保持现状，兼作 llm-judge 校准源。
 
 **end-state 优先原则**：grade what the agent produced, not the path——评产出不评过程
 （便宜、可复现、给创造性解法自由）。已知反方主张（Agent-as-a-Judge, arXiv 2410.10934：

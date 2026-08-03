@@ -271,7 +271,7 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 
 **语义兜底（route-guard 词表不中时同样适用）：** 用户描述"筛一遍这堆需求"、"要不要先过一遍再进 brainstorm"这类批量需求预筛意图 → `/muse-req-triage`；"从需求到原型跑一遍完整流程/闭环"这类端到端自治编排意图 → `/muse-loop-orchestrate`；"这假设没数据支撑/得去问问真实用户/怎么验证这个前提"这类**需一手采集但工具还没有**的意图 → `/research-kit`（产提纲问卷，不代采集）；"这些提示语太生硬/空状态该说什么/报错文案改改"这类**界面语言**意图 → `/ux-writing`。
 
-**隐藏/高级 skill：** `challenge`、`handoff-review`、`design-review`、`taste-review`、
+**隐藏/高级 skill：** `challenge`、
 `redteam`、`evals`、`retro`、`careful`、`compare`、`figma-demo`、`magicpath`。
 这些不作为一级斜杠命令暴露，不在 `/office` 展示，不主动推荐；需要时由
 agent 直接读取对应 skill 文件或用 Skill 工具按名调用（如 `open-design` 的界面产出
@@ -380,7 +380,7 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
    `python3 memory/scripts/search_memory.py "<task/topic>" --limit 5` 做任务相关检索。
 1. 读 `CONTEXT.md`——「红线」节约束本 session 全部操作。
 2. 读 `.claude/workflow-state.yaml`：`topic`/`scene` 定当前上下文；有 `IN_PROGRESS` 节点 → 告知用户「上次 session 在
-   {节点名} 中断，是否继续？」；`iteration ≥ 3` → 告知「handoff-review 已连续失败 {N} 次」。
+   {节点名} 中断，是否继续？」。
 3. 有 DONE 节点 → 读 `docs/handoff/` 最新 handoff summary 并遵守其约束（缺文件跳过不报错；
    不读上游完整 SKILL.md 或产出全文，用 handoff summary 替代）。
 4. 涉及 skill 操作时读 `.claude/skills/office/SKILL.md`（共享规范）；执行具体 skill 前跑

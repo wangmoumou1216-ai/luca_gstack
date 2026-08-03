@@ -18,9 +18,9 @@ const GATE_WEIGHTS = { fit: 30, quality: 30, adoption: 20, maintenance: 20 }
 // 非冗余硬门的正常路径是 Load phase 从 self-model 真值文件读活清单。
 const FALLBACK_EXISTING = [
   // luca office skills
-  'idea','brainstorm','deepresearch','ux-research','ux-brainstorm','design-brief','design-review',
-  'taste-review','open-design','magicpath','html-prototype','figma-demo','figma-layer','fx-icon-search',
-  'ux-audit','tech-spec','task-plan','handoff-review','redteam','evals','retro','compare','challenge',
+  'idea','brainstorm','deepresearch','ux-research','ux-brainstorm','design-brief',
+  'open-design','magicpath','html-prototype','figma-demo','figma-layer','fx-icon-search',
+  'ux-audit','tech-spec','task-plan','redteam','evals','retro','compare','challenge',
   'careful','auto',
   // claude-code built-in / globally-installed skills
   'code-review','simplify','verify','security-review','review','init','run','skill-creator','find-skills',

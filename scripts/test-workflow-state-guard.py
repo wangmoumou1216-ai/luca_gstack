@@ -27,11 +27,9 @@ SKILLS = REPO / ".claude" / "skills" / "office"
 TARGETS = [
     ("ux-audit", SKILLS / "ux-audit" / "SKILL.md",
      {"_TOPIC": "t", "_OUTPUT": "o", "_EXTRA_BASELINE": "85"}),
-    ("handoff-review", SKILLS / "handoff-review" / "SKILL.md",
-     {"_TOPIC": "t", "_RESULT": "FAILED"}),
-    ("design-review", SKILLS / "design-review" / "SKILL.md",
-     {"_NODE": "design-review", "_STATUS": "DONE", "_OUTPUT": "o", "_MODE": "m"}),
 ]
+# 原另两处（handoff-review / design-review）已随 2026-08-03 的评审资产整合删除；
+# 若将来有新 skill 内嵌同款 yaml 读-改-写块，加进本表即可（不要复制那段 except 写法）。
 
 GOOD = """topic: 速记
 scene: B

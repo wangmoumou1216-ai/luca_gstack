@@ -23,7 +23,7 @@ context-cost:
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 echo "BRANCH: $_BRANCH"
 _DECISION=$(ls -t docs/decisions/*-design-brief.md 2>/dev/null | head -1)
-_REVIEW=$(ls -t docs/review/*-handoff-review.md 2>/dev/null | head -1)
+_REVIEW=$(ls -t docs/review/*.md 2>/dev/null | head -1)
 echo "DECISION: ${_DECISION:-none}"
 echo "REVIEW: ${_REVIEW:-none}"
 python3 .claude/observability/scripts/get_rules.py retro "*" 2>/dev/null || true
@@ -33,7 +33,7 @@ python3 .claude/observability/scripts/get_rules.py retro "*" 2>/dev/null || true
 
 ## 五问复盘（逐一问，每次只问一个）
 
-**读取 design-brief.md、ux-audit 报告（如有）、handoff-review（如有）作为上下文。**
+**读取 design-brief.md、ux-audit 报告（如有）、评审产出（如有）作为上下文。**
 
 ---
 

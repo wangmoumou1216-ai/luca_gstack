@@ -447,7 +447,7 @@ docs/prototype/YYYY-MM-DD-<topic>/blueprint.yaml
 docs/prototype/YYYY-MM-DD-<topic>/mapping-proof.md
 docs/prototype/YYYY-MM-DD-<topic>/requirement.md
 docs/figma/YYYY-MM-DD-<topic>/figma-spec.md
-docs/review/YYYY-MM-DD-<topic>-handoff-review.md
+docs/review/YYYY-MM-DD-<topic>-<review-type>.md
 docs/evals/YYYY-MM-DD-<topic>-evals.md
 docs/retro/YYYY-MM-DD-<topic>-retro.md
 docs/redteam/YYYY-MM-DD-<topic>-redteam.md
@@ -600,9 +600,9 @@ Layered routing order:
    force them through semantic dispatch (explicit user naming of any item still executes it — the
    exclusion targets semantic recognition, not refusal).
 
-Hidden skill semantics still require explicit user intent: `challenge`, `handoff-review`,
-`design-review`, `taste-review`, `redteam`, `evals`, `retro`, `careful`,
-`compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 11-item
+Hidden skill semantics still require explicit user intent: `challenge`,
+`redteam`, `evals`, `retro`, `careful`,
+`compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 8-item
 hidden/advanced roster as CLAUDE.md). **Review carve-out:** when the user explicitly asks for a
 review, picking a review asset per routing-chain-check R4 is not "proactive recommendation" — the
 user asked for the review; which asset serves it is an execution detail.

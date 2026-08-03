@@ -53,13 +53,13 @@ tiers:
       fable_whitelist P1 单独 dispatch fable 微判官。
     skills: [brainstorm, ux-brainstorm, design-brief, muse-loop-orchestrate,
              deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype,
-             handoff-review, code-hygiene, auto, muse-x-digest]
+             code-hygiene, auto, muse-x-digest]
 
   guided-execution:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
-    skills: [quick-research, idea, ux-research, ux-audit, figma-demo, challenge, taste-review,
-             design-review, code-recon, muse-req-triage, muse-proto-gen,
+    skills: [quick-research, idea, ux-research, ux-audit, figma-demo, challenge,
+             code-recon, muse-req-triage, muse-proto-gen,
              compare, magicpath, research-kit, ux-writing]
 
   mechanical:
@@ -72,7 +72,7 @@ tiers:
 fable_whitelist:
   P0_出门前裁决:
     - "期末合同回验（orchestrator Step 3b 的 RTM 判定 dispatch）"
-    - "交付验收裁决（handoff-review 的 oracle 环节、REQ 终验含验收裁决时）"
+    - "交付验收裁决（REQ 终验含验收裁决时；oracle/taste 判据见 references/oracle-vs-taste-criteria.md）"
     - "不可逆操作前复审（git 批量/发布/覆盖前的独立 review dispatch）"
   P1_对抗判定:
     - "redteam skill 全程"

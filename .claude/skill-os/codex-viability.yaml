@@ -20,7 +20,6 @@ skills:
   challenge: {tier: 1}
   compare: {tier: 1}
   design-brief: {tier: 1}
-  design-review: {tier: 1}
   evals: {tier: 1}
   idea: {tier: 1}
   insight-synthesis: {tier: 1}
@@ -30,7 +29,6 @@ skills:
   research-kit: {tier: 1}
   retro: {tier: 1}
   task-plan: {tier: 1}
-  taste-review: {tier: 1}
   tech-spec: {tier: 1}
   ux-writing: {tier: 1}
   html-prototype: {tier: 1}
@@ -43,7 +41,6 @@ skills:
   quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明该回退**，故 Codex 上强度弱于 Claude 上的同一 skill"}
   code-recon: {tier: 2, degrade: "并行 recon fan-out → 可顺序 recon；skill 正文未写明"}
   code-hygiene: {tier: 2, degrade: "8 算子本就内联；review 段派 quality-gate → 可退单轴/内联"}
-  handoff-review: {tier: 2, degrade: "每节串行 dispatch → 可退内联读 specialist"}
   ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
   figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}
   careful: {tier: 2, degrade: "其 deny 挂 Bash-PreToolUse hook，但该 hook 由 **Claude 读 SKILL.md frontmatter 注册**且路径用 ${CLAUDE_SKILL_DIR}——Codex 无此加载器，故降级为「文档规则+人工自觉」，弱于 Claude；若 Codex 提供等价 skill-hook 注册则可恢复"}

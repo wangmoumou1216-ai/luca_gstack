@@ -146,7 +146,7 @@ python3 .claude/observability/scripts/get_rules.py figma-demo "*" 2>/dev/null ||
       ▼
 ┌──────────────────────────────────────────────────────────┐
 │ Phase 6: 审查衔接                                        │
-│   • 生成 prototype-spec.md（兼容高级 handoff-review）     │
+│   • 生成 prototype-spec.md（供下游交付审查消费）         │
 │   • 运行 html-prototype QA 脚本                           │
 │   • 更新 workflow-state.yaml                              │
 └──────────────────────────────────────────────────────────┘
@@ -855,7 +855,7 @@ cat .claude/skills/office/figma-demo/templates/demo-template.html
 读取 SCHEMA.md，填充产出规格文件。
 写入 `docs/prototype/YYYY-MM-DD-<topic>/prototype-spec.md`
 
-**这份文件兼容高级 `handoff-review` skill。格式必须与 html-prototype 的 SCHEMA 兼容。**
+**格式必须与 html-prototype 的 SCHEMA 兼容**（供下游交付审查消费）。
 
 ### Step 6.1.5：可观测 QA
 

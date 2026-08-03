@@ -49,10 +49,9 @@ if (existsSync(stateFile)) {
   if (inProgressMatch) {
     process.stdout.write(`[session-restore] ⚠️  上次 session 在 "${inProgressMatch[1]}" 节点中断，建议继续或重置状态。\n`);
   }
-  const iterMatch = content.match(/^iteration:\s*(\d+)/m);
-  if (iterMatch && parseInt(iterMatch[1]) >= 3) {
-    process.stdout.write(`[session-restore] ⚠️  handoff-review 已连续失败 ${iterMatch[1]} 次。\n`);
-  }
+  // 顶层 iteration 告警已随 handoff-review 于 2026-08-03 移除：该字段全仓只有
+  // handoff-review 写，而它 69 天零运行 → 字段恒为初始值，告警从未触发过（死代码）。
+  // 将来若有新 skill 需要「连续失败 N 次」语义，自己声明字段名并在此加读取。
 }
 
 // 并发隔离（G2，2026-07-04）：真实 session 的计数/marker 已按 -<sid> 后缀隔离
