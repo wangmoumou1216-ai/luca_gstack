@@ -29,6 +29,7 @@ fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头�
       多候选 "MULTI:<按字母序逗号拼接>"（如 "MULTI:/tech-spec,systematic-debugging"）
       流程 "flow:design-chain"/"flow:od-design"（OD-first 设计产出链）| 语义特例 "special:sidebar"/"special:luca-open"
       链路检查形态 "ask:research-first"（正确响应=按 routing-chain-check R1 先问"先调研还是直接开始"）
+                   | "review:dispatch"（评审请求：按 R4 先判评审对象再选资产或自建编排，2026-07-31）
       平凡任务负样本 "direct"（期望 route-guard 不强路由，落 STOP/NONE，防过度路由）
       歧义多选 "A|B"（任一即中；标签对抗审查确认存在同等合理路由时使用）
     已删词条：special:od（僵尸——OD 交接本就关键词可达 → "/open-design"）；special:html

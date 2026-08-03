@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-07-31 · 评审请求入口）
+
+- **routing-chain-check R4「评审请求」（三规则→四规则）+ route-guard 评审轴提示钉与 Gate 豁免
+  + ux_audit 撤四个零对象泛词 / code_hygiene 收对象绑定评审词 + code-hygiene 模式 D「改动评审」**
+  （luca 追问「我让你 review 时该不该命中框架 skill」）。为什么：实测 `评审代码`/`帮我评审一下
+  刚才那份计划` 高置信落 /ux-audit（强制截图 skill），泛 review 落 STOP 且零提示，框架自评审又被
+  Project Gate 兜底网吃掉；14 条评审纪律仅 2 条固化、其余靠记忆召回。**净效果是解绑不是约束**
+  （luca 同轮追加的设计约束「不得用框架约束模型自有能力」）：撤掉的硬映射多于新增，R4 明写
+  「资产索引非决策树、对不上时自建评审编排优于硬套」、证据标准标注「下限非上限」、并带
+  native_precedence 式退场条件。顺带修红线：Gate 豁免缺 `!named` 守卫（实测"清理一下 muse 里
+  scripts/ 的死代码"今天就在静默吞掉项目切换，SC-20260523-002）。semantic fixture +3
+  （`review:dispatch` 形态）。两轮独立红队 11 MAJOR/14 MINOR 全采纳。
+
 ### Added（2026-07-23 · 对标自我成长 SOP 制度化）
 
 - **benchmark-registry.yaml（repo 级对标基线活登记）+ check_benchmark_drift（每日观察者）+

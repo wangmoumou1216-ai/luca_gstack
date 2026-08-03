@@ -150,7 +150,8 @@
     ".claude/skill-os/routing-chain-check.md": [
       "研究前置",
       "OD-first",
-      "Ask 纪律"
+      "Ask 纪律",
+      "评审请求"
     ],
     ".claude/hooks/session-sync.mjs": [
       "增量重拦",
