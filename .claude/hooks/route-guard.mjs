@@ -552,7 +552,8 @@ function buildDecision(prompt) {
 // 评审轴提示钉（2026-07-31）。刻意是**独立分支**：不进 complexityScore、不挂 hasActiveProject——
 //   ① 7 个复杂度信号全在构建轴，"review 一遍你做的内容"恒 0 分，挂上去钉子永不出现；
 //   ② 若做成第 9 个复杂度信号，会把"评审一下这个复杂功能"从 4 分推到 6 分误触 PLAN_MODE。
-//   **所有决策分支都要出**（不只 STOP）：R4 的两种失效形态是"没映射上"和"映射错"——后者恰恰
+//   挂在 STOP / SINGLE_SKILL / PROJECT_STOP / PROJECT_SWITCH 四支（不只 STOP）：R4 的两种失效
+//   形态是"没映射上"和"映射错"——后者恰恰
 //   表现为高置信 SINGLE（实测"评审一下这份 PRD"→SINGLE /brainstorm，撤 ux_audit 泛词前是 MULTI），
 //   只挂 STOP 等于把 R4 自己点名的第二形态交还给记忆召回。钉不改决策，只多一行文本。
 //   覆盖面含被撤的 ux_audit 泛词语义（挑毛病/有什么问题/给建议）：撤词是为停掉"任何评审意图→
@@ -576,7 +577,10 @@ function decisionToHints(decision) {
       // 框架自维护碰撞（2026-07-31）：产品线名同时是项目名时（如 muse），"清理/评审 muse 的 hook"
       //   会命中命名即切换，而 meta/框架 session 明令不得 switch（踩并行 session 指针）。加信息不改
       //   决策：命中框架路径/制品词时提醒这条例外，由模型判断自己是不是框架 session。
-      const frameworkSelfMaint = /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|框架自/.test(prompt)
+      //   正则**必须与 M3 豁免的第二条件同集**（:220）——两处对"什么算框架制品"的口径分叉，
+      //   就会出现"豁免认它是框架活、警示却不认"的盲区（实测"评审一下 muse 工具通道的 hook 改动"
+      //   曾漏警示，因当时少了 hook|路由 两词）。改一处必须同改另一处。
+      const frameworkSelfMaint = /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/i.test(prompt)
         ? '\n[route-guard] ⚠️ 同时命中框架路径/制品词：若本 session 是框架/meta 维护（非该项目的产品工作），**不要 switch**（会踩并行 session 的激活指针），直接在框架检出上作业。'
         : '';
       const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n命名即切换（点到已有项目名＝切过去，无需确认）：立即执行 ./scripts/project.sh switch "${decision.project}"` + frameworkSelfMaint + reviewAxisHint(decision);
