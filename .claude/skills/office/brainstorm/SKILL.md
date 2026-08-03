@@ -653,6 +653,14 @@ Check the PRD's `Outstanding Questions → Resolve Before Planning` subsection:
 
 Use the AskUserQuestion with these options (adapt wording to user's language):
 
+**Primary-data check (before presenting the menu; hint, not a gate):** scan the PRD's
+Outstanding Questions (both subsections). If any item can only be answered by **primary
+user data** (interviews / surveys / usability tests — e.g. unvalidated user-habit
+assumptions, the Weakest Assumption itself), prepend one line to the menu:
+"⚗ {N} open question(s) need primary data — consider `/research-kit` to design the
+collection instruments first (feeds `/insight-synthesis` once data comes back)."
+No such items → no line. Never block on this.
+
 **When gate is OPEN (Resolve Before Planning is empty):**
 1. Proceed to downstream design (invoke `/ux-research`, `/ux-brainstorm`, `/design-brief`, or
    `/html-prototype` next) — *Recommended*

@@ -269,7 +269,7 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 | `/muse-loop-orchestrate` | 需求→原型自治 Loop 编排器：extract→triage→map→gen→judge 单向链（gen↔judge 有界内循环），自带两个不可省略人类卡点（GATE-1/GATE-2）。触发短语见 `.claude/skill-os/skill-routing-map.yaml`（复合词，不撞现有 brainstorm/html-prototype/design-brief 词条）|
 | `/muse-req-triage` | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单。双入口：独立使用（入口A，筛过再投 `/brainstorm`）或被 `/muse-loop-orchestrate` 内部 dispatch（入口B）|
 
-**语义兜底（route-guard 词表不中时同样适用）：** 用户描述"筛一遍这堆需求"、"要不要先过一遍再进 brainstorm"这类批量需求预筛意图 → `/muse-req-triage`；"从需求到原型跑一遍完整流程/闭环"这类端到端自治编排意图 → `/muse-loop-orchestrate`；"这假设没数据支撑/得去问问真实用户/怎么验证这个前提"这类**需一手采集但工具还没有**的意图 → `/research-kit`（产提纲问卷，不代采集）；"这些提示语太生硬/空状态该说什么/报错文案改改"这类**界面语言**意图 → `/ux-writing`。
+**语义兜底（route-guard 词表不中时同样适用）：** 用户描述"筛一遍这堆需求"、"要不要先过一遍再进 brainstorm"这类批量需求预筛意图 → `/muse-req-triage`；"从需求到原型跑一遍完整流程/闭环"这类端到端自治编排意图 → `/muse-loop-orchestrate`；"这假设没数据支撑/得去问问真实用户/怎么验证这个前提"这类**需一手采集但工具还没有**的意图 → `/research-kit`（产提纲问卷，不代采集）；"这些提示语太生硬/空状态该说什么/报错文案改改"这类**界面语言**意图 → `/ux-writing`；"访谈做完了/收了一批工单反馈/回访记录在手，看看说明了什么"这类**一手定性数据已在手**的意图 → `/insight-synthesis`（observation+interpretation 两层，不臆造语料）。
 
 **隐藏/高级 skill：** `challenge`、
 `redteam`、`evals`、`retro`、`careful`、`compare`、`figma-demo`、`magicpath`。
@@ -280,7 +280,7 @@ routing-chain-check R4 复用其中的评审资产不受"不主动推荐"限制�
 是执行细节不是主动推销。
 **兼容语义：** 用户说「写 PRD」时路由到 `/brainstorm`；不再暴露独立 `/prd` 命令。
 
-**使用即留任原则（skill 输入面治理）：** 一级 skill 连续 60 天 `skills_used` 零记录 → 治理复盘时降级为隐藏（撤一级入口：斜杠命令+路由词表+/office 展示；磁盘目录/逻辑零删除）；用户明确要求恢复一级曝光随时可逆（加回路由词条+命令+表行）。
+**使用即留任原则（skill 输入面治理）：** 判据是**场景**不是时长——先数该 skill 的触发场景在窗口内发生过几次（用上下游产物代理：设计链看 `decisions/*-design-brief.md`、研究链看 `research/`、工程链看 `engineering/`）。**分母为 0 一律不处置**——那是场景没发生，推不出它没价值（luca 长期修框架期间，研究/内容类 skill 的零使用毫无信息量）。场景发生 ≥3 次而它零调用，才降级为隐藏（撤斜杠命令+路由词表+/office 展示；磁盘/逻辑零删除，用户随时可要求恢复）。**两条硬豁免：**①SKILL.md 里声明了低频属性+理由的（如 `/research-kit`「使用节奏天然低频…60 天零使用属预期，非降级信号」）**不适用本规则**；②`skills_used` 字段实测 7 月缺失率 52%（brainstorm 产出 13 份却记 0 次），**不得单独作判据**，以产出文件存在性为准。
 
 **场景说明：A = 新功能设计，B = 已有功能优化，C = 线上评审改版，D = Agent
 化改造（把现有功能从"用户手动"变为"用户监督 Agent"）**
