@@ -562,7 +562,10 @@ function buildDecision(prompt) {
 //   文案只放指针不复制 R4 证据标准（唯一权威落点在 R4，内联副本必漂移）。
 function reviewAxisHint(decision) {
   if ((decision.signals || []).includes('研究/认知诉求')) return '';
-  if (!/评审|复审|审一遍|审查一下|复查一下|复查一遍|把关一下|挑毛病|有什么问题|有没有问题|给点建议|给些建议|(^|[^a-z])review([^a-z]|$)/i.test(prompt)) return '';
+  // 2026-08-03 补：验收/品味/对齐/一致性 —— 实现后评审实测这四类评审意图零命中，
+  // 「对一下 PRD、原型和 figma」还会被 MULTI 误导到 /brainstorm、/figma-layer（去写 PRD 或搭 Figma）。
+  // 「对齐/一致性」收窄为复合词，避免撞「对齐设计稿」这类生产意图。
+  if (!/评审|复审|审一遍|审查一下|复查一下|复查一遍|把关一下|挑毛病|有什么问题|有没有问题|给点建议|给些建议|验收一下|做一次验收|交付验收|品味检查|跑一次品味|对齐检查|一致性检查|是否一致|对不对得上|(^|[^a-z])review([^a-z]|$)/i.test(prompt)) return '';
   return '\n[route-guard] 🔎 评审请求信号——先判**评审对象**（代码/设计文档/页面/skill 产出/翻案）再定形态，别被上面的词表命中带偏：全文 .claude/skill-os/routing-chain-check.md R4（资产索引非决策树，对不上时自建评审编排；证据标准在那里，是下限不是上限）。';
 }
 
@@ -609,10 +612,13 @@ function decisionToHints(decision) {
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：直呼已尊重；执行前按 plan-agent.md 触发条件表自查，满足任一先出计划。`];
     }
     case 'MULTI_SKILL':
+      // 2026-08-03：MULTI 同样挂评审钉。实现后评审实测「对一下 PRD、原型和 figma 是否一致」
+      // 落 MULTI → 候选是 /brainstorm、/figma-layer（生产类 skill），会把一个评审请求
+      // 导向"去写 PRD / 去搭 Figma"。候选相近时评审提示比在单命中时更需要。
       return [
         '[route-guard] 🔀 MULTI — 路由命中多个候选（权重相近，无法自动决策）。\n' +
         '你必须在执行任何操作前，先主动询问用户选择哪个 skill，禁止自行判断。\n' +
-        `候选列表（供用户选择）：${decision.candidates.join(', ')}`,
+        `候选列表（供用户选择）：${decision.candidates.join(', ')}` + reviewAxisHint(decision),
       ];
     case 'STOP': {
       const softCandidates = decision.softCandidates || [];

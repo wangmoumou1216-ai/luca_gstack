@@ -453,12 +453,8 @@ Layer D · 代理层（场景 D 和涉及 agent 的功能强制）：
 
 ### AI Slop 扫描（对照 ai-native-design-framework.md 第 8 节 10 项反模式）
 
-逐项扫一遍，**给出计数**——只写「有无 Slop」等于没扫：
-
-```
-命中项：{逐条列出：反模式名 / 出现位置 / 修复建议}
-Slop 总数：{N}
-```
+按 `SCHEMA.md` §AI Slop 扫描的 **10 行表逐行作答**（每行必须写「有/无」，不允许留空或
+只报总数）——只写「未发现 Slop」等于没扫。逐行答完再算总数。
 
 **处理规则（可判定分级，不是"发现就改"）：**
 `N ≥ 3` → 整体品味不合格，**必须返工**，不得进入 Phase 5；
@@ -708,10 +704,11 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 读取 SCHEMA.md 作为**字段级模版**（其含前 9 节的字段结构；**产出的节清单以下方 12 节为准**——SCHEMA 未含的「可追踪完整矩阵 / Design Generation Packet / Tool Consumption Contract」三节按 Phase 6.5 / 6.75 产出补入，不得因 SCHEMA 缺节而漏产），写入：
 `docs/decisions/YYYY-MM-DD-<topic>-design-brief.md`
 
-**产出文件必须包含以下所有节（节名锁死，MagicPath、外部设计生成器、html-prototype 和高级审查依赖）：**
+**产出文件必须包含以下所有节（节名锁死）：** MagicPath / 外部设计生成器 / html-prototype /
+tech-spec / figma-layer 依赖第 4、7 节；**`redteam` 判据挂载表按本清单逐节做完整性核查**。
 
 1. 设计坐标系（Phase A 产出）
-2. **原生AI深度思考小结**（Phase 1 产出，节名对齐高级前置审查，内部扩展为四层）
+2. **原生AI深度思考小结**（Phase 1 产出，内部扩展为四层）
 3. **假设挑战结论**（Phase 2 产出）
 4. **体验验证结论**（Phase 3 产出，含 12 状态覆盖表）
 5. **品味检查四锚点**（Phase 4 产出，节名保持不变，内部扩展为 8 锚点）
@@ -723,8 +720,9 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 11. REMOVED 记录（场景 B / D 专有）
 12. **交接块**（下游恢复索引；不得包含正文没有的新事实）
 
-**节名约束说明：** 为保持与高级前置审查的兼容，第 2/3/4/5/7
-节的节名必须与原版保持一致。内部扩展（如四层思考 / 12 状态 / 8 锚点）
+**节名约束说明：** 第 2/3/4/5/7 节的节名必须与原版保持一致——下游按节名定位内容
+（第 4、7 节由 html-prototype / tech-spec / figma-layer / magicpath 直接消费；
+第 2/3/5 节由 `redteam` 的 12 节完整性核查消费）。内部扩展（如四层思考 / 12 状态 / 8 锚点）
 放在节的子结构里。
 
 **写入 CONTEXT.md 长期记忆：**
@@ -776,7 +774,7 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 场景：{A / B / C / D}
 
 AI Native：{范式}，决策 {N}→{N'} 次，路径 {N}→{M} 步
-品味检查：{通过 / 阻断项: X / 警告项: Y}
+品味检查：{通过 / 阻断项: X / 警告项: Y}；Slop: {N}
 决策清单：{N} 条（每条 8 字段）
 组件映射：{N} shadcn + {M} 自绘
 状态覆盖：{12 / 12}
@@ -820,7 +818,7 @@ AskUserQuestion：
 13. **Design Generation Packet 不可省略** — MagicPath / Open Design / Claude Design / HTML 生成器统一消费它
 14. **Tool Consumption Contract 不可省略**
 15. **交接块不可省略** — 交接块只是索引，不是第二事实来源
-16. **节名锁死** — 第 2/3/4/5/7 节的节名保持原版，后续高级审查依赖这些节名做审查
+16. **节名锁死** — 第 2/3/4/5/7 节的节名保持原版，下游按节名定位内容、redteam 按 12 节清单核完整性
 17. **下游询问必须执行** — 不能静默进入下一步
 
 ---

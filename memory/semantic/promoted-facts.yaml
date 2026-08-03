@@ -329,7 +329,7 @@ facts:
     tags: ["memory", "governance", "promotion", "proposed_stable", "backlog"]
   - id: SC-20260615-002
     domain: skill-rule
-    fact: "loop-engineering: luca_gstack 定位为 HARNESS（非 Loop）。广义自主 loop（cron 工作发现 / run-while-you-sleep / 自动验证到绿）对其设计主域是净负：发散品味域无 green-test oracle → verification collapse，与人在环安全模型相悖。worktrees 经对抗评估后刻意拒绝。唯一正向例外：会话内有界 oracle-gated evaluator-optimizer（cap=1；含 taste 项即跳过交人；绝不二次循环）——判据与合法形态见 .claude/skills/office/references/oracle-vs-taste-criteria.md §3（原载体 handoff-review 因 69 天零使用于 2026-08-03 删除，本裁决结论不变、只换载体）。再遇\"给 gstack 加 automation/loop/worktree\"提案，直接引用此判定，无需重跑全评估。"
+    fact: "loop-engineering: luca_gstack 定位为 HARNESS（非 Loop）。广义自主 loop（cron 工作发现 / run-while-you-sleep / 自动验证到绿）对其设计主域是净负：发散品味域无 green-test oracle → verification collapse，与人在环安全模型相悖。worktrees 经对抗评估后刻意拒绝。唯一正向例外：会话内有界 oracle-gated evaluator-optimizer（cap=1；含 taste 项**或跨产物一致性层失败**即跳过交人；绝不二次循环）——判据与合法形态见 .claude/skills/office/references/oracle-vs-taste-criteria.md §3（原载体 handoff-review 因 69 天零使用于 2026-08-03 删除，本裁决结论不变、只换载体）。再遇\"给 gstack 加 automation/loop/worktree\"提案，直接引用此判定，无需重跑全评估。"
     confidence: high
     stable: true
     added: 2026-06-21
@@ -338,6 +338,7 @@ facts:
     reviewer: "luca"
     scope: "luca_gstack 架构方向 / 是否引入 automation·loop·worktree"
     tags: ["loop-engineering", "architecture", "harness", "human-in-the-loop", "oracle-vs-taste", "worktree"]
+    provenance_note: "2026-08-03 由 agent 原地维护指针：载体 handoff-review 因 69 天零使用被删除，fact 正文中的实例化指针改为 references/oracle-vs-taste-criteria.md，tags 中 handoff-review→oracle-vs-taste。**裁决结论未变**（原「节3 失败即交人」在原文中本就归类为 taste，被「含 taste 项即跳过」吸收；新 reference §2 另以「整层封锁」显式保留该语义）。reviewer/added 保留原值——luca 审的是结论，不是本次改写的文字。"
   - id: SC-20260616-002
     domain: skill-rule
     fact: "spawn claude -p（无人值守/定时/子进程调用）必须在执行环境中携带正确的 USER=<真实用户名>（如 USER=luca），否则回退到 API-credit 账户报 'Credit balance is too low'(exit 1)。launchd、env -i、子进程剥离环境等场景均可触发此问题。解法：显式在 plist EnvironmentVariables / env 注入 USER=真实用户名；LOGNAME 不顶用。注意 launchd 还有独立的 TCC/EPERM 障碍（~/Desktop 需 Full Disk Access），与认证无关。"

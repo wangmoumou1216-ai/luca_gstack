@@ -50,6 +50,7 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 | workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
 | 正式 PR / 整分支 | 提示用户可跑原生 `/code-review` | 计费、仅用户可触发，我不代跑 |
 | 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
+| **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——figma-layer / html-prototype 的自检不算数 |
 
 *证据标准（**下限非上限**——做得更多永远合法；严禁用打勾替代"针对这个场景该攻什么"的思考）*：
 ①验证者独立于修复者，冷启动派发、不给会话历史与实现过程（07-03）②default-REFUTE，证伪不了才放行

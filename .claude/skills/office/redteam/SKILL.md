@@ -38,7 +38,7 @@ echo "BRANCH: $_BRANCH"
 
 | target 是 | 取用 |
 |---|---|
-| 渲染页面 / 原型 HTML | `ux-audit/specialists/module-a-visual.md`（间距白名单 / 品牌色 ≤3 处 / 排版 L1-L4 / 构图 8 锚点）+ `module-b-interaction.md`（Nielsen 10 · Norman 7 · WCAG 2.1 AA 7 项） |
+| 渲染页面 / 原型 HTML | `ux-audit/specialists/module-a-visual.md`（间距白名单 / 品牌色 ≤3 处 / 排版 L1-L4 / 构图 8 锚点）+ `ux-audit/specialists/module-b-interaction.md`（Nielsen 10 · Norman 7 · WCAG 2.1 AA 7 项）+ `references/ai-native-taste-anchors.md`（8 品味锚点含信任/代理维度 + §4b 取证表 —— **已生成的原型同样要过品味检查**，别只做视觉与交互层） |
 | 上行 + 属 CRM 业务页 | 加 `ux-audit/specialists/module-c-crm.md` 或 `references/crm-business-criteria.md` §1.2-1.5（首屏必要字段 / 高频操作路径 / 信息层级） |
 | 设计决策文档（design-brief / 交互方案 / 原型描述） | `references/ai-native-taste-anchors.md`（8 品味锚点 + §4b 取证表 + 严重性分级）+ `references/ai-native-design-framework.md` §8（AI Slop 10 项反模式）+ `references/ai-native-state-coverage.md`（12 状态覆盖） |
 | target 就是一份 design-brief 产出 | 加一项**完整性核查**：对照 `design-brief/SKILL.md` Phase 7 声明的 12 节清单逐节核对（生产者自己声明了节名锁死，但框架里没有别的角色在查）；若同时有原型，核实现与决策映射表是否一致（组件 variant / 类名） |

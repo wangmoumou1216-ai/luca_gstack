@@ -571,7 +571,7 @@ rejected:
     (brand-locked interface generation); design-review covers craft review. The combination already delivers
     this skill's value within the user's brand constraints, which this skill does not respect.
   reject_reasons:
-  - 'non_redundancy FAIL: taste/anti-slop review is already covered by taste-review and design-review;
+  - 'non_redundancy FAIL: taste/anti-slop review is already covered by ai-native-taste-anchors (8 anchors + §4b evidence tables) consumed by design-brief Phase 4 and redteam's criteria mount table [2026-08-03: taste-review/design-review deleted, coverage moved, rejection still stands];
     interface generation is covered by open-design + fxui-source-to-html + html-prototype + magicpath'
   - 'Scope mismatch: skill Section 13 explicitly excludes dashboards, dense product UI, data tables, and
     multi-step forms — i.e. the core of CRM product design — limiting it to landing/portfolio/marketing

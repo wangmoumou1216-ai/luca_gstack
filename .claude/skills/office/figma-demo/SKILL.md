@@ -946,7 +946,7 @@ AskUserQuestion：
    text-sm，间距用七档不用自定义值。
 7. **品牌色 #FF8000 全页 ≤ 3 处** — 在 blueprint 中明确标注。
 8. **Builder 连续失败 3 次 → BLOCKED** — 不继续循环，升级给用户。
-9. **prototype-spec.md 必须生成** — 对接 /figma-layer 和高级 handoff-review 的硬依赖。
+9. **prototype-spec.md 必须生成** — 对接 /figma-layer 与下游交付审查的硬依赖。
 10. **演示模式是默认功能** — 每个 Demo 自带键盘切换和全屏能力。
 
 ---

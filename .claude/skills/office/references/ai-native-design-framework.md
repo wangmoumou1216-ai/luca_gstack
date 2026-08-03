@@ -269,7 +269,9 @@ apply"、Claude Code 的 `--dangerously-skip-permissions` 反例（默认必须�
 - `/design-brief` — 使用全部（Step A 设计坐标系引用第 1-3 节，Phase 1 引用第 4
   节，Phase 3 引用第 6 节，Phase 4 引用第 8 节）
 
-（清单以各 skill frontmatter `shared-refs` 为准；redteam 只加载 ai-native-taste-anchors，不直接消费本文件，故不列入。）
+（清单以各 skill frontmatter `shared-refs` 为准。2026-08-03 起 `redteam` 的判据挂载表
+在 target 为设计决策文档时按需读取本文件 §8（AI Slop 10 项）——属 Phase-gated 条件加载，
+非必载，故不进其 `shared-refs`。）
 
 ---
 
