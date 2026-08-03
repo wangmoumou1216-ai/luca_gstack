@@ -541,7 +541,7 @@ Layered routing order:
    requirement inside the current project → stay. Only the self-judged-new-project case confirms.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6, keyword-approximation only),
    or `PLAN CHECK` (a skill in the `HEAVY_ORCHESTRATOR_SKILLS` extension point was hit — **the set
-   is injected via tracked settings.json `env` as `ROUTE_GUARD_HEAVY_SKILLS=auto,muse-loop-orchestrate`,
+   is injected via tracked settings.json `env` as `ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate` (auto removed 2026-08-03 for the throttling experiment, see plan-agent.md),
    effective identically in both checkouts; hitting either escalates to PLAN_CHECK**.
    deepresearch/ux-research/figma-demo rely on their own internal HITL gates, see
    plan-agent.md "条件 2 豁免"),

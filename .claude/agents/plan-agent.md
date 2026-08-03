@@ -70,8 +70,11 @@ Step 2 已有的按 Phase 数缩放的确认门（Hierarchical≥3 Phase 才等�
 - `/muse-loop-orchestrate`（muse fork 专属，2026-07-14 编排层评审收编）：GATE-1 在首次 fan-out
   前——dispatch `muse-req-triage`（入口B）时其 Phase 3 AskUserQuestion 触发，
   `allow_standalone_override: false` 不可绕过，另有 GATE-2 第二人类卡点。豁免只解条件 2 恒真
-  （防复刻 /auto 当年 50-session 零使用的结构性成因）；PLAN_CHECK 双保险保留——
-  ROUTE_GUARD_HEAVY_SKILLS 仍升 PLAN_CHECK，其余 4 条件照常检查。
+  （防复刻 /auto 当年 50-session 零使用的结构性成因）；muse-loop-orchestrate 的 PLAN_CHECK
+  双保险保留（ROUTE_GUARD_HEAVY_SKILLS 仍升 PLAN_CHECK），其余 4 条件照常检查。
+  /auto 已于 2026-08-03 从 HEAVY 移除做最小干预实验：红队实测其每次触发词命中都被
+  PLAN_CHECK 改写成「读本文件出计划」、从未出现「调用 /auto」——移除是唯一能分辨
+  「零使用因截流还是因无需求」的办法；60 天后按场景覆盖报告复盘，仍零使用则按规则处置。
 
 **不触发的情况：**
 - 单文件编辑（Solo Mode，直接执行）

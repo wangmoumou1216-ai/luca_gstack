@@ -372,6 +372,25 @@ try {
   }
 } catch { }
 
+// kit→synthesis 确定性接力（2026-08-03）：insight-synthesis 的场景（一手数据在 luca 手上）
+// 结构上不落盘、任何文件代理都数不到（场景覆盖报告标 UNOBSERVABLE）——唯一可观测的上游信号
+// 是 research-kit 工具已产出。检测「有 kit、无 synthesis」且 kit 已过 3 天采集静默期
+// （≤60 天防陈旧唠叨），启动提醒一句。这是该 skill 除语义兜底外唯一的确定性通道。
+try {
+  const resDir = join(projectRoot, 'docs', 'research');
+  if (activeProject && !docsDangling && existsSync(resDir)) {
+    const rfiles = readdirSync(resDir);
+    const kits = rfiles.filter(f => f.startsWith('research-kit-') && f.endsWith('.md'));
+    if (kits.length && !rfiles.some(f => f.startsWith('insight-synthesis-'))) {
+      const newest = Math.max(...kits.map(f => { try { return statSync(join(resDir, f)).mtimeMs; } catch { return 0; } }));
+      const ageDays = (Date.now() - newest) / 86400000;
+      if (ageDays >= 3 && ageDays <= 60) {
+        process.stdout.write(`[session-restore] 🔬 项目「${activeProject}」有 research-kit 采集工具（${Math.round(ageDays)} 天前）但尚无 insight-synthesis 产出——数据若已采回，可跑 /insight-synthesis 做两层综合。\n`);
+      }
+    }
+  }
+} catch { }
+
 // person 层记忆候选提示（独立于 digest 预览——digest 预览虽已覆盖「待你裁决」整节，但仍有 40 行上限
 // 且每份只展示一次，person 候选排在该节之后仍可能不可见）
 try {

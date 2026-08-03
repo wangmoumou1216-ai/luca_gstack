@@ -146,7 +146,7 @@ def main():
             print(f"{skill:24} {'-':>6} {out_n:>7}  UNMAPPED（代理口径未定，不判）")
             continue
         if strength == "unobservable":
-            print(f"{skill:24} {'-':>6} {out_n:>7}  UNOBSERVABLE（场景不落盘——如数据由用户手供；只能靠语义兜底，不判）")
+            print(f"{skill:24} {'-':>6} {out_n:>7}  UNOBSERVABLE（场景不落盘；命中靠语义兜底 + session-restore kit→synthesis 接力提醒，不判）")
             continue
         scene_n = sum(count(p, scene_pats, cutoff) for p in projects)
         age = skill_age_days(skill)

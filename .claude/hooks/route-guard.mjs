@@ -529,7 +529,7 @@ function buildDecision(prompt) {
 
   // 2026-07-13 fable review B-F1：显式斜杠直呼 = 用户最新明确请求（规则优先级 #1），不被
   // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
-  // 为 /auto 设计的较软 PLAN_CHECK 门。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
+  // 较软 PLAN_CHECK 门（原为 /auto 设计；auto 已于 2026-08-03 移出 HEAVY 做截流实验，现成员仅 muse-loop-orchestrate）。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
   const directCall = /^\/[a-z][\w-]*/i.test(prompt);
   if (!directCall && complexity.decision === 'PLAN_MODE') return complexity;
 
