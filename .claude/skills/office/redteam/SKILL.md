@@ -103,16 +103,13 @@ export _OUTPUT="docs/redteam/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md"
 python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
 ```
 
-**框架治理场景**：`_TOPIC` 从被审 target 的文件名/主题直接推（**不读 current-topic、不 ls
-项目产出目录**——那两个路径字面量会让整条命令被 project-scope-guard 在未绑定 session 下 deny），
-`_OUTPUT` 指向 framework-audit；`_NODE`/`_STATUS` 与写入调用保持不变：
-
-```bash
-export _TOPIC="<从被审 target 推出的 slug>"
-export _NODE="redteam"
-export _STATUS="DONE"
-export _OUTPUT="framework-audit/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md"
-python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
-```
+**框架治理场景：不写 workflow-state。** 理由不是"绕开 guard"而是**没有可追踪的对象**——
+workflow-state 追的是某个项目的设计流节点，框架审计不属于任何项目的设计流。更硬的理由：
+`references/write_state.py` 在 Python 内部打开 `.claude/workflow-state.yaml`（**一条指向当前
+激活项目的软链**），project-scope-guard 只按 Bash 命令文本做 anchor 匹配、拦不住它——未绑定
+的框架 session 调它，会把框架评审的 DONE 状态写进"此刻碰巧激活的那个项目"，正是会话级项目
+隔离要消灭的跨项目污染（并行 session 尤甚）。**P7 合规**：写入块本体与变量含义一字未动，
+这里加的是场景门；`quality-gate` 的"workflow-state 已更新为 DONE"检查属 workflow 模式，
+框架治理场景本就不在 workflow 里。产出落 `framework-audit/` 自身即审计留痕。
 
 <!-- FILE_END: .claude/skills/office/redteam/SKILL.md -->

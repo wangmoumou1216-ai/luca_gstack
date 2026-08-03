@@ -34,7 +34,7 @@ context-cost:
 与既有能力的边界（**不重复**）：
 - `careful`=危险命令拦截（rm -rf/force-push），与本 skill 正交。
 - 全局 `tdd`=测试先行；`systematic-debugging`=根因排查。本 skill 的「验证铁律」是**完成前**跑验证，不是写测试方法论。
-- `redteam`/`quality-gate` agent=对**产出**做对抗审查；本 skill 的代码审查环节**复用**它们，不另造。
+- `redteam`/`quality-gate` agent=对**产出**做对抗审查；本 skill 的代码审查环节优先**复用**它们，不另造常驻 reviewer（对不上被审对象时按 R4 自建场景化编排仍合法）。
 - CLAUDE.md「Coding Discipline」=always-on 的轻量原则（Surgical Changes 等）；本 skill 是**按需深度体检** + 可路由调用，两者互补不冲突（Coding Discipline 仍不进 routing-map）。
 
 ## Preamble (run first)
@@ -189,8 +189,10 @@ BASE_SHA=$(git rev-parse HEAD~1); HEAD_SHA=$(git rev-parse HEAD)
 派 `quality-gate` agent（**opus**，见 `model-routing.yaml` pin）跑断言，或 `redteam`（Fable）
 对 diff 做对抗。给 reviewer 精确上下文、**不给会话历史与实现过程**（R4 证据标准①）：附
 DESCRIPTION（建了什么）/ PLAN_OR_REQUIREMENTS（应满足什么）/ 上述基线之一。
-反馈处理：Critical 立即修 → Important 继续前修 → Minor 记下 → reviewer 错了带理由反推。
-**修完要发回做终版闭合**（R4 证据标准⑤：评审后的改动没经确认 = 这一轮没闭合）。
+产出=分级 findings（Critical / Important / Minor），**本环节到此为止、不改代码**——这正是
+模式 D 能在脏树上跑的前提。修不修、何时修由调用方决定；决定修时按 Critical 立即修 →
+Important 继续前修 → Minor 记下 → reviewer 错了带理由反推，**修完发回做终版闭合**
+（R4 证据标准：评审后的改动没经确认 = 这一轮没闭合）。
 
 **双轴分派（diff 有 spec 上游时启用；无 spec 上游维持上面的单轴择一）：** 当被审 diff 存在
 书面上游（tech-spec / PRD / task-plan 卡），**同一条消息并发两个审查 agent**、各自隔离上下文：
@@ -213,7 +215,7 @@ Divergent Change / Speculative Generality / Message Chains / Middle Man / Refuse
 3. **luca 护栏优先于算子，且按属性非按文件名**：fail-open catch / 有意 fallback / 兼容语义 / framework/ 只读 / WHY 注释 一律保护——算子说"删"，护栏说"留"时**听护栏**。**未具名但同属性者（如 `memory/scripts/*.py` 的 fail-open `except`）同等保护**，不因不在示例名单里就放行。
 4. **模式 B/C 要求干净工作树**；脏树先 stash/commit 或缩范围。
 5. **每个清理算子改完跑 verify**，失败逐项回退，不让级联坏下去。
-6. **代码审查复用 quality-gate/redteam**，不新建 reviewer。
+6. **代码审查优先复用 quality-gate/redteam**，不新建常驻 reviewer；对不上被审对象时按 R4 自建场景化评审编排（见「代码审查环节」）。
 7. **本 skill 自身的改动也受 Iron Law 约束**——别在没跑 `verify.sh`/`check:*` 前说"接好了"。
 
 <!-- FILE_END: code-hygiene/SKILL.md -->

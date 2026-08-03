@@ -673,6 +673,75 @@ const cases = [
         `诊断语境不应命中研究轴: ${JSON.stringify(decision.signals)}`);
     },
   },
+  // ── 评审轴 2026-07-31（R4 评审请求分流）──────────────────────────────────
+  // 钉住"确定性层"行为：词表增删 + Project Gate 豁免。提示钉在 hints 层（decisionToHints），
+  // dry-run 只吐 decision，故此处只测决策；钉的正/负样本走 fixtures.jsonl semantic 层。
+  {
+    name: '评审轴: 对象绑定词命中 code-hygiene（不被 ux-audit 抢）',
+    prompt: '代码评审',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/code-hygiene');
+    },
+  },
+  {
+    // preview ⊃ review：正是不收泛动词 `review代码` 的理由，钉住防日后加回来。
+    name: '评审轴: preview 句不得命中 code-hygiene（子串碰撞防回归）',
+    prompt: '帮我 preview 代码改完的效果',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/code-hygiene', 'preview 不得被当成 review');
+    },
+  },
+  {
+    // 撤裸词「评审」后，页面评审仍须靠复合词直达——这是撤词的安全边界。
+    name: '评审轴: 撤泛词后页面评审复合词仍直达 ux-audit',
+    prompt: '评审这个页面有什么 UX 问题',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/ux-audit');
+    },
+  },
+  {
+    // 零对象泛词已撤：不得再把任意评审意图硬送进强制截图的页面 skill。
+    name: '评审轴: 零对象泛词不再误路由到 ux-audit',
+    prompt: '这次改动有什么问题吗',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/ux-audit', '零对象泛词不得硬映射到页面评审 skill');
+    },
+  },
+  {
+    // 红线 SC-20260523-002：M3 豁免加 !named 守卫前，这句会 SINGLE 直达并静默吞掉切换。
+    name: '评审轴/红线: 点名已有项目的框架动词请求仍须过 Project Gate',
+    prompt: '清理一下 muse 里 scripts/ 的死代码',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH', '点名项目不得绕 Gate');
+      assert.equal(decision.project, 'muse');
+    },
+  },
+  {
+    // M3 豁免收评审动词的目的：框架自评审在无激活项目时不被 gate 兜底网吃掉。
+    name: '评审轴: 无激活项目 + 框架路径的代码审查不被 Project Gate 截断',
+    prompt: '代码审查一下 .claude/hooks/route-guard.mjs 的改动',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP', '框架自评审须能到达路由层');
+      assert.equal(decision.skill, '/code-hygiene');
+    },
+  },
+  {
+    // 大小写轴：M3 豁免读原文 prompt，词表读 normalize 后文本；不加 /i 会"词表中了、豁免没中"。
+    name: '评审轴: 大写 Review 的框架自评审同样不被截断（豁免正则 /i）',
+    prompt: '代码 Review 一下 scripts/build.mjs 的改动',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP', '大小写变体不得被 gate 吃掉');
+    },
+  },
 ];
 
 let passCount = 0;

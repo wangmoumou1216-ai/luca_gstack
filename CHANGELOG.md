@@ -21,8 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   （luca 同轮追加的设计约束「不得用框架约束模型自有能力」）：撤掉的硬映射多于新增，R4 明写
   「资产索引非决策树、对不上时自建评审编排优于硬套」、证据标准标注「下限非上限」、并带
   native_precedence 式退场条件。顺带修红线：Gate 豁免缺 `!named` 守卫（实测"清理一下 muse 里
-  scripts/ 的死代码"今天就在静默吞掉项目切换，SC-20260523-002）。semantic fixture +3
-  （`review:dispatch` 形态）。两轮独立红队 11 MAJOR/14 MINOR 全采纳。
+  scripts/ 的死代码"今天就在静默吞掉项目切换，SC-20260523-002）。test-route-guard +7 确定性用例
+  （逐条过变异测试）、semantic fixture +3（`review:dispatch` 形态）。三轮独立红队
+  （fable/opus/fable）1 BLOCKER + 11 MAJOR + 22 MINOR 全采纳。
+  **已知取舍（撤泛词的代价，如实记）**：① `评审一下这个页面`（不含"页面评审"连续子串）从
+  SINGLE 直达降级为 STOP + 提示钉，真页面评审多一跳语义判断；② 点名项目的框架自维护句
+  （"清理一下 muse 的 hook"）因补 `!named` 守卫从直达变成 PROJECT_SWITCH 提示，已在该分支加
+  "若是框架 session 不要 switch"的确定性提醒兜底。
 
 ### Added（2026-07-23 · 对标自我成长 SOP 制度化）
 

@@ -218,7 +218,7 @@ function projectGate(prompt, projects, currentProject) {
   // 文本，不容空格会出现"词表中了、豁免没中"的错配。边界：仍要求共现框架路径/制品词，
   // 故"评审一下我刚做的框架改动"（无路径字样）仍走 gate——有意保守，不为评审拆松 gate。
   if (!named &&
-      /清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量|代码审查|代码评审|评审代码|代码\s*review/.test(prompt) &&
+      /清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量|代码审查|代码评审|评审代码|代码\s*review/i.test(prompt) &&
       /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/.test(prompt)) {
     return null;
   }
@@ -551,17 +551,18 @@ function buildDecision(prompt) {
 
 // 评审轴提示钉（2026-07-31）。刻意是**独立分支**：不进 complexityScore、不挂 hasActiveProject——
 //   ① 7 个复杂度信号全在构建轴，"review 一遍你做的内容"恒 0 分，挂上去钉子永不出现；
-//   ② 若做成第 9 个复杂度信号，会把"评审一下这个复杂功能"从 4 分推到 6 分误触 PLAN_MODE；
-//   ③ STOP 与 PROJECT GATE 两条路径都要出——框架/meta session 常无激活项目，评审请求会被 gate
-//      的">5字陈述句"兜底网吃掉；gate 决策不动（评审下游项目代码同样该先确认项目），但提示跟到。
+//   ② 若做成第 9 个复杂度信号，会把"评审一下这个复杂功能"从 4 分推到 6 分误触 PLAN_MODE。
+//   **所有决策分支都要出**（不只 STOP）：R4 的两种失效形态是"没映射上"和"映射错"——后者恰恰
+//   表现为高置信 SINGLE（实测"评审一下这份 PRD"→SINGLE /brainstorm，撤 ux_audit 泛词前是 MULTI），
+//   只挂 STOP 等于把 R4 自己点名的第二形态交还给记忆召回。钉不改决策，只多一行文本。
 //   覆盖面含被撤的 ux_audit 泛词语义（挑毛病/有什么问题/给建议）：撤词是为停掉"任何评审意图→
 //   截图 skill"的错误确定性，若提示钉不接住，这些句子就从"错的确定"退成"完全裸奔"=净变差。
-//   latin 词必须带边界（preview⊃review）；研究轴优先（"评估一下这个架构设计"属研究不属评审）。
-//   只出提示、不参与路由决策，故误报代价仅一行多余提示——宁宽勿窄。
+//   latin 词带边界（preview⊃review）；研究轴优先（"评估一下这个架构设计"属研究不属评审）。
+//   文案只放指针不复制 R4 证据标准（唯一权威落点在 R4，内联副本必漂移）。
 function reviewAxisHint(decision) {
   if ((decision.signals || []).includes('研究/认知诉求')) return '';
-  if (!/评审|复审|审一遍|审查一下|复查|把关|挑毛病|有什么问题|有没有问题|给建议|(^|[^a-z])review([^a-z]|$)/i.test(prompt)) return '';
-  return '\n[route-guard] 🔎 评审请求信号——按 CLAUDE.md「语义路由契约」过 .claude/skill-os/routing-chain-check.md R4：先判**评审对象**（代码/设计文档/页面/skill 产出/翻案），对上既有资产就用，对不上自建评审编排；证据标准（验证者独立于修复者、default-REFUTE、有可运行物须含真跑分区、缺票轮不算完成轮、改动后发回终版闭合）是下限不是上限。';
+  if (!/评审|复审|审一遍|审查一下|复查一下|复查一遍|把关一下|挑毛病|有什么问题|有没有问题|给点建议|给些建议|(^|[^a-z])review([^a-z]|$)/i.test(prompt)) return '';
+  return '\n[route-guard] 🔎 评审请求信号——先判**评审对象**（代码/设计文档/页面/skill 产出/翻案）再定形态，别被上面的词表命中带偏：全文 .claude/skill-os/routing-chain-check.md R4（资产索引非决策树，对不上时自建评审编排；证据标准在那里，是下限不是上限）。';
 }
 
 function decisionToHints(decision) {
@@ -572,7 +573,13 @@ function decisionToHints(decision) {
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
     }
     case 'PROJECT_SWITCH': {
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n命名即切换（点到已有项目名＝切过去，无需确认）：立即执行 ./scripts/project.sh switch "${decision.project}"`;
+      // 框架自维护碰撞（2026-07-31）：产品线名同时是项目名时（如 muse），"清理/评审 muse 的 hook"
+      //   会命中命名即切换，而 meta/框架 session 明令不得 switch（踩并行 session 指针）。加信息不改
+      //   决策：命中框架路径/制品词时提醒这条例外，由模型判断自己是不是框架 session。
+      const frameworkSelfMaint = /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|框架自/.test(prompt)
+        ? '\n[route-guard] ⚠️ 同时命中框架路径/制品词：若本 session 是框架/meta 维护（非该项目的产品工作），**不要 switch**（会踩并行 session 的激活指针），直接在框架检出上作业。'
+        : '';
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n命名即切换（点到已有项目名＝切过去，无需确认）：立即执行 ./scripts/project.sh switch "${decision.project}"` + frameworkSelfMaint + reviewAxisHint(decision);
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
     }
@@ -592,7 +599,7 @@ function decisionToHints(decision) {
     }
     case 'SINGLE_SKILL': {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
-      const base = `[route-guard] ✅ 高置信命中 → 建议调用${prefix}${decision.skill}`;
+      const base = `[route-guard] ✅ 高置信命中 → 建议调用${prefix}${decision.skill}` + reviewAxisHint(decision);
       // 直呼+复杂内容（B-F1）：直呼已归还，复杂度以提醒附加，权威口径仍是 plan-agent.md。
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：直呼已尊重；执行前按 plan-agent.md 触发条件表自查，满足任一先出计划。`];
