@@ -28,18 +28,20 @@ echo "BRANCH: $_BRANCH"
 
 ## 执行
 
-读取 docs/ 目录下所有已产出文件，建立当前决策链路的完整图谱。
+**评审对象**：调用方给了显式 target（diff / 文件集 / 某份提案或计划）→ **以该 target 为对象**，
+不去扫 docs/ 全量（对齐 `input-modes.yaml` 的 `target_artifacts_or_problem`）。没给 target →
+读 docs/ 下所有已产出文件，建立当前决策链路的完整图谱。
 
 读取 observability 的短规则和近期反馈摘要，用来检查复犯：
 
 ```bash
 python3 .claude/observability/scripts/get_rules.py "*" "*" 2>/dev/null || true
 tail -50 .claude/observability/observations.jsonl 2>/dev/null
-tail -50 .claude/observability/run-log.jsonl 2>/dev/null
 ```
 
-不要读取完整历史；只把 active rules、近期 observations、近期 run-log 中与当前
-topic/skill 有关的条目纳入质疑。
+不要读取完整历史；只把 active rules、近期 observations 中与当前 topic/skill 有关的条目
+纳入质疑。（`run-log.jsonl` 已 FREEZE、零写入即裁决票据，见 `office/SKILL.md` 冻结说明——
+不再作为本 skill 的数据源。）
 
 然后从「最挑剔的用户/竞争对手/产品经理」视角，对以下维度逐一质疑：
 
@@ -75,15 +77,17 @@ topic/skill 有关的条目纳入质疑。
 - 本次是否违反 active rules？
 - 用户过去明确指出的问题，有没有在本次流程中复犯？
 - 有没有新 observation 只被记录、没有沉淀成可执行 rule？
-- run-log 是否足够让下次调用知道本次用过哪些规则和产出？
 
-产出质疑清单，写入 `docs/redteam/YYYY-MM-DD-<topic>-redteam.md`。
+产出质疑清单：**设计/项目场景**写入 `docs/redteam/YYYY-MM-DD-<topic>-redteam.md`；
+**框架治理场景**（被审对象是 luca_gstack 自身的规则/hook/skill，非某项目产物）写入
+`framework-audit/YYYY-MM-DD-<topic>-redteam.md`——那里才是框架审计产出的既有落点，
+且框架 session 常无绑定项目、写 `docs/` 会被 project-scope-guard 拒。
 清单格式：每条质疑一句话，后面是「如果这个质疑成立，影响是什么」。
 
 **workflow-state 写入：**
 
-Claude 在执行前必须确定实际 `_TOPIC`（从 `current-topic.txt` 读取，
-或根据当前功能名推断 topic slug），然后执行：
+Claude 在执行前必须确定实际 `_TOPIC` 与 `_OUTPUT`，然后执行下面两组之一。
+**项目场景**（有绑定项目）：
 
 ```bash
 export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
@@ -96,6 +100,18 @@ export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 export _NODE="redteam"
 export _STATUS="DONE"
 export _OUTPUT="docs/redteam/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md"
+python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
+```
+
+**框架治理场景**：`_TOPIC` 从被审 target 的文件名/主题直接推（**不读 current-topic、不 ls
+项目产出目录**——那两个路径字面量会让整条命令被 project-scope-guard 在未绑定 session 下 deny），
+`_OUTPUT` 指向 framework-audit；`_NODE`/`_STATUS` 与写入调用保持不变：
+
+```bash
+export _TOPIC="<从被审 target 推出的 slug>"
+export _NODE="redteam"
+export _STATUS="DONE"
+export _OUTPUT="framework-audit/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md"
 python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
 ```
 

@@ -59,10 +59,11 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 > A）**完成前验证**（Iron Law）——只跑「声明 done 前的证据门」，不改代码
 > B）**定向清理**——指定 1-2 个算子（如「去重」「删死代码」）+ 范围（路径/glob）
 > C）**全量体检**（cleanup-all 顺序）——8 算子按序跑，每步 verify，首个失败即停
+> D）**改动评审**——对一批改动做审查（下方「代码审查环节」），只出 findings 不改代码
 >
 > 范围默认=当前改动涉及的文件；可指定路径。框架自维护时范围=被改的 hooks/scripts/memory。
 
-**硬前置**：模式 B/C 要求工作树**干净**（每算子需干净 baseline 做逐项回退）。脏树 → 先让用户 stash/commit，或缩到「只对已暂存改动」。模式 A（纯验证）不要求干净树。
+**硬前置**：模式 B/C 要求工作树**干净**（每算子需干净 baseline 做逐项回退）。脏树 → 先让用户 stash/commit，或缩到「只对已暂存改动」。模式 A（纯验证）与模式 D（评审不改文件，无需回退 baseline）不要求干净树——**"刚改完还没提交"正是评审的主场景**。
 
 ---
 
@@ -168,17 +169,28 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 
 ---
 
-## 代码审查环节（复用既有，不另造）
+## 代码审查环节（模式 D 的执行体；复用既有资产，不另造 reviewer）
 
-需要对一段改动做代码审查时，**派 `quality-gate` agent（Sonnet）跑断言** 或 **`redteam` skill（Fable）对 diff 做对抗**，
-而不是新建 reviewer。给 reviewer 精确上下文（BASE_SHA/HEAD_SHA + 需求），**不给会话历史**：
+**通用评审纪律（独立性/REFUTE/运行时分区/缺票补票/终版闭合/mutation/复犯检查）按
+`.claude/skill-os/routing-chain-check.md` R4 的证据标准执行**——那里是唯一权威落点，此处不复制。
+R4 同时说明：既有资产对不上被审对象时，**按场景自建评审编排优于硬套**（如按本次风险面定制
+攻击维度的独立 agent）；下面是资产对得上时的省事路径。
+
+**基线三选一**（评审对象怎么界定，`WORKTREE_DIFF` 为默认）：
 
 ```bash
+# ① WORKTREE_DIFF：刚改完还没提交（最常见的 review 请求形态）
+git diff HEAD
+# ② BASE_SHA/HEAD_SHA：已提交的一批 commit
 BASE_SHA=$(git rev-parse HEAD~1); HEAD_SHA=$(git rev-parse HEAD)
+# ③ FILE_SET：显式文件集（跨多次提交的一条主题线）
 ```
 
-派发时附：DESCRIPTION（建了什么）/ PLAN_OR_REQUIREMENTS（应满足什么）/ BASE_SHA / HEAD_SHA。
+派 `quality-gate` agent（**opus**，见 `model-routing.yaml` pin）跑断言，或 `redteam`（Fable）
+对 diff 做对抗。给 reviewer 精确上下文、**不给会话历史与实现过程**（R4 证据标准①）：附
+DESCRIPTION（建了什么）/ PLAN_OR_REQUIREMENTS（应满足什么）/ 上述基线之一。
 反馈处理：Critical 立即修 → Important 继续前修 → Minor 记下 → reviewer 错了带理由反推。
+**修完要发回做终版闭合**（R4 证据标准⑤：评审后的改动没经确认 = 这一轮没闭合）。
 
 **双轴分派（diff 有 spec 上游时启用；无 spec 上游维持上面的单轴择一）：** 当被审 diff 存在
 书面上游（tech-spec / PRD / task-plan 卡），**同一条消息并发两个审查 agent**、各自隔离上下文：

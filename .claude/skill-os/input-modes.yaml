@@ -185,7 +185,7 @@ skills:
         required: []
         optional: ["target_paths"]
     quality_gates: ["verification_iron_law", "high_confidence_apply_only", "luca_guards_preserved", "clean_tree_for_apply"]
-    notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子。代码审查复用 quality-gate/redteam。"
+    notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子 + 模式 D 改动评审（基线三选一 WORKTREE_DIFF/BASE+HEAD_SHA/FILE_SET，不要求干净树；纪律见 routing-chain-check R4）。代码审查复用 quality-gate/redteam。"
 
   code-recon:
     modes:
