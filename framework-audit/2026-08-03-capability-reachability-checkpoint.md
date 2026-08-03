@@ -1,60 +1,59 @@
-# Checkpoint — 能力可达性治理（2026-08-03）
+# Checkpoint — 能力可达性治理（2026-08-03，R2 轮进行中）
 
-> 框架/meta session，无绑定项目 → 按 redteam 框架治理场景同一条 fallback 落 `framework-audit/`
-> （未绑定 session 写 `docs/` 会被 project-scope-guard deny，见本轮 R4 改动）。
-> 计划全文：`~/.claude/plans/abundant-shimmying-thunder.md`
+> 框架/meta session，无绑定项目 → 产出落 `framework-audit/`（未绑定 session 写 `docs/` 会被 project-scope-guard deny）。
+
+## 三份权威文件
+
+| 文件 | 作用 |
+|---|---|
+| `framework-audit/2026-08-03-capability-reachability-plan-v2.md` | **当前计划**（v1 已废） |
+| `framework-audit/2026-08-03-capability-reachability-handshake-r1.md` | R1 四路红队裁决 + 我的驳回 + 名单修正 |
+| `~/.claude/plans/abundant-shimmying-thunder.md` | **v1，已被证伪，仅作历史** |
 
 ## 已完成 ✅
 
 ### 前序（已交付、已推送）
-- **R4 评审请求分流**落地：`routing-chain-check` 增 R4（资产索引+证据标准，非决策树）、
-  route-guard 评审轴提示钉（挂 STOP/SINGLE_SKILL/PROJECT_STOP/PROJECT_SWITCH 四支）、
-  Project Gate 豁免补评审动词 + `!named` 守卫（修红线 SC-20260523-002）、
-  撤 ux_audit 四个零对象泛词、code_hygiene 收对象绑定词、code-hygiene 模式 D、
-  redteam target/产出场景适配。
-- 三轮独立红队（fable R1 / opus R2 / fable R3）1 BLOCKER + 11 MAJOR + 22 MINOR **全解**，
-  R3 终裁 **CONFIRM-HANDSHAKE**。test-route-guard 61→68 全过变异测试，verify.sh 70 PASS。
-- commit `152259e` `fae3e5e` `2c6e2d4` `76f3252` `2e5eb2e` `89c80e9` 已推 upstream/main，双检出同步。
-- muse pty 两相退出修复已交付 `/Applications/luca.app`（旧版留 `.bak`，需重启生效）。
+R4 评审请求分流落地（`routing-chain-check` R4 资产索引 + route-guard 评审轴提示钉 + Project Gate 补 `!named` 守卫修红线 SC-20260523-002 + 撤 ux_audit 四个零对象泛词）；三轮独立红队全解，CONFIRM-HANDSHAKE；commit `152259e`→`89c80e9` 已推 upstream/main。muse pty 两相退出修复已交付 `/Applications/luca.app`（**需重启生效，luca 侧未做**）。
 
-### 本轮调查（数据已取证，结论已成形）
-- 全 11 项目产出文件扫描：生成类全在跑，评审评估复盘类 **七个全零产出**。
-- 下游消费者统计：`prd/` 14→13 份、`design-brief` 11→8；`redteam/`/`evals/`/`retro/` 消费者
-  只有自己 → 产出 0。**相关性近乎完美**。
-- reference 引用统计：`handoff-protocol` 21、`ai-native-taste-anchors` 5（含 design-brief）。
-- 硬门禁全量取证（6 个 skill + input-modes + invariants），逐条 blame 出「有无事故出处」。
-- AND 门槛实测：handoff-review 三件套 1/11、task-plan 双 handoff 2/11。
+### 本轮 R1 握手（已闭合）
+- 四路独立红队（保护区/壳存档/证据因果/运行时）**全判 BLOCKER-FOUND**
+- 我逐条独立核验，三分类归档：接受为真缺陷的改 plan、**5 条举证驳回**（含 C 的 BLOCKER 定级过高、B 的 input-modes 零命中断言错误、C 的 redteam 产出断言需限定）
+- luca 裁决二则：①范围＝**两件都做、价值裁决优先** ②保护区＝**批 `:163` 改措辞 + P6 顺序重排，P1 `allowed-tools` 不批**
 
-## 关键决策（本轮形成，勿重推）
+### 本轮取证（3 路取证员，取证外包/判定自留）
+11 个 skill + 对照组（design-brief / brainstorm）的硬门禁清单、知识内核、行数分布、创建背景、可达性面、能力依赖分类。
 
-1. **「没用到 = 没接进流程」被证伪**——ux-audit 入口最全（一级+斜杠+graph 起点）产出照样 0。
-2. **真判据是「挂在什么上」**：挂必然动作→活；挂自己触发词等召唤→死。
-3. **luca 补的认知一致点**：触发后限制模型能力的 skill 该改或砍（2×2 判据表）。
-4. **同一 skill 内两部分性质相反**：知识内核=增强（全活，靠被引用）、流程外壳=限制（全死）。
-5. **救零使用 skill 不是加触发词**——那会把限制性外壳一并接进流程、用可达性名义扩散枷锁。
-6. **门禁的决定性分野=有无事故出处**：有出处的是红线（保留），无出处的全部 blame 到
-   `^7295ec2 2026-05-26 baseline snapshot`（可改可砍）。
-7. **ux-audit 截图门是「模型变强后约束反成负担」的活样本**：skill 级拦死、无出处、
-   而 input-modes 登记的本就是 `screenshot_or_page_reference`（执行面单方面收紧）。
+## 关键决策（本轮形成，**勿重推**）
 
-## 待执行（按 luca 指定序列）
+1. **v1 核心判据被证伪**：「知识内核=增强=全活 / 流程外壳=限制=全死」——对照组 design-brief **41 条硬门禁**（最多）产出 **15 份**（最活），brainstorm 30 条产出 14 份。门禁数量与存活无关甚至正相关。
+2. **v2 判据**：可达性是**必要**条件（0/5 可达的三个全死），**是下游 gate 的源**是**充分**条件（auto 5/5 可达、ux-audit 4/5 可达，但都不是任何 gate 的源，照样 0 产出）。
+3. **名单 11 → 5**：加年龄维度后（「使用即留任」是 60 天窗口，对未满 60 天的 skill 不适用），只剩 **auto / ux-audit / taste-review / design-review / handoff-review**，全部是 `7295ec2`（2026-05-26 根提交）就存在的那批。**7 月新落地的 6 个 skill 全都跑过至少一次。**
+4. **我连犯三次同类 glob 错误**才拿到准确产出数：task-plan 在 `engineering/` 非 `tasks/`；research-kit 是**前缀**非后缀；code-recon / muse-loop 的**产出不带 skill 名**。教训已写入 person 记忆（否定性断言要定向 grep）。
+5. **`/auto` 是「修可达性无效」的决定性实证**：`plan-agent.md:46` 记着 2026-07-03 就诊断过它 50-session 零使用、两个成因当期都修了，修完至今一个月仍是 0。
+6. **handoff-review 绝不能存档**：`iteration` 是全仓唯一由单 skill 独占写入且被 hook 消费的字段；`auto-revise-once` 被 `promoted-facts SC-20260615-002`（luca 亲审、stable）称为 luca_gstack「HARNESS 非 Loop」定位下的**唯一正向例外**。
+7. **blame 判据是伪判据**：`7295ec2` 是根提交，85–96% 基准率零区分度。判「有无出处」须**五源穷尽检索**且两侧同法。
 
-- [ ] **红队深度 review 本 plan**（下一步）——重点攻击面已在 plan 末尾标出
-- [ ] 红队↔plan 握手至无存活 BLOCKER/MAJOR（上限 2 轮）
-- [ ] 执行批 1（砍限制性门禁：ux-audit 截图门→材料门 + Phase0 顺序锁、task-plan 双 handoff 降级）
-- [ ] 执行批 2（三个零使用 skill：内核留下、外壳存档）
-- [ ] 执行批 3（持续保证：§6 必答项作提示、使用即留任换数据源）
-- [ ] 实现后独立评审（不知情 agent，只给改动清单+验收标准）
+## 待执行
+
+- [ ] **R2 红队三路进行中**（判据有效性 / 执行面完整性+真跑仿真 / 资产迁移安全性）
+- [ ] R2 握手（**上限 2 轮，已用 1**）→ 无存活 BLOCKER/MAJOR 即执行
+- [ ] 执行 A：auto 降级隐藏（6 处登记面 + 5 处 CI 消费者）
+- [ ] 执行 B：ux-audit 三步（B1 计分函数 evidence-aware → B2 baseline_score 修缺陷 → B3 截图门材料化 + B4 P6 顺序重排）**顺序不可颠倒**
+- [ ] 执行 C：taste-review 9+5 条独有内容迁进 anchors（壳保留不存档）
+- [ ] 执行 D：design-review `:130-135` 迁走后壳存档（唯一可存档的）
+- [ ] 执行 E：handoff-review 补可达性 + 补拉动力
+- [ ] 实现后独立评审（不知情 agent）+ 变异测试
 
 ## 恢复指令
 
 ```bash
 cd /Users/luca/Desktop/项目/muse/lucagstack
-git log --oneline -6          # 确认前序已推
-cat ~/.claude/plans/abundant-shimmying-thunder.md   # 计划全文（含判据与批次）
-bash scripts/verify.sh        # 基线应为 70 PASS 0 FAIL 1 WARN
-node scripts/test-route-guard.mjs   # 基线应为 68/68
+cat framework-audit/2026-08-03-capability-reachability-plan-v2.md        # 当前计划
+cat framework-audit/2026-08-03-capability-reachability-handshake-r1.md   # R1 裁决与驳回
+bash scripts/verify.sh              # 基线 70 PASS / 0 FAIL / 1 WARN
+node scripts/test-route-guard.mjs   # 基线 68/68
 ```
 
-**风险提示**：批 1.1 要动 `skill-invariants.md:163`（ux-audit 截图门列在"不可进化"清单）——
-这是**动保护区**，须 luca 明确批准，红队已被指定重点攻这条。
+**授权边界**：luca 已批 `skill-invariants.md:163` 改措辞（不删条目）+ `:106` P6 顺序重排；**P1 `allowed-tools` 未批** → ux-audit 材料门本轮只收 HTML 源码 / 本地路径，「我自己截图」通道不开。
+
+<!-- FILE_END: 2026-08-03-capability-reachability-checkpoint.md -->
