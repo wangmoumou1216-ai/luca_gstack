@@ -132,6 +132,6 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 2. **Packet 既有两处越界**（先于本计划）：output-templates「组件结构」块 shadcn 词表压进 OD 主输入；「品牌与视觉约束」第 2 行与 open-design SKILL 的 FxUI 收窄口径矛盾。已在围栏外指引中加警示；是否收窄两块待 luca 裁决。
 3. **module-a 分数漂移提示**：A6 新增后可检出项变多→与历史 audit 分数不可直接比（基线不连续点 2026-07-21）。
 4. **insight-synthesis 两处既有漂移**：AGENTS.md 全文零出现（新 skill 已同步，它未同步）；frontmatter `self: 1800` 单位异常（实测 6094B，G5 字节口径不符）。
-5. **使用即留任预声明**：/research-kit 天然低频（kit 与 synthesis 之间隔着 luca 亲自采集）——60 天零 `skills_used` 属预期节奏，治理复盘按此判读不误降。
+5. **使用即留任预声明**：/research-kit 天然低频（kit 与 synthesis 之间隔着 luca 亲自采集）——低频属预期节奏（判据已改为场景计数，见 CLAUDE.md 使用即留任 2026-08-03 版），治理复盘按此判读不误降。
 6. **workflow-state 口径**：两新 skill 照 insight-synthesis 先例不自写 workflow-state（由编排层更新）——与 R3-② M2 原修法的显式偏差，依据=最新一级 skill 活先例。
 7. **窄词条已接受触达缺口**：「设计一份问卷」类倒序 prompt 零词表命中 → STOP → 语义路由契约兜底（窄词条防劫持的已接受代价；词表设计注释见 routing-map research_kit/ux_writing 条目）。

@@ -361,6 +361,9 @@ try {
       } else {
         process.stdout.write(`[session-restore] 🧬 月度演进扫描到期 (${curMonth}) — 在 session 内运行：${cmd}\n`);
       }
+      // 场景覆盖报告与月度演进同频（2026-08-03：「使用即留任」的执行者若无机械触发点，
+      // 就与它替代的死规则同一死法——独立评审 MAJOR。仅本地数据，脚本自身拒绝在 CI 跑）。
+      process.stdout.write(`[session-restore] ↳ 同场治理：python3 scripts/check-skill-scene-coverage.py（场景覆盖报告贴进 digest；判定含 DORMANT 的仅人工裁决）\n`);
       // scout 是 propose-only 的（workflow 无 fs，只 return 数据）：簿记落盘走确定性脚本
       // evolution-bookkeep.mjs（曾靠人手动追加 candidate-log 而漏做 → 跨月去重失效，故脚本化）；
       // digest 仍人工写，但首节四件套（采纳复盘/opportunities 裁决/addressed 复核/重访到期）是强制项。
