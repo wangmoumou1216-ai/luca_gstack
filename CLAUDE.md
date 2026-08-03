@@ -273,11 +273,11 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 
 **隐藏/高级 skill：** `challenge`、
 `redteam`、`evals`、`retro`、`careful`、`compare`、`figma-demo`、`magicpath`。
-这些不作为一级斜杠命令暴露，不在 `/office` 展示，不主动推荐；需要时由
-agent 直接读取对应 skill 文件或用 Skill 工具按名调用（如 `open-design` 的界面产出
-备选链仍可内部 dispatch `magicpath`）。**评审 carve-out：** 用户明确要求评审/复审时，按
-routing-chain-check R4 复用其中的评审资产不受"不主动推荐"限制——用户要的就是评审，选哪个资产
-是执行细节不是主动推销。
+这些不占一级入口（无斜杠命令、不在 `/office` 展示），由 agent 按名调用（如 `open-design`
+备选链内部 dispatch `magicpath`）。**「不占入口」≠「等点名」——执行中命中其场景时主动提出是
+义务不是推销**（luca 不可能记得点名低频 skill）：评审/复审 → R4 资产分流；多方案对比 →
+`compare`；大流程收尾 → `retro`（route-guard 40 轮钉兜底）；场景 A PRD 后 → `challenge`
+（brainstorm Phase 7 钉兜底）。仅"用户未表达且场景未出现"时不提。
 **兼容语义：** 用户说「写 PRD」时路由到 `/brainstorm`；不再暴露独立 `/prd` 命令。
 
 **使用即留任原则（skill 输入面治理）：** 判据是**场景**不是时长——数该 skill 的触发场景在**60 天窗口内**发生几次（上下游产物 mtime 代理；口径表/豁免白名单**单真值源 = `scripts/check-skill-scene-coverage.py` TABLE**，散文不复制）。**分母为 0 或 skill 未满窗口一律不处置**——场景没发生推不出没价值（luca 长期修框架期间，研究/内容类 skill 零使用毫无信息量）。窗口内场景 ≥3 次（初始阈值，随治理复盘校准）且**强代理**而零调用 → 才降级为隐藏（撤入口；磁盘零删除，随时可恢复）；弱代理只出 DORMANT? 待人工确认。**两条硬豁免：**①SKILL.md 声明「非降级信号」+进脚本白名单（双确认，selftest 守护）不适用本规则；②`skills_used` 字段脏（7 月缺失率 52%）不得单独作判据，以产出文件为准。执行者挂月度演进提示（session-restore 同场治理行；仅本地，CI 无仓外数据）。

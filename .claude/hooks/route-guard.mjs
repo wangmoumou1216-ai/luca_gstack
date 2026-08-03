@@ -749,6 +749,12 @@ if (!dryRun && prompt) {
   // 4c（claude5-unhobble）：20/40/每20、100 封顶；harness 已原生自动摘要，不再建议 /compact
   if (turns === 20 || turns === 40 || (turns > 40 && turns % 20 === 0 && turns <= 100)) {
     hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议写入 Checkpoint。`);
+    // 2026-08-03 低频治理 skill 确定性下沉：retro/evals 的需求时刻（大流程收尾）没有产物信号，
+    // 靠"自觉想起"实证不可靠（同日实证：提取 6/6 次全靠 Stop hook 强制、零次自觉）。
+    // 长 session 提醒是它们唯一的确定性通道；40 轮起提示（20 轮的 session 多半还没到收尾）。
+    if (turns >= 40) {
+      hints.push(`[route-guard] ↳ 长 session 治理：若本 session 已完成完整流程链/重大交付，收尾前考虑 retro 复盘（隐藏 skill，按名调用）；workflow 模式下各节点指标记录归 evals。`);
+    }
   }
 
   // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04；命名即切换扩展 2026-07-06）──
