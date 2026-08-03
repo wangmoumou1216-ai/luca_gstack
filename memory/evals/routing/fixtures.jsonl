@@ -20,7 +20,7 @@
 {"id":"kw-trivial-async","input":"把这个函数改成异步的","expected":"direct","layer":"keyword","scene":"B","note":"平凡任务"}
 {"id":"kw-diagnostic-noise","input":"上线之后订单、库存、报表都出现了延迟","expected":"direct","layer":"keyword","scene":"B","note":"事故报告反担保：'上线'是时间状语非构建意图，不得被多功能需求门推进 PLAN_MODE（2026-07-13 fable review；另一诊断句变体含'搜索'会撞 web_access 既有宽词，见 golden 反担保）"}
 {"id":"kw-slash-direct","input":"/brainstorm 新增登录、权限、导出、通知功能的需求","expected":"/brainstorm","layer":"keyword","scene":"A","note":"B-F1：显式斜杠直呼不被 PLAN_MODE 劫持（复杂度降级为 planHint 附加）"}
-{"id":"kw-auto-plancheck","input":"/auto 新增订单、库存、报表管理","expected":"PLAN_CHECK","layer":"keyword","scene":"A","note":"B-F1+A-F2：HEAVY 成员直呼+复杂内容走 PLAN_CHECK 较软门，不被 PLAN_MODE 压过（生产 env 由 tracked settings.json 注入，此处 env 复现同值）","env":{"ROUTE_GUARD_HEAVY_SKILLS":"auto,muse-loop-orchestrate"}}
+{"id": "kw-auto-plancheck", "input": "/auto 新增订单、库存、报表管理", "expected": "PLAN_CHECK", "layer": "keyword", "scene": "A", "note": "B-F1+A-F2：HEAVY 成员直呼+复杂内容走 PLAN_CHECK 较软门，不被 PLAN_MODE 压过。env 为机制测试自包含注入——auto 已于 2026-08-03 移出生产 env（截流实验），此处保留 auto 作分支机制测试载体，不复现生产值", "env": {"ROUTE_GUARD_HEAVY_SKILLS": "auto,muse-loop-orchestrate"}}
 {"id":"kw-connector-noise","input":"帮我加个红、黄、蓝三个主题色，然后保存","expected":"direct","layer":"keyword","scene":"B","note":"B-F2：连接词'然后'不算真功能词，占位符枚举不得过报"}
 {"id":"kw-idea-minutes","input":"帮我把这段会议纪要整理成需求：大家讨论决定新增订单查询、库存管理、报表导出","expected":"/idea","layer":"keyword","scene":"A","note":"B-F4：会议纪要摄入语境归 /idea，功能枚举是纪要常态非构建请求"}
 {"id":"kw-observability-build","input":"新增监控看板：展示异常统计、延迟分布、报错列表、故障详情","expected":"PLAN_MODE","layer":"keyword","scene":"A","note":"B-F5：可观测域构建需求召回（诊断反担保 v2 改句式框架后不再整域压制）"}
@@ -54,5 +54,5 @@
 {"id": "sem-primary-data-in-hand", "input": "上周做的 6 场用户访谈记录都在这个文件夹里，帮我看看说明了什么", "expected": "/insight-synthesis", "layer": "semantic", "scene": "B", "note": "2026-08-03 可达性方案 C：一手定性数据已在手→/insight-synthesis（兜底段新增句）。与 /idea 划界=忠实结构化 vs 解读跃迁；与 muse-req-triage 靠意图消歧（筛 vs 综合）"}
 {"id": "sem-idea-faithful-structuring", "input": "这是今天会议的语音转写稿，帮我整理成需求文档，别加你自己的想法", "expected": "/idea", "layer": "semantic", "scene": "A", "note": "2026-08-03 盲测覆盖补漏：已有语料忠实结构化→/idea（不延展不推断）；『别加想法』是忠实 vs 解读的显式信号，与 insight-synthesis 划界"}
 {"id": "sem-quick-research-single-source", "input": "帮我查一下 Electron 的 before-quit 事件到底保不保证触发，看官方文档", "expected": "/quick-research", "layer": "semantic", "scene": "B", "note": "2026-08-03 补漏：单点读一手源→quick-research（三档研究的中档）；研究轴钉已覆盖此类信号"}
-{"id": "sem-figma-layer-from-prototype", "input": "把这个原型同步到 Figma 里", "expected": "/figma-layer", "layer": "semantic", "scene": "A", "note": "2026-08-03 补漏：原型→Figma 保险层；写入完成后按乙类纪律主动开侧栏"}
+{"id": "kw-figma-layer-from-prototype", "input": "把这个原型同步到 Figma 里", "expected": "/figma-layer", "layer": "keyword", "scene": "A", "note": "2026-08-03 补漏：原型→Figma 保险层；写入完成后按乙类纪律主动开侧栏；2026-08-03 上线评审 NOTE-8：实测 route-guard 确定性命中 /figma-layer，由 semantic 改标 keyword 进确定性回归门"}
 {"id": "sem-compare-two-options", "input": "这两个方案帮我比一比哪个更合适", "expected": "compare", "layer": "semantic", "scene": "B", "note": "2026-08-03 低频 skill 下沉：多方案对比→compare（隐藏 skill 按名调用；CLAUDE.md 隐藏节已改口——场景命中时主动提出是义务）"}

@@ -452,6 +452,11 @@ function runRouteGuard(cwd, prompt) {
     assert.match(settings.env?.ROUTE_GUARD_HEAVY_SKILLS ?? '', /(^|,)muse-loop-orchestrate(,|$)/,
       'settings.json env 块必须注入 muse-loop-orchestrate 进 ROUTE_GUARD_HEAVY_SKILLS');
   }
+  // auto 截流实验不变量（2026-08-03，60 天盒到期 2026-10-02）：实验期内 HEAVY 集不得含 auto——
+  // 否则实验静默失效且无人发现（复盘会把截流期的零使用误读为需求侧结论）。
+  // 实验结束后按复盘裁决删除或反转本断言。
+  assert.doesNotMatch(settings.env?.ROUTE_GUARD_HEAVY_SKILLS ?? '', /(^|,)auto(,|$)/,
+    'auto 截流实验期内不得回到 ROUTE_GUARD_HEAVY_SKILLS（见 plan-agent.md 实验记录）');
   // README §8 表的「时机」行不得与真实布线矛盾
   const readme = readFileSync(resolve(projectRoot, 'README.md'), 'utf8');
   for (const [row, script] of [

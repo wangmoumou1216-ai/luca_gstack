@@ -57,7 +57,11 @@ TABLE = {
     "quick-research": (None, [f"{D}/research/*quick-research*.md"], "unmapped"),
     "ux-research": (None, [f"{D}/research/ux-research-*.md"], "unmapped"),
     "idea": (None, [f"{D}/idea/*.md"], "unmapped"),
-    "auto": (None, [], "unmapped"),
+    # auto：截流实验观察对象（2026-08-03 移出 ROUTE_GUARD_HEAVY_SKILLS，60 天盒到期 2026-10-02）。
+    # 它是编排器、无唯一文件产物——观察通道 = 窗口内 episodic skills_used 含 "auto" 的条数
+    # （自陈字段有漏记可能，复盘时辅以对话记录核对；混杂因素：部分触发词召回不全，
+    # 如「全自动把这些需求做出来」落 STOP——复盘时先查词表召回再下需求侧结论）。
+    "auto": (None, [], "experiment"),
     "code-recon": (None, [f"{D}/engineering/*architecture*"], "unmapped"),
     "code-hygiene": (None, [], "unmapped"),
     "muse-req-triage": (None, [f"{D}/loop/*"], "unmapped"),
@@ -94,6 +98,33 @@ def skill_age_days(skill: str):
         return (time.time() - min(stamps)) / 86400 if stamps else None
     except Exception:
         return None
+
+
+def episodic_uses(skill: str, cutoff: float):
+    """窗口内 episodic 记录 skills_used 含该 skill 的条数（实验观察通道；自陈字段、可能漏记）。"""
+    import json
+    import datetime
+    n = 0
+    try:
+        for line in (REPO / "memory" / "episodic" / "index.jsonl").read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                d = json.loads(line)
+            except Exception:
+                continue
+            if skill not in str(d.get("skills_used", "")):
+                continue
+            try:
+                ts = datetime.datetime.fromisoformat(str(d.get("date", ""))[:10]).timestamp()
+            except Exception:
+                continue
+            if ts >= cutoff:
+                n += 1
+    except OSError:
+        pass
+    return n
 
 
 def is_exempt(skill: str) -> bool:
@@ -144,6 +175,10 @@ def main():
         out_n = sum(count(p, out_pats, cutoff) for p in projects)
         if strength == "unmapped":
             print(f"{skill:24} {'-':>6} {out_n:>7}  UNMAPPED（代理口径未定，不判）")
+            continue
+        if strength == "experiment":
+            used = episodic_uses(skill, cutoff)
+            print(f"{skill:24} {'-':>6} {used:>7}  EXPERIMENT（截流实验观察中，output=窗口内 episodic 使用数；到期 2026-10-02 复盘，判据与混杂因素见 TABLE 注释）")
             continue
         if strength == "unobservable":
             print(f"{skill:24} {'-':>6} {out_n:>7}  UNOBSERVABLE（场景不落盘；命中靠语义兜底 + session-restore kit→synthesis 接力提醒，不判）")

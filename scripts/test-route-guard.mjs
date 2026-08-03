@@ -531,6 +531,8 @@ const cases = [
   },
   {
     // B-F1 fork 面：HEAVY 成员的斜杠直呼+复杂内容走 PLAN_CHECK（较软门），不被 PLAN_MODE 压过。
+    // extraEnv 为机制测试自包含注入——auto 已于 2026-08-03 移出生产 env（截流实验），
+    // 此处保留 auto 作分支机制测试载体（机制本身仍服务 muse-loop-orchestrate），非生产值复现。
     name: 'B-F1: HEAVY 成员直呼+枚举 → PLAN_CHECK（fork 设计恢复，不被 PLAN_MODE 吞）',
     prompt: '/auto 新增订单、库存、报表管理',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示', ROUTE_GUARD_HEAVY_SKILLS: 'auto,muse-loop-orchestrate' },

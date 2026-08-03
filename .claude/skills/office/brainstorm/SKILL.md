@@ -661,12 +661,15 @@ assumptions, the Weakest Assumption itself), prepend one line to the menu:
 collection instruments first (feeds `/insight-synthesis` once data comes back)."
 No such items → no line. Never block on this.
 
-**Scope-challenge check (Scene A only; hint, not a gate):** when this PRD is for a
-**new feature (Scene A)** and the gate is OPEN, append one line to the menu:
-"⚔ Scene A — `challenge` (hidden skill, invoke by name) can pressure-test the scope
-from a CEO/founder lens (expand / selective / hold / cut) before `/ux-research`."
-This is `challenge`'s self-declared slot (after /brainstorm, before /ux-research,
-Scene A only) — surfacing it here is its only deterministic reach. Scene B/C/D → no line.
+**Scope-challenge line (deterministic; hint, not a gate):** when the gate is OPEN,
+**always** append this line to the menu — applicability is stated inside the line itself,
+not judged silently (a judged-append is the same "self-discipline" failure mode this
+mount exists to remove):
+"⚔ If this PRD is for a **brand-new feature (Scene A)**: `challenge` (hidden skill,
+invoke by name) can pressure-test the scope from a CEO/founder lens
+(expand / selective / hold / cut) before committing scope downstream."
+This is `challenge`'s self-declared slot (after /brainstorm, Scene A only) and its only
+deterministic reach; the reader decides applicability from the line.
 
 **When gate is OPEN (Resolve Before Planning is empty):**
 1. Proceed to downstream design (invoke `/ux-research`, `/ux-brainstorm`, `/design-brief`, or

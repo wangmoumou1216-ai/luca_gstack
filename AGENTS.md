@@ -600,12 +600,13 @@ Layered routing order:
    force them through semantic dispatch (explicit user naming of any item still executes it — the
    exclusion targets semantic recognition, not refusal).
 
-Hidden skill semantics still require explicit user intent: `challenge`,
-`redteam`, `evals`, `retro`, `careful`,
-`compare`, `figma-demo`, and `magicpath` are not proactive first-level routes (same 8-item
-hidden/advanced roster as CLAUDE.md). **Review carve-out:** when the user explicitly asks for a
-review, picking a review asset per routing-chain-check R4 is not "proactive recommendation" — the
-user asked for the review; which asset serves it is an execution detail.
+Hidden skills hold no first-level entry, but **"no entry" ≠ "wait to be named"** (aligned
+with CLAUDE.md 2026-08-03): `challenge`, `redteam`, `evals`, `retro`, `careful`, `compare`,
+`figma-demo`, and `magicpath` (same 8-item roster) are invoked by name, and **proactively
+surfacing one when its scene occurs mid-execution is a duty, not promotion** — the user cannot
+be expected to memorize low-frequency skill names. Review→R4 assets; comparison→`compare`;
+major-delivery wrap-up→`retro` (route-guard 40-turn nail as backstop); Scene-A PRD→`challenge`
+(brainstorm Phase 7 nail). Only stay silent when neither the user asked nor the scene appeared.
 
 Muse additions (muse product line — on the single truth source `main` since 2026-07-16):
 

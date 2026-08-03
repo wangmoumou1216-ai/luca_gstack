@@ -377,10 +377,12 @@ try {
 // 是 research-kit 工具已产出。检测「有 kit、无 synthesis」且 kit 已过 3 天采集静默期
 // （≤60 天防陈旧唠叨），启动提醒一句。这是该 skill 除语义兜底外唯一的确定性通道。
 try {
-  // 走 PROJECTS_ROOT 绝对路径而非 docs 软链：冷启动分支会在上文清掉三链，
-  // 走软链会让本提醒在最常见的启动形态下永远沉默（activeProject 在清链前已读到）。
+  // 走 PROJECTS_ROOT 绝对路径而非 docs 软链：清链后软链已断（activeProject 在清链前已读到）。
+  // !cleared：本次清了链 = 走全新流程/不继承，提示刚清掉的项目名与「请告知要做什么」打架
+  //（上线评审 NOTE-2）；每日标记防条件成立期间每 session 重复刷（NOTE-1，照 digest-shown 惯例）。
+  const kitMark = join(projectRoot, '.claude', `.kit-relay-shown-${new Date().toISOString().slice(0, 10)}`);
   const resDir = join(PROJECTS_ROOT, activeProject, 'docs', 'research');
-  if (activeProject && !docsDangling && existsSync(resDir)) {
+  if (activeProject && !docsDangling && !cleared && !existsSync(kitMark) && existsSync(resDir)) {
     const rfiles = readdirSync(resDir);
     const kits = rfiles.filter(f => f.startsWith('research-kit-') && f.endsWith('.md'));
     if (kits.length && !rfiles.some(f => f.startsWith('insight-synthesis-'))) {
@@ -388,6 +390,7 @@ try {
       const ageDays = (Date.now() - newest) / 86400000;
       if (ageDays >= 3 && ageDays <= 60) {
         process.stdout.write(`[session-restore] 🔬 项目「${activeProject}」有 research-kit 采集工具（${Math.round(ageDays)} 天前）但尚无 insight-synthesis 产出——数据若已采回，可跑 /insight-synthesis 做两层综合。\n`);
+        try { writeFileSync(kitMark, ''); } catch { }
       }
     }
   }
