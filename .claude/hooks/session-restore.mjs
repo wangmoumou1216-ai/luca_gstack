@@ -377,7 +377,9 @@ try {
 // 是 research-kit 工具已产出。检测「有 kit、无 synthesis」且 kit 已过 3 天采集静默期
 // （≤60 天防陈旧唠叨），启动提醒一句。这是该 skill 除语义兜底外唯一的确定性通道。
 try {
-  const resDir = join(projectRoot, 'docs', 'research');
+  // 走 PROJECTS_ROOT 绝对路径而非 docs 软链：冷启动分支会在上文清掉三链，
+  // 走软链会让本提醒在最常见的启动形态下永远沉默（activeProject 在清链前已读到）。
+  const resDir = join(PROJECTS_ROOT, activeProject, 'docs', 'research');
   if (activeProject && !docsDangling && existsSync(resDir)) {
     const rfiles = readdirSync(resDir);
     const kits = rfiles.filter(f => f.startsWith('research-kit-') && f.endsWith('.md'));
