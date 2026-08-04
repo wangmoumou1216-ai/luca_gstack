@@ -2,7 +2,7 @@
 name: open-design
 preamble-tier: 3
 argument-hint: "[design-brief 路径 | 要给 OD 的方案 md(单点交接) | 'recover/拉回来' 回收产物]"
-version: 3.1.0
+version: 3.2.0
 description: |
   Open Design (OD) 连接器（**默认桌面端生成；headless 为 opt-in**）：把设计产出（design-brief 交互文档，
   或你单点指定的方案 md）编译成干净 OD 指令；先评估并让你选 Target platform + Design system，再建项目绑定它、
@@ -110,15 +110,20 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
   后台/管理/web → `responsive-web`（或 desktop-web/desktop-app）。
 - fidelity：高保真原型 → `high`；线框 → `wireframe`。默认 `high`。
 
-**2b. 评估 Design system 候选（拉 OD 实时目录，按"产品域 + 不与 FxUI 橙撞色"选 3-4 个）：**
-```bash
-curl -s "$_OD_URL/api/design-systems" | python3 -c "import sys,json;[print(s.get('id'),'|',s.get('title'),'—',(s.get('summary') or '')[:60]) for s in json.load(sys.stdin).get('designSystems',[])]" | head -60
-```
-评估准则：① 产品域匹配（B2B/CRM→企业/中性类；消费→Apple 类；数据→dashboard 类）
-② **因为叠了 FxUI 橙品牌色，优先色彩中性的 DS**（避免它自带强品牌色与橙撞，如 Ant 蓝/Linear 紫）。
+**2b. Design system 选择 = 意图先行（2026-08-04 机制反转，源：luca 纠正「候选不是我想要的，还得手动打字」）：**
 
-**2c. 让用户选（AskUserQuestion，不替用户定）：** 一个问题列 Target platform（带推荐），一个问题列 3-4 个 Design system
-候选（每个写清调性 + 与 FxUI 橙是否撞色的权衡）。**用户选定 platform + designSystem 后才进 Phase 3。**
+目录（60+ 项）是实现细节，不是用户的考题。先拉实时目录备匹配（**不直接贴给用户**）：
+```bash
+curl -s "$_OD_URL/api/design-systems" | python3 -c "import sys,json;[print(s.get('id'),'|',s.get('title')) for s in json.load(sys.stdin).get('designSystems',[])]"
+```
+- **默认不出 DS 选择题**。开放一问：「想要什么风格？点产品名（Notion/GitHub/…）或说感觉（干净的/像 XX 那种）都行；要多方案对比就说要几个。」
+- 拿用户语义到目录匹配 id 后，**一句话回显映射结果确认**（「按你说的选了 notion/github，开建？」）——语义匹配可能错，回显是唯一保险；确认后才进 Phase 3。
+- **多方案合法且常态**：用户要 N 个 DS 就建 N 个项目（slug 加 DS 后缀，见 Phase 3D；同一份 brief）。
+- **目录按需可见**：仅当用户问「有哪些可选」才贴，且须分组（知名产品类 / 中性风格类 / 强风格主题类）+ 每行一句调性注释，不贴裸名单。
+- **偏好行（活数据，用户每次选定后回写本行）**：已知口味圈 = notion, github, slack, vercel（2026-08-04；偏好知名产品 DS + 多方案横向对比）。有口味圈后开放问可带默认值（「还是上次那几个？」）；若用 AskUserQuestion，候选只从口味圈出，不再预生成陌生候选。
+- 匹配/推荐仍守两准则：① 产品域匹配 ② **叠了 FxUI 橙 → 对自带强品牌色的 DS（Ant 蓝/Linear 紫）提示撞色风险**——但用户点名的照建不拦。
+
+**2c. Target platform 照旧 AskUserQuestion（带推荐，不替用户定）。** platform + DS 都定了才进 Phase 3。
 
 ---
 
@@ -126,7 +131,7 @@ curl -s "$_OD_URL/api/design-systems" | python3 -c "import sys,json;[print(s.get
 
 把一切 staged 好，只把"按生成键"交给你在桌面端（走本机已登录订阅会话，可靠，不受 headless 子进程不稳影响）。
 
-**先定标识（贯穿 建项目→落盘→recover 同一 slug）：** `_TOPIC`=主题展示名（取 `.claude/current-topic.txt` 或本次主题）；`_SLUG`=ASCII 安全短名（如 `suji-biz-insight`，从主题罗马化/英译，≤64 字符）。下面 `<slug>`=`$_SLUG`、`<topic>`=`$_TOPIC`；建完务必把 `$_SLUG` 记进 Phase 6 handoff，供日后 recover 定位。
+**先定标识（贯穿 建项目→落盘→recover 同一 slug）：** `_TOPIC`=主题展示名（取 `.claude/current-topic.txt` 或本次主题）；`_SLUG`=ASCII 安全短名（如 `suji-biz-insight`，从主题罗马化/英译，≤64 字符）。下面 `<slug>`=`$_SLUG`、`<topic>`=`$_TOPIC`；建完务必把 `$_SLUG` 记进 Phase 6 handoff，供日后 recover 定位。**多方案（Phase 2b 用户点了 N 个 DS）：每个 DS 建一个项目，slug=`<主slug>-<dsId>`（如 `fxai-card-notion`），同一份 brief.md 写入每个项目，逐个验证各自 designSystemId 绑定。**
 
 ```bash
 # 1) 建项目并绑定所选 designSystem（designSystemId 是可绑字段；platform/fidelity 写进 brief 文本兜底）
@@ -246,8 +251,9 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 2. **人工判断后置，迭代主体=用户在 OD**：落盘后展示即止、不阻塞提问；用户在 OD 桌面端
    自行迭代，回收（recover）/推 figma-layer 由用户点名触发（2026-06-10 luca 指示）。
 3. **FxUI 收窄口径**：口径与具体色值权威见 Phase 1「FxUI Token 块」，本处不复述色值（避免与 Phase 1 漂移）。
-4. **必须先评估并让用户选 Target platform + Design system**（Phase 2 AskUserQuestion），选定后**建项目时绑 `designSystemId`**
-   （建后验证真的绑上）；platform/fidelity 写进 brief 文本兜底。
+4. **必须先定 Target platform + Design system 再建项目**（DS=意图先行开放问 + 映射回显确认，**不预生成陌生候选菜单**，
+   权威见 Phase 2b），选定后**建项目时绑 `designSystemId`**（建后验证真的绑上；多方案=多项目各绑各的）；
+   platform/fidelity 写进 brief 文本兜底。
 5. **输入是设计产出**（交互文档 或 单点方案 md），不是 PRD、不是已生成 HTML；源缺失不静默建空项目。
 6. **桌面端动态端口**：每段都用 pgrep+lsof 重测 `$_OD_URL`，不写死；daemon 重启端口会变。
 7. **/api/chat 必须带 `agentId`**（如 "claude"），否则 AGENT_UNAVAILABLE。
