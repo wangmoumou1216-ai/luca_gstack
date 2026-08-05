@@ -1,0 +1,80 @@
+# luca_gstack × Codex 全模块排查矩阵（2026-08-05）
+
+> 目标：逐模块确认「以前用 Claude 的能力，现在切 Codex 是否等价可用」，事无巨细。
+> 判据纪律：**每格必须有实测证据**；「据文档/据 schema 推断」单独标注，不与实测混列。
+> 环境：codex-cli 0.146.0（会话期间自动从 0.133.0 升级）、ChatGPT plus。
+
+---
+
+## 结论矩阵
+
+| # | 模块 | Codex 下状态 | 证据 | 遗留动作 |
+|---|---|---|---|---|
+| M1 | hooks（6 个） | ⚠️ **可用但需两道门** | 活体：5 事件全触发、本仓日志 +616B | 见下「M1 两道门」 |
+| M2 | skills（33） | ✅ 等价可用 | 活体：`$quick-research` 经软链读到真实 SKILL.md 并准确引用首步 | 无 |
+| M3 | subagents（3） | ✅ 等价可用 | 活体：找到 `.codex/agents/preflight-agent.toml`、按 `low` 档派发、返回 OK | 无 |
+| M4 | slash commands（23） | ✅ 功能可达，**语法不同** | 活体：`/status` 不执行；`$<skill>` 正常 | 已写入 AGENTS.md |
+| M5 | workflows（2） | ✅ 等价可用 | `test-workflow-runner` 15/15，两个 workflow 零改写跑通 | 无 |
+| M6 | scripts（38） | ✅ 无依赖 | 引用 `CLAUDE_PROJECT_DIR` 的 8 个**全是测试脚本**（自设 fixture），非生产路径 | 无 |
+| M7 | memory scripts（13） | ✅ 等价可用 | 活体：`env -u CLAUDE_PROJECT_DIR` 下 `get_memory --summary` 与 `search_memory` 均正常（memroot 脚本相对回退生效） | 无 |
+
+---
+
+## M1 两道门（唯一未闭合项）
+
+Codex **不加载仓库级 hooks.json**。实测矩阵（全部不触发）：
+
+| 位置 | 无 trust | 加 `[projects]` trust | `--dangerously-bypass-hook-trust` |
+|---|---|---|---|
+| `.codex/hooks.json` | ❌ | ❌ | ❌ |
+| `.agents/hooks.json` | ❌ | — | — |
+| `.claude/hooks.json` | ❌ | — | — |
+
+唯一生效通路 = **用户级 `~/.codex/hooks.json`**，且新条目还需**授信**：
+
+- 门 1 · 注册：把 `.codex/hooks.json` 条目并入 `~/.codex/hooks.json`（保留其中既有第三方 hook）。
+  断言 `S11` 守护；未注册时如实报 FAIL，不粉饰。
+- 门 2 · 授信：新增条目未授信时 `codex exec` **静默跳过**。实测须配
+  `--dangerously-bypass-hook-trust` 才执行；常规使用应在 TUI 里授信一次。
+
+adapter 自带 `inRepo` 守卫，故全局注册后在其它项目静默放行，不越界。
+
+---
+
+## 本轮修掉的 BLOCKER（全部经一手证据）
+
+| ID | 问题 | 证据来源 | 后果（未修时） |
+|---|---|---|---|
+| B1 | 仓库级 hooks.json 不被加载 | 自建 marker 实测 + 空目录阴性对照 | 整套 hook 从未运行；我曾据泛化 `hook:` 行误报"验证通过" |
+| B2 | `process.exit()` 截断 stdout | 200000B → 收到 65536B | 大 payload 时控制动词变非法 JSON |
+| B3 | Stop `decision:block` 被译成 `continue:false` | 二进制校验串「Stop hook requested continuation without a prompt; ignoring the block」 | 语义反转：自成长捕获不发生 + 用户回合被杀 |
+| B4 | `updatedInput` 被误判为不支持 | 二进制校验串「PreToolUse hook returned updatedInput without permissionDecision:allow」 | 正常重定向被降级成硬 deny，比 fail-open 更糟 |
+| B5 | matcher 用 `shell`（实际是 `Bash`） | matcher=`.*` 抓真实载荷 | Pre/PostToolUse 永不触发 → 项目隔离形同虚设 |
+| B6 | effort 用 `minimal`（模型拒绝） | 400 unsupported_value | preflight-agent 每次调用失败 |
+| B7 | workflow schema 未做 strict 归一化 | 400 invalid_json_schema | 每个 agent 静默返回 null → workflow 恒产出空结果 |
+
+---
+
+## 实测得到的 Codex 事实（写给下一个人）
+
+- **tool_name**：shell 执行 = `Bash`（**不是 `shell`**）；文件编辑 = `apply_patch`。
+  **两者 tool_input 都是 `{command}`，没有 `file_path`**——这决定了 adapter 必须按目标 hook 分流别名。
+- **事件名大小写**：hooks.json 用 **PascalCase**（`UserPromptSubmit`）；snake_case 只是 config.toml
+  里 trust-state 的 key 写法，两者不可混。
+- **effort 枚举**：模型接受 `none/low/medium/high/xhigh/max`，**拒绝 `minimal`**（config 解析器却接受它）。
+- **结构化输出**：strict 模式，每层 object 的 `required` 须列全 properties + `additionalProperties:false`。
+- **stdin**：`codex exec` 在 stdin 未 EOF 时**永久挂起**（"Reading additional input from stdin"），
+  自动化调用必须 `< /dev/null` 或 `stdio:'ignore'`。
+- **subagent 工具名**：连字符会被转成下划线（`preflight-agent` → `preflight_agent`），注册名不变。
+- **skills 预算**：skill 多时描述会被压缩（"shortened to fit the 2% skills context budget"），
+  但全部仍可见可调用。
+
+---
+
+## 未闭合 / 待办
+
+1. **门 1+门 2**（见上）——需用户在本机执行，属环境动作非代码动作。
+2. **串行深审**：runtime 维已完成（4 BLOCKER 全修）；协议维、workflow-runner 安全维、
+   零回归+mutation 维待跑（用户要求串行，逐个进行）。
+3. **MCP `mcp__muse__*`**：Codex 侧不可用（app 动态注入），降级链
+   `luca-open.sh` / `luca-sidebar.sh` 为纯 bash、零 harness 依赖，可用。

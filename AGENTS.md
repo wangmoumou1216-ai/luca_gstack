@@ -370,6 +370,23 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 > 需要知道**实际跑在哪个 CLI** 时用 `harness.mjs` 的 `actualHarness()`（读 `LUCA_ACTUAL_HARNESS`），
 > **不要**用 `detectHarness()`——后者回答的是"该按哪套协议输出"，在 adapter 下返回 `claude` 是正确的。
 > 验收：`node scripts/verify-codex-wiring.mjs`（静态段随时可跑；活体段需可用订阅）。
+>
+> **调用语法（2026-08-05 活体实测）**：Codex **不执行** `.claude/commands/*.md`，`/brainstorm` 这类
+> 斜杠语法无效；但同一批 skill 经 `.agents/skills/` 软链**完全可用**，用 **`$<skill-name>`**（如
+> `$quick-research`）或 `/skills` 选择器调用，读到的是同一份 SKILL.md。`.claude/commands/` 里那 23 个
+> 文件是薄包装（正文即"读 SKILL.md 并执行"），故**功能无缺口、仅语法不同**。
+> subagent（`.codex/agents/*.toml`）**仓库级即可被发现**（与 hooks 不同），按名派发；
+> 工具名里的连字符会转成下划线（`preflight-agent`→`preflight_agent`），注册名不变。
+>
+> **Codex 实测事实速查**（全模块矩阵与证据见 `framework-audit/2026-08-05-codex-module-matrix.md`）：
+> tool_name：shell 执行=`Bash`（**非 `shell`**）／文件编辑=`apply_patch`，**两者 tool_input 均为
+> `{command}`、无 `file_path``；hooks.json 事件名用 **PascalCase**（snake_case 仅是 trust-state key）；
+> effort 枚举模型接受 `none/low/medium/high/xhigh/max`、**拒绝 `minimal`**；结构化输出为 strict
+> （每层 `required` 须列全 properties + `additionalProperties:false`）；`codex exec` 在 stdin 未 EOF 时
+> **永久挂起**，自动化调用必须 `< /dev/null`。
+> **hooks 两道门**：Codex **不加载仓库级 hooks.json**（`.codex/`/`.agents/`/`.claude/` × trust/bypass
+> 全组合实测不触发）——须并入用户级 `~/.codex/hooks.json`（门 1，断言 S11 守护），且新条目需**授信**
+> 才执行（门 2，未授信静默跳过）。adapter 自带 `inRepo` 守卫，全局注册后不越界到其它项目。
 
 真值源 `.claude/skill-os/model-routing.yaml`。**Codex 是否能传 per-agent model 参数尚未在真 Codex
 上核验**（当前按"不能"保守假设），故档位分派本身暂判不可移植（见 §11 Non-goals；真-Codex spike
