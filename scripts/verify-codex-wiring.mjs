@@ -49,11 +49,17 @@ ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NE
     lim('SessionStart') === 0 && lim('UserPromptSubmit') === 0);
 }
 
-// S5 PreToolUse matcher 必须匹配 Codex 真实 tool_name，而非 CC 工具名
+// S5 matcher 必须匹配 **实测** tool_name。2026-08-05 用 matcher='.*' 抓真实载荷：
+//   shell 执行 → tool_name='Bash'（**不是 'shell'**）；文件编辑 → 'apply_patch'。
+// 初版据文档写 `^(shell|apply_patch)$`，PreToolUse/PostToolUse 因此**永远不触发**——
+// 即项目隔离强制（project-scope-guard）在 Codex 下完全失效，且静默无声。
+// 本断言现在守实测值；PostToolUse 同样要匹配，否则编辑计数链断。
 {
-  const m = hooks?.hooks?.PreToolUse?.[0]?.matcher || '';
-  ok('S5 PreToolUse matcher 用 Codex 的 shell/apply_patch（用 CC 名会静默永不触发）',
-    /shell/.test(m) && /apply_patch/.test(m), `matcher=${m}`);
+  const need = (m) => /\bBash\b/.test(m) && /apply_patch/.test(m) && !/\bshell\b/.test(m);
+  const pre = hooks?.hooks?.PreToolUse?.[0]?.matcher || '';
+  const post = hooks?.hooks?.PostToolUse?.[0]?.matcher || '';
+  ok('S5 Pre/PostToolUse matcher 用实测 tool_name（Bash|apply_patch；写 shell 永不触发）',
+    need(pre) && need(post), `pre=${pre} post=${post}`);
 }
 
 // S6 adapter 本体

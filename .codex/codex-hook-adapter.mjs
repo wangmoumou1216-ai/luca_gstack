@@ -42,8 +42,27 @@ import { fileURLToPath } from 'url';
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const diag = (m) => { try { process.stderr.write(`[codex-adapter] ${m}\n`); } catch { } };
 
-// Codex tool_name → Claude Code tool_name（PreToolUse 目前只对 shell / apply_patch 分发）
-const TOOL_NAME_MAP = { shell: 'Bash', local_shell: 'Bash', apply_patch: 'Write' };
+// 【tool_name 实测（2026-08-05，matcher='.*' 抓真实载荷）】
+//   shell 执行  → tool_name='Bash'      tool_input={command}
+//   文件编辑    → tool_name='apply_patch' tool_input={command}   ← **不是 file_path**
+// 两个都用 `command` 装载，这决定了映射必须**按目标 hook 分流**，而不是全局一张表：
+//   · project-scope-guard 的 Bash 分支扫描 `input.command` 找越界路径（第 218 行），
+//     其余工具名走 `file_path`/`notebook_path` 字段。apply_patch 没有 file_path，
+//     若映射成 Write，guard 会去找一个不存在的字段 → **项目隔离形同虚设**。
+//     ⇒ 对 guard 映射成 Bash，命令串扫描照常生效。
+//   · post-edit 用 /^(Write|Edit|MultiEdit|NotebookEdit)$/ 计编辑数，Bash 只计工具数。
+//     ⇒ 对 post-edit 映射成 Write，编辑计数才递增（否则 .session-edit-count 恒 0 →
+//       session-sync 判"无实质工作" → Stop 自成长捕获不触发，即本文件头 B1 的连锁失效）。
+// 同一个 Codex 工具在两个消费者眼里需要不同形状，这正是 adapter 该做的事。
+const TOOL_ALIAS_BY_HOOK = [
+  { match: /project-scope-guard/, map: { apply_patch: 'Bash', shell: 'Bash', local_shell: 'Bash' } },
+  { match: /post-edit/,           map: { apply_patch: 'Write', shell: 'Bash', local_shell: 'Bash' } },
+];
+const DEFAULT_TOOL_MAP = { shell: 'Bash', local_shell: 'Bash' };   // Bash 本就是 CC 名，无需改写
+function aliasFor(targetPath) {
+  const hit = TOOL_ALIAS_BY_HOOK.find((e) => e.match.test(targetPath || ''));
+  return hit ? hit.map : DEFAULT_TOOL_MAP;
+}
 
 // 哪些事件的输出 schema 含 additionalContext。Stop 的 schema 是 additionalProperties:false
 // 且**没有** hookSpecificOutput —— 往 Stop 塞它会被判 "invalid stop hook JSON output"。
@@ -113,7 +132,8 @@ function main() {
   if (!inRepo(data.cwd)) return 0;      // 其它项目：静默放行，零副作用
 
   const event = data.hook_event_name || '';
-  if (data.tool_name && TOOL_NAME_MAP[data.tool_name]) data.tool_name = TOOL_NAME_MAP[data.tool_name];
+  const alias = aliasFor(target);
+  if (data.tool_name && alias[data.tool_name]) data.tool_name = alias[data.tool_name];
   // Codex 的 SessionStart 无 source 字段；给显式非-startup 值，让 session-restore 走
   // "保守保留软链"分支，避免误清并行 session 的软链。
   if (event === 'SessionStart' && !data.source) data.source = 'codex-start';

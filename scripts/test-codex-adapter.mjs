@@ -128,15 +128,16 @@ cleanup();
   // "PreToolUse hook returned updatedInput without permissionDecision:allow" 证明它是一等字段。
   // 初版据一个 OPEN 的旧版 issue 把它降级成 deny，等于把 project-scope-guard 的**正常重定向
   // 路径**（pinned session 写产出目录的常态）变成硬拒绝——比 fail-open 更糟。
+  // 用**实测载荷形状**：Codex 的 shell 工具名是 Bash，载荷是 {command}。
+  // 原用例给 apply_patch 传 file_path —— Codex 从不这样传，等于测一个不存在的场景（假绿）。
   const r = runVia('project-scope-guard.mjs', {
     hook_event_name: 'PreToolUse',
     session_id: 'no-such-pin-' + Date.now(),
-    tool_name: 'apply_patch',
-    tool_input: { file_path: join(ROOT, 'docs', 'x.md') },
+    tool_name: 'Bash',
+    tool_input: { command: 'echo hi > docs/x.md' },
   });
   const o = parse(r.stdout);
   const hso = o?.hookSpecificOutput;
-  // 未绑定 session 时 guard 走 deny 分支（非重定向）；deny 两家同字段同语义 → 原样透传
   ok('D1 未绑定项目写产出目录 → deny 原样透传（强制未因 harness 丢失）',
     hso?.permissionDecision === 'deny', `stdout=${String(r.stdout).slice(0, 160)}`);
   ok('D2 deny 理由非空（模型可据此改正）',
@@ -155,6 +156,53 @@ cleanup();
   const h = o?.hookSpecificOutput;
   ok('D3 updatedInput 原样透传且自动补 permissionDecision:allow（不再降级成 deny）',
     !!h?.updatedInput && h.permissionDecision === 'allow', `stdout=${String(r.stdout).slice(0, 200)}`);
+}
+
+
+// ── F. 真实载荷形状（2026-08-05 实测：Codex 的 tool_input 与 CC 不同）──────────
+// 实测 matcher='.*' 抓到：shell 执行 → tool_name='Bash'、文件编辑 → 'apply_patch'，
+// **两者 tool_input 都是 {command}，没有 file_path**。原 B/D 组用 file_path 构造
+// apply_patch，与真实载荷不符，因此测不出"映射错了会让项目隔离失效"这一类缺陷。
+// 本组一律用**实测形状**构造。
+{
+  cleanup();
+  // F1: apply_patch(command 载荷) 送到 post-edit → 须按 Write 计编辑数
+  runVia('post-edit.mjs', {
+    hook_event_name: 'PostToolUse', session_id: SID,
+    tool_name: 'apply_patch',
+    tool_input: { command: '*** Begin Patch\n*** Add File: x.md\n+hi\n*** End Patch' },
+  });
+  const p1 = join(ROOT, '.claude', '.session-edit-count-' + SID);
+  const n1 = existsSync(p1) ? parseInt(readFileSync(p1, 'utf8').trim() || '0', 10) : 0;
+  ok('F1 apply_patch(真实 command 载荷) → post-edit 计为编辑（Stop 自成长链不断）',
+    n1 >= 1, `count=${n1}`);
+  cleanup();
+}
+{
+  // F2: apply_patch 送到 project-scope-guard → 须走 Bash 命令串扫描分支并拦截越界写
+  // （若误映射成 Write，guard 会找不存在的 file_path → 项目隔离静默失效）
+  const r = runVia('project-scope-guard.mjs', {
+    hook_event_name: 'PreToolUse',
+    session_id: 'no-such-pin-' + Date.now(),
+    tool_name: 'apply_patch',
+    tool_input: { command: `*** Begin Patch\n*** Add File: docs/leak.md\n+x\n*** End Patch` },
+  });
+  const o = parse(r.stdout);
+  ok('F2 apply_patch 越界写产出目录 → guard 经命令串扫描拦下（项目隔离在 Codex 下真生效）',
+    o?.hookSpecificOutput?.permissionDecision === 'deny',
+    `stdout=${String(r.stdout).slice(0, 160)}`);
+}
+{
+  // F3: Bash 是 Codex 的真实 shell 工具名，不得被改写
+  cleanup();
+  runVia('post-edit.mjs', {
+    hook_event_name: 'PostToolUse', session_id: SID,
+    tool_name: 'Bash', tool_input: { command: 'ls' },
+  });
+  const p3 = join(ROOT, '.claude', '.session-tool-count-' + SID);
+  const n3 = existsSync(p3) ? parseInt(readFileSync(p3, 'utf8').trim() || '0', 10) : 0;
+  ok('F3 Bash(Codex 真实 shell 工具名) 正常计入工具数', n3 >= 1, `count=${n3}`);
+  cleanup();
 }
 
 // ── E. 零回归：Claude 直调路径未被本次改动影响 ──────────────────────────────

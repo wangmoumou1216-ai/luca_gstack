@@ -1,5 +1,5 @@
 {
-  "_comment": "luca_gstack 的 Codex 侧 hook 注册（2026-08-04）。所有 hook 经 .codex/codex-hook-adapter.mjs 调用：adapter 负责入向 tool_name 归一化（shell→Bash / apply_patch→Write）与出向方言翻译（decision:block→continue:false；纯文本→additionalContext；updatedInput 不受支持时降级为 deny）。.claude/hooks/*.mjs 六个脚本因此零改动、Claude 路径零影响。matcher 用 Codex 真实 tool_name（openai/codex#18491：read_file 与 grep 目前无 hook 分发）。SessionStart/UserPromptSubmit 设 additionalContextLimit=0：完整输出直传、不截断不 spill。",
+  "_comment": "luca_gstack 的 Codex hook 注册（真值源）。⚠️ codex 0.146.0 **不加载仓库级 hooks.json** —— 实测 .codex/ .agents/ .claude/ 三处 × (无trust / projects trust / --dangerously-bypass-hook-trust) 全组合均不触发。本文件是真值源，须并入用户级 ~/.codex/hooks.json 且授信后才会执行（断言 S11 守护）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）；写成 shell 会永远匹配不上。所有 hook 经 .codex/codex-hook-adapter.mjs 调用，adapter 负责按目标 hook 分流 tool_name 别名、出向最小适配，并自带 inRepo 守卫（全局注册后只在本仓生效）。SessionStart/UserPromptSubmit 设 additionalContextLimit=0：完整直传、不截断不 spill。",
   "hooks": {
     "SessionStart": [
       {
@@ -27,7 +27,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "^(shell|apply_patch)$",
+        "matcher": "^(Bash|apply_patch)$",
         "hooks": [
           {
             "type": "command",
@@ -39,7 +39,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "^(shell|apply_patch)$",
+        "matcher": "^(Bash|apply_patch)$",
         "hooks": [
           {
             "type": "command",
