@@ -8,6 +8,18 @@ export const meta = {
   ],
 }
 
+// ── 红线（2026-08-05 补齐：与兄弟工作流 framework-evolution-scout 对齐）──────
+// 1. propose-only：本工作流只「发现 + 门禁 + 证据核验 + 出排序建议」，**绝不编辑任何
+//    luca_gstack 行为面文件**（skills/hooks/routing/registry），**绝不安装任何东西**。
+//    采纳落地是另一条人工触发的管线（见 FUSION-RUNBOOK）。
+//    补入缘由：红队审计发现本文件此前**零** propose-only 措辞，而兄弟工作流有；
+//    且本工作流的 npx channel 会下载执行第三方包，缺这条约束时 agent 可能把
+//    「建议安装」读成「去安装」。
+// 2. **本条是 prompt 层影响、不是强制。** 唯一的机械强制来自执行环境：
+//    Codex 侧由 .codex/workflow-runner.mjs 把 agent 工作根隔离到 scratch
+//    （仓库只读、写入被沙箱拦死）；Claude Code 侧无沙箱，靠人实时监督。
+//    别把这行字当成防线——它只降低模型误解的概率。
+
 // ── The 门禁 (durable home of the gate criteria) ──────────────────────────
 // HARD gates (any FAIL => REJECTED, no matter the stars): safety, compatibility, non_redundancy.
 // SOFT scores (0-3 each, weighted): fit 30, quality 30, adoption 20, maintenance 20.

@@ -37,7 +37,7 @@
 //       不是 spawn 后管道无人 drain 的情形；结论不适用于此，已更正。）
 
 import { spawn } from 'child_process';
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, resolve, join, basename } from 'path';
 import { fileURLToPath } from 'url';
@@ -90,6 +90,9 @@ const MAX_CONCURRENCY = posInt('LUCA_WF_CONCURRENCY', 3);
 const TIMEOUT_MS = posInt('LUCA_WF_AGENT_TIMEOUT_MS', 900000);
 
 const tmp = mkdtempSync(join(tmpdir(), 'luca-wf-'));
+// agent 的工作根：**不是仓库**。写入面被沙箱限死在这里，仓库只可读不可写。
+const AGENT_CWD = join(tmp, 'agent-cwd');
+mkdirSync(AGENT_CWD, { recursive: true });
 let agentSeq = 0, agentFail = 0, agentOk = 0;
 const liveChildren = new Set();
 
@@ -189,8 +192,11 @@ function runCodex(prompt, schema, phaseName) {
     try {
       const outFile = join(tmp, `out-${id}.json`);
       const freeform = [];
-      const args = ['exec', '--skip-git-repo-check', '-s', SANDBOX,
+      const args = ['exec', '--skip-git-repo-check', '-C', AGENT_CWD, '-s', SANDBOX,
         '-c', `model_reasoning_effort="${effortFor(phaseName)}"`, '-o', outFile];
+      // 网络开关必须与档位一起接线：原实现只认 LUCA_WF_SANDBOX 却从不设 network_access，
+      // 于是设成 workspace-write 只拿到「写权限」拿不到「网络」——逃生舱恰好只给了危险的一半。
+      if (SANDBOX === 'workspace-write') args.push('-c', 'sandbox_workspace_write.network_access=true');
       if (schema) {
         const sf = join(tmp, `schema-${id}.json`);
         writeFileSync(sf, JSON.stringify(strictifySchema(schema, freeform)));
@@ -235,8 +241,19 @@ function runCodex(prompt, schema, phaseName) {
   });
 }
 
-// ── 沙箱档：见文件尾「网络与沙箱」说明 ──────────────────────────────────────
-const SANDBOX = process.env.LUCA_WF_SANDBOX || 'read-only';
+// ── 沙箱档 + 工作根隔离（2026-08-05 红队裁决，见文件尾「网络与沙箱」）──────────
+// 红队实测推翻了「read-only 断网 vs 放开仓库写」的二选一：**codex 沙箱的读是全局的，
+// 只有写受工作根约束**。故把工作根 -C 指到 scratch 子目录，即可同时拿到
+// 网络通 + 仓库写入被沙箱硬拦（独立复核：写仓库报 operation not permitted，读仓库正常）。
+// danger-full-access 不在白名单——逃生舱不该给这一档（原实现无值域校验，可被直接设进去）。
+const SANDBOX_ALLOWED = ['read-only', 'workspace-write'];
+const SANDBOX = (() => {
+  const v = process.env.LUCA_WF_SANDBOX;
+  if (!v) return 'workspace-write';
+  if (SANDBOX_ALLOWED.includes(v)) return v;
+  process.stderr.write(`[runner] LUCA_WF_SANDBOX=${v} 不在白名单 ${SANDBOX_ALLOWED}，退回 workspace-write\n`);
+  return 'workspace-write';
+})();
 
 // ── 注入给 workflow 的 4 个 API ────────────────────────────────────────────
 let currentPhase = '';
@@ -247,7 +264,12 @@ const agent = async (prompt, opts = {}) => {
   const ph = opts.phase || currentPhase;
   process.stderr.write(`   · agent ${opts.label || '(unlabeled)'} [effort=${effortFor(ph)}]\n`);
   if (DRY) return null;                       // dry-run：不真调模型，走全 null 路径验降级
-  return runCodex(prompt, opts.schema, ph);
+  // 工作根是 scratch 而非仓库（见 SANDBOX 段），故须显式告知仓库绝对路径——否则脚本里
+  // 那些仓库相对路径（self-model.yaml 等）会解析到 scratch 而读不到。
+  // 前缀加在 runner 侧 ⇒ workflow 脚本仍然零改写。红队端到端探针已验证模型能据此正确取文件。
+  const prefixed = `REPO_ROOT=${ROOT}\n（你的 CWD 是临时工作目录；仓库相对路径一律按 REPO_ROOT 解析；`
+    + `仓库只读，任何写入只能落在 CWD 内。）\n\n${prompt}`;
+  return runCodex(prefixed, opts.schema, ph);
 };
 
 // 顺序保持 + 并发节流；任一 thunk 抛错都收敛成 null（契约：失败是 falsy 不是异常）
@@ -320,10 +342,15 @@ process.stderr.write(`\n── runner: agent ok=${agentOk} fail=${agentFail}${DR
 if (failed) { process.stderr.write(`workflow 执行异常: ${failed}\n`); process.exit(1); }
 process.stdout.write(JSON.stringify(result ?? null, null, 2) + '\n');
 
-// ── 网络与沙箱（待裁决，见 framework-audit/2026-08-05-codex-module-matrix.md）──
+// ── 网络与沙箱（2026-08-05 红队裁决已闭合）──────────────────────────────────
 // `-s read-only` 会**屏蔽网络**（实测：沙箱内 `gh api` 报 connect 失败，沙箱外同命令 exit=0）。
 // 而两个 workflow 的发现层重度依赖 gh（external-skill-scout 16 处、framework-evolution-scout 12 处），
 // 网络被堵 → 每个 channel 返回空 → filter(Boolean) 清零 → **静默产出零候选**。
-// codex 没有「read-only + 联网」的组合档（network_access 只挂在 workspace-write 下），
-// 这是设计层的真冲突，须人裁决而非默认。当前默认保守（read-only），
-// 可用 LUCA_WF_SANDBOX 覆盖（如 workspace-write）。裁决前不要静默改默认值。
+// codex 确实没有「read-only + 联网」的组合档（network_access 只挂在 workspace-write 下），
+// 但**不是真冲突**——红队实测：codex 沙箱的**读是全局的，只有写受工作根约束**。
+// 故 `-C <scratch>` + workspace-write + network_access=true 同时满足两边：
+//   · 网络通（gh 发现层可用）· 仓库写入被沙箱硬拦（独立复核：operation not permitted）
+//   · 仓库仍可读（workflow 需要的 self-model/gaps-register 等全是读）
+// 代价仅为 prompt 前缀一行（见 agent()），workflow 脚本零改写。
+// 备注：`sandbox_workspace_write.writable_roots` 是**加法不是限制**（设了它 cwd 仍可写），
+// 所以「cwd 留仓库根 + 收窄写入面」那条路不存在，换工作根是唯一解。

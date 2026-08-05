@@ -74,10 +74,21 @@ return { out }
   const src = readFileSync(RUNNER, 'utf8');
   ok('W4 runner 以 model_reasoning_effort 定档，未硬编码模型名',
     /model_reasoning_effort/.test(src) && !/gpt-5[.\w-]*/.test(src.replace(/^\/\/.*$/gm, '')));
-  // 沙箱档改为可覆盖（LUCA_WF_SANDBOX）后，本断言守的是**默认值仍为 read-only**——
-  // 网络与沙箱的取舍待人裁决前，默认不得被静默改成放开（见 runner 文件尾说明）。
-  ok('W4b 沙箱默认仍为 read-only（放开须经人裁决，不得静默改默认）',
-    /LUCA_WF_SANDBOX\s*\|\|\s*'read-only'/.test(src) && /'-s',\s*SANDBOX/.test(src));
+  // 【2026-08-05 红队裁决的回归门】沙箱取舍不是二选一：codex 的读全局、只有写受工作根约束，
+  // 故 -C <scratch> + workspace-write + network_access 同时拿到「网络通」与「仓库写被硬拦」。
+  // 这三件必须同时在场——少任一件就退回被否决的形态：
+  //   缺 -C        → 工作根是仓库，模型可写 .claude/skills、memory（实测可写）
+  //   缺 network   → 发现层 16+12 处 gh 全废，静默产出零候选
+  //   缺白名单校验 → danger-full-access 可被直接设进逃生舱
+  ok('W4b 工作根隔离到 scratch（-C AGENT_CWD），仓库不在可写面内',
+    /'-C',\s*AGENT_CWD/.test(src) && /const AGENT_CWD = join\(tmp,/.test(src));
+  ok('W4b2 workspace-write 档必须同时开 network_access（否则发现层全废）',
+    /sandbox_workspace_write\.network_access=true/.test(src));
+  ok('W4b3 沙箱档有白名单校验且不含 danger-full-access',
+    /SANDBOX_ALLOWED\s*=\s*\['read-only',\s*'workspace-write'\]/.test(src)
+    && !/danger-full-access/.test(src.replace(/^\s*\/\/.*$/gm, '')));
+  ok('W4b4 prompt 前缀告知 REPO_ROOT（工作根非仓库，否则相对路径读不到文件）',
+    /REPO_ROOT=\$\{ROOT\}/.test(src));
   ok('W4c 并发有上限（无节流会打爆速率限制，且 agent 失败是静默 falsy 极难归因）',
     /MAX_CONCURRENCY/.test(src));
 }
