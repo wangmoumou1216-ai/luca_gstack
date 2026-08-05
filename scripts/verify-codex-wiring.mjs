@@ -146,6 +146,13 @@ ok('S9b workflow-runner 存在且两个 workflow 零改写可执行（scripts/te
   && spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner.mjs')],
     { cwd: ROOT, timeout: 420000 }).status === 0);
 
+// S9c workflow-runner **运行时**覆盖（2026-08-05 深审 M-8）：既有 test-workflow-runner
+// 全用 --dry-run，`if (DRY) return null` 在 runCodex 前短路 → spawn/超时/进程组/schema 写盘/
+// 退出码分支覆盖率为 0%，而三个 BLOCKER 全住在那块。本套用假 codex 二进制真跑该路径。
+ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-runtime.mjs）',
+  spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
+    { cwd: ROOT, timeout: 420000 }).status === 0);
+
 // S10 Claude 侧零回归
 ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0

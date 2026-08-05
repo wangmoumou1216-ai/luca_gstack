@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Workflow → Codex 执行后端（2026-08-04）。
+// Workflow → Codex 执行后端。
 //
 // 【为什么需要它】
 // .claude/workflows/*.js 是给 Claude Code 的 Workflow 工具写的编排脚本：顶层有 return、
@@ -9,151 +9,234 @@
 //
 // 【为什么不是"自建平行机器"（Loop 宪法 §4）】
 // 本文件不实现编排语义——阶段划分、并发分组、门禁、降级全在 workflow 脚本里，原样不动。
-// 它只把 agent() 这一个原语接到 **Codex 原生的 `codex exec`** 上（--output-schema 提供
-// 结构化返回，正是 agent(prompt,{schema}) 需要的语义）。这是"接 harness 原生原语"，
-// 不是造第二套 workflow 引擎。workflow 脚本零改写 —— 与 codex-hook-adapter 同一手法。
+// 它只把 agent() 这一个原语接到 **Codex 原生的 `codex exec`** 上。workflow 脚本零改写。
 //
 // 【契约（从 workflow 脚本的实际用法反推，不可违反）】
 //  · agent(prompt, {label, phase, schema}) → Promise<对象|null>
 //    **失败必须 resolve 成 falsy，绝不 throw** —— 脚本靠 filter(Boolean) / `r || {保守降级}`
-//    做决定层降级（如 redteam agent 失败按"downgraded/UNKNOWN"保守处理）。抛异常会让
-//    整套降级逻辑失效并炸掉整个 run。
-//  · parallel(thunks[]) → Promise<结果数组>，**保持输入顺序**（脚本用 index 对齐语义）
+//    做决定层降级。抛异常会让整套降级逻辑失效并炸掉整个 run。
+//  · parallel(thunks[]) → Promise<结果数组>，**保持输入顺序**
 //  · phase(title) / log(msg) → 同步，无返回值
 //
-// 用法： node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]
-// 例：   node .codex/workflow-runner.mjs framework-evolution-scout --args '{"date":"2026-08"}'
+// 【2026-08-05 深审修正（独立评审逐条实测，见 framework-audit/）】
+//  B1 strictifySchema 漏掉**无 properties 的自由形态 object** → 真实 API 仍 400，
+//     而它恰是 framework-evolution-scout 的 Phase-1 总闸 ⇒ 整个 workflow 每次第一步死掉。
+//     修法不能简单补 additionalProperties:false —— 那会让 `discovery` 变成恒空对象，
+//     而它是被 `src.discovery.method/.queries/.hubs` **结构化消费**的，等于静默丢数据。
+//     ⇒ 自由形态 object 转 `type:'string'` 并**记录路径**，响应回来后自动 JSON.parse 还原。
+//  B3 agent() 会 throw（writeFileSync / strictifySchema 在 Promise executor 里无 try/catch，
+//     EACCES、循环引用、BigInt 均可触发）⇒ 直接 `await agent()` 的调用点会掀到顶层，
+//     整套降级失效。⇒ executor 全体包 try/catch，任何异常一律收敛成 resolve(null)。
+//  M4/M5 env 无校验：LUCA_WF_CONCURRENCY=0/-1/abc → 一个 thunk 都不跑且返回稀疏空洞数组；
+//     TIMEOUT=0/abc → 每个 agent 4ms 被 SIGKILL。两者都是**静默全空**。⇒ 加正整数校验。
+//  M6 超时只杀直接子进程，孙进程（gh/sandbox-exec）成孤儿；无信号 handler → tmp 残留。
+//     ⇒ detached 进程组 + kill(-pid)；SIGINT/SIGTERM/exit 统一清理。
+//  M7 stdout 设 pipe 却无消费者，>192KB 挂死到超时。runner 根本不读 stdout（结果走 -o 文件）
+//     ⇒ 直接设 'ignore'，零成本消除该失败模式。
+//     （我此前"10MB 不阻塞"的实测是对**另一条代码路径**——裸 node 写 stdout，
+//       不是 spawn 后管道无人 drain 的情形；结论不适用于此，已更正。）
 
 import { spawn } from 'child_process';
 import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, resolve, join } from 'path';
+import { dirname, resolve, join, basename } from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
-const NAME = argv.find((a) => !a.startsWith('--'));
 const DRY = argv.includes('--dry-run');
+const rawName = argv.find((a) => !a.startsWith('--') && a !== argvValueAfter('--args'));
+function argvValueAfter(flag) { const i = argv.indexOf(flag); return i >= 0 ? argv[i + 1] : undefined; }
 const ARGS_JSON = (() => {
-  const i = argv.indexOf('--args');
-  if (i < 0 || !argv[i + 1]) return {};
-  try { return JSON.parse(argv[i + 1]); } catch { return {}; }
+  const v = argvValueAfter('--args');
+  if (v === undefined) return {};
+  try { return JSON.parse(v); } catch {
+    process.stderr.write(`[runner] --args 不是合法 JSON，已忽略：${String(v).slice(0, 80)}\n`);
+    return {};
+  }
 })();
 
-if (!NAME) {
-  console.error('用法: node .codex/workflow-runner.mjs <workflow名> [--args \'<json>\'] [--dry-run]');
+if (!rawName) {
+  console.error("用法: node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]");
   process.exit(2);
 }
-const WF = join(ROOT, '.claude', 'workflows', `${NAME}.js`);
+// NAME 校验：只允许纯 workflow 名，禁路径分隔与穿越（原实现可执行仓外任意 .js）
+if (rawName !== basename(rawName) || !/^[A-Za-z0-9._-]+$/.test(rawName) || rawName.startsWith('.')) {
+  console.error(`[runner] 非法 workflow 名（只允许 .claude/workflows/ 下的纯文件名）: ${rawName}`);
+  process.exit(2);
+}
+const WF = join(ROOT, '.claude', 'workflows', `${rawName}.js`);
 if (!existsSync(WF)) { console.error(`找不到 workflow: ${WF}`); process.exit(2); }
 
 // ── 档位：真值源 .claude/skill-os/model-routing.yaml 的 codex.tier_to_effort ──
-// 不写死模型名（随账户失效）；只映射 effort（枚举稳定）。见该文件 why_not_model_names。
-// phase 名 → tier 的归属：判定型阶段（红队/裁决）走 reasoning-heavy，其余走 guided-execution。
-// mechanical 用 low 而非 minimal：config 解析器接受 minimal，但真实模型返回
-// 400 unsupported_value（2026-08-05 实测）。见 model-routing.yaml effort_rejected_by_model。
+// 不写死模型名（随账户失效）；只映射 effort。mechanical 用 low 而非 minimal：
+// config 解析器接受 minimal，但真实模型 400 拒绝（2026-08-05 实测）。
 const TIER_TO_EFFORT = { 'reasoning-heavy': 'xhigh', 'core-execution': 'high', 'guided-execution': 'medium', mechanical: 'low' };
 const PHASE_TIER = { Redteam: 'reasoning-heavy', Verify: 'core-execution', AdoptionReview: 'core-execution' };
 const effortFor = (phase) => TIER_TO_EFFORT[PHASE_TIER[phase] || 'guided-execution'];
 
-// Codex 侧并发上限。workflow 的 parallel() 可能一次抛出十几个 agent；
-// 无节流会打爆速率限制，而 agent 失败是静默 falsy → 表现为"候选莫名变少"，极难归因。
-const MAX_CONCURRENCY = Number(process.env.LUCA_WF_CONCURRENCY || 3);
-const TIMEOUT_MS = Number(process.env.LUCA_WF_AGENT_TIMEOUT_MS || 900000);
+// env 正整数校验（M4/M5）：非法值静默退回默认，绝不产生"零并发/零超时"的静默空转
+function posInt(name, dflt) {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return dflt;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
+    process.stderr.write(`[runner] ${name}=${raw} 非法（须为 ≥1 整数），退回默认 ${dflt}\n`);
+    return dflt;
+  }
+  return n;
+}
+const MAX_CONCURRENCY = posInt('LUCA_WF_CONCURRENCY', 3);
+const TIMEOUT_MS = posInt('LUCA_WF_AGENT_TIMEOUT_MS', 900000);
 
 const tmp = mkdtempSync(join(tmpdir(), 'luca-wf-'));
 let agentSeq = 0, agentFail = 0, agentOk = 0;
+const liveChildren = new Set();
 
-// ── Schema 归一化（2026-08-05 实测发现，BLOCKER 修复）────────────────────────
-// OpenAI 结构化输出是 **strict** 模式：每一层 object 都要求
-//   ① `required` 包含 `properties` 的**全部** key   ② `additionalProperties: false`
-// 而 .claude/workflows/*.js 的 schema 是给 Claude Code 的 Workflow 工具写的，普遍带可选字段。
-// 实测：不归一化时 codex 返回 400 invalid_json_schema
-//   （"'required' is required to be supplied and to be an array including every key in properties"）
-// → 子进程 exit=1 → agent() 按契约返回 null → **每个 candidate 都静默消失**，
-// workflow 照常跑完并产出空结果。这正是本文件开头警告的"候选莫名变少"失效模式，
-// 且不报错、极难归因 —— 若不修，Codex 侧的 workflow 等于常态空转。
-//
-// 归一化不改变语义：原本**非** required 的字段转成 nullable（type 并上 'null'），
-// 模型仍可用 null 表达"没有"，而 strict 模式的形式要求得到满足。
-// 修在 runner 而非 workflow 脚本：零改写是本设计的根本前提（同 codex-hook-adapter 手法）。
-function strictifySchema(node) {
+// 统一清理：正常/异常/信号三条路径都走这里（M6：原实现只在正常路径清 tmp）
+let cleanedUp = false;
+function cleanup() {
+  if (cleanedUp) return;
+  cleanedUp = true;
+  for (const pid of liveChildren) {
+    try { process.kill(-pid, 'SIGKILL'); } catch { try { process.kill(pid, 'SIGKILL'); } catch { } }
+  }
+  try { rmSync(tmp, { recursive: true, force: true }); } catch { }
+}
+process.on('exit', cleanup);
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(sig, () => { cleanup(); process.exit(130); });
+}
+
+// ── Schema 归一化（OpenAI 结构化输出为 strict 模式）──────────────────────────
+// strict 要求每层 object：① required 列全 properties ② additionalProperties:false。
+// 自由形态 object（有 type:'object' 但无 properties）在 strict 下**无法表达**：
+// 补 additionalProperties:false 会使其恒空 → 结构化消费方（如 src.discovery.method）拿到空 →
+// 静默丢数据。故转成 string 并记录路径，响应回来后自动解析还原（见 reviveFreeform）。
+// 原可选字段转 nullable，保住"可以没有"的语义，不强行必填。
+function strictifySchema(node, freeform = [], path = [], seen = new WeakSet()) {
   if (!node || typeof node !== 'object') return node;
-  if (Array.isArray(node)) return node.map(strictifySchema);
+  if (seen.has(node)) return node;          // 环检测（B3：循环引用曾致 RangeError）
+  seen.add(node);
+  if (Array.isArray(node)) return node.map((n) => strictifySchema(n, freeform, path, seen));
 
   const out = { ...node };
-  for (const k of ['items', 'not']) if (out[k]) out[k] = strictifySchema(out[k]);
-  for (const k of ['anyOf', 'oneOf', 'allOf']) if (Array.isArray(out[k])) out[k] = out[k].map(strictifySchema);
-  if (out.$defs) out.$defs = Object.fromEntries(Object.entries(out.$defs).map(([k, v]) => [k, strictifySchema(v)]));
+  for (const k of ['items', 'not']) if (out[k]) out[k] = strictifySchema(out[k], freeform, path.concat(k === 'items' ? '[]' : k), seen);
+  for (const k of ['anyOf', 'oneOf', 'allOf']) if (Array.isArray(out[k])) out[k] = out[k].map((n) => strictifySchema(n, freeform, path, seen));
+  if (out.$defs) out.$defs = Object.fromEntries(Object.entries(out.$defs).map(([k, v]) => [k, strictifySchema(v, freeform, path, seen)]));
+
+  const isObj = out.type === 'object' || (Array.isArray(out.type) && out.type.includes('object'));
 
   if (out.properties && typeof out.properties === 'object') {
     const keys = Object.keys(out.properties);
     const wasRequired = new Set(Array.isArray(out.required) ? out.required : []);
     const props = {};
     for (const k of keys) {
-      let child = strictifySchema(out.properties[k]);
+      let child = strictifySchema(out.properties[k], freeform, path.concat(k), seen);
       if (!wasRequired.has(k) && child && typeof child === 'object' && child.type) {
-        // 原可选 → nullable，保住"可以没有"的语义
         const t = Array.isArray(child.type) ? child.type : [child.type];
         if (!t.includes('null')) child = { ...child, type: [...t, 'null'] };
       }
       props[k] = child;
     }
     out.properties = props;
-    out.required = keys;              // strict：必须列全
-    out.additionalProperties = false; // strict：必须显式关闭
+    out.required = keys;
+    out.additionalProperties = false;
+  } else if (isObj) {
+    // 自由形态 object → string（记录路径，响应后还原）
+    freeform.push(path.join('.'));
+    const desc = out.description ? `${out.description} ` : '';
+    return { type: Array.isArray(out.type) && out.type.includes('null') ? ['string', 'null'] : 'string',
+      description: `${desc}(Return a JSON object serialized as a compact JSON string.)` };
   }
   return out;
 }
 
+// 把被转成 string 的自由形态字段解析回对象（与 strictifySchema 的 freeform 路径配对）
+function reviveFreeform(value, paths) {
+  if (!paths.length || value === null || typeof value !== 'object') return value;
+  const set = new Set(paths);
+  const walk = (node, path) => {
+    if (node === null || typeof node !== 'object') return node;
+    if (Array.isArray(node)) return node.map((n) => walk(n, path.concat('[]')));
+    const out = {};
+    for (const [k, v] of Object.entries(node)) {
+      const p = path.concat(k).join('.');
+      if (set.has(p) && typeof v === 'string') {
+        try { out[k] = JSON.parse(v); continue; } catch { /* 解析失败保留原串 */ }
+      }
+      out[k] = walk(v, path.concat(k));
+    }
+    return out;
+  };
+  return walk(value, []);
+}
+
 function runCodex(prompt, schema, phaseName) {
   return new Promise((resolveP) => {
-    const id = ++agentSeq;
-    const outFile = join(tmp, `out-${id}.json`);
-    const args = ['exec', '--skip-git-repo-check', '-s', 'read-only',
-      '-c', `model_reasoning_effort="${effortFor(phaseName)}"`,
-      '-o', outFile];
-    if (schema) {
-      const sf = join(tmp, `schema-${id}.json`);
-      writeFileSync(sf, JSON.stringify(strictifySchema(schema)));
-      args.push('--output-schema', sf);
-    }
-    args.push(prompt);
-
-    // read-only 沙箱：约束的是**这个 codex 子进程**（即模型在 agent 调用里可能生成并执行的
-    // 命令），使 workflow 红线①（propose-only / 绝不编辑行为面文件）在**模型侧**成为不可能。
-    // 【边界，别高估】它**不**约束 workflow 脚本本身——脚本经 AsyncFunction 跑在 runner 的
-    // node 进程里，不在任何沙箱内，理论上仍能读写磁盘。对脚本自身而言 propose-only 依旧是
-    // 纸面约定（与 Claude Code 侧同等），沙箱只堵住了模型生成命令这条更危险的路径。
-    // （2026-08-04 初版注释把这写成"纸面约定变成沙箱层面的不可能"，是夸大，已改正。）
-    const p = spawn('codex', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
-    let stderr = '';
-    p.stderr.on('data', (d) => { stderr += String(d).slice(0, 2000); });
-    const timer = setTimeout(() => { try { p.kill('SIGKILL'); } catch { } }, TIMEOUT_MS);
-
+    // B3：executor 全体包 try/catch —— 任何同步异常都必须收敛成 resolve(null)，绝不 reject
+    let settled = false;
     const done = (val, why) => {
-      clearTimeout(timer);
-      if (val) { agentOk++; } else { agentFail++; process.stderr.write(`   ⚠ agent#${id} 失败(${why})——按契约返回 null 交给 workflow 降级\n`); }
+      if (settled) return;                    // MINOR：error+close 双触发导致计数虚高
+      settled = true;
+      if (val) agentOk++; else {
+        agentFail++;
+        process.stderr.write(`   ⚠ agent#${id} 失败(${why})——按契约返回 null 交给 workflow 降级\n`);
+      }
       resolveP(val);
     };
-    p.on('error', () => done(null, 'spawn 失败'));
-    p.on('close', (code) => {
-      if (/not supported when using Codex with a ChatGPT account/.test(stderr)) return done(null, '模型不可用/订阅');
-      // 失败原因必须可见：agent 失败是**静默 falsy**（契约要求），若再把 stderr 吞掉，
-      // 症状就只剩"产出莫名变空"。2026-08-05 的 schema BLOCKER 正因此难以归因——
-      // 从摘要里提取 API 报错关键句，让下一次一眼可辨。
-      if (code !== 0) {
-        const api = (stderr.match(/"message":\s*"([^"]{0,200})/) || [])[1];
-        return done(null, `exit=${code}${api ? ' | ' + api : ''}`);
+    const id = ++agentSeq;
+    try {
+      const outFile = join(tmp, `out-${id}.json`);
+      const freeform = [];
+      const args = ['exec', '--skip-git-repo-check', '-s', SANDBOX,
+        '-c', `model_reasoning_effort="${effortFor(phaseName)}"`, '-o', outFile];
+      if (schema) {
+        const sf = join(tmp, `schema-${id}.json`);
+        writeFileSync(sf, JSON.stringify(strictifySchema(schema, freeform)));
+        args.push('--output-schema', sf);
       }
-      try {
-        const raw = readFileSync(outFile, 'utf8').trim();
-        const m = raw.match(/\{[\s\S]*\}/);           // 容忍模型在 JSON 前后加话
-        return done(m ? JSON.parse(m[0]) : null, m ? 'ok' : '无 JSON');
-      } catch { return done(null, '读回失败'); }
-    });
+      args.push(prompt);
+
+      // stdout 设 'ignore'（M7）：runner 不读它（结果走 -o 文件），设 pipe 而无消费者
+      // 会在 >192KB 时挂死到超时。stderr 仍 pipe——订阅检测与报错提取需要它。
+      const p = spawn('codex', args, {
+        cwd: ROOT, stdio: ['ignore', 'ignore', 'pipe'], detached: true,
+      });
+      liveChildren.add(p.pid);
+      let stderr = '';
+      p.stderr.on('data', (d) => {
+        if (stderr.length < 8000) stderr += String(d);   // 总量上限，非每块截断
+      });
+      const timer = setTimeout(() => {
+        // 杀整个进程组（M6）：只杀直接子进程会把 gh/sandbox-exec 等孙进程留成孤儿
+        try { process.kill(-p.pid, 'SIGKILL'); } catch { try { p.kill('SIGKILL'); } catch { } }
+      }, TIMEOUT_MS);
+
+      p.on('error', () => { clearTimeout(timer); liveChildren.delete(p.pid); done(null, 'spawn 失败'); });
+      p.on('close', (code) => {
+        clearTimeout(timer);
+        liveChildren.delete(p.pid);
+        try {
+          if (/not supported when using Codex with a ChatGPT account/.test(stderr)) return done(null, '模型不可用/订阅');
+          if (code !== 0) {
+            const api = (stderr.match(/"message":\s*"([^"]{0,200})/) || [])[1];
+            return done(null, `exit=${code}${api ? ' | ' + api : ''}`);
+          }
+          const raw = readFileSync(outFile, 'utf8').trim();
+          const m = raw.match(/\{[\s\S]*\}/);            // 容忍模型在 JSON 前后加话
+          if (!m) return done(null, '无 JSON');
+          return done(reviveFreeform(JSON.parse(m[0]), freeform), 'ok');
+        } catch (e) { return done(null, `读回失败(${(e && e.message) || e})`); }
+      });
+    } catch (e) {
+      done(null, `准备阶段异常(${(e && e.message) || e})`);   // EACCES / 循环引用 / BigInt
+    }
   });
 }
+
+// ── 沙箱档：见文件尾「网络与沙箱」说明 ──────────────────────────────────────
+const SANDBOX = process.env.LUCA_WF_SANDBOX || 'read-only';
 
 // ── 注入给 workflow 的 4 个 API ────────────────────────────────────────────
 let currentPhase = '';
@@ -170,7 +253,7 @@ const agent = async (prompt, opts = {}) => {
 // 顺序保持 + 并发节流；任一 thunk 抛错都收敛成 null（契约：失败是 falsy 不是异常）
 const parallel = async (thunks) => {
   const list = Array.from(thunks || []);
-  const out = new Array(list.length);
+  const out = new Array(list.length).fill(null);   // 预填，杜绝稀疏空洞
   let next = 0;
   const worker = async () => {
     for (;;) {
@@ -179,29 +262,68 @@ const parallel = async (thunks) => {
       try { out[i] = await list[i](); } catch { out[i] = null; }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENCY, list.length) }, worker));
+  const width = Math.max(1, Math.min(MAX_CONCURRENCY, list.length));
+  await Promise.all(Array.from({ length: width }, worker));
   return out;
 };
 
 // ── 执行 ───────────────────────────────────────────────────────────────────
 // workflow 脚本是 ESM 形态（`export const meta = {...}`）却带顶层 return —— 它本就不是
 // 独立可运行的模块，而是被 runtime 包进函数体执行的**片段**。放进 AsyncFunction 前须剥掉
-// 顶层 export 关键字（函数体内 `export` 是 SyntaxError）。只锚行首 + 限定声明关键字，
-// 避免误伤字符串/注释里的 "export" 字样。
-// 注意：不得把 meta 作为注入参数名 —— 脚本体内自己 `const meta = {...}`，同名会重复声明报错。
-const src = readFileSync(WF, 'utf8')
-  .replace(/^export\s+default\s+/gm, 'const __wf_default = ')
-  .replace(/^export\s+(?=(const|let|var|function|async\s+function)\s)/gm, '');
+// 顶层 export（函数体内 `export` 是 SyntaxError）。
+// **不能用裸正则**（MINOR）：prompt 里的模板字符串常含行首 `export ...`（这两个 workflow
+// 正是审查 skill 源码的），裸正则会静默改写发给模型的文本。故做一次轻量扫描，
+// 只在**字符串/模板/注释之外**的顶层位置剥离。
+function stripTopLevelExports(src) {
+  let out = '', i = 0;
+  const n = src.length;
+  let atLineStart = true;
+  while (i < n) {
+    const c = src[i], c2 = src[i + 1];
+    // 注释
+    if (c === '/' && c2 === '/') { const e = src.indexOf('\n', i); const j = e < 0 ? n : e; out += src.slice(i, j); i = j; continue; }
+    if (c === '/' && c2 === '*') { const e = src.indexOf('*/', i + 2); const j = e < 0 ? n : e + 2; out += src.slice(i, j); i = j; continue; }
+    // 字符串 / 模板（模板内不追踪 ${}，代价是其中的行首 export 也不剥——安全侧）
+    if (c === '"' || c === "'" || c === '`') {
+      const q = c; let j = i + 1;
+      while (j < n) { if (src[j] === '\\') { j += 2; continue; } if (src[j] === q) { j++; break; } j++; }
+      out += src.slice(i, j); i = j; atLineStart = false; continue;
+    }
+    if (atLineStart) {
+      const rest = src.slice(i);
+      const mDefault = rest.match(/^export\s+default\s+/);
+      if (mDefault) { out += 'const __wf_default = '; i += mDefault[0].length; atLineStart = false; continue; }
+      const mDecl = rest.match(/^export\s+(?=(const|let|var|function|async\s+function|class)\s)/);
+      if (mDecl) { i += mDecl[0].length; atLineStart = false; continue; }
+      const mList = rest.match(/^export\s*\{[^}]*\}\s*;?/);       // `export { a, b }` 整条删掉
+      if (mList) { i += mList[0].length; atLineStart = false; continue; }
+    }
+    atLineStart = (c === '\n');
+    out += c; i++;
+  }
+  return out;
+}
+
+const src = stripTopLevelExports(readFileSync(WF, 'utf8'));
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 let result = null, failed = null;
 try {
+  // 不得把 meta 作为注入参数名 —— 脚本体内自己 `const meta = {...}`，同名会重复声明报错
   const fn = new AsyncFunction('agent', 'phase', 'parallel', 'log', 'args', src);
   result = await fn(agent, phase, parallel, log, ARGS_JSON);
 } catch (e) {
-  failed = e && e.message ? e.message : String(e);
+  failed = (e && e.message) ? e.message : String(e);
 }
-try { rmSync(tmp, { recursive: true, force: true }); } catch { }
+cleanup();
 
 process.stderr.write(`\n── runner: agent ok=${agentOk} fail=${agentFail}${DRY ? ' (dry-run)' : ''} ──\n`);
 if (failed) { process.stderr.write(`workflow 执行异常: ${failed}\n`); process.exit(1); }
 process.stdout.write(JSON.stringify(result ?? null, null, 2) + '\n');
+
+// ── 网络与沙箱（待裁决，见 framework-audit/2026-08-05-codex-module-matrix.md）──
+// `-s read-only` 会**屏蔽网络**（实测：沙箱内 `gh api` 报 connect 失败，沙箱外同命令 exit=0）。
+// 而两个 workflow 的发现层重度依赖 gh（external-skill-scout 16 处、framework-evolution-scout 12 处），
+// 网络被堵 → 每个 channel 返回空 → filter(Boolean) 清零 → **静默产出零候选**。
+// codex 没有「read-only + 联网」的组合档（network_access 只挂在 workspace-write 下），
+// 这是设计层的真冲突，须人裁决而非默认。当前默认保守（read-only），
+// 可用 LUCA_WF_SANDBOX 覆盖（如 workspace-write）。裁决前不要静默改默认值。

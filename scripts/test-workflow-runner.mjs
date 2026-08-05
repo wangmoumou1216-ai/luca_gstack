@@ -74,8 +74,10 @@ return { out }
   const src = readFileSync(RUNNER, 'utf8');
   ok('W4 runner 以 model_reasoning_effort 定档，未硬编码模型名',
     /model_reasoning_effort/.test(src) && !/gpt-5[.\w-]*/.test(src.replace(/^\/\/.*$/gm, '')));
-  ok('W4b codex 子进程以 read-only 沙箱执行（堵住模型生成命令这条路径；不覆盖 workflow 脚本本身）',
-    /'-s',\s*'read-only'/.test(src));
+  // 沙箱档改为可覆盖（LUCA_WF_SANDBOX）后，本断言守的是**默认值仍为 read-only**——
+  // 网络与沙箱的取舍待人裁决前，默认不得被静默改成放开（见 runner 文件尾说明）。
+  ok('W4b 沙箱默认仍为 read-only（放开须经人裁决，不得静默改默认）',
+    /LUCA_WF_SANDBOX\s*\|\|\s*'read-only'/.test(src) && /'-s',\s*SANDBOX/.test(src));
   ok('W4c 并发有上限（无节流会打爆速率限制，且 agent 失败是静默 falsy 极难归因）',
     /MAX_CONCURRENCY/.test(src));
 }
@@ -85,7 +87,7 @@ return { out }
 // workflow 照常跑完但产出恒空。属"不报错的错"，必须有断言守住。
 {
   const src = readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8');
-  ok('W5 runner 在写 schema 前做 strict 归一化', /strictifySchema\(schema\)/.test(src));
+  ok('W5 runner 在写 schema 前做 strict 归一化', /strictifySchema\(schema,\s*freeform\)/.test(src));
 
   // 注意：runner 是**脚本**不是模块，绝不能 import 它——import 会执行它并 process.exit，
   // 直接打断本测试进程（本行曾如此翻车）。取函数体受控求值是唯一安全取法。
@@ -95,6 +97,7 @@ return { out }
       a: { type: 'string' },
       b: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'string' } }, required: ['x'] },
       c: { type: 'array', items: { type: 'object', properties: { z: { type: 'string' } } } },
+      d: { type: 'object', description: '自由形态：真实 schema 里 discovery 就是这形状' },
     },
     required: ['a'],
   };
@@ -108,6 +111,11 @@ return { out }
       for (const k of keys) if (!req.includes(k)) errs.push(`${path}.required 缺 ${k}`);
       if (n.additionalProperties !== false) errs.push(`${path}.additionalProperties 未设 false`);
       for (const k of keys) errs.push(...check(n.properties[k], `${path}.${k}`));
+    } else if (n.type === 'object' || (Array.isArray(n.type) && n.type.includes('object'))) {
+      // 【本行是 BLOCKER-1 的回归门】原 check() 只在有 properties 时才查，与实现共享同一盲点，
+      // 于是真实 schema 里那个自由形态 object 双方都放过、真实 API 却 400。
+      // 交叉校验必须能抓到实现的盲点，否则它不是独立校验，只是同一个错误的第二份拷贝。
+      errs.push(`${path} 是自由形态 object（strict 无法表达）——须转 string 或补 properties`);
     }
     if (n.items) errs.push(...check(n.items, `${path}[]`));
     return errs;
