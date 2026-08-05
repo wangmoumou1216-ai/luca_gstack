@@ -132,12 +132,19 @@ codex:
     （"not supported when using Codex with a ChatGPT account"），gpt-5.6-codex 与
     gpt-5.1-codex 这两个历史上成功跑过的名字同样被拒。把档位绑在模型名上，
     等于把整个路由系统绑在一张会过期的凭证上。
-  effort_lineup: [none, minimal, low, medium, high, xhigh]  # codex-cli 0.133.0 实测枚举（config 解析器报错列出）
+  # 【枚举以**模型**为准，不以 config 解析器为准（2026-08-05 实测教训）】
+  # config 解析器接受 none/minimal/low/medium/high/xhigh —— 那是**超集**；
+  # 真实模型（gpt-5.6-sol 系）拒绝 minimal，其支持集为 none/low/medium/high/xhigh/max。
+  # 首版从"config 报错列出的枚举"取值，导致 mechanical 档定成 minimal，
+  # 实测每次调用 400 unsupported_value（preflight-agent 会恒失败）。
+  # 取枚举必须来自**实际调用**的反馈，不能来自配置层的校验信息。
+  effort_lineup: [none, low, medium, high, xhigh, max]   # 实测：真实模型接受集
+  effort_rejected_by_model: [minimal]                     # config 层接受但模型拒绝，勿用
   tier_to_effort:
-    reasoning-heavy: xhigh      # 判定/对抗/裁决——高杠杆小上下文，给满推理预算
+    reasoning-heavy: xhigh      # 判定/对抗/裁决——高杠杆小上下文，给满推理预算（上方仍留 max 余量）
     core-execution: high        # 承重执行与整场交互
     guided-execution: medium    # 有 checklist 指导的轻执行（默认档）
-    mechanical: minimal         # 机械执行/格式/计数
+    mechanical: low             # 机械执行/格式/计数（原定 minimal，被模型拒绝）
   model_field: inherit
   model_field_note: |
     subagent toml 一律**省略 model 字段** → 继承父会话。理由同 why_not_model_names，
@@ -145,7 +152,7 @@ codex:
   agents:                       # 与上方 agents: 同名同序，值换成 effort
     quality-gate: high          # 判官≥执行者（对应 Claude 侧 opus）
     muse-proto-judge: high
-    preflight-agent: minimal    # 纯机械前置检查（对应 Claude 侧 haiku）
+    preflight-agent: low        # 纯机械前置检查（对应 Claude 侧 haiku；minimal 被模型拒绝）
   parity_note: |
     本段与上方 Claude 侧 agents:/tiers: 是**同一套档位的两个投影**，新增场景须同时补两侧
     （new_scenario_protocol 对 Codex 同样适用）。只补一侧 = 换个 CLI 就掉档。

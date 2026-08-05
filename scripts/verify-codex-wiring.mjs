@@ -106,6 +106,29 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
     mismatch.length === 0, mismatch.join(','));
 }
 
+// S8c effort 值必须在**模型**接受集内。config 解析器接受 minimal 但真实模型 400 拒绝
+// （2026-08-05 实测）——从 config 报错取枚举是个陷阱，此断言把实测结论钉死。
+{
+  const yml = readFileSync(join(ROOT, '.claude', 'skill-os', 'model-routing.yaml'), 'utf8');
+  const seg = yml.split(/^codex:/m)[1] || '';
+  const rejected = ((seg.match(/effort_rejected_by_model:\s*\[([^\]]*)\]/) || [])[1] || '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  const used = [...seg.matchAll(/^\s{4}[a-z0-9-]+:\s*([a-z]+)\s*(?:#.*)?$/gm)].map((m) => m[1]);
+  const bad = used.filter((v) => rejected.includes(v));
+  let tomlBad = [];
+  const dir = join(ROOT, '.codex', 'agents');
+  for (const f of (existsSync(dir) ? readdirSync(dir).filter((x) => x.endsWith('.toml')) : [])) {
+    const eff = (readFileSync(join(dir, f), 'utf8').match(/^model_reasoning_effort\s*=\s*"([^"]+)"/m) || [])[1];
+    if (eff && rejected.includes(eff)) tomlBad.push(`${f}=${eff}`);
+  }
+  const runnerBad = (readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8')
+    .match(/TIER_TO_EFFORT\s*=\s*\{[^}]*\}/) || [''])[0]
+    .split(/['"]/).filter((v) => rejected.includes(v));
+  ok('S8c 所有 effort 取值都在模型接受集内（未用 config 层接受但模型拒绝的值）',
+    rejected.length > 0 && bad.length === 0 && tomlBad.length === 0 && runnerBad.length === 0,
+    `yaml=${bad} toml=${tomlBad} runner=${runnerBad} rejected=${rejected}`);
+}
+
 // S9 adapter 行为回归（真实 hook 端到端）
 ok('S9 adapter 行为测试全绿（scripts/test-codex-adapter.mjs）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-codex-adapter.mjs')], { cwd: ROOT }).status === 0);
@@ -145,21 +168,27 @@ if (staticOnly) {
 }
 
 if (liveReady) {
-  const before = new Set(readdirSync(join(ROOT, '.claude')).filter((f) => f.startsWith('.session-')));
-  const r = spawnSync('codex', ['exec', '-s', 'read-only', '--dangerously-bypass-hook-trust',
-    '用 shell 跑 `echo codex-wiring-probe`，只报告输出，不要修改任何文件。'],
-    { cwd: ROOT, encoding: 'utf8', timeout: 300000 });
-  const modelRejected = /not supported when using Codex with a ChatGPT account/.test(String(r.stdout) + String(r.stderr));
-  if (modelRejected) {
+  // stdin 必须关闭：codex exec 在 stdin 未 EOF 时会一直等待（"Reading additional input
+  // from stdin..."），表现为无限挂起。spawnSync 默认继承，故显式给空 input。
+  const r = spawnSync('codex', ['exec', '--skip-git-repo-check', '-s', 'read-only',
+    '--dangerously-bypass-hook-trust',
+    '运行 shell 命令 `echo codex-wiring-probe` 并报告输出，不要修改任何文件。'],
+    { cwd: ROOT, encoding: 'utf8', timeout: 300000, input: '' });
+  const blob = String(r.stdout) + String(r.stderr);
+
+  if (/not supported when using Codex with a ChatGPT account/.test(blob)) {
     skip('L1-L3', '服务端拒绝了配置的模型（订阅或 config.toml 的 model 需要修正）');
   } else {
-    const after = readdirSync(join(ROOT, '.claude')).filter((f) => f.startsWith('.session-'));
-    const fresh = after.filter((f) => !before.has(f));
-    ok('L1 真实 Codex session 中 hook 确实触发（出现新的 .session-* 计数文件）',
-      fresh.length > 0, `新增=${fresh.join(',') || '无'}`);
-    ok('L2 codex exec 正常结束（无 hook 导致的中断）', r.status === 0, `exit=${r.status}`);
+    // L1 证据用 **Codex 自己的一手报告**（stderr 里的 `hook: <Event>` / `Completed`），
+    // 不用 .session-* 文件差集 —— 后者取决于模型这一轮是否恰好调了工具、以及 sid 是否复用，
+    // 同一份接线两次跑出过相反结论（2026-08-05），是不可靠的代理指标。
+    const fired = [...blob.matchAll(/hook:\s*(\w+)/g)].map((m) => m[1]);
+    ok('L1 真实 Codex session 中 hook 被调用（据 Codex 自身 stderr 报告）',
+      fired.length > 0, `已触发=${[...new Set(fired)].join(',') || '无'}`);
+    ok('L2 codex exec 正常结束（无 hook 导致的中断）', r.status === 0,
+      `exit=${r.status} | ${(blob.match(/"message":\s*"([^"]{0,140})/) || [])[1] || ''}`);
     ok('L3 hook 未向 Codex 吐出它解析不了的内容（无 parser 报错）',
-      !/unsupported updatedInput|hook returned/i.test(String(r.stderr)));
+      !/unsupported updatedInput|hook returned/i.test(blob));
   }
 }
 

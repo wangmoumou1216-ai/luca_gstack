@@ -74,10 +74,61 @@ return { out }
   const src = readFileSync(RUNNER, 'utf8');
   ok('W4 runner 以 model_reasoning_effort 定档，未硬编码模型名',
     /model_reasoning_effort/.test(src) && !/gpt-5[.\w-]*/.test(src.replace(/^\/\/.*$/gm, '')));
-  ok('W4b runner 用 read-only 沙箱执行（把 workflow 的 propose-only 红线变成沙箱强制）',
+  ok('W4b codex 子进程以 read-only 沙箱执行（堵住模型生成命令这条路径；不覆盖 workflow 脚本本身）',
     /'-s',\s*'read-only'/.test(src));
   ok('W4c 并发有上限（无节流会打爆速率限制，且 agent 失败是静默 falsy 极难归因）',
     /MAX_CONCURRENCY/.test(src));
+}
+
+// ── W5：schema strict 归一化（2026-08-05 实测 BLOCKER 的回归门）──
+// 不归一化 → codex 返回 400 invalid_json_schema → 每个 agent 静默返回 null →
+// workflow 照常跑完但产出恒空。属"不报错的错"，必须有断言守住。
+{
+  const src = readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8');
+  ok('W5 runner 在写 schema 前做 strict 归一化', /strictifySchema\(schema\)/.test(src));
+
+  // 注意：runner 是**脚本**不是模块，绝不能 import 它——import 会执行它并 process.exit，
+  // 直接打断本测试进程（本行曾如此翻车）。取函数体受控求值是唯一安全取法。
+  const sample = {
+    type: 'object',
+    properties: {
+      a: { type: 'string' },
+      b: { type: 'object', properties: { x: { type: 'number' }, y: { type: 'string' } }, required: ['x'] },
+      c: { type: 'array', items: { type: 'object', properties: { z: { type: 'string' } } } },
+    },
+    required: ['a'],
+  };
+  // 独立实现同规则做交叉校验（不复用被测函数，避免自证）
+  const check = (n, path = '$') => {
+    const errs = [];
+    if (!n || typeof n !== 'object') return errs;
+    if (n.properties) {
+      const keys = Object.keys(n.properties);
+      const req = Array.isArray(n.required) ? n.required : [];
+      for (const k of keys) if (!req.includes(k)) errs.push(`${path}.required 缺 ${k}`);
+      if (n.additionalProperties !== false) errs.push(`${path}.additionalProperties 未设 false`);
+      for (const k of keys) errs.push(...check(n.properties[k], `${path}.${k}`));
+    }
+    if (n.items) errs.push(...check(n.items, `${path}[]`));
+    return errs;
+  };
+  // 从 runner 源码里取出函数体求值（runner 无导出，故用受控 eval 而非 import 执行整脚本）
+  let strictify = null;
+  const m = src.match(/function strictifySchema[\s\S]*?\n\}\n/);
+  if (m) { try { strictify = new Function(`${m[0]}; return strictifySchema;`)(); } catch { } }
+  ok('W5b 归一化函数可独立求值（源码结构未被破坏）', typeof strictify === 'function');
+  if (typeof strictify === 'function') {
+    const norm = strictify(sample);
+    const errs = check(norm);
+    ok('W5c 归一化输出满足 OpenAI strict 三要求（含嵌套与数组元素）',
+      errs.length === 0, errs.slice(0, 4).join('; '));
+    ok('W5d 原可选字段转为 nullable（保住"可以没有"的语义，不是强行必填）',
+      Array.isArray(norm.properties.b.type) && norm.properties.b.type.includes('null')
+      && Array.isArray(norm.properties.b.properties.y.type)
+      && norm.properties.b.properties.y.type.includes('null'));
+    ok('W5e 原必填字段不被改成 nullable',
+      norm.properties.a.type === 'string' && norm.properties.b.properties.x.type === 'number');
+  }
 }
 
 console.log(`\n=== test-workflow-runner summary: PASS=${pass} FAIL=${fail} ===`);

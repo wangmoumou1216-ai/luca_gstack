@@ -6,8 +6,10 @@ sandbox_mode = "read-only"
 
 # ── 档位（真值源：model-routing.yaml 的 codex.agents）──
 # model 省略继承父会话；档位落在 effort 上（理由见 quality-gate.toml）。
-# Claude 侧定档 haiku（纯机械前置检查）→ 投影为 minimal。
-model_reasoning_effort = "minimal"
+# Claude 侧定档 haiku（纯机械前置检查）→ 投影为 low。
+# 注意：不是 minimal —— config 解析器接受 minimal 但**真实模型拒绝**（400 unsupported_value，
+# 2026-08-05 实测）。枚举以实际调用为准，见 model-routing.yaml 的 effort_rejected_by_model。
+model_reasoning_effort = "low"
 
 developer_instructions = """
 你是 luca_gstack 的 preflight 检查器。

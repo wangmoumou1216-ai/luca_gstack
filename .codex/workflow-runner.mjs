@@ -50,7 +50,9 @@ if (!existsSync(WF)) { console.error(`找不到 workflow: ${WF}`); process.exit(
 // ── 档位：真值源 .claude/skill-os/model-routing.yaml 的 codex.tier_to_effort ──
 // 不写死模型名（随账户失效）；只映射 effort（枚举稳定）。见该文件 why_not_model_names。
 // phase 名 → tier 的归属：判定型阶段（红队/裁决）走 reasoning-heavy，其余走 guided-execution。
-const TIER_TO_EFFORT = { 'reasoning-heavy': 'xhigh', 'core-execution': 'high', 'guided-execution': 'medium', mechanical: 'minimal' };
+// mechanical 用 low 而非 minimal：config 解析器接受 minimal，但真实模型返回
+// 400 unsupported_value（2026-08-05 实测）。见 model-routing.yaml effort_rejected_by_model。
+const TIER_TO_EFFORT = { 'reasoning-heavy': 'xhigh', 'core-execution': 'high', 'guided-execution': 'medium', mechanical: 'low' };
 const PHASE_TIER = { Redteam: 'reasoning-heavy', Verify: 'core-execution', AdoptionReview: 'core-execution' };
 const effortFor = (phase) => TIER_TO_EFFORT[PHASE_TIER[phase] || 'guided-execution'];
 
@@ -62,6 +64,48 @@ const TIMEOUT_MS = Number(process.env.LUCA_WF_AGENT_TIMEOUT_MS || 900000);
 const tmp = mkdtempSync(join(tmpdir(), 'luca-wf-'));
 let agentSeq = 0, agentFail = 0, agentOk = 0;
 
+// ── Schema 归一化（2026-08-05 实测发现，BLOCKER 修复）────────────────────────
+// OpenAI 结构化输出是 **strict** 模式：每一层 object 都要求
+//   ① `required` 包含 `properties` 的**全部** key   ② `additionalProperties: false`
+// 而 .claude/workflows/*.js 的 schema 是给 Claude Code 的 Workflow 工具写的，普遍带可选字段。
+// 实测：不归一化时 codex 返回 400 invalid_json_schema
+//   （"'required' is required to be supplied and to be an array including every key in properties"）
+// → 子进程 exit=1 → agent() 按契约返回 null → **每个 candidate 都静默消失**，
+// workflow 照常跑完并产出空结果。这正是本文件开头警告的"候选莫名变少"失效模式，
+// 且不报错、极难归因 —— 若不修，Codex 侧的 workflow 等于常态空转。
+//
+// 归一化不改变语义：原本**非** required 的字段转成 nullable（type 并上 'null'），
+// 模型仍可用 null 表达"没有"，而 strict 模式的形式要求得到满足。
+// 修在 runner 而非 workflow 脚本：零改写是本设计的根本前提（同 codex-hook-adapter 手法）。
+function strictifySchema(node) {
+  if (!node || typeof node !== 'object') return node;
+  if (Array.isArray(node)) return node.map(strictifySchema);
+
+  const out = { ...node };
+  for (const k of ['items', 'not']) if (out[k]) out[k] = strictifySchema(out[k]);
+  for (const k of ['anyOf', 'oneOf', 'allOf']) if (Array.isArray(out[k])) out[k] = out[k].map(strictifySchema);
+  if (out.$defs) out.$defs = Object.fromEntries(Object.entries(out.$defs).map(([k, v]) => [k, strictifySchema(v)]));
+
+  if (out.properties && typeof out.properties === 'object') {
+    const keys = Object.keys(out.properties);
+    const wasRequired = new Set(Array.isArray(out.required) ? out.required : []);
+    const props = {};
+    for (const k of keys) {
+      let child = strictifySchema(out.properties[k]);
+      if (!wasRequired.has(k) && child && typeof child === 'object' && child.type) {
+        // 原可选 → nullable，保住"可以没有"的语义
+        const t = Array.isArray(child.type) ? child.type : [child.type];
+        if (!t.includes('null')) child = { ...child, type: [...t, 'null'] };
+      }
+      props[k] = child;
+    }
+    out.properties = props;
+    out.required = keys;              // strict：必须列全
+    out.additionalProperties = false; // strict：必须显式关闭
+  }
+  return out;
+}
+
 function runCodex(prompt, schema, phaseName) {
   return new Promise((resolveP) => {
     const id = ++agentSeq;
@@ -71,14 +115,17 @@ function runCodex(prompt, schema, phaseName) {
       '-o', outFile];
     if (schema) {
       const sf = join(tmp, `schema-${id}.json`);
-      writeFileSync(sf, JSON.stringify(schema));
+      writeFileSync(sf, JSON.stringify(strictifySchema(schema)));
       args.push('--output-schema', sf);
     }
     args.push(prompt);
 
-    // read-only 沙箱不是保守默认，而是**强制执行 workflow 自己的红线**：
-    // 两个 workflow 的红线①都写着 propose-only / 绝不编辑 luca_gstack 行为面文件。
-    // 纸面约定在这里变成沙箱层面的不可能。
+    // read-only 沙箱：约束的是**这个 codex 子进程**（即模型在 agent 调用里可能生成并执行的
+    // 命令），使 workflow 红线①（propose-only / 绝不编辑行为面文件）在**模型侧**成为不可能。
+    // 【边界，别高估】它**不**约束 workflow 脚本本身——脚本经 AsyncFunction 跑在 runner 的
+    // node 进程里，不在任何沙箱内，理论上仍能读写磁盘。对脚本自身而言 propose-only 依旧是
+    // 纸面约定（与 Claude Code 侧同等），沙箱只堵住了模型生成命令这条更危险的路径。
+    // （2026-08-04 初版注释把这写成"纸面约定变成沙箱层面的不可能"，是夸大，已改正。）
     const p = spawn('codex', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     let stderr = '';
     p.stderr.on('data', (d) => { stderr += String(d).slice(0, 2000); });
@@ -92,7 +139,13 @@ function runCodex(prompt, schema, phaseName) {
     p.on('error', () => done(null, 'spawn 失败'));
     p.on('close', (code) => {
       if (/not supported when using Codex with a ChatGPT account/.test(stderr)) return done(null, '模型不可用/订阅');
-      if (code !== 0) return done(null, `exit=${code}`);
+      // 失败原因必须可见：agent 失败是**静默 falsy**（契约要求），若再把 stderr 吞掉，
+      // 症状就只剩"产出莫名变空"。2026-08-05 的 schema BLOCKER 正因此难以归因——
+      // 从摘要里提取 API 报错关键句，让下一次一眼可辨。
+      if (code !== 0) {
+        const api = (stderr.match(/"message":\s*"([^"]{0,200})/) || [])[1];
+        return done(null, `exit=${code}${api ? ' | ' + api : ''}`);
+      }
       try {
         const raw = readFileSync(outFile, 'utf8').trim();
         const m = raw.match(/\{[\s\S]*\}/);           // 容忍模型在 JSON 前后加话
