@@ -28,6 +28,26 @@ export function detectHarness(env = process.env) {
   return HARNESS.UNKNOWN;
 }
 
+// ── 「输出方言」与「实际 CLI」是两个问题（2026-08-04，勿混用）────────────────
+// detectHarness() 回答的是**该按哪套协议输出**。当 .codex/codex-hook-adapter.mjs 在中间层
+// 代偿时，它注入 CLAUDE_PROJECT_DIR 让 hook 走完整 CC 强制路径、再由 adapter 翻译成 Codex
+// 方言 —— 此时 detectHarness() 返回 'claude' 是**正确**的，不是 bug：hook 就该吐 CC 形动词。
+// 若让 detectHarness 认 LUCA_ACTUAL_HARNESS 而返回 codex，hook 会改吐 stderr advisory，
+// adapter 将无 CC JSON 可翻译 —— 强制动词反而整体丢失。故两者必须分开。
+//
+// 需要知道**实际跑在哪个 CLI** 的消费方（遥测、诊断、luca app 的 CLI 切换开关、
+// 按厂商分流的行为）一律用 actualHarness()，绝不去猜 CLAUDE_PROJECT_DIR。
+export function actualHarness(env = process.env) {
+  const declared = String(env.LUCA_ACTUAL_HARNESS || '').toLowerCase();
+  if (declared === HARNESS.CODEX || declared === HARNESS.CLAUDE) return declared;
+  return detectHarness(env);   // 无显式声明时退回协议侧判断
+}
+
+// 当前 CC 语义是否由 adapter 代偿（=真实 harness 非 Claude 但按 CC 协议在跑）。
+export function isAdapted(env = process.env) {
+  return env.LUCA_HARNESS_ADAPTED === '1';
+}
+
 // ── Codex 方言表（2026-08-04 实测校正）──────────────────────────────────────
 // 【本次修正的根因】首版把 Codex 判为"无 hook 强制能力"，据此把 deny/block 一律降级为
 // stderr advisory。实测 codex-cli 0.133.0（`codex features list`）：`hooks` 与 `multi_agent`

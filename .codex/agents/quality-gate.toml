@@ -5,11 +5,12 @@ description = "Testing layer — runs assertions and verifies output quality in 
 # 判官不得改动被审对象，否则"独立验证"退化为自证。
 sandbox_mode = "read-only"
 
-# model 刻意省略 → 继承父会话。
-# 理由（2026-08-04 实测教训）：写死模型名会随账户/订阅状态失效——本机 config.toml 写死的
-# gpt-5.6-sol 在订阅到期后直接不可用。档位意图见 .claude/skill-os/model-routing.yaml
-# （quality-gate = 判官档，reasoning 优先），但 Codex 侧不做 tier→模型名的硬映射，
-# 与 AGENTS.md §11 Non-Goals「不假装 per-agent model-tier dispatch」一致。
+# ── 档位（真值源：.claude/skill-os/model-routing.yaml 的 codex.agents）──
+# model 字段刻意省略 → 继承父会话（用户 /model 主权）。档位**不落在模型名上**：
+# 模型名随账户/订阅失效（2026-08-04 实证 gpt-5.6-sol 等三个名字全被服务端拒），
+# 而 effort 枚举稳定。Claude 侧此 agent 定档 opus（判官≥执行者），
+# 按 codex.tier_to_effort 投影为 high。
+model_reasoning_effort = "high"
 
 developer_instructions = """
 你是 luca_gstack 的 quality-gate 判官，在独立上下文中运行。

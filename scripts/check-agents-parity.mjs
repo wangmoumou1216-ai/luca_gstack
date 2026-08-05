@@ -83,18 +83,35 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   // Round2 强化 + Round3 加固：hedge 就近判定 **且** 就近不得出现既成事实反措辞。整段/整窗只查 hedge
   // 存在性时，半回退（把 model 句翻成"无法传/已确认/has no"、却在窗口别处保留一个 hedge 词）会误 PASS。
   const revert = /无法.{0,4}传|已(?:经)?确认|Codex has no per-agent|Codex cannot .{0,12}model/i;
-  const mIdx = mdSec.search(/per-agent model|model 参数/i);
-  const mWin = mIdx >= 0 ? mdSec.slice(Math.max(0, mIdx - 160), mIdx + 160) : '';
-  check('hedge: §4.8.2「per-agent model 参数」就近带 hedge 且无既成事实反措辞',
-    mIdx >= 0 && hedge.test(mWin) && !revert.test(mWin),
-    '§4.8.2 model 句就近缺 hedge 或现既成事实措辞（无法传/已确认）→ 恐退回断言');
+
+  // 2026-08-04 演进：spike 已真做（Codex subagent toml 实测支持 model / model_reasoning_effort）。
+  // 门的不变量从来不是"永远保持 hedge"，而是**断言不得无凭据**——未核验时凭据是 hedge，
+  // 已核验时凭据是实测锚。若只认 hedge，spike 完成后守的就是一句假话，且会逼后来者
+  // 要么写假 hedge 要么删掉整个门（两条都比现在糟）。故补一条**更严**的合法解除路径：
+  // 必须同时出现「已核验措辞」+「可追的实测落点」，缺一不可；revert 反措辞检测照旧生效。
+  // 判定粒度刻意分两级：hedge / 已核验措辞 / 反措辞按**就近窗口**判（防"半回退"——把某一句
+  // 翻成既成事实、却靠段落别处残留的词蒙混过关，这是 Round2/Round3 加固的原意，不可放宽）；
+  // 而实测锚按**全文**判——它是可追的落点凭据（真值源字段名 / 验收脚本名），本就散落在别处，
+  // 要求它紧贴该句会逼出复读式冗余。锚被整体删除时仍会转红（已变异测试验证）。
+  const verified = /spike 已完成|已核验|实测推翻|实测(?:证据|校正|枚举)|被实测/i;
+  const evidenceAnchor = /model_reasoning_effort|verify-codex-wiring|tier_to_effort/i;
+  const hasAnchor = evidenceAnchor.test(agents);
+  const attested = (t) => (hedge.test(t) || (verified.test(t) && hasAnchor)) && !revert.test(t);
+
+  const mIdx = mdSec.search(/per-agent model|model 参数|reasoning effort/i);
+  const mWin = mIdx >= 0 ? mdSec.slice(Math.max(0, mIdx - 160), mIdx + 400) : '';
+  check('hedge: §4.8.2 model 档位断言有凭据（hedge 或实测锚）且无既成事实反措辞',
+    mIdx >= 0 && attested(mWin),
+    '§4.8.2 model 句缺凭据（既无 hedge 也无实测锚）或现既成事实措辞（无法传/已确认）→ 恐退回断言');
   // §11 Non-goal：整条目查 hedge 存在性 **+ 反措辞检测**（Round3 加固）。反措辞是真防护——半回退把
   // 本句翻成"Codex has no per-agent model"既成事实时，即便条目别处留 hedge 词也会被 revert 检测抓住。
-  const ng = agents.indexOf('per-agent model-tier dispatch');
+  // 大小写不敏感：条目首字母会随行文改写（Do not attempt per-agent… → **Per-agent…**），
+  // indexOf 恒敏感会让本 check 静默恒 FAIL（2026-08-04 实证，一度被误读成"反措辞被抓到"）。
+  const ng = agents.search(/per-agent model-tier dispatch/i);
   const ngItem = ng >= 0 ? agents.slice(ng, ng + 600) : '';
-  check('hedge: §11 model dispatch Non-goal 带 hedge 且无既成事实反措辞',
-    ng >= 0 && hedge.test(ngItem) && !revert.test(ngItem),
-    '§11 model dispatch 缺 hedge 或现既成事实断言（Codex has no per-agent model）');
+  check('hedge: §11 model dispatch 条目有凭据（hedge 或实测锚）且无既成事实反措辞',
+    ng >= 0 && attested(ngItem),
+    '§11 model dispatch 缺凭据（既无 hedge 也无实测锚）或现既成事实断言（Codex has no per-agent model）');
 }
 
 // ⑥ 无字面绝对路径（审计 CR0022 的门守护）：项目路径应全用 <PROJECTS_ROOT>；仅 PROJECTS_ROOT

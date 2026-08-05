@@ -63,6 +63,15 @@ if (data.hook_event_name === 'SessionStart' && !data.source) {
 const childEnv = { ...process.env };
 if (!childEnv.CLAUDE_PROJECT_DIR) childEnv.CLAUDE_PROJECT_DIR = REPO_ROOT;
 
+// 【真实 harness 身份不得因伪装而丢失】
+// 上一行注入 CLAUDE_PROJECT_DIR 是刻意的——让 hook 走完整 CC 强制路径，由本层翻译输出。
+// 但副作用是 detectHarness() 在 Codex 下恒返回 'claude'，真实身份被抹掉。
+// 后果有二：① 需要按 CLI 分流的消费方（如 luca app 的 CLI 切换开关）拿不到真实 harness；
+// ② harness.mjs 的 Codex 方言字段永远不触发（本层已代劳，但身份不该因此消失）。
+// 故显式落一个不可伪装的标记：需要区分时读 LUCA_ACTUAL_HARNESS，而非猜 CLAUDE_PROJECT_DIR。
+childEnv.LUCA_ACTUAL_HARNESS = 'codex';
+childEnv.LUCA_HARNESS_ADAPTED = '1';   // 标记"CC 语义由 adapter 代偿"，供诊断与遥测区分真假 CC
+
 // ── 2. 执行目标 hook ─────────────────────────────────────────────────────────
 let r;
 try {

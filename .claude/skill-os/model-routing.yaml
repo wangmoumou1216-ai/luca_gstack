@@ -117,6 +117,39 @@ dispatch_rules:
     （指挥官档），fable 全部经白名单点状 dispatch；重大架构/审查日可手动
     /model fable 起 session（逃生阀，可选）。
 
+# ─── Codex harness 的档位解析（2026-08-04，跨-harness 档位适配）───
+# 上面整套 tiers/agents/dispatch_rules 的落点是 Claude 模型别名，Codex 不能照搬。
+# 本段是 Codex 侧的**唯一**解析表；.codex/agents/*.toml 与任何 Codex 调度方都从这里取值。
+codex:
+  principle: |
+    档位的不变量是**相对序**（判定 > 承重执行 > 轻执行 > 机械），不是某个具体模型。
+    Claude 侧这个序落在模型别名上（fable>opus>sonnet>haiku）；
+    Codex 侧落在 reasoning effort 上（xhigh>high>medium>minimal）。
+    序保住了，档位语义就保住了——这与"档位名是别名、档内升级自动跟随零维护"同一条原则。
+  why_not_model_names: |
+    **Codex 模型名不得作为档位落点**——它随账户/订阅状态失效，而 effort 枚举不会。
+    2026-08-04 实证：本机 config.toml 写死的 gpt-5.6-sol 在订阅到期后被服务端直接拒绝
+    （"not supported when using Codex with a ChatGPT account"），gpt-5.6-codex 与
+    gpt-5.1-codex 这两个历史上成功跑过的名字同样被拒。把档位绑在模型名上，
+    等于把整个路由系统绑在一张会过期的凭证上。
+  effort_lineup: [none, minimal, low, medium, high, xhigh]  # codex-cli 0.133.0 实测枚举（config 解析器报错列出）
+  tier_to_effort:
+    reasoning-heavy: xhigh      # 判定/对抗/裁决——高杠杆小上下文，给满推理预算
+    core-execution: high        # 承重执行与整场交互
+    guided-execution: medium    # 有 checklist 指导的轻执行（默认档）
+    mechanical: minimal         # 机械执行/格式/计数
+  model_field: inherit
+  model_field_note: |
+    subagent toml 一律**省略 model 字段** → 继承父会话。理由同 why_not_model_names，
+    且与 main_loop 的"模型是用户 /model 主权"一致：用户换主模型时子 agent 自动跟随。
+  agents:                       # 与上方 agents: 同名同序，值换成 effort
+    quality-gate: high          # 判官≥执行者（对应 Claude 侧 opus）
+    muse-proto-judge: high
+    preflight-agent: minimal    # 纯机械前置检查（对应 Claude 侧 haiku）
+  parity_note: |
+    本段与上方 Claude 侧 agents:/tiers: 是**同一套档位的两个投影**，新增场景须同时补两侧
+    （new_scenario_protocol 对 Codex 同样适用）。只补一侧 = 换个 CLI 就掉档。
+
 # ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
 new_scenario_protocol:
   rule: |

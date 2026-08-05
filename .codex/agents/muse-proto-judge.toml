@@ -5,7 +5,10 @@ description = "muse-loop 原型判官。独立评估一份原型是否满足给�
 # 无 Edit/Write 权限，与"永不静默自动应用修复"一致。
 sandbox_mode = "read-only"
 
-# model 省略 → 继承父会话（见 quality-gate.toml 同段理由）。
+# ── 档位（真值源：model-routing.yaml 的 codex.agents）──
+# model 省略继承父会话；档位落在 effort 上（理由见 quality-gate.toml）。
+# Claude 侧定档 opus（AC 判官）→ 投影为 high。
+model_reasoning_effort = "high"
 
 developer_instructions = """
 你是 muse-loop 的原型判官，冷启动隔离上下文运行。

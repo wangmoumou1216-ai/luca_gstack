@@ -355,7 +355,17 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
   · 只对某个下游项目成立 → 该项目 `.luca/memory/MEMORY.md`
 - **检索改变了行动时**补跑 `search_memory.py --mattered "<query>"`（ADR-0006 唯一主观信号）。
 
-### 4.8.2 Model routing（能力档意图 — Codex 的 model dispatch 参数尚未核验，按意图自选）
+### 4.8.2 Model routing（能力档 — Codex 侧落在 reasoning effort，2026-08-04 spike 已核验）
+
+> **Codex 接线现状（2026-08-04）**：本仓已具备 Codex 侧完整接线，读取顺序与落点如下——
+> `.codex/hooks.json`（6 个生命周期 hook，全部经 `.codex/codex-hook-adapter.mjs` 调用）／
+> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（32 条软链 → `.claude/skills/office/*`）。
+> adapter 负责入向 `tool_name` 归一化（`shell`→`Bash`、`apply_patch`→`Write`）与出向方言翻译
+> （`decision:block`→`continue:false`；裸文本→`additionalContext`；`updatedInput` 不受支持时降级为
+> `deny`）——因此 `.claude/hooks/*.mjs` 六个脚本零改动、Claude 路径零影响。
+> 需要知道**实际跑在哪个 CLI** 时用 `harness.mjs` 的 `actualHarness()`（读 `LUCA_ACTUAL_HARNESS`），
+> **不要**用 `detectHarness()`——后者回答的是"该按哪套协议输出"，在 adapter 下返回 `claude` 是正确的。
+> 验收：`node scripts/verify-codex-wiring.mjs`（静态段随时可跑；活体段需可用订阅）。
 
 真值源 `.claude/skill-os/model-routing.yaml`。**Codex 是否能传 per-agent model 参数尚未在真 Codex
 上核验**（当前按"不能"保守假设），故档位分派本身暂判不可移植（见 §11 Non-goals；真-Codex spike
@@ -717,13 +727,22 @@ Only report this checklist to the user if it affects the work or the user asks.
 
 - Do not maintain a second, divergent workflow system in `AGENTS.md`.
 - Do not duplicate every Claude skill body here.
-- Do not pretend Codex can directly execute Claude slash commands.
+- Do not pretend Codex can directly execute Claude **slash** commands (`/brainstorm` 等语法仍是
+  Claude 侧的)。**但同一套 skill 本体在 Codex 下是可达的**（2026-08-04 接线）：`.agents/skills/`
+  下 32 条软链指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
+  读的是同一份 SKILL.md（软链非副本——复制会漂移，见 b2b83d3）。所以正确说法是
+  「触发语法不同，skill 本体同源」，不是「Codex 用不了这些 skill」。
 - Do not use this file to store task-specific notes.
-- **Do not attempt per-agent model-tier dispatch.** The capability tiers in §4.8.2 are *intent*, not
-  a dispatch mechanism: `.claude/skill-os/model-routing.yaml` + the `recommended-model` frontmatter
-  are consumed by Claude-side CI and the orchestrator prompt only. Whether Codex exposes a per-agent
-  `model` parameter is **unverified on a real Codex (currently assumed "no", pending a spike)**, so tier
-  **dispatch** is a Non-goal here until that spike; honor the intent, do not fake the wiring.
+- **Per-agent model-tier dispatch：spike 已完成（2026-08-04），结论是"能做，但不落在模型名上"。**
+  此前本条基于「假设 Codex 不暴露该参数」判为 Non-goal，该假设已被实测推翻：Codex subagent
+  （`.codex/agents/*.toml`）确实支持 `model` 与 `model_reasoning_effort` 字段。
+  **但档位一律落在 `model_reasoning_effort`，绝不写死模型名**——模型名随账户/订阅失效
+  （实证：本机 config.toml 的 `gpt-5.6-sol` 与另两个历史可用名在订阅到期后全部被服务端拒绝），
+  而 effort 枚举（`none/minimal/low/medium/high/xhigh`）稳定。档位的不变量是**相对序**，
+  Claude 侧投影为模型别名、Codex 侧投影为 effort。
+  唯一真值源：`.claude/skill-os/model-routing.yaml` 的 `codex:` 段（`tier_to_effort` + `agents`）；
+  一致性由 `scripts/verify-codex-wiring.mjs` 的 S8b 守护（含"禁止硬编码 model 名"断言）。
+  `model` 字段一律省略以继承父会话，与 §main_loop「模型是用户 /model 主权」一致。
 - Do not edit `CLAUDE.md` or `.claude/skills/office/*` unless the user explicitly asks to change
   the Claude workflow itself.
 

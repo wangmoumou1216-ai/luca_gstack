@@ -4,8 +4,10 @@ description = "Pre-flight check agent — validates preconditions before a skill
 # 纯机械前置检查，只读。
 sandbox_mode = "read-only"
 
-# model 省略 → 继承父会话（见 quality-gate.toml 同段理由）。
-# 档位意图：mechanical（.claude/agents/preflight-agent.md frontmatter 标 haiku / effort low）。
+# ── 档位（真值源：model-routing.yaml 的 codex.agents）──
+# model 省略继承父会话；档位落在 effort 上（理由见 quality-gate.toml）。
+# Claude 侧定档 haiku（纯机械前置检查）→ 投影为 minimal。
+model_reasoning_effort = "minimal"
 
 developer_instructions = """
 你是 luca_gstack 的 preflight 检查器。

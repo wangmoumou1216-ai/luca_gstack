@@ -80,6 +80,32 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   ok('S8 .codex/agents/*.toml 已定义', fs_.length >= 3, `found=${fs_.length}`);
 }
 
+// S8b 档位一致性：.codex/agents/*.toml 的 effort 必须等于 model-routing.yaml 的 codex.agents
+// （两处分散 = 迟早漂移；漂移的症状是"换个 CLI 就悄悄掉档"，不会报错）
+{
+  const yml = readFileSync(join(ROOT, '.claude', 'skill-os', 'model-routing.yaml'), 'utf8');
+  const seg = yml.split(/^codex:/m)[1] || '';
+  const agentsBlock = (seg.split(/^\s{2}agents:/m)[1] || '').split(/^\s{2}[a-z_]+:/m)[0] || '';
+  const want = {};
+  for (const m of agentsBlock.matchAll(/^\s{4}([a-z0-9-]+):\s*([a-z]+)/gm)) want[m[1]] = m[2];
+
+  const dir = join(ROOT, '.codex', 'agents');
+  let mismatch = [];
+  for (const f of (existsSync(dir) ? readdirSync(dir).filter((x) => x.endsWith('.toml')) : [])) {
+    const t = readFileSync(join(dir, f), 'utf8');
+    const name = (t.match(/^name\s*=\s*"([^"]+)"/m) || [])[1];
+    const eff = (t.match(/^model_reasoning_effort\s*=\s*"([^"]+)"/m) || [])[1];
+    if (!name) { mismatch.push(`${f}:无name`); continue; }
+    if (!eff) { mismatch.push(`${name}:未定档`); continue; }
+    if (want[name] && want[name] !== eff) mismatch.push(`${name}:toml=${eff}≠yaml=${want[name]}`);
+    if (!want[name]) mismatch.push(`${name}:yaml未登记`);
+    // 模型名硬编码 = 把档位绑在会过期的凭证上（2026-08-04 实证）
+    if (/^model\s*=/m.test(t)) mismatch.push(`${name}:硬编码了model名`);
+  }
+  ok('S8b subagent 档位与 model-routing.yaml 的 codex.agents 一致且无硬编码模型名',
+    mismatch.length === 0, mismatch.join(','));
+}
+
 // S9 adapter 行为回归（真实 hook 端到端）
 ok('S9 adapter 行为测试全绿（scripts/test-codex-adapter.mjs）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-codex-adapter.mjs')], { cwd: ROOT }).status === 0);
