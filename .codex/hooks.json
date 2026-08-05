@@ -1,0 +1,73 @@
+{
+  "_comment": "luca_gstack 的 Codex 侧 hook 注册（2026-08-04）。所有 hook 经 .codex/codex-hook-adapter.mjs 调用：adapter 负责入向 tool_name 归一化（shell→Bash / apply_patch→Write）与出向方言翻译（decision:block→continue:false；纯文本→additionalContext；updatedInput 不受支持时降级为 deny）。.claude/hooks/*.mjs 六个脚本因此零改动、Claude 路径零影响。matcher 用 Codex 真实 tool_name（openai/codex#18491：read_file 与 grep 目前无 hook 分发）。SessionStart/UserPromptSubmit 设 additionalContextLimit=0：完整输出直传、不截断不 spill。",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "luca_gstack: 恢复 session 上下文",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log || true",
+            "additionalContextLimit": 0
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "luca_gstack: 路由检查",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true",
+            "additionalContextLimit": 0
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(shell|apply_patch)$",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "luca_gstack: 项目边界检查",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(shell|apply_patch)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "luca_gstack: 自成长捕获",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      }
+    ]
+  }
+}
