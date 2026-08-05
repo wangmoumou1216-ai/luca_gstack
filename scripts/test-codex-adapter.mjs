@@ -4,7 +4,7 @@
 // 覆盖：入向 tool_name 归一化 / 出向四种方言翻译 / Claude 路径零回归。
 
 import { spawnSync } from 'child_process';
-import { existsSync, rmSync, readFileSync } from 'fs';
+import { existsSync, rmSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -107,13 +107,16 @@ cleanup();
   }
   const r = runVia('session-sync.mjs', { hook_event_name: 'Stop', session_id: SID, cwd: ROOT });
   const o = parse(r.stdout);
-  if (o && (o.continue === false || o.stopReason)) {
-    ok('C1 decision:block 被翻译成 Codex 方言 continue:false', o.continue === false);
-    ok('C2 拦截理由经 stopReason 传出（信息不丢失）',
-      typeof o.stopReason === 'string' && o.stopReason.length > 0);
-    ok('C3 未把 Codex 不认的 decision 字段透出', !('decision' in o));
+  if (o && (o.decision || o.continue !== undefined)) {
+    // 2026-08-05 深审纠正：Codex 与 CC **同字段同语义**（运行中二进制的校验串
+    // "Stop hook returned decision:block without a non-empty reason"），故必须原样透传。
+    // 初版译成 continue:false 是语义反转：block=「别停、这是继续的提示词」被改成「终止本轮」，
+    // 自成长捕获不再发生且用户回合被杀。本组断言现在守的正是"不翻译"。
+    ok('C1 Stop 的 decision:block 原样透传（不得译成 continue:false）', o.decision === 'block');
+    ok('C2 拦截理由经 reason 传出（信息不丢失）',
+      typeof o.reason === 'string' && o.reason.length > 0);
+    ok('C3 未产生语义反转的 continue:false', o.continue !== false);
   } else {
-    // 该 session 未达拦截阈值时跳过（不算失败，但要显式说明，避免假绿）
     console.log('SKIP C1-C3 — 本次 session-sync 未产出 block（未达实质工作阈值）');
   }
   cleanup();
@@ -121,7 +124,10 @@ cleanup();
 
 // ── D. 出向：PreToolUse 动词 ────────────────────────────────────────────────
 {
-  // D1: updatedInput 不受支持 → 必须降级为 deny，绝不静默丢弃
+  // D1-D3（2026-08-05 深审纠正）：updatedInput **受支持**，二进制校验串
+  // "PreToolUse hook returned updatedInput without permissionDecision:allow" 证明它是一等字段。
+  // 初版据一个 OPEN 的旧版 issue 把它降级成 deny，等于把 project-scope-guard 的**正常重定向
+  // 路径**（pinned session 写产出目录的常态）变成硬拒绝——比 fail-open 更糟。
   const r = runVia('project-scope-guard.mjs', {
     hook_event_name: 'PreToolUse',
     session_id: 'no-such-pin-' + Date.now(),
@@ -130,11 +136,25 @@ cleanup();
   });
   const o = parse(r.stdout);
   const hso = o?.hookSpecificOutput;
-  ok('D1 未绑定项目写 docs/ → 输出 deny（强制未因 harness 丢失）',
+  // 未绑定 session 时 guard 走 deny 分支（非重定向）；deny 两家同字段同语义 → 原样透传
+  ok('D1 未绑定项目写产出目录 → deny 原样透传（强制未因 harness 丢失）',
     hso?.permissionDecision === 'deny', `stdout=${String(r.stdout).slice(0, 160)}`);
   ok('D2 deny 理由非空（模型可据此改正）',
     typeof hso?.permissionDecisionReason === 'string' && hso.permissionDecisionReason.length > 10);
-  ok('D3 未透出 Codex 会拒绝的 updatedInput 字段', !hso?.updatedInput);
+}
+{
+  // D3：带 updatedInput 的重定向必须透传并自动补 permissionDecision:allow
+  const fake = join(ROOT, '.claude', 'workflows', '__adapter_probe_ui.js');
+  writeFileSync(fake, `console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',updatedInput:{file_path:'/redirected/x.md'}}}))`);
+  const r = spawnSync('node', [ADAPTER, fake], {
+    input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: SID, cwd: ROOT, tool_name: 'apply_patch', tool_input: {} }),
+    encoding: 'utf8', cwd: ROOT, timeout: 30000,
+  });
+  rmSync(fake, { force: true });
+  const o = parse(r.stdout);
+  const h = o?.hookSpecificOutput;
+  ok('D3 updatedInput 原样透传且自动补 permissionDecision:allow（不再降级成 deny）',
+    !!h?.updatedInput && h.permissionDecision === 'allow', `stdout=${String(r.stdout).slice(0, 200)}`);
 }
 
 // ── E. 零回归：Claude 直调路径未被本次改动影响 ──────────────────────────────

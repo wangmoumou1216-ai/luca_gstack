@@ -145,6 +145,27 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0
   && spawnSync('node', [join(ROOT, 'scripts', 'test-hooks.mjs')], { cwd: ROOT }).status === 0);
 
+// S11 【本次深审最重要的发现】codex 0.146.0 **不加载仓库级 hooks.json**。
+// 实测矩阵：`.codex/` `.agents/` `.claude/` 三处 ×（无 trust / projects trust /
+// --dangerously-bypass-hook-trust）全组合均不触发；唯一生效的注册点是用户级 ~/.codex/hooks.json。
+// 因此 .codex/hooks.json 只是**本仓的真值源**，必须并入全局才会真的跑起来。
+// 没有这条断言，S1-S5 全绿会给人"接线完成"的假象——而实际一个 hook 都不会执行。
+{
+  const gp = join(process.env.HOME || '', '.codex', 'hooks.json');
+  let registered = false, adapterPath = '';
+  try {
+    const blob = readFileSync(gp, 'utf8');
+    registered = /codex-hook-adapter\.mjs/.test(blob);
+    adapterPath = (blob.match(/[^"]*codex-hook-adapter\.mjs/) || [])[0] || '';
+  } catch { }
+  ok('S11 luca_gstack hook 已注册到用户级 ~/.codex/hooks.json（仓库级不被 Codex 加载）',
+    registered,
+    registered ? adapterPath
+      : '未注册 → 本仓 hook 在 Codex 下一个都不会执行。修复：把 .codex/hooks.json 的条目'
+        + '并入 ~/.codex/hooks.json（保留其中已有的第三方 hook）；adapter 自带 inRepo 守卫，'
+        + '全局注册后在其它项目里静默放行');
+}
+
 console.log('\n── [活体] 真实 Codex session ──────────────────────────');
 
 // L0 订阅/模型可用性 —— 这是活体段的闸
@@ -170,6 +191,7 @@ if (staticOnly) {
 if (liveReady) {
   // stdin 必须关闭：codex exec 在 stdin 未 EOF 时会一直等待（"Reading additional input
   // from stdin..."），表现为无限挂起。spawnSync 默认继承，故显式给空 input。
+  const liveLogBefore = (() => { try { return statSync('/tmp/luca-gstack-hooks.log').size; } catch { return 0; } })();
   const r = spawnSync('codex', ['exec', '--skip-git-repo-check', '-s', 'read-only',
     '--dangerously-bypass-hook-trust',
     '运行 shell 命令 `echo codex-wiring-probe` 并报告输出，不要修改任何文件。'],
@@ -179,12 +201,25 @@ if (liveReady) {
   if (/not supported when using Codex with a ChatGPT account/.test(blob)) {
     skip('L1-L3', '服务端拒绝了配置的模型（订阅或 config.toml 的 model 需要修正）');
   } else {
-    // L1 证据用 **Codex 自己的一手报告**（stderr 里的 `hook: <Event>` / `Completed`），
-    // 不用 .session-* 文件差集 —— 后者取决于模型这一轮是否恰好调了工具、以及 sid 是否复用，
-    // 同一份接线两次跑出过相反结论（2026-08-05），是不可靠的代理指标。
-    const fired = [...blob.matchAll(/hook:\s*(\w+)/g)].map((m) => m[1]);
-    ok('L1 真实 Codex session 中 hook 被调用（据 Codex 自身 stderr 报告）',
-      fired.length > 0, `已触发=${[...new Set(fired)].join(',') || '无'}`);
+    // 【L1 判据两度返工，此为第三版——前两版都是假证据】
+    //  v1 用 .session-* 文件差集：取决于模型这轮是否恰好调工具、sid 是否复用，两次跑出相反结论。
+    //  v2 改用 Codex stderr 的 `hook: <Event>` 行——**同样是假的**：独立评审证明该行由
+    //     ~/.codex/hooks.json 里既存的第三方 hook（adrafinil）产生，在一个完全没有
+    //     luca_gstack 配置的空目录里也照样打印。据此判"我们的 hook 触发了"是彻头彻尾的误判。
+    //  v3（本版）唯一可信判据：**只有本仓 hook 才可能产生的副作用**。用 luca-marker：
+    //     adapter 在 inRepo 命中时会把 LUCA_HARNESS_ADAPTED 传给子 hook，子 hook 的 stderr
+    //     经 hooks.json 重定向进 /tmp/luca-gstack-hooks.log —— 该日志增长是本仓专属证据。
+    //  教训同族：证据必须能**区分**"我的东西生效了"与"某个东西生效了"。
+    const logPath = '/tmp/luca-gstack-hooks.log';
+    const sizeAfter = (() => { try { return statSync(logPath).size; } catch { return 0; } })();
+    const grew = sizeAfter > liveLogBefore;
+    const markerHit = /codex-adapter|luca_gstack/.test(blob);
+    ok('L1 真实 Codex session 中**本仓** hook 被调用（本仓专属副作用，非泛化 hook: 行）',
+      grew || markerHit,
+      `日志 ${liveLogBefore}→${sizeAfter}B${grew ? '' : '（未增长）'}；`
+      + `本仓标记=${markerHit}；`
+      + `注意：codex 0.146.0 实测**不加载仓库级 hooks.json**（.codex/.agents/.claude 三处 × trust/bypass 全组合均不触发），`
+      + `须把 .codex/hooks.json 的条目并入 ~/.codex/hooks.json 才会生效`);
     ok('L2 codex exec 正常结束（无 hook 导致的中断）', r.status === 0,
       `exit=${r.status} | ${(blob.match(/"message":\s*"([^"]{0,140})/) || [])[1] || ''}`);
     ok('L3 hook 未向 Codex 吐出它解析不了的内容（无 parser 报错）',
