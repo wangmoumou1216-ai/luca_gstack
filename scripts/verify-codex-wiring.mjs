@@ -110,6 +110,13 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
 ok('S9 adapter 行为测试全绿（scripts/test-codex-adapter.mjs）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-codex-adapter.mjs')], { cwd: ROOT }).status === 0);
 
+// S9b Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，靠 .codex/workflow-runner.mjs
+// 把 agent() 接到 codex exec 上。缺它 = 月度治理能力（演进侦察/外部 skill 侦察）在 Codex 下消失。
+ok('S9b workflow-runner 存在且两个 workflow 零改写可执行（scripts/test-workflow-runner.mjs）',
+  existsSync(join(ROOT, '.codex', 'workflow-runner.mjs'))
+  && spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner.mjs')],
+    { cwd: ROOT, timeout: 420000 }).status === 0);
+
 // S10 Claude 侧零回归
 ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0

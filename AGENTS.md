@@ -359,7 +359,11 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 
 > **Codex 接线现状（2026-08-04）**：本仓已具备 Codex 侧完整接线，读取顺序与落点如下——
 > `.codex/hooks.json`（6 个生命周期 hook，全部经 `.codex/codex-hook-adapter.mjs` 调用）／
-> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（32 条软链 → `.claude/skills/office/*`）。
+> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（32 条软链 → `.claude/skills/office/*`）／
+> `.codex/workflow-runner.mjs`（Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，本 runner 把
+> workflow 脚本注入的 `agent()` 接到 `codex exec --output-schema` 上，`.claude/workflows/*.js` 零改写即可运行；
+> 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`；以 `-s read-only` 执行，
+> 把 workflow 自身的 propose-only 红线变成沙箱强制）。
 > adapter 负责入向 `tool_name` 归一化（`shell`→`Bash`、`apply_patch`→`Write`）与出向方言翻译
 > （`decision:block`→`continue:false`；裸文本→`additionalContext`；`updatedInput` 不受支持时降级为
 > `deny`）——因此 `.claude/hooks/*.mjs` 六个脚本零改动、Claude 路径零影响。
