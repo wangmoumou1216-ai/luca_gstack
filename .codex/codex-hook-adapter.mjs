@@ -67,6 +67,31 @@ function aliasFor(targetPath) {
   return hit ? hit.map : DEFAULT_TOOL_MAP;
 }
 
+// 【B5 · tool_input 也要归一化，只改 tool_name 不够】(2026-08-06)
+// 上面把 apply_patch 映射成 Write 让 `.session-edit-count` 活了，但 tool_input 形状没变——
+// 它只有 {command}（装着 patch 全文），**没有 file_path**。而 post-edit 另有两处功能靠它：
+//   · post-edit.mjs:55  framework/ 只读保护区编辑告警  → 恒不触发（保护区哑了，比下面更严重）
+//   · post-edit.mjs:72  html/md 产出物投递 ~/.luca/open-spool → 恒不触发
+//     （:71 的 tool_name 那关是过的，断在 :72 取空串、:73 return）
+// 表现是"测试全绿 + hook 全触发 + edit-count 正常"，唯独这两件事静默不干活。
+// 故在此从 patch 头解析出文件路径补进 tool_input。
+// 只作用于 post-edit + apply_patch：guard 分支**不碰**——它按 command 串扫越界路径，
+// 映射成 Bash 是对的，塞 file_path 反而可能改变其判定路径。
+const PATCH_FILE_RE = /^\*\*\*\s+(?:Add|Update|Delete)\s+File:\s*(.+?)\s*$/gm;
+function patchFilePaths(command) {
+  const out = [];
+  try {
+    for (const m of String(command || '').matchAll(PATCH_FILE_RE)) {
+      const p = (m[1] || '').trim();
+      if (!p) continue;
+      // patch 头里是仓库相对路径；cwd 恒为 REPO_ROOT（见 spawnSync 的 cwd）
+      const abs = isAbsolute(p) ? p : resolve(REPO_ROOT, p);
+      if (!out.includes(abs)) out.push(abs);
+    }
+  } catch { /* fail-open：解析不出就退回原样，不影响其余功能 */ }
+  return out;
+}
+
 // 哪些事件的输出 schema 含 additionalContext。Stop 的 schema 是 additionalProperties:false
 // 且**没有** hookSpecificOutput —— 往 Stop 塞它会被判 "invalid stop hook JSON output"。
 // 全量支持 additionalContext 的是 5 个事件；SubagentStart 当前未注册，先列上以免将来注册时漏配。
@@ -155,7 +180,18 @@ function main() {
 
   const event = data.hook_event_name || '';
   const alias = aliasFor(target);
+  const origToolName = data.tool_name;                    // 映射前的 Codex 真名（B5 判定要用）
   if (data.tool_name && alias[data.tool_name]) data.tool_name = alias[data.tool_name];
+  // B5：post-edit + apply_patch 时把 patch 头里的文件路径补进 tool_input.file_path。
+  // 首个路径进主 payload，其余留给下面的副作用调用（对齐 Claude 侧 N 文件 = N 次 hook）。
+  let extraFiles = [];
+  if (/post-edit/.test(target) && origToolName === 'apply_patch') {
+    const files = patchFilePaths(data.tool_input && data.tool_input.command);
+    if (files.length) {
+      data.tool_input = { ...(data.tool_input || {}), file_path: files[0] };
+      extraFiles = files.slice(1);
+    }
+  }
   // 【2026-08-06 深审修正：原写法是死代码】原注释称"Codex 的 SessionStart 无 source 字段"，
   // 实测**为假**——schema 里 source 是 required，实捕载荷为 `source:"startup"`。
   // 于是 `!data.source` 恒 false、兜底永不执行，session-restore 拿到 startup 直落 doClear()，
@@ -171,6 +207,19 @@ function main() {
   childEnv.CLAUDE_PROJECT_DIR = REPO_ROOT;
   childEnv.LUCA_ACTUAL_HARNESS = 'codex';   // 真实 CLI 身份（detectHarness 回答的是"按哪套协议输出"）
   childEnv.LUCA_HARNESS_ADAPTED = '1';
+
+  // B5 多文件 patch：Claude 侧改 N 个文件 = N 次 Write = N 次 hook；Codex 侧是 1 次 apply_patch。
+  // 首个路径走下面的主调用（其返回值参与控制动词），其余在此各补一次**纯副作用**调用——
+  // 只为让 edit-count 与 auto-open 投递对齐，输出一律不参与控制流，失败也不影响主路径。
+  for (const f of extraFiles) {
+    try {
+      const rx = spawnSync('node', [target], {
+        input: JSON.stringify({ ...data, tool_input: { ...data.tool_input, file_path: f } }),
+        env: childEnv, encoding: 'utf8', timeout: 30000, cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024,
+      });
+      if (rx && rx.stderr) process.stderr.write(rx.stderr);
+    } catch (e) { diag(`多文件 patch 副作用调用失败(${(e && e.message) || e})——不影响主路径`); }
+  }
 
   let r;
   try {
