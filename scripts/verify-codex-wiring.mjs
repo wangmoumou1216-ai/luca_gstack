@@ -55,7 +55,15 @@ ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NE
 // 即项目隔离强制（project-scope-guard）在 Codex 下完全失效，且静默无声。
 // 本断言现在守实测值；PostToolUse 同样要匹配，否则编辑计数链断。
 {
-  const need = (m) => /\bBash\b/.test(m) && /apply_patch/.test(m) && !/\bshell\b/.test(m);
+  // 2026-08-05 评审绕过实证：matcher 写成 `^(Bash|apply_patch)$never`（含全部关键词但
+  // **永不匹配任何 tool_name**）时本断言照样 PASS —— 查子串存在性守不住"正则真能用"。
+  // 而这**正是 56500da 修的那一类 bug**。改为拿实测 tool_name 真跑一遍这个正则。
+  const need = (m) => {
+    try {
+      const re = new RegExp(m);
+      return re.test('Bash') && re.test('apply_patch') && !re.test('shell');
+    } catch { return false; }
+  };
   const pre = hooks?.hooks?.PreToolUse?.[0]?.matcher || '';
   const post = hooks?.hooks?.PostToolUse?.[0]?.matcher || '';
   ok('S5 Pre/PostToolUse matcher 用实测 tool_name（Bash|apply_patch；写 shell 永不触发）',
@@ -117,8 +125,14 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
 {
   const yml = readFileSync(join(ROOT, '.claude', 'skill-os', 'model-routing.yaml'), 'utf8');
   const seg = yml.split(/^codex:/m)[1] || '';
-  const rejected = ((seg.match(/effort_rejected_by_model:\s*\[([^\]]*)\]/) || [])[1] || '')
+  // 2026-08-05 评审绕过实证：禁令清单与被查对象**在同一个文件**里，把
+  // effort_rejected_by_model 改成 [nonexistent-value] 再把 mechanical 改回 minimal → 照样 PASS。
+  // 自证式门禁不是门禁。故把**实测结论**硬编码在检查脚本这一侧（改 yaml 无法松动它），
+  // 同时仍要求 yaml 自己也登记（两侧都得对）。
+  const REJECTED_BY_MODEL = ['minimal'];   // 实测：真实模型 400 unsupported_value
+  const declared = ((seg.match(/effort_rejected_by_model:\s*\[([^\]]*)\]/) || [])[1] || '')
     .split(',').map((s) => s.trim()).filter(Boolean);
+  const rejected = [...new Set([...REJECTED_BY_MODEL, ...declared])];
   const used = [...seg.matchAll(/^\s{4}[a-z0-9-]+:\s*([a-z]+)\s*(?:#.*)?$/gm)].map((m) => m[1]);
   const bad = used.filter((v) => rejected.includes(v));
   let tomlBad = [];
@@ -130,9 +144,10 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   const runnerBad = (readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8')
     .match(/TIER_TO_EFFORT\s*=\s*\{[^}]*\}/) || [''])[0]
     .split(/['"]/).filter((v) => rejected.includes(v));
-  ok('S8c 所有 effort 取值都在模型接受集内（未用 config 层接受但模型拒绝的值）',
-    rejected.length > 0 && bad.length === 0 && tomlBad.length === 0 && runnerBad.length === 0,
-    `yaml=${bad} toml=${tomlBad} runner=${runnerBad} rejected=${rejected}`);
+  const declaredOk = REJECTED_BY_MODEL.every((v) => declared.includes(v));
+  ok('S8c 所有 effort 取值都在模型接受集内，且 yaml 已登记实测禁用值（脚本侧硬编码，改 yaml 松不动）',
+    declaredOk && bad.length === 0 && tomlBad.length === 0 && runnerBad.length === 0,
+    `yaml=${bad} toml=${tomlBad} runner=${runnerBad} 未登记=${REJECTED_BY_MODEL.filter((v) => !declared.includes(v))}`);
 }
 
 // S9 adapter 行为回归（真实 hook 端到端）

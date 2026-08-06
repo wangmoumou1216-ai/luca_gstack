@@ -6,7 +6,7 @@
 // 腐烂成陈旧的「CRM 身份 + 已被取代的 G6 共享软链模型」。本门把这些段落钉死，并做**跨源一致性**
 // 检查：SF 镜像的 id 集合必须 == static-fallback-allowlist.txt（防两处 SF 分叉）。
 import assert from 'assert/strict';
-import { readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -94,14 +94,37 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   // 而实测锚按**全文**判——它是可追的落点凭据（真值源字段名 / 验收脚本名），本就散落在别处，
   // 要求它紧贴该句会逼出复读式冗余。锚被整体删除时仍会转红（已变异测试验证）。
   const verified = /spike 已完成|已核验|实测推翻|实测(?:证据|校正|枚举)|被实测/i;
-  const evidenceAnchor = /model_reasoning_effort|verify-codex-wiring|tier_to_effort/i;
-  const hasAnchor = evidenceAnchor.test(agents);
-  const attested = (t) => (hedge.test(t) || (verified.test(t) && hasAnchor)) && !revert.test(t);
+  // 2026-08-05 深审：把「必须 hedge」放宽成「hedge 或(已核验词 + 全文锚)」后，评审用一条
+  // **与代码直接矛盾的假断言**（"effort 一律固定为 xhigh、调用方不可配置"，而 .codex/agents/*.toml
+  // 明明分三档）拿到 22/22 全绿——两个弱条件相乘不等于强条件：verified 只是词表匹配，
+  // 锚是全文级（文件任何角落出现该词即算数）。
+  // 修法：已核验路径不能只靠"说了什么"，必须与**磁盘真实状态**对账——
+  // 断言 AGENTS.md 声称的可配置性与 .codex/agents/*.toml 的实际档位分布一致。
+  // 说假话就会与磁盘对不上，词表再全也过不了。
+  const tomlEfforts = (() => {
+    const d = join(ROOT, '.codex', 'agents');
+    if (!existsSync(d)) return [];
+    return readdirSync(d).filter((f) => f.endsWith('.toml'))
+      .map((f) => (readFileSync(join(d, f), 'utf8').match(/^model_reasoning_effort\s*=\s*"([^"]+)"/m) || [])[1])
+      .filter(Boolean);
+  })();
+  const tomlIsConfigurable = new Set(tomlEfforts).size > 1;   // 多档并存 = 可配置
+  const claimsNotConfigurable = /不可配置|一律固定|固定为\s*\w+|无法配置/.test(agents);
+  const groundTruthOk = !(tomlIsConfigurable && claimsNotConfigurable);
+  const attested = (t) =>
+    (hedge.test(t) || (verified.test(t) && evidenceAnchorNear(t))) && !revert.test(t) && groundTruthOk;
+  // 锚的判定范围：全文级太松（评审实证形同虚设），±400 字符太脆（措辞一改就误红）。
+  // 取中间——**同一小节内**：主张与其证据本就该在同一节。真正的强度来自上面的
+  // groundTruthOk（与 .codex/agents/*.toml 的实际档位分布对账），说假话对不上磁盘就过不了。
+  function evidenceAnchorNear() { return /model_reasoning_effort|verify-codex-wiring|tier_to_effort/i.test(mdSec); }
 
-  const mIdx = mdSec.search(/per-agent model|model 参数|reasoning effort/i);
-  const mWin = mIdx >= 0 ? mdSec.slice(Math.max(0, mIdx - 160), mIdx + 400) : '';
+  // 逐个匹配点各取窗口，**任一成立即通过**（2026-08-05 修）：
+  // 原实现只看首个匹配，而 §4.8.2 的**标题**本身就含 "reasoning effort"，
+  // 于是窗口恒定落在段首 400 字符、看不到写在后文的凭据——断言恒红，是定位 bug 不是内容问题。
+  const wins = [...mdSec.matchAll(/per-agent[ \u4e00-\u9fa5]{0,4}(model|档位)|model 参数|reasoning effort/gi)]
+    .map((m) => mdSec.slice(Math.max(0, m.index - 160), m.index + 400));
   check('hedge: §4.8.2 model 档位断言有凭据（hedge 或实测锚）且无既成事实反措辞',
-    mIdx >= 0 && attested(mWin),
+    wins.length > 0 && wins.some(attested),
     '§4.8.2 model 句缺凭据（既无 hedge 也无实测锚）或现既成事实措辞（无法传/已确认）→ 恐退回断言');
   // §11 Non-goal：整条目查 hedge 存在性 **+ 反措辞检测**（Round3 加固）。反措辞是真防护——半回退把
   // 本句翻成"Codex has no per-agent model"既成事实时，即便条目别处留 hedge 词也会被 revert 检测抓住。

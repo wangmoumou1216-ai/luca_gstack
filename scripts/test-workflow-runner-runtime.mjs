@@ -203,6 +203,48 @@ return { x };`);
   ok('G8b 真正的顶层 export 已剥离（脚本可执行）', o?.metaOk === true);
 }
 
+
+// ── I. 沙箱/网络的**行为**断言（2026-08-05 评审：grep 断言可被绕过）─────────────
+// 评审实证两处摆设：① 保留 `'-C', AGENT_CWD` 原句、在 args 末尾追加 `args.push('-C', ROOT)`
+//   → 两条正则照常命中，34 条断言 0 红，而 `-C` 末次生效值 = 仓库根，工作根隔离完全失效；
+// ② 把 `if (SANDBOX === 'workspace-write')` 写反成 `'read-only'` → network_access 永不下发，
+//   发现层 16+12 处 gh 全废、静默零候选，同样 0 红。
+// 根因：W4b/W4b2 查的是"源码里有没有这个字符串"，不是"最终传给 codex 的是什么"。
+// 本组让假 codex 把**真实 argv** 落盘，直接检查生效值——绕过手法再多也逃不掉。
+{
+  const argvDump = join(sandbox, 'argv.json');
+  installFakeCodex(`${FAKE_HEADER}
+fs.writeFileSync(${JSON.stringify(argvDump)}, JSON.stringify(args));
+fs.writeFileSync(outFile, JSON.stringify({ ok: true }));
+process.exit(0);`);
+  const r = runWF(`phase('P'); const x = await agent('hi', { label:'i1' }); return { x };`);
+  let argv = [];
+  try { argv = JSON.parse(readFileSync(argvDump, 'utf8')); } catch { }
+
+  // -C 的**末次**出现才是生效值（重复传参时后者胜出）
+  const lastC = (() => {
+    let v = null;
+    for (let i = 0; i < argv.length - 1; i++) if (argv[i] === '-C') v = argv[i + 1];
+    return v;
+  })();
+  ok('I1 传给 codex 的工作根**实际生效值**在临时目录内，不是仓库根',
+    !!lastC && lastC !== ROOT && !ROOT.startsWith(lastC) && /agent-cwd/.test(lastC),
+    `实际 -C=${lastC}`);
+  ok('I2 仓库根从未作为工作根出现（防"追加一个 -C ROOT"式绕过）',
+    !argv.includes(ROOT), `argv 含仓库根=${argv.includes(ROOT)}`);
+
+  const lastSandbox = (() => {
+    let v = null;
+    for (let i = 0; i < argv.length - 1; i++) if (argv[i] === '-s') v = argv[i + 1];
+    return v;
+  })();
+  ok('I3 沙箱档实际生效值为 workspace-write', lastSandbox === 'workspace-write', `实际 -s=${lastSandbox}`);
+  ok('I4 network_access 实际被下发（否则发现层 gh 全废、静默零候选）',
+    argv.some((a) => /sandbox_workspace_write\.network_access=true/.test(String(a))),
+    `argv=${JSON.stringify(argv).slice(0, 200)}`);
+  ok('I5 未下发 danger-full-access', !argv.includes('danger-full-access'));
+}
+
 rmSync(sandbox, { recursive: true, force: true });
 console.log(`\n=== test-workflow-runner-runtime summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail === 0 ? 0 : 1);

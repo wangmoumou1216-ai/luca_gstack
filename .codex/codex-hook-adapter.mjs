@@ -35,7 +35,7 @@
 // 用法：node codex-hook-adapter.mjs <hook脚本绝对路径>
 
 import { spawnSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { readFileSync, realpathSync } from 'fs';
 import { dirname, resolve, relative, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -72,9 +72,22 @@ const SUPPORTS_ADDITIONAL_CONTEXT = new Set([
 
 // 本 adapter 经**用户级** ~/.codex/hooks.json 注册（B1：仓库级不被加载），因此会在所有项目里
 // 被调用。只在本仓范围内工作，其它项目静默放行——全局注册不等于全局生效。
+// 2026-08-05 评审：macOS 默认卷**大小写不敏感**，而 relative() 大小写敏感 ——
+// 从 `/…/muse/LUCAGSTACK/` 进来时 rel=`../LUCAGSTACK` → 判不在仓内 → **人明明在仓内，
+// 6 个 hook 全部静默跳过**（项目隔离/路由/自成长捕获同时消失）且零线索。
+// 故先用 realpath 归一（解符号链接与大小写），失败再退回大小写不敏感比较。
 function inRepo(cwd) {
+  const norm = (p) => {
+    try { return realpathSync(p); } catch { return resolve(p); }
+  };
   try {
-    const rel = relative(REPO_ROOT, resolve(cwd || process.cwd()));
+    const root = norm(REPO_ROOT);
+    const here = norm(cwd || process.cwd());
+    let rel = relative(root, here);
+    if (rel !== '' && (rel.startsWith('..') || isAbsolute(rel))) {
+      // 退路：大小写不敏感再判一次（realpath 在不存在的路径上不生效）
+      rel = relative(root.toLowerCase(), here.toLowerCase());
+    }
     return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
   } catch { return false; }
 }
@@ -129,7 +142,12 @@ function main() {
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) { diag('stdin JSON 不是对象——放行'); return 0; }
 
-  if (!inRepo(data.cwd)) return 0;      // 其它项目：静默放行，零副作用
+  if (!inRepo(data.cwd)) {
+    // 本行曾是全文件**唯一**不打诊断的失败路径，与文件头「失败一律 fail-open 但留 stderr 诊断」
+    // 自相矛盾：一旦 inRepo 误判（如大小写），现象是"6 个 hook 集体静默消失"且事后零线索。
+    diag(`cwd 不在本仓范围内，放行不处理（cwd=${data.cwd || '(未提供)'} repo=${REPO_ROOT}）`);
+    return 0;
+  }
 
   const event = data.hook_event_name || '';
   const alias = aliasFor(target);

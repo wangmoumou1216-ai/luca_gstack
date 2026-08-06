@@ -107,6 +107,12 @@ cleanup();
   }
   const r = runVia('session-sync.mjs', { hook_event_name: 'Stop', session_id: SID, cwd: ROOT });
   const o = parse(r.stdout);
+  // C0 是 C1-C3 的**前置断言**，不是 skip 条件（2026-08-05 评审变异逼出）：
+  // 若把它写成 `if (...) {...} else { SKIP }`，则「Stop 控制动词整个消失」这一最坏失效
+  // 会被判成"本次没触发"而报绿——恰恰是最该红的情形最不会红。
+  ok('C0 Stop hook 确实产出了控制动词（前置断言：动词消失必须红，不能 SKIP 掉）',
+    !!o && (o.decision !== undefined || o.continue !== undefined),
+    `stdout=${String(r.stdout).slice(0, 160)}`);
   if (o && (o.decision || o.continue !== undefined)) {
     // 2026-08-05 深审纠正：Codex 与 CC **同字段同语义**（运行中二进制的校验串
     // "Stop hook returned decision:block without a non-empty reason"），故必须原样透传。
@@ -117,7 +123,8 @@ cleanup();
       typeof o.reason === 'string' && o.reason.length > 0);
     ok('C3 未产生语义反转的 continue:false', o.continue !== false);
   } else {
-    console.log('SKIP C1-C3 — 本次 session-sync 未产出 block（未达实质工作阈值）');
+    // 走到这里说明 C0 已红；不再打 SKIP 假装无事发生
+    ok('C1 Stop 的 decision:block 原样透传', false, '未产出控制动词，见 C0');
   }
   cleanup();
 }
@@ -203,6 +210,32 @@ cleanup();
   const n3 = existsSync(p3) ? parseInt(readFileSync(p3, 'utf8').trim() || '0', 10) : 0;
   ok('F3 Bash(Codex 真实 shell 工具名) 正常计入工具数', n3 >= 1, `count=${n3}`);
   cleanup();
+}
+
+
+// ── H. 大 payload 不被截断（B2 的回归门，2026-08-05 评审指出此前无守护）────────
+// `process.stdout.write` 后立刻 `process.exit()` 会丢弃未落 OS 管道的数据（macOS 64KiB）。
+// 失效场景正是最需要控制动词的时候：往产出目录写大文件时的 updatedInput。
+// 评审实测：exit() 版对端收到 65536 字节且 JSON 不可解析；exitCode 版收到 30 万字节完整。
+{
+  const fake = join(ROOT, '.claude', 'workflows', '__adapter_big_probe.js');
+  // hook 吐一个 ~300KB 的合法 JSON（带 updatedInput，走 adapter 的透传+补 allow 分支）
+  writeFileSync(fake, `
+const big = 'x'.repeat(300000);
+console.log(JSON.stringify({ hookSpecificOutput: {
+  hookEventName: 'PreToolUse', updatedInput: { file_path: '/redirected/x.md', blob: big },
+} }));`);
+  const r = spawnSync('node', [ADAPTER, fake], {
+    input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: SID, cwd: ROOT, tool_name: 'apply_patch', tool_input: {} }),
+    encoding: 'utf8', cwd: ROOT, timeout: 30000, maxBuffer: 64 * 1024 * 1024,
+  });
+  rmSync(fake, { force: true });
+  const raw = String(r.stdout || '');
+  const o = parse(raw);
+  ok('H1 大 payload(300KB) 完整输出且 JSON 可解析（防 process.exit 截断）',
+    raw.length > 250000 && !!o, `收到=${raw.length}B 可解析=${!!o}`);
+  ok('H2 截断防护下控制动词仍完好（updatedInput + allow 都在）',
+    o?.hookSpecificOutput?.updatedInput && o.hookSpecificOutput.permissionDecision === 'allow');
 }
 
 // ── E. 零回归：Claude 直调路径未被本次改动影响 ──────────────────────────────

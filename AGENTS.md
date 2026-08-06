@@ -362,11 +362,21 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 > `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（32 条软链 → `.claude/skills/office/*`）／
 > `.codex/workflow-runner.mjs`（Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，本 runner 把
 > workflow 脚本注入的 `agent()` 接到 `codex exec --output-schema` 上，`.claude/workflows/*.js` 零改写即可运行；
-> 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`；以 `-s read-only` 执行，
-> 把 workflow 自身的 propose-only 红线变成沙箱强制）。
-> adapter 负责入向 `tool_name` 归一化（`shell`→`Bash`、`apply_patch`→`Write`）与出向方言翻译
-> （`decision:block`→`continue:false`；裸文本→`additionalContext`；`updatedInput` 不受支持时降级为
-> `deny`）——因此 `.claude/hooks/*.mjs` 六个脚本零改动、Claude 路径零影响。
+> 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`。
+> **沙箱姿态（2026-08-05 红队裁决）**：`-C <scratch>` 把 agent 工作根隔离到临时目录 +
+> `workspace-write` + `sandbox_workspace_write.network_access=true`。依据是实测
+> **codex 沙箱的读是全局的、只有写受工作根约束**，故可同时拿到「发现层联网」与「仓库写入被沙箱硬拦」；
+> 仓库仍可读（workflow 的需求全是读）。**propose-only 是 prompt 层影响，不是沙箱强制**——
+> 真正的机械强制来自工作根隔离。)
+> adapter 负责入向 `tool_name` **按目标 hook 分流**别名（`apply_patch`→给 project-scope-guard 是
+> `Bash`〔其分支扫 `input.command`〕、给 post-edit 是 `Write`〔按工具名计编辑数〕）与出向**最小**适配
+> （裸文本→`additionalContext`；`updatedInput` 补 `permissionDecision:allow` 后原样透传）
+> ——因此 `.claude/hooks/*.mjs` 六个脚本零改动、Claude 路径零影响。
+> **刻意不翻译 `decision:block`**：Codex 与 CC 同字段同语义（二进制校验串
+> `Stop hook returned decision:block without a non-empty reason`），初版译成 `continue:false`
+> 是语义反转（=终止本轮），已回退。**`updatedInput` 受支持**（校验串
+> `PreToolUse hook returned updatedInput without permissionDecision:allow`），初版据旧版 issue
+> 降级为 `deny` 亦已回退。
 > 需要知道**实际跑在哪个 CLI** 时用 `harness.mjs` 的 `actualHarness()`（读 `LUCA_ACTUAL_HARNESS`），
 > **不要**用 `detectHarness()`——后者回答的是"该按哪套协议输出"，在 adapter 下返回 `claude` 是正确的。
 > 验收：`node scripts/verify-codex-wiring.mjs`（静态段随时可跑；活体段需可用订阅）。
@@ -388,9 +398,14 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 > 全组合实测不触发）——须并入用户级 `~/.codex/hooks.json`（门 1，断言 S11 守护），且新条目需**授信**
 > 才执行（门 2，未授信静默跳过）。adapter 自带 `inRepo` 守卫，全局注册后不越界到其它项目。
 
-真值源 `.claude/skill-os/model-routing.yaml`。**Codex 是否能传 per-agent model 参数尚未在真 Codex
-上核验**（当前按"不能"保守假设），故档位分派本身暂判不可移植（见 §11 Non-goals；真-Codex spike
-证伪则复审）；可移植的是**意图**——按判断杠杆选强弱：
+真值源 `.claude/skill-os/model-routing.yaml`（Codex 侧解析表在其 `codex:` 段）。
+**per-agent 档位分派已在真 Codex 上核验可用**（2026-08-05：Codex 找到 `.codex/agents/preflight-agent.toml`、
+按其 `low` 档派发、子 agent 正常返回），此前"尚未核验、按不能保守假设"的表述已过期，据实更新。
+**但档位落在 `model_reasoning_effort`，绝不写死模型名**——模型名随账户/订阅失效（实测三个历史可用
+名在订阅到期后全被服务端拒），effort 枚举则稳定；且实测**模型拒绝 `minimal`**（config 解析器却接受它），
+可用集为 `none/low/medium/high/xhigh/max`。一致性由 `verify-codex-wiring.mjs` 的 S8b/S8c 守护
+（S8c 把实测禁用值硬编码在检查脚本侧，改 yaml 松不动它）。
+档位**意图**跨 harness 不变——按判断杠杆选强弱：
 
 - 出门前裁决 / 对抗判定 / 翻案复审 / 规划期 → **reasoning-heavy**（最强档）
 - 写代码 / 规格 / 原型 / 编排 / 研究 / 判官常规 → **core-execution**（承重常驻档）

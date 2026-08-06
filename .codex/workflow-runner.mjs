@@ -117,13 +117,24 @@ for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
 // 补 additionalProperties:false 会使其恒空 → 结构化消费方（如 src.discovery.method）拿到空 →
 // 静默丢数据。故转成 string 并记录路径，响应回来后自动解析还原（见 reviveFreeform）。
 // 原可选字段转 nullable，保住"可以没有"的语义，不强行必填。
-function strictifySchema(node, freeform = [], path = [], seen = new WeakSet()) {
+// seen 是 **Map（原节点 → 已归一化结果）**，不是 Set。
+// 2026-08-05 评审实证原 WeakSet 写法有两处错：①命中时 `return node` 返回**未处理的原节点**，
+// 真环下后面 JSON.stringify 照抛，等于没达成"环检测"的宣称目的；②对**共享子 schema（DAG，非环）**
+// 第二次引用被原样返回、**未 strict 化** → 递交真实 API 即 400（当前 workflow 是内联字面量
+// 尚未触发，但 `const EVIDENCE = {...}` 复用两处是 JS 最自然的写法，一写就中）。
+// 用 Map 缓存归一化结果后：DAG 复用拿到的是**已归一化**的同一份，真环拿到占位后不再无限递归。
+function strictifySchema(node, freeform = [], path = [], seen = new Map()) {
   if (!node || typeof node !== 'object') return node;
-  if (seen.has(node)) return node;          // 环检测（B3：循环引用曾致 RangeError）
-  seen.add(node);
-  if (Array.isArray(node)) return node.map((n) => strictifySchema(n, freeform, path, seen));
+  if (seen.has(node)) return seen.get(node);
+  if (Array.isArray(node)) {
+    const arr = [];
+    seen.set(node, arr);
+    for (const n of node) arr.push(strictifySchema(n, freeform, path, seen));
+    return arr;
+  }
 
   const out = { ...node };
+  seen.set(node, out);          // 先登记再递归：环回到此处拿到的是同一份 out（不再无限下探）
   for (const k of ['items', 'not']) if (out[k]) out[k] = strictifySchema(out[k], freeform, path.concat(k === 'items' ? '[]' : k), seen);
   for (const k of ['anyOf', 'oneOf', 'allOf']) if (Array.isArray(out[k])) out[k] = out[k].map((n) => strictifySchema(n, freeform, path, seen));
   if (out.$defs) out.$defs = Object.fromEntries(Object.entries(out.$defs).map(([k, v]) => [k, strictifySchema(v, freeform, path, seen)]));
