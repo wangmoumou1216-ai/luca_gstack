@@ -243,6 +243,9 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   })();
   const missing = [];
   if (memRoot && !roots.includes(memRoot)) missing.push(`MEMORY_ROOT(${memRoot})`);
+  // 全局个人记忆（三分表第一层：feedback_*.md / MEMORY.md）——2026-08-06 同类扫描补入。
+  // 少了它，person 层记忆写入在 Codex 下静默失败（实测 os.access W_OK = False）。
+  if (!/\.claude\/projects\/[^"']*memory/.test(roots)) missing.push('~/.claude/projects/<repo>/memory（全局个人记忆）');
   if (!/\.luca/.test(roots)) missing.push('~/.luca（muse app IPC spool）');
   ok('S13 .codex/config.toml 的 writable_roots 覆盖工作根之外的必写路径（记忆 store + app spool）',
     !!toml && missing.length === 0,

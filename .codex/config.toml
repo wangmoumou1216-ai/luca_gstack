@@ -11,7 +11,12 @@
 #     自成长捕获、semantic 候选、治理落盘全部无声失败。
 #     这是"跑测试全绿但真用起来坏掉"的典型，只有真实使用才暴露。
 #
-#  2. ~/.luca/**（muse app 的 IPC spool）—— luca-open.sh / luca-sidebar.sh 的投递通道。
+#  2. ~/.claude/projects/<repo>/memory —— **全局个人记忆** store（三分表第一层：
+#     feedback_*.md / MEMORY.md / candidate_feedback_*.md）。daily_governance.py:710 引用此 canonical 路径。
+#     实测未加时 `os.access(..., W_OK)` = **False**：person 层记忆写入在 Codex 下同样是断的。
+#     范围刻意取最窄（只到 memory 子目录），不放开整个 ~/.claude（那里还有会话 transcript）。
+#
+#  3. ~/.luca/**（muse app 的 IPC spool）—— luca-open.sh / luca-sidebar.sh 的投递通道。
 #     实测未加时：`luca-open.sh <file>` 本地 exit=0，Codex 内报
 #     `/Users/luca/.luca/open-spool/.tmp.…: Operation not permitted` 且 exit=1。
 #     后果：侧栏预览、HTML 产物推送、侧栏感知全部失效。
@@ -22,8 +27,12 @@
 # 断言 S13 守护本文件与这两条路径的存在（改坏了会红）。
 
 [sandbox_workspace_write]
-# 母版仓（记忆权威 store）+ muse app IPC spool
-writable_roots = ["/Users/luca/Desktop/luca_gstack", "/Users/luca/.luca"]
+# 三条工作根之外的必写路径（少任一条 → 对应能力静默失效）
+writable_roots = [
+  "/Users/luca/Desktop/luca_gstack",                                    # 母版仓：记忆权威 store
+  "/Users/luca/.claude/projects/-Users-luca-Desktop-luca-gstack/memory", # 全局个人记忆（范围取最窄）
+  "/Users/luca/.luca",                                                  # muse app IPC spool
+]
 
 # 发现层依赖 gh（external-skill-scout 16 处 / framework-evolution-scout 12 处）；
 # 关掉会让每个 channel 静默返回空 → filter(Boolean) 清零 → 产出恒空且无告警。
