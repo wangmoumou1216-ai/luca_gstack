@@ -247,7 +247,18 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   // 少了它，person 层记忆写入在 Codex 下静默失败（实测 os.access W_OK = False）。
   if (!/\.claude\/projects\/[^"']*memory/.test(roots)) missing.push('~/.claude/projects/<repo>/memory（全局个人记忆）');
   if (!/\.luca/.test(roots)) missing.push('~/.luca（muse app IPC spool）');
-  ok('S13 .codex/config.toml 的 writable_roots 覆盖工作根之外的必写路径（记忆 store + app spool）',
+  // PROJECTS_ROOT（skill 产出 + 流程状态）——2026-08-06 运行时探针补入。docs/·workflow-state·
+  // current-topic 是软链，目标在工作根之外；脚本里只出现相对路径，故上一轮的绝对路径扫法结构上
+  // 扫不到。取值以 project.sh 的默认根为单真值源（同 memRoot 取自 hooks.json，避免两处漂移）。
+  const projRoot = (() => {
+    try {
+      const blob = readFileSync(join(ROOT, 'scripts', 'project.sh'), 'utf8');
+      const raw = (blob.match(/PROJECTS_ROOT="\$\{LUCA_PROJECTS_ROOT:-([^}"]+)\}"/) || [])[1] || '';
+      return raw.replace(/^\$HOME/, process.env.HOME || '');
+    } catch { return ''; }
+  })();
+  if (projRoot && !roots.includes(projRoot)) missing.push(`PROJECTS_ROOT(${projRoot})（skill 产出 + 流程状态，软链目标）`);
+  ok('S13 .codex/config.toml 的 writable_roots 覆盖工作根之外的必写路径（记忆 store + app spool + 产出根）',
     !!toml && missing.length === 0,
     !toml ? '缺 .codex/config.toml' : `writable_roots 缺: ${missing.join(', ')} —— 缺失时表现为静默 Operation not permitted`);
 }
