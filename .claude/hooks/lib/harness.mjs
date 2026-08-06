@@ -52,23 +52,32 @@ export function isAdapted(env = process.env) {
 // 【本次修正的根因】首版把 Codex 判为"无 hook 强制能力"，据此把 deny/block 一律降级为
 // stderr advisory。实测 codex-cli 0.133.0（`codex features list`）：`hooks` 与 `multi_agent`
 // 均为 stable+enabled，stdin/stdout JSON 协议与 CC 近乎同构。真实差异只有三处：
-//   1. Stop 拦截**能力存在但方言不同**：CC 用 {decision:'block'}，Codex 用 {continue:false,stopReason}
-//   2. PreToolUse `updatedInput` 被运行时**显式拒绝**（output_parser.rs，openai/codex#18491 OPEN）
-//   3. PreToolUse 只对 shell / apply_patch 分发，read_file / grep 无 hook（同 issue）
+//   【以下三条为 2026-08-04 的判断，2026-08-05/06 深审逐条推翻，保留以记录纠错轨迹】
+//   1. ~~Stop 方言不同~~ → **同字段同语义**，`decision:block`+`reason` 直接可用，不该翻译
+//      （二进制校验串 "Stop hook returned decision:block without a non-empty reason"）
+//   2. ~~updatedInput 被显式拒绝~~ → **受支持**，只需与 `permissionDecision:allow` 同发
+//      （校验串 "PreToolUse hook returned updatedInput without permissionDecision:allow"）；
+//      原依据 openai/codex#18491 针对旧版本，不适用于 0.146.0
+//   3. ~~只对 shell / apply_patch 分发~~ → 工具名实测是 **`Bash`** 与 `apply_patch`（不是 `shell`）
 // 因此「能力有无」不足以描述，需再加一层「方言」——否则会把"翻译一下就能用"误判成"用不了"。
 //
 // 【向后兼容硬约束】旧字段（blockVerb/writeHook/inputMutation/workflow/askUserWidget）的取值
 // **一律保持原样不动**：blockVerb 语义是"能否原样输出 **CC 形**动词"，对 Codex 确实为 false，
 // 原值正确；scripts/test-harness.mjs 的 H7a/H7b/H8 断言这些取值，本次修改必须保持全绿。
 // 新能力一律以**新增字段**表达，调用方按需迁移，绝不改写既有语义（不缩减任何现有逻辑）。
-export const CODEX_PRE_TOOL_SCOPE = ['shell', 'apply_patch'];
+// 实测工具名（matcher='.*' 抓真实载荷）：shell 执行 = 'Bash'（**不是 'shell'**）
+export const CODEX_PRE_TOOL_SCOPE = ['Bash', 'apply_patch'];
 
 // Codex 侧文件写工具名（≈ CC 的 Write/Edit/MultiEdit/NotebookEdit）
+// 注意：apply_patch 的 tool_input 是 {command} 而非 {file_path}——消费方按用途分流别名，
+// 权威实现在 .codex/codex-hook-adapter.mjs 的 TOOL_ALIAS_BY_HOOK。
 export const CODEX_WRITE_TOOLS = ['apply_patch'];
 
-// Stop 拦截方言：'claude' → {decision:'block',reason}；'codex' → {continue:false,stopReason}
-export function stopDialect(env = process.env) {
-  return detectHarness(env) === HARNESS.CODEX ? 'codex' : 'claude';
+// 【已废弃 · 保留为反面记录，勿使用】曾以为 Stop 拦截两家方言不同，实测**同字段同语义**：
+// Codex 原生接受 {decision:'block', reason}。若按本函数去翻译成 continue:false，
+// 语义会反转成"终止本轮"（自成长捕获不发生 + 用户回合被杀）。零调用点，不要接线。
+export function stopDialect() {
+  return 'claude';   // 两家一致；保留函数仅为不破坏可能的外部引用
 }
 
 // PreToolUse 的 deny 动词**两家都支持**且字段名相同（hookSpecificOutput.permissionDecision）。

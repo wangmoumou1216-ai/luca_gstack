@@ -1,5 +1,5 @@
 {
-  "description": "luca_gstack 的 Codex hook 注册（仓库级，随版本控制走）。⚠️ 顶层**只接受 `description` 与 `hooks` 两个键**——用 `_comment` 之类的自定义键会让整份文件被拒：`unknown field _comment, expected description or hooks`，且该警告只在会话启动时一闪而过，极易误判成「Codex 不支持仓库级 hooks」（2026-08-06 深审实证：正是这一个键导致上一轮\"穷尽矩阵\"每格都失败）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）。所有 hook 经 .codex/codex-hook-adapter.mjs 调用：按目标 hook 分流 tool_name 别名、出向最小适配。SessionStart/UserPromptSubmit 设 additionalContextLimit=0（完整直传、不 spill）。新增/改动条目后需授信一次：node scripts/codex-trust-hooks.mjs",
+  "description": "luca_gstack 的 Codex hook 注册（仓库级，随版本控制走）。⚠️ 顶层**只接受 `description` 与 `hooks` 两个键**——用 `_comment` 之类的自定义键会让整份文件被拒：`unknown field _comment, expected description or hooks`，且该警告只在会话启动时一闪而过，极易误判成「Codex 不支持仓库级 hooks」（2026-08-06 深审实证：正是这一个键导致上一轮\"穷尽矩阵\"每格都失败）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）。所有 hook 经 .codex/codex-hook-adapter.mjs 调用：按目标 hook 分流 tool_name 别名、出向最小适配。SessionStart/UserPromptSubmit 设 additionalContextLimit=0（完整直传、不 spill）。新增/改动条目后需授信一次：node scripts/codex-trust-hooks.mjs SessionEnd 显式设 timeoutSec=30：Codex 对该事件的默认值是 **1 秒**（其余事件 600 秒），而本链要串起 adapter node + 子 hook node 两次进程启动，机器负载高时会超时，后果是 marker/计数文件静默泄漏。 命令尾部用 `; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0` 而非 `|| true`：exit 2 是 Codex 的**合法阻断通道**（\"hook exited with code 2 but did not write a blocking reason to stderr\"），`|| true` 会连它一起吞掉，使 adapter 里保留 2 的那行成为死代码；现写法既保住 fail-open（崩溃等非-2 退出码仍归 0，不阻断用户工作），又让 2 透出去。",
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +7,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 恢复 session 上下文",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log || true",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
             "additionalContextLimit": 0
           }
         ]
@@ -19,7 +19,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 路由检查",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
             "additionalContextLimit": 0
           }
         ]
@@ -32,7 +32,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 项目边界检查",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]
       }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]
       }
@@ -54,7 +54,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 自成长捕获",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]
       }
@@ -64,7 +64,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
+            "timeoutSec": 30
           }
         ]
       }

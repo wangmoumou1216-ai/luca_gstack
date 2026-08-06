@@ -69,8 +69,9 @@ function aliasFor(targetPath) {
 
 // 哪些事件的输出 schema 含 additionalContext。Stop 的 schema 是 additionalProperties:false
 // 且**没有** hookSpecificOutput —— 往 Stop 塞它会被判 "invalid stop hook JSON output"。
+// 全量支持 additionalContext 的是 5 个事件；SubagentStart 当前未注册，先列上以免将来注册时漏配。
 const SUPPORTS_ADDITIONAL_CONTEXT = new Set([
-  'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse',
+  'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'SubagentStart',
 ]);
 
 // 本 adapter 经**用户级** ~/.codex/hooks.json 注册（B1：仓库级不被加载），因此会在所有项目里
