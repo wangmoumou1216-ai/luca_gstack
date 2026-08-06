@@ -73,7 +73,23 @@ adapter 自带 `inRepo` 守卫，故全局注册后在其它项目静默放行�
 
 ## 未闭合 / 待办
 
-1. **门 1+门 2**（见上）——需用户在本机执行，属环境动作非代码动作。
+1. **门 1 已闭合（2026-08-06）**：`.codex/hooks.json` 已并入 `~/.codex/hooks.json`
+   （备份 `~/.codex/hooks.json.bak-20260806-094703`，一条 cp 可完全回退）。
+   核验：JSON 合法／6 事件齐全／第三方 adrafinil 条目语义与位置均未变且**实测仍正常触发**
+   （防我方重新序列化导致它自己的 trusted_hash 失配）。断言 S11 已转绿。
+2. **门 2 未闭合，且确认无法自动化**——授信只在 TUI 写入
+   （二进制 `tui/src/startup_hooks_review.rs`，提示语 "… hooks need review before they can run"）。
+   **穷尽过的路径与失败原因**（列清单而非笼统说"做不到"）：
+   | 尝试 | 结果 |
+   |---|---|
+   | 反推 `trusted_hash` 算法 | command／hook 对象／group／state-key × 多种 JSON 规范化与拼接，全不命中；且即便成功也不应往用户 config 伪造哈希 |
+   | `codex` 的 trust 子命令 | 不存在 |
+   | `--dangerously-bypass-hook-trust` 持久化 | 不写盘（实测 trust 条目 1→1） |
+   | auto-trust 配置键 | 仅有反向的 `allow_managed_hooks_only` |
+   | pty(`script`) 喂按键驱动 TUI | 管道 stdin 立即 EOF，TUI 需真终端 raw mode |
+   ⇒ **唯一路径**：在本仓目录跑一次交互式 `codex`，逐条确认信任。S12 会自动转绿。
+   未授信时的实测行为：本仓 hook 日志**零增长**，只有早已授信的第三方 hook 触发——
+   故 S11 单独全绿会造成假象，S12 是必需的第二道断言。
 2. **串行深审**：runtime 维已完成（4 BLOCKER 全修）；协议维、workflow-runner 安全维、
    零回归+mutation 维待跑（用户要求串行，逐个进行）。
 3. **MCP `mcp__muse__*`**：Codex 侧不可用（app 动态注入），降级链

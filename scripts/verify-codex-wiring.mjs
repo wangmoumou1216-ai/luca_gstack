@@ -228,9 +228,14 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
     needKeys.length > 0 && missing.length === 0,
     missing.length
       ? `未授信 ${missing.length}/${needKeys.length} 条（事件=${[...new Set(missing.map((k) => k.split(':').slice(-3, -2)[0]))].join(',')}）。`
-        + `授信只能在 TUI 完成：在本仓目录跑一次 \`codex\`（交互式），`
-        + `它会就新 hook 条目询问，确认信任即可；此后 codex exec 也生效。`
-        + `（临时验证可加 --dangerously-bypass-hook-trust，但那只对单次调用有效）`
+        + `【怎么做】在本仓目录跑一次**交互式** \`codex\`（不是 codex exec）。`
+        + `启动时会出现 hooks 审阅界面（提示语 "… hooks need review before they can run"），`
+        + `逐条确认信任即可；此后 codex exec 一并生效，本断言自动转绿。`
+        + `【为何不能自动化】授信只在 TUI 里写入（二进制 tui/src/startup_hooks_review.rs）。`
+        + `已穷尽尝试且全部失败：反推 trusted_hash 算法（command/hook 对象/group/state-key ×`
+        + ` 多种 JSON 规范化，全不命中）／trust 子命令（不存在）／--dangerously-bypass-hook-trust`
+        + ` 持久化（不写盘）／auto-trust 配置键（仅有反向的 allow_managed_hooks_only）／`
+        + `用 pty(script) 喂按键驱动 TUI（管道 stdin 立即 EOF，TUI 需真终端 raw mode）。`
       : `已授信 ${needKeys.length}/${needKeys.length} 条`);
 }
 
