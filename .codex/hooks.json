@@ -1,5 +1,5 @@
 {
-  "_comment": "luca_gstack 的 Codex hook 注册（真值源）。⚠️ codex 0.146.0 **不加载仓库级 hooks.json** —— 实测 .codex/ .agents/ .claude/ 三处 × (无trust / projects trust / --dangerously-bypass-hook-trust) 全组合均不触发。本文件是真值源，须并入用户级 ~/.codex/hooks.json 且授信后才会执行（断言 S11 守护）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）；写成 shell 会永远匹配不上。所有 hook 经 .codex/codex-hook-adapter.mjs 调用，adapter 负责按目标 hook 分流 tool_name 别名、出向最小适配，并自带 inRepo 守卫（全局注册后只在本仓生效）。SessionStart/UserPromptSubmit 设 additionalContextLimit=0：完整直传、不截断不 spill。",
+  "description": "luca_gstack 的 Codex hook 注册（仓库级，随版本控制走）。⚠️ 顶层**只接受 `description` 与 `hooks` 两个键**——用 `_comment` 之类的自定义键会让整份文件被拒：`unknown field _comment, expected description or hooks`，且该警告只在会话启动时一闪而过，极易误判成「Codex 不支持仓库级 hooks」（2026-08-06 深审实证：正是这一个键导致上一轮\"穷尽矩阵\"每格都失败）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）。所有 hook 经 .codex/codex-hook-adapter.mjs 调用：按目标 hook 分流 tool_name 别名、出向最小适配。SessionStart/UserPromptSubmit 设 additionalContextLimit=0（完整直传、不 spill）。新增/改动条目后需授信一次：node scripts/codex-trust-hooks.mjs",
   "hooks": {
     "SessionStart": [
       {

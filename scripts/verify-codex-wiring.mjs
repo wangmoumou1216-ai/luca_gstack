@@ -173,69 +173,54 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0
   && spawnSync('node', [join(ROOT, 'scripts', 'test-hooks.mjs')], { cwd: ROOT }).status === 0);
 
-// S11 【本次深审最重要的发现】codex 0.146.0 **不加载仓库级 hooks.json**。
-// 实测矩阵：`.codex/` `.agents/` `.claude/` 三处 ×（无 trust / projects trust /
-// --dangerously-bypass-hook-trust）全组合均不触发；唯一生效的注册点是用户级 ~/.codex/hooks.json。
-// 因此 .codex/hooks.json 只是**本仓的真值源**，必须并入全局才会真的跑起来。
-// 没有这条断言，S1-S5 全绿会给人"接线完成"的假象——而实际一个 hook 都不会执行。
+// S11 【2026-08-06 二次修正——上一轮的 S11 把错误架构钉成了回归测试】
+// 曾断言「必须并入用户级 ~/.codex/hooks.json，因为仓库级不被加载」。**那个前提是假的**：
+// hooks.json 顶层只接受 `description` 与 `hooks`，我写的 `_comment` 键让整份文件被拒
+// （`unknown field _comment`），而该警告只在会话启动时一闪而过。改名后 hooks/list
+// 立刻从 7 条变 13 条（user 7 + project 6）。⇒ 仓库级完全可用，配置随版本控制走，
+// 不需要全局注册、也就没有跨项目污染。本断言改为守正确架构。
 {
-  const gp = join(process.env.HOME || '', '.codex', 'hooks.json');
-  let registered = false, adapterPath = '';
+  const top = hooks ? Object.keys(hooks) : [];
+  const illegal = top.filter((k) => k !== 'description' && k !== 'hooks');
+  ok('S11 .codex/hooks.json 顶层只用 description/hooks（多一个自定义键 → 整份文件被拒且警告一闪而过）',
+    illegal.length === 0,
+    `非法顶层键=${illegal.join(',')}（Codex 只接受 description 与 hooks）`);
+
+  // 纵深：确认全局配置里**没有**本仓条目——仓库级可用后再全局注册就是跨项目污染
+  let globalHasOurs = false;
   try {
-    const blob = readFileSync(gp, 'utf8');
-    registered = /codex-hook-adapter\.mjs/.test(blob);
-    adapterPath = (blob.match(/[^"]*codex-hook-adapter\.mjs/) || [])[0] || '';
+    globalHasOurs = /codex-hook-adapter/.test(
+      readFileSync(join(process.env.HOME || '', '.codex', 'hooks.json'), 'utf8'));
   } catch { }
-  ok('S11 luca_gstack hook 已注册到用户级 ~/.codex/hooks.json（仓库级不被 Codex 加载）',
-    registered,
-    registered ? adapterPath
-      : '未注册 → 本仓 hook 在 Codex 下一个都不会执行。修复：把 .codex/hooks.json 的条目'
-        + '并入 ~/.codex/hooks.json（保留其中已有的第三方 hook）；adapter 自带 inRepo 守卫，'
-        + '全局注册后在其它项目里静默放行');
+  ok('S11b 未在用户级 ~/.codex/hooks.json 重复注册（仓库级已够；全局注册会污染其它项目）',
+    !globalHasOurs,
+    '全局配置里发现本仓 adapter 条目 —— 仓库级已可用，应移除以免在其它项目里空跑');
 }
 
-// S12 【授信门，2026-08-06】注册 ≠ 生效。Codex 对 hooks.json 里的**每个条目**单独要求授信，
-// 未授信时 `codex exec` **静默跳过**（实测：注册后未授信 → 本仓 hook 日志零增长，
-// 只有早已授信的第三方 hook 触发）。授信只能在 TUI 里完成，无配置项可免（二进制里
-// 相关消息即 "config/batchWrite failed while updating hook trust in TUI"；
-// 反推 trusted_hash 算法未果，也不该往用户 config 里伪造哈希）。
-// 没有这条断言，S11 全绿会造成"接线完成"的假象——而 hook 一个都不会跑。
+// S12 授信门：Codex 对**每个条目**单独要求授信，未授信时静默跳过（实测：日志零增长）。
+// 注册 ≠ 生效，S11 全绿而 S12 红时 hook 一个都不会跑。
 {
   const cfg = join(process.env.HOME || '', '.codex', 'config.toml');
   let trusted = [];
   try {
-    const blob = readFileSync(cfg, 'utf8');
-    trusted = [...blob.matchAll(/\[hooks\.state\."([^"]+)"\]/g)].map((m) => m[1]);
+    trusted = [...readFileSync(cfg, 'utf8').matchAll(/\[hooks\.state\."([^"]+)"\]/g)].map((m) => m[1]);
   } catch { }
-  // trust key 形如 `<hooks.json 路径>:<event_snake_case>:<组索引>:<钩索引>`。
-  // **必须比完整键**：只比事件名会假阴性——第三方 adrafinil 的条目正好也是
-  // user_prompt_submit，本仓那条挂在**不同组索引**下，只比事件名会被它误判成"已授信"。
+  // 仓库级条目的 trust key 以本仓 hooks.json 绝对路径为前缀
+  const ourPath = join(ROOT, '.codex', 'hooks.json');
+  const mine = trusted.filter((k) => k.startsWith(ourPath + ':'));
   const evToSnake = (e) => e.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-  const gp = join(process.env.HOME || '', '.codex', 'hooks.json');
   let needKeys = [];
-  try {
-    const g = JSON.parse(readFileSync(gp, 'utf8'));
-    for (const [ev, groups] of Object.entries(g.hooks || {})) {
-      groups.forEach((grp, gi) => {
-        (grp.hooks || []).forEach((h, hi) => {
-          if (/codex-hook-adapter/.test(h.command || '')) needKeys.push(`${gp}:${evToSnake(ev)}:${gi}:${hi}`);
-        });
-      });
-    }
-  } catch { }
-  const missing = needKeys.filter((k) => !trusted.includes(k));
-  ok('S12 本仓 hook 已获授信（注册≠生效：未授信时 Codex 静默跳过，hook 一个都不会跑）',
+  for (const [ev, groups] of Object.entries(hooks?.hooks || {})) {
+    groups.forEach((grp, gi) => (grp.hooks || []).forEach((h, hi) => {
+      if (/codex-hook-adapter/.test(h.command || '')) needKeys.push(`${ourPath}:${evToSnake(ev)}:${gi}:${hi}`);
+    }));
+  }
+  const missing = needKeys.filter((k) => !mine.includes(k));
+  ok('S12 本仓 hook 已获授信（未授信时 Codex 静默跳过，hook 一个都不会跑）',
     needKeys.length > 0 && missing.length === 0,
     missing.length
-      ? `未授信 ${missing.length}/${needKeys.length} 条（事件=${[...new Set(missing.map((k) => k.split(':').slice(-3, -2)[0]))].join(',')}）。`
-        + `【怎么做】在本仓目录跑一次**交互式** \`codex\`（不是 codex exec）。`
-        + `启动时会出现 hooks 审阅界面（提示语 "… hooks need review before they can run"），`
-        + `逐条确认信任即可；此后 codex exec 一并生效，本断言自动转绿。`
-        + `【为何不能自动化】授信只在 TUI 里写入（二进制 tui/src/startup_hooks_review.rs）。`
-        + `已穷尽尝试且全部失败：反推 trusted_hash 算法（command/hook 对象/group/state-key ×`
-        + ` 多种 JSON 规范化，全不命中）／trust 子命令（不存在）／--dangerously-bypass-hook-trust`
-        + ` 持久化（不写盘）／auto-trust 配置键（仅有反向的 allow_managed_hooks_only）／`
-        + `用 pty(script) 喂按键驱动 TUI（管道 stdin 立即 EOF，TUI 需真终端 raw mode）。`
+      ? `未授信 ${missing.length}/${needKeys.length} 条。修复：node scripts/codex-trust-hooks.mjs`
+        + `（先 --dry-run 过目；它用 Codex 自己的 hooks/list + config/batchWrite，只碰本仓条目）`
       : `已授信 ${needKeys.length}/${needKeys.length} 条`);
 }
 

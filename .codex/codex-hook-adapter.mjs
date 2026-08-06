@@ -6,10 +6,13 @@
 // 一个 OPEN 的 GitHub issue 而非实际运行的二进制。实测（codex-cli 0.146.0，本会话期间自动从
 // 0.133.0 升级）逐条推翻：
 //
-//  B1 仓库级 hooks.json **根本不被加载**。实测矩阵：`.codex/` `.agents/` `.claude/` 三处 ×
-//     （无 trust / 加 projects trust / --dangerously-bypass-hook-trust）全组合均不触发。
-//     唯一生效的注册点是**用户级 `~/.codex/hooks.json`**。
-//     ⇒ 本 adapter 必须自带**仓库自守**（见 inRepo）：全局注册后只在本仓生效，其它项目立即退出。
+//  B1 【2026-08-06 二次推翻——上一轮的结论本身是错的】曾判「仓库级 hooks.json 根本不被加载」，
+//     依据是 `.codex/`/`.agents/`/`.claude/` × trust/bypass 的"穷尽矩阵"全不触发。
+//     真相：**每一格都因同一个原因失败**——hooks.json 顶层只接受 `description` 与 `hooks`，
+//     而我写了个 `_comment` 键，整份文件被拒（`unknown field _comment`），警告只在会话启动时
+//     一闪而过。改名后 `hooks/list` 立刻从 7 条变 13 条（user 7 + **project 6**）。
+//     ⇒ 仓库级完全可用，配置随版本控制走，**不需要**全局注册，也就没有跨项目污染。
+//     `inRepo` 守卫因此从"必需"降级为纵深防御（万一将来又被全局注册，它仍挡得住）。
 //  B2 `process.stdout.write` 后立刻 `process.exit()` 会丢弃未落 OS 管道的数据（macOS 64KiB）。
 //     实测 200000 字节 → 对端只收到 65536。大 payload（往 docs/ 写报告/原型时的 updatedInput）
 //     恰在最需要控制动词时被截断成非法 JSON。⇒ 改用 process.exitCode，让 Node 自然退出。
@@ -152,9 +155,14 @@ function main() {
   const event = data.hook_event_name || '';
   const alias = aliasFor(target);
   if (data.tool_name && alias[data.tool_name]) data.tool_name = alias[data.tool_name];
-  // Codex 的 SessionStart 无 source 字段；给显式非-startup 值，让 session-restore 走
-  // "保守保留软链"分支，避免误清并行 session 的软链。
-  if (event === 'SessionStart' && !data.source) data.source = 'codex-start';
+  // 【2026-08-06 深审修正：原写法是死代码】原注释称"Codex 的 SessionStart 无 source 字段"，
+  // 实测**为假**——schema 里 source 是 required，实捕载荷为 `source:"startup"`。
+  // 于是 `!data.source` 恒 false、兜底永不执行，session-restore 拿到 startup 直落 doClear()，
+  // **每次 codex exec 都按冷启动清三条软链**。本轮实跑没清掉纯属侥幸（并行 session 侦测兜住了），
+  // 作者想要的"未知 source → 保守保留 + canary"从未生效。
+  // 改为**无条件映射**：codex exec 是一次性脚本调用，把它当"全新工作会话"去翻软链，
+  // 比交互式冷启动激进得多；且风险不对称（误清不可逆、误保留可 switch 恢复），故取保守侧。
+  if (event === 'SessionStart') data.source = 'codex-start';
 
   const childEnv = { ...process.env };
   // REPO_ROOT 由本文件自身路径推得，永远正确；继承来的同名变量可能指向别的仓库

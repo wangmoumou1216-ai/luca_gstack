@@ -394,9 +394,13 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 > effort 枚举模型接受 `none/low/medium/high/xhigh/max`、**拒绝 `minimal`**；结构化输出为 strict
 > （每层 `required` 须列全 properties + `additionalProperties:false`）；`codex exec` 在 stdin 未 EOF 时
 > **永久挂起**，自动化调用必须 `< /dev/null`。
-> **hooks 两道门**：Codex **不加载仓库级 hooks.json**（`.codex/`/`.agents/`/`.claude/` × trust/bypass
-> 全组合实测不触发）——须并入用户级 `~/.codex/hooks.json`（门 1，断言 S11 守护），且新条目需**授信**
-> 才执行（门 2，未授信静默跳过）。adapter 自带 `inRepo` 守卫，全局注册后不越界到其它项目。
+> **hooks 注册（2026-08-06 二次修正）**：**仓库级 `.codex/hooks.json` 完全可用**，配置随版本控制走，
+> 不需要也**不应**并入用户级（全局注册会在其它项目里空跑）。此前判「仓库级不被加载」是错的——
+> 真因是 hooks.json **顶层只接受 `description` 与 `hooks`**，多写一个 `_comment` 键会让整份文件被拒
+> （`unknown field _comment`），而该警告只在会话启动时一闪而过，极易误判成机制不支持。
+> 唯一仍需的一步是**授信**：新增/改动条目后跑 `node scripts/codex-trust-hooks.mjs`
+> （用 Codex 自己的 `hooks/list` + `config/batchWrite`，只碰本仓条目；先 `--dry-run` 过目）。
+> 断言 S11/S11b/S12 分别守：顶层键合法、未重复全局注册、已授信。
 
 真值源 `.claude/skill-os/model-routing.yaml`（Codex 侧解析表在其 `codex:` 段）。
 **per-agent 档位分派已在真 Codex 上核验可用**（2026-08-05：Codex 找到 `.codex/agents/preflight-agent.toml`、

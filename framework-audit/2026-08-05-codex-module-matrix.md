@@ -20,12 +20,29 @@
 
 ---
 
-## M1 两道门（唯一未闭合项）
+## M1 注册与授信（2026-08-06 架构二次修正后）
 
-Codex **不加载仓库级 hooks.json**。实测矩阵（全部不触发）：
+**上一轮的「仓库级 hooks.json 不被加载」结论是错的**，据此建立的全局注册架构已回退。
 
-| 位置 | 无 trust | 加 `[projects]` trust | `--dangerously-bypass-hook-trust` |
-|---|---|---|---|
+真因：hooks.json **顶层只接受 `description` 与 `hooks`**；我写的 `_comment` 键让整份文件被拒
+（`unknown field _comment, expected description or hooks`），警告只在会话启动时一闪而过。
+上一轮"三处 × trust/bypass 全组合"的穷尽矩阵——**每一格都因这同一个键失败**，
+测的从来不是加载机制，是这一个键。改名后 `hooks/list` 立刻 7 条 → 13 条（user 7 + **project 6**）。
+
+**当前正确架构**：仓库级 `.codex/hooks.json`（随版本控制）+ 一次授信。
+全局配置已回退到原状（只剩第三方 adrafinil），零跨项目污染。
+`inRepo` 守卫从"必需"降级为纵深防御。
+
+| 步骤 | 状态 | 断言 |
+|---|---|---|
+| 顶层键合法（description/hooks） | ✅ | S11 |
+| 未重复全局注册 | ✅ | S11b |
+| 条目已授信 | ✅ | S12 |
+
+活体终验（纯仓库级、无 bypass）：5 事件全触发、日志 +856B、零解析警告、三条软链完好。
+`verify-codex-wiring` **20/20 FAIL=0 BLOCKED=0**。
+
+---|---|---|---|
 | `.codex/hooks.json` | ❌ | ❌ | ❌ |
 | `.agents/hooks.json` | ❌ | — | — |
 | `.claude/hooks.json` | ❌ | — | — |
