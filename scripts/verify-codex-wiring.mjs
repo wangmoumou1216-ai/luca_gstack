@@ -194,6 +194,46 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
         + '全局注册后在其它项目里静默放行');
 }
 
+// S12 【授信门，2026-08-06】注册 ≠ 生效。Codex 对 hooks.json 里的**每个条目**单独要求授信，
+// 未授信时 `codex exec` **静默跳过**（实测：注册后未授信 → 本仓 hook 日志零增长，
+// 只有早已授信的第三方 hook 触发）。授信只能在 TUI 里完成，无配置项可免（二进制里
+// 相关消息即 "config/batchWrite failed while updating hook trust in TUI"；
+// 反推 trusted_hash 算法未果，也不该往用户 config 里伪造哈希）。
+// 没有这条断言，S11 全绿会造成"接线完成"的假象——而 hook 一个都不会跑。
+{
+  const cfg = join(process.env.HOME || '', '.codex', 'config.toml');
+  let trusted = [];
+  try {
+    const blob = readFileSync(cfg, 'utf8');
+    trusted = [...blob.matchAll(/\[hooks\.state\."([^"]+)"\]/g)].map((m) => m[1]);
+  } catch { }
+  // trust key 形如 `<hooks.json 路径>:<event_snake_case>:<组索引>:<钩索引>`。
+  // **必须比完整键**：只比事件名会假阴性——第三方 adrafinil 的条目正好也是
+  // user_prompt_submit，本仓那条挂在**不同组索引**下，只比事件名会被它误判成"已授信"。
+  const evToSnake = (e) => e.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+  const gp = join(process.env.HOME || '', '.codex', 'hooks.json');
+  let needKeys = [];
+  try {
+    const g = JSON.parse(readFileSync(gp, 'utf8'));
+    for (const [ev, groups] of Object.entries(g.hooks || {})) {
+      groups.forEach((grp, gi) => {
+        (grp.hooks || []).forEach((h, hi) => {
+          if (/codex-hook-adapter/.test(h.command || '')) needKeys.push(`${gp}:${evToSnake(ev)}:${gi}:${hi}`);
+        });
+      });
+    }
+  } catch { }
+  const missing = needKeys.filter((k) => !trusted.includes(k));
+  ok('S12 本仓 hook 已获授信（注册≠生效：未授信时 Codex 静默跳过，hook 一个都不会跑）',
+    needKeys.length > 0 && missing.length === 0,
+    missing.length
+      ? `未授信 ${missing.length}/${needKeys.length} 条（事件=${[...new Set(missing.map((k) => k.split(':').slice(-3, -2)[0]))].join(',')}）。`
+        + `授信只能在 TUI 完成：在本仓目录跑一次 \`codex\`（交互式），`
+        + `它会就新 hook 条目询问，确认信任即可；此后 codex exec 也生效。`
+        + `（临时验证可加 --dangerously-bypass-hook-trust，但那只对单次调用有效）`
+      : `已授信 ${needKeys.length}/${needKeys.length} 条`);
+}
+
 console.log('\n── [活体] 真实 Codex session ──────────────────────────');
 
 // L0 订阅/模型可用性 —— 这是活体段的闸
