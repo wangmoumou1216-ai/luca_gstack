@@ -121,5 +121,18 @@ adapter 自带 `inRepo` 守卫，故全局注册后在其它项目静默放行�
    （事件名大小写、tool_name、matcher、agents 发现、skills 软链、effort 枚举、strict schema），
    剩余未系统核对项：SubagentStart/SubagentStop/PermissionRequest/PreCompact/PostCompact 五个
    未注册事件是否有接入价值。
-3. **MCP `mcp__muse__*`**：Codex 侧不可用（app 动态注入），降级链
-   `luca-open.sh` / `luca-sidebar.sh` 为纯 bash、零 harness 依赖，可用。
+3. **MCP `mcp__muse__*`**：Codex 侧不可用（app 动态注入）。
+   降级链 `luca-open.sh` / `luca-sidebar.sh` **可用，但必须配 writable_roots**——
+   我此前写它们"纯 bash、零 harness 依赖、可用"是**静态推断且是错的**：实测在 Codex 沙箱里
+   `luca-open.sh <file>` 报 `Operation not permitted`（`~/.luca/**` 在工作根之外）、exit=1，
+   本地直跑却 exit=0。已由 `.codex/config.toml` 的 writable_roots 修复，S13 守护。
+
+4. **真实使用终验（2026-08-06，唯一能暴露以下两条的方式）**：
+   测试套件全绿、hook 全触发，仍可能真用起来就坏——本轮实证两例：
+   - **记忆写入路径在 Codex 下整个是断的**：`append_episode.py` 抛
+     `PermissionError: Operation not permitted: .../memory/episodic/index.jsonl`
+     （MEMORY_ROOT 指向母版仓，在工作根之外）。读正常、写全废，且**静默**。
+   - **app 投递通道失效**（同因，见上）。
+   修法：仓库级 `.codex/config.toml`（**实测生效**，故不必改用户全局配置）声明 writable_roots。
+   终验三条真实路径同 session 跑通：`mem-read=0` / `app-deliver=0` / `memroot-writable=True`，
+   5 事件全触发、零解析警告、三条软链完好。

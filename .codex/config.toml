@@ -1,0 +1,30 @@
+# luca_gstack 的 Codex 仓库级配置（随版本控制走，无需改用户全局 ~/.codex/config.toml）。
+#
+# 【为什么必须有这个文件 —— 2026-08-06 真实使用终验发现】
+# Codex 沙箱的**读是全局的，只有写受工作根约束**。而 luca_gstack 有两类**必须写在工作根之外**
+# 的路径，不加进 writable_roots 就会被 `Operation not permitted` 静默打断：
+#
+#  1. MEMORY_ROOT（母版仓）—— 三层记忆系统的权威 store。
+#     实测未加时：`append_episode.py` 抛
+#     `PermissionError: Operation not permitted: .../memory/episodic/index.jsonl`
+#     后果：**整个记忆写入路径在 Codex 下是断的**（读正常，写全废）——
+#     自成长捕获、semantic 候选、治理落盘全部无声失败。
+#     这是"跑测试全绿但真用起来坏掉"的典型，只有真实使用才暴露。
+#
+#  2. ~/.luca/**（muse app 的 IPC spool）—— luca-open.sh / luca-sidebar.sh 的投递通道。
+#     实测未加时：`luca-open.sh <file>` 本地 exit=0，Codex 内报
+#     `/Users/luca/.luca/open-spool/.tmp.…: Operation not permitted` 且 exit=1。
+#     后果：侧栏预览、HTML 产物推送、侧栏感知全部失效。
+#     （我此前在模块矩阵里写这条降级链"纯 bash、零 harness 依赖、可用"——**是错的**，
+#       那是静态推断，没在沙箱里真跑过。）
+#
+# 【口径】只加这两条，不放开别的。仓库本身在工作根内、本来就可写，无需列出。
+# 断言 S13 守护本文件与这两条路径的存在（改坏了会红）。
+
+[sandbox_workspace_write]
+# 母版仓（记忆权威 store）+ muse app IPC spool
+writable_roots = ["/Users/luca/Desktop/luca_gstack", "/Users/luca/.luca"]
+
+# 发现层依赖 gh（external-skill-scout 16 处 / framework-evolution-scout 12 处）；
+# 关掉会让每个 channel 静默返回空 → filter(Boolean) 清零 → 产出恒空且无告警。
+network_access = true

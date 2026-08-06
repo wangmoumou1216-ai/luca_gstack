@@ -224,6 +224,31 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
       : `已授信 ${needKeys.length}/${needKeys.length} 条`);
 }
 
+// S13 【2026-08-06 真实使用终验发现】Codex 沙箱只约束**写**，且限死在工作根内。
+// luca_gstack 有两类必须写在工作根之外的路径，缺了就 `Operation not permitted` 静默打断：
+//   · MEMORY_ROOT（母版仓）—— 缺它则**整个记忆写入路径在 Codex 下是断的**（读正常、写全废）
+//   · ~/.luca/**（muse app IPC spool）—— 缺它则 luca-open/luca-sidebar 全失效
+// 二者都只在**真实使用**时暴露：测试套件全绿、hook 全触发，照样坏。
+{
+  const cfgPath = join(ROOT, '.codex', 'config.toml');
+  let toml = '';
+  try { toml = readFileSync(cfgPath, 'utf8'); } catch { }
+  const roots = ((toml.match(/writable_roots\s*=\s*\[([^\]]*)\]/) || [])[1] || '');
+  // MEMORY_ROOT 以 hooks.json 里内联的值为准（单真值源，避免两处漂移）
+  const memRoot = (() => {
+    try {
+      const blob = readFileSync(join(ROOT, '.codex', 'hooks.json'), 'utf8');
+      return (blob.match(/MEMORY_ROOT=([^\s"\\]+)/) || [])[1] || '';
+    } catch { return ''; }
+  })();
+  const missing = [];
+  if (memRoot && !roots.includes(memRoot)) missing.push(`MEMORY_ROOT(${memRoot})`);
+  if (!/\.luca/.test(roots)) missing.push('~/.luca（muse app IPC spool）');
+  ok('S13 .codex/config.toml 的 writable_roots 覆盖工作根之外的必写路径（记忆 store + app spool）',
+    !!toml && missing.length === 0,
+    !toml ? '缺 .codex/config.toml' : `writable_roots 缺: ${missing.join(', ')} —— 缺失时表现为静默 Operation not permitted`);
+}
+
 console.log('\n── [活体] 真实 Codex session ──────────────────────────');
 
 // L0 订阅/模型可用性 —— 这是活体段的闸
