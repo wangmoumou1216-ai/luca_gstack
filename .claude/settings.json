@@ -31,14 +31,6 @@
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/sidebar-focus.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
-          }
-        ]
       }
     ],
     "PreToolUse": [

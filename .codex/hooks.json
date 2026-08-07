@@ -23,16 +23,6 @@
             "additionalContextLimit": 0
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "statusMessage": "luca_gstack: 侧栏焦点",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/sidebar-focus.mjs\" 2>> /tmp/luca-gstack-hooks.log || true",
-            "additionalContextLimit": 0
-          }
-        ]
       }
     ],
     "PreToolUse": [
