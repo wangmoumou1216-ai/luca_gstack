@@ -44,9 +44,16 @@ ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NE
 
 // S4 上下文注入不被截断（0 = 完整直传）
 {
-  const lim = (e) => hooks?.hooks?.[e]?.[0]?.hooks?.[0]?.additionalContextLimit;
-  ok('S4 SessionStart/UserPromptSubmit 设 additionalContextLimit=0（启动注入与路由提示不被 spill）',
-    lim('SessionStart') === 0 && lim('UserPromptSubmit') === 0);
+  // 注意查的是**每个 group**而非只查第一个：2026-08-07 起 UserPromptSubmit 挂了两条
+  // （route-guard + sidebar-focus），只查 [0] 会让后加的条目漏检、被默认值悄悄截断。
+  const limsOf = (e) => (hooks?.hooks?.[e] || []).flatMap((g) => (g.hooks || []).map((h) => h.additionalContextLimit));
+  const bad = [];
+  for (const e of ['SessionStart', 'UserPromptSubmit']) {
+    const ls = limsOf(e);
+    if (!ls.length || ls.some((v) => v !== 0)) bad.push(`${e}=${JSON.stringify(ls)}`);
+  }
+  ok('S4 SessionStart/UserPromptSubmit 的**每个** hook 都设 additionalContextLimit=0（0=完整直传，语义反直觉）',
+    bad.length === 0, bad.join(' '));
 }
 
 // S5 matcher 必须匹配 **实测** tool_name。2026-08-05 用 matcher='.*' 抓真实载荷：
