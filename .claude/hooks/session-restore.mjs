@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
-import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync, renameSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
@@ -32,6 +32,32 @@ let startPayload = {};
 try { startPayload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const startSource = typeof startPayload.source === 'string' ? startPayload.source : '';
 const ownSid = String(startPayload.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
+
+// ── session-spool：把**精确** session id 交回 muse app（G3，2026-08-08）────────────
+//   只在 app 内嵌会话里生效：MUSE_TAB 由 app 的 spawnTerminal 注入，值就是那个 pty 页签 id。
+//   app 侧原本只能靠"扫最近的 rollout + mtime 猜"来把会话对上页签，而 codex 的 rollout 是
+//   **懒创建**的（要等第一个 turn 才落盘），FIFO 前提被打破：A 开了不说话、B 先说话，
+//   A 的轮询会抢走 B 的会话。这里由 CLI 自己报出 id，页签↔会话变成精确对应。
+//   刻意做成**加法**：不新增 hook 条目（免去两套 harness 再改一遍 + 重跑 codex 授信），
+//   挂在这条本来就已注册、已授信、每次 SessionStart 必跑的 hook 里。
+//   fail-open：写不了就当没有，app 侧的启发式认领器仍在，功能只是退回原状。
+try {
+  const museTab = String(process.env.MUSE_TAB || '');
+  if (museTab && ownSid) {
+    const dir = join(homedir(), '.luca', 'session-spool');
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const rec = {
+      tab: museTab.slice(0, 64),
+      sid: ownSid,
+      provider: String(process.env.LUCA_CLI || 'claude').replace(/[^\w-]/g, '').slice(0, 16),
+      transcript_path: String(startPayload.transcript_path || '').slice(0, 512),
+      at: Date.now(),
+    };
+    const tmp = join(dir, '.tmp-' + process.pid);
+    writeFileSync(tmp, JSON.stringify(rec), { mode: 0o600 });
+    renameSync(tmp, join(dir, museTab.replace(/[^\w-]/g, '') + '-' + Date.now() + '.json'));  // 原子替换：app 永不读到半截
+  }
+} catch { }
 
 // hooks 日志 size-cap：5 个 hook 共写 2>>，~27KB/天；/tmp 周期清理按 mtime 判老，对活跃追加文件永不命中。
 // 两个候选名都 cap：母版写 hooks.log，fork（muse）写 hooks.muse.log——分文件防两仓混写互截（audit F1-11）。
