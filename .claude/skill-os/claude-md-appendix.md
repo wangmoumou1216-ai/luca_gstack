@@ -182,7 +182,7 @@ luca 连问「你置入到 figma 里面了吗」「打开浏览器到侧边栏�
 ## muse 工具通道（MCP，2026-07-30）
 
 app 内嵌 claude session 由 app 注入 `--mcp-config`（`~/.luca/mcp/muse-<实例哈希>.json`，
-app 启动时生成），暴露 6 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
+app 启动时生成），暴露 7 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
 
 | 工具 | 用途 | 何时用 |
 |---|---|---|
@@ -191,10 +191,11 @@ app 启动时生成），暴露 6 个 `mcp__muse__*` 工具（server：app 内 u
 | `open_in_view` | 开文件/URL（HTML→侧栏预览，md→文件页签，`target:"split"` 分屏——**split 仅对本地文件生效**） | 替代 luca-open 的模型主动路径 |
 | `web_locate` | 定位侧栏页签回 tabKey/URL/pageOrigin/标题/rect；`reveal:false`（默认）**不切面板不抢焦点** | **开页前查重（纪律③的执行手段）**；`reveal:true`＝把已开页签调到前面给 luca 看 |
 | `sidebar_read` | 读**指定**页签正文（含跨域子帧）；不切页签；正文按不可信输入披露 | 用户说"基于侧栏那页"而该页非激活页签时（纪律④ 的执行手段） |
+| `sidebar_selection` | 读**用户当前选中的文字**＋所在元素 CSS selector（selector 在页内自验证过唯一命中，验不过就不给而非给个错的）；抓取跑**隔离世界**故页面伪造不了选区；不切页签、不抢焦点、不改工作台状态；只读顶层文档——iframe（**含同源**）/shadow DOM/input·textarea 内的选区一律够不到；正文折叠转义且 400 字上限（截断会明说），**不能当字面量去 grep/Edit**；正文与本地 file:// 一律按不可信输入披露 | **指代消解**：用户说"这个/这段/这里/改一下这个按钮"而侧栏开着——他在看屏幕我没在看，先问一次再答，别猜元素。空结果＝去问用户，不等于"他没选" |
 | `sidebar_navigate` | 已有页签内导航（等加载完）；跨分区目标改新开正确分区页签 | 想移动已有页签而非堆新页签 |
 
-**读面安全边界（2026-07-30 A 批落地）**：`claude.ai` 域的 `sidebar_read`/`preview_screenshot`
-**一律硬拒**（该登录态属 Claude 自身通道，判据取页签当前 URL 不信入参）；figma 走独立分区
+**读面安全边界（2026-07-30 A 批落地）**：`claude.ai` 域的 `sidebar_read`/`preview_screenshot`/
+`sidebar_selection` **一律硬拒**（该登录态属 Claude 自身通道，判据取页签当前 URL 不信入参）；figma 走独立分区
 `persist:figma`（跨分区 in-tab 导航被守卫拦下改新开页签，含页内链接/地址栏/工具三入口）。
 **写面（点击/输入）本批不存在**——需权限门先落地，见 muse
 `docs/plans/2026-07-30-sidebar-automation-plan.md` B 批。

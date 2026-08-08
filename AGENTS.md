@@ -635,11 +635,15 @@ Layered routing order:
    `.claude/skill-os/routing-chain-check.md`). This one
    reflex unifies the semantic special-case handoffs declared in this file (currently: OD single-point
    handoff, project self-judgment, sidebar sensing, luca-open file preview, etc.; in Claude app-embedded
-   sessions these app actions prefer the `mcp__muse__*` tool channel when visible — agents without it,
-   including Codex, use the shell-script paths as the documented degrade route (the channel now exposes
-   six tools — workspace_state / preview_screenshot / open_in_view / web_locate / sidebar_read /
-   sidebar_navigate; read-side tools default to not stealing focus, and claude.ai is hard-refused for
-   agent read/screenshot); sidebar-delivery rule:
+   sessions these app actions prefer the `mcp__muse__*` tool channel when visible — **Codex sees the
+   same channel** (verified 2026-08-07; the app injects it per-CLI via
+   `--mcp-config` for Claude and `-c mcp_servers.muse=` for Codex), so only sessions outside the app
+   fall back to the shell-script paths as the documented degrade route (the channel now exposes
+   seven tools — workspace_state / preview_screenshot / open_in_view / web_locate / sidebar_read /
+   sidebar_selection / sidebar_navigate; read-side tools default to not stealing focus, and claude.ai
+   is hard-refused for agent read/screenshot; when the user says "这个/这段/这里/this one" while the
+   sidebar is open, call `sidebar_selection` to resolve the reference instead of guessing which
+   element they mean — they are looking at the screen, you are not); sidebar-delivery rule:
    show-intent URL opens go to the app sidebar — `open_in_view(url)` or `luca-open.sh --url` — and any
    browser-automation end state gets pulled back into the sidebar; Chrome automation itself is
    Claude-only tooling, out of scope for Codex) and covers mapping to
