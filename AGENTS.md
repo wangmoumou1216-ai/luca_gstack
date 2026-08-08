@@ -566,6 +566,47 @@ paths in the final response.
 Route user intent through the same layered router described in `CLAUDE.md`. Codex emulates the
 Claude workflow; it must not maintain a separate flat routing system.
 
+### 7.0 First-class skill table（Codex 侧的路由基底，2026-08-08 补）
+
+**为什么这张表必须在这里、而不是靠 skill 描述**（实测，别再假设）：Codex 会把**所有**已装
+skill 的描述压进「2% skills context budget」——2026-08-08 实测本机加载 **106 条** skill
+（项目 33 + `~/.claude/skills` 40 + 各插件），预算按条数均摊，于是**33 条项目 skill 里有 32
+条的描述被截到约 40 字符**（`brainstorm` 716→40、`magicpath` 774→40）。40 字符对语义路由等于没有。
+Codex 的告警原文是「Codex can still see every skill, but some descriptions are shorter」——
+**skill 一个都没丢，丢的是描述**。关插件解决不了：106→76 也只是把 40 字符抬到约 55。
+AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落在这里。
+（同理，route-guard 经 `.codex/hooks.json` 的 UserPromptSubmit 注入、`additionalContextLimit=0`
+完整直传，是第二条不受预算影响的路由通道。）
+
+| 命令 | 场景 | 用途（一行） |
+|---|---|---|
+| `/auto` | A B C D | 全自动多 Agent 编排：自然语言需求 → Skill Pipeline → 并行执行 → 聚合产出 |
+| `/idea` | A B | **已有原始语料**忠实结构化（会议纪要/语音稿/讨论记录）；新想法走 `/brainstorm` |
+| `/brainstorm` | A B D | 苏格拉底拷问式 PRD（用户说「写 PRD」即路由到它，不暴露独立 `/prd`） |
+| `/deepresearch` | A B D | 多 Agent 深度研究，产出研究报告 |
+| `/quick-research` | A B D | 轻量研究（单 agent 后台查 primary source，单文件落盘）；发散题升 deepresearch |
+| `/insight-synthesis` | A B D | **一手定性数据已在手**（访谈/工单/回访）→ observation+interpretation 两层洞察，不臆造语料 |
+| `/research-kit` | A B D | 假设 → 访谈提纲/问卷/可用性测试计划/卡片分类法。**采集之前**用；三不产：不产发现/解读/不代采集 |
+| `/ux-research` | A B D | 多维度 UX 深度研究（并行 agent + 共识矩阵 + 苏格拉底审查） |
+| `/ux-brainstorm` | A B D | **发散引擎**：研究/想法 → 2-3 方案 + Oracle 对抗 + 交互架构 + AI-Native 判定 |
+| `/design-brief` | A B C D | **收敛引擎**：方向 → 规格契约（决策卡/状态/组件映射/Generation Packet） |
+| `/ux-writing` | A B C D | 界面语言：voice/tone + 微文案系统 + 文案评审改写（「提示语生硬/空态说什么/报错文案」） |
+| `/open-design` | A B C D | **设计产出首选**：需求 → OD 指令 → 生成 HTML → 落盘 + figma-layer |
+| `/html-prototype` | A B C | HTML 原型（备选，OD/MagicPath 不可用时） |
+| `/ux-audit` | B C | UX 评审（多选模块） |
+| `/figma-layer` | A C | Figma 保险层 |
+| `/tech-spec` | A B D | PRD + design-brief → 技术合同，强制覆盖率验证 |
+| `/task-plan` | A B D | 任务编排计划：渐进式索引 + 断言矩阵 + 开发/测试任务卡；执行前须过门禁 |
+| `/code-hygiene` | 代码层 | 完成前验证铁律（done 前须有当场跑出的证据）+ 8 清理算子；只自动应用 HIGH 置信 |
+| `/code-recon` | 代码层 | Brownfield 正门：并行只读 recon 把代码库逆向成架构 brief（标 VERIFIED vs INFERRED），只读不改 |
+| `/muse-req-triage` | muse | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单 |
+| `/muse-loop-orchestrate` | muse | 需求→原型自治 Loop 编排器，自带两个不可省略的人类卡点（GATE-1/GATE-2） |
+
+场景：**A=新功能设计 · B=已有功能优化 · C=线上评审改版 · D=Agent 化改造**。
+隐藏/高级 skill（`challenge`/`redteam`/`evals`/`retro`/`careful`/`compare`/`figma-demo`/`magicpath`）
+不占入口但**不等点名**：执行中命中其场景时主动提出是义务。触发词唯一真值源仍是
+`.claude/skill-os/skill-routing-map.yaml`。
+
 - Slashless aliases are supported for every command in `.claude/commands/`.
   - If the user's message starts with an exact command name without `/`, treat it as the
     corresponding Claude slash-command semantics.
