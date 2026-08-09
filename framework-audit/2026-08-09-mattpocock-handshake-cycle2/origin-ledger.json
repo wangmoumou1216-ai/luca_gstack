@@ -1,0 +1,1147 @@
+{
+  "schema_version": "matt-origin-ledger/v2",
+  "generated_at": "2026-08-09T00:00:00+08:00",
+  "status": "ORIGIN_CLOSURE_FROZEN",
+  "upstream_repository": "https://github.com/mattpocock/skills.git",
+  "source_census": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/source-census.json",
+  "closure_rule": "All upstream primary/supporting evidence_refs in source-census plus the writing-great-skills GLOSSARY.md reached by its mandatory definition pointer. No fixed historical object count was reused.",
+  "counts": {
+    "objects": 46,
+    "commits": {
+      "391a2701dd948f94f56a39f7533f8eea9a859c87": 43,
+      "ed37663cc5fbef691ddfecd080dff42f7e7e350d": 3
+    },
+    "referenced_atoms": 196,
+    "missing_objects": 0,
+    "unread_eof_receipts": 0
+  },
+  "objects": [
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".agents/invocation.md",
+      "blob_oid": "c434516edb8ebb19ec0c6f8a4bf822490c4cc1ba",
+      "sha256": "03d4e958e7fdd2f199ea1b3b77d396080a3f3c73b4c7eb725e551ddd17ff4317",
+      "lines": 18,
+      "bytes": 1795,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.agents/invocation.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-0570bc8d2999",
+        "MATT-aa494e6e1ef5"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".agents/writing-docs.md",
+      "blob_oid": "c3bfc83732e8ae6337f813a3201e89f0a799f2f5",
+      "sha256": "679d2e8e7470f48737df069150ace4d9accfdb918fcdd741c95e539ea789d8b9",
+      "lines": 81,
+      "bytes": 7186,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.agents/writing-docs.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-5df2e8d0079d"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".changeset/config.json",
+      "blob_oid": "06c7350518b33bdaedd0eae254f75fd887f16963",
+      "sha256": "61717b21675ba9d99f0fc363253ead2716895a4c043c779727d8c685d48684e8",
+      "lines": 15,
+      "bytes": 380,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.changeset/config.json consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-def446ebf97a"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".changeset/prototype-primary-source.md",
+      "blob_oid": "4e97b193504de1e51254902389574fc28e69b8f3",
+      "sha256": "f82a6210810000c4a4e81a1b3ee59fb78875b12918432f0d5c2884b39662a07e",
+      "lines": 5,
+      "bytes": 557,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.changeset/prototype-primary-source.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-a4960189591a",
+        "MATT-def446ebf97a"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".claude-plugin/plugin.json",
+      "blob_oid": "db81962396e8b1a83fedbc26d95ebfd3ad76083a",
+      "sha256": "df7b9a6084e376a346f9d55cfdb0487758f28e7e7a797af6c5de87e11c0cd26f",
+      "lines": 26,
+      "bytes": 907,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.claude-plugin/plugin.json consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-7a0fb29ec0b5"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".out-of-scope/mainstream-issue-trackers-only.md",
+      "blob_oid": "7cd3dd6ddd022fa3ca0c72b91eb852fab77b0a11",
+      "sha256": "6aa440190cf69f103063ded3ea5b07b38143baa877a1db200ab05dd1dbf283ad",
+      "lines": 25,
+      "bytes": 1574,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.out-of-scope/mainstream-issue-trackers-only.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-c5026b27545e"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".out-of-scope/question-limits.md",
+      "blob_oid": "9ec41214d8e76f88d320613ba830bf9d81a229ea",
+      "sha256": "4079b906b148c0c4eed7dff807348ad62b2c0c83ced017dc674973007e04a55d",
+      "lines": 18,
+      "bytes": 1262,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.out-of-scope/question-limits.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-4fdac0593d2b"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": ".out-of-scope/setup-skill-verify-mode.md",
+      "blob_oid": "70d8714705002dd4e9d6fcb8cd79e98138ecfcb0",
+      "sha256": "bac6a66bb6f50ff7f60a7853344dbfc05db38369bf517917389340355b4acf9f",
+      "lines": 15,
+      "bytes": 1134,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:.out-of-scope/setup-skill-verify-mode.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-4fdac0593d2b"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "CHANGELOG.md",
+      "blob_oid": "f609fc1642ce217f2ebf926663df2e8cba548081",
+      "sha256": "e542f578f0626c8fe1afdb5ea778397f9e67e62babe5f3ce816b47595034d26b",
+      "lines": 116,
+      "bytes": 21018,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:CHANGELOG.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-a4960189591a",
+        "MATT-def446ebf97a"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "CLAUDE.md",
+      "blob_oid": "20ca92b5f361957bd6416d597cf303ab6bda0baf",
+      "sha256": "eb94a78649b55eb71212df83cc9f6f0a5c0ba3e93fca93cb82b96e73fb455ed2",
+      "lines": 22,
+      "bytes": 2588,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:CLAUDE.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-29a389b085fa",
+        "MATT-5df2e8d0079d",
+        "MATT-7a0fb29ec0b5",
+        "MATT-a0e5308ee1f7",
+        "MATT-ef67aca33ea4"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "README.md",
+      "blob_oid": "1b290f84dece493cd4a39fb38a3d684161d9d16f",
+      "sha256": "3e718f9539b2a33fd310470fc4a25fa51f523d50013ea3e94a8bfd03dcecb960",
+      "lines": 185,
+      "bytes": 12899,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:README.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-ef67aca33ea4"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "scripts/link-skills.sh",
+      "blob_oid": "deb546110aecef390dec50627934d6d867cf56ac",
+      "sha256": "ad99b6c6d67fcd9af64cc912f93d43faf008df1d50ebe822c0cf4517cb9efe93",
+      "lines": 56,
+      "bytes": 1824,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:scripts/link-skills.sh consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-a0e5308ee1f7"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/code-review/SKILL.md",
+      "blob_oid": "2a0b5240731b927caa9ac0bf43c3e2af9dc3f0a7",
+      "sha256": "6a65cc61114f96db07ec41e3920e67c9c5bf70dd6e0901eb9460ebcb2bdc209f",
+      "lines": 89,
+      "bytes": 6740,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/code-review/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-03def577b39b",
+        "MATT-1325b5597939",
+        "MATT-9e29a77e6581",
+        "MATT-b55c645aeef0",
+        "MATT-be5d474141dc",
+        "MATT-c35661170bbe",
+        "MATT-ce7c8d8773f2",
+        "MATT-e330d907544b",
+        "MATT-edf0f3f0b74a"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/codebase-design/DEEPENING.md",
+      "blob_oid": "3938457b88ddf98262d5f461aac703dbd74f749a",
+      "sha256": "125e6b77413ad2bc7cf7a772bc74336d580a50f9e797db2178ed133d62333d06",
+      "lines": 37,
+      "bytes": 2559,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/codebase-design/DEEPENING.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-15485bb22446",
+        "MATT-1ea0f91fc4a9",
+        "MATT-53559f445e14",
+        "MATT-538bc022a77f",
+        "MATT-5415ba505994",
+        "MATT-84b0ef32976f",
+        "MATT-c67bec38d586",
+        "MATT-d3050f8c0bfd"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "blob_oid": "49a7c42a2ccc6aff0ffc09efd28e6a4aa3c373d7",
+      "sha256": "21c3264953bd30ee87b181a3ccaf0e70649f461e5ffd7dc654acee4ba1788b31",
+      "lines": 44,
+      "bytes": 2712,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/codebase-design/DESIGN-IT-TWICE.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-06baf62f40eb",
+        "MATT-111a1b92627d",
+        "MATT-40511a116496",
+        "MATT-4cd3187c5fc3",
+        "MATT-8ea4417e52b6",
+        "MATT-f0faf1b7ee95"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/codebase-design/SKILL.md",
+      "blob_oid": "16620c24528b737408e78d95dd6a0e01a98d3d63",
+      "sha256": "a8d50abac5a4018f60e1d911d4b6f4e36454ca14d6c390c0695a578c7de65dad",
+      "lines": 114,
+      "bytes": 6488,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/codebase-design/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-0d37abd78dd2",
+        "MATT-1407567c473c",
+        "MATT-140e7afa9788",
+        "MATT-6dbcb7203d84",
+        "MATT-73ae85a30a74",
+        "MATT-76146c6e4949",
+        "MATT-7a2724c2338e",
+        "MATT-942e6ab6ce59",
+        "MATT-a274e23d48df",
+        "MATT-afe207f5f55a",
+        "MATT-b29e699b092e",
+        "MATT-c34c9bea72c0",
+        "MATT-d3287e529dbb",
+        "MATT-d5f02709eab6",
+        "MATT-f80bd1d84ca6"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "blob_oid": "40afc4652f6f52fc117b2b00e1fa65fcec235838",
+      "sha256": "b2932630950e5210075bcd6f850e5accf30c101c5367b29eac3a29b4dd8084c8",
+      "lines": 41,
+      "bytes": 1164,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-1101b1fc2687",
+        "MATT-56aa9571a6e3"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "blob_oid": "f400de7c1937377fec7ff9bae3b0c072670f1e81",
+      "sha256": "7a0779480f323a66d109404646bcc1a14bf0232b45b3e3ea93b652a035718acb",
+      "lines": 134,
+      "bytes": 8536,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/diagnosing-bugs/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-4208a8fab1df",
+        "MATT-4c87f2bc7a1f",
+        "MATT-533bb3fbd132",
+        "MATT-5dedd94dc46e",
+        "MATT-8953d6ad9a01",
+        "MATT-8ef4dfa714d5",
+        "MATT-e1804fa3e83d",
+        "MATT-e30ba0f32921",
+        "MATT-e4ca763b1b1c"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/domain-modeling/ADR-FORMAT.md",
+      "blob_oid": "da7e78ec1c220cd0aedf7ad36424c9398034f375",
+      "sha256": "f1f36cd3f8d3b6474ddd5855da4e233bfc4ae1a1c5024909ccf11871819a41b2",
+      "lines": 47,
+      "bytes": 2766,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/domain-modeling/ADR-FORMAT.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-d47f4a181325"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+      "blob_oid": "eaf2a18573f0a2d8c69ed53e29e4d9e21baf81d8",
+      "sha256": "b8cc318f2a4285b530e908b6bc43901c3c5cd11100362636bbc4216639bef597",
+      "lines": 60,
+      "bytes": 2299,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/domain-modeling/CONTEXT-FORMAT.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary",
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-489f7d41e23d",
+        "MATT-c2e99e7f8524"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/domain-modeling/SKILL.md",
+      "blob_oid": "d0f7e1a5ccb06a7184056ff9af02b67bc77f9dda",
+      "sha256": "152e2c97239affb12a60c5f4a7e74ab546a49ae169688c81f4e2ccc42dafa579",
+      "lines": 74,
+      "bytes": 3427,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/domain-modeling/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-3609f7403c0c",
+        "MATT-5626527013d7",
+        "MATT-67900874d64c",
+        "MATT-a180b289f07f",
+        "MATT-c2e99e7f8524",
+        "MATT-d47f4a181325"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "blob_oid": "a79b493ea386d537208beacc41ad26336da257eb",
+      "sha256": "0026900866ed2a542af0559cef11dd7ae707633b75cc6f668c2e7c0a33e35032",
+      "lines": 66,
+      "bytes": 5421,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/improve-codebase-architecture/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-28d2f29c8990"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/research/SKILL.md",
+      "blob_oid": "0ba594a07f306479baa67104381f48e209ab6aae",
+      "sha256": "af378829f015775a3bcd65ff466826722e99359017ae6bae227ca4c9bd14049c",
+      "lines": 12,
+      "bytes": 799,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/research/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-1f9c1b70aeff",
+        "MATT-34b79a286455",
+        "MATT-35b6c87ab446",
+        "MATT-3f8cbf4f286c",
+        "MATT-d2af03d19255"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "blob_oid": "aadb3fcb1dfb43413dff30c2fb4b18b7cf58e90e",
+      "sha256": "c7c9ba81362a786aac05d2223123bf1bd2f8a99c3243a72882ede9c68bedfb24",
+      "lines": 14,
+      "bytes": 921,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/resolving-merge-conflicts/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-127daf4bf0ac",
+        "MATT-15ab6bef833e",
+        "MATT-37dc2f9c1058",
+        "MATT-3d7d5b68dc87",
+        "MATT-5d37af533e7b",
+        "MATT-89e00ced8a97",
+        "MATT-97e6b49655a7",
+        "MATT-a6cb54e9b6d2",
+        "MATT-bbb9c3f9d57e",
+        "MATT-c0f70c5e9feb",
+        "MATT-cf58ebc6d623",
+        "MATT-ee41891aaab5"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/tdd/mocking.md",
+      "blob_oid": "71cbfee674d93244ce81d1830b930ca9a69200bd",
+      "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+      "lines": 59,
+      "bytes": 1481,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/tdd/mocking.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-603d5be80f52",
+        "MATT-6d2cb921a70d",
+        "MATT-f6f21e46723c"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/tdd/SKILL.md",
+      "blob_oid": "9a2e1d2a1ad856b0d5903dd002209ff8c32c9a48",
+      "sha256": "5363bb2775679fe9311fbb67947f95359169c6e7f1fac77c0f25e190bca6cf2f",
+      "lines": 36,
+      "bytes": 3213,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/tdd/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-1b86b321487e",
+        "MATT-2aeabccea366",
+        "MATT-5404beb35412",
+        "MATT-66e32c11cde4",
+        "MATT-8b37d64a16e2",
+        "MATT-a0566b42dcc8",
+        "MATT-bbde2783e7c4",
+        "MATT-f06998587ea3"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/tdd/tests.md",
+      "blob_oid": "7ab86479f925a1f9e8ba680af33cb3b12e015381",
+      "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+      "lines": 77,
+      "bytes": 2214,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/tdd/tests.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-1b86b321487e",
+        "MATT-66e32c11cde4",
+        "MATT-a0566b42dcc8"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/to-spec/SKILL.md",
+      "blob_oid": "f3cca8d3dbdb7c22e11447f1d13011a78ca6efba",
+      "sha256": "267638edd513b5918de626ad5605d261952abb7428cb308869c663ca924e93e7",
+      "lines": 75,
+      "bytes": 3073,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/to-spec/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-3dfb3c48d978",
+        "MATT-6674e058b36b",
+        "MATT-a170f51c539f"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/to-tickets/SKILL.md",
+      "blob_oid": "23140c577f71c98993523f0dbec74f250561b708",
+      "sha256": "1846d215e24ec1219b199a708329ca915db93138d4f3675af29db4d32ee41391",
+      "lines": 107,
+      "bytes": 5800,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/to-tickets/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-1255551b75b6",
+        "MATT-4e06282c5bcd",
+        "MATT-63657d578563",
+        "MATT-6533defb2dc1",
+        "MATT-bcdf6fa46f89",
+        "MATT-c7a88350b48b",
+        "MATT-d5e1af44f0f3",
+        "MATT-d80ea51036ce",
+        "MATT-f62c5aacc8d4"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/triage/OUT-OF-SCOPE.md",
+      "blob_oid": "fc0e39f529146883d23d0dd315f55af05a39cbdf",
+      "sha256": "2526f998fd7ca5e956d3f6f234bcc2431a5971ee769f1148ddc60b92f04d5914",
+      "lines": 105,
+      "bytes": 4712,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/triage/OUT-OF-SCOPE.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary",
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-29bde5edb226",
+        "MATT-4fdac0593d2b",
+        "MATT-5d8afee7d6ea",
+        "MATT-636ced1b204e",
+        "MATT-a17cf3e7893b",
+        "MATT-a1ea8c358191",
+        "MATT-c5026b27545e"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/triage/SKILL.md",
+      "blob_oid": "be47b78100c8524c3af3681790d2bb8b9ff150b7",
+      "sha256": "d45827c299c021f77b0f146fefa3ee679b13f99e9a2ffdf48e8de2347adeefe1",
+      "lines": 112,
+      "bytes": 6574,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/triage/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-0d0c190fa8fc",
+        "MATT-636ced1b204e",
+        "MATT-8cff28050948",
+        "MATT-c805300f20ba",
+        "MATT-eb57baa2d020"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/engineering/wayfinder/SKILL.md",
+      "blob_oid": "2bce062ff22c3f21108db356822db9f66a2eb4f2",
+      "sha256": "bef437de697fb6984a8a90b7fd82f128609148d6e02f635ce419d03555b351e1",
+      "lines": 127,
+      "bytes": 11503,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/engineering/wayfinder/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-18e52b5f091d",
+        "MATT-34e280addae5",
+        "MATT-46e4365cc5af",
+        "MATT-4b054922a7d3",
+        "MATT-b34b24ea1018",
+        "MATT-dddfb551b1f4",
+        "MATT-dfba6d8951d5",
+        "MATT-ec0ef96aa62c"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/in-progress/setup-ts-deep-modules/SKILL.md",
+      "blob_oid": "5963b8a39f1818da85bbef74eab8c96cf544181e",
+      "sha256": "2c6e39ccdd77f85337c13a4877c222d47dcd26e31619157af9688798244192d5",
+      "lines": 102,
+      "bytes": 7602,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/in-progress/setup-ts-deep-modules/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-430aa46524cb",
+        "MATT-bd4240ee4565",
+        "MATT-e5b350fa765c"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/misc/git-guardrails-claude-code/SKILL.md",
+      "blob_oid": "d943c68219d0f47512f10c5018a11fd8358e9bb5",
+      "sha256": "03c4de7613c712aea336d64c467ea3ed14be2cbd52345925fe949c75c01c29f7",
+      "lines": 95,
+      "bytes": 2312,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/misc/git-guardrails-claude-code/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-93d03c228db7"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/grilling/SKILL.md",
+      "blob_oid": "219930f78b238d0980f5036af7d7736b855bbaea",
+      "sha256": "5a35925d03a391bcfa46940868b649b72dba89ec9c19525e785bbb6bd3a7f478",
+      "lines": 12,
+      "bytes": 821,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/grilling/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-7adf9ea0ad31",
+        "MATT-8c98f264c50c"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/handoff/SKILL.md",
+      "blob_oid": "043d9e13dc7eca3002a47d3ab9865c568f647863",
+      "sha256": "57c9f1f392d7352cdc85b1e39ca49eddc70ce1dc278bd9653fb4f23dfc2560fc",
+      "lines": 16,
+      "bytes": 879,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/handoff/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-72e5071e2a35",
+        "MATT-b1e53acbdaf0",
+        "MATT-e40dcb5cc0f9"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/teach/GLOSSARY-FORMAT.md",
+      "blob_oid": "9cae84c44c8eb5d27b8695d4ef29a2893dc4900c",
+      "sha256": "d177def491519d97873291f2e860d8f1d60ead78feecb82eee022177958069c6",
+      "lines": 35,
+      "bytes": 2131,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/teach/GLOSSARY-FORMAT.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-d791c08cc574"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
+      "blob_oid": "2faa7c98fabcdff48eb6bd07e4847d48a6b8d4e1",
+      "sha256": "855f81017625256584bbf62bd5edb9b0c86605c4cc1139c56acc36b802595d17",
+      "lines": 46,
+      "bytes": 2777,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/teach/LEARNING-RECORD-FORMAT.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-d237b0ad2fee"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/teach/MISSION-FORMAT.md",
+      "blob_oid": "5dac184a319308e2ec0c18c16d6b8d52b9be2748",
+      "sha256": "8da6d3ac84eb2eb19f17c260b6acf01c560d3ac7a4501c415eea0e985602f4d7",
+      "lines": 31,
+      "bytes": 1553,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/teach/MISSION-FORMAT.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-49c7fdbf5776"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/teach/RESOURCES-FORMAT.md",
+      "blob_oid": "c94aac6a2634cc229fe0b777fc5cc7da3a28c3d2",
+      "sha256": "2bc634a64b0d0daa10904f9222e7aa0d361420dfacabbf092fbe3a72222edc08",
+      "lines": 32,
+      "bytes": 1926,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/teach/RESOURCES-FORMAT.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "supporting"
+      ],
+      "referenced_by": [
+        "MATT-2bedc3c6fd85"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/teach/SKILL.md",
+      "blob_oid": "b1603e5ac536d2b5c29496c06df4db0bb9f74e69",
+      "sha256": "6d2dbe5e03084cf26fef66b535127b36cd1bcbe9478e26b0626029cd51dc2259",
+      "lines": 140,
+      "bytes": 9507,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/teach/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-2078085333fd",
+        "MATT-241024e11cdf",
+        "MATT-2bedc3c6fd85",
+        "MATT-38334ef06d4d",
+        "MATT-39a072bb7b58",
+        "MATT-39c2563e2cc1",
+        "MATT-3e38be0f9764",
+        "MATT-3e8a44ea488a",
+        "MATT-46596b9d7b36",
+        "MATT-49c7fdbf5776",
+        "MATT-5adcf9315175",
+        "MATT-5d41ce3b389f",
+        "MATT-6ead816fdfbe",
+        "MATT-6fd379d5366d",
+        "MATT-709f14d1320a",
+        "MATT-7970347cb8d1",
+        "MATT-8c55afe36688",
+        "MATT-90a2d7417e80",
+        "MATT-9ccc1540af8a",
+        "MATT-b03e58473886",
+        "MATT-b33234f5e4d8",
+        "MATT-c5330b65f2d5",
+        "MATT-c5f866973596",
+        "MATT-d237b0ad2fee",
+        "MATT-d791c08cc574",
+        "MATT-e8904e44a50c",
+        "MATT-e946354e755c",
+        "MATT-f14789f26257",
+        "MATT-f26725cd4ac3",
+        "MATT-f2c08a702dac",
+        "MATT-f3b7c2069f77",
+        "MATT-f5dbbdb73cd7"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/writing-great-skills/GLOSSARY.md",
+      "blob_oid": "0269ca89b9d886075c3d1ae624592f8a08ba3197",
+      "sha256": "cccd684c73fb7a06f523497b0121765f92d2b33d6ef9c51602294849233451d6",
+      "lines": 201,
+      "bytes": 18488,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/writing-great-skills/GLOSSARY.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "transitive-definition"
+      ],
+      "referenced_by": [
+        "MATT-0261a740295f",
+        "MATT-03e4eb13963c",
+        "MATT-0570bc8d2999",
+        "MATT-0a53b72be4e9",
+        "MATT-0a9e93314192",
+        "MATT-1f966fb0d410",
+        "MATT-36dba8805ddb",
+        "MATT-40f9c0e526bf",
+        "MATT-4890d9057b14",
+        "MATT-4da647d8b6e1",
+        "MATT-51799dcfefd9",
+        "MATT-5fa120e2be08",
+        "MATT-70d0fc06870a",
+        "MATT-7187491bdac0",
+        "MATT-82e9843da4ee",
+        "MATT-9be0134050b9",
+        "MATT-a3aaa647aaa4",
+        "MATT-aa494e6e1ef5",
+        "MATT-b0c0a8ac9c7f",
+        "MATT-b8468d932b72",
+        "MATT-c338631e1af2",
+        "MATT-c5989fa21e70",
+        "MATT-c5a2f1239e64",
+        "MATT-c82b83a7017e",
+        "MATT-d42c3fe44b94",
+        "MATT-d99654edc8ca",
+        "MATT-f79e0fab364f"
+      ]
+    },
+    {
+      "commit": "391a2701dd948f94f56a39f7533f8eea9a859c87",
+      "commit_tree": "c2522c32e5897eaf528b9e47e355fe78e0db3b5b",
+      "path": "skills/productivity/writing-great-skills/SKILL.md",
+      "blob_oid": "82abd0dce264eecb3ed461b3eac17bdafb52f84b",
+      "sha256": "4d6ccbc3760b1bd4107c495a79872286ea69494003f3b0a719fc95b147457061",
+      "lines": 83,
+      "bytes": 9414,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 391a2701dd948f94f56a39f7533f8eea9a859c87:skills/productivity/writing-great-skills/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-0261a740295f",
+        "MATT-03e4eb13963c",
+        "MATT-0570bc8d2999",
+        "MATT-0a53b72be4e9",
+        "MATT-0a9e93314192",
+        "MATT-1f966fb0d410",
+        "MATT-36dba8805ddb",
+        "MATT-40f9c0e526bf",
+        "MATT-4890d9057b14",
+        "MATT-4da647d8b6e1",
+        "MATT-51799dcfefd9",
+        "MATT-5fa120e2be08",
+        "MATT-70d0fc06870a",
+        "MATT-7187491bdac0",
+        "MATT-82e9843da4ee",
+        "MATT-9be0134050b9",
+        "MATT-a3aaa647aaa4",
+        "MATT-aa494e6e1ef5",
+        "MATT-b0c0a8ac9c7f",
+        "MATT-b8468d932b72",
+        "MATT-c338631e1af2",
+        "MATT-c5989fa21e70",
+        "MATT-c5a2f1239e64",
+        "MATT-c82b83a7017e",
+        "MATT-d42c3fe44b94",
+        "MATT-d99654edc8ca",
+        "MATT-f79e0fab364f"
+      ]
+    },
+    {
+      "commit": "ed37663cc5fbef691ddfecd080dff42f7e7e350d",
+      "commit_tree": "04b0fcb78e3de7c58744fcba2528354cc64ab988",
+      "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "blob_oid": "b56969e92f0705d70700f908b8ec929a1edfa782",
+      "sha256": "4b4cb798c3863d5b6f5c0b4604af1ecb5beb6df82553c972898a91ba38bcf289",
+      "lines": 71,
+      "bytes": 6039,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show ed37663cc5fbef691ddfecd080dff42f7e7e350d:skills/engineering/improve-codebase-architecture/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-3aedc100aa38",
+        "MATT-857925a93192",
+        "MATT-8c03ef8961de"
+      ]
+    },
+    {
+      "commit": "ed37663cc5fbef691ddfecd080dff42f7e7e350d",
+      "commit_tree": "04b0fcb78e3de7c58744fcba2528354cc64ab988",
+      "path": "skills/engineering/wayfinder/SKILL.md",
+      "blob_oid": "42e3644cc57e41a1b87482754f25b4d9462d4bbc",
+      "sha256": "257e40665b28ae959ffdcb97d7a72b074360f4a3d201bd84786505308546e434",
+      "lines": 128,
+      "bytes": 11900,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show ed37663cc5fbef691ddfecd080dff42f7e7e350d:skills/engineering/wayfinder/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-a4f566d38089"
+      ]
+    },
+    {
+      "commit": "ed37663cc5fbef691ddfecd080dff42f7e7e350d",
+      "commit_tree": "04b0fcb78e3de7c58744fcba2528354cc64ab988",
+      "path": "skills/productivity/grilling/SKILL.md",
+      "blob_oid": "52d8eb3cadd2dca62634d5dccfa73ea6b725b117",
+      "sha256": "44331dda57f461db4fec3f2efb6ddabe7aaaa0a57ae0f88a883bc61aed8a0587",
+      "lines": 12,
+      "bytes": 843,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show ed37663cc5fbef691ddfecd080dff42f7e7e350d:skills/productivity/grilling/SKILL.md consumed as a complete blob"
+      },
+      "reference_kinds": [
+        "primary"
+      ],
+      "referenced_by": [
+        "MATT-9a6cb6fdaec0"
+      ]
+    }
+  ],
+  "integrity": {
+    "duplicate_commit_path": 0,
+    "missing_blob_oid": 0,
+    "missing_sha256": 0
+  },
+  "_file_end": "origin-ledger.json"
+}

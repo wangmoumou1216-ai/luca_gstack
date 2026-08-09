@@ -1,0 +1,14 @@
+{
+  "case": "switch and scoped operation must be separate tool calls",
+  "switch_command": "./scripts/project.sh switch muse",
+  "scoped_operation": {
+    "verb": "touch",
+    "path_segments": ["do", "cs", "x.md"]
+  },
+  "separators": ["&&", ";", "|", "\n"],
+  "expected": {
+    "status": "DENY_COMPOUND",
+    "exit": 2,
+    "pin_unchanged": true
+  }
+}

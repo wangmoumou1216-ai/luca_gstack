@@ -1,0 +1,2950 @@
+{
+  "schema_version": "1.0",
+  "status": "BLOCKED",
+  "audit": "mattpocock-handshake-cycle2-independent-census",
+  "upstream_head": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+  "independence": {
+    "prejoin_sources": [
+      ".claude/skill-os/evolution/adoption-log.jsonl",
+      "external installed pins/routes/catalogs/current global targets",
+      "prior benchmark dossiers/verdicts",
+      "read-only upstream clone at assigned HEAD"
+    ],
+    "forbidden_until_freeze": [
+      "framework-audit/2026-08-09-mattpocock-handshake-cycle2/source-census.json",
+      "framework-audit/2026-08-09-mattpocock-handshake-cycle2/live-census.json"
+    ],
+    "freeze_completed_before_join_read": true,
+    "note": "The frozen inventory was not edited after opening the producer censuses."
+  },
+  "prejoin": {
+    "atom_rule": "one trigger, one observable effect, one independently failing degradation",
+    "canonicalization": "UTF-8 JSON.stringify(frozen_atoms), insertion order preserved, no whitespace",
+    "atom_count": 135,
+    "sha256": "d460284fb0c03afb53634dbf8c64229b49eae55c87a061bbbcb9761293ae5da4",
+    "frozen_atoms": [
+      {
+        "id": "IC-001",
+        "category": "tdd",
+        "trigger": "test-first work starts",
+        "effect": "run red→green",
+        "degradation": "code can precede a failing test",
+        "basis": "tdd refresh/live"
+      },
+      {
+        "id": "IC-002",
+        "category": "tdd",
+        "trigger": "each TDD cycle starts",
+        "effect": "use one vertical tracer-bullet slice",
+        "degradation": "tests/implementation can be horizontally batched",
+        "basis": "tdd refresh/live"
+      },
+      {
+        "id": "IC-003",
+        "category": "tdd",
+        "trigger": "before writing a test",
+        "effect": "confirm the seam with the user",
+        "degradation": "tests can target an unapproved seam",
+        "basis": "tdd refresh/live"
+      },
+      {
+        "id": "IC-004",
+        "category": "tdd",
+        "trigger": "a test is designed",
+        "effect": "test observable behavior through a public interface",
+        "degradation": "tests can couple to internals",
+        "basis": "tdd refresh/live"
+      },
+      {
+        "id": "IC-005",
+        "category": "tdd",
+        "trigger": "an expected value is chosen",
+        "effect": "derive it independently",
+        "degradation": "the oracle can recompute the implementation",
+        "basis": "tdd tests.md"
+      },
+      {
+        "id": "IC-006",
+        "category": "tdd",
+        "trigger": "an assertion is reviewed",
+        "effect": "reject tautological assertions",
+        "degradation": "a broken implementation can still pass",
+        "basis": "tdd tests.md"
+      },
+      {
+        "id": "IC-007",
+        "category": "tdd",
+        "trigger": "a dependency is substituted",
+        "effect": "mock only system boundaries",
+        "degradation": "internal collaborators can be mocked",
+        "basis": "tdd mocking.md"
+      },
+      {
+        "id": "IC-008",
+        "category": "tdd",
+        "trigger": "a boundary must be mockable",
+        "effect": "inject the dependency",
+        "degradation": "construction can make the seam untestable",
+        "basis": "tdd mocking.md"
+      },
+      {
+        "id": "IC-009",
+        "category": "tdd",
+        "trigger": "an external client seam is shaped",
+        "effect": "use operation-specific SDK methods",
+        "degradation": "generic conditional mocks can be required",
+        "basis": "tdd mocking.md"
+      },
+      {
+        "id": "IC-010",
+        "category": "codebase",
+        "trigger": "module design/restructure starts",
+        "effect": "use canonical module/interface/seam/adapter/depth/leverage/locality vocabulary",
+        "degradation": "architecture aliases can drift",
+        "basis": "codebase-design install"
+      },
+      {
+        "id": "IC-011",
+        "category": "codebase",
+        "trigger": "a module shape is judged",
+        "effect": "prefer high leverage behind a small interface",
+        "degradation": "a shallow pass-through can be accepted",
+        "basis": "codebase-design live"
+      },
+      {
+        "id": "IC-012",
+        "category": "codebase",
+        "trigger": "a deepening candidate is judged",
+        "effect": "apply the deletion test",
+        "degradation": "pass-through complexity can look valuable",
+        "basis": "codebase-design live"
+      },
+      {
+        "id": "IC-013",
+        "category": "codebase",
+        "trigger": "a test boundary is chosen",
+        "effect": "treat the interface as test surface",
+        "degradation": "tests can reach past the seam",
+        "basis": "codebase-design live"
+      },
+      {
+        "id": "IC-014",
+        "category": "codebase",
+        "trigger": "a seam is proposed",
+        "effect": "require real variation/two justified adapters",
+        "degradation": "hypothetical seams can add indirection",
+        "basis": "codebase-design live"
+      },
+      {
+        "id": "IC-015",
+        "category": "codebase",
+        "trigger": "a cluster is deepened",
+        "effect": "classify dependency type and choose its matching test strategy",
+        "degradation": "the wrong double/adapter strategy can be chosen",
+        "basis": "DEEPENING.md"
+      },
+      {
+        "id": "IC-016",
+        "category": "codebase",
+        "trigger": "internal test seams exist",
+        "effect": "keep them private",
+        "degradation": "test-only structure can leak into public API",
+        "basis": "DEEPENING.md"
+      },
+      {
+        "id": "IC-017",
+        "category": "codebase",
+        "trigger": "deep-interface tests replace shallow tests",
+        "effect": "delete old layered unit tests",
+        "degradation": "duplicate fossilized tests can remain",
+        "basis": "DEEPENING.md"
+      },
+      {
+        "id": "IC-018",
+        "category": "codebase",
+        "trigger": "alternative interfaces are requested",
+        "effect": "frame constraints/dependencies/non-proposal sketch",
+        "degradation": "agents can solve different unstated problems",
+        "basis": "DESIGN-IT-TWICE"
+      },
+      {
+        "id": "IC-019",
+        "category": "codebase",
+        "trigger": "the interface problem is framed",
+        "effect": "spawn 3+ radical alternatives in parallel",
+        "degradation": "the first idea can win by default",
+        "basis": "DESIGN-IT-TWICE"
+      },
+      {
+        "id": "IC-020",
+        "category": "codebase",
+        "trigger": "alternatives return",
+        "effect": "require interface/usage/hidden implementation/dependency/trade-offs",
+        "degradation": "candidates can be incomparable",
+        "basis": "DESIGN-IT-TWICE"
+      },
+      {
+        "id": "IC-021",
+        "category": "codebase",
+        "trigger": "alternatives are presented",
+        "effect": "compare depth/locality/seam and recommend one or a hybrid",
+        "degradation": "the user can receive an unranked menu",
+        "basis": "DESIGN-IT-TWICE"
+      },
+      {
+        "id": "IC-022",
+        "category": "resolving",
+        "trigger": "merge/rebase conflict starts",
+        "effect": "inspect state/history/conflicting files",
+        "degradation": "resolution can start blind",
+        "basis": "resolving install"
+      },
+      {
+        "id": "IC-023",
+        "category": "resolving",
+        "trigger": "each conflict is investigated",
+        "effect": "recover intent from commits/PRs/issues",
+        "degradation": "surface syntax can substitute for intent",
+        "basis": "resolving install"
+      },
+      {
+        "id": "IC-024",
+        "category": "resolving",
+        "trigger": "a hunk is resolved",
+        "effect": "preserve both intents or follow merge goal and note trade-off",
+        "degradation": "one intent can vanish silently",
+        "basis": "resolving install"
+      },
+      {
+        "id": "IC-025",
+        "category": "resolving",
+        "trigger": "intents are incompatible",
+        "effect": "do not invent behavior",
+        "degradation": "conflict resolution can become feature design",
+        "basis": "resolving install"
+      },
+      {
+        "id": "IC-026",
+        "category": "resolving",
+        "trigger": "hunks are resolved",
+        "effect": "discover/run checks and fix merge-caused failures",
+        "degradation": "broken resolved code can remain",
+        "basis": "resolving install"
+      },
+      {
+        "id": "IC-027",
+        "category": "resolving",
+        "trigger": "checks pass",
+        "effect": "stage and finish/continue",
+        "degradation": "the repo can remain mid-operation",
+        "basis": "resolving install"
+      },
+      {
+        "id": "IC-028",
+        "category": "resolving",
+        "trigger": "resolution is difficult",
+        "effect": "never abort",
+        "degradation": "the skill removes a safety escape",
+        "basis": "resolving live vs adoption reconciliation"
+      },
+      {
+        "id": "IC-029",
+        "category": "teach",
+        "trigger": "multi-session learning is requested",
+        "effect": "use a mission-grounded stateful workspace",
+        "degradation": "teaching can be stateless/generic",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-030",
+        "category": "teach",
+        "trigger": "the next lesson is selected",
+        "effect": "use records and mission to target ZPD",
+        "degradation": "material can be repeated or mis-levelled",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-031",
+        "category": "teach",
+        "trigger": "knowledge is prepared",
+        "effect": "use curated high-trust sources",
+        "degradation": "parametric guesses can become lessons",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-032",
+        "category": "teach",
+        "trigger": "a learning path is designed",
+        "effect": "separate knowledge/skills/wisdom",
+        "degradation": "acquisition/practice/experience can be conflated",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-033",
+        "category": "teach",
+        "trigger": "durability is targeted",
+        "effect": "use retrieval/spacing/interleaving",
+        "degradation": "fluency can masquerade as retention",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-034",
+        "category": "teach",
+        "trigger": "a lesson is produced",
+        "effect": "write a short self-contained HTML lesson tied to mission/ZPD",
+        "degradation": "lessons can be long/generic",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-035",
+        "category": "teach",
+        "trigger": "lessons share UI/interaction",
+        "effect": "reuse assets and stylesheet",
+        "degradation": "components can be duplicated inline",
+        "basis": "teach install"
+      },
+      {
+        "id": "IC-036",
+        "category": "teach",
+        "trigger": "understanding is evidenced/corrected",
+        "effect": "write or supersede a learning record",
+        "degradation": "coverage can masquerade as learning",
+        "basis": "teach formats"
+      },
+      {
+        "id": "IC-037",
+        "category": "authoring",
+        "trigger": "a skill is authored/revised",
+        "effect": "optimize repeatable process predictability",
+        "degradation": "output sameness can displace process consistency",
+        "basis": "writing-great-skills port"
+      },
+      {
+        "id": "IC-038",
+        "category": "authoring",
+        "trigger": "skill exposure is chosen",
+        "effect": "price context load and cognitive load separately",
+        "degradation": "exposure can be free in the decision",
+        "basis": "invocation-cost port"
+      },
+      {
+        "id": "IC-039",
+        "category": "authoring",
+        "trigger": "a new entry is proposed",
+        "effect": "justify that the granularity cut repays its load",
+        "degradation": "unnecessary entries can proliferate",
+        "basis": "invocation-cost port"
+      },
+      {
+        "id": "IC-040",
+        "category": "authoring",
+        "trigger": "behavior needs an anchor",
+        "effect": "reuse a pretrained leading word",
+        "degradation": "behavior can lack a compact retrievable concept",
+        "basis": "leading-word port"
+      },
+      {
+        "id": "IC-041",
+        "category": "authoring",
+        "trigger": "no pretrained anchor fits",
+        "effect": "charge repeated-injection cost for invented terms",
+        "degradation": "novel jargon can be treated as free",
+        "basis": "leading-word port"
+      },
+      {
+        "id": "IC-042",
+        "category": "authoring",
+        "trigger": "a leading word is adopted",
+        "effect": "anchor invocation and execution surfaces",
+        "degradation": "discovery and behavior can diverge",
+        "basis": "leading-word port"
+      },
+      {
+        "id": "IC-043",
+        "category": "authoring",
+        "trigger": "a canonical term has aliases",
+        "effect": "record aliases in _Avoid_",
+        "degradation": "vocabulary can drift",
+        "basis": "avoid-alias port"
+      },
+      {
+        "id": "IC-044",
+        "category": "authoring",
+        "trigger": "skill content is placed",
+        "effect": "choose step/in-file reference/disclosed reference by immediacy",
+        "degradation": "material can load too late or clutter the top",
+        "basis": "writing-great-skills port"
+      },
+      {
+        "id": "IC-045",
+        "category": "authoring",
+        "trigger": "a disclosed reference is mandatory",
+        "effect": "state when/how fully to read it",
+        "degradation": "a weak pointer can fail to load context",
+        "basis": "docs-router port"
+      },
+      {
+        "id": "IC-046",
+        "category": "authoring",
+        "trigger": "reference material is located",
+        "effect": "co-locate near its consumer",
+        "degradation": "instructions can sprawl",
+        "basis": "writing-great-skills port"
+      },
+      {
+        "id": "IC-047",
+        "category": "authoring",
+        "trigger": "a skill stops early",
+        "effect": "sharpen observable completion criteria",
+        "degradation": "premature completion can persist",
+        "basis": "failure taxonomy port"
+      },
+      {
+        "id": "IC-048",
+        "category": "authoring",
+        "trigger": "behavior is duplicated",
+        "effect": "keep one SSOT plus pointers",
+        "degradation": "copies can drift",
+        "basis": "failure taxonomy port"
+      },
+      {
+        "id": "IC-049",
+        "category": "authoring",
+        "trigger": "old layers accumulate",
+        "effect": "remove non-bearing sediment",
+        "degradation": "stale defensive prose can persist",
+        "basis": "failure taxonomy port"
+      },
+      {
+        "id": "IC-050",
+        "category": "authoring",
+        "trigger": "scope sprawls",
+        "effect": "cut scope or split under granularity rule",
+        "degradation": "one skill can become catch-all",
+        "basis": "failure taxonomy port"
+      },
+      {
+        "id": "IC-051",
+        "category": "authoring",
+        "trigger": "a sentence is evaluated",
+        "effect": "delete it if behavior is unchanged without it",
+        "degradation": "no-op prose can consume context",
+        "basis": "failure taxonomy port"
+      },
+      {
+        "id": "IC-052",
+        "category": "authoring",
+        "trigger": "a negative instruction is needed",
+        "effect": "prefer a positive directive plus one counterexample",
+        "degradation": "negation piles can omit desired behavior",
+        "basis": "failure taxonomy port"
+      },
+      {
+        "id": "IC-053",
+        "category": "authoring",
+        "trigger": "a drafted line remains",
+        "effect": "require relevance to next correct action",
+        "degradation": "irrelevant prose can survive",
+        "basis": "pruning port"
+      },
+      {
+        "id": "IC-054",
+        "category": "authoring",
+        "trigger": "a dependency pointer is copied",
+        "effect": "keep it only at a real consumption point",
+        "degradation": "cargo-cult wiring can appear",
+        "basis": "anti-cargo port"
+      },
+      {
+        "id": "IC-055",
+        "category": "authoring",
+        "trigger": "description/registry prose is written",
+        "effect": "state the defining constraint",
+        "degradation": "neighboring skills can be indistinguishable",
+        "basis": "defining-constraint port"
+      },
+      {
+        "id": "IC-056",
+        "category": "review",
+        "trigger": "a diff has an upstream spec",
+        "effect": "run separate Standards and Spec axes",
+        "degradation": "one axis can hide failure in the other",
+        "basis": "code-review port"
+      },
+      {
+        "id": "IC-057",
+        "category": "review",
+        "trigger": "both axes run",
+        "effect": "isolate them in parallel contexts",
+        "degradation": "one axis can bias the other",
+        "basis": "code-review port"
+      },
+      {
+        "id": "IC-058",
+        "category": "review",
+        "trigger": "reports aggregate",
+        "effect": "do not merge/rerank across axes",
+        "degradation": "a single winner can erase findings",
+        "basis": "code-review port"
+      },
+      {
+        "id": "IC-059",
+        "category": "review",
+        "trigger": "Standards has no repo rules",
+        "effect": "apply Fowler smell baseline",
+        "degradation": "a zero-doc repo can get no standards review",
+        "basis": "code-review port"
+      },
+      {
+        "id": "IC-060",
+        "category": "review",
+        "trigger": "repo rules/guards conflict with baseline",
+        "effect": "let local rules override",
+        "degradation": "generic smells can remove intended patterns",
+        "basis": "code-review port"
+      },
+      {
+        "id": "IC-061",
+        "category": "bite",
+        "trigger": "a guard/checker changes",
+        "effect": "observe clean input pass",
+        "degradation": "the checker may already reject valid input",
+        "basis": "prove-it-bites port"
+      },
+      {
+        "id": "IC-062",
+        "category": "bite",
+        "trigger": "clean input passes",
+        "effect": "inject a deliberate violation and observe fail",
+        "degradation": "a non-biting guard can be accepted",
+        "basis": "prove-it-bites port"
+      },
+      {
+        "id": "IC-063",
+        "category": "bite",
+        "trigger": "the violation fails",
+        "effect": "assert exact exit/symptom",
+        "degradation": "an unrelated failure can count",
+        "basis": "prove-it-bites port"
+      },
+      {
+        "id": "IC-064",
+        "category": "bite",
+        "trigger": "the violation is restored",
+        "effect": "observe final pass",
+        "degradation": "the valid path can remain broken",
+        "basis": "prove-it-bites port"
+      },
+      {
+        "id": "IC-065",
+        "category": "bite",
+        "trigger": "completion is claimed",
+        "effect": "show fresh invocation and output",
+        "degradation": "assertion/memory can replace execution",
+        "basis": "prove-it-bites dossier"
+      },
+      {
+        "id": "IC-066",
+        "category": "bite",
+        "trigger": "a fail-open guard is tested",
+        "effect": "bite only on intended trigger path",
+        "degradation": "the test can demand fail-closed internals",
+        "basis": "prove-it-bites redteam constraint"
+      },
+      {
+        "id": "IC-067",
+        "category": "debug",
+        "trigger": "a nontrivial bug is investigated",
+        "effect": "write 3–5 ranked hypotheses before testing",
+        "degradation": "first-cause anchoring can occur",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-068",
+        "category": "debug",
+        "trigger": "a hypothesis is recorded",
+        "effect": "state a falsifiable prediction",
+        "degradation": "theory can be untestable",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-069",
+        "category": "debug",
+        "trigger": "a hypothesis is tested",
+        "effect": "change one minimal variable",
+        "degradation": "causal evidence can be destroyed",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-070",
+        "category": "debug",
+        "trigger": "temporary probes are added",
+        "effect": "use one [DEBUG-*] prefix",
+        "degradation": "probes can be hard to clean",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-071",
+        "category": "debug",
+        "trigger": "a probe is selected",
+        "effect": "map it to a prediction",
+        "degradation": "instrumentation can be irrelevant",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-072",
+        "category": "debug",
+        "trigger": "a regression test is proposed",
+        "effect": "write only at a correct public seam",
+        "degradation": "a shallow test can give false confidence",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-073",
+        "category": "debug",
+        "trigger": "no correct seam exists",
+        "effect": "report architecture finding",
+        "degradation": "missing architecture can be hidden",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-074",
+        "category": "debug",
+        "trigger": "reproduction needs user action",
+        "effect": "run step/capture HITL loop",
+        "degradation": "the agent can guess at manual reproduction",
+        "basis": "diagnosing-bugs port"
+      },
+      {
+        "id": "IC-075",
+        "category": "registration",
+        "trigger": "registration check runs",
+        "effect": "assert route/command/skill consistency",
+        "degradation": "a skill can be orphaned on one surface",
+        "basis": "registration-sync adoption"
+      },
+      {
+        "id": "IC-076",
+        "category": "task-plan",
+        "trigger": "feature decomposition starts",
+        "effect": "use tracer-bullet vertical slices",
+        "degradation": "tasks can be horizontal layers",
+        "basis": "to-tickets port"
+      },
+      {
+        "id": "IC-077",
+        "category": "task-plan",
+        "trigger": "wide refactor is planned",
+        "effect": "use expand→batched migrate→contract",
+        "degradation": "compatibility can break mid-migration",
+        "basis": "to-tickets port"
+      },
+      {
+        "id": "IC-078",
+        "category": "task-plan",
+        "trigger": "dependencies exist",
+        "effect": "expose blockers/frontier",
+        "degradation": "work can start before prerequisites",
+        "basis": "to-tickets port"
+      },
+      {
+        "id": "IC-079",
+        "category": "task-plan",
+        "trigger": "a wide-refactor source is fork-only",
+        "effect": "limit that exemption to this card type",
+        "degradation": "the exemption can leak",
+        "basis": "to-tickets redteam"
+      },
+      {
+        "id": "IC-080",
+        "category": "plan",
+        "trigger": "planning starts under uncertainty",
+        "effect": "represent destination/fog/frontier",
+        "degradation": "unknowns can masquerade as work",
+        "basis": "wayfinder port"
+      },
+      {
+        "id": "IC-081",
+        "category": "plan",
+        "trigger": "fog becomes actionable",
+        "effect": "require graduation criteria",
+        "degradation": "research can graduate without evidence",
+        "basis": "wayfinder port"
+      },
+      {
+        "id": "IC-082",
+        "category": "plan",
+        "trigger": "work is emitted",
+        "effect": "preserve output contract",
+        "degradation": "vocabulary can displace assertions",
+        "basis": "wayfinder redteam"
+      },
+      {
+        "id": "IC-083",
+        "category": "plan",
+        "trigger": "a ticket is a human decision",
+        "effect": "never graduate to autonomous execution",
+        "degradation": "human choices can be automated",
+        "basis": "2026-07-23 wayfinder"
+      },
+      {
+        "id": "IC-084",
+        "category": "tech-spec",
+        "trigger": "a spec fixes a seam",
+        "effect": "confirm seam before downstream testing",
+        "degradation": "confirmation can arrive too late",
+        "basis": "to-spec port"
+      },
+      {
+        "id": "IC-085",
+        "category": "tech-spec",
+        "trigger": "no interactive widget exists",
+        "effect": "write checklist without faking approval",
+        "degradation": "headless can self-approve or deadlock",
+        "basis": "to-spec redteam"
+      },
+      {
+        "id": "IC-086",
+        "category": "brainstorm",
+        "trigger": "facts and decisions mix",
+        "effect": "self-check facts; leave decisions to human",
+        "degradation": "facts can be delegated or decisions seized",
+        "basis": "grilling port"
+      },
+      {
+        "id": "IC-087",
+        "category": "brainstorm",
+        "trigger": "a term is settled",
+        "effect": "persist canonical terminology",
+        "degradation": "later phases can reopen it",
+        "basis": "domain-modeling port"
+      },
+      {
+        "id": "IC-088",
+        "category": "brainstorm",
+        "trigger": "a fact needs checking",
+        "effect": "use filesystem/tools/web",
+        "degradation": "available evidence can be ignored",
+        "basis": "2026-07-23 grilling"
+      },
+      {
+        "id": "IC-089",
+        "category": "handoff",
+        "trigger": "durable handoff is written",
+        "effect": "redact secrets at source",
+        "degradation": "tracked docs can leak credentials",
+        "basis": "handoff port"
+      },
+      {
+        "id": "IC-090",
+        "category": "handoff",
+        "trigger": "existing artifact is referenced",
+        "effect": "link rather than copy",
+        "degradation": "copies can drift",
+        "basis": "handoff port"
+      },
+      {
+        "id": "IC-091",
+        "category": "handoff",
+        "trigger": "next skills are suggested",
+        "effect": "keep suggestions descriptive",
+        "degradation": "handoff can auto-route",
+        "basis": "handoff redteam"
+      },
+      {
+        "id": "IC-092",
+        "category": "domain",
+        "trigger": "a domain term is decided",
+        "effect": "write active-project CONTEXT inline",
+        "degradation": "the decision can be lost before Stop",
+        "basis": "domain-modeling port"
+      },
+      {
+        "id": "IC-093",
+        "category": "domain",
+        "trigger": "a decision meets three conditions",
+        "effect": "propose ADR for human approval",
+        "degradation": "history can be lost or auto-written",
+        "basis": "domain-modeling port"
+      },
+      {
+        "id": "IC-094",
+        "category": "triage",
+        "trigger": "a claim concerns existing behavior",
+        "effect": "verify before scoring/grilling",
+        "degradation": "false premises can be scored",
+        "basis": "triage port"
+      },
+      {
+        "id": "IC-095",
+        "category": "triage",
+        "trigger": "a request duplicates shipped behavior",
+        "effect": "classify shipped redundancy separately",
+        "degradation": "existing behavior can look net-new",
+        "basis": "triage port"
+      },
+      {
+        "id": "IC-096",
+        "category": "triage",
+        "trigger": "a request is human-rejected",
+        "effect": "write rejection ledger",
+        "degradation": "rejected ideas can repeat",
+        "basis": "out-of-scope port"
+      },
+      {
+        "id": "IC-097",
+        "category": "triage",
+        "trigger": "a prior rejection is found",
+        "effect": "surface without auto-rejecting",
+        "degradation": "the ledger can poison future judgment",
+        "basis": "out-of-scope redteam"
+      },
+      {
+        "id": "IC-098",
+        "category": "code-recon",
+        "trigger": "a brownfield cluster is analyzed",
+        "effect": "apply deletion/deepening lens",
+        "degradation": "pass-through modules can survive",
+        "basis": "improve-codebase port"
+      },
+      {
+        "id": "IC-099",
+        "category": "code-recon",
+        "trigger": "change direction is known",
+        "effect": "enrich candidates with churn",
+        "degradation": "high-risk surfaces can be missed",
+        "basis": "2026-07-23 improve"
+      },
+      {
+        "id": "IC-100",
+        "category": "research",
+        "trigger": "bounded factual research appears",
+        "effect": "choose lightweight research tier",
+        "degradation": "task can fall between lookup and deep research",
+        "basis": "research revive"
+      },
+      {
+        "id": "IC-101",
+        "category": "research",
+        "trigger": "light research executes",
+        "effect": "use primary sources",
+        "degradation": "secondary summaries can dominate",
+        "basis": "research revive"
+      },
+      {
+        "id": "IC-102",
+        "category": "research",
+        "trigger": "light research executes",
+        "effect": "use one agent and one durable report",
+        "degradation": "work can become heavy or ephemeral",
+        "basis": "research revive"
+      },
+      {
+        "id": "IC-103",
+        "category": "changelog",
+        "trigger": "capability lifecycle changes",
+        "effect": "record what and why",
+        "degradation": "state can lack rationale",
+        "basis": "changelog port"
+      },
+      {
+        "id": "IC-104",
+        "category": "reachability",
+        "trigger": "codebase trigger matches",
+        "effect": "route with narrow engineering terms",
+        "degradation": "unreachable or design-hijacking route",
+        "basis": "route map"
+      },
+      {
+        "id": "IC-105",
+        "category": "reachability",
+        "trigger": "Claude invokes codebase-design",
+        "effect": "resolve complete Claude target",
+        "degradation": "route can dangle in Claude",
+        "basis": "global target"
+      },
+      {
+        "id": "IC-106",
+        "category": "reachability",
+        "trigger": "Codex invokes codebase-design",
+        "effect": "resolve complete Codex target",
+        "degradation": "route dangles in Codex",
+        "basis": "global target/R2"
+      },
+      {
+        "id": "IC-107",
+        "category": "reachability",
+        "trigger": "codebase support loads",
+        "effect": "resolve both nested references",
+        "degradation": "root can pass while support is absent",
+        "basis": "global target/R2"
+      },
+      {
+        "id": "IC-108",
+        "category": "reachability",
+        "trigger": "codebase spawns alternatives",
+        "effect": "use harness-valid subagent primitive",
+        "degradation": "live prose can name unavailable Agent tool",
+        "basis": "HEAD vs live"
+      },
+      {
+        "id": "IC-109",
+        "category": "reachability",
+        "trigger": "resolving trigger matches",
+        "effect": "route to resolving skill",
+        "degradation": "install can be unreachable",
+        "basis": "route map"
+      },
+      {
+        "id": "IC-110",
+        "category": "reachability",
+        "trigger": "Claude invokes resolving",
+        "effect": "resolve Claude target",
+        "degradation": "route can dangle in Claude",
+        "basis": "global target"
+      },
+      {
+        "id": "IC-111",
+        "category": "reachability",
+        "trigger": "Codex invokes resolving",
+        "effect": "resolve Codex target",
+        "degradation": "route dangles in Codex",
+        "basis": "global target/R2"
+      },
+      {
+        "id": "IC-112",
+        "category": "governance",
+        "trigger": "local resolving policy runs",
+        "effect": "reconcile never-abort with safety escape",
+        "degradation": "promised downgrade can be absent",
+        "basis": "adoption vs live/R2"
+      },
+      {
+        "id": "IC-113",
+        "category": "governance",
+        "trigger": "TDD install is audited",
+        "effect": "match approved three-file footprint and pin",
+        "degradation": "stale five-file prose can misstate install",
+        "basis": "pins/R2"
+      },
+      {
+        "id": "IC-114",
+        "category": "reachability",
+        "trigger": "either harness invokes TDD",
+        "effect": "share one target via Claude link/Codex catalog",
+        "degradation": "harness bodies can drift",
+        "basis": "global targets"
+      },
+      {
+        "id": "IC-115",
+        "category": "governance",
+        "trigger": "teach remains personal",
+        "effect": "stay user-invoked and unrouted",
+        "degradation": "personal skill can auto-enter framework",
+        "basis": "adoption/routes"
+      },
+      {
+        "id": "IC-116",
+        "category": "reachability",
+        "trigger": "Codex receives teach request",
+        "effect": "declare Claude-only N/A or provide target",
+        "degradation": "single-harness scope can masquerade as parity",
+        "basis": "global targets/R2"
+      },
+      {
+        "id": "IC-117",
+        "category": "safety",
+        "trigger": "teach writes workspace",
+        "effect": "confine writes to approved teaching root",
+        "degradation": "arbitrary current project can be modified",
+        "basis": "teach live/R2"
+      },
+      {
+        "id": "IC-118",
+        "category": "reachability",
+        "trigger": "Claude authors a skill",
+        "effect": "load doctrine via CLAUDE pointer",
+        "degradation": "doctrine can be inert in Claude",
+        "basis": "authoring wiring/R2"
+      },
+      {
+        "id": "IC-119",
+        "category": "reachability",
+        "trigger": "Codex authors a skill",
+        "effect": "load doctrine via AGENTS pointer",
+        "degradation": "doctrine can be inert in Codex",
+        "basis": "authoring wiring/R2"
+      },
+      {
+        "id": "IC-120",
+        "category": "reachability",
+        "trigger": "FUSION ports prose",
+        "effect": "load doctrine from runbook",
+        "degradation": "ports can bypass doctrine",
+        "basis": "authoring wiring/R2"
+      },
+      {
+        "id": "IC-121",
+        "category": "governance",
+        "trigger": "parity check runs",
+        "effect": "assert authoring wiring parity",
+        "degradation": "checkout/harness can drift",
+        "basis": "authoring wiring/R2"
+      },
+      {
+        "id": "IC-122",
+        "category": "provenance",
+        "trigger": "debug port is audited",
+        "effect": "trace matt lineage apart from obra base",
+        "degradation": "local mods can be misattributed",
+        "basis": "creation log/R2"
+      },
+      {
+        "id": "IC-123",
+        "category": "provenance",
+        "trigger": "upstream debug drift is checked",
+        "effect": "watch matt source as well as obra",
+        "degradation": "port-source changes can be missed",
+        "basis": "pins/R2"
+      },
+      {
+        "id": "IC-124",
+        "category": "governance",
+        "trigger": "standard verification runs",
+        "effect": "execute registration checker as blocking S19/package step",
+        "degradation": "warning-only result can pass release",
+        "basis": "registration/R2"
+      },
+      {
+        "id": "IC-125",
+        "category": "governance",
+        "trigger": "registration checks external skills",
+        "effect": "assert route→global target",
+        "degradation": "target absence can pass",
+        "basis": "registration/R2"
+      },
+      {
+        "id": "IC-126",
+        "category": "governance",
+        "trigger": "registration checks support files",
+        "effect": "assert nested reference existence",
+        "degradation": "root-only presence can pass",
+        "basis": "registration/R2"
+      },
+      {
+        "id": "IC-127",
+        "category": "reachability",
+        "trigger": "plan continuity is used",
+        "effect": "reach PROGRESS appendix contract",
+        "degradation": "planning can omit continuity consumer",
+        "basis": "plan/R2"
+      },
+      {
+        "id": "IC-128",
+        "category": "reachability",
+        "trigger": "Codex enters Plan mode",
+        "effect": "dispatch actual Codex plan role/equivalent",
+        "degradation": "parity can be prose-only",
+        "basis": "plan/R2"
+      },
+      {
+        "id": "IC-129",
+        "category": "portability",
+        "trigger": "plan dispatch resolves",
+        "effect": "use capability tiers, not Claude aliases",
+        "degradation": "Codex can receive invalid model names",
+        "basis": "plan/R2"
+      },
+      {
+        "id": "IC-130",
+        "category": "source-head",
+        "trigger": "TDD finds interface shape uncertain",
+        "effect": "consult codebase-design as reference",
+        "degradation": "dependency can be skipped or invoked as slash session",
+        "basis": "HEAD tdd"
+      },
+      {
+        "id": "IC-131",
+        "category": "source-head",
+        "trigger": "debug output may contain secrets",
+        "effect": "redact before display/capture",
+        "degradation": "raw output can leak before prose cleanup",
+        "basis": "HEAD diagnosing"
+      },
+      {
+        "id": "IC-132",
+        "category": "source-head",
+        "trigger": "debug needs credentials",
+        "effect": "keep credentials in env",
+        "degradation": "secrets can enter commands/artifacts",
+        "basis": "HEAD diagnosing"
+      },
+      {
+        "id": "IC-133",
+        "category": "source-head",
+        "trigger": "artifact has auth material",
+        "effect": "quote only signal lines",
+        "degradation": "auth headers can leak",
+        "basis": "HEAD diagnosing"
+      },
+      {
+        "id": "IC-134",
+        "category": "source-head",
+        "trigger": "redaction removes needed signal",
+        "effect": "ask user for narrower context",
+        "degradation": "agent can guess or demand raw secrets",
+        "basis": "HEAD diagnosing"
+      },
+      {
+        "id": "IC-135",
+        "category": "source-head",
+        "trigger": "agent-consumed docs are authored",
+        "effect": "environment is SSOT; cache only costly-to-reacquire facts",
+        "degradation": "docs can duplicate stale environment state",
+        "basis": "HEAD writing-for-agents/Aug7 C3"
+      }
+    ]
+  },
+  "joined_inputs": {
+    "source": {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/source-census.json",
+      "sha256": "52803f08d60a54b03ad28bcca06d106b430de0d99dea9339ef3ee8c56eba3a0c",
+      "atom_count": 196
+    },
+    "live": {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/live-census.json",
+      "sha256": "4c3c11cc953708c3791c8b2d1c629f0c63fd51ba165a8eee33b8bb9ff42adde5",
+      "atom_count": 109
+    },
+    "independent": {
+      "atom_count": 135,
+      "sha256": "d460284fb0c03afb53634dbf8c64229b49eae55c87a061bbbcb9761293ae5da4"
+    }
+  },
+  "semantic_crosswalks": [
+    {
+      "family": "tdd",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L8"
+      ],
+      "source_count": 11,
+      "source_ids": [
+        "MATT-1b86b321487e",
+        "MATT-2aeabccea366",
+        "MATT-5404beb35412",
+        "MATT-603d5be80f52",
+        "MATT-66e32c11cde4",
+        "MATT-6d2cb921a70d",
+        "MATT-8b37d64a16e2",
+        "MATT-a0566b42dcc8",
+        "MATT-bbde2783e7c4",
+        "MATT-f06998587ea3",
+        "MATT-f6f21e46723c"
+      ],
+      "live_count": 10,
+      "live_ids": [
+        "LIVE-001",
+        "LIVE-002",
+        "LIVE-003",
+        "LIVE-004",
+        "LIVE-005",
+        "LIVE-006",
+        "LIVE-007",
+        "LIVE-008",
+        "LIVE-009",
+        "LIVE-010"
+      ],
+      "independent_count": 9,
+      "independent_ids": [
+        "IC-001",
+        "IC-002",
+        "IC-003",
+        "IC-004",
+        "IC-005",
+        "IC-006",
+        "IC-007",
+        "IC-008",
+        "IC-009"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Route is live-only; source refactor-outside-red-green is absent; one-slice and oracle rules are collapsed."
+    },
+    {
+      "family": "codebase-design",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L6"
+      ],
+      "source_count": 29,
+      "source_ids": [
+        "MATT-06baf62f40eb",
+        "MATT-0d37abd78dd2",
+        "MATT-111a1b92627d",
+        "MATT-1407567c473c",
+        "MATT-140e7afa9788",
+        "MATT-15485bb22446",
+        "MATT-1ea0f91fc4a9",
+        "MATT-40511a116496",
+        "MATT-4cd3187c5fc3",
+        "MATT-53559f445e14",
+        "MATT-538bc022a77f",
+        "MATT-5415ba505994",
+        "MATT-6dbcb7203d84",
+        "MATT-73ae85a30a74",
+        "MATT-76146c6e4949",
+        "MATT-7a2724c2338e",
+        "MATT-84b0ef32976f",
+        "MATT-8ea4417e52b6",
+        "MATT-942e6ab6ce59",
+        "MATT-a274e23d48df",
+        "MATT-afe207f5f55a",
+        "MATT-b29e699b092e",
+        "MATT-c34c9bea72c0",
+        "MATT-c67bec38d586",
+        "MATT-d3050f8c0bfd",
+        "MATT-d3287e529dbb",
+        "MATT-d5f02709eab6",
+        "MATT-f0faf1b7ee95",
+        "MATT-f80bd1d84ca6"
+      ],
+      "live_count": 12,
+      "live_ids": [
+        "LIVE-011",
+        "LIVE-012",
+        "LIVE-013",
+        "LIVE-014",
+        "LIVE-015",
+        "LIVE-016",
+        "LIVE-017",
+        "LIVE-018",
+        "LIVE-019",
+        "LIVE-020",
+        "LIVE-021",
+        "LIVE-022"
+      ],
+      "independent_count": 17,
+      "independent_ids": [
+        "IC-010",
+        "IC-011",
+        "IC-012",
+        "IC-013",
+        "IC-014",
+        "IC-015",
+        "IC-016",
+        "IC-017",
+        "IC-018",
+        "IC-019",
+        "IC-020",
+        "IC-021",
+        "IC-104",
+        "IC-105",
+        "IC-106",
+        "IC-107",
+        "IC-108"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Twenty-nine source atoms are compressed into glossary/category/multiple-design umbrellas; Codex target is orphaned."
+    },
+    {
+      "family": "resolving-merge-conflicts",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L7"
+      ],
+      "source_count": 12,
+      "source_ids": [
+        "MATT-127daf4bf0ac",
+        "MATT-15ab6bef833e",
+        "MATT-37dc2f9c1058",
+        "MATT-3d7d5b68dc87",
+        "MATT-5d37af533e7b",
+        "MATT-89e00ced8a97",
+        "MATT-97e6b49655a7",
+        "MATT-a6cb54e9b6d2",
+        "MATT-bbb9c3f9d57e",
+        "MATT-c0f70c5e9feb",
+        "MATT-cf58ebc6d623",
+        "MATT-ee41891aaab5"
+      ],
+      "live_count": 7,
+      "live_ids": [
+        "LIVE-023",
+        "LIVE-024",
+        "LIVE-025",
+        "LIVE-026",
+        "LIVE-027",
+        "LIVE-028",
+        "LIVE-029"
+      ],
+      "independent_count": 11,
+      "independent_ids": [
+        "IC-022",
+        "IC-023",
+        "IC-024",
+        "IC-025",
+        "IC-026",
+        "IC-027",
+        "IC-028",
+        "IC-109",
+        "IC-110",
+        "IC-111",
+        "IC-112"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Stage/commit/continue and preserve/trade-off/no-invention are composites; never-abort remains unsafe."
+    },
+    {
+      "family": "teach",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L9"
+      ],
+      "source_count": 32,
+      "source_ids": [
+        "MATT-2078085333fd",
+        "MATT-241024e11cdf",
+        "MATT-2bedc3c6fd85",
+        "MATT-38334ef06d4d",
+        "MATT-39a072bb7b58",
+        "MATT-39c2563e2cc1",
+        "MATT-3e38be0f9764",
+        "MATT-3e8a44ea488a",
+        "MATT-46596b9d7b36",
+        "MATT-49c7fdbf5776",
+        "MATT-5adcf9315175",
+        "MATT-5d41ce3b389f",
+        "MATT-6ead816fdfbe",
+        "MATT-6fd379d5366d",
+        "MATT-709f14d1320a",
+        "MATT-7970347cb8d1",
+        "MATT-8c55afe36688",
+        "MATT-90a2d7417e80",
+        "MATT-9ccc1540af8a",
+        "MATT-b03e58473886",
+        "MATT-b33234f5e4d8",
+        "MATT-c5330b65f2d5",
+        "MATT-c5f866973596",
+        "MATT-d237b0ad2fee",
+        "MATT-d791c08cc574",
+        "MATT-e8904e44a50c",
+        "MATT-e946354e755c",
+        "MATT-f14789f26257",
+        "MATT-f26725cd4ac3",
+        "MATT-f2c08a702dac",
+        "MATT-f3b7c2069f77",
+        "MATT-f5dbbdb73cd7"
+      ],
+      "live_count": 8,
+      "live_ids": [
+        "LIVE-030",
+        "LIVE-031",
+        "LIVE-032",
+        "LIVE-033",
+        "LIVE-034",
+        "LIVE-035",
+        "LIVE-036",
+        "LIVE-037"
+      ],
+      "independent_count": 11,
+      "independent_ids": [
+        "IC-029",
+        "IC-030",
+        "IC-031",
+        "IC-032",
+        "IC-033",
+        "IC-034",
+        "IC-035",
+        "IC-036",
+        "IC-115",
+        "IC-116",
+        "IC-117"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Whole-install source has 32 atoms; both replays enumerate only a small subset and write scope is unresolved."
+    },
+    {
+      "family": "skill-authoring",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L10"
+      ],
+      "source_count": 27,
+      "source_ids": [
+        "MATT-0261a740295f",
+        "MATT-03e4eb13963c",
+        "MATT-0570bc8d2999",
+        "MATT-0a53b72be4e9",
+        "MATT-0a9e93314192",
+        "MATT-1f966fb0d410",
+        "MATT-36dba8805ddb",
+        "MATT-40f9c0e526bf",
+        "MATT-4890d9057b14",
+        "MATT-4da647d8b6e1",
+        "MATT-51799dcfefd9",
+        "MATT-5fa120e2be08",
+        "MATT-70d0fc06870a",
+        "MATT-7187491bdac0",
+        "MATT-82e9843da4ee",
+        "MATT-9be0134050b9",
+        "MATT-a3aaa647aaa4",
+        "MATT-aa494e6e1ef5",
+        "MATT-b0c0a8ac9c7f",
+        "MATT-b8468d932b72",
+        "MATT-c338631e1af2",
+        "MATT-c5989fa21e70",
+        "MATT-c5a2f1239e64",
+        "MATT-c82b83a7017e",
+        "MATT-d42c3fe44b94",
+        "MATT-d99654edc8ca",
+        "MATT-f79e0fab364f"
+      ],
+      "live_count": 11,
+      "live_ids": [
+        "LIVE-038",
+        "LIVE-039",
+        "LIVE-040",
+        "LIVE-041",
+        "LIVE-042",
+        "LIVE-043",
+        "LIVE-044",
+        "LIVE-045",
+        "LIVE-046",
+        "LIVE-047",
+        "LIVE-048"
+      ],
+      "independent_count": 23,
+      "independent_ids": [
+        "IC-037",
+        "IC-038",
+        "IC-039",
+        "IC-040",
+        "IC-041",
+        "IC-042",
+        "IC-043",
+        "IC-044",
+        "IC-045",
+        "IC-046",
+        "IC-047",
+        "IC-048",
+        "IC-049",
+        "IC-050",
+        "IC-051",
+        "IC-052",
+        "IC-053",
+        "IC-054",
+        "IC-055",
+        "IC-118",
+        "IC-119",
+        "IC-120",
+        "IC-121"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Live taxonomy and hierarchy rows collapse multiple independently failing source behaviors."
+    },
+    {
+      "family": "code-review-and-prove-it-bites",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L11"
+      ],
+      "source_count": 13,
+      "source_ids": [
+        "MATT-03def577b39b",
+        "MATT-1325b5597939",
+        "MATT-430aa46524cb",
+        "MATT-93d03c228db7",
+        "MATT-9e29a77e6581",
+        "MATT-b55c645aeef0",
+        "MATT-bd4240ee4565",
+        "MATT-be5d474141dc",
+        "MATT-c35661170bbe",
+        "MATT-ce7c8d8773f2",
+        "MATT-e330d907544b",
+        "MATT-e5b350fa765c",
+        "MATT-edf0f3f0b74a"
+      ],
+      "live_count": 5,
+      "live_ids": [
+        "LIVE-049",
+        "LIVE-050",
+        "LIVE-051",
+        "LIVE-052",
+        "LIVE-053"
+      ],
+      "independent_count": 11,
+      "independent_ids": [
+        "IC-056",
+        "IC-057",
+        "IC-058",
+        "IC-059",
+        "IC-060",
+        "IC-061",
+        "IC-062",
+        "IC-063",
+        "IC-064",
+        "IC-065",
+        "IC-066"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Review setup/spec tracing and judgement-call behavior are absent; live mutation proof omits fresh evidence as its own atom."
+    },
+    {
+      "family": "systematic-debugging-port",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L12"
+      ],
+      "source_count": 11,
+      "source_ids": [
+        "MATT-1101b1fc2687",
+        "MATT-4208a8fab1df",
+        "MATT-4c87f2bc7a1f",
+        "MATT-533bb3fbd132",
+        "MATT-56aa9571a6e3",
+        "MATT-5dedd94dc46e",
+        "MATT-8953d6ad9a01",
+        "MATT-8ef4dfa714d5",
+        "MATT-e1804fa3e83d",
+        "MATT-e30ba0f32921",
+        "MATT-e4ca763b1b1c"
+      ],
+      "live_count": 8,
+      "live_ids": [
+        "LIVE-054",
+        "LIVE-055",
+        "LIVE-056",
+        "LIVE-057",
+        "LIVE-058",
+        "LIVE-059",
+        "LIVE-060",
+        "LIVE-109"
+      ],
+      "independent_count": 14,
+      "independent_ids": [
+        "IC-067",
+        "IC-068",
+        "IC-069",
+        "IC-070",
+        "IC-071",
+        "IC-072",
+        "IC-073",
+        "IC-074",
+        "IC-122",
+        "IC-123",
+        "IC-131",
+        "IC-132",
+        "IC-133",
+        "IC-134"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Source-adopted debug atoms, local provenance controls, and unadopted HEAD redaction are mixed across scopes."
+    },
+    {
+      "family": "registration-sync",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L13"
+      ],
+      "source_count": 5,
+      "source_ids": [
+        "MATT-29a389b085fa",
+        "MATT-5df2e8d0079d",
+        "MATT-7a0fb29ec0b5",
+        "MATT-a0e5308ee1f7",
+        "MATT-ef67aca33ea4"
+      ],
+      "live_count": 5,
+      "live_ids": [
+        "LIVE-061",
+        "LIVE-062",
+        "LIVE-063",
+        "LIVE-092",
+        "LIVE-093"
+      ],
+      "independent_count": 4,
+      "independent_ids": [
+        "IC-075",
+        "IC-124",
+        "IC-125",
+        "IC-126"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Source promotion surfaces are not equivalent to the current three checks; external and nested coverage remain separate failures."
+    },
+    {
+      "family": "task-plan",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L14"
+      ],
+      "source_count": 9,
+      "source_ids": [
+        "MATT-1255551b75b6",
+        "MATT-4e06282c5bcd",
+        "MATT-63657d578563",
+        "MATT-6533defb2dc1",
+        "MATT-bcdf6fa46f89",
+        "MATT-c7a88350b48b",
+        "MATT-d5e1af44f0f3",
+        "MATT-d80ea51036ce",
+        "MATT-f62c5aacc8d4"
+      ],
+      "live_count": 4,
+      "live_ids": [
+        "LIVE-064",
+        "LIVE-065",
+        "LIVE-066",
+        "LIVE-067"
+      ],
+      "independent_count": 4,
+      "independent_ids": [
+        "IC-076",
+        "IC-077",
+        "IC-078",
+        "IC-079"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Nine source atoms are collapsed to four; sizing, demoability, blocker declaration, and final-integration fallback are missing."
+    },
+    {
+      "family": "plan-agent",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L15",
+        ".claude/skill-os/evolution/adoption-log.jsonl:L24"
+      ],
+      "source_count": 9,
+      "source_ids": [
+        "MATT-18e52b5f091d",
+        "MATT-34e280addae5",
+        "MATT-46e4365cc5af",
+        "MATT-4b054922a7d3",
+        "MATT-a4f566d38089",
+        "MATT-b34b24ea1018",
+        "MATT-dddfb551b1f4",
+        "MATT-dfba6d8951d5",
+        "MATT-ec0ef96aa62c"
+      ],
+      "live_count": 5,
+      "live_ids": [
+        "LIVE-068",
+        "LIVE-069",
+        "LIVE-070",
+        "LIVE-071",
+        "LIVE-102"
+      ],
+      "independent_count": 7,
+      "independent_ids": [
+        "IC-080",
+        "IC-081",
+        "IC-082",
+        "IC-083",
+        "IC-127",
+        "IC-128",
+        "IC-129"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Wayfinder map behaviors are under-enumerated and Codex dispatch is missing."
+    },
+    {
+      "family": "tech-spec",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L16"
+      ],
+      "source_count": 3,
+      "source_ids": [
+        "MATT-3dfb3c48d978",
+        "MATT-6674e058b36b",
+        "MATT-a170f51c539f"
+      ],
+      "live_count": 2,
+      "live_ids": [
+        "LIVE-072",
+        "LIVE-073"
+      ],
+      "independent_count": 2,
+      "independent_ids": [
+        "IC-084",
+        "IC-085"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "LIVE-072 combines minimum seam count with highest-existing seam selection."
+    },
+    {
+      "family": "brainstorm",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L17",
+        ".claude/skill-os/evolution/adoption-log.jsonl:L25"
+      ],
+      "source_count": 3,
+      "source_ids": [
+        "MATT-7adf9ea0ad31",
+        "MATT-8c98f264c50c",
+        "MATT-9a6cb6fdaec0"
+      ],
+      "live_count": 4,
+      "live_ids": [
+        "LIVE-074",
+        "LIVE-075",
+        "LIVE-076",
+        "LIVE-077"
+      ],
+      "independent_count": 3,
+      "independent_ids": [
+        "IC-086",
+        "IC-087",
+        "IC-088"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Fact lookup and whole-environment lookup are collapsed; LIVE-077 is a local Oracle control, not a source atom."
+    },
+    {
+      "family": "handoff",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L18"
+      ],
+      "source_count": 3,
+      "source_ids": [
+        "MATT-72e5071e2a35",
+        "MATT-b1e53acbdaf0",
+        "MATT-e40dcb5cc0f9"
+      ],
+      "live_count": 2,
+      "live_ids": [
+        "LIVE-078",
+        "LIVE-079"
+      ],
+      "independent_count": 3,
+      "independent_ids": [
+        "IC-089",
+        "IC-090",
+        "IC-091"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Independent replay recovers the source no-copy atom that live census omits."
+    },
+    {
+      "family": "domain-modeling",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L19"
+      ],
+      "source_count": 7,
+      "source_ids": [
+        "MATT-3609f7403c0c",
+        "MATT-489f7d41e23d",
+        "MATT-5626527013d7",
+        "MATT-67900874d64c",
+        "MATT-a180b289f07f",
+        "MATT-c2e99e7f8524",
+        "MATT-d47f4a181325"
+      ],
+      "live_count": 2,
+      "live_ids": [
+        "LIVE-080",
+        "LIVE-081"
+      ],
+      "independent_count": 2,
+      "independent_ids": [
+        "IC-092",
+        "IC-093"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Glossary/spec separation, edge-case stress, code cross-check, and canonicalization are absent."
+    },
+    {
+      "family": "muse-req-triage",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L20"
+      ],
+      "source_count": 11,
+      "source_ids": [
+        "MATT-0d0c190fa8fc",
+        "MATT-29bde5edb226",
+        "MATT-4fdac0593d2b",
+        "MATT-5d8afee7d6ea",
+        "MATT-636ced1b204e",
+        "MATT-8cff28050948",
+        "MATT-a17cf3e7893b",
+        "MATT-a1ea8c358191",
+        "MATT-c5026b27545e",
+        "MATT-c805300f20ba",
+        "MATT-eb57baa2d020"
+      ],
+      "live_count": 3,
+      "live_ids": [
+        "LIVE-082",
+        "LIVE-083",
+        "LIVE-084"
+      ],
+      "independent_count": 4,
+      "independent_ids": [
+        "IC-094",
+        "IC-095",
+        "IC-096",
+        "IC-097"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Eleven source atoms collapse into verification, shipped duplicate, and rejection-ledger umbrellas."
+    },
+    {
+      "family": "code-recon",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L21",
+        ".claude/skill-os/evolution/adoption-log.jsonl:L26"
+      ],
+      "source_count": 4,
+      "source_ids": [
+        "MATT-28d2f29c8990",
+        "MATT-3aedc100aa38",
+        "MATT-857925a93192",
+        "MATT-8c03ef8961de"
+      ],
+      "live_count": 2,
+      "live_ids": [
+        "LIVE-085",
+        "LIVE-086"
+      ],
+      "independent_count": 2,
+      "independent_ids": [
+        "IC-098",
+        "IC-099"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Directionless widening and honoring an explicit scan direction are absent."
+    },
+    {
+      "family": "quick-research",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L22"
+      ],
+      "source_count": 5,
+      "source_ids": [
+        "MATT-1f9c1b70aeff",
+        "MATT-34b79a286455",
+        "MATT-35b6c87ab446",
+        "MATT-3f8cbf4f286c",
+        "MATT-d2af03d19255"
+      ],
+      "live_count": 4,
+      "live_ids": [
+        "LIVE-087",
+        "LIVE-088",
+        "LIVE-089",
+        "LIVE-090"
+      ],
+      "independent_count": 3,
+      "independent_ids": [
+        "IC-100",
+        "IC-101",
+        "IC-102"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Owning-source trace, repository output convention, and per-claim citation remain unenumerated."
+    },
+    {
+      "family": "changelog",
+      "source_adoption_rows": [
+        ".claude/skill-os/evolution/adoption-log.jsonl:L23"
+      ],
+      "source_count": 2,
+      "source_ids": [
+        "MATT-a4960189591a",
+        "MATT-def446ebf97a"
+      ],
+      "live_count": 1,
+      "live_ids": [
+        "LIVE-091"
+      ],
+      "independent_count": 1,
+      "independent_ids": [
+        "IC-103"
+      ],
+      "status": "PARTIAL_NON_ATOMIC",
+      "note": "Two source effects—create lifecycle history and explain why—are collapsed into one row in both replays."
+    }
+  ],
+  "gaps": {
+    "source_only_no_separate_atom": {
+      "count": 61,
+      "groups": [
+        {
+          "family": "tdd",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-bbde2783e7c4",
+              "behavior_slug": "refactor-outside-red-green",
+              "path": "skills/engineering/tdd/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "codebase-design",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-1407567c473c",
+              "behavior_slug": "return-results-not-side-effects",
+              "path": "skills/engineering/codebase-design/SKILL.md"
+            },
+            {
+              "source_id": "MATT-73ae85a30a74",
+              "behavior_slug": "implementation-adapter-distinction",
+              "path": "skills/engineering/codebase-design/SKILL.md"
+            },
+            {
+              "source_id": "MATT-d5f02709eab6",
+              "behavior_slug": "accept-dont-create-dependencies",
+              "path": "skills/engineering/codebase-design/SKILL.md"
+            },
+            {
+              "source_id": "MATT-111a1b92627d",
+              "behavior_slug": "radically-different-design-constraints",
+              "path": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md"
+            }
+          ]
+        },
+        {
+          "family": "teach",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-2078085333fd",
+              "behavior_slug": "persist-teaching-preferences",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-241024e11cdf",
+              "behavior_slug": "cross-link-learning-artifacts",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-2bedc3c6fd85",
+              "behavior_slug": "resources-inventory",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-39a072bb7b58",
+              "behavior_slug": "compressed-reference-documents",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-3e8a44ea488a",
+              "behavior_slug": "recommend-primary-source-per-lesson",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-46596b9d7b36",
+              "behavior_slug": "reuse-assets-before-authoring",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-6ead816fdfbe",
+              "behavior_slug": "record-mission-change",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-7970347cb8d1",
+              "behavior_slug": "equal-length-quiz-options",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-8c55afe36688",
+              "behavior_slug": "shared-course-stylesheet",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-90a2d7417e80",
+              "behavior_slug": "self-contained-numbered-lessons",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-c5330b65f2d5",
+              "behavior_slug": "interview-unclear-mission-first",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-c5f866973596",
+              "behavior_slug": "invite-lesson-followups",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-d791c08cc574",
+              "behavior_slug": "lesson-glossary-adherence",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-e8904e44a50c",
+              "behavior_slug": "printable-reference-materials",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-f14789f26257",
+              "behavior_slug": "cite-claims-in-lessons",
+              "path": "skills/productivity/teach/SKILL.md"
+            },
+            {
+              "source_id": "MATT-f2c08a702dac",
+              "behavior_slug": "confirm-mission-change",
+              "path": "skills/productivity/teach/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "skill-authoring",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-40f9c0e526bf",
+              "behavior_slug": "frontload-leading-word",
+              "path": "skills/productivity/writing-great-skills/SKILL.md"
+            },
+            {
+              "source_id": "MATT-5fa120e2be08",
+              "behavior_slug": "description-declares-identity-and-branches",
+              "path": "skills/productivity/writing-great-skills/SKILL.md"
+            },
+            {
+              "source_id": "MATT-d42c3fe44b94",
+              "behavior_slug": "one-trigger-per-branch",
+              "path": "skills/productivity/writing-great-skills/SKILL.md"
+            },
+            {
+              "source_id": "MATT-7187491bdac0",
+              "behavior_slug": "router-reduces-cognitive-load",
+              "path": "skills/productivity/writing-great-skills/SKILL.md"
+            },
+            {
+              "source_id": "MATT-c5a2f1239e64",
+              "behavior_slug": "split-sequence-to-prevent-rush",
+              "path": "skills/productivity/writing-great-skills/SKILL.md"
+            },
+            {
+              "source_id": "MATT-d99654edc8ca",
+              "behavior_slug": "checkable-exhaustive-completion-criteria",
+              "path": "skills/productivity/writing-great-skills/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "code-review",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-9e29a77e6581",
+              "behavior_slug": "pin-fixed-review-point",
+              "path": "skills/engineering/code-review/SKILL.md"
+            },
+            {
+              "source_id": "MATT-1325b5597939",
+              "behavior_slug": "standards-axis-loads-repo-rules",
+              "path": "skills/engineering/code-review/SKILL.md"
+            },
+            {
+              "source_id": "MATT-c35661170bbe",
+              "behavior_slug": "spec-axis-traces-originating-contract",
+              "path": "skills/engineering/code-review/SKILL.md"
+            },
+            {
+              "source_id": "MATT-e330d907544b",
+              "behavior_slug": "smells-are-judgement-calls",
+              "path": "skills/engineering/code-review/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "systematic-debugging-port",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-4208a8fab1df",
+              "behavior_slug": "prefer-targeted-instrumentation",
+              "path": "skills/engineering/diagnosing-bugs/SKILL.md"
+            },
+            {
+              "source_id": "MATT-e30ba0f32921",
+              "behavior_slug": "show-ranking-before-testing",
+              "path": "skills/engineering/diagnosing-bugs/SKILL.md"
+            },
+            {
+              "source_id": "MATT-1101b1fc2687",
+              "behavior_slug": "hitl-machine-readable-capture",
+              "path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh"
+            }
+          ]
+        },
+        {
+          "family": "registration-sync",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-7a0fb29ec0b5",
+              "behavior_slug": "promoted-skill-plugin-registration",
+              "path": "CLAUDE.md"
+            },
+            {
+              "source_id": "MATT-a0e5308ee1f7",
+              "behavior_slug": "link-skills-both-harnesses",
+              "path": "CLAUDE.md"
+            }
+          ]
+        },
+        {
+          "family": "task-plan",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-4e06282c5bcd",
+              "behavior_slug": "ticket-independently-demoable",
+              "path": "skills/engineering/to-tickets/SKILL.md"
+            },
+            {
+              "source_id": "MATT-63657d578563",
+              "behavior_slug": "ticket-declares-blockers",
+              "path": "skills/engineering/to-tickets/SKILL.md"
+            },
+            {
+              "source_id": "MATT-bcdf6fa46f89",
+              "behavior_slug": "ticket-fits-fresh-context",
+              "path": "skills/engineering/to-tickets/SKILL.md"
+            },
+            {
+              "source_id": "MATT-f62c5aacc8d4",
+              "behavior_slug": "wide-refactor-final-integration-fallback",
+              "path": "skills/engineering/to-tickets/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "plan-agent",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-34e280addae5",
+              "behavior_slug": "out-of-scope-never-graduates",
+              "path": "skills/engineering/wayfinder/SKILL.md"
+            },
+            {
+              "source_id": "MATT-46e4365cc5af",
+              "behavior_slug": "claim-and-frontier-semantics",
+              "path": "skills/engineering/wayfinder/SKILL.md"
+            },
+            {
+              "source_id": "MATT-4b054922a7d3",
+              "behavior_slug": "no-fog-early-exit",
+              "path": "skills/engineering/wayfinder/SKILL.md"
+            },
+            {
+              "source_id": "MATT-b34b24ea1018",
+              "behavior_slug": "map-index-not-store",
+              "path": "skills/engineering/wayfinder/SKILL.md"
+            },
+            {
+              "source_id": "MATT-ec0ef96aa62c",
+              "behavior_slug": "resolution-updates-pointer-and-fog",
+              "path": "skills/engineering/wayfinder/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "domain-modeling",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-3609f7403c0c",
+              "behavior_slug": "context-is-glossary-not-spec",
+              "path": "skills/engineering/domain-modeling/SKILL.md"
+            },
+            {
+              "source_id": "MATT-5626527013d7",
+              "behavior_slug": "stress-test-domain-boundaries",
+              "path": "skills/engineering/domain-modeling/SKILL.md"
+            },
+            {
+              "source_id": "MATT-67900874d64c",
+              "behavior_slug": "challenge-and-canonicalize-terms",
+              "path": "skills/engineering/domain-modeling/SKILL.md"
+            },
+            {
+              "source_id": "MATT-a180b289f07f",
+              "behavior_slug": "cross-check-domain-claims-with-code",
+              "path": "skills/engineering/domain-modeling/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "muse-req-triage",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-0d0c190fa8fc",
+              "behavior_slug": "triage-redundancy-by-domain-concept",
+              "path": "skills/engineering/triage/SKILL.md"
+            },
+            {
+              "source_id": "MATT-c805300f20ba",
+              "behavior_slug": "already-implemented-is-not-rejection",
+              "path": "skills/engineering/triage/SKILL.md"
+            },
+            {
+              "source_id": "MATT-eb57baa2d020",
+              "behavior_slug": "verification-reports-evidence-state",
+              "path": "skills/engineering/triage/SKILL.md"
+            },
+            {
+              "source_id": "MATT-29bde5edb226",
+              "behavior_slug": "ledger-only-rejected-enhancements",
+              "path": "skills/engineering/triage/OUT-OF-SCOPE.md"
+            },
+            {
+              "source_id": "MATT-4fdac0593d2b",
+              "behavior_slug": "append-or-create-rejection-record",
+              "path": "skills/engineering/triage/OUT-OF-SCOPE.md"
+            },
+            {
+              "source_id": "MATT-a1ea8c358191",
+              "behavior_slug": "rejection-reason-is-durable",
+              "path": "skills/engineering/triage/OUT-OF-SCOPE.md"
+            },
+            {
+              "source_id": "MATT-c5026b27545e",
+              "behavior_slug": "rejection-ledger-one-file-per-concept",
+              "path": "skills/engineering/triage/OUT-OF-SCOPE.md"
+            }
+          ]
+        },
+        {
+          "family": "code-recon",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-3aedc100aa38",
+              "behavior_slug": "widen-when-churn-scattered",
+              "path": "skills/engineering/improve-codebase-architecture/SKILL.md"
+            },
+            {
+              "source_id": "MATT-857925a93192",
+              "behavior_slug": "honor-user-scan-direction",
+              "path": "skills/engineering/improve-codebase-architecture/SKILL.md"
+            }
+          ]
+        },
+        {
+          "family": "quick-research",
+          "gap_kind": "NO_SEPARATE_ATOM_IN_LIVE_OR_INDEPENDENT",
+          "atoms": [
+            {
+              "source_id": "MATT-1f9c1b70aeff",
+              "behavior_slug": "research-claim-source-ownership",
+              "path": "skills/engineering/research/SKILL.md"
+            },
+            {
+              "source_id": "MATT-35b6c87ab446",
+              "behavior_slug": "research-follow-repo-output-convention",
+              "path": "skills/engineering/research/SKILL.md"
+            },
+            {
+              "source_id": "MATT-3f8cbf4f286c",
+              "behavior_slug": "research-single-cited-markdown",
+              "path": "skills/engineering/research/SKILL.md"
+            }
+          ]
+        }
+      ]
+    },
+    "live_only": {
+      "count": 25,
+      "atoms": [
+        {
+          "live_id": "LIVE-001",
+          "slug": "tdd-route",
+          "state": "PRESENT_LIVE_TRIGGER",
+          "capability": "tdd",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-011",
+          "slug": "codebase-design-route",
+          "state": "ORPHAN_CODEX",
+          "capability": "codebase-design",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-023",
+          "slug": "merge-route",
+          "state": "ORPHAN_CODEX",
+          "capability": "resolving-merge-conflicts",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-030",
+          "slug": "teach-claude-personal-scope",
+          "state": "CLAUDE_ONLY_PRESENT",
+          "capability": "teach",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-048",
+          "slug": "authoring-consumption-surface",
+          "state": "PRESENT_STATIC",
+          "capability": "skill-authoring",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-054",
+          "slug": "debug-route",
+          "state": "PRESENT_LIVE_TRIGGER",
+          "capability": "systematic-debugging",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-077",
+          "slug": "brainstorm-independent-oracle",
+          "state": "PARTIAL_CROSS_HARNESS",
+          "capability": "brainstorm",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-092",
+          "slug": "external-route-catalog-parity",
+          "state": "FAIL_LIVE",
+          "capability": "harness-routing",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-093",
+          "slug": "nested-reference-closure",
+          "state": "PARTIAL_LIVE",
+          "capability": "harness-routing",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-094",
+          "slug": "patch-header-target",
+          "state": "PARTIAL_STATIC",
+          "capability": "project-scope-guard",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-095",
+          "slug": "patch-body-preservation",
+          "state": "FAIL_LIVE",
+          "capability": "project-scope-guard",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-096",
+          "slug": "patch-malformed-fail-closed",
+          "state": "MISSING",
+          "capability": "project-scope-guard",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-097",
+          "slug": "project-name-canonical-validation",
+          "state": "FAIL_STATIC",
+          "capability": "project-pinning",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-098",
+          "slug": "pin-commit-after-success",
+          "state": "FAIL_LIVE",
+          "capability": "project-pinning",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-099",
+          "slug": "compound-switch-separation",
+          "state": "FAIL_STATIC",
+          "capability": "project-pinning",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-100",
+          "slug": "failed-switch-preserves-pin",
+          "state": "FAIL_STATIC",
+          "capability": "project-pinning",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-101",
+          "slug": "no-pin-read-degradation",
+          "state": "FAIL_LIVE_CODEX",
+          "capability": "project-pinning",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-102",
+          "slug": "codex-plan-agent-dispatch",
+          "state": "MISSING",
+          "capability": "agent-dispatch",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-103",
+          "slug": "codex-work-agent-dispatch",
+          "state": "MISSING",
+          "capability": "agent-dispatch",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-104",
+          "slug": "codex-oracle-dispatch",
+          "state": "MISSING",
+          "capability": "agent-dispatch",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-105",
+          "slug": "native-receipt",
+          "state": "MISSING",
+          "capability": "agent-dispatch",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-106",
+          "slug": "route-quarantine",
+          "state": "MISSING_UNSAFE",
+          "capability": "activation",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-107",
+          "slug": "activation-two-phase",
+          "state": "MISSING_UNSAFE",
+          "capability": "activation",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-108",
+          "slug": "dual-harness-verifier-hermeticity",
+          "state": "FAIL_LIVE",
+          "capability": "verification",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        },
+        {
+          "live_id": "LIVE-109",
+          "slug": "debug-probe-secret-safety",
+          "state": "UNSAFE_PRESENT",
+          "capability": "systematic-debugging",
+          "disposition": "CONTROL_OR_LOCAL_TRIGGER_NOT_AN_ADOPTED_SOURCE_ATOM"
+        }
+      ]
+    },
+    "independent_only": {
+      "count": 13,
+      "atoms": [
+        {
+          "id": "IC-066",
+          "category": "bite",
+          "trigger": "a fail-open guard is tested",
+          "effect": "bite only on intended trigger path",
+          "degradation": "the test can demand fail-closed internals",
+          "basis": "prove-it-bites redteam constraint",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-113",
+          "category": "governance",
+          "trigger": "TDD install is audited",
+          "effect": "match approved three-file footprint and pin",
+          "degradation": "stale five-file prose can misstate install",
+          "basis": "pins/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-117",
+          "category": "safety",
+          "trigger": "teach writes workspace",
+          "effect": "confine writes to approved teaching root",
+          "degradation": "arbitrary current project can be modified",
+          "basis": "teach live/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-118",
+          "category": "reachability",
+          "trigger": "Claude authors a skill",
+          "effect": "load doctrine via CLAUDE pointer",
+          "degradation": "doctrine can be inert in Claude",
+          "basis": "authoring wiring/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-119",
+          "category": "reachability",
+          "trigger": "Codex authors a skill",
+          "effect": "load doctrine via AGENTS pointer",
+          "degradation": "doctrine can be inert in Codex",
+          "basis": "authoring wiring/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-120",
+          "category": "reachability",
+          "trigger": "FUSION ports prose",
+          "effect": "load doctrine from runbook",
+          "degradation": "ports can bypass doctrine",
+          "basis": "authoring wiring/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-121",
+          "category": "governance",
+          "trigger": "parity check runs",
+          "effect": "assert authoring wiring parity",
+          "degradation": "checkout/harness can drift",
+          "basis": "authoring wiring/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-122",
+          "category": "provenance",
+          "trigger": "debug port is audited",
+          "effect": "trace matt lineage apart from obra base",
+          "degradation": "local mods can be misattributed",
+          "basis": "creation log/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-123",
+          "category": "provenance",
+          "trigger": "upstream debug drift is checked",
+          "effect": "watch matt source as well as obra",
+          "degradation": "port-source changes can be missed",
+          "basis": "pins/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-124",
+          "category": "governance",
+          "trigger": "standard verification runs",
+          "effect": "execute registration checker as blocking S19/package step",
+          "degradation": "warning-only result can pass release",
+          "basis": "registration/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-127",
+          "category": "reachability",
+          "trigger": "plan continuity is used",
+          "effect": "reach PROGRESS appendix contract",
+          "degradation": "planning can omit continuity consumer",
+          "basis": "plan/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-129",
+          "category": "portability",
+          "trigger": "plan dispatch resolves",
+          "effect": "use capability tiers, not Claude aliases",
+          "degradation": "Codex can receive invalid model names",
+          "basis": "plan/R2",
+          "gap_kind": "LOCAL_CONTROL_NOT_SEPARATELY_ENUMERATED"
+        },
+        {
+          "id": "IC-135",
+          "category": "source-head",
+          "trigger": "agent-consumed docs are authored",
+          "effect": "environment is SSOT; cache only costly-to-reacquire facts",
+          "degradation": "docs can duplicate stale environment state",
+          "basis": "HEAD writing-for-agents/Aug7 C3",
+          "gap_kind": "UNADOPTED_HEAD_CANDIDATE"
+        }
+      ]
+    },
+    "scope_exclusions": {
+      "unadopted_head_independent_ids": [
+        "IC-130",
+        "IC-131",
+        "IC-132",
+        "IC-133",
+        "IC-134",
+        "IC-135"
+      ],
+      "policy": "Do not count upstream HEAD candidates until a governed adoption record exists; keep them in the HEAD/control ledger."
+    }
+  },
+  "composite_findings": [
+    {
+      "inventory": "source",
+      "ids": [
+        "MATT-a0566b42dcc8"
+      ],
+      "finding": "The expected-value atom combines detecting/rejecting a tautology with replacing it from an independent oracle; those effects can fail separately.",
+      "required_split": [
+        "reject-tautological-assertion",
+        "replace-with-independent-expected-value"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-026"
+      ],
+      "finding": "Preserve compatible intent, surface trade-off, and avoid invented behavior are independently degradable.",
+      "required_split": [
+        "preserve-compatible-intents",
+        "record-incompatible-tradeoff",
+        "do-not-invent-behavior"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-029"
+      ],
+      "finding": "Stage, commit, and rebase-continue are distinct state changes and authorization points.",
+      "required_split": [
+        "stage-resolved-files",
+        "commit-merge-resolution",
+        "continue-rebase-resolution"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-039"
+      ],
+      "finding": "Context-load and cognitive-load branches fail independently.",
+      "required_split": [
+        "model-invocation-context-load",
+        "human-invocation-cognitive-load"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-041"
+      ],
+      "finding": "Leading-word selection, front-loading, invocation anchor, and execution anchor are collapsed.",
+      "required_split": [
+        "prefer-pretrained-leading-word",
+        "frontload-leading-word",
+        "anchor-invocation",
+        "anchor-execution"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-043"
+      ],
+      "finding": "Ordered steps, in-file reference, disclosed reference, and condition-bearing pointer are collapsed.",
+      "required_split": [
+        "ordered-step-tier",
+        "in-file-reference-tier",
+        "disclosed-reference-tier",
+        "condition-bearing-pointer"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-045"
+      ],
+      "finding": "Six failure modes have independent triggers and cures.",
+      "required_split": [
+        "premature-completion",
+        "duplication",
+        "sediment",
+        "sprawl",
+        "no-op",
+        "negation"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-046"
+      ],
+      "finding": "Single-source ownership and obsolete-prose pruning are independent.",
+      "required_split": [
+        "single-source-each-meaning",
+        "prune-obsolete-prose"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-050"
+      ],
+      "finding": "Fowler fallback and repository-rule override can fail independently.",
+      "required_split": [
+        "fowler-baseline",
+        "repo-rule-override"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-052"
+      ],
+      "finding": "Creating a deliberate violation and checking its exact failure are distinct.",
+      "required_split": [
+        "violation-fixture-fails",
+        "exact-exit-and-output"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-059"
+      ],
+      "finding": "Writing at a real seam and reporting no seam are mutually exclusive, independently testable branches.",
+      "required_split": [
+        "regression-test-real-seam",
+        "missing-seam-is-finding"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-065"
+      ],
+      "finding": "Expand, migrate batches, contract, and fallback integration are separately failing stages.",
+      "required_split": [
+        "expand-first",
+        "migrate-green-batches",
+        "contract-last",
+        "final-integration-fallback"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-072"
+      ],
+      "finding": "Prefer existing/highest seam and minimize seam count are distinct decisions.",
+      "required_split": [
+        "prefer-existing-highest-seam",
+        "minimize-seam-count"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-084"
+      ],
+      "finding": "Loading prior records, concept matching, human confirmation, durable reason, and anti-poisoning are collapsed.",
+      "required_split": [
+        "load-prior-rejections",
+        "concept-match",
+        "human-decides-match",
+        "durable-reason",
+        "anti-poisoning"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-091"
+      ],
+      "finding": "Creating lifecycle history and recording rationale are distinct.",
+      "required_split": [
+        "lifecycle-history-created",
+        "history-explains-why"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-092"
+      ],
+      "finding": "One row covers multiple route targets and two harness catalogs, so one target can fail while the atom appears partially present.",
+      "required_split": [
+        "one atom per route-target-harness tuple"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-093"
+      ],
+      "finding": "Nested-reference closure is stated across all parents; each parent/reference/harness edge can fail independently.",
+      "required_split": [
+        "one atom per parent-reference-harness edge"
+      ]
+    },
+    {
+      "inventory": "live",
+      "ids": [
+        "LIVE-109"
+      ],
+      "finding": "Environment inspection, captured error text, and artifact persistence are separate secret sinks.",
+      "required_split": [
+        "env-output-redaction",
+        "capture-output-redaction",
+        "artifact-redaction"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-015"
+      ],
+      "finding": "Four dependency classes and their isolation strategies are compressed into one atom.",
+      "required_split": [
+        "in-process",
+        "local-substitutable",
+        "remote-owned",
+        "true-external"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-024"
+      ],
+      "finding": "Preserve compatible intent, choose merge goal, and disclose trade-off are collapsed.",
+      "required_split": [
+        "preserve",
+        "choose",
+        "disclose"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-029"
+      ],
+      "finding": "Persistent workspace and mission grounding are independently failing.",
+      "required_split": [
+        "persistent-workspace",
+        "mission-grounding"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-044"
+      ],
+      "finding": "Three information tiers are compressed.",
+      "required_split": [
+        "steps",
+        "in-file-reference",
+        "disclosed-reference"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-056"
+      ],
+      "finding": "Standards and Spec effects are named together; each axis needs its own output atom plus a coordination atom.",
+      "required_split": [
+        "standards-axis",
+        "spec-axis",
+        "axis-separation"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-077"
+      ],
+      "finding": "Expand, migrate, and contract are independent stages.",
+      "required_split": [
+        "expand",
+        "migrate",
+        "contract"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-103"
+      ],
+      "finding": "What changed and why are separate observable fields.",
+      "required_split": [
+        "what",
+        "why"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-114"
+      ],
+      "finding": "Claude link and Codex catalog can fail independently.",
+      "required_split": [
+        "claude-link",
+        "codex-catalog"
+      ]
+    },
+    {
+      "inventory": "independent",
+      "ids": [
+        "IC-135"
+      ],
+      "finding": "Environment-as-SSOT and cache-only-costly-facts are two effects.",
+      "required_split": [
+        "environment-ssot",
+        "cache-threshold"
+      ]
+    }
+  ],
+  "collision_findings": [
+    {
+      "kind": "ID_COLLISION",
+      "status": "NONE",
+      "evidence": {
+        "source_unique_ids": 196,
+        "live_unique_ids": 109,
+        "independent_unique_ids": 135
+      }
+    },
+    {
+      "kind": "SEMANTIC_NEAR_COLLISION",
+      "status": "KEEP_DISTINCT",
+      "pairs": [
+        [
+          "module-deletion-test",
+          "consumer-deletion-test"
+        ],
+        [
+          "vertical-tracer-slices",
+          "ticket-complete-vertical-path"
+        ],
+        [
+          "canonical-term-avoid-aliases",
+          "skill-authoring _Avoid_"
+        ]
+      ],
+      "reason": "The language repeats, but triggers and consumers differ; merging would hide consumer-specific degradation."
+    },
+    {
+      "kind": "ROUTE_COLLISION",
+      "status": "OPEN",
+      "ids": [
+        "LIVE-001"
+      ],
+      "finding": "The live evidence says a TDD utterance returns MULTI_SKILL with brainstorm, while LIVE-001 labels the route present without representing the competing branch."
+    }
+  ],
+  "join_assessment": {
+    "decision": "BLOCKED",
+    "final_denominator": null,
+    "reasons": [
+      "The three atom sets are not semantically equal: 196 source, 109 live, and 135 independent.",
+      "At least one source atom, eighteen live atoms, and multiple independent atoms are composite under the stated atom rule.",
+      "Sixty-one adopted-source behaviors have no separate atom in either replay; presence inside an umbrella cannot close U-203.",
+      "Twenty-five live rows are local trigger/control-plane findings rather than adopted-source capability atoms, so a raw union changes scope.",
+      "Thirteen independent rows are local controls or an unadopted HEAD candidate, so majority vote or intersection would be unsound."
+    ]
+  },
+  "recommended_final_denominator_policy": {
+    "name": "SOURCE_FLOOR_PLUS_SEPARATE_CONTROL_LEDGER",
+    "denominator_rule": "Use every atomic adopted-source behavior as the non-negotiable floor; exact installs enumerate the whole installed contract and ports enumerate only the approved subset. Never delete an atom because live evidence is missing.",
+    "provisional_source_floor": 196,
+    "final_N": "UNSET_UNTIL_REPLAY",
+    "required_replay": [
+      "Split all listed source/live/independent composites.",
+      "Expand live and independent replays until every adopted source ID has an explicit one-to-one semantic row or an explicitly justified consumer-specific one-to-many mapping.",
+      "Move route, project-pin, adapter, activation, receipt, and hermeticity controls into a separately counted control ledger; controls gate the handshake but do not substitute for MATT-derived capability atoms.",
+      "Keep unadopted HEAD deltas outside the denominator until adoption-log governance admits them.",
+      "Re-run the third-way equality check; any unmatched atom, composite, or true collision remains exit-33/BLOCKED."
+    ],
+    "forbidden_policies": [
+      "intersection of the three sets",
+      "two-of-three majority vote",
+      "raw union of capability and control-plane atoms",
+      "reusing legacy 47/57/60 counts",
+      "prewriting N before equality"
+    ]
+  },
+  "_file_end": "independent-census.json"
+}
+

@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "transaction_id": "ACT-partial-failure-001",
+  "target_commit": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+  "initial_repo_head": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+  "status": "ROLLED_BACK",
+  "steps": [
+    {
+      "state": "PREPARED",
+      "started_at": "2026-08-09T00:00:00.000Z",
+      "finished_at": "2026-08-09T00:00:01.000Z",
+      "result": "PASS",
+      "cas": [],
+      "artifacts": [],
+      "compensation": {
+        "command_id": "RESTORE_PREPARED_SNAPSHOT",
+        "expected_state": "initial hashes and targets"
+      }
+    },
+    {
+      "state": "GLOBAL_STAGED",
+      "started_at": "2026-08-09T00:00:02.000Z",
+      "finished_at": "2026-08-09T00:00:03.000Z",
+      "result": "PASS",
+      "cas": [],
+      "artifacts": [
+        {
+          "path": "isolated-home/candidates/systematic-debugging",
+          "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      ],
+      "compensation": {
+        "command_id": "DELETE_EXACT_STAGED_CANDIDATES",
+        "expected_state": "no staged candidates"
+      }
+    },
+    {
+      "state": "REPO_COMMITTED",
+      "started_at": "2026-08-09T00:00:04.000Z",
+      "finished_at": "2026-08-09T00:00:05.000Z",
+      "result": "PASS",
+      "cas": [],
+      "artifacts": [],
+      "compensation": {
+        "command_id": "REVERT_EXACT_DORMANT_COMMIT",
+        "expected_state": "initial repository tree plus preserved user changes"
+      }
+    },
+    {
+      "state": "GLOBAL_SWAPPED",
+      "started_at": "2026-08-09T00:00:06.000Z",
+      "finished_at": "2026-08-09T00:00:07.000Z",
+      "result": "FAIL",
+      "cas": [],
+      "artifacts": [],
+      "compensation": {
+        "command_id": "RESTORE_EXACT_GLOBAL_BACKUPS_THEN_REVERT_REPO_COMMIT",
+        "expected_state": "all live targets and repository tree restored"
+      }
+    }
+  ],
+  "rollback_steps": [
+    {
+      "for_state": "GLOBAL_SWAPPED",
+      "command_id": "RESTORE_EXACT_GLOBAL_BACKUPS_THEN_REVERT_REPO_COMMIT",
+      "result": "PASS",
+      "verified_state": "all live targets restored"
+    },
+    {
+      "for_state": "REPO_COMMITTED",
+      "command_id": "REVERT_EXACT_DORMANT_COMMIT",
+      "result": "PASS",
+      "verified_state": "initial repository tree plus preserved user changes"
+    },
+    {
+      "for_state": "GLOBAL_STAGED",
+      "command_id": "DELETE_EXACT_STAGED_CANDIDATES",
+      "result": "PASS",
+      "verified_state": "no staged candidates"
+    },
+    {
+      "for_state": "PREPARED",
+      "command_id": "RESTORE_PREPARED_SNAPSHOT",
+      "result": "PASS",
+      "verified_state": "initial hashes and targets"
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "status": "FINAL",
+  "audit_date": "2026-08-09",
+  "package_id": "mattpocock-skills-cycle2-final",
+  "package_root": "framework-audit/2026-08-09-mattpocock-handshake-cycle2",
+  "authority": {
+    "primary": "FINAL-EXECUTION-PLAN.md",
+    "handoff": "FINAL-HANDOFF.md",
+    "defer_truth": "defer-promotion-register.json",
+    "candidate_plan_role": "SOURCE_ONLY_SUPERSEDED",
+    "no_further_redteam": true,
+    "no_further_judge": true,
+    "implementation_authorized_by_this_manifest": false,
+    "human_gates_remain_required": true
+  },
+  "frozen_inputs": {
+    "canonical_repo": "/Users/luca/Desktop/项目/muse/lucagstack",
+    "canonical_head": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+    "upstream_repo": "mattpocock/skills",
+    "upstream_head": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+    "stale_checkout": "/Users/luca/Desktop/luca_gstack",
+    "stale_checkout_head": "3f2caad60ec2aa085b87e01db98c852491b53edf",
+    "stale_checkout_policy": "READ_ONLY_OUT_OF_SCOPE",
+    "hashes": {
+      "candidate_handshake_plan": "1964e44d150001aa10604b9abd6763792269c24e4995fadd6d4df737c289052c",
+      "atomic_manifest": "69af68294271995a4f130541698b87f65f10f59bd1f956212e69125dfa7afb48",
+      "decision_map": "f76056e4a7d9c510d4c4a0e79fc8dea6e2b3c7dae312aa4a54d4ce17d9f4967b",
+      "harness_matrix": "c0ddd7da94389ab20e50461abe8bcc8fd79c8164fef1cf71f6b17fe22dd548cc",
+      "architecture_decisions": "4134996ac6c131f0b919b639537013406272ef91c3763bf24ec131187393a3db",
+      "codex_live_probe": "e68096e3d290ef5d4470eaabe843a7d61d4b83ce95ab6b08ff34a5ad227477f8"
+    }
+  },
+  "audit_universe": {
+    "adopted": 197,
+    "controls": 50,
+    "head": 74,
+    "total": 321,
+    "contracts_per_atom": 8,
+    "acceptance_cells": 2568,
+    "head_decisions": {
+      "ADAPT": 10,
+      "KEEP": 18,
+      "DEFER": 19,
+      "REJECT": 27,
+      "QUARANTINE": 0
+    }
+  },
+  "defer_verdict": {
+    "priorities": [
+      "P1:questionnaire:8",
+      "P2:logic-prototype:10",
+      "P3:tdd-codebase-design:1"
+    ],
+    "promoted_now": 0,
+    "integration_now": "DEFER_REVISIT_CONSUMER_ONLY",
+    "automatic_promotion": false
+  },
+  "read_order": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "NEXT-SESSION-PROMPT.md",
+    "FINAL-HANDOFF.md",
+    "FINAL-EXECUTION-PLAN.md",
+    "final-execution-manifest.json",
+    "defer-promotion-register.json",
+    "decision-map.json",
+    "head-decision-map.json",
+    "harness-matrix.yaml",
+    "architecture-decisions.md",
+    "quick-research-framework-routing-defer-2026-08-09.md"
+  ],
+  "phases": [
+    {
+      "id": "E0",
+      "name": "package-preflight",
+      "dev": ["DEV-001"],
+      "tests": ["TST-001"],
+      "terminal": "PACKAGE_VERIFIED",
+      "gate_after": "G-PACKAGE"
+    },
+    {
+      "id": "E1",
+      "name": "resolver-containment",
+      "dev": ["DEV-002"],
+      "tests": ["TST-002"],
+      "terminal": "RESOLVER_CONTAINED",
+      "gate_before_live_write": "G-CONTAIN"
+    },
+    {
+      "id": "E2",
+      "name": "dual-harness-foundation",
+      "dev": ["DEV-003", "DEV-004"],
+      "tests": ["TST-003", "TST-004"],
+      "terminal": "HARNESS_FOUNDATION_PASS"
+    },
+    {
+      "id": "E3",
+      "name": "capability-and-governance",
+      "dev": ["DEV-005", "DEV-006", "DEV-007", "DEV-008", "DEV-009"],
+      "tests": ["TST-005", "TST-006", "TST-007", "TST-008", "TST-009"],
+      "terminal": "CAPABILITY_GOVERNANCE_PASS"
+    },
+    {
+      "id": "E4",
+      "name": "routing-registration-closure",
+      "dev": ["DEV-010"],
+      "tests": ["TST-010"],
+      "terminal": "ROUTING_CLOSED_PASS"
+    },
+    {
+      "id": "E5",
+      "name": "fusion-v2-rehearsal",
+      "dev": ["DEV-011"],
+      "tests": ["TST-011"],
+      "terminal": "REHEARSAL_PASS"
+    },
+    {
+      "id": "E6",
+      "name": "full-acceptance",
+      "dev": ["DEV-012"],
+      "tests": ["TST-012"],
+      "terminal": "ACCEPTANCE_PASS",
+      "gate_after": "G-ACTIVATE"
+    },
+    {
+      "id": "E7",
+      "name": "live-cutover-and-record",
+      "requires": ["G-ACTIVATE", "ACCEPTANCE_PASS"],
+      "terminal": "EVOLUTION_VERIFIED"
+    }
+  ],
+  "human_gates": {
+    "G-PACKAGE": "Exact package allowlist commit only",
+    "G-CONTAIN": "Exact old resolver targets to fail-closed stubs only",
+    "G-ACTIVATE": "Exact global target hashes, route changes, Git commits, and rollback descriptor only"
+  },
+  "routing_decisions": {
+    "systematic-debugging": "EXISTING_SEMANTIC_ROUTE_NO_WORKFLOW_NODE",
+    "tdd": "EXISTING_SEMANTIC_ROUTE_NO_WORKFLOW_NODE",
+    "codebase-design": "EXISTING_DIRECT_AND_INTERNAL_REFERENCE_NO_WORKFLOW_NODE",
+    "resolving-merge-conflicts": "CONFLICT_ONLY_DIRECT_NO_WORKFLOW_NODE",
+    "teach": "CLAUDE_USER_EXPLICIT_ONLY_NO_CODEX_PROJECT_ROUTE",
+    "questionnaire": "DEFER_ZERO_SURFACE",
+    "logic-prototype": "DEFER_ZERO_SURFACE",
+    "tdd-codebase-design-pointer": "DEFER_ZERO_SURFACE"
+  },
+  "package_allowlist": {
+    "source": "final-source-bundle.sha256",
+    "include_source_file_itself": true,
+    "scope": "PACKAGE_ROOT_ONLY",
+    "extra_files_allowed": false,
+    "staging_rule": "Stage exact paths listed in final-source-bundle.sha256 plus final-source-bundle.sha256; never stage the directory or use git add ."
+  },
+  "verification": {
+    "command": "node framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/verify-final-handoff.mjs",
+    "pass_token": "FINAL_HANDOFF_GATE_PASS",
+    "must_run_before_implementation": true
+  },
+  "stop_rules": [
+    "Any blocking assertion fails",
+    "A required human gate is absent or payload drifts",
+    "The package checker fails",
+    "Canonical relevant surfaces changed without a written delta",
+    "The same issue fails three times",
+    "A command would touch unrelated dirty or untracked user work"
+  ],
+  "_file_end": "final-execution-manifest.json"
+}

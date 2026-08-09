@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca.local/schemas/work-packet-v1.json",
+  "title": "Cross-harness native work-agent packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "packet_id",
+    "mode",
+    "phase",
+    "role",
+    "goal",
+    "task_context",
+    "ownership",
+    "inputs",
+    "constraints",
+    "protected_paths",
+    "outputs",
+    "verification",
+    "rollback"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "packet_id": { "type": "string", "pattern": "^WP-[A-Za-z0-9._-]{3,96}$" },
+    "mode": { "enum": ["task_execution", "skill_execution"] },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "ordinal", "total"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "ordinal": { "type": "integer", "minimum": 1 },
+        "total": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "role": { "type": "string", "minLength": 1 },
+    "goal": { "type": "string", "minLength": 1 },
+    "task_context": { "type": "string", "minLength": 1 },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["responsibilities", "write_paths"],
+      "properties": {
+        "responsibilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "write_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/relativePath" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "reason", "sha256"],
+        "properties": {
+          "path": { "$ref": "#/definitions/relativePath" },
+          "reason": { "type": "string", "minLength": 1 },
+          "sha256": { "$ref": "#/definitions/sha256" }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "protected_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/relativePath" },
+      "uniqueItems": true
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "format", "done_criteria"],
+        "properties": {
+          "path": { "$ref": "#/definitions/relativePath" },
+          "format": { "type": "string", "minLength": 1 },
+          "done_criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "expected", "receipt"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "expected": { "type": "string", "minLength": 1 },
+          "receipt": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "expected", "forbidden"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "expected": { "type": "string", "minLength": 1 },
+        "forbidden": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "skill": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["name", "path"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/definitions/relativePath" }
+      }
+    }
+  },
+  "definitions": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f]).+$"
+    }
+  }
+}
