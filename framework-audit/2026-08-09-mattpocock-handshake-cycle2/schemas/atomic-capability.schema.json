@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca.local/schemas/mattpocock-atomic-capability-v1.json",
+  "title": "mattpocock atomic capability manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "upstream_head",
+    "framework_head",
+    "atoms",
+    "coverage"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "upstream_head": { "$ref": "#/definitions/sha1" },
+    "framework_head": { "$ref": "#/definitions/sha1" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "atoms": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/atom" }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "denominator",
+        "source_ids",
+        "live_ids",
+        "independent_ids",
+        "unmatched",
+        "collisions",
+        "composites"
+      ],
+      "properties": {
+        "denominator": { "type": "integer", "minimum": 1 },
+        "source_ids": { "$ref": "#/definitions/idSet" },
+        "live_ids": { "$ref": "#/definitions/idSet" },
+        "independent_ids": { "$ref": "#/definitions/idSet" },
+        "unmatched": { "type": "array", "maxItems": 0 },
+        "collisions": { "type": "array", "maxItems": 0 },
+        "composites": { "type": "array", "maxItems": 0 }
+      }
+    }
+  },
+  "definitions": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "idSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^MATT-[0-9a-f]{12}$" }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_repo",
+        "commit",
+        "path",
+        "source_range",
+        "blob_oid",
+        "sha256",
+        "bytes",
+        "eof_verified"
+      ],
+      "properties": {
+        "source_repo": { "enum": ["mattpocock/skills", "luca_gstack"] },
+        "commit": { "$ref": "#/definitions/sha1" },
+        "path": { "type": "string", "minLength": 1 },
+        "source_range": { "type": "string", "pattern": "^(L[0-9]+-L[0-9]+|WHOLE_FILE)$" },
+        "blob_oid": { "$ref": "#/definitions/sha1" },
+        "sha256": { "$ref": "#/definitions/sha256" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "eof_verified": { "const": true }
+      }
+    },
+    "atom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "behavior_slug",
+        "title",
+        "surface",
+        "trigger",
+        "observable_effect",
+        "independent_failure",
+        "provenance",
+        "live_targets",
+        "current_state",
+        "decision",
+        "decision_reason",
+        "work_package"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^MATT-[0-9a-f]{12}$" },
+        "behavior_slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "title": { "type": "string", "minLength": 4 },
+        "surface": {
+          "enum": [
+            "skill-behavior",
+            "support-reference",
+            "route",
+            "catalog",
+            "provenance",
+            "governance",
+            "harness-adapter",
+            "project-isolation",
+            "agent-dispatch",
+            "activation"
+          ]
+        },
+        "trigger": { "type": "string", "minLength": 3 },
+        "observable_effect": { "type": "string", "minLength": 3 },
+        "independent_failure": { "type": "string", "minLength": 3 },
+        "provenance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/origin" }
+        },
+        "live_targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "current_state": {
+          "enum": [
+            "active-safe",
+            "active-unsafe",
+            "orphan",
+            "governance-only",
+            "not-installed",
+            "deferred",
+            "rejected"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "KEEP",
+            "ADAPT",
+            "ADOPT",
+            "QUARANTINE",
+            "DEFER",
+            "REJECT",
+            "REMOVE_STALE_RECORD"
+          ]
+        },
+        "decision_reason": { "type": "string", "minLength": 8 },
+        "work_package": { "type": ["string", "null"], "pattern": "^WP-[0-9]{2}$" }
+      }
+    }
+  }
+}

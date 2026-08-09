@@ -1,0 +1,3238 @@
+{
+  "schema_version": "matt-head-decision-map/v1",
+  "status": "RECOMMENDATIONS_COMPLETE",
+  "generated_for": "mattpocock/skills self-evolution cycle2",
+  "audit_date": "2026-08-09",
+  "source": {
+    "repository": "https://github.com/mattpocock/skills.git",
+    "baseline_commit": "ed37663cc5fbef691ddfecd080dff42f7e7e350d",
+    "head_commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+    "census_sha256": "bd8a972587c2264317ff8ccef2b48ac004ca19548a81187f68aa042fa474ac25",
+    "reconciled_census_sha256": "e40a466768a75f5f22776fa9ee4934978144d64e46ff7c28be3fa2e602241d5b",
+    "head_ledger_sha256": "bc423f8c139f850d66c152571140ade2a011e80232f6ca0342d26e2771a05724"
+  },
+  "decision_contract": {
+    "vocabulary": [
+      "ADAPT",
+      "KEEP",
+      "DEFER",
+      "REJECT",
+      "QUARANTINE"
+    ],
+    "keep_semantics": "KEEP never means local activation for an unadopted HEAD delta; it means preserve upstream lineage or retain an already-covered local behavior with zero new surface.",
+    "no_whole_package_install": true,
+    "quarantine_semantics": "Reserved for an unsafe capability already reachable locally. No HEAD-only candidate meets that condition, so the count is zero."
+  },
+  "summary": {
+    "raw_head_rows": 73,
+    "raw_head_rows_covered": 73,
+    "canonical_candidate_atoms": 74,
+    "unique_ids": 74,
+    "unique_slugs": 74,
+    "families": 13,
+    "decisions": {
+      "ADAPT": 10,
+      "KEEP": 18,
+      "DEFER": 19,
+      "REJECT": 27,
+      "QUARANTINE": 0
+    }
+  },
+  "lineage": {
+    "replacements": [
+      {
+        "from": "skills/in-progress/batch-grill-me/SKILL.md",
+        "to": "skills/productivity/grilling/SKILL.md",
+        "effect": "whole-frontier rounds moved into the stable grilling primitive",
+        "decision": "REJECT_KILL_STANDS"
+      },
+      {
+        "from": "skills/productivity/writing-great-skills/",
+        "to": "skills/productivity/writing-for-agents/",
+        "effect": "scope broadened from skills to all agent-consumed documents and model invocation enabled",
+        "decision": "ADAPT_TWO_DOCTRINES_ONLY"
+      },
+      {
+        "from": "skills/in-progress/to-questionnaire/",
+        "to": "skills/productivity/to-questionnaire/",
+        "effect": "body preserved while the user-only skill graduated and gained Codex metadata",
+        "decision": "DEFER_ONE_OFF_PILOT"
+      },
+      {
+        "from": "skills/in-progress/wizard/",
+        "to": "skills/engineering/wizard/",
+        "effect": "dangerous external-write procedure graduated and became model-invokable",
+        "decision": "REJECT"
+      },
+      {
+        "from": "terminal logic prototype",
+        "to": "self-contained HTML logic demo",
+        "effect": "artifact, interaction, and audience contract replaced",
+        "decision": "DEFER_ONE_OFF_PILOT"
+      }
+    ],
+    "deletions": [
+      {
+        "path": "skills/deprecated/design-an-interface/SKILL.md",
+        "decision": "KEEP",
+        "scope": "upstream_lineage_only_no_local_delete"
+      },
+      {
+        "path": "skills/deprecated/qa/SKILL.md",
+        "decision": "KEEP",
+        "scope": "upstream_lineage_only_no_local_delete"
+      },
+      {
+        "path": "skills/deprecated/request-refactor-plan/SKILL.md",
+        "decision": "KEEP",
+        "scope": "upstream_lineage_only_no_local_delete"
+      },
+      {
+        "path": "skills/deprecated/ubiquitous-language/SKILL.md",
+        "decision": "KEEP",
+        "scope": "upstream_lineage_only_no_local_delete"
+      },
+      {
+        "path": "skills/personal/edit-article/SKILL.md",
+        "decision": "KEEP",
+        "scope": "upstream_lineage_only_no_local_delete"
+      },
+      {
+        "path": "skills/personal/obsidian-vault/SKILL.md",
+        "decision": "KEEP",
+        "scope": "upstream_lineage_only_no_local_delete"
+      }
+    ],
+    "head_ledger_closure": {
+      "status": "PASS",
+      "candidate_source_path_count": 24,
+      "ledger_object_count": 30,
+      "missing_candidate_source_paths": [],
+      "transitive_extra_paths": [
+        "skills/engineering/ask-matt/SKILL.md",
+        "skills/engineering/codebase-design/DEEPENING.md",
+        "skills/engineering/codebase-design/SKILL.md",
+        "skills/engineering/prototype/UI.md",
+        "skills/engineering/tdd/mocking.md",
+        "skills/engineering/tdd/tests.md"
+      ],
+      "rule": "All 24 candidate source blobs must appear in head-ledger; explicit transitive extras may remain."
+    },
+    "raw_to_canonical_coverage": [
+      {
+        "head_id": "MATT-f785c73e1ec8",
+        "final_ids": [
+          "MATT-f785c73e1ec8"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-29d6533391d8",
+        "final_ids": [
+          "MATT-29d6533391d8"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-3fab1efa17e6",
+        "final_ids": [
+          "MATT-3fab1efa17e6"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1cfdccc521e3",
+        "final_ids": [
+          "MATT-1cfdccc521e3"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-e900d56ff86c",
+        "final_ids": [
+          "MATT-e900d56ff86c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-087eaf541c55",
+        "final_ids": [
+          "MATT-087eaf541c55"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1dea85381675",
+        "final_ids": [
+          "MATT-1dea85381675"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-c2613bbdf6f0",
+        "final_ids": [
+          "MATT-c2613bbdf6f0"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-4ef75cf060d9",
+        "final_ids": [
+          "MATT-4ef75cf060d9"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-cd5eca63e78c",
+        "final_ids": [
+          "MATT-cd5eca63e78c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-fa7e31d36e28",
+        "final_ids": [
+          "MATT-c786c75d9ce5",
+          "MATT-8603aff9d903"
+        ],
+        "disposition": "SPLIT_1_TO_2_BEFORE_ADOPTION"
+      },
+      {
+        "head_id": "MATT-d32e20a647b2",
+        "final_ids": [
+          "MATT-d32e20a647b2"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-17a0ed5e3b83",
+        "final_ids": [
+          "MATT-17a0ed5e3b83"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-93c541c588be",
+        "final_ids": [
+          "MATT-93c541c588be"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1eb663064749",
+        "final_ids": [
+          "MATT-1eb663064749"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-cbc9590cf27c",
+        "final_ids": [
+          "MATT-cbc9590cf27c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1926a447c911",
+        "final_ids": [
+          "MATT-1926a447c911"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-68dd81ed3614",
+        "final_ids": [
+          "MATT-68dd81ed3614"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-764808dd085a",
+        "final_ids": [
+          "MATT-764808dd085a"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-0f66ea53c99a",
+        "final_ids": [
+          "MATT-0f66ea53c99a"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-0f394f53d5d7",
+        "final_ids": [
+          "MATT-0f394f53d5d7"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-8ec2838b5cad",
+        "final_ids": [
+          "MATT-8ec2838b5cad"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1ea3663314a9",
+        "final_ids": [
+          "MATT-1ea3663314a9"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-dfe75cd8c7e9",
+        "final_ids": [
+          "MATT-dfe75cd8c7e9"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-2d330e7516fe",
+        "final_ids": [
+          "MATT-2d330e7516fe"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-69c03fa3848c",
+        "final_ids": [
+          "MATT-69c03fa3848c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-3e8939104418",
+        "final_ids": [
+          "MATT-3e8939104418"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-3359aa28ff1a",
+        "final_ids": [
+          "MATT-3359aa28ff1a"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-63cf1a43166c",
+        "final_ids": [
+          "MATT-63cf1a43166c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-3601e39b1222",
+        "final_ids": [
+          "MATT-3601e39b1222"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-617e3a2a95a3",
+        "final_ids": [
+          "MATT-617e3a2a95a3"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1c575c15b60e",
+        "final_ids": [
+          "MATT-1c575c15b60e"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-e9258f150e5f",
+        "final_ids": [
+          "MATT-e9258f150e5f"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1047ab54aad9",
+        "final_ids": [
+          "MATT-1047ab54aad9"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-b38846688969",
+        "final_ids": [
+          "MATT-b38846688969"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-c64f15d32b8f",
+        "final_ids": [
+          "MATT-c64f15d32b8f"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-b3589d5156a5",
+        "final_ids": [
+          "MATT-b3589d5156a5"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-67f419958c76",
+        "final_ids": [
+          "MATT-67f419958c76"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-ba5ba30d55fc",
+        "final_ids": [
+          "MATT-ba5ba30d55fc"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-995d533d88fa",
+        "final_ids": [
+          "MATT-995d533d88fa"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-addf618cdf4b",
+        "final_ids": [
+          "MATT-addf618cdf4b"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-4df741edbd67",
+        "final_ids": [
+          "MATT-4df741edbd67"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-e1881ecf0f86",
+        "final_ids": [
+          "MATT-e1881ecf0f86"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-e072e08dc8b4",
+        "final_ids": [
+          "MATT-e072e08dc8b4"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-9e17e436b51c",
+        "final_ids": [
+          "MATT-9e17e436b51c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-759e33cc418f",
+        "final_ids": [
+          "MATT-759e33cc418f"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-af30e0ed4176",
+        "final_ids": [
+          "MATT-af30e0ed4176"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-d630109f0348",
+        "final_ids": [
+          "MATT-d630109f0348"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-a9b1e31a35ad",
+        "final_ids": [
+          "MATT-a9b1e31a35ad"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-9cd8048bc76e",
+        "final_ids": [
+          "MATT-9cd8048bc76e"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-7e6c82da4918",
+        "final_ids": [
+          "MATT-7e6c82da4918"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-768dcd6a9f31",
+        "final_ids": [
+          "MATT-768dcd6a9f31"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-32a587e2ae16",
+        "final_ids": [
+          "MATT-32a587e2ae16"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-14788bc00c7c",
+        "final_ids": [
+          "MATT-14788bc00c7c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-1ef0003875bf",
+        "final_ids": [
+          "MATT-1ef0003875bf"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-cacaba6fee83",
+        "final_ids": [
+          "MATT-cacaba6fee83"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-14aa6fda7115",
+        "final_ids": [
+          "MATT-14aa6fda7115"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-88bd946f2af3",
+        "final_ids": [
+          "MATT-88bd946f2af3"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-ef3806a9c4af",
+        "final_ids": [
+          "MATT-ef3806a9c4af"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-826719117fa0",
+        "final_ids": [
+          "MATT-826719117fa0"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-36a37a56c05b",
+        "final_ids": [
+          "MATT-36a37a56c05b"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-3032fe812104",
+        "final_ids": [
+          "MATT-3032fe812104"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-df4775134f2f",
+        "final_ids": [
+          "MATT-df4775134f2f"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-2e91f1b00c08",
+        "final_ids": [
+          "MATT-2e91f1b00c08"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-5ae242a1e7a3",
+        "final_ids": [
+          "MATT-5ae242a1e7a3"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-ec1e2352340c",
+        "final_ids": [
+          "MATT-ec1e2352340c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-875493a46768",
+        "final_ids": [
+          "MATT-875493a46768"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-83b5baf3a2a6",
+        "final_ids": [
+          "MATT-83b5baf3a2a6"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-7fa068e58440",
+        "final_ids": [
+          "MATT-7fa068e58440"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-864d55193e5e",
+        "final_ids": [
+          "MATT-864d55193e5e"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-a624582e0135",
+        "final_ids": [
+          "MATT-a624582e0135"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-9ebf3141af1c",
+        "final_ids": [
+          "MATT-9ebf3141af1c"
+        ],
+        "disposition": "IDENTITY"
+      },
+      {
+        "head_id": "MATT-28d950692bef",
+        "final_ids": [
+          "MATT-28d950692bef"
+        ],
+        "disposition": "IDENTITY"
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "MATT-f785c73e1ec8",
+      "family": "tdd-codebase-design",
+      "slug": "tdd-interface-vocabulary-reference",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "接口词汇指针有潜在价值，但本地尚无 seam 失败样本，且 codebase-design 当前只在 Claude 全局目录可达。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：A literal slash pointer can be reachable in Claude while dangling in Codex, or can accidentally start a second process instead of loading vocabulary.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 能解释 /codebase-design 字面指针且已有全局 target。",
+        "codex": "Codex 不执行 Claude slash，当前 catalog 也没有 codebase-design target。",
+        "cross_harness": "先改 tdd 会形成 Claude 可达、Codex dangling 的依赖边。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 tdd blob 与 route 保持不变；只有出现首个真实 seam ambiguity 且 WP-07 两端 parity 全绿后，才在一次性 reference-only pilot 中验证不会启动第二个 workflow。",
+        "required_receipt": "真实需求证据 + Claude/Codex reference-only trace；此前 ledger 状态必须保持 DEFER"
+      },
+      "source_census_recommendation": "DEFER_PILOT",
+      "source_behavior": {
+        "trigger": "During TDD, the public interface or seam shape is itself unsettled.",
+        "observable_effect": "Consult codebase-design vocabulary as a reference without starting a separate workflow session.",
+        "independent_degradation": "A literal slash pointer can be reachable in Claude while dangling in Codex, or can accidentally start a second process instead of loading vocabulary."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/tdd/SKILL.md",
+        "range": "L26-L26",
+        "blob_alias": "tdd",
+        "blob_oid": "ead7781d79eb11cdafa1ac2db978cadef0eba240",
+        "sha256": "5e6b9c16b547113e90afbb946489d1c1384be5c2128f0159bd0bee57251ecf08",
+        "bytes": 3568,
+        "eof": "LF",
+        "delta_relation": "added pointer"
+      }
+    },
+    {
+      "id": "MATT-29d6533391d8",
+      "family": "diagnosing-redaction",
+      "slug": "redact-before-show",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 shared systematic-debugging 已实证会打印 IDENTITY 环境值和任意 HITL 错误文本，安全修复必须落在产生输出的命令或脚本源头。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：Masking only later prose still leaves raw tool output or transcripts exposed.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 与 Codex 共享 systematic-debugging 真身，但 Claude 的 Bash/tool transcript 是独立泄漏面。",
+        "codex": "Codex 的 shell/apply_patch 输出、commentary 与 artifact 都必须单独扫 canary。",
+        "cross_harness": "只跑一端或只检查最终 prose 会产生假绿。"
+      },
+      "proposed_work_package": "WP-06-debug-redaction",
+      "mechanical_gate": {
+        "assertion": "同一组 AWS/GitHub/Bearer/cookie/IDENTITY canary 在 Claude 与 Codex 的 raw stdout、stderr、transcript、artifact、final answer 中均为 0 字节命中。",
+        "required_receipt": "Claude+Codex 两份独立 canary 执行日志 hash 与零泄漏扫描结果"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "A debugging run is about to show a command, output, or captured artifact.",
+        "observable_effect": "Every secret is replaced with a redaction marker before it is shown.",
+        "independent_degradation": "Masking only later prose still leaves raw tool output or transcripts exposed."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+        "range": "L14-L14",
+        "blob_alias": "diagnosing",
+        "blob_oid": "7f8acf7e3c5929a557d7bf26c88a7844551e3976",
+        "sha256": "b9339b09ee3980808d8c5a35c7251b891b8b1e0036ec4ca37812b976ebddf6b6",
+        "bytes": 8969,
+        "eof": "LF",
+        "delta_relation": "added safety contract"
+      }
+    },
+    {
+      "id": "MATT-3fab1efa17e6",
+      "family": "diagnosing-redaction",
+      "slug": "credential-env-boundary",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 shared systematic-debugging 已实证会打印 IDENTITY 环境值和任意 HITL 错误文本，安全修复必须落在产生输出的命令或脚本源头。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：Command arguments or shell expansion can leak credential values even if later artifacts are redacted.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 与 Codex 共享 systematic-debugging 真身，但 Claude 的 Bash/tool transcript 是独立泄漏面。",
+        "codex": "Codex 的 shell/apply_patch 输出、commentary 与 artifact 都必须单独扫 canary。",
+        "cross_harness": "只跑一端或只检查最终 prose 会产生假绿。"
+      },
+      "proposed_work_package": "WP-06-debug-redaction",
+      "mechanical_gate": {
+        "assertion": "执行日志中的 argv/展示命令不含 credential 值，只有 SET/UNSET 或 <REDACTED>；凭据仅经环境注入。",
+        "required_receipt": "Claude+Codex 两份独立 canary 执行日志 hash 与零泄漏扫描结果"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "A feedback loop needs authenticated access.",
+        "observable_effect": "The credential remains in an environment variable instead of appearing in the displayed command.",
+        "independent_degradation": "Command arguments or shell expansion can leak credential values even if later artifacts are redacted."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+        "range": "L14-L14",
+        "blob_alias": "diagnosing",
+        "blob_oid": "7f8acf7e3c5929a557d7bf26c88a7844551e3976",
+        "sha256": "b9339b09ee3980808d8c5a35c7251b891b8b1e0036ec4ca37812b976ebddf6b6",
+        "bytes": 8969,
+        "eof": "LF",
+        "delta_relation": "added safety contract"
+      }
+    },
+    {
+      "id": "MATT-1cfdccc521e3",
+      "family": "diagnosing-redaction",
+      "slug": "artifact-signal-only",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 shared systematic-debugging 已实证会打印 IDENTITY 环境值和任意 HITL 错误文本，安全修复必须落在产生输出的命令或脚本源头。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：A minimally useful quote can still become a wholesale artifact disclosure if selection is not enforced.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 与 Codex 共享 systematic-debugging 真身，但 Claude 的 Bash/tool transcript 是独立泄漏面。",
+        "codex": "Codex 的 shell/apply_patch 输出、commentary 与 artifact 都必须单独扫 canary。",
+        "cross_harness": "只跑一端或只检查最终 prose 会产生假绿。"
+      },
+      "proposed_work_package": "WP-06-debug-redaction",
+      "mechanical_gate": {
+        "assertion": "含 auth header 的 fixture 只输出 allowlisted signal 行，原 artifact hash 可核但原文不进入 transcript。",
+        "required_receipt": "Claude+Codex 两份独立 canary 执行日志 hash 与零泄漏扫描结果"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "A captured trace contains authentication headers or other sensitive context.",
+        "observable_effect": "Only the lines carrying the diagnostic signal are quoted.",
+        "independent_degradation": "A minimally useful quote can still become a wholesale artifact disclosure if selection is not enforced."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+        "range": "L14-L14",
+        "blob_alias": "diagnosing",
+        "blob_oid": "7f8acf7e3c5929a557d7bf26c88a7844551e3976",
+        "sha256": "b9339b09ee3980808d8c5a35c7251b891b8b1e0036ec4ca37812b976ebddf6b6",
+        "bytes": 8969,
+        "eof": "LF",
+        "delta_relation": "added safety contract"
+      }
+    },
+    {
+      "id": "MATT-e900d56ff86c",
+      "family": "diagnosing-redaction",
+      "slug": "insufficient-redaction-stop",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 shared systematic-debugging 已实证会打印 IDENTITY 环境值和任意 HITL 错误文本，安全修复必须落在产生输出的命令或脚本源头。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：A run may either leak more context or continue on an underdetermined diagnosis.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 与 Codex 共享 systematic-debugging 真身，但 Claude 的 Bash/tool transcript 是独立泄漏面。",
+        "codex": "Codex 的 shell/apply_patch 输出、commentary 与 artifact 都必须单独扫 canary。",
+        "cross_harness": "只跑一端或只检查最终 prose 会产生假绿。"
+      },
+      "proposed_work_package": "WP-06-debug-redaction",
+      "mechanical_gate": {
+        "assertion": "把诊断所需字段全部过滤后，两端返回 NEEDS_CONTEXT 并停止，不回读 raw artifact、不猜根因。",
+        "required_receipt": "Claude+Codex 两份独立 canary 执行日志 hash 与零泄漏扫描结果"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "Redacted evidence is insufficient to diagnose the bug.",
+        "observable_effect": "The agent states the limitation and asks the user instead of exposing more data or guessing.",
+        "independent_degradation": "A run may either leak more context or continue on an underdetermined diagnosis."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+        "range": "L16-L16",
+        "blob_alias": "diagnosing",
+        "blob_oid": "7f8acf7e3c5929a557d7bf26c88a7844551e3976",
+        "sha256": "b9339b09ee3980808d8c5a35c7251b891b8b1e0036ec4ca37812b976ebddf6b6",
+        "bytes": 8969,
+        "eof": "LF",
+        "delta_relation": "added degradation path"
+      }
+    },
+    {
+      "id": "MATT-087eaf541c55",
+      "family": "diagnosing-redaction",
+      "slug": "hitl-signin-not-capture",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 shared systematic-debugging 已实证会打印 IDENTITY 环境值和任意 HITL 错误文本，安全修复必须落在产生输出的命令或脚本源头。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：Using capture for login or credentials prints the value back to the terminal and agent.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 与 Codex 共享 systematic-debugging 真身，但 Claude 的 Bash/tool transcript 是独立泄漏面。",
+        "codex": "Codex 的 shell/apply_patch 输出、commentary 与 artifact 都必须单独扫 canary。",
+        "cross_harness": "只跑一端或只检查最终 prose 会产生假绿。"
+      },
+      "proposed_work_package": "WP-06-debug-redaction",
+      "mechanical_gate": {
+        "assertion": "HITL 登录只出现 step，不存在 credential capture；输出字段由 allowlist 限定。",
+        "required_receipt": "Claude+Codex 两份独立 canary 执行日志 hash 与零泄漏扫描结果"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "A human-in-the-loop reproduction requires authentication.",
+        "observable_effect": "Signing in is a human step; only non-secret observations should be captured for the agent.",
+        "independent_degradation": "Using capture for login or credentials prints the value back to the terminal and agent."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+        "range": "L15-L16",
+        "blob_alias": "diagnosing_hitl",
+        "blob_oid": "43daedd1bdbb47b49638c82557990fc5100d7c9c",
+        "sha256": "18ae07e1cc49b32c71767e241a6e8de4be74ef21d5e3b7e39034d9c7335f2d80",
+        "bytes": 1319,
+        "eof": "LF",
+        "delta_relation": "added template warning"
+      }
+    },
+    {
+      "id": "MATT-1dea85381675",
+      "family": "diagnosing-redaction",
+      "slug": "hitl-unfiltered-free-text-gap",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 shared systematic-debugging 已实证会打印 IDENTITY 环境值和任意 HITL 错误文本，安全修复必须落在产生输出的命令或脚本源头。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：Secrets embedded in an error string bypass the prose-only redaction instruction.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 与 Codex 共享 systematic-debugging 真身，但 Claude 的 Bash/tool transcript 是独立泄漏面。",
+        "codex": "Codex 的 shell/apply_patch 输出、commentary 与 artifact 都必须单独扫 canary。",
+        "cross_harness": "只跑一端或只检查最终 prose 会产生假绿。"
+      },
+      "proposed_work_package": "WP-06-debug-redaction",
+      "mechanical_gate": {
+        "assertion": "把 secret sentinel 嵌入 ERROR_MSG，自由文本输出必须源头替换为 <REDACTED> 且诊断字段仍可用。",
+        "required_receipt": "Claude+Codex 两份独立 canary 执行日志 hash 与零泄漏扫描结果"
+      },
+      "source_census_recommendation": "ADAPT_FIX_SOURCE",
+      "source_behavior": {
+        "trigger": "The example HITL flow asks a user to paste an error message.",
+        "observable_effect": "The entered free text is printed verbatim as captured output.",
+        "independent_degradation": "Secrets embedded in an error string bypass the prose-only redaction instruction."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+        "range": "L38-L44",
+        "blob_alias": "diagnosing_hitl",
+        "blob_oid": "43daedd1bdbb47b49638c82557990fc5100d7c9c",
+        "sha256": "18ae07e1cc49b32c71767e241a6e8de4be74ef21d5e3b7e39034d9c7335f2d80",
+        "bytes": 1319,
+        "eof": "LF",
+        "delta_relation": "HEAD limitation exposed by new safety contract"
+      }
+    },
+    {
+      "id": "MATT-c2613bbdf6f0",
+      "family": "writing-for-agents",
+      "slug": "writing-model-trigger-agent-docs",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：Installing the whole skill adds a competing authoring authority and a new routing surface.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "不安装 writing-for-agents、不新增 route；只把适用范围窄化写入现有 skill-authoring SSOT，并验证 Claude/Codex 指针都命中同一文件。",
+        "required_receipt": "canonical source hash + 两端 A/B trace + route/catalog zero-delta"
+      },
+      "source_census_recommendation": "REJECT_WHOLE_SKILL_ADAPT_SCOPE",
+      "source_behavior": {
+        "trigger": "An agent edits a skill, AGENTS.md, CLAUDE.md, or another agent-consumed document.",
+        "observable_effect": "The renamed skill is model-reachable and applies one writing discipline across those document forms.",
+        "independent_degradation": "Installing the whole skill adds a competing authoring authority and a new routing surface."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL.md",
+        "range": "L1-L8",
+        "blob_alias": "writing",
+        "blob_oid": "c059d48cd70cfd1494bde74afcc426010b1c10e3",
+        "sha256": "a842323e664e5af104eac5c97ad22fda929ebeb62d81c501161ac1f6f482db58",
+        "bytes": 10966,
+        "eof": "LF",
+        "delta_relation": "renamed, broadened, model-invokable"
+      }
+    },
+    {
+      "id": "MATT-4ef75cf060d9",
+      "family": "writing-for-agents",
+      "slug": "pointer-wording-controls-retrieval",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：A valid target behind weak wording is not loaded reliably.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "该 atom 只进入 signed decision/lineage ledger；候选 diff 不新增 route、skill、pin 或 global target。",
+        "required_receipt": "decision ledger entry + zero-activation diff"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "A required document is kept outside always-loaded context.",
+        "observable_effect": "The pointer names both the material and each distinct branch that should retrieve it, with trigger language front-loaded and deduplicated.",
+        "independent_degradation": "A valid target behind weak wording is not loaded reliably."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL.md",
+        "range": "L10-L18",
+        "blob_alias": "writing",
+        "blob_oid": "c059d48cd70cfd1494bde74afcc426010b1c10e3",
+        "sha256": "a842323e664e5af104eac5c97ad22fda929ebeb62d81c501161ac1f6f482db58",
+        "bytes": 10966,
+        "eof": "LF",
+        "delta_relation": "generalized from skill descriptions to all pointers"
+      }
+    },
+    {
+      "id": "MATT-cd5eca63e78c",
+      "family": "writing-for-agents",
+      "slug": "real-context-boundary-for-step-hiding",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：An inline call leaves later steps visible and cannot deliver the claimed attention isolation.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "该 atom 只进入 signed decision/lineage ledger；候选 diff 不新增 route、skill、pin 或 global target。",
+        "required_receipt": "decision ledger entry + zero-activation diff"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "A vague completion bound demonstrably causes premature completion.",
+        "observable_effect": "Later steps are hidden only by a true handoff or subagent context boundary after sharpening the bound fails.",
+        "independent_degradation": "An inline call leaves later steps visible and cannot deliver the claimed attention isolation."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL.md",
+        "range": "L45-L52",
+        "blob_alias": "writing",
+        "blob_oid": "c059d48cd70cfd1494bde74afcc426010b1c10e3",
+        "sha256": "a842323e664e5af104eac5c97ad22fda929ebeb62d81c501161ac1f6f482db58",
+        "bytes": 10966,
+        "eof": "LF",
+        "delta_relation": "sharpened mechanism"
+      }
+    },
+    {
+      "id": "MATT-c786c75d9ce5",
+      "family": "writing-for-agents",
+      "slug": "environment-is-runtime-ssot",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：Static prose becomes the authority for a cheaply inspectable fact.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "skill-authoring 只新增一处 environment/cache canonical doctrine，CLAUDE.md 与 AGENTS.md 仅存指针；两端 agent-doc edit A/B 都实际加载同一 hash。",
+        "required_receipt": "canonical source hash + 两端 A/B trace + route/catalog zero-delta"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "An agent document is about to restate a cheaply inspectable runtime fact.",
+        "observable_effect": "The runtime environment remains authoritative.",
+        "independent_degradation": "Static prose becomes the authority for a cheaply inspectable fact."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL.md",
+        "range": "L79-L79",
+        "blob_alias": "writing",
+        "blob_oid": "c059d48cd70cfd1494bde74afcc426010b1c10e3",
+        "sha256": "a842323e664e5af104eac5c97ad22fda929ebeb62d81c501161ac1f6f482db58",
+        "bytes": 10966,
+        "eof": "LF",
+        "delta_relation": "new doctrine"
+      }
+    },
+    {
+      "id": "MATT-8603aff9d903",
+      "family": "writing-for-agents",
+      "slug": "cache-only-costly-to-reacquire-facts",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：A cheap fact is duplicated into prose.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "skill-authoring 只新增一处 environment/cache canonical doctrine，CLAUDE.md 与 AGENTS.md 仅存指针；两端 agent-doc edit A/B 都实际加载同一 hash。",
+        "required_receipt": "canonical source hash + 两端 A/B trace + route/catalog zero-delta"
+      },
+      "source_census_recommendation": "ADAPT_ADOPT",
+      "source_behavior": {
+        "trigger": "An agent document considers caching a runtime fact.",
+        "observable_effect": "The fact is persisted only when reacquisition is costly.",
+        "independent_degradation": "A cheap fact is duplicated into prose."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL.md",
+        "range": "L79-L79",
+        "blob_alias": "writing",
+        "blob_oid": "c059d48cd70cfd1494bde74afcc426010b1c10e3",
+        "sha256": "a842323e664e5af104eac5c97ad22fda929ebeb62d81c501161ac1f6f482db58",
+        "bytes": 10966,
+        "eof": "LF",
+        "delta_relation": "new doctrine"
+      }
+    },
+    {
+      "id": "MATT-d32e20a647b2",
+      "family": "writing-for-agents",
+      "slug": "shared-reference-outside-user-only",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Duplicating the reference in each skill causes semantic drift; pretending one user-only skill can fire the other causes a dead edge.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "该 atom 只进入 signed decision/lineage ledger；候选 diff 不新增 route、skill、pin 或 global target。",
+        "required_receipt": "decision ledger entry + zero-activation diff"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "Two user-only skills need the same reference but cannot invoke one another.",
+        "observable_effect": "The shared reference is placed in a plain external file both can point to.",
+        "independent_degradation": "Duplicating the reference in each skill causes semantic drift; pretending one user-only skill can fire the other causes a dead edge."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+        "range": "L12-L14",
+        "blob_alias": "writing_mechanics",
+        "blob_oid": "c28e3bf035403080a849ac4b7816d3af93d145ff",
+        "sha256": "b4c54a0aaad3f6eddefde6d06770a0e401fbb8fc6a8f49ce18af816bd144d14d",
+        "bytes": 2651,
+        "eof": "LF",
+        "delta_relation": "new explicit placement rule"
+      }
+    },
+    {
+      "id": "MATT-17a0ed5e3b83",
+      "family": "writing-for-agents",
+      "slug": "router-hints-user-only",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "本地 skill-authoring 已覆盖大部分写作理论；新增价值只在所有 agent-consumed docs 的适用范围和 environment/cache 原则，必须保持单一真值源。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Treating the router as an execution engine creates unreachable or falsely claimed dispatch.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 由 CLAUDE.md 指针触发本地 authoring SSOT。",
+        "codex": "Codex 必须由 AGENTS.md 指向同一 SSOT，不能虚构同名 $skill。",
+        "cross_harness": "复制 doctrine 到两个 harness contract 会立即制造漂移源。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "该 atom 只进入 signed decision/lineage ledger；候选 diff 不新增 route、skill、pin 或 global target。",
+        "required_receipt": "decision ledger entry + zero-activation diff"
+      },
+      "source_census_recommendation": "NO_OP_UPSTREAM_SPECIFIC",
+      "source_behavior": {
+        "trigger": "Human cognitive load from many user-only skills becomes too high.",
+        "observable_effect": "A user-only router lists candidate skills but cannot autonomously invoke another user-only skill.",
+        "independent_degradation": "Treating the router as an execution engine creates unreachable or falsely claimed dispatch."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+        "range": "L20-L22",
+        "blob_alias": "writing_mechanics",
+        "blob_oid": "c28e3bf035403080a849ac4b7816d3af93d145ff",
+        "sha256": "b4c54a0aaad3f6eddefde6d06770a0e401fbb8fc6a8f49ce18af816bd144d14d",
+        "bytes": 2651,
+        "eof": "LF",
+        "delta_relation": "new explicit router limitation"
+      }
+    },
+    {
+      "id": "MATT-93c541c588be",
+      "family": "logic-prototype",
+      "slug": "logic-vs-visual-trigger",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Routing it into a polished visual prototype spends the wrong constraints and obscures the state-model question.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The open question concerns business logic, state transitions, or data shape rather than visual appearance.",
+        "observable_effect": "The prototype router chooses a non-visual logic demo branch and discloses ambiguity assumptions.",
+        "independent_degradation": "Routing it into a polished visual prototype spends the wrong constraints and obscures the state-model question."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/SKILL.md",
+        "range": "L12-L17",
+        "blob_alias": "prototype",
+        "blob_oid": "094571156140f5993cce8557dc31383c82817f3e",
+        "sha256": "2579ecf89a7fb7e73345117405c7ba9b9fb5ab22a78ecb08b0ce68b73f0148c2",
+        "bytes": 2954,
+        "eof": "LF",
+        "delta_relation": "logic branch changed from terminal app to HTML demo"
+      }
+    },
+    {
+      "id": "MATT-1eb663064749",
+      "family": "logic-prototype",
+      "slug": "visible-prototype-question",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：A correct-looking artifact can answer a different question without a checkable statement of intent.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A logic demo is about to be authored.",
+        "observable_effect": "The exact state model and question appear visibly at the top of the demo.",
+        "independent_degradation": "A correct-looking artifact can answer a different question without a checkable statement of intent."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L18-L20",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "changed from README/comment to visible intro"
+      }
+    },
+    {
+      "id": "MATT-cbc9590cf27c",
+      "family": "logic-prototype",
+      "slug": "portable-pure-logic-module",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Embedding rules in UI handlers makes the learned behavior non-portable.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The state-model behavior is implemented for the demo.",
+        "observable_effect": "The logic lives as a small pure module in one script block that can be lifted into production separately from the page.",
+        "independent_degradation": "Embedding rules in UI handlers makes the learned behavior non-portable."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L22-L24",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "changed host from project runtime module to inline pure module"
+      }
+    },
+    {
+      "id": "MATT-1926a447c911",
+      "family": "logic-prototype",
+      "slug": "dom-isolation-liftability",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：DOM coupling makes a visually working demo unusable as validated logic.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A reducer, state machine, functions, or stateful module is selected for the question.",
+        "observable_effect": "The page calls the logic through a clean interface; logic never references DOM objects or handlers.",
+        "independent_degradation": "DOM coupling makes a visually working demo unusable as validated logic."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L26-L33",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "changed shell isolation from terminal I/O to DOM isolation"
+      }
+    },
+    {
+      "id": "MATT-68dd81ed3614",
+      "family": "logic-prototype",
+      "slug": "self-contained-double-click-html",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：A runtime or install requirement removes the shareable-demo property.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The logic demo must be shareable with a non-developer.",
+        "observable_effect": "One inline HTML/CSS/JS file opens by double-click with no framework, bundler, or server.",
+        "independent_degradation": "A runtime or install requirement removes the shareable-demo property."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L35-L37",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "replaced TUI runtime with self-contained HTML"
+      }
+    },
+    {
+      "id": "MATT-764808dd085a",
+      "family": "logic-prototype",
+      "slug": "domain-language-nondeveloper",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：The model may be technically testable yet opaque to the decision holder.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A non-developer reads or drives the logic demo.",
+        "observable_effect": "Labels and explanations use domain language rather than reducer or code vocabulary.",
+        "independent_degradation": "The model may be technically testable yet opaque to the decision holder."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L39-L39",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "new audience constraint"
+      }
+    },
+    {
+      "id": "MATT-0f66ea53c99a",
+      "family": "logic-prototype",
+      "slug": "full-state-rerender",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Partial or raw-JSON state hides illegal or surprising transitions.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "Any demo action changes the model.",
+        "observable_effect": "The full relevant state is re-rendered as labelled fields and the change can be called out.",
+        "independent_degradation": "Partial or raw-JSON state hides illegal or surprising transitions."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L43-L44",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "translated terminal frame behavior to readable HTML state"
+      }
+    },
+    {
+      "id": "MATT-0f394f53d5d7",
+      "family": "logic-prototype",
+      "slug": "free-play-actions",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Guided cases alone can miss emergent illegal sequences.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A reviewer wants to explore unplanned action orderings.",
+        "observable_effect": "Every action remains available as a free-play button and dispatches through the state model.",
+        "independent_degradation": "Guided cases alone can miss emergent illegal sequences."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L45-L45",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "new HTML interaction mode"
+      }
+    },
+    {
+      "id": "MATT-8ec2838b5cad",
+      "family": "logic-prototype",
+      "slug": "deterministic-guided-scenarios",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：A walkthrough that does not reset or uses fake steps cannot be reproduced or compared.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A reviewer chooses a happy, edge, or illegal walkthrough.",
+        "observable_effect": "A tabbed ordered scenario resets to known state and advances through real action buttons deterministically.",
+        "independent_degradation": "A walkthrough that does not reset or uses fake steps cannot be reproduced or compared."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L46-L48",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "new guided scenario mode"
+      }
+    },
+    {
+      "id": "MATT-1ea3663314a9",
+      "family": "logic-prototype",
+      "slug": "capture-logic-separate-shell",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "单文件逻辑 demo 是独立 sliver，但与本地 framework 母版、docs/prototype 路径、traceability 和精修 UI 链存在边界冲突，且没有真实消费样本。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Shipping the shell or discarding the validated module confuses evidence with production implementation.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可能把 /prototype 或现有 html-prototype 误当成逻辑分支入口。",
+        "codex": "Codex 不执行 slash，且写入必须受 session project pin 约束。",
+        "cross_harness": "两端若使用不同入口或不同产物路径，无法把一次性 pilot 当同一能力验证。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "当前 route/catalog/gap/mode/pin 均无 logic-demo 新增；未来仅在真实 logic-only 任务产生一次性 artifact，并逐项验证本 atom 的状态/DOM/可分享/场景判准，且不改 framework/ 母版。",
+        "required_receipt": "现在为 zero-activation diff；未来为 pinned-path artifact hash + 状态 oracle + 用户判断"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The prototype has answered its question.",
+        "observable_effect": "Validated logic is absorbed separately while the disposable HTML shell remains only as a rerunnable primary-source artifact.",
+        "independent_degradation": "Shipping the shell or discarding the validated module confuses evidence with production implementation."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/prototype/LOGIC.md",
+        "range": "L56-L58",
+        "blob_alias": "prototype_logic",
+        "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+        "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+        "bytes": 6093,
+        "eof": "LF",
+        "delta_relation": "updated capture mapping for HTML shell"
+      }
+    },
+    {
+      "id": "MATT-dfe75cd8c7e9",
+      "family": "grilling-rounds",
+      "slug": "whole-frontier-rounds",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Batching can overwhelm the user and bypass the local one-decision sharpening rhythm even if dependency ordering is correct.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不把 whole-frontier/rounds 语义写入 grilling、triage 或 loop consumer；重启门仍要求两次真实不耐烦且 narrow-to-2 已失败。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "REJECT_KILL_STANDS",
+      "source_behavior": {
+        "trigger": "Several decision-tree nodes have all prerequisites settled.",
+        "observable_effect": "The entire current frontier is asked in one numbered round, then the agent waits for the round's answers.",
+        "independent_degradation": "Batching can overwhelm the user and bypass the local one-decision sharpening rhythm even if dependency ordering is correct."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/grilling/SKILL.md",
+        "range": "L6-L8",
+        "blob_alias": "grilling",
+        "blob_oid": "95bd01ee9049a7e08120d54af9cd6ceeef282335",
+        "sha256": "fa5c1e5ee76b1c8f1ae56101f52c9e239de75d5c578adc61227b92d10b7e52ef",
+        "bytes": 1872,
+        "eof": "LF",
+        "delta_relation": "batch-grill behavior merged into stable grilling"
+      }
+    },
+    {
+      "id": "MATT-2d330e7516fe",
+      "family": "grilling-rounds",
+      "slug": "question-format-recommendation",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Formatting can pass while the number or cognitive breadth of simultaneous questions remains harmful.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不把 whole-frontier/rounds 语义写入 grilling、triage 或 loop consumer；重启门仍要求两次真实不耐烦且 narrow-to-2 已失败。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "REJECT_KILL_STANDS",
+      "source_behavior": {
+        "trigger": "A frontier question is presented inside a round.",
+        "observable_effect": "Each question has a fixed numbered title/body format and an attached recommended answer.",
+        "independent_degradation": "Formatting can pass while the number or cognitive breadth of simultaneous questions remains harmful."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/grilling/SKILL.md",
+        "range": "L10-L16",
+        "blob_alias": "grilling",
+        "blob_oid": "95bd01ee9049a7e08120d54af9cd6ceeef282335",
+        "sha256": "fa5c1e5ee76b1c8f1ae56101f52c9e239de75d5c578adc61227b92d10b7e52ef",
+        "bytes": 1872,
+        "eof": "LF",
+        "delta_relation": "new pinned round format"
+      }
+    },
+    {
+      "id": "MATT-69c03fa3848c",
+      "family": "grilling-rounds",
+      "slug": "dependency-respecting-frontier",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A complete batch can still ask logically premature questions if dependency recalculation fails.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不把 whole-frontier/rounds 语义写入 grilling、triage 或 loop consumer；重启门仍要求两次真实不耐烦且 narrow-to-2 已失败。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "REJECT_KILL_STANDS",
+      "source_behavior": {
+        "trigger": "An answer settles decisions and may unlock dependent questions.",
+        "observable_effect": "The frontier is recomputed; any question depending on another still-open question moves to a later round.",
+        "independent_degradation": "A complete batch can still ask logically premature questions if dependency recalculation fails."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/grilling/SKILL.md",
+        "range": "L18-L18",
+        "blob_alias": "grilling",
+        "blob_oid": "95bd01ee9049a7e08120d54af9cd6ceeef282335",
+        "sha256": "fa5c1e5ee76b1c8f1ae56101f52c9e239de75d5c578adc61227b92d10b7e52ef",
+        "bytes": 1872,
+        "eof": "LF",
+        "delta_relation": "stable batch dependency rule"
+      }
+    },
+    {
+      "id": "MATT-3e8939104418",
+      "family": "grilling-rounds",
+      "slug": "fact-subagent-nonblocking",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：A failed or unavailable subagent can silently turn a fact into a user question or block the whole round.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只记录已存在的 fact/decision split 或 final human confirmation；不得借 KEEP 引入 rounds。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "REJECT_KILL_STANDS",
+      "source_behavior": {
+        "trigger": "One frontier question depends on a discoverable environmental fact.",
+        "observable_effect": "A subagent finds the fact while unrelated frontier questions proceed; only dependent questions wait.",
+        "independent_degradation": "A failed or unavailable subagent can silently turn a fact into a user question or block the whole round."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/grilling/SKILL.md",
+        "range": "L20-L20",
+        "blob_alias": "grilling",
+        "blob_oid": "95bd01ee9049a7e08120d54af9cd6ceeef282335",
+        "sha256": "fa5c1e5ee76b1c8f1ae56101f52c9e239de75d5c578adc61227b92d10b7e52ef",
+        "bytes": 1872,
+        "eof": "LF",
+        "delta_relation": "batch-grill fact handling promoted"
+      }
+    },
+    {
+      "id": "MATT-3359aa28ff1a",
+      "family": "grilling-rounds",
+      "slug": "frontier-empty-user-confirm",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：An empty machine frontier can falsely stand in for human agreement.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只记录已存在的 fact/decision split 或 final human confirmation；不得借 KEEP 引入 rounds。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "No decision-tree frontier remains.",
+        "observable_effect": "The interview still does not act until the user confirms shared understanding.",
+        "independent_degradation": "An empty machine frontier can falsely stand in for human agreement."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/grilling/SKILL.md",
+        "range": "L22-L22",
+        "blob_alias": "grilling",
+        "blob_oid": "95bd01ee9049a7e08120d54af9cd6ceeef282335",
+        "sha256": "fa5c1e5ee76b1c8f1ae56101f52c9e239de75d5c578adc61227b92d10b7e52ef",
+        "bytes": 1872,
+        "eof": "LF",
+        "delta_relation": "completion gate carried into promoted grilling"
+      }
+    },
+    {
+      "id": "MATT-63cf1a43166c",
+      "family": "grilling-rounds",
+      "slug": "triage-round-consumer",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：The core skill can be rejected locally while a consumer silently preserves the same batch behavior.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不把 whole-frontier/rounds 语义写入 grilling、triage 或 loop consumer；重启门仍要求两次真实不耐烦且 narrow-to-2 已失败。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "REJECT_PROPAGATION",
+      "source_behavior": {
+        "trigger": "A triage item needs grilling to become actionable.",
+        "observable_effect": "Triage now asks a round of questions at a time rather than one question at a time.",
+        "independent_degradation": "The core skill can be rejected locally while a consumer silently preserves the same batch behavior."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/triage/SKILL.md",
+        "range": "L76-L76",
+        "blob_alias": "triage",
+        "blob_oid": "e67b7bbabf5215b52f135c7e58b8da5f91337a86",
+        "sha256": "91e2817ecb688c4df4e2444eab472d1d79d2a0a57abf9f6726967664c460ff2e",
+        "bytes": 6582,
+        "eof": "LF",
+        "delta_relation": "consumer changed with promoted grilling"
+      }
+    },
+    {
+      "id": "MATT-3601e39b1222",
+      "family": "grilling-rounds",
+      "slug": "loop-round-consumer",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游 promotion 只改变供应侧成熟度；本地 whole-frontier 重启门仍未满足，结构化提问上限也不支持无界并发问题。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Deleting only the standalone batch skill leaves identical behavior active in downstream consumers.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 的结构化提问也不能把无界 whole frontier 当成安全的一轮。",
+        "codex": "request_user_input 最多 1–3 个短问题，whole-frontier 语义会直接退化。",
+        "cross_harness": "同一 rounds 文本在两端会产生不同批量与等待行为。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不把 whole-frontier/rounds 语义写入 grilling、triage 或 loop consumer；重启门仍要求两次真实不耐烦且 narrow-to-2 已失败。",
+        "required_receipt": "route/skill diff zero + restart-evidence counter + consumer propagation grep"
+      },
+      "source_census_recommendation": "REJECT_PROPAGATION",
+      "source_behavior": {
+        "trigger": "A workflow-spec interview runs through loop-me.",
+        "observable_effect": "The consumer explicitly uses rounds of questions with a recommendation attached to each.",
+        "independent_degradation": "Deleting only the standalone batch skill leaves identical behavior active in downstream consumers."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/in-progress/loop-me/SKILL.md",
+        "range": "L8-L8",
+        "blob_alias": "loop_me",
+        "blob_oid": "c408efa39d2a5da50562e29c914bf8095bf4a1db",
+        "sha256": "ad7110ecbd419fc312c3e7c62f496bd346a05462cdf1589b12ff7550fce3202a",
+        "bytes": 2560,
+        "eof": "LF",
+        "delta_relation": "consumer changed with promoted grilling"
+      }
+    },
+    {
+      "id": "MATT-617e3a2a95a3",
+      "family": "questionnaire",
+      "slug": "questionnaire-claude-user-only",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Promotion alone can be mistaken for permission to add an automatic route.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A user explicitly chooses the questionnaire capability in Claude-style packaging.",
+        "observable_effect": "The promoted skill remains user-invoked and is not autonomously selected by the model.",
+        "independent_degradation": "Promotion alone can be mistaken for permission to add an automatic route."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L1-L5",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "renamed path from in-progress to productivity with body preserved"
+      }
+    },
+    {
+      "id": "MATT-1c575c15b60e",
+      "family": "questionnaire",
+      "slug": "questionnaire-codex-user-only",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Claude-only frontmatter parity can pass while Codex still invokes the skill automatically.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The questionnaire package is discovered by Codex.",
+        "observable_effect": "Codex metadata explicitly disallows implicit invocation.",
+        "independent_degradation": "Claude-only frontmatter parity can pass while Codex still invokes the skill automatically."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/agents/openai.yaml",
+        "range": "L4-L5",
+        "blob_alias": "questionnaire_openai",
+        "blob_oid": "a58d14765beb4acb4c9708b516310558e1308a22",
+        "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+        "bytes": 166,
+        "eof": "LF",
+        "delta_relation": "new Codex metadata on graduation"
+      }
+    },
+    {
+      "id": "MATT-e9258f150e5f",
+      "family": "questionnaire",
+      "slug": "grill-send-not-subject",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Re-interviewing the user about facts they do not have cannot produce the missing evidence.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The user needs knowledge held by another named person.",
+        "observable_effect": "The interview asks only about the send and shapes document questions around the knowledge gap.",
+        "independent_degradation": "Re-interviewing the user about facts they do not have cannot produce the missing evidence."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L7-L9",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "unchanged body exposed by stable graduation"
+      }
+    },
+    {
+      "id": "MATT-1047ab54aad9",
+      "family": "questionnaire",
+      "slug": "recipient-gate",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Without a concrete recipient, tone and assumed context are fabricated.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "A questionnaire send is proposed.",
+        "observable_effect": "One exchange resolves the recipient's role, expertise, relationship, and unique knowledge before drafting.",
+        "independent_degradation": "Without a concrete recipient, tone and assumed context are fabricated."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L11-L11",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "unchanged body exposed by stable graduation"
+      }
+    },
+    {
+      "id": "MATT-b38846688969",
+      "family": "questionnaire",
+      "slug": "needs-back-gate",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：A known recipient without a decision target yields a generic survey instead of a decision instrument.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The recipient is known.",
+        "observable_effect": "One exchange produces the concrete facts or decisions the user must receive back.",
+        "independent_degradation": "A known recipient without a decision target yields a generic survey instead of a decision instrument."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L13-L13",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "unchanged body exposed by stable graduation"
+      }
+    },
+    {
+      "id": "MATT-c64f15d32b8f",
+      "family": "questionnaire",
+      "slug": "questionnaire-current-dir-output-coverage",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：An unpinned current directory can mis-scope the write even when question coverage passes.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ADAPT_PATH",
+      "source_behavior": {
+        "trigger": "Recipient and required return are both known.",
+        "observable_effect": "A named Markdown artifact is written in the current directory and every required return is covered by at least one question.",
+        "independent_degradation": "An unpinned current directory can mis-scope the write even when question coverage passes."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L15-L15",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "unchanged body exposed by stable graduation"
+      }
+    },
+    {
+      "id": "MATT-b3589d5156a5",
+      "family": "questionnaire",
+      "slug": "questionnaire-priority-and-themes",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：An async recipient may answer only an early portion, making weak ordering materially lossy.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "The one-off questionnaire is drafted.",
+        "observable_effect": "Questions are ordered most-important-first and grouped by theme only when numerous.",
+        "independent_degradation": "An async recipient may answer only an early portion, making weak ordering materially lossy."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L17-L19",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "unchanged body exposed by stable graduation"
+      }
+    },
+    {
+      "id": "MATT-67f419958c76",
+      "family": "questionnaire",
+      "slug": "questionnaire-one-idea-answer-stub",
+      "independent_decision": "DEFER",
+      "decision_scope": "future_trigger_or_one_off_pilot_only",
+      "reason": "稳定毕业降低了上游成熟度疑虑，却没有替代本地具名收件人和明确回收目标的真实触发证据；任何试点都必须写入 pinned project path。因此当前只冻结触发器和试点判准，不新增 route、skill、mode、pin 或 activation。 该行为若失守的独立退化是：Compound questions or detached answer areas reduce completion and attribution quality.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude frontmatter 是 user-only，但本地没有注册该 skill。",
+        "codex": "上游 Codex metadata 禁止 implicit invocation；本地仍无对应 catalog target。",
+        "cross_harness": "把 metadata parity 冒充本地可执行 parity 会造假；试点只能走共同自然语言触发。"
+      },
+      "proposed_work_package": "WP-10-authoring-and-defer-gates",
+      "mechanical_gate": {
+        "assertion": "Claude/Codex 都不新增 questionnaire 注册；gap 只允许在具名 recipient 与明确 needs-back 两个人类门通过后做一次性 pilot，输出写绝对 pinned project path，不能写 current directory。",
+        "required_receipt": "route/catalog zero-delta + 两个人类门记录 + 未来一次性 artifact coverage receipt"
+      },
+      "source_census_recommendation": "DEFER_ONE_OFF_PILOT",
+      "source_behavior": {
+        "trigger": "An individual questionnaire item is authored.",
+        "observable_effect": "Each question asks one idea, includes an immediate answer stub, and adds rationale only when misunderstanding is likely.",
+        "independent_degradation": "Compound questions or detached answer areas reduce completion and attribution quality."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/to-questionnaire/SKILL.md",
+        "range": "L37-L47",
+        "blob_alias": "questionnaire",
+        "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+        "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+        "bytes": 2921,
+        "eof": "LF",
+        "delta_relation": "unchanged body exposed by stable graduation"
+      }
+    },
+    {
+      "id": "MATT-ba5ba30d55fc",
+      "family": "wizard",
+      "slug": "wizard-model-trigger-human-only",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：An automatic credential or cutover trigger can cross human, account, repository, and irreversible-action gates without explicit authorization.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "The agent encounters provisioning, credentials, an unfamiliar dashboard, migration, or cutover that requires human-only steps.",
+        "observable_effect": "The promoted skill may invoke itself and generate an interactive Bash procedure.",
+        "independent_degradation": "An automatic credential or cutover trigger can cross human, account, repository, and irreversible-action gates without explicit authorization."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "range": "L1-L4",
+        "blob_alias": "wizard",
+        "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+        "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+        "bytes": 4163,
+        "eof": "LF",
+        "delta_relation": "graduated and model invocation enabled"
+      }
+    },
+    {
+      "id": "MATT-995d533d88fa",
+      "family": "wizard",
+      "slug": "wizard-codex-model-metadata",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Claude and Codex can diverge in automatic activation semantics even when both display the skill.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "Codex indexes the graduated wizard metadata.",
+        "observable_effect": "The metadata exposes the wizard without an explicit no-implicit-invocation policy.",
+        "independent_degradation": "Claude and Codex can diverge in automatic activation semantics even when both display the skill."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/agents/openai.yaml",
+        "range": "L1-L3",
+        "blob_alias": "wizard_openai",
+        "blob_oid": "b601bdf3a321e7d32d5714681540b811287d3988",
+        "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+        "bytes": 96,
+        "eof": "LF",
+        "delta_relation": "new Codex metadata without implicit-invocation deny"
+      }
+    },
+    {
+      "id": "MATT-addf618cdf4b",
+      "family": "wizard",
+      "slug": "wizard-scope-stage-destinations",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A complete stage list can still target the wrong account or repository if identity is not pinned separately.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A human-only procedure is being scoped.",
+        "observable_effect": "The agent enumerates ordered stages and maps each captured value to source, destination, and secret/public status, then asks for confirmation.",
+        "independent_degradation": "A complete stage list can still target the wrong account or repository if identity is not pinned separately."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "range": "L18-L25",
+        "blob_alias": "wizard",
+        "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+        "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+        "bytes": 4163,
+        "eof": "LF",
+        "delta_relation": "existing behavior newly exposed by promotion"
+      }
+    },
+    {
+      "id": "MATT-4df741edbd67",
+      "family": "wizard",
+      "slug": "wizard-no-invented-journey",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A correct stage schema can still send the human through a stale or nonexistent external interface.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A stage depends on a third-party UI or command path.",
+        "observable_effect": "The path is made concrete from repository or documentation evidence; unknown steps are disclosed rather than invented.",
+        "independent_degradation": "A correct stage schema can still send the human through a stale or nonexistent external interface."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "range": "L27-L31",
+        "blob_alias": "wizard",
+        "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+        "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+        "bytes": 4163,
+        "eof": "LF",
+        "delta_relation": "existing behavior newly exposed by promotion"
+      }
+    },
+    {
+      "id": "MATT-e1881ecf0f86",
+      "family": "wizard",
+      "slug": "wizard-fixed-template-stages",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Treating the library as immutable can preserve unsafe helpers and hides version or local-policy changes.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "The approved procedure is authored.",
+        "observable_effect": "Only dependency-ordered stages below a fixed template marker are customized.",
+        "independent_degradation": "Treating the library as immutable can preserve unsafe helpers and hides version or local-policy changes."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "range": "L33-L35",
+        "blob_alias": "wizard",
+        "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+        "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+        "bytes": 4163,
+        "eof": "LF",
+        "delta_relation": "existing behavior newly exposed by promotion"
+      }
+    },
+    {
+      "id": "MATT-e072e08dc8b4",
+      "family": "wizard",
+      "slug": "wizard-confirm-irreversible",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Reversible external writes and credential changes still occur without per-write preview, confirmation, or compensation.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A generated stage contains an irreversible action.",
+        "observable_effect": "The author is instructed to place a confirmation gate before that action.",
+        "independent_degradation": "Reversible external writes and credential changes still occur without per-write preview, confirmation, or compensation."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "range": "L37-L37",
+        "blob_alias": "wizard",
+        "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+        "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+        "bytes": 4163,
+        "eof": "LF",
+        "delta_relation": "existing behavior newly exposed by promotion"
+      }
+    },
+    {
+      "id": "MATT-9e17e436b51c",
+      "family": "wizard",
+      "slug": "wizard-static-only-verification",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：External-write, quoting, rollback, account, and cancellation faults remain untested.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "The generated script is ready for verification.",
+        "observable_effect": "Syntax and optional shellcheck run, but the procedure is not executed end-to-end; value flow is traced statically.",
+        "independent_degradation": "External-write, quoting, rollback, account, and cancellation faults remain untested."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/SKILL.md",
+        "range": "L39-L44",
+        "blob_alias": "wizard",
+        "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+        "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+        "bytes": 4163,
+        "eof": "LF",
+        "delta_relation": "existing behavior newly exposed by promotion"
+      }
+    },
+    {
+      "id": "MATT-759e33cc418f",
+      "family": "wizard",
+      "slug": "wizard-cross-platform-url-open",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Opening the right URL does not pin account, tenant, or repository identity.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A stage names an external dashboard URL.",
+        "observable_effect": "The script attempts platform-specific browser openers and falls back to a manual URL warning.",
+        "independent_degradation": "Opening the right URL does not pin account, tenant, or repository identity."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/template.sh",
+        "range": "L65-L75",
+        "blob_alias": "wizard_template",
+        "blob_oid": "e5b28ab65e034cec1bd61f12116808d343bdb957",
+        "sha256": "d43dc3f7b6008779ef55e3935bf1df246b5bc194b7f9e1dee3d9340a00922ce6",
+        "bytes": 8596,
+        "eof": "LF",
+        "delta_relation": "template promoted into stable bucket"
+      }
+    },
+    {
+      "id": "MATT-af30e0ed4176",
+      "family": "wizard",
+      "slug": "wizard-secret-read-reuse",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Secret existence and content cross from disk into process memory without identity, permission, or redaction guarantees.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A stage requests a visible or secret value and an existing environment file may already contain it.",
+        "observable_effect": "The script reads the existing value, offers reuse, hides newly typed secrets, and stores the result in a shell variable.",
+        "independent_degradation": "Secret existence and content cross from disk into process memory without identity, permission, or redaction guarantees."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/template.sh",
+        "range": "L91-L126",
+        "blob_alias": "wizard_template",
+        "blob_oid": "e5b28ab65e034cec1bd61f12116808d343bdb957",
+        "sha256": "d43dc3f7b6008779ef55e3935bf1df246b5bc194b7f9e1dee3d9340a00922ce6",
+        "bytes": 8596,
+        "eof": "LF",
+        "delta_relation": "template promoted into stable bucket"
+      }
+    },
+    {
+      "id": "MATT-d630109f0348",
+      "family": "wizard",
+      "slug": "wizard-env-upsert",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：There is no backup, rollback, gitignore preflight, escaping contract, or per-write approval; embedded newlines can corrupt the file.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A captured value is marked for local persistence.",
+        "observable_effect": "The script rewrites the selected environment file through a temporary file and records the key as written.",
+        "independent_degradation": "There is no backup, rollback, gitignore preflight, escaping contract, or per-write approval; embedded newlines can corrupt the file."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/template.sh",
+        "range": "L128-L139",
+        "blob_alias": "wizard_template",
+        "blob_oid": "e5b28ab65e034cec1bd61f12116808d343bdb957",
+        "sha256": "d43dc3f7b6008779ef55e3935bf1df246b5bc194b7f9e1dee3d9340a00922ce6",
+        "bytes": 8596,
+        "eof": "LF",
+        "delta_relation": "template promoted into stable bucket"
+      }
+    },
+    {
+      "id": "MATT-a9b1e31a35ad",
+      "family": "wizard",
+      "slug": "wizard-github-external-writes",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Authentication can point at the wrong account or repository, and a partial set of writes has no compensating rollback.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "A captured value is mapped to a GitHub Actions secret or variable.",
+        "observable_effect": "The script writes through gh when authenticated, otherwise records the operation as skipped.",
+        "independent_degradation": "Authentication can point at the wrong account or repository, and a partial set of writes has no compensating rollback."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/template.sh",
+        "range": "L141-L167",
+        "blob_alias": "wizard_template",
+        "blob_oid": "e5b28ab65e034cec1bd61f12116808d343bdb957",
+        "sha256": "d43dc3f7b6008779ef55e3935bf1df246b5bc194b7f9e1dee3d9340a00922ce6",
+        "bytes": 8596,
+        "eof": "LF",
+        "delta_relation": "template promoted into stable bucket"
+      }
+    },
+    {
+      "id": "MATT-9cd8048bc76e",
+      "family": "wizard",
+      "slug": "wizard-partial-success-summary",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "该能力会打开 GUI、读取或写入凭据、修改 .env 和 GitHub 外部状态，却缺少目标身份绑定、逐写审批、事务日志和补偿回滚。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A friendly summary can normalize a partially committed state without rollback or an explicit failed transaction status.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 Claude skill 已允许 model invocation，可能自动进入 credential/cutover 流程。",
+        "codex": "Codex metadata 没有 explicit no-implicit policy，自动触发边界更弱。",
+        "cross_harness": "两端都缺事务性外部写合同，而触发语义还不一致。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "wizard、template.sh 与 metadata 在 route、catalog、pin、global skill targets 中均不存在，且没有 plugin/skills.sh 间接安装；任何命中立即 FAIL。",
+        "required_receipt": "route/catalog/pin/global-tree absence report + rejected lineage entry"
+      },
+      "source_census_recommendation": "REJECT",
+      "source_behavior": {
+        "trigger": "The wizard reaches its finish function after any mix of writes and skips.",
+        "observable_effect": "It summarizes local writes, GitHub secrets, and skipped actions.",
+        "independent_degradation": "A friendly summary can normalize a partially committed state without rollback or an explicit failed transaction status."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/wizard/template.sh",
+        "range": "L169-L180",
+        "blob_alias": "wizard_template",
+        "blob_oid": "e5b28ab65e034cec1bd61f12116808d343bdb957",
+        "sha256": "d43dc3f7b6008779ef55e3935bf1df246b5bc194b7f9e1dee3d9340a00922ce6",
+        "bytes": 8596,
+        "eof": "LF",
+        "delta_relation": "template promoted into stable bucket"
+      }
+    },
+    {
+      "id": "MATT-7e6c82da4918",
+      "family": "phase-boundary-tree",
+      "slug": "phase-boundary-only",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Applying the tree mid-phase discards the live reasoning thread.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只在 ledger 记录已有 phase-boundary/AFK delegation/lossiness 原则；本地 checkpoint、handoff 与 native compaction 合同 hash 不变。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "One work phase has actually ended and the next is about to start.",
+        "observable_effect": "Context continuation, clearing, handoff, subagent, or compaction is chosen only at the boundary; mid-phase work continues or branches to a subagent.",
+        "independent_degradation": "Applying the tree mid-phase discards the live reasoning thread."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L3-L5",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new phase decision reference"
+      }
+    },
+    {
+      "id": "MATT-768dcd6a9f31",
+      "family": "phase-boundary-tree",
+      "slug": "phase-continue-primary-source-smart-zone",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：The hard-coded window estimate and manual judgement are model- and harness-specific and can override actual compaction behavior.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "共享合同和候选 diff 中不新增 /clear、/compact、150k smart-zone 或 portability-only handoff 分支。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "REJECT_TREE",
+      "source_behavior": {
+        "trigger": "The next phase needs verbatim primary-source reasoning or is estimated to fit in a roughly 150k-token smart zone.",
+        "observable_effect": "The same session continues and preserves full context.",
+        "independent_degradation": "The hard-coded window estimate and manual judgement are model- and harness-specific and can override actual compaction behavior."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L19-L21",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new ordered branch"
+      }
+    },
+    {
+      "id": "MATT-32a587e2ae16",
+      "family": "phase-boundary-tree",
+      "slug": "phase-clear-irrelevant-context",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A Claude slash assumption is not portable to Codex, and a mistaken relevance judgement irreversibly loses the why.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "共享合同和候选 diff 中不新增 /clear、/compact、150k smart-zone 或 portability-only handoff 分支。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "REJECT_TREE",
+      "source_behavior": {
+        "trigger": "All current exploration, decisions, and dead ends are irrelevant to the next phase.",
+        "observable_effect": "The context is cleared while the old session remains resumable.",
+        "independent_degradation": "A Claude slash assumption is not portable to Codex, and a mistaken relevance judgement irreversibly loses the why."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L23-L25",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new ordered branch"
+      }
+    },
+    {
+      "id": "MATT-14788bc00c7c",
+      "family": "phase-boundary-tree",
+      "slug": "phase-handoff-portability-only",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：This narrow definition conflicts with lucagstack's durable mandatory handoff artifacts and shared state semantics.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "共享合同和候选 diff 中不新增 /clear、/compact、150k smart-zone 或 portability-only handoff 分支。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "REJECT_TREE",
+      "source_behavior": {
+        "trigger": "Work moves to another harness, directory, colleague, or a mid-phase side task.",
+        "observable_effect": "A portable Markdown handoff is produced only for those four travel cases.",
+        "independent_degradation": "This narrow definition conflicts with lucagstack's durable mandatory handoff artifacts and shared state semantics."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L27-L34",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new narrowed handoff branch"
+      }
+    },
+    {
+      "id": "MATT-1ef0003875bf",
+      "family": "phase-boundary-tree",
+      "slug": "phase-afk-subagent",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Prompt-only scope can be falsely treated as execution isolation or completion proof.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只在 ledger 记录已有 phase-boundary/AFK delegation/lossiness 原则；本地 checkpoint、handoff 与 native compaction 合同 hash 不变。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "The next task is tight enough to complete without user steering.",
+        "observable_effect": "It is delegated to a subagent while the parent session stays intact.",
+        "independent_degradation": "Prompt-only scope can be falsely treated as execution isolation or completion proof."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L36-L36",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new ordered branch"
+      }
+    },
+    {
+      "id": "MATT-cacaba6fee83",
+      "family": "phase-boundary-tree",
+      "slug": "phase-compact-default",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Codex does not expose this slash contract, while both harnesses already perform automatic compaction differently.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "共享合同和候选 diff 中不新增 /clear、/compact、150k smart-zone 或 portability-only handoff 分支。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "REJECT_TREE",
+      "source_behavior": {
+        "trigger": "Context is relevant, work stays in the same harness and directory, and human steering remains necessary after cheaper branches fail.",
+        "observable_effect": "A slash compaction with a next-phase instruction becomes the default fallback.",
+        "independent_degradation": "Codex does not expose this slash contract, while both harnesses already perform automatic compaction differently."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L38-L40",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new ordered branch"
+      }
+    },
+    {
+      "id": "MATT-14aa6fda7115",
+      "family": "phase-boundary-tree",
+      "slug": "phase-primary-secondary-lossiness",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "只有 phase-boundary 与 primary-source lossiness 原则可复用；/clear、/compact、150k 和 portability-only handoff 是 Claude/模型特定语义。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Treating every handoff or compaction as equally lossy ignores structured durable artifacts and native session receipts.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 具备 /clear、/handoff、/compact 语法，但其语义也与本地 durable handoff 冲突。",
+        "codex": "Codex 没有这些 slash，compaction 由 harness 自动管理。",
+        "cross_harness": "共享树会让同一分支在 Claude 可执行、在 Codex dangling。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只在 ledger 记录已有 phase-boundary/AFK delegation/lossiness 原则；本地 checkpoint、handoff 与 native compaction 合同 hash 不变。",
+        "required_receipt": "forbidden-token scan + shared-contract zero-delta or existing-test receipt"
+      },
+      "source_census_recommendation": "NO_OP_PRINCIPLE_ONLY",
+      "source_behavior": {
+        "trigger": "A context-moving option other than Continue is considered.",
+        "observable_effect": "The decision explicitly trades primary-source information for less noise and more room.",
+        "independent_degradation": "Treating every handoff or compaction as equally lossy ignores structured durable artifacts and native session receipts."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+        "range": "L42-L51",
+        "blob_alias": "phase_boundaries",
+        "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+        "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+        "bytes": 4276,
+        "eof": "LF",
+        "delta_relation": "new decision rationale"
+      }
+    },
+    {
+      "id": "MATT-88bd946f2af3",
+      "family": "wait-what",
+      "slug": "wait-what-claude-user-only",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "自然语言纠正已经是双 harness 原生触发；独立 skill 增加 catalog 与认知负担，ASD-STE100 也不适合作为中文清晰度规范。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A dedicated corrective command increases cognitive and routing load for a trigger already expressed in natural language.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude user-only 包装可达，但自然语言纠正已足够。",
+        "codex": "Codex metadata 也可暴露入口，但新增 catalog 无行为增量。",
+        "cross_harness": "真正共同不变量是按用户语言重述，不是同名注册。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "route/catalog/global skill 中无 wait-what，且共享中文行为规范不出现 ASD-STE100 强制。",
+        "required_receipt": "registration absence + 双端自然语言重述 trace"
+      },
+      "source_census_recommendation": "REJECT_SKILL",
+      "source_behavior": {
+        "trigger": "The user explicitly invokes the corrective because the previous message did not land.",
+        "observable_effect": "The skill is user-only in Claude-style packaging.",
+        "independent_degradation": "A dedicated corrective command increases cognitive and routing load for a trigger already expressed in natural language."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/wait-what/SKILL.md",
+        "range": "L1-L5",
+        "blob_alias": "wait_what",
+        "blob_oid": "d493cfa883645bb7ce2e12f5232c0fbe3a0b9f87",
+        "sha256": "8923f7df1a0d1b138281658e134caa4bf1c618d2876a2323b19acdfdffebc024",
+        "bytes": 325,
+        "eof": "LF",
+        "delta_relation": "new user-invoked skill"
+      }
+    },
+    {
+      "id": "MATT-ef3806a9c4af",
+      "family": "wait-what",
+      "slug": "wait-what-codex-user-only",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "自然语言纠正已经是双 harness 原生触发；独立 skill 增加 catalog 与认知负担，ASD-STE100 也不适合作为中文清晰度规范。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Adding the registration still spends catalog and human-index cost despite correct invocation parity.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude user-only 包装可达，但自然语言纠正已足够。",
+        "codex": "Codex metadata 也可暴露入口，但新增 catalog 无行为增量。",
+        "cross_harness": "真正共同不变量是按用户语言重述，不是同名注册。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "route/catalog/global skill 中无 wait-what，且共享中文行为规范不出现 ASD-STE100 强制。",
+        "required_receipt": "registration absence + 双端自然语言重述 trace"
+      },
+      "source_census_recommendation": "REJECT_SKILL",
+      "source_behavior": {
+        "trigger": "Codex discovers the corrective package.",
+        "observable_effect": "Metadata explicitly prevents implicit invocation.",
+        "independent_degradation": "Adding the registration still spends catalog and human-index cost despite correct invocation parity."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/wait-what/agents/openai.yaml",
+        "range": "L4-L5",
+        "blob_alias": "wait_what_openai",
+        "blob_oid": "ba77f1c967700d7c6574ba70b0dd585056c98b7f",
+        "sha256": "3ec661af8fc7063b650518c95ab775bbeabaefce38b89acaf6da2f749168f37e",
+        "bytes": 161,
+        "eof": "LF",
+        "delta_relation": "new Codex metadata"
+      }
+    },
+    {
+      "id": "MATT-826719117fa0",
+      "family": "wait-what",
+      "slug": "wait-what-repitch-context",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "自然语言纠正已经是双 harness 原生触发；独立 skill 增加 catalog 与认知负担，ASD-STE100 也不适合作为中文清晰度规范。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：A rephrasing can remain opaque if it merely adds more explanation without changing the mental model.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude user-only 包装可达，但自然语言纠正已足够。",
+        "codex": "Codex metadata 也可暴露入口，但新增 catalog 无行为增量。",
+        "cross_harness": "真正共同不变量是按用户语言重述，不是同名注册。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "普通自然语言纠正能在两端触发重述，并沿 active CONTEXT 或用户当前用词降级；不创建技能入口。",
+        "required_receipt": "registration absence + 双端自然语言重述 trace"
+      },
+      "source_census_recommendation": "NO_OP_NATIVE_BEHAVIOR",
+      "source_behavior": {
+        "trigger": "The last answer was not understood.",
+        "observable_effect": "The answer is re-pitched with enough missing context to orient the user.",
+        "independent_degradation": "A rephrasing can remain opaque if it merely adds more explanation without changing the mental model."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/wait-what/SKILL.md",
+        "range": "L7-L7",
+        "blob_alias": "wait_what",
+        "blob_oid": "d493cfa883645bb7ce2e12f5232c0fbe3a0b9f87",
+        "sha256": "8923f7df1a0d1b138281658e134caa4bf1c618d2876a2323b19acdfdffebc024",
+        "bytes": 325,
+        "eof": "LF",
+        "delta_relation": "new one-line behavior"
+      }
+    },
+    {
+      "id": "MATT-36a37a56c05b",
+      "family": "wait-what",
+      "slug": "wait-what-asd-ste100",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "自然语言纠正已经是双 harness 原生触发；独立 skill 增加 catalog 与认知负担，ASD-STE100 也不适合作为中文清晰度规范。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：An English technical-writing standard does not guarantee clarity in Chinese and can distort natural product language.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude user-only 包装可达，但自然语言纠正已足够。",
+        "codex": "Codex metadata 也可暴露入口，但新增 catalog 无行为增量。",
+        "cross_harness": "真正共同不变量是按用户语言重述，不是同名注册。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "route/catalog/global skill 中无 wait-what，且共享中文行为规范不出现 ASD-STE100 强制。",
+        "required_receipt": "registration absence + 双端自然语言重述 trace"
+      },
+      "source_census_recommendation": "REJECT_PORTABILITY",
+      "source_behavior": {
+        "trigger": "The previous answer must be simplified.",
+        "observable_effect": "The rewrite is constrained to ASD-STE100 Simplified Technical English.",
+        "independent_degradation": "An English technical-writing standard does not guarantee clarity in Chinese and can distort natural product language."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/wait-what/SKILL.md",
+        "range": "L7-L7",
+        "blob_alias": "wait_what",
+        "blob_oid": "d493cfa883645bb7ce2e12f5232c0fbe3a0b9f87",
+        "sha256": "8923f7df1a0d1b138281658e134caa4bf1c618d2876a2323b19acdfdffebc024",
+        "bytes": 325,
+        "eof": "LF",
+        "delta_relation": "new one-line behavior"
+      }
+    },
+    {
+      "id": "MATT-3032fe812104",
+      "family": "wait-what",
+      "slug": "wait-what-context-vocabulary",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "自然语言纠正已经是双 harness 原生触发；独立 skill 增加 catalog 与认知负担，ASD-STE100 也不适合作为中文清晰度规范。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：A missing or stale context file can replace the user's current words with outdated jargon.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude user-only 包装可达，但自然语言纠正已足够。",
+        "codex": "Codex metadata 也可暴露入口，但新增 catalog 无行为增量。",
+        "cross_harness": "真正共同不变量是按用户语言重述，不是同名注册。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "普通自然语言纠正能在两端触发重述，并沿 active CONTEXT 或用户当前用词降级；不创建技能入口。",
+        "required_receipt": "registration absence + 双端自然语言重述 trace"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "A misunderstood answer is re-pitched inside a project.",
+        "observable_effect": "The rewrite uses the ubiquitous language in CONTEXT.md.",
+        "independent_degradation": "A missing or stale context file can replace the user's current words with outdated jargon."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/productivity/wait-what/SKILL.md",
+        "range": "L7-L7",
+        "blob_alias": "wait_what",
+        "blob_oid": "d493cfa883645bb7ce2e12f5232c0fbe3a0b9f87",
+        "sha256": "8923f7df1a0d1b138281658e134caa4bf1c618d2876a2323b19acdfdffebc024",
+        "bytes": 325,
+        "eof": "LF",
+        "delta_relation": "new one-line behavior"
+      }
+    },
+    {
+      "id": "MATT-df4775134f2f",
+      "family": "harness-neutral-dispatch",
+      "slug": "code-review-harness-neutral",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "去除厂商工具名只是文案可移植性，不等于原生 agent 可发现、可派发、隔离和 receipt 已闭合。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：A heading can remain portable while the local harness lacks the required role, isolation, or receipt mechanics.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可用原生 subagent，但泛化措辞不证明角色与 receipt。",
+        "codex": "Codex 需要真实 native dispatch、agent registration 和 receipt；当前关键角色仍缺。",
+        "cross_harness": "删除 vendor 名称只能通过文案 gate，不能通过执行 parity gate。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只记上游措辞 lineage；不存在因措辞变化而新增的本地 role、route 或 capability PASS。",
+        "required_receipt": "lineage receipt + local zero-delta"
+      },
+      "source_census_recommendation": "NO_INDEPENDENT_ADOPTION",
+      "source_behavior": {
+        "trigger": "A two-axis code review reaches its parallel review step.",
+        "observable_effect": "The behavior is stated as spawning two subagents in parallel without naming a vendor tool or agent type.",
+        "independent_degradation": "A heading can remain portable while the local harness lacks the required role, isolation, or receipt mechanics."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/code-review/SKILL.md",
+        "range": "L58-L58",
+        "blob_alias": "code_review",
+        "blob_oid": "2d276fe88bddd363395b4887a555769222a34975",
+        "sha256": "9cf46653dd9c710ea1e6c22423caf31a794c88773bc94bdaa23140277f470442",
+        "bytes": 6634,
+        "eof": "LF",
+        "delta_relation": "vendor-specific call removed"
+      }
+    },
+    {
+      "id": "MATT-2e91f1b00c08",
+      "family": "harness-neutral-dispatch",
+      "slug": "codebase-design-harness-neutral",
+      "independent_decision": "ADAPT",
+      "decision_scope": "narrow_adaptation_only",
+      "reason": "去除厂商工具名只是文案可移植性，不等于原生 agent 可发现、可派发、隔离和 receipt 已闭合。因此只吸收这个独立行为并接入本地 SSOT/安全边界，禁止整包安装。 该行为若失守的独立退化是：The source may be portable while Codex catalog reach, nested references, or native parallel dispatch is absent.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可用原生 subagent，但泛化措辞不证明角色与 receipt。",
+        "codex": "Codex 需要真实 native dispatch、agent registration 和 receipt；当前关键角色仍缺。",
+        "cross_harness": "删除 vendor 名称只能通过文案 gate，不能通过执行 parity gate。"
+      },
+      "proposed_work_package": "WP-07-codebase-parity",
+      "mechanical_gate": {
+        "assertion": "共享目录的 SKILL.md、DESIGN-IT-TWICE.md、DEEPENING.md 三文件闭包存在；Claude 为指向共享真身的软链；Codex catalog 可发现；两端真实派发 3+ native subagents 且 receipt 的 parent/child/role/hash 可核。",
+        "required_receipt": "两端 catalog+nested-reference+native-dispatch receipts；任一缺失即 BLOCK"
+      },
+      "source_census_recommendation": "ADAPT_EXISTING_DEFECT",
+      "source_behavior": {
+        "trigger": "A selected deepening candidate needs alternative interfaces.",
+        "observable_effect": "Three or more parallel subagents each produce a radically different design without a named vendor tool.",
+        "independent_degradation": "The source may be portable while Codex catalog reach, nested references, or native parallel dispatch is absent."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+        "range": "L19-L21",
+        "blob_alias": "design_twice",
+        "blob_oid": "8419ad6fa966be2e9e435c932b3584df56cb1af6",
+        "sha256": "09f9948ea7636a4d3704c5ab909762e876c0b39849eefb14d2e03a398cc9c7e7",
+        "bytes": 2691,
+        "eof": "LF",
+        "delta_relation": "vendor-specific Agent tool removed"
+      }
+    },
+    {
+      "id": "MATT-5ae242a1e7a3",
+      "family": "harness-neutral-dispatch",
+      "slug": "architecture-scan-harness-neutral",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "去除厂商工具名只是文案可移植性，不等于原生 agent 可发现、可派发、隔离和 receipt 已闭合。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Removing a vendor name can still leave an unavailable capability or unsafe write-enabled explorer.",
+      "claude_codex_parity_risk": {
+        "claude": "Claude 可用原生 subagent，但泛化措辞不证明角色与 receipt。",
+        "codex": "Codex 需要真实 native dispatch、agent registration 和 receipt；当前关键角色仍缺。",
+        "cross_harness": "删除 vendor 名称只能通过文案 gate，不能通过执行 parity gate。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只记上游措辞 lineage；不存在因措辞变化而新增的本地 role、route 或 capability PASS。",
+        "required_receipt": "lineage receipt + local zero-delta"
+      },
+      "source_census_recommendation": "NO_INDEPENDENT_ADOPTION",
+      "source_behavior": {
+        "trigger": "An architecture scan begins exploration.",
+        "observable_effect": "A subagent explores the codebase without hard-coding Claude's Agent/Explore names.",
+        "independent_degradation": "Removing a vendor name can still leave an unavailable capability or unsafe write-enabled explorer."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+        "range": "L27-L27",
+        "blob_alias": "improve_architecture",
+        "blob_oid": "529761a3a01d35996018f27530b3c3cc0ab18d41",
+        "sha256": "7b76f01b0eefe49a127754c9027a6235a036a21348df5dad988893d8b2f384d6",
+        "bytes": 6009,
+        "eof": "LF",
+        "delta_relation": "vendor-specific Agent/Explore call removed"
+      }
+    },
+    {
+      "id": "MATT-ec1e2352340c",
+      "family": "distribution",
+      "slug": "claude-official-plugin-auto-update",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游按 Claude plugin 与 Codex skills.sh 分渠道交付；本地采用 pinned source、共享真身、harness adapter 与 FUSION 人类门，不能切到自动更新或直拷通道。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：Automatic upstream updates bypass lucagstack's pinned source review, adaptation, and gated activation.",
+      "claude_codex_parity_risk": {
+        "claude": "官方 plugin 自动更新会绕过本地 pin、review 与 H4。",
+        "codex": "skills.sh 直拷会绕过共享真身、lineage 与双端验收。",
+        "cross_harness": "采用上游分渠道会拆开本地一份真身、两端 adapter 的架构。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不执行或推荐 Claude official plugin、skills.sh 直拷或二者 exclusivity；installed-pins、watcher、shared target 与 H4/FUSION 控制链保持唯一通道。",
+        "required_receipt": "install-channel forbidden-command scan + pins/registry target diff"
+      },
+      "source_census_recommendation": "REJECT_CHANNEL_SWITCH",
+      "source_behavior": {
+        "trigger": "A Claude Code user installs the upstream collection.",
+        "observable_effect": "The official marketplace plugin installs a managed read-only bundle and receives automatic updates.",
+        "independent_degradation": "Automatic upstream updates bypass lucagstack's pinned source review, adaptation, and gated activation."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/install-block.md",
+        "range": "L5-L21",
+        "blob_alias": "install_block",
+        "blob_oid": "8971bde2d7ad2bbc722cc4beb838ea6c906b57c7",
+        "sha256": "8079456d3df5866785ee71e0e14e88b99ad96921e28f4e664b7f67dd1c455f16",
+        "bytes": 2802,
+        "eof": "LF",
+        "delta_relation": "new canonical install story"
+      }
+    },
+    {
+      "id": "MATT-875493a46768",
+      "family": "distribution",
+      "slug": "codex-skills-sh-copy",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游按 Claude plugin 与 Codex skills.sh 分渠道交付；本地采用 pinned source、共享真身、harness adapter 与 FUSION 人类门，不能切到自动更新或直拷通道。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：A copied file can bypass local lineage pins, local modifications, and dual-harness acceptance gates.",
+      "claude_codex_parity_risk": {
+        "claude": "官方 plugin 自动更新会绕过本地 pin、review 与 H4。",
+        "codex": "skills.sh 直拷会绕过共享真身、lineage 与双端验收。",
+        "cross_harness": "采用上游分渠道会拆开本地一份真身、两端 adapter 的架构。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不执行或推荐 Claude official plugin、skills.sh 直拷或二者 exclusivity；installed-pins、watcher、shared target 与 H4/FUSION 控制链保持唯一通道。",
+        "required_receipt": "install-channel forbidden-command scan + pins/registry target diff"
+      },
+      "source_census_recommendation": "NO_CHANNEL_CHANGE",
+      "source_behavior": {
+        "trigger": "A Codex or other Agent-Skills user installs upstream skills.",
+        "observable_effect": "skills.sh copies selected editable skill files and prompts the installer to include setup-matt-pocock-skills.",
+        "independent_degradation": "A copied file can bypass local lineage pins, local modifications, and dual-harness acceptance gates."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/install-block.md",
+        "range": "L25-L35",
+        "blob_alias": "install_block",
+        "blob_oid": "8971bde2d7ad2bbc722cc4beb838ea6c906b57c7",
+        "sha256": "8079456d3df5866785ee71e0e14e88b99ad96921e28f4e664b7f67dd1c455f16",
+        "bytes": 2802,
+        "eof": "LF",
+        "delta_relation": "new audience-specific install story"
+      }
+    },
+    {
+      "id": "MATT-83b5baf3a2a6",
+      "family": "distribution",
+      "slug": "exclusive-install-routes",
+      "independent_decision": "REJECT",
+      "decision_scope": "no_local_adoption",
+      "reason": "上游按 Claude plugin 与 Codex skills.sh 分渠道交付；本地采用 pinned source、共享真身、harness adapter 与 FUSION 人类门，不能切到自动更新或直拷通道。因此不进入本地执行面，只保留可审计的拒绝与 replacement 谱系。 该行为若失守的独立退化是：luca_gstack deliberately has shared truth plus harness adapters, so copying this rule literally would misclassify its architecture.",
+      "claude_codex_parity_risk": {
+        "claude": "官方 plugin 自动更新会绕过本地 pin、review 与 H4。",
+        "codex": "skills.sh 直拷会绕过共享真身、lineage 与双端验收。",
+        "cross_harness": "采用上游分渠道会拆开本地一份真身、两端 adapter 的架构。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "候选 diff 不执行或推荐 Claude official plugin、skills.sh 直拷或二者 exclusivity；installed-pins、watcher、shared target 与 H4/FUSION 控制链保持唯一通道。",
+        "required_receipt": "install-channel forbidden-command scan + pins/registry target diff"
+      },
+      "source_census_recommendation": "NO_OP_UPSTREAM_PACKAGING",
+      "source_behavior": {
+        "trigger": "A user chooses how to consume the upstream collection.",
+        "observable_effect": "Managed plugin and editable-copy routes are declared mutually exclusive to avoid duplicate skills.",
+        "independent_degradation": "luca_gstack deliberately has shared truth plus harness adapters, so copying this rule literally would misclassify its architecture."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/install-block.md",
+        "range": "L55-L61",
+        "blob_alias": "install_block",
+        "blob_oid": "8971bde2d7ad2bbc722cc4beb838ea6c906b57c7",
+        "sha256": "8079456d3df5866785ee71e0e14e88b99ad96921e28f4e664b7f67dd1c455f16",
+        "bytes": 2802,
+        "eof": "LF",
+        "delta_relation": "new exclusivity rule"
+      }
+    },
+    {
+      "id": "MATT-7fa068e58440",
+      "family": "agent-doc-authoring",
+      "slug": "docs-renderer-install-ssot",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "这些规则服务上游 aihero 文档发布面；可复用原则要么已由本地质量门覆盖，要么被 environment/cache doctrine 吸收，不形成新运行时能力。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Hand-written copies drift from the executable or rendered source of truth.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 aihero renderer 与 Claude runtime 没有执行等价性。",
+        "codex": "Codex 也不消费该网站 page template。",
+        "cross_harness": "若只记谱系则无 parity 风险；若当 runtime doctrine 安装会引入第三份 SSOT。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只写 lineage；不创建本地 docs-page skill/route，不复制 aihero renderer 规则；被 environment/cache 吸收的含义只在 canonical doctrine 出现一次。",
+        "required_receipt": "route/catalog zero-delta + duplicate-doctrine scan"
+      },
+      "source_census_recommendation": "NO_INDEPENDENT_ADOPTION_C3_ABSORBS",
+      "source_behavior": {
+        "trigger": "A human-facing skill page is authored where the site renderer already owns install UI.",
+        "observable_effect": "The page omits duplicate install commands and changes the canonical renderer block instead.",
+        "independent_degradation": "Hand-written copies drift from the executable or rendered source of truth."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/writing-docs.md",
+        "range": "L19-L19",
+        "blob_alias": "writing_pages",
+        "blob_oid": "c915ab8be6e22dab003df00f76ffc69937517bd9",
+        "sha256": "d63abb087493db959d2e614f2a8fd697c0d32fb80df84c48b4c0bca18c82a443",
+        "bytes": 12760,
+        "eof": "LF",
+        "delta_relation": "new anti-duplication rule"
+      }
+    },
+    {
+      "id": "MATT-864d55193e5e",
+      "family": "agent-doc-authoring",
+      "slug": "observed-questions-evidence",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "这些规则服务上游 aihero 文档发布面；可复用原则要么已由本地质量门覆盖，要么被 environment/cache doctrine 吸收，不形成新运行时能力。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Invented padding can satisfy structure while answering questions no user has.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 aihero renderer 与 Claude runtime 没有执行等价性。",
+        "codex": "Codex 也不消费该网站 page template。",
+        "cross_harness": "若只记谱系则无 parity 风险；若当 runtime doctrine 安装会引入第三份 SSOT。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只写 lineage；不创建本地 docs-page skill/route，不复制 aihero renderer 规则；被 environment/cache 吸收的含义只在 canonical doctrine 出现一次。",
+        "required_receipt": "route/catalog zero-delta + duplicate-doctrine scan"
+      },
+      "source_census_recommendation": "NO_INDEPENDENT_ADOPTION",
+      "source_behavior": {
+        "trigger": "A Common questions section is considered for a skill page.",
+        "observable_effect": "Real questions are sought from the wiki, issues, and changelog; section length remains proportional to evidence.",
+        "independent_degradation": "Invented padding can satisfy structure while answering questions no user has."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/writing-docs.md",
+        "range": "L44-L56",
+        "blob_alias": "writing_pages",
+        "blob_oid": "c915ab8be6e22dab003df00f76ffc69937517bd9",
+        "sha256": "d63abb087493db959d2e614f2a8fd697c0d32fb80df84c48b4c0bca18c82a443",
+        "bytes": 12760,
+        "eof": "LF",
+        "delta_relation": "new evidence-gathering rule"
+      }
+    },
+    {
+      "id": "MATT-a624582e0135",
+      "family": "agent-doc-authoring",
+      "slug": "external-working-signals",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "这些规则服务上游 aihero 文档发布面；可复用原则要么已由本地质量门覆盖，要么被 environment/cache doctrine 吸收，不形成新运行时能力。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：An internal compliance check can masquerade as a user-observable outcome.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 aihero renderer 与 Claude runtime 没有执行等价性。",
+        "codex": "Codex 也不消费该网站 page template。",
+        "cross_harness": "若只记谱系则无 parity 风险；若当 runtime doctrine 安装会引入第三份 SSOT。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只写 lineage；不创建本地 docs-page skill/route，不复制 aihero renderer 规则；被 environment/cache 吸收的含义只在 canonical doctrine 出现一次。",
+        "required_receipt": "route/catalog zero-delta + duplicate-doctrine scan"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "A human-facing page claims how to tell a skill works.",
+        "observable_effect": "Each signal must be checkable from the user's work or visible trace without inspecting the skill source.",
+        "independent_degradation": "An internal compliance check can masquerade as a user-observable outcome."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/writing-docs.md",
+        "range": "L58-L60",
+        "blob_alias": "writing_pages",
+        "blob_oid": "c915ab8be6e22dab003df00f76ffc69937517bd9",
+        "sha256": "d63abb087493db959d2e614f2a8fd697c0d32fb80df84c48b4c0bca18c82a443",
+        "bytes": 12760,
+        "eof": "LF",
+        "delta_relation": "new outcome-test rule"
+      }
+    },
+    {
+      "id": "MATT-9ebf3141af1c",
+      "family": "agent-doc-authoring",
+      "slug": "branches-table-list",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "这些规则服务上游 aihero 文档发布面；可复用原则要么已由本地质量门覆盖，要么被 environment/cache doctrine 吸收，不形成新运行时能力。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：Correct branch prose can remain hard to scan and easy to miss.",
+      "claude_codex_parity_risk": {
+        "claude": "上游 aihero renderer 与 Claude runtime 没有执行等价性。",
+        "codex": "Codex 也不消费该网站 page template。",
+        "cross_harness": "若只记谱系则无 parity 风险；若当 runtime doctrine 安装会引入第三份 SSOT。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "只写 lineage；不创建本地 docs-page skill/route，不复制 aihero renderer 规则；被 environment/cache 吸收的含义只在 canonical doctrine 出现一次。",
+        "required_receipt": "route/catalog zero-delta + duplicate-doctrine scan"
+      },
+      "source_census_recommendation": "NO_OP_ALREADY_COVERED",
+      "source_behavior": {
+        "trigger": "A page presents a multi-way choice.",
+        "observable_effect": "Branches are represented as a list or table rather than embedded in a paragraph.",
+        "independent_degradation": "Correct branch prose can remain hard to scan and easy to miss."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": ".agents/writing-docs.md",
+        "range": "L78-L78",
+        "blob_alias": "writing_pages",
+        "blob_oid": "c915ab8be6e22dab003df00f76ffc69937517bd9",
+        "sha256": "d63abb087493db959d2e614f2a8fd697c0d32fb80df84c48b4c0bca18c82a443",
+        "bytes": 12760,
+        "eof": "LF",
+        "delta_relation": "new presentation rule"
+      }
+    },
+    {
+      "id": "MATT-28d950692bef",
+      "family": "deletion-policy",
+      "slug": "retired-skills-deleted",
+      "independent_decision": "KEEP",
+      "decision_scope": "upstream_lineage_or_existing_local_behavior_only",
+      "reason": "上游删除和 replacement 只构成谱系事实；本地没有同名 installed/adopted counterpart，不能据此删除本地资产。因此 KEEP 只表示保留上游谱系或沿用已经存在的本地行为，不授权本地新增激活。 该行为若失守的独立退化是：A blind refresh could either resurrect removed upstream skills or delete unrelated local capabilities with similar names.",
+      "claude_codex_parity_risk": {
+        "claude": "无本地同名 target 需要删除。",
+        "codex": "无本地同名 target 需要删除。",
+        "cross_harness": "唯一风险是盲同步删除误伤名称相近但来源不同的本地能力。"
+      },
+      "proposed_work_package": "WP-01-signed-decision-lineage-ledger",
+      "mechanical_gate": {
+        "assertion": "replacement/deletion ledger 完整，但候选 diff 删除的本地 skill 文件数为 0。",
+        "required_receipt": "upstream deleted-path list hash + local deletion zero-diff"
+      },
+      "source_census_recommendation": "NO_OP_LINEAGE_ONLY",
+      "source_behavior": {
+        "trigger": "An upstream skill is retired.",
+        "observable_effect": "The deprecated bucket is emptied and retired skills are deleted, with replacement lineage delegated to changesets.",
+        "independent_degradation": "A blind refresh could either resurrect removed upstream skills or delete unrelated local capabilities with similar names."
+      },
+      "provenance": {
+        "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+        "path": "skills/deprecated/README.md",
+        "range": "L1-L3",
+        "blob_alias": "deprecated_readme",
+        "blob_oid": "ac3f47d3d28f8ca6371df209e14540243b47a360",
+        "sha256": "e951955161a17638da3abb77bd359be791d05d7744f6774a630b67cb8d47fc93",
+        "bytes": 163,
+        "eof": "LF",
+        "delta_relation": "bucket policy changed and removals applied"
+      }
+    }
+  ],
+  "integrity": {
+    "exact_raw_73_coverage": true,
+    "exact_canonical_74": true,
+    "id_uniqueness": true,
+    "slug_uniqueness": true,
+    "decision_total": 74,
+    "unclassified": [],
+    "no_whole_package_install": true
+  },
+  "file_end": "head-decision-map.json"
+}

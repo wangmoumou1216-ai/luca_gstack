@@ -1,0 +1,14 @@
+{
+  "case": "composite atom must be split",
+  "atom": {
+    "behavior_slug": "prove-it-bites-composite",
+    "triggers": ["observe failure", "assert symptom", "paste evidence"],
+    "observable_effects": ["red state captured", "exit captured", "evidence attached"],
+    "independent_failures": ["red state absent", "wrong exit accepted", "evidence omitted"]
+  },
+  "expected": {
+    "status": "COMPOSITE",
+    "exit": 31,
+    "minimum_atoms": 3
+  }
+}
