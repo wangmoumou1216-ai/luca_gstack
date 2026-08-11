@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "plan_id": "REX-20260811-001",
+  "gate": "G-PLAN",
+  "status": "APPROVED_BY_EXPLICIT_USER_OVERRIDE",
+  "approved_at": "2026-08-11T04:58:08Z",
+  "user_turn_text": "我直接批准执行。",
+  "user_turn_sha256_utf8": "f59860a70eeb2379fe1c8689297ae53c8c1156510afdfd01bfd50c2042624964",
+  "overrides": "Only the proposal's exact-byte formatting requirement; all downstream gates remain independent.",
+  "opens": ["U-001 PREP", "TST-001 PRE"],
+  "does_not_open": ["G-PACKAGE", "G-CONTAIN", "G-OBLIGATION-SCOPE", "G-ACTIVATE", "G-REMOTE"]
+}

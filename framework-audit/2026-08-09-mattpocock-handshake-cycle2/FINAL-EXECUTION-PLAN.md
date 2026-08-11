@@ -2,6 +2,12 @@
 
 > 状态：`FINAL`  
 > 日期：2026-08-09  
+> overlap 状态：`BLOCKED_BY_REX_DELTA`（2026-08-11）  
+> execution baseline：`../2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md`
+> (`REX-20260811-001`)  
+> 冻结范围：project transaction、patch parser、native agents、human gate、activation journal
+> 五类 shared-owner task 不得从本 Cycle 2 直接执行；必须等待 `RULE_EXECUTION_VERIFIED` 后生成
+> Cycle 2 delta、新 package SHA 与新的 G-PACKAGE。其它 capability task 仍未获执行授权。  
 > 性质：luca_gstack 框架/meta 任务，不是 muse 产品任务；因此产物固定在本 `framework-audit/` 目录，不写活动项目 `/Users/luca/Desktop/项目/X/docs/`。  
 > 本文是唯一执行权威。`candidate-handshake-plan.md`、此前红队、审计稿与研究稿只作证据；冲突时以本文为准。  
 > 用户终局指令：不再开新红队或 judge。本方案的终局由确定性 handoff gate 判定；实施阶段既有 quality/safety gate 与真实人类门仍保留。

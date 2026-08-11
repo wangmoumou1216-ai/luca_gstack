@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan_id": "REX-20260811-001",
+  "status": "READY_FOR_USER_AUDIT",
+  "members": [
+    {
+      "path": "FINAL-EXECUTION-PLAN.md",
+      "sha256": "ca4d57b0057dea529943e167b833eaca5a07d51495fc0f62e2dd47ac23daf4d8"
+    },
+    {
+      "path": "ROUND-1-REDTEAM.md",
+      "sha256": "2e4ff42c82958ef41b00836d24cca5ce7d6b3ff43411d918232bc6e5ca2df53e"
+    },
+    {
+      "path": "REDTEAM-HANDOFF.md",
+      "sha256": "a75f57d5ed1e384b90cb3baf0bbd9a6f7959be8a260cbe755bb44f6faa6402d5"
+    },
+    {
+      "path": "FINAL-JUDGE-R1.md",
+      "sha256": "1ed96a4e8fc28ffc01552f6d0c043804dead5a3e681595e3d793db3f0632670c"
+    },
+    {
+      "path": "FINAL-JUDGE.md",
+      "sha256": "d4a06781c6c0cd8e2fd8eaaa208a8b7b00aa12dd420fdcb33dbee7d8df17aa8f"
+    },
+    {
+      "path": "obligation-source-manifest.json",
+      "sha256": "5b66b5814addeb97e1cc4f7d890a5897f180023ca3a4c285f5898c1e3df228ff"
+    },
+    {
+      "path": "tools/verify-final-plan.mjs",
+      "sha256": "89b80647830b2469a7ba09068e02ec2dfcc2527bcde6ef9cac6618428560d24c"
+    }
+  ]
+}

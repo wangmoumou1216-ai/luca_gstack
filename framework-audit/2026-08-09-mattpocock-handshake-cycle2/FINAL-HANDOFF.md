@@ -3,6 +3,11 @@
 ## Metadata
 
 - status: `READY_FOR_EXECUTION_SESSION`
+- overlap_status: `BLOCKED_BY_REX_DELTA`
+- execution_baseline: `../2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md`
+- shared_owner_block: project transaction、patch parser、native agents、human gate、activation journal
+- unblock_condition: `RULE_EXECUTION_VERIFIED` 后生成 Cycle 2 delta、新 package SHA 与新的 G-PACKAGE；
+  当前 Cycle 2 不得直接执行 shared-owner task
 - type: `framework/meta self-evolution`
 - canonical repo: `/Users/luca/Desktop/项目/muse/lucagstack`
 - final authority: `FINAL-EXECUTION-PLAN.md`
