@@ -18,6 +18,7 @@
     "check:substrate": "node scripts/test-project-substrate.mjs && node scripts/test-project-identity-wiring.mjs",
     "test:routes": "node scripts/test-route-guard.mjs",
     "test:project-scope": "node scripts/test-project-scope-guard.mjs",
+    "test:project-transaction": "node scripts/test-project-transaction.mjs",
     "test:memory": "python3 -m unittest memory.tests.test_memory_system -v",
     "check:memory-health": "python3 memory/scripts/check_memory_health.py",
     "check:routing-map": "node scripts/check-routing-map.mjs",

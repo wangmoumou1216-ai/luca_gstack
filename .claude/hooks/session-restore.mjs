@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
-import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync, renameSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync, renameSync, symlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
-import { PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
+import { acquireProjectLease, releaseProjectLease } from '../../scripts/project-lease.mjs';
+import {
+  PROJECTS_ROOT,
+  projectNameFromLink,
+  readProjectState,
+  validatedBindingForState,
+} from './lib/project-substrate.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
 
 // 记忆数据根（audit 2026-07-07 F2-01/P0）：memory 脚本全部以 MEMORY_ROOT 为最高优先解析数据根
 // （muse app 有意注入以共享母版经验层），但本 hook 原先用 projectRoot 认领 .checked-<date> 与找
@@ -32,6 +37,22 @@ let startPayload = {};
 try { startPayload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const startSource = typeof startPayload.source === 'string' ? startPayload.source : '';
 const ownSid = String(startPayload.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
+
+// Startup project context follows the same identity source as every later hook.
+// The shared workflow/docs symlinks are display state only: a NO_PIN session must
+// not even probe their contents (FIFO tests guard against hidden reads). Resume
+// may consume project files only when this exact sid carries a canonical binding.
+let startupBinding = null;
+if (ownSid) {
+  try {
+    const projectState = readProjectState(projectRoot, ownSid).value;
+    if (['BOUND', 'TURN_ACTIVE', 'TURN_CLOSED'].includes(projectState.state)) {
+      startupBinding = validatedBindingForState(projectState, PROJECTS_ROOT);
+    }
+  } catch (error) {
+    process.stderr.write(`[session-restore] ⚠️ 本 session 项目 identity 无效，按 NO_PIN 启动：${String(error?.message || error)}\n`);
+  }
+}
 
 // ── session-spool：把**精确** session id 交回 muse app（G3，2026-08-08）────────────
 //   只在 app 内嵌会话里生效：MUSE_TAB 由 app 的 spawnTerminal 注入，值就是那个 pty 页签 id。
@@ -69,8 +90,9 @@ for (const hookLog of ['/tmp/luca-gstack-hooks.log', '/tmp/luca-gstack-hooks.mus
   } catch { }
 }
 
-if (existsSync(stateFile)) {
-  const content = readFileSync(stateFile, 'utf8');
+const boundStateFile = startupBinding ? join(startupBinding.realpath, '.luca', 'workflow-state.yaml') : '';
+if (boundStateFile && existsSync(boundStateFile)) {
+  const content = readFileSync(boundStateFile, 'utf8');
   const inProgressMatch = content.match(/^  (\w[\w-]+):\s*\n\s+status:\s*IN_PROGRESS/m);
   if (inProgressMatch) {
     process.stdout.write(`[session-restore] ⚠️  上次 session 在 "${inProgressMatch[1]}" 节点中断，建议继续或重置状态。\n`);
@@ -96,11 +118,15 @@ try {
   for (const f of readdirSync(claudeDir)) {
     const isMarker = f.startsWith('.episode-written-');
     const isSidCounter = /^\.session-(turn|edit|tool)-count-./.test(f);
-    const isPin = /^\.session-(project|projnag|inherited)-./.test(f); // G6-R7②：pin/nag/继承标记同样按 mtime GC，防永久堆积
-    if (!isMarker && !isSidCounter && !isPin) continue;
+    const isProjectIdentity = /^\.session-project-/.test(f);
+    const isAncillary = /^\.session-(projnag|inherited)-./.test(f);
+    // Identity state and its O_EXCL lock are never stolen by age. Without a
+    // generation/liveness proof, cleanup must be explicit (deactivate/manual recovery).
+    if (isProjectIdentity) continue;
+    if (!isMarker && !isSidCounter && !isAncillary) continue;
     try {
       const age = nowMs - statSync(join(claudeDir, f)).mtimeMs;
-      const ttl = isMarker ? MARKER_TTL : COUNTER_TTL; // pin 同 counter 7天
+      const ttl = isMarker ? MARKER_TTL : COUNTER_TTL;
       if (age > ttl) unlinkSync(join(claudeDir, f));
     } catch { }
   }
@@ -115,9 +141,9 @@ try {
   }
 } catch { }
 
-// 读取 PROGRESS.md（在清除 symlink 之前，docs/ 还存在时读取）
-const progressFile = join(projectRoot, 'docs', 'PROGRESS.md');
-if (existsSync(progressFile)) {
+// 只从已验证 binding 读取进度。共享 docs/ 是 display symlink，永不作为身份或启动上下文来源。
+const progressFile = startupBinding ? join(startupBinding.realpath, 'docs', 'PROGRESS.md') : '';
+if (progressFile && existsSync(progressFile)) {
   try {
     const progressContent = readFileSync(progressFile, 'utf8');
     const lines = progressContent.split('\n');
@@ -193,14 +219,76 @@ for (const l of [stateLink, topicLink]) {
   try { if (lstatSync(l).isSymbolicLink() && !existsSync(l)) docsDangling = true; } catch { }
 }
 
-const hasActiveLinks = [docsLink, stateLink, topicLink].some(l => {
-  try { return lstatSync(l).isSymbolicLink(); } catch { return false; }
-});
+function captureDisplayLink(path) {
+  try {
+    const st = lstatSync(path);
+    return st.isSymbolicLink() ? { kind: 'symlink', target: readlinkSync(path) } : { kind: 'other' };
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { kind: 'absent' };
+    throw error;
+  }
+}
+const displayPaths = [docsLink, stateLink, topicLink];
+const startupDisplaySnapshot = displayPaths.map(captureDisplayLink);
+const hasActiveLinks = startupDisplaySnapshot.some(item => item.kind === 'symlink');
+const sameDisplaySnapshot = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 const doClear = () => {
-  for (const link of [docsLink, stateLink, topicLink]) {
-    try { if (lstatSync(link).isSymbolicLink()) unlinkSync(link); } catch { }
+  let lease = null;
+  let cleared = false;
+  const removed = [];
+  try {
+    lease = acquireProjectLease({
+      root: projectRoot,
+      ownerToken: `startup-clear-${ownSid || process.pid}`,
+      pid: process.pid,
+    });
+    const current = displayPaths.map(captureDisplayLink);
+    if (!sameDisplaySnapshot(current, startupDisplaySnapshot)) {
+      process.stderr.write('[session-restore] ⚠️ display tuple 在清理前已变化，保守不清（可能有并发 switch）\n');
+      return false;
+    }
+    if (current.some(item => item.kind === 'other')) {
+      process.stderr.write('[session-restore] ⚠️ display tuple 含非 symlink 实体，保守不清，需人工恢复\n');
+      return false;
+    }
+    for (let i = 0; i < displayPaths.length; i++) {
+      if (current[i].kind !== 'symlink') continue;
+      if (!sameDisplaySnapshot(captureDisplayLink(displayPaths[i]), current[i])) {
+        throw new Error(`display link changed before unlink: ${displayPaths[i]}`);
+      }
+      unlinkSync(displayPaths[i]);
+      removed.push(i);
+    }
+    if (!displayPaths.map(captureDisplayLink).every(item => item.kind === 'absent')) {
+      throw new Error('display tuple clear readback failed');
+    }
+    cleared = true;
+  } catch (error) {
+    // Under the same global lease, roll back only entries this call removed.
+    for (const i of removed.reverse()) {
+      try {
+        if (captureDisplayLink(displayPaths[i]).kind === 'absent') {
+          symlinkSync(startupDisplaySnapshot[i].target, displayPaths[i]);
+        }
+      } catch { }
+    }
+    process.stderr.write(`[session-restore] ⚠️ display tuple 未清理：${String(error?.message || error)}\n`);
+    cleared = false;
+  } finally {
+    if (lease) {
+      try {
+        const released = releaseProjectLease({ root: projectRoot, ownerHandle: lease.owner_handle });
+        if (released.cleanup_required) {
+          process.stderr.write(`[session-restore] ⚠️ startup clear lease 已释放，但精确残留清理失败（不应重试 clear）：${released.parked_path} — ${released.error}\n`);
+        }
+      }
+      catch (error) {
+        process.stderr.write(`[session-restore] ⚠️ startup clear 已完成但 lease 释放失败，禁止重试 clear；需用 exact owner_handle 恢复：owner_handle=${JSON.stringify(lease.owner_handle)} error=${String(error?.message || error)}\n`);
+      }
+    }
   }
+  return cleared;
 };
 // 决策树顺序关键（STICKY-004 回归钉死）：悬空 gate 与 kill-switch 必须**优先于**所有
 // 保留条件——否则 source=resume 时悬空链会被 resume 分支先保留，绕过安全 gate。
@@ -209,10 +297,10 @@ if (hasActiveLinks) {
   if (docsDangling && !alwaysClear) {
     // R5 安全 gate：目标已删/改名 → 无视 source/活跃度直接清（否则 gate ① 静默继续已删项目、
     // session-sync 穿悬空链复活已删目录树）。最高优先。
-    doClear(); cleared = true;
-    process.stderr.write(`[session-restore] 🧹 检测到悬空项目链（目标已删/改名），已清除，走全新流程\n`);
+    cleared = doClear();
+    if (cleared) process.stderr.write(`[session-restore] 🧹 检测到悬空项目链（目标已删/改名），已清除，走全新流程\n`);
   } else if (alwaysClear) {
-    doClear(); cleared = true; // kill-switch：无条件回退旧行为
+    cleared = doClear(); // kill-switch 仍须受全局 lease + tuple CAS 约束
   } else if (startSource === 'resume' || startSource === 'compact') {
     // resume / compact → 保留（本 session 自己的上下文，清它是 bug；不打扰）
   } else if (startSource === 'clear') {
@@ -226,7 +314,7 @@ if (hasActiveLinks) {
     process.stderr.write(`[session-restore] ⚠️ SessionStart source 值未知（"${startSource}"，非 startup/resume/clear/compact）——疑似 harness 语义漂移，保守保留激活项目 ${activeProject || '(未知)'}（如确为冷启动需清除：SESSION_RESTORE_ALWAYS_CLEAR=1）\n`);
   } else if (hasActiveParallelSession()) {
     // 冷启动但检测到活跃并行 session → 保留 + 显式告知（R2/R4：不再谎称"无激活项目"）
-    process.stdout.write(`[session-restore] 🔗 当前激活项目: ${activeProject || '(未知)'}（检测到活跃并行 session，已保留；如需切换请显式运行 ./scripts/project.sh switch <项目>）\n\n`);
+    process.stdout.write(`[session-restore] 🔗 当前激活项目: ${activeProject || '(未知)'}（检测到活跃并行 session，已保留；如需切换，请在 prompt 中明确项目并只执行 route-guard 生成的完整事务命令）\n\n`);
     // 一次性继承标记（终验核验修）：只有"为并行 session 而保留"才是真继承；route-guard 认此标记
     // 而非 cur&&!pin，避免把 self-switch 误判成继承（单 session 正常流程 Msg2 假阳性）。
     if (ownSid) {
@@ -234,7 +322,7 @@ if (hasActiveLinks) {
     }
   } else {
     // 冷启动 + 无活跃并行 → 清，走全新项目流程（原始设计意图）
-    doClear(); cleared = true;
+    cleared = doClear();
   }
 }
 

@@ -12,7 +12,14 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, unlin
 import { join } from 'path';
 import { execSync } from 'child_process';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
-import { PROJECTS_ROOT as SUBSTRATE_PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
+import { withoutLocalGitEnv } from './lib/git-env.mjs';
+import {
+  PROJECTS_ROOT as SUBSTRATE_PROJECTS_ROOT,
+  closeProjectTurn,
+  closeSwitchTurn,
+  readProjectState,
+  validatedBindingForState,
+} from './lib/project-substrate.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -28,33 +35,56 @@ const sessionId =
   (payload.session_id && String(payload.session_id).replace(/[^\w-]/g, '').slice(0, 36)) ||
   `date-${dateStr}`;
 
-// ---- 当前项目：pin 优先（方案A 补全，2026-07-14 P2）----
-// Stop 链的项目真值与 project-scope-guard 一致：先读本 session 的 pin，无 pin 才回退共享软链。
-// 否则并行 session 切走软链时，提取归因/checkpoint/topic 会落到别人的项目（实证：pin=projA
-// 而 reason 指向软链的 projB）。hook 是直接 fs 写、不走工具调用，PreToolUse 重定向兜不住。
-// 失效 pin（项目目录已删）按无 pin 处理，绝不复活幽灵目录。
+// ---- 当前项目：pin 优先，并收紧为只认 TURN_ACTIVE identity+epoch snapshot ----
+// Stop hook 直接读写磁盘，不经过 PreToolUse；因此绝不能回退共享展示软链。
 const PROJECTS_ROOT = SUBSTRATE_PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖
 let project = '';
 let projectFromPin = false;
+let projectState = null;
 if (hasSid) {
   try {
-    const pin = readFileSync(join(projectRoot, '.claude', `.session-project-${sessionId}`), 'utf8').trim();
-    if (pin && existsSync(join(PROJECTS_ROOT, pin))) { project = pin; projectFromPin = true; }
+    projectState = readProjectState(projectRoot, sessionId).value;
+    if (projectState.state === 'TURN_ACTIVE') {
+      const binding = validatedBindingForState(projectState, PROJECTS_ROOT);
+      project = binding.project;
+      projectFromPin = true;
+    }
   } catch { }
 }
-if (!project) {
+
+let closeSnapshotOnExit = false;
+process.on('exit', () => {
+  if (!closeSnapshotOnExit || !projectState || !hasSid) return;
   try {
-    project = projectNameFromLink(readlinkSync(join(projectRoot, 'docs'))); // FIX-2：同一 canonical 裁决
-  } catch { }
-}
+    if (projectState.state === 'TURN_ACTIVE') {
+      closeProjectTurn({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        sessionId,
+        turnId: projectState.turn.turn_id,
+        expectedEpoch: projectState.turn.epoch,
+        outcome: 'stop',
+      });
+    } else if (projectState.state === 'BOUND' && projectState.terminal) {
+      closeSwitchTurn({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        sessionId,
+        turnId: projectState.terminal.turn_id,
+        expectedEpoch: projectState.binding.epoch,
+        outcome: 'switch-stop',
+      });
+    }
+  } catch (error) {
+    try { process.stderr.write(`[session-sync] ⚠️ turn snapshot close failed: ${error.message}\n`); } catch { }
+  }
+});
 
 // ---- 解析 topic + workflow 节点状态（pin 态直读 <pin>/.luca/，与归因落点同源）----
 let topic = 'session';
 let nodeStates = [];
-const stateFile = projectFromPin
-  ? join(PROJECTS_ROOT, project, '.luca', 'workflow-state.yaml')
-  : join(projectRoot, '.claude', 'workflow-state.yaml');
-if (existsSync(stateFile)) {
+const stateFile = projectFromPin ? join(PROJECTS_ROOT, project, '.luca', 'workflow-state.yaml') : null;
+if (stateFile && existsSync(stateFile)) {
   try {
     const content = readFileSync(stateFile, 'utf8');
     const tm = content.match(/^topic:\s*"([^"]*)"/m) || content.match(/^topic:\s*'([^']*)'/m) || content.match(/^topic:\s*(\S+)/m);
@@ -70,10 +100,8 @@ function writeCheckpointIfInProgress() {
   // 无激活项目（docs 非软链）时不落 checkpoint，否则会在 luca_gstack 仓内生成杂散 docs/handoff（HOOK-005）。
   if (inProgress.length === 0 || !project) return;
   try {
-    // pin 态直落 <pin>/docs/handoff（与归因同源）；无 pin 保持穿软链的旧行为。
-    const dir = projectFromPin
-      ? join(PROJECTS_ROOT, project, 'docs', 'handoff')
-      : join(projectRoot, 'docs', 'handoff');
+    if (!projectFromPin) return;
+    const dir = join(PROJECTS_ROOT, project, 'docs', 'handoff');
     mkdirSync(dir, { recursive: true });
     const body = [
       `# Auto Checkpoint — ${now}`, '', `**Topic:** ${topic}`, '', '## 节点状态', '',
@@ -174,6 +202,11 @@ try {
     process.exit(0);
   }
 
+  // Only a non-blocking Stop is a turn-closing boundary. A blocked Stop keeps
+  // TURN_ACTIVE so the required extraction continuation cannot cross epochs.
+  closeSnapshotOnExit = projectState?.state === 'TURN_ACTIVE'
+    || (projectState?.state === 'BOUND' && Boolean(projectState?.terminal));
+
   // ---- 放行 ----
   // kill-switch 可见性（audit 2026-07-07 F1-02）：环境残留 SESSION_SYNC_BLOCK=0 曾静默关停
   // 自成长拦截一整个 session（EP-20260706-057 当事记录自认）。命中时留痕，不再无声。
@@ -193,7 +226,7 @@ try {
     try {
       const dirty = execSync(
         'git status --porcelain -- memory/episodic/index.jsonl memory/episodic/archive memory/semantic/promoted-facts.yaml memory/semantic/archive memory/evals/eval-log.jsonl .claude/skill-os/evolution .claude/observability/observations.jsonl',
-        { cwd: repo, encoding: 'utf8' }
+        { cwd: repo, encoding: 'utf8', env: withoutLocalGitEnv() }
       ).trim();
       if (dirty) process.stderr.write(`[session-sync] 🔔 ${repo === projectRoot ? '本仓' : `MEMORY_ROOT 仓（${repo}）`}有未提交的记忆/演进状态 — 收尾请在该仓跑 \`bash scripts/sync.sh\` 推到 GitHub。\n`);
     } catch { }

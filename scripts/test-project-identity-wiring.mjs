@@ -1,120 +1,162 @@
 #!/usr/bin/env node
-// FIX-2 wiring 集成测试：证明 **4 个 marker 站点真的共用** projectNameFromLink 的 canonical 裁决。
-//
-// 【2026-07-25 深审修正 — 判别式 fixture】
-// 首版 fixture 用 `<tmp>/项目/muse/lucagstack/docs`，但该布局下 canonical ≡ 旧首段正则（都得 "muse"），
-// 于是把 session-restore / session-sync / append_episode 改回旧解析测试**仍全绿**（M4/M5 mutant 存活）
-// ——4 站里只有 route-guard 有判别力，却据此宣称"非假绿"。
-// 现改为**判别式**布局：PROJECTS_ROOT 用 LUCA_PROJECTS_ROOT 覆盖到一个**路径中不含「项目」二字**的根：
-//   <tmp>/roots/<PROJ>/<CHECKOUT>/docs
-// · 旧首段正则/marker 解析：找不到 `/项目/` → 返回 ''（判别出未接线）
-// · canonical：走 projectsRoot 前缀分支 + known-projects 最长前缀 → 返回 <PROJ>
-// 因此把任一站点改回旧解析，本测试必红（4 个 mutant 全部可杀）。
-import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync, rmSync } from 'fs';
-import { join } from 'path';
+// Identity wiring integration: display symlinks and session identity are
+// deliberately different projects. Every project-aware hook must follow the
+// schema-v2 binding (or fail closed), never infer identity from display state.
+import assert from 'assert/strict';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
-import { execFileSync, spawnSync } from 'child_process';
+import { join } from 'path';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const REPO = fileURLToPath(new URL('..', import.meta.url));
-const PROJ = 'zz-ident-probe';   // 哨兵名：绝不会从别处冒出（防兜底正则误匹配路径里的其它词）
-const CHECKOUT = 'inner-checkout';
+const HOOKS = join(REPO, '.claude', 'hooks');
+const root = mkdtempSync(join(tmpdir(), 'luca-identity-wiring-'));
+const projectsRoot = join(root, 'roots');
+mkdirSync(join(root, '.claude', 'observability'), { recursive: true });
+mkdirSync(join(root, 'memory', 'scripts'), { recursive: true });
 
-const root = mkdtempSync(join(tmpdir(), 'luca-identity-'));
-const altRoot = join(root, 'roots');                       // 注意：路径中**不含**「项目」二字
-const nested = join(altRoot, PROJ, CHECKOUT, 'docs');
-mkdirSync(nested, { recursive: true });
-symlinkSync(nested, join(root, 'docs'));
-mkdirSync(join(root, '.claude'), { recursive: true });
-mkdirSync(join(root, 'memory', 'episodic'), { recursive: true });
-writeFileSync(join(root, '.claude', 'workflow-state.yaml'), 'topic: "identity-test"\nnodes:\n  n1:\n    status: DONE\niteration: 1\n');
+function makeProject(name, node) {
+  const project = join(projectsRoot, name);
+  mkdirSync(join(project, 'docs'), { recursive: true });
+  mkdirSync(join(project, '.luca'), { recursive: true });
+  writeFileSync(join(project, '.luca', 'workflow-state.yaml'),
+    `topic: "${name}"\nmode: "standalone"\nnodes:\n  ${node}:\n    status: IN_PROGRESS\niteration: 1\n`);
+  writeFileSync(join(project, '.luca', 'current-topic.txt'), `${name}\n`);
+  writeFileSync(join(project, 'docs', 'PROGRESS.md'), `# ${name} progress\n`);
+  return project;
+}
 
-// hermetic env 白名单：只保留必需项，显式清掉会改变行为的开关（深审：宿主 SESSION_RESTORE_ALWAYS_CLEAR=1
-// 会让探针②删掉 fixture 软链，连累③④假红）
-const baseEnv = {
-  PATH: process.env.PATH, HOME: join(root, 'home'), LANG: process.env.LANG || 'en_US.UTF-8',
-  CLAUDE_PROJECT_DIR: root,
-  LUCA_PROJECTS_ROOT: altRoot, // 判别式：根不含「项目」
+const boundProject = makeProject('bound-alpha', 'alpha-node');
+const displayProject = makeProject('display-beta', 'beta-node');
+symlinkSync(join(displayProject, 'docs'), join(root, 'docs'));
+symlinkSync(join(displayProject, '.luca', 'workflow-state.yaml'), join(root, '.claude', 'workflow-state.yaml'));
+symlinkSync(join(displayProject, '.luca', 'current-topic.txt'), join(root, '.claude', 'current-topic.txt'));
+
+const SID = 'identity-wiring';
+const st = statSync(boundProject);
+const binding = {
+  project: 'bound-alpha',
+  epoch: 7,
+  realpath: realpathSync(boundProject),
+  dev: Number(st.dev),
+  ino: Number(st.ino),
 };
-mkdirSync(baseEnv.HOME, { recursive: true });
+const statePath = join(root, '.claude', `.session-project-${SID}`);
+function writeActive(epoch = binding.epoch) {
+  writeFileSync(statePath, `${JSON.stringify({
+    schema_version: 2,
+    state: 'TURN_ACTIVE',
+    session_id: SID,
+    binding,
+    turn: { turn_id: 'turn-identity', epoch },
+  })}\n`);
+}
+writeActive();
 
-const results = {};
-const statuses = {};
+const env = {
+  ...process.env,
+  CLAUDE_PROJECT_DIR: root,
+  LUCA_GSTACK_ROOT: root,
+  LUCA_PROJECTS_ROOT: projectsRoot,
+  MEMORY_ROOT: root,
+  ROUTE_GUARD_PROJECTS: 'bound-alpha,display-beta',
+};
+for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) delete env[key];
 
-// ① route-guard：未绑定 session + 继承标记 → hint 打印「全局激活项目「<readCurrentProject 结果>」」
-{
-  writeFileSync(join(root, '.claude', '.session-inherited-ident-1'), '');
-  const r = spawnSync('node', [join(REPO, '.claude/hooks/route-guard.mjs')], {
-    cwd: root, encoding: 'utf8', env: baseEnv,
-    input: JSON.stringify({ session_id: 'ident-1', prompt: '帮我看看这段逻辑对不对' }),
+function run(hook, payload, timeout = 4000) {
+  const r = spawnSync('node', [join(HOOKS, hook)], {
+    cwd: root,
+    encoding: 'utf8',
+    timeout,
+    env,
+    input: JSON.stringify(payload),
   });
-  statuses['route-guard'] = r.status;
-  const m = ((r.stdout || '') + (r.stderr || '')).match(/全局激活项目「([^」]+)」/);
-  results['route-guard'] = m ? m[1] : '(未解析出)';
+  assert.notEqual(r.error?.code, 'ETIMEDOUT', `${hook} timed out`);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  return r;
+}
+const json = value => JSON.parse(String(value).trim());
+
+// PreToolUse follows the exact active binding, not display-beta.
+{
+  const r = run('project-scope-guard.mjs', { session_id: SID, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  const redirected = json(r.stdout).hookSpecificOutput.updatedInput.file_path;
+  assert.equal(redirected, join(realpathSync(boundProject), 'docs', 'x.md'));
+  assert.doesNotMatch(redirected, /display-beta/);
+  console.log('PASS scope guard resolves schema-v2 identity, not display symlink');
 }
 
-// ② session-restore：stdin 无 source → 保守保留分支打印「保守保留激活项目 <activeProject>」
+// UserPromptSubmit closes the prior snapshot and opens a new exact TURN_ACTIVE.
 {
-  const r = spawnSync('node', [join(REPO, '.claude/hooks/session-restore.mjs')], {
-    cwd: root, encoding: 'utf8', env: baseEnv, input: JSON.stringify({ session_id: 'ident-2' }),
+  run('route-guard.mjs', {
+    session_id: SID,
+    turn_id: 'turn-next',
+    prompt: '审查 luca_gstack route guard',
   });
-  statuses['session-restore'] = r.status;
-  // 边界到中文/半角括号与空白（该行紧跟「（如需清除：…）」，\S+ 会贪婪吞进后缀）
-  const m = ((r.stdout || '') + (r.stderr || '')).match(/保守保留激活项目\s*([^\s（(，,。\n]+)/);
-  results['session-restore'] = m ? m[1] : '(未解析出)';
+  const next = JSON.parse(readFileSync(statePath, 'utf8'));
+  assert.equal(next.state, 'TURN_ACTIVE');
+  assert.equal(next.binding.project, 'bound-alpha');
+  assert.equal(next.turn.turn_id, 'turn-next');
+  assert.equal(next.turn.epoch, next.binding.epoch);
+  console.log('PASS route guard preserves binding and rotates exact turn snapshot');
 }
 
-// ③ session-sync：block reason 里带「当前激活项目「X」」
-//    深审修正：计数文件必须带 -<sid> 后缀，否则 hook 读不到 → 永不 block → 该锚点根本不出现
-//    （首版靠松散兜底正则 /项目[:：]/ 匹配到别的行才"变绿"，等于探针从未触发目标路径）。
+// Stop attribution/checkpoint also follows bound-alpha and never display-beta.
 {
-  const sid = 'ident-3';
-  writeFileSync(join(root, '.claude', `.session-edit-count-${sid}`), '9');
-  writeFileSync(join(root, '.claude', `.session-tool-count-${sid}`), '25');
-  const r = spawnSync('node', [join(REPO, '.claude/hooks/session-sync.mjs')], {
-    cwd: root, encoding: 'utf8', env: baseEnv, input: JSON.stringify({ session_id: sid }),
-  });
-  statuses['session-sync'] = r.status;
-  // 只用主锚点，不留松散兜底（兜底正是首版探针错位无声通过的原因）
-  const m = ((r.stdout || '') + (r.stderr || '')).match(/当前激活项目「([^」]+)」/);
-  results['session-sync'] = m ? m[1] : '(未解析出)';
+  writeFileSync(join(root, '.claude', `.session-edit-count-${SID}`), '1');
+  const r = run('session-sync.mjs', { session_id: SID });
+  const reason = json(r.stdout).reason;
+  assert.match(reason, /当前激活项目「bound-alpha」/);
+  assert.doesNotMatch(reason, /display-beta/);
+  assert.ok(existsSync(join(boundProject, 'docs', 'handoff')));
+  assert.ok(!existsSync(join(displayProject, 'docs', 'handoff')));
+  console.log('PASS Stop hook attribution/checkpoint follows exact turn identity');
 }
 
-// ④ append_episode.active_project()
+// SessionStart reads bound context only when the epoch snapshot is valid.
 {
-  const code = [
-    'import importlib.util as ilu',
-    `s = ilu.spec_from_file_location('ae', ${JSON.stringify(join(REPO, 'memory/scripts/append_episode.py'))})`,
-    'm = ilu.module_from_spec(s)',
-    'try:\n    s.loader.exec_module(m)\nexcept SystemExit:\n    pass',
-    'print(m.active_project())',
-  ].join('\n');
-  try {
-    const out = execFileSync('python3', ['-c', code], {
-      cwd: root, encoding: 'utf8', env: { ...baseEnv, MEMORY_ROOT: root },
-    });
-    statuses['append_episode'] = 0;
-    results['append_episode'] = out.trim().split('\n').pop() || '(空)';
-  } catch (e) {
-    statuses['append_episode'] = e.status ?? 1;
-    results['append_episode'] = '(执行失败)';
-  }
+  const r = run('session-restore.mjs', { session_id: SID, source: 'resume' });
+  assert.match(r.stdout, /alpha-node/);
+  assert.doesNotMatch(r.stdout, /beta-node|display-beta progress/);
+  console.log('PASS SessionStart loads only validated bound project context');
 }
 
-let fail = 0;
-console.log(`判别式 fixture: LUCA_PROJECTS_ROOT=<tmp>/roots（不含「项目」）; docs → …/roots/${PROJ}/${CHECKOUT}/docs`);
-console.log(`  · canonical（接线正确）→ "${PROJ}"   · 旧首段/marker 解析（未接线）→ ""（找不到 /项目/ 标记）\n`);
-for (const [site, got] of Object.entries(results)) {
-  const okStatus = statuses[site] === 0;
-  const ok = got === PROJ && okStatus;
-  if (!ok) fail++;
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${site.padEnd(16)} → ${JSON.stringify(got)}${ok ? '' : `  期望 ${JSON.stringify(PROJ)}（exit=${statuses[site]}；未接线的站点在此 fixture 下解析不出项目名）`}`);
+// Corrupt the turn epoch: every project consumer must fail closed.
+{
+  writeActive(binding.epoch - 1);
+  const guard = run('project-scope-guard.mjs', { session_id: SID, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(json(guard.stdout).hookSpecificOutput.permissionDecision, 'deny');
+  const restore = run('session-restore.mjs', { session_id: SID, source: 'resume' });
+  assert.doesNotMatch(restore.stdout, /alpha-node|beta-node/);
+  assert.match(restore.stderr, /identity 无效|epoch snapshot/);
+  console.log('PASS corrupt turn epoch is rejected across guard and startup');
 }
-const uniq = [...new Set(Object.values(results))];
-const consistent = uniq.length === 1;
-if (!consistent) fail++;
-console.log(`\n${consistent ? 'PASS' : 'FAIL'} 4 站一致性：${consistent ? `全部解析为 ${JSON.stringify(uniq[0])}` : `发散 → ${JSON.stringify(uniq)}`}`);
 
-try { rmSync(root, { recursive: true, force: true }); } catch { }
-console.log(`\n=== test-project-identity-wiring summary: ${fail ? `FAIL=${fail}` : 'ALL PASS（4 站 canonical 一致）'} ===`);
-process.exit(fail ? 1 : 0);
+// A different no-pin sid cannot inherit display-beta identity.
+{
+  const noPin = 'identity-no-pin';
+  const guard = run('project-scope-guard.mjs', { session_id: noPin, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(json(guard.stdout).hookSpecificOutput.permissionDecision, 'deny');
+  run('route-guard.mjs', { session_id: noPin, turn_id: 'turn-no-pin', prompt: '审查 luca_gstack route guard' });
+  assert.ok(!existsSync(join(root, '.claude', `.session-project-${noPin}`)));
+  console.log('PASS NO_PIN never adopts display project identity');
+}
+
+// Static wiring guard: all four project-aware hooks use the centralized shape validator.
+for (const hook of ['project-scope-guard.mjs', 'route-guard.mjs', 'session-restore.mjs', 'session-sync.mjs']) {
+  assert.match(readFileSync(join(HOOKS, hook), 'utf8'), /validatedBindingForState/,
+    `${hook} must consume centralized identity+epoch validation`);
+}
+console.log('PASS project-aware hook wiring shares one identity/epoch validator');
+
+console.log('\n=== test-project-identity-wiring summary: ALL PASS ===');

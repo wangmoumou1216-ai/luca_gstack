@@ -48,6 +48,8 @@ Core facts:
   project's absolute path, and **denies** those writes when the session has no pin — so the shared symlink
   degrades to display only and a parallel `switch` can no longer pull another session onto the wrong project.
   The pin is written only when the user explicitly names/confirms a project, **never derived from the symlink**.
+  State reads and `check-project-links` are read-only: legacy text pins require the explicit
+  `project-pin.mjs migrate-legacy-pin` command, or exact-value `quarantine-legacy-pin` when their project no longer exists.
   Name-to-switch (2026-07-06): naming an existing project (or semantically describing another/new project) makes
   the main agent switch/create decisively without asking (a new project detaches the current one). Only confirm
   once when the message points at no project yet you must do real work under a never-confirmed inherited project.
@@ -626,8 +628,9 @@ Layered routing order:
    existing project, resolve the project first. Do not treat "老项目" as scene B by itself.
    Name-to-switch + semantic self-judgment (2026-07-06): project attribution is a **semantic** judgment,
    not keyword-matching — even when route-guard emits STOP, act decisively on what the language means:
-   naming/implying an existing project → `project.sh switch` immediately (no confirm); explicitly a new
-   project → `project.sh new {name}` (detaches current) immediately; a big new requirement you judge to
+   naming/implying an existing project → execute the exact `switch` transaction emitted for the current
+   `UserPromptSubmit` (no confirm); explicitly a new project → execute its exact `new` transaction
+   (detaches current) immediately; never hand-write a bare `project.sh switch/new`. A big new requirement you judge to
    be a new project but the user did not explicitly say so → one-line confirm, then create; a new
    requirement inside the current project → stay. Only the self-judged-new-project case confirms.
 2. **Complexity gate.** If route-guard indicates `PLAN MODE` (复杂度分 ≥ 6, keyword-approximation only),
