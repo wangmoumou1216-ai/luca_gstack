@@ -362,7 +362,9 @@ luca_gstack/                  ← 运行环境（不存项目产出）
 ```
 
 `luca_gstack` 只通过 `docs/` 与 `.claude/workflow-state.yaml` 等 symlink 暴露当前激活项目；
-项目产出与状态放在 `/Users/luca/Desktop/项目/<项目名>/`，切换项目用 `scripts/project.sh switch <名>`。
+项目产出与状态放在 `/Users/luca/Desktop/项目/<项目名>/`。切换/新建只执行 route-guard 为当前
+`UserPromptSubmit` 生成的完整事务命令（含 session、tx、expected epoch），不直接调用裸
+`scripts/project.sh switch/new <名>`。
 
 ---
 

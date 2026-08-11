@@ -1,0 +1,21 @@
+{
+  "case": "transitive origin closure must not omit support objects",
+  "referenced": [
+    "skills/in-progress/setup-ts-deep-modules/SKILL.md",
+    "skills/misc/git-guardrails-claude-code/SKILL.md",
+    "CLAUDE.md",
+    ".claude-plugin/plugin.json",
+    "scripts/link-skills.sh"
+  ],
+  "ledgered": [
+    "skills/in-progress/setup-ts-deep-modules/SKILL.md",
+    "CLAUDE.md",
+    ".claude-plugin/plugin.json",
+    "scripts/link-skills.sh"
+  ],
+  "expected": {
+    "status": "MISSING_ORIGIN",
+    "missing": ["skills/misc/git-guardrails-claude-code/SKILL.md"],
+    "exit": 34
+  }
+}

@@ -11,11 +11,24 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
-import { PROJECTS_ROOT, projectNameFromLink } from './lib/project-substrate.mjs';
+import { randomUUID } from 'crypto';
+import {
+  PROJECTS_ROOT,
+  beginProjectTurn,
+  cancelProjectSwitch,
+  closeProjectTurn,
+  closeSwitchTurn,
+  prepareProjectSwitch,
+  projectNameFromLink,
+  readProjectState,
+  validateProjectName,
+  validatedBindingForState,
+} from './lib/project-substrate.mjs';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const dryRun = process.env.ROUTE_GUARD_DRY_RUN === '1' || process.argv.includes('--dry-run');
+let runtimeCurrentProject = '';
 
 function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
@@ -47,12 +60,16 @@ function nameMatchesIn(text, name) {
 // 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
 // per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
 let hookSessionId = '';
+let hookPayload = {};
+let hookTurnId = '';
 function parsePrompt() {
   try {
     const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
     try {
       const data = JSON.parse(raw || '{}');
+      hookPayload = data;
       hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
+      hookTurnId = String(data.turn_id || data.user_message_id || randomUUID());
       return String(data.prompt || data.message || '');
     } catch {
       process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);
@@ -148,6 +165,9 @@ function readCurrentProject(projects) {
   // 显式设置（含空串="无激活项目"）即生效——空串回退真实 symlink 会让 dry-run 测试
   // 依赖宿主机的项目状态（G3 修复测试时发现）。
   if (process.env.ROUTE_GUARD_CURRENT_PROJECT !== undefined) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
+  // Production routing identity comes only from the validated session binding.
+  // The shared docs symlink is display state, never an identity source.
+  if (!dryRun) return runtimeCurrentProject;
   try {
     const docsPath = join(projectRoot, 'docs');
     const target = readlinkSync(docsPath);
@@ -160,6 +180,97 @@ function readCurrentProject(projects) {
   }
 }
 
+// U-003：项目归属不是「meta 关键词豁免表」。先找具名 downstream identity，再用同一组
+// 数据规则区分纯框架对象与框架×未具名项目混合对象；复杂度只在范围闭合后计算。
+const FRAMEWORK_SCOPE_RULES = [
+  { id: 'runtime', pattern: /luca[_\s-]?gstack|lucagstack|skill\s*os/i },
+  { id: 'runtime-files', pattern: /(?:AGENTS|CLAUDE)\.md|workflow-state/i },
+  { id: 'runtime-paths', pattern: /\.claude\/hooks|\.codex\/hooks|memory\/scripts|framework-audit/i },
+  { id: 'runtime-guards', pattern: /project-scope-guard|route-guard|session-restore/i },
+  { id: 'routing-meta', pattern: /项目(?:上下文)?门禁|路由(?:守卫|规则|闭环)?|plan\s*(?:agent|mode)/i },
+  { id: 'framework-meta', pattern: /框架(?:自身|自审|治理)?|规则执行闭环|\bhooks?\b/i },
+];
+
+const FRAMEWORK_CONTROL_RULES = [
+  { id: 'approval', pattern: /我(?:已经)?直接批准执行|不用再.{0,8}批准|批准(?=.{0,16}(?:方案|计划|执行))|(?:给你|授予你).{0,8}(?:最大|全部|完整)?权限/ },
+  { id: 'execution-continuation', pattern: /继续执行|开始执行|直接执行|按.{0,12}计划.{0,8}(?:执行|完成|跑)|直接跑完|跑完|跑到底/ },
+];
+
+const DOWNSTREAM_SCOPE_RULES = [
+  { id: 'project', pattern: /(?:产品|业务|下游|一个|某个)?项目(?:里|内|中|的)?/ },
+  { id: 'product', pattern: /产品|业务|页面|功能|需求|客户|订单|原型|用户|接口|数据库|应用|网站|代码库|仓库|模块|\bcrm\b/i },
+];
+
+function matchingScopeRuleIds(value, rules) {
+  return rules.filter(rule => rule.pattern.test(value)).map(rule => rule.id);
+}
+
+function stripScopeRules(value, rules) {
+  let residual = value;
+  for (const rule of rules) {
+    const flags = `${rule.pattern.flags.replaceAll('g', '')}g`;
+    residual = residual.replace(new RegExp(rule.pattern.source, flags), ' ');
+  }
+  return residual;
+}
+
+function projectIdentityText(prompt) {
+  let text = normalize(prompt);
+  for (const trigger of ['新项目', '新需求', '新功能']) {
+    text = text.split(normalize(trigger)).join('');
+  }
+  return text;
+}
+
+function explicitNewProjectName(prompt) {
+  const patterns = [
+    /^\s*(?:请)?(?:新建|创建)(?:一个)?(?:新)?项目\s*(?:名为|叫|名称(?:是|为)|[:：])?\s*(.+?)\s*$/i,
+    /^\s*(?:请)?(?:新项目|一个新项目)\s*(?:名为|叫|名称(?:是|为)|[:：])\s*(.+?)\s*$/i,
+    /^\s*(?:请)?(?:新建|创建)(?:一个)?(?:名为|叫)\s*(.+?)\s*的?新项目\s*$/i,
+    /^\s*new\s+project\s*(?::|named\s+)\s*(.+?)\s*$/i,
+  ];
+  const match = patterns.map(pattern => prompt.match(pattern)).find(Boolean);
+  if (!match) return '';
+  const raw = match[1].trim();
+  if (/\s(?:或|或者|还是|or|and)\s/i.test(raw)) return '';
+  const quoted = raw.match(/^[「『“"'](.+)[」』”"']$/u);
+  const name = quoted ? quoted[1].trim() : raw;
+  // Unquoted declarations deliberately require one token. Names containing
+  // spaces remain supported through explicit quotes, preventing a trailing
+  // requirement sentence from being mistaken for the project identity.
+  if (!quoted && /\s/.test(name)) return '';
+  if (!name || name.length > 80) return '';
+  try { return validateProjectName(name); } catch { return ''; }
+}
+
+function classifyRoutingScope(prompt, projects, currentProject) {
+  const namedProject = projects.find(name => nameMatchesIn(projectIdentityText(prompt), name));
+  const frameworkSignals = matchingScopeRuleIds(prompt, FRAMEWORK_SCOPE_RULES);
+  const controlSignals = matchingScopeRuleIds(prompt, FRAMEWORK_CONTROL_RULES);
+  const residual = stripScopeRules(
+    stripScopeRules(prompt, FRAMEWORK_SCOPE_RULES),
+    FRAMEWORK_CONTROL_RULES,
+  );
+  const downstreamSignals = matchingScopeRuleIds(residual, DOWNSTREAM_SCOPE_RULES);
+
+  // 具名 identity 仍决定最高优先级的 scope，但不再丢掉同句中的框架/续接信号：目标项目
+  // 已经激活时 Gate 已满足，后面的 complexity 必须还能看见这些信号。
+  if (namedProject) {
+    return { kind: 'named_downstream', namedProject, frameworkSignals, controlSignals, downstreamSignals };
+  }
+  if (!frameworkSignals.length && !controlSignals.length) return { kind: 'ordinary' };
+
+  if (downstreamSignals.length) {
+    const affirmsCurrent = /当前项目|这个项目|本项目/.test(residual) && currentProject;
+    if (affirmsCurrent) {
+      return { kind: 'current_downstream', project: currentProject, frameworkSignals, controlSignals, downstreamSignals };
+    }
+    return { kind: 'mixed_ambiguous', frameworkSignals, controlSignals, downstreamSignals };
+  }
+
+  return { kind: 'pure_framework_meta', frameworkSignals, controlSignals };
+}
+
 // 对话延续/状态询问豁免（G3，2026-07-04）：整句就是"继续/停/问进度"类 check-in 时不注入
 // 路由提示——此前 >5 字、非?结尾的陈述句一律 STOP/PROJECT_STOP，实测几乎每条对话性消息
 // 都吃一段噪音注入。双闸防误豁免：① 整句锚定（前缀限 都/全部/现在，尾部限语气助词）
@@ -170,10 +281,9 @@ function isContinuation(prompt) {
   return prompt.length <= 10 && CONTINUATION_RE.test(prompt.trim());
 }
 
-function projectGate(prompt, projects, currentProject) {
+function projectGate(prompt, projects, currentProject, routingScope) {
   const text = normalize(prompt);
   if (!text) return null;
-  if (/当前项目|这个项目|本项目/.test(prompt)) return null;
   // 寒暄/确认类非任务输入不进项目门禁（与 skill 路由层 looksLikeTask 同口径；红队 C7 实测漏网）
   if (/^\s*(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i.test(prompt)) {
     return null;
@@ -183,10 +293,47 @@ function projectGate(prompt, projects, currentProject) {
   // trigger words before matching existing project names.
   const newProjectTriggers = ['新项目', '新需求', '新功能'];
   const hasNewProjectSignal = newProjectTriggers.some(t => text.includes(normalize(t)));
+  const hasNewProjectDeclaration = /新项目|新建(?:一个)?项目|创建(?:一个)?(?:名为.{1,80})?新?项目|new\s+project/i.test(prompt);
+  const declaredNewProject = explicitNewProjectName(prompt);
   let searchText = text;
   for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
 
-  const named = projects.find(name => nameMatchesIn(searchText, name));
+  if (declaredNewProject) {
+    const existing = projects.find(name => normalize(name) === normalize(declaredNewProject));
+    if (existing) {
+      return {
+        decision: 'PROJECT_STOP',
+        projectAction: 'new_project_name_conflict',
+        project: existing,
+        projects,
+        message: `项目 ${existing} 已存在；请确认是切换到它，还是为新项目换一个名字。`,
+      };
+    }
+    return {
+      decision: 'PROJECT_SWITCH',
+      projectAction: 'create_new_project',
+      operation: 'new',
+      project: declaredNewProject,
+      message: `新建并绑定 ${declaredNewProject} 后再继续路由。`,
+    };
+  }
+
+  const named = routingScope?.namedProject || projects.find(name => nameMatchesIn(searchText, name));
+
+  // explicit downstream identity 永远先于 meta/content 豁免。即使请求审计的是该项目的
+  // hook/路由，具名项目也必须先绑定；同一项目已经激活时视为 gate 已满足。
+  if (named && normalize(named) !== normalize(currentProject)) {
+    return {
+      decision: 'PROJECT_SWITCH',
+      projectAction: 'switch_existing_project',
+      project: named,
+      message: `切换到 ${named} 后再继续路由。`,
+    };
+  }
+  if (/当前项目|这个项目|本项目/.test(prompt)) return null;
+
+  // 纯 luca_gstack/framework meta 不消费 downstream project context，跳过无项目兜底网。
+  if (routingScope?.kind === 'pure_framework_meta') return null;
 
   // Audit C2: meta/audit/help questions are framework-level, not project work.
   // Skip Project Gate so they route via the normal skill/STOP path instead of
@@ -223,15 +370,6 @@ function projectGate(prompt, projects, currentProject) {
     return null;
   }
 
-  if (named && normalize(named) !== normalize(currentProject)) {
-    return {
-      decision: 'PROJECT_SWITCH',
-      projectAction: 'switch_existing_project',
-      project: named,
-      message: `切换到 ${named} 后再继续路由。`,
-    };
-  }
-
   if (/老项目|已有项目|已有的项目|旧项目|继续项目|上次那个项目|接着上次|上次的项目|之前那个项目|之前的项目|之前那个/.test(prompt) && !named) {
     return {
       decision: 'PROJECT_STOP',
@@ -248,6 +386,16 @@ function projectGate(prompt, projects, currentProject) {
       currentProject: currentProject || '',
       projects,
       message: '请先确认这是新项目、当前项目里的需求，还是继续老项目。',
+    };
+  }
+
+  if (hasNewProjectDeclaration) {
+    return {
+      decision: 'PROJECT_STOP',
+      projectAction: 'confirm_new_project_name',
+      currentProject: currentProject || '',
+      projects,
+      message: '这是新项目声明，但项目名缺失或不唯一；请给出一个明确项目名（含空格时用引号）。',
     };
   }
 
@@ -277,9 +425,17 @@ function projectGate(prompt, projects, currentProject) {
   return null;
 }
 
-function complexityDecision(prompt) {
+function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
   const text = normalize(prompt);
   const signals = [
+    {
+      name: '框架执行续接',
+      weight: 6,
+      test: () => routingScope.controlSignals?.length > 0 && (
+        routingScope.kind === 'pure_framework_meta' ||
+        (['named_downstream', 'current_downstream'].includes(routingScope.kind) && routingScope.frameworkSignals?.length > 0)
+      ),
+    },
     {
       name: '多模块',
       weight: 3,
@@ -511,8 +667,23 @@ const HEAVY_ORCHESTRATOR_SKILLS = new Set(
 function buildDecision(prompt) {
   const projects = listProjects();
   const currentProject = readCurrentProject(projects);
-  const gate = projectGate(prompt, projects, currentProject);
-  const complexity = complexityDecision(prompt);
+  const routingScope = classifyRoutingScope(prompt, projects, currentProject);
+
+  if (routingScope.kind === 'mixed_ambiguous') {
+    return {
+      decision: 'NEEDS_CONTEXT',
+      projectAction: 'clarify_framework_or_project_scope',
+      projects,
+      scopeSignals: {
+        framework: routingScope.frameworkSignals,
+        downstream: routingScope.downstreamSignals,
+      },
+      message: '请求同时指向 luca_gstack 框架与未具名项目，请先说明要改框架本身，还是哪个下游项目。',
+    };
+  }
+
+  const gate = projectGate(prompt, projects, currentProject, routingScope);
+  const complexity = complexityDecision(prompt, routingScope);
 
   // The gate short-circuits before skill/complexity routing. Carry the
   // complexity result through so a complex requirement bundled into a
@@ -571,6 +742,8 @@ function reviewAxisHint(decision) {
 
 function decisionToHints(decision) {
   switch (decision.decision) {
+    case 'NEEDS_CONTEXT':
+      return [`[route-guard] 🧭 NEEDS CONTEXT — ${decision.message}`];
     case 'PROJECT_STOP': {
       const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}` + reviewAxisHint(decision);
       if (!decision.planHint) return [base];
@@ -586,7 +759,10 @@ function decisionToHints(decision) {
       const frameworkSelfMaint = /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/i.test(prompt)
         ? '\n[route-guard] ⚠️ 同时命中框架路径/制品词：若本 session 是框架/meta 维护（非该项目的产品工作），**不要 switch**（会踩并行 session 的激活指针），直接在框架检出上作业。'
         : '';
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n命名即切换（点到已有项目名＝切过去，无需确认）：立即执行 ./scripts/project.sh switch "${decision.project}"` + frameworkSelfMaint + reviewAxisHint(decision);
+      const operation = decision.operation === 'new' ? 'new' : 'switch';
+      const command = decision.projectMutation
+        || `./scripts/project.sh ${operation} ${decision.project} --session-id <sid> --tx <missing> --expected-epoch <missing>`;
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n本轮是 SWITCH_ONLY；只执行这一条事务命令，成功后立即结束本轮：${command}` + frameworkSelfMaint + reviewAxisHint(decision);
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
     }
@@ -713,14 +889,34 @@ function ruleHintsForSkills(skills) {
 
 const prompt = parsePrompt();
 const hints = [];
-
-const stateFile = join(projectRoot, '.claude', 'workflow-state.yaml');
-if (existsSync(stateFile) && !dryRun) {
+let topLevelProjectState = null;
+let injectProjectOnThisTurn = false;
+let projectStateError = '';
+if (!dryRun && prompt && hookSessionId) {
   try {
-    const content = readFileSync(stateFile, 'utf8');
-    const match = content.match(/^  (\w[\w-]+):\s*\n\s+status:\s*IN_PROGRESS/m);
-    if (match) hints.push(`[route-guard] ⚠️  当前有未完成节点: ${match[1]}`);
-  } catch {}
+    let current = readProjectState(projectRoot, hookSessionId).value;
+    if (current.state === 'TURN_ACTIVE') {
+      current = closeProjectTurn({
+        gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: hookSessionId,
+        turnId: current.turn.turn_id, expectedEpoch: current.turn.epoch, outcome: 'next-user-prompt',
+      });
+    } else if (current.state === 'BOUND' && current.terminal) {
+      injectProjectOnThisTurn = true;
+      current = closeSwitchTurn({
+        gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: hookSessionId,
+        turnId: current.terminal.turn_id, expectedEpoch: current.binding.epoch, outcome: 'next-user-prompt',
+      });
+    } else if (current.state === 'SWITCH_ONLY') {
+      current = cancelProjectSwitch({ gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: hookSessionId });
+    }
+    topLevelProjectState = current;
+    runtimeCurrentProject = validatedBindingForState(current, PROJECTS_ROOT)?.project || '';
+    if (current.state === 'NO_PIN') {
+      try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch { }
+    }
+  } catch (error) {
+    projectStateError = String(error?.message || error);
+  }
 }
 
 let decision = null; // 提升到外层：pin 层（另一 if 块）需读它判定"命名即切换自切"
@@ -729,6 +925,76 @@ if (prompt) {
   if (dryRun) {
     process.stdout.write(JSON.stringify(decision, null, 2) + '\n');
     process.exit(0);
+  }
+  if (hookSessionId) {
+    try {
+      if (projectStateError) throw new Error(projectStateError);
+      const current = topLevelProjectState || readProjectState(projectRoot, hookSessionId).value;
+      const binding = validatedBindingForState(current, PROJECTS_ROOT);
+      const named = listProjects().find(name => nameMatchesIn(projectIdentityText(prompt), name));
+      // A display symlink is never enough to bind a no-pin session. Explicitly
+      // naming that same display project still creates a real switch transaction.
+      if (named && !binding && decision.decision !== 'PROJECT_SWITCH') {
+        decision = {
+          ...decision,
+          decision: 'PROJECT_SWITCH',
+          projectAction: 'switch_existing_project',
+          project: named,
+          message: `为本 session 事务绑定 ${named} 后再继续。`,
+        };
+      }
+
+      if (decision.decision === 'PROJECT_SWITCH' && decision.project) {
+        const operation = decision.operation === 'new' ? 'new' : 'switch';
+        const prepared = prepareProjectSwitch({
+          gstackRoot: projectRoot,
+          projectsRoot: PROJECTS_ROOT,
+          sessionId: hookSessionId,
+          operation,
+          target: decision.project,
+          turnId: hookTurnId,
+        });
+        const sw = prepared.switch;
+        decision = {
+          ...decision,
+          tx: sw.tx,
+          expectedEpoch: sw.expected_epoch,
+          projectMutation: `./scripts/project.sh ${sw.operation} ${sw.target} --session-id ${hookSessionId} --tx ${sw.tx} --expected-epoch ${sw.expected_epoch}`,
+        };
+        try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch { }
+        try { unlinkSync(join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`)); } catch { }
+      } else {
+        const opened = beginProjectTurn({
+          gstackRoot: projectRoot,
+          projectsRoot: PROJECTS_ROOT,
+          sessionId: hookSessionId,
+          turnId: hookTurnId,
+        });
+        if (opened.state === 'TURN_ACTIVE') {
+          const activeState = join(opened.binding.realpath, '.luca', 'workflow-state.yaml');
+          if (existsSync(activeState)) {
+            const content = readFileSync(activeState, 'utf8');
+            const match = content.match(/^  (\w[\w-]+):\s*\n\s+status:\s*IN_PROGRESS/m);
+            if (match) hints.push(`[route-guard] ⚠️  当前有未完成节点: ${match[1]}`);
+          }
+          if (injectProjectOnThisTurn) {
+            const memory = join(opened.binding.realpath, '.luca', 'memory', 'MEMORY.md');
+            const context = join(opened.binding.realpath, 'CONTEXT.md');
+            if (existsSync(memory)) {
+              const text = readFileSync(memory, 'utf8');
+              if (/^- /m.test(text)) hints.push(`[route-guard] 🧠 项目本地记忆（${opened.binding.project}）:\n${text}`);
+            }
+            if (existsSync(context)) {
+              const lines = readFileSync(context, 'utf8').split('\n').slice(0, 100);
+              const hasRealContent = lines.some(line => !/^(#|>|<!--|\s*$)/.test(line) && !line.includes('<'));
+              if (hasRealContent) hints.push(`[route-guard] 📌 项目 CONTEXT（${opened.binding.project}）:\n${lines.join('\n')}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      hints.push(`[route-guard] ⛔ PROJECT STATE — ${String(error?.message || error)}。本轮不得访问项目路径。`);
+    }
   }
   hints.push(...decisionToHints(decision));
   hints.push(...ruleHintsForSkills(matchedSkills(decision)));
@@ -757,57 +1023,6 @@ if (!dryRun && prompt) {
     }
   }
 
-  // ── 会话粘性 pin 层（G6-R2/R7，2026-07-04；命名即切换扩展 2026-07-06）──
-  // session-restore 会保留并行 session 的激活项目 → 新 session 可能"继承"一个自己从未确认过的
-  // 项目。pin 记录本 session 认过的项目，用于三件事：
-  //  (a) 继承检测：首轮消息时 docs 有链但本 sid 无 pin = 继承态 → 一次性提示（防静默写错项目）
-  //  (b) 漂移对账：docs 链被别的 session switch 走后与本 sid pin 不符 → 提示（携带计数收敛）
-  //  (c) 命名即切换自切：本轮 route-guard 判定要切到具名项目（PROJECT_SWITCH）时，switch 由主
-  //      Agent 在本轮之后执行、docs 链此刻仍是旧项目——故不做 cur 比对，直接把 pin 记成目标项目
-  //      并跳过漂移对账，避免"自己主动切"下一轮被 (b) 误报成"被并行 session 切走"。并行 session
-  //      不受影响（它本轮没发 PROJECT_SWITCH，照常走 (b) 告警）。
-  if (hookSessionId) {
-    try {
-      const pinFile = join(projectRoot, '.claude', `.session-project-${hookSessionId}`);
-      const inheritFile = join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`);
-      // 方案A（会话级项目隔离，2026-07-08）：pin 是 session 属性，是 project-scope-guard 重定向
-      // docs/·workflow-state·current-topic 的唯一真值。**pin 只在用户显式声明/确认项目时写，永不从
-      // 共享软链派生**——否则新 session 会静默继承别的 session 恰好切成的全局激活项目（正是 luca 否决
-      // 的"随意切到其他项目"）。
-      const selfSwitchTo = (decision && decision.decision === 'PROJECT_SWITCH' && decision.project) ? decision.project : null;
-      let pin = null;
-      try { pin = readFileSync(pinFile, 'utf8').trim() || null; } catch {}
-
-      if (selfSwitchTo) {
-        // 切到别的已有项目（PROJECT_SWITCH）：写权威 pin。switch 由主 Agent 本轮后执行、docs 链此刻仍
-        // 是旧项目，故不做 cur 比对。project-scope-guard 也会在 `project.sh switch/new` Bash 命令上认领
-        // pin（闭合 ! 直接 CLI 切换的洞），两者幂等。
-        try { writeFileSync(pinFile, selfSwitchTo); } catch {}
-        try { unlinkSync(inheritFile); } catch {}
-        try { unlinkSync(join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`)); } catch {}
-      } else if (pin) {
-        // 已绑定：刷新 mtime 供 GC 判活。**不再做 pin-vs-软链漂移对账/告警/自动认领**——A 下 pin≠软链是
-        // 常态（别的 session 切走软链与本 session 无关，重定向已兜住落点）。旧的"3 次后认领劫持者项目"
-        // 逻辑是跨 session 污染的元凶，在此彻底移除。
-        try { writeFileSync(pinFile, pin); } catch {}
-      } else {
-        // 未绑定 session：只在用户**确认地提到当前全局项目名**时才绑定（安全——是用户点名的、且就是已在
-        // 展示的项目，非随机软链目标）。其余保持无 pin：纯对话/框架任务照常；若碰 docs/ 由
-        // project-scope-guard deny 并提示先 switch/new，绝不静默落错项目。
-        const projects = listProjects();
-        const cur = readCurrentProject(projects);
-        // 词边界匹配（P5，2026-07-14）：与 projectGate 具名匹配同源，裸子串不再误绑（amusement⊅muse）。
-        const affirmsCur = cur && nameMatchesIn(normalize(prompt), cur);
-        if (affirmsCur) {
-          try { writeFileSync(pinFile, cur); } catch {}
-          try { unlinkSync(inheritFile); } catch {}
-        } else if (existsSync(inheritFile)) {
-          hints.push(`[route-guard] 🔗 全局激活项目「${cur || '(未知)'}」仅供参考——本 session 尚未绑定项目。提项目名即绑定（命名即切换）；绑定前对 docs/ 的读写会被拦以防落错项目，纯对话/框架任务不受影响。`);
-          try { unlinkSync(inheritFile); } catch {}
-        }
-      }
-    } catch {}
-  }
 }
 
 // ── 单真值源 behind 兜底提醒（2026-07-16 luca 点名）：落后 tracking 分支即每条消息提醒，

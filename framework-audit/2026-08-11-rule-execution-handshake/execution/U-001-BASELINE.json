@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan_id": "REX-20260811-001",
+  "captured_at": "2026-08-11T04:58:08Z",
+  "repo": "/Users/luca/Desktop/项目/muse/lucagstack",
+  "branch": "main",
+  "head": "789b1b800649de47a79096c72f40c03a54529303",
+  "head_tree": "0ad5ba4df4b191a0fabc7a0f77665e02a231f9b2",
+  "upstream_main": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+  "backup_main": "b73cc051d442d97ba0a1d5855c4ea521180ddaa7",
+  "ahead": 1,
+  "behind": 0,
+  "index_listing_sha256": "26d35431ffd2a36ea9acf4259824fc8b3f55892bc49089fa8506decccbeb51b2",
+  "cached_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "worktree_diff_sha256": "af2f466f7351d579e9990855899ace1ea7e159286285bc84e891976e14d589af",
+  "status_porcelain_v2_sha256_before_prep": "c04b70418725a954b69cb5f3c1ea52e115c7f2e9734215bd57f741e9fe83f58e",
+  "tracked_dirty_count": 9,
+  "tracked_dirty": [
+    {"path": ".claude/hooks/route-guard.mjs", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "abde3dfe355d17857fe9164ad61b74c07db1c016", "worktree_sha256": "d1c8d04490485ee2a097cad175c78ca78c37811d077f9d2537873bedfe1f525b"},
+    {"path": ".claude/hooks/session-sync.mjs", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "1ae836d68f44537ed6bb6a09b9938c8e2627a33b", "worktree_sha256": "f55cbdd12249d1edd7a7ca7e6db31cea1514723dbe643179ce4eba6a116b6343"},
+    {"path": ".claude/observability/observations.jsonl", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "55749713b8c303fc00ef84d52937b1971aa7e52b", "worktree_sha256": "c34da87448b218058b3b07dd8a4da40c70acf84edca15dd7b0ccb79382374918"},
+    {"path": ".claude/skill-os/capability-parity.json", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "a1eac7b24c9a441a27141e6e99aa090cf8d625fe", "worktree_sha256": "9d591dfcfbe7c28c51166d0dc0f45507271ab790beabaac0969a51da453845ce"},
+    {"path": "memory/evals/routing/fixtures.jsonl", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "2224912cf16190e6d2f549cff6b00a9962878646", "worktree_sha256": "448010186cbf930502159380661d287a96d535f82873cbfd1c5d094519117d0f"},
+    {"path": "scripts/test-codex-adapter.mjs", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "59bdf447deb440bd49f3b6ff23727d0cc8ce4972", "worktree_sha256": "98e5ffec504eb20d34802b102199dbfe98c6470da26c533e80453321ddd87690"},
+    {"path": "scripts/test-hooks.mjs", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "dba1f3cf5f8d2507032bf2c78e64100fef7f6d8e", "worktree_sha256": "e99ad341400dd32bed97aa2e71e7eae0d2fbcbd3a07c13470707fc0076bc7f2b"},
+    {"path": "scripts/test-project-identity-wiring.mjs", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "2a831fdafd7fd7433da68276f9c81e6fa3cfa628", "worktree_sha256": "e6f74bd53a4d8981fd42c4de58c9f52bbe4646eff6d03aaae01819026c7dfc65"},
+    {"path": "scripts/test-route-guard.mjs", "ownership": "UNRELATED_UNKNOWN_WIP", "index_blob": "5c05d704566ff33dfcb0e4e91622cf85fba92aa6", "worktree_sha256": "76c64045882bba9b535a0da5a075f4d2924f0e8d494a6a391ee8cdb8802321a0"}
+  ],
+  "untracked_count_before_prep": 36,
+  "untracked_classification": {
+    "KNOWN_PLAN_PACKAGE_PREFIX": "framework-audit/2026-08-11-rule-execution-handshake/",
+    "KNOWN_PLAN_PACKAGE_COUNT_BEFORE_PREP": 10,
+    "ALL_OTHER_UNTRACKED": "UNRELATED_UNKNOWN_WIP"
+  },
+  "safety": {
+    "staged_paths": [],
+    "excluded_tracked_dirty_count": 9,
+    "git_mutation_before_G_PACKAGE": false,
+    "rule": "Any drift in an unrelated tracked dirty hash is BLOCKED_DIRTY_OVERLAP; never stage by broad path or stage unrelated untracked files."
+  }
+}

@@ -112,7 +112,8 @@
 
 **绑定即注入（2026-07-09 M2 原文）：** 确认/绑定项目时（含上面继承态的确认、或点名当前已激活
 项目这类"没跑过 switch"的路径），若本 session 尚未注入该项目本地记忆 → 幂等执行
-`./scripts/project.sh switch {name}`（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
+route-guard 为当前 `UserPromptSubmit` 生成的完整 `./scripts/project.sh switch ... --session-id ... --tx ... --expected-epoch ...`
+事务命令（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
 切到当前已激活的同名项目不改软链目标）。②/③ 分支本就跑 switch/new，注入天然覆盖。
 **边界（2026-07-09 红队修订）：仅适用于真正要在该项目上做实质工作的 session。**
 meta/框架/审计 session 不适用——只需读某项目记忆做参考时，直接 Read 其项目根 `CONTEXT.md`
@@ -121,11 +122,11 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 （person 记忆 never-switch-parallel-session-projects，luca 标注严重问题）。
 
 **旧 ②（确认制切换）：** 消息中包含已有项目名 → 提示切换：「切换到 {name}」→ 用户确认后执行
-`./scripts/project.sh switch {name}` → 继续
+执行 route-guard 本轮生成的完整 `switch` 事务命令 → 成功后结束本轮，下一轮继续
 
 **旧 ③（一律确认制新建）：** 消息描述新项目/新需求/新功能，或直接调用了 skill 且没有明确当前项目
 → 新项目信号；从描述/skill 参数推断候选名 → 一句话确认：「这是新项目，建议叫 {name}，确认？」
-→ 用户确认（或给出其他名字）→ `./scripts/project.sh new {name}` → 执行原始请求
+→ 用户确认（或给出其他名字）→ 下一条 prompt 由 route-guard 生成完整 `new` 事务命令 → 执行后结束本轮，下一轮执行原始请求
 
 ## Project Gate 附则：总原则 + 绑定即注入（全文）
 
@@ -137,7 +138,8 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 
 > **绑定即注入（2026-07-09）：** 确认/绑定项目时（含继承态确认、点名当前已激活项目这类
 > "pin 已写但没跑 switch"的路径），若本 session 尚未注入该项目本地记忆 → 幂等执行
-> `./scripts/project.sh switch {name}`（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
+> route-guard 为当前 `UserPromptSubmit` 生成的完整 `./scripts/project.sh switch ... --session-id ... --tx ... --expected-epoch ...`
+> 事务命令（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
 > 切到当前已激活的同名项目不改软链目标）。
 > **边界（2026-07-09 红队修订）：仅适用于真正要在该项目上做实质工作的 session。**
 > meta/框架/审计 session 不适用——只需读某项目记忆做参考时，直接 Read 其项目根 `CONTEXT.md`
@@ -330,4 +332,3 @@ claude-in-chrome＝act 面（自动化）。判断路径＝语义路由契约的
 
 > （原挂此处的四条「浏览器点名镜像」bullets 系 2026-07-28 本节插入时被劈开的错位段，
 > 2026-07-30 已归位回「luca app 侧栏感知 › 浏览器点名镜像」节，约束原文不变。）
-

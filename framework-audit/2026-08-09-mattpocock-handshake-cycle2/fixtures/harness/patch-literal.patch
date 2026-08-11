@@ -1,0 +1,6 @@
+*** Begin Patch
+*** Update File: README.md
+@@
+-old line
++The prose mentions docs/example.md but the target remains README.md.
+*** End Patch

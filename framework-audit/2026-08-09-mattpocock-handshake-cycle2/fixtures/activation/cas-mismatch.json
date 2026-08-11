@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "transaction_id": "ACT-cas-mismatch-001",
+  "target_commit": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+  "initial_repo_head": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+  "status": "BLOCKED",
+  "steps": [
+    {
+      "state": "PREPARED",
+      "started_at": "2026-08-09T00:00:00.000Z",
+      "finished_at": "2026-08-09T00:00:01.000Z",
+      "result": "FAIL",
+      "cas": [
+        {
+          "resource": "global/systematic-debugging",
+          "expected": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "observed": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "artifacts": [],
+      "compensation": {
+        "command_id": "NOOP_BEFORE_MUTATION",
+        "expected_state": "unchanged"
+      }
+    }
+  ],
+  "rollback_steps": []
+}

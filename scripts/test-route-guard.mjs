@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
+import { mkdirSync, mkdtempSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import assert from 'assert/strict';
 
 const baseEnv = {
@@ -30,7 +33,74 @@ function route(prompt, extraEnv = {}) {
   }
 }
 
+function loadScopeMatrixFixtures() {
+  return readFileSync('memory/evals/routing/fixtures.jsonl', 'utf8')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith('//'))
+    .map(line => JSON.parse(line))
+    .filter(row => row.matrix === 'U-003');
+}
+
+function expectScopeMatrixDecision(fixture, decision) {
+  if (fixture.expected === 'PLAN_MODE') {
+    assert.equal(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+    return;
+  }
+  if (fixture.expected.startsWith('project:switch:')) {
+    assert.equal(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
+    assert.equal(decision.project, fixture.expected.slice('project:switch:'.length));
+    return;
+  }
+  assert.equal(fixture.expected, 'NEEDS_CONTEXT');
+  assert.equal(decision.decision, 'NEEDS_CONTEXT', `got ${decision.decision}`);
+  assert.equal(decision.projectAction, 'clarify_framework_or_project_scope');
+}
+
 const cases = [
+  {
+    name: 'explicitly named new project declaration reaches operation:new',
+    prompt: '新建项目 beta',
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, 'create_new_project');
+      assert.equal(decision.operation, 'new');
+      assert.equal(decision.project, 'beta');
+    },
+  },
+  {
+    name: 'quoted new project name with spaces remains deterministic',
+    prompt: '创建一个名为「客户 成功」的新项目',
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.operation, 'new');
+      assert.equal(decision.project, '客户 成功');
+    },
+  },
+  {
+    name: 'unnamed new project remains a human gate even with an active project',
+    prompt: '新项目想做用户管理',
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, 'confirm_new_project_name');
+    },
+  },
+  {
+    name: 'ambiguous new project names remain a human gate',
+    prompt: '新建项目 alpha 或 beta',
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, 'confirm_new_project_name');
+    },
+  },
+  {
+    name: 'new declaration colliding with an existing identity requires a human choice',
+    prompt: '新建项目 luca-dev',
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, 'new_project_name_conflict');
+    },
+  },
   {
     name: 'ambiguous demand asks project context before idea',
     prompt: '我想做一个需求',
@@ -746,9 +816,79 @@ const cases = [
   },
 ];
 
+const scopeMatrixFixtures = loadScopeMatrixFixtures();
+for (const matrixClass of ['pure_meta', 'project', 'mixed']) {
+  assert.ok(
+    scopeMatrixFixtures.filter(row => row.matrix_class === matrixClass).length >= 12,
+    `U-003 ${matrixClass} fixtures must contain at least 12 cases`,
+  );
+}
+assert.ok(
+  scopeMatrixFixtures.some(row => row.matrix_class === 'pure_meta' && row.input === '我直接批准执行。'),
+  'U-003 must retain the exact user prompt fixture',
+);
+for (const prompt of [
+  '继续执行当前项目里的 route-guard 治理计划。',
+  '继续执行 muse 项目里 route-guard 的治理计划。',
+]) {
+  assert.ok(
+    scopeMatrixFixtures.some(row => row.input === prompt && row.expected === 'PLAN_MODE'),
+    `U-003 must retain the Gate-satisfied reality fixture: ${prompt}`,
+  );
+}
+
+for (const fixture of scopeMatrixFixtures) {
+  cases.push({
+    name: `U-003 ${fixture.matrix_class}: ${fixture.id}`,
+    prompt: fixture.input,
+    extraEnv: fixture.env || {},
+    expect: decision => expectScopeMatrixDecision(fixture, decision),
+  });
+}
+
 let passCount = 0;
 let failCount = 0;
 const failures = [];
+
+// Real UserPromptSubmit fixture: this exercises the stateful branch that calls
+// prepareProjectSwitch, not only the dry-run decision builder.
+{
+  const root = mkdtempSync(join(tmpdir(), 'route-new-project-'));
+  const gstack = join(root, 'gstack');
+  const projects = join(root, 'projects');
+  mkdirSync(join(gstack, '.claude'), { recursive: true });
+  mkdirSync(projects, { recursive: true });
+  const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+    cwd: process.cwd(),
+    input: JSON.stringify({ session_id: 'REALNEW', turn_id: 'turn-new-1', prompt: '新建项目 beta' }),
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: gstack,
+      LUCA_GSTACK_ROOT: gstack,
+      LUCA_PROJECTS_ROOT: projects,
+      ROUTE_GUARD_PROJECTS: '',
+      ROUTE_GUARD_CURRENT_PROJECT: '',
+      ROUTE_GUARD_HEAVY_SKILLS: '',
+    },
+  });
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /project\.sh new beta --session-id REALNEW --tx .+ --expected-epoch 0/);
+    const state = JSON.parse(readFileSync(join(gstack, '.claude', '.session-project-REALNEW'), 'utf8'));
+    assert.equal(state.state, 'SWITCH_ONLY');
+    assert.equal(state.switch.operation, 'new');
+    assert.equal(state.switch.target, 'beta');
+    assert.equal(state.switch.turn_id, 'turn-new-1');
+    console.log('PASS real route fixture prepares deterministic operation:new transaction');
+    passCount++;
+  } catch (error) {
+    console.log(`FAIL real route fixture prepares deterministic operation:new transaction: ${error.message?.split('\n')[0]}`);
+    failures.push({ name: 'real route operation:new fixture', error: error.message?.split('\n')[0] });
+    failCount++;
+  }
+}
+
 for (const testCase of cases) {
   const decision = route(testCase.prompt, testCase.extraEnv || {});
   try {

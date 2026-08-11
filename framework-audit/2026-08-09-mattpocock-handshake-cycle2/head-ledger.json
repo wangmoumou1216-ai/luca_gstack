@@ -1,0 +1,562 @@
+{
+  "schema_version": "matt-head-ledger/v2",
+  "generated_at": "2026-08-09T00:00:00+08:00",
+  "status": "HEAD_WINDOW_CLOSURE_FROZEN",
+  "upstream_repository": "https://github.com/mattpocock/skills.git",
+  "window": {
+    "previous_review_commit": "ed37663cc5fbef691ddfecd080dff42f7e7e350d",
+    "current_main_head": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+    "current_main_tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+    "official_remote_head_verified": "2026-08-09",
+    "local_head_matches_remote": true,
+    "commits_after_2026_08_07_observed_head": 0,
+    "explanation": "The unresolved/current candidate closure is the ed37663c..84fdeffd window. The 2026-08-07 review already observed 84fdeffd; official main still resolves to the same commit, so there is no newer post-review commit."
+  },
+  "selection_rule": "All 24 exact HEAD source blobs referenced by the 73 raw candidate rows, plus six retained transitive references needed to interpret codebase-design, tdd, prototype, and ask-matt behavior. Candidate source coverage is mandatory; transitive extras require an explicit relevance reason.",
+  "counts": {
+    "objects": 30,
+    "mandatory_candidate_sources": 24,
+    "changed_or_renamed": 25,
+    "unchanged_transitive_closure": 5,
+    "transitive_extras": 6,
+    "dispositions": {
+      "REJECT": 11,
+      "OBSERVE_DEPENDENCY": 4,
+      "KEEP_LINEAGE": 1,
+      "UNCHANGED_CLOSURE": 5,
+      "DEFER": 7,
+      "ADAPT_NARROW": 2
+    },
+    "missing_objects": 0,
+    "unread_eof_receipts": 0
+  },
+  "objects": [
+    {
+      "path": ".agents/install-block.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "8971bde2d7ad2bbc722cc4beb838ea6c906b57c7",
+      "sha256": "8079456d3df5866785ee71e0e14e88b99ad96921e28f4e664b7f67dd1c455f16",
+      "lines": 61,
+      "bytes": 2802,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:.agents/install-block.md consumed as a complete blob"
+      },
+      "window_status": "A\t.agents/install-block.md",
+      "review_disposition": "REJECT",
+      "relevance": "Upstream Claude plugin and Codex skills.sh channels are behavior-bearing distribution candidates; local governed pins/FUSION remains the only allowed channel."
+    },
+    {
+      "path": ".agents/writing-docs.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "c915ab8be6e22dab003df00f76ffc69937517bd9",
+      "sha256": "d63abb087493db959d2e614f2a8fd697c0d32fb80df84c48b4c0bca18c82a443",
+      "lines": 96,
+      "bytes": 12760,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:.agents/writing-docs.md consumed as a complete blob"
+      },
+      "window_status": "M\t.agents/writing-docs.md",
+      "review_disposition": "OBSERVE_DEPENDENCY",
+      "relevance": "Four HEAD atoms cite the upstream docs-authoring contract; its reusable environment/cache meaning is absorbed narrowly rather than installed as a runtime skill."
+    },
+    {
+      "path": "skills/deprecated/README.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "ac3f47d3d28f8ca6371df209e14540243b47a360",
+      "sha256": "e951955161a17638da3abb77bd359be791d05d7744f6774a630b67cb8d47fc93",
+      "lines": 3,
+      "bytes": 163,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/deprecated/README.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/deprecated/README.md",
+      "review_disposition": "KEEP_LINEAGE",
+      "relevance": "Records upstream deletion policy; no local file deletion is authorized."
+    },
+    {
+      "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "cb31e6abf5c3fce903f1f4ed554cf541c9354977",
+      "sha256": "bd0fe4291d25064080a5b880a17d2ebe320e65a63747a2d69a64b04d72a0d03e",
+      "lines": 55,
+      "bytes": 4276,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/ask-matt/PHASE-BOUNDARIES.md consumed as a complete blob"
+      },
+      "window_status": "A\tskills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+      "review_disposition": "REJECT",
+      "relevance": "Five-option phase-boundary tree was rejected."
+    },
+    {
+      "path": "skills/engineering/ask-matt/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "7f3ab7829fba2321ac9e5b2ff9d58b8321734aa8",
+      "sha256": "3d38910535f5f01e15bc5fd7f6ca8880d628cd248741f08e6780dd7c1828e832",
+      "lines": 90,
+      "bytes": 11491,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/ask-matt/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/ask-matt/SKILL.md",
+      "review_disposition": "REJECT",
+      "relevance": "Router additions tied to rejected/deferred candidates were not adopted."
+    },
+    {
+      "path": "skills/engineering/code-review/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "2d276fe88bddd363395b4887a555769222a34975",
+      "sha256": "9cf46653dd9c710ea1e6c22423caf31a794c88773bc94bdaa23140277f470442",
+      "lines": 87,
+      "bytes": 6634,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/code-review/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/code-review/SKILL.md",
+      "review_disposition": "OBSERVE_DEPENDENCY",
+      "relevance": "Carries one harness-neutral dispatch wording atom; wording alone is not local native-dispatch evidence."
+    },
+    {
+      "path": "skills/engineering/codebase-design/DEEPENING.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "3938457b88ddf98262d5f461aac703dbd74f749a",
+      "sha256": "125e6b77413ad2bc7cf7a772bc74336d580a50f9e797db2178ed133d62333d06",
+      "lines": 37,
+      "bytes": 2559,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/codebase-design/DEEPENING.md consumed as a complete blob"
+      },
+      "window_status": "UNCHANGED_TRANSITIVE_CLOSURE",
+      "review_disposition": "UNCHANGED_CLOSURE",
+      "relevance": "Unchanged dependency read for codebase-design reference closure."
+    },
+    {
+      "path": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "8419ad6fa966be2e9e435c932b3584df56cb1af6",
+      "sha256": "09f9948ea7636a4d3704c5ab909762e876c0b39849eefb14d2e03a398cc9c7e7",
+      "lines": 44,
+      "bytes": 2691,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/codebase-design/DESIGN-IT-TWICE.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "review_disposition": "DEFER",
+      "relevance": "Updated design alternatives are observed but no new local delta was approved."
+    },
+    {
+      "path": "skills/engineering/codebase-design/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "16620c24528b737408e78d95dd6a0e01a98d3d63",
+      "sha256": "a8d50abac5a4018f60e1d911d4b6f4e36454ca14d6c390c0695a578c7de65dad",
+      "lines": 114,
+      "bytes": 6488,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/codebase-design/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "UNCHANGED_TRANSITIVE_CLOSURE",
+      "review_disposition": "UNCHANGED_CLOSURE",
+      "relevance": "Unchanged dependency read to keep DESIGN-IT-TWICE semantics grounded."
+    },
+    {
+      "path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "43daedd1bdbb47b49638c82557990fc5100d7c9c",
+      "sha256": "18ae07e1cc49b32c71767e241a6e8de4be74ef21d5e3b7e39034d9c7335f2d80",
+      "lines": 44,
+      "bytes": 1319,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "review_disposition": "OBSERVE_DEPENDENCY",
+      "relevance": "Read because diagnosing behavior depends on the HITL script and prior leakage findings target it."
+    },
+    {
+      "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "7f8acf7e3c5929a557d7bf26c88a7844551e3976",
+      "sha256": "b9339b09ee3980808d8c5a35c7251b891b8b1e0036ec4ca37812b976ebddf6b6",
+      "lines": 140,
+      "bytes": 8969,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/diagnosing-bugs/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/diagnosing-bugs/SKILL.md",
+      "review_disposition": "ADAPT_NARROW",
+      "relevance": "Redaction-before-showing commands/output was selected for adaptation; other changes remain outside this update."
+    },
+    {
+      "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "529761a3a01d35996018f27530b3c3cc0ab18d41",
+      "sha256": "7b76f01b0eefe49a127754c9027a6235a036a21348df5dad988893d8b2f384d6",
+      "lines": 71,
+      "bytes": 6009,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/improve-codebase-architecture/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/improve-codebase-architecture/SKILL.md",
+      "review_disposition": "OBSERVE_DEPENDENCY",
+      "relevance": "Carries one harness-neutral exploration wording atom; no local counterpart is refreshed in this cycle."
+    },
+    {
+      "path": "skills/engineering/prototype/LOGIC.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "5f5a3fd5a8cbd69c029854e9881ddc6e87ae5093",
+      "sha256": "5aef84c2ef514dd2a7268433abd3ee8e47b35f42b60e0b5f7430ec4937f4f06a",
+      "lines": 67,
+      "bytes": 6093,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/prototype/LOGIC.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/prototype/LOGIC.md",
+      "review_disposition": "DEFER",
+      "relevance": "Logic-demo mechanics were deferred."
+    },
+    {
+      "path": "skills/engineering/prototype/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "094571156140f5993cce8557dc31383c82817f3e",
+      "sha256": "2579ecf89a7fb7e73345117405c7ba9b9fb5ab22a78ecb08b0ce68b73f0148c2",
+      "lines": 26,
+      "bytes": 2954,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/prototype/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/prototype/SKILL.md",
+      "review_disposition": "DEFER",
+      "relevance": "Prototype update was not adopted in this review."
+    },
+    {
+      "path": "skills/engineering/prototype/UI.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "76c0f6012b016af04d6105fa696a9a0e29dfa53a",
+      "sha256": "e2ca04434be54acdee2f5df582ef8038fadf582bbcc99be0d2e27737ff8ed096",
+      "lines": 112,
+      "bytes": 6959,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/prototype/UI.md consumed as a complete blob"
+      },
+      "window_status": "UNCHANGED_TRANSITIVE_CLOSURE",
+      "review_disposition": "UNCHANGED_CLOSURE",
+      "relevance": "Unchanged branch dependency of prototype."
+    },
+    {
+      "path": "skills/engineering/tdd/mocking.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "71cbfee674d93244ce81d1830b930ca9a69200bd",
+      "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+      "lines": 59,
+      "bytes": 1481,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/tdd/mocking.md consumed as a complete blob"
+      },
+      "window_status": "UNCHANGED_TRANSITIVE_CLOSURE",
+      "review_disposition": "UNCHANGED_CLOSURE",
+      "relevance": "Unchanged TDD reference dependency."
+    },
+    {
+      "path": "skills/engineering/tdd/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "ead7781d79eb11cdafa1ac2db978cadef0eba240",
+      "sha256": "5e6b9c16b547113e90afbb946489d1c1384be5c2128f0159bd0bee57251ecf08",
+      "lines": 38,
+      "bytes": 3568,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/tdd/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/tdd/SKILL.md",
+      "review_disposition": "DEFER",
+      "relevance": "TDD pointer/rewording update was deferred."
+    },
+    {
+      "path": "skills/engineering/tdd/tests.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "7ab86479f925a1f9e8ba680af33cb3b12e015381",
+      "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+      "lines": 77,
+      "bytes": 2214,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/tdd/tests.md consumed as a complete blob"
+      },
+      "window_status": "UNCHANGED_TRANSITIVE_CLOSURE",
+      "review_disposition": "UNCHANGED_CLOSURE",
+      "relevance": "Unchanged TDD reference dependency."
+    },
+    {
+      "path": "skills/engineering/triage/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "e67b7bbabf5215b52f135c7e58b8da5f91337a86",
+      "sha256": "91e2817ecb688c4df4e2444eab472d1d79d2a0a57abf9f6726967664c460ff2e",
+      "lines": 112,
+      "bytes": 6582,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/triage/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/engineering/triage/SKILL.md",
+      "review_disposition": "REJECT",
+      "relevance": "Consumer site that propagates rejected whole-frontier grilling rounds; required for replacement-lineage closure."
+    },
+    {
+      "path": "skills/engineering/wizard/agents/openai.yaml",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "b601bdf3a321e7d32d5714681540b811287d3988",
+      "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+      "lines": 3,
+      "bytes": 96,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/wizard/agents/openai.yaml consumed as a complete blob"
+      },
+      "window_status": "R069\tskills/in-progress/wizard/agents/openai.yaml\tskills/engineering/wizard/agents/openai.yaml",
+      "review_disposition": "REJECT",
+      "relevance": "Codex metadata omits an explicit no-implicit-invocation policy for the rejected external-write wizard."
+    },
+    {
+      "path": "skills/engineering/wizard/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "fdc2a72162b75db138df2f81c9cc6fd8a72f4495",
+      "sha256": "7fb2b4ba23870ec028c85c6d7ef1ca573413ca7026bd4d410fe0e6d8dc9d1e92",
+      "lines": 44,
+      "bytes": 4163,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/wizard/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "A\tskills/engineering/wizard/SKILL.md",
+      "review_disposition": "REJECT",
+      "relevance": "Wizard capability was rejected for local adoption."
+    },
+    {
+      "path": "skills/engineering/wizard/template.sh",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "e5b28ab65e034cec1bd61f12116808d343bdb957",
+      "sha256": "d43dc3f7b6008779ef55e3935bf1df246b5bc194b7f9e1dee3d9340a00922ce6",
+      "lines": 204,
+      "bytes": 8596,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/engineering/wizard/template.sh consumed as a complete blob"
+      },
+      "window_status": "A\tskills/engineering/wizard/template.sh",
+      "review_disposition": "REJECT",
+      "relevance": "Wizard template follows the rejected capability."
+    },
+    {
+      "path": "skills/in-progress/loop-me/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "c408efa39d2a5da50562e29c914bf8095bf4a1db",
+      "sha256": "ad7110ecbd419fc312c3e7c62f496bd346a05462cdf1589b12ff7550fce3202a",
+      "lines": 32,
+      "bytes": 2560,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/in-progress/loop-me/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/in-progress/loop-me/SKILL.md",
+      "review_disposition": "REJECT",
+      "relevance": "Second consumer site that preserves rejected rounds behavior after the standalone batch skill was removed."
+    },
+    {
+      "path": "skills/productivity/grilling/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "95bd01ee9049a7e08120d54af9cd6ceeef282335",
+      "sha256": "fa5c1e5ee76b1c8f1ae56101f52c9e239de75d5c578adc61227b92d10b7e52ef",
+      "lines": 22,
+      "bytes": 1872,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/grilling/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "M\tskills/productivity/grilling/SKILL.md",
+      "review_disposition": "REJECT",
+      "relevance": "Round/frontier multi-question rewrite was rejected."
+    },
+    {
+      "path": "skills/productivity/to-questionnaire/agents/openai.yaml",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "a58d14765beb4acb4c9708b516310558e1308a22",
+      "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+      "lines": 5,
+      "bytes": 166,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/to-questionnaire/agents/openai.yaml consumed as a complete blob"
+      },
+      "window_status": "R100\tskills/in-progress/to-questionnaire/agents/openai.yaml\tskills/productivity/to-questionnaire/agents/openai.yaml",
+      "review_disposition": "DEFER",
+      "relevance": "Codex user-only metadata is part of the deferred questionnaire parity boundary."
+    },
+    {
+      "path": "skills/productivity/to-questionnaire/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "1423375bb23923a754e931f034a9714b8f81dfcc",
+      "sha256": "8e7f9ed8d7b2e66babf1a54aee9b94319bf38c32619cffe78819df6518ead5fc",
+      "lines": 53,
+      "bytes": 2921,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/to-questionnaire/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "A\tskills/productivity/to-questionnaire/SKILL.md",
+      "review_disposition": "DEFER",
+      "relevance": "Questionnaire promotion was deferred."
+    },
+    {
+      "path": "skills/productivity/wait-what/agents/openai.yaml",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "ba77f1c967700d7c6574ba70b0dd585056c98b7f",
+      "sha256": "3ec661af8fc7063b650518c95ab775bbeabaefce38b89acaf6da2f749168f37e",
+      "lines": 5,
+      "bytes": 161,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/wait-what/agents/openai.yaml consumed as a complete blob"
+      },
+      "window_status": "A\tskills/productivity/wait-what/agents/openai.yaml",
+      "review_disposition": "REJECT",
+      "relevance": "Codex user-only metadata is part of the rejected extra catalog surface."
+    },
+    {
+      "path": "skills/productivity/wait-what/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "d493cfa883645bb7ce2e12f5232c0fbe3a0b9f87",
+      "sha256": "8923f7df1a0d1b138281658e134caa4bf1c618d2876a2323b19acdfdffebc024",
+      "lines": 7,
+      "bytes": 325,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/wait-what/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "A\tskills/productivity/wait-what/SKILL.md",
+      "review_disposition": "REJECT",
+      "relevance": "Wait-what corrective skill was rejected."
+    },
+    {
+      "path": "skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "c28e3bf035403080a849ac4b7816d3af93d145ff",
+      "sha256": "b4c54a0aaad3f6eddefde6d06770a0e401fbb8fc6a8f49ce18af816bd144d14d",
+      "lines": 22,
+      "bytes": 2651,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/writing-for-agents/SKILL-MECHANICS.md consumed as a complete blob"
+      },
+      "window_status": "A\tskills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+      "review_disposition": "DEFER",
+      "relevance": "Skill-specific mechanics remain candidate context, not an adopted delta."
+    },
+    {
+      "path": "skills/productivity/writing-for-agents/SKILL.md",
+      "commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "tree": "5c5d817a09c3ac2cbad66c0d09db3fce3455a440",
+      "blob_oid": "c059d48cd70cfd1494bde74afcc426010b1c10e3",
+      "sha256": "a842323e664e5af104eac5c97ad22fda929ebeb62d81c501161ac1f6f482db58",
+      "lines": 81,
+      "bytes": 10966,
+      "eof": {
+        "read_complete": true,
+        "newline_terminated": true,
+        "receipt": "git show 84fdeffd12f2ee307994d1eb6feb48173b6e0502:skills/productivity/writing-for-agents/SKILL.md consumed as a complete blob"
+      },
+      "window_status": "A\tskills/productivity/writing-for-agents/SKILL.md",
+      "review_disposition": "ADAPT_NARROW",
+      "relevance": "One universal agent-document doctrine sentence was accepted in prior consensus; no upstream file was installed wholesale."
+    }
+  ],
+  "integrity": {
+    "duplicate_paths": 0,
+    "missing_blob_oid": 0,
+    "missing_sha256": 0,
+    "candidate_source_paths_expected": 24,
+    "candidate_source_paths_present": 24,
+    "missing_candidate_source_paths": [],
+    "transitive_extra_paths": [
+      "skills/engineering/ask-matt/SKILL.md",
+      "skills/engineering/codebase-design/DEEPENING.md",
+      "skills/engineering/codebase-design/SKILL.md",
+      "skills/engineering/prototype/UI.md",
+      "skills/engineering/tdd/mocking.md",
+      "skills/engineering/tdd/tests.md"
+    ]
+  },
+  "_file_end": "head-ledger.json"
+}

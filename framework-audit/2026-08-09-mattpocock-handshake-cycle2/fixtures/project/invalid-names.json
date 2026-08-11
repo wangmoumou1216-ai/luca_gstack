@@ -1,0 +1,17 @@
+{
+  "valid": ["muse", "research-intel-officer", "中文项目", "alpha_2"],
+  "invalid": [
+    "",
+    ".",
+    "..",
+    ".hidden",
+    "alpha/beta",
+    "alpha\\beta",
+    "alpha/../beta",
+    "/absolute",
+    "trailing/",
+    "line\nbreak",
+    "tab\tname"
+  ],
+  "contract": "one direct-child segment; no dot segment, separators, controls, or hidden name"
+}

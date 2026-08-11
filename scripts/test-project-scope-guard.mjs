@@ -3,9 +3,9 @@
 // 不并入 test-hooks.mjs：后者在首个断言失败即崩（当前 HOOK-001-reverse 是 fork 内先存的失败，
 // 与本 skill 无关），并入会被它挡住不执行。
 //
-// 全程 hermetic：临时 HOME + 临时 CLAUDE_PROJECT_DIR，绝不碰真实 ~/Desktop/项目 或本仓库状态。
+// 全程 hermetic：任务专用 LUCA_PROJECTS_ROOT + 临时 CLAUDE_PROJECT_DIR，不改写 HOME。
 import { spawnSync } from 'child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs';
+import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import assert from 'assert';
@@ -16,30 +16,40 @@ function ok(name) { pass++; console.log('PASS ' + name); }
 function bad(name, e) { fail++; console.log('FAIL ' + name + ' :: ' + (e && e.message || e)); }
 function check(name, fn) { try { fn(); ok(name); } catch (e) { bad(name, e); } }
 
-// 每个 case 造独立 hermetic 环境：<tmp>/gstack 作 CLAUDE_PROJECT_DIR，<tmp> 作 HOME
-// （hook 里 PROJECTS_ROOT = $HOME/Desktop/项目）。pins 传入则预写 .session-project-<sid>。
-function makeEnv({ pins = {} } = {}) {
-  const home = mkdtempSync(join(tmpdir(), 'psg-home-'));
-  const gstack = join(home, 'Desktop', '项目', 'gstack');
+// pins 传入则预写 schema v2 TURN_ACTIVE identity+epoch snapshot。
+function makeEnv({ pins = {}, nestedFramework = false } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'psg-root-'));
+  const projects = join(root, 'projects');
+  const gstack = nestedFramework ? join(projects, 'muse', 'lucagstack') : join(root, 'gstack');
   mkdirSync(join(gstack, '.claude'), { recursive: true });
+  mkdirSync(projects, { recursive: true });
   for (const [sid, proj] of Object.entries(pins)) {
-    writeFileSync(join(gstack, '.claude', `.session-project-${sid}`), proj);
-    mkdirSync(join(home, 'Desktop', '项目', proj, 'docs'), { recursive: true });
-    mkdirSync(join(home, 'Desktop', '项目', proj, '.luca'), { recursive: true });
+    const project = join(projects, proj);
+    mkdirSync(join(project, 'docs'), { recursive: true });
+    mkdirSync(join(project, '.luca'), { recursive: true });
+    const st = statSync(project);
+    const binding = { project: proj, epoch: 1, realpath: realpathSync(project), dev: Number(st.dev), ino: Number(st.ino) };
+    writeFileSync(join(gstack, '.claude', `.session-project-${sid}`), `${JSON.stringify({
+      schema_version: 2,
+      state: 'TURN_ACTIVE',
+      session_id: sid,
+      binding,
+      turn: { turn_id: `turn-${sid}`, epoch: 1 },
+    })}\n`);
   }
-  return { home, gstack };
+  return { root, gstack, projects };
 }
-function run(env, payload) {
+function run(env, payload, extraEnv = {}) {
   const r = spawnSync('node', [HOOK], {
     input: JSON.stringify(payload),
     cwd: env.gstack,
-    env: { ...process.env, HOME: env.home, CLAUDE_PROJECT_DIR: env.gstack },
+    env: { ...process.env, CLAUDE_PROJECT_DIR: env.gstack, LUCA_GSTACK_ROOT: env.gstack, LUCA_PROJECTS_ROOT: env.projects, ...extraEnv },
     encoding: 'utf8',
   });
   assert.equal(r.status, 0, 'hook 必须永远 exit 0（fail-open），stderr=' + r.stderr);
   return r.stdout.trim() ? JSON.parse(r.stdout) : null; // 空 stdout = pass-through
 }
-const abs = (env, proj, rest) => join(env.home, 'Desktop', '项目', proj, rest);
+const abs = (env, proj, rest) => join(realpathSync(join(env.projects, proj)), rest);
 
 // 1. 已绑定 session 写 docs/ → 重定向到本 pin 项目绝对路径
 check('pinned Write docs/ → redirect to own project', () => {
@@ -64,7 +74,7 @@ check('no-pin Write docs/ → deny', () => {
   const env = makeEnv();
   const o = run(env, { session_id: 'NP', tool_name: 'Write', tool_input: { file_path: 'docs/x.md', content: 'x' } });
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
-  assert.match(o.hookSpecificOutput.permissionDecisionReason, /未绑定|switch/);
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /NO_PIN|TURN_ACTIVE|switch/);
 });
 
 // 4. 非项目路径（.claude/skills、memory、scripts、任意）→ 放行不改写
@@ -106,12 +116,12 @@ check('no-pin Bash docs write → deny', () => {
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
 });
 
-// 9. Bash `project.sh switch X` → 认领 pin（闭合 CLI 直切的洞）
-check('Bash project.sh switch X → claims pin', () => {
+// 9. Legacy direct switch without tx is rejected and cannot create a pin.
+check('Bash project.sh switch X without tx → denied, no pin prewrite', () => {
   const env = makeEnv();
-  run(env, { session_id: 'CLI', tool_name: 'Bash', tool_input: { command: './scripts/project.sh switch mobile-list' } });
-  const pin = readFileSync(join(env.gstack, '.claude', '.session-project-CLI'), 'utf8').trim();
-  assert.equal(pin, 'mobile-list');
+  const out = run(env, { session_id: 'CLI', tool_name: 'Bash', tool_input: { command: './scripts/project.sh switch mobile-list' } });
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  assert.ok(!existsSync(join(env.gstack, '.claude', '.session-project-CLI')));
 });
 
 // 10. Read docs/ 也重定向（读也须落本项目）
@@ -125,7 +135,7 @@ check('pinned Read docs/ → redirect', () => {
 check('malformed stdin → fail-open pass-through', () => {
   const env = makeEnv({ pins: { S1: 'muse' } });
   const r = spawnSync('node', [HOOK], { input: 'not json{', cwd: env.gstack,
-    env: { ...process.env, HOME: env.home, CLAUDE_PROJECT_DIR: env.gstack }, encoding: 'utf8' });
+    env: { ...process.env, CLAUDE_PROJECT_DIR: env.gstack, LUCA_GSTACK_ROOT: env.gstack, LUCA_PROJECTS_ROOT: env.projects }, encoding: 'utf8' });
   assert.equal(r.status, 0);
   assert.equal(r.stdout.trim(), '');
 });
@@ -137,18 +147,18 @@ check('no session_id → treated as no-pin (docs denied)', () => {
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
 });
 
-// 13. 放宽（#2）：无 pin READ docs/ → pass-through（纯对话/审计可读当前项目 docs，跟软链）
-check('no-pin Read docs/ → pass-through (relaxed read)', () => {
+// 13. 无 pin 读共享 docs 同样 fail-closed。
+check('no-pin Read docs/ → deny', () => {
   const env = makeEnv();
   const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: 'docs/PROGRESS.md' } });
-  assert.equal(o, null, '无 pin 读类应放行');
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
 });
 
-// 14. 放宽仅限读：无 pin Grep path=docs → pass-through；但无 pin Write docs → 仍 deny（不变）
-check('no-pin Grep path=docs → pass-through; Write still deny', () => {
+// 14. 无 pin Grep/Write 都 fail-closed。
+check('no-pin Grep path=docs and Write docs → both deny', () => {
   const env = makeEnv();
   const g = run(env, { session_id: 'NP', tool_name: 'Grep', tool_input: { pattern: 'x', path: 'docs' } });
-  assert.equal(g, null, '无 pin Grep 应放行');
+  assert.equal(g.hookSpecificOutput.permissionDecision, 'deny');
   const w = run(env, { session_id: 'NP', tool_name: 'Write', tool_input: { file_path: 'docs/x.md', content: 'x' } });
   assert.equal(w.hookSpecificOutput.permissionDecision, 'deny', '无 pin 写仍 deny');
 });
@@ -160,12 +170,12 @@ check('project.sh switch inside echo string → NOT claimed', () => {
   assert.ok(!existsSync(join(env.gstack, '.claude', '.session-project-E')), 'echo 里的 project.sh 不得置 pin');
 });
 
-// 16. 收紧后真调用仍认领：命令段起始位（含 && 后一段）的 project.sh switch → 置 pin
-check('real project.sh switch (after &&) still claims pin', () => {
+// 16. 复合命令永不构成合法 SWITCH_ONLY mutation。
+check('compound project.sh switch (after &&) is denied and does not prewrite pin', () => {
   const env = makeEnv();
-  run(env, { session_id: 'R', tool_name: 'Bash', tool_input: { command: 'echo start && ./scripts/project.sh switch mobile-list' } });
-  const pin = readFileSync(join(env.gstack, '.claude', '.session-project-R'), 'utf8').trim();
-  assert.equal(pin, 'mobile-list');
+  const out = run(env, { session_id: 'R', tool_name: 'Bash', tool_input: { command: 'echo start && ./scripts/project.sh switch mobile-list' } });
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  assert.ok(!existsSync(join(env.gstack, '.claude', '.session-project-R')));
 });
 
 // 17. ★回归★（sid 截断 bug，2026-07-09）：真实 36 字符 UUID sid。route-guard 用 slice(0,36)
@@ -289,6 +299,199 @@ check('FW-A2abs: Bash 绝对路径写仓外 framework → 放行（不越界）'
   const o = run(env, { session_id: 's', tool_name: 'Bash', tool_input: { command: 'echo x > /tmp/framework/x' } });
   assert.equal(o, null, '仓外 framework 绝对路径不拦（只保护本仓母版）');
 });
+
+// ── DEV-004 身份边界增量：direct absolute / broad search / malformed state ──
+check('IDENTITY-DIRECT-001 no-pin direct absolute project Read → deny', () => {
+  const env = makeEnv();
+  mkdirSync(join(env.projects, 'alpha', 'docs'), { recursive: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'alpha', 'docs', 'x.md') } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-DIRECT-002 active same-project direct absolute Read → canonical allow', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const target = abs(env, 'alpha', 'docs/x.md');
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: target } });
+  assert.equal(o.hookSpecificOutput.updatedInput.file_path, target);
+});
+check('IDENTITY-DIRECT-003 active cross-project direct absolute Read → deny', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  mkdirSync(join(env.projects, 'beta', 'docs'), { recursive: true });
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'beta', 'docs', 'x.md') } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-DIRECT-004 active same-project direct absolute Bash → allow', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `test -f ${abs(env, 'alpha', 'docs/x.md')}` } });
+  assert.equal(o, null);
+});
+check('IDENTITY-DIRECT-005 active cross-project direct absolute Bash → deny', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  mkdirSync(join(env.projects, 'beta', 'docs'), { recursive: true });
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `test -f ${join(env.projects, 'beta', 'docs', 'x.md')}` } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-BROAD-001 no-pin pathless Grep → deny', () => {
+  const env = makeEnv();
+  const o = run(env, { session_id: 'NP', tool_name: 'Grep', tool_input: { pattern: 'x' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-BROAD-002 active pathless Glob → deny with explicit-path guidance', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Glob', tool_input: { pattern: '**/*.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /明确.*路径|共享 docs/);
+});
+check('IDENTITY-STATE-001 malformed state never falls back to display path', () => {
+  const env = makeEnv();
+  writeFileSync(join(env.gstack, '.claude', '.session-project-BAD'), '{not-json');
+  const o = run(env, { session_id: 'BAD', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /INVALID/);
+});
+check('IDENTITY-STATE-002 corrupt turn epoch never authorizes project access', () => {
+  const env = makeEnv({ pins: { BAD: 'alpha' } });
+  const path = join(env.gstack, '.claude', '.session-project-BAD');
+  const value = JSON.parse(readFileSync(path, 'utf8'));
+  value.turn.epoch = value.binding.epoch + 1;
+  writeFileSync(path, `${JSON.stringify(value)}\n`);
+  const o = run(env, { session_id: 'BAD', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-001 docs traversal cannot escape active binding', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/../../beta/secret.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /traversal/);
+});
+check('IDENTITY-PATH-002 direct PROJECTS/A/../B traversal is denied', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  mkdirSync(join(env.projects, 'beta'), { recursive: true });
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: `${env.projects}/alpha/../beta/secret.md` } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-003 in-project symlink escape is denied by nearest-parent realpath', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const beta = join(env.projects, 'beta');
+  mkdirSync(beta, { recursive: true });
+  symlinkSync(beta, join(env.projects, 'alpha', 'docs', 'escape'));
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/escape/secret.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-004 Bash exact docs token rewrites; no-pin exact token denies', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const active = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'ls docs' } });
+  assert.equal(active.hookSpecificOutput.updatedInput.command, `ls ${abs(env, 'alpha', 'docs')}`);
+  const noPin = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'ls docs' } });
+  assert.equal(noPin.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-005 PROJECTS_ROOT probe is denied even for active binding', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `ls ${env.projects}` } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-006 projects-root symlink swap invalidates prior binding', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const parked = `${env.projects}-old`;
+  renameSync(env.projects, parked);
+  const replacement = `${env.projects}-replacement`;
+  mkdirSync(join(replacement, 'alpha', 'docs'), { recursive: true });
+  symlinkSync(replacement, env.projects);
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-007 dangling in-project symlink is not treated as a missing leaf', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  symlinkSync(join(env.projects, 'missing-target'), join(env.projects, 'alpha', 'docs', 'dangling'));
+  const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/dangling/secret.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-008 Bash checks every docs token, not only the first', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'ls docs/a; ls docs/../beta' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-009 Bash docs symlink escape is denied when statically resolvable', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const beta = join(env.projects, 'beta');
+  mkdirSync(beta, { recursive: true });
+  symlinkSync(beta, join(env.projects, 'alpha', 'docs', 'escape'));
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'cat docs/escape/secret.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+check('IDENTITY-PATH-010 no-pin Bash cannot reach projects through LUCA_PROJECTS_ROOT env', () => {
+  const env = makeEnv();
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'find "$LUCA_PROJECTS_ROOT" -maxdepth 2 -type f' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /环境变量|binding/);
+});
+check('IDENTITY-PATH-011 active Bash cannot cross projects through HOME or alias env', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  mkdirSync(join(env.projects, 'beta'), { recursive: true });
+  const home = resolve(env.projects, '..', 'fake-home');
+  const alias = env.projects;
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'cat "$PROJECT_ALIAS/beta/secret"' } }, {
+    HOME: home,
+    PROJECT_ALIAS: alias,
+  });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-012 PWD/docs env alias is denied instead of following display link', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'cat "$PROJECT_CWD/docs/secret"' } }, {
+    PROJECT_CWD: env.gstack,
+  });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-013 APFS case aliases are classified as project scope', () => {
+  const env = makeEnv();
+  const variant = env.projects.replace(/^\/private\//, '/PRIVATE/').replace(/projects$/, 'PROJECTS');
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${variant}/alpha/secret` } });
+  if (process.platform === 'darwin') assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  else assert.equal(o, null);
+});
+check('IDENTITY-PATH-014 literal absolute display path rewrites to binding', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `cat ${env.gstack}/docs/secret` } });
+  assert.equal(o.hookSpecificOutput.updatedInput.command, `cat ${abs(env, 'alpha', 'docs/secret')}`);
+});
+
+check('IDENTITY-PATH-015 no-pin nested framework cannot cd ../.. into PROJECTS_ROOT', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'cd ../.. && find . -maxdepth 2 -type f' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /相对路径|未绑定/);
+});
+check('IDENTITY-PATH-016 no-pin nested framework cannot use ../.. as a command operand', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'find ../.. -maxdepth 2 -type f' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-017 active binding may traverse only within its own containing project', () => {
+  const env = makeEnv({ nestedFramework: true, pins: { S: 'muse' } });
+  const same = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'cd .. && find . -maxdepth 1 -type f' } });
+  assert.equal(same, null, 'validated muse binding may access muse outside nested lucagstack');
+  mkdirSync(join(env.projects, 'beta'), { recursive: true });
+  const cross = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'cd ../../beta && find . -maxdepth 1 -type f' } });
+  assert.equal(cross.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-018 literal cwd simulation does not reject a round trip inside luca_gstack', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'cd scripts && cd .. && find . -maxdepth 1 -type f' } });
+  assert.equal(o, null);
+});
+for (const command of [
+  'cd "$(pwd)/../.." && ls',
+  'cd `pwd`/../.. && ls',
+  'cd "$(dirname "$PWD")/.." && ls',
+]) {
+  check(`IDENTITY-PATH-019 no-pin dynamic cd fails closed: ${command}`, () => {
+    const env = makeEnv({ nestedFramework: true });
+    const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+    assert.match(o.hookSpecificOutput.permissionDecisionReason, /相对路径|dynamic|未绑定/);
+  });
+}
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

@@ -1,62 +1,74 @@
 #!/usr/bin/env node
 import assert from 'assert/strict';
 import { existsSync, lstatSync, readFileSync, readlinkSync, readdirSync } from 'fs';
-import { homedir } from 'os';
-import { join, relative } from 'path';
+import { join } from 'path';
+import {
+  PROJECTS_ROOT,
+  canonicalProjectIdentity,
+  projectNameFromLink,
+  readProjectState,
+  validatedBindingForState,
+} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const root = process.cwd();
-// WS-B2/FIX-2：与 hooks/project.sh 共用同一根（LUCA_PROJECTS_ROOT 覆盖），去尾斜杠归一。
-const projectsRoot = (process.env.LUCA_PROJECTS_ROOT || join(homedir(), 'Desktop', '项目')).replace(/\/+$/, '');
 const docsLink = join(root, 'docs');
 const stateLink = join(root, '.claude', 'workflow-state.yaml');
-const topicLink = join(root, ".claude", "current-topic.txt");
+const topicLink = join(root, '.claude', 'current-topic.txt');
 
 const extraDocsAliases = readdirSync(root).filter(name => /^docs\s+/.test(name));
-assert.deepEqual(
-  extraDocsAliases,
-  [],
-  `root must not contain stale docs aliases: ${extraDocsAliases.join(", ")}`
-);
+assert.deepEqual(extraDocsAliases, [], `root must not contain stale docs aliases: ${extraDocsAliases.join(', ')}`);
 
-// Tri-state: no project active (all 3 links absent) is a valid deactivated startup state.
-const projectLinks = [docsLink, stateLink, topicLink];
-const present = projectLinks.filter(p => existsSync(p) || lstatSync(p, { throwIfNoEntry: false })?.isSymbolicLink());
-if (present.length === 0) {
-  console.log('PASS project links: no project active (deactivated)');
-  process.exit(0);
+function linkKind(path) {
+  try { return lstatSync(path).isSymbolicLink() ? 'symlink' : 'other'; }
+  catch (error) { if (error?.code === 'ENOENT') return 'absent'; throw error; }
 }
 
-function mustSymlink(path, label) {
-  assert.ok(existsSync(path), `${label} missing: ${path}`);
-  assert.ok(lstatSync(path).isSymbolicLink(), `${label} must be a symlink`);
-  return readlinkSync(path);
+const links = [
+  { key: 'docs', path: docsLink, suffix: 'docs' },
+  { key: 'workflow-state', path: stateLink, suffix: join('.luca', 'workflow-state.yaml') },
+  { key: 'current-topic', path: topicLink, suffix: join('.luca', 'current-topic.txt') },
+];
+const kinds = links.map(item => linkKind(item.path));
+assert.ok(kinds.every(kind => kind === 'absent') || kinds.every(kind => kind === 'symlink'),
+  `display links must be an exact all-absent/all-symlink tuple: ${links.map((item, i) => `${item.key}=${kinds[i]}`).join(', ')}`);
+
+let displayProject = '';
+if (kinds[0] === 'symlink') {
+  const targets = links.map(item => readlinkSync(item.path));
+  displayProject = projectNameFromLink(targets[0], { projectsRoot: PROJECTS_ROOT });
+  assert.ok(displayProject, `docs target has no canonical project identity: ${targets[0]}`);
+  const identity = canonicalProjectIdentity(displayProject, PROJECTS_ROOT);
+  const expected = [
+    join(identity.realpath, 'docs'),
+    join(identity.realpath, '.luca', 'workflow-state.yaml'),
+    join(identity.realpath, '.luca', 'current-topic.txt'),
+  ];
+  assert.deepEqual(targets, expected, 'display tuple must target one exact canonical project identity');
+  for (let i = 0; i < expected.length; i++) assert.ok(existsSync(expected[i]), `${links[i].key} target missing: ${expected[i]}`);
+  const state = readFileSync(expected[1], 'utf8');
+  assert.match(state, /^nodes:/m, 'workflow-state must contain nodes');
+  assert.match(state, /^mode:\s*"(standalone|workflow)"/m, 'workflow-state mode must be standalone or workflow');
 }
 
-function projectNameFromTarget(target, suffix, label) {
-  assert.ok(target.startsWith(projectsRoot + '/'), `${label} target must be under ${projectsRoot}: ${target}`);
-  assert.ok(target.endsWith(suffix), `${label} target must end with ${suffix}: ${target}`);
-  const rel = relative(projectsRoot, target);
-  // canonical 首段（与 hooks 的 projectNameFromLink 同口径）：嵌套 docs 软链下不返回多段 rest，
-  // 使 7 站身份口径真正统一（审计 CR0109/CR0340）。三链一致性检查仍成立（各链均取首段再比对）。
-  return rel.slice(0, -suffix.length).replace(/\/$/, '').split('/')[0];
+// Display links are not session identity. Validate every persisted session state
+// independently; parallel sessions may legitimately bind different projects.
+const claudeDir = join(root, '.claude');
+const stateFiles = readdirSync(claudeDir).filter(name => /^\.session-project-[\w-]{1,36}$/.test(name));
+for (const file of stateFiles) {
+  const sid = file.slice('.session-project-'.length);
+  let state;
+  try {
+    state = readProjectState(root, sid).value;
+  } catch (error) {
+    const message = String(error?.message || error);
+    const legacy = message.match(/legacy project pin requires explicit migration: session=([^ ]+) project=(.+)$/);
+    if (legacy) {
+      throw new Error(`${file}: legacy pin is read-only until explicitly resolved. Existing project → node scripts/project-pin.mjs migrate-legacy-pin --session ${sid}; missing/stale project → node scripts/project-pin.mjs quarantine-legacy-pin --session ${sid} --expected-project ${legacy[2]}`);
+    }
+    throw error;
+  }
+  assert.notEqual(state.state, 'NO_PIN', `${file}: NO_PIN must be represented by absence`);
+  validatedBindingForState(state, PROJECTS_ROOT);
 }
 
-const docsTarget = mustSymlink(docsLink, 'docs');
-const stateTarget = mustSymlink(stateLink, 'workflow-state');
-const topicTarget = mustSymlink(topicLink, 'current-topic');
-
-const docsProject = projectNameFromTarget(docsTarget, '/docs', 'docs');
-const stateProject = projectNameFromTarget(stateTarget, '/.luca/workflow-state.yaml', 'workflow-state');
-const topicProject = projectNameFromTarget(topicTarget, '/.luca/current-topic.txt', 'current-topic');
-
-assert.equal(stateProject, docsProject, 'docs and workflow-state must point to the same project');
-assert.equal(topicProject, docsProject, 'docs and current-topic must point to the same project');
-assert.ok(existsSync(docsTarget), `docs target does not exist: ${docsTarget}`);
-assert.ok(existsSync(stateTarget), `workflow-state target does not exist: ${stateTarget}`);
-assert.ok(existsSync(topicTarget), `current-topic target does not exist: ${topicTarget}`);
-
-const state = readFileSync(stateTarget, 'utf8');
-assert.match(state, /^nodes:/m, 'workflow-state must contain nodes');
-assert.match(state, /^mode:\s*"(standalone|workflow)"/m, 'workflow-state mode must be standalone or workflow');
-
-console.log(`PASS project links: ${docsProject}`);
+console.log(`PASS project links: display=${displayProject || 'deactivated'}; validated session states=${stateFiles.length}`);

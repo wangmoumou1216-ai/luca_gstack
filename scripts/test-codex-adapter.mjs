@@ -41,9 +41,13 @@ function runDirect(hookFile, payload, env = {}) {
 const parse = (s) => { try { return JSON.parse(String(s).trim()); } catch { return null; } };
 
 const SID = 'codex-adapter-test';
+const DIRECT_SID = 'codex-adapter-direct-test';
 const cleanup = () => {
   for (const f of ['.session-edit-count-' + SID, '.session-tool-count-' + SID,
-                   '.session-turn-count-' + SID, '.session-project-' + SID]) {
+                   '.session-turn-count-' + SID, '.session-project-' + SID,
+                   '.session-consumed-turns-' + SID,
+                   '.session-project-' + DIRECT_SID,
+                   '.session-consumed-turns-' + DIRECT_SID]) {
     const p = join(ROOT, '.claude', f);
     if (existsSync(p)) rmSync(p, { force: true });
   }
@@ -251,7 +255,7 @@ console.log(JSON.stringify({ hookSpecificOutput: {
 }
 {
   const r = runDirect('route-guard.mjs', {
-    session_id: 'direct-' + Date.now(), prompt: '帮我设计一个新功能', cwd: ROOT,
+    session_id: DIRECT_SID, prompt: '帮我设计一个新功能', cwd: ROOT,
   });
   ok('E2 [零回归] Claude 直调 route-guard 仍输出裸文本（未被包成 JSON）',
     String(r.stdout).trim().length > 0 && parse(r.stdout) === null);

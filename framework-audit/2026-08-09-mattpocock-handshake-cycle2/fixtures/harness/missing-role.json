@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "issuer": "luca-agent-launcher",
+  "harness": "codex",
+  "run_id": "run-missing-role-001",
+  "nonce": "0123456789abcdef0123456789abcdef",
+  "parent_session_id": "parent-001",
+  "child_session_id": "child-001",
+  "target_commit": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+  "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "output_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "started_at": "2026-08-09T00:00:00.000Z",
+  "finished_at": "2026-08-09T00:00:01.000Z",
+  "expires_at": "2026-08-09T00:10:00.000Z",
+  "status": "DONE",
+  "source_log_path": "native-log.jsonl",
+  "source_log_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "agent_definition_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "native_spawn_event_id": "spawn-001",
+  "event_chain_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "signing_key_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "signature_ed25519": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+}
