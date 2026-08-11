@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
+import { readFileSync } from 'fs';
 import assert from 'assert/strict';
 
 const baseEnv = {
@@ -28,6 +29,30 @@ function route(prompt, extraEnv = {}) {
   } catch (error) {
     throw new Error(`Expected JSON dry-run output for ${prompt}, got:\n${result.stdout}\n${result.stderr}`);
   }
+}
+
+function loadScopeMatrixFixtures() {
+  return readFileSync('memory/evals/routing/fixtures.jsonl', 'utf8')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith('//'))
+    .map(line => JSON.parse(line))
+    .filter(row => row.matrix === 'U-003');
+}
+
+function expectScopeMatrixDecision(fixture, decision) {
+  if (fixture.expected === 'PLAN_MODE') {
+    assert.equal(decision.decision, 'PLAN_MODE', `got ${decision.decision}`);
+    return;
+  }
+  if (fixture.expected.startsWith('project:switch:')) {
+    assert.equal(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
+    assert.equal(decision.project, fixture.expected.slice('project:switch:'.length));
+    return;
+  }
+  assert.equal(fixture.expected, 'NEEDS_CONTEXT');
+  assert.equal(decision.decision, 'NEEDS_CONTEXT', `got ${decision.decision}`);
+  assert.equal(decision.projectAction, 'clarify_framework_or_project_scope');
 }
 
 const cases = [
@@ -745,6 +770,36 @@ const cases = [
     },
   },
 ];
+
+const scopeMatrixFixtures = loadScopeMatrixFixtures();
+for (const matrixClass of ['pure_meta', 'project', 'mixed']) {
+  assert.ok(
+    scopeMatrixFixtures.filter(row => row.matrix_class === matrixClass).length >= 12,
+    `U-003 ${matrixClass} fixtures must contain at least 12 cases`,
+  );
+}
+assert.ok(
+  scopeMatrixFixtures.some(row => row.matrix_class === 'pure_meta' && row.input === '我直接批准执行。'),
+  'U-003 must retain the exact user prompt fixture',
+);
+for (const prompt of [
+  '继续执行当前项目里的 route-guard 治理计划。',
+  '继续执行 muse 项目里 route-guard 的治理计划。',
+]) {
+  assert.ok(
+    scopeMatrixFixtures.some(row => row.input === prompt && row.expected === 'PLAN_MODE'),
+    `U-003 must retain the Gate-satisfied reality fixture: ${prompt}`,
+  );
+}
+
+for (const fixture of scopeMatrixFixtures) {
+  cases.push({
+    name: `U-003 ${fixture.matrix_class}: ${fixture.id}`,
+    prompt: fixture.input,
+    extraEnv: fixture.env || {},
+    expect: decision => expectScopeMatrixDecision(fixture, decision),
+  });
+}
 
 let passCount = 0;
 let failCount = 0;

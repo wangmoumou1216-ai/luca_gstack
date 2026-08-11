@@ -160,6 +160,76 @@ function readCurrentProject(projects) {
   }
 }
 
+// U-003：项目归属不是「meta 关键词豁免表」。先找具名 downstream identity，再用同一组
+// 数据规则区分纯框架对象与框架×未具名项目混合对象；复杂度只在范围闭合后计算。
+const FRAMEWORK_SCOPE_RULES = [
+  { id: 'runtime', pattern: /luca[_\s-]?gstack|lucagstack|skill\s*os/i },
+  { id: 'runtime-files', pattern: /(?:AGENTS|CLAUDE)\.md|workflow-state/i },
+  { id: 'runtime-paths', pattern: /\.claude\/hooks|\.codex\/hooks|memory\/scripts|framework-audit/i },
+  { id: 'runtime-guards', pattern: /project-scope-guard|route-guard|session-restore/i },
+  { id: 'routing-meta', pattern: /项目(?:上下文)?门禁|路由(?:守卫|规则|闭环)?|plan\s*(?:agent|mode)/i },
+  { id: 'framework-meta', pattern: /框架(?:自身|自审|治理)?|规则执行闭环|\bhooks?\b/i },
+];
+
+const FRAMEWORK_CONTROL_RULES = [
+  { id: 'approval', pattern: /我(?:已经)?直接批准执行|不用再.{0,8}批准|批准(?=.{0,16}(?:方案|计划|执行))|(?:给你|授予你).{0,8}(?:最大|全部|完整)?权限/ },
+  { id: 'execution-continuation', pattern: /继续执行|开始执行|直接执行|按.{0,12}计划.{0,8}(?:执行|完成|跑)|直接跑完|跑完|跑到底/ },
+];
+
+const DOWNSTREAM_SCOPE_RULES = [
+  { id: 'project', pattern: /(?:产品|业务|下游|一个|某个)?项目(?:里|内|中|的)?/ },
+  { id: 'product', pattern: /产品|业务|页面|功能|需求|客户|订单|原型|用户|接口|数据库|应用|网站|代码库|仓库|模块|\bcrm\b/i },
+];
+
+function matchingScopeRuleIds(value, rules) {
+  return rules.filter(rule => rule.pattern.test(value)).map(rule => rule.id);
+}
+
+function stripScopeRules(value, rules) {
+  let residual = value;
+  for (const rule of rules) {
+    const flags = `${rule.pattern.flags.replaceAll('g', '')}g`;
+    residual = residual.replace(new RegExp(rule.pattern.source, flags), ' ');
+  }
+  return residual;
+}
+
+function projectIdentityText(prompt) {
+  let text = normalize(prompt);
+  for (const trigger of ['新项目', '新需求', '新功能']) {
+    text = text.split(normalize(trigger)).join('');
+  }
+  return text;
+}
+
+function classifyRoutingScope(prompt, projects, currentProject) {
+  const namedProject = projects.find(name => nameMatchesIn(projectIdentityText(prompt), name));
+  const frameworkSignals = matchingScopeRuleIds(prompt, FRAMEWORK_SCOPE_RULES);
+  const controlSignals = matchingScopeRuleIds(prompt, FRAMEWORK_CONTROL_RULES);
+  const residual = stripScopeRules(
+    stripScopeRules(prompt, FRAMEWORK_SCOPE_RULES),
+    FRAMEWORK_CONTROL_RULES,
+  );
+  const downstreamSignals = matchingScopeRuleIds(residual, DOWNSTREAM_SCOPE_RULES);
+
+  // 具名 identity 仍决定最高优先级的 scope，但不再丢掉同句中的框架/续接信号：目标项目
+  // 已经激活时 Gate 已满足，后面的 complexity 必须还能看见这些信号。
+  if (namedProject) {
+    return { kind: 'named_downstream', namedProject, frameworkSignals, controlSignals, downstreamSignals };
+  }
+  if (!frameworkSignals.length && !controlSignals.length) return { kind: 'ordinary' };
+
+  if (downstreamSignals.length) {
+    const affirmsCurrent = /当前项目|这个项目|本项目/.test(residual) && currentProject;
+    if (affirmsCurrent) {
+      return { kind: 'current_downstream', project: currentProject, frameworkSignals, controlSignals, downstreamSignals };
+    }
+    return { kind: 'mixed_ambiguous', frameworkSignals, controlSignals, downstreamSignals };
+  }
+
+  return { kind: 'pure_framework_meta', frameworkSignals, controlSignals };
+}
+
 // 对话延续/状态询问豁免（G3，2026-07-04）：整句就是"继续/停/问进度"类 check-in 时不注入
 // 路由提示——此前 >5 字、非?结尾的陈述句一律 STOP/PROJECT_STOP，实测几乎每条对话性消息
 // 都吃一段噪音注入。双闸防误豁免：① 整句锚定（前缀限 都/全部/现在，尾部限语气助词）
@@ -170,10 +240,9 @@ function isContinuation(prompt) {
   return prompt.length <= 10 && CONTINUATION_RE.test(prompt.trim());
 }
 
-function projectGate(prompt, projects, currentProject) {
+function projectGate(prompt, projects, currentProject, routingScope) {
   const text = normalize(prompt);
   if (!text) return null;
-  if (/当前项目|这个项目|本项目/.test(prompt)) return null;
   // 寒暄/确认类非任务输入不进项目门禁（与 skill 路由层 looksLikeTask 同口径；红队 C7 实测漏网）
   if (/^\s*(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i.test(prompt)) {
     return null;
@@ -186,7 +255,22 @@ function projectGate(prompt, projects, currentProject) {
   let searchText = text;
   for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
 
-  const named = projects.find(name => nameMatchesIn(searchText, name));
+  const named = routingScope?.namedProject || projects.find(name => nameMatchesIn(searchText, name));
+
+  // explicit downstream identity 永远先于 meta/content 豁免。即使请求审计的是该项目的
+  // hook/路由，具名项目也必须先绑定；同一项目已经激活时视为 gate 已满足。
+  if (named && normalize(named) !== normalize(currentProject)) {
+    return {
+      decision: 'PROJECT_SWITCH',
+      projectAction: 'switch_existing_project',
+      project: named,
+      message: `切换到 ${named} 后再继续路由。`,
+    };
+  }
+  if (/当前项目|这个项目|本项目/.test(prompt)) return null;
+
+  // 纯 luca_gstack/framework meta 不消费 downstream project context，跳过无项目兜底网。
+  if (routingScope?.kind === 'pure_framework_meta') return null;
 
   // Audit C2: meta/audit/help questions are framework-level, not project work.
   // Skip Project Gate so they route via the normal skill/STOP path instead of
@@ -221,15 +305,6 @@ function projectGate(prompt, projects, currentProject) {
       /清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量|代码审查|代码评审|评审代码|代码\s*review/i.test(prompt) &&
       /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/.test(prompt)) {
     return null;
-  }
-
-  if (named && normalize(named) !== normalize(currentProject)) {
-    return {
-      decision: 'PROJECT_SWITCH',
-      projectAction: 'switch_existing_project',
-      project: named,
-      message: `切换到 ${named} 后再继续路由。`,
-    };
   }
 
   if (/老项目|已有项目|已有的项目|旧项目|继续项目|上次那个项目|接着上次|上次的项目|之前那个项目|之前的项目|之前那个/.test(prompt) && !named) {
@@ -277,9 +352,17 @@ function projectGate(prompt, projects, currentProject) {
   return null;
 }
 
-function complexityDecision(prompt) {
+function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
   const text = normalize(prompt);
   const signals = [
+    {
+      name: '框架执行续接',
+      weight: 6,
+      test: () => routingScope.controlSignals?.length > 0 && (
+        routingScope.kind === 'pure_framework_meta' ||
+        (['named_downstream', 'current_downstream'].includes(routingScope.kind) && routingScope.frameworkSignals?.length > 0)
+      ),
+    },
     {
       name: '多模块',
       weight: 3,
@@ -511,8 +594,23 @@ const HEAVY_ORCHESTRATOR_SKILLS = new Set(
 function buildDecision(prompt) {
   const projects = listProjects();
   const currentProject = readCurrentProject(projects);
-  const gate = projectGate(prompt, projects, currentProject);
-  const complexity = complexityDecision(prompt);
+  const routingScope = classifyRoutingScope(prompt, projects, currentProject);
+
+  if (routingScope.kind === 'mixed_ambiguous') {
+    return {
+      decision: 'NEEDS_CONTEXT',
+      projectAction: 'clarify_framework_or_project_scope',
+      projects,
+      scopeSignals: {
+        framework: routingScope.frameworkSignals,
+        downstream: routingScope.downstreamSignals,
+      },
+      message: '请求同时指向 luca_gstack 框架与未具名项目，请先说明要改框架本身，还是哪个下游项目。',
+    };
+  }
+
+  const gate = projectGate(prompt, projects, currentProject, routingScope);
+  const complexity = complexityDecision(prompt, routingScope);
 
   // The gate short-circuits before skill/complexity routing. Carry the
   // complexity result through so a complex requirement bundled into a
@@ -571,6 +669,8 @@ function reviewAxisHint(decision) {
 
 function decisionToHints(decision) {
   switch (decision.decision) {
+    case 'NEEDS_CONTEXT':
+      return [`[route-guard] 🧭 NEEDS CONTEXT — ${decision.message}`];
     case 'PROJECT_STOP': {
       const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}` + reviewAxisHint(decision);
       if (!decision.planHint) return [base];
