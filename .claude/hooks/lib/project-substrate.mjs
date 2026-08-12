@@ -28,7 +28,7 @@ import {
 } from 'fs';
 import { dirname, join, isAbsolute, relative, resolve } from 'path';
 import { homedir } from 'os';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 const DEFAULT_ROOT = join(homedir(), 'Desktop', '项目');
 function normRoot(p) {
@@ -161,6 +161,19 @@ function readOptionalBytes(path) {
   }
 }
 
+function sha256(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+function exactRawMatch(actual, expected) {
+  return actual === null ? expected === null : Buffer.isBuffer(expected) && actual.equals(expected);
+}
+
+function rollbackSnapshot(raw) {
+  if (raw === null) return { absent: true, sha256: sha256(Buffer.alloc(0)) };
+  return { absent: false, raw_base64: raw.toString('base64'), sha256: sha256(raw) };
+}
+
 function stateLockOwnerBytes(owner) {
   return Buffer.from(`${JSON.stringify(owner)}\n`);
 }
@@ -240,6 +253,9 @@ function atomicWriteBytes(path, body, prefix) {
     closeSync(fd);
     fd = null;
     if (process.env.LUCA_PROJECT_STATE_WRITE_FAULT === 'before-rename') {
+      // Fault injection is a single boundary failure. Leaving it armed would
+      // also sabotage the compensating exact CAS and test a different outage.
+      delete process.env.LUCA_PROJECT_STATE_WRITE_FAULT;
       throw new Error('injected project state write fault before-rename');
     }
     renameSync(tmp, path);
@@ -471,6 +487,51 @@ export function stateBinding(value) {
   return value.binding || null;
 }
 
+function decodeSwitchRollback(value, projectsRoot = PROJECTS_ROOT) {
+  const sid = sanitizeSessionId(value?.session_id);
+  const sw = value?.switch;
+  const snapshot = sw?.rollback;
+  if (!sid || !snapshot || typeof snapshot !== 'object') throw new Error('SWITCH_ONLY rollback snapshot is missing');
+
+  if (snapshot.absent === true) {
+    if ('raw_base64' in snapshot || snapshot.sha256 !== sha256(Buffer.alloc(0))) {
+      throw new Error('SWITCH_ONLY absent rollback snapshot is invalid');
+    }
+    if (sw.binding || sw.expected_epoch !== 0) throw new Error('SWITCH_ONLY absent rollback disagrees with binding');
+    return null;
+  }
+
+  if (snapshot.absent !== false || typeof snapshot.raw_base64 !== 'string' || typeof snapshot.sha256 !== 'string') {
+    throw new Error('SWITCH_ONLY rollback snapshot shape is invalid');
+  }
+  const raw = Buffer.from(snapshot.raw_base64, 'base64');
+  if (raw.toString('base64') !== snapshot.raw_base64 || sha256(raw) !== snapshot.sha256) {
+    throw new Error('SWITCH_ONLY rollback snapshot bytes/hash mismatch');
+  }
+  let stable;
+  try { stable = JSON.parse(raw.toString('utf8')); }
+  catch { throw new Error('SWITCH_ONLY rollback snapshot is not canonical project state JSON'); }
+  if (stable?.schema_version !== PROJECT_STATE_SCHEMA || stable.session_id !== sid
+      || !['BOUND', 'TURN_CLOSED'].includes(stable.state)) {
+    throw new Error('SWITCH_ONLY rollback snapshot is not a stable prior state');
+  }
+  const stableBinding = validatedBindingForState(stable, projectsRoot);
+  const fields = ['project', 'realpath', 'dev', 'ino', 'epoch'];
+  if (!sw.binding || fields.some(field => stableBinding?.[field] !== sw.binding?.[field])
+      || stableBinding.epoch !== sw.expected_epoch) {
+    throw new Error('SWITCH_ONLY rollback snapshot disagrees with prepared binding');
+  }
+  return raw;
+}
+
+export function projectSwitchRollbackRaw(value, projectsRoot = PROJECTS_ROOT) {
+  if (value?.state !== 'SWITCH_ONLY') throw new Error('rollback snapshot requires SWITCH_ONLY state');
+  // validatedBindingForState also validates tx/target/epoch and calls the
+  // decoder, so callers cannot use an unbound or forged rollback payload.
+  validatedBindingForState(value, projectsRoot);
+  return decodeSwitchRollback(value, projectsRoot);
+}
+
 // Validate both filesystem identity and the state-specific epoch snapshot.
 // Keeping this in the substrate prevents route/restore/scope/Stop from each
 // accepting a different partially-corrupt shape.
@@ -488,8 +549,10 @@ export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
     }
     validateProjectName(sw.target);
     if (!Number.isSafeInteger(sw.expected_epoch) || sw.expected_epoch < 0) throw new Error('SWITCH_ONLY expected epoch is invalid');
+    const rollbackRaw = decodeSwitchRollback(value, projectsRoot);
     if (!sw.binding) {
       if (sw.expected_epoch !== 0) throw new Error('unbound SWITCH_ONLY must expect epoch 0');
+      if (rollbackRaw !== null) throw new Error('unbound SWITCH_ONLY must roll back to NO_PIN');
       return null;
     }
     if (sw.binding.epoch !== sw.expected_epoch) throw new Error('SWITCH_ONLY binding epoch mismatch');
@@ -516,44 +579,58 @@ export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
   return binding;
 }
 
-export function atomicProjectStateCas(gstackRoot, sessionId, expectedRaw, nextValue) {
+function removePublishedProjectState(path) {
+  const parent = dirname(path);
+  const parked = join(parent, `.project-state-remove-${process.pid}-${randomUUID()}`);
+  renameSync(path, parked);
+  try {
+    if (process.env.LUCA_PROJECT_STATE_REMOVE_FAULT === 'after-rename') {
+      throw new Error('injected project state remove fault after-rename');
+    }
+    const dirFd = openSync(parent, 'r');
+    try { fsyncSync(dirFd); } finally { closeSync(dirFd); }
+    unlinkSync(parked);
+    const dirFd2 = openSync(parent, 'r');
+    try { fsyncSync(dirFd2); } finally { closeSync(dirFd2); }
+    try { readFileSync(path); throw new Error('project state remove readback failed'); }
+    catch (error) { if (error?.code !== 'ENOENT') throw error; }
+  } catch (error) {
+    // rename is the removal commit point. A later cleanup failure must not make
+    // the caller retry an already-completed exact CAS.
+    process.stderr.write(`[project-substrate] ⚠️ project state 已从 canonical 路径移除，但残留清理/持久化检查失败；禁止重试解绑：${parked} — ${String(error?.message || error)}\n`);
+  }
+}
+
+export function atomicProjectStateRawCas(gstackRoot, sessionId, expectedRaw, replacementRaw) {
+  if (expectedRaw !== null && !Buffer.isBuffer(expectedRaw)) throw new Error('project state raw CAS expected bytes must be Buffer|null');
+  if (replacementRaw !== null && !Buffer.isBuffer(replacementRaw)) throw new Error('project state raw CAS replacement bytes must be Buffer|null');
   return withProjectStateLock(gstackRoot, sessionId, () => {
     const path = projectStatePath(gstackRoot, sessionId);
     const raw = readOptionalBytes(path);
-    const same = raw === null
-      ? expectedRaw === null
-      : Buffer.isBuffer(expectedRaw) && raw.equals(expectedRaw);
-    if (!same) throw new Error('project state CAS mismatch');
-    const body = Buffer.from(`${JSON.stringify(nextValue)}\n`);
-    atomicWriteBytes(path, body, 'project-state-tmp');
-    return nextValue;
+    if (!exactRawMatch(raw, expectedRaw)) throw new Error('project state raw CAS mismatch; manual recovery required');
+    if (replacementRaw === null) {
+      if (raw !== null) removePublishedProjectState(path);
+    } else {
+      atomicWriteBytes(path, replacementRaw, 'project-state-tmp');
+    }
+    return replacementRaw;
   });
 }
 
+export function atomicProjectStateCas(gstackRoot, sessionId, expectedRaw, nextValue) {
+  const body = Buffer.from(`${JSON.stringify(nextValue)}\n`);
+  atomicProjectStateRawCas(gstackRoot, sessionId, expectedRaw, body);
+  return nextValue;
+}
+
 export function removeProjectStateCas(gstackRoot, sessionId, expectedRaw) {
-  return withProjectStateLock(gstackRoot, sessionId, () => {
-    const path = projectStatePath(gstackRoot, sessionId);
-    const raw = readOptionalBytes(path);
-    if (!raw || !Buffer.isBuffer(expectedRaw) || !raw.equals(expectedRaw)) throw new Error('project state remove CAS mismatch');
-    const parent = dirname(path);
-    const parked = join(parent, `.project-state-remove-${process.pid}-${randomUUID()}`);
-    renameSync(path, parked);
-    try {
-      if (process.env.LUCA_PROJECT_STATE_REMOVE_FAULT === 'after-rename') {
-        throw new Error('injected project state remove fault after-rename');
-      }
-      const dirFd = openSync(parent, 'r');
-      try { fsyncSync(dirFd); } finally { closeSync(dirFd); }
-      unlinkSync(parked);
-      const dirFd2 = openSync(parent, 'r');
-      try { fsyncSync(dirFd2); } finally { closeSync(dirFd2); }
-      try { readFileSync(path); throw new Error('project state remove readback failed'); }
-      catch (error) { if (error?.code !== 'ENOENT') throw error; }
-    } catch (error) {
-      process.stderr.write(`[project-substrate] ⚠️ project state 已从 canonical 路径移除，但残留清理/持久化检查失败；禁止重试解绑：${parked} — ${String(error?.message || error)}\n`);
-    }
-    return { schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sanitizeSessionId(sessionId) };
-  });
+  if (!Buffer.isBuffer(expectedRaw)) throw new Error('project state remove CAS mismatch');
+  try { atomicProjectStateRawCas(gstackRoot, sessionId, expectedRaw, null); }
+  catch (error) {
+    if (/raw CAS mismatch/.test(String(error?.message || error))) throw new Error('project state remove CAS mismatch');
+    throw error;
+  }
+  return { schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sanitizeSessionId(sessionId) };
 }
 
 export function prepareProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, operation, target, turnId = '' }) {
@@ -581,6 +658,7 @@ export function prepareProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT,
       expected_epoch: expectedEpoch,
       binding,
       turn_id: requestedTurnId,
+      rollback: rollbackSnapshot(current.raw),
     },
   };
   atomicProjectStateCas(gstackRoot, sid, current.raw, next);

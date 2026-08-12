@@ -167,16 +167,99 @@ check('every switch write-boundary fault preserves old pin bytes and old link tu
     const before = stateBytes(fx, 'S');
     const links = linkTuple(fx);
     const proposal = prepare(fx, 'S', 'switch', 'beta');
-    const prepared = stateBytes(fx, 'S');
+    assert.notDeepEqual(stateBytes(fx, 'S'), before, `${fault}: prepare must publish SWITCH_ONLY`);
     const result = mutate(fx, 'S', 'switch', 'beta', proposal, { LUCA_PROJECT_FAULT: fault });
     assert.notEqual(result.status, 0, `${fault} should fail`);
-    assert.deepEqual(stateBytes(fx, 'S'), prepared, `${fault}: SWITCH_ONLY CAS bytes changed`);
+    assert.deepEqual(stateBytes(fx, 'S'), before, `${fault}: stable state bytes were not restored`);
     assert.deepEqual(linkTuple(fx), links, `${fault}: links not rolled back`);
     const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
-    assert.equal(status.switch.binding.project, 'alpha');
-    assert.deepEqual(Buffer.from(JSON.stringify(status.switch.binding.project)), Buffer.from(JSON.stringify('alpha')));
-    assert.ok(before.length > 0);
+    assert.equal(status.state, 'BOUND');
+    assert.equal(status.binding.project, 'alpha');
   }
+});
+
+check('public switch post-state-commit failure restores the exact pre-prepare stable tuple', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  const before = stateBytes(fx, 'S');
+  const links = linkTuple(fx);
+  const proposal = prepare(fx, 'S', 'switch', 'beta');
+  assert.notDeepEqual(stateBytes(fx, 'S'), before, 'prepare must publish SWITCH_ONLY');
+
+  const result = mutate(fx, 'S', 'switch', 'beta', proposal, {
+    LUCA_PROJECT_FAULT: 'after-state-commit-link-drift',
+  });
+
+  assert.notEqual(result.status, 0, 'post-state-commit link drift must fail final tuple readback');
+  assert.deepEqual(stateBytes(fx, 'S'), before, 'failure must restore exact stable state bytes');
+  assert.deepEqual(linkTuple(fx), links, 'failure must restore the old display-link tuple');
+  const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
+  assert.equal(status.state, 'BOUND');
+  assert.equal(status.binding.project, 'alpha');
+});
+
+check('post-state-commit failure from NO_PIN restores pin absence and all-absent links', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  const pinPath = join(fx.gstack, '.claude', '.session-project-S');
+  assert.equal(existsSync(pinPath), false);
+  assert.deepEqual(linkTuple(fx), [null, null, null]);
+  const proposal = prepare(fx, 'S', 'switch', 'alpha');
+
+  const result = mutate(fx, 'S', 'switch', 'alpha', proposal, {
+    LUCA_PROJECT_FAULT: 'after-state-commit',
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.equal(existsSync(pinPath), false, 'NO_PIN rollback must remove the published state exactly');
+  assert.deepEqual(linkTuple(fx), [null, null, null]);
+  assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'S'], fx)).state, 'NO_PIN');
+});
+
+check('public new post-state-commit failure restores the old tuple and parks only its new target', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  const before = stateBytes(fx, 'S');
+  const links = linkTuple(fx);
+  const proposal = prepare(fx, 'S', 'new', 'beta');
+
+  const result = mutate(fx, 'S', 'new', 'beta', proposal, {
+    LUCA_PROJECT_FAULT: 'after-state-commit',
+  });
+
+  assert.notEqual(result.status, 0, 'post-state-commit new fault must fail');
+  assert.deepEqual(stateBytes(fx, 'S'), before);
+  assert.deepEqual(linkTuple(fx), links);
+  assert.equal(existsSync(join(fx.projects, 'beta')), false, 'aborted target must leave the canonical name');
+  const parked = readdirSync(fx.projects).find(name => name === `.luca-aborted-target-beta-${proposal.tx}`);
+  assert.ok(parked, 'the exact transaction target must be parked for recovery');
+  assert.equal(existsSync(join(fx.projects, parked, 'docs')), true);
+});
+
+check('inverse-CAS drift refuses blind link rollback and leaves the advanced tuple observable', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  const proposal = prepare(fx, 'S', 'switch', 'beta');
+
+  const result = mutate(fx, 'S', 'switch', 'beta', proposal, {
+    LUCA_PROJECT_FAULT: 'after-state-commit-drift',
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /rollback CAS refused; manual recovery required/);
+  const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
+  assert.equal(status.state, 'TURN_CLOSED');
+  assert.equal(status.binding.project, 'beta');
+  assert.deepEqual(linkTuple(fx), [
+    join(realpathSync(join(fx.projects, 'beta')), 'docs'),
+    join(realpathSync(join(fx.projects, 'beta')), '.luca', 'workflow-state.yaml'),
+    join(realpathSync(join(fx.projects, 'beta')), '.luca', 'current-topic.txt'),
+  ], 'CAS mismatch must not blindly restore alpha links over an advanced beta state');
 });
 
 check('stale epoch and replayed tx cannot mutate project or pin', () => {
@@ -282,9 +365,9 @@ check('new project staging loses a creation race without changing old binding or
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
-  const p = prepare(fx, 'S', 'new', 'beta');
   const before = stateBytes(fx, 'S');
   const links = linkTuple(fx);
+  const p = prepare(fx, 'S', 'new', 'beta');
   makeProject(fx, 'beta');
   const result = mutate(fx, 'S', 'new', 'beta', p);
   assert.notEqual(result.status, 0);
@@ -296,9 +379,9 @@ check('empty-target publish race preserves the winner and parks the complete sta
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
-  const p = prepare(fx, 'S', 'new', 'beta');
   const before = stateBytes(fx, 'S');
   const links = linkTuple(fx);
+  const p = prepare(fx, 'S', 'new', 'beta');
   const result = mutate(fx, 'S', 'new', 'beta', p, { LUCA_PROJECT_FAULT: 'empty-target-race' });
   assert.notEqual(result.status, 0);
   const target = join(fx.projects, 'beta');
@@ -518,9 +601,9 @@ check('state-file publication uses rename as commit point: pre-rename fails, pos
     makeProject(fx, 'alpha');
     makeProject(fx, 'beta');
     bind(fx, 'S', 'alpha');
-    const proposal = prepare(fx, 'S', 'switch', 'beta');
     const before = stateBytes(fx, 'S');
     const links = linkTuple(fx);
+    const proposal = prepare(fx, 'S', 'switch', 'beta');
     const failed = mutate(fx, 'S', 'switch', 'beta', proposal, {
       LUCA_PROJECT_STATE_WRITE_FAULT: 'before-rename',
     });

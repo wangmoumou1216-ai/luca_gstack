@@ -22,6 +22,7 @@ import {
   PROJECTS_ROOT,
   PROJECT_STATE_SCHEMA,
   atomicProjectStateCas,
+  atomicProjectStateRawCas,
   beginProjectTurn,
   canonicalProjectIdentity,
   closeProjectTurn,
@@ -29,6 +30,7 @@ import {
   inspectProjectStateLock,
   migrateLegacyProjectState,
   prepareProjectSwitch,
+  projectSwitchRollbackRaw,
   readProjectState,
   removeProjectStateCas,
   recoverProjectStateLock,
@@ -151,6 +153,7 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
   }
   const oldBinding = validatedBindingForState(initial.value, projectsRoot);
   if ((oldBinding?.epoch || 0) !== expected) throw new Error('stale expected epoch');
+  const rollbackRaw = projectSwitchRollbackRaw(initial.value, projectsRoot);
 
   const leaseToken = `${sid}-${tx}`;
   const lease = acquireProjectLease({ root: gstackRoot, ownerToken: leaseToken, pid: process.pid });
@@ -159,6 +162,8 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
   let visibleNewProject = false;
   let staging = '';
   let committedState = null;
+  let committedRaw = null;
+  let rollbackExpectedRaw = initial.raw;
   let primaryError = null;
   try {
     // Recheck the proposal only after owning the lease. This closes the gap where
@@ -224,11 +229,44 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
       binding,
       terminal: { tx, operation: op, expected_epoch: expected, turn_id: proposal.turn_id, committed_at: new Date().toISOString() },
     };
+    committedRaw = Buffer.from(`${JSON.stringify(next)}\n`);
     atomicProjectStateCas(gstackRoot, sid, initial.raw, next);
+    rollbackExpectedRaw = committedRaw;
+    if (process.env.LUCA_PROJECT_FAULT === 'after-state-commit-drift') {
+      const drift = {
+        schema_version: PROJECT_STATE_SCHEMA,
+        state: 'TURN_CLOSED',
+        session_id: sid,
+        binding,
+        turn: { turn_id: proposal.turn_id, epoch: binding.epoch, outcome: 'injected-post-commit-drift' },
+      };
+      atomicProjectStateCas(gstackRoot, sid, committedRaw, drift);
+      throw new Error('injected project transaction fault: after-state-commit-drift');
+    }
+    if (process.env.LUCA_PROJECT_FAULT === 'after-state-commit-link-drift') {
+      // Deterministic race seam: emulate a competing display publisher after
+      // the state commit so the final full-tuple readback must catch it.
+      for (const item of [...linkPaths(gstackRoot)].reverse()) restoreLink(item.path, snapshots.get(item.path));
+    }
+    fault('after-state-commit');
+    for (const item of linkPaths(gstackRoot)) assertLink(item.path, targets[item.key]);
+    const published = readProjectState(gstackRoot, sid, projectsRoot);
+    if (!published.raw?.equals(committedRaw)) throw new Error('final project state bytes readback mismatch');
+    const publishedBinding = validatedBindingForState(published.value, projectsRoot);
+    for (const field of ['project', 'realpath', 'dev', 'ino', 'epoch']) {
+      if (publishedBinding?.[field] !== binding[field]) throw new Error(`final project tuple readback mismatch: ${field}`);
+    }
     committedState = next;
     return committedState;
   } catch (error) {
     primaryError = error;
+    try {
+      atomicProjectStateRawCas(gstackRoot, sid, rollbackExpectedRaw, rollbackRaw);
+    } catch (rollbackError) {
+      const recovery = new Error(`project transaction rollback CAS refused; manual recovery required: ${String(rollbackError?.message || rollbackError)}`, { cause: error });
+      primaryError = recovery;
+      throw recovery;
+    }
     if (linksTouched) {
       for (const item of [...linkPaths(gstackRoot)].reverse()) {
         const snapshot = snapshots.get(item.path);
