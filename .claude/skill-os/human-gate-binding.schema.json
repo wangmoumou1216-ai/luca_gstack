@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca-gstack.local/schemas/human-gate-binding.schema.json",
+  "title": "Human gate approval binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "binding_id",
+    "proposal_id",
+    "proposal_sha256",
+    "gate",
+    "plan_sha256",
+    "payload_sha256",
+    "execution_envelope_sha256",
+    "harness",
+    "session_id",
+    "receipt_root",
+    "secure_writer_sha256",
+    "nonce",
+    "created_at",
+    "expires_at",
+    "role",
+    "authority",
+    "top_level",
+    "event_id",
+    "event_created_at",
+    "raw_prompt_sha256",
+    "observed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "human-gate-binding-v1" },
+    "binding_id": { "type": "string", "pattern": "^hgb-[a-f0-9]{64}$" },
+    "proposal_id": { "type": "string", "pattern": "^hgp-[a-f0-9]{64}$" },
+    "proposal_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "gate": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$" },
+    "plan_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "payload_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "execution_envelope_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "harness": { "enum": ["claude", "codex"] },
+    "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
+    "receipt_root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dev", "ino"],
+      "properties": {
+        "dev": { "type": "string", "pattern": "^(?:0|[1-9][0-9]*)$" },
+        "ino": { "type": "string", "pattern": "^(?:0|[1-9][0-9]*)$" }
+      }
+    },
+    "secure_writer_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nonce": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "role": { "const": "user" },
+    "authority": { "const": "trusted-bootstrap-main" },
+    "top_level": { "const": true },
+    "event_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$" },
+    "event_created_at": { "type": "string", "format": "date-time" },
+    "raw_prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "observed_at": { "type": "string", "format": "date-time" }
+  }
+}
