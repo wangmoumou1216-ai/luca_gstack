@@ -1,10 +1,10 @@
 import { createHash } from 'crypto';
-import { lstatSync, readFileSync, realpathSync, statSync } from 'fs';
+import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, realpathSync } from 'fs';
 import { dirname, isAbsolute, resolve } from 'path';
 import { spawnSync } from 'child_process';
 import { withoutLocalGitEnv } from './git-env.mjs';
 
-export const CORRECTION_VERIFIER_REGISTRY_VERSION = 'correction-verifiers-v1';
+export const CORRECTION_VERIFIER_REGISTRY_VERSION = 'correction-verifiers-v2';
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -40,6 +40,27 @@ function earliestObservedAt(values) {
   return new Date(Math.min(...values.map(value => Date.parse(value)))).toISOString();
 }
 
+function ticketBinding(context) {
+  const ticket = context?.ticket;
+  if (!ticket || typeof ticket.ticket_id !== 'string' || !/^ct-[a-f0-9]{64}$/.test(ticket.ticket_id)) {
+    throw new Error('fixed evidence verifier requires the bound correction ticket');
+  }
+  if (typeof ticket.nonce !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(ticket.nonce)) {
+    throw new Error('fixed evidence verifier requires the bound correction nonce');
+  }
+  return {
+    ticket: `ticket=${ticket.ticket_id}`,
+    nonce: `nonce=${ticket.nonce}`,
+  };
+}
+
+function requireTextTicketBinding(text, context, label) {
+  const expected = ticketBinding(context);
+  if (!text.includes(expected.ticket) || !text.includes(expected.nonce)) {
+    throw new Error(`${label} must contain the current ticket and nonce binding`);
+  }
+}
+
 function regularFile(rawPath, root) {
   if (typeof rawPath !== 'string' || !rawPath || rawPath.includes('\0')) throw new Error('evidence path is invalid');
   const absolute = isAbsolute(rawPath) ? resolve(rawPath) : resolve(root, rawPath);
@@ -47,10 +68,26 @@ function regularFile(rawPath, root) {
   if (lst.isSymbolicLink() || !lst.isFile()) throw new Error(`evidence must be a regular non-symlink file: ${rawPath}`);
   if (lst.nlink !== 1) throw new Error(`evidence must not be a hardlink: ${rawPath}`);
   const real = realpathSync(absolute);
-  const st = statSync(real);
-  if (!st.isFile()) throw new Error(`evidence target is not a regular file: ${rawPath}`);
-  const bytes = readFileSync(real);
-  return { path: real, bytes, sha256: sha256(bytes), observed_at: lst.mtime.toISOString() };
+  let fd;
+  try {
+    fd = openSync(real, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const before = fstatSync(fd);
+    if (!before.isFile() || before.nlink !== 1 || before.dev !== lst.dev || before.ino !== lst.ino) {
+      throw new Error(`evidence target changed or is not a regular single-link file: ${rawPath}`);
+    }
+    const bytes = readFileSync(fd);
+    const after = fstatSync(fd);
+    if (
+      after.dev !== before.dev
+      || after.ino !== before.ino
+      || after.size !== before.size
+      || after.mtimeMs !== before.mtimeMs
+      || after.nlink !== 1
+    ) throw new Error(`evidence changed while being verified: ${rawPath}`);
+    return { path: real, bytes, sha256: sha256(bytes), observed_at: before.mtime.toISOString() };
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
 }
 
 function artifact(file) {
@@ -79,12 +116,14 @@ function disclosure(entry, context) {
   if (!text.includes('归因') || !new RegExp(`(?:^|[^A-Z0-9])${context.attributionLevel}(?:[^0-9]|$)`).test(text)) {
     throw new Error(`disclosure must name attribution ${context.attributionLevel}`);
   }
+  requireTextTicketBinding(text, context, 'disclosure');
   return { artifacts: [artifact(file)], observed_at: file.observed_at, claim_sha256: claimHash({ attribution: context.attributionLevel, text }) };
 }
 
 function affectedArtifact(entry, context) {
   if (entry.selector !== '') throw new Error('AFFECTED_ARTIFACT selector must be empty');
   const file = regularFile(entry.path, context.root);
+  requireTextTicketBinding(file.bytes.toString('utf8'), context, 'affected artifact');
   return { artifacts: [artifact(file)], observed_at: file.observed_at, claim_sha256: claimHash({ path: file.path, sha256: file.sha256 }) };
 }
 
@@ -95,6 +134,7 @@ function observationRule(entry, context) {
   if (!record || typeof record.skill !== 'string' || !record.skill || typeof record.message !== 'string' || !record.message) {
     throw new Error(`observation not found or incomplete: ${entry.selector}`);
   }
+  requireTextTicketBinding(String(record.correction || ''), context, 'observation correction');
   const recordTime = observedAt(record.time, 'observation time');
   const rules = regularFile(resolve(dirname(observations.path), 'rules.yaml'), context.root);
   const blocks = rules.bytes.toString('utf8').split(/(?=^- id:\s*R-)/m);
@@ -118,6 +158,7 @@ function semanticCandidate(entry, context) {
   if (!record || record.status !== 'CANDIDATE' || typeof record.fact !== 'string' || !record.fact || typeof record.domain !== 'string') {
     throw new Error(`semantic candidate not found or incomplete: ${entry.selector}`);
   }
+  requireTextTicketBinding(String(record.evidence || ''), context, 'semantic candidate evidence');
   return { artifacts: [artifact(candidates)], observed_at: observedAt(record.created_at, 'semantic candidate created_at'), claim_sha256: claimHash(record) };
 }
 
@@ -126,11 +167,15 @@ function fixOrTaskPointer(entry, context) {
   const pointer = regularFile(entry.path, context.root);
   let record;
   try { record = JSON.parse(pointer.bytes.toString('utf8')); } catch { throw new Error('fix/task pointer must be JSON'); }
-  exactKeys(record, ['schema_version', 'pointer_type', 'target', 'target_sha256'], 'fix/task pointer');
+  exactKeys(record, ['schema_version', 'pointer_type', 'target', 'target_sha256', 'correction_ticket_id', 'correction_nonce'], 'fix/task pointer');
   if (record.schema_version !== 'correction-fix-pointer-v1') throw new Error('wrong fix/task pointer schema_version');
   if (!['artifact', 'task', 'git_commit'].includes(record.pointer_type)) throw new Error('wrong fix/task pointer_type');
   if (typeof record.target !== 'string' || !record.target) throw new Error('fix/task pointer target is required');
   if (!/^[a-f0-9]{40,64}$/.test(record.target_sha256)) throw new Error('fix/task pointer target_sha256 is invalid');
+  const expected = ticketBinding(context);
+  if (`ticket=${record.correction_ticket_id}` !== expected.ticket || `nonce=${record.correction_nonce}` !== expected.nonce) {
+    throw new Error('fix/task pointer must bind the current ticket and nonce');
+  }
 
   const artifacts = [artifact(pointer)];
   if (record.pointer_type === 'git_commit') {
@@ -158,6 +203,7 @@ function routingFixture(entry, context) {
   if (!record || typeof record.input !== 'string' || !record.input || typeof record.expected !== 'string' || !record.expected || !['keyword', 'semantic'].includes(record.layer)) {
     throw new Error(`routing fixture not found or incomplete: ${entry.selector}`);
   }
+  requireTextTicketBinding(String(record.note || ''), context, 'routing fixture note');
   return { artifacts: [artifact(fixtures)], observed_at: fixtures.observed_at, claim_sha256: claimHash(record) };
 }
 

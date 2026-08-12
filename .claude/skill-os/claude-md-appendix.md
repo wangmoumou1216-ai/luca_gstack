@@ -58,7 +58,10 @@
    与 **通用**（`propose_semantic.py` 候选 ／ 全局 `feedback_*.md` 或 `candidate_feedback_*.md`）落地。
    UserPromptSubmit 先 O_EXCL 签发绑定 event/session/prompt hash/nonce 的 ticket；全不中以
    `close-correction-ticket.mjs close --session <sid> --level NONE` 闭合，命中则按 L1–L5 + route bit 的
-   fixed verifier exact-set 闭合。只有验证 receipt 可放行；`stop_hook_active` 与旧 `.episode-written-*`
+   fixed verifier exact-set 先经 `record --request` 建立 ticket-bound O_EXCL evidence binding，再以
+   `close --request` 闭合。`template` 同时输出不可预测的 `ticket=...` / `nonce=...` 内容绑定；所选
+   evidence producer 的本体必须含两串，故旧字节改 mtime 或换路径不能注册为新事件证据，而相同
+   人类说明可在写入新事件绑定后合法复用。只有验证 receipt 可放行；`stop_hook_active` 与旧 `.episode-written-*`
    marker 均无放行权，`SESSION_SYNC_BLOCK=0` 仅保留为显式应急 kill-switch。
 2. **治理 + 晋升（每日检查，按需写 digest）：** `session-restore.mjs` 每天首次 session 启动时后台 detached 跑
    `daily_governance.py`（跑在 Claude 已获 Desktop 访问的 TCC 上下文，绕开 launchd 对 ~/Desktop 的 TCC 限制——见 review DG-01；

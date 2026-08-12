@@ -37,14 +37,16 @@
 |---|---|---|
 | L1 产出物层 | 本次产出的一次性内容缺陷（措辞/事实/漏项），重跑大概率不犯 | 只修产出物；披露一行带过 |
 | L2 上游产物层 | 根因在上游 artifact（PRD/handoff/brief 的**内容**错），下游忠实继承 | 修上游 + 受影响下游，披露标注上游节点；上游是历史产物→先提请用户再改。仍属内容层不进治理轨道；同类第二次出现即信号②，按 extraction-bar 升级 |
-| L3 skill 层 | SKILL.md 指令/模板/门禁/示例缺陷，任何人重跑同 skill 都会犯 | 快车道：`python3 .claude/observability/scripts/write_observation.py --skill <s> --message "<用户原话>" --rule "<s>: <蒸馏规则>" --applies-to <s> --severity medium`（立即 active，下次同 skill Preamble 注入即验证）。规则小而明确且用户在场→可提议当场修 SKILL.md（响应式改进，豁免框架建设预算；遵守 skill-invariants.md 保护区，保护区内→只落 rule 并提请 luca）。reusable 拿不准→降级 `propose_semantic.py --domain skill-rule` 候选 |
-| L4 框架层 | 路由/编排协议/hook/记忆协议等结构缺陷，跨 skill 复现 | `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<规则>" --confidence high --stable --evidence "<本次纠正+复现推理>" --scope "<范围>" --reviewer luca`（进 digest「待你裁决」）；重大结构问题→额外**提议**写 framework-audit/proposals/（提议即止，不自动写 gaps-register.yaml / BACKLOG.md——那是人工裁决面） |
+| L3 skill 层 | SKILL.md 指令/模板/门禁/示例缺陷，任何人重跑同 skill 都会犯 | 快车道：`python3 .claude/observability/scripts/write_observation.py --skill <s> --message "<用户原话>" --correction "<修正> ticket=<ticket_id> nonce=<nonce>" --rule "<s>: <蒸馏规则>" --applies-to <s> --severity medium`（立即 active，下次同 skill Preamble 注入即验证）。规则小而明确且用户在场→可提议当场修 SKILL.md（响应式改进，豁免框架建设预算；遵守 skill-invariants.md 保护区，保护区内→只落 rule 并提请 luca）。reusable 拿不准→降级 `propose_semantic.py --domain skill-rule` 候选 |
+| L4 框架层 | 路由/编排协议/hook/记忆协议等结构缺陷，跨 skill 复现 | `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<规则>" --confidence high --stable --evidence "<本次纠正+复现推理> ticket=<ticket_id> nonce=<nonce>" --scope "<范围>" --reviewer luca`（进 digest「待你裁决」）；重大结构问题→额外**提议**写 framework-audit/proposals/（提议即止，不自动写 gaps-register.yaml / BACKLOG.md——那是人工裁决面） |
 | L5 自有产品代码层 | 绕行根因是我们拥有的产品/项目代码能力缺口（如 luca app），任何人在该产品重跑都会撞 | 修源头：走该项目仓库+部署纪律（当场修/立任务按下方处置矩阵）；决策一行落该项目 `.luca/memory/decisions.md`；全局记忆只存「上游不可控事实+残余兜底+指向修复的指针」，不存已被源头修复覆盖的绕法细节 |
 
 **路由类纠正附加动作（2026-07-13，源 fable 审查 V3 循环性裁决）**：纠正对象是「路由去哪」
 （该命中的 skill/流程/能力没命中，或误命中）时，除上表治理写入外，**顺手把真实输入 + 正确
 expected 追加为 `memory/evals/routing/fixtures.jsonl` 一条 fixture**（keyword 可达标
 `layer=keyword`，否则 `semantic`）——现实出题是根治「fixture 由被测者手写」循环性的唯一来源。
+该条 fixture 的 `note` 同时写入本 ticket 模板给出的 `ticket=<ticket_id> nonce=<nonce>`；L1 披露、
+L2 受影响 artifact 与 L5 fix/task pointer 也必须按模板把同一对绑定写进各自证据本体。
 
 ## 处置默认（2026-07-11 luca 拍板：记录为主 + 条件当场修）
 

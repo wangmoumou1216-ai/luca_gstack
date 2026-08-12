@@ -895,8 +895,10 @@ let injectProjectOnThisTurn = false;
 let projectStateError = '';
 // U-006: the top-level prompt hook is the only component that sees the exact
 // user bytes and native event id together. Claim one session-scoped ticket
-// with O_EXCL before routing or project-gate early exits. Later prompts never
-// overwrite an open ticket; closing it is a separate verified transaction.
+// with O_EXCL before routing or project-gate early exits. Ordinary later
+// prompts preserve an open ticket; a later exact explicit-correction event is
+// transactionally promoted and the displaced ticket is archived. Closing is
+// a separate verified transaction on the same session transition lock.
 if (!dryRun && prompt && hookSessionId) {
   try {
     issueCorrectionTicket({

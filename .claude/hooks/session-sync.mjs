@@ -21,9 +21,9 @@ import {
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
 import {
+  acquireCurrentCorrectionReceiptSnapshot,
   ensureRearmCorrectionTicket,
   readActiveCorrectionTicket,
-  readCurrentCorrectionReceipt,
 } from './lib/correction-contract.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -58,6 +58,21 @@ if (hasSid) {
 }
 
 let closeSnapshotOnExit = false;
+let correctionReceiptSnapshot = null;
+let correctionSnapshotVerified = false;
+let correctionSnapshotFinalizationError = '';
+function releaseCorrectionReceiptSnapshot({ throughProcessExit = false } = {}) {
+  if (!correctionReceiptSnapshot) return;
+  const snapshot = correctionReceiptSnapshot;
+  try {
+    if (throughProcessExit) snapshot.sealForProcessExit();
+    else snapshot.release();
+    correctionReceiptSnapshot = null;
+  } catch (error) {
+    correctionSnapshotFinalizationError = String(error?.message || error);
+    throw error;
+  }
+}
 process.on('exit', () => {
   if (!closeSnapshotOnExit || !projectState || !hasSid) return;
   try {
@@ -138,7 +153,7 @@ function buildReason({ rearm = false, deltaEdit = 0, deltaTool = 0, ticket = nul
     `【归因/归属】按 L1–L5 后走 CLAUDE.md「写入协议」三分表：个人①→feedback_；②③④→candidate_feedback_（不索引）／框架→semantic 候选／项目→项目本地。`,
     projLine,
     ticket
-      ? `【解锁】ticket=${ticket.ticket_id}。全不中：node scripts/close-correction-ticket.mjs close --session ${sessionId} --level NONE；命中：node scripts/close-correction-ticket.mjs template --session ${sessionId} --level L<n> [--route]，审阅填证据后 close --request <file>。旧 ".episode-written-${sessionId}" marker 仅提示，绝无放行权。`
+      ? `【解锁】ticket=${ticket.ticket_id}。全不中：node scripts/close-correction-ticket.mjs close --session ${sessionId} --level NONE；命中：node scripts/close-correction-ticket.mjs template --session ${sessionId} --level L<n> [--route]，把模板给出的 ticket/nonce 字串写进证据本体，再 record --request <file>、close --request <file>。旧 ".episode-written-${sessionId}" marker 仅提示，绝无放行权。`
       : `【解锁】ticket 不可用（${ticketError || 'missing'}），不得伪造 receipt；需由下一顶层 prompt 的 hook 先签发。旧 ".episode-written-${sessionId}" marker 仅提示，绝无放行权。`,
   ].join('\n');
 }
@@ -169,7 +184,11 @@ try {
   // 都不能改变下面的裁决。任何 receipt/ticket/evidence 读回异常都折叠为未闭合（fail-closed）。
   let completed = null;
   let completionError = '';
-  try { completed = readCurrentCorrectionReceipt({ root: projectRoot, sessionId }); }
+  try {
+    correctionReceiptSnapshot = acquireCurrentCorrectionReceiptSnapshot({ root: projectRoot, sessionId });
+    completed = correctionReceiptSnapshot.completed;
+    correctionSnapshotVerified = Boolean(completed);
+  }
   catch (error) { completionError = String(error?.message || error); }
 
   // ---- 增量重拦：baseline 只来自已验证 receipt，不再来自可自报的 marker ----
@@ -186,6 +205,9 @@ try {
 
   // ---- 拦截：首次闭合、receipt 损坏或增量重拦。stop_hook_active 不再构成旁路。----
   if (!killSwitch && ((!completed && substantive) || rearm)) {
+    // This branch is unconditionally blocking. Drop the allow snapshot before
+    // rearming/reading active ticket state for the user-facing explanation.
+    releaseCorrectionReceiptSnapshot();
     let active = null;
     let ticketError = completionError;
     try {
@@ -207,6 +229,7 @@ try {
     } else {
       process.stderr.write(`[session-sync] ⚠️ 本 session 有实质工作但未沉淀经验（当前 harness 无 Stop-block 强制能力，此为 advisory）：\n${reason}\n`);
     }
+    releaseCorrectionReceiptSnapshot();
     process.exit(0);
   }
 
@@ -247,6 +270,9 @@ try {
         hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
       if (existsSync(stalePending)) unlinkSync(stalePending);
     } catch { }
+    // Keep the event barrier owned until this process actually dies. The next
+    // prompt can recover it only after PID + process-start identity is dead.
+    releaseCorrectionReceiptSnapshot({ throughProcessExit: true });
     process.stderr.write(`[session-sync] ✅ correction receipt 已验证（${completed.receipt.receipt_id}），放行。\n`);
     process.exit(0);
   }
@@ -267,7 +293,10 @@ try {
   // 只对 substantive-但-未拦截（kill-switch / stop_hook_active）写软兜底；trivial session 不写——
   // 与 CLAUDE.md「无文件产出且工具调用不足不拦截、不提醒」对齐（audit F1-03；原 HOOK-006 时
   // 「未拦截一律写」在 Stop 按回合触发下会让每个 session 首回合都落一个 stub，只增不减）。
-  if (!substantive) process.exit(0);
+  if (!substantive) {
+    releaseCorrectionReceiptSnapshot();
+    process.exit(0);
+  }
   const pending = join(projectRoot, '.claude', 'observability',
     hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
   try {
@@ -288,9 +317,23 @@ try {
       process.stderr.write(`[session-sync] 📝 已写入 ${pending.split('/').pop()}（下次启动提醒）\n`);
     }
   } catch { }
+  releaseCorrectionReceiptSnapshot();
   process.exit(0);
 } catch (e) {
-  // fail-open：任何异常都不得阻止 session 结束
+  // Correction receipt snapshot/finalization integrity is the governance
+  // boundary itself and must fail closed. Only unrelated hook failures retain
+  // the historical fail-open behavior below.
+  try { releaseCorrectionReceiptSnapshot({ throughProcessExit: correctionSnapshotVerified }); } catch { }
+  if (correctionSnapshotFinalizationError) {
+    const reason = `correction receipt snapshot finalization failed; exact state recovery required: ${correctionSnapshotFinalizationError.slice(0, 220)}`;
+    let canBlock = true;
+    try { canBlock = (await import('./lib/harness.mjs')).canEmitControlVerb(process.env); } catch { }
+    if (canBlock) process.stdout.write(JSON.stringify({ decision: 'block', reason }));
+    else process.stderr.write(`[session-sync] ⚠️ ${reason}\n`);
+    process.exit(0);
+  }
+  // Peripheral failures remain fail-open so a broken reminder/checkpoint
+  // cannot strand the session.
   try { process.stderr.write(`[session-sync] ⚠️ 异常，已放行: ${String(e && e.message).slice(0, 80)}\n`); } catch { }
   process.exit(0);
 }

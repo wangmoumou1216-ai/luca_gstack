@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca-gstack.local/schemas/correction-evidence-binding.schema.json",
+  "title": "Correction evidence binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proof_id",
+    "binding_sha256",
+    "ticket_id",
+    "ticket_sha256",
+    "session_id",
+    "event_id",
+    "prompt_sha256",
+    "nonce",
+    "evidence",
+    "bound_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "correction-evidence-binding-v1" },
+    "proof_id": { "type": "string", "pattern": "^cep-[a-f0-9]{64}$" },
+    "binding_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ticket_id": { "type": "string", "pattern": "^ct-[a-f0-9]{64}$" },
+    "ticket_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nonce": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{12}$" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "verifier", "selector", "claim_sha256", "artifact_sha256"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "DISCLOSURE",
+            "AFFECTED_ARTIFACT",
+            "OBSERVATION_RULE",
+            "SEMANTIC_CANDIDATE",
+            "FIX_OR_TASK_POINTER",
+            "ROUTING_FIXTURE"
+          ]
+        },
+        "verifier": {
+          "enum": [
+            "DISCLOSURE_LINE_V1",
+            "REGULAR_FILE_SHA256_V1",
+            "OBSERVATION_RULE_JSONL_V1",
+            "SEMANTIC_CANDIDATE_JSONL_V1",
+            "FIX_OR_TASK_POINTER_V1",
+            "ROUTING_FIXTURE_JSONL_V1"
+          ]
+        },
+        "selector": { "type": "string" },
+        "claim_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "artifact_sha256": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    },
+    "bound_at": { "type": "string", "format": "date-time" }
+  }
+}

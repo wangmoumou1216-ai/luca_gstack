@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca-gstack.local/schemas/correction-closing.schema.json",
+  "title": "Correction closing journal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "journal_sha256",
+    "ticket_id",
+    "ticket_sha256",
+    "session_id",
+    "event_id",
+    "prompt_sha256",
+    "nonce",
+    "request_sha256",
+    "baseline_counts",
+    "closed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "correction-closing-v1" },
+    "journal_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ticket_id": { "type": "string", "pattern": "^ct-[a-f0-9]{64}$" },
+    "ticket_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nonce": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{12}$" },
+    "request_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "baseline_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edit", "tool"],
+      "properties": {
+        "edit": { "type": "integer", "minimum": 0 },
+        "tool": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "closed_at": { "type": "string", "format": "date-time" }
+  }
+}

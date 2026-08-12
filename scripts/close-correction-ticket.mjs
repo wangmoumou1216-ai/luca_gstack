@@ -5,7 +5,11 @@ import {
   buildCorrectionCloseRequest,
   closeCorrectionTicket,
   correctionEvidenceVariants,
+  inspectCorrectionTransitionLock,
+  recordCorrectionEvidence,
   readActiveCorrectionTicket,
+  readCorrectionTicketForClose,
+  recoverCorrectionTransitionLock,
 } from '../.claude/hooks/lib/correction-contract.mjs';
 
 function fail(message) {
@@ -36,6 +40,13 @@ function active(root, sessionId) {
   if (!sessionId) fail('--session is required');
   const record = readActiveCorrectionTicket({ root, sessionId });
   if (!record) fail(`no active ticket for session ${sessionId}`);
+  return record.ticket;
+}
+
+function closeCandidate(root, sessionId) {
+  if (!sessionId) fail('--session is required');
+  const record = readCorrectionTicketForClose({ root, sessionId });
+  if (!record) fail(`no active or recoverable closing ticket for session ${sessionId}`);
   return record.ticket;
 }
 
@@ -72,11 +83,38 @@ try {
       routeCorrection: route,
       evidence: evidenceKinds.map(placeholder),
     }));
-    process.stdout.write(`${JSON.stringify({ choose_exactly_one: templates }, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({
+      evidence_content_binding: {
+        ticket: `ticket=${ticket.ticket_id}`,
+        nonce: `nonce=${ticket.nonce}`,
+        rule: 'Each selected evidence producer output must contain both exact binding strings.',
+      },
+      choose_exactly_one: templates,
+    }, null, 2)}\n`);
     process.exit(0);
   }
 
-  if (command !== 'close') fail('usage: close-correction-ticket.mjs <show|template|close> ...');
+  if (command === 'inspect-lock') {
+    const sessionId = option('--session');
+    if (!sessionId) fail('--session is required');
+    process.stdout.write(`${JSON.stringify(inspectCorrectionTransitionLock({ root, sessionId }), null, 2)}\n`);
+    process.exit(0);
+  }
+
+  if (command === 'recover-lock') {
+    const sessionId = option('--session');
+    const handleFile = option('--handle-file');
+    if (!sessionId || !handleFile) fail('recover-lock requires --session and --handle-file');
+    const parsed = JSON.parse(readFileSync(resolve(handleFile), 'utf8'));
+    const ownerHandle = parsed.owner_handle || parsed;
+    const result = recoverCorrectionTransitionLock({ root, sessionId, ownerHandle });
+    process.stdout.write(`CORRECTION_TRANSITION_LOCK_RECOVERED ${result.owner_handle.raw_sha256}\n`);
+    process.exit(0);
+  }
+
+  if (!['record', 'close'].includes(command)) {
+    fail('usage: close-correction-ticket.mjs <show|template|record|close|inspect-lock|recover-lock> ...');
+  }
 
   let request;
   const requestPath = option('--request');
@@ -89,13 +127,19 @@ try {
       fail('non-NONE closure requires --request from a reviewed template');
     }
     request = buildCorrectionCloseRequest({
-      ticket: active(root, sessionId),
+      ticket: closeCandidate(root, sessionId),
       attributionLevel: 'NONE',
       routeCorrection: false,
       evidence: [],
     });
   }
 
+  if (command === 'record') {
+    if (!requestPath) fail('record requires --request from a reviewed template');
+    const recorded = recordCorrectionEvidence({ root, request });
+    process.stdout.write(`CORRECTION_EVIDENCE_RECORDED ${recorded.ticket.ticket_id} ${recorded.evidence.map(item => item.proof_id).join(',')}\n`);
+    process.exit(0);
+  }
   const result = closeCorrectionTicket({
     root,
     request,

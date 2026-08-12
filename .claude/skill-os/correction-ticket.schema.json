@@ -17,7 +17,7 @@
   ],
   "properties": {
     "schema_version": { "const": "correction-ticket-v1" },
-    "verifier_registry": { "const": "correction-verifiers-v1" },
+    "verifier_registry": { "const": "correction-verifiers-v2" },
     "ticket_id": { "type": "string", "pattern": "^ct-[a-f0-9]{64}$" },
     "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
     "event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
