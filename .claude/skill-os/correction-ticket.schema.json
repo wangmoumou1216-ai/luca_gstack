@@ -11,6 +11,7 @@
     "session_id",
     "event_id",
     "prompt_sha256",
+    "prompt_signal",
     "nonce",
     "created_at"
   ],
@@ -21,6 +22,7 @@
     "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
     "event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "prompt_signal": { "enum": ["NO_EXPLICIT_CORRECTION", "EXPLICIT_CORRECTION"] },
     "nonce": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
     "created_at": { "type": "string", "format": "date-time" }
   }

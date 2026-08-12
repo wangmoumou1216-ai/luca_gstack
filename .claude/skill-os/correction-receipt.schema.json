@@ -13,6 +13,7 @@
     "session_id",
     "event_id",
     "prompt_sha256",
+    "prompt_signal",
     "nonce",
     "attribution_level",
     "route_correction",
@@ -30,6 +31,7 @@
     "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
     "event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "prompt_signal": { "enum": ["NO_EXPLICIT_CORRECTION", "EXPLICIT_CORRECTION"] },
     "nonce": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
     "attribution_level": { "enum": ["NONE", "L1", "L2", "L3", "L4", "L5"] },
     "route_correction": { "type": "boolean" },
@@ -52,7 +54,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["kind", "verifier", "path", "selector", "claim_sha256", "artifacts"],
+        "required": ["kind", "verifier", "path", "selector", "observed_at", "claim_sha256", "artifacts"],
         "properties": {
           "kind": {
             "enum": [
@@ -76,6 +78,7 @@
           },
           "path": { "type": "string", "minLength": 1 },
           "selector": { "type": "string" },
+          "observed_at": { "type": "string", "format": "date-time" },
           "claim_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
           "artifacts": {
             "type": "array",

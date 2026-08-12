@@ -8,12 +8,14 @@ import {
   readFileSync,
   renameSync,
   symlinkSync,
+  utimesSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import {
   buildCorrectionCloseRequest,
+  classifyCorrectionPrompt,
   closeCorrectionTicket,
   correctionEvidenceVariants,
   hashCorrectionPrompt,
@@ -55,7 +57,10 @@ function issue(root, label = 'case') {
   const sessionId = `s-${label}-${sequence}`.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 36);
   const eventId = `event-${sequence}`;
   const prompt = `prompt-${label}-${sequence}`;
-  const record = issueCorrectionTicket({ root, sessionId, eventId, prompt });
+  const record = issueCorrectionTicket({
+    root, sessionId, eventId, prompt,
+    now: new Date(Date.now() - 5_000).toISOString(),
+  });
   assert.equal(record.created, true);
   assert.equal(record.ticket.prompt_sha256, hashCorrectionPrompt(prompt));
   return { sessionId, eventId, prompt, record };
@@ -77,7 +82,7 @@ function evidenceFor(root, level, route, { l3Candidate = false } = {}) {
     const observationId = `O-20260812-${String(sequence).padStart(3, '0')}`;
     const observations = write(root, 'evidence/observations.jsonl', `${JSON.stringify({
       id: observationId,
-      time: '2026-08-12T00:00:00+08:00',
+      time: new Date().toISOString(),
       skill: 'test-skill',
       source: 'user_feedback',
       severity: 'medium',
@@ -103,7 +108,7 @@ function evidenceFor(root, level, route, { l3Candidate = false } = {}) {
     const candidateId = `SC-20260812-${String(sequence).padStart(3, '0')}`;
     const candidates = write(root, 'evidence/candidates.jsonl', `${JSON.stringify({
       id: candidateId,
-      created_at: '2026-08-12T00:00:00Z',
+      created_at: new Date().toISOString(),
       domain: 'skill-rule',
       fact: 'verified framework correction',
       confidence: 'high',
@@ -185,6 +190,11 @@ for (const level of ['L1', 'L2', 'L3', 'L4', 'L5']) {
 }
 closeLevel('L3', false, { l3Candidate: true });
 closeLevel('NONE', false);
+assert.equal(classifyCorrectionPrompt('普通问题：今天的状态是什么？'), 'NO_EXPLICIT_CORRECTION');
+assert.equal(
+  classifyCorrectionPrompt('纠正：你刚才路由错了，以后必须命中 quick-research'),
+  'EXPLICIT_CORRECTION',
+);
 assert.deepEqual(correctionEvidenceVariants('L3', true), [
   ['OBSERVATION_RULE', 'ROUTING_FIXTURE'],
   ['SEMANTIC_CANDIDATE', 'ROUTING_FIXTURE'],
@@ -220,6 +230,7 @@ for (const value of Object.values(CORRECTION_VERIFIER_REGISTRY)) assert.equal(Ob
     { ...good, session_id: 'wrong-session' },
     { ...good, event_id: 'wrong-event' },
     { ...good, prompt_sha256: '0'.repeat(64) },
+    { ...good, prompt_signal: 'EXPLICIT_CORRECTION' },
     { ...good, nonce: randomUUID() },
     { ...good, evidence: [] },
     { ...good, evidence: [...good.evidence, {
@@ -240,6 +251,82 @@ for (const value of Object.values(CORRECTION_VERIFIER_REGISTRY)) assert.equal(Ob
   writeFileSync(evidence[0].path, `${readFileSync(evidence[0].path, 'utf8')}{"tampered":true}\n`);
   assert.throws(() => readCurrentCorrectionReceipt({ root, sessionId: issued.sessionId }), /changed after receipt close|invalid JSONL/);
   assert.ok(closed.receipt.receipt_id.startsWith('cr-'));
+}
+
+// A prompt classified from the original bytes as an explicit correction cannot self-report NONE.
+{
+  const root = rootFixture();
+  const prompt = '纠正：你刚才路由错了，以后必须命中 quick-research';
+  const issued = issueCorrectionTicket({
+    root,
+    sessionId: 'explicit-correction',
+    eventId: 'event-explicit-correction',
+    prompt,
+    now: new Date(Date.now() - 5_000).toISOString(),
+  });
+  assert.equal(issued.ticket.prompt_signal, 'EXPLICIT_CORRECTION');
+  assert.throws(
+    () => buildCorrectionCloseRequest({
+      ticket: issued.ticket,
+      attributionLevel: 'NONE',
+      routeCorrection: false,
+      evidence: [],
+    }),
+    /explicit correction cannot close as NONE/,
+  );
+  assert.equal(readActiveCorrectionTicket({ root, sessionId: 'explicit-correction' }).ticket.ticket_id, issued.ticket.ticket_id);
+}
+
+// Evidence that predates a ticket cannot be reused unchanged for that ticket.
+{
+  const root = rootFixture();
+  const issued = issue(root, 'old-evidence');
+  const evidence = evidenceFor(root, 'L1', false);
+  const stale = new Date(Date.parse(issued.record.ticket.created_at) - 60_000);
+  utimesSync(evidence[0].path, stale, stale);
+  const request = buildCorrectionCloseRequest({
+    ticket: issued.record.ticket,
+    attributionLevel: 'L1',
+    routeCorrection: false,
+    evidence,
+  });
+  assert.throws(
+    () => closeCorrectionTicket({ root, request, baselineCounts: { edit: 1, tool: 1 } }),
+    /evidence predates ticket/,
+  );
+  assert.equal(readActiveCorrectionTicket({ root, sessionId: issued.sessionId }).ticket.ticket_id, issued.record.ticket.ticket_id);
+}
+
+// Evidence accepted for ticket A cannot be replayed unchanged against later ticket B.
+{
+  const completed = closeLevel('L1', false);
+  const ticketBCreatedAt = new Date(Date.now() + 2_000).toISOString();
+  const ticketB = issueCorrectionTicket({
+    root: completed.root,
+    sessionId: completed.issued.sessionId,
+    eventId: 'event-evidence-replay-b',
+    prompt: '普通后续任务',
+    now: ticketBCreatedAt,
+  });
+  const requestB = buildCorrectionCloseRequest({
+    ticket: ticketB.ticket,
+    attributionLevel: 'L1',
+    routeCorrection: false,
+    evidence: completed.evidence,
+  });
+  assert.throws(
+    () => closeCorrectionTicket({
+      root: completed.root,
+      request: requestB,
+      baselineCounts: { edit: 2, tool: 2 },
+      now: new Date(Date.parse(ticketBCreatedAt) + 1_000).toISOString(),
+    }),
+    /evidence predates ticket/,
+  );
+  assert.equal(
+    readActiveCorrectionTicket({ root: completed.root, sessionId: completed.issued.sessionId }).ticket.ticket_id,
+    ticketB.ticket.ticket_id,
+  );
 }
 
 // A changed receipt or ticket cannot be repaired by a matching self-report.
@@ -277,6 +364,20 @@ for (const value of Object.values(CORRECTION_VERIFIER_REGISTRY)) assert.equal(Ob
   assert.throws(
     () => readActiveCorrectionTicket({ root, sessionId: issued.sessionId }),
     /not a real directory/,
+  );
+}
+
+{
+  const root = rootFixture();
+  const issued = issue(root, 'ticket-leaf-symlink');
+  const stateRoot = join(root, '.claude', 'correction-state', issued.sessionId);
+  const activePath = join(stateRoot, 'active-ticket.json');
+  const parked = join(root, 'external-ticket.json');
+  renameSync(activePath, parked);
+  symlinkSync(parked, activePath);
+  assert.throws(
+    () => readActiveCorrectionTicket({ root, sessionId: issued.sessionId }),
+    /regular non-symlink/,
   );
 }
 console.log('PASS ASSERT-012 replay/forgery/wrong-binding/evidence-tamper rejection');
@@ -325,6 +426,31 @@ function runHook(script, root, input, extraEnv = {}) {
   return result;
 }
 
+// A valid old completion can never release Stop while a newer ticket is active.
+{
+  const completed = closeLevel('NONE', false);
+  const sessionId = completed.issued.sessionId;
+  const next = issueCorrectionTicket({
+    root: completed.root,
+    sessionId,
+    eventId: 'event-after-completion',
+    prompt: '普通后续任务',
+    now: new Date(Date.now() - 1_000).toISOString(),
+  });
+  assert.equal(next.created, true);
+  assert.throws(
+    () => readCurrentCorrectionReceipt({ root: completed.root, sessionId }),
+    /active correction ticket supersedes prior completion/,
+  );
+  write(completed.root, `.claude/.session-edit-count-${sessionId}`, '4');
+  write(completed.root, `.claude/.session-tool-count-${sessionId}`, '9');
+  const blocked = runHook(sessionSync, completed.root, { session_id: sessionId, stop_hook_active: true });
+  const decision = JSON.parse(blocked.stdout);
+  assert.equal(decision.decision, 'block');
+  assert.match(decision.reason, new RegExp(next.ticket.ticket_id));
+  assert.equal(readActiveCorrectionTicket({ root: completed.root, sessionId }).ticket.ticket_id, next.ticket.ticket_id);
+}
+
 // Live hook composition: UserPromptSubmit issues first; marker and stop_hook_active cannot release.
 {
   const root = rootFixture();
@@ -346,9 +472,9 @@ function runHook(script, root, input, extraEnv = {}) {
 
   const request = buildCorrectionCloseRequest({
     ticket: active.ticket,
-    attributionLevel: 'NONE',
+    attributionLevel: 'L1',
     routeCorrection: false,
-    evidence: [],
+    evidence: evidenceFor(root, 'L1', false),
   });
   closeCorrectionTicket({ root, request, baselineCounts: { edit: 1, tool: 2 } });
   assert.equal(runHook(sessionSync, root, { session_id: sessionId, stop_hook_active: true }).stdout, '');

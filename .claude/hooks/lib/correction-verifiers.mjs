@@ -31,16 +31,26 @@ function exactKeys(value, expected, label) {
   }
 }
 
+function observedAt(value, label) {
+  if (typeof value !== 'string' || !value || Number.isNaN(Date.parse(value))) throw new Error(`${label} must be an ISO date-time`);
+  return new Date(value).toISOString();
+}
+
+function earliestObservedAt(values) {
+  return new Date(Math.min(...values.map(value => Date.parse(value)))).toISOString();
+}
+
 function regularFile(rawPath, root) {
   if (typeof rawPath !== 'string' || !rawPath || rawPath.includes('\0')) throw new Error('evidence path is invalid');
   const absolute = isAbsolute(rawPath) ? resolve(rawPath) : resolve(root, rawPath);
   const lst = lstatSync(absolute);
   if (lst.isSymbolicLink() || !lst.isFile()) throw new Error(`evidence must be a regular non-symlink file: ${rawPath}`);
+  if (lst.nlink !== 1) throw new Error(`evidence must not be a hardlink: ${rawPath}`);
   const real = realpathSync(absolute);
   const st = statSync(real);
   if (!st.isFile()) throw new Error(`evidence target is not a regular file: ${rawPath}`);
   const bytes = readFileSync(real);
-  return { path: real, bytes, sha256: sha256(bytes) };
+  return { path: real, bytes, sha256: sha256(bytes), observed_at: lst.mtime.toISOString() };
 }
 
 function artifact(file) {
@@ -69,13 +79,13 @@ function disclosure(entry, context) {
   if (!text.includes('归因') || !new RegExp(`(?:^|[^A-Z0-9])${context.attributionLevel}(?:[^0-9]|$)`).test(text)) {
     throw new Error(`disclosure must name attribution ${context.attributionLevel}`);
   }
-  return { artifacts: [artifact(file)], claim_sha256: claimHash({ attribution: context.attributionLevel, text }) };
+  return { artifacts: [artifact(file)], observed_at: file.observed_at, claim_sha256: claimHash({ attribution: context.attributionLevel, text }) };
 }
 
 function affectedArtifact(entry, context) {
   if (entry.selector !== '') throw new Error('AFFECTED_ARTIFACT selector must be empty');
   const file = regularFile(entry.path, context.root);
-  return { artifacts: [artifact(file)], claim_sha256: claimHash({ path: file.path, sha256: file.sha256 }) };
+  return { artifacts: [artifact(file)], observed_at: file.observed_at, claim_sha256: claimHash({ path: file.path, sha256: file.sha256 }) };
 }
 
 function observationRule(entry, context) {
@@ -85,6 +95,7 @@ function observationRule(entry, context) {
   if (!record || typeof record.skill !== 'string' || !record.skill || typeof record.message !== 'string' || !record.message) {
     throw new Error(`observation not found or incomplete: ${entry.selector}`);
   }
+  const recordTime = observedAt(record.time, 'observation time');
   const rules = regularFile(resolve(dirname(observations.path), 'rules.yaml'), context.root);
   const blocks = rules.bytes.toString('utf8').split(/(?=^- id:\s*R-)/m);
   const ruleBlock = blocks.find(block => (
@@ -95,6 +106,7 @@ function observationRule(entry, context) {
   if (!ruleBlock) throw new Error(`active rule for observation not found: ${entry.selector}`);
   return {
     artifacts: [artifact(observations), artifact(rules)],
+    observed_at: earliestObservedAt([recordTime, rules.observed_at]),
     claim_sha256: claimHash({ observation: record, rule_block: ruleBlock.trim() }),
   };
 }
@@ -106,7 +118,7 @@ function semanticCandidate(entry, context) {
   if (!record || record.status !== 'CANDIDATE' || typeof record.fact !== 'string' || !record.fact || typeof record.domain !== 'string') {
     throw new Error(`semantic candidate not found or incomplete: ${entry.selector}`);
   }
-  return { artifacts: [artifact(candidates)], claim_sha256: claimHash(record) };
+  return { artifacts: [artifact(candidates)], observed_at: observedAt(record.created_at, 'semantic candidate created_at'), claim_sha256: claimHash(record) };
 }
 
 function fixOrTaskPointer(entry, context) {
@@ -136,7 +148,7 @@ function fixOrTaskPointer(entry, context) {
     if (target.sha256 !== record.target_sha256) throw new Error('fix/task pointer target hash mismatch');
     artifacts.push(artifact(target));
   }
-  return { artifacts, claim_sha256: claimHash(record) };
+  return { artifacts, observed_at: pointer.observed_at, claim_sha256: claimHash(record) };
 }
 
 function routingFixture(entry, context) {
@@ -146,7 +158,7 @@ function routingFixture(entry, context) {
   if (!record || typeof record.input !== 'string' || !record.input || typeof record.expected !== 'string' || !record.expected || !['keyword', 'semantic'].includes(record.layer)) {
     throw new Error(`routing fixture not found or incomplete: ${entry.selector}`);
   }
-  return { artifacts: [artifact(fixtures)], claim_sha256: claimHash(record) };
+  return { artifacts: [artifact(fixtures)], observed_at: fixtures.observed_at, claim_sha256: claimHash(record) };
 }
 
 export const CORRECTION_VERIFIER_REGISTRY = Object.freeze({
@@ -166,5 +178,5 @@ export function verifyCorrectionEvidence(entry, context) {
   if (!registered || typeof registered.verify !== 'function') throw new Error(`unknown fixed verifier enum: ${entry.verifier}`);
   if (registered.kind !== entry.kind) throw new Error(`verifier ${entry.verifier} cannot verify ${entry.kind}`);
   const result = registered.verify(entry, context);
-  return { ...entry, claim_sha256: result.claim_sha256, artifacts: result.artifacts };
+  return { ...entry, observed_at: result.observed_at, claim_sha256: result.claim_sha256, artifacts: result.artifacts };
 }
