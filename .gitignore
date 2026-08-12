@@ -101,6 +101,9 @@ api-project/
 .claude/.project-switch.lock/
 .claude/project-state-quarantine/
 .claude/observability/pending-extraction*.md
+# U-006 correction tickets/receipts are per-session runtime authority. Schemas
+# and verifiers are tracked; live ticket state must never be staged.
+.claude/correction-state/
 .claude/.episode-written-*
 .claude/.digest-shown-*
 .claude/current-topic*.txt

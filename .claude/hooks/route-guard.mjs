@@ -24,6 +24,7 @@ import {
   validateProjectName,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
+import { issueCorrectionTicket } from './lib/correction-contract.mjs';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -892,6 +893,24 @@ const hints = [];
 let topLevelProjectState = null;
 let injectProjectOnThisTurn = false;
 let projectStateError = '';
+// U-006: the top-level prompt hook is the only component that sees the exact
+// user bytes and native event id together. Claim one session-scoped ticket
+// with O_EXCL before routing or project-gate early exits. Later prompts never
+// overwrite an open ticket; closing it is a separate verified transaction.
+if (!dryRun && prompt && hookSessionId) {
+  try {
+    issueCorrectionTicket({
+      root: projectRoot,
+      sessionId: hookSessionId,
+      eventId: hookTurnId,
+      prompt,
+    });
+  } catch (error) {
+    // The Stop hook treats a missing/corrupt ticket as non-releasable. This
+    // hook remains non-blocking so routing itself cannot strand the prompt.
+    process.stderr.write(`[route-guard] ⚠️ correction ticket issue failed: ${String(error?.message || error).slice(0, 160)}\n`);
+  }
+}
 if (!dryRun && prompt && hookSessionId) {
   try {
     let current = readProjectState(projectRoot, hookSessionId).value;

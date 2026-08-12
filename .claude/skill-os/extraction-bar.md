@@ -7,7 +7,9 @@
 > 改信号名必须同步 session-sync.mjs 的速记行并跑 `npm run check:hooks`。
 > 背景：2026-06-10 luca 纠正「不是每个问答+解决方案都值得提取，只提取重大经验」。
 
-【提取门槛 · 默认不存】先过门槛再谈归属——四强信号全不中 → 什么都不写，直接落 marker 结束：
+【提取门槛 · 默认不存】先过门槛再谈归属——四强信号全不中 → 什么都不写，以
+`close-correction-ticket.mjs close --session <sid> --level NONE` 生成绑定 receipt 后结束；旧
+`.episode-written-*` marker 仅作迁移提示，不具放行权：
 ①用户明确纠正我的行为，或对未来行为给出明确指示（最强信号）
 ②同类问题复发：写前用 2-3 组不同措辞 search_memory 查 episodic+全局前科（best-effort 非硬门）；查到→升级写入；查不到→按首次只记 episodic，topic 必须带规范关键词（skill 名/错误类别）留检索钩子
 ③造成真实返工的坑，或触及不可逆操作红线的险情（near-miss 也算）

@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca-gstack.local/schemas/correction-receipt.schema.json",
+  "title": "Correction receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "verifier_registry",
+    "receipt_id",
+    "ticket_id",
+    "ticket_sha256",
+    "session_id",
+    "event_id",
+    "prompt_sha256",
+    "nonce",
+    "attribution_level",
+    "route_correction",
+    "required_evidence_kinds",
+    "evidence",
+    "baseline_counts",
+    "closed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "correction-receipt-v1" },
+    "verifier_registry": { "const": "correction-verifiers-v1" },
+    "receipt_id": { "type": "string", "pattern": "^cr-[a-f0-9]{64}$" },
+    "ticket_id": { "type": "string", "pattern": "^ct-[a-f0-9]{64}$" },
+    "ticket_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "session_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,36}$" },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nonce": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "attribution_level": { "enum": ["NONE", "L1", "L2", "L3", "L4", "L5"] },
+    "route_correction": { "type": "boolean" },
+    "required_evidence_kinds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DISCLOSURE",
+          "AFFECTED_ARTIFACT",
+          "OBSERVATION_RULE",
+          "SEMANTIC_CANDIDATE",
+          "FIX_OR_TASK_POINTER",
+          "ROUTING_FIXTURE"
+        ]
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "verifier", "path", "selector", "claim_sha256", "artifacts"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "DISCLOSURE",
+              "AFFECTED_ARTIFACT",
+              "OBSERVATION_RULE",
+              "SEMANTIC_CANDIDATE",
+              "FIX_OR_TASK_POINTER",
+              "ROUTING_FIXTURE"
+            ]
+          },
+          "verifier": {
+            "enum": [
+              "DISCLOSURE_LINE_V1",
+              "REGULAR_FILE_SHA256_V1",
+              "OBSERVATION_RULE_JSONL_V1",
+              "SEMANTIC_CANDIDATE_JSONL_V1",
+              "FIX_OR_TASK_POINTER_V1",
+              "ROUTING_FIXTURE_JSONL_V1"
+            ]
+          },
+          "path": { "type": "string", "minLength": 1 },
+          "selector": { "type": "string" },
+          "claim_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "artifacts": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "sha256"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "baseline_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edit", "tool"],
+      "properties": {
+        "edit": { "type": "integer", "minimum": 0 },
+        "tool": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "closed_at": { "type": "string", "format": "date-time" }
+  }
+}

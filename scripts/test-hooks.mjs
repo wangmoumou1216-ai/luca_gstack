@@ -192,59 +192,24 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   console.log('PASS HOOK-002 DONE-only 空 session 放行且不落 checkpoint');
 }
 
-// ── 三重防循环：marker / kill-switch / stop_hook_active 任一命中 → 不 block ──
+// ── U-006：旧 marker / stop_hook_active 不再具放行权；仅显式 kill-switch 是应急旁路 ──
 {
   const base = () => makeFixture({ turns: 5, edits: 1, activeProject: 'testproj' });
 
   const rMarker = base();
   writeFileSync(join(rMarker, '.claude', `.episode-written-date-${UTC_TODAY}`), '');
-  assert.equal(runNode(sessionSyncHook, rMarker).stdout, '', 'marker 命中应放行');
+  assert.equal(JSON.parse(runNode(sessionSyncHook, rMarker).stdout).decision, 'block',
+    '旧 marker 只能提示，不能放行');
 
   const rKill = base();
   assert.equal(runNode(sessionSyncHook, rKill, { env: { SESSION_SYNC_BLOCK: '0' } }).stdout, '',
     'kill-switch 应放行');
 
   const rStop = base();
-  assert.equal(runNode(sessionSyncHook, rStop, { input: JSON.stringify({ stop_hook_active: true }) }).stdout, '',
-    'stop_hook_active 应放行');
+  assert.equal(JSON.parse(runNode(sessionSyncHook, rStop, { input: JSON.stringify({ stop_hook_active: true }) }).stdout).decision, 'block',
+    'stop_hook_active 没有 verified receipt 时仍须 block');
 
-  console.log('PASS 三重防循环（marker / kill-switch / stop_hook_active）均不 block');
-}
-
-// ── REARM（2026-07-13 M1）：增量重拦——marker 只免"已裁决过的工作量"，大增量再拦一次 ──
-{
-  const markerName = `.episode-written-date-${UTC_TODAY}`;
-
-  // REARM-001：marker 基线 "1 5"，计数涨到 edits=12（Δ=11≥10）→ 必须再 block，且基线被刷新
-  const r1 = makeFixture({ edits: 12, tools: 10, activeProject: 'testproj' });
-  writeFileSync(join(r1, '.claude', markerName), '1 5');
-  const res1 = runNode(sessionSyncHook, r1);
-  let parsed1;
-  assert.doesNotThrow(() => { parsed1 = JSON.parse(res1.stdout); }, '增量超阈值必须走 block 路径');
-  assert.equal(parsed1.decision, 'block', '增量重拦必须 block');
-  assert.match(parsed1.reason, /Δedit=11/, 'reason 应带增量数字');
-  assert.equal(readFileSync(join(r1, '.claude', markerName), 'utf8'), '12 10',
-    '拦截前必须刷新基线（防循环承重）');
-
-  // REARM-002 防循环：同一 fixture 立刻再跑（基线已刷新，Δ=0）→ 放行
-  assert.equal(runNode(sessionSyncHook, r1).stdout, '', '基线刷新后同一增量不得二次拦截');
-
-  // REARM-003 空 marker 补基线：首跑放行且回填计数；计数大涨后再跑 → block
-  const r3 = makeFixture({ edits: 3, tools: 4, activeProject: 'testproj' });
-  writeFileSync(join(r3, '.claude', markerName), '');
-  assert.equal(runNode(sessionSyncHook, r3).stdout, '', '空 marker（旧 touch 形态）首跑应放行');
-  assert.equal(readFileSync(join(r3, '.claude', markerName), 'utf8'), '3 4', '空 marker 应被回填当前计数为基线');
-  writeFileSync(join(r3, '.claude', '.session-edit-count'), '20');
-  const res3 = runNode(sessionSyncHook, r3);
-  assert.equal(JSON.parse(res3.stdout).decision, 'block', '回填基线后大增量（Δedit=17）应重拦');
-
-  // REARM-004 关断阀：SESSION_SYNC_REARM=0 时大增量也放行
-  const r4 = makeFixture({ edits: 50, tools: 90, activeProject: 'testproj' });
-  writeFileSync(join(r4, '.claude', markerName), '1 5');
-  assert.equal(runNode(sessionSyncHook, r4, { env: { SESSION_SYNC_REARM: '0' } }).stdout, '',
-    'SESSION_SYNC_REARM=0 应关闭增量重拦');
-
-  console.log('PASS REARM 增量重拦：大增量再拦一次 / 基线刷新防循环 / 空 marker 回填 / 关断阀');
+  console.log('PASS U-006 receipt-only release：旧 marker/stop_hook_active 拒绝，kill-switch 留作显式应急');
 }
 
 // ── V3 修复：重 Bash/subagent/MCP、零编辑、少轮次 → tool-count 触发实质判据 → block ──
@@ -675,7 +640,7 @@ function runRouteGuard(cwd, prompt) {
   const rA = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-A' }) });
   const parsedA = JSON.parse(rA.stdout);
   assert.equal(parsedA.decision, 'block', 'A 有自己的编辑计数 → block');
-  assert.match(parsedA.reason, /\.episode-written-sess-A/, 'A 的解锁 marker 名须带自己的 sid');
+  assert.match(parsedA.reason, /\.episode-written-sess-A/, 'A 的 legacy marker 提示名须带自己的 sid');
   console.log('PASS CONC-002 session-sync 只认本 sid 计数：A 实质 B 放行');
 }
 

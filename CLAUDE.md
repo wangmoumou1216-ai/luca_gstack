@@ -163,7 +163,7 @@ Agent prompt 预算细表见 appendix「Agent Context 预算」。
 | 只在 **luca_gstack 框架内**成立（skill 规则 / 路由 / 品牌 / 跨项目方法论） | **框架 semantic 候选** | `propose_semantic.py`（走门禁晋升，红线 [SC-20260523-003]） |
 | 只对**某个具体下游项目**成立（部署坑 / 状态真值路径 / 项目结构） | **该项目本地记忆** | `~/Desktop/项目/<name>/.luca/memory/MEMORY.md`（只在该项目激活时注入）；单次经历另走 episodic |
 
-附加：**默认不存——四信号全不中（含纯咨询 / 闲聊 / 纯执行）→ 什么都不存，落 marker 直接结束。** session-sync 已据此放过（无文件产出且工具调用不足不拦截、不提醒）。
+附加：**四信号全不中→不存，以 `NONE` receipt 解锁；旧 marker 仅提示、不放行。** 无产出且工具不足仍不拦截、不提醒。
 项目本地记忆与全局个人记忆的区别：全局每 session 无差别注入，项目本地只在 `project.sh switch/new` 激活该项目时注入——具体项目事实务必入项目本地，避免跨项目上下文污染。
 
 **写入脚本**：`append_episode.py`=Episodic、`propose_semantic.py --domain <...>`=Semantic
