@@ -9,6 +9,10 @@ import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFil
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import assert from 'assert';
+import {
+  acquireProjectWriteLease,
+  releaseProjectWriteLease,
+} from '../.claude/hooks/lib/project-write-lease.mjs';
 
 const HOOK = resolve(process.cwd(), '.claude/hooks/project-scope-guard.mjs');
 let pass = 0, fail = 0;
@@ -492,6 +496,47 @@ for (const command of [
     assert.match(o.hookSpecificOutput.permissionDecisionReason, /相对路径|dynamic|未绑定/);
   });
 }
+
+check('PATCH-LEASE-001 active lease denies competing Write/Bash but preserves read-only access', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const target = abs(env, 'alpha', 'docs/leased.md');
+  const lease = acquireProjectWriteLease({
+    targetPath: target,
+    patchHash: 'a'.repeat(64),
+    ownerToken: 'scope-guard-test',
+    projectsRoot: env.projects,
+  });
+  try {
+    const write = run(env, { session_id: 'S', tool_name: 'Write', tool_input: { file_path: 'docs/leased.md', content: 'x' } });
+    assert.equal(write.hookSpecificOutput.permissionDecision, 'deny');
+    assert.match(write.hookSpecificOutput.permissionDecisionReason, /写租约|write lease|apply_patch/);
+    const bashWrite = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'echo x > docs/leased.md' } });
+    assert.equal(bashWrite.hookSpecificOutput.permissionDecision, 'deny');
+    const read = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/leased.md' } });
+    assert.equal(read.hookSpecificOutput.updatedInput.file_path, target);
+    const bashRead = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'cat docs/leased.md' } });
+    assert.equal(bashRead.hookSpecificOutput.updatedInput.command, `cat ${target}`);
+    for (const command of [
+      'find docs -delete',
+      "sed -n -i.bak '1p' docs/leased.md",
+      'rg --pre touch docs/leased.md needle docs',
+    ]) {
+      const disguisedWrite = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command } });
+      assert.equal(disguisedWrite.hookSpecificOutput.permissionDecision, 'deny', command);
+    }
+  } finally {
+    releaseProjectWriteLease(lease.owner_handle, env.projects);
+  }
+});
+
+check('PATCH-LEASE-002 case-variant protected patch paths fail closed on exact file interface', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  for (const file_path of ['Docs/x.md', '.CLAUDE/workflow-state.yaml']) {
+    const out = run(env, { session_id: 'S', tool_name: 'Write', tool_input: { file_path, content: 'x' } });
+    assert.equal(out.hookSpecificOutput.permissionDecision, 'deny', file_path);
+    assert.match(out.hookSpecificOutput.permissionDecisionReason, /traversal|拒绝|路径/);
+  }
+});
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

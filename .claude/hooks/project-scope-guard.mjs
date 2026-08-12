@@ -77,10 +77,14 @@ const gstackRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 // 动态 import 失败时回落硬编码默认，保 fail-open（本 hook 任何异常都不得阻断工具调用）。
 let PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
 let substrate = null;
+let writeLease = null;
+let writeLeaseLoadError = null;
 try {
   substrate = await import('./lib/project-substrate.mjs');
   if (substrate?.PROJECTS_ROOT) PROJECTS_ROOT = substrate.PROJECTS_ROOT;
 } catch { /* fail-open：用默认根 */ }
+try { writeLease = await import('./lib/project-write-lease.mjs'); }
+catch (error) { writeLeaseLoadError = error; }
 const claudeDir = join(gstackRoot, '.claude');
 
 function readSessionState() {
@@ -159,32 +163,40 @@ function classifyPath(p, binding) {
       const rest = s === root ? '' : s.slice(root.length + 1);
       const [project, ...tail] = rest.split('/');
       const insideBinding = binding && pathKey(project) === pathKey(binding.project);
+      const canonicalProject = binding && project === binding.project;
       return {
         scoped: true,
-        redirected: insideBinding && safeSegments([project, ...tail]) ? confinedProjectPath(binding, tail) : null,
+        redirected: insideBinding && canonicalProject && safeSegments([project, ...tail])
+          ? confinedProjectPath(binding, tail) : null,
         direct: true,
-        unsafe: !safeSegments([project, ...tail]),
+        unsafe: !safeSegments([project, ...tail]) || Boolean(insideBinding && !canonicalProject),
       };
     }
   }
 
   // docs/（相对） 或 <gstack>/docs/（绝对，含软链未解析形式）
-  if (s === 'docs' || s.startsWith('docs/')) {
+  if (s.toLowerCase() === 'docs' || s.toLowerCase().startsWith('docs/')) {
+    const canonicalSpelling = s === 'docs' || s.startsWith('docs/');
     const tail = s === 'docs' ? ['docs'] : ['docs', ...s.slice('docs/'.length).split('/')];
-    const redirected = binding && safeSegments(tail) ? confinedProjectPath(binding, tail) : null;
-    return { scoped: true, redirected, unsafe: !safeSegments(tail) };
+    const redirected = binding && canonicalSpelling && safeSegments(tail) ? confinedProjectPath(binding, tail) : null;
+    return { scoped: true, redirected, unsafe: !canonicalSpelling || !safeSegments(tail) };
   }
   if (samePath(s, gd) || pathKey(s).startsWith(pathKey(gd) + '/')) {
+    const canonicalSpelling = s === gd || s.startsWith(gd + '/');
     const tail = samePath(s, gd) ? ['docs'] : ['docs', ...s.slice(gd.length + 1).split('/')];
-    const redirected = binding && safeSegments(tail) ? confinedProjectPath(binding, tail) : null;
-    return { scoped: true, redirected, unsafe: !safeSegments(tail) };
+    const redirected = binding && canonicalSpelling && safeSegments(tail) ? confinedProjectPath(binding, tail) : null;
+    return { scoped: true, redirected, unsafe: !canonicalSpelling || !safeSegments(tail) };
   }
   // workflow-state / current-topic（相对 或 <gstack>/.claude/… 绝对）
-  if (s === '.claude/workflow-state.yaml' || samePath(s, gState)) {
-    return { scoped: true, redirected: binding ? absState(binding) : null };
+  if (s.toLowerCase() === '.claude/workflow-state.yaml' || samePath(s, gState)) {
+    const canonicalSpelling = s === '.claude/workflow-state.yaml' || s === gState;
+    return { scoped: true, redirected: binding && canonicalSpelling ? absState(binding) : null,
+      unsafe: !canonicalSpelling };
   }
-  if (s === '.claude/current-topic.txt' || samePath(s, gTopic)) {
-    return { scoped: true, redirected: binding ? absTopic(binding) : null };
+  if (s.toLowerCase() === '.claude/current-topic.txt' || samePath(s, gTopic)) {
+    const canonicalSpelling = s === '.claude/current-topic.txt' || s === gTopic;
+    return { scoped: true, redirected: binding && canonicalSpelling ? absTopic(binding) : null,
+      unsafe: !canonicalSpelling };
   }
   return { scoped: false };
 }
@@ -324,6 +336,40 @@ function relativeProjectReference(cmd, binding) {
   return null;
 }
 
+// Lease checks are applied only to commands whose grammar is mechanically
+// read-only. Ambiguous shell is treated as a possible writer while a patch owns
+// the project lease; this is the cooperative boundary selected by ADR-PATCH-001.
+function isStrictReadOnlyCommand(cmd) {
+  const text = String(cmd || '').trim();
+  if (!text || /[;&|<>\n]|\$\(|`|\beval\b|\b(?:python|node|ruby|perl)\b/.test(text)) return false;
+  // Keep this list deliberately narrow. `find -delete`, `find -fprint`,
+  // `sed -i`/`w`, and `rg --pre` can mutate or execute even though their
+  // command names commonly look read-only.
+  return /^(?:cat|head|tail|wc|ls|grep|pwd|stat|readlink)(?:\s|$)/.test(text);
+}
+
+function denyActiveWriteLease(target) {
+  if (!writeLease?.projectWriteLeaseForPath) {
+    // Rollback contract: absence of the optional lease module disables patch
+    // through the adapter's fail-closed dynamic loader, but must not disable
+    // ordinary Bash/file tools globally. A present-but-corrupt active lease is
+    // different and is denied by the catch below.
+    if (writeLeaseLoadError) return false;
+    return false;
+  }
+  try {
+    const active = writeLease.projectWriteLeaseForPath(target, PROJECTS_ROOT);
+    if (!active) return false;
+    out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+      permissionDecisionReason: `目标项目正由 apply_patch 写租约保护（owner=${active.owner.owner_token}）；竞争写入须等待该 patch 的 PostToolUse 精确释放。` } });
+    return true;
+  } catch (error) {
+    out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+      permissionDecisionReason: `项目写租约状态不可验证，竞争写入 fail-closed：${error?.message || error}。只读工具仍可用。` } });
+    return true;
+  }
+}
+
 // 只把"命令段起始位"的 project.sh switch/new 当真调用 —— 防 echo/heredoc 里的字符串误置 pin。
 // 按 \n ; & | 切段，每段去掉前导 bash/sh，要求以（可选路径）project.sh 开头才算数
 // （`echo "...project.sh switch x"` 之类整段以 echo 开头，不再误触）。
@@ -452,6 +498,8 @@ function main() {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。` } });
     }
+    if (binding && (direct.seen || r.hasScoped) && !isStrictReadOnlyCommand(cmd)
+        && denyActiveWriteLease(absDocs(binding))) return;
     if (r.changed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: r.cmd } } });
     }
@@ -479,6 +527,9 @@ function main() {
         ? `项目路径含 . / .. / 空段 traversal，拒绝「${target}」。`
         : `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，不能访问共享路径「${target}」。` } });
   }
+
+  if (/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(toolName)
+      && denyActiveWriteLease(c.redirected)) return;
 
   return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, [pathField]: c.redirected } } });
 }

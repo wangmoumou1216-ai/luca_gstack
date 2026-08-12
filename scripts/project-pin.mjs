@@ -40,6 +40,7 @@ import {
   validatedBindingForState,
 } from '../.claude/hooks/lib/project-substrate.mjs';
 import { acquireProjectLease, releaseProjectLease } from './project-lease.mjs';
+import { projectWriteLeaseForPath } from '../.claude/hooks/lib/project-write-lease.mjs';
 import { withoutLocalGitEnv } from '../.claude/hooks/lib/git-env.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -139,6 +140,13 @@ function proposalFields(state) {
   return sw;
 }
 
+function assertNoProjectWriteLease(projectPath, projectsRoot, label) {
+  const active = projectWriteLeaseForPath(projectPath, projectsRoot);
+  if (active) {
+    throw new Error(`${label} project has an active patch write lease (owner=${active.owner.owner_token})`);
+  }
+}
+
 export function executeProjectTransaction({ sessionId, tx, operation, target, expectedEpoch }) {
   const sid = sanitizeSessionId(sessionId);
   const op = String(operation || '');
@@ -170,10 +178,12 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
     // two callers both validate before serialization.
     const locked = readProjectState(gstackRoot, sid);
     if (!locked.raw?.equals(initial.raw)) throw new Error('project state changed before lease acquisition');
+    if (oldBinding) assertNoProjectWriteLease(oldBinding.realpath, projectsRoot, 'current');
 
     const targetRoot = join(projectsRoot, project);
     if (op === 'switch') {
-      canonicalProjectIdentity(project, projectsRoot);
+      const targetIdentity = canonicalProjectIdentity(project, projectsRoot);
+      assertNoProjectWriteLease(targetIdentity.realpath, projectsRoot, 'target');
     } else {
       if (existsSync(targetRoot)) throw new Error(`new project already exists: ${project}`);
       staging = join(projectsRoot, `.luca-staging-${project}-${tx}`);
@@ -343,6 +353,7 @@ function deactivateProject(sessionId) {
   let committedResult = null;
   let primaryError = null;
   try {
+    assertNoProjectWriteLease(binding.realpath, projectsRoot, 'current');
     const expectedTargets = new Map([
       [join(gstackRoot, 'docs'), join(binding.realpath, 'docs')],
       [join(gstackRoot, '.claude', 'workflow-state.yaml'), join(binding.realpath, '.luca', 'workflow-state.yaml')],

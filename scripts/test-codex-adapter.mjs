@@ -4,9 +4,28 @@
 // 覆盖：入向 tool_name 归一化 / 出向四种方言翻译 / Claude 路径零回归。
 
 import { spawnSync } from 'child_process';
-import { existsSync, rmSync, readFileSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  renameSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  unlinkSync,
+  linkSync,
+  writeFileSync,
+} from 'fs';
 import { dirname, resolve, join } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
+import { createHash } from 'crypto';
+import { parsePatchTargets } from '../.codex/lib/patch-targets.mjs';
+import { projectWriteLeaseForPath } from '../.claude/hooks/lib/project-write-lease.mjs';
+import { acquireProjectLease, releaseProjectLease } from './project-lease.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ADAPTER = join(ROOT, '.codex', 'codex-hook-adapter.mjs');
@@ -39,6 +58,56 @@ function runDirect(hookFile, payload, env = {}) {
   });
 }
 const parse = (s) => { try { return JSON.parse(String(s).trim()); } catch { return null; } };
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+
+function withPatchState(fn) {
+  const dir = mkdtempSync(join(tmpdir(), 'codex-patch-state-test.'));
+  try { return fn({ LUCA_PATCH_STATE_DIR: dir }); }
+  finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
+function nativePatchLifecycle(command, preHook = 'project-scope-guard.mjs', postHook = 'post-edit.mjs', env = {}) {
+  const payload = {
+    cwd: ROOT, session_id: SID, tool_name: 'apply_patch', tool_input: { command },
+  };
+  const pre = runVia(preHook, { ...payload, hook_event_name: 'PreToolUse' }, env);
+  const preOut = parse(pre.stdout);
+  const transformed = preOut?.hookSpecificOutput?.updatedInput?.command || command;
+  const post = preOut?.hookSpecificOutput?.permissionDecision === 'deny' ? null : runVia(postHook, {
+    ...payload, hook_event_name: 'PostToolUse', tool_input: { command: transformed },
+  }, env);
+  return { pre, preOut, transformed, post, postOut: post ? parse(post.stdout) : null };
+}
+
+function writeTurnActiveState(sessionId, projectName, projectPath) {
+  const st = statSync(projectPath);
+  const statePath = join(ROOT, '.claude', `.session-project-${sessionId}`);
+  writeFileSync(statePath, `${JSON.stringify({
+    schema_version: 2,
+    state: 'TURN_ACTIVE',
+    session_id: sessionId,
+    binding: {
+      project: projectName,
+      epoch: 1,
+      realpath: realpathSync(projectPath),
+      dev: Number(st.dev),
+      ino: Number(st.ino),
+    },
+    turn: { turn_id: `turn-${sessionId}`, epoch: 1 },
+  })}\n`);
+  return statePath;
+}
+
+function preservedOutsidePaths(buffer, spans) {
+  const chunks = [];
+  let cursor = 0;
+  for (const span of spans) {
+    chunks.push(buffer.subarray(cursor, span.start));
+    cursor = span.end;
+  }
+  chunks.push(buffer.subarray(cursor));
+  return Buffer.concat(chunks);
+}
 
 const SID = 'codex-adapter-test';
 const DIRECT_SID = 'codex-adapter-direct-test';
@@ -72,19 +141,20 @@ cleanup();
 }
 
 // ── B. 入向：tool_name 归一化（连锁失效的根因）──────────────────────────────
-// Codex 传 apply_patch；不归一化则 post-edit 的 /^(Write|Edit|...)$/ 不命中 →
-// .session-edit-count 恒 0 → session-sync 判"无实质工作" → Stop 自成长捕获永不触发。
+// Native apply_patch is covered end-to-end in F/G. This baseline keeps the
+// existing Write accounting contract explicit without fabricating a Post event
+// that has no matching patch Pre/inventory.
 {
   cleanup();
   runVia('post-edit.mjs', {
     hook_event_name: 'PostToolUse',
     session_id: SID,
-    tool_name: 'apply_patch',
+    tool_name: 'Write',
     tool_input: { file_path: join(ROOT, 'README.md') },
   });
   const p = join(ROOT, '.claude', '.session-edit-count-' + SID);
   const n = existsSync(p) ? parseInt(readFileSync(p, 'utf8').trim() || '0', 10) : 0;
-  ok('B1 apply_patch 被归一化为 Write → 编辑计数器递增（解连锁失效）', n >= 1, `count=${n}`);
+  ok('B1 synthetic Write 进入 post-edit → 编辑计数器递增', n >= 1, `count=${n}`);
 }
 {
   cleanup();
@@ -106,7 +176,7 @@ cleanup();
   for (let i = 0; i < 3; i++) {
     runVia('post-edit.mjs', {
       hook_event_name: 'PostToolUse', session_id: SID,
-      tool_name: 'apply_patch', tool_input: { file_path: join(ROOT, 'README.md') },
+      tool_name: 'Write', tool_input: { file_path: join(ROOT, 'README.md') },
     });
   }
   const r = runVia('session-sync.mjs', { hook_event_name: 'Stop', session_id: SID, cwd: ROOT });
@@ -177,21 +247,80 @@ cleanup();
 // 本组一律用**实测形状**构造。
 {
   cleanup();
-  // F1: apply_patch(command 载荷) 送到 post-edit → 须按 Write 计编辑数
-  runVia('post-edit.mjs', {
-    hook_event_name: 'PostToolUse', session_id: SID,
-    tool_name: 'apply_patch',
-    tool_input: { command: '*** Begin Patch\n*** Add File: x.md\n+hi\n*** End Patch' },
-  });
+  withPatchState((env) => nativePatchLifecycle(
+    '*** Begin Patch\n*** Add File: x.md\n+hi\n*** End Patch',
+    'project-scope-guard.mjs', 'post-edit.mjs', env));
   const p1 = join(ROOT, '.claude', '.session-edit-count-' + SID);
   const n1 = existsSync(p1) ? parseInt(readFileSync(p1, 'utf8').trim() || '0', 10) : 0;
-  ok('F1 apply_patch(真实 command 载荷) → post-edit 计为编辑（Stop 自成长链不断）',
-    n1 >= 1, `count=${n1}`);
+  ok('F1 native apply_patch Pre→Post 冻结 inventory 后按 Write 计编辑',
+    n1 === 1, `count=${n1}`);
   cleanup();
 }
 {
-  // F2: apply_patch 送到 project-scope-guard → 须走 Bash 命令串扫描分支并拦截越界写
-  // （若误映射成 Write，guard 会找不存在的 file_path → 项目隔离静默失效）
+  // F1b: a body-only project-looking literal cannot influence classification.
+  const command = [
+    '*** Begin Patch',
+    '*** Update File: README.md',
+    '@@',
+    '-old prose',
+    '+ordinary prose mentions docs/should-not-classify.md',
+    '+*** Add File: docs/body-only.md',
+    '*** End Patch',
+  ].join('\n');
+  const result = withPatchState((env) => nativePatchLifecycle(
+    command, 'project-scope-guard.mjs', 'post-edit.mjs', env));
+  ok('F1b patch body 路径与 +*** 字面量不参与 target classification',
+    result.preOut?.hookSpecificOutput?.permissionDecision === 'allow'
+      && result.transformed === command && result.post?.status === 0,
+    `pre=${String(result.pre.stdout).slice(0, 180)} post=${result.post?.status}`);
+}
+{
+  const malformed = [
+    ['missing Begin', '*** Add File: x.md\n+x\n*** End Patch'],
+    ['missing End', '*** Begin Patch\n*** Add File: x.md\n+x'],
+    ['duplicate Begin', '*** Begin Patch\n*** Begin Patch\n*** Add File: x.md\n+x\n*** End Patch'],
+    ['duplicate End', '*** Begin Patch\n*** Add File: x.md\n+x\n*** End Patch\n*** End Patch'],
+    ['data after End', '*** Begin Patch\n*** Add File: x.md\n+x\n*** End Patch\ntrailer'],
+    ['missing target', '*** Begin Patch\n+x\n*** End Patch'],
+    ['empty target', '*** Begin Patch\n*** Add File: \n+x\n*** End Patch'],
+    ['move syntax', '*** Begin Patch\n*** Update File: x.md\n*** Move to: y.md\n@@\n-x\n+y\n*** End Patch'],
+    ['unknown control', '*** Begin Patch\n*** Rename File: x.md\n*** End Patch'],
+    ['duplicate target', '*** Begin Patch\n*** Add File: x.md\n+x\n*** Update File: X.md\n@@\n-x\n+y\n*** End Patch'],
+    ['empty Add body', '*** Begin Patch\n*** Add File: x.md\n*** End Patch'],
+    ['empty Update hunk', '*** Begin Patch\n*** Update File: x.md\n@@\n*** End Patch'],
+    ['malformed Add body', '*** Begin Patch\n*** Add File: x.md\nplain\n*** End Patch'],
+    ['malformed Update body', '*** Begin Patch\n*** Update File: x.md\n+x\n*** End Patch'],
+    ['malformed Delete body', '*** Begin Patch\n*** Delete File: x.md\n+x\n*** End Patch'],
+    ['traversal target', '*** Begin Patch\n*** Add File: ../escape.md\n+x\n*** End Patch'],
+    ['absolute target', '*** Begin Patch\n*** Add File: /tmp/escape.md\n+x\n*** End Patch'],
+    ['backslash target', '*** Begin Patch\n*** Add File: docs\\escape.md\n+x\n*** End Patch'],
+    ['case variant target', '*** Begin Patch\n*** Add File: Docs/escape.md\n+x\n*** End Patch'],
+  ];
+  withPatchState((env) => {
+    for (const [name, command] of malformed) {
+      const r = runVia('project-scope-guard.mjs', {
+        hook_event_name: 'PreToolUse', cwd: ROOT, session_id: SID,
+        tool_name: 'apply_patch', tool_input: { command },
+      }, env);
+      const o = parse(r.stdout);
+      ok(`F1-negative ${name} → structured fail-closed`,
+        r.status === 0 && o?.hookSpecificOutput?.permissionDecision === 'deny'
+          && /retry apply_patch/.test(o.hookSpecificOutput.permissionDecisionReason || ''),
+      `exit=${r.status} stdout=${String(r.stdout).slice(0, 180)}`);
+    }
+  });
+  const invalidUtf8 = Buffer.concat([
+    Buffer.from('*** Begin Patch\n*** Add File: bad-'),
+    Buffer.from([0xff]),
+    Buffer.from('.md\n+x\n*** End Patch'),
+  ]);
+  let invalidUtf8Denied = false;
+  try { parsePatchTargets(invalidUtf8); } catch { invalidUtf8Denied = true; }
+  ok('F1-negative invalid UTF-8 cannot desynchronize byte offsets', invalidUtf8Denied);
+}
+{
+  // F2: strict parser derives the real header target, then sends only that
+  // target to the guard as a synthetic Write.
   const r = runVia('project-scope-guard.mjs', {
     hook_event_name: 'PreToolUse',
     session_id: 'no-such-pin-' + Date.now(),
@@ -199,7 +328,7 @@ cleanup();
     tool_input: { command: `*** Begin Patch\n*** Add File: docs/leak.md\n+x\n*** End Patch` },
   });
   const o = parse(r.stdout);
-  ok('F2 apply_patch 越界写产出目录 → guard 经命令串扫描拦下（项目隔离在 Codex 下真生效）',
+  ok('F2 apply_patch 越界 target → synthetic Write guard 拦下',
     o?.hookSpecificOutput?.permissionDecision === 'deny',
     `stdout=${String(r.stdout).slice(0, 160)}`);
 }
@@ -261,53 +390,470 @@ console.log(JSON.stringify({ hookSpecificOutput: {
     String(r.stdout).trim().length > 0 && parse(r.stdout) === null);
 }
 
-// ── G. B5：tool_input 归一化（apply_patch 没有 file_path，须从 patch 头合成）──────────
-// 回归意义：tool_name 映射对了、edit-count 也对了，**但 post-edit 另外两处功能靠 file_path**，
-// 缺了的表现是"测试全绿 + hook 全触发 + 这两件事静默不干活"——2026-08-06 沙箱实测才发现。
+// ── G0. Patch-only safety module failure must not kill Bash/read lanes ──────
+{
+  const temp = mkdtempSync(join(tmpdir(), 'codex-patch-module-missing.'));
+  const copiedAdapter = join(temp, '.codex', 'codex-hook-adapter.mjs');
+  const fakeGuard = join(temp, '.claude', 'hooks', 'project-scope-guard-probe.mjs');
+  try {
+    mkdirSync(dirname(copiedAdapter), { recursive: true });
+    mkdirSync(dirname(fakeGuard), { recursive: true });
+    writeFileSync(copiedAdapter, readFileSync(ADAPTER));
+    writeFileSync(fakeGuard, [
+      'process.stdout.write(JSON.stringify({hookSpecificOutput:{',
+      'hookEventName:"PreToolUse",updatedInput:{command:"ls"}}}));',
+    ].join(''));
+    const invoke = (payload) => spawnSync('node', [copiedAdapter, fakeGuard], {
+      input: JSON.stringify(payload), encoding: 'utf8', cwd: temp, timeout: 30000,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: '' },
+    });
+    const patchRun = invoke({
+      hook_event_name: 'PreToolUse', cwd: temp, session_id: SID,
+      tool_name: 'apply_patch',
+      tool_input: { command: '*** Begin Patch\n*** Add File: x.md\n+x\n*** End Patch' },
+    });
+    const patchOut = parse(patchRun.stdout);
+    const bashRun = invoke({
+      hook_event_name: 'PreToolUse', cwd: temp, session_id: SID,
+      tool_name: 'Bash', tool_input: { command: 'ls' },
+    });
+    ok('G0a missing parser/lease module denies only apply_patch with native recovery text',
+      patchRun.status === 0 && patchOut?.hookSpecificOutput?.permissionDecision === 'deny'
+        && /retry apply_patch/.test(patchOut.hookSpecificOutput.permissionDecisionReason || '')
+        && /Bash and read-only inspection remain available/.test(patchOut.hookSpecificOutput.permissionDecisionReason || ''),
+      `status=${patchRun.status} stdout=${String(patchRun.stdout).slice(0, 200)}`);
+    ok('G0b missing patch modules leave the Bash lane executable',
+      bashRun.status === 0 && parse(bashRun.stdout)?.hookSpecificOutput?.updatedInput?.command === 'ls',
+      `status=${bashRun.status} stderr=${bashRun.stderr}`);
+  } finally {
+    rmSync(temp, { recursive: true, force: true });
+  }
+}
+
+// ── G. Native patch inventory: Pre classifies, Post reuses exact targets ─────────
 {
   const patch = '*** Begin Patch\n*** Update File: framework/list-page.html\n@@\n+x\n*** End Patch';
-  const r = runVia('post-edit.mjs', {
-    hook_event_name: 'PostToolUse', cwd: ROOT, session_id: SID,
+  const r = runVia('project-scope-guard.mjs', {
+    hook_event_name: 'PreToolUse', cwd: ROOT, session_id: SID,
     tool_name: 'apply_patch', tool_input: { command: patch },
   });
   const o = parse(r.stdout);
-  const txt = o?.hookSpecificOutput?.additionalContext || String(r.stdout || '');
-  ok('G1 apply_patch 的 file_path 被合成 → framework/ 只读保护区告警恢复触发',
-    /framework\//.test(txt), `输出=${txt.slice(0, 80)}`);
+  ok('G1 framework target 在 Pre synthetic Write 阶段即被拒绝',
+    o?.hookSpecificOutput?.permissionDecision === 'deny'
+      && /framework\//.test(o.hookSpecificOutput.permissionDecisionReason || ''),
+    `输出=${String(r.stdout).slice(0, 160)}`);
 }
 {
   const editCount = join(ROOT, '.claude', '.session-edit-count-' + SID);
   if (existsSync(editCount)) rmSync(editCount, { force: true });
   const patch = '*** Begin Patch\n*** Update File: a.md\n@@\n+x\n*** Update File: b.md\n@@\n+y\n*** End Patch';
-  runVia('post-edit.mjs', {
-    hook_event_name: 'PostToolUse', cwd: ROOT, session_id: SID,
-    tool_name: 'apply_patch', tool_input: { command: patch },
-  });
+  withPatchState((env) => nativePatchLifecycle(
+    patch, 'project-scope-guard.mjs', 'post-edit.mjs', env));
   let n = 0;
   try { n = parseInt(readFileSync(editCount, 'utf8'), 10) || 0; } catch { }
-  ok('G2 多文件 patch → 每个文件各触发一次（对齐 Claude 侧 N 文件 = N 次 Write）', n === 2, `edit-count=${n}`);
+  ok('G2 多文件 patch → Post 按 Pre 冻结 inventory 每目标各触发一次', n === 2, `edit-count=${n}`);
 }
 {
-  // 白盒断言：临时 echo hook 把 adapter 改写后的 payload 原样吐回。文件名含 post-edit /
-  // project-scope-guard 以命中 TOOL_ALIAS_BY_HOOK 对应分支。
+  // Boundary probe records the real child-hook payloads outside the repository.
+  const probeRoot = mkdtempSync(join(tmpdir(), 'codex-patch-probe.'));
+  const log = join(probeRoot, 'events.jsonl');
   const mk = (name) => {
     const p = join(HOOKS, name);
-    writeFileSync(p, 'import{readFileSync}from"node:fs";process.stdout.write(readFileSync(0,"utf8"));\n');
+    writeFileSync(p, [
+      'import{appendFileSync,readFileSync}from"node:fs";',
+      'appendFileSync(process.env.PATCH_PROBE_LOG,readFileSync(0,"utf8")+"\\n");',
+    ].join(''));
     return p;
   };
-  const patch = '*** Begin Patch\n*** Update File: docs/x.md\n@@\n+x\n*** End Patch';
-  const payload = { hook_event_name: 'PostToolUse', cwd: ROOT, session_id: SID, tool_name: 'apply_patch', tool_input: { command: patch } };
+  const patch = '*** Begin Patch\n*** Update File: a.md\n@@\n+x\n*** Update File: b.md\n@@\n+y\n*** End Patch';
   const pe = mk('.b5-echo-post-edit.mjs'), pg = mk('.b5-echo-project-scope-guard.mjs');
   try {
-    const a = parse(runVia('.b5-echo-post-edit.mjs', payload).stdout);
-    ok('G3 post-edit 分支：file_path 合成为绝对路径且 tool_name=Write',
-      a?.tool_input?.file_path === join(ROOT, 'docs', 'x.md') && a?.tool_name === 'Write',
-      `得到=${a?.tool_input?.file_path} / ${a?.tool_name}`);
-    const b = parse(runVia('.b5-echo-project-scope-guard.mjs', payload).stdout);
-    ok('G4 [零回归] guard 分支不被 B5 触及：不塞 file_path、tool_name 仍为 Bash（它按 command 串扫越界）',
-      b?.tool_input?.file_path === undefined && b?.tool_name === 'Bash',
-      `得到=${b?.tool_input?.file_path} / ${b?.tool_name}`);
-  } finally { for (const p of [pe, pg]) if (existsSync(p)) rmSync(p, { force: true }); }
+    withPatchState((stateEnv) => nativePatchLifecycle(
+      patch, '.b5-echo-project-scope-guard.mjs', '.b5-echo-post-edit.mjs',
+      { ...stateEnv, PATCH_PROBE_LOG: log }));
+    const events = readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(parse);
+    const pre = events.filter((event) => event?.hook_event_name === 'PreToolUse');
+    const post = events.filter((event) => event?.hook_event_name === 'PostToolUse');
+    ok('G3 Pre 对每个 header target 恰合成一次 Write，正文不进入 file_path',
+      pre.length === 2 && pre.every((event) => event.tool_name === 'Write')
+        && pre.map((event) => event.tool_input?.file_path).join(',') === 'a.md,b.md',
+      `events=${events.length} pre=${pre.length}`);
+    ok('G4 Post 只复用同一有序 target inventory，不重新解析 body',
+      post.length === 2 && post.every((event) => event.tool_name === 'Write')
+        && post.map((event) => event.tool_input?.file_path).join(',') === 'a.md,b.md',
+      `events=${events.length} post=${post.length}`);
+  } finally {
+    for (const p of [pe, pg]) if (existsSync(p)) rmSync(p, { force: true });
+    rmSync(probeRoot, { recursive: true, force: true });
+  }
+}
+
+// ── I. Isolated native consumer + project lease lifecycle ───────────────────
+{
+  const temp = mkdtempSync(join(tmpdir(), `codex-native-${'x'.repeat(88)}.`));
+  const projects = join(temp, 'projects');
+  const stateDir = join(temp, 'patch-state');
+  const a = join(projects, 'A');
+  const b = join(projects, 'B');
+  const nativeSid = `u005-native-${process.pid}`.slice(0, 36);
+  const failSid = `u005-fail-${process.pid}`.slice(0, 36);
+  const postFailSid = `u005-postfail-${process.pid}`.slice(0, 36);
+  const switchSid = `u005-switch-${process.pid}`.slice(0, 36);
+  const globalSid = `u005-global-${process.pid}`.slice(0, 36);
+  const deleteSid = `u005-delete-${process.pid}`.slice(0, 36);
+  const updateSid = `u005-update-${process.pid}`.slice(0, 36);
+  const mixedSid = `u005-mixed-${process.pid}`.slice(0, 36);
+  const inventorySid = `u005-inventory-${process.pid}`.slice(0, 36);
+  const raceSid = `u005-race-${process.pid}`.slice(0, 36);
+  const linkSid = `u005-link-${process.pid}`.slice(0, 36);
+  const transient = [nativeSid, failSid, postFailSid, switchSid, globalSid, deleteSid,
+    updateSid, mixedSid, inventorySid, raceSid, linkSid];
+  const display = join(ROOT, 'docs');
+  let createdDisplay = false;
+  let displayA = null;
+  const env = { LUCA_PROJECTS_ROOT: projects, LUCA_PATCH_STATE_DIR: stateDir, LUCA_APP: '0' };
+  const patchState = (sid) => join(stateDir, `.codex-patch-contract-${sid}.json`);
+  const cleanupSid = (sid) => {
+    for (const file of [
+      join(ROOT, '.claude', `.session-project-${sid}`),
+      join(ROOT, '.claude', `.session-edit-count-${sid}`),
+      join(ROOT, '.claude', `.session-tool-count-${sid}`),
+      patchState(sid),
+    ]) {
+      if (existsSync(file)) rmSync(file, { force: true });
+    }
+  };
+  try {
+    for (const project of [a, b]) {
+      mkdirSync(join(project, 'docs'), { recursive: true });
+      mkdirSync(join(project, '.luca'), { recursive: true });
+      writeFileSync(join(project, '.luca', 'workflow-state.yaml'), 'topic: ""\nnodes: {}\n');
+      writeFileSync(join(project, '.luca', 'current-topic.txt'), '');
+    }
+    mkdirSync(stateDir, { recursive: true });
+    if (existsSync(display)) {
+      const st = lstatSync(display);
+      if (!st.isSymbolicLink()) throw new Error(`native fixture refuses non-symlink display path: ${display}`);
+      displayA = realpathSync(display);
+    } else {
+      symlinkSync(join(a, 'docs'), display);
+      createdDisplay = true;
+      displayA = realpathSync(display);
+    }
+
+    writeTurnActiveState(nativeSid, 'B', b);
+    const unique = `.u005-native-${process.pid}`;
+    const sourceText = [
+      '*** Begin Patch',
+      `*** Add File: docs/${unique}-a.txt`,
+      '+literal docs/not-a-target.txt',
+      '+*** Add File: docs/still-not-a-target.txt',
+      `*** Add File: docs/${unique}-中文 空格.txt`,
+      '+第二个文件',
+      '*** End Patch',
+    ].join('\n');
+    const source = Buffer.from(sourceText);
+    const parsed = parsePatchTargets(source);
+    const pre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: nativeSid,
+      tool_name: 'apply_patch', tool_input: { command: sourceText },
+    }, env);
+    const preOut = parse(pre.stdout);
+    const transformedText = preOut?.hookSpecificOutput?.updatedInput?.command || '';
+    const transformed = Buffer.from(transformedText);
+    const state = parse(readFileSync(patchState(nativeSid), 'utf8'));
+    const outputSpans = state.span_map.map((item) => item.output);
+    const firstDelta = outputSpans[0].end - outputSpans[0].start
+      - (state.span_map[0].source.end - state.span_map[0].source.start);
+    const secondStartDelta = outputSpans[1].start - state.span_map[1].source.start;
+    const sourceOutside = preservedOutsidePaths(source, parsed.path_spans);
+    const outputOutside = preservedOutsidePaths(transformed, outputSpans);
+    ok('I1 native Pre redirects exact ordered headers to pinned B and holds one project lease',
+      pre.status === 0 && state.targets.length === 2
+        && state.targets.every((item) => item.output_path.startsWith(realpathSync(b) + '/'))
+        && !!projectWriteLeaseForPath(join(b, 'docs'), projects),
+      `status=${pre.status} stdout=${String(pre.stdout).slice(0, 180)}`);
+    ok('I2 long first redirect has cumulative span offsets and every non-path byte is identical',
+      firstDelta >= 80 && secondStartDelta === firstDelta
+        && sourceOutside.equals(outputOutside)
+        && sha256(sourceOutside) === state.non_path_hash,
+      `firstDelta=${firstDelta} secondStartDelta=${secondStartDelta} bytesEqual=${sourceOutside.equals(outputOutside)} sourceHash=${sha256(sourceOutside)} stateHash=${state.non_path_hash}`);
+
+    const txEnv = {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: ROOT,
+      LUCA_GSTACK_ROOT: ROOT,
+      LUCA_PROJECTS_ROOT: projects,
+      LUCA_ACTUAL_HARNESS: 'claude',
+    };
+    const prepared = spawnSync('node', [join(ROOT, 'scripts', 'project-pin.mjs'),
+      'prepare', '--session', switchSid, '--operation', 'switch', '--target', 'B',
+      '--turn-id', `turn-${switchSid}`], {
+      cwd: ROOT, env: txEnv, encoding: 'utf8', timeout: 30000,
+    });
+    const proposal = parse(prepared.stdout);
+    const competingSwitch = proposal ? spawnSync('bash', [join(ROOT, 'scripts', 'project.sh'),
+      'switch', 'B', '--session-id', switchSid, '--tx', proposal.tx,
+      '--expected-epoch', String(proposal.expected_epoch)], {
+      cwd: ROOT, env: txEnv, encoding: 'utf8', timeout: 30000,
+    }) : prepared;
+    ok('I2b project transaction acquires global lock then refuses an active target write lease',
+      prepared.status === 0 && competingSwitch.status !== 0
+        && /active patch write lease/.test(String(competingSwitch.stderr)),
+      `prepare=${prepared.status} switch=${competingSwitch.status} stderr=${competingSwitch.stderr}`);
+
+    const consumer = spawnSync('apply_patch', [], {
+      input: transformedText, encoding: 'utf8', cwd: ROOT, timeout: 30000,
+      maxBuffer: 16 * 1024 * 1024,
+    });
+    ok('I3 guard output passes the real apply_patch consumer', consumer.status === 0,
+      `status=${consumer.status} stdout=${consumer.stdout} stderr=${consumer.stderr}`);
+    const aFirst = join(displayA, `${unique}-a.txt`);
+    const aSecond = join(displayA, `${unique}-中文 空格.txt`);
+    const bFirst = join(b, 'docs', `${unique}-a.txt`);
+    const bSecond = join(b, 'docs', `${unique}-中文 空格.txt`);
+    ok('I4 display A is unchanged and only pinned B receives both files with literal body intact',
+      !existsSync(aFirst) && !existsSync(aSecond)
+        && readFileSync(bFirst, 'utf8').includes('docs/still-not-a-target.txt')
+        && readFileSync(bSecond, 'utf8') === '第二个文件\n');
+
+    const post = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: nativeSid,
+      tool_name: 'apply_patch', tool_input: { command: transformedText },
+      tool_response: { success: true },
+    }, env);
+    const count = Number.parseInt(readFileSync(join(ROOT, '.claude', `.session-edit-count-${nativeSid}`), 'utf8'), 10);
+    ok('I5 native Post consumes exact Pre inventory and releases lease/state',
+      post.status === 0 && count === 2 && !existsSync(patchState(nativeSid))
+        && !projectWriteLeaseForPath(join(b, 'docs'), projects),
+      `status=${post.status} count=${count} stderr=${post.stderr}`);
+
+    writeTurnActiveState(updateSid, 'B', b);
+    const updateText = `*** Begin Patch\n*** Update File: docs/${unique}-中文 空格.txt\n@@\n-第二个文件\n+第二个文件已更新\n*** End Patch`;
+    const updatePre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: updateSid,
+      tool_name: 'apply_patch', tool_input: { command: updateText },
+    }, env);
+    const updateCommand = parse(updatePre.stdout)?.hookSpecificOutput?.updatedInput?.command;
+    const updateConsumer = spawnSync('apply_patch', [], {
+      input: updateCommand, encoding: 'utf8', cwd: ROOT, timeout: 30000,
+      maxBuffer: 16 * 1024 * 1024,
+    });
+    const updatePost = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: updateSid,
+      tool_name: 'apply_patch', tool_input: { command: updateCommand },
+      tool_response: { success: true },
+    }, env);
+    ok('I5a valid Update preserves real apply_patch semantics through redirect and Post',
+      updatePre.status === 0 && updateConsumer.status === 0 && updatePost.status === 0
+        && readFileSync(bSecond, 'utf8') === '第二个文件已更新\n'
+        && !existsSync(patchState(updateSid)),
+      `pre=${updatePre.status} consumer=${updateConsumer.status} post=${updatePost.status}`);
+
+    writeTurnActiveState(deleteSid, 'B', b);
+    const deleteText = `*** Begin Patch\n*** Delete File: docs/${unique}-a.txt\n*** End Patch`;
+    const deletePre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: deleteSid,
+      tool_name: 'apply_patch', tool_input: { command: deleteText },
+    }, env);
+    const deleteCommand = parse(deletePre.stdout)?.hookSpecificOutput?.updatedInput?.command;
+    const deleteConsumer = spawnSync('apply_patch', [], {
+      input: deleteCommand, encoding: 'utf8', cwd: ROOT, timeout: 30000,
+      maxBuffer: 16 * 1024 * 1024,
+    });
+    const deletePost = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: deleteSid,
+      tool_name: 'apply_patch', tool_input: { command: deleteCommand },
+      tool_response: { success: true },
+    }, env);
+    ok('I5b legitimate Delete may change/remove the leaf inode while directory ancestry stays frozen',
+      deletePre.status === 0 && deleteConsumer.status === 0 && deletePost.status === 0
+        && !existsSync(bFirst) && !existsSync(patchState(deleteSid))
+        && !projectWriteLeaseForPath(join(b, 'docs'), projects),
+      `pre=${deletePre.status} consumer=${deleteConsumer.status} post=${deletePost.status}`);
+
+    writeTurnActiveState(mixedSid, 'B', b);
+    const mixedText = [
+      '*** Begin Patch',
+      `*** Add File: docs/${unique}-allowed.txt`,
+      '+x',
+      '*** Update File: framework/list-page.html',
+      '@@',
+      '-old',
+      '+new',
+      '*** End Patch',
+    ].join('\n');
+    const mixed = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: mixedSid,
+      tool_name: 'apply_patch', tool_input: { command: mixedText },
+    }, env);
+    ok('I5c one denied target rejects the whole multi-file patch before state/lease publication',
+      mixed.status === 0 && parse(mixed.stdout)?.hookSpecificOutput?.permissionDecision === 'deny'
+        && !existsSync(patchState(mixedSid))
+        && !projectWriteLeaseForPath(join(b, 'docs'), projects)
+        && !existsSync(join(b, 'docs', `${unique}-allowed.txt`)),
+      `status=${mixed.status} stdout=${String(mixed.stdout).slice(0, 180)}`);
+
+    writeTurnActiveState(inventorySid, 'B', b);
+    const inventoryText = `*** Begin Patch\n*** Add File: docs/${unique}-inventory.txt\n+x\n*** End Patch`;
+    const inventoryPre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: inventorySid,
+      tool_name: 'apply_patch', tool_input: { command: inventoryText },
+    }, env);
+    const inventoryCommand = parse(inventoryPre.stdout)?.hookSpecificOutput?.updatedInput?.command;
+    const inventoryPath = patchState(inventorySid);
+    const inventoryRaw = readFileSync(inventoryPath);
+    const wrongBodyPost = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: inventorySid,
+      tool_name: 'apply_patch', tool_input: { command: `${inventoryCommand}\n` },
+      tool_response: { success: false },
+    }, env);
+    const forged = parse(inventoryRaw);
+    forged.targets[0].output_path = join(b, 'docs', `${unique}-forged.txt`);
+    writeFileSync(inventoryPath, `${JSON.stringify(forged)}\n`);
+    const forgedStatePost = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: inventorySid,
+      tool_name: 'apply_patch', tool_input: { command: inventoryCommand },
+      tool_response: { success: false },
+    }, env);
+    const heldAfterFailures = !!projectWriteLeaseForPath(join(b, 'docs'), projects);
+    writeFileSync(inventoryPath, inventoryRaw);
+    const inventoryRecovery = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: inventorySid,
+      tool_name: 'apply_patch', tool_input: { command: inventoryCommand },
+      tool_response: { success: false },
+    }, env);
+    ok('I5d Post rejects changed body bytes and forged frozen inventory, then exact retry releases',
+      inventoryPre.status === 0 && wrongBodyPost.status === 2 && forgedStatePost.status === 2
+        && heldAfterFailures && inventoryRecovery.status === 0
+        && !existsSync(inventoryPath) && !projectWriteLeaseForPath(join(b, 'docs'), projects),
+      `pre=${inventoryPre.status} body=${wrongBodyPost.status} forged=${forgedStatePost.status} recovery=${inventoryRecovery.status}`);
+
+    const raceDir = join(b, 'docs', `${unique}-race`);
+    const raceOld = `${raceDir}-old`;
+    mkdirSync(raceDir);
+    writeTurnActiveState(raceSid, 'B', b);
+    const raceText = `*** Begin Patch\n*** Add File: docs/${unique}-race/x.txt\n+x\n*** End Patch`;
+    const racePre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: raceSid,
+      tool_name: 'apply_patch', tool_input: { command: raceText },
+    }, env);
+    const raceCommand = parse(racePre.stdout)?.hookSpecificOutput?.updatedInput?.command;
+    renameSync(raceDir, raceOld);
+    mkdirSync(raceDir);
+    const driftPost = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: raceSid,
+      tool_name: 'apply_patch', tool_input: { command: raceCommand },
+      tool_response: { success: false },
+    }, env);
+    rmSync(raceDir, { recursive: true, force: true });
+    renameSync(raceOld, raceDir);
+    const driftRecovery = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: raceSid,
+      tool_name: 'apply_patch', tool_input: { command: raceCommand },
+      tool_response: { success: false },
+    }, env);
+    ok('I5e directory inode drift retains lease/state until exact ancestry is restored',
+      racePre.status === 0 && driftPost.status === 2 && driftRecovery.status === 0
+        && !existsSync(patchState(raceSid))
+        && !projectWriteLeaseForPath(join(b, 'docs'), projects),
+      `pre=${racePre.status} drift=${driftPost.status} recovery=${driftRecovery.status}`);
+
+    writeTurnActiveState(linkSid, 'B', b);
+    const hardBase = join(b, 'docs', `${unique}-hard-base.txt`);
+    const hardTarget = join(b, 'docs', `${unique}-hard-target.txt`);
+    writeFileSync(hardBase, 'old\n');
+    linkSync(hardBase, hardTarget);
+    const hardText = `*** Begin Patch\n*** Update File: docs/${unique}-hard-target.txt\n@@\n-old\n+new\n*** End Patch`;
+    const hardPre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: linkSid,
+      tool_name: 'apply_patch', tool_input: { command: hardText },
+    }, env);
+    const outside = join(temp, 'outside');
+    mkdirSync(outside);
+    symlinkSync(outside, join(b, 'docs', `${unique}-sym`));
+    const symText = `*** Begin Patch\n*** Add File: docs/${unique}-sym/x.txt\n+x\n*** End Patch`;
+    const symPre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: linkSid,
+      tool_name: 'apply_patch', tool_input: { command: symText },
+    }, env);
+    ok('I5f hard-linked leaf and symlink ancestry both fail closed before patch execution',
+      parse(hardPre.stdout)?.hookSpecificOutput?.permissionDecision === 'deny'
+        && parse(symPre.stdout)?.hookSpecificOutput?.permissionDecision === 'deny'
+        && !existsSync(patchState(linkSid))
+        && !projectWriteLeaseForPath(join(b, 'docs'), projects),
+      `hard=${hardPre.status}/${String(hardPre.stdout).slice(0, 100)} sym=${symPre.status}/${String(symPre.stdout).slice(0, 100)}`);
+
+    writeTurnActiveState(failSid, 'B', b);
+    const failureText = `*** Begin Patch\n*** Add File: docs/${unique}-not-created.txt\n+x\n*** End Patch`;
+    const failurePre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: failSid,
+      tool_name: 'apply_patch', tool_input: { command: failureText },
+    }, env);
+    const failureCommand = parse(failurePre.stdout)?.hookSpecificOutput?.updatedInput?.command;
+    const failurePost = runVia('post-edit.mjs', {
+      hook_event_name: 'PostToolUse', cwd: ROOT, session_id: failSid,
+      tool_name: 'apply_patch', tool_input: { command: failureCommand },
+      tool_response: { success: false, error: 'injected consumer failure' },
+    }, env);
+    ok('I6 failed real-tool result releases exact lease/state without post-edit side effects',
+      failurePre.status === 0 && failurePost.status === 0
+        && !existsSync(patchState(failSid))
+        && !projectWriteLeaseForPath(join(b, 'docs'), projects)
+        && !existsSync(join(b, 'docs', `${unique}-not-created.txt`)));
+
+    writeTurnActiveState(postFailSid, 'B', b);
+    const postFailText = `*** Begin Patch\n*** Add File: docs/${unique}-postfail.txt\n+x\n*** End Patch`;
+    const postFailurePre = runVia('project-scope-guard.mjs', {
+      hook_event_name: 'PreToolUse', cwd: ROOT, session_id: postFailSid,
+      tool_name: 'apply_patch', tool_input: { command: postFailText },
+    }, env);
+    const postFailureCommand = parse(postFailurePre.stdout)?.hookSpecificOutput?.updatedInput?.command;
+    const failingHook = join(HOOKS, '.u005-failing-post-edit.mjs');
+    writeFileSync(failingHook, 'process.stderr.write("injected post failure\\n");process.exitCode=1;\n');
+    try {
+      const postFailure = runVia('.u005-failing-post-edit.mjs', {
+        hook_event_name: 'PostToolUse', cwd: ROOT, session_id: postFailSid,
+        tool_name: 'apply_patch', tool_input: { command: postFailureCommand },
+        tool_response: { success: true },
+      }, env);
+      ok('I7 post-edit child failure still releases exact lease/state before reporting failure',
+        postFailurePre.status === 0 && postFailure.status === 2
+          && !existsSync(patchState(postFailSid))
+          && !projectWriteLeaseForPath(join(b, 'docs'), projects),
+        `status=${postFailure.status} stderr=${postFailure.stderr}`);
+    } finally {
+      if (existsSync(failingHook)) unlinkSync(failingHook);
+    }
+
+    writeTurnActiveState(globalSid, 'B', b);
+    const globalLease = acquireProjectLease({
+      root: ROOT,
+      ownerToken: `u005-global-${process.pid}`,
+      pid: process.pid,
+    });
+    try {
+      const blockedText = `*** Begin Patch\n*** Add File: docs/${unique}-global-blocked.txt\n+x\n*** End Patch`;
+      const blocked = runVia('project-scope-guard.mjs', {
+        hook_event_name: 'PreToolUse', cwd: ROOT, session_id: globalSid,
+        tool_name: 'apply_patch', tool_input: { command: blockedText },
+      }, env);
+      const denied = parse(blocked.stdout);
+      ok('I8 active global project transaction blocks patch lease acquisition before mutation',
+        blocked.status === 0 && denied?.hookSpecificOutput?.permissionDecision === 'deny'
+          && /project switch transaction is active/.test(denied.hookSpecificOutput.permissionDecisionReason || '')
+          && !existsSync(patchState(globalSid))
+          && !projectWriteLeaseForPath(join(b, 'docs'), projects));
+    } finally {
+      releaseProjectLease({ root: ROOT, ownerHandle: globalLease.owner_handle });
+    }
+  } catch (error) {
+    ok('I-native fixture completed without unexpected exception', false, error.stack || String(error));
+  } finally {
+    for (const sid of transient) cleanupSid(sid);
+    if (createdDisplay && existsSync(display) && lstatSync(display).isSymbolicLink()) unlinkSync(display);
+    rmSync(temp, { recursive: true, force: true });
+  }
 }
 
 cleanup();

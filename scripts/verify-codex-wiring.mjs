@@ -82,6 +82,25 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   existsSync(join(ROOT, '.codex', 'codex-hook-adapter.mjs'))
   && spawnSync('node', ['--check', join(ROOT, '.codex', 'codex-hook-adapter.mjs')]).status === 0);
 
+// S6b patch safety modules are independently loadable. The adapter must keep
+// apply_patch native, lazy-load critical modules inside that lane, and classify
+// only strict parser targets as synthetic Write events.
+{
+  const parser = join(ROOT, '.codex', 'lib', 'patch-targets.mjs');
+  const lease = join(ROOT, '.claude', 'hooks', 'lib', 'project-write-lease.mjs');
+  const adapter = readFileSync(join(ROOT, '.codex', 'codex-hook-adapter.mjs'), 'utf8');
+  const pin = readFileSync(join(ROOT, 'scripts', 'project-pin.mjs'), 'utf8');
+  ok('S6b native patch parser/lease contract is wired fail-closed without Bash aliasing',
+    existsSync(parser) && existsSync(lease)
+      && spawnSync('node', ['--check', parser]).status === 0
+      && spawnSync('node', ['--check', lease]).status === 0
+      && !/apply_patch\s*:\s*['"]Bash['"]/.test(adapter)
+      && /import\('\.\/lib\/patch-targets\.mjs'\)/.test(adapter)
+      && /tool_name:\s*['"]Write['"]/.test(adapter)
+      && /projectWriteLeaseForPath/.test(pin),
+    'parser/lease missing or adapter regressed to whole-command Bash scanning');
+}
+
 // S7 skills 发现层：.agents/skills 软链全部可解析
 {
   const dir = join(ROOT, '.agents', 'skills');
