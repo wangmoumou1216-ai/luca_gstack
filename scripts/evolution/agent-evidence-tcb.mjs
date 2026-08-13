@@ -759,6 +759,35 @@ const containsToolInvocation = (value) => {
   return Object.values(value).some(containsToolInvocation);
 };
 
+const exactObjectKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
+  && stable(Object.keys(value).sort()) === stable([...keys].sort());
+
+const exactDualFiveHourRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && exactObjectKeys(info, ['status', 'resetsAt', 'rateLimitType', 'overageStatus',
+      'overageDisabledReason', 'isUsingOverage'])
+    && info.status === 'rejected'
+    && Number.isSafeInteger(info.resetsAt) && info.resetsAt > 0
+    && info.rateLimitType === 'five_hour'
+    && info.overageStatus === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false;
+};
+
+const exactDualCreditsRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && exactObjectKeys(info, ['status', 'overageDisabledReason', 'isUsingOverage', 'errorCode',
+      'canUserPurchaseCredits', 'hasChargeableSavedPaymentMethod'])
+    && info.status === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false
+    && info.errorCode === 'credits_required'
+    && info.canUserPurchaseCredits === true
+    && info.hasChargeableSavedPaymentMethod === false;
+};
+
 export function classifyClaudeModelProbe({ status, stdout, stderr, expectedAlias, expectedCwd }) {
   if (!Number.isInteger(status) || !Buffer.isBuffer(stdout) || !Buffer.isBuffer(stderr)
     || !/^[A-Za-z0-9._-]+$/.test(expectedAlias || '') || !isAbsolute(expectedCwd || '')
@@ -768,10 +797,16 @@ export function classifyClaudeModelProbe({ status, stdout, stderr, expectedAlias
   if (stderr.length) fail('Claude model probe wrote stderr');
   const events = parseJsonl(stdout, 'Claude safe-mode model probe');
   if (events.some(containsToolInvocation)) fail('Claude safe-mode model probe invoked a tool');
-  if (events.length !== 4) fail('Claude safe-mode model probe must contain exactly four events');
-  const [init, rate, assistant, result] = events;
+  if (![4, 5].includes(events.length)) fail('Claude safe-mode model probe must contain exactly four or five events');
+  const dualRateCredits = events.length === 5;
+  const init = events[0];
+  const firstRate = dualRateCredits ? events[1] : null;
+  const rate = events[dualRateCredits ? 2 : 1];
+  const assistant = events[dualRateCredits ? 3 : 2];
+  const result = events[dualRateCredits ? 4 : 3];
   const sessionId = init?.session_id;
   if (init?.type !== 'system' || init?.subtype !== 'init'
+    || (dualRateCredits && firstRate?.type !== 'rate_limit_event')
     || rate?.type !== 'rate_limit_event' || assistant?.type !== 'assistant' || result?.type !== 'result'
     || init.cwd !== expectedCwd || init.permissionMode !== 'dontAsk'
     || stable(init.tools) !== stable([]) || !projectionMatches(expectedAlias, init.model)) {
@@ -785,7 +820,7 @@ export function classifyClaudeModelProbe({ status, stdout, stderr, expectedAlias
   const assistantText = Array.isArray(content) && content.length === 1
     && content[0]?.type === 'text' && typeof content[0]?.text === 'string'
     ? content[0].text : null;
-  if (status === 0 && result.subtype === 'success' && result.is_error === false
+  if (!dualRateCredits && status === 0 && result.subtype === 'success' && result.is_error === false
     && result.result === 'LUCA_CLAUDE_MODEL_PROBE_OK' && result.terminal_reason === 'completed'
     && ['allowed', 'allowed_warning'].includes(rate?.rate_limit_info?.status)
     && assistant.parent_tool_use_id === null
@@ -795,6 +830,7 @@ export function classifyClaudeModelProbe({ status, stdout, stderr, expectedAlias
   }
   const expectedCredits = /^Fable(?:\s+\d+(?:\.\d+)*)?\s+requires usage credits\.(?: Run \/usage-credits to continue or switch models with \/model\.)?$/;
   if (expectedAlias === 'fable' && status === 1
+    && (!dualRateCredits || (exactDualFiveHourRate(firstRate) && exactDualCreditsRate(rate)))
     && rate?.rate_limit_info?.status === 'rejected'
     && rate?.rate_limit_info?.errorCode === 'credits_required'
     && assistant.parent_tool_use_id === null

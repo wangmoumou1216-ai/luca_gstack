@@ -47,6 +47,30 @@ const HASH = /^[a-f0-9]{64}$/;
 const OID = /^[a-f0-9]{40}$/;
 const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
   && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+const exactClaudeCreditsRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && exactKeys(info, ['status', 'overageDisabledReason', 'isUsingOverage', 'errorCode',
+      'canUserPurchaseCredits', 'hasChargeableSavedPaymentMethod'])
+    && info.status === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false
+    && info.errorCode === 'credits_required'
+    && info.canUserPurchaseCredits === true
+    && info.hasChargeableSavedPaymentMethod === false;
+};
+const exactClaudeFiveHourRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && exactKeys(info, ['status', 'resetsAt', 'rateLimitType', 'overageStatus',
+      'overageDisabledReason', 'isUsingOverage'])
+    && info.status === 'rejected'
+    && Number.isSafeInteger(info.resetsAt) && info.resetsAt > 0
+    && info.rateLimitType === 'five_hour'
+    && info.overageStatus === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false;
+};
 const bytesSha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const stable = (value) => {
   if (Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
@@ -244,8 +268,13 @@ const validateModelResolutions = ({ root, proofRoot, evidenceRoot, commitments }
           || stderr.bytes.length !== 0) throw new Error(`model probe raw bytes mismatch ${item.tier}/${index}`);
       const events = parseJsonl(stdout.bytes, `model probe stdout ${item.tier}/${index}`);
       if (events.some(modelProbeContainsTool)) throw new Error(`model probe invoked a tool ${item.tier}/${index}`);
-      if (events.length !== 4) throw new Error(`model probe event count is not exact ${item.tier}/${index}`);
-      const [init, rateLimit, assistant, result] = events;
+      if (![4, 5].includes(events.length)) throw new Error(`model probe event count is not exact ${item.tier}/${index}`);
+      const dualRateCredits = events.length === 5;
+      const init = events[0];
+      const rateLimit = events[1];
+      const creditsRate = dualRateCredits ? events[2] : rateLimit;
+      const assistant = events[dualRateCredits ? 3 : 2];
+      const result = events[dualRateCredits ? 4 : 3];
       const expectedCwd = join(dirname(evidenceRoot), 'child-scratch', 'model-resolution', expectedProjection);
       if (realpathSync(expectedCwd) !== expectedCwd || !lstatSync(expectedCwd).isDirectory()) {
         throw new Error(`model probe cwd is not canonical ${item.tier}/${index}`);
@@ -254,27 +283,39 @@ const validateModelResolutions = ({ root, proofRoot, evidenceRoot, commitments }
           || init.cwd !== expectedCwd || init.permissionMode !== 'dontAsk'
           || !claudeFamilyMatches(expectedProjection, init.model)
           || typeof init.session_id !== 'string' || !init.session_id
-          || rateLimit?.type !== 'rate_limit_event' || assistant?.type !== 'assistant' || result?.type !== 'result'
+          || rateLimit?.type !== 'rate_limit_event'
+          || (dualRateCredits && creditsRate?.type !== 'rate_limit_event')
+          || assistant?.type !== 'assistant' || result?.type !== 'result'
           || events.some((event) => event.session_id !== init.session_id)) {
         throw new Error(`model probe transport is not exact ${item.tier}/${index}`);
       }
-      const text = Array.isArray(assistant?.message?.content)
-        ? assistant.message.content.filter((part) => part?.type === 'text').map((part) => part.text || '').join('') : '';
+      const assistantContent = assistant?.message?.content;
+      const text = Array.isArray(assistantContent)
+        ? assistantContent.filter((part) => part?.type === 'text').map((part) => part.text || '').join('') : '';
       if (expectedOutcome === 'credits_required') {
         const expectedCredits = new RegExp(`\\b${expectedProjection}\\b[^\\n]*requires usage credits`, 'i');
+        const exactDualCredits = /^Fable(?:\s+\d+(?:\.\d+)*)?\s+requires usage credits\.(?: Run \/usage-credits to continue or switch models with \/model\.)?$/;
         if (expectedProjection !== 'fable' || attempt.resolved_model !== null
-            || rateLimit?.rate_limit_info?.status !== 'rejected'
-            || rateLimit?.rate_limit_info?.errorCode !== 'credits_required'
+            || (dualRateCredits
+              ? !exactClaudeCreditsRate(creditsRate)
+              : rateLimit?.rate_limit_info?.status !== 'rejected'
+                || rateLimit?.rate_limit_info?.errorCode !== 'credits_required')
+            || (dualRateCredits && !exactClaudeFiveHourRate(rateLimit))
             || assistant.parent_tool_use_id !== null || assistant.message?.model !== '<synthetic>'
             || assistant.error !== 'rate_limit' || assistant.is_api_error_message !== true
-            || !expectedCredits.test(text) || text !== result.result
+            || (dualRateCredits
+              ? !(Array.isArray(assistantContent) && assistantContent.length === 1
+                && assistantContent[0]?.type === 'text' && typeof assistantContent[0]?.text === 'string'
+                && exactDualCredits.test(assistantContent[0].text))
+              : !expectedCredits.test(text))
+            || text !== result.result
             || result.subtype !== 'success' || result.is_error !== true
             || result.api_error_status !== 429 || result.terminal_reason !== 'api_error') {
           throw new Error(`model probe is not an explicit credits rejection ${item.tier}/${index}`);
         }
       } else {
-        if (!claudeFamilyMatches(expectedProjection, attempt.resolved_model)
-            || rateLimit?.rate_limit_info?.status !== 'allowed'
+        if (dualRateCredits || !claudeFamilyMatches(expectedProjection, attempt.resolved_model)
+            || !['allowed', 'allowed_warning'].includes(rateLimit?.rate_limit_info?.status)
             || assistant.parent_tool_use_id !== null || assistant.message?.model !== attempt.resolved_model
             || text !== 'LUCA_CLAUDE_MODEL_PROBE_OK'
             || result.subtype !== 'success' || result.is_error !== false

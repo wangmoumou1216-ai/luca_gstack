@@ -534,6 +534,38 @@ const modelProbeContainsTool = (value) => {
   return Object.values(value).some(modelProbeContainsTool);
 };
 
+const exactClaudeCreditsRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && info && typeof info === 'object' && !Array.isArray(info)
+    && stable(Object.keys(info).sort()) === stable([
+      'status', 'overageDisabledReason', 'isUsingOverage', 'errorCode',
+      'canUserPurchaseCredits', 'hasChargeableSavedPaymentMethod',
+    ].sort())
+    && info.status === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false
+    && info.errorCode === 'credits_required'
+    && info.canUserPurchaseCredits === true
+    && info.hasChargeableSavedPaymentMethod === false;
+};
+
+const exactClaudeFiveHourRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && info && typeof info === 'object' && !Array.isArray(info)
+    && stable(Object.keys(info).sort()) === stable([
+      'status', 'resetsAt', 'rateLimitType', 'overageStatus',
+      'overageDisabledReason', 'isUsingOverage',
+    ].sort())
+    && info.status === 'rejected'
+    && Number.isSafeInteger(info.resetsAt) && info.resetsAt > 0
+    && info.rateLimitType === 'five_hour'
+    && info.overageStatus === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false;
+};
+
 function claudeModelProbeArgs(alias) {
   return ['--safe-mode', '-p', '--model', alias, '--output-format', 'stream-json', '--verbose',
     '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
@@ -544,11 +576,18 @@ function classifyClaudeResolutionProbe(bytes, stderr, exitCode, projection, expe
   if (!Number.isInteger(exitCode) || stderr.length) fail('Claude model-resolution probe process result is invalid');
   const events = parseJsonl(bytes, 'Claude model-resolution probe');
   if (events.some(modelProbeContainsTool)) fail('Claude safe-mode model-resolution probe invoked a tool');
-  if (events.length !== 4) fail('Claude model-resolution probe must contain exactly four events');
-  const [init, rate, assistant, result] = events;
+  if (![4, 5].includes(events.length)) fail('Claude model-resolution probe event count is not exact');
+  const dualRateCredits = events.length === 5;
+  const init = events[0];
+  const rate = events[1];
+  const creditsRate = dualRateCredits ? events[2] : rate;
+  const assistant = events[dualRateCredits ? 3 : 2];
+  const result = events[dualRateCredits ? 4 : 3];
   const sessionId = init?.session_id;
   if (init?.type !== 'system' || init?.subtype !== 'init'
-    || rate?.type !== 'rate_limit_event' || assistant?.type !== 'assistant' || result?.type !== 'result'
+    || rate?.type !== 'rate_limit_event'
+    || (dualRateCredits && creditsRate?.type !== 'rate_limit_event')
+    || assistant?.type !== 'assistant' || result?.type !== 'result'
     || init.cwd !== expectedCwd || init.permissionMode !== 'dontAsk'
     || stable(init.tools) !== stable([]) || !claudeFamilyMatches(projection, init.model)) {
     fail('Claude safe-mode model-resolution ordered transport/init is not exact');
@@ -561,7 +600,7 @@ function classifyClaudeResolutionProbe(bytes, stderr, exitCode, projection, expe
   const assistantText = Array.isArray(content) && content.length === 1
     && content[0]?.type === 'text' && typeof content[0]?.text === 'string'
     ? content[0].text : null;
-  if (exitCode === 0 && result.subtype === 'success' && result.is_error === false
+  if (!dualRateCredits && exitCode === 0 && result.subtype === 'success' && result.is_error === false
     && result.result === 'LUCA_CLAUDE_MODEL_PROBE_OK' && result.terminal_reason === 'completed'
     && ['allowed', 'allowed_warning'].includes(rate?.rate_limit_info?.status)
     && assistant.parent_tool_use_id === null
@@ -571,8 +610,11 @@ function classifyClaudeResolutionProbe(bytes, stderr, exitCode, projection, expe
   }
   const expectedCredits = /^Fable(?:\s+\d+(?:\.\d+)*)?\s+requires usage credits\.(?: Run \/usage-credits to continue or switch models with \/model\.)?$/;
   if (projection === 'fable' && exitCode === 1
-    && rate?.rate_limit_info?.status === 'rejected'
-    && rate?.rate_limit_info?.errorCode === 'credits_required'
+    && (dualRateCredits
+      ? exactClaudeCreditsRate(creditsRate)
+      : rate?.rate_limit_info?.status === 'rejected'
+        && rate?.rate_limit_info?.errorCode === 'credits_required')
+    && (!dualRateCredits || exactClaudeFiveHourRate(rate))
     && assistant.parent_tool_use_id === null
     && assistant?.message?.model === '<synthetic>' && assistant.is_api_error_message === true
     && assistant.error === 'rate_limit' && assistantText === result.result

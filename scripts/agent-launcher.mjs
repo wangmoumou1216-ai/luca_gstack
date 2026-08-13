@@ -350,6 +350,35 @@ const containsToolInvocation = (value) => {
 const modelMatchesAlias = (model, alias) => typeof model === 'string'
   && new RegExp(`(^|[-_.])${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[-_.0-9])`, 'i').test(model);
 
+const exactObjectKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
+  && stable(Object.keys(value).sort()) === stable([...keys].sort());
+
+const exactDualFiveHourRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && exactObjectKeys(info, ['status', 'resetsAt', 'rateLimitType', 'overageStatus',
+      'overageDisabledReason', 'isUsingOverage'])
+    && info.status === 'rejected'
+    && Number.isSafeInteger(info.resetsAt) && info.resetsAt > 0
+    && info.rateLimitType === 'five_hour'
+    && info.overageStatus === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false;
+};
+
+const exactDualCreditsRate = (event) => {
+  const info = event?.rate_limit_info;
+  return event?.type === 'rate_limit_event'
+    && exactObjectKeys(info, ['status', 'overageDisabledReason', 'isUsingOverage', 'errorCode',
+      'canUserPurchaseCredits', 'hasChargeableSavedPaymentMethod'])
+    && info.status === 'rejected'
+    && info.overageDisabledReason === 'org_level_disabled'
+    && info.isUsingOverage === false
+    && info.errorCode === 'credits_required'
+    && info.canUserPurchaseCredits === true
+    && info.hasChargeableSavedPaymentMethod === false;
+};
+
 export function classifyClaudeModelProbe({ status, stdout, stderr = '', expectedAlias, expectedCwd,
   allowCreditsRequired = false }) {
   if (!Number.isInteger(status)) return Object.freeze({ outcome: 'rejected', reason: 'missing_exit_status' });
@@ -375,8 +404,13 @@ export function classifyClaudeModelProbe({ status, stdout, stderr = '', expected
     }
   }
   if (events.some(containsToolInvocation)) return Object.freeze({ outcome: 'rejected', reason: 'tool_invocation_observed' });
-  if (events.length !== 4) return Object.freeze({ outcome: 'rejected', reason: 'probe_transport_shape' });
-  const [init, rateLimit, assistant, result] = events;
+  if (![4, 5].includes(events.length)) return Object.freeze({ outcome: 'rejected', reason: 'probe_transport_shape' });
+  const dualRateCredits = events.length === 5;
+  const init = events[0];
+  const firstRateLimit = dualRateCredits ? events[1] : null;
+  const rateLimit = events[dualRateCredits ? 2 : 1];
+  const assistant = events[dualRateCredits ? 3 : 2];
+  const result = events[dualRateCredits ? 4 : 3];
   const sessionId = init?.session_id;
   const exactTransport = init?.type === 'system'
     && init?.subtype === 'init'
@@ -387,6 +421,7 @@ export function classifyClaudeModelProbe({ status, stdout, stderr = '', expected
     && modelMatchesAlias(init?.model, expectedAlias)
     && typeof sessionId === 'string'
     && sessionId.length > 0
+    && (!dualRateCredits || firstRateLimit?.type === 'rate_limit_event')
     && rateLimit?.type === 'rate_limit_event'
     && assistant?.type === 'assistant'
     && result?.type === 'result'
@@ -396,9 +431,10 @@ export function classifyClaudeModelProbe({ status, stdout, stderr = '', expected
   const assistantText = Array.isArray(assistantContent) && assistantContent.length === 1
     && assistantContent[0]?.type === 'text' && typeof assistantContent[0]?.text === 'string'
     ? assistantContent[0].text : null;
-  const exactSuccess = status === 0
+  const exactSuccess = !dualRateCredits
+    && status === 0
     && stderr === ''
-    && rateLimit?.rate_limit_info?.status === 'allowed'
+    && ['allowed', 'allowed_warning'].includes(rateLimit?.rate_limit_info?.status)
     && assistant?.parent_tool_use_id === null
     && modelMatchesAlias(assistant?.message?.model, expectedAlias)
     && assistantText === CLAUDE_MODEL_PROBE_SENTINEL
@@ -408,18 +444,25 @@ export function classifyClaudeModelProbe({ status, stdout, stderr = '', expected
     && result.terminal_reason === 'completed';
   if (exactSuccess) return Object.freeze({ outcome: 'success', reason: 'exact_success' });
   const errorText = assistantText;
+  const escapedAlias = expectedAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const creditsTextMatchesAlias = typeof errorText === 'string'
-    && new RegExp(`^${expectedAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s+\\d+(?:\\.\\d+)*)?\\s+requires usage credits(?:[.!]|$)`, 'i').test(errorText);
+    && new RegExp(`^${escapedAlias}(?:\\s+\\d+(?:\\.\\d+)*)?\\s+requires usage credits(?:[.!]|$)`, 'i').test(errorText);
+  const canonicalAlias = `${expectedAlias[0].toUpperCase()}${expectedAlias.slice(1)}`
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const exactDualCreditsText = typeof errorText === 'string'
+    && new RegExp(`^${canonicalAlias}(?:\\s+\\d+(?:\\.\\d+)*)?\\s+requires usage credits\\.`
+      + '(?: Run /usage-credits to continue or switch models with /model\\.)?$').test(errorText);
   const exactCreditsRequired = allowCreditsRequired === true
     && status === 1
     && stderr === ''
+    && (!dualRateCredits || (exactDualFiveHourRate(firstRateLimit) && exactDualCreditsRate(rateLimit)))
     && rateLimit?.rate_limit_info?.status === 'rejected'
     && rateLimit?.rate_limit_info?.errorCode === 'credits_required'
     && assistant?.message?.model === '<synthetic>'
     && assistant?.parent_tool_use_id === null
     && assistant?.is_api_error_message === true
     && assistant?.error === 'rate_limit'
-    && creditsTextMatchesAlias
+    && (dualRateCredits ? exactDualCreditsText : creditsTextMatchesAlias)
     && result.subtype === 'success'
     && result.is_error === true
     && result.api_error_status === 429

@@ -202,10 +202,17 @@ const successProbeStream = (alias, { rateStatus = 'allowed', withToolUse = false
 const creditsProbeStream = ({ code = 'credits_required', status = 'rejected', apiStatus = 429,
   terminalReason = 'api_error', model = '<synthetic>', parentToolUseId = null,
   isApiErrorMessage = true, error = 'rate_limit', text = 'Fable 5 requires usage credits. Run /usage-credits to continue or switch models with /model.',
-  resultText = text, extraAssistant = false } = {}) => jsonl(
+  resultText = text, extraAssistant = false, dualRate = false } = {}) => jsonl(
   { type: 'system', subtype: 'init', session_id: 'probe-session', tools: [], permissionMode: 'dontAsk',
     cwd: PROBE_CWD, model: 'claude-fable-5-test' },
-  { type: 'rate_limit_event', session_id: 'probe-session', rate_limit_info: { status, errorCode: code } },
+  ...(dualRate ? [{ type: 'rate_limit_event', session_id: 'probe-session', rate_limit_info: {
+    status: 'rejected', resetsAt: 1786641600, rateLimitType: 'five_hour', overageStatus: 'rejected',
+    overageDisabledReason: 'org_level_disabled', isUsingOverage: false,
+  } }] : []),
+  { type: 'rate_limit_event', session_id: 'probe-session', rate_limit_info: dualRate ? {
+    status, overageDisabledReason: 'org_level_disabled', isUsingOverage: false, errorCode: code,
+    canUserPurchaseCredits: true, hasChargeableSavedPaymentMethod: false,
+  } : { status, errorCode: code } },
   { type: 'assistant', session_id: 'probe-session', parent_tool_use_id: parentToolUseId,
     is_api_error_message: isApiErrorMessage, error,
     message: { model, content: [{ type: 'text', text }] } },
@@ -219,6 +226,9 @@ assert.deepEqual(classifyClaudeModelProbe({ status: 0, stdout: successProbeStrea
   { outcome: 'success', reason: 'exact_success' });
 assert.deepEqual(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('opus', { rateStatus: 'allowed' }), expectedAlias: 'opus' }),
   { outcome: 'success', reason: 'exact_success' });
+assert.deepEqual(classifyClaudeModelProbe({ status: 0,
+  stdout: successProbeStream('opus', { rateStatus: 'allowed_warning' }), expectedAlias: 'opus' }),
+{ outcome: 'success', reason: 'exact_success' });
 assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable', { rateStatus: null }), expectedAlias: 'fable' }).outcome, 'rejected');
 assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable', { rateStatus: 'rejected' }), expectedAlias: 'fable' }).outcome, 'rejected');
 assert.equal(classifyClaudeModelProbe({ status: 1, stdout: successProbeStream('fable'), expectedAlias: 'fable' }).outcome, 'rejected');
@@ -226,6 +236,44 @@ assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('f
 assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('opus'), expectedAlias: 'fable' }).outcome, 'rejected');
 assert.deepEqual(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream(), expectedAlias: 'fable' }),
   { outcome: 'credits_required', reason: 'credits_required' });
+assert.deepEqual(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({
+  text: 'Fable 5 requires usage credits. LEGACY_SUFFIX',
+  resultText: 'Fable 5 requires usage credits. LEGACY_SUFFIX',
+}), expectedAlias: 'fable' }), { outcome: 'credits_required', reason: 'credits_required' },
+  'legacy four-event credits text compatibility changed');
+assert.deepEqual(classifyClaudeModelProbe({ status: 1,
+  stdout: creditsProbeStream({ dualRate: true }), expectedAlias: 'fable' }),
+{ outcome: 'credits_required', reason: 'credits_required' });
+const dualCreditsMutation = (mutate) => {
+  const events = creditsProbeStream({ dualRate: true }).trim().split('\n').map((line) => JSON.parse(line));
+  mutate(events);
+  return jsonl(...events);
+};
+for (const [label, stdout] of [
+  ['wrong first status', dualCreditsMutation((events) => { events[1].rate_limit_info.status = 'allowed'; })],
+  ['wrong first type', dualCreditsMutation((events) => { events[1].type = 'progress'; })],
+  ['wrong first reset', dualCreditsMutation((events) => { events[1].rate_limit_info.resetsAt = 0; })],
+  ['fractional first reset', dualCreditsMutation((events) => { events[1].rate_limit_info.resetsAt = 1.5; })],
+  ['unsafe first reset', dualCreditsMutation((events) => {
+    events[1].rate_limit_info.resetsAt = Number.MAX_SAFE_INTEGER + 1;
+  })],
+  ['wrong first overage', dualCreditsMutation((events) => { events[1].rate_limit_info.overageStatus = 'allowed'; })],
+  ['extra first rate field', dualCreditsMutation((events) => { events[1].rate_limit_info.untrusted = true; })],
+  ['extra credits rate field', dualCreditsMutation((events) => { events[2].rate_limit_info.untrusted = true; })],
+  ['reordered rates', dualCreditsMutation((events) => { [events[1], events[2]] = [events[2], events[1]]; })],
+  ['extra event', dualCreditsMutation((events) => { events.splice(3, 0, { type: 'progress', session_id: 'probe-session' }); })],
+  ['same-result suffix injection', dualCreditsMutation((events) => {
+    const injected = `${events[3].message.content[0].text} UNTRUSTED_SUFFIX`;
+    events[3].message.content[0].text = injected;
+    events[4].result = injected;
+  })],
+  ['extra non-tool assistant content', dualCreditsMutation((events) => {
+    events[3].message.content.push({ type: 'text', text: '' });
+  })],
+]) {
+  assert.equal(classifyClaudeModelProbe({ status: 1, stdout, expectedAlias: 'fable' }).outcome, 'rejected',
+    `accepted dual-rate credits probe with ${label}`);
+}
 assert.equal(classifyClaudeModelProbe({ status: 1,
   stdout: creditsProbeStream({ text: 'Opus 5 requires usage credits.', resultText: 'Opus 5 requires usage credits.' }),
   expectedAlias: 'opus' }).outcome, 'rejected');

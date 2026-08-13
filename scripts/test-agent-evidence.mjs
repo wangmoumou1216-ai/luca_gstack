@@ -75,19 +75,35 @@ const modelProbeSuccess = (alias, cwd, mutation = {}) => {
 };
 const modelProbeCredits = (cwd, mutation = {}) => {
   const session = 'probe-fable';
-  const message = 'Fable 5 requires usage credits.';
-  return jsonl([
+  const message = `Fable 5 requires usage credits.${mutation.dualSuffix ? ' UNTRUSTED_SUFFIX' : ''}`;
+  const events = [
     { type: 'system', subtype: 'init', session_id: session, cwd, permissionMode: 'dontAsk',
       model: 'claude-fable-5', tools: [] },
-    { type: 'rate_limit_event', session_id: session, rate_limit_info: { status: 'rejected',
-      errorCode: mutation.generic ? 'rate_limited' : 'credits_required' } },
+    ...(mutation.dual ? [{ type: mutation.dualFirstType || 'rate_limit_event', session_id: session,
+      rate_limit_info: { status: mutation.dualFirstStatus || 'rejected',
+        resetsAt: mutation.dualReset ?? 1786641600, rateLimitType: 'five_hour',
+        overageStatus: mutation.dualOverage || 'rejected',
+        overageDisabledReason: 'org_level_disabled', isUsingOverage: false } }] : []),
+    { type: 'rate_limit_event', session_id: session, rate_limit_info: mutation.dual ? {
+      status: 'rejected', overageDisabledReason: 'org_level_disabled', isUsingOverage: false,
+      errorCode: mutation.generic ? 'rate_limited' : 'credits_required',
+      canUserPurchaseCredits: true, hasChargeableSavedPaymentMethod: false,
+    } : { status: 'rejected', errorCode: mutation.generic ? 'rate_limited' : 'credits_required' } },
     { type: 'assistant', session_id: session, parent_tool_use_id: null,
       is_api_error_message: true, error: 'rate_limit',
       message: { model: mutation.realModel ? 'claude-fable-5' : '<synthetic>',
-        content: [{ type: 'text', text: mutation.wrongText ? 'different error' : message }] } },
+        content: [
+          { type: 'text', text: mutation.wrongText ? 'different error' : message },
+          ...(mutation.dualExtraAssistantContent ? [{ type: 'text', text: '' }] : []),
+        ] } },
     { type: 'result', session_id: session, subtype: 'success', is_error: true, api_error_status: 429,
       terminal_reason: 'api_error', result: message },
-  ]);
+  ];
+  if (mutation.dualReordered) [events[1], events[2]] = [events[2], events[1]];
+  if (mutation.dualExtraEvent) events.splice(3, 0, { type: 'progress', session_id: session });
+  if (mutation.dualFirstExtra) events[1].rate_limit_info.untrusted = true;
+  if (mutation.dualCreditsExtra) events[2].rate_limit_info.untrusted = true;
+  return jsonl(events);
 };
 const mkdir700 = (path) => { mkdirSync(path, { recursive: true, mode: 0o700 }); chmodSync(path, 0o700); };
 const write0600 = (path, bytes) => {
@@ -844,6 +860,29 @@ try {
     stdout: modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { warningRate: true }), stderr: Buffer.alloc(0),
     expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }),
   { outcome: 'available', resolved_model: 'claude-fable-fixture-1' });
+  assert.deepEqual(classifyClaudeModelProbe({ status: 1,
+    stdout: modelProbeCredits(realpathSync(classifierProbeCwd), { dual: true }), stderr: Buffer.alloc(0),
+    expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }),
+  { outcome: 'credits_required', resolved_model: null });
+  for (const [label, mutation] of [
+    ['dual-rate wrong first status', { dual: true, dualFirstStatus: 'allowed' }],
+    ['dual-rate wrong first type', { dual: true, dualFirstType: 'progress' }],
+    ['dual-rate wrong first reset', { dual: true, dualReset: 0 }],
+    ['dual-rate fractional first reset', { dual: true, dualReset: 1.5 }],
+    ['dual-rate unsafe first reset', { dual: true, dualReset: Number.MAX_SAFE_INTEGER + 1 }],
+    ['dual-rate wrong first overage', { dual: true, dualOverage: 'allowed' }],
+    ['dual-rate extra first field', { dual: true, dualFirstExtra: true }],
+    ['dual-rate extra credits field', { dual: true, dualCreditsExtra: true }],
+    ['dual-rate reordered rates', { dual: true, dualReordered: true }],
+    ['dual-rate extra event', { dual: true, dualExtraEvent: true }],
+    ['dual-rate same-result suffix injection', { dual: true, dualSuffix: true }],
+    ['dual-rate extra non-tool assistant content', { dual: true, dualExtraAssistantContent: true }],
+  ]) {
+    assert.throws(() => classifyClaudeModelProbe({ status: 1,
+      stdout: modelProbeCredits(realpathSync(classifierProbeCwd), mutation), stderr: Buffer.alloc(0),
+      expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }), undefined,
+    `TCB classifier accepted ${label}`);
+  }
   for (const [label, bytes] of [
     ['reordered', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { reordered: true })],
     ['extra', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { extraEvent: true })],
@@ -926,7 +965,13 @@ try {
     const fableBytes = mutation.fallbackResolution
       ? modelProbeCredits(fableProbeCwd, {
         generic: mutation.probeGenericRate, realModel: mutation.probeRealModel,
-        wrongText: mutation.probeWrongText,
+        wrongText: mutation.probeWrongText, dual: mutation.dualRateResolution,
+        dualFirstStatus: mutation.probeDualFirstStatus, dualFirstType: mutation.probeDualFirstType,
+        dualReset: mutation.probeDualReset, dualOverage: mutation.probeDualOverage,
+        dualReordered: mutation.probeDualReordered, dualExtraEvent: mutation.probeDualExtraEvent,
+        dualFirstExtra: mutation.probeDualFirstExtra, dualCreditsExtra: mutation.probeDualCreditsExtra,
+        dualSuffix: mutation.probeDualSuffix,
+        dualExtraAssistantContent: mutation.probeDualExtraAssistantContent,
       })
       : modelProbeSuccess('fable', fableProbeCwd, {
         tool: mutation.probeTool, unknownRate: mutation.probeUnknownRate,
@@ -942,7 +987,11 @@ try {
       if (!mutation.probeGenericRate && !mutation.probeRealModel && !mutation.probeWrongText
         && !mutation.probeTool && !mutation.probeUnknownRate && !mutation.probeExtraInitTool
         && !mutation.probeReordered && !mutation.probeExtraEvent && !mutation.probeMissingSession
-        && !mutation.probeWrongCwd) throw error;
+        && !mutation.probeWrongCwd && !mutation.probeDualFirstStatus && !mutation.probeDualFirstType
+        && mutation.probeDualReset === undefined && !mutation.probeDualOverage
+        && !mutation.probeDualReordered && !mutation.probeDualExtraEvent
+        && !mutation.probeDualFirstExtra && !mutation.probeDualCreditsExtra
+        && !mutation.probeDualSuffix && !mutation.probeDualExtraAssistantContent) throw error;
       const stdoutPath = join(rawRoot, 'claude-model-fable.stdout.jsonl');
       const stderrPath = join(rawRoot, 'claude-model-fable.stderr');
       fableAttempt = { projection: 'fable', outcome: mutation.fallbackResolution ? 'credits_required' : 'available',
@@ -1160,6 +1209,13 @@ try {
   const fallbackPositive = verifyEvidence(fallbackValid);
   assert.equal(fallbackPositive.status, 0, `fallback evidence failed: ${fallbackPositive.stderr}`);
   assert.match(fallbackPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  const dualRateFallbackValid = await buildEvidence('valid-dual-rate-fallback', {
+    fallbackResolution: true, dualRateResolution: true,
+  });
+  const dualRateFallbackPositive = verifyEvidence(dualRateFallbackValid);
+  assert.equal(dualRateFallbackPositive.status, 0,
+    `dual-rate fallback evidence failed: ${dualRateFallbackPositive.stderr}`);
+  assert.match(dualRateFallbackPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
   const warningValid = await buildEvidence('valid-allowed-warning', { warningResolution: true });
   const warningPositive = verifyEvidence(warningValid);
   assert.equal(warningPositive.status, 0, `allowed_warning evidence failed: ${warningPositive.stderr}`);
@@ -1310,6 +1366,30 @@ try {
     ['fallback probe has generic rate error', { fallbackResolution: true, probeGenericRate: true }],
     ['fallback probe synthetic error uses a real model', { fallbackResolution: true, probeRealModel: true }],
     ['fallback probe synthetic error text differs from result', { fallbackResolution: true, probeWrongText: true }],
+    ['dual-rate fallback first status differs', { fallbackResolution: true, dualRateResolution: true,
+      probeDualFirstStatus: 'allowed' }],
+    ['dual-rate fallback first type differs', { fallbackResolution: true, dualRateResolution: true,
+      probeDualFirstType: 'progress' }],
+    ['dual-rate fallback reset is invalid', { fallbackResolution: true, dualRateResolution: true,
+      probeDualReset: 0 }],
+    ['dual-rate fallback reset is fractional', { fallbackResolution: true, dualRateResolution: true,
+      probeDualReset: 1.5 }],
+    ['dual-rate fallback reset is unsafe', { fallbackResolution: true, dualRateResolution: true,
+      probeDualReset: Number.MAX_SAFE_INTEGER + 1 }],
+    ['dual-rate fallback overage differs', { fallbackResolution: true, dualRateResolution: true,
+      probeDualOverage: 'allowed' }],
+    ['dual-rate fallback first info has an extra field', { fallbackResolution: true, dualRateResolution: true,
+      probeDualFirstExtra: true }],
+    ['dual-rate fallback credits info has an extra field', { fallbackResolution: true, dualRateResolution: true,
+      probeDualCreditsExtra: true }],
+    ['dual-rate fallback events are reordered', { fallbackResolution: true, dualRateResolution: true,
+      probeDualReordered: true }],
+    ['dual-rate fallback contains an extra event', { fallbackResolution: true, dualRateResolution: true,
+      probeDualExtraEvent: true }],
+    ['dual-rate fallback has a same-result suffix injection', { fallbackResolution: true,
+      dualRateResolution: true, probeDualSuffix: true }],
+    ['dual-rate fallback has extra non-tool assistant content', { fallbackResolution: true,
+      dualRateResolution: true, probeDualExtraAssistantContent: true }],
     ['Codex item envelope lacks thread binding', { missingItemThread: true }],
     ['Codex plaintext prompt substitution', { wrongPrompt: true }],
     ['Codex public parent completes before child', { publicParentCompletesEarly: true }],
