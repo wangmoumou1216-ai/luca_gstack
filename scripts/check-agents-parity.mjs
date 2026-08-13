@@ -6,15 +6,621 @@
 // 腐烂成陈旧的「CRM 身份 + 已被取代的 G6 共享软链模型」。本门把这些段落钉死，并做**跨源一致性**
 // 检查：SF 镜像的 id 集合必须 == static-fallback-allowlist.txt（防两处 SF 分叉）。
 import assert from 'assert/strict';
-import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { createHash, createPublicKey, verify as verifyBytes } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { LOGICAL_ROLES, ROLE_CONTRACT, resolveRole } from './agent-launcher.mjs';
 
 // 深审：用 CLAUDE_PROJECT_DIR 定位会在双检出下验错仓并报绿（实测）。改脚本相对：
 // 本文件在 scripts/ → 上 1 级 = 仓根，与被验文件恒同仓。
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
+const SELF = fileURLToPath(import.meta.url);
+export const NATIVE_PROOF_RECEIPT_PATH = 'framework-audit/2026-08-11-rule-execution-handshake/execution/u008/TST-008-RESULT.json';
+export const NATIVE_ROUTE_GATE_COMMAND = 'node scripts/agent-launcher.mjs launch';
+export const NATIVE_ROUTE_SURFACES = Object.freeze({
+  '.claude/agents/orchestrator.md': 'work-agent',
+  '.claude/skills/office/brainstorm/SKILL.md': 'oracle',
+  '.claude/skills/office/brainstorm/references/adversarial-review.md': 'oracle',
+  '.claude/skills/office/deepresearch/SKILL.md': 'oracle',
+  '.claude/skills/office/ux-brainstorm/SKILL.md': 'oracle',
+  '.claude/skills/office/ux-research/SKILL.md': 'oracle',
+});
+const ACTIVATION_GATED_ROLES = new Set(['work-agent', 'oracle']);
+const REGISTERED_ROLE_DEFINITIONS = new Set(Object.values(ROLE_CONTRACT)
+  .flatMap((entry) => [entry.claude, entry.codex]));
+const ACTIVATION_KEYS = ['schema_version', 'status', 'proof_receipt_path', 'proof_receipt_sha256', 'activated_at'];
+const TST_RESULT_KEYS = ['schema_version', 'plan_id', 'unit', 'test', 'captured_at', 'status', 'recommendation',
+  'independent_tester', 'source_binding', 'criteria', 'native_evidence', 'blocking_criteria_all_passed'];
+const NATIVE_EVIDENCE_KEYS = ['verification_token', 'harnesses', 'roles', 'target_commit', 'anchor_path',
+  'anchor_sha256', 'envelope_path', 'envelope_sha256', 'summary_path', 'summary_sha256', 'consume_path',
+  'consume_sha256', 'tcb_path', 'tcb_sha256', 'verifier_path', 'verifier_sha256',
+  'evidence_public_key_fingerprint_sha256', 'counter_fingerprint_sha256', 'nonce_set_sha256',
+  'verification_stdout_path', 'verification_stdout_sha256', 'independent_verifier_exit_code',
+  'evidence_consumed_once', 'edges'];
+const EDGE_KEYS = ['harness', 'role', 'parent_id', 'child_id', 'definition_path', 'definition_sha256',
+  'input_sha256', 'output_sha256', 'source_log_sha256', 'receipt_path', 'receipt_sha256',
+  'native_descriptor_sha256'];
+const HASH = /^[a-f0-9]{64}$/;
+const OID = /^[a-f0-9]{40}$/;
+const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
+  && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+const bytesSha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const stable = (value) => {
+  if (Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+};
+const within = (base, target) => target === base || target.startsWith(`${base}/`);
+const cleanGitEnv = () => {
+  const env = {};
+  for (const [key, value] of Object.entries(process.env)) if (!key.startsWith('GIT_')) env[key] = value;
+  env.GIT_NO_REPLACE_OBJECTS = '1';
+  env.GIT_OPTIONAL_LOCKS = '0';
+  return env;
+};
+const git = (root, args, { bytes = false, allowStatus = null } = {}) => {
+  const result = spawnSync('git', args, { cwd: root, env: cleanGitEnv(), encoding: bytes ? null : 'utf8', input: '' });
+  if (allowStatus !== null) return result.status === allowStatus;
+  if (result.status !== 0) throw new Error(`git ${args[0]} failed`);
+  return bytes ? result.stdout : String(result.stdout).trim();
+};
+const parseJson = (bytes, label) => {
+  try { return JSON.parse(bytes.toString('utf8')); } catch { throw new Error(`${label} is not valid JSON`); }
+};
+const canonicalFile = (path, label, { privateFile = false, outsideRoot = null } = {}) => {
+  if (typeof path !== 'string' || !isAbsolute(path) || resolve(path) !== path) throw new Error(`${label} path is not canonical absolute`);
+  const stat = lstatSync(path);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || realpathSync(path) !== path) {
+    throw new Error(`${label} is not a canonical regular single-link file`);
+  }
+  if ((stat.mode & 0o022) !== 0) throw new Error(`${label} is group/world writable`);
+  if (privateFile && (stat.mode & 0o777) !== 0o600) throw new Error(`${label} is not an exact 0600 private file`);
+  if (outsideRoot && within(outsideRoot, path)) throw new Error(`${label} must be outside repository`);
+  return readFileSync(path);
+};
+const verifySigned = (object, coreKeys, hashKey, signatureKey, key, label) => {
+  if (!exactKeys(object, [...coreKeys, hashKey, signatureKey])) throw new Error(`${label} keys are not exact`);
+  const core = Object.fromEntries(coreKeys.map((name) => [name, object[name]]));
+  const payload = Buffer.from(stable(core), 'utf8');
+  if (object[hashKey] !== bytesSha256(payload)
+      || typeof object[signatureKey] !== 'string'
+      || !verifyBytes(null, payload, key, Buffer.from(object[signatureKey], 'base64'))) {
+    throw new Error(`${label} signature/hash is invalid`);
+  }
+  return core;
+};
+const iso = (value, label) => {
+  const parsed = typeof value === 'string' ? Date.parse(value) : NaN;
+  if (!Number.isFinite(parsed) || new Date(parsed).toISOString() !== value) throw new Error(`${label} is not canonical ISO time`);
+  return parsed;
+};
+const assertHash = (value, label) => { if (!HASH.test(value || '')) throw new Error(`${label} is not SHA-256`); };
+const trackedBytes = (root, commit, path, label) => {
+  const bytes = git(root, ['show', `${commit}:${path}`], { bytes: true });
+  if (!Buffer.isBuffer(bytes)) throw new Error(`${label} target blob is unavailable`);
+  return bytes;
+};
+
+function validateApprovedReceipt({ root, receipt, receiptPath }) {
+  if (!exactKeys(receipt, TST_RESULT_KEYS) || receipt.schema_version !== 'luca.tst-008-result.v1'
+      || receipt.plan_id !== 'REX-20260811-001' || receipt.unit !== 'U-008' || receipt.test !== 'TST-008'
+      || receipt.status !== 'AGENT_EVIDENCE_VERIFIED' || receipt.recommendation !== 'PASS'
+      || receipt.blocking_criteria_all_passed !== true) throw new Error('TST-008 result contract is not exact PASS');
+  iso(receipt.captured_at, 'captured_at');
+  if (!exactKeys(receipt.independent_tester, ['task', 'role', 'implementation_participation'])
+      || receipt.independent_tester.task !== '/root/u008_dormancy_audit'
+      || receipt.independent_tester.role !== 'independent-harness-reviewer'
+      || receipt.independent_tester.implementation_participation !== false) throw new Error('independent tester binding is invalid');
+  if (!exactKeys(receipt.source_binding, ['commit', 'target_tree'])
+      || !OID.test(receipt.source_binding.commit || '') || !OID.test(receipt.source_binding.target_tree || '')) {
+    throw new Error('source binding is invalid');
+  }
+  if (!Array.isArray(receipt.criteria) || receipt.criteria.length !== 2
+      || receipt.criteria.some((item) => !exactKeys(item, ['id', 'status']) || item.status !== 'PASS')
+      || stable(receipt.criteria.map((item) => item.id).sort()) !== stable(['ASSERT-014', 'ASSERT-015'])) {
+    throw new Error('criteria must be exact ASSERT-014/015 PASS');
+  }
+  const native = receipt.native_evidence;
+  if (!exactKeys(native, NATIVE_EVIDENCE_KEYS) || native.verification_token !== 'AGENT_EVIDENCE_VERIFIED'
+      || stable(native.harnesses) !== stable(['claude', 'codex'])
+      || stable(native.roles) !== stable([...LOGICAL_ROLES])
+      || native.independent_verifier_exit_code !== 0 || native.evidence_consumed_once !== true) {
+    throw new Error('native evidence result is not exact verified matrix');
+  }
+  for (const key of ['anchor_sha256', 'envelope_sha256', 'summary_sha256', 'consume_sha256',
+    'tcb_sha256', 'verifier_sha256', 'evidence_public_key_fingerprint_sha256',
+    'counter_fingerprint_sha256', 'nonce_set_sha256', 'verification_stdout_sha256']) assertHash(native[key], key);
+  const commit = receipt.source_binding.commit;
+  if (native.target_commit !== commit) throw new Error('source/evidence target commit mismatch');
+  if (git(root, ['cat-file', '-t', commit]) !== 'commit') throw new Error('source binding is not a commit');
+  const targetTree = git(root, ['rev-parse', `${commit}^{tree}`]);
+  if (targetTree !== receipt.source_binding.target_tree
+      || !git(root, ['merge-base', '--is-ancestor', commit, 'HEAD'], { allowStatus: 0 })
+      || git(root, ['for-each-ref', '--format=%(refname)', 'refs/replace']) !== '') {
+    throw new Error('source commit/tree is stale, non-ancestor, or replacement refs are present');
+  }
+
+  const external = {};
+  for (const [key, label] of [['anchor_path', 'anchor'], ['envelope_path', 'envelope'],
+    ['summary_path', 'summary'], ['consume_path', 'consume'], ['verification_stdout_path', 'verification stdout']]) {
+    external[key] = canonicalFile(native[key], label, { privateFile: true, outsideRoot: root });
+  }
+  if (bytesSha256(external.anchor_path) !== native.anchor_sha256
+      || bytesSha256(external.envelope_path) !== native.envelope_sha256
+      || bytesSha256(external.summary_path) !== native.summary_sha256
+      || bytesSha256(external.consume_path) !== native.consume_sha256
+      || bytesSha256(external.verification_stdout_path) !== native.verification_stdout_sha256) {
+    throw new Error('evidence artifact hash mismatch');
+  }
+  const tcbBytes = canonicalFile(native.tcb_path, 'TCB', { privateFile: true, outsideRoot: root });
+  const verifierBytes = canonicalFile(native.verifier_path, 'verifier', { privateFile: true, outsideRoot: root });
+  const currentTcb = canonicalFile(join(root, 'scripts/evolution/agent-evidence-tcb.mjs'), 'current TCB');
+  const currentVerifier = canonicalFile(join(root, 'scripts/evolution/verify-agent-evidence.mjs'), 'current verifier');
+  if (bytesSha256(tcbBytes) !== native.tcb_sha256 || bytesSha256(verifierBytes) !== native.verifier_sha256
+      || !tcbBytes.equals(currentTcb) || !verifierBytes.equals(currentVerifier)
+      || !tcbBytes.equals(trackedBytes(root, commit, 'scripts/evolution/agent-evidence-tcb.mjs', 'TCB'))
+      || !verifierBytes.equals(trackedBytes(root, commit, 'scripts/evolution/verify-agent-evidence.mjs', 'verifier'))) {
+    throw new Error('TCB/verifier bytes do not match current target commit');
+  }
+
+  const anchor = parseJson(external.anchor_path, 'anchor');
+  const anchorCoreKeys = ['schema_version', 'transaction_id', 'created_at', 'expires_at', 'repo_root', 'evidence_root',
+    'consume_path', 'target_commit', 'target_tree_manifest', 'tcb', 'verifier', 'candidate_launcher', 'work_packet',
+    'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256', 'runs'];
+  const anchorKeys = [...anchorCoreKeys, 'base_core_sha256', 'evidence_signature_ed25519', 'counter_public_key_pem',
+    'counter_fingerprint_sha256', 'counter_signature_ed25519'];
+  if (!exactKeys(anchor, anchorKeys) || anchor.schema_version !== 'luca.agent-evidence-anchor.v2') throw new Error('anchor schema/keys invalid');
+  let evidenceKey; let counterKey;
+  try { evidenceKey = createPublicKey(anchor.evidence_public_key_pem); counterKey = createPublicKey(anchor.counter_public_key_pem); }
+  catch { throw new Error('anchor public key invalid'); }
+  const anchorCore = Object.fromEntries(anchorCoreKeys.map((key) => [key, anchor[key]]));
+  const anchorPayload = Buffer.from(stable(anchorCore), 'utf8');
+  const evidenceFingerprint = bytesSha256(evidenceKey.export({ type: 'spki', format: 'der' }));
+  const counterFingerprint = bytesSha256(counterKey.export({ type: 'spki', format: 'der' }));
+  if (anchor.base_core_sha256 !== bytesSha256(anchorPayload)
+      || anchor.evidence_fingerprint_sha256 !== evidenceFingerprint
+      || anchor.evidence_fingerprint_sha256 !== native.evidence_public_key_fingerprint_sha256
+      || anchor.counter_fingerprint_sha256 !== counterFingerprint
+      || anchor.counter_fingerprint_sha256 !== native.counter_fingerprint_sha256
+      || anchor.nonce_set_sha256 !== native.nonce_set_sha256
+      || !verifyBytes(null, anchorPayload, evidenceKey, Buffer.from(anchor.evidence_signature_ed25519, 'base64'))
+      || !verifyBytes(null, anchorPayload, counterKey, Buffer.from(anchor.counter_signature_ed25519, 'base64'))) {
+    throw new Error('anchor dual signature/fingerprint invalid');
+  }
+  const proofRoot = realpathSync(anchor.repo_root);
+  if (!isAbsolute(anchor.repo_root) || proofRoot !== anchor.repo_root || proofRoot === root
+      || anchor.target_commit !== commit || anchor.consume_path !== native.consume_path
+      || anchor.tcb?.path !== native.tcb_path || anchor.tcb?.sha256 !== native.tcb_sha256
+      || anchor.verifier?.path !== native.verifier_path || anchor.verifier?.sha256 !== native.verifier_sha256) {
+    throw new Error('anchor source/TCB/verifier binding mismatch');
+  }
+  if (git(proofRoot, ['rev-parse', 'HEAD']) !== commit
+      || git(proofRoot, ['rev-parse', `${commit}^{tree}`]) !== receipt.source_binding.target_tree
+      || git(proofRoot, ['for-each-ref', '--format=%(refname)', 'refs/replace']) !== '') {
+    throw new Error('signed proof checkout is not the frozen target commit/tree');
+  }
+  const evidenceRoot = realpathSync(anchor.evidence_root);
+  const transactionRoot = dirname(native.anchor_path);
+  if (native.anchor_path !== join(transactionRoot, 'precommit-anchor.json')
+      || native.consume_path !== join(transactionRoot, 'verification-consumed.json')
+      || native.verification_stdout_path !== join(transactionRoot, 'verification-stdout.txt')
+      || dirname(native.tcb_path) !== transactionRoot || dirname(native.verifier_path) !== transactionRoot
+      || within(root, evidenceRoot) || dirname(evidenceRoot) !== transactionRoot || dirname(native.consume_path) !== transactionRoot
+      || native.envelope_path !== join(evidenceRoot, 'execution-envelope.json')
+      || native.summary_path !== join(evidenceRoot, 'summary.json')) throw new Error('evidence transaction layout invalid');
+  if (!exactKeys(anchor.tcb, ['path', 'sha256']) || !exactKeys(anchor.verifier, ['path', 'sha256'])
+      || !exactKeys(anchor.candidate_launcher, ['path', 'sha256', 'execution'])
+      || !exactKeys(anchor.work_packet, ['path', 'sha256', 'source_sha256'])
+      || !exactKeys(anchor.counter_ready, ['path', 'sha256', 'ready_id', 'created_at', 'expires_at', 'socket_path'])) {
+    throw new Error('anchor nested contract invalid');
+  }
+  const proofLauncherPath = join(proofRoot, 'scripts/agent-launcher.mjs');
+  const proofLauncherBytes = canonicalFile(proofLauncherPath, 'proof candidate launcher');
+  const currentLauncherBytes = canonicalFile(join(root, 'scripts/agent-launcher.mjs'), 'current candidate launcher');
+  const targetLauncherBytes = trackedBytes(root, commit, 'scripts/agent-launcher.mjs', 'candidate launcher');
+  if (anchor.candidate_launcher.path !== proofLauncherPath || anchor.candidate_launcher.execution !== 'describe-contract-only-before-evidence-key'
+      || anchor.candidate_launcher.sha256 !== bytesSha256(proofLauncherBytes)
+      || !proofLauncherBytes.equals(targetLauncherBytes) || !currentLauncherBytes.equals(targetLauncherBytes)) {
+    throw new Error('candidate launcher target binding invalid');
+  }
+  const gatePath = join(root, 'scripts/check-agents-parity.mjs');
+  const gateBytes = canonicalFile(gatePath, 'native route gate');
+  if (!gateBytes.equals(trackedBytes(root, commit, 'scripts/check-agents-parity.mjs', 'native route gate'))) {
+    throw new Error('native route gate differs from evidence target commit');
+  }
+  const proofPacketBytes = canonicalFile(anchor.work_packet.path, 'proof work packet');
+  const currentPacketBytes = canonicalFile(join(root, 'scripts/fixtures/agent-valid-work-packet.json'), 'current work packet');
+  const targetPacketBytes = trackedBytes(root, commit, 'scripts/fixtures/agent-valid-work-packet.json', 'work packet');
+  if (anchor.work_packet.path !== join(proofRoot, 'scripts/fixtures/agent-valid-work-packet.json')
+      || bytesSha256(proofPacketBytes) !== anchor.work_packet.source_sha256
+      || !proofPacketBytes.equals(targetPacketBytes) || !currentPacketBytes.equals(targetPacketBytes)) {
+    throw new Error('work packet proof/current/target bytes mismatch');
+  }
+
+  const envelope = parseJson(external.envelope_path, 'envelope');
+  const envelopeCoreKeys = ['schema_version', 'transaction_id', 'anchor_path', 'anchor_sha256', 'target_commit', 'repo_root',
+    'created_at', 'expires_at', 'public_key_fingerprint_sha256', 'tcb_sha256', 'verifier_sha256', 'launcher_sha256',
+    'work_packet_sha256', 'work_packet_source_sha256', 'runtime_attestations', 'runs'];
+  const envelopeCore = verifySigned(envelope, envelopeCoreKeys, 'envelope_core_sha256', 'signature_ed25519', evidenceKey, 'envelope');
+  if (envelope.schema_version !== 'luca.agent-evidence-envelope.v2' || envelope.transaction_id !== anchor.transaction_id
+      || envelope.anchor_path !== native.anchor_path || envelope.anchor_sha256 !== native.anchor_sha256
+      || envelope.target_commit !== commit || envelope.repo_root !== proofRoot || envelope.public_key_fingerprint_sha256 !== evidenceFingerprint
+      || envelope.tcb_sha256 !== native.tcb_sha256 || envelope.verifier_sha256 !== native.verifier_sha256
+      || envelope.launcher_sha256 !== anchor.candidate_launcher.sha256
+      || envelope.work_packet_sha256 !== anchor.work_packet.sha256
+      || envelope.work_packet_source_sha256 !== anchor.work_packet.source_sha256) throw new Error('envelope binding mismatch');
+  void envelopeCore;
+  if (!Array.isArray(envelope.runs) || envelope.runs.length !== 8 || !Array.isArray(anchor.runs) || anchor.runs.length !== 8) {
+    throw new Error('anchor/envelope run matrix must contain eight runs');
+  }
+  const descriptorKeys = ['schema_version', 'dispatcher_id', 'harness', 'role', 'tier', 'projection', 'definition_path',
+    'definition_sha256', 'routing_path', 'routing_sha256', 'packet_sha256', 'packet_source_sha256', 'input_sha256',
+    'native_task_name', 'sandbox_contract', 'write_roots', 'dispatcher_prompt', 'dispatcher_prompt_sha256', 'command_path',
+    'args', 'argv_sha256', 'command_sha256', 'native_binary_path', 'native_binary_sha256', 'cli_version', 'cwd'];
+  const runKeys = ['run_id', 'harness', 'role', 'nonce_commitment_sha256', 'candidate_contract_sha256',
+    'native_descriptor', 'native_descriptor_sha256'];
+  const anchorRunKeys = ['run_id', 'harness', 'role', 'projection', 'input_sha256', 'candidate_contract_sha256',
+    'native_descriptor_sha256', 'write_roots', 'sandbox_contract'];
+  const runByPair = new Map();
+  const runIds = new Set();
+  const anchorNonces = new Map();
+  if (!Array.isArray(anchor.nonce_commitments) || anchor.nonce_commitments.length !== 8) {
+    throw new Error('anchor nonce commitments must contain eight records');
+  }
+  for (const entry of anchor.nonce_commitments) {
+    if (!exactKeys(entry, ['run_id', 'commitment_sha256']) || typeof entry.run_id !== 'string'
+        || !entry.run_id || !HASH.test(entry.commitment_sha256 || '') || anchorNonces.has(entry.run_id)) {
+      throw new Error('anchor nonce commitment invalid or duplicate');
+    }
+    anchorNonces.set(entry.run_id, entry.commitment_sha256);
+  }
+  if (new Set(anchorNonces.values()).size !== 8
+      || anchor.nonce_set_sha256 !== bytesSha256(Buffer.from(stable(anchor.nonce_commitments), 'utf8'))) {
+    throw new Error('anchor nonce-set hash mismatch');
+  }
+  for (const run of envelope.runs) {
+    if (!exactKeys(run, runKeys) || !exactKeys(run.native_descriptor, descriptorKeys)) throw new Error('native run/descriptor keys invalid');
+    const descriptor = run.native_descriptor;
+    const pair = `${run.harness}/${run.role}`;
+    const contract = ROLE_CONTRACT[run.role];
+    if (!['claude', 'codex'].includes(run.harness) || !contract || runByPair.has(pair) || runIds.has(run.run_id)
+        || descriptor.schema_version !== 'luca.native-launch.v2' || descriptor.harness !== run.harness
+        || descriptor.role !== run.role || descriptor.definition_path !== contract[run.harness]
+        || !HASH.test(descriptor.definition_sha256 || '') || !HASH.test(descriptor.input_sha256 || '')
+        || bytesSha256(Buffer.from(stable(descriptor), 'utf8')) !== run.native_descriptor_sha256
+        || anchorNonces.get(run.run_id) !== run.nonce_commitment_sha256) {
+      throw new Error(`native descriptor binding invalid ${pair}`);
+    }
+    runIds.add(run.run_id);
+    const anchorRun = anchor.runs.find((item) => item?.run_id === run.run_id);
+    if (!exactKeys(anchorRun, anchorRunKeys) || anchorRun.harness !== run.harness || anchorRun.role !== run.role
+        || anchorRun.projection !== descriptor.projection || anchorRun.input_sha256 !== descriptor.input_sha256
+        || anchorRun.candidate_contract_sha256 !== run.candidate_contract_sha256
+        || anchorRun.native_descriptor_sha256 !== run.native_descriptor_sha256
+        || stable(anchorRun.write_roots) !== stable(descriptor.write_roots)
+        || stable(anchorRun.sandbox_contract) !== stable(descriptor.sandbox_contract)) {
+      throw new Error(`anchor/envelope run mismatch ${pair}`);
+    }
+    const { write_roots: omittedRoots, ...contractDescriptor } = descriptor;
+    void omittedRoots;
+    if (bytesSha256(Buffer.from(stable(contractDescriptor), 'utf8')) !== run.candidate_contract_sha256) {
+      throw new Error(`candidate dispatch contract hash mismatch ${pair}`);
+    }
+    const proofDefinitionBytes = canonicalFile(join(proofRoot, descriptor.definition_path), `proof definition ${pair}`);
+    const currentDefinitionBytes = canonicalFile(join(root, descriptor.definition_path), `current definition ${pair}`);
+    const targetDefinitionBytes = trackedBytes(root, commit, descriptor.definition_path, `definition ${pair}`);
+    if (descriptor.cwd !== proofRoot || bytesSha256(proofDefinitionBytes) !== descriptor.definition_sha256
+        || !proofDefinitionBytes.equals(targetDefinitionBytes) || !currentDefinitionBytes.equals(targetDefinitionBytes)) {
+      throw new Error(`definition current/target bytes mismatch ${pair}`);
+    }
+    const proofRoutingBytes = canonicalFile(join(proofRoot, descriptor.routing_path), `proof routing ${pair}`);
+    const currentRoutingBytes = canonicalFile(join(root, descriptor.routing_path), `current routing ${pair}`);
+    const targetRoutingBytes = trackedBytes(root, commit, descriptor.routing_path, `routing ${pair}`);
+    if (bytesSha256(proofRoutingBytes) !== descriptor.routing_sha256
+        || !proofRoutingBytes.equals(targetRoutingBytes) || !currentRoutingBytes.equals(targetRoutingBytes)) {
+      throw new Error(`routing current/target bytes mismatch ${pair}`);
+    }
+    runByPair.set(pair, run);
+  }
+  const expectedPairs = ['claude', 'codex'].flatMap((harness) => LOGICAL_ROLES.map((role) => `${harness}/${role}`));
+  if (stable([...runByPair.keys()].sort()) !== stable(expectedPairs.sort())) throw new Error('native descriptor matrix exact-set mismatch');
+
+  const delegatedRoots = [...new Set(envelope.runs.flatMap((run) => run.native_descriptor.write_roots || []).map((path) => resolve(path)))];
+  for (const [path, label] of [[native.anchor_path, 'anchor'], [native.envelope_path, 'envelope'],
+    [native.summary_path, 'summary'], [native.consume_path, 'consume'],
+    [native.verification_stdout_path, 'verification stdout'], [native.tcb_path, 'TCB'],
+    [native.verifier_path, 'verifier']]) {
+    if (delegatedRoots.some((writeRoot) => within(writeRoot, path))) throw new Error(`${label} overlaps delegated child root`);
+  }
+
+  const summary = parseJson(external.summary_path, 'summary');
+  const summaryCoreKeys = ['schema_version', 'transaction_id', 'anchor_sha256', 'envelope_path', 'envelope_sha256',
+    'public_key_fingerprint_sha256', 'target_commit', 'harnesses', 'roles', 'receipts', 'completed_at'];
+  verifySigned(summary, summaryCoreKeys, 'summary_core_sha256', 'signature_ed25519', evidenceKey, 'summary');
+  if (summary.schema_version !== 'luca.agent-evidence-summary.v2' || summary.transaction_id !== anchor.transaction_id
+      || summary.anchor_sha256 !== native.anchor_sha256 || summary.envelope_path !== relative(evidenceRoot, native.envelope_path)
+      || summary.envelope_sha256 !== native.envelope_sha256 || summary.public_key_fingerprint_sha256 !== evidenceFingerprint
+      || summary.target_commit !== commit || stable(summary.harnesses) !== stable(['claude', 'codex'])
+      || stable(summary.roles) !== stable([...LOGICAL_ROLES]) || !Array.isArray(summary.receipts)
+      || summary.receipts.length !== 8) throw new Error('summary binding/matrix invalid');
+  iso(summary.completed_at, 'summary.completed_at');
+
+  const consumption = parseJson(external.consume_path, 'consumption');
+  if (!exactKeys(consumption, ['schema_version', 'anchor_sha256', 'envelope_sha256', 'verified_at'])
+      || consumption.schema_version !== 'luca.agent-evidence-consumption.v1'
+      || consumption.anchor_sha256 !== native.anchor_sha256 || consumption.envelope_sha256 !== native.envelope_sha256) {
+    throw new Error('one-use consumption binding invalid');
+  }
+  iso(consumption.verified_at, 'consumption.verified_at');
+  const verificationLines = external.verification_stdout_path.toString('utf8').split('\n');
+  if (verificationLines.length !== 3 || verificationLines[2] !== ''
+      || verificationLines[1] !== 'AGENT_EVIDENCE_VERIFIED') throw new Error('independent verifier stdout shape invalid');
+  const verificationRecord = parseJson(Buffer.from(verificationLines[0], 'utf8'), 'verification stdout record');
+  if (!exactKeys(verificationRecord, ['transaction_id', 'receipts', 'anchor_sha256', 'consumed'])
+      || verificationRecord.transaction_id !== anchor.transaction_id || verificationRecord.receipts !== 8
+      || verificationRecord.anchor_sha256 !== native.anchor_sha256
+      || verificationRecord.consumed !== native.consume_path) throw new Error('independent verifier stdout binding invalid');
+
+  if (!Array.isArray(native.edges) || native.edges.length !== 8) throw new Error('edge matrix must contain eight records');
+  const parents = new Set(); const children = new Set(); const edgePairs = new Set();
+  const receiptCoreKeys = ['schema_version', 'transaction_id', 'run_id', 'anchor_sha256', 'envelope_sha256',
+    'public_key_fingerprint_sha256', 'harness', 'role', 'target_commit', 'native_descriptor_sha256',
+    'nonce_commitment_sha256', 'parent_id', 'child_id', 'spawn_id', 'source_log_sha256', 'output_sha256',
+    'events', 'created_at', 'completed_at', 'expires_at'];
+  for (const edge of native.edges) {
+    if (!exactKeys(edge, EDGE_KEYS)) throw new Error('edge keys are not exact');
+    const pair = `${edge.harness}/${edge.role}`;
+    const run = runByPair.get(pair);
+    if (!run || edgePairs.has(pair) || typeof edge.parent_id !== 'string' || !edge.parent_id
+        || typeof edge.child_id !== 'string' || !edge.child_id || edge.parent_id === edge.child_id
+        || parents.has(edge.parent_id) || children.has(edge.child_id) || parents.has(edge.child_id) || children.has(edge.parent_id)) {
+      throw new Error(`edge identity/exact-set invalid ${pair}`);
+    }
+    edgePairs.add(pair); parents.add(edge.parent_id); children.add(edge.child_id);
+    for (const key of ['definition_sha256', 'input_sha256', 'output_sha256', 'source_log_sha256',
+      'receipt_sha256', 'native_descriptor_sha256']) assertHash(edge[key], `edge.${key}`);
+    const descriptor = run.native_descriptor;
+    if (edge.definition_path !== descriptor.definition_path || edge.definition_sha256 !== descriptor.definition_sha256
+        || edge.input_sha256 !== descriptor.input_sha256 || edge.native_descriptor_sha256 !== run.native_descriptor_sha256) {
+      throw new Error(`edge descriptor/input/definition mismatch ${pair}`);
+    }
+    const summaryEntry = summary.receipts.find((item) => item?.harness === edge.harness && item?.role === edge.role);
+    if (!exactKeys(summaryEntry, ['harness', 'role', 'path', 'sha256', 'child_id'])
+        || typeof summaryEntry.path !== 'string' || summaryEntry.path.startsWith('/') || summaryEntry.path.includes('..')
+        || join(evidenceRoot, summaryEntry.path) !== edge.receipt_path || summaryEntry.sha256 !== edge.receipt_sha256
+        || summaryEntry.child_id !== edge.child_id) throw new Error(`summary/edge receipt mismatch ${pair}`);
+    const receiptBytes = canonicalFile(edge.receipt_path, `edge receipt ${pair}`, { privateFile: true, outsideRoot: root });
+    if (delegatedRoots.some((writeRoot) => within(writeRoot, edge.receipt_path))
+        || bytesSha256(receiptBytes) !== edge.receipt_sha256) throw new Error(`edge receipt path/hash invalid ${pair}`);
+    const signedReceipt = parseJson(receiptBytes, `edge receipt ${pair}`);
+    verifySigned(signedReceipt, receiptCoreKeys, 'receipt_core_sha256', 'signature_ed25519', evidenceKey, `edge receipt ${pair}`);
+    if (signedReceipt.schema_version !== 'luca.agent-evidence-receipt.v2'
+        || signedReceipt.transaction_id !== anchor.transaction_id || signedReceipt.run_id !== run.run_id
+        || signedReceipt.anchor_sha256 !== native.anchor_sha256 || signedReceipt.envelope_sha256 !== native.envelope_sha256
+        || signedReceipt.public_key_fingerprint_sha256 !== evidenceFingerprint
+        || signedReceipt.harness !== edge.harness || signedReceipt.role !== edge.role || signedReceipt.target_commit !== commit
+        || signedReceipt.native_descriptor_sha256 !== edge.native_descriptor_sha256
+        || signedReceipt.nonce_commitment_sha256 !== run.nonce_commitment_sha256
+        || signedReceipt.parent_id !== edge.parent_id || signedReceipt.child_id !== edge.child_id
+        || signedReceipt.source_log_sha256 !== edge.source_log_sha256 || signedReceipt.output_sha256 !== edge.output_sha256
+        || !Array.isArray(signedReceipt.events) || signedReceipt.events.length !== 3) {
+      throw new Error(`signed receipt edge binding invalid ${pair}`);
+    }
+    let previous = null;
+    const kinds = ['launch', 'session', 'result'];
+    const eventCores = signedReceipt.events.map((event, index) => {
+      const eventKeys = ['schema_version', 'kind', 'sequence', 'previous_sha256', 'payload'];
+      const core = verifySigned(event, eventKeys, 'event_sha256', 'signature_ed25519', evidenceKey, `edge event ${pair}/${index}`);
+      if (event.schema_version !== 'luca.agent-evidence-event.v2' || event.kind !== kinds[index]
+          || event.sequence !== index + 1 || event.previous_sha256 !== previous) throw new Error(`edge event chain invalid ${pair}`);
+      previous = event.event_sha256;
+      return core.payload;
+    });
+    const [launch, session, result] = eventCores;
+    if (!exactKeys(launch, ['run_id', 'anchor_sha256', 'envelope_sha256', 'nonce', 'nonce_commitment_sha256',
+      'harness', 'role', 'native_descriptor_sha256', 'target_commit', 'launched_at'])
+      || !exactKeys(session, ['run_id', 'parent_id', 'child_id', 'spawn_id', 'native_identity_kind', 'input_binding_kind',
+        'observed_input_sha256', 'observed_projection', 'source_log_sha256', 'raw_logs', 'stderr_sha256', 'observed_at'])
+      || !exactKeys(result, ['run_id', 'output_sha256', 'output_size', 'completed_at', 'exit_code'])) {
+      throw new Error(`edge event payload keys invalid ${pair}`);
+    }
+    if (launch.run_id !== run.run_id || launch.anchor_sha256 !== native.anchor_sha256
+        || launch.envelope_sha256 !== native.envelope_sha256 || launch.harness !== edge.harness || launch.role !== edge.role
+        || launch.native_descriptor_sha256 !== edge.native_descriptor_sha256 || launch.target_commit !== commit
+        || launch.nonce_commitment_sha256 !== run.nonce_commitment_sha256
+        || bytesSha256(Buffer.from(launch.nonce || '', 'utf8')) !== launch.nonce_commitment_sha256
+        || session.run_id !== run.run_id || session.parent_id !== edge.parent_id || session.child_id !== edge.child_id
+        || session.spawn_id !== signedReceipt.spawn_id || session.observed_input_sha256 !== edge.input_sha256
+        || session.observed_projection !== run.native_descriptor.projection
+        || session.native_identity_kind !== (edge.harness === 'claude'
+          ? 'dispatcher_session_to_child_agent_id' : 'parent_thread_to_child_thread')
+        || session.input_binding_kind !== (edge.harness === 'claude'
+          ? 'native_plaintext_prompt_sha256' : 'precommitted_dispatcher_plus_native_ciphertext_continuity')
+        || session.source_log_sha256 !== edge.source_log_sha256 || result.run_id !== run.run_id
+        || result.output_sha256 !== edge.output_sha256 || result.exit_code !== 0) {
+      throw new Error(`edge signed event binding invalid ${pair}`);
+    }
+    const expectedKinds = edge.harness === 'claude' ? ['public', 'stderr'] : ['public', 'stderr', 'parent_rollout', 'child_rollout'];
+    if (!Array.isArray(session.raw_logs) || stable(session.raw_logs.map((raw) => raw?.kind)) !== stable(expectedKinds)
+        || new Set(session.raw_logs.map((raw) => raw?.kind)).size !== expectedKinds.length
+        || !HASH.test(session.stderr_sha256 || '')) throw new Error(`edge raw log manifest invalid ${pair}`);
+    const framed = [];
+    for (const raw of session.raw_logs) {
+      if (!exactKeys(raw, ['kind', 'path', 'size', 'sha256']) || typeof raw.path !== 'string'
+          || raw.path.startsWith('/') || raw.path.includes('..') || !Number.isInteger(raw.size) || raw.size < 0
+          || !HASH.test(raw.sha256 || '')) throw new Error(`edge raw log entry invalid ${pair}`);
+      const rawPath = join(evidenceRoot, raw.path);
+      const rawBytes = canonicalFile(rawPath, `raw log ${pair}`, { privateFile: true, outsideRoot: root });
+      if (delegatedRoots.some((writeRoot) => within(writeRoot, rawPath))
+          || rawBytes.length !== raw.size || bytesSha256(rawBytes) !== raw.sha256) throw new Error(`edge raw log hash invalid ${pair}`);
+      framed.push(Buffer.from(`${raw.kind}:${rawBytes.length}:`), rawBytes);
+      if (raw.kind === 'stderr' && bytesSha256(rawBytes) !== session.stderr_sha256) throw new Error(`edge stderr hash invalid ${pair}`);
+    }
+    if (bytesSha256(Buffer.concat(framed)) !== edge.source_log_sha256) throw new Error(`edge source log framing invalid ${pair}`);
+  }
+  if (edgePairs.size !== 8 || parents.size !== 8 || children.size !== 8
+      || stable([...edgePairs].sort()) !== stable(expectedPairs.sort())) throw new Error('edge matrix identities are incomplete');
+  if (receiptPath !== join(root, NATIVE_PROOF_RECEIPT_PATH)) throw new Error('proof receipt path is not canonical');
+}
+
+// Production route authorization is deliberately separate from agent-launcher.mjs.  The frozen
+// U008 evidence TCB must be able to exercise the dormant definitions directly; first-class skills
+// and the orchestrator, by contrast, must pass this exact gate before every native role dispatch.
+// The CLI below always binds to this checkout's state.  The exported pure function accepts a root
+// only so the hermetic test suite can build mutation fixtures without rewriting the live state.
+export function verifyNativeRouteActivation({ root = ROOT, role }) {
+  const blocked = (code, detail = '') => Object.freeze({ authorized: false, code, detail, role });
+  if (!LOGICAL_ROLES.includes(role)) return blocked('UNKNOWN_ROLE');
+  if (!ACTIVATION_GATED_ROLES.has(role)) {
+    return Object.freeze({ authorized: true, code: 'EXISTING_ROUTE_UNGATED', role });
+  }
+  let canonicalRoot;
+  try { canonicalRoot = realpathSync(root); } catch { return blocked('ROOT_UNAVAILABLE'); }
+  const activationPath = join(canonicalRoot, '.claude', 'skill-os', 'native-agent-activation.json');
+  let activationBytes;
+  let activationStat;
+  let activation;
+  try {
+    activationStat = lstatSync(activationPath);
+    if (!activationStat.isFile() || activationStat.isSymbolicLink() || activationStat.nlink !== 1) {
+      return blocked('ACTIVATION_FILE_UNSAFE');
+    }
+    activationBytes = readFileSync(activationPath);
+    activation = JSON.parse(activationBytes.toString('utf8'));
+  } catch {
+    return blocked('ACTIVATION_STATE_INVALID');
+  }
+  if (!exactKeys(activation, ACTIVATION_KEYS)
+      || activation.schema_version !== 'luca.native-agent-activation.v1'
+      || !['DORMANT', 'ACTIVE'].includes(activation.status)) {
+    return blocked('ACTIVATION_STATE_INVALID');
+  }
+  if (activation.status === 'DORMANT') {
+    if (activation.proof_receipt_path !== null || activation.proof_receipt_sha256 !== null
+        || activation.activated_at !== null) return blocked('DORMANT_STATE_INVALID');
+    return blocked('DORMANT');
+  }
+  if (activation.proof_receipt_path !== NATIVE_PROOF_RECEIPT_PATH
+      || !/^[a-f0-9]{64}$/.test(activation.proof_receipt_sha256 || '')
+      || typeof activation.activated_at !== 'string'
+      || !Number.isFinite(Date.parse(activation.activated_at))) {
+    return blocked('ACTIVE_BINDING_INVALID');
+  }
+  const receiptPath = join(canonicalRoot, NATIVE_PROOF_RECEIPT_PATH);
+  let receiptBytes;
+  let receipt;
+  try {
+    const receiptStat = lstatSync(receiptPath);
+    if (!receiptStat.isFile() || receiptStat.isSymbolicLink() || receiptStat.nlink !== 1
+        || realpathSync(receiptPath) !== receiptPath) return blocked('PROOF_RECEIPT_UNSAFE');
+    receiptBytes = readFileSync(receiptPath);
+    if (bytesSha256(receiptBytes) !== activation.proof_receipt_sha256) {
+      return blocked('PROOF_RECEIPT_HASH_MISMATCH');
+    }
+    receipt = JSON.parse(receiptBytes.toString('utf8'));
+  } catch {
+    return blocked('PROOF_RECEIPT_INVALID');
+  }
+  try { validateApprovedReceipt({ root: canonicalRoot, receipt, receiptPath }); }
+  catch (error) { return blocked('PROOF_RECEIPT_NOT_APPROVED', error.message); }
+  return Object.freeze({
+    authorized: true,
+    code: 'AUTHORIZED',
+    role,
+    proof_receipt_path: activation.proof_receipt_path,
+    proof_receipt_sha256: activation.proof_receipt_sha256,
+    activation_sha256: bytesSha256(activationBytes),
+  });
+}
+
+const DIRECT_NEW_ROLE_SYNTAX = Object.freeze([
+  /\b(?:subagent_type|agent_type)\s*[=:]\s*["'`](?:work-agent|oracle)["'`]/i,
+  /\bAgent\((?:work-agent|oracle)\)/i,
+  /\btask\s*\([^\n]{0,160}\b(?:subagent_type|agent_type)\s*[=:]\s*["'`](?:work-agent|oracle)["'`]/i,
+  /\bspawn_agent\s*\([^\n]{0,160}\bagent_type\s*[=:]\s*["'`](?:work-agent|oracle)["'`]/i,
+  /\bspawn\s+[`"']?(?:work-agent|oracle)[`"']?\b/i,
+]);
+const DIRECT_NEW_ROLE_LAUNCH = /\bscripts\/agent-launcher\.mjs[^\n]*\blaunch\b[^\n]*--role\s+(?:work-agent|oracle)\b/i;
+
+export function findNativeRouteBypasses({ activationStatus, surfaces }) {
+  const errors = [];
+  const hasOperationalGate = (text, role) => text.includes(NATIVE_ROUTE_GATE_COMMAND)
+    && text.includes(`--role ${role}`) && text.includes('NATIVE_ROLE_ROUTE_ACTIVE');
+  for (const [rel, role] of Object.entries(NATIVE_ROUTE_SURFACES)) {
+    const text = surfaces[rel];
+    if (typeof text !== 'string') {
+      errors.push(`${rel} missing from production route surface map`);
+      continue;
+    }
+    if (activationStatus === 'DORMANT') {
+      const oracleSurface = role === 'oracle';
+      if (oracleSurface
+          && (!text.includes('NATIVE_ROLE_ROUTE_DORMANT_BLOCK')
+            || !text.includes('BLOCKED_NATIVE_ROLE_DORMANT'))) {
+        errors.push(`${rel} missing oracle dormant fail-closed marker`);
+      }
+    } else if (activationStatus === 'ACTIVE') {
+      if (!hasOperationalGate(text, role)) errors.push(`${rel} missing ACTIVE receipt-bound operational gate for ${role}`);
+      for (const pattern of DIRECT_NEW_ROLE_SYNTAX) {
+        if (pattern.test(text)) {
+          errors.push(`${rel} contains direct exact ${role} bypass while ACTIVE: ${pattern.source}`);
+          break;
+        }
+      }
+      if (/internal reasoning|内部推理|generic (?:agent|child)|Workflow runner/i.test(text)
+          && !/(?:never|不得|不能|不可|do not)[^\n]{0,120}(?:internal reasoning|内部推理|generic (?:agent|child)|Workflow runner)/i.test(text)
+          && !/(?:internal reasoning|内部推理|generic (?:agent|child)|Workflow runner)[^\n]{0,120}(?:never|不得|不能|不可)/i.test(text)) {
+        errors.push(`${rel} permits non-native substitution while ACTIVE`);
+      }
+    } else {
+      errors.push(`invalid activation status ${activationStatus || 'missing'}`);
+      break;
+    }
+  }
+  if (['DORMANT', 'ACTIVE'].includes(activationStatus)) {
+    for (const [rel, text] of Object.entries(surfaces)) {
+      if (typeof text !== 'string' || REGISTERED_ROLE_DEFINITIONS.has(rel)) continue;
+      for (const pattern of DIRECT_NEW_ROLE_SYNTAX) {
+        if (pattern.test(text)) {
+          errors.push(`${rel} contains direct new native role syntax while ${activationStatus}: ${pattern.source}`);
+          break;
+        }
+      }
+      if (activationStatus === 'DORMANT' && DIRECT_NEW_ROLE_LAUNCH.test(text)
+          && !(text.includes('NATIVE_ROLE_ROUTE_ACTIVE') && text.includes('NATIVE_ROLE_ROUTE_DORMANT_BLOCK'))) {
+        errors.push(`${rel} invokes the governed new-role launcher without an explicit DORMANT/ACTIVE branch`);
+      }
+    }
+  }
+  return errors;
+}
+
+export function collectNativeRouteSurfaces(root = ROOT) {
+  const found = {};
+  const walk = (rel) => {
+    const absolute = join(root, rel);
+    if (!existsSync(absolute)) return;
+    for (const entry of readdirSync(absolute, { withFileTypes: true })) {
+      const child = `${rel}/${entry.name}`;
+      if (entry.isDirectory()) walk(child);
+      else if (entry.isFile() && /\.(?:md|js|mjs)$/.test(entry.name)) found[child] = readFileSync(join(root, child), 'utf8');
+    }
+  };
+  walk('.claude/agents');
+  walk('.claude/commands');
+  walk('.claude/skills/office');
+  walk('.claude/workflows');
+  for (const rel of Object.keys(NATIVE_ROUTE_SURFACES)) {
+    if (!(rel in found) && existsSync(join(root, rel))) found[rel] = readFileSync(join(root, rel), 'utf8');
+  }
+  return found;
+}
+
+function runParityChecks() {
 const agents = readFileSync(join(ROOT, 'AGENTS.md'), 'utf8');
 let pass = 0, fail = 0;
 const check = (name, cond, detail = '') => {
@@ -346,55 +952,34 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   check('roles: 可执行 role call graph 不在 model-routing.yaml 之外直写模型 alias',
     aliasLeaks.length === 0, aliasLeaks.join(' | '));
 
-  const orch = readFileSync(join(ROOT, '.claude', 'agents', 'orchestrator.md'), 'utf8');
   const runner = readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8');
   const activationPath = join(ROOT, '.claude', 'skill-os', 'native-agent-activation.json');
   let activation;
   try { activation = JSON.parse(readFileSync(activationPath, 'utf8')); } catch { activation = null; }
-  const activationKeys = ['schema_version', 'status', 'proof_receipt_path', 'proof_receipt_sha256', 'activated_at'];
-  const activationExact = activation && same(sorted(Object.keys(activation)), sorted(activationKeys))
+  const activationExact = exactKeys(activation, ACTIVATION_KEYS)
     && activation.schema_version === 'luca.native-agent-activation.v1'
     && ['DORMANT', 'ACTIVE'].includes(activation.status);
   check('roles: native route activation state 精确且 fail-closed', activationExact,
     activation ? `status=${activation.status}` : 'missing/invalid activation state');
-  const oracleSkillFiles = [
-    '.claude/skills/office/brainstorm/SKILL.md',
-    '.claude/skills/office/ux-brainstorm/SKILL.md',
-    '.claude/skills/office/ux-research/SKILL.md',
-    '.claude/skills/office/deepresearch/SKILL.md',
-  ];
   const substitutionErrors = [];
   if (!/forbiddenClaims\s*=\s*\[[^\]]*agent_type[^\]]*subagent_type[^\]]*logical_role[^\]]*receipt[^\]]*evidence[^\]]*\]/s.test(runner)
       || !/Object\.hasOwn\(opts, key\)/.test(runner)
       || !/runner 不能证明 native role\/receipt/.test(runner)) {
     substitutionErrors.push('workflow-runner 未 fail-closed 拒绝 role/evidence claim');
   }
+  const routeSurfaces = collectNativeRouteSurfaces(ROOT);
+  if (activationExact) substitutionErrors.push(...findNativeRouteBypasses({
+    activationStatus: activation.status,
+    surfaces: routeSurfaces,
+  }));
   if (activationExact && activation.status === 'DORMANT') {
     if (activation.proof_receipt_path !== null || activation.proof_receipt_sha256 !== null
       || activation.activated_at !== null) substitutionErrors.push('DORMANT state 携带伪 proof/activation 数据');
-    const premature = [
-      ['.claude/agents/orchestrator.md', orch, /Native role invariant|按精确注册名 native spawn|luca\.work-packet\.v1 JSON/],
-      ...oracleSkillFiles.map((rel) => [rel, readFileSync(join(ROOT, rel), 'utf8'), /harness-native child mechanism|native child 机制/]),
-    ].filter(([, text, pattern]) => pattern.test(text)).map(([rel]) => rel);
-    if (premature.length) substitutionErrors.push(`DORMANT 时存在提前激活 call site: ${premature.join(',')}`);
   } else if (activationExact) {
-    if (!/^[a-f0-9]{64}$/.test(activation.proof_receipt_sha256 || '')
-      || typeof activation.proof_receipt_path !== 'string' || !activation.proof_receipt_path
-      || typeof activation.activated_at !== 'string' || !Number.isFinite(Date.parse(activation.activated_at))) {
-      substitutionErrors.push('ACTIVE state 缺 exact live proof binding');
-    }
-    if (!EXACT_ROLES.every((role) => orch.includes(`\`${role}\``))) substitutionErrors.push('orchestrator 未声明精确四 role');
-    if (!/Workflow runner[^\n]{0,160}(?:不能|不是|never)/i.test(orch)
-        && !/(?:不能|不是|never)[^\n]{0,160}Workflow runner/i.test(orch)) {
-      substitutionErrors.push('orchestrator 缺 Workflow runner 不可替代 role 声明');
-    }
-    for (const rel of oracleSkillFiles) {
-      const text = readFileSync(join(ROOT, rel), 'utf8');
-      if (!/subagent_type\s*=\s*["']oracle["']/.test(text)
-          || !/native child/i.test(text)
-          || !/BLOCKED/.test(text)
-          || !/generic agent/i.test(text)) {
-        substitutionErrors.push(`${rel} 未按精确 oracle native role fail-closed`);
+    for (const role of EXACT_ROLES) {
+      const routeGate = verifyNativeRouteActivation({ root: ROOT, role });
+      if (!routeGate.authorized) {
+        substitutionErrors.push(`ACTIVE state ${role} 未绑定 approved live proof: ${routeGate.code}`);
       }
     }
   }
@@ -403,4 +988,35 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
 }
 
 console.log(`\n=== check-agents-parity summary: PASS=${pass} FAIL=${fail} ===`);
-process.exit(fail ? 1 : 0);
+return fail ? 1 : 0;
+}
+
+function main(argv) {
+  const gateIndex = argv.indexOf('--native-route-gate');
+  if (gateIndex >= 0) {
+    if (argv.length !== 2 || gateIndex !== 0 || typeof argv[1] !== 'string') {
+      process.stderr.write('NATIVE_ROLE_ROUTE_BLOCKED INVALID_INVOCATION unknown\n');
+      return 4;
+    }
+    const result = verifyNativeRouteActivation({ role: argv[1] });
+    if (!result.authorized) {
+      process.stderr.write(`NATIVE_ROLE_ROUTE_BLOCKED ${result.code} ${argv[1]}\n`);
+      return 4;
+    }
+    if (result.code === 'EXISTING_ROUTE_UNGATED') {
+      process.stdout.write(`NATIVE_ROLE_ROUTE_EXISTING_UNGATED ${argv[1]}\n`);
+      return 0;
+    }
+    process.stdout.write(`NATIVE_ROLE_ROUTE_AUTHORIZED ${argv[1]} ${result.proof_receipt_sha256}\n`);
+    return 0;
+  }
+  if (argv.length) {
+    process.stderr.write('usage: check-agents-parity.mjs [--native-route-gate ROLE]\n');
+    return 2;
+  }
+  return runParityChecks();
+}
+
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(SELF)) {
+  process.exitCode = main(process.argv.slice(2));
+}

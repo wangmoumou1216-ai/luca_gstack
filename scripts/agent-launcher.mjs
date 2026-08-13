@@ -17,6 +17,7 @@ const SELF = fileURLToPath(import.meta.url);
 const DEFAULT_ROOT = resolve(dirname(SELF), '..');
 export const WORK_PACKET_VERSION = 'luca.work-packet.v1';
 export const LOGICAL_ROLES = Object.freeze(['plan-agent', 'work-agent', 'oracle', 'quality-gate']);
+export const ACTIVATION_GATED_ROLES = Object.freeze(['work-agent', 'oracle']);
 export const ROLE_CONTRACT = Object.freeze({
   'plan-agent': Object.freeze({ tier: 'reasoning-heavy', claude: '.claude/agents/plan-agent.md', codex: '.codex/agents/plan-agent.toml' }),
   'work-agent': Object.freeze({ tier: 'core-execution', claude: '.claude/agents/work-agent.md', codex: '.codex/agents/work-agent.toml' }),
@@ -453,7 +454,7 @@ export function nativeDispatchContract(descriptor) {
   });
 }
 
-export function spawnNativeLaunch(launch, { stdout = 'pipe', stderr = 'pipe' } = {}) {
+function spawnNativeLaunch(launch, { stdout = 'pipe', stderr = 'pipe' } = {}) {
   if (!launch || launch.schema_version !== 'luca.native-launch.v2') fail('invalid native launch descriptor');
   if (launch.harness === 'codex') fail('Codex app-server launches require runNativeLaunch');
   if (!isAbsolute(launch.command_path)) fail('native command must be absolute');
@@ -465,7 +466,7 @@ export function spawnNativeLaunch(launch, { stdout = 'pipe', stderr = 'pipe' } =
   });
 }
 
-export async function runNativeLaunch(launch, { stdout = process.stdout, stderr = process.stderr, timeoutMs = 300_000, scratch = null } = {}) {
+async function runNativeLaunch(launch, { stdout = process.stdout, stderr = process.stderr, timeoutMs = 300_000, scratch = null } = {}) {
   if (!launch || launch.schema_version !== 'luca.native-launch.v2') fail('invalid native launch descriptor');
   if (launch.harness === 'claude') {
     const child = spawnNativeLaunch(launch);
@@ -551,6 +552,17 @@ async function main() {
     const root = option(argv, '--root') || DEFAULT_ROOT;
     const harness = option(argv, '--harness');
     const role = option(argv, '--role');
+    // Production activation applies only to the two routes introduced by U-008.
+    // Keep this before packet loading, scratch creation and CLI identity probes so
+    // DORMANT is mechanically zero-spawn even when no native CLI is installed.
+    let earlyActivation = null;
+    if (mode === 'launch' && ACTIVATION_GATED_ROLES.includes(role)) {
+      const { verifyNativeRouteActivation } = await import('./check-agents-parity.mjs');
+      earlyActivation = verifyNativeRouteActivation({ root, role });
+      if (!earlyActivation.authorized) {
+        fail(`NATIVE_ROLE_ROUTE_BLOCKED ${earlyActivation.code} ${role}`);
+      }
+    }
     const packetPath = option(argv, '--packet');
     const dispatcherId = option(argv, '--dispatcher-id') || `manual-${process.pid}`;
     const packet = packetPath ? loadWorkPacket(packetPath) : null;
@@ -571,6 +583,19 @@ async function main() {
       return;
     }
     try {
+      // Re-read the approved receipt in this same process immediately before the
+      // native run.  A changed activation/receipt between preflight and dispatch
+      // fails closed; programmatic prepare/run exports remain available only for
+      // the frozen evidence TCB and do not silently become production routes.
+      if (ACTIVATION_GATED_ROLES.includes(role)) {
+        const { verifyNativeRouteActivation } = await import('./check-agents-parity.mjs');
+        const immediateActivation = verifyNativeRouteActivation({ root, role });
+        if (!immediateActivation.authorized
+            || immediateActivation.proof_receipt_sha256 !== earlyActivation.proof_receipt_sha256
+            || immediateActivation.activation_sha256 !== earlyActivation.activation_sha256) {
+          fail(`NATIVE_ROLE_ROUTE_BLOCKED ${immediateActivation.code} ${role}`);
+        }
+      }
       process.exitCode = await runNativeLaunch(launch, { scratch });
     } finally {
       const canonical = realpathSync(scratch);

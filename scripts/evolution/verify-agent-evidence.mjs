@@ -39,18 +39,35 @@ const EXEC_ID_RE = /^exec-[a-f0-9-]{36}$/i;
 const NATIVE_WORK_VERIFY_COMMAND = "test -f scripts/agent-launcher.mjs && printf 'LUCA_NATIVE_WORK_AGENT_VERIFY_WP_NATIVE_SMOKE_V1\\n'";
 const TARGET_TREE_BASE_PATHS = Object.freeze([
   ...ROLES.flatMap((role) => [`.claude/agents/${role}.md`, `.codex/agents/${role}.toml`]),
+  '.claude/agents/orchestrator.md',
+  '.claude/agents/work-agent-template.md',
   '.claude/skill-os/model-routing.yaml',
+  '.claude/skill-os/native-agent-activation.json',
+  '.claude/skill-os/schemas/work-packet.schema.json',
+  '.claude/skill-os/skill-routing-map.yaml',
+  '.claude/skill-os/input-modes.yaml',
+  '.claude/skill-os/optional-workflow-graph.yaml',
   '.claude/settings.json',
   '.claude/hooks/post-edit.mjs',
+  '.claude/hooks/route-guard.mjs',
+  '.claude/skills/office/brainstorm/SKILL.md',
+  '.claude/skills/office/deepresearch/SKILL.md',
+  '.claude/skills/office/ux-brainstorm/SKILL.md',
+  '.claude/skills/office/ux-research/SKILL.md',
+  '.claude/skills/office/code-hygiene/SKILL.md',
   '.codex/hooks.json',
+  '.codex/config.toml',
   '.codex/codex-hook-adapter.mjs',
+  '.codex/workflow-runner.mjs',
   'AGENTS.md',
   'CLAUDE.md',
   'scripts/agent-launcher.mjs',
+  'scripts/check-agents-parity.mjs',
 ]);
-const GIT_ENV_KEYS = Object.freeze([
-  'GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR',
-  'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+const TARGET_TREE_EXACT_NAMESPACES = Object.freeze([
+  '.claude/agents',
+  '.codex/agents',
+  '.claude/skill-os/schemas',
 ]);
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const stable = (value) => {
@@ -75,7 +92,9 @@ const option = (argv, name) => {
 
 function cleanGitEnv() {
   const env = { ...process.env };
-  for (const key of GIT_ENV_KEYS) delete env[key];
+  for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
+  env.GIT_NO_REPLACE_OBJECTS = '1';
+  env.GIT_OPTIONAL_LOCKS = '0';
   return env;
 }
 
@@ -90,11 +109,69 @@ function gitRead(root, args, label) {
   return result.stdout;
 }
 
+function assertNoReplaceRefs(root) {
+  const refs = gitRead(root, ['for-each-ref', '--format=%(refname)', 'refs/replace'], 'git replacement-ref scan')
+    .toString('utf8').trim();
+  if (refs) fail(`target repository contains forbidden refs/replace entries: ${refs.replace(/\s+/g, ',')}`);
+}
+
+function parseTreeRecords(bytes, label) {
+  if (!bytes.length) return [];
+  return bytes.toString('utf8').split('\0').filter(Boolean).map((record) => {
+    const match = record.match(/^(\d{6}) ([a-z]+) ([a-f0-9]{40})\t(.+)$/s);
+    if (!match) fail(`${label} emitted a malformed tree record`);
+    return { mode: match[1], type: match[2], object_id: match[3], path: match[4] };
+  });
+}
+
+function namespaceTreePaths(root, targetCommit) {
+  const records = parseTreeRecords(
+    gitRead(root, ['ls-tree', '-r', '-z', targetCommit, '--', ...TARGET_TREE_EXACT_NAMESPACES], 'git critical namespace tree'),
+    'git critical namespace tree',
+  );
+  if (!records.length) fail('target commit has no critical agent/schema namespace entries');
+  for (const entry of records) {
+    if (!['100644', '100755'].includes(entry.mode) || entry.type !== 'blob') {
+      fail(`critical namespace contains symlink/submodule/non-blob entry: ${entry.path}`);
+    }
+  }
+  const targetPaths = new Set(records.map(({ path }) => path));
+  const additions = gitRead(root,
+    ['ls-files', '--others', '-z', '--', ...TARGET_TREE_EXACT_NAMESPACES],
+    'git critical namespace untracked scan');
+  if (additions.length) {
+    fail(`critical namespace contains relevant untracked additions: ${additions.toString('utf8').split('\0').filter(Boolean).join(',')}`);
+  }
+  return targetPaths;
+}
+
+function assertExactIndexEntry(root, targetEntry) {
+  const tag = gitRead(root, ['ls-files', '-v', '-z', '--', targetEntry.path], `git index flags ${targetEntry.path}`);
+  if (!tag.equals(Buffer.from(`H ${targetEntry.path}\0`, 'utf8'))) {
+    fail(`critical target path has skip-worktree/assume-unchanged/noncanonical index flags: ${targetEntry.path}`);
+  }
+  const staged = gitRead(root, ['ls-files', '-s', '-z', '--', targetEntry.path], `git staged entry ${targetEntry.path}`)
+    .toString('utf8');
+  const expected = `${targetEntry.mode} ${targetEntry.object_id} 0\t${targetEntry.path}\0`;
+  if (staged !== expected) fail(`critical target index entry differs from target commit: ${targetEntry.path}`);
+}
+
 function targetTreeManifest(root, targetCommit, workPacketPath) {
+  assertNoReplaceRefs(root);
+  if (!/^[a-f0-9]{40}$/.test(targetCommit)
+    || gitRead(root, ['cat-file', '-t', targetCommit], 'git target object type').toString('utf8') !== 'commit\n') {
+    fail('target commit is not one exact commit object');
+  }
+  const targetTree = gitRead(root, ['rev-parse', `${targetCommit}^{tree}`], 'git target tree').toString('utf8').trim();
+  if (!/^[a-f0-9]{40}$/.test(targetTree)
+    || gitRead(root, ['cat-file', '-t', targetTree], 'git target tree type').toString('utf8') !== 'tree\n') {
+    fail('target commit does not resolve to one exact tree object');
+  }
   const packetReal = realpathSync(workPacketPath);
   if (!within(root, packetReal)) fail('work packet must be a tracked target-commit file inside the frozen checkout');
   const packetRel = packetReal.slice(root.length + 1);
-  const paths = [...new Set([...TARGET_TREE_BASE_PATHS, packetRel])].sort();
+  const namespacePaths = namespaceTreePaths(root, targetCommit);
+  const paths = [...new Set([...TARGET_TREE_BASE_PATHS, ...namespacePaths, packetRel])].sort();
   const manifest = [];
   for (const path of paths) {
     const absolute = resolve(root, path);
@@ -103,13 +180,14 @@ function targetTreeManifest(root, targetCommit, workPacketPath) {
     if (!st.isFile() || st.isSymbolicLink() || st.nlink !== 1 || (st.mode & 0o022) !== 0) {
       fail(`critical target path is not a single-link regular non-writable file: ${path}`);
     }
-    const listing = gitRead(root, ['ls-tree', '-z', targetCommit, '--', path], `git ls-tree ${path}`);
-    const match = listing.toString('utf8').match(/^(100644|100755) blob ([a-f0-9]{40})\t([^\0]+)\0$/);
-    if (!match || match[3] !== path) fail(`critical target path is not one tracked regular blob at target commit: ${path}`);
-    const blob = gitRead(root, ['cat-file', 'blob', match[2]], `git cat-file ${path}`);
+    const entries = parseTreeRecords(gitRead(root, ['ls-tree', '-z', targetCommit, '--', path], `git ls-tree ${path}`), `git ls-tree ${path}`);
+    if (entries.length !== 1 || entries[0].path !== path || !['100644', '100755'].includes(entries[0].mode)
+      || entries[0].type !== 'blob') fail(`critical target path is not one tracked regular blob at target commit: ${path}`);
+    assertExactIndexEntry(root, entries[0]);
+    const blob = gitRead(root, ['cat-file', 'blob', entries[0].object_id], `git cat-file ${path}`);
     const bytes = readFileSync(absolute);
     if (!bytes.equals(blob)) fail(`critical target bytes differ from target-commit blob: ${path}`);
-    manifest.push({ path, mode: match[1], type: 'blob', object_id: match[2], size: bytes.length, sha256: sha256(bytes) });
+    manifest.push({ path, mode: entries[0].mode, type: 'blob', object_id: entries[0].object_id, size: bytes.length, sha256: sha256(bytes) });
   }
   return manifest;
 }
@@ -784,6 +862,38 @@ function claudeFamilyMatches(alias, resolved) {
     && new RegExp(`^claude-${alias.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}(?:-|$)`, 'i').test(resolved);
 }
 
+function assertClaudeWorkResult(events, bashId, parentSpawnId, sentinel) {
+  const linked = [];
+  for (const event of events) {
+    const parts = Array.isArray(event?.message?.content) ? event.message.content : [];
+    for (const part of parts) if (part?.type === 'tool_result') {
+      if (part.tool_use_id === bashId) linked.push({ event, part });
+    }
+  }
+  if (linked.length !== 1 || linked[0].event?.parent_tool_use_id !== parentSpawnId) {
+    fail('Claude work verification must have exactly one result bound to the sole Bash call');
+  }
+  const { event, part } = linked[0];
+  exactKeys(part, ['type', 'tool_use_id', 'content', 'is_error'], 'Claude Bash tool_result');
+  // stream-json's exact is_error:false plus the frozen printf command is the
+  // structured zero-exit attestation; its content removes the terminal newline.
+  if (part.is_error !== false || typeof part.content !== 'string' || part.content !== sentinel) {
+    fail('Claude work verification result is not exact structured zero-exit sentinel output');
+  }
+  if (Object.hasOwn(event, 'tool_use_result')) {
+    fail('Claude Bash result has a duplicate/ambiguous snake-case result representation');
+  }
+  if (Object.hasOwn(event, 'toolUseResult')) {
+    exactKeys(event.toolUseResult,
+      ['stdout', 'stderr', 'interrupted', 'isImage', 'noOutputExpected'], 'Claude Bash detailed result');
+    if (event.toolUseResult.stdout !== sentinel || event.toolUseResult.stderr !== ''
+      || event.toolUseResult.interrupted !== false || event.toolUseResult.isImage !== false
+      || event.toolUseResult.noOutputExpected !== false) {
+      fail('Claude Bash detailed result is not exact zero-exit stdout/stderr state');
+    }
+  }
+}
+
 function verifyClaudeLogs(bytes, run, expectedInput, expectedResult) {
   const events = parseJsonl(bytes, 'Claude raw transport');
   const indexed = events.map((event, index) => ({ event, index }));
@@ -818,16 +928,7 @@ function verifyClaudeLogs(bytes, run, expectedInput, expectedResult) {
     if (observedCommands.some((command) => typeof command !== 'string')
       || stable([...observedCommands].sort()) !== stable([...frozenCommands].sort())) fail('Claude work child Bash calls differ from the frozen verification command');
     const bashId = childToolUses[0]?.item?.id;
-    const resultTexts = events.flatMap((event) => {
-      const parts = Array.isArray(event?.message?.content) ? event.message.content : [];
-      const results = parts.filter((part) => part?.type === 'tool_result' && part.tool_use_id === bashId)
-        .map((part) => textFromContent(part.content));
-      if (event?.tool_use_id === bashId && event?.tool_use_result !== undefined) results.push(textFromContent(event.tool_use_result));
-      return results;
-    }).filter(Boolean);
-    if (resultTexts.length !== 1 || !resultTexts[0].includes(run.packet.verification_sentinel)) {
-      fail('Claude work verification result lacks the frozen success sentinel');
-    }
+    assertClaudeWorkResult(events, bashId, tool.id, run.packet.verification_sentinel);
   }
   const spawnId = tool.id;
   const starts = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_started'
@@ -907,6 +1008,13 @@ function codexItemEvents(messages) {
     }
   }
   return events;
+}
+
+function assertStrictOrder(label, ...indices) {
+  if (indices.some((index) => !Number.isInteger(index) || index < 0)
+    || indices.some((index, position) => position > 0 && indices[position - 1] >= index)) {
+    fail(`${label} violates the required strict partial order`);
+  }
 }
 
 function assertCodexTurn(turn, expectedStatus, label) {
@@ -1003,6 +1111,9 @@ function verifyCodexPublic(publicBytes, run, expectedInput) {
   assertCodexTurn(turnResponse[0].result.turn, 'inProgress', 'Codex turn/start response');
   assertCodexTurn(turnStarted[0].params.turn, 'inProgress', 'Codex parent turn/started notification');
   assertCodexTurn(turnCompleted[0].params.turn, 'completed', 'Codex parent turn/completed notification');
+  assertStrictOrder('Codex public request/thread/parent-turn lifecycle',
+    messages.indexOf(initialize[0]), messages.indexOf(threadResponse[0]), messages.indexOf(threadStarted[0]),
+    messages.indexOf(turnResponse[0]), messages.indexOf(turnStarted[0]), messages.indexOf(turnCompleted[0]));
   const itemEvents = codexItemEvents(messages);
   if (itemEvents.some(({ item }) => /collab/i.test(String(item?.type || ''))
     && item?.type !== 'collabAgentToolCall')) fail('Codex app-server exposes a non-v2 collaboration item');
@@ -1051,6 +1162,25 @@ function verifyCodexPublic(publicBytes, run, expectedInput) {
   if (!CALL_ID_RE.test(waitPair[0].item.id || '')
     || waitPair.some(({ message }) => message.params.threadId !== parentId || message.params.turnId !== turnId)) {
     fail('Codex wait activity is not bound to the parent turn');
+  }
+  const parentTurnStartIndex = messages.indexOf(turnStarted[0]);
+  const parentTurnEndIndex = messages.indexOf(turnCompleted[0]);
+  const childTurnStartIndex = messages.indexOf(childTurnStarts[0]);
+  const childTurnEndIndex = messages.indexOf(childTurnEnds[0]);
+  assertStrictOrder('Codex public spawn lifecycle', parentTurnStartIndex,
+    activities[0].index, activities[1].index, childTurnStartIndex, childTurnEndIndex, parentTurnEndIndex);
+  assertStrictOrder('Codex public spawn/wait lifecycle', activities[1].index,
+    waitPair[0].index, waitPair[1].index, parentTurnEndIndex);
+  assertStrictOrder('Codex public child-before-wait completion lifecycle', childTurnEndIndex,
+    waitPair[1].index, parentTurnEndIndex);
+  for (const { message, index } of itemEvents) {
+    const owner = message.params.threadId;
+    if (owner === parentId && !(parentTurnStartIndex < index && index < parentTurnEndIndex)) {
+      fail('Codex parent item escaped its public turn lifetime');
+    }
+    if (owner === childId && !(childTurnStartIndex < index && index < childTurnEndIndex)) {
+      fail('Codex child item escaped its public turn lifetime');
+    }
   }
   if (itemEvents.some(({ message }) => {
     const owner = message.params.threadId;
@@ -1175,6 +1305,11 @@ function verifyCodexLogs(publicBytes, parentBytes, childBytes, run, expectedInpu
   const begun = edges.filter((event) => event?.payload?.kind === 'started');
   if (begun.length !== 1 || begun[0].payload.event_id !== spawnId || edges.some((event) => event.payload.kind !== 'started')) fail('Codex native persisted start graph is not exact');
   const childId = begun[0].payload.agent_thread_id;
+  const spawnOutputEvent = callOutputs.find((event) => event.payload.call_id === spawnId);
+  const waitOutputEvent = callOutputs.find((event) => event.payload.call_id === waitCalls[0].payload.call_id);
+  assertStrictOrder('Codex persisted parent spawn/wait lifecycle',
+    parent.indexOf(spawnCalls[0]), parent.indexOf(spawnOutputEvent), parent.indexOf(begun[0]),
+    parent.indexOf(waitCalls[0]), parent.indexOf(waitOutputEvent));
   if (!childId || childId === parentId) fail('Codex child identity is missing/not distinct');
   if (childId !== observed.childId || spawnId !== observed.spawnId) fail('Codex public plaintext seam differs from persisted native edge');
   const spawnOutput = callOutputs.find((event) => event.payload.call_id === spawnId)?.payload?.output;
@@ -1210,6 +1345,10 @@ function verifyCodexLogs(publicBytes, parentBytes, childBytes, run, expectedInpu
   const outputs = child.filter((event) => event?.type === 'event_msg' && event?.payload?.type === 'agent_message')
     .map((event) => event.payload.message).filter((value) => typeof value === 'string' && value.trim());
   if (outputs.length !== 1 || outputs[0].trim() !== expectedResult) fail('Codex child result differs from the exact frozen result');
+  const outputEvent = child.find((event) => event?.type === 'event_msg'
+    && event?.payload?.type === 'agent_message' && event.payload.message === outputs[0]);
+  assertStrictOrder('Codex persisted child task lifecycle',
+    child.indexOf(childStarts[0]), child.indexOf(outputEvent), child.indexOf(childCompletes[0]));
   if (run.role === 'work-agent') {
     const toolCalls = child.filter((event) => event?.type === 'response_item' && event?.payload?.type === 'custom_tool_call');
     const toolResults = child.filter((event) => event?.type === 'response_item' && event?.payload?.type === 'custom_tool_call_output');
@@ -1217,6 +1356,9 @@ function verifyCodexLogs(publicBytes, parentBytes, childBytes, run, expectedInpu
       || toolResults[0].payload.call_id !== toolCalls[0].payload.call_id) {
       fail('Codex work child tool graph is not one exact exec call/result');
     }
+    assertStrictOrder('Codex persisted work tool lifecycle',
+      child.indexOf(childStarts[0]), child.indexOf(toolCalls[0]), child.indexOf(toolResults[0]),
+      child.indexOf(outputEvent), child.indexOf(childCompletes[0]));
     const observedCommand = staticExecCommand(toolCalls[0].payload.input, root);
     if (observedCommand !== run.packet.packet.verification[0].command) fail('Codex work child executed a non-frozen verification command');
     if (!Buffer.from(stable(toolResults[0].payload), 'utf8').toString('utf8').includes(run.packet.verification_sentinel)) {

@@ -142,9 +142,14 @@ AI Native不等于「加一个AI按钮」。它意味着：
     4期间是绝对约束。永不说「这个设计很好」「有意思」
     「符合行业惯例」等。选择立场，引用证据，为之辩护。
 
-12. **Oracle是前台阻塞。** Phase 5的对抗性审查使用 `subagent_type="oracle"` +
-    `run_in_background=false`。必须在Phase 6之前完成。最多3轮，
-    收敛保护强制执行。
+12. **Oracle route 当前 dormant。** 在仓库 activation record 变为 ACTIVE 且绑定获批 live-proof
+    receipt 前，Phase 5 返回 `BLOCKED_NATIVE_ROLE_DORMANT`，不得调度或模拟 Oracle。
+    <!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
+
+    **ACTIVE 分支合同：** 仅当 activation record 为 ACTIVE，才在审查前立即执行
+    `node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`。
+    launcher 会在同一进程内复验 receipt；仍禁止直接 task/Agent 精确角色语法及 generic/root 替代。
+    <!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 13. **懒加载references。** 不在会话开始时读取
     `references/design-proposal-template.md`、`references/pressure-test.md`、
@@ -487,20 +492,16 @@ Deep-product：3+，至少一个非显而易见。
 - Phase 3追问回答摘要（来自 `<interrogation_log>`）
 - Phase 2.5 AI Native评估
 
-前台发射Oracle：
+当前 dormant implementation commit 不开放 production Oracle route。到此立即返回
+`BLOCKED_NATIVE_ROLE_DORMANT`，不得进入 Phase 6，不得在主会话内部执行审查 prompt，也不得
+换 generic child。U008 隔离 evidence TCB 会直接调用 candidate launcher 证明注册定义；该证明
+路径不经过本 skill。只有后续 activation commit 绑定获批 live-proof receipt 后，才能替换此块。
+<!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
 
-```
-Subagent调度：Oracle（前台，必须在Phase 6前完成）
-  type: oracle
-  background: false
-  description: "对抗性设计方案审查 — 第{N}轮"
-  prompt: {ORACLE_REVIEW_PROMPT from references/adversarial-review.md}
-
-# 如果环境支持task()：
-#   task(subagent_type="oracle", load_skills=[], run_in_background=false, ...)
-# 如果环境不支持task()：
-#   以内部推理执行Oracle prompt，以<review_findings> XML格式输出。
-```
+activation record 为 ACTIVE 后，只能以
+`node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`
+替换上述停点；launcher 在执行前立即复验 receipt。直接 task/Agent 精确角色语法与 generic/root
+fallback 始终禁止。<!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 ### 5.3 — 分类处理发现
 

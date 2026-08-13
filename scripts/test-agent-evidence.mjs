@@ -5,7 +5,7 @@ import {
 } from 'node:crypto';
 import {
   chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync,
-  rmSync, statSync, writeFileSync,
+  rmSync, statSync, symlinkSync, unlinkSync, writeFileSync,
 } from 'node:fs';
 import { createConnection } from 'node:net';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -64,13 +64,17 @@ const signedEvent = (privateKey, kind, sequence, previous, payload) => {
 };
 
 function git(cwd, args) {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
+  env.GIT_NO_REPLACE_OBJECTS = '1';
+  env.GIT_OPTIONAL_LOCKS = '0';
+  Object.assign(env, {
+    GIT_AUTHOR_NAME: 'agent-evidence-test', GIT_AUTHOR_EMAIL: 'agent-evidence-test@localhost',
+    GIT_COMMITTER_NAME: 'agent-evidence-test', GIT_COMMITTER_EMAIL: 'agent-evidence-test@localhost',
+  });
   const result = spawnSync('git', args, {
     cwd, encoding: 'utf8', input: '',
-    env: {
-      ...process.env,
-      GIT_AUTHOR_NAME: 'agent-evidence-test', GIT_AUTHOR_EMAIL: 'agent-evidence-test@localhost',
-      GIT_COMMITTER_NAME: 'agent-evidence-test', GIT_COMMITTER_EMAIL: 'agent-evidence-test@localhost',
-    },
+    env,
   });
   assert.equal(result.status, 0, `git ${args.join(' ')} failed: ${result.stderr}`);
   return result.stdout.trim();
@@ -224,12 +228,17 @@ function claudeRaw(run, packet, mutation) {
   ];
   if (run.role === 'work-agent') {
     const bashId = `bash-${spawnId}`;
+    const result = { type: 'tool_result', tool_use_id: bashId,
+      content: mutation.claudeAdditionalOutput ? `${packet.verification_sentinel}\nEXTRA` : packet.verification_sentinel,
+      is_error: mutation.claudeSentinelBeforeFailure ? true : false };
+    if (mutation.claudeResultExtraField) result.extra = 'forbidden';
+    const results = [result];
+    if (mutation.claudeDuplicateResult) results.push({ ...result });
     events.push(
       { type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId, subagent_type: run.role,
         message: { model, content: [{ type: 'tool_use', name: 'Bash', id: bashId,
           input: { command: packet.packet.verification[0].command } }] } },
-      { type: 'user', session_id: parentId, message: { content: [{ type: 'tool_result', tool_use_id: bashId,
-        content: packet.verification_sentinel }] } },
+      { type: 'user', session_id: parentId, parent_tool_use_id: spawnId, message: { content: results } },
     );
   } else if (mutation.extraTool && run.role === 'oracle') {
     events.push({ type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId, subagent_type: run.role,
@@ -302,10 +311,18 @@ function codexRaw(run, packet, mutation) {
     { jsonrpc: '2.0', method: 'item/completed', params: { item: collab(waitId, 'wait', 'completed', null, []), threadId: parentId, turnId, completedAtMs: 1005 } },
     { jsonrpc: '2.0', method: 'turn/completed', params: { threadId: parentId, turn: turn(turnId, 'completed') } },
   );
+  if (mutation.publicParentCompletesEarly && run.role === 'plan-agent') {
+    const endIndex = publicEvents.findIndex((event) => event.method === 'turn/completed'
+      && event.params.threadId === parentId);
+    const [end] = publicEvents.splice(endIndex, 1);
+    const childEndIndex = publicEvents.findIndex((event) => event.method === 'turn/completed'
+      && event.params.threadId === childId);
+    publicEvents.splice(childEndIndex, 0, end);
+  }
   if (mutation.missingItemThread && run.role === 'plan-agent') delete publicEvents.find((event) => event.method === 'item/started').params.threadId;
   const publicBytes = jsonl(publicEvents);
   const ciphertext = `gAAAAfixture_${run.ordinal}_${run.role.replaceAll('-', '_')}=`;
-  const parentBytes = jsonl([
+  const parentEvents = [
     { type: 'event_msg', payload: { type: 'user_message', message: mutation.wrongPrompt && run.role === 'plan-agent'
       ? `${run.launch.dispatcherPrompt} altered` : run.launch.dispatcherPrompt } },
     { type: 'turn_context', payload: codexContext(sandboxMode,
@@ -321,7 +338,22 @@ function codexRaw(run, packet, mutation) {
       arguments: '{}' } },
     { type: 'response_item', payload: { type: 'function_call_output', call_id: waitId,
       output: JSON.stringify({ timed_out: false, message: 'completed' }) } },
-  ]);
+  ];
+  if (mutation.persistedWaitBeforeSpawnResult && run.role === 'plan-agent') {
+    const waitIndex = parentEvents.findIndex((event) => event.payload?.name === 'wait_agent');
+    const [wait] = parentEvents.splice(waitIndex, 1);
+    const spawnOutputIndex = parentEvents.findIndex((event) => event.payload?.type === 'function_call_output'
+      && event.payload.call_id === spawnId);
+    parentEvents.splice(spawnOutputIndex, 0, wait);
+  }
+  if (mutation.persistedEdgeBeforeSpawnResult && run.role === 'plan-agent') {
+    const edgeIndex = parentEvents.findIndex((event) => event.payload?.type === 'sub_agent_activity');
+    const [edge] = parentEvents.splice(edgeIndex, 1);
+    const spawnOutputIndex = parentEvents.findIndex((event) => event.payload?.type === 'function_call_output'
+      && event.payload.call_id === spawnId);
+    parentEvents.splice(spawnOutputIndex, 0, edge);
+  }
+  const parentBytes = jsonl(parentEvents);
   const expected = roleOutput(run.role, packet);
   const output = mutation.fakeLog && run.role === 'plan-agent' ? 'ALTERED_REHASHED_OUTPUT' : expected;
   const agentRole = mutation.unrelatedChild && run.role === 'plan-agent' ? 'oracle' : run.role;
@@ -344,11 +376,21 @@ function codexRaw(run, packet, mutation) {
       { type: 'response_item', payload: { type: 'custom_tool_call_output', call_id: callId,
         output: packet.verification_sentinel } },
     );
+    if (mutation.persistedToolResultBeforeCall) {
+      const result = childEvents.pop();
+      const call = childEvents.pop();
+      childEvents.push(result, call);
+    }
   }
   childEvents.push(
     { type: 'event_msg', payload: { type: 'agent_message', message: output } },
     { type: 'event_msg', payload: { type: 'task_complete', turn_id: childTurnId } },
   );
+  if (mutation.persistedTaskCompletesBeforeOutput && run.role === 'plan-agent') {
+    const complete = childEvents.pop();
+    const result = childEvents.pop();
+    childEvents.push(complete, result);
+  }
   return {
     publicBytes, parentBytes, childBytes: jsonl(childEvents), parentId, childId, spawnId,
     output, observedProjection: run.launch.descriptor.projection,
@@ -363,18 +405,42 @@ mkdir700(codexHome);
 process.env.CODEX_HOME = codexHome;
 
 try {
-  for (const role of ROLES) {
-    copyInto(SOURCE_ROOT, repo, `.claude/agents/${role}.md`);
-    copyInto(SOURCE_ROOT, repo, `.codex/agents/${role}.toml`);
-  }
   for (const rel of [
+    '.claude/agents/muse-proto-judge.md',
+    '.claude/agents/oracle.md',
+    '.claude/agents/orchestrator.md',
+    '.claude/agents/plan-agent.md',
+    '.claude/agents/preflight-agent.md',
+    '.claude/agents/quality-gate.md',
+    '.claude/agents/work-agent-template.md',
+    '.claude/agents/work-agent.md',
+    '.codex/agents/muse-proto-judge.toml',
+    '.codex/agents/oracle.toml',
+    '.codex/agents/plan-agent.toml',
+    '.codex/agents/preflight-agent.toml',
+    '.codex/agents/quality-gate.toml',
+    '.codex/agents/work-agent.toml',
     '.claude/skill-os/model-routing.yaml',
+    '.claude/skill-os/native-agent-activation.json',
+    '.claude/skill-os/schemas/work-packet.schema.json',
+    '.claude/skill-os/skill-routing-map.yaml',
+    '.claude/skill-os/input-modes.yaml',
+    '.claude/skill-os/optional-workflow-graph.yaml',
     '.claude/hooks/post-edit.mjs',
+    '.claude/hooks/route-guard.mjs',
+    '.claude/skills/office/brainstorm/SKILL.md',
+    '.claude/skills/office/deepresearch/SKILL.md',
+    '.claude/skills/office/ux-brainstorm/SKILL.md',
+    '.claude/skills/office/ux-research/SKILL.md',
+    '.claude/skills/office/code-hygiene/SKILL.md',
+    '.codex/config.toml',
     '.codex/codex-hook-adapter.mjs',
+    '.codex/workflow-runner.mjs',
     'AGENTS.md',
     'CLAUDE.md',
     'scripts/fixtures/agent-valid-work-packet.json',
     'scripts/agent-launcher.mjs',
+    'scripts/check-agents-parity.mjs',
   ]) copyInto(SOURCE_ROOT, repo, rel);
 
   const claudeSettings = {
@@ -393,12 +459,7 @@ try {
   write0600(join(codexHome, 'config.toml'), Buffer.from(`[hooks.state."${trustKey}"]\ntrusted_hash = "${trustedHash}"\n`));
 
   git(repo, ['init', '-q']);
-  const fixtureTracked = [
-    ...ROLES.flatMap((role) => [`.claude/agents/${role}.md`, `.codex/agents/${role}.toml`]),
-    '.claude/skill-os/model-routing.yaml', '.claude/settings.json', '.codex/hooks.json',
-    '.claude/hooks/post-edit.mjs', '.codex/codex-hook-adapter.mjs', 'AGENTS.md', 'CLAUDE.md',
-    'scripts/fixtures/agent-valid-work-packet.json', 'scripts/agent-launcher.mjs',
-  ];
+  const fixtureTracked = git(repo, ['ls-files', '--others']).split('\n').filter(Boolean);
   git(repo, ['add', '--', ...fixtureTracked]);
   git(repo, ['commit', '-q', '-m', 'hermetic v2 agent evidence fixture']);
   const targetCommit = git(repo, ['rev-parse', 'HEAD']);
@@ -667,8 +728,17 @@ try {
     ['extra read-only child tool', { extraTool: true }],
     ['Codex wrapper side effect', { wrapperInjection: true }],
     ['Codex public command exits nonzero after sentinel', { commandExitFailure: true }],
+    ['Claude sentinel precedes structured failure', { claudeSentinelBeforeFailure: true }],
+    ['Claude Bash result contains additional output', { claudeAdditionalOutput: true }],
+    ['Claude Bash result contains an extra field', { claudeResultExtraField: true }],
+    ['Claude Bash result is duplicated', { claudeDuplicateResult: true }],
     ['Codex item envelope lacks thread binding', { missingItemThread: true }],
     ['Codex plaintext prompt substitution', { wrongPrompt: true }],
+    ['Codex public parent completes before child', { publicParentCompletesEarly: true }],
+    ['Codex persisted wait precedes spawn result', { persistedWaitBeforeSpawnResult: true }],
+    ['Codex persisted edge precedes spawn result', { persistedEdgeBeforeSpawnResult: true }],
+    ['Codex persisted task completes before output', { persistedTaskCompletesBeforeOutput: true }],
+    ['Codex persisted tool result precedes tool call', { persistedToolResultBeforeCall: true }],
     ['expired transaction', { expired: true }],
   ];
   for (const [label, mutation] of attacks) {
@@ -680,6 +750,94 @@ try {
   const replacement = generateKeyPairSync('ed25519').publicKey.export({ type: 'spki', format: 'der' });
   assert.notEqual(verifyEvidence(selfKey, { counterFingerprint: sha256(replacement) }).status, 0,
     'self-generated replacement counter key unexpectedly verified');
+
+  // Actual repository/filesystem substitution attacks.  Each mutation must be
+  // rejected independently by the exported TCB path and by the standalone
+  // verifier replaying an already signed, otherwise-valid matrix.
+  const boundaryEvidence = await buildEvidence('git-filesystem-boundary');
+  const assertBoundaryRejected = (label) => {
+    assert.throws(() => targetTreeManifest(repo, targetCommit, packetPath), undefined,
+      `${label}: TCB target boundary unexpectedly accepted`);
+    const result = verifyEvidence(boundaryEvidence);
+    assert.equal(result.status, 2, `${label}: independent verifier did not fail closed: ${result.stderr}`);
+    assert.match(result.stderr, /AGENT_EVIDENCE_VERIFY_ERROR/,
+      `${label}: independent verifier failure was not the governed target gate`);
+  };
+  const targetTree = git(repo, ['rev-parse', `${targetCommit}^{tree}`]);
+  const emptyTree = git(repo, ['hash-object', '-w', '-t', 'tree', '--stdin']);
+  const replacementCommit = git(repo, ['commit-tree', emptyTree, '-p', targetCommit, '-m', 'replacement-commit-mutant']);
+  git(repo, ['replace', targetCommit, replacementCommit]);
+  try { assertBoundaryRejected('replacement commit ref'); } finally { git(repo, ['replace', '-d', targetCommit]); }
+  git(repo, ['replace', targetTree, emptyTree]);
+  try { assertBoundaryRejected('replacement tree ref'); } finally { git(repo, ['replace', '-d', targetTree]); }
+
+  const criticalRel = '.claude/agents/plan-agent.md';
+  const criticalPath = join(repo, criticalRel);
+  const criticalBytes = readFileSync(criticalPath);
+  const criticalMode = statSync(criticalPath).mode & 0o777;
+  const externalCritical = join(base, 'external-plan-agent.md');
+  write0600(externalCritical, criticalBytes);
+  unlinkSync(criticalPath);
+  symlinkSync(externalCritical, criticalPath);
+  try { assertBoundaryRejected('critical working-tree symlink'); } finally {
+    unlinkSync(criticalPath);
+    writeFileSync(criticalPath, criticalBytes, { mode: criticalMode });
+    chmodSync(criticalPath, criticalMode);
+  }
+
+  const originalEntry = git(repo, ['ls-tree', targetCommit, '--', criticalRel])
+    .match(/^(100644|100755) blob ([a-f0-9]{40})\t(.+)$/);
+  assert.ok(originalEntry && originalEntry[3] === criticalRel, 'critical fixture tree entry missing');
+  const restoreCriticalIndex = () => git(repo,
+    ['update-index', '--add', '--cacheinfo', `${originalEntry[1]},${originalEntry[2]},${criticalRel}`]);
+  git(repo, ['update-index', '--add', '--cacheinfo', `160000,${targetCommit},${criticalRel}`]);
+  try { assertBoundaryRejected('critical index gitlink/submodule'); } finally { restoreCriticalIndex(); }
+  git(repo, ['update-index', '--skip-worktree', '--', criticalRel]);
+  try { assertBoundaryRejected('critical index skip-worktree'); } finally {
+    git(repo, ['update-index', '--no-skip-worktree', '--', criticalRel]);
+  }
+  git(repo, ['update-index', '--assume-unchanged', '--', criticalRel]);
+  try { assertBoundaryRejected('critical index assume-unchanged'); } finally {
+    git(repo, ['update-index', '--no-assume-unchanged', '--', criticalRel]);
+  }
+
+  const excludePath = join(repo, '.git/info/exclude');
+  const excludeBytes = readFileSync(excludePath);
+  const ignoredRel = '.claude/agents/ignored-native-route.md';
+  const ignoredPath = join(repo, ignoredRel);
+  writeFileSync(excludePath, Buffer.concat([excludeBytes, Buffer.from(`\n/${ignoredRel}\n`, 'utf8')]));
+  writeFileSync(ignoredPath, 'ignored but harness-discoverable native role\n', { mode: 0o600 });
+  try {
+    assert.equal(git(repo, ['check-ignore', ignoredRel]), ignoredRel, 'untracked mutant is not actually ignored');
+    assertBoundaryRejected('ignored relevant untracked native role');
+  } finally {
+    unlinkSync(ignoredPath);
+    writeFileSync(excludePath, excludeBytes);
+  }
+
+  const poisonedGit = {
+    GIT_DIR: '/definitely/not/the/repository',
+    GIT_NAMESPACE: 'attacker',
+    GIT_CEILING_DIRECTORIES: repo,
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'core.repositoryformatversion',
+    GIT_CONFIG_VALUE_0: '99',
+  };
+  const cleanBoundaryManifest = targetTreeManifest(repo, targetCommit, packetPath);
+  const previousGitEnv = Object.fromEntries(Object.keys(poisonedGit).map((key) => [key, process.env[key]]));
+  Object.assign(process.env, poisonedGit);
+  let envPositive;
+  try {
+    assert.deepEqual(targetTreeManifest(repo, targetCommit, packetPath),
+      cleanBoundaryManifest, 'TCB Git environment scrub did not preserve the clean manifest');
+    envPositive = verifyEvidence(boundaryEvidence);
+  } finally {
+    for (const [key, value] of Object.entries(previousGitEnv)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+  assert.equal(envPositive.status, 0, `standalone verifier failed despite GIT_* environment scrub: ${envPositive.stderr}`);
+  assert.match(envPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
 
   const missingRoot = join(base, 'missing-role-root');
   mkdir700(join(missingRoot, '.claude/skill-os'));
@@ -720,7 +878,7 @@ try {
 
   const tcbSource = readFileSync(TCB, 'utf8');
   assert.doesNotMatch(tcbSource, /(?:import\s*\(|\bfrom\b|\bspawn(?:Sync)?\b|\bexec(?:File|Sync)?\b)[^\n]*agent-launcher\.mjs/);
-  console.log(`AGENT_EVIDENCE_ATTACK_MATRIX_PASS ${attacks.length + 7}/${attacks.length + 7} + VALID_8_OF_8 + EXTERNAL_COUNTER_ONE_USE`);
+  console.log(`AGENT_EVIDENCE_ATTACK_MATRIX_PASS ${attacks.length + 14}/${attacks.length + 14} + VALID_8_OF_8 + EXTERNAL_COUNTER_ONE_USE`);
 } finally {
   const st = statSync(base);
   assert.ok(st.isDirectory() && realpathSync(base).startsWith('/private/tmp/ae2-'));

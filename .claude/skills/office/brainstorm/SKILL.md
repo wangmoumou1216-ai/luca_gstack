@@ -169,9 +169,14 @@ deepresearch*.md (or idea)
     during Phases 3 and 4. Never say "that's interesting," "great question," "you might want to
     consider," etc. Pick a position, state it, defend it with evidence.
 
-11. **Oracle is foreground.** The Phase 5 adversarial review uses `subagent_type="oracle"` with
-    `run_in_background=false`. It must complete before Phase 6. Max 3 rounds with convergence guard
-    enforced.
+11. **Oracle route is dormant.** Until the repository activation record is ACTIVE and bound to the
+    approved live-proof receipt, Phase 5 stops with `BLOCKED_NATIVE_ROLE_DORMANT`; it does not
+    dispatch or simulate Oracle. <!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
+
+    **ACTIVE branch contract:** only after that state is ACTIVE, invoke the Oracle through
+    `node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`
+    immediately before the review. The launcher revalidates the receipt in-process; never use direct
+    exact-role task/Agent syntax or a generic/root substitute. <!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 12. **Lazy-load references.** Do NOT read `references/prd-template.md`,
     `references/pressure-test.md`, or `references/adversarial-review.md` at session start. Load
@@ -524,20 +529,17 @@ Construct the Oracle prompt from the template in `references/adversarial-review.
 - `<prior_decisions>` block (empty for round 1)
 - User interrogation answer summary (from Phase 3's `<interrogation_log>`)
 
-Fire Oracle in foreground:
+The production Oracle route is intentionally unavailable in this dormant implementation commit.
+Stop here and return `BLOCKED_NATIVE_ROLE_DORMANT`; do not enter Phase 6, do not run the review
+prompt as root reasoning, and do not substitute a generic child. The isolated U008 evidence TCB
+proves the registered definitions by calling the candidate launcher directly; that proof path is
+not this skill route. A later activation commit may replace this block only after it binds the
+approved live-proof receipt. <!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
 
-```
-Subagent dispatch: Oracle (foreground, must complete before Phase 6)
-  type: oracle
-  background: false
-  description: "Adversarial PRD review — round {N}"
-  prompt: {ORACLE_REVIEW_PROMPT from references/adversarial-review.md}
-
-# If environment supports task():
-#   task(subagent_type="oracle", load_skills=[], run_in_background=false, ...)
-# If environment does NOT support task():
-#   Execute the Oracle prompt as internal reasoning, output in <review_findings> XML format.
-```
+When the activation record is ACTIVE, replace the stop only with
+`node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`.
+That governed launcher performs the immediate receipt check. Direct exact-role task/Agent syntax and
+generic/root fallbacks remain forbidden. <!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 ### 5.3 — Classify findings and apply
 

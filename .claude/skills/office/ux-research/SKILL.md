@@ -384,16 +384,18 @@ DIMENSION, ROLE, ANGLE, SEARCH STRATEGY, DEPTH REQUIREMENT）填充模板，
 - 发现目标场景的特殊性被忽略的地方
 - 标记AI Native结论里可能的过度乐观
 
-### 启动苏格拉底审查器
+### 苏格拉底审查器 route（dormant）
 
-```typescript
-task(subagent_type="oracle", load_skills=[], run_in_background=false,
-  description="Socratic examination of UX research findings",
-  prompt=SOCRATIC_PROMPT)
-```
+当前 dormant implementation commit 不开放 production Oracle route。Phase 3 到此返回
+`BLOCKED_NATIVE_ROLE_DORMANT`；不得在 scratchpad/主会话内部执行同一 prompt，也不得换
+generic child。U008 隔离 evidence TCB 会直接调用 candidate launcher 证明注册定义；该证明路径
+不经过本 skill。只有后续 activation commit 绑定获批 live-proof receipt 后，才能替换此块。
+<!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
 
-环境不支持oracle subagent时：以内部推理执行同样的prompt，在scratchpad中完成，
-不对用户可见。
+activation record 为 ACTIVE 后，只能执行
+`node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`；
+launcher 会在同一进程内立即复验 receipt。直接 task/Agent 精确角色语法及 generic/root fallback
+仍然禁止。<!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 
 **加载 `references/socratic-prompt.md`。**

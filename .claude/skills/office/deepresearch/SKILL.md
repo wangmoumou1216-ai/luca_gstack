@@ -368,13 +368,20 @@ disprove findings, but to identify:
 - Perspective blind spots
 - Unexamined implications
 
-### Launch Socratic Examiner
+### Socratic Examiner route (dormant)
 
-```typescript
-task(subagent_type="oracle", load_skills=[], run_in_background=false,
-  description="Socratic examination of research findings",
-  prompt=SOCRATIC_PROMPT)
-```
+The production Oracle route is intentionally unavailable in this dormant implementation commit.
+Stop before Phase 4 and return `BLOCKED_NATIVE_ROLE_DORMANT`; never execute the Socratic prompt as
+root reasoning and never substitute a generic child. The isolated U008 evidence TCB proves the
+registered definitions by calling the candidate launcher directly; that proof path is not this
+skill route. A later activation commit may replace this block only after it binds the approved
+live-proof receipt. <!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
+
+If and only if the activation record is ACTIVE, run
+`node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`
+immediately before the examination. The launcher revalidates authorization in-process; direct
+exact-role task/Agent syntax and generic/root fallbacks remain forbidden.
+<!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 
 **Load `references/socratic-prompt.md` now.** It contains the complete Socratic Examination prompt

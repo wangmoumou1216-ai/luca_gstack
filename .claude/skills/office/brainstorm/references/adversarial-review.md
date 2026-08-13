@@ -21,20 +21,18 @@ If the draft fails the pre-gate, loop back to Phase 3 or Phase 4 first.
 
 ---
 
-## Oracle Invocation Pattern
+## Oracle Invocation Pattern (dormant)
 
-Dispatch ONE oracle subagent in **foreground** (blocking). This is not parallel — we want a
-focused, independent pass. Max 3 review rounds with convergence detection.
+This reference supplies prompt content only. The production Oracle route is intentionally closed in
+the dormant implementation commit. Return `BLOCKED_NATIVE_ROLE_DORMANT` before using the template;
+do not dispatch or simulate the reviewer. The isolated U008 evidence TCB proves the definitions by
+calling the candidate launcher directly. A later activation commit may add an invocation only after
+binding the approved live-proof receipt. <!-- NATIVE_ROLE_ROUTE_DORMANT_BLOCK -->
 
-```typescript
-task(
-  subagent_type="oracle",
-  load_skills=[],
-  run_in_background=false,
-  description="Adversarial PRD review — round {N}",
-  prompt=ORACLE_REVIEW_PROMPT  // constructed from template below
-)
-```
+For an ACTIVE record, the sole invocation contract is
+`node scripts/agent-launcher.mjs launch --harness <claude|codex> --role oracle --dispatcher-id <id>`;
+the launcher rechecks authorization immediately before execution. Direct exact-role task/Agent syntax
+and generic/root fallbacks are forbidden. <!-- NATIVE_ROLE_ROUTE_ACTIVE -->
 
 ---
 

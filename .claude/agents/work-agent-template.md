@@ -4,7 +4,8 @@
 > 它只帮助 Orchestrator 把旧字段语义映射为 `luca.work-packet.v1` JSON；本 Markdown、未填变量、
 > 或由它插值出的自由文本 prompt 都不得直接 dispatch。真正的 native role 定义是
 > `.claude/agents/work-agent.md`。Orchestrator 必须先让 `scripts/agent-launcher.mjs` 按
-> `.claude/skill-os/schemas/work-packet.schema.json` 验证完整 packet，再 spawn `work-agent`。
+> `.claude/skill-os/schemas/work-packet.schema.json` 验证完整 packet；本模板本身不能调度精确
+> `work-agent` route。DORMANT 时 Orchestrator 既有 generic Agent/template 语义继续可用。
 > typed source-data 字段内的字面花括号是合法输入，不得做全局 `{{...}}` substring 拒绝。
 >
 > **Orchestrator 填写说明：** 下列变量清单仅是 authoring checklist。将其内容装入 schema
