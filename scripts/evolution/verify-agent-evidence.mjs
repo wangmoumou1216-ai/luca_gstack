@@ -1363,6 +1363,16 @@ function assertStrictOrder(label, ...indices) {
   }
 }
 
+function assertCodexSpawnOutput(value, childId, nativeTaskName) {
+  let parsed;
+  try { parsed = typeof value === 'string' ? JSON.parse(value) : null; } catch { parsed = null; }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) fail('Codex persisted spawn output is not exact JSON');
+  const keys = Object.keys(parsed).sort();
+  const legacy = stable(keys) === stable(['agent_id']) && parsed.agent_id === childId;
+  const current = stable(keys) === stable(['task_name']) && parsed.task_name === `/root/${nativeTaskName}`;
+  if (!legacy && !current) fail('Codex persisted spawn output does not bind the child identity/task path');
+}
+
 function assertCodexTurn(turn, expectedStatus, label) {
   if (!turn || !UUID_RE.test(turn.id || '') || !Array.isArray(turn.items) || turn.status !== expectedStatus) {
     fail(`${label} is not a schema-conformant Turn`);
@@ -1653,13 +1663,15 @@ function verifyCodexLogs(publicBytes, parentBytes, childBytes, run, expectedInpu
   const childId = begun[0].payload.agent_thread_id;
   const spawnOutputEvent = callOutputs.find((event) => event.payload.call_id === spawnId);
   const waitOutputEvent = callOutputs.find((event) => event.payload.call_id === waitCalls[0].payload.call_id);
-  assertStrictOrder('Codex persisted parent spawn/wait lifecycle',
-    parent.indexOf(spawnCalls[0]), parent.indexOf(spawnOutputEvent), parent.indexOf(begun[0]),
+  assertStrictOrder('Codex persisted parent spawn/output/wait lifecycle',
+    parent.indexOf(spawnCalls[0]), parent.indexOf(spawnOutputEvent),
+    parent.indexOf(waitCalls[0]), parent.indexOf(waitOutputEvent));
+  assertStrictOrder('Codex persisted parent spawn/edge/wait lifecycle',
+    parent.indexOf(spawnCalls[0]), parent.indexOf(begun[0]),
     parent.indexOf(waitCalls[0]), parent.indexOf(waitOutputEvent));
   if (!childId || childId === parentId) fail('Codex child identity is missing/not distinct');
   if (childId !== observed.childId || spawnId !== observed.spawnId) fail('Codex public plaintext seam differs from persisted native edge');
-  const spawnOutput = callOutputs.find((event) => event.payload.call_id === spawnId)?.payload?.output;
-  if (typeof spawnOutput !== 'string' || !spawnOutput.includes(childId)) fail('Codex spawn result does not bind the native child ID');
+  assertCodexSpawnOutput(spawnOutputEvent.payload.output, childId, run.native_descriptor.native_task_name);
   const child = parseJsonl(childBytes, 'Codex child rollout');
   const metas = child.filter((event) => event?.type === 'session_meta');
   if (metas.length !== 1) fail('Codex child session_meta is not exact');

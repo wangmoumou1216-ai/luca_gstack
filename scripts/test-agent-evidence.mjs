@@ -651,6 +651,13 @@ function codexRaw(run, packet, mutation) {
   if (mutation.missingItemThread && run.role === 'plan-agent') delete publicEvents.find((event) => event.method === 'item/started').params.threadId;
   const publicBytes = jsonl(publicEvents);
   const ciphertext = `gAAAAfixture_${run.ordinal}_${run.role.replaceAll('-', '_')}=`;
+  const spawnOutputPayload = mutation.currentCodexSpawnReceipt
+    ? { task_name: mutation.persistedWrongSpawnTask && run.role === 'plan-agent'
+      ? `${agentPath}-wrong` : agentPath }
+    : { agent_id: childId };
+  if (mutation.persistedAmbiguousSpawnOutput && run.role === 'plan-agent') {
+    spawnOutputPayload.task_name = agentPath;
+  }
   const parentEvents = [
     { type: 'event_msg', payload: { type: 'user_message', message: mutation.wrongPrompt && run.role === 'plan-agent'
       ? `${run.launch.dispatcherPrompt} altered` : run.launch.dispatcherPrompt } },
@@ -660,7 +667,7 @@ function codexRaw(run, packet, mutation) {
       arguments: JSON.stringify({ agent_type: run.role, fork_turns: 'none', message: ciphertext,
         task_name: run.launch.descriptor.native_task_name }) } },
     { type: 'response_item', payload: { type: 'function_call_output', call_id: spawnId,
-      output: JSON.stringify({ agent_id: childId }) } },
+      output: JSON.stringify(spawnOutputPayload) } },
     { type: 'event_msg', payload: { type: 'sub_agent_activity', kind: 'started', event_id: spawnId,
       agent_thread_id: childId } },
     { type: 'response_item', payload: { type: 'function_call', name: 'wait_agent', call_id: waitId,
@@ -675,12 +682,18 @@ function codexRaw(run, packet, mutation) {
       && event.payload.call_id === spawnId);
     parentEvents.splice(spawnOutputIndex, 0, wait);
   }
-  if (mutation.persistedEdgeBeforeSpawnResult && run.role === 'plan-agent') {
+  if (mutation.currentCodexSpawnReceipt) {
     const edgeIndex = parentEvents.findIndex((event) => event.payload?.type === 'sub_agent_activity');
     const [edge] = parentEvents.splice(edgeIndex, 1);
     const spawnOutputIndex = parentEvents.findIndex((event) => event.payload?.type === 'function_call_output'
       && event.payload.call_id === spawnId);
     parentEvents.splice(spawnOutputIndex, 0, edge);
+  }
+  if (mutation.persistedEdgeBeforeSpawnCall && run.role === 'plan-agent') {
+    const edgeIndex = parentEvents.findIndex((event) => event.payload?.type === 'sub_agent_activity');
+    const [edge] = parentEvents.splice(edgeIndex, 1);
+    const spawnIndex = parentEvents.findIndex((event) => event.payload?.name === 'spawn_agent');
+    parentEvents.splice(spawnIndex, 0, edge);
   }
   const parentBytes = jsonl(parentEvents);
   const expected = roleOutput(run.role, packet);
@@ -1139,6 +1152,10 @@ try {
   const legacyPositive = verifyEvidence(legacyValid);
   assert.equal(legacyPositive.status, 0, `legacy Claude evidence failed: ${legacyPositive.stderr}`);
   assert.match(legacyPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  const currentCodexValid = await buildEvidence('valid-current-codex-spawn', { currentCodexSpawnReceipt: true });
+  const currentCodexPositive = verifyEvidence(currentCodexValid);
+  assert.equal(currentCodexPositive.status, 0, `current Codex spawn receipt evidence failed: ${currentCodexPositive.stderr}`);
+  assert.match(currentCodexPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
   const replay = verifyEvidence(valid);
   assert.notEqual(replay.status, 0, 'consumed anchor replay unexpectedly verified');
   await assert.rejects(async () => await new Promise((accept, reject) => {
@@ -1247,7 +1264,9 @@ try {
     ['Codex plaintext prompt substitution', { wrongPrompt: true }],
     ['Codex public parent completes before child', { publicParentCompletesEarly: true }],
     ['Codex persisted wait precedes spawn result', { persistedWaitBeforeSpawnResult: true }],
-    ['Codex persisted edge precedes spawn result', { persistedEdgeBeforeSpawnResult: true }],
+    ['Codex persisted edge precedes spawn call', { persistedEdgeBeforeSpawnCall: true }],
+    ['Codex current spawn receipt has the wrong task path', { currentCodexSpawnReceipt: true, persistedWrongSpawnTask: true }],
+    ['Codex persisted spawn output mixes legacy and current schemas', { persistedAmbiguousSpawnOutput: true }],
     ['Codex persisted task completes before output', { persistedTaskCompletesBeforeOutput: true }],
     ['Codex persisted tool result precedes tool call', { persistedToolResultBeforeCall: true }],
     ['expired transaction', { expired: true }],

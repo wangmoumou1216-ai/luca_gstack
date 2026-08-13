@@ -1120,6 +1120,16 @@ function assertStrictOrder(label, ...indices) {
   }
 }
 
+function assertCodexSpawnOutput(value, childId, nativeTaskName) {
+  let parsed;
+  try { parsed = typeof value === 'string' ? JSON.parse(value) : null; } catch { parsed = null; }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) fail('Codex persisted spawn output is not exact JSON');
+  const keys = Object.keys(parsed).sort();
+  const legacy = stable(keys) === stable(['agent_id']) && parsed.agent_id === childId;
+  const current = stable(keys) === stable(['task_name']) && parsed.task_name === `/root/${nativeTaskName}`;
+  if (!legacy && !current) fail('Codex persisted spawn output does not bind the child identity/task path');
+}
+
 function assertCodexTurn(turn, expectedStatus, label) {
   if (!turn || !UUID_RE.test(turn.id || '') || !Array.isArray(turn.items) || turn.status !== expectedStatus) {
     fail(`${label} is not a schema-conformant Turn`);
@@ -1401,9 +1411,15 @@ function parseCodex(publicBytes, before, run, packet) {
   const childId = edges[0].payload.agent_thread_id;
   const spawnOutput = callOutputs.find((event) => event.payload.call_id === spawnId);
   const waitOutput = callOutputs.find((event) => event.payload.call_id === waits[0].payload.call_id);
-  assertStrictOrder('Codex persisted parent spawn/wait lifecycle',
-    pe.indexOf(spawns[0]), pe.indexOf(spawnOutput), pe.indexOf(edges[0]),
-    pe.indexOf(waits[0]), pe.indexOf(waitOutput));
+  // Codex has emitted both spawn-call → spawn-output → started-edge and
+  // spawn-call → started-edge → spawn-output across native app-server builds.
+  // Output and edge are parallel attestations of the same spawn: both must be
+  // after the call and before wait, but their relative order is not causal.
+  assertStrictOrder('Codex persisted parent spawn/output/wait lifecycle',
+    pe.indexOf(spawns[0]), pe.indexOf(spawnOutput), pe.indexOf(waits[0]), pe.indexOf(waitOutput));
+  assertStrictOrder('Codex persisted parent spawn/edge/wait lifecycle',
+    pe.indexOf(spawns[0]), pe.indexOf(edges[0]), pe.indexOf(waits[0]), pe.indexOf(waitOutput));
+  assertCodexSpawnOutput(spawnOutput.payload.output, childId, run.descriptor.native_task_name);
   const childDeadline = Date.now() + 15_000;
   let child;
   let ce;
