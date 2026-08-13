@@ -563,7 +563,7 @@ function classifyClaudeResolutionProbe(bytes, stderr, exitCode, projection, expe
     ? content[0].text : null;
   if (exitCode === 0 && result.subtype === 'success' && result.is_error === false
     && result.result === 'LUCA_CLAUDE_MODEL_PROBE_OK' && result.terminal_reason === 'completed'
-    && rate?.rate_limit_info?.status === 'allowed'
+    && ['allowed', 'allowed_warning'].includes(rate?.rate_limit_info?.status)
     && assistant.parent_tool_use_id === null
     && assistant?.message?.model === init.model && claudeFamilyMatches(projection, assistant.message.model)
     && assistantText === 'LUCA_CLAUDE_MODEL_PROBE_OK') {

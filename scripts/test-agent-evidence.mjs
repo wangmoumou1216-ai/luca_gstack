@@ -57,7 +57,10 @@ const modelProbeSuccess = (alias, cwd, mutation = {}) => {
     { type: 'system', subtype: 'init', session_id: session, cwd, permissionMode: 'dontAsk',
       model: `claude-${alias}-fixture-1`, tools: mutation.extraInitTool ? ['Bash'] : [] },
     { type: 'rate_limit_event', session_id: session,
-      rate_limit_info: { status: mutation.unknownRate ? 'unknown' : 'allowed' } },
+      rate_limit_info: mutation.warningRate
+        ? { status: 'allowed_warning', resetsAt: 1786641600, rateLimitType: 'five_hour',
+          utilization: 0.95, isUsingOverage: false }
+        : { status: mutation.unknownRate ? 'unknown' : 'allowed' } },
     { type: 'assistant', session_id: session, parent_tool_use_id: null,
       message: { model: `claude-${alias}-fixture-1`, content: mutation.tool
         ? [{ type: 'tool_use', id: 'forbidden', name: 'Bash', input: { command: 'true' } }]
@@ -837,6 +840,10 @@ try {
     stdout: modelProbeSuccess('fable', realpathSync(classifierProbeCwd)), stderr: Buffer.alloc(0),
     expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }),
   { outcome: 'available', resolved_model: 'claude-fable-fixture-1' });
+  assert.deepEqual(classifyClaudeModelProbe({ status: 0,
+    stdout: modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { warningRate: true }), stderr: Buffer.alloc(0),
+    expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }),
+  { outcome: 'available', resolved_model: 'claude-fable-fixture-1' });
   for (const [label, bytes] of [
     ['reordered', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { reordered: true })],
     ['extra', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { extraEvent: true })],
@@ -923,6 +930,7 @@ try {
       })
       : modelProbeSuccess('fable', fableProbeCwd, {
         tool: mutation.probeTool, unknownRate: mutation.probeUnknownRate,
+        warningRate: mutation.warningResolution,
         extraInitTool: mutation.probeExtraInitTool,
         reordered: mutation.probeReordered, extraEvent: mutation.probeExtraEvent,
         missingSession: mutation.probeMissingSession,
@@ -1152,6 +1160,10 @@ try {
   const fallbackPositive = verifyEvidence(fallbackValid);
   assert.equal(fallbackPositive.status, 0, `fallback evidence failed: ${fallbackPositive.stderr}`);
   assert.match(fallbackPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  const warningValid = await buildEvidence('valid-allowed-warning', { warningResolution: true });
+  const warningPositive = verifyEvidence(warningValid);
+  assert.equal(warningPositive.status, 0, `allowed_warning evidence failed: ${warningPositive.stderr}`);
+  assert.match(warningPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
   const legacyValid = await buildEvidence('valid-legacy-claude', { legacyClaudeStream: true });
   const legacyPositive = verifyEvidence(legacyValid);
   assert.equal(legacyPositive.status, 0, `legacy Claude evidence failed: ${legacyPositive.stderr}`);
