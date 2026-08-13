@@ -252,6 +252,11 @@ function claudeLegacyRaw(run, packet, mutation) {
         ? 'claude-sonnet-fixture-1' : `claude-${run.launch.descriptor.projection}-fixture-1`;
   const expected = roleOutput(run.role, packet);
   const output = mutation.fakeLog && run.role === 'plan-agent' ? 'ALTERED_REHASHED_OUTPUT' : expected;
+  const parentModel = 'claude-sonnet-fixture-1';
+  const mutatePlan = run.role === 'plan-agent';
+  const parentThinking = { type: 'assistant', session_id: parentId, parent_tool_use_id: null,
+    message: { model: parentModel, content: [{ type: 'thinking', thinking: '',
+      signature: `legacy-parent-thinking-${spawnId}` }] } };
   const events = [
     { type: 'system', subtype: 'init', session_id: parentId, cwd: run.launch.descriptor.cwd,
       permissionMode: 'dontAsk',
@@ -260,7 +265,9 @@ function claudeLegacyRaw(run, packet, mutation) {
           : mutation.initDuplicateAgent ? ['claude', 'u008-dispatcher', run.role, run.role]
             : ['claude', 'Explore', 'general-purpose', 'u008-dispatcher', run.role, 'statusline-setup'],
       tools: mutation.initExtraTool ? ['Task', 'Bash'] : ['Task'] },
-    { type: 'assistant', session_id: parentId, message: { content: [{ type: 'tool_use', name: 'Agent', id: spawnId,
+    parentThinking,
+    { type: 'assistant', session_id: parentId, message: { model: parentModel,
+      content: [{ type: 'tool_use', name: 'Agent', id: spawnId,
       input: { subagent_type: run.role, prompt: run.launch.input, run_in_background: false } }] } },
     { type: 'system', subtype: 'hook_started', session_id: parentId, hook_event: 'PreToolUse',
       hook_name: 'PreToolUse:Agent', hook_id: `pre-${spawnId}` },
@@ -275,6 +282,10 @@ function claudeLegacyRaw(run, packet, mutation) {
     { type: 'user', session_id: parentId, tool_use_result: { status: 'async_launched', agentId: childId,
       prompt: run.launch.input, resolvedModel: model } },
   ];
+  const childThinking = { type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId,
+    subagent_type: run.role, message: { model, content: [{ type: 'thinking', thinking: '',
+      signature: `legacy-child-thinking-${spawnId}` }] } };
+  events.push(childThinking);
   if (run.role === 'work-agent') {
     const bashId = `bash-${spawnId}`;
     const result = { type: 'tool_result', tool_use_id: bashId,
@@ -293,12 +304,24 @@ function claudeLegacyRaw(run, packet, mutation) {
     events.push({ type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId, subagent_type: run.role,
       message: { model, content: [{ type: 'tool_use', name: 'Bash', id: `extra-${spawnId}`, input: { command: 'true' } }] } });
   }
-  events.push(
-    { type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId, subagent_type: run.role,
-      message: { model, content: [{ type: 'text', text: output }] } },
-    { type: 'system', subtype: 'task_notification', session_id: parentId, task_id: childId,
-      tool_use_id: spawnId, status: 'completed' },
-  );
+  const childOutput = { type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId,
+    subagent_type: run.role, message: { model, content: [{ type: 'text', text: output }] } };
+  const completion = { type: 'system', subtype: 'task_notification', session_id: parentId, task_id: childId,
+    tool_use_id: spawnId, status: 'completed' };
+  events.push(childOutput, completion);
+  if (mutation.legacyChildThinkingAfterOutput && mutatePlan) {
+    events.splice(events.indexOf(childThinking), 1);
+    events.splice(events.indexOf(completion), 0, childThinking);
+  }
+  if (mutation.legacyParentThinkingAfterAgent && mutatePlan) {
+    const agentEvent = events.find((event) => event?.type === 'assistant'
+      && !event.parent_tool_use_id && event.message?.content?.[0]?.name === 'Agent');
+    events.splice(events.indexOf(parentThinking), 1);
+    events.splice(events.indexOf(agentEvent) + 1, 0, parentThinking);
+  }
+  if (mutation.legacyMalformedThinking && mutatePlan) {
+    childThinking.message.content[0].extra = 'forbidden';
+  }
   return { publicBytes: jsonl(events), parentId, childId, spawnId, output, observedProjection: model };
 }
 
@@ -381,6 +404,10 @@ function claudeRaw(run, packet, mutation) {
   const finalOutput = mutation.claudeWrongFinalResult && mutatePlan
     ? `${output}\nALTERED_FINAL_RESULT` : output;
   const childEvents = [];
+  const childThinking = { type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId,
+    subagent_type: run.role, message: { model, content: [{ type: 'thinking', thinking: '',
+      signature: `child-thinking-${spawnId}` }] } };
+  childEvents.push(childThinking);
   if (run.role === 'work-agent') {
     const bashId = `bash-${spawnId}`;
     childEvents.push(
@@ -407,6 +434,9 @@ function claudeRaw(run, packet, mutation) {
             : ['claude', 'Explore', 'general-purpose', 'u008-dispatcher', run.role, 'statusline-setup'],
       tools: mutation.initExtraTool ? ['Task', 'Bash'] : ['Task'] },
     { type: 'assistant', session_id: parentId, parent_tool_use_id: null,
+      message: { model: parentModel, content: [{ type: 'thinking', thinking: '',
+        signature: `parent-thinking-${spawnId}` }] } },
+    { type: 'assistant', session_id: parentId, parent_tool_use_id: null,
       message: { model: parentModel, content: [{ type: 'tool_use', name: 'Agent', id: spawnId,
         input: { description, subagent_type: run.role, prompt: run.launch.input, run_in_background: false } }] } },
     taskStarted,
@@ -430,7 +460,9 @@ function claudeRaw(run, packet, mutation) {
       result: finalOutput, num_turns: 2 },
   ];
   if (mutation.claudeMissingRunInBackground && mutatePlan) {
-    delete events[1].message.content[0].input.run_in_background;
+    const agentUse = events.find((event) => event?.type === 'assistant' && !event.parent_tool_use_id
+      && event.message?.content?.[0]?.type === 'tool_use' && event.message.content[0].name === 'Agent');
+    delete agentUse.message.content[0].input.run_in_background;
   }
   const forwardedText = events.find((event) => event?.type === 'assistant'
     && event.parent_tool_use_id === spawnId
@@ -472,6 +504,19 @@ function claudeRaw(run, packet, mutation) {
       && event.parent_tool_use_id === spawnId && event.message?.content?.[0]?.type === 'tool_result');
     events.splice(events.indexOf(forwardedText), 1);
     events.splice(events.indexOf(childResult), 0, forwardedText);
+  }
+  if (mutation.claudeChildThinkingAfterOutput && mutatePlan) {
+    events.splice(events.indexOf(childThinking), 1);
+    events.splice(events.indexOf(forwardedText) + 1, 0, childThinking);
+  }
+  if (mutation.claudeParentThinkingAfterAgent && mutatePlan) {
+    const parentThinking = events.find((event) => event?.type === 'assistant'
+      && !event.parent_tool_use_id && event.message?.content?.[0]?.type === 'thinking');
+    events.splice(events.indexOf(parentThinking), 1);
+    events.splice(events.indexOf(taskStarted), 0, parentThinking);
+  }
+  if (mutation.claudeMalformedThinking && mutatePlan) {
+    childThinking.message.content[0].extra = 'forbidden';
   }
   if (mutation.claudeDuplicateAsyncLaunches && mutatePlan) {
     const asyncLaunch = { type: 'user', session_id: parentId,
@@ -1132,6 +1177,9 @@ try {
     ['Claude foreground includes an extra empty child assistant event', { claudeExtraEmptyChildAssistant: true }],
     ['Claude foreground duplicates the exact child text event', { claudeDuplicateChildText: true }],
     ['Claude work child emits final output before its Bash result', { claudeWorkOutputBeforeResult: true }],
+    ['Claude child thinking follows its exact final output', { claudeChildThinkingAfterOutput: true }],
+    ['Claude parent thinking follows the Agent dispatch', { claudeParentThinkingAfterAgent: true }],
+    ['Claude child thinking has a malformed signed shape', { claudeMalformedThinking: true }],
     ['Claude foreground completed prompt differs from Agent input', { claudeWrongCompletionPrompt: true }],
     ['Claude foreground completed status is not completed', { claudeWrongCompletionStatus: true }],
     ['Claude foreground completed agent differs from task_started', { claudeWrongCompletionAgent: true }],
@@ -1170,6 +1218,9 @@ try {
     ['legacy Claude Bash result contains additional output', { legacyClaudeStream: true, claudeAdditionalOutput: true }],
     ['legacy Claude Bash result contains an extra field', { legacyClaudeStream: true, claudeResultExtraField: true }],
     ['legacy Claude Bash result is duplicated', { legacyClaudeStream: true, claudeDuplicateResult: true }],
+    ['legacy Claude child thinking follows final output', { legacyClaudeStream: true, legacyChildThinkingAfterOutput: true }],
+    ['legacy Claude parent thinking follows Agent dispatch', { legacyClaudeStream: true, legacyParentThinkingAfterAgent: true }],
+    ['legacy Claude child thinking has malformed signed shape', { legacyClaudeStream: true, legacyMalformedThinking: true }],
     ['Claude child resolved model differs from effective family', { wrongResolvedModel: true }],
     ['Claude child drifts within the effective alias family', { sameFamilyModelDrift: true }],
     ['Claude child uses the other tier concrete model', { crossTierChildModel: true }],

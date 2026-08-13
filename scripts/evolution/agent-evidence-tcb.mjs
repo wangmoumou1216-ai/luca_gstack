@@ -709,6 +709,16 @@ function textOnly(content) {
   return content.filter((part) => part?.type === 'text').map((part) => part.text || '').join('');
 }
 
+function claudeThinkingOnly(event) {
+  const content = event?.message?.content;
+  if (!Array.isArray(content) || content.length !== 1) return false;
+  const part = content[0];
+  return part?.type === 'thinking'
+    && stable(Object.keys(part).sort()) === stable(['signature', 'thinking', 'type'])
+    && typeof part.thinking === 'string'
+    && typeof part.signature === 'string' && part.signature.length > 0;
+}
+
 function projectionMatches(alias, model) {
   return typeof model === 'string' && new RegExp(`^claude-${alias.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}(?:-|$)`, 'i').test(model);
 }
@@ -901,8 +911,41 @@ function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
   let output;
   if (launches.length === 1) {
     const launch = launches[0];
-    if (launch.index <= postResponses[0].index || !childMessages.length || allCompletions.length !== 1 || completions.length !== 1
-      || completions[0].index <= Math.max(...childMessages.map(({ index }) => index))) fail('Claude legacy child completion edge mismatch');
+    const expectedToolUses = frozenCommands.length;
+    const actualToolUses = childToolUses.length;
+    const childTextMessages = childAssistantEvents.filter(({ event }) => Array.isArray(event.message?.content)
+      && event.message.content.some((part) => part?.type === 'text'));
+    const childToolMessages = childAssistantEvents.filter(({ event }) => Array.isArray(event.message?.content)
+      && event.message.content.some((part) => part?.type === 'tool_use'));
+    const childThinkingMessages = childAssistantEvents.filter(({ event }) => claudeThinkingOnly(event));
+    const childOutputMessage = childTextMessages[0];
+    const exactChildMessageShapes = childAssistantEvents.every(({ event }) => claudeThinkingOnly(event)
+      || (Array.isArray(event.message?.content) && event.message.content.length === 1
+        && ['text', 'tool_use'].includes(event.message.content[0]?.type)));
+    const parentAssistants = indexed.filter(({ event }) => event?.type === 'assistant' && !event.parent_tool_use_id);
+    const parentThinkingMessages = parentAssistants.filter(({ event }) => claudeThinkingOnly(event));
+    const parentEvidenceMessages = parentAssistants.filter(({ event }) => !claudeThinkingOnly(event));
+    const parentModel = indexed[tool.index].event.message?.model;
+    const legacyUserEvents = indexed.filter(({ event, index }) => event?.type === 'user'
+      && index > starts[0].index && index < (completions[0]?.index ?? Number.POSITIVE_INFINITY));
+    const expectedLegacyUserIndexes = [launch.index,
+      ...(run.role === 'work-agent' ? [childToolResults[0]?.index] : [])];
+    const exactLegacyUserSet = legacyUserEvents.length === expectedLegacyUserIndexes.length
+      && expectedLegacyUserIndexes.every((index) => Number.isInteger(index)
+        && legacyUserEvents.some((record) => record.index === index));
+    if (launch.index <= postResponses[0].index || allCompletions.length !== 1 || completions.length !== 1
+      || !exactLegacyUserSet || !exactChildMessageShapes || childTextMessages.length !== 1
+      || childToolMessages.length !== actualToolUses
+      || childAssistantEvents.length !== childThinkingMessages.length + actualToolUses + 1
+      || actualToolUses !== expectedToolUses || childOutputMessage.event.message.content[0].text !== expected
+      || childAssistantEvents.some(({ index }) => index <= launch.index || index >= completions[0].index)
+      || childOutputMessage.index !== Math.max(...childAssistantEvents.map(({ index }) => index))
+      || parentEvidenceMessages.length !== 1 || parentEvidenceMessages[0].index !== tool.index
+      || typeof parentModel !== 'string' || !parentModel
+      || parentThinkingMessages.some(({ event, index }) => index >= tool.index || event.message?.model !== parentModel)
+      || (run.role === 'work-agent' && (childToolResults.length !== 1
+        || childToolResults[0].index <= childToolUses[0]?.index
+        || childOutputMessage.index <= childToolResults[0].index))) fail('Claude legacy child completion edge mismatch');
     if (run.role === 'work-agent') {
       const observedCommands = childToolUses.map(({ item }) => item.input?.command);
       if (observedCommands.some((command) => typeof command !== 'string')
@@ -911,7 +954,7 @@ function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
       assertClaudeWorkResult(events, bashId, tool.item.id, packet.verification_sentinel);
     }
     resolvedModel = launch.event.tool_use_result.resolvedModel;
-    output = childMessages.map(({ event }) => textOnly(event.message?.content)).join('\n').trim();
+    output = childTextMessages.map(({ event }) => textOnly(event.message?.content)).join('\n').trim();
   } else {
     const receipt = completedReceipts[0];
     const allChildPrompts = indexed.filter(({ event }) => event?.type === 'user'
@@ -936,16 +979,18 @@ function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
       && event.message.content.some((part) => part?.type === 'text'));
     const childToolMessages = childAssistantEvents.filter(({ event }) => Array.isArray(event.message?.content)
       && event.message.content.some((part) => part?.type === 'tool_use'));
+    const childThinkingMessages = childAssistantEvents.filter(({ event }) => claudeThinkingOnly(event));
     const childOutputMessage = childTextMessages[0];
-    const exactChildMessageShapes = childAssistantEvents.every(({ event }) => Array.isArray(event.message?.content)
-      && event.message.content.length === 1
-      && ['text', 'tool_use'].includes(event.message.content[0]?.type));
+    const exactChildMessageShapes = childAssistantEvents.every(({ event }) => claudeThinkingOnly(event)
+      || (Array.isArray(event.message?.content) && event.message.content.length === 1
+        && ['text', 'tool_use'].includes(event.message.content[0]?.type)));
     if (allChildPrompts.length !== 1 || childPrompts.length !== 1 || childPrompts[0].index <= starts[0].index
       || allUpdates.length !== 1 || updates.length !== 1 || updates[0].index <= childPrompts[0].index
       || !exactEvidenceUserSet
       || childMessages.some(({ index }) => index <= childPrompts[0].index || index >= updates[0].index)
       || !exactChildMessageShapes || childTextMessages.length !== 1
-      || childToolMessages.length !== actualToolUses || childAssistantEvents.length !== actualToolUses + 1
+      || childToolMessages.length !== actualToolUses
+      || childAssistantEvents.length !== childThinkingMessages.length + actualToolUses + 1
       || childOutputMessage.event.message.content[0].text !== expected
       || childOutputMessage.index !== Math.max(...childAssistantEvents.map(({ index }) => index))
       || (run.role === 'work-agent' && (childToolResults.length !== 1
@@ -990,11 +1035,17 @@ function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
       && event.message.content.length === 1 && event.message.content[0]?.type === 'text'
       && event.message.content[0]?.text === expected);
     const parentAssistants = indexed.filter(({ event }) => event?.type === 'assistant' && !event.parent_tool_use_id);
+    const parentThinkingMessages = parentAssistants.filter(({ event }) => claudeThinkingOnly(event));
+    const parentEvidenceMessages = parentAssistants.filter(({ event }) => !claudeThinkingOnly(event));
+    const parentModel = indexed[tool.index].event.message?.model;
     const terminal = indexed.filter(({ event }) => event?.type === 'result' && event?.subtype === 'success'
       && event.is_error === false && event.result === expected && event.terminal_reason === 'completed');
     const allTerminal = indexed.filter(({ event }) => event?.type === 'result');
     const childText = childMessages.map(({ event }) => textOnly(event.message?.content)).filter(Boolean).join('\n').trim();
-    if (parentAssistants.length !== 2 || parentOutputs.length !== 1
+    if (parentEvidenceMessages.length !== 2 || parentOutputs.length !== 1
+      || typeof parentModel !== 'string' || !parentModel
+      || parentThinkingMessages.some(({ event, index }) => index >= tool.index || event.message?.model !== parentModel)
+      || parentOutputs[0].event.message?.model !== parentModel
       || !childMessages.length || childText !== expected
       || allTerminal.length !== 1 || terminal.length !== 1
       || terminal[0].index <= parentOutputs[0].index) fail('Claude completed dispatcher result is not exact');
