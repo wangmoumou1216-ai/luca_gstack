@@ -11,7 +11,7 @@ context-cost:
   self: 22149  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 150000
   shared-refs: [none]
-  recommended-model: core-execution  # 2026-07-10 Fable手术刀：研究fan-out是最大fable漏点，降opus（翻2026-06-10裁决，记录在model-routing.yaml）
+  recommended-model: core-execution  # 研究执行；Socratic Oracle 独立使用 reasoning-heavy logical role
 ---
 
 ## Preamble (run first)

@@ -6,10 +6,8 @@ description = "Testing layer — runs assertions and verifies output quality in 
 sandbox_mode = "read-only"
 
 # ── 档位（真值源：.claude/skill-os/model-routing.yaml 的 codex.agents）──
-# model 字段刻意省略 → 继承父会话（用户 /model 主权）。档位**不落在模型名上**：
-# 模型名随账户/订阅失效（2026-08-04 实证 gpt-5.6-sol 等三个名字全被服务端拒），
-# 而 effort 枚举稳定。Claude 侧此 agent 定档 opus（判官≥执行者），
-# 按 codex.tier_to_effort 投影为 high。
+# logical tier=core-execution（registered judge tier）；model 字段刻意省略，Codex 只接收
+# model-routing 的 effort 投影。
 model_reasoning_effort = "high"
 
 developer_instructions = """
@@ -23,4 +21,5 @@ developer_instructions = """
 - 在独立上下文判定，不接收生成过程与推理链，只接收产物路径 + 断言/criteria 列表。
 - 逐条给 pass / fail / unknown + 证据；不确定判 unknown，禁止硬判。
 - 只读：不得修改被审对象。发现问题只报告，绝不自行修复。
+- 只返回 eval_intent；不得调用 record_eval.py 或写 memory/evals/eval-log.jsonl。
 """

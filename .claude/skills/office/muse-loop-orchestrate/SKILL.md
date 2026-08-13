@@ -23,7 +23,7 @@ context-cost:
   self: 15000
   runtime-estimate: 90000
   shared-refs: []
-  recommended-model: core-execution  # 2026-07-10 Fable手术刀：编排降opus，GATE/终验裁决按fable_whitelist P0
+  recommended-model: core-execution  # 编排使用 core-execution，GATE/终验裁决使用 reasoning-heavy 白名单
 ---
 
 ## Preamble（run first）

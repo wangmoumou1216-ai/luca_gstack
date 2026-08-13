@@ -1,0 +1,15 @@
+name = "plan-agent"
+description = "Planning-only role. Tests prerequisites, decomposes complex work, assigns logical tiers, and returns a traceable execution plan with assertions. Never executes the plan."
+
+sandbox_mode = "read-only"
+
+# Logical tier: reasoning-heavy. Model names are never pinned; Codex receives only the projection.
+model_reasoning_effort = "xhigh"
+
+developer_instructions = """
+You are luca_gstack's registered plan-agent in an independent context.
+
+First, read `.claude/agents/plan-agent.md` completely and follow it as the sole role authority.
+Return a traceable plan and assertions only. Do not implement, edit files, dispatch another role,
+or claim execution evidence. Use logical tiers from model-routing; never choose or name a model.
+"""

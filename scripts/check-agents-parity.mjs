@@ -6,9 +6,11 @@
 // 腐烂成陈旧的「CRM 身份 + 已被取代的 G6 共享软链模型」。本门把这些段落钉死，并做**跨源一致性**
 // 检查：SF 镜像的 id 集合必须 == static-fallback-allowlist.txt（防两处 SF 分叉）。
 import assert from 'assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
+import { LOGICAL_ROLES, ROLE_CONTRACT, resolveRole } from './agent-launcher.mjs';
 
 // 深审：用 CLAUDE_PROJECT_DIR 定位会在双检出下验错仓并报绿（实测）。改脚本相对：
 // 本文件在 scripts/ → 上 1 级 = 仓根，与被验文件恒同仓。
@@ -145,6 +147,259 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   const bad = agents.split('\n').filter((l) => l.includes('/Users/luca/Desktop'));
   check('no-abs-path: 无字面 /Users/luca/Desktop 硬编码（除 PROJECTS_ROOT 定义行）',
     bad.length === 0, `残留 ${bad.length} 行硬编码绝对路径`);
+}
+
+// ⑦ ADR-AGENT-001：四个 logical role 必须是仓库原生定义，两端投影同源。
+// 这里查「精确名字 + 精确路径 + 定义 bytes hash」，而不是“目录里有几个文件”。
+// hash 会在每次运行时从当前 bytes 重算，同时与 review-owned 常量和 launcher
+// 解析结果对账。改了 role body 却没显式更新 pin，必须变红。
+{
+  const EXACT_ROLES = ['plan-agent', 'work-agent', 'oracle', 'quality-gate'];
+  const EXPECTED = {
+    'plan-agent': { tier: 'reasoning-heavy', claude: '.claude/agents/plan-agent.md', codex: '.codex/agents/plan-agent.toml' },
+    'work-agent': { tier: 'core-execution', claude: '.claude/agents/work-agent.md', codex: '.codex/agents/work-agent.toml' },
+    oracle: { tier: 'reasoning-heavy', claude: '.claude/agents/oracle.md', codex: '.codex/agents/oracle.toml' },
+    'quality-gate': { tier: 'core-execution', claude: '.claude/agents/quality-gate.md', codex: '.codex/agents/quality-gate.toml' },
+  };
+  // Definition bytes are part of the registered-role identity, not merely files that happen to
+  // parse today.  Intentional role-body changes must update this review-owned pin in the same
+  // change; an unreviewed body edit therefore fails even when its name/path remain unchanged.
+  const EXPECTED_HASHES = {
+    claude: {
+      'plan-agent': '857aada14b161e98c9b626ef3c856d58dd4c018ddcd6555b266f91e2365862c7',
+      'work-agent': 'ef0ff9b632e37067fa0a026118aa4d4915745fcfabd5dbdc0a5558541e5da664',
+      oracle: 'de7fe2bd4404f980ff5551eb61dae931cbeee813647c3cb2f1023f5f556e55eb',
+      'quality-gate': '36a61adced31a6038e4d87e56b96c158752ffd12a6bd68347410a588726c7fb4',
+    },
+    codex: {
+      'plan-agent': '877d38847e644800d83feedea80702ede9efdf034550fce7c02024313d94f5d2',
+      'work-agent': '715a4f694179ad328f54e7a7c3c1e31abe85fa7edfe39a782885e6ae8c700118',
+      oracle: '661d1ea7c74c1cbd0f8351bdf516b87d9bde4327e051f176a9fa4c5df3384b87',
+      'quality-gate': '49f7d50ebcc4dc8d073b62f43cfb60ebc953fd5c0c00b8f5a9b985b8b828d898',
+    },
+  };
+  const sorted = (xs) => [...xs].sort();
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  const routingPath = join(ROOT, '.claude', 'skill-os', 'model-routing.yaml');
+  const routing = readFileSync(routingPath, 'utf8');
+
+  const indentedBlock = (text, key, indent = 0) => {
+    const prefix = `${' '.repeat(indent)}${key}:`;
+    const lines = text.split('\n');
+    const start = lines.findIndex((line) => line.split('#', 1)[0].trimEnd() === prefix);
+    if (start < 0) return '';
+    const out = [];
+    for (let i = start + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim() && !line.trimStart().startsWith('#')) {
+        const leading = line.length - line.trimStart().length;
+        if (leading <= indent) break;
+      }
+      out.push(line);
+    }
+    return out.join('\n');
+  };
+  const scalarMap = (block, indent) => Object.fromEntries(
+    [...block.matchAll(new RegExp(`^\\s{${indent}}([a-z0-9-]+):\\s*([a-z0-9-]+)\\s*(?:#.*)?$`, 'gm'))]
+      .map((m) => [m[1], m[2]]),
+  );
+  const logical = scalarMap(indentedBlock(routing, 'logical_roles'), 2);
+  const claudeProjection = scalarMap(indentedBlock(routing, 'agents'), 2);
+  const codexBlock = indentedBlock(routing, 'codex');
+  const codexProjection = scalarMap(indentedBlock(codexBlock, 'agents', 2), 4);
+  const tierEffort = scalarMap(indentedBlock(codexBlock, 'tier_to_effort', 2), 4);
+  const tierAlias = Object.fromEntries(['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical'].map((tier) => {
+    const block = indentedBlock(indentedBlock(routing, 'tiers'), tier, 2);
+    return [tier, (block.match(/^\s{4}resolves_to:\s*([a-z0-9-]+)/m) || [])[1] || ''];
+  }));
+
+  check('roles: launcher logical role set 精确为四个注册名',
+    same(sorted(LOGICAL_ROLES), sorted(EXACT_ROLES)),
+    `actual=${JSON.stringify(LOGICAL_ROLES)}`);
+  check('roles: launcher ROLE_CONTRACT 名字/路径/tier 精确',
+    same(ROLE_CONTRACT, EXPECTED), `actual=${JSON.stringify(ROLE_CONTRACT)}`);
+  check('roles: model-routing logical_roles 精确为四个注册名',
+    same(sorted(Object.keys(logical)), sorted(EXACT_ROLES)),
+    `actual=${JSON.stringify(logical)}`);
+
+  const projectionErrors = [];
+  for (const role of EXACT_ROLES) {
+    const tier = EXPECTED[role].tier;
+    if (logical[role] !== tier) projectionErrors.push(`${role}:logical=${logical[role] || '缺失'}≠${tier}`);
+    if (claudeProjection[role] !== tierAlias[tier]) {
+      projectionErrors.push(`${role}:claude=${claudeProjection[role] || '缺失'}≠tier.${tier}=${tierAlias[tier] || '缺失'}`);
+    }
+    if (codexProjection[role] !== tierEffort[tier]) {
+      projectionErrors.push(`${role}:codex=${codexProjection[role] || '缺失'}≠tier.${tier}=${tierEffort[tier] || '缺失'}`);
+    }
+  }
+  check('roles: logical tier 与 Claude alias / Codex effort 投影同源',
+    projectionErrors.length === 0, projectionErrors.join(', '));
+
+  const claudeDir = join(ROOT, '.claude', 'agents');
+  const claudeNames = new Map();
+  for (const file of readdirSync(claudeDir).filter((name) => name.endsWith('.md'))) {
+    const text = readFileSync(join(claudeDir, file), 'utf8');
+    if (!text.startsWith('---\n')) continue;
+    const end = text.indexOf('\n---\n', 4);
+    const name = end < 0 ? '' : (text.slice(4, end).match(/^name:\s*([^\s#]+)/m) || [])[1];
+    if (name) claudeNames.set(name, [...(claudeNames.get(name) || []), file]);
+  }
+  const codexDir = join(ROOT, '.codex', 'agents');
+  const codexNames = new Map();
+  for (const file of readdirSync(codexDir).filter((name) => name.endsWith('.toml'))) {
+    const text = readFileSync(join(codexDir, file), 'utf8');
+    const name = (text.match(/^name\s*=\s*"([^"]+)"/m) || [])[1];
+    if (name) codexNames.set(name, [...(codexNames.get(name) || []), file]);
+  }
+  const registrationErrors = [];
+  for (const role of EXACT_ROLES) {
+    const claudeFile = EXPECTED[role].claude.split('/').at(-1);
+    const codexFile = EXPECTED[role].codex.split('/').at(-1);
+    if (!same(claudeNames.get(role) || [], [claudeFile])) registrationErrors.push(`${role}:Claude=${claudeNames.get(role) || '缺失'}`);
+    if (!same(codexNames.get(role) || [], [codexFile])) registrationErrors.push(`${role}:Codex=${codexNames.get(role) || '缺失'}`);
+  }
+  check('roles: Claude/Codex 四个精确注册名各有且仅有一份定义',
+    registrationErrors.length === 0, registrationErrors.join(', '));
+
+  const hashManifest = {};
+  const hashErrors = [];
+  for (const harness of ['claude', 'codex']) {
+    hashManifest[harness] = {};
+    for (const role of EXACT_ROLES) {
+      try {
+        const resolved = resolveRole({ root: ROOT, role, harness });
+        const expectedPath = EXPECTED[role][harness];
+        const diskHash = sha256(readFileSync(join(ROOT, expectedPath)));
+        hashManifest[harness][role] = diskHash;
+        if (resolved.definition_path !== expectedPath) hashErrors.push(`${harness}/${role}:path=${resolved.definition_path}`);
+        if (resolved.definition_sha256 !== diskHash) hashErrors.push(`${harness}/${role}:hash mismatch`);
+        if (diskHash !== EXPECTED_HASHES[harness][role]) hashErrors.push(`${harness}/${role}:unpinned-bytes=${diskHash}`);
+        if (resolved.tier !== EXPECTED[role].tier) hashErrors.push(`${harness}/${role}:tier=${resolved.tier}`);
+      } catch (error) {
+        hashErrors.push(`${harness}/${role}:${error.message}`);
+      }
+    }
+  }
+  const hashes = Object.values(hashManifest).flatMap((roles) => Object.values(roles));
+  if (hashes.length !== 8 || new Set(hashes).size !== 8 || hashes.some((hash) => !/^[a-f0-9]{64}$/.test(hash))) {
+    hashErrors.push(`hash-set=count:${hashes.length}/unique:${new Set(hashes).size}`);
+  }
+  check('roles: 八份定义 bytes 的 SHA-256 与 launcher 解析精确一致',
+    hashErrors.length === 0, hashErrors.join(', '));
+  console.log(`ROLE_DEFINITION_HASHES ${JSON.stringify(hashManifest)}`);
+
+  const template = readFileSync(join(ROOT, '.claude', 'agents', 'work-agent-template.md'), 'utf8');
+  check('roles: work-agent-template 保持未注册且无 Codex 同名 adapter',
+    !template.startsWith('---\n')
+      && !existsSync(join(ROOT, '.codex', 'agents', 'work-agent-template.toml'))
+      && /\b不注册为 subagent\b|不注册为 subagent/.test(template),
+    '模板不得带 frontmatter/同名 TOML，也不得成为 dispatch 目标');
+
+  // 只扫可执行 role call graph，不扫历史审计档：role 定义、orchestrator、
+  // 引用四 role 之一的 first-class skill、workflow 源和其 Codex runner。
+  const callGraphFiles = new Set([
+    '.claude/agents/orchestrator.md',
+    '.claude/agents/work-agent-template.md',
+    '.codex/workflow-runner.mjs',
+    'scripts/agent-launcher.mjs',
+    ...Object.values(EXPECTED).flatMap((entry) => [entry.claude, entry.codex]),
+  ]);
+  const skillRoot = join(ROOT, '.claude', 'skills', 'office');
+  const rolePattern = /\b(?:plan-agent|work-agent|oracle|quality-gate)\b/i;
+  for (const entry of readdirSync(skillRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const rel = `.claude/skills/office/${entry.name}/SKILL.md`;
+    if (existsSync(join(ROOT, rel)) && rolePattern.test(readFileSync(join(ROOT, rel), 'utf8'))) callGraphFiles.add(rel);
+  }
+  const workflowRoot = join(ROOT, '.claude', 'workflows');
+  if (existsSync(workflowRoot)) for (const file of readdirSync(workflowRoot).filter((name) => name.endsWith('.js'))) {
+    callGraphFiles.add(`.claude/workflows/${file}`);
+  }
+  const lineup = ((routing.match(/^known_lineup:\s*\[([^\]]+)\]/m) || [])[1] || '')
+    .split(',').map((value) => value.trim().toLowerCase()).filter(Boolean);
+  const forbiddenAliases = [...new Set(['fable', 'opus', 'sonnet', 'haiku', ...lineup])];
+  const aliasPattern = new RegExp(`\\b(?:${forbiddenAliases.join('|')})\\b`, 'gi');
+  const aliasLeaks = [];
+  for (const rel of sorted(callGraphFiles)) {
+    const text = readFileSync(join(ROOT, rel), 'utf8');
+    const lines = text.split('\n');
+    const skill = /^\.claude\/skills\/office\/[^/]+\/SKILL\.md$/.test(rel);
+    const hits = [];
+    for (let i = 0; i < lines.length; i++) {
+      aliasPattern.lastIndex = 0;
+      const found = [...lines[i].matchAll(aliasPattern)];
+      if (!found.length) continue;
+      // Skill prose may cite a routing example/history without making a dispatch decision.  A
+      // direct pin is an alias on/near a role call, dispatch/spawn instruction, model field, or
+      // recommended-model declaration.  Core definitions/orchestrator/runner/workflows are all
+      // executable dispatch surfaces, so any alias in those files remains a hard failure.
+      const window = lines.slice(Math.max(0, i - 3), i + 4).join('\n');
+      const direct = !skill
+        || rolePattern.test(window)
+        || /\brecommended-model\b|\b(?:subagent_type|agent_type)\b|\b(?:dispatch|spawn)\b|\bmodel\s*[:=]/i.test(window);
+      if (direct) hits.push(...found.map((m) => `${m[0]}@${i + 1}`));
+    }
+    if (hits.length) aliasLeaks.push(`${rel}:${hits.join(',')}`);
+  }
+  check('roles: 可执行 role call graph 不在 model-routing.yaml 之外直写模型 alias',
+    aliasLeaks.length === 0, aliasLeaks.join(' | '));
+
+  const orch = readFileSync(join(ROOT, '.claude', 'agents', 'orchestrator.md'), 'utf8');
+  const runner = readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8');
+  const activationPath = join(ROOT, '.claude', 'skill-os', 'native-agent-activation.json');
+  let activation;
+  try { activation = JSON.parse(readFileSync(activationPath, 'utf8')); } catch { activation = null; }
+  const activationKeys = ['schema_version', 'status', 'proof_receipt_path', 'proof_receipt_sha256', 'activated_at'];
+  const activationExact = activation && same(sorted(Object.keys(activation)), sorted(activationKeys))
+    && activation.schema_version === 'luca.native-agent-activation.v1'
+    && ['DORMANT', 'ACTIVE'].includes(activation.status);
+  check('roles: native route activation state 精确且 fail-closed', activationExact,
+    activation ? `status=${activation.status}` : 'missing/invalid activation state');
+  const oracleSkillFiles = [
+    '.claude/skills/office/brainstorm/SKILL.md',
+    '.claude/skills/office/ux-brainstorm/SKILL.md',
+    '.claude/skills/office/ux-research/SKILL.md',
+    '.claude/skills/office/deepresearch/SKILL.md',
+  ];
+  const substitutionErrors = [];
+  if (!/forbiddenClaims\s*=\s*\[[^\]]*agent_type[^\]]*subagent_type[^\]]*logical_role[^\]]*receipt[^\]]*evidence[^\]]*\]/s.test(runner)
+      || !/Object\.hasOwn\(opts, key\)/.test(runner)
+      || !/runner 不能证明 native role\/receipt/.test(runner)) {
+    substitutionErrors.push('workflow-runner 未 fail-closed 拒绝 role/evidence claim');
+  }
+  if (activationExact && activation.status === 'DORMANT') {
+    if (activation.proof_receipt_path !== null || activation.proof_receipt_sha256 !== null
+      || activation.activated_at !== null) substitutionErrors.push('DORMANT state 携带伪 proof/activation 数据');
+    const premature = [
+      ['.claude/agents/orchestrator.md', orch, /Native role invariant|按精确注册名 native spawn|luca\.work-packet\.v1 JSON/],
+      ...oracleSkillFiles.map((rel) => [rel, readFileSync(join(ROOT, rel), 'utf8'), /harness-native child mechanism|native child 机制/]),
+    ].filter(([, text, pattern]) => pattern.test(text)).map(([rel]) => rel);
+    if (premature.length) substitutionErrors.push(`DORMANT 时存在提前激活 call site: ${premature.join(',')}`);
+  } else if (activationExact) {
+    if (!/^[a-f0-9]{64}$/.test(activation.proof_receipt_sha256 || '')
+      || typeof activation.proof_receipt_path !== 'string' || !activation.proof_receipt_path
+      || typeof activation.activated_at !== 'string' || !Number.isFinite(Date.parse(activation.activated_at))) {
+      substitutionErrors.push('ACTIVE state 缺 exact live proof binding');
+    }
+    if (!EXACT_ROLES.every((role) => orch.includes(`\`${role}\``))) substitutionErrors.push('orchestrator 未声明精确四 role');
+    if (!/Workflow runner[^\n]{0,160}(?:不能|不是|never)/i.test(orch)
+        && !/(?:不能|不是|never)[^\n]{0,160}Workflow runner/i.test(orch)) {
+      substitutionErrors.push('orchestrator 缺 Workflow runner 不可替代 role 声明');
+    }
+    for (const rel of oracleSkillFiles) {
+      const text = readFileSync(join(ROOT, rel), 'utf8');
+      if (!/subagent_type\s*=\s*["']oracle["']/.test(text)
+          || !/native child/i.test(text)
+          || !/BLOCKED/.test(text)
+          || !/generic agent/i.test(text)) {
+        substitutionErrors.push(`${rel} 未按精确 oracle native role fail-closed`);
+      }
+    }
+  }
+  check('roles: generic agent / root reasoning / Workflow runner 不得替代 native role',
+    substitutionErrors.length === 0, substitutionErrors.join(' | '));
 }
 
 console.log(`\n=== check-agents-parity summary: PASS=${pass} FAIL=${fail} ===`);

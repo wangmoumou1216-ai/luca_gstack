@@ -186,7 +186,8 @@ BASE_SHA=$(git rev-parse HEAD~1); HEAD_SHA=$(git rev-parse HEAD)
 # ③ FILE_SET：显式文件集（跨多次提交的一条主题线）
 ```
 
-派 `quality-gate` agent（**opus**，见 `model-routing.yaml` pin）跑断言，或 `redteam`（Fable）
+派 `quality-gate` agent（`core-execution` logical tier）跑断言，或 `redteam`
+（`reasoning-heavy` logical tier）
 对 diff 做对抗。给 reviewer 精确上下文、**不给会话历史与实现过程**（R4 证据标准①）：附
 DESCRIPTION（建了什么）/ PLAN_OR_REQUIREMENTS（应满足什么）/ 上述基线之一。
 产出=分级 findings（Critical / Important / Minor），**本环节到此为止、不改代码**——这正是

@@ -1,0 +1,7 @@
+{
+  "schema_version": "luca.native-agent-activation.v1",
+  "status": "DORMANT",
+  "proof_receipt_path": null,
+  "proof_receipt_sha256": null,
+  "activated_at": null
+}

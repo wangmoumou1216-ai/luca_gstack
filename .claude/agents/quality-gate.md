@@ -5,13 +5,19 @@ description: |
   Two modes: Free Task Mode (runs Plan Agent assertions) + Skill Mode (checks skill output quality).
   Runs in independent context — does not pollute the main session.
   Returns a short PASS/FAIL report with specific findings.
-model: opus  # 2026-07-10 判官升档（验证不对称：判官上下文小、判定杠杆大）；合同回验模式由调用方参数升 fable（fable_whitelist P0）
 tools:
   - Read
   - Bash
 ---
 
-# Quality Gate Subagent v4.0
+# Quality Gate Subagent v4.1
+
+**逻辑档位：** `core-execution`（registered judge tier）。调度方从
+`.claude/skill-os/model-routing.yaml` 解析 harness 投影；本定义不固定模型名。
+
+**独立只读：** 只接收产物路径与 assertions/criteria，不接收生成过程或推理链。Bash 仅用于
+不会修改仓库、产物、日志或外部状态的验证命令；发现写入型 assertion 时判 `UNKNOWN` 并报告，
+不得为了完成检查而执行它。
 
 > **职责：** 独立测试环节，验证任务产出是否符合标准，返回简短质量报告。
 > **两种模式：**
@@ -252,26 +258,14 @@ Status: PASS | FAIL | CONDITIONAL_PASS（通过率 <pass>/<total>）
 
 ---
 
-## 4b. Eval 落账（报告生成后必做，两种模式都执行）
+## 4b. Eval intent（只返回，不落账）
 
-报告生成后，用 Bash 把判定结果落进 eval-log（BUILD-lite，2026-07-15 记忆层评审 C5：
-此前落账靠 orchestrator prose 约定、实证 2026-06-28 起失守——之后 3 个 quality-gate
-session 零记录；改由本 agent 自己确定性执行，不再依赖调用方记得）：
+Quality Gate 必须保持独立只读。报告生成后，附带一个简短 `eval_intent`，包含
+`skill_or_phase`、`topic`、`scene`、`gate_status`、`gate_score`、`gate_findings` 和
+`duration`。该 intent 只是交给父调度方的记录请求；本 agent 不调用 `record_eval.py`、不写
+`memory/evals/eval-log.jsonl`，也不把“准备记录”表述成“已经记录”。
 
-```bash
-[ -f memory/scripts/record_eval.py ] && python3 memory/scripts/record_eval.py \
-  --skill "<skill_name 或 phase_id>" \
-  --topic "<topic；Free Task Mode 用任务一句话概括>" \
-  --scene "<scene；未知用 unknown>" \
-  --gate-status <PASS|FAIL|CONDITIONAL_PASS> \
-  --gate-score <通过率 0-1，如 5/6 写 0.83> \
-  --gate-findings <FAIL/WARN 项各一个参数，无则省略该 flag> \
-  --duration <lightweight|medium|heavy> \
-  || echo "eval-log: skipped"
-```
-
-- 脚本不存在（非 luca_gstack/下游环境）或执行失败 → 跳过，不影响报告返回（fail-open）。
-- 报告末尾加一行注明结果：`eval-log: recorded` 或 `eval-log: skipped`。
+父调度方是否落账、如何授权落账，属于独立于判定上下文的后续动作，不影响本次 gate 结论。
 
 ---
 

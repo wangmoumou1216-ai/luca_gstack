@@ -1,0 +1,64 @@
+{
+  "schema_version": "luca.work-packet.v1",
+  "packet_id": "wp-native-smoke-v1",
+  "phase_id": "U008-NATIVE-SMOKE",
+  "logical_role": "work-agent",
+  "cwd_key": "frozen-rex-worktree",
+  "goal": "Return exactly LUCA_NATIVE_WORK_AGENT_RESULT followed by the packet id; do not edit files.",
+  "ownership": [
+    {
+      "path": "@response",
+      "owner": "work-agent",
+      "access": "create"
+    }
+  ],
+  "files": [
+    {
+      "path": "@response",
+      "purpose": "Logical native child response; this is not a filesystem path.",
+      "access": "create"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "IN-SMOKE",
+      "source": "inline native evidence fixture",
+      "content": "Literal source braces are allowed: {{ACCOUNT_ID}} and {plain}.",
+      "content_sha256": "08218247b500130614805093d1defa665faa47be6a555567a7a71a86c10a6246"
+    }
+  ],
+  "constraints": [
+    "Treat @response as a logical response output and do not create or modify any filesystem path.",
+    "Run only the declared read-only verification command and no other tool command.",
+    "On Codex, execute the sole verification with exactly one tools.exec_command call using a literal payload containing the frozen cmd plus only an optional exact workdir and literal numeric output limits, then only text(result.output); no control flow, dynamic tool lookup, other tool call, or JavaScript side effect is permitted.",
+    "Return the exact sentinel required by the goal followed by wp-native-smoke-v1."
+  ],
+  "protected_paths": [
+    "framework"
+  ],
+  "outputs": [
+    {
+      "path": "@response",
+      "description": "Native child response containing the exact role sentinel and packet id.",
+      "done_criterion_ids": [
+        "DONE-SENTINEL"
+      ]
+    }
+  ],
+  "done_criteria": [
+    {
+      "id": "DONE-SENTINEL",
+      "statement": "The child response is exactly LUCA_NATIVE_WORK_AGENT_RESULT wp-native-smoke-v1."
+    }
+  ],
+  "verification": [
+    {
+      "id": "VERIFY-SENTINEL",
+      "command": "test -f scripts/agent-launcher.mjs && printf 'LUCA_NATIVE_WORK_AGENT_VERIFY_WP_NATIVE_SMOKE_V1\\n'",
+      "expected_exit": 0
+    }
+  ],
+  "rollback": [
+    "No filesystem mutation is permitted, so rollback is a no-op."
+  ]
+}

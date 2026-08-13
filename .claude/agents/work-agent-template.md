@@ -1,12 +1,14 @@
-# Work Agent (WA-{{PHASE_ID}})
+# Work Packet Authoring Template (WA-{{PHASE_ID}})
 
-> **本文件是 prompt 模板，不注册为 subagent**（无 frontmatter 是有意的——2026-07-14 双重身份修复：
-> 模板含未填变量，若注册为 agent type 被直接 `subagent_type: work-agent` spawn，系统提示词就是
-> 未填模板。正确用法：Orchestrator 填完全部变量后，经 Agent tool 的 prompt 字段传入完整 prompt）。
+> **本文件是不注册为 subagent 的 packet authoring 模板**（无 frontmatter 是有意的）。
+> 它只帮助 Orchestrator 把旧字段语义映射为 `luca.work-packet.v1` JSON；本 Markdown、未填变量、
+> 或由它插值出的自由文本 prompt 都不得直接 dispatch。真正的 native role 定义是
+> `.claude/agents/work-agent.md`。Orchestrator 必须先让 `scripts/agent-launcher.mjs` 按
+> `.claude/skill-os/schemas/work-packet.schema.json` 验证完整 packet，再 spawn `work-agent`。
+> typed source-data 字段内的字面花括号是合法输入，不得做全局 `{{...}}` substring 拒绝。
 >
-> **Orchestrator 填写说明：**
-> 在生成 Work Agent prompt 之前，将所有 `{{VARIABLE}}` 替换为具体值。
-> 不得保留任何占位符。Work Agent 启动时接收到的是已填写完毕的版本。
+> **Orchestrator 填写说明：** 下列变量清单仅是 authoring checklist。将其内容装入 schema
+> 定义的 typed fields；未映射字段、缺字段和额外字段都必须在 spawn 前失败。
 
 ### 变量清单（Orchestrator 必须全部填写）
 

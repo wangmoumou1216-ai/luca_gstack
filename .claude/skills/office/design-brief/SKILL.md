@@ -22,7 +22,7 @@ context-cost:
   self: 39572  # 实测字节数 wc -c，统一口径 2026-07-04（G5）；2026-07-21 复测（interaction-mechanics 挂载 + Step 1.0b + 内容语义规则）
   runtime-estimate: 24000  # 2026-07-21：+interaction-mechanics（10826B ≈ +3.6K tokens，Phase 3 挂载）
   shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, design-system-contract, interaction-mechanics]
-  recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场收敛opus；本 skill 无 judge/oracle 环节
+  recommended-model: core-execution  # 整场收敛使用 core-execution；本 skill 无 judge/oracle 环节
 ---
 
 ## Preamble (run first)

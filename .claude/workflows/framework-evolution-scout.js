@@ -464,7 +464,7 @@ function redteamPrompt(v) {
     'EXISTING luca_gstack capabilities: ' + [...existingNames].join(', ') + '\n\n' +
     'DO THREE THINGS:\n' +
     '1. STEEL-MAN THE INCUMBENT: name the closest existing skill/agent and argue why it is ALREADY enough for this gap. If that argument is strong → redteam_verdict="killed".\n' +
-    '2. ATTACK THE FIT HYPOTHESIS: what environment assumption does the fit-claim depend on, and does luca_gstack (FxUI brand-lock, framework/ read-only, Sonnet default, Claude Code harness) actually satisfy it? If it depends on something luca_gstack lacks → downgrade or kill.\n' +
+    '2. ATTACK THE FIT HYPOTHESIS: what environment assumption does the fit-claim depend on, and does luca_gstack (FxUI brand-lock, framework/ read-only, guided-execution default, current harness) actually satisfy it? If it depends on something luca_gstack lacks → downgrade or kill.\n' +
     '3. INTEGRATION COST: which luca_gstack surface files would the fusion touch? If it must edit framework/, SKILL.md P1-P7 invariants, or weaken a brand-lock → integration_risk="HIGH".\n\n' +
     'redteam_verdict: "stands" (recommendation holds), "downgraded" (real but weaker than scored → CONDITIONAL), or "killed" (incumbent suffices / fit bogus). reason = one line.'
 }

@@ -107,11 +107,9 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
           FAIL(WARNING) → 记录 findings，继续执行
           CONDITIONAL_PASS → 记录 findings 到当前 Phase 日志，继续执行（与 Skill Workflow Mode 处理方式一致）
 
-  2c-eval 【Eval 记录】落账已内置于 quality-gate agent 定义 §4b（2026-07-15 BUILD-lite：
-        prose 约定实证 2026-06-28 起失守，改为 agent 自己确定性执行）。此处只做兜底核对：
-        quality-gate 报告末尾应有 `eval-log: recorded` 行；若显示 skipped/缺失且当前在
-        luca_gstack 环境，由 Orchestrator 手动补跑 record_eval.py（参数见 quality-gate.md §4b），
-        脚本失败不阻塞流程。
+  2c-eval 【Eval intent】quality-gate 只返回 §4b `eval_intent`，不写 eval log。
+        Orchestrator 将 intent 作为独立后续记录请求交回父会话；没有明确写入授权时只展示，
+        不得把 intent 伪装成已落账，也不得让判官 child 获得日志写权限。
 
   2c-obs  【观察提取（Hermes-lite）】质量验证通过后，主 Agent 快速检查：
       ① Work Agent 完成报告里有没有 non-obvious blockers？
@@ -147,8 +145,8 @@ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时
           追加 delta 行：MODIFIED: <原准则> → <新准则> (reason)
         - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
         - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
-        - 模型：判定环节 dispatch quality-gate 时传 model: fable（fable_whitelist P0
-          出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
+        - 档位：该出门前裁决使用 `reasoning-heavy`；具体 harness 投影只从
+          model-routing 真值源解析，定义/调用点不固定模型名——见 §5 Dispatch 规则
 ```
 
 ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
@@ -360,22 +358,23 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 
 ## 5. 模型路由（强制传参，2026-07-10 起非建议）
 
-真值源：`.claude/skill-os/model-routing.yaml`（能力档 + fable_whitelist + dispatch_rules；下表为速查快照，与真值源同步维护）。
+真值源：`.claude/skill-os/model-routing.yaml`。定义和调用点只写 logical tier；harness-specific
+alias/effort 只能由该真值源投影。
 
-| 能力档 | 任务类型 | 当前解析（2026-07-10） |
-|---------|---------|---------|
-| reasoning-heavy | **仅判定场景**（fable_whitelist：出门前裁决/对抗判定/翻案复审/plan-mode 规划期）| Fable（不可用→降级 Opus）|
-| core-execution | 承重执行：写代码、tech-spec/task-plan、原型、OD/Claude Design 编排、交互式设计 skill、deepresearch、判官常规 | Opus |
-| guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
-| mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
+| 能力档 | 任务类型 |
+|---------|---------|
+| reasoning-heavy | 仅高杠杆判定：出门前裁决、对抗判定、翻案复审、规划期 |
+| core-execution | 承重执行：代码、规格、原型、编排、深研、判官常规 |
+| guided-execution | 轻执行、checklist 审查、一般检索（默认档） |
+| mechanical | 机械执行、格式化、简单验证、preflight |
 
 **Dispatch 规则（强制）：**
-1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
+1. spawn 任何 subagent 时，先确定 logical tier，再让 launcher/当前 harness 从真值源解析投影；定义和 caller 不得自行写模型名。
 2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
-3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。
-4. **降级链**：fable 调用失败（配额/不可用）→ 自动降 opus 重试，并在产出中告知用户本次判定运行在降级档。
+3. `reasoning-heavy` 只可用于真值源列出的高杠杆授权场景；普通执行不得借判定名义升档。
+4. 投影不可用时按真值源声明的降级规则处理并披露实际 logical tier；不得在 caller 猜测替代模型。
 5. 发现真值源未收录的档位变化 → 先提示用户更新真值源再调度（活规则）。
-调度时向用户展示：`"下一步是 <task>，使用 <model>（依据：<tier/白名单条目>）"`
+调度时向用户展示：`"下一步是 <task>，使用 <logical-tier>（依据：<真值源场景>）"`
 
 ---
 

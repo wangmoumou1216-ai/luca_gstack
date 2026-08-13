@@ -4,15 +4,15 @@
 # 1. 按「能力档（tier）」定义路由，不写死模型版本号。resolves_to 是 Claude Code
 #    档位别名（fable/opus/sonnet/haiku），运行时自动解析到该档当前最新模型——
 #    档位内升级（如 Opus 4.7→4.8）零维护，自动跟随。
-# 2. CLAUDE.md「模型路由」节、orchestrator.md §5 的速查表、各 SKILL.md frontmatter
-#    的 recommended-model 均引用本文件的 tier 名；调整路由只改本文件（速查快照同步）。
+# 2. CLAUDE.md「模型路由」节、orchestrator.md §5 和各 SKILL.md frontmatter 只引用
+#    本文件的 logical tier；具体 alias/effort 只在本文件的 harness projection 中出现。
 # 3. 会话兜底（活规则）：Claude 在 session 中发现 known_lineup 之外的档位变化
 #    （新档位发布/档位退役/能力代际漂移），主动向用户提示更新本文件，不得沉默沿用。
 # 4. daily_governance.py 每日校验本文件 ↔ skill frontmatter 一致性与复核期限，
 #    异常写入 memory/digests/ 等用户裁决——检测自动化，重映射判断留给人。
-# 5. 【2026-07-10 Fable 手术刀改版】fable 配额稀缺，物尽其用：fable 只用于
-#    fable_whitelist 枚举的判定场景；dispatch 传 model: fable 的唯一合法依据是
-#    白名单条目。生成/研究/编排/checklist 审查/交互引导一律 ≤ opus。
+# 5. 【2026-07-10 高杠杆判定档】reasoning-heavy 只用于授权清单枚举的判定场景；
+#    caller 只声明 logical tier，由 dispatch 层在本文件内解析投影。生成/研究/编排/
+#    checklist 审查/交互引导一律使用较低 logical tier。
 # 6. 【降级链】fable 不可用（配额耗尽/模型报错/被 availableModels 排除）→
 #    自动降一级到 opus 重试，并在产出中告知用户本次判定运行在降级档。
 # 7. 【native_precedence · 原生优先】Claude Code 原生已有 opusplan（plan=opus/
@@ -20,8 +20,8 @@
 #    路由/fableplan 类特性）时：主动告知用户 → 提案将本文件降级为语义补充层，
 #    Claude 原生逻辑优先，不得与原生机制抢控制权。
 
-version: 2
-updated: 2026-07-10
+version: 3
+updated: 2026-08-12
 review_after_days: 90   # 超过此天数未复核 → digest 提醒重新核对档位映射
 
 # Claude Code 当前已知档位阵容（能力高→低）。会话中发现阵容变化时更新此表。
@@ -82,16 +82,27 @@ fable_whitelist:
     - "plan-mode 规划期 dispatch（Explore / Plan agent）——2026-07-10 用户点名"
   # 此外一律不用 fable；拿不准 → 用 opus（宁降不越权）。
 
-# ─── Agent frontmatter pin 登记（与 .claude/agents/*.md 保持一致，governance 机检）───
+# ─── Native logical roles（跨 harness 同一语义）───
+logical_roles:
+  plan-agent: reasoning-heavy
+  work-agent: core-execution
+  oracle: reasoning-heavy
+  quality-gate: core-execution
+
+# ─── Claude agent projection / existing frontmatter pins ───
+# 四个 logical role 的定义不含 model pin；只有此真值源可把 logical tier 投影成 Claude alias。
+# 其余历史 agent 保留 frontmatter pin，并由 governance 机检对齐。
 agents:
-  quality-gate: opus        # 判官≥执行者；合同回验模式由调用方参数升 fable（P0）
+  plan-agent: fable         # reasoning-heavy projection
+  work-agent: opus          # core-execution projection
+  oracle: fable             # reasoning-heavy projection
+  quality-gate: opus        # core-execution registered judge tier
   muse-proto-judge: opus    # AC 判官（muse）
   preflight-agent: haiku    # 纯机械前置检查（effort: low）
 
-# 有意不 pin 的 agent（机检白名单——不在 agents: 也不在此表的 agent 文件 → tripwire 告警）：
-# orchestrator=主循环行为模式（继承主循环）；plan-agent 被 spawn 时按白名单 P2 传 fable；
-# work-agent 按 Phase 的 model_tier 由 dispatch 参数决定（默认 core-execution）。
-agents_no_pin: [orchestrator, plan-agent, work-agent-template]
+# 有意不在定义中 pin 的文件。四个 logical role 均由上方 logical_roles + agents projection
+# 解析；orchestrator 是主循环行为模式；work-agent-template 不可注册或 dispatch。
+agents_no_pin: [orchestrator, plan-agent, work-agent, oracle, quality-gate, work-agent-template]
 
 # 非可调度目录（有 SKILL.md 但不可作为独立 skill 调用，无模型档——tripwire 豁免）
 non_dispatchable: [references]
@@ -124,7 +135,7 @@ codex:
   principle: |
     档位的不变量是**相对序**（判定 > 承重执行 > 轻执行 > 机械），不是某个具体模型。
     Claude 侧这个序落在模型别名上（fable>opus>sonnet>haiku）；
-    Codex 侧落在 reasoning effort 上（xhigh>high>medium>minimal）。
+    Codex 侧落在 reasoning effort 上（xhigh>high>medium>low）。
     序保住了，档位语义就保住了——这与"档位名是别名、档内升级自动跟随零维护"同一条原则。
   why_not_model_names: |
     **Codex 模型名不得作为档位落点**——它随账户/订阅状态失效，而 effort 枚举不会。
@@ -149,10 +160,13 @@ codex:
   model_field_note: |
     subagent toml 一律**省略 model 字段** → 继承父会话。理由同 why_not_model_names，
     且与 main_loop 的"模型是用户 /model 主权"一致：用户换主模型时子 agent 自动跟随。
-  agents:                       # 与上方 agents: 同名同序，值换成 effort
-    quality-gate: high          # 判官≥执行者（对应 Claude 侧 opus）
+  agents:                       # logical roles + existing agents 的 Codex effort projection
+    plan-agent: xhigh
+    work-agent: high
+    oracle: xhigh
+    quality-gate: high
     muse-proto-judge: high
-    preflight-agent: low        # 纯机械前置检查（对应 Claude 侧 haiku；minimal 被模型拒绝）
+    preflight-agent: low        # 纯机械前置检查；minimal 被模型拒绝
   parity_note: |
     本段与上方 Claude 侧 agents:/tiers: 是**同一套档位的两个投影**，新增场景须同时补两侧
     （new_scenario_protocol 对 Codex 同样适用）。只补一侧 = 换个 CLI 就掉档。

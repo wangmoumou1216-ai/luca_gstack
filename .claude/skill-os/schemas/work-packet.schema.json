@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luca-gstack.local/schemas/work-packet.schema.json",
+  "title": "luca_gstack fully materialized work-agent packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "packet_id",
+    "phase_id",
+    "logical_role",
+    "cwd_key",
+    "goal",
+    "ownership",
+    "files",
+    "inputs",
+    "constraints",
+    "protected_paths",
+    "outputs",
+    "done_criteria",
+    "verification",
+    "rollback"
+  ],
+  "properties": {
+    "schema_version": { "const": "luca.work-packet.v1" },
+    "packet_id": {
+      "type": "string",
+      "pattern": "^wp-[a-z0-9][a-z0-9._-]{2,127}$"
+    },
+    "phase_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "logical_role": { "const": "work-agent" },
+    "cwd_key": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "goal": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "ownership": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/ownership" }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 4096 }
+    },
+    "protected_paths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/path" }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/output" }
+    },
+    "done_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/doneCriterion" }
+    },
+    "verification": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/verification" }
+    },
+    "rollback": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 4096 }
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*//)(?!\\.\\.?$)(?!\\.\\.?/)(?!.*\\/\\.\\.?$)(?!.*\\/\\.\\.?/)(?!.*\\/$)[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "owner", "access"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "owner": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "access": { "enum": ["read", "write", "create", "delete"] }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "purpose", "access"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "access": { "enum": ["read", "write", "create", "delete"] }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "content", "content_sha256"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^IN-[A-Z0-9][A-Z0-9_-]{0,63}$" },
+        "source": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Typed source data. Literal braces and template examples are allowed."
+        },
+        "content_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "description", "done_criterion_ids"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "done_criterion_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^DONE-[A-Z0-9][A-Z0-9_-]{0,63}$" }
+        }
+      }
+    },
+    "doneCriterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^DONE-[A-Z0-9][A-Z0-9_-]{0,63}$" },
+        "statement": { "type": "string", "minLength": 1, "maxLength": 4096 }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "command", "expected_exit"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^VERIFY-[A-Z0-9][A-Z0-9_-]{0,63}$" },
+        "command": { "type": "string", "minLength": 1, "maxLength": 8192 },
+        "expected_exit": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    }
+  },
+  "$comment": "The launcher additionally enforces cross-field rules: all mutable files and outputs have matching ownership, protected paths never overlap mutable ownership/files/outputs, input hashes match UTF-8 content, all output done_criterion_ids resolve, and duplicate logical paths/IDs are rejected."
+}

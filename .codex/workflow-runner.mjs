@@ -10,6 +10,9 @@
 // 【为什么不是"自建平行机器"（Loop 宪法 §4）】
 // 本文件不实现编排语义——阶段划分、并发分组、门禁、降级全在 workflow 脚本里，原样不动。
 // 它只把 agent() 这一个原语接到 **Codex 原生的 `codex exec`** 上。workflow 脚本零改写。
+// 该原语是 generic workflow helper，不是注册 role dispatcher：它不能声明 `plan-agent`、
+// `work-agent`、`oracle`、`quality-gate` 的 native child edge，也不能生成/替代 role receipt。
+// DEV-008/TST-008 的 role 或 evidence 断言若指向本 runner，必须 fail closed。
 //
 // 【契约（从 workflow 脚本的实际用法反推，不可违反）】
 //  · agent(prompt, {label, phase, schema}) → Promise<对象|null>
@@ -272,6 +275,15 @@ const phase = (t) => { currentPhase = t; process.stderr.write(`\n▶ Phase: ${t}
 const log = (...a) => process.stderr.write(`   ${a.join(' ')}\n`);
 
 const agent = async (prompt, opts = {}) => {
+  // Optional graph backend cannot be upgraded into a native-role/evidence path by adding an option.
+  // Reject claim-shaped keys instead of silently ignoring them and returning role-shaped prose.
+  const forbiddenClaims = ['agent_type', 'subagent_type', 'logical_role', 'receipt', 'evidence'];
+  const claim = forbiddenClaims.find((key) => Object.hasOwn(opts, key));
+  if (claim) {
+    agentFail++;
+    process.stderr.write(`   ⚠ workflow agent() 不接受 ${claim}；本 runner 不能证明 native role/receipt\n`);
+    return null;
+  }
   const ph = opts.phase || currentPhase;
   process.stderr.write(`   · agent ${opts.label || '(unlabeled)'} [effort=${effortFor(ph)}]\n`);
   if (DRY) return null;                       // dry-run：不真调模型，走全 null 路径验降级
@@ -279,7 +291,8 @@ const agent = async (prompt, opts = {}) => {
   // 那些仓库相对路径（self-model.yaml 等）会解析到 scratch 而读不到。
   // 前缀加在 runner 侧 ⇒ workflow 脚本仍然零改写。红队端到端探针已验证模型能据此正确取文件。
   const prefixed = `REPO_ROOT=${ROOT}\n（你的 CWD 是临时工作目录；仓库相对路径一律按 REPO_ROOT 解析；`
-    + `仓库只读，任何写入只能落在 CWD 内。）\n\n${prompt}`;
+    + `仓库只读，任何写入只能落在 CWD 内。本调用是 generic workflow helper，不是注册 native role，`
+    + `不得声称 role edge 或 receipt。）\n\n${prompt}`;
   return runCodex(prefixed, opts.schema, ph);
 };
 

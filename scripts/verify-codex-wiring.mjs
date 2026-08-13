@@ -8,9 +8,14 @@
 //        node scripts/verify-codex-wiring.mjs --static （只跑静态段）
 
 import { spawnSync } from 'child_process';
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
+import {
+  copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync,
+  statSync, writeFileSync,
+} from 'fs';
 import { dirname, resolve, join } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
+import { LOGICAL_ROLES, ROLE_CONTRACT, resolveRole } from './agent-launcher.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const staticOnly = process.argv.includes('--static');
@@ -113,11 +118,36 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   ok('S7 .agents/skills 下每个条目都能解析到 SKILL.md', broken === 0 && links >= 30, `可用=${links} 断=${broken}`);
 }
 
-// S8 subagent 定义
+// S8 native logical role 定义。不再用 TOML 数量代替身份：多三个无关
+// agent 不能证明 plan/work/oracle/quality-gate 任何一个可调度。
 {
+  const exactRoles = ['plan-agent', 'work-agent', 'oracle', 'quality-gate'];
+  const expected = {
+    'plan-agent': '.codex/agents/plan-agent.toml',
+    'work-agent': '.codex/agents/work-agent.toml',
+    oracle: '.codex/agents/oracle.toml',
+    'quality-gate': '.codex/agents/quality-gate.toml',
+  };
   const d = join(ROOT, '.codex', 'agents');
   const fs_ = existsSync(d) ? readdirSync(d).filter((f) => f.endsWith('.toml')) : [];
-  ok('S8 .codex/agents/*.toml 已定义', fs_.length >= 3, `found=${fs_.length}`);
+  const byName = new Map();
+  for (const file of fs_) {
+    const text = readFileSync(join(d, file), 'utf8');
+    const name = (text.match(/^name\s*=\s*"([^"]+)"/m) || [])[1];
+    if (name) byName.set(name, [...(byName.get(name) || []), `.codex/agents/${file}`]);
+  }
+  const errors = [];
+  const same = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+  if (!same(LOGICAL_ROLES, exactRoles)) errors.push(`launcher roles=${JSON.stringify(LOGICAL_ROLES)}`);
+  for (const role of exactRoles) {
+    const files = byName.get(role) || [];
+    if (files.length !== 1 || files[0] !== expected[role]) errors.push(`${role}=${JSON.stringify(files)}`);
+    if (ROLE_CONTRACT[role]?.codex !== expected[role]) errors.push(`${role}:launcher path=${ROLE_CONTRACT[role]?.codex || '缺失'}`);
+    try { resolveRole({ root: ROOT, role, harness: 'codex' }); }
+    catch (error) { errors.push(`${role}:${error.message}`); }
+  }
+  ok('S8 Codex native logical role 集精确包含 plan/work/oracle/quality-gate（名字+路径）',
+    errors.length === 0, errors.join(','));
 }
 
 // S8b 档位一致性：.codex/agents/*.toml 的 effort 必须等于 model-routing.yaml 的 codex.agents
@@ -176,6 +206,49 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
     `yaml=${bad} toml=${tomlBad} runner=${runnerBad} 未登记=${REJECTED_BY_MODEL.filter((v) => !declared.includes(v))}`);
 }
 
+// S8d 反担保：在 mkdtemp 隔离根下真跑 launcher 的 role resolver。三个同族回归
+// ——缺文件、改注册名、错 effort——必须都拒绝；不得靠当前源文本子串自证。
+{
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'luca-agent-role-negative-'));
+  const roles = ['plan-agent', 'work-agent', 'oracle', 'quality-gate'];
+  const copy = (rel) => {
+    const target = join(fixtureRoot, rel);
+    mkdirSync(dirname(target), { recursive: true });
+    copyFileSync(join(ROOT, rel), target);
+  };
+  const rejected = (role) => {
+    try { resolveRole({ root: fixtureRoot, role, harness: 'codex' }); return false; }
+    catch { return true; }
+  };
+  const results = [];
+  try {
+    copy('.claude/skill-os/model-routing.yaml');
+    for (const role of roles) copy(ROLE_CONTRACT[role].codex);
+    results.push(['baseline', roles.every((role) => !rejected(role))]);
+
+    const oraclePath = join(fixtureRoot, ROLE_CONTRACT.oracle.codex);
+    rmSync(oraclePath);
+    results.push(['missing-role', rejected('oracle')]);
+    copy(ROLE_CONTRACT.oracle.codex);
+
+    const planPath = join(fixtureRoot, ROLE_CONTRACT['plan-agent'].codex);
+    const plan = readFileSync(planPath, 'utf8');
+    writeFileSync(planPath, plan.replace(/^name\s*=\s*"plan-agent"/m, 'name = "renamed-plan"'));
+    results.push(['renamed-role', rejected('plan-agent')]);
+    copy(ROLE_CONTRACT['plan-agent'].codex);
+
+    const workPath = join(fixtureRoot, ROLE_CONTRACT['work-agent'].codex);
+    const work = readFileSync(workPath, 'utf8');
+    writeFileSync(workPath, work.replace(/^model_reasoning_effort\s*=\s*"[^"]+"/m, 'model_reasoning_effort = "low"'));
+    results.push(['wrong-effort', rejected('work-agent')]);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+  const failed = results.filter(([, value]) => !value).map(([name]) => name);
+  ok('S8d 缺失/改名/错 effort 三类隔离反例全部 fail-closed',
+    failed.length === 0, `unexpected-pass=${failed.join(',')}`);
+}
+
 // S9 adapter 行为回归（真实 hook 端到端）
 ok('S9 adapter 行为测试全绿（scripts/test-codex-adapter.mjs）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-codex-adapter.mjs')], { cwd: ROOT }).status === 0);
@@ -231,8 +304,23 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
   try {
     trusted = [...readFileSync(cfg, 'utf8').matchAll(/\[hooks\.state\."([^"]+)"\]/g)].map((m) => m[1]);
   } catch { }
-  // 仓库级条目的 trust key 以本仓 hooks.json 绝对路径为前缀
-  const ourPath = join(ROOT, '.codex', 'hooks.json');
+  // Linked worktree 实测（Codex 0.146.1）：hooks/list 把 project hook 的身份归到
+  // git common-dir 对应的 canonical worktree，而不是当前 linked worktree。静态检查
+  // 必须复现这个身份规则；但只有两端 hooks.json 字节完全相同时才可借用 canonical
+  // trust，避免把另一份配置的授信误算给当前候选。
+  const localPath = join(ROOT, '.codex', 'hooks.json');
+  let ourPath = localPath;
+  let canonicalParity = true;
+  const common = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], {
+    cwd: ROOT, encoding: 'utf8', input: '',
+  });
+  if (common.status === 0) {
+    const canonicalPath = join(resolve(common.stdout.trim(), '..'), '.codex', 'hooks.json');
+    if (canonicalPath !== localPath && existsSync(canonicalPath)) {
+      canonicalParity = readFileSync(canonicalPath).equals(readFileSync(localPath));
+      if (canonicalParity) ourPath = canonicalPath;
+    }
+  }
   const mine = trusted.filter((k) => k.startsWith(ourPath + ':'));
   const evToSnake = (e) => e.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
   let needKeys = [];
@@ -242,9 +330,11 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
     }));
   }
   const missing = needKeys.filter((k) => !mine.includes(k));
-  ok('S12 本仓 hook 已获授信（未授信时 Codex 静默跳过，hook 一个都不会跑）',
-    needKeys.length > 0 && missing.length === 0,
-    missing.length
+  ok('S12 本仓 hook 已获授信（linked worktree 仅在 canonical hook 字节等价时复用其 native 身份）',
+    canonicalParity && needKeys.length > 0 && missing.length === 0,
+    !canonicalParity
+      ? 'linked worktree 与 canonical .codex/hooks.json 字节不一致，禁止复用 canonical trust'
+      : missing.length
       ? `未授信 ${missing.length}/${needKeys.length} 条。修复：node scripts/codex-trust-hooks.mjs`
         + `（先 --dry-run 过目；它用 Codex 自己的 hooks/list + config/batchWrite，只碰本仓条目）`
       : `已授信 ${needKeys.length}/${needKeys.length} 条`);
