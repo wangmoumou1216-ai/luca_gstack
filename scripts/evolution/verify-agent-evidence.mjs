@@ -855,8 +855,25 @@ function verifyManagedSandbox(value, label) {
     || (box.filesystem?.allowWrite !== undefined && stable(box.filesystem.allowWrite) !== '[]')) fail(`${label} broadens the Claude sandbox`);
 }
 
+function verifyCodexTrustState(config, runtime) {
+  const lines = config.split(/\r?\n/);
+  runtime.forEach((entry) => {
+    const header = `[hooks.state."${entry.key}"]`;
+    const headers = lines.flatMap((line, index) => line === header ? [index] : []);
+    if (headers.length !== 1) fail('Codex trusted hook table is missing or duplicated');
+    const block = [];
+    for (let index = headers[0] + 1; index < lines.length && !lines[index].startsWith('['); index += 1) {
+      if (lines[index].trim()) block.push(lines[index].trim());
+    }
+    const trusted = block.length === 1
+      ? block[0].match(/^trusted_hash\s*=\s*"([^"]+)"$/)?.[1]
+      : null;
+    if (trusted !== entry.current_hash) fail('Codex trusted hash differs from hooks/list');
+  });
+}
+
 function verifyRuntimeAttestations(att, root, claudeContracts) {
-  exactKeys(att, ['claude_settings_path', 'claude_settings_sha256', 'claude_post_tool_use_agent_hooks', 'claude_settings_sources', 'codex_hooks_path', 'codex_hooks_sha256', 'codex_config_path', 'codex_config_sha256', 'codex_hook_runtime'], 'runtime attestations');
+  exactKeys(att, ['claude_settings_path', 'claude_settings_sha256', 'claude_post_tool_use_agent_hooks', 'claude_settings_sources', 'codex_hooks_path', 'codex_hooks_sha256', 'codex_config_path', 'codex_hook_runtime'], 'runtime attestations');
   if (att.claude_settings_path !== '.claude/settings.json' || att.codex_hooks_path !== '.codex/hooks.json') fail('runtime source paths mismatch');
   const settingsBytes = readFileSync(join(root, att.claude_settings_path));
   const settings = parseJson(settingsBytes, 'Claude project settings');
@@ -906,8 +923,8 @@ function verifyRuntimeAttestations(att, root, claudeContracts) {
   const activeConfig = realpathSync(join(process.env.CODEX_HOME || join(process.env.HOME || '', '.codex'), 'config.toml'));
   if (configPath !== activeConfig) fail('Codex trust config is not active');
   const configBytes = readFileSync(configPath);
-  if (sha256(configBytes) !== att.codex_config_sha256) fail('Codex trust config drift');
   const config = configBytes.toString('utf8');
+  verifyCodexTrustState(config, att.codex_hook_runtime);
   const hooks = parseJson(hooksBytes, 'Codex hooks');
   const snake = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
   const expected = [];
@@ -927,11 +944,6 @@ function verifyRuntimeAttestations(att, root, claudeContracts) {
     const configFromKey = runtime.key.slice(0, -exp.suffix.length);
     runtimeConfigPaths.add(realpathSync(configFromKey));
     if (sha256(readFileSync(configFromKey)) !== sha256(hooksBytes)) fail('runtime Codex hook config differs from frozen checkout bytes');
-    const header = `[hooks.state.\"${runtime.key}\"]`;
-    const start = config.indexOf(header);
-    const next = config.indexOf('\n[', start + header.length);
-    const block = start < 0 ? '' : config.slice(start + header.length, next < 0 ? undefined : next);
-    if (block.match(/^trusted_hash\s*=\s*\"([^\"]+)\"\s*$/m)?.[1] !== runtime.current_hash) fail('Codex trusted hash differs from hooks/list');
     runtimeKeys.push(runtime.key);
   });
   if (runtimeConfigPaths.size !== 1 || new Set(runtimeKeys).size !== expected.length) fail('Codex hooks/list/trust exact-set mismatch');

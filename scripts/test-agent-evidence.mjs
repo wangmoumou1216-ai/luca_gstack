@@ -798,7 +798,8 @@ try {
   const hooksPath = realpathSync(join(repo, '.codex/hooks.json'));
   const trustKey = `${hooksPath}:user_prompt_submit:0:0`;
   const trustedHash = `sha256:${'b'.repeat(64)}`;
-  write0600(join(codexHome, 'config.toml'), Buffer.from(`[hooks.state."${trustKey}"]\ntrusted_hash = "${trustedHash}"\n`));
+  const codexConfigPath = join(codexHome, 'config.toml');
+  write0600(codexConfigPath, Buffer.from(`[hooks.state."${trustKey}"]\ntrusted_hash = "${trustedHash}"\n`));
 
   git(repo, ['init', '-q']);
   const fixtureTracked = git(repo, ['ls-files', '--others']).split('\n').filter(Boolean);
@@ -820,13 +821,16 @@ try {
     ],
     codex_hooks_path: '.codex/hooks.json',
     codex_hooks_sha256: sha256(readFileSync(hooksPath)),
-    codex_config_path: realpathSync(join(codexHome, 'config.toml')),
-    codex_config_sha256: sha256(readFileSync(join(codexHome, 'config.toml'))),
+    codex_config_path: realpathSync(codexConfigPath),
     codex_hook_runtime: [{
       key: trustKey, event_name: 'userPromptSubmit', current_hash: trustedHash, command: hookCommand,
       command_sha256: sha256(Buffer.from(hookCommand)), trust_status: 'trusted',
     }],
   };
+  write0600(codexConfigPath, Buffer.concat([
+    readFileSync(codexConfigPath),
+    Buffer.from('\n[notice]\nhide_rate_limit_model_nudge = true\n', 'utf8'),
+  ]));
   const classifierProbeCwd = join(base, 'classifier-transaction', 'child-scratch', 'model-resolution', 'fable');
   mkdir700(classifierProbeCwd);
   assert.deepEqual(classifyClaudeModelProbe({ status: 0,
@@ -1156,6 +1160,40 @@ try {
   const currentCodexPositive = verifyEvidence(currentCodexValid);
   assert.equal(currentCodexPositive.status, 0, `current Codex spawn receipt evidence failed: ${currentCodexPositive.stderr}`);
   assert.match(currentCodexPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  const unrelatedConfigDrift = await buildEvidence('codex-unrelated-config-drift');
+  const configBeforeUnrelatedDrift = readFileSync(codexConfigPath);
+  try {
+    write0600(codexConfigPath, Buffer.concat([
+      configBeforeUnrelatedDrift,
+      Buffer.from('\n[desktop]\nconversationDetailMode = "STEPS_COMMANDS"\n', 'utf8'),
+    ]));
+    const unrelatedConfigPositive = verifyEvidence(unrelatedConfigDrift);
+    assert.equal(unrelatedConfigPositive.status, 0,
+      `unrelated post-sign Codex config drift failed: ${unrelatedConfigPositive.stderr}`);
+    assert.match(unrelatedConfigPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  } finally {
+    write0600(codexConfigPath, configBeforeUnrelatedDrift);
+  }
+  const requiredTrustBlock = `[hooks.state."${trustKey}"]\ntrusted_hash = "${trustedHash}"\n`;
+  const assertActiveTrustMutationRejected = async (label, mutate) => {
+    const evidence = await buildEvidence(`codex-active-trust-${label}`);
+    const original = readFileSync(codexConfigPath);
+    try {
+      const altered = mutate(original.toString('utf8'));
+      assert.notEqual(altered, original.toString('utf8'), `${label}: fixture did not alter active trust state`);
+      write0600(codexConfigPath, Buffer.from(altered, 'utf8'));
+      assert.notEqual(verifyEvidence(evidence).status, 0, `${label}: active Codex trust-state mutation unexpectedly verified`);
+    } finally {
+      write0600(codexConfigPath, original);
+    }
+  };
+  await assertActiveTrustMutationRejected('missing-block', (text) => text.replace(requiredTrustBlock, ''));
+  await assertActiveTrustMutationRejected('wrong-hash', (text) => text.replace(trustedHash, `sha256:${'c'.repeat(64)}`));
+  await assertActiveTrustMutationRejected('duplicate-block', (text) => text.replace(requiredTrustBlock, requiredTrustBlock.repeat(2)));
+  await assertActiveTrustMutationRejected('duplicate-hash', (text) => text.replace(
+    `trusted_hash = "${trustedHash}"`, `trusted_hash = "${trustedHash}"\ntrusted_hash = "${trustedHash}"`));
+  await assertActiveTrustMutationRejected('wrong-table', (text) => text.replace(
+    `[hooks.state."${trustKey}"]`, `[hooks.state."${hooksPath}:user_prompt_submit:9:9"]`));
   const replay = verifyEvidence(valid);
   assert.notEqual(replay.status, 0, 'consumed anchor replay unexpectedly verified');
   await assert.rejects(async () => await new Promise((accept, reject) => {
@@ -1415,7 +1453,7 @@ try {
 
   const tcbSource = readFileSync(TCB, 'utf8');
   assert.doesNotMatch(tcbSource, /(?:import\s*\(|\bfrom\b|\bspawn(?:Sync)?\b|\bexec(?:File|Sync)?\b)[^\n]*agent-launcher\.mjs/);
-  console.log(`AGENT_EVIDENCE_ATTACK_MATRIX_PASS ${attacks.length + 14}/${attacks.length + 14} + VALID_8_OF_8 + EXTERNAL_COUNTER_ONE_USE`);
+  console.log(`AGENT_EVIDENCE_ATTACK_MATRIX_PASS ${attacks.length + 19}/${attacks.length + 19} + VALID_8_OF_8 + EXTERNAL_COUNTER_ONE_USE`);
 } finally {
   const st = statSync(base);
   assert.ok(st.isDirectory() && realpathSync(base).startsWith('/private/tmp/ae2-'));

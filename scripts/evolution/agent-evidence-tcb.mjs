@@ -660,6 +660,23 @@ async function listNativeCodexHooks(root, frozenBytes, expected) {
   return runtime.sort((a, b) => a.key.localeCompare(b.key));
 }
 
+function verifyCodexTrustState(config, runtime) {
+  const lines = config.split(/\r?\n/);
+  runtime.forEach((entry) => {
+    const header = `[hooks.state."${entry.key}"]`;
+    const headers = lines.flatMap((line, index) => line === header ? [index] : []);
+    if (headers.length !== 1) fail('Codex trusted hook table is missing or duplicated');
+    const block = [];
+    for (let index = headers[0] + 1; index < lines.length && !lines[index].startsWith('['); index += 1) {
+      if (lines[index].trim()) block.push(lines[index].trim());
+    }
+    const trusted = block.length === 1
+      ? block[0].match(/^trusted_hash\s*=\s*"([^"]+)"$/)?.[1]
+      : null;
+    if (trusted !== entry.current_hash) fail('Codex trusted hash differs from hooks/list');
+  });
+}
+
 async function runtimeAttestations(root) {
   const claudePath = join(root, '.claude/settings.json');
   const claudeBytes = readFileSync(claudePath);
@@ -685,7 +702,7 @@ async function runtimeAttestations(root) {
   const configPath = join(process.env.CODEX_HOME || join(process.env.HOME || '', '.codex'), 'config.toml');
   const configBytes = readFileSync(configPath);
   const configText = configBytes.toString('utf8');
-  if (runtime.some((entry) => !configText.includes(`[hooks.state."${entry.key}"]`) || !configText.includes(entry.current_hash))) fail('native trusted hook state is absent/stale');
+  verifyCodexTrustState(configText, runtime);
   return {
     claude_settings_path: relative(root, claudePath),
     claude_settings_sha256: sha256(claudeBytes),
@@ -698,7 +715,6 @@ async function runtimeAttestations(root) {
     codex_hooks_path: relative(root, codexPath),
     codex_hooks_sha256: sha256(codexBytes),
     codex_config_path: realpathSync(configPath),
-    codex_config_sha256: sha256(configBytes),
     codex_hook_runtime: runtime,
   };
 }
