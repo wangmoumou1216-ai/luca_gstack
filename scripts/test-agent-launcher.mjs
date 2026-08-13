@@ -351,6 +351,7 @@ for (const harness of ['claude', 'codex']) {
     assert.equal(work.native_task_name, null);
     assert.ok(work.args.includes('Agent,Bash'));
     assert.ok(work.args.includes('u008-dispatcher'));
+    assert.ok(work.args.includes('--forward-subagent-text'));
   } else {
     assert.equal(work.schema_version, 'luca.native-launch.v2');
     assert.equal(work.sandbox_contract.type, 'workspace-write');

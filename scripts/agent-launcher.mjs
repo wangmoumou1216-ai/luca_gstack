@@ -551,7 +551,7 @@ export function prepareNativeLaunch({ root = DEFAULT_ROOT, harness, role, packet
       inline_settings: JSON.parse(sandboxSettings), setting_sources: ['project'],
       required_post_tool_use_event: 'Agent',
     };
-    args = ['-p', '--output-format', 'stream-json', '--include-hook-events', '--verbose',
+    args = ['-p', '--output-format', 'stream-json', '--include-hook-events', '--forward-subagent-text', '--verbose',
       '--no-session-persistence', '--setting-sources', 'project', '--settings', sandboxSettings,
       '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--disable-slash-commands',
       '--tools', 'Agent,Bash', '--allowedTools', `Agent(${role})`, '--permission-mode', 'dontAsk',

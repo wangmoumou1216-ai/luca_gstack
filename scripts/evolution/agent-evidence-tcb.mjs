@@ -492,7 +492,7 @@ export function buildNativeLaunch({ root, harness, role, packet, routing, dispat
         permissionMode: 'dontAsk',
       },
     };
-    args = ['-p', '--output-format', 'stream-json', '--include-hook-events', '--verbose',
+    args = ['-p', '--output-format', 'stream-json', '--include-hook-events', '--forward-subagent-text', '--verbose',
       '--no-session-persistence', '--setting-sources', 'project', '--settings', JSON.stringify(inlineSettings),
       '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--disable-slash-commands',
       '--tools', 'Agent,Bash', '--allowedTools', `Agent(${role})`, '--permission-mode', 'dontAsk',
@@ -784,13 +784,16 @@ export function classifyClaudeModelProbe({ status, stdout, stderr, expectedAlias
 
 function assertClaudeWorkResult(events, bashId, parentSpawnId, sentinel) {
   const linked = [];
+  const allChildResults = [];
   for (const event of events) {
     const parts = Array.isArray(event?.message?.content) ? event.message.content : [];
     for (const part of parts) if (part?.type === 'tool_result') {
+      if (event.parent_tool_use_id) allChildResults.push({ event, part });
       if (part.tool_use_id === bashId) linked.push({ event, part });
     }
   }
-  if (linked.length !== 1 || linked[0].event?.parent_tool_use_id !== parentSpawnId) {
+  if (allChildResults.length !== 1 || linked.length !== 1
+    || linked[0].event?.parent_tool_use_id !== parentSpawnId) {
     fail('Claude work verification must have exactly one result bound to the sole Bash call');
   }
   const { event, part } = linked[0];
@@ -827,6 +830,7 @@ function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
   const sessions = new Set(events.map((event) => event?.session_id).filter(Boolean));
   if (sessions.size !== 1) fail('Claude transport must have one session');
   const parentId = [...sessions][0];
+  if (!events.every((event) => event?.session_id === parentId)) fail('Claude transport event lacks exact session binding');
   const parentToolUses = [];
   const childToolUses = [];
   for (const { event, index } of indexed) {
@@ -835,51 +839,171 @@ function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
       (event.parent_tool_use_id ? childToolUses : parentToolUses).push({ item, index });
     }
   }
+  const allowedInput = new Set(['subagent_type', 'prompt', 'description', 'run_in_background']);
   if (parentToolUses.length !== 1 || parentToolUses[0].item.name !== 'Agent'
-    || parentToolUses[0].item.input?.subagent_type !== run.role || parentToolUses[0].item.input?.run_in_background !== false) fail('Claude dispatcher action graph is not exclusive');
+    || !parentToolUses[0].item.input
+    || Object.keys(parentToolUses[0].item.input).some((key) => !allowedInput.has(key))
+    || parentToolUses[0].item.input.subagent_type !== run.role
+    || parentToolUses[0].item.input.run_in_background !== false) fail('Claude dispatcher action graph is not exclusive');
   if (run.role !== 'work-agent' && childToolUses.length) fail('read-only Claude child called a tool');
   if (childToolUses.some(({ item }) => item.name !== 'Bash')) fail('Claude child called a non-Bash tool');
-  if (run.role === 'work-agent') {
-    const observedCommands = childToolUses.map(({ item }) => item.input?.command);
-    const frozenCommands = packet.packet.verification.map((entry) => entry.command);
-    if (observedCommands.some((command) => typeof command !== 'string')
-      || stable([...observedCommands].sort()) !== stable([...frozenCommands].sort())) fail('Claude work child Bash calls are not the exact frozen verification commands');
-    const bashId = childToolUses[0]?.item?.id;
-    assertClaudeWorkResult(events, bashId, parentToolUses[0].item.id, packet.verification_sentinel);
-  }
+  const childToolResults = indexed.flatMap(({ event, index }) => {
+    const parts = Array.isArray(event?.message?.content) ? event.message.content : [];
+    return parts.filter((part) => part?.type === 'tool_result' && event.parent_tool_use_id)
+      .map((part) => ({ event, index, part }));
+  });
+  if (run.role !== 'work-agent' && childToolResults.length) fail('read-only Claude child emitted a tool result');
   const tool = parentToolUses[0];
+  const toolContent = indexed[tool.index]?.event?.message?.content;
+  if (!Array.isArray(toolContent) || toolContent.length !== 1 || toolContent[0] !== tool.item) {
+    fail('Claude dispatcher Agent message is not exclusive');
+  }
+  const childAssistantEvents = indexed.filter(({ event }) => event?.type === 'assistant' && event.parent_tool_use_id);
+  if (childAssistantEvents.some(({ event }) => event.parent_tool_use_id !== tool.item.id
+    || event.subagent_type !== run.role)) fail('Claude forwarded child assistant identity mismatch');
   const prompt = tool.item.input?.prompt;
   if (typeof prompt !== 'string' || sha256(Buffer.from(prompt)) !== run.descriptor.input_sha256) fail('Claude child prompt hash mismatch');
   const starts = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_started'
     && event.tool_use_id === tool.item.id && event.subagent_type === run.role && event.prompt === prompt);
-  if (starts.length !== 1 || starts[0].index <= tool.index) fail('Claude native task_started edge mismatch');
+  const allStarts = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_started');
+  if (allStarts.length !== 1 || starts.length !== 1 || starts[0].index <= tool.index) fail('Claude native task_started edge mismatch');
   const childId = starts[0].event.task_id;
+  if (typeof childId !== 'string' || !childId || childId === parentId) fail('Claude child identity is missing/not distinct');
   const launches = indexed.filter(({ event }) => event?.type === 'user' && event?.tool_use_result?.status === 'async_launched'
     && event.tool_use_result.agentId === childId && event.tool_use_result.prompt === prompt);
-  if (launches.length !== 1 || launches[0].index <= starts[0].index) fail('Claude launch result mismatch');
-  const preStarts = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'hook_started' && event.hook_event === 'PreToolUse' && event.hook_name === 'PreToolUse:Agent');
-  const preResponses = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'hook_response' && event.hook_event === 'PreToolUse'
-    && event.hook_name === 'PreToolUse:Agent' && event.exit_code === 0 && event.outcome === 'success');
+  const completedReceipts = indexed.filter(({ event }) => event?.type === 'user' && event?.tool_use_result?.status === 'completed'
+    && event.tool_use_result.agentId === childId && event.tool_use_result.prompt === prompt);
+  const allNativeResults = indexed.filter(({ event }) => event?.type === 'user' && Object.hasOwn(event, 'tool_use_result'));
+  if (allNativeResults.length !== 1
+    || !((launches.length === 1 && completedReceipts.length === 0)
+      || (launches.length === 0 && completedReceipts.length === 1))) {
+    fail('Claude launch/completion result mismatch');
+  }
   const postStarts = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'hook_started' && event.hook_event === 'PostToolUse' && event.hook_name === 'PostToolUse:Agent');
   const postResponses = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'hook_response' && event.hook_event === 'PostToolUse'
     && event.hook_name === 'PostToolUse:Agent' && event.exit_code === 0 && event.outcome === 'success');
-  if (preStarts.length !== 1 || preResponses.length !== 1 || postStarts.length !== 1 || postResponses.length !== 1
-    || preStarts[0].event.hook_id !== preResponses[0].event.hook_id
+  const allPostResponses = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'hook_response'
+    && event.hook_event === 'PostToolUse' && event.hook_name === 'PostToolUse:Agent');
+  if (postStarts.length !== 1 || allPostResponses.length !== 1 || postResponses.length !== 1
+    || typeof postStarts[0].event.hook_id !== 'string' || !postStarts[0].event.hook_id
+    || typeof postResponses[0].event.hook_id !== 'string' || !postResponses[0].event.hook_id
     || postStarts[0].event.hook_id !== postResponses[0].event.hook_id
-    || preStarts[0].index <= tool.index || preResponses[0].index <= preStarts[0].index
-    || starts[0].index <= preResponses[0].index || postStarts[0].index <= starts[0].index
-    || postResponses[0].index <= postStarts[0].index || launches[0].index <= postResponses[0].index
+    || postStarts[0].index <= starts[0].index || postResponses[0].index <= postStarts[0].index
     || !runtime.claude_post_tool_use_agent_hooks.some(({ matcher }) => matcherCoversAgent(matcher))) fail('Claude Agent hook edge is not bound to an effective matcher');
-  const childMessages = indexed.filter(({ event }) => event?.type === 'assistant' && event.parent_tool_use_id === tool.item.id && event.subagent_type === run.role);
+  const childMessages = childAssistantEvents;
   const completions = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_notification'
     && event.task_id === childId && event.tool_use_id === tool.item.id && event.status === 'completed');
-  if (!childMessages.length || completions.length !== 1 || completions[0].index <= Math.max(...childMessages.map(({ index }) => index))) fail('Claude child completion edge mismatch');
-  const resolvedModel = launches[0].event.tool_use_result.resolvedModel;
+  const allCompletions = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_notification');
+  const expected = run.role === 'work-agent' ? packet.expected_output : `LUCA_NATIVE_${run.role.replaceAll('-', '_').toUpperCase()}_RESULT`;
+  const frozenCommands = run.role === 'work-agent'
+    ? packet.packet.verification.map((entry) => entry.command) : [];
+  let resolvedModel;
+  let output;
+  if (launches.length === 1) {
+    const launch = launches[0];
+    if (launch.index <= postResponses[0].index || !childMessages.length || allCompletions.length !== 1 || completions.length !== 1
+      || completions[0].index <= Math.max(...childMessages.map(({ index }) => index))) fail('Claude legacy child completion edge mismatch');
+    if (run.role === 'work-agent') {
+      const observedCommands = childToolUses.map(({ item }) => item.input?.command);
+      if (observedCommands.some((command) => typeof command !== 'string')
+        || stable([...observedCommands].sort()) !== stable([...frozenCommands].sort())) fail('Claude work child Bash calls are not the exact frozen verification commands');
+      const bashId = childToolUses[0]?.item?.id;
+      assertClaudeWorkResult(events, bashId, tool.item.id, packet.verification_sentinel);
+    }
+    resolvedModel = launch.event.tool_use_result.resolvedModel;
+    output = childMessages.map(({ event }) => textOnly(event.message?.content)).join('\n').trim();
+  } else {
+    const receipt = completedReceipts[0];
+    const allChildPrompts = indexed.filter(({ event }) => event?.type === 'user'
+      && event.message?.role === 'user' && Array.isArray(event.message.content)
+      && event.message.content.length === 1 && event.message.content[0]?.type === 'text');
+    const childPrompts = allChildPrompts.filter(({ event }) => event.parent_tool_use_id === tool.item.id
+      && event.subagent_type === run.role && event.message.content[0].text === prompt);
+    const updates = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_updated'
+      && event.task_id === childId && event.patch?.status === 'completed'
+      && Number.isFinite(event.patch?.end_time));
+    const allUpdates = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'task_updated');
+    const evidenceUserEvents = indexed.filter(({ event, index }) => event?.type === 'user'
+      && index > starts[0].index && index <= receipt.index);
+    const expectedEvidenceUserIndexes = [childPrompts[0]?.index,
+      ...(run.role === 'work-agent' ? [childToolResults[0]?.index] : []), receipt.index];
+    const exactEvidenceUserSet = evidenceUserEvents.length === expectedEvidenceUserIndexes.length
+      && expectedEvidenceUserIndexes.every((index) => Number.isInteger(index)
+        && evidenceUserEvents.some((record) => record.index === index));
+    const expectedToolUses = frozenCommands.length;
+    const actualToolUses = childToolUses.length;
+    const childTextMessages = childAssistantEvents.filter(({ event }) => Array.isArray(event.message?.content)
+      && event.message.content.some((part) => part?.type === 'text'));
+    const childToolMessages = childAssistantEvents.filter(({ event }) => Array.isArray(event.message?.content)
+      && event.message.content.some((part) => part?.type === 'tool_use'));
+    const childOutputMessage = childTextMessages[0];
+    const exactChildMessageShapes = childAssistantEvents.every(({ event }) => Array.isArray(event.message?.content)
+      && event.message.content.length === 1
+      && ['text', 'tool_use'].includes(event.message.content[0]?.type));
+    if (allChildPrompts.length !== 1 || childPrompts.length !== 1 || childPrompts[0].index <= starts[0].index
+      || allUpdates.length !== 1 || updates.length !== 1 || updates[0].index <= childPrompts[0].index
+      || !exactEvidenceUserSet
+      || childMessages.some(({ index }) => index <= childPrompts[0].index || index >= updates[0].index)
+      || !exactChildMessageShapes || childTextMessages.length !== 1
+      || childToolMessages.length !== actualToolUses || childAssistantEvents.length !== actualToolUses + 1
+      || childOutputMessage.event.message.content[0].text !== expected
+      || childOutputMessage.index !== Math.max(...childAssistantEvents.map(({ index }) => index))
+      || (run.role === 'work-agent' && (childToolResults.length !== 1
+        || childToolResults[0].index <= childToolUses[0]?.index || childToolResults[0].index >= updates[0].index
+        || childOutputMessage.index <= childToolResults[0].index))
+      || allCompletions.length !== 1 || completions.length !== 1 || completions[0].index <= updates[0].index
+      || postStarts[0].index <= completions[0].index || receipt.index <= postResponses[0].index) {
+      fail('Claude completed child task lifecycle mismatch');
+    }
+    const detail = receipt.event.tool_use_result;
+    const structuredContent = detail.content;
+    if (receipt.event.parent_tool_use_id !== null || receipt.event.message?.role !== 'user'
+      || detail.agentType !== run.role || detail.resolvedModel !== expectedConcreteModel
+      || !Array.isArray(structuredContent) || structuredContent.length !== 1
+      || structuredContent[0]?.type !== 'text' || structuredContent[0]?.text !== expected
+      || !Number.isInteger(detail.totalTokens) || detail.totalTokens < 0
+      || !Number.isInteger(detail.totalDurationMs) || detail.totalDurationMs < 0
+      || actualToolUses !== expectedToolUses || detail.totalToolUseCount !== actualToolUses
+      || completions[0].event.summary !== expected
+      || completions[0].event.usage?.tool_uses !== actualToolUses) {
+      fail('Claude completed native result binding mismatch');
+    }
+    const parentContent = receipt.event.message?.content;
+    const parentToolResult = Array.isArray(parentContent) && parentContent.length === 1 ? parentContent[0] : null;
+    const resultParts = parentToolResult?.content;
+    const expectedMetadata = `agentId: ${childId} (use SendMessage with to: '${childId}', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: ${detail.totalTokens}\ntool_uses: ${detail.totalToolUseCount}\nduration_ms: ${detail.totalDurationMs}</usage>`;
+    if (parentToolResult?.type !== 'tool_result' || parentToolResult.tool_use_id !== tool.item.id
+      || !Array.isArray(resultParts) || resultParts.length !== 2
+      || resultParts[0]?.type !== 'text' || resultParts[0]?.text !== expected
+      || resultParts[1]?.type !== 'text' || resultParts[1]?.text !== expectedMetadata) {
+      fail('Claude completed parent tool_result is not exact');
+    }
+    if (run.role === 'work-agent') {
+      const observedCommands = childToolUses.map(({ item }) => item.input?.command);
+      if (observedCommands.some((command) => typeof command !== 'string')
+        || stable([...observedCommands].sort()) !== stable([...frozenCommands].sort())) fail('Claude forwarded work child Bash calls differ from the frozen commands');
+      const bashId = childToolUses[0]?.item?.id;
+      assertClaudeWorkResult(events, bashId, tool.item.id, packet.verification_sentinel);
+    }
+    const parentOutputs = indexed.filter(({ event, index }) => index > receipt.index && event?.type === 'assistant'
+      && !event.parent_tool_use_id && Array.isArray(event.message?.content)
+      && event.message.content.length === 1 && event.message.content[0]?.type === 'text'
+      && event.message.content[0]?.text === expected);
+    const parentAssistants = indexed.filter(({ event }) => event?.type === 'assistant' && !event.parent_tool_use_id);
+    const terminal = indexed.filter(({ event }) => event?.type === 'result' && event?.subtype === 'success'
+      && event.is_error === false && event.result === expected && event.terminal_reason === 'completed');
+    const allTerminal = indexed.filter(({ event }) => event?.type === 'result');
+    const childText = childMessages.map(({ event }) => textOnly(event.message?.content)).filter(Boolean).join('\n').trim();
+    if (parentAssistants.length !== 2 || parentOutputs.length !== 1
+      || !childMessages.length || childText !== expected
+      || allTerminal.length !== 1 || terminal.length !== 1
+      || terminal[0].index <= parentOutputs[0].index) fail('Claude completed dispatcher result is not exact');
+    resolvedModel = detail.resolvedModel;
+    output = structuredContent[0].text;
+  }
   if (typeof expectedConcreteModel !== 'string' || !expectedConcreteModel
     || resolvedModel !== expectedConcreteModel
     || childMessages.some(({ event }) => event.message?.model !== resolvedModel)) fail('Claude routed concrete model mismatch');
-  const output = childMessages.map(({ event }) => textOnly(event.message?.content)).join('\n').trim();
-  const expected = run.role === 'work-agent' ? packet.expected_output : `LUCA_NATIVE_${run.role.replaceAll('-', '_').toUpperCase()}_RESULT`;
   if (output !== expected) fail('Claude child text output is not the exact frozen result');
   return { parent_id: parentId, child_id: childId, spawn_id: tool.item.id, output, observed_input_sha256: sha256(Buffer.from(prompt)), observed_projection: resolvedModel, event_count: events.length };
 }

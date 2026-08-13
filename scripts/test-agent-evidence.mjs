@@ -239,7 +239,7 @@ function roleOutput(role, packet) {
 
 const fixtureUuid = (ordinal, lane) => `00000000-0000-4${String(lane).padStart(3, '0')}-8000-${String(ordinal + 1).padStart(12, '0')}`;
 
-function claudeRaw(run, packet, mutation) {
+function claudeLegacyRaw(run, packet, mutation) {
   const parentId = `claude-parent-${run.role}-${run.ordinal}`;
   const childId = mutation.sameIdentity && run.role === 'plan-agent'
     ? parentId : `claude-child-${run.role}-${run.ordinal}`;
@@ -299,6 +299,241 @@ function claudeRaw(run, packet, mutation) {
     { type: 'system', subtype: 'task_notification', session_id: parentId, task_id: childId,
       tool_use_id: spawnId, status: 'completed' },
   );
+  return { publicBytes: jsonl(events), parentId, childId, spawnId, output, observedProjection: model };
+}
+
+function claudeRaw(run, packet, mutation) {
+  if (mutation.legacyClaudeStream) return claudeLegacyRaw(run, packet, mutation);
+  const parentId = `claude-parent-${run.role}-${run.ordinal}`;
+  const childId = mutation.sameIdentity && run.role === 'plan-agent'
+    ? parentId : `claude-child-${run.role}-${run.ordinal}`;
+  const spawnId = `claude-spawn-${run.role}-${run.ordinal}`;
+  const model = mutation.sameFamilyModelDrift && run.role === 'plan-agent'
+    ? `claude-${run.launch.descriptor.projection}-fixture-2`
+    : mutation.crossTierChildModel && run.role === 'work-agent'
+      ? 'claude-fable-fixture-1'
+      : mutation.wrongResolvedModel && run.role === 'plan-agent'
+        ? 'claude-sonnet-fixture-1' : `claude-${run.launch.descriptor.projection}-fixture-1`;
+  const parentModel = 'claude-sonnet-fixture-1';
+  const expected = roleOutput(run.role, packet);
+  const output = mutation.fakeLog && run.role === 'plan-agent' ? 'ALTERED_REHASHED_OUTPUT' : expected;
+  const mutatePlan = run.role === 'plan-agent';
+  const childPrompt = mutation.claudeWrongChildPrompt && mutatePlan
+    ? `${run.launch.input}\nALTERED_CHILD_PROMPT` : run.launch.input;
+  const completionPrompt = mutation.claudeWrongCompletionPrompt && mutatePlan
+    ? `${run.launch.input}\nALTERED_COMPLETION_PROMPT` : run.launch.input;
+  const completionAgentId = mutation.claudeWrongCompletionAgent && mutatePlan
+    ? `${childId}-wrong` : childId;
+  const completionRole = mutation.claudeWrongCompletionRole && mutatePlan ? 'oracle' : run.role;
+  const completionOutput = mutation.claudeWrongCompletionOutput && mutatePlan
+    ? `${output}\nALTERED_COMPLETION_OUTPUT` : output;
+  const taskSummary = mutation.claudeWrongTaskSummary && mutatePlan
+    ? `${output}\nALTERED_TASK_SUMMARY` : output;
+  const expectedToolUses = run.role === 'work-agent' ? packet.packet.verification.length : 0;
+  const observedToolUses = mutation.extraTool && run.role === 'oracle'
+    ? expectedToolUses + 1 : expectedToolUses;
+  const completedToolUses = mutation.claudeWrongCompletedToolCount && mutatePlan
+    ? observedToolUses + 1 : observedToolUses;
+  const notificationToolUses = mutation.claudeWrongNotificationToolCount && mutatePlan
+    ? observedToolUses + 1 : observedToolUses;
+  const description = `Native ${run.role} role smoke check`;
+  const taskStarted = { type: 'system', subtype: 'task_started', session_id: parentId,
+    task_id: childId, tool_use_id: spawnId, description,
+    subagent_type: run.role, task_type: 'local_agent', prompt: run.launch.input };
+  const childPromptEvent = { type: 'user', session_id: parentId,
+    parent_tool_use_id: mutation.claudeWrongChildParent && mutatePlan ? `${spawnId}-wrong` : spawnId,
+    subagent_type: run.role,
+    message: { role: 'user', content: [{ type: 'text', text: childPrompt }] } };
+  const taskUpdated = { type: 'system', subtype: 'task_updated', session_id: parentId,
+    task_id: mutation.claudeWrongTaskUpdateAgent && mutatePlan ? `${childId}-wrong` : childId, patch: {
+      status: mutation.claudeWrongTaskUpdateStatus && mutatePlan ? 'running' : 'completed',
+      end_time: 1_000 + run.ordinal,
+    } };
+  const taskNotification = { type: 'system', subtype: 'task_notification', session_id: parentId,
+    task_id: mutation.claudeWrongNotificationAgent && mutatePlan ? `${childId}-wrong` : childId,
+    tool_use_id: spawnId,
+    status: mutation.claudeWrongNotificationStatus && mutatePlan ? 'failed' : 'completed',
+    output_file: `/private/tmp/claude-fixture/${parentId}/tasks/${childId}.output`,
+    summary: taskSummary,
+    usage: { total_tokens: 1_000 + run.ordinal, tool_uses: notificationToolUses, duration_ms: 10 } };
+  const postStarted = { type: 'system', subtype: 'hook_started', session_id: parentId,
+    hook_event: 'PostToolUse', hook_name: 'PostToolUse:Agent', hook_id: `post-${spawnId}` };
+  const postResponse = { type: 'system', subtype: 'hook_response', session_id: parentId,
+    hook_event: 'PostToolUse', hook_name: 'PostToolUse:Agent',
+    hook_id: mutation.claudeWrongPostHookId && mutatePlan ? `post-${spawnId}-wrong` : `post-${spawnId}`,
+    exit_code: 0, outcome: 'success', output: '', stdout: '', stderr: '' };
+  const completedResult = {
+    status: mutation.claudeWrongCompletionStatus && mutatePlan ? 'failed' : 'completed',
+    prompt: completionPrompt,
+    agentId: completionAgentId, agentType: completionRole,
+    content: [{ type: 'text', text: completionOutput }], resolvedModel: model,
+    totalDurationMs: 10, totalTokens: 1_000 + run.ordinal,
+    totalToolUseCount: completedToolUses,
+    usage: { input_tokens: 1, output_tokens: 1, iterations: [{ type: 'message' }] } };
+  const completedUser = { type: 'user', session_id: parentId, parent_tool_use_id: null,
+    message: { role: 'user', content: [{ type: 'tool_result',
+      tool_use_id: mutation.claudeWrongCompletedToolBinding && mutatePlan ? `${spawnId}-wrong` : spawnId,
+      content: [{ type: 'text', text: completionOutput },
+        { type: 'text', text: `agentId: ${completionAgentId} (use SendMessage with to: '${completionAgentId}', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: ${1_000 + run.ordinal}\ntool_uses: ${completedToolUses}\nduration_ms: 10</usage>` }] }] },
+    tool_use_result: completedResult };
+  const parentOutput = mutation.claudeWrongParentOutput && mutatePlan
+    ? `${output}\nALTERED_PARENT_OUTPUT` : output;
+  const finalOutput = mutation.claudeWrongFinalResult && mutatePlan
+    ? `${output}\nALTERED_FINAL_RESULT` : output;
+  const childEvents = [];
+  if (run.role === 'work-agent') {
+    const bashId = `bash-${spawnId}`;
+    childEvents.push(
+      { type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId, subagent_type: run.role,
+        message: { model, content: [{ type: 'tool_use', name: 'Bash', id: bashId,
+          input: { command: packet.packet.verification[0].command } }] } },
+      { type: 'user', session_id: parentId, parent_tool_use_id: spawnId,
+        message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: bashId,
+          content: packet.verification_sentinel, is_error: false }] } },
+    );
+  } else if (mutation.extraTool && run.role === 'oracle') {
+    childEvents.push({ type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId,
+      subagent_type: run.role, message: { model, content: [{ type: 'tool_use', name: 'Bash',
+        id: `extra-${spawnId}`, input: { command: 'true' } }] } });
+  }
+  childEvents.push({ type: 'assistant', session_id: parentId, parent_tool_use_id: spawnId,
+    subagent_type: run.role, message: { model, content: [{ type: 'text', text: output }] } });
+  const events = [
+    { type: 'system', subtype: 'init', session_id: parentId, cwd: run.launch.descriptor.cwd,
+      permissionMode: 'dontAsk', model: parentModel,
+      agents: mutation.initMissingDispatcher ? ['claude', run.role]
+        : mutation.initMissingRole ? ['claude', 'u008-dispatcher']
+          : mutation.initDuplicateAgent ? ['claude', 'u008-dispatcher', run.role, run.role]
+            : ['claude', 'Explore', 'general-purpose', 'u008-dispatcher', run.role, 'statusline-setup'],
+      tools: mutation.initExtraTool ? ['Task', 'Bash'] : ['Task'] },
+    { type: 'assistant', session_id: parentId, parent_tool_use_id: null,
+      message: { model: parentModel, content: [{ type: 'tool_use', name: 'Agent', id: spawnId,
+        input: { description, subagent_type: run.role, prompt: run.launch.input, run_in_background: false } }] } },
+    taskStarted,
+    childPromptEvent,
+    ...childEvents,
+    taskUpdated,
+    taskNotification,
+    postStarted,
+    postResponse,
+    completedUser,
+    { type: 'assistant', session_id: parentId, parent_tool_use_id: null,
+      message: { model: parentModel, content: [{ type: 'text', text: parentOutput }] } },
+    { type: 'system', subtype: 'hook_started', session_id: parentId,
+      hook_event: 'Stop', hook_name: 'Stop', hook_id: `stop-${spawnId}` },
+    { type: 'system', subtype: 'hook_response', session_id: parentId,
+      hook_event: 'Stop', hook_name: 'Stop', hook_id: `stop-${spawnId}`,
+      exit_code: 0, outcome: 'success', output: '', stdout: '', stderr: '' },
+    { type: 'result', subtype: mutation.claudeWrongFinalStatus && mutatePlan ? 'error' : 'success',
+      session_id: parentId, is_error: Boolean(mutation.claudeWrongFinalStatus && mutatePlan),
+      terminal_reason: mutation.claudeWrongFinalStatus && mutatePlan ? 'api_error' : 'completed',
+      result: finalOutput, num_turns: 2 },
+  ];
+  if (mutation.claudeMissingRunInBackground && mutatePlan) {
+    delete events[1].message.content[0].input.run_in_background;
+  }
+  const forwardedText = events.find((event) => event?.type === 'assistant'
+    && event.parent_tool_use_id === spawnId
+    && event.message?.content?.some((part) => part?.type === 'text'));
+  if (mutation.claudeWrongForwardedChildParent && mutatePlan) {
+    forwardedText.parent_tool_use_id = `${spawnId}-wrong`;
+  }
+  if (mutation.claudeWrongForwardedChildRole && mutatePlan) {
+    forwardedText.subagent_type = 'oracle';
+  }
+  if (mutation.claudeExtraWrongForwardedChild && mutatePlan) {
+    events.splice(events.indexOf(taskUpdated), 0, { type: 'assistant', session_id: parentId,
+      parent_tool_use_id: `${spawnId}-extra`, subagent_type: 'oracle',
+      message: { model, content: [{ type: 'text', text: output }] } });
+  }
+  if (mutation.claudeExtraWrongChildPrompt && mutatePlan) {
+    events.splice(events.indexOf(taskUpdated), 0, { type: 'user', session_id: parentId,
+      parent_tool_use_id: `${spawnId}-extra`, subagent_type: 'oracle',
+      message: { role: 'user', content: [{ type: 'text', text: 'ALTERED_EXTRA_CHILD_PROMPT' }] } });
+  }
+  if (mutation.claudeExtraChildUser && mutatePlan) {
+    events.splice(events.indexOf(taskUpdated), 0, { type: 'user', session_id: parentId,
+      parent_tool_use_id: spawnId, subagent_type: run.role,
+      message: { role: 'user', content: [] } });
+  }
+  if (mutation.claudeExtraUnscopedUser && mutatePlan) {
+    events.splice(events.indexOf(taskUpdated), 0, { type: 'user', session_id: parentId,
+      parent_tool_use_id: null, message: { role: 'user', content: [{ type: 'text', text: 'UNRELATED' }] } });
+  }
+  if (mutation.claudeExtraEmptyChildAssistant && mutatePlan) {
+    events.splice(events.indexOf(taskUpdated), 0, { type: 'assistant', session_id: parentId,
+      parent_tool_use_id: spawnId, subagent_type: run.role, message: { model, content: [] } });
+  }
+  if (mutation.claudeDuplicateChildText && mutatePlan) {
+    events.splice(events.indexOf(forwardedText) + 1, 0, structuredClone(forwardedText));
+  }
+  if (mutation.claudeWorkOutputBeforeResult && run.role === 'work-agent') {
+    const childResult = events.find((event) => event?.type === 'user'
+      && event.parent_tool_use_id === spawnId && event.message?.content?.[0]?.type === 'tool_result');
+    events.splice(events.indexOf(forwardedText), 1);
+    events.splice(events.indexOf(childResult), 0, forwardedText);
+  }
+  if (mutation.claudeDuplicateAsyncLaunches && mutatePlan) {
+    const asyncLaunch = { type: 'user', session_id: parentId,
+      tool_use_result: { status: 'async_launched', agentId: childId,
+        prompt: run.launch.input, resolvedModel: model } };
+    events.splice(events.indexOf(taskStarted) + 1, 0, asyncLaunch, structuredClone(asyncLaunch));
+  }
+  if (mutation.claudeExtraCompletedReceipt && mutatePlan) {
+    const extraReceipt = structuredClone(completedUser);
+    extraReceipt.tool_use_result.agentId = `${childId}-extra`;
+    events.splice(events.indexOf(completedUser) + 1, 0, extraReceipt);
+  }
+  if (mutation.claudeExtraTaskNotification && mutatePlan) {
+    const extraNotification = structuredClone(taskNotification);
+    extraNotification.task_id = `${childId}-extra`;
+    events.splice(events.indexOf(taskNotification), 0, extraNotification);
+  }
+  if (mutation.claudeParentExtraToolResult && mutatePlan) {
+    completedUser.message.content.push({ type: 'tool_result', tool_use_id: `${spawnId}-extra`,
+      content: [{ type: 'text', text: output }] });
+  }
+  if (mutation.claudeExtraPostHookResponse && mutatePlan) {
+    events.splice(events.indexOf(postResponse) + 1, 0, { ...postResponse,
+      hook_id: `${postResponse.hook_id}-extra`, exit_code: 1, outcome: 'error' });
+  }
+  if (mutation.claudeWrongCompletedMessageRole && mutatePlan) {
+    completedUser.message.role = 'assistant';
+  }
+  if (mutation.claudeWrongCompletedParent && mutatePlan) {
+    completedUser.parent_tool_use_id = spawnId;
+  }
+  if (mutation.claudeExtraChildToolResult && run.role === 'work-agent') {
+    const childResult = events.find((event) => event?.type === 'user'
+      && event.parent_tool_use_id === spawnId && event.message?.content?.[0]?.type === 'tool_result');
+    childResult.message.content.push({ type: 'tool_result', tool_use_id: `${spawnId}-extra`,
+      content: packet.verification_sentinel, is_error: false });
+  }
+  if (mutation.claudeForwardedChildAfterUpdate && mutatePlan) {
+    const forwardedIndex = events.indexOf(forwardedText);
+    events.splice(forwardedIndex, 1);
+    events.splice(events.indexOf(taskUpdated) + 1, 0, forwardedText);
+  }
+  if (mutation.claudeChildToolResultAfterUpdate && run.role === 'work-agent') {
+    const childResult = events.find((event) => event?.type === 'user'
+      && event.parent_tool_use_id === spawnId && event.message?.content?.[0]?.type === 'tool_result');
+    const childResultIndex = events.indexOf(childResult);
+    events.splice(childResultIndex, 1);
+    events.splice(events.indexOf(taskUpdated) + 1, 0, childResult);
+  }
+  if (mutation.claudeMissingEventSession && mutatePlan) {
+    delete childPromptEvent.session_id;
+  }
+  if (mutation.claudeTaskUpdateAfterNotification && mutatePlan) {
+    const updatedIndex = events.indexOf(taskUpdated);
+    events.splice(updatedIndex, 1);
+    events.splice(events.indexOf(taskNotification) + 1, 0, taskUpdated);
+  }
+  if (mutation.claudePostHookBeforeNotification && mutatePlan) {
+    events.splice(events.indexOf(postStarted), 1);
+    events.splice(events.indexOf(postResponse), 1);
+    events.splice(events.indexOf(taskNotification), 0, postStarted, postResponse);
+  }
   return { publicBytes: jsonl(events), parentId, childId, spawnId, output, observedProjection: model };
 }
 
@@ -855,6 +1090,10 @@ try {
   const fallbackPositive = verifyEvidence(fallbackValid);
   assert.equal(fallbackPositive.status, 0, `fallback evidence failed: ${fallbackPositive.stderr}`);
   assert.match(fallbackPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  const legacyValid = await buildEvidence('valid-legacy-claude', { legacyClaudeStream: true });
+  const legacyPositive = verifyEvidence(legacyValid);
+  assert.equal(legacyPositive.status, 0, `legacy Claude evidence failed: ${legacyPositive.stderr}`);
+  assert.match(legacyPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
   const replay = verifyEvidence(valid);
   assert.notEqual(replay.status, 0, 'consumed anchor replay unexpectedly verified');
   await assert.rejects(async () => await new Promise((accept, reject) => {
@@ -881,14 +1120,56 @@ try {
     ['Claude init missing role', { initMissingRole: true }],
     ['Claude init duplicate role', { initDuplicateAgent: true }],
     ['Claude init broadens effective tool pool', { initExtraTool: true }],
+    ['Claude foreground child prompt differs from Agent input', { claudeWrongChildPrompt: true }],
+    ['Claude foreground child prompt binds another parent tool', { claudeWrongChildParent: true }],
+    ['Claude foreground Agent omits run_in_background false', { claudeMissingRunInBackground: true }],
+    ['Claude forwarded child assistant binds another parent', { claudeWrongForwardedChildParent: true }],
+    ['Claude forwarded child assistant has another role', { claudeWrongForwardedChildRole: true }],
+    ['Claude foreground includes an extra wrong child assistant', { claudeExtraWrongForwardedChild: true }],
+    ['Claude foreground includes an extra wrong child prompt', { claudeExtraWrongChildPrompt: true }],
+    ['Claude foreground includes an extra empty child-scoped user event', { claudeExtraChildUser: true }],
+    ['Claude foreground includes an extra unscoped user event', { claudeExtraUnscopedUser: true }],
+    ['Claude foreground includes an extra empty child assistant event', { claudeExtraEmptyChildAssistant: true }],
+    ['Claude foreground duplicates the exact child text event', { claudeDuplicateChildText: true }],
+    ['Claude work child emits final output before its Bash result', { claudeWorkOutputBeforeResult: true }],
+    ['Claude foreground completed prompt differs from Agent input', { claudeWrongCompletionPrompt: true }],
+    ['Claude foreground completed status is not completed', { claudeWrongCompletionStatus: true }],
+    ['Claude foreground completed agent differs from task_started', { claudeWrongCompletionAgent: true }],
+    ['Claude foreground completed role differs from dispatched role', { claudeWrongCompletionRole: true }],
+    ['Claude foreground completed tool result binds another Agent call', { claudeWrongCompletedToolBinding: true }],
+    ['Claude foreground completion content differs from task output', { claudeWrongCompletionOutput: true }],
+    ['Claude foreground task summary differs from exact result', { claudeWrongTaskSummary: true }],
+    ['Claude foreground completed tool count differs from role contract', { claudeWrongCompletedToolCount: true }],
+    ['Claude foreground notification tool count differs from role contract', { claudeWrongNotificationToolCount: true }],
+    ['Claude foreground task_updated is not completed', { claudeWrongTaskUpdateStatus: true }],
+    ['Claude foreground task_updated binds another agent', { claudeWrongTaskUpdateAgent: true }],
+    ['Claude foreground task notification binds another agent', { claudeWrongNotificationAgent: true }],
+    ['Claude foreground task notification is not completed', { claudeWrongNotificationStatus: true }],
+    ['Claude foreground task_updated follows task_notification', { claudeTaskUpdateAfterNotification: true }],
+    ['Claude foreground PostToolUse hook ids differ', { claudeWrongPostHookId: true }],
+    ['Claude foreground includes an extra failed PostToolUse response', { claudeExtraPostHookResponse: true }],
+    ['Claude foreground PostToolUse precedes task_notification', { claudePostHookBeforeNotification: true }],
+    ['Claude foreground parent assistant alters child result', { claudeWrongParentOutput: true }],
+    ['Claude foreground final result alters child result', { claudeWrongFinalResult: true }],
+    ['Claude foreground final result is not successful', { claudeWrongFinalStatus: true }],
+    ['Claude foreground includes two legacy launches beside one completion', { claudeDuplicateAsyncLaunches: true }],
+    ['Claude foreground includes an extra completed receipt for another agent', { claudeExtraCompletedReceipt: true }],
+    ['Claude foreground includes an extra task notification for another agent', { claudeExtraTaskNotification: true }],
+    ['Claude foreground parent message includes an unrelated tool result', { claudeParentExtraToolResult: true }],
+    ['Claude foreground completed receipt message has wrong role', { claudeWrongCompletedMessageRole: true }],
+    ['Claude foreground completed receipt has a parent tool id', { claudeWrongCompletedParent: true }],
+    ['Claude foreground work result includes an extra child tool result', { claudeExtraChildToolResult: true }],
+    ['Claude forwarded child assistant follows task_updated', { claudeForwardedChildAfterUpdate: true }],
+    ['Claude work child tool result follows task_updated', { claudeChildToolResultAfterUpdate: true }],
+    ['Claude foreground evidence event lacks session binding', { claudeMissingEventSession: true }],
     ['unrelated native child role', { unrelatedChild: true }],
     ['extra read-only child tool', { extraTool: true }],
     ['Codex wrapper side effect', { wrapperInjection: true }],
     ['Codex public command exits nonzero after sentinel', { commandExitFailure: true }],
-    ['Claude sentinel precedes structured failure', { claudeSentinelBeforeFailure: true }],
-    ['Claude Bash result contains additional output', { claudeAdditionalOutput: true }],
-    ['Claude Bash result contains an extra field', { claudeResultExtraField: true }],
-    ['Claude Bash result is duplicated', { claudeDuplicateResult: true }],
+    ['legacy Claude sentinel precedes structured failure', { legacyClaudeStream: true, claudeSentinelBeforeFailure: true }],
+    ['legacy Claude Bash result contains additional output', { legacyClaudeStream: true, claudeAdditionalOutput: true }],
+    ['legacy Claude Bash result contains an extra field', { legacyClaudeStream: true, claudeResultExtraField: true }],
+    ['legacy Claude Bash result is duplicated', { legacyClaudeStream: true, claudeDuplicateResult: true }],
     ['Claude child resolved model differs from effective family', { wrongResolvedModel: true }],
     ['Claude child drifts within the effective alias family', { sameFamilyModelDrift: true }],
     ['Claude child uses the other tier concrete model', { crossTierChildModel: true }],
