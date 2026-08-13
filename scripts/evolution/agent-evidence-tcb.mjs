@@ -355,12 +355,20 @@ export function parseRouting(root) {
   const path = join(root, '.claude/skill-os/model-routing.yaml');
   const bytes = readFileSync(path);
   const text = bytes.toString('utf8');
+  const lineup = (text.match(/^known_lineup:\s*\[([^\]]+)\]/m)?.[1] || '')
+    .split(',').map((item) => item.trim()).filter(Boolean);
+  if (!lineup.length || new Set(lineup).size !== lineup.length
+    || lineup.some((alias) => !/^[A-Za-z0-9._-]+$/.test(alias))) fail('routing known_lineup is invalid');
   const tiers = {};
   for (const name of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical']) {
     const block = text.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [a-z][a-z-]+:|^#|\\Z)`, 'm'))?.[1] || '';
     const alias = block.match(/^    resolves_to:\s*([A-Za-z0-9._-]+)/m)?.[1];
-    if (!alias) fail(`routing has no Claude projection for ${name}`);
-    tiers[name] = { alias };
+    const fallback = block.match(/^    fallback:\s*([A-Za-z0-9._-]+)/m)?.[1] || null;
+    if (!alias || !lineup.includes(alias)) fail(`routing has no valid Claude projection for ${name}`);
+    if (fallback && (!lineup.includes(fallback) || lineup.indexOf(fallback) !== lineup.indexOf(alias) + 1)) {
+      fail(`routing has invalid Claude fallback for ${name}`);
+    }
+    tiers[name] = { alias, fallback };
   }
   const codex = text.match(/^codex:\n([\s\S]*?)(?=^# ─── 新场景|\Z)/m)?.[1] || '';
   const efforts = codex.match(/^  tier_to_effort:\n([\s\S]*?)(?=^  [a-z_]+:|\Z)/m)?.[1] || '';
@@ -369,16 +377,23 @@ export function parseRouting(root) {
     if (!effort || effort === 'minimal') fail(`routing has no valid Codex projection for ${name}`);
     tiers[name].effort = effort;
   }
-  return { path: realpathSync(path), sha256: sha256(bytes), tiers };
+  return { path: realpathSync(path), sha256: sha256(bytes), lineup, tiers };
 }
 
-function resolveRole(root, harness, role, routing) {
+function resolveRole(root, harness, role, routing, projectionMode = 'primary') {
   if (!ROLES.includes(role) || !['claude', 'codex'].includes(harness)) fail('unknown native role/harness');
   const contract = ROLE_CONTRACT[role];
   const path = join(root, contract[harness]);
   const bytes = readFileSync(path);
   const text = bytes.toString('utf8');
-  const projection = harness === 'claude' ? routing.tiers[contract.tier].alias : routing.tiers[contract.tier].effort;
+  if (!['primary', 'fallback'].includes(projectionMode)) fail('invalid projection mode');
+  const tierRoute = routing.tiers[contract.tier];
+  if (projectionMode === 'fallback' && (harness !== 'claude' || !tierRoute.fallback)) {
+    fail(`fallback projection is unavailable for ${harness}/${role}`);
+  }
+  const projection = harness === 'claude'
+    ? (projectionMode === 'fallback' ? tierRoute.fallback : tierRoute.alias)
+    : tierRoute.effort;
   if (harness === 'claude') {
     const front = text.match(/^---\n([\s\S]*?)\n---\n/)?.[1] || '';
     if (front.match(/^name:\s*(\S+)/m)?.[1] !== role || /^model\s*:/m.test(front)) fail(`invalid Claude role ${role}`);
@@ -432,8 +447,8 @@ function nativeIdentity(command, harness) {
   };
 }
 
-export function buildNativeLaunch({ root, harness, role, packet, routing, dispatcherId, runtime, scratch }) {
-  const resolved = resolveRole(root, harness, role, routing);
+export function buildNativeLaunch({ root, harness, role, packet, routing, dispatcherId, runtime, scratch, projectionMode = 'primary' }) {
+  const resolved = resolveRole(root, harness, role, routing, projectionMode);
   const input = childInput(role, packet);
   const inputSha = sha256(Buffer.from(input, 'utf8'));
   const taskName = `edge_${inputSha}`;
@@ -545,9 +560,9 @@ export function nativeDispatchContract(descriptor) {
   };
 }
 
-function verifyCandidateDispatchContract(candidateLauncher, launch, root, harness, role, packet) {
+function verifyCandidateDispatchContract(candidateLauncher, launch, root, harness, role, packet, projectionMode) {
   const args = [candidateLauncher, 'describe-contract', '--root', root, '--harness', harness,
-    '--role', role, '--dispatcher-id', launch.descriptor.dispatcher_id];
+    '--role', role, '--dispatcher-id', launch.descriptor.dispatcher_id, '--projection-mode', projectionMode];
   if (role === 'work-agent') args.push('--packet', packet.path);
   const result = spawnSync(process.execPath, args, {
     cwd: root,
@@ -698,6 +713,75 @@ function projectionMatches(alias, model) {
   return typeof model === 'string' && new RegExp(`^claude-${alias.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}(?:-|$)`, 'i').test(model);
 }
 
+function assertClaudeInit(init, run, label = 'Claude init') {
+  const agents = Array.isArray(init?.agents) ? init.agents : [];
+  const tools = Array.isArray(init?.tools) ? init.tools : [];
+  const uniqueAgents = agents.length === new Set(agents).size && agents.every((agent) => typeof agent === 'string');
+  const exactNativeDispatcherTool = stable(tools) === stable(['Task']) || stable(tools) === stable(['Agent']);
+  if (init?.cwd !== run.descriptor.cwd || init?.permissionMode !== 'dontAsk' || !uniqueAgents
+    || agents.filter((agent) => agent === 'u008-dispatcher').length !== 1
+    || agents.filter((agent) => agent === run.role).length !== 1 || !exactNativeDispatcherTool) {
+    fail(`${label} is not the frozen dispatcher`);
+  }
+}
+
+const containsToolInvocation = (value) => {
+  if (Array.isArray(value)) return value.some(containsToolInvocation);
+  if (!value || typeof value !== 'object') return false;
+  if (['tool_use', 'server_tool_use', 'mcp_tool_use'].includes(String(value.type || '').toLowerCase())) return true;
+  if (typeof value.tool_use_id === 'string' && value.tool_use_id) return true;
+  return Object.values(value).some(containsToolInvocation);
+};
+
+export function classifyClaudeModelProbe({ status, stdout, stderr, expectedAlias, expectedCwd }) {
+  if (!Number.isInteger(status) || !Buffer.isBuffer(stdout) || !Buffer.isBuffer(stderr)
+    || !/^[A-Za-z0-9._-]+$/.test(expectedAlias || '') || !isAbsolute(expectedCwd || '')
+    || resolve(expectedCwd) !== expectedCwd) {
+    fail('Claude model probe classifier input is invalid');
+  }
+  if (stderr.length) fail('Claude model probe wrote stderr');
+  const events = parseJsonl(stdout, 'Claude safe-mode model probe');
+  if (events.some(containsToolInvocation)) fail('Claude safe-mode model probe invoked a tool');
+  if (events.length !== 4) fail('Claude safe-mode model probe must contain exactly four events');
+  const [init, rate, assistant, result] = events;
+  const sessionId = init?.session_id;
+  if (init?.type !== 'system' || init?.subtype !== 'init'
+    || rate?.type !== 'rate_limit_event' || assistant?.type !== 'assistant' || result?.type !== 'result'
+    || init.cwd !== expectedCwd || init.permissionMode !== 'dontAsk'
+    || stable(init.tools) !== stable([]) || !projectionMatches(expectedAlias, init.model)) {
+    fail('Claude safe-mode model probe ordered transport/init is not exact');
+  }
+  if (typeof sessionId !== 'string' || !sessionId
+    || !events.every((event) => event.session_id === sessionId)) {
+    fail('Claude safe-mode model probe session binding is not exact');
+  }
+  const content = assistant?.message?.content;
+  const assistantText = Array.isArray(content) && content.length === 1
+    && content[0]?.type === 'text' && typeof content[0]?.text === 'string'
+    ? content[0].text : null;
+  if (status === 0 && result.subtype === 'success' && result.is_error === false
+    && result.result === 'LUCA_CLAUDE_MODEL_PROBE_OK' && result.terminal_reason === 'completed'
+    && rate?.rate_limit_info?.status === 'allowed'
+    && assistant.parent_tool_use_id === null
+    && assistant?.message?.model === init.model && projectionMatches(expectedAlias, assistant.message.model)
+    && assistantText === 'LUCA_CLAUDE_MODEL_PROBE_OK') {
+    return { outcome: 'available', resolved_model: assistant.message.model };
+  }
+  const expectedCredits = /^Fable(?:\s+\d+(?:\.\d+)*)?\s+requires usage credits\.(?: Run \/usage-credits to continue or switch models with \/model\.)?$/;
+  if (expectedAlias === 'fable' && status === 1
+    && rate?.rate_limit_info?.status === 'rejected'
+    && rate?.rate_limit_info?.errorCode === 'credits_required'
+    && assistant.parent_tool_use_id === null
+    && assistant?.message?.model === '<synthetic>' && assistant.is_api_error_message === true
+    && assistant.error === 'rate_limit' && assistantText === result.result
+    && result.is_error === true && result.subtype === 'success'
+    && result.api_error_status === 429 && result.terminal_reason === 'api_error'
+    && expectedCredits.test(String(result.result || ''))) {
+    return { outcome: 'credits_required', resolved_model: null };
+  }
+  fail('Claude safe-mode model probe result is not exact success or explicit credits_required');
+}
+
 function assertClaudeWorkResult(events, bashId, parentSpawnId, sentinel) {
   const linked = [];
   for (const event of events) {
@@ -733,16 +817,13 @@ function assertClaudeWorkResult(events, bashId, parentSpawnId, sentinel) {
   }
 }
 
-function parseClaude(bytes, run, runtime, packet) {
+function parseClaude(bytes, run, runtime, packet, expectedConcreteModel) {
   const events = parseJsonl(bytes, 'Claude transport');
   const indexed = events.map((event, index) => ({ event, index }));
   const inits = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'init');
   if (inits.length !== 1) fail('Claude transport must contain exactly one init');
   const init = inits[0].event;
-  const exactAgents = Array.isArray(init.agents) && stable([...init.agents].sort()) === stable(['u008-dispatcher', run.role].sort());
-  const exactTools = Array.isArray(init.tools) && (stable([...init.tools].sort()) === stable(['Agent', 'Bash'].sort())
-    || stable([...init.tools].sort()) === stable(['Task', 'Bash'].sort()));
-  if (init.cwd !== run.descriptor.cwd || init.permissionMode !== 'dontAsk' || !exactAgents || !exactTools) fail('Claude init is not the frozen dispatcher');
+  assertClaudeInit(init, run);
   const sessions = new Set(events.map((event) => event?.session_id).filter(Boolean));
   if (sessions.size !== 1) fail('Claude transport must have one session');
   const parentId = [...sessions][0];
@@ -794,8 +875,9 @@ function parseClaude(bytes, run, runtime, packet) {
     && event.task_id === childId && event.tool_use_id === tool.item.id && event.status === 'completed');
   if (!childMessages.length || completions.length !== 1 || completions[0].index <= Math.max(...childMessages.map(({ index }) => index))) fail('Claude child completion edge mismatch');
   const resolvedModel = launches[0].event.tool_use_result.resolvedModel;
-  if (!projectionMatches(run.descriptor.projection, resolvedModel)
-    || childMessages.some(({ event }) => event.message?.model !== resolvedModel)) fail('Claude routed model family mismatch');
+  if (typeof expectedConcreteModel !== 'string' || !expectedConcreteModel
+    || resolvedModel !== expectedConcreteModel
+    || childMessages.some(({ event }) => event.message?.model !== resolvedModel)) fail('Claude routed concrete model mismatch');
   const output = childMessages.map(({ event }) => textOnly(event.message?.content)).join('\n').trim();
   const expected = run.role === 'work-agent' ? packet.expected_output : `LUCA_NATIVE_${run.role.replaceAll('-', '_').toUpperCase()}_RESULT`;
   if (output !== expected) fail('Claude child text output is not the exact frozen result');
@@ -1430,6 +1512,113 @@ function spawnNative(run, scratch) {
   });
 }
 
+function claudeModelProbeArgs(alias) {
+  return ['--safe-mode', '-p', '--model', alias, '--output-format', 'stream-json', '--verbose',
+    '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
+    'Reply with exactly LUCA_CLAUDE_MODEL_PROBE_OK. Do not call tools.'];
+}
+
+async function resolveClaudeModels({ root, routing, scratchRoot, rawRoot, timeoutMs }) {
+  const reasoning = routing.tiers['reasoning-heavy'];
+  const core = routing.tiers['core-execution'];
+  if (!reasoning.fallback || core.fallback || reasoning.fallback !== core.alias) {
+    fail('Claude U008 fallback chain must be exactly reasoning-heavy primary -> core-execution primary');
+  }
+  const command = realpathSync(process.env.LUCA_CLAUDE_BIN || '/Users/luca/.local/bin/claude');
+  const probeRoot = privateDir(join(scratchRoot, 'model-resolution'));
+  const cache = new Map();
+  const probe = async (alias) => {
+    if (cache.has(alias)) return cache.get(alias);
+    const scratch = privateDir(join(probeRoot, alias));
+    const args = claudeModelProbeArgs(alias);
+    const captured = await capture(spawn(command, args, {
+      cwd: scratch,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
+      env: { ...process.env, TMPDIR: scratch, LUCA_NATIVE_AGENT_EVIDENCE: '0' },
+    }), timeoutMs);
+    if (captured.killed) fail(`Claude ${alias} safe-mode model probe timed out`);
+    const publicPath = join(rawRoot, `claude-model-${alias}.stdout.jsonl`);
+    const stderrPath = join(rawRoot, `claude-model-${alias}.stderr`);
+    exclusiveFile(publicPath, captured.stdout);
+    exclusiveFile(stderrPath, captured.stderr);
+    const classification = classifyClaudeModelProbe({ status: captured.code, stdout: captured.stdout,
+      stderr: captured.stderr, expectedAlias: alias, expectedCwd: scratch });
+    const attempt = {
+      projection: alias,
+      outcome: classification.outcome,
+      resolved_model: classification.resolved_model,
+      exit_code: captured.code,
+      argv_sha256: sha256(Buffer.from(stable(args), 'utf8')),
+      stdout_path: relative(dirname(rawRoot), publicPath),
+      stdout_sha256: sha256(captured.stdout),
+      stderr_path: relative(dirname(rawRoot), stderrPath),
+      stderr_sha256: sha256(captured.stderr),
+    };
+    cache.set(alias, attempt);
+    return attempt;
+  };
+  const primaryAttempt = await probe(reasoning.alias);
+  let reasoningEffective = reasoning.alias;
+  let reasoningEffectiveModel = primaryAttempt.resolved_model;
+  let reasoningReason = 'primary_available';
+  const reasoningAttempts = [primaryAttempt];
+  if (primaryAttempt.outcome === 'credits_required') {
+    const fallbackAttempt = await probe(reasoning.fallback);
+    if (fallbackAttempt.outcome !== 'available') fail('governed Claude fallback is unavailable');
+    reasoningAttempts.push(fallbackAttempt);
+    reasoningEffective = reasoning.fallback;
+    reasoningEffectiveModel = fallbackAttempt.resolved_model;
+    reasoningReason = 'credits_required';
+  } else if (primaryAttempt.outcome !== 'available') {
+    fail('Claude primary model did not produce a governed resolution');
+  }
+  const coreAttempt = await probe(core.alias);
+  if (coreAttempt.outcome !== 'available') fail('Claude core-execution primary is unavailable');
+  const specs = [
+    { tier: 'reasoning-heavy', route: reasoning, effective: reasoningEffective,
+      effectiveModel: reasoningEffectiveModel,
+      reason: reasoningReason, attempts: reasoningAttempts },
+    { tier: 'core-execution', route: core, effective: core.alias,
+      effectiveModel: coreAttempt.resolved_model,
+      reason: 'primary_available', attempts: [coreAttempt] },
+  ];
+  const records = specs.map((spec) => {
+    const record = {
+      schema_version: 'luca.agent-model-resolution.v1',
+      harness: 'claude', tier: spec.tier,
+      primary_projection: spec.route.alias,
+      fallback_projection: spec.route.fallback,
+      effective_projection: spec.effective,
+      effective_model: spec.effectiveModel,
+      reason: spec.reason,
+      attempts: spec.attempts,
+    };
+    const path = join(rawRoot, `claude-${spec.tier}-resolution.json`);
+    const bytes = jsonBytes(record);
+    exclusiveFile(path, bytes);
+    return {
+      harness: 'claude', tier: spec.tier,
+      primary_projection: spec.route.alias,
+      fallback_projection: spec.route.fallback,
+      effective_projection: spec.effective,
+      effective_model: spec.effectiveModel,
+      reason: spec.reason,
+      path: relative(dirname(rawRoot), path),
+      sha256: sha256(bytes),
+    };
+  });
+  return {
+    records,
+    modes: new Map([['claude/reasoning-heavy',
+      reasoningEffective === reasoning.alias ? 'primary' : 'fallback']]),
+    concreteModels: new Map([
+      ['reasoning-heavy', reasoningEffectiveModel],
+      ['core-execution', coreAttempt.resolved_model],
+    ]),
+  };
+}
+
 async function runMatrix(options) {
   const root = realpathSync(options.root || resolve(dirname(SELF), '../..'));
   const candidateLauncher = realpathSync(join(root, 'scripts', 'agent-launcher.mjs'));
@@ -1450,21 +1639,6 @@ async function runMatrix(options) {
   const counterReady = readCounterReady(options.counter_ready, root, options.target_commit, packet);
   const routing = parseRouting(root);
   const runtime = await runtimeAttestations(root);
-  const preflightRuns = [];
-  for (const harness of harnesses) for (const role of roles) {
-    const nonce = randomBytes(32).toString('hex');
-    const runId = `${harness}-${role}-${randomBytes(8).toString('hex')}`;
-    const launch = buildNativeLaunch({ root, harness, role, packet: role === 'work-agent' ? packet : null,
-      routing, dispatcherId: runId, runtime, scratch: root });
-    const candidateContractSha256 = verifyCandidateDispatchContract(candidateLauncher, launch, root, harness, role, packet);
-    preflightRuns.push({ run_id: runId, harness, role, nonce,
-      nonce_commitment_sha256: sha256(Buffer.from(nonce)), candidate_contract_sha256: candidateContractSha256,
-      preflight_contract: nativeDispatchContract(launch.descriptor) });
-  }
-  if (stable(targetTreeManifest(root, options.target_commit, packet.path)) !== stable(targetManifest)
-    || gitRead(root, ['status', '--porcelain=v2', '--untracked-files=no'], 'git status after candidate contract comparison').length) {
-    fail('candidate contract comparison changed the frozen target');
-  }
   const transactionRoot = newExternalRoot(options.out_root, root);
   const evidenceRoot = privateDir(join(transactionRoot, 'evidence'));
   const rawRoot = privateDir(join(evidenceRoot, 'raw'));
@@ -1475,6 +1649,28 @@ async function runMatrix(options) {
   for (const externalPath of [counterReady.path, counterReady.ready.socket_path]) {
     if (within(transactionRoot, resolve(externalPath)) || within(resolve(externalPath), transactionRoot)) fail('counter channel overlaps evidence transaction root');
   }
+  // Availability is resolved by the external TCB before either evidence key or
+  // anchor exists.  Probe bytes are private 0600 artifacts and their canonical
+  // resolution record is later counter-signed; a post-anchor model switch is impossible.
+  const modelResolution = await resolveClaudeModels({ root, routing, runtime, scratchRoot, rawRoot,
+    timeoutMs: Number(options.timeout_ms || 300_000) });
+  const preflightRuns = [];
+  for (const harness of harnesses) for (const role of roles) {
+    const nonce = randomBytes(32).toString('hex');
+    const runId = `${harness}-${role}-${randomBytes(8).toString('hex')}`;
+    const tier = ROLE_CONTRACT[role].tier;
+    const projectionMode = modelResolution.modes.get(`${harness}/${tier}`) || 'primary';
+    const launch = buildNativeLaunch({ root, harness, role, packet: role === 'work-agent' ? packet : null,
+      routing, dispatcherId: runId, runtime, scratch: root, projectionMode });
+    const candidateContractSha256 = verifyCandidateDispatchContract(candidateLauncher, launch, root, harness, role, packet, projectionMode);
+    preflightRuns.push({ run_id: runId, harness, role, nonce, projection_mode: projectionMode,
+      nonce_commitment_sha256: sha256(Buffer.from(nonce)), candidate_contract_sha256: candidateContractSha256,
+      preflight_contract: nativeDispatchContract(launch.descriptor) });
+  }
+  if (stable(targetTreeManifest(root, options.target_commit, packet.path)) !== stable(targetManifest)
+    || gitRead(root, ['status', '--porcelain=v2', '--untracked-files=no'], 'git status after candidate contract comparison').length) {
+    fail('candidate contract comparison changed the frozen target');
+  }
   const created = new Date();
   const requestedTtl = Number(options.ttl_ms || 3_600_000);
   if (!Number.isInteger(requestedTtl) || requestedTtl < 60_000 || requestedTtl > 86_400_000) fail('invalid --ttl-ms');
@@ -1484,7 +1680,7 @@ async function runMatrix(options) {
     const scratch = privateDir(join(scratchRoot, preflight.run_id));
     const launch = buildNativeLaunch({ root, harness: preflight.harness, role: preflight.role,
       packet: preflight.role === 'work-agent' ? packet : null, routing,
-      dispatcherId: preflight.run_id, runtime, scratch });
+      dispatcherId: preflight.run_id, runtime, scratch, projectionMode: preflight.projection_mode });
     if (stable(nativeDispatchContract(launch.descriptor)) !== stable(preflight.preflight_contract)) {
       fail(`native contract changed while materializing ${preflight.harness}/${preflight.role}`);
     }
@@ -1539,6 +1735,7 @@ async function runMatrix(options) {
     evidence_fingerprint_sha256: evidenceFingerprint,
     nonce_commitments: nonceCommitments,
     nonce_set_sha256: nonceSetSha,
+    model_resolutions: modelResolution.records,
     runs: anchorRuns,
   };
   const counterResult = await requestCounterSignature(counterReady, baseCore, options.expected_counter_fingerprint);
@@ -1611,7 +1808,10 @@ async function runMatrix(options) {
     addRaw('public', `${prefix}.stdout.jsonl`, captured.stdout);
     addRaw('stderr', `${prefix}.stderr`, captured.stderr);
     let parsed;
-    if (run.harness === 'claude') parsed = parseClaude(captured.stdout, run, runtime, packet);
+    if (run.harness === 'claude') {
+      parsed = parseClaude(captured.stdout, run, runtime, packet,
+        modelResolution.concreteModels.get(run.descriptor.tier));
+    }
     else {
       parsed = parseCodex(captured.stdout, beforeCodex, run, packet);
       addRaw('parent_rollout', `${prefix}.parent-rollout.jsonl`, parsed.parent_bytes);

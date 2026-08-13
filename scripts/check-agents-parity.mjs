@@ -9,9 +9,10 @@ import assert from 'assert/strict';
 import { createHash, createPublicKey, verify as verifyBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { LOGICAL_ROLES, ROLE_CONTRACT, resolveRole } from './agent-launcher.mjs';
+import { targetTreeManifest as deriveTargetTreeManifest } from './evolution/agent-evidence-tcb.mjs';
 
 // 深审：用 CLAUDE_PROJECT_DIR 定位会在双检出下验错仓并报绿（实测）。改脚本相对：
 // 本文件在 scripts/ → 上 1 级 = 仓根，与被验文件恒同仓。
@@ -105,6 +106,194 @@ const trackedBytes = (root, commit, path, label) => {
   return bytes;
 };
 
+const claudeFamilyMatches = (alias, model) => typeof alias === 'string' && typeof model === 'string'
+  && new RegExp(`(^|[-_.])${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[-_.0-9])`, 'i').test(model);
+
+const parseRoutingProjection = (root) => {
+  const path = join(root, '.claude/skill-os/model-routing.yaml');
+  const bytes = canonicalFile(path, 'model routing');
+  const text = bytes.toString('utf8');
+  const lineup = (text.match(/^known_lineup:\s*\[([^\]]+)\]\s*$/m)?.[1] || '')
+    .split(',').map((item) => item.trim()).filter(Boolean);
+  if (!lineup.length || new Set(lineup).size !== lineup.length
+      || lineup.some((alias) => !/^[A-Za-z0-9._-]+$/.test(alias))) {
+    throw new Error('model-routing known_lineup is invalid');
+  }
+  const codex = text.match(/^codex:\n([\s\S]*?)(?=^# ─── 新场景|(?![\s\S]))/m)?.[1] || '';
+  const efforts = codex.match(/^  tier_to_effort:\n([\s\S]*?)(?=^  [a-z_]+:|(?![\s\S]))/m)?.[1] || '';
+  const tiers = {};
+  for (const name of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical']) {
+    const block = text.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [a-z][a-z-]+:|^#|(?![\\s\\S]))`, 'm'))?.[1] || '';
+    const alias = block.match(/^    resolves_to:\s*([A-Za-z0-9._-]+)/m)?.[1];
+    const fallback = block.match(/^    fallback:\s*([A-Za-z0-9._-]+)/m)?.[1] || null;
+    const effort = efforts.match(new RegExp(`^    ${name}:\\s*(none|low|medium|high|xhigh|max)\\b`, 'm'))?.[1];
+    if (!alias || !lineup.includes(alias) || !effort) throw new Error(`model-routing projection missing for ${name}`);
+    if (fallback && (!lineup.includes(fallback) || lineup.indexOf(fallback) !== lineup.indexOf(alias) + 1)) {
+      throw new Error(`model-routing fallback is not immediately below ${name}`);
+    }
+    tiers[name] = { alias, fallback, effort };
+  }
+  if (!tiers['reasoning-heavy'].fallback
+      || tiers['reasoning-heavy'].fallback !== tiers['core-execution'].alias
+      || tiers['core-execution'].fallback !== null) {
+    throw new Error('model-routing Claude fallback chain is not reasoning-heavy -> core-execution');
+  }
+  return { path: '.claude/skill-os/model-routing.yaml', sha256: bytesSha256(bytes), tiers };
+};
+
+const evidenceFile = (root, evidenceRoot, rel, label) => {
+  if (typeof rel !== 'string' || isAbsolute(rel) || rel.includes('\\')
+      || rel.split('/').some((segment) => !segment || segment === '.' || segment === '..')) {
+    throw new Error(`${label} path is not a canonical relative path`);
+  }
+  const path = join(evidenceRoot, rel);
+  if (!within(evidenceRoot, path) || relative(evidenceRoot, path) !== rel) {
+    throw new Error(`${label} escapes evidence root`);
+  }
+  return { path, bytes: canonicalFile(path, label, { privateFile: true, outsideRoot: root }) };
+};
+
+const parseJsonl = (bytes, label) => {
+  const lines = bytes.toString('utf8').split(/\r?\n/).filter((line) => line.length);
+  if (!lines.length) throw new Error(`${label} is empty`);
+  return lines.map((line) => parseJson(Buffer.from(line, 'utf8'), label));
+};
+
+const modelProbeContainsTool = (value) => {
+  if (Array.isArray(value)) return value.some(modelProbeContainsTool);
+  if (!value || typeof value !== 'object') return false;
+  if (['tool_use', 'server_tool_use', 'mcp_tool_use'].includes(String(value.type || '').toLowerCase())) return true;
+  if (typeof value.tool_use_id === 'string' && value.tool_use_id) return true;
+  return Object.values(value).some(modelProbeContainsTool);
+};
+
+const claudeModelProbeArgs = (alias) => ['--safe-mode', '-p', '--model', alias, '--output-format', 'stream-json',
+  '--verbose', '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
+  'Reply with exactly LUCA_CLAUDE_MODEL_PROBE_OK. Do not call tools.'];
+
+const validateModelResolutions = ({ root, proofRoot, evidenceRoot, commitments }) => {
+  if (!Array.isArray(commitments) || commitments.length !== 2) {
+    throw new Error('model resolutions must contain exactly two Claude tiers');
+  }
+  const routing = parseRoutingProjection(root);
+  const expectedTiers = ['reasoning-heavy', 'core-execution'];
+  const bindings = new Map();
+  for (const item of commitments) {
+    if (!exactKeys(item, ['harness', 'tier', 'primary_projection', 'fallback_projection', 'effective_projection',
+      'effective_model', 'reason', 'path', 'sha256']) || item.harness !== 'claude' || !expectedTiers.includes(item.tier)
+      || bindings.has(item.tier) || !HASH.test(item.sha256 || '')) {
+      throw new Error('model resolution commitment is invalid or duplicate');
+    }
+    const route = routing.tiers[item.tier];
+    if (item.primary_projection !== route.alias || item.fallback_projection !== route.fallback) {
+      throw new Error(`model resolution route differs from routing truth for ${item.tier}`);
+    }
+    if (item.path !== `raw/claude-${item.tier}-resolution.json`) {
+      throw new Error(`model resolution path is not canonical ${item.tier}`);
+    }
+    const recordRead = evidenceFile(root, evidenceRoot, item.path, `model resolution ${item.tier}`);
+    if (bytesSha256(recordRead.bytes) !== item.sha256) throw new Error(`model resolution hash mismatch ${item.tier}`);
+    const record = parseJson(recordRead.bytes, `model resolution ${item.tier}`);
+    if (!exactKeys(record, ['schema_version', 'harness', 'tier', 'primary_projection', 'fallback_projection',
+      'effective_projection', 'effective_model', 'reason', 'attempts'])
+      || record.schema_version !== 'luca.agent-model-resolution.v1') {
+      throw new Error(`model resolution record contract is invalid ${item.tier}`);
+    }
+    if (!recordRead.bytes.equals(Buffer.from(`${stable(record)}\n`, 'utf8'))) {
+      throw new Error(`model resolution record is not canonical ${item.tier}`);
+    }
+    const projected = Object.fromEntries(Object.keys(item).filter((key) => !['path', 'sha256'].includes(key))
+      .map((key) => [key, item[key]]));
+    const recordProjection = Object.fromEntries(Object.keys(record).filter((key) => !['schema_version', 'attempts'].includes(key))
+      .map((key) => [key, record[key]]));
+    if (stable(projected) !== stable(recordProjection) || !Array.isArray(record.attempts)) {
+      throw new Error(`model resolution record differs from signed commitment ${item.tier}`);
+    }
+    const fallbackUsed = item.reason === 'credits_required';
+    if (item.tier === 'core-execution') {
+      if (route.fallback !== null || item.reason !== 'primary_available'
+          || item.effective_projection !== route.alias || record.attempts.length !== 1) {
+        throw new Error('core-execution model resolution is not the exact direct route');
+      }
+    } else if ((!fallbackUsed && (item.reason !== 'primary_available'
+        || item.effective_projection !== route.alias || record.attempts.length !== 1))
+      || (fallbackUsed && (item.effective_projection !== route.fallback || record.attempts.length !== 2))) {
+      throw new Error('reasoning-heavy model resolution is not the governed route');
+    }
+    let effectiveConcrete = null;
+    record.attempts.forEach((attempt, index) => {
+      if (!exactKeys(attempt, ['projection', 'outcome', 'resolved_model', 'exit_code', 'argv_sha256',
+        'stdout_path', 'stdout_sha256', 'stderr_path', 'stderr_sha256'])) {
+        throw new Error(`model resolution attempt keys invalid ${item.tier}/${index}`);
+      }
+      const expectedProjection = index === 0 ? route.alias : route.fallback;
+      const expectedOutcome = fallbackUsed && index === 0 ? 'credits_required' : 'available';
+      const expectedArgvSha = bytesSha256(Buffer.from(stable(claudeModelProbeArgs(expectedProjection)), 'utf8'));
+      const expectedStdoutPath = `raw/claude-model-${expectedProjection}.stdout.jsonl`;
+      const expectedStderrPath = `raw/claude-model-${expectedProjection}.stderr`;
+      if (attempt.projection !== expectedProjection || attempt.outcome !== expectedOutcome
+          || attempt.exit_code !== (expectedOutcome === 'available' ? 0 : 1)
+          || attempt.argv_sha256 !== expectedArgvSha
+          || attempt.stdout_path !== expectedStdoutPath || attempt.stderr_path !== expectedStderrPath
+          || !HASH.test(attempt.stdout_sha256 || '') || !HASH.test(attempt.stderr_sha256 || '')) {
+        throw new Error(`model resolution attempt is not governed ${item.tier}/${index}`);
+      }
+      const stdout = evidenceFile(root, evidenceRoot, attempt.stdout_path, `model probe stdout ${item.tier}/${index}`);
+      const stderr = evidenceFile(root, evidenceRoot, attempt.stderr_path, `model probe stderr ${item.tier}/${index}`);
+      if (bytesSha256(stdout.bytes) !== attempt.stdout_sha256 || bytesSha256(stderr.bytes) !== attempt.stderr_sha256
+          || stderr.bytes.length !== 0) throw new Error(`model probe raw bytes mismatch ${item.tier}/${index}`);
+      const events = parseJsonl(stdout.bytes, `model probe stdout ${item.tier}/${index}`);
+      if (events.some(modelProbeContainsTool)) throw new Error(`model probe invoked a tool ${item.tier}/${index}`);
+      if (events.length !== 4) throw new Error(`model probe event count is not exact ${item.tier}/${index}`);
+      const [init, rateLimit, assistant, result] = events;
+      const expectedCwd = join(dirname(evidenceRoot), 'child-scratch', 'model-resolution', expectedProjection);
+      if (realpathSync(expectedCwd) !== expectedCwd || !lstatSync(expectedCwd).isDirectory()) {
+        throw new Error(`model probe cwd is not canonical ${item.tier}/${index}`);
+      }
+      if (init?.type !== 'system' || init?.subtype !== 'init' || stable(init.tools) !== stable([])
+          || init.cwd !== expectedCwd || init.permissionMode !== 'dontAsk'
+          || !claudeFamilyMatches(expectedProjection, init.model)
+          || typeof init.session_id !== 'string' || !init.session_id
+          || rateLimit?.type !== 'rate_limit_event' || assistant?.type !== 'assistant' || result?.type !== 'result'
+          || events.some((event) => event.session_id !== init.session_id)) {
+        throw new Error(`model probe transport is not exact ${item.tier}/${index}`);
+      }
+      const text = Array.isArray(assistant?.message?.content)
+        ? assistant.message.content.filter((part) => part?.type === 'text').map((part) => part.text || '').join('') : '';
+      if (expectedOutcome === 'credits_required') {
+        const expectedCredits = new RegExp(`\\b${expectedProjection}\\b[^\\n]*requires usage credits`, 'i');
+        if (expectedProjection !== 'fable' || attempt.resolved_model !== null
+            || rateLimit?.rate_limit_info?.status !== 'rejected'
+            || rateLimit?.rate_limit_info?.errorCode !== 'credits_required'
+            || assistant.parent_tool_use_id !== null || assistant.message?.model !== '<synthetic>'
+            || assistant.error !== 'rate_limit' || assistant.is_api_error_message !== true
+            || !expectedCredits.test(text) || text !== result.result
+            || result.subtype !== 'success' || result.is_error !== true
+            || result.api_error_status !== 429 || result.terminal_reason !== 'api_error') {
+          throw new Error(`model probe is not an explicit credits rejection ${item.tier}/${index}`);
+        }
+      } else {
+        if (!claudeFamilyMatches(expectedProjection, attempt.resolved_model)
+            || rateLimit?.rate_limit_info?.status !== 'allowed'
+            || assistant.parent_tool_use_id !== null || assistant.message?.model !== attempt.resolved_model
+            || text !== 'LUCA_CLAUDE_MODEL_PROBE_OK'
+            || result.subtype !== 'success' || result.is_error !== false
+            || result.result !== 'LUCA_CLAUDE_MODEL_PROBE_OK' || result.terminal_reason !== 'completed') {
+          throw new Error(`model probe does not prove the effective model ${item.tier}/${index}`);
+        }
+        effectiveConcrete = attempt.resolved_model;
+      }
+    });
+    if (!effectiveConcrete || item.effective_model !== effectiveConcrete
+        || !claudeFamilyMatches(item.effective_projection, effectiveConcrete)) {
+      throw new Error(`effective concrete model is missing ${item.tier}`);
+    }
+    bindings.set(item.tier, { alias: item.effective_projection, concrete: effectiveConcrete });
+  }
+  if (expectedTiers.some((tier) => !bindings.has(tier))) throw new Error('model resolution tier set is incomplete');
+  return { routing, bindings };
+};
+
 function validateApprovedReceipt({ root, receipt, receiptPath }) {
   if (!exactKeys(receipt, TST_RESULT_KEYS) || receipt.schema_version !== 'luca.tst-008-result.v1'
       || receipt.plan_id !== 'REX-20260811-001' || receipt.unit !== 'U-008' || receipt.test !== 'TST-008'
@@ -170,7 +359,8 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
   const anchor = parseJson(external.anchor_path, 'anchor');
   const anchorCoreKeys = ['schema_version', 'transaction_id', 'created_at', 'expires_at', 'repo_root', 'evidence_root',
     'consume_path', 'target_commit', 'target_tree_manifest', 'tcb', 'verifier', 'candidate_launcher', 'work_packet',
-    'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256', 'runs'];
+    'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256',
+    'model_resolutions', 'runs'];
   const anchorKeys = [...anchorCoreKeys, 'base_core_sha256', 'evidence_signature_ed25519', 'counter_public_key_pem',
     'counter_fingerprint_sha256', 'counter_signature_ed25519'];
   if (!exactKeys(anchor, anchorKeys) || anchor.schema_version !== 'luca.agent-evidence-anchor.v2') throw new Error('anchor schema/keys invalid');
@@ -205,10 +395,13 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
   }
   const evidenceRoot = realpathSync(anchor.evidence_root);
   const transactionRoot = dirname(native.anchor_path);
+  const frozenRoot = dirname(native.tcb_path);
   if (native.anchor_path !== join(transactionRoot, 'precommit-anchor.json')
       || native.consume_path !== join(transactionRoot, 'verification-consumed.json')
       || native.verification_stdout_path !== join(transactionRoot, 'verification-stdout.txt')
-      || dirname(native.tcb_path) !== transactionRoot || dirname(native.verifier_path) !== transactionRoot
+      || native.tcb_path === native.verifier_path || dirname(native.verifier_path) !== frozenRoot
+      || within(transactionRoot, frozenRoot) || within(frozenRoot, transactionRoot)
+      || within(proofRoot, native.tcb_path) || within(proofRoot, native.verifier_path)
       || within(root, evidenceRoot) || dirname(evidenceRoot) !== transactionRoot || dirname(native.consume_path) !== transactionRoot
       || native.envelope_path !== join(evidenceRoot, 'execution-envelope.json')
       || native.summary_path !== join(evidenceRoot, 'summary.json')) throw new Error('evidence transaction layout invalid');
@@ -240,6 +433,61 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
       || !proofPacketBytes.equals(targetPacketBytes) || !currentPacketBytes.equals(targetPacketBytes)) {
     throw new Error('work packet proof/current/target bytes mismatch');
   }
+  const derivedManifest = deriveTargetTreeManifest(proofRoot, commit, anchor.work_packet.path);
+  if (stable(anchor.target_tree_manifest) !== stable(derivedManifest)) {
+    throw new Error('target-tree manifest is not exactly derivable from the frozen proof checkout');
+  }
+  const counterReadyBytes = canonicalFile(anchor.counter_ready.path, 'counter ready', {
+    privateFile: true,
+    outsideRoot: root,
+  });
+  const counterReadyPath = realpathSync(anchor.counter_ready.path);
+  if (within(proofRoot, counterReadyPath) || within(transactionRoot, counterReadyPath)
+      || within(counterReadyPath, transactionRoot)
+      || bytesSha256(counterReadyBytes) !== anchor.counter_ready.sha256) {
+    throw new Error('counter ready artifact path/hash is unsafe');
+  }
+  const counterReady = parseJson(counterReadyBytes, 'counter ready');
+  if (!exactKeys(counterReady, ['schema_version', 'ready_id', 'created_at', 'expires_at', 'socket_path',
+    'counter_public_key_pem', 'counter_fingerprint_sha256', 'commitments'])
+      || !exactKeys(counterReady.commitments, ['tcb_sha256', 'verifier_sha256', 'repo_root', 'target_commit',
+        'work_packet_sha256', 'work_packet_source_sha256'])
+      || !counterReadyBytes.equals(Buffer.from(`${stable(counterReady)}\n`, 'utf8'))
+      || counterReady.schema_version !== 'luca.agent-evidence-counter-ready.v1'
+      || !/^counter-[a-f0-9]{24}$/.test(counterReady.ready_id || '')
+      || counterReady.ready_id !== anchor.counter_ready.ready_id
+      || counterReady.created_at !== anchor.counter_ready.created_at
+      || counterReady.expires_at !== anchor.counter_ready.expires_at
+      || counterReady.socket_path !== anchor.counter_ready.socket_path
+      || counterReady.counter_public_key_pem !== anchor.counter_public_key_pem
+      || counterReady.counter_fingerprint_sha256 !== counterFingerprint
+      || counterReady.commitments.tcb_sha256 !== native.tcb_sha256
+      || counterReady.commitments.verifier_sha256 !== native.verifier_sha256
+      || counterReady.commitments.repo_root !== proofRoot
+      || counterReady.commitments.target_commit !== commit
+      || counterReady.commitments.work_packet_sha256 !== anchor.work_packet.sha256
+      || counterReady.commitments.work_packet_source_sha256 !== anchor.work_packet.source_sha256) {
+    throw new Error('counter ready artifact/commitments differ from signed anchor');
+  }
+  const readyCreated = iso(counterReady.created_at, 'counter_ready.created_at');
+  const readyExpires = iso(counterReady.expires_at, 'counter_ready.expires_at');
+  const anchorCreated = iso(anchor.created_at, 'anchor.created_at');
+  const anchorExpires = iso(anchor.expires_at, 'anchor.expires_at');
+  if (readyCreated > anchorCreated || anchorCreated >= anchorExpires || anchorExpires > readyExpires) {
+    throw new Error('counter ready/anchor lifetime ordering is invalid');
+  }
+  const socketPath = counterReady.socket_path;
+  if (!isAbsolute(socketPath || '') || resolve(socketPath) !== socketPath) {
+    throw new Error('counter socket path is not canonical absolute');
+  }
+  const counterSocketParent = realpathSync(dirname(socketPath));
+  if (join(counterSocketParent, basename(socketPath)) !== socketPath
+      || within(proofRoot, socketPath) || within(transactionRoot, socketPath)
+      || within(socketPath, transactionRoot)) {
+    throw new Error('counter socket parent overlaps protected roots');
+  }
+  const modelResolution = validateModelResolutions({ root, proofRoot, evidenceRoot,
+    commitments: anchor.model_resolutions });
 
   const envelope = parseJson(external.envelope_path, 'envelope');
   const envelopeCoreKeys = ['schema_version', 'transaction_id', 'anchor_path', 'anchor_sha256', 'target_commit', 'repo_root',
@@ -287,9 +535,15 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
     const descriptor = run.native_descriptor;
     const pair = `${run.harness}/${run.role}`;
     const contract = ROLE_CONTRACT[run.role];
+    const expectedProjection = run.harness === 'claude'
+      ? modelResolution.bindings.get(contract?.tier)?.alias
+      : modelResolution.routing.tiers[contract?.tier]?.effort;
     if (!['claude', 'codex'].includes(run.harness) || !contract || runByPair.has(pair) || runIds.has(run.run_id)
         || descriptor.schema_version !== 'luca.native-launch.v2' || descriptor.harness !== run.harness
-        || descriptor.role !== run.role || descriptor.definition_path !== contract[run.harness]
+        || descriptor.role !== run.role || descriptor.tier !== contract.tier || descriptor.projection !== expectedProjection
+        || descriptor.definition_path !== contract[run.harness]
+        || descriptor.routing_path !== modelResolution.routing.path
+        || descriptor.routing_sha256 !== modelResolution.routing.sha256
         || !HASH.test(descriptor.definition_sha256 || '') || !HASH.test(descriptor.input_sha256 || '')
         || bytesSha256(Buffer.from(stable(descriptor), 'utf8')) !== run.native_descriptor_sha256
         || anchorNonces.get(run.run_id) !== run.nonce_commitment_sha256) {
@@ -330,6 +584,11 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
   if (stable([...runByPair.keys()].sort()) !== stable(expectedPairs.sort())) throw new Error('native descriptor matrix exact-set mismatch');
 
   const delegatedRoots = [...new Set(envelope.runs.flatMap((run) => run.native_descriptor.write_roots || []).map((path) => resolve(path)))];
+  if (delegatedRoots.some((writeRoot) => within(writeRoot, counterReadyPath)
+      || within(counterReadyPath, writeRoot) || within(writeRoot, counterSocketParent)
+      || within(counterSocketParent, writeRoot))) {
+    throw new Error('counter ready/socket parent overlaps delegated child root');
+  }
   for (const [path, label] of [[native.anchor_path, 'anchor'], [native.envelope_path, 'envelope'],
     [native.summary_path, 'summary'], [native.consume_path, 'consume'],
     [native.verification_stdout_path, 'verification stdout'], [native.tcb_path, 'TCB'],
@@ -421,6 +680,10 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
       return core.payload;
     });
     const [launch, session, result] = eventCores;
+    const sessionProjectionMatches = edge.harness === 'claude'
+      ? claudeFamilyMatches(run.native_descriptor.projection, session.observed_projection)
+        && session.observed_projection === modelResolution.bindings.get(run.native_descriptor.tier)?.concrete
+      : session.observed_projection === run.native_descriptor.projection;
     if (!exactKeys(launch, ['run_id', 'anchor_sha256', 'envelope_sha256', 'nonce', 'nonce_commitment_sha256',
       'harness', 'role', 'native_descriptor_sha256', 'target_commit', 'launched_at'])
       || !exactKeys(session, ['run_id', 'parent_id', 'child_id', 'spawn_id', 'native_identity_kind', 'input_binding_kind',
@@ -435,7 +698,7 @@ function validateApprovedReceipt({ root, receipt, receiptPath }) {
         || bytesSha256(Buffer.from(launch.nonce || '', 'utf8')) !== launch.nonce_commitment_sha256
         || session.run_id !== run.run_id || session.parent_id !== edge.parent_id || session.child_id !== edge.child_id
         || session.spawn_id !== signedReceipt.spawn_id || session.observed_input_sha256 !== edge.input_sha256
-        || session.observed_projection !== run.native_descriptor.projection
+        || !sessionProjectionMatches
         || session.native_identity_kind !== (edge.harness === 'claude'
           ? 'dispatcher_session_to_child_agent_id' : 'parent_thread_to_child_thread')
         || session.input_binding_kind !== (edge.harness === 'claude'

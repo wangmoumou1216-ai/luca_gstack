@@ -7,10 +7,12 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import {
+  classifyClaudeModelProbe as classifyClaudeModelProbeRaw,
   LOGICAL_ROLES,
   loadWorkPacket,
   nativeDispatchContract as candidateDispatchContract,
   prepareNativeLaunch,
+  resolveClaudeProjectionForLaunch,
   resolveRole,
   validateWorkPacket,
 } from './agent-launcher.mjs';
@@ -18,6 +20,7 @@ import {
   buildNativeLaunch,
   nativeDispatchContract as tcbDispatchContract,
   parseRouting,
+  targetTreeManifest as deriveTargetTreeManifest,
   validatePacket as validateTcbPacket,
 } from './evolution/agent-evidence-tcb.mjs';
 import {
@@ -178,6 +181,151 @@ for (const harness of ['claude', 'codex']) {
   }
 }
 
+const jsonl = (...events) => `${events.map((event) => JSON.stringify(event)).join('\n')}\n`;
+const PROBE_CWD = resolve(tmpdir(), 'agent-launcher-model-probe-fixture');
+const classifyClaudeModelProbe = (args) => classifyClaudeModelProbeRaw({
+  ...args,
+  expectedCwd: args.expectedCwd || PROBE_CWD,
+  allowCreditsRequired: args.allowCreditsRequired ?? args.expectedAlias === 'fable',
+});
+const successProbeStream = (alias, { rateStatus = 'allowed', withToolUse = false } = {}) => jsonl(
+  { type: 'system', subtype: 'init', session_id: 'probe-session', tools: [], permissionMode: 'dontAsk',
+    cwd: PROBE_CWD, model: `claude-${alias}-test` },
+  ...(rateStatus ? [{ type: 'rate_limit_event', session_id: 'probe-session', rate_limit_info: { status: rateStatus } }] : []),
+  { type: 'assistant', session_id: 'probe-session', parent_tool_use_id: null,
+    message: { model: `claude-${alias}-test`, content: [withToolUse
+    ? { type: 'tool_use', id: 'tool-1', name: 'Bash', input: {} }
+    : { type: 'text', text: 'LUCA_CLAUDE_MODEL_PROBE_OK' }] } },
+  { type: 'result', session_id: 'probe-session', subtype: 'success', is_error: false,
+    result: 'LUCA_CLAUDE_MODEL_PROBE_OK', terminal_reason: 'completed' },
+);
+const creditsProbeStream = ({ code = 'credits_required', status = 'rejected', apiStatus = 429,
+  terminalReason = 'api_error', model = '<synthetic>', parentToolUseId = null,
+  isApiErrorMessage = true, error = 'rate_limit', text = 'Fable 5 requires usage credits. Run /usage-credits to continue or switch models with /model.',
+  resultText = text, extraAssistant = false } = {}) => jsonl(
+  { type: 'system', subtype: 'init', session_id: 'probe-session', tools: [], permissionMode: 'dontAsk',
+    cwd: PROBE_CWD, model: 'claude-fable-5-test' },
+  { type: 'rate_limit_event', session_id: 'probe-session', rate_limit_info: { status, errorCode: code } },
+  { type: 'assistant', session_id: 'probe-session', parent_tool_use_id: parentToolUseId,
+    is_api_error_message: isApiErrorMessage, error,
+    message: { model, content: [{ type: 'text', text }] } },
+  ...(extraAssistant ? [{ type: 'assistant', session_id: 'probe-session', parent_tool_use_id: null, is_api_error_message: true,
+    error: 'rate_limit', message: { model: '<synthetic>', content: [{ type: 'text', text }] } }] : []),
+  { type: 'result', session_id: 'probe-session', subtype: 'success', is_error: true, result: resultText,
+    api_error_status: apiStatus, terminal_reason: terminalReason },
+);
+
+assert.deepEqual(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable'), expectedAlias: 'fable' }),
+  { outcome: 'success', reason: 'exact_success' });
+assert.deepEqual(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('opus', { rateStatus: 'allowed' }), expectedAlias: 'opus' }),
+  { outcome: 'success', reason: 'exact_success' });
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable', { rateStatus: null }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable', { rateStatus: 'rejected' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: successProbeStream('fable'), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable'), stderr: 'warning\n', expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('opus'), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.deepEqual(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream(), expectedAlias: 'fable' }),
+  { outcome: 'credits_required', reason: 'credits_required' });
+assert.equal(classifyClaudeModelProbe({ status: 1,
+  stdout: creditsProbeStream({ text: 'Opus 5 requires usage credits.', resultText: 'Opus 5 requires usage credits.' }),
+  expectedAlias: 'opus' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: creditsProbeStream(), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream(), stderr: 'warning\n', expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: 'Fable requires credits\n', expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ code: 'rate_limit_exceeded' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ apiStatus: 401 }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ terminalReason: 'network_error' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ model: 'claude-fable-5' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ parentToolUseId: 'tool-1' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ isApiErrorMessage: false }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ error: 'authentication_error' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ text: 'Opus 5 requires usage credits.' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ resultText: 'different error' }), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 1, stdout: creditsProbeStream({ extraAssistant: true }), expectedAlias: 'fable' }).outcome, 'rejected');
+const reorderedSuccessEvents = successProbeStream('fable').trim().split('\n').map((line) => JSON.parse(line));
+[reorderedSuccessEvents[1], reorderedSuccessEvents[2]] = [reorderedSuccessEvents[2], reorderedSuccessEvents[1]];
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: jsonl(...reorderedSuccessEvents), expectedAlias: 'fable' }).outcome, 'rejected');
+const mismatchedSessionEvents = successProbeStream('fable').trim().split('\n').map((line) => JSON.parse(line));
+mismatchedSessionEvents[2].session_id = 'different-session';
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: jsonl(...mismatchedSessionEvents), expectedAlias: 'fable' }).outcome, 'rejected');
+assert.equal(classifyClaudeModelProbe({ status: 0, stdout: successProbeStream('fable', { withToolUse: true }), expectedAlias: 'fable' }).reason, 'tool_invocation_observed');
+assert.equal(classifyClaudeModelProbeRaw({ status: 0, stdout: successProbeStream('fable'), expectedAlias: 'fable',
+  expectedCwd: resolve(PROBE_CWD, 'different') }).outcome, 'rejected');
+
+let probeAliases = [];
+assert.deepEqual(resolveClaudeProjectionForLaunch({ root, role: 'plan-agent', probe: (alias) => {
+  probeAliases.push(alias); return { outcome: 'success', reason: 'exact_success' };
+} }), { projectionMode: 'primary', primary: 'fable', effective: 'fable', reason: null });
+assert.deepEqual(probeAliases, ['fable'], 'primary success must probe exactly once');
+probeAliases = [];
+assert.deepEqual(resolveClaudeProjectionForLaunch({ root, role: 'plan-agent', probe: (alias) => {
+  probeAliases.push(alias);
+  return alias === 'fable' ? { outcome: 'credits_required', reason: 'credits_required' }
+    : { outcome: 'success', reason: 'exact_success' };
+} }), { projectionMode: 'fallback', primary: 'fable', effective: 'opus', reason: 'credits_required' });
+assert.deepEqual(probeAliases, ['fable', 'opus'], 'credits fallback must probe exactly primary then YAML fallback');
+probeAliases = [];
+assert.throws(() => resolveClaudeProjectionForLaunch({ root, role: 'plan-agent', probe: (alias) => {
+  probeAliases.push(alias); return { outcome: 'rejected', reason: 'auth_error' };
+} }), /reason=auth_error/);
+assert.deepEqual(probeAliases, ['fable'], 'non-credits failure must not probe fallback');
+probeAliases = [];
+assert.throws(() => resolveClaudeProjectionForLaunch({ root, role: 'plan-agent', probe: (alias) => {
+  probeAliases.push(alias);
+  return alias === 'fable' ? { outcome: 'credits_required', reason: 'credits_required' }
+    : { outcome: 'rejected', reason: 'fallback_failed' };
+} }), /projection=opus reason=fallback_failed/);
+assert.deepEqual(probeAliases, ['fable', 'opus'], 'fallback failure must stop after exactly two probes');
+
+const probePolicies = [];
+resolveClaudeProjectionForLaunch({ root, role: 'plan-agent', probe: (alias, policy) => {
+  probePolicies.push({ alias, ...policy });
+  return alias === 'fable' ? { outcome: 'credits_required', reason: 'credits_required' }
+    : { outcome: 'success', reason: 'exact_success' };
+} });
+assert.deepEqual(probePolicies, [
+  { alias: 'fable', allowCreditsRequired: true },
+  { alias: 'opus', allowCreditsRequired: false },
+], 'only a YAML-declared primary fallback may classify credits_required');
+probePolicies.length = 0;
+resolveClaudeProjectionForLaunch({ root, role: 'work-agent', probe: (alias, policy) => {
+  probePolicies.push({ alias, ...policy });
+  return { outcome: 'success', reason: 'exact_success' };
+} });
+assert.deepEqual(probePolicies, [{ alias: 'opus', allowCreditsRequired: false }],
+  'a tier without YAML fallback must not classify credits_required');
+
+assert.equal(resolveRole({ root, harness: 'claude', role: 'plan-agent', projectionMode: 'fallback' }).projection, 'opus');
+assert.throws(() => resolveRole({ root, harness: 'claude', role: 'work-agent', projectionMode: 'fallback' }), /no fallback projection/);
+assert.throws(() => resolveRole({ root, harness: 'codex', role: 'plan-agent', projectionMode: 'fallback' }), /Codex projectionMode must be primary/);
+assert.throws(() => resolveRole({ root, harness: 'claude', role: 'plan-agent', projectionMode: 'opus' }), /unknown projectionMode/);
+
+const routingFixture = mkdtempSync(resolve(tmpdir(), 'agent-launcher-routing-'));
+mkdirSync(resolve(routingFixture, '.claude/skill-os'), { recursive: true });
+mkdirSync(resolve(routingFixture, '.claude/agents'), { recursive: true });
+copyFileSync(resolve(root, '.claude/agents/plan-agent.md'), resolve(routingFixture, '.claude/agents/plan-agent.md'));
+const routingSource = readFileSync(resolve(root, '.claude/skill-os/model-routing.yaml'), 'utf8');
+const writeRouting = (text) => writeFileSync(resolve(routingFixture, '.claude/skill-os/model-routing.yaml'), text);
+writeRouting(routingSource.replace('fallback: opus', 'fallback: sonnet'));
+assert.throws(() => resolveRole({ root: routingFixture, harness: 'claude', role: 'plan-agent' }), /must be the next lower/);
+writeRouting(routingSource.replace('fallback: opus', 'fallback: fable'));
+assert.throws(() => resolveRole({ root: routingFixture, harness: 'claude', role: 'plan-agent' }), /must be the next lower/);
+writeRouting(routingSource.replace('fallback: opus', 'fallback: unknown-model'));
+assert.throws(() => resolveRole({ root: routingFixture, harness: 'claude', role: 'plan-agent' }), /outside known_lineup/);
+writeRouting(routingSource.replace('  core-execution:\n    resolves_to: opus',
+  '  core-execution:\n    resolves_to: sonnet'));
+assert.throws(() => resolveRole({ root: routingFixture, harness: 'claude', role: 'plan-agent' }),
+  /fallback chain must be reasoning-heavy -> core-execution/);
+writeRouting(routingSource);
+
+const primaryDescriptorShape = prepareNativeLaunch({ root, harness: 'claude', role: 'plan-agent', dispatcherId: 'shape-primary' });
+const fallbackDescriptorShape = prepareNativeLaunch({ root, harness: 'claude', role: 'plan-agent', dispatcherId: 'shape-primary', projectionMode: 'fallback' });
+assert.deepEqual(Object.keys(fallbackDescriptorShape).sort(), Object.keys(primaryDescriptorShape).sort(),
+  'fallback selection must not change native-launch.v2 descriptor schema');
+assert.equal(primaryDescriptorShape.schema_version, 'luca.native-launch.v2');
+assert.equal(primaryDescriptorShape.projection, 'fable');
+assert.equal(fallbackDescriptorShape.projection, 'opus');
+
 const packet = loadWorkPacket(fixturePath);
 const tcbPacket = validateTcbPacket(fixturePath);
 const workRole = readFileSync(resolve(root, '.claude/agents/work-agent.md'), 'utf8');
@@ -256,6 +404,100 @@ for (const role of ['plan-agent', 'quality-gate']) {
 const moduleExports = await import('./agent-launcher.mjs');
 assert.equal(Object.hasOwn(moduleExports, 'runNativeLaunch'), false, 'low-level run export is a production bypass');
 assert.equal(Object.hasOwn(moduleExports, 'spawnNativeLaunch'), false, 'low-level spawn export is a production bypass');
+const forbiddenLaunchOverrides = [
+  ['--projection-mode', 'fallback'],
+  ['--model', 'opus'],
+  ['--projection', 'opus'],
+  ['--fallback', 'opus'],
+  ['--fallback-model', 'opus'],
+  ['--projection-mode=fallback'],
+];
+for (const override of forbiddenLaunchOverrides) {
+  const rejectedOverride = run(process.execPath, ['scripts/agent-launcher.mjs', 'launch', '--root', root,
+    '--harness', 'claude', '--role', 'oracle', '--dispatcher-id', 'forbidden-override', ...override], {
+    env: { ...process.env, LUCA_CLAUDE_BIN: '/definitely/must-not-spawn' },
+  });
+  assert.equal(rejectedOverride.status, 2, `${override.join(' ')} must be rejected`);
+  assert.match(rejectedOverride.stderr, /launch does not accept caller-controlled/);
+  assert.doesNotMatch(rejectedOverride.stderr, /NATIVE_ROLE_ROUTE_BLOCKED|ENOENT|version probe|native process/,
+    `${override.join(' ')} must fail before activation, probe, or native spawn`);
+}
+
+const fakeClaudeRoot = mkdtempSync(resolve(tmpdir(), 'agent-launcher-fake-claude-'));
+const fakeClaudePath = resolve(fakeClaudeRoot, 'claude');
+const fakeClaudeLog = resolve(fakeClaudeRoot, 'calls.jsonl');
+writeFileSync(fakeClaudePath, `#!/usr/bin/env node
+import { appendFileSync } from 'node:fs';
+const args = process.argv.slice(2);
+const record = (kind, extra = {}) => appendFileSync(process.env.FAKE_CLAUDE_LOG,
+  JSON.stringify({ kind, args, cwd: process.cwd(), ...extra }) + '\\n');
+const emit = (...events) => process.stdout.write(events.map((event) => JSON.stringify(event)).join('\\n') + '\\n');
+const success = (alias) => emit(
+  { type: 'system', subtype: 'init', session_id: 'fake-session', tools: [], permissionMode: 'dontAsk', cwd: process.cwd(), model: 'claude-' + alias + '-test' },
+  { type: 'rate_limit_event', session_id: 'fake-session', rate_limit_info: { status: 'allowed' } },
+  { type: 'assistant', session_id: 'fake-session', parent_tool_use_id: null, message: { model: 'claude-' + alias + '-test', content: [{ type: 'text', text: 'LUCA_CLAUDE_MODEL_PROBE_OK' }] } },
+  { type: 'result', session_id: 'fake-session', subtype: 'success', is_error: false, result: 'LUCA_CLAUDE_MODEL_PROBE_OK', terminal_reason: 'completed' },
+);
+if (args.includes('--version')) {
+  record('version');
+  process.stdout.write('2.1.229 (Claude Code)\\n');
+} else if (args.includes('--safe-mode')) {
+  const alias = args[args.indexOf('--model') + 1];
+  record('probe', { alias });
+  if (process.env.FAKE_CLAUDE_SCENARIO === 'credits-fallback' && alias === 'fable') {
+    const message = 'Fable 5 requires usage credits. Run /usage-credits to continue or switch models with /model.';
+    emit(
+      { type: 'system', subtype: 'init', session_id: 'fake-session', tools: [], permissionMode: 'dontAsk', cwd: process.cwd(), model: 'claude-fable-5-test' },
+      { type: 'rate_limit_event', session_id: 'fake-session', rate_limit_info: { status: 'rejected', errorCode: 'credits_required' } },
+      { type: 'assistant', session_id: 'fake-session', parent_tool_use_id: null, is_api_error_message: true, error: 'rate_limit',
+        message: { model: '<synthetic>', content: [{ type: 'text', text: message }] } },
+      { type: 'result', session_id: 'fake-session', subtype: 'success', is_error: true, result: message,
+        api_error_status: 429, terminal_reason: 'api_error' },
+    );
+    process.exitCode = 1;
+  } else {
+    success(alias);
+  }
+} else {
+  record('formal');
+}
+`);
+chmodSync(fakeClaudePath, 0o755);
+const runFakeClaudeLaunch = (scenario) => {
+  writeFileSync(fakeClaudeLog, '');
+  const result = run(process.execPath, ['scripts/agent-launcher.mjs', 'launch', '--root', root,
+    '--harness', 'claude', '--role', 'plan-agent', '--dispatcher-id', `fake-${scenario}`], {
+    env: { ...process.env, LUCA_CLAUDE_BIN: fakeClaudePath, FAKE_CLAUDE_LOG: fakeClaudeLog,
+      FAKE_CLAUDE_SCENARIO: scenario },
+  });
+  const calls = readFileSync(fakeClaudeLog, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line));
+  return { result, calls };
+};
+const primaryFakeLaunch = runFakeClaudeLaunch('primary-success');
+assert.equal(primaryFakeLaunch.result.status, 0, primaryFakeLaunch.result.stderr);
+assert.deepEqual(primaryFakeLaunch.calls.map((call) => call.kind), ['probe', 'version', 'formal']);
+assert.deepEqual(primaryFakeLaunch.calls.filter((call) => call.kind === 'probe').map((call) => call.alias), ['fable']);
+assert.doesNotMatch(primaryFakeLaunch.result.stderr, /NATIVE_MODEL_FALLBACK/);
+const primaryProbe = primaryFakeLaunch.calls[0];
+assert.ok(primaryProbe.cwd.startsWith('/private/tmp/luca-native-launch-'));
+assert.notEqual(primaryProbe.cwd, root);
+assert.deepEqual(primaryProbe.args, ['--safe-mode', '-p', '--model', 'fable', '--output-format', 'stream-json',
+  '--verbose', '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
+  'Reply with exactly LUCA_CLAUDE_MODEL_PROBE_OK. Do not call tools.']);
+assert.doesNotMatch(primaryProbe.args.join(' '), /include-hook-events|setting-sources|--settings/);
+const primaryFormal = primaryFakeLaunch.calls.find((call) => call.kind === 'formal');
+assert.equal(JSON.parse(primaryFormal.args[primaryFormal.args.indexOf('--agents') + 1])['plan-agent'].model, 'fable');
+
+const fallbackFakeLaunch = runFakeClaudeLaunch('credits-fallback');
+assert.equal(fallbackFakeLaunch.result.status, 0, fallbackFakeLaunch.result.stderr);
+assert.deepEqual(fallbackFakeLaunch.calls.map((call) => call.kind), ['probe', 'probe', 'version', 'formal']);
+assert.deepEqual(fallbackFakeLaunch.calls.filter((call) => call.kind === 'probe').map((call) => call.alias), ['fable', 'opus']);
+assert.match(fallbackFakeLaunch.result.stderr,
+  /NATIVE_MODEL_FALLBACK primary=fable effective=opus reason=credits_required/);
+const fallbackFormal = fallbackFakeLaunch.calls.find((call) => call.kind === 'formal');
+assert.equal(JSON.parse(fallbackFormal.args[fallbackFormal.args.indexOf('--agents') + 1])['plan-agent'].model, 'opus');
+assert.equal(fallbackFormal.args.includes('--fallback-model'), false);
+
 for (const [harness, role] of [['claude', 'oracle'], ['codex', 'work-agent']]) {
   const dormantLaunch = run(process.execPath, ['scripts/agent-launcher.mjs', 'launch', '--root', root,
     '--harness', harness, '--role', role, '--dispatcher-id', `dormant-${harness}`], {
@@ -348,13 +590,37 @@ const activationRoot = resolve(signedBase, 'activation-root');
 mkdir700(activationRoot);
 gitFixture(activationRoot, ['init', '-q']);
 const trackedFixturePaths = [
+  'AGENTS.md',
+  'CLAUDE.md',
   'scripts/agent-launcher.mjs',
   'scripts/check-agents-parity.mjs',
   'scripts/evolution/agent-evidence-tcb.mjs',
   'scripts/evolution/verify-agent-evidence.mjs',
   'scripts/fixtures/agent-valid-work-packet.json',
+  '.claude/agents/muse-proto-judge.md',
+  '.claude/agents/orchestrator.md',
+  '.claude/agents/preflight-agent.md',
+  '.claude/agents/work-agent-template.md',
+  '.codex/agents/muse-proto-judge.toml',
+  '.codex/agents/preflight-agent.toml',
   '.claude/skill-os/model-routing.yaml',
   '.claude/skill-os/native-agent-activation.json',
+  '.claude/skill-os/schemas/work-packet.schema.json',
+  '.claude/skill-os/skill-routing-map.yaml',
+  '.claude/skill-os/input-modes.yaml',
+  '.claude/skill-os/optional-workflow-graph.yaml',
+  '.claude/settings.json',
+  '.claude/hooks/post-edit.mjs',
+  '.claude/hooks/route-guard.mjs',
+  '.claude/skills/office/brainstorm/SKILL.md',
+  '.claude/skills/office/deepresearch/SKILL.md',
+  '.claude/skills/office/ux-brainstorm/SKILL.md',
+  '.claude/skills/office/ux-research/SKILL.md',
+  '.claude/skills/office/code-hygiene/SKILL.md',
+  '.codex/hooks.json',
+  '.codex/config.toml',
+  '.codex/codex-hook-adapter.mjs',
+  '.codex/workflow-runner.mjs',
   ...LOGICAL_ROLES.flatMap((role) => [`.claude/agents/${role}.md`, `.codex/agents/${role}.toml`]),
 ];
 for (const rel of trackedFixturePaths) {
@@ -382,8 +648,10 @@ const envelopePath = resolve(evidenceRoot, 'execution-envelope.json');
 const summaryPath = resolve(evidenceRoot, 'summary.json');
 const consumePath = resolve(transactionRoot, 'verification-consumed.json');
 const verificationStdoutPath = resolve(transactionRoot, 'verification-stdout.txt');
-const externalTcbPath = resolve(transactionRoot, 'agent-evidence-tcb.mjs');
-const externalVerifierPath = resolve(transactionRoot, 'verify-agent-evidence.mjs');
+const frozenTcbRoot = resolve(signedBase, 'frozen-tcb');
+mkdir700(frozenTcbRoot);
+const externalTcbPath = resolve(frozenTcbRoot, 'agent-evidence-tcb.mjs');
+const externalVerifierPath = resolve(frozenTcbRoot, 'verify-agent-evidence.mjs');
 write0600(externalTcbPath, readFileSync(resolve(proofRoot, 'scripts/evolution/agent-evidence-tcb.mjs')));
 write0600(externalVerifierPath, readFileSync(resolve(proofRoot, 'scripts/evolution/verify-agent-evidence.mjs')));
 const proofPacket = loadWorkPacket(resolve(proofRoot, 'scripts/fixtures/agent-valid-work-packet.json'));
@@ -414,6 +682,72 @@ for (const harness of ['claude', 'codex']) for (const role of LOGICAL_ROLES) {
 }
 const nonceCommitments = prepared.map((item) => ({ run_id: item.runId, commitment_sha256: item.nonceSha }));
 const nonceSetSha = sha256(Buffer.from(stable(nonceCommitments), 'utf8'));
+const concreteClaudeModels = {
+  'reasoning-heavy': 'claude-fable-5-20260801',
+  'core-execution': 'claude-opus-4-8-20260701',
+};
+const resolutionSpecifications = [
+  { tier: 'reasoning-heavy', primary: 'fable', fallback: 'opus' },
+  { tier: 'core-execution', primary: 'opus', fallback: null },
+];
+const modelProbeRoot = resolve(transactionRoot, 'child-scratch', 'model-resolution');
+for (const spec of resolutionSpecifications) mkdir700(resolve(modelProbeRoot, spec.primary));
+const modelResolutions = resolutionSpecifications.map((spec) => {
+  const resolvedModel = concreteClaudeModels[spec.tier];
+  const sessionId = `probe-session-${spec.tier}`;
+  const stdoutPath = `raw/claude-model-${spec.primary}.stdout.jsonl`;
+  const stderrPath = `raw/claude-model-${spec.primary}.stderr`;
+  const stdoutBytes = Buffer.from(jsonl(
+    { type: 'system', subtype: 'init', session_id: sessionId, tools: [], cwd: realpathSync(resolve(modelProbeRoot, spec.primary)),
+      permissionMode: 'dontAsk', model: resolvedModel },
+    { type: 'rate_limit_event', session_id: sessionId, rate_limit_info: { status: 'allowed' } },
+    { type: 'assistant', session_id: sessionId, parent_tool_use_id: null,
+      message: { model: resolvedModel, content: [{ type: 'text', text: 'LUCA_CLAUDE_MODEL_PROBE_OK' }] } },
+    { type: 'result', session_id: sessionId, subtype: 'success', is_error: false,
+      result: 'LUCA_CLAUDE_MODEL_PROBE_OK', terminal_reason: 'completed' },
+  ), 'utf8');
+  const stderrBytes = Buffer.alloc(0);
+  write0600(resolve(evidenceRoot, stdoutPath), stdoutBytes);
+  write0600(resolve(evidenceRoot, stderrPath), stderrBytes);
+  const record = {
+    schema_version: 'luca.agent-model-resolution.v1',
+    harness: 'claude',
+    tier: spec.tier,
+    primary_projection: spec.primary,
+    fallback_projection: spec.fallback,
+    effective_projection: spec.primary,
+    effective_model: resolvedModel,
+    reason: 'primary_available',
+    attempts: [{
+      projection: spec.primary,
+      outcome: 'available',
+      resolved_model: resolvedModel,
+      exit_code: 0,
+      argv_sha256: sha256(Buffer.from(stable(['--safe-mode', '-p', '--model', spec.primary,
+        '--output-format', 'stream-json', '--verbose', '--no-session-persistence', '--tools', '',
+        '--permission-mode', 'dontAsk',
+        'Reply with exactly LUCA_CLAUDE_MODEL_PROBE_OK. Do not call tools.']), 'utf8')),
+      stdout_path: stdoutPath,
+      stdout_sha256: sha256(stdoutBytes),
+      stderr_path: stderrPath,
+      stderr_sha256: sha256(stderrBytes),
+    }],
+  };
+  const recordPath = `raw/claude-${spec.tier}-resolution.json`;
+  const recordBytes = jsonBytes(record);
+  write0600(resolve(evidenceRoot, recordPath), recordBytes);
+  return {
+    harness: record.harness,
+    tier: record.tier,
+    primary_projection: record.primary_projection,
+    fallback_projection: record.fallback_projection,
+    effective_projection: record.effective_projection,
+    effective_model: record.effective_model,
+    reason: record.reason,
+    path: recordPath,
+    sha256: sha256(recordBytes),
+  };
+});
 const anchorRuns = prepared.map((item) => ({
   run_id: item.runId,
   harness: item.harness,
@@ -425,8 +759,28 @@ const anchorRuns = prepared.map((item) => ({
   write_roots: item.descriptor.write_roots,
   sandbox_contract: item.descriptor.sandbox_contract,
 }));
-const counterReadyPath = resolve(transactionRoot, 'counter-ready.json');
-write0600(counterReadyPath, jsonBytes({ fixture: true }));
+const counterChannelRoot = resolve(signedBase, 'counter-channel');
+mkdir700(counterChannelRoot);
+const counterReadyPath = resolve(counterChannelRoot, 'counter-ready.json');
+const counterSocketPath = resolve(counterChannelRoot, 'counter.sock');
+const counterReady = {
+  schema_version: 'luca.agent-evidence-counter-ready.v1',
+  ready_id: 'counter-1234567890abcdef12345678',
+  created_at: createdAt,
+  expires_at: expiresAt,
+  socket_path: counterSocketPath,
+  counter_public_key_pem: counterPublicPem,
+  counter_fingerprint_sha256: counterFingerprint,
+  commitments: {
+    tcb_sha256: sha256(readFileSync(externalTcbPath)),
+    verifier_sha256: sha256(readFileSync(externalVerifierPath)),
+    repo_root: realpathSync(proofRoot),
+    target_commit: targetCommit,
+    work_packet_sha256: proofPacket.sha256,
+    work_packet_source_sha256: proofPacket.source_bytes_sha256,
+  },
+};
+write0600(counterReadyPath, jsonBytes(counterReady));
 const anchorCore = {
   schema_version: 'luca.agent-evidence-anchor.v2',
   transaction_id: transactionId,
@@ -436,7 +790,8 @@ const anchorCore = {
   evidence_root: realpathSync(evidenceRoot),
   consume_path: consumePath,
   target_commit: targetCommit,
-  target_tree_manifest: [],
+  target_tree_manifest: deriveTargetTreeManifest(proofRoot, targetCommit,
+    resolve(proofRoot, 'scripts/fixtures/agent-valid-work-packet.json')),
   tcb: { path: externalTcbPath, sha256: sha256(readFileSync(externalTcbPath)) },
   verifier: { path: externalVerifierPath, sha256: sha256(readFileSync(externalVerifierPath)) },
   candidate_launcher: { path: resolve(proofRoot, 'scripts/agent-launcher.mjs'),
@@ -445,12 +800,13 @@ const anchorCore = {
   work_packet: { path: resolve(proofRoot, 'scripts/fixtures/agent-valid-work-packet.json'),
     sha256: proofPacket.sha256, source_sha256: proofPacket.source_bytes_sha256 },
   counter_ready: { path: counterReadyPath, sha256: sha256(readFileSync(counterReadyPath)),
-    ready_id: 'fixture-ready', created_at: createdAt, expires_at: expiresAt,
-    socket_path: resolve(transactionRoot, 'counter.sock') },
+    ready_id: counterReady.ready_id, created_at: createdAt, expires_at: expiresAt,
+    socket_path: counterSocketPath },
   evidence_public_key_pem: evidencePublicPem,
   evidence_fingerprint_sha256: evidenceFingerprint,
   nonce_commitments: nonceCommitments,
   nonce_set_sha256: nonceSetSha,
+  model_resolutions: modelResolutions,
   runs: anchorRuns,
 };
 const anchorPayload = Buffer.from(stable(anchorCore), 'utf8');
@@ -514,7 +870,9 @@ for (const [index, item] of prepared.entries()) {
     run_id: item.runId, parent_id: parentId, child_id: childId, spawn_id: spawnId,
     native_identity_kind: item.harness === 'claude' ? 'dispatcher_session_to_child_agent_id' : 'parent_thread_to_child_thread',
     input_binding_kind: item.harness === 'claude' ? 'native_plaintext_prompt_sha256' : 'precommitted_dispatcher_plus_native_ciphertext_continuity',
-    observed_input_sha256: item.descriptor.input_sha256, observed_projection: item.descriptor.projection,
+    observed_input_sha256: item.descriptor.input_sha256,
+    observed_projection: item.harness === 'claude'
+      ? concreteClaudeModels[item.descriptor.tier] : item.descriptor.projection,
     source_log_sha256: sourceLogSha, raw_logs: rawLogs,
     stderr_sha256: sha256(Buffer.alloc(0)), observed_at: createdAt,
   });
@@ -593,6 +951,13 @@ for (const role of ['work-agent', 'oracle']) {
   const authorized = verifyNativeRouteActivation({ root: activationRoot, role });
   assert.equal(authorized.authorized, true, `${role}: ${authorized.code} ${authorized.detail}`);
 }
+const counterReadyOriginal = readFileSync(counterReadyPath);
+writeFileSync(counterReadyPath, jsonBytes({ fixture: true }), { mode: 0o600 });
+chmodSync(counterReadyPath, 0o600);
+assert.equal(verifyNativeRouteActivation({ root: activationRoot, role: 'oracle' }).authorized, false,
+  'noncanonical/uncommitted counter-ready artifact must invalidate activation');
+writeFileSync(counterReadyPath, counterReadyOriginal, { mode: 0o600 });
+chmodSync(counterReadyPath, 0o600);
 
 const receiptMutants = [
   ['wrong schema', (value) => { value.schema_version = 'luca.tst-008-result.v0'; }],

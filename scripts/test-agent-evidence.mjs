@@ -12,7 +12,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import {
-  buildNativeLaunch, nativeDispatchContract, parseRouting, targetTreeManifest, validatePacket as validateTcbPacket,
+  buildNativeLaunch, classifyClaudeModelProbe, nativeDispatchContract, parseRouting,
+  targetTreeManifest, validatePacket as validateTcbPacket,
 } from './evolution/agent-evidence-tcb.mjs';
 
 const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,6 +48,44 @@ const codexContext = (mode, root, effort) => {
 };
 const jsonBytes = (value) => Buffer.from(`${stable(value)}\n`, 'utf8');
 const jsonl = (events) => Buffer.from(`${events.map((event) => JSON.stringify(event)).join('\n')}\n`, 'utf8');
+const modelProbeArgs = (alias) => ['--safe-mode', '-p', '--model', alias, '--output-format', 'stream-json', '--verbose',
+  '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
+  'Reply with exactly LUCA_CLAUDE_MODEL_PROBE_OK. Do not call tools.'];
+const modelProbeSuccess = (alias, cwd, mutation = {}) => {
+  const session = `probe-${alias}`;
+  const events = [
+    { type: 'system', subtype: 'init', session_id: session, cwd, permissionMode: 'dontAsk',
+      model: `claude-${alias}-fixture-1`, tools: mutation.extraInitTool ? ['Bash'] : [] },
+    { type: 'rate_limit_event', session_id: session,
+      rate_limit_info: { status: mutation.unknownRate ? 'unknown' : 'allowed' } },
+    { type: 'assistant', session_id: session, parent_tool_use_id: null,
+      message: { model: `claude-${alias}-fixture-1`, content: mutation.tool
+        ? [{ type: 'tool_use', id: 'forbidden', name: 'Bash', input: { command: 'true' } }]
+        : [{ type: 'text', text: 'LUCA_CLAUDE_MODEL_PROBE_OK' }] } },
+    { type: 'result', session_id: session, subtype: 'success', is_error: false,
+      terminal_reason: 'completed', result: 'LUCA_CLAUDE_MODEL_PROBE_OK' },
+  ];
+  if (mutation.missingSession) delete events[1].session_id;
+  if (mutation.reordered) [events[1], events[2]] = [events[2], events[1]];
+  if (mutation.extraEvent) events.splice(3, 0, { type: 'progress', session_id: session });
+  return jsonl(events);
+};
+const modelProbeCredits = (cwd, mutation = {}) => {
+  const session = 'probe-fable';
+  const message = 'Fable 5 requires usage credits.';
+  return jsonl([
+    { type: 'system', subtype: 'init', session_id: session, cwd, permissionMode: 'dontAsk',
+      model: 'claude-fable-5', tools: [] },
+    { type: 'rate_limit_event', session_id: session, rate_limit_info: { status: 'rejected',
+      errorCode: mutation.generic ? 'rate_limited' : 'credits_required' } },
+    { type: 'assistant', session_id: session, parent_tool_use_id: null,
+      is_api_error_message: true, error: 'rate_limit',
+      message: { model: mutation.realModel ? 'claude-fable-5' : '<synthetic>',
+        content: [{ type: 'text', text: mutation.wrongText ? 'different error' : message }] } },
+    { type: 'result', session_id: session, subtype: 'success', is_error: true, api_error_status: 429,
+      terminal_reason: 'api_error', result: message },
+  ]);
+};
 const mkdir700 = (path) => { mkdirSync(path, { recursive: true, mode: 0o700 }); chmodSync(path, 0o700); };
 const write0600 = (path, bytes) => {
   mkdir700(dirname(path));
@@ -205,12 +244,22 @@ function claudeRaw(run, packet, mutation) {
   const childId = mutation.sameIdentity && run.role === 'plan-agent'
     ? parentId : `claude-child-${run.role}-${run.ordinal}`;
   const spawnId = `claude-spawn-${run.role}-${run.ordinal}`;
-  const model = `claude-${run.launch.descriptor.projection}-fixture-1`;
+  const model = mutation.sameFamilyModelDrift && run.role === 'plan-agent'
+    ? `claude-${run.launch.descriptor.projection}-fixture-2`
+    : mutation.crossTierChildModel && run.role === 'work-agent'
+      ? 'claude-fable-fixture-1'
+      : mutation.wrongResolvedModel && run.role === 'plan-agent'
+        ? 'claude-sonnet-fixture-1' : `claude-${run.launch.descriptor.projection}-fixture-1`;
   const expected = roleOutput(run.role, packet);
   const output = mutation.fakeLog && run.role === 'plan-agent' ? 'ALTERED_REHASHED_OUTPUT' : expected;
   const events = [
     { type: 'system', subtype: 'init', session_id: parentId, cwd: run.launch.descriptor.cwd,
-      permissionMode: 'dontAsk', agents: ['u008-dispatcher', run.role], tools: ['Agent', 'Bash'] },
+      permissionMode: 'dontAsk',
+      agents: mutation.initMissingDispatcher ? ['claude', run.role]
+        : mutation.initMissingRole ? ['claude', 'u008-dispatcher']
+          : mutation.initDuplicateAgent ? ['claude', 'u008-dispatcher', run.role, run.role]
+            : ['claude', 'Explore', 'general-purpose', 'u008-dispatcher', run.role, 'statusline-setup'],
+      tools: mutation.initExtraTool ? ['Task', 'Bash'] : ['Task'] },
     { type: 'assistant', session_id: parentId, message: { content: [{ type: 'tool_use', name: 'Agent', id: spawnId,
       input: { subagent_type: run.role, prompt: run.launch.input, run_in_background: false } }] } },
     { type: 'system', subtype: 'hook_started', session_id: parentId, hook_event: 'PreToolUse',
@@ -485,6 +534,22 @@ try {
       command_sha256: sha256(Buffer.from(hookCommand)), trust_status: 'trusted',
     }],
   };
+  const classifierProbeCwd = join(base, 'classifier-transaction', 'child-scratch', 'model-resolution', 'fable');
+  mkdir700(classifierProbeCwd);
+  assert.deepEqual(classifyClaudeModelProbe({ status: 0,
+    stdout: modelProbeSuccess('fable', realpathSync(classifierProbeCwd)), stderr: Buffer.alloc(0),
+    expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }),
+  { outcome: 'available', resolved_model: 'claude-fable-fixture-1' });
+  for (const [label, bytes] of [
+    ['reordered', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { reordered: true })],
+    ['extra', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { extraEvent: true })],
+    ['missing-session', modelProbeSuccess('fable', realpathSync(classifierProbeCwd), { missingSession: true })],
+    ['wrong-cwd', modelProbeSuccess('fable', realpathSync(repo))],
+  ]) {
+    assert.throws(() => classifyClaudeModelProbe({ status: 0, stdout: bytes, stderr: Buffer.alloc(0),
+      expectedAlias: 'fable', expectedCwd: realpathSync(classifierProbeCwd) }), undefined,
+    `TCB classifier accepted ${label} safe-mode probe transport`);
+  }
 
   async function buildEvidence(name, mutation = {}, useServer = false) {
     const transactionRoot = join(base, `txn-${name}`);
@@ -504,6 +569,8 @@ try {
       const launch = buildNativeLaunch({
         root: repo, harness, role, packet: role === 'work-agent' ? packet : null,
         routing, dispatcherId: runId, runtime, scratch: realpathSync(scratch),
+        projectionMode: mutation.fallbackResolution && harness === 'claude'
+          && ['plan-agent', 'oracle'].includes(role) ? 'fallback' : 'primary',
       });
       if (mutation.wrongEffort && harness === 'codex' && role === 'plan-agent') {
         launch.descriptor.projection = 'low';
@@ -535,6 +602,87 @@ try {
       run_id: run.run_id, commitment_sha256: run.nonce_commitment_sha256,
     }));
     const nonceSetSha = sha256(Buffer.from(stable(nonceCommitments), 'utf8'));
+    const probeRoot = join(scratchRoot, 'model-resolution');
+    mkdir700(probeRoot);
+    const probeCwds = new Map(['fable', 'opus'].map((alias) => {
+      const path = join(probeRoot, alias); mkdir700(path); return [alias, realpathSync(path)];
+    }));
+    const writeProbe = (alias, bytes, exitCode) => {
+      const stdoutPath = join(rawRoot, `claude-model-${alias}.stdout.jsonl`);
+      const stderrPath = join(rawRoot, `claude-model-${alias}.stderr`);
+      write0600(stdoutPath, bytes); write0600(stderrPath, Buffer.alloc(0));
+      const parsed = classifyClaudeModelProbe({ status: exitCode, stdout: bytes, stderr: Buffer.alloc(0),
+        expectedAlias: alias, expectedCwd: probeCwds.get(alias) });
+      return { projection: alias, outcome: parsed.outcome, resolved_model: parsed.resolved_model,
+        exit_code: exitCode, argv_sha256: sha256(Buffer.from(stable(modelProbeArgs(alias)), 'utf8')),
+        stdout_path: relative(evidenceRoot, stdoutPath), stdout_sha256: sha256(bytes),
+        stderr_path: relative(evidenceRoot, stderrPath), stderr_sha256: sha256(Buffer.alloc(0)) };
+    };
+    const fableProbeCwd = mutation.probeWrongCwd ? realpathSync(repo) : probeCwds.get('fable');
+    const fableBytes = mutation.fallbackResolution
+      ? modelProbeCredits(fableProbeCwd, {
+        generic: mutation.probeGenericRate, realModel: mutation.probeRealModel,
+        wrongText: mutation.probeWrongText,
+      })
+      : modelProbeSuccess('fable', fableProbeCwd, {
+        tool: mutation.probeTool, unknownRate: mutation.probeUnknownRate,
+        extraInitTool: mutation.probeExtraInitTool,
+        reordered: mutation.probeReordered, extraEvent: mutation.probeExtraEvent,
+        missingSession: mutation.probeMissingSession,
+      });
+    let fableAttempt;
+    try { fableAttempt = writeProbe('fable', fableBytes, mutation.fallbackResolution ? 1 : 0); } catch (error) {
+      // Attack fixtures must remain constructible so the independent verifier,
+      // rather than this helper, demonstrates rejection of malformed probe bytes.
+      if (!mutation.probeGenericRate && !mutation.probeRealModel && !mutation.probeWrongText
+        && !mutation.probeTool && !mutation.probeUnknownRate && !mutation.probeExtraInitTool
+        && !mutation.probeReordered && !mutation.probeExtraEvent && !mutation.probeMissingSession
+        && !mutation.probeWrongCwd) throw error;
+      const stdoutPath = join(rawRoot, 'claude-model-fable.stdout.jsonl');
+      const stderrPath = join(rawRoot, 'claude-model-fable.stderr');
+      fableAttempt = { projection: 'fable', outcome: mutation.fallbackResolution ? 'credits_required' : 'available',
+        resolved_model: mutation.fallbackResolution ? null : 'claude-fable-fixture-1',
+        exit_code: mutation.fallbackResolution ? 1 : 0,
+        argv_sha256: sha256(Buffer.from(stable(modelProbeArgs('fable')), 'utf8')),
+        stdout_path: relative(evidenceRoot, stdoutPath), stdout_sha256: sha256(fableBytes),
+        stderr_path: relative(evidenceRoot, stderrPath), stderr_sha256: sha256(Buffer.alloc(0)) };
+    }
+    const opusAttempt = writeProbe('opus', modelProbeSuccess('opus', probeCwds.get('opus')), 0);
+    if (mutation.probeWrongExit) fableAttempt.exit_code = 1;
+    if (mutation.probeWrongOutcome) fableAttempt.outcome = 'credits_required';
+    if (mutation.probeWrongArgv) fableAttempt.argv_sha256 = '0'.repeat(64);
+    if (mutation.probePathTraversal) fableAttempt.stdout_path = 'raw/../raw/claude-model-fable.stdout.jsonl';
+    const modelResolutionRecords = [
+      { schema_version: 'luca.agent-model-resolution.v1', harness: 'claude', tier: 'reasoning-heavy',
+        primary_projection: 'fable', fallback_projection: 'opus',
+        effective_projection: mutation.fallbackResolution ? 'opus' : 'fable',
+        effective_model: mutation.fallbackResolution ? 'claude-opus-fixture-1' : 'claude-fable-fixture-1',
+        reason: mutation.fallbackResolution ? 'credits_required' : 'primary_available',
+        attempts: mutation.fallbackResolution ? [fableAttempt, opusAttempt] : [fableAttempt] },
+      { schema_version: 'luca.agent-model-resolution.v1', harness: 'claude', tier: 'core-execution',
+        primary_projection: 'opus', fallback_projection: null, effective_projection: 'opus',
+        effective_model: 'claude-opus-fixture-1',
+        reason: 'primary_available', attempts: [opusAttempt] },
+    ];
+    if (mutation.crossTierEffectiveModel) {
+      modelResolutionRecords[0].effective_model = modelResolutionRecords[1].effective_model;
+    }
+    const modelResolutions = modelResolutionRecords.map((record, index) => {
+      const path = join(rawRoot, `claude-${record.tier}-resolution.json`);
+      const bytes = mutation.noncanonicalResolutionRecord && index === 0
+        ? Buffer.from(`${JSON.stringify(record, null, 2)}\n`, 'utf8') : jsonBytes(record);
+      write0600(path, bytes);
+      return { harness: record.harness, tier: record.tier,
+        primary_projection: record.primary_projection, fallback_projection: record.fallback_projection,
+        effective_projection: record.effective_projection, effective_model: record.effective_model,
+        reason: record.reason,
+        path: relative(evidenceRoot, path), sha256: sha256(bytes) };
+    });
+    if (mutation.resolutionPathTraversal) {
+      modelResolutions[0].path = 'raw/../raw/claude-reasoning-heavy-resolution.json';
+    }
+    if (mutation.wrongResolutionEffective) modelResolutions[0].effective_projection = 'opus';
+    if (mutation.wrongResolutionHash) modelResolutions[0].sha256 = '0'.repeat(64);
     const counter = useServer
       ? await startCounter({ name, base, repo, targetCommit, packetPath })
       : manualCounter({ name, base, repo, targetCommit, packet, packetPath, createdMs, expiryMs });
@@ -562,7 +710,8 @@ try {
       counter_ready: { path: counter.readyPath, sha256: counter.readySha, ready_id: counter.ready.ready_id,
         created_at: counter.ready.created_at, expires_at: counter.ready.expires_at, socket_path: counter.ready.socket_path },
       evidence_public_key_pem: evidencePublicPem, evidence_fingerprint_sha256: evidenceFingerprint,
-      nonce_commitments: nonceCommitments, nonce_set_sha256: nonceSetSha, runs: anchorRuns,
+      nonce_commitments: nonceCommitments, nonce_set_sha256: nonceSetSha,
+      model_resolutions: modelResolutions, runs: anchorRuns,
     };
     if (mutation.wrongTreeManifest) baseCore.target_tree_manifest[0].sha256 = '0'.repeat(64);
     const counterSignature = useServer
@@ -702,6 +851,10 @@ try {
   const positive = verifyEvidence(valid);
   assert.equal(positive.status, 0, `positive evidence failed: ${positive.stderr}`);
   assert.match(positive.stdout, /AGENT_EVIDENCE_VERIFIED/);
+  const fallbackValid = await buildEvidence('valid-fallback', { fallbackResolution: true });
+  const fallbackPositive = verifyEvidence(fallbackValid);
+  assert.equal(fallbackPositive.status, 0, `fallback evidence failed: ${fallbackPositive.stderr}`);
+  assert.match(fallbackPositive.stdout, /AGENT_EVIDENCE_VERIFIED/);
   const replay = verifyEvidence(valid);
   assert.notEqual(replay.status, 0, 'consumed anchor replay unexpectedly verified');
   await assert.rejects(async () => await new Promise((accept, reject) => {
@@ -724,6 +877,10 @@ try {
     ['altered and rehashed fake native log', { fakeLog: true }],
     ['untrusted Codex hook', { untrustedHook: true }],
     ['wrong Claude matcher', { wrongMatcher: true }],
+    ['Claude init missing dispatcher', { initMissingDispatcher: true }],
+    ['Claude init missing role', { initMissingRole: true }],
+    ['Claude init duplicate role', { initDuplicateAgent: true }],
+    ['Claude init broadens effective tool pool', { initExtraTool: true }],
     ['unrelated native child role', { unrelatedChild: true }],
     ['extra read-only child tool', { extraTool: true }],
     ['Codex wrapper side effect', { wrapperInjection: true }],
@@ -732,6 +889,28 @@ try {
     ['Claude Bash result contains additional output', { claudeAdditionalOutput: true }],
     ['Claude Bash result contains an extra field', { claudeResultExtraField: true }],
     ['Claude Bash result is duplicated', { claudeDuplicateResult: true }],
+    ['Claude child resolved model differs from effective family', { wrongResolvedModel: true }],
+    ['Claude child drifts within the effective alias family', { sameFamilyModelDrift: true }],
+    ['Claude child uses the other tier concrete model', { crossTierChildModel: true }],
+    ['reasoning tier records the core tier concrete model', { crossTierEffectiveModel: true }],
+    ['signed model resolution effective projection is altered', { wrongResolutionEffective: true }],
+    ['signed model resolution record hash is altered', { wrongResolutionHash: true }],
+    ['model resolution record is noncanonical JSON', { noncanonicalResolutionRecord: true }],
+    ['model resolution record path traverses and normalizes', { resolutionPathTraversal: true }],
+    ['model probe raw path traverses and normalizes', { probePathTraversal: true }],
+    ['safe-mode model probe invokes a tool', { probeTool: true }],
+    ['safe-mode model probe has unknown rate status', { probeUnknownRate: true }],
+    ['safe-mode model probe init has an extra tool', { probeExtraInitTool: true }],
+    ['safe-mode model probe uses the repository cwd', { probeWrongCwd: true }],
+    ['safe-mode model probe events are reordered', { probeReordered: true }],
+    ['safe-mode model probe contains an extra event', { probeExtraEvent: true }],
+    ['safe-mode model probe event lacks its session', { probeMissingSession: true }],
+    ['safe-mode model probe exit code differs from its outcome', { probeWrongExit: true }],
+    ['safe-mode model probe declared outcome differs from its bytes', { probeWrongOutcome: true }],
+    ['safe-mode model probe argv commitment differs', { probeWrongArgv: true }],
+    ['fallback probe has generic rate error', { fallbackResolution: true, probeGenericRate: true }],
+    ['fallback probe synthetic error uses a real model', { fallbackResolution: true, probeRealModel: true }],
+    ['fallback probe synthetic error text differs from result', { fallbackResolution: true, probeWrongText: true }],
     ['Codex item envelope lacks thread binding', { missingItemThread: true }],
     ['Codex plaintext prompt substitution', { wrongPrompt: true }],
     ['Codex public parent completes before child', { publicParentCompletesEarly: true }],
@@ -847,6 +1026,13 @@ try {
     scratch: realpathSync(missingRoot) }), /ENOENT|no such file/i);
   assert.throws(() => buildNativeLaunch({ root: repo, harness: 'claude', role: 'renamed-oracle', packet: null,
     routing, dispatcherId: 'renamed-role', runtime, scratch: realpathSync(repo) }), /unknown native role/);
+  const invalidFallbackRoot = join(base, 'invalid-fallback-root');
+  mkdir700(join(invalidFallbackRoot, '.claude/skill-os'));
+  const routingText = readFileSync(join(repo, '.claude/skill-os/model-routing.yaml'), 'utf8');
+  write0600(join(invalidFallbackRoot, '.claude/skill-os/model-routing.yaml'),
+    Buffer.from(routingText.replace('fallback: opus', 'fallback: sonnet')));
+  assert.throws(() => parseRouting(invalidFallbackRoot), /invalid Claude fallback/,
+    'TCB accepted a fallback that skips the immediately lower known_lineup alias');
 
   const invalidPacketPath = join(base, 'invalid-work-packet.json');
   const invalidPacket = JSON.parse(readFileSync(packetPath, 'utf8'));

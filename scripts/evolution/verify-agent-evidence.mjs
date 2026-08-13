@@ -75,6 +75,7 @@ const stable = (value) => {
   if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`).join(',')}}`;
   return JSON.stringify(value);
 };
+const jsonBytes = (value) => Buffer.from(`${stable(value)}\n`, 'utf8');
 const codexApiSandbox = (mode) => mode === 'workspace-write'
   ? { type: 'workspaceWrite', writableRoots: [], networkAccess: false, excludeTmpdirEnvVar: true, excludeSlashTmp: true }
   : { type: 'readOnly', networkAccess: false };
@@ -268,7 +269,7 @@ function newExternalPath(value, root, label) {
 }
 
 function validateCounterBaseCore(core, ready, readyPath, readySha, commitments, readyCreated, readyExpiry, tcbPath, packetPath) {
-  const keys = ['schema_version', 'transaction_id', 'created_at', 'expires_at', 'repo_root', 'evidence_root', 'consume_path', 'target_commit', 'target_tree_manifest', 'tcb', 'verifier', 'candidate_launcher', 'work_packet', 'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256', 'runs'];
+  const keys = ['schema_version', 'transaction_id', 'created_at', 'expires_at', 'repo_root', 'evidence_root', 'consume_path', 'target_commit', 'target_tree_manifest', 'tcb', 'verifier', 'candidate_launcher', 'work_packet', 'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256', 'model_resolutions', 'runs'];
   exactKeys(core, keys, 'counter request base_core');
   if (core.schema_version !== 'luca.agent-evidence-anchor.v2' || typeof core.transaction_id !== 'string' || !core.transaction_id) {
     fail('counter request base_core identity mismatch');
@@ -325,6 +326,8 @@ function validateCounterBaseCore(core, ready, readyPath, readySha, commitments, 
     || sha256(evidenceKey.export({ type: 'spki', format: 'der' })) !== core.evidence_fingerprint_sha256) {
     fail('counter request evidence key/fingerprint mismatch');
   }
+  const routing = routingProjection(root);
+  const effectiveModels = verifyModelResolutions(core.model_resolutions, root, evidenceRoot, routing);
   if (!Array.isArray(core.nonce_commitments) || core.nonce_commitments.length !== 8
     || new Set(core.nonce_commitments.map((item) => item?.run_id)).size !== 8
     || new Set(core.nonce_commitments.map((item) => item?.commitment_sha256)).size !== 8
@@ -335,7 +338,16 @@ function validateCounterBaseCore(core, ready, readyPath, readySha, commitments, 
     || sha256(Buffer.from(stable(core.nonce_commitments), 'utf8')) !== core.nonce_set_sha256
     || !Array.isArray(core.runs) || core.runs.length !== 8
     || new Set(core.runs.map((run) => run?.run_id)).size !== 8
-    || core.runs.some((run) => !core.nonce_commitments.some((nonce) => nonce.run_id === run?.run_id))) {
+    || core.runs.some((run) => {
+      try { exactKeys(run, ['run_id', 'harness', 'role', 'projection', 'input_sha256', 'candidate_contract_sha256', 'native_descriptor_sha256', 'write_roots', 'sandbox_contract'], 'counter anchor run'); } catch { return true; }
+      const expectedProjection = run.harness === 'claude'
+        ? effectiveModels.get(`claude/${ROLE_TIERS[run.role]}`)?.projection
+        : routing.tiers[ROLE_TIERS[run.role]]?.effort;
+      return !HARNESSES.includes(run.harness) || !ROLES.includes(run.role) || run.projection !== expectedProjection
+        || !HASH.test(run.input_sha256 || '') || !HASH.test(run.candidate_contract_sha256 || '')
+        || !HASH.test(run.native_descriptor_sha256 || '') || !Array.isArray(run.write_roots)
+        || !core.nonce_commitments.some((nonce) => nonce.run_id === run.run_id);
+    })) {
     fail('counter request nonce/run precommitment is invalid');
   }
 }
@@ -484,15 +496,23 @@ function routingProjection(root) {
   const path = join(root, '.claude/skill-os/model-routing.yaml');
   const bytes = readFileSync(path);
   const text = bytes.toString('utf8');
+  const lineup = (text.match(/^known_lineup:\s*\[([^\]]+)\]/m)?.[1] || '')
+    .split(',').map((item) => item.trim()).filter(Boolean);
+  if (!lineup.length || new Set(lineup).size !== lineup.length
+    || lineup.some((alias) => !/^[A-Za-z0-9._-]+$/.test(alias))) fail('routing known_lineup is invalid');
   const tiers = {};
   const codex = text.match(/^codex:\n([\s\S]*?)(?=^# ─── 新场景|(?![\s\S]))/m)?.[1] || '';
   const efforts = codex.match(/^  tier_to_effort:\n([\s\S]*?)(?=^  [a-z_]+:|(?![\s\S]))/m)?.[1] || '';
   for (const name of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical']) {
     const block = text.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [a-z][a-z-]+:|^#|(?![\\s\\S]))`, 'm'))?.[1] || '';
     const alias = block.match(/^    resolves_to:\s*([A-Za-z0-9._-]+)/m)?.[1];
+    const fallback = block.match(/^    fallback:\s*([A-Za-z0-9._-]+)/m)?.[1] || null;
     const effort = efforts.match(new RegExp(`^    ${name}:\\s*(none|low|medium|high|xhigh|max)\\b`, 'm'))?.[1];
-    if (!alias || !effort) fail(`routing projection missing for ${name}`);
-    tiers[name] = { alias, effort };
+    if (!alias || !lineup.includes(alias) || !effort) fail(`routing projection missing for ${name}`);
+    if (fallback && (!lineup.includes(fallback) || lineup.indexOf(fallback) !== lineup.indexOf(alias) + 1)) {
+      fail(`routing fallback is not the immediately lower projection for ${name}`);
+    }
+    tiers[name] = { alias, fallback, effort };
   }
   const logicalBlock = text.match(/^logical_roles:\n([\s\S]*?)(?=^\S|(?![\s\S]))/m)?.[1] || '';
   const agentsBlock = text.match(/^agents:\n([\s\S]*?)(?=^\S|(?![\s\S]))/m)?.[1] || '';
@@ -503,7 +523,155 @@ function routingProjection(root) {
     const alias = agentsBlock.match(new RegExp(`^  ${role}:\\s*([A-Za-z0-9._-]+)`, 'm'))?.[1];
     if (tier !== ROLE_TIERS[role] || alias !== tiers[tier]?.alias) fail(`routing logical role/Claude projection mismatch for ${role}`);
   }
-  return { path: '.claude/skill-os/model-routing.yaml', sha256: sha256(bytes), tiers };
+  return { path: '.claude/skill-os/model-routing.yaml', sha256: sha256(bytes), lineup, tiers };
+}
+
+const modelProbeContainsTool = (value) => {
+  if (Array.isArray(value)) return value.some(modelProbeContainsTool);
+  if (!value || typeof value !== 'object') return false;
+  if (['tool_use', 'server_tool_use', 'mcp_tool_use'].includes(String(value.type || '').toLowerCase())) return true;
+  if (typeof value.tool_use_id === 'string' && value.tool_use_id) return true;
+  return Object.values(value).some(modelProbeContainsTool);
+};
+
+function claudeModelProbeArgs(alias) {
+  return ['--safe-mode', '-p', '--model', alias, '--output-format', 'stream-json', '--verbose',
+    '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
+    'Reply with exactly LUCA_CLAUDE_MODEL_PROBE_OK. Do not call tools.'];
+}
+
+function classifyClaudeResolutionProbe(bytes, stderr, exitCode, projection, expectedCwd) {
+  if (!Number.isInteger(exitCode) || stderr.length) fail('Claude model-resolution probe process result is invalid');
+  const events = parseJsonl(bytes, 'Claude model-resolution probe');
+  if (events.some(modelProbeContainsTool)) fail('Claude safe-mode model-resolution probe invoked a tool');
+  if (events.length !== 4) fail('Claude model-resolution probe must contain exactly four events');
+  const [init, rate, assistant, result] = events;
+  const sessionId = init?.session_id;
+  if (init?.type !== 'system' || init?.subtype !== 'init'
+    || rate?.type !== 'rate_limit_event' || assistant?.type !== 'assistant' || result?.type !== 'result'
+    || init.cwd !== expectedCwd || init.permissionMode !== 'dontAsk'
+    || stable(init.tools) !== stable([]) || !claudeFamilyMatches(projection, init.model)) {
+    fail('Claude safe-mode model-resolution ordered transport/init is not exact');
+  }
+  if (typeof sessionId !== 'string' || !sessionId
+    || !events.every((event) => event.session_id === sessionId)) {
+    fail('Claude safe-mode model-resolution session binding is not exact');
+  }
+  const content = assistant?.message?.content;
+  const assistantText = Array.isArray(content) && content.length === 1
+    && content[0]?.type === 'text' && typeof content[0]?.text === 'string'
+    ? content[0].text : null;
+  if (exitCode === 0 && result.subtype === 'success' && result.is_error === false
+    && result.result === 'LUCA_CLAUDE_MODEL_PROBE_OK' && result.terminal_reason === 'completed'
+    && rate?.rate_limit_info?.status === 'allowed'
+    && assistant.parent_tool_use_id === null
+    && assistant?.message?.model === init.model && claudeFamilyMatches(projection, assistant.message.model)
+    && assistantText === 'LUCA_CLAUDE_MODEL_PROBE_OK') {
+    return { outcome: 'available', resolved_model: assistant.message.model };
+  }
+  const expectedCredits = /^Fable(?:\s+\d+(?:\.\d+)*)?\s+requires usage credits\.(?: Run \/usage-credits to continue or switch models with \/model\.)?$/;
+  if (projection === 'fable' && exitCode === 1
+    && rate?.rate_limit_info?.status === 'rejected'
+    && rate?.rate_limit_info?.errorCode === 'credits_required'
+    && assistant.parent_tool_use_id === null
+    && assistant?.message?.model === '<synthetic>' && assistant.is_api_error_message === true
+    && assistant.error === 'rate_limit' && assistantText === result.result
+    && result.is_error === true && result.subtype === 'success'
+    && result.api_error_status === 429 && result.terminal_reason === 'api_error'
+    && expectedCredits.test(String(result.result || ''))) {
+    return { outcome: 'credits_required', resolved_model: null };
+  }
+  fail('Claude model-resolution probe is not exact success or explicit credits_required');
+}
+
+function verifyModelResolutions(items, root, evidenceRoot, routing) {
+  if (!Array.isArray(items) || items.length !== 2) fail('model_resolutions must contain the exact two Claude tiers used by U008');
+  const expectedTiers = ['reasoning-heavy', 'core-execution'];
+  const reasoningRoute = routing.tiers['reasoning-heavy'];
+  const coreRoute = routing.tiers['core-execution'];
+  if (!reasoningRoute.fallback || reasoningRoute.fallback !== coreRoute.alias || coreRoute.fallback !== null) {
+    fail('Claude model-resolution fallback chain is not reasoning-heavy primary -> core-execution primary');
+  }
+  const transactionRoot = canonicalDirectory(dirname(evidenceRoot), 'model-resolution transaction root');
+  const seen = new Set();
+  const effective = new Map();
+  for (const item of items) {
+    exactKeys(item, ['harness', 'tier', 'primary_projection', 'fallback_projection', 'effective_projection', 'effective_model', 'reason', 'path', 'sha256'], 'model resolution commitment');
+    if (item.harness !== 'claude' || !expectedTiers.includes(item.tier) || seen.has(item.tier)
+      || !HASH.test(item.sha256 || '')) fail('model resolution commitment identity/hash is invalid');
+    seen.add(item.tier);
+    const route = routing.tiers[item.tier];
+    if (item.primary_projection !== route.alias || item.fallback_projection !== route.fallback) {
+      fail(`model resolution route differs from routing truth for ${item.tier}`);
+    }
+    const expectedRecordPath = `raw/claude-${item.tier}-resolution.json`;
+    if (item.path !== expectedRecordPath) fail(`model resolution path is not canonical for ${item.tier}`);
+    const read = secureRead(join(evidenceRoot, item.path), evidenceRoot, `model resolution ${item.tier}`);
+    if (sha256(read.bytes) !== item.sha256) fail(`model resolution hash mismatch ${item.tier}`);
+    const record = parseJson(read.bytes, `model resolution ${item.tier}`);
+    if (!read.bytes.equals(jsonBytes(record))) fail(`model resolution record is not canonical JSON ${item.tier}`);
+    exactKeys(record, ['schema_version', 'harness', 'tier', 'primary_projection', 'fallback_projection', 'effective_projection', 'effective_model', 'reason', 'attempts'], `model resolution record ${item.tier}`);
+    const projected = Object.fromEntries(Object.keys(item).filter((key) => !['path', 'sha256'].includes(key)).map((key) => [key, item[key]]));
+    if (record.schema_version !== 'luca.agent-model-resolution.v1'
+      || stable(projected) !== stable(Object.fromEntries(Object.keys(record).filter((key) => key !== 'schema_version' && key !== 'attempts').map((key) => [key, record[key]])))) {
+      fail(`model resolution record differs from signed commitment ${item.tier}`);
+    }
+    if (item.tier === 'core-execution') {
+      if (item.fallback_projection !== null || item.effective_projection !== item.primary_projection
+        || item.reason !== 'primary_available' || !Array.isArray(record.attempts) || record.attempts.length !== 1) {
+        fail('core-execution model resolution is not the exact direct route');
+      }
+    } else {
+      if (route.fallback === null || !Array.isArray(record.attempts)) fail('reasoning-heavy model resolution lacks governed attempts');
+      const fallbackUsed = item.reason === 'credits_required';
+      if ((!fallbackUsed && (item.reason !== 'primary_available' || item.effective_projection !== route.alias || record.attempts.length !== 1))
+        || (fallbackUsed && (item.effective_projection !== route.fallback || record.attempts.length !== 2))) {
+        fail('reasoning-heavy effective projection/reason/attempt count is invalid');
+      }
+    }
+    const fallbackUsed = item.reason === 'credits_required';
+    record.attempts.forEach((attempt, index) => {
+      exactKeys(attempt, ['projection', 'outcome', 'resolved_model', 'exit_code', 'argv_sha256', 'stdout_path', 'stdout_sha256', 'stderr_path', 'stderr_sha256'], `model resolution attempt ${index}`);
+      const expectedProjection = index === 0 ? route.alias : route.fallback;
+      const expectedOutcome = fallbackUsed && index === 0 ? 'credits_required' : 'available';
+      const expectedExit = expectedOutcome === 'credits_required' ? 1 : 0;
+      const expectedArgvSha = sha256(Buffer.from(stable(claudeModelProbeArgs(expectedProjection)), 'utf8'));
+      const expectedStdoutPath = `raw/claude-model-${expectedProjection}.stdout.jsonl`;
+      const expectedStderrPath = `raw/claude-model-${expectedProjection}.stderr`;
+      if (attempt.projection !== expectedProjection || attempt.outcome !== expectedOutcome
+        || attempt.exit_code !== expectedExit || attempt.argv_sha256 !== expectedArgvSha
+        || attempt.stdout_path !== expectedStdoutPath || attempt.stderr_path !== expectedStderrPath
+        || !HASH.test(attempt.stdout_sha256 || '') || !HASH.test(attempt.stderr_sha256 || '')) {
+        fail(`model resolution attempt ${index} is not the governed route`);
+      }
+      const stdout = secureRead(join(evidenceRoot, attempt.stdout_path), evidenceRoot, `model probe stdout ${index}`);
+      const stderr = secureRead(join(evidenceRoot, attempt.stderr_path), evidenceRoot, `model probe stderr ${index}`);
+      if (sha256(stdout.bytes) !== attempt.stdout_sha256 || sha256(stderr.bytes) !== attempt.stderr_sha256 || stderr.bytes.length) {
+        fail(`model resolution attempt ${index} raw bytes mismatch`);
+      }
+      const expectedCwd = canonicalDirectory(
+        join(transactionRoot, 'child-scratch', 'model-resolution', expectedProjection),
+        `model probe scratch ${expectedProjection}`,
+      );
+      const parsed = classifyClaudeResolutionProbe(stdout.bytes, stderr.bytes, attempt.exit_code,
+        attempt.projection, expectedCwd);
+      if (parsed.outcome !== attempt.outcome || parsed.resolved_model !== attempt.resolved_model) {
+        fail(`model resolution attempt ${index} classification mismatch`);
+      }
+    });
+    const successfulAttempt = record.attempts.at(-1);
+    if (typeof item.effective_model !== 'string' || !item.effective_model
+      || successfulAttempt?.outcome !== 'available'
+      || item.effective_model !== successfulAttempt.resolved_model) {
+      fail(`model resolution effective concrete model mismatch ${item.tier}`);
+    }
+    effective.set(`${item.harness}/${item.tier}`, {
+      projection: item.effective_projection,
+      model: item.effective_model,
+    });
+  }
+  if (expectedTiers.some((tier) => !seen.has(tier))) fail('model_resolutions tier set is incomplete');
+  return effective;
 }
 
 function validatePacket(packet) {
@@ -862,6 +1030,18 @@ function claudeFamilyMatches(alias, resolved) {
     && new RegExp(`^claude-${alias.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}(?:-|$)`, 'i').test(resolved);
 }
 
+function assertClaudeInit(init, root, role, label) {
+  const agents = Array.isArray(init?.agents) ? init.agents : [];
+  const tools = Array.isArray(init?.tools) ? init.tools : [];
+  const uniqueAgents = agents.length === new Set(agents).size && agents.every((agent) => typeof agent === 'string');
+  const exactNativeDispatcherTool = stable(tools) === stable(['Task']) || stable(tools) === stable(['Agent']);
+  if (init?.cwd !== root || init?.permissionMode !== 'dontAsk' || !uniqueAgents
+    || agents.filter((agent) => agent === 'u008-dispatcher').length !== 1
+    || agents.filter((agent) => agent === role).length !== 1 || !exactNativeDispatcherTool) {
+    fail(`${label} dispatcher/role/tool pool is not exact`);
+  }
+}
+
 function assertClaudeWorkResult(events, bashId, parentSpawnId, sentinel) {
   const linked = [];
   for (const event of events) {
@@ -898,11 +1078,8 @@ function verifyClaudeLogs(bytes, run, expectedInput, expectedResult) {
   const events = parseJsonl(bytes, 'Claude raw transport');
   const indexed = events.map((event, index) => ({ event, index }));
   const inits = events.filter((event) => event?.type === 'system' && event?.subtype === 'init');
-  if (inits.length !== 1 || !Array.isArray(inits[0].agents) || !inits[0].agents.includes(run.role)
-    || !inits[0].agents.includes('u008-dispatcher') || inits[0].permissionMode !== 'dontAsk'
-    || stable([...(inits[0].tools || [])].sort()) !== stable(['Bash', inits[0].tools.includes('Agent') ? 'Agent' : 'Task'].sort())) {
-    fail('Claude init dispatcher/role/tool pool is not exact');
-  }
+  if (inits.length !== 1) fail('Claude transport must contain exactly one init');
+  assertClaudeInit(inits[0], run.native_descriptor.cwd, run.role, 'Claude init');
   const sessions = new Set(events.map((event) => event?.session_id).filter(Boolean));
   if (sessions.size !== 1) fail('Claude transport has multiple/no dispatcher sessions');
   const parentId = [...sessions][0];
@@ -939,8 +1116,8 @@ function verifyClaudeLogs(bytes, run, expectedInput, expectedResult) {
   const launches = indexed.filter(({ event }) => event?.type === 'user' && event?.tool_use_result?.status === 'async_launched'
     && event.tool_use_result.agentId === childId && event.tool_use_result.prompt === expectedInput);
   if (launches.length !== 1 || launches[0].index <= starts[0].index
-    || !claudeFamilyMatches(run.projection, launches[0].event.tool_use_result.resolvedModel)) {
-    fail('Claude native launch/model family binding mismatch');
+    || launches[0].event.tool_use_result.resolvedModel !== run.expectedConcreteModel) {
+    fail('Claude native launch/concrete model binding mismatch');
   }
   const resolvedModel = launches[0].event.tool_use_result.resolvedModel;
   const preStarts = indexed.filter(({ event }) => event?.type === 'system' && event?.subtype === 'hook_started'
@@ -1400,7 +1577,7 @@ function verifyAll(argv) {
   if (sha256(anchorRead.bytes) !== expectedAnchorSha) fail('out-of-band precommit anchor hash mismatch');
   if (within(evidenceRoot, anchorRead.path) || within(anchorRead.path, evidenceRoot)) fail('precommit anchor is not outside evidence');
   const anchor = parseJson(anchorRead.bytes, 'precommit anchor');
-  const baseKeys = ['schema_version', 'transaction_id', 'created_at', 'expires_at', 'repo_root', 'evidence_root', 'consume_path', 'target_commit', 'target_tree_manifest', 'tcb', 'verifier', 'candidate_launcher', 'work_packet', 'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256', 'runs'];
+  const baseKeys = ['schema_version', 'transaction_id', 'created_at', 'expires_at', 'repo_root', 'evidence_root', 'consume_path', 'target_commit', 'target_tree_manifest', 'tcb', 'verifier', 'candidate_launcher', 'work_packet', 'counter_ready', 'evidence_public_key_pem', 'evidence_fingerprint_sha256', 'nonce_commitments', 'nonce_set_sha256', 'model_resolutions', 'runs'];
   const anchorKeys = [...baseKeys, 'base_core_sha256', 'evidence_signature_ed25519', 'counter_public_key_pem', 'counter_fingerprint_sha256', 'counter_signature_ed25519'];
   exactKeys(anchor, anchorKeys, 'precommit anchor');
   if (anchor.schema_version !== 'luca.agent-evidence-anchor.v2') fail('wrong precommit anchor schema');
@@ -1514,6 +1691,7 @@ function verifyAll(argv) {
     fail('target-tree manifest drift or target-commit substitution');
   }
   const routing = routingProjection(root);
+  const effectiveModels = verifyModelResolutions(anchor.model_resolutions, root, evidenceRoot, routing);
   const envelopeRead = secureRead(join(evidenceRoot, 'execution-envelope.json'), evidenceRoot, 'execution envelope');
   if (sha256(envelopeRead.bytes) !== expectedEnvelopeSha) fail('out-of-band envelope hash mismatch');
   const envelope = parseJson(envelopeRead.bytes, 'execution envelope');
@@ -1547,7 +1725,9 @@ function verifyAll(argv) {
     if (descriptor.schema_version !== 'luca.native-launch.v2' || descriptor.dispatcher_id !== run.run_id
       || descriptor.harness !== run.harness || descriptor.role !== run.role || descriptor.tier !== ROLE_TIERS[run.role]
       || descriptor.routing_sha256 !== routing.sha256) fail(`native descriptor identity/routing mismatch ${key}`);
-    const projection = run.harness === 'claude' ? routing.tiers[descriptor.tier].alias : routing.tiers[descriptor.tier].effort;
+    const projection = run.harness === 'claude'
+      ? effectiveModels.get(`claude/${descriptor.tier}`)?.projection
+      : routing.tiers[descriptor.tier].effort;
     if (descriptor.projection !== projection) fail(`native projection mismatch ${key}`);
     const def = verifyRoleDefinition(root, run.harness, run.role, projection, descriptor.definition_path);
     if (sha256(def.bytes) !== descriptor.definition_sha256) fail(`definition drift ${key}`);
@@ -1580,6 +1760,9 @@ function verifyAll(argv) {
     runMap.set(key, {
       ...run,
       projection,
+      expectedConcreteModel: run.harness === 'claude'
+        ? effectiveModels.get(`claude/${descriptor.tier}`)?.model
+        : null,
       packet,
       input: roleInput(run.role, packet),
       expectedResult: expectedOutput(run.role, packet),

@@ -34,6 +34,7 @@ const codexApiSandbox = (mode) => mode === 'workspace-write'
 const MUTABLE_ACCESS = new Set(['write', 'create', 'delete']);
 const ACCESS = new Set(['read', ...MUTABLE_ACCESS]);
 const VALIDATED_PACKETS = new WeakSet();
+const CLAUDE_MODEL_PROBE_SENTINEL = 'LUCA_CLAUDE_MODEL_PROBE_OK';
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const stable = (value) => {
   if (Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
@@ -209,6 +210,17 @@ export function loadWorkPacket(path) {
   return result;
 }
 
+function validateLaunchPacket(role, packet) {
+  if (role === 'work-agent') {
+    if (!packet || !VALIDATED_PACKETS.has(packet)
+      || stable(packet.packet) !== packet.canonical_json
+      || sha256(Buffer.from(packet.canonical_json, 'utf8')) !== packet.sha256) {
+      fail('work-agent launch requires an intact validateWorkPacket/loadWorkPacket result');
+    }
+    assertNativeSmokePacket(packet.packet);
+  } else if (packet) fail(`${role} does not accept a work packet`);
+}
+
 function assertNativeSmokePacket(packet) {
   if (packet.ownership.length !== 1 || stable(packet.ownership[0]) !== stable({ path: '@response', owner: 'work-agent', access: 'create' })
     || packet.files.length !== 1 || stable(packet.files[0]) !== stable({ path: '@response', purpose: 'Logical native child response; this is not a filesystem path.', access: 'create' })
@@ -223,12 +235,32 @@ function assertNativeSmokePacket(packet) {
 function parseRouting(root) {
   const path = join(root, '.claude/skill-os/model-routing.yaml');
   const text = readFileSync(path, 'utf8');
+  const lineupMatch = text.match(/^known_lineup:\s*\[([^\]]+)\]\s*$/m);
+  if (!lineupMatch) fail('model-routing missing known_lineup');
+  const knownLineup = lineupMatch[1].split(',').map((value) => value.trim());
+  if (knownLineup.some((value) => !/^[A-Za-z0-9._-]+$/.test(value))) fail('model-routing has invalid known_lineup');
+  unique(knownLineup, 'model-routing known_lineup');
   const tier = {};
   for (const name of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical']) {
     const block = text.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [a-z][a-z-]+:|^#|\\Z)`, 'm'))?.[1] || '';
     const alias = block.match(/^    resolves_to:\s*([A-Za-z0-9._-]+)/m)?.[1];
     if (!alias) fail(`model-routing missing Claude projection for ${name}`);
-    tier[name] = { alias };
+    if (!knownLineup.includes(alias)) fail(`model-routing Claude projection ${alias} for ${name} is outside known_lineup`);
+    const fallback = block.match(/^    fallback:\s*([A-Za-z0-9._-]+)/m)?.[1] || null;
+    if (fallback) {
+      const primaryIndex = knownLineup.indexOf(alias);
+      const fallbackIndex = knownLineup.indexOf(fallback);
+      if (fallbackIndex < 0) fail(`model-routing fallback ${fallback} for ${name} is outside known_lineup`);
+      if (fallbackIndex !== primaryIndex + 1) {
+        fail(`model-routing fallback ${fallback} for ${name} must be the next lower known_lineup alias after ${alias}`);
+      }
+    }
+    tier[name] = { alias, fallback };
+  }
+  if (!tier['reasoning-heavy'].fallback
+      || tier['reasoning-heavy'].fallback !== tier['core-execution'].alias
+      || tier['core-execution'].fallback !== null) {
+    fail('model-routing Claude fallback chain must be reasoning-heavy -> core-execution with no core fallback');
   }
   const codexBlock = text.match(/^codex:\n([\s\S]*?)(?=^# ─── 新场景|\Z)/m)?.[1] || '';
   const effortBlock = codexBlock.match(/^  tier_to_effort:\n([\s\S]*?)(?=^  [a-z_]+:|\Z)/m)?.[1] || '';
@@ -237,7 +269,7 @@ function parseRouting(root) {
     if (!effort || effort === 'minimal') fail(`model-routing missing valid Codex projection for ${name}`);
     tier[name].effort = effort;
   }
-  return Object.freeze({ path, sha256: sha256(Buffer.from(text)), tier });
+  return deepFreeze({ path, sha256: sha256(Buffer.from(text)), knownLineup, tier });
 }
 
 function parseClaudeFrontmatter(text, role) {
@@ -260,12 +292,18 @@ function parseCodexToml(text, role, expectedEffort) {
   if (!text.includes(`.claude/agents/${role}.md`)) fail(`Codex role ${role} does not point to Claude authority`);
 }
 
-export function resolveRole({ root = DEFAULT_ROOT, role, harness }) {
+export function resolveRole({ root = DEFAULT_ROOT, role, harness, projectionMode = 'primary' }) {
   root = realpathSync(root);
   if (!LOGICAL_ROLES.includes(role)) fail(`unknown logical role ${role}`);
   if (!['claude', 'codex'].includes(harness)) fail(`unknown harness ${harness}`);
+  if (!['primary', 'fallback'].includes(projectionMode)) fail(`unknown projectionMode ${projectionMode}`);
+  if (harness === 'codex' && projectionMode !== 'primary') fail('Codex projectionMode must be primary');
   const routing = parseRouting(root);
   const contract = ROLE_CONTRACT[role];
+  const tierProjection = routing.tier[contract.tier];
+  if (projectionMode === 'fallback' && !tierProjection.fallback) {
+    fail(`model-routing has no fallback projection for ${contract.tier}`);
+  }
   const definitionPath = join(root, contract[harness]);
   if (!existsSync(definitionPath)) fail(`missing ${harness} definition for ${role}`);
   const bytes = readFileSync(definitionPath);
@@ -277,7 +315,9 @@ export function resolveRole({ root = DEFAULT_ROOT, role, harness }) {
     role,
     harness,
     tier: contract.tier,
-    projection: harness === 'claude' ? routing.tier[contract.tier].alias : routing.tier[contract.tier].effort,
+    projection: harness === 'claude'
+      ? (projectionMode === 'fallback' ? tierProjection.fallback : tierProjection.alias)
+      : tierProjection.effort,
     routing_path: relative(root, routing.path),
     routing_sha256: routing.sha256,
     definition_path: relative(root, definitionPath),
@@ -296,6 +336,144 @@ function rolePayload(role, packet) {
     return stable(packet.packet);
   }
   return `Perform a read-only native role smoke check. Do not call tools and do not edit files. Return exactly ${sentinel}.`;
+}
+
+const containsToolInvocation = (value) => {
+  if (Array.isArray(value)) return value.some(containsToolInvocation);
+  if (!value || typeof value !== 'object') return false;
+  const type = typeof value.type === 'string' ? value.type.toLowerCase() : '';
+  if (['tool_use', 'server_tool_use', 'mcp_tool_use'].includes(type)) return true;
+  if (typeof value.tool_use_id === 'string' && value.tool_use_id.length > 0) return true;
+  return Object.values(value).some(containsToolInvocation);
+};
+
+const modelMatchesAlias = (model, alias) => typeof model === 'string'
+  && new RegExp(`(^|[-_.])${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[-_.0-9])`, 'i').test(model);
+
+export function classifyClaudeModelProbe({ status, stdout, stderr = '', expectedAlias, expectedCwd,
+  allowCreditsRequired = false }) {
+  if (!Number.isInteger(status)) return Object.freeze({ outcome: 'rejected', reason: 'missing_exit_status' });
+  if (typeof stdout !== 'string' || typeof stderr !== 'string') {
+    return Object.freeze({ outcome: 'rejected', reason: 'invalid_process_output' });
+  }
+  if (typeof expectedAlias !== 'string' || !/^[A-Za-z0-9._-]+$/.test(expectedAlias)) {
+    return Object.freeze({ outcome: 'rejected', reason: 'invalid_expected_alias' });
+  }
+  if (typeof expectedCwd !== 'string' || !isAbsolute(expectedCwd) || resolve(expectedCwd) !== expectedCwd) {
+    return Object.freeze({ outcome: 'rejected', reason: 'invalid_expected_cwd' });
+  }
+  const lines = stdout.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  if (lines.length < 1) return Object.freeze({ outcome: 'rejected', reason: 'empty_stream' });
+  const events = [];
+  for (const line of lines) {
+    try {
+      const event = JSON.parse(line);
+      if (!event || typeof event !== 'object' || Array.isArray(event)) throw new Error('not an object');
+      events.push(event);
+    } catch {
+      return Object.freeze({ outcome: 'rejected', reason: 'non_json_stream' });
+    }
+  }
+  if (events.some(containsToolInvocation)) return Object.freeze({ outcome: 'rejected', reason: 'tool_invocation_observed' });
+  if (events.length !== 4) return Object.freeze({ outcome: 'rejected', reason: 'probe_transport_shape' });
+  const [init, rateLimit, assistant, result] = events;
+  const sessionId = init?.session_id;
+  const exactTransport = init?.type === 'system'
+    && init?.subtype === 'init'
+    && init?.cwd === expectedCwd
+    && Array.isArray(init?.tools)
+    && init.tools.length === 0
+    && init?.permissionMode === 'dontAsk'
+    && modelMatchesAlias(init?.model, expectedAlias)
+    && typeof sessionId === 'string'
+    && sessionId.length > 0
+    && rateLimit?.type === 'rate_limit_event'
+    && assistant?.type === 'assistant'
+    && result?.type === 'result'
+    && events.every((event) => event.session_id === sessionId);
+  if (!exactTransport) return Object.freeze({ outcome: 'rejected', reason: 'probe_transport_shape' });
+  const assistantContent = assistant?.message?.content;
+  const assistantText = Array.isArray(assistantContent) && assistantContent.length === 1
+    && assistantContent[0]?.type === 'text' && typeof assistantContent[0]?.text === 'string'
+    ? assistantContent[0].text : null;
+  const exactSuccess = status === 0
+    && stderr === ''
+    && rateLimit?.rate_limit_info?.status === 'allowed'
+    && assistant?.parent_tool_use_id === null
+    && modelMatchesAlias(assistant?.message?.model, expectedAlias)
+    && assistantText === CLAUDE_MODEL_PROBE_SENTINEL
+    && result.subtype === 'success'
+    && result.is_error === false
+    && result.result === CLAUDE_MODEL_PROBE_SENTINEL
+    && result.terminal_reason === 'completed';
+  if (exactSuccess) return Object.freeze({ outcome: 'success', reason: 'exact_success' });
+  const errorText = assistantText;
+  const creditsTextMatchesAlias = typeof errorText === 'string'
+    && new RegExp(`^${expectedAlias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s+\\d+(?:\\.\\d+)*)?\\s+requires usage credits(?:[.!]|$)`, 'i').test(errorText);
+  const exactCreditsRequired = allowCreditsRequired === true
+    && status === 1
+    && stderr === ''
+    && rateLimit?.rate_limit_info?.status === 'rejected'
+    && rateLimit?.rate_limit_info?.errorCode === 'credits_required'
+    && assistant?.message?.model === '<synthetic>'
+    && assistant?.parent_tool_use_id === null
+    && assistant?.is_api_error_message === true
+    && assistant?.error === 'rate_limit'
+    && creditsTextMatchesAlias
+    && result.subtype === 'success'
+    && result.is_error === true
+    && result.api_error_status === 429
+    && result.terminal_reason === 'api_error'
+    && result.result === errorText;
+  if (exactCreditsRequired) return Object.freeze({ outcome: 'credits_required', reason: 'credits_required' });
+  return Object.freeze({ outcome: 'rejected', reason: 'unclassified_failure' });
+}
+
+function runClaudeModelProbe({ command, cwd, alias, allowCreditsRequired = false }) {
+  const args = ['--safe-mode', '-p', '--model', alias, '--output-format', 'stream-json', '--verbose',
+    '--no-session-persistence', '--tools', '', '--permission-mode', 'dontAsk',
+    `Reply with exactly ${CLAUDE_MODEL_PROBE_SENTINEL}. Do not call tools.`];
+  const result = spawnSync(command, args, {
+    cwd,
+    encoding: 'utf8',
+    input: '',
+    timeout: 45_000,
+    maxBuffer: 4 * 1024 * 1024,
+    env: { ...process.env, LUCA_NATIVE_AGENT_EVIDENCE: '0' },
+  });
+  if (result.error) return Object.freeze({ outcome: 'rejected', reason: result.error.code === 'ETIMEDOUT' ? 'probe_timeout' : 'probe_spawn_error' });
+  return classifyClaudeModelProbe({
+    status: result.status,
+    stdout: String(result.stdout || ''),
+    stderr: String(result.stderr || ''),
+    expectedAlias: alias,
+    expectedCwd: cwd,
+    allowCreditsRequired,
+  });
+}
+
+export function resolveClaudeProjectionForLaunch({ root = DEFAULT_ROOT, role, probe }) {
+  if (typeof probe !== 'function') fail('Claude projection resolution requires a probe function');
+  const primary = resolveRole({ root, role, harness: 'claude', projectionMode: 'primary' }).projection;
+  const route = parseRouting(realpathSync(root)).tier[ROLE_CONTRACT[role].tier];
+  const primaryResult = probe(primary, Object.freeze({ allowCreditsRequired: route.fallback !== null }));
+  if (primaryResult?.outcome === 'success') {
+    return Object.freeze({ projectionMode: 'primary', primary, effective: primary, reason: null });
+  }
+  if (primaryResult?.outcome !== 'credits_required') {
+    fail(`CLAUDE_MODEL_PROBE_REJECTED projection=${primary} reason=${primaryResult?.reason || 'invalid_probe_result'}`);
+  }
+  let fallback;
+  try {
+    fallback = resolveRole({ root, role, harness: 'claude', projectionMode: 'fallback' }).projection;
+  } catch (error) {
+    fail(`CLAUDE_MODEL_PROBE_REJECTED projection=${primary} reason=no_yaml_fallback (${error.message})`);
+  }
+  const fallbackResult = probe(fallback, Object.freeze({ allowCreditsRequired: false }));
+  if (fallbackResult?.outcome !== 'success') {
+    fail(`CLAUDE_MODEL_PROBE_REJECTED projection=${fallback} reason=${fallbackResult?.reason || 'invalid_probe_result'}`);
+  }
+  return Object.freeze({ projectionMode: 'fallback', primary, effective: fallback, reason: 'credits_required' });
 }
 
 function nativeBinaryIdentity(command, harness) {
@@ -323,16 +501,10 @@ function nativeBinaryIdentity(command, harness) {
   };
 }
 
-export function prepareNativeLaunch({ root = DEFAULT_ROOT, harness, role, packet = null, dispatcherId, scratch = null }) {
-  const resolvedRole = resolveRole({ root, role, harness });
-  if (role === 'work-agent') {
-    if (!packet || !VALIDATED_PACKETS.has(packet)
-      || stable(packet.packet) !== packet.canonical_json
-      || sha256(Buffer.from(packet.canonical_json, 'utf8')) !== packet.sha256) {
-      fail('work-agent launch requires an intact validateWorkPacket/loadWorkPacket result');
-    }
-    assertNativeSmokePacket(packet.packet);
-  } else if (packet) fail(`${role} does not accept a work packet`);
+export function prepareNativeLaunch({ root = DEFAULT_ROOT, harness, role, packet = null, dispatcherId, scratch = null,
+  projectionMode = 'primary' }) {
+  const resolvedRole = resolveRole({ root, role, harness, projectionMode });
+  validateLaunchPacket(role, packet);
   boundedString(dispatcherId, 'dispatcherId', 256);
   const childPrompt = rolePayload(role, packet);
   const inputSha256 = sha256(Buffer.from(childPrompt, 'utf8'));
@@ -552,6 +724,18 @@ async function main() {
     const root = option(argv, '--root') || DEFAULT_ROOT;
     const harness = option(argv, '--harness');
     const role = option(argv, '--role');
+    const projectionOverrideFlags = ['--projection-mode', '--model', '--projection', '--fallback', '--fallback-model'];
+    const callerProjectionOverrides = argv.filter((value) => projectionOverrideFlags
+      .some((flag) => value === flag || value.startsWith(`${flag}=`)));
+    if (mode === 'launch' && callerProjectionOverrides.length > 0) {
+      fail(`launch does not accept caller-controlled ${callerProjectionOverrides[0].split('=')[0]}`);
+    }
+    const projectionModeFlags = argv.filter((value) => value === '--projection-mode').length;
+    const requestedProjectionMode = projectionModeFlags === 0 ? 'primary' : option(argv, '--projection-mode');
+    if ((mode === 'describe' || mode === 'describe-contract')
+      && (projectionModeFlags > 1 || !['primary', 'fallback'].includes(requestedProjectionMode))) {
+      fail('--projection-mode must be exactly primary or fallback');
+    }
     // Production activation applies only to the two routes introduced by U-008.
     // Keep this before packet loading, scratch creation and CLI identity probes so
     // DORMANT is mechanically zero-spawn even when no native CLI is installed.
@@ -570,7 +754,23 @@ async function main() {
     if (scratch) chmodSync(scratch, 0o700);
     let launch;
     try {
-      launch = prepareNativeLaunch({ root, harness, role, packet, dispatcherId, scratch });
+      let projectionMode = requestedProjectionMode;
+      if (mode === 'launch') {
+        validateLaunchPacket(role, packet);
+        if (harness === 'claude') {
+          const command = process.env.LUCA_CLAUDE_BIN || '/Users/luca/.local/bin/claude';
+          const resolution = resolveClaudeProjectionForLaunch({
+            root,
+            role,
+            probe: (alias, options) => runClaudeModelProbe({ command, cwd: scratch, alias, ...options }),
+          });
+          projectionMode = resolution.projectionMode;
+          if (resolution.reason === 'credits_required') {
+            process.stderr.write(`NATIVE_MODEL_FALLBACK primary=${resolution.primary} effective=${resolution.effective} reason=credits_required\n`);
+          }
+        }
+      }
+      launch = prepareNativeLaunch({ root, harness, role, packet, dispatcherId, scratch, projectionMode });
     } catch (error) {
       if (scratch) rmSync(scratch, { recursive: true, force: false });
       throw error;
@@ -604,7 +804,7 @@ async function main() {
     }
     return;
   }
-  fail('usage: agent-launcher.mjs validate-work-packet --packet FILE | describe|describe-contract|launch --harness claude|codex --role ROLE [--packet FILE] [--root DIR]');
+  fail('usage: agent-launcher.mjs validate-work-packet --packet FILE | describe|describe-contract [--projection-mode primary|fallback] | launch --harness claude|codex --role ROLE [--packet FILE] [--root DIR]');
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(SELF)) {
