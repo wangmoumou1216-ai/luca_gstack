@@ -215,7 +215,9 @@ check('wrong proposal hash is rejected with zero mutation', () => expectZeroMuta
   rejectionFixture, 'wrong hash', args => ({ ...args, rawPromptBytes: Buffer.from(rejectionFixture.prepared.exactReply.replace(rejectionFixture.prepared.proposalSha256, '0'.repeat(64))) }), /not exact/,
 ));
 check('wrong nonce is rejected with zero mutation', () => expectZeroMutationReject(
-  rejectionFixture, 'wrong nonce', args => ({ ...args, rawPromptBytes: Buffer.from(`${rejectionFixture.prepared.exactReply.slice(0, -1)}0`) }), /not exact/,
+  rejectionFixture, 'wrong nonce', args => ({ ...args, rawPromptBytes: Buffer.from(
+    `${rejectionFixture.prepared.exactReply.slice(0, -1)}${rejectionFixture.prepared.exactReply.endsWith('0') ? '1' : '0'}`,
+  ) }), /not exact/,
 ));
 check('normalized or newline reply is rejected with zero mutation', () => expectZeroMutationReject(
   rejectionFixture, 'normalized', args => ({ ...args, rawPromptBytes: Buffer.from(`${rejectionFixture.prepared.exactReply}\n`) }), /not exact/,
