@@ -1,0 +1,452 @@
+{
+  "$id": "https://luca.local/schemas/obligation-census.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "anchors": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "disposition": {
+            "const": "OBLIGATION"
+          },
+          "obligation_id": {
+            "pattern": "^OBL-[A-F0-9]{20}$",
+            "type": "string"
+          },
+          "source_anchor_hash": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "source_pointer": {
+            "pattern": "^[^#]+#L[1-9][0-9]*$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_pointer",
+          "source_anchor_hash",
+          "disposition",
+          "obligation_id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "approval_state": {
+      "const": "PENDING_G_OBLIGATION_SCOPE"
+    },
+    "kind": {
+      "const": "CANDIDATE"
+    },
+    "live_target_census_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "obligations": {
+      "items": {
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "S0_MACHINE_SAFETY"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "degradation_code": {
+                  "type": "null"
+                },
+                "enforcement": {
+                  "const": "MECHANICAL_DUAL_HARNESS"
+                },
+                "harnesses": {
+                  "const": [
+                    "claude",
+                    "codex"
+                  ]
+                },
+                "native_status": {
+                  "not": {
+                    "enum": [
+                      "MODEL_ONLY",
+                      "NATIVE_IMPOSSIBLE",
+                      "DEGRADED"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "S3_HUMAN_TASTE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "degradation_code": {
+                  "type": "null"
+                },
+                "enforcement": {
+                  "const": "HUMAN_GATE"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "native_status": {
+                  "const": "MISSING_WIRING"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "activation_probe": {
+                  "type": "null"
+                },
+                "executor": {
+                  "type": "null"
+                },
+                "verifier": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "native_status": {
+                  "const": "NATIVE_IMPOSSIBLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "class": {
+                  "const": "S4_NATIVE_CAPABILITY"
+                },
+                "degradation_code": {
+                  "const": "NATIVE_CAPABILITY_DIFFERENCE"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "activation_probe": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "class": {
+            "enum": [
+              "S0_MACHINE_SAFETY",
+              "S1_ROUTING_DISPATCH",
+              "S2_COMPLETION_QUALITY",
+              "S3_HUMAN_TASTE",
+              "S4_NATIVE_CAPABILITY",
+              "UNKNOWN"
+            ]
+          },
+          "classification_basis": {
+            "enum": [
+              "PROJECT_ISOLATION",
+              "STABLE_MEMORY",
+              "GIT_GLOBAL",
+              "RESOLVER_CONTAINMENT",
+              "PROJECT_GATE",
+              "PLAN",
+              "DISPATCH",
+              "QUALITY",
+              "HANDOFF",
+              "HARNESS_CAPABILITY",
+              "READ_ORDER",
+              "DONE",
+              "HUMAN_CHOICE",
+              "SLASH",
+              "WORKFLOW",
+              "WIDGET",
+              "SANDBOX_EVENT",
+              "UNRESOLVED"
+            ]
+          },
+          "degradation_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enforcement": {
+            "enum": [
+              "MECHANICAL_DUAL_HARNESS",
+              "DETERMINISTIC_ROUTE_LIVE_TRACE",
+              "INVOCATION_LEDGER",
+              "HUMAN_GATE",
+              "CAPABILITY_CENSUS_LIVE_EVIDENCE",
+              "UNRESOLVED"
+            ]
+          },
+          "executor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "harnesses": {
+            "items": {
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "id": {
+            "pattern": "^OBL-[A-F0-9]{20}$",
+            "type": "string"
+          },
+          "mutant_ids": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "native_status": {
+            "enum": [
+              "MISSING_WIRING",
+              "WIRED_UNPROBED",
+              "LIVE_VERIFIED",
+              "NATIVE_IMPOSSIBLE",
+              "MODEL_ONLY",
+              "DEGRADED"
+            ]
+          },
+          "owner": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "receipt_kind": {
+            "const": "OBLIGATION_LEDGER_ENTRY"
+          },
+          "review_state": {
+            "enum": [
+              "PROPOSED",
+              "HUMAN_APPROVED"
+            ]
+          },
+          "source_anchor_hash": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "source_pointer": {
+            "pattern": "^[^#]+#L[1-9][0-9]*$",
+            "type": "string"
+          },
+          "trigger": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "SOURCE_NORMATIVE_MARKER"
+              },
+              "markers": {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array",
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "markers"
+            ],
+            "type": "object"
+          },
+          "verifier": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "source_pointer",
+          "source_anchor_hash",
+          "class",
+          "trigger",
+          "harnesses",
+          "executor",
+          "activation_probe",
+          "verifier",
+          "mutant_ids",
+          "receipt_kind",
+          "degradation_code",
+          "owner",
+          "classification_basis",
+          "review_state",
+          "native_status",
+          "enforcement"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "plan_id": {
+      "const": "REX-20260811-001"
+    },
+    "schema_version": {
+      "const": "luca.obligation-census.v1"
+    },
+    "source_coverage": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor_count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "disposition": {
+            "enum": [
+              "OBLIGATIONS_FOUND",
+              "NO_NORMATIVE_MARKER_FOUND"
+            ]
+          },
+          "file_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "review_state": {
+            "const": "MACHINE_EXTRACTED_CANDIDATE"
+          }
+        },
+        "required": [
+          "path",
+          "file_sha256",
+          "anchor_count",
+          "disposition",
+          "review_state"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "source_manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "summary": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "class_counts": {
+          "additionalProperties": false,
+          "properties": {
+            "S0_MACHINE_SAFETY": { "minimum": 0, "type": "integer" },
+            "S1_ROUTING_DISPATCH": { "minimum": 0, "type": "integer" },
+            "S2_COMPLETION_QUALITY": { "minimum": 0, "type": "integer" },
+            "S3_HUMAN_TASTE": { "minimum": 0, "type": "integer" },
+            "S4_NATIVE_CAPABILITY": { "minimum": 0, "type": "integer" },
+            "UNKNOWN": { "minimum": 0, "type": "integer" }
+          },
+          "required": [
+            "S0_MACHINE_SAFETY",
+            "S1_ROUTING_DISPATCH",
+            "S2_COMPLETION_QUALITY",
+            "S3_HUMAN_TASTE",
+            "S4_NATIVE_CAPABILITY",
+            "UNKNOWN"
+          ],
+          "type": "object"
+        },
+        "native_status_counts": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "obligation_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "source_with_obligations": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_without_normative_markers": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "unknown_count": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_count",
+        "source_with_obligations",
+        "source_without_normative_markers",
+        "anchor_count",
+        "obligation_count",
+        "class_counts",
+        "unknown_count",
+        "native_status_counts"
+      ],
+      "type": "object"
+    },
+    "target_commit": {
+      "pattern": "^[a-f0-9]{40}$",
+      "type": "string"
+    },
+    "target_tree": {
+      "pattern": "^[a-f0-9]{40}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "kind",
+    "approval_state",
+    "target_commit",
+    "target_tree",
+    "source_manifest_sha256",
+    "live_target_census_sha256",
+    "source_coverage",
+    "anchors",
+    "obligations",
+    "summary"
+  ],
+  "title": "Pointer-only obligation census candidate",
+  "type": "object"
+}
