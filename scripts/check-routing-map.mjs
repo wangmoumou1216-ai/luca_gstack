@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, lstatSync, realpathSync, readlinkSync } from 'fs';
 import { execFileSync } from 'child_process';
 import { join } from 'path';
 import assert from 'assert/strict';
@@ -192,6 +192,23 @@ function u013OpenDesignErrors(sources) {
   return errors;
 }
 
+// U-013 / ASSERT-023: formal PR review must remain reachable from both harnesses.
+function u013ReviewFallbackErrors(sources) {
+  const errors = [];
+  const formalPrRow = sources.routingChain.split('\n').find((line) => /^\| 正式 PR \/ 整分支 \|/.test(line)) || '';
+  for (const anchor of ['/code-review', '$code-hygiene', 'Mode D', 'BASE_SHA', 'HEAD_SHA']) {
+    if (!formalPrRow.includes(anchor)) errors.push(`formal PR dual-harness row missing ${anchor}`);
+  }
+  if (!/代码审查环节（模式 D/.test(sources.codeHygiene)
+      || !/BASE_SHA\/HEAD_SHA/.test(sources.codeHygiene)) {
+    errors.push('shared code-hygiene Mode D fallback body is not executable');
+  }
+  if (!sources.codeHygieneLinkIsCanonical) {
+    errors.push('Codex code-hygiene skill link does not resolve to the canonical shared skill');
+  }
+  return errors;
+}
+
 const openDesignText = readFileSync('.claude/skills/office/open-design/SKILL.md', 'utf8');
 const u013Sources = {
   openDesign: openDesignText,
@@ -207,6 +224,33 @@ const u013Mutants = [
 ];
 for (const mutant of u013Mutants) {
   if (u013OpenDesignErrors(mutant.mutate(u013Sources)).length === 0) {
+    ssotErrors.push(`U-013 reverse mutant survived: ${mutant.id}`);
+  }
+}
+
+const routingChainText = readFileSync('.claude/skill-os/routing-chain-check.md', 'utf8');
+const codeHygieneText = readFileSync('.claude/skills/office/code-hygiene/SKILL.md', 'utf8');
+const codeHygieneLink = '.agents/skills/code-hygiene';
+let codeHygieneLinkIsCanonical = false;
+try {
+  codeHygieneLinkIsCanonical = lstatSync(codeHygieneLink).isSymbolicLink()
+    && readlinkSync(codeHygieneLink) === '../../.claude/skills/office/code-hygiene'
+    && realpathSync(join(codeHygieneLink, 'SKILL.md'))
+      === realpathSync('.claude/skills/office/code-hygiene/SKILL.md');
+} catch { /* current-state error is reported below */ }
+const u013ReviewSources = {
+  routingChain: routingChainText,
+  codeHygiene: codeHygieneText,
+  codeHygieneLinkIsCanonical,
+};
+for (const error of u013ReviewFallbackErrors(u013ReviewSources)) ssotErrors.push(`U-013 ${error}`);
+
+const u013ReviewMutants = [
+  { id: 'codex-review-fallback', mutate: (s) => ({ ...s, routingChain: s.routingChain.replace('$code-hygiene', 'code-hygiene unavailable') }) },
+  { id: 'codex-skill-link', mutate: (s) => ({ ...s, codeHygieneLinkIsCanonical: false }) },
+];
+for (const mutant of u013ReviewMutants) {
+  if (u013ReviewFallbackErrors(mutant.mutate(u013ReviewSources)).length === 0) {
     ssotErrors.push(`U-013 reverse mutant survived: ${mutant.id}`);
   }
 }

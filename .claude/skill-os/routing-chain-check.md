@@ -48,7 +48,7 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 | 设计决策文档 / 提案 / 计划 | `redteam`（按名调用） | 有显式 target 即以 target 为对象；框架治理场景产出落 `framework-audit/` |
 | 渲染页面 / 原型 | `/ux-audit` | 截图为强制输入（其 Phase 0 自拦） |
 | workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
-| 正式 PR / 整分支 | 提示用户可跑原生 `/code-review` | 计费、仅用户可触发，我不代跑 |
+| 正式 PR / 整分支 | Claude 原生 `/code-review`；Codex 或原生入口不可用时走共享 `code-hygiene` Mode D，传 `BASE_SHA` + `HEAD_SHA`（Claude `/code-hygiene`，Codex `$code-hygiene`） | “仅用户可触发”只约束 Claude 原生 `/code-review`；共享 fallback 必须保持双端可达 |
 | 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
 | **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——figma-layer / html-prototype 的自检不算数 |
 
