@@ -51,6 +51,7 @@ check G3 ".gitignore 覆盖 .DS_Store" "grep -q '\.DS_Store' .gitignore"
 check G4 ".gitignore 覆盖 .env" "grep -q '\.env' .gitignore"
 check G5 "pre-commit 存在且可执行" "[ -x .githooks/pre-commit ]"
 check G5b "commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）" "[ -x .githooks/commit-msg ]"
+check G5c "pre-commit 强制消费 exact local closeout" "[ -x .githooks/pre-commit-git-closeout ] && grep -q pre-commit-git-closeout .githooks/pre-commit"
 check G6 "pre-push exact G-REMOTE gate 存在且可执行" "[ -x .githooks/pre-push ]"
 echo ""
 

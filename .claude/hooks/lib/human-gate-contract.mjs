@@ -3,6 +3,7 @@ import { spawnSync } from 'child_process';
 import {
   closeSync,
   constants,
+  existsSync,
   fstatSync,
   lstatSync,
   mkdtempSync,
@@ -428,6 +429,7 @@ export function verifyHumanGateApproval({
   const bindingBytes = safeRead(root, slots.binding, proposal.receipt_root);
   const binding = parseReceipt(bindingBytes, 'binding');
   validateHumanGateBinding(binding, proposal, proposalBytes);
+  if (existsSync(join(root, ...safeSegments(slots.result)))) throw new Error('human gate approval already has a result');
   return {
     proposal,
     binding,

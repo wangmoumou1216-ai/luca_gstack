@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
@@ -10,6 +11,7 @@ import {
   readRemoteDescriptor,
   readRemoteReceipt,
   recordRemoteReadback,
+  remoteExecutionToken,
   verifyLocalCommit,
   verifyLocalIndex,
   verifyPrePush,
@@ -17,6 +19,12 @@ import {
   verifyRemotePre,
   writeExclusive,
 } from '../.claude/hooks/lib/git-closeout-contract.mjs';
+import { withoutLocalGitEnv } from '../.claude/hooks/lib/git-env.mjs';
+import {
+  recordHumanGateResult,
+  verifyHumanGateApproval,
+  verifyHumanGateChain,
+} from '../.claude/hooks/lib/human-gate-contract.mjs';
 
 const CONTRACTS = {
   'prepare-local': {
@@ -34,19 +42,40 @@ const CONTRACTS = {
   'verify-remote-pre': {
     required: ['repo', 'descriptor'],
   },
+  'execute-remote': {
+    required: ['repo', 'descriptor', 'gate-root', 'proposal-id', 'plan', 'envelope', 'writer'],
+  },
   'record-remote': {
-    required: ['repo', 'descriptor', 'out', 'observed-at'],
+    required: [
+      'repo', 'descriptor', 'out', 'observed-at', 'gate-root', 'proposal-id',
+      'plan', 'envelope', 'writer',
+    ],
   },
   'verify-remote-post': {
-    required: ['repo', 'descriptor', 'receipt'],
+    required: [
+      'repo', 'descriptor', 'receipt', 'gate-root', 'proposal-id', 'plan',
+      'envelope', 'writer',
+    ],
   },
   'pre-push': {
     required: [
       'repo', 'descriptor', 'remote-name', 'remote-url', 'gate-root',
-      'proposal-id', 'plan', 'envelope', 'writer',
+      'proposal-id', 'plan', 'envelope', 'writer', 'execution-token',
     ],
   },
 };
+
+function gateInputs(options, descriptorBytes) {
+  return {
+    receiptRoot: options['gate-root'],
+    secureWriterPath: resolve(options.writer),
+    gate: 'G-REMOTE',
+    proposalId: options['proposal-id'],
+    planBytes: readFileSync(resolve(options.plan)),
+    payloadBytes: descriptorBytes,
+    executionEnvelopeBytes: readFileSync(resolve(options.envelope)),
+  };
+}
 
 function reject(message, code = 'GIT_CLOSEOUT_REJECTED') {
   process.stderr.write(`${code} ${message}\n`);
@@ -111,26 +140,67 @@ try {
     const descriptor = readRemoteDescriptor(options.descriptor).value;
     const result = verifyRemotePre({ repo: options.repo, descriptor });
     process.stdout.write(`GIT_REMOTE_PRE_PASS ${descriptor.descriptor_id} ${result.before} ${result.after}\n`);
+  } else if (mode === 'execute-remote') {
+    const descriptor = readRemoteDescriptor(options.descriptor);
+    verifyRemotePre({ repo: options.repo, descriptor: descriptor.value });
+    const gate = verifyHumanGateApproval(gateInputs(options, descriptor.bytes));
+    const token = remoteExecutionToken(descriptor.bytes, gate);
+    const pushed = spawnSync('git', [
+      '-C', descriptor.value.repository.root, 'push', '--porcelain', '--',
+      descriptor.value.remote, descriptor.value.refspec,
+    ], {
+      encoding: 'utf8',
+      env: {
+        ...withoutLocalGitEnv(),
+        GIT_CLOSEOUT_DESCRIPTOR: resolve(options.descriptor),
+        GIT_CLOSEOUT_GATE_ROOT: options['gate-root'],
+        GIT_CLOSEOUT_GATE_PROPOSAL_ID: options['proposal-id'],
+        GIT_CLOSEOUT_GATE_PLAN: resolve(options.plan),
+        GIT_CLOSEOUT_GATE_ENVELOPE: resolve(options.envelope),
+        GIT_CLOSEOUT_GATE_WRITER: resolve(options.writer),
+        GIT_CLOSEOUT_EXECUTION_TOKEN: token,
+      },
+      maxBuffer: 32 * 1024 * 1024,
+    });
+    if (pushed.error || pushed.status !== 0) {
+      reject(String(pushed.error?.message || pushed.stderr || pushed.stdout || 'controlled push failed').trim(), 'REMOTE_EXECUTION_REJECTED');
+    }
+    process.stdout.write(`GIT_REMOTE_EXECUTED ${descriptor.value.descriptor_id} ${descriptor.value.before} ${descriptor.value.after}\n`);
   } else if (mode === 'record-remote') {
     const loaded = readRemoteDescriptor(options.descriptor);
+    const gate = verifyHumanGateApproval(gateInputs(options, loaded.bytes));
     const receipt = recordRemoteReadback({
       repo: options.repo,
       descriptor: loaded.value,
       descriptorBytes: loaded.bytes,
       observedAt: options['observed-at'],
+      gateApproval: gate,
     });
     writeExclusive(options.out, receipt);
-    process.stdout.write(`GIT_REMOTE_RECEIPT_CREATED ${receipt.receipt_id} ${receipt.after}\n`);
+    const receiptBytes = jsonBytes(receipt);
+    const result = recordHumanGateResult({
+      ...gateInputs(options, loaded.bytes),
+      readbackBytes: receiptBytes,
+      postStateSha256: receipt.readback_sha256,
+      observedAt: options['observed-at'],
+    });
+    process.stdout.write(`GIT_REMOTE_RECEIPT_CREATED ${receipt.receipt_id} ${receipt.after} ${result.result.result_id}\n`);
   } else if (mode === 'verify-remote-post') {
     const descriptor = readRemoteDescriptor(options.descriptor);
-    const receipt = readRemoteReceipt(options.receipt).value;
+    const receipt = readRemoteReceipt(options.receipt);
+    const chain = verifyHumanGateChain({
+      ...gateInputs(options, descriptor.bytes),
+      readbackBytes: receipt.bytes,
+      expectedPostStateSha256: receipt.value.readback_sha256,
+    });
     const result = verifyRemotePost({
       repo: options.repo,
       descriptor: descriptor.value,
       descriptorBytes: descriptor.bytes,
-      receipt,
+      receipt: receipt.value,
+      gateApproval: chain,
     });
-    process.stdout.write(`GIT_REMOTE_POST_PASS ${result.receipt_id} ${result.after}\n`);
+    process.stdout.write(`GIT_REMOTE_POST_PASS ${result.receipt_id} ${result.after} ${chain.result.result_id}\n`);
   } else if (mode === 'pre-push') {
     const descriptor = readRemoteDescriptor(options.descriptor);
     const result = verifyPrePush({
@@ -145,6 +215,7 @@ try {
       planBytes: readFileSync(resolve(options.plan)),
       envelopeBytes: readFileSync(resolve(options.envelope)),
       writerPath: options.writer,
+      executionToken: options['execution-token'],
     });
     process.stdout.write(`G_REMOTE_PRE_PUSH_PASS ${descriptor.value.descriptor_id} ${result.proposal_sha256} ${result.binding_sha256}\n`);
   }

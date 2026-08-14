@@ -462,6 +462,9 @@ class PromotionGitGuardTests(unittest.TestCase):
             self.git(root, "config", "user.name", "U011 Fixture")
             (root / ".githooks").mkdir()
             shutil.copy2(ROOT / ".githooks" / "pre-commit", root / ".githooks" / "pre-commit")
+            closeout_stub = root / ".githooks" / "pre-commit-git-closeout"
+            closeout_stub.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            closeout_stub.chmod(0o755)
             (root / "memory" / "scripts").mkdir(parents=True)
             shutil.copy2(SCRIPTS / "promotion_provenance.py", root / "memory" / "scripts" / "promotion_provenance.py")
             semantic = root / "memory" / "semantic"

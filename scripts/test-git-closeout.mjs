@@ -99,11 +99,15 @@ function installRuntime(root) {
   for (const dir of ['scripts', '.githooks', '.claude/hooks/lib']) mkdirSync(join(root, dir), { recursive: true });
   for (const [source, target] of [
     ['scripts/git-closeout.mjs', 'scripts/git-closeout.mjs'],
+    ['.githooks/pre-commit', '.githooks/pre-commit'],
+    ['.githooks/pre-commit-git-closeout', '.githooks/pre-commit-git-closeout'],
     ['.githooks/pre-push', '.githooks/pre-push'],
     ['.claude/hooks/lib/git-closeout-contract.mjs', '.claude/hooks/lib/git-closeout-contract.mjs'],
     ['.claude/hooks/lib/git-env.mjs', '.claude/hooks/lib/git-env.mjs'],
     ['.claude/hooks/lib/human-gate-contract.mjs', '.claude/hooks/lib/human-gate-contract.mjs'],
   ]) copyFileSync(resolve(sourceRoot, source), join(root, target));
+  chmodSync(join(root, '.githooks/pre-commit'), 0o755);
+  chmodSync(join(root, '.githooks/pre-commit-git-closeout'), 0o755);
   chmodSync(join(root, '.githooks/pre-push'), 0o755);
   chmodSync(join(root, 'scripts/git-closeout.mjs'), 0o755);
   git(root, ['config', 'core.hooksPath', '.githooks']);
@@ -178,26 +182,39 @@ try {
     readFileSync(resolve(sourceRoot, '.claude/hooks/lib/git-closeout-contract.mjs'), 'utf8'),
     readFileSync(resolve(sourceRoot, 'scripts/git-closeout.mjs'), 'utf8'),
   ].join('\n');
-  assert.doesNotMatch(forbiddenSource, /(?:git|rawGit)\([^\n]+\['(?:push|pull|rebase|stash|reset|clean)'/);
-  pass('Git closeout implementation has no mutation command surface');
+  assert.doesNotMatch(forbiddenSource, /(?:pull|rebase|stash|reset|clean)|--force|--no-verify/);
+  assert.match(readFileSync(cliSource, 'utf8'), /'push', '--porcelain', '--'/);
+  pass('Git closeout has one fixed non-force push surface and no destructive/history options');
 
   {
     const repo = fixtureRepo('local-exact');
     const patch = approvedPatchPath(repo);
     const descriptor = join(repo, 'local-descriptor.json');
-    writeFileSync(join(repo, 'shared.txt'), 'base1\nplan2\nbase3\nUSER-WIP\n');
+    writeFileSync(join(repo, 'shared.txt'), 'base1\nplan2\nbase3\n');
     prepareLocal(repo, patch, descriptor);
-    const worktreeBefore = readFileSync(join(repo, 'shared.txt'));
     git(repo, ['apply', '--cached', patch]);
     const result = verifyLocal(repo, patch, descriptor);
     assert.match(result.stdout, /GIT_LOCAL_INDEX_PASS/);
-    assert.deepEqual(readFileSync(join(repo, 'shared.txt')), worktreeBefore);
-    pass('same-file unknown WIP remains unstaged while exact approved hunk passes');
+    pass('clean exact approved hunk passes');
     git(repo, ['commit', '-q', '-m', 'fixture: exact local closeout']);
     const post = cli(['verify-local-commit', '--repo', repo, '--descriptor', descriptor, '--commit', 'HEAD']);
     assert.match(post.stdout, /GIT_LOCAL_COMMIT_PASS/);
-    assert.match(git(repo, ['status', '--short']).stdout, /shared\.txt/);
-    pass('local commit read-back binds parent/tree/path while WIP remains');
+    pass('local commit read-back binds parent/tree/path');
+  }
+
+  {
+    const repo = fixtureRepo('local-same-file-wip');
+    const patch = approvedPatchPath(repo);
+    const descriptor = join(repo, 'local-descriptor.json');
+    writeFileSync(join(repo, 'shared.txt'), 'base1\nplan2\nbase3\nUSER-WIP\n');
+    prepareLocal(repo, patch, descriptor);
+    git(repo, ['apply', '--cached', patch]);
+    const indexBefore = git(repo, ['write-tree']).stdout.trim();
+    const worktreeBefore = readFileSync(join(repo, 'shared.txt'));
+    const result = verifyLocal(repo, patch, descriptor, {}, 2);
+    expectFailure('same-file unknown WIP is BLOCKED_DIRTY_OVERLAP', result, /BLOCKED_DIRTY_OVERLAP/);
+    assert.equal(git(repo, ['write-tree']).stdout.trim(), indexBefore);
+    assert.deepEqual(readFileSync(join(repo, 'shared.txt')), worktreeBefore);
   }
 
   {
@@ -214,6 +231,33 @@ try {
     assert.equal(git(repo, ['write-tree']).stdout.trim(), indexBefore);
     assert.deepEqual(readFileSync(join(repo, 'shared.txt')), bytesBefore);
     pass('failed local checker is zero-mutation');
+  }
+
+  {
+    const consumer = readFileSync(resolve(sourceRoot, '.githooks/pre-commit'), 'utf8');
+    const invocation = consumer.indexOf('/.githooks/pre-commit-git-closeout"');
+    const fastBranch = consumer.indexOf('if [ "${FAST_COMMIT');
+    assert.ok(invocation >= 0 && fastBranch >= 0 && invocation < fastBranch);
+    const repo = fixtureRepo('local-mandatory-consumer');
+    const patch = approvedPatchPath(repo);
+    const descriptor = join(repo, 'local-descriptor.json');
+    writeFileSync(join(repo, 'shared.txt'), 'base1\nplan2\nbase3\n');
+    prepareLocal(repo, patch, descriptor);
+    installRuntime(repo);
+    git(repo, ['apply', '--cached', patch]);
+    const indexBefore = git(repo, ['write-tree']).stdout.trim();
+    const omitted = git(repo, ['commit', '-q', '-m', 'fixture: omitted closeout'], { expected: 1 });
+    expectFailure('actual pre-commit blocks an omitted local closeout consumer', omitted, /GIT_LOCAL_CLOSEOUT_REQUIRED/);
+    assert.equal(git(repo, ['write-tree']).stdout.trim(), indexBefore);
+    const helper = run(join(repo, '.githooks/pre-commit-git-closeout'), [], {
+      cwd: repo,
+      env: {
+        GIT_CLOSEOUT_LOCAL_DESCRIPTOR: descriptor,
+        GIT_CLOSEOUT_LOCAL_PATCH: patch,
+      },
+    });
+    assert.match(helper.stdout, /GIT_LOCAL_INDEX_PASS/);
+    pass('mandatory pre-commit consumer accepts only the exact descriptor and patch');
   }
 
   {
@@ -372,6 +416,7 @@ try {
       '--remote-name', 'beta', '--remote-url', remote.beta,
       '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
       '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
+      '--execution-token', '0'.repeat(64),
     ], {
       input: `${descriptor.source_ref} ${descriptor.after} ${descriptor.destination_ref} ${descriptor.before}\n`,
       expected: 2,
@@ -382,6 +427,7 @@ try {
       '--remote-name', 'alpha', '--remote-url', remote.alpha,
       '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
       '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
+      '--execution-token', '0'.repeat(64),
     ], {
       input: `${descriptor.source_ref} ${descriptor.after} refs/heads/wrong ${descriptor.before}\n`,
       expected: 2,
@@ -390,9 +436,17 @@ try {
   }
 
   {
-    const pushed = git(remote.repo, ['push', 'alpha', 'refs/heads/main:refs/heads/main'], { env: gateEnv });
-    assert.match(`${pushed.stdout}\n${pushed.stderr}`, /G_REMOTE_PRE_PUSH_PASS/);
-    pass('fresh exact G-REMOTE approval permits one exact real pre-push update');
+    const descriptor = JSON.parse(descriptorBytes.toString('utf8'));
+    const forced = git(remote.repo, ['push', '--force', 'alpha', 'refs/heads/main:refs/heads/main'], { env: gateEnv, expected: 1 });
+    expectFailure('direct force command cannot reuse a valid G-REMOTE approval', forced, /G_REMOTE_REQUIRED/);
+    assert.equal(git(remote.repo, ['ls-remote', '--refs', remote.alpha, 'refs/heads/main']).stdout.split(/\s+/)[0], descriptor.before);
+    const pushed = cli([
+      'execute-remote', '--repo', remote.repo, '--descriptor', remote.descriptor,
+      '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
+      '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
+    ]);
+    assert.match(pushed.stdout, /GIT_REMOTE_EXECUTED/);
+    pass('fresh exact G-REMOTE approval permits one controlled non-force update');
   }
 
   const receipt = join(remote.repo, 'remote-receipt.json');
@@ -400,14 +454,21 @@ try {
     const recorded = cli([
       'record-remote', '--repo', remote.repo, '--descriptor', remote.descriptor,
       '--out', receipt, '--observed-at', new Date().toISOString(),
+      '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
+      '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
     ]);
-    assert.match(recorded.stdout, /GIT_REMOTE_RECEIPT_CREATED/);
+    assert.match(recorded.stdout, /GIT_REMOTE_RECEIPT_CREATED .* hgr-/);
+    const receiptValue = JSON.parse(readFileSync(receipt, 'utf8'));
+    assert.equal(receiptValue.gate, 'G-REMOTE');
+    assert.equal(receiptValue.gate_proposal_id, proposal.proposal.proposal_id);
     const verified = cli([
       'verify-remote-post', '--repo', remote.repo, '--descriptor', remote.descriptor,
       '--receipt', receipt,
+      '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
+      '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
     ]);
-    assert.match(verified.stdout, /GIT_REMOTE_POST_PASS/);
-    pass('exact descriptor post-push live read-back and receipt agree');
+    assert.match(verified.stdout, /GIT_REMOTE_POST_PASS .* hgr-/);
+    pass('remote read-back receipt and human-gate result form one verified chain');
   }
 
   {
@@ -427,6 +488,8 @@ try {
     const stale = cli([
       'verify-remote-post', '--repo', remote.repo, '--descriptor', remote.descriptor,
       '--receipt', receipt,
+      '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
+      '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
     ], { expected: 2 });
     expectFailure('post receipt replay fails after remote advances again', stale, /REMOTE_READBACK_REJECTED/);
   }

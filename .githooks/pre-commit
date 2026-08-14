@@ -10,6 +10,10 @@ if [ -z "$STAGED_FILES" ]; then
   exit 0
 fi
 
+# Every non-empty commit must consume the frozen exact-hunk descriptor before
+# any FAST_COMMIT branch or repository-specific checker can run.
+"$(git rev-parse --show-toplevel)/.githooks/pre-commit-git-closeout"
+
 FOUND_SECRETS=0
 
 for FILE in $STAGED_FILES; do

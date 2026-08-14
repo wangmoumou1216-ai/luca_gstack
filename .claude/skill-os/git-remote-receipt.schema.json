@@ -19,6 +19,11 @@
     "after",
     "commit_range",
     "force",
+    "gate",
+    "gate_proposal_id",
+    "gate_proposal_sha256",
+    "gate_binding_id",
+    "gate_binding_sha256",
     "readback_sha256",
     "observed_at"
   ],
@@ -42,6 +47,11 @@
       "items": { "$ref": "#/$defs/sha1" }
     },
     "force": { "const": false },
+    "gate": { "const": "G-REMOTE" },
+    "gate_proposal_id": { "type": "string", "pattern": "^hgp-[a-f0-9]{64}$" },
+    "gate_proposal_sha256": { "$ref": "#/$defs/sha256" },
+    "gate_binding_id": { "type": "string", "pattern": "^hgb-[a-f0-9]{64}$" },
+    "gate_binding_sha256": { "$ref": "#/$defs/sha256" },
     "readback_sha256": { "$ref": "#/$defs/sha256" },
     "observed_at": { "type": "string", "format": "date-time" }
   },

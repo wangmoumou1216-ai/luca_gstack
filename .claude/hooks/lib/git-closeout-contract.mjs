@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, isAbsolute, join, resolve } from 'path';
+import { isAbsolute, join, resolve } from 'path';
 import { withoutLocalGitEnv } from './git-env.mjs';
 import { verifyHumanGateApproval } from './human-gate-contract.mjs';
 
@@ -85,10 +85,6 @@ function parseCanonicalJson(bytes, label) {
   }
   if (!jsonBytes(value).equals(bytes)) fail('INVALID_DESCRIPTOR', `${label} is not canonical JSON`);
   return value;
-}
-
-function readCanonical(path, label) {
-  return { bytes: readFileSync(resolve(path)), value: parseCanonicalJson(readFileSync(resolve(path)), label) };
 }
 
 function writeExclusive(path, value) {
@@ -208,7 +204,7 @@ function validateChange(change) {
   if (typeof change.path !== 'string' || !change.path || change.path.startsWith('/') || change.path.includes('\0')) {
     fail('INVALID_DESCRIPTOR', 'local change path must be a non-empty repository-relative path');
   }
-  if (![change.old_mode, change.new_mode].every((mode) => /^\d{6}$/.test(mode))) fail('INVALID_DESCRIPTOR', 'invalid Git mode');
+  if (![change.old_mode, change.new_mode].every((mode) => /^[0-7]{6}$/.test(mode))) fail('INVALID_DESCRIPTOR', 'invalid Git mode');
   if (![change.old_blob, change.new_blob].every((blob) => SHA1_RE.test(blob))) fail('INVALID_DESCRIPTOR', 'invalid blob id');
   if (change.old_blob === ZERO_SHA1 && change.new_blob === ZERO_SHA1) fail('INVALID_DESCRIPTOR', 'change cannot be absent on both sides');
 }
@@ -295,6 +291,9 @@ export function verifyLocalIndex({ repo, descriptor, patchBytes }) {
     .split('\0').filter(Boolean).sort();
   const expectedPaths = descriptor.changes.map((item) => item.path);
   if (stable(actualPaths) !== stable(expectedPaths)) fail('BLOCKED_DIRTY_OVERLAP', 'staged path set is not exact');
+  const worktree = rawGit(repository.root, ['diff', '--quiet', '--', ...expectedPaths]);
+  if (worktree.status === 1) fail('BLOCKED_DIRTY_OVERLAP', 'descriptor-owned path contains unstaged or unknown WIP');
+  if (worktree.status !== 0) fail('BLOCKED_DIRTY_OVERLAP', 'cannot prove descriptor-owned worktree paths equal the approved index');
   return { index_tree: actual, paths: actualPaths };
 }
 
@@ -444,7 +443,8 @@ export function validateRemoteReceipt(value) {
   exactKeys(value, [
     'schema_version', 'receipt_id', 'descriptor_id', 'descriptor_sha256', 'repository',
     'remote', 'url', 'refspec', 'source_ref', 'destination_ref', 'before', 'after',
-    'commit_range', 'force', 'readback_sha256', 'observed_at',
+    'commit_range', 'force', 'gate', 'gate_proposal_id', 'gate_proposal_sha256',
+    'gate_binding_id', 'gate_binding_sha256', 'readback_sha256', 'observed_at',
   ], 'remote receipt');
   if (value.schema_version !== REMOTE_RECEIPT_SCHEMA) fail('INVALID_RECEIPT', 'wrong remote receipt schema');
   validateRepository(value.repository);
@@ -457,6 +457,11 @@ export function validateRemoteReceipt(value) {
   if (![value.before, value.after].every((oid) => SHA1_RE.test(oid))) fail('INVALID_RECEIPT', 'invalid receipt SHA');
   if (!Array.isArray(value.commit_range) || value.commit_range.length === 0 || value.commit_range.some((oid) => !SHA1_RE.test(oid))) fail('INVALID_RECEIPT', 'invalid receipt range');
   if (value.commit_range.at(-1) !== value.after || value.force !== false) fail('INVALID_RECEIPT', 'receipt range/force is invalid');
+  if (value.gate !== 'G-REMOTE' || !/^hgp-[a-f0-9]{64}$/.test(value.gate_proposal_id)
+      || !/^hgb-[a-f0-9]{64}$/.test(value.gate_binding_id)
+      || !SHA256_RE.test(value.gate_proposal_sha256) || !SHA256_RE.test(value.gate_binding_sha256)) {
+    fail('INVALID_RECEIPT', 'receipt human-gate binding is invalid');
+  }
   canonicalInstant(value.observed_at, 'observed_at');
   const body = { ...value };
   delete body.receipt_id;
@@ -464,9 +469,15 @@ export function validateRemoteReceipt(value) {
   return value;
 }
 
-export function recordRemoteReadback({ repo, descriptor, descriptorBytes, observedAt }) {
+export function recordRemoteReadback({ repo, descriptor, descriptorBytes, observedAt, gateApproval }) {
   validateRemoteDescriptor(descriptor);
   if (!jsonBytes(descriptor).equals(descriptorBytes)) fail('INVALID_DESCRIPTOR', 'descriptor bytes are not canonical or exact');
+  if (!gateApproval || gateApproval.proposal?.gate !== 'G-REMOTE'
+      || !/^hgp-[a-f0-9]{64}$/.test(gateApproval.proposal?.proposal_id || '')
+      || !/^hgb-[a-f0-9]{64}$/.test(gateApproval.binding?.binding_id || '')
+      || !SHA256_RE.test(gateApproval.proposalSha256 || '') || !SHA256_RE.test(gateApproval.bindingSha256 || '')) {
+    fail('REMOTE_READBACK_REJECTED', 'exact G-REMOTE approval link is required');
+  }
   const repository = repositoryIdentity(repo);
   if (!sameRepository(repository, descriptor.repository)) fail('REMOTE_READBACK_REJECTED', 'repository identity drift');
   const url = remoteUrl(repository.root, descriptor.remote);
@@ -489,23 +500,38 @@ export function recordRemoteReadback({ repo, descriptor, descriptorBytes, observ
     after: descriptor.after,
     commit_range: descriptor.commit_range,
     force: false,
+    gate: 'G-REMOTE',
+    gate_proposal_id: gateApproval.proposal.proposal_id,
+    gate_proposal_sha256: gateApproval.proposalSha256,
+    gate_binding_id: gateApproval.binding.binding_id,
+    gate_binding_sha256: gateApproval.bindingSha256,
     readback_sha256: readbackSha,
     observed_at: observedAt,
   };
   return validateRemoteReceipt({ schema_version: body.schema_version, receipt_id: `grr-${stableHash(body)}`, ...Object.fromEntries(Object.entries(body).slice(1)) });
 }
 
-export function verifyRemotePost({ repo, descriptor, descriptorBytes, receipt }) {
+export function verifyRemotePost({ repo, descriptor, descriptorBytes, receipt, gateApproval }) {
   validateRemoteDescriptor(descriptor);
   validateRemoteReceipt(receipt);
-  const expected = recordRemoteReadback({ repo, descriptor, descriptorBytes, observedAt: receipt.observed_at });
+  const expected = recordRemoteReadback({ repo, descriptor, descriptorBytes, observedAt: receipt.observed_at, gateApproval });
   if (stable(expected) !== stable(receipt)) fail('REMOTE_READBACK_REJECTED', 'remote receipt does not match live read-back');
   return { receipt_id: receipt.receipt_id, after: receipt.after, readback_sha256: receipt.readback_sha256 };
 }
 
+export function remoteExecutionToken(descriptorBytes, gateApproval) {
+  if (!Buffer.isBuffer(descriptorBytes) || !gateApproval) fail('REMOTE_EXECUTOR_REQUIRED', 'controlled remote executor inputs are missing');
+  return sha256(Buffer.from(stable({
+    descriptor_sha256: sha256(descriptorBytes),
+    proposal_sha256: gateApproval.proposalSha256,
+    binding_sha256: gateApproval.bindingSha256,
+    executor: 'git-closeout-execute-remote-v1',
+  }), 'utf8'));
+}
+
 export function verifyPrePush({
   repo, descriptor, descriptorBytes, remoteName, remoteUrlArg, pushInput,
-  gateRoot, proposalId, planBytes, envelopeBytes, writerPath,
+  gateRoot, proposalId, planBytes, envelopeBytes, writerPath, executionToken,
 }) {
   const pre = verifyRemotePre({ repo, descriptor });
   if (remoteName !== descriptor.remote || remoteUrlArg !== descriptor.url) fail('REMOTE_DESCRIPTOR_DRIFT', 'pre-push remote name/URL does not match descriptor');
@@ -527,6 +553,9 @@ export function verifyPrePush({
     payloadBytes: descriptorBytes,
     executionEnvelopeBytes: envelopeBytes,
   });
+  if (executionToken !== remoteExecutionToken(descriptorBytes, gate)) {
+    fail('REMOTE_EXECUTOR_REQUIRED', 'push was not launched by the controlled non-force executor');
+  }
   return { ...pre, proposal_sha256: gate.proposalSha256, binding_sha256: gate.bindingSha256 };
 }
 
