@@ -156,7 +156,7 @@
     ".claude/hooks/session-sync.mjs": [
       "增量重拦",
       "SESSION_SYNC_REARM",
-      "pin 优先",
+      "真实 session 只认 pin",
       "MEMORY_ROOT 仓"
     ],
     ".claude/workflows/framework-evolution-scout.js": [
