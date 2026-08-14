@@ -1,0 +1,73 @@
+{
+  "schema_version": "luca.obligation-mutation-matrix.v1",
+  "plan_id": "REX-20260811-001",
+  "production_entrypoints": {
+    "task_start": {
+      "events": ["UserPromptSubmit"],
+      "command_fragment": "scripts/evolution/obligation-task-start-hook.mjs",
+      "receipt_kind": "OBLIGATION_LEDGER_ENTRY"
+    },
+    "stop": {
+      "events": ["Stop"],
+      "command_fragment": "scripts/evolution/obligation-stop-hook.mjs",
+      "receipt_kind": "OBLIGATION_LEDGER_AGGREGATE"
+    },
+    "verify": {
+      "path": "scripts/verify.sh",
+      "command_fragment": "verify-obligation-runtime.mjs l1 --entrypoint verify",
+      "lane": "L1_HERMETIC"
+    },
+    "pre_commit": {
+      "path": ".githooks/pre-commit",
+      "command_fragment": "verify-obligation-runtime.mjs l1 --entrypoint pre-commit",
+      "lane": "L1_HERMETIC"
+    },
+    "ci": {
+      "path": ".github/workflows/ci.yml",
+      "command_fragment": "verify-obligation-runtime.mjs l1 --entrypoint ci",
+      "lane": "L1_HERMETIC"
+    }
+  },
+  "mutants": [
+    {
+      "id": "MUT-RUNTIME-CONSUMER-REMOVED",
+      "expected_killers": ["ACTIVATION-CONSUMER", "REAL-BEHAVIOR"]
+    },
+    {
+      "id": "MUT-RUNTIME-MATCHER-WRONG",
+      "expected_killers": ["ACTIVATION-MATCHER"]
+    },
+    {
+      "id": "MUT-RUNTIME-TRUST-UNTRUSTED",
+      "expected_killers": ["ACTIVATION-CODEX-TRUST"]
+    },
+    {
+      "id": "MUT-RUNTIME-RECEIPT-REMOVED",
+      "expected_killers": ["INDEX-SCHEMA", "LEDGER-EVIDENCE"]
+    },
+    {
+      "id": "MUT-RUNTIME-SOURCE-REMOVED",
+      "expected_killers": ["REVERSE-DENOMINATOR"]
+    },
+    {
+      "id": "MUT-RUNTIME-REAL-NOOP",
+      "expected_killers": ["REAL-BEHAVIOR"]
+    },
+    {
+      "id": "MUT-RUNTIME-EXIT1-NORMALIZED",
+      "expected_killers": ["ACTIVATION-FAIL-CLOSED"]
+    },
+    {
+      "id": "MUT-RUNTIME-NOT-RUN-PASS",
+      "expected_killers": ["RESULT-LATTICE"]
+    },
+    {
+      "id": "MUT-RUNTIME-S0-DEGRADED",
+      "expected_killers": ["RESULT-LATTICE", "INDEX-SCHEMA"]
+    },
+    {
+      "id": "MUT-RUNTIME-S3-DEGRADED",
+      "expected_killers": ["RESULT-LATTICE", "INDEX-SCHEMA"]
+    }
+  ]
+}

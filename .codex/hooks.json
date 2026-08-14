@@ -23,6 +23,16 @@
             "additionalContextLimit": 0
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "luca_gstack: 编译本轮 obligation",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/scripts/evolution/obligation-task-start-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "additionalContextLimit": 0
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -55,6 +65,15 @@
             "type": "command",
             "statusMessage": "luca_gstack: 自成长捕获",
             "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "luca_gstack: 核验 obligation ledger",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/scripts/evolution/obligation-stop-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }

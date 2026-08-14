@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "luca.obligation-runtime.schema.v1",
+  "title": "REX U-010 obligation runtime artifacts",
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "NOT_APPLICABLE",
+        "BLOCKED",
+        "DEGRADED",
+        "NOT_RUN",
+        "UNKNOWN"
+      ]
+    },
+    "class": {
+      "enum": [
+        "S0_MACHINE_SAFETY",
+        "S1_ROUTING_DISPATCH",
+        "S2_COMPLETION_QUALITY",
+        "S3_HUMAN_TASTE",
+        "S4_NATIVE_CAPABILITY"
+      ]
+    },
+    "lane": {
+      "enum": [
+        "L1_HERMETIC",
+        "L2_LOCAL_LIVE",
+        "L3_EXTERNAL"
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "uri", "sha256"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "index_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_pointer",
+        "source_anchor_hash",
+        "class",
+        "trigger",
+        "harnesses",
+        "executor",
+        "activation_probe",
+        "verifier",
+        "mutant_ids",
+        "receipt_kind",
+        "degradation_code",
+        "owner",
+        "enforcement",
+        "approved_native_status",
+        "wiring_state",
+        "applicability"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^OBL-[A-F0-9]{20}$" },
+        "source_pointer": { "type": "string", "pattern": "^.+#L[1-9][0-9]*$" },
+        "source_anchor_hash": { "$ref": "#/$defs/sha256" },
+        "class": { "$ref": "#/$defs/class" },
+        "trigger": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "markers"],
+          "properties": {
+            "kind": { "const": "SOURCE_NORMATIVE_MARKER" },
+            "markers": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "harnesses": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "enum": ["claude", "codex"] }
+        },
+        "executor": { "const": "scripts/evolution/obligation-runtime.mjs#recordEvidence" },
+        "activation_probe": { "const": "scripts/evolution/verify-obligation-runtime.mjs#probeProductionActivation" },
+        "verifier": { "const": "scripts/evolution/obligation-runtime.mjs#aggregateLedger" },
+        "mutant_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "receipt_kind": { "const": "OBLIGATION_LEDGER_ENTRY" },
+        "degradation_code": {
+          "oneOf": [
+            { "type": "null" },
+            { "const": "NATIVE_CAPABILITY_DIFFERENCE" }
+          ]
+        },
+        "owner": { "type": "string", "minLength": 1 },
+        "enforcement": { "type": "string", "minLength": 1 },
+        "approved_native_status": { "const": "MISSING_WIRING" },
+        "wiring_state": { "const": "WIRED_UNPROBED" },
+        "applicability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "key"],
+          "properties": {
+            "kind": {
+              "enum": [
+                "GLOBAL_RUNTIME",
+                "SKILL_ROUTE",
+                "AGENT_ROLE",
+                "WORKFLOW_ROUTE",
+                "HOOK_EVENT",
+                "ACTION_CONTEXT"
+              ]
+            },
+            "key": {
+              "oneOf": [
+                { "type": "null" },
+                { "type": "string", "minLength": 1 }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "plan_id", "approved", "records"],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-index.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "approved": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "census_sha256",
+            "implementation_receipt_sha256",
+            "target_commit",
+            "target_tree",
+            "source_manifest_sha256",
+            "obligation_count"
+          ],
+          "properties": {
+            "census_sha256": { "$ref": "#/$defs/sha256" },
+            "implementation_receipt_sha256": { "$ref": "#/$defs/sha256" },
+            "target_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+            "target_tree": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+            "source_manifest_sha256": { "$ref": "#/$defs/sha256" },
+            "obligation_count": { "const": 1808 }
+          }
+        },
+        "records": {
+          "type": "array",
+          "minItems": 1808,
+          "maxItems": 1808,
+          "items": { "$ref": "#/$defs/index_record" }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "invocation_id",
+        "harness",
+        "lane",
+        "event",
+        "cwd",
+        "task_sha256",
+        "route"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-task-context.v1" },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "harness": { "enum": ["claude", "codex", "ci", "pre-commit", "manual"] },
+        "lane": { "$ref": "#/$defs/lane" },
+        "event": { "type": "string", "minLength": 1 },
+        "cwd": { "type": "string", "minLength": 1 },
+        "task_sha256": { "$ref": "#/$defs/sha256" },
+        "route": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["complete", "skills", "roles", "workflows", "actions", "paths"],
+          "properties": {
+            "complete": { "type": "boolean" },
+            "skills": { "type": "array", "items": { "type": "string" } },
+            "roles": { "type": "array", "items": { "type": "string" } },
+            "workflows": { "type": "array", "items": { "type": "string" } },
+            "actions": { "type": "array", "items": { "type": "string" } },
+            "paths": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "context", "index_sha256", "entries", "aggregate"],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-ledger.v1" },
+        "context": { "type": "object" },
+        "index_sha256": { "$ref": "#/$defs/sha256" },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "obligation_id",
+              "source_pointer",
+              "class",
+              "applicable",
+              "applicability_state",
+              "result",
+              "lane",
+              "evidence"
+            ],
+            "properties": {
+              "obligation_id": { "type": "string", "pattern": "^OBL-[A-F0-9]{20}$" },
+              "source_pointer": { "type": "string" },
+              "class": { "$ref": "#/$defs/class" },
+              "applicable": { "type": "boolean" },
+              "applicability_state": { "enum": ["APPLICABLE", "NOT_APPLICABLE", "UNKNOWN"] },
+              "result": { "$ref": "#/$defs/result" },
+              "lane": { "$ref": "#/$defs/lane" },
+              "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+            }
+          }
+        },
+        "aggregate": { "$ref": "#/$defs/result" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "entrypoint",
+        "lane",
+        "executed_checks",
+        "classes",
+        "result",
+        "evidence"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-execution-receipt.v1" },
+        "entrypoint": {
+          "enum": ["verify", "pre-commit", "ci", "task-start", "stop", "local-live", "external"]
+        },
+        "lane": { "$ref": "#/$defs/lane" },
+        "executed_checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/class" }
+        },
+        "result": { "$ref": "#/$defs/result" },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/evidence" }
+        }
+      }
+    }
+  ]
+}

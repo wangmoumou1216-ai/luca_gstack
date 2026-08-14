@@ -31,6 +31,14 @@
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/scripts/evolution/obligation-task-start-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -61,6 +69,14 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/scripts/evolution/obligation-stop-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }

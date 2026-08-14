@@ -98,6 +98,9 @@ jobs:
       - name: Harness detection + Codex viability registry
         run: npm run check:harness
 
+      - name: Obligation runtime L1 execution-set receipt
+        run: node scripts/evolution/verify-obligation-runtime.mjs l1 --entrypoint ci
+
       # claude5-unhobble C7：远端补 B1/S18/S19——守 CLAUDE.md 预算/parity 锚/skill 注册
       # 的三个关键 checker 此前只在本地 verify.sh（FAST_COMMIT 可跳），CI 兜底为事后信号
       - name: CLAUDE.md byte budget (B1 remote)

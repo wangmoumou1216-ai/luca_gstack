@@ -72,6 +72,10 @@ fi
 
 echo "pre-commit: no secrets detected ✓"
 
+# This receipt is not inherited from verify.sh and FAST_COMMIT cannot bypass it.
+echo "pre-commit: running obligation runtime L1 receipt ..."
+node scripts/evolution/verify-obligation-runtime.mjs l1 --entrypoint pre-commit
+
 # Framework health: aggregates all check/test scripts.
 # Skip via FAST_COMMIT=1 only when committing audit notes / docs unrelated to
 # framework logic.
