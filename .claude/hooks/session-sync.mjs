@@ -41,7 +41,7 @@ const sessionId =
   (payload.session_id && String(payload.session_id).replace(/[^\w-]/g, '').slice(0, 36)) ||
   `date-${dateStr}`;
 
-// ---- 当前项目：pin 优先，并收紧为只认 TURN_ACTIVE identity+epoch snapshot ----
+// ---- 当前项目：真实 session 只认 pin，并收紧为只认 TURN_ACTIVE identity+epoch snapshot ----
 // Stop hook 直接读写磁盘，不经过 PreToolUse；因此绝不能回退共享展示软链。
 const PROJECTS_ROOT = SUBSTRATE_PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖
 let project = '';
