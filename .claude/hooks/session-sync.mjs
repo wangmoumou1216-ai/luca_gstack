@@ -220,8 +220,7 @@ try {
     }
     writeCheckpointIfInProgress();
     const reason = buildReason({ rearm, deltaEdit, deltaTool, ticket: active?.ticket || null, ticketError });
-    // harness 门（P0/WS-A0 接线，2026-07-25）：decision:block 是 CC 专有动词，正向确定是 Codex
-    // 时降级为纯文本 advisory（claude/unknown 照常 block——失效方向偏向保住自成长捕获强制）。
+    // harness 门：decision:block 是 Claude/Codex 共享控制面；当前三态都结构化 block。
     let canBlock = true;
     try { canBlock = (await import('./lib/harness.mjs')).canEmitControlVerb(process.env); } catch { }
     if (canBlock) {

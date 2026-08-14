@@ -35,9 +35,8 @@
 import { readFileSync, existsSync, lstatSync, realpathSync } from 'fs';
 import { join, relative, resolve } from 'path';
 
-// harness 门（P0/WS-A0 接线，2026-07-25）：CC 专有强制动词（permissionDecision:deny /
-// updatedInput）只在**正向确定是 Codex** 时降级为纯文本 advisory——claude/unknown 照常输出，
-// 失效方向偏向"保住强制"（详见 lib/harness.mjs 头注）。动态 import 失败即视为可输出（fail-open）。
+// harness 门（P0/WS-A0 接线）：permissionDecision:deny / updatedInput 是 Claude/Codex 共享控制面，
+// 三态都结构化输出；保留 capability 分支用于未来 harness，动态 import 失败仍视为可输出（fail-open）。
 let _canEmitVerb = true;
 try {
   const h = await import('./lib/harness.mjs');
@@ -47,7 +46,7 @@ try {
 function out(obj) {
   try {
     if (!_canEmitVerb) {
-      // Codex：吐 harness-agnostic 纯文本到 stderr，绝不吐它解析不了的 CC JSON
+      // 未来不支持结构化控制面的 harness：退为可见 advisory；当前 Claude/Codex 不走此分支。
       const o = obj?.hookSpecificOutput || obj || {};
       // Round5 NIT 修：updatedInput 嵌在 hookSpecificOutput（即 o）里，原查 obj.updatedInput 恒空 →
       // 友好文案是死分支、永远整体转储裸 JSON。改查 o.updatedInput 让"路径应重定向到"分支可达。

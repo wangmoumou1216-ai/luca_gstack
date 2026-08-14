@@ -36,13 +36,19 @@ const NEED = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', '
 const have = hooks ? Object.keys(hooks.hooks) : [];
 ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NEED.filter((e) => !have.includes(e))}`);
 
-// S3 每个 hook 都经 adapter，且引用的脚本真实存在
+// S3 每个 hook 都经 adapter，且引用的目标脚本真实存在。目标既可能是
+// .claude/hooks/*，也可能是 obligation 等 repo script；不能把目录写死成前者。
 {
   let bad = [];
   for (const ev of have) for (const g of hooks.hooks[ev]) for (const h of g.hooks) {
-    if (!/codex-hook-adapter\.mjs/.test(h.command)) { bad.push(`${ev}:未走adapter`); continue; }
-    const m = h.command.match(/\.claude\/hooks\/([a-z-]+\.mjs)/);
-    if (!m || !existsSync(join(ROOT, '.claude', 'hooks', m[1]))) bad.push(`${ev}:脚本缺失`);
+    const refs = [...String(h.command || '').matchAll(/"\$\(git rev-parse --show-toplevel\)\/([^"\n]+\.mjs)"/g)]
+      .map((m) => m[1]);
+    const adapters = refs.filter((p) => p === '.codex/codex-hook-adapter.mjs');
+    const targets = refs.filter((p) => p !== '.codex/codex-hook-adapter.mjs');
+    if (adapters.length !== 1) { bad.push(`${ev}:未精确走一次adapter`); continue; }
+    if (targets.length !== 1 || !existsSync(join(ROOT, targets[0]))) {
+      bad.push(`${ev}:目标脚本缺失(${targets.join('|') || 'none'})`);
+    }
   }
   ok('S3 全部 hook 经 adapter 且目标脚本存在', bad.length === 0, bad.join(','));
 }
@@ -431,8 +437,8 @@ if (liveReady) {
       grew || markerHit,
       `日志 ${liveLogBefore}→${sizeAfter}B${grew ? '' : '（未增长）'}；`
       + `本仓标记=${markerHit}；`
-      + `注意：codex 0.146.0 实测**不加载仓库级 hooks.json**（.codex/.agents/.claude 三处 × trust/bypass 全组合均不触发），`
-      + `须把 .codex/hooks.json 的条目并入 ~/.codex/hooks.json 才会生效`);
+      + `若本仓 hook 未触发：先确认 .codex/hooks.json 顶层只有 description/hooks，再运行 `
+      + `node scripts/codex-trust-hooks.mjs --dry-run 检查仓库条目授信；不要复制到用户级全局 hooks`);
     ok('L2 codex exec 正常结束（无 hook 导致的中断）', r.status === 0,
       `exit=${r.status} | ${(blob.match(/"message":\s*"([^"]{0,140})/) || [])[1] || ''}`);
     ok('L3 hook 未向 Codex 吐出它解析不了的内容（无 parser 报错）',

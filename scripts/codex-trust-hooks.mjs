@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // 给 luca_gstack 自己的 Codex hook 条目授信（2026-08-06）。
 //
-// 【背景】Codex 对 ~/.codex/hooks.json 的**每个条目**单独要求授信，未授信时 `codex exec`
+// 【背景】Codex 对合并后发现的 hook **每个条目**单独要求授信；本仓定义来自仓库级
+// `.codex/hooks.json`，trust state 写在用户配置。未授信时 `codex exec`
 // **静默跳过**（实测：注册后未授信 → 本仓 hook 日志零增长）。授信常规路径是交互式 TUI 的
 // hooks 审阅界面。本脚本用 **Codex 自己的 app-server API** 完成同一件事，便于自动化与复核：
 //   1. `hooks/list` → 拿到每个条目的 `key` 与 **codex 自己算出的 `currentHash`**
@@ -56,7 +57,7 @@ const INIT = {
 const listMsgs = await rpc([INIT, { jsonrpc: '2.0', id: 2, method: 'hooks/list', params: {} }]);
 const listed = listMsgs.find((m) => m.id === 2)?.result?.data || [];
 const all = listed.flatMap((g) => g.hooks || []);
-if (!all.length) { console.error('[trust] hooks/list 未返回条目——检查 ~/.codex/hooks.json'); process.exit(2); }
+if (!all.length) { console.error('[trust] hooks/list 未返回条目——检查仓库 .codex/hooks.json 顶层合法性、仓库发现与 trust 状态'); process.exit(2); }
 
 const ours = all.filter((h) => OURS.test(h.command || ''));
 const foreign = all.filter((h) => !OURS.test(h.command || ''));

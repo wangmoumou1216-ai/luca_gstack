@@ -79,8 +79,8 @@ const SUPPORTS_ADDITIONAL_CONTEXT = new Set([
   'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'SubagentStart',
 ]);
 
-// 本 adapter 经**用户级** ~/.codex/hooks.json 注册（B1：仓库级不被加载），因此会在所有项目里
-// 被调用。只在本仓范围内工作，其它项目静默放行——全局注册不等于全局生效。
+// 本 adapter 由仓库级 `.codex/hooks.json` 注册并随仓库版本化；不应复制到用户级全局配置。
+// inRepo 仍作为纵深防御：即便未来误被全局注册，也只在本仓范围内工作、其它项目静默放行。
 // 2026-08-05 评审：macOS 默认卷**大小写不敏感**，而 relative() 大小写敏感 ——
 // 从 `/…/muse/LUCAGSTACK/` 进来时 rel=`../LUCAGSTACK` → 判不在仓内 → **人明明在仓内，
 // 6 个 hook 全部静默跳过**（项目隔离/路由/自成长捕获同时消失）且零线索。

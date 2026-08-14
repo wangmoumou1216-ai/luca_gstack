@@ -387,7 +387,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 > 斜杠语法无效；但同一批 skill 经 `.agents/skills/` 软链**完全可用**，用 **`$<skill-name>`**（如
 > `$quick-research`）或 `/skills` 选择器调用，读到的是同一份 SKILL.md。`.claude/commands/` 里那 23 个
 > 文件是薄包装（正文即"读 SKILL.md 并执行"），故**功能无缺口、仅语法不同**。
-> subagent（`.codex/agents/*.toml`）**仓库级即可被发现**（与 hooks 不同），按名派发；
+> subagent（`.codex/agents/*.toml`）与 hooks（`.codex/hooks.json`）都可在**仓库级被发现**，按名/事件派发；
 > 工具名里的连字符会转成下划线（`preflight-agent`→`preflight_agent`），注册名不变。
 >
 > **Codex 实测事实速查**（全模块矩阵与证据见 `framework-audit/2026-08-05-codex-module-matrix.md`）：
@@ -829,7 +829,7 @@ Only report this checklist to the user if it affects the work or the user asks.
   （`.codex/agents/*.toml`）确实支持 `model` 与 `model_reasoning_effort` 字段。
   **但档位一律落在 `model_reasoning_effort`，绝不写死模型名**——模型名随账户/订阅失效
   （实证：本机 config.toml 的 `gpt-5.6-sol` 与另两个历史可用名在订阅到期后全部被服务端拒绝），
-  而 effort 枚举（`none/minimal/low/medium/high/xhigh`）稳定。档位的不变量是**相对序**，
+  而模型接受的 effort 枚举（`none/low/medium/high/xhigh/max`）稳定，`minimal` 会被模型拒绝。档位的不变量是**相对序**，
   Claude 侧投影为模型别名、Codex 侧投影为 effort。
   唯一真值源：`.claude/skill-os/model-routing.yaml` 的 `codex:` 段（`tier_to_effort` + `agents`）；
   一致性由 `scripts/verify-codex-wiring.mjs` 的 S8b 守护（含"禁止硬编码 model 名"断言）。

@@ -420,7 +420,8 @@ console.log(JSON.stringify({ hookSpecificOutput: {
     ok('G0a missing parser/lease module denies only apply_patch with native recovery text',
       patchRun.status === 0 && patchOut?.hookSpecificOutput?.permissionDecision === 'deny'
         && /retry apply_patch/.test(patchOut.hookSpecificOutput.permissionDecisionReason || '')
-        && /Bash and read-only inspection remain available/.test(patchOut.hookSpecificOutput.permissionDecisionReason || ''),
+        && /Bash and read-only inspection remain available/.test(patchOut.hookSpecificOutput.permissionDecisionReason || '')
+        && !/\b(?:Edit|Write|MultiEdit)\b/.test(patchOut.hookSpecificOutput.permissionDecisionReason || ''),
       `status=${patchRun.status} stdout=${String(patchRun.stdout).slice(0, 200)}`);
     ok('G0b missing patch modules leave the Bash lane executable',
       bashRun.status === 0 && parse(bashRun.stdout)?.hookSpecificOutput?.updatedInput?.command === 'ls',

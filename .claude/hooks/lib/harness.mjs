@@ -4,15 +4,10 @@
 // 而不是静默失效。与 memroot.mjs（store 解析）/ project-substrate.mjs（项目身份）分属不同
 // concern，保持 deep-module 边界。
 //
-// 【降级方向 — 本模块最关键的安全设计（2026-07-25 深审修正）】
-// CC 专有强制动词（decision:block / permissionDecision:deny / updatedInput）**只在正向确定是
-// Codex 时才降级为纯文本**；claude 与 unknown 一律照常输出。
-//
-// 为什么不是"unknown 也关"（我的首版设计，已被推翻）：unknown 的现实来源绝大多数是
-// **CLAUDE_PROJECT_DIR 被剥掉的 Claude 会话**（测试沙箱、异常 spawn、cwd 漂移），而非 Codex。
-// 若 unknown 关掉强制动词，后果是**主路径上静默丢失治理强制**（Stop 的自成长捕获环不再拦、
-// PreToolUse 不再 deny 落错项目）——这比"在未知 harness 上多吐一行它解析不了的 JSON"严重得多。
-// 失效方向要偏向**保住强制**，不偏向保住整洁。
+// 【共享控制面 — 2026-08-05/06 活体与二进制证据】
+// Claude 与当前 Codex 都原生接受 decision:block、permissionDecision:deny，以及与
+// permissionDecision:allow 同发的 updatedInput。三态（claude/codex/unknown）一律保留这些强制动词；
+// 只有 Workflow 原语与 AskUserQuestion widget 仍是 Claude 专有能力。失效方向固定为保住治理强制。
 
 export const HARNESS = {
   CLAUDE: 'claude',
@@ -21,7 +16,7 @@ export const HARNESS = {
 };
 
 // 正向检测：CLAUDE_PROJECT_DIR 是 Claude Code 注入的标志性 env（本仓 6 个 hook 全依赖它）。
-// Codex 侧 env 名**未对实装核验**（计划 §2b），故只在明确出现时才判 codex，绝不猜。
+// Codex 侧 env 只在明确出现时才判 codex，绝不从 cwd 或工具名猜 harness。
 export function detectHarness(env = process.env) {
   if (env.CLAUDE_PROJECT_DIR) return HARNESS.CLAUDE;
   if (env.CODEX_HOME || env.CODEX_SANDBOX || env.CODEX_SESSION_ID) return HARNESS.CODEX;
@@ -30,10 +25,8 @@ export function detectHarness(env = process.env) {
 
 // ── 「输出方言」与「实际 CLI」是两个问题（2026-08-04，勿混用）────────────────
 // detectHarness() 回答的是**该按哪套协议输出**。当 .codex/codex-hook-adapter.mjs 在中间层
-// 代偿时，它注入 CLAUDE_PROJECT_DIR 让 hook 走完整 CC 强制路径、再由 adapter 翻译成 Codex
-// 方言 —— 此时 detectHarness() 返回 'claude' 是**正确**的，不是 bug：hook 就该吐 CC 形动词。
-// 若让 detectHarness 认 LUCA_ACTUAL_HARNESS 而返回 codex，hook 会改吐 stderr advisory，
-// adapter 将无 CC JSON 可翻译 —— 强制动词反而整体丢失。故两者必须分开。
+// 代偿时，它注入 CLAUDE_PROJECT_DIR 让 hook 走共享结构化控制路径，再由 adapter 做最小 schema 修补。
+// 此时 detectHarness() 返回 'claude' 是**正确**的，不是 bug；两端的控制动词本就同字段同语义。
 //
 // 需要知道**实际跑在哪个 CLI** 的消费方（遥测、诊断、luca app 的 CLI 切换开关、
 // 按厂商分流的行为）一律用 actualHarness()，绝不去猜 CLAUDE_PROJECT_DIR。
@@ -61,10 +54,8 @@ export function isAdapted(env = process.env) {
 //   3. ~~只对 shell / apply_patch 分发~~ → 工具名实测是 **`Bash`** 与 `apply_patch`（不是 `shell`）
 // 因此「能力有无」不足以描述，需再加一层「方言」——否则会把"翻译一下就能用"误判成"用不了"。
 //
-// 【向后兼容硬约束】旧字段（blockVerb/writeHook/inputMutation/workflow/askUserWidget）的取值
-// **一律保持原样不动**：blockVerb 语义是"能否原样输出 **CC 形**动词"，对 Codex 确实为 false，
-// 原值正确；scripts/test-harness.mjs 的 H7a/H7b/H8 断言这些取值，本次修改必须保持全绿。
-// 新能力一律以**新增字段**表达，调用方按需迁移，绝不改写既有语义（不缩减任何现有逻辑）。
+// 旧 capability 字段仍保留给调用方，但其事实值按当前 harness 校正：blockVerb/writeHook/
+// inputMutation 在 Claude、Codex 与 unknown 都为 true；workflow/askUserWidget 仍只在 Claude 为 true。
 // 实测工具名（matcher='.*' 抓真实载荷）：shell 执行 = 'Bash'（**不是 'shell'**）
 export const CODEX_PRE_TOOL_SCOPE = ['Bash', 'apply_patch'];
 
@@ -77,12 +68,11 @@ export const CODEX_WRITE_TOOLS = ['apply_patch'];
 // Codex 原生接受 {decision:'block', reason}。若按本函数去翻译成 continue:false，
 // 语义会反转成"终止本轮"（自成长捕获不发生 + 用户回合被杀）。零调用点，不要接线。
 export function stopDialect() {
-  return 'claude';   // 两家一致；保留函数仅为不破坏可能的外部引用
+  return 'shared';   // 两家一致；保留函数仅为不破坏可能的外部引用
 }
 
 // PreToolUse 的 deny 动词**两家都支持**且字段名相同（hookSpecificOutput.permissionDecision）。
-// 与 canEmitControlVerb 的区别：那个门管的是"CC 专有动词整体"（含 Codex 不认的 block/updatedInput），
-// 这个只管 deny —— Codex 实测可用，不该被一并关掉（首版正是在这里白白丢了强制）。
+// deny 与 canEmitControlVerb 覆盖的 block/updatedInput 都是双端共享控制面；保留独立函数只是兼容调用方。
 export function canEmitDeny(env = process.env) {
   return true;
 }
@@ -102,21 +92,20 @@ export function isEditTool(toolName) {
   return /^(Write|Edit|MultiEdit|NotebookEdit|apply_patch)$/.test(String(toolName || ''));
 }
 
-// 能力表。CC 专有原语 = **非-codex 即视为可用**（见上：失效方向偏向保住强制）。
+// 能力表。结构化治理控制面三态都可用；仅交互/编排 widget 需要正向确认 Claude。
 export function capabilities(harness = detectHarness()) {
   const notCodex = harness !== HARNESS.CODEX;
   return {
     harness,
-    // ── 新增（2026-08-04 实测）：方言层，旧字段语义不变 ──
+    // ── 共享控制面 + 分发范围 ──
     denyVerb: true,                                        // PreToolUse deny：两家同字段同语义
-    stopVerbDialect: notCodex ? 'claude' : 'codex',        // Stop 拦截：能力都有，方言不同
+    stopVerbDialect: 'shared',                             // Stop 拦截：两家同字段同语义
     preToolScope: notCodex ? null : CODEX_PRE_TOOL_SCOPE,  // null = 全工具分发
     contextInjection: true,                                // 两家都能注入（Codex 走 additionalContext）
     subagents: true,                                       // Codex multi_agent = stable+enabled
-    // CC 专有强制原语（正向确定是 Codex 时才判为不可用）
-    blockVerb: notCodex,        // Stop hook 的 decision:block（自成长强制捕获）
-    writeHook: notCodex,        // PreToolUse 对文件写工具名触发（project-scope-guard 拦截）
-    inputMutation: notCodex,    // updatedInput（docs 重定向）
+    blockVerb: true,            // Stop hook 的 decision:block（双端共享）
+    writeHook: true,            // PreToolUse 写工具经各自 matcher/adapter 分发
+    inputMutation: true,        // updatedInput + permissionDecision:allow（双端共享）
     // 以下两项**没有安全的兜底方向**（吐一个 Codex 执行不了的 Workflow(...)/AskUserQuestion
     // 调用不会"多一层保护"，只会让 agent 卡住），故仍门于 claude 正向确定。
     workflow: harness === HARNESS.CLAUDE,
@@ -128,8 +117,7 @@ export function capabilities(harness = detectHarness()) {
 }
 
 // 强制动词是否允许原样输出。**已接线的生产调用点**：session-sync 的 decision:block、
-// project-scope-guard 的 permissionDecision:deny / updatedInput。false（=正向 Codex）时
-// 调用方必须改吐 harness-agnostic 纯文本。
+// project-scope-guard 的 permissionDecision:deny / updatedInput。当前三态均返回 true。
 export function canEmitControlVerb(env = process.env) {
   return capabilities(detectHarness(env)).blockVerb;
 }
