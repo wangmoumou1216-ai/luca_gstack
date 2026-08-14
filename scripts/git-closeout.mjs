@@ -43,12 +43,9 @@ const CONTRACTS = {
     required: ['repo', 'descriptor'],
   },
   'execute-remote': {
-    required: ['repo', 'descriptor', 'gate-root', 'proposal-id', 'plan', 'envelope', 'writer'],
-  },
-  'record-remote': {
     required: [
-      'repo', 'descriptor', 'out', 'observed-at', 'gate-root', 'proposal-id',
-      'plan', 'envelope', 'writer',
+      'repo', 'descriptor', 'out', 'gate-root', 'proposal-id', 'plan',
+      'envelope', 'writer',
     ],
   },
   'verify-remote-post': {
@@ -165,26 +162,26 @@ try {
     if (pushed.error || pushed.status !== 0) {
       reject(String(pushed.error?.message || pushed.stderr || pushed.stdout || 'controlled push failed').trim(), 'REMOTE_EXECUTION_REJECTED');
     }
-    process.stdout.write(`GIT_REMOTE_EXECUTED ${descriptor.value.descriptor_id} ${descriptor.value.before} ${descriptor.value.after}\n`);
-  } else if (mode === 'record-remote') {
-    const loaded = readRemoteDescriptor(options.descriptor);
-    const gate = verifyHumanGateApproval(gateInputs(options, loaded.bytes));
+    const observedAt = new Date().toISOString();
     const receipt = recordRemoteReadback({
       repo: options.repo,
-      descriptor: loaded.value,
-      descriptorBytes: loaded.bytes,
-      observedAt: options['observed-at'],
+      descriptor: descriptor.value,
+      descriptorBytes: descriptor.bytes,
+      observedAt,
       gateApproval: gate,
     });
     writeExclusive(options.out, receipt);
     const receiptBytes = jsonBytes(receipt);
     const result = recordHumanGateResult({
-      ...gateInputs(options, loaded.bytes),
+      ...gateInputs(options, descriptor.bytes),
       readbackBytes: receiptBytes,
       postStateSha256: receipt.readback_sha256,
-      observedAt: options['observed-at'],
+      observedAt,
     });
-    process.stdout.write(`GIT_REMOTE_RECEIPT_CREATED ${receipt.receipt_id} ${receipt.after} ${result.result.result_id}\n`);
+    process.stdout.write(
+      `GIT_REMOTE_EXECUTED ${descriptor.value.descriptor_id} ${descriptor.value.before} ${descriptor.value.after}`
+      + ` ${receipt.receipt_id} ${result.result.result_id}\n`,
+    );
   } else if (mode === 'verify-remote-post') {
     const descriptor = readRemoteDescriptor(options.descriptor);
     const receipt = readRemoteReceipt(options.receipt);

@@ -4,6 +4,7 @@ import { spawnSync } from 'child_process';
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -411,6 +412,39 @@ try {
 
   {
     const descriptor = JSON.parse(descriptorBytes.toString('utf8'));
+    const bypassReceipt = join(remote.repo, 'bypass-remote-receipt.json');
+    git(remote.repo, [
+      'push', '--force', '--no-verify', 'alpha',
+      'refs/heads/main:refs/heads/main',
+    ]);
+    assert.equal(
+      git(remote.repo, ['ls-remote', '--refs', remote.alpha, 'refs/heads/main']).stdout.split(/\s+/)[0],
+      descriptor.after,
+    );
+    const smuggled = cli([
+      'record-remote', '--repo', remote.repo, '--descriptor', remote.descriptor,
+      '--out', bypassReceipt, '--observed-at', new Date().toISOString(),
+      '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
+      '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
+    ], { expected: 2 });
+    expectFailure(
+      'no-verify remote mutation cannot be post-hoc wrapped as an approved result',
+      smuggled,
+      /REMOTE_EXECUTOR_REQUIRED|unknown mode: record-remote/,
+    );
+    assert.equal(existsSync(bypassReceipt), false);
+    run('git', [
+      '--git-dir', remote.alpha, 'update-ref', 'refs/heads/main', descriptor.before,
+    ]);
+    assert.equal(
+      git(remote.repo, ['ls-remote', '--refs', remote.alpha, 'refs/heads/main']).stdout.split(/\s+/)[0],
+      descriptor.before,
+    );
+  }
+
+  const receipt = join(remote.repo, 'remote-receipt.json');
+  {
+    const descriptor = JSON.parse(descriptorBytes.toString('utf8'));
     const wrongRemote = cli([
       'pre-push', '--repo', remote.repo, '--descriptor', remote.descriptor,
       '--remote-name', 'beta', '--remote-url', remote.beta,
@@ -442,22 +476,15 @@ try {
     assert.equal(git(remote.repo, ['ls-remote', '--refs', remote.alpha, 'refs/heads/main']).stdout.split(/\s+/)[0], descriptor.before);
     const pushed = cli([
       'execute-remote', '--repo', remote.repo, '--descriptor', remote.descriptor,
+      '--out', receipt,
       '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
       '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
     ]);
-    assert.match(pushed.stdout, /GIT_REMOTE_EXECUTED/);
-    pass('fresh exact G-REMOTE approval permits one controlled non-force update');
+    assert.match(pushed.stdout, /GIT_REMOTE_EXECUTED .* grr-.* hgr-/);
+    pass('fresh exact G-REMOTE approval atomically executes, reads back, and publishes its result');
   }
 
-  const receipt = join(remote.repo, 'remote-receipt.json');
   {
-    const recorded = cli([
-      'record-remote', '--repo', remote.repo, '--descriptor', remote.descriptor,
-      '--out', receipt, '--observed-at', new Date().toISOString(),
-      '--gate-root', gateRoot, '--proposal-id', proposal.proposal.proposal_id,
-      '--plan', planPath, '--envelope', envelopePath, '--writer', writer,
-    ]);
-    assert.match(recorded.stdout, /GIT_REMOTE_RECEIPT_CREATED .* hgr-/);
     const receiptValue = JSON.parse(readFileSync(receipt, 'utf8'));
     assert.equal(receiptValue.gate, 'G-REMOTE');
     assert.equal(receiptValue.gate_proposal_id, proposal.proposal.proposal_id);

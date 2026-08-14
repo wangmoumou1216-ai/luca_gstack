@@ -34,22 +34,24 @@
   `before..after` 的有序 exact commit range、`force=false`、生成时间与 expiry。
 - before 必须是 after 的祖先。non-fast-forward、remote/ref/URL 漂移、commit range 漂移、过期或 replay
   都使 descriptor 失效；必须重新 fetch/read-back 并生成新 proposal。
-- `G-REMOTE` 只授权其 exact descriptor。唯一有效执行入口是 `git-closeout.mjs execute-remote`；它只构造
-  descriptor 的 remote/refspec，命令面不暴露 force 或任意额外 Git 参数。
-- push 后从 remote 重新读取 destination ref；remote receipt 必须绑定 descriptor SHA、before/after、
+- `G-REMOTE` 只授权其 exact descriptor。唯一有效执行入口是 `git-closeout.mjs execute-remote`；它在同一
+  进程内完成 precheck、固定 non-force push、read-back、receipt 与 gate result，命令面不暴露 force、
+  任意额外 Git 参数或事后补录入口。
+- 受控 push 后从 remote 重新读取 destination ref；remote receipt 必须绑定 descriptor SHA、before/after、
   exact range、URL/refspec 与 read-back。checker 重新查询 live remote 后才可判 PASS。
 - 远端补偿也必须形成新的 descriptor 和新的顶层批准；不得用 force 猜修。
 
 ## 4. 工具边界
 
-- `scripts/git-closeout.mjs` 的只读模式负责 descriptor/receipt；只有 `execute-remote` 可执行一次 exact
-  non-force push。它不得执行 pull、rebase、stash、reset、clean 或 history rewrite。
+- `scripts/git-closeout.mjs` 的只读模式负责 descriptor/verification；只有 `execute-remote` 可执行一次 exact
+  non-force push 并发布对应 receipt/result。它不得执行 pull、rebase、stash、reset、clean 或 history rewrite。
 - `.githooks/pre-push` 对标准 Git 路径 fail-closed，除 descriptor、push stdin、有效 `G-REMOTE`
   proposal/binding 外还要求受控 executor token；直接 `git push`（含冗余 `--force`）不能复用批准。
 - Git 原生 `--no-verify` 会绕过任何 client hook，这是 Git 能力边界，不能伪装成仓库内可消除。它被本
-  contract 明令禁止，也不是有效 executor：无法产生 human-gate result；一旦越权移动 ref，before/after
-  read-back 会使 descriptor 漂移并阻断完成。要阻止恶意 unsandboxed 进程本身，必须另有 remote/server
-  protection；client hook 只提供 cooperative harness 的机械门，不能虚报成服务器权限边界。
+  contract 明令禁止，也不是有效 executor：公开 CLI 不提供独立 post-hoc receipt/result 写入面；一旦越权
+  移动 ref，受控 executor 的 precheck 只会得到 replay/drift，不能把该状态补录成完成。要阻止恶意
+  unsandboxed 进程本身，必须另有 remote/server protection；client hook 只提供 cooperative harness 的
+  机械门，不能虚报成服务器权限边界。
 - post-push remote receipt 必须写入 proposal/binding hashes，并由同一 `G-REMOTE` 发布 result；post verifier
   同时重查 live remote 与完整 proposal→binding→result chain。
 - `scripts/sync.sh` 只做 memory/evolution readiness inspection，不 stage、commit、pull 或 push。
