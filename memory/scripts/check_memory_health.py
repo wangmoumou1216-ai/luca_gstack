@@ -114,10 +114,21 @@ def main() -> int:
                 for aid in sorted(allow_ids - sf_ids):
                     errors.append(f"static-fallback-allowlist: {aid} 未出现在 CLAUDE.md Static Fallback 节（镜像缺失）")
 
+    # Stable-memory validity is not enough: a well-formed direct edit is still
+    # forbidden.  Check both the live worktree transition and every committed
+    # transition since the provenance schema activated.  History validation is
+    # Git-ancestry based and therefore works in a fresh clone without local keys.
+    try:
+        from promotion_provenance import ProvenanceError, verify_committed_history, verify_worktree
+        verify_committed_history(ROOT)
+        verify_worktree(ROOT)
+    except (ProvenanceError, OSError) as exc:
+        errors.append(f"stable-memory provenance: {exc}")
+
     if errors:
         print(json.dumps({"status": "FAIL", "errors": errors}, ensure_ascii=False, indent=2))
         return 1
-    print(json.dumps({"status": "PASS", "checked": str(PROMOTED)}, ensure_ascii=False))
+    print(json.dumps({"status": "PASS", "checked": str(PROMOTED), "provenance": "PASS"}, ensure_ascii=False))
     return 0
 
 

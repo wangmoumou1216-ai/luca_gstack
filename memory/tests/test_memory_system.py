@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 import os
 import subprocess
@@ -10,6 +11,17 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _isolated_test_env(extra=None):
+    """Remove Git hook context before spawning temp-store subprocesses."""
+    env = os.environ.copy()
+    for key in tuple(env):
+        if key.startswith("GIT_"):
+            env.pop(key, None)
+    if extra:
+        env.update(extra)
+    return env
 
 
 def _load_daily_governance():
@@ -24,9 +36,7 @@ def _load_daily_governance():
 
 class MemorySystemTests(unittest.TestCase):
     def run_script(self, script, *args, env=None, check=True):
-        merged_env = os.environ.copy()
-        if env:
-            merged_env.update(env)
+        merged_env = _isolated_test_env(env)
         result = subprocess.run(
             [sys.executable, str(ROOT / "memory" / "scripts" / script), *args],
             cwd=ROOT,
@@ -522,8 +532,10 @@ facts:
         import re as _re
         n = 20
         with tempfile.TemporaryDirectory() as tmp:
-            env = os.environ.copy()
-            env.update({"MEMORY_ROOT": str(Path(tmp)), "MEMORY_MAX_EPISODES": "5"})
+            env = _isolated_test_env({
+                "MEMORY_ROOT": str(Path(tmp)),
+                "MEMORY_MAX_EPISODES": "5",
+            })
             script = str(ROOT / "memory" / "scripts" / "append_episode.py")
             procs = [
                 subprocess.Popen(
@@ -775,8 +787,30 @@ facts:
 """,
             encoding="utf-8",
         )
+        ready_candidate = next(
+            json.loads(line)
+            for line in (mem / "semantic" / "candidates.jsonl").read_text(encoding="utf-8").splitlines()
+            if json.loads(line).get("id") == "SC-ready"
+        )
+        ready_sha = hashlib.sha256(
+            json.dumps(ready_candidate, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
         (mem / "semantic" / "reviews.jsonl").write_text(
-            json.dumps({"candidate_id": "SC-rejected", "decision": "rejected", "reviewer": "luca"}, ensure_ascii=False)
+            "\n".join(
+                [
+                    json.dumps({"candidate_id": "SC-rejected", "decision": "rejected", "reviewer": "luca"}, ensure_ascii=False),
+                    json.dumps(
+                        {
+                            "candidate_id": "SC-ready",
+                            "decision": "approved_stable",
+                            "reviewer": "luca",
+                            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+                            "candidate_sha256": ready_sha,
+                        },
+                        ensure_ascii=False,
+                    ),
+                ]
+            )
             + "\n",
             encoding="utf-8",
         )
@@ -1536,6 +1570,14 @@ class BenchmarkDriftWatcherTests(unittest.TestCase):
             self.assertEqual(len(issues), 2, issues)
             self.assertTrue(any("o/bad" in i and "不是合法日期" in i for i in issues), issues)
             self.assertTrue(any("o/good" in i and "compare/" in i for i in issues), issues)
+
+# Production-lane aggregation: package.json intentionally invokes this module
+# explicitly, so ASSERT-019 cases must be imported here rather than relying on
+# filesystem discovery that CI does not run.
+from memory.tests.test_promotion_provenance import (  # noqa: E402,F401
+    PromotionGitGuardTests,
+    PromotionIssuerTests,
+)
 
 
 if __name__ == "__main__":

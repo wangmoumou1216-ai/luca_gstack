@@ -20,7 +20,7 @@ import os
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from consolidate_memory import build_queue, promote_ready_candidates
+from consolidate_memory import build_queue, promote_ready_candidates, set_stable
 
 def _resolve_root():
     """记忆根解析（P1/FIX-1）：统一走 _memroot.resolve_memory_root——含 store-shape 哨兵、
@@ -98,6 +98,35 @@ def main() -> int:
     now = datetime.now(timezone.utc)
     promoted_ids = load_promoted_ids()
     promoted, skipped = [], []
+    parsed_candidates = []
+    for line in CANDIDATES.read_text(encoding="utf-8").splitlines():
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            parsed_candidates.append(value)
+
+    # `--promote --reviewer` is an explicit review entrypoint.  Persist its
+    # approved_stable record (bound to the exact candidate snapshot) before the
+    # central queue is rebuilt; a bare proposed_stable flag is never authority.
+    if args.promote:
+        approval_ids = []
+        for candidate in parsed_candidates:
+            try:
+                age_days = (now - datetime.fromisoformat(candidate.get("created_at", ""))).days
+            except Exception:
+                age_days = 0
+            if (
+                candidate.get("proposed_stable") is True
+                and candidate.get("confidence") == "high"
+                and has_review_metadata(candidate)
+                and age_days >= args.days
+            ):
+                approval_ids.append(str(candidate.get("id", "")))
+        if approval_ids:
+            set_stable(approval_ids, dry_run=False, reviewer=args.reviewer)
+
     queue, all_candidates, _candidate_rows, _promoted_facts, _decisions, _episode_rows = build_queue()
     promotion_ready_by_id = {item["id"]: item for item in queue.get("promotion_ready", [])}
     ready_after_age = []

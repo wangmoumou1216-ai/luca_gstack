@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "luca.memory-promotion-receipt.v1",
+  "title": "Authenticated stable-memory promotion receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "receipt_id",
+    "issued_at",
+    "repository",
+    "transition",
+    "candidates",
+    "approved_reviews",
+    "promotion_ready",
+    "source_files",
+    "producer",
+    "nonce",
+    "signature"
+  ],
+  "properties": {
+    "schema": { "const": "luca.memory-promotion-receipt.v1" },
+    "receipt_id": { "type": "string", "pattern": "^[0-9a-f]{48}$" },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "root", "head"],
+      "properties": {
+        "kind": { "enum": ["git-worktree", "detached-memory-root"] },
+        "id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "root": { "type": "string" },
+        "head": { "type": "string" }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "before", "after"],
+      "properties": {
+        "path": { "const": "memory/semantic/promoted-facts.yaml" },
+        "before": { "$ref": "#/$defs/blob" },
+        "after": { "$ref": "#/$defs/blob" }
+      }
+    },
+    "candidates": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+    "approved_reviews": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+    "promotion_ready": { "type": "object" },
+    "source_files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidates_path", "candidates_sha256", "reviews_path", "reviews_sha256", "parent_reviews_sha256", "schema_path", "schema_sha256"],
+      "properties": {
+        "candidates_path": { "const": "memory/semantic/candidates.jsonl" },
+        "candidates_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "reviews_path": { "const": "memory/semantic/reviews.jsonl" },
+        "reviews_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "parent_reviews_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "schema_path": { "const": "memory/semantic/promotion-receipt.schema.json" },
+        "schema_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["writer", "entrypoint"],
+      "properties": {
+        "writer": { "$ref": "#/$defs/producerFile" },
+        "entrypoint": { "$ref": "#/$defs/producerFile" }
+      }
+    },
+    "nonce": { "type": "string", "pattern": "^[0-9a-f]{48}$" },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id", "mac"],
+      "properties": {
+        "algorithm": { "const": "hmac-sha256" },
+        "key_id": { "type": "string", "pattern": "^[0-9a-f]{24}$" },
+        "mac": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  },
+  "$defs": {
+    "producerFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "blob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["git_oid", "sha256"],
+      "properties": {
+        "git_oid": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

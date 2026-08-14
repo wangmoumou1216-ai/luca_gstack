@@ -219,6 +219,27 @@ def review_decisions(reviews: list[dict]) -> dict[str, str]:
     return decisions
 
 
+def approved_stable_reviews(reviews: list[dict]) -> dict[str, dict]:
+    """Return the latest attributable human approval for each candidate.
+
+    `proposed_stable: true` is data, not authority: historic/manual edits to a
+    candidate cannot substitute for an approved_stable review record.
+    """
+    approved = {}
+    for review in reviews:
+        cid = str(review.get("candidate_id", "")).strip()
+        decision = str(review.get("decision", "")).strip().lower()
+        if cid and decision == "approved_stable" and str(review.get("reviewer", "")).strip():
+            approved[cid] = review
+    return approved
+
+
+def candidate_record_sha256(candidate: dict) -> str:
+    payload = json.dumps(candidate, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    import hashlib
+    return hashlib.sha256(payload).hexdigest()
+
+
 def parse_datetime(value: str):
     if not value:
         return None
@@ -378,7 +399,8 @@ def has_review_metadata(candidate: dict) -> bool:
     return all(str(candidate.get(field, "")).strip() for field in ("evidence", "scope", "reviewer"))
 
 
-def promotion_ready(candidates: list[dict], duplicate_ids: set[str], conflict_ids: set[str], decisions: dict[str, str]) -> list[dict]:
+def promotion_ready(candidates: list[dict], duplicate_ids: set[str], conflict_ids: set[str],
+                    decisions: dict[str, str], approvals: dict[str, dict]) -> list[dict]:
     ready = []
     for candidate in candidates:
         cid = str(candidate.get("id", ""))
@@ -392,6 +414,8 @@ def promotion_ready(candidates: list[dict], duplicate_ids: set[str], conflict_id
             continue
         if not has_review_metadata(candidate):
             continue
+        if cid not in approvals or approvals[cid].get("candidate_sha256") != candidate_record_sha256(candidate):
+            continue
         ready.append(
             {
                 "id": cid,
@@ -400,12 +424,14 @@ def promotion_ready(candidates: list[dict], duplicate_ids: set[str], conflict_id
                 "evidence": candidate.get("evidence", ""),
                 "scope": candidate.get("scope", ""),
                 "reviewer": candidate.get("reviewer", ""),
+                "approval": approvals[cid],
             }
         )
     return ready
 
 
-def awaiting_approval(candidates: list[dict], duplicate_ids: set[str], conflict_ids: set[str], decisions: dict[str, str]) -> list[dict]:
+def awaiting_approval(candidates: list[dict], duplicate_ids: set[str], conflict_ids: set[str],
+                      decisions: dict[str, str], approvals: dict[str, dict]) -> list[dict]:
     """候选满足全部晋升条件但 proposed_stable 仍为 False —— 即提案者已 --stable 请求晋升，
     却未经人工闸门 consolidate --set-stable 批准。红线 SC-20260523-003：proposed_stable
     只能由人工翻转，提案者自评不得直接晋升。本桶让"待你批准"候选在治理命令中可见，
@@ -417,9 +443,13 @@ def awaiting_approval(candidates: list[dict], duplicate_ids: set[str], conflict_
             continue
         if cid in duplicate_ids or cid in conflict_ids:
             continue
-        if candidate.get("proposed_stable") is True:
-            continue  # 已批准 → 属 promotion_ready
-        if not candidate.get("stable_requested"):
+        approval_matches = (
+            cid in approvals
+            and approvals[cid].get("candidate_sha256") == candidate_record_sha256(candidate)
+        )
+        if candidate.get("proposed_stable") is True and approval_matches:
+            continue  # 数据旗标与独立批准都在场 → 属 promotion_ready
+        if candidate.get("proposed_stable") is not True and not candidate.get("stable_requested"):
             continue  # 提案者未请求 stable
         if str(candidate.get("confidence", "")).lower() != "high":
             continue
@@ -564,7 +594,7 @@ def append_promoted(candidate: dict) -> None:
     sync_claude_fallback(candidate)
 
 
-def append_review(candidate_id: str, reviewer: str, decision: str, reason: str) -> None:
+def append_review(candidate_id: str, reviewer: str, decision: str, reason: str, binding: dict | None = None) -> None:
     REVIEWS.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "candidate_id": candidate_id,
@@ -574,6 +604,8 @@ def append_review(candidate_id: str, reviewer: str, decision: str, reason: str) 
         "reviewed_at": datetime.now(timezone.utc).isoformat(),
         "source": "consolidate_memory.py",
     }
+    if binding:
+        record.update(binding)
     with REVIEWS.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
@@ -581,15 +613,56 @@ def append_review(candidate_id: str, reviewer: str, decision: str, reason: str) 
 def promote_ready_candidates(candidates: list[dict], ready: list[dict], dry_run: bool) -> list[str]:
     ready_ids = {item["id"] for item in ready}
     existing = promoted_ids(parse_promoted_facts(PROMOTED))
-    promoted = []
-    for candidate in candidates:
-        cid = str(candidate.get("id", ""))
-        if cid not in ready_ids or cid in existing:
-            continue
-        promoted.append(cid)
-        if not dry_run:
+    selected = [candidate for candidate in candidates
+                if str(candidate.get("id", "")) in ready_ids
+                and str(candidate.get("id", "")) not in existing]
+    promoted = [str(candidate.get("id", "")) for candidate in selected]
+    if dry_run or not selected:
+        return promoted
+
+    approval_by_id = {str(item["id"]): item.get("approval") for item in ready}
+    approvals = [approval_by_id[str(candidate.get("id", ""))] for candidate in selected]
+    if any(not isinstance(item, dict) for item in approvals):
+        raise RuntimeError("promotion_ready item lacks approved_stable review provenance")
+
+    # Cross-file transaction: a tool/receipt/mirror failure restores every durable
+    # target.  Candidate and approval records remain available for a safe retry.
+    claude_md = ROOT / "CLAUDE.md"
+    snapshots = {}
+    for path in (PROMOTED, REVIEWS, claude_md):
+        snapshots[path] = path.read_bytes() if path.exists() else None
+    receipt_path = None
+    receipt_id = ""
+    before = snapshots[PROMOTED] or b""
+    try:
+        for candidate in selected:
             append_promoted(candidate)
-            append_review(cid, str(candidate.get("reviewer") or "consolidate_memory"), "promoted", "promotion_ready review queue item")
+            append_review(
+                str(candidate.get("id", "")),
+                str(candidate.get("reviewer") or "consolidate_memory"),
+                "promoted",
+                "promotion_ready review queue item",
+            )
+        after = PROMOTED.read_bytes()
+        from promotion_provenance import issue_receipt
+        receipt_path, receipt_id = issue_receipt(ROOT, before, after, selected, approvals)
+        sys.stderr.write(f"[consolidate] promotion receipt: {receipt_path}\n")
+    except BaseException:
+        if receipt_path is not None:
+            try:
+                from promotion_provenance import revoke_receipt
+                revoke_receipt(ROOT, receipt_path, receipt_id)
+            except Exception:
+                pass
+        for path, content in snapshots.items():
+            if content is None:
+                try:
+                    path.unlink()
+                except FileNotFoundError:
+                    pass
+            else:
+                atomic_write_text(path, content.decode("utf-8"))
+        raise
     return promoted
 
 
@@ -604,7 +677,9 @@ def set_stable(ids: list, dry_run: bool, reviewer: str = "") -> dict:
     """
     want = {str(i) for i in ids}
     rows = read_jsonl_with_raw(CANDIDATES)
-    set_done, out_lines, found, reviewer_filled = [], [], set(), []
+    existing_approvals = approved_stable_reviews(read_jsonl(REVIEWS))
+    set_done, out_lines, found, reviewer_filled, approval_needed = [], [], set(), [], []
+    approval_candidates = {}
     for candidate, raw in rows:
         if candidate is None:
             out_lines.append(raw.rstrip())
@@ -623,18 +698,30 @@ def set_stable(ids: list, dry_run: bool, reviewer: str = "") -> dict:
             if reviewer and not str(candidate.get("reviewer", "")).strip():
                 candidate["reviewer"] = reviewer
                 reviewer_filled.append(cid)
+            expected_binding = candidate_record_sha256(candidate)
+            if cid not in existing_approvals or existing_approvals[cid].get("candidate_sha256") != expected_binding:
+                approval_needed.append(cid)
+                approval_candidates[cid] = dict(candidate)
             out_lines.append(json.dumps(candidate, ensure_ascii=False))
         else:
             out_lines.append(raw.rstrip())
-    if not dry_run and (set_done or reviewer_filled):
-        atomic_write_text(CANDIDATES, ("\n".join(out_lines) + "\n") if out_lines else "")
-        for cid in set_done:
-            append_review(cid, reviewer or "unattributed", "approved_stable", "人工闸门放行：proposed_stable 置 True")
+    if not dry_run and (set_done or reviewer_filled or approval_needed):
+        if set_done or reviewer_filled:
+            atomic_write_text(CANDIDATES, ("\n".join(out_lines) + "\n") if out_lines else "")
+        for cid in approval_needed:
+            append_review(
+                cid,
+                reviewer or "unattributed",
+                "approved_stable",
+                "人工闸门放行：proposed_stable 置 True",
+                {"candidate_sha256": candidate_record_sha256(approval_candidates[cid])},
+            )
         for cid in reviewer_filled:
             append_review(cid, reviewer or "unattributed", "reviewer_backfilled", "人工放行时回填候选 reviewer（解 has_review_metadata 门禁）")
     return {
         "set_stable": set_done,
         "reviewer_filled": reviewer_filled,
+        "approved": approval_needed,
         "already_stable": sorted(found - set(set_done)),
         "not_found": sorted(want - found),
     }
@@ -729,14 +816,15 @@ def build_queue() -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict],
     promoted = parse_promoted_facts(PROMOTED)
     reviews = read_jsonl(REVIEWS)
     decisions = review_decisions(reviews)
+    approvals = approved_stable_reviews(reviews)
     duplicate_queue, duplicate_ids = duplicate_candidates(candidates, promoted)
     conflict_queue, conflict_ids = conflicts(candidates, promoted)
     queue = {
         "duplicate_candidates": duplicate_queue,
         "conflicts": conflict_queue,
         "stale_candidates": stale_candidates(candidates, decisions),
-        "promotion_ready": promotion_ready(candidates, duplicate_ids, conflict_ids, decisions),
-        "awaiting_approval": awaiting_approval(candidates, duplicate_ids, conflict_ids, decisions),
+        "promotion_ready": promotion_ready(candidates, duplicate_ids, conflict_ids, decisions, approvals),
+        "awaiting_approval": awaiting_approval(candidates, duplicate_ids, conflict_ids, decisions, approvals),
         "noisy_episodes": noisy_episodes(episodes),
         "failing_eval_patterns": failing_eval_patterns(read_jsonl(EVAL_LOG)),
         # 区分「无源」与「有源无失败」：二者此前同为空 list，人看不出是 eval 没接通还是真没失败模式
