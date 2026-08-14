@@ -8,8 +8,8 @@ description: |
   或你单点指定的方案 md）编译成干净 OD 指令；先评估并让你选 Target platform + Design system，再建项目绑定它、
   写 brief.md（=stage）；**默认让你在 OD 桌面端按生成（走订阅会话，可靠），完成说「拉回来」回收**；headless
   一次性出图为显式 opt-in（实测不稳/慢，失败即降级桌面端）。回收落盘 docs/prototype/ 供
-  /figma-layer。design 产出首选。**FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E；其余配色/字体/字号/布局
-  全走所选 OD design system，不指定、不覆盖、不冲突。** 两种进入：chain（默认取最新 design-brief）/ adhoc
+  /figma-layer。design 产出首选。**品牌与视觉约束只按激活项目 `CONTEXT.md` 声明的 design profile 叠加；
+  没有激活 profile 时不注入任何产品 token，其余配色/字体/字号/布局全走所选 OD design system。** 两种进入：chain（默认取最新 design-brief）/ adhoc
   （语义识别的单点交接）。不接受 PRD 当设计源、不接受已生成 HTML。(luca_gstack)
 allowed-tools:
   - Read
@@ -82,18 +82,32 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 - **adhoc**：以用户点名产物**原文**为主体，忠实传递，不替它发散/编造。
 - 用户对话里**额外强调的需求点**（如「突出今日待跟进」）按原意编进去作重点；真实中文 B2B 文案，不要 Lorem。
 
-**FxUI Token 块（只叠这两类，其余全交所选 design system，不指定、不覆盖、不冲突）：**
-```
-## FxUI 品牌叠加（仅两类；其余配色/字体/字号/布局沿用本项目所选 design system，不要指定、不要覆盖它）
-- 品牌色：#FF8000（主按钮/主操作/激活/品牌强调；替代 design system 原强调色；全页≤3处）
-  **其上文字色必须显式声明，不得留空、不得默认白色**（白字实测 2.52:1，不满足 WCAG AA 正文 4.5:1，
-  连非文本 3:1 都不过）。二选一，按项目市场取：
-  · **近黑 `#181C25`（6.77:1 ✓）** — 面向欧美 / 受 EAA·ADA 影响 / 客户合同写明无障碍要求时**必须**用这条；
-    品牌色值零改动，与 Carbon `warning #F1C21B`、Polaris `caution #FFE600` 处理亮暖色的做法一致
-  · 白色 `#FFFFFF`（2.52:1 ✗ 不合规） — 仅国内市场且项目显式接受该风险时可用，**必须在 brief 里写明是有意选择**
-  （上游 design-brief 的 Packet 若已声明前景色，以它为准，不在此二选）
-- 文字颜色：主文字 #181C25；次要文字 #91959E
-（不指定字体 family、不指定字号、不用 FxUI 的语义色/分割线/页面底/卡片底——这些一律交给所选 design system 默认）
+**项目品牌叠加（profile-activated；无 profile 则不叠加）：**
+1. 先按 session project pin 定位激活项目并读取该项目 `CONTEXT.md`；不得从 luca_gstack 根目录、共享展示软链或历史项目推断品牌。
+2. 仅当 `CONTEXT.md` 明确声明已激活 design profile 时，读取该 profile 声明的 token 来源（例如它指向的
+   `brand-tokens.md` / `framework/tokens.css`），把来源明确允许的品牌与文字 token 编进 brief，并记录来源路径。
+3. **无激活 design profile、声明不完整或 token 来源不可读 → 不注入任何产品 token**；不要用通用 skill 内置产品名、色值或猜测补齐。
+4. 除 profile 明确允许的叠加外，配色、字体、字号与布局沿用用户所选 design system，不指定、不覆盖、不冲突；
+   可访问性前景色也必须来自上游已定事实或激活 profile，不在通用 skill 里二选一。
+
+**冻结 profile resolution（Phase 4 只读这份结果，不依赖外部未定义变量）：**
+- 初始化 `_PROFILE_STATUS=none`、`_PROFILE_CONTEXT=`、`_PROFILE_SOURCE=`。按上述规则读完 session pin 对应的
+  `CONTEXT.md` 后，只有“明确激活 profile + 声明的 token 来源可读”才把 status 改为 `active` 并填两条绝对路径；
+  其它情况保持 `none`，source 必须为空。
+- 在编译 brief 前写 `/tmp/od_profile_resolution.json`，随后 read-back；字段只允许
+  `status/context/source`，其中 `status` 只允许 `none|active`：
+```bash
+_PROFILE_STATUS="${_PROFILE_STATUS:-none}"; _PROFILE_CONTEXT="${_PROFILE_CONTEXT:-}"; _PROFILE_SOURCE="${_PROFILE_SOURCE:-}"
+python3 - "$_PROFILE_STATUS" "$_PROFILE_CONTEXT" "$_PROFILE_SOURCE" <<'PY'
+import json, os, sys
+status, context, source = sys.argv[1:]
+if status not in {"none", "active"}: raise SystemExit("invalid profile status")
+if status == "active" and (not context or not source or not os.path.isfile(source)): raise SystemExit("active profile source unreadable")
+if status == "none" and source: raise SystemExit("none profile must not carry a token source")
+with open("/tmp/od_profile_resolution.json", "w") as f:
+    json.dump({"status": status, "context": context, "source": source}, f, ensure_ascii=False, sort_keys=True)
+PY
+python3 -c 'import json; p=json.load(open("/tmp/od_profile_resolution.json")); assert set(p)=={"status","context","source"}; print(p)'
 ```
 
 **一次性产出 tag（桌面端/headless 两条路径都加）：** 指令末尾必须加（让 OD 一次出、不反问）：
@@ -120,8 +134,10 @@ curl -s "$_OD_URL/api/design-systems" | python3 -c "import sys,json;[print(s.get
 - 拿用户语义到目录匹配 id 后，**一句话回显映射结果确认**（「按你说的选了 notion/github，开建？」）——语义匹配可能错，回显是唯一保险；确认后才进 Phase 3。
 - **多方案合法且常态**：用户要 N 个 DS 就建 N 个项目（slug 加 DS 后缀，见 Phase 3D；同一份 brief）。
 - **目录按需可见**：仅当用户问「有哪些可选」才贴，且须分组（知名产品类 / 中性风格类 / 强风格主题类）+ 每行一句调性注释，不贴裸名单。
-- **偏好行（活数据，用户每次选定后回写本行）**：已知口味圈 = notion, github, slack, vercel（2026-08-04；偏好知名产品 DS + 多方案横向对比）。有口味圈后开放问可带默认值（「还是上次那几个？」）；若用 AskUserQuestion，候选只从口味圈出，不再预生成陌生候选。
-- 匹配/推荐仍守两准则：① 产品域匹配 ② **叠了 FxUI 橙 → 对自带强品牌色的 DS（Ant 蓝/Linear 紫）提示撞色风险**——但用户点名的照建不拦。
+- **偏好不回写通用 skill**：本次选择只留在当前会话/产物。若用户明确要求长期记住，先按
+  `.claude/skill-os/extraction-bar.md` 与三分归属门裁决，再写对应个人/框架候选/项目记忆；`SKILL.md` 永不自编辑。
+  已有合规偏好记忆时，开放问可带其默认值；若用 AskUserQuestion，候选只从该次检索出的偏好出，不预生成陌生候选。
+- 匹配/推荐仍守两准则：① 产品域匹配 ② **激活 profile 的品牌叠加若与 DS 自带强品牌色冲突，提示撞色风险**——但用户点名的照建不拦。
 
 **2c. Target platform 照旧 AskUserQuestion（带推荐，不替用户定）。** platform + DS 都定了才进 Phase 3。
 
@@ -196,18 +212,23 @@ grep -c "STATE:" "$_DIR"/*.html 2>/dev/null
 > ④ 用户选定后，把选定方案 **`mv`（不是 `cp`）到 `index.html`**（下游按此固定路径发现），
 > 原导航页改名保留并修正其链接——`mv` 是为了避免两份副本日后漂移。
 > **守卫：** 只有真·HTML 入口被回收且文件非空，才进 Phase 5/6 标 DONE；否则告知用户产物还没出、不落盘、不写 handoff。
-**校验 FxUI 收窄口径**（可执行门，非目测）：品牌橙 #FF8000 与文字色 #181C25/#91959E 允许出现；**FxUI 语义色（success/info/warning/danger/link 的 FxUI 专有 hex）应为 0**（其余颜色/字体来自所选 DS=预期，不算违规）：
+**校验 profile 口径**（可执行门，非目测）：无激活 design profile 时不允许生成品牌叠加块；有 profile 时每个产品 token 必须能追溯到已记录的 token 来源：
 ```bash
 [ -z "$_TOPIC" ] && _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
 _P="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
-_LEAK=$(grep -ioE '#(87cc3b|189dff|ff7c19|ff4a66|0c6cff)' "$_P" | sort -u | tr '\n' ' ')
-[ -z "$_LEAK" ] && echo "FxUI 语义色泄漏检查: 0 ✓" || echo "FxUI 语义色泄漏: $_LEAK — 需回查（应来自所选 DS 而非 FxUI 注入），未清零不标 DONE"
+_PROFILE_STATUS=$(python3 -c 'import json; print(json.load(open("/tmp/od_profile_resolution.json"))["status"])')
+_PROFILE_SOURCE=$(python3 -c 'import json; print(json.load(open("/tmp/od_profile_resolution.json"))["source"])')
+if [ "$_PROFILE_STATUS" = "none" ]; then
+  ! grep -q '^## 项目品牌叠加' /tmp/od_brief.txt && echo "profile_overlay=none ✓" || echo "无 profile 却出现品牌叠加块 — 未清零不标 DONE"
+else
+  [ -n "$_PROFILE_SOURCE" ] && [ -r "$_PROFILE_SOURCE" ] && echo "profile_overlay=active source=$_PROFILE_SOURCE" || echo "profile 来源缺失/不可读 — 不注入 token、不标 DONE"
+fi
 ```
 
 **写 prototype-spec.md**（读 `html-prototype/SCHEMA.md`，框架来源填 `open-design`）：设计意图（迁移自交互文档）；
 Design Decision Coverage 标 best-effort（chain）/「源=<产物>无决策矩阵」（adhoc），**不伪装 100% 可追踪**；
 组件清单从实际 HTML 归纳；记录所选 design system + platform；交接块：figma-layer 须知 source=open-design、
-FxUI 仅品牌色+文字色、必须读 index.html 实际代码。
+profile overlay 状态与来源（无 profile 写 `none`）、必须读 index.html 实际代码。
 
 **开发交接补全（仅下游=开发/场景1 时追加）**：若本原型将进自家开发链（tech-spec/task-plan），
 在 prototype-spec.md 追加"开发交接补全"节，补 **组件 props / 响应式断点 / design token 清单 / 动效**
@@ -240,7 +261,7 @@ export _OUTPUT="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
 python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
 ```
 **Handoff**（`docs/handoff/YYYY-MM-DD-<topic>-open-design-handoff.md` ≤2000 tokens）：决策（≤8：选的 platform/DS、
-用户判断结论、token 偏差）；约束（≤5：figma-layer 必读 index.html 路径、source=open-design、FxUI 仅品牌色+文字色）；
+用户判断结论、token 偏差）；约束（≤5：figma-layer 必读 index.html 路径、source=open-design、profile overlay 状态与来源）；
 风险（≤3：traceability best-effort、OD beta/动态端口、未还原项）；产出路径 + **OD 项目 slug=`$_SLUG`（供日后 recover 定位）**。
 
 ---
@@ -250,7 +271,7 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 1. **默认桌面端生成；headless 为 opt-in**（权威见 Phase 0b / 3D / 3H）：默认 stage 后交你在桌面端按生成→「拉回来」回收；headless 为显式 opt-in，其重试上限与回落规则以 Phase 3H 为准。
 2. **人工判断后置，迭代主体=用户在 OD**：落盘后展示即止、不阻塞提问；用户在 OD 桌面端
    自行迭代，回收（recover）/推 figma-layer 由用户点名触发（2026-06-10 luca 指示）。
-3. **FxUI 收窄口径**：口径与具体色值权威见 Phase 1「FxUI Token 块」，本处不复述色值（避免与 Phase 1 漂移）。
+3. **品牌叠加只由激活 profile 驱动**：口径与来源规则权威见 Phase 1；无 profile 不注入产品 token，通用 skill 不保存产品色值。
 4. **必须先定 Target platform + Design system 再建项目**（DS=意图先行开放问 + 映射回显确认，**不预生成陌生候选菜单**，
    权威见 Phase 2b），选定后**建项目时绑 `designSystemId`**（建后验证真的绑上；多方案=多项目各绑各的）；
    platform/fidelity 写进 brief 文本兜底。

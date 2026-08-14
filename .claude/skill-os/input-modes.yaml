@@ -30,8 +30,8 @@ skills:
       workflow:
         required: ["design_brief_artifact"]
         optional: ["ux_brainstorm_artifact"]
-    quality_gates: ["input_source_resolved", "design_generation_packet_when_chain", "instruction_compiled", "fxui_brand_text_tokens_only", "platform_designsystem_user_selected", "designsystem_bound_verified", "od_daemon_reachable", "artifact_generated", "prototype_spec_written", "no_source_fact_drift"]   # artifact_generated = desktop_generated_then_recovered(默认) OR headless_generated(opt-in)，产物落盘即 PASS
-    notes: "design_output 主力，**默认桌面端生成（headless opt-in）**：luca 编译指令 → 评估并让用户选 Target platform + Design system → 建项目绑 designSystemId(建后验证) + 写 brief.md → **默认交用户在 OD 桌面端按生成(订阅会话, 可靠) → '拉回来' recover 落盘**；headless 经 daemon /api/chat(带 agentId) 为 opt-in，本 session 实测不稳(生成慢/daemon重启)，失败上限 1 后降级桌面端。人工判断后置(符合/迭代/停)。FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E，其余走所选 design system 不覆盖。两种进入 chain/adhoc。"
+    quality_gates: ["input_source_resolved", "design_generation_packet_when_chain", "instruction_compiled", "profile_brand_overlay_only_when_active", "platform_designsystem_user_selected", "designsystem_bound_verified", "od_daemon_reachable", "artifact_generated", "prototype_spec_written", "no_source_fact_drift"]   # artifact_generated = desktop_generated_then_recovered(默认) OR headless_generated(opt-in)，产物落盘即 PASS
+    notes: "design_output 主力，**默认桌面端生成（headless opt-in）**：luca 编译指令 → 评估并让用户选 Target platform + Design system → 建项目绑 designSystemId(建后验证) + 写 brief.md → **默认交用户在 OD 桌面端按生成(订阅会话, 可靠) → '拉回来' recover 落盘**；headless 经 daemon /api/chat(带 agentId) 为 opt-in，本 session 实测不稳(生成慢/daemon重启)，失败上限 1 后降级桌面端。人工判断后置(符合/迭代/停)。品牌 token 仅在激活项目 CONTEXT 明确声明 design profile 时从其来源叠加；无 profile 不注入任何产品 token，其余走所选 design system。偏好不回写通用 skill。两种进入 chain/adhoc。"
 
   idea:
     modes:

@@ -165,6 +165,52 @@ const inputModeKeys = new Set([
   ...parseTopKeys(inputModesText, 'governance_tools'),
 ]);
 
+// U-013 / ASSERT-022: product-neutral Open Design.
+// Keep this as a pure contract checker so reverse mutants can be killed in memory
+// without editing the worktree or teaching the test its expected output after mutation.
+function u013OpenDesignErrors(sources) {
+  const errors = [];
+  const genericProductHardcode = /FxUI|#(?:FF8000|181C25|91959E|87cc3b|189dff|ff7c19|ff4a66|0c6cff)/i;
+  if (genericProductHardcode.test(sources.openDesign) || genericProductHardcode.test(sources.inputModes)) {
+    errors.push('generic open-design surfaces hardcode a product name/token');
+  }
+  if (/用户每次选定后回写本行|偏好行（活数据/.test(sources.openDesign)) {
+    errors.push('generic open-design instructs personal preference writeback');
+  }
+  if (!/无激活 design profile[^\n]*不注入任何产品 token/.test(sources.openDesign)
+      || !/SKILL\.md` 永不自编辑/.test(sources.openDesign)
+      || !/extraction-bar\.md/.test(sources.openDesign)
+      || !/od_profile_resolution\.json/.test(sources.openDesign)
+      || /OD_PROFILE_(?:STATUS|SOURCE)/.test(sources.openDesign)
+      || !/profile_brand_overlay_only_when_active/.test(sources.inputModes)) {
+    errors.push('profile/no-profile or preference-ownership contract is incomplete');
+  }
+  if (!sources.openDesign.trimEnd().endsWith('<!-- FILE_END: open-design/SKILL.md -->')) {
+    errors.push('open-design FILE_END marker missing or displaced');
+  }
+
+  return errors;
+}
+
+const openDesignText = readFileSync('.claude/skills/office/open-design/SKILL.md', 'utf8');
+const u013Sources = {
+  openDesign: openDesignText,
+  inputModes: inputModesText,
+};
+for (const error of u013OpenDesignErrors(u013Sources)) ssotErrors.push(`U-013 ${error}`);
+
+const u013Mutants = [
+  { id: 'preference-writeback', mutate: (s) => ({ ...s, openDesign: `${s.openDesign}\n偏好行（活数据，用户每次选定后回写本行）` }) },
+  { id: 'product-token', mutate: (s) => ({ ...s, openDesign: `${s.openDesign}\n产品品牌色 #FF8000` }) },
+  { id: 'profile-absent', mutate: (s) => ({ ...s, openDesign: s.openDesign.replaceAll('无激活 design profile', 'profile unavailable') }) },
+  { id: 'profile-resolution', mutate: (s) => ({ ...s, openDesign: s.openDesign.replaceAll('od_profile_resolution.json', 'missing-profile-resolution') }) },
+];
+for (const mutant of u013Mutants) {
+  if (u013OpenDesignErrors(mutant.mutate(u013Sources)).length === 0) {
+    ssotErrors.push(`U-013 reverse mutant survived: ${mutant.id}`);
+  }
+}
+
 for (const skill of projectSkills) {
   const id = skill.canonical;
 
