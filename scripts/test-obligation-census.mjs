@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -12,6 +13,13 @@ import {
 } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
+  createHumanGateProposal,
+  recordHumanGateApproval,
+  recordHumanGateResult,
+} from '../.claude/hooks/lib/human-gate-contract.mjs';
+import {
+  buildApprovedCensus,
+  buildPostState,
   censusLiveTargets,
   classificationReport,
   generateCandidate,
@@ -20,6 +28,7 @@ import {
   sha256,
   sourceDelta,
   stable,
+  validateApprovedCensus,
   validateCandidate,
 } from './evolution/obligation-census.mjs';
 
@@ -27,7 +36,19 @@ const SOURCE_ROOT = process.cwd();
 const ENGINE = resolve(SOURCE_ROOT, 'scripts/evolution/obligation-census.mjs');
 const SCHEMA = resolve(SOURCE_ROOT, '.claude/skill-os/obligation-census.schema.json');
 const TEST = resolve(SOURCE_ROOT, 'scripts/test-obligation-census.mjs');
+const WRITER_SOURCE = resolve(SOURCE_ROOT, 'scripts/native/secure-receipt-writer.c');
+const WRITER_BUILD = mkdtempSync('/private/tmp/obligation-census-writer-');
+const WRITER = join(WRITER_BUILD, 'secure-receipt-writer');
 let pass = 0;
+
+{
+  const compiled = spawnSync('/usr/bin/cc', [
+    '-std=c11', '-Wall', '-Wextra', '-Werror', '-pedantic', '-O2',
+    WRITER_SOURCE, '-o', WRITER,
+  ], { input: '', encoding: 'utf8' });
+  assert.equal(compiled.status, 0, compiled.stderr);
+  chmodSync(WRITER, 0o700);
+}
 
 function check(label, fn) {
   try {
@@ -242,13 +263,15 @@ check('ASSERT-016: source hash substitution is rejected', () => {
 });
 
 check('ASSERT-016: newly committed source and MUST line create explicit SOURCE_SET_DRIFT', () => {
-  write(join(value.repo, 'RULES.md'), `${readFileSync(join(value.repo, 'RULES.md'), 'utf8')}A new gate MUST remain registered.\n`);
-  write(join(value.repo, '.claude/skill-os/new-rule.json'), '{"policy":"A consumer MUST reject omission."}\n');
-  git(value.repo, ['add', '--', 'RULES.md', '.claude/skill-os/new-rule.json']);
-  git(value.repo, ['commit', '-q', '-m', 'source drift']);
-  const commit2 = git(value.repo, ['rev-parse', 'HEAD']);
-  const effective2 = recomputeSourceManifest({ root: value.repo, targetCommit: commit2, baseline: value.baseline, baselineSha256: baselineSha });
-  const delta2 = sourceDelta(value.baseline, effective2);
+  const drift = fixture();
+  const driftBaselineSha = sha256(readFileSync(drift.baselinePath));
+  write(join(drift.repo, 'RULES.md'), `${readFileSync(join(drift.repo, 'RULES.md'), 'utf8')}A new gate MUST remain registered.\n`);
+  write(join(drift.repo, '.claude/skill-os/new-rule.json'), '{"policy":"A consumer MUST reject omission."}\n');
+  git(drift.repo, ['add', '--', 'RULES.md', '.claude/skill-os/new-rule.json']);
+  git(drift.repo, ['commit', '-q', '-m', 'source drift']);
+  const commit2 = git(drift.repo, ['rev-parse', 'HEAD']);
+  const effective2 = recomputeSourceManifest({ root: drift.repo, targetCommit: commit2, baseline: drift.baseline, baselineSha256: driftBaselineSha });
+  const delta2 = sourceDelta(drift.baseline, effective2);
   assert.equal(delta2.status, 'SOURCE_SET_DRIFT');
   assert.equal(delta2.added.length, 1);
   assert.equal(delta2.hash_changed.length, 1);
@@ -350,6 +373,150 @@ function runEngine(args) {
   });
 }
 
+function prepareGateFlow({ writer = WRITER } = {}) {
+  const source = fixture();
+  const cli = mkdtempSync('/private/tmp/obligation-census-approved-flow-');
+  const paths = {
+    effective: join(cli, 'effective.json'),
+    delta: join(cli, 'delta.json'),
+    targets: join(cli, 'targets.json'),
+    candidate: join(cli, 'candidate.json'),
+    report: join(cli, 'report.json'),
+    payload: join(cli, 'payload.json'),
+    envelope: join(cli, 'envelope.json'),
+    plan: join(cli, 'plan.md'),
+  };
+  write(paths.plan, '# U009 test plan\n');
+  const live = [
+    '--home', source.home,
+    '--claude-settings', join(source.home, '.claude/settings.json'),
+    '--claude-plugin-json', source.claudePluginsPath,
+    '--codex-plugin-json', source.codexPluginsPath,
+  ];
+  let result = runEngine(['recompute-source', '--root', source.repo, '--target-commit', source.commit1,
+    '--baseline', source.baselinePath, '--out', paths.effective, '--delta', paths.delta]);
+  assert.equal(result.status, 0, result.stderr);
+  result = runEngine(['census-targets', '--root', source.repo, '--target-commit', source.commit1,
+    '--out', paths.targets, ...live]);
+  assert.equal(result.status, 0, result.stderr);
+  result = runEngine(['generate', '--root', source.repo, '--source', paths.effective,
+    '--targets', paths.targets, '--delta', paths.delta, '--out', paths.candidate,
+    '--report', paths.report]);
+  assert.equal(result.status, 0, result.stderr);
+  result = runEngine(['make-gate-payload', '--root', source.repo, '--plan', paths.plan,
+    '--baseline', source.baselinePath, '--source', paths.effective, '--delta', paths.delta,
+    '--targets', paths.targets, '--candidate', paths.candidate, '--report', paths.report,
+    '--schema', SCHEMA, '--test', TEST, '--out', paths.payload, '--envelope', paths.envelope]);
+  assert.equal(result.status, 0, result.stderr);
+
+  const receiptRoot = join(cli, 'receipts');
+  mkdir(receiptRoot);
+  const created = Date.now() - 5000;
+  const proposalOutput = createHumanGateProposal({
+    receiptRoot,
+    secureWriterPath: writer,
+    gate: 'G-OBLIGATION-SCOPE',
+    planBytes: readFileSync(paths.plan),
+    payloadBytes: readFileSync(paths.payload),
+    executionEnvelopeBytes: readFileSync(paths.envelope),
+    harness: 'codex',
+    sessionId: 'u009-test',
+    now: new Date(created).toISOString(),
+    expiresAt: new Date(Date.now() + 600000).toISOString(),
+  });
+  const bindingOutput = recordHumanGateApproval({
+    receiptRoot,
+    secureWriterPath: writer,
+    gate: 'G-OBLIGATION-SCOPE',
+    proposalId: proposalOutput.proposal.proposal_id,
+    planBytes: readFileSync(paths.plan),
+    payloadBytes: readFileSync(paths.payload),
+    executionEnvelopeBytes: readFileSync(paths.envelope),
+    rawPromptBytes: Buffer.from(proposalOutput.exactReply, 'utf8'),
+    event: {
+      role: 'user',
+      top_level: true,
+      authority: 'trusted-bootstrap-main',
+      event_id: 'u009-test-user-event',
+      event_created_at: new Date(created + 1000).toISOString(),
+      observed_at: new Date(created + 2000).toISOString(),
+      harness: 'codex',
+      session_id: 'u009-test',
+    },
+  });
+  const promotion = [
+    '--root', source.repo,
+    '--target-commit', source.commit1,
+    '--plan', paths.plan,
+    '--baseline', source.baselinePath,
+    '--source', paths.effective,
+    '--delta', paths.delta,
+    '--targets', paths.targets,
+    '--candidate', paths.candidate,
+    '--report', paths.report,
+    '--schema', SCHEMA,
+    '--test', TEST,
+    '--payload', paths.payload,
+    '--envelope', paths.envelope,
+    '--receipt-root', receiptRoot,
+    '--writer', writer,
+    '--proposal', proposalOutput.path,
+    '--binding', bindingOutput.path,
+    ...live,
+  ];
+  return { source, cli, paths, live, receiptRoot, proposalOutput, bindingOutput, promotion, writer };
+}
+
+function publishApproved(flow) {
+  const result = runEngine(['promote-approved', ...flow.promotion]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^OBLIGATION_CENSUS_APPROVED_PUBLISHED /);
+  flow.approvedPath = join(flow.receiptRoot, 'obligation-census/approved.json');
+  flow.postStatePath = join(flow.receiptRoot, 'obligation-census/post-state.json');
+  flow.approvedBytes = readFileSync(flow.approvedPath);
+  flow.postStateBytes = readFileSync(flow.postStatePath);
+  return flow;
+}
+
+function approvedContext(flow) {
+  return {
+    candidate: JSON.parse(readFileSync(flow.paths.candidate, 'utf8')),
+    source: JSON.parse(readFileSync(flow.paths.effective, 'utf8')),
+    targets: JSON.parse(readFileSync(flow.paths.targets, 'utf8')),
+    report: JSON.parse(readFileSync(flow.paths.report, 'utf8')),
+    payloadBytes: readFileSync(flow.paths.payload),
+    envelopeBytes: readFileSync(flow.paths.envelope),
+    proposal: flow.proposalOutput.proposal,
+    proposalBytes: flow.proposalOutput.proposalBytes,
+    binding: flow.bindingOutput.binding,
+    bindingBytes: flow.bindingOutput.bindingBytes,
+  };
+}
+
+function failOnceWriter(failCall) {
+  const root = mkdtempSync('/private/tmp/obligation-census-fault-writer-');
+  const wrapper = join(root, 'secure-writer-fault.cjs');
+  const counter = join(root, 'calls');
+  const script = [
+    `#!${process.execPath}`,
+    "const { readFileSync, writeFileSync } = require('node:fs');",
+    "const { spawnSync } = require('node:child_process');",
+    `const counter = ${JSON.stringify(counter)};`,
+    `const writer = ${JSON.stringify(WRITER)};`,
+    'let calls = 0;',
+    "try { calls = Number(readFileSync(counter, 'utf8')); } catch { }",
+    'calls += 1;',
+    "writeFileSync(counter, `${calls}\\n`, { mode: 0o600 });",
+    `if (calls === ${failCall}) { process.stderr.write('injected writer fault\\n'); process.exit(73); }`,
+    "const result = spawnSync(writer, process.argv.slice(2), { stdio: 'inherit' });",
+    'if (result.error) throw result.error;',
+    'process.exit(result.status === null ? 74 : result.status);',
+    '',
+  ].join('\n');
+  write(wrapper, script, 0o700);
+  return { wrapper, counter };
+}
+
 check('CLI recompute/generate/verify/make-gate-payload closes the pristine gate-ready path', () => {
   const cli = mkdtempSync('/private/tmp/obligation-census-cli-');
   const effectivePath = join(cli, 'effective.json');
@@ -429,6 +596,200 @@ check('CLI rejects unknown options instead of widening its authority surface', (
     '--allow-shrink', 'true']);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /invalid option: --allow-shrink/);
+});
+
+const approvedFlow = publishApproved(prepareGateFlow());
+const exactApprovedContext = approvedContext(approvedFlow);
+
+check('approved census is a separate pointer-only artifact with approval-only deltas and acyclic post-state', () => {
+  const candidate = exactApprovedContext.candidate;
+  const approved = JSON.parse(approvedFlow.approvedBytes.toString('utf8'));
+  const postState = JSON.parse(approvedFlow.postStateBytes.toString('utf8'));
+  validateApprovedCensus(approved, exactApprovedContext);
+  assert.equal(stable(approved), stable(buildApprovedCensus(exactApprovedContext)));
+  assert.equal(stable(postState), stable(buildPostState(exactApprovedContext, approved)));
+  assert.equal(approved.kind, 'APPROVED');
+  assert.equal(approved.approval_state, 'APPROVED_G_OBLIGATION_SCOPE');
+  assert.deepEqual(approved.anchors, candidate.anchors);
+  assert.deepEqual(approved.summary, candidate.summary);
+  assert.ok(approved.source_coverage.every((row) => row.review_state === 'HUMAN_APPROVED'));
+  assert.ok(approved.obligations.every((row) => row.review_state === 'HUMAN_APPROVED'));
+  assert.ok(approved.obligations.every((row) => !Object.hasOwn(row, 'text') && !Object.hasOwn(row, 'rule')));
+  assert.equal(postState.approved_census_sha256, sha256(approvedFlow.approvedBytes));
+  assert.ok(!Object.keys(postState).some((key) => key.includes('result')));
+});
+
+check('approved reverse checker rejects shrink/class/S0/S3/native/prose/candidate mutations', () => {
+  const approved = JSON.parse(approvedFlow.approvedBytes.toString('utf8'));
+  const s0 = approved.obligations.findIndex((row) => row.class === 'S0_MACHINE_SAFETY');
+  const s3 = approved.obligations.findIndex((row) => row.class === 'S3_HUMAN_TASTE');
+  assert.notEqual(s0, -1);
+  assert.notEqual(s3, -1);
+  const mutants = [];
+  let mutant = clone(approved);
+  mutant.obligations.pop();
+  mutants.push(mutant);
+  mutant = clone(approved);
+  mutant.obligations[s0].class = 'S3_HUMAN_TASTE';
+  mutants.push(mutant);
+  mutant = clone(approved);
+  mutant.obligations[s0].degradation_code = 'NATIVE_CAPABILITY_DIFFERENCE';
+  mutants.push(mutant);
+  mutant = clone(approved);
+  mutant.obligations[s3].enforcement = 'MECHANICAL_DUAL_HARNESS';
+  mutants.push(mutant);
+  mutant = clone(approved);
+  mutant.obligations[s0].native_status = 'MODEL_ONLY';
+  mutants.push(mutant);
+  mutant = clone(approved);
+  mutant.obligations[0].text = 'copied canonical prose is forbidden';
+  mutants.push(mutant);
+  for (const value of mutants) assert.throws(() => validateApprovedCensus(value, exactApprovedContext), /approved census/);
+  const substitutedContext = clone(exactApprovedContext);
+  substitutedContext.candidate.summary.obligation_count += 1;
+  assert.throws(() => validateApprovedCensus(approved, substitutedContext), /approved census/);
+});
+
+check('separate gate result binds approved readback and post-state before implementation receipt', () => {
+  const resultReceipt = recordHumanGateResult({
+    receiptRoot: approvedFlow.receiptRoot,
+    secureWriterPath: approvedFlow.writer,
+    gate: 'G-OBLIGATION-SCOPE',
+    proposalId: approvedFlow.proposalOutput.proposal.proposal_id,
+    planBytes: readFileSync(approvedFlow.paths.plan),
+    payloadBytes: readFileSync(approvedFlow.paths.payload),
+    executionEnvelopeBytes: readFileSync(approvedFlow.paths.envelope),
+    readbackBytes: approvedFlow.approvedBytes,
+    postStateSha256: sha256(approvedFlow.postStateBytes),
+  });
+  const verified = runEngine(['verify-approved', ...approvedFlow.promotion,
+    '--approved', approvedFlow.approvedPath, '--post-state', approvedFlow.postStatePath]);
+  assert.equal(verified.status, 0, verified.stderr);
+  assert.match(verified.stdout, /^OBLIGATION_CENSUS_APPROVED_VERIFIED /);
+  const receiptPath = join(approvedFlow.receiptRoot, 'obligation-census/implementation-receipt.json');
+  const receipt = JSON.parse(readFileSync(receiptPath, 'utf8'));
+  assert.equal(receipt.gate_result_id, resultReceipt.result.result_id);
+  assert.equal(receipt.gate_result_sha256, resultReceipt.resultSha256);
+  assert.equal(receipt.post_state_sha256, sha256(approvedFlow.postStateBytes));
+});
+
+check('exact promotion and implementation receipt replays recover lost acknowledgements idempotently', () => {
+  const approvedBefore = readFileSync(approvedFlow.approvedPath);
+  const postBefore = readFileSync(approvedFlow.postStatePath);
+  const implementationPath = join(approvedFlow.receiptRoot, 'obligation-census/implementation-receipt.json');
+  const implementationBefore = readFileSync(implementationPath);
+  const promotionReplay = runEngine(['promote-approved', ...approvedFlow.promotion]);
+  assert.equal(promotionReplay.status, 0, promotionReplay.stderr);
+  assert.deepEqual(readFileSync(approvedFlow.approvedPath), approvedBefore);
+  assert.deepEqual(readFileSync(approvedFlow.postStatePath), postBefore);
+  const verifyReplay = runEngine(['verify-approved', ...approvedFlow.promotion,
+    '--approved', approvedFlow.approvedPath, '--post-state', approvedFlow.postStatePath]);
+  assert.equal(verifyReplay.status, 0, verifyReplay.stderr);
+  assert.deepEqual(readFileSync(implementationPath), implementationBefore);
+});
+
+check('writer fault after approved publication is recoverable by exact retry of the missing post-state', () => {
+  const fault = failOnceWriter(4);
+  const flow = prepareGateFlow({ writer: fault.wrapper });
+  const first = runEngine(['promote-approved', ...flow.promotion]);
+  assert.notEqual(first.status, 0);
+  assert.match(first.stderr, /injected writer fault/);
+  const approvedPath = join(flow.receiptRoot, 'obligation-census/approved.json');
+  const postStatePath = join(flow.receiptRoot, 'obligation-census/post-state.json');
+  assert.equal(existsSync(approvedPath), true);
+  assert.equal(existsSync(postStatePath), false);
+  const approvedBefore = readFileSync(approvedPath);
+  const retry = runEngine(['promote-approved', ...flow.promotion]);
+  assert.equal(retry.status, 0, retry.stderr);
+  assert.deepEqual(readFileSync(approvedPath), approvedBefore);
+  assert.equal(existsSync(postStatePath), true);
+  assert.equal(readFileSync(fault.counter, 'utf8').trim(), '5');
+});
+
+check('mismatched pre-existing fixed receipt bytes reject instead of being reused', () => {
+  const flow = prepareGateFlow();
+  const approvedPath = join(flow.receiptRoot, 'obligation-census/approved.json');
+  write(approvedPath, '{}\n');
+  const result = runEngine(['promote-approved', ...flow.promotion]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /approved census existing bytes mismatch/);
+  assert.equal(existsSync(join(flow.receiptRoot, 'obligation-census/post-state.json')), false);
+});
+
+check('verify-approved rejects a gate result with wrong approved readback', () => {
+  const flow = publishApproved(prepareGateFlow());
+  recordHumanGateResult({
+    receiptRoot: flow.receiptRoot,
+    secureWriterPath: flow.writer,
+    gate: 'G-OBLIGATION-SCOPE',
+    proposalId: flow.proposalOutput.proposal.proposal_id,
+    planBytes: readFileSync(flow.paths.plan),
+    payloadBytes: readFileSync(flow.paths.payload),
+    executionEnvelopeBytes: readFileSync(flow.paths.envelope),
+    readbackBytes: Buffer.from('wrong approved readback', 'utf8'),
+    postStateSha256: sha256(flow.postStateBytes),
+  });
+  const result = runEngine(['verify-approved', ...flow.promotion,
+    '--approved', flow.approvedPath, '--post-state', flow.postStatePath]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /read-back mismatch/);
+});
+
+check('verify-approved rejects a gate result with wrong post-state hash', () => {
+  const flow = publishApproved(prepareGateFlow());
+  recordHumanGateResult({
+    receiptRoot: flow.receiptRoot,
+    secureWriterPath: flow.writer,
+    gate: 'G-OBLIGATION-SCOPE',
+    proposalId: flow.proposalOutput.proposal.proposal_id,
+    planBytes: readFileSync(flow.paths.plan),
+    payloadBytes: readFileSync(flow.paths.payload),
+    executionEnvelopeBytes: readFileSync(flow.paths.envelope),
+    readbackBytes: flow.approvedBytes,
+    postStateSha256: '0'.repeat(64),
+  });
+  const result = runEngine(['verify-approved', ...flow.promotion,
+    '--approved', flow.approvedPath, '--post-state', flow.postStatePath]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /post-state mismatch/);
+});
+
+check('promote-approved rejects candidate substitution before any receipt publication', () => {
+  const flow = prepareGateFlow();
+  const mutant = JSON.parse(readFileSync(flow.paths.candidate, 'utf8'));
+  mutant.obligations.pop();
+  writeFileSync(flow.paths.candidate, jsonBytes(mutant));
+  const result = runEngine(['promote-approved', ...flow.promotion]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /candidate census drift/);
+  assert.equal(existsSync(join(flow.receiptRoot, 'obligation-census')), false);
+});
+
+check('promote-approved rejects live global target drift before any receipt publication', () => {
+  const flow = prepareGateFlow();
+  write(join(flow.source.home, '.claude/skills/external/GLOBAL-DRIFT.md'), 'drift\n');
+  const result = runEngine(['promote-approved', ...flow.promotion]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /live target census drift/);
+  assert.equal(existsSync(join(flow.receiptRoot, 'obligation-census')), false);
+});
+
+check('promote-approved rejects canonical source worktree drift before any receipt publication', () => {
+  const flow = prepareGateFlow();
+  writeFileSync(join(flow.source.repo, 'RULES.md'), 'mutated canonical prose\n');
+  const result = runEngine(['promote-approved', ...flow.promotion]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /canonical source worktree drift/);
+  assert.equal(existsSync(join(flow.receiptRoot, 'obligation-census')), false);
+});
+
+check('promote-approved rejects forbidden runtime tree drift before any receipt publication', () => {
+  const flow = prepareGateFlow();
+  write(join(flow.source.repo, 'scripts/evolution/drift.mjs'), 'export const drift = true;\n');
+  const result = runEngine(['promote-approved', ...flow.promotion]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /gate payload drift/);
+  assert.equal(existsSync(join(flow.receiptRoot, 'obligation-census')), false);
 });
 
 check('production gate payload tracked-byte branch accepts tracked non-JSON generator and test files', () => {

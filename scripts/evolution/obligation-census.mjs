@@ -9,20 +9,33 @@
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import {
+  closeSync,
+  constants,
   existsSync,
+  fstatSync,
   lstatSync,
   mkdirSync,
+  mkdtempSync,
+  openSync,
   readFileSync,
   readlinkSync,
   readdirSync,
   realpathSync,
   renameSync,
+  rmdirSync,
   statSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  humanGateSlots,
+  validateHumanGateBinding,
+  validateHumanGateProposal,
+  verifyHumanGateChain,
+} from '../../.claude/hooks/lib/human-gate-contract.mjs';
 
 const SELF = realpathSync(fileURLToPath(import.meta.url));
 const SOURCE_ROOT = realpathSync(resolve(dirname(SELF), '../..'));
@@ -43,6 +56,40 @@ const RECORD_KEYS = Object.freeze([
   'degradation_code', 'owner', 'classification_basis', 'review_state',
   'native_status', 'enforcement',
 ]);
+const APPROVAL_KEYS = Object.freeze([
+  'gate', 'candidate_sha256', 'source_manifest_sha256', 'live_target_census_sha256',
+  'gate_payload_sha256', 'execution_envelope_sha256', 'proposal_id',
+  'proposal_sha256', 'binding_id', 'binding_sha256', 'target_commit', 'target_tree',
+]);
+const POST_STATE_KEYS = Object.freeze([
+  'schema_version', 'plan_id', 'gate', 'target_commit', 'target_tree',
+  'candidate_sha256', 'approved_census_sha256', 'source_manifest_sha256',
+  'live_target_census_sha256', 'gate_payload_sha256',
+  'execution_envelope_sha256', 'proposal_id', 'proposal_sha256', 'binding_id',
+  'binding_sha256', 'counts',
+]);
+const IMPLEMENTATION_RECEIPT_KEYS = Object.freeze([
+  'schema_version', 'plan_id', 'unit', 'gate', 'status', 'target_commit',
+  'target_tree', 'approved_slot', 'post_state_slot', 'candidate_sha256',
+  'approved_census_sha256', 'post_state_sha256', 'proposal_id',
+  'proposal_sha256', 'binding_id', 'binding_sha256', 'gate_result_id',
+  'gate_result_sha256', 'counts',
+]);
+const POST_COUNT_KEYS = Object.freeze([
+  'sources', 'anchors', 'obligations', 'unknown', 'missing_wiring',
+  'native_impossible', 'degraded',
+]);
+const EXECUTION_GUARD_KEYS = Object.freeze([
+  'head_commit', 'head_tree', 'tracked_diff_sha256', 'tracked_diff_bytes',
+  'canonical_source_count', 'canonical_source_worktree_sha256',
+  'runtime_trees', 'allowed_repo_mutations',
+]);
+const RUNTIME_GUARD_PATHS = Object.freeze([
+  '.claude/hooks', '.codex', '.agents/skills', 'scripts/evolution',
+]);
+const APPROVED_SLOT = 'obligation-census/approved.json';
+const POST_STATE_SLOT = 'obligation-census/post-state.json';
+const IMPLEMENTATION_RECEIPT_SLOT = 'obligation-census/implementation-receipt.json';
 const MARKERS = Object.freeze([
   ['MUST_UPPER', /\bMUST\b/u],
   ['SHALL_UPPER', /\bSHALL\b/u],
@@ -711,6 +758,7 @@ function validateObligation(row, mode) {
     || stable(row.harnesses) !== stable(['claude', 'codex']) || !Array.isArray(row.mutant_ids) || !row.mutant_ids.length
     || row.receipt_kind !== 'OBLIGATION_LEDGER_ENTRY' || typeof row.owner !== 'string'
     || !['PROPOSED', 'HUMAN_APPROVED'].includes(row.review_state)) fail(`invalid obligation record: ${row.id}`);
+  if (['candidate', 'gate-ready'].includes(mode) && row.review_state !== 'PROPOSED') fail(`candidate obligation review state mismatch: ${row.id}`);
   const expectedId = `OBL-${sha256(Buffer.from(`${row.source_pointer}\0${row.source_anchor_hash}`, 'utf8')).slice(0, 20).toUpperCase()}`;
   if (row.id !== expectedId) fail(`obligation id is not content-derived: ${row.id}`);
   const basisClasses = {
@@ -835,6 +883,161 @@ function writeExclusiveJson(path, value) {
   return { path: absolute, sha256: sha256(readFileSync(absolute)) };
 }
 
+function statIdentity(path) {
+  const stat = lstatSync(path, { bigint: true });
+  if (stat.isSymbolicLink() || !stat.isDirectory()) fail(`receipt root is not a real directory: ${path}`);
+  return { dev: String(stat.dev), ino: String(stat.ino) };
+}
+
+function sameIdentity(left, right) {
+  return String(left?.dev) === String(right?.dev) && String(left?.ino) === String(right?.ino);
+}
+
+function physicalReceiptRoot(path) {
+  if (!isAbsolute(path)) fail('receipt root must be absolute');
+  const lexical = resolve(path);
+  if (lexical !== path || realpathSync(lexical) !== lexical) fail('receipt root must be a physical absolute path');
+  statIdentity(lexical);
+  return lexical;
+}
+
+function regularFileBytes(path, label) {
+  const beforePath = lstatSync(path);
+  if (beforePath.isSymbolicLink() || !beforePath.isFile() || beforePath.nlink !== 1) fail(`${label} must be a single-link regular file`);
+  let descriptor;
+  try {
+    descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const before = fstatSync(descriptor);
+    if (!before.isFile() || before.nlink !== 1) fail(`${label} must be a single-link regular file`);
+    const bytes = readFileSync(descriptor);
+    const after = fstatSync(descriptor);
+    if (before.dev !== after.dev || before.ino !== after.ino || before.size !== after.size || before.mtimeMs !== after.mtimeMs) {
+      fail(`${label} changed while read`);
+    }
+    const afterPath = lstatSync(path);
+    if (afterPath.isSymbolicLink() || !afterPath.isFile() || afterPath.nlink !== 1
+      || afterPath.dev !== after.dev || afterPath.ino !== after.ino || afterPath.size !== after.size) {
+      fail(`${label} path identity changed while read`);
+    }
+    return bytes;
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
+}
+
+function safeReceiptSegments(slot) {
+  const parts = String(slot).split('/');
+  if (!slot || isAbsolute(slot) || slot.includes('\\')
+    || parts.some((part) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(part) || part === '.' || part === '..')) {
+    fail(`invalid receipt slot: ${slot}`);
+  }
+  return parts;
+}
+
+function receiptPath(root, slot) {
+  return join(root, ...safeReceiptSegments(slot));
+}
+
+function safeReadReceipt(root, slot, expectedIdentity, label) {
+  if (!sameIdentity(statIdentity(root), expectedIdentity)) fail('receipt root identity mismatch');
+  const parts = safeReceiptSegments(slot);
+  const ancestors = [{ path: root, ...statIdentity(root) }];
+  let current = root;
+  for (const part of parts.slice(0, -1)) {
+    current = join(current, part);
+    const stat = lstatSync(current, { bigint: true });
+    if (stat.isSymbolicLink() || !stat.isDirectory()) fail(`${label} ancestor is not a real directory`);
+    ancestors.push({ path: current, dev: String(stat.dev), ino: String(stat.ino) });
+  }
+  const bytes = regularFileBytes(join(current, parts.at(-1)), label);
+  for (const ancestor of ancestors) if (!sameIdentity(statIdentity(ancestor.path), ancestor)) fail(`${label} ancestor identity changed while read`);
+  return bytes;
+}
+
+function publishReceipt(root, identity, writerPath, writerSha256, slot, bytes) {
+  if (sha256(regularFileBytes(writerPath, 'secure writer')) !== writerSha256) fail('secure writer hash mismatch');
+  if (!sameIdentity(statIdentity(root), identity)) fail('receipt root identity mismatch');
+  const parts = safeReceiptSegments(slot);
+  const temporaryRoot = mkdtempSync(join(tmpdir(), 'obligation-census-publish-'));
+  const inputPath = join(temporaryRoot, 'receipt.input');
+  try {
+    writeFileSync(inputPath, bytes, { flag: 'wx', mode: 0o600 });
+    const args = ['--root', root, '--root-dev', identity.dev, '--root-ino', identity.ino];
+    for (const segment of parts.slice(0, -1)) args.push('--segment', segment);
+    args.push('--final', parts.at(-1), '--input', inputPath, '--expected-input-sha', sha256(bytes));
+    const result = spawnSync(writerPath, args, {
+      input: '', encoding: 'utf8', env: { PATH: '/usr/bin:/bin' }, maxBuffer: 1024 * 1024,
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) fail(`secure writer rejected publication: ${String(result.stderr || result.stdout).trim()}`);
+    if (sha256(regularFileBytes(writerPath, 'secure writer')) !== writerSha256) fail('secure writer changed during publication');
+    const readback = safeReadReceipt(root, slot, identity, 'published receipt');
+    if (!readback.equals(bytes)) fail('secure writer read-back mismatch');
+    if (String(result.stdout).trim() !== `OK sha256=${sha256(bytes)} bytes=${bytes.length}`) fail('secure writer success token mismatch');
+    return { path: receiptPath(root, slot), sha256: sha256(readback), bytes: readback };
+  } finally {
+    try { unlinkSync(inputPath); } catch { }
+    try { rmdirSync(temporaryRoot); } catch { }
+  }
+}
+
+function parseReceipt(bytes, label) {
+  let value;
+  try { value = JSON.parse(bytes.toString('utf8')); } catch { fail(`${label} is not valid JSON`); }
+  return value;
+}
+
+function runtimeTreeDescriptor(root, path) {
+  const absolute = join(root, path);
+  if (!existsSync(absolute)) return { path, state: 'ABSENT', entry_count: 0, tree_sha256: objectHash([]) };
+  const stat = lstatSync(absolute);
+  if (stat.isSymbolicLink() || !stat.isDirectory()) fail(`runtime guard root must be a real directory: ${path}`);
+  const rows = treeRows(absolute);
+  return { path, state: 'PRESENT', entry_count: rows.length, tree_sha256: objectHash(rows) };
+}
+
+export function executionGuard({ root, targetCommit, effective }) {
+  const target = resolveTargetCommit(root, targetCommit);
+  const headCommit = git(target.root, ['rev-parse', '--verify', 'HEAD^{commit}'], 'HEAD resolution').stdout.toString('utf8').trim();
+  const headTree = git(target.root, ['rev-parse', '--verify', 'HEAD^{tree}'], 'HEAD tree resolution').stdout.toString('utf8').trim();
+  if (headCommit !== target.commit || headTree !== target.tree) fail('HEAD does not match the bound target commit/tree');
+  const diff = git(target.root, ['diff', '--binary', '--no-ext-diff', 'HEAD', '--'], 'tracked worktree diff').stdout;
+  const sourceRows = effective.resolved.map((row) => {
+    const path = join(target.root, row.path);
+    const stat = lstatSync(path);
+    if (stat.isSymbolicLink() || !stat.isFile() || stat.nlink !== 1) fail(`canonical source worktree entry is not a single-link file: ${row.path}`);
+    const currentSha = sha256(readFileSync(path));
+    if (currentSha !== row.sha256) fail(`canonical source worktree drift: ${row.path}`);
+    return { path: row.path, mode: fileMode(stat), sha256: currentSha };
+  });
+  const guard = {
+    head_commit: headCommit,
+    head_tree: headTree,
+    tracked_diff_sha256: sha256(diff),
+    tracked_diff_bytes: diff.length,
+    canonical_source_count: sourceRows.length,
+    canonical_source_worktree_sha256: objectHash(sourceRows),
+    runtime_trees: RUNTIME_GUARD_PATHS.map((path) => runtimeTreeDescriptor(target.root, path)),
+    allowed_repo_mutations: [],
+  };
+  exactKeys(guard, EXECUTION_GUARD_KEYS, 'execution guard');
+  return guard;
+}
+
+function approvalCounts(candidate, report) {
+  const counts = {
+    sources: candidate.summary.source_count,
+    anchors: candidate.summary.anchor_count,
+    obligations: candidate.summary.obligation_count,
+    unknown: candidate.summary.unknown_count,
+    missing_wiring: report.missing_wiring_ids.length,
+    native_impossible: report.native_impossible_ids.length,
+    degraded: report.degraded_ids.length,
+  };
+  exactKeys(counts, POST_COUNT_KEYS, 'approval counts');
+  return counts;
+}
+
 function parseOptions(argv, allowed) {
   const options = {};
   for (let index = 0; index < argv.length; index += 1) {
@@ -875,6 +1078,7 @@ export function gatePayload({ planPath, baselinePath, sourcePath, deltaPath, tar
   const source = readCanonicalJson(sourcePath, 'effective source manifest');
   const delta = readCanonicalJson(deltaPath, 'source delta');
   const targets = readCanonicalJson(targetsPath, 'live target census');
+  validateEffective(source);
   if (report.candidate_sha256 !== sha256(jsonBytes(candidate)) || report.source_delta_sha256 !== sha256(jsonBytes(delta))
     || stable(report) !== stable(classificationReport({ candidate, delta, liveTargets: targets }))) fail('classification report binding mismatch');
   validateCandidate(candidate, source, targets, 'gate-ready');
@@ -896,6 +1100,7 @@ export function gatePayload({ planPath, baselinePath, sourcePath, deltaPath, tar
       trackedBytes(target.root, target.commit, path, label);
     }
   }
+  const guard = executionGuard({ root: target.root, targetCommit: target.commit, effective: source });
   return {
     payload: {
       schema_version: 'luca.g-obligation-scope-payload.v1',
@@ -904,6 +1109,7 @@ export function gatePayload({ planPath, baselinePath, sourcePath, deltaPath, tar
       target_commit: target.commit,
       target_tree: target.tree,
       bindings,
+      execution_guard: guard,
       counts: {
         baseline_sources: delta.baseline_count,
         effective_sources: delta.effective_count,
@@ -934,16 +1140,270 @@ export function gatePayload({ planPath, baselinePath, sourcePath, deltaPath, tar
   };
 }
 
+function requireFixedReceiptPath(provided, expected, label) {
+  const lexical = resolve(provided);
+  if (lexical !== expected) fail(`${label} must name the fixed receipt slot`);
+  let physical;
+  try { physical = realpathSync(lexical); } catch { fail(`${label} is missing`); }
+  if (physical !== lexical) fail(`${label} must not traverse a symlink`);
+}
+
+function canonicalReceipt(bytes, label) {
+  const value = parseReceipt(bytes, label);
+  if (!bytes.equals(jsonBytes(value))) fail(`${label} bytes are not canonical JSON`);
+  return value;
+}
+
+function slotExists(root, slot) {
+  try { lstatSync(receiptPath(root, slot)); return true; }
+  catch (error) { if (error?.code === 'ENOENT') return false; throw error; }
+}
+
+function reuseExactReceipt(root, identity, slot, expectedBytes, label) {
+  const bytes = safeReadReceipt(root, slot, identity, label);
+  if (!bytes.equals(expectedBytes)) fail(`${label} existing bytes mismatch`);
+  return { path: receiptPath(root, slot), sha256: sha256(bytes), bytes, reused: true };
+}
+
+function publishOrReuseReceipt(root, identity, writerPath, writerSha256, slot, bytes, label) {
+  if (slotExists(root, slot)) return reuseExactReceipt(root, identity, slot, bytes, label);
+  try {
+    return { ...publishReceipt(root, identity, writerPath, writerSha256, slot, bytes), reused: false };
+  } catch (error) {
+    if (slotExists(root, slot)) return reuseExactReceipt(root, identity, slot, bytes, label);
+    throw error;
+  }
+}
+
+function loadPromotionContext(options) {
+  const trackedBaseline = trackedJson(options.root, options['target-commit'], options.baseline, 'baseline source manifest');
+  const baseline = trackedBaseline.value;
+  const source = readCanonicalJson(options.source, 'effective source manifest');
+  const delta = readCanonicalJson(options.delta, 'source delta');
+  const targets = readCanonicalJson(options.targets, 'live target census');
+  const candidate = readCanonicalJson(options.candidate, 'candidate census');
+  const report = readCanonicalJson(options.report, 'classification report');
+  const currentSource = recomputeSourceManifest({
+    root: options.root,
+    targetCommit: options['target-commit'],
+    baseline,
+    baselineSha256: sha256(trackedBaseline.bytes),
+  });
+  sameValue(source, currentSource, 'effective source manifest');
+  sameValue(delta, sourceDelta(baseline, currentSource), 'source delta');
+  const currentTargets = censusLiveTargets(liveArgs(options));
+  sameValue(targets, currentTargets, 'live target census');
+  const currentCandidate = generateCandidate({ root: options.root, effective: source, liveTargets: targets });
+  sameValue(candidate, currentCandidate, 'candidate census');
+  validateCandidate(candidate, source, targets, 'gate-ready');
+  sameValue(report, classificationReport({ candidate, delta, liveTargets: targets }), 'classification report');
+
+  const expectedGate = gatePayload({
+    planPath: options.plan,
+    baselinePath: options.baseline,
+    sourcePath: options.source,
+    deltaPath: options.delta,
+    targetsPath: options.targets,
+    candidatePath: options.candidate,
+    reportPath: options.report,
+    schemaPath: options.schema,
+    testPath: options.test,
+    root: options.root,
+  });
+  const payload = readCanonicalJson(options.payload, 'gate payload');
+  const envelope = readCanonicalJson(options.envelope, 'gate execution envelope');
+  sameValue(payload, expectedGate.payload, 'gate payload');
+  sameValue(envelope, expectedGate.envelope, 'gate execution envelope');
+
+  const receiptRoot = physicalReceiptRoot(options['receipt-root']);
+  const receiptIdentity = statIdentity(receiptRoot);
+  const writerPath = resolve(options.writer);
+  const writerSha256 = sha256(regularFileBytes(writerPath, 'secure writer'));
+  const proposalProbe = parseReceipt(regularFileBytes(options.proposal, 'human gate proposal'), 'human gate proposal');
+  validateHumanGateProposal(proposalProbe);
+  const slots = humanGateSlots('G-OBLIGATION-SCOPE', proposalProbe.proposal_id);
+  requireFixedReceiptPath(options.proposal, receiptPath(receiptRoot, slots.proposal), 'proposal');
+  requireFixedReceiptPath(options.binding, receiptPath(receiptRoot, slots.binding), 'binding');
+  const proposalBytes = safeReadReceipt(receiptRoot, slots.proposal, receiptIdentity, 'human gate proposal');
+  const bindingBytes = safeReadReceipt(receiptRoot, slots.binding, receiptIdentity, 'human gate binding');
+  const proposal = parseReceipt(proposalBytes, 'human gate proposal');
+  const binding = parseReceipt(bindingBytes, 'human gate binding');
+  validateHumanGateProposal(proposal);
+  validateHumanGateBinding(binding, proposal, proposalBytes);
+  if (proposal.gate !== 'G-OBLIGATION-SCOPE' || binding.gate !== proposal.gate) fail('wrong human gate identity');
+  if (!sameIdentity(proposal.receipt_root, receiptIdentity) || !sameIdentity(binding.receipt_root, receiptIdentity)) fail('human gate receipt root mismatch');
+  if (proposal.secure_writer_sha256 !== writerSha256 || binding.secure_writer_sha256 !== writerSha256) fail('human gate secure writer mismatch');
+  const planBytes = regularFileBytes(options.plan, 'gate plan');
+  const payloadBytes = regularFileBytes(options.payload, 'gate payload');
+  const envelopeBytes = regularFileBytes(options.envelope, 'gate execution envelope');
+  if (proposal.plan_sha256 !== sha256(planBytes) || proposal.payload_sha256 !== sha256(payloadBytes)
+    || proposal.execution_envelope_sha256 !== sha256(envelopeBytes)) fail('human gate external input substitution detected');
+  if (payload.target_commit !== candidate.target_commit || payload.target_tree !== candidate.target_tree
+    || payload.bindings.candidate_census.sha256 !== sha256(jsonBytes(candidate))
+    || payload.bindings.effective_source_manifest.sha256 !== sha256(jsonBytes(source))
+    || payload.bindings.live_target_census.sha256 !== sha256(jsonBytes(targets))) fail('gate payload census binding mismatch');
+  return {
+    baseline, source, delta, targets, candidate, report, payload, envelope,
+    planBytes, payloadBytes, envelopeBytes, proposal, proposalBytes, binding,
+    bindingBytes, receiptRoot, receiptIdentity, writerPath, writerSha256, slots,
+  };
+}
+
+function approvalMetadata(context) {
+  const value = {
+    gate: 'G-OBLIGATION-SCOPE',
+    candidate_sha256: sha256(jsonBytes(context.candidate)),
+    source_manifest_sha256: sha256(jsonBytes(context.source)),
+    live_target_census_sha256: sha256(jsonBytes(context.targets)),
+    gate_payload_sha256: sha256(context.payloadBytes),
+    execution_envelope_sha256: sha256(context.envelopeBytes),
+    proposal_id: context.proposal.proposal_id,
+    proposal_sha256: sha256(context.proposalBytes),
+    binding_id: context.binding.binding_id,
+    binding_sha256: sha256(context.bindingBytes),
+    target_commit: context.candidate.target_commit,
+    target_tree: context.candidate.target_tree,
+  };
+  exactKeys(value, APPROVAL_KEYS, 'census approval metadata');
+  return value;
+}
+
+export function buildApprovedCensus(context) {
+  const approved = structuredClone(context.candidate);
+  approved.kind = 'APPROVED';
+  approved.approval_state = 'APPROVED_G_OBLIGATION_SCOPE';
+  approved.source_coverage = approved.source_coverage.map((row) => ({ ...row, review_state: 'HUMAN_APPROVED' }));
+  approved.obligations = approved.obligations.map((row) => ({ ...row, review_state: 'HUMAN_APPROVED' }));
+  approved.approval = approvalMetadata(context);
+  return approved;
+}
+
+export function validateApprovedCensus(approved, context) {
+  exactKeys(approved, [
+    'schema_version', 'plan_id', 'kind', 'approval_state', 'target_commit',
+    'target_tree', 'source_manifest_sha256', 'live_target_census_sha256',
+    'source_coverage', 'anchors', 'obligations', 'summary', 'approval',
+  ], 'approved obligation census');
+  exactKeys(approved.approval, APPROVAL_KEYS, 'census approval metadata');
+  const expected = buildApprovedCensus(context);
+  sameValue(approved, expected, 'approved census');
+  return approved;
+}
+
+export function buildPostState(context, approved) {
+  validateApprovedCensus(approved, context);
+  const postState = {
+    schema_version: 'luca.obligation-census-post-state.v1',
+    plan_id: PLAN_ID,
+    gate: 'G-OBLIGATION-SCOPE',
+    target_commit: context.candidate.target_commit,
+    target_tree: context.candidate.target_tree,
+    candidate_sha256: sha256(jsonBytes(context.candidate)),
+    approved_census_sha256: sha256(jsonBytes(approved)),
+    source_manifest_sha256: sha256(jsonBytes(context.source)),
+    live_target_census_sha256: sha256(jsonBytes(context.targets)),
+    gate_payload_sha256: sha256(context.payloadBytes),
+    execution_envelope_sha256: sha256(context.envelopeBytes),
+    proposal_id: context.proposal.proposal_id,
+    proposal_sha256: sha256(context.proposalBytes),
+    binding_id: context.binding.binding_id,
+    binding_sha256: sha256(context.bindingBytes),
+    counts: approvalCounts(context.candidate, context.report),
+  };
+  exactKeys(postState, POST_STATE_KEYS, 'obligation census post-state');
+  return postState;
+}
+
+function promoteApproved(options) {
+  const context = loadPromotionContext(options);
+  const approved = buildApprovedCensus(context);
+  validateApprovedCensus(approved, context);
+  const approvedBytes = jsonBytes(approved);
+  const postState = buildPostState(context, approved);
+  const postStateBytes = jsonBytes(postState);
+  const approvedOutput = publishOrReuseReceipt(
+    context.receiptRoot, context.receiptIdentity, context.writerPath,
+    context.writerSha256, APPROVED_SLOT, approvedBytes, 'approved census',
+  );
+  const postStateOutput = publishOrReuseReceipt(
+    context.receiptRoot, context.receiptIdentity, context.writerPath,
+    context.writerSha256, POST_STATE_SLOT, postStateBytes, 'post-state',
+  );
+  return { context, approved, approvedBytes, postState, postStateBytes, approvedOutput, postStateOutput };
+}
+
+function verifyApproved(options) {
+  const context = loadPromotionContext(options);
+  requireFixedReceiptPath(options.approved, receiptPath(context.receiptRoot, APPROVED_SLOT), 'approved census');
+  requireFixedReceiptPath(options['post-state'], receiptPath(context.receiptRoot, POST_STATE_SLOT), 'post-state');
+  const approvedBytes = safeReadReceipt(context.receiptRoot, APPROVED_SLOT, context.receiptIdentity, 'approved census');
+  const postStateBytes = safeReadReceipt(context.receiptRoot, POST_STATE_SLOT, context.receiptIdentity, 'post-state');
+  const approved = canonicalReceipt(approvedBytes, 'approved census');
+  const postState = canonicalReceipt(postStateBytes, 'post-state');
+  validateApprovedCensus(approved, context);
+  const expectedPostState = buildPostState(context, approved);
+  exactKeys(postState, POST_STATE_KEYS, 'obligation census post-state');
+  sameValue(postState, expectedPostState, 'obligation census post-state');
+  const postStateSha256 = sha256(postStateBytes);
+  const chain = verifyHumanGateChain({
+    receiptRoot: context.receiptRoot,
+    secureWriterPath: context.writerPath,
+    gate: 'G-OBLIGATION-SCOPE',
+    proposalId: context.proposal.proposal_id,
+    planBytes: context.planBytes,
+    payloadBytes: context.payloadBytes,
+    executionEnvelopeBytes: context.envelopeBytes,
+    readbackBytes: approvedBytes,
+    expectedPostStateSha256: postStateSha256,
+  });
+  const implementationReceipt = {
+    schema_version: 'luca.obligation-census-implementation-receipt.v1',
+    plan_id: PLAN_ID,
+    unit: 'U-009',
+    gate: 'G-OBLIGATION-SCOPE',
+    status: 'VERIFIED_APPROVED_CENSUS',
+    target_commit: context.candidate.target_commit,
+    target_tree: context.candidate.target_tree,
+    approved_slot: APPROVED_SLOT,
+    post_state_slot: POST_STATE_SLOT,
+    candidate_sha256: sha256(jsonBytes(context.candidate)),
+    approved_census_sha256: sha256(approvedBytes),
+    post_state_sha256: postStateSha256,
+    proposal_id: chain.proposal.proposal_id,
+    proposal_sha256: chain.proposalSha256,
+    binding_id: chain.binding.binding_id,
+    binding_sha256: chain.bindingSha256,
+    gate_result_id: chain.result.result_id,
+    gate_result_sha256: chain.resultSha256,
+    counts: approvalCounts(context.candidate, context.report),
+  };
+  exactKeys(implementationReceipt, IMPLEMENTATION_RECEIPT_KEYS, 'implementation receipt');
+  const output = publishOrReuseReceipt(
+    context.receiptRoot, context.receiptIdentity, context.writerPath,
+    context.writerSha256, IMPLEMENTATION_RECEIPT_SLOT,
+    jsonBytes(implementationReceipt), 'implementation receipt',
+  );
+  return { implementationReceipt, output, chain };
+}
+
 async function main() {
   const [mode, ...argv] = process.argv.slice(2);
+  const promotionOptions = [
+    'root', 'target-commit', 'plan', 'baseline', 'source', 'delta', 'targets',
+    'candidate', 'report', 'schema', 'test', 'payload', 'envelope',
+    'receipt-root', 'writer', 'proposal', 'binding', 'home', 'claude-settings',
+    'claude-plugin-json', 'codex-plugin-json',
+  ];
   const allowedByMode = {
     'recompute-source': ['root', 'target-commit', 'baseline', 'out', 'delta'],
     'census-targets': ['root', 'target-commit', 'out', 'home', 'claude-settings', 'claude-plugin-json', 'codex-plugin-json'],
     generate: ['root', 'source', 'targets', 'delta', 'out', 'report'],
     verify: ['root', 'target-commit', 'baseline', 'source', 'targets', 'delta', 'candidate', 'report', 'mode', 'home', 'claude-settings', 'claude-plugin-json', 'codex-plugin-json'],
     'make-gate-payload': ['root', 'plan', 'baseline', 'source', 'delta', 'targets', 'candidate', 'report', 'schema', 'test', 'out', 'envelope'],
+    'promote-approved': promotionOptions,
+    'verify-approved': [...promotionOptions, 'approved', 'post-state'],
   };
-  if (!Object.hasOwn(allowedByMode, mode)) fail('usage: obligation-census.mjs <recompute-source|census-targets|generate|verify|make-gate-payload> [exact options]');
+  if (!Object.hasOwn(allowedByMode, mode)) fail('usage: obligation-census.mjs <recompute-source|census-targets|generate|verify|make-gate-payload|promote-approved|verify-approved> [exact options]');
   const options = parseOptions(argv, new Set(allowedByMode[mode]));
   if (mode === 'recompute-source') {
     requireOptions(options, ['root', 'target-commit', 'baseline', 'out', 'delta']);
@@ -1018,6 +1478,18 @@ async function main() {
     const payloadOutput = writeExclusiveJson(options.out, result.payload);
     const envelopeOutput = writeExclusiveJson(options.envelope, result.envelope);
     process.stdout.write(`OBLIGATION_SCOPE_PAYLOAD_READY ${payloadOutput.sha256} ${envelopeOutput.sha256}\n`);
+    return;
+  }
+  if (mode === 'promote-approved') {
+    requireOptions(options, promotionOptions.filter((name) => !['home', 'claude-settings', 'claude-plugin-json', 'codex-plugin-json'].includes(name)));
+    const result = promoteApproved(options);
+    process.stdout.write(`OBLIGATION_CENSUS_APPROVED_PUBLISHED ${result.approvedOutput.sha256} ${result.postStateOutput.sha256}\n`);
+    return;
+  }
+  if (mode === 'verify-approved') {
+    requireOptions(options, [...promotionOptions.filter((name) => !['home', 'claude-settings', 'claude-plugin-json', 'codex-plugin-json'].includes(name)), 'approved', 'post-state']);
+    const result = verifyApproved(options);
+    process.stdout.write(`OBLIGATION_CENSUS_APPROVED_VERIFIED ${result.output.sha256} ${result.chain.resultSha256}\n`);
     return;
   }
   fail('unreachable obligation census mode');
