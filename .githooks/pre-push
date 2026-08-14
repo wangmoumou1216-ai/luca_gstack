@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+required=(
+  GIT_CLOSEOUT_DESCRIPTOR
+  GIT_CLOSEOUT_GATE_ROOT
+  GIT_CLOSEOUT_GATE_PROPOSAL_ID
+  GIT_CLOSEOUT_GATE_PLAN
+  GIT_CLOSEOUT_GATE_ENVELOPE
+  GIT_CLOSEOUT_GATE_WRITER
+)
+for name in "${required[@]}"; do
+  if [ -z "${!name:-}" ]; then
+    echo "G_REMOTE_REQUIRED missing $name; prepare an exact descriptor and obtain a fresh top-level G-REMOTE approval" >&2
+    exit 1
+  fi
+done
+
+repo_root=$(git rev-parse --show-toplevel)
+node "$repo_root/scripts/git-closeout.mjs" pre-push \
+  --repo "$repo_root" \
+  --descriptor "$GIT_CLOSEOUT_DESCRIPTOR" \
+  --remote-name "$1" \
+  --remote-url "$2" \
+  --gate-root "$GIT_CLOSEOUT_GATE_ROOT" \
+  --proposal-id "$GIT_CLOSEOUT_GATE_PROPOSAL_ID" \
+  --plan "$GIT_CLOSEOUT_GATE_PLAN" \
+  --envelope "$GIT_CLOSEOUT_GATE_ENVELOPE" \
+  --writer "$GIT_CLOSEOUT_GATE_WRITER"

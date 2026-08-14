@@ -1076,7 +1076,7 @@ check('honesty: 降级面显式声明弱于 Claude', /弱于 Claude/.test(agents
   // change; an unreviewed body edit therefore fails even when its name/path remain unchanged.
   const EXPECTED_HASHES = {
     claude: {
-      'plan-agent': '857aada14b161e98c9b626ef3c856d58dd4c018ddcd6555b266f91e2365862c7',
+      'plan-agent': '82c309d2d0a31311c0880b38a8fe3df5f6ef53c74647ecfcfa51e2a62e8dca11',
       'work-agent': 'ef0ff9b632e37067fa0a026118aa4d4915745fcfabd5dbdc0a5558541e5da664',
       oracle: 'de7fe2bd4404f980ff5551eb61dae931cbeee813647c3cb2f1023f5f556e55eb',
       'quality-gate': '36a61adced31a6038e4d87e56b96c158752ffd12a6bd68347410a588726c7fb4',

@@ -33,9 +33,8 @@ appendix「harness 注入边界」。
 
 **单真值源 + 双检出原则（2026-07-16，取代双仓一致）：** `main` 是唯一真值源；
 `~/Desktop/luca_gstack`（框架/meta + 记忆权威 store）与 `~/Desktop/项目/muse/lucagstack`
-（luca app 运行时）是其两个检出。**框架改动任一检出可做：改前 pull、改完即 commit+push**；
-漂移有 tripwire，冲突推送被 git 拒绝。风险实验用分支/worktree，不开永久 fork；
-capability-parity 降级为仓内锚点自检。
+（luca app 运行时）是其两个检出。Git 收口统一遵循 `.claude/skill-os/git-closeout-policy.md`；
+风险实验用分支/worktree，不开永久 fork；capability-parity 降级为仓内锚点自检。
 
 ### Coding Discipline（Karpathy-inspired）
 
@@ -64,7 +63,7 @@ capability-parity 降级为仓内锚点自检。
   触发，且各自 SKILL.md 内含 fan-out 前的用户确认门；条件 2 对它们不适用，其余 4 条件仍正常触发。
   判定原则与名单的权威源见 `.claude/agents/plan-agent.md`「条件 2 豁免」段）
 - 任务有明确的阶段依赖（B 必须等 A 完成）
-- 任务涉及不可逆操作（git 操作、文件批量覆盖）
+- 任务涉及尚未批准的不可逆操作；已批准计划内 local exact commit 按 Git policy 收口，不重复进 Plan
 - 用户明确要求：「先做个计划」、「plan 一下」、「想清楚再做」
 
 **研究默认门：** 任务**同时复杂且新颖**（命中上面任一条件，且核心机制/交互无成熟先例）时，

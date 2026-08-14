@@ -411,6 +411,31 @@ export function recordHumanGateApproval({
   return { binding, bindingBytes, bindingSha256: published.sha256, path: published.path };
 }
 
+// Pre-execution consumers (for example the Git pre-push gate) must be able to
+// verify a fresh proposal+binding before the protected mutation exists. This
+// deliberately does not mint or accept a result receipt; post-state evidence
+// remains the responsibility of recordHumanGateResult/verifyHumanGateChain.
+export function verifyHumanGateApproval({
+  receiptRoot, secureWriterPath, gate, proposalId, planBytes, payloadBytes,
+  executionEnvelopeBytes,
+}) {
+  const root = physicalRoot(receiptRoot);
+  const identity = statIdentity(root);
+  const { proposal, bytes: proposalBytes, slots } = readProposal(root, gate, proposalId, identity);
+  if (!sameIdentity(identity, proposal.receipt_root)) throw new Error('receipt root does not match proposal');
+  verifyExternalBytes(proposal, { planBytes, payloadBytes, executionEnvelopeBytes, secureWriterPath });
+  if (Date.now() >= Date.parse(proposal.expires_at)) throw new Error('human gate approval expired before execution');
+  const bindingBytes = safeRead(root, slots.binding, proposal.receipt_root);
+  const binding = parseReceipt(bindingBytes, 'binding');
+  validateHumanGateBinding(binding, proposal, proposalBytes);
+  return {
+    proposal,
+    binding,
+    proposalSha256: sha256(proposalBytes),
+    bindingSha256: sha256(bindingBytes),
+  };
+}
+
 export function recordHumanGateResult({
   receiptRoot, secureWriterPath, gate, proposalId, planBytes, payloadBytes,
   executionEnvelopeBytes, readbackBytes, postStateSha256, observedAt = new Date().toISOString(),

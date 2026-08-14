@@ -222,7 +222,10 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 - **完成前验证铁律**：声明"做完了"之前，必须有当场跑出的证据（测试 / 脚本 / 读回文件 / 可观察检查）。
 - **保护区**：`framework/` HTML 母版只读、`docs/evaluation/` 受保护、`skill-invariants.md` P1-P7 保护区、
   记忆红线（稳定事实不得直接写长期上下文）。
-- **单真值源 + 双检出**：`main` 是唯一真值源，两个本地目录均为其检出（框架改动任一检出皆可做：动手前先 pull、做完立即 commit+push，另一侧开工前 pull）；`check-capability-parity.mjs` 降级为仓内能力锚点自检（verify 门 S18），behind tripwire 见 `check-behind-upstream.sh`（S23）。
+- **单真值源 + 双检出**：`main` 是唯一真值源，两个本地目录均为其检出；本地 exact commit、
+  dirty/WIP 隔离、只读 fetch 与 `G-REMOTE` 发布统一遵守
+  `.claude/skill-os/git-closeout-policy.md`。`check-capability-parity.mjs` 降级为仓内能力锚点自检
+  （verify 门 S18），behind tripwire 见 `check-behind-upstream.sh`（S23）。
 
 ---
 
@@ -333,7 +336,7 @@ git config core.hooksPath .githooks
 
 ```bash
 bash scripts/verify.sh   # 项目健康检查（结构、软链、路由、覆盖等）
-bash scripts/sync.sh     # 把记忆与自进化状态推回 GitHub（干净时会直接告诉你无需同步）
+bash scripts/sync.sh     # 只读检查记忆与自进化状态；不 stage、commit 或 push
 ```
 
 ---

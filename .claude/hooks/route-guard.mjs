@@ -1046,13 +1046,13 @@ if (!dryRun && prompt) {
 
 }
 
-// ── 单真值源 behind 兜底提醒（2026-07-16 luca 点名）：落后 tracking 分支即每条消息提醒，
-// pull 后自动消失。只查本地 ref（~10ms，fetch 由 session-restore 后台刷新 + verify S23 负责）。fail-open。
+// ── 单真值源 behind 兜底提醒（2026-07-16 luca 点名）：落后 tracking 分支即每条消息提醒。
+// 只查本地 ref（~10ms、零网络）；刷新须显式 fetch remote+ref，整合仍须人门。fail-open。
 try {
   const gitOpt = { cwd: projectRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] };
   const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', gitOpt).trim();
   const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, gitOpt).trim(), 10);
-  if (behind > 0) hints.push(`[route-guard] ⬇️ 本检出落后 ${up} ${behind} 条——动框架前请先 git pull（单真值源纪律，pull 后本提醒消失）。`);
+  if (behind > 0) hints.push(`[route-guard] ⬇️ 本检出落后本地 tracking ref ${up} ${behind} 条——如需刷新先显式只读 fetch remote+ref；整合须按 git-closeout-policy 通过人门。`);
 } catch {}
 
 if (hints.length > 0) process.stdout.write(hints.join('\n') + '\n');

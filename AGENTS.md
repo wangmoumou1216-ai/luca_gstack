@@ -465,6 +465,9 @@ The harness is the set of file, command, verification, and safety behaviors used
 
 - Prefer deterministic local commands.
 - Use `rg` before slower search tools.
+- Git closeout uses `.claude/skill-os/git-closeout-policy.md` as its single source of truth. In
+  particular, local exact commits use blob/hunk ownership, and every remote publication requires
+  an exact `G-REMOTE` descriptor and a fresh top-level user approval.
 - Do not run destructive commands such as `rm`, `git reset`, or broad cleanup commands unless
   explicitly requested and confirmed.
 - If network, GUI, or permission escalation is required, ask through the runtime approval mechanism.

@@ -47,7 +47,7 @@ Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 | 任务涉及 ≥ 3 个文件的创建或修改 | 搭建 CI/CD、实现记忆系统 |
 | 任务需要 ≥ 2 个独立 subagent 协作 | 多 Agent 研究 + 评估 |
 | 任务有明确阶段依赖（B 等 A 完成） | 先建 git → 再加 hooks |
-| 任务涉及不可逆操作 | git 操作、批量覆盖文件 |
+| 任务涉及尚未获批准的不可逆操作 | 远端发布、历史/冲突变更、批量覆盖文件；已批准计划内 local exact commit 按 `git-closeout-policy.md` 收口，不二次进 Plan |
 | 用户明确要求 | "先做个计划"、"plan 一下"、"想清楚再做" |
 
 **「≥2 subagent」条件对 `/auto` 本身不生效（2026-07-03 修复）：** `/auto` 把"编排多个 skill"
@@ -95,7 +95,7 @@ Step 2 已有的按 Phase 数缩放的确认门（Hierarchical≥3 Phase 才等�
 - 已有明确 step-by-step 指令
 - 简单的 2 文件无依赖任务（直接 Parallel Fan-out；≥3 文件即命中触发条件 1，边界与 CLAUDE.md 对齐）
 
-> **优先级规则：** 当触发条件和不触发条件同时命中时，**触发条件优先**。仅当任务纯属已有步骤的机械执行（无依赖、无不可逆操作、无需 subagent）时，方可适用不触发条件。
+> **优先级规则：** 当触发条件和不触发条件同时命中时，**触发条件优先**。仅当任务纯属已有步骤的机械执行（无依赖、无尚未获批准的不可逆操作、无需 subagent）时，方可适用不触发条件。已批准计划内的 local exact commit 是原计划执行收口，按 `.claude/skill-os/git-closeout-policy.md` 运行，不重复触发本 Plan。
 
 ---
 

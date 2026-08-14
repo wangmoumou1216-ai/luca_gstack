@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luca.local/schemas/git-remote-receipt.v1.json",
+  "title": "Luca exact remote read-back receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "descriptor_id",
+    "descriptor_sha256",
+    "repository",
+    "remote",
+    "url",
+    "refspec",
+    "source_ref",
+    "destination_ref",
+    "before",
+    "after",
+    "commit_range",
+    "force",
+    "readback_sha256",
+    "observed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "luca.git-remote-readback.v1" },
+    "receipt_id": { "type": "string", "pattern": "^grr-[a-f0-9]{64}$" },
+    "descriptor_id": { "type": "string", "pattern": "^grd-[a-f0-9]{64}$" },
+    "descriptor_sha256": { "$ref": "#/$defs/sha256" },
+    "repository": { "$ref": "#/$defs/repository" },
+    "remote": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "url": { "type": "string", "minLength": 1 },
+    "refspec": { "type": "string", "pattern": "^refs/(heads|tags)/[^:*^~]+:refs/(heads|tags)/[^:*^~]+$" },
+    "source_ref": { "$ref": "#/$defs/ref" },
+    "destination_ref": { "$ref": "#/$defs/ref" },
+    "before": { "$ref": "#/$defs/sha1" },
+    "after": { "$ref": "#/$defs/sha1" },
+    "commit_range": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sha1" }
+    },
+    "force": { "const": false },
+    "readback_sha256": { "$ref": "#/$defs/sha256" },
+    "observed_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ref": { "type": "string", "pattern": "^refs/(heads|tags)/[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$" },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "common_dir", "common_dev", "common_ino"],
+      "properties": {
+        "root": { "type": "string", "pattern": "^/" },
+        "common_dir": { "type": "string", "pattern": "^/" },
+        "common_dev": { "type": "string", "pattern": "^[0-9]+$" },
+        "common_ino": { "type": "string", "pattern": "^[0-9]+$" }
+      }
+    }
+  }
+}

@@ -572,17 +572,13 @@ try {
   }
 } catch { }
 
-// ── 单真值源 behind 软提醒（2026-07-16 B2 合并）：本检出落后 tracking 分支 → 提示 pull。
-// 只查本地 ref 不 fetch（session 启动零网络零延迟；有网刷新交给 verify S23）。fail-open。
+// ── 单真值源 behind 软提醒（2026-07-16 B2 合并）：本检出落后本地 tracking ref → 提示按 Git policy 人门整合。
+// 只查本地 ref、零网络零写；刷新须由调用者显式 fetch remote+ref。fail-open。
 try {
   const cwd = process.env.CLAUDE_PROJECT_DIR || process.cwd();
   const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-  // 后台静默 fetch（detached 不阻塞启动）：让本地 ref 保持新鲜，本条与 route-guard 的
-  // 每消息 behind 提醒在下一次检查时即拿到准确落后数。离线/失败静默。
-  // 同 governance spawn：git 缺失时 ENOENT 走 async 'error' 事件，try/catch 拦不住 → 加 .on('error')（Round5）。
-  try { const gc = spawn('git', ['fetch', '-q', '--no-tags', up.split('/')[0]], { cwd, detached: true, stdio: 'ignore' }); gc.on('error', () => {}); gc.unref(); } catch { }
   const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim(), 10);
   if (behind > 0) {
-    process.stdout.write(`[session-restore] ⚠ 本检出落后 ${up} ${behind} 条——建议 git pull（单真值源纪律）\n`);
+    process.stdout.write(`[session-restore] ⚠ 本检出落后本地 tracking ref ${up} ${behind} 条——如需刷新先显式只读 fetch remote+ref；整合须按 git-closeout-policy 通过人门。\n`);
   }
 } catch { }

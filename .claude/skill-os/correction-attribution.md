@@ -63,9 +63,9 @@ L3/L4 默认只做治理写入（一条命令），项目继续跑不中断；�
 
 | 根因层 | 项目 session（含任务中途） | 框架/meta session |
 |---|---|---|
-| L3/L4 | 默认治理记账一条命令，项目不断流、指针不动；三条全占→当场修任一框架检出（pull→改→校验→commit+push→**回项目任务**）；重结构缺陷→提案进 digest/framework-audit，留给框架 session | 就地修（响应式改进，豁免框架建设预算），commit+push |
+| L3/L4 | 默认治理记账一条命令，项目不断流、指针不动；三条全占→当场修任一框架检出（改→校验→按 Git closeout policy 完成本地 exact commit；远端发布另走 G-REMOTE→**回项目任务**）；重结构缺陷→提案进 digest/framework-audit，留给框架 session | 就地修（响应式改进，豁免框架建设预算）；本地 commit 与远端发布均按 `.claude/skill-os/git-closeout-policy.md` |
 | L5a 当前项目代码 | 正常项目工作：走本项目仓库/部署纪律，无特殊逻辑 | 不 switch；落任务给该项目，或小修按 L5b 规则直写 |
-| L5b 其他自有项目代码 | **不切指针**；先查该仓 WIP（`git -C <绝对路径> status`）：干净且修复 surgical→绝对路径直修+按该仓纪律 commit；有他 session WIP 或修复重/需部署→该项目立任务/提案，本 session 继续用绕法；需部署的修复走部署纪律+与用户协调重启时机 | 同左 |
+| L5b 其他自有项目代码 | **不切指针**；先查该仓 WIP（`git -C <绝对路径> status`）：干净且修复 surgical→绝对路径直修+按该仓纪律完成本地 commit；有他 session WIP 或修复重/需部署→该项目立任务/提案，本 session 继续用绕法；需部署的修复走部署纪律+与用户协调重启时机；若目标仓未声明更具体规则，采用 `.claude/skill-os/git-closeout-policy.md` | 同左 |
 | 上游/外部（非自有） | 存完整绕法（仍过四信号门槛），无归因动作 | 同左 |
 
 ## 披露格式（修复回复末尾，≤3 行，每次纠正都披露）

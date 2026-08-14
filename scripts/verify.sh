@@ -51,6 +51,7 @@ check G3 ".gitignore 覆盖 .DS_Store" "grep -q '\.DS_Store' .gitignore"
 check G4 ".gitignore 覆盖 .env" "grep -q '\.env' .gitignore"
 check G5 "pre-commit 存在且可执行" "[ -x .githooks/pre-commit ]"
 check G5b "commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）" "[ -x .githooks/commit-msg ]"
+check G6 "pre-push exact G-REMOTE gate 存在且可执行" "[ -x .githooks/pre-push ]"
 echo ""
 
 echo "[ 标准文档 ]"
@@ -121,11 +122,12 @@ check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 
 check S29 "AGENTS.md 治理平价（记忆门禁/模型档/隔离/human-gate/SF 跨源一致 + 陈旧面回归门）" "npm run check:agents-parity --silent"
 check S28 "项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）" "npm run check:substrate --silent"
 check S34 "obligation runtime L1 只回执本入口真实执行集合" "node scripts/evolution/verify-obligation-runtime.mjs l1-verify"
+check S35 "Git exact-hunk closeout 与 G-REMOTE descriptor/pre-push 回归" "npm run test:git-closeout --silent"
 # S27（深审 R1）：standalone opt-in 绝不能进版本控制——写进 committed settings.json 会让每个
 # checkout（含 master 改名/fork 配错）把 auth-absent 从 ANOMALY 静默降 NOTE，defeats FAIL-SAFE。
 # marker 侧已由 .gitignore 覆盖；此门把"勿写 committed settings.json"的注释护栏升级为确定性 CI 门。
 check S27 "MEMORY_STANDALONE 未泄漏进 tracked settings.json（opt-in 防泄漏门）" "! git ls-files -z '.claude/settings*.json' | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q ."
-warn  S23 "单真值源同步（不落后 tracking 分支）" "bash scripts/check-behind-upstream.sh"
+warn  S23 "单真值源本地 tracking ref 检查（零网络零写）" "bash scripts/check-behind-upstream.sh"
 echo ""
 
 echo "[ CI/CD 基础设施 ]"

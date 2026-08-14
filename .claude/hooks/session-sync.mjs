@@ -248,7 +248,7 @@ try {
   writeCheckpointIfInProgress();
 
   // 未提交的记忆/演进状态提醒（纯提醒、非阻塞、fail-open）：本机正常使用会写这些
-  // git-tracked 状态文件，与 GitHub 漂移；收尾用 scripts/sync.sh 一条命令推回。
+  // git-tracked 状态文件；scripts/sync.sh 只读检查，closeout/remote 纪律见 git-closeout-policy。
   // 只走 stderr —— stdout 在 Stop 路径专用于 block 决策 JSON（见文件头契约）。
   // MEMORY_ROOT 重定向时记忆写入落的是那个仓（session-restore F2-01 同款 split-brain）：
   // 两仓都查，否则 fork session 写脏母版永远无人提醒（2026-07-14 P3 实证，前日 A11 WARN 即此症）。
@@ -259,7 +259,7 @@ try {
         'git status --porcelain -- memory/episodic/index.jsonl memory/episodic/archive memory/semantic/promoted-facts.yaml memory/semantic/archive memory/evals/eval-log.jsonl .claude/skill-os/evolution .claude/observability/observations.jsonl',
         { cwd: repo, encoding: 'utf8', env: withoutLocalGitEnv() }
       ).trim();
-      if (dirty) process.stderr.write(`[session-sync] 🔔 ${repo === projectRoot ? '本仓' : `MEMORY_ROOT 仓（${repo}）`}有未提交的记忆/演进状态 — 收尾请在该仓跑 \`bash scripts/sync.sh\` 推到 GitHub。\n`);
+      if (dirty) process.stderr.write(`[session-sync] 🔔 ${repo === projectRoot ? '本仓' : `MEMORY_ROOT 仓（${repo}）`}有未提交的记忆/演进状态 — 可在该仓跑 \`bash scripts/sync.sh\` 做只读检查；本地 closeout/远端发布见 git-closeout-policy。\n`);
     } catch { }
   }
 

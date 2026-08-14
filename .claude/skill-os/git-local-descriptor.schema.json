@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luca.local/schemas/git-local-descriptor.v1.json",
+  "title": "Luca Git local exact-hunk descriptor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "descriptor_id",
+    "plan_id",
+    "repository",
+    "base_commit",
+    "base_tree",
+    "index_before_tree",
+    "patch_sha256",
+    "expected_index_tree",
+    "changes",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "luca.git-local-closeout.v1" },
+    "descriptor_id": { "type": "string", "pattern": "^gld-[a-f0-9]{64}$" },
+    "plan_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "repository": { "$ref": "#/$defs/repository" },
+    "base_commit": { "$ref": "#/$defs/sha1" },
+    "base_tree": { "$ref": "#/$defs/sha1" },
+    "index_before_tree": { "$ref": "#/$defs/sha1" },
+    "patch_sha256": { "$ref": "#/$defs/sha256" },
+    "expected_index_tree": { "$ref": "#/$defs/sha1" },
+    "changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/change" }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "common_dir", "common_dev", "common_ino"],
+      "properties": {
+        "root": { "type": "string", "pattern": "^/" },
+        "common_dir": { "type": "string", "pattern": "^/" },
+        "common_dev": { "type": "string", "pattern": "^[0-9]+$" },
+        "common_ino": { "type": "string", "pattern": "^[0-9]+$" }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "old_mode", "old_blob", "new_mode", "new_blob"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "pattern": "^[^/]" },
+        "old_mode": { "type": "string", "pattern": "^[0-7]{6}$" },
+        "old_blob": { "$ref": "#/$defs/sha1" },
+        "new_mode": { "type": "string", "pattern": "^[0-7]{6}$" },
+        "new_blob": { "$ref": "#/$defs/sha1" }
+      }
+    }
+  }
+}

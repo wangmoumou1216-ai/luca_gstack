@@ -23,6 +23,9 @@ git config core.hooksPath .githooks
 bash scripts/verify.sh
 ```
 
+本地 exact commit、dirty/WIP hunk 隔离、分支整合与远端发布统一遵守
+`.claude/skill-os/git-closeout-policy.md`；不得绕过仓库 hooks 或假定 remote 名为 `origin`。
+
 ## 分支命名规范
 
 | 类型 | 格式 | 示例 |
