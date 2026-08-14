@@ -120,7 +120,7 @@ check S26 "记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path
 check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）" "npm run check:harness --silent"
 check S29 "AGENTS.md 治理平价（记忆门禁/模型档/隔离/human-gate/SF 跨源一致 + 陈旧面回归门）" "npm run check:agents-parity --silent"
 check S28 "项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）" "npm run check:substrate --silent"
-check S34 "obligation runtime L1 只回执本入口真实执行集合" "node scripts/evolution/verify-obligation-runtime.mjs l1 --entrypoint verify"
+check S34 "obligation runtime L1 只回执本入口真实执行集合" "node scripts/evolution/verify-obligation-runtime.mjs l1-verify"
 # S27（深审 R1）：standalone opt-in 绝不能进版本控制——写进 committed settings.json 会让每个
 # checkout（含 master 改名/fork 配错）把 auth-absent 从 ANOMALY 静默降 NOTE，defeats FAIL-SAFE。
 # marker 侧已由 .gitignore 覆盖；此门把"勿写 committed settings.json"的注释护栏升级为确定性 CI 门。

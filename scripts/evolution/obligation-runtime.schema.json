@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "luca.obligation-runtime.schema.v1",
+  "$id": "luca.obligation-runtime.schema.v2",
   "title": "REX U-010 obligation runtime artifacts",
   "$defs": {
     "sha256": {
@@ -34,13 +34,50 @@
       ]
     },
     "evidence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "uri", "sha256"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1, "not": { "const": "OBLIGATION_PROOF" } },
+            "uri": { "type": "string", "minLength": 1 },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "uri", "sha256", "receipt_id"],
+          "properties": {
+            "kind": { "const": "OBLIGATION_PROOF" },
+            "uri": { "type": "string", "pattern": "^file:" },
+            "sha256": { "$ref": "#/$defs/sha256" },
+            "receipt_id": { "type": "string", "pattern": "^op-[a-f0-9]{64}$" }
+          }
+        }
+      ]
+    },
+    "artifact_readback": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "uri", "sha256"],
+      "required": ["role", "path", "sha256", "size"],
       "properties": {
-        "kind": { "type": "string", "minLength": 1 },
-        "uri": { "type": "string", "minLength": 1 },
-        "sha256": { "$ref": "#/$defs/sha256" }
+        "role": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "runtime_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable_path", "executable_sha256", "script_path", "script_sha256"],
+      "properties": {
+        "executable_path": { "type": "string", "minLength": 1 },
+        "executable_sha256": { "$ref": "#/$defs/sha256" },
+        "script_path": { "type": "string", "minLength": 1 },
+        "script_sha256": { "$ref": "#/$defs/sha256" }
       }
     },
     "index_record": {
@@ -174,6 +211,45 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "schema_version", "plan_id", "activation_id", "nonce", "invocation_id", "index_sha256",
+        "obligation_id", "source_pointer", "class", "lane", "contract_id", "producer", "verifier",
+        "artifact_readbacks", "observation_sha256", "created_at"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-activation-receipt.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "activation_id": { "type": "string", "pattern": "^oa-[a-f0-9]{64}$" },
+        "nonce": { "type": "string", "minLength": 1 },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "index_sha256": { "$ref": "#/$defs/sha256" },
+        "obligation_id": { "type": "string", "pattern": "^OBL-[A-F0-9]{20}$" },
+        "source_pointer": { "type": "string", "pattern": "^.+#L[1-9][0-9]*$" },
+        "class": { "$ref": "#/$defs/class" },
+        "lane": { "$ref": "#/$defs/lane" },
+        "contract_id": { "type": "string", "minLength": 1 },
+        "producer": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256", "argv"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" },
+            "argv": { "type": "array", "minItems": 2, "items": { "type": "string" } }
+          }
+        },
+        "verifier": {
+          "type": "object", "additionalProperties": false, "required": ["id", "path", "sha256"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "artifact_readbacks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact_readback" } },
+        "observation_sha256": { "$ref": "#/$defs/sha256" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
         "schema_version",
         "invocation_id",
         "harness",
@@ -216,7 +292,8 @@
         "index_sha256": { "$ref": "#/$defs/sha256" },
         "entries": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 1808,
+          "maxItems": 1808,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -249,36 +326,216 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "schema_version",
-        "entrypoint",
-        "lane",
-        "executed_checks",
-        "classes",
-        "result",
-        "evidence"
+        "schema_version", "plan_id", "run_id", "nonce", "repo_root", "index_sha256",
+        "commit", "tree", "started_at"
       ],
       "properties": {
-        "schema_version": { "const": "luca.obligation-execution-receipt.v1" },
-        "entrypoint": {
-          "enum": ["verify", "pre-commit", "ci", "task-start", "stop", "local-live", "external"]
+        "schema_version": { "const": "luca.obligation-execution-run.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "run_id": { "type": "string", "pattern": "^orun-[a-f0-9]{64}$" },
+        "nonce": { "type": "string", "minLength": 1 },
+        "repo_root": { "type": "string", "minLength": 1 },
+        "index_sha256": { "$ref": "#/$defs/sha256" },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "tree": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "started_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "plan_id", "receipt_id", "run_id", "nonce", "repo_root", "index_sha256",
+        "commit", "tree", "run_ticket", "entrypoint", "lane", "started_at", "finished_at",
+        "producer", "verifier", "mint_authorization", "entrypoint_binding", "argv", "command",
+        "exit_code", "executed_check_ids", "classes", "result", "artifact_readbacks"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-execution-receipt.v2" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "receipt_id": { "type": "string", "pattern": "^orc-[a-f0-9]{64}$" },
+        "run_id": { "type": "string", "pattern": "^orun-[a-f0-9]{64}$" },
+        "nonce": { "type": "string", "minLength": 1 },
+        "repo_root": { "type": "string", "minLength": 1 },
+        "index_sha256": { "$ref": "#/$defs/sha256" },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "tree": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "run_ticket": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+          "properties": { "path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
         },
+        "entrypoint": { "enum": ["verify", "pre-commit", "ci", "local-live-claude", "local-live-codex", "external"] },
         "lane": { "$ref": "#/$defs/lane" },
-        "executed_checks": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "type": "string", "minLength": 1 }
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "producer": { "$ref": "#/$defs/runtime_binding" },
+        "verifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "executable_path", "executable_sha256", "script_path", "script_sha256",
+            "pid", "process_started_at", "process_command"
+          ],
+          "properties": {
+            "executable_path": { "type": "string", "minLength": 1 },
+            "executable_sha256": { "$ref": "#/$defs/sha256" },
+            "script_path": { "type": "string", "minLength": 1 },
+            "script_sha256": { "$ref": "#/$defs/sha256" },
+            "pid": { "type": "integer", "minimum": 2 },
+            "process_started_at": { "type": "string", "minLength": 1 },
+            "process_command": { "type": "string", "minLength": 1 }
+          }
         },
-        "classes": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/class" }
+        "mint_authorization": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256", "authorization_id"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" },
+            "authorization_id": { "type": "string", "pattern": "^oma-[a-f0-9]{64}$" }
+          }
         },
+        "entrypoint_binding": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256", "command_fragment"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" },
+            "command_fragment": { "type": "string", "minLength": 1 }
+          }
+        },
+        "argv": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 } },
+        "command": { "type": "string", "minLength": 1 },
+        "exit_code": { "type": "integer", "minimum": 0 },
+        "executed_check_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "classes": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/class" } },
         "result": { "$ref": "#/$defs/result" },
-        "evidence": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/evidence" }
+        "artifact_readbacks": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/artifact_readback" } }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "plan_id", "receipt_id", "nonce", "invocation_id", "index_sha256",
+        "obligation_id", "source_pointer", "class", "lane", "human_gate", "activation",
+        "activation_receipt", "producer", "verifier", "started_at", "finished_at", "exit_code",
+        "artifact_readbacks", "observation"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-proof.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "receipt_id": { "type": "string", "pattern": "^op-[a-f0-9]{64}$" },
+        "nonce": { "type": "string", "minLength": 1 },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "index_sha256": { "$ref": "#/$defs/sha256" },
+        "obligation_id": { "type": "string", "pattern": "^OBL-[A-F0-9]{20}$" },
+        "source_pointer": { "type": "string", "pattern": "^.+#L[1-9][0-9]*$" },
+        "class": { "$ref": "#/$defs/class" },
+        "lane": { "$ref": "#/$defs/lane" },
+        "human_gate": { "type": ["object", "null"] },
+        "activation": {
+          "type": "object", "additionalProperties": false, "required": ["from", "to"],
+          "properties": { "from": { "const": "WIRED_UNPROBED" }, "to": { "const": "PROBED_ACTIVE" } }
+        },
+        "activation_receipt": {
+          "type": "object", "additionalProperties": false, "required": ["path", "sha256", "activation_id"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 }, "sha256": { "$ref": "#/$defs/sha256" },
+            "activation_id": { "type": "string", "pattern": "^oa-[a-f0-9]{64}$" }
+          }
+        },
+        "producer": { "type": "object" },
+        "verifier": { "type": "object" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "exit_code": { "const": 0 },
+        "artifact_readbacks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact_readback" } },
+        "observation": { "type": "object" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "plan_id", "authorization_id", "nonce", "parent_pid", "parent_started_at",
+        "parent_command", "root", "index_path", "run_ticket_path", "mode", "argv", "started_at",
+        "finished_at", "producer", "verifier", "artifact_paths"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-mint-authorization.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "authorization_id": { "type": "string", "pattern": "^oma-[a-f0-9]{64}$" },
+        "nonce": { "type": "string", "minLength": 1 },
+        "parent_pid": { "type": "integer", "minimum": 2 },
+        "parent_started_at": { "type": "string", "minLength": 1 },
+        "parent_command": { "type": "string", "minLength": 1 },
+        "root": { "type": "string", "minLength": 1 },
+        "index_path": { "type": "string", "minLength": 1 },
+        "run_ticket_path": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["l1-verify", "l1-pre-commit", "l1-ci", "l2", "l3"] },
+        "argv": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 } },
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "producer": { "$ref": "#/$defs/runtime_binding" },
+        "verifier": { "$ref": "#/$defs/runtime_binding" },
+        "artifact_paths": {
+          "type": "array", "minItems": 3,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["role", "path"],
+            "properties": { "role": { "type": "string", "minLength": 1 }, "path": { "type": "string", "minLength": 1 } }
+          }
         }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "plan_id", "consumption_id", "receipt_id", "activation_id",
+        "invocation_id", "index_sha256", "obligation_id"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-proof-consumption.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "consumption_id": { "type": "string", "pattern": "^opc-[a-f0-9]{64}$" },
+        "receipt_id": { "type": "string", "pattern": "^op-[a-f0-9]{64}$" },
+        "activation_id": { "type": "string", "pattern": "^oa-[a-f0-9]{64}$" },
+        "invocation_id": { "type": "string", "minLength": 1 },
+        "index_sha256": { "$ref": "#/$defs/sha256" },
+        "obligation_id": { "type": "string", "pattern": "^OBL-[A-F0-9]{20}$" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "plan_id", "aggregation_id", "run_id", "receipt_ids", "result"],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-lane-aggregation.v1" },
+        "plan_id": { "const": "REX-20260811-001" },
+        "aggregation_id": { "type": "string", "pattern": "^ola-[a-f0-9]{64}$" },
+        "run_id": { "type": "string", "pattern": "^orun-[a-f0-9]{64}$" },
+        "receipt_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^orc-[a-f0-9]{64}$" } },
+        "result": { "$ref": "#/$defs/result" }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "contract_id", "executable", "argv", "cwd", "input", "env_bindings",
+        "exit_code", "signal", "stdout", "stderr", "scripts", "semantic"
+      ],
+      "properties": {
+        "schema_version": { "const": "luca.obligation-class-invocation.v1" },
+        "contract_id": { "type": "string", "minLength": 1 },
+        "executable": { "$ref": "#/$defs/artifact_readback" },
+        "argv": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "cwd": { "type": "string", "minLength": 1 },
+        "input": { "type": "string" },
+        "env_bindings": { "type": "object" },
+        "exit_code": { "type": ["integer", "null"] },
+        "signal": { "type": ["string", "null"] },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" },
+        "scripts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact_readback" } },
+        "semantic": { "type": "object" }
       }
     }
   ]

@@ -1,25 +1,24 @@
 #!/usr/bin/env node
 
+import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import {
   existsSync,
-  mkdtempSync,
   readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
   aggregateLaneReceipts,
+  createExecutionRun,
   INDEX_PATH,
   loadIndex,
-  makeExecutionReceipt,
-  OBLIGATION_CLASSES,
-  RESULT_LATTICE,
+  readExecutionReceipt,
+  readExecutionRun,
   sha256,
   validateLedger,
 } from './obligation-runtime.mjs';
@@ -46,9 +45,23 @@ const REQUIRED_MUTANTS = Object.freeze([
   'MUT-RUNTIME-S0-DEGRADED',
   'MUT-RUNTIME-S3-DEGRADED',
 ]);
+const NATIVE_HOOK_COMMANDS = Object.freeze({
+  claude: Object.freeze({
+    UserPromptSubmit: 'node "${CLAUDE_PROJECT_DIR:-.}/scripts/evolution/obligation-task-start-hook.mjs" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2',
+    Stop: 'node "${CLAUDE_PROJECT_DIR:-.}/scripts/evolution/obligation-stop-hook.mjs" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2',
+  }),
+  codex: Object.freeze({
+    UserPromptSubmit: 'node "$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs" "$(git rev-parse --show-toplevel)/scripts/evolution/obligation-task-start-hook.mjs" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2',
+    Stop: 'node "$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs" "$(git rev-parse --show-toplevel)/scripts/evolution/obligation-stop-hook.mjs" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2',
+  }),
+});
+const PRODUCTION_ENTRYPOINT_LINES = Object.freeze({
+  verify: 'check S34 "obligation runtime L1 只回执本入口真实执行集合" "node scripts/evolution/verify-obligation-runtime.mjs l1-verify"',
+  'pre-commit': 'node scripts/evolution/verify-obligation-runtime.mjs l1-pre-commit',
+  ci: 'run: node scripts/evolution/verify-obligation-runtime.mjs l1-ci',
+});
 
 const fail = (message) => { throw new Error(message); };
-const evidence = (kind, uri, value) => ({ kind, uri, sha256: sha256(Buffer.from(stable(value), 'utf8')) });
 
 function exactKeys(value, keys, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)
@@ -209,10 +222,7 @@ export function verifyProductionEntrypoints({ root = DEFAULT_ROOT, indexPath = I
       if (matches.length !== 1) fail(`${harness} ${event} obligation consumer missing or duplicated`);
       const [{ group, hook }] = matches;
       if (Object.hasOwn(group, 'matcher') && group.matcher !== '') fail(`${harness} ${event} obligation matcher is wrong`);
-      if (harness === 'codex' && !hook.command.includes('.codex/codex-hook-adapter.mjs')) fail('Codex obligation consumer bypasses native adapter');
-      if (!hook.command.includes('[ "$c" = "0" ] && exit 0 || exit 2')) {
-        fail(`${harness} ${event} obligation consumer normalizes unexpected nonzero exit`);
-      }
+      if (hook.command !== NATIVE_HOOK_COMMANDS[harness][event]) fail(`${harness} ${event} obligation command is not the exact fail-closed native consumer`);
     }
   }
   for (const [name, spec] of [
@@ -221,8 +231,8 @@ export function verifyProductionEntrypoints({ root = DEFAULT_ROOT, indexPath = I
     ['ci', matrix.production_entrypoints.ci],
   ]) {
     const text = readFileSync(join(root, spec.path), 'utf8');
-    const count = text.split(spec.command_fragment).length - 1;
-    if (count !== 1) fail(`${name} production entrypoint missing or duplicated`);
+    const exactLines = text.split('\n').map((line) => line.trim()).filter((line) => line === PRODUCTION_ENTRYPOINT_LINES[name]);
+    if (exactLines.length !== 1) fail(`${name} production entrypoint exact command missing or duplicated`);
   }
   const precommit = readFileSync(join(root, matrix.production_entrypoints.pre_commit.path), 'utf8');
   const obligationOffset = precommit.indexOf(matrix.production_entrypoints.pre_commit.command_fragment);
@@ -233,10 +243,12 @@ export function verifyProductionEntrypoints({ root = DEFAULT_ROOT, indexPath = I
 }
 
 export function verifyRealBehavior({ root = DEFAULT_ROOT, indexPath = INDEX_PATH }) {
-  const temporary = mkdtempSync(join(tmpdir(), 'obligation-runtime-behavior-'));
-  const ledgerPath = join(temporary, 'ledger.json');
+  const sessionId = 'tst-010-real-behavior';
+  const gitDir = spawnSync('git', ['rev-parse', '--absolute-git-dir'], { cwd: root, encoding: 'utf8', input: '' });
+  if (gitDir.status !== 0 || !gitDir.stdout.trim()) fail('cannot resolve real-behavior ledger root');
+  const ledgerPath = join(gitDir.stdout.trim(), 'luca-obligation-runtime', `${sha256(Buffer.from(sessionId)).slice(0, 32)}.json`);
   const input = JSON.stringify({
-    session_id: 'tst-010-real-behavior',
+    session_id: sessionId,
     cwd: root,
     prompt: '$design-brief verify obligation behavior',
     obligation_route_context: {
@@ -250,7 +262,7 @@ export function verifyRealBehavior({ root = DEFAULT_ROOT, indexPath = INDEX_PATH
   });
   const startCommand = join(root, 'scripts/evolution/obligation-task-start-hook.mjs');
   const stopCommand = join(root, 'scripts/evolution/obligation-stop-hook.mjs');
-  const env = { ...process.env, LUCA_OBLIGATION_LEDGER_PATH: ledgerPath, LUCA_OBLIGATION_INDEX: indexPath };
+  const env = { ...process.env };
   try {
     const start = spawnSync(process.execPath, [startCommand], { cwd: root, env, encoding: 'utf8', input, timeout: 30000 });
     if (start.status !== 0 || !existsSync(ledgerPath) || !/\[obligation-runtime\]/.test(start.stdout || '')) fail(`task-start native behavior failed: ${start.stderr || start.stdout}`);
@@ -262,13 +274,25 @@ export function verifyRealBehavior({ root = DEFAULT_ROOT, indexPath = INDEX_PATH
     if (stop.status !== 0 || stopResult?.decision !== 'block' || !/NOT_RUN|UNKNOWN|BLOCKED/.test(stopResult.reason || '')) fail('Stop consumer did not block unfinished applicable obligations');
     return { ledger_sha256: sha256(readFileSync(ledgerPath)), aggregate: ledger.aggregate };
   } finally {
-    rmSync(temporary, { recursive: true, force: true });
+    rmSync(ledgerPath, { force: true });
   }
+}
+
+export function verifyRuntimeLattice({ root = DEFAULT_ROOT } = {}) {
+  const runtime = join(root, 'scripts/evolution/obligation-runtime.mjs');
+  const result = spawnSync(process.execPath, [runtime, 'self-test-lattice'], { cwd: root, encoding: 'utf8', input: '', timeout: 30000 });
+  if (result.status !== 0 || result.stdout.trim() !== 'OBLIGATION_LATTICE_SELF_TEST_PASS') {
+    fail(`runtime lattice production self-test failed: ${result.stderr || result.stdout}`);
+  }
+  return { token: result.stdout.trim(), runtime_sha256: sha256(readFileSync(runtime)) };
 }
 
 async function codexHooksList(root) {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn('codex', ['app-server'], { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] });
+    const configuredBinary = '/Users/luca/.local/bin/codex';
+    if (!existsSync(configuredBinary)) throw new Error('bound Codex executable is missing');
+    const binary = realpathSync(configuredBinary);
+    const child = spawn(binary, ['-C', root, 'app-server'], { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
     let settled = false;
@@ -298,18 +322,47 @@ async function codexHooksList(root) {
   });
 }
 
-export async function probeProductionActivation({ root = DEFAULT_ROOT, harness, codexHooksFixture = null }) {
+export async function probeProductionActivation({ root = DEFAULT_ROOT, harness, codexHooksProvider = codexHooksList }) {
   const entrypoints = verifyProductionEntrypoints({ root, indexPath: join(root, 'scripts/evolution/obligation-index.json'), matrixPath: join(root, 'scripts/evolution/obligation-mutation-matrix.json') });
   const behavior = verifyRealBehavior({ root, indexPath: join(root, 'scripts/evolution/obligation-index.json') });
   const checks = ['ACTIVATION-CONSUMER', 'ACTIVATION-MATCHER', 'ACTIVATION-FAIL-CLOSED', 'REAL-BEHAVIOR'];
   if (harness === 'codex') {
-    const hooks = codexHooksFixture ? readJson(codexHooksFixture, 'Codex hooks/list fixture').hooks : await codexHooksList(root);
+    if (typeof codexHooksProvider !== 'function') fail('Codex hooks provider must be a function');
+    const hooks = await codexHooksProvider(root);
     if (!Array.isArray(hooks)) fail('Codex hooks/list payload is invalid');
-    const needed = ['obligation-task-start-hook.mjs', 'obligation-stop-hook.mjs'];
-    for (const fragment of needed) {
-      const matches = hooks.filter((hook) => typeof hook.command === 'string' && hook.command.includes(fragment));
-      if (matches.length !== 1 || matches[0].trustStatus !== 'trusted' || !/^sha256:[a-f0-9]{64}$/.test(matches[0].currentHash || '')) {
-        fail(`Codex native hook is missing, duplicated, or untrusted: ${fragment}`);
+    const configPath = realpathSync(join(root, '.codex/hooks.json'));
+    const configBytes = readFileSync(configPath);
+    const config = JSON.parse(configBytes);
+    const expected = [];
+    const snake = (value) => value.replace(/([a-z0-9])([A-Z])/gu, '$1_$2').toLowerCase();
+    for (const event of ['UserPromptSubmit', 'Stop']) {
+      (config.hooks[event] || []).forEach((group, groupIndex) => (group.hooks || []).forEach((hook, hookIndex) => {
+        if (/obligation-(?:task-start|stop)-hook\.mjs/u.test(hook.command || '')) {
+          expected.push({ event, suffix: `:${snake(event)}:${groupIndex}:${hookIndex}`, command: hook.command });
+        }
+      }));
+    }
+    if (expected.length !== 2) fail('Codex obligation hook config exact set is missing or duplicated');
+    for (const item of expected) {
+      const matches = hooks.filter((hook) => String(hook.key || '').endsWith(item.suffix));
+      const hook = matches[0];
+      const nativeEvent = item.event[0].toLowerCase() + item.event.slice(1);
+      if (matches.length !== 1 || hook.eventName !== nativeEvent || hook.command !== item.command
+        || hook.trustStatus !== 'trusted' || !/^sha256:[a-f0-9]{64}$/.test(hook.currentHash || '')
+        || !hook.key.startsWith(`${configPath}:`)) {
+        fail(`Codex native hook is missing, duplicated, or untrusted: ${item.event}`);
+      }
+    }
+    if (codexHooksProvider === codexHooksList) {
+      const trustPath = realpathSync(join(process.env.CODEX_HOME || join(process.env.HOME || '', '.codex'), 'config.toml'));
+      const trustText = readFileSync(trustPath, 'utf8');
+      for (const item of expected) {
+        const hook = hooks.find((candidate) => String(candidate.key || '').endsWith(item.suffix));
+        const header = `[hooks.state."${hook.key}"]`;
+        const offset = trustText.split('\n').findIndex((line) => line === header);
+        if (offset < 0) fail('Codex native trust state is missing');
+        const block = trustText.split('\n').slice(offset + 1).find((line) => line.trim() && !line.startsWith('['));
+        if (block?.trim().match(/^trusted_hash\s*=\s*"([^"]+)"$/u)?.[1] !== hook.currentHash) fail('Codex native trusted hash differs from hooks/list');
       }
     }
     checks.push('ACTIVATION-CODEX-TRUST');
@@ -317,57 +370,171 @@ export async function probeProductionActivation({ root = DEFAULT_ROOT, harness, 
   return { entrypoints, behavior, checks };
 }
 
-function receiptFor({ entrypoint, lane, checks, classes = OBLIGATION_CLASSES, result, detail }) {
-  return makeExecutionReceipt({
-    entrypoint,
-    lane,
-    executedChecks: checks,
-    classes,
-    result,
-    evidence: [evidence('CHECK_SET', `entrypoint:${entrypoint}`, detail)],
-  });
+function processRecord(pid) {
+  const parent = spawnSync('/bin/ps', ['-o', 'ppid=', '-p', String(pid)], { encoding: 'utf8', input: '' });
+  const command = spawnSync('/bin/ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8', input: '' });
+  if (parent.status !== 0 || command.status !== 0) return null;
+  return { pid, ppid: Number(parent.stdout.trim()), command: command.stdout.trim() };
 }
 
-export function verifyExternalFixture(path) {
-  if (!path) return receiptFor({
-    entrypoint: 'external',
-    lane: 'L3_EXTERNAL',
-    checks: ['GLOBAL-READBACK-NOT-RUN'],
-    classes: OBLIGATION_CLASSES,
-    result: 'NOT_RUN',
-    detail: { fixture: null },
-  });
-  const fixture = readJson(path, 'external fixture');
-  exactKeys(fixture, ['schema_version', 'targets'], 'external fixture');
-  if (fixture.schema_version !== 'luca.obligation-external-fixture.v1' || !Array.isArray(fixture.targets) || fixture.targets.length === 0) fail('external fixture identity/count mismatch');
-  for (const row of fixture.targets) {
-    exactKeys(row, ['id', 'class', 'result', 'evidence'], `external target ${row?.id}`);
-    if (typeof row.id !== 'string' || !row.id || !OBLIGATION_CLASSES.includes(row.class) || !RESULT_LATTICE.includes(row.result)
-      || !Array.isArray(row.evidence) || row.evidence.length === 0) fail(`external target is invalid: ${row?.id}`);
+function assertNativePreCommitContext() {
+  const chain = [];
+  let pid = process.ppid;
+  for (let depth = 0; depth < 6 && Number.isSafeInteger(pid) && pid > 1; depth += 1) {
+    const record = processRecord(pid);
+    if (!record) break;
+    chain.push(record);
+    pid = record.ppid;
   }
-  const result = fixture.targets.some((row) => row.result === 'BLOCKED') ? 'BLOCKED'
-    : fixture.targets.some((row) => row.result === 'UNKNOWN') ? 'UNKNOWN'
-      : fixture.targets.some((row) => row.result === 'NOT_RUN') ? 'NOT_RUN'
-        : fixture.targets.some((row) => row.result === 'DEGRADED') ? 'DEGRADED' : 'PASS';
-  return receiptFor({
-    entrypoint: 'external',
-    lane: 'L3_EXTERNAL',
-    checks: fixture.targets.map((row) => `GLOBAL:${row.id}`),
-    classes: [...new Set(fixture.targets.map((row) => row.class))],
-    result,
-    detail: fixture,
+  if (!chain[0]?.command.includes('.githooks/pre-commit')
+    || !chain.some((row) => /(?:^|\/)git(?:\s|$).*\bcommit\b/u.test(row.command))) {
+    fail('l1-pre-commit requires an actual git commit hook process chain');
+  }
+  return chain;
+}
+
+function assertGitHubActionsContext(root) {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  const chain = [];
+  let pid = process.ppid;
+  for (let depth = 0; depth < 10 && Number.isSafeInteger(pid) && pid > 1; depth += 1) {
+    const record = processRecord(pid);
+    if (!record) break;
+    chain.push(record);
+    pid = record.ppid;
+  }
+  const nativeRunner = chain.some((row) => (
+    /(?:^|\s)(?:\S*\/)?Runner\.(?:Worker|Listener)(?:\s|$)/u.test(row.command)
+    || /(?:^|\s)\S*\/actions-runner\/(?:run|runsvc)\.sh(?:\s|$)/u.test(row.command)
+  ));
+  if (process.env.GITHUB_ACTIONS !== 'true' || process.env.CI !== 'true'
+    || !/^[1-9][0-9]*$/.test(process.env.GITHUB_RUN_ID || '')
+    || !/^[1-9][0-9]*$/.test(process.env.GITHUB_RUN_ATTEMPT || '')
+    || !/^[a-f0-9]{40}$/.test(process.env.GITHUB_SHA || '')
+    || process.env.GITHUB_SHA !== spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', input: '' }).stdout.trim()
+    || !String(process.env.GITHUB_WORKFLOW_REF || '').includes('.github/workflows/ci.yml@')
+    || typeof process.env.GITHUB_JOB !== 'string' || !process.env.GITHUB_JOB
+    || !/^[^/]+\/[^/]+$/u.test(process.env.GITHUB_REPOSITORY || '')
+    || !['macOS', 'Linux', 'Windows'].includes(process.env.RUNNER_OS)
+    || !process.env.RUNNER_NAME || !process.env.RUNNER_TEMP || !process.env.GITHUB_WORKSPACE
+    || realpathSync(process.env.GITHUB_WORKSPACE) !== realpathSync(root)
+    || !eventPath || !nativeRunner) fail('l1-ci requires GitHub Actions native runner ancestry/context');
+  readJson(realpathSync(eventPath), 'GitHub Actions event payload');
+  return realpathSync(eventPath);
+}
+
+function receiptEntrypoint(mode, argv) {
+  if (mode === 'l1-verify') return 'verify';
+  if (mode === 'l1-pre-commit') return 'pre-commit';
+  if (mode === 'l1-ci') return 'ci';
+  if (mode === 'l3') return 'external';
+  if (mode === 'l2') {
+    const offset = argv.indexOf('--harness');
+    if (offset < 0 || !['claude', 'codex'].includes(argv[offset + 1])) fail('l2 receipt authorization lacks an exact harness');
+    return `local-live-${argv[offset + 1]}`;
+  }
+  fail('mode cannot authorize a receipt');
+}
+
+function receiptProcessSnapshot() {
+  const command = spawnSync('/bin/ps', ['-ww', '-o', 'command=', '-p', String(process.pid)], { encoding: 'utf8', input: '' });
+  const started = spawnSync('/bin/ps', ['-o', 'lstart=', '-p', String(process.pid)], { encoding: 'utf8', input: '' });
+  if (command.status !== 0 || started.status !== 0 || !command.stdout.trim() || !started.stdout.trim()) fail('cannot capture verifier process identity');
+  return { command: command.stdout.trim(), started_at: started.stdout.trim() };
+}
+
+function receiptAuthorizationCore(value) {
+  const { authorization_id: ignored, ...core } = value;
+  return core;
+}
+
+function receiptFor({ root, indexPath, runTicketPath, mode, checks, detail, startedAt, extraArtifactPaths = [] }) {
+  const runRecord = runTicketPath
+    ? readExecutionRun(resolve(runTicketPath), { root, indexPath })
+    : createExecutionRun({ root, indexPath, startedAt });
+  const argv = process.argv.slice(1);
+  if (mode !== argv[1]) fail('receipt mode differs from the executing verifier argv');
+  const entrypoint = receiptEntrypoint(mode, argv);
+  const detailPath = join(dirname(runRecord.path), `${runRecord.run.run_id}-${entrypoint}-detail.json`);
+  writeFileSync(detailPath, jsonBytes({ schema_version: 'luca.obligation-execution-detail.v1', entrypoint, checks: [...checks].sort(), detail }), { flag: 'wx', mode: 0o600 });
+  const runtimePath = realpathSync(join(root, 'scripts/evolution/obligation-runtime.mjs'));
+  const verifierPath = realpathSync(fileURLToPath(import.meta.url));
+  const executablePath = realpathSync(process.execPath);
+  const snapshot = receiptProcessSnapshot();
+  const core = {
+    schema_version: 'luca.obligation-mint-authorization.v1',
+    plan_id: 'REX-20260811-001',
+    nonce: randomUUID(),
+    parent_pid: process.pid,
+    parent_started_at: snapshot.started_at,
+    parent_command: snapshot.command,
+    root: realpathSync(root),
+    index_path: realpathSync(indexPath),
+    run_ticket_path: runRecord.path,
+    mode,
+    argv,
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    producer: {
+      executable_path: executablePath,
+      executable_sha256: sha256(readFileSync(executablePath)),
+      script_path: runtimePath,
+      script_sha256: sha256(readFileSync(runtimePath)),
+    },
+    verifier: {
+      executable_path: executablePath,
+      executable_sha256: sha256(readFileSync(executablePath)),
+      script_path: verifierPath,
+      script_sha256: sha256(readFileSync(verifierPath)),
+    },
+    artifact_paths: [
+      { role: 'execution_detail', path: detailPath },
+      { role: 'obligation_index', path: indexPath },
+      { role: 'mutation_matrix', path: MATRIX_PATH },
+      ...extraArtifactPaths,
+    ],
+  };
+  const authorization = { ...core, authorization_id: `oma-${sha256(Buffer.from(stable(core)))}` };
+  const authorizationPath = join(dirname(runRecord.path), `${runRecord.run.run_id}-${entrypoint}-${authorization.authorization_id}.json`);
+  writeFileSync(authorizationPath, jsonBytes(authorization), { flag: 'wx', mode: 0o600 });
+  const producer = spawnSync(process.execPath, [runtimePath, 'receipt-producer', '--authorization', authorizationPath], {
+    cwd: root,
+    encoding: 'utf8',
+    input: '',
+    timeout: 30000,
   });
+  if (producer.status !== 0) fail(`execution receipt producer failed: ${producer.stderr || producer.stdout}`);
+  try { return JSON.parse(producer.stdout); } catch { fail('execution receipt producer returned invalid JSON'); }
 }
 
 async function main(argv) {
   const [mode, ...args] = argv;
-  const root = resolve(option(args, '--root', false) || DEFAULT_ROOT);
+  const root = DEFAULT_ROOT;
+  const indexPath = join(root, 'scripts/evolution/obligation-index.json');
+  const matrixPath = join(root, 'scripts/evolution/obligation-mutation-matrix.json');
+  if (args.includes('--root') || args.includes('--index') || args.includes('--matrix')
+    || args.includes('--entrypoint') || args.includes('--codex-hooks-fixture') || args.includes('--external-fixture')) {
+    fail('production verifier forbids identity and fixture overrides');
+  }
+  if (mode === 'run-start') {
+    const output = resolve(option(args, '--output'));
+    const run = createExecutionRun({ root, indexPath, outputPath: output });
+    process.stdout.write(`OBLIGATION_RUNTIME_RUN ${run.path} ${run.run.run_id}\n`);
+    return 0;
+  }
+  if (mode === 'aggregate') {
+    const paths = args.filter((arg) => !arg.startsWith('--'));
+    const receipts = paths.map((path) => readExecutionReceipt(resolve(path), { root, indexPath }).receipt);
+    const result = aggregateLaneReceipts(receipts, { root, indexPath });
+    process.stdout.write(`${result}\n`);
+    return result === 'PASS' || result === 'NOT_APPLICABLE' ? 0 : 1;
+  }
+  const startedAt = new Date().toISOString();
+  const runTicketPath = option(args, '--run-ticket', false);
   let receipt;
-  if (mode === 'l1') {
-    const entrypoint = option(args, '--entrypoint');
-    if (!['verify', 'pre-commit', 'ci'].includes(entrypoint)) fail('L1 entrypoint must be verify, pre-commit, or ci');
-    const indexPath = resolve(option(args, '--index', false) || join(root, 'scripts/evolution/obligation-index.json'));
-    const matrixPath = resolve(option(args, '--matrix', false) || join(root, 'scripts/evolution/obligation-mutation-matrix.json'));
+  if (['l1-verify', 'l1-pre-commit', 'l1-ci'].includes(mode)) {
+    const nativeContext = mode === 'l1-pre-commit' ? assertNativePreCommitContext()
+      : mode === 'l1-ci' ? assertGitHubActionsContext(root) : null;
     const reverse = verifyReverseCoverage({
       root,
       indexPath,
@@ -376,30 +543,30 @@ async function main(argv) {
     });
     const entrypoints = verifyProductionEntrypoints({ root, indexPath, matrixPath });
     const behavior = verifyRealBehavior({ root, indexPath });
+    const lattice = verifyRuntimeLattice({ root });
     const syntax = spawnSync(process.execPath, ['--check', join(root, 'scripts/evolution/obligation-runtime.mjs')], { cwd: root, encoding: 'utf8', input: '' });
     if (syntax.status !== 0) fail(`runtime syntax check failed: ${syntax.stderr}`);
     receipt = receiptFor({
-      entrypoint,
-      lane: 'L1_HERMETIC',
+      root, indexPath, runTicketPath, mode,
       checks: ['INDEX-SCHEMA', 'REVERSE-DENOMINATOR', 'ACTIVATION-CONSUMER', 'ACTIVATION-MATCHER', 'ACTIVATION-FAIL-CLOSED', 'LEDGER-EVIDENCE', 'REAL-BEHAVIOR', 'MUTATION-MATRIX'],
-      result: 'PASS',
-      detail: { reverse, entrypoints, behavior },
+      detail: { reverse, entrypoints, behavior, lattice, native_context: nativeContext }, startedAt,
+      extraArtifactPaths: mode === 'l1-ci' ? [{ role: 'github_event', path: nativeContext }] : [],
     });
   } else if (mode === 'l2') {
     const harness = option(args, '--harness');
-    const detail = await probeProductionActivation({ root, harness, codexHooksFixture: option(args, '--codex-hooks-fixture', false) });
-    receipt = receiptFor({ entrypoint: 'local-live', lane: 'L2_LOCAL_LIVE', checks: detail.checks, result: 'PASS', detail });
+    const detail = await probeProductionActivation({ root, harness });
+    receipt = receiptFor({
+      root, indexPath, runTicketPath, mode,
+      checks: detail.checks, detail, startedAt,
+    });
   } else if (mode === 'l3') {
-    receipt = verifyExternalFixture(option(args, '--external-fixture', false));
-  } else if (mode === 'aggregate') {
-    const paths = args.filter((arg) => !arg.startsWith('--'));
-    const receipts = paths.map((path) => readJson(resolve(path), 'lane receipt'));
-    const result = aggregateLaneReceipts(receipts);
-    process.stdout.write(`${result}\n`);
-    return result === 'PASS' || result === 'NOT_APPLICABLE' ? 0 : 1;
-  } else fail('usage: verify-obligation-runtime.mjs <l1|l2|l3|aggregate>');
+    receipt = receiptFor({
+      root, indexPath, runTicketPath, mode,
+      checks: ['GLOBAL-READBACK-NOT-RUN'], detail: { external_receipt: null }, startedAt,
+    });
+  } else fail('usage: verify-obligation-runtime.mjs <run-start|l1-verify|l1-pre-commit|l1-ci|l2|l3|aggregate>');
   const output = option(args, '--receipt-output', false);
-  if (output) writeFileSync(resolve(output), jsonBytes(receipt), { mode: 0o600 });
+  if (output) writeFileSync(resolve(output), jsonBytes(receipt), { flag: 'wx', mode: 0o600 });
   process.stdout.write(`OBLIGATION_RUNTIME_RECEIPT ${JSON.stringify(receipt)}\n`);
   return receipt.result === 'PASS' || receipt.result === 'DEGRADED' || receipt.result === 'NOT_APPLICABLE' ? 0 : 1;
 }

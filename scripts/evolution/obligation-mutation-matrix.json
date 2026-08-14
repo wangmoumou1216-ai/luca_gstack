@@ -14,17 +14,17 @@
     },
     "verify": {
       "path": "scripts/verify.sh",
-      "command_fragment": "verify-obligation-runtime.mjs l1 --entrypoint verify",
+      "command_fragment": "verify-obligation-runtime.mjs l1-verify",
       "lane": "L1_HERMETIC"
     },
     "pre_commit": {
       "path": ".githooks/pre-commit",
-      "command_fragment": "verify-obligation-runtime.mjs l1 --entrypoint pre-commit",
+      "command_fragment": "verify-obligation-runtime.mjs l1-pre-commit",
       "lane": "L1_HERMETIC"
     },
     "ci": {
       "path": ".github/workflows/ci.yml",
-      "command_fragment": "verify-obligation-runtime.mjs l1 --entrypoint ci",
+      "command_fragment": "verify-obligation-runtime.mjs l1-ci",
       "lane": "L1_HERMETIC"
     }
   },
