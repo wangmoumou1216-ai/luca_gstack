@@ -31,6 +31,7 @@ const postEditHook = resolve(projectRoot, '.claude/hooks/post-edit.mjs');
 const projectPinScript = resolve(projectRoot, 'scripts/project-pin.mjs');
 const projectLeaseScript = resolve(projectRoot, 'scripts/project-lease.mjs');
 const projectScript = resolve(projectRoot, 'scripts/project.sh');
+const closeCorrectionScript = resolve(projectRoot, 'scripts/close-correction-ticket.mjs');
 const searchScript = resolve(projectRoot, 'memory/scripts/search_memory.py');
 const isSymlink = (p) => { try { return lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
@@ -75,7 +76,7 @@ function makeFixture({
   return root;
 }
 
-function runNode(scriptPath, cwd, { env = {}, input } = {}) {
+function runNode(scriptPath, cwd, { env = {}, input, args = [] } = {}) {
   // Hermetic env: strip the ambient SESSION_SYNC_BLOCK kill-switch so a dev shell
   // exporting SESSION_SYNC_BLOCK=0 can't leak into block-expecting tests (C11 root
   // cause). The 三重防循环 kill-switch case passes it explicitly via `env`, which
@@ -89,14 +90,37 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) {
     delete baseEnv[key];
   }
-  const result = spawnSync('node', [scriptPath], {
+  const result = spawnSync('node', [scriptPath, ...args], {
     cwd,
     encoding: 'utf8',
-    env: { ...baseEnv, ...env },
+    env: { ...baseEnv, CLAUDE_PROJECT_DIR: cwd, ...env },
     ...(input != null ? { input } : {}),
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   return result;
+}
+
+function closeExplicitCorrection(root, sid) {
+  const env = { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root };
+  const ticket = JSON.parse(runNode(closeCorrectionScript, root, {
+    env, args: ['show', '--session', sid],
+  }).stdout);
+  const template = JSON.parse(runNode(closeCorrectionScript, root, {
+    env, args: ['template', '--session', sid, '--level', 'L1'],
+  }).stdout);
+  const disclosure = join(root, 'correction-disclosure.txt');
+  writeFileSync(disclosure, `归因: L1 已完成 ticket=${ticket.ticket_id} nonce=${ticket.nonce}\n`);
+  const request = template.choose_exactly_one[0];
+  request.evidence[0].path = disclosure;
+  const requestPath = join(root, 'correction-close-request.json');
+  writeFileSync(requestPath, `${JSON.stringify(request, null, 2)}\n`);
+  runNode(closeCorrectionScript, root, {
+    env, args: ['record', '--request', requestPath],
+  });
+  runNode(closeCorrectionScript, root, {
+    env, args: ['close', '--request', requestPath],
+  });
+  return ticket;
 }
 
 function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
@@ -210,6 +234,90 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
     'stop_hook_active 没有 verified receipt 时仍须 block');
 
   console.log('PASS U-006 receipt-only release：旧 marker/stop_hook_active 拒绝，kill-switch 留作显式应急');
+}
+
+// ── U-014 overlap：显式纠错 ticket 即使 edit/tool=0 也须 block；只有 verified receipt 放行 ──
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const sid = 'sess-explicit-zero-work';
+  const env = {
+    LUCA_GSTACK_ROOT: root,
+    LUCA_PROJECTS_ROOT: join(root, '项目'),
+    ROUTE_GUARD_PROJECTS: 'projA',
+  };
+  const routed = runNode(routeGuardHook, root, {
+    env,
+    input: JSON.stringify({
+      session_id: sid,
+      turn_id: 'turn-explicit-zero-work',
+      prompt: '你现在没有先识别是什么项目吗？还是已经识别了',
+    }),
+  });
+  assert.match(routed.stdout, /CORRECTION GATE/, 'explicit correction must receive an immediate ticket-bound hint');
+  const activeTicket = join(root, '.claude', 'correction-state', sid, 'active-ticket.json');
+  assert.ok(existsSync(activeTicket), 'route guard must publish the session-scoped O_EXCL ticket');
+
+  const blocked = JSON.parse(runNode(sessionSyncHook, root, {
+    env, input: JSON.stringify({ session_id: sid }),
+  }).stdout);
+  assert.equal(blocked.decision, 'block', 'active explicit ticket must block even when edit/tool counters are zero');
+
+  writeFileSync(join(root, '.claude', `.episode-written-${sid}`), '');
+  const markerBlocked = JSON.parse(runNode(sessionSyncHook, root, {
+    env, input: JSON.stringify({ session_id: sid }),
+  }).stdout);
+  assert.equal(markerBlocked.decision, 'block', 'legacy marker has no release authority over an explicit ticket');
+
+  closeExplicitCorrection(root, sid);
+  const released = runNode(sessionSyncHook, root, {
+    env, input: JSON.stringify({ session_id: sid }),
+  });
+  assert.equal(released.stdout, '', 'verified ticket/receipt is the only normal release authority');
+  assert.match(released.stderr, /correction receipt 已验证/);
+  console.log('PASS U-014 explicit zero-work correction blocks until verified ticket/receipt closure');
+}
+
+// Malformed active tickets and committed receipts are governance-boundary corruption: fail closed.
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const sid = 'sess-corrupt-active-ticket';
+  const env = { LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: join(root, '项目'), ROUTE_GUARD_PROJECTS: 'projA' };
+  runNode(routeGuardHook, root, {
+    env,
+    input: JSON.stringify({ session_id: sid, turn_id: 'turn-corrupt-ticket', prompt: '那你为什么没有识别？' }),
+  });
+  writeFileSync(join(root, '.claude', 'correction-state', sid, 'active-ticket.json'), '{broken-ticket\n');
+  const broken = JSON.parse(runNode(sessionSyncHook, root, {
+    env, input: JSON.stringify({ session_id: sid }),
+  }).stdout);
+  assert.equal(broken.decision, 'block');
+  assert.match(broken.reason, /ticket|correction/i);
+
+  const receiptRoot = makeFixture({ activeProject: 'projA' });
+  const receiptSid = 'sess-corrupt-receipt';
+  const receiptEnv = {
+    LUCA_GSTACK_ROOT: receiptRoot,
+    LUCA_PROJECTS_ROOT: join(receiptRoot, '项目'),
+    ROUTE_GUARD_PROJECTS: 'projA',
+  };
+  runNode(routeGuardHook, receiptRoot, {
+    env: receiptEnv,
+    input: JSON.stringify({ session_id: receiptSid, turn_id: 'turn-ordinary', prompt: '普通问题：今天的状态是什么？' }),
+  });
+  runNode(closeCorrectionScript, receiptRoot, {
+    env: receiptEnv,
+    args: ['close', '--session', receiptSid, '--level', 'NONE'],
+  });
+  const receiptsDir = join(receiptRoot, '.claude', 'correction-state', receiptSid, 'receipts');
+  const receiptName = readdirSync(receiptsDir).find(name => name.endsWith('.json'));
+  assert.ok(receiptName, 'fixture must have a committed receipt to corrupt');
+  writeFileSync(join(receiptsDir, receiptName), '{broken-receipt\n');
+  const badReceipt = JSON.parse(runNode(sessionSyncHook, receiptRoot, {
+    env: receiptEnv, input: JSON.stringify({ session_id: receiptSid }),
+  }).stdout);
+  assert.equal(badReceipt.decision, 'block');
+  assert.match(badReceipt.reason, /receipt|correction/i);
+  console.log('PASS U-014 damaged correction ticket/receipt fail closed');
 }
 
 // ── V3 修复：重 Bash/subagent/MCP、零编辑、少轮次 → tool-count 触发实质判据 → block ──

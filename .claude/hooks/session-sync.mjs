@@ -22,6 +22,7 @@ import {
 } from './lib/project-substrate.mjs';
 import {
   acquireCurrentCorrectionReceiptSnapshot,
+  correctionStatePath,
   ensureRearmCorrectionTicket,
   readActiveCorrectionTicket,
 } from './lib/correction-contract.mjs';
@@ -141,12 +142,24 @@ function writeCheckpointIfInProgress() {
 // 归属三分表在 CLAUDE.md「写入协议」（每 session 已在 context）。
 // 只动态注入两样真正只有 hook 知道的：激活项目落点、本 session 的 marker 文件名。
 // 改四信号速记必须同步 extraction-bar.md（HOOK-007 钉关键词）。
-function buildReason({ rearm = false, deltaEdit = 0, deltaTool = 0, ticket = null, ticketError = '' } = {}) {
+function buildReason({
+  rearm = false,
+  deltaEdit = 0,
+  deltaTool = 0,
+  ticket = null,
+  ticketError = '',
+  explicitCorrection = false,
+  governanceBoundaryError = false,
+} = {}) {
   const projLine = project
     ? `【项目】当前激活项目「${project}」：项目级持久事实 → ~/Desktop/项目/${project}/.luca/memory/MEMORY.md；单次经历 → python3 memory/scripts/append_episode.py --project "${project}"；若本 session 实为框架/meta 工作（改 luca_gstack 自身），episodic 改用 --meta 防误标。`
     : `【项目】当前无激活项目：项目级经验暂记 append_episode.py（不带 --project），待项目激活后归位到其 .luca/memory/MEMORY.md。`;
   return [
-    rearm
+    governanceBoundaryError
+      ? `correction ticket/receipt 校验失败，治理边界必须 fail-closed；修复并读回 exact state 后才能结束：`
+      : explicitCorrection
+        ? `本 session 有尚未闭环的明确用户纠错；即使 edit/tool=0，也必须先完成 ticket-bound 归因与 receipt：`
+        : rearm
       ? `自上次提取裁决后，本 session 又新增大量实质工作（Δedit=${deltaEdit}, Δtool=${deltaTool}）。对【新增部分】再做一次「自成长提取」裁决（仅一次，勿循环）：`
       : `本 session 有实质工作但尚未沉淀经验。结束前就地完成一次「自成长提取」（仅一次，勿循环）：`,
     `【门槛 · 默认不存】仅四强信号提取：①明确纠正/未来指示 ②复发 ③返工/不可逆险情 ④高成本且复用（细则：.claude/skill-os/extraction-bar.md）。绕行先按 correction-attribution.md 修源头；全不中直接解锁。`,
@@ -191,6 +204,26 @@ try {
   }
   catch (error) { completionError = String(error?.message || error); }
 
+  // A first-turn explicit correction is governance work even when the normal
+  // edit/tool counters are still zero. Validate any existing state before the
+  // substantive-work gate; malformed ticket/receipt state is itself a
+  // fail-closed condition, never a reason to silently treat the session as
+  // trivial. Absence of the whole state tree remains the ordinary no-work case.
+  let activeBeforeBlock = null;
+  let activeStateError = '';
+  if (!completed && existsSync(correctionStatePath({ root: projectRoot, sessionId }))) {
+    try {
+      activeBeforeBlock = readActiveCorrectionTicket({ root: projectRoot, sessionId });
+      if (!activeBeforeBlock && !completionError) {
+        activeStateError = 'correction state has neither a verified completion nor an active ticket';
+      }
+    } catch (error) {
+      activeStateError = String(error?.message || error);
+    }
+  }
+  const explicitCorrectionOpen = activeBeforeBlock?.ticket?.prompt_signal === 'EXPLICIT_CORRECTION';
+  const governanceBoundaryError = Boolean(completionError || activeStateError);
+
   // ---- 增量重拦：baseline 只来自已验证 receipt，不再来自可自报的 marker ----
   let rearm = false, deltaEdit = 0, deltaTool = 0;
   if (completed && process.env.SESSION_SYNC_REARM !== '0') {
@@ -204,22 +237,29 @@ try {
   }
 
   // ---- 拦截：首次闭合、receipt 损坏或增量重拦。stop_hook_active 不再构成旁路。----
-  if (!killSwitch && ((!completed && substantive) || rearm)) {
+  if (!killSwitch && ((!completed && (substantive || explicitCorrectionOpen || governanceBoundaryError)) || rearm)) {
     // This branch is unconditionally blocking. Drop the allow snapshot before
     // rearming/reading active ticket state for the user-facing explanation.
     releaseCorrectionReceiptSnapshot();
-    let active = null;
-    let ticketError = completionError;
+    let active = activeBeforeBlock;
+    let ticketError = completionError || activeStateError;
     try {
-      active = rearm
-        ? ensureRearmCorrectionTicket({ root: projectRoot, sessionId, completed })
-        : readActiveCorrectionTicket({ root: projectRoot, sessionId });
+      if (rearm) active = ensureRearmCorrectionTicket({ root: projectRoot, sessionId, completed });
+      else if (!active && !ticketError) active = readActiveCorrectionTicket({ root: projectRoot, sessionId });
       if (!active && !ticketError) ticketError = 'missing active ticket';
     } catch (error) {
       ticketError = String(error?.message || error);
     }
     writeCheckpointIfInProgress();
-    const reason = buildReason({ rearm, deltaEdit, deltaTool, ticket: active?.ticket || null, ticketError });
+    const reason = buildReason({
+      rearm,
+      deltaEdit,
+      deltaTool,
+      ticket: active?.ticket || null,
+      ticketError,
+      explicitCorrection: explicitCorrectionOpen,
+      governanceBoundaryError,
+    });
     // harness 门：decision:block 是 Claude/Codex 共享控制面；当前三态都结构化 block。
     let canBlock = true;
     try { canBlock = (await import('./lib/harness.mjs')).canEmitControlVerb(process.env); } catch { }

@@ -15,7 +15,7 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { spawnSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const REPO = fileURLToPath(new URL('..', import.meta.url));
@@ -73,12 +73,12 @@ const env = {
 };
 for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) delete env[key];
 
-function run(hook, payload, timeout = 4000) {
+function run(hook, payload, timeout = 4000, extraEnv = {}) {
   const r = spawnSync('node', [join(HOOKS, hook)], {
     cwd: root,
     encoding: 'utf8',
     timeout,
-    env,
+    env: { ...env, ...extraEnv },
     input: JSON.stringify(payload),
   });
   assert.notEqual(r.error?.code, 'ETIMEDOUT', `${hook} timed out`);
@@ -86,6 +86,28 @@ function run(hook, payload, timeout = 4000) {
   return r;
 }
 const json = value => JSON.parse(String(value).trim());
+
+// Ambient test overrides are allowed only in explicit dry-run mode. In a
+// production hook event they must not replace the validated schema-v2 binding.
+{
+  const envSid = 'identity-env-override';
+  writeFileSync(join(root, '.claude', `.session-project-${envSid}`), `${JSON.stringify({
+    schema_version: 2,
+    state: 'TURN_ACTIVE',
+    session_id: envSid,
+    binding,
+    turn: { turn_id: 'turn-env-before', epoch: binding.epoch },
+  })}\n`);
+  run('route-guard.mjs', {
+    session_id: envSid,
+    turn_id: 'turn-env-switch',
+    prompt: '继续 display-beta 的任务',
+  }, 4000, { ROUTE_GUARD_CURRENT_PROJECT: 'display-beta' });
+  const switched = JSON.parse(readFileSync(join(root, '.claude', `.session-project-${envSid}`), 'utf8'));
+  assert.equal(switched.state, 'SWITCH_ONLY');
+  assert.equal(switched.switch.target, 'display-beta');
+  console.log('PASS production route identity ignores ambient env and follows schema-v2 binding');
+}
 
 // PreToolUse follows the exact active binding, not display-beta.
 {
@@ -158,5 +180,31 @@ for (const hook of ['project-scope-guard.mjs', 'route-guard.mjs', 'session-resto
     `${hook} must consume centralized identity+epoch validation`);
 }
 console.log('PASS project-aware hook wiring shares one identity/epoch validator');
+
+// Preserve the Python resolver probe that originally caught nested checkout
+// drift. append_episode is a legacy convenience resolver (explicit --project
+// or --meta remains authoritative); it is not a production hook identity.
+{
+  const resolverProject = 'resolver-probe';
+  const resolverRoot = join(root, 'resolver-memory');
+  const nestedDocs = join(projectsRoot, resolverProject, 'inner-checkout', 'docs');
+  mkdirSync(nestedDocs, { recursive: true });
+  mkdirSync(resolverRoot, { recursive: true });
+  symlinkSync(nestedDocs, join(resolverRoot, 'docs'));
+  const code = [
+    'import importlib.util as ilu',
+    `s = ilu.spec_from_file_location('ae', ${JSON.stringify(join(REPO, 'memory/scripts/append_episode.py'))})`,
+    'm = ilu.module_from_spec(s)',
+    'try:\n    s.loader.exec_module(m)\nexcept SystemExit:\n    pass',
+    'print(m.active_project())',
+  ].join('\n');
+  const output = execFileSync('python3', ['-c', code], {
+    cwd: resolverRoot,
+    encoding: 'utf8',
+    env: { ...env, MEMORY_ROOT: resolverRoot },
+  }).trim().split('\n').pop();
+  assert.equal(output, resolverProject);
+  console.log('PASS append_episode nested-checkout resolver probe remains discriminating');
+}
 
 console.log('\n=== test-project-identity-wiring summary: ALL PASS ===');

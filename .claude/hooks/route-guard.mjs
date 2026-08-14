@@ -165,7 +165,7 @@ function listProjects() {
 function readCurrentProject(projects) {
   // 显式设置（含空串="无激活项目"）即生效——空串回退真实 symlink 会让 dry-run 测试
   // 依赖宿主机的项目状态（G3 修复测试时发现）。
-  if (process.env.ROUTE_GUARD_CURRENT_PROJECT !== undefined) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
+  if (dryRun && process.env.ROUTE_GUARD_CURRENT_PROJECT !== undefined) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
   // Production routing identity comes only from the validated session binding.
   // The shared docs symlink is display state, never an identity source.
   if (!dryRun) return runtimeCurrentProject;
@@ -190,6 +190,7 @@ const FRAMEWORK_SCOPE_RULES = [
   { id: 'runtime-guards', pattern: /project-scope-guard|route-guard|session-restore/i },
   { id: 'routing-meta', pattern: /项目(?:上下文)?门禁|路由(?:守卫|规则|闭环)?|plan\s*(?:agent|mode)/i },
   { id: 'framework-meta', pattern: /框架(?:自身|自审|治理)?|规则执行闭环|\bhooks?\b/i },
+  { id: 'rule-execution-audit', pattern: /(?:很多|这些)规则.{0,12}(?:你|agent|助手).{0,8}(?:没有执行|执行不了|未执行)|(?:你|agent|助手).{0,12}(?:很多|这些)规则.{0,12}(?:没有执行|执行不了|未执行)/i },
 ];
 
 const FRAMEWORK_CONTROL_RULES = [
@@ -438,6 +439,11 @@ function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
       ),
     },
     {
+      name: '规则执行系统审查',
+      weight: 6,
+      test: () => routingScope.frameworkSignals?.includes('rule-execution-audit'),
+    },
+    {
       name: '多模块',
       weight: 3,
       test: t => {
@@ -577,6 +583,14 @@ function softSkillDecision(prompt, routes) {
 function skillDecision(prompt) {
   const direct = prompt.match(/^\/[a-z][\w-]*/i)?.[0];
   if (direct) return { decision: 'SINGLE_SKILL', skill: direct, candidates: [direct] };
+
+  // A user can explicitly select a formal skill without slash syntax. Keep
+  // this narrower than mere name mention: an action phrase must name the
+  // skill, so "不要 deepresearch，按 quick-research 执行" cannot be routed to
+  // the negated skill just because its token also appears in the sentence.
+  if (/(?:^|[，。,.\s])(?:请)?(?:按|使用|调用)\s*(?:\/|\$)?quick-research(?:\s+(?:skill))?(?:\s*执行)?(?:[，。,.\s]|$)/i.test(prompt)) {
+    return { decision: 'SINGLE_SKILL', skill: '/quick-research', candidates: ['/quick-research'] };
+  }
 
   const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'));
   const text = normalize(prompt);
@@ -901,12 +915,20 @@ let projectStateError = '';
 // a separate verified transaction on the same session transition lock.
 if (!dryRun && prompt && hookSessionId) {
   try {
-    issueCorrectionTicket({
+    const issued = issueCorrectionTicket({
       root: projectRoot,
       sessionId: hookSessionId,
       eventId: hookTurnId,
       prompt,
     });
+    if (issued.ticket.prompt_signal === 'EXPLICIT_CORRECTION') {
+      hints.push(
+        `[route-guard] 🛑 CORRECTION GATE — 检测到用户正在纠正当前 agent/流程；` +
+        `ticket=${issued.ticket.ticket_id}。先按 .claude/skill-os/correction-attribution.md 归因，` +
+        `再按 extraction-bar 裁决；若属路由纠正，把真实表述加入 routing fixture。` +
+        `只有 ticket-bound verified receipt 可解锁，旧 episode marker 无放行权。`,
+      );
+    }
   } catch (error) {
     // The Stop hook treats a missing/corrupt ticket as non-releasable. This
     // hook remains non-blocking so routing itself cannot strand the prompt.

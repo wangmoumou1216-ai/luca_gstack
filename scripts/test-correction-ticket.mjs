@@ -235,6 +235,30 @@ assert.equal(
   classifyCorrectionPrompt('纠正：你刚才路由错了，以后必须命中 quick-research'),
   'EXPLICIT_CORRECTION',
 );
+for (const prompt of [
+  '你现在没有先识别是什么项目吗？还是已经识别了',
+  '那你为什么没有识别？',
+  '我是说，先确认项目，再执行后续任务',
+  '这个流程有问题',
+]) {
+  assert.equal(
+    classifyCorrectionPrompt(prompt),
+    'EXPLICIT_CORRECTION',
+    `high-confidence Chinese correction must be explicit: ${prompt}`,
+  );
+}
+for (const prompt of [
+  '不对称加密怎么实现？',
+  '这个流程有问题吗？',
+  '以后用户必须先登录吗？',
+  '下次发布必须先跑测试吗？',
+]) {
+  assert.equal(
+    classifyCorrectionPrompt(prompt),
+    'NO_EXPLICIT_CORRECTION',
+    `ordinary terminology/product question must not become a correction: ${prompt}`,
+  );
+}
 assert.deepEqual(correctionEvidenceVariants('L3', true), [
   ['OBSERVATION_RULE', 'ROUTING_FIXTURE'],
   ['SEMANTIC_CANDIDATE', 'ROUTING_FIXTURE'],

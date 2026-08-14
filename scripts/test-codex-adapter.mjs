@@ -30,6 +30,7 @@ import { acquireProjectLease, releaseProjectLease } from './project-lease.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ADAPTER = join(ROOT, '.codex', 'codex-hook-adapter.mjs');
 const HOOKS = join(ROOT, '.claude', 'hooks');
+const CLOSE_CORRECTION = join(ROOT, 'scripts', 'close-correction-ticket.mjs');
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -115,12 +116,46 @@ const cleanup = () => {
   for (const f of ['.session-edit-count-' + SID, '.session-tool-count-' + SID,
                    '.session-turn-count-' + SID, '.session-project-' + SID,
                    '.session-consumed-turns-' + SID,
+                   '.episode-written-' + SID,
                    '.session-project-' + DIRECT_SID,
                    '.session-consumed-turns-' + DIRECT_SID]) {
     const p = join(ROOT, '.claude', f);
     if (existsSync(p)) rmSync(p, { force: true });
   }
+  const correctionState = join(ROOT, '.claude', 'correction-state', SID);
+  if (existsSync(correctionState)) rmSync(correctionState, { recursive: true, force: true });
 };
+
+function runCorrectionCli(args) {
+  const result = spawnSync('node', [CLOSE_CORRECTION, ...args], {
+    cwd: ROOT,
+    encoding: 'utf8',
+    timeout: 30000,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: ROOT, LUCA_GSTACK_ROOT: ROOT },
+  });
+  if (result.status !== 0) throw new Error(result.stderr || result.stdout);
+  return result;
+}
+
+function closeExplicitAdapterTicket(sessionId) {
+  const ticket = JSON.parse(runCorrectionCli(['show', '--session', sessionId]).stdout);
+  const template = JSON.parse(runCorrectionCli(['template', '--session', sessionId, '--level', 'L1']).stdout);
+  const scratch = mkdtempSync(join(tmpdir(), 'adapter-correction-close.'));
+  try {
+    const disclosure = join(scratch, 'disclosure.txt');
+    writeFileSync(disclosure, `归因: L1 已完成 ticket=${ticket.ticket_id} nonce=${ticket.nonce}\n`);
+    const request = template.choose_exactly_one[0];
+    request.evidence[0].path = disclosure;
+    const requestPath = join(scratch, 'request.json');
+    writeFileSync(requestPath, `${JSON.stringify(request, null, 2)}\n`);
+    runCorrectionCli(['record', '--request', requestPath]);
+    runCorrectionCli(['close', '--request', requestPath]);
+    return scratch;
+  } catch (error) {
+    rmSync(scratch, { recursive: true, force: true });
+    throw error;
+  }
+}
 cleanup();
 
 // ── A. 出向：纯文本 → additionalContext 包装（route-guard 走这条）────────────
@@ -138,6 +173,54 @@ cleanup();
     typeof o?.hookSpecificOutput?.additionalContext === 'string'
     && o.hookSpecificOutput.additionalContext.length > 10);
   ok('A3 hookEventName 正确回填', o?.hookSpecificOutput?.hookEventName === 'UserPromptSubmit');
+}
+
+// ── A4-A9：Claude/Codex 共用 ticket/receipt 与项目门语义 ──────────────
+{
+  cleanup();
+  const routed = runVia('route-guard.mjs', {
+    hook_event_name: 'UserPromptSubmit',
+    session_id: SID,
+    turn_id: 'turn-adapter-correction',
+    prompt: '你现在没有先识别是什么项目吗？还是已经识别了',
+    cwd: ROOT,
+  });
+  const context = parse(routed.stdout)?.hookSpecificOutput?.additionalContext || '';
+  ok('A4 Codex UserPromptSubmit 收到共享 CORRECTION GATE', /CORRECTION GATE/.test(context), `context=${context.slice(0, 180)}`);
+  const ticket = JSON.parse(runCorrectionCli(['show', '--session', SID]).stdout);
+  ok('A5 Codex 路径签发同一 per-sid explicit ticket', ticket.prompt_signal === 'EXPLICIT_CORRECTION');
+
+  const stopped = parse(runVia('session-sync.mjs', {
+    hook_event_name: 'Stop', session_id: SID, cwd: ROOT,
+  }).stdout);
+  ok('A6 Codex Stop 对零编辑纯对话纠错仍原样 decision:block', stopped?.decision === 'block');
+
+  writeFileSync(join(ROOT, '.claude', '.episode-written-' + SID), '');
+  const markerBlocked = parse(runVia('session-sync.mjs', {
+    hook_event_name: 'Stop', session_id: SID, cwd: ROOT,
+  }).stdout);
+  ok('A7 legacy marker 永不解锁 explicit ticket', markerBlocked?.decision === 'block');
+
+  const evidenceScratch = closeExplicitAdapterTicket(SID);
+  const released = runVia('session-sync.mjs', {
+    hook_event_name: 'Stop', session_id: SID, cwd: ROOT,
+  });
+  ok('A8 verified receipt 解锁且不残留控制动词', !parse(released.stdout),
+    `stdout=${String(released.stdout).slice(0, 1200)} stderr=${String(released.stderr).slice(0, 400)}`);
+  rmSync(evidenceScratch, { recursive: true, force: true });
+  cleanup();
+}
+{
+  const routed = runVia('route-guard.mjs', {
+    hook_event_name: 'UserPromptSubmit',
+    session_id: SID,
+    turn_id: 'turn-adapter-crm',
+    prompt: '我们有一个置入 CRM 的 agent，需要识别任何当前页面并带入上下文对话，还要调研标准厂商如何让用户感知上下文透明度',
+    cwd: ROOT,
+  }, { ROUTE_GUARD_PROJECTS: 'projA' });
+  const context = parse(routed.stdout)?.hookSpecificOutput?.additionalContext || '';
+  ok('A9 Codex 无 schema-v2 binding 时先走 PROJECT GATE', /PROJECT GATE/.test(context), `context=${context.slice(0, 180)}`);
+  cleanup();
 }
 
 // ── B. 入向：tool_name 归一化（连锁失效的根因）──────────────────────────────

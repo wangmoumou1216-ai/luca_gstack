@@ -130,8 +130,18 @@ function validatePromptSignal(value) {
 export function classifyCorrectionPrompt(prompt) {
   const text = String(prompt || '').normalize('NFKC').trim();
   if (!text) return 'NO_EXPLICIT_CORRECTION';
+  const isQuestion = /[?？]\s*$/.test(text);
   const explicitCorrection = [
-    /(?:纠正|更正|改正|修正(?:一下)?|你(?:刚才|前面)?(?:做|说|理解|路由)?错(?:了)?|不对|不是.{0,80}而是|不要再|别再|以后(?:不要|必须|应该|请)|今后(?:不要|必须|应该|请)|听懂(?:了)?吗|我要求你(?:以后|今后)|记住(?:这个|这一点|以后|今后))/u,
+    /(?:纠正|更正|改正|修正(?:一下)?|你(?:刚才|前面)?(?:做|说|理解|路由)?错(?:了)?|不是.{0,80}而是|不要再|别再|听懂(?:了)?吗|我要求你(?:以后|今后)|记住(?:这个|这一点|以后|今后))/u,
+    /(?:^|[，,。！!？?\s])不对(?:[，,。！!？?\s]|$)/u,
+    /(?:你|你的|你现在|那你).{0,20}(?:为什么没|为什么没有|怎么没|怎么没有|没有先|没先|漏了|做错了|弄错了|搞错了|没按|没有按|违反了)/u,
+    /^(?:我是说|我说的是|我指的是|不是(?:这个|这样|我的意思|我问的是|我说))/u,
+    /这个不对(?:[，,。！!？?\s]|$)/u,
+    /(?:这两个|这些|刚才|前面).{0,12}问题.{0,8}(?:出在哪|根因)/u,
+    ...(!isQuestion ? [
+      /(?:以后|今后).{0,24}(?:不要|别|必须|应该|请|先|记住)/u,
+      /这个流程有问题/u,
+    ] : []),
     /(?:\bcorrection\b|\bcorrect\s+(?:this|that|your)\b|\byou(?:'re| are| were)?\s+wrong\b|\bthat(?:'s| is)\s+(?:wrong|incorrect)\b|\bnot\s+.{1,80}\s+but\b|\bdo not\s+.{0,80}\s+again\b|\bdon't\s+.{0,80}\s+again\b|\bfrom now on\b|\bin the future\b|\bremember (?:that|to)\b|\byou should have\b|\byou must not\b)/iu,
   ].some(pattern => pattern.test(text));
   return explicitCorrection ? 'EXPLICIT_CORRECTION' : 'NO_EXPLICIT_CORRECTION';

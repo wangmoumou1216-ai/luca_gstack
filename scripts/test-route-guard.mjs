@@ -33,13 +33,12 @@ function route(prompt, extraEnv = {}) {
   }
 }
 
-function loadScopeMatrixFixtures() {
+function loadRoutingFixtures() {
   return readFileSync('memory/evals/routing/fixtures.jsonl', 'utf8')
     .split('\n')
     .map(line => line.trim())
     .filter(line => line && !line.startsWith('//'))
-    .map(line => JSON.parse(line))
-    .filter(row => row.matrix === 'U-003');
+    .map(line => JSON.parse(line));
 }
 
 function expectScopeMatrixDecision(fixture, decision) {
@@ -107,6 +106,32 @@ const cases = [
     expect: decision => {
       assert.equal(decision.decision, 'PROJECT_STOP');
       assert.equal(decision.projectAction, 'clarify_project_scope');
+    },
+  },
+  {
+    name: 'real CRM research prompt without a project binding stops at Project Gate',
+    prompt: '我们有一个agent，然后这个agent是置入到crm里面的。我们希望当打开crm任何页面，agent都能识别当前页面，带入上下文，然后与agent对话，是可以针对当前页面的。那这块有一个执行上，透明度感知的问题。我如何让用户能感知到，当前你的提问时带入了当前页面的上下文的。这个 需要按照我们agent标准的ax规范。已经你需要调研一下其他标准的厂商他们在这种场景时怎么做到的透明度感知的问题',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'projA' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, 'choose_new_or_existing');
+    },
+  },
+  {
+    name: 'explicit quick-research selection outranks a negated deepresearch mention',
+    prompt: '当前项目不要 deepresearch，quick-research 是一个 skill，按 quick-research 执行',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'muse', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/quick-research');
+    },
+  },
+  {
+    name: 'real framework rule system-review prompt enters Plan Mode without a project gate',
+    prompt: '那我需要你看看你为什么没有执行，我现在很多规则你都没有执行。我需要你系统的review一下，还有什么执行不了，为什么',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PLAN_MODE');
     },
   },
   {
@@ -816,7 +841,17 @@ const cases = [
   },
 ];
 
-const scopeMatrixFixtures = loadScopeMatrixFixtures();
+const allRoutingFixtures = loadRoutingFixtures();
+const fixtureIds = allRoutingFixtures.map(row => row.id);
+assert.equal(new Set(fixtureIds).size, fixtureIds.length, 'routing fixture ids must be unique');
+for (const id of [
+  'sem-explicit-quick-research-over-negated-deepresearch',
+  'sem-no-pin-project-gate-before-deepresearch',
+  'sem-framework-rule-system-review-no-project-gate',
+]) {
+  assert.ok(fixtureIds.includes(id), `merged canonical WIP fixture missing: ${id}`);
+}
+const scopeMatrixFixtures = allRoutingFixtures.filter(row => row.matrix === 'U-003');
 for (const matrixClass of ['pure_meta', 'project', 'mixed']) {
   assert.ok(
     scopeMatrixFixtures.filter(row => row.matrix_class === matrixClass).length >= 12,
