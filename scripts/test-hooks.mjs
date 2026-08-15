@@ -403,9 +403,15 @@ for (const which of ['workflow-state', 'progress']) {
   const globalDir = mkdtempSync(join(tmpdir(), 'luca-gstack-person-'));
   const candBody = '---\nname: gov-t\ndescription: 治理测试候选\n---\n\n正文\n';
   writeFileSync(join(globalDir, 'candidate_feedback_gov-t.md'), candBody);
+  // 索引预算门按**字符**不按条数（2026-08-15）：条数与注入成本不是一回事——真实索引里
+  // 18 条 >300 字符的行就占了总字符的 62%。fixture 因此要造出「超字符预算」而非「超条数」，
+  // 并额外造一条含「并入」标注的行来验合并落点提醒。
+  const fatHook = 'x'.repeat(320);
   writeFileSync(
     join(globalDir, 'MEMORY.md'),
-    '# Memory Index\n\n' + Array.from({ length: 21 }, (_, i) => `- [m${i}](f${i}.md) — hook`).join('\n') + '\n'
+    '# Memory Index\n\n'
+    + Array.from({ length: 21 }, (_, i) => `- [m${i}](f${i}.md) — ${fatHook}`).join('\n')
+    + `\n- [merged](fm.md) — ${fatHook}（并入 [[f0]]）\n`
   );
   const before = readdirSync(globalDir).sort().join(',');
 
@@ -421,7 +427,23 @@ for (const which of ['workflow-state', 'progress']) {
   const digest = readFileSync(join(digestsDir, digestFile), 'utf8');
   assert.match(digest, /person 层候选/, 'digest 应有 person 层候选节');
   assert.match(digest, /candidate_feedback_gov-t\.md/, 'digest 应列出候选文件名与采纳命令');
-  assert.match(digest, /软上限.*21 条/, 'MEMORY.md >20 条应触发软上限告警');
+  assert.match(digest, /索引预算：MEMORY\.md 索引 22 条 \/ \d+ 字符/, '超字符预算应触发索引预算门');
+  assert.match(digest, /最肥 5 条：/, '预算门必须点名最肥的条目（只说"建议修剪"落不到动作）');
+  assert.match(digest, /合并落点：1 条索引行带「并入」标注/, '含「并入」的索引行应触发合并落点提醒');
+  assert.match(digest, /记忆注入成本/, 'digest 应含注入成本度量节（治理成败判据）');
+  assert.match(digest, /person 层候选（全局个人记忆，只读看护）/, 'person 块应在「待你裁决」节内');
+  // 顺序断言：person 块必须是「待你裁决」下的**第一个**子块——预览是 40 行硬帽，
+  // 排在后面等于永不可见（实测 58% 的队列从未进入注入面，而 100% 不可见的正是 person 块）。
+  // 写成「第一个」而非「早于某块」：后者在对照块缺席时 indexOf 返回 -1，顺序比较被静默跳过
+  // ——断言没跑到会被计成绿（本 fixture 2026-08-15 实证过一次，变异不转红）。
+  // 本 fixture 的 memRoot 是空临时目录、没有 memory/scripts，consolidate 子进程跑不起来，
+  // 因此 awaiting/stale 块恒缺席；只有「第一个子块」这个写法在此仍然可判。
+  const decideIdx = digest.indexOf('## ⏳ 待你裁决');
+  assert.notEqual(decideIdx, -1, 'digest 应有「待你裁决」节');
+  const subBlocks = digest.slice(decideIdx).split('\n').filter(l => l.startsWith('**'));
+  assert.ok(subBlocks.length > 0, 'fixture 必须产出至少一个子块，否则顺序断言无从判定');
+  assert.match(subBlocks[0], /person 层候选/,
+    'person 块必须是「待你裁决」下的第一个子块（40 行预览硬帽下的可见性）');
 
   assert.equal(readdirSync(globalDir).sort().join(','), before, '治理必须只读：不得增删/改名全局目录文件');
   assert.equal(readFileSync(join(globalDir, 'candidate_feedback_gov-t.md'), 'utf8'), candBody, '候选文件内容不得被修改');

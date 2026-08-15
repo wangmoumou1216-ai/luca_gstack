@@ -11,6 +11,7 @@ evidence/scope/reviewer 齐全，且非重复/冲突），本脚本不直接写 
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -318,6 +319,19 @@ def check_gap_recheck():
     return issues
 
 
+# person 索引的字符预算。基线：2026-08-15 实测 18,395 字符 / 56 条（每 session 全量注入）。
+# 取 6000 是「最肥 6 条换成钩子后」的量级，不是拍的——低于它就没有可操作的瘦身对象了。
+PERSON_INDEX_CHAR_BUDGET = 6000
+
+
+def _index_row_name(row: str) -> str:
+    """从索引行 `- [标题](file.md) — hook` 里取出文件 stem，取不到就退回标题片段。"""
+    m = re.search(r"\]\(([^)]+)\)", row)
+    if m:
+        return Path(m.group(1)).stem
+    return row[:24]
+
+
 def check_person_memory():
     """person 层（全局个人记忆）看护：candidate_feedback 候选清单 + MEMORY.md 软上限。
 
@@ -349,14 +363,113 @@ def check_person_memory():
             )
         memory_md = gdir / "MEMORY.md"
         if memory_md.is_file():
-            entries = [l for l in memory_md.read_text(encoding="utf-8").splitlines() if l.lstrip().startswith("- ")]
-            if len(entries) > 20:
+            text = memory_md.read_text(encoding="utf-8")
+            entries = [l for l in text.splitlines() if l.lstrip().startswith("- ")]
+            # 预算门按**字符**不按条数（2026-08-15）：条数与注入成本不是一回事——实测 56 条里
+            # 18 条 >300 字符就占了索引总字符的 62%，最长一条 3,289 字符（索引行长成了正文）。
+            # 只说"已 N 条建议修剪"无法落到动作；给出最肥的几条与各自可省字符才可执行。
+            index_chars = sum(len(l) for l in entries)
+            if index_chars > PERSON_INDEX_CHAR_BUDGET:
+                fattest = sorted(entries, key=len, reverse=True)[:5]
+                detail = "；".join(
+                    f"{_index_row_name(l)}({len(l)}字)" for l in fattest
+                )
                 issues.append(
-                    f"person 层软上限：MEMORY.md 已 {len(entries)} 条（>20，每 session 全量注入 context），建议合并/修剪"
+                    f"person 层索引预算：MEMORY.md 索引 {len(entries)} 条 / {index_chars} 字符 "
+                    f"（>{PERSON_INDEX_CHAR_BUDGET}，每 session 全量注入）。最肥 5 条：{detail}。"
+                    f"瘦身法=把整行原文逐字归档进对应正文文件的「索引原文存档」一节，索引行只留钩子"
+                )
+            # 合并落点制度（2026-08-15）：索引膨胀的机制是**合并时把被并入内容追加进索引行**
+            # 而非吸收者正文——实测含「并入」标注的 6 条（11% 的条目）占索引 35% 字符、均长是
+            # 其他条目的 4.4 倍，同时留下 7 个孤儿文件。制度必须挂在动作真正发生的地方。
+            merged_rows = [l for l in entries if "并入" in l]
+            if merged_rows:
+                issues.append(
+                    f"person 层合并落点：{len(merged_rows)} 条索引行带「并入」标注、占索引 "
+                    f"{sum(len(l) for l in merged_rows) * 100 // max(1, index_chars)}% 字符。"
+                    "合并记忆时：被并入内容写进**吸收者的正文文件**，索引行只留钩子，"
+                    "原文件移入 archive/ 并保留 [[old]] → 已并入 [[new]] 的指针（勿直接删链接）"
                 )
     except Exception as e:  # noqa: BLE001 — 看护绝不打断治理
         issues.append(f"person 层看护异常：{e}")
     return issues
+
+
+def check_memory_integrity_issues():
+    """引用完整性 + 重复/取代体检（G6-3/G6-6），委托给 check_memory_integrity.py。
+
+    补的是记忆系统一直缺的**退役与自检**那条边：写入有 Stop hook 强制、晋升有 promotion_ready
+    门禁，但没有任何东西负责发现死链、孤儿、失联记忆，或"这两条其实是一件事"。
+    只读；fail-open（体检失败折成一条 issue，绝不打断治理）。
+    """
+    issues = []
+    try:
+        import importlib.util as _ilu
+        mod_path = Path(__file__).resolve().parent / "check_memory_integrity.py"
+        if not mod_path.is_file():
+            return issues
+        spec = _ilu.spec_from_file_location("check_memory_integrity", mod_path)
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        gdir = GLOBAL_MEMORY_DIR
+        if gdir.is_dir():
+            ref = mod.check_references(gdir)
+            if ref["dead_link_target_count"]:
+                merged = sum(1 for v in ref["dead_link_targets"].values() if v["context_has_merge"])
+                issues.append(
+                    f"引用完整性：{ref['dead_link_target_count']} 个死 wiki-link 目标 / "
+                    f"{ref['dead_link_occurrence_count']} 处（{merged} 个上下文含「并入」可重定向到吸收者，"
+                    f"其余需人工裁）— 明细：`python3 memory/scripts/check_memory_integrity.py --json`"
+                )
+            if ref["unreachable_files"]:
+                issues.append(
+                    f"**完全失联的记忆**（不在索引且无任何文件链接到它，等于已丢失）："
+                    f"{', '.join(ref['unreachable_files'])}"
+                )
+            if ref["broken_index_rows"]:
+                issues.append(f"索引死行（指向不存在的文件）：{', '.join(ref['broken_index_rows'])}")
+
+            decay = mod.check_decay_triggers(gdir)
+            if decay:
+                names = "、".join(d["file"] for d in decay)
+                issues.append(
+                    f"退化触发器到期复核（{len(decay)} 条自带失效条件的记忆）：{names} — "
+                    "逐条确认条件是否已满足；满足则按其自述降级为指针或归档"
+                )
+
+        sup = mod.check_supersession(ROOT / "memory")
+        if sup:
+            top = sup[:3]
+            detail = "；".join(f"{p['a']}↔{p['b']}({p['shared_rare']})" for p in top)
+            issues.append(
+                f"疑似重复/取代（semantic 层，{len(sup)} 对，按共享稀有 token 排序）：{detail}"
+                f"{' 等' if len(sup) > 3 else ''} — 确认后用 supersedes 字段建立取代关系，"
+                "而不是让两条并存（现状 60 条 stable fact 只有 1 条用过 supersedes）"
+            )
+    except Exception as e:  # noqa: BLE001 — 体检绝不打断治理
+        issues.append(f"记忆完整性体检异常：{e}")
+    return issues
+
+
+def measure_context_injection():
+    """G7：每 session 记忆注入字符数——治理的成败指标。
+
+    外部研究给的核心运营判据是「注入成本应随记忆增长保持平坦」；本系统此前无人度量，
+    只能事后靠感觉说"是不是变多了"。分子刻意包含**会被本轮治理推高的那一项**（digest 预览），
+    避免口径绕开自己唯一会变大的部分。
+    """
+    parts = {}
+    try:
+        gmd = GLOBAL_MEMORY_DIR / "MEMORY.md"
+        if gmd.is_file():
+            parts["person索引"] = len(gmd.read_text(encoding="utf-8"))
+        claude_md = ROOT / "CLAUDE.md"
+        if claude_md.is_file():
+            parts["CLAUDE.md"] = len(claude_md.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        pass
+    return parts
 
 
 FORCE_WEEKLY_DAYS = 7  # 无状态变化也至少每 N 天写一次心跳 digest，确认管线存活
@@ -826,6 +939,7 @@ def main() -> int:
     routing_issues = check_model_routing()
     self_model_issues = check_self_model() + check_gap_recheck()
     person_issues = check_person_memory()
+    integrity_issues = check_memory_integrity_issues()
     eps = recent_episodes(today)
 
     # A2 loop 健康自检（fail-open）——在降频判定之前跑：异常本身构成写 digest 的理由。
@@ -844,7 +958,7 @@ def main() -> int:
 
     has_change = bool(
         promoted or archived or archived_noisy or conflicts or dups or stale or awaiting
-        or routing_issues or self_model_issues or person_issues or eps
+        or routing_issues or self_model_issues or person_issues or integrity_issues or eps
     )
     last_dt = last_digest_date()
     days_since = (today_dt - last_dt).days if last_dt else FORCE_WEEKLY_DAYS
@@ -875,8 +989,18 @@ def main() -> int:
     lines += [f"## 🟢 自动晋升的稳定事实（{len(promoted)}）", ""]
     lines += ([f"- {render_item(p)}" for p in promoted] or ["_无_"]) + [""]
 
-    pending = len(conflicts) + len(dups) + len(stale) + len(awaiting) + len(routing_issues) + len(self_model_issues) + len(person_issues)
+    pending = len(conflicts) + len(dups) + len(stale) + len(awaiting) + len(routing_issues) + len(self_model_issues) + len(person_issues) + len(integrity_issues)
     lines += [f"## ⏳ 待你裁决（需人工，{pending}）", ""]
+    # person 层块置顶（2026-08-15）：session-restore 的预览是 40 行硬上限，实测今日 36 条
+    # 待裁决只有 ~15 条进入注入面、21 条（58%）从未出现在人眼前，而 **100% 不可见的恰好是
+    # person 层候选块与索引预算提醒**（它们排在最后）。抬上限的代价实测 +7,012 字符/session
+    # 且会让预览长度跟随队列无界增长；重排是零成本的等效解法，故只重排、不抬帽。
+    if person_issues:
+        lines.append("**person 层候选（全局个人记忆，只读看护）：**")
+        lines += [f"- {i}" for i in person_issues]
+    if integrity_issues:
+        lines.append("**记忆完整性（死链/失联/退化触发器/重复取代，只读体检）：**")
+        lines += [f"- {i}" for i in integrity_issues]
     if awaiting:
         # awaiting_approval 桶：提案者已 --stable 请求、条件齐备、只差人工闸门放行。
         # 此前该桶建了却从不进 digest，候选 0-14 天窗口对人完全不可见、只能等 14 天后
@@ -903,9 +1027,6 @@ def main() -> int:
     if self_model_issues:
         lines.append("**自模型/演进面（复核/生成）：**")
         lines += [f"- {i}" for i in self_model_issues]
-    if person_issues:
-        lines.append("**person 层候选（全局个人记忆，只读看护）：**")
-        lines += [f"- {i}" for i in person_issues]
     if not pending:
         lines.append("_无_")
     lines.append("")
@@ -989,6 +1110,19 @@ def main() -> int:
                           ""]
     except Exception as e:  # noqa: BLE001
         lines += [f"> ⚠️ 检索度量节异常（fail-open）：{e}", ""]
+
+    # 注入成本度量（2026-08-15）：治理的成败判据是「注入成本随记忆增长保持平坦」——
+    # 记忆条数可以涨，每 session 注入不许涨。此前无人度量，只能靠感觉说"是不是变多了"。
+    try:
+        inj = measure_context_injection()
+        if inj:
+            total = sum(inj.values())
+            detail = " + ".join(f"{k} {v}" for k, v in inj.items())
+            lines += [f"## 📏 记忆注入成本", "",
+                      f"- 每 session 注入 **{total} 字符**（{detail}）",
+                      f"- 判据：记忆条数可以涨，本行不许涨。涨了说明退役侧又停摆了", ""]
+    except Exception as e:  # noqa: BLE001
+        lines += [f"> ⚠️ 注入成本节异常（fail-open）：{e}", ""]
 
     lines += [f"## 📥 归档", "", f"- 已审候选归档：{len(archived)}", f"- noisy episode 归档：{len(archived_noisy)}", ""]
 
