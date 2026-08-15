@@ -593,6 +593,64 @@ def promote_ready_candidates(candidates: list[dict], ready: list[dict], dry_run:
     return promoted
 
 
+def archive_superseded_facts(dry_run: bool, reviewer: str = "") -> list[str]:
+    """把「已被别的 stable fact 声明 supersedes」的旧事实移出 promoted-facts 到年度归档。
+
+    ## 为什么需要这个口
+
+    bi-temporal 能力（`supersedes` / `valid_until`）读侧早已实现（search/get 会过滤被取代者），
+    `check_memory_health` 也会对「被取代却仍在 promoted-facts」报 FAIL——**但此前没有任何工具
+    能执行这个归档**，只能手改被治理的文件。2026-08-15 一次性晋升 20 条时当场撞上：
+    SC-20260723-002 自带 supersedes: SC-20260723-001，两条被一起晋升，健康检查立刻转红。
+
+    只搬不删：旧事实整块移进 `semantic/archive/superseded-facts-YYYY.yaml`，证据链保留。
+    """
+    text = PROMOTED.read_text(encoding="utf-8") if PROMOTED.exists() else ""
+    facts = parse_promoted_facts(PROMOTED)
+    superseded = {
+        str(f.get("supersedes") or "").strip()
+        for f in facts if str(f.get("supersedes") or "").strip()
+    }
+    present = {str(f.get("id") or "") for f in facts}
+    targets = sorted(superseded & present)
+    if not targets:
+        return []
+
+    lines = text.splitlines(keepends=True)
+    # 逐块切分：一个 fact 从 `  - id:` 起，到下一个 `  - id:` 或文件末尾止
+    starts = [i for i, l in enumerate(lines) if re.match(r"\s*- id:\s*\S", l)]
+    blocks = {}
+    for n, i in enumerate(starts):
+        end = starts[n + 1] if n + 1 < len(starts) else len(lines)
+        m = re.match(r"\s*- id:\s*(\S+)", lines[i])
+        if m:
+            blocks[m.group(1)] = (i, end)
+
+    moved, drop = [], set()
+    chunks = []
+    for fid in targets:
+        if fid not in blocks:
+            continue
+        i, end = blocks[fid]
+        chunks.append("".join(lines[i:end]))
+        drop.update(range(i, end))
+        moved.append(fid)
+    if not moved or dry_run:
+        return moved
+
+    year = datetime.now(timezone.utc).strftime("%Y")
+    archive = SEMANTIC_DIR / "archive" / f"superseded-facts-{year}.yaml"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    header = "" if archive.exists() else "# 被 supersedes 取代的旧稳定事实（只搬不删，保留证据链）\nfacts:\n"
+    prev = archive.read_text(encoding="utf-8") if archive.exists() else ""
+    atomic_write_text(archive, prev + header + "".join(chunks))
+    atomic_write_text(PROMOTED, "".join(l for n, l in enumerate(lines) if n not in drop))
+    for fid in moved:
+        append_review(fid, reviewer or "consolidate_memory", "archived_superseded",
+                      f"被后续 stable fact 声明 supersedes，移入 {archive.name}")
+    return moved
+
+
 def set_stable(ids: list, dry_run: bool, reviewer: str = "") -> dict:
     """人工复核后批准：把指定候选 id 的 proposed_stable 置 True（缺失的「候选→可晋升」人工闸门）。
 
@@ -784,6 +842,8 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="force no writes even with action flags")
     parser.add_argument("--json", action="store_true", help="print structured JSON")
     parser.add_argument("--promote-ready", action="store_true", help="promote eligible candidates and record reviews")
+    parser.add_argument("--archive-superseded", action="store_true",
+                        help="把被 supersedes 取代的旧 stable fact 移入 semantic/archive/superseded-facts-YYYY.yaml（只搬不删）")
     parser.add_argument("--archive-reviewed", action="store_true", help="move promoted/rejected candidates into semantic/archive")
     parser.add_argument("--archive-noisy", action="store_true", help="move noisy episodic records out of the hot index")
     parser.add_argument("--set-stable", nargs="+", metavar="ID", default=None,
@@ -799,7 +859,7 @@ def main() -> int:
         print("--set-stable/--reject 需要 --reviewer <你的名字>（人工闸门审计留痕）", file=sys.stderr)
         return 2
 
-    write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy
+    write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy or args.archive_superseded
                      or args.set_stable or args.reject) and not args.dry_run
 
     # set-stable/reject 先于 build_queue：写盘后 promotion_ready/decisions 才能看到结果
@@ -817,6 +877,10 @@ def main() -> int:
         queue["actions"]["promoted"] = promote_ready_candidates(candidates, queue["promotion_ready"], dry_run=not write_enabled)
         if write_enabled:
             promoted = parse_promoted_facts(PROMOTED)
+    if args.archive_superseded:
+        # 放在 promote_ready 之后：同一次调用里刚晋升的 fact 若带 supersedes，本步立即收尾
+        queue["actions"]["archived_superseded"] = archive_superseded_facts(
+            dry_run=not write_enabled, reviewer=args.reviewer.strip())
     if args.archive_reviewed:
         queue["actions"]["archived"] = archive_reviewed_candidates(candidate_rows, decisions, promoted, dry_run=not write_enabled)
     if args.archive_noisy:
