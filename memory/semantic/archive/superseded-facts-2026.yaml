@@ -1,0 +1,13 @@
+# 被 supersedes 取代的旧稳定事实（只搬不删，保留证据链）
+facts:
+  - id: SC-20260723-001
+    domain: skill-rule
+    fact: "上游 skill 更新复盘协议（luca 2026-07-23 明确指示）：看某上游 repo 更新时，先做血统对标——逐条核对上游演进是否修正/推翻我方已吸收文本（直读吸收落点 plan-agent/task-plan/brainstorm 等的实际段落，不凭 ADOPTED 摘要），再评估净新增单元是否值得采；采纳候选出口前过需求真伪门（真实使用数据+机制语境匹配），不得以「成本低」替代「有需求」，也不得用 AskUserQuestion 要裁决替代深评估。ack 只静音已裁决版本，路径级 ack 不覆盖 repo 级其余单元的演进。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "luca 两次纠正 @ mattpocock/skills 更新对标 session 8c7728d0"
+    evidence: "07-15 路径级 ack 静音了 4 已装单元，但同窗口 wayfinder/grilling/batch-grill-me 等全 repo 演进无人裁决；本次对标发现 4 血统 no-op + 2 真候选 + 1 over-claim 撤回"
+    reviewer: "luca-delegated"
+    scope: "external-skills,evolution"
+    tags: ["外部skill", "更新复盘", "对标", "采纳", "watcher"]

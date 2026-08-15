@@ -634,3 +634,205 @@ facts:
     supersedes: "SC-20260715-005"
     scope: "memory"
     tags: ["memory", "person-layer", "fork", "fragmentation", "harness", "automemorydirectory"]
+  - id: SC-20260710-001
+    domain: skill-rule
+    fact: "外部 spec/流程系统（如 OpenSpec）接入 lucagstack 前先判两条：①与 tech-spec/task-plan 等核心层的本体重叠度——高重叠=双真值源，拒整套接入；②是否往母版 .claude/ 写自有命名空间——污染框架本体，拒装 CLI。'装下游不进母版'先例（codegraph）仅适用于只读且零本体重叠的工具，不得迁移到会改写核心 spec 层的系统。可汲取时只取思想、用框架自有 idiom 原生重写（OpenSpec 案例取 3 思想：delta+archive 活 spec、可机检 Requirement/Scenario、/opsx:verify 三维回验节点概念）"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "2026-07-10 OpenSpec 评估 session"
+    evidence: "framework-audit/proposals/2026-07-10-acceptance-closure-handoff.md §1/§4"
+    reviewer: "luca-delegated"
+    scope: "framework-evolution"
+  - id: SC-20260720-001
+    domain: skill-rule
+    fact: "新增一级 skill 的完整登记面（从 checker 反推）：commit 级硬门 5 面 = (1) routing-map project_skills 条目[SSOT-2/3/4/5/6，键下划线·invoke连字符·keyNorm==canonical] (2) CLAUDE.md /name 表行[REG-1] (3) SKILL.md frontmatter recommended-model[REG-2，只查有那行不查tier] (4) .claude/commands/name.md[SSOT-2/6] (5) input-modes 键放 skills: 节下非顶层[SSOT-3只扫skills/governance_tools两节]。非硬门但须做：office-wizard 提及[REG-3 warn]、model-routing 对应 tier 的 skills: roster 加名[daily_governance 校验↔frontmatter]、node scripts/build-self-model.mjs 重生成 self-model.generated.yaml[C16]。且 CLAUDE.md 常贴 45KB 硬顶[B1，基线曾仅剩 9 字节 headroom]——加表行前须先把语义划界详情 offload 到 claude-md-appendix.md 或去重腾字节，别指望塞得下。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-07-20 落地 insight-synthesis 新 skill 时逐一直读 check-routing-map.mjs/check-registration-sync.mjs/build-self-model.mjs/verify.sh 核实"
+    reviewer: "luca-delegated"
+    scope: "skill-registration"
+    tags: ["new-skill", "registration", "claude-md-budget", "checkers", "self-model"]
+  - id: SC-20260721-003
+    domain: skill-rule
+    fact: "记忆治理链改动纪律（2026-07-21，同族第二次实证）：治理链是「动作 → 旗标 → 门禁 → 落盘」多段串联，任何一段的门禁若要求某字段，必须同时存在能填该字段的写入路径，否则形成**静默死锁**——动作返回成功、审计留痕齐全、就是永远不生效。已发两例：①SC-20260615-001（无任何路径把已存在候选 proposed_stable 置 True → promotion_ready 恒空）②本次（--set-stable 的 --reviewer 只写 reviews.jsonl 不回流候选本体，而 has_review_metadata 要求候选自带 reviewer → 人工放行后仍卡门外；且落盘条件只看旗标是否变化，已 True 的候选回填会丢在内存）。因此：改治理链时**验收标准是端到端真实跑通一次（候选→放行→晋升→读回 promoted-facts 命中）**，不是各段动作分别返回成功；新增门禁字段时同步问「谁来填它」。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "consolidate_memory.py 晋升死锁调试（session 45c656f8）"
+    evidence: "候选 SC-20260721-001/002 proposed_stable=True 且 evidence/scope 齐备，promote-ready 仍零晋升；实测 reviewer='' 触 has_review_metadata 假；修 set_stable 回填+落盘条件后端到端跑通，promoted-facts 命中 2"
+    reviewer: "luca"
+    scope: "memory,governance,consolidate_memory"
+    tags: ["记忆治理", "静默死锁", "门禁与写入路径", "端到端验收"]
+  - id: SC-20260721-004
+    domain: skill-rule
+    fact: "审计/评审类计划在块 0 声明『默认产出形态』时，该形态会成为裁决阶段的拇指——写了『默认产出是关闭/删除』，发现层就会系统性高估关闭的正当性。2026-07-21 实证：4 条关闭提案经独立红队判 5/6 REFUTED，根据是『触发器坏掉 ≠ 被防的风险消失』。两条防线：①计划块 0 写默认产出形态时必须同时声明它构成的偏差方向，并指定由谁以相反默认立场复核；②凡『关闭/删除/永久放弃某道防护』类提案，一律派独立红队以默认 REFUTED 立场审，且红队须显式评估『该提案是否让审计本身显得收口更干净』。这与既有的 over-claim 纪律互补——那条防高估问题，本条防高估非问题。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "2026-07-21 收口 Pass 自省（session 45c656f8）：计划块 0 写死『默认产出是删除·接线·关闭』→ Wave 1 产出 4 条 UNFIREABLE 关闭提案 → fable 红队 5/6 REFUTED 并直接点名自我服务偏差，Wave 3 处置全部返工改写"
+    evidence: "framework-audit/2026-07-21-consolidation-close.md §1；2026-07-21-wave2-S2.jsonl（6 条判决 5 REFUTED）；对比 2026-07-21-wave1-WA3.jsonl 的 4 条 UNFIREABLE→关闭提案"
+    reviewer: "luca-delegated"
+    scope: "framework-audit, plan-agent"
+    tags: ["audit", "plan", "bias", "redteam", "closure"]
+  - id: SC-20260721-005
+    domain: skill-rule
+    fact: "在 JSON-schema 约束的 agent/workflow 管道里加字段，只改 prompt 指令而不改 schema 的 properties，字段会被**静默剥掉**——structured output 按 schema 裁剪，prompt 里写得再清楚也不生效。因此『接通消费端』的验收动作不是检查清单打勾，而是**把调用链一路追到人类看得见的渲染处并贴出 file:line**，任一环断开即判未完成。反面教训：仓内已有 skill-authoring 接线清单的『消费面』条目（同日落地），仍未拦住本次——文档级清单挡不住这类失败，只有追链验收能。且此类假接线自测必过（字段确实写进文件、确实能被 yaml.safe_load 读出），只有独立验收者会去追下游消费者。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "2026-07-21 收口 Pass（session 45c656f8）：给 gaps-register 加 revisit_when/revisit_status 并在 loader prompt 里写了抽取指令，自测『字段能被 safe_load 读到』通过；独立验收判 NOT_RESOLVED——LOADER_SCHEMA.gaps.items.properties 未声明该字段，结构化输出会被剥掉，下游 gapsText/openGapIds/gapsCovered/return 全不读"
+    evidence: ".claude/workflows/framework-evolution-scout.js 的 LOADER_SCHEMA 与 return 块；framework-audit/2026-07-21-consolidation-close.md §7；同日 commit『fix(skill-authoring): 接线清单补消费面环节』已在仓内却未拦住本次"
+    reviewer: "luca-delegated"
+    scope: "framework-evolution-scout, workflow schema, 接线验收"
+    tags: ["wiring", "schema", "consumption", "verification", "silent-drop"]
+  - id: SC-20260722-005
+    domain: fxui
+    fact: "补充 SC-20260722-003（白字亮底）：问题范围比该候选记录的更大，还有两项未覆盖。①第四个硬编码位置：.claude/skills/office/figma-layer/SKILL.md Phase 3 的 Figma Variables 覆盖块同样写死 --primary-foreground #FFFFFF。②不止背景前景对，FxUI 的次要文字色 #91959E 本身在白底上仅 3.00:1，过得了非文本 3:1 但过不了正文 4.5:1——即凡用它承载正文/字段值的地方都不合规；合规替身 #6E727B 为 4.82:1（同色相压深）。该问题此前未被发现是因为注意力全在按钮底色上；实证来自 Open Design 生成原型时自行发现并替换，且在 CSS 注释里留了一行回退路径。结论：2026-07-22 已提交的 a11y 注记（commit 523a970）只覆盖了 *-foreground 白字，未覆盖 #91959E 次要文字色，也未改 figma-layer SKILL —— 修复不完整。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "figma-layer/SKILL.md Phase 3 变量块原文；对比度按 WCAG 相对亮度公式实算 #91959E on #FFFFFF = 3.00、#6E727B on #FFFFFF = 4.82；原型 /Users/luca/Desktop/项目/mobile-list/docs/prototype/2026-07-22-crm-list-westernization/index.html 第 120-130 行 OD 的替换与回退注释"
+    reviewer: "luca-delegated"
+    scope: "design-system-contract,brand-tokens,figma-layer,open-design"
+    tags: ["fxui", "wcag", "accessibility", "secondary-text", "upstream-defect", "incomplete-fix"]
+  - id: SC-20260723-002
+    domain: skill-rule
+    fact: "对标自我成长的权威流程已源头制度化（2026-07-23，commit 35a8df5）：增量基线=evolution/benchmark-registry.yaml（必录对方更新日期+我们更新了什么，check_benchmark_drift 每日观察者消费）；标准作业流程=BENCHMARK-RUNBOOK「更新对标（窗口复审）」W①-W⑨（枚举穷尽断言/血统落点直读/need-first 三问门/FACT-INFERENCE-CLAIM 靶子/opus 并行红队+fable 串行终审/SSOT 回写+基线推进）。本条仅存指针：规则内容以 RUNBOOK 与 registry 文件头为唯一真值，勿在记忆层复制细则（SC-20260723-001 的协议内容已升源头，据此作废）。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "luca 制度化指令 @ session 8c7728d0；落地 commit 35a8df5"
+    evidence: ".claude/skill-os/evolution/{benchmark-registry.yaml,BENCHMARK-RUNBOOK.md} + daily_governance.check_benchmark_drift + 5 单测"
+    reviewer: "luca-delegated"
+    supersedes: "SC-20260723-001"
+    scope: "evolution,external-skills"
+    tags: ["对标", "更新复审", "基线", "SOP", "指针"]
+  - id: SC-20260729-001
+    domain: skill-rule
+    fact: "仓内 A/B 测试提示词层改动（CLAUDE.md/系统提示）时，Agent tool 子代理会被 harness 自动注入项目 CLAUDE.md+person MEMORY.md（settings 发现驱动非 cwd slug）——双臂对照必然被污染（旧规则经注入仍在场→删除项假 PASS）。正确做法：claude -p 于仓外 scratch cwd + 双向 canary（候选侧埋新 token、真文件侧用删除项独有短语作零字节天然 canary）证隔离"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "claude5-unhobble 红队 R2-③B4（红队亲测自身 context 含全量注入）+R5 设计定稿"
+    evidence: "计划 graph-engineering-lucagastack v7.4 §四P3"
+    reviewer: "luca-delegated"
+    scope: "framework"
+  - id: SC-20260804-001
+    domain: skill-rule
+    fact: "project.sh switch 的输出是项目本地记忆的唯一注入口，不得用 head/tail 截断或丢弃——截断等于推平记忆防线。实证：muse 仓 push-main 打空枪坑 7-31 已入项目记忆，8-04 因 switch 输出被 head -3 截断原样复发"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "session b77fa6ec 2026-08-04 复发实证"
+    evidence: "muse/.luca/memory/muse-repo-trunk-branch.md 7-31 已记录该坑；本 session switch muse | head -3 后仍 push origin main 得 Everything up-to-date"
+    reviewer: "luca-delegated"
+    scope: "project-gate/switch"
+  - id: SC-20260807-001
+    domain: skill-rule
+    fact: "luca_gstack 框架更新（含自进化对标、融合、skill/hook/agent/workflow 改动）必须同时验证 Claude Code 与 Codex 的语义可达性：逐端说明触发、执行、降级与验证；不得以单 harness 可运行代替双 harness 适配完成，缺等价能力时须显式降级或拒绝。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "luca 2026-08-07 明确未来约束；原始纠正 O-20260807-001。当前 AGENTS.md 已有 Governance Parity/Codex wiring 背景，但 BENCHMARK/FUSION 尚无逐候选双-harness 硬门。"
+    reviewer: "luca"
+    scope: "luca_gstack framework evolution, benchmark, fusion, skill/hook/agent/workflow changes"
+    tags: ["codex", "claude", "harness-parity", "self-evolution", "skill-rule"]
+  - id: SC-20260809-001
+    domain: skill-rule
+    fact: "自进化/外部能力适配任务的第一交付物必须是可直接执行且逐项可验收的冻结 Plan；Plan 获用户最终握手批准前，调研、盘点、计划级验证与红队仅用于收敛 Plan，不得预先实现 runtime、route、全局 skill 或框架代码。最终握手必须基于同一冻结 Plan SHA 的多域独立红队闭环与独立终审，任何实质修订都使旧握手失效并重跑。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-08-09 mattpocock/skills 自进化 session：luca 多次明确纠正“首要目的是先产出计划”“不具备最终握手不要说最终”，并指出计划阶段不应看起来在实施；cycle2 audit 由此发生真实返工。"
+    reviewer: "luca"
+    scope: "luca_gstack self-evolution/external-capability-adaptation planning across Codex and Claude"
+    tags: ["self-evolution", "plan-first", "approval-boundary", "redteam", "final-handshake", "cross-harness"]
+  - id: SC-20260809-002
+    domain: skill-rule
+    fact: "自进化执行 Plan 的机械可信性必须同时闭合三件事：①信任链单向且无自认证，使用 Plan literal→OS-owned anchor→source bundle→members，bundle 内 validator 只能做二级结构校验；②执行 key/receipt/CWD 不靠人工抄表，校验器从真实 Command/CWD 引用机械提取并强制 referenced⊆closed manifest、无重复、别名一致；③人类门不得假设未接线的 harness hook，必须按当前 Claude/Codex 真能力明确 trusted top-level main 边界，或另列受批 bootstrap，缺可靠 user turn 时 fail closed。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "framework-audit/2026-08-09-mattpocock-handshake-cycle2：Round1 redteam 实证 source-bundle self-auth、ancestor symlink、pre-envelope bootstrap recursion、未接线 UserPromptSubmit、closed key漏 cycle2-audit-root/h0-approval 与 WP08/09 CWD别名，均造成冻结 Plan 返工；最终由 ADR-GATE-001、os-byte-anchor.sh、FD writer与 run-fixtures mechanical subset check闭合。"
+    reviewer: "luca"
+    scope: "luca_gstack self-evolution/external-capability execution plans across Claude and Codex"
+    tags: ["self-evolution", "plan-trust-root", "source-bundle", "key-closure", "human-gate", "cross-harness"]
+  - id: SC-20260811-001
+    domain: skill-rule
+    fact: "当用户明确否定 deepresearch 并指定正式 quick-research skill 时，显式 skill 选择必须优先于关键词粗网；route-guard 的否定词误命中不得覆盖用户选择。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-08-09 用户连续纠正 quick-research 是正式 skill；2026-08-11 dry-run 对『不要 deepresearch…按 quick-research 执行』仍错误返回 SINGLE_SKILL /deepresearch；已加 routing fixture sem-explicit-quick-research-over-negated-deepresearch。"
+    reviewer: "codex"
+    scope: "luca_gstack route-guard 与跨 harness skill routing"
+  - id: SC-20260811-003
+    domain: skill-rule
+    fact: "框架任务的 DONE 门禁必须基于本次适用义务清单：每条强制规则都要有执行证据、明确不适用，或披露为能力不支持/权限受限/规则冲突；仅验证代码测试通过不能替代规则执行闭环。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-08-11 用户连续纠正：项目识别、问题纠错闭环、Git commit/push 等已有规则被加载却未执行；现有 verify 仍可全绿。"
+    reviewer: "luca"
+    scope: "luca_gstack 框架任务，Claude 与 Codex"
+  - id: SC-20260811-004
+    domain: skill-rule
+    fact: "凡受人工门保护的变更任务，计划合同必须机械拆成 PREP/TST-PRE → GATE → EXEC/TST-POST：PREP 仅生成只读 census/descriptor/proposal/rehearsal evidence，gate 不得作为准备 evidence 的任务依赖，批准后才能 mutation，且必须 post read-back。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-08-11 final-handshake cold judge Round 2 REFUTED gate-evidence cycle；修订后 target ca4d57b0 在 FINAL-JUDGE.md Round 3 SURVIVES"
+    reviewer: "luca"
+    scope: "luca_gstack Plan Agent、task-plan 与所有含 human mutation gate 的执行握手"
+  - id: SC-20260811-005
+    domain: skill-rule
+    fact: "规则执行/义务 census 的输入分母必须从可执行真值源的 selector 生成 exact path+hash set，并包含 hooks、agents、skills、workflows、Git/CI 入口；机器完整性 checker 只能证明 frozen bytes/structure closure，必须明确 structural integrity is not plan truth，不能替代独立语义判官和用户裁决。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-08-11 final-handshake cold judge Round 2 发现 .claude/workflows 漏入分母；补成 103-file exact source set 后 FINAL-JUDGE.md Round 3 SURVIVES"
+    reviewer: "luca"
+    scope: "luca_gstack governance audit、obligation compiler、final handshake bundle"
+  - id: SC-20260811-006
+    domain: skill-rule
+    fact: "Git package/handshake checker 不得把 descriptor 自洽当作授权：必须由 checker 外置钉死 namespace（package prefix + exact target），显式拒绝 baseline dirty path 被新增为 member；POST 还须证明 commit 恰有一个获批 parent、assembly 与 execution 是两个已注册 worktree、execution clean、canonical HEAD/index/WIP hash 未变。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "2026-08-11 TST-001 PRE 首轮用真实 route-guard dirty hash 同步扩展 descriptor+exact-set 后 checker 仍 exit 0；已在 framework-audit/2026-08-11-rule-execution-handshake/tools/verify-u001-package.mjs 修复，复测 PACKAGE_PROPOSAL_PASS"
+    reviewer: "luca"
+    scope: "luca_gstack G-PACKAGE、dirty-worktree 隔离提交与所有 descriptor-driven exact commit verifier"
+  - id: SC-20260812-001
+    domain: tech
+    fact: "诊断 Claude Max 额度消耗的唯一可靠数据源是 ~/.claude/projects/**/*.jsonl 每条的 message.usage（input_tokens / cache_creation_input_tokens / cache_read_input_tokens / output_tokens）。三条硬要求：①按 requestId 去重（resume 会重放条目）②按完整日期过滤——transcript 跨多天，只用 HH:MM 匹配会把历史条目混进当前窗口，产出看似合理但错一个数量级的总量③跨条目比较用计费权重 in 1x / cacheW 1.25x / cacheR 0.1x / out 5x（这是价格比率，非 Anthropic 公布的配额公式，结论须标注为估算）。两条结构性事实：(a) 用量条的「当前 session」是账号级 5 小时滚动块，所有 CLI 窗口 + subagent + 桌面 app 共用一个池，与你刚开的窗口无关；块起点 = 上一块首请求时间 +5h，可用『重置倒计时』反推核对。(b) 主导变量是上下文体积而非请求数：每次工具调用都要按当前上下文全额重新计费，且缓存过期后下一条消息要按 1.25x 全量重写整份上下文。2026-08-12 实测——一个 72 万 token 上下文的并行 session 占当天全部加权用量 85.5%，其缓存过期后的单次全量重写（cacheW 71.3 万）就占该 5h 块已消耗量的 46%，而同期新开的 9.2 万上下文窗口只占 9%。因此额度告急时最高杠杆的动作是 compact 或收尾那个大上下文 session，而不是少开新窗口。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "session 48c069e2 2026-08-12 实测"
+    evidence: "~/.claude/projects/**/*.jsonl message.usage 字段；919bccc7 今日 74 请求 cacheR=47,217,006 / cacheW=1,449,313；14:31:55 单条 cacheW=712,997"
+    reviewer: "luca-delegated"
+    scope: "claude-code,quota-diagnosis"
+    tags: ["quota", "token", "usage", "transcript", "jsonl", "cache", "context-size", "max-plan", "parallel-session"]
+  - id: SC-20260814-001
+    domain: skill-rule
+    fact: "Git fixture 和隔离 worktree 内启动的所有 git 子进程必须剥离继承的 GIT_DIR、GIT_WORK_TREE、GIT_INDEX_FILE 等 GIT_* 定位变量，并在测试前后读取父仓 HEAD、index 与 tree 证明未被改写；否则临时仓命令可能落到父仓。U012 源头修复完成并通过 TST-012 后，本条只作为 git-closeout-policy 与 withoutLocalGitEnv 的残余兜底指针。"
+    confidence: high
+    stable: true
+    added: 2026-08-15
+    source: "observation"
+    evidence: "framework-audit/2026-08-11-rule-execution-handshake/execution/u011/GIT-FIXTURE-CONTAMINATION.json; recovery commit 638f03f83b8705e9214f5452f8190e23d46f2e5e; U012 git-closeout implementation"
+    reviewer: "luca"
+    scope: "luca_gstack Git harness tests and isolated worktrees"
+    tags: ["git", "fixture", "worktree", "environment", "isolation", "near-miss"]
