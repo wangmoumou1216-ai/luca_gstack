@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "gate": "G-PLAN",
+  "plan_id": "REX-20260811-001",
+  "plan_sha256": "ca4d57b0057dea529943e167b833eaca5a07d51495fc0f62e2dd47ac23daf4d8",
+  "redteam_sha256": "2e4ff42c82958ef41b00836d24cca5ce7d6b3ff43411d918232bc6e5ca2df53e",
+  "final_judge_sha256": "d4a06781c6c0cd8e2fd8eaaa208a8b7b00aa12dd420fdcb33dbee7d8df17aa8f",
+  "source_manifest_sha256": "5b66b5814addeb97e1cc4f7d890a5897f180023ca3a4c285f5898c1e3df228ff",
+  "manifest_sha256": "89555b30ebddaf2f32143c9c54a52f57d566c4fe9210bff145218adfc40b4144",
+  "nonce": "f687feb84f0de01f1bffaa5d1e435ced",
+  "created_at": "2026-08-11T04:48:11Z",
+  "expires_at": "2026-08-18T04:48:11Z",
+  "authority_boundary": "A new exact top-level user turn may approve this proposal; assistant, tool and delegated-agent text cannot. Any member drift invalidates the proposal."
+}

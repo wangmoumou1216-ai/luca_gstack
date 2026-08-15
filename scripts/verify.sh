@@ -81,6 +81,7 @@ check C16 "self-model 与磁盘一致（audit F4-05）" "npm run check:self-mode
 check C17 "workflow-state 写入块坏 yaml 时拒写（不擦除既有状态）" "python3 scripts/test-workflow-state-guard.py"
 check C18 "redteam 判据挂载表完整且引用路径全部存在" "python3 scripts/test-redteam-mount-table.py"
 check C19 "场景覆盖表结构自洽（SSOT对账+豁免声明双确认+三不规则形态）" "python3 scripts/check-skill-scene-coverage.py --selftest"
+check C20 "项目绑定事务回归通过（CAS/lease/replay/new/legacy migration）" "npm run test:project-transaction --silent"
 echo ""
 
 echo "[ Skill 体系 ]"

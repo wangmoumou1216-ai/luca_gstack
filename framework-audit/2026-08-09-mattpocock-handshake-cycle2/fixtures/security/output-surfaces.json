@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "surfaces": [
+    "stdout",
+    "stderr",
+    "native-transcript",
+    "artifact",
+    "handoff",
+    "final",
+    "receipt-log"
+  ],
+  "contract": "Every WP-06 atom receipt binds this manifest hash and proves absence of public regression canaries plus post-freeze parent-memory oracle canaries on every surface.",
+  "file_end": "output-surfaces.json"
+}

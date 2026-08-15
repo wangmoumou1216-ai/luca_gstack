@@ -217,8 +217,10 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 - `docs/` 必须是 symlink，指向当前项目的 `docs/`。
 - `.claude/workflow-state.yaml` 必须是 symlink，指向当前项目的 `.luca/workflow-state.yaml`。
 - `.claude/current-topic.txt` 必须是 symlink，指向当前项目的 `.luca/current-topic.txt`。
-- 切换项目必须使用 `scripts/project.sh switch <项目名>`，并运行
-  `npm run check:project-links` 验证 docs/state 指向同一项目。
+- 切换/新建项目只能执行当前 `UserPromptSubmit` 的 route-guard 生成的**完整事务命令**
+  （含 `--session-id`、`--tx`、`--expected-epoch`）；禁止手写裸
+  `scripts/project.sh switch/new <项目名>`。事务完成后运行 `npm run check:project-links`
+  验证 docs/state 指向同一项目。
 - `memory/**` 和 `.claude/observability/**` 是跨项目经验层，不随项目切换。
 
 `luca_gstack` 是 Skill OS，不是强制 workflow engine：
@@ -392,7 +394,8 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 
    > **总原则（命名即切换 + 语义自判）：** 项目归属是**语义判断不靠词表**（route-guard STOP
    > 不豁免你判断）；切换便宜可逆→不确认；仅"名字是我猜的新项目"留一句确认。
-   > **绑定即注入：** 确认/绑定项目时幂等执行 `./scripts/project.sh switch {name}` 注入项目
+   > **绑定即注入：** route-guard 为确认/绑定项目准备 `SWITCH_ONLY` 事务；只执行其输出的
+   > 完整 `./scripts/project.sh switch/new ... --session-id ... --tx ... --expected-epoch ...` 命令来注入项目
    > 记忆；**meta/框架/审计 session 只 Read 项目文件、不得 switch**（never-switch，luca 标注
    > 严重问题）。两条全文：appendix「Project Gate 附则」。
 
@@ -404,12 +407,12 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
      对吗？」再动手（防落错项目）。
 
    **② 消息点到已有项目名 / 语义指向某已有项目**（匹配项目列表某一项）
-   → **命名即切换**：直接执行 `./scripts/project.sh switch {name}`，一句话告知「已切到 {name}」，
+   → **命名即切换**：执行 route-guard 本轮给出的完整 `switch` 事务命令，成功后立即结束本轮；下一轮一句话告知「已切到 {name}」，
      **不等确认**（便宜可逆；点到即切正是所需）。想只引用不切换时，用户会说"不用切 / 当前项目"。
 
    **③ 消息表达新项目 / 语义自判是新项目**（含直接调用 `/brainstorm` `/idea` `/auto` 等且无明确当前项目）
    → **明说**是全新项目（或明确"新做一个 X"）：从描述推断候选名（如"商机管理"→"crm-bizop"）
-     → `./scripts/project.sh new {name}`（**它会 detach 当前、把软链重指到新项目**）→ 一句话告知
+     → 执行 route-guard 本轮给出的完整 `new` 事务命令（**它会 detach 当前、把软链重指到新项目**）→ 成功后立即结束本轮，下一轮一句话告知
      「已新建并激活 {name}」→ 直接执行原始请求，**不等确认**。
    → **没明说、但用户诉说一个大需求/新方向，你据语义判断是新项目**：**一句话确认**——「听起来是
      新项目「{name}」，我从当前 {cur} 切出去新建，对吗？」→ 确认后 `new {name}`。（只有这格确认：
@@ -486,9 +489,13 @@ gate）。handoff 分级：workflow 模式必写；standalone 模式 + 轻量 sk
   （GitHub→gh / 文档→WebFetch / X→FxTwitter / 本地 HTML→Read；兜底 capture）；15s 超时
   =app 未运行，**如实报告不臆造**；完整四步见 appendix「luca app 侧栏感知」。
 - **muse 工具通道（MCP，可见即优先）：** `mcp__muse__*` 工具可见（app 内嵌 session）时，
-  查工作台/截像素自验 UI/开文件网页分屏/定位读取导航侧栏页签 → 优先调工具（6 个：
+  查工作台/截像素自验 UI/开文件网页分屏/定位读取导航侧栏页签 → 优先调工具（7 个：
   workspace_state / preview_screenshot / open_in_view / web_locate / sidebar_read /
-  sidebar_navigate）；不可见（终端/降级/Codex）→ 走上列脚本。
+  sidebar_selection / sidebar_navigate）。**用户说"这个/这段/这里"且侧栏开着 → 先
+  `sidebar_selection` 消解指代再答，不猜他指哪个元素**（他在看屏幕，我没有）。
+  **Claude 与 Codex 档同样可见**（2026-08-07 实测，
+  app 按 CLI 分别以 `--mcp-config` / `-c mcp_servers.muse=` 注入）；仅 app 外终端/降级时
+  才走上列脚本。
   清单与降级链见 appendix「muse 工具通道」。**侧栏交付面（甲类）：展示类打开归侧栏
   （agent_browser SINGLE 命中不豁免）、Chrome 归自动化、终态拉回侧栏——全文见 appendix
   「luca app 侧栏感知」。**

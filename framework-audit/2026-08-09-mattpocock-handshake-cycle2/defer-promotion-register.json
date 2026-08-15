@@ -1,0 +1,183 @@
+{
+  "schema_version": "1.0",
+  "status": "FINAL",
+  "audit_date": "2026-08-09",
+  "source_repo": "mattpocock/skills",
+  "source_commit": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+  "decision_rule": "Priority ranks expected value and readiness; promotion requires every evidence gate. High priority alone never promotes a capability.",
+  "summary": {
+    "deferred_atoms": 19,
+    "families": 3,
+    "promoted_now_atoms": 0,
+    "promoted_now_families": 0,
+    "final_head_decisions": {
+      "ADAPT": 10,
+      "KEEP": 18,
+      "DEFER": 19,
+      "REJECT": 27,
+      "QUARANTINE": 0
+    }
+  },
+  "ranking_model": {
+    "order": [
+      "expected_user_value",
+      "evidence_readiness",
+      "fit_with_existing_luca_modules",
+      "cross_harness_safety",
+      "reversibility"
+    ],
+    "promotion_terminal": "READY_FOR_HUMAN_ADJUDICATION",
+    "automatic_promotion": false
+  },
+  "families": [
+    {
+      "priority": "P1",
+      "family": "questionnaire",
+      "label": "具名知识持有者决策问卷",
+      "atom_count": 8,
+      "atom_ids": [
+        "MATT-617e3a2a95a3",
+        "MATT-1c575c15b60e",
+        "MATT-e9258f150e5f",
+        "MATT-1047ab54aad9",
+        "MATT-b38846688969",
+        "MATT-c64f15d32b8f",
+        "MATT-b3589d5156a5",
+        "MATT-67f419958c76"
+      ],
+      "value_assessment": "高。它能把规划中 luca 无法代答、但挂在外部知识持有者身上的问题，转成可异步回收的决策制品；现有 GAP-decision-questionnaire 已证明框架承认此问题。",
+      "readiness_assessment": "中低。EP-20260722-098 提供了相邻实例和待决问题类别，但没有一位实际具名收件人，也没有一次真实的‘发送给谁、必须收回哪些事实/决策’任务。",
+      "existing_luca_landing": {
+        "registry": ".claude/skill-os/evolution/gaps-register.yaml#GAP-decision-questionnaire",
+        "consumer": ".claude/workflows/framework-evolution-scout.js",
+        "promotion_pipeline": ".claude/skill-os/evolution/FUSION-RUNBOOK.md",
+        "likely_destination_after_pilot": "research-kit 正文或 references 底料，由一次真实 pilot 后人裁；不预建 questionnaire skill"
+      },
+      "evidence_gates": [
+        {
+          "id": "Q-RECIPIENT",
+          "requirement": "存在实际具名的知识持有者/决策者，而不是角色类别或泛称",
+          "status": "UNMET"
+        },
+        {
+          "id": "Q-NEEDS-BACK",
+          "requirement": "明确列出必须从该人处收回的事实、选择或批准，以及这些答案会解锁哪项决策",
+          "status": "UNMET"
+        },
+        {
+          "id": "Q-PIN",
+          "requirement": "输出落到已确认 session project 的绝对路径，不能写 ambient current directory",
+          "status": "NOT_RUN"
+        }
+      ],
+      "promote_now": false,
+      "why_not_now": "相邻需求不是实际触发。缺少具名收件人和明确 needs-back 时生成问卷，会编造语气、上下文和问题边界。",
+      "revisit_when": "第一次真实出现：luca 需要把一组待决问题交给一位具名知识持有者，并能说清必须收回什么来解锁哪个决策。",
+      "promotion_target": "one_off_internal_pilot",
+      "surface_before_pilot": "ZERO_NEW_SKILL_ROUTE_MODE_WORKFLOW"
+    },
+    {
+      "priority": "P2",
+      "family": "logic-prototype",
+      "label": "只验证状态逻辑的可分享原型",
+      "atom_count": 10,
+      "atom_ids": [
+        "MATT-93c541c588be",
+        "MATT-1eb663064749",
+        "MATT-cbc9590cf27c",
+        "MATT-1926a447c911",
+        "MATT-68dd81ed3614",
+        "MATT-764808dd085a",
+        "MATT-0f66ea53c99a",
+        "MATT-0f394f53d5d7",
+        "MATT-8ec2838b5cad",
+        "MATT-1ea3663314a9"
+      ],
+      "value_assessment": "高潜力。它能在视觉精修前独立验证业务规则、状态转换和数据形状，避免把‘逻辑是否成立’误当成‘页面是否好看’。",
+      "readiness_assessment": "低。检索到的 EP-20260608-018 是对竞品录屏缺少真实逻辑的研究结论，不是一个具名项目提出的 logic-only 原型任务，不能拿来替代真实消费证据。",
+      "existing_luca_landing": {
+        "routing_rule": "沿用 CLAUDE.md 的逐子目标语义评估；当前不新增机械关键词路由",
+        "artifact_scope": "第一次 pilot 仅写 pinned project 的 /Users/luca/Desktop/项目/X/docs/prototype/YYYY-MM-DD-<topic>/logic-probe.html 和同目录验证回执",
+        "framework_boundary": "framework/ 保持只读；logic probe 是验证制品，不冒充最终视觉原型或 workflow 节点",
+        "consumer_after_pilot": "由 FUSION 人裁是否成为 html-prototype 的内部模式、references 底料或继续保持一次性工具"
+      },
+      "evidence_gates": [
+        {
+          "id": "L-NAMED-TASK",
+          "requirement": "出现一个具名项目/主题的真实任务",
+          "status": "UNMET"
+        },
+        {
+          "id": "L-LOGIC-ONLY",
+          "requirement": "核心问题明确是业务规则、状态转换或数据形状；视觉表达不是本轮验收对象",
+          "status": "UNMET"
+        },
+        {
+          "id": "L-PORTABLE",
+          "requirement": "一次性 pilot 证明纯逻辑可从 DOM 壳中抬出、完整状态重绘、free-play 与确定性场景都可复现",
+          "status": "NOT_RUN"
+        }
+      ],
+      "promote_now": false,
+      "why_not_now": "当前只有理论价值和邻近反例，没有一次真实 logic-only 请求。此时注册 skill 或 workflow 会把假设性用例固化为永久复杂度。",
+      "revisit_when": "首个具名任务明确要求先验证规则/状态机/数据形状，而不是制作精修视觉原型。",
+      "promotion_target": "one_off_internal_pilot",
+      "surface_before_pilot": "ZERO_NEW_SKILL_ROUTE_MODE_WORKFLOW"
+    },
+    {
+      "priority": "P3",
+      "family": "tdd-codebase-design",
+      "label": "TDD 对 codebase-design 接口词汇的只读指针",
+      "atom_count": 1,
+      "atom_ids": [
+        "MATT-f785c73e1ec8"
+      ],
+      "value_assessment": "中低但明确。它能在测试 seam 本身未定时复用 codebase-design 词汇，不过只是一个窄指针，增量价值小于前两项。",
+      "readiness_assessment": "低。没有发生过因 seam/interface 词汇缺失导致的真实 TDD 失败；而 codebase-design 当前只有 Claude 全局真身，Codex 目标缺失。",
+      "existing_luca_landing": {
+        "source_skill": "/Users/luca/.agents/skills/tdd/SKILL.md",
+        "dependency": "先把 codebase-design 迁到 /Users/luca/.agents/skills/codebase-design，并让 /Users/luca/.claude/skills/codebase-design 成为同一真身的 symlink",
+        "routing_rule": "只作为 reference-only nested dispatch；不得启动第二套 workflow"
+      },
+      "evidence_gates": [
+        {
+          "id": "T-SEAM-FAILURE",
+          "requirement": "出现一例真实 TDD 任务，明确因 seam/interface 词汇不足产生错误测试面或返工",
+          "status": "UNMET"
+        },
+        {
+          "id": "T-PARITY",
+          "requirement": "codebase-design 在 Claude 与 Codex 均指向同一共享真身，直调和嵌套引用全部 PASS",
+          "status": "UNMET"
+        },
+        {
+          "id": "T-NO-SECOND-WORKFLOW",
+          "requirement": "一次性 reference-only pilot 证明只读取词汇，不生成并行流程状态",
+          "status": "NOT_RUN"
+        }
+      ],
+      "promote_now": false,
+      "why_not_now": "现在加指针会得到 Claude 可达、Codex 悬空的依赖边，而且没有失败样本证明该指针值得增加耦合。",
+      "revisit_when": "同时满足：首个真实 seam 词汇缺失失败已留证；codebase-design 双 harness parity 已通过。",
+      "promotion_target": "reference_only_pilot",
+      "surface_before_pilot": "TDD_BODY_AND_ROUTE_UNCHANGED"
+    }
+  ],
+  "governance_change_planned": {
+    "purpose": "让 DEFER 具备优先级、可观察重访条件和现有消费者，而不是只留在 Plan prose。",
+    "files": [
+      ".claude/skill-os/evolution/gaps-register.yaml",
+      ".claude/workflows/framework-evolution-scout.js",
+      "scripts/check-defer-readiness.mjs",
+      "scripts/check-evolution-adjudication.mjs",
+      "package.json"
+    ],
+    "rules": [
+      "deferred records are loaded separately from open candidate-discovery gaps",
+      "MET deferred records are emitted as deferred_revisit_due in P1/P2/P3 order",
+      "the checker only emits READY_FOR_HUMAN_ADJUDICATION from explicit evidence receipts",
+      "no script changes status, creates a skill, edits routing, or activates a capability automatically"
+    ]
+  },
+  "_file_end": "defer-promotion-register.json"
+}

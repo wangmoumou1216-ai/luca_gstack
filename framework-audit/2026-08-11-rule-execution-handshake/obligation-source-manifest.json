@@ -1,0 +1,462 @@
+{
+  "schema_version": 1,
+  "plan_id": "REX-20260811-001",
+  "purpose": "Freeze the repository-resident input denominator for the one-time obligation census. Global routed targets are a separate live census.",
+  "generation_rules": [
+    "fixed: AGENTS.md, CLAUDE.md, CONTEXT.md, framework settings, active observability rules, stable semantic store, memory governance, Git/CI entrypoints, package.json",
+    "all .md/.yaml/.yml/.json under .claude/skill-os",
+    "every SKILL.md under .claude/skills/office",
+    "all Claude .md and Codex .toml agent definitions",
+    "all .mjs under .claude/hooks, all executable .js/.mjs under .claude/workflows, plus top-level Codex runtime .mjs, hooks.json and config.toml",
+    "all repository Git hook files and CI workflow yaml files"
+  ],
+  "selection": {
+    "fixed": [
+      ".claude/observability/README.md",
+      ".claude/observability/rules.yaml",
+      ".claude/settings.json",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "CONTEXT.md",
+      "memory/README.md",
+      "memory/semantic/README.md",
+      "memory/semantic/promoted-facts.yaml",
+      "memory/semantic/static-fallback-allowlist.txt",
+      "package.json",
+      "scripts/sync.sh",
+      "scripts/verify.sh"
+    ],
+    "dynamic": [
+      {"root": ".claude/skill-os", "mode": "extensions_recursive", "extensions": [".md", ".yaml", ".yml", ".json"]},
+      {"root": ".claude/skills/office", "mode": "basename_recursive", "basename": "SKILL.md"},
+      {"root": ".claude/agents", "mode": "extensions_recursive", "extensions": [".md"]},
+      {"root": ".codex/agents", "mode": "extensions_recursive", "extensions": [".toml"]},
+      {"root": ".claude/hooks", "mode": "extensions_recursive", "extensions": [".mjs"]},
+      {"root": ".claude/workflows", "mode": "extensions_recursive", "extensions": [".js", ".mjs"]},
+      {"root": ".codex", "mode": "top_level_allowlist_and_extensions", "allow": ["hooks.json", "config.toml"], "extensions": [".mjs"]},
+      {"root": ".githooks", "mode": "all_files_recursive"},
+      {"root": ".github/workflows", "mode": "extensions_recursive", "extensions": [".yaml", ".yml"]}
+    ]
+  },
+  "exclusions": [
+    "cold observations and run logs",
+    "tests and generated receipts",
+    "project outputs and compatibility symlinks",
+    "global skill targets outside the repository; these require an E0 live exact-target census"
+  ],
+  "resolved_count": 103,
+  "resolved": [
+    {
+      "path": ".claude/agents/muse-proto-judge.md",
+      "sha256": "0224ac686ee2427d2298ec55d5adf7d3a66d149e1590597be5bb320e3a14dbaf"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "sha256": "6e5d677fc1055b63268f9b740549bf019584797e5cd6cdf35a57ebd811916aea"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "sha256": "425cbe8dd3345b08820905166f779854d35ccfd2c9fc3e3f48f1be07c34aa1d3"
+    },
+    {
+      "path": ".claude/agents/preflight-agent.md",
+      "sha256": "086878194c4bc46cb42ca3a3a54ee8f45fde559dc5bb5dd93acc9bca808b1b54"
+    },
+    {
+      "path": ".claude/agents/quality-gate.md",
+      "sha256": "914fa32e66ca41497f5a864018f18d3e4a1748bed83440f84e21d24cb9a002b3"
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "sha256": "f64a121c456c7287ca36594d10a86878930091dce0bd8c92ed7ec8190d4eb5aa"
+    },
+    {
+      "path": ".claude/hooks/lib/harness.mjs",
+      "sha256": "d65dc4071687295bbf3ee3e4c9ba05e4e999f962e159fcd42e443c8e7214e3d2"
+    },
+    {
+      "path": ".claude/hooks/lib/memroot.mjs",
+      "sha256": "84efa17c488da1b596e4b58a37e096ddfe5a4cf62d06d713c6802b573bd7186f"
+    },
+    {
+      "path": ".claude/hooks/lib/project-substrate.mjs",
+      "sha256": "7a181430b90974ba362b2c59627615f4072e2adf870e3bd35e4afcf5667818ea"
+    },
+    {
+      "path": ".claude/hooks/post-edit.mjs",
+      "sha256": "3cc855d3fa96fcf41fee4a5921844ab4b106e8a0280d676d2667bdcfd6933e2b"
+    },
+    {
+      "path": ".claude/hooks/project-scope-guard.mjs",
+      "sha256": "228ab94208e38c97a41ba57684c3a4192b22c4740012b6534fb94ec6bf65327c"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "sha256": "d1c8d04490485ee2a097cad175c78ca78c37811d077f9d2537873bedfe1f525b"
+    },
+    {
+      "path": ".claude/hooks/session-end.mjs",
+      "sha256": "1b3388439d8072781b0c9ce7f29ae1fb261de34bd1a27646a22ed113643fd62a"
+    },
+    {
+      "path": ".claude/hooks/session-restore.mjs",
+      "sha256": "ea1414db783774b6a64b388d17d5408b9c2bb1ec15d0552313dfdf374a591111"
+    },
+    {
+      "path": ".claude/hooks/session-sync.mjs",
+      "sha256": "f55cbdd12249d1edd7a7ca7e6db31cea1514723dbe643179ce4eba6a116b6343"
+    },
+    {
+      "path": ".claude/observability/README.md",
+      "sha256": "f51432c248fd95b2aa14685dfcd2b980631d0eca85ed071144fd3911a06ca1e1"
+    },
+    {
+      "path": ".claude/observability/rules.yaml",
+      "sha256": "77d7c32bceada49aace3141c33702388c89beb0e1032689c2c760430bad1b673"
+    },
+    {
+      "path": ".claude/settings.json",
+      "sha256": "d7b97a0c6083e6a20833a3c4a9727108d85b1559ead76a57acc8d5921c64e04b"
+    },
+    {
+      "path": ".claude/skill-os/README.md",
+      "sha256": "d1c23e05478e1e61f3d9e8ce74dc9d253ef2707d90af38ab88a2444b7766afc9"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "sha256": "9d591dfcfbe7c28c51166d0dc0f45507271ab790beabaac0969a51da453845ce"
+    },
+    {
+      "path": ".claude/skill-os/claude-md-appendix.md",
+      "sha256": "79e06071f9cf88649b7f19b9d6c4bc519f40ded2a1797c40618d53f5ea14e883"
+    },
+    {
+      "path": ".claude/skill-os/codex-viability.yaml",
+      "sha256": "df38efee63c66a38be2318889f53f564242e8c39ba5f86998f4bd9c6824034b0"
+    },
+    {
+      "path": ".claude/skill-os/correction-attribution.md",
+      "sha256": "afdf6a173d9c817a304b24afd7247df4c62c01b2937d4231079a9cd3b7e3618f"
+    },
+    {
+      "path": ".claude/skill-os/crm-profile.md",
+      "sha256": "c745239f7bcbec5e069b36134229dfbf7859c796510d7d9cfbb1b244d9a376cf"
+    },
+    {
+      "path": ".claude/skill-os/eval-methodology.md",
+      "sha256": "2d3241a21589f13f6f66bbdf56b30895bb5f78a5558545f4314e0ca241132c23"
+    },
+    {
+      "path": ".claude/skill-os/evolution/ADOPTED.md",
+      "sha256": "c295ef45a0f6a2a7a1be4968048fc3485f92a62131a921cc5d381d5c1aa5cd24"
+    },
+    {
+      "path": ".claude/skill-os/evolution/BENCHMARK-RUNBOOK.md",
+      "sha256": "05826d41e56f5af0d069620d6d5cff49d9e59425a60fc2961cd7629f65226b63"
+    },
+    {
+      "path": ".claude/skill-os/evolution/CHECKPOINT.md",
+      "sha256": "8d0c2bb71d7a83a6f2618685f7880f2cd2a8eea02887ce3a5d6967b97c9c00fe"
+    },
+    {
+      "path": ".claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "sha256": "1fbd5651835d348001ae3f2f47e6cc3ed5e308325af6c92e30f2fee55eede3e7"
+    },
+    {
+      "path": ".claude/skill-os/evolution/benchmark-registry.yaml",
+      "sha256": "b8c9602b1a8a5afb4fc6efd1595d8df41362b8d6b190c1086857954141bbc1c3"
+    },
+    {
+      "path": ".claude/skill-os/evolution/digests/2026-06-evolution.md",
+      "sha256": "e4b62e2096b66359a1a200a1c9933217c6b023a7887c40364e325fe43c19c2c4"
+    },
+    {
+      "path": ".claude/skill-os/evolution/digests/2026-07-evolution.md",
+      "sha256": "23d18b29e4a49ddd848b820ceaaeea84b2bb0eebcec8a433cca198914f2602ca"
+    },
+    {
+      "path": ".claude/skill-os/evolution/gaps-register.yaml",
+      "sha256": "a348473b4fcda4962408b81c75b37593db9b6477744fce033f09067e895bce44"
+    },
+    {
+      "path": ".claude/skill-os/evolution/self-model.generated.yaml",
+      "sha256": "5711b3f256064fd942b0ada7a6c1c58bb900be194493e32cc5094af96723ed00"
+    },
+    {
+      "path": ".claude/skill-os/evolution/self-model.yaml",
+      "sha256": "35bbaaa81457d433063744a54a650b88cd49d03d63e85f237de817cbd07871d7"
+    },
+    {
+      "path": ".claude/skill-os/evolution/sources-registry.yaml",
+      "sha256": "7777b91d30812305c5693841d61ebc60af51830d65e1f078ee50d66788f3a8ed"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/INTEGRATION-MAP.md",
+      "sha256": "fd360b354a46d2a9314f790278759f02525261447dd6cd46d606f4fc5b713bbc"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/RECOMMENDATIONS-2026-06-07.md",
+      "sha256": "f2f518a30c4d740945e9f02b47d2e7c4660179bd723af8e47c4ecba6327e0fee"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/installed-pins.yaml",
+      "sha256": "6740c78fc1dc5a22a4d272d7c3be55e0a50955604e988399eed6486fd7d859ed"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/vetting-registry.yaml",
+      "sha256": "699409525718b61494247f7f2b9d43692e4d2242f71ce1b0799bf8350e2a842c"
+    },
+    {
+      "path": ".claude/skill-os/extraction-bar.md",
+      "sha256": "091bf1f4ca3865b7cd0ef39f9fe303841dd0ec4bb63c34cbe9c835b3054724bf"
+    },
+    {
+      "path": ".claude/skill-os/input-modes.yaml",
+      "sha256": "1ae75ba1e8ef6a123c75d3cb5d8ef382139133f213c43f353561bd7b08ae3e2e"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "sha256": "a67090fb41133deeb9cb8c38471503ec9de617a7435d2f106edeee3342de4bf9"
+    },
+    {
+      "path": ".claude/skill-os/optional-workflow-graph.yaml",
+      "sha256": "e091f7d88745138c34350e385c8a66fe671a44555aec1f8b841e0abe45fdb793"
+    },
+    {
+      "path": ".claude/skill-os/routing-chain-check.md",
+      "sha256": "6d46421a4d5c803ce485d092745334ba60225a88354859526f2da222f050ff3c"
+    },
+    {
+      "path": ".claude/skill-os/skill-authoring.md",
+      "sha256": "18709dffeddbab0974928f61c9c992cad5080bde719ae23a6270c8802cdece68"
+    },
+    {
+      "path": ".claude/skill-os/skill-invariants.md",
+      "sha256": "532a3569fd44d9f978fde505bb32176e201a667f6dd9f1212e2cdf4b4893bdd3"
+    },
+    {
+      "path": ".claude/skill-os/skill-routing-map.yaml",
+      "sha256": "8f7ac03d81fa5207139cb5cc9ecb56ee385d109f388f21a913ceab2f3a8fbf34"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "sha256": "e183e08541a9a3e481e52c2769e243a6ebf26c66f3d4a629f34bd06dc8abca9d"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "sha256": "a3fd36f8c5bb78c2d53411214edd62c3d3bded0e8972872185c51aa8da7f2fa8"
+    },
+    {
+      "path": ".claude/skills/office/brainstorm/SKILL.md",
+      "sha256": "93a6871e94d71986bb3fe67b2dfcd5b82a3db28ea8e5d74c36f64cde0b48455b"
+    },
+    {
+      "path": ".claude/skills/office/careful/SKILL.md",
+      "sha256": "4eff2b84a80c3201569ba860e4b6387d21080073c325a841b2ed61d88e4b3e36"
+    },
+    {
+      "path": ".claude/skills/office/challenge/SKILL.md",
+      "sha256": "f2ef29f2700a801db8574af90f1fceecb9d14f24d6e31499b145b9db522ba926"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/SKILL.md",
+      "sha256": "343efab2217bbd2a573879a8a98b6efc5e0b239640715f68912cc708eff05738"
+    },
+    {
+      "path": ".claude/skills/office/code-recon/SKILL.md",
+      "sha256": "1a99d321c2e3c6885e66de875ba6ad0b218eba3382b94de6cd6f6be7d13f27cd"
+    },
+    {
+      "path": ".claude/skills/office/compare/SKILL.md",
+      "sha256": "d19ee67e80b5f5201b410120f88ed7f0f2dac225bf8adb810a0c6d293ccc15ef"
+    },
+    {
+      "path": ".claude/skills/office/deepresearch/SKILL.md",
+      "sha256": "6aba4216db147eef903d21bbf8316f04ea0a08c0d912fceebcfb9725cb4698f8"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "sha256": "49a1e0fe4af753c9f92023c123f19196dcbabff5e7962f27b2e05d526241da5b"
+    },
+    {
+      "path": ".claude/skills/office/evals/SKILL.md",
+      "sha256": "89b432e2cb4cd7782b2e718123309726162a996af43631820a24a18fa9d14ec0"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/SKILL.md",
+      "sha256": "9fbe2e7052724822abe367f307c8141a216c217acd344416efe34e4ab30d75fd"
+    },
+    {
+      "path": ".claude/skills/office/figma-layer/SKILL.md",
+      "sha256": "736317f3371f3e80bbf197fe1e4cb999e45200bfb607f613eada5dcf0b918a42"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SKILL.md",
+      "sha256": "a64fab2144fcebdbceda179e865891eccbcb2be3429e879933189cf01a926df0"
+    },
+    {
+      "path": ".claude/skills/office/idea/SKILL.md",
+      "sha256": "02923b17e30902d004d1c3fe0eabef472ecfb75fcc4d86f1b3384925c39aab94"
+    },
+    {
+      "path": ".claude/skills/office/insight-synthesis/SKILL.md",
+      "sha256": "360eebc0010781d43b4fbcb1d47b07c57028a84cafe491fe39613fb237ac544e"
+    },
+    {
+      "path": ".claude/skills/office/magicpath/SKILL.md",
+      "sha256": "7f6bf3ccea4996da2cd40cf47d6dca95290bfea16c6a6841e00f068d055b862b"
+    },
+    {
+      "path": ".claude/skills/office/muse-loop-orchestrate/SKILL.md",
+      "sha256": "b765a31c25422a757b88884b6c037ab0147c55ca61f04573f78324708e5ec467"
+    },
+    {
+      "path": ".claude/skills/office/muse-proto-gen/SKILL.md",
+      "sha256": "412fd105986f90cbd33a54cfbdbb87cadb2726f0da6c900d4f2880a6c29550bf"
+    },
+    {
+      "path": ".claude/skills/office/muse-req-triage/SKILL.md",
+      "sha256": "76094491bda9e3307d8487982ba4ee955428062b796f03ece45d8e6f8523673d"
+    },
+    {
+      "path": ".claude/skills/office/muse-x-digest/SKILL.md",
+      "sha256": "647fe7ae9ff1bfc8099948d8abadaf2c17b02f35ed534f065f83824dbeca20a9"
+    },
+    {
+      "path": ".claude/skills/office/open-design/SKILL.md",
+      "sha256": "190726eed03b995cecffbcac55479e5dd8bff50b881160b3577f6eb48e97ca34"
+    },
+    {
+      "path": ".claude/skills/office/quick-research/SKILL.md",
+      "sha256": "5ee7d10cb6ac841b3045e9be869fee84a9ff88e4bf132ab4a065770b11be913e"
+    },
+    {
+      "path": ".claude/skills/office/redteam/SKILL.md",
+      "sha256": "9f7a150caa2b16f9687968dc9ce28a991c2d54a0ae0774a0997fb21820391b52"
+    },
+    {
+      "path": ".claude/skills/office/references/SKILL.md",
+      "sha256": "9245a21db1d5b5801af745480bcc3de64beef90ef9fcd718d5de5f7d16bb9469"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/SKILL.md",
+      "sha256": "c7237f52d0b2ec33bd652371f1203975cde2bb0524da06c8fb06c764e52dcdb0"
+    },
+    {
+      "path": ".claude/skills/office/retro/SKILL.md",
+      "sha256": "4780d8a3d8baa3eb8d4cdb8d1c7e2b45455e72f3efc8d717458b26d6fb173191"
+    },
+    {
+      "path": ".claude/skills/office/task-plan/SKILL.md",
+      "sha256": "fe49e2908e963bc8e2c4769e6104131ffb0788b895311bfcab1f863fa107bb5e"
+    },
+    {
+      "path": ".claude/skills/office/tech-spec/SKILL.md",
+      "sha256": "55d9fe342f564661bbb31cb6a9715c7e0ae4fb897aaacfbe854aaadd5a93122a"
+    },
+    {
+      "path": ".claude/skills/office/ux-audit/SKILL.md",
+      "sha256": "945ea89fc1646dee51123abbd3475a4a6f09de57f2c93a17875806be5661f73a"
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/SKILL.md",
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949"
+    },
+    {
+      "path": ".claude/skills/office/ux-research/SKILL.md",
+      "sha256": "44f9acc5e6e9e02a9f416185d4faa73e92f64552a5b5cdda3f7b3acb2cf711ce"
+    },
+    {
+      "path": ".claude/skills/office/ux-writing/SKILL.md",
+      "sha256": "612a557223d57d3ee7c515fb038aeed20af0272527127a80221d592850fbe565"
+    },
+    {
+      "path": ".claude/workflows/external-skill-scout.js",
+      "sha256": "eb0c955499264aa87d1d3249cfe80f975c13d41212b0fbf099a49d5b9d3dc7e8"
+    },
+    {
+      "path": ".claude/workflows/framework-evolution-scout.js",
+      "sha256": "3f3136f735a7e1578c8cd3fba044f267563f8da0c0628bc8e096ad39f0751bf6"
+    },
+    {
+      "path": ".codex/agents/muse-proto-judge.toml",
+      "sha256": "a4ee0515f85a9eb1e35c5bd5c3e004d7deae00d7d045dca4fd80a6b6e6445e04"
+    },
+    {
+      "path": ".codex/agents/preflight-agent.toml",
+      "sha256": "41abdb2c5be223dca0cd87765ee0e6c9b4399bd28828484348a9a157f51116cc"
+    },
+    {
+      "path": ".codex/agents/quality-gate.toml",
+      "sha256": "edd74c79ca7d0c20f6012ad19dde40820d7dafba7ab50d298a46a35f124697df"
+    },
+    {
+      "path": ".codex/codex-hook-adapter.mjs",
+      "sha256": "f871a3a84089ce68e9373b2c0e22278f2d9c68ad46ad14e4ed65469131b2dae6"
+    },
+    {
+      "path": ".codex/config.toml",
+      "sha256": "94cbd3534392be5631ab7f87386a3ce26c65347b8a065e0eb7698863c384081a"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "sha256": "46ac3cf6254367d94a8228e6c1722e2fa055cbf5d2fa608b17ebf016f2157a60"
+    },
+    {
+      "path": ".codex/workflow-runner.mjs",
+      "sha256": "01f15c7b7ee74a3cc9afe7d90b373ae076e0d55e768447a1fd690c0f37c0312a"
+    },
+    {
+      "path": ".githooks/commit-msg",
+      "sha256": "05dc95854985fe354ef41275c1d1ba3fc54cf3b3d0fc7065e7be51c181c8005a"
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "sha256": "07c590f4ebf07516cb72b368a29dd2e961272f2164dc6699ce096b23068ebc51"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "2dbd8495f77346f85e38abccd72dcc852cc89e9078b500c1a5d0c0704b95a0d6"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "dbfa3a801e1a150bbcc12cb5b9e69a579b6834b35af2e8805962c6dbbcd676fc"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "c954aa2a92aaa9775dbca91a9ed5c13a13096cdb2f7a39fa19dc8e46411d0e65"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "c87a32ce258d48a4ae9977cc7719c0f4654bac936960451b99e71e9426a8e162"
+    },
+    {
+      "path": "memory/README.md",
+      "sha256": "539bc72f56594b7e45825f86a5f5ffb6b0cd1a26c7c1a8025c06a02d4fc85855"
+    },
+    {
+      "path": "memory/semantic/README.md",
+      "sha256": "0bb14c38256e3df6afd7448ce2cff2e1fc84edab9802f48498b15f7a922379d1"
+    },
+    {
+      "path": "memory/semantic/promoted-facts.yaml",
+      "sha256": "32eb2108a220cf14684d4110631975b93e0b0bfd71d630c095159afa7b1319a9"
+    },
+    {
+      "path": "memory/semantic/static-fallback-allowlist.txt",
+      "sha256": "076e4c1c4e82342da7c4f8001743a31143121bb25b330faca929592ec6dcfbdd"
+    },
+    {
+      "path": "package.json",
+      "sha256": "ef1ae39a5fea22ee68f9fbdf02d7caaeb877fb207635078f738150088d6a70a5"
+    },
+    {
+      "path": "scripts/sync.sh",
+      "sha256": "a64f380c6f605e082ac7b0831f10142e01d21c5dc45912ae10280a5fa99721de"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "sha256": "c5e72b48c24b1e7ad6bdcd62daf5899da35e9c10b92e16b3b52b99e0f479e30f"
+    }
+  ]
+}

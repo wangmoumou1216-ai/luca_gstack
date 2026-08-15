@@ -95,9 +95,11 @@ api-project/
 .claude/.session-edit-count-*
 .claude/.session-tool-count-*
 .claude/.session-project-*
+.claude/.session-consumed-turns-*
 .claude/.session-projnag-*
 .claude/.session-inherited-*
 .claude/.project-switch.lock/
+.claude/project-state-quarantine/
 .claude/observability/pending-extraction*.md
 .claude/.episode-written-*
 .claude/.digest-shown-*

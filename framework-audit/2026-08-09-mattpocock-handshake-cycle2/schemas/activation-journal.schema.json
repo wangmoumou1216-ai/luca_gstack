@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://luca.local/schemas/mattpocock-activation-journal-v3.json",
+  "title": "Two-epoch signed cross-surface activation journal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "transaction_id",
+    "target_commit",
+    "initial_repo_head",
+    "status",
+    "trust_bundle",
+    "events",
+    "chain_head_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "3.0.0" },
+    "transaction_id": { "type": "string", "pattern": "^ACT-[A-Za-z0-9._-]{8,96}$" },
+    "target_commit": { "$ref": "#/definitions/sha1" },
+    "initial_repo_head": { "$ref": "#/definitions/sha1" },
+    "status": {
+      "enum": ["IN_PROGRESS", "VERIFIED", "BLOCKED", "ROLLED_BACK", "BLOCKED_MANUAL_RECOVERY"]
+    },
+    "trust_bundle": { "$ref": "#/definitions/trustBundle" },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/event" }
+    },
+    "chain_head_sha256": { "$ref": "#/definitions/sha256" }
+  },
+  "definitions": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "signer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "fingerprint"],
+      "properties": {
+        "algorithm": { "enum": ["Ed25519", "ECDSA_P256_SHA256"] },
+        "fingerprint": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "trustBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transaction_id",
+        "target_commit",
+        "pre_h4_signer",
+        "recovery_signer",
+        "recovery_helper",
+        "h4_anchor"
+      ],
+      "properties": {
+        "transaction_id": { "type": "string", "pattern": "^ACT-[A-Za-z0-9._-]{8,96}$" },
+        "target_commit": { "$ref": "#/definitions/sha1" },
+        "pre_h4_signer": {
+          "allOf": [
+            { "$ref": "#/definitions/signer" },
+            { "properties": { "algorithm": { "const": "Ed25519" } } }
+          ]
+        },
+        "recovery_signer": {
+          "allOf": [
+            { "$ref": "#/definitions/signer" },
+            { "properties": { "algorithm": { "const": "ECDSA_P256_SHA256" } } }
+          ]
+        },
+        "recovery_helper": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["binary_sha256", "designated_requirement", "key_storage", "durable_ledger_id"],
+          "properties": {
+            "binary_sha256": { "$ref": "#/definitions/sha256" },
+            "designated_requirement": { "type": "string", "minLength": 1 },
+            "key_storage": { "const": "SECURE_ENCLAVE_KEYCHAIN" },
+            "durable_ledger_id": { "type": "string", "pattern": "^ACTLEDGER-[A-Za-z0-9._-]{8,96}$" }
+          }
+        },
+        "h4_anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sequence", "chain_head_sha256", "approved_at", "permitted_dag_sha256"],
+          "properties": {
+            "sequence": { "type": "integer", "minimum": 0 },
+            "chain_head_sha256": { "$ref": "#/definitions/sha256" },
+            "approved_at": { "type": ["string", "null"], "format": "date-time" },
+            "permitted_dag_sha256": { "$ref": "#/definitions/sha256" }
+          }
+        }
+      }
+    },
+    "cas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource", "expected", "observed"],
+      "properties": {
+        "resource": { "type": "string", "minLength": 1 },
+        "expected": { "type": "string", "minLength": 1 },
+        "observed": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/definitions/sha256" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "event_type",
+        "state",
+        "signer_epoch",
+        "signer_fingerprint",
+        "signature_algorithm",
+        "claim_of_head",
+        "started_at",
+        "finished_at",
+        "result",
+        "cas",
+        "artifacts",
+        "command_id",
+        "compensation_command_id",
+        "expected_state",
+        "verified_state",
+        "prev_hash",
+        "event_hash",
+        "signature"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "event_type": { "enum": ["FORWARD", "CUTOVER_CLAIM", "RECOVERY_CLAIM", "ROLLBACK"] },
+        "state": {
+          "enum": ["PREPARED", "GLOBAL_STAGED", "REPO_COMMITTED", "GLOBAL_SWAPPED", "LEDGER_COMMITTED", "VERIFIED"]
+        },
+        "signer_epoch": { "enum": ["PRE_H4", "POST_H4"] },
+        "signer_fingerprint": { "$ref": "#/definitions/sha256" },
+        "signature_algorithm": { "enum": ["Ed25519", "ECDSA_P256_SHA256"] },
+        "claim_of_head": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "result": { "enum": ["PASS", "FAIL"] },
+        "cas": { "type": "array", "items": { "$ref": "#/definitions/cas" } },
+        "artifacts": { "type": "array", "items": { "$ref": "#/definitions/artifact" } },
+        "command_id": { "type": "string", "minLength": 1 },
+        "compensation_command_id": { "type": "string", "minLength": 1 },
+        "expected_state": { "type": "string", "minLength": 1 },
+        "verified_state": { "type": "string", "minLength": 1 },
+        "prev_hash": { "$ref": "#/definitions/sha256" },
+        "event_hash": { "$ref": "#/definitions/sha256" },
+        "signature": { "type": "string", "pattern": "^[A-Za-z0-9+/]+={0,2}$" }
+      }
+    }
+  }
+}

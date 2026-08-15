@@ -1,0 +1,460 @@
+{
+  "schema_version": "cycle2-framework-snapshot/v1",
+  "captured_at_utc": "2026-08-09T02:06:25Z",
+  "capture_mode": "read-only-git-pre-output",
+  "phase": "Phase 1 / U-101",
+  "overall_status": "BLOCKED",
+  "status_detail": [
+    "KILL-1_NEEDS_CONTEXT",
+    "KILL-2_BLOCKED"
+  ],
+  "authority_boundary": {
+    "allowed": [
+      "read Git objects and refs already present locally",
+      "write framework-snapshot.json and framework-alignment.md"
+    ],
+    "forbidden_and_not_performed": [
+      "fetch",
+      "pull",
+      "checkout",
+      "merge",
+      "commit",
+      "push",
+      "clean",
+      "reset",
+      "route mutation",
+      "global activation"
+    ]
+  },
+  "frozen_plan": {
+    "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/audit-execution-plan.md",
+    "sha256_computed": "b90042f41ff969877150ce70d9de2a5c55b5ef38abf8df596fe86b0303fa267c",
+    "sha256_recorded": "b90042f41ff969877150ce70d9de2a5c55b5ef38abf8df596fe86b0303fa267c",
+    "freeze_matches": true
+  },
+  "baseline": {
+    "oid": "ef8eadf19b9bd98801aed4446b80816a1727f66f",
+    "tree_oid": "85216acb0dd432a23f421de446e6b53a9f51110a",
+    "parent": "2cf3c9224ad43061b829c11f5aa584b9819fb20d",
+    "authored_at": "2026-08-06T16:47:59+08:00",
+    "subject": "fix(codex): adapter 补 tool_input 归一化——只改 tool_name 不够，两处功能仍静默失效",
+    "present_in_runtime_object_database": true,
+    "present_in_desktop_object_database": false,
+    "ancestor_of_runtime_head": true,
+    "ancestor_of_desktop_head": false,
+    "valid_common_ancestor_of_both_current_heads": false,
+    "kill_1_result": "NEEDS_CONTEXT",
+    "reason": "The desktop checkout is two commits older than the nominated baseline and cannot resolve the baseline object. The baseline is therefore an intermediate commit in the single linear history, not a common ancestor of both current checkout HEADs."
+  },
+  "repositories": [
+    {
+      "id": "desktop_checkout",
+      "path": "/Users/luca/Desktop/luca_gstack",
+      "branch": "main",
+      "head": "3f2caad60ec2aa085b87e01db98c852491b53edf",
+      "head_tree": "b68cc57840956d1ec3e6fde7e0a4aaa1e1ca6164",
+      "head_parent": "c4ce68e9de00659ce6a7422055e8bf2ef2ee2437",
+      "head_authored_at": "2026-08-06T16:10:08+08:00",
+      "head_subject": "chore(memory): 记忆写入落盘（Codex 迁移 session + 并行 session 条目 + 归档轮转）",
+      "tracking_ref": "refs/remotes/origin/main",
+      "tracking_oid": "3f2caad60ec2aa085b87e01db98c852491b53edf",
+      "head_equals_tracking_ref": true,
+      "tracking_ahead": 0,
+      "tracking_behind": 0,
+      "tracking_reflog": {
+        "at": "2026-08-06T16:10:48+08:00",
+        "action": "update by push"
+      },
+      "remote": {
+        "name": "origin",
+        "fetch_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+        "push_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git"
+      },
+      "object_database_can_resolve": {
+        "desktop_head": true,
+        "baseline": false,
+        "runtime_head": false
+      },
+      "dirty": {
+        "tracked_modified_count": 2,
+        "untracked_count": 0,
+        "entries": [
+          {
+            "path": "memory/episodic/index.jsonl",
+            "status": "worktree_modified",
+            "staged": false,
+            "index_blob": "3db280f3453a9bb94b4c838a9b7c9ccc1300606e",
+            "worktree_blob": "26257c06c958a61d945e42c52a3bfb3d328db1fe",
+            "sha256": "ea67b8b8b003527bb889dac4e760e414e7ee8d46e2e1e2d786815a1123e99f6f",
+            "bytes": 56473,
+            "numstat": "+1/-0"
+          },
+          {
+            "path": "memory/retrieval-log.jsonl",
+            "status": "worktree_modified",
+            "staged": false,
+            "index_blob": "0230b8cc7b20f4233f9b13e4fec6a1d5cb019ba2",
+            "worktree_blob": "6545b4e1a8435fe6b66675324e66bdb7b9796c28",
+            "sha256": "64fc5e98764d542ea6429df9f72c558a733a0cd70441eba984bf42917368da6e",
+            "bytes": 62605,
+            "numstat": "+35/-0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "runtime_checkout",
+      "path": "/Users/luca/Desktop/项目/muse/lucagstack",
+      "branch": "main",
+      "head": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+      "head_tree": "77840bb20192b8940c77f674fd12babc00e018a8",
+      "head_parent": "55b17daa5069a1c04aa5726664dc8d788e792bf6",
+      "head_authored_at": "2026-08-08T16:57:38+08:00",
+      "head_subject": "feat(hooks): session-restore 在 app 内嵌会话里回报精确 session id（G3）",
+      "tracking_ref": "refs/remotes/upstream/main",
+      "tracking_oid": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+      "head_equals_tracking_ref": true,
+      "tracking_ahead": 0,
+      "tracking_behind": 0,
+      "tracking_reflog": {
+        "at": "2026-08-08T16:58:01+08:00",
+        "action": "update by push"
+      },
+      "remote": {
+        "name": "upstream",
+        "fetch_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+        "push_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git"
+      },
+      "additional_remote": {
+        "name": "backup",
+        "fetch_url": "https://github.com/wangmoumou1216-ai/luca-gstack-muse.git",
+        "push_url": "https://github.com/wangmoumou1216-ai/luca-gstack-muse.git"
+      },
+      "object_database_can_resolve": {
+        "desktop_head": true,
+        "baseline": true,
+        "runtime_head": true
+      },
+      "dirty": {
+        "tracked_modified_count": 1,
+        "untracked_count": 21,
+        "entries": [
+          {
+            "path": ".claude/observability/observations.jsonl",
+            "status": "worktree_modified",
+            "staged": false,
+            "index_blob": "55749713b8c303fc00ef84d52937b1971aa7e52b",
+            "worktree_blob": "4924597cb219c104370e26746c34d21ac9772fe1",
+            "sha256": "d5b98a763db9412f30f35c0c8215d6129150ef3ca4f1ced6fe14cefa20c496a7",
+            "bytes": 2137,
+            "numstat": "+1/-0"
+          },
+          {
+            "path": ".claude/.kit-relay-shown-2026-08-04",
+            "status": "untracked",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": ".claude/.kit-relay-shown-2026-08-05",
+            "status": "untracked",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": ".claude/.kit-relay-shown-2026-08-06",
+            "status": "untracked",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": ".claude/.kit-relay-shown-2026-08-07",
+            "status": "untracked",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": ".claude/.kit-relay-shown-2026-08-08",
+            "status": "untracked",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": ".claude/.kit-relay-shown-2026-08-09",
+            "status": "untracked",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          {
+            "path": "app.js",
+            "status": "untracked",
+            "sha256": "aa6eec504ee494f7690c440aaf115904d7c2f1ec1adcdb8b8d0c256ac49811d4",
+            "bytes": 88527
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/capability-inventory.md",
+            "status": "untracked_read_only_input",
+            "sha256": "e7921f5c2a1514d71a17754b535ef99d4361d327d54a05da8fe26c9487097900",
+            "bytes": 8675
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/independent-judge-verdict.md",
+            "status": "untracked_read_only_input",
+            "sha256": "3f0e98d6c2c6b6bf6a8793d0b264f8fd23eb4953bb583354c91c96d34c184d8f",
+            "bytes": 1751
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/inventory-refreeze-r2.md",
+            "status": "untracked_read_only_input",
+            "sha256": "9fcbaeabaf6fb8f00bd783f28ac05757a1b304b1e4975a722c771bef44e0c043",
+            "bytes": 3817
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/loop-charter.md",
+            "status": "untracked_read_only_input",
+            "sha256": "94f8efb3c60f06a6f2467d4d2f3a2cd7c8e6bd2678aaa88adae2e63c4ea20be8",
+            "bytes": 3936
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/read-coverage-report.md",
+            "status": "untracked_read_only_input",
+            "sha256": "b76b4554c05c2dc101bc330700f7b452f79b7b72c10afd846319d90151f8db32",
+            "bytes": 12850
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/revised-handshake-plan.md",
+            "status": "untracked_read_only_input",
+            "sha256": "43ee24bd752bfa17cf9ee3bc973415daf191bc0b9c7427fe85d444f009debf64",
+            "bytes": 18622
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/round1-findings.md",
+            "status": "untracked_read_only_input",
+            "sha256": "738ad0b5b7a6fb518a5b56dd2bdc3016090fbd524dd4426f7cb71cc16645cd0e",
+            "bytes": 9105
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/round2-findings.md",
+            "status": "untracked_read_only_input",
+            "sha256": "91ffd23e505f7819b576d8274e02a0eab3158d47a4f9f8832c44f03e8bd0746d",
+            "bytes": 9264
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-deep-redteam/round2-freeze.md",
+            "status": "untracked_read_only_input",
+            "sha256": "52b9312606d5d8ffa552f84c5b4ecd8a4f25c0ffda300be744c824162061bdd0",
+            "bytes": 983
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-update-consensus.md",
+            "status": "untracked_read_only_input",
+            "sha256": "66cc0f40c0e46d2ff0c3fe21144234efddeae242b68101975c3030ee1eb27c00",
+            "bytes": 12350
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-update-redteam-findings.md",
+            "status": "untracked_read_only_input",
+            "sha256": "3d15f3a73b381b9274ba1936e54b534b7dfdc68599b780124f27edbd30218caf",
+            "bytes": 11040
+          },
+          {
+            "path": "framework-audit/2026-08-07-mattpocock-update-review.md",
+            "status": "untracked_read_only_input",
+            "sha256": "6425cb2937fe50bd2812d972a72cfd1721eea4b702034dbc984a67afced86a68",
+            "bytes": 21498
+          },
+          {
+            "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/audit-execution-plan.md",
+            "status": "untracked_frozen_read_only_input",
+            "sha256": "b90042f41ff969877150ce70d9de2a5c55b5ef38abf8df596fe86b0303fa267c",
+            "bytes": 25368
+          },
+          {
+            "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/plan-freeze.sha256",
+            "status": "untracked_frozen_read_only_input",
+            "sha256": "38cb24cce9ca7244661ecd1ab6e6e99643157c015d85910a4f0ea0e59089d169",
+            "bytes": 90
+          }
+        ]
+      }
+    }
+  ],
+  "cross_checkout": {
+    "same_canonical_remote_url": true,
+    "same_branch_name": true,
+    "same_head": false,
+    "history_shape": "strictly_linear_lag",
+    "merge_base": "3f2caad60ec2aa085b87e01db98c852491b53edf",
+    "desktop_head_is_ancestor_of_runtime_head": true,
+    "runtime_head_is_ancestor_of_desktop_head": false,
+    "desktop_to_runtime_commit_count": 7,
+    "diverged_commit_counts": {
+      "runtime_only": 7,
+      "desktop_only": 0
+    },
+    "network_remote_verified": false,
+    "network_note": "No fetch or network read was performed. A remote-tracking ref is a local cached ref; the reflogs prove each ref was updated by a push at the stated time, not the server's state at capture time.",
+    "ordered_chain_after_desktop_head": [
+      {
+        "oid": "2cf3c9224ad43061b829c11f5aa584b9819fb20d",
+        "subject": "fix(codex): 补第四条断路径——skill 产出与流程状态在沙箱下写不了"
+      },
+      {
+        "oid": "ef8eadf19b9bd98801aed4446b80816a1727f66f",
+        "subject": "fix(codex): adapter 补 tool_input 归一化——只改 tool_name 不够，两处功能仍静默失效",
+        "role": "nominated_baseline"
+      },
+      {
+        "oid": "a8dfa539737573952f6e8d436e1b4ccb3df55cc0",
+        "subject": "feat(focus): 共享焦点通道的投递侧——luca 在侧栏选中/点了什么，随 prompt 自动到达"
+      },
+      {
+        "oid": "0a77b3427cb9da9c2ecd8a9881a6b282f55d4a66",
+        "subject": "revert(focus): 紧急撤下 sidebar-focus 的 hook 注册——独立安全评审判定有根本缺陷"
+      },
+      {
+        "oid": "aa984228202f04aea086fd47a98704ebbc840daa",
+        "subject": "docs(contract): 登记第 7 个 muse 工具 sidebar_selection（两套契约同步）"
+      },
+      {
+        "oid": "55b17daa5069a1c04aa5726664dc8d788e792bf6",
+        "subject": "fix(codex): AGENTS.md 补一级 skill 表——codex 的路由基底不能靠 skill 描述"
+      },
+      {
+        "oid": "dce92e6b8c91c617d086ac044e90187b68325fc6",
+        "subject": "feat(hooks): session-restore 在 app 内嵌会话里回报精确 session id（G3）",
+        "role": "runtime_head"
+      }
+    ],
+    "baseline_position": {
+      "desktop_to_baseline_commits": 2,
+      "baseline_to_runtime_commits": 5,
+      "description": "3f2caad -> 2cf3c92 -> ef8eadf (baseline) -> five commits -> dce92e6"
+    },
+    "kill_2_result": "BLOCKED",
+    "kill_2_reason": "The two checkout HEADs are not identical. Linear order eliminates a history-divergence hypothesis but does not waive the frozen KILL-2 wording."
+  },
+  "changed_paths": {
+    "desktop_head_to_baseline": [
+      ".codex/codex-hook-adapter.mjs",
+      ".codex/config.toml",
+      "scripts/test-codex-adapter.mjs",
+      "scripts/verify-codex-wiring.mjs"
+    ],
+    "baseline_to_runtime_head": [
+      ".claude/hooks/session-restore.mjs",
+      ".claude/settings.json",
+      ".claude/skill-os/claude-md-appendix.md",
+      ".claude/skill-os/evolution/self-model.generated.yaml",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "scripts/verify-codex-wiring.mjs"
+    ],
+    "desktop_head_to_runtime_head": [
+      ".claude/hooks/session-restore.mjs",
+      ".claude/settings.json",
+      ".claude/skill-os/claude-md-appendix.md",
+      ".claude/skill-os/evolution/self-model.generated.yaml",
+      ".codex/codex-hook-adapter.mjs",
+      ".codex/config.toml",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "scripts/test-codex-adapter.mjs",
+      "scripts/verify-codex-wiring.mjs"
+    ]
+  },
+  "dirty_overlap": {
+    "comparison_rule": "Path intersection was computed against the two owned output paths and against committed framework paths changed between the nominated baseline and runtime HEAD. Frozen/untracked audit inputs were classified as read-only evidence, not implementation edits.",
+    "owned_output_paths": [
+      "framework-audit/2026-08-09-mattpocock-handshake-cycle2/framework-snapshot.json",
+      "framework-audit/2026-08-09-mattpocock-handshake-cycle2/framework-alignment.md"
+    ],
+    "owned_output_paths_preexisting_at_capture": false,
+    "dirty_write_set_overlap": [],
+    "dirty_baseline_to_runtime_changed_path_overlap": [],
+    "semantic_audit_input_dirty_paths": [
+      "framework-audit/2026-08-09-mattpocock-handshake-cycle2/audit-execution-plan.md",
+      "framework-audit/2026-08-09-mattpocock-handshake-cycle2/plan-freeze.sha256",
+      "framework-audit/2026-08-07-mattpocock-deep-redteam/*",
+      "framework-audit/2026-08-07-mattpocock-update-*.md"
+    ],
+    "conclusion": "No path-level dirty overlap with this phase's write set or committed framework delta was found. The untracked audit inputs are intentionally preserved and hash-frozen. KILL-2 is nevertheless triggered by different HEADs independently of dirty overlap."
+  },
+  "root_architecture_delta": {
+    "external_skill_route_changed_since_baseline": false,
+    "project_scope_guard_changed_since_baseline": false,
+    "codex_adapter_changed_since_baseline": false,
+    "codex_agent_roster_changed_since_baseline": false,
+    "fusion_activation_changed_since_baseline": false,
+    "net_codex_hooks_registration_changed_since_baseline": false,
+    "session_restore_changed_since_baseline": true,
+    "session_restore_change": "dce92e6 adds an app-specific exact session-id spool; it does not implement post-success project pinning or native-log-backed agent receipts.",
+    "kill_3_result": "NOT_TRIGGERED_BY_NET_HEAD",
+    "note": "a8dfa53 temporarily added sidebar-focus hook registration, 0a77b34 removed the registration, and aa98422 removed the script. The final tree does not retain that root hook architecture."
+  },
+  "verification_receipts": [
+    {
+      "id": "GIT-IDENTITY",
+      "command": "git rev-parse HEAD; git rev-parse @{upstream}; git status --porcelain=v2 --branch --untracked-files=all",
+      "result": "Both branch HEADs equal their own cached tracking refs; HEADs differ."
+    },
+    {
+      "id": "GIT-LINEARITY",
+      "command": "git merge-base dce92e6b8c91c617d086ac044e90187b68325fc6 3f2caad60ec2aa085b87e01db98c852491b53edf; git merge-base --is-ancestor 3f2caad60ec2aa085b87e01db98c852491b53edf dce92e6b8c91c617d086ac044e90187b68325fc6; git rev-list --left-right --count 3f2caad60ec2aa085b87e01db98c852491b53edf...dce92e6b8c91c617d086ac044e90187b68325fc6",
+      "exit": 0,
+      "result": "merge-base=3f2caad60ec2aa085b87e01db98c852491b53edf; ancestor=true; counts=0/7"
+    },
+    {
+      "id": "BASELINE-RELATION",
+      "command": "git merge-base --is-ancestor ef8eadf19b9bd98801aed4446b80816a1727f66f dce92e6b8c91c617d086ac044e90187b68325fc6; git merge-base --is-ancestor ef8eadf19b9bd98801aed4446b80816a1727f66f 3f2caad60ec2aa085b87e01db98c852491b53edf",
+      "result": "runtime=true; desktop=false"
+    },
+    {
+      "id": "DESKTOP-OBJECT-BOUNDARY",
+      "command": "git -C /Users/luca/Desktop/luca_gstack cat-file -t ef8eadf19b9bd98801aed4446b80816a1727f66f; git -C /Users/luca/Desktop/luca_gstack cat-file -t dce92e6b8c91c617d086ac044e90187b68325fc6",
+      "result": "both exit 128: objects absent in desktop object database"
+    },
+    {
+      "id": "PATCH-LITERAL-PROBE",
+      "command": "Codex adapter -> project-scope-guard with apply_patch target README.md and a project-document token only in added prose",
+      "exit": 0,
+      "result": "permissionDecision=deny; B04 reproduced"
+    },
+    {
+      "id": "PROJECT-GUARD-SUITE",
+      "command": "node scripts/test-project-scope-guard.mjs",
+      "exit": 0,
+      "result": "PASS=40 FAIL=0; suite positively asserts pre-success pin claim and compound-command claim, which conflicts with U-401"
+    },
+    {
+      "id": "PLANNED-ARTIFACT-EXISTENCE",
+      "command": "read-only existence audit for census/ledger/matrix/schema/tool paths declared by the frozen plan",
+      "exit": 0,
+      "result": "14 of 14 audited Phase 2-5 artifacts absent, as expected before implementation"
+    },
+    {
+      "id": "CODEX-ROLE-ROSTER",
+      "command": "read-only .codex/agents roster audit",
+      "exit": 0,
+      "result": "present=muse-proto-judge,preflight-agent,quality-gate; missing=plan-agent,work-agent,oracle"
+    },
+    {
+      "id": "EXTERNAL-ROUTE-TARGETS",
+      "command": "read-only route/catalog target existence audit",
+      "exit": 0,
+      "result": "Claude global codebase-design/resolving targets exist; Codex .agents/skills targets do not"
+    }
+  ],
+  "execution_addendum_candidate": {
+    "applied": false,
+    "reason_for_candidate": "The repository contract says main is the single truth source with two checkouts, while frozen KILL-2 treats any unequal HEAD as if truth were ambiguous. First-party Git facts prove a strict seven-commit lag, not a fork.",
+    "candidate_text": "For read-only Phase 1 only, if both checkouts use the same canonical remote URL, their HEADs are strictly linearly ordered, each HEAD equals its own cached tracking ref, and neither dirty manifest intersects the framework delta or owned outputs, classify the condition as LINEAR_CHECKOUT_LAG. Permit a provisional baseline..unique-descendant alignment without naming that descendant the writable truth and without synchronizing. Preserve KILL-2 as BLOCKED for Phase 2 and all mutations until Luca explicitly aligns or selects the checkout state. If the lagging checkout predates the nominated baseline, classify KILL-1 as STALE_CHECKOUT_NEEDS_CONTEXT rather than silently replacing the baseline.",
+    "effect_if_approved_later": "Would allow the already-completed read-only U-102 analysis to stand while keeping Phase 2 and all synchronization blocked.",
+    "current_effect": "none"
+  },
+  "next_gate": {
+    "phase_2_allowed": false,
+    "required_human_resolution": "Resolve KILL-1/KILL-2 (or explicitly approve the addendum) and separately decide H1 if immediate route quarantine is desired."
+  },
+  "_file_end": "FILE_END: framework-snapshot.json"
+}

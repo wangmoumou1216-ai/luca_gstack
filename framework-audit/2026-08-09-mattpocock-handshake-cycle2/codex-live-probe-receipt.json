@@ -1,0 +1,38 @@
+{
+  "schema_version": "cycle2-native-probe/v1",
+  "probe": "codex-exec-read-only-ephemeral",
+  "run_date": "2026-08-09",
+  "command": "codex exec --ephemeral --sandbox read-only --json --color never -C /Users/luca/Desktop/项目/muse/lucagstack \"Do not call tools. Return exactly: CODEX_LIVE_PROBE_OK\" < /dev/null",
+  "sandbox_attempt": {
+    "status": "BLOCKED_BY_OUTER_SANDBOX",
+    "exit_code": 1,
+    "error": "failed to initialize in-process app-server client: Operation not permitted"
+  },
+  "approved_unsandboxed_outer_retry": {
+    "inner_sandbox": "read-only",
+    "ephemeral": true,
+    "stdin_closed": true,
+    "exit_code": 0,
+    "thread_id": "019fe4a8-9271-7223-ad7f-a25a91097d1f",
+    "events": [
+      "thread.started",
+      "turn.started",
+      "item.completed:error(skill-description-budget-warning)",
+      "item.completed:agent_message(CODEX_LIVE_PROBE_OK)",
+      "turn.completed"
+    ],
+    "exact_agent_message": "CODEX_LIVE_PROBE_OK",
+    "usage": {
+      "input_tokens": 28816,
+      "cached_input_tokens": 6912,
+      "output_tokens": 11,
+      "reasoning_output_tokens": 0
+    },
+    "status": "PASS_WITH_WARNING"
+  },
+  "warnings": [
+    "models cache reported missing base_instructions before the native thread started",
+    "skill descriptions were shortened to the runtime context budget"
+  ],
+  "scope": "This closes the audit's UNKNOWN-LIVE Codex CLI availability gate only. It is not a logical-role receipt and does not prove future plan/work/oracle definitions."
+}

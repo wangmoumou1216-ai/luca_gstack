@@ -112,7 +112,8 @@
 
 **绑定即注入（2026-07-09 M2 原文）：** 确认/绑定项目时（含上面继承态的确认、或点名当前已激活
 项目这类"没跑过 switch"的路径），若本 session 尚未注入该项目本地记忆 → 幂等执行
-`./scripts/project.sh switch {name}`（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
+route-guard 为当前 `UserPromptSubmit` 生成的完整 `./scripts/project.sh switch ... --session-id ... --tx ... --expected-epoch ...`
+事务命令（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
 切到当前已激活的同名项目不改软链目标）。②/③ 分支本就跑 switch/new，注入天然覆盖。
 **边界（2026-07-09 红队修订）：仅适用于真正要在该项目上做实质工作的 session。**
 meta/框架/审计 session 不适用——只需读某项目记忆做参考时，直接 Read 其项目根 `CONTEXT.md`
@@ -121,11 +122,11 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 （person 记忆 never-switch-parallel-session-projects，luca 标注严重问题）。
 
 **旧 ②（确认制切换）：** 消息中包含已有项目名 → 提示切换：「切换到 {name}」→ 用户确认后执行
-`./scripts/project.sh switch {name}` → 继续
+执行 route-guard 本轮生成的完整 `switch` 事务命令 → 成功后结束本轮，下一轮继续
 
 **旧 ③（一律确认制新建）：** 消息描述新项目/新需求/新功能，或直接调用了 skill 且没有明确当前项目
 → 新项目信号；从描述/skill 参数推断候选名 → 一句话确认：「这是新项目，建议叫 {name}，确认？」
-→ 用户确认（或给出其他名字）→ `./scripts/project.sh new {name}` → 执行原始请求
+→ 用户确认（或给出其他名字）→ 下一条 prompt 由 route-guard 生成完整 `new` 事务命令 → 执行后结束本轮，下一轮执行原始请求
 
 ## Project Gate 附则：总原则 + 绑定即注入（全文）
 
@@ -137,7 +138,8 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 
 > **绑定即注入（2026-07-09）：** 确认/绑定项目时（含继承态确认、点名当前已激活项目这类
 > "pin 已写但没跑 switch"的路径），若本 session 尚未注入该项目本地记忆 → 幂等执行
-> `./scripts/project.sh switch {name}`（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
+> route-guard 为当前 `UserPromptSubmit` 生成的完整 `./scripts/project.sh switch ... --session-id ... --tx ... --expected-epoch ...`
+> 事务命令（项目 MEMORY.md / CONTEXT.md 的注入挂在它的 stdout 上；
 > 切到当前已激活的同名项目不改软链目标）。
 > **边界（2026-07-09 红队修订）：仅适用于真正要在该项目上做实质工作的 session。**
 > meta/框架/审计 session 不适用——只需读某项目记忆做参考时，直接 Read 其项目根 `CONTEXT.md`
@@ -182,7 +184,7 @@ luca 连问「你置入到 figma 里面了吗」「打开浏览器到侧边栏�
 ## muse 工具通道（MCP，2026-07-30）
 
 app 内嵌 claude session 由 app 注入 `--mcp-config`（`~/.luca/mcp/muse-<实例哈希>.json`，
-app 启动时生成），暴露 6 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
+app 启动时生成），暴露 7 个 `mcp__muse__*` 工具（server：app 内 unix socket + mcp-shim.cjs）：
 
 | 工具 | 用途 | 何时用 |
 |---|---|---|
@@ -191,10 +193,11 @@ app 启动时生成），暴露 6 个 `mcp__muse__*` 工具（server：app 内 u
 | `open_in_view` | 开文件/URL（HTML→侧栏预览，md→文件页签，`target:"split"` 分屏——**split 仅对本地文件生效**） | 替代 luca-open 的模型主动路径 |
 | `web_locate` | 定位侧栏页签回 tabKey/URL/pageOrigin/标题/rect；`reveal:false`（默认）**不切面板不抢焦点** | **开页前查重（纪律③的执行手段）**；`reveal:true`＝把已开页签调到前面给 luca 看 |
 | `sidebar_read` | 读**指定**页签正文（含跨域子帧）；不切页签；正文按不可信输入披露 | 用户说"基于侧栏那页"而该页非激活页签时（纪律④ 的执行手段） |
+| `sidebar_selection` | 读**用户当前选中的文字**＋所在元素 CSS selector（selector 在页内自验证过唯一命中，验不过就不给而非给个错的）；抓取跑**隔离世界**故页面伪造不了选区；不切页签、不抢焦点、不改工作台状态；只读顶层文档——iframe（**含同源**）/shadow DOM/input·textarea 内的选区一律够不到；正文折叠转义且 400 字上限（截断会明说），**不能当字面量去 grep/Edit**；正文与本地 file:// 一律按不可信输入披露 | **指代消解**：用户说"这个/这段/这里/改一下这个按钮"而侧栏开着——他在看屏幕我没在看，先问一次再答，别猜元素。空结果＝去问用户，不等于"他没选" |
 | `sidebar_navigate` | 已有页签内导航（等加载完）；跨分区目标改新开正确分区页签 | 想移动已有页签而非堆新页签 |
 
-**读面安全边界（2026-07-30 A 批落地）**：`claude.ai` 域的 `sidebar_read`/`preview_screenshot`
-**一律硬拒**（该登录态属 Claude 自身通道，判据取页签当前 URL 不信入参）；figma 走独立分区
+**读面安全边界（2026-07-30 A 批落地）**：`claude.ai` 域的 `sidebar_read`/`preview_screenshot`/
+`sidebar_selection` **一律硬拒**（该登录态属 Claude 自身通道，判据取页签当前 URL 不信入参）；figma 走独立分区
 `persist:figma`（跨分区 in-tab 导航被守卫拦下改新开页签，含页内链接/地址栏/工具三入口）。
 **写面（点击/输入）本批不存在**——需权限门先落地，见 muse
 `docs/plans/2026-07-30-sidebar-automation-plan.md` B 批。
@@ -329,4 +332,3 @@ claude-in-chrome＝act 面（自动化）。判断路径＝语义路由契约的
 
 > （原挂此处的四条「浏览器点名镜像」bullets 系 2026-07-28 本节插入时被劈开的错位段，
 > 2026-07-30 已归位回「luca app 侧栏感知 › 浏览器点名镜像」节，约束原文不变。）
-

@@ -41,9 +41,13 @@ function runDirect(hookFile, payload, env = {}) {
 const parse = (s) => { try { return JSON.parse(String(s).trim()); } catch { return null; } };
 
 const SID = 'codex-adapter-test';
+const DIRECT_SID = 'codex-adapter-direct-test';
 const cleanup = () => {
   for (const f of ['.session-edit-count-' + SID, '.session-tool-count-' + SID,
-                   '.session-turn-count-' + SID, '.session-project-' + SID]) {
+                   '.session-turn-count-' + SID, '.session-project-' + SID,
+                   '.session-consumed-turns-' + SID,
+                   '.session-project-' + DIRECT_SID,
+                   '.session-consumed-turns-' + DIRECT_SID]) {
     const p = join(ROOT, '.claude', f);
     if (existsSync(p)) rmSync(p, { force: true });
   }
@@ -251,10 +255,59 @@ console.log(JSON.stringify({ hookSpecificOutput: {
 }
 {
   const r = runDirect('route-guard.mjs', {
-    session_id: 'direct-' + Date.now(), prompt: '帮我设计一个新功能', cwd: ROOT,
+    session_id: DIRECT_SID, prompt: '帮我设计一个新功能', cwd: ROOT,
   });
   ok('E2 [零回归] Claude 直调 route-guard 仍输出裸文本（未被包成 JSON）',
     String(r.stdout).trim().length > 0 && parse(r.stdout) === null);
+}
+
+// ── G. B5：tool_input 归一化（apply_patch 没有 file_path，须从 patch 头合成）──────────
+// 回归意义：tool_name 映射对了、edit-count 也对了，**但 post-edit 另外两处功能靠 file_path**，
+// 缺了的表现是"测试全绿 + hook 全触发 + 这两件事静默不干活"——2026-08-06 沙箱实测才发现。
+{
+  const patch = '*** Begin Patch\n*** Update File: framework/list-page.html\n@@\n+x\n*** End Patch';
+  const r = runVia('post-edit.mjs', {
+    hook_event_name: 'PostToolUse', cwd: ROOT, session_id: SID,
+    tool_name: 'apply_patch', tool_input: { command: patch },
+  });
+  const o = parse(r.stdout);
+  const txt = o?.hookSpecificOutput?.additionalContext || String(r.stdout || '');
+  ok('G1 apply_patch 的 file_path 被合成 → framework/ 只读保护区告警恢复触发',
+    /framework\//.test(txt), `输出=${txt.slice(0, 80)}`);
+}
+{
+  const editCount = join(ROOT, '.claude', '.session-edit-count-' + SID);
+  if (existsSync(editCount)) rmSync(editCount, { force: true });
+  const patch = '*** Begin Patch\n*** Update File: a.md\n@@\n+x\n*** Update File: b.md\n@@\n+y\n*** End Patch';
+  runVia('post-edit.mjs', {
+    hook_event_name: 'PostToolUse', cwd: ROOT, session_id: SID,
+    tool_name: 'apply_patch', tool_input: { command: patch },
+  });
+  let n = 0;
+  try { n = parseInt(readFileSync(editCount, 'utf8'), 10) || 0; } catch { }
+  ok('G2 多文件 patch → 每个文件各触发一次（对齐 Claude 侧 N 文件 = N 次 Write）', n === 2, `edit-count=${n}`);
+}
+{
+  // 白盒断言：临时 echo hook 把 adapter 改写后的 payload 原样吐回。文件名含 post-edit /
+  // project-scope-guard 以命中 TOOL_ALIAS_BY_HOOK 对应分支。
+  const mk = (name) => {
+    const p = join(HOOKS, name);
+    writeFileSync(p, 'import{readFileSync}from"node:fs";process.stdout.write(readFileSync(0,"utf8"));\n');
+    return p;
+  };
+  const patch = '*** Begin Patch\n*** Update File: docs/x.md\n@@\n+x\n*** End Patch';
+  const payload = { hook_event_name: 'PostToolUse', cwd: ROOT, session_id: SID, tool_name: 'apply_patch', tool_input: { command: patch } };
+  const pe = mk('.b5-echo-post-edit.mjs'), pg = mk('.b5-echo-project-scope-guard.mjs');
+  try {
+    const a = parse(runVia('.b5-echo-post-edit.mjs', payload).stdout);
+    ok('G3 post-edit 分支：file_path 合成为绝对路径且 tool_name=Write',
+      a?.tool_input?.file_path === join(ROOT, 'docs', 'x.md') && a?.tool_name === 'Write',
+      `得到=${a?.tool_input?.file_path} / ${a?.tool_name}`);
+    const b = parse(runVia('.b5-echo-project-scope-guard.mjs', payload).stdout);
+    ok('G4 [零回归] guard 分支不被 B5 触及：不塞 file_path、tool_name 仍为 Bash（它按 command 串扫越界）',
+      b?.tool_input?.file_path === undefined && b?.tool_name === 'Bash',
+      `得到=${b?.tool_input?.file_path} / ${b?.tool_name}`);
+  } finally { for (const p of [pe, pg]) if (existsSync(p)) rmSync(p, { force: true }); }
 }
 
 cleanup();

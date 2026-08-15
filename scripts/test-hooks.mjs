@@ -11,12 +11,16 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
+  statSync,
   symlinkSync,
+  unlinkSync,
   utimesSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
+import { withoutLocalGitEnv } from '../.claude/hooks/lib/git-env.mjs';
 
 const projectRoot = process.cwd();
 const sessionSyncHook = resolve(projectRoot, '.claude/hooks/session-sync.mjs');
@@ -24,6 +28,9 @@ const sessionRestoreHook = resolve(projectRoot, '.claude/hooks/session-restore.m
 const routeGuardHook = resolve(projectRoot, '.claude/hooks/route-guard.mjs');
 const sessionEndHook = resolve(projectRoot, '.claude/hooks/session-end.mjs');
 const postEditHook = resolve(projectRoot, '.claude/hooks/post-edit.mjs');
+const projectPinScript = resolve(projectRoot, 'scripts/project-pin.mjs');
+const projectLeaseScript = resolve(projectRoot, 'scripts/project-lease.mjs');
+const projectScript = resolve(projectRoot, 'scripts/project.sh');
 const searchScript = resolve(projectRoot, 'memory/scripts/search_memory.py');
 const isSymlink = (p) => { try { return lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
@@ -54,9 +61,16 @@ function makeFixture({
   if (tools != null) writeFileSync(join(root, '.claude', '.session-tool-count'), String(tools));
   if (activeProject) {
     // docs 软链指向 .../项目/<name>/docs —— session-sync 据此解析"激活项目"。
-    const projDocs = join(root, '项目', activeProject, 'docs');
+    const project = join(root, '项目', activeProject);
+    const projDocs = join(project, 'docs');
     mkdirSync(projDocs, { recursive: true });
+    mkdirSync(join(project, '.luca'), { recursive: true });
+    writeFileSync(join(project, '.luca', 'workflow-state.yaml'), readFileSync(join(root, '.claude', 'workflow-state.yaml')));
+    writeFileSync(join(project, '.luca', 'current-topic.txt'), `${activeProject}\n`);
+    unlinkSync(join(root, '.claude', 'workflow-state.yaml'));
     symlinkSync(projDocs, join(root, 'docs'));
+    symlinkSync(join(project, '.luca', 'workflow-state.yaml'), join(root, '.claude', 'workflow-state.yaml'));
+    symlinkSync(join(project, '.luca', 'current-topic.txt'), join(root, '.claude', 'current-topic.txt'));
   }
   return root;
 }
@@ -72,6 +86,9 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   // 重定向出测试 fixture；需要它们的测试均已显式经 `env` 传入（spread 仍然生效）。
   delete baseEnv.MEMORY_ROOT;
   delete baseEnv.GLOBAL_MEMORY_DIR;
+  for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) {
+    delete baseEnv[key];
+  }
   const result = spawnSync('node', [scriptPath], {
     cwd,
     encoding: 'utf8',
@@ -80,6 +97,35 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
   return result;
+}
+
+function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
+  const projectsRoot = join(root, 'projects');
+  const projectRoot = join(projectsRoot, project);
+  mkdirSync(join(projectRoot, 'docs', 'handoff'), { recursive: true });
+  mkdirSync(join(projectRoot, '.luca'), { recursive: true });
+  const sharedState = join(root, '.claude', 'workflow-state.yaml');
+  writeFileSync(join(projectRoot, '.luca', 'workflow-state.yaml'), readFileSync(sharedState));
+  writeFileSync(join(projectRoot, '.luca', 'current-topic.txt'), `${project}\n`);
+  const st = statSync(projectRoot);
+  const binding = { project, epoch: 1, realpath: realpathSync(projectRoot), dev: Number(st.dev), ino: Number(st.ino) };
+  writeFileSync(join(root, '.claude', `.session-project-${sid}`), `${JSON.stringify({
+    schema_version: 2,
+    state: 'TURN_ACTIVE',
+    session_id: sid,
+    binding,
+    turn: { turn_id: `turn-${sid}`, epoch: 1 },
+  })}\n`);
+  for (const counter of ['turn', 'edit', 'tool']) {
+    const legacy = join(root, '.claude', `.session-${counter}-count`);
+    if (existsSync(legacy)) writeFileSync(join(root, '.claude', `.session-${counter}-count-${sid}`), readFileSync(legacy));
+  }
+  return {
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot },
+    input: JSON.stringify({ session_id: sid }),
+    projectRoot,
+    sid,
+  };
 }
 
 // ── HOOK-001（critical）：实质工作（有文件编辑）→ block 路径 stdout 是纯 JSON，旁路文本只在 stderr ──
@@ -92,12 +138,19 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   assert.equal(parsed.decision, 'block', 'decision 必须为 block');
   assert.ok(parsed.reason && parsed.reason.length > 0, 'block 必须带 reason');
   assert.doesNotMatch(result.stdout, /已自动写入 checkpoint/, 'checkpoint 提示不得污染 stdout');
-  assert.match(result.stderr, /已自动写入 checkpoint/, 'checkpoint 提示必须在 stderr');
-  assert.ok(
-    readdirSync(join(root, 'docs', 'handoff')).some(n => n.endsWith('-auto-checkpoint.md')),
-    '激活项目 + IN_PROGRESS 时应写 checkpoint'
-  );
-  console.log('PASS HOOK-001 block 路径 stdout 纯 JSON，checkpoint 仅在 stderr');
+  assert.doesNotMatch(result.stderr, /已自动写入 checkpoint/, 'no-pin 不得沿 shared docs/state 写 checkpoint');
+  console.log('PASS HOOK-001 no-pin substantive 仍 block，且 shared project 零读取/零 checkpoint');
+}
+
+{
+  const root = makeFixture({ turns: 5, edits: 1, activeProject: 'display-only' });
+  const active = bindActiveTurn(root, 'testproj');
+  const result = runNode(sessionSyncHook, root, active);
+  assert.equal(JSON.parse(result.stdout).decision, 'block');
+  assert.match(result.stderr, /已自动写入 checkpoint/);
+  assert.ok(readdirSync(join(active.projectRoot, 'docs', 'handoff')).some(n => n.endsWith('-auto-checkpoint.md')));
+  assert.equal(existsSync(join(root, '项目', 'display-only', 'docs', 'handoff', `${UTC_TODAY}-auto-checkpoint.md`)), false);
+  console.log('PASS HOOK-001 identity-bound TURN_ACTIVE checkpoint 只落 binding project');
 }
 
 // ── HOOK-001 反面 + HOOK-005：trivial session → release，stdout 空，且**不写** pending ──
@@ -227,12 +280,16 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
     'extraction-bar.md', '写入协议', '修源头', '.episode-written-']) {
     assert.ok(parsed.reason.includes(kw), `短指针 reason 必须含「${kw}」，实际缺失`);
   }
-  assert.ok(parsed.reason.includes('testproj/.luca/memory/MEMORY.md'), '有激活项目时必须注入项目本地落点');
+  assert.ok(parsed.reason.includes('不带 --project'), '无 pin substantive block 不得借 shared display 推断项目');
   assert.ok(parsed.reason.length <= 900,
     `reason 必须保持短指针（≤900 字符，实际 ${parsed.reason.length}）——勿回归成全文注入`);
 
   const pNoProj = JSON.parse(runNode(sessionSyncHook, makeFixture({ edits: 1 })).stdout);
   assert.ok(pNoProj.reason.includes('不带 --project'), '无激活项目时必须提示暂记 episodic 待归位');
+  const activeRoot = makeFixture({ edits: 1, activeProject: 'display-only' });
+  const active = bindActiveTurn(activeRoot, 'testproj', 'reason-session');
+  const pActive = JSON.parse(runNode(sessionSyncHook, activeRoot, active).stdout);
+  assert.ok(pActive.reason.includes('testproj/.luca/memory/MEMORY.md'), 'TURN_ACTIVE identity 绑定时必须注入项目本地落点');
   console.log('PASS HOOK-007 block reason 为短指针且长度受控，不整段注入');
 }
 
@@ -263,6 +320,81 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   assert.equal(existsSync(reviewMarker), false, 'session-restore 不得运行 semantic 候选 review');
   assert.match(result.stdout, /1 条 person 记忆候选待裁决/, '有 candidate_feedback 时启动应独立提示');
   console.log('PASS session-restore 启动 memory-light，兜底提醒带真实 topic + person 候选提示');
+}
+
+// ── STARTUP-IDENTITY-N01/N02：NO_PIN 不得读取 shared workflow-state / docs PROGRESS ──
+// 两个路径各放一个无 writer 的 FIFO；任何 exists 后 read 都会阻塞并触发 timeout。
+for (const which of ['workflow-state', 'progress']) {
+  const root = mkdtempSync(join(tmpdir(), `luca-gstack-startup-${which}-`));
+  const projectsRoot = join(root, 'projects');
+  mkdirSync(join(root, '.claude', 'observability'), { recursive: true });
+  mkdirSync(join(root, 'memory', 'scripts'), { recursive: true });
+  mkdirSync(projectsRoot, { recursive: true });
+  const fifo = which === 'workflow-state'
+    ? join(root, '.claude', 'workflow-state.yaml')
+    : join(root, 'docs', 'PROGRESS.md');
+  mkdirSync(dirname(fifo), { recursive: true });
+  const made = spawnSync('mkfifo', [fifo], { encoding: 'utf8' });
+  assert.equal(made.status, 0, made.stderr || 'mkfifo failed');
+  const baseEnv = { ...process.env };
+  for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) {
+    delete baseEnv[key];
+  }
+  const r = spawnSync('node', [sessionRestoreHook], {
+    cwd: root,
+    encoding: 'utf8',
+    timeout: 1500,
+    input: JSON.stringify({ session_id: `sess-NO-PIN-${which}`, source: 'resume' }),
+    env: {
+      ...baseEnv,
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      MEMORY_ROOT: root,
+    },
+  });
+  assert.notEqual(r.error?.code, 'ETIMEDOUT', `NO_PIN startup 不得读取 shared ${which} FIFO`);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  console.log(`PASS STARTUP-IDENTITY-${which === 'workflow-state' ? 'N01' : 'N02'} NO_PIN 对 shared ${which} 零读取`);
+}
+
+{
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-startup-bad-epoch-'));
+  const projectsRoot = join(root, 'projects');
+  const project = join(projectsRoot, 'alpha');
+  mkdirSync(join(root, '.claude', 'observability'), { recursive: true });
+  mkdirSync(join(root, 'memory', 'scripts'), { recursive: true });
+  mkdirSync(join(project, '.luca'), { recursive: true });
+  mkdirSync(join(project, 'docs'), { recursive: true });
+  const fifo = join(project, '.luca', 'workflow-state.yaml');
+  const made = spawnSync('mkfifo', [fifo], { encoding: 'utf8' });
+  assert.equal(made.status, 0, made.stderr || 'mkfifo failed');
+  const st = statSync(project);
+  const binding = { project: 'alpha', epoch: 4, realpath: realpathSync(project), dev: Number(st.dev), ino: Number(st.ino) };
+  writeFileSync(join(root, '.claude', '.session-project-sess-BAD-EPOCH'), `${JSON.stringify({
+    schema_version: 2,
+    state: 'TURN_ACTIVE',
+    session_id: 'sess-BAD-EPOCH',
+    binding,
+    turn: { turn_id: 'turn-bad', epoch: 3 },
+  })}\n`);
+  const r = spawnSync('node', [sessionRestoreHook], {
+    cwd: root,
+    encoding: 'utf8',
+    timeout: 1500,
+    input: JSON.stringify({ session_id: 'sess-BAD-EPOCH', source: 'resume' }),
+    env: {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      MEMORY_ROOT: root,
+    },
+  });
+  assert.notEqual(r.error?.code, 'ETIMEDOUT', 'corrupt turn epoch must be rejected before bound workflow FIFO read');
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.match(r.stderr, /identity 无效|epoch snapshot/, 'corrupt epoch rejection must stay visible');
+  console.log('PASS STARTUP-IDENTITY-N03 corrupt turn epoch 不加载项目上下文');
 }
 
 // ── GOV-001：daily_governance 对 person 层只读看护——digest 列候选+软上限，且绝不改全局目录 ──
@@ -559,13 +691,17 @@ function runRouteGuard(cwd, prompt) {
   const oldCounter = join(cl, '.session-tool-count-staleold');
   writeFileSync(oldCounter, '9');
   utimesSync(oldCounter, Date.now() / 1000 - 8 * 24 * 3600, Date.now() / 1000 - 8 * 24 * 3600);
-  runNode(sessionRestoreHook, root, { env: { CLAUDE_PROJECT_DIR: root } });
+  const identity = bindActiveTurn(root, 'identity-project', 'identity-old');
+  const identityPath = join(cl, '.session-project-identity-old');
+  utimesSync(identityPath, Date.now() / 1000 - 30 * 24 * 3600, Date.now() / 1000 - 30 * 24 * 3600);
+  runNode(sessionRestoreHook, root, { env: identity.env, input: JSON.stringify({ session_id: 'identity-old', source: 'resume' }) });
   assert.ok(!existsSync(join(cl, '.episode-written-oldsess')), '>48h 的 marker 应被 GC');
   assert.ok(existsSync(join(cl, '.episode-written-freshsess')), '新鲜 marker 必须保留（并行 session 的守卫）');
   assert.ok(existsSync(join(cl, '.session-tool-count-freshsess')), '新鲜 per-sid 计数必须保留');
   assert.equal(readFileSync(join(cl, '.session-tool-count-freshsess'), 'utf8'), '5', '保留的计数值不得被清零');
   assert.ok(!existsSync(oldCounter), '>7天的 per-sid 计数应被 GC');
-  console.log('PASS CONC-003 启动 GC 只删过期状态，绝不清并行 session 的活 marker/计数');
+  assert.ok(existsSync(identityPath), 'identity 无 generation/liveness 证明，不得仅按 mtime 偷删');
+  console.log('PASS CONC-003 启动 GC 只删可证明过期的临时状态，identity 不按年龄偷删');
 }
 
 // ── CONC-004：digest-shown O_EXCL 抢占——marker 已存在则静默，不重复展示 ──
@@ -630,47 +766,83 @@ function runRouteGuard(cwd, prompt) {
 // ── CONC-007：project.sh 并发 switch——锁串行化 + 原子替换后三链一致、无 tmp 残留 ──
 {
   const root = mkdtempSync(join(tmpdir(), 'luca-gstack-conc7-'));
-  mkdirSync(join(root, 'scripts'), { recursive: true });
   mkdirSync(join(root, '.claude', 'templates'), { recursive: true });
   writeFileSync(join(root, '.claude', 'templates', 'workflow-state.yaml'), 'topic: ""\nnodes:\n');
-  const projectsRoot = join(root, '项目');
+  const projectsRoot = join(root, 'projects');
   mkdirSync(projectsRoot, { recursive: true });
-  // 复制 project.sh 进 fixture（PROJECT_ROOT 由脚本位置推导=root），只重写 PROJECTS_ROOT 一行
-  const scriptSrc = readFileSync(resolve(projectRoot, 'scripts/project.sh'), 'utf8')
-    .replace('PROJECTS_ROOT="$HOME/Desktop/项目"', `PROJECTS_ROOT="${projectsRoot}"`);
-  const scriptPath = join(root, 'scripts', 'project.sh');
-  writeFileSync(scriptPath, scriptSrc, { mode: 0o755 });
-
-  const run = (args) => spawnSync('bash', [scriptPath, ...args], { encoding: 'utf8' });
-  assert.equal(run(['new', 'projA']).status, 0, 'new projA 应成功');
-  assert.equal(run(['new', 'projB']).status, 0, 'new projB 应成功');
-
-  // 并发 10 次交替 switch + 同时读者探测：readlink 永不悬空（原子替换的核心承诺）
-  const stress = spawnSync('bash', ['-c', [
-    `set -e`,
-    `for i in 1 2 3 4 5; do`,
-    `  bash "${scriptPath}" switch projA >/dev/null 2>&1 &`,
-    `  bash "${scriptPath}" switch projB >/dev/null 2>&1 &`,
-    `done`,
-    `for j in $(seq 1 40); do`,
-    `  if [ -L "${root}/docs" ]; then readlink "${root}/docs" >/dev/null || echo "DANGLING"; fi`,
-    `  sleep 0.05`,
-    `done`,
-    `wait`,
-  ].join('\n')], { encoding: 'utf8' });
-  assert.doesNotMatch(stress.stdout, /DANGLING/, '并发 switch 期间 docs 链不得悬空（原子替换）');
-  const leftovers = readdirSync(root).filter(f => f.includes('.tmp.'));
-  assert.equal(leftovers.length, 0, `不得残留临时链: ${leftovers}`);
+  for (const name of ['projA', 'projB']) {
+    mkdirSync(join(projectsRoot, name, 'docs'), { recursive: true });
+    mkdirSync(join(projectsRoot, name, '.luca'), { recursive: true });
+    writeFileSync(join(projectsRoot, name, '.luca', 'workflow-state.yaml'), `topic: ${name}\n`);
+    writeFileSync(join(projectsRoot, name, '.luca', 'current-topic.txt'), name);
+  }
+  const env = { ...process.env, CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot };
+  const prep = (sid, target) => {
+    const r = spawnSync('node', [projectPinScript, 'prepare', '--session', sid, '--operation', 'switch', '--target', target, '--turn-id', `turn-${sid}`], { env, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    return JSON.parse(r.stdout);
+  };
+  const pA = prep('conc-A', 'projA');
+  const pB = prep('conc-B', 'projB');
+  const cmd = (sid, target, p) => `bash ${JSON.stringify(projectScript)} switch ${target} --session-id ${sid} --tx ${p.tx} --expected-epoch ${p.expected_epoch}`;
+  const stress = spawnSync('bash', ['-c', `${cmd('conc-A', 'projA', pA)} &\n${cmd('conc-B', 'projB', pB)} &\nwait`], { env, encoding: 'utf8' });
+  assert.equal(stress.status, 0, stress.stderr || stress.stdout);
   assert.ok(!existsSync(join(root, '.claude', '.project-switch.lock')), '锁目录应已释放');
   // 终态一致性：三链同项目
   const linkTarget = (p) => { try { return readFileSync(join(root, p), 'utf8') && ''; } catch { return ''; } };
   const docsT = spawnSync('readlink', [join(root, 'docs')], { encoding: 'utf8' }).stdout.trim();
   const stateT = spawnSync('readlink', [join(root, '.claude', 'workflow-state.yaml')], { encoding: 'utf8' }).stdout.trim();
   const topicT = spawnSync('readlink', [join(root, '.claude', 'current-topic.txt')], { encoding: 'utf8' }).stdout.trim();
-  const projOf = (t) => (t.match(/项目\/([^/]+)\//) || [])[1] || '';
+  const projOf = (t) => (t.match(/projects\/([^/]+)\//) || [])[1] || '';
   assert.ok(projOf(docsT) && projOf(docsT) === projOf(stateT) && projOf(docsT) === projOf(topicT),
     `并发 switch 终态三链必须同项目: docs=${docsT} state=${stateT} topic=${topicT}`);
   console.log('PASS CONC-007 project.sh 并发 switch：锁串行化 + 原子替换 + 终态一致');
+}
+
+// ── CONC-008：startup clear 与 switch 共用 global lease，lease 忙时绝不拆 display tuple ──
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const links = [join(root, 'docs'), join(root, '.claude', 'workflow-state.yaml'), join(root, '.claude', 'current-topic.txt')];
+  const before = links.map(path => spawnSync('readlink', [path], { encoding: 'utf8' }).stdout.trim());
+  const acquired = spawnSync('node', [projectLeaseScript, 'acquire', '--root', root, '--owner-token', 'switch-in-flight', '--pid', String(process.pid)], {
+    cwd: projectRoot, encoding: 'utf8', env: process.env,
+  });
+  assert.equal(acquired.status, 0, acquired.stderr);
+  const held = JSON.parse(acquired.stdout);
+  const restore = runNode(sessionRestoreHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root },
+    input: JSON.stringify({ session_id: 'startup-racer', source: 'startup' }),
+  });
+  assert.match(restore.stderr, /未清理|live owner|lease/, 'lease busy 必须 fail-visible 且保守不清');
+  const after = links.map(path => spawnSync('readlink', [path], { encoding: 'utf8' }).stdout.trim());
+  assert.deepEqual(after, before, 'startup clear 不得与持锁 switch 互踩或拆散三链');
+  const released = spawnSync('node', [projectLeaseScript, 'release', '--root', root, '--handle-json', JSON.stringify(held.owner_handle)], {
+    cwd: projectRoot, encoding: 'utf8', env: process.env,
+  });
+  assert.equal(released.status, 0, released.stderr);
+  console.log('PASS CONC-008 startup clear 与 switch 共用 lease，忙时 display tuple 保持原样');
+}
+
+// ── CONC-009：startup clear 已提交后 release-before-rename 失败，不得谎报 clear 失败/诱发重试 ──
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const restore = runNode(sessionRestoreHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_PROJECT_LEASE_FAULT: 'before-release-rename' },
+    input: JSON.stringify({ session_id: 'startup-release-fault', source: 'startup' }),
+  });
+  assert.ok(!isSymlink(join(root, 'docs')), 'release 失败发生在 clear commit 之后，display tuple 应保持已清理');
+  assert.match(restore.stderr, /startup clear 已完成.*lease 释放失败.*禁止重试 clear/);
+  const inspected = spawnSync('node', [projectLeaseScript, 'inspect', '--root', root], {
+    cwd: projectRoot, encoding: 'utf8', env: process.env,
+  });
+  assert.equal(inspected.status, 0, inspected.stderr);
+  const held = JSON.parse(inspected.stdout);
+  assert.equal(held.owner_alive, false);
+  const recovered = spawnSync('node', [projectLeaseScript, 'recover', '--root', root, '--handle-json', JSON.stringify(held.owner_handle)], {
+    cwd: projectRoot, encoding: 'utf8', env: process.env,
+  });
+  assert.equal(recovered.status, 0, recovered.stderr);
+  console.log('PASS CONC-009 startup clear commit 后 lease release 失败保持成功语义并可 exact recovery');
 }
 
 // ══════════════ G6 会话粘性回归（2026-07-04）══════════════
@@ -787,8 +959,7 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）');
 }
 
-// STICKY-008（方案A 2026-07-08）：继承态（有 session-restore 写的标记）+ 首条消息未点名项目
-// → 提示"仅供参考/尚未绑定" + 删标记 + **不写 pin**（A 下继承≠绑定，绝不静默 adopt 软链目标）
+// STICKY-008：继承 display marker 不得成为生产 identity；no-pin 仍走 gate。
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-inherited-sess-I'), 'projA'); // session-restore 保留态写的
@@ -796,22 +967,23 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-I', prompt: '随便说点什么' }),
   });
-  assert.match(r.stdout, /全局激活项目「projA」仅供参考/, '继承态首条消息应提示"仅供参考"');
-  assert.match(r.stdout, /尚未绑定/, '应说明本 session 尚未绑定项目');
+  assert.match(r.stdout, /PROJECT GATE/, '继承 display marker 不得绕过 no-pin gate');
   assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-I')), 'A 下继承态不写 pin（未绑定）');
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-I')), '继承标记应一次性读后删');
-  console.log('PASS STICKY-008 继承态未点名 → 提示"仅供参考/未绑定" + 删标记 + 不写 pin');
+  console.log('PASS STICKY-008 继承 display marker 不成为 identity，no-pin fail-closed');
 }
 
 // STICKY-008b（方案A）：pin 只在"显式声明/确认项目"时写，永不从软链 auto-adopt（跨 session 污染根因）
 {
-  // (i) 无标记 + 首条消息点名当前项目 projA → 静默写 pin=projA（确认即绑定）
+  // (i) 点名项目只创建 SWITCH_ONLY，不预写 BOUND。
   const rootA = makeFixture({ activeProject: 'projA' });
   runNode(routeGuardHook, rootA, {
     env: { CLAUDE_PROJECT_DIR: rootA, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-Sa', prompt: '继续 projA 的列表' }),
   });
-  assert.ok(existsSync(join(rootA, '.claude', '.session-project-sess-Sa')), '点名当前项目应写 pin');
+  const stateA = JSON.parse(readFileSync(join(rootA, '.claude', '.session-project-sess-Sa'), 'utf8'));
+  assert.equal(stateA.state, 'SWITCH_ONLY');
+  assert.equal(stateA.switch.target, 'projA');
 
   // (ii) ★no-adopt★ 无标记 + 不点名任何项目（cur=projA 仍在软链）→ 不写 pin（保持未绑定）
   const rootB = makeFixture({ activeProject: 'projA' });
@@ -821,7 +993,7 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   });
   assert.ok(!existsSync(join(rootB, '.claude', '.session-project-sess-Sb')), 'A 下不再从软链 auto-adopt pin');
   assert.doesNotMatch(rB.stdout, /并行 session 保留/, '不得残留旧继承措辞');
-  console.log('PASS STICKY-008b pin 仅在点名/确认项目时写，永不从软链 auto-adopt');
+  console.log('PASS STICKY-008b 点名只建 SWITCH_ONLY，未点名不从 display symlink auto-adopt');
 }
 
 // STICKY-008c（命名即切换 2026-07-06）：本 session 主动切到具名项目 → emit 立即切换（无"确认后"）；
@@ -834,30 +1006,33 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA,projB' },
     input: JSON.stringify({ session_id: 'sess-N', prompt: '继续 projB 的任务' }),
   });
-  assert.match(r.stdout, /命名即切换/, '应 emit 命名即切换（立即切换，非"确认后执行"）');
-  assert.match(r.stdout, /switch "projB"/, '应给出切到 projB 的命令');
+  assert.match(r.stdout, /SWITCH_ONLY/, '应 emit SWITCH_ONLY transaction');
+  assert.match(r.stdout, /project\.sh switch projB --session-id sess-N --tx .+ --expected-epoch 0/, '应给出 hash-bound 事务命令');
   assert.doesNotMatch(r.stdout, /原在项目/, '自己主动切不得报"被切走"漂移');
-  const pin = readFileSync(join(root, '.claude', '.session-project-sess-N'), 'utf8').trim();
-  assert.equal(pin, 'projB', 'pin 应记成【目标】projB，而非当前 projA');
+  const pin = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-N'), 'utf8'));
+  assert.equal(pin.state, 'SWITCH_ONLY');
+  assert.equal(pin.switch.target, 'projB', 'SWITCH_ONLY target 应为 projB，尚未 BOUND');
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-N')), '自切应清继承标记');
   assert.ok(!existsSync(join(root, '.claude', '.session-projnag-sess-N')), '自切应清残留漂移计数');
-  console.log('PASS STICKY-008c 命名即切换 self-switch → pin=目标 + 清标记 + 不报漂移');
+  console.log('PASS STICKY-008c 命名切换 → SWITCH_ONLY + tx/epoch + 清标记');
 }
 
-// STICKY-009：SessionEnd 清理本 sid 计数 + pin（R H2 僵尸窗口归零）
+// STICKY-009：SessionEnd 清计数但保留 identity（End 无 generation，不能安全删 pin）
 {
   const root = makeFixture({});
   const cl = join(root, '.claude');
-  for (const f of ['.session-tool-count-gone', '.session-turn-count-gone', '.session-project-gone', '.session-projnag-gone']) {
+  const active = bindActiveTurn(root, 'testproj', 'gone');
+  for (const f of ['.session-tool-count-gone', '.session-turn-count-gone', '.session-projnag-gone']) {
     writeFileSync(join(cl, f), 'x');
   }
   writeFileSync(join(cl, '.session-tool-count-other'), 'y'); // 他 sid，不应被删
-  runNode(sessionEndHook, root, { env: { CLAUDE_PROJECT_DIR: root }, input: JSON.stringify({ session_id: 'gone' }) });
-  for (const f of ['.session-tool-count-gone', '.session-turn-count-gone', '.session-project-gone', '.session-projnag-gone']) {
+  runNode(sessionEndHook, root, { env: active.env, input: JSON.stringify({ session_id: 'gone' }) });
+  for (const f of ['.session-tool-count-gone', '.session-turn-count-gone', '.session-projnag-gone']) {
     assert.ok(!existsSync(join(cl, f)), `SessionEnd 应删本 sid 的 ${f}`);
   }
+  assert.ok(existsSync(join(cl, '.session-project-gone')), 'SessionEnd 无 generation snapshot，不得删除可能已被 resume/reuse 的 identity');
   assert.ok(existsSync(join(cl, '.session-tool-count-other')), 'SessionEnd 不得删他 sid 文件');
-  console.log('PASS STICKY-009 SessionEnd 只清本 sid 状态');
+  console.log('PASS STICKY-009 SessionEnd 清本 sid 临时计数但保留 identity');
 }
 
 // STICKY-010（方案A 2026-07-08）：docs/ 落点已由 PreToolUse project-scope-guard 重定向到 pin 项目，
@@ -881,22 +1056,29 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   const home = mkdtempSync(join(tmpdir(), 'luca-gstack-syncpin-'));
   const root = join(home, 'gstack');
   mkdirSync(join(root, '.claude'), { recursive: true });
-  const projBdocs = join(home, 'Desktop', '项目', 'projB', 'docs');
+  const projectsRoot = join(home, 'projects');
+  const projBdocs = join(projectsRoot, 'projB', 'docs');
   mkdirSync(projBdocs, { recursive: true });
   symlinkSync(projBdocs, join(root, 'docs'));
-  const projA = join(home, 'Desktop', '项目', 'projA');
+  const projA = join(projectsRoot, 'projA');
   mkdirSync(join(projA, '.luca'), { recursive: true });
   mkdirSync(join(projA, 'docs'), { recursive: true });
   writeFileSync(join(projA, '.luca', 'workflow-state.yaml'),
     ['topic: "pin-topic"', 'nodes:', '  node-pin:', '    status: IN_PROGRESS', 'iteration: 1', ''].join('\n'));
-  writeFileSync(join(root, '.claude', '.session-project-sessPIN'), 'projA');
+  writeFileSync(join(projA, '.luca', 'current-topic.txt'), 'pin-topic\n');
+  const st = statSync(projA);
+  const binding = { project: 'projA', epoch: 1, realpath: realpathSync(projA), dev: Number(st.dev), ino: Number(st.ino) };
+  writeFileSync(join(root, '.claude', '.session-project-sessPIN'), `${JSON.stringify({
+    schema_version: 2, state: 'TURN_ACTIVE', session_id: 'sessPIN', binding,
+    turn: { turn_id: 'turn-sessPIN', epoch: 1 },
+  })}\n`);
   writeFileSync(join(root, '.claude', '.session-edit-count-sessPIN'), '1');
   const r = runNode(sessionSyncHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, HOME: home },
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot },
     input: JSON.stringify({ session_id: 'sessPIN' }),
   });
   const parsed = JSON.parse(r.stdout);
-  assert.match(parsed.reason, /项目\/projA\/\.luca\/memory/, '归因必须指向 pin 项目 projA');
+  assert.match(parsed.reason, /当前激活项目「projA」/, '归因必须指向 identity binding 项目 projA');
   assert.doesNotMatch(parsed.reason, /projB/, '归因不得指向软链项目 projB（P2 实证回归）');
   const ckDir = join(projA, 'docs', 'handoff');
   assert.ok(existsSync(ckDir) && readdirSync(ckDir).some(n => n.endsWith('-auto-checkpoint.md')),
@@ -904,28 +1086,30 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   const ckFile = readdirSync(ckDir).find(n => n.endsWith('-auto-checkpoint.md'));
   assert.match(readFileSync(join(ckDir, ckFile), 'utf8'), /pin-topic/,
     'topic 必须读自 pin 项目的 .luca/workflow-state.yaml（与落点同源）');
-  assert.ok(!existsSync(join(home, 'Desktop', '项目', 'projB', 'docs', 'handoff')),
+  assert.ok(!existsSync(join(projectsRoot, 'projB', 'docs', 'handoff')),
     '软链项目 projB 不得被写入');
   console.log('PASS SYNC-PIN-001 Stop 链 pin 优先：归因/checkpoint/topic 与 pin 同源，projB 零写入');
 }
 
-// ── SYNC-PIN-002：失效 pin（项目目录已删）→ 回退软链，不复活幽灵目录 ──
+// ── SYNC-PIN-002：失效/malformed pin → no-pin，绝不回退 display symlink ──
 {
   const home = mkdtempSync(join(tmpdir(), 'luca-gstack-syncgh-'));
   const root = join(home, 'gstack');
   mkdirSync(join(root, '.claude'), { recursive: true });
-  const projBdocs = join(home, 'Desktop', '项目', 'projB', 'docs');
+  const projectsRoot = join(home, 'projects');
+  const projBdocs = join(projectsRoot, 'projB', 'docs');
   mkdirSync(projBdocs, { recursive: true });
   symlinkSync(projBdocs, join(root, 'docs'));
   writeFileSync(join(root, '.claude', '.session-project-sessGH'), 'ghost'); // 指向不存在的项目
   writeFileSync(join(root, '.claude', '.session-edit-count-sessGH'), '1');
   const r = runNode(sessionSyncHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, HOME: home },
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot },
     input: JSON.stringify({ session_id: 'sessGH' }),
   });
-  assert.match(JSON.parse(r.stdout).reason, /projB/, '失效 pin 应回退软链项目 projB');
-  assert.ok(!existsSync(join(home, 'Desktop', '项目', 'ghost')), '不得为失效 pin 创建幽灵项目目录');
-  console.log('PASS SYNC-PIN-002 失效 pin 回退软链，不复活幽灵目录');
+  assert.doesNotMatch(JSON.parse(r.stdout).reason, /projB/, '失效 pin 不得回退 display symlink projB');
+  assert.match(JSON.parse(r.stdout).reason, /不带 --project/, '失效 pin 应按 no-pin 归因');
+  assert.ok(!existsSync(join(projectsRoot, 'ghost')), '不得为失效 pin 创建幽灵项目目录');
+  console.log('PASS SYNC-PIN-002 失效 pin fail-closed 为 no-pin，不回退 display symlink');
 }
 
 // ── SYNC-MEM-001：MEMORY_ROOT 重定向时脏记忆提醒必须查该仓（P3 实证回归：fork 写脏母版无人提醒）──
@@ -933,12 +1117,26 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   const root = makeFixture({}); // trivial → release 路径（提醒只在放行侧发）
   const memRoot = mkdtempSync(join(tmpdir(), 'luca-gstack-memdirty-'));
   mkdirSync(join(memRoot, 'memory', 'episodic'), { recursive: true });
-  spawnSync('git', ['init', '-q'], { cwd: memRoot, encoding: 'utf8' });
+  spawnSync('git', ['init', '-q'], {
+    cwd: memRoot,
+    encoding: 'utf8',
+    env: withoutLocalGitEnv(),
+  });
   writeFileSync(join(memRoot, 'memory', 'episodic', 'index.jsonl'), '{}'); // untracked = 脏
   const r = runNode(sessionSyncHook, root, { env: { CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: memRoot } });
   assert.match(r.stderr, /MEMORY_ROOT 仓（.*）有未提交的记忆/, 'MEMORY_ROOT 仓脏时提醒必须响且点名该仓');
-  const rClean = runNode(sessionSyncHook, makeFixture({}));
-  assert.doesNotMatch(rClean.stderr, /🔔/, '非 git/干净环境不得误响（fail-open）');
+  const poison = mkdtempSync(join(tmpdir(), 'luca-gstack-git-env-'));
+  spawnSync('git', ['init', '-q'], { cwd: poison, env: withoutLocalGitEnv() });
+  mkdirSync(join(poison, 'memory', 'episodic'), { recursive: true });
+  writeFileSync(join(poison, 'memory', 'episodic', 'index.jsonl'), '{}\n');
+  const rClean = runNode(sessionSyncHook, makeFixture({}), {
+    env: {
+      GIT_DIR: join(poison, '.git'),
+      GIT_WORK_TREE: poison,
+      GIT_INDEX_FILE: join(poison, '.git', 'index'),
+    },
+  });
+  assert.doesNotMatch(rClean.stderr, /🔔/, 'Git hook local env 不得把外仓脏状态误报到 fixture');
   console.log('PASS SYNC-MEM-001 MEMORY_ROOT 仓脏 → 提醒点名该仓（split-brain 提醒盲区修复）');
 }
 
@@ -953,9 +1151,46 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-SUB')),
     '子串（amusement ⊃ muse）不得绑 pin（P5 实证回归）');
   fire('继续 muse 的任务');
-  assert.equal(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8').trim(), 'muse',
-    '真点名（词边界成立）仍须正常绑 pin');
-  console.log('PASS STICKY-011 pin 绑定词边界：amusement 不误绑，点名 muse 正常绑');
+  const prepared = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8'));
+  assert.equal(prepared.state, 'SWITCH_ONLY',
+    '真点名（词边界成立）须进入 SWITCH_ONLY，不能在切换事务完成前伪造 BOUND pin');
+  assert.equal(prepared.switch?.target, 'muse', 'SWITCH_ONLY 必须保留规范化目标项目');
+  console.log('PASS STICKY-011 project switch 词边界：amusement 不误触，点名 muse 只准备事务');
+}
+
+// ── IDENTITY-FIFO-001：NO_PIN route 不得探测 shared workflow-state ──
+// FIFO 没有 writer 时任何 readFileSync 都会永久阻塞；用短 timeout 把“没有读取”变成机械证据。
+{
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-route-fifo-'));
+  const projectsRoot = join(root, 'projects');
+  mkdirSync(join(root, '.claude', 'observability'), { recursive: true });
+  mkdirSync(projectsRoot, { recursive: true });
+  const fifo = join(root, '.claude', 'workflow-state.yaml');
+  const made = spawnSync('mkfifo', [fifo], { encoding: 'utf8' });
+  assert.equal(made.status, 0, made.stderr || 'mkfifo failed');
+  const baseEnv = { ...process.env };
+  for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) {
+    delete baseEnv[key];
+  }
+  const r = spawnSync('node', [routeGuardHook], {
+    cwd: root,
+    encoding: 'utf8',
+    timeout: 1500,
+    input: JSON.stringify({ session_id: 'sess-FIFO', turn_id: 'turn-FIFO', prompt: '审查 luca_gstack route guard' }),
+    env: {
+      ...baseEnv,
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      ROUTE_GUARD_CURRENT_PROJECT: '',
+      ROUTE_GUARD_PROJECTS: '',
+    },
+  });
+  assert.notEqual(r.error?.code, 'ETIMEDOUT', 'NO_PIN route 读取 shared workflow-state 会在 FIFO 上卡死');
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-FIFO')),
+    '纯框架 prompt 不得因 display state 创建项目 identity');
+  console.log('PASS IDENTITY-FIFO-001 NO_PIN route 对 shared workflow-state 零读取');
 }
 
 // ── DIGEST-001（BACKLOG #17 送达链，2026-07-21）：digest「待你裁决」标题的**生产端与消费端必须咬住** ──

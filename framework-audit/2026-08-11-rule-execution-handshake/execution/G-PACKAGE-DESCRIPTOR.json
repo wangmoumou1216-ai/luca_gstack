@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "plan_id": "REX-20260811-001",
+  "gate": "G-PACKAGE",
+  "status": "AWAITING_TST_PRE_AND_USER_APPROVAL",
+  "created_at": "2026-08-11T05:02:48Z",
+  "expires_at": "2026-08-18T05:02:48Z",
+  "nonce": "9b8d3f528ee8d64239d792100966e7ab",
+  "parent": "789b1b800649de47a79096c72f40c03a54529303",
+  "canonical_repo": "/Users/luca/Desktop/项目/muse/lucagstack",
+  "self_path": "framework-audit/2026-08-11-rule-execution-handshake/execution/G-PACKAGE-DESCRIPTOR.json",
+  "patch_path": "framework-audit/2026-08-11-rule-execution-handshake/execution/cycle2-overlap.patch",
+  "scope": "Create one package-only child commit in an isolated assembly worktree, then create a second fresh execution worktree from that commit. Do not move canonical main, stage canonical index, include unrelated WIP, or push.",
+  "patch_targets": [
+    {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-EXECUTION-PLAN.md",
+      "before_sha256": "19711435e97eb4c7f27b2185bb5f9b6bfe8f04d78d160be73e78ff8c8afacf28",
+      "after_sha256": "4bfbfed81496fe53174a73bc4242b1b0043cc01292db636c379e0dd1892c12d7"
+    },
+    {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-HANDOFF.md",
+      "before_sha256": "57436e3496c641ee0b8393dc7cc569c334a7a5771c18e68b687d7a03f0d507ad",
+      "after_sha256": "9f7837c44f9c3ef85d00f219e5beee5479bd7d05b5a8a71429d5aa20cce0b0d3"
+    }
+  ],
+  "commit_entries": [
+    {"path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-EXECUTION-PLAN.md", "mode": "PATCH_RESULT", "sha256": "4bfbfed81496fe53174a73bc4242b1b0043cc01292db636c379e0dd1892c12d7"},
+    {"path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-HANDOFF.md", "mode": "PATCH_RESULT", "sha256": "9f7837c44f9c3ef85d00f219e5beee5479bd7d05b5a8a71429d5aa20cce0b0d3"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md", "mode": "CURRENT", "sha256": "ca4d57b0057dea529943e167b833eaca5a07d51495fc0f62e2dd47ac23daf4d8"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/FINAL-JUDGE-R1.md", "mode": "CURRENT", "sha256": "1ed96a4e8fc28ffc01552f6d0c043804dead5a3e681595e3d793db3f0632670c"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/FINAL-JUDGE.md", "mode": "CURRENT", "sha256": "d4a06781c6c0cd8e2fd8eaaa208a8b7b00aa12dd420fdcb33dbee7d8df17aa8f"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/HANDSHAKE.md", "mode": "CURRENT", "sha256": "13c2f127becd58175d515b79e8763fc1fed961c43e75c55e27d9ac261878c0e6"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/REDTEAM-HANDOFF.md", "mode": "CURRENT", "sha256": "a75f57d5ed1e384b90cb3baf0bbd9a6f7959be8a260cbe755bb44f6faa6402d5"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/ROUND-1-REDTEAM.md", "mode": "CURRENT", "sha256": "2e4ff42c82958ef41b00836d24cca5ce7d6b3ff43411d918232bc6e5ca2df53e"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/execution/G-PLAN-RESULT.json", "mode": "CURRENT", "sha256": "1864c79f41aa365482f2b93dcfbcbea38df1b84da6c4be4b8c5c28d44db3e19d"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/execution/U-001-BASELINE.json", "mode": "CURRENT", "sha256": "3d895e1a480616a54d3bce1a86ec54aa25d308b79dce65df6ecef9c12539b275"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/execution/cycle2-overlap.patch", "mode": "CURRENT", "sha256": "5d238e95f82c4cc79298f58bac37e24da1dff20c17cde42345908141309871c9"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/final-plan-manifest.json", "mode": "CURRENT", "sha256": "89555b30ebddaf2f32143c9c54a52f57d566c4fe9210bff145218adfc40b4144"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/g-plan-proposal.json", "mode": "CURRENT", "sha256": "7948abf601a80c9f4267dbbdf7b9cde1b0d90e85e729dc654df768804266443e"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/obligation-source-manifest.json", "mode": "CURRENT", "sha256": "5b66b5814addeb97e1cc4f7d890a5897f180023ca3a4c285f5898c1e3df228ff"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/tools/verify-final-plan.mjs", "mode": "CURRENT", "sha256": "89b80647830b2469a7ba09068e02ec2dfcc2527bcde6ef9cac6618428560d24c"},
+    {"path": "framework-audit/2026-08-11-rule-execution-handshake/tools/verify-u001-package.mjs", "mode": "CURRENT", "sha256": "56950e28978929328b2fd656be7d08222ebf9969a0d9b84b4849d0758005202d"}
+  ],
+  "exact_changed_paths": [
+    "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-EXECUTION-PLAN.md",
+    "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-HANDOFF.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/FINAL-JUDGE-R1.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/FINAL-JUDGE.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/HANDSHAKE.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/REDTEAM-HANDOFF.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/ROUND-1-REDTEAM.md",
+    "framework-audit/2026-08-11-rule-execution-handshake/execution/G-PACKAGE-DESCRIPTOR.json",
+    "framework-audit/2026-08-11-rule-execution-handshake/execution/G-PLAN-RESULT.json",
+    "framework-audit/2026-08-11-rule-execution-handshake/execution/U-001-BASELINE.json",
+    "framework-audit/2026-08-11-rule-execution-handshake/execution/cycle2-overlap.patch",
+    "framework-audit/2026-08-11-rule-execution-handshake/final-plan-manifest.json",
+    "framework-audit/2026-08-11-rule-execution-handshake/g-plan-proposal.json",
+    "framework-audit/2026-08-11-rule-execution-handshake/obligation-source-manifest.json",
+    "framework-audit/2026-08-11-rule-execution-handshake/tools/verify-final-plan.mjs",
+    "framework-audit/2026-08-11-rule-execution-handshake/tools/verify-u001-package.mjs"
+  ],
+  "excluded": {
+    "tracked_dirty_count": 9,
+    "tracked_dirty_ownership": "UNRELATED_UNKNOWN_WIP",
+    "all_non_package_untracked": "UNRELATED_UNKNOWN_WIP",
+    "canonical_branch_move": false,
+    "remote_change": false,
+    "force": false
+  },
+  "assembly_contract": [
+    "Revalidate PACKAGE_PROPOSAL_PASS and canonical dirty hashes immediately before mutation.",
+    "Create a detached assembly worktree from the exact parent; copy only CURRENT entries and apply the frozen patch.",
+    "Stage only exact_changed_paths inside the assembly worktree; reject any missing or extra cached path.",
+    "Create one child commit, create a dedicated local branch at that child, then create a second fresh execution worktree.",
+    "Run TST-001 POST with the approved descriptor SHA; canonical main/index/WIP must remain unchanged. No push."
+  ],
+  "approval_template": "APPROVE G-PACKAGE <descriptor_sha256> 9b8d3f528ee8d64239d792100966e7ab"
+}

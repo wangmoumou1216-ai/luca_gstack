@@ -23,15 +23,29 @@
 #     （我此前在模块矩阵里写这条降级链"纯 bash、零 harness 依赖、可用"——**是错的**，
 #       那是静态推断，没在沙箱里真跑过。）
 #
-# 【口径】只加这两条，不放开别的。仓库本身在工作根内、本来就可写，无需列出。
-# 断言 S13 守护本文件与这两条路径的存在（改坏了会红）。
+#  4. PROJECTS_ROOT（`$HOME/Desktop/项目`，单真值源 scripts/project.sh:16）—— **skill 产出与流程状态**。
+#     `docs/`、`.claude/workflow-state.yaml`、`.claude/current-topic.txt` 三者都是**软链**，
+#     目标落在 `$PROJECTS_ROOT/<项目>/` 下，即工作根之外。
+#     实测未加时：`docs/`、`<项目>/.luca/`、`$PROJECTS_ROOT` 全部 `Operation not permitted`。
+#     后果：**所有 skill 产出（PRD/design-brief/tech-spec/handoff/plans）与流程状态写入全部静默失败**。
+#     【为什么前三条扫出来了、这条没有 —— 漏因是结构性的，值得后来者记住】
+#     上一轮的扫法是 `git ls-files` 过可执行文件、提取 `$HOME`/`~`/`/Users/luca` **绝对路径**。
+#     而这三条在脚本里一律写作**相对路径**（`docs/...`），绝对路径只在**运行时由软链解析**才出现，
+#     ⇒ 静态扫法在结构上就覆盖不到。**凡"软链指向工作根之外"的路径，绝对路径扫描一律扫不出，
+#     必须另用「沙箱内真写探针」这一类运行时手段来发现。**
+#     范围取 `$PROJECTS_ROOT` 整体而非单个项目目录：`project.sh switch/new` 要写**别的**项目的
+#     `.luca/`，限死单项目会让 PROJECT GATE 失效。
+#
+# 【口径】只加这四条，不放开别的。仓库本身在工作根内、本来就可写，无需列出。
+# 断言 S13 守护本文件与这四条路径的存在（改坏了会红）。
 
 [sandbox_workspace_write]
-# 三条工作根之外的必写路径（少任一条 → 对应能力静默失效）
+# 四条工作根之外的必写路径（少任一条 → 对应能力静默失效）
 writable_roots = [
   "/Users/luca/Desktop/luca_gstack",                                    # 母版仓：记忆权威 store
   "/Users/luca/.claude/projects/-Users-luca-Desktop-luca-gstack/memory", # 全局个人记忆（范围取最窄）
   "/Users/luca/.luca",                                                  # muse app IPC spool
+  "/Users/luca/Desktop/项目",                                            # PROJECTS_ROOT：skill 产出 + 流程状态（软链目标）
 ]
 
 # 发现层依赖 gh（external-skill-scout 16 处 / framework-evolution-scout 12 处）；
