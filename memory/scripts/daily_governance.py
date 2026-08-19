@@ -390,6 +390,28 @@ def check_person_memory():
                     "合并记忆时：被并入内容写进**吸收者的正文文件**，索引行只留钩子，"
                     "原文件移入 archive/ 并保留 [[old]] → 已并入 [[new]] 的指针（勿直接删链接）"
                 )
+        # 版本控制看护（2026-08-15）：person 目录此前不在任何 git 里，一次误改零回滚。
+        # 现已 git init + 公开 remote，但**写入侧是 Stop hook 自动写的、没有任何东西负责提交**——
+        # 建了仓不接编排层就只是个快照摆设（采纳≠可达）。只读提醒，绝不自动 commit：
+        # 何时把哪些记忆定版是人的判断，不是治理脚本该替他做的。
+        try:
+            if (gdir / ".git").is_dir():
+                import subprocess as _sp
+                _r = _sp.run(["git", "-C", str(gdir), "status", "--porcelain"],
+                             capture_output=True, text=True, timeout=10)
+                _dirty = [l for l in _r.stdout.splitlines() if l.strip()]
+                if _dirty:
+                    issues.append(
+                        f"person 记忆有 {len(_dirty)} 个未提交改动（仓已建但没人提交，git 里仍是旧快照）"
+                        f" — 定版：cd \"{gdir}\" && git add -A && git commit -m \"memory: ...\""
+                    )
+                _a = _sp.run(["git", "-C", str(gdir), "rev-list", "--count", "@{u}..HEAD"],
+                             capture_output=True, text=True, timeout=10)
+                _n = (_a.stdout or "").strip()
+                if _a.returncode == 0 and _n.isdigit() and int(_n) > 0:
+                    issues.append(f"person 记忆有 {_n} 个 commit 未推送 — cd \"{gdir}\" && git push")
+        except Exception:  # noqa: BLE001 — git 不可用不影响其余看护
+            pass
     except Exception as e:  # noqa: BLE001 — 看护绝不打断治理
         issues.append(f"person 层看护异常：{e}")
     return issues
