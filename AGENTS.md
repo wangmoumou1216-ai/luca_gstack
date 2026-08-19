@@ -142,6 +142,11 @@ python3 memory/scripts/search_memory.py "<task/skill/topic>" --limit 5
 Only use `get_memory.py --layer ...` after search indicates a specific layer is needed. Do not
 read memory long files during normal startup.
 
+Since 2026-08-15 the **person** (global personal memory) and **project** (project-local) layers
+are searchable: `search_memory.py "<query>" --layer person|project` (both are also included in
+`--layer all`). `MEMORY.md` itself and un-adjudicated `candidate_*` files are excluded from the
+search surface; `--include-candidates` opts the latter in and tags them `status: CANDIDATE`.
+
 If a task involves design workflow, prototype work, PRD, idea analysis, review, Figma, or a
 slash-command-like request, also read:
 

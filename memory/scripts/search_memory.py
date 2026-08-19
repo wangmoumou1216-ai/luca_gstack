@@ -300,6 +300,14 @@ def base_result(layer: str, record: dict, path: Path) -> dict:
     if layer == "semantic":
         result["fact"] = str(record.get("fact", ""))
         result["title"] = str(record.get("domain", "semantic"))
+    elif layer in ("person", "project"):
+        result["title"] = str(record.get("title") or record.get("id"))
+        result["path"] = str(record.get("_path") or path)
+        result["source"] = result["path"]
+        if record.get("status") == "CANDIDATE":
+            result["status"] = "CANDIDATE"   # 未经裁决，检索者须看得出区别
+        if record.get("project"):
+            result["project"] = record["project"]
     elif layer == "eval":
         result["title"] = str(record.get("topic") or record.get("skill_name") or "eval")
     else:
@@ -373,6 +381,121 @@ def load_archive_episodes() -> list[dict]:
     return rows
 
 
+# person / project 层的数据在 MEMORY_ROOT **之外**（绝对路径），因此必须自己守隔离：
+# 否则任何把 MEMORY_ROOT 指向临时目录的测试或沙箱，都会被灌进真实的个人记忆
+# （2026-08-15 首版就这么漏了，被 test_tokenize_cjk_sentence_query_hits 抓到——
+# 隔离的 episodic fixture 里冒出了真实的 muse/MEMORY）。
+# 规则：只有在**权威 store** 上作业时才默认加载；显式设了目录 env 则按显式来（测试可 opt-in）。
+AUTHORITATIVE_MEMORY_ROOT = "/Users/luca/Desktop/luca_gstack"  # 与 daily_governance 同一硬编码哨兵
+_ON_AUTHORITATIVE = str(ROOT) == AUTHORITATIVE_MEMORY_ROOT
+
+# **隔离只由 MEMORY_ROOT 判定**，`GLOBAL_MEMORY_DIR` 只决定「去哪读」不决定「读不读」——
+# 它在 luca 的环境里是常驻导出的，拿它当「调用方显式 opt-in」会让守卫恒为真（2026-08-15
+# 首版就这么写，实测临时 MEMORY_ROOT 下真人记忆照样漏进隔离 fixture）。
+# 测试要单测 person/project 层时用 MEMORY_PERSON_DIR / MEMORY_PROJECTS_DIR——
+# 这两个名字环境里不存在，置位即真实意图。
+_PERSON_OPTIN = os.environ.get("MEMORY_PERSON_DIR")
+_PROJECTS_OPTIN = os.environ.get("MEMORY_PROJECTS_DIR")
+
+if _PERSON_OPTIN:
+    PERSON_DIR = Path(_PERSON_OPTIN)
+elif _ON_AUTHORITATIVE:
+    PERSON_DIR = Path(os.environ.get(
+        "GLOBAL_MEMORY_DIR",
+        str(Path.home() / ".claude" / "projects" / "-Users-luca-Desktop-luca-gstack" / "memory"),
+    ))
+else:
+    PERSON_DIR = None
+
+if _PROJECTS_OPTIN:
+    PROJECTS_DIR = Path(_PROJECTS_OPTIN)
+elif _ON_AUTHORITATIVE:
+    PROJECTS_DIR = Path(os.environ.get("PROJECTS_ROOT", str(Path.home() / "Desktop" / "项目")))
+else:
+    PROJECTS_DIR = None
+INCLUDE_CANDIDATES = False  # --include-candidates 打开
+
+
+def _strip_frontmatter(text: str) -> str:
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            return parts[2]
+    return text
+
+
+def _md_record(path: Path, layer: str) -> dict:
+    """把一个记忆 .md 文件读成检索记录。
+
+    **不合成 date/added 字段**：person/project 文件只有 mtime，而 mtime 反映的是「上次编辑」
+    不是「经验发生时间」——治理动作（改死链、压索引）会把一批文件的 mtime 刷新，若拿它当
+    recency 加分，刚被改过的文件会在所有查询里凭空上浮。record_date() 取不到就返回 None、
+    recency 不加分，这正是我们要的（宁可无时间信号，不要假时间信号）。
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    body = _strip_frontmatter(text)
+    desc = ""
+    m = re.search(r"^description:\s*(.+)$", text, re.M)
+    if m:
+        desc = m.group(1).strip().strip('"')
+    return {
+        "id": path.stem,
+        "title": desc or path.stem,
+        "summary": desc,
+        "text": body,
+        "status": "CANDIDATE" if path.name.startswith("candidate_feedback_") else "ACTIVE",
+        "_path": str(path),
+        "layer_hint": layer,
+    }
+
+
+def load_person_layer() -> tuple[Path, list[dict]]:
+    """全局个人记忆（person 层）。2026-08-15 接入——此前 search/get 对该层零覆盖，
+    76 个文件只能靠每 session 全量注入的 MEMORY.md 索引触达，索引行因此被迫承担全文职能。
+
+    两条排除（都不是保守，是实测的）：
+    - **MEMORY.md 本身排除**：18k 字符、覆盖全部主题，作为单条 record 会命中几乎任何 query，
+      是通吃型吸引子（它的内容已经每 session 全量注入，再进检索面纯属重复）。
+    - **candidate_feedback_* 默认排除**：按 extraction-bar 它们处在冷静期、未经 luca 裁决，
+      让未批准内容与已批准记忆并列检索会让前者压过后者（与红线 SC-20260523-003
+      「提案者不得自评晋升」同精神）。`--include-candidates` 可纳入，纳入时带 status=CANDIDATE。
+    """
+    rows = []
+    if PERSON_DIR and PERSON_DIR.is_dir():
+        for p in sorted(PERSON_DIR.glob("*.md")):
+            if p.name == "MEMORY.md" or ".bak" in p.name:
+                continue
+            if p.name.startswith("candidate_feedback_") and not INCLUDE_CANDIDATES:
+                continue
+            try:
+                rows.append(_md_record(p, "person"))
+            except Exception:  # noqa: BLE001 — 单文件读失败不拖垮整层
+                continue
+    return (PERSON_DIR or ROOT), rows
+
+
+def load_project_layer() -> tuple[Path, list[dict]]:
+    """各下游项目的本地记忆（`<项目>/.luca/memory/*.md`）。与 person 层同样此前零覆盖。
+
+    记录带 `project` 字段，故 `--project <名>` 过滤对本层生效（对 episodic 沿用旧语义）。
+    """
+    rows = []
+    if PROJECTS_DIR and PROJECTS_DIR.is_dir():
+        for proj in sorted(PROJECTS_DIR.iterdir()):
+            mem = proj / ".luca" / "memory"
+            if not mem.is_dir():
+                continue
+            for p in sorted(mem.glob("*.md")):
+                try:
+                    rec = _md_record(p, "project")
+                    rec["project"] = proj.name
+                    rec["id"] = f"{proj.name}/{p.stem}"
+                    rows.append(rec)
+                except Exception:  # noqa: BLE001
+                    continue
+    return (PROJECTS_DIR or ROOT), rows
+
+
 def load_layer(layer: str) -> tuple[Path, list[dict]]:
     if layer == "episodic":
         rows = read_jsonl(EPISODIC_INDEX)
@@ -381,12 +504,19 @@ def load_layer(layer: str) -> tuple[Path, list[dict]]:
         return EPISODIC_INDEX, rows
     if layer == "semantic":
         return SEMANTIC_FACTS, parse_semantic_facts(SEMANTIC_FACTS)
+    if layer == "person":
+        return load_person_layer()
+    if layer == "project":
+        return load_project_layer()
     return EVAL_LOG, read_jsonl(EVAL_LOG)
 
 
 def passes_filters(layer: str, record: dict, skill: str, topic: str, project: str = "") -> bool:
     if topic and topic.lower() not in str(record.get("topic", "")).lower() and topic.lower() not in as_text(record):
         return False
+    if project and layer == "project":
+        if project.lower() != str(record.get("project", "")).lower():
+            return False
     if project and layer == "episodic":
         rec_proj = str(record.get("project", "")).strip()
         if rec_proj:
@@ -405,7 +535,7 @@ def passes_filters(layer: str, record: dict, skill: str, topic: str, project: st
 
 def search(query: str, limit: int, layer: str, skill: str, topic: str, project: str = "") -> list[dict]:
     tokens = tokenize(query)
-    layers = ["episodic", "semantic", "eval"] if layer == "all" else [layer]
+    layers = ["episodic", "semantic", "eval", "person", "project"] if layer == "all" else [layer]
     results = []
     for layer_name in layers:
         path, rows = load_layer(layer_name)
@@ -586,7 +716,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("query", nargs="?", default="")
     parser.add_argument("--limit", type=int, default=10)
-    parser.add_argument("--layer", choices=["episodic", "semantic", "eval", "all"], default="all")
+    parser.add_argument("--layer", choices=["episodic", "semantic", "eval", "person", "project", "all"], default="all")
+    parser.add_argument("--include-candidates", action="store_true", help="person 层纳入未裁决的 candidate_feedback_*（默认排除；纳入时结果带 status=CANDIDATE）")
     parser.add_argument("--skill", default="*")
     parser.add_argument("--topic", default="")
     parser.add_argument("--project", default="", help="按项目作用域过滤 episodic（含历史记录文本兜底）")
@@ -614,6 +745,10 @@ def main() -> int:
 
     global INCLUDE_ARCHIVE
     INCLUDE_ARCHIVE = bool(args.include_archive)
+
+    global INCLUDE_CANDIDATES
+
+    INCLUDE_CANDIDATES = args.include_candidates
 
     rows = search(args.query, args.limit, args.layer, args.skill, args.topic, args.project)
     # Fail-safe instrumentation: logged AFTER computing results, swallows all errors,

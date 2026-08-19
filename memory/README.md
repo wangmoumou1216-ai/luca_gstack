@@ -61,11 +61,24 @@ python3 memory/scripts/search_memory.py "路由 触发词" --project muse   # �
   默认关是为零噪音/零性能回归；`noisy-*.jsonl`（因是噪音而归档）即便开启也不并入，与热窗同 id 的副本自动去重）
 - `semantic/promoted-facts.yaml`
 - `evals/eval-log.jsonl`
+- **`person` 层**（全局个人记忆 `~/.claude/projects/-Users-luca-Desktop-luca-gstack/memory/*.md`，
+  2026-08-15 接入）。**`MEMORY.md` 本身不进检索面**（18k 字符覆盖全主题＝通吃型吸引子，且已每
+  session 全量注入）；`candidate_feedback_*` **默认排除**（冷静期未裁决内容不与已批准记忆并列），
+  `--include-candidates` 可纳入、结果带 `status: CANDIDATE`。
+- **`project` 层**（各下游项目 `<项目>/.luca/memory/*.md`，同日接入）。记录带 `project` 字段，
+  `--project <名>` 对本层按项目名精确过滤。
+
+> **隔离**：后两层的数据在 `MEMORY_ROOT` **之外**，因此只在「作业于权威 store」时默认加载；
+> `GLOBAL_MEMORY_DIR` 只决定去哪读、**不决定读不读**（它在真实环境里是常驻导出的，
+> 拿它当 opt-in 会让隔离恒失效）。测试单测这两层用 `MEMORY_PERSON_DIR` /
+> `MEMORY_PROJECTS_DIR`——这两个名字环境里不存在，置位即真实意图。
+> 这两层**不合成日期**：文件只有 mtime，而 mtime 是「上次编辑」不是「经验发生时间」，
+> 治理动作会刷新一批 mtime，拿它当 recency 会让刚改过的记忆凭空上浮。
 
 支持参数：
 
 ```text
-python3 memory/scripts/search_memory.py "query" [--limit N] [--layer episodic|semantic|eval|all] [--skill X] [--topic X] [--project X] [--include-archive] [--json]
+python3 memory/scripts/search_memory.py "query" [--limit N] [--layer episodic|semantic|eval|person|project|all] [--include-candidates] [--skill X] [--topic X] [--project X] [--include-archive] [--json]
 ```
 
 输出字段包含 `layer`、`id`、`title` 或 `fact`、`score`、`reasons`、`source`、`path`。评分理由会展示关键词命中、skill/topic 过滤、semantic stable/confidence、eval gate_status 和 recency。默认输出人类可读文本；`--json` 输出 JSON list。脚本兼容 `MEMORY_ROOT`，并对 `promoted-facts.yaml` 做轻量容错解析，单条 YAML 异常不会导致整层检索为空。

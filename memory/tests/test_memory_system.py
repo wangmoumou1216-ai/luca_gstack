@@ -1538,5 +1538,94 @@ class BenchmarkDriftWatcherTests(unittest.TestCase):
             self.assertTrue(any("o/good" in i and "compare/" in i for i in issues), issues)
 
 
+class PersonProjectLayerTests(unittest.TestCase):
+    """person / project 层接入检索（2026-08-15）。这两层的数据在 MEMORY_ROOT **之外**，
+    因此隔离必须自己守——回归重点不是"能不能搜到"，是"不该搜到时真的搜不到"。"""
+
+    def run_search(self, *args, env=None):
+        merged = os.environ.copy()
+        merged.update({"MEMORY_SEARCH_SOURCE": "test"})
+        if env:
+            merged.update(env)
+        r = subprocess.run(
+            [sys.executable, str(ROOT / "memory" / "scripts" / "search_memory.py"), *args, "--json"],
+            cwd=ROOT, text=True, capture_output=True, env=merged,
+        )
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(r.stdout or "[]")
+
+    def _fixture(self, tmp):
+        """隔离的 person 目录 + 一个 fake 项目本地记忆。"""
+        person = Path(tmp, "person")
+        person.mkdir(parents=True)
+        # MEMORY.md 必须**含查询词**，否则「排除吸引子」这条断言恒真、变异不转红
+        # （首版没放，撤掉排除逻辑后测试照样绿——空断言）。
+        (person / "MEMORY.md").write_text(
+            "# Index\n\n- [zzz](feedback_zzz.md) — 蝾螈标记 索引行本身不该进检索面\n", encoding="utf-8")
+        (person / "feedback_zzz.md").write_text(
+            "---\nname: feedback_zzz\ndescription: 正式记忆 蝾螈标记\n---\n\n正文 蝾螈标记\n", encoding="utf-8")
+        (person / "candidate_feedback_yyy.md").write_text(
+            "---\nname: candidate_yyy\ndescription: 候选记忆 蝾螈标记\n---\n\n正文 蝾螈标记\n", encoding="utf-8")
+        projects = Path(tmp, "projects", "projX", ".luca", "memory")
+        projects.mkdir(parents=True)
+        (projects / "notes.md").write_text(
+            "---\nname: notes\ndescription: 项目事实 蝾螈标记\n---\n\n正文 蝾螈标记\n", encoding="utf-8")
+        return person, Path(tmp, "projects")
+
+    def test_isolation_not_broken_by_ambient_global_memory_dir(self):
+        """MEMORY_ROOT 指向临时目录时，person/project 层必须完全关闭——
+        即便环境里常驻着 GLOBAL_MEMORY_DIR（luca 环境实际如此）。首版把它当"显式 opt-in"，
+        守卫恒为真，真人记忆漏进了隔离 fixture。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "memory", "episodic").mkdir(parents=True)
+            Path(tmp, "memory", "episodic", "index.jsonl").write_text("", encoding="utf-8")
+            person, projects = self._fixture(tmp)
+            out = self.run_search("蝾螈标记", "--layer", "person", env={
+                "MEMORY_ROOT": tmp,
+                "GLOBAL_MEMORY_DIR": str(person),   # 环境常驻变量：不得被当成 opt-in
+                "PROJECTS_ROOT": str(projects),
+            })
+            self.assertEqual(out, [], "非权威 root 下 person 层必须为空（GLOBAL_MEMORY_DIR 不是 opt-in）")
+
+    def test_explicit_optin_reads_person_and_project(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "memory", "episodic").mkdir(parents=True)
+            Path(tmp, "memory", "episodic", "index.jsonl").write_text("", encoding="utf-8")
+            person, projects = self._fixture(tmp)
+            env = {"MEMORY_ROOT": tmp, "MEMORY_PERSON_DIR": str(person),
+                   "MEMORY_PROJECTS_DIR": str(projects)}
+            ids = [r["id"] for r in self.run_search("蝾螈标记", "--layer", "person", env=env)]
+            self.assertIn("feedback_zzz", ids)
+            self.assertNotIn("MEMORY", ids, "MEMORY.md 是通吃型吸引子，必须排除出检索面")
+            self.assertNotIn("candidate_feedback_yyy", ids, "未裁决候选默认不得与已批准记忆并列")
+
+            ids2 = [r["id"] for r in self.run_search(
+                "蝾螈标记", "--layer", "person", "--include-candidates", env=env)]
+            self.assertIn("candidate_feedback_yyy", ids2)
+            statuses = {r["id"]: r.get("status") for r in self.run_search(
+                "蝾螈标记", "--layer", "person", "--include-candidates", env=env)}
+            self.assertEqual(statuses.get("candidate_feedback_yyy"), "CANDIDATE",
+                             "纳入候选时必须带 status，检索者要看得出未裁决")
+
+            proj = self.run_search("蝾螈标记", "--layer", "project", env=env)
+            self.assertTrue(any(r["id"] == "projX/notes" for r in proj))
+            self.assertTrue(all(r.get("project") == "projX" for r in proj))
+
+    def test_person_records_carry_no_synthetic_date(self):
+        """person 文件只有 mtime，而 mtime 是「上次编辑」不是「经验发生时间」。
+        治理动作（改死链/压索引）会刷新一批文件的 mtime——若拿它当 recency 加分，
+        刚被改过的记忆会在所有查询里凭空上浮。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "memory", "episodic").mkdir(parents=True)
+            Path(tmp, "memory", "episodic", "index.jsonl").write_text("", encoding="utf-8")
+            person, _ = self._fixture(tmp)
+            out = self.run_search("蝾螈标记", "--layer", "person", env={
+                "MEMORY_ROOT": tmp, "MEMORY_PERSON_DIR": str(person)})
+            self.assertTrue(out)
+            for row in out:
+                self.assertNotIn("recency", " ".join(row.get("reasons", [])),
+                                 "person 层不得有 recency 加分（无真实日期字段可依）")
+
+
 if __name__ == "__main__":
     unittest.main()
