@@ -493,5 +493,45 @@ for (const command of [
   });
 }
 
+// ── IDENTITY-PATH-020：嵌套检出下的**绝对路径**框架作用域（此前整格无覆盖）────────────
+// 缺陷：classifyPath 缺 resolvedRelativeProjectAccess 那条 frameworkRoot 短路，导致同一操作
+// 写相对路径放行、写绝对路径被拒。Bash 与 Read/Edit 两条链都汇到 classifyPath，一处修复两处生效。
+check('IDENTITY-PATH-020a no-pin nested framework: Bash 绝对路径读框架文件应放行', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: `cat ${env.gstack}/scripts/verify.sh` } });
+  assert.equal(o, null, '框架自身文件不是项目作用域');
+});
+check('IDENTITY-PATH-020b no-pin nested framework: 仓根本身（无子路径）应放行', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: `git -C ${env.gstack} status` } });
+  assert.equal(o, null, 'insidePath 含根自身，仓根不该被判项目作用域');
+});
+check('IDENTITY-PATH-020c no-pin nested framework: Read 工具绝对路径读框架文件应放行', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/settings.json` } });
+  assert.equal(o, null, 'Read 与 Bash 必须同口径');
+});
+// —— 以下四条是**保护面**：豁免绝不能顺带放开共享展示路径或外层项目 ——
+check('IDENTITY-PATH-020d [保护面] 豁免不得放开 <gstack> 内的共享 docs/', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/docs/secret` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '共享展示链虽在 gstackRoot 内但必须仍受保护');
+});
+check('IDENTITY-PATH-020e [保护面] 豁免不得放开 workflow-state.yaml', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/workflow-state.yaml` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny');
+});
+check('IDENTITY-PATH-020f [保护面] 豁免不得放开 current-topic.txt', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/current-topic.txt` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny');
+});
+check('IDENTITY-PATH-020g [保护面] 豁免不得放开外层承载项目自己的目录', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'muse', 'docs', 'x.md') } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', 'lucagstack 的父项目目录不在豁免内');
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

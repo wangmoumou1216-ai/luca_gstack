@@ -149,6 +149,18 @@ function classifyPath(p, binding) {
   const gd = join(gstackRoot, 'docs');
   const gState = join(gstackRoot, '.claude', 'workflow-state.yaml');
   const gTopic = join(gstackRoot, '.claude', 'current-topic.txt');
+  // 框架自身作用域豁免（与 resolvedRelativeProjectAccess 的 frameworkRoot 短路**同口径**）。
+  // luca_gstack 的检出可能物理上就坐落在 PROJECTS_ROOT 之内（嵌套检出）。没有这条时，下面的
+  // PROJECTS_ROOT 循环会先把框架自己的每个文件判成项目作用域，无 pin 的框架/meta session 连
+  // 只读框架文件都被拒——而 route-guard 恰恰指示这类 session「不要 switch，直接在框架检出上
+  // 作业」，两条指令互斥。更要命的是不对称：相对路径走 resolvedRelativeProjectAccess 已放行，
+  // 绝对路径却在此被拒，**同一操作放行与否只取决于路径怎么拼**——这不是安全边界。
+  // Bash 与 Read/Edit 两条链最终都汇到 classifyPath（directProjectPathsAllowed 逐 token 调它），
+  // 补在这一处即可。**三条共享展示路径除外**：它们虽在 gstackRoot 内，正是本守卫要保护的项目软链。
+  if (insidePath(s, gstackRoot)
+      && !insidePath(s, gd) && !samePath(s, gState) && !samePath(s, gTopic)) {
+    return { scoped: false };
+  }
   // Direct absolute project paths are project scope too. A shared-alias-only
   // guard can be bypassed with /projects/<other>/... even when docs/ is safe.
   const roots = [PROJECTS_ROOT];
@@ -237,9 +249,13 @@ function directProjectPathsAllowed(cmd, binding) {
     const escaped = escapeRe(root);
     const re = new RegExp(`${escaped}(?:/[^\\s"';&|]+)?`, process.platform === 'darwin' ? 'gi' : 'g');
     for (const match of String(cmd || '').matchAll(re)) {
-      seen = true;
       const value = match[0];
       const classified = classifyPath(value, binding);
+      // 框架自身路径（嵌套检出时会落在 PROJECTS_ROOT 的正则里）不是项目作用域：
+      // classifyPath 已判 scoped:false，此处必须据此放行。原先只看 redirected，
+      // 而 scoped:false 天然没有 redirected，会把框架路径误判成"无 pin 的项目访问"。
+      if (!classified.scoped) continue;
+      seen = true;
       if (!classified.redirected) return { seen, allowed: false, value };
     }
   }
