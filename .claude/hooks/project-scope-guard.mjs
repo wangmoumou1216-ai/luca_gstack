@@ -157,8 +157,14 @@ function classifyPath(p, binding) {
   // 绝对路径却在此被拒，**同一操作放行与否只取决于路径怎么拼**——这不是安全边界。
   // Bash 与 Read/Edit 两条链最终都汇到 classifyPath（directProjectPathsAllowed 逐 token 调它），
   // 补在这一处即可。**三条共享展示路径除外**：它们虽在 gstackRoot 内，正是本守卫要保护的项目软链。
-  if (insidePath(s, gstackRoot)
-      && !insidePath(s, gd) && !samePath(s, gState) && !samePath(s, gTopic)) {
+  // 判据必须同时看**字面**与**归一化**两种形态：insidePath 是纯字符串前缀比对，
+  // 只看字面的话 `<gstackRoot>/../../otherproj/x` 会因为字面以 gstackRoot 开头而被误放行，
+  // 等于用 `..` 就能绕开整个项目隔离（2026-08-20 真机实测到该洞：直接路径被拒、穿越形式却列出了
+  // 别的项目内容）。resolve() 吃掉 `..`/`.` 后再查一次，逃逸出根的路径归一化后自然落不进来。
+  // 展示路径的排除也一律对归一化形态判，免得 `<gstackRoot>/x/../docs` 这类绕过保护面。
+  const gNorm = resolve(s);
+  if (insidePath(s, gstackRoot) && insidePath(gNorm, gstackRoot)
+      && !insidePath(gNorm, gd) && !samePath(gNorm, gState) && !samePath(gNorm, gTopic)) {
     return { scoped: false };
   }
   // Direct absolute project paths are project scope too. A shared-alias-only

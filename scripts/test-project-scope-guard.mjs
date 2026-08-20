@@ -533,5 +533,28 @@ check('IDENTITY-PATH-020g [保护面] 豁免不得放开外层承载项目自己
   assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', 'lucagstack 的父项目目录不在豁免内');
 });
 
+// ── IDENTITY-PATH-021：框架豁免不得被 `..` 穿越绕开（2026-08-20 真机实测到的洞）──────
+// insidePath 是纯字符串前缀比对。只看字面的话 `<gstackRoot>/../../otherproj/x` 会因为字面以
+// gstackRoot 开头而被误放行 —— 等于用 `..` 就能绕开整个项目隔离。判据必须同时看字面与
+// resolve() 归一化后的形态。下面第一条是**保护面**，第二条守住不要误伤根内的合法 `..`。
+check('IDENTITY-PATH-021a [保护面] 经 .. 逃出框架根去别的项目 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const escaped = `${env.gstack}/../../beta/secret.md`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: escaped } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '字面前缀匹配不等于真的在根内');
+});
+check('IDENTITY-PATH-021b [保护面] 经 .. 绕回共享展示链 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const sneaky = `${env.gstack}/scripts/../docs/secret`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: sneaky } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '展示路径的排除也要对归一化形态判');
+});
+check('IDENTITY-PATH-021c 根内的合法 .. 不被误伤（归一化后仍在根内 → 放行）', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const inner = `${env.gstack}/scripts/../.claude/settings.json`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: inner } });
+  assert.equal(o, null, '归一化后仍在框架根内，属框架作用域');
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
