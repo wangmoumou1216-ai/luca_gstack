@@ -556,5 +556,38 @@ check('IDENTITY-PATH-021c 根内的合法 .. 不被误伤（归一化后仍在�
   assert.equal(o, null, '归一化后仍在框架根内，属框架作用域');
 });
 
+// ── IDENTITY-PATH-022：框架豁免不得被**符号链接**绕开（2026-08-20 红队实证的洞）────────
+// resolve() 只做词法 `.`/`..` 折叠，**不解析软链**。只用它的话，gstackRoot 里任何一条名字不叫
+// docs/workflow-state.yaml/current-topic.txt 的软链都会被豁免吞掉，从而绕开 pin/redirect/deny
+// 全部逻辑（红队实测：backdoor -> 别的项目 可读可写；别名 -> 共享展示链 直接重开本 hook 要堵的原始洞）。
+// 判据必须问**真实目标**（realTargetOf 逐段上溯 + realpathSync），排除项也按 realpath 比。
+check('IDENTITY-PATH-022a [保护面] gstackRoot 内指向别的项目的软链 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const other = join(env.projects, 'beta');
+  mkdirSync(join(other, 'docs'), { recursive: true });
+  writeFileSync(join(other, 'docs', 'secret.md'), 'x');
+  symlinkSync(other, join(env.gstack, 'backdoor'));
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/backdoor/docs/secret.md` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '字面在根内不等于真实目标在根内');
+});
+check('IDENTITY-PATH-022b [保护面] 指向共享展示链的**别名**软链 → 必须 deny（否则重开原始洞）', () => {
+  const env = makeEnv({ nestedFramework: true, pins: {} , activeProject: 'alpha' });
+  symlinkSync(join(env.gstack, 'docs'), join(env.gstack, 'docs2'));
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/docs2/plan.md` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '经别名抵达展示链也必须被认出来');
+});
+check('IDENTITY-PATH-022c [保护面] gstackRoot 内的**悬空**软链 → 必须 deny（身份边界）', () => {
+  const env = makeEnv({ nestedFramework: true });
+  symlinkSync(join(env.projects, 'nonexistent-target'), join(env.gstack, 'dangling'));
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/dangling/x.md` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '悬空软链不可豁免');
+});
+check('IDENTITY-PATH-022d 普通框架文件不因这条加固被误伤（仍放行）', () => {
+  const env = makeEnv({ nestedFramework: true });
+  writeFileSync(join(env.gstack, 'CLAUDE.md'), '# x');
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/CLAUDE.md` } });
+  assert.equal(o, null, '真实目标确实在框架根内 → 属框架作用域');
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

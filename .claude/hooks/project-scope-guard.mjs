@@ -143,6 +143,36 @@ function confinedProjectPath(binding, parts) {
 
 // 判断一个路径是否"项目作用域"（docs/·state·topic），若是则给出重写后的绝对路径。
 // 返回 { scoped:boolean, redirected?:string }。scoped 但无 pin → 调用方 deny。
+// 求一个路径的**真实**目标（跟随符号链接）：逐段上溯到最近存在的祖先做 realpath，
+// 再把缺失的叶子段拼回去。与 confinedProjectPath 同款技术，抽出来给框架豁免复用。
+// 悬空软链视为身份边界（返回 null=不可豁免），与 confinedProjectPath 的判断保持一致。
+// **为什么必须有这个**：resolve() 只做词法 `.`/`..` 折叠，**不解析软链**。只用它的话，
+// gstackRoot 里任何一条名字不叫 docs/workflow-state/current-topic 的软链都会被豁免吞掉，
+// 从而绕开 pin/redirect/deny 全部逻辑（2026-08-20 红队实证：backdoor -> 别的项目 可读可写；
+// 更致命的是 docs2 -> docs 这种别名，直接重开了本 hook 存在的理由要堵的那个洞）。
+function realTargetOf(input) {
+  let probe = resolve(input);
+  const missing = [];
+  while (!existsSync(probe)) {
+    try {
+      if (lstatSync(probe).isSymbolicLink()) return null;   // 悬空软链 = 身份边界
+    } catch (error) {
+      if (error?.code !== 'ENOENT') return null;
+    }
+    const parent = join(probe, '..');
+    if (parent === probe) return null;
+    missing.unshift(probe.slice(parent.length + (parent.endsWith('/') ? 0 : 1)));
+    probe = parent;
+  }
+  try { return join(realpathSync(probe), ...missing); } catch { return null; }
+}
+
+// 尽力求 realpath；不可解析（如软链悬空）时退回字面值，供"排除"用途——
+// 排除面宁可用字面兜住，也不要因为解析失败而漏掉一条展示路径。
+function realOrLiteral(input) {
+  try { return realpathSync(input); } catch { return input; }
+}
+
 function classifyPath(p, binding) {
   if (typeof p !== 'string' || !p) return { scoped: false };
   let s = p.replace(/^\.\//, '');
@@ -162,9 +192,23 @@ function classifyPath(p, binding) {
   // 等于用 `..` 就能绕开整个项目隔离（2026-08-20 真机实测到该洞：直接路径被拒、穿越形式却列出了
   // 别的项目内容）。resolve() 吃掉 `..`/`.` 后再查一次，逃逸出根的路径归一化后自然落不进来。
   // 展示路径的排除也一律对归一化形态判，免得 `<gstackRoot>/x/../docs` 这类绕过保护面。
-  const gNorm = resolve(s);
-  if (insidePath(s, gstackRoot) && insidePath(gNorm, gstackRoot)
-      && !insidePath(gNorm, gd) && !samePath(gNorm, gState) && !samePath(gNorm, gTopic)) {
+  // 判据必须问**真实目标**，不能只看字面或词法归一化：
+  //   · 字面前缀 → `<gstackRoot>/../../otherproj/x` 会被误放行（词法洞，已修）
+  //   · 词法归一化 → 仍不解析软链，`<gstackRoot>/backdoor/...` 照样被误放行（本次修的洞）
+  // 三条共享展示路径的排除同样按 realpath 判，这样**经由任何别名软链**抵达它们的路径
+  // 都会被认出来，而不是只认字面那三个名字。
+  // 两侧必须锚在**同一基准**：gReal 是 realpath 形态；排除项若在软链不可解析时退回字面值
+  // （/tmp/... 而非 /private/tmp/...），前缀比对就会落空、保护面静默失效——首版这么写，
+  // 四条保护面断言当场转红。故兜底一律拼在 realpath 后的根上。
+  const rootReal = realOrLiteral(gstackRoot);
+  const underRoot = (abs, ...parts) => realTargetOf(abs) || join(rootReal, ...parts);
+  const gReal = realTargetOf(s);
+  if (gReal
+      && insidePath(s, gstackRoot)
+      && insidePath(gReal, rootReal)
+      && !insidePath(gReal, underRoot(gd, '/Users/luca/Desktop/项目/muse/docs'))
+      && !samePath(gReal, underRoot(gState, '.claude', 'workflow-state.yaml'))
+      && !samePath(gReal, underRoot(gTopic, '.claude', 'current-topic.txt'))) {
     return { scoped: false };
   }
   // Direct absolute project paths are project scope too. A shared-alias-only
