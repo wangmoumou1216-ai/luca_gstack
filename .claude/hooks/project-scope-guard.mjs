@@ -315,16 +315,44 @@ function directProjectPathsAllowed(cmd, binding) {
 // Expand only absolute-valued environment references for detection. Commands
 // that reach project/display paths through an env alias are denied instead of
 // rewritten: shell assignments can change the value again after this hook.
+// 从命令文本**自身**提取静态赋值（`NAME=值`），与 env 变量合流参与展开。
+// **为什么需要**：此前只展开已存在的 process.env 变量，于是把路径拆进本地变量就能让
+// PROJECTS_ROOT 的字面子串在命令文本里从不出现，静态匹配整个落空（2026-08-20 红队实证：
+// `A="…/项"; B="目"; cat "$A$B/别的项目/x"` 完全放行）。这条不需要恶意动机——agent 自己写
+// 脚本时用变量拼含中文/空格的路径是很自然的写法，会**无意**触发。
+// **明确不覆盖**（不要以为"变量间接已经处理了"）：命令替换 `$(...)`／反引号／`eval`／数组／
+// printf 拼接／字符串切片等动态求值。那属于"任何非执行式静态分析都躲不掉"的范畴，
+// 成本收益比低，故意不追。这里只堵**无意**触发的那一类——真要绕总能绕，但不该绊倒老实写法。
+function localAssignments(cmd) {
+  const map = new Map();
+  // 只在语句起始位置认赋值；值只吃静态形态：双引号（允许 $VAR 但禁 $( ）、单引号、裸词。
+  const re = /(?:^|[;&|\n]|\s)\s*([A-Za-z_][A-Za-z0-9_]*)=("(?:[^"`$]|\$(?!\())*"|'[^']*'|[^\s"'`;&|()$]+)/g;
+  for (const m of String(cmd || '').matchAll(re)) {
+    let v = m[2];
+    if (v[0] === '"' || v[0] === "'") v = v.slice(1, -1);
+    map.set(m[1], v);
+  }
+  return map;
+}
+
 function variableProjectReference(cmd, binding) {
   let expanded = String(cmd || '');
   const original = expanded;
-  const entries = Object.entries(process.env)
-    .filter(([key, value]) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && typeof value === 'string' && value.startsWith('/'))
-    .sort((a, b) => b[0].length - a[0].length);
-  for (const [key, value] of entries) {
-    expanded = expanded
-      .replace(new RegExp(`\\$\\{${escapeRe(key)}\\}`, 'g'), value)
-      .replace(new RegExp(`\\$${escapeRe(key)}\\b`, 'g'), value);
+  const table = Object.entries(process.env)
+    .filter(([key, value]) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && typeof value === 'string' && value.startsWith('/'));
+  for (const [key, value] of localAssignments(original)) table.push([key, value]);
+  table.sort((a, b) => b[0].length - a[0].length);
+  // 多趟：允许链式引用逐层解开；收敛即停，最多 3 趟防病态输入打转。
+  // **防御性冗余**：2026-08-20 变异实测改成单趟后现有断言全绿——赋值语句自身被展开时
+  // 字面路径就已出现并被抓到。留着是便宜的保险，但别以为它被测试守着。
+  for (let pass = 0; pass < 3; pass++) {
+    const before = expanded;
+    for (const [key, value] of table) {
+      expanded = expanded
+        .replace(new RegExp(`\\$\\{${escapeRe(key)}\\}`, 'g'), value)
+        .replace(new RegExp(`\\$${escapeRe(key)}\\b`, 'g'), value);
+    }
+    if (expanded === before) break;
   }
   if (process.env.HOME) expanded = expanded.replace(/(^|[\s"'`=:(;&|])~(?=\/)/g, (_m, a) => a + process.env.HOME);
   if (expanded === original) return null;

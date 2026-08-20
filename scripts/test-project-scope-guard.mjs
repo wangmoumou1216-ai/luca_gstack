@@ -589,5 +589,41 @@ check('IDENTITY-PATH-022d 普通框架文件不因这条加固被误伤（仍放
   assert.equal(o, null, '真实目标确实在框架根内 → 属框架作用域');
 });
 
+// ── IDENTITY-PATH-023：本地变量拼接不得让字面匹配落空（2026-08-20 红队实证）───────────
+// 此前只展开已存在的 process.env 变量，于是把路径拆进本地变量，PROJECTS_ROOT 的字面子串
+// 在命令文本里从不出现，静态匹配整个落空。这条不需要恶意动机——用变量拼含中文/空格的路径
+// 是很自然的写法，会**无意**触发。已知不覆盖 $(...)／反引号／eval 等动态求值（见实现注释）。
+check('IDENTITY-PATH-023a [保护面] 本地赋值拼出别的项目路径 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const head = env.projects.slice(0, -2), tail = env.projects.slice(-2);
+  const cmd = `A="${head}"; B="${tail}"; ls "$A$B/beta/"`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: cmd } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '拆进变量不该让静态匹配落空');
+});
+check('IDENTITY-PATH-023b [保护面] 链式赋值：字面路径全程不出现，只能靠展开抓', () => {
+  // 初版这条把完整路径写进了 `A="<projects>"`，正则直接就抓到了，跟本地赋值展开无关——
+  // 变异（拔掉本地赋值）不转红当场暴露它是弱断言。这里把路径拆开，字面从不出现。
+  const env = makeEnv({ nestedFramework: true });
+  const head = env.projects.slice(0, -2), tail = env.projects.slice(-2);
+  const cmd = `A="${head}"; B="${tail}"; C="$A$B/beta"; ls "$C/"`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: cmd } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '链式引用必须被解开');
+});
+check('IDENTITY-PATH-023d [保护面] 三级链式引用（合成变量名短于部件）同样要被抓', () => {
+  // 诚实标注：本条**不能**证明多趟展开是承重的。变异实测（把循环改成单趟）它仍绿——
+  // 因为赋值语句 `X="$AAA$BBB/beta"` 自身在第一趟就被展开成字面路径、当场被正则抓到，
+  // 与 $X 解不解得开无关。多趟循环是防御性冗余，我没能构造出证明它承重的输入。
+  const env = makeEnv({ nestedFramework: true });
+  const head = env.projects.slice(0, -2), tail = env.projects.slice(-2);
+  const cmd = `AAA="${head}"; BBB="${tail}"; X="$AAA$BBB/beta"; ls "$X/"`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: cmd } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '多趟展开是承重的，不是防御性冗余');
+});
+check('IDENTITY-PATH-023c 不构成项目路径的普通变量用法不被误伤', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'X=/tmp; MSG="just text"; ls "$X" && echo "$MSG"' } });
+  assert.equal(o, null, '误伤面必须为零，否则老实写法会被绊倒');
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
