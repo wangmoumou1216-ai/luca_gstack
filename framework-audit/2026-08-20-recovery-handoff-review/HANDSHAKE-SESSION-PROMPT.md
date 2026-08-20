@@ -35,8 +35,9 @@ node /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-08-19-rule-
 独立复算显示 45 项冻结值里 12 项漂移（明细见 REVIEW.md §1）。
 原因有两个，都必须承认：
 
-  (a) 冻结（2026-08-20 14:08）之后 canonical 又推进了 4 个提交并 push：
-      83e907b / 7b05466 / bc08674 / 8ae3d91，upstream/main 随之移动；
+  (a) 冻结（2026-08-20 14:08）之后 canonical 持续推进并 push（至本评审写就时已 +5 个提交：
+      83e907b / 7b05466 / bc08674 / 8ae3d91 / 9dbb139），upstream/main 随之移动。
+      **不要把这里的任何 SHA 当作当前值**——它此刻多半又变了，这正是 (b) 的症状。
   (b) 更根本：这份冻结把三类**注定会变**的东西写进了门禁——hook 持续追加的 untracked
       文件、别的 session 的在飞草稿目录、以及 upstream ref。在多 session 共享、hook 常驻
       写入的工作树上做字节级全树冻结，注定失效；实测它只活了约 20 分钟。
@@ -105,10 +106,11 @@ node /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-08-19-rule-
    truth（即 G-REFREEZE 的产物）。
 2. 建立 **current main（= G-REFREEZE 时的实际 HEAD，不是 ad9903d）** ↔ forensic branch 的
    owner/hunk matrix，特别处理八个 overlap paths。
-   **这条是本轮最重要的更正。** 原版把基线钉死在 ad9903d，而 canonical 已推进到 8ae3d91；
+   **这条是本轮最重要的更正。** 原版把基线钉死在 ad9903d，而 canonical 早已越过它——
    其中 .claude/hooks/project-scope-guard.mjs 与 scripts/test-project-scope-guard.mjs
-   各有 3 个新提交。用旧基线建矩阵，这些 hunk **不会被判 BLOCKED_DIRTY_OVERLAP，而是压根
-   不进矩阵**，于是 forensic 侧的旧守卫会以「唯一有主的版本」身份被恢复。
+   在 ad9903d 之后各有 >=3 个新提交（自己数，别信这里的数字）。用旧基线建矩阵，这些 hunk
+   **不会被判 BLOCKED_DIRTY_OVERLAP，而是压根不进矩阵**，于是 forensic 侧的旧守卫会以
+   「唯一有主的版本」身份被恢复。基线只能取 `git rev-parse HEAD` 的当场值。
 3. 未确认归属的 hunk 必须 BLOCKED_DIRTY_OVERLAP。
 4. 裁决 REX source-manifest drift、历史 G-PLAN/G-PACKAGE/G-CONTAIN、TST-001/TST-002，
    以及 root identity 已漂移的 G-OBLIGATION chain。
@@ -187,8 +189,8 @@ RULE_EXECUTION_VERIFIED
 ────────────────────────────────────────────────────────
 
 原版把 `git fetch upstream main` + 读 SESSION-CHANGE-DECLARATION.md 保留到最后一个
-integration task。**该前提已失效**：实测 upstream/main 与本地 HEAD 完全相同
-（均为 8ae3d9192b1b05a34313b5baf9ed96888a70d1d8），且
+integration task。**该前提已失效**：实测 upstream/main 与本地 HEAD **完全相同**
+（自己用 `git rev-parse HEAD refs/remotes/upstream/main` 复核，不要引用本文里的具体值），且
 
   git cat-file -e HEAD:framework-audit/2026-08-11-rule-execution-handshake/SESSION-CHANGE-DECLARATION.md
 
