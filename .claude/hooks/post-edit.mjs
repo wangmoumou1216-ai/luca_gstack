@@ -62,9 +62,14 @@ if (parsed) {
   maybeSpoolAutoOpen(data, sid);
 }
 
-// ── 产出物自动打开（2026-07-24）：luca app 内嵌会话（pty 注入 LUCA_APP=1）里，Write/Edit 落盘的
-//    html/md/图片投递 ~/.luca/open-spool（JSON 载荷，app 端 auto 模式后台打开）。终端 session 无
-//    LUCA_APP 静默跳过；legacy 裸路径协议（luca-open.sh）不受影响。全段 fail-open。
+// ── 产出物自动打开（2026-07-24；2026-08-21 收窄到仅 html）：luca app 内嵌会话（pty 注入
+//    LUCA_APP=1）里，Write/Edit 落盘的 **html** 投递 ~/.luca/open-spool（JSON 载荷，app 端 auto
+//    模式后台打开）。终端 session 无 LUCA_APP 静默跳过；legacy 裸路径协议（luca-open.sh）不受
+//    影响。全段 fail-open。
+//    为什么只剩 html：原白名单含 md/mdx/图片，于是任何 session 写一份报告/审计 md 就在 app 主页签
+//    栏冒一个文件页签（luca 2026-08-21：「执行过程中总是不停地打开一个 readme 的页签」）。诉求
+//    本来就是「HTML 产物主动推送」（CLAUDE.md「luca app 集成」节），md/图片属自动扩大的投递面。
+//    要看 md 仍有两条路：文件树点开、或显式跑 scripts/luca-open.sh（legacy 前台档，不受此限）。
 function maybeSpoolAutoOpen(data, sid) {
   try {
     if (process.env.LUCA_APP !== '1') return;
@@ -73,7 +78,7 @@ function maybeSpoolAutoOpen(data, sid) {
     if (!p.startsWith('/')) return;
     const base = p.slice(p.lastIndexOf('/') + 1);
     if (base.startsWith('.')) return;
-    if (!/\.(html?|md|markdown|mdx|png|jpe?g|svg|webp|gif)$/i.test(base)) return;
+    if (!/\.html?$/i.test(base)) return;                        // 仅 html：见上方「为什么只剩 html」
     const EXCLUDED_SEGS = ['memory', '.claude', '.luca', 'observability', 'node_modules', '.git'];
     if (p.split('/').some(s => EXCLUDED_SEGS.includes(s))) return;
     if (!statSync(p).isFile()) return;
