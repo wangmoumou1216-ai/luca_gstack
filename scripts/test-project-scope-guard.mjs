@@ -7,10 +7,19 @@
 import { spawnSync } from 'child_process';
 import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
 import { tmpdir } from 'os';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import assert from 'assert';
 
-const HOOK = resolve(process.cwd(), '.claude/hooks/project-scope-guard.mjs');
+// 被测守卫的定位：**按本脚本自身位置**，不按 process.cwd()。
+// 原写法是 resolve(process.cwd(), ...)（04a5faf, 2026-07-09 起未改），从非仓根 cwd 跑会
+// 静默变成 PASS=0 FAIL=88 且 **exit 仍是 0** —— 满屏红、无任何报错，极易被读成「守卫真的坏了」。
+// 2026-08-21 实测复现：仓根 88/0，中性目录 0/88。
+// PSG_HOOK_UNDER_TEST 是**显式**覆盖口，专供隔离变异夹具：把守卫连同 .claude/hooks/lib/*.mjs
+// 拷到临时目录后指向那份副本，即可在**不碰活体钩子**的前提下做变异测试
+// （守卫第 43/81 行有相对自身位置的动态 import，只拷单文件会 fail-open 静默退化，务必连 lib 一起拷）。
+const HOOK = process.env.PSG_HOOK_UNDER_TEST
+  || resolve(dirname(fileURLToPath(import.meta.url)), '..', '.claude/hooks/project-scope-guard.mjs');
 let pass = 0, fail = 0;
 function ok(name) { pass++; console.log('PASS ' + name); }
 function bad(name, e) { fail++; console.log('FAIL ' + name + ' :: ' + (e && e.message || e)); }

@@ -196,34 +196,29 @@ routing-steering-handshake 当前状态，并**由 luca 确认两个计划的执
 **两段式，第二段不做则第一段的绿不算数。**
 
 【第一段·状态】任何 hunk 应用、分支恢复、package 重建之后，当场跑出并留证。
-**必须用绝对路径，且必须先读下面这条 cwd 陷阱——否则你会对一个不存在的缺陷做出回退动作。**
+**从中性目录用绝对路径直接跑即可，不需要 cd 进仓库。**
 
-  cd <仓根> && node scripts/test-project-scope-guard.mjs   期望 88/88 且 FAIL=0，跑完立刻 cd 回中性目录
-  bash /Users/luca/Desktop/项目/muse/lucagstack/scripts/verify.sh        期望 PASS >= 75 且 FAIL=0
+  node /Users/luca/Desktop/项目/muse/lucagstack/scripts/test-project-scope-guard.mjs
+      期望 88/88 且 FAIL=0
+  bash /Users/luca/Desktop/项目/muse/lucagstack/scripts/verify.sh
+      期望 PASS >= 75 且 FAIL=0
 
   （烟雾信号，非权威判据，见下）
   grep -c realTargetOf     <仓根>/.claude/hooks/project-scope-guard.mjs   期望 >= 3
   grep -c 'resolve(input)' <仓根>/.claude/hooks/project-scope-guard.mjs   期望 >= 1
   grep -c localAssignments <仓根>/.claude/hooks/project-scope-guard.mjs   期望 >= 2
 
-**⚠ cwd 陷阱（已实测，必读）**：`scripts/test-project-scope-guard.mjs:13` 写的是
-`resolve(process.cwd(), '.claude/hooks/project-scope-guard.mjs')` —— 按**进程 cwd** 而非脚本
-自身位置定位被测文件。这行自 `04a5faf`(2026-07-09) 起从未改过，是**沉睡的既有 bug，不是本次
-引入的**。后果实测：
-
-  从仓根跑            → PASS=88 FAIL=0
-  从本稿钦定的中性目录跑 → **PASS=0 FAIL=88，而且 exit code 仍是 0**
-
-即：cwd 错了会给出一个**看起来像"守卫被回退了"的满屏红**，却没有任何报错提示。
-本稿通篇要求保持中性 cwd，两条指令因此直接冲突。
-**裁决**：跑这一条测试是本稿允许的唯一一次 `cd` 进仓根，跑完立即回中性目录；
-若看到 `PASS=0 FAIL=88` 或 `MODULE_NOT_FOUND`，**先判定为 cwd 副作用，不得据此触发
-REVERTS_SECURITY_FIX**。修那一行（改用脚本自身目录定位）是正确的根因修复，但它落在
-两个并发工作流的受控文件上，**不属于本次 recovery 的 scope，请单独提出、不要顺手改**。
+**关于此前那条 cwd 陷阱（已修，此处仅留历史说明）**：`test-project-scope-guard.mjs` 原先按
+`process.cwd()` 定位被测守卫（`04a5faf`, 2026-07-09 起未改），从非仓根 cwd 跑会给出
+`PASS=0 FAIL=88` 且 **exit 仍是 0**——满屏红、无任何报错，极易被误读成「守卫真的被回退了」
+并触发本条款的 REVERTS_SECURITY_FIX。**2026-08-21 已修**为按脚本自身位置定位，
+实测仓根与中性目录**均为 88/0**。因此本稿此前写的「唯一允许的一次 cd 进仓根」例外
+**已撤销**——不再需要进仓库，也就不再与 SAFE-BOOTSTRAP 的中性 cwd 纪律有任何张力。
+若你仍看到 `PASS=0 FAIL=88`，那说明这个修复被回退了，**先查这一点，再谈安全回退**。
 
 **权威性分级**：grep 三行只是**烟雾信号**——`grep -c` 只数字符串出现次数，加一行
 `// resolve(input) noop` 或保留符号名而清空函数体都能让它通过。唯一权威判据是
-`test-project-scope-guard.mjs` 的 88/88（且要在确认 cwd 正确之后）。两者不等权。
+`test-project-scope-guard.mjs` 的 88/88。两者不等权。
 
 【第二段·断言自证】做一次**故意的外科回退**，证明套件会转红——
 **但绝不在 canonical 的活体文件上做。**
@@ -246,7 +241,13 @@ REVERTS_SECURITY_FIX**。修那一行（改用脚本自身目录定位）是正�
      而是 `PROJECTS_ROOT` 悄悄退回硬编码默认、pin 读取全退化成 `NO_PIN`，
      套件给出 `PASS=57 FAIL=31` 这种**看起来像转红、其实是夹具死了**的结果。
      补齐 `lib/` 后实测阳性对照为 `PASS=88 FAIL=0`，与仓根一致。
-  2. **先跑阳性对照**：拷贝**未经修改**，在隔离位置跑套件，看结果是否与仓根一致（88/0）；
+  2. **先跑阳性对照**：拷贝**未经修改**，用**显式覆盖口**指向副本跑套件，看是否与仓根一致（88/0）：
+
+       PSG_HOOK_UNDER_TEST=<tmp>/.claude/hooks/project-scope-guard.mjs \
+         node /Users/luca/Desktop/项目/muse/lucagstack/scripts/test-project-scope-guard.mjs
+
+     （`PSG_HOOK_UNDER_TEST` 是 2026-08-21 为此专门加的覆盖口；此前只能靠 chdir 到隔离目录，
+      而那条路径有 cwd 耦合，正是上面那条陷阱。用覆盖口就不必 cd，活体钩子也永不被指向。）
      · 不一致 → **夹具无效，立即停止**。此时既不能说条款有效也不能说无效，
        如实记为「未能验证」并在人类门报告，**不得**改用原地回退绕过；
      · 一致 → 夹具可信，继续第 3 步；
@@ -254,7 +255,9 @@ REVERTS_SECURITY_FIX**。修那一行（改用脚本自身目录定位）是正�
   4. 转红 → 第一段的绿是真的，记下转红的断言编号；
      仍绿 → 这套断言测不到这个缺陷面，第一段的绿是摆设，必须先补断言再谈恢复。
 
-     **本条款已由评审方在补齐依赖后实测跑通，结论如下（供你对照，别当免跑理由）**：
+     **本条款已由评审方实测跑通（四向验证），结论如下（供你对照，别当免跑理由）**：
+     A 仓根 88/0 · B 中性目录 88/0 · C 覆盖口指未变异副本 88/0 · D 覆盖口指变异副本 83/5，
+     且全程活体钩子 md5 未变。
      变异 `realTargetOf(s)` → `resolve(s)` 得到 `PASS=83 FAIL=5`，总数守恒，**套件确实转红**。
      但转红的五条是 **020a/020b/020c/021c/022d ——全部是「误伤面」断言**
      （框架文件应放行 / 仓根应放行 / Read 与 Bash 同口径 / 根内合法 `..` 不误伤 /
