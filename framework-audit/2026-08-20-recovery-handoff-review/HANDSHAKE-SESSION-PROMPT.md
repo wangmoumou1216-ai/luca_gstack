@@ -156,13 +156,27 @@ node /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-08-19-rule-
 6. 如需新 package 或 obligation scope，计算 exact payload，并停在新的顶层人类门等待真实批准。
 7. 只有有效 gate 和独立 TST receipt 允许后，才能从最早未解决的 REX 节点恢复实现。
 
-**通报（经红队核实后已降级，不是文件级冲突）**：另有一条工作流
+**⚠ 协调门（第四轮独立红队把此前的降级推翻，已重新升级）**：另有一条工作流
 framework-audit/2026-08-20-routing-steering-handshake/ 在 2026-08-20 19:33 仍在写入，
 Round-2 红队 5 条 BLOCKER 围绕 TURN_ACTIVE / epoch / lease / 直接调用重放。
-核实结论：它自报 `Production hooks changed: no`，尚在普查/设计阶段；其计划点名的文件是
-**pin 事务侧**（project-pin.mjs / project.sh / session-restore / session-sync），
-**不含 project-scope-guard.mjs**。所以是**相邻面并发**，不是同文件冲突。
-处置：动 pin 事务侧文件前先读它，避免重复设计；不必把交集列为 BLOCKED_DIRTY_OVERLAP。
+**此前的降级依据是 2026-08-20 21:00 的一份 census 快照，已被证伪。**
+对**当前**的 `FINAL-EXECUTION-PLAN.md` 实测 `grep -c project-scope-guard` → **5 处命中**，
+包含它自己的 exact bridge path set：
+
+  .claude/hook-releases/g0-baseline-20260820/payload/.claude/hooks/project-scope-guard.mjs
+  .claude/hooks/project-scope-guard.mjs
+  .claude/hook-releases/g3-routing-steering-20260820/payload/.claude/hooks/project-scope-guard.mjs
+  scripts/test-project-scope-guard.mjs（其 DAG 里也跑同一条测试命令）
+
+即它计划通过一套全新的「hook-releases 世代 + runtime-dispatch bridge」**重新发布这个文件**，
+不是打几个 hunk。而本稿的非负条款却把这个文件的**当前字面内容**当作长期不变的安全基准。
+且该工作流的 handshake plan 自己记录着：它的基线**已经被评审方推到 main 的提交撞脱靶过一次**——
+「两个并发工作流在同一文件上互相绊倒」不是假设风险，是**已经发生过的事实**。
+
+**处置（硬门，不是通报）**：动 `.claude/hooks/project-scope-guard.mjs` 或
+`scripts/test-project-scope-guard.mjs` 之前，**必须**先读 routing-steering-handshake 当前的
+`FINAL-EXECUTION-PLAN.md` 与 `NEXT-SESSION-FINAL-HANDSHAKE-PLAN.md`，
+并**由 luca 确认两个计划的执行顺序**，然后才动手。不确认不得动这两个文件。
 
 ────────────────────────────────────────────────────────
 非负条款 —— 安全后置条件（不可协商）
@@ -170,20 +184,61 @@ Round-2 红队 5 条 BLOCKER 围绕 TURN_ACTIVE / epoch / lease / 直接调用�
 
 **两段式，第二段不做则第一段的绿不算数。**
 
-【第一段·状态】任何 hunk 应用、分支恢复、package 重建之后，当场跑出并留证：
+【第一段·状态】任何 hunk 应用、分支恢复、package 重建之后，当场跑出并留证。
+**必须用绝对路径，且必须先读下面这条 cwd 陷阱——否则你会对一个不存在的缺陷做出回退动作。**
 
-  node scripts/test-project-scope-guard.mjs      期望 >= 88/88 且 FAIL=0
-  bash  scripts/verify.sh                        期望 PASS >= 75 且 FAIL=0
-  grep -c realTargetOf     .claude/hooks/project-scope-guard.mjs    期望 >= 3
-  grep -c 'resolve(input)' .claude/hooks/project-scope-guard.mjs    期望 >= 1
-  grep -c localAssignments .claude/hooks/project-scope-guard.mjs    期望 >= 2
+  cd <仓根> && node scripts/test-project-scope-guard.mjs   期望 88/88 且 FAIL=0，跑完立刻 cd 回中性目录
+  bash /Users/luca/Desktop/项目/muse/lucagstack/scripts/verify.sh        期望 PASS >= 75 且 FAIL=0
 
-【第二段·断言自证】在真仓里做一次**故意的外科回退**——把框架豁免的判据从「真实目标」
-退回词法解析（`realTargetOf(s)` → `resolve(s)`，其余不动）——**证明套件会转红**，
-记下转红的断言编号，然后精确还原（`cp` 备份还原，禁止 `git checkout` 整文件）。
+  （烟雾信号，非权威判据，见下）
+  grep -c realTargetOf     <仓根>/.claude/hooks/project-scope-guard.mjs   期望 >= 3
+  grep -c 'resolve(input)' <仓根>/.claude/hooks/project-scope-guard.mjs   期望 >= 1
+  grep -c localAssignments <仓根>/.claude/hooks/project-scope-guard.mjs   期望 >= 2
 
-  转红 → 第一段的绿是真的；
-  仍绿 → **说明这套断言测不到这个缺陷面**，第一段的绿是摆设，必须先补断言再谈恢复。
+**⚠ cwd 陷阱（已实测，必读）**：`scripts/test-project-scope-guard.mjs:13` 写的是
+`resolve(process.cwd(), '.claude/hooks/project-scope-guard.mjs')` —— 按**进程 cwd** 而非脚本
+自身位置定位被测文件。这行自 `04a5faf`(2026-07-09) 起从未改过，是**沉睡的既有 bug，不是本次
+引入的**。后果实测：
+
+  从仓根跑            → PASS=88 FAIL=0
+  从本稿钦定的中性目录跑 → **PASS=0 FAIL=88，而且 exit code 仍是 0**
+
+即：cwd 错了会给出一个**看起来像"守卫被回退了"的满屏红**，却没有任何报错提示。
+本稿通篇要求保持中性 cwd，两条指令因此直接冲突。
+**裁决**：跑这一条测试是本稿允许的唯一一次 `cd` 进仓根，跑完立即回中性目录；
+若看到 `PASS=0 FAIL=88` 或 `MODULE_NOT_FOUND`，**先判定为 cwd 副作用，不得据此触发
+REVERTS_SECURITY_FIX**。修那一行（改用脚本自身目录定位）是正确的根因修复，但它落在
+两个并发工作流的受控文件上，**不属于本次 recovery 的 scope，请单独提出、不要顺手改**。
+
+**权威性分级**：grep 三行只是**烟雾信号**——`grep -c` 只数字符串出现次数，加一行
+`// resolve(input) noop` 或保留符号名而清空函数体都能让它通过。唯一权威判据是
+`test-project-scope-guard.mjs` 的 88/88（且要在确认 cwd 正确之后）。两者不等权。
+
+【第二段·断言自证】做一次**故意的外科回退**，证明套件会转红——
+**但绝不在 canonical 的活体文件上做。**
+
+> **本段原稿要求在真仓里原地回退，那是一个严重错误，已由独立红队打掉。**
+> 实证：`.claude/settings.json:42` 与 `.codex/hooks.json:35` 都把
+> `.claude/hooks/project-scope-guard.mjs` 接成 **PreToolUse 热路径钩子**，对**这台机器上
+> 所有并发 Claude/Codex session** 生效。原地把 `realTargetOf` 退回词法解析，等于在那个
+> 窗口内对**所有会话**真实撤掉 `..` 穿越与软链绕过的防护——而这两个洞是当天被红队
+> **实证复现过**的。代价不是"测试会失败"，是"当场真的削弱了跨项目隔离"。
+
+**正确做法（隔离 + 阳性对照先行）**：
+
+  1. 建临时目录，把守卫**拷贝**过去：`<tmp>/.claude/hooks/project-scope-guard.mjs`；
+  2. **先跑阳性对照**：拷贝**未经修改**，在隔离位置跑套件，看结果是否与仓根一致（88/0）；
+     · 不一致 → **夹具无效，立即停止**。此时既不能说条款有效也不能说无效，
+       如实记为「未能验证」并在人类门报告，**不得**改用原地回退绕过；
+     · 一致 → 夹具可信，继续第 3 步；
+  3. 在**拷贝**上做外科回退（`realTargetOf(s)` → `resolve(s)`，其余不动），再跑一次；
+  4. 转红 → 第一段的绿是真的，记下转红的断言编号；
+     仍绿 → 这套断言测不到这个缺陷面，第一段的绿是摆设，必须先补断言再谈恢复。
+  5. 全程 canonical 的 `.claude/hooks/project-scope-guard.mjs` **一个字节都不许动**。
+
+**为什么第 2 步的阳性对照不可省**：评审方自己就是在这里栽的——三次变异分别给出
+`56/32`，看着像转红，直到拿**字节完全相同的未变异副本**跑出**同样的 `56/32`** 才发现
+夹具是死的。没有阳性对照，你分不清「抓住了缺陷」和「夹具自己崩了」。
 
 任一段不满足 → 判 REVERTS_SECURITY_FIX，回退该次恢复并停在人类门。
 
