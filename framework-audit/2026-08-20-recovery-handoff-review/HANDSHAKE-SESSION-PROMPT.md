@@ -46,6 +46,9 @@ node /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-08-19-rule-
 
 - **禁止**手改 manifest 里的任何哈希/HEAD 让 verifier 通过。那是把命令改到能过检查而风险
   原样存在，直接判本次 recovery 无效。
+  **消歧（这两句表面矛盾，务必读清）**：禁的是**逐个改值**去迁就一份已过期的 manifest；
+  允许并且要求的是**整份重新测量生成**——差别在于前者让门禁去适应现实，后者让 manifest
+  重新反映现实，且必须经下面那道新的人类门。判据：你改的是「值」还是「测量」。
 - **禁止**跳过或注释掉门禁继续往下走。
 - 第一个工作项是 **G-REFREEZE**：重新采集冻结并**同时交付一个生成器**
   （`tools/emit-recovery-freeze.mjs` 或等价物），使 manifest 从此可复算、不再手工维护。
@@ -53,9 +56,19 @@ node /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-08-19-rule-
 - G-REFREEZE 必须**收窄冻结面**。判据是「这一项变了会不会让 adjudication 失效」：
   · 必须冻：forensic tip/tree/common_base、7 个 authority 的 SHA、3 个 containment 文件、
     8 条 overlap path 的内容身份、verifier 自身字节。
-  · 不得冻：全树 porcelain status、untracked 路径清单、upstream ref、别的 session 的
-    草稿目录、hook 追加的 jsonl。
+  · 不得冻：全树 porcelain status、untracked 路径清单、upstream ref 的 **OID（位置）**、
+    别的 session 的草稿目录、hook 追加的 jsonl。
+  · **必须冻 upstream 的 URL 身份（fetch 与 push 的 `--all` 全量列表，含基数）** ——
+    这条不能跟着 OID 一起砍掉：红队 B 的 **B-R4-P1-001** 正是发现「冻结的 upstream endpoint
+    不在 live gate 里」，remote URL 被改掉而所有 live 断言仍可全绿。
+    **端点身份要冻，端点位置不要冻**——前者被改是攻击，后者移动是正常 push。
 - G-REFREEZE 是**新的顶层人类门**：payload 算完停下等真实批准，不得自签。
+  **预期行为：你会在此处停住等 luca**，这是设计的一部分，不是卡死。
+- **只读阶段的例外，范围写死**：交付生成器意味着在「第一阶段只读」里写文件，与
+  SAFE-BOOTSTRAP「first recovery phase 不得改 live source/hook」表面冲突。裁决：
+  **允许**在 `framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/` 下新建生成器，
+  **不得**碰任何 live source / hook / skill / 生产脚本，**不得**在人类门批准前 commit/push。
+  超出这个范围的任何写入都回到只读禁令。
 
 只有 G-REFREEZE 获批并落地、verifier 在**新冻结**上给出唯一 RECOVERY_HANDOFF_GATE_PASS
 之后，才允许进入第 1 阶段。

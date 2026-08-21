@@ -138,14 +138,77 @@ CLAUDE.md 把「具体任务优先跑 `search_memory`」定为设计路径，而
 
 ---
 
+## 二之二、第三轮：换新眼睛攻**我自己的握手稿**（三条全中）
+
+第二轮攻的是我的**发现**；这一轮攻的是我的**交付物**。三条都是我自己写进去的缺陷。
+
+### R3-A1 我的两条指令表面自相矛盾，会让新 session 卡死 —— **已修**
+
+握手稿同时写着：
+
+- 「**禁止**手改 manifest 里的任何哈希/HEAD 让 verifier 通过」
+- 「第一个工作项是 **G-REFREEZE**：重新采集冻结」
+
+而重新采集冻结**就是**在改写 manifest 里的哈希和 HEAD。一个照字面执行的 session
+会判定这两条不可同时满足而停下。**这不是理论风险，是我交付物里的真实歧义。**
+
+已补消歧：禁的是**逐个改值**去迁就一份过期 manifest；要求的是**整份重新测量生成**。
+判据一句话——**你改的是「值」还是「测量」。**
+
+### R3-A2 我的 G-REFREEZE 要求在他们定义为只读的阶段写码 —— **已修**
+
+SAFE-BOOTSTRAP 明令 `Do not create a linked worktree, merge, cherry-pick, stage, commit, push,
+or change a live source/hook during the first recovery phase`。
+而我要求「交付一个生成器」——那是在只读阶段写文件。我提这条时**没意识到自己在破他们的禁令**。
+
+已补范围写死的例外：只允许在
+`framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/` 下新建生成器；
+不得碰任何 live source / hook / skill / 生产脚本；人类门批准前不得 commit/push。
+
+### R3-A3 我的「收窄冻结面」会删掉红队 B 明确要求的一条保护 —— **已修**
+
+我写「不得冻 upstream ref」。但红队 B 的 **B-R4-P1-001** 恰恰是发现
+「冻结的 upstream endpoint **不在** live gate 里」——remote URL 可以被改掉而所有 live 断言仍全绿，
+于是保留到最后的那次 fetch 可以从**另一个仓**取回 declaration。
+
+我那句话若照做，等于把一条红队要求加上的保护当成冗余砍掉。**这是收窄冻结面时最容易犯的错：
+把「会合法移动的」和「被改动就是攻击的」混为一谈。**
+
+已拆成两件事：**端点身份（fetch/push 的 `--all` 全量 URL 列表，含基数）必须冻；
+端点位置（ref OID）不要冻。** 前者被改是攻击，后者移动是正常 push。
+
+### 本轮另外两处补验（都清白，缩小了 luca 的担心范围）
+
+- **skill 集自 common base 起零变更**（`git diff --name-only df63d4e..HEAD -- .claude/skills/
+  .claude/skill-os/` → **0** 个文件）。所以 Cycle 2 的 `321/321`、`2,568/2,568` 与
+  `ADAPT 10 / KEEP 18 / DEFER 19 / REJECT 27` 量的仍是同一个对象，**没有被代际漂移掏空**。
+- **containment 的两条 absent 路径仍不存在**（`~/.agents/skills/resolving-merge-conflicts`、
+  `~/.codex/skills/resolving-merge-conflicts`），门禁这一格不会因外部变化而假红。
+
+**代际漂移的最终边界**：宪法文本未变（`a864d54` 在 common base 内）、**skill 集未变**、
+containment 未变。全部漂移集中在 **记忆层（08-15 八个提交）+ hooks（我的四个）+ 文档/数据**。
+luca 担心的「更新了几代」是真的，但**没有动到 Cycle 2 的度量对象**，只动到了 bootstrap 依赖的
+记忆层——F10 就长在那一处。
+
+### §7 已读：不翻案
+
+`Honest execution ledger` 是一张「什么都没完成」的诚实台账（`RULE_EXECUTION_VERIFIED` 未达、
+MPC2 未开始、U014 草稿与其路径分母**已随 /private/tmp worktree 永久丢失**、
+15 TST / 28 断言 / 7 criteria 均未 durably proven）。它不改变本评审任何一条裁决，
+但它解释了这份 handoff 为什么如此偏执于「持久路径」——他们真的丢过一整批 receipt。
+
+---
+
 ## 三、还没做的（诚实列出，不冒充完成）
 
-- **红队只跑了一轮，且是我自己攻自己。** 我是被评审方也是执行者，这个位置上自审系统性偏软。
-  本轮已证明这一点：一轮就打掉了自己两条、加强一条、重归因一条。**第二轮独立视角仍有价值。**
-- **红队 A/B 的 87KB 只读了结构与四处定点**，没有逐条通读。已定点核对的是 A-R2/A-R3 标题、
-  B P0-003、B-R4-P1-001 三处。
-- **`FINAL-SESSION-HANDOFF.md` 九节读了四节**（§3/§4/§8/§9），§1/§2/§5/§6/§7 仍未读，
-  其中 §7 `Honest execution ledger` 最可能改变判断。
+- **红队跑了三轮，全部是我自己攻自己。** 我是被评审方也是执行者，这个位置上自审系统性偏软。
+  三轮的产出恰恰证明了这一点：第二轮打掉自己两条发现，第三轮打掉自己三条交付物缺陷。
+  **收敛了，但没有外部视角**——真正独立的一轮仍有价值。
+- **红队 A/B 的 87KB 只读了结构与四处定点**，没有逐条通读。已定点核对：A-R2/A-R3 标题、
+  B P0-003、B-R4-P1-001（后者在第三轮反过来纠正了我的收窄建议）。
+- **`FINAL-SESSION-HANDOFF.md` 已读 §1/§2/§3/§4/§7/§8/§9**；**§5/§6 仍未读**
+  （5.1 外部证据森林 / 5.2 resolver containment / 6 trusted-hook bootstrap hazard）。
+  §7 已读并确认不翻案。
 - **非负条款有效性未证明**（见 R-A6），已转为执行方义务。
 
 <!-- FILE_END: DISPOSITION-AND-REDTEAM.md -->
