@@ -218,6 +218,74 @@ Bash 通过环境变量或 ~ 间接引用项目根/display 路径，hook 无法�
 「命令参数」与「heredoc 正文」**——已知误伤面，写在这里供 F7 那条工作流一并处置。
 本轮不改：改它属于守卫的下一轮，且与本次评审的裁决无关。
 
+### F10 [BLOCKER · 代际冲突] 他们的记忆隔离，会静默关掉 08-15 才接入的两层 —— **必须改**
+
+这是 luca 真正担心的那一类：**计划成稿之后框架又走了几代，脚下的语义变了。**
+
+先把代际量化清楚（`4ef6bd6` = 计划冻结 08-11 13:30；`2928280` = forensic tip 08-14 18:38）：
+
+- 自计划冻结以来 main 共 **26** 个提交；forensic 分叉后 main 独有 **23** 个
+- 按天：08-11 **6** / 08-15 **8** / 08-19 **3** / 08-20 **9**
+- **宪法文本没有漂移**：`CLAUDE.md`/`AGENTS.md` 最后一次改是 `a864d54`(08-11 18:03)，
+  实测 `git merge-base --is-ancestor a864d54 df63d4e` 为真 —— **在 common base 之内，两侧同源**。
+- 漂移**集中在记忆层**（08-15 那批 8 个提交），而他们的 bootstrap 整个建立在记忆隔离上。
+
+**冲突点**：`238bbd6`（08-15）给 `search_memory.py` 接入了 person / project 两层
+（此前零检索覆盖）。这两层的数据在 `MEMORY_ROOT` **之外**，所以同一提交加了一道隔离闸：
+
+```python
+AUTHORITATIVE_MEMORY_ROOT = "/Users/luca/Desktop/luca_gstack"
+_ON_AUTHORITATIVE = str(ROOT) == AUTHORITATIVE_MEMORY_ROOT
+...
+if _PERSON_OPTIN:      PERSON_DIR = Path(_PERSON_OPTIN)
+elif _ON_AUTHORITATIVE: PERSON_DIR = Path(... GLOBAL_MEMORY_DIR ...)
+else:                   PERSON_DIR = None      # ← 静默关掉，无任何提示
+```
+
+而 SAFE-BOOTSTRAP 强制 `MEMORY_ROOT` 指向一次性 clone，并把
+`/Users/luca/Desktop/luca_gstack` 判为 **unsafe MEMORY_ROOT hazard**、禁止使用。
+**那个被判为 hazard 的路径，正是这道闸唯一认的权威哨兵。**
+
+实测三种 `MEMORY_ROOT` 下的 `PERSON_DIR` 与 person 层条数：
+
+| MEMORY_ROOT | `_ON_AUTHORITATIVE` | PERSON_DIR | person 条数 |
+|---|---|---|---|
+| 一次性 clone（他们 bootstrap 的做法） | False | `None` | **0** |
+| canonical（muse 检出） | False | `None` | **0** |
+| `/Users/luca/Desktop/luca_gstack`（他们判为 hazard） | True | `~/.claude/projects/…/memory` | **83** |
+
+所以按他们的 bootstrap 执行 mandatory memory startup，会在
+**person 层 83 条、project 层整层全部缺席**的情况下继续，而且**不报错、不告警**——
+这是静默降级，不是失败。`get_memory.py` 更彻底：它对 person 层**根本没有实现**
+（四个关键词 grep 全空），所以「`--summary` 看过了」不构成覆盖。
+
+**三方全盲，这是本条的分量所在：**
+
+| 文档 | 提到 person | 提到 AUTHORITATIVE |
+|---|---|---|
+| SAFE-BOOTSTRAP.md | 0 | 0 |
+| FINAL-SESSION-HANDOFF.md | 0 | 0 |
+| redteam-a.md（48KB，closed remaining 0） | **0** | 0 |
+| redteam-b.md（39KB，closed remaining 0） | **0** | 0 |
+
+两轮红队都谈过 `MEMORY_ROOT`（各 2/4 处）和 `search_memory`（各 3/5 处），
+**却没有一处触及 person/project 层**。原因不难理解：计划冻结于 08-11，这两层 08-15 才落地——
+**红队审的是一个已经不存在的框架世代。** 这正是「计划稿之后框架又更新了几代」的具体形态。
+
+一个溢出本次评审范围、但更该单独处置的推论：**任何非母版检出的 session，
+`search_memory.py` 都拿不到 person/project 层**（上表第二行 = 我自己此刻的处境）。
+CLAUDE.md 的记忆协议把「具体任务优先跑 search_memory」定为设计路径，
+而这条路径在 muse 检出上对这两层恒返回 0。这不属于 recovery handoff 的错，
+但它解释了为什么这类盲区能在两轮红队下存活。
+
+处置：握手稿须补——mandatory memory startup **必须显式声明 person/project 层的处置**。
+二选一：① 用 `MEMORY_PERSON_DIR` / `MEMORY_PROJECTS_DIR` 显式 opt-in（这两个 env 就是为
+「测试/沙箱显式取用」设计的，且不破坏他们的写隔离——`RETRIEVAL_LOG` 仍从 `MEMORY_ROOT` 派生）；
+或 ② 明确记录「本次 recovery 在无 person/project 层的条件下作业」并列为已知盲区。
+**不允许的是现状：既不 opt-in 也不声明，看起来跑过了记忆启动协议。**
+
+---
+
 ---
 
 ## 3. 我改了什么、没改什么
