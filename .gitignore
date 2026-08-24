@@ -133,3 +133,7 @@ design-system/
 .claude/.allow-framework-write
 # standalone/cloud opt-in marker（勿提交；判别器据此把 auth-absent 从 anomaly 降 note，R8/R3A-1）
 .claude/.memory-standalone
+
+# hook 写的每日提示标记（.kit-relay-shown-YYYY-MM-DD）：纯本机状态，不是产物。
+# 不入库——否则每天新增一个未跟踪文件，把 git status 的信噪比长期压低。
+.claude/.kit-relay-shown-*
