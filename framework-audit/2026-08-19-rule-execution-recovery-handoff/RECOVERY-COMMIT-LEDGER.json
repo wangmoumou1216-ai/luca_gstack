@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "handoff_id": "RECOVERY-HANDOFF-20260820-001",
+  "ledger_id": "REX-RECOVERY-COMMIT-LEDGER-20260820",
+  "captured_on": "2026-08-20",
+  "purpose": "Forensic commit-to-unit inventory for recovering the Rule Execution work without treating commit presence as implementation acceptance, independent verification, or gate completion.",
+  "authority_boundary": {
+    "is_execution_authority": false,
+    "is_completion_receipt": false,
+    "claims_any_gate_pass": false,
+    "instructions": [
+      "Use the applicable Final Execution Plans and fresh gate outputs as execution authority.",
+      "Treat the recovery ref as forensic input only; do not merge, fast-forward, cherry-pick, package, activate, or push it wholesale.",
+      "A commit listed here proves only that the named Git object exists and was mapped to the indicated historical unit.",
+      "Do not infer author/tester independence from a commit author, committer, subject, ordering, or branch membership."
+    ]
+  },
+  "repository_snapshot": {
+    "canonical_repository": "/Users/luca/Desktop/项目/muse/lucagstack",
+    "canonical_branch": "main",
+    "canonical_head": "ad9903dfad7fea93ac2f5fd3ba1945b11adf6518",
+    "canonical_tree": "c467889bfef1c67b3053519dd63933804bf1ae1b",
+    "observed_upstream_main": "ad9903dfad7fea93ac2f5fd3ba1945b11adf6518",
+    "recovery_ref": "rex/rule-execution-recovery-u011-20260814",
+    "recovery_role": "FORENSIC_ONLY_NOT_AN_EXECUTION_BASE",
+    "recovery_tip": "29282803bd5f31064819de34c19a2e1663247b66",
+    "recovery_tree": "87c98aee201784c0454f63eebc03977165ff6a0d",
+    "common_base": "df63d4e1390d6da4a689c1be84121e84b55b6003",
+    "divergence_from_recovery_to_canonical": {
+      "recovery_only_commit_count": 30,
+      "canonical_only_commit_count": 17
+    },
+    "snapshot_warning": "These values are a captured before-state, not permission to overwrite later drift. Re-freeze and re-run the handoff verifier before recovery work."
+  },
+  "shared_owner_overlap": {
+    "comparison": "common_base..canonical_head versus common_base..recovery_tip",
+    "exact_path_count": 8,
+    "unowned_overlap_disposition": "BLOCKED_DIRTY_OVERLAP",
+    "paths": [
+      ".claude/hooks/project-scope-guard.mjs",
+      ".claude/observability/observations.jsonl",
+      "AGENTS.md",
+      "memory/scripts/consolidate_memory.py",
+      "memory/tests/test_memory_system.py",
+      "scripts/test-hooks.mjs",
+      "scripts/test-project-scope-guard.mjs",
+      "scripts/verify.sh"
+    ],
+    "rule": "Every overlapping file and hunk requires a freshly reconstructed owner matrix. Any hunk whose ownership is not confirmed must stop as BLOCKED_DIRTY_OVERLAP; it must not be overwritten."
+  },
+  "commit_mapping_summary": {
+    "mapped_repository_commit_count": 34,
+    "present_in_canonical_and_recovery_history_count": 4,
+    "recovery_only_count": 30,
+    "units_with_no_repository_commit": [
+      "U002",
+      "U014",
+      "U015"
+    ],
+    "counting_rule": "The 34-commit denominator covers U001 and U003-U013 only. U002 is global containment with no repository commit; U014 has no recoverable commit or trustworthy draft path denominator; U015 was not started."
+  },
+  "unit_ledger": [
+    {
+      "unit_id": "U001",
+      "repository_commits": [
+        {
+          "oid": "4ef6bd6453f3097c287e901b0c89f551ed0a2978",
+          "reachability": "CURRENT_MAIN_AND_FORENSIC_RECOVERY"
+        }
+      ],
+      "historical_state": "COMMIT_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U002",
+      "repository_commits": [],
+      "historical_state": "GLOBAL_CONTAINMENT_NO_REPOSITORY_COMMIT",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      },
+      "note": "Global containment evidence must be verified from its exact live path, quarantine path, journal, hashes, and applicable gate lineage; repository history is not its receipt."
+    },
+    {
+      "unit_id": "U003",
+      "repository_commits": [
+        {
+          "oid": "47929a7da74e179e80ce654b30c6e3c93d9ff2ed",
+          "reachability": "CURRENT_MAIN_AND_FORENSIC_RECOVERY"
+        }
+      ],
+      "historical_state": "COMMIT_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U004",
+      "repository_commits": [
+        {
+          "oid": "a864d54bc7d3e592f4ed83bc54fce4b6df7909b4",
+          "reachability": "CURRENT_MAIN_AND_FORENSIC_RECOVERY"
+        },
+        {
+          "oid": "df63d4e1390d6da4a689c1be84121e84b55b6003",
+          "reachability": "CURRENT_MAIN_AND_FORENSIC_RECOVERY_COMMON_BASE"
+        },
+        {
+          "oid": "bd29308912a2950e3df51420c6d2f75b290681d2",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMITS_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U005",
+      "repository_commits": [
+        {
+          "oid": "1fe03a00575d7eef9457266f7fbeb1df960b1671",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMIT_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U006",
+      "repository_commits": [
+        {
+          "oid": "5b0d062223093c2bcc1d67148da0783e119b7def",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "33170c33bdae6676ff751cda57e706cf6f953f6d",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "0b49f1a52562260ab8bdea2f77d26b0cb255dd95",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMITS_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U007",
+      "repository_commits": [
+        {
+          "oid": "553a486c22f8b323aacd1318c6fd82dd37be0e22",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMIT_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U008",
+      "repository_commits": [
+        {
+          "oid": "960b14d0124ebe3b1fca7a47abd9aab0096bdaed",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "a5e82e12b3926092dd47e11f9874a6d821cbd88f",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "880214473519ec2056e37e8a3b9ae5a8db75438b",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "feac31a2b380a15faf323d12cc939b3570635d35",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "aa3091a3c4a34b6983c427d1ea9944067b6f435c",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "05e1825ad925f73c15d32c3500f19a245b95f617",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "1760becec7ea1b27de7386cbfee57aa7fa84946b",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "d6377dfab51682d002ea6cd21c9b058b189e8c9c",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "2e1d5e0a0c59fe3ac60f51b90dec7cfeab8d4e21",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "83adec9380d28ad599ce68d1c37c63d5aedfbcd6",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMITS_AND_EXTERNAL_MATERIAL_PRESENT_NOT_FRESHLY_ACCEPTED",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      },
+      "evidence_warning": "The surviving U008 material is historical and expired or consumed; it is not a fresh PASS receipt."
+    },
+    {
+      "unit_id": "U009",
+      "repository_commits": [
+        {
+          "oid": "8421eadbbafb96500df84483b440e69d0460b981",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "318814876e3ad6e82384ae7570a872aa1b7a9cd4",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMITS_AND_EXTERNAL_MATERIAL_PRESENT_NOT_FRESHLY_ACCEPTED",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      },
+      "evidence_warning": "The surviving U009 gate bytes are historical only. A current root-device identity mismatch prevents treating them as a fresh-valid G-OBLIGATION receipt without independent adjudication."
+    },
+    {
+      "unit_id": "U010",
+      "repository_commits": [
+        {
+          "oid": "183e52943fb59b776ef9b46ea0b50b917ab39e4d",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "f6af3c373736f37e6d119d96ae782c1f8bb57693",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMITS_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U011",
+      "repository_commits": [
+        {
+          "oid": "638f03f83b8705e9214f5452f8190e23d46f2e5e",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMIT_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U012",
+      "repository_commits": [
+        {
+          "oid": "fc00caaa481eefa49851bc0ad7ca2094315ef263",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "99d5452aad8fe6a8db85e0064324543db1247f89",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "7108a1a4bbcf57f4106a89ed28c44f375467d049",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        }
+      ],
+      "historical_state": "COMMITS_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U013",
+      "repository_commits": [
+        {
+          "oid": "3b99ac361b0ac19d9ba65a1ac193d38bc5f3a26a",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "03c593ece5ec2ea0097301b6f2ea301f203d57db",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "578da38648ef30e883dc916586df3c8dbed617a1",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "fcd5dd5d148bcff846560ce53e8413b169ac6032",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "43fef9c9699a2bd3bb33a99de997bd020985d7bb",
+          "reachability": "FORENSIC_RECOVERY_ONLY"
+        },
+        {
+          "oid": "29282803bd5f31064819de34c19a2e1663247b66",
+          "reachability": "FORENSIC_RECOVERY_ONLY_RECOVERY_TIP"
+        }
+      ],
+      "historical_state": "COMMITS_PRESENT_NOT_ACCEPTED_BY_THIS_LEDGER",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "NOT_ESTABLISHED_BY_THIS_LEDGER"
+      }
+    },
+    {
+      "unit_id": "U014",
+      "repository_commits": [],
+      "historical_state": "NOT_RECOVERED_DRAFT_AND_PATH_DENOMINATOR_LOST",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "ABSENT"
+      },
+      "blocking_note": "The earlier draft bytes and exact file list are unavailable. Do not reuse a remembered '6 new plus 2 tracked' statement as a denominator. Reconstruct the denominator from the REX DEV-014 authority after prior gates and ownership adjudication."
+    },
+    {
+      "unit_id": "U015",
+      "repository_commits": [],
+      "historical_state": "NOT_STARTED",
+      "verification_accountability": {
+        "author_identity": "UNKNOWN",
+        "tester_identity": "UNKNOWN",
+        "author_tester_independence": "UNKNOWN",
+        "durable_independent_test_receipt": "ABSENT"
+      }
+    }
+  ],
+  "downstream_completion_state": {
+    "rule_execution": "NOT_VERIFIED",
+    "mpc2_task_id": "MPC2-CO-20260811-001",
+    "mpc2": "BLOCKED_BY_REX_DELTA_NOT_INTEGRATED",
+    "mattpocock_cycle2": "NOT_COMPLETE",
+    "required_future_order": [
+      "RULE_EXECUTION_VERIFIED",
+      "MPC2_CHANGE_ORDER_INTEGRATED",
+      "EVOLUTION_VERIFIED"
+    ],
+    "tokens_emitted_by_this_ledger": []
+  },
+  "_file_end": "RECOVERY-COMMIT-LEDGER.json"
+}

@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "handoff_id": "RECOVERY-HANDOFF-20260820-001",
+  "status": "READY_FOR_NEW_SESSION_RECOVERY_REQUIRED",
+  "expected_pass_token": "RECOVERY_HANDOFF_GATE_PASS",
+  "artifacts": {
+    "handoff": {
+      "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff/FINAL-SESSION-HANDOFF.md",
+      "type": "markdown",
+      "sha256": "5c3344f20d807bccf378c990785f0897471c6555675c2cb2693f839d62be7bc4"
+    },
+    "state": {
+      "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff/RECOVERY-STATE.json",
+      "type": "json",
+      "sha256": "6ae32c3d2bbc3201533d5615a3edcfae2e9c55c642a79d62171b71115d09ba06"
+    },
+    "ledger": {
+      "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff/RECOVERY-COMMIT-LEDGER.json",
+      "type": "json",
+      "sha256": "74c15312fc8eae929bcb83487871f0ef436e970d856f3db13046ea0ed1f3ba13"
+    },
+    "safe_bootstrap": {
+      "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff/SAFE-BOOTSTRAP.md",
+      "type": "markdown",
+      "sha256": "f2b3032325dfa542194e47fb8387892617f189a9262b91212b130eb2bb5f6805"
+    },
+    "redteam_a": {
+      "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md",
+      "type": "markdown",
+      "sha256": "8e8e4167d6b73b51300f53db0fa1001ed796d40f42215ac703f472473935a319"
+    },
+    "redteam_b": {
+      "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-b.md",
+      "type": "markdown",
+      "sha256": "1bed3943522aa7ec94d7514d1af09f1cdd87ee1b06d8a762c75eb4e6e8eda78b"
+    }
+  },
+  "verifier": {
+    "path": "framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs",
+    "sha256": "05629524c4d2bb18aab77d47b2673a5e3f7f67bd55d060b4cf17c061d4b827af"
+  },
+  "launch_prompt": {
+    "path": "/Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap/NEW-SESSION-PROMPT.md",
+    "sha256": "3424421deeb58662f619955e10a9fc9edb27d5fb48bcefef142a7c675beede25",
+    "role": "EXTERNAL_NEUTRAL_BOOTSTRAP_PROMPT"
+  },
+  "repo": {
+    "canonical": {
+      "path": "/Users/luca/Desktop/项目/muse/lucagstack",
+      "head": "ad9903dfad7fea93ac2f5fd3ba1945b11adf6518",
+      "tree": "c467889bfef1c67b3053519dd63933804bf1ae1b",
+      "upstream_main": "ad9903dfad7fea93ac2f5fd3ba1945b11adf6518",
+      "worktree_diff_binary_sha256": "17077a26b71cd2b60a1d9980e68406ca680d9bd6537c4b82795cd7f4abda0c84",
+      "cached_diff_binary_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": {
+        "porcelain_v2_z_sha256": "2ac0d65c4561af1f490bc2937ecf5a9b362720754da15289370ac412e57d912f",
+        "paths": [
+          ".claude/.kit-relay-shown-2026-08-04",
+          ".claude/.kit-relay-shown-2026-08-05",
+          ".claude/.kit-relay-shown-2026-08-06",
+          ".claude/.kit-relay-shown-2026-08-07",
+          ".claude/.kit-relay-shown-2026-08-08",
+          ".claude/.kit-relay-shown-2026-08-09",
+          ".claude/.kit-relay-shown-2026-08-10",
+          ".claude/.kit-relay-shown-2026-08-11",
+          ".claude/.kit-relay-shown-2026-08-12",
+          ".claude/.kit-relay-shown-2026-08-13",
+          ".claude/.kit-relay-shown-2026-08-14",
+          ".claude/.kit-relay-shown-2026-08-15",
+          ".claude/.kit-relay-shown-2026-08-18",
+          ".claude/.kit-relay-shown-2026-08-19",
+          ".claude/.kit-relay-shown-2026-08-20",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/capability-inventory.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/independent-judge-verdict.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/inventory-refreeze-r2.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/loop-charter.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/read-coverage-report.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/revised-handshake-plan.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/round1-findings.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/round2-findings.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/round2-freeze.md",
+          "framework-audit/2026-08-07-mattpocock-update-consensus.md",
+          "framework-audit/2026-08-07-mattpocock-update-redteam-findings.md",
+          "framework-audit/2026-08-07-mattpocock-update-review.md",
+          "framework-audit/2026-08-09-mattpocock-handshake-cycle2-repair/quick-research-package-head-contract-2026-08-09.md",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/CHANGE-ORDER-BUNDLE.sha256",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/FINAL-CHANGE-ORDER.md",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/NEXT-SESSION-GOAL.md",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/execution-delta.json",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/tools/verify-change-order.mjs",
+          "framework-audit/2026-08-11-project-gate-correction-fix-redteam.md",
+          "framework-audit/2026-08-11-project-gate-correction-loop-redteam.md",
+          "framework-audit/2026-08-11-rule-execution-repair-plan.md",
+          "framework-audit/2026-08-11-rule-execution-system-review.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-b.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/FINAL-SESSION-HANDOFF-MANIFEST.json",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/FINAL-SESSION-HANDOFF.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/RECOVERY-COMMIT-LEDGER.json",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/RECOVERY-STATE.json",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/SAFE-BOOTSTRAP.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs",
+          "memory/episodic/archive/2026.jsonl",
+          "memory/episodic/index.jsonl"
+        ],
+        "paths_nul_sha256": "f7284d8b8bfc4e62a5dd767935b4f8b57341253eab95f69e7c895ad3f49e9aec",
+        "untracked_paths": [
+          ".claude/.kit-relay-shown-2026-08-04",
+          ".claude/.kit-relay-shown-2026-08-05",
+          ".claude/.kit-relay-shown-2026-08-06",
+          ".claude/.kit-relay-shown-2026-08-07",
+          ".claude/.kit-relay-shown-2026-08-08",
+          ".claude/.kit-relay-shown-2026-08-09",
+          ".claude/.kit-relay-shown-2026-08-10",
+          ".claude/.kit-relay-shown-2026-08-11",
+          ".claude/.kit-relay-shown-2026-08-12",
+          ".claude/.kit-relay-shown-2026-08-13",
+          ".claude/.kit-relay-shown-2026-08-14",
+          ".claude/.kit-relay-shown-2026-08-15",
+          ".claude/.kit-relay-shown-2026-08-18",
+          ".claude/.kit-relay-shown-2026-08-19",
+          ".claude/.kit-relay-shown-2026-08-20",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/capability-inventory.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/independent-judge-verdict.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/inventory-refreeze-r2.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/loop-charter.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/read-coverage-report.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/revised-handshake-plan.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/round1-findings.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/round2-findings.md",
+          "framework-audit/2026-08-07-mattpocock-deep-redteam/round2-freeze.md",
+          "framework-audit/2026-08-07-mattpocock-update-consensus.md",
+          "framework-audit/2026-08-07-mattpocock-update-redteam-findings.md",
+          "framework-audit/2026-08-07-mattpocock-update-review.md",
+          "framework-audit/2026-08-09-mattpocock-handshake-cycle2-repair/quick-research-package-head-contract-2026-08-09.md",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/CHANGE-ORDER-BUNDLE.sha256",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/FINAL-CHANGE-ORDER.md",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/NEXT-SESSION-GOAL.md",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/execution-delta.json",
+          "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/tools/verify-change-order.mjs",
+          "framework-audit/2026-08-11-project-gate-correction-fix-redteam.md",
+          "framework-audit/2026-08-11-project-gate-correction-loop-redteam.md",
+          "framework-audit/2026-08-11-rule-execution-repair-plan.md",
+          "framework-audit/2026-08-11-rule-execution-system-review.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-b.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/FINAL-SESSION-HANDOFF-MANIFEST.json",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/FINAL-SESSION-HANDOFF.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/RECOVERY-COMMIT-LEDGER.json",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/RECOVERY-STATE.json",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/SAFE-BOOTSTRAP.md",
+          "framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs"
+        ],
+        "untracked_paths_nul_sha256": "98c7536f4522dc94a044c4daa73c2ce8457534e515d00b4cb1576d1c411120d7"
+      }
+    },
+    "remote": {
+      "name": "upstream",
+      "fetch_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+      "push_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git"
+    },
+    "recovery": {
+      "ref": "refs/heads/rex/rule-execution-recovery-u011-20260814",
+      "tip": "29282803bd5f31064819de34c19a2e1663247b66",
+      "tree": "87c98aee201784c0454f63eebc03977165ff6a0d",
+      "common_base": "df63d4e1390d6da4a689c1be84121e84b55b6003",
+      "role": "FORENSIC_ONLY"
+    },
+    "stale": {
+      "path": "/Users/luca/Desktop/luca_gstack",
+      "head": "6edcabde191a852825dfb53f845a1eaac545c949",
+      "tree": "33557fa71c1d1d8f1f7a3b89c74f5c643b72ed79",
+      "status_porcelain_v2_z_sha256": "50ef74f5f7672bab82bc39b6bae7e500bcfa21f56825386a068eb171c9ab8c8b",
+      "worktree_diff_binary_sha256": "7060ced74ee8e364ab424d458f7494773b9a657c0b88469c95105ec820a42a4c",
+      "cached_diff_binary_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "STALE_READ_ONLY_PROTECTED"
+    }
+  },
+  "safe_bootstrap_policy": {
+    "required": true,
+    "neutral_cwd_required": true,
+    "start_in_repo_allowed": false,
+    "artifact_id": "safe_bootstrap",
+    "hook_path": ".codex/hooks.json",
+    "hooks_sha256": "46ac3cf6254367d94a8228e6c1722e2fa055cbf5d2fa608b17ebf016f2157a60",
+    "unsafe_memory_root": "/Users/luca/Desktop/luca_gstack",
+    "neutral_root": "/Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap",
+    "forbidden_inherited_git_environment": [
+      "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+      "GIT_CONFIG",
+      "GIT_CONFIG_PARAMETERS",
+      "GIT_CONFIG_COUNT",
+      "GIT_CONFIG_GLOBAL",
+      "GIT_CONFIG_SYSTEM",
+      "GIT_CONFIG_NOSYSTEM",
+      "GIT_OBJECT_DIRECTORY",
+      "GIT_DIR",
+      "GIT_WORK_TREE",
+      "GIT_IMPLICIT_WORK_TREE",
+      "GIT_GRAFT_FILE",
+      "GIT_INDEX_FILE",
+      "GIT_NO_REPLACE_OBJECTS",
+      "GIT_REPLACE_REF_BASE",
+      "GIT_PREFIX",
+      "GIT_SHALLOW_FILE",
+      "GIT_COMMON_DIR"
+    ],
+    "forbidden_start_roots": [
+      "/Users/luca/Desktop/luca_gstack",
+      "/Users/luca/Desktop/项目/muse/lucagstack"
+    ]
+  },
+  "authorities": [
+    {
+      "id": "cycle2_plan",
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-EXECUTION-PLAN.md",
+      "sha256": "4bfbfed81496fe53174a73bc4242b1b0043cc01292db636c379e0dd1892c12d7"
+    },
+    {
+      "id": "cycle2_handoff",
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-HANDOFF.md",
+      "sha256": "9f7837c44f9c3ef85d00f219e5beee5479bd7d05b5a8a71429d5aa20cce0b0d3"
+    },
+    {
+      "id": "cycle2_manifest",
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/final-execution-manifest.json",
+      "sha256": "45ccb4812bdf5f8bcd86eab59ff35fd20810326354bdfeda7b03a4668d64e715"
+    },
+    {
+      "id": "defer_register",
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/defer-promotion-register.json",
+      "sha256": "92c6b8bd3a9b5754a4da31baa893beec8020c699c98ec4731fe185a804f0d5f7"
+    },
+    {
+      "id": "rex_plan",
+      "path": "framework-audit/2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md",
+      "sha256": "ca4d57b0057dea529943e167b833eaca5a07d51495fc0f62e2dd47ac23daf4d8"
+    },
+    {
+      "id": "mpc2_change_order",
+      "path": "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/FINAL-CHANGE-ORDER.md",
+      "sha256": "563f3b1bb4edff297ba932831b3d35faa7bc6fe9da63298c48934f94f059b9ce"
+    },
+    {
+      "id": "mpc2_delta",
+      "path": "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/execution-delta.json",
+      "sha256": "8c36052143790ff099d71549d788a2c36dd8582391224344ad224c6693660ced"
+    }
+  ],
+  "containment": {
+    "files": [
+      {
+        "id": "resolver_live",
+        "path": "/Users/luca/.claude/skills/resolving-merge-conflicts/SKILL.md",
+        "sha256": "5befc05bd6cc6513485521b0f62b80de39abb38cfb8703daa3aed9abb30fd4de"
+      },
+      {
+        "id": "resolver_backup",
+        "path": "/Users/luca/.luca/quarantine/resolving-merge-conflicts/20260811T055628Z-c7c9ba81362a/unsafe-original/SKILL.md",
+        "sha256": "c7c9ba81362a786aac05d2223123bf1bd2f8a99c3243a72882ede9c68bedfb24"
+      },
+      {
+        "id": "containment_journal",
+        "path": "/Users/luca/.luca/quarantine/resolving-merge-conflicts/20260811T055628Z-c7c9ba81362a/containment-journal.json",
+        "sha256": "a3c30778b30c12dd1329b162aa8afc8d6279dc572e33ed6e9f76617a34e09592"
+      }
+    ],
+    "absent_paths": [
+      "/Users/luca/.agents/skills/resolving-merge-conflicts",
+      "/Users/luca/.codex/skills/resolving-merge-conflicts"
+    ]
+  },
+  "completion_boundary": {
+    "handoff_only": true,
+    "implementation_authorized": false,
+    "goal_complete": false,
+    "completion_token_emitted": false
+  },
+  "_file_end": "FINAL-SESSION-HANDOFF-MANIFEST.json"
+}
