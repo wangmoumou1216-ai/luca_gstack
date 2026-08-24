@@ -1,0 +1,16 @@
+{
+  "description": "LRS-20260820 payload census only; writes synthetic hook payloads to a temporary evidence file.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "LRS_CENSUS_OUT=/private/tmp/lrs-payload-census-20260820/output/codex-events.jsonl node /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-08-20-routing-steering-handshake/payload-census/collector.mjs",
+            "additionalContextLimit": 0
+          }
+        ]
+      }
+    ]
+  }
+}
