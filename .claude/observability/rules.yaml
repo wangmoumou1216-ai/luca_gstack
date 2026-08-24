@@ -70,3 +70,13 @@ rules:
   rule: "open-design 默认走桌面端生成(stage 项目+brief.md+DS → 用户在 OD 桌面端按生成 → '拉回来' recover)，走订阅会话可靠。headless(/api/chat) 为 opt-in：仅用户显式要求才跑；本 session 实测不稳(生成慢 >2.5-3min + daemon SIGTERM 重启)，失败重试上限 1 后降级 OD 桌面端生成。daemon UP 但 headless 坏时降级目标=同栈桌面端，非 magicpath/html-prototype(后者仅 daemon 真不可达)。鉴权旁注：OD spawn env 含 USER→走订阅正常，缺 USER 才回退 API-credit(OD 已满足，非故障原因)。详见候选 SC-20260616-001。"
   source_observations:
     - O-20260616-od-headless-credit
+- id: R-20260820-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["office"]
+    scenes: ["*"]
+  rule: "强制项目切换轮结束后，下一条用户消息应自动续接已明确的原始任务，不得制造重复确认；真实人类决策门除外"
+  source_observations:
+    - O-20260820-001
