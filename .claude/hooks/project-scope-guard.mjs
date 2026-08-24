@@ -143,12 +143,74 @@ function confinedProjectPath(binding, parts) {
 
 // 判断一个路径是否"项目作用域"（docs/·state·topic），若是则给出重写后的绝对路径。
 // 返回 { scoped:boolean, redirected?:string }。scoped 但无 pin → 调用方 deny。
+// 求一个路径的**真实**目标（跟随符号链接）：逐段上溯到最近存在的祖先做 realpath，
+// 再把缺失的叶子段拼回去。与 confinedProjectPath 同款技术，抽出来给框架豁免复用。
+// 悬空软链视为身份边界（返回 null=不可豁免），与 confinedProjectPath 的判断保持一致。
+// **为什么必须有这个**：resolve() 只做词法 `.`/`..` 折叠，**不解析软链**。只用它的话，
+// gstackRoot 里任何一条名字不叫 docs/workflow-state/current-topic 的软链都会被豁免吞掉，
+// 从而绕开 pin/redirect/deny 全部逻辑（2026-08-20 红队实证：backdoor -> 别的项目 可读可写；
+// 更致命的是 docs2 -> docs 这种别名，直接重开了本 hook 存在的理由要堵的那个洞）。
+function realTargetOf(input) {
+  let probe = resolve(input);
+  const missing = [];
+  while (!existsSync(probe)) {
+    try {
+      if (lstatSync(probe).isSymbolicLink()) return null;   // 悬空软链 = 身份边界
+    } catch (error) {
+      if (error?.code !== 'ENOENT') return null;
+    }
+    const parent = join(probe, '..');
+    if (parent === probe) return null;
+    missing.unshift(probe.slice(parent.length + (parent.endsWith('/') ? 0 : 1)));
+    probe = parent;
+  }
+  try { return join(realpathSync(probe), ...missing); } catch { return null; }
+}
+
+// 尽力求 realpath；不可解析（如软链悬空）时退回字面值，供"排除"用途——
+// 排除面宁可用字面兜住，也不要因为解析失败而漏掉一条展示路径。
+function realOrLiteral(input) {
+  try { return realpathSync(input); } catch { return input; }
+}
+
 function classifyPath(p, binding) {
   if (typeof p !== 'string' || !p) return { scoped: false };
   let s = p.replace(/^\.\//, '');
   const gd = join(gstackRoot, 'docs');
   const gState = join(gstackRoot, '.claude', 'workflow-state.yaml');
   const gTopic = join(gstackRoot, '.claude', 'current-topic.txt');
+  // 框架自身作用域豁免（与 resolvedRelativeProjectAccess 的 frameworkRoot 短路**同口径**）。
+  // luca_gstack 的检出可能物理上就坐落在 PROJECTS_ROOT 之内（嵌套检出）。没有这条时，下面的
+  // PROJECTS_ROOT 循环会先把框架自己的每个文件判成项目作用域，无 pin 的框架/meta session 连
+  // 只读框架文件都被拒——而 route-guard 恰恰指示这类 session「不要 switch，直接在框架检出上
+  // 作业」，两条指令互斥。更要命的是不对称：相对路径走 resolvedRelativeProjectAccess 已放行，
+  // 绝对路径却在此被拒，**同一操作放行与否只取决于路径怎么拼**——这不是安全边界。
+  // Bash 与 Read/Edit 两条链最终都汇到 classifyPath（directProjectPathsAllowed 逐 token 调它），
+  // 补在这一处即可。**三条共享展示路径除外**：它们虽在 gstackRoot 内，正是本守卫要保护的项目软链。
+  // 判据必须同时看**字面**与**归一化**两种形态：insidePath 是纯字符串前缀比对，
+  // 只看字面的话 `<gstackRoot>/../../otherproj/x` 会因为字面以 gstackRoot 开头而被误放行，
+  // 等于用 `..` 就能绕开整个项目隔离（2026-08-20 真机实测到该洞：直接路径被拒、穿越形式却列出了
+  // 别的项目内容）。resolve() 吃掉 `..`/`.` 后再查一次，逃逸出根的路径归一化后自然落不进来。
+  // 展示路径的排除也一律对归一化形态判，免得 `<gstackRoot>/x/../docs` 这类绕过保护面。
+  // 判据必须问**真实目标**，不能只看字面或词法归一化：
+  //   · 字面前缀 → `<gstackRoot>/../../otherproj/x` 会被误放行（词法洞，已修）
+  //   · 词法归一化 → 仍不解析软链，`<gstackRoot>/backdoor/...` 照样被误放行（本次修的洞）
+  // 三条共享展示路径的排除同样按 realpath 判，这样**经由任何别名软链**抵达它们的路径
+  // 都会被认出来，而不是只认字面那三个名字。
+  // 两侧必须锚在**同一基准**：gReal 是 realpath 形态；排除项若在软链不可解析时退回字面值
+  // （/tmp/... 而非 /private/tmp/...），前缀比对就会落空、保护面静默失效——首版这么写，
+  // 四条保护面断言当场转红。故兜底一律拼在 realpath 后的根上。
+  const rootReal = realOrLiteral(gstackRoot);
+  const underRoot = (abs, ...parts) => realTargetOf(abs) || join(rootReal, ...parts);
+  const gReal = realTargetOf(s);
+  if (gReal
+      && insidePath(s, gstackRoot)
+      && insidePath(gReal, rootReal)
+      && !insidePath(gReal, underRoot(gd, '/Users/luca/Desktop/项目/muse/docs'))
+      && !samePath(gReal, underRoot(gState, '.claude', 'workflow-state.yaml'))
+      && !samePath(gReal, underRoot(gTopic, '.claude', 'current-topic.txt'))) {
+    return { scoped: false };
+  }
   // Direct absolute project paths are project scope too. A shared-alias-only
   // guard can be bypassed with /projects/<other>/... even when docs/ is safe.
   const roots = [PROJECTS_ROOT];
@@ -237,9 +299,13 @@ function directProjectPathsAllowed(cmd, binding) {
     const escaped = escapeRe(root);
     const re = new RegExp(`${escaped}(?:/[^\\s"';&|]+)?`, process.platform === 'darwin' ? 'gi' : 'g');
     for (const match of String(cmd || '').matchAll(re)) {
-      seen = true;
       const value = match[0];
       const classified = classifyPath(value, binding);
+      // 框架自身路径（嵌套检出时会落在 PROJECTS_ROOT 的正则里）不是项目作用域：
+      // classifyPath 已判 scoped:false，此处必须据此放行。原先只看 redirected，
+      // 而 scoped:false 天然没有 redirected，会把框架路径误判成"无 pin 的项目访问"。
+      if (!classified.scoped) continue;
+      seen = true;
       if (!classified.redirected) return { seen, allowed: false, value };
     }
   }
@@ -249,16 +315,44 @@ function directProjectPathsAllowed(cmd, binding) {
 // Expand only absolute-valued environment references for detection. Commands
 // that reach project/display paths through an env alias are denied instead of
 // rewritten: shell assignments can change the value again after this hook.
+// 从命令文本**自身**提取静态赋值（`NAME=值`），与 env 变量合流参与展开。
+// **为什么需要**：此前只展开已存在的 process.env 变量，于是把路径拆进本地变量就能让
+// PROJECTS_ROOT 的字面子串在命令文本里从不出现，静态匹配整个落空（2026-08-20 红队实证：
+// `A="…/项"; B="目"; cat "$A$B/别的项目/x"` 完全放行）。这条不需要恶意动机——agent 自己写
+// 脚本时用变量拼含中文/空格的路径是很自然的写法，会**无意**触发。
+// **明确不覆盖**（不要以为"变量间接已经处理了"）：命令替换 `$(...)`／反引号／`eval`／数组／
+// printf 拼接／字符串切片等动态求值。那属于"任何非执行式静态分析都躲不掉"的范畴，
+// 成本收益比低，故意不追。这里只堵**无意**触发的那一类——真要绕总能绕，但不该绊倒老实写法。
+function localAssignments(cmd) {
+  const map = new Map();
+  // 只在语句起始位置认赋值；值只吃静态形态：双引号（允许 $VAR 但禁 $( ）、单引号、裸词。
+  const re = /(?:^|[;&|\n]|\s)\s*([A-Za-z_][A-Za-z0-9_]*)=("(?:[^"`$]|\$(?!\())*"|'[^']*'|[^\s"'`;&|()$]+)/g;
+  for (const m of String(cmd || '').matchAll(re)) {
+    let v = m[2];
+    if (v[0] === '"' || v[0] === "'") v = v.slice(1, -1);
+    map.set(m[1], v);
+  }
+  return map;
+}
+
 function variableProjectReference(cmd, binding) {
   let expanded = String(cmd || '');
   const original = expanded;
-  const entries = Object.entries(process.env)
-    .filter(([key, value]) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && typeof value === 'string' && value.startsWith('/'))
-    .sort((a, b) => b[0].length - a[0].length);
-  for (const [key, value] of entries) {
-    expanded = expanded
-      .replace(new RegExp(`\\$\\{${escapeRe(key)}\\}`, 'g'), value)
-      .replace(new RegExp(`\\$${escapeRe(key)}\\b`, 'g'), value);
+  const table = Object.entries(process.env)
+    .filter(([key, value]) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && typeof value === 'string' && value.startsWith('/'));
+  for (const [key, value] of localAssignments(original)) table.push([key, value]);
+  table.sort((a, b) => b[0].length - a[0].length);
+  // 多趟：允许链式引用逐层解开；收敛即停，最多 3 趟防病态输入打转。
+  // **防御性冗余**：2026-08-20 变异实测改成单趟后现有断言全绿——赋值语句自身被展开时
+  // 字面路径就已出现并被抓到。留着是便宜的保险，但别以为它被测试守着。
+  for (let pass = 0; pass < 3; pass++) {
+    const before = expanded;
+    for (const [key, value] of table) {
+      expanded = expanded
+        .replace(new RegExp(`\\$\\{${escapeRe(key)}\\}`, 'g'), value)
+        .replace(new RegExp(`\\$${escapeRe(key)}\\b`, 'g'), value);
+    }
+    if (expanded === before) break;
   }
   if (process.env.HOME) expanded = expanded.replace(/(^|[\s"'`=:(;&|])~(?=\/)/g, (_m, a) => a + process.env.HOME);
   if (expanded === original) return null;

@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "handoff_id": "RECOVERY-HANDOFF-20260820-001",
+  "state_id": "REX-MPC2-C2-RECOVERY-STATE-20260820-001",
+  "captured_at": "2026-08-20T12:59:07+0800",
+  "state": "READY_FOR_NEW_SESSION_RECOVERY_REQUIRED",
+  "completion_claims": {
+    "rule_execution_verified": false,
+    "mpc2_change_order_integrated": false,
+    "evolution_verified": false
+  },
+  "canonical": {
+    "path": "/Users/luca/Desktop/项目/muse/lucagstack",
+    "branch": "main",
+    "head": "ad9903dfad7fea93ac2f5fd3ba1945b11adf6518",
+    "tree": "c467889bfef1c67b3053519dd63933804bf1ae1b",
+    "upstream_main": "ad9903dfad7fea93ac2f5fd3ba1945b11adf6518",
+    "tracked_working_diff_sha256": "17077a26b71cd2b60a1d9980e68406ca680d9bd6537c4b82795cd7f4abda0c84",
+    "tracked_cached_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "status_porcelain_v2_z_sha256": "2ac0d65c4561af1f490bc2937ecf5a9b362720754da15289370ac412e57d912f",
+    "untracked_count": 45,
+    "untracked_nul_path_list_sha256": "98c7536f4522dc94a044c4daa73c2ce8457534e515d00b4cb1576d1c411120d7",
+    "note": "The final exact status path freeze and full tracked binary diff hashes are also duplicated in the manifest so the handoff gate can mechanically reject drift."
+  },
+  "self_growth_extraction": {
+    "scope": "FRAMEWORK_META_NOT_PRODUCT",
+    "semantic_candidate": {
+      "id": "SC-20260820-001",
+      "path": "memory/semantic/candidates.jsonl",
+      "sha256": "fb7d53ebb5d7d88b6f179140e786c8654cd1b997afe37d999eb4ecd464e373a7",
+      "status": "CANDIDATE_PENDING_REVIEW"
+    },
+    "prompt_semantic_candidate": {
+      "id": "SC-20260820-002",
+      "path": "memory/semantic/candidates.jsonl",
+      "sha256": "fb7d53ebb5d7d88b6f179140e786c8654cd1b997afe37d999eb4ecd464e373a7",
+      "status": "CANDIDATE_PENDING_REVIEW"
+    },
+    "meta_episode": {
+      "id": "EP-20260820-133",
+      "index_path": "memory/episodic/index.jsonl",
+      "index_sha256": "c1af7a338f3e92a5571d8ac19a00abfa1f203f314a89f73c830274a1443397f2",
+      "archive_path": "memory/episodic/archive/2026.jsonl",
+      "archive_sha256": "90f90838ed6c9938ee2494eb71e249d837cd140a8f2ef2371aff2bc9ef09009e",
+      "raw_path": "memory/episodic/sessions/2026-08-20-rex-mpc2-cycle2-recovery-handoff-redteam.md",
+      "raw_sha256": "ccd8fe7a3f9b88763bd719d1f6501b6d18110ba2ce2f5b0f9f2d3df1924ebe10"
+    },
+    "unlock_marker": {
+      "path": ".claude/.episode-written-019fe5dc-3e4c-7300-a7c2-c0d8747fac82",
+      "verification": "REGULAR_FILE_EXISTENCE_ONLY",
+      "volatile_hook_bookkeeping": true
+    },
+    "completion_effect": "NONE"
+  },
+  "forensic_recovery": {
+    "ref": "rex/rule-execution-recovery-u011-20260814",
+    "role": "FORENSIC_ONLY_NOT_EXECUTION_BASE",
+    "tip": "29282803bd5f31064819de34c19a2e1663247b66",
+    "tree": "87c98aee201784c0454f63eebc03977165ff6a0d",
+    "common_base_with_canonical": "df63d4e1390d6da4a689c1be84121e84b55b6003",
+    "recovery_only_commits": 30,
+    "canonical_only_commits": 17,
+    "canonical_changed_paths_from_base": 22,
+    "recovery_changed_paths_from_base": 118,
+    "exact_overlap_paths": [
+      ".claude/hooks/project-scope-guard.mjs",
+      ".claude/observability/observations.jsonl",
+      "AGENTS.md",
+      "memory/scripts/consolidate_memory.py",
+      "memory/tests/test_memory_system.py",
+      "scripts/test-hooks.mjs",
+      "scripts/test-project-scope-guard.mjs",
+      "scripts/verify.sh"
+    ],
+    "unowned_overlap_disposition": "BLOCKED_DIRTY_OVERLAP"
+  },
+  "stale_checkout": {
+    "path": "/Users/luca/Desktop/luca_gstack",
+    "policy": "READ_ONLY_NEVER_ALIGN_PULL_OR_WRITE",
+    "head": "6edcabde191a852825dfb53f845a1eaac545c949",
+    "tree": "33557fa71c1d1d8f1f7a3b89c74f5c643b72ed79",
+    "status_porcelain_v2_z_sha256": "50ef74f5f7672bab82bc39b6bae7e500bcfa21f56825386a068eb171c9ab8c8b",
+    "working_diff_sha256": "7060ced74ee8e364ab424d458f7494773b9a657c0b88469c95105ec820a42a4c",
+    "cached_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "protected_tracked_dirty_paths": [
+      "memory/episodic/archive/2026.jsonl",
+      "memory/episodic/index.jsonl"
+    ]
+  },
+  "worktree_and_refs": {
+    "registered_worktree_count": 33,
+    "worktree_porcelain_sha256": "f25f75a4c1d8c81f04cae08fceb4ca47f4781c7fd1f6792608a4af7f5abe5dd8",
+    "show_ref_sorted_sha256": "e568f8063f1c6aacc251e1dd0418e5c551356542f2d077df4314a70d78b24e59",
+    "upstream_fetch_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+    "upstream_push_url": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+    "rule": "Do not prune missing worktree metadata or infer ownership from branch membership. Re-freeze before recovery."
+  },
+  "authorities": {
+    "rex_final_plan": {
+      "path": "framework-audit/2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md",
+      "sha256": "ca4d57b0057dea529943e167b833eaca5a07d51495fc0f62e2dd47ac23daf4d8"
+    },
+    "mpc2_change_order": {
+      "path": "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/FINAL-CHANGE-ORDER.md",
+      "sha256": "563f3b1bb4edff297ba932831b3d35faa7bc6fe9da63298c48934f94f059b9ce"
+    },
+    "mpc2_execution_delta": {
+      "path": "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/execution-delta.json",
+      "sha256": "8c36052143790ff099d71549d788a2c36dd8582391224344ad224c6693660ced"
+    },
+    "cycle2_patched_final_plan": {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-EXECUTION-PLAN.md",
+      "sha256": "4bfbfed81496fe53174a73bc4242b1b0043cc01292db636c379e0dd1892c12d7"
+    },
+    "cycle2_patched_final_handoff": {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-HANDOFF.md",
+      "sha256": "9f7837c44f9c3ef85d00f219e5beee5479bd7d05b5a8a71429d5aa20cce0b0d3"
+    },
+    "cycle2_manifest": {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/final-execution-manifest.json",
+      "sha256": "45ccb4812bdf5f8bcd86eab59ff35fd20810326354bdfeda7b03a4668d64e715"
+    },
+    "cycle2_defer_register": {
+      "path": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/defer-promotion-register.json",
+      "sha256": "92c6b8bd3a9b5754a4da31baa893beec8020c699c98ec4731fe185a804f0d5f7"
+    }
+  },
+  "checker_truth": {
+    "cycle2_final_handoff": {
+      "command": "node framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/verify-final-handoff.mjs",
+      "exit": 1,
+      "result": "FINAL_HANDOFF_GATE_FAIL (7)"
+    },
+    "rex_final_plan": {
+      "command": "node framework-audit/2026-08-11-rule-execution-handshake/tools/verify-final-plan.mjs",
+      "exit": 1,
+      "result": "Error: source manifest exact path set drift"
+    },
+    "mpc2_change_order": {
+      "command": "node framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/tools/verify-change-order.mjs",
+      "exit": 0,
+      "result": "FINAL_CHANGE_ORDER_GATE_PASS",
+      "scope": "CHANGE_ORDER_DEFINITION_ONLY"
+    }
+  },
+  "historical_gate_material": {
+    "forensic_g_package_descriptor": {
+      "sha256": "e59eb3742895a05166b2a65f49ef3befc87930bb488ea9379f9ed394f4dc93fb",
+      "status": "AWAITING_TST_PRE_AND_USER_APPROVAL",
+      "nonce": "9b8d3f528ee8d64239d792100966e7ab",
+      "expires_at": "2026-08-18T05:02:48Z",
+      "binding_or_result_committed": false,
+      "state": "EXPIRED_FORENSIC_BYTES_NOT_CURRENT_AUTHORIZATION"
+    },
+    "forensic_g_plan_result": {
+      "sha256": "1864c79f41aa365482f2b93dcfbcbea38df1b84da6c4be4b8c5c28d44db3e19d",
+      "opens": [
+        "U-001 PREP",
+        "TST-001 PRE"
+      ],
+      "does_not_open_later_human_gates": true
+    },
+    "stale_checker_disposition": "Do not write or align the stale checkout; carry the failure as a blocking acceptance delta until the applicable owner matrix and exact gate authorize checker/manifest resolution."
+  },
+  "external_evidence": {
+    "root": "/Users/luca/.luca/framework-audit-evidence/REX-20260811-001",
+    "top_level_roots": 13,
+    "file_count": 188,
+    "inventory_algorithm": "Recursively enumerate regular files; express each as a root-relative POSIX path; sort paths by raw UTF-8 byte order; serialize lowercase file_sha256 + two ASCII spaces + relative_path + LF; SHA-256 the complete UTF-8 stream.",
+    "excluded_non_regular_entries": [
+      "u008-2e1d5e0.6kwYgn/counter/counter.sock",
+      "u008-d6377df.XJqfbt/counter/counter.sock"
+    ],
+    "relative_path_file_hash_inventory_sha256": "6028425c89a8d72ef4a38d75bc49d7899e49a1afc3011f0668fbc06b7ca67ad8",
+    "u008_final_root": "u008-83adec9.yUSHyU",
+    "u008_summary_sha256": "3620bca8d1e39553d683bbb9a904d210a24bbedcac2a164dc3cf539fdc859cb5",
+    "u008_consumption_sha256": "139cad0c7ed2da8c5855cc75d4d76b1fc58095787ae01d207959bf497b67591f",
+    "u008_state": "HISTORICAL_EXPIRED_CONSUMED_NOT_FRESH_PASS",
+    "u009_approved_root": "u009-3188148.XlLYVg",
+    "u009_stored_root_device_inode": "16777230/132828101",
+    "u009_current_root_device_inode": "16777233/132828101",
+    "u009_state": "HISTORICAL_BYTES_ROOT_IDENTITY_MISMATCH_NOT_FRESH_VALID",
+    "transcript": {
+      "path": "/Users/luca/.codex/sessions/2026/08/09/rollout-2026-08-09T17-30-44-019fe5dc-3e4c-7300-a7c2-c0d8747fac82.jsonl",
+      "prefix_lines": 28119,
+      "prefix_bytes": 60441369,
+      "prefix_sha256": "38e5b5ba64483236521b53ddef75d44db729178676c1bcef5e57b584c6d379e2",
+      "approval_message_id": "msg_019ffe3a-a775-7072-894d-82bfd35d0ce2",
+      "approval_turn_id": "019ffe3a-a6fa-7573-934e-5fe6ea1f2bf5",
+      "approval_timestamp": "2026-08-14T03:04:44.661Z"
+    }
+  },
+  "containment": {
+    "live": {
+      "path": "/Users/luca/.claude/skills/resolving-merge-conflicts/SKILL.md",
+      "sha256": "5befc05bd6cc6513485521b0f62b80de39abb38cfb8703daa3aed9abb30fd4de"
+    },
+    "unsafe_backup": {
+      "path": "/Users/luca/.luca/quarantine/resolving-merge-conflicts/20260811T055628Z-c7c9ba81362a/unsafe-original/SKILL.md",
+      "sha256": "c7c9ba81362a786aac05d2223123bf1bd2f8a99c3243a72882ede9c68bedfb24"
+    },
+    "journal": {
+      "path": "/Users/luca/.luca/quarantine/resolving-merge-conflicts/20260811T055628Z-c7c9ba81362a/containment-journal.json",
+      "sha256": "a3c30778b30c12dd1329b162aa8afc8d6279dc572e33ed6e9f76617a34e09592",
+      "descriptor_sha256": "7dcdc8833c0ee2df2155d90acaa24f9ff616b496dbba93112381fb13603fe7fe",
+      "nonce": "d84ce5f789a86641d31867860f9598cf",
+      "approval_receipt_sha256": "c290ca8271fb1c13782fdf241da67a0b75838d6412fe294c76b6e667d94b038f",
+      "approval_turn_id": "019fef83-30ea-75a2-92e3-6e9d1f14c5be",
+      "transcript_offset": 8009972
+    },
+    "absent_discovery_paths": [
+      "/Users/luca/.agents/skills/resolving-merge-conflicts",
+      "/Users/luca/.codex/skills/resolving-merge-conflicts"
+    ],
+    "rule": "Never reopen the unsafe original. Historical TST-002 PRE must be recovered or remain blocked; only POST may be freshly rerun against containment."
+  },
+  "bootstrap_hazard": {
+    "canonical_hooks_path": ".codex/hooks.json",
+    "canonical_hooks_sha256": "46ac3cf6254367d94a8228e6c1722e2fa055cbf5d2fa608b17ebf016f2157a60",
+    "unsafe_memory_root": "/Users/luca/Desktop/luca_gstack",
+    "trusted_repo_lifecycle_hook_count": 6,
+    "safe_bootstrap_required": true,
+    "neutral_directory": "/Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap",
+    "mandatory_memory_isolation": {
+      "required": true,
+      "reason": "The normal search_memory.py path appends tracked canonical memory/retrieval-log.jsonl.",
+      "method": "Independent disposable local no-hardlinks memory clone at the frozen canonical HEAD with MEMORY_ROOT pointed at it; it is intentionally dirty and never evidence.",
+      "canonical_search_memory_allowed_during_bootstrap": false
+    },
+    "forensic_comparison_isolation": {
+      "required": true,
+      "method": "In the same self-contained bootstrap shell block, create a second no-hardlinks clone after the memory search, verify empty porcelain status at the frozen HEAD, and keep it read-only.",
+      "memory_clone_may_be_reused": false
+    },
+    "forbidden_inherited_git_environment": [
+      "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+      "GIT_CONFIG",
+      "GIT_CONFIG_PARAMETERS",
+      "GIT_CONFIG_COUNT",
+      "GIT_CONFIG_GLOBAL",
+      "GIT_CONFIG_SYSTEM",
+      "GIT_CONFIG_NOSYSTEM",
+      "GIT_OBJECT_DIRECTORY",
+      "GIT_DIR",
+      "GIT_WORK_TREE",
+      "GIT_IMPLICIT_WORK_TREE",
+      "GIT_GRAFT_FILE",
+      "GIT_INDEX_FILE",
+      "GIT_NO_REPLACE_OBJECTS",
+      "GIT_REPLACE_REF_BASE",
+      "GIT_PREFIX",
+      "GIT_SHALLOW_FILE",
+      "GIT_COMMON_DIR"
+    ]
+  },
+  "next_state": "READ_ONLY_AUTHORITY_GATE_EVIDENCE_OWNER_ADJUDICATION",
+  "prohibited_next_state": "U014_IMPLEMENTATION",
+  "reserved_final_task": {
+    "order": "AFTER_ALL_OTHER_INTEGRATION",
+    "commands": [
+      "git fetch upstream main",
+      "git show upstream/main:framework-audit/2026-08-11-rule-execution-handshake/SESSION-CHANGE-DECLARATION.md"
+    ],
+    "no_pull_or_overwrite": true
+  },
+  "_file_end": "RECOVERY-STATE.json"
+}

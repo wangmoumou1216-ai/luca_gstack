@@ -7,10 +7,19 @@
 import { spawnSync } from 'child_process';
 import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
 import { tmpdir } from 'os';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import assert from 'assert';
 
-const HOOK = resolve(process.cwd(), '.claude/hooks/project-scope-guard.mjs');
+// 被测守卫的定位：**按本脚本自身位置**，不按 process.cwd()。
+// 原写法是 resolve(process.cwd(), ...)（04a5faf, 2026-07-09 起未改），从非仓根 cwd 跑会
+// 静默变成 PASS=0 FAIL=88 且 **exit 仍是 0** —— 满屏红、无任何报错，极易被读成「守卫真的坏了」。
+// 2026-08-21 实测复现：仓根 88/0，中性目录 0/88。
+// PSG_HOOK_UNDER_TEST 是**显式**覆盖口，专供隔离变异夹具：把守卫连同 .claude/hooks/lib/*.mjs
+// 拷到临时目录后指向那份副本，即可在**不碰活体钩子**的前提下做变异测试
+// （守卫第 43/81 行有相对自身位置的动态 import，只拷单文件会 fail-open 静默退化，务必连 lib 一起拷）。
+const HOOK = process.env.PSG_HOOK_UNDER_TEST
+  || resolve(dirname(fileURLToPath(import.meta.url)), '..', '.claude/hooks/project-scope-guard.mjs');
 let pass = 0, fail = 0;
 function ok(name) { pass++; console.log('PASS ' + name); }
 function bad(name, e) { fail++; console.log('FAIL ' + name + ' :: ' + (e && e.message || e)); }
@@ -492,6 +501,138 @@ for (const command of [
     assert.match(o.hookSpecificOutput.permissionDecisionReason, /相对路径|dynamic|未绑定/);
   });
 }
+
+// ── IDENTITY-PATH-020：嵌套检出下的**绝对路径**框架作用域（此前整格无覆盖）────────────
+// 缺陷：classifyPath 缺 resolvedRelativeProjectAccess 那条 frameworkRoot 短路，导致同一操作
+// 写相对路径放行、写绝对路径被拒。Bash 与 Read/Edit 两条链都汇到 classifyPath，一处修复两处生效。
+check('IDENTITY-PATH-020a no-pin nested framework: Bash 绝对路径读框架文件应放行', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: `cat ${env.gstack}/scripts/verify.sh` } });
+  assert.equal(o, null, '框架自身文件不是项目作用域');
+});
+check('IDENTITY-PATH-020b no-pin nested framework: 仓根本身（无子路径）应放行', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: `git -C ${env.gstack} status` } });
+  assert.equal(o, null, 'insidePath 含根自身，仓根不该被判项目作用域');
+});
+check('IDENTITY-PATH-020c no-pin nested framework: Read 工具绝对路径读框架文件应放行', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/settings.json` } });
+  assert.equal(o, null, 'Read 与 Bash 必须同口径');
+});
+// —— 以下四条是**保护面**：豁免绝不能顺带放开共享展示路径或外层项目 ——
+check('IDENTITY-PATH-020d [保护面] 豁免不得放开 <gstack> 内的共享 docs/', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/docs/secret` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '共享展示链虽在 gstackRoot 内但必须仍受保护');
+});
+check('IDENTITY-PATH-020e [保护面] 豁免不得放开 workflow-state.yaml', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/workflow-state.yaml` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny');
+});
+check('IDENTITY-PATH-020f [保护面] 豁免不得放开 current-topic.txt', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/current-topic.txt` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny');
+});
+check('IDENTITY-PATH-020g [保护面] 豁免不得放开外层承载项目自己的目录', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'muse', 'docs', 'x.md') } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', 'lucagstack 的父项目目录不在豁免内');
+});
+
+// ── IDENTITY-PATH-021：框架豁免不得被 `..` 穿越绕开（2026-08-20 真机实测到的洞）──────
+// insidePath 是纯字符串前缀比对。只看字面的话 `<gstackRoot>/../../otherproj/x` 会因为字面以
+// gstackRoot 开头而被误放行 —— 等于用 `..` 就能绕开整个项目隔离。判据必须同时看字面与
+// resolve() 归一化后的形态。下面第一条是**保护面**，第二条守住不要误伤根内的合法 `..`。
+check('IDENTITY-PATH-021a [保护面] 经 .. 逃出框架根去别的项目 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const escaped = `${env.gstack}/../../beta/secret.md`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: escaped } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '字面前缀匹配不等于真的在根内');
+});
+check('IDENTITY-PATH-021b [保护面] 经 .. 绕回共享展示链 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const sneaky = `${env.gstack}/scripts/../docs/secret`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: sneaky } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '展示路径的排除也要对归一化形态判');
+});
+check('IDENTITY-PATH-021c 根内的合法 .. 不被误伤（归一化后仍在根内 → 放行）', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const inner = `${env.gstack}/scripts/../.claude/settings.json`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: inner } });
+  assert.equal(o, null, '归一化后仍在框架根内，属框架作用域');
+});
+
+// ── IDENTITY-PATH-022：框架豁免不得被**符号链接**绕开（2026-08-20 红队实证的洞）────────
+// resolve() 只做词法 `.`/`..` 折叠，**不解析软链**。只用它的话，gstackRoot 里任何一条名字不叫
+// docs/workflow-state.yaml/current-topic.txt 的软链都会被豁免吞掉，从而绕开 pin/redirect/deny
+// 全部逻辑（红队实测：backdoor -> 别的项目 可读可写；别名 -> 共享展示链 直接重开本 hook 要堵的原始洞）。
+// 判据必须问**真实目标**（realTargetOf 逐段上溯 + realpathSync），排除项也按 realpath 比。
+check('IDENTITY-PATH-022a [保护面] gstackRoot 内指向别的项目的软链 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const other = join(env.projects, 'beta');
+  mkdirSync(join(other, 'docs'), { recursive: true });
+  writeFileSync(join(other, 'docs', 'secret.md'), 'x');
+  symlinkSync(other, join(env.gstack, 'backdoor'));
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/backdoor/docs/secret.md` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '字面在根内不等于真实目标在根内');
+});
+check('IDENTITY-PATH-022b [保护面] 指向共享展示链的**别名**软链 → 必须 deny（否则重开原始洞）', () => {
+  const env = makeEnv({ nestedFramework: true, pins: {} , activeProject: 'alpha' });
+  symlinkSync(join(env.gstack, 'docs'), join(env.gstack, 'docs2'));
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/docs2/plan.md` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '经别名抵达展示链也必须被认出来');
+});
+check('IDENTITY-PATH-022c [保护面] gstackRoot 内的**悬空**软链 → 必须 deny（身份边界）', () => {
+  const env = makeEnv({ nestedFramework: true });
+  symlinkSync(join(env.projects, 'nonexistent-target'), join(env.gstack, 'dangling'));
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/dangling/x.md` } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '悬空软链不可豁免');
+});
+check('IDENTITY-PATH-022d 普通框架文件不因这条加固被误伤（仍放行）', () => {
+  const env = makeEnv({ nestedFramework: true });
+  writeFileSync(join(env.gstack, 'CLAUDE.md'), '# x');
+  const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/CLAUDE.md` } });
+  assert.equal(o, null, '真实目标确实在框架根内 → 属框架作用域');
+});
+
+// ── IDENTITY-PATH-023：本地变量拼接不得让字面匹配落空（2026-08-20 红队实证）───────────
+// 此前只展开已存在的 process.env 变量，于是把路径拆进本地变量，PROJECTS_ROOT 的字面子串
+// 在命令文本里从不出现，静态匹配整个落空。这条不需要恶意动机——用变量拼含中文/空格的路径
+// 是很自然的写法，会**无意**触发。已知不覆盖 $(...)／反引号／eval 等动态求值（见实现注释）。
+check('IDENTITY-PATH-023a [保护面] 本地赋值拼出别的项目路径 → 必须 deny', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const head = env.projects.slice(0, -2), tail = env.projects.slice(-2);
+  const cmd = `A="${head}"; B="${tail}"; ls "$A$B/beta/"`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: cmd } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '拆进变量不该让静态匹配落空');
+});
+check('IDENTITY-PATH-023b [保护面] 链式赋值：字面路径全程不出现，只能靠展开抓', () => {
+  // 初版这条把完整路径写进了 `A="<projects>"`，正则直接就抓到了，跟本地赋值展开无关——
+  // 变异（拔掉本地赋值）不转红当场暴露它是弱断言。这里把路径拆开，字面从不出现。
+  const env = makeEnv({ nestedFramework: true });
+  const head = env.projects.slice(0, -2), tail = env.projects.slice(-2);
+  const cmd = `A="${head}"; B="${tail}"; C="$A$B/beta"; ls "$C/"`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: cmd } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '链式引用必须被解开');
+});
+check('IDENTITY-PATH-023d [保护面] 三级链式引用（合成变量名短于部件）同样要被抓', () => {
+  // 诚实标注：本条**不能**证明多趟展开是承重的。变异实测（把循环改成单趟）它仍绿——
+  // 因为赋值语句 `X="$AAA$BBB/beta"` 自身在第一趟就被展开成字面路径、当场被正则抓到，
+  // 与 $X 解不解得开无关。多趟循环是防御性冗余，我没能构造出证明它承重的输入。
+  const env = makeEnv({ nestedFramework: true });
+  const head = env.projects.slice(0, -2), tail = env.projects.slice(-2);
+  const cmd = `AAA="${head}"; BBB="${tail}"; X="$AAA$BBB/beta"; ls "$X/"`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: cmd } });
+  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', '多趟展开是承重的，不是防御性冗余');
+});
+check('IDENTITY-PATH-023c 不构成项目路径的普通变量用法不被误伤', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'X=/tmp; MSG="just text"; ls "$X" && echo "$MSG"' } });
+  assert.equal(o, null, '误伤面必须为零，否则老实写法会被绊倒');
+});
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

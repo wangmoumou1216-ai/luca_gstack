@@ -48,36 +48,60 @@ CANDIDATES = ROOT / "memory" / "semantic" / "candidates.jsonl"
 PROMOTED = ROOT / "memory" / "semantic" / "promoted-facts.yaml"
 
 
+# 单真值源是 main，但它有**两个检出**，而 memory/semantic/candidates.jsonl 在两边都是
+# untracked（各持一份、永不合并）。若只扫本地 store 取 max+1，**同一天在两个检出各提一条
+# 必然撞号**——2026-08-20 实测：两边各有一条内容完全不同的 SC-20260820-001 与 -002，
+# 而下游 verifier 只在其中一侧按 ID+字节校验，所以门禁看不见这个损伤。
+# 修法：跨全部已知检出取全局 max。ID 格式不变（下游有 SC-\d{8}-\d{3} 的消费者）。
+KNOWN_ROOTS = (
+    Path("/Users/luca/Desktop/luca_gstack"),              # 母版＝记忆权威 store
+    Path("/Users/luca/Desktop/项目/muse/lucagstack"),      # muse 运行时检出
+)
+
+
+def _seq_from(fact_id: str, prefix: str) -> int:
+    if not fact_id.startswith(prefix):
+        return 0
+    try:
+        return int(fact_id.split("-")[-1])
+    except Exception:
+        return 0
+
+
+def _max_seq_for_prefix(prefix: str) -> int:
+    """跨全部已知检出扫 candidates + promoted，返回该前缀下的最大序号。"""
+    roots = {ROOT.resolve()}
+    for r in KNOWN_ROOTS:
+        try:
+            if r.is_dir():
+                roots.add(r.resolve())
+        except Exception:
+            pass
+    best = 0
+    for root in roots:
+        cand = root / "memory" / "semantic" / "candidates.jsonl"
+        if cand.exists():
+            for line in cand.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    best = max(best, _seq_from(json.loads(line).get("id", ""), prefix))
+                except Exception:
+                    pass
+        prom = root / "memory" / "semantic" / "promoted-facts.yaml"
+        if prom.exists():
+            for line in prom.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line.startswith("- id:") or line.startswith("id:"):
+                    best = max(best, _seq_from(line.split(":", 1)[1].strip().strip('"'), prefix))
+    return best
+
+
 def next_id() -> str:
     today = datetime.now(timezone.utc).strftime('%Y%m%d')
     prefix = f"SC-{today}-"
-
-    # Count candidates with today's prefix
-    candidate_count = 0
-    if CANDIDATES.exists():
-        for line in CANDIDATES.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line:
-                try:
-                    rec = json.loads(line)
-                    if rec.get("id", "").startswith(prefix):
-                        seq = int(rec["id"].split("-")[-1])
-                        candidate_count = max(candidate_count, seq)
-                except Exception:
-                    pass
-
-    # Count promoted facts with today's prefix
-    promoted_count = 0
-    if PROMOTED.exists():
-        for line in PROMOTED.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line.startswith("- id:") or line.startswith("id:"):
-                fact_id = line.split(":", 1)[1].strip().strip('"')
-                if fact_id.startswith(prefix):
-                    seq = int(fact_id.split("-")[-1])
-                    promoted_count = max(promoted_count, seq)
-
-    return f"{prefix}{max(candidate_count, promoted_count) + 1:03d}"
+    return f"{prefix}{_max_seq_for_prefix(prefix) + 1:03d}"
 
 
 def main() -> int:

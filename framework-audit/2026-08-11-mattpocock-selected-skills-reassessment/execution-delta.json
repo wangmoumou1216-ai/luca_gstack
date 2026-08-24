@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0",
+  "change_order_id": "MPC2-CO-20260811-001",
+  "status": "FINAL_CHANGE_ORDER",
+  "date": "2026-08-11",
+  "canonical_repo": "/Users/luca/Desktop/项目/muse/lucagstack",
+  "upstream": {
+    "repo": "mattpocock/skills",
+    "head": "84fdeffd12f2ee307994d1eb6feb48173b6e0502"
+  },
+  "changes_plan": "framework-audit/2026-08-09-mattpocock-handshake-cycle2/FINAL-EXECUTION-PLAN.md",
+  "blocking_baseline": {
+    "plan": "framework-audit/2026-08-11-rule-execution-handshake/FINAL-EXECUTION-PLAN.md",
+    "required_terminal": "RULE_EXECUTION_VERIFIED",
+    "blocked_terminal": "BLOCKED_BY_REX_DELTA"
+  },
+  "authority": {
+    "mode": "SCOPED_SUPERSESSION",
+    "primary": "FINAL-CHANGE-ORDER.md",
+    "rule": "This change order overrides only explicitly mapped Cycle 2 clauses; all other original obligations remain active.",
+    "historical_head_decisions_mutated": false,
+    "historical_acceptance_denominator_mutated": false
+  },
+  "surface_budget": {
+    "new_shared_first_class_skills": [
+      "code-review",
+      "domain-modeling"
+    ],
+    "new_optional_workflow_presets": [
+      "engineering-delivery"
+    ],
+    "enhanced_existing_surfaces": [
+      "plan-agent:wayfinder-mode",
+      "tech-spec:synthesis-input-mode",
+      "task-plan:ticket-projection-boundary",
+      "orchestrator:implement-approved-frontier",
+      "handoff:explicit-operation",
+      "skill-authoring:agent-consumed-docs"
+    ],
+    "preserved_original_adapts": [
+      "codebase-design",
+      "resolving-merge-conflicts"
+    ],
+    "raw_upstream_installs": 0
+  },
+  "work_packets": [
+    {"id": "CO-01", "priority": "P0", "name": "rebaseline-and-owner-delta"},
+    {"id": "CO-02", "priority": "P0", "name": "extract-shared-code-review"},
+    {"id": "CO-03", "priority": "P1", "name": "add-shared-domain-modeling"},
+    {"id": "CO-04", "priority": "P1", "name": "formalize-wayfinder-plan-mode"},
+    {"id": "CO-05", "priority": "P1", "name": "enhance-engineering-delivery-surfaces"},
+    {"id": "CO-06", "priority": "P1", "name": "add-optional-engineering-delivery-preset"},
+    {"id": "CO-07", "priority": "P1", "name": "expose-existing-handoff-protocol"},
+    {"id": "CO-08", "priority": "P1", "name": "expand-writing-for-agents-doctrine"},
+    {"id": "CO-09", "priority": "P0", "name": "close-codebase-and-resolver-original-adapts"},
+    {"id": "CO-10", "priority": "P2", "name": "pilot-ticket-projection"},
+    {"id": "CO-11", "priority": "P0", "name": "prove-route-registration-live-parity"}
+  ],
+  "change_map": [
+    {"original": "section-0.2-and-3-promoted-now-zero", "action": "KEEP_SCOPED_TO_19_HEAD_DEFERS"},
+    {"original": "section-0.3-capability-list", "action": "EXPAND_WITH_CODE_REVIEW_DOMAIN_MODELING_AND_EXISTING_SURFACE_ENHANCEMENTS"},
+    {"original": "section-0.4-no-new-workflow-node", "action": "REPLACE_WITH_ONE_USER_SELECTED_OPTIONAL_ENGINEERING_DELIVERY_PRESET"},
+    {"original": "DEV-006-TST-006-codebase-design", "action": "KEEP_AND_RAISE_TO_P0"},
+    {"original": "DEV-007-TST-007-safe-resolver", "action": "KEEP_AND_RAISE_TO_P0"},
+    {"original": "DEV-009-tdd-code-review-pointer", "action": "POINT_TO_NEW_FIRST_CLASS_CODE_REVIEW_AFTER_ACTIVATION"},
+    {"original": "DEV-009-skill-authoring", "action": "EXPAND_TO_AGENT_CONSUMED_DOCUMENTATION_DOCTRINE"},
+    {"original": "DEV-010-TST-010-routing-closure", "action": "EXPAND_WITH_CHANGE_ORDER_SURFACES_AND_LIVE_DUAL_HARNESS_PROOF"},
+    {"original": "ASSERT-013-014", "action": "ADD_DASSERT_001_THROUGH_012"},
+    {"original": "321-2568-lineage", "action": "KEEP_AND_ADD_SEPARATE_DELTA_ACCEPTANCE_LEDGER"}
+  ],
+  "delta_assertions": [
+    "DASSERT-001",
+    "DASSERT-002",
+    "DASSERT-003",
+    "DASSERT-004",
+    "DASSERT-005",
+    "DASSERT-006",
+    "DASSERT-007",
+    "DASSERT-008",
+    "DASSERT-009",
+    "DASSERT-010",
+    "DASSERT-011",
+    "DASSERT-012"
+  ],
+  "tracker_projection": {
+    "canonical_truth": "pinned-project-docs-plus-stable-ids-plus-handoff",
+    "projection_only": true,
+    "phase_0_contract": "GO",
+    "phase_1_local_markdown": "GO_AFTER_CONTRACT_PASS",
+    "phase_2_one-provider-one-project": "CONDITIONAL_GO",
+    "phase_3_autonomous_multi-session": "NO_GO_WITHOUT_PROVIDER_CAS_LEASE_AND_LIVE_PROOF",
+    "canonical_tracker": "PERMANENT_NO_GO"
+  },
+  "completion": {
+    "required_original_matrix": "321/321-and-2568/2568",
+    "required_delta_assertions": "12/12",
+    "required_harnesses": ["claude", "codex"],
+    "final_token": "MPC2_CHANGE_ORDER_INTEGRATED"
+  },
+  "verification": {
+    "command": "node framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/tools/verify-change-order.mjs",
+    "pass_token": "FINAL_CHANGE_ORDER_GATE_PASS"
+  },
+  "_file_end": "execution-delta.json"
+}

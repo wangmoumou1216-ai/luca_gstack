@@ -60,7 +60,7 @@ function makeFixture({
   if (edits != null) writeFileSync(join(root, '.claude', '.session-edit-count'), String(edits));
   if (tools != null) writeFileSync(join(root, '.claude', '.session-tool-count'), String(tools));
   if (activeProject) {
-    // docs 软链指向 .../项目/<name>/docs —— session-sync 据此解析"激活项目"。
+    // docs 软链指向 .../项目/<name>/docs （旧行为遗留：session-sync **不再**据此解析激活项目，改由 TURN_ACTIVE binding 唯一裁决；此处软链只用于构造「有共享展示链但无 pin」的场景）。
     const project = join(root, '项目', activeProject);
     const projDocs = join(project, 'docs');
     mkdirSync(projDocs, { recursive: true });
@@ -137,6 +137,12 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
     `block 路径 stdout 必须是可解析的纯 JSON，实际: ${JSON.stringify(result.stdout.slice(0, 80))}`);
   assert.equal(parsed.decision, 'block', 'decision 必须为 block');
   assert.ok(parsed.reason && parsed.reason.length > 0, 'block 必须带 reason');
+  // C4（源自 2026-08-11 WIP 台账 framework-audit/2026-08-20-stash-wip-adjudication.md）：
+  // 无 pin 时 reason 必须**自陈**「当前无激活项目」，不得把共享展示链指向的项目当成激活项目
+  // 写进提取指令。session-sync 现在只从 TURN_ACTIVE 的 binding 取 project、无软链回退，
+  // 但本文件 makeFixture 的注释仍描述着旧的「据软链解析」行为——这两条断言防它被重新引入。
+  assert.match(parsed.reason, /当前无激活项目/, 'no-pin 的 reason 必须自陈无激活项目');
+  assert.doesNotMatch(parsed.reason, /testproj/, 'no-pin 的 reason 不得出现共享展示链指向的项目名');
   assert.doesNotMatch(result.stdout, /已自动写入 checkpoint/, 'checkpoint 提示不得污染 stdout');
   assert.doesNotMatch(result.stderr, /已自动写入 checkpoint/, 'no-pin 不得沿 shared docs/state 写 checkpoint');
   console.log('PASS HOOK-001 no-pin substantive 仍 block，且 shared project 零读取/零 checkpoint');

@@ -53,7 +53,7 @@ function ok(name) { passed++; console.log(`  ✅ ${name}`); }
 // T1 无 LUCA_APP → 不投递，且 tool-count 照常 bump（既有行为回归）
 {
   const root = makeFixture(), home = mkdtempSync(join(tmpdir(), 'home-'));
-  const abs = makeArtifact(home, 't1.md');
+  const abs = makeArtifact(home, 't1.html');
   const r = runHook(root, home, { input: stdinFor(abs) });
   assert.equal(r.status, 0);
   assert.equal(spoolEntries(home).length, 0);
@@ -61,10 +61,10 @@ function ok(name) { passed++; console.log(`  ✅ ${name}`); }
   ok('T1 无 LUCA_APP 不投递 + 计数照常');
 }
 
-// T2 LUCA_APP=1 + Write .md → 恰一条 JSON 条目，字段正确
+// T2 LUCA_APP=1 + Write .html → 恰一条 JSON 条目，字段正确
 {
   const root = makeFixture(), home = mkdtempSync(join(tmpdir(), 'home-'));
-  const abs = makeArtifact(home, 't2.md');
+  const abs = makeArtifact(home, 't2.html');
   const r = runHook(root, home, { env: { LUCA_APP: '1' }, input: stdinFor(abs) });
   assert.equal(r.status, 0);
   const es = spoolEntries(home);
@@ -74,7 +74,7 @@ function ok(name) { passed++; console.log(`  ✅ ${name}`); }
   assert.equal(j.mode, 'auto');
   assert.equal(j.sid, 'test-sid');
   assert.ok(Math.abs(Date.now() - j.ts) < 60000);
-  ok('T2 Write .md 投递一条且字段正确');
+  ok('T2 Write .html 投递一条且字段正确');
 }
 
 // T3 白名单外扩展名不投
@@ -89,7 +89,7 @@ function ok(name) { passed++; console.log(`  ✅ ${name}`); }
 // T4 排除路径段不投（memory / .claude / node_modules）
 {
   const root = makeFixture(), home = mkdtempSync(join(tmpdir(), 'home-'));
-  for (const rel of ['memory/a.md', '.claude/c.md', 'node_modules/b.html']) {
+  for (const rel of ['memory/a.html', '.claude/c.html', 'node_modules/b.html']) {
     const abs = join(home, 'work', rel);
     mkdirSync(join(abs, '..'), { recursive: true });
     writeFileSync(abs, 'x');
@@ -124,11 +124,23 @@ function ok(name) { passed++; console.log(`  ✅ ${name}`); }
 // T7 非编辑类工具（Bash/Task）不投
 {
   const root = makeFixture(), home = mkdtempSync(join(tmpdir(), 'home-'));
-  const abs = makeArtifact(home, 't7.md');
+  const abs = makeArtifact(home, 't7.html');
   runHook(root, home, { env: { LUCA_APP: '1' }, input: stdinFor(abs, 'Bash') });
   runHook(root, home, { env: { LUCA_APP: '1' }, input: stdinFor(abs, 'Task') });
   assert.equal(spoolEntries(home).length, 0);
   ok('T7 Bash/Task 不投');
 }
 
-console.log(`\ntest-auto-open: ${passed}/7 全部通过`);
+// T8 收窄回归（2026-08-21）：md/mdx/图片不再自动投递——只有 html 是「产出物主动推送」的对象。
+//    这条是本次收窄的**唯一**守卫：删掉它，白名单被改回去也没人发现。
+{
+  const root = makeFixture(), home = mkdtempSync(join(tmpdir(), 'home-'));
+  for (const rel of ['t8.md', 't8.markdown', 't8.mdx', 't8.png', 't8.svg']) {
+    const abs = makeArtifact(home, rel);
+    runHook(root, home, { env: { LUCA_APP: '1' }, input: stdinFor(abs) });
+  }
+  assert.equal(spoolEntries(home).length, 0);
+  ok('T8 md/mdx/图片不再投递（收窄回归）');
+}
+
+console.log(`\ntest-auto-open: ${passed}/8 全部通过`);
