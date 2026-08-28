@@ -39,6 +39,7 @@ tools:
 
 ```
 phase_id:    <WA 的 Phase ID，如 "WA-2">
+eval_run_id: <调用方生成的本次判定唯一 ID>
 outputs:     <Work Agent 完成报告中的 outputs_produced 列表>
 assertions:  <Plan Agent 定义的断言列表，shell 命令格式>
 blockers:    <Work Agent 完成报告中的 blockers（如有）>
@@ -92,6 +93,7 @@ subagent 被调度时，调用方提供：
 
 ```
 skill_name:   <刚完成的 skill 名称>
+eval_run_id:  <调用方生成的本次判定唯一 ID>
 topic:        <当前 topic>
 scene:        <当前 scene A/B/C/D>
 output_path:  <skill 的主产出文件路径>
@@ -252,26 +254,28 @@ Status: PASS | FAIL | CONDITIONAL_PASS（通过率 <pass>/<total>）
 
 ---
 
-## 4b. Eval 落账（报告生成后必做，两种模式都执行）
+## 4b. Eval verdict envelope（报告生成后必做，两种模式都执行）
 
-报告生成后，用 Bash 把判定结果落进 eval-log（BUILD-lite，2026-07-15 记忆层评审 C5：
-此前落账靠 orchestrator prose 约定、实证 2026-06-28 起失守——之后 3 个 quality-gate
-session 零记录；改由本 agent 自己确定性执行，不再依赖调用方记得）：
+quality-gate 是**判决者，不是记录者**。即使当前 harness 把父会话的写权限继承给本 agent，
+也不得写文件、不得调用 `record_eval.py`、不得自行宣称 `eval-log: recorded`。报告末尾只输出
+一个严格 JSON envelope，交给调用方的独立 recorder 校验并落账。
 
-```bash
-[ -f memory/scripts/record_eval.py ] && python3 memory/scripts/record_eval.py \
-  --skill "<skill_name 或 phase_id>" \
-  --topic "<topic；Free Task Mode 用任务一句话概括>" \
-  --scene "<scene；未知用 unknown>" \
-  --gate-status <PASS|FAIL|CONDITIONAL_PASS> \
-  --gate-score <通过率 0-1，如 5/6 写 0.83> \
-  --gate-findings <FAIL/WARN 项各一个参数，无则省略该 flag> \
-  --duration <lightweight|medium|heavy> \
-  || echo "eval-log: skipped"
+调用方必须传入唯一 `eval_run_id`；缺失时仍可返回质量报告，但**不得**输出一个伪合法
+`EVAL_ENVELOPE_JSON`，也不得由判官自造 ID。报告末尾改为输出：
+`EVAL_ENVELOPE_ERROR {"code":"MISSING_EVAL_RUN_ID","retry":"redispatch_same_artifact"}`，
+要求调用方为同一产物生成 ID 后重新 dispatch。`UNKNOWN` 只属于 criteria 判定，不是 envelope status。
+
+固定输出标记与 schema（标记之后只放一个 JSON 对象，不加解释）：
+
+```text
+EVAL_ENVELOPE_JSON
+{"schema_version":1,"producer":"quality-gate","eval_run_id":"<调用方原样传入>","subject":{"skill":"<skill_name 或 phase_id>","topic":"<topic>","scene":"<A|B|C|D|unknown>","input_summary":"<≤300字>","output_paths":["<path>"] ,"duration":"<lightweight|medium|heavy>"},"verdict":{"status":"<PASS|FAIL|CONDITIONAL_PASS>","passed":<整数>,"total":<正整数>,"findings":["<FAIL/WARN 摘要>"]}}
 ```
 
-- 脚本不存在（非 luca_gstack/下游环境）或执行失败 → 跳过，不影响报告返回（fail-open）。
-- 报告末尾加一行注明结果：`eval-log: recorded` 或 `eval-log: skipped`。
+- `PASS` 必须且只能对应 `passed == total`；UNKNOWN criterion 计入 `total`、不计入 `passed`。
+- envelope 不包含自报 hash。父级 recorder 对完整规范化 JSON 计算 SHA-256，并以 `eval_run_id`
+  做幂等/冲突校验；这是落账后的篡改可见性，不冒充来源签名。
+- 报告硬约束的 ≤500 tokens 只计算人类可读报告；envelope 是固定机器尾部。
 
 ---
 

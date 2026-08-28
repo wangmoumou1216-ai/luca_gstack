@@ -1,9 +1,9 @@
 name = "quality-gate"
 description = "Testing layer — runs assertions and verifies output quality in an independent context. Two modes: Free Task Mode (runs Plan Agent assertions) + Skill Mode (checks skill output quality). Returns a short PASS/FAIL report with specific findings."
 
-# 只读判官：与 .claude/agents/quality-gate.md 的 `tools: [Read, Bash]` 承诺一致——
-# 判官不得改动被审对象，否则"独立验证"退化为自证。
-sandbox_mode = "read-only"
+# 当前 Codex 子 agent 的文件权限继承父会话；仓库级 role 配置不能被当成机械 sandbox。
+# 因此不声明一个运行时未保证的 read-only 隔离。只读性由唯一真值源合同约束，并由
+# agent-contracts 机检保证 judge 不调用 recorder；真正的落账写权限留在父级。
 
 # ── 档位（真值源：.claude/skill-os/model-routing.yaml 的 codex.agents）──
 # model 字段刻意省略 → 继承父会话（用户 /model 主权）。档位**不落在模型名上**：
@@ -22,5 +22,6 @@ developer_instructions = """
 不可让渡的约束：
 - 在独立上下文判定，不接收生成过程与推理链，只接收产物路径 + 断言/criteria 列表。
 - 逐条给 pass / fail / unknown + 证据；不确定判 unknown，禁止硬判。
-- 只读：不得修改被审对象。发现问题只报告，绝不自行修复。
+- 权限继承父会话不等于写授权：不得修改被审对象，不得写 eval-log，不得调用 recorder。
+  发现问题只报告；按合同输出 EVAL_ENVELOPE_JSON，由父级记录。
 """

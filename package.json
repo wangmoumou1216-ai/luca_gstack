@@ -19,6 +19,11 @@
     "test:routes": "node scripts/test-route-guard.mjs",
     "test:project-scope": "node scripts/test-project-scope-guard.mjs",
     "test:project-transaction": "node scripts/test-project-transaction.mjs",
+    "test:observability": "python3 scripts/test-observability-writer.py",
+    "test:gate-verdict": "python3 scripts/test-gate-verdict-recorder.py",
+    "test:framework-html-baseline": "node scripts/test-framework-html-baseline.mjs",
+    "test:ci-contract": "node scripts/test-ci-contract.mjs",
+    "test:semantic-parity": "node scripts/test-semantic-parity.mjs",
     "test:memory": "python3 -m unittest memory.tests.test_memory_system -v",
     "check:memory-health": "python3 memory/scripts/check_memory_health.py",
     "check:routing-map": "node scripts/check-routing-map.mjs",
@@ -31,7 +36,9 @@
     "check:self-model": "node scripts/build-self-model.mjs --check",
     "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs",
     "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs",
-    "check:agent-contracts": "node scripts/check-agent-contracts.mjs"
+    "check:agent-contracts": "node scripts/check-agent-contracts.mjs",
+    "check:ci-contract": "node scripts/check-ci-contract.mjs",
+    "check:framework-html": "node scripts/check-framework-html.mjs"
   },
   "dependencies": {
     "playwright": "^1.61.1"

@@ -28,7 +28,7 @@
 //
 // 【职责】只做三件必要的事，能不翻译就不翻译：
 //  1. 仓库自守（B1 的必然要求）
-//  2. 入向 tool_name 归一化：shell→Bash、apply_patch→Write，使现有 hook 的正则原样命中。
+//  2. 入向 tool_name 归一化：shell→Bash；apply_patch 按目标 hook 分流成 Bash/Write。
 //     不归一化会连锁失效：post-edit 的 .session-edit-count 恒 0 → session-sync 判"无实质工作"
 //     → Stop 自成长捕获永不触发。
 //  3. 出向**最小**适配：updatedInput 补 allow；裸文本包 additionalContext（仅限支持该字段的事件）。
@@ -49,10 +49,10 @@ const diag = (m) => { try { process.stderr.write(`[codex-adapter] ${m}\n`); } ca
 //   shell 执行  → tool_name='Bash'      tool_input={command}
 //   文件编辑    → tool_name='apply_patch' tool_input={command}   ← **不是 file_path**
 // 两个都用 `command` 装载，这决定了映射必须**按目标 hook 分流**，而不是全局一张表：
-//   · project-scope-guard 的 Bash 分支扫描 `input.command` 找越界路径（第 218 行），
+//   · project-scope-guard 的 Bash 分支识别 patch header 与 shell path operand；
 //     其余工具名走 `file_path`/`notebook_path` 字段。apply_patch 没有 file_path，
 //     若映射成 Write，guard 会去找一个不存在的字段 → **项目隔离形同虚设**。
-//     ⇒ 对 guard 映射成 Bash，命令串扫描照常生效。
+//     ⇒ 对 guard 映射成 Bash，由 guard 只检查 patch target header，不扫描补丁正文。
 //   · post-edit 用 /^(Write|Edit|MultiEdit|NotebookEdit)$/ 计编辑数，Bash 只计工具数。
 //     ⇒ 对 post-edit 映射成 Write，编辑计数才递增（否则 .session-edit-count 恒 0 →
 //       session-sync 判"无实质工作" → Stop 自成长捕获不触发，即本文件头 B1 的连锁失效）。
@@ -99,8 +99,8 @@ const SUPPORTS_ADDITIONAL_CONTEXT = new Set([
   'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'SubagentStart',
 ]);
 
-// 本 adapter 经**用户级** ~/.codex/hooks.json 注册（B1：仓库级不被加载），因此会在所有项目里
-// 被调用。只在本仓范围内工作，其它项目静默放行——全局注册不等于全局生效。
+// 本 adapter 经仓库级 .codex/hooks.json 注册，配置随版本控制走；不应在用户级重复注册。
+// inRepo 仍作为纵深防御：若未来被误注册到全局，也不会在其它项目执行本仓 hook。
 // 2026-08-05 评审：macOS 默认卷**大小写不敏感**，而 relative() 大小写敏感 ——
 // 从 `/…/muse/LUCAGSTACK/` 进来时 rel=`../LUCAGSTACK` → 判不在仓内 → **人明明在仓内，
 // 6 个 hook 全部静默跳过**（项目隔离/路由/自成长捕获同时消失）且零线索。

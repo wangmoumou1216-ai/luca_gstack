@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "validator": "html-validate",
+  "validator_version": "11.10.0",
+  "policy": "exact-debt-snapshot",
+  "files": {
+    "detail-page-2col.html": {
+      "no-implicit-button-type": 28,
+      "no-inline-style": 3,
+      "text-content": 11
+    },
+    "detail-page-3col.html": {
+      "no-implicit-button-type": 34,
+      "no-inline-style": 4,
+      "prefer-native-element": 6,
+      "text-content": 8,
+      "void-style": 78
+    },
+    "form-page.html": {
+      "no-implicit-button-type": 17,
+      "no-implicit-input-type": 5,
+      "text-content": 2
+    },
+    "home-page.html": {
+      "element-permitted-content": 1,
+      "no-implicit-button-type": 12,
+      "no-inline-style": 2,
+      "text-content": 3
+    },
+    "list-page.html": {
+      "no-inline-style": 2,
+      "unique-landmark": 2,
+      "void-style": 99
+    },
+    "shared-head.html": {
+    }
+  }
+}

@@ -6,11 +6,25 @@ description: |
   workflow 模式下必须消费 design-brief 的 Design Generation Packet。
   本 skill 是外部插件 `magicpath` 的本地占位，供 orchestrator 路径解析用。
 recommended-model: guided-execution  # 2026-07-10 new_scenario_protocol 定档：生成外包给MagicPath平台，本体是轻编排
+metadata:
+  codex-projection-mode: external-delegation
+  codex-projection-target: .agents/skills/magicpath/SKILL.md
+  codex-projection-reason: "Codex 入口使用 MagicPath 官方完整 skill；本文件保留 luca_gstack workflow gate 与委托语义。"
+  codex-obligation-source: .claude/skill-os/optional-workflow-graph.yaml#handoff_gates.design_brief_to_magicpath
 ---
 
 # magicpath — 外部插件委托
 
 MagicPath 是全局安装的插件 skill，直接通过 `magicpath` 命令调用。
+
+## Codex runtime receipt authority
+
+<!-- LUCA_RUNTIME_RECEIPT_BEGIN -->
+Before any MagicPath CLI command, read `.claude/skills/office/magicpath/SKILL.md` and enforce the
+gate referenced by `codex-obligation-source` exactly in its source-declared scope, override,
+parallel-start, order, and blocking semantics. If the wrapper or gate cannot be read, or the gate
+does not pass, stop before delegation.
+<!-- LUCA_RUNTIME_RECEIPT_END -->
 
 ## 输入契约
 

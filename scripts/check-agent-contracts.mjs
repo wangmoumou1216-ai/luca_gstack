@@ -31,6 +31,7 @@ const orch = read('.claude/agents/orchestrator.md');
 const pre = read('.claude/agents/preflight-agent.md');
 const qg = read('.claude/agents/quality-gate.md');
 const wa = read('.claude/agents/work-agent-template.md');
+const codexQg = read('.codex/agents/quality-gate.toml');
 
 // 1. OD-first 锚（当轮漂移正是三处全漏，缺一即复发）
 t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-design'));
@@ -72,9 +73,20 @@ t('plan-agent 含增量重规划协议', plan.includes('增量重规划（Replan
 t('plan-agent 含块 5 出门自检', plan.includes('块 5 — 出门自检'));
 t('preflight 含未列出 WARN 规则', pre.includes('无专属检查行'));
 
+// 8. 判决权与记录权分离：judge 只产 envelope，父级 recorder 校验并落账。
+t('quality-gate 不自行调用 eval recorder', !/python3\s+memory\/scripts\/record_eval\.py/.test(qg));
+t('quality-gate 输出结构化 EVAL_ENVELOPE_JSON', qg.includes('EVAL_ENVELOPE_JSON'));
+t('quality-gate envelope 绑定 eval_run_id', qg.includes('eval_run_id'));
+t('quality-gate 缺 run id 时 fail-closed 而非伪造 UNKNOWN status',
+  qg.includes('EVAL_ENVELOPE_ERROR') && qg.includes('MISSING_EVAL_RUN_ID') && qg.includes('不是 envelope status'));
+t('orchestrator 独占 verdict recorder 调用', /record_eval\.py\s+--verdict-file/.test(orch));
+t('orchestrator 不允许改写 judge verdict', orch.includes('不得改写 verdict'));
+t('Codex quality-gate 如实声明权限继承', codexQg.includes('权限继承父会话'));
+t('Codex quality-gate 不宣称已机械隔离 sandbox', !/^sandbox_mode\s*=/m.test(codexQg));
+
 if (failures.length) {
   console.error(`❌ agent 契约回归 FAIL（${failures.length}/${n}）：`);
   failures.forEach(f => console.error('  - ' + f));
   process.exit(1);
 }
-console.log(`agent-contracts: ${n}/${n} 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/模型档/能力锚）`);
+console.log(`agent-contracts: ${n}/${n} 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/模型档/能力锚/判决记录分权）`);

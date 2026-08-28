@@ -14,11 +14,21 @@ compatibility: Requires Node.js (for npx), network access to MagicPath, and brow
 metadata:
   author: MagicPathAI
   source: https://github.com/MagicPathAI/agent-skills
+  luca-wrapper: .claude/skills/office/magicpath/SKILL.md
+  luca-obligation-source: .claude/skill-os/optional-workflow-graph.yaml#handoff_gates.design_brief_to_magicpath
+  luca-obligation-digest: sha256:703328f01d8366d01647ca4ba877a333136ecbb149adfd9df138597a034eed20
 allowed-tools: Bash(npx -y magicpath-ai *)
 user-invocable: true
 ---
 
 # MagicPath
+
+<!-- LUCA_RUNTIME_RECEIPT_BEGIN -->
+Before any MagicPath CLI command, read `.claude/skills/office/magicpath/SKILL.md` and enforce the
+gate referenced by `codex-obligation-source` exactly in its source-declared scope, override,
+parallel-start, order, and blocking semantics. If the wrapper or gate cannot be read, or the gate
+does not pass, stop before delegation.
+<!-- LUCA_RUNTIME_RECEIPT_END -->
 
 A platform for building, sharing, and installing UI components via AI. Components are added as
 source code to the user's project via the `magicpath-ai` CLI.

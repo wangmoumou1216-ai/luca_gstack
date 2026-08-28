@@ -206,7 +206,7 @@ function classifyPath(p, binding) {
   if (gReal
       && insidePath(s, gstackRoot)
       && insidePath(gReal, rootReal)
-      && !insidePath(gReal, underRoot(gd, '/Users/luca/Desktop/项目/muse/docs'))
+      && !insidePath(gReal, underRoot(gd, 'docs'))
       && !samePath(gReal, underRoot(gState, '.claude', 'workflow-state.yaml'))
       && !samePath(gReal, underRoot(gTopic, '.claude', 'current-topic.txt'))) {
     return { scoped: false };
@@ -253,6 +253,145 @@ function classifyPath(p, binding) {
 
 // Bash：对"路径位"的 docs/·state·topic token 做保守重写。
 // anchor = 行首 / 空白 / 引号 / 重定向或赋值符 —— 避免误伤 mydocs/、已是绝对的 /x/docs/。
+function shellWordSegments(command) {
+  const segments = [];
+  let words = [];
+  let token = null;
+  let quote = '';
+
+  const finishToken = (end) => {
+    if (!token) return;
+    token.end = end;
+    words.push(token);
+    token = null;
+  };
+  const finishSegment = () => {
+    if (words.length) segments.push(words);
+    words = [];
+  };
+
+  for (let index = 0; index < command.length; index++) {
+    const char = command[index];
+    if (!token && !quote && /\s/.test(char)) continue;
+    if (!quote && (char === ';' || char === '|' || char === '&' || char === '\n')) {
+      finishToken(index);
+      finishSegment();
+      continue;
+    }
+    if (!token) token = { start: index, end: index, value: '' };
+    if (quote) {
+      if (char === quote) {
+        quote = '';
+      } else if (char === '\\' && quote === '"' && index + 1 < command.length) {
+        token.value += command[++index];
+      } else {
+        token.value += char;
+      }
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === '\\' && index + 1 < command.length) {
+      token.value += command[++index];
+    } else if (/\s/.test(char)) {
+      finishToken(index);
+    } else {
+      token.value += char;
+    }
+  }
+  finishToken(command.length);
+  finishSegment();
+  return segments;
+}
+
+// Search patterns are data, not path operands. Mask only the pattern argument of a
+// small, explicit command subset and only when an explicit path operand follows it.
+// Unknown options remain unmasked (conservative fallback), while real path operands
+// continue through the normal redirect/deny logic.
+function maskSearchPatternArguments(command) {
+  const ranges = [];
+  const noValueFlags = /^-(?:[nHhIiLlSsUuvwcFq]+|-[A-Za-z0-9][\w-]*)$/;
+  const valueFlags = new Set([
+    '-A', '-B', '-C', '-g', '-j', '-m', '-t', '-T',
+    '--after-context', '--before-context', '--context', '--encoding', '--engine',
+    '--glob', '--iglob', '--max-count', '--max-depth', '--max-filesize', '--pre',
+    '--pre-glob', '--replace', '--sort', '--sortr', '--threads', '--type', '--type-add',
+  ]);
+
+  for (const segment of shellWordSegments(String(command || ''))) {
+    let cursor = 0;
+    if (segment[cursor]?.value === 'command') cursor++;
+    const executable = (segment[cursor]?.value || '').split('/').pop();
+    if (!['rg', 'grep', 'egrep', 'fgrep'].includes(executable)) continue;
+    cursor++;
+
+    let defaultPattern = null;
+    const explicitPatterns = [];
+    const pathOperands = [];
+    let pending = '';
+    let positionalOnly = false;
+    let unsupported = false;
+
+    for (; cursor < segment.length; cursor++) {
+      const word = segment[cursor];
+      const value = word.value;
+      if (pending === 'pattern') {
+        explicitPatterns.push(word);
+        pending = '';
+        continue;
+      }
+      if (pending === 'option-value') {
+        pending = '';
+        continue;
+      }
+      if (!positionalOnly && value === '--') {
+        positionalOnly = true;
+        continue;
+      }
+      if (!positionalOnly && (value === '-e' || value === '--regexp')) {
+        pending = 'pattern';
+        continue;
+      }
+      if (!positionalOnly && /^(?:-e|--regexp=).+/.test(value)) {
+        unsupported = true;
+        break;
+      }
+      if (!positionalOnly && value.startsWith('-')) {
+        const optionName = value.split('=')[0];
+        if (valueFlags.has(optionName)) {
+          if (!value.includes('=')) pending = 'option-value';
+          continue;
+        }
+        if (noValueFlags.test(value)) continue;
+        unsupported = true;
+        break;
+      }
+      if (!defaultPattern && explicitPatterns.length === 0) defaultPattern = word;
+      else pathOperands.push(word);
+    }
+
+    if (unsupported || pending || pathOperands.length === 0) continue;
+    ranges.push(...explicitPatterns, ...(defaultPattern ? [defaultPattern] : []));
+  }
+
+  if (!ranges.length) return { command, restore: value => value };
+  const restorations = [];
+  let masked = String(command);
+  [...ranges].sort((a, b) => b.start - a.start).forEach((range, index) => {
+    const marker = `__LUCA_SEARCH_PATTERN_${index}__`;
+    restorations.push([marker, masked.slice(range.start, range.end)]);
+    masked = masked.slice(0, range.start) + marker + masked.slice(range.end);
+  });
+  return {
+    command: masked,
+    restore(value) {
+      let restored = value;
+      for (const [marker, original] of restorations) restored = restored.replace(marker, original);
+      return restored;
+    },
+  };
+}
+
 function rewriteBash(cmd, binding) {
   if (typeof cmd !== 'string') return { changed: false, cmd, hasScoped: false, unsafe: false };
   let hasScoped = false;
@@ -493,7 +632,58 @@ function frameworkWriteDeny(tool, inp) {
   return null;
 }
 
+// Codex projects apply_patch into this hook's Bash-shaped input. A patch is not a
+// shell command: only its file headers are path operands; body lines are arbitrary
+// source text. Inspect and, when bound, rewrite those headers without scanning body
+// content as executable shell syntax.
+function inspectApplyPatch(command, binding) {
+  const source = String(command || '');
+  if (!source.startsWith('*** Begin Patch\n') || !source.trimEnd().endsWith('*** End Patch')) return null;
+
+  const header = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/gm;
+  const matches = [...source.matchAll(header)];
+  if (!matches.length) return null;
+
+  const replacements = [];
+  for (const match of matches) {
+    const target = match[1].trim();
+    if (isFrameworkPath(target) && !frameworkEscapeActive()) {
+      return { handled: true, denied: true, reason: `补丁目标位于只读母版保护区：${target}` };
+    }
+    const classified = classifyPath(target, binding);
+    if (!classified.scoped) continue;
+    if (!classified.redirected) {
+      return { handled: true, denied: true, reason: `补丁目标不属于当前可验证 binding：${target}` };
+    }
+    const targetOffset = match.index + match[0].lastIndexOf(match[1]);
+    replacements.push({ start: targetOffset, end: targetOffset + match[1].length, value: classified.redirected });
+  }
+
+  let rewritten = source;
+  for (const item of replacements.sort((a, b) => b.start - a.start)) {
+    rewritten = rewritten.slice(0, item.start) + item.value + rewritten.slice(item.end);
+  }
+  return { handled: true, denied: false, changed: rewritten !== source, command: rewritten };
+}
+
 function main() {
+  const state = readSessionState();
+  const binding = activeBinding(state);
+  const bashCommand = toolName === 'Bash' ? String(input.command || '') : '';
+  if (toolName === 'Bash') {
+    const patch = inspectApplyPatch(bashCommand, binding);
+    if (patch?.denied) {
+      return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+        permissionDecisionReason: patch.reason } });
+    }
+    if (patch?.handled) {
+      if (patch.changed) {
+        return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: patch.command } } });
+      }
+      passThrough();
+    }
+  }
+
   // framework/ 只读保护先于项目隔离（正交，两者都可能命中同一次调用；framework 写一律不放行）
   const fwHit = frameworkWriteDeny(toolName, input);
   if (fwHit) {
@@ -501,13 +691,12 @@ function main() {
       permissionDecisionReason: `framework/ 是只读母版保护区（SF-002 宪法红线）：「${fwHit}」被拒。原型/演示应把母版复制到项目目录再改，绝不原地写 framework/。确需维护母版本身 → touch .claude/.allow-framework-write（改完 rm）或设 env ALLOW_FRAMEWORK_WRITE=1 后重试。` } });
   }
 
-  const state = readSessionState();
-  const binding = activeBinding(state);
-
   // Bash 先处理，且优先识别命令位的 project.sh switch/new —— 直接 CLI 切换（! 命令）route-guard 看不到，
   // 在此认领 pin，闭合"CLI 切换后 pin 不更新"的洞。识别后立即用新 pin 继续本命令的重写。
   if (toolName === 'Bash') {
-    const cmd = String(input.command || '');
+    const cmd = bashCommand;
+    const maskedSearch = maskSearchPatternArguments(cmd);
+    const guardCmd = maskedSearch.command;
     if (state.state === 'SWITCH_ONLY') {
       if (exactMutationMatches(state, cmd)) passThrough();
       if (mentionsProjectMutation(cmd) || mentionsInternalProjectController(cmd) || rewriteBash(cmd, null).hasScoped) {
@@ -521,22 +710,22 @@ function main() {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: 'project-pin.mjs 是 hook/project.sh 的内部事务接口，不能作为同轮绕过 terminal/epoch 的项目工具调用。' } });
     }
-    const variableRef = variableProjectReference(cmd, binding);
+    const variableRef = variableProjectReference(guardCmd, binding);
     if (variableRef) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: 'Bash 通过环境变量或 ~ 间接引用项目根/display 路径，hook 无法安全重写其运行时值；请改用已验证 binding 的显式绝对路径。' } });
     }
-    const relativeRef = relativeProjectReference(cmd, binding);
+    const relativeRef = relativeProjectReference(guardCmd, binding);
     if (relativeRef?.denied) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: `Bash 相对路径会离开 luca_gstack 并进入未绑定/跨项目作用域（${relativeRef.value}${relativeRef.resolved ? ` → ${relativeRef.resolved}` : ''}）；请先完成项目绑定或改用明确的框架内路径。` } });
     }
-    const direct = directProjectPathsAllowed(cmd, binding);
+    const direct = directProjectPathsAllowed(guardCmd, binding);
     if (direct.seen && !direct.allowed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: `Bash 直接项目路径不属于当前可验证 binding（${direct.value}）；禁止 no-pin/跨项目/失效 identity 访问。` } });
     }
-    const r = rewriteBash(cmd, binding);
+    const r = rewriteBash(guardCmd, binding);
     if (r.unsafe) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: 'Bash 项目路径含 . / .. / 空段 traversal，禁止重写或执行。' } });
@@ -547,7 +736,7 @@ function main() {
         permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。` } });
     }
     if (r.changed) {
-      return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: r.cmd } } });
+      return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: maskedSearch.restore(r.cmd) } } });
     }
     passThrough();
   }

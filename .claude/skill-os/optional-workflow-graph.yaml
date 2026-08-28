@@ -118,6 +118,7 @@ handoff_gates:
 
   design_brief_to_magicpath:
     applies_when: "workflow_mode"
+    order_significant: false  # block_if 是集合；重排不改变语义，增删才要求 projection digest 更新
     block_if:
       - "design_generation_packet missing"
       - "tool_consumption_contract missing"
@@ -131,6 +132,7 @@ handoff_gates:
       - "required_state_coverage missing"
       - "ux_brief not written to docs/decisions/"
     allow_standalone_override: false
+    allow_parallel_start: false
     note: "MagicPath Phase 必须等此 gate PASS 后才能启动，严禁并发"
 
   design_brief_to_open_design:

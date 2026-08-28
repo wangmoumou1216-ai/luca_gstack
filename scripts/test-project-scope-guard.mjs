@@ -634,5 +634,88 @@ check('IDENTITY-PATH-023c 不构成项目路径的普通变量用法不被误伤
   assert.equal(o, null, '误伤面必须为零，否则老实写法会被绊倒');
 });
 
+// Regression: search-pattern data must not be interpreted as a display-path operand.
+check('IDENTITY-PATH-024a no-pin rg pattern text is data, not a project path operand', () => {
+  const env = makeEnv();
+  mkdirSync(join(env.gstack, 'framework-audit'), { recursive: true });
+  const displayDir = String.fromCharCode(100, 111, 99, 115);
+  const protectedPattern = [displayDir, 'handoff'].join('/');
+  const command = `rg -n "${protectedPattern}" framework-audit/report.md`;
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } });
+  assert.equal(o, null, '搜索模式中的受保护路径字样不得被当成真实路径');
+});
+check('IDENTITY-PATH-024b [保护面] rg 的真实 path operand 仍受 NO_PIN 保护', () => {
+  const env = makeEnv();
+  const displayDir = String.fromCharCode(100, 111, 99, 115);
+  const protectedPath = [displayDir, 'handoff'].join('/');
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: `rg -n "handoff" ${protectedPath}` } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-024c pinned rg rewrites only the path operand and preserves the pattern', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const displayDir = String.fromCharCode(100, 111, 99, 115);
+  const protectedPattern = [displayDir, 'handoff'].join('/');
+  const command = `rg -n "${protectedPattern}" ${displayDir}/review`;
+  const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command } });
+  assert.equal(o.hookSpecificOutput.updatedInput.command,
+    `rg -n "${protectedPattern}" ${abs(env, 'alpha', displayDir)}/review`);
+});
+check('IDENTITY-PATH-024d project-scope guard source is checkout-portable', () => {
+  const source = readFileSync(HOOK, 'utf8');
+  const localMachinePrefix = ['/Users', 'luca', 'Desktop'].join('/');
+  assert.equal(source.includes(localMachinePrefix), false,
+    '展示路径兜底不得写死开发机绝对路径');
+});
+check('IDENTITY-PATH-024e patch body path-like text is data, target header decides scope', () => {
+  const env = makeEnv();
+  const displayDir = String.fromCharCode(100, 111, 99, 115);
+  const patch = [
+    '*** Begin Patch',
+    `*** Update File: ${join(env.gstack, 'scripts', 'x.mjs')}`,
+    '@@',
+    `+const example = "${displayDir}/handoff";`,
+    '*** End Patch',
+  ].join('\n');
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: patch } });
+  assert.equal(o, null, '补丁正文不是 shell operand，不得按正文中的示例字符串拒绝');
+});
+check('IDENTITY-PATH-024f [保护面] patch target header pointing at display scope is denied', () => {
+  const env = makeEnv();
+  const displayDir = String.fromCharCode(100, 111, 99, 115);
+  const patch = [
+    '*** Begin Patch',
+    `*** Update File: ${displayDir}/x.md`,
+    '@@',
+    '+safe text',
+    '*** End Patch',
+  ].join('\n');
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: patch } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-PATH-024g patch body cannot trigger framework write heuristics', () => {
+  const env = makeEnv();
+  const patch = [
+    '*** Begin Patch',
+    `*** Update File: ${join(env.gstack, 'scripts', 'ci-check.mjs')}`,
+    '@@',
+    `+const example = 'cp generated.html framework/list-page.html';`,
+    '*** End Patch',
+  ].join('\n');
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: patch } });
+  assert.equal(o, null, '补丁正文中的命令示例不得覆盖真实 target header 判定');
+});
+check('IDENTITY-PATH-024h [保护面] patch target header cannot write framework', () => {
+  const env = makeEnv();
+  const patch = [
+    '*** Begin Patch',
+    '*** Update File: framework/list-page.html',
+    '@@',
+    '+unsafe',
+    '*** End Patch',
+  ].join('\n');
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: patch } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);

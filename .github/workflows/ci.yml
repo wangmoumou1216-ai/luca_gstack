@@ -71,6 +71,14 @@ jobs:
         run: npm run check:hooks
       - name: Route-guard golden tests
         run: npm run test:routes
+      - name: Project-scope guard conformance
+        run: npm run test:project-scope
+      - name: Project identity transaction conformance
+        run: npm run test:project-transaction
+      - name: Observability writer concurrency + recovery
+        run: python3 scripts/test-observability-writer.py
+      - name: Quality-gate verdict recorder authority contract
+        run: python3 scripts/test-gate-verdict-recorder.py
       - name: Routing-map coverage + skill SSOT consistency
         run: npm run check:routing-map
       - name: Project routing dry-run
@@ -79,6 +87,8 @@ jobs:
         run: npm run check:coding-discipline
       - name: Quality gate contracts
         run: npm run check:quality-gates
+      - name: Agent orchestration + verdict/recorder separation contracts
+        run: npm run check:agent-contracts
       - name: Memory system tests
         run: npm run test:memory
       - name: Memory stable-facts health
@@ -97,6 +107,16 @@ jobs:
 
       - name: Harness detection + Codex viability registry
         run: npm run check:harness
+      - name: Codex projection static wiring (CI-safe host checks)
+        run: node scripts/verify-codex-wiring.mjs --static --ci
+      - name: Evolution adjudication default-deny contracts
+        run: npm run check:evolution-adjudication
+      - name: CI blocking/coverage/gatherer contract
+        run: npm run check:ci-contract
+      - name: Framework HTML debt-baseline checker contract
+        run: npm run test:framework-html-baseline
+      - name: CI contract proof-it-bites
+        run: npm run test:ci-contract
 
       # claude5-unhobble C7：远端补 B1/S18/S19——守 CLAUDE.md 预算/parity 锚/skill 注册
       # 的三个关键 checker 此前只在本地 verify.sh（FAST_COMMIT 可跳），CI 兜底为事后信号
@@ -107,6 +127,8 @@ jobs:
           [ "$SZ" -le 45098 ]
       - name: Capability-parity anchors (S18 remote)
         run: node scripts/check-capability-parity.mjs
+      - name: Cross-harness semantic projection proof-it-bites (S40 remote)
+        run: npm run test:semantic-parity
       - name: Skill registration sync (S19 remote)
         run: npm run check:registration
       # Phase6 MINOR-3：三个新门补远端网（此前 S31/S32/S33 仅本地、FAST_COMMIT 可跳）
@@ -140,13 +162,31 @@ jobs:
           echo "All framework HTML files present ✓"
       - name: Validate HTML syntax
         run: |
-          npm install -g html-validate
-          for f in framework/*.html; do
-            html-validate "$f" && echo "✓ $f" || echo "⚠ $f (warning only)"
-          done
-          # docs/prototype 中的原型（如有）也做检查
+          npm install -g html-validate@11.10.0
+          npm run check:framework-html
+          # Downstream prototypes are optional on a clean framework checkout.
+          # When present, report their debt without changing the framework gate.
           if ls docs/prototype/*.html 2>/dev/null | head -1 | grep -q .; then
             for f in docs/prototype/*.html; do
-              html-validate "$f" && echo "✓ $f" || echo "⚠ $f (warning only)"
+              html-validate "$f" && echo "✓ $f" || echo "⚠ $f (downstream warning only)"
             done
           fi
+
+  required-checks:
+    name: Required Checks
+    if: ${{ always() }}
+    needs:
+      - validate-yaml
+      - validate-markdown
+      - validate-skills
+      - validate-framework-logic
+      - validate-html
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every CI job to succeed
+        run: |
+          test "${{ needs.validate-yaml.result }}" = "success"
+          test "${{ needs.validate-markdown.result }}" = "success"
+          test "${{ needs.validate-skills.result }}" = "success"
+          test "${{ needs.validate-framework-logic.result }}" = "success"
+          test "${{ needs.validate-html.result }}" = "success"
