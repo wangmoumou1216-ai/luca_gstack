@@ -210,6 +210,20 @@ const DOWNSTREAM_SCOPE_RULES = [
   { id: 'product', pattern: /产品|业务|页面|功能|需求|客户|订单|原型|用户|接口|数据库|应用|网站|代码库|仓库|模块|\bcrm\b/i },
 ];
 
+// 范围词有极性：明确说“不是/不涉及下游项目”是在收窄范围，不能再把其中的
+// “产品/项目”当成正向 downstream 证据。这里只消去语义闭合的否定短语；同句中
+// 另有“页面/功能/某个项目”等正向对象时仍会由 DOWNSTREAM_SCOPE_RULES 命中。
+const NEGATED_DOWNSTREAM_SCOPE_RULES = [
+  {
+    id: 'not-downstream-project',
+    pattern: /(?:不是|并非|不属于|不涉及|无关(?:于)?|非)\s*(?:任何)?\s*(?:下游)?\s*(?:产品|业务)?\s*项目(?:任务|工作)?/i,
+  },
+  {
+    id: 'no-downstream-binding',
+    pattern: /(?:不要|不得|无需|禁止)\s*(?:激活|确认|切换)(?:(?:\s*[、，,或和与]\s*)(?:激活|确认|切换))*\s*(?:任何)?\s*(?:下游)?\s*(?:产品|业务)?\s*项目/i,
+  },
+];
+
 function matchingScopeRuleIds(value, rules) {
   return rules.filter(rule => rule.pattern.test(value)).map(rule => rule.id);
 }
@@ -256,28 +270,30 @@ function classifyRoutingScope(prompt, projects, currentProject) {
   const namedProject = projects.find(name => nameMatchesIn(projectIdentityText(prompt), name));
   const frameworkSignals = matchingScopeRuleIds(prompt, FRAMEWORK_SCOPE_RULES);
   const controlSignals = matchingScopeRuleIds(prompt, FRAMEWORK_CONTROL_RULES);
-  const residual = stripScopeRules(
+  const scopeResidual = stripScopeRules(
     stripScopeRules(prompt, FRAMEWORK_SCOPE_RULES),
     FRAMEWORK_CONTROL_RULES,
   );
+  const negatedDownstreamSignals = matchingScopeRuleIds(scopeResidual, NEGATED_DOWNSTREAM_SCOPE_RULES);
+  const residual = stripScopeRules(scopeResidual, NEGATED_DOWNSTREAM_SCOPE_RULES);
   const downstreamSignals = matchingScopeRuleIds(residual, DOWNSTREAM_SCOPE_RULES);
 
   // 具名 identity 仍决定最高优先级的 scope，但不再丢掉同句中的框架/续接信号：目标项目
   // 已经激活时 Gate 已满足，后面的 complexity 必须还能看见这些信号。
   if (namedProject) {
-    return { kind: 'named_downstream', namedProject, frameworkSignals, controlSignals, downstreamSignals };
+    return { kind: 'named_downstream', namedProject, frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
   }
   if (!frameworkSignals.length && !controlSignals.length) return { kind: 'ordinary' };
 
   if (downstreamSignals.length) {
     const affirmsCurrent = /当前项目|这个项目|本项目/.test(residual) && currentProject;
     if (affirmsCurrent) {
-      return { kind: 'current_downstream', project: currentProject, frameworkSignals, controlSignals, downstreamSignals };
+      return { kind: 'current_downstream', project: currentProject, frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
     }
-    return { kind: 'mixed_ambiguous', frameworkSignals, controlSignals, downstreamSignals };
+    return { kind: 'mixed_ambiguous', frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
   }
 
-  return { kind: 'pure_framework_meta', frameworkSignals, controlSignals };
+  return { kind: 'pure_framework_meta', frameworkSignals, controlSignals, negatedDownstreamSignals };
 }
 
 // 对话延续/状态询问豁免（G3，2026-07-04）：整句就是"继续/停/问进度"类 check-in 时不注入
@@ -589,7 +605,7 @@ function frameworkFlowMode(flow, prompt) {
   if (flow !== 'framework-evolution') return 'default';
   // 显式点名 scout 是模式 1/1b，不被同句里的“评估”等宽词改写成模式 2。
   if (/framework-evolution-scout/i.test(prompt)) return 'scout';
-  const explicitBenchmark = /对标|全面对一对|全面对比|深度对比|深评|benchmark/i.test(prompt);
+  const explicitBenchmark = /对标|全面对一对|全面对比|深度对比|深评|benchmark|\bmode\s*2\b|模式\s*2/i.test(prompt);
   const comparativeBenchmark = /对比|比较|评估/.test(prompt)
     && /harness|框架|体系|仓库|repo|开源/i.test(prompt);
   return explicitBenchmark || comparativeBenchmark ? 'benchmark' : 'scout';

@@ -887,6 +887,34 @@ const cases = [
     },
   },
   {
+    name: '框架演进轴极性: 显式否定下游范围不得反向制造 Project Gate',
+    prompt: '这是 luca_gstack 的框架任务，不是下游产品项目任务，保持 NO_PIN，不要触发 Project Gate。执行 framework-evolution Mode 2，深度调研 Codex harness。',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'FRAMEWORK_FLOW');
+      assert.equal(decision.flow, 'framework-evolution');
+      assert.equal(decision.mode, 'benchmark');
+    },
+  },
+  {
+    name: '框架演进轴极性: 禁止激活/确认/切换下游项目仍保持纯框架范围',
+    prompt: 'luca_gstack 框架演进：不要激活、确认或切换任何下游项目，执行 framework-evolution Mode 2。',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'FRAMEWORK_FLOW');
+      assert.equal(decision.flow, 'framework-evolution');
+    },
+  },
+  {
+    name: '框架演进轴极性反担保: 真正的框架与未具名产品项目混合请求仍须澄清',
+    prompt: '评估 luca_gstack 框架，并同步改造某个产品项目的页面功能',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NEEDS_CONTEXT');
+      assert.equal(decision.projectAction, 'clarify_framework_or_project_scope');
+    },
+  },
+  {
     name: '框架演进轴: 用户纠正“应该是自我成长流程”时不再掉进 Project Gate',
     prompt: '我这个不是命中的应该是自我成长流程吗',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },

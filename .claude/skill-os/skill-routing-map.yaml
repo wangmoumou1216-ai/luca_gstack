@@ -18,7 +18,7 @@ framework_flows:
     invoke: "framework-evolution"
     scope: "framework_meta"
     weight: 10
-    triggers: [自我成长, 自我成长流程, 自我演进, 自进化, 框架演进, framework evolution, framework-evolution-scout]
+    triggers: [自我成长, 自我成长流程, 自我演进, 自进化, 框架演进, framework evolution, framework-evolution, framework-evolution-scout]
 
 # ── luca_gstack project skills ───────────────────────────────────────────────
 project_skills:
