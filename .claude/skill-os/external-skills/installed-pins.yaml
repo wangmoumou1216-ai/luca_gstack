@@ -117,3 +117,15 @@ units:
     静默自动升级（5.1.0→6.1.1 无人察觉 37 天是本 watcher 立项实证）。2026-07-15 补审通过：官方
     marketplace 渠道、6.x 自带 plugin hooks 已与框架 hooks 实测共存数周（全 hook 回归绿）、
     原 vetting 结论为"冗余于已装"非安全议题
+- name: handoff
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/productivity/handoff
+  install_path: .claude/skills/office/handoff
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: d28dfdc39beadc3142a33359b5cfa4765dcbd0bc
+  ack_sha: null
+  pinned_at: '2026-08-28'
+  source: adoption-log
+  note: 用户显式覆盖 2026-07 的 REJECTED 安装裁决；Luca 适配为 explicit-intent-gated、OS-temp
+    session transfer，不替代项目级 workflow handoff、handoff-protocol 或 checkpoint

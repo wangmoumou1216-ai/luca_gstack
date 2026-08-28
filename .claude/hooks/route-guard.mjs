@@ -286,6 +286,9 @@ function classifyRoutingScope(prompt, projects, currentProject) {
 // ② 长度 ≤10。「继续做个原型」含实义任务词、锚定失败 → 照常路由；「继续项目」被上游
 // 老项目正则先捕获 → 仍走 Project Gate。
 const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀了的！!。.？?…\s]*$/;
+// 会话 handoff 是项目无关工具。只豁免“明确把当前会话交给新 agent/session”这一窄意图；
+// handoff-protocol、项目级 workflow handoff 等普通提及不能命中。
+const SESSION_HANDOFF_INTENT_RE = /(?:^\s*[$/]?handoff(?:\s|$)|会话交接|生成(?:一份)?交接文档|(?:把)?(?:当前|这个)会话\s*交给(?:下个|下一个)\s*(?:agent|session)|新\s*session\s*接手(?:当前|这个)会话|session\s+handoff)/i;
 function isContinuation(prompt) {
   return prompt.length <= 10 && CONTINUATION_RE.test(prompt.trim());
 }
@@ -357,7 +360,7 @@ function projectGate(prompt, projects, currentProject, routingScope) {
   // project context (e.g. /idea ingesting meeting notes, /compare diffing two
   // files, agent-browser/web-access fetching URLs). Let them route via
   // skillDecision; don't short-circuit them through the project gate.
-  if (/会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取|翻译/.test(prompt)) {
+  if (SESSION_HANDOFF_INTENT_RE.test(prompt) || /会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取|翻译/.test(prompt)) {
     return null;
   }
   // Audit M3: framework self-maintenance code-hygiene (清理/体检 luca 自身
@@ -592,11 +595,25 @@ function frameworkFlowMode(flow, prompt) {
   return explicitBenchmark || comparativeBenchmark ? 'benchmark' : 'scout';
 }
 
+// AGENTS.md 的 slashless alias 契约：只有消息首 token 与真实 command 文件完全对应时，
+// 才等价为斜杠命令。这样既兼容会拦截斜杠的客户端，也不把正文 casual mention 或隐藏
+// skill 目录误当一级入口。
+function visibleSlashlessAlias(prompt) {
+  const name = prompt.match(/^\s*([a-z][\w-]*)(?:\s|$)/i)?.[1]?.toLowerCase();
+  if (!name) return '';
+  return existsSync(join(projectRoot, '.claude/commands', name + '.md')) ? '/' + name : '';
+}
+
 function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
   const direct = prompt.match(/^[$/][a-z][\w-]*/i)?.[0];
   if (direct) {
     const skill = direct.startsWith('$') ? `/${direct.slice(1)}` : direct;
     return { decision: 'SINGLE_SKILL', skill, candidates: [skill] };
+  }
+
+  const slashlessSkill = visibleSlashlessAlias(prompt);
+  if (slashlessSkill) {
+    return { decision: 'SINGLE_SKILL', skill: slashlessSkill, candidates: [slashlessSkill] };
   }
 
   const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'))
@@ -734,7 +751,7 @@ function buildDecision(prompt) {
   // 2026-07-13 fable review B-F1：显式 / 或 $ 直呼 = 用户最新明确请求（规则优先级 #1），不被
   // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
   // 较软 PLAN_CHECK 门（原为 /auto 设计；auto 已于 2026-08-03 移出 HEAVY 做截流实验，现成员仅 muse-loop-orchestrate）。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
-  const directCall = /^[$/][a-z][\w-]*/i.test(prompt);
+  const directCall = /^[$/][a-z][\w-]*/i.test(prompt) || !!visibleSlashlessAlias(prompt);
   if (!directCall && complexity.decision === 'PLAN_MODE') return complexity;
 
   const skillResult = skillDecision(prompt, routingScope);

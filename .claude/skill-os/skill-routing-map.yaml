@@ -28,6 +28,13 @@ project_skills:
     weight: 10
     triggers: [全流程, 自动做, auto, 一键, 帮我全部, 端到端, 完整设计, 全套方案, 全套功能设计, 完整功能设计, 全部搞定, 整套做]
 
+  handoff:
+    invoke: "/handoff"
+    weight: 8
+    # 只收显式“跨 session 接手”意图；禁用裸 交接/handoff 词条，避免撞项目 handoff、
+    # handoff-protocol 与 workflow handoff。裸首 token 由 slashless command 接线处理。
+    triggers: [会话交接, 生成交接文档, 生成一份交接文档, 当前会话交给下个agent, 当前会话交给下一个agent, 当前会话交给下个session, 当前会话交给下一个session, 这个会话交给下个agent, 这个会话交给下一个agent, 这个会话交给下个session, 这个会话交给下一个session, 新session接手当前会话, 新session接手这个会话, session handoff]
+
   idea:
     invoke: "/idea"
     weight: 6

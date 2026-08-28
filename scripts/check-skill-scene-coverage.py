@@ -57,6 +57,8 @@ TABLE = {
     "quick-research": (None, [f"{D}/research/*quick-research*.md"], "unmapped"),
     "ux-research": (None, [f"{D}/research/ux-research-*.md"], "unmapped"),
     "idea": (None, [f"{D}/idea/*.md"], "unmapped"),
+    # 会话工具：产物刻意落 OS 临时目录，不进入项目产物面；用 episodic skills_used 观察触发。
+    "handoff": (None, [], "session-tool"),
     # auto：截流实验观察对象（2026-08-03 移出 ROUTE_GUARD_HEAVY_SKILLS，60 天盒到期 2026-10-02）。
     # 它是编排器、无唯一文件产物——观察通道 = 窗口内 episodic skills_used 含 "auto" 的条数
     # （自陈字段有漏记可能，复盘时辅以对话记录核对；混杂因素：部分触发词召回不全，
@@ -179,6 +181,10 @@ def main():
         if strength == "experiment":
             used = episodic_uses(skill, cutoff)
             print(f"{skill:24} {'-':>6} {used:>7}  EXPERIMENT（截流实验观察中，output=窗口内 episodic 使用数；到期 2026-10-02 复盘，判据与混杂因素见 TABLE 注释）")
+            continue
+        if strength == "session-tool":
+            used = episodic_uses(skill, cutoff)
+            print(f"{skill:24} {'-':>6} {used:>7}  SESSION-TOOL（项目无关、OS 临时产物不入库；output=窗口内 episodic 使用数）")
             continue
         if strength == "unobservable":
             print(f"{skill:24} {'-':>6} {out_n:>7}  UNOBSERVABLE（场景不落盘；命中靠语义兜底 + session-restore kit→synthesis 接力提醒，不判）")

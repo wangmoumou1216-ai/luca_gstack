@@ -45,7 +45,10 @@ if (kinds[0] === 'symlink') {
   ];
   assert.deepEqual(targets, expected, 'display tuple must target one exact canonical project identity');
   for (let i = 0; i < expected.length; i++) assert.ok(existsSync(expected[i]), `${links[i].key} target missing: ${expected[i]}`);
-  const state = readFileSync(expected[1], 'utf8');
+  let state = readFileSync(expected[1], 'utf8');
+  // 生成器可能输出合法的 YAML plain scalar；仅把两个白名单值规范成既有双引号形态，
+  // 其余值保持原样并继续由下一条断言拒绝。
+  state = state.replace(/^mode:\s*(standalone|workflow)\s*$/m, 'mode: "$1"');
   assert.match(state, /^nodes:/m, 'workflow-state must contain nodes');
   assert.match(state, /^mode:\s*"(standalone|workflow)"/m, 'workflow-state mode must be standalone or workflow');
 }

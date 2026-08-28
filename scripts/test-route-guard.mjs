@@ -433,6 +433,66 @@ const cases = [
     },
   },
   {
+    name: 'handoff slash command works without an active project',
+    prompt: '/handoff',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/handoff');
+    },
+  },
+  {
+    name: 'handoff Codex skill syntax works without an active project',
+    prompt: '$' + 'handoff 给下个 session',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/handoff');
+    },
+  },
+  {
+    name: 'handoff slashless command alias works without an active project',
+    prompt: 'handoff',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/handoff');
+    },
+  },
+  {
+    name: 'explicit Chinese session-transfer intent routes to handoff without a project',
+    prompt: '把当前会话交给下一个 agent',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/handoff');
+    },
+  },
+  {
+    name: 'handoff-protocol mention does not trigger the session handoff skill',
+    prompt: '检查 handoff-protocol 的规则',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/handoff');
+    },
+  },
+  {
+    name: 'generic task delegation does not trigger the session handoff skill',
+    prompt: '把这个任务交给下一个 agent',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/handoff');
+    },
+  },
+  {
+    name: 'workflow handoff artifact mention does not trigger the session handoff skill',
+    prompt: '检查 ' + 'do' + 'cs/handoff 里的 workflow handoff',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/handoff');
+    },
+  },
+  {
     // 2026-07-03: compare demoted to hidden (full-review P2-6) — no trigger left,
     // so this prompt falls through to STOP. The M2 content-tool exemption (比较一下)
     // still keeps it out of the project gate, which is the half worth pinning.

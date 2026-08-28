@@ -12,6 +12,14 @@ skills:
         optional: ["topic", "scene"]
     quality_gates: ["skill_pipeline_complete", "artifacts_produced"]
 
+  handoff:
+    modes:
+      standalone:
+        required: []
+        optional: ["next_session_focus"]
+    quality_gates: ["os_temp_output", "artifact_references_not_duplication", "sensitive_data_redacted", "suggested_skills_verified"]
+    notes: "用户显式调用的会话交接工具；输出 OS 临时目录，不碰项目级交接目录、工作流记录、当前话题或 checkpoint，不参与 workflow gate，也不要求项目 pin。"
+
   magicpath:
     modes:
       standalone:

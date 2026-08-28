@@ -243,6 +243,7 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 |------|---------|------|
 | `/office` | — | 显示一级可见 skill |
 | `/auto` | A B C D | **全自动多 Agent 编排**：自然语言需求 → 自动 Skill Pipeline → 并行执行 → 聚合产出 |
+| `/handoff` | — | **会话交接**：把当前对话压缩成 OS 临时目录 Markdown，供新 session/agent 接手；显式调用，不替代项目级 workflow handoff |
 | `/idea` | A B | 已有原始语料忠实结构化（会议纪要/语音稿/讨论记录转需求，不延展不推断；新想法的方向探索/需求梳理走 /brainstorm，不走 /idea）|
 | `/deepresearch` | A B D | 多 Agent 深度研究（产出研究报告，可作为 brainstorm 输入）|
 | `/quick-research` | A B D | 轻量研究（单 agent 后台查 primary source，单文件落盘；三档研究的中档，发散题升 deepresearch）|

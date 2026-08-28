@@ -367,7 +367,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 
 > **Codex 接线现状（2026-08-04）**：本仓已具备 Codex 侧完整接线，读取顺序与落点如下——
 > `.codex/hooks.json`（6 个生命周期 hook，全部经 `.codex/codex-hook-adapter.mjs` 调用）／
-> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（32 条软链 → `.claude/skills/office/*`）／
+> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（33 条软链 → `.claude/skills/office/*`）／
 > `.codex/workflow-runner.mjs`（Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，本 runner 把
 > workflow 脚本注入的 `agent()` 接到 `codex exec --output-schema` 上，`.claude/workflows/*.js` 零改写即可运行；
 > 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`。
@@ -391,7 +391,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 >
 > **调用语法（2026-08-05 活体实测）**：Codex **不执行** `.claude/commands/*.md`，`/brainstorm` 这类
 > 斜杠语法无效；但同一批 skill 经 `.agents/skills/` 软链**完全可用**，用 **`$<skill-name>`**（如
-> `$quick-research`）或 `/skills` 选择器调用，读到的是同一份 SKILL.md。`.claude/commands/` 里那 23 个
+> `$quick-research`）或 `/skills` 选择器调用，读到的是同一份 SKILL.md。`.claude/commands/` 里那 24 个
 > 文件是薄包装（正文即"读 SKILL.md 并执行"），故**功能无缺口、仅语法不同**。
 > subagent（`.codex/agents/*.toml`）**仓库级即可被发现**（与 hooks 不同），按名派发；
 > 工具名里的连字符会转成下划线（`preflight-agent`→`preflight_agent`），注册名不变。
@@ -589,6 +589,7 @@ AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落
 | 命令 | 场景 | 用途（一行） |
 |---|---|---|
 | `/auto` | A B C D | 全自动多 Agent 编排：自然语言需求 → Skill Pipeline → 并行执行 → 聚合产出 |
+| `/handoff` | 会话工具 | 当前对话 → OS 临时目录 Markdown，供新 session/agent 接手；显式调用，不替代项目级 workflow handoff |
 | `/idea` | A B | **已有原始语料**忠实结构化（会议纪要/语音稿/讨论记录）；新想法走 `/brainstorm` |
 | `/brainstorm` | A B D | 苏格拉底拷问式 PRD（用户说「写 PRD」即路由到它，不暴露独立 `/prd`） |
 | `/deepresearch` | A B D | 多 Agent 深度研究，产出研究报告 |
@@ -827,7 +828,7 @@ Only report this checklist to the user if it affects the work or the user asks.
 - Do not duplicate every Claude skill body here.
 - Do not pretend Codex can directly execute Claude **slash** commands (`/brainstorm` 等语法仍是
   Claude 侧的)。**但同一套 skill 本体在 Codex 下是可达的**（2026-08-04 接线）：`.agents/skills/`
-  下 32 条软链指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
+  下 33 条软链指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
   读的是同一份 SKILL.md（软链非副本——复制会漂移，见 b2b83d3）。所以正确说法是
   「触发语法不同，skill 本体同源」，不是「Codex 用不了这些 skill」。
 - Do not use this file to store task-specific notes.

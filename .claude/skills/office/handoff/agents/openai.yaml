@@ -1,0 +1,6 @@
+interface:
+  display_name: "Luca Handoff"
+  short_description: "Create an OS-temp session handoff for the next agent"
+policy:
+  # Luca 的 route-guard 只在明确的会话转移表达上推荐本 skill；允许该窄语义命中后调用。
+  allow_implicit_invocation: true
