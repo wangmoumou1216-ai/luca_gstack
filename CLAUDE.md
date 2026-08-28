@@ -8,10 +8,11 @@ This file is read by Claude Code at the start of every session.
 
 1. Project Gate first: 老项目 / 已有项目 / 继续项目 → 先确认或切换项目。
 2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 5条件；满足任一不得直接执行。**
-3. Ambiguity third: 多候选 → 问用户，不自行判断。
-4. Single skill last: 只在高置信且不触发 Plan Agent 5条件的前提下调用 skill。
-5. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
-6. Scene (A=新功能 / B=已有优化 / C=线上评审 / D=Agent化) **由用户或上下文确认**，
+3. Framework flow before skills: 自成长/演进/对标 → `framework-evolution`（研究仅作内部阶段）。
+4. Ambiguity next: 多候选 → 问用户，不自行判断。
+5. Single skill last: 只在高置信且不触发 Plan Agent 5条件的前提下调用 skill。
+6. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
+7. Scene (A=新功能 / B=已有优化 / C=线上评审 / D=Agent化) **由用户或上下文确认**，
    route-guard 不做自动分类；不得把"老项目"直接解释为场景 B（见 SC-20260523-002）。
 
 ## 仓库概览与非显然的坑
@@ -298,7 +299,8 @@ route-guard 在每次 UserPromptSubmit 时自动评分，Claude 必须遵守输�
 | 层级 | 触发条件 | Claude 行为 |
 |------|---------|------------|
 | **项目上下文门禁** | route-guard 输出 `PROJECT GATE` | 先确认/切换项目；“老项目/已有项目/继续项目”不得直接进入场景B或单个 skill |
-| **Plan Agent 层** | route-guard 输出 `PLAN MODE`（复杂度分 ≥ 6，**关键词近似判定**）**或** `PLAN CHECK`（命中 `HEAVY_ORCHESTRATOR_SKILLS`——tracked settings.json env 注入 `ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate`（auto 2026-08-03 移除做截流实验，见 plan-agent.md），两检出一致生效，命中即升 PLAN_CHECK；deepresearch/ux-research/figma-demo 靠各自内部 HITL 门，见 plan-agent.md「条件 2 豁免」）**或** 命中 skill 满足 Plan Agent 5 条件之一（**`.claude/agents/plan-agent.md` 触发条件表是唯一权威口径**；PLAN MODE 是其关键词近似、研究默认门 = 5 条件 + 新颖，均从属于它） | 读取 `.claude/agents/plan-agent.md`，输出 Phase 计划，等用户确认后进入 Orchestrator |
+| **Plan Agent 层** | `PLAN MODE` / `PLAN CHECK`，或语义满足 Plan Agent 5 条件 | 以 `.claude/agents/plan-agent.md` 为唯一口径，先产 Phase 计划并等确认；研究类自身 HITL 豁免见其「条件 2」 |
+| **Framework Flow 层** | `FRAMEWORK FLOW` | 执行 `framework-evolution`；由 `evolution/{BENCHMARK-RUNBOOK,CHECKPOINT}.md` 定模式，研究仅作内部阶段，meta 不切项目 |
 | **Multi-Skill 层** | route-guard 输出多候选（置信度低，无法自动决策）| 向用户列出候选 skill 组合，询问确认顺序后依次执行；或建议 `/auto` |
 | **Single-Skill 层** | route-guard 输出单一高置信命中，**且** 命中 skill 不触发 Plan Agent 5条件 | 直接调用对应 skill |
 | **低置信兜底** | route-guard 输出 `STOP`（零关键词命中）| 按下方「语义路由契约」裁决：语义高置信直接路由；多个合理一次一问；无推断依据 → 展示软候选或 /office 列表请用户选。禁止无依据自行执行 |

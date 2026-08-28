@@ -92,6 +92,10 @@ function loadRoutes(yamlPath) {
   let currentEntry = null;
 
   for (const line of content.split('\n')) {
+    if (line.startsWith('framework_flows:')) {
+      currentSection = 'framework_flow';
+      continue;
+    }
     if (line.startsWith('project_skills:')) {
       currentSection = 'project';
       continue;
@@ -109,7 +113,7 @@ function loadRoutes(yamlPath) {
     const skillMatch = line.match(/^  ([\w-]+):(\s*)$/);
     if (skillMatch) {
       if (currentEntry?.triggers?.length) routes.push(currentEntry);
-      currentEntry = { type: currentSection, invoke: '', hint: '', triggers: [], w: 7 };
+      currentEntry = { type: currentSection, invoke: '', hint: '', scope: 'any', triggers: [], w: 7 };
       continue;
     }
     if (!currentEntry) continue;
@@ -117,12 +121,14 @@ function loadRoutes(yamlPath) {
     const invokeM = line.match(/^\s+invoke:\s+"?([^"#\n]+?)"?\s*$/);
     const skillM = line.match(/^\s+skill:\s+"?([^"#\n]+?)"?\s*$/);
     const hintM = line.match(/^\s+hint:\s+"(.+?)"\s*$/);
+    const scopeM = line.match(/^\s+scope:\s+"?([^"#\n]+?)"?\s*$/);
     const weightM = line.match(/^\s+weight:\s+(\d+)/);
     const triggersM = line.match(/^\s+triggers:\s+\[(.+)\]/);
 
     if (invokeM) currentEntry.invoke = invokeM[1].trim();
     if (skillM && !currentEntry.invoke) currentEntry.invoke = skillM[1].trim();
     if (hintM) currentEntry.hint = hintM[1];
+    if (scopeM) currentEntry.scope = scopeM[1].trim();
     if (weightM) currentEntry.w = parseInt(weightM[1], 10);
     if (triggersM) {
       currentEntry.triggers = triggersM[1]
@@ -187,6 +193,9 @@ const FRAMEWORK_SCOPE_RULES = [
   { id: 'runtime-files', pattern: /(?:AGENTS|CLAUDE)\.md|workflow-state/i },
   { id: 'runtime-paths', pattern: /\.claude\/hooks|\.codex\/hooks|memory\/scripts|framework-audit/i },
   { id: 'runtime-guards', pattern: /project-scope-guard|route-guard|session-restore/i },
+  // “自我成长”本身可能是下游产品功能，不能裸豁免 Project Gate。只收具名 workflow，
+  // 或用户明确在纠正“自我成长流程”的路由归属这一窄语境。
+  { id: 'framework-evolution', pattern: /framework-evolution(?:-scout)?|(?:命中|应该|不是).{0,12}自我成长流程|自我成长流程吗|自我演进流程|框架演进流程/i },
   { id: 'routing-meta', pattern: /项目(?:上下文)?门禁|路由(?:守卫|规则|闭环)?|plan\s*(?:agent|mode)/i },
   { id: 'framework-meta', pattern: /框架(?:自身|自审|治理)?|规则执行闭环|\bhooks?\b/i },
 ];
@@ -573,11 +582,25 @@ function softSkillDecision(prompt, routes) {
     .map(e => ({ skill: e.route.invoke || e.route.hint, tokens: e.matchedTokens }));
 }
 
-function skillDecision(prompt) {
-  const direct = prompt.match(/^\/[a-z][\w-]*/i)?.[0];
-  if (direct) return { decision: 'SINGLE_SKILL', skill: direct, candidates: [direct] };
+function frameworkFlowMode(flow, prompt) {
+  if (flow !== 'framework-evolution') return 'default';
+  // 显式点名 scout 是模式 1/1b，不被同句里的“评估”等宽词改写成模式 2。
+  if (/framework-evolution-scout/i.test(prompt)) return 'scout';
+  const explicitBenchmark = /对标|全面对一对|全面对比|深度对比|深评|benchmark/i.test(prompt);
+  const comparativeBenchmark = /对比|比较|评估/.test(prompt)
+    && /harness|框架|体系|仓库|repo|开源/i.test(prompt);
+  return explicitBenchmark || comparativeBenchmark ? 'benchmark' : 'scout';
+}
 
-  const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'));
+function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
+  const direct = prompt.match(/^[$/][a-z][\w-]*/i)?.[0];
+  if (direct) {
+    const skill = direct.startsWith('$') ? `/${direct.slice(1)}` : direct;
+    return { decision: 'SINGLE_SKILL', skill, candidates: [skill] };
+  }
+
+  const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'))
+    .filter(route => route.scope !== 'framework_meta' || routingScope.kind === 'pure_framework_meta');
   const text = normalize(prompt);
 
   // ADR-0002 stopgap: longest-match-wins disambiguation (CJK-safe; no \b).
@@ -627,6 +650,16 @@ function skillDecision(prompt) {
   const unique = [...new Map(candidates.map(hit => [hit.invoke || hit.hint, hit])).values()];
 
   if (unique.length === 1) {
+    if (unique[0].type === 'framework_flow') {
+      const flow = unique[0].invoke || unique[0].hint;
+      return {
+        decision: 'FRAMEWORK_FLOW',
+        flow,
+        mode: frameworkFlowMode(flow, prompt),
+        routeType: unique[0].type,
+        candidates: [flow],
+      };
+    }
     return {
       decision: 'SINGLE_SKILL',
       skill: unique[0].invoke || unique[0].hint,
@@ -698,13 +731,13 @@ function buildDecision(prompt) {
     };
   }
 
-  // 2026-07-13 fable review B-F1：显式斜杠直呼 = 用户最新明确请求（规则优先级 #1），不被
+  // 2026-07-13 fable review B-F1：显式 / 或 $ 直呼 = 用户最新明确请求（规则优先级 #1），不被
   // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
   // 较软 PLAN_CHECK 门（原为 /auto 设计；auto 已于 2026-08-03 移出 HEAVY 做截流实验，现成员仅 muse-loop-orchestrate）。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
-  const directCall = /^\/[a-z][\w-]*/i.test(prompt);
+  const directCall = /^[$/][a-z][\w-]*/i.test(prompt);
   if (!directCall && complexity.decision === 'PLAN_MODE') return complexity;
 
-  const skillResult = skillDecision(prompt);
+  const skillResult = skillDecision(prompt, routingScope);
   if (
     skillResult.decision === 'SINGLE_SKILL' &&
     HEAVY_ORCHESTRATOR_SKILLS.has(skillResult.skill)
@@ -765,6 +798,16 @@ function decisionToHints(decision) {
       const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n本轮是 SWITCH_ONLY；只执行这一条事务命令，成功后立即结束本轮：${command}` + frameworkSelfMaint + reviewAxisHint(decision);
       if (!decision.planHint) return [base];
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
+    }
+    case 'FRAMEWORK_FLOW': {
+      const modeHint = decision.mode === 'benchmark'
+        ? '模式 2（对标深评）：先完整读取 .claude/skill-os/evolution/BENCHMARK-RUNBOOK.md，按 inventory→matrix→rubric→红队→复审→人类 GATE 执行。'
+        : '模式 1/1b（演进 scout）：先读取 .claude/skill-os/evolution/CHECKPOINT.md；Claude 用 Workflow framework-evolution-scout，Codex 用 .codex/workflow-runner.mjs 等价执行。';
+      return [
+        `[route-guard] 🧬 FRAMEWORK FLOW — 高置信命中顶层流程 ${decision.flow}（${decision.mode}）。\n` +
+        `${modeHint}\n` +
+        'deepresearch / quick-research 只作为流程内部的证据采集阶段，不得替代顶层自成长流程；框架/meta session 不切换下游项目。',
+      ];
     }
     case 'PLAN_MODE':
       return [

@@ -27,7 +27,8 @@ fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头�
       具体 skill "/brainstorm"（含隐藏 skill 名如 "redteam"）
       决策 "PLAN_MODE"/"PLAN_CHECK"/"project:switch:<项目名>"（校验切对了谁；裸 project:switch 宽匹配）/"project:stop"
       多候选 "MULTI:<按字母序逗号拼接>"（如 "MULTI:/tech-spec,systematic-debugging"）
-      流程 "flow:design-chain"/"flow:od-design"（OD-first 设计产出链）| 语义特例 "special:sidebar"/"special:luca-open"
+      流程 "flow:design-chain"/"flow:od-design"（OD-first 设计产出链）/
+           "flow:framework-evolution:<benchmark|scout>" | 语义特例 "special:sidebar"/"special:luca-open"
       链路检查形态 "ask:research-first"（正确响应=按 routing-chain-check R1 先问"先调研还是直接开始"）
                    | "review:dispatch"（评审请求：按 R4 先判评审对象再选资产或自建编排，2026-07-31）
       平凡任务负样本 "direct"（期望 route-guard 不强路由，落 STOP/NONE，防过度路由）
@@ -110,6 +111,10 @@ def routed_capability(decision):
         return "project:stop"
     if d == "MULTI_SKILL":
         return "MULTI:" + ",".join(sorted(decision.get("candidates", [])))
+    if d == "FRAMEWORK_FLOW":
+        flow = decision.get("flow", "?")
+        mode = decision.get("mode", "default")
+        return f"flow:{flow}:{mode}"
     return d or "NONE"  # STOP / NONE / PARSE_ERR
 
 
@@ -252,6 +257,7 @@ def cmd_selftest():
         # (prompt, expected, layer, 期望 correct)
         ("帮我写一份技术规格文档", "/tech-spec", "keyword", True),
         ("帮我加上订单查询、库存管理、报表导出三个功能", "PLAN_MODE", "keyword", True),
+        ("luca gstack 自我成长：深度对比 Codex harness", "flow:framework-evolution:benchmark", "keyword", True),
         ("帮我加个导出按钮", "direct", "keyword", True),          # 琐事应落 STOP/NONE
         ("帮我写一份技术规格文档", "/brainstorm", "keyword", False),  # 故意错标 → 应判不命中
     ]

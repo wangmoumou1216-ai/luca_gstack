@@ -17,9 +17,10 @@ final line when a task depends on it. -->
 
 1. Project Gate first: 老项目 / 已有项目 / 继续项目 → 先确认或切换项目。
 2. Complexity second: 复杂需求 → Plan Agent，不进单个 skill。**即使 route-guard 高置信命中 skill，仍须检查 Plan Agent 5条件；满足任一不得直接执行。**
-3. Ambiguity third: 多候选 → 问用户，不自行判断。
-4. Single skill last: 只在高置信且不触发 Plan Agent 5条件的前提下调用 skill。
-5. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
+3. Framework flow before skills: 自成长/演进/对标 → `framework-evolution`（研究仅作内部阶段）。
+4. Ambiguity next: 多候选 → 问用户，不自行判断。
+5. Single skill last: 只在高置信且不触发 Plan Agent 5条件的前提下调用 skill。
+6. Keyword source: `.claude/skill-os/skill-routing-map.yaml`。
 
 ---
 
@@ -664,11 +665,15 @@ Layered routing order:
      or `/ux-research`, scaled to the fact-gap) is the DEFAULT step. Skipping it requires an
      explicit, user-confirmed reason in the plan — never silent. See
      `.claude/agents/plan-agent.md`「研究默认门」.
-3. **Multi-skill ambiguity.** If route-guard reports competing candidates, ask the user to choose
+3. **Framework flow.** If route-guard reports `FRAMEWORK FLOW`, enter `framework-evolution` and
+   choose benchmark or scout from `.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md` and
+   `CHECKPOINT.md`. Research skills are evidence-gathering stages inside this flow, not substitutes
+   for it; framework/meta sessions never switch to a downstream project for this work.
+4. **Multi-skill ambiguity.** If route-guard reports competing candidates, ask the user to choose
    an order or suggest `/auto`.
-4. **Single-skill route.** Use `.claude/skill-os/skill-routing-map.yaml` as the keyword and invoke
+5. **Single-skill route.** Use `.claude/skill-os/skill-routing-map.yaml` as the keyword and invoke
    source. Do not duplicate its full trigger table here.
-5. **STOP / low confidence — semantic routing contract (2026-07-12).** route-guard is a keyword-only
+6. **STOP / low confidence — semantic routing contract (2026-07-12).** route-guard is a keyword-only
    coarse net that runs before I read the prompt: honor its PLAN/MULTI/SINGLE hits, but its **STOP /
    miss never exempts my own semantic assessment**. On every request — and mid-execution whenever a
    new sub-goal, scope shift, or fresh design/engineering need surfaces — judge by **meaning** whether

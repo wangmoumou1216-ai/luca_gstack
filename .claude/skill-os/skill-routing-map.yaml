@@ -1,14 +1,24 @@
 version: 1
 description: >
-  Universal skill routing map.
+  Universal routing map.
   Authoritative keyword and invoke reference for route-guard.mjs.
-  Project context and complexity gates run before this skill map.
-  Sections: project context markers, project skills (luca_gstack), and built-in skills.
+  Project context and complexity gates run before framework flows and skills.
+  Sections: project context markers, framework flows, project skills (luca_gstack), and built-in skills.
 
 project_context:
   old_project_triggers: [老项目, 已有项目, 已有的项目, 旧项目, 继续项目, 上次那个项目, 接着上次, 上次的项目, 之前那个项目, 之前的项目, 之前那个]
   new_project_triggers: [新项目, 新需求, 新功能, 我想做一个需求, 我想做一个项目]
   current_project_triggers: [当前项目, 这个项目, 本项目]
+
+# ── luca_gstack framework flows ──────────────────────────────────────────────
+# 顶层治理流程不是 skill：命中后先选择流程模式，再由流程内部调用 research/review skill。
+framework_flows:
+
+  framework_evolution:
+    invoke: "framework-evolution"
+    scope: "framework_meta"
+    weight: 10
+    triggers: [自我成长, 自我成长流程, 自我演进, 自进化, 框架演进, framework evolution, framework-evolution-scout]
 
 # ── luca_gstack project skills ───────────────────────────────────────────────
 project_skills:

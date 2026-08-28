@@ -32,6 +32,9 @@ for (const invoke of requiredInvokes) {
 
 assert.ok(!content.includes('invoke: "/status"'), '/status must not be a fake first-level skill');
 assert.match(content, /project_context:/, 'missing project_context section');
+assert.match(content, /framework_flows:/, 'missing framework_flows section');
+assert.match(content, /invoke:\s+"?framework-evolution"?/, 'missing framework-evolution flow');
+assert.match(content, /scope:\s+"?framework_meta"?/, 'framework-evolution must stay framework_meta-scoped');
 assert.match(content, /老项目/, 'missing old-project trigger');
 assert.match(content, /新项目/, 'missing new-project trigger');
 assert.ok(existsSync('.claude/skills/office/compare/SKILL.md'), 'compare skill file missing');
@@ -39,15 +42,16 @@ assert.match(claudeHead, /Routing Contract TL;DR/, 'CLAUDE.md routing contract m
 assert.match(agentsHead, /Routing Contract TL;DR/, 'AGENTS.md routing contract must stay in first 40 lines');
 assert.match(claudeHead, /Project Gate first/, 'CLAUDE.md must front-load Project Gate priority');
 assert.match(agentsHead, /Project Gate first/, 'AGENTS.md must front-load Project Gate priority');
-// #14 (benchmark debate): anchor the SHARED TL;DR routing-contract items 2-5
+// #14 (benchmark debate): anchor the SHARED TL;DR routing-contract items 2-6
 // across BOTH surfaces so the human-readable contract can't silently drift.
-// Items 1-5 are verbatim-identical in CLAUDE.md and AGENTS.md TL;DR. Item 6
+// Items 1-6 are verbatim-identical in CLAUDE.md and AGENTS.md TL;DR. Item 7
 // (Scene) is intentionally CLAUDE-only (AGENTS carries it later in body), so it
-// is NOT anchored here — forcing it would wrongly inject a 6th item into
+// is NOT anchored here — forcing it would wrongly inject a 7th item into
 // AGENTS.md's EN-adapted TL;DR (the rejected literal-equality form).
 for (const surface of [{ name: 'CLAUDE.md', head: claudeHead }, { name: 'AGENTS.md', head: agentsHead }]) {
   assert.match(surface.head, /Complexity second/, `${surface.name} TL;DR missing shared item "Complexity second"`);
-  assert.match(surface.head, /Ambiguity third/, `${surface.name} TL;DR missing shared item "Ambiguity third"`);
+  assert.match(surface.head, /Framework flow before skills/, `${surface.name} TL;DR missing shared item "Framework flow before skills"`);
+  assert.match(surface.head, /Ambiguity next/, `${surface.name} TL;DR missing shared item "Ambiguity next"`);
   assert.match(surface.head, /Single skill last/, `${surface.name} TL;DR missing shared item "Single skill last"`);
   assert.match(surface.head, /Keyword source/, `${surface.name} TL;DR missing shared item "Keyword source"`);
 }

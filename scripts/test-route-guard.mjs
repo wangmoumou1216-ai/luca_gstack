@@ -814,6 +814,62 @@ const cases = [
       assert.notEqual(decision.decision, 'PROJECT_STOP', '大小写变体不得被 gate 吃掉');
     },
   },
+  {
+    // 框架演进是顶层 workflow；研究只是其证据采集阶段。旧路由只有 skill 命名空间，
+    // 因此本句被通用“调研”词稳定压成 /deepresearch，完全绕过 self-evolution 流程。
+    name: '框架演进轴: luca_gstack 自我成长对标请求命中顶层 benchmark 流程，而非 /deepresearch',
+    prompt: '我要做luca gstack的自我成长，帮我调研一下codex开源了的harness。对比我们的luca gstgack。有什么可以值得借鉴的地方，我需要你进入深度调研模式，进行自我和codex的harness的评估',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'FRAMEWORK_FLOW');
+      assert.equal(decision.flow, 'framework-evolution');
+      assert.equal(decision.mode, 'benchmark');
+    },
+  },
+  {
+    name: '框架演进轴: 用户纠正“应该是自我成长流程”时不再掉进 Project Gate',
+    prompt: '我这个不是命中的应该是自我成长流程吗',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'FRAMEWORK_FLOW');
+      assert.equal(decision.flow, 'framework-evolution');
+    },
+  },
+  {
+    name: '框架演进轴: 显式 framework-evolution-scout 走 scout 模式且无需下游项目',
+    prompt: '请运行 framework-evolution-scout',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'FRAMEWORK_FLOW');
+      assert.equal(decision.mode, 'scout');
+    },
+  },
+  {
+    name: '框架演进轴反担保: 句首显式 /deepresearch 仍尊重用户直呼',
+    prompt: '/deepresearch luca gstack 自我成长',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    name: '框架演进轴反担保: Codex 句首显式 $deepresearch 同样尊重用户直呼',
+    prompt: '$deepresearch luca gstack 自我成长',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    name: '框架演进轴反担保: 下游产品的“用户自我成长功能”不得误进框架流程',
+    prompt: '给 crm 项目做用户人格自我成长功能',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm', ROUTE_GUARD_PROJECTS: 'muse,crm' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'FRAMEWORK_FLOW');
+    },
+  },
 ];
 
 const scopeMatrixFixtures = loadScopeMatrixFixtures();
@@ -849,6 +905,31 @@ for (const fixture of scopeMatrixFixtures) {
 let passCount = 0;
 let failCount = 0;
 const failures = [];
+
+// Real hint surface (not dry-run JSON): this is what Claude/Codex actually receive.
+// No session_id is supplied, so the hook cannot open or mutate project state.
+{
+  const prompt = '我要做luca gstack的自我成长，帮我调研一下codex开源了的harness。对比我们的luca gstgack。有什么可以值得借鉴的地方，我需要你进入深度调研模式，进行自我和codex的harness的评估';
+  const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+    cwd: process.cwd(),
+    input: JSON.stringify({ prompt }),
+    encoding: 'utf8',
+    env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_CURRENT_PROJECT: '' },
+  });
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /FRAMEWORK FLOW/);
+    assert.match(result.stdout, /模式 2（对标深评）/);
+    assert.match(result.stdout, /不得替代顶层自成长流程/);
+    assert.doesNotMatch(result.stdout, /建议调用项目 skill:\s*\/deepresearch/);
+    console.log('PASS real hint surface routes self-evolution benchmark above deepresearch');
+    passCount++;
+  } catch (error) {
+    console.log(`FAIL real hint surface routes self-evolution benchmark above deepresearch: ${error.message?.split('\n')[0]}`);
+    failures.push({ name: 'real self-evolution hint fixture', error: error.message?.split('\n')[0] });
+    failCount++;
+  }
+}
 
 // Real UserPromptSubmit fixture: this exercises the stateful branch that calls
 // prepareProjectSwitch, not only the dry-run decision builder.
