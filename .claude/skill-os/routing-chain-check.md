@@ -44,11 +44,10 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 
 | 评审对象 | 资产 | 契约要点 |
 |---|---|---|
-| 代码/改动批（含框架文件） | `/code-hygiene` 模式 D | 输入三选一：`WORKTREE_DIFF`（默认，覆盖"刚改完没提交"）/ `BASE_SHA`+`HEAD_SHA` / `FILE_SET` |
+| 代码/改动批/正式 PR/整分支（含框架文件） | `/code-review`（底层权威=`/code-hygiene` 模式 D） | 输入三选一：`WORKTREE_DIFF`（默认，覆盖"刚改完没提交"）/ `BASE_SHA`+`HEAD_SHA` / `FILE_SET`；有 spec 时 Standards/Spec 双轴隔离，无 spec 明示单轴降级 |
 | 设计决策文档 / 提案 / 计划 | `redteam`（按名调用） | 有显式 target 即以 target 为对象；框架治理场景产出落 `framework-audit/` |
 | 渲染页面 / 原型 | `/ux-audit` | 截图为强制输入（其 Phase 0 自拦） |
 | workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
-| 正式 PR / 整分支 | 提示用户可跑原生 `/code-review` | 计费、仅用户可触发，我不代跑 |
 | 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
 | **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——figma-layer / html-prototype 的自检不算数 |
 

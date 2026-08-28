@@ -151,7 +151,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
 
 **seam 前置步（2026-07-12 对标 merge，源 to-spec，spec-time 勾画）：** 起草 IF-NNN 前先列
 **测试 seam 清单**——本变更将在哪些公共边界被测：优先已有 seam、取最高边界、趋向单一
-（词汇见全局 `codebase-design` skill）。与逐需求测试判据互补：判据管"测什么"，seam 管"在哪测"；
+（词汇见项目共享 `codebase-design` skill）。与逐需求测试判据互补：判据管"测什么"，seam 管"在哪测"；
 **限定 spec-time 勾画，不复制全局 tdd 的 test-time 确认门**。确认门条件化：交互运行（用户在场）
 用 AskUserQuestion 确认 seam 清单再展开契约；**编排器 headless 运行（如 muse-loop dispatch）
 把 seam 清单写入产出、不阻塞**——不向编排节点插计划外人类卡点。

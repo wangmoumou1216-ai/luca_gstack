@@ -195,6 +195,28 @@ skills:
     quality_gates: ["verification_iron_law", "high_confidence_apply_only", "luca_guards_preserved", "clean_tree_for_apply"]
     notes: "工程域代码约束 skill（非设计）。Iron Law 完成前验证 + 8 清理算子 + 模式 D 改动评审（基线三选一 WORKTREE_DIFF/BASE+HEAD_SHA/FILE_SET，不要求干净树；纪律见 routing-chain-check R4）。代码审查复用 quality-gate/redteam。"
 
+  code-review:
+    modes:
+      standalone:
+        required: ["code_change_scope_or_fixed_point"]
+        optional: ["spec_source"]
+      workflow:
+        required: ["code_change_scope_or_fixed_point"]
+        optional: ["spec_source", "tech_spec_handoff", "task_plan_artifact"]
+    quality_gates: ["fixed_scope_resolves", "non_empty_change_set", "standards_spec_context_isolation", "separate_axis_reporting", "read_only_review"]
+    notes: "用户可见代码审查 facade。WORKTREE_DIFF/BASE+HEAD/FILE_SET 三选一；底层权威为 code-hygiene Mode D + routing-chain-check R4。无 spec 时 Spec 轴显式 NOT RUN，不伪造。"
+
+  codebase-design:
+    modes:
+      standalone:
+        required: ["module_or_interface_problem"]
+        optional: ["target_paths", "caller_examples"]
+      workflow:
+        required: ["module_or_interface_problem"]
+        optional: ["architecture_brief", "tech_spec_artifact", "target_paths"]
+    quality_gates: ["stable_vocabulary", "depth_and_deletion_test", "real_seam", "interface_is_test_surface", "no_forced_workflow_node"]
+    notes: "工程模块设计共享原语；可 standalone，也可由 code-recon/tech-spec/实现任务内部调用。无固定产物、无 workflow 状态所有权。"
+
   code-recon:
     modes:
       standalone:

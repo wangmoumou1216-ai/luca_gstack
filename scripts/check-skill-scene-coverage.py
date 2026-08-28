@@ -66,6 +66,9 @@ TABLE = {
     "auto": (None, [], "experiment"),
     "code-recon": (None, [f"{D}/engineering/*architecture*"], "unmapped"),
     "code-hygiene": (None, [], "unmapped"),
+    # 工程原语/只读审查入口均无固定落盘产物；实际触发由 episodic skills_used 观察。
+    "codebase-design": (None, [], "unobservable"),
+    "code-review": (None, [], "unobservable"),
     "muse-req-triage": (None, [f"{D}/loop/*"], "unmapped"),
 }
 

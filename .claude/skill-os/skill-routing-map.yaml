@@ -125,13 +125,22 @@ project_skills:
   code_hygiene:
     invoke: "/code-hygiene"
     weight: 6
-    # 工程域代码约束（非设计 skill）。Iron Law 完成前验证 + 8 清理算子 + 模式 D 改动评审。
-    # 2026-07-31 只收**对象绑定**的评审词。不收泛动词（review一遍/你review/审一遍/复查一遍）：
-    #   ①零对象却硬编码目的地 = 重造 ux_audit 那种误路由陷阱，与 R4 按对象分流自相矛盾；
-    #   ②`preview一下` ⊃ `review一下`、`preview代码` ⊃ `review代码`（子串匹配，muse 语境高频）；
-    #   ③`审一遍` ⊂ `评审一遍`，会把"评审一遍这个页面"高置信误派来这里。
-    #   泛动词 review 意图走 STOP → 评审轴提示钉 → R4 语义分流。`检查一下` 亦不收（撞 web_access `查一下`）。
-    triggers: [代码清理, 清理代码, 死代码, 删死代码, 代码去重, 弱类型, 代码质量, 代码体检, 工程体检, 完成前验证, 代码审查, 代码评审, 评审代码, 代码review, cleanup, code-hygiene, 清理冗余]
+    # 工程域代码约束：Iron Law + 8 清理算子。代码 review 触发词归专用 code-review facade，
+    # facade 再复用本 skill Mode D，避免两个 project skill 等权命中。
+    triggers: [代码清理, 清理代码, 死代码, 删死代码, 代码去重, 弱类型, 代码质量, 代码体检, 工程体检, 完成前验证, cleanup, code-hygiene, 清理冗余]
+
+  code_review:
+    invoke: "/code-review"
+    weight: 8
+    # 固定代码对象 + 审查动作；不收裸 review/评审，避免劫持 UX、文档、方案和普通复查。
+    # `preview` 不含任何完整触发项，保留 2026-07-31 的子串防回归边界。
+    triggers: [代码审查, 代码评审, 评审代码, 代码review, code review, 审查这个PR, 评审这个PR, review当前改动, review这个分支, 评审这个分支, review since]
+
+  codebase_design:
+    invoke: "/codebase-design"
+    weight: 7
+    # 纯工程模块对象；刻意不收裸“接口设计/架构设计”，避免劫持产品/UX 设计管线。
+    triggers: [codebase-design, 深模块, 浅模块, 模块深度, 模块边界, seam设计, 模块seam, 模块拆分方案, 接口可测性, 深化模块]
 
   code_recon:
     invoke: "/code-recon"
@@ -326,13 +335,6 @@ builtin_skills:
     hint: "→ 建议使用外部 skill: tdd（测试先行，红绿重构）"
     weight: 7
     triggers: [tdd, 测试驱动, 写测试, 测试先行, 红绿重构, 单元测试]
-
-  codebase_design:
-    skill: codebase-design
-    hint: "→ 建议使用外部 skill: codebase-design（深模块词汇：seam/接口即测试面/deletion test）"
-    weight: 7
-    # 纯工程词——红队裁定不收设计邻词（如「接口设计」），避免劫持设计管线
-    triggers: [深模块, 浅模块, 模块边界, seam, 模块拆分, 接口可测性]
 
   resolving_merge_conflicts:
     skill: resolving-merge-conflicts

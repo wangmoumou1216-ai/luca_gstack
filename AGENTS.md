@@ -367,7 +367,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 
 > **Codex 接线现状（2026-08-04）**：本仓已具备 Codex 侧完整接线，读取顺序与落点如下——
 > `.codex/hooks.json`（6 个生命周期 hook，全部经 `.codex/codex-hook-adapter.mjs` 调用）／
-> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（33 条软链 → `.claude/skills/office/*`）／
+> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（35 条软链 → `.claude/skills/office/*`）／
 > `.codex/workflow-runner.mjs`（Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，本 runner 把
 > workflow 脚本注入的 `agent()` 接到 `codex exec --output-schema` 上，`.claude/workflows/*.js` 零改写即可运行；
 > 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`。
@@ -391,7 +391,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 >
 > **调用语法（2026-08-05 活体实测）**：Codex **不执行** `.claude/commands/*.md`，`/brainstorm` 这类
 > 斜杠语法无效；但同一批 skill 经 `.agents/skills/` 软链**完全可用**，用 **`$<skill-name>`**（如
-> `$quick-research`）或 `/skills` 选择器调用，读到的是同一份 SKILL.md。`.claude/commands/` 里那 24 个
+> `$quick-research`）或 `/skills` 选择器调用，读到的是同一份 SKILL.md。`.claude/commands/` 里那 26 个
 > 文件是薄包装（正文即"读 SKILL.md 并执行"），故**功能无缺口、仅语法不同**。
 > subagent（`.codex/agents/*.toml`）**仓库级即可被发现**（与 hooks 不同），按名派发；
 > 工具名里的连字符会转成下划线（`preflight-agent`→`preflight_agent`），注册名不变。
@@ -525,6 +525,8 @@ Claude Code owns the native slash-command experience:
 
 - `.claude/commands/*`
 - `.claude/skills/office/*`
+- `.claude/skills/codebase-design`、`.claude/skills/code-review`：仅为指向 `office/` 真值源的
+  Claude native aliases（不复制正文；后者覆盖 bundled `/code-review`，其 `/review` alias 仍属原生）
 - Claude-specific guided workflows.
 
 When Claude runs a skill, its durable output should land in `docs/` and workflow status should be
@@ -606,6 +608,8 @@ AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落
 | `/figma-layer` | A C | Figma 保险层 |
 | `/tech-spec` | A B D | PRD + design-brief → 技术合同，强制覆盖率验证 |
 | `/task-plan` | A B D | 任务编排计划：渐进式索引 + 断言矩阵 + 开发/测试任务卡；执行前须过门禁 |
+| `/codebase-design` | 代码层 | Module/Interface/Depth/Seam/Adapter 共享原语；模块深化、接口收敛和测试面设计，不是 workflow 节点 |
+| `/code-review` | 代码层 | 固定 WORKTREE_DIFF/比较点/FILE_SET 后分离 Standards/Spec 两轴，只读报告；复用 code-hygiene Mode D |
 | `/code-hygiene` | 代码层 | 完成前验证铁律（done 前须有当场跑出的证据）+ 8 清理算子；只自动应用 HIGH 置信 |
 | `/code-recon` | 代码层 | Brownfield 正门：并行只读 recon 把代码库逆向成架构 brief（标 VERIFIED vs INFERRED），只读不改 |
 | `/muse-req-triage` | muse | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单 |

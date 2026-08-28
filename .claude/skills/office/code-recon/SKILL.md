@@ -127,7 +127,7 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
 - **VERIFIED vs INFERRED 审计**：哪些是读到的、哪些是推断的、哪些没读到（诚实空白）
 - **深化机会（可选透镜，2026-07-12 对标 merge，源 improve-codebase-architecture）**：对疑似浅
   模块跑 **deletion test**——"删掉它，复杂度是集中还是只挪走？"集中 → 标 deepening candidate。
-  词汇引全局 `codebase-design` skill（deep module/seam），该 skill 已装时启用，未装则跳过本透镜
+  词汇引项目共享 `codebase-design` skill（deep module/seam）；该入口是框架内置工程原语
 - **churn 富化信号（2026-07-23 对标 merge，源 improve-codebase-architecture YAGNI 定界的
   有方向面）**：有 git 历史时对待扩展面跑 `git log --oneline -- <路径>`：高频变动区 →
   INFERRED 风险标注上调并提示"活跃开发区"。仅作**有方向时**的富化信号，不引入无方向

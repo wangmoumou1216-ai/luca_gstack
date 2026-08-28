@@ -42,6 +42,8 @@ skills:
   quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明该回退**，故 Codex 上强度弱于 Claude 上的同一 skill"}
   code-recon: {tier: 2, degrade: "并行 recon fan-out → 可顺序 recon；skill 正文未写明"}
   code-hygiene: {tier: 2, degrade: "8 算子本就内联；review 段派 quality-gate → 可退单轴/内联"}
+  code-review: {tier: 2, degrade: "Standards/Spec 优先并行冷启动；Codex 并发不可用时按正文串行且禁止跨轴读报告，上下文隔离弱于真并行"}
+  codebase-design: {tier: 2, degrade: "Design It Twice 优先 3 个独立 agent；Codex 并发槽不足时按正文串行做 3 次冷启动式推演，独立性弱于真并行"}
   ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
   figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}
   careful: {tier: 2, degrade: "其 deny 挂 Bash-PreToolUse hook，但该 hook 由 **Claude 读 SKILL.md frontmatter 注册**且路径用 ${CLAUDE_SKILL_DIR}——Codex 无此加载器，故降级为「文档规则+人工自觉」，弱于 Claude；若 Codex 提供等价 skill-hook 注册则可恢复"}

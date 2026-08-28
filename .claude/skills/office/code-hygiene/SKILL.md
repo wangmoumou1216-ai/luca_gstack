@@ -1,7 +1,7 @@
 ---
 name: code-hygiene
 preamble-tier: 1
-version: 1.1.0
+version: 1.1.1
 description: |
   代码层工程约束 skill：对工程代码（luca_gstack 自身 .mjs/.py/.js 神经系统 + 下游实现）
   做「清理 + 完成前验证」的工程体检。两半：
@@ -35,6 +35,7 @@ context-cost:
 - `careful`=危险命令拦截（rm -rf/force-push），与本 skill 正交。
 - 全局 `tdd`=测试先行；`systematic-debugging`=根因排查。本 skill 的「验证铁律」是**完成前**跑验证，不是写测试方法论。
 - `redteam`/`quality-gate` agent=对**产出**做对抗审查；本 skill 的代码审查环节优先**复用**它们，不另造常驻 reviewer（对不上被审对象时按 R4 自建场景化编排仍合法）。
+- `code-review`=用户可见的代码审查入口（固定范围 + Standards/Spec 两轴隔离）；它委托本 skill 的模式 D 作为唯一执行合同，不复制第二套审查规则。
 - CLAUDE.md「Coding Discipline」=always-on 的轻量原则（Surgical Changes 等）；本 skill 是**按需深度体检** + 可路由调用，两者互补不冲突（Coding Discipline 仍不进 routing-map）。
 
 ## Preamble (run first)
@@ -169,7 +170,7 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 
 ---
 
-## 代码审查环节（模式 D 的执行体；复用既有资产，不另造 reviewer）
+## 代码审查环节（模式 D 的执行体；`code-review` facade 的唯一权威，不另造 reviewer）
 
 **通用评审纪律（独立性/REFUTE/运行时分区/缺票补票/终版闭合/mutation/复犯检查）按
 `.claude/skill-os/routing-chain-check.md` R4 的证据标准执行**——那里是唯一权威落点，此处不复制。

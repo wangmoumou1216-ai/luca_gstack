@@ -261,8 +261,9 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 | `/figma-layer` | A C | Figma 保险层 |
 | `/tech-spec` | A B D | 工程规格节点：PRD + design-brief → 技术合同，强制覆盖率验证 |
 | `/task-plan` | A B D | 任务编排计划：渐进式索引 + 断言矩阵 + 开发/测试任务卡，执行前必须通过门禁 |
-
-**工程/质量 skill（代码层，非设计场景）：** `/code-hygiene` — 代码层工程约束：完成前验证铁律（done 前须有当场跑出的证据）+ 8 清理算子（只自动应用 HIGH 置信，luca 护栏保护 fail-open hooks/Static Fallback/兼容语义/WHY 注释）。审查优先复用 `redteam`/`quality-gate`（对得上就别重造）；既有资产与被审对象对不上时，按 routing-chain-check R4 自建评审编排是合法且更优的（禁的是重复造同款常驻 reviewer，不是禁按场景定制）。可路由 + 斜杠调用，细节见 SKILL.md。
+| `/codebase-design` | 代码层 | 深模块/interface/seam 共享原语；standalone/internal，非节点 |
+| `/code-review` | 代码层 | 固定范围后 Standards/Spec 分轴只读审查；委托 code-hygiene Mode D |
+| `/code-hygiene` | 代码层 | 完成前验证 + 8 清理算子；Mode D 是 review 权威 |
 
 **Brownfield 正门 skill（代码层，非设计场景）：** `/code-recon` — 从现有代码起步：并行只读 recon 把代码库逆向成架构 brief（入口/模块/流程/数据模型/扩展点，标 VERIFIED vs INFERRED），作 `ux-brainstorm`/`design-brief`/`tech-spec` 的 `architecture_brief` optional 输入。native-first、只读不改；规模命中 ≥2 信号才**提示**下游装 codegraph MCP（`colbymchenry/codegraph`，不进 luca_gstack）。可路由 + 斜杠调用，细节见 SKILL.md。
 

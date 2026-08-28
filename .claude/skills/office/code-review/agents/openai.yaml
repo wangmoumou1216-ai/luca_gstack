@@ -1,0 +1,5 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Review code changes on standards and spec separately"
+policy:
+  allow_implicit_invocation: true

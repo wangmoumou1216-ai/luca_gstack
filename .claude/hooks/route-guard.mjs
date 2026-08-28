@@ -379,12 +379,11 @@ function projectGate(prompt, projects, currentProject, routingScope) {
   if (SESSION_HANDOFF_INTENT_RE.test(prompt) || /会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取|翻译/.test(prompt)) {
     return null;
   }
-  // Audit M3: framework self-maintenance code-hygiene (清理/体检 luca 自身
-  // .mjs/.py/hooks/scripts) is a Meta task on luca_gstack itself, not project
-  // work. Exempt from Project Gate ONLY when a code-hygiene trigger CO-OCCURS
-  // with a framework path/artifact — so downstream-project cleanup (which DOES
-  // want a project) is not over-exempted. Lets /code-hygiene surface via skill
-  // routing for genuine self-maintenance with no active project.
+  // Audit M3: framework self-maintenance（code-hygiene 清理/体检或 code-review
+  // 审查 luca 自身 .mjs/.py/hooks/scripts）是 luca_gstack Meta task，不是下游
+  // project work。仅当相应工程触发词与 framework path/artifact 共现时豁免
+  // Project Gate，避免把真正的下游代码任务过度豁免；无 active project 时仍能
+  // 让 /code-hygiene 或 /code-review 到达 skill routing。
   // Guarded by !named (same as C2 above): naming an existing project must still
   // gate — else "清理一下 muse 里 scripts/ 的死代码" silently swallows the switch
   // and runs against the wrong project (红线 SC-20260523-002). 2026-07-31: 评审动词

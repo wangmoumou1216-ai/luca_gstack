@@ -258,6 +258,14 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone 或 workflow。执行前必须通过门禁
                产出：docs/engineering/{topic}-task-plan.md
 
+/codebase-design  —   工程模块设计原语：用 Module/Interface/Depth/Seam/Adapter
+               评估模块深度、收敛接口、选择测试 seam；无固定产物，不是 workflow 节点
+               输入模式：standalone，或由 code-recon/tech-spec/工程任务内部调用
+
+/code-review   —      代码改动双轴审查：固定 WORKTREE_DIFF/比较点/FILE_SET，再隔离检查
+               Standards 与 Spec；只读 findings，底层复用 code-hygiene Mode D + R4
+               输入模式：standalone；可作为执行→验收之间的可选质量门，不强制进主链
+
 /code-hygiene  —      代码层工程约束：完成前验证铁律（声明 done 前必须有当场跑出的
                证据）+ 8 清理算子（死代码/循环依赖/去重/类型/弱类型/防御性/遗留/slop，
                只自动应用 HIGH 置信）。不是设计场景 skill，代码/工程任务专用

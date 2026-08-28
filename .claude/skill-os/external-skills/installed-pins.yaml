@@ -32,13 +32,24 @@ units:
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/codebase-design
-  install_path: ~/.claude/skills/codebase-design
-  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
-  watch_sha: ee8bae40062cd6b435073368ed0c540f48c35862
-  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
-  pinned_at: '2026-07-12'
+  install_path: .claude/skills/office/codebase-design
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-08-28'
   source: adoption-log
-  note: null
+  note: 项目内共享真值源；.claude/skills native alias 供 Claude、.agents/skills 供 Codex；旧 ~/.claude 个人目录已可恢复备份，原路径软链回本项目以消除 personal>project 遮蔽
+- name: code-review
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/code-review
+  install_path: .claude/skills/office/code-review
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  ack_sha: null
+  pinned_at: '2026-08-28'
+  source: adoption-log
+  note: Luca facade 保留 fixed-point + Standards/Spec 两轴，执行权威复用 code-hygiene Mode D 与 routing-chain-check R4；项目 native alias 覆盖 Claude bundled /code-review，/review 仍保留原生 alias
 - name: resolving-merge-conflicts
   kind: skill
   repo: mattpocock/skills

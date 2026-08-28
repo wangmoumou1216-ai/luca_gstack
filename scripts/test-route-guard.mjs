@@ -809,21 +809,21 @@ const cases = [
   // 钉住"确定性层"行为：词表增删 + Project Gate 豁免。提示钉在 hints 层（decisionToHints），
   // dry-run 只吐 decision，故此处只测决策；钉的正/负样本走 fixtures.jsonl semantic 层。
   {
-    name: '评审轴: 对象绑定词命中 code-hygiene（不被 ux-audit 抢）',
+    name: '评审轴: 对象绑定词命中 code-review（不被 ux-audit 抢）',
     prompt: '代码评审',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
     expect: decision => {
       assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, '/code-hygiene');
+      assert.equal(decision.skill, '/code-review');
     },
   },
   {
     // preview ⊃ review：正是不收泛动词 `review代码` 的理由，钉住防日后加回来。
-    name: '评审轴: preview 句不得命中 code-hygiene（子串碰撞防回归）',
+    name: '评审轴: preview 句不得命中 code-review（子串碰撞防回归）',
     prompt: '帮我 preview 代码改完的效果',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
     expect: decision => {
-      assert.notEqual(decision.skill, '/code-hygiene', 'preview 不得被当成 review');
+      assert.notEqual(decision.skill, '/code-review', 'preview 不得被当成 review');
     },
   },
   {
@@ -862,7 +862,33 @@ const cases = [
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
     expect: decision => {
       assert.notEqual(decision.decision, 'PROJECT_STOP', '框架自评审须能到达路由层');
-      assert.equal(decision.skill, '/code-hygiene');
+      assert.equal(decision.skill, '/code-review');
+    },
+  },
+  {
+    name: '评审轴: 英文 code review 分支请求命中专用入口',
+    prompt: 'code review this branch against the spec',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/code-review');
+    },
+  },
+  {
+    name: '模块设计轴: 深模块与 seam 对象命中 codebase-design',
+    prompt: '评估订单模块是不是浅模块，seam 应该放在哪里',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/codebase-design');
+    },
+  },
+  {
+    name: '模块设计轴: 泛产品接口设计不得误触 codebase-design',
+    prompt: '设计一下支付接口页面的用户流程',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/codebase-design', '无工程模块对象的接口设计不得误触');
     },
   },
   {

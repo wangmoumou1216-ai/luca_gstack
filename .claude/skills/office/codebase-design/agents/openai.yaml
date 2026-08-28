@@ -1,0 +1,5 @@
+interface:
+  display_name: "Codebase Design"
+  short_description: "Design deep modules at clear, testable seams"
+policy:
+  allow_implicit_invocation: true
