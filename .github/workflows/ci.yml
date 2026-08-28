@@ -151,7 +151,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - name: Check framework HTML files exist
         run: |
           for f in framework/list-page.html framework/detail-page-2col.html \

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -46,6 +46,12 @@ function runValidator(validatorBin, htmlFiles) {
     if (result.error) throw new Error(`cannot execute ${validatorBin}: ${result.error.message}`);
     if (![0, 1].includes(result.status)) {
       throw new Error(`${validatorBin} failed unexpectedly (${result.status}): ${result.stderr.trim()}`);
+    }
+    if (!existsSync(reportPath)) {
+      const diagnostic = [result.stderr.trim(), result.stdout.trim()].filter(Boolean).join('\n') || 'no diagnostic output';
+      throw new Error(
+        `${validatorBin} exited ${result.status} without producing a JSON report:\n${diagnostic}`,
+      );
     }
     return readFileSync(reportPath, 'utf8');
   } finally {

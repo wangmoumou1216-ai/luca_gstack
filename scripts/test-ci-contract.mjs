@@ -30,4 +30,18 @@ const rejected = run(mutatedPath);
 assert.equal(rejected.status, 1, `${rejected.stdout}${rejected.stderr}`);
 assert.match(`${rejected.stdout}${rejected.stderr}`, /CI missing blocking command: npm run test:project-scope/);
 console.log('PASS missing blocking command is rejected');
-console.log('PASS CI contract proof-it-bites 2/2');
+
+const outdatedRuntimePath = join(tempDir, 'ci-node20.yml');
+const outdatedRuntime = readFileSync(ciPath, 'utf8').replace(
+  /(  validate-html:[\s\S]*?node-version:\s*)'24'/,
+  "$1'20'",
+);
+writeFileSync(outdatedRuntimePath, outdatedRuntime);
+const runtimeRejected = run(outdatedRuntimePath);
+assert.equal(runtimeRejected.status, 1, `${runtimeRejected.stdout}${runtimeRejected.stderr}`);
+assert.match(
+  `${runtimeRejected.stdout}${runtimeRejected.stderr}`,
+  /validate-html must use Node 24 for html-validate@11\.10\.0/,
+);
+console.log('PASS incompatible validate-html runtime is rejected');
+console.log('PASS CI contract proof-it-bites 3/3');
