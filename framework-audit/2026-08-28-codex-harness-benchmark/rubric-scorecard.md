@@ -1,6 +1,8 @@
 # Rubric Scorecard — Final, Post-Redteam
 
-Status: `RESEARCH_COMPLETE / PENDING_HUMAN_GATE`
+Status: `RESEARCH_COMPLETE / RESEARCH_BASELINE_PRESERVED`
+
+Post-gate note: this scorecard is a pre-adoption evidence profile, not a live operational score. Later closure of the narrowed `FINAL-OPP-01` and `FINAL-OPP-03..06`, plus the `FINAL-OPP-02=NOT_NEEDED_AS_NEW_PROFILE` adjudication, are documented in `completion-review.md` and `remediation-report.md`; they do not retroactively rewrite the benchmark rubric.
 Assessment date: `2026-08-28`
 
 ## 0. Redteam correction

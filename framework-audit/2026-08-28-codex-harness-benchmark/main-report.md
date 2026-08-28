@@ -1,9 +1,11 @@
 # OpenAI Codex 开源 Harness × luca_gstack 系统级对标深评
 
-状态：**DONE_WITH_CONCERNS / PENDING_HUMAN_GATE**
+状态：**DONE_WITH_CONCERNS / NECESSARY_ADOPTION_REMOTE_VERIFIED**
 评估日期：**2026-08-28**
 顶层流程：**framework-evolution Mode 2**
 本地姿态：**NO_PIN / pure meta**
+
+后续执行注记：研究终审完成后，用户先授权修复本地缺陷，随后要求对尚未完成项按 need-first 计划审查并在确有必要时完成。终局裁决为：`FINAL-OPP-01` 收窄后需要并已实施；`FINAL-OPP-02` 因现有 scratch-isolated runner 已满足该任务类而判 **NOT_NEEDED_AS_NEW_PROFILE**；`FINAL-OPP-03..06` 已完成，其中 remote CI 与最小 branch protection 已真实验证。native judge 的 role-level mechanical read-only 与 execpolicy 仍按证据 `DEFER`。实现、验证与残余风险见 `completion-review.md` 和 `remediation-report.md`。
 
 ## 一、核心结论
 
@@ -32,11 +34,11 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 - 父会话可写时，judge 子 agent 仍继承可写权限；
 - 直接扩张 native planner/work/oracle 注册会放大错误安全假设。
 
-这项发现已写入 inventory、C09、机会裁决和红队报告。任何修复或角色改造都未执行，必须另过人类 GATE。
+这项发现已写入 inventory、C09、机会裁决和红队报告。研究终审时尚未修复；随后的人类 GATE 已授权 verdict/recorder 职责分离与诚实权限声明，但 native child 继承父权限这一 substrate 事实没有被伪装成已解决。
 
-### 4. 两项 Codex 借鉴候选之外，还出现四项本地自托管缺口
+### 4. 研究阶段：两项 Codex 借鉴候选之外，还出现四项本地自托管缺口
 
-最终值得人类审议的集合分两类：
+研究终审时值得人类审议的集合分两类：
 
 1. 跨 harness 语义与义务证据闭环；
 2. 显式、隔离的最小权限 profile 评估；
@@ -45,7 +47,7 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 5. observability writer 的并发唯一性与原子性；
 6. CI severity、projection portability 与 negative-control closure。
 
-前两项是 Codex-derived adaptation；后四项是本次对标反向创造的 luca 本地 gap 候选。execpolicy command-prefix 投影仍有价值，但尚未覆盖 Ask/用户 override、approval-policy 矩阵与 projection SSOT，因此降为 DEFER，不进入当前 GATE。没有任何候选意味着直接复制整个 Codex 子系统。
+前两项是 Codex-derived adaptation；后四项是本次对标反向创造的 luca 本地 gap 候选。终局中，第一项收窄实施、第二项判无新增 profile 的 need、后四项按授权闭合。execpolicy command-prefix 投影仍有价值，但尚未覆盖 Ask/用户 override、approval-policy 矩阵与 projection SSOT，因此继续 DEFER。没有任何候选意味着直接复制整个 Codex 子系统。
 
 ## 二、范围与证据
 
@@ -60,8 +62,9 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 
 ### luca_gstack 侧
 
-- HEAD：b438c92b1d1dbb28f5252396181f1cb9ab806900
-- 评估的是 current pure-meta worktree，不是仅 HEAD；已有 dirty 文件被保留，具体路径与 hash 已登记。
+- 研究基线 HEAD：`b438c92b1d1dbb28f5252396181f1cb9ab806900`；研究时 dirty snapshot 的精确边界仍由 source-manifest.md 保存。
+- 远端验证提交链为 `e399f45`（本任务主要 harness closure）→ `3d94271`（另一 session 的 skill 安装）→ `6449180`（本任务 HTML validator runtime follow-up）；run `33165797050` 验证的是这一 combined tree。归属上，本任务的精确 path commits 只有 `e399f45` 与 `6449180`，没有回退、重写或吸收另一 session 的未提交文件。
+- 评估和实施均是 pure-meta worktree；既有或并发 dirty 文件被保留，精确 path commit 只包含本任务文件。
 - 只读取框架契约、skill-os evolution、framework-audit、hooks、scripts、memory、Codex/agent/skill meta 面。
 - 未读取产品态上下文、共享项目产物或工作流项目状态；未调用任何 identity transaction。
 
@@ -69,8 +72,10 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 
 - local static wiring：`--static` 为 PASS=18、FAIL=0、BLOCKED=1；随后在获准越过外层嵌套沙箱后，完整只读活体 verifier 为 **PASS=21、FAIL=0、BLOCKED=0**。外层沙箱内直接启动嵌套 Codex 会在 app-server 初始化前报 `Operation not permitted`，这不是 hook wiring 失败。
 - viability 时间线：初始 inventory lane PASS=33/FAIL=0；`handoff` 并发出现但尚未进 registry 时，2026-08-28T15:44:25+0800 为 PASS=32/FAIL=1；另一条并发流程补齐 projection 后，最终验证为 PASS=34/FAIL=0（32 skills）。本 benchmark 没有修改 skill 或 registry，只记录三个时点。
-- capability parity：anchors present，但这不证明行为/语义等价。
-- project-scope fixtures：PASS=88、FAIL=0；与此同时源码硬编码 fallback 与命令字符串误报未被这些 fixtures 覆盖，因此绿色不等于闭合。
+- capability parity：终局实盘为 **141 anchors / 35 shared / 1 delegated**；semantic projection proof-it-bites **31/31 PASS**。它证明 source-derived 静态一致性，不证明 runtime 模型遵循。
+- project-scope fixtures：研究基线 PASS=88/FAIL=0；修复后 **PASS=96/FAIL=0**，新增 read/search operand、patch header/body、portable-root 与 NO_PIN 反例。
+- 本地全仓验证：`bash scripts/verify.sh` 为 **PASS=81 / FAIL=0 / WARN=1**；warning 是既有 ADR 目录无记录。
+- 远端验证：[run 33165797050](https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/33165797050) 对 head `6449180` 全部成功，包含稳定 `Required Checks` gatherer；`main` protection 随后只要求该 context。
 - 上游源码未执行，完整上游 test suite 未运行；698 来自 `find codex-rs -path '*/tests/*' -type f`，1,135 来自 `find codex-rs -type f \( -name '*_tests.rs' -o -path '*/tests/*.rs' \)`；这两个精确 predicate 仅表示验证面广，不代表覆盖率。
 - 官方联网证据全部来自 OpenAI 一手资料，访问日期均为 2026-08-28。
 
@@ -110,19 +115,19 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 
 这些是覆盖与目标优势，不等于每项都已机械 enforcement。Plan、graph、human gate、eval、handoff 的一部分仍依赖契约和模型遵循。
 
-### 关键差距
+### 研究时差距与终局处置
 
-1. **权限假设错误**：native judge 的 read-only TOML 不产生机械隔离。
-2. **parity blind spot**：MagicPath intentional delegation 已被源文件证实，但当前 checker 不能表达/验证这一 source-owned reason，也不能识别具有相同 anchors 的未来误替换。
-3. **obligation receipt 缺口**：文件/anchor 出现不证明必做步骤真实执行。
-4. **host dependence**：hooks、agent lifecycle、exec、SDK/state 依赖宿主或 wrapper。
-5. **权限 blast radius**：宽 writable roots 有真实历史原因，但普通会话失误影响面仍大。
-6. **route negation failure**：只读 dry-run 复现了“明确不要 Project Gate / 不要做 benchmark”仍被词面规则反向命中的情况；正向 fixture 不能覆盖 polarity。
-7. **scope self-hosting gap**：scope guard 对整段 Bash 字符串做 regex 扫描，NO_PIN 下无法区分只读与写入；源码另含一个本机绝对路径 fallback，88 条测试没有覆盖 display link 缺失/跨机路径。
-8. **judge/eval 冲突**：判官宣称只读，却又被共享合同要求自己写 eval-log；继承可写父权限时不再机械只读，真正 read-only 时必达落账会 fail-open。
-9. **observability 并发风险**：ID 由无锁计数生成，`rules.yaml` 是无锁 read-modify-write，observation 与 rule 非事务更新；多 agent 下可能重复 ID、丢规则或半提交。
-10. **CI false-green / portability**：HTML 与若干 quality-contract 检查只 warning；远端 CI 未覆盖全部本地 verify；多处绝对路径与未 pin 的工具依赖削弱复现性。
-11. **证据可复现性**：本地是 dirty worktree snapshot；官方 web 页面可变，已用 hash 与 access date 降低歧义。
+1. **权限假设错误 — RESIDUAL / DEFER**：native judge 的 read-only TOML 不产生机械隔离。已删除虚假能力声明并分离 verdict/recorder，但 child 仍继承 parent permission。
+2. **parity blind spot — CLOSED_WITH_BOUNDARY**：source-owned delegation、target、authority 与 canonical gate 义务已进入 source-derived projection；31/31 负控通过。static parity 不等于 runtime execution。
+3. **obligation receipt 缺口 — NARROWED**：静态 mandatory instruction receipt 已可机验；没有把 trace 或文件存在升级成治理真值，也没有声称每次模型都执行。
+4. **host dependence — DESIGN_BOUNDARY**：hooks、agent lifecycle、exec、SDK/state 仍依赖宿主或 wrapper；这是分层架构边界，不是复制 Codex runtime 的理由。
+5. **权限 blast radius — NOT_NEEDED_AS_NEW_PROFILE**：普通会话宽 root 风险存在，但现有 workflow runner 已为需隔离任务提供 opt-in scratch-CWD 机械边界；本轮不造第二 profile/router。
+6. **route negation failure — CLOSED_BOUNDED**：显式 framework/NO_PIN 否定范围已回归覆盖；真正混合项目意图仍 gate。
+7. **scope self-hosting gap — CLOSED_BOUNDED**：search pattern 与 patch body 不再被当路径；真实 operand/header 仍保护；本机绝对 fallback 已移除，fixture 96/0。
+8. **judge/eval 冲突 — CLOSED_WITH_RESIDUAL**：judge 只产严格 envelope，父级 recorder 落账并做 digest/幂等/冲突检查；role-level filesystem authority 未被假装解决。
+9. **observability 并发风险 — CLOSED_BOUNDED**：单锁、唯一 ID、fsync staging、durable journal 与崩溃恢复通过 24-way/partial-commit/malformed-log fixture；不宣称无锁 reader 的跨文件 snapshot isolation。
+10. **CI false-green / portability — CLOSED_WITH_NONBLOCKING_WARNINGS**：required gatherer、关键本地门、HTML exact-debt gate 与 mutation tests 已远端成功并设为 main required context。Actions Node deprecation annotation和 relaxed-yamllint line-length 仍是显式 non-blocking maintenance 项。
+11. **证据可复现性 — IMPROVED_WITH_LIMITS**：研究基线仍是 dirty snapshot；实现有精确 commits、远端 run 与 API read-back。官方 web 页面仍可变，因此继续依赖 access date、hash 与 pinned source。
 
 ### 目标不同、不应强行同化
 
@@ -206,16 +211,20 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 - 本地 dirty worktree 在研究期间仍有并发 meta 变化；最终关键文件 hash 采样于 2026-08-28T15:59:54+0800，无法由 HEAD 单独复现，也不应被误读为全仓冻结。
 - 价值/成本/风险仍是研究判断；只有实验数据才能升级为事实。
 
-## 九、人类 GATE
+## 九、人类 GATE 与后续裁决
 
-研究评估到此完成；采纳仍未开始。任何下一步都必须由人类对 FINAL-OPP-01 至 FINAL-OPP-06 分别选择：
+研究评估先停在 GATE；用户先授权本地缺陷修复，后续又明确授权“先审查 need，确有必要则完成”。终局裁决为：
 
-- OPEN_GAP
-- AUTHORIZE_SPIKE
-- DEFER
-- REJECT
+- `FINAL-OPP-01`: **NEED → IMPLEMENTED / VERIFIED_WITH_RESIDUAL**
+- `FINAL-OPP-02`: **NOT_NEEDED_AS_NEW_PROFILE**；复用已有 scratch-isolated runner
+- `FINAL-OPP-03`: **AUTHORIZE_FIX → IMPLEMENTED / VERIFIED**
+- `FINAL-OPP-04`: **AUTHORIZE_FIX → IMPLEMENTED / VERIFIED_WITH_RESIDUAL**
+- `FINAL-OPP-05`: **AUTHORIZE_FIX → IMPLEMENTED / VERIFIED**
+- `FINAL-OPP-06`: **AUTHORIZE_FIX → IMPLEMENTED / REMOTE_VERIFIED / PROTECTED**
+- native judge role-level isolation：**DEFER**，等待真实 mutation 事件或上游 role sandbox
+- execpolicy：**DEFER / NOT_GATE_READY**
 
-当前六项全部是 **UNDECIDED**。本次没有修改 code、hook、config、skill、memory rule、gap register、benchmark registry、adoption log 或 release。
+未执行下游项目动作、identity transaction、gap/benchmark registry 晋升、memory rule 晋升或 release。边界与证据见 `completion-review.md` 与 `remediation-report.md`。
 
 ## 十、产物索引
 
@@ -229,5 +238,8 @@ OpenAI Codex 的强项是原生运行时与控制平面：typed tools、unified 
 - opportunities.md — 最终机会、延期、拒绝与 GATE
 - redteam-review.md — 正向红队、反向红队、reasoning-heavy 终审、Socratic 修订与残余风险
 - final-review.md — 独立终审、终态哈希与残余风险
+- completion-plan.md — 未完成项的 need-first 执行计划、kill assumptions 与实际结果
+- completion-review.md — 终局裁决、远端 CI、branch protection read-back 与残余
+- remediation-report.md — 人类 GATE 后必要缺口的实现、验证、回滚与残余风险
 
 <!-- FILE_END: main-report.md -->

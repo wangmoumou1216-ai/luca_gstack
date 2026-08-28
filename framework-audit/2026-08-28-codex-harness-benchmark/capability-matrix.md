@@ -1,6 +1,8 @@
 # Capability Matrix — Post-Redteam Assessment
 
-Status: `RESEARCH_COMPLETE / PENDING_HUMAN_GATE`
+Status: `RESEARCH_COMPLETE / RESEARCH_BASELINE_PRESERVED`
+
+Post-gate note: scores and classifications remain the research-time comparison. The narrowed `FINAL-OPP-01` and `FINAL-OPP-03..06` were later authorized and verified; `FINAL-OPP-02` was found unnecessary as a new profile. See `completion-review.md` and `remediation-report.md`. No score was recomputed from implementation work.
 Revision: `Mode 2 redteam applied`
 
 ## 0. Reading rules
@@ -114,5 +116,16 @@ Deferred rather than gate-ready: narrow execpolicy projection for deterministic 
 - Session project identity/CAS.
 
 These are coverage and intent advantages. The benchmark does not claim that every obligation is mechanically enforced.
+
+## 4. Terminal closure overlay — no retroactive rescoring
+
+| Research rows | Terminal evidence state |
+|---|---|
+| C05/C12/C18 | Route polarity and scope-wrapper counterexamples closed in bounded fixtures; project identity/CAS purpose unchanged |
+| C15/C18 | Observability writer now lock/journal/recovery guarded; no claim of snapshot isolation for readers that ignore the lock |
+| C09/C16 | Verdict and recorder authority separated; native child role still inherits parent permission |
+| C06/C20 | Source-derived semantic/delegation projection passes 31/31 proof-it-bites; static parity is not runtime enforcement |
+| C22 | Exact head `6449180` passed remote CI; `main` now requires only the stable `Required Checks` gatherer |
+| C02 | Existing scratch-isolated workflow runner was sufficient for the evidenced task class; no new universal permission profile was added |
 
 <!-- FILE_END: capability-matrix.md -->

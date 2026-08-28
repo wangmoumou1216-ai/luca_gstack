@@ -1,6 +1,6 @@
 # Mode 2 Terminal Review
 
-Status: **PASS_WITH_CONCERNS / PENDING_HUMAN_GATE**
+Status: **PASS_WITH_CONCERNS / TERMINAL_RESEARCH_REVIEW; POST_GATE_REMEDIATION_VERIFIED**
 Review time: **2026-08-28T16:14:58+0800**
 Posture: **NO_PIN / READ_ONLY REVIEW**
 
@@ -71,7 +71,7 @@ These concerns justify `DONE_WITH_CONCERNS`, not `BLOCKED`.
 
 ## 7. Terminal artifact hashes
 
-Hashes were captured after the terminal-review corrections. `final-review.md` is excluded from its own pre-write snapshot.
+Hashes below preserve the **pre-adoption terminal-review snapshot**. They are intentionally not current post-remediation hashes; current implementation evidence is recorded in `remediation-report.md`.
 
 | SHA-256 | Artifact |
 |---|---|
@@ -85,10 +85,25 @@ Hashes were captured after the terminal-review corrections. `final-review.md` is
 | `2bc4baa3056d368a03b9464244068e48ea6ff90dc57f98b53de392f7d58edabb` | `opportunities.md` |
 | `df80a4cf663b9b34786cfdaaa106981c3d9c67fa318a6d6ff3a559c0c2ae95f1` | `redteam-review.md` |
 
-## 8. Human GATE
+## 8. Human GATE — terminal-review state and later disposition
 
-No adoption decision was made. `FINAL-OPP-01` through `FINAL-OPP-06` remain **UNDECIDED**. The only authorized next action is a future human choice per candidate: `OPEN_GAP`, `AUTHORIZE_SPIKE`, `DEFER`, or `REJECT`.
+At terminal-review time no adoption decision had been made; all six items were **UNDECIDED**. Later on 2026-08-28, the user explicitly instructed “你发现的，解决了”. The bounded interpretation and resulting disposition are:
 
-No code, hook, config, skill, memory rule, gap register, benchmark registry, adoption log, changelog or release artifact was changed by this benchmark.
+- `FINAL-OPP-03/04/05/06`: local defect repair authorized and executed;
+- a subsequent need-first instruction authorized the narrowed `FINAL-OPP-01`, which was implemented with its static-vs-runtime residual explicit;
+- `FINAL-OPP-02`: `NOT_NEEDED_AS_NEW_PROFILE`, because the existing scratch-isolated workflow runner already satisfied the evidenced task class;
+- remote CI succeeded for exact head `6449180`, then `main` was configured to require only `Required Checks` with API read-back;
+- native judge role-level isolation and execpolicy remain deferred;
+- no downstream project, identity transaction, semantic promotion, registry adoption or release.
+
+The post-gate implementation is independently documented in `completion-review.md` and `remediation-report.md`; the original terminal review remains an audit snapshot rather than being rewritten as if it had pre-authorized the changes.
+
+## 9. Post-completion independent re-review
+
+After the bounded implementation, remote verification and branch-protection read-back, `/root/mode2_terminal_review` re-reviewed the completion artifacts without editing them. Verdict: **PASS_WITH_RESIDUAL; no blocking contradiction**.
+
+The re-review confirmed C1-C7 and CR-01 through CR-07, the rubric arithmetic, the successful exact-SHA CI run, the minimal branch-protection state, the absence of framework-template/adoption-registry mutation, and the ownership boundary around the concurrent `3d94271` skill-install commit. Its seven precision findings were applied to the durable record: terminal plan hash, baseline-pinned `L-SRC` resolution, current test counts, validator-path prerequisite, scoped scan for untracked completion documents, the missing `b2762c7` evidence commit, and the combined commit chain.
+
+Residuals intentionally remain: static semantic projection is not runtime model compliance; native quality-gate agents inherit parent permission; live runner stdout is not a replayable receipt bundle; and the ordering of CI success before branch-protection mutation is supported by this session's API evidence rather than an independent external timestamp ledger.
 
 <!-- FILE_END: final-review.md -->

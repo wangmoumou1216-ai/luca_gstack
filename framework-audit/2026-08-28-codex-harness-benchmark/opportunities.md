@@ -1,9 +1,9 @@
-# Opportunity Ledger — Final, Propose Only
+# Opportunity Ledger — Final Research + Post-GATE Disposition
 
-Status: **RESEARCH_COMPLETE / NO_ADOPTION_AUTHORIZED**
-Human gate: **PENDING**
+Status: **NECESSARY_ADOPTION_COMPLETE / VERIFIED_WITH_CONCERNS**
+Human gate: **01 + 03–06 COMPLETED; 02 NOT_NEEDED_AS_NEW_PROFILE**
 
-No item has been adopted, implemented, released, opened as a gap, or written into framework behavior. Redteam removed false precision from the first draft: value/cost/risk are ordered bands, not a pseudo-exact composite score.
+At research close no item had been adopted. The later user instruction “你发现的，解决了” authorized the four local defect closures `FINAL-OPP-03..06`; a subsequent need-first instruction authorized completion only where current evidence still showed need. That review implemented the narrowed `FINAL-OPP-01`, found no incremental need for a new `FINAL-OPP-02` profile, and completed remote CI/branch protection for `FINAL-OPP-06`. Deferred execpolicy work, publication and release remain unauthorized. Redteam's value/cost/risk bands remain research judgments rather than pseudo-exact scores.
 
 ## 0. Ordering method
 
@@ -17,16 +17,16 @@ Items are sorted by higher value, then lower cost, then lower risk. Ties are exp
 
 | Order | ID | Opportunity | Classification | Value | Cost | Risk | Gate state |
 |---:|---|---|---|---|---|---|---|
-| 1 | FINAL-OPP-03 | Route polarity and scope-guard conformance closure | LOCAL_HARDENING | High | Low–Medium | Medium | UNDECIDED |
-| 2 | FINAL-OPP-05 | Atomic observability writer and rebuildable projection | LOCAL_HARDENING + DIRECT_PATTERN | High | Low–Medium | Medium | UNDECIDED |
-| 3 | FINAL-OPP-01 | Cross-harness semantic and obligation evidence closure | LOCAL_HARDENING + ADAPT_TEST_PATTERNS | High | Medium | Medium | UNDECIDED |
-| 4 | FINAL-OPP-06 | CI severity propagation and projection portability closure | LOCAL_HARDENING + DIRECT_PATTERN | High | Medium | Medium | UNDECIDED |
-| 5 | FINAL-OPP-02 | Explicit isolated least-authority profile evaluation | ADAPT | High | Medium | High | UNDECIDED |
-| 6 | FINAL-OPP-04 | Independent verdict / eval-recorder permission separation | LOCAL_HARDENING | High | Medium | High | UNDECIDED |
+| 1 | FINAL-OPP-03 | Route polarity and scope-guard conformance closure | LOCAL_HARDENING | High | Low–Medium | Medium | IMPLEMENTED_VERIFIED |
+| 2 | FINAL-OPP-05 | Atomic observability writer and rebuildable projection | LOCAL_HARDENING + DIRECT_PATTERN | High | Low–Medium | Medium | CORE_IMPLEMENTED_VERIFIED |
+| 3 | FINAL-OPP-01 | Cross-harness semantic and obligation evidence closure | LOCAL_HARDENING + ADAPT_TEST_PATTERNS | High | Medium | Medium | IMPLEMENTED_VERIFIED_WITH_RESIDUAL |
+| 4 | FINAL-OPP-06 | CI severity propagation and projection portability closure | LOCAL_HARDENING + DIRECT_PATTERN | High | Medium | Medium | IMPLEMENTED_REMOTE_VERIFIED_PROTECTED |
+| 5 | FINAL-OPP-02 | Explicit isolated least-authority profile evaluation | ADAPT | High | Medium | High | NOT_NEEDED_AS_NEW_PROFILE |
+| 6 | FINAL-OPP-04 | Independent verdict / eval-recorder permission separation | LOCAL_HARDENING | High | Medium | High | IMPLEMENTED_VERIFIED_WITH_RESIDUAL |
 
-The six items are not recommendations to implement. The order expresses current evidence, cost and risk bands; tied bands remain uncertain. `FINAL-OPP-01/02` are bounded adaptations prompted by Codex evidence. `FINAL-OPP-03..06` are local defects or proof gaps exposed by the benchmark and use only bounded upstream testing/failure-semantics patterns.
+The order preserves the research-time value/cost/risk view. `FINAL-OPP-01` was implemented only after the later conditional GATE; `FINAL-OPP-02` was not implemented because the existing runner already supplied the evidenced least-authority task boundary. `FINAL-OPP-03..06` were local defects or proof gaps and were implemented only after human authorization. Exact outcomes and limitations are in `completion-review.md` and `remediation-report.md`.
 
-The priority table is authoritative. Dossiers are grouped by evidence lineage, so their section order does not override the ranked bands above.
+The priority table is authoritative. Dossiers below preserve the research-time evidence, proposed minimum scheme, verification and rollback contract; their future-tense wording is an audit snapshot, not the current implementation status.
 
 ### FINAL-OPP-03 — Route polarity and scope-guard conformance closure
 
@@ -158,15 +158,23 @@ Deferred execpolicy evidence: Codex supports side-effect-free prefix rules but t
 | A Codex-only source of truth | It would create the cross-harness drift this framework is designed to prevent. |
 | Broad permissions merely for convenience | Existing broad roots must be justified by required workflows, not copied as a default pattern. |
 
-## 5. Human adoption gate
+## 5. Human adoption gate — final disposition
 
-For each of the six final candidates, a human may later choose exactly one:
+The research-stage choices were:
 
 - OPEN_GAP: create a governed opportunity with owner and evidence.
 - AUTHORIZE_SPIKE: permit only the stated bounded experiment.
 - DEFER: retain evidence and set a revisit trigger.
 - REJECT: record why it is unsuitable.
 
-No choice has been made. No code, hook, config, registry, skill, memory rule, gap record, adoption log or release artifact was changed.
+Post-research human decision:
+
+- `FINAL-OPP-01`: `NEED`; source-derived projection and proof-it-bites implemented, locally and remotely verified, with static-vs-runtime residual retained.
+- `FINAL-OPP-02`: `NOT_NEEDED_AS_NEW_PROFILE`; existing scratch-isolated runner satisfies the evidenced task class. Native judge role isolation remains a separately triggered residual, not a reason to create a universal profile.
+- `FINAL-OPP-03/04/05`: `AUTHORIZE_FIX`; implemented and verified with the residuals recorded in `remediation-report.md`.
+- `FINAL-OPP-06`: `AUTHORIZE_FIX`; implemented, verified on remote run `33165797050`, and installed as the sole `main` required context `Required Checks`.
+- Deferred and rejected items: unchanged.
+
+No downstream project, identity transaction, semantic promotion, gap/benchmark registry mutation, adoption log, changelog or release was performed. The branch-protection change was the explicitly scoped external completion step and was read back after mutation.
 
 <!-- FILE_END: opportunities.md -->

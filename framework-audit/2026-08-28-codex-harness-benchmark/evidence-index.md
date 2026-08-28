@@ -1,11 +1,14 @@
 # Evidence Index — OpenAI Codex Harness Benchmark
 
-Status: **RESEARCH_COMPLETE / PENDING_HUMAN_GATE**
+Status: **RESEARCH_COMPLETE / NECESSARY_REMEDIATION_REMOTE_VERIFIED_PROTECTED**
 Access date for all network sources: **2026-08-28**
-Local repository HEAD: **b438c92b1d1dbb28f5252396181f1cb9ab806900**
+Research-baseline local HEAD: **b438c92b1d1dbb28f5252396181f1cb9ab806900**
+
+Post-gate implementation commits: **b2762c7fa5b8b5de725a3339f1a5afdcb3e147a7**, **f8024a8ef3172bd4027d16b2515bb1ca68b2ef50**, **e399f45a2a1a820ec36692fa4644a89532d8135b**, **644918028f75fd9c1c8c33107d808814fd198272**
+Remote verification head: **644918028f75fd9c1c8c33107d808814fd198272**
 OpenAI Codex pin: **7d6f808b97e424da80271be8cc539e8c5437a229**
 
-This index separates public contracts, pinned implementation facts, current-worktree local facts, and analyst inferences. A source proves only the listed claim. Exact content hashes and dirty-worktree limits are in source-manifest.md.
+This index separates public contracts, pinned implementation facts, current-worktree local facts, and analyst inferences. A source proves only the listed claim. Research-baseline content hashes and dirty-worktree limits are in source-manifest.md; terminal implementation reproducibility is anchored by the commits, remote run and API read-back listed here.
 
 ## A. Reproducibility ledger
 
@@ -79,6 +82,8 @@ All links resolve to the assessed commit.
 
 ## D. luca_gstack current-worktree evidence
 
+`L-SRC-01..20` are **research-baseline locators**, not terminal-HEAD line references: resolve tracked files against baseline commit `b438c92b1d1dbb28f5252396181f1cb9ab806900`, and resolve files that were already dirty at capture time by the SHA-256 entries in `source-manifest.md`. Bare paths below must not be interpreted against the repaired terminal tree. `L-REM-*` rows are the additive post-gate evidence.
+
 | ID | Local source | Claims supported | Evidence class |
 |---|---|---|---|
 | L-SRC-01 | AGENTS.md; CLAUDE.md | Identity, route order, cross-harness and human-gate contracts | Contract |
@@ -118,5 +123,23 @@ All links resolve to the assessed commit.
 - CLAIM: predicted benefit, cost, risk or future experiment outcome.
 - Pinned source controls implementation claims when a mutable page is broader or ambiguous.
 - Passing static checks do not prove live hook dispatch, semantic routing, permission isolation or cross-harness equivalence. The passing full wiring probe proves only the bundle and lifecycle branches asserted by that script, not all six events' allow/deny/rewrite/fail-open semantics.
+
+## G. Post-GATE remediation evidence
+
+The original `L-SRC-15..19` rows remain research-time defect evidence. Their post-gate dispositions are additive, not retroactive rewrites:
+
+| ID | Local source / command | Claim supported | Boundary |
+|---|---|---|---|
+| L-REM-01 | route-guard + route fixtures; commit `b2762c7`; `npm run test:routes --silent` | Negative downstream scope no longer creates a Project Gate; true mixed scope remains gated; current combined tree 132/0 | Heuristic routing remains a bounded parser, not semantic proof for every language form; three later cases came from the separate skill-install commit |
+| L-REM-02 | project-scope-guard + conformance fixtures; `npm run test:project-scope --silent` | Search patterns and patch bodies are data; real path/header operands remain protected; hard-coded root removed; 96/0 | Explicit search-command subset; unknown syntax stays conservative |
+| L-REM-03 | quality-gate/orchestrator contracts, `record_eval.py`, recorder tests | Judge/recorder duties separated; strict hash-bound envelope is idempotent/conflict-detecting; 4/4 + 53/53 | Native child still inherits parent filesystem authority; no mechanical read-only claim |
+| L-REM-04 | observability writer + temp-fixture tests | 24 concurrent writers keep unique IDs/rules; journal recovers a forced partial commit; malformed log fails without rewrite; 3/3 | No cross-file snapshot isolation claim for readers that ignore the lock |
+| L-REM-05 | harness projection; commit `f8024a8`; harness/viability suites | Codex shared control verbs are projected as available; current combined tree harness 13/13 + viability 36/0 across 34 skills | Static/runtime tests cover declared branches, not every upstream version; the two additional skills belong to commit `3d94271` from another session |
+| L-REM-06 | CI workflow, CI checker/mutation test, HTML debt checker/baseline | Required checks gather, missing gate fails, validator/runtime pair is pinned, 6 files/317 known debt are exact-gated | Historical debt remains; action-runtime deprecation annotations are non-blocking maintenance signals |
+| L-REM-07 | `bash scripts/verify.sh` | Integrated local result PASS=81, FAIL=0, WARN=1 | WARN is existing empty ADR directory; local success alone is not remote proof |
+| L-REM-08 | `scripts/lib/semantic-projection.mjs`; semantic/capability parity checkers; `npm run test:semantic-parity --silent` | Repo-owned source/target/authority containment, source-declared delegation and canonical gate projection; 31/31 proof-it-bites; real repo 141 anchors / 35 shared / 1 delegated | Static instruction consistency only; does not prove runtime obligation execution or hash non-governance plugin code |
+| L-REM-09 | [GitHub Actions run 33165797050](https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/33165797050) | Exact head `644918028f75fd9c1c8c33107d808814fd198272`; all five dependency jobs and `Required Checks` succeeded | Hosted-run fact for this SHA; future commits require their own run |
+| L-REM-10 | [main branch protection API](https://api.github.com/repos/wangmoumou1216-ai/luca_gstack/branches/main/protection) read-back on 2026-08-28 | `strict=true`; only `Required Checks` (GitHub Actions app `15368`); admins not enforced; PR review/restrictions absent; other optional protections false | Mutable external repository state; read-back records the state immediately after the authorized change |
+| L-REM-11 | [failed run 33163664368](https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/33163664368); [html-validate 11.10.0 package metadata](https://registry.npmjs.org/html-validate/11.10.0); follow-up `6449180` | Node 20 was outside the validator engine `^22.22.0 || >=24.8.0`; local Node 20 reproduction raised `TypeError: fs.globSync is not a function`; Node 24 plus diagnostic/CI negative controls closed the failure | Package metadata and Actions logs were accessed 2026-08-28; the registry page is mutable but version-addressed |
 
 <!-- FILE_END: evidence-index.md -->

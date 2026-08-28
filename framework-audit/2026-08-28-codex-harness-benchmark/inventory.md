@@ -1,6 +1,8 @@
 # System Inventory — OpenAI Codex and luca_gstack
 
-Status: `RESEARCH_COMPLETE / PENDING_HUMAN_GATE`
+Status: `RESEARCH_COMPLETE / RESEARCH_BASELINE_PRESERVED`
+
+Post-gate note: this inventory preserves the facts observed before adoption. Later authorization closed the narrowed `FINAL-OPP-01` and `FINAL-OPP-03..06`; `FINAL-OPP-02` was adjudicated `NOT_NEEDED_AS_NEW_PROFILE`. Current-state evidence is in `completion-review.md` and `remediation-report.md`; do not read the defect rows below as terminal assertions.
 Inventory date: `2026-08-28`
 
 ## 0. Boundary and method

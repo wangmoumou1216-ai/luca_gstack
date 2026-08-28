@@ -1,6 +1,8 @@
 # Redteam and Reverse-Redteam Review
 
 Status: **CHALLENGE_AND_FINAL_REVIEW_COMPLETE / PASS_WITH_CONCERNS**
+
+Post-review note: four local gaps were later human-authorized and remediated; this document preserves the pre-adoption challenge record.
 Review date: **2026-08-28**
 Posture: **NO_PIN / READ_ONLY CHALLENGE**
 
@@ -133,6 +135,18 @@ Final post-second-pass disposition:
 - `FINAL-OPP-06`: **ADDED / UNDECIDED**.
 - Deterministic command-prefix safety: **DEFERRED / NOT GATE-READY**.
 
-No verdict authorizes implementation. All six candidates remain at the human adoption GATE.
+At the close of this redteam, no verdict authorized implementation and all six candidates remained at the human adoption GATE. A later first GATE authorized `FINAL-OPP-03..06`; the subsequent need-first completion review authorized the narrowed `FINAL-OPP-01`, found `FINAL-OPP-02` unnecessary as a new profile, and completed remote CI/branch protection for `FINAL-OPP-06`. The redteam verdicts above remain the historical research-time challenge record; current disposition is in `completion-review.md` and `remediation-report.md`.
+
+## 11. Post-completion adversarial recheck
+
+The terminal recheck challenged five possible over-claims:
+
+1. **“Semantic parity means runtime compliance.” — REJECTED.** The implemented checker proves source/target/authority/canonical-instruction consistency only; the residual is explicit.
+2. **“Existing scratch isolation makes native judge read-only.” — REJECTED.** `FINAL-OPP-02=NOT_NEEDED_AS_NEW_PROFILE` applies only to the evidenced workflow task class; parent-permission inheritance remains a separate residual.
+3. **“Local green is enough.” — REJECTED.** The first remote run failed on a real Node/package mismatch; the root cause was reproduced, regression-tested and closed before branch protection was installed.
+4. **“Branch protection can safely require every job name.” — REJECTED.** Only the stable gatherer `Required Checks` is required; PR review/admin enforcement/restrictions were intentionally not added.
+5. **“Everything in the opportunity ledger must be implemented.” — REJECTED.** Execpolicy and native role isolation remain deferred; the new universal profile was not built because current need was absent.
+
+Residual verdict: **PASS_WITH_RESIDUAL**. No current false-green was reproduced in the scoped semantic projection, CI gatherer or API read-back; native role isolation and runtime obligation execution remain honestly unclosed.
 
 <!-- FILE_END: redteam-review.md -->
