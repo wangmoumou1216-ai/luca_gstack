@@ -35,6 +35,7 @@ const searchScript = resolve(projectRoot, 'memory/scripts/search_memory.py');
 const isSymlink = (p) => { try { return lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
 const UTC_TODAY = new Date().toISOString().slice(0, 10);
+const FORCE_STOP_ENV = { SESSION_SYNC_FORCE_ON_STOP: '1' };
 
 function makeFixture({
   topic = '"hook-test"',
@@ -82,6 +83,7 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   // still wins in the spread below.
   const baseEnv = { ...process.env };
   delete baseEnv.SESSION_SYNC_BLOCK;
+  delete baseEnv.SESSION_SYNC_FORCE_ON_STOP;
   // 同 C11 理由（audit F2-01）：MEMORY_ROOT/GLOBAL_MEMORY_DIR 残留会把 hook 的记忆/治理路径
   // 重定向出测试 fixture；需要它们的测试均已显式经 `env` 传入（spread 仍然生效）。
   delete baseEnv.MEMORY_ROOT;
@@ -128,10 +130,22 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   };
 }
 
-// ── HOOK-001（critical）：实质工作（有文件编辑）→ block 路径 stdout 是纯 JSON，旁路文本只在 stderr ──
+// ── HOOK-000：Stop 是回合边界，不是 SessionEnd；默认只留 pending，不开启新一轮对话 ──
 {
   const root = makeFixture({ turns: 5, edits: 1, activeProject: 'testproj' });
   const result = runNode(sessionSyncHook, root);
+  assert.equal(result.stdout, '', '默认 Stop 不得输出 decision:block 或 hook prompt');
+  assert.ok(
+    existsSync(join(root, '.claude', 'observability', 'pending-extraction.md')),
+    '实质工作应以 pending 形式留待真正收尾处理'
+  );
+  console.log('PASS HOOK-000 substantive Stop 默认安静放行并留下 pending');
+}
+
+// ── HOOK-001（critical）：显式旧强制模式仍保留纯 JSON block 契约 ──
+{
+  const root = makeFixture({ turns: 5, edits: 1, activeProject: 'testproj' });
+  const result = runNode(sessionSyncHook, root, { env: FORCE_STOP_ENV });
   let parsed;
   assert.doesNotThrow(() => { parsed = JSON.parse(result.stdout); },
     `block 路径 stdout 必须是可解析的纯 JSON，实际: ${JSON.stringify(result.stdout.slice(0, 80))}`);
@@ -151,7 +165,10 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
 {
   const root = makeFixture({ turns: 5, edits: 1, activeProject: 'display-only' });
   const active = bindActiveTurn(root, 'testproj');
-  const result = runNode(sessionSyncHook, root, active);
+  const result = runNode(sessionSyncHook, root, {
+    ...active,
+    env: { ...active.env, ...FORCE_STOP_ENV },
+  });
   assert.equal(JSON.parse(result.stdout).decision, 'block');
   assert.match(result.stderr, /已自动写入 checkpoint/);
   assert.ok(readdirSync(join(active.projectRoot, 'docs', 'handoff')).some(n => n.endsWith('-auto-checkpoint.md')));
@@ -172,7 +189,7 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
     false,
     'trivial session 不得写 pending-extraction（F1-03）'
   );
-  assert.match(result.stderr, /Session 结束/, '放行信息应在 stderr');
+  assert.match(result.stderr, /回合结束/, '放行信息应在 stderr');
   console.log('PASS release 路径 stdout 为空，trivial 不落 pending（F1-03）');
 }
 
@@ -204,14 +221,14 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
 
   const rMarker = base();
   writeFileSync(join(rMarker, '.claude', `.episode-written-date-${UTC_TODAY}`), '');
-  assert.equal(runNode(sessionSyncHook, rMarker).stdout, '', 'marker 命中应放行');
+  assert.equal(runNode(sessionSyncHook, rMarker, { env: FORCE_STOP_ENV }).stdout, '', 'marker 命中应放行');
 
   const rKill = base();
-  assert.equal(runNode(sessionSyncHook, rKill, { env: { SESSION_SYNC_BLOCK: '0' } }).stdout, '',
+  assert.equal(runNode(sessionSyncHook, rKill, { env: { ...FORCE_STOP_ENV, SESSION_SYNC_BLOCK: '0' } }).stdout, '',
     'kill-switch 应放行');
 
   const rStop = base();
-  assert.equal(runNode(sessionSyncHook, rStop, { input: JSON.stringify({ stop_hook_active: true }) }).stdout, '',
+  assert.equal(runNode(sessionSyncHook, rStop, { env: FORCE_STOP_ENV, input: JSON.stringify({ stop_hook_active: true }) }).stdout, '',
     'stop_hook_active 应放行');
 
   console.log('PASS 三重防循环（marker / kill-switch / stop_hook_active）均不 block');
@@ -224,7 +241,7 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   // REARM-001：marker 基线 "1 5"，计数涨到 edits=12（Δ=11≥10）→ 必须再 block，且基线被刷新
   const r1 = makeFixture({ edits: 12, tools: 10, activeProject: 'testproj' });
   writeFileSync(join(r1, '.claude', markerName), '1 5');
-  const res1 = runNode(sessionSyncHook, r1);
+  const res1 = runNode(sessionSyncHook, r1, { env: FORCE_STOP_ENV });
   let parsed1;
   assert.doesNotThrow(() => { parsed1 = JSON.parse(res1.stdout); }, '增量超阈值必须走 block 路径');
   assert.equal(parsed1.decision, 'block', '增量重拦必须 block');
@@ -233,21 +250,21 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
     '拦截前必须刷新基线（防循环承重）');
 
   // REARM-002 防循环：同一 fixture 立刻再跑（基线已刷新，Δ=0）→ 放行
-  assert.equal(runNode(sessionSyncHook, r1).stdout, '', '基线刷新后同一增量不得二次拦截');
+  assert.equal(runNode(sessionSyncHook, r1, { env: FORCE_STOP_ENV }).stdout, '', '基线刷新后同一增量不得二次拦截');
 
   // REARM-003 空 marker 补基线：首跑放行且回填计数；计数大涨后再跑 → block
   const r3 = makeFixture({ edits: 3, tools: 4, activeProject: 'testproj' });
   writeFileSync(join(r3, '.claude', markerName), '');
-  assert.equal(runNode(sessionSyncHook, r3).stdout, '', '空 marker（旧 touch 形态）首跑应放行');
+  assert.equal(runNode(sessionSyncHook, r3, { env: FORCE_STOP_ENV }).stdout, '', '空 marker（旧 touch 形态）首跑应放行');
   assert.equal(readFileSync(join(r3, '.claude', markerName), 'utf8'), '3 4', '空 marker 应被回填当前计数为基线');
   writeFileSync(join(r3, '.claude', '.session-edit-count'), '20');
-  const res3 = runNode(sessionSyncHook, r3);
+  const res3 = runNode(sessionSyncHook, r3, { env: FORCE_STOP_ENV });
   assert.equal(JSON.parse(res3.stdout).decision, 'block', '回填基线后大增量（Δedit=17）应重拦');
 
   // REARM-004 关断阀：SESSION_SYNC_REARM=0 时大增量也放行
   const r4 = makeFixture({ edits: 50, tools: 90, activeProject: 'testproj' });
   writeFileSync(join(r4, '.claude', markerName), '1 5');
-  assert.equal(runNode(sessionSyncHook, r4, { env: { SESSION_SYNC_REARM: '0' } }).stdout, '',
+  assert.equal(runNode(sessionSyncHook, r4, { env: { ...FORCE_STOP_ENV, SESSION_SYNC_REARM: '0' } }).stdout, '',
     'SESSION_SYNC_REARM=0 应关闭增量重拦');
 
   console.log('PASS REARM 增量重拦：大增量再拦一次 / 基线刷新防循环 / 空 marker 回填 / 关断阀');
@@ -256,7 +273,7 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
 // ── V3 修复：重 Bash/subagent/MCP、零编辑、少轮次 → tool-count 触发实质判据 → block ──
 {
   const root = makeFixture({ turns: 0, edits: 0, tools: 8, activeProject: 'testproj' });
-  const result = runNode(sessionSyncHook, root);
+  const result = runNode(sessionSyncHook, root, { env: FORCE_STOP_ENV });
   let parsed;
   assert.doesNotThrow(() => { parsed = JSON.parse(result.stdout); },
     'tool-count 达阈值时应走 block 路径');
@@ -280,7 +297,7 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
 // ── HOOK-007：block reason 为短指针（四信号速记 + 真值源路径 + marker），不再整段注入说明书 ──
 {
   const root = makeFixture({ edits: 1, activeProject: 'testproj' });
-  const parsed = JSON.parse(runNode(sessionSyncHook, root).stdout);
+  const parsed = JSON.parse(runNode(sessionSyncHook, root, { env: FORCE_STOP_ENV }).stdout);
   assert.equal(parsed.decision, 'block');
   for (const kw of ['默认不存', '明确纠正', '复发', '返工', '候选', 'candidate_feedback_',
     'extraction-bar.md', '写入协议', '修源头', '.episode-written-']) {
@@ -290,11 +307,14 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   assert.ok(parsed.reason.length <= 900,
     `reason 必须保持短指针（≤900 字符，实际 ${parsed.reason.length}）——勿回归成全文注入`);
 
-  const pNoProj = JSON.parse(runNode(sessionSyncHook, makeFixture({ edits: 1 })).stdout);
+  const pNoProj = JSON.parse(runNode(sessionSyncHook, makeFixture({ edits: 1 }), { env: FORCE_STOP_ENV }).stdout);
   assert.ok(pNoProj.reason.includes('不带 --project'), '无激活项目时必须提示暂记 episodic 待归位');
   const activeRoot = makeFixture({ edits: 1, activeProject: 'display-only' });
   const active = bindActiveTurn(activeRoot, 'testproj', 'reason-session');
-  const pActive = JSON.parse(runNode(sessionSyncHook, activeRoot, active).stdout);
+  const pActive = JSON.parse(runNode(sessionSyncHook, activeRoot, {
+    ...active,
+    env: { ...active.env, ...FORCE_STOP_ENV },
+  }).stdout);
   assert.ok(pActive.reason.includes('testproj/.luca/memory/MEMORY.md'), 'TURN_ACTIVE identity 绑定时必须注入项目本地落点');
   console.log('PASS HOOK-007 block reason 为短指针且长度受控，不整段注入');
 }
@@ -698,9 +718,9 @@ function runRouteGuard(cwd, prompt) {
 {
   const root = makeFixture({ activeProject: 'testproj' });
   writeFileSync(join(root, '.claude', '.session-edit-count-sess-A'), '3');
-  const rB = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-B' }) });
+  const rB = runNode(sessionSyncHook, root, { env: FORCE_STOP_ENV, input: JSON.stringify({ session_id: 'sess-B' }) });
   assert.equal(rB.stdout, '', 'B 无自己的计数 → 放行，不得因 A 的编辑被 block');
-  const rA = runNode(sessionSyncHook, root, { input: JSON.stringify({ session_id: 'sess-A' }) });
+  const rA = runNode(sessionSyncHook, root, { env: FORCE_STOP_ENV, input: JSON.stringify({ session_id: 'sess-A' }) });
   const parsedA = JSON.parse(rA.stdout);
   assert.equal(parsedA.decision, 'block', 'A 有自己的编辑计数 → block');
   assert.match(parsedA.reason, /\.episode-written-sess-A/, 'A 的解锁 marker 名须带自己的 sid');
@@ -987,7 +1007,7 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）');
 }
 
-// STICKY-008：继承 display marker 不得成为生产 identity；no-pin 仍走 gate。
+// STICKY-008：继承 display marker 不得成为生产 identity；普通对话也不得因此制造 gate。
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-inherited-sess-I'), 'projA'); // session-restore 保留态写的
@@ -995,10 +1015,10 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-I', prompt: '随便说点什么' }),
   });
-  assert.match(r.stdout, /PROJECT GATE/, '继承 display marker 不得绕过 no-pin gate');
+  assert.doesNotMatch(r.stdout, /PROJECT GATE/, 'NO_PIN + 普通对话不是项目意图，不得制造 gate');
   assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-I')), 'A 下继承态不写 pin（未绑定）');
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-I')), '继承标记应一次性读后删');
-  console.log('PASS STICKY-008 继承 display marker 不成为 identity，no-pin fail-closed');
+  console.log('PASS STICKY-008 继承 display marker 不成为 identity，也不把普通对话变成项目任务');
 }
 
 // STICKY-008b（方案A）：pin 只在"显式声明/确认项目"时写，永不从软链 auto-adopt（跨 session 污染根因）
@@ -1102,7 +1122,7 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   })}\n`);
   writeFileSync(join(root, '.claude', '.session-edit-count-sessPIN'), '1');
   const r = runNode(sessionSyncHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot },
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot, ...FORCE_STOP_ENV },
     input: JSON.stringify({ session_id: 'sessPIN' }),
   });
   const parsed = JSON.parse(r.stdout);
@@ -1131,7 +1151,7 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   writeFileSync(join(root, '.claude', '.session-project-sessGH'), 'ghost'); // 指向不存在的项目
   writeFileSync(join(root, '.claude', '.session-edit-count-sessGH'), '1');
   const r = runNode(sessionSyncHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot },
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot, ...FORCE_STOP_ENV },
     input: JSON.stringify({ session_id: 'sessGH' }),
   });
   assert.doesNotMatch(JSON.parse(r.stdout).reason, /projB/, '失效 pin 不得回退 display symlink projB');

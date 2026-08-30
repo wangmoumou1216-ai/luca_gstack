@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Stop hook —— Session 结束时：
-//  · 若本 session 有「实质工作」且尚未沉淀经验 → 拦截（decision:block），
-//    强制主 Agent 就地做「自成长提取」（分 项目级 / 通用 两类落地）再结束。
-//  · 否则放行，并保留旧行为（有中断节点时写 checkpoint）。
+// Stop hook —— 每个 assistant 回合结束时：
+//  · 默认静默放行；有实质工作且尚未沉淀时只落 pending-extraction，供下次启动提醒。
+//  · 仅显式设置 SESSION_SYNC_FORCE_ON_STOP=1 时保留旧的 decision:block 强制提取模式。
+//  · 有中断节点时照常写 checkpoint，并关闭本轮项目快照。
 //
 // 安全契约（务必维持）：
 //  · 任何异常一律 fail-open —— 不输出 JSON、exit 0，绝不卡住 session 结束。
-//  · 三重防循环：stop_hook_active（CC 已在拦截续跑）/ 本 session marker / 环境变量 SESSION_SYNC_BLOCK=0 kill-switch。
+//  · 强制模式三重防循环：stop_hook_active / 本 session marker / SESSION_SYNC_BLOCK=0 kill-switch。
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, unlinkSync } from 'fs';
 import { join } from 'path';
@@ -141,6 +141,9 @@ function buildReason(rearm = false, deltaEdit = 0, deltaTool = 0) {
 // ============== 主决策（全程 try/catch，异常即 fail-open 放行）==============
 try {
   const killSwitch = process.env.SESSION_SYNC_BLOCK === '0';
+  // Stop 是回合边界，不是 SessionEnd。默认在这里强制续跑会把正常中间对话变成额外的
+  // “经验提取”回合；旧强制能力仅作为显式兼容开关保留。
+  const forceOnStop = process.env.SESSION_SYNC_FORCE_ON_STOP === '1';
   const markerFile = join(projectRoot, '.claude', `.episode-written-${sessionId}`);
   const alreadyExtracted = existsSync(markerFile);
 
@@ -187,7 +190,7 @@ try {
   }
 
   // ---- 拦截：强制就地提取（首次裁决 或 增量重拦）----
-  if (!killSwitch && !stopHookActive && ((!alreadyExtracted && substantive) || rearm)) {
+  if (forceOnStop && !killSwitch && !stopHookActive && ((!alreadyExtracted && substantive) || rearm)) {
     writeCheckpointIfInProgress();
     const reason = buildReason(rearm, deltaEdit, deltaTool);
     // harness 门（P0/WS-A0 接线，2026-07-25）：decision:block 是 CC 专有动词，正向确定是 Codex
@@ -213,7 +216,7 @@ try {
   if (killSwitch) {
     process.stderr.write(`[session-sync] ⚠️ SESSION_SYNC_BLOCK=0 生效——自成长拦截已被环境变量禁用（如非有意设置，请在启动终端 unset 后重开进程）。\n`);
   }
-  process.stderr.write(`[session-sync] Session 结束于 ${now}。topic: ${topic}${project ? ` · 项目: ${project}` : ''}\n`);
+  process.stderr.write(`[session-sync] 回合结束于 ${now}。topic: ${topic}${project ? ` · 项目: ${project}` : ''}\n`);
   writeCheckpointIfInProgress();
 
   // 未提交的记忆/演进状态提醒（纯提醒、非阻塞、fail-open）：本机正常使用会写这些
@@ -243,7 +246,7 @@ try {
     process.exit(0);
   }
 
-  // 未拦截（trivial / kill-switch / stop_hook_active 但无 marker）：保留旧提醒 + pending-extraction 作兜底
+  // 未拦截（默认软模式 / trivial / kill-switch / stop_hook_active）：pending-extraction 作兜底
   const episodicDir = join(projectRoot, 'memory', 'episodic');
   if (existsSync(episodicDir)) {
     process.stderr.write(

@@ -163,6 +163,14 @@ check('no-pin Read docs/ → deny', () => {
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
 });
 
+check('no-pin Bash denial gives a harness-valid next step', () => {
+  const env = makeEnv();
+  const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: 'cat docs/PROGRESS.md' } });
+  const reason = o.hookSpecificOutput.permissionDecisionReason;
+  assert.doesNotMatch(reason, /Read 工具/, 'Codex 没有独立 Read 工具，不得给出不可执行建议');
+  assert.match(reason, /先绑定项目|跳过项目状态/, '拒绝后必须给出安全且可执行的下一步');
+});
+
 // 14. 无 pin Grep/Write 都 fail-closed。
 check('no-pin Grep path=docs and Write docs → both deny', () => {
   const env = makeEnv();

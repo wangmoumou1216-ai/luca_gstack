@@ -294,6 +294,15 @@ const cases = [
     },
   },
   {
+    name: 'G3 保护面: 无 pin 时继续做原型仍须先绑定项目',
+    prompt: '继续做个原型',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, 'choose_new_or_existing');
+    },
+  },
+  {
     name: 'G3 反例: 继续项目 → 仍走老项目 PROJECT_STOP（上游专有检查先赢）',
     prompt: '继续项目',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
@@ -302,11 +311,60 @@ const cases = [
     },
   },
   {
-    name: 'G3 反例: >10字陈述句不豁免（长度闸）→ 仍 PROJECT_STOP',
+    name: 'G3: 长续接句不因长度被当成新项目任务',
     prompt: '把昨天没写完的那个报告接着写完整理好',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 对上一轮判断的纠正保持静默',
+    prompt: '我认为这个判断不对，你再检查一下触发逻辑',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 要求换成易懂说法保持静默',
+    prompt: '说我能听懂的话',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 框架 hook 讨论不消费下游项目上下文',
+    prompt: '先第一性原理定义是不是问题。其他hook有没有相关问题',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 转述 route-guard 输出时不把输出里的项目词当成用户项目意图',
+    prompt: 'UserPromptSubmit hook (completed) hook context: [route-guard] PROJECT GATE — 当前没有激活项目，请先确认新项目还是继续老项目。这个hook每次在中间对话都会出现，请检查触发逻辑。',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3 保护面: 明确的无 pin 项目修改仍触发 Project Gate',
+    prompt: '帮我修改登录页面的交互',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
       assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, 'choose_new_or_existing');
+    },
+  },
+  {
+    name: 'G3 反担保: 描述页面现状不是项目修改请求',
+    prompt: '这个页面做得挺好，不用改',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP');
     },
   },
   // --- G3-C2 latin 词边界：产品名子串不再误报 soft candidate ---

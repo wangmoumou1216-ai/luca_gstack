@@ -69,7 +69,7 @@ ok('H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）',
 
   // ① Claude：block JSON 照常
   const rC = spawnSync('node', [SYNC], {
-    cwd: root, encoding: 'utf8', env: { ...base, CLAUDE_PROJECT_DIR: root },
+    cwd: root, encoding: 'utf8', env: { ...base, CLAUDE_PROJECT_DIR: root, SESSION_SYNC_FORCE_ON_STOP: '1' },
     input: JSON.stringify({ session_id: 'e2e-c' }),
   });
   ok('E1 [接线] session-sync @claude → stdout 仍是 decision:block JSON（零回归）',
@@ -77,7 +77,7 @@ ok('H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）',
 
   // ② Codex：原生接受同一 decision:block JSON
   const rX = spawnSync('node', [SYNC], {
-    cwd: root, encoding: 'utf8', env: { ...base, CODEX_HOME: '/tmp/cx' },
+    cwd: root, encoding: 'utf8', env: { ...base, CODEX_HOME: '/tmp/cx', SESSION_SYNC_FORCE_ON_STOP: '1' },
     input: JSON.stringify({ session_id: 'e2e-x' }),
   });
   ok('E2 [接线] session-sync @codex → stdout 保留 decision:block JSON',
