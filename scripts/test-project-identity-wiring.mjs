@@ -70,6 +70,7 @@ const env = {
   LUCA_PROJECTS_ROOT: projectsRoot,
   MEMORY_ROOT: root,
   ROUTE_GUARD_PROJECTS: 'bound-alpha,display-beta',
+  SESSION_SYNC_FORCE_ON_STOP: '1',
 };
 for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) delete env[key];
 

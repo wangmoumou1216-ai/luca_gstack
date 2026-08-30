@@ -51,13 +51,12 @@
 > 经验沉淀**不再依赖用户开口提醒**。三个自动环节：
 
 1. **捕获（每 session 自动）：** Stop hook（`.claude/hooks/session-sync.mjs`）在「本 session 有实质工作
-   （有编辑 或 工具调用 ≥8 次；纯轮次不拦截，HOOK-006）且尚未沉淀」时**拦截结束**，注入短指针
-   （四信号速记 + `.claude/skill-os/extraction-bar.md` 路径，细则按需读；HOOK-007 锁定 ≤900 字符）
-   要求当前 Agent 先就地裁决——过门槛的经验分
-   **项目级**（`append_episode.py --project`，自动从 docs 软链推导项目）
-   与 **通用**（`propose_semantic.py` 候选 ／ 全局 `feedback_*.md` 或 `candidate_feedback_*.md`）落地，
-   全不中则直接 `touch .claude/.episode-written-<sid>` 解锁。三重防循环：`stop_hook_active` ／ 本 session marker ／
-   `SESSION_SYNC_BLOCK=0` kill-switch；任何异常 fail-open（绝不卡住结束）。
+   （有编辑 或工具调用 ≥8 次；纯轮次不捕获，HOOK-006）且尚未沉淀」时，默认只幂等写
+   `pending-extraction-<sid>.md`，不把每个 assistant 回合误当 SessionEnd，也不注入额外对话；
+   下次 `session-restore` 启动时提醒按四信号门槛裁决。项目归属只认 session pin，不从共享 docs
+   展示软链推导。显式设置 `SESSION_SYNC_FORCE_ON_STOP=1` 才恢复旧的当场 block 模式；该兼容模式
+   继续使用短指针（HOOK-007 ≤900 字符）、marker、`stop_hook_active` 与
+   `SESSION_SYNC_BLOCK=0` kill-switch。任何异常 fail-open。
 2. **治理 + 晋升（每日检查，按需写 digest）：** `session-restore.mjs` 每天首次 session 启动时后台 detached 跑
    `daily_governance.py`（跑在 Claude 已获 Desktop 访问的 TCC 上下文，绕开 launchd 对 ~/Desktop 的 TCC 限制——见 review DG-01；
    `scripts/launchd/com.luca.memory-governance.plist` 是可选的真·无人值守路径，但需手动授 Full Disk Access）：消化候选 → **只晋升 promotion_ready 门禁内的候选**（红线 SC-20260523-003 不变，

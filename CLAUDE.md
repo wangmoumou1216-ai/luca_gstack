@@ -147,7 +147,8 @@ Agent prompt 预算细表见 appendix「Agent Context 预算」。
 四强信号才提取（速记：①明确纠正或对未来行为明确指示 ②二次复发 ③真实返工或不可逆险情
 ④重获成本高且确定复用；定义与按层分级以该文件为准，勿在别处复制全文）。
 一次性问答、答案可从文档重推、纯执行无判断 → 一律不存。
-提取时机：person/项目层只在 session 结束 Stop 拦截时统一裁决一次，对话中途仅信号①允许即写。
+提取时机：Stop 默认仅落 pending、不打断；下次启动提醒裁决。中途仅信号①可写；
+旧强制模式须显式设置 `SESSION_SYNC_FORCE_ON_STOP=1`。
 
 **中途纠正 A 与绕行入库 B 都须过归因阶梯 L1-L5**（判据/矩阵/三条件/退化触发器全文见
 `.claude/skill-os/correction-attribution.md`，勿在别处复制）：A 判「同样输入重跑还复现吗」→不复现只修
@@ -164,7 +165,8 @@ Agent prompt 预算细表见 appendix「Agent Context 预算」。
 | 只在 **luca_gstack 框架内**成立（skill 规则 / 路由 / 品牌 / 跨项目方法论） | **框架 semantic 候选** | `propose_semantic.py`（走门禁晋升，红线 [SC-20260523-003]） |
 | 只对**某个具体下游项目**成立（部署坑 / 状态真值路径 / 项目结构） | **该项目本地记忆** | `~/Desktop/项目/<name>/.luca/memory/MEMORY.md`（只在该项目激活时注入）；单次经历另走 episodic |
 
-附加：**默认不存——四信号全不中（含纯咨询 / 闲聊 / 纯执行）→ 什么都不存，落 marker 直接结束。** session-sync 已据此放过（无文件产出且工具调用不足不拦截、不提醒）。
+附加：**四信号全不中（含纯咨询 / 闲聊 / 纯执行）→ 不存。** 非实质回合不落 pending；
+实质工作也只留 pending，不开启额外对话。
 项目本地记忆与全局个人记忆的区别：全局每 session 无差别注入，项目本地只在 `project.sh switch/new` 激活该项目时注入——具体项目事实务必入项目本地，避免跨项目上下文污染。
 
 **写入脚本**：`append_episode.py`=Episodic、`propose_semantic.py --domain <...>`=Semantic
@@ -172,7 +174,7 @@ Agent prompt 预算细表见 appendix「Agent Context 预算」。
 
 ### 自动自成长（auto-grow）
 
-三环闭环：**捕获**（Stop hook）→**治理+晋升**（`daily_governance.py` 只晋升门禁内候选）→
+三环闭环：**捕获**（Stop hook 幂等落 pending，不阻断）→**治理+晋升**（`daily_governance.py` 只晋升门禁内候选）→
 **回看**（启动提示 digest）；机制细节全文见 appendix「自动自成长」。**项目级检索**：
 `search_memory.py --project <名>`。
 
@@ -376,7 +378,8 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 > session **且** 未设 `SESSION_RESTORE_ALWAYS_CLEAR=1`」时清三软链（resume/compact/clear
 > 保留；悬空链无条件清）。**会话级项目隔离：** `.claude/.session-project-<sid>` pin 是唯一真值，
 > project-scope-guard 把本 session 对 `docs/`·workflow-state·current-topic 的读写重定向到 pin
-> 项目绝对路径（软链退化为纯展示）；未绑定 session 写 `docs/` 直接 deny、读放行；pin 只在用户
+> 项目绝对路径（软链仅展示）；未绑定 session 对共享 `docs/`、state、topic 读写均 deny；
+> 框架内非项目路径照常可读。pin 只在用户
 > 显式声明/确认项目时写、永不从软链派生、漂移永不自动认领。继承态（并行保留的激活项目）做实质
 > 项目任务前先声明/确认。回归：`scripts/test-project-scope-guard.mjs`。
 
@@ -385,9 +388,9 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 0. `python3 memory/scripts/get_memory.py --summary`（只看摘要不读长文件）；首条任务明确后
    `python3 memory/scripts/search_memory.py "<task/topic>" --limit 5` 做任务相关检索。
 1. 读 `CONTEXT.md`——「红线」节约束本 session 全部操作。
-2. 读 `.claude/workflow-state.yaml`：`topic`/`scene` 定当前上下文；有 `IN_PROGRESS` 节点 → 告知用户「上次 session 在
-   {节点名} 中断，是否继续？」。
-3. 有 DONE 节点 → 读 `docs/handoff/` 最新 handoff summary 并遵守其约束（缺文件跳过不报错；
+2. 有可验证 project pin 才读 `.claude/workflow-state.yaml`；`NO_PIN` 的框架/meta 任务跳过，
+   不沿共享展示链读项目状态。有 `IN_PROGRESS` 节点则询问是否继续。
+3. 已绑定项目且有 DONE 节点 → 读 `docs/handoff/` 最新 handoff summary 并遵守其约束（缺文件跳过不报错；
    不读上游完整 SKILL.md 或产出全文，用 handoff summary 替代）。
 4. 涉及 skill 操作时读 `.claude/skills/office/SKILL.md`（共享规范）；执行具体 skill 前跑
    `.claude/observability/scripts/get_rules.py <skill> <scene>`，只加载输出的短规则。

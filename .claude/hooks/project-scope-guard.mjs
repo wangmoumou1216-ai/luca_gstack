@@ -731,9 +731,10 @@ function main() {
         permissionDecisionReason: 'Bash 项目路径含 . / .. / 空段 traversal，禁止重写或执行。' } });
     }
     if (r.hasScoped && !binding) {
-      // Bash 无 pin 一律 deny：shell 字符串里读/写难可靠区分，从严防写泄漏；纯读某项目 docs 请改用 Read 工具。
+      // Bash 无 pin 一律 deny：shell 字符串里读/写难可靠区分，且共享展示链可能指向另一
+      // session 的项目。框架/meta 任务应跳过项目状态；确需项目资料则先建立 binding。
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。` } });
+        permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。框架任务请跳过项目状态；确需读取或写入项目资料，请先绑定项目。` } });
     }
     if (r.changed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: maskedSearch.restore(r.cmd) } } });

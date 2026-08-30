@@ -53,7 +53,6 @@
         "hooks": [
           {
             "type": "command",
-            "statusMessage": "luca_gstack: 自成长捕获",
             "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]

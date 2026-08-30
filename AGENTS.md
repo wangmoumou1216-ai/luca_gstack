@@ -46,7 +46,7 @@ Core facts:
   **Session-level project isolation (方案A, 2026-07-08 — supersedes the earlier "global shared symlink" model):**
   the per-session pin `.claude/.session-project-<sid>` is the single truth for "which project is this session on".
   `project-scope-guard` (PreToolUse) rewrites every docs/ · workflow-state · current-topic path to the pinned
-  project's absolute path, and **denies** those writes when the session has no pin — so the shared symlink
+  project's absolute path, and **denies reads and writes through those shared aliases** when the session has no pin — so the shared symlink
   degrades to display only and a parallel `switch` can no longer pull another session onto the wrong project.
   The pin is written only when the user explicitly names/confirms a project, **never derived from the symlink**.
   State reads and `check-project-links` are read-only: legacy text pins require the explicit
@@ -122,8 +122,9 @@ Before doing any non-trivial task in this repository, read these files:
 0. Memory summary from `python3 memory/scripts/get_memory.py --summary`
 1. `CONTEXT.md`
 2. `CLAUDE.md`
-3. `.claude/workflow-state.yaml`
-4. Latest handoff summary from `docs/handoff/` (if any DONE nodes exist)
+3. `.claude/workflow-state.yaml` only after the session has a verified project pin; a `NO_PIN`
+   framework/meta session skips this shared alias.
+4. Latest handoff summary from `docs/handoff/` only for a verified pinned project with DONE nodes.
 
 Read them completely enough to know:
 
@@ -811,7 +812,7 @@ At the start of a task, silently check:
 ```text
 [ ] Read CONTEXT.md.
 [ ] Read CLAUDE.md.
-[ ] Read .claude/workflow-state.yaml.
+[ ] If project-pinned, read .claude/workflow-state.yaml; if NO_PIN, skip the shared alias.
 [ ] Apply project context gate before skill routing.
 [ ] Apply route-guard layers: Project Gate / Plan Agent / Multi-Skill / Single-Skill / STOP.
 [ ] If workflow-related, read .claude/skills/office/SKILL.md.

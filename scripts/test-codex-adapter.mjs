@@ -109,7 +109,11 @@ cleanup();
       tool_name: 'apply_patch', tool_input: { file_path: join(ROOT, 'README.md') },
     });
   }
-  const r = runVia('session-sync.mjs', { hook_event_name: 'Stop', session_id: SID, cwd: ROOT });
+  const r = runVia(
+    'session-sync.mjs',
+    { hook_event_name: 'Stop', session_id: SID, cwd: ROOT },
+    { SESSION_SYNC_FORCE_ON_STOP: '1' },
+  );
   const o = parse(r.stdout);
   // C0 是 C1-C3 的**前置断言**，不是 skip 条件（2026-08-05 评审变异逼出）：
   // 若把它写成 `if (...) {...} else { SKIP }`，则「Stop 控制动词整个消失」这一最坏失效
