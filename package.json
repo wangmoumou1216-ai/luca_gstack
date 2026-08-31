@@ -10,7 +10,7 @@
     "verify": "bash scripts/verify.sh",
     "validate:skills": "bash scripts/validate-skills.sh",
     "lint:yaml": "python3 -c \"import sys, os, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:] if not f.endswith('workflow-state.yaml') or os.path.exists(f)]\" .claude/workflow-state.yaml .claude/skill-os/optional-workflow-graph.yaml .claude/skill-os/input-modes.yaml .claude/skill-os/evolution/self-model.yaml .claude/skill-os/evolution/gaps-register.yaml .claude/skill-os/evolution/sources-registry.yaml .claude/skill-os/evolution/benchmark-registry.yaml .claude/skill-os/model-routing.yaml",
-    "check:hooks": "node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node --check .claude/hooks/session-end.mjs && node --check .claude/hooks/project-scope-guard.mjs && node scripts/test-hooks.mjs && node scripts/test-auto-open.mjs",
+    "check:hooks": "node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node --check .claude/hooks/session-end.mjs && node --check .claude/hooks/project-scope-guard.mjs && node --check .claude/hooks/controlled-change-guard.mjs && node scripts/test-hooks.mjs && node scripts/test-auto-open.mjs",
     "check:luca-open": "node scripts/test-luca-open-url.mjs",
     "check:memroot": "node scripts/test-memroot-parity.mjs",
     "check:harness": "node scripts/test-harness.mjs && node scripts/check-codex-viability.mjs",
@@ -38,7 +38,10 @@
     "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs",
     "check:agent-contracts": "node scripts/check-agent-contracts.mjs",
     "check:ci-contract": "node scripts/check-ci-contract.mjs",
-    "check:framework-html": "node scripts/check-framework-html.mjs"
+    "check:framework-html": "node scripts/check-framework-html.mjs",
+    "test:controlled-change": "node scripts/test-controlled-change.mjs --all",
+    "test:engineering-delivery": "node scripts/test-engineering-delivery-skills.mjs --all",
+    "check:skill-integration-receipt": "node scripts/validate-skill-integration-receipt.mjs --final"
   },
   "dependencies": {
     "playwright": "^1.61.1"

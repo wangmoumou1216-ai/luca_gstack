@@ -258,6 +258,27 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone 或 workflow。执行前必须通过门禁
                产出：docs/engineering/{topic}-task-plan.md
 
+/grilling      —      一次只问一个尚未决定的关键取舍；能检索的事实由 agent 先查
+               输入模式：standalone 或 internal；不新建 workflow 状态，不扩大 authority
+
+/to-spec       —      已解决的工程讨论 → canonical tech-spec 的 conversation_synthesis 薄入口
+               输入模式：standalone 或 internal；不重开 discovery，不另建 spec 状态
+
+/wayfinder     —      超大、多会话且路线迷雾时的 Plan Agent 规划薄入口
+               输入模式：standalone 或 internal；自动建议严格要求 huge AND multi-session AND fog
+
+/implement     —      把已冻结、已批准的 task-plan 编译为 exact U-ID 后交 Orchestrator 执行
+               输入模式：standalone 或 internal；必须绑定同一 SHA/payload 的人类批准
+
+/diagnosing-bugs —    诊断意外失败、回归、偶发故障或性能回归；先建立命中症状的 red loop
+               默认 diagnose-only；expected TDD red 不触发；internal 完成后回原 U-ID
+
+/resolving-merge-conflicts — 仅处理真实进行中的 merge/rebase/cherry-pick/revert 冲突
+               inspect/propose 默认只读；edit/stage/advance/abort 分门授权，不自动 commit/push
+
+可选 `engineering-delivery` preset 只在用户明确选择时提供建议边。未选择时上述六项全部
+standalone，不读 optional graph；preset 选择也不授予写入、Git、网络或 external effect。
+
 /codebase-design  —   工程模块设计原语：用 Module/Interface/Depth/Seam/Adapter
                评估模块深度、收敛接口、选择测试 seam；无固定产物，不是 workflow 节点
                输入模式：standalone，或由 code-recon/tech-spec/工程任务内部调用

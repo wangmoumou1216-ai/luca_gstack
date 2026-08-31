@@ -38,6 +38,48 @@ research_default:
     hard_guard: "简单/平凡诉求 → 平凡任务豁免，绝不触发研究编排、不提示。"
     note: "recommended_paths 是写死静态启发式；诉求→动态编排是净新增行为，真值逻辑在 plan-agent.md 块2，此处仅登记对象角度与原则。tool_choice 列 5 项 = 3 对象角度（deep/ux/insight）× 深度档——quick-research/web_spike 是 deepresearch 外部角度的降档变体，非独立对象角度。"
 
+# 可选工程交付 preset：只存建议边和进入条件，不保存运行状态、不授予 authority。
+# 未显式选择时六项完全 standalone；删除本段或整份 graph 不影响 direct/semantic/internal loader。
+presets:
+  engineering-delivery:
+    optional: true
+    selected_only_when: "user explicitly selects engineering-delivery preset"
+    standalone_dependency: false
+    authority_effect: "none; selection is routing metadata only"
+    truth_owners:
+      spec: tech-spec
+      plan: task-plan
+      compile: plan-agent
+      execution: orchestrator
+    suggested_edges:
+      - from: wayfinder
+        to: grilling
+        when: "huge AND multi-session AND fog, and one consequential human decision is unresolved"
+      - from: to-spec
+        to: tech-spec
+        when: "engineering conversation is already resolved and conversation_synthesis eligibility passes"
+      - from: tech-spec
+        to: task-plan
+        when: "canonical tech-spec coverage gate is PASS"
+      - from: task-plan
+        to: implement
+        when: "canonical task-plan gate is PASS and its exact SHA-256 is frozen"
+      - from: implement
+        to: code-review
+        when: "all approved U-IDs have returned a verification verdict"
+    exception_edges:
+      - from: implement
+        to: diagnosing-bugs
+        when: "an unexpected failure or regression occurs"
+        return_to: "original U-ID"
+      - from: implement
+        to: resolving-merge-conflicts
+        when: "a real in-progress Git operation has unmerged index entries"
+        return_to: "original U-ID"
+    human_gates:
+      - "after task-plan SHA freeze, Plan Agent compiles exact U-IDs"
+      - "the user confirms that same task-plan SHA, baseline, U-ID set, paths, effects, and assertions"
+
 scenes:
   A:
     name: "new_feature"

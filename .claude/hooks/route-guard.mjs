@@ -268,6 +268,11 @@ function explicitNewProjectName(prompt) {
 
 function classifyRoutingScope(prompt, projects, currentProject) {
   const namedProject = projects.find(name => nameMatchesIn(projectIdentityText(prompt), name));
+  // Some clients surface hook output inside the next visible message. That
+  // diagnostic text is evidence about the framework, not fresh project intent;
+  // in particular, the standard "新项目还是继续老项目" wording must not feed
+  // back into this classifier and manufacture another Project Gate.
+  const isRouteGuardReport = /UserPromptSubmit\s+hook\s*\(completed\).*hook\s+context:\s*\[route-guard\]/is.test(prompt);
   const frameworkSignals = matchingScopeRuleIds(prompt, FRAMEWORK_SCOPE_RULES);
   const controlSignals = matchingScopeRuleIds(prompt, FRAMEWORK_CONTROL_RULES);
   const scopeResidual = stripScopeRules(
@@ -283,6 +288,9 @@ function classifyRoutingScope(prompt, projects, currentProject) {
   if (namedProject) {
     return { kind: 'named_downstream', namedProject, frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
   }
+  if (isRouteGuardReport) {
+    return { kind: 'pure_framework_meta', frameworkSignals: [...new Set([...frameworkSignals, 'route-guard-report'])], controlSignals, negatedDownstreamSignals };
+  }
   if (!frameworkSignals.length && !controlSignals.length) return { kind: 'ordinary' };
 
   if (downstreamSignals.length) {
@@ -296,17 +304,29 @@ function classifyRoutingScope(prompt, projects, currentProject) {
   return { kind: 'pure_framework_meta', frameworkSignals, controlSignals, negatedDownstreamSignals };
 }
 
-// 对话延续/状态询问豁免（G3，2026-07-04）：整句就是"继续/停/问进度"类 check-in 时不注入
-// 路由提示——此前 >5 字、非?结尾的陈述句一律 STOP/PROJECT_STOP，实测几乎每条对话性消息
-// 都吃一段噪音注入。双闸防误豁免：① 整句锚定（前缀限 都/全部/现在，尾部限语气助词）
-// ② 长度 ≤10。「继续做个原型」含实义任务词、锚定失败 → 照常路由；「继续项目」被上游
-// 老项目正则先捕获 → 仍走 Project Gate。
+// 对话延续/状态询问豁免（G3）：UserPromptSubmit 是“可以检查”的事件，不是“新任务开始”的
+// 证据。短 check-in、引用上一轮判断、要求换种说法，以及带明确续接词的长句都属于同一任务。
+// 真正的项目声明在 projectGate 里先检查；明确 skill 词仍会在 skillDecision 命中，因此这里
+// 放宽续接识别不会吞掉“继续项目”或“继续做个原型”。
 const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀了的！!。.？?…\s]*$/;
+const CONTEXTUAL_FOLLOWUP_RE = /(?:刚才|上一轮|上一条|上面|前面|这个判断|这个说法|你刚才|你再(?:检查|想想|解释|说明)|接着(?:写|做|说|看|检查|整理|完成)|说我能听懂的话|换(?:个|一种)说法|简单(?:点|一点)|说清楚|用大白话|没听懂)/;
 // 会话 handoff 是项目无关工具。只豁免“明确把当前会话交给新 agent/session”这一窄意图；
 // handoff-protocol、项目级 workflow handoff 等普通提及不能命中。
 const SESSION_HANDOFF_INTENT_RE = /(?:^\s*[$/]?handoff(?:\s|$)|会话交接|生成(?:一份)?交接文档|(?:把)?(?:当前|这个)会话\s*交给(?:下个|下一个)\s*(?:agent|session)|新\s*session\s*接手(?:当前|这个)会话|session\s+handoff)/i;
 function isContinuation(prompt) {
-  return prompt.length <= 10 && CONTINUATION_RE.test(prompt.trim());
+  const text = prompt.trim();
+  return CONTINUATION_RE.test(text) || CONTEXTUAL_FOLLOWUP_RE.test(text);
+}
+
+function hasProjectWorkIntent(prompt, routingScope) {
+  if (routingScope?.kind === 'pure_framework_meta') return false;
+  if (/怎么做|如何做|怎么实现|如何实现|为什么|是什么/.test(prompt)) return false;
+  const directAction = /^\s*(?:(?:请|帮我|麻烦|能不能|可以|继续|接着)\s*)*(?:做(?:个|一个|一下)?|创建|新建|新增|添加|增加|修改|改造|优化|修复|开发|实现|设计|生成|搭建|上线|接入|评审|审查|检查|重构|迁移|删除|调整|更新)/;
+  const baAction = /^\s*(?:(?:请|帮我|麻烦|能不能|可以)\s*)?把.{1,60}(?:做|创建|新增|添加|修改|改造|优化|修复|实现|设计|生成|重构|迁移|删除|调整|更新)/;
+  const desireAction = /^\s*(?:我想|我要|我需要|需要|希望|能不能|可以).{0,30}(?:做|创建|新建|新增|添加|修改|改造|优化|修复|开发|实现|设计|生成|搭建|上线|接入|重构|迁移|删除|调整|更新)/;
+  const projectObject = /产品|业务|需求|页面|功能|原型|交互|用户流程|接口|数据库|应用|网站|代码库|仓库|模块|组件|登录|注册|订单|客户|报表|工作流|\bprd\b|技术规格|设计稿/i;
+  return (directAction.test(prompt) || baAction.test(prompt) || desireAction.test(prompt))
+    && projectObject.test(prompt);
 }
 
 function projectGate(prompt, projects, currentProject, routingScope) {
@@ -436,11 +456,9 @@ function projectGate(prompt, projects, currentProject, routingScope) {
     };
   }
 
-  // 对话延续豁免（G3）：放在所有具名项目/老项目/新项目专有检查之后——那些必须先赢；
-  // 只拦下面这个"一切>5字陈述句都 PROJECT_STOP"的兜底网。
-  if (isContinuation(prompt)) return null;
-
-  if (!currentProject && prompt.length > 5 && !prompt.endsWith('?') && !prompt.endsWith('？')) {
+  // NO_PIN 只是状态，不是项目意图。只有“动作 + 项目对象”同时出现，才要求用户先绑定
+  // 项目；普通陈述、纠正和问答交给后续路由，不再由长度/标点制造 Project Gate。
+  if (!currentProject && hasProjectWorkIntent(prompt, routingScope)) {
     return {
       decision: 'PROJECT_STOP',
       projectAction: 'choose_new_or_existing',
@@ -448,6 +466,10 @@ function projectGate(prompt, projects, currentProject, routingScope) {
       message: '当前没有激活项目，请先确认新项目还是继续老项目。',
     };
   }
+
+  // 对话延续豁免放在所有明确项目工作检查之后：续接本身不制造 gate，但“继续做原型”
+  // 这类仍要落项目产物的请求在 NO_PIN 下必须先绑定。
+  if (isContinuation(prompt)) return null;
 
   return null;
 }
@@ -559,6 +581,34 @@ function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
   return { complexityScore, signals: firedSignals };
 }
 
+// Engineering-delivery 新能力只在 route loader 无法表达的两个窄缝处写手工语义：
+// 1) wayfinder 自动建议的三条件与；2) preset 的显式选择而非普通提及。
+// 六项 skill 的普通 semantic route 仍只读 skill-routing-map.yaml。
+const WAYFINDER_MULTI_SESSION_RE = /(?:跨\s*(?:session|会话)|多(?:个)?会话|multi[-\s]?session|长期分阶段|多人接力)/i;
+const WAYFINDER_FOG_RE = /(?:路线不清|路径不清|不知道从哪开始|决策纠缠|范围迷雾|方向不清|fog(?:gy)?|fog[-\s]?of[-\s]?war)/i;
+
+function wayfinderAutoPredicate(prompt, complexity) {
+  return Number(complexity?.complexityScore || 0) >= 6
+    && WAYFINDER_MULTI_SESSION_RE.test(prompt)
+    && WAYFINDER_FOG_RE.test(prompt);
+}
+
+function explicitEngineeringDeliverySelection(prompt) {
+  const preset = '(?:engineering[-\\s]?delivery(?:\\s+preset)?|工程交付(?:\\s*preset|预设|流程))';
+  const selection = new RegExp(
+    `(?:选择|启用|采用|使用)\\s*${preset}|(?:按|按照)\\s*${preset}\\s*(?:执行|走|继续)|(?:run|use|enable|select)\\s+(?:the\\s+)?${preset}`,
+    'i',
+  );
+  if (!selection.test(prompt)) return false;
+
+  // 询问、评审、否定都只是提及，不能制造 preset selection authority。
+  const nonSelection = new RegExp(
+    `(?:不(?:要)?|没有?|别|无需)\\s*(?:选择|启用|采用|使用|按)|(?:要不要|是否|能否|怎么|为什么).{0,16}${preset}|(?:评审|复审|审查|介绍|解释).{0,16}${preset}|(?:do\\s+not|don't|did\\s+not|should\\s+we|how\\s+to|review)\\s+.{0,16}${preset}`,
+    'i',
+  );
+  return !nonSelection.test(prompt);
+}
+
 function softSkillDecision(prompt, routes) {
   const text = normalize(prompt);
   const promptLower = prompt.toLowerCase();
@@ -632,7 +682,10 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
   }
 
   const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'))
-    .filter(route => route.scope !== 'framework_meta' || routingScope.kind === 'pure_framework_meta');
+    .filter(route => route.scope !== 'framework_meta' || routingScope.kind === 'pure_framework_meta')
+    // YAML 是候选短语 SSOT，但线性 loader 无法辨认「不要启用」/「要不要启用」。
+    // 对这一个 preset 先过纯函数语义门，防止否定/询问被字面子串反向选中。
+    .filter(route => route.invoke !== 'engineering-delivery' || explicitEngineeringDeliverySelection(prompt));
   const text = normalize(prompt);
 
   // ADR-0002 stopgap: longest-match-wins disambiguation (CJK-safe; no \b).
@@ -668,10 +721,13 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
   const hits = matched.map(entry => entry.route).sort((a, b) => b.w - a.w);
 
   if (!hits.length) {
+    if (routingScope.kind === 'pure_framework_meta' || isContinuation(prompt)) {
+      return { decision: 'NONE' };
+    }
     const looksLikeTask = prompt.length > 5
       && !prompt.match(/^(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i)
       && !prompt.endsWith('?') && !prompt.endsWith('？')
-      && !isContinuation(prompt); // G3：整句延续/状态询问不当任务，静默放行
+      && !isContinuation(prompt);
     if (!looksLikeTask) return { decision: 'NONE' };
     const softCandidates = softSkillDecision(prompt, routes);
     return { decision: 'STOP', reason: 'no_keyword_match', softCandidates };
@@ -767,7 +823,29 @@ function buildDecision(prompt) {
   // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
   // 较软 PLAN_CHECK 门（原为 /auto 设计；auto 已于 2026-08-03 移出 HEAVY 做截流实验，现成员仅 muse-loop-orchestrate）。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
   const directCall = /^[$/][a-z][\w-]*/i.test(prompt) || !!visibleSlashlessAlias(prompt);
-  if (!directCall && complexity.decision === 'PLAN_MODE') return complexity;
+  if (!directCall && complexity.decision === 'PLAN_MODE') {
+    if (!wayfinderAutoPredicate(prompt, complexity)) return complexity;
+    return {
+      ...complexity,
+      recommendedSkills: ['/wayfinder'],
+      recommendationEvidence: { huge: true, multi_session: true, fog: true },
+    };
+  }
+
+  // Preset 选择不是 skill 命中，也不是 authority；它只在 Project Gate 和 Plan
+  // complexity 之后产生一个编译元数据入口。未选择时完全不读 optional graph。
+  if (!directCall && explicitEngineeringDeliverySelection(prompt)) {
+    return {
+      decision: 'FRAMEWORK_FLOW',
+      flow: 'engineering-delivery',
+      mode: 'selected-preset-compile',
+      routeType: 'framework_flow',
+      candidates: ['engineering-delivery'],
+      complexityScore: complexity.complexityScore,
+      signals: complexity.signals,
+      selectionAuthorityEffect: 'none',
+    };
+  }
 
   const skillResult = skillDecision(prompt, routingScope);
   if (
@@ -832,6 +910,13 @@ function decisionToHints(decision) {
       return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
     }
     case 'FRAMEWORK_FLOW': {
+      if (decision.flow === 'engineering-delivery') {
+        return [
+          '[route-guard] 🧩 ENGINEERING DELIVERY PRESET — 用户已显式选择可选 preset；这只是 routing metadata，不授予写入、Git、网络或 external effect authority。\n' +
+          '读取 optional-workflow-graph.yaml 的 engineering-delivery 建议边，以 compile-only selection envelope 进入 Plan Agent；不跳过 canonical tech-spec/task-plan gate，不预造代码 U-ID。\n' +
+          '最终 task-plan SHA-256 冻结后，由 Plan Agent 编译 exact U-ID，用户对同一 SHA/baseline/U-ID/path/effect/assertion payload 再次确认后才能交 Orchestrator。',
+        ];
+      }
       const modeHint = decision.mode === 'benchmark'
         ? '模式 2（对标深评）：先完整读取 .claude/skill-os/evolution/BENCHMARK-RUNBOOK.md，按 inventory→matrix→rubric→红队→复审→人类 GATE 执行。'
         : '模式 1/1b（演进 scout）：先读取 .claude/skill-os/evolution/CHECKPOINT.md；Claude 用 Workflow framework-evolution-scout，Codex 用 .codex/workflow-runner.mjs 等价执行。';
@@ -842,6 +927,13 @@ function decisionToHints(decision) {
       ];
     }
     case 'PLAN_MODE':
+      if ((decision.recommendedSkills || []).includes('/wayfinder')) {
+        return [
+          `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）；同时满足 huge AND multi-session AND fog。\n` +
+          '仍为 PLAN MODE，不降级为 SINGLE_SKILL。必须先读取 .claude/agents/plan-agent.md，由 Plan Agent 重验三条件后才可进入具名 /wayfinder mode。\n' +
+          '等用户确认计划后，再进入 Orchestrator 模式执行。',
+        ];
+      }
       return [
         `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}；关键词近似判定，权威口径以 .claude/agents/plan-agent.md 触发条件表为准）\n` +
         '禁止直接路由到单个 skill。必须先读取 .claude/agents/plan-agent.md，输出 Phase 分解计划。\n' +

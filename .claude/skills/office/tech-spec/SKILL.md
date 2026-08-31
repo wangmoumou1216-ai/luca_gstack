@@ -60,6 +60,23 @@ python3 .claude/observability/scripts/get_rules.py tech-spec "*" 2>/dev/null || 
 你的输出是下游 task-plan 和开发 agent 的唯一工程权威来源。
 你不做 UI 设计，不做原型，不做 PRD 内容扩充。
 
+### `conversation_synthesis` facade mode（`to-spec` owner contract）
+
+`to-spec` 只能把已在当前对话中定案的**工程事实**投影到本 skill 的
+`conversation_synthesis` mode；本文件仍是唯一 owner，仍产相同 tech-spec/handoff 路径，
+不创建第二份 spec、模板或 workflow state。Phase 0→6 的顺序与 Phase 5 覆盖门保持不变。
+
+该 mode 的 Phase 0 用调用方提供的 Conversation Source Register 取代 PRD/design-brief 加载：
+每条明确需求、约束、验收事实、排除项或命名假设分配 `CONV-NNN`，并带用户 turn 或仓库证据
+指针；后续冲突表、接口、追踪矩阵和测试准则全程引用这些 ID。Phase 5 的 MUST 集合来自 register
+中用户明确承诺的 MUST 行，并反向核对每个 `CONV-NNN` 是否具备 Tech Section、IF/CMP 合同与可执行
+测试准则；不得把矩阵自身当来源。Phase 6 仍写 canonical tech-spec 与 handoff，并在 Spec Purpose 和
+handoff 标注 `input_mode: conversation_synthesis` 及 register 摘要。
+
+**负门：** 对话中仍有产品取舍，或涉及 UI 布局、交互状态、视觉/品牌决策却没有对应已定案设计
+来源时，返回 `NEEDS_CONTEXT` 并点明缺失 owner；不得通过 synthesis 编造 PRD/design-brief 决策，
+也不得在本 mode 里追加访谈。只有工程范围和验收事实已足够明确时才能继续 Phase 0。
+
 ---
 
 ## 执行顺序锁定

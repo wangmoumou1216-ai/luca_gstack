@@ -1,7 +1,7 @@
 # Routing Chain-Check — dispatch 前链路检查（唯一真值源）
 
 > **Defining constraint：只补被逐 skill 契约调查证实的缝隙——两个裸奔点的研究前置、设计产出的
-> OD-first 执行面、端到端意图的确认门、评审请求的对象分流；其余 skill 自带硬门禁
+> OD-first 执行面、端到端意图的确认门、评审请求的对象分流、显式工程 preset 的非授权接线；其余 skill 自带硬门禁
 > （`NEEDS_CONTEXT`/`BLOCKED`/`⛔`），路由层不重复拦。** CLAUDE.md 语义路由契约只放速记指针，
 > 勿在别处复制全文。
 > 背景：2026-07-13 luca——单 skill 命中会坍缩链路意图（写 PRD 前该不该先调研？出设计该走 OD 全链），
@@ -9,12 +9,12 @@
 
 ## 触发
 
-**R1/R2/R3** 在语义路由把意图映射到目标能力之后、dispatch 之前过一遍——它们是"已选定目标后的
+**R1/R2/R3/R5** 在语义路由把意图映射到目标能力之后、dispatch 之前过一遍——它们是"已选定目标后的
 junction"。**R4 在映射阶段就生效**（评审请求的失效形态恰恰是"没映射上"或"映射错"：STOP 漏网、
 或词表 SINGLE 命中了对象不符的 skill），故它在 R1-R3 之前先跑。全部是语义判断（route-guard
 关键词层不参与决策，只出提示钉）；keyword 层 fixture 不测本协议，semantic 层 fixture 测。
 
-## 四规则
+## 五规则
 
 **R1 · 研究前置（仅裸奔点 brainstorm / ux-brainstorm）**
 这两个 skill 缺研究输入时会静默 cold-start 产薄产物、不报警（其 SKILL.md Phase 0.1 声明的行为）。
@@ -65,6 +65,14 @@ observability active rules，看有没有重犯用户已明确指出过的问题
 
 *退场条件*：harness 原生具备评审分流能力，或实测显示本索引的判断劣于直接语义判断 → 分流部分退场，
 只留资产索引与证据标准（比照 `model-routing.yaml` 的 `native_precedence` 活规则）。
+
+**R5 · engineering-delivery preset（只认显式选择）**
+仅当用户明确说选择/启用/按 `engineering-delivery preset` 执行时，才把该 preset 作为 routing metadata
+交给 `implement`。提及、询问、评审该 preset 不算选择。选择本身不授予写入、Git、网络或 external
+effect authority，也不跳过 Project Gate、Plan complexity、canonical tech-spec/task-plan gate。
+未选择时六项完全 standalone，`implement` 不读也不要求 optional graph；已选择时仍须等最终 task-plan
+SHA-256 冻结，由 Plan Agent 编译 exact U-ID，并让用户对同一 payload 明确确认后才交 Orchestrator。
+异常方法只返回原 U-ID，不创建新任务状态。
 
 ## Ask 纪律（与四规则同权重）
 

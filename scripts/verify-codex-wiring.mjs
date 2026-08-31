@@ -78,6 +78,29 @@ ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NE
     need(pre) && need(post), `pre=${pre} post=${post}`);
 }
 
+// S5b Codex 复用既有已授信 project-scope entry；新增 entry 会改变 trust currentHash，
+// 在未授权写 ~/.codex/config.toml 的正常 fresh session 中被静默跳过。
+{
+  const codexPre = (hooks?.hooks?.PreToolUse || []).flatMap((group) => group.hooks || []);
+  const projectScope = codexPre.find((hook) => /project-scope-guard\.mjs/.test(hook.command || ''));
+  const accidentalSecondEntry = codexPre.find((hook) => /controlled-change-guard\.mjs/.test(hook.command || ''));
+  const adapterSource = readFileSync(join(ROOT, '.codex', 'codex-hook-adapter.mjs'), 'utf8');
+  let claude = null;
+  try { claude = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8')); } catch { }
+  const claudePre = (claude?.hooks?.PreToolUse || []).flatMap((group) => group.hooks || []);
+  const claudeControlled = claudePre.find((hook) => /controlled-change-guard\.mjs/.test(hook.command || ''));
+  const wrapperSafe = (command) => Boolean(command
+    && /hook-failure-decision/.test(command)
+    && /exit 2/.test(command)
+    && !/controlled-change-guard[^\n]*\|\|\s*true/.test(command));
+  const chained = /project-scope-guard/.test(adapterSource)
+    && /controlled-change-guard\.mjs/.test(adapterSource)
+    && /hook-failure-decision/.test(adapterSource);
+  ok('S5b Claude 直接注册 controlled-change；Codex 不新增 trust entry而由既有 project-scope entry 在 adapter 内串行强制',
+    Boolean(projectScope && !accidentalSecondEntry && chained && claudeControlled && wrapperSafe(claudeControlled.command)),
+    `projectScope=${Boolean(projectScope)} accidentalSecondEntry=${Boolean(accidentalSecondEntry)} chained=${chained} claudeControlled=${Boolean(claudeControlled)}`);
+}
+
 // S6 adapter 本体
 ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   existsSync(join(ROOT, '.codex', 'codex-hook-adapter.mjs'))

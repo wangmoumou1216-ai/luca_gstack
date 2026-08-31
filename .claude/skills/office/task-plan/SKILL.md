@@ -350,6 +350,9 @@ Handoff 必须包含：
 - 风险：执行中可能发现的遗漏（≤3 条）
 - 产出路径：指向 task-plan.md
 - 下游建议：执行阶段从 DEV-001 开始
+- `task_plan_sha256`：仅在 Phase 7 PASS 且最终 task-plan 字节落盘后计算的小写 SHA-256；
+  `implement` / Plan Agent compile 必须绑定此路径+hash。文件随后发生任何变化都会使旧 compile 与
+  旧 approval 失效，必须重新过门并重算。
 
 ### 8.3 Completion Status
 
@@ -358,6 +361,7 @@ DONE: task-plan
   产出: docs/engineering/YYYY-MM-DD-<topic>-task-plan.md
   Handoff: docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md
   Gate: TASK PLAN GATE PASS（MUST N/N，断言 N 条，Dev N 张，Test N 张）
+  Task-plan SHA: <最终 gated 文件的 SHA-256>
   下游建议: 执行阶段 — 开发 agent 从 DEV-001 开始，先读本 task-plan 文件
 ```
 

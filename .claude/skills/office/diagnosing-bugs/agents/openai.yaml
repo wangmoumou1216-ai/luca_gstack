@@ -1,0 +1,6 @@
+interface:
+  display_name: "Diagnosing Bugs"
+  short_description: "Find root cause from a symptom-specific red loop"
+  default_prompt: "Use $diagnosing-bugs to diagnose this unexpected failure without applying a fix unless separately authorized."
+policy:
+  allow_implicit_invocation: true

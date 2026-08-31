@@ -33,6 +33,10 @@ skills:
   tech-spec: {tier: 1}
   ux-writing: {tier: 1}
   html-prototype: {tier: 1}
+  grilling: {tier: 1}
+  diagnosing-bugs: {tier: 1}
+  resolving-merge-conflicts: {tier: 1}
+  to-spec: {tier: 1}
 
   # ── tier-2：可降级（degrade 必填）──
   deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}
@@ -44,6 +48,8 @@ skills:
   code-hygiene: {tier: 2, degrade: "8 算子本就内联；review 段派 quality-gate → 可退单轴/内联"}
   code-review: {tier: 2, degrade: "Standards/Spec 优先并行冷启动；Codex 并发不可用时按正文串行且禁止跨轴读报告，上下文隔离弱于真并行"}
   codebase-design: {tier: 2, degrade: "Design It Twice 优先 3 个独立 agent；Codex 并发槽不足时按正文串行做 3 次冷启动式推演，独立性弱于真并行"}
+  wayfinder: {tier: 2, degrade: "Plan Agent 仍是唯一规划真值 owner；Codex 子 agent 不可用时由主循环串行执行同一 wayfinder mode 的 destination/fog/decision-frontier 合同，不伪造并行独立性且不跳过人类决策门"}
+  implement: {tier: 2, degrade: "Plan Agent compile 与 Orchestrator execution 保持 owner 分离；Codex 子 agent 不可用时由主循环按同一 task-plan SHA 串行执行两个 owner 合同，不合并状态或省略人类确认"}
   ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
   figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}
   careful: {tier: 2, degrade: "其 deny 挂 Bash-PreToolUse hook，但该 hook 由 **Claude 读 SKILL.md frontmatter 注册**且路径用 ${CLAUDE_SKILL_DIR}——Codex 无此加载器，故降级为「文档规则+人工自觉」，弱于 Claude；若 Codex 提供等价 skill-hook 注册则可恢复"}

@@ -25,6 +25,30 @@
 Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 没有 Plan Agent 的计划，Orchestrator 不知道要执行什么。
 
+## Engineering-delivery facade modes
+
+这两个 mode 都复用本文件的计划格式、Stable ID Freeze、断言与用户确认门；不创建平行状态。
+
+### `wayfinder` mode（planning owner）
+
+只接受调用方已逐项举证的 `huge AND multi-session AND fog`。三项任一为 false，退回普通 Plan
+Agent 流程；普通大但清晰的任务不得启用。输入必须含 destination、已知决策、frontier、fog、
+out-of-scope 与来源指针。fog 仍无法精确表述时只留在计划的 fog 区，不伪装成 U-block；一旦可精确
+表述，先判它是人类决策还是可执行调查/任务，决策型进入 HITL，只有执行型进入 U-block。
+产出仍是本文件定义的 canonical resumable plan，不创建 tracker map 或第二计划真值。
+
+### `implement compile` mode（execution-plan owner）
+
+只接受 Phase gate 已 PASS 的 canonical tech-spec + task-plan，并在编译前回算最终
+`task_plan_sha256`。将每张待执行 DEV/TEST 卡映射为 stable U-ID，保留 Source、Dependencies、exact
+Files、Read List、Test scenarios、Verification，并另列 Git/external effects。输出必须绑定 exact
+task-plan path+SHA、tech-spec source、repo baseline；不得保留 placeholder U-ID、模糊 path 或待补
+authority。optional graph 或 engineering-delivery preset 只提供路由元数据，不能授予执行权。
+
+编译完成后向用户展示上述绑定和 exact U-ID 集；只有用户对该 payload 的明确确认才产生
+`approved U-ID` authority。task-plan/hash/baseline 任一漂移或来自旧计划的批准均使 authority 失效，
+必须重新编译。通过后把同一份计划交给 Orchestrator，不在 facade 或本文件另建执行状态。
+
 ---
 
 ## 触发条件

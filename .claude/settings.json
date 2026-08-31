@@ -40,6 +40,10 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log || true"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/controlled-change-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; if [ \"$c\" = \"2\" ]; then exit 2; fi; if [ \"$c\" != \"0\" ]; then node \"${CLAUDE_PROJECT_DIR:-.}/scripts/controlled-change.mjs\" hook-failure-decision 2>> /tmp/luca-gstack-hooks.log; exit $?; fi; exit 0"
           }
         ]
       }
