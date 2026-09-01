@@ -51,6 +51,19 @@ workflow-state.yaml → skill 图谱 → Orchestrator Skill Workflow Mode → ha
 - 重构多文件系统
 - 任何 Plan Agent 已产出计划的任务
 
+### 2.1a `implement` authority admission
+
+`implement` 进入 Free Task Mode 时，只接收 Plan Agent `implement compile` 产出的 canonical plan：
+其中必须有最终 gated task-plan 的 exact path+SHA-256、repo baseline、无 placeholder 的 exact U-ID
+集合、Files/Verification，以及单列的 Git/external effects，并有用户对同一 payload 的明确批准。
+启动前回算 task-plan SHA 与 baseline；任一漂移、旧计划 authority、空/占位 U-ID 都必须拒绝并返回
+重编译。engineering-delivery preset 或 optional graph 只能说明路由选择，不能替代批准或扩大 scope。
+
+执行严格限制在 approved U-ID 的 scope。unexpected failure/regression 进入 `diagnosing-bugs` 的
+diagnose-only 回路；只有真实 Git conflict 才进入 `resolving-merge-conflicts`。两条异常回路只继承
+父 U-ID 已批准的读写/effect authority，不得扩权，完成后回到原 U-ID 再验证。Orchestrator 不因
+`implement` 自动 stage、commit 或 push；这些 effects 仍须各自的人类 gate 与一次性授权。
+
 ### 2.2 执行流程
 
 ```

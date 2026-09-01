@@ -78,6 +78,29 @@ ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NE
     need(pre) && need(post), `pre=${pre} post=${post}`);
 }
 
+// S5b Codex 复用既有已授信 project-scope entry；新增 entry 会改变 trust currentHash，
+// 在未授权写 ~/.codex/config.toml 的正常 fresh session 中被静默跳过。
+{
+  const codexPre = (hooks?.hooks?.PreToolUse || []).flatMap((group) => group.hooks || []);
+  const projectScope = codexPre.find((hook) => /project-scope-guard\.mjs/.test(hook.command || ''));
+  const accidentalSecondEntry = codexPre.find((hook) => /controlled-change-guard\.mjs/.test(hook.command || ''));
+  const adapterSource = readFileSync(join(ROOT, '.codex', 'codex-hook-adapter.mjs'), 'utf8');
+  let claude = null;
+  try { claude = JSON.parse(readFileSync(join(ROOT, '.claude', 'settings.json'), 'utf8')); } catch { }
+  const claudePre = (claude?.hooks?.PreToolUse || []).flatMap((group) => group.hooks || []);
+  const claudeControlled = claudePre.find((hook) => /controlled-change-guard\.mjs/.test(hook.command || ''));
+  const wrapperSafe = (command) => Boolean(command
+    && /hook-failure-decision/.test(command)
+    && /exit 2/.test(command)
+    && !/controlled-change-guard[^\n]*\|\|\s*true/.test(command));
+  const chained = /project-scope-guard/.test(adapterSource)
+    && /controlled-change-guard\.mjs/.test(adapterSource)
+    && /hook-failure-decision/.test(adapterSource);
+  ok('S5b Claude 直接注册 controlled-change；Codex 不新增 trust entry而由既有 project-scope entry 在 adapter 内串行强制',
+    Boolean(projectScope && !accidentalSecondEntry && chained && claudeControlled && wrapperSafe(claudeControlled.command)),
+    `projectScope=${Boolean(projectScope)} accidentalSecondEntry=${Boolean(accidentalSecondEntry)} chained=${chained} claudeControlled=${Boolean(claudeControlled)}`);
+}
+
 // S6 adapter 本体
 ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   existsSync(join(ROOT, '.codex', 'codex-hook-adapter.mjs'))
@@ -216,8 +239,22 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
     try {
       trusted = [...readFileSync(cfg, 'utf8').matchAll(/\[hooks\.state\."([^"]+)"\]/g)].map((m) => m[1]);
     } catch { }
-    // 仓库级条目的 trust key 以本仓 hooks.json 绝对路径为前缀
-    const ourPath = join(ROOT, '.codex', 'hooks.json');
+    // 仓库级条目的 trust key 以 hooks.json 的**绝对路径**为前缀，而 Codex 实际加载的是
+    // 主工作树那一份——链接 worktree 的路径不同，永远不在授信表里。若按 ROOT 判，本检查
+    // 在任何 worktree 里都恒红，且"修复"意味着把一个临时目录永久写进用户的 ~/.codex/config.toml。
+    // 故：检查对象锁定到**部署面（主工作树）**，而不是当前检出。这不是跳过，是改为核对正确的对象。
+    // git 的 --git-common-dir 在主检出与其所有 worktree 上返回同一个 <main>/.git。
+    let deployRoot = ROOT;
+    try {
+      const common = spawnSync('/usr/bin/git', ['-C', ROOT, 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+        { encoding: 'utf8' });
+      if (common.status === 0) {
+        const gitDir = String(common.stdout || '').trim();
+        if (gitDir.endsWith('/.git')) deployRoot = dirname(gitDir);
+      }
+    } catch { }
+    const inWorktree = deployRoot !== ROOT;
+    const ourPath = join(deployRoot, '.codex', 'hooks.json');
     const mine = trusted.filter((k) => k.startsWith(ourPath + ':'));
     const evToSnake = (e) => e.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
     let needKeys = [];
@@ -227,12 +264,13 @@ ok('S10 Claude 路径零回归（test-harness + test-hooks）',
       }));
     }
     const missing = needKeys.filter((k) => !mine.includes(k));
+    const where = inWorktree ? `（当前是链接 worktree，检查对象为部署面 ${deployRoot}）` : '';
     ok('S12 本仓 hook 已获授信（未授信时 Codex 静默跳过，hook 一个都不会跑）',
       needKeys.length > 0 && missing.length === 0,
       missing.length
-        ? `未授信 ${missing.length}/${needKeys.length} 条。修复：node scripts/codex-trust-hooks.mjs`
+        ? `未授信 ${missing.length}/${needKeys.length} 条${where}。修复：node scripts/codex-trust-hooks.mjs`
           + `（先 --dry-run 过目；它用 Codex 自己的 hooks/list + config/batchWrite，只碰本仓条目）`
-        : `已授信 ${needKeys.length}/${needKeys.length} 条`);
+        : `已授信 ${needKeys.length}/${needKeys.length} 条${where}`);
   }
 }
 

@@ -39,11 +39,36 @@
 
 import { spawnSync } from 'child_process';
 import { readFileSync, realpathSync } from 'fs';
-import { dirname, resolve, relative, isAbsolute } from 'path';
+import { dirname, resolve, relative, isAbsolute, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const diag = (m) => { try { process.stderr.write(`[codex-adapter] ${m}\n`); } catch { } };
+const failureContext = { target: '', event: '', inRepository: false };
+
+function witnessAwareRuntimeFailure(reason) {
+  diag(reason);
+  if (!failureContext.inRepository
+    || failureContext.event !== 'PreToolUse'
+    || !/project-scope-guard/.test(failureContext.target)) return 0;
+  try {
+    const fallback = spawnSync('node', [
+      join(REPO_ROOT, 'scripts', 'controlled-change.mjs'),
+      'hook-failure-decision', '--repo', REPO_ROOT,
+    ], {
+      input: '',
+      env: { ...process.env, CLAUDE_PROJECT_DIR: REPO_ROOT, LUCA_ACTUAL_HARNESS: 'codex', LUCA_HARNESS_ADAPTED: '1' },
+      encoding: 'utf8',
+      timeout: 30000,
+      cwd: REPO_ROOT,
+      maxBuffer: 4 * 1024 * 1024,
+    });
+    if (fallback?.stderr) process.stderr.write(fallback.stderr);
+    if (fallback?.status === 0 && !fallback.error) return 0;
+  } catch { /* inability to prove strict inactivity is fail-closed */ }
+  process.stderr.write('[controlled-change] deny: adapter runtime failed while controlled state may be required\n');
+  return 2;
+}
 
 // 【tool_name 实测（2026-08-05，matcher='.*' 抓真实载荷）】
 //   shell 执行  → tool_name='Bash'      tool_input={command}
@@ -59,6 +84,7 @@ const diag = (m) => { try { process.stderr.write(`[codex-adapter] ${m}\n`); } ca
 // 同一个 Codex 工具在两个消费者眼里需要不同形状，这正是 adapter 该做的事。
 const TOOL_ALIAS_BY_HOOK = [
   { match: /project-scope-guard/, map: { apply_patch: 'Bash', shell: 'Bash', local_shell: 'Bash' } },
+  { match: /controlled-change-guard/, map: { apply_patch: 'apply_patch', shell: 'Bash', local_shell: 'Bash' } },
   { match: /post-edit/,           map: { apply_patch: 'Write', shell: 'Bash', local_shell: 'Bash' } },
 ];
 const DEFAULT_TOOL_MAP = { shell: 'Bash', local_shell: 'Bash' };   // Bash 本就是 CC 名，无需改写
@@ -157,28 +183,45 @@ function adapt(text, event) {
 function main() {
   const target = process.argv[2];
   if (!target) { diag('缺少目标 hook 路径参数'); return 0; }
+  failureContext.target = target;
+  if (resolve(target) === join(REPO_ROOT, '.claude', 'hooks', 'project-scope-guard.mjs')) {
+    // The registered target itself uniquely identifies the trusted PreToolUse entry, so stdin read
+    // failures can still consult the witness before JSON event/cwd fields are available.
+    failureContext.event = 'PreToolUse';
+    failureContext.inRepository = true;
+  }
 
   let raw = '';
-  try { raw = readFileSync(0, 'utf8'); } catch (e) {
+  try {
+    if (process.env.LUCA_CONTROLLED_TEST_ADAPTER_READ_ERROR === 'project-scope') throw new Error('injected stdin read error');
+    raw = readFileSync(0, 'utf8');
+  } catch (e) {
     // EAGAIN（非阻塞 stdin）等：如实报告，不假装读到了空输入
-    diag(`读取 stdin 失败(${(e && e.code) || e})——放行，hook 未执行`); return 0;
+    return witnessAwareRuntimeFailure(`读取 stdin 失败(${(e && e.code) || e})，consulting durable witness`);
   }
 
   let data;
   try { data = JSON.parse(raw || '{}'); } catch {
     // 初版在此静默降级成 {} 并照常执行 hook —— 等于用空 payload 骗过守卫
-    diag('stdin 不是合法 JSON——放行且不执行 hook（不以空 payload 冒充真实输入）'); return 0;
+    return witnessAwareRuntimeFailure('stdin 不是合法 JSON（不以空 payload 冒充真实输入）');
   }
-  if (!data || typeof data !== 'object' || Array.isArray(data)) { diag('stdin JSON 不是对象——放行'); return 0; }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return witnessAwareRuntimeFailure('stdin JSON 不是对象');
 
   if (!inRepo(data.cwd)) {
-    // 本行曾是全文件**唯一**不打诊断的失败路径，与文件头「失败一律 fail-open 但留 stderr 诊断」
-    // 自相矛盾：一旦 inRepo 误判（如大小写），现象是"6 个 hook 集体静默消失"且事后零线索。
-    diag(`cwd 不在本仓范围内，放行不处理（cwd=${data.cwd || '(未提供)'} repo=${REPO_ROOT}）`);
-    return 0;
+    // Legacy hooks still fail open here, but the exact trusted project-scope PreToolUse entry must
+    // first prove strict inactivity. Otherwise an attacker could put /private/tmp in payload.cwd
+    // while naming this controlled repo in `git -C ...` and bypass the durable REQUIRED witness.
+    return witnessAwareRuntimeFailure(
+      `cwd 不在本仓范围内（cwd=${data.cwd || '(未提供)'} repo=${REPO_ROOT}），consulting durable witness`,
+    );
   }
 
   const event = data.hook_event_name || '';
+  failureContext.event = event;
+  failureContext.inRepository = true;
+  if (process.env.LUCA_CONTROLLED_TEST_ADAPTER_THROW === 'after-context') {
+    throw new Error('injected adapter runtime throw after witness-aware context capture');
+  }
   const alias = aliasFor(target);
   const origToolName = data.tool_name;                    // 映射前的 Codex 真名（B5 判定要用）
   if (data.tool_name && alias[data.tool_name]) data.tool_name = alias[data.tool_name];
@@ -223,13 +266,19 @@ function main() {
 
   let r;
   try {
-    r = spawnSync('node', [target], {
-      input: JSON.stringify(data), env: childEnv, encoding: 'utf8',
-      timeout: 30000, cwd: REPO_ROOT,
-      maxBuffer: 64 * 1024 * 1024,   // 默认 1MiB 会让大 payload 的控制动词整个消失
-    });
-  } catch (e) { diag(`spawn 异常(${(e && e.message) || e})——放行`); return 0; }
-  if (!r) { diag('spawnSync 无返回——放行'); return 0; }
+    if (process.env.LUCA_CONTROLLED_TEST_ADAPTER_SPAWN_THROW === 'project-scope') throw new Error('injected project-scope spawn exception');
+    r = process.env.LUCA_CONTROLLED_TEST_ADAPTER_NULL_RESULT === 'project-scope'
+      ? null
+      : process.env.LUCA_CONTROLLED_TEST_ADAPTER_TIMEOUT === 'project-scope'
+      && /project-scope-guard/.test(target) && event === 'PreToolUse'
+      ? { status: null, error: Object.assign(new Error('injected project-scope timeout'), { code: 'ETIMEDOUT' }), stdout: '', stderr: '' }
+      : spawnSync('node', [target], {
+        input: JSON.stringify(data), env: childEnv, encoding: 'utf8',
+        timeout: 30000, cwd: REPO_ROOT,
+        maxBuffer: 64 * 1024 * 1024,   // 默认 1MiB 会让大 payload 的控制动词整个消失
+      });
+  } catch (e) { return witnessAwareRuntimeFailure(`spawn 异常(${(e && e.message) || e})`); }
+  if (!r) return witnessAwareRuntimeFailure('spawnSync 无返回');
 
   if (r.stderr) process.stderr.write(r.stderr);
   // 初版这些失败全部静默 exit 0，事后无从排查
@@ -238,15 +287,88 @@ function main() {
       + (r.error.code === 'ETIMEDOUT' ? '——30s 超时，控制动词已丢失' : ''));
   }
 
+  if (/project-scope-guard/.test(target) && event === 'PreToolUse'
+    && (r.error || r.status === null || (r.status !== 0 && r.status !== 2))) {
+    return witnessAwareRuntimeFailure(`project-scope hook runtime failed (${r.error?.code || r.error?.message || `status=${r.status}`})`);
+  }
+
+  // controlled-change piggybacks on the already-trusted project-scope PreToolUse entry.
+  // Codex trust is bound to hooks.json entry bytes; adding a second entry would be silently
+  // skipped in a normal fresh session until ~/.codex/config.toml was mutated, which Gate A does
+  // not authorize. Keep hooks.json unchanged and chain the new guard here instead.
+  if (/project-scope-guard/.test(target) && event === 'PreToolUse' && r.status !== 2) {
+    let projectPayload = null;
+    try { projectPayload = JSON.parse(String(r.stdout || '').trim() || 'null'); } catch { }
+    const projectHso = projectPayload?.hookSpecificOutput;
+    const projectDenied = projectHso?.permissionDecision === 'deny';
+    if (!projectDenied) {
+      const controlledTarget = join(REPO_ROOT, '.claude', 'hooks', 'controlled-change-guard.mjs');
+      const controlledData = {
+        ...data,
+        tool_name: origToolName || data.tool_name,
+        tool_input: projectHso?.updatedInput || data.tool_input,
+      };
+      let controlled;
+      try {
+        controlled = spawnSync('node', [controlledTarget], {
+          input: JSON.stringify(controlledData), env: childEnv, encoding: 'utf8',
+          timeout: 30000, cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024,
+        });
+      } catch (e) {
+        controlled = { status: null, error: e, stdout: '', stderr: '' };
+      }
+      if (controlled?.stderr) process.stderr.write(controlled.stderr);
+      const controlledOut = String(controlled?.stdout || '').trim();
+      if (controlledOut) {
+        const payload = adapt(controlledOut, event);
+        if (payload !== null) process.stdout.write(JSON.stringify(payload) + '\n');
+      }
+      if (controlled?.status === 2) return 2;
+      if (!controlled || controlled.error || controlled.status === null || controlled.status !== 0) {
+        diag(`controlled-change guard failed (${controlled?.error?.code || controlled?.error?.message || `status=${controlled?.status}`}); consulting durable witness`);
+        const fallback = spawnSync('node', [join(REPO_ROOT, 'scripts', 'controlled-change.mjs'), 'hook-failure-decision'], {
+          input: '', env: childEnv, encoding: 'utf8', timeout: 30000, cwd: REPO_ROOT,
+          maxBuffer: 4 * 1024 * 1024,
+        });
+        if (fallback?.stderr) process.stderr.write(fallback.stderr);
+        if (fallback?.status === 2) return 2;
+        if (fallback?.error || fallback?.status === null || fallback?.status !== 0) {
+          diag('controlled-change witness fallback itself failed; refusing this PreToolUse call');
+          process.stderr.write('[controlled-change] deny: guard and durable-witness fallback both failed\n');
+          return 2;
+        }
+      }
+      // A controlled guard emits output only for a denial. Preserve the JSON control verb even
+      // if a future implementation accidentally exits zero after emitting it.
+      if (controlledOut) return 2;
+    }
+  }
+
   const out = String(r.stdout || '').trim();
   if (out) {
     const payload = adapt(out, event);
     if (payload !== null) {
       try { process.stdout.write(JSON.stringify(payload) + '\n'); }
-      catch (e) { diag(`输出序列化失败(${(e && e.message) || e})`); }
+      catch (e) { return witnessAwareRuntimeFailure(`输出序列化失败(${(e && e.message) || e})`); }
     }
+  }
+  // controlled-change is the one guard whose failure semantics depend on durable required-witness
+  // state. Preserve every abnormal child outcome so the outer registered wrapper can run
+  // `controlled-change.mjs hook-failure-decision`; folding status=1/null to zero here would make
+  // a syntax error or timeout fail-open while a non-terminal witness exists. Other legacy hooks
+  // retain their established fail-open behavior.
+  if (/controlled-change-guard/.test(target) && (r.error || r.status === null || r.status !== 0)) {
+    return r.status === 2 ? 2 : 1;
   }
   return r.status === 2 ? 2 : 0;
 }
 
-process.exitCode = main();
+// A top-level catch can cover runtime throws and child timeouts because these bytes execute.
+// Syntax-byte corruption occurs before Node can evaluate this file; the registered shell command
+// deliberately maps exit 1 to fail-open. FINAL-MASTER §0.4 treats that case as a compromised hook
+// outside the controlled layer. Strengthening it requires changing the already-trusted command
+// bytes (and personal trust state), which Gate A-bootstrap explicitly does not authorize.
+try { process.exitCode = main(); }
+catch (error) {
+  process.exitCode = witnessAwareRuntimeFailure(`top-level adapter runtime exception: ${error?.message || error}`);
+}

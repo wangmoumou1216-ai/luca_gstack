@@ -26,6 +26,10 @@ try {
     `.session-tool-count-${sid}`,
     `.session-projnag-${sid}`,
     `.session-inherited-${sid}`,
+    // E2 义务状态文件：本目录里**唯一含用户 prompt 原文逐字节**的 per-sid 临时文件，
+    // 却是唯一没被 GC 的（深审 MINOR-8）。它无时效，而 `--resume` 会复用 sid，
+    // 于是一条陈旧的 PENDING 义务会在数天后复活并继续注入。随本 session 一起清。
+    `.session-obligation-${sid}`,
   ];
   for (const f of targets) {
     try { unlinkSync(join(claudeDir, f)); } catch { } // 不存在即跳过

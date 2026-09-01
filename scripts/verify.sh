@@ -107,6 +107,16 @@ check S16 "项目 docs/state symlink 一致"          "npm run check:project-lin
 check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
 check S18 "能力锚点自检（capability anchors，防误删关键小节）"  "node scripts/check-capability-parity.mjs"
 check S40 "跨 harness 语义 projection proof-it-bites（delegation/obligation/order）" "npm run test:semantic-parity --silent"
+check S41 "controlled-change schema/controller/guard 全量回归" "npm run test:controlled-change --silent"
+check S42 "六项集成冻结 source manifest tuple 可复现" "node scripts/validate-skill-integration-receipt.mjs --source-manifest"
+check S43 "engineering-delivery 六项 owner/trigger/loader/flow 回归" "npm run test:engineering-delivery --silent"
+check S44 "六项集成终态 receipt 与三路同 SHA 评审闭合" "npm run check:skill-integration-receipt --silent"
+# S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
+# 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
+# verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。
+# 新口径下：manifest 篡改、denominator 漂移、锚点填错仍各自转红（四条变异实测），
+# 而发布之后的合法修改只以 INFO 行报告，不再误判。
+check S45 "六项集成 runtime candidate manifest denominator/blob 闭合（对发布提交求证）" "node scripts/candidate-manifest.mjs --verify-at framework-audit/2026-08-30-mattpocock-six-skills-integration/CANDIDATE-MANIFEST.tsv"
 check S31 "appendix 指针奇偶校验（前向孤儿+后向丢指针，claude5-unhobble C1）" "node scripts/check-appendix-pointers.mjs"
 check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）" "awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
 check S33 "CLAUDE.md 模型档表 4 行在场且含当前 alias（C5，.mjs 强断言）" "node scripts/check-model-table.mjs"

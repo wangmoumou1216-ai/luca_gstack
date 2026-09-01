@@ -1,0 +1,6 @@
+interface:
+  display_name: "To Spec"
+  short_description: "Synthesize conversation into the canonical tech spec"
+  default_prompt: "Use $to-spec to synthesize our resolved engineering conversation into the canonical tech spec."
+policy:
+  allow_implicit_invocation: true

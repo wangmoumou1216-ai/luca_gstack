@@ -368,7 +368,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 
 > **Codex 接线现状（2026-08-04）**：本仓已具备 Codex 侧完整接线，读取顺序与落点如下——
 > `.codex/hooks.json`（6 个生命周期 hook，全部经 `.codex/codex-hook-adapter.mjs` 调用）／
-> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（35 条软链 → `.claude/skills/office/*`）／
+> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（41 条软链 → `.claude/skills/office/*`）／
 > `.codex/workflow-runner.mjs`（Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，本 runner 把
 > workflow 脚本注入的 `agent()` 接到 `codex exec --output-schema` 上，`.claude/workflows/*.js` 零改写即可运行；
 > 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`。
@@ -526,8 +526,9 @@ Claude Code owns the native slash-command experience:
 
 - `.claude/commands/*`
 - `.claude/skills/office/*`
-- `.claude/skills/codebase-design`、`.claude/skills/code-review`：仅为指向 `office/` 真值源的
-  Claude native aliases（不复制正文；后者覆盖 bundled `/code-review`，其 `/review` alias 仍属原生）
+- `.claude/skills/{codebase-design,code-review,grilling,diagnosing-bugs,resolving-merge-conflicts,to-spec,wayfinder,implement}`：
+  仅为指向 `office/` 真值源的 Claude native aliases（不复制正文；`code-review`
+  覆盖 bundled `/code-review`，其 `/review` alias 仍属原生）
 - Claude-specific guided workflows.
 
 When Claude runs a skill, its durable output should land in `docs/` and workflow status should be
@@ -581,7 +582,7 @@ Claude workflow; it must not maintain a separate flat routing system.
 
 **为什么这张表必须在这里、而不是靠 skill 描述**（实测，别再假设）：Codex 会把**所有**已装
 skill 的描述压进「2% skills context budget」——2026-08-08 实测本机加载 **106 条** skill
-（项目 33 + `~/.claude/skills` 40 + 各插件），预算按条数均摊，于是**33 条项目 skill 里有 32
+（当时项目 33 + `~/.claude/skills` 40 + 各插件），预算按条数均摊，于是**当时 33 条项目 skill 里有 32
 条的描述被截到约 40 字符**（`brainstorm` 716→40、`magicpath` 774→40）。40 字符对语义路由等于没有。
 Codex 的告警原文是「Codex can still see every skill, but some descriptions are shorter」——
 **skill 一个都没丢，丢的是描述**。关插件解决不了：106→76 也只是把 40 字符抬到约 55。
@@ -609,12 +610,21 @@ AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落
 | `/figma-layer` | A C | Figma 保险层 |
 | `/tech-spec` | A B D | PRD + design-brief → 技术合同，强制覆盖率验证 |
 | `/task-plan` | A B D | 任务编排计划：渐进式索引 + 断言矩阵 + 开发/测试任务卡；执行前须过门禁 |
+| `/grilling` | 工程/决策 | 一次只问一个尚未决定的关键取舍；先查可检索事实，不扩大 authority |
+| `/diagnosing-bugs` | 代码层 | 意外失败/回归/偶发/性能回归的 diagnose-only red loop；expected TDD red 不触发，完成后回原 U-ID |
+| `/resolving-merge-conflicts` | 代码层 | 真实进行中 Git 冲突才进；变更/stage/advance/abort 分门，不自动 commit/push |
+| `/to-spec` | 工程层 | 已解决工程讨论 → canonical tech-spec 的 conversation_synthesis 薄入口 |
+| `/wayfinder` | 规划层 | Plan Agent 薄入口；自动建议仅 huge AND multi-session AND fog，direct 按名可直达 |
+| `/implement` | 工程层 | 已冻结、已批准 task-plan → exact U-ID；Plan Agent 编译，Orchestrator 拥有执行状态 |
 | `/codebase-design` | 代码层 | Module/Interface/Depth/Seam/Adapter 共享原语；模块深化、接口收敛和测试面设计，不是 workflow 节点 |
 | `/code-review` | 代码层 | 固定 WORKTREE_DIFF/比较点/FILE_SET 后分离 Standards/Spec 两轴，只读报告；复用 code-hygiene Mode D |
 | `/code-hygiene` | 代码层 | 完成前验证铁律（done 前须有当场跑出的证据）+ 8 清理算子；只自动应用 HIGH 置信 |
 | `/code-recon` | 代码层 | Brownfield 正门：并行只读 recon 把代码库逆向成架构 brief（标 VERIFIED vs INFERRED），只读不改 |
 | `/muse-req-triage` | muse | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单 |
 | `/muse-loop-orchestrate` | muse | 需求→原型自治 Loop 编排器，自带两个不可省略的人类卡点（GATE-1/GATE-2） |
+
+`engineering-delivery` 是可选无状态 preset：只有用户明确选择才作为 routing metadata。
+未选择时六项全部 standalone，optional graph 可删且不是 loader/状态依赖；选择也不授予 effect authority。
 
 场景：**A=新功能设计 · B=已有功能优化 · C=线上评审改版 · D=Agent 化改造**。
 隐藏/高级 skill（`challenge`/`redteam`/`evals`/`retro`/`careful`/`compare`/`figma-demo`/`magicpath`）
@@ -833,7 +843,7 @@ Only report this checklist to the user if it affects the work or the user asks.
 - Do not duplicate every Claude skill body here.
 - Do not pretend Codex can directly execute Claude **slash** commands (`/brainstorm` 等语法仍是
   Claude 侧的)。**但同一套 skill 本体在 Codex 下是可达的**（2026-08-04 接线）：`.agents/skills/`
-  下 33 条软链指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
+  下 41 条软链指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
   读的是同一份 SKILL.md（软链非副本——复制会漂移，见 b2b83d3）。所以正确说法是
   「触发语法不同，skill 本体同源」，不是「Codex 用不了这些 skill」。
 - Do not use this file to store task-specific notes.

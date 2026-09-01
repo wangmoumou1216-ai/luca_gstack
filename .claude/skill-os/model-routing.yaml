@@ -40,7 +40,7 @@ tiers:
       2026-07-10 用户裁决收严为手术刀——整场交互 skill（brainstorm 系）与研究 fan-out
       （deepresearch）迁出至 core-execution，fable 只留判定时刻（单次 5-30k token、
       判断杠杆极高的点位），配额消耗降约 80-95%。
-    skills: [redteam]
+    skills: [redteam, wayfinder]
 
   core-execution:
     resolves_to: opus
@@ -53,7 +53,8 @@ tiers:
       fable_whitelist P1 单独 dispatch fable 微判官。
     skills: [brainstorm, ux-brainstorm, design-brief, muse-loop-orchestrate,
              deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype,
-             code-hygiene, code-review, codebase-design, auto, muse-x-digest]
+             code-hygiene, code-review, codebase-design, auto, muse-x-digest,
+             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, implement]
 
   guided-execution:
     resolves_to: sonnet
@@ -79,7 +80,7 @@ fable_whitelist:
     - "refute/judge/oracle 型 subagent（brainstorm 苏格拉底审查、ux-brainstorm Oracle、judge panel 裁定）"
   P2_复审与规划:
     - "翻案复审（用户质疑结论/要求高模型复审时的 review dispatch）"
-    - "plan-mode 规划期 dispatch（Explore / Plan agent）——2026-07-10 用户点名"
+    - "plan-mode 规划期 dispatch（Explore / Plan agent / 具名 wayfinder mode）——2026-07-10 用户点名"
   # 此外一律不用 fable；拿不准 → 用 opus（宁降不越权）。
 
 # ─── Agent frontmatter pin 登记（与 .claude/agents/*.md 保持一致，governance 机检）───

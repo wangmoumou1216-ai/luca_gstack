@@ -50,17 +50,72 @@ units:
   pinned_at: '2026-08-28'
   source: adoption-log
   note: Luca facade 保留 fixed-point + Standards/Spec 两轴，执行权威复用 code-hygiene Mode D 与 routing-chain-check R4；项目 native alias 覆盖 Claude bundled /code-review，/review 仍保留原生 alias
+- name: grilling
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/productivity/grilling
+  install_path: .claude/skills/office/grilling
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
+  ack_sha: null
+  pinned_at: '2026-08-31'
+  source: adoption-log
+  note: project canonical independent method; Claude/Codex aliases are thin pointers; one consequential human decision per turn and no authority expansion
+- name: diagnosing-bugs
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/diagnosing-bugs
+  install_path: .claude/skills/office/diagnosing-bugs
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-08-31'
+  source: adoption-log
+  note: project canonical unexpected-failure method; expected TDD red stays outside; legacy systematic-debugging remains compatibility-only
 - name: resolving-merge-conflicts
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/resolving-merge-conflicts
-  install_path: ~/.claude/skills/resolving-merge-conflicts
-  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
-  watch_sha: 81ddacb08b3878d07ac4fa2de60bd8a53bacba5b
-  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
-  pinned_at: '2026-07-12'
+  install_path: .claude/skills/office/resolving-merge-conflicts
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-08-31'
   source: adoption-log
-  note: null
+  note: project canonical real-conflict-only method; personal collision cutover is separately governed by U-006 and does not change this project pin
+- name: to-spec
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/to-spec
+  install_path: .claude/skills/office/to-spec
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  ack_sha: null
+  pinned_at: '2026-08-31'
+  source: adoption-log
+  note: thin conversation_synthesis facade; canonical tech-spec remains the sole specification truth owner
+- name: wayfinder
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/wayfinder
+  install_path: .claude/skills/office/wayfinder
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-08-31'
+  source: adoption-log
+  note: thin planning facade; automatic recommendation requires huge AND multi-session AND fog and Plan Agent remains the truth owner
+- name: implement
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/implement
+  install_path: .claude/skills/office/implement
+  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  watch_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+  ack_sha: null
+  pinned_at: '2026-08-31'
+  source: adoption-log
+  note: thin approved-plan execution facade; Plan Agent compiles exact U-IDs and Orchestrator owns execution state
 - name: teach
   kind: skill
   repo: mattpocock/skills

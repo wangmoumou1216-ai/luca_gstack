@@ -263,6 +263,12 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 | `/figma-layer` | A C | Figma 保险层 |
 | `/tech-spec` | A B D | 工程规格节点：PRD + design-brief → 技术合同，强制覆盖率验证 |
 | `/task-plan` | A B D | 任务编排计划：渐进式索引 + 断言矩阵 + 开发/测试任务卡，执行前必须通过门禁 |
+| `/grilling` | 工程 | 取舍追问 |
+| `/diagnosing-bugs` | 代码 | 根因诊断 |
+| `/resolving-merge-conflicts` | 代码 | 冲突处理 |
+| `/to-spec` | 工程 | 规格合成 |
+| `/wayfinder` | 规划 | 任务规划 |
+| `/implement` | 工程 | 批准执行 |
 | `/codebase-design` | 代码层 | 深模块/interface/seam 共享原语；standalone/internal，非节点 |
 | `/code-review` | 代码层 | 固定范围后 Standards/Spec 分轴只读审查；委托 code-hygiene Mode D |
 | `/code-hygiene` | 代码层 | 完成前验证 + 8 清理算子；Mode D 是 review 权威 |

@@ -69,6 +69,15 @@ TABLE = {
     # 工程原语/只读审查入口均无固定落盘产物；实际触发由 episodic skills_used 观察。
     "codebase-design": (None, [], "unobservable"),
     "code-review": (None, [], "unobservable"),
+    # Engineering-delivery methods/facades have no unique project-file output. Their canonical
+    # owners (tech-spec/task-plan/Plan Agent/Orchestrator) own durable artifacts and state, so
+    # attributing those files back to these entries would manufacture false usage evidence.
+    "grilling": (None, [], "unobservable"),
+    "diagnosing-bugs": (None, [], "unobservable"),
+    "resolving-merge-conflicts": (None, [], "unobservable"),
+    "to-spec": (None, [], "unobservable"),
+    "wayfinder": (None, [], "unobservable"),
+    "implement": (None, [], "unobservable"),
     "muse-req-triage": (None, [f"{D}/loop/*"], "unmapped"),
 }
 

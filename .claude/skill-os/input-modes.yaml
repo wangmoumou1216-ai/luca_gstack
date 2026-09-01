@@ -184,6 +184,90 @@ skills:
     output_path: "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md"
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
 
+  grilling:
+    modes:
+      standalone:
+        required: ["plan_decision_or_idea"]
+        optional: ["retrievable_evidence"]
+      workflow:
+        required: ["consequential_unresolved_decision"]
+        optional: ["parent_u_id"]
+      internal:
+        required: ["caller", "human_decision_gate", "condition_evidence", "authority_record_sha256", "inherited_authority", "authority_effect_intersection"]
+        optional: ["parent_u_id"]
+    quality_gates: ["one_decision_question_per_turn", "facts_retrieved_before_asking", "no_authority_expansion"]
+    notes: "Direct/semantic/internal 共用一次一个决定规则；internal 只继承父任务 authority。"
+
+  diagnosing-bugs:
+    modes:
+      standalone:
+        required: ["unexpected_symptom"]
+        optional: ["authorized_local_diagnostics"]
+      workflow:
+        required: ["unexpected_failure", "original_u_id"]
+        optional: ["inherited_path_scope"]
+      internal:
+        required: ["caller", "unexpected_failure", "condition_evidence", "original_u_id", "authority_record_sha256", "inherited_authority", "authority_effect_intersection"]
+        optional: ["inherited_path_scope"]
+    quality_gates: ["symptom_hitting_red_loop", "expected_tdd_red_excluded", "diagnose_only_default", "returns_to_original_u_id"]
+    notes: "自然语言异常主路由；diagnose-only 不获得写入、网络、Git 或 external effect 权限。"
+
+  resolving-merge-conflicts:
+    modes:
+      standalone:
+        required: ["real_in_progress_git_conflict"]
+        optional: ["authorized_read_only_git_observation"]
+      workflow:
+        required: ["real_in_progress_git_conflict", "original_u_id"]
+        optional: ["inherited_path_scope"]
+      internal:
+        required: ["caller", "real_in_progress_git_conflict", "condition_evidence", "original_u_id", "authority_record_sha256", "inherited_authority", "authority_effect_intersection"]
+        optional: ["inherited_path_scope"]
+    quality_gates: ["operation_and_unmerged_entries_confirmed", "both_intents_recovered", "mutation_doors_separate", "no_automatic_commit_or_push", "returns_to_original_u_id"]
+    notes: "inspect/propose 默认只读；edit/stage/advance/abort 分门授权。"
+
+  to-spec:
+    modes:
+      standalone:
+        required: ["resolved_engineering_conversation"]
+        optional: ["repository_evidence"]
+      workflow:
+        required: ["resolved_engineering_conversation"]
+        optional: ["existing_tech_spec_context"]
+      internal:
+        required: ["caller", "resolved_engineering_conversation", "condition_evidence", "authority_record_sha256", "inherited_authority", "authority_effect_intersection"]
+        optional: ["parent_u_id"]
+    quality_gates: ["conversation_source_register", "no_product_or_design_invention", "canonical_tech_spec_coverage_gate"]
+    notes: "薄 facade，只进入 tech-spec conversation_synthesis；不拥有第二份 spec/state。"
+
+  wayfinder:
+    modes:
+      standalone:
+        required: ["destination", "huge", "multi_session", "fog"]
+        optional: ["known_frontier"]
+      workflow:
+        required: ["destination", "huge", "multi_session", "fog"]
+        optional: ["parent_plan_context"]
+      internal:
+        required: ["caller", "huge_and_multi_session_and_fog", "condition_evidence", "authority_record_sha256", "inherited_authority", "authority_effect_intersection"]
+        optional: ["parent_u_id"]
+    quality_gates: ["three_predicates_all_true", "plan_agent_is_only_planning_truth", "no_execution_authority"]
+    notes: "三谓词是 conjunction；任一为 false 即回普通 Plan Agent/direct execution。"
+
+  implement:
+    modes:
+      standalone:
+        required: ["gated_tech_spec", "gated_task_plan"]
+        optional: ["current_handoff"]
+      workflow:
+        required: ["gated_tech_spec", "gated_task_plan"]
+        optional: ["selected_engineering_delivery_preset"]
+      internal:
+        required: ["caller", "approved_u_ids", "task_plan_sha256", "condition_evidence", "authority_record_sha256", "inherited_authority", "authority_effect_intersection"]
+        optional: ["original_u_id"]
+    quality_gates: ["task_plan_sha_frozen_before_compile", "exact_u_ids_human_confirmed", "plan_agent_compiles", "orchestrator_executes", "graph_optional"]
+    notes: "preset selection is routing metadata, never authority；standalone 不读 optional graph。"
+
   code-hygiene:
     modes:
       standalone:

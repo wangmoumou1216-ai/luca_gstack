@@ -1,0 +1,77 @@
+schema_version: 1
+name: controlled-change
+visibility: internal
+purpose: Exact-path, CAS-bound framework mutation control for LucaGStack.
+
+activation:
+  applies_when:
+    - A Plan Agent or Orchestrator execution will mutate the LucaGStack repository.
+  inactive_when:
+    - No required witness and no active context exist.
+    - The newest witness is terminal and matches its durable receipt.
+  required_order:
+    - Persist and fsync required-witness.json with state REQUIRED.
+    - Persist and fsync active-context.json bound to the witness anchor.
+    - Read both files back and verify both bindings before dispatching a writer.
+  fail_closed_when:
+    - A non-terminal witness has no active context.
+    - Either state file is malformed, stale, or has a mismatched generation, plan SHA, or manifest SHA.
+    - A terminal witness has no matching durable receipt.
+
+manifest:
+  required_fields:
+    - schema_version
+    - task_id
+    - u_id
+    - repo_realpath
+    - git_common_dir_realpath
+    - plan_sha256
+    - plan_recorded_baseline
+    - observed_baseline
+    - session
+    - scratch_root
+    - repo_paths
+    - external_paths
+    - mutation_classes
+    - approved_effects
+    - allowed_commands
+  path_contract:
+    repo_paths: Exact POSIX repository-relative paths only; no glob, absolute path, empty segment, dot, or dot-dot.
+    external_paths: Exact approved absolute paths only; every entry must carry a preimage and postimage tuple.
+    scratch_root: Existing normalized realpath directory, disjoint from repo_realpath in both ancestor directions.
+    tuple_fields: [type, mode, sha256]
+    types: [absent, file, symlink]
+    modes: ["-", "100644", "100755", "120000"]
+  mutation_classes: [add, modify, delete, symlink]
+  git_and_external_effects_default: deny
+
+states:
+  witness_non_terminal: [REQUIRED]
+  witness_terminal: [VERIFIED, COMPLETED, ABORTED]
+  receipt_states: [PREPARED, APPLIED, VERIFIED, EFFECT_UNKNOWN, COMPLETED, ABORTED]
+
+guard:
+  structured_tools: [Write, Edit, MultiEdit, NotebookEdit, apply_patch]
+  shell_policy: deny_by_default
+  exact_patch_policy: Every apply_patch payload requires a lowercase metadata.patch_sha256 binding; every header must be an exact current-U path and every target must match its preimage tuple before mutation.
+  effect_policy: Git stage, commit, push, and ref mutation require a one-use authorization bound to the exact command SHA, repository identity, and cwd after the matching human gate. Authorization and consumption update only required-witness.json by CAS; consumed effects remain EFFECT_UNKNOWN pending human reconciliation.
+
+bootstrap_activation:
+  dormant_value: fresh_bootstrap_pass
+  binding: The dormant manifest and receipt both bind the approved BOOTSTRAP.patch and BOOTSTRAP-MANIFEST.tsv SHA-256 values, plan SHA, both baselines, repo identity, and current postimage tuple set.
+  producer: controlled-change.mjs fresh-bootstrap-receipt reruns exact M6-A01/M6-A02 commands, verifies artifacts and postimages before and after, and atomically writes the deterministic scratch receipt.
+  activation_check: Re-read all bound artifacts and tuples, rerun exact gates, and require current output hashes to equal the receipt before writing any required witness.
+
+threat_boundary:
+  enforced:
+    - Fresh Claude and Codex registered PreToolUse calls in the current checkout.
+    - Exact path and preimage checks for trusted-main exact patch application.
+    - Default denial of implicit Git and external effects.
+  detected_only:
+    - Terminal or IDE writes, old linked worktrees, and other same-user processes are detected by baseline and CAS drift checks.
+  excluded:
+    - A malicious trusted main process.
+    - Compromised hooks, CLI binaries, credentials, or arbitrary same-user processes.
+    - Syntax-byte corruption of the trusted Codex adapter before Node can execute its witness-aware top-level catch; closing it requires a newly trusted command and is outside Gate A-bootstrap.
+
+file_end: controlled-change.yaml

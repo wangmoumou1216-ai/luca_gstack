@@ -1,0 +1,6 @@
+interface:
+  display_name: "Grilling"
+  short_description: "Pressure-test one human decision at a time"
+  default_prompt: "Use $grilling to pressure-test this decision tree one question at a time."
+policy:
+  allow_implicit_invocation: true

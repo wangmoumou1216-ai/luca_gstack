@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
-import { mkdirSync, mkdtempSync, readFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import assert from 'assert/strict';
@@ -1153,6 +1153,514 @@ for (const testCase of cases) {
     failures.push({ name: testCase.name, error: e.message?.split('\n')[0] });
     failCount++;
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// A-ALIAS（E1 RESOLVE）—— hook 只记录候选、永不授权。
+// 自带 fixture 根：这些用例必须真的读 <PROJECTS_ROOT>/<canonical>/.luca/project.json，
+// 所以不能走 ROUTE_GUARD_PROJECTS 那条 env 列表捷径（那会绕开目录读取，让断言恒真）。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const aliasRoot = mkdtempSync(join(tmpdir(), 'route-guard-alias-'));
+  const manifest = (name, aliases) => {
+    mkdirSync(join(aliasRoot, name, '.luca'), { recursive: true });
+    writeFileSync(join(aliasRoot, name, '.luca', 'project.json'),
+      `${JSON.stringify({ schema_version: 1, canonical_project: name, aliases })}\n`);
+  };
+  manifest('muse', ['luca app']);
+  manifest('crm', ['商机管理']);
+  manifest('demo', ['项目', 'crm']);          // 保留词 + 别名等于某 canonical ID：两条都必须被拒
+  // 差分对照根：**同样的项目目录、零 manifest**。用于证明别名解析对授权面净影响为零。
+  const barrenRoot = mkdtempSync(join(tmpdir(), 'route-guard-barren-'));
+  for (const name of ['muse', 'crm', 'demo']) mkdirSync(join(barrenRoot, name), { recursive: true });
+  const aliasEnv = { LUCA_PROJECTS_ROOT: aliasRoot, ROUTE_GUARD_PROJECTS: '', ROUTE_GUARD_CURRENT_PROJECT: 'muse' };
+  const ar = (prompt, extra = {}) => route(prompt, { ...aliasEnv, ...extra });
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+  const candidatesFor = (decision, canonical) =>
+    (decision.aliasResolution?.candidates || []).filter(c => c.canonical === canonical);
+  // RESOLVE 永不授权。
+  // ⚠ 首版查的是 `decision.command === undefined`——而 `command` 是 route-guard **从不产出**的键
+  //   （`/usr/bin/grep -n "command:" route-guard.mjs` 零命中），所以那条断言恒真：深审把
+  //   `aliasResolution` 直接接成 PROJECT_SWITCH/switch_existing_project 后，25 条 A-ALIAS 全绿。
+  //   正解不是补字段名，而是**差分**：同一输入，有 manifest 与无 manifest 两次运行的
+  //   全部授权字段必须逐字节相同——别名解析对授权面的净影响必须为零。
+  //   这种写法无法靠「点一个不存在的字段」蒙混过关。
+  const AUTHORITY_FIELDS = ['decision', 'projectAction', 'operation', 'project', 'tx',
+    'expectedEpoch', 'projectMutation', 'command', 'capability'];
+  const authoritySlice = decision => JSON.stringify(AUTHORITY_FIELDS.map(k => decision?.[k] ?? null));
+  const assertNoAuthority = (prompt, extra = {}) => {
+    const withAlias = route(prompt, { ...aliasEnv, ...extra });
+    const withoutAlias = route(prompt, { ...aliasEnv, LUCA_PROJECTS_ROOT: barrenRoot, ...extra });
+    assert.equal(authoritySlice(withAlias), authoritySlice(withoutAlias),
+      `alias resolution changed the authority surface: ${authoritySlice(withAlias)} vs ${authoritySlice(withoutAlias)}`);
+    assert.doesNotMatch(JSON.stringify(withAlias.aliasResolution || {}), /project\.sh|capability|operation/,
+      'aliasResolution must carry no authority');
+  };
+
+  // §3.3 冻结 fixture：每条恰好一条 muse 候选。否定式**照样产候选**——授权轴上不做否定判定，
+  // 在这里重新引入任何机械否定都会让这一组转红（变异体 3）。
+  const frozen = [
+    ['进入luca app项目', true], ['进入「luca app」项目', true],
+    ['进入 luca app 项目页面看看', true], ['切到 luca app 项目功能', true],
+    ['打开 luca app', false], ['继续 luca app 的登录流程', false],
+    ['不进入 luca app 项目', true], ['别切到 luca app 项目', true],
+    ['不想进入 luca app 项目', true], ['更别说进入 luca app 项目', true],
+    ['免得又要进入 luca app 项目', true], ['难道现在要进入 luca app 项目', true],
+    ['无论如何都要进入 luca app 项目', true], ['不妨进入 luca app 项目', true],
+    ['进不进入 luca app 项目', true],
+  ];
+  for (const [prompt, marker] of frozen) {
+    check(`A-ALIAS frozen fixture ${JSON.stringify(prompt)}`, () => {
+      const decision = ar(prompt);
+      const hits = candidatesFor(decision, 'muse');
+      assert.equal(hits.length, 1, `expected exactly 1 muse candidate, got ${hits.length}`);
+      // marker 只记录、不 gate：`打开 luca app` 无 marker 却**必须**仍产候选（变异体 2）
+      assert.equal(hits[0].marker_present, marker, 'marker_present must be recorded as observed');
+      assert.equal(prompt.slice(hits[0].span_start, hits[0].span_end).toLowerCase().replace(/\s+/g, ' '), 'luca app');
+      assertNoAuthority(prompt);
+    });
+  }
+
+  // 深审 BLOCKER-1：`aliasResolution` 只挂在 `decision` 上，而 `decision` **只有 dry-run 才写 stdout**；
+  // 真实路径写的是 `hints`，`decisionToHints` 从不提它。实测改前改后真实输出逐字节相同 ——
+  // 修复完全没接线。这条断言钉的是**生产面**，dry-run 断言全绿也救不了。
+  check('A-ALIAS 候选必须出现在真实 hint 面（非 dry-run），否则等于没接线', () => {
+    const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+      cwd: process.cwd(), input: JSON.stringify({ prompt: '进入 luca app 项目' }), encoding: 'utf8',
+      env: { ...baseEnv, ...aliasEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_CURRENT_PROJECT: '' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /🔎 别名候选/, '真实 hint 面必须出现别名候选');
+    assert.match(result.stdout, /muse/, '候选必须点名 canonical 目标');
+    assert.match(result.stdout, /非授权/, '措辞必须表明这是证据不是授权');
+    // 阳性对照：无 manifest 时不得出现该行（证明这行来自解析而非硬编码）
+    const barren = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+      cwd: process.cwd(), input: JSON.stringify({ prompt: '进入 luca app 项目' }), encoding: 'utf8',
+      env: { ...baseEnv, ...aliasEnv, LUCA_PROJECTS_ROOT: barrenRoot, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_CURRENT_PROJECT: '' },
+    });
+    assert.doesNotMatch(barren.stdout, /🔎 别名候选/, '无 manifest 时不得出现候选行');
+  });
+
+  check('A-ALIAS 两个不同 canonical 目标全部记录、都不选', () => {
+    const decision = ar('从 luca app 切换到 crm 项目');
+    const names = (decision.aliasResolution?.candidates || []).map(c => c.canonical);
+    assert.equal(new Set(names).size, 2, `expected both targets recorded, got ${names.join(',')}`);
+    assert.equal(decision.aliasResolution.candidates.some(c => c.chosen || c.selected), false, 'RESOLVE must not choose');
+  });
+
+  check('A-ALIAS alias_not_found：零候选时该对象缺席且命令为空', () => {
+    const decision = ar('进入 luca ap 项目');
+    assert.equal(decision.aliasResolution, undefined, 'zero candidates must omit the object entirely');
+    assert.equal(decision.command === undefined || decision.command === '', true);
+  });
+
+  check('A-ALIAS 第 9 条触发 cap 拒绝（不截断、不择一）', () => {
+    const decision = ar(Array.from({ length: 9 }, (_, i) => `luca app ${i}`).join('、'));
+    assert.equal(decision.aliasResolution?.status, 'CAP_EXCEEDED');
+    assert.equal(decision.aliasResolution.candidates.length, 0);
+  });
+
+  check('A-ALIAS 保留词别名被拒，而其 canonical 名始终可用', () => {
+    const reserved = ar('这个项目怎么样');
+    assert.equal(candidatesFor(reserved, 'demo').length, 0, '「项目」是保留词，不得成为别名');
+    const canonical = ar('看看 demo 的登录流程');
+    assert.equal(candidatesFor(canonical, 'demo').length, 1, 'canonical 名必须始终可用');
+  });
+
+  check('A-ALIAS 别名等于某 canonical ID 被拒（不得改判归属）', () => {
+    const decision = ar('打开 crm');
+    const hits = decision.aliasResolution?.candidates || [];
+    assert.equal(hits.every(c => c.canonical === 'crm'), true, '`crm` 必须解析为 crm 自己，不得被 demo 的别名劫持');
+  });
+
+  check('A-ALIAS .luca 是符号链接时该项目只剩 canonical 名可用', () => {
+    const linkRoot = mkdtempSync(join(tmpdir(), 'route-guard-alias-link-'));
+    mkdirSync(join(linkRoot, 'real', '.luca'), { recursive: true });
+    writeFileSync(join(linkRoot, 'real', '.luca', 'project.json'),
+      `${JSON.stringify({ schema_version: 1, canonical_project: 'linked', aliases: ['别名甲'] })}\n`);
+    mkdirSync(join(linkRoot, 'linked'), { recursive: true });
+    symlinkSync(join(linkRoot, 'real', '.luca'), join(linkRoot, 'linked', '.luca'));
+    const env = { LUCA_PROJECTS_ROOT: linkRoot, ROUTE_GUARD_PROJECTS: '', ROUTE_GUARD_CURRENT_PROJECT: 'linked' };
+    assert.equal((route('打开 别名甲', env).aliasResolution?.candidates || []).length, 0, '符号链接 .luca 不得被读取');
+    assert.equal((route('打开 linked', env).aliasResolution?.candidates || []).length, 1, 'canonical 名仍必须可用');
+  });
+
+  // 携带模式（§3.2）：信号必须穿过 buildDecision 的**全部**早返。
+  // 当前基线是四分支 / 五条 return——`explicitEngineeringDeliverySelection → FRAMEWORK_FLOW`
+  // 是 upstream 6aaa1c6 新增、计划成稿时并不存在的那一条（变异体 12 只列了三个）。
+  const carry = [
+    ['FRAMEWORK_FLOW 早返', '按工程交付流程执行：重构 luca app 的设置页面信息架构，功能堆砌很难找', 'FRAMEWORK_FLOW'],
+    ['裸 return complexity（PLAN_MODE）', '重构 luca app 的设置页面的信息架构，新增权限、通知、导出三个分组，层级太深很难找', 'PLAN_MODE'],
+    ['mixed_ambiguous 早返', '改一下 route-guard 里 luca app 项目的东西', 'NEEDS_CONTEXT'],
+    ['gate 短路早返', '切到 crm 项目，顺便看看 luca app 的登录流程', 'PROJECT_SWITCH'],
+  ];
+  for (const [label, prompt, expected] of carry) {
+    check(`A-ALIAS 携带模式穿过${label}`, () => {
+      const decision = ar(prompt);
+      assert.equal(decision.decision, expected, `expected ${expected}, got ${decision.decision}`);
+      assert.equal(candidatesFor(decision, 'muse').length >= 1, true, '早返路径上信号被静默丢弃');
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// A-SCOPE-NULL（§6.1 REQ-SCOPE-NULL-FIRST）
+// 缺陷（改前基线为红，实测可触发）：`new project: 不涉及项目的route-guard` 里的否定词**命中**
+// → 下游信号被剥掉 → mixed_ambiguous 短路消失 → projectGate 一路走到 explicitNewProjectName
+// → `project.sh new`：真的建一个叫「不涉及项目的route-guard」的项目、解绑当前、三条软链重指。
+//
+// 承重不变量是「作用域否定的结果到不了会改绑定的分支」。计划 A-SCOPE-NULL 另写的
+// 「否定式与肯定式必须返回**相同**决策」是过度指定：`不涉及项目` 本就该被判成框架活、不 gate，
+// 那正是 NEGATED_DOWNSTREAM_SCOPE_RULES 存在的目的；要求两者同决策等于要求删掉该能力。
+// 故这里钉后半句（安全属性），并用三条反向对照证明不是把 gate 一刀切关掉。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const BINDING_ACTIONS = new Set(['create_new_project', 'switch_existing_project']);
+  const scopeEnv = { ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示,muse' };
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+  const pairs = [
+    ['涉及项目', '不涉及项目'],
+    ['属于项目', '不属于项目'],
+    ['项目相关', '非项目相关'],
+  ];
+  for (const [affirmative, negated] of pairs) {
+    check(`A-SCOPE-NULL 作用域否定「${negated}」到不了会改绑定的分支`, () => {
+      for (const form of [affirmative, negated]) {
+        const decision = route(`new project: ${form}的route-guard`, scopeEnv);
+        assert.equal(BINDING_ACTIONS.has(decision.projectAction), false,
+          `「${form}」returned binding-changing ${decision.projectAction} (project=${decision.project})`);
+      }
+    });
+  }
+
+  // 深审 MAJOR-5：首版臂序以 `!named` 为条件，**否定短语里嵌一个真实项目名就绕开**——
+  // `named` 为真 → kind 变 named_downstream → 空臂跳过 → explicitNewProjectName 开火，
+  // 实测建出 project="不涉及项目的muse路由"。上面三组最小对里没有一条把项目名放进否定短语，
+  // 因此对这个洞**结构性失明**。这两条补上，并各带一个只差项目名的阳性对照。
+  for (const [label, prompt] of [
+    ['new project 前缀', 'new project: 不涉及项目的muse路由'],
+    ['显式新建前缀', '新建项目 不涉及项目的muse路由'],
+  ]) {
+    check(`A-SCOPE-NULL 否定短语内嵌真实项目名仍不得改绑定（${label}）`, () => {
+      const decision = route(prompt, scopeEnv);
+      assert.equal(BINDING_ACTIONS.has(decision.projectAction), false,
+        `returned binding-changing ${decision.projectAction} (project=${decision.project})`);
+      // 阳性对照：把 muse 换成非项目名 zzz，行为必须一致——证明差别不是靠「恰好没命中」蒙的
+      const control = route(prompt.replace('muse', 'zzz'), scopeEnv);
+      assert.equal(BINDING_ACTIONS.has(control.projectAction), false);
+    });
+  }
+
+  // 反向对照 1：具名下游项目**必须继续 gate**（SC-20260523-002）。
+  // 这条专门钉死「修法不是把空臂提到 named 之前一刀切」——那样会让具名项目不再 gate。
+  // fixture 自带 ROUTE_GUARD_PROJECTS 且必须含 muse：默认列表里没有 muse 时，
+  // 本用例与正例同样返回 NONE，零分辨力（会审 R-5 实测）。
+  check('A-SCOPE-NULL 反向对照：具名下游项目仍然 gate', () => {
+    const decision = route('route-guard 在 muse 里怎么走', scopeEnv);
+    assert.equal(decision.projectAction, 'switch_existing_project', `got ${decision.projectAction}`);
+    assert.equal(decision.project, 'muse');
+  });
+
+  // 反向对照 2：正常的显式新建仍然工作（没有把 explicitNewProjectName 整条废掉）。
+  check('A-SCOPE-NULL 反向对照：正常新建项目仍然工作', () => {
+    const decision = route('新建项目 beta', scopeEnv);
+    assert.equal(decision.projectAction, 'create_new_project');
+    assert.equal(decision.project, 'beta');
+  });
+
+  // 反向对照 3（对照组，防过度修复）：无框架信号的显式「新建项目 X」，
+  // 肯定式与否定式必须**同样**建项目——那是用户显式声明项目名，不是作用域否定缺陷。
+  check('A-SCOPE-NULL 对照组：显式新建时两种极性行为一致（未被过度修复）', () => {
+    const yes = route('新建项目 涉及项目的东西', scopeEnv);
+    const no = route('新建项目 不涉及项目的东西', scopeEnv);
+    assert.equal(yes.projectAction, 'create_new_project');
+    assert.equal(no.projectAction, 'create_new_project');
+    assert.equal(yes.project, '涉及项目的东西');
+    assert.equal(no.project, '不涉及项目的东西');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// A-SIGNAL（E2 §4.1）—— 三腿在**整条 prompt 内**命中即可产信号。
+// 跨从句是**正例不是反例**：E2 原始复现串的结构腿落在第二个从句，「同从句」约束会把
+// 该 bug 自己的复现串判为阴性（2026-08-30 会审推翻原设计的实测依据）。
+// 信号不计分、不派 skill/flow、不改 Plan 五条件；此处同样不做否定判定。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+  const legsOf = d => (d.semanticRouteAxis?.evidence || []).map(e => e.leg).sort().join(',');
+
+  // E2 的直接回归断言。结构腿必须落在逗号之后——这条把「跨从句是正例」钉死，
+  // 恢复「同从句」约束（变异体 11）会让它转红。
+  check('A-SIGNAL E2 原始复现串产信号且结构腿跨从句', () => {
+    const prompt = '帮我优化下设置页面，功能堆砌太严重了很难找';
+    const decision = route(prompt);
+    assert.ok(decision.semanticRouteAxis, 'E2 复现串必须产信号');
+    assert.equal(decision.semanticRouteAxis.axis, 'interface_structure_change');
+    assert.equal(legsOf(decision), 'change,structure,surface');
+    const comma = prompt.indexOf('，');
+    const structure = decision.semanticRouteAxis.evidence.find(e => e.leg === 'structure');
+    assert.ok(structure.span_start > comma, `结构腿必须在第二从句（span=${structure.span_start} comma=${comma}）`);
+  });
+
+  check('A-SIGNAL negation_context 原样记录整条 prompt 字节', () => {
+    const prompt = '帮我优化下设置页面，别动结构，其他随便你改';
+    const decision = route(prompt);
+    assert.equal(decision.semanticRouteAxis.negation_context, prompt, 'negation_context 必须逐字节等于原 prompt');
+  });
+
+  // §4.3 冻结 fixture（已按计划指示逐条重测后收敛）：三腿齐全者产信号，
+  // 且**都不产生义务**——hook 不区分它们，否定判定属于 LLM 层。
+  for (const prompt of [
+    '调整设置里的颜色但结构不变',
+    '别调整设置结构',
+    '我们优化了设置页面，结构没变',
+    '帮我优化下设置页面，别动结构，其他随便你改',
+    '颜色不改，重组设置分组',
+  ]) {
+    check(`A-SIGNAL 冻结 fixture 产信号且不产生义务 ${JSON.stringify(prompt)}`, () => {
+      const decision = route(prompt);
+      assert.ok(decision.semanticRouteAxis, '三腿齐全必须产信号');
+      assert.equal(decision.semanticRouteAxis.negation_context, prompt);
+      assert.equal(decision.obligation, undefined, '光有信号不得产生义务（SIGNAL_UNCONFIRMED 确认门）');
+    });
+  }
+
+  // 计划 §4.3 明写：删掉「同从句」后逐条重测，**仍缺腿的移出本 fixture 集**，
+  // 不得为迁就它们再放宽腿规则——那等于把 §3.3 删掉的机制从另一个门引回来。
+  // 这两条实测缺**界面腿**，故作为缺腿反例钉住，防止后人「顺手补全」腿规则。
+  for (const prompt of ['结构别改', '没改结构，只动了配色']) {
+    check(`A-SIGNAL 缺界面腿不得产信号（移出 fixture 集的两条）${JSON.stringify(prompt)}`, () => {
+      assert.equal(route(prompt).semanticRouteAxis, undefined, '缺腿必须不产信号');
+    });
+  }
+
+  for (const prompt of ['优化一下设置页面', '这个页面的信息架构很乱', '重构代码', '把颜色改成蓝色']) {
+    check(`A-SIGNAL 缺腿反例不产信号 ${JSON.stringify(prompt)}`, () => {
+      assert.equal(route(prompt).semanticRouteAxis, undefined);
+    });
+  }
+
+  check('A-SIGNAL 一段证据不得兼任两腿', () => {
+    // ⚠ 首版只有 `重构结构` 这一条——它**根本没有界面腿命中**，pickDisjointLegs 在
+    //   `perLeg.some(spans => !spans.length)` 就返回 null，永远走不到区间相交判断。
+    //   深审把 `overlaps` 整个改成 `() => false`（相交判定彻底删除）后本用例仍绿：典型影子守卫。
+    //   下面这条才是真守卫——`regroup` ⊂ `grouping`，字节 2-7 会被变更腿与结构腿重复计入。
+    assert.equal(route('重构结构').semanticRouteAxis, undefined);
+    assert.equal(route('regrouping the settings page').semanticRouteAxis, undefined,
+      'regroup ⊂ grouping：同一段字节不得同时充当变更腿与结构腿');
+  });
+
+  // 深审 BLOCKER-6：`semanticRouteAxis` 与别名候选同病——只活在 dry-run JSON 里。
+  // E2 的原始故障恰恰发生在**第一轮**，而义务确认门要两轮才注入 📌，
+  // 所以第一轮必须由信号证据行本身可见，否则「改后」与「改前」输出逐字节相同。
+  check('A-SIGNAL 信号必须出现在真实 hint 面（故障发生的那一轮就可见）', () => {
+    const run = prompt => spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+      cwd: process.cwd(), input: JSON.stringify({ prompt }), encoding: 'utf8',
+      env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0' },
+    });
+    const hit = run('帮我优化下设置页面，功能堆砌太严重了很难找');
+    assert.equal(hit.status, 0, hit.stderr);
+    assert.match(hit.stdout, /🧩 界面结构变更信号/, '第一轮就必须可见');
+    assert.match(hit.stdout, /不计分、不派 skill/, '措辞必须表明这是证据不是判定');
+    const miss = run('把颜色改成蓝色');   // 阳性对照：缺腿时不得出现
+    assert.doesNotMatch(miss.stdout, /🧩 界面结构变更信号/);
+  });
+
+  check('A-SIGNAL 不计分、不派 skill/flow', () => {
+    const decision = route('帮我优化下设置页面，功能堆砌太严重了很难找');
+    assert.equal(decision.complexityScore || 0, 0, `信号不得计分，got ${decision.complexityScore}`);
+    assert.equal(decision.recommendedSkills, undefined, '信号不得派 skill');
+    assert.equal(decision.flow, undefined, '信号不得派 flow');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// A-OBLIG-VISIBLE / A-OBLIG-LIFECYCLE（E2 §4.2 / §4.2a）
+// 义务是**任务载体不是拦截器**：任何状态都不拦 Stop、不拒 scope。唯一动作是每轮注入一行。
+// 这些用例必须跑**真实 hint 面**（dry-run 走 JSON 分支并 process.exit(0)，注入根本不经过）。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const INJECT = '📌 当前有未完成任务';
+  const obligationFile = sid => join(process.cwd(), '.claude', `.session-obligation-${sid}`);
+  const realRoute = (prompt, sid, extraEnv = {}) => {
+    const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+      cwd: process.cwd(),
+      input: JSON.stringify({ prompt, session_id: sid }),
+      encoding: 'utf8',
+      env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示,muse', ...extraEnv },
+    });
+    assert.equal(result.status, 0, `route-guard exited ${result.status}: ${result.stderr}`);
+    return result.stdout;
+  };
+  const injected = out => out.split('\n').filter(line => line.includes(INJECT)).length;
+  const stateOf = sid => {
+    try { return JSON.parse(readFileSync(obligationFile(sid), 'utf8')).state; } catch { return null; }
+  };
+  const cleanup = sid => { try { rmSync(obligationFile(sid), { force: true }); } catch { } };
+  const SIGNAL_A = '帮我优化下设置页面，功能堆砌太严重了很难找';
+  const SIGNAL_B = '再优化一下设置页面的信息架构，层级太深';
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+
+  check('A-OBLIG-VISIBLE 光有信号只落 SIGNAL_UNCONFIRMED，不注入（确认门）', () => {
+    const sid = 'oblig-gate-1'; cleanup(sid);
+    try {
+      assert.equal(injected(realRoute(SIGNAL_A, sid)), 0, 'SIGNAL_UNCONFIRMED 不得注入');
+      assert.equal(stateOf(sid), 'SIGNAL_UNCONFIRMED');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 14 专门要求：用例必须是**同一 sid 连续 ≥3 轮**——单轮用例判不出「每轮注入」，会恒绿。
+  check('A-OBLIG-VISIBLE PENDING 起同一 sid 连续 3 轮每轮都注入', () => {
+    const sid = 'oblig-every-turn'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid);
+      assert.equal(injected(realRoute(SIGNAL_B, sid)), 1, '第二次信号应升 PENDING 并注入');
+      assert.equal(stateOf(sid), 'PENDING');
+      for (const turn of [1, 2, 3]) {
+        assert.equal(injected(realRoute('嗯', sid)), 1, `第 ${turn} 个后续回合必须仍然注入`);
+      }
+    } finally { cleanup(sid); }
+  });
+
+  // R-6 / MINOR-4：route-guard 早已在同一 hints 通道发 `⚠️ 当前有未完成节点`，与注入串一字之差。
+  // 断言必须锚定**含 📌 的完整串**，否则按 `当前有未完成` 子串匹配对两者都绿。
+  check('A-OBLIG-VISIBLE 注入串锚定含 📌 的完整串，不与既有「未完成节点」提示混淆', () => {
+    const sid = 'oblig-string'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid);
+      const out = realRoute(SIGNAL_B, sid);
+      const line = out.split('\n').find(l => l.includes(INJECT));
+      assert.ok(line, '必须出现注入行');
+      assert.match(line, /^\[route-guard\] 📌 当前有未完成任务：.+（完整字节见 .+\.claude\/\.session-obligation-.+）$/);
+      assert.doesNotMatch(line, /当前有未完成节点/, '不得与既有节点提示同串');
+    } finally { cleanup(sid); }
+  });
+
+  check('A-OBLIG-LIFECYCLE 20 轮封顶后自动停止注入（变异体 15）', () => {
+    const sid = 'oblig-cap'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      for (let i = 0; i < 19; i++) realRoute('嗯', sid);
+      assert.equal(injected(realRoute('嗯', sid)), 1, '第 20 轮仍应注入');
+      assert.equal(injected(realRoute('嗯', sid)), 0, '第 21 轮起必须停止注入');
+      assert.equal(stateOf(sid), null, '封顶后义务应被终结');
+    } finally { cleanup(sid); }
+  });
+
+  // 深审 BLOCKER-3：DEFERRED→PENDING 的恢复分支原本 return 在计数分支之前且不计数，
+  // 于是**任何 PROJECT_SWITCH 回合都把注入预算整份退还**——交替 40 轮实测 injected_turns 恒为 0、
+  // 注入 40 次不停。上面那条封顶用例只用 '嗯'，对这条路径结构性失明。
+  // 无有效绑定时 decision 每轮都会被重写成 PROJECT_SWITCH，这条路径一点都不 exotic。
+  check('A-OBLIG-LIFECYCLE 切换回合不得退还注入预算（封顶对交替路径同样成立）', () => {
+    const sid = 'oblig-cap-switch'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      let total = 0;
+      for (let i = 0; i < 30; i++) {
+        total += injected(realRoute('切到 muse 项目', sid));
+        total += injected(realRoute('嗯', sid));
+      }
+      assert.ok(total <= 20, `交替 30 轮后注入 ${total} 次，超过 20 轮封顶——预算被退还了`);
+      assert.equal(stateOf(sid), null, '封顶后义务必须被终结，不得永生');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 13：注入若放在 buildDecision 早返之后（或塞进 project-state 块内），
+  // `PROJECT_SWITCH` 回合会静默不注入——而那正是义务必须存活转 DEFERRED 的一轮。
+  check('A-OBLIG-LIFECYCLE 项目切换回合义务存活转 DEFERRED 且保留完整原始字节', () => {
+    const sid = 'oblig-defer'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      realRoute('切到 muse 项目', sid);
+      assert.equal(stateOf(sid), 'DEFERRED_BY_PROJECT_CHANGE');
+      const doc = JSON.parse(readFileSync(obligationFile(sid), 'utf8'));
+      assert.equal(doc.exact_task_text, SIGNAL_B, '必须保留完整原始任务字节，不得截断');
+      assert.equal(injected(realRoute('嗯', sid)), 1, '事务后必须恢复注入');
+    } finally { cleanup(sid); }
+  });
+
+  check('A-OBLIG-LIFECYCLE 取消语义终结义务并停止注入', () => {
+    const sid = 'oblig-cancel'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      assert.equal(injected(realRoute('不用了', sid)), 0);
+      assert.equal(stateOf(sid), null);
+      assert.equal(injected(realRoute('嗯', sid)), 0, '终结后不得再注入');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 17：去掉义务读取的 try/catch，损坏的状态文件会让整轮路由失败或吞掉路由提示。
+  check('A-OBLIG-VISIBLE 损坏的状态文件不得让 route-guard 失败或吞掉路由提示（变异体 17）', () => {
+    const sid = 'oblig-corrupt'; cleanup(sid);
+    try {
+      writeFileSync(obligationFile(sid), 'not json at all {{{');
+      const out = realRoute(SIGNAL_A, sid);
+      assert.ok(out.includes('[route-guard]'), '本轮路由提示必须照常产出');
+      assert.equal(injected(out), 0, '损坏状态只跳过注入');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 18：义务状态文件含完整 prompt 原文，必须被 .gitignore 覆盖。
+  check('A-OBLIG-VISIBLE 义务状态文件被 .gitignore 覆盖（变异体 18）', () => {
+    const ignored = spawnSync('git', ['check-ignore', '-q', '.claude/.session-obligation-probe'], { cwd: process.cwd() });
+    assert.equal(ignored.status, 0, '义务状态文件必须被忽略，否则用户原话会被 git add -A 提交进仓库');
+    const control = spawnSync('git', ['check-ignore', '-q', '.claude/settings.json'], { cwd: process.cwd() });
+    assert.equal(control.status, 1, '阳性对照：settings.json 不得被这条规则误伤');
+  });
+
+  // 08-31 裁决的守卫：E2 **不拦截任何东西**。
+  check('A-OBLIG-LIFECYCLE 义务不污染 decision 通道（只走 hints）', () => {
+    const sid = 'oblig-channel'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      const decision = route(SIGNAL_A);
+      assert.equal(decision.obligation, undefined, 'decision 不得携带义务');
+      assert.equal(decision.injection, undefined);
+    } finally { cleanup(sid); }
+  });
+
+  check('A-OBLIG-LIFECYCLE Stop 路径行为不因义务改变（session-sync stdout 恒定）', () => {
+    const sid = 'oblig-stop'; cleanup(sid);
+    const runStop = () => spawnSync('node', ['.claude/hooks/session-sync.mjs'], {
+      cwd: process.cwd(), input: JSON.stringify({ session_id: sid }), encoding: 'utf8',
+      env: { ...baseEnv, SESSION_SYNC_BLOCK: '0' },
+    }).stdout;
+    try {
+      const before = runStop();
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      assert.equal(stateOf(sid), 'PENDING', '前置条件：义务确实处于 PENDING');
+      assert.equal(runStop(), before, 'Stop 侧 stdout 不得因义务存在而改变');
+    } finally { cleanup(sid); }
+  });
 }
 
 console.log(`\n=== test-route-guard summary: PASS=${passCount} FAIL=${failCount} ===`);

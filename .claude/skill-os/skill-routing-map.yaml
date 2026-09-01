@@ -20,6 +20,13 @@ framework_flows:
     weight: 10
     triggers: [自我成长, 自我成长流程, 自我演进, 自进化, 框架演进, framework evolution, framework-evolution, framework-evolution-scout]
 
+  engineering_delivery:
+    invoke: "engineering-delivery"
+    weight: 10
+    # 只收用户明确选择该 preset 的完整短语；提及、询问、评审不是选择。
+    # route-guard 再以纯函数检查否定/疑问语境，因为 loader 只能表达字面触发。
+    triggers: [选择engineering-delivery preset, 启用engineering-delivery preset, 按engineering-delivery preset执行, 选择工程交付preset, 启用工程交付preset, 按工程交付preset执行]
+
 # ── luca_gstack project skills ───────────────────────────────────────────────
 project_skills:
 
@@ -121,6 +128,46 @@ project_skills:
     invoke: "/task-plan"
     weight: 7
     triggers: [任务编排, 任务计划, 开发计划, task plan, 拆任务, 任务拆解, 编排任务, 开发编排, 任务分解]
+
+  # Engineering-delivery 六项 canonical 的 semantic SSOT。direct 由同名 command/alias；
+  # semantic 只取下列触发；internal 由 Plan Agent / Orchestrator 按 canonical SKILL 合同 dispatch。
+  # internal 只继承父任务 authority，routing 命中本身不增加 path/Git/network/external effect。
+  grilling:
+    invoke: "/grilling"
+    weight: 8
+    # 决策压力测试必须含「逐个/一次一个/问到底」或明确 grill 语义；普通澄清与事实检索不命中。
+    triggers: [grilling, grill me, 逐个拷问, 一次只问一个决定, 一次一个问题盘问, 把这个决定问到底, 对这个方案逐项盘问, 逐个逼问尚未决定的关键取舍]
+
+  diagnosing-bugs:
+    invoke: "/diagnosing-bugs"
+    weight: 8
+    # 自然语言异常主路由；刻意不收「测试失败/写测试」等 TDD red 泛词。
+    triggers: [diagnosing-bugs, diagnose bug, 意外失败, 未知回归, 回归故障, 性能回归, 偶发故障, flaky bug, debug这个报错, 找出这个bug根因, 排查这个异常报错, 诊断这个具体bug, 排查这个性能回归]
+
+  resolving-merge-conflicts:
+    invoke: "/resolving-merge-conflicts"
+    weight: 8
+    # 只收真实 Git operation 形态；文件里有冲突标记、分支分歧、未来可能冲突均不命中。
+    triggers: [resolving-merge-conflicts, 当前merge冲突, 当前合并冲突, 当前rebase冲突, 当前cherry-pick冲突, 当前revert冲突, 解决当前Git冲突, 处理这个真实进行中的Git冲突]
+
+  to-spec:
+    invoke: "/to-spec"
+    weight: 8
+    # 已解决工程讨论的 synthesis；开放产品/UI 决策仍由其原 owner 处理。
+    triggers: [to-spec, conversation to spec, 把已确认的工程讨论整理成规格, 把刚才定下的工程约束整理成技术规格, 将已解决的工程讨论转成tech spec, 根据刚才讨论直接形成spec不要重做访谈]
+
+  wayfinder:
+    invoke: "/wayfinder"
+    weight: 8
+    # 完整 huge AND multi-session AND fog 由 route-guard 的窄 conjunction 检查表达；
+    # 此处只保留显式按名，避免绕过 complexity 将自动建议降成 SINGLE_SKILL。
+    triggers: [wayfinder]
+
+  implement:
+    invoke: "/implement"
+    weight: 8
+    # 只接已过 gate/已冻结计划；普通「实现一个功能」仍先走 Plan complexity。
+    triggers: [implement, 执行已批准U-ID, 开始实现已批准任务, 落地已冻结task-plan, 按已批准任务计划实现, 按这个批准的spec执行, 按这个批准的task-plan执行, 按这个批准的U-ID执行]
 
   code_hygiene:
     invoke: "/code-hygiene"
@@ -328,16 +375,11 @@ builtin_skills:
     skill: systematic-debugging
     hint: "→ 建议使用外部 skill: systematic-debugging（根因优先调试，改前先定位）"
     weight: 7
-    triggers: [调试, 报错, 根因, debug, 排查, 找bug, 复现, 测试失败, 崩溃, 异常报错]
+    # legacy 显式名兼容；自然语言异常主路由已迁到项目 canonical /diagnosing-bugs。
+    triggers: [systematic-debugging, systematic debugging]
 
   tdd:
     skill: tdd
     hint: "→ 建议使用外部 skill: tdd（测试先行，红绿重构）"
     weight: 7
     triggers: [tdd, 测试驱动, 写测试, 测试先行, 红绿重构, 单元测试]
-
-  resolving_merge_conflicts:
-    skill: resolving-merge-conflicts
-    hint: "→ 建议使用外部 skill: resolving-merge-conflicts（按意图解决冲突：先溯源 commit/PR 原意）"
-    weight: 7
-    triggers: [merge冲突, 合并冲突, rebase冲突, 解决冲突, 冲突了]

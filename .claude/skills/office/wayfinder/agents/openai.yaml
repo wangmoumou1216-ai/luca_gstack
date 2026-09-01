@@ -1,0 +1,6 @@
+interface:
+  display_name: "Wayfinder"
+  short_description: "Map huge multi-session work while the path is foggy"
+  default_prompt: "Use $wayfinder to determine whether this huge, multi-session, foggy effort needs a resumable map."
+policy:
+  allow_implicit_invocation: true
