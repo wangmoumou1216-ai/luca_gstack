@@ -33,7 +33,9 @@ project_skills:
   auto:
     invoke: "/auto"
     weight: 10
-    triggers: [全流程, 自动做, auto, 一键, 帮我全部, 端到端, 完整设计, 全套方案, 全套功能设计, 完整功能设计, 全部搞定, 整套做]
+    # 2026-09-02 职责审计：撤裸拉丁 auto。它是全系统最高权重(10)，误命中代价最大；
+    # 裸首 token "auto" 仍由 slashless command alias 直呼（实测保留），故召回零损失。
+    triggers: [全流程, 自动做, 一键, 帮我全部, 端到端, 完整设计, 全套方案, 全套功能设计, 完整功能设计, 全部搞定, 整套做]
 
   handoff:
     invoke: "/handoff"
@@ -55,7 +57,9 @@ project_skills:
 
   superpowers-brainstorming:
     invoke: "superpowers:brainstorming"
-    weight: 6
+    # 2026-09-02 职责审计 6→7：`轻量prd`⊃`prd`、`简单需求梳理`⊃`需求梳理`(均 brainstorm w6)，
+    # 等权 ⇒ 恒 MULTI，CLAUDE.md「快速梳理/轻量PRD → superpowers」这条映射在路由层从未解析成功。
+    weight: 7
     triggers: [快速梳理, 轻量PRD, quick brainstorm, 简单需求梳理, superpowers brainstorm]
 
   deepresearch:
@@ -66,7 +70,9 @@ project_skills:
     skill: quick-research
     invoke: "/quick-research"
     hint: "→ /quick-research（轻量研究：单 agent 后台查 primary source，落盘单文件；发散题升 /deepresearch）"
-    weight: 6
+    # 2026-09-02 职责审计 6→7：等权时 shadow 规则失效（`调研` ⊂ `快速调研`），恒落 MULTI；
+    # 升 7 后长词遮蔽短词，实测转 SINGLE。同类记忆 SC-20260811-001。
+    weight: 7
     # 刻意窄词——"查一下"太宽会劫持日常问答；宽表述靠语义兜底
     triggers: [快速调研, 轻量研究, 查文档确认, 查一下资料, 查下官方文档, 帮我查证]
 
@@ -102,7 +108,10 @@ project_skills:
   figma_layer:
     invoke: "/figma-layer"
     weight: 5
-    triggers: [Figma, figma, 保险层, 推到figma, figma保险]
+    # 2026-09-02 职责审计：撤裸词 Figma/figma，补 CJK 复合词保召回。依据 SC-20260610-001——
+    # 本 skill 只适用「已有 HTML 原型一比一还原到 Figma」，裸词把一切 Figma 话题
+    # （"figma MCP 怎么配"/独立设计写入）都判成 SINGLE，属结构性误命中。
+    triggers: [保险层, figma保险层, 推到figma, 推到Figma, 同步到figma, 同步到Figma, 还原到figma, 还原到Figma, figma保险]
 
   # figma_demo / compare / magicpath 2026-07-03 移出一级路由（全量搭建 review P2-6，
   # framework-audit/2026-07-03-full-review.md）：近30天 episodic skills_used 零调用，
@@ -252,7 +261,11 @@ builtin_skills:
   agent_browser:
     skill: agent-browser
     hint: "→ 建议使用内置 skill: agent-browser（浏览器截图/交互）"
-    weight: 7
+    # 2026-09-02 职责审计 7→9：本条的 `访问网页`/`打开网页` 内含 web_access(w9) 的 `网页`，
+    # 而 shadow 规则只保护"短词属低权"方向 ⇒ 这两个词是死信，恒落 SINGLE web-access
+    # （CLAUDE.md:352「看看竞品/截图 → agent-browser」与 appendix「侧栏交付面」以其 SINGLE 命中为前提）。
+    # 升至同权后转 MULTI（安全歧义），符合本文件"never silently drop an equal-weight candidate"的既定意图。
+    weight: 9
     # 2026-07-30 侧栏交付面：app 内嵌 session（mcp__muse__* 可见）下，"打开网页"类词若语义为
     # 展示类打开（给 luca 看）→ 由 CLAUDE.md「侧栏交付面」改道 open_in_view 侧栏，SINGLE 命中
     # 不豁免该语义裁决；本词条继续承载自动化语义（页内交互/截图取证）。词表本体不动（route-guard

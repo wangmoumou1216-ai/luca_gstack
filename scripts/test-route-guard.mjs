@@ -436,14 +436,23 @@ const cases = [
     },
   },
   {
-    // KNOWN LIMITATION (deferred to ADR-0005): the English substring-in-word
-    // case is NOT fixed by this stopgap. normalize() strips spaces, so a \b
-    // check would also kill legitimate multi-word phrases like "deep research".
-    // This case documents that research-proof STILL misfires deepresearch.
-    name: 'KNOWN LIMITATION: research-proof still fires deepresearch (ADR-0005)',
+    // 2026-09-02 skill 职责审计：这条 ADR-0005 已知限制**已修复**，断言从"记录缺陷"
+    // 翻转为"守护修复"。做法是给纯 ASCII 触发词加词边界并改在**原始文本**（保留空格）上匹配，
+    // 多词短语用 \s* 兼容 'code review'/'codereview' —— 原注释所说"normalize 去空格导致 \b
+    // 不可靠"因此不再成立。实测同类误命中 10/10：autoload/auto-merge→/auto、
+    // password/keyword→docx。多词英文短语的召回由下一条用例守护。
+    name: 'ADR-0005 FIXED: research-proof no longer fires deepresearch (word boundary)',
     prompt: 'please research-proof this sentence',
     expect: decision => {
-      assert.equal(decision.skill, '/deepresearch');
+      assert.notEqual(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    // 修复的反向守护：加了词边界不能伤到合法的多词英文触发短语（空格写法与连写写法都要中）。
+    name: 'word-boundary fix keeps multi-word latin triggers (code review / codereview)',
+    prompt: 'code review 一下当前改动',
+    expect: decision => {
+      assert.equal(decision.skill, '/code-review');
     },
   },
   {

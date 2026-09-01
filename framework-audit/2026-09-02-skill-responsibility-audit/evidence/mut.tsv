@@ -1,0 +1,10 @@
+C-01	NOT-auto	帮我看下 autoload 配置对不对
+C-02	NOT-auto	这个 CI 的 auto-merge 开关在哪
+C-03	NOT-figma	Figma 上那个设计稿的主色是什么
+C-04	NOT-figma	figma MCP 的 token 怎么配
+C-05	NOT-dr	research 这个词中文怎么翻更好
+C-13	NOT-dr	帮我调研下今天午饭吃什么
+B-01	qr	快速调研一下就行
+A-qr-1	qr	快速调研一下 Anthropic 的 prompt caching 定价
+A-fig-1	figma	把这个原型推到 figma
+A-dr-2	dr	全面调研下这个技术方向的先例

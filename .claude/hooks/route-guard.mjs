@@ -716,8 +716,28 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
 
   // ADR-0002 stopgap: longest-match-wins disambiguation (CJK-safe; no \b).
   // Collect, per matched route, the exact normalized triggers that matched.
+  // 纯拉丁触发词按词边界匹配（2026-09-02 skill 职责审计）：normalize() 去空格后的裸子串匹配
+  // 会把 'auto'⊂autoload / 'auto'⊂auto-merge / 'word'⊂password,keyword 变成**高置信 SINGLE_SKILL**
+  // （实测 10/10；SINGLE 不受语义契约复核保护，无下游兜底）。CJK 无词边界概念、保持原逻辑；
+  // 只给 ASCII 触发词加边界，并在**原始文本**（保留空格）上匹配 —— 这正是源注释里
+  // "normalize() strips spaces so \b is unreliable" 的解法：多词短语用 \s* 兼容
+  // 'code review' / 'codereview' 两种写法，故不再需要依赖去空格文本。
+  const rawText = String(prompt || '').toLowerCase();
+  const LATIN_TRIGGER = /^[a-z0-9][a-z0-9\s._-]*$/i;
+  const latinHit = (trigger) => {
+    const body = trigger.trim().toLowerCase().split(/\s+/)
+      .map(seg => seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*');
+    return new RegExp(`(?<![a-z0-9-])${body}(?![a-z0-9-])`, 'i').test(rawText);
+  };
+  const triggerHit = (raw, t) => (LATIN_TRIGGER.test(raw.trim()) ? latinHit(raw) : text.includes(t));
   let matched = routes
-    .map(route => ({ route, matchedTriggers: route.triggers.map(normalize).filter(t => t && text.includes(t)) }))
+    .map(route => ({
+      route,
+      matchedTriggers: route.triggers
+        .map(raw => ({ raw, t: normalize(raw) }))
+        .filter(({ raw, t }) => t && triggerHit(raw, t))
+        .map(({ t }) => t),
+    }))
     .filter(entry => entry.matchedTriggers.length);
 
   // If a shorter matched trigger is a substring of a longer matched trigger

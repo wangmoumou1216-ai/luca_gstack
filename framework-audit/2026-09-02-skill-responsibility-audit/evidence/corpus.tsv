@@ -1,0 +1,137 @@
+# ── A 正向召回：每 skill 3 条真实说法（取自其 SKILL.md 场景，非触发词复述）
+A-auto-1	auto	帮我把这个需求从头到尾全套做出来
+A-auto-2	auto	这个功能你端到端跑一遍
+A-auto-3	auto	一键把设计和文档都产出来
+A-brain-1	brainstorm	我有个想法想做个会员积分体系，帮我梳理成需求
+A-brain-2	brainstorm	写一份这个功能的产品需求文档
+A-brain-3	brainstorm	这个功能方向还没想清楚，陪我拷问一下
+A-idea-1	idea	把这份会议纪要整理成结构化需求
+A-idea-2	idea	这是一段语音转文字的讨论记录，帮我结构化
+A-idea-3	idea	原始语料在这里，忠实整理不要延展
+A-dr-1	deepresearch	帮我深度研究一下 agent memory 的主流做法
+A-dr-2	deepresearch	全面调研下这个技术方向的先例
+A-dr-3	deepresearch	多agent研究一下这个领域
+A-qr-1	quick-research	快速调研一下 Anthropic 的 prompt caching 定价
+A-qr-2	quick-research	帮我查下官方文档确认这个参数
+A-qr-3	quick-research	轻量研究一下就行，别开重型编排
+A-uxr-1	ux-research	做个竞品分析看看别人怎么做的
+A-uxr-2	ux-research	帮我做 UX 研究，多维度看看
+A-uxr-3	ux-research	用户研究这块儿帮我看看
+A-uxb-1	ux-brainstorm	给我几个界面方案对比一下
+A-uxb-2	ux-brainstorm	这个页面的 UI 方案帮我发散一下
+A-uxb-3	ux-brainstorm	设计方案要 2-3 个，带对抗评审
+A-db-1	design-brief	把这个方向落成交互文档
+A-db-2	design-brief	方案细化成规格契约
+A-db-3	design-brief	出一份 design brief
+A-od-1	open-design	用 Open Design 生成这个页面
+A-od-2	open-design	OD 出图吧
+A-od-3	open-design	用OD做一版设计
+A-html-1	html-prototype	做个 HTML 原型看看
+A-html-2	html-prototype	生成一个快速原型界面
+A-html-3	html-prototype	本地原型跑一版
+A-fig-1	figma-layer	把这个原型推到 figma
+A-fig-2	figma-layer	跑一下 figma 保险层
+A-fig-3	figma-layer	原型一比一还原到 Figma
+A-uxa-1	ux-audit	评审这个页面有什么 UX 问题
+A-uxa-2	ux-audit	这个页面挑毛病
+A-uxa-3	ux-audit	做个体验评审
+A-uxw-1	ux-writing	这些界面文案太生硬，帮我改
+A-uxw-2	ux-writing	空态文案该写什么
+A-uxw-3	ux-writing	定一套文案规范
+A-is-1	insight-synthesis	访谈做完了，帮我提炼洞察
+A-is-2	insight-synthesis	把这批工单做个定性综合
+A-is-3	insight-synthesis	区分观察与解读，出两层洞察
+A-rk-1	research-kit	帮我设计一份访谈提纲
+A-rk-2	research-kit	做个问卷设计
+A-rk-3	research-kit	可用性测试计划怎么写
+A-ts-1	tech-spec	出一份工程规格
+A-ts-2	tech-spec	把这个写成技术合同
+A-ts-3	tech-spec	tech spec 写一下
+A-tp-1	task-plan	帮我拆任务
+A-tp-2	task-plan	出个开发计划
+A-tp-3	task-plan	任务编排一下
+A-tsp-1	to-spec	刚才讨论已经定了，直接整理成 spec 不要重做访谈
+A-tsp-2	to-spec	把刚才定下的工程约束整理成技术规格
+A-tsp-3	to-spec	我们把接口都聊定了，转成 tech spec
+A-imp-1	implement	按这个批准的 task-plan 执行
+A-imp-2	implement	开始实现已批准任务
+A-imp-3	implement	按已批准的 U-ID 落地
+A-way-1	wayfinder	wayfinder
+A-way-2	wayfinder	这个工程要跨好几个会话做，路径也不清楚，先规划
+A-way-3	wayfinder	大工程多会话推进，方向有雾，帮我定路线
+A-cr-1	code-review	帮我审查一下当前改动的代码
+A-cr-2	code-review	review 这个分支
+A-cr-3	code-review	代码评审一下这个 PR
+A-ch-1	code-hygiene	做个代码体检
+A-ch-2	code-hygiene	清理一下死代码
+A-ch-3	code-hygiene	代码去重和弱类型收一收
+A-cd-1	codebase-design	这个模块边界怎么划
+A-cd-2	codebase-design	模块拆分方案帮我看看
+A-cd-3	codebase-design	接口太浅了，帮我深化模块
+A-crc-1	code-recon	帮我读懂这个代码库
+A-crc-2	code-recon	摸清现有代码结构再动手
+A-crc-3	code-recon	基于现有代码做扩展，先逆向一下
+A-dg-1	diagnosing-bugs	排查这个异常报错
+A-dg-2	diagnosing-bugs	找出这个 bug 根因
+A-dg-3	diagnosing-bugs	这是个偶发故障，帮我诊断
+A-rmc-1	resolving-merge-conflicts	帮我解决当前 Git 冲突
+A-rmc-2	resolving-merge-conflicts	当前 rebase 冲突处理一下
+A-rmc-3	resolving-merge-conflicts	merge 冲突了，帮我处理
+A-gr-1	grilling	把这个决定问到底
+A-gr-2	grilling	一次只问一个问题，逐个盘问我
+A-gr-3	grilling	grill me
+A-hd-1	handoff	生成一份交接文档
+A-hd-2	handoff	这个会话交给下一个 session
+A-hd-3	handoff	会话交接一下
+A-mlo-1	muse-loop-orchestrate	跑一下 muse loop
+A-mlo-2	muse-loop-orchestrate	需求到原型闭环走一遍
+A-mrt-1	muse-req-triage	这一堆需求要不要做，先筛一遍
+A-mrt-2	muse-req-triage	批量需求 triage
+# ── B 家族边界对照：两两易撞
+B-01	quick-research	快速调研一下就行
+B-02	deepresearch	这个方向要深入研究
+B-03	brainstorm	评审一下这份 PRD
+B-04	ux-audit	评审一下这个页面
+B-05	code-review	评审一下这段代码
+B-06	idea	把这段讨论记录梳理成需求
+B-07	brainstorm	帮我梳理需求
+B-08	design-brief	这个方案怎么落地
+B-09	ux-brainstorm	这个设计方案好不好
+B-10	tech-spec	技术文档写一份
+B-11	to-spec	刚才的工程讨论整理一下
+B-12	task-plan	任务分解成开发卡
+B-13	open-design	设计产出用什么
+B-14	insight-synthesis	访谈洞察
+B-15	research-kit	访谈提纲
+# ── C 泛词劫持探针：含触发词子串但语义不该命中
+C-01	NOT-auto	帮我看下 autoload 配置对不对
+C-02	NOT-auto	这个 CI 的 auto-merge 开关在哪
+C-03	NOT-figma-layer	Figma 上那个设计稿的主色是什么
+C-04	NOT-figma-layer	figma MCP 的 token 怎么配
+C-05	NOT-deepresearch	research 这个词中文怎么翻更好
+C-06	NOT-brainstorm	这个 PRD 文件放哪个目录了
+C-07	NOT-brainstorm	我想加一个功能开关
+C-08	NOT-ux-brainstorm	这个设计方案的数据库表怎么建
+C-09	NOT-tech-spec	技术文档目录结构是怎样的
+C-10	NOT-html-prototype	prototype 这个单词在代码里出现了几次
+C-11	NOT-code-review	code review 这个流程在公司怎么走
+C-12	NOT-ux-audit	页面有什么问题都列一下吧
+C-13	NOT-deepresearch	帮我调研下今天午饭吃什么
+C-14	NOT-implement	implement 这个接口的最佳实践
+C-15	NOT-design-brief	落地方案已经有了，我只是问下进度
+C-16	NOT-open-design	OD 是什么的缩写
+C-17	NOT-task-plan	任务计划文件被谁改了
+C-18	NOT-handoff	handoff
+C-19	NOT-grilling	grilling 是什么意思
+C-20	NOT-code-hygiene	代码质量这个话题聊聊
+# ── D 日常对话对照组：应 STOP/NONE，无 skill
+D-01	NONE-OR-STOP	今天几号
+D-02	NONE-OR-STOP	谢谢
+D-03	NONE-OR-STOP	这个变量名改成 userId 吧
+D-04	NONE-OR-STOP	把第 12 行的分号删掉
+D-05	NONE-OR-STOP	git status 看一下
+D-06	NONE-OR-STOP	解释一下这段正则
+D-07	NONE-OR-STOP	刚才那个说法再说清楚点
+D-08	NONE-OR-STOP	继续
+D-09	NONE-OR-STOP	帮我把这句话翻译成英文
+D-10	NONE-OR-STOP	这个报错是什么意思
