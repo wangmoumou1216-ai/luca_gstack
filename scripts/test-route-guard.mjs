@@ -1275,6 +1275,72 @@ for (const testCase of cases) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// A-SCOPE-NULL（§6.1 REQ-SCOPE-NULL-FIRST）
+// 缺陷（改前基线为红，实测可触发）：`new project: 不涉及项目的route-guard` 里的否定词**命中**
+// → 下游信号被剥掉 → mixed_ambiguous 短路消失 → projectGate 一路走到 explicitNewProjectName
+// → `project.sh new`：真的建一个叫「不涉及项目的route-guard」的项目、解绑当前、三条软链重指。
+//
+// 承重不变量是「作用域否定的结果到不了会改绑定的分支」。计划 A-SCOPE-NULL 另写的
+// 「否定式与肯定式必须返回**相同**决策」是过度指定：`不涉及项目` 本就该被判成框架活、不 gate，
+// 那正是 NEGATED_DOWNSTREAM_SCOPE_RULES 存在的目的；要求两者同决策等于要求删掉该能力。
+// 故这里钉后半句（安全属性），并用三条反向对照证明不是把 gate 一刀切关掉。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const BINDING_ACTIONS = new Set(['create_new_project', 'switch_existing_project']);
+  const scopeEnv = { ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示,muse' };
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+  const pairs = [
+    ['涉及项目', '不涉及项目'],
+    ['属于项目', '不属于项目'],
+    ['项目相关', '非项目相关'],
+  ];
+  for (const [affirmative, negated] of pairs) {
+    check(`A-SCOPE-NULL 作用域否定「${negated}」到不了会改绑定的分支`, () => {
+      for (const form of [affirmative, negated]) {
+        const decision = route(`new project: ${form}的route-guard`, scopeEnv);
+        assert.equal(BINDING_ACTIONS.has(decision.projectAction), false,
+          `「${form}」returned binding-changing ${decision.projectAction} (project=${decision.project})`);
+      }
+    });
+  }
+
+  // 反向对照 1：具名下游项目**必须继续 gate**（SC-20260523-002）。
+  // 这条专门钉死「修法不是把空臂提到 named 之前一刀切」——那样会让具名项目不再 gate。
+  // fixture 自带 ROUTE_GUARD_PROJECTS 且必须含 muse：默认列表里没有 muse 时，
+  // 本用例与正例同样返回 NONE，零分辨力（会审 R-5 实测）。
+  check('A-SCOPE-NULL 反向对照：具名下游项目仍然 gate', () => {
+    const decision = route('route-guard 在 muse 里怎么走', scopeEnv);
+    assert.equal(decision.projectAction, 'switch_existing_project', `got ${decision.projectAction}`);
+    assert.equal(decision.project, 'muse');
+  });
+
+  // 反向对照 2：正常的显式新建仍然工作（没有把 explicitNewProjectName 整条废掉）。
+  check('A-SCOPE-NULL 反向对照：正常新建项目仍然工作', () => {
+    const decision = route('新建项目 beta', scopeEnv);
+    assert.equal(decision.projectAction, 'create_new_project');
+    assert.equal(decision.project, 'beta');
+  });
+
+  // 反向对照 3（对照组，防过度修复）：无框架信号的显式「新建项目 X」，
+  // 肯定式与否定式必须**同样**建项目——那是用户显式声明项目名，不是作用域否定缺陷。
+  check('A-SCOPE-NULL 对照组：显式新建时两种极性行为一致（未被过度修复）', () => {
+    const yes = route('新建项目 涉及项目的东西', scopeEnv);
+    const no = route('新建项目 不涉及项目的东西', scopeEnv);
+    assert.equal(yes.projectAction, 'create_new_project');
+    assert.equal(no.projectAction, 'create_new_project');
+    assert.equal(yes.project, '涉及项目的东西');
+    assert.equal(no.project, '不涉及项目的东西');
+  });
+}
+
 console.log(`\n=== test-route-guard summary: PASS=${passCount} FAIL=${failCount} ===`);
 if (failCount > 0) {
   console.log('Failed cases:');

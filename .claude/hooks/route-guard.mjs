@@ -352,6 +352,19 @@ function projectGate(prompt, projects, currentProject, routingScope) {
   let searchText = text;
   for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
 
+  const named = routingScope?.namedProject || projects.find(name => nameMatchesIn(searchText, name));
+
+  // REQ-SCOPE-NULL-FIRST（§6.1）：作用域否定的结果绝不能走到会改绑定的分支。
+  // 实测缺陷（改前基线为红）：`new project: 不涉及项目的route-guard` 里的否定词**命中**，
+  // 下游信号被 NEGATED_DOWNSTREAM_SCOPE_RULES 剥掉 → mixed_ambiguous 短路消失 →
+  // projectGate 继续往下 → 撞上 explicitNewProjectName → `project.sh new`：
+  // 真的建一个叫「不涉及项目的route-guard」的项目、解绑当前、三条软链重指。
+  // 危险方向是否定词**命中**而非漏掉，所以修法不是补词表（扩得越全越危险），而是臂序：
+  // 空臂先于 explicitNewProjectName 评估。
+  // 边界：**只在没有具名下游项目时**才提前返回——具名项目必须继续 gate
+  // （SC-20260523-002：`route-guard 在 muse 里怎么走` 仍须 gate），故 named 上提到这里。
+  if (routingScope?.kind === 'pure_framework_meta' && !named) return null;
+
   if (declaredNewProject) {
     const existing = projects.find(name => normalize(name) === normalize(declaredNewProject));
     if (existing) {
@@ -371,8 +384,6 @@ function projectGate(prompt, projects, currentProject, routingScope) {
       message: `新建并绑定 ${declaredNewProject} 后再继续路由。`,
     };
   }
-
-  const named = routingScope?.namedProject || projects.find(name => nameMatchesIn(searchText, name));
 
   // explicit downstream identity 永远先于 meta/content 豁免。即使请求审计的是该项目的
   // hook/路由，具名项目也必须先绑定；同一项目已经激活时视为 gate 已满足。
