@@ -157,7 +157,25 @@ function validateFinal() {
   const candidateSha = sha256(readFileSync(CANDIDATE_PATH));
   const receipt = readFileSync(RECEIPT_PATH, 'utf8');
   assert.equal(field(receipt, 'approved_plan_sha256'), PLAN_SHA);
-  assert.equal(field(receipt, 'state'), 'VERIFIED');
+  // `VERIFIED` 是**发布前**终态，`PUBLISHED` 是发布真的发生之后的终态。旧写法只认 VERIFIED，
+  // 于是收据一旦如实推进到 PUBLISHED，本检查就永久变红且没有前进路径——与 S45 同型缺陷。
+  // 这里不是放宽：PUBLISHED 需**额外**满足发布证明字段自洽（缺字段/半写入/被改过都判红），
+  // 与 candidate-manifest.mjs 的 verifyPublishReceipt 同一套不变量。
+  const state = field(receipt, 'state');
+  assert.ok(['VERIFIED', 'PUBLISHED'].includes(state), `unexpected receipt state: ${state}`);
+  if (state === 'PUBLISHED') {
+    const commit = field(receipt, 'published_commit_oid');
+    assert.match(commit, /^[0-9a-f]{40}$/, 'published_commit_oid must be a full OID');
+    assert.match(field(receipt, 'published_parent_oid'), /^[0-9a-f]{40}$/, 'published_parent_oid must be a full OID');
+    assert.equal(field(receipt, 'remote_observed_oid'), commit, 'remote_observed_oid must equal published_commit_oid');
+    assert.equal(field(receipt, 'remote_url'), 'https://github.com/wangmoumou1216-ai/luca_gstack.git');
+    assert.equal(field(receipt, 'remote_ref'), 'refs/heads/main');
+    // 隔离发布的承重不变量：共享 index / HEAD / 本地 main 在发布过程中不得被动过。
+    for (const invariant of ['shared_index', 'symbolic_head', 'local_main']) {
+      assert.equal(field(receipt, `${invariant}_pre_tuple`), field(receipt, `${invariant}_post_tuple`),
+        `${invariant} changed during isolated publication`);
+    }
+  }
   assert.equal(field(receipt, 'candidate_manifest_sha256'), candidateSha);
   assert.equal(/PENDING_U\d+|RED_NOT_IMPLEMENTED/.test(receipt), false, 'final receipt contains pending state');
   const ledger = readFileSync(LEDGER_PATH, 'utf8');
