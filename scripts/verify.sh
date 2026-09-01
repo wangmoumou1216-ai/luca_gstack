@@ -120,7 +120,10 @@ check S45 "六项集成 runtime candidate manifest denominator/blob 闭合（对
 check S31 "appendix 指针奇偶校验（前向孤儿+后向丢指针，claude5-unhobble C1）" "node scripts/check-appendix-pointers.mjs"
 check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）" "awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
 check S33 "CLAUDE.md 模型档表 4 行在场且含当前 alias（C5，.mjs 强断言）" "node scripts/check-model-table.mjs"
-check S34 "Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）" "node scripts/verify-codex-wiring.mjs --static"
+# VERIFY_CODEX_CLAUDE_REGRESSION_COVERED=1：S34 内部的「S10 Claude 路径零回归」会再 spawn 一遍
+# test-harness + test-hooks，而本文件的 C11/S30 已各跑一次——同一轮内纯重复，实测约 5.5 秒。
+# 单独跑 verify-codex-wiring.mjs 时不设该变量，覆盖面照旧。
+check S34 "Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）" "VERIFY_CODEX_CLAUDE_REGRESSION_COVERED=1 node scripts/verify-codex-wiring.mjs --static"
 check S35 "observability 写入并发与崩溃恢复回归" "npm run test:observability --silent"
 check S36 "quality-gate verdict 与 recorder 权限分离回归" "npm run test:gate-verdict --silent"
 check S37 "CI 阻断覆盖与稳定 gatherer 合同" "npm run check:ci-contract --silent"

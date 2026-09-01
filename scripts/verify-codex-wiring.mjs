@@ -199,10 +199,21 @@ ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-run
   spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
     { cwd: ROOT, timeout: 420000 }).status === 0);
 
-// S10 Claude 侧零回归
-ok('S10 Claude 路径零回归（test-harness + test-hooks）',
-  spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0
-  && spawnSync('node', [join(ROOT, 'scripts', 'test-hooks.mjs')], { cwd: ROOT }).status === 0);
+// S10 Claude 侧零回归。
+// 这两套在 verify.sh 里已由 C11（check:hooks → test-hooks）与 S30（check:harness → test-harness）
+// 各跑一次；本处再 spawn 一遍是同一进程组内的纯重复，实测占 verify.sh 总耗时约 5.5 秒。
+// 而 verify.sh 现在要 124 秒、已经超过 agent harness 的 120 秒单命令上限——每次提交必超时，
+// 于是只能退到 FAST_COMMIT=1，**跳过全部 87 项**。省下的每一秒都直接换成门禁的可用性。
+// 故：由 verify.sh 显式声明「本轮已另行覆盖」时跳过重复；**单独跑本脚本时照常执行**，
+// 覆盖面在任何上下文都不减少。跳过是**声明式**的（消息里写明由谁覆盖），不是静默假绿。
+const claudeRegressionCoveredElsewhere = process.env.VERIFY_CODEX_CLAUDE_REGRESSION_COVERED === '1';
+if (claudeRegressionCoveredElsewhere) {
+  ok('S10 Claude 路径零回归（本轮由 verify.sh 的 C11/S30 覆盖，不在此重复 spawn）', true);
+} else {
+  ok('S10 Claude 路径零回归（test-harness + test-hooks）',
+    spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0
+    && spawnSync('node', [join(ROOT, 'scripts', 'test-hooks.mjs')], { cwd: ROOT }).status === 0);
+}
 
 // S11 【2026-08-06 二次修正——上一轮的 S11 把错误架构钉成了回归测试】
 // 曾断言「必须并入用户级 ~/.codex/hooks.json，因为仓库级不被加载」。**那个前提是假的**：
