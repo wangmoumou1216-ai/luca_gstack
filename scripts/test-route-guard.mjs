@@ -1341,6 +1341,87 @@ for (const testCase of cases) {
   });
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// A-SIGNAL（E2 §4.1）—— 三腿在**整条 prompt 内**命中即可产信号。
+// 跨从句是**正例不是反例**：E2 原始复现串的结构腿落在第二个从句，「同从句」约束会把
+// 该 bug 自己的复现串判为阴性（2026-08-30 会审推翻原设计的实测依据）。
+// 信号不计分、不派 skill/flow、不改 Plan 五条件；此处同样不做否定判定。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+  const legsOf = d => (d.semanticRouteAxis?.evidence || []).map(e => e.leg).sort().join(',');
+
+  // E2 的直接回归断言。结构腿必须落在逗号之后——这条把「跨从句是正例」钉死，
+  // 恢复「同从句」约束（变异体 11）会让它转红。
+  check('A-SIGNAL E2 原始复现串产信号且结构腿跨从句', () => {
+    const prompt = '帮我优化下设置页面，功能堆砌太严重了很难找';
+    const decision = route(prompt);
+    assert.ok(decision.semanticRouteAxis, 'E2 复现串必须产信号');
+    assert.equal(decision.semanticRouteAxis.axis, 'interface_structure_change');
+    assert.equal(legsOf(decision), 'change,structure,surface');
+    const comma = prompt.indexOf('，');
+    const structure = decision.semanticRouteAxis.evidence.find(e => e.leg === 'structure');
+    assert.ok(structure.span_start > comma, `结构腿必须在第二从句（span=${structure.span_start} comma=${comma}）`);
+  });
+
+  check('A-SIGNAL negation_context 原样记录整条 prompt 字节', () => {
+    const prompt = '帮我优化下设置页面，别动结构，其他随便你改';
+    const decision = route(prompt);
+    assert.equal(decision.semanticRouteAxis.negation_context, prompt, 'negation_context 必须逐字节等于原 prompt');
+  });
+
+  // §4.3 冻结 fixture（已按计划指示逐条重测后收敛）：三腿齐全者产信号，
+  // 且**都不产生义务**——hook 不区分它们，否定判定属于 LLM 层。
+  for (const prompt of [
+    '调整设置里的颜色但结构不变',
+    '别调整设置结构',
+    '我们优化了设置页面，结构没变',
+    '帮我优化下设置页面，别动结构，其他随便你改',
+    '颜色不改，重组设置分组',
+  ]) {
+    check(`A-SIGNAL 冻结 fixture 产信号且不产生义务 ${JSON.stringify(prompt)}`, () => {
+      const decision = route(prompt);
+      assert.ok(decision.semanticRouteAxis, '三腿齐全必须产信号');
+      assert.equal(decision.semanticRouteAxis.negation_context, prompt);
+      assert.equal(decision.obligation, undefined, '光有信号不得产生义务（SIGNAL_UNCONFIRMED 确认门）');
+    });
+  }
+
+  // 计划 §4.3 明写：删掉「同从句」后逐条重测，**仍缺腿的移出本 fixture 集**，
+  // 不得为迁就它们再放宽腿规则——那等于把 §3.3 删掉的机制从另一个门引回来。
+  // 这两条实测缺**界面腿**，故作为缺腿反例钉住，防止后人「顺手补全」腿规则。
+  for (const prompt of ['结构别改', '没改结构，只动了配色']) {
+    check(`A-SIGNAL 缺界面腿不得产信号（移出 fixture 集的两条）${JSON.stringify(prompt)}`, () => {
+      assert.equal(route(prompt).semanticRouteAxis, undefined, '缺腿必须不产信号');
+    });
+  }
+
+  for (const prompt of ['优化一下设置页面', '这个页面的信息架构很乱', '重构代码', '把颜色改成蓝色']) {
+    check(`A-SIGNAL 缺腿反例不产信号 ${JSON.stringify(prompt)}`, () => {
+      assert.equal(route(prompt).semanticRouteAxis, undefined);
+    });
+  }
+
+  check('A-SIGNAL 一段证据不得兼任两腿', () => {
+    // 只有「结构」一处证据时不得被同时算作 structure 与 surface。
+    assert.equal(route('重构结构').semanticRouteAxis, undefined);
+  });
+
+  check('A-SIGNAL 不计分、不派 skill/flow', () => {
+    const decision = route('帮我优化下设置页面，功能堆砌太严重了很难找');
+    assert.equal(decision.complexityScore || 0, 0, `信号不得计分，got ${decision.complexityScore}`);
+    assert.equal(decision.recommendedSkills, undefined, '信号不得派 skill');
+    assert.equal(decision.flow, undefined, '信号不得派 flow');
+  });
+}
+
 console.log(`\n=== test-route-guard summary: PASS=${passCount} FAIL=${failCount} ===`);
 if (failCount > 0) {
   console.log('Failed cases:');

@@ -991,6 +991,61 @@ function resolveAliasCandidates(prompt, projects) {
   return { schema_version: 1, status: 'OK', registry_complete: registry.complete, candidates: found };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// E2 非计分信号（§4.1）—— 设置页交互结构请求 route score = 0 被当成「不需要 skill/flow」。
+// 三段**互不重叠**的证据齐全即置 semanticRouteAxis=interface_structure_change。
+// 该信号**不计分、不派 scene/skill/flow、不改 Plan Agent 五条件**；此处**同样不做否定判定**
+// （§3.3：确定性 hook 判不了中文否定，语义判定属于 LLM 层）。negation_context 原样记录
+// **整条 prompt 的原始字节**，让 LLM 层自己读。
+//
+// 三腿**不要求同从句**：2026-08-30 会审推翻了原设计——`帮我优化下设置页面，功能堆砌太严重了很难找`
+// 的结构腿落在第二个从句，「同从句」约束会把 E2 自己的复现串判为阴性。一条把自己要修的 bug
+// 判为阴性的规则，不能作为该 bug 的修复。而且「从句」对未分词中文没有定义，与 §3.3 删掉整套
+// 否定判定所用的论据是同一条。误报的唯一后果是 LLM 多读一句原文；漏报的后果是 E2 复发。取宽。
+// ══════════════════════════════════════════════════════════════════════════
+const E2_LEGS = [
+  ['change', /优化|重组|重构|改版|重新设计|拆分|归组|调整|optimize|reorganize|redesign|restructure|refactor|split|regroup/gi],
+  ['surface', /页面|界面|设置|偏好设置|交互|布局|侧栏|导航|page|screen|settings|preferences|UI|interface|interaction|layout|sidebar|navigation/gi],
+  ['structure', /功能堆砌|层级|信息架构|分组|拥挤|很难找|难找|找不到|结构|feature pile-up|hierarchy|information architecture|grouping|crowded|hard to find/gi],
+];
+// 「一段证据不能兼任两腿」：三腿各自的命中区间必须两两不相交。逐腿枚举全部命中后做
+// 小规模回溯，避免「设置」既算界面腿又被「信息架构」里的片段重复计入这类假阳性。
+function pickDisjointLegs(text) {
+  const perLeg = E2_LEGS.map(([leg, re]) => {
+    const spans = [];
+    re.lastIndex = 0;
+    for (let m = re.exec(text); m; m = re.exec(text)) spans.push({ leg, start: m.index, end: m.index + m[0].length, text: m[0] });
+    return spans;
+  });
+  if (perLeg.some(spans => !spans.length)) return null;
+  const chosen = [];
+  const overlaps = (a, b) => a.start < b.end && b.start < a.end;
+  const walk = (i) => {
+    if (i === perLeg.length) return true;
+    for (const span of perLeg[i]) {
+      if (chosen.some(prev => overlaps(prev, span))) continue;
+      chosen.push(span);
+      if (walk(i + 1)) return true;
+      chosen.pop();
+    }
+    return false;
+  };
+  return walk(0) ? chosen.slice() : null;
+}
+function interfaceStructureSignal(prompt) {
+  const text = String(prompt || '');
+  if (!text) return null;
+  const legs = pickDisjointLegs(text);
+  if (!legs) return null;
+  return {
+    schema_version: 1,
+    axis: 'interface_structure_change',
+    evidence: legs.map(({ leg, start, end, text: matched }) => ({ leg, span_start: start, span_end: end, surface: matched })),
+    // 整条 prompt 的原始字节——不截断、不挑从句。判断留给 LLM 层。
+    negation_context: text,
+  };
+}
+
 // 携带模式（§3.2）：信号必须穿过 `buildDecisionCore` 的**全部**早返。
 // 用包装器而不是在每个 return 各补一次 spread——后者在新增分支时会静默漏掉
 // （实测：upstream 6aaa1c6 新增的 `explicitEngineeringDeliverySelection → FRAMEWORK_FLOW`
@@ -1002,6 +1057,11 @@ function buildDecision(prompt) {
     const aliasResolution = resolveAliasCandidates(prompt, listProjects());
     if (aliasResolution) decision.aliasResolution = aliasResolution;
   } catch { /* RESOLVE 是证据记录，不得让路由整体失败 */ }
+  try {
+    const signal = interfaceStructureSignal(prompt);
+    // 不计分、不派 skill/flow、不改 Plan Agent 五条件——只挂一个 LLM 层可读的证据对象。
+    if (signal) decision.semanticRouteAxis = signal;
+  } catch { /* 同上：信号是证据不是判定 */ }
   return decision;
 }
 
