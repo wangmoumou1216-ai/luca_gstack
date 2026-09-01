@@ -17,7 +17,7 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import {
   PROJECTS_ROOT,
   beginProjectTurn,
@@ -1046,6 +1046,107 @@ function interfaceStructureSignal(prompt) {
   };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// E2 最小义务（§4.2）—— **任务载体，不是拦截器**（2026-08-31 luca 裁决）。
+// 任何状态都**不拦 Stop、不拒 scope、不拦任何东西**；唯一动作是 `PENDING` 时每轮注入一行提醒。
+// 拦截只在「模型想结束时」生效，是最晚的一道；UserPromptSubmit **每轮都跑**，
+// 覆盖面更大更早，正对「不认路」这个根因。代价明写：保证从「挡得住」退成「全程看得见」。
+//
+// 状态机：SIGNAL_UNCONFIRMED → PENDING → DEFERRED_BY_PROJECT_CHANGE → SATISFIED
+//                                                                  ↘ CANCELLED / SUPERSEDED
+// R-11（本执行口径，随 E3 收紧）：§4.2 写「升 PENDING 的唯一途径 = 下一个**经认证的**人类事件带着
+// **肯定式任务指令**」。这句在当前范围内字面不可实现——「经认证」是 E3 的惰性认证层（已按会审
+// 裁决拆出），「肯定式」是语义判断而 §3.3 刚论证 hook 判不了。故取**非语义代理**：
+// Claude 侧 UserPromptSubmit 只在真实用户回合触发，「认证」在结构上已满足；
+// 「肯定式任务指令」取「下一个人类回合**再次产出 E2 信号**」（用户重述了同一类诉求），
+// 其余任何事件按 §4.2 直接删除 SIGNAL_UNCONFIRMED。E3 落地后把这一处换成真认证即可，
+// 状态机与注入面不必改。
+// ══════════════════════════════════════════════════════════════════════════
+const OBLIGATION_INJECTION_CAP = 20;   // 无界提醒本身就是缺陷（对齐 checkpoint 的 100 轮封顶惯例）
+// 整句即取消——沿用本文件既有的「整句锚定」手法，不新建词表机制；判错的唯一后果是少一行提醒。
+const OBLIGATION_CANCEL_RE = /^\s*(?:算了|不用了|不做了|别做了|取消|停|停一下|先停|暂停|就这样)[吧呢吗呀了的！!。.？?…\s]*$/;
+function obligationPath(sid) {
+  // 文件名**不得**以 `.session-project-` 开头：check-project-links.mjs 会把该前缀当项目 pin 误解析。
+  return join(projectRoot, '.claude', `.session-obligation-${sid}`);
+}
+function readObligation(sid) {
+  try {
+    const doc = JSON.parse(readFileSync(obligationPath(sid), 'utf8'));
+    return doc && typeof doc === 'object' && doc.schema_version === 1 ? doc : null;
+  } catch { return null; }
+}
+function writeObligation(sid, doc) {
+  try { writeFileSync(obligationPath(sid), `${JSON.stringify(doc)}\n`); } catch { /* 提醒不得让路由失败 */ }
+}
+function clearObligation(sid) {
+  try { unlinkSync(obligationPath(sid)); } catch { /* 本就不存在 */ }
+}
+// ≤40 字摘要**渲染时派生、不落盘**（避免第二份可能与原文不一致的副本）。
+// NFC → 控制字符与换行折叠为单空格 → 按**码位**取前 40（不是字节，避免切出半个多字节字符）→ 补 `…`。
+function obligationSummary(text) {
+  const flat = String(text || '').normalize('NFC').replace(/[\p{Cc}\p{Cf}\s]+/gu, ' ').trim();
+  const cp = [...flat];
+  return cp.length > 40 ? `${cp.slice(0, 40).join('')}…` : flat;
+}
+// 返回本轮结束后的义务（或 null）。**只读写状态文件，不产生任何拦截效果。**
+function advanceObligation({ sid, prompt, signal, decision }) {
+  const existing = readObligation(sid);
+  const isSwitch = decision?.decision === 'PROJECT_SWITCH';
+  const dispatched = Array.isArray(decision?.recommendedSkills) && decision.recommendedSkills.length > 0;
+  const cancelled = OBLIGATION_CANCEL_RE.test(String(prompt || '').trim());
+
+  if (!existing) {
+    // 光有信号只落 SIGNAL_UNCONFIRMED：**不注入、不给 capability**（确认门，原 R27 BLOCKER）。
+    if (!signal) return null;
+    const doc = {
+      schema_version: 1, state: 'SIGNAL_UNCONFIRMED',
+      exact_task_text: String(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      injected_turns: 0, superseded: 0,
+    };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  if (cancelled) { clearObligation(sid); return { ...existing, state: 'CANCELLED' }; }
+  if (existing.state === 'SIGNAL_UNCONFIRMED') {
+    // 升 PENDING 的唯一途径；其余任何事件直接删除它。
+    if (!signal) { clearObligation(sid); return null; }
+    const doc = {
+      ...existing, state: 'PENDING',
+      exact_task_text: String(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      injected_turns: 0,
+    };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  // 项目切换：转 DEFERRED 并**保留原始任务字节**，事务提交后（下一轮）恢复。
+  if (isSwitch) {
+    const doc = { ...existing, state: 'DEFERRED_BY_PROJECT_CHANGE' };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  if (existing.state === 'DEFERRED_BY_PROJECT_CHANGE') {
+    const doc = { ...existing, state: 'PENDING' };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  if (dispatched) { clearObligation(sid); return { ...existing, state: 'SATISFIED' }; }
+  if (signal) {
+    // 新的肯定式任务指令 → 旧义务 SUPERSEDED，新的接替（同一 sid 只保留一条）。
+    const doc = {
+      ...existing, state: 'PENDING', superseded: (existing.superseded || 0) + 1,
+      exact_task_text: String(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      injected_turns: 0,
+    };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  const injected = (existing.injected_turns || 0) + 1;
+  if (injected > OBLIGATION_INJECTION_CAP) { clearObligation(sid); return { ...existing, state: 'CANCELLED' }; }
+  const doc = { ...existing, injected_turns: injected };
+  writeObligation(sid, doc);
+  return doc;
+}
+
 // 携带模式（§3.2）：信号必须穿过 `buildDecisionCore` 的**全部**早返。
 // 用包装器而不是在每个 return 各补一次 spread——后者在新增分支时会静默漏掉
 // （实测：upstream 6aaa1c6 新增的 `explicitEngineeringDeliverySelection → FRAMEWORK_FLOW`
@@ -1445,6 +1546,25 @@ if (prompt) {
   }
   hints.push(...decisionToHints(decision));
   hints.push(...ruleHintsForSkills(matchedSkills(decision)));
+}
+
+// E2 每轮注入（§4.2a）。**接线硬约束**：
+// 1) 放在**顶层**、独立于上面那个 project-state 块——放进那个块里会被它的 hookSessionId 条件
+//    与 catch 吞掉，于是在 `PROJECT_SWITCH` 回合静默不注入，而那正是义务必须存活（转 DEFERRED）
+//    的一轮（终审 MAJOR-2）。
+// 2) 只写 `hints` 通道、**不写 `decision`**：dry-run JSON 由上面的 process.exit(0) 天然隔离，
+//    Codex adapter 会把非 JSON 包成 additionalContext 且 additionalContextLimit:0，输出契约不受污染。
+// 3) 自带 try/catch，异常一律静默跳过注入——注入是提醒，不得因它让 route-guard 失败（变异体 17）。
+if (!dryRun && prompt && hookSessionId) {
+  try {
+    const obligation = advanceObligation({
+      sid: hookSessionId, prompt, signal: decision?.semanticRouteAxis || null, decision,
+    });
+    if (obligation && obligation.state === 'PENDING') {
+      hints.push(`[route-guard] 📌 当前有未完成任务：${obligationSummary(obligation.exact_task_text)}`
+        + `（完整字节见 ${obligationPath(hookSessionId)}）`);
+    }
+  } catch { /* 提醒失败不得影响本轮路由 */ }
 }
 
 if (!dryRun && prompt) {

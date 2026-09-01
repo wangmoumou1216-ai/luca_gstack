@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
-import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import assert from 'assert/strict';
@@ -1419,6 +1419,155 @@ for (const testCase of cases) {
     assert.equal(decision.complexityScore || 0, 0, `信号不得计分，got ${decision.complexityScore}`);
     assert.equal(decision.recommendedSkills, undefined, '信号不得派 skill');
     assert.equal(decision.flow, undefined, '信号不得派 flow');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// A-OBLIG-VISIBLE / A-OBLIG-LIFECYCLE（E2 §4.2 / §4.2a）
+// 义务是**任务载体不是拦截器**：任何状态都不拦 Stop、不拒 scope。唯一动作是每轮注入一行。
+// 这些用例必须跑**真实 hint 面**（dry-run 走 JSON 分支并 process.exit(0)，注入根本不经过）。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const INJECT = '📌 当前有未完成任务';
+  const obligationFile = sid => join(process.cwd(), '.claude', `.session-obligation-${sid}`);
+  const realRoute = (prompt, sid, extraEnv = {}) => {
+    const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+      cwd: process.cwd(),
+      input: JSON.stringify({ prompt, session_id: sid }),
+      encoding: 'utf8',
+      env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示,muse', ...extraEnv },
+    });
+    assert.equal(result.status, 0, `route-guard exited ${result.status}: ${result.stderr}`);
+    return result.stdout;
+  };
+  const injected = out => out.split('\n').filter(line => line.includes(INJECT)).length;
+  const stateOf = sid => {
+    try { return JSON.parse(readFileSync(obligationFile(sid), 'utf8')).state; } catch { return null; }
+  };
+  const cleanup = sid => { try { rmSync(obligationFile(sid), { force: true }); } catch { } };
+  const SIGNAL_A = '帮我优化下设置页面，功能堆砌太严重了很难找';
+  const SIGNAL_B = '再优化一下设置页面的信息架构，层级太深';
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+
+  check('A-OBLIG-VISIBLE 光有信号只落 SIGNAL_UNCONFIRMED，不注入（确认门）', () => {
+    const sid = 'oblig-gate-1'; cleanup(sid);
+    try {
+      assert.equal(injected(realRoute(SIGNAL_A, sid)), 0, 'SIGNAL_UNCONFIRMED 不得注入');
+      assert.equal(stateOf(sid), 'SIGNAL_UNCONFIRMED');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 14 专门要求：用例必须是**同一 sid 连续 ≥3 轮**——单轮用例判不出「每轮注入」，会恒绿。
+  check('A-OBLIG-VISIBLE PENDING 起同一 sid 连续 3 轮每轮都注入', () => {
+    const sid = 'oblig-every-turn'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid);
+      assert.equal(injected(realRoute(SIGNAL_B, sid)), 1, '第二次信号应升 PENDING 并注入');
+      assert.equal(stateOf(sid), 'PENDING');
+      for (const turn of [1, 2, 3]) {
+        assert.equal(injected(realRoute('嗯', sid)), 1, `第 ${turn} 个后续回合必须仍然注入`);
+      }
+    } finally { cleanup(sid); }
+  });
+
+  // R-6 / MINOR-4：route-guard 早已在同一 hints 通道发 `⚠️ 当前有未完成节点`，与注入串一字之差。
+  // 断言必须锚定**含 📌 的完整串**，否则按 `当前有未完成` 子串匹配对两者都绿。
+  check('A-OBLIG-VISIBLE 注入串锚定含 📌 的完整串，不与既有「未完成节点」提示混淆', () => {
+    const sid = 'oblig-string'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid);
+      const out = realRoute(SIGNAL_B, sid);
+      const line = out.split('\n').find(l => l.includes(INJECT));
+      assert.ok(line, '必须出现注入行');
+      assert.match(line, /^\[route-guard\] 📌 当前有未完成任务：.+（完整字节见 .+\.claude\/\.session-obligation-.+）$/);
+      assert.doesNotMatch(line, /当前有未完成节点/, '不得与既有节点提示同串');
+    } finally { cleanup(sid); }
+  });
+
+  check('A-OBLIG-LIFECYCLE 20 轮封顶后自动停止注入（变异体 15）', () => {
+    const sid = 'oblig-cap'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      for (let i = 0; i < 19; i++) realRoute('嗯', sid);
+      assert.equal(injected(realRoute('嗯', sid)), 1, '第 20 轮仍应注入');
+      assert.equal(injected(realRoute('嗯', sid)), 0, '第 21 轮起必须停止注入');
+      assert.equal(stateOf(sid), null, '封顶后义务应被终结');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 13：注入若放在 buildDecision 早返之后（或塞进 project-state 块内），
+  // `PROJECT_SWITCH` 回合会静默不注入——而那正是义务必须存活转 DEFERRED 的一轮。
+  check('A-OBLIG-LIFECYCLE 项目切换回合义务存活转 DEFERRED 且保留完整原始字节', () => {
+    const sid = 'oblig-defer'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      realRoute('切到 muse 项目', sid);
+      assert.equal(stateOf(sid), 'DEFERRED_BY_PROJECT_CHANGE');
+      const doc = JSON.parse(readFileSync(obligationFile(sid), 'utf8'));
+      assert.equal(doc.exact_task_text, SIGNAL_B, '必须保留完整原始任务字节，不得截断');
+      assert.equal(injected(realRoute('嗯', sid)), 1, '事务后必须恢复注入');
+    } finally { cleanup(sid); }
+  });
+
+  check('A-OBLIG-LIFECYCLE 取消语义终结义务并停止注入', () => {
+    const sid = 'oblig-cancel'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      assert.equal(injected(realRoute('不用了', sid)), 0);
+      assert.equal(stateOf(sid), null);
+      assert.equal(injected(realRoute('嗯', sid)), 0, '终结后不得再注入');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 17：去掉义务读取的 try/catch，损坏的状态文件会让整轮路由失败或吞掉路由提示。
+  check('A-OBLIG-VISIBLE 损坏的状态文件不得让 route-guard 失败或吞掉路由提示（变异体 17）', () => {
+    const sid = 'oblig-corrupt'; cleanup(sid);
+    try {
+      writeFileSync(obligationFile(sid), 'not json at all {{{');
+      const out = realRoute(SIGNAL_A, sid);
+      assert.ok(out.includes('[route-guard]'), '本轮路由提示必须照常产出');
+      assert.equal(injected(out), 0, '损坏状态只跳过注入');
+    } finally { cleanup(sid); }
+  });
+
+  // 变异体 18：义务状态文件含完整 prompt 原文，必须被 .gitignore 覆盖。
+  check('A-OBLIG-VISIBLE 义务状态文件被 .gitignore 覆盖（变异体 18）', () => {
+    const ignored = spawnSync('git', ['check-ignore', '-q', '.claude/.session-obligation-probe'], { cwd: process.cwd() });
+    assert.equal(ignored.status, 0, '义务状态文件必须被忽略，否则用户原话会被 git add -A 提交进仓库');
+    const control = spawnSync('git', ['check-ignore', '-q', '.claude/settings.json'], { cwd: process.cwd() });
+    assert.equal(control.status, 1, '阳性对照：settings.json 不得被这条规则误伤');
+  });
+
+  // 08-31 裁决的守卫：E2 **不拦截任何东西**。
+  check('A-OBLIG-LIFECYCLE 义务不污染 decision 通道（只走 hints）', () => {
+    const sid = 'oblig-channel'; cleanup(sid);
+    try {
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      const decision = route(SIGNAL_A);
+      assert.equal(decision.obligation, undefined, 'decision 不得携带义务');
+      assert.equal(decision.injection, undefined);
+    } finally { cleanup(sid); }
+  });
+
+  check('A-OBLIG-LIFECYCLE Stop 路径行为不因义务改变（session-sync stdout 恒定）', () => {
+    const sid = 'oblig-stop'; cleanup(sid);
+    const runStop = () => spawnSync('node', ['.claude/hooks/session-sync.mjs'], {
+      cwd: process.cwd(), input: JSON.stringify({ session_id: sid }), encoding: 'utf8',
+      env: { ...baseEnv, SESSION_SYNC_BLOCK: '0' },
+    }).stdout;
+    try {
+      const before = runStop();
+      realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
+      assert.equal(stateOf(sid), 'PENDING', '前置条件：义务确实处于 PENDING');
+      assert.equal(runStop(), before, 'Stop 侧 stdout 不得因义务存在而改变');
+    } finally { cleanup(sid); }
   });
 }
 
