@@ -88,8 +88,22 @@ export function readJson(path, label = path) {
   return parsed;
 }
 
+// 本函数拿到的是**显式的 repoRoot**，环境不得推翻它。git 钩子（链接 worktree 尤甚）会注入
+// 绝对 GIT_DIR / GIT_INDEX_FILE：GIT_DIR 重定向仓库（refs/objects/index）而非工作树，于是
+// `--git-common-dir` 会指向注入的那个仓，`controlRoot()` 随之算到别处——实测后果是守卫对
+// 整个 session 的所有工具调用 fail-closed（`git rev-parse --show-toplevel failed`）。
+// 故显式剥离位置类 GIT_*：调用方给了 -C，就以 -C 为准。
+const GIT_LOCATION_ENV = [
+  'GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY',
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_COMMON_DIR', 'GIT_NAMESPACE', 'GIT_PREFIX',
+];
+function gitEnv() {
+  const env = { ...process.env };
+  for (const key of GIT_LOCATION_ENV) delete env[key];
+  return env;
+}
 function git(repoRoot, args) {
-  const result = spawnSync('/usr/bin/git', ['-C', repoRoot, ...args], { encoding: 'utf8' });
+  const result = spawnSync('/usr/bin/git', ['-C', repoRoot, ...args], { encoding: 'utf8', env: gitEnv() });
   if (result.status !== 0) fail(`git ${args.join(' ')} failed: ${(result.stderr || result.stdout || '').trim()}`);
   return String(result.stdout || '').trim();
 }

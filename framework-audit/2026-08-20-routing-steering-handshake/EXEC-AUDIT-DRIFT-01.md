@@ -188,9 +188,25 @@ git 往 hook 注入的环境**在链接 worktree 与普通仓里不同**（实�
 env: { ...process.env, ...(options.env || {}) },
 ```
 
-**`GIT_DIR` 压过 `-C`**（独立阳性对照已验：`GIT_DIR=A git -C B rev-parse --show-toplevel` 打印 A）。
-于是该测试所有 `git(tempRepo, …)` 调用全部重定向到真仓：`git add target.txt` 写进**用户的 index**，
-`git commit -qm fixture` 把**用户当时的暂存区 + target.txt** 提交到**用户的分支**上。
+`GIT_DIR` 重定向的是**仓库**（refs / objects / index），**不是工作树**——工作树仍由 `-C` / cwd 决定。
+实测（只设 `GIT_DIR=A`，在仓库 B 里跑）：
+
+| 查询 | 解析到 |
+|---|---|
+| `rev-parse --show-toplevel` | **B**（工作树未被重定向） |
+| `rev-parse --absolute-git-dir` | **A** |
+| `rev-parse --git-common-dir` | **A** |
+| `git add new.txt && git commit -qm leaked` | 提交落在 **A 的分支**，内容取自 **B 的工作树** |
+
+于是该测试的 `git(tempRepo, …)` 调用**从临时目录取内容、往真仓写提交**：`git add target.txt` 写进
+**用户的 index**，`git commit -qm fixture` 把**用户当时的暂存区 + target.txt** 提交到**用户的分支**上。
+
+> **更正（2026-09-01，由冷启动会审专家指出后我独立复验）**：本节初稿写的是「`GIT_DIR` 压过 `-C`，
+> 阳性对照 `GIT_DIR=A git -C B rev-parse --show-toplevel` 打印 A」。**那条阳性对照是被污染的**——
+> 我当时同时设了 `GIT_WORK_TREE=A`，打印 A 是后者的功劳。单独设 `GIT_DIR` 时它打印 **B**。
+> 端到端 RED/GREEN 的结论不受影响（提交确实落进了用户分支），但那句机制论证是错的，已按上表更正。
+> 教训与 [[feedback_scope-diff-measurement-to-fresh-output]] 同族：**阳性对照本身也要控制变量，
+> 多设一个变量就等于没做对照。**
 
 链路：`.githooks/pre-commit:84 → exec bash scripts/verify.sh` → `verify.sh:110 → npm run test:controlled-change`。
 **即：这个仓里每一次从链接 worktree 发起的 `git commit`，都会走到这条路径。**
@@ -219,6 +235,30 @@ GREEN（已修版）          分支提交数 1 → 1   顶部提交 = 'seed'
 
 另：worktree 里 `verify.sh` 还有 **S34 FAIL**（`本仓 hook 未获授信 6/6`，主检出 19/0 通过）。
 修它要跑 `codex-trust-hooks.mjs` 改 Codex 全局配置，同样不属执行者自决范围。
+
+## P1 门裁决 —— 冷启动独立会审（2026-09-01）
+
+**VERDICT: `NEEDS_ARCHITECTURE_REVIEW`。** 会审为冷启动（无本 session 上下文），被明确告知
+`NEEDS_ARCHITECTURE_REVIEW` / `BLOCKED` 是可接受结论，并被要求专攻本审计。它自己跑命令复核，
+未改任何文件。逐条裁决：
+
+| 项 | 裁决 | 要点 |
+|---|---|---|
+| D1 | **机械** | 五条 return 中 #4 是 `{...complexity}` spread，§3.2 已强制的携带模式免费覆盖它；只有 #5（`FRAMEWORK_FLOW` 对象字面量）需显式补一次 spread。需改的是散文计数、行号锚点、变异体 12 的用例表 |
+| **D2** | **架构（且本审计诊断不足）** | 身份合成在 `route-guard.mjs:72`（`turn_id \|\| user_message_id \|\| randomUUID()`），`:1134` 同一次 UserPromptSubmit 内同步消费，`:1162` catch 成「⛔ PROJECT STATE」。§5.2 要求的惰性认证层**在本仓不存在**：`session-sync.mjs` 与 `project-scope-guard.mjs` 各自 `attest/queue/msg_/rollout/prompt_id` 全为 0，而这两个文件正是 §8 声明不改、变异体 15 声明「全程不改」的。**E3 按规格写是新子系统，不是重锚** |
+| D3 | **无效（no-op）** | `controlled-change` 零编排集成（CLAUDE.md / AGENTS.md / plan-agent.md / orchestrator.md 提及数均为 0），无任何路径自动创建 witness；不走它不构成绕过。另：`controlRoot()` 用 `--git-common-dir`，worktree 与主检出同值，worktree 并未逃逸管制，只是管制没开 |
+| D4 | **读法正确、归属错误** | 我采纳的红队 A-7 措辞是唯一自洽解，但「Stop 侧允许且必须推进状态」意味着往 `session-sync.mjs` 写义务代码，§8 从 5 文件重新扩到 7，正是 D2 的同一条边界。**并入 D2 一起裁，不能作为执行者的实现决策私下记账**——那恰好绕过 K1 存在的意义 |
+| D5 | **成立，独立复现** | 它自建夹具复现了链接 worktree 的注入差异与端到端污染。**并指出本节初稿的阳性对照是错的**（见上文更正） |
+
+**新查出、此前无人抓到的恒真项**：
+- **变异体 19 恒真**：它描述的 `:683` / `tool_name='Bash'` / `*** Begin Patch` 形态在 `route-guard.mjs` 中计数全为 0，那些东西在 `project-scope-guard.mjs`——而该文件已被 BLOCKER-2 移出 §8。属 C1 改写变异体 13 后的残留，与 MAJOR-4 同型但未一并修。
+- **`A-GATE-SUPPRESS` 反向对照测不到**：测试环境 `ROUTE_GUARD_PROJECTS='luca-dev,ai 宠物提示'` 不含 `muse`，故 `route-guard 在 muse 里怎么走` 与正例同样返回 `NONE`，零分辨力；fixture 必须自己覆盖 `ROUTE_GUARD_PROJECTS`。
+- `A-OBLIG-VISIBLE` / `A-OBLIG-LIFECYCLE` 的 Stop 子句**今天恒真**（§8 从不改 `session-sync.mjs`），采纳 D4 后 LIFECYCLE 的「行为不因义务改变」将变**恒假**。两条都不是守卫。
+
+**未被漂移动摇、不得重开**：§3.3 授权轴否定判定的删除、§4.1「同从句」的删除、§4.2a 不拦 Stop 的裁决、
+§6 `REQ-SCOPE-NULL-FIRST`、E1 别名契约。会审在 `fc6eeb5` 上重验了 §6.1 与 `A-GATE-SUPPRESS` 正例仍成立。
+
+**建议路径**：把 **E3 拆出单独立项**；E1+E2 对 `fc6eeb5` 确属机械，可在重锚后的计划上先行。
 
 ## 新基线实测（隔离 worktree @ `fc6eeb5`）
 

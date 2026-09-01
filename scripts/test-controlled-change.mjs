@@ -36,10 +36,23 @@ const PLAN_SHA = '1db326ae078ddefe95f594b9c6f3ce2c68eae6b70bc25205645973843c76c0
 const tests = new Map();
 function test(name, fn) { tests.set(name, fn); }
 
+// git 钩子会把仓库位置注入环境，而这些变量**压过 `-C`**：本测试所有 `git(repo, …)` 调用
+// 都会被重定向到真仓。链接 worktree 尤其危险——实测 git 在 worktree 的 pre-commit 里注入
+// **绝对路径**的 GIT_DIR + GIT_INDEX_FILE（普通仓只注入相对的 GIT_INDEX_FILE，不注入 GIT_DIR），
+// 于是 fixture 的 `git commit -qm fixture` 会拿**当时的暂存区**在**用户的分支**上造出一条
+// 名为 `fixture` 的提交（内容 = 用户已 add 的文件 + target.txt）。`verify.sh` 是 pre-commit
+// 的最后一步，所以这条路径在每次 worktree 提交时都会走到。故显式剥离位置类 GIT_*。
+const GIT_LOCATION_ENV = [
+  'GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY',
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_COMMON_DIR', 'GIT_NAMESPACE', 'GIT_PREFIX',
+];
+
 function run(command, args, options = {}) {
+  const inherited = { ...process.env };
+  for (const key of GIT_LOCATION_ENV) delete inherited[key];
   return spawnSync(command, args, {
     cwd: options.cwd,
-    env: { ...process.env, ...(options.env || {}) },
+    env: { ...inherited, ...(options.env || {}) },
     input: options.input,
     encoding: 'utf8',
     timeout: 30000,
