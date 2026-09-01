@@ -260,6 +260,42 @@ GREEN（已修版）          分支提交数 1 → 1   顶部提交 = 'seed'
 
 **建议路径**：把 **E3 拆出单独立项**；E1+E2 对 `fc6eeb5` 确属机械，可在重锚后的计划上先行。
 
+## 重锚清单（E1+E2 执行口径；E3 拆出）
+
+依 P1 门裁决执行。**本清单不改 `EXECUTION-PLAN-CORE.md` 字节**（避免触发 `K1`）——它是执行者
+对该计划的差异口径，落点在实现与测试里，计划本体的修订与重新批准 SHA 由 luca / 计划所有者裁。
+
+### 拆分
+
+- **E1 + E2 继续按本计划执行**，基线重钉为 `fc6eeb5`。会审在该基线上重验了 §6.1、
+  `A-GATE-SUPPRESS` 正例、`A-SCOPE-NULL` 缺陷仍在，四条不得重开的结论（§3.3 / §4.1 /
+  §4.2a / §6）全部存活。
+- **E3 移出本次范围，单独立项**。理由不是漂移，是计划自身的边界矛盾：§5.2 要求的惰性认证层
+  在本仓不存在，唯一可能的两个宿主（`project-scope-guard.mjs` / `session-sync.mjs`）都被 §8
+  声明不改、被变异体 15 声明「全程不改」。这是 `EXPERT-REVIEW-CORE-01` Q1 在 `4658595` 就
+  指出过、C1 只为 E2 侧「删掉要求」而从未对 E3 侧复用的同一条。**D4（MAJOR-5）随 E3 一起走**
+  ——「Stop 侧允许且必须推进状态」同样要往 `session-sync.mjs` 写代码，是同一条边界。
+
+### E1+E2 的差异口径（逐条可执行）
+
+| # | 计划原文 | 执行口径 | 依据 |
+|---|---|---|---|
+| R-1 | §3.2「`buildDecision` 里有**三个**早返」 | 当前基线是**四个分支 / 五条 return**。#4（`{...complexity}` + wayfinder）由 §3.2 已强制的携带模式免费覆盖；**#5 `explicitEngineeringDeliverySelection → FRAMEWORK_FLOW` 是对象字面量，必须显式补一次 spread** | D1 |
+| R-2 | §3.2 行号锚点 `:737/:757/:770/:772` | **作废**（指向已失效的 `4658595`）。当前：`buildDecision@788`、`skillDecision@850`。实现按**符号**定位不按行号 | D1 |
+| R-3 | §7.2 变异体 12 列三个早返 | 补第 5 条早返的回归用例。会审已推导出可达串：`按工程交付流程执行：重构 luca app 的设置页面信息架构，功能堆砌很难找`（同时携带 E1 别名与 E2 三腿，且走 `FRAMEWORK_FLOW` 早返） | D1 |
+| R-4 | §7.2 变异体 19 | **恒真，作废**。它描述的 `:683` / `tool_name='Bash'` / `*** Begin Patch` 在 `route-guard.mjs` 中计数全为 0，那些形态在 `project-scope-guard.mjs`——已被 BLOCKER-2 移出 §8。与 MAJOR-4 同型残留 | 会审 |
+| R-5 | §7.1 `A-GATE-SUPPRESS` 反向控制 | **fixture 必须自己覆盖 `ROUTE_GUARD_PROJECTS` 并包含 `muse`**，否则 `route-guard 在 muse 里怎么走` 与正例同样返回 `NONE`，零分辨力 | 会审 |
+| R-6 | §4.2a 注入串 `📌 当前有未完成任务` | 断言**锚定完整串含 `📌`**；`route-guard.mjs:1145` 已有 `⚠️ 当前有未完成节点` 同通道同前缀，按 `当前有未完成` 子串匹配会对两者都绿 | MINOR-4 |
+| R-7 | §9 验证命令 | 补 `node scripts/test-codex-adapter.mjs`（23/0）。本执行已在 `AS-07` 接住 | MINOR-5 |
+| R-8 | §10 KILL 顺序 `K1,K2,K5,K3,K4,K6`、标题「4 条」实列 6 条 | 纯排版，不影响执行 | MINOR-3 |
+| R-9 | §7.1 `A-OBLIG-VISIBLE` / `A-OBLIG-LIFECYCLE` 的 Stop 子句 | **今天恒真**（§8 从不改 `session-sync.mjs`）。E2 侧只保留「注入存在/停止」这一半可测断言；Stop 侧断言随 E3 一起重做，不在本次充当守卫 | 会审 |
+
+### 本次不做（明写，防止悄悄扩张）
+
+E3 的 revoke-and-queue 与惰性认证、`project-substrate.mjs` 的状态机改造、
+`session-sync.mjs` / `project-scope-guard.mjs` 的任何改动、plan-execution 状态机、
+bridge / activation / rollback。
+
 ## 新基线实测（隔离 worktree @ `fc6eeb5`）
 
 ```

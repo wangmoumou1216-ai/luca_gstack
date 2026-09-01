@@ -96,6 +96,11 @@ api-project/
 .claude/.session-tool-count-*
 .claude/.session-project-*
 .claude/.session-consumed-turns-*
+# E2 义务状态文件：含 `exact_task_text` = **完整原始 prompt 字节**（上限 262,144 B）。
+# 必须先于义务落盘代码进入本文件，否则每个产生义务的 session 都会留下一个含用户原话的
+# 未跟踪文件，一次 `git add -A` 就把它提交进仓库。文件名刻意不以 `.session-project-` 开头
+# （`scripts/check-project-links.mjs:59` 会把那个前缀当项目 pin 误解析）。
+.claude/.session-obligation-*
 .claude/.session-projnag-*
 .claude/.session-inherited-*
 .claude/.project-switch.lock/
