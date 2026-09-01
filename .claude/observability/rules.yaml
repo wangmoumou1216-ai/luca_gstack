@@ -80,3 +80,33 @@ rules:
   rule: "强制项目切换轮结束后，下一条用户消息应自动续接已明确的原始任务，不得制造重复确认；真实人类决策门除外"
   source_observations:
     - O-20260820-001
+- id: R-20260824-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["office"]
+    scenes: ["*"]
+  rule: "office: 项目创建意图与名称已明确后，不得要求用户重复输入同一门禁口令；应在官方事务路径内自行完成，无法完成时一次性报告 blocker。"
+  source_observations:
+    - O-20260824-001
+- id: R-20260826-001
+  status: active
+  severity: medium
+  type: quality-gate
+  scope:
+    skills: ["code-recon", "html-prototype"]
+    scenes: ["B", "C"]
+  rule: "code-recon/html-prototype：当基于既有界面重构且用户要求不改变内容时，原型前必须建立可枚举内容守恒契约，覆盖角色、场景、模块、指标、表格/工作项、动作与详情子页；笼统的‘保留全部内容’不构成证据，须由独立 Gate 对照源文件抽查。"
+  source_observations:
+    - O-20260826-001
+- id: R-20260826-002
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["open-design"]
+    scenes: ["*"]
+  rule: "open-design: 当用户要求 OD 基于已验证原型做视觉处理时，交接包应同时包含自包含 HTML 作为可执行行为参考；Markdown 仍是设计源，OD 输出必须另命名且不得覆盖既有 HTML。"
+  source_observations:
+    - O-20260826-002

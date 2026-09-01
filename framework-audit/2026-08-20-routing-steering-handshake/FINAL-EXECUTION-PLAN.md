@@ -2,7 +2,7 @@
 
 > Plan ID: `LRS-20260820-016`
 > Date: 2026-08-20
-> Status: `PROPOSED_ONLY` — Round-18 Plan Gate returned READY_FOR_REDTEAM (0/0/0); the Round-18 routing red team returned FAIL(STALE) with 2 MAJOR, both now closed in these bytes; the baseline is re-frozen at the quiesced 2026-08-24 refs; pending a fresh Plan Agent review and Round-19 dual red team
+> Status: `PROPOSED_ONLY` — Round-18 Plan Gate READY_FOR_REDTEAM (0/0/0) and its routing red team FAIL(STALE) 0/2/0; Round-19 Plan Gate NOT_READY (0/2/0); Round-20 Plan Gate NOT_READY (0/3/3) and stale on a mid-review ref advance; Round-21 Plan Gate NOT_READY (0/2/2) with refs held. Round-22 Plan Gate NOT_READY (0/1/1); Round-23 NOT_READY (0/2/0); Round-24 routing FAIL(STALE) 0/2/0; Round-25 gate NOT_READY (0/2/1), routing FAIL (1/1/1), transaction **PASS (0/0/1)**; Round-26 gate NOT_READY (0/3/2), routing FAIL (2/2/1), transaction **PASS (0/0/0)**; Round-27 gate NOT_READY (1/0/0), routing FAIL (3/0/1), transaction FAIL (1/1/0). Round 27 confirmed the architectural deletion is sound in design — no candidate becomes authority, the R26 negation corpus holds, no candidate reaches a persisted schema — but found the deletion incomplete in the bytes and, decisively, that §5.1's LLM-confirmation promise was never wired into §5.2's creation rule. Every R18–R27 BLOCKER, MAJOR and MINOR is closed here and the baseline is frozen at the §0.3 tuple. Round-28 is stale by KILL-02: `b438c92` landed the `FRAMEWORK FLOW` capability mid-cycle and re-froze the baseline, so its partial gate/routing verdicts grant nothing. The alignment that commit owed — §8.1/§4.2/§5.1 positioning, the §3 behavioural freeze, the §16 union and the new `R-FLOW` assertion with its four §15 mutants — is closed in these bytes; pending a fresh Plan Agent review and Round-29 dual red team
 > Mode: requirements → solution review → plan → two independent red teams → exact-SHA user handshake → isolated implementation → two independent post-reviews
 > Runtime authorization: **none**. Before the exact-SHA handshake, only this audit package may change.
 
@@ -70,33 +70,80 @@ Operational outcome:
   framework chain `A0→B1→B2→V1→C1` and independent downstream object `D1` frozen in §13 after their
   respective named gates → produce a delta and re-review. No sibling, merge, rebuilt equivalent or
   content-similar object qualifies. The frozen framework baseline is exactly:
-  - `BASELINE_HEAD=BASELINE_UPSTREAM=fd0919bb49597f1050106180bbbed21dac4aedff`,
-    `BASELINE_TREE=3d383c34468249431c70fc864cc78cd772c82e1b`. The two refs are equal and are pinned
+  - `BASELINE_HEAD=BASELINE_UPSTREAM=4658595ac20ce544cb406657c70ba3259eb1f842`,
+    `BASELINE_TREE=368e1fc739b0618073c28eeb7e5cff7a9779ab6c`. Re-pinned from `6449180…` under the audit-only
+    exemption below, evidenced: `6449180..4658595` touches 0 non-audit paths and all 13 pinned envelope blobs
+    are byte-identical at both commits, positive control run. The two refs are equal and are pinned
     independently; either one moving — a new commit, or a push that advances only upstream — re-fires KILL-02;
-  - prior frozen ancestor `PRIOR_BASELINE_COMMIT=8e9726d8477f8a287722c09345f07182cc86d1d5`,
-    `PRIOR_BASELINE_TREE=fe67c639838340beca9556e76773f0e1b7d41c2b`;
-  - the intervening ancestry is exactly, in parent-to-child order,
-    `c0a2efe7bfc7a32455580a349cd5d79915561573`, `c9d4185f18e14871f6f285e19baff205798be201`,
-    `8e1c46d56d431d54ada9d30a3bb34d010f3e8466`, `068b9ab45d98c6fc258278e08d27388e59cd8729`,
-    `36d37072ab31fdaa4fd7140f08869c60b654fa57`, `0e51ec2171c6c81de3403815339cdf304a0a3917`,
-    `fd0919bb49597f1050106180bbbed21dac4aedff`;
-  - the complete `PRIOR_BASELINE_COMMIT..BASELINE_HEAD` delta is exactly six files, whose `BASELINE_HEAD` blobs
-    are `framework-audit/2026-08-20-recovery-handoff-review/DISPOSITION-AND-REDTEAM.md=a71725210b88f4fc15b4b3c0fd516562ea3eae47`,
-    `framework-audit/2026-08-20-recovery-handoff-review/HANDSHAKE-SESSION-PROMPT.md=4662ecd884c079b533ec06fdf0fd9c918645c393`,
-    `framework-audit/2026-08-20-recovery-handoff-review/REVIEW.md=4a6740fbafa9937c6a2c41a7c4febfe666d799f7`,
-    `.claude/hooks/post-edit.mjs=b534aa6eabaee449b551edce41a7cf7d4c6f8d30`,
-    `scripts/test-auto-open.mjs=f4719bd33599ea60acd9cc8bc1617c1173a05189` and
-    `scripts/test-project-scope-guard.mjs=2d056cd674ddad28ffc7f4958fd4b0a0db3412a8`;
-  - the non-audit subtree is **no longer** byte-identical to `PRIOR_BASELINE_TREE`. Concurrent sessions changed
-    `.claude/hooks/post-edit.mjs` (inside the §12.1 bridge envelope and both release payload lists),
-    `scripts/test-auto-open.mjs` and `scripts/test-project-scope-guard.mjs` (inside the §12.2 envelope). Every
-    §10.1 g0 source receipt, byte-parity proof and envelope hash is therefore taken against `BASELINE_HEAD`
-    bytes and never against any earlier tree; any prior review that cited the pre-`fd0919b…` bytes of those
-    three paths is void for those paths.
-  This tuple is asserted by commit-ref identity in the preflight receipt, §13 `A0` parent/ancestry and every
-  rollback ancestry. The byte-identical non-audit subtree is recorded as evidence only and never downgrades
-  KILL-02 to path-filtered or content identity; any further commit on either repository, including another
-  audit-only one, re-fires KILL-02 and the in-flight review round is stale.
+  - prior frozen ancestor `PRIOR_BASELINE_COMMIT=b438c92b1d1dbb28f5252396181f1cb9ab806900`,
+    `PRIOR_BASELINE_TREE=ffc658ee1f6770751d2024377c318404dbe5580b`;
+  - the intervening ancestry is exactly, in parent-to-child topological order,
+    `60dd0ce6f72da0a29200378aafe925b8b4144f32`, `d572fe1e287616543cb70f7d34b689a2cb0ecbaa`,
+    `b2762c7fa5b8b5de725a3339f1a5afdcb3e147a7`, `f8024a8ef3172bd4027d16b2515bb1ca68b2ef50`,
+    `e399f45a2a1a820ec36692fa4644a89532d8135b`, `3d942710bb90790809b3cc98b1492f6a47adfef8`,
+    `644918028f75fd9c1c8c33107d808814fd198272`, `4658595ac20ce544cb406657c70ba3259eb1f842`;
+  - the complete `PRIOR_BASELINE_COMMIT..BASELINE_HEAD` delta is exactly 80 files, of which 65 lie outside
+    `framework-audit/**`. Envelope membership is decided **only** by a path appearing as its own literal line in
+    a §12.1 or §12.2 file list. A path named anywhere else in this document — in §10.1 prose, in this tuple, or
+    as the tail of a longer nested `…/payload/<path>` release-manifest entry — is **not** thereby an envelope
+    member. Under that rule exactly 13 of the 65 qualify, and their `BASELINE_HEAD` blobs are pinned here:
+    `.claude/agents/orchestrator.md=99fa3f5ee273e7b3f44c941e8038c32cf6d8490c`,
+    `.claude/hooks/project-scope-guard.mjs=1f62fecf21dbff0831ed858d496d7943d04f0cff`,
+    `.claude/hooks/route-guard.mjs=f895cc210c0431308a672410bbf84b7ea82571df`,
+    `.codex/codex-hook-adapter.mjs=944652ae83c7b4d45e5cc39562f2eb9516f8726a`,
+    `AGENTS.md=b482d336dcd22b9d3e4331a4105f023bb4d7586f`,
+    `CLAUDE.md=199d724e94d0c2fc56b3882db1730c95c218c5f5`,
+    `scripts/check-agent-contracts.mjs=4aed81aeb2721662e009998a69699cd39553e062`,
+    `scripts/check-capability-parity.mjs=2f66a5a8a86f667f9680ae904c1212b0ec259fe6`,
+    `scripts/check-project-links.mjs=42c5fe21473303ba535f688ac0eb6cc5fd080d60`,
+    `scripts/test-harness.mjs=599f5eed5bb872889afecf238fe467b2af94db28`,
+    `scripts/test-project-scope-guard.mjs=d9f14d6604d073c98ee163b72ba675fda66d7e8b`,
+    `scripts/test-route-guard.mjs=72c0c07df6880b63d4d1fcc69c33006c268224ce`,
+    `scripts/verify-codex-wiring.mjs=60eafc374f47af45b6dfc62b39ab2f268d1627ca`.
+    The remaining 52 appear in no envelope list and are never staged, packaged or modified by this plan. They
+    are **not** transcribed here: at 52 paths an inline list is copy-rot waiting to happen, and the earlier
+    12-path list existed only as evidence that the membership rule had been applied to every delta path. That
+    evidence is now supplied mechanically instead — any reviewer reproduces the exact partition with
+    `git -C <root> diff --name-only PRIOR_BASELINE_COMMIT BASELINE_HEAD | grep -v '^framework-audit/'`
+    intersected against the bare path lines of §12.1–12.2, and a positive control must be run through the same
+    loop so an empty or short result is not mistaken for a clean one. Counts, not transcription, are normative:
+    80 / 65 / 13 / 52;
+  - the non-audit subtree is **no longer** byte-identical to `PRIOR_BASELINE_TREE`. Every §10.1 g0 source
+    receipt, byte-parity snapshot — including the `.claude/observability/rules.yaml` runtime-parity snapshot,
+    which §10.1 takes from live worktree bytes rather than from any envelope list —
+    and every envelope hash is therefore taken against `BASELINE_HEAD` bytes and never against any earlier
+    tree; any prior review that cited pre-`BASELINE_HEAD` bytes of those paths is void for those paths;
+  - this audit package is itself tracked at `BASELINE_HEAD`: `FINAL-EXECUTION-PLAN.md`, every Plan Agent
+    receipt through R18 and `REDTEAM-ROUND-18-ROUTING.md` are committed objects, so `A0` adds only the
+    still-absent outputs of the round that actually passed — currently the R32 names in §12.3 — plus the
+    evidence manifest, rather than re-adding the package. This phrase always tracks the passing round's
+    number; a stale round number here is a defect.
+  This tuple is the **sole** definition of the framework baseline. Every other section — the §3 preflight
+  receipt, §13's `A0` parent/ancestry, and every rollback ancestry — refers to `BASELINE_HEAD`,
+  `BASELINE_UPSTREAM`, `BASELINE_TREE`, `PRIOR_BASELINE_COMMIT` and `PRIOR_BASELINE_TREE` **by name only** and
+  never restates their literal hashes, so re-freezing the baseline is a single-site edit that cannot leave a
+  stale copy behind. Concretely: a literal 40-hex value of any of those five names is legal **only** inside this
+  tuple and the ancestry list it contains; anywhere else — §3, §13, any rollback ancestry — it is a defect. This rule
+  binds only those five baseline names; the downstream ref, the pinned envelope blob hashes and the screenshot
+  digest each have their own single definition site elsewhere and are unaffected. It is asserted by commit-ref
+  identity. The byte-identical non-audit subtree is recorded as evidence only and never downgrades
+  KILL-02 to content identity for reviewed paths.
+  **Audit-only exemption (2026-08-28, user-adjudicated).** KILL-02 fires when a commit advances either ref
+  **and** that commit's `PRIOR..NEW` delta touches at least one path outside `framework-audit/**`, or any
+  path appearing as its own literal line in a §12.1/§12.2 list. A commit whose entire delta lies inside
+  `framework-audit/**` with **zero** envelope members and **zero** non-audit paths does **not** invalidate an
+  in-flight round; the reviewer re-pins `BASELINE_HEAD`/`BASELINE_UPSTREAM`/`BASELINE_TREE` to the new commit,
+  records the exemption in its receipt, and continues. The exemption is mechanical and must be evidenced, not
+  asserted: `git -C <root> diff --name-only <old> <new> | grep -v '^framework-audit/'` must be empty **and**
+  every §0.3-pinned envelope blob must be byte-identical at the new commit, with a positive control run
+  through the same comparison so an empty result is not mistaken for a working check. Any doubt resolves to
+  stale.
+  Rationale: KILL-02 exists so no reviewer certifies bytes that moved underneath it. An audit-only commit
+  moves nothing a reviewer reads — Round 31 was invalidated by `4658595`, which touched 0 non-audit paths and
+  left `route-guard.mjs` byte-identical — so firing on it served the letter of the rule against its purpose
+  and cost six of this cycle's rounds. The plan-SHA half of the freeze is untouched: any edit to this
+  document still invalidates every review under KILL-01, and refs moving on **any** reviewed path still
+  invalidates under KILL-02.
 - `KILL-03`: any pre-existing tracked/untracked change overlaps an exact runtime, test, wrapper or governance
   pointer path in §12.1–12.2 → `BLOCKED_DIRTY_OVERLAP`; no stash/reset/clean/ours/theirs workaround.
 - `KILL-04`: any hash-frozen audit input named by the final evidence manifest changes, or any not-yet-run
@@ -202,145 +249,24 @@ stable entry shims
 `prompt_gate` controls whether a tool may inherit project access. Project lifecycle, route obligation and
 mutation intent are orthogonal fields in one atomic session document.
 
-### 2.3 Round-4 Plan Gate closure map
+### 2.3 Review-cycle history (removed 2026-08-28)
 
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 approved-plan totality | §5.3 strict task/skill/parallel-skill `oneOf`, mandatory preflight/parameters/JOIN/quality, global concurrency cap, phase/final assertion bijection |
-| B2 activation TCB | §10.2 explicitly frozen NODE/Codex-helper/Git/ps/sysctl/lsof external roles; no wrapper-only TCB claim |
-| M1 cross-session checkpoint | §5.3 source revocation + byte-proved checkpoint + one-claim global journal/target import |
-| M2 delta replan | §5.3 failure decision, delta schema, controller-derived approval, immutable predecessor/evidence lineage |
-| M3 project boundary | §5.3 PLAN_PROJECT_REQUIRED before approval and exact WAITING_BOUNDARY after same/unproven approval |
-| M4 activation order | §10.3 one forward tuple chain and one inverse; §10.1/DAG only reference it |
-| M5 project-only NEW race | §9.2 issuance snapshot and route-present/absent controller arms |
-| M6 TARGET_EXISTS task loss | §8.1 exact task-bearing PROJECT_SWITCH_REQUIRED obligation; bare SWITCH cannot erase it |
-| m1 D re-presentation | §5.3 immutable primary proof plus fresh event-bound reprompt challenge |
+Rounds 4–31 recorded their closure maps, stale-round notes and defect narratives here across 215 lines. §17.0
+already placed every one of them out of gate scope — they are never implemented and never judged — while each
+round appended more, lengthening the document that the next round has to read. They are deleted rather than
+carried: the receipts themselves (`PLAN-AGENT-REVIEW-R*.md`, `REDTEAM-ROUND-*.md`, 42 files on disk and
+immutable under §12.3) are the authoritative record of what each round found, and nothing here restated them
+more accurately than they state themselves.
 
-### 2.4 Round-5 Plan Gate closure map
+Three findings from that history are load-bearing on the executable contract and therefore live in the
+contract itself rather than in a changelog row:
 
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 parallel JOIN authority | §5.3 exact work/preflight/JOIN/quality owner↔agent↔execution-contract bijections plus one-shot SUMMARY/JOIN capability |
-| B2 rollback after helper disable | §10.3 durable HELPER_DISABLED tuple and exact helper 000→0500→trust-inverse→000 rollback transitions under the fence |
-| M1 checkpoint identity/schema | §5.3 strict checkpoint status `oneOf`, controller-only sequence/core/checkpoint/claim H/LP identities and golden vectors |
-| M2 delta authority envelope | §5.3 Plan-parity delta capability/call/result/finalizer/install identities, strict verb requests and one-shot barriers |
-| M3 NO_PIN no-project Plan | §5.3 exact approval cell enters route-only PLAN_EXECUTION_PENDING with empty project roots and no project grant |
-| M4 project-only D(NEW) recensus | §8.5 census crossed with `route_snapshot_kind=ABSENT|PRESENT`; ABSENT uses only independent project presentation |
-| M5 NEW controller restore | §9.2 one immutable origin-snapshot restoration oracle shared by route-present and route-absent arms |
-
-### 2.5 Round-6 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 deferred-request split schema | §5.4 owns one strict `deferred-project-request:v2` discriminated `oneOf`, including the sole project-origin and route-snapshot H/LP identities; §7 only points to it |
-| B2 activation inverse frozen too late | §10.1/§13 move the complete forward/inverse activator, HELPER_DISABLED faults and review into B1 before B1/B2 freeze; V1/C1 are forbidden to modify bootstrap-TCB bytes |
-| M1 delta controls in wrong route column | §8.1/§8.5 keep initial Plan approval as the sole EXACT_APPROVAL and dispatch both SHA-bound delta controls through wait-kind-checked ANSWER_OR_REVISION cells |
-| M2 checkpoint Stop deadlock | §8.6 gives CHECKPOINT_PRESENTATION one exact byte-proving Stop transition to PRESENTED/TRANSFER_READY and removes it from the unconditional block set |
-| M3 plan-execution verb envelopes | §5.3 defines one strict common envelope plus a closed per-verb payload/pre-state/capability/evidence/next-state table for every public verb |
-| M4 post-child JOIN cannot serialize writes | §5.3 requires unconditional pairwise-disjoint canonical child writes and a distinct summary output; shared-write work is a serial dependency DAG |
-
-### 2.6 Round-7 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 successful work/final assertions unreachable | §5.3 adds paired `record-work`; the later R9 closure adds a registered FINAL quality-gate lifecycle, after which `finalize` consumes only its verified evidence and stages the exact summary before Stop |
-| B2 mandatory checkpoint unreachable | §5.3 adds capability-free `BETWEEN_WAVES` plus one mutually exclusive wave-choice capability consumed by `advance-wave` or `checkpoint` |
-| M1 failure-decision wait missing | §5.3/§5.4 add PLAN_EXECUTION_FAILURE_DECISION and exact RETRY/REPAIR/SKIP/TERMINATE rows |
-| M2 approved-plan snapshot overlap/invalid tombstone | §5.4 replaces phase/wave overlap with exclusive BEGIN/typed FRONTIER/DELTA_CALL/BETWEEN_WAVES/FINAL_ASSERTIONS arms; FRONTIER alone represents legal native-call + phase-completion coexistence using only declared tombstone kinds |
-| M3 committed projection incomplete | §5.4 projects every begin, mixed frontier, between-wave, replan, delta-call/wait, boundary-wait, final-assertion and staged-summary subphase to one superseded predecessor/new obligation |
-| M4 transfer recovery authority absent | §5.3 defines the transfer journal owner, liveness-gated recovery capability/sequence and one successor per nonterminal barrier |
-| M5 helper inode frozen before creation | §10/§13 freeze helper source/construction before review; the activation journal freezes the actual private inode after creation and post-activation review attests it |
-
-### 2.7 Round-8 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 `record-work` rejected by production surface | §9.1 derives one exact public-verb set from the §5.3 schema; `record-work` is present and omission is a build-time equality failure |
-| B2 `advance-wave` rejected by production surface | the same generated set includes `advance-wave`; local and transferred positive vectors plus a deletion mutant bind it |
-| B3 FINAL assertions lack native quality lifecycle | §5.3 adds FINAL_QUALITY_GATE ISSUED→IN_FLIGHT→VERIFIED with registered quality-gate PreTool/PostTool; only VERIFIED mints the summary finalizer |
-| M1 MAIN_AGENT multi-tool/HITL not total | §5.3 adds a manifest-bound main-agent step DAG/cursor, one capability per tool or human wait, accumulated evidence and distinct `complete-main-work` before quality |
-| M2 failure drain misses PHASE_COMPLETION | §5.3 atomically revokes every native/non-native frontier authority into a strict suspended-successor union; RETRY/SKIP alone may reissue exact records |
-| M3 checkpoint-display project change contradictory | §5.4/§8 choose the smaller policy: any pre-claim project intent cancels the checkpoint and routes through a fresh ordinary replan/project operation; the D snapshot arm is removed |
-| M4 transfer recovery journal/notice not total | §5.3 defines a four-arm TransferJournal oneOf, H/LP state hashes and one successor per arm; §8 adds a source/target recovery-notice overlay and exact Stop proof |
-
-### 2.8 Round-9 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 ordered public-verb SSOT rejects its own table | §5.3 freezes one canonical 22-member manifest order, generates the transition-table row order and production dispatcher from it, and makes an adjacent-row swap a biting build mutant |
-| B2 parallel-child parameter wait is not exclusive/addressable | §5.3 makes any parameterized parallel group an exclusive outer wave, freezes a child-addressable lexicographic parameter queue, and permits child work only after every preflight and queued answer is terminal |
-| B3 phase SKIP revives work inside the waived phase | §5.4 splits suspended successors into FAILED_SCOPE, SAME_PHASE and OTHER_PHASE; PHASE SKIP tombstones the first two and may reissue only OTHER_PHASE authority |
-| M1 mandatory Orchestrator phase confirmation absent | §5.3 derives a strict post-wave phase-confirmation queue for MAIN_AGENT skill and Supervisor/Hierarchical phases; no later wave/final gate issues before its exact human receipts complete |
-| M2 TransferJournal owner/capability preimages ambiguous | §5.3 defines strict owner/recovery-capability oneOf objects, nonrecursive started-state semantics, domain-separated H/LP hashes and null/golden arms |
-| M3 recover actor identity ambiguous | §5.3 replaces the shared transfer root with per-verb oneOf roots; recover binds an exact source-or-target actor sid/event/boundary and the capability binds the same actor |
-| M4 preflight override absent | §5.3 adds a manifest-policy-bound PREFLIGHT_OVERRIDE wait with distinct retry/override decisions; override stores evidence and continues the same phase without fabricating PASS or waiving it |
-| M5 target deferred-claim cleanup has no strict receipt | §5.3/§7 define the claim hash, immutable source CANCELLED retention, stable no-follow source read, target CAS and one bounded non-authorizing cleanup receipt |
-
-### 2.9 Round-10 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 parameter answers are irreversible hashes | §5.3 stores each answer as one bounded `CollectedParameterAnswer` with canonical base64 bytes, decoded length/SHA, native event/boundary and closed-option ID; queue, wait snapshot, work input and Work Agent prompt bind the same complete objects |
-| B2 TARGET_EXISTS product is incomplete and double-valued | §8.1 adds the byte-preserving `PLAN_EXECUTION_FAILURE_DRAIN` BUSY row, removes `PLAN_EXECUTION_TRANSFER_READY` from the terminal row, and generates exactly one row for every closed route status |
-| M1 cancelled checkpoint has no authoritative retained store | §5.3/§7 move the complete CANCELLED checkpoint into one bounded top-level source-session archive in the same rename that replaces the live route; target cleanup reads only that immutable archive and pre-claim cancellation never writes the transfer journal |
-
-### 2.10 Round-11 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 MAIN_AGENT human answer has only a SHA | §5.3 uses one strict bounded `MainAgentHumanAnswer` with canonical bytes, length/SHA, event/boundary and option ID in the DONE step, evidence root, successor input/prompt and every crash/scope projection |
-| B2 archive-full cancellation leaves PRESENTED claimable | §5.3 admits a checkpoint only after reserving one archive slot and worst-case cancellation bytes, forbids ROTATION/cancellation markers at claim, and makes `ROTATION+PRESENTED` schema-invalid |
-| M1 retained parameter answers can exceed 2 MiB | §5.3 adds manifest-derived `state_capacity_admission` at Plan finalization/approval over all question/HITL maxima, canonical expansion, duplicated snapshots, cancellation and deny reserves; cap/cap+1 Plans are rejected before execution |
-
-### 2.11 Round-12 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 transferred source gives NEW_TASK two successors | §8.1/§8.6 make `PLAN_EXECUTION_TRANSFERRED` one permanent source-session terminal: every route event, project intent and parent relation preserves the immutable transfer tombstone, emits only the derived `NEW_SESSION_REQUIRED` diagnostic with command null, and requires a fresh native session for another task; §14 generates the full product and §15 kills any restored `PLACE_NEW` arm |
-
-### 2.12 Round-13 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 terminal transfer was below semantic creation/TARGET_EXISTS | §5.2/§8.1 put one `PLAN_EXECUTION_TRANSFERRED` pre-creation short circuit immediately after attestation and before signal placement, explicit-new-task supersession, TARGET_EXISTS or the ordinary project matrix; the existing `route_obligation` remains the immutable transfer tombstone, while generated signal-only/combined/census/parent fixtures and a bypass mutant prove no replacement live obligation can be minted |
-
-### 2.13 Round-14 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 status-only transfer terminal bypasses nonterminal journal recovery | §5.2/§5.3/§8 freeze one order: attestation and identity/stream/replay guards → matching TransferJournal locks+census/notice/recovery overlay → exact fully validated COMMITTED read-back with nonempty commit receipt → transferred-source terminal → remaining capacity/semantic/TARGET_EXISTS/project routing; SOURCE_TOMBSTONED remains recovery-only even though its underlay route arm is already TRANSFERRED |
-
-### 2.14 Round-15 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 transfer overlay has no event-257 successor | §5.3/§6.3/§7/§8 make one fixed-size per-session hash-chain `transfer_security_ledger` mandatory at schema-v3 bootstrap and advance it across sequential journals for every nonterminal transfer event plus COMMITTED-source terminal event; `ledger_admission=AVAILABLE|FULL` is derived before mutation, FULL rotates ordinary authority but preserves the dedicated recovery/terminal lane, and COMMITTED target alone follows the ordinary 256/event-257 oracle |
-
-### 2.15 Round-16 Plan Gate closure map
-
-| Failed-gate item | Normative closure |
-|---|---|
-| B1 framework ref baseline had drifted off the frozen `8e9726d…` | §0.3 KILL-02, §3 preflight receipt, §13 `A0` parent/ancestry and every rollback ancestry now freeze the actual baseline tuple by commit-ref identity together with prior ancestor `8e9726d…`/tree `fe67c63…`, the exact parent-to-child audit-only ancestry and its three-blob delta; identity remains commit-ref and no runtime-tree-only exception exists |
-| B2 transfer recovery had no event-bearing / no-new-event product | §5.3 adds the strict total `transfer_invocation_kind` discriminator (six kinds, seven ordered disjoint predicates) ahead of the outcome table: only `SCAN_DRAIN_EVENT`/`NEWLY_ATTESTED_EVENT` append exactly one `TransferSecurityEvent`, every no-new-event kind is append-free, `RECOVERY_CAPABILITY_BUSY`/`RECOVERY_OWNER_BUSY` are deleted, an event-bearing kind atomically rotates any stale capability onto the current event under a strictly monotonic `recovery_sequence`, and §6.1/§7.1/§8.2/§8.6/§14/§15 carry the identical partition |
-
-### 2.16 Round-17 Plan Gate outcome and round invalidation
-
-| Item | Disposition |
-|---|---|
-| Round-17 gate verdict | `READY_FOR_REDTEAM — 0 BLOCKER / 0 MAJOR / 0 MINOR` against plan SHA `87d56f6c7722ca73ba4503bdab20630fc706fc01e443c400113070eca621b0ba`; no plan defect was found and none is carried forward |
-| Why Round 17 did not dispatch | framework `HEAD`/upstream advanced from `8e1c46d…` to `068b9ab…` at 2026-08-21 10:38:41 +0800, inside the review window and before the receipt was written; by KILL-02 and the round-staleness rule the whole round is stale regardless of its verdict, and no red team may bind that SHA |
-| Closure | the §0.3 baseline tuple is re-frozen at `BASELINE_COMMIT=068b9ab…`/`BASELINE_TREE=6894a706…` with the extended parent-to-child ancestry, the cycle advances to R18, and `PLAN-AGENT-REVIEW-R17.md` joins the immutable prior inputs unmodified. The constraint was not downgraded: an audit-only commit still re-fires KILL-02 |
-
-### 2.17 Round-18 closure map and round invalidation
-
-| Item | Normative closure |
-|---|---|
-| Round-18 Plan Gate | `READY_FOR_REDTEAM — 0/0/0` against plan SHA `063d5dca…`; no plan defect carried forward from that gate |
-| Routing red team MAJOR-1 — asymmetric trailing-content grammar | §4.2 bullet 1 now carries the same clause-terminal / closed-set trailing-content contract as the `打开|继续` bullet whenever the target is a metadata alias, canonical directory IDs keep the looser rule, and `进入 luca app 项目页面看看` / `切到 luca app 项目功能` / `回到 luca app 项目的登录流程` are frozen negative examples |
-| Routing red team MAJOR-2 — `别`-form structural negation unrecognized | §5.1 structural negation is now the closed generated set `(不\|别\|不要\|不用\|无需\|不必) × (改\|动\|调整\|变) × 结构` plus the fixed forms, matching the negator alternation §4.2 already declares authoritative; `别调整设置结构` and `帮我优化下设置页面，别动结构，其他随便你改` are frozen negative fixtures and the §14 `R-SIGNAL` corpus enumerates the generated set |
-| Why Round 18 did not complete | framework refs advanced twice inside the review window: `36d3707…` at 2026-08-21 14:57:28 and `0e51ec2…` at 15:01:42, leaving `HEAD` one unpushed commit ahead of upstream. `0e51ec2…` is **not** audit-only — it modifies `.claude/hooks/post-edit.mjs`, a path inside this plan's own §12.1 envelope. The round is stale by KILL-02 regardless of merits, and the transaction lane was never dispatched against those bytes |
-| Closure | the §0.3 baseline is re-frozen as the independently pinned pair `BASELINE_HEAD`/`BASELINE_UPSTREAM`, now equal at the quiesced 2026-08-24 ref `fd0919b…`, with the extended ancestry and the corrected six-file delta; the false "non-audit subtree byte-identical" claim is withdrawn, and the cycle advances to R19. `PLAN-AGENT-REVIEW-R18.md` and `REDTEAM-ROUND-18-ROUTING.md` join the immutable prior inputs unmodified. No constraint was downgraded |
-| Why Round 19 can converge | the two concurrent sessions that produced `36d3707…`, `0e51ec2…` and `fd0919b…` finished on 2026-08-21; the repository has been quiescent since, with `HEAD` equal to upstream and 0 ahead / 0 behind. R19 freezes against that quiesced pair |
+- the R18–R26 negation falsification chain and the resulting deletion → §4.2, with its axis split;
+- the Round-27 stranded-consumer method note (search by **semantics** and import-style phrasing, not by deleted
+  symbol name — three rounds since have each found another stranded site this way) → §4.2 and the §14 preamble;
+- the R29–R31 control-vacuity chain (a control must be **derived** from every branch that can claim the input,
+  not chosen as an example, and measurable-now claims must be stated apart from post-implementation ones) →
+  §8.1 and `R-FLOW`.
 
 ## 3. Blocking preflight: payload and lazy-attestation timing
 
@@ -392,9 +318,19 @@ PASS requires:
 - Stop exposes an exact bounded final-assistant-message byte projection in both harnesses. It must prove every
   persisted human question/plan and response-only completion draft was actually presented; if absent, KILL-06
   fires rather than allowing an unobservable WAIT or inferred completion.
+- `L0-PREFLIGHT-RECEIPT.json` additionally freezes the **route-guard behavioural baseline** at `BASELINE_HEAD`,
+  because `b438c92` made `route-guard.mjs` carry the `FRAMEWORK FLOW` layer this plan must not disturb: the
+  `scripts/test-route-guard.mjs` pass/fail counts as run (132/0 at freeze time) with the six framework-flow case
+  names, the `scripts/check-routing-map.mjs` result, and the recorded `buildDecision` layer order
+  `mixed_ambiguous → projectGate → direct call → PLAN_MODE → skillDecision (framework_meta filter,
+  FRAMEWORK_FLOW) → PLAN_CHECK`, with `projectGate`'s internal arm order recorded as measured — explicit
+  creation grammar and named-existing-project both decided **before** the late `pure_framework_meta` null arm,
+  so that arm is never frozen as a universal. `R-FLOW` and §15's non-interference mutants are checked
+  against this record, not against any pre-`b438c92` reading of the file;
 - `L0-PREFLIGHT-RECEIPT.json` freezes the complete §0.3 KILL-02 baseline tuple by commit-ref identity —
-  `BASELINE_COMMIT`/`BASELINE_TREE`, `PRIOR_BASELINE_COMMIT`/`PRIOR_BASELINE_TREE`, the parent-to-child
-  audit-only ancestry, its three-blob delta and the downstream commit/upstream — read back from both
+  `BASELINE_HEAD`, `BASELINE_UPSTREAM` and `BASELINE_TREE` as three independently frozen scalars,
+  `PRIOR_BASELINE_COMMIT`/`PRIOR_BASELINE_TREE`, the parent-to-child
+  ancestry, the complete delta with its pinned envelope blobs, and the downstream commit/upstream — read back from both
   repositories at receipt time. Any mismatch against §0.3 fires KILL-02 before a worktree exists; a
   byte-identical non-audit subtree is never accepted as a substitute for commit-ref identity.
 
@@ -435,44 +371,162 @@ cannot be ignored. Canonical selections still work under `INCOMPLETE`; non-canon
 
 ### 4.2 Executable selection grammar
 
-Only an affirmative project-selection clause outside quotes/backticks/report/example spans authorizes aliases.
-Canonical directory IDs may use the optional noun shown below; a metadata alias requires an adjacent
-`项目|工程` marker unless it is inside the explicit correction forms:
+This section defines **`RESOLVE`**, the hook's only alias operation. `RESOLVE` scans the raw prompt bytes and
+records where registered names occur. It has no notion of affirmative, negated, quoted, reported, questioned or
+clause-terminal, and no notion of a directive verb; those are all semantic judgments made at the LLM layer.
+There is exactly one recognition rule, and it admits no variant, exception or precedence order:
 
-- `进入|切换到|切到|回到|转到 <target> [项目|工程]`; when `<target>` is a metadata alias rather than a
-  canonical directory ID, the adjacent marker — or the alias itself when the optional marker is absent — must be
-  clause-terminal except for a bounded polite particle (`啊|呀|吧`), and a following possessive/content token from
-  the same closed set `的|里|中|下|报告|登录|设置|任务|功能|页面` makes the clause non-authorizing. A canonical
-  directory ID keeps the looser rule because §4.1 already treats a canonical name as lower-ambiguity than a
-  product-owned alias; the two bullets therefore share one trailing-content contract for aliases and differ only
-  on canonical targets;
-- high-ambiguity `打开|继续 <target> 项目|工程` requires the adjacent noun to be clause-terminal
-  except for a bounded polite particle (`啊|呀|吧`); a following possessive/content token from the closed
-  set `的|里|中|下|报告|登录|设置|任务|功能|页面` makes it non-authorizing;
-- correction `项目|工程 是|为|:|： <target>`;
-- possessive correction `项目|工程 是|为 <canonical> 的 <alias>` authorizes only when both sides
-  independently resolve to the same canonical project; disagreement is `multiple_project_targets`;
-- direction `从 <source> [项目|工程] [切换] 到 <target> [项目|工程]`; only target authorizes;
-- creation is separate and requires explicit `新建|创建 <target> 项目|工程`.
+- a **canonical directory ID** occurring anywhere in the prompt is a candidate;
+- a **metadata alias** occurring anywhere in the prompt is likewise a candidate; whether the adjacent token is
+  the `项目|工程` marker is **recorded** as `marker_present` and is never used to accept or reject a candidate.
 
-Clause boundaries are start/end and `，,。；;！!？?\n`. Ignore quoted/backticked spans. A negator
-`不要|别|不用|无需|不必|不是` before the directive cancels it. A clause is non-authorizing when a
-pre-directive epistemic/question token (`如何|怎么|怎样|请告诉我|能不能|是否|要不要`) or report/example
-token (`比如|例如|示例|测试短语|文档写着|引用|假设`) scopes the directive.
+The marker is evidence, not a gate. An earlier revision of this section made alias candidacy conditional on the
+marker (`is a candidate iff …`) while the same sentence declared the marker "never used to accept or reject" —
+a self-contradiction, and one its own frozen fixtures falsified: `打开 luca app` and
+`继续 luca app 的登录流程` are both required to yield one `muse` candidate with `marker_present:false`, which
+the conditional form forbids. The conditional was residue of the deleted authorization grammar, where the marker
+had been an authorizing gate. Restoring it in any form re-opens E1 for bare-alias phrasing — the model would
+again receive zero evidence for `打开 luca app` — and is a named biting mutant.
+
+Verb lists, trailing-content sets, polite particles, quote delimiters, correction forms, direction forms and
+creation forms have all been **deleted** from this section. A hook that consults any of them — to authorize, to
+refuse, or to choose among candidates — reintroduces the class this plan removed, and is a named biting
+mutant.
+
+Clause boundaries are start/end and `，,。；;！!？?\n`.
+
+`RESOLVE` is mechanical and **never authorizes**. Six consecutive review rounds falsified every attempt to
+decide, inside a deterministic hook, whether a Chinese clause negates its directive: `别` (R18), bare `不` (R21),
+`没`/`没有` (R24), `莫` plus an adjacency gap (R25), an over-refusal hole in that same repair, and finally
+`不想进入`/`更别说进入`/`免得又要进入` (R26) — each escaping both the recognized-negator set and the fail-closed
+net, plus `不妨`/`何不` wrongly refused, plus the observation that "token" is undefined for unsegmented Chinese
+so two conforming implementations may disagree on the same input. That record is not six unlucky omissions; it
+is the standing rule of this repository applied to a hook that cannot follow it: **semantic intent recognition
+belongs at the LLM layer, and a deterministic hook may only carry a coarse product-name net.** This plan
+therefore stops trying, and removes negation, rhetorical-question, concessive and idiom analysis from the
+mechanical contract entirely. No `NEG`, `ADV`, `NEG_SUSPECT`, exempt-compound or intervening-token rule exists
+anywhere in this plan; reintroducing one is a named biting mutant.
+
+**Scope of that deletion — the authorization axis only (2026-08-28, user-adjudicated).** What is deleted is
+negation analysis used to decide **whether a directive was issued**: whether a clause naming a project asks for
+a switch. That is the axis where a wrong answer produces a *wrong authorization* — a project switched out from
+under the user or a parallel session — and where six rounds proved a closed negator set is always falsifiable.
+
+It does **not** delete negation used to classify **scope**. `BASELINE_HEAD` carries
+`NEGATED_DOWNSTREAM_SCOPE_RULES` in `classifyRoutingScope` (landed in `b2762c7`), which strips phrases such as
+`不是项目任务` / `不涉及项目` before `DOWNSTREAM_SCOPE_RULES` runs, so an explicit disclaimer of downstream
+work is not counted as positive downstream evidence. That rule is **retained** and this plan does not remove,
+weaken or re-derive it. It is a different axis with a different failure direction:
+
+| | deleted axis | retained axis |
+|---|---|---|
+| decides | was a switch requested | is this prompt framework or downstream work |
+| wrong answer costs | a **wrong project mutation** — unrecoverable within the turn | a **question** (`NEEDS_CONTEXT`) or one extra Gate prompt |
+| on an unrecognised negator | silently authorizes | falls back to asking |
+
+**The retained rule is *not* fail-safe as landed, and this plan owns the fix.** An earlier revision claimed it
+was "fail-safe by construction — worst case a question, never a switch". That claim is **false**, and the
+falsifying pair is minimal and reproducible at `BASELINE_HEAD`:
+
+```text
+new project: 涉及项目的route-guard    → NEEDS_CONTEXT
+new project: 不涉及项目的route-guard  → PROJECT_SWITCH / create_new_project   (同 属于/不属于, 项目/非项目)
+```
+
+The dangerous direction is the negator **hitting**, not missing. A hit strips the downstream signal, which
+removes the `mixed_ambiguous` short-circuit; `projectGate` then proceeds and reaches `explicitNewProjectName`,
+which sits **before** the `pure_framework_meta` null arm (the "late, not universal" ordering §3 and §8.1 already
+record). The result is `project.sh new`: a fresh project is created, the current binding detached and the three
+softlinks repointed — precisely the "wrong project mutation" cell this table reserves for the deleted axis. Two
+consequences follow. Extending the negator set makes the system **less** safe, not more, so the earlier
+permission to extend it is withdrawn. And the unmatched `跟项目没关系` gap is currently the only thing
+preventing mutation on that phrasing, so it must not be "fixed" either.
+
+The axis split therefore holds only once the ordering defect is closed, and closing it is **in scope for this
+plan** because `projectGate` is already a §12.1 modification target:
+
+- **`REQ-SCOPE-NULL-FIRST`**: `projectGate` must evaluate the `pure_framework_meta` null arm **before**
+  `explicitNewProjectName`, so no scope-negation outcome can reach a project-creating branch. Until then the
+  retained rule is safe only for *existing-project switching*, never for creation.
+- `R-FLOW` carries the four minimal pairs above as blocking fixtures: each negated form must return the same
+  decision as its affirmative twin, and neither may return any `projectAction` that mutates a binding.
+- §15 adds the mutant: restore `explicitNewProjectName` ahead of the null arm and the fixtures turn red.
+
+Only with `REQ-SCOPE-NULL-FIRST` in place is the wrong answer on this axis reduced to a question. The closed set
+may then remain incomplete, because incompleteness costs only availability once no branch downstream of it can
+mutate a project.
+
+The hook's total output for a prompt is one strict, non-authorizing
+`alias_resolution={schema_version:1,candidates}` where `candidates` is a duplicate-free, at-most-eight array of
+`{surface,canonical,span_start,span_end,marker_present}`. It is produced by exactly one operation: scan the raw
+prompt for occurrences of a registered canonical directory ID or metadata alias, and for each, record its
+canonical target and byte span. Adjacency of a `项目|工程` marker is recorded as `marker_present` for both
+alias and canonical hits and gates neither. Quoting, backticking, negation, questions, report framing and clause
+structure are **not consulted** — the hook makes no claim about what the user wants, only about which product
+names appear where. Zero candidates yields the absent object. Two or more candidates with distinct canonical
+targets are all recorded; the hook does not choose among them.
+
+`alias_resolution` grants no capability, mutates no project binding, creates no transaction and emits no
+command. It is evidence injected for the model, and §8.1's classification consumes it exactly as it consumes
+every other non-authorizing signal. `RESOLVE` is also independent of the routing-scope and `FRAMEWORK FLOW`
+machinery landed in `b438c92`: it runs on raw prompt bytes, feeds neither `classifyRoutingScope` nor the
+`framework_meta` route filter, and — decisively — **never restores a Project Gate that `pure_framework_meta`
+suppressed**. Candidates are recorded on framework/meta prompts exactly as on any other, and recording them
+authorizes nothing. §8.1 states the full ordering and §15 names the mutant. The project-switch decision is made
+at the LLM layer under the repository's
+semantic routing contract, which reads the actual sentence — including `不想进入 luca app 项目`,
+`更别说进入 luca app 项目`, `免得又要进入 luca app 项目`, `难道现在要进入 luca app 项目`,
+`无论如何都要进入 luca app 项目` and `进入「luca app」项目` — and decides whether a switch was requested. That
+layer already performs this judgment for every other semantic route in this repository and is the only layer
+that can.
+
+This closes E1 without the failed grammar. E1 was a **resolution** failure — `luca app` was never bound to
+canonical `muse`, so the model had nothing to act on and asked again. `alias_resolution` supplies exactly that
+missing binding and nothing more. It cannot recur as a wrong authorization, because the hook no longer issues
+authorizations; and it cannot recur as an over-refusal, because the hook no longer refuses. The residual risk
+moves to where it is recoverable and observable: if the model misjudges intent, the user corrects it in one
+turn, and §5.2's durable obligation plus §8's total transition contract still govern what may then mutate.
+
+The registry rules are unchanged: with a complete registry an explicitly named target that resolves to nothing
+returns `NEEDS_CONTEXT(alias_not_found)`, never STOP or a create fallback; a malformed or overflowed manifest
+makes the registry `INCOMPLETE` per §4.1, under which non-canonical candidates are withheld and only canonical
+IDs resolve. Blocking fixtures pin: `进入luca app项目` and `进入「luca app」项目` both yielding one `muse`
+candidate; `不想进入 luca app 项目` also yielding one `muse` candidate with **no** project mutation, no command
+and no capability, proving the hook records without authorizing; `luca app 和 crm` yielding two candidates with
+neither selected; `打开 luca app` yielding one candidate with `marker_present:false`; the eight-candidate cap
+and its cap+1 (ninth) rejection fixture;
+and a mutant that makes any `alias_resolution` field grant authority turning its test red.
 
 Scan every occurrence. Canonical and alias mentions collapsing to one target are accepted; distinct undirected
 targets return `NEEDS_CONTEXT(multiple_project_targets)`. With a complete registry, an unknown explicit
 selection returns `NEEDS_CONTEXT(alias_not_found)`, never STOP or create fallback. Required examples include:
 
-- `进入luca app项目` → canonical `muse`;
-- `项目是muse的luca app啊` → one canonical `muse` target; `项目是crm的luca app` → conflict, command null;
-- `从 luca app 切换到 crm 项目` → `crm` only;
-- `打开 luca app` and `继续 luca app 的登录流程` → no project selection;
-- `进入 luca app 设置` and `打开 luca app 项目报告` → no project selection;
-- `进入 luca app 项目页面看看`, `切到 luca app 项目功能` and `回到 luca app 项目的登录流程` → no project
-  selection; the trailing-content tokens that disarm `打开|继续` disarm this family too for an alias target,
-  while `进入 muse 项目页面` stays governed by the looser canonical rule;
-- `请告诉我怎么进入 luca app 项目` and `测试短语：进入 luca app 项目` → no selection;
+- `进入luca app项目` → one `muse` candidate, `marker_present:true`;
+- `项目是muse的luca app啊` → candidates for both `muse` and the alias, collapsing to one canonical `muse`;
+  `项目是crm的luca app` → two candidates with distinct canonical targets, both recorded, neither chosen;
+- `从 luca app 切换到 crm 项目` → two candidates, both recorded; the hook does not decide that only the target
+  matters, because "which one is the target" is a semantic judgment;
+- `打开 luca app` → one `muse` candidate with `marker_present:false`;
+  `继续 luca app 的登录流程` → one `muse` candidate, `marker_present:false`;
+- **`进入 luca app 项目页面看看`, `切到 luca app 项目功能` and `回到 luca app 项目的登录流程` → one `muse`
+  candidate each, `marker_present:true`.** These are the frozen E1-family controls. Under the deleted grammar
+  they produced zero evidence, which is exactly the starting condition that caused E1: the model had nothing to
+  act on and asked again. Any rule that returns them to zero evidence re-opens E1 and turns this test red;
+- `请告诉我怎么进入 luca app 项目` and `测试短语：进入 luca app 项目` → one `muse` candidate each. The hook
+  records the occurrence; whether a question or a quoted example constitutes a request is decided at the LLM
+  layer, which can read that it is a question;
+- every one of `不进入 luca app 项目`, `别切到 luca app 项目`, `不想进入 luca app 项目`,
+  `更别说进入 luca app 项目`, `免得又要进入 luca app 项目`, `难道现在要进入 luca app 项目`,
+  `无论如何都要进入 luca app 项目`, `不妨进入 luca app 项目` and `进不进入 luca app 项目` yields exactly one
+  `muse` candidate with `marker_present:true`, no project mutation, no command and no capability. The hook
+  records the name it saw; it forms no view on whether a switch was requested. These nine are the frozen
+  proof that the R18–R26 negation counterexamples can no longer produce either a wrong authorization or a
+  wrong refusal, because the mechanical layer no longer decides;
+- `进入「luca app」项目`, `进入“luca app”项目`, ``进入 `luca app` 项目``, `进入「luca app 项目」`,
+  `「进入 luca app 项目」是个例子` and `进入「luca app 的设置」项目` → one `muse` candidate each. Quoting is not
+  adjudicated anywhere in this plan: delimiters are ordinary bytes, spans are recorded as found, and §14's
+  `R-SIGNAL` states the identical outcome for the identical strings. Two sections requiring opposite results
+  for one input is itself a defect this contract forbids;
 - `进入 luca ap 项目` with complete registry → `alias_not_found`, command null.
 
 ## 5. Semantic signal and durable route obligation
@@ -491,20 +545,37 @@ evidence spans:
    `功能堆砌/层级/信息架构/分组/拥挤/很难找/难找/找不到/结构`.
 
 Tokens use frozen Unicode-aware boundaries. One span cannot satisfy two legs; legs cannot aggregate across
-clauses. Negated, quoted, report/example and explanatory-question clauses do not count. The signal contributes
+clauses. Whether a clause is negated, quoted, reported or rhetorical is **not** evaluated here — see the
+non-adjudication rule below, which supersedes any earlier reading. The signal contributes
 zero complexity points, assigns no scene/skill/flow and does not alter the five authoritative Plan conditions.
+Since `b438c92` "flow" has a concrete referent — `decision:'FRAMEWORK_FLOW'` — and the clause binds to it
+literally: the signal cannot create, select, suppress or re-mode a framework flow, and contributes nothing to
+`frameworkFlowMode`'s `scout`/`benchmark` choice. §8.1 states the ordering.
 
-Negation is structural, not a generic nearby `不`. In the same operative clause, the structure leg is disabled
-when its matched span is governed by one member of the closed generated set
-`(不|别|不要|不用|无需|不必) × (改|动|调整|变) × 结构` — the same negator alternation §4.2 already declares
-authoritative, so `别动结构` and `别调整结构` are recognized exactly as `不动结构` and `不调整结构` are — together
-with the fixed forms `结构不变|保持结构不变|结构不动|结构别动|而非结构|不是结构问题`. The admitted set is exactly
-this enumeration; no generic negation heuristic and no other negator/verb pair is admitted, and the two negation
-grammars in this document share one negator alternation with no unexplained asymmetry; an adversative color/copy/performance request followed by one of these
-forms cannot borrow `调整` as the change leg. A negator scoped only to another leg does not erase a later
-affirmative structural directive. Fixtures pin `调整设置里的颜色但结构不变` negative, `别调整设置结构` negative,
-`帮我优化下设置页面，别动结构，其他随便你改` negative on its structure leg, `颜色不改，重组设置分组`
-positive, every deletion of one generated negator member red, and quote/report/question variants inert.
+Negation is **not** decided mechanically here either, for the reason §4.2 gives at length: a deterministic
+hook cannot parse Chinese negation, and six rounds of trying produced both wrong signals and wrong refusals.
+The structure leg therefore records evidence rather than adjudicating it. When all three evidence spans are
+present in one clause, the hook sets `semanticRouteAxis=interface_structure_change` **and** records
+`negation_context` — the raw bytes of the clause, unmodified — so the model can read the sentence itself. No
+`NEG`, `ADV`, `NEG_SUSPECT`, generated negation product or exempt-compound list exists in this section; the
+signal remains non-scoring, assigns no scene/skill/flow, alters no Plan condition, and by §5.2 creates a
+durable obligation only after the LLM layer confirms the request is affirmative. A false signal is therefore
+recoverable in one turn and can never silently block Stop on a request the user explicitly declined, which is
+the property the deleted grammar kept failing to guarantee. Fixtures pin that
+`我们优化了设置页面，结构没变`, `别动结构`, `结构别改` and `别再调整设置结构` each produce the signal plus their
+verbatim `negation_context`, that none of them alone creates an obligation, and that a mutant reintroducing any
+mechanical negation verdict **on the authorization axis** turns its test red. Per §4.2's scope clause, the
+retained `NEGATED_DOWNSTREAM_SCOPE_RULES` scope-classification negation is explicitly outside this prohibition
+and its presence must not turn any test red. The one three-leg rule above is the whole test: a clause either
+carries all three evidence spans or it does not, and no adversative, scoping or leg-borrowing analysis modifies
+that. The complete frozen corpus is `调整设置里的颜色但结构不变`, `别调整设置结构`, `结构别改`,
+`我们优化了设置页面，结构没变`, `没改结构，只动了配色`, `帮我优化下设置页面，别动结构，其他随便你改` and
+`颜色不改，重组设置分组`. Every one of them — negated, affirmative, quoted or rhetorical alike — produces the
+signal plus its verbatim `negation_context` and **no obligation**, because the hook no longer distinguishes
+them; each carries three legs in one clause, so a fixture asserting any of them "negative" would be asserting
+the deleted grammar. A mutant that
+reintroduces any per-negator fixture, attachment rule or fail-closed arm turns this test red, as does a mutant
+that lets any of these strings create an obligation without the §5.2 confirmation gate.
 
 ### 5.2 Obligation creation and persistence
 
@@ -544,7 +615,7 @@ route_obligation:
   obligation_id
   source_event_id / source_boundary_id
   exact_task_text / exact_task_sha256 / prompt_sha256
-  status: PENDING | DEFERRED_BY_PROJECT_CHANGE | RESUMED |
+  status: SIGNAL_UNCONFIRMED | PENDING | DEFERRED_BY_PROJECT_CHANGE | RESUMED |
           PLANNING_PENDING | PRESENTATION_PENDING | WAITING_HUMAN | WAITING_PLAN_APPROVAL |
           PLAN_REVISION_REQUIRED |
           PLAN_EXECUTION_WAITING_BOUNDARY |
@@ -568,9 +639,26 @@ route_obligation:
   execution_tool_capability? / scope_resume_snapshot?
 ```
 
+**Signal-derived creation requires confirmation.** `semanticRouteAxis` is evidence, not a request: §4.2 and §5.1
+deleted every mechanical judgment of negation, quoting and rhetorical framing, so the hook cannot know whether
+`我们优化了设置页面，结构没变` asks for a change or declines one. A `route_obligation` whose only basis is
+`semanticRouteAxis` is therefore created in status **`SIGNAL_UNCONFIRMED`**, which is inert: it blocks no Stop,
+denies no scope, reinjects nothing, grants no capability, and is byte-preserved across events. Exactly one
+transition leaves it — the next attested human event carrying an affirmative task directive under §8.1's
+classification promotes it to `PENDING` bound to that event; any other next event, including a correction, a
+STATUS or a decline, deletes it and appends no record. A hook path that creates `PENDING` directly from
+`semanticRouteAxis`, or that treats `SIGNAL_UNCONFIRMED` as blocking, is a named biting mutant. Obligations
+created from an explicit task directive rather than from the bare signal are unaffected and enter `PENDING` as
+before.
+
+This is the mechanical half of the promise §5.1 makes in prose. Neither half is sufficient alone: §5.1 says the
+LLM layer decides, and this rule is what makes a wrong signal harmless until it does — a signal from a declined
+request expires on the next event instead of blocking the conversation.
+
 Creation placement is an overlay evaluated after the terminal-source check and before the ordinary project matrix:
 
-- in clean N/A/C/B, create PENDING unless the same event also creates SWITCH_ONLY(SWITCH/NEW), in which case
+- in clean N/A/C/B, a bare-signal basis creates `SIGNAL_UNCONFIRMED` per the paragraph above; an explicit task
+  directive creates PENDING unless the same event also creates SWITCH_ONLY(SWITCH/NEW), in which case
   create DEFERRED_BY_PROJECT_CHANGE bound to that exact tx/target/op and a new-task
   `PENDING/CLASSIFY_ISSUED` scope-resume snapshot;
 - if an exact SWITCH_ONLY(SWITCH/NEW) already exists, a signal-only event with **no** project directive may
@@ -2148,6 +2236,15 @@ IN_PROGRESS, ordinary route/project mutation and Stop are blocked; only the exac
 UNPROVABLE allows one Stop only after byte-proving its notice and remains externally blocked; no phrase in this
 plan converts that notice into recovery authority.
 
+Capability rotation guarantees safety, not liveness, and this plan does not claim otherwise. Every rotation is
+strictly monotonic in `recovery_sequence`, so no authority is ever lost, duplicated or consumed twice; but a
+pathological interleaving in which fresh human events keep arriving on both bound sessions can keep rotating the
+capability away from whichever side is attempting to consume it, and no bound on that interleaving is asserted.
+This never arises under ordinary one-message-per-turn use, where consumption follows its issuing event before
+the peer's next event, and it violates no stated invariant. It is recorded here so that no reader infers a
+liveness guarantee the mechanism does not provide; a starvation bound, if one is ever wanted, is a separate
+change with its own review.
+
 `recovery_basis_state_sha256` is the exact read-back journal state hash **before** the ISSUED capability is
 inserted. Capability issuance then recomputes the current journal `state_sha256` with the capability object,
 avoiding a recursive hash. `recover.payload.journal_state_sha256` must equal that post-issuance current hash;
@@ -3403,8 +3500,68 @@ class. Required controls include `你做完计划了吗|现在到哪了`→STATU
 an explicit constraint change→CORRECTION, a second independent deliverable→NEW_TASK, and status text containing
 an imperative requirement→ROUTE_AMBIGUOUS rather than STATUS.
 
-The classifier is a bounded executable grammar, not a model label. It first applies the same clause,
-quote/backtick, report/example and negation spans as §4.2/§5.1; quoted or reported control words never count.
+The classifier is a bounded executable grammar, not a model label. It consumes §4.2's `alias_resolution`
+candidates and §5.1's `semanticRouteAxis`+`negation_context` as **evidence only**, and imports no negation,
+quoting or clause-structure verdict from those sections, which define none. Its own control-word recognition
+below is self-contained and is the sole span analysis in this classifier.
+
+**Position relative to the `FRAMEWORK FLOW` layer (landed at `BASELINE_HEAD` in `b438c92`).** That commit added
+a fourth documented routing layer between the Plan Agent layer and Multi-Skill in `CLAUDE.md`/`AGENTS.md`, and
+implemented it in `buildDecision` as: `classifyRoutingScope` — which since `b2762c7` strips
+`NEGATED_DOWNSTREAM_SCOPE_RULES` from the residual *before* `DOWNSTREAM_SCOPE_RULES` runs and returns a
+`negatedDownstreamSignals` field on every arm — → `mixed_ambiguous`⇒`NEEDS_CONTEXT`;
+`projectGate`, whose `pure_framework_meta` null arm is **late, not universal** — it is reached only after the
+earlier arms, so an explicit creation grammar (`explicitNewProjectName`, e.g. `new project: route-guard`) still
+returns `PROJECT_SWITCH/create_new_project` despite that scope, and a named existing project is decided by the
+`namedProject` arm before it; a leading
+`^[$/][a-z][\w-]*` direct call, which bypasses the complexity gate; `PLAN_MODE`; then `skillDecision`, which
+filters every `scope: framework_meta` route unless the scope is `pure_framework_meta` and emits
+`decision:'FRAMEWORK_FLOW'` for a unique `type:'framework_flow'` candidate. Neither `alias_resolution` nor
+`semanticRouteAxis` participates in any of it, and this plan does not change that ordering:
+
+- `alias_resolution` is computed from raw prompt bytes by §4.2's `RESOLVE` alone. It is **not** an input to
+  `classifyRoutingScope`, `FRAMEWORK_SCOPE_RULES`, the `framework_meta` route filter or `frameworkFlowMode`, and
+  a candidate never promotes, demotes, suppresses or selects a framework flow. Conversely a `FRAMEWORK_FLOW`
+  decision neither consumes nor clears candidates: they are emitted as evidence on the same prompt regardless of
+  which layer produced the decision.
+- **`RESOLVE` must never resurrect a Project Gate that `pure_framework_meta` suppressed.** This property is a
+  conjunction — the prompt must *simultaneously* reach `pure_framework_meta` **and** produce a candidate — and
+  the control must be constructed so that both conjuncts actually hold; two prior revisions each satisfied only
+  one. Three constraints fix the string. (i) It must not contain a **canonical directory ID**:
+  `classifyRoutingScope` tests `namedProject` first and returns `named_downstream`, so a canonical name never
+  reaches `pure_framework_meta`. (ii) It must carry a `项目|工程` **marker**, so the candidate is unambiguous
+  under §4.2 on any reading of that section's marker rule. (iii) The marker must be `工程`, not `项目`:
+  `DOWNSTREAM_SCOPE_RULES` matches `项目(?:里|内|中|的)?`, which classifies the prompt `mixed_ambiguous` and
+  returns `NEEDS_CONTEXT` **before** `projectGate` is ever called, again bypassing the property.
+  The frozen control is therefore `route-guard 在 luca app 工程里怎么走`. Measured at `BASELINE_HEAD` with
+  current project `crm` it classifies `pure_framework_meta`, takes `projectGate`'s null arm and emits `STOP`;
+  `RESOLVE`'s candidate output is a **post-implementation** requirement (the hook does not emit
+  `alias_resolution` at `BASELINE_HEAD`), namely one `muse` candidate with `marker_present:true`. Those two
+  halves are stated separately on purpose: only the routing half is measurable today, and packaging an
+  unmeasurable half inside a "measured" claim is how the previous two vacuous controls escaped notice.
+  Wiring candidate presence into the gate decision would switch the active project out
+  from under framework/meta and parallel sessions, which this repository forbids and `SC-20260523-002` red-lines;
+  doing so is a named biting mutant in §15. Two frozen **negative** controls guard the edges: the canonical-ID
+  prompt `route-guard 在 muse 里怎么走` gates (`PROJECT_SWITCH/switch_existing_project/muse`) at
+  `BASELINE_HEAD` and must keep gating, because Project Gate on an explicitly named existing project is required
+  behaviour rather than a defect; and `route-guard 在 luca app 项目里怎么走` returns `NEEDS_CONTEXT` and must
+  keep doing so, proving the `工程` choice in (iii) is load-bearing rather than cosmetic.
+- `semanticRouteAxis` remains non-scoring and, per §5.1, "assigns no scene/skill/flow". With `FRAMEWORK_FLOW`
+  now a concrete decision value, that clause is read strictly: the signal cannot create, select, suppress or
+  re-mode a framework flow, and `frameworkFlowMode`'s `scout`/`benchmark` choice is computed from the prompt
+  alone. A signal-bearing prompt that also trips a framework-evolution trigger still routes `FRAMEWORK_FLOW`,
+  and §5.2 may hold at most an inert `SIGNAL_UNCONFIRMED` obligation beside it.
+- `route_event_kind` classification is unchanged by the layer. A prompt routed `FRAMEWORK_FLOW` is classified
+  on its own content exactly as any other; `FRAMEWORK_FLOW` is not a `route_event_kind`, is never
+  `PROJECT_ONLY`, and creates, rotates and revokes no capability, obligation, transaction or project command.
+
+`skillDecision`'s new second parameter and the `framework_flow` branch are therefore additive with respect to
+this plan: the modifications §12.1 authorizes to `route-guard.mjs` add `alias_resolution` and
+`semanticRouteAxis` emission and must leave `classifyRoutingScope`, `FRAMEWORK_SCOPE_RULES`, the
+`framework_meta` filter, `frameworkFlowMode` and the `FRAMEWORK_FLOW` hint text behaviourally untouched. All
+132 passing checks reported by `scripts/test-route-guard.mjs` at `BASELINE_HEAD` — including its six framework-flow cases
+and the live hint-surface fixture — are a regression floor that stays green, and §16 runs
+`scripts/check-routing-map.mjs`, which pins the `framework_flows:` section and the shared six-item TL;DR.
 Negation scopes project/signal/action markers, but the unquoted whole-input task-cancel forms below are themselves
 controls and are recognized before that suppression; `不做了` therefore cancels, while `文档里写“不做了”` does not.
 After removing bounded polite particles, the whole operative content is classified in this order:
@@ -4585,7 +4742,7 @@ No Luca app source, UI, workflow state, prototype, product context or unrelated 
 
 Before handshake, `EVIDENCE-MANIFEST.sha256` will list exact hashes for the plan, `PAYLOAD-CENSUS.md`,
 `TRANSCRIPT-AUTH-EVIDENCE.md`, every prior failed and final Plan Agent review receipt, every actually completed
-prior planning-redteam report and both final Round-19 reports, and these five literal census files:
+prior planning-redteam report and both final Round-32 reports, and these five literal census files:
 
 ```text
 framework-audit/2026-08-20-routing-steering-handshake/payload-census/collector.mjs
@@ -4627,8 +4784,27 @@ framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R17.md
 framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R18.md
 framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-18-ROUTING.md
 framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R19.md
-framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-19-ROUTING.md
-framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-19-TRANSACTION.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R20.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R21.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R22.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R23.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R25.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-25-ROUTING.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-25-TRANSACTION.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R26.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-26-ROUTING.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-26-TRANSACTION.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R27.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-27-ROUTING.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-27-TRANSACTION.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R28.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-28-ROUTING.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R29.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R30.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R31.md
+framework-audit/2026-08-20-routing-steering-handshake/PLAN-AGENT-REVIEW-R32.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-32-ROUTING.md
+framework-audit/2026-08-20-routing-steering-handshake/REDTEAM-ROUND-32-TRANSACTION.md
 framework-audit/2026-08-20-routing-steering-handshake/EVIDENCE-MANIFEST.sha256
 framework-audit/2026-08-20-routing-steering-handshake/L0-PREFLIGHT-RECEIPT.json
 framework-audit/2026-08-20-routing-steering-handshake/BRIDGE-G0-SOURCE-RECEIPT.json
@@ -4650,9 +4826,31 @@ Cycle-completed `PLAN-AGENT-REVIEW.md`, `PLAN-AGENT-REVIEW-R4.md`, `PLAN-AGENT-R
 `PLAN-AGENT-REVIEW-R9.md`, `PLAN-AGENT-REVIEW-R10.md`, `PLAN-AGENT-REVIEW-R11.md` and Round-1/2/3 reports are
 joined by failed `PLAN-AGENT-REVIEW-R12.md`, `PLAN-AGENT-REVIEW-R13.md`, `PLAN-AGENT-REVIEW-R14.md`,
 `PLAN-AGENT-REVIEW-R15.md`, `PLAN-AGENT-REVIEW-R16.md`, stale-round `PLAN-AGENT-REVIEW-R17.md`,
-`PLAN-AGENT-REVIEW-R18.md` and stale-round `REDTEAM-ROUND-18-ROUTING.md` as immutable prior inputs; no completed
+`PLAN-AGENT-REVIEW-R18.md`, stale-round `REDTEAM-ROUND-18-ROUTING.md`, `PLAN-AGENT-REVIEW-R19.md`,
+stale-round `PLAN-AGENT-REVIEW-R20.md`, `PLAN-AGENT-REVIEW-R21.md`, `PLAN-AGENT-REVIEW-R22.md`,
+`PLAN-AGENT-REVIEW-R23.md`, stale-round `REDTEAM-ROUND-24-ROUTING.md`, `PLAN-AGENT-REVIEW-R25.md`,
+`REDTEAM-ROUND-25-ROUTING.md`, `REDTEAM-ROUND-25-TRANSACTION.md`, `PLAN-AGENT-REVIEW-R26.md`,
+`REDTEAM-ROUND-26-ROUTING.md`, `REDTEAM-ROUND-26-TRANSACTION.md`, `PLAN-AGENT-REVIEW-R27.md`,
+`REDTEAM-ROUND-27-ROUTING.md`, `REDTEAM-ROUND-27-TRANSACTION.md`, stale-round `PLAN-AGENT-REVIEW-R28.md`,
+stale-round `REDTEAM-ROUND-28-ROUTING.md` , failed `PLAN-AGENT-REVIEW-R29.md` and failed `PLAN-AGENT-REVIEW-R30.md` as immutable prior inputs; no completed
 receipt is ever edited, renamed or overwritten, and a stale round's verdict — PASS or FAIL — grants nothing.
-Every other required-new output, including all R19 names,
+`REDTEAM-ROUND-19-*` through `REDTEAM-ROUND-23-*` were never produced and are not required by any gate. `REDTEAM-ROUND-24-ROUTING.md` exists and is an immutable stale-round input; its transaction counterpart was never produced. Round 24's reviewers ended on an infrastructure session limit, which is not a verdict.
+Round 28 is stale by KILL-02: `b438c92` re-froze the baseline mid-cycle, so whatever partial verdicts
+`PLAN-AGENT-REVIEW-R28.md` and `REDTEAM-ROUND-28-ROUTING.md` recorded grant nothing, and
+`REDTEAM-ROUND-28-TRANSACTION.md` was never produced and is not required by any gate.
+Round 29's gate returned `NOT_READY_FOR_REDTEAM — 1 BLOCKER / 1 MAJOR / 2 MINOR` against plan SHA `90ccdfa4…`
+with refs held throughout, so no red team was dispatched for it and `REDTEAM-ROUND-29-*` were never produced
+and are not required by any gate. `PLAN-AGENT-REVIEW-R29.md` joins the immutable prior inputs unmodified.
+Round 30's gate returned `NOT_READY_FOR_REDTEAM — 1 BLOCKER / 1 MAJOR / 2 MINOR` against plan SHA `4882ad9d…`
+with refs held throughout, so no red team was dispatched for it either; `REDTEAM-ROUND-30-*` were never produced
+and are not required by any gate, and `PLAN-AGENT-REVIEW-R30.md` joins the immutable prior inputs unmodified.
+**Round-pointer invariant:** every `PLAN-AGENT-REVIEW-R<n>.md` present on disk is an immutable prior input by
+that fact alone, and the required-new round is exactly `max(<n> present on disk) + 1` — a **monotonic** pointer,
+never the lowest gap. Gaps below the maximum are abandoned rounds and are never reused: `R24` has no gate
+receipt and must not be re-issued merely because its number is free. A round number listed as required-new whose
+receipt already exists is a defect, detectable by comparing this list against a directory listing rather than
+against the rest of this document. At these bytes the highest gate receipt on disk is `R31`, so the required-new round is `R32`.
+Every other required-new output, including all R32 names,
 must be absent until its
 named gate; existing bytes block rather than overwrite.
 KILL-03 uses only the literal file sets in §12.1–12.2; no directory wildcard or future manifest can expand them.
@@ -4666,19 +4864,24 @@ after handshake may include only manifest-listed audit files and never stages an
    `PLAN-AGENT-REVIEW-R9.md`, `PLAN-AGENT-REVIEW-R10.md`, `PLAN-AGENT-REVIEW-R11.md`,
    `PLAN-AGENT-REVIEW-R12.md`, `PLAN-AGENT-REVIEW-R13.md`, `PLAN-AGENT-REVIEW-R14.md`,
    `PLAN-AGENT-REVIEW-R15.md`, `PLAN-AGENT-REVIEW-R16.md`, `PLAN-AGENT-REVIEW-R17.md`,
-   `PLAN-AGENT-REVIEW-R18.md`, `REDTEAM-ROUND-18-ROUTING.md` and Round-1/2/3 reports
-   as immutable evidence. Freeze this revised plan; obtain new
-   `PLAN-AGENT-REVIEW-R19.md` with READY_FOR_REDTEAM, then two Round-19 PASS reports
+   `PLAN-AGENT-REVIEW-R18.md`, `REDTEAM-ROUND-18-ROUTING.md`, `PLAN-AGENT-REVIEW-R19.md`,
+   `PLAN-AGENT-REVIEW-R20.md`, `PLAN-AGENT-REVIEW-R21.md`, `PLAN-AGENT-REVIEW-R22.md`,
+   `PLAN-AGENT-REVIEW-R23.md`, `REDTEAM-ROUND-24-ROUTING.md`, `PLAN-AGENT-REVIEW-R25.md`,
+   `REDTEAM-ROUND-25-ROUTING.md`, `REDTEAM-ROUND-25-TRANSACTION.md`, `PLAN-AGENT-REVIEW-R26.md`,
+   `REDTEAM-ROUND-26-ROUTING.md`, `REDTEAM-ROUND-26-TRANSACTION.md`, `PLAN-AGENT-REVIEW-R27.md`,
+   `REDTEAM-ROUND-27-ROUTING.md`, `REDTEAM-ROUND-27-TRANSACTION.md`, `PLAN-AGENT-REVIEW-R28.md`,
+   `REDTEAM-ROUND-28-ROUTING.md`, `PLAN-AGENT-REVIEW-R29.md`, `PLAN-AGENT-REVIEW-R30.md` and Round-1/2/3 reports as immutable
+   evidence. This list must name every receipt §12.3 records as a prior input, including the stale-round R28
+   pair and every non-final R29/R30 gate receipt. Freeze this revised plan; obtain new
+   `PLAN-AGENT-REVIEW-R32.md` with READY_FOR_REDTEAM, then two Round-32 PASS reports
    against that same SHA and the same unmoved `BASELINE_HEAD`/`BASELINE_UPSTREAM` pair.
 2. Obtain the user's explicit approval of that SHA; create `A0`, the manifest-listed audit-only commit whose
-   parent is exactly the §0.3 `BASELINE_HEAD=fd0919bb49597f1050106180bbbed21dac4aedff`
-   (`BASELINE_TREE=3d383c34468249431c70fc864cc78cd772c82e1b`), so `A0`'s ancestry includes the frozen
-   commits `c0a2efe7bfc7a32455580a349cd5d79915561573`, `c9d4185f18e14871f6f285e19baff205798be201`,
-   `8e1c46d56d431d54ada9d30a3bb34d010f3e8466`, `068b9ab45d98c6fc258278e08d27388e59cd8729`,
-   `36d37072ab31fdaa4fd7140f08869c60b654fa57`, `0e51ec2171c6c81de3403815339cdf304a0a3917` and
-   `fd0919bb49597f1050106180bbbed21dac4aedff` above
-   `PRIOR_BASELINE_COMMIT=8e9726d8477f8a287722c09345f07182cc86d1d5`, including the three non-audit paths that
-   `0e51ec2…` and `fd0919b…` changed.
+   parent is exactly the `BASELINE_HEAD` commit defined in §0.3, whose tree is the `BASELINE_TREE` defined
+   there, with the complete §0.3 ancestry above
+   the §0.3 `PRIOR_BASELINE_COMMIT`. Because the audit package is already
+   tracked at `BASELINE_HEAD`, `A0` stages exactly the still-absent outputs of the passing round — currently
+   the R32 names in §12.3 — plus `EVIDENCE-MANIFEST.sha256` and
+   the approved plan bytes — never a re-add of committed files and never any observability/memory data path.
    Every later rollback ancestry, including the literal C1→B2 ref-CAS descriptor, resolves against that same
    frozen ancestry.
 3. Run L0 fresh Claude/Codex timing, delivery-group and terminal-boundary probes against unmodified runtime;
@@ -4744,17 +4947,32 @@ after handshake may include only manifest-listed audit files and never stages an
 
 ### R — routing and obligation
 
-- `R-ALIAS`: opaque temp-root manifest; both original alias phrases resolve muse; direction chooses only target;
-  bare open/login-continue, question, quote/example/report, negation and typo are negative; all reserved nouns,
-  raw/NFKC limits, 513th root entry, 257th project and aggregate overflow fail as specified while canonical
-  names remain usable. NEW has a complete EXISTING_CURRENT/EXISTING_OTHER/ABSENT census: only ABSENT can mint a
+- `R-ALIAS`: opaque temp-root manifest; both original alias phrases resolve muse. **Candidate recording is
+  unconditional on intent**, matching §4.2's non-adjudicating contract: a two-target prompt records both and
+  selects neither (direction does *not* choose "only the target" — which one is the target is a semantic
+  judgment the hook does not make); and bare open (`打开 luca app`), login-continue
+  (`继续 luca app 的登录流程`), question, quote/example/report and every member of the R18–R26 negation corpus
+  each yield their `muse` candidate rather than being negative, with `marker_present` recorded either way.
+  The **only** negative arms are registry-level: an unknown alias (`进入 luca ap 项目` → `alias_not_found`),
+  the reserved nouns, raw/NFKC limits, 513th root entry, 257th project, aggregate overflow and the cap+1 ninth
+  candidate — all failing as specified while canonical names remain usable. An earlier revision of this line
+  still demanded the six intent families be "negative", contradicting §4.2 and `R-SIGNAL` three lines below for
+  the identical strings; two sections requiring opposite outcomes for one input is a defect this plan forbids,
+  and this is the same stranded-consumer class as Round 27's, surviving in a section the deletion never edited. NEW has a complete EXISTING_CURRENT/EXISTING_OTHER/ABSENT census: only ABSENT can mint a
   fresh project capability; existing pure-project and combined-task cases preserve project/task evidence, run
   the total route event-rebind subtable, and emit TARGET_EXISTS with no project command in N/A/C/B/S.
 - `R-SIGNAL`: original settings prompt has three distinct spans in one affirmative clause; every 2/3,
-  same-span, cross-clause, structural-negator (the complete generated `(不|别|不要|不用|无需|不必)×(改|动|调整|变)结构` set, including
-  `别动结构`/`别调整结构`, plus `结构不变`, `结构不动`, `结构别动`, `而非结构`, `不是结构问题`), quoted and question
-  case is negative; `调整设置里的颜色但结构不变` is frozen negative while an independent later affirmative
-  reorganization remains positive; score and five Plan conditions do not
+  same-span and cross-clause cases are negative. The R18–R26 negation corpus
+  (`不进入`/`别切到`/`不想进入`/`更别说进入`/`免得又要进入`/`难道现在要进入`/`无论如何都要进入`/`不妨进入`/
+  `进不进入 luca app 项目`, and `结构没变`/`别动结构`/`结构别改`/`别再调整设置结构`) asserts the **new**
+  contract rather than the deleted one: each yields its `alias_resolution` candidate or its
+  `semanticRouteAxis`+verbatim `negation_context`, and **none** of them mutates a project, emits a command,
+  mints a capability or creates an obligation from the hook alone. A mutant that makes any of them authorize,
+  refuse, or return a negation verdict turns this test red. Quoting is likewise not adjudicated: `进入「luca
+  app」项目`, `进入「luca app 项目」`, `「进入 luca app 项目」是个例子` and `进入「luca app 的设置」项目` each
+  yield their candidates by span with no suppression rule;
+  `调整设置里的颜色但结构不变` yields the signal plus its verbatim context and no obligation, while an
+  independent later affirmative reorganization is confirmed at the LLM layer; score and five Plan conditions do not
   change; pure audit, explicit code-change and explicit-skill controls retain their routes. The exact original
   combined phrase is the sole two-region NEW_TASK_SIGNAL_WITH_PROJECT positive and becomes S(muse)+DEFERRED;
   its exact_task_text is the complete contiguous task-side raw region and excludes only the project clause plus
@@ -4763,6 +4981,42 @@ after handshake may include only manifest-listed audit files and never stages an
   NEW_TASK+project never inherits this exception. In clean S and every SWITCH/NEW transaction phase, signal-only
   steering binds the immutable core target; combined steering is accepted only for identical target/op.
   Different target/op is REJECTED_BUSY, preserves any old obligation, and cannot attach a crm task to muse.
+- `R-FLOW`: the `FRAMEWORK FLOW` layer landed in `b438c92` keeps its exact `BASELINE_HEAD` behaviour after this
+  plan's `route-guard.mjs` changes. `scripts/test-route-guard.mjs` at `BASELINE_HEAD` passes 132/0 and is a
+  regression floor: its six framework-flow cases (benchmark-mode self-evolution request; the
+  `应该是自我成长流程吗` correction routing `FRAMEWORK_FLOW` **instead of** Project Gate under an empty current
+  project; explicit `framework-evolution-scout`⇒`scout`; `/deepresearch` and `$deepresearch` direct calls still
+  `SINGLE_SKILL`; a downstream `crm` "用户人格自我成长功能" request **not** `FRAMEWORK_FLOW`) and its live
+  hint-surface fixture must stay green with `alias_resolution` and `semanticRouteAxis` emission added.
+  `REQ-SCOPE-NULL-FIRST` fixtures (blocking): `new project: 涉及项目的route-guard` /
+  `new project: 不涉及项目的route-guard`, `new project: 属于项目的route-guard` /
+  `new project: 不属于项目的route-guard`, and the `项目`/`非项目` pair — each negated form must return the
+  **same** decision as its affirmative twin, and no member may return a `projectAction` that creates,
+  switches or detaches a binding. At `BASELINE_HEAD` the negated forms return
+  `PROJECT_SWITCH/create_new_project` while the affirmative forms return `NEEDS_CONTEXT`, so these fixtures
+  are **red until `projectGate` evaluates the `pure_framework_meta` null arm before `explicitNewProjectName`**.
+  This is the one assertion in this plan that is deliberately red at baseline: it encodes a live defect the
+  implementation must close, not a property the baseline already has.
+  Additionally, the gate-suppression control is `route-guard 在 luca app 工程里怎么走`, constructed under §8.1's
+  three constraints so that **both** conjuncts hold: a metadata alias rather than a canonical ID (or
+  `namedProject` claims it before `pure_framework_meta`), a `项目|工程` marker present (or §4.2 yields no
+  candidate), and specifically `工程` rather than `项目` (or `DOWNSTREAM_SCOPE_RULES` returns `NEEDS_CONTEXT`
+  before `projectGate` runs). Its two halves are asserted separately: **measurable at `BASELINE_HEAD`** — with
+  current project `crm` it classifies `pure_framework_meta`, takes `projectGate`'s null arm, emits `STOP`;
+  **post-implementation** — `RESOLVE` emits one `muse` candidate, `marker_present:true`, on that same prompt
+  while the routing half is unchanged. The assertion passes only when both hold; an implementation satisfying
+  either alone fails it. Two paired negative controls: `route-guard 在 muse 里怎么走` must keep returning
+  `PROJECT_SWITCH/switch_existing_project/muse`, since gating an explicitly named existing project is required
+  by `SC-20260523-002` and an implementation that silences it fails this assertion rather than satisfying it;
+  and `route-guard 在 luca app 项目里怎么走` must keep returning `NEEDS_CONTEXT`, proving the `工程`/`项目`
+  distinction is load-bearing. A prompt carrying all three §5.1 evidence spans **and** a framework-evolution
+  trigger routes `FRAMEWORK_FLOW` while its obligation stays inert `SIGNAL_UNCONFIRMED`; `FRAMEWORK_FLOW`
+  appears in no `route_event_kind` enum and emits no project command, capability or transaction; and
+  `frameworkFlowMode`'s `scout`/`benchmark` choice is byte-identical with the signal present and absent. Four
+  mutants turn this red: feeding `alias_resolution` into `classifyRoutingScope` or the `framework_meta` filter;
+  letting a candidate make `projectGate` return non-null under `pure_framework_meta`; letting
+  `semanticRouteAxis` change `frameworkFlowMode`'s result; and dropping the `scope: framework_meta` filter so a
+  framework flow becomes reachable from an ordinary downstream prompt.
 - `R-OBLIGATION`: the original task cannot vanish without a tool because Stop blocks; wrong obligation/event/
   boundary/generation/binding inode/epoch/one-shot receipt denies; PLAN first enters PLANNING_PENDING, proves the
   exact read-only Plan Agent + PreTool/PostTool-paired result capability, pins SHA-256/LP capability and result
@@ -5289,6 +5543,28 @@ Each named mutant must make its owning independent test red before restoration:
 - drop an admissible semantic steering event in clean S/each SWITCH transaction phase, let route-only deferral
   alter tx/core, or accept a mismatched combined target/op there;
 - remove each alias grammar guard/cap, ignore the cap+1 entry, reuse one semantic span or aggregate clauses;
+- restore `explicitNewProjectName` (or any other project-creating or binding-mutating branch) **ahead of**
+  `projectGate`'s `pure_framework_meta` null arm, re-opening `REQ-SCOPE-NULL-FIRST`: the four negated/
+  affirmative minimal pairs in `R-FLOW` must turn red;
+- reintroduce mechanical negation on the **authorization axis** — any rule that reads a negator to decide
+  whether a project directive was issued, or to authorize, refuse or choose among `alias_resolution`
+  candidates. This mutant is explicitly **axis-scoped** per §4.2: it must **not** fire on the retained
+  `NEGATED_DOWNSTREAM_SCOPE_RULES` scope classification, and a mutant that deletes *that* rule instead
+  (re-counting `不是项目任务` as positive downstream evidence) must turn its own test red — the two are
+  opposite requirements and a test suite satisfying only one is incomplete;
+- make alias candidacy **conditional on the `项目|工程` marker** in any form (`iff`, "requires", a fail-closed
+  arm, or a filter applied after recording), which re-opens E1 for bare-alias phrasing by returning
+  `打开 luca app` and `继续 luca app 的登录流程` to zero evidence; or make any intent family — direction,
+  bare open, login-continue, question, quote/example/report, negation — candidate-suppressing in `R-ALIAS`
+  while §4.2 and `R-SIGNAL` require it candidate-producing;
+- **`FRAMEWORK FLOW` non-interference (§4.2, §5.1, §8.1, `R-FLOW`)**: feed `alias_resolution` into
+  `classifyRoutingScope`, `FRAMEWORK_SCOPE_RULES` or the `scope: framework_meta` route filter; let a candidate
+  make `projectGate` return non-null under `pure_framework_meta`, resurrecting the gate that scope suppresses;
+  let `semanticRouteAxis` or `negation_context` change `frameworkFlowMode`'s `scout`/`benchmark` result, create,
+  select or suppress a flow; drop the `scope: framework_meta` filter so `framework-evolution` becomes reachable
+  from an ordinary downstream prompt; add `FRAMEWORK_FLOW` to the `route_event_kind` enum or let it emit a
+  project command, capability, obligation or transaction; or regress any of the six `BASELINE_HEAD`
+  framework-flow cases or the live hint-surface fixture in `scripts/test-route-guard.mjs`;
 - drop Claude sid/cwd/origin/current-window/terminal checks; accept paired wrapper field typo; accept one Codex
   leg; trust harness env; use ID inequality or Stop as drain; block clean A forever waiting for a post-Stop
   terminal marker;
@@ -5523,7 +5799,15 @@ node scripts/test-agent-execution-contracts.mjs
 node scripts/test-controller-carrier.mjs
 node scripts/test-route-execution-gate.mjs
 node scripts/test-skill-execution-contracts.mjs
+node scripts/check-routing-map.mjs
+node scripts/check-project-routing.mjs
+node scripts/check-registration-sync.mjs
+node scripts/check-capability-parity.mjs
+node scripts/check-agents-parity.mjs
+node scripts/verify-codex-wiring.mjs
 node scripts/test-project-state-matrix.mjs
+node scripts/test-harness.mjs
+node scripts/test-project-substrate.mjs
 node scripts/test-project-recovery.mjs
 node scripts/test-process-liveness.mjs
 node scripts/test-activation-consumer-fence.mjs
@@ -5537,15 +5821,65 @@ bash scripts/verify.sh
 ```
 
 Every named runner above is mandatory; `npm run verify` is not assumed to aggregate a new file unless its exact
-package wiring is separately reviewed. Receipts save
+package wiring is separately reviewed. Two of them carry the `b438c92` framework-flow regression floor and are
+run **before** any `route-guard.mjs` edit to record a green baseline, then again after: `test-route-guard.mjs`,
+which passes 132/0 at `BASELINE_HEAD` and whose six framework-flow cases plus live hint-surface fixture are
+`R-FLOW`'s floor; and `check-routing-map.mjs`, which asserts that a `framework_flows:` section, a
+`framework-evolution` invoke and a `scope: framework_meta` each appear **somewhere in the file** — three
+unanchored whole-file matches, so it proves presence, not that the scope belongs to that entry — plus the
+six-item TL;DR shared verbatim by `CLAUDE.md` and `AGENTS.md`. Entry-level binding of
+`framework-evolution`↔`framework_meta` is covered by `R-FLOW`'s behavioural cases, not by this runner. A drop
+in the pre-edit count, or any newly red case among those, is a stop. Receipts save
 raw hook stdin hashes, CLI versions/commands, bounded transcript extracts, state bytes before/after, commit/tree/
 manifest/pointer/journal hashes, mutant red/green evidence and rollback results. A dry-run alone cannot satisfy a
 live cell.
 
 ## 17. Planning handshake and post-implementation review
 
+### 17.0 Gate scope
+
+The reviewed contract is the **executable** plan: §4 alias resolution, §5 semantic signal and route obligation,
+§6 prompt gate and lazy attestation, §7 schema-v3 state, §8 the total transition and Stop contracts, §9 project
+mutation and recovery, §10 bridge/activation/rollback, §11 schema transition, §12.1–12.2 the change envelopes,
+§13 the execution DAG, §14 assertions, §15 mutants and fault barriers, §16 verification levels. A BLOCKER or
+MAJOR may be raised only against those sections.
+
+The following are **session bookkeeping, explicitly out of gate scope**, because they exist only to track the
+review cycle itself and are never implemented: the literal hash values inside §0.3's baseline tuple (the KILL-02
+*rule* remains in scope), §2.3's review-cycle history note, and the §12.3 round-number lists of prior
+receipts and required-new outputs. Their staleness, ordering or wording is reported at most as an observation
+and never blocks dispatch or handshake. Eight consecutive rounds found defects only here while the executable
+mechanics held, and gating implementation on a changelog row's ordering mistakes the means for the end.
+
+### 17.0a Review partition (2026-08-28, user-adjudicated)
+
+Rounds 29, 30 and 31 each returned findings while leaving §5.2–§5.4, §6, §7, §8.3–§8.6, §9, §10, §11 and §14's
+T-section unread, so a `0 BLOCKER` verdict has never covered the whole contract. A single reviewer cannot read
+this document in one pass, and pretending otherwise produced verdicts whose coverage was narrower than they
+appeared. Reviewers are therefore assigned **named section sets**, and a round's gate verdict is the union of
+its lanes:
+
+| Lane | Sections | Owns |
+|---|---|---|
+| `ROUTING` | §4, §5.1, §8.1, §8.2, and `R-ALIAS`/`R-SIGNAL`/`R-FLOW` in §14 | alias resolution, the signal, the axis split, intent classification |
+| `STATE` | §5.2–§5.4, §6, §7, §8.3–§8.6, §9, and the §14 T-section | obligations, attestation, schema-v3, transitions, mutation/recovery |
+| `DELIVERY` | §10, §11, §12, §13, §15, §16 | bridge/activation/rollback, envelopes, DAG, mutants, verification |
+
+Rules. Every lane must be covered by some reviewer in a round, and each reviewer states its assigned set and
+reports coverage against **that** set — "sections not reached" inside an assigned lane is a gate failure for
+that lane, not a footnote. A defect found outside a reviewer's lane is reported as a cross-lane observation and
+routed to the owning lane rather than silently dropped. `READY_FOR_REDTEAM` requires every lane clean in the
+same round against one unchanged plan SHA. Lanes may run in separate rounds only if the plan SHA is unchanged
+between them; any edit re-fires KILL-01 and voids every lane.
+
+Two invariants keep that exclusion honest and are themselves in scope: KILL-02 still requires the framework and
+downstream refs to hold their §0.3 values unmoved throughout a round, verified from git at review time; and
+KILL-03 still requires that no path appearing as its own literal line in a §12.1 or §12.2 list carries
+modification. A round whose refs moved is stale regardless of scope.
+
+
 This plan may be shown for approval only after the independent Plan Agent reports READY_FOR_REDTEAM in the
-cycle-specific R19 receipt and two independent Round-19 reviewers report PASS with no BLOCKER or MAJOR against one unchanged SHA. Any edit invalidates
+cycle-specific R32 receipt and two independent Round-32 reviewers report PASS with no BLOCKER or MAJOR against one unchanged SHA. Any edit invalidates
 all three reports. The user must explicitly approve that exact SHA; `继续`, an old SHA, or approval before every
 report is not authorization.
 
