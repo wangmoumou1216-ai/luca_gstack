@@ -365,6 +365,15 @@ function projectGate(prompt, projects, currentProject, routingScope) {
   // （SC-20260523-002：`route-guard 在 muse 里怎么走` 仍须 gate），故 named 上提到这里。
   if (routingScope?.kind === 'pure_framework_meta' && !named) return null;
 
+  // 深审 MAJOR-5：上面那条以 `!named` 为条件，于是**否定短语里只要嵌了一个真实项目名**
+  // （`new project: 不涉及项目的muse路由`）就绕开——`named` 为真、kind 变 named_downstream、
+  // 空臂被跳过、explicitNewProjectName 照样开火，实测真的建出
+  // project="不涉及项目的muse路由"（对照：把 muse 换成 zzz → NONE，证明差别就在这里）。
+  // §6.1 的原文是「使**任何**作用域否定结果都到不了会改绑定的分支」，故按否定信号本身闸，
+  // 而不是按有没有具名项目。未命中否定规则的输入完全不受影响（SC-20260523-002 的
+  // `route-guard 在 muse 里怎么走` 无否定词，照常 gate）。
+  if ((routingScope?.negatedDownstreamSignals || []).length > 0) return null;
+
   if (declaredNewProject) {
     const existing = projects.find(name => normalize(name) === normalize(declaredNewProject));
     if (existing) {
@@ -900,6 +909,9 @@ function readAliasRegistry(projects) {
       if (typeof raw !== 'string') { seenHere.clear(); break; }
       if (aliasCharsForbidden(raw)) continue;
       const folded = foldAlias(raw);
+      // 深审 MINOR-9：字符检查必须在**归一化之后**再跑一次——`ａ／ｂ` 的全角斜杠
+      // NFKC 之后才变成 `/`，只查 raw 会让 §3.1「拒绝斜杠反斜杠」形同虚设。
+      if (aliasCharsForbidden(folded)) continue;
       if (!folded) continue;
       const cp = [...folded].length;
       if (cp < ALIAS_LIMITS.aliasMinCp || cp > ALIAS_LIMITS.aliasMaxCp) continue;
@@ -1005,7 +1017,7 @@ function resolveAliasCandidates(prompt, projects) {
 // ══════════════════════════════════════════════════════════════════════════
 const E2_LEGS = [
   ['change', /优化|重组|重构|改版|重新设计|拆分|归组|调整|optimize|reorganize|redesign|restructure|refactor|split|regroup/gi],
-  ['surface', /页面|界面|设置|偏好设置|交互|布局|侧栏|导航|page|screen|settings|preferences|UI|interface|interaction|layout|sidebar|navigation/gi],
+  ['surface', /页面|界面|设置|偏好设置|交互|布局|侧栏|导航|page|screen|settings|preferences|\bUI\b|interface|interaction|layout|sidebar|navigation/gi],
   ['structure', /功能堆砌|层级|信息架构|分组|拥挤|很难找|难找|找不到|结构|feature pile-up|hierarchy|information architecture|grouping|crowded|hard to find/gi],
 ];
 // 「一段证据不能兼任两腿」：三腿各自的命中区间必须两两不相交。逐腿枚举全部命中后做
@@ -1065,6 +1077,17 @@ function interfaceStructureSignal(prompt) {
 const OBLIGATION_INJECTION_CAP = 20;   // 无界提醒本身就是缺陷（对齐 checkpoint 的 100 轮封顶惯例）
 // 整句即取消——沿用本文件既有的「整句锚定」手法，不新建词表机制；判错的唯一后果是少一行提醒。
 const OBLIGATION_CANCEL_RE = /^\s*(?:算了|不用了|不做了|别做了|取消|停|停一下|先停|暂停|就这样)[吧呢吗呀了的！!。.？?…\s]*$/;
+// 深审 MINOR-11：`.gitignore` 注释声称「上限 262,144 B」，而落盘处原本无任何上限。
+// 截断只发生在**超限**时，正常任务的字节永远完整（§4.2「不截断、不丢任何 UX 约束」针对的是
+// 三腿从句截断，不是拒绝一个 256 KiB 的病态输入）；截断时留标记，让读者知道这不是全文。
+const OBLIGATION_TEXT_CAP = 262144;
+function cappedTaskText(prompt) {
+  const text = String(prompt || '');
+  if (Buffer.byteLength(text, 'utf8') <= OBLIGATION_TEXT_CAP) return text;
+  let out = text;
+  while (Buffer.byteLength(out, 'utf8') > OBLIGATION_TEXT_CAP - 32) out = out.slice(0, -64);
+  return `${out}\n[route-guard: truncated at ${OBLIGATION_TEXT_CAP} bytes]`;
+}
 function obligationPath(sid) {
   // 文件名**不得**以 `.session-project-` 开头：check-project-links.mjs 会把该前缀当项目 pin 误解析。
   return join(projectRoot, '.claude', `.session-obligation-${sid}`);
@@ -1100,7 +1123,7 @@ function advanceObligation({ sid, prompt, signal, decision }) {
     if (!signal) return null;
     const doc = {
       schema_version: 1, state: 'SIGNAL_UNCONFIRMED',
-      exact_task_text: String(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      exact_task_text: cappedTaskText(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
       injected_turns: 0, superseded: 0,
     };
     writeObligation(sid, doc);
@@ -1112,7 +1135,7 @@ function advanceObligation({ sid, prompt, signal, decision }) {
     if (!signal) { clearObligation(sid); return null; }
     const doc = {
       ...existing, state: 'PENDING',
-      exact_task_text: String(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      exact_task_text: cappedTaskText(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
       injected_turns: 0,
     };
     writeObligation(sid, doc);
@@ -1124,8 +1147,14 @@ function advanceObligation({ sid, prompt, signal, decision }) {
     writeObligation(sid, doc);
     return doc;
   }
+  // 深审 BLOCKER-3：这条恢复分支原本 return 在计数分支**之前**且不计数，于是任何
+  // `PROJECT_SWITCH` 回合都会把注入预算整份退还——交替 `切到 X` / 普通消息 40 轮实测
+  // `injected_turns` 恒为 0、注入 40 次不停。而无有效绑定时 decision 会被**每轮重写**成
+  // PROJECT_SWITCH，这条路径一点都不exotic。恢复同样要计费，20 轮封顶才是真封顶。
   if (existing.state === 'DEFERRED_BY_PROJECT_CHANGE') {
-    const doc = { ...existing, state: 'PENDING' };
+    const restored = (existing.injected_turns || 0) + 1;
+    if (restored > OBLIGATION_INJECTION_CAP) { clearObligation(sid); return { ...existing, state: 'CANCELLED' }; }
+    const doc = { ...existing, state: 'PENDING', injected_turns: restored };
     writeObligation(sid, doc);
     return doc;
   }
@@ -1134,7 +1163,7 @@ function advanceObligation({ sid, prompt, signal, decision }) {
     // 新的肯定式任务指令 → 旧义务 SUPERSEDED，新的接替（同一 sid 只保留一条）。
     const doc = {
       ...existing, state: 'PENDING', superseded: (existing.superseded || 0) + 1,
-      exact_task_text: String(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      exact_task_text: cappedTaskText(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
       injected_turns: 0,
     };
     writeObligation(sid, doc);
@@ -1565,6 +1594,31 @@ if (!dryRun && prompt && hookSessionId) {
         + `（完整字节见 ${obligationPath(hookSessionId)}）`);
     }
   } catch { /* 提醒失败不得影响本轮路由 */ }
+}
+
+// E1/E2 证据渲染到**生产面**。没有这一段，`aliasResolution` / `semanticRouteAxis` 只活在
+// dry-run JSON 里——而 dry-run 只有测试会开，`.claude/settings.json` 与 `.codex/hooks.json`
+// 都不设 ROUTE_GUARD_DRY_RUN，于是真实 harness 一个字都看不到，整个修复等于没接线。
+// （深审 BLOCKER-1/6 实测：改前改后真实输出**逐字节相同**。这正是「模块+单测全绿≠生效」。）
+// 接线纪律与义务注入一致：顶层、独立 try/catch、只写 hints 不写 decision。
+// 措辞刻意是「证据，非授权 / 非判定」——这一层不裁决，切不切、走不走 skill 由 LLM 层按
+// 语义路由契约判断（§3.2「RESOLVE 永不授权」、§4.1「信号不计分不派 skill」）。
+if (!dryRun && prompt) {
+  try {
+    const candidates = decision?.aliasResolution?.candidates || [];
+    if (candidates.length) {
+      const shown = candidates.map(c => `「${c.surface}」→ ${c.canonical}`).join('、');
+      hints.push(`[route-guard] 🔎 别名候选（证据，非授权；本 hook 不裁决切换）：${shown}`
+        + '。是否切换由你按语义路由契约判断；多个候选一律不代选。');
+    } else if (decision?.aliasResolution?.status === 'CAP_EXCEEDED') {
+      hints.push('[route-guard] 🔎 别名候选超过上限，本轮不产候选（证据缺席，非拒绝）。');
+    }
+    if (decision?.semanticRouteAxis) {
+      const legs = decision.semanticRouteAxis.evidence.map(e => `${e.leg}:${e.surface}`).join(' / ');
+      hints.push(`[route-guard] 🧩 界面结构变更信号（证据，非判定；不计分、不派 skill）：${legs}`
+        + '。这类请求 route score 常为 0，别据此认为「不需要 skill/flow」。');
+    }
+  } catch { /* 证据渲染失败不得影响本轮路由 */ }
 }
 
 if (!dryRun && prompt) {
