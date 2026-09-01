@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
-import { mkdirSync, mkdtempSync, readFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import assert from 'assert/strict';
@@ -1152,6 +1152,126 @@ for (const testCase of cases) {
     console.log(`FAIL ${testCase.name}: ${e.message?.split('\n')[0]}`);
     failures.push({ name: testCase.name, error: e.message?.split('\n')[0] });
     failCount++;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// A-ALIAS（E1 RESOLVE）—— hook 只记录候选、永不授权。
+// 自带 fixture 根：这些用例必须真的读 <PROJECTS_ROOT>/<canonical>/.luca/project.json，
+// 所以不能走 ROUTE_GUARD_PROJECTS 那条 env 列表捷径（那会绕开目录读取，让断言恒真）。
+// ══════════════════════════════════════════════════════════════════════════
+{
+  const aliasRoot = mkdtempSync(join(tmpdir(), 'route-guard-alias-'));
+  const manifest = (name, aliases) => {
+    mkdirSync(join(aliasRoot, name, '.luca'), { recursive: true });
+    writeFileSync(join(aliasRoot, name, '.luca', 'project.json'),
+      `${JSON.stringify({ schema_version: 1, canonical_project: name, aliases })}\n`);
+  };
+  manifest('muse', ['luca app']);
+  manifest('crm', ['商机管理']);
+  manifest('demo', ['项目', 'crm']);          // 保留词 + 别名等于某 canonical ID：两条都必须被拒
+  const aliasEnv = { LUCA_PROJECTS_ROOT: aliasRoot, ROUTE_GUARD_PROJECTS: '', ROUTE_GUARD_CURRENT_PROJECT: 'muse' };
+  const ar = (prompt, extra = {}) => route(prompt, { ...aliasEnv, ...extra });
+  const check = (name, fn) => {
+    try { fn(); console.log(`PASS ${name}`); passCount++; }
+    catch (e) {
+      console.log(`FAIL ${name}: ${e.message?.split('\n')[0]}`);
+      failures.push({ name, error: e.message?.split('\n')[0] });
+      failCount++;
+    }
+  };
+  const candidatesFor = (decision, canonical) =>
+    (decision.aliasResolution?.candidates || []).filter(c => c.canonical === canonical);
+  // RESOLVE 永不授权：不发命令、不改绑定、不建事务、不给 capability。
+  const assertNoAuthority = decision => {
+    assert.equal(decision.command === undefined || decision.command === '', true, 'RESOLVE must not emit a command');
+    assert.doesNotMatch(JSON.stringify(decision.aliasResolution || {}), /project\.sh|capability|operation/,
+      'aliasResolution must carry no authority');
+  };
+
+  // §3.3 冻结 fixture：每条恰好一条 muse 候选。否定式**照样产候选**——授权轴上不做否定判定，
+  // 在这里重新引入任何机械否定都会让这一组转红（变异体 3）。
+  const frozen = [
+    ['进入luca app项目', true], ['进入「luca app」项目', true],
+    ['进入 luca app 项目页面看看', true], ['切到 luca app 项目功能', true],
+    ['打开 luca app', false], ['继续 luca app 的登录流程', false],
+    ['不进入 luca app 项目', true], ['别切到 luca app 项目', true],
+    ['不想进入 luca app 项目', true], ['更别说进入 luca app 项目', true],
+    ['免得又要进入 luca app 项目', true], ['难道现在要进入 luca app 项目', true],
+    ['无论如何都要进入 luca app 项目', true], ['不妨进入 luca app 项目', true],
+    ['进不进入 luca app 项目', true],
+  ];
+  for (const [prompt, marker] of frozen) {
+    check(`A-ALIAS frozen fixture ${JSON.stringify(prompt)}`, () => {
+      const decision = ar(prompt);
+      const hits = candidatesFor(decision, 'muse');
+      assert.equal(hits.length, 1, `expected exactly 1 muse candidate, got ${hits.length}`);
+      // marker 只记录、不 gate：`打开 luca app` 无 marker 却**必须**仍产候选（变异体 2）
+      assert.equal(hits[0].marker_present, marker, 'marker_present must be recorded as observed');
+      assert.equal(prompt.slice(hits[0].span_start, hits[0].span_end).toLowerCase().replace(/\s+/g, ' '), 'luca app');
+      assertNoAuthority(decision);
+    });
+  }
+
+  check('A-ALIAS 两个不同 canonical 目标全部记录、都不选', () => {
+    const decision = ar('从 luca app 切换到 crm 项目');
+    const names = (decision.aliasResolution?.candidates || []).map(c => c.canonical);
+    assert.equal(new Set(names).size, 2, `expected both targets recorded, got ${names.join(',')}`);
+    assert.equal(decision.aliasResolution.candidates.some(c => c.chosen || c.selected), false, 'RESOLVE must not choose');
+  });
+
+  check('A-ALIAS alias_not_found：零候选时该对象缺席且命令为空', () => {
+    const decision = ar('进入 luca ap 项目');
+    assert.equal(decision.aliasResolution, undefined, 'zero candidates must omit the object entirely');
+    assert.equal(decision.command === undefined || decision.command === '', true);
+  });
+
+  check('A-ALIAS 第 9 条触发 cap 拒绝（不截断、不择一）', () => {
+    const decision = ar(Array.from({ length: 9 }, (_, i) => `luca app ${i}`).join('、'));
+    assert.equal(decision.aliasResolution?.status, 'CAP_EXCEEDED');
+    assert.equal(decision.aliasResolution.candidates.length, 0);
+  });
+
+  check('A-ALIAS 保留词别名被拒，而其 canonical 名始终可用', () => {
+    const reserved = ar('这个项目怎么样');
+    assert.equal(candidatesFor(reserved, 'demo').length, 0, '「项目」是保留词，不得成为别名');
+    const canonical = ar('看看 demo 的登录流程');
+    assert.equal(candidatesFor(canonical, 'demo').length, 1, 'canonical 名必须始终可用');
+  });
+
+  check('A-ALIAS 别名等于某 canonical ID 被拒（不得改判归属）', () => {
+    const decision = ar('打开 crm');
+    const hits = decision.aliasResolution?.candidates || [];
+    assert.equal(hits.every(c => c.canonical === 'crm'), true, '`crm` 必须解析为 crm 自己，不得被 demo 的别名劫持');
+  });
+
+  check('A-ALIAS .luca 是符号链接时该项目只剩 canonical 名可用', () => {
+    const linkRoot = mkdtempSync(join(tmpdir(), 'route-guard-alias-link-'));
+    mkdirSync(join(linkRoot, 'real', '.luca'), { recursive: true });
+    writeFileSync(join(linkRoot, 'real', '.luca', 'project.json'),
+      `${JSON.stringify({ schema_version: 1, canonical_project: 'linked', aliases: ['别名甲'] })}\n`);
+    mkdirSync(join(linkRoot, 'linked'), { recursive: true });
+    symlinkSync(join(linkRoot, 'real', '.luca'), join(linkRoot, 'linked', '.luca'));
+    const env = { LUCA_PROJECTS_ROOT: linkRoot, ROUTE_GUARD_PROJECTS: '', ROUTE_GUARD_CURRENT_PROJECT: 'linked' };
+    assert.equal((route('打开 别名甲', env).aliasResolution?.candidates || []).length, 0, '符号链接 .luca 不得被读取');
+    assert.equal((route('打开 linked', env).aliasResolution?.candidates || []).length, 1, 'canonical 名仍必须可用');
+  });
+
+  // 携带模式（§3.2）：信号必须穿过 buildDecision 的**全部**早返。
+  // 当前基线是四分支 / 五条 return——`explicitEngineeringDeliverySelection → FRAMEWORK_FLOW`
+  // 是 upstream 6aaa1c6 新增、计划成稿时并不存在的那一条（变异体 12 只列了三个）。
+  const carry = [
+    ['FRAMEWORK_FLOW 早返', '按工程交付流程执行：重构 luca app 的设置页面信息架构，功能堆砌很难找', 'FRAMEWORK_FLOW'],
+    ['裸 return complexity（PLAN_MODE）', '重构 luca app 的设置页面的信息架构，新增权限、通知、导出三个分组，层级太深很难找', 'PLAN_MODE'],
+    ['mixed_ambiguous 早返', '改一下 route-guard 里 luca app 项目的东西', 'NEEDS_CONTEXT'],
+    ['gate 短路早返', '切到 crm 项目，顺便看看 luca app 的登录流程', 'PROJECT_SWITCH'],
+  ];
+  for (const [label, prompt, expected] of carry) {
+    check(`A-ALIAS 携带模式穿过${label}`, () => {
+      const decision = ar(prompt);
+      assert.equal(decision.decision, expected, `expected ${expected}, got ${decision.decision}`);
+      assert.equal(candidatesFor(decision, 'muse').length >= 1, true, '早返路径上信号被静默丢弃');
+    });
   }
 }
 

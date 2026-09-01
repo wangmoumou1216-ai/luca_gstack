@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 // UserPromptSubmit hook: project context gate + route hints + checkpoint reminder
 import {
+  closeSync,
+  constants as fsConstants,
   existsSync,
+  fstatSync,
+  lstatSync,
+  openSync,
   readFileSync,
+  readSync,
   readlinkSync,
   readdirSync,
   statSync,
@@ -785,7 +791,210 @@ const HEAVY_ORCHESTRATOR_SKILLS = new Set(
   })
 );
 
+// ══════════════════════════════════════════════════════════════════════════
+// E1 别名解析（RESOLVE）—— hook 只**记录候选**，永不授权、永不择一、永不生成命令。
+// 别名真值在下游项目自己的 <PROJECTS_ROOT>/<canonical>/.luca/project.json；
+// **框架内不出现任何产品名字面量**。缺该文件 = 只有 canonical 名可用，合法且不报错。
+// 切不切项目由 LLM 层按语义路由契约决定——这一层拿不到语义证据，所以这一层不裁决。
+// ══════════════════════════════════════════════════════════════════════════
+const ALIAS_LIMITS = {
+  rootEntries: 512, projects: 256, manifestBytes: 8192, totalBytes: 262144,
+  aliasesPerProject: 16, aliasesGlobal: 2048,
+  aliasMinCp: 2, aliasMaxCp: 80, aliasMaxBytes: 256, candidates: 8,
+};
+// 保留词：别名不得取这些（取了会让任何一句带该词的话都产出候选，等于噪音发生器）
+const ALIAS_RESERVED = new Set([
+  'app', 'application', 'project', 'product', 'system', 'software',
+  '项目', '工程', '应用', '产品', '系统', '软件', '页面', '界面', '功能',
+]);
+const ALIAS_MANIFEST_KEYS = new Set(['schema_version', 'canonical_project', 'aliases']);
+
+function foldAlias(value) {
+  return String(value).normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function aliasCharsForbidden(value) {
+  return /[\p{Cc}\p{Cf}]/u.test(value) || value.includes('/') || value.includes('\\');
+}
+// O_NOFOLLOW + regular-file fstat + limit+1 读取 + dev/ino/size 复核。
+// 任何一步不满足都返回 null（该项目只剩 canonical 名可用），绝不抛出。
+function readManifestBytes(path) {
+  let fd;
+  try {
+    fd = openSync(path, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+  } catch { return null; }
+  try {
+    const pre = fstatSync(fd);
+    if (!pre.isFile()) return null;
+    const buf = Buffer.alloc(ALIAS_LIMITS.manifestBytes + 1);
+    const read = readSync(fd, buf, 0, buf.length, 0);
+    if (read > ALIAS_LIMITS.manifestBytes) return null;
+    const post = fstatSync(fd);
+    if (post.dev !== pre.dev || post.ino !== pre.ino || post.size !== pre.size || post.size !== read) return null;
+    return buf.subarray(0, read);
+  } catch {
+    return null;
+  } finally {
+    try { closeSync(fd); } catch { /* fd 已失效，忽略 */ }
+  }
+}
+// 重复键感知：JSON.parse 会静默保留最后一个同名键。schema 只有三个合法键，且合法值里
+// 出现的字符串后面跟的是 `,`/`]` 而非 `:`，故按 `"key"\s*:` 计数即可判重复。
+function parseManifestStrict(text) {
+  for (const key of ALIAS_MANIFEST_KEYS) {
+    const hits = text.match(new RegExp(`"${key}"\\s*:`, 'g'));
+    if (hits && hits.length > 1) return null;
+  }
+  let doc;
+  try { doc = JSON.parse(text); } catch { return null; }
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return null;
+  for (const key of Object.keys(doc)) if (!ALIAS_MANIFEST_KEYS.has(key)) return null;
+  if (doc.schema_version !== 1) return null;
+  if (typeof doc.canonical_project !== 'string' || !doc.canonical_project) return null;
+  if (doc.aliases !== undefined && !Array.isArray(doc.aliases)) return null;
+  return doc;
+}
+// 返回 { complete, entries: Map<foldedSurface, canonical> }。
+// complete=false（越界/普查超限）时**只保留 canonical 名**，非 canonical 名一律不解析。
+function readAliasRegistry(projects) {
+  const entries = new Map();
+  let complete = true;
+  const canonicalFolded = new Set();
+  for (const name of projects) {
+    const folded = foldAlias(name);
+    if (folded) { entries.set(folded, name); canonicalFolded.add(folded); }
+  }
+  if (projects.length > ALIAS_LIMITS.projects) return { complete: false, entries };
+  let totalBytes = 0;
+  let globalAliases = 0;
+  const ownerOf = new Map();
+  const rejected = new Set();
+  for (const name of projects) {
+    let dir;
+    try {
+      dir = join(PROJECTS_ROOT, name, '.luca');
+      // `.luca` 与 manifest 均不得是符号链接；canonical 包含性检查
+      if (!lstatSync(dir).isDirectory()) continue;
+    } catch { continue; }
+    const bytes = readManifestBytes(join(dir, 'project.json'));
+    if (!bytes) continue;
+    totalBytes += bytes.length;
+    if (totalBytes > ALIAS_LIMITS.totalBytes) { complete = false; break; }
+    const doc = parseManifestStrict(bytes.toString('utf8'));
+    if (!doc) continue;
+    if (doc.canonical_project !== name) continue;      // 一份 manifest 只能声明自己
+    const seenHere = new Set();
+    const list = doc.aliases || [];
+    if (list.length > ALIAS_LIMITS.aliasesPerProject) continue;
+    for (const raw of list) {
+      if (typeof raw !== 'string') { seenHere.clear(); break; }
+      if (aliasCharsForbidden(raw)) continue;
+      const folded = foldAlias(raw);
+      if (!folded) continue;
+      const cp = [...folded].length;
+      if (cp < ALIAS_LIMITS.aliasMinCp || cp > ALIAS_LIMITS.aliasMaxCp) continue;
+      if (Buffer.byteLength(folded, 'utf8') > ALIAS_LIMITS.aliasMaxBytes) continue;
+      if (ALIAS_RESERVED.has(folded)) continue;
+      if (canonicalFolded.has(folded)) continue;        // 别名不得等于某个 canonical ID
+      if (seenHere.has(folded)) continue;               // 规范化后同项目内重名
+      seenHere.add(folded);
+      if (ownerOf.has(folded) && ownerOf.get(folded) !== name) { rejected.add(folded); continue; }
+      ownerOf.set(folded, name);
+      globalAliases += 1;
+      if (globalAliases > ALIAS_LIMITS.aliasesGlobal) { complete = false; break; }
+    }
+    if (!complete) break;
+  }
+  if (!complete) {
+    const canonicalOnly = new Map();
+    for (const folded of canonicalFolded) canonicalOnly.set(folded, entries.get(folded));
+    return { complete: false, entries: canonicalOnly };
+  }
+  for (const [folded, owner] of ownerOf) {
+    if (rejected.has(folded)) continue;                 // 一名多主：整条别名作废
+    if (!entries.has(folded)) entries.set(folded, owner);
+  }
+  return { complete: true, entries };
+}
+// 规范化并保留到原始下标的映射，使 span 始终指向**原始 prompt**。
+function foldWithMap(text) {
+  const out = [];
+  const map = [];
+  let pendingSpace = false;
+  for (let i = 0; i < text.length; i++) {
+    const folded = text[i].normalize('NFKC').toLowerCase();
+    if (/^\s+$/.test(folded)) { pendingSpace = true; continue; }
+    if (pendingSpace) { if (out.length) { out.push(' '); map.push(i); } pendingSpace = false; }
+    for (const ch of folded) { out.push(ch); map.push(i); }
+  }
+  return { text: out.join(''), map };
+}
+// `项目|工程` 相邻与否**只记录**为 marker_present，绝不决定候选成不成立（变异体 2）。
+const ALIAS_MARKER_SKIP = /[\s"'`«»「」『』()（）[\]【】{}<>《》,，、.。:：;；!！?？~-]/;
+function markerNear(raw, start, end) {
+  const scan = (from, step) => {
+    let i = from;
+    let skipped = 0;
+    while (i >= 0 && i < raw.length && skipped < 4 && ALIAS_MARKER_SKIP.test(raw[i])) { i += step; skipped += 1; }
+    if (i < 0 || i >= raw.length) return false;
+    if (step > 0) return raw.startsWith('项目', i) || raw.startsWith('工程', i);
+    return raw.slice(Math.max(0, i - 1), i + 1) === '项目' || raw.slice(Math.max(0, i - 1), i + 1) === '工程';
+  };
+  return scan(end, 1) || scan(start - 1, -1);
+}
+// RESOLVE：扫描原始 prompt，记录「哪些产品名出现在哪里」。
+// 引号、反引号、否定、疑问、转述、从句结构**一律不看**（§3.3 六轮红队结论：
+// 确定性 hook 判不了中文否定；在授权轴引回任何机械否定都是命名变异体）。
+function resolveAliasCandidates(prompt, projects) {
+  const registry = readAliasRegistry(projects);
+  if (!registry.entries.size) return null;
+  const folded = foldWithMap(String(prompt || ''));
+  if (!folded.text) return null;
+  const found = [];
+  const seen = new Set();
+  for (const [surface, canonical] of registry.entries) {
+    let from = 0;
+    for (;;) {
+      const idx = folded.text.indexOf(surface, from);
+      if (idx === -1) break;
+      from = idx + 1;
+      const start = folded.map[idx];
+      const end = folded.map[idx + surface.length - 1] + 1;
+      const key = `${canonical} ${start} ${end}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      found.push({
+        surface: String(prompt).slice(start, end),
+        canonical,
+        span_start: start,
+        span_end: end,
+        marker_present: markerNear(String(prompt), start, end),
+      });
+    }
+  }
+  if (!found.length) return null;                        // 零候选 → 该对象缺席
+  found.sort((a, b) => a.span_start - b.span_start || a.span_end - b.span_end);
+  if (found.length > ALIAS_LIMITS.candidates) {
+    // 第 9 条触发 cap 拒绝：不截断、不择一，整体不产候选。
+    return { schema_version: 1, status: 'CAP_EXCEEDED', registry_complete: registry.complete, candidates: [] };
+  }
+  return { schema_version: 1, status: 'OK', registry_complete: registry.complete, candidates: found };
+}
+
+// 携带模式（§3.2）：信号必须穿过 `buildDecisionCore` 的**全部**早返。
+// 用包装器而不是在每个 return 各补一次 spread——后者在新增分支时会静默漏掉
+// （实测：upstream 6aaa1c6 新增的 `explicitEngineeringDeliverySelection → FRAMEWORK_FLOW`
+// 早返，计划成稿时并不存在）。包装器对将来新增的早返同样生效。
 function buildDecision(prompt) {
+  const decision = buildDecisionCore(prompt);
+  if (!decision || typeof decision !== 'object') return decision;
+  try {
+    const aliasResolution = resolveAliasCandidates(prompt, listProjects());
+    if (aliasResolution) decision.aliasResolution = aliasResolution;
+  } catch { /* RESOLVE 是证据记录，不得让路由整体失败 */ }
+  return decision;
+}
+
+function buildDecisionCore(prompt) {
   const projects = listProjects();
   const currentProject = readCurrentProject(projects);
   const routingScope = classifyRoutingScope(prompt, projects, currentProject);
