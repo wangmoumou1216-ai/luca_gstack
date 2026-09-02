@@ -349,7 +349,8 @@ Handoff 必须包含：
 - 约束：执行 agent 必须先读本文件；不允许跳过 gate
 - 风险：执行中可能发现的遗漏（≤3 条）
 - 产出路径：指向 task-plan.md
-- 下游建议：执行阶段从 DEV-001 开始
+- 下游建议：若用户明确要发布为 ticket，调用 `to-tickets`；否则执行阶段从
+  DEV-001 经 `implement` 开始。`to-tickets` 只是本 task-plan 的 SHA 绑定投影，不取代本文件。
 - `task_plan_sha256`：仅在 Phase 7 PASS 且最终 task-plan 字节落盘后计算的小写 SHA-256；
   `implement` / Plan Agent compile 必须绑定此路径+hash。文件随后发生任何变化都会使旧 compile 与
   旧 approval 失效，必须重新过门并重算。
@@ -362,7 +363,7 @@ DONE: task-plan
   Handoff: docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md
   Gate: TASK PLAN GATE PASS（MUST N/N，断言 N 条，Dev N 张，Test N 张）
   Task-plan SHA: <最终 gated 文件的 SHA-256>
-  下游建议: 执行阶段 — 开发 agent 从 DEV-001 开始，先读本 task-plan 文件
+  下游建议: 需发布 ticket 则显式调用 to-tickets；需执行则调用 implement，开发 agent 从 DEV-001 开始
 ```
 
 ---

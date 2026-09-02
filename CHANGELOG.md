@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-09-02 · to-tickets 发布入口）
+
+- **项目 canonical `/to-tickets` + Claude/Codex 双 loader + 显式路由 + engineering-delivery 可选发布边。**
+  为什么：用户明确要求把已吸收 tracer-bullet 拆卡机制的 `task-plan` 补成真正可调用的
+  Matt Skill。Luca 适配不重造任务真值：`task-plan` 仍独占拆解/断言/依赖与 gate，
+  `to-tickets` 只绑定其 SHA 后预览、授权、发布和读回校验；默认本地 `.scratch` 逐票文件，
+  外部 tracker 写入单独授权。上游锁定 `mattpocock/skills@321658273cb1`。
+
 ### Added（2026-07-31 · 评审请求入口）
 
 - **routing-chain-check R4「评审请求」（三规则→四规则）+ route-guard 评审轴提示钉与 Gate 豁免

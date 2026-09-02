@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SKILLS = ['grilling', 'diagnosing-bugs', 'resolving-merge-conflicts', 'to-spec', 'wayfinder', 'implement'];
+const SKILLS = ['grilling', 'diagnosing-bugs', 'resolving-merge-conflicts', 'to-spec', 'to-tickets', 'wayfinder', 'implement'];
 const cases = new Map();
 
 function test(name, fn) { cases.set(name, fn); }
@@ -280,9 +280,24 @@ test('independent-methods', () => {
 
 test('facade-owner-candidate', () => {
   const toSpec = assertCanonicalSkill('to-spec');
+  const toTickets = assertCanonicalSkill('to-tickets');
   const wayfinder = assertCanonicalSkill('wayfinder');
   const implement = assertCanonicalSkill('implement');
   assertMatches(toSpec, [/tech-spec/i, /conversation[_ -]synthesis/i, /facade|薄门面|薄入口/i], 'to-spec');
+  assertMatches(toTickets, [/task-plan/i, /tracer[- ]bullet/i, /blocking edges/i, /explicit-only/i], 'to-tickets');
+  assertMatches(toTickets, [/sole owner|sole decomposition truth|唯一真值/i, /SHA-256/i, /preview/i, /read every created|read back/i], 'to-tickets owner and publication gates');
+  assertMatches(toTickets, [/disable-model-invocation:\s*true/i], 'to-tickets Claude explicit-only policy');
+  assertMatches(text('.claude/skills/office/to-tickets/agents/openai.yaml'), [/allow_implicit_invocation:\s*false/i], 'to-tickets Codex explicit-only policy');
+  assertInOrder(toTickets, [
+    /TASK PLAN GATE PASS/i,
+    /Compute the lowercase SHA-256/i,
+    /Quiz before any publication/i,
+    /approves this exact preview/i,
+    /Publish the approved projection/i,
+    /Read back and report/i,
+  ], 'to-tickets bind-preview-publish-readback sequence');
+  assertMatches(text('.claude/skills/office/task-plan/SKILL.md'), [/to-tickets[\s\S]*implement/i], 'task-plan downstream publication/execution boundary');
+  assertMatches(implement, [/ticket[\s\S]*projection[\s\S]*never grants execution authority/i], 'implement rejects ticket authority');
   assertMatches(wayfinder, [/Plan Agent/i, /huge|超大/i, /multi-session|多会话/i, /fog|迷雾|不确定/i], 'wayfinder');
   assertMatches(implement, [/task-plan/i, /Plan Agent/i, /Orchestrator/i, /approved[^\n]{0,40}U-ID|已批准[^\n]{0,40}U-ID/i], 'implement');
   assertMatches(implement, [/standalone/i, /optional[^\n]{0,40}graph|graph[^\n]{0,40}(?:optional|非依赖)/i], 'implement standalone contract');

@@ -135,3 +135,12 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 5. **使用即留任预声明**：/research-kit 天然低频（kit 与 synthesis 之间隔着 luca 亲自采集）——低频属预期节奏（判据已改为场景计数，见 CLAUDE.md 使用即留任 2026-08-03 版），治理复盘按此判读不误降。
 6. **workflow-state 口径**：两新 skill 照 insight-synthesis 先例不自写 workflow-state（由编排层更新）——与 R3-② M2 原修法的显式偏差，依据=最新一级 skill 活先例。
 7. **窄词条已接受触达缺口**：「设计一份问卷」类倒序 prompt 零词表命中 → STOP → 语义路由契约兜底（窄词条防劫持的已接受代价；词表设计注释见 routing-map research_kit/ux_writing 条目）。
+
+## 2026-09-02 增补（`to-tickets` 从已吸收机制升为可调用 facade）
+
+| # | Skill | 场景 | 真值 owner | 角色 | 护栏 |
+|---|---|---|---|---|---|
+| 9 | to-tickets | 工程交付·显式调用 | `task-plan` 独占 DEV/TEST/断言/依赖/gate；`to-tickets` 不拆第二份计划 | 把已过门且 SHA 固定的 task-plan 投影成逐票交付面；默认 `.scratch` 本地票，可显式发到现有 tracker | 上游 explicit-only 保留；发布前批准 exact preview+target；外部 effect 单独授权；发布后逐票读回；不自动 implement/commit/push |
+
+此次是 luca 显式覆盖 2026-07 「只 merge 机制、tracker 留 gap」的旧裁决。最小接入不引入
+`setup-matt-pocock-skills` 或新 tracker 抽象：本地逐票为零配置路径，现有认证 tracker 由每次调用显式命名。

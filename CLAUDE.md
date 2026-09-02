@@ -266,9 +266,10 @@ observability。项目产出和项目状态属于当前激活项目，固定放�
 | `/grilling` | 工程 | 取舍追问 |
 | `/diagnosing-bugs` | 代码 | 根因诊断 |
 | `/resolving-merge-conflicts` | 代码 | 冲突处理 |
-| `/to-spec` | 工程 | 规格合成 |
-| `/wayfinder` | 规划 | 任务规划 |
-| `/implement` | 工程 | 批准执行 |
+|`/to-spec`|工程|规格合成|
+|`/to-tickets`|工程|票据发布|
+|`/wayfinder`|规划|任务规划|
+|`/implement`|工程|批准执行|
 | `/codebase-design` | 代码层 | 深模块/interface/seam 共享原语；standalone/internal，非节点 |
 | `/code-review` | 代码层 | 固定范围后 Standards/Spec 分轴只读审查；委托 code-hygiene Mode D |
 | `/code-hygiene` | 代码层 | 完成前验证 + 8 清理算子；Mode D 是 review 权威 |

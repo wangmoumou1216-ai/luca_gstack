@@ -240,6 +240,17 @@ skills:
     quality_gates: ["conversation_source_register", "no_product_or_design_invention", "canonical_tech_spec_coverage_gate"]
     notes: "薄 facade，只进入 tech-spec conversation_synthesis；不拥有第二份 spec/state。"
 
+  to-tickets:
+    modes:
+      standalone:
+        required: ["gated_task_plan"]
+        optional: ["publication_target", "parent_reference", "include_partial"]
+      workflow:
+        required: ["gated_task_plan", "explicit_ticket_publication_selection"]
+        optional: ["selected_engineering_delivery_preset", "publication_target", "parent_reference", "include_partial"]
+    quality_gates: ["task_plan_sha_bound", "tracer_bullet_projection_only", "preview_approved_before_publish", "blocking_edges_preserved", "published_bodies_read_back"]
+    notes: "Explicit-only 发布 facade；task-plan 仍是拆解/断言/依赖的唯一真值。无显式 tracker 时默认本地 .scratch 逐票文件；外部发布单独授权。"
+
   wayfinder:
     modes:
       standalone:

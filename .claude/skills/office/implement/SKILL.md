@@ -58,6 +58,8 @@ It has two entry modes:
 
 - No gated task-plan or spec: `NEEDS_CONTEXT` with the exact missing path/gate.
 - Task-plan hash drift or authority from an older plan: stop and recompile; never reuse approval.
+- A local or remote ticket is only a `to-tickets` projection: resolve and verify its bound canonical
+  task-plan path/SHA before compilation; the ticket itself never grants execution authority.
 - Placeholder or partially compiled U-ID: reject it; never ask Orchestrator to infer the missing scope.
 - Optional graph missing in standalone mode: continue; it is not an error or a dependency.
 

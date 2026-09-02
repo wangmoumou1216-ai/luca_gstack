@@ -94,6 +94,17 @@ units:
   pinned_at: '2026-08-31'
   source: adoption-log
   note: thin conversation_synthesis facade; canonical tech-spec remains the sole specification truth owner
+- name: to-tickets
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/to-tickets
+  install_path: .claude/skills/office/to-tickets
+  pinned_sha: 321658273cb1d20b76026717d027d505790106d4
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-09-02'
+  source: adoption-log
+  note: explicit-only publication facade; canonical task-plan remains sole decomposition truth; local .scratch default and external tracker effects require separate preview approval
 - name: wayfinder
   kind: skill
   repo: mattpocock/skills

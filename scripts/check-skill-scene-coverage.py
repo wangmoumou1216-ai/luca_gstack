@@ -76,6 +76,7 @@ TABLE = {
     "diagnosing-bugs": (None, [], "unobservable"),
     "resolving-merge-conflicts": (None, [], "unobservable"),
     "to-spec": (None, [], "unobservable"),
+    "to-tickets": (None, [], "unobservable"),
     "wayfinder": (None, [], "unobservable"),
     "implement": (None, [], "unobservable"),
     "muse-req-triage": (None, [f"{D}/loop/*"], "unmapped"),

@@ -526,7 +526,7 @@ Claude Code owns the native slash-command experience:
 
 - `.claude/commands/*`
 - `.claude/skills/office/*`
-- `.claude/skills/{codebase-design,code-review,grilling,diagnosing-bugs,resolving-merge-conflicts,to-spec,wayfinder,implement}`：
+- `.claude/skills/{codebase-design,code-review,grilling,diagnosing-bugs,resolving-merge-conflicts,to-spec,to-tickets,wayfinder,implement}`：
   仅为指向 `office/` 真值源的 Claude native aliases（不复制正文；`code-review`
   覆盖 bundled `/code-review`，其 `/review` alias 仍属原生）
 - Claude-specific guided workflows.
@@ -614,6 +614,7 @@ AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落
 | `/diagnosing-bugs` | 代码层 | 意外失败/回归/偶发/性能回归的 diagnose-only red loop；expected TDD red 不触发，完成后回原 U-ID |
 | `/resolving-merge-conflicts` | 代码层 | 真实进行中 Git 冲突才进；变更/stage/advance/abort 分门，不自动 commit/push |
 | `/to-spec` | 工程层 | 已解决工程讨论 → canonical tech-spec 的 conversation_synthesis 薄入口 |
+| `/to-tickets` | 工程层 | 显式把已过门、SHA 固定的 task-plan 发布为竖切 tickets；task-plan 仍是唯一真值 |
 | `/wayfinder` | 规划层 | Plan Agent 薄入口；自动建议仅 huge AND multi-session AND fog，direct 按名可直达 |
 | `/implement` | 工程层 | 已冻结、已批准 task-plan → exact U-ID；Plan Agent 编译，Orchestrator 拥有执行状态 |
 | `/codebase-design` | 代码层 | Module/Interface/Depth/Seam/Adapter 共享原语；模块深化、接口收敛和测试面设计，不是 workflow 节点 |
@@ -624,7 +625,7 @@ AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落
 | `/muse-loop-orchestrate` | muse | 需求→原型自治 Loop 编排器，自带两个不可省略的人类卡点（GATE-1/GATE-2） |
 
 `engineering-delivery` 是可选无状态 preset：只有用户明确选择才作为 routing metadata。
-未选择时六项全部 standalone，optional graph 可删且不是 loader/状态依赖；选择也不授予 effect authority。
+未选择时七项全部 standalone，optional graph 可删且不是 loader/状态依赖；选择也不授予 effect authority。
 
 场景：**A=新功能设计 · B=已有功能优化 · C=线上评审改版 · D=Agent 化改造**。
 隐藏/高级 skill（`challenge`/`redteam`/`evals`/`retro`/`careful`/`compare`/`figma-demo`/`magicpath`）

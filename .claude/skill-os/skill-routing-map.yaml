@@ -165,6 +165,12 @@ project_skills:
     # 已解决工程讨论的 synthesis；开放产品/UI 决策仍由其原 owner 处理。
     triggers: [to-spec, conversation to spec, 把已确认的工程讨论整理成规格, 把刚才定下的工程约束整理成技术规格, 将已解决的工程讨论转成tech spec, 根据刚才讨论直接形成spec不要重做访谈]
 
+  to-tickets:
+    invoke: "/to-tickets"
+    weight: 8
+    # 上游 explicit-only：只收同名显式调用；泛「拆任务/ticket/工单」仍归 task-plan 或业务语义。
+    triggers: [to-tickets]
+
   wayfinder:
     invoke: "/wayfinder"
     weight: 8

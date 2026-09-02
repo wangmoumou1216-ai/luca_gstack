@@ -39,7 +39,7 @@ research_default:
     note: "recommended_paths 是写死静态启发式；诉求→动态编排是净新增行为，真值逻辑在 plan-agent.md 块2，此处仅登记对象角度与原则。tool_choice 列 5 项 = 3 对象角度（deep/ux/insight）× 深度档——quick-research/web_spike 是 deepresearch 外部角度的降档变体，非独立对象角度。"
 
 # 可选工程交付 preset：只存建议边和进入条件，不保存运行状态、不授予 authority。
-# 未显式选择时六项完全 standalone；删除本段或整份 graph 不影响 direct/semantic/internal loader。
+# 未显式选择时七项完全 standalone；删除本段或整份 graph 不影响 direct/semantic/internal loader。
 presets:
   engineering-delivery:
     optional: true
@@ -49,6 +49,7 @@ presets:
     truth_owners:
       spec: tech-spec
       plan: task-plan
+      tickets: to-tickets
       compile: plan-agent
       execution: orchestrator
     suggested_edges:
@@ -61,6 +62,9 @@ presets:
       - from: tech-spec
         to: task-plan
         when: "canonical tech-spec coverage gate is PASS"
+      - from: task-plan
+        to: to-tickets
+        when: "canonical task-plan gate is PASS, its exact SHA-256 is frozen, and the user explicitly selects ticket publication"
       - from: task-plan
         to: implement
         when: "canonical task-plan gate is PASS and its exact SHA-256 is frozen"
@@ -77,6 +81,7 @@ presets:
         when: "a real in-progress Git operation has unmerged index entries"
         return_to: "original U-ID"
     human_gates:
+      - "before to-tickets publishes local files or external tracker issues, the user approves the exact preview and target"
       - "after task-plan SHA freeze, Plan Agent compiles exact U-IDs"
       - "the user confirms that same task-plan SHA, baseline, U-ID set, paths, effects, and assertions"
 

@@ -872,6 +872,52 @@ const cases = [
         `诊断语境不应命中研究轴: ${JSON.stringify(decision.signals)}`);
     },
   },
+  // ── to-tickets explicit-only 发布轴 2026-09-02 ────────────────────
+  {
+    name: 'to-tickets: 显式同名调用命中发布 facade',
+    prompt: '/to-tickets',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/to-tickets');
+    },
+  },
+  {
+    name: 'to-tickets: Codex $skill 显式调用命中发布 facade',
+    prompt: '$to-tickets',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/to-tickets');
+    },
+  },
+  {
+    name: 'to-tickets: 元问句只是询问 skill，不执行',
+    // 裸的句首 `to-tickets` 是本仓明确支持的 slashless command alias；
+    // 这里覆盖的是普通句子中的“提及并询问”，不是显式调用。
+    prompt: '这个 to-tickets 是什么',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/to-tickets');
+    },
+  },
+  {
+    name: 'to-tickets: 泛拆任务语义仍归 task-plan',
+    prompt: '把这个开发需求拆任务',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.equal(decision.skill, '/task-plan');
+      assert.notEqual(decision.skill, '/to-tickets');
+    },
+  },
+  {
+    name: 'to-tickets: 泛 ticket/工单词不误触发',
+    prompt: '看一下客户工单和 tickets 的数量',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/to-tickets');
+    },
+  },
   // ── 评审轴 2026-07-31（R4 评审请求分流）──────────────────────────────────
   // 钉住"确定性层"行为：词表增删 + Project Gate 豁免。提示钉在 hints 层（decisionToHints），
   // dry-run 只吐 decision，故此处只测决策；钉的正/负样本走 fixtures.jsonl semantic 层。

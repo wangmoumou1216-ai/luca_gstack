@@ -54,7 +54,7 @@ tiers:
     skills: [brainstorm, ux-brainstorm, design-brief, muse-loop-orchestrate,
              deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype,
              code-hygiene, code-review, codebase-design, auto, muse-x-digest,
-             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, implement]
+             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, to-tickets, implement]
 
   guided-execution:
     resolves_to: sonnet

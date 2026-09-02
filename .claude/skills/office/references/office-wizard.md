@@ -264,6 +264,9 @@ luca_gstack — 一级可见 Skill 列表
 /to-spec       —      已解决的工程讨论 → canonical tech-spec 的 conversation_synthesis 薄入口
                输入模式：standalone 或 internal；不重开 discovery，不另建 spec 状态
 
+/to-tickets    —      把已过门且 SHA 固定的 task-plan 发布为竖切 tickets + blocking edges
+               显式调用；task-plan 仍是唯一真值；默认本地 .scratch，外部 tracker 单独授权
+
 /wayfinder     —      超大、多会话且路线迷雾时的 Plan Agent 规划薄入口
                输入模式：standalone 或 internal；自动建议严格要求 huge AND multi-session AND fog
 
@@ -276,7 +279,7 @@ luca_gstack — 一级可见 Skill 列表
 /resolving-merge-conflicts — 仅处理真实进行中的 merge/rebase/cherry-pick/revert 冲突
                inspect/propose 默认只读；edit/stage/advance/abort 分门授权，不自动 commit/push
 
-可选 `engineering-delivery` preset 只在用户明确选择时提供建议边。未选择时上述六项全部
+可选 `engineering-delivery` preset 只在用户明确选择时提供建议边。未选择时上述七项全部
 standalone，不读 optional graph；preset 选择也不授予写入、Git、网络或 external effect。
 
 /codebase-design  —   工程模块设计原语：用 Module/Interface/Depth/Seam/Adapter
