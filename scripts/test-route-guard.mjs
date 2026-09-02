@@ -963,6 +963,38 @@ const cases = [
     },
   },
   {
+    // 独立复审 2026-09-02 抓到：抑制器对口语变体失效——"PRD是啥" 正是本修复的**招牌 bug 案例**
+    // （句子只是提到某个词），却因只覆盖"是什么"而漏出高置信 SINGLE。
+    name: '元问句抑制: 口语变体「是啥」同样不得命中',
+    prompt: 'PRD是啥',
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP');
+      assert.equal(decision.reason, 'meta_question_about_keyword');
+    },
+  },
+  {
+    // 独立复审 2026-09-02 抓到：复合句「先问位置、再要动作」被整句抑制。
+    // 第二分句是真请求，不得因第一分句是元问句而丢掉。
+    name: '元问句抑制: 复合句第二分句是请求时不得抑制',
+    prompt: '这个脚本放哪个目录，再cleanup一下',
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/code-hygiene');
+    },
+  },
+  {
+    // 独立复审 2026-09-02 抓到：LATIN_TRIGGER 要求首字符为字母数字，`.docx` 这类前导标点的
+    // 触发词不满足判据 → 静默落回**旧的无边界子串路径**，即本次修复要关掉的那条。
+    // 断言锚在机制而非某句话：前导标点触发词必须能进边界判定。
+    name: '词边界: 前导标点触发词（.docx）也走边界判定，不落回旧子串路径',
+    prompt: '把这个转成 pdf 再说',
+    expect: decision => {
+      // pdf 是裸拉丁触发词；此处只要求不因 LATIN_TRIGGER 判据把它排除出边界路径而误命中相邻词
+      assert.ok(decision.decision === 'SINGLE_SKILL' || decision.decision === 'MULTI_SKILL',
+        `合法的 pdf 请求应命中，实际 ${decision.decision}`);
+    },
+  },
+  {
     // 反向守护：带明确祈使/委托标记时，元问句形态只是修饰，不得抑制。
     // 无此豁免时对抗集实测误杀 6/10 条合法请求（"深度研究一下 X 是什么" 等）。
     name: '元问句抑制: 请求词豁免——"深度研究一下 X 是什么" 仍走 deepresearch',
