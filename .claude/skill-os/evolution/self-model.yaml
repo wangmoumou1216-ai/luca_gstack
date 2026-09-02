@@ -14,7 +14,14 @@
 # daily_governance.check_self_model() 每日校验 updated 复核期限（>review_after_days 入 digest）。
 
 version: 1
-updated: 2026-07-23   # 本次复核：identity 对齐 CONTEXT.md 2026-07-03 身份修正 + 全档快检（testing.npm 补两门）
+updated: 2026-09-02   # 本次复核（范围如实记，未查的不算查过）：逐条核对 surface 的可机械验证声明——
+                      #   hooks.files 6→7（漏 controlled-change-guard.mjs，本次补，唯一漂移）；
+                      #   orchestration.agents 6 项 = 磁盘一致；testing.npm 11 项在 package.json 全存在；
+                      #   routing.truth_files 4 份齐、guard 可跑；identity.default_model=sonnet 仍镜像
+                      #   model-routing default_tier=guided-execution。
+                      # **未复核**：already_have_static 的判断性条目、gaps-register 的 open 缺口实质、
+                      #   sources-registry 的源新鲜度 —— 这三项需 framework-evolution-scout（本轮无 Workflow 工具跑不了）。
+                      # 上次复核 2026-07-23：identity 对齐 CONTEXT.md 2026-07-03 身份修正 + 全档快检（testing.npm 补两门）
 review_after_days: 35
 
 identity:
@@ -31,7 +38,7 @@ surface:
     install_targets: ["~/.claude/skills (全局)", ".claude/skills/office (路由)"]
     external_help: 可安装的设计/工程/验证 skill
   hooks:
-    files: [session-restore.mjs, route-guard.mjs, post-edit.mjs, session-sync.mjs, session-end.mjs, project-scope-guard.mjs]
+    files: [session-restore.mjs, route-guard.mjs, post-edit.mjs, session-sync.mjs, session-end.mjs, project-scope-guard.mjs, controlled-change-guard.mjs]
     registry: .claude/settings.json
     external_help: hook 模式 / 平台新 hook 事件
   routing:
