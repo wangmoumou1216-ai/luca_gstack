@@ -184,6 +184,9 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 - `docs/`、`.claude/workflow-state.yaml`、`.claude/current-topic.txt` 都是 **symlink**，指向当前激活项目。
 - 会话级项目绑定（`project-scope-guard`）：pin 是唯一真值，把本 session 对 docs/state 的读写重定向到
   pin 项目的绝对路径；未绑定 session 写 docs/ 直接拦截，防止落错项目。
+- 跨项目依赖只读：用 `只读引用: \`/绝对/文件路径\``（默认本回合）或
+  `只读引用目录: \`/绝对/目录路径\``；前缀加“本会话”才跨 turn。它不会切项目，也不开放写工具或 raw Bash；
+  当前仅支持文本，图片、PDF 与 MCP local-path 仍为 DEFERRED。
 - **命名即切换**：你一提某个已有项目名，就自动切过去（切换便宜可逆）；只有"名字是猜的新项目"才留一句确认。
 - `memory/**` 与 `.claude/observability/**` 是跨项目经验层，**不随项目切换**——经验不因换项目而丢。
 
@@ -194,11 +197,11 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 | 时机 | hook | 做什么 |
 |------|------|--------|
 | **SessionStart** | session-restore | 加载记忆摘要、恢复流程状态、显示 PROGRESS、清理悬空软链 |
-| **UserPromptSubmit** | route-guard | 打分路由 + 项目门禁 + 轮数追踪提醒 |
-| **PreToolUse** | project-scope-guard | 工具执行**前**把 docs/state 读写重定向到本 session 的 pin 项目；未绑定写 docs/ 直接拦 |
+| **UserPromptSubmit** | route-guard | 打分路由 + 项目门禁 + 显式只读 grant 签发 + 轮数追踪提醒 |
+| **PreToolUse** | project-scope-guard | 工具执行**前**重定向 pin 路径并消费精确只读 grant；写入和 raw Bash 不消费 grant |
 | **PostToolUse** | post-edit | 累计活动信号（edit/tool 计数，供 Stop 判"实质工作"）+ framework/ 只读警告 |
-| **Stop** | session-sync | 拦截未沉淀的实质工作、就地裁决记忆、写 checkpoint、提示同步 |
-| **SessionEnd** | session-end | 会话真正结束时清理本 session 的计数/pin 残留（僵尸窗口归零） |
+| **Stop** | session-sync | 拦截未沉淀的实质工作、写 checkpoint；真正关闭回合时撤销 turn grant |
+| **SessionEnd** | session-end | 会话真正结束时清理本 session 的计数和全部 read grants（僵尸窗口归零） |
 
 ### 9. 框架自进化（propose-only）
 

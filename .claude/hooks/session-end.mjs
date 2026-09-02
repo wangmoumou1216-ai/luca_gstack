@@ -9,6 +9,7 @@
 // 全程 fail-open：任何异常都不得报错（session 已在结束）。
 import { readFileSync, readdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
+import { closeGrants } from './lib/project-read-grants.mjs';
 
 try {
   const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -18,6 +19,8 @@ try {
     sid = String(payload.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
   } catch { }
   if (!sid) process.exit(0); // 无 sid 无从定位本 session 文件，安全退出（GC 会兜底）
+
+  try { closeGrants({ gstackRoot: projectRoot, sessionId: sid, scope: 'session' }); } catch { }
 
   const claudeDir = join(projectRoot, '.claude');
   const targets = [

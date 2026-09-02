@@ -380,15 +380,12 @@ skill 全部词表）。route-guard 每条消息按 yaml 匹配并注入路由�
 
 ## Session 启动协议（每次 Claude Code 启动必须执行）
 
-> **软链与并行安全（G6 2026-07-04 条件化清链 + 方案A 2026-07-08 会话级隔离；全文沿革见
-> `.claude/skill-os/claude-md-appendix.md`）：** session-restore 仅在「冷启动 **且** 无活跃并行
-> session **且** 未设 `SESSION_RESTORE_ALWAYS_CLEAR=1`」时清三软链（resume/compact/clear
-> 保留；悬空链无条件清）。**会话级项目隔离：** `.claude/.session-project-<sid>` pin 是唯一真值，
-> project-scope-guard 把本 session 对 `docs/`·workflow-state·current-topic 的读写重定向到 pin
-> 项目绝对路径（软链仅展示）；未绑定 session 对共享 `docs/`、state、topic 读写均 deny；
-> 框架内非项目路径照常可读。pin 只在用户
-> 显式声明/确认项目时写、永不从软链派生、漂移永不自动认领。继承态（并行保留的激活项目）做实质
-> 项目任务前先声明/确认。回归：`scripts/test-project-scope-guard.mjs`。
+> **软链与并行安全（全文沿革见 `.claude/skill-os/claude-md-appendix.md`）：** session-restore
+> 仅在冷启动、无活跃并行且未设 `SESSION_RESTORE_ALWAYS_CLEAR=1` 时清三软链；悬空链无条件清。
+> `.claude/.session-project-<sid>` pin 是会话项目唯一真值，project-scope-guard 将共享路径重定向
+> 到 pin 项目；无 pin 时 deny，pin 永不从软链派生或自动认领。跨项目只认显式 `只读引用:` /
+> `只读引用目录:` 的文本只读 grant；图片、PDF、MCP local-path 均 DEFERRED，且不授权写或 raw Bash。
+> 回归：`scripts/test-project-scope-guard.mjs`。
 
 **按顺序执行以下步骤：**
 

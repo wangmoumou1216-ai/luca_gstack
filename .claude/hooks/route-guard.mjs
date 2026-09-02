@@ -30,6 +30,7 @@ import {
   validateProjectName,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
+import { closeGrants, reconcilePromptGrants } from './lib/project-read-grants.mjs';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -38,6 +39,12 @@ let runtimeCurrentProject = '';
 
 function normalize(value) {
   return String(value || '').toLowerCase().replace(/\s+/g, '');
+}
+
+function promptForRouting(prompt) {
+  const kept = String(prompt || '').split(/\r?\n/).filter((line) =>
+    !/^(?:本会话)?只读引用(?:目录)?[：:]\s*.+\s*$/.test(line.trim()));
+  return kept.join('\n').trim() || '显式只读引用外部资料';
 }
 
 // 项目名词边界匹配（2026-07-14 P5 修复）：projectGate 具名匹配与 pin 层 affirmsCur 共用同一套
@@ -1511,6 +1518,7 @@ function ruleHintsForSkills(skills) {
 }
 
 const prompt = parsePrompt();
+const routingPrompt = promptForRouting(prompt);
 const hints = [];
 let topLevelProjectState = null;
 let injectProjectOnThisTurn = false;
@@ -1544,7 +1552,7 @@ if (!dryRun && prompt && hookSessionId) {
 
 let decision = null; // 提升到外层：pin 层（另一 if 块）需读它判定"命名即切换自切"
 if (prompt) {
-  decision = buildDecision(prompt);
+  decision = buildDecision(routingPrompt);
   if (dryRun) {
     process.stdout.write(JSON.stringify(decision, null, 2) + '\n');
     process.exit(0);
@@ -1554,7 +1562,7 @@ if (prompt) {
       if (projectStateError) throw new Error(projectStateError);
       const current = topLevelProjectState || readProjectState(projectRoot, hookSessionId).value;
       const binding = validatedBindingForState(current, PROJECTS_ROOT);
-      const named = listProjects().find(name => nameMatchesIn(projectIdentityText(prompt), name));
+      const named = listProjects().find(name => nameMatchesIn(projectIdentityText(routingPrompt), name));
       // A display symlink is never enough to bind a no-pin session. Explicitly
       // naming that same display project still creates a real switch transaction.
       if (named && !binding && decision.decision !== 'PROJECT_SWITCH') {
@@ -1568,6 +1576,8 @@ if (prompt) {
       }
 
       if (decision.decision === 'PROJECT_SWITCH' && decision.project) {
+        try { closeGrants({ gstackRoot: projectRoot, sessionId: hookSessionId, scope: 'session' }); }
+        catch (error) { hints.push(`[route-guard] ⛔ READ GRANTS — 项目切换前撤销失败：${error.message}`); }
         const operation = decision.operation === 'new' ? 'new' : 'switch';
         const prepared = prepareProjectSwitch({
           gstackRoot: projectRoot,
@@ -1593,6 +1603,22 @@ if (prompt) {
           sessionId: hookSessionId,
           turnId: hookTurnId,
         });
+        try {
+          const grantResult = reconcilePromptGrants({
+            gstackRoot: projectRoot,
+            projectsRoot: PROJECTS_ROOT,
+            sessionId: hookSessionId,
+            turnId: hookTurnId,
+            prompt,
+            binding: opened.state === 'TURN_ACTIVE' ? opened.binding : null,
+          });
+          for (const grant of grantResult.issued) {
+            hints.push(`[route-guard] 🔐 已授权${grant.lifetime === 'session' ? '本会话' : '本回合'}只读引用：${grant.path}（cap ${hookSessionId}:${grant.id}）`);
+          }
+          for (const hint of grantResult.hints) hints.push(`[route-guard] ⚠️ READ GRANT — ${hint}`);
+        } catch (error) {
+          hints.push(`[route-guard] ⛔ READ GRANT — ${String(error?.message || error)}；跨项目读取保持关闭。`);
+        }
         if (opened.state === 'TURN_ACTIVE') {
           const activeState = join(opened.binding.realpath, '.luca', 'workflow-state.yaml');
           if (existsSync(activeState)) {

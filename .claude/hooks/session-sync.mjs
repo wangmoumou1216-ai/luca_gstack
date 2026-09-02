@@ -20,6 +20,7 @@ import {
   readProjectState,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
+import { closeGrants, snapshotGrantTurn } from './lib/project-read-grants.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -53,30 +54,50 @@ if (hasSid) {
 }
 
 let closeSnapshotOnExit = false;
+let closeReadGrantTurnOnExit = false;
+let readGrantTurnSnapshot = null;
+if (hasSid) {
+  try { readGrantTurnSnapshot = snapshotGrantTurn(projectRoot, sessionId); } catch { }
+}
 process.on('exit', () => {
-  if (!closeSnapshotOnExit || !projectState || !hasSid) return;
-  try {
-    if (projectState.state === 'TURN_ACTIVE') {
-      closeProjectTurn({
+  if (closeSnapshotOnExit && projectState && hasSid) {
+    try {
+      if (projectState.state === 'TURN_ACTIVE') {
+        closeProjectTurn({
+          gstackRoot: projectRoot,
+          projectsRoot: PROJECTS_ROOT,
+          sessionId,
+          turnId: projectState.turn.turn_id,
+          expectedEpoch: projectState.turn.epoch,
+          outcome: 'stop',
+        });
+      } else if (projectState.state === 'BOUND' && projectState.terminal) {
+        closeSwitchTurn({
+          gstackRoot: projectRoot,
+          projectsRoot: PROJECTS_ROOT,
+          sessionId,
+          turnId: projectState.terminal.turn_id,
+          expectedEpoch: projectState.binding.epoch,
+          outcome: 'switch-stop',
+        });
+      }
+    } catch (error) {
+      try { process.stderr.write(`[session-sync] ⚠️ turn snapshot close failed: ${error.message}\n`); } catch { }
+    }
+  }
+  if (closeReadGrantTurnOnExit && hasSid && readGrantTurnSnapshot?.open) {
+    try {
+      closeGrants({
         gstackRoot: projectRoot,
-        projectsRoot: PROJECTS_ROOT,
         sessionId,
-        turnId: projectState.turn.turn_id,
-        expectedEpoch: projectState.turn.epoch,
-        outcome: 'stop',
-      });
-    } else if (projectState.state === 'BOUND' && projectState.terminal) {
-      closeSwitchTurn({
-        gstackRoot: projectRoot,
-        projectsRoot: PROJECTS_ROOT,
-        sessionId,
-        turnId: projectState.terminal.turn_id,
-        expectedEpoch: projectState.binding.epoch,
-        outcome: 'switch-stop',
+        scope: 'turn',
+        generation: readGrantTurnSnapshot.generation,
+        turnId: readGrantTurnSnapshot.turnId,
       });
     }
-  } catch (error) {
-    try { process.stderr.write(`[session-sync] ⚠️ turn snapshot close failed: ${error.message}\n`); } catch { }
+    catch (error) {
+      try { process.stderr.write(`[session-sync] ⚠️ read grant close failed (deny latch retained): ${error.message}\n`); } catch { }
+    }
   }
 });
 
@@ -209,6 +230,7 @@ try {
   // TURN_ACTIVE so the required extraction continuation cannot cross epochs.
   closeSnapshotOnExit = projectState?.state === 'TURN_ACTIVE'
     || (projectState?.state === 'BOUND' && Boolean(projectState?.terminal));
+  closeReadGrantTurnOnExit = hasSid;
 
   // ---- 放行 ----
   // kill-switch 可见性（audit 2026-07-07 F1-02）：环境残留 SESSION_SYNC_BLOCK=0 曾静默关停

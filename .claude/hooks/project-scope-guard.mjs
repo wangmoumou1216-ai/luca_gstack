@@ -33,7 +33,7 @@
 //         （reason 会展示给模型，模型可据此改用 switch/new）。
 
 import { readFileSync, existsSync, lstatSync, realpathSync } from 'fs';
-import { join, relative, resolve } from 'path';
+import { isAbsolute, join, relative, resolve } from 'path';
 
 // harness 门（P0/WS-A0 接线，2026-07-25）：CC 专有强制动词（permissionDecision:deny /
 // updatedInput）只在**正向确定是 Codex** 时降级为纯文本 advisory——claude/unknown 照常输出，
@@ -77,10 +77,12 @@ const gstackRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 // 动态 import 失败时回落硬编码默认，保 fail-open（本 hook 任何异常都不得阻断工具调用）。
 let PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
 let substrate = null;
+let readGrants = null;
 try {
   substrate = await import('./lib/project-substrate.mjs');
   if (substrate?.PROJECTS_ROOT) PROJECTS_ROOT = substrate.PROJECTS_ROOT;
 } catch { /* fail-open：用默认根 */ }
+try { readGrants = await import('./lib/project-read-grants.mjs'); } catch { }
 const claudeDir = join(gstackRoot, '.claude');
 
 function readSessionState() {
@@ -304,6 +306,69 @@ function shellWordSegments(command) {
   return segments;
 }
 
+function exactReadBrokerInvocation(command, expectedSessionId) {
+  const source = String(command || '').trim();
+  if (!source || /[;&|><`\n\r]/.test(source) || /\$/.test(source)) return false;
+  const segments = shellWordSegments(source);
+  if (segments.length !== 1) return false;
+  const words = segments[0].map((word) => word.value);
+  if (words[0] !== 'node' || words[1] !== 'scripts/project-read.mjs') return false;
+  if (!['read', 'list', 'search'].includes(words[2])) return false;
+  const options = new Map();
+  for (let index = 3; index < words.length; index += 2) {
+    const flag = words[index];
+    const value = words[index + 1];
+    if (!['--cap', '--relative', '--pattern'].includes(flag) || value === undefined || options.has(flag)) return false;
+    options.set(flag, value);
+  }
+  const cap = options.get('--cap') || '';
+  if (!/^[\w-]{1,36}:[0-9a-f-]{36}$/i.test(cap)) return false;
+  if (!expectedSessionId || cap.slice(0, cap.indexOf(':')) !== expectedSessionId) return false;
+  if (words[2] === 'search' && !options.has('--pattern')) return false;
+  if (words[2] === 'search' && options.has('--relative')) return false;
+  if (words[2] !== 'search' && options.has('--pattern')) return false;
+  if (options.has('--relative')) {
+    const rel = options.get('--relative');
+    if (!rel || isAbsolute(rel) || rel.split(/[\\/]/).some((part) => !part || part === '.' || part === '..')) return false;
+  }
+  return true;
+}
+
+function readGrantControlPlaneReference(tool, inp) {
+  const prefix = '.session-read-';
+  if (tool === 'Bash') {
+    const command = String(inp.command || '');
+    const partial = ['.session', 'rea'].join('-');
+    for (const source of new Set([command, expandLocalAssignments(command)])) {
+      if (source.includes(prefix) || source.includes(partial)) return prefix;
+      const references = [...source.matchAll(/(?:^|[\s"'`])(?:\.\/)?\.claude\/([^\s"'`;|&<>]*)/g)];
+      for (const match of references) {
+        const tail = match[1] || '';
+        const unquotedGlob = tail.replace(/[\[\]{}*?\\]/g, '');
+        if (unquotedGlob.includes(prefix) || /[*?\[\]{}$()\\]/.test(tail)) return match[0].trim();
+      }
+    }
+    return null;
+  }
+  const path = inp.file_path || inp.notebook_path || inp.path;
+  if (typeof path !== 'string' || !path) return null;
+  const absolute = isAbsolute(path) ? resolve(path) : resolve(gstackRoot, path);
+  const dir = resolve(gstackRoot, '.claude');
+  const rel = relative(dir, absolute);
+  if (rel && !rel.startsWith('..') && !isAbsolute(rel) && rel.split('/').pop().startsWith(prefix)) return path;
+  return null;
+}
+
+function mentionsReadBrokerInvocation(command) {
+  return String(command || '').includes('scripts/project-read');
+}
+
+function exactReadBrokerMaintenance(command) {
+  const source = ['scripts/project', 'read.mjs'].join('-');
+  if (String(command || '').trim() === `git add ${source}`) return true;
+  return String(command || '').trim() === 'node --check scripts/project-read.mjs';
+}
+
 // Search patterns are data, not path operands. Mask only the pattern argument of a
 // small, explicit command subset and only when an explicit path operand follows it.
 // Unknown options remain unmasked (conservative fallback), while real path operands
@@ -472,6 +537,21 @@ function localAssignments(cmd) {
     map.set(m[1], v);
   }
   return map;
+}
+
+function expandLocalAssignments(cmd) {
+  let expanded = String(cmd || '');
+  const table = [...localAssignments(expanded).entries()].sort((a, b) => b[0].length - a[0].length);
+  for (let pass = 0; pass < 3; pass++) {
+    const before = expanded;
+    for (const [key, value] of table) {
+      expanded = expanded
+        .replace(new RegExp(`\\$\\{${escapeRe(key)}\\}`, 'g'), value)
+        .replace(new RegExp(`\\$${escapeRe(key)}\\b`, 'g'), value);
+    }
+    if (expanded === before) break;
+  }
+  return expanded;
 }
 
 function variableProjectReference(cmd, binding) {
@@ -670,6 +750,11 @@ function main() {
   const state = readSessionState();
   const binding = activeBinding(state);
   const bashCommand = toolName === 'Bash' ? String(input.command || '') : '';
+  const grantControlPlane = readGrantControlPlaneReference(toolName, input);
+  if (grantControlPlane) {
+    return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+      permissionDecisionReason: `read-grant sidecar 是 hook 内部控制平面，普通工具不得读取、写入或伪造（${grantControlPlane}）。` } });
+  }
   if (toolName === 'Bash') {
     const patch = inspectApplyPatch(bashCommand, binding);
     if (patch?.denied) {
@@ -709,6 +794,13 @@ function main() {
     } else if (mentionsInternalProjectController(cmd)) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: 'project-pin.mjs 是 hook/project.sh 的内部事务接口，不能作为同轮绕过 terminal/epoch 的项目工具调用。' } });
+    }
+    if (mentionsReadBrokerInvocation(cmd)) {
+      if (exactReadBrokerInvocation(cmd, sid)) passThrough();
+      if (!exactReadBrokerMaintenance(cmd)) {
+        return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+          permissionDecisionReason: '跨项目只读 broker 必须是单一 exact argv 命令；禁止管道、重定向、控制操作符、命令替换、未知参数或复合命令。' } });
+      }
     }
     const variableRef = variableProjectReference(guardCmd, binding);
     if (variableRef) {
@@ -758,6 +850,22 @@ function main() {
   if (!c.scoped) passThrough(); // 非项目路径 → 放行（.claude/skills、memory、scripts、framework、任意文件）
 
   if (!c.redirected) {
+    const operation = toolName === 'Read' ? 'read' : toolName === 'Grep' ? 'search' : toolName === 'Glob' ? 'list' : '';
+    if (operation && ['NO_PIN', 'TURN_ACTIVE'].includes(state.state) && readGrants?.authorizeRead) {
+      const verdict = readGrants.authorizeRead({
+        gstackRoot,
+        projectsRoot: PROJECTS_ROOT,
+        sessionId: sid,
+        turnId: state.state === 'TURN_ACTIVE' ? state.turn?.turn_id : undefined,
+        binding,
+        operation,
+        toolName,
+        targetPath: target,
+      });
+      if (verdict.allowed) {
+        return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, [pathField]: verdict.canonicalPath } } });
+      }
+    }
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
       permissionDecisionReason: c.unsafe
         ? `项目路径含 . / .. / 空段 traversal，拒绝「${target}」。`

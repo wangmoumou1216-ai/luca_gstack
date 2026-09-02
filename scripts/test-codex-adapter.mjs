@@ -4,9 +4,11 @@
 // 覆盖：入向 tool_name 归一化 / 出向四种方言翻译 / Claude 路径零回归。
 
 import { spawnSync } from 'child_process';
-import { existsSync, rmSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, rmSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync } from 'fs';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
+import { tmpdir } from 'os';
+import { reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ADAPTER = join(ROOT, '.codex', 'codex-hook-adapter.mjs');
@@ -46,8 +48,10 @@ const cleanup = () => {
   for (const f of ['.session-edit-count-' + SID, '.session-tool-count-' + SID,
                    '.session-turn-count-' + SID, '.session-project-' + SID,
                    '.session-consumed-turns-' + SID,
+                   '.session-read-grants-' + SID, '.session-read-turn-' + SID, '.session-read-deny-' + SID,
                    '.session-project-' + DIRECT_SID,
-                   '.session-consumed-turns-' + DIRECT_SID]) {
+                   '.session-consumed-turns-' + DIRECT_SID,
+                   '.session-read-grants-' + DIRECT_SID, '.session-read-turn-' + DIRECT_SID, '.session-read-deny-' + DIRECT_SID]) {
     const p = join(ROOT, '.claude', f);
     if (existsSync(p)) rmSync(p, { force: true });
   }
@@ -312,6 +316,44 @@ console.log(JSON.stringify({ hookSpecificOutput: {
       b?.tool_input?.file_path === undefined && b?.tool_name === 'Bash',
       `得到=${b?.tool_input?.file_path} / ${b?.tool_name}`);
   } finally { for (const p of [pe, pg]) if (existsSync(p)) rmSync(p, { force: true }); }
+}
+
+// ── I. Codex typed read broker：真实 capability + bounded read/list/search ──
+{
+  const base = mkdtempSync(join(tmpdir(), 'codex-read-broker-'));
+  const gstack = join(base, 'gstack');
+  const projects = join(base, 'projects');
+  const directory = join(projects, 'beta', 'docs', 'nested');
+  const file = join(projects, 'beta', 'docs', 'reference.md');
+  const child = join(directory, 'child.md');
+  mkdirSync(join(gstack, '.claude'), { recursive: true });
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(file, 'beta reference\n');
+  writeFileSync(child, 'needle child\n');
+  const issued = reconcilePromptGrants({
+    gstackRoot: gstack, projectsRoot: projects, sessionId: 'BROKER', turnId: 'turn-broker', binding: null,
+    prompt: `只读引用: \`${file}\`\n只读引用目录: \`${directory}\``,
+  }).issued;
+  const fileCap = `BROKER:${issued.find((grant) => grant.kind === 'file').id}`;
+  const dirCap = `BROKER:${issued.find((grant) => grant.kind === 'directory').id}`;
+  const runBroker = (args) => spawnSync('node', [join(ROOT, 'scripts', 'project-read.mjs'), ...args], {
+    cwd: gstack,
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: gstack, LUCA_GSTACK_ROOT: gstack, LUCA_PROJECTS_ROOT: projects },
+  });
+  const read = runBroker(['read', '--cap', fileCap]);
+  ok('I1 broker exact file read consumes capability', read.status === 0 && read.stdout === 'beta reference\n', read.stderr);
+  const childRead = runBroker(['read', '--cap', dirCap, '--relative', 'child.md']);
+  ok('I2 broker directory read supports safe --relative descendant', childRead.status === 0 && /needle child/.test(childRead.stdout), childRead.stderr);
+  const list = runBroker(['list', '--cap', dirCap]);
+  ok('I3 broker bounded list returns typed entry', list.status === 0 && /f\tchild\.md/.test(list.stdout), list.stderr);
+  const search = runBroker(['search', '--cap', dirCap, '--pattern', 'needle']);
+  ok('I4 broker literal search returns relative file and line', search.status === 0 && /child\.md:1:needle child/.test(search.stdout), search.stderr);
+  const traversal = runBroker(['read', '--cap', dirCap, '--relative', '../reference.md']);
+  ok('I5 broker rejects traversal before policy consumption', traversal.status !== 0 && /traversal/.test(traversal.stderr), traversal.stderr);
+  const searchRelative = runBroker(['search', '--cap', dirCap, '--pattern', 'needle', '--relative', 'child.md']);
+  ok('I6 broker rejects unapproved search --relative expansion', searchRelative.status !== 0 && /not valid for search/.test(searchRelative.stderr), searchRelative.stderr);
+  rmSync(base, { recursive: true, force: true });
 }
 
 cleanup();

@@ -21,6 +21,12 @@ import {
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { withoutLocalGitEnv } from '../.claude/hooks/lib/git-env.mjs';
+import {
+  authorizeRead,
+  grantSetPath,
+  reconcilePromptGrants,
+  turnWitnessPath,
+} from '../.claude/hooks/lib/project-read-grants.mjs';
 
 const projectRoot = process.cwd();
 const sessionSyncHook = resolve(projectRoot, '.claude/hooks/session-sync.mjs');
@@ -1324,6 +1330,74 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   assert.doesNotMatch(String(r.stderr || ''), /Unhandled 'error'|spawn python3 ENOENT|node:events/,
     'detached governance spawn 崩溃栈绝不能泄漏到 stderr（会盖过干净告警、被 SessionStart 展示给用户）');
   console.log('PASS GOVERNANCE-SPAWN-FAILOPEN session-restore 云端 python3 缺失下 detached spawn fail-open（Round5 MAJOR 回归门）');
+}
+
+// ── READ-GRANT-LIFECYCLE：blocked Stop 不是边界；non-blocking Stop / SessionEnd 才撤销 ──
+{
+  const root = makeFixture({ statuses: [] });
+  const projects = join(root, 'projects');
+  const target = join(projects, 'beta', 'docs', 'reference.md');
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, 'reference');
+  const sid = 'grant-blocked-stop';
+  reconcilePromptGrants({
+    gstackRoot: root, projectsRoot: projects, sessionId: sid, turnId: 'turn-blocked', binding: null,
+    prompt: `只读引用: \`${target}\``,
+  });
+  writeFileSync(join(root, '.claude', `.session-edit-count-${sid}`), '1');
+  const blocked = runNode(sessionSyncHook, root, {
+    env: { ...FORCE_STOP_ENV, CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projects },
+    input: JSON.stringify({ session_id: sid }),
+  });
+  assert.equal(JSON.parse(blocked.stdout).decision, 'block');
+  assert.equal(authorizeRead({
+    gstackRoot: root, projectsRoot: projects, sessionId: sid, binding: null,
+    operation: 'read', toolName: 'Read', targetPath: target,
+  }).allowed, true, 'blocked Stop must retain the active turn grant');
+  console.log('PASS READ-GRANT-LIFECYCLE blocked Stop preserves turn grant');
+}
+
+{
+  const root = makeFixture({ statuses: [] });
+  const projects = join(root, 'projects');
+  const target = join(projects, 'beta', 'docs', 'reference.md');
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, 'reference');
+  const sid = 'grant-open-stop';
+  reconcilePromptGrants({
+    gstackRoot: root, projectsRoot: projects, sessionId: sid, turnId: 'turn-open', binding: null,
+    prompt: `只读引用: \`${target}\``,
+  });
+  runNode(sessionSyncHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projects },
+    input: JSON.stringify({ session_id: sid }),
+  });
+  assert.equal(authorizeRead({
+    gstackRoot: root, projectsRoot: projects, sessionId: sid, binding: null,
+    operation: 'read', toolName: 'Read', targetPath: target,
+  }).allowed, false, 'non-blocking Stop must close the turn witness');
+  assert.equal(JSON.parse(readFileSync(turnWitnessPath(root, sid), 'utf8')).open, false);
+  console.log('PASS READ-GRANT-LIFECYCLE non-blocking Stop closes turn grant');
+}
+
+{
+  const root = makeFixture({ statuses: [] });
+  const projects = join(root, 'projects');
+  const target = join(projects, 'beta', 'docs', 'reference.md');
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, 'reference');
+  const sid = 'grant-session-end';
+  reconcilePromptGrants({
+    gstackRoot: root, projectsRoot: projects, sessionId: sid, turnId: 'turn-session', binding: null,
+    prompt: `本会话只读引用: \`${target}\``,
+  });
+  runNode(sessionEndHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projects },
+    input: JSON.stringify({ session_id: sid }),
+  });
+  assert.equal(existsSync(grantSetPath(root, sid)), false);
+  assert.equal(existsSync(turnWitnessPath(root, sid)), false);
+  console.log('PASS READ-GRANT-LIFECYCLE SessionEnd revokes all grants');
 }
 
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

@@ -1251,6 +1251,45 @@ const failures = [];
   }
 }
 
+// Real UserPromptSubmit fixture: the route hook is the only read-grant issuer.
+{
+  const root = mkdtempSync(join(tmpdir(), 'route-read-grant-'));
+  const gstack = join(root, 'gstack');
+  const projects = join(root, 'projects');
+  const target = join(projects, 'beta', 'docs', 'reference.md');
+  mkdirSync(join(gstack, '.claude'), { recursive: true });
+  mkdirSync(join(projects, 'beta', 'docs'), { recursive: true });
+  writeFileSync(target, 'reference');
+  const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+    cwd: process.cwd(),
+    input: JSON.stringify({ session_id: 'REALGRANT', turn_id: 'turn-grant-1', prompt: `只读引用: \`${target}\`` }),
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: gstack,
+      LUCA_GSTACK_ROOT: gstack,
+      LUCA_PROJECTS_ROOT: projects,
+      ROUTE_GUARD_PROJECTS: '',
+      ROUTE_GUARD_CURRENT_PROJECT: '',
+      ROUTE_GUARD_HEAVY_SKILLS: '',
+    },
+  });
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /已授权本回合只读引用/);
+    const grants = JSON.parse(readFileSync(join(gstack, '.claude', '.session-read-grants-REALGRANT'), 'utf8'));
+    assert.equal(grants.grants.length, 1);
+    assert.equal(grants.grants[0].authority.turn_id, 'turn-grant-1');
+    assert.ok(!JSON.stringify(grants).includes(`只读引用: \`${target}\``), 'sidecar must not retain raw prompt');
+    console.log('PASS real route fixture is the prompt-bound read-grant issuer');
+    passCount++;
+  } catch (error) {
+    console.log(`FAIL real route read-grant fixture: ${error.message?.split('\n')[0]}`);
+    failures.push({ name: 'real route read-grant fixture', error: error.message?.split('\n')[0] });
+    failCount++;
+  }
+}
+
 for (const testCase of cases) {
   const decision = route(testCase.prompt, testCase.extraEnv || {});
   try {
@@ -1627,7 +1666,17 @@ for (const testCase of cases) {
   const stateOf = sid => {
     try { return JSON.parse(readFileSync(obligationFile(sid), 'utf8')).state; } catch { return null; }
   };
-  const cleanup = sid => { try { rmSync(obligationFile(sid), { force: true }); } catch { } };
+  const cleanup = sid => {
+    for (const name of [
+      `.session-obligation-${sid}`,
+      `.session-read-grants-${sid}`,
+      `.session-read-turn-${sid}`,
+      `.session-read-deny-${sid}`,
+      `.session-consumed-turns-${sid}`,
+    ]) {
+      try { rmSync(join(process.cwd(), '.claude', name), { force: true }); } catch { }
+    }
+  };
   const SIGNAL_A = '帮我优化下设置页面，功能堆砌太严重了很难找';
   const SIGNAL_B = '再优化一下设置页面的信息架构，层级太深';
   const check = (name, fn) => {

@@ -10,6 +10,7 @@ import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import assert from 'assert';
+import { reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
 
 // 被测守卫的定位：**按本脚本自身位置**，不按 process.cwd()。
 // 原写法是 resolve(process.cwd(), ...)（04a5faf, 2026-07-09 起未改），从非仓根 cwd 跑会
@@ -59,6 +60,7 @@ function run(env, payload, extraEnv = {}) {
   return r.stdout.trim() ? JSON.parse(r.stdout) : null; // 空 stdout = pass-through
 }
 const abs = (env, proj, rest) => join(realpathSync(join(env.projects, proj)), rest);
+const GRANTS_DISABLED = process.env.LUCA_READ_GRANTS_DISABLE === '1';
 
 // 1. 已绑定 session 写 docs/ → 重定向到本 pin 项目绝对路径
 check('pinned Write docs/ → redirect to own project', () => {
@@ -723,6 +725,112 @@ check('IDENTITY-PATH-024h [保护面] patch target header cannot write framework
   ].join('\n');
   const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: patch } });
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+// ── READ-GRANT：显式用户授权只扩展精确文本读取，不扩展写入或 raw Bash ──
+check('READ-GRANT-001 NO_PIN exact file grant allows Claude Read only', () => {
+  const env = makeEnv();
+  const target = join(env.projects, 'beta', 'docs', 'reference.md');
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, 'reference');
+  reconcilePromptGrants({
+    gstackRoot: env.gstack, projectsRoot: env.projects, sessionId: 'RG', turnId: 'turn-rg',
+    prompt: `只读引用: \`${target}\``, binding: null,
+  });
+  const read = run(env, { session_id: 'RG', tool_name: 'Read', tool_input: { file_path: target } });
+  if (GRANTS_DISABLED) assert.equal(read.hookSpecificOutput.permissionDecision, 'deny');
+  else assert.equal(read.hookSpecificOutput.updatedInput.file_path, realpathSync(target));
+  const write = run(env, { session_id: 'RG', tool_name: 'Write', tool_input: { file_path: target, content: 'x' } });
+  assert.equal(write.hookSpecificOutput.permissionDecision, 'deny');
+  const bash = run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command: `cat ${target}` } });
+  assert.equal(bash.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+check('READ-GRANT-002 directory grant confines Read/Grep/Glob descendants', () => {
+  const env = makeEnv();
+  const directory = join(env.projects, 'beta', 'docs', 'nested');
+  const child = join(directory, 'child.md');
+  const sibling = join(env.projects, 'beta', 'docs', 'sibling.md');
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(child, 'needle');
+  writeFileSync(sibling, 'needle');
+  reconcilePromptGrants({
+    gstackRoot: env.gstack, projectsRoot: env.projects, sessionId: 'RGD', turnId: 'turn-rgd',
+    prompt: `只读引用目录: \`${directory}\``, binding: null,
+  });
+  for (const payload of [
+    { tool_name: 'Read', tool_input: { file_path: child } },
+    { tool_name: 'Grep', tool_input: { path: directory, pattern: 'needle' } },
+    { tool_name: 'Glob', tool_input: { path: directory, pattern: '*.md' } },
+  ]) {
+    const out = run(env, { session_id: 'RGD', ...payload });
+    if (GRANTS_DISABLED) assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
+    else assert.ok(out?.hookSpecificOutput?.updatedInput, `${payload.tool_name} must consume directory grant`);
+  }
+  const denied = run(env, { session_id: 'RGD', tool_name: 'Read', tool_input: { file_path: sibling } });
+  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+check('READ-GRANT-003 broker grammar is exact and composition is denied', () => {
+  const env = makeEnv();
+  const cap = 'RG:123e4567-e89b-12d3-a456-426614174000';
+  const exact = run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command: `node scripts/project-read.mjs read --cap ${cap}` } });
+  assert.equal(exact, null, 'exact broker argv should reach the typed broker');
+  const replay = run(env, { session_id: 'ATTACKER', tool_name: 'Bash', tool_input: { command: `node scripts/project-read.mjs read --cap ${cap}` } });
+  assert.equal(replay.hookSpecificOutput.permissionDecision, 'deny', 'cap sid must equal the current hook sid');
+  for (const command of [
+    `node scripts/project-read.mjs read --cap ${cap} | tee x`,
+    `node scripts/project-read.mjs read --cap ${cap} > x`,
+    `node scripts/project-read.mjs read --cap ${cap} && echo x`,
+    `node scripts/project-read.mjs read --cap ${cap} --unknown x`,
+    `node scripts/project-read.mjs search --cap ${cap} --pattern x --relative child.md`,
+    `command node scripts/project-read.mjs read --cap ${cap} | tee x`,
+    `/usr/bin/node scripts/project-read.mjs read --cap ${cap} > x`,
+    `echo $(node scripts/project-read.mjs read --cap ${cap}) > x`,
+    `sh -c 'node scripts/project-read.mjs read --cap ${cap} > x'`,
+    `node scripts/project-read.mj? read --cap ${cap}`,
+  ]) {
+    const denied = run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny', command);
+  }
+  const maintenance = run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command: 'node --check scripts/project-read.mjs' } });
+  assert.equal(maintenance, null, 'source validation is not a broker consumption attempt');
+});
+
+check('READ-GRANT-005 grant sidecars are inaccessible control-plane state', () => {
+  const env = makeEnv();
+  const relative = '.claude/.session-read-grants-QG';
+  const absolute = join(env.gstack, relative);
+  const globbed = join('.claude', ['.session', 'rea[d]', 'grants-QG'].join('-'));
+  const splitPrefix = join('.claude', '.session-');
+  const splitRead = `a=${splitPrefix}; b=${['read', 'grants-QG'].join('-')}; cat "$a$b"`;
+  const splitWrite = `a=${splitPrefix}; b=${['read', 'grants-QG'].join('-')}; printf x > "$a$b"`;
+  for (const payload of [
+    { tool_name: 'Read', tool_input: { file_path: relative } },
+    { tool_name: 'Write', tool_input: { file_path: absolute, content: '{}' } },
+    { tool_name: 'Bash', tool_input: { command: `cat ${globbed}` } },
+    { tool_name: 'Bash', tool_input: { command: splitRead } },
+    { tool_name: 'Bash', tool_input: { command: splitWrite } },
+    { tool_name: 'Bash', tool_input: { command: `cat ${relative}` } },
+    { tool_name: 'Bash', tool_input: { command: `*** Begin Patch\n*** Add File: ${relative}\n+{}\n*** End Patch` } },
+  ]) {
+    const out = run(env, { session_id: 'QG', ...payload });
+    assert.equal(out.hookSpecificOutput.permissionDecision, 'deny', payload.tool_name);
+  }
+});
+
+check('READ-GRANT-004 malformed project state cannot masquerade as NO_PIN', () => {
+  const env = makeEnv();
+  const target = join(env.projects, 'beta', 'docs', 'reference.md');
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, 'reference');
+  reconcilePromptGrants({
+    gstackRoot: env.gstack, projectsRoot: env.projects, sessionId: 'RGM', turnId: 'turn-rgm',
+    prompt: `只读引用: \`${target}\``, binding: null,
+  });
+  writeFileSync(join(env.gstack, '.claude', '.session-project-RGM'), '{broken');
+  const out = run(env, { session_id: 'RGM', tool_name: 'Read', tool_input: { file_path: target } });
+  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
 });
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);

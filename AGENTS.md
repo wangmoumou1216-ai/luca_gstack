@@ -49,6 +49,11 @@ Core facts:
   project's absolute path, and **denies reads and writes through those shared aliases** when the session has no pin — so the shared symlink
   degrades to display only and a parallel `switch` can no longer pull another session onto the wrong project.
   The pin is written only when the user explicitly names/confirms a project, **never derived from the symlink**.
+  Cross-project dependency reads are orthogonal to the pin: only the strict `只读引用:` /
+  `只读引用目录:` directives may issue turn-scoped grants (`本会话…` is the explicit session opt-in).
+  Grants never create a second binding and never authorize write tools, raw Bash, root scans, traversal,
+  symlinks, or control-plane paths; Codex consumes them only through `scripts/project-read.mjs`.
+  The MVP is text-only; image, PDF, and MCP local-path consumption remains DEFERRED.
   State reads and `check-project-links` are read-only: legacy text pins require the explicit
   `project-pin.mjs migrate-legacy-pin` command, or exact-value `quarantine-legacy-pin` when their project no longer exists.
   Name-to-switch (2026-07-06): naming an existing project (or semantically describing another/new project) makes
