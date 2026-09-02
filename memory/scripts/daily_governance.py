@@ -460,6 +460,19 @@ def check_memory_integrity_issues():
                     "逐条确认条件是否已满足；满足则按其自述降级为指针或归档"
                 )
 
+            # 搁置提案到期复访（2026-09-02）：与上一条同构，但对象是 framework-audit/proposals/。
+            # 此前只有 person 记忆有观察者，方案里的 KILL/[BLOCKING] 无人复查 → 搁置退化成遗忘
+            # （源: feedback_blocked-proposals-need-revisit，实证 2026-07-16 person-memory 整批）。
+            # 最多列 4 个防刷屏，对齐既有惯例。
+            stalled = getattr(mod, "check_stalled_proposals", lambda *_: [])(ROOT)
+            if stalled:
+                shown = "、".join(f"{d['file']}({d['age_days']}天)" for d in stalled[:4])
+                more = f"，另 {len(stalled) - 4} 份" if len(stalled) > 4 else ""
+                issues.append(
+                    f"搁置提案到期复访（{len(stalled)} 份带 KILL/[BLOCKING]/未验证 且 ≥30 天未动）："
+                    f"{shown}{more} — 逐份确认解锁条件是否已成立；成立则复活，不成立则写明新条件或归档"
+                )
+
         sup = mod.check_supersession(ROOT / "memory")
         if sup:
             top = sup[:3]

@@ -21,7 +21,9 @@
 import json
 import os
 import re
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 GLOBAL_MEMORY_DIR = Path(os.environ.get(
@@ -36,6 +38,12 @@ INDEX_ROW_RE = re.compile(r"^- \[[^\]]*\]\(([^)]+)\)")
 SUPERSEDE_WORDS = ("取代", "推翻", "已修", "降为指针", "已失效", "作废", "不再适用", "supersede")
 # 退化触发器 / 到期复查声明（G6-2）
 DECAY_WORDS = ("退化触发器", "复查时机", "待验证", "待重启验证", "通过后本条", "issue 关闭后")
+# 搁置提案的"条件满足后该复活"标记（2026-09-02）。与 DECAY_WORDS 同构：方案里的 KILL 假设
+# 和 [BLOCKING] 断言就是一模一样的结构，但此前**只有 person 记忆有观察者，proposals 没有**——
+# 实证：2026-07-16 那批 person-memory 方案（已红队、已收敛）因 KILL-1 未验证搁置，解锁条件
+# 一个月前就成立，靠一次 grep 偶然撞见才没白费（源: feedback_blocked-proposals-need-revisit）。
+PROPOSAL_STALL_WORDS = ("KILL", "[BLOCKING]", "未验证", "待 luca", "待裁")
+PROPOSAL_MIN_AGE_DAYS = 30   # 天龄闸：新提案本就在途，只报真正搁置的
 
 
 def _read(path):
@@ -243,6 +251,48 @@ def check_decay_triggers(root):
     return out
 
 
+def _last_touch_epoch(repo_root, path):
+    """文件"最后被动过"的时点。优先 git 最后提交时间，mtime 只作兜底——
+    **mtime 对 git 跟踪文件不是可靠量程**：新检出/重新 materialize 会把 mtime 重置成"今天"，
+    于是所有搁置提案一夜之间变 0 天、扫描器静默失明（假阴性）。git 提交时间跨检出恒定。"""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(repo_root), "log", "-1", "--format=%ct", "--", str(path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        ts = r.stdout.strip()
+        if ts.isdigit():
+            return int(ts)
+    except Exception:  # noqa: BLE001 — 非 git 环境/超时一律回落 mtime
+        pass
+    return path.stat().st_mtime
+
+
+def check_stalled_proposals(repo_root, min_age_days=PROPOSAL_MIN_AGE_DAYS):
+    """搁置提案到期复访：framework-audit/proposals/ 里带 KILL/[BLOCKING]/未验证 标记且
+    超过 min_age_days 未动的方案，列出来让人复核解锁条件是否已成立。检测 only，不改文件。
+    fail-open：目录不存在或读失败一律返回空，绝不打断体检。
+    刻意**不**按"已闭合/已落地"类词排除：实测 12 份候选里 11 份无任何完成标记，
+    用这种弱信号做排除是拿真信号换猜测（会把真搁置的方案藏掉）。"""
+    out = []
+    try:
+        pdir = Path(repo_root) / "framework-audit" / "proposals"
+        if not pdir.is_dir():
+            return out
+        now = time.time()
+        for p in sorted(pdir.glob("*.md")):
+            text = _read(p)
+            hits = [w for w in PROPOSAL_STALL_WORDS if w in text]
+            if not hits:
+                continue
+            age = int((now - _last_touch_epoch(repo_root, p)) / 86400)
+            if age >= min_age_days:
+                out.append({"file": p.name, "age_days": age, "signals": hits})
+    except Exception:  # noqa: BLE001 — 同 check_decay_triggers：体检不因扫描失败而中断
+        return out
+    return sorted(out, key=lambda d: -d["age_days"])
+
+
 def main() -> int:
     root = GLOBAL_MEMORY_DIR
     if not root.is_dir():
@@ -261,6 +311,9 @@ def main() -> int:
         "references": check_references(root),
         "supersession_candidates": check_supersession(memory_root),
         "decay_triggers": check_decay_triggers(root),
+        # repo 根 = 本脚本的 parents[2]（memory/scripts/x.py → repo/）。刻意不用 MEMORY_ROOT：
+        # proposals 是仓内资产，不随记忆 store 重定向走。
+        "stalled_proposals": check_stalled_proposals(Path(__file__).resolve().parents[2]),
     }
 
     if "--json" in sys.argv:
@@ -287,6 +340,10 @@ def main() -> int:
     print(f"  自带退化触发器待复核：{len(report['decay_triggers'])} 条")
     for item in report["decay_triggers"][:5]:
         print(f"    {item['file']}  ({','.join(item['signals'])})")
+    stalled = report["stalled_proposals"]
+    print(f"  搁置提案待复访（≥{PROPOSAL_MIN_AGE_DAYS} 天未动且带 KILL/[BLOCKING]/未验证）：{len(stalled)} 份")
+    for item in stalled[:5]:
+        print(f"    {item['age_days']:>4}天  {item['file']}  ({','.join(item['signals'])})")
     return 0
 
 

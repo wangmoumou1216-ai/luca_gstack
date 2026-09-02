@@ -142,3 +142,10 @@ design-system/
 # hook 写的每日提示标记（.kit-relay-shown-YYYY-MM-DD）：纯本机状态，不是产物。
 # 不入库——否则每天新增一个未跟踪文件，把 git status 的信噪比长期压低。
 .claude/.kit-relay-shown-*
+
+# playwright CLI 的调试转储（console-*.log / page-*.yml）：工具运行时产物，非仓库资产。
+# 同上信噪比理由（2026-09-02：一批 8/26 的转储长期挂在 untracked 面上）。
+.playwright-cli/
+
+# record_eval.py 的 flock 锁文件：空文件、不持有锁（锁随 fd 关闭释放），纯本机运行时痕迹。
+memory/evals/.eval-log.lock
