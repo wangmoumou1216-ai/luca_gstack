@@ -185,4 +185,31 @@ Handoff 写入节的以下内容受保护：
 
 三个都否 → 可以进化。
 
+---
+
+## 常驻裁定：`careful` 只作 opt-in，不进全局 hook 注册（2026-09-02，luca 授权裁定）
+
+**结论：`careful` 的 PreToolUse hook 刻意 *不* 接进 `.claude/settings.json` / `.codex/hooks.json`。
+「它没在 settings 里」是符合设计，不是待修缺陷——审计不得再把它记为可达性缺口。**
+
+三条理由（缺一不可，任一失效需重新裁定）：
+1. **声明设计如此**：它的 hook 写在 SKILL.md frontmatter，是 skill 级（加载该 skill 才活）；
+   CLAUDE.md 隐藏 skill 段也写明「由 agent 按名调用」。全局 PreToolUse 不是它声明的形态。
+2. **会撤销 luca 刻意选的低确认工作方式**：全局接线给本仓所有 session 与 agent 的 Bash
+   调用加一道模式匹配确认（`rm -rf` / `git reset --hard` / `git push --force` / `DROP TABLE`
+   / `kubectl delete`，含命令文本里只是**提到**这些模式的假阳性）。luca 明确要求执行层
+   少来回确认，静默给他加确认门等于撤销他有意做的配置选择。
+3. **Codex 半边撞硬约束**：接线需给 `.codex/hooks.json` 新条目授信，而授信写
+   `~/.codex/config.toml`——luca 明令不得自动改的全局 harness 配置；只接 Claude 半边
+   又违反双 harness 对等纪律。两边都不通。
+
+**它的已知状态（2026-09-02 实测，非文档推断）**：`bin/check-careful.sh` 已从早期
+「exit 2 硬拒无覆盖旁路」的死锁改为 `permissionDecision:"ask"` + exit 0 ——
+危险命令弹确认可覆盖、普通命令静默放行、假阳性只多点一次确认。2026-07-20 红队提的
+死锁与误杀那一半**已落地**（此前一版审计误报为「未落地」，此处更正）。
+
+**要启用时的唯一动作**（luca 一句话即可，不需要重新设计）：在 `.claude/settings.json` 的
+PreToolUse 加一条 matcher 为 `Bash` 的条目指向该脚本，并按双 harness 对等同步 Codex 侧
+（含 `codex-trust-hooks.mjs` 授信）。启用前请重新评估上面第 2 条的确认成本。
+
 <!-- FILE_END: skill-os/skill-invariants.md -->
