@@ -11,7 +11,7 @@
 **职责定义层是健康的**——五个高风险家族逐个比对四个声明面（SKILL.md / CLAUDE.md 表行 / routing hint / input-modes），
 没有两个 skill 抢同一份活，也没有同一个 skill 在两处说不同的话。
 **问题全部在路由层**：触发词与权重让「已声明好的归属」在实际路由里兑现不了，以及纯拉丁触发词按裸子串匹配
-导致 `password`→docx 这类误伤。已修 6 项（全部经实测 + 全量回归），留 3 类判断题给 luca。
+导致 `password`→docx 这类误伤。已修 8 项（全部经实测 + 全量回归）；原先留给裁决的 3 类里，2 类同日修掉，只剩 1 项**行为决策**（是否给 careful 接线）留 luca。
 
 ---
 
@@ -20,18 +20,18 @@
 | ID | 维度 | 结论 |
 |----|------|------|
 | D1 | 职责重叠与冲突 | 定义层 **0 冲突**；路由层 **3 对**互吞（已修） |
-| D2 | 可达性（有没有入口） | 30 个一级 skill 全部可达；10 个隐藏 skill 中 `careful` 无已验证的 opt-in 路径（陈账，见下） |
-| D3 | 过度命中 | 两类：**子串误伤**（已修）+ **意图误判**（结构性，需你裁决） |
+| D2 | 可达性（有没有入口） | 30 个一级 skill 全部可达；隐藏 skill 中 `careful` 的 hook 逻辑已修好但**没接线**＝无 opt-in 入口（接不接是行为决策，见 C） |
+| D3 | 过度命中 | 两类：**子串误伤**（已修·词边界）+ **意图误判**（已修·元问句抑制器，见 A） |
 | D4 | 欠命中（召回） | 邻接漏字类**有软候选兜底**（我一度报错，见「我的错误」）；`NONE` 分支是真空洞 |
 | D5 | 门禁层级交互 | 10/10 符合 CLAUDE.md 优先级表，健康 |
 | D6 | 声明面语义一致 | 四面一致，无矛盾 |
-| D7 | 编排位置 | `code-recon` 在编排图零出现（提案，未改） |
+| D7 | 编排位置 | `code-recon` 曾在编排图零出现 → **已补** scene B 两条路径（见 B） |
 | D8 | 双 harness 对等 | 40 个 skill 逐个比对，仅 `muse-proto-gen` 不对等（低，不影响可达性） |
 | D9 | 使用面证据 | 场景覆盖表照跑；分母为 0 的一律标 NOT-ADJUDICATED，不进处置建议 |
 
 ---
 
-## 已修（6 项，全部实测 + 全量回归绿）
+## 已修 · 第一批（6 项，全部实测 + 全量回归绿）
 
 ### 1. 纯拉丁触发词按词边界匹配 —— `route-guard.mjs` 匹配器
 **根因**：`normalize()` 去空格后用 `text.includes()` 裸子串匹配，无词边界。实测 10/10 误命中：
@@ -63,54 +63,45 @@
 ### 6. `/auto` 撤裸拉丁 `auto`
 它是最高权重条目，误命中代价最大；裸首 token `auto` 仍由 slashless command alias 直呼（实测保留），召回零损失。
 
-**回归**：`scripts/verify.sh` PASS=86 FAIL=0（与改动前基线逐项一致）· `test-route-guard.mjs` 201/0 ·
-`check-routing-map.mjs` SSOT-1..10 PASS · `eval_routing.py --keyword-only` 70/70 ·
-自建 133 条语料 93→98 符合预期、零回归。
+**第一批回归**：`verify.sh` 86/0（与改动前基线逐项一致）· `test-route-guard.mjs` 201/0 ·
+`check-routing-map.mjs` SSOT-1..10 PASS · `eval_routing --keyword-only` 70/70 · 133 条语料 93→98、零回归。
 
 ---
 
-## 留给 luca 裁决（3 类，未动手）
+## 原「留给裁决」的 3 类 — 后续处置（2026-09-02 同日）
 
-### A. 意图误判：keyword 层的结构性上限
-撤掉子串误伤后，C 组仍有 11 条**语义级**误命中——句子只是**提到**某个词，却被判成要**执行**该 skill：
+### A. 意图误判 → **已修**（元问句抑制器）
+撤掉子串误伤后仍有 11 条语义级误命中：句子只是**提到**某个词，却被判成要执行该 skill
+（「这个 PRD 文件放哪个目录了」→ SINGLE `/brainstorm`）。已在 `route-guard.mjs` 的
+`skillDecision` 加元问句抑制：命中「问它是什么/在哪/谁改的/聊聊」形态时，把 SINGLE 降级为
+STOP + 软候选 —— **不静音**，候选仍在 STOP 提示里出现，只撤掉那份没有依据的确定性。
 
-| prompt | 命中 |
-|---|---|
-| 这个 PRD 文件放哪个目录了 | `/brainstorm` |
-| 我想加一个功能开关 | `/brainstorm` |
-| 这个设计方案的数据库表怎么建 | `/ux-brainstorm` |
-| 技术文档目录结构是怎样的 | `/tech-spec` |
-| 任务计划文件被谁改了 | `/task-plan` |
-| 代码质量这个话题聊聊 | `/code-hygiene` |
-| 落地方案已经有了，我只是问下进度 | `/design-brief` |
-| research 这个词中文怎么翻更好 / prototype 这个单词出现了几次 | `/deepresearch` `/html-prototype` |
-| 帮我调研下今天午饭吃什么 | `/deepresearch` |
+两道刹车都是实测定的，不是设计出来的：
+- **请求词豁免**：出现祈使/委托标记（帮我/研究一下/评审…）时不抑制。无此豁免的 v1 在
+  10 条对抗集上**误杀 6 条**合法请求（"深度研究一下 X 是什么"、"帮我查证…是什么意思"）。
+- **「找位置」形态收窄**：v2 仍被既有 golden 抓到一条误伤——「seam 应该放在哪里」是
+  **设计问题本身**而非找文件。改为要求 文件/目录/脚本/配置… 邻接才算元问句。
 
-关键词匹配对「提及」和「要求执行」不做区分，这是匹配器的能力上限，不是词表选错。
-**可能的解法**（未实施，因为误伤面需要你判）：给「易被提及」的词加一层元问句抑制器
-（`X 是什么`/`X 这个词`/`在哪`/`放哪`/`谁改的`/`聊聊`），命中则 SINGLE 降级为 STOP+软候选。
-风险：`PRD 怎么写` 这类**是**真请求的句子长得很像元问句，抑制器可能误伤召回。
-另一条更稳的路：不动 hook，靠语义路由契约（现状即如此）——代价是每次都依赖模型当场判断。
+结果：133 条语料 98→106（8 条修好、零召回损失），10 条对抗集 10/10 保持原路由，
+golden 201→203（新增正反两条守护）。两次变异各自钉红对应那一条，证明断言非恒真。
 
-### B. `code-recon` 在编排图零出现
-`optional-workflow-graph.yaml` 的 A/B/C/D 四个 scene 的 recommended / engineering / fallback paths
-**零次**提到 code-recon ⇒ workflow 模式下永不被推荐，尤其 scene B（existing_feature_optimization，
-正是 brownfield 场景）。它的输入契约**是**接好的（`input-modes.yaml:108/118/167` 三个下游都挂了
-`architecture_brief` optional——我原先「契约悬空」的假设已自我证伪）。
-缺的只是编排推荐面。**建议**（未改，因为这是在给你的流程新增推荐路径，属设计决策）：
-scene B 加 `["code-recon","ux-brainstorm","design-brief","open-design"]`，
-engineering_paths 加 `["code-recon","tech-spec","task-plan"]`。
+### B. code-recon 编排位置 → **已修**
+`optional-workflow-graph.yaml` scene B（existing_feature_optimization，brownfield 主场）
+补两条路径：`code-recon → ux-brainstorm → design-brief → open-design`（设计链）与
+`code-recon → tech-spec → task-plan`（工程链）。SSOT-8 校验通过。
+scene D 暂未加——agent 化改造是否也默认从代码起步，属产品判断，留给 luca。
 
-### C. `careful` 没有可达的 opt-in 入口（陈账复访）
-它声明 `hooks.PreToolUse` 执行 `bin/check-careful.sh`（脚本存在且可执行），但该 hook
-**未接进** `.claude/settings.json` 或 `.codex/hooks.json`；同时无斜杠命令、无路由词、
-CLAUDE.md 隐藏名单里也没给它场景或提示钉。
-**这是旧账不是新账**：`framework-audit/2026-07-20-DECIDE-36-post-redteam-for-luca.md:92-98` 已记录
-其 hook 的死锁（exit 2 无覆盖旁路）与假阳性，红队当时给的两条路是「改 `permissionDecision:"ask"`」
-或「按显式 opt-in 模式接受现状」，列在**须 luca 手动**那堆里至今未见落地。本次不重开设计，只补一句：
-若选「接受现状」，那它现在**没有**可 opt-in 的入口，等于常态不可达。
+### C. careful 陈账 → **查清，一半是我报错了**
+上一版报告说 2026-07-20 的处置「至今未见落地」——**这句错了**。实测脚本已改成
+`permissionDecision:"ask"` + exit 0，死锁那半早已修好：
+- 危险命令（`rm -rf /tmp/x`）→ 吐 ask JSON、exit 0（弹确认框，可覆盖）
+- 普通命令（`ls -la`）→ 静默 exit 0
+- 已知假阳性（命令里只是**提到** `rm -rf`）→ 同样只是弹一次确认，不再永久卡死
 
----
+真正剩下的只有一件：**它没接进 `.claude/settings.json` / `.codex/hooks.json`**，也没有斜杠命令、
+路由词或场景钉，所以没有可 opt-in 的入口 = 常态不可达。接不接是**一行决定**，但那一行会给
+本仓所有 session（含 agent）的 Bash 调用加一道模式匹配确认——**这是行为决策，留给 luca**，
+不由审计单方面接线。
 
 ## 我在这次审计里犯的错（红队抓的）
 
@@ -158,11 +149,13 @@ CLAUDE.md 隐藏名单里也没给它场景或提示钉。
 | `evidence/probe-out.json` | 修法前原始决策输出（红队独立重跑，逐字节一致） |
 | `evidence/after.json` | 修法后决策输出 |
 | `evidence/latin.tsv` `keep.tsv` `shadow.tsv` `recall.tsv` | 拉丁子串 / 召回保持 / 遮蔽失效 / 召回代价四组专项 |
+| `evidence/adver.tsv` | 元问句抑制器的 10 条对抗集（合法请求里含元问句形态） |
+| `evidence/final.json` | 全部修法后的最终决策输出（133 条 → 106 符合预期） |
 | `evidence/README-rig-limits.md` | **装置已知盲区**，复用前必读 |
 | `01-findings-draft.md` | 红队复审前的原始草案（保留，便于对照我改了什么） |
 
 **装置自证**：阳性对照 3/3、阴性对照 2/2、变异对照（删 brainstorm 词表 → 仅该条翻转）、
-golden 基线 201/0。红队独立重跑 `probe.mjs` 对 `corpus.tsv`，与 `probe-out.json` 逐字节相同。
+golden 基线 201/0 → 全部修法后 203/0（新增 2 条守护用例）。红队独立重跑 `probe.mjs` 对 `corpus.tsv`，与 `probe-out.json` 逐字节相同。
 
 > **本报告的 F10/F11（agent-browser 死信、superpowers 恒 MULTI）产生于红队复审之后，未经外部复审**，
 > 仅有我自己的实测与回归支撑。

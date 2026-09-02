@@ -1,0 +1,1332 @@
+[
+  {
+    "id": "A-auto-1",
+    "expect": "auto",
+    "prompt": "帮我把这个需求从头到尾全套做出来",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-auto-2",
+    "expect": "auto",
+    "prompt": "这个功能你端到端跑一遍",
+    "decision": "SINGLE_SKILL",
+    "target": "/auto",
+    "score": 3,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-auto-3",
+    "expect": "auto",
+    "prompt": "一键把设计和文档都产出来",
+    "decision": "SINGLE_SKILL",
+    "target": "/auto",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-brain-1",
+    "expect": "brainstorm",
+    "prompt": "我有个想法想做个会员积分体系，帮我梳理成需求",
+    "decision": "SINGLE_SKILL",
+    "target": "/brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-brain-2",
+    "expect": "brainstorm",
+    "prompt": "写一份这个功能的产品需求文档",
+    "decision": "SINGLE_SKILL",
+    "target": "/brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-brain-3",
+    "expect": "brainstorm",
+    "prompt": "这个功能方向还没想清楚，陪我拷问一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-idea-1",
+    "expect": "idea",
+    "prompt": "把这份会议纪要整理成结构化需求",
+    "decision": "SINGLE_SKILL",
+    "target": "/idea",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-idea-2",
+    "expect": "idea",
+    "prompt": "这是一段语音转文字的讨论记录，帮我结构化",
+    "decision": "SINGLE_SKILL",
+    "target": "/idea",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-idea-3",
+    "expect": "idea",
+    "prompt": "原始语料在这里，忠实整理不要延展",
+    "decision": "SINGLE_SKILL",
+    "target": "/idea",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-dr-1",
+    "expect": "deepresearch",
+    "prompt": "帮我深度研究一下 agent memory 的主流做法",
+    "decision": "SINGLE_SKILL",
+    "target": "/deepresearch",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-dr-2",
+    "expect": "deepresearch",
+    "prompt": "全面调研下这个技术方向的先例",
+    "decision": "SINGLE_SKILL",
+    "target": "/deepresearch",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-dr-3",
+    "expect": "deepresearch",
+    "prompt": "多agent研究一下这个领域",
+    "decision": "SINGLE_SKILL",
+    "target": "/deepresearch",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-qr-1",
+    "expect": "quick-research",
+    "prompt": "快速调研一下 Anthropic 的 prompt caching 定价",
+    "decision": "MULTI_SKILL",
+    "target": "claude-api|/quick-research",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-qr-2",
+    "expect": "quick-research",
+    "prompt": "帮我查下官方文档确认这个参数",
+    "decision": "SINGLE_SKILL",
+    "target": "/quick-research",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-qr-3",
+    "expect": "quick-research",
+    "prompt": "轻量研究一下就行，别开重型编排",
+    "decision": "SINGLE_SKILL",
+    "target": "/quick-research",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxr-1",
+    "expect": "ux-research",
+    "prompt": "做个竞品分析看看别人怎么做的",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-research",
+    "score": 2,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxr-2",
+    "expect": "ux-research",
+    "prompt": "帮我做 UX 研究，多维度看看",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-research",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxr-3",
+    "expect": "ux-research",
+    "prompt": "用户研究这块儿帮我看看",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-research",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxb-1",
+    "expect": "ux-brainstorm",
+    "prompt": "给我几个界面方案对比一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxb-2",
+    "expect": "ux-brainstorm",
+    "prompt": "这个页面的 UI 方案帮我发散一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxb-3",
+    "expect": "ux-brainstorm",
+    "prompt": "设计方案要 2-3 个，带对抗评审",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-db-1",
+    "expect": "design-brief",
+    "prompt": "把这个方向落成交互文档",
+    "decision": "SINGLE_SKILL",
+    "target": "/design-brief",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-db-2",
+    "expect": "design-brief",
+    "prompt": "方案细化成规格契约",
+    "decision": "SINGLE_SKILL",
+    "target": "/design-brief",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-db-3",
+    "expect": "design-brief",
+    "prompt": "出一份 design brief",
+    "decision": "SINGLE_SKILL",
+    "target": "/design-brief",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-od-1",
+    "expect": "open-design",
+    "prompt": "用 Open Design 生成这个页面",
+    "decision": "SINGLE_SKILL",
+    "target": "/open-design",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-od-2",
+    "expect": "open-design",
+    "prompt": "OD 出图吧",
+    "decision": "SINGLE_SKILL",
+    "target": "/open-design",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-od-3",
+    "expect": "open-design",
+    "prompt": "用OD做一版设计",
+    "decision": "SINGLE_SKILL",
+    "target": "/open-design",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-html-1",
+    "expect": "html-prototype",
+    "prompt": "做个 HTML 原型看看",
+    "decision": "SINGLE_SKILL",
+    "target": "/html-prototype",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-html-2",
+    "expect": "html-prototype",
+    "prompt": "生成一个快速原型界面",
+    "decision": "SINGLE_SKILL",
+    "target": "/html-prototype",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-html-3",
+    "expect": "html-prototype",
+    "prompt": "本地原型跑一版",
+    "decision": "SINGLE_SKILL",
+    "target": "/html-prototype",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-fig-1",
+    "expect": "figma-layer",
+    "prompt": "把这个原型推到 figma",
+    "decision": "SINGLE_SKILL",
+    "target": "/figma-layer",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-fig-2",
+    "expect": "figma-layer",
+    "prompt": "跑一下 figma 保险层",
+    "decision": "SINGLE_SKILL",
+    "target": "/figma-layer",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-fig-3",
+    "expect": "figma-layer",
+    "prompt": "原型一比一还原到 Figma",
+    "decision": "SINGLE_SKILL",
+    "target": "/figma-layer",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxa-1",
+    "expect": "ux-audit",
+    "prompt": "评审这个页面有什么 UX 问题",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-audit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxa-2",
+    "expect": "ux-audit",
+    "prompt": "这个页面挑毛病",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-audit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxa-3",
+    "expect": "ux-audit",
+    "prompt": "做个体验评审",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-audit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxw-1",
+    "expect": "ux-writing",
+    "prompt": "这些界面文案太生硬，帮我改",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-writing",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxw-2",
+    "expect": "ux-writing",
+    "prompt": "空态文案该写什么",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-writing",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-uxw-3",
+    "expect": "ux-writing",
+    "prompt": "定一套文案规范",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-writing",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-is-1",
+    "expect": "insight-synthesis",
+    "prompt": "访谈做完了，帮我提炼洞察",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/insight-synthesis",
+    "projectAction": ""
+  },
+  {
+    "id": "A-is-2",
+    "expect": "insight-synthesis",
+    "prompt": "把这批工单做个定性综合",
+    "decision": "SINGLE_SKILL",
+    "target": "/insight-synthesis",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-is-3",
+    "expect": "insight-synthesis",
+    "prompt": "区分观察与解读，出两层洞察",
+    "decision": "SINGLE_SKILL",
+    "target": "/insight-synthesis",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-rk-1",
+    "expect": "research-kit",
+    "prompt": "帮我设计一份访谈提纲",
+    "decision": "SINGLE_SKILL",
+    "target": "/research-kit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-rk-2",
+    "expect": "research-kit",
+    "prompt": "做个问卷设计",
+    "decision": "SINGLE_SKILL",
+    "target": "/research-kit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-rk-3",
+    "expect": "research-kit",
+    "prompt": "可用性测试计划怎么写",
+    "decision": "SINGLE_SKILL",
+    "target": "/research-kit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-ts-1",
+    "expect": "tech-spec",
+    "prompt": "出一份工程规格",
+    "decision": "SINGLE_SKILL",
+    "target": "/tech-spec",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-ts-2",
+    "expect": "tech-spec",
+    "prompt": "把这个写成技术合同",
+    "decision": "SINGLE_SKILL",
+    "target": "/tech-spec",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-ts-3",
+    "expect": "tech-spec",
+    "prompt": "tech spec 写一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/tech-spec",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-tp-1",
+    "expect": "task-plan",
+    "prompt": "帮我拆任务",
+    "decision": "SINGLE_SKILL",
+    "target": "/task-plan",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-tp-2",
+    "expect": "task-plan",
+    "prompt": "出个开发计划",
+    "decision": "SINGLE_SKILL",
+    "target": "/task-plan",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-tp-3",
+    "expect": "task-plan",
+    "prompt": "任务编排一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/task-plan",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-tsp-1",
+    "expect": "to-spec",
+    "prompt": "刚才讨论已经定了，直接整理成 spec 不要重做访谈",
+    "decision": "NONE",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-tsp-2",
+    "expect": "to-spec",
+    "prompt": "把刚才定下的工程约束整理成技术规格",
+    "decision": "SINGLE_SKILL",
+    "target": "/to-spec",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-tsp-3",
+    "expect": "to-spec",
+    "prompt": "我们把接口都聊定了，转成 tech spec",
+    "decision": "SINGLE_SKILL",
+    "target": "/tech-spec",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-imp-1",
+    "expect": "implement",
+    "prompt": "按这个批准的 task-plan 执行",
+    "decision": "PLAN_MODE",
+    "target": "",
+    "score": 6,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-imp-2",
+    "expect": "implement",
+    "prompt": "开始实现已批准任务",
+    "decision": "SINGLE_SKILL",
+    "target": "/implement",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-imp-3",
+    "expect": "implement",
+    "prompt": "按已批准的 U-ID 落地",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/implement",
+    "projectAction": ""
+  },
+  {
+    "id": "A-way-1",
+    "expect": "wayfinder",
+    "prompt": "wayfinder",
+    "decision": "SINGLE_SKILL",
+    "target": "/wayfinder",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-way-2",
+    "expect": "wayfinder",
+    "prompt": "这个工程要跨好几个会话做，路径也不清楚，先规划",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/handoff",
+    "projectAction": ""
+  },
+  {
+    "id": "A-way-3",
+    "expect": "wayfinder",
+    "prompt": "大工程多会话推进，方向有雾，帮我定路线",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-cr-1",
+    "expect": "code-review",
+    "prompt": "帮我审查一下当前改动的代码",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/code-review",
+    "projectAction": ""
+  },
+  {
+    "id": "A-cr-2",
+    "expect": "code-review",
+    "prompt": "review 这个分支",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-review",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-cr-3",
+    "expect": "code-review",
+    "prompt": "代码评审一下这个 PR",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-review",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-ch-1",
+    "expect": "code-hygiene",
+    "prompt": "做个代码体检",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-hygiene",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-ch-2",
+    "expect": "code-hygiene",
+    "prompt": "清理一下死代码",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-hygiene",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-ch-3",
+    "expect": "code-hygiene",
+    "prompt": "代码去重和弱类型收一收",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-hygiene",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-cd-1",
+    "expect": "codebase-design",
+    "prompt": "这个模块边界怎么划",
+    "decision": "SINGLE_SKILL",
+    "target": "/codebase-design",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-cd-2",
+    "expect": "codebase-design",
+    "prompt": "模块拆分方案帮我看看",
+    "decision": "SINGLE_SKILL",
+    "target": "/codebase-design",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-cd-3",
+    "expect": "codebase-design",
+    "prompt": "接口太浅了，帮我深化模块",
+    "decision": "SINGLE_SKILL",
+    "target": "/codebase-design",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-crc-1",
+    "expect": "code-recon",
+    "prompt": "帮我读懂这个代码库",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/code-recon",
+    "projectAction": ""
+  },
+  {
+    "id": "A-crc-2",
+    "expect": "code-recon",
+    "prompt": "摸清现有代码结构再动手",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-recon",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-crc-3",
+    "expect": "code-recon",
+    "prompt": "基于现有代码做扩展，先逆向一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/code-recon",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-dg-1",
+    "expect": "diagnosing-bugs",
+    "prompt": "排查这个异常报错",
+    "decision": "SINGLE_SKILL",
+    "target": "/diagnosing-bugs",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-dg-2",
+    "expect": "diagnosing-bugs",
+    "prompt": "找出这个 bug 根因",
+    "decision": "SINGLE_SKILL",
+    "target": "/diagnosing-bugs",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-dg-3",
+    "expect": "diagnosing-bugs",
+    "prompt": "这是个偶发故障，帮我诊断",
+    "decision": "SINGLE_SKILL",
+    "target": "/diagnosing-bugs",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-rmc-1",
+    "expect": "resolving-merge-conflicts",
+    "prompt": "帮我解决当前 Git 冲突",
+    "decision": "SINGLE_SKILL",
+    "target": "/resolving-merge-conflicts",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-rmc-2",
+    "expect": "resolving-merge-conflicts",
+    "prompt": "当前 rebase 冲突处理一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/resolving-merge-conflicts",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-rmc-3",
+    "expect": "resolving-merge-conflicts",
+    "prompt": "merge 冲突了，帮我处理",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/resolving-merge-conflicts",
+    "projectAction": ""
+  },
+  {
+    "id": "A-gr-1",
+    "expect": "grilling",
+    "prompt": "把这个决定问到底",
+    "decision": "SINGLE_SKILL",
+    "target": "/grilling",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-gr-2",
+    "expect": "grilling",
+    "prompt": "一次只问一个问题，逐个盘问我",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/grilling",
+    "projectAction": ""
+  },
+  {
+    "id": "A-gr-3",
+    "expect": "grilling",
+    "prompt": "grill me",
+    "decision": "SINGLE_SKILL",
+    "target": "/grilling",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-hd-1",
+    "expect": "handoff",
+    "prompt": "生成一份交接文档",
+    "decision": "SINGLE_SKILL",
+    "target": "/handoff",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-hd-2",
+    "expect": "handoff",
+    "prompt": "这个会话交给下一个 session",
+    "decision": "SINGLE_SKILL",
+    "target": "/handoff",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-hd-3",
+    "expect": "handoff",
+    "prompt": "会话交接一下",
+    "decision": "SINGLE_SKILL",
+    "target": "/handoff",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-mlo-1",
+    "expect": "muse-loop-orchestrate",
+    "prompt": "跑一下 muse loop",
+    "decision": "PLAN_CHECK",
+    "target": "/muse-loop-orchestrate",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-mlo-2",
+    "expect": "muse-loop-orchestrate",
+    "prompt": "需求到原型闭环走一遍",
+    "decision": "PLAN_CHECK",
+    "target": "/muse-loop-orchestrate",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-mrt-1",
+    "expect": "muse-req-triage",
+    "prompt": "这一堆需求要不要做，先筛一遍",
+    "decision": "SINGLE_SKILL",
+    "target": "/muse-req-triage",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "A-mrt-2",
+    "expect": "muse-req-triage",
+    "prompt": "批量需求 triage",
+    "decision": "SINGLE_SKILL",
+    "target": "/muse-req-triage",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-01",
+    "expect": "quick-research",
+    "prompt": "快速调研一下就行",
+    "decision": "SINGLE_SKILL",
+    "target": "/quick-research",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-02",
+    "expect": "deepresearch",
+    "prompt": "这个方向要深入研究",
+    "decision": "SINGLE_SKILL",
+    "target": "/deepresearch",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-03",
+    "expect": "brainstorm",
+    "prompt": "评审一下这份 PRD",
+    "decision": "SINGLE_SKILL",
+    "target": "/brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-04",
+    "expect": "ux-audit",
+    "prompt": "评审一下这个页面",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/ux-audit|/code-recon",
+    "projectAction": ""
+  },
+  {
+    "id": "B-05",
+    "expect": "code-review",
+    "prompt": "评审一下这段代码",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-06",
+    "expect": "idea",
+    "prompt": "把这段讨论记录梳理成需求",
+    "decision": "SINGLE_SKILL",
+    "target": "/idea",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-07",
+    "expect": "brainstorm",
+    "prompt": "帮我梳理需求",
+    "decision": "SINGLE_SKILL",
+    "target": "/brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-08",
+    "expect": "design-brief",
+    "prompt": "这个方案怎么落地",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/grilling",
+    "projectAction": ""
+  },
+  {
+    "id": "B-09",
+    "expect": "ux-brainstorm",
+    "prompt": "这个设计方案好不好",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-10",
+    "expect": "tech-spec",
+    "prompt": "技术文档写一份",
+    "decision": "SINGLE_SKILL",
+    "target": "/tech-spec",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-11",
+    "expect": "to-spec",
+    "prompt": "刚才的工程讨论整理一下",
+    "decision": "NONE",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-12",
+    "expect": "task-plan",
+    "prompt": "任务分解成开发卡",
+    "decision": "SINGLE_SKILL",
+    "target": "/task-plan",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-13",
+    "expect": "open-design",
+    "prompt": "设计产出用什么",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-14",
+    "expect": "insight-synthesis",
+    "prompt": "访谈洞察",
+    "decision": "SINGLE_SKILL",
+    "target": "/insight-synthesis",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "B-15",
+    "expect": "research-kit",
+    "prompt": "访谈提纲",
+    "decision": "SINGLE_SKILL",
+    "target": "/research-kit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-01",
+    "expect": "NOT-auto",
+    "prompt": "帮我看下 autoload 配置对不对",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-02",
+    "expect": "NOT-auto",
+    "prompt": "这个 CI 的 auto-merge 开关在哪",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-03",
+    "expect": "NOT-figma-layer",
+    "prompt": "Figma 上那个设计稿的主色是什么",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-04",
+    "expect": "NOT-figma-layer",
+    "prompt": "figma MCP 的 token 怎么配",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-05",
+    "expect": "NOT-deepresearch",
+    "prompt": "research 这个词中文怎么翻更好",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/deepresearch",
+    "projectAction": ""
+  },
+  {
+    "id": "C-06",
+    "expect": "NOT-brainstorm",
+    "prompt": "这个 PRD 文件放哪个目录了",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/brainstorm",
+    "projectAction": ""
+  },
+  {
+    "id": "C-07",
+    "expect": "NOT-brainstorm",
+    "prompt": "我想加一个功能开关",
+    "decision": "SINGLE_SKILL",
+    "target": "/brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-08",
+    "expect": "NOT-ux-brainstorm",
+    "prompt": "这个设计方案的数据库表怎么建",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-brainstorm",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-09",
+    "expect": "NOT-tech-spec",
+    "prompt": "技术文档目录结构是怎样的",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/tech-spec",
+    "projectAction": ""
+  },
+  {
+    "id": "C-10",
+    "expect": "NOT-html-prototype",
+    "prompt": "prototype 这个单词在代码里出现了几次",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/html-prototype",
+    "projectAction": ""
+  },
+  {
+    "id": "C-11",
+    "expect": "NOT-code-review",
+    "prompt": "code review 这个流程在公司怎么走",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/code-review",
+    "projectAction": ""
+  },
+  {
+    "id": "C-12",
+    "expect": "NOT-ux-audit",
+    "prompt": "页面有什么问题都列一下吧",
+    "decision": "SINGLE_SKILL",
+    "target": "/ux-audit",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-13",
+    "expect": "NOT-deepresearch",
+    "prompt": "帮我调研下今天午饭吃什么",
+    "decision": "SINGLE_SKILL",
+    "target": "/deepresearch",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-14",
+    "expect": "NOT-implement",
+    "prompt": "implement 这个接口的最佳实践",
+    "decision": "SINGLE_SKILL",
+    "target": "/implement",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-15",
+    "expect": "NOT-design-brief",
+    "prompt": "落地方案已经有了，我只是问下进度",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/design-brief",
+    "projectAction": ""
+  },
+  {
+    "id": "C-16",
+    "expect": "NOT-open-design",
+    "prompt": "OD 是什么的缩写",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-17",
+    "expect": "NOT-task-plan",
+    "prompt": "任务计划文件被谁改了",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/task-plan",
+    "projectAction": ""
+  },
+  {
+    "id": "C-18",
+    "expect": "NOT-handoff",
+    "prompt": "handoff",
+    "decision": "SINGLE_SKILL",
+    "target": "/handoff",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-19",
+    "expect": "NOT-grilling",
+    "prompt": "grilling 是什么意思",
+    "decision": "SINGLE_SKILL",
+    "target": "/grilling",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "C-20",
+    "expect": "NOT-code-hygiene",
+    "prompt": "代码质量这个话题聊聊",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/code-hygiene",
+    "projectAction": ""
+  },
+  {
+    "id": "D-01",
+    "expect": "NONE-OR-STOP",
+    "prompt": "今天几号",
+    "decision": "NONE",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-02",
+    "expect": "NONE-OR-STOP",
+    "prompt": "谢谢",
+    "decision": "NONE",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-03",
+    "expect": "NONE-OR-STOP",
+    "prompt": "这个变量名改成 userId 吧",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-04",
+    "expect": "NONE-OR-STOP",
+    "prompt": "把第 12 行的分号删掉",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-05",
+    "expect": "NONE-OR-STOP",
+    "prompt": "git status 看一下",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-06",
+    "expect": "NONE-OR-STOP",
+    "prompt": "解释一下这段正则",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-07",
+    "expect": "NONE-OR-STOP",
+    "prompt": "刚才那个说法再说清楚点",
+    "decision": "NONE",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-08",
+    "expect": "NONE-OR-STOP",
+    "prompt": "继续",
+    "decision": "NONE",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-09",
+    "expect": "NONE-OR-STOP",
+    "prompt": "帮我把这句话翻译成英文",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "",
+    "projectAction": ""
+  },
+  {
+    "id": "D-10",
+    "expect": "NONE-OR-STOP",
+    "prompt": "这个报错是什么意思",
+    "decision": "STOP",
+    "target": "",
+    "score": 0,
+    "soft": "/diagnosing-bugs",
+    "projectAction": ""
+  }
+]

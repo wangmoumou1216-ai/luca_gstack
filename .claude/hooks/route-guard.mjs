@@ -779,9 +779,31 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
     return { decision: 'STOP', reason: 'no_keyword_match', softCandidates };
   }
 
+  // 元问句抑制（2026-09-02 skill 职责审计）：句子只是**提到**某个 skill 的关键词，却在问它
+  // 是什么/在哪/谁改的/聊聊——关键词层无法区分「提及」与「要求执行」，于是「这个 PRD 文件放哪个
+  // 目录了」得到高置信 SINGLE /brainstorm（实测这类 11 条）。命中元问句形态时把 SINGLE 降级为
+  // STOP + 软候选：**不静音**（候选仍会出现在 STOP 的提示里），只撤掉那份没有依据的确定性。
+  const META_QUESTION_RE = /(?:这个|那个|该)?[^，。？?]{0,12}(?:是什么(?:意思|的缩写)?|什么意思|这个(?:词|单词|缩写|概念|话题|流程|文件|目录))|(?:(?:文件|目录|脚本|配置|日志|文档|产物|报告)[^，。？?]{0,4}(?:放(?:在)?哪|在哪)|放哪个(?:目录|文件)|在哪个(?:目录|文件)|被谁(?:改|删|动)|谁(?:改|写|删)的|出现了?几次|目录结构|怎么走|多少人)|(?:只是|就是)问(?:一?下)?|聊聊|翻(?:译|得|更好)/;
+  // 请求词豁免：出现明确祈使/委托标记时，元问句形态只是**修饰**（"深度研究一下 X 是什么"仍是
+  // 研究请求），不得抑制。对抗集实测：无此豁免会误杀 6/10 条合法请求。
+  const REQUEST_MARKER_RE = /帮我|请你?|麻烦|给我|来一份|写一份|写个|生成|做一个|做个|跑一下|跑个|执行|开始|研究一下|深度研究|调研一下|全面调研|查证|审查|评审|复审|梳理|拆任务|拆一下|出一份|整理|设计一下|优化一下|重构/;
+  const looksMetaQuestion = META_QUESTION_RE.test(prompt) && !REQUEST_MARKER_RE.test(prompt);
+
   const topWeight = hits[0].w;
   const candidates = hits.filter(hit => hit.w >= topWeight - 1);
   const unique = [...new Map(candidates.map(hit => [hit.invoke || hit.hint, hit])).values()];
+
+  // framework_flow 不参与抑制：它是治理流程入口，不走"提及 vs 执行"这套判别。
+  if (unique.length === 1 && looksMetaQuestion && unique[0].type !== 'framework_flow') {
+    return {
+      decision: 'STOP',
+      reason: 'meta_question_about_keyword',
+      softCandidates: [{
+        skill: unique[0].invoke || unique[0].hint,
+        why: 'keyword matched but the prompt reads as a question *about* the term',
+      }],
+    };
+  }
 
   if (unique.length === 1) {
     if (unique[0].type === 'framework_flow') {

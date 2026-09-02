@@ -951,6 +951,28 @@ const cases = [
     },
   },
   {
+    // 元问句抑制（2026-09-02）：只是**提到**关键词的查找/元问题不得拿到高置信 SINGLE。
+    name: '元问句抑制: 找文件位置不得命中 /brainstorm',
+    prompt: '这个 PRD 文件放哪个目录了',
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP');
+      assert.equal(decision.reason, 'meta_question_about_keyword');
+      // 不静音：候选仍要出现在软候选里，供 STOP 提示渲染
+      assert.ok((decision.softCandidates || []).some(c => c.skill === '/brainstorm'),
+        `抑制后必须保留软候选，实际 ${JSON.stringify(decision.softCandidates)}`);
+    },
+  },
+  {
+    // 反向守护：带明确祈使/委托标记时，元问句形态只是修饰，不得抑制。
+    // 无此豁免时对抗集实测误杀 6/10 条合法请求（"深度研究一下 X 是什么" 等）。
+    name: '元问句抑制: 请求词豁免——"深度研究一下 X 是什么" 仍走 deepresearch',
+    prompt: '深度研究一下 Model Context Protocol 是什么',
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
     name: '模块设计轴: 泛产品接口设计不得误触 codebase-design',
     prompt: '设计一下支付接口页面的用户流程',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm' },

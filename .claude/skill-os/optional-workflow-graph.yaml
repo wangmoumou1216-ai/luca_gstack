@@ -104,8 +104,10 @@ scenes:
       - ["superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["insight-synthesis", "ux-research", "ux-brainstorm", "design-brief", "open-design"]  # 有工单/回访一手数据：综合洞察 + 外部竞品（追加项 C）
       - ["research-kit", "insight-synthesis", "ux-brainstorm", "design-brief", "open-design"]  # 先设计采集工具摸问题→[采集]→洞察（research-kit 2026-07-21）
+      - ["code-recon", "ux-brainstorm", "design-brief", "open-design"]  # brownfield 起步：现有代码 → 架构 brief 作 architecture_brief 输入（code-recon 2026-09-02）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
+      - ["code-recon", "tech-spec", "task-plan"]  # 从现有代码起步的工程链（同上）
     fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
       - ["ux-audit", "design-brief", "magicpath"]
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
