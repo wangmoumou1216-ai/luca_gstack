@@ -149,6 +149,10 @@ luca_gstack — 一级可见 Skill 列表
                说明：仅显式会话交接意图触发；不碰项目级流程交接、工作流记录、当前话题、
                checkpoint 或项目 pin
 
+/wait-what     —         上一条没讲明白时，补足缺失前提并用自然中文重新讲清楚
+               输入模式：standalone；仅显式 `$wait-what`、`/wait-what` 或裸首 token 调用
+               说明：只重讲当前对话，不创建产物、不改 workflow state、不获得新执行权限
+
 ── 全流程编排 ──────────────────────────────────────────────────
 
 /auto          A B C D   全自动多 Agent 编排：自然语言需求 → 自动 Skill Pipeline →

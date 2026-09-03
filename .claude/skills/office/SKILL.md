@@ -122,8 +122,11 @@ DONE 合法。compare / status 即此规则的既有实例。standalone 重型 s
 格式规范：见 `references/handoff-protocol.md`
 硬约束：≤2000 tokens（≈8000 chars）
 
-内容必须包含：决策列表（≤8 条）、下游约束（≤5 条）、风险（≤3 条）、产出路径。
+内容必须包含：`gate_result`、3-7 条 `criteria`、决策列表（≤8 条）、下游约束（≤5 条）、风险（≤3 条）、产出路径。
 如适用：AI Native 范式判断。
+
+写完后、标记 DONE 或更新 workflow-state 之前，必须运行：
+`node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.md"`。失败先修 handoff，不得继续报 DONE。
 
 **下游 skill 启动时读取上游 handoff summary，不读取上游完整 SKILL.md 或完整产出。**
 

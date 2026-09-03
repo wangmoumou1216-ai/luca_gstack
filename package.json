@@ -9,7 +9,7 @@
   "scripts": {
     "verify": "bash scripts/verify.sh",
     "validate:skills": "bash scripts/validate-skills.sh",
-    "lint:yaml": "python3 -c \"import sys, os, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:] if not f.endswith('workflow-state.yaml') or os.path.exists(f)]\" .claude/workflow-state.yaml .claude/skill-os/optional-workflow-graph.yaml .claude/skill-os/input-modes.yaml .claude/skill-os/evolution/self-model.yaml .claude/skill-os/evolution/gaps-register.yaml .claude/skill-os/evolution/sources-registry.yaml .claude/skill-os/evolution/benchmark-registry.yaml .claude/skill-os/model-routing.yaml",
+    "lint:yaml": "python3 -c \"import sys, os, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:] if not f.endswith('workflow-state.yaml') or os.path.exists(f)]\" .claude/workflow-state.yaml .claude/skill-os/optional-workflow-graph.yaml .claude/skill-os/input-modes.yaml .claude/skill-os/evolution/self-model.yaml .claude/skill-os/evolution/gaps-register.yaml .claude/skill-os/evolution/sources-registry.yaml .claude/skill-os/evolution/benchmark-registry.yaml .claude/skill-os/model-routing.yaml .claude/skill-os/external-skills/installed-pins.yaml .claude/skill-os/external-skills/vetting-registry.yaml",
     "check:hooks": "node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node --check .claude/hooks/session-end.mjs && node --check .claude/hooks/project-scope-guard.mjs && node --check .claude/hooks/lib/project-read-grants.mjs && node --check scripts/project-read.mjs && node --check .claude/hooks/controlled-change-guard.mjs && node scripts/test-project-read-grants.mjs && node scripts/test-hooks.mjs && node scripts/test-codex-adapter.mjs && node scripts/test-auto-open.mjs",
     "check:luca-open": "node scripts/test-luca-open-url.mjs",
     "check:memroot": "node scripts/test-memroot-parity.mjs",
@@ -17,6 +17,8 @@
     "check:agents-parity": "node scripts/check-agents-parity.mjs",
     "check:substrate": "node scripts/test-project-substrate.mjs && node scripts/test-project-identity-wiring.mjs",
     "test:routes": "node scripts/test-route-guard.mjs",
+    "test:wait-what": "node scripts/test-wait-what-skill.mjs",
+    "test:handoff-validator": "node scripts/test-handoff-validator.mjs",
     "test:project-scope": "node scripts/test-project-scope-guard.mjs",
     "test:project-read-grants": "node scripts/test-project-read-grants.mjs",
     "test:project-transaction": "node scripts/test-project-transaction.mjs",

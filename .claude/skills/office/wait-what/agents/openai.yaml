@@ -1,0 +1,6 @@
+interface:
+  display_name: "等等，我没听懂"
+  short_description: "补足前提，用自然中文重新讲清楚"
+  default_prompt: "使用 $wait-what，把上一条没讲明白的内容补足上下文后，用自然中文重新讲清楚。"
+policy:
+  allow_implicit_invocation: false

@@ -144,3 +144,12 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 
 此次是 luca 显式覆盖 2026-07 「只 merge 机制、tracker 留 gap」的旧裁决。最小接入不引入
 `setup-matt-pocock-skills` 或新 tracker 抽象：本地逐票为零配置路径，现有认证 tracker 由每次调用显式命名。
+
+## 2026-09-03 增补（`wait-what` 中文对话修复覆盖层）
+
+| # | Skill | 场景 | 真值 owner | 角色 | 护栏 |
+|---|---|---|---|---|---|
+| 10 | wait-what | 任意对话·显式调用 | 原任务/原 skill 仍拥有事实、产物与状态；`wait-what` 只拥有下一条回复的表达 | 补足上一条缺失前提，用自然中文和当前项目通用语言重新讲清楚 | 上游 explicit-only 保留；不收泛「没听懂/换个说法」路由词；零产物、零 workflow state、零工具与 authority 扩张 |
+
+它不是工程交付图的新节点，也不是 `teach`、`handoff` 或 `ux-writing` 的替代品：`teach` 面向持续教学，
+`handoff` 面向跨会话移交，`ux-writing` 面向产品界面文案；`wait-what` 只修复当前对话中刚刚没讲明白的一条回复。

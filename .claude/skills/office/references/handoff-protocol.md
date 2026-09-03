@@ -94,6 +94,14 @@ API key/密码/PII——发现即替换为 `<REDACTED>` 占位符（本目录 gi
 standalone 重型必写，见「写入时机/豁免规则」），`scripts/check-quality-gates.mjs`
 （verify.sh S14 / CI）对新 handoff 校验 criteria 存在性（WARN 起步）。
 
+**写完即验（任何 DONE / workflow-state 更新之前）：**
+
+```bash
+node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.md"
+```
+
+命令失败时不得标记 DONE；先补齐 `gate_result`、`criteria`、决策/约束/风险标题与产出路径。
+
 ## 为什么 ≤2000 tokens？
 
 **量化依据：**
@@ -128,6 +136,7 @@ cat > "docs/handoff/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md" << 'HANDOFF_EOF'
 # Handoff: <skill-name> → downstream
 ...（按格式填写）
 HANDOFF_EOF
+node scripts/check-quality-gates.mjs --handoff "docs/handoff/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md"
 ```
 
 ## 在 SKILL.md 共享规范中的嵌入位置

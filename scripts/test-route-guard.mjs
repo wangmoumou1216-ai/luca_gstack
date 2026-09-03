@@ -335,6 +335,58 @@ const cases = [
     },
   },
   {
+    name: 'wait-what slash command explicitly invokes the Chinese repitch overlay without a project',
+    prompt: '/wait-what',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/wait-what');
+    },
+  },
+  {
+    name: 'wait-what Codex syntax explicitly invokes the same overlay',
+    prompt: '$' + 'wait-what',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/wait-what');
+    },
+  },
+  {
+    name: 'wait-what slashless command alias remains explicit',
+    prompt: 'wait-what 请重讲上一条',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/wait-what');
+    },
+  },
+  {
+    name: 'generic Chinese clarification does not implicitly invoke wait-what',
+    prompt: '我没听懂，换个说法',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/wait-what');
+    },
+  },
+  {
+    name: 'casual mention of wait-what does not invoke the explicit-only skill',
+    prompt: '介绍一下 wait-what 这个 skill',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.skill, '/wait-what');
+    },
+  },
+  {
+    name: 'explicit Chinese wait-what invocation phrase reaches the registered route',
+    prompt: '显式调用wait-what',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/wait-what');
+    },
+  },
+  {
     name: 'G3: 框架 hook 讨论不消费下游项目上下文',
     prompt: '先第一性原理定义是不是问题。其他hook有没有相关问题',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },

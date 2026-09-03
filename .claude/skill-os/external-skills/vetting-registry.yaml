@@ -571,8 +571,8 @@ rejected:
     (brand-locked interface generation); design-review covers craft review. The combination already delivers
     this skill's value within the user's brand constraints, which this skill does not respect.
   reject_reasons:
-  - 'non_redundancy FAIL: taste/anti-slop review is already covered by ai-native-taste-anchors (8 anchors + §4b evidence tables) consumed by design-brief Phase 4 and redteam's criteria mount table [2026-08-03: taste-review/design-review deleted, coverage moved, rejection still stands];
-    interface generation is covered by open-design + fxui-source-to-html + html-prototype + magicpath'
+  - "non_redundancy FAIL: taste/anti-slop review is already covered by ai-native-taste-anchors (8 anchors + §4b evidence tables) consumed by design-brief Phase 4 and redteam's criteria mount table [2026-08-03: taste-review/design-review deleted, coverage moved, rejection still stands];
+    interface generation is covered by open-design + fxui-source-to-html + html-prototype + magicpath"
   - 'Scope mismatch: skill Section 13 explicitly excludes dashboards, dense product UI, data tables, and
     multi-step forms — i.e. the core of CRM product design — limiting it to landing/portfolio/marketing
     pages'
@@ -916,3 +916,20 @@ manual_vetting_2026_07_23:
     - "improve-codebase-architecture YAGNI: branch(b) 无方向 fallback 不采（Phase 0 结构性预置）；churn 有方向富化信号 → code-recon（merge）"
     - "plugin 渠道不切（订阅自动更新=watcher 立项实证所防对象）；roster 校验 gap 核销（check-routing-map+check-registration-sync 已覆盖）"
     - "已装 4 单元 path 域零实质变动；ack 697d4ce9 经 path 域当前 SHA 核验维持有效（NF2：ack 永不用 repo HEAD）"
+
+# ── 2026-09-03 用户点名增补（当前 upstream path commit）──
+manual_vetting_2026_09_03:
+  - name: wait-what
+    repo: mattpocock/skills
+    path: skills/productivity/wait-what
+    source_url: https://github.com/mattpocock/skills/blob/5c89081d4bbeb3d039a42093653f90bb698d780e/skills/productivity/wait-what/SKILL.md
+    pinned: 5c89081d4bbeb3d039a42093653f90bb698d780e
+    license: MIT
+    hard:
+      safety: PASS
+      compatibility: PASS
+      non_redundancy: PASS
+    verdict: ADOPTED-LOCALIZED
+    why_useful: "提供一个极低成本的显式对话修复按钮：上一条没讲明白时补齐前提，并复用 CONTEXT 通用语言重新讲述。"
+    boundary: "只重讲当前回复；不替代 teach 的持续教学、handoff 的跨会话移交或 ux-writing 的产品文案工作。"
+    adaptation: "保留 explicit-only、CONTEXT.md/CONTEXT-MAP.md 与 repitch 机制；用户可见描述、指令和输出契约改为自然中文。"

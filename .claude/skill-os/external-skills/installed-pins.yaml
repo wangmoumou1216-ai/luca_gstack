@@ -105,6 +105,17 @@ units:
   pinned_at: '2026-09-02'
   source: adoption-log
   note: explicit-only publication facade; canonical task-plan remains sole decomposition truth; local .scratch default and external tracker effects require separate preview approval
+- name: wait-what
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/productivity/wait-what
+  install_path: .claude/skills/office/wait-what
+  pinned_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  ack_sha: null
+  pinned_at: '2026-09-03'
+  source: adoption-log
+  note: explicit-only conversation repair overlay localized to natural Chinese; no artifact, workflow state, graph edge, or authority expansion
 - name: wayfinder
   kind: skill
   repo: mattpocock/skills

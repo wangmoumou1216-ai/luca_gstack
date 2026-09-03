@@ -44,6 +44,13 @@ project_skills:
     # handoff-protocol 与 workflow handoff。裸首 token 由 slashless command 接线处理。
     triggers: [会话交接, 生成交接文档, 生成一份交接文档, 当前会话交给下个agent, 当前会话交给下一个agent, 当前会话交给下个session, 当前会话交给下一个session, 这个会话交给下个agent, 这个会话交给下一个agent, 这个会话交给下个session, 这个会话交给下一个session, 新session接手当前会话, 新session接手这个会话, session handoff]
 
+  wait_what:
+    invoke: "/wait-what"
+    weight: 8
+    # 上游 explicit-only：/$/裸首 token 由 direct/command loader 接线；只保留一个明确调用短语，
+    # 不收「没听懂/换个说法/讲清楚」等泛词，避免劫持普通对话延续。
+    triggers: [显式调用wait-what]
+
   idea:
     invoke: "/idea"
     weight: 6

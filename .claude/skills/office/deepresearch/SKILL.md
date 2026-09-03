@@ -481,10 +481,17 @@ mkdir -p docs/handoff
 ```
 
 必须包含：
+- **质量头**：`gate_result` + 3-7 条带证据的 `criteria`（PASS/FAIL/UNKNOWN）
 - **决策列表**（≤8条）：核心研究发现、共识/分歧项、Socratic 审查结论
 - **下游约束**（≤5条）：哪些发现可信度低（DISPUTED）、哪些已被标记为需人工裁决
 - **风险**（≤3条）：来源局限、时效性、盲点
 - **产出路径**：research 报告完整路径
+
+**Step 1.5 — 写完即验：**
+```bash
+node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-deepresearch-handoff.md"
+```
+失败时先补齐 handoff，不得进入 Step 2 或报告 DONE。
 
 **Step 2 — 更新 workflow-state.yaml：**
 ```yaml

@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-09-03 · 检查发现问题全量收口）
+
+- 收窄 read-grant sidecar 检测：`apply_patch` 正文中的 `.claude/skills/office/*` 等普通路径示例不再被误拦，真实 sidecar 目标仍保持拒绝。
+- 修复外部技能 vetting registry 中 `redteam's` 引发的非法 YAML，并把 pin/vetting 两个 registry 纳入常规 YAML 门禁。
+- 新增单文件 handoff 写完即验入口和正反 fixture；公共协议与 `deepresearch` 在标记 DONE 前强制校验 `gate_result`、`criteria`、关键标题及产出路径。
+
+### Added（2026-09-03 · wait-what 中文对话重讲入口）
+
+- **项目 canonical `/wait-what` + Claude/Codex 双 loader + 显式路由 + 中文交互契约。**
+  保留 Matt 原版“上一条没讲明白就补上下文重讲”的极薄机制，但将用户可见说明和实际输出改为
+  自然中文；只允许显式调用，不创建产物、不改 workflow state，也不进入工程交付图。上游锁定
+  `mattpocock/skills@5c89081d4bbeb3d039a42093653f90bb698d780e`。
+
 ### Added（2026-09-02 · to-tickets 发布入口）
 
 - **项目 canonical `/to-tickets` + Claude/Codex 双 loader + 显式路由 + engineering-delivery 可选发布边。**

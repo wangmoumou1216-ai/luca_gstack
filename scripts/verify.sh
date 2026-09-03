@@ -111,6 +111,8 @@ check S41 "controlled-change schema/controller/guard 全量回归" "npm run test
 check S42 "六项集成冻结 source manifest tuple 可复现" "node scripts/validate-skill-integration-receipt.mjs --source-manifest"
 check S43 "engineering-delivery 七项 owner/trigger/loader/flow 回归" "npm run test:engineering-delivery --silent"
 check S44 "六项集成终态 receipt 与三路同 SHA 评审闭合" "npm run check:skill-integration-receipt --silent"
+check S46 "wait-what 中文化/显式调用/零副作用契约" "npm run test:wait-what --silent"
+check S47 "handoff 生成时 gate_result/criteria/标题契约会咬" "npm run test:handoff-validator --silent"
 # S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
 # 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
 # verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。
@@ -134,7 +136,7 @@ check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径�
 # S24：lint:yaml 的能力早已写好（package.json 覆盖 7 个 skill-os yaml），但从无自动调用者——
 # model-routing / self-model / gaps-register / sources-registry 四个真值源因此零 YAML 语法门
 # （CI 的 validate-yaml 只覆盖其中 2 个）。2026-06-28 体检 HC-21/HC-25 已两次点名，此处接线。
-check S24 "skill-os yaml 语法合法（8 个真值源）"    "npm run lint:yaml --silent"
+check S24 "skill-os YAML 语法合法（含外部技能 pin/vetting registry）" "npm run lint:yaml --silent"
 check S25 "luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）" "npm run check:luca-open --silent"
 check S26 "记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）" "npm run check:memroot --silent"
 check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）" "npm run check:harness --silent"
