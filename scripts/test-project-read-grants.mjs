@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
+  READ_GRANTS_ENABLED,
   authorizeRead,
   closeGrants,
   denyLatchPath,
@@ -17,8 +18,32 @@ import {
 
 let passed = 0;
 let failed = 0;
+let skipped = 0;
 
 function check(name, fn) {
+  // 2026-09-03 post-seal 增量审计（finding #5）：READ_GRANTS_ENABLED=false 把
+  // reconcilePromptGrants/authorizeRead 短路成恒定 deny。下面这些既有用例本来
+  // 测的是正向 grant 生命周期（CAS/latch/traversal/...），一旦短路，它们的断言
+  // 要么恒为 false 而“通过”（其实没跑到真实逻辑——vacuous pass），要么因为
+  // setup 阶段拿不到预期的 grant 而级联报错。两种都不是真实回归信号，所以整批
+  // 随隔离开关一起跳过，而不是留着造假绿或吵得看不出真问题。
+  // 隔离解除、重新设计好授权通道后，把 READ_GRANTS_ENABLED 改回 true 即可原样复跑。
+  if (!READ_GRANTS_ENABLED) {
+    skipped += 1;
+    console.log(`SKIP ${name} (read-grants quarantined: READ_GRANTS_ENABLED=false)`);
+    return;
+  }
+  try {
+    fn();
+    passed += 1;
+    console.log(`PASS ${name}`);
+  } catch (error) {
+    failed += 1;
+    console.error(`FAIL ${name}: ${error.stack || error}`);
+  }
+}
+
+function checkAlways(name, fn) {
   try {
     fn();
     passed += 1;
@@ -288,5 +313,58 @@ check('kill-switch restores baseline deny behavior', () => {
   }
 });
 
-console.log(`\nRESULT pass=${passed} fail=${failed}`);
+// 2026-09-03 post-seal 增量审计 finding #5（sidecar forgery → grant retarget → broker
+// 越权读）的永久回归。与上面的隔离开关强绑定：断言 deny 是"因为 READ_GRANTS_ENABLED=false"
+// 这条防线，不是因为其他偶然原因；READ_GRANTS_ENABLED 改回 true 后，这条必须改写为真实攻击
+// 复现（forged_sibling_authorized 必须仍为 false），不能让它随手继续绿。
+checkAlways('quarantine: reconcilePromptGrants always issues nothing regardless of prompt', () => {
+  assert.equal(READ_GRANTS_ENABLED, false, 'this suite assumes the current quarantine; update it alongside re-enabling the flag');
+  const env = fixture();
+  try {
+    const target = join(env.projectsRoot, 'beta', 'docs', 'reference.md');
+    const result = issue(env, { prompt: `只读引用: \`${target}\`` });
+    assert.equal(result.issued.length, 0);
+    assert.ok(result.hints.includes('read grants disabled'));
+  } finally { rmSync(env.base, { recursive: true, force: true }); }
+});
+
+checkAlways('quarantine: authorizeRead denies even a forged grant sidecar retargeted to a different file', () => {
+  const env = fixture();
+  try {
+    const allowedTarget = join(env.projectsRoot, 'beta', 'docs', 'reference.md');
+    const forgedTarget = join(env.projectsRoot, 'beta', 'docs', 'sibling.md');
+    const forgedGrantId = '123e4567-e89b-12d3-a456-426614174000';
+    const projectRealpath = realpathSync(join(env.projectsRoot, 'beta'));
+    const projectStat = statSync(projectRealpath);
+    // 直接手写伪造的 grant sidecar（模拟 finding #5 的 runtime string-concat 绕过写入），
+    // 把它指向一个从未被授权过的文件——即便 sidecar 本身被伪造成功，authorizeRead 在
+    // 隔离期必须无条件 deny，不能因为 sidecar 内容"看起来合法"就放行。
+    writeFileSync(grantSetPath(env.gstackRoot, 'FORGE'), `${JSON.stringify({
+      schema_version: 1,
+      session_id: 'FORGE',
+      generation: 1,
+      binding: null,
+      grants: [{
+        id: forgedGrantId,
+        authority: { turn_id: 'turn-forge', turn_generation: 1, prompt_sha256: '0'.repeat(64) },
+        lifetime: 'turn',
+        kind: 'file',
+        operations: ['read'],
+        requested_path: allowedTarget,
+        canonical_realpath: realpathSync(forgedTarget),
+        project: { name: 'beta', realpath: projectRealpath, dev: Number(projectStat.dev), ino: Number(projectStat.ino) },
+      }],
+    })}\n`, { mode: 0o600 });
+    writeFileSync(turnWitnessPath(env.gstackRoot, 'FORGE'), `${JSON.stringify({
+      schema_version: 1, session_id: 'FORGE', turn_id: 'turn-forge', generation: 1, open: true,
+    })}\n`, { mode: 0o600 });
+    const verdict = allow(env, {
+      sid: 'FORGE', turnId: 'turn-forge', targetPath: forgedTarget, grantId: forgedGrantId,
+    });
+    assert.equal(verdict.allowed, false);
+    assert.equal(verdict.reason, 'read grants disabled');
+  } finally { rmSync(env.base, { recursive: true, force: true }); }
+});
+
+console.log(`\nRESULT pass=${passed} fail=${failed} skip=${skipped}`);
 if (failed) process.exitCode = 1;

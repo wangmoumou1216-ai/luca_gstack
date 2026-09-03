@@ -8,7 +8,7 @@ import { existsSync, rmSync, readFileSync, writeFileSync, mkdirSync, mkdtempSync
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
-import { reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
+import { READ_GRANTS_ENABLED, reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ADAPTER = join(ROOT, '.codex', 'codex-hook-adapter.mjs');
@@ -319,7 +319,11 @@ console.log(JSON.stringify({ hookSpecificOutput: {
 }
 
 // ── I. Codex typed read broker：真实 capability + bounded read/list/search ──
-{
+// 2026-09-03 post-seal 增量审计 finding #5：READ_GRANTS_ENABLED=false 期间 reconcilePromptGrants
+// 恒定 issued=[]，下面全部用例都建立在"能拿到真 capability"之上，隔离期天然不适用——跳过而不是
+// 让 undefined.id 崩掉整个 test runner（崩溃会跳过收尾的 cleanup()，见下）。
+// 隔离解除后把 READ_GRANTS_ENABLED 改回 true 即可原样复跑。
+if (READ_GRANTS_ENABLED) {
   const base = mkdtempSync(join(tmpdir(), 'codex-read-broker-'));
   const gstack = join(base, 'gstack');
   const projects = join(base, 'projects');
@@ -354,6 +358,8 @@ console.log(JSON.stringify({ hookSpecificOutput: {
   const searchRelative = runBroker(['search', '--cap', dirCap, '--pattern', 'needle', '--relative', 'child.md']);
   ok('I6 broker rejects unapproved search --relative expansion', searchRelative.status !== 0 && /not valid for search/.test(searchRelative.stderr), searchRelative.stderr);
   rmSync(base, { recursive: true, force: true });
+} else {
+  console.log('SKIP I1-I6 Codex typed read broker (read-grants quarantined: READ_GRANTS_ENABLED=false)');
 }
 
 cleanup();

@@ -791,6 +791,9 @@ function main() {
   const state = readSessionState();
   const binding = activeBinding(state);
   const bashCommand = toolName === 'Bash' ? String(input.command || '') : '';
+  // 2026-09-03 post-seal 增量审计 finding #5：sidecar 写保护刻意保持 unconditional，不随
+  // READ_GRANTS_ENABLED 关闭而放松——authorizeRead/reconcilePromptGrants 已在
+  // project-read-grants.mjs 内部无条件 deny，这条只是纵深防御的另一层，不该被同一个开关连坐掉。
   const grantControlPlane = readGrantControlPlaneReference(toolName, input);
   if (grantControlPlane) {
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',

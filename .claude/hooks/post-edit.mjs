@@ -81,7 +81,7 @@ function frameworkTripwire(toolName, suffix) {
     if (toolName !== 'Bash') return;   // 文件类工具已被 PreToolUse 挡在门外，不必重复付费
     if (process.env.ALLOW_FRAMEWORK_WRITE === '1') return;
     if (existsSync(join(claudeDir, '.allow-framework-write'))) return;
-    const probe = spawnSync('git', ['status', '--porcelain', '--', 'framework'],
+    const probe = spawnSync('git', ['-c', 'core.fsmonitor=false', 'status', '--porcelain', '--', 'framework'],
       { cwd: repoRoot, encoding: 'utf8', timeout: 5000, env: withoutLocalGitEnv() });
     if (probe.status !== 0 || typeof probe.stdout !== 'string') return;
     const dirty = probe.stdout.trim();
@@ -92,7 +92,8 @@ function frameworkTripwire(toolName, suffix) {
     try { writeFileSync(mark, dirty); } catch { }
     if (!dirty) return;                // 首次记录或恢复干净：只落水位，不告警
     process.stdout.write(`[post-edit] 🚨 framework/ 只读母版出现未提交改动（SF-002 宪法红线）：\n${dirty}\n`
-      + `[post-edit] 非有意则还原：git checkout -- framework；确需维护母版：先开显式豁免开关再改。\n`);
+      + '[post-edit] 先检查：git status --short -- framework；git diff -- framework。\n'
+      + '[post-edit] 停止并请用户确认精确文件后再恢复；未跟踪文件需单独核对。确需维护母版：先开显式豁免开关再改。\n');
   } catch { }
 }
 

@@ -27,6 +27,10 @@ const OPERATIONS = new Set(['read', 'list', 'search']);
 const LIFETIMES = new Set(['turn', 'session']);
 const KINDS = new Set(['file', 'directory']);
 
+// Quarantined until the authority state and invocation channel are owned by the
+// harness rather than by same-UID workspace files and arbitrary shell text.
+export const READ_GRANTS_ENABLED = false;
+
 function sidOf(sessionId) {
   const sid = sanitizeSessionId(sessionId);
   if (!sid) throw new Error('session id required');
@@ -347,7 +351,7 @@ export function reconcilePromptGrants({
   const sid = sidOf(sessionId);
   const currentTurn = String(turnId || '');
   if (!currentTurn) throw new Error('turn id required');
-  if (process.env.LUCA_READ_GRANTS_DISABLE === '1') {
+  if (!READ_GRANTS_ENABLED || process.env.LUCA_READ_GRANTS_DISABLE === '1') {
     try { closeGrants({ gstackRoot, sessionId: sid, scope: 'session' }); } catch { }
     return { generation: 0, issued: [], hints: ['read grants disabled'] };
   }
@@ -418,7 +422,7 @@ export function authorizeRead({
 }) {
   try {
     const sid = sidOf(sessionId);
-    if (process.env.LUCA_READ_GRANTS_DISABLE === '1') return deny('read grants disabled');
+    if (!READ_GRANTS_ENABLED || process.env.LUCA_READ_GRANTS_DISABLE === '1') return deny('read grants disabled');
     if (!OPERATIONS.has(operation)) return deny('operation is not read-only');
     if (existsSync(grantLockPath(gstackRoot, sid))) return deny('read grant state transaction is active or incomplete');
     if (existsSync(denyLatchPath(gstackRoot, sid))) return deny('read grant deny latch is active');

@@ -30,7 +30,11 @@ import {
   validateProjectName,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
-import { closeGrants, reconcilePromptGrants } from './lib/project-read-grants.mjs';
+import {
+  READ_GRANTS_ENABLED,
+  closeGrants,
+  reconcilePromptGrants,
+} from './lib/project-read-grants.mjs';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -680,7 +684,16 @@ function softSkillDecision(prompt, routes) {
     .filter(e => e.score >= 4)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .map(e => ({ skill: e.route.invoke || e.route.hint, tokens: e.matchedTokens }));
+    .map(e => softCandidate(e.route.invoke || e.route.hint, e.matchedTokens));
+}
+
+function softCandidate(skill, evidenceItems) {
+  return {
+    skill,
+    evidence: (Array.isArray(evidenceItems) ? evidenceItems : [evidenceItems])
+      .map(item => String(item || '').trim())
+      .filter(Boolean),
+  };
 }
 
 function frameworkFlowMode(flow, prompt) {
@@ -809,10 +822,10 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
     return {
       decision: 'STOP',
       reason: 'meta_question_about_keyword',
-      softCandidates: [{
-        skill: unique[0].invoke || unique[0].hint,
-        why: 'keyword matched but the prompt reads as a question *about* the term',
-      }],
+      softCandidates: [softCandidate(
+        unique[0].invoke || unique[0].hint,
+        'keyword matched but the prompt reads as a question *about* the term',
+      )],
     };
   }
 
@@ -1431,7 +1444,7 @@ function decisionToHints(decision) {
       const candidateHint = softCandidates.length
         ? '\n基于语义推断，最可能的 skill：\n' +
           softCandidates.map((c, i) =>
-            `  ${i + 1}. ${c.skill}（参考词：${c.tokens.join('、')}）`
+            `  ${i + 1}. ${c.skill}（参考依据：${c.evidence.join('、')}）`
           ).join('\n') +
           '\n语义映射清晰可按 CLAUDE.md「语义路由契约」直接路由；否则展示候选请用户确认或补充。'
         : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
@@ -1576,8 +1589,10 @@ if (prompt) {
       }
 
       if (decision.decision === 'PROJECT_SWITCH' && decision.project) {
-        try { closeGrants({ gstackRoot: projectRoot, sessionId: hookSessionId, scope: 'session' }); }
-        catch (error) { hints.push(`[route-guard] ⛔ READ GRANTS — 项目切换前撤销失败：${error.message}`); }
+        if (READ_GRANTS_ENABLED) {
+          try { closeGrants({ gstackRoot: projectRoot, sessionId: hookSessionId, scope: 'session' }); }
+          catch (error) { hints.push(`[route-guard] ⛔ READ GRANTS — 项目切换前撤销失败：${error.message}`); }
+        }
         const operation = decision.operation === 'new' ? 'new' : 'switch';
         const prepared = prepareProjectSwitch({
           gstackRoot: projectRoot,
@@ -1603,21 +1618,23 @@ if (prompt) {
           sessionId: hookSessionId,
           turnId: hookTurnId,
         });
-        try {
-          const grantResult = reconcilePromptGrants({
-            gstackRoot: projectRoot,
-            projectsRoot: PROJECTS_ROOT,
-            sessionId: hookSessionId,
-            turnId: hookTurnId,
-            prompt,
-            binding: opened.state === 'TURN_ACTIVE' ? opened.binding : null,
-          });
-          for (const grant of grantResult.issued) {
-            hints.push(`[route-guard] 🔐 已授权${grant.lifetime === 'session' ? '本会话' : '本回合'}只读引用：${grant.path}（cap ${hookSessionId}:${grant.id}）`);
+        if (READ_GRANTS_ENABLED) {
+          try {
+            const grantResult = reconcilePromptGrants({
+              gstackRoot: projectRoot,
+              projectsRoot: PROJECTS_ROOT,
+              sessionId: hookSessionId,
+              turnId: hookTurnId,
+              prompt,
+              binding: opened.state === 'TURN_ACTIVE' ? opened.binding : null,
+            });
+            for (const grant of grantResult.issued) {
+              hints.push(`[route-guard] 🔐 已授权${grant.lifetime === 'session' ? '本会话' : '本回合'}只读引用：${grant.path}（cap ${hookSessionId}:${grant.id}）`);
+            }
+            for (const hint of grantResult.hints) hints.push(`[route-guard] ⚠️ READ GRANT — ${hint}`);
+          } catch (error) {
+            hints.push(`[route-guard] ⛔ READ GRANT — ${String(error?.message || error)}；跨项目读取保持关闭。`);
           }
-          for (const hint of grantResult.hints) hints.push(`[route-guard] ⚠️ READ GRANT — ${hint}`);
-        } catch (error) {
-          hints.push(`[route-guard] ⛔ READ GRANT — ${String(error?.message || error)}；跨项目读取保持关闭。`);
         }
         if (opened.state === 'TURN_ACTIVE') {
           const activeState = join(opened.binding.realpath, '.luca', 'workflow-state.yaml');

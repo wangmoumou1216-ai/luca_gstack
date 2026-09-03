@@ -5,6 +5,7 @@
 import assert from 'assert/strict';
 import { spawnSync } from 'child_process';
 import {
+  chmodSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -22,6 +23,7 @@ import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { withoutLocalGitEnv } from '../.claude/hooks/lib/git-env.mjs';
 import {
+  READ_GRANTS_ENABLED,
   authorizeRead,
   grantSetPath,
   reconcilePromptGrants,
@@ -643,6 +645,41 @@ function runRouteGuard(cwd, prompt) {
   writeFileSync(join(root, '.claude', '.allow-framework-write'), '');
   assert.doesNotMatch(fireBash().stdout, /只读母版出现未提交改动/, '显式豁免开关期间不应告警');
   console.log('PASS post-edit framework tripwire：干净不吵/脏了告警/不重复吵/污染仍报/两个豁免口都闭嘴');
+}
+
+// ── POST-EDIT/FSMONITOR-RCE（2026-09-03 post-seal 增量审计 finding #6）：tripwire 探针跑的
+//    是普通 `git status`，会尊重仓库本地 core.fsmonitor 配置——一个恶意 fsmonitor 程序因此能
+//    借"只读检测"之名任意执行。修复=给探针加 `-c core.fsmonitor=false`；同一处顺带把恢复文案
+//    从会连坐清掉不相关未提交改动的 `git checkout -- framework` 换成先 inspect 再由人确认。
+//    两条断言缺一不可：RCE 关闭 **且** 脏检测本身不受影响（否则"修复"等于连告警一起哑掉）。
+{
+  const peHook = process.env.PE_HOOK_UNDER_TEST || resolve(projectRoot, '.claude/hooks/post-edit.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-fsmonitor-'));
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  mkdirSync(join(root, 'framework'), { recursive: true });
+  writeFileSync(join(root, 'framework', 'master.html'), 'seed\n');
+  const marker = join(root, 'fsmonitor-executed');
+  const monitor = join(root, 'malicious-fsmonitor.sh');
+  writeFileSync(monitor, `#!/bin/sh\ntouch '${marker}'\nprintf '\\n'\n`);
+  chmodSync(monitor, 0o755);
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8', env: withoutLocalGitEnv() });
+  git('init', '-q');
+  git('config', 'user.email', 'fixture@example.invalid');
+  git('config', 'user.name', 'fixture');
+  git('add', '-A');
+  git('commit', '-qm', 'seed');
+  git('config', 'core.fsmonitor', monitor);
+  writeFileSync(join(root, 'framework', 'master.html'), 'dirty\n');
+  const post = runNode(peHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root },
+    input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'true' } }),
+  });
+  assert.equal(existsSync(marker), false,
+    '恶意 core.fsmonitor 绝不能被 tripwire 的 git status 探针执行（RCE）');
+  assert.match(post.stdout, /只读母版出现未提交改动/, '中和 fsmonitor 后脏检测本身必须仍然生效');
+  assert.match(post.stdout, /git status --short -- framework/, '恢复文案必须先教用户 inspect 再动手');
+  assert.doesNotMatch(post.stdout, /git checkout -- framework/, '恢复文案不得再建议无条件清空 framework/（会连坐未跟踪/无关改动）');
+  console.log('PASS post-edit fsmonitor RCE 已中和 + 脏检测保留 + 恢复文案改为先 inspect');
 }
 
 // ── SETTINGS-001：PostToolUse matcher 必须覆盖 Agent（2026-07-04 修复 Task→Agent 工具名漂移）──
@@ -1387,7 +1424,12 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
 }
 
 // ── READ-GRANT-LIFECYCLE：blocked Stop 不是边界；non-blocking Stop / SessionEnd 才撤销 ──
-{
+// 2026-09-03 post-seal 增量审计 finding #5：READ_GRANTS_ENABLED=false 把 reconcilePromptGrants/
+// authorizeRead 短路成恒定 deny，下面三段测的是正向生命周期（grant 在 blocked Stop 下存活、在
+// non-blocking Stop/SessionEnd 下被撤销），quarantine 期间既拿不到真 grant 也谈不上"存活"，
+// 断言会失真而不是抓到真回归。整批跟隔离开关一起跳过，别硬凑出假绿或吵得盖过真问题。
+// 隔离解除、重新设计好授权通道后，把 READ_GRANTS_ENABLED 改回 true 即可原样复跑。
+if (READ_GRANTS_ENABLED) {
   const root = makeFixture({ statuses: [] });
   const projects = join(root, 'projects');
   const target = join(projects, 'beta', 'docs', 'reference.md');
@@ -1409,9 +1451,11 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     operation: 'read', toolName: 'Read', targetPath: target,
   }).allowed, true, 'blocked Stop must retain the active turn grant');
   console.log('PASS READ-GRANT-LIFECYCLE blocked Stop preserves turn grant');
+} else {
+  console.log('SKIP READ-GRANT-LIFECYCLE blocked Stop preserves turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)');
 }
 
-{
+if (READ_GRANTS_ENABLED) {
   const root = makeFixture({ statuses: [] });
   const projects = join(root, 'projects');
   const target = join(projects, 'beta', 'docs', 'reference.md');
@@ -1432,9 +1476,11 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   }).allowed, false, 'non-blocking Stop must close the turn witness');
   assert.equal(JSON.parse(readFileSync(turnWitnessPath(root, sid), 'utf8')).open, false);
   console.log('PASS READ-GRANT-LIFECYCLE non-blocking Stop closes turn grant');
+} else {
+  console.log('SKIP READ-GRANT-LIFECYCLE non-blocking Stop closes turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)');
 }
 
-{
+if (READ_GRANTS_ENABLED) {
   const root = makeFixture({ statuses: [] });
   const projects = join(root, 'projects');
   const target = join(projects, 'beta', 'docs', 'reference.md');
@@ -1452,6 +1498,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   assert.equal(existsSync(grantSetPath(root, sid)), false);
   assert.equal(existsSync(turnWitnessPath(root, sid)), false);
   console.log('PASS READ-GRANT-LIFECYCLE SessionEnd revokes all grants');
+} else {
+  console.log('SKIP READ-GRANT-LIFECYCLE SessionEnd revokes all grants (read-grants quarantined: READ_GRANTS_ENABLED=false)');
 }
 
 console.log('\nALL HOOK/MEMORY REGRESSION TESTS PASSED');

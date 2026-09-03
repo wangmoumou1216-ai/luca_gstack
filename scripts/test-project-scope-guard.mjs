@@ -10,7 +10,7 @@ import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import assert from 'assert';
-import { reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
+import { READ_GRANTS_ENABLED, reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
 
 // 被测守卫的定位：**按本脚本自身位置**，不按 process.cwd()。
 // 原写法是 resolve(process.cwd(), ...)（04a5faf, 2026-07-09 起未改），从非仓根 cwd 跑会
@@ -60,7 +60,8 @@ function run(env, payload, extraEnv = {}) {
   return r.stdout.trim() ? JSON.parse(r.stdout) : null; // 空 stdout = pass-through
 }
 const abs = (env, proj, rest) => join(realpathSync(join(env.projects, proj)), rest);
-const GRANTS_DISABLED = process.env.LUCA_READ_GRANTS_DISABLE === '1';
+// 2026-09-03 post-seal 增量审计：quarantine 常量与旧 env kill-switch 任一命中都算禁用。
+const GRANTS_DISABLED = !READ_GRANTS_ENABLED || process.env.LUCA_READ_GRANTS_DISABLE === '1';
 
 // 1. 已绑定 session 写 docs/ → 重定向到本 pin 项目绝对路径
 check('pinned Write docs/ → redirect to own project', () => {

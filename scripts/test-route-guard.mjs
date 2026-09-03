@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSyn
 import { tmpdir } from 'os';
 import { join } from 'path';
 import assert from 'assert/strict';
+import { READ_GRANTS_ENABLED } from '../.claude/hooks/lib/project-read-grants.mjs';
 
 const baseEnv = {
   ...process.env,
@@ -1264,6 +1265,31 @@ const failures = [];
   }
 }
 
+// PR-101（2026-09-03 post-seal 增量审计 finding #1）永久回归：一个 STOP + meta_question_about_keyword
+// 决策会走 softCandidates 渲染分支。修复前该分支硬编两种不一致的 shape（`{skill,tokens}` 和
+// `{skill,why}`），production renderer 只认 `.tokens`，遇到 `.why` 分支直接 `undefined.join` 崩溃、
+// 整个 hook 非 0 退出——route-guard 一旦崩，UserPromptSubmit 那一轮就拿不到任何路由提示。
+// 这条钉的正是那条真实会崩的生产路径：非 dry-run、无 session_id、真实会触发 meta_question 的 prompt。
+{
+  const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+    cwd: process.cwd(),
+    input: JSON.stringify({ prompt: 'PRD是啥' }),
+    encoding: 'utf8',
+    env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_CURRENT_PROJECT: '' },
+  });
+  try {
+    assert.equal(result.status, 0, `PR-101 回归：route-guard 不得因 meta_question soft-candidate 渲染崩溃，stderr=${result.stderr}`);
+    assert.match(result.stdout, /基于语义推断，最可能的 skill/);
+    assert.match(result.stdout, /参考依据：/, '渲染必须走统一的 evidence 字段，不是已删除的 tokens 字段');
+    console.log('PASS PR-101 regression: meta_question soft-candidate renders without crashing');
+    passCount++;
+  } catch (error) {
+    console.log(`FAIL PR-101 regression: ${error.message?.split('\n')[0]}`);
+    failures.push({ name: 'PR-101 meta_question soft-candidate crash', error: error.message?.split('\n')[0] });
+    failCount++;
+  }
+}
+
 // Real UserPromptSubmit fixture: this exercises the stateful branch that calls
 // prepareProjectSwitch, not only the dry-run decision builder.
 {
@@ -1304,7 +1330,11 @@ const failures = [];
 }
 
 // Real UserPromptSubmit fixture: the route hook is the only read-grant issuer.
-{
+// 2026-09-03 post-seal 增量审计 finding #5：READ_GRANTS_ENABLED=false 期间 route-guard 的
+// reconcilePromptGrants 分支整段跳过（见 route-guard.mjs 内 `if (READ_GRANTS_ENABLED) {...}`），
+// 不会再产生任何 grant 或"已授权"提示，这条正向断言在隔离期天然不适用，跳过而非硬凑假信号。
+// 隔离解除后把 READ_GRANTS_ENABLED 改回 true 即可原样复跑。
+if (READ_GRANTS_ENABLED) {
   const root = mkdtempSync(join(tmpdir(), 'route-read-grant-'));
   const gstack = join(root, 'gstack');
   const projects = join(root, 'projects');
@@ -1340,6 +1370,8 @@ const failures = [];
     failures.push({ name: 'real route read-grant fixture', error: error.message?.split('\n')[0] });
     failCount++;
   }
+} else {
+  console.log('SKIP real route fixture is the prompt-bound read-grant issuer (read-grants quarantined: READ_GRANTS_ENABLED=false)');
 }
 
 for (const testCase of cases) {
