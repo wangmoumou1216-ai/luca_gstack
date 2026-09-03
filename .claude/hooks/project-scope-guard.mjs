@@ -794,7 +794,12 @@ function main() {
   const grantControlPlane = readGrantControlPlaneReference(toolName, input);
   if (grantControlPlane) {
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-      permissionDecisionReason: `read-grant sidecar 是 hook 内部控制平面，普通工具不得读取、写入或伪造（${grantControlPlane}）。` } });
+      // 文案必须给出改写指引：本判据保留了 dotglob 安全余量，正常路径也可能被它拦下，而一条只说
+      // 「你在伪造控制平面」的拒绝会把人推向绕行（实测：一次误拦就催生了「把载荷挪出命令文本」的
+      // 方案）。给出两条不绕闸的出路，比让人自己发明第三条强。
+      permissionDecisionReason: `read-grant sidecar 是 hook 内部控制平面，普通工具不得读取、写入或伪造（${grantControlPlane}）。`
+        + '若你并非要碰 sidecar，只是路径里带了通配或运行期展开：把它写成不含元字符的确定路径，'
+        + '或改用 Write/Edit 等文件类工具（按 file_path 精确判定，不扫命令文本）。' } });
   }
   if (toolName === 'Bash') {
     const patch = inspectApplyPatch(bashCommand, binding);

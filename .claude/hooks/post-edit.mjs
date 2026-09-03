@@ -8,11 +8,15 @@
 // 该 legacy 路径仍由 session-restore 启动清零。sid sanitize 表达式必须与
 // session-sync.mjs / route-guard.mjs 逐字一致：replace(/[^\w-]/g,'').slice(0,36)。
 // Claude Code 的 PostToolUse hook 通过 stdin 传入 JSON: { session_id, tool_name, tool_input, … }
-import { readFileSync, writeFileSync, statSync, mkdirSync, renameSync } from 'fs';
+import { readFileSync, writeFileSync, statSync, mkdirSync, renameSync, existsSync } from 'fs';
+import { spawnSync } from 'child_process';
+// 与 session-sync.mjs 同一条纪律：面向别的 cwd 的子 git 绝不继承仓库局部 GIT_* 绑定。
+import { withoutLocalGitEnv } from './lib/git-env.mjs';
 import { join } from 'path';
 import { homedir } from 'os';
 
-const claudeDir = join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), '.claude');
+const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const claudeDir = join(repoRoot, '.claude');
 function bump(file) {
   try {
     const cf = join(claudeDir, file);
@@ -55,11 +59,41 @@ if (parsed) {
   if (editedFile.includes('/framework/') || editedFile.includes('\\framework\\')) {
     process.stdout.write(`[post-edit] ⚠️  framework/ 是只读模板目录，请确认此次编辑是有意为之。\n`);
   }
+  frameworkTripwire(toolName, suffix);
   // 会话级项目隔离（方案A，2026-07-08）后，docs/ 写入由 PreToolUse 的 project-scope-guard 直接
   // 重定向到本 session pin 项目的绝对路径 —— 落点由 pin 决定、与共享软链无关。故这里原先的
   // "pin ≠ docs 软链 → 可能落错项目"事后告警已失去意义（A 下 pin≠软链是常态，且写入并未落软链），
   // 留着只会每次误报，移除。真正的兜底前移到 PreToolUse（重定向或无 pin 时 deny）。
   maybeSpoolAutoOpen(data, sid);
+}
+
+// ── framework/ 只读母版的**事后兜底**（2026-09-03）。PreToolUse 的 project-scope-guard 只能按
+//    shell 写语法认写入（重定向 / tee / sed -i / rm / cp…），**解释器中转的写入它在文本层
+//    根本看不见**——实测 python3 -c、node -e、patch 读文件、bash 脚本 四种全部放行，而这是
+//    SF-002 宪法红线。文本层无法区分“解释器在读母版”与“在写母版”，往黑名单里再补形态
+//    只会永远差下一种（封闭集合按全集补，而写法的集合不封闭）；故改成**不依赖命令形态**的
+//    事后判定：pathspec 限定的 git status（本仓实测 ≈ 20ms）。
+//    只在**状态发生变化**时告警：母版一旦脏掉就每次 Bash 刷同一条，很快会被无视。
+//    显式豁免期间不告警，与 PreToolUse 的 frameworkEscapeActive() 同语义。
+//    全段 fail-open：非 git 仓/git 不可用/任何异常都静默跳过，绝不阻断工具调用。
+function frameworkTripwire(toolName, suffix) {
+  try {
+    if (toolName !== 'Bash') return;   // 文件类工具已被 PreToolUse 挡在门外，不必重复付费
+    if (process.env.ALLOW_FRAMEWORK_WRITE === '1') return;
+    if (existsSync(join(claudeDir, '.allow-framework-write'))) return;
+    const probe = spawnSync('git', ['status', '--porcelain', '--', 'framework'],
+      { cwd: repoRoot, encoding: 'utf8', timeout: 5000, env: withoutLocalGitEnv() });
+    if (probe.status !== 0 || typeof probe.stdout !== 'string') return;
+    const dirty = probe.stdout.trim();
+    const mark = join(claudeDir, `.session-framework-state${suffix}`);
+    let seen = null;
+    try { seen = readFileSync(mark, 'utf8'); } catch { }
+    if (seen !== null && dirty === seen) return;
+    try { writeFileSync(mark, dirty); } catch { }
+    if (!dirty) return;                // 首次记录或恢复干净：只落水位，不告警
+    process.stdout.write(`[post-edit] 🚨 framework/ 只读母版出现未提交改动（SF-002 宪法红线）：\n${dirty}\n`
+      + `[post-edit] 非有意则还原：git checkout -- framework；确需维护母版：先开显式豁免开关再改。\n`);
+  } catch { }
 }
 
 // ── 产出物自动打开（2026-07-24；2026-08-21 收窄到仅 html）：luca app 内嵌会话（pty 注入

@@ -591,6 +591,60 @@ function runRouteGuard(cwd, prompt) {
   console.log('PASS post-edit Writer：edit-count 仅文件编辑递增、tool-count 全工具递增、framework/ 警告');
 }
 
+// ── POST-EDIT/FW-TRIPWIRE（2026-09-03）：PreToolUse 按 shell 写语法认写入，**解释器中转的
+//    母版写入它在文本层看不见**（实测 python3 -c / node -e / patch 读文件 / bash 脚本 四种全部
+//    放行），故 post-edit 按 git 实际状态事后兜底。四条断言缺一不可：干净不吵、脏了告警、
+//    同一状态不重复吵（会被无视的告警等于没有）、显式豁免期间闭嘴。──
+{
+  // PE_HOOK_UNDER_TEST：显式注入口，专供隔离变异夹具（同 PSG_HOOK_UNDER_TEST 的用法）——
+  // 把 post-edit.mjs 连同 hooks/lib 拷到临时目录后指向副本，即可在**不碰活体钩子**的前提下
+  // 做变异测试。本 hook 静态 import ./lib/git-env.mjs，只拷单文件会直接崩，务必连 lib 一起拷。
+  const peHook = process.env.PE_HOOK_UNDER_TEST || resolve(projectRoot, '.claude/hooks/post-edit.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-fwtrip-'));
+  mkdirSync(join(root, '.claude'), { recursive: true });
+  mkdirSync(join(root, 'framework'), { recursive: true });
+  const master = join(root, 'framework', 'shared-head.html');
+  writeFileSync(master, '<head>母版</head>\n');
+  // 夹具自身必须与外层仓解绑：继承 GIT_DIR 会让 git init 绑到外层仓，断言整齐地读出假结果。
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8', env: withoutLocalGitEnv() });
+  git('init', '-q');
+  git('config', 'user.email', 'fixture@example.invalid');
+  git('config', 'user.name', 'fixture');
+  git('add', '-A');
+  git('commit', '-qm', 'seed master');
+  assert.equal(git('status', '--porcelain', '--', 'framework').stdout.trim(), '', '夹具自检：seed 后母版必须干净');
+  const fireBash_env = (extra = {}) => runNode(peHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, ...extra },
+    input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: 'true' } }),
+  });
+  const fireBash = () => fireBash_env();
+
+  assert.doesNotMatch(fireBash().stdout, /只读母版出现未提交改动/, '母版干净时不应告警');
+  writeFileSync(master, '<head>被解释器改过</head>\n');   // 不经任何 shell 写语法
+  assert.match(fireBash().stdout, /只读母版出现未提交改动/, '母版被改后必须告警');
+  assert.doesNotMatch(fireBash().stdout, /只读母版出现未提交改动/, '同一状态不得重复告警');
+
+  // GIT_* 污染下仍须报警：继承外层仓的 GIT_DIR 会让子 git 读错仓库、告警静默消失。
+  // 这条断言专钉 withoutLocalGitEnv()，去掉隔离即转红（变异实测）。
+  const poison = join(root, 'poison-git-dir');
+  mkdirSync(poison, { recursive: true });
+  writeFileSync(master, '<head>污染环境下再改</head>\n');
+  writeFileSync(join(root, 'framework', 'extra-a.html'), 'x\n');   // 让 porcelain 串真的变化
+  assert.match(fireBash_env({ GIT_DIR: poison }).stdout, /只读母版出现未提交改动/,
+    'GIT_* 污染下母版被改仍须告警（子 git 必须与外层仓解绑）');
+
+  // 豁免闭嘴（两个口子各测一次，与 PreToolUse 的 frameworkEscapeActive() 同语义）。
+  // 每次都必须让 porcelain 串**确实变化**，否则会被上面的水位短路挡住、断言恒真
+  // （变异实测：改同一个文件两次，porcelain 输出一模一样，豁免判据去掉也不转红）。
+  writeFileSync(join(root, 'framework', 'extra-b.html'), 'y\n');
+  assert.doesNotMatch(fireBash_env({ ALLOW_FRAMEWORK_WRITE: '1' }).stdout, /只读母版出现未提交改动/,
+    'ALLOW_FRAMEWORK_WRITE=1 期间不应告警');
+  writeFileSync(join(root, 'framework', 'extra-c.html'), 'z\n');
+  writeFileSync(join(root, '.claude', '.allow-framework-write'), '');
+  assert.doesNotMatch(fireBash().stdout, /只读母版出现未提交改动/, '显式豁免开关期间不应告警');
+  console.log('PASS post-edit framework tripwire：干净不吵/脏了告警/不重复吵/污染仍报/两个豁免口都闭嘴');
+}
+
 // ── SETTINGS-001：PostToolUse matcher 必须覆盖 Agent（2026-07-04 修复 Task→Agent 工具名漂移）──
 // settings.json 此前零测试覆盖；subagent 工具名已从 Task 演化为 Agent，matcher 漏配会让
 // 纯 subagent 扇出的 session tool-count 漏计 → session-sync 误判"无实质工作"跳过记忆提取。
