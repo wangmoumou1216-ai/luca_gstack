@@ -1,17 +1,17 @@
 # LucaGStack controlled-change 受控变更全量能力方案
 
-> 状态：`CANDIDATE_UNDER_REVIEW`  
-> 方案日期：2026-08-30；按已发布 MVP 现场重基线：2026-09-01（Asia/Shanghai）  
+> 状态：`CANDIDATE_UNDER_REVIEW`
+> 方案日期：2026-08-30；按近期提交审计重基线：2026-09-02；post-seal review 重新打开：2026-09-03（Asia/Shanghai）
 > 任务类型：Deep / framework-meta / plan-only / `NO_PIN`  
 > 推荐目标档：**Standard**  
-> 当前终点：冻结计划 SHA，经同一 SHA 的独立审查全部通过后停在 `Gate P — Implementation Approval`  
+> 当前终点：先闭合 post-seal 增量审计与证据完整性问题，再冻结新计划 SHA；`Gate P` 当前暂停
 > 实施授权：**无**
 
 ## 0. 执行摘要
 
 本方案把 controlled-change 定义为 LucaGStack 的**变更执行内核**：Plan Agent 决定“做什么”，Orchestrator 决定“按什么依赖顺序调度”，Skill/Work Agent 决定“怎样产出候选”，controlled-change 只负责把已经批准的候选限制成**精确目标、精确 effect、精确前置状态、可恢复状态转换和可核验 receipt**。它既不是 Skill，也不是新 workflow 状态机，更不是第二个项目真值源。
 
-2026-09-01 现场侦察确认：六 Skill MVP 已作为 **controlled-change/v1** 发布到 `upstream/main` 的 commit `6aaa1c6511af6845042e9dc541524934ed57bfe9`，当前 checkout 中的 v1 runtime bytes 与 `upstream/main` 一致；控制根为 `inactive`，只留有可验证 terminal witness/receipt。故本计划不是“从零安装”，而是**保住 v1 安全下限、以 side-by-side v2 演进到 Standard**。任何实现都必须先让 v1 非终态恢复完毕，再允许 v2 激活；不得原地改写 v1 state、receipt 或已发布证据。
+2026-09-02 对 `72bd1f2..0f8cf14` 的 18 个近期提交及随后 `83468c1`、`91ba95a`、`a98d97a`、`516bf6b`、`893d476`、merge `2059ee4` 与 docs-only 报告 `c98f3b9` 完成增量审计。六 Skill MVP 已作为 **controlled-change/v1** 发布于 commit `6aaa1c6511af6845042e9dc541524934ed57bfe9`；这些规划事实绑定不可变 commit/diff 与审查记录，而不绑定会继续移动的 checkout HEAD。81-row 发布 manifest 中已有 8 个 runtime 路径发生合法的发布后漂移，不能再声称 live runtime bytes 等于 `6aaa1c6`。更重要的是，v1 guard 对复合 Bash 命令只分类第一个 Git verb，可使一次 `git-stage` 授权连带放行未批准的 `git push`；并发 one-use effect 消费也不是线性化的。因此 v1 只作为**已安装的兼容/恢复基线**，不是可继续扩展的安全下限：在 Foundation containment 测试杀死这些 mutant 前，禁止新的 v1 Git effect 授权；U-001 containment 只用零 Git/任意 shell effect 的 exact repo subset，Gate N 放行后的迁移也只能经已批准 operation 的 public `prepare/advance`。控制根的规划期只读观测为 `inactive`，两组 terminal witness/receipt 有效；任何实现都必须重做现场 census，不得原地改写 v1 state、receipt 或已发布证据。`83468c1` 的 proposal scanner、`91ba95a`/`516bf6b` 的 route/graph 变更、`a98d97a` 的 self-model复核与 `893d476` 的 memory promotion 都不改 controlled-change state，但审计均 FAIL：scanner存在门控失明/`KILL`子串误报；route生产STOP renderer仍崩溃、礼貌词仍可误派、`.docx`修复测试是假绿且workflow路径未证明输入合同；self-model用局部复核重置全局freshness且不防人工清单漂移；memory batch虽结构闭合，却以agent自报用户代裁跨越人工门，最终promoted reviewer又显示候选自填的`luca`，无法充当可独立验证的批准。`c98f3b9` 只修改审查报告，却把这些未闭合问题宣称为已修；双轴复核均 FAIL。本计划只把上述材料作为不可信现场输入，不把scanner、route verdict/soft candidate/workflow recommendation、self-model freshness、promoted-memory reviewer或该报告当authority、完成证据或implementation依赖。
 
 目标架构选择 **Standard**：
 
@@ -22,9 +22,11 @@
 - 以短时、资源粒度 claim + CAS 管并发，不用覆盖整个任务生命周期的 repo-global OS lease；
 - effect host 使用封闭静态 adapter 表；`repo-files`、`external-files`、`git-publisher` 都是同一 DAG 下的 adapter，kernel 是唯一状态推进者；
 - 网络/API/GUI 默认拒绝，直到存在具备 identity、idempotency、readback、reconcile/compensate 合同的具体 adapter；
-- 已安装 v1 是 Foundation 的安全下限；v2 Standard 只在 v1 兼容门、受保护表面 admission、多 effect、并发或外部 effect 证据达标后逐面启用；High-assurance 只有真实威胁证据达到进入条件后才另立计划。
+- 已安装 v1 是 Foundation 的历史兼容/恢复输入；Foundation containment 先关闭已证实的 effect bypass 与证据错绑，v2 Standard 再于兼容门、受保护表面 admission、多 effect、并发或外部 effect 证据达标后逐面启用；High-assurance 只有真实威胁证据达到进入条件后才另立计划。
 
 六 Skill 主计划里的 controlled-change MVP 已成为第一位真实消费者和 Foundation v1，不是全量结论；旧重型方案只作为机制候选库，daemon、签名 capability、全局 authority registry、repo-global whole-task lease、通用 two-phase publisher 均不恢复为默认架构。
+
+2026-09-03 post-seal review 发现，R23 冻结后落地的 `a16d47bc09e8b10ea19cade6d54881b03286239c` 与 `62b6e4f32feb850ba4f8286a7cb9609202b88f6b` 触及本计划的 workflow/route/project-scope/session 只读接口，并新增 `to-tickets` 发布面与 `project-read-grants.mjs` / `project-read.mjs` 传递信任面；现有 R-001–R-017 尚未对这些 delta 作固定范围裁决。与此同时，`REVIEW-LEDGER.md` 的 canonical SHA 声明复算不一致，且输入 handoff bytes 未在仓库中持久化。按 §24.9–§24.10，R23 的历史 verdict 保留但不再构成当前 Gate P 入口；在增量审计明确这些变化只是 Gate M 可吸收的 baseline drift，或更新受影响的架构/锚点/U-block 并完成新 SHA 四类复签前，本计划保持 `CANDIDATE_UNDER_REVIEW`。是否把第七个工程交付能力和 read-grant 链纳入 controlled-change 保护范围属于架构范围裁决，本轮不代替用户或计划 owner 选择。
 
 ---
 
@@ -69,16 +71,25 @@ framework-audit/2026-08-30-controlled-change-full-capability/
 |---|---|---|
 | handoff，SHA-256 `51618e033c1ef5ec221a7a455fb743df07d103fde65c715d207f783cae8a221f` | 任务约束、16 域和审查合同已冻结 | 作为 R-001 主来源 |
 | 六 Skill MVP plan，SHA-256 `1db326ae078ddefe95f594b9c6f3ce2c68eae6b70bc25205645973843c76c0f9` | MVP 设计真值；不是全量 schema 结论 | 作为 v1 provenance 与迁移输入 |
-| 已发布 MVP commit `6aaa1c6511af6845042e9dc541524934ed57bfe9`；tree `c1f7b2f43a1c048852415475eb43be26c377d942` | `upstream/main` 已含 manifest/CAS、required/active、双端 guard、crash recovery、one-use Git effect与发布结果证据；不含可复用通用publisher | v1 是不可跳过的 installed baseline |
+| 已发布 MVP commit `6aaa1c6511af6845042e9dc541524934ed57bfe9`；tree `c1f7b2f43a1c048852415475eb43be26c377d942` | 历史 commit 含 manifest/CAS、required/active、双端 guard、crash recovery、one-use Git effect与发布结果证据；不含可复用通用 publisher | v1 是不可跳过的兼容/恢复 baseline，不是当前安全证明 |
 | 本地 `IMPLEMENTATION-RECEIPT.md` SHA-256 `d2969ad74c47977e29102db1d043d4f035ea1f290163ce9ad14ee8eed9ad5aea` | `state:PUBLISHED`；remote observed commit 与 published commit 一致；shared index/HEAD/local main 未变 | 发布后本地补充事实；不回写已发布 commit |
-| `npm run test:controlled-change --silent`（2026-09-01） | 11/11 PASS；含 exact patch/effect binding、bootstrap、crash、双 harness、required bypass | 继承已证明的 v1 controls，不重造 |
-| `npm run check:hooks --silent`、`verify-codex-wiring` 静态段（2026-09-01） | Claude 直接 hook；Codex 经已授信 project-scope entry 串联；接线断言通过 | v2 必须保持同一入口 trust bytes 或显式过新 Gate G |
-| `controlled-change.mjs inspect`（2026-09-01） | control root `inactive`；两组 terminal witness/receipt 可读，无 nonterminal operation | 当前可规划迁移；实现时必须重新 census |
-| `check:skill-integration-receipt`（2026-09-01） | FAIL：校验器只接受 `VERIFIED`，本地发布回执为 `PUBLISHED` | 已知 v1 evidence-schema drift；Gate M 前必须修正或版本化校验 |
-| 当前 checkout | `main` 相对 `upstream/main` ahead 1 / behind 2，且有其他 session dirty WIP；关键 MVP runtime bytes 与 upstream 相同 | 本 Session 不 pull；未来实现必须用干净隔离 checkout 或先人工裁决基线 |
+| `npm run test:controlled-change --silent`（2026-09-02） | 11/11 PASS；现有 suite 没有杀死 compound-Git 与 concurrent one-use 两个 mutant | 保留为回归输入，不得用“11/11”推导无 bypass |
+| `verify-codex-wiring --static`（2026-09-02） | static 19 PASS；live L1–L3 因 `--static` 未运行 | 静态接线成立；不得声称 fresh/live parity |
+| `controlled-change.mjs inspect`（2026-09-02） | control root `inactive`；两组 valid terminal，无 nonterminal operation | 仅作规划 snapshot；实现时必须重新 census |
+| `check:skill-integration-receipt`（2026-09-02） | PASS；但 `PUBLISHED` admission 只检查 40-hex 形状、remote==commit、固定 URL/ref 与 pre==post tuple | 旧 FAIL 已消失，新 gap 是结果欠绑；需证明 commit 存在、single parent/baseline 与 exact path-set |
+| `candidate-manifest --verify-at 6aaa1c6`（2026-09-02） | 发布 commit 内 81-row 历史 manifest 可复算；当前 live 有 8/81 drift | 历史 lineage 只从发布 commit blob 核验，不把 live drift 伪装成发布失败 |
+| 近期提交审计 `72bd1f2..0f8cf14` | Standards/Spec 两轴均 FAIL：Critical compound-Git bypass；non-linear one-use；Git read probe 可触发 repo-local `core.fsmonitor`；PUBLISHED 结果欠绑；E2 提示被当成 dispatch、二次事件覆盖原任务文本；E1 alias 依赖未 tracked 下游身份 | 所有问题进 Foundation containment / Gate M；不在本 Session 修 runtime |
+| 增量提交审计 `0f8cf14..83468c1` | Standards/Spec 两轴均 FAIL：proposal scanner 被不存在的个人记忆目录错误门控；裸 `KILL` 子串误报 `SKILL.md`；新增行为零持久化回归；30 日展示常量重复 | 无 controlled-change 文件/状态变化；由 memory/governance owner 另行修复，本计划不依赖该 scanner、不扩写 U-block |
+| 增量提交审计 `83468c1..91ba95a` | Standards `FAIL 1/6`、Spec `FAIL 5/7`：新STOP soft candidate缺`tokens`而生产renderer调用`.join()`导致hook exit 1；`请问/麻烦/帮我`绕过meta抑制；code-recon两条workflow链未证明下游input合同；133-corpus/adversarial证据环境与scorer未冻结 | route/graph原owner另修；Gate M必须重做production-shape与workflow-interface census；U-006只消费attested E3/current request，所有route verdict/hint均非authority且四个anchor保持只读 |
+| 增量提交审计 `91ba95a..a98d97a` | Standards `FAIL 4/6`、Spec `FAIL 5/7`：第7个hook补录与7 hooks/6 agents/11 npm/4 truth files/model mirror均复算正确；但局部复核重置全局唯一`updated`，使明确未复核的already-have/gaps/sources过期提醒被压35天；`check:self-model`只比live/generated、不比较人工hooks清单，不能防同类漂移复发 | 只影响治理inventory/fusion-preflight范围，不改controlled-change runtime/state/authority；由evolution owner修复freshness与manual↔generated guard，本计划不依赖其freshness或PASS |
+| 增量提交审计 `a98d97a..516bf6b` | Standards `FAIL 1/6`、Spec `FAIL 1/7`：`PRD是啥`仅dry-run STOP，production因`{skill,why}`对`tokens.join()`仍exit 1；`readme.docx.bak`仍误命中docx，而新增“.docx”fixture实际只含pdf、杀不死mutant；礼貌/否定meta与`然后cleanup`仍不闭合 | route owner继续修复；206/206与commit message不得解除Gate M，U-006只隔离消费且不改route/graph anchors |
+| 增量提交审计 `a98d97a..893d476` + merge `2059ee4` | Standards `FAIL 2/6`、Spec `FAIL 2/7`：10 promoted+1 rejected及health/谱系结构成立；但人工授权仅由agent reviewer字符串自报，promoted记录把候选reviewer`luca`呈现为最终reviewer；证据有过期/失配，5条无关retrieval telemetry改变统计，revert也不能恢复被gitignore的hot candidates | 两条controlled-change原则只作佐证；promoted memory/reviewer/mattered记录一律非approval/effect authority，memory owner另行取得直接人签与角色闭合，本计划不接管或回滚该commit |
+| docs-only 报告审计 `2059ee4..c98f3b9` | Standards `FAIL 1/6`、Spec `FAIL 1/7`：报告宣称route与memory问题已闭合，但production renderer、`.docx.bak`、`然后 cleanup`、礼貌meta与人门归因仍失败/UNKNOWN | 该commit只改另一审查目录的`REPORT.md`，不改controlled-change或其消费接口；报告为non-authority，不触发目标架构重做 |
+| `bash scripts/verify.sh`（2026-09-02） | PASS=86, FAIL=0, WARN=1，耗时约 112s | 仅余约 8s/120s agent 预算；U-012 必须先建验证预算门，不能继续串行堆 suite |
+| 规划证据冻结策略 | 事实绑定 R-001–R-017 的不可变commit/diff/eval与最终plan SHA；live HEAD/dirty状态只作时间点观测，不是plan签名输入 | 仅当相关接口的新delta推翻已写架构事实时修plan；无关commit/报告/WIP不再导致重签。未来实现仍须在Gate M选择clean isolated baseline并冻结exact preimage |
 | project transaction primitives | 已有 proposal/epoch CAS、mkdir lease、O_EXCL、fsync、no-age-steal、恢复测试 | 复用算法，不混同为 controlled-change 状态真值 |
 | observability writer / eval recorder | 已有 journal/flock/idempotent audit 的局部实现 | 提取模式，不侵入其现有 owner transaction |
-| linked worktree 事实 | 9 个 worktree 共享 object/ref/config，index/worktree bytes 各自独立 | ref/remote claim 必须 common-dir 级；文件 claim 含 worktree identity |
+| linked worktree 事实 | 11 个 worktree 共享 object/ref/config，index/worktree bytes 各自独立 | ref/remote claim 必须 common-dir 级；文件 claim 含 worktree identity |
 | 旧重型方案 | controller、authority、lease、publisher、journal 候选较完整 | 每项重新裁决，不整包恢复 |
 
 外部研究在本轮不启动：核心问题是本仓 harness、Git topology、既有 primitive 与信任边界，最可靠 primary source 已在本地；引入通用业界框架不会替代对当前协议和失败面的实证。若 implementation 阶段遇到 Git/hook 未决语义，只允许针对官方文档或源码单点补证。
@@ -99,8 +110,17 @@ framework-audit/2026-08-30-controlled-change-full-capability/
 | R-008 | codebase-design 三路独立推演 | deep kernel、窄接口、静态 adapter、Standard 目标与删除测试收敛 |
 | R-009 | redteam / careful 约束 | safety 默认 REFUTED；危险 effect 必须人门、预像、恢复与最小授权 |
 | R-010 | Skill-first / Graph-optional 宪法 | controlled-change 不得成为 workflow truth 或强迫只读/普通下游工作进入流程 |
+| R-011 | 2026-09-02 近期提交固定范围审计 `72bd1f2..0f8cf14` | Standards eval `recent-commits-standards-20260902-72bd1f2-0f8cf14`；Spec eval `recent-commits-spec-20260902-72bd1f2-0f8cf14`；两轴 FAIL 及 scratch mutant/reproduction 必须进入 Foundation/Gate M/U-block 验收 |
+| R-012 | 2026-09-02 增量提交审计 `0f8cf14..83468c1` | Standards eval `recent-commit-standards-20260902-83468c1`；Spec eval `recent-commit-spec-20260902-83468c1`；两轴 FAIL，但 diff 不触及 controlled-change runtime/state，故只更新现场基线并明确 scanner 为非 authority/非依赖 |
+| R-013 | 2026-09-02 增量提交审计 `83468c1..91ba95a` | Standards eval `recent-commit-standards-20260902-91ba95a`；Spec eval `recent-commit-spec-20260902-91ba95a`；两轴 FAIL；route/graph anchors已变且存在production crash/误派/输入合同/证据复算缺口，U-006只加消费端隔离与外部修复门，不接管原owner修复 |
+| R-014 | 2026-09-02 增量提交审计 `91ba95a..a98d97a` | Standards eval `recent-commit-standards-20260902-a98d97a`；Spec eval `recent-commit-spec-20260902-a98d97a`；两轴 FAIL；self-model正确补录guard但全局freshness与manual-inventory回归欠绑，只作non-authority checkout/governance evidence，不成为implementation dependency |
+| R-015 | 2026-09-02 增量提交审计 `a98d97a..516bf6b` | Standards eval `recent-commit-standards-20260902-516bf6b`；Spec eval `recent-commit-spec-20260902-516bf6b`；两轴 FAIL；三项route修复仅compound case成立，production renderer/礼貌meta/.docx mutant仍失败，不能解除R-013 quarantine或成为dispatch/authority证据 |
+| R-016 | 2026-09-02 增量提交审计 `a98d97a..893d476` 及 merge `2059ee4` | Standards eval `recent-commit-standards-20260902-893d476`；Spec eval `recent-commit-spec-20260902-893d476`；两轴 FAIL；memory谱系结构PASS但人门真实性UNKNOWN、角色归因混淆且稳定事实立即被消费，只能佐证“caller/memory自报非authority”；merge无额外冲突delta，不成为implementation dependency |
+| R-017 | 2026-09-02 docs-only 报告审计 `2059ee4..c98f3b9` | Standards eval `recent-commit-standards-20260902-c98f3b9`；Spec eval `recent-commit-spec-20260902-c98f3b9`；两轴均 FAIL；commit只改`framework-audit/2026-09-02-skill-responsibility-audit/REPORT.md`且过度宣称修复，不是runtime、dispatch、approval或completion authority |
 
 所有后续 U-block 的 `Source` 只能引用本表，不得由 implementation agent 自行扩权。若 source 与现场代码冲突，U-block 必须返回 `NEEDS_CONTEXT`。
+
+R-014–R-017不要求 controlled-change 接管 evolution、route、memory 或审查报告 owner 的修复，也不扩大任何 U-block Files；它们只冻结“这些材料不得作为freshness/dispatch/approval/authority证明”的接口约束。后续修复只有在改变controlled-change消费者合同或受保护表面时，才由未来Session做相关路径增量审计；无关HEAD前进不再使本计划失效。
 
 ---
 
@@ -120,7 +140,21 @@ controlled-change v2/Standard 只有在以下命题为真时才值得进入实�
 
 ### 3.2 更小替代
 
-更小替代是：**不建设 v2**，只保留现有 v1，并把 `PUBLISHED` receipt/validator 漂移修到自洽；后续每个高风险 Skill 继续显式复用 v1 manifest/controller。若 20 次真实操作没有出现跨任务恢复、并发或多 adapter 需求，这就是正确停止点。只有出现本节 premise 的真实证据，才进入 Standard；“已有计划”本身不是扩建理由。
+更小替代是：**不建设 v2**，只做 Foundation containment：禁止/修复 v1 compound-Git effect 授权，使 one-use 消费线性化，将发布 receipt 与 historical attestation 绑定到真实 commit/parent/path-set，然后保留 v1 只做单操作 repo 变更与 legacy recovery。若 containment 后 20 次真实操作没有出现跨任务恢复、并发或多 adapter 需求，这就是正确停止点。只有出现本节 premise 的真实证据，才进入 Standard；“已有计划”本身不是扩建理由。
+
+这不是文档性建议，而是 **Gate N — Standard Capability Need Evidence**。U-001 完成最小 Foundation containment 并真实运行至少 20 次 repo-only operation 后，Gate N 必须输出一份可复算的 capability vector；门前除 U-001 exact Foundation subset、其 RED fixtures 与只读 evidence 外，**不得生成任何 v2 schema、policy、compat reader、journal、launcher、effect host、adapter 或 v2 test bytes，即使只放在 scratch 也不允许**：
+
+- `N0 CORE=ENTER_STANDARD`：至少命中以下一项且更小 skill-local 修复不足——两次可证明 disjoint 的工作被 repo-global single-flight 阻断；一次真实 operation 需要多 effect/reconcile；或一次 crash/recovery 无法由 v1 给出唯一下一动作。否则 `CORE=STOP_AT_CONTAINED_FOUNDATION`。
+- `N-C CONCURRENCY=BUILD`：只在至少两次可证明 disjoint 的真实工作被 single-flight 阻断时成立；否则 `SKIP_DARK`，U-005 不产生 source bytes。
+- `N-D DAG=BUILD`：只在至少一次真实 operation 需要两个以上有序 effect/recovery node 时成立；`N-E` 或 `N-G` 为 BUILD 时自动蕴含 `N-D=BUILD`，除此之外不得反向传播。
+- `N-E EXTERNAL=BUILD`：只在真实 operation 需要 exact external/personal file effect，且现有 task-specific owner 无法以更小修复安全完成时成立；否则 `SKIP_DARK`，U-008 两个文件均不存在。
+- `N-G GIT=BUILD`：只在至少两个不同任务需要相同 publication primitive，或一次真实 publication 出现 response-loss/parent/lease 无法唯一 reconcile、且 task-local publisher 不足时成立；否则 `SKIP_DARK`，U-009 adapter/test 不产生 bytes。
+
+Gate N 的证据面包括 20 次 contained-Foundation operation，以及被 Foundation 明确拒绝或仍由既有 task-local owner 处理的 adjacent request；只记录脱敏 tuple，不为“收集证据”执行 external/Git effect。任何 `N-C/N-D/N-E/N-G=BUILD` 都蕴含 `N0=ENTER_STANDARD`，但 `N0` 不会反向解锁未证明的 capability。所有样本同时要求 median 额外交互 ≤1、运行时间增幅 ≤30%、零 confirmed bypass。若 `N0=STOP_AT_CONTAINED_FOUNDATION`，保留 U-001 修复和 legacy recovery，U-002–U-013 全部不启动；样本不足为 `NEEDS_EVIDENCE`。若 `N0=ENTER_STANDARD` 而子能力为 `SKIP_DARK`，只执行 base U-block；该项只记录为 `gate_disposition=SKIP_DARK`，对应 U-block 根本不实例化、不产生 completion status、不计 PASS、也不进入下游 wait set，不能用 deny stub 或“以后可能需要”偷建代码。
+
+Capability source isolation 是机械合同，不靠命名约定：N-C 只拥有 `resource-claims.mjs`、`concurrency-scheduler.mjs`、`claim-cases.json`、`test-controlled-change-claims.mjs`；N-D 只拥有 `effect-dag.mjs`、`effect-dag-cases.json`、`test-controlled-change-effect-dag.mjs`；N-E 只拥有 `external-files.mjs` 与其 test；N-G 只拥有 `git-publisher.mjs` 与其 test。四者不得修改 base `kernel/state-store/effect-host/policy/git-object-reader/capsule-composer`。Gate F 冻结 base digest 与这些独占路径的 absence map；U-010 是唯一 composition owner，且只生成 operational capsule profile，不接管这些 source owner。
+
+**默认形态偏差**：本案把 `Standard` 写成推荐目标，会把裁决的秤压向“建设通用 transaction kernel”，从而系统性低估只停在 Foundation/no-v2 的价值。相反默认由 architecture reviewer 以“Foundation 已足够、Standard 不应建设”复核，safety reviewer 继续从 `REFUTED` 起步；Gate N 若拿不出逐能力真实证据，反方自动胜出并停止扩建。
 
 ### 3.3 Kill assumptions 与停止线
 
@@ -134,6 +168,10 @@ controlled-change v2/Standard 只有在以下命题为真时才值得进入实�
 | K-05 | Git remote readback 能判定 push 结果 | fixture 无法可靠区分 old/new/diverged/unreadable | publisher 保持 `EFFECT_UNKNOWN`，禁止自动 retry/rollback |
 | K-06 | static adapter 表足够 | 两个以上真实 effect 因接口刚性需 fork kernel | 重审 adapter seam；仍不得直接上 dynamic plugin bus |
 | K-07 | 审计可最小化敏感信息 | receipt 必须保存 secret/token/完整敏感文件才能恢复 | 拒绝该 adapter，重新设计 oracle/escrow 边界 |
+| K-08 | v1 能安全承载新 Git effect | compound command 或并发消费 mutant 任一未被唯一 selector 杀死 | 禁止所有新 v1 Git effect；U-001仅zero-Git/arbitrary-shell exact subset；后续迁移只准operation-bound public prepare/advance |
+| K-09 | 现有 `PUBLISHED` validator 足以证明发布 | 任意 40-hex OID/错 parent/错 path-set 仍 PASS | 只将 S44 当 shape check；历史结论必须从 published commit blobs 复算并绑定 receipt |
+| K-10 | route reminder 能代表真实批准/派发 | E2 仅观察 recommendedSkills/hint，或第二事件覆盖原任务 | obligation 文件永不进 authority chain；只接受 top-level request/gate 或 E3 attested event |
+| K-11 | 新验证可继续串行加入 120s 链路 | 重复全量运行 p95 > 102s（85%）或可用 headroom < 15s | 停止接线；先优化或做经 mutation 证明的安全分片，保留显式 full suite |
 
 High-assurance 的进入条件至少命中一项，且必须另起 plan：
 
@@ -206,6 +244,10 @@ receipt projection
 
 authority record 不是 secret、不是签名 capability，也不是全局 registry 条目。它只是 canonical journal 中由已批准 request 派生的 task-local projection；caller 不能提交任意 authority JSON、任意 shell 或动态 adapter 名来扩大权限。
 
+semantic memory、review log、`promoted-facts.yaml`、retrieval `mattered` 与其中的 reviewer 字符串都只能提供上下文/审计证据，不能证明当前用户批准。即使事实标为 stable，若其人门仅由 agent 自报“用户已授权”，也不得进入 authority chain；唯一可接受的批准仍是当前 top-level request/gate evidence 与其 exact digest。proposer、approver、promoter 三种角色若在上游展示中混淆，controlled-change 直接视为 `NON_AUTHORITY_EVIDENCE`，不尝试替 memory owner 猜测或修复。
+
+近期 E1/E2 route-obligation 文件只是**提示性证据**，既不是批准、也不是已派发的证明，不得进入上述 authority chain。`recommendedSkills`/PLAN_MODE hint 不等于 dispatch，二次 route event 不得覆盖第一事件绑定的 exact task text。如未来 E3 产生具有 event ID、task digest、actor/harness 和不可变 payload 的 attestation，controlled-change 只消费该上游接口，不在内部重新解析 transcript，也不依赖“相邻消息”启发式；E3-L0 已记录的 distance-2 counterexample 必须成为接口 fixture。Gate M 若发现 E3 或 route contract 在本 plan 冻结后改变，必须重做 interface census，不允许复制一套第二真值。
+
 ---
 
 ## 5. Read-only capability-gap map
@@ -217,39 +259,56 @@ authority record 不是 secret、不是签名 capability，也不是全局 regis
 | prepare concurrency | control-root inode 上 advisory `flock`，竞争 prepare 在写 witness 前被拒；不建 lease 文件 | repo-global single active；不能表达 disjoint operations；外部进程不遵守 | v2 resource claims + CAS |
 | Claude enforcement | `.claude/settings.json` 直接注册 guard；异常经 `hook-failure-decision` 查询 durable witness | v1 inactive 时不做 pre-entry admission；受保护面仍可能绕过 `prepare` | stable admission classifier + shared evaluator |
 | Codex enforcement | 已授信 project-scope hook 在 adapter 中串行调用 v1 guard；apply_patch/Bash 映射与异常路径有回归 | 依赖既有 trust entry bytes；新增注册需 fresh trust Gate G | 同一 stable entry 下版本化 launcher |
-| active authorization | structured target/preimage；Codex exact patch SHA；shell default deny；one-use effect 绑定 command SHA/cwd/gate/token | guard 只能服务唯一 active；多 operation 时无法安全选 owner；授权消费先记 `EFFECT_UNKNOWN` 但尚非通用 effect state | v2 exact controller operation/generation dispatch + effect host |
+| active authorization | structured target/preimage；Codex exact patch SHA；shell default deny；one-use effect 绑定 command SHA/cwd/gate/token | Critical：compound Bash只分类首个Git verb，可借stage授权执行push；one-use check-hash→rename非线性；guard只能服务唯一active | Foundation containment + v2 exact controller operation/generation dispatch + effect host |
 | pre-entry coverage | Plan Agent/Orchestrator 合同触发 + v1 `prepare` | ordinary inactive write本身不会自动建立 witness；“所有 runtime mutation mandatory”目前不是机械事实 | protected-surface admission；其余先 shadow/explicit |
 | repo file apply | manifest 支持 add/modify/delete/symlink tuple、pre/post check；scratch/repo disjoint | 没有统一 rename/mode/delta-denominator adapter；repo apply 与 effect 状态尚未同一 DAG | repo-files adapter |
 | crash recovery | prepare 与 terminal crash points、same generation resume、foreign active CAS 拒绝均有测试 | 仅 v1 state machine；无多 adapter partial/unknown 的唯一 next-action model | v1 reader + v2 kernel |
 | bootstrap | fresh bootstrap receipt 绑定 exact patch/manifest、postimage和双门输出；已真实安装 | 这是已完成的 v1 bootstrap，不能再执行“首次安装”；v2 必须 side-by-side dormant | migration/lifecycle |
 | isolated publication | 六Skill receipt/terminal history证明曾用私有 index、`commit-tree`、private ref、expected-old lease、literal URL 与 remote readback完成发布；`candidate-manifest.mjs`只读核验lineage | 通用publisher代码/外部journal不在当前tracked runtime；不能从terminal state重放；本地post-publication receipt使旧validator变红 | Git publisher adapter + evidence schema v2 |
 | external/personal | 六 Skill 已完成两处 exact personal cutover并有 restricted backup/receipt | 真实路径流程是 task-specific，不能在本规划读取/修改；尚无通用 default-deny adapter | external-files adapter |
-| evidence closure | v1 core 11/11、hooks、wiring、engineering-delivery tests PASS | final receipt validator 只接受 `VERIFIED`，不接受真实终态 `PUBLISHED`；同源状态枚举缺失 | versioned receipt schema + verifier |
+| evidence closure | v1 core 11/11、hooks/wiring静态、engineering-delivery tests PASS | validator现已接受 `PUBLISHED`，但伪40-hex OID/错parent/错path-set仍可PASS；stronger verifier误用live bytes；同源状态/lineage仍缺失 | published-commit historical verifier + versioned receipt schema |
 | common-dir topology | v1 已绑定 realpath/common-dir/HEAD；published flow 保持 shared index/HEAD/local main | v2 多 worktree 的 file/ref/remote resource identity 尚未形成统一 key | repo identity + claims |
 | network/API/GUI | 无通用 primitive | identity/idempotency/readback/compensation 不可泛化 | default-deny；未来具体 adapter另立 U-block |
 | self-upgrade | v1 guard/controller 是 live source bytes | active session/runtime upgrade、previous reader、旧 nonterminal compatibility 未闭合 | content-addressed v2 bundle + stable launcher |
 | audit/privacy | v1 receipt 不含 file bodies；effect auth/发布事实可追踪 | schema/retention/redaction、发布后 supplemental receipt、terminal verifier 漂移未统一 | receipt policy |
 | Plan/Orchestrator integration | 六 Skill 已有真实 v1 consumer 和角色接线 | 全量触发仍以合同纪律为主；protected-surface pre-entry 未机械覆盖 | orchestration + admission integration |
 
-结论：仓库已经有一套**可工作的 Foundation v1**，不是只有零散算法原语。全量方案的价值在于补齐它明确缺少的多操作归属、统一 effect lifecycle、版本迁移、预激活 admission 和证据同源；不是重写 v1。既有 project transaction、observability writer、eval recorder 继续拥有各自 operational data，controlled-change 只控制“修改这些 owner 实现”的变更。
+结论：仓库已经有一套**可运行但 effect 面必须先 containment 的 Foundation v1**，不是只有零散算法原语。全量方案的价值在于先关闭已知 bypass，再补齐多操作归属、统一 effect lifecycle、版本迁移、预激活 admission 和证据同源；不是重写 v1。既有 project transaction、observability writer、eval recorder 继续拥有各自 operational data，controlled-change 只控制“修改这些 owner 实现”的变更。
+
+### 5.1 2026-09-02 提交审计增量 gap
+
+| Finding | 独立证据 | 本方案裁决 |
+|---|---|---|
+| v1 复合 Git effect bypass | scratch fixture 对 `git add target.txt && git push ...` 仅绑定 `git-stage` 即 PASS | Critical；Gate M0 起禁止新 v1 Git effect；U-001先以zero-Git/arbitrary-shell exact subset完成containment；Gate N后U-003只经public prepare/advance迁移 |
+| v1 one-use 非线性化 | `atomicWriteJson` 是 check-hash 后无锁 rename，并发消费可重用 token/丢更新 | Standard 不继承该 store；U-002 使用 lock/O_EXCL sequence + previous-event hash，Foundation mutant 未杀死前 effect dark |
+| read-only Git probe 可执行 repo-local program | scratch repo 的 `core.fsmonitor` 在 NOT_APPLICABLE inspect 前已执行 | 不把现有 conflict helper 当 trusted oracle；Gate M/U-009 使用中和 program surfaces 的 plumbing 和恶意 config matrix |
+| `PUBLISHED` 校验欠绑 | 伪造全 `a` commit/全 `b` parent 仍通过 final validator | S44 只是 shape check；U-001 建 historical verifier，从 published commit blob 绑定 OID、single parent/baseline、plan SHA 和 path-set |
+| E2 reminder 被误当 dispatch；task text 被二次事件覆盖 | route-guard 将 recommendedSkills 视为 SATISFIED；SIGNAL_A/B test 没守 first payload | U-006 只读消费 E3 attestation（若存在），永不使用 obligation 文件作 authority；route 本体修复属独立 owner |
+| E1 alias 身份不可携带 | delivery report 确认依赖未 tracked 下游 `.luca/project.json` | Gate M 不从 alias 推导 authority；需 exact tracked/attested identity，否则 `NEEDS_CONTEXT` |
+| route STOP production shape 崩溃 | `91ba95a` 新分支产 `{skill,why}`，renderer仍执行`c.tokens.join()`；dry-run 203/203未覆盖真实输出，独立审查复现exit 1 | Gate M将production renderer/adapter schema视为外部前置；未由route owner修复并加non-dry-run回归前，U-006不得开始；controlled-change不改route文件 |
+| meta-question仍可高置信误派 | `请问/麻烦/帮我`触发宽泛request-marker豁免；纯文件位置/翻译问题仍SINGLE skill | 所有STOP/SINGLE/MULTI/FRAMEWORK_FLOW/soft candidate仅作不可信hint；U-006绑定top-level request或attested E3，不从route verdict推导approval/dispatch |
+| code-recon workflow链未证明可执行 | scene B新增两条path，但architecture_brief未进入ux-brainstorm workflow输入，tech-spec workflow仍要求PRD+design-brief | graph保持Graph-optional且为只读anchor；U-006不新增/修补node/path，Gate M要求原owner给出下游input-contract proof，否则这些推荐不进入受控调度 |
+| routing evidence不可精确复算 | corpus probe继承未冻结env造成committed final两行漂移，98→106无持久化scorer | 不把报告分数当Gate evidence；U-012 evidence manifest必须冻结argv/env/input/output/scorer SHA，fresh结果不能由静态artifact自证 |
+
+因此，上文“可工作”只表示 v1 有已发布的运行形态与可读 legacy evidence，**不表示已经安全到可继续发放 effect authority**。
 
 ---
 
 ## 6. 三种架构档位比较与目标选择
 
-| 维度 | Foundation / v1（已安装） | Standard / v2（推荐演进目标） | High-assurance |
+| 维度 | Foundation / v1（已安装，待 containment） | Standard / v2（推荐演进目标） | High-assurance |
 |---|---|---|---|
-| 主要目标 | 防误改、stale overwrite、无 receipt | 完整 cooperative transaction、恢复、effect adapter、双 harness 平价 | 对抗恶意/被攻破组件、多用户隔离 |
+| 主要目标 | 先关闭已知 effect bypass/欠绑证据，再保留精确 repo 变更与 legacy recovery | 完整 cooperative transaction、恢复、effect adapter、双 harness 平价 | 对抗恶意/被攻破组件、多用户隔离 |
 | 核心机制 | manifest、required/active、scratch bundle、preimage CAS、receipt | Foundation + durable journal/generation、resource claims、static effect host、self-upgrade、reconcile | daemon/broker、签名 capability、进程/OS sandbox、远端 attestation |
 | concurrency | 每 Git common-dir 仅一个 nonterminal；prepare flock + tuple CAS | 每 operation 一份 immutable manifest；排序 resource claim + CAS；仅 disjoint action 并行 | 系统服务仲裁、强隔离 |
-| effects | harness 直接写 repo bytes；one-use Git command authorization；task-specific personal/publish | kernel 统一调度 repo/external/Git adapter；其他默认拒绝 | 经签名/隔离 broker 的多方 effect |
+| effects | harness 直接写 exact repo bytes；已有 one-use Git 授权暂停新发；task-specific personal/publish 只作历史证据 | kernel 统一调度 repo/external/Git adapter；其他默认拒绝 | 经签名/隔离 broker 的多方 effect |
 | trust | trusted main/kernel/hook | 同左，边界明确 | 缩小 TCB，main/worker 也可能不可信 |
 | UX 成本 | 低 | 低风险走 Foundation，风险升级 Standard | 高，常驻服务/凭证/部署/故障面大 |
 | 运维成本 | 低中 | 中等，可由仓库维护 | 高，需服务生命周期和跨平台运维 |
-| 适配当前证据 | 已真实发布且 11 项 core 回归通过；终态 verifier 漂移待修 | 只在 v1 迁移、pre-entry、并发、effect unknown 证据达标后进入 | 目前缺真实攻击证据/多用户需求 |
+| 适配当前证据 | 已真实发布且原 11 项 core 回归通过；新审计证明 compound-Git、linearizability、publication binding 未闭合 | 只在 Foundation containment、v1 迁移、pre-entry、并发、effect unknown 证据达标后进入 | 目前缺真实攻击证据/多用户需求 |
 | 停止线 | 无法可靠恢复多 effect 时停止 | 满足当前目标后停止；不默认平台化 | 仅 Gate H 新计划可进入 |
 
-选择 Standard 的理由不是“功能最多”，而是它覆盖 v1 已明确暴露的边界：repo-global single-flight、直接 writer、descriptive policy、非冻结 `EFFECT_UNKNOWN`、task-specific publication 与无版本迁移。它仍是**有条件目标**：Gate M 或 Foundation shadow 证伪需求时，正确结论是停在修正后的 v1。High-assurance 的复杂度没有当前证据支持。
+选择 Standard 的理由不是“功能最多”，而是它覆盖 v1 已明确暴露的边界：Git effect 类型混淆、one-use 非线性化、repo-global single-flight、直接 writer、descriptive policy、非冻结 `EFFECT_UNKNOWN`、task-specific publication 与无版本迁移。它仍是**有条件目标**：Gate M0/M 或 Foundation shadow 证伪需求时，正确结论是停在 containment 后的 v1。High-assurance 的复杂度没有当前证据支持。
 
 ### 6.1 旧重型机制逐项裁决
 
@@ -286,7 +345,7 @@ trusted top-level main ─ real approval binding ────────┐ │
 └───────────────┬──────────────────────────────────────────────┘
                 ▼
 ┌──────────────── controlled-change v2 CLI ───────────────────┐
-│ prepare(request,approval) │ advance(op,generation) │ status  │
+│ prepare(request,[approval]) │ advance(op,generation,[approval]) │ status │
 └───────────────┬──────────────────────────────────────────────┘
                 ▼
 ┌──────────── transaction kernel / policy compiler ──────────┐
@@ -299,9 +358,10 @@ trusted top-level main ─ real approval binding ────────┐ │
         └────────────┴───────┬──────┘
                              ▼
                   candidate pipeline / effect host
-scratch worker ─────► ├─ repo-files adapter
- candidate bundle     ├─ external-files adapter
-                      └─ git-publisher adapter
+scratch worker ─────► ├─ repo-files adapter (base)
+ candidate bundle     ├─ concurrency / effect-DAG module [Gate N BUILD only]
+                      ├─ external-files adapter [N-E BUILD only]
+                      └─ git-publisher adapter [N-G BUILD only]
                              │
                              ▼
                   readback → durable receipt
@@ -325,10 +385,11 @@ Codex trusted-entry ──┴─ consume same admission policy + version launche
 | transaction kernel | 根据 journal 计算唯一 legal next action | internal `next/applyTransition` | 若 adapter 能绕过它推进状态，设计失败 |
 | state store | journal、generation、attempt、projection、receipt durability | append/CAS/read projection | 若 authority/receipt 可独立改写，设计失败 |
 | resource claims | 短时、多资源有序 claim/no-age-steal | acquire/release/inspect | 删除仅降低并发体验，不得破坏 CAS 正确性 |
-| lifecycle | exact bootstrap、runtime capsule、active pointer、rollback | bootstrap/install/activate | 可独立替换版本，不把 effect policy 放进来 |
+| lifecycle | exact bootstrap、runtime capsule、active pointer、rollback | internal stageCapsule/verifyCapsule/activateCAS；仅由kernel的public advance调用 | 可独立替换版本，不把 effect policy 放进来；无独立activate CLI |
+| capsule composer | 将Gate N vector与exact module SHA编译成带literal imports的immutable runtime entry | pure compose/verifyProfile | 删除后可回base repo-only capsule；运行时不得靠目录扫描或dynamic import补回 |
 | candidate pipeline | scratch bundle census、pre/post/reverse，自己不写 live | build/inspect | worker 无 live 写权；repo adapter 不解析 prompt |
 | enforcement gateway | 适配 Claude/Codex hook 协议 | `decide(tool,input,projection)` | 删除某 adapter 不改变核心语义；该 harness 失去 mandatory 能力 |
-| effect host | 静态选择包括 repo-files 在内的 adapter、按 DAG 调度、unknown 冻结 | prepare/apply/readback/compensate | 删除任一 adapter 不影响其他 adapter/kernel |
+| effect host | 接收capsule composer生成的封闭registry/scheduler；base只含repo-files | prepare/apply/readback/compensate | 删除任一可选模块不影响base adapter/kernel |
 | repo-files adapter | path/mode/blob/symlink/rename 精确变更 | adapter contract | 不含 Git publish/personal policy |
 | external-files adapter | 绝对路径 same-dir durable transaction | adapter contract | 不存在时 personal/external 默认拒绝 |
 | Git publisher adapter | isolated index/commit/private ref/remote CAS | adapter contract | 不存在时 local repo change 仍完整可用 |
@@ -341,7 +402,7 @@ Codex trusted-entry ──┴─ consume same admission policy + version launche
 - v1 witness/receipt 是 immutable legacy evidence，不导入 v2 journal、不重算 terminal manifest、不复用 gate/token；v2 只保存 legacy path + raw SHA 的 derived index；
 - Git publisher 不进入 kernel；kernel 只理解 effect lifecycle 与 typed outcome；
 - repo-files 与 Git/external 一样只通过 effect host；不得再建“先硬编码 repo apply、再进入 effects”的第二 mutation owner；
-- adapter 表编译期封闭、版本化、显式 allowlist；未知 adapter 永远 `POLICY_DENIED`；
+- adapter/scheduler 表由 capsule composer 在bundle构建期封闭、版本化并写 literal import + module SHA；runtime 不扫描目录、不按文件存在性发现、不 dynamic import。未知或未选 adapter 永远 `POLICY_DENIED`；
 - recovery 不是“任意选择一个状态”，而是 `advance` 根据 state/readback 计算的受限动作。
 
 ---
@@ -351,7 +412,7 @@ Codex trusted-entry ──┴─ consume same admission policy + version launche
 ### 8.1 三个公开入口
 
 ```text
-controlled-change prepare --request <request.json> --approval-evidence <evidence.json>
+controlled-change prepare --request <request.json> [--approval-evidence <evidence.json>]
 controlled-change advance --operation <id> --expected-generation <n> [--approval-evidence <evidence.json>]
 controlled-change status --operation <id> [--json]
 ```
@@ -359,16 +420,16 @@ controlled-change status --operation <id> [--json]
 `prepare`：
 
 - strict schema 验证、repo common-dir/worktree identity、canonical path、preimage、effect DAG、风险档和 gate；
-- 验证由 trusted top-level main 绑定的 request/plan/U-block/session-turn approval evidence，生成 immutable manifest digest 与人类可读 approval payload；
+- 若携带 approval evidence，验证 trusted top-level main 绑定的 request/plan/U-block/session-turn 并直接进入已批准 projection；若不携带，只写 PREPARED journal 并返回 immutable manifest digest + 人类可读 approval payload，后续由 `advance --approval-evidence` 绑定；
 - 可在 Git common-dir 的 operational state root 写 PREPARED journal，但绝不写 live target；
 - 不接受自由 shell、glob 扩权或 caller 自带 authority。
 
 `advance`：
 
-- **唯一 mutating public entry**；
+- **唯一推进 live/effect 的 public entry**；`prepare` 虽可写 PREPARED journal，但不得获取 target claim 或产生 effect；
 - caller 只能给 operation ID、expected generation，以及**仅当当前 next action 需要新 human gate 时**的 approval evidence；kernel 自行计算唯一 next action；
 - apply 前重验 approval/digest/expiry/preimage、获取短 claim、写 durable intent；
-- recovery 使用同一入口：fresh approval 允许后，kernel 只能执行 `resume`、`abort-owned` 或 `reconcile-readonly` 中唯一合法动作。
+- recovery 使用同一入口，但任一 durable snapshot 只映射一个机械动作，不返回动作集合：仅当approval current时，`REQUIRED`已durable但active缺失才允许重建同digest active，partial repo apply在“已写资源全为owned postimage且其余资源全为old preimage”时才允许roll-forward，Git-local postimage才允许补receipt；上述任一snapshot的approval过期都只进入`AWAIT_GATE_X`。external/remote unknown只允许`reconcile-readonly`。`abort-owned`/reverse绝不与resume共享同一generation：只有确定性resume不成立且kernel先durable写入绑定snapshot/generation/resource digest的`RECOVERY_REQUIRED(selector=AWAIT_GATE_X)`后，top-level用户才可在Gate X用fresh approval选择exact recovery mode；`advance`先追加`RECOVERY_CHOICE`并递增generation，后续snapshot才唯一执行所选动作。旧generation、同一snapshot同时接受resume/abort/reverse、worker自选mode全部拒绝。
 
 `status`：
 
@@ -376,6 +437,15 @@ controlled-change status --operation <id> [--json]
 - 默认脱敏，不展示 file body、token、credential、完整 remote URL query/userinfo。
 
 `approval-evidence` 是 journal 中的审计绑定，不是 secret capability。它至少绑定 plan SHA、U-ID、request digest、manifest digest、gate ID、harness/session/turn identity（若 harness 可提供）与明确裁决；不得保存整段对话。Standard 的威胁模型信任 top-level main，不声称防恶意 main 伪造批准。worker 不得调用这三个入口的机械依据是其 sandbox writable roots 不包含 live repo、Git common-dir 与 external target；某 harness 无法证明该隔离时，不得把 controller 委托给 worker。
+
+#### 私有兼容 ABI（不是第四个公开入口）
+
+未改动的 Claude/Codex wrapper 已依赖 `scripts/controlled-change.mjs hook-failure-decision`，因此 migration 必须冻结该 private ABI：
+
+- 同时支持 `hook-failure-decision` 与 `hook-failure-decision --repo <realpath>` 两种形式；其他未知参数 exit 2；
+- stdout 永远为空；仅在 strict inactive（v1/v2 都无 required/invalid/nonterminal）时 exit 0；
+- required、invalid、nonterminal、launcher/projection 不可读时 exit 2，stderr 保持有界、脱敏、可诊断；
+- fixture 必须覆盖两种 wrapper 形式与 raw v1/v2 state。Codex adapter 在 Node 启动前已发生的 syntax-byte corruption 仍是 TCB/fail-open 边界，除非 Gate G 显式改动 trusted wrapper bytes。
 
 ### 8.2 Typed errors 与六值完成状态映射
 
@@ -394,6 +464,8 @@ controlled-change status --operation <id> [--json]
 | 无错误、断言全过 | `DONE` 或有 WARNING 时 `DONE_WITH_CONCERNS` | 对应 U-block 完成 |
 
 不得自造新的 Plan completion status。`IN_PROGRESS` 和 `PLANNED` 只由 Orchestrator 生命周期管理。
+
+Gate N 的 capability disposition 与完成状态正交：`BUILD | SKIP_DARK` 只存在于带 SHA 的 Gate N vector，不写入 kernel/Plan 的 completion enum。Orchestrator 在任何 U-block 实例化前用同一 canonical vector digest裁剪 DAG：`BUILD` 才创建该 U-ID 的 lifecycle record，`SKIP_DARK` 没有 U-block instance、没有 `Status`、不计 PASS/FAIL、也不进入 dependency wait set。Claude direct path 与 Codex trusted-entry path都只消费 U-002 contract compiler输出的 canonical projection/digest，不各自解析文本；vector 不可读、digest不同或条件依赖无法投影时统一 `NEEDS_CONTEXT`，不得把 skip 降级成成功。
 
 ### 8.3 自动触发规则
 
@@ -440,6 +512,8 @@ admission 同时检查 lexical destination 与 existing-parent/symlink-resolved 
 - framework-evolution 的只读发现阶段。
 
 controlled-change 的触发是由**可执行 policy + static admission classifier**共同给出的可测试结果；v1 当前 YAML 只是 descriptive，v2 Gate F 必须证明 runtime 实际加载冻结 policy digest。不改 optional workflow graph，不成为 workflow state truth。
+
+route-guard 的 E1/E2 obligation state 不参与此触发的权限裁决：`recommendedSkills` 或 PLAN_MODE hint 只能作 observability reminder，不能证明已 dispatch、已 prepare 或已 approval。Gate M 必须重新 census 当时的 E3 产物：若 E3 已提供冻结的 attested event interface，U-006 仅通过该接口适配；若仍未提供，就继续绑定当前 top-level request digest。两种情况都禁止 controlled-change 重新解析 transcript 或把 `.session-obligation-*` 当 authority。
 
 ### 8.4 角色与权限
 
@@ -542,14 +616,16 @@ PREPARED
 每个 effect node：
 PENDING → PREPARED → INTENT_DURABLE → APPLYING
   ├─ readback confirms owned postimage → CONFIRMED
-  ├─ readback proves old/preimage       → RECOVERY_REQUIRED（可 fresh-approved 新 attempt）
-  ├─ readback proves foreign/diverged   → RECOVERY_REQUIRED / NEEDS_CONTEXT
+  ├─ readback proves old/preimage AND approval current AND semantics/ownership exact → RECOVERY_REQUIRED(selector=RESUME_EXACT)
+  ├─ approval expired OR readback foreign/diverged OR semantics/ownership ambiguous → RECOVERY_REQUIRED(selector=AWAIT_GATE_X) / NEEDS_CONTEXT
   └─ readback cannot decide             → EFFECT_UNKNOWN（冻结本节点与全部后继）
 
-任何非终态 crash/不一致/expiry → RECOVERY_REQUIRED
-在没有不可逆/unknown effect 且所有 postimage 仍归本 operation 所有时：
-RECOVERY_REQUIRED → ABORTING → ABORTED
-否则：RECOVERY_REQUIRED → read-only reconcile / fresh approved resume
+selector优先级是机械且互斥的：readback不可判定先进入`EFFECT_UNKNOWN`；否则任一approval过期/foreign/语义或ownership不唯一都选`AWAIT_GATE_X`；只有余下的current-approval + exact old/owned snapshot才选`RESUME_EXACT`。`RECONCILE_READONLY`是`EFFECT_UNKNOWN`的唯一动作，不是recovery selector。
+任何非终态 crash/不一致/expiry（已进入`EFFECT_UNKNOWN`者除外）→ kernel按snapshot digest写入恰好一个selector：`RESUME_EXACT | AWAIT_GATE_X`。
+RECOVERY_REQUIRED(selector=RESUME_EXACT) → 只允许同generation exact resume
+RECOVERY_REQUIRED(selector=AWAIT_GATE_X) → 只等待Gate X；不得resume/abort/reverse
+Gate X fresh approval → durable `RECOVERY_CHOICE(snapshot_digest, mode, owned_set, approval_hash)`并递增generation
+RECOVERY_CHOICE(mode=ABORT_OWNED) → ABORTING → ABORTED；mode=RESUME_EXACT → 只恢复绑定的exact action
 ```
 
 终态只有 `COMPLETED` 与 `ABORTED`。`EFFECT_UNKNOWN` 不是失败终态，而是冻结状态；它只允许 observe/reconcile，不允许 retry、补偿或清 active。v1 receipt 中既有的 `EFFECT_UNKNOWN → APPLIED → VERIFIED → COMPLETED` 只是历史 v1 语义，v2 不得把它重解释成符合本不变量。
@@ -572,19 +648,24 @@ RECOVERY_REQUIRED → ABORTING → ABORTED
 
 ### 10.3 Crash point matrix
 
+下表先应用 §10.1 的selector优先级：任何approval过期/foreign/语义或ownership不唯一都不匹配resume/apply行，而唯一落到`AWAIT_GATE_X`；表中所有重建/补写/roll-forward行均隐含并在证据列要求`approval current`。read-only status/reconcile不计为live/effect推进动作。
+
 | Crash 点 | 重启后证据 | 唯一合法动作 |
 |---|---|---|
 | v1 drain 前发现 required/invalid | raw v1 witness/active/receipt | 禁止 v2 prepare；只用冻结 v1 runtime exact recover 或 Legacy Gate |
 | PREPARED 前 | 无 operation | 重跑 prepare |
 | PREPARED 后、批准前 | manifest，无 approval | status / abort-pre-effect |
-| REQUIRED durable、active 前 | required witness | fail closed；重建相同 digest active 或 abort |
-| active 后、claim 前 | required+active | advance 重验并获取 claims |
-| intent 后、repo-files apply 前 | intent + old preimage | 若仍 old，idempotent apply；否则 stale/recovery |
-| 部分 repo-files apply | per-resource old/owned/foreign readback + journal | 只补仍 old 的资源，或全量 owned reverse；foreign 则停 |
+| REQUIRED durable、active 前；approval current | required witness + approval digest/expiry | 只重建相同digest active；本snapshot不接受abort/reverse |
+| active 后、claim 前；approval current | required+active + approval digest/expiry | advance重验并获取claims |
+| intent 后、repo-files apply 前；approval current | intent + old preimage + approval digest/expiry | 若仍old，idempotent apply；否则按selector进入recovery |
+| 部分 repo-files apply；approval current，已写资源均为owned postimage且其余均为old preimage | per-resource old/owned readback + journal + approval digest/expiry | 只幂等补仍old的资源；本generation不接受reverse |
+| 部分 repo-files apply；任一资源foreign/unclassifiable | per-resource readback + journal | 只durable进入绑定exact snapshot的`RECOVERY_REQUIRED`并停；不得补写或reverse |
+| `RECOVERY_CHOICE(mode=ABORT_OWNED)` durable 的新generation | prior snapshot digest + top-level approval hash + exact owned set | 只reverse仍等于owned postimage的资源；任一漂移则停，不改foreign |
 | effect intent 后、响应前 | intent，无 readback | `EFFECT_UNKNOWN`，只读 reconcile |
 | confirmed 后、receipt 前 | readback confirms | 补写 receipt，不重复 effect |
 | receipt 后、active cleanup 前 | terminal receipt | idempotent cleanup projection |
-| v2 pointer CAS 后、fresh proof 前 | old/new bundle + pointer journal | launcher 保持 previous 可选；失败 expected-current CAS 回 `DRAIN_V1`/previous |
+| fresh proof + Gate F receipt durable 后、activation CAS 前 | pointer=`DRAIN_V1` + M current generation + fresh/Gate F evidence | 只允许同一M与expected generation的public `advance`执行activation；门证据缺失则保持DRAIN |
+| activation pointer CAS 后、receipt 前 | pointer=exact owned new bundle + Gate F evidence + generation journal，无activation receipt | pointer仍等于owned postimage时只幂等补activation event/receipt；任何foreign/unknown值立即停，不重做activation |
 
 ---
 
@@ -677,7 +758,7 @@ Git publication 是 Standard adapter，不是 kernel，也不是所有 operation
 
 ### 13.1 Local build
 
-1. 解析并固定 common-dir、worktree identity、base commit、full destination ref；
+1. 在可执行程序面被中和的 Git envelope 内解析并固定 common-dir、worktree identity、base commit、full destination ref；优先用 plumbing，不调用现有 conflict helper 作 trusted oracle；
 2. 使用 operation 专属临时 index，不触碰共享/当前 index；
 3. 将已核验 repo bundle 写入临时 index，逐 path 核验 mode/blob/tree；
 4. 用 `git write-tree` + `git commit-tree` 生成 immutable commit OID；
@@ -688,10 +769,13 @@ Git publication 是 Standard adapter，不是 kernel，也不是所有 operation
 ### 13.2 Remote descriptor 与发布
 
 - remote 使用 literal canonical URL identity + exact destination full ref，禁止依赖 `origin`、`push.default`、URL rewrite、include config 或当前 branch；
-- Git config 只保留 credential helper 所需最小项，恶意 alias/hooks/pager/protocol rewrite 必须被清空或显式拒绝；
+- 所有发布前只读 probe 和 local build 都必须中和 repo-local/system/global 可执行程序面，至少包括 `core.fsmonitor`、hooks、pager/editor、external diff/textconv、config include、URL rewrite 与 protocol helper；设置 `GIT_NO_REPLACE_OBJECTS=1`，枚举并拒绝非空 `refs/replace/**` 与 `<common-dir>/info/grafts`，使 parent/ancestor 证明基于 raw object graph；
+- 设置 `GIT_NO_LAZY_FETCH=1` 与 `GIT_TERMINAL_PROMPT=0`，在 network-denied sandbox 内验证所有 base/parent/tree/blob 本地存在；若仓库声明 partial-clone/promisor 或任一必需 object 缺失，返回 `NEEDS_CONTEXT`，不得由 `cat-file`/revision walk/status 隐式 fetch；
+- 只使用冻结的 plumbing argv/env/config allowlist，不能先跑未消毒的 `git status`再判定 NOT_APPLICABLE；historical PUBLISHED verifier 与 Gate R FF proof 必须复用同一 safe object-reader，不得各自实现较弱版本；
+- 真实 remote effect 只在 Gate R 后为精确 transport 开放必需的 credential helper/protocol，其余 alias/hooks/pager/rewrite 仍保持 deny；
 - source 是 immutable commit OID；
 - 发布前机械证明 `expected-old` 是 source 的 ancestor，禁止 backward/non-FF；
-- 执行 exact `--force-with-lease=<dst>:<expected-old>` 仅作为**expected-old CAS**，不允许空 lease、`+refspec` 或无 FF 证明；
+- 执行 exact `--force-with-lease=<dst>:<expected-old>` 仅作为**expected-old CAS 协议原语**，不得用于非 FF 覆盖，不允许空 lease、`+refspec` 或无 FF 证明；因 CLI 形态含 force-like 语义，每次真实执行仍需 Gate R 显式授权，不能依赖通用命令白名单；
 - Gate R 展示 remote identity、dst、expected-old、new OID、FF 证明摘要，由真实用户批准。
 
 ### 13.3 Unknown reconciliation
@@ -719,6 +803,8 @@ Git adapter 可在 Standard phase 定义 seam，但只有 concrete local bare re
 - evaluator 与 exact controller invocation matcher；
 - conformance fixtures、state/crash vectors、receipt schema。
 
+其中 `harness-cases.json` 必须逐个复用 state vectors 的 approval-selector 交叉积 fixture ID：`required-missing-active | partial-owned | git-local` × `current | expired`；Claude 与 Codex 的 fresh-session run 都必须执行这六个相同 fixture，current 只接受 `RESUME_EXACT`，expired 只接受 `AWAIT_GATE_X`，不能用共享 evaluator 的单元测试代替 adapter 端到端证明。
+
 先把原生事件投影成四类语义事件：`READ_ONLY`、`LIVE_MUTATION`、`CONTROLLER_ARGV`、`UNKNOWN`。parity 比较的是相同语义事件的 verdict/reason digest，不要求两端拥有完全相同的原生工具集合；未能可靠归类的一律 `UNKNOWN`。
 
 两端只在 adapter 层不同：
@@ -737,6 +823,7 @@ stable admission 与 v2 active 使用两层规则：
 
 - **无 operation**：对已经 rollout 为 mandatory 的 protected surface，直接 live writer 返回 `PREPARE_REQUIRED`；普通非保护面保持现有模式；
 - **v1 nonterminal**：冻结 v1 guard 语义，拒绝任何新 v1/v2 prepare，只允许 exact legacy recovery；
+- **migration bridge / DRAIN_V1**：U-001 containment guard可观察Gate B绑定的唯一migration operation M；M创建后及DRAIN期间拒绝所有新prepare/普通writer，只允许M当前generation的canonical `advance`与只读status。该桥不执行activation，只把调用交给fixed candidate/capsule；
 - **v2 nonterminal**：按下列规则执行。
 
 - 所有已登记 mutating tools 默认 deny；
@@ -749,12 +836,12 @@ stable admission 与 v2 active 使用两层规则：
 - 不从多个 active manifests 取 union；controller argv 必须显式 operation/generation，resource owner 由 kernel 校验；
 - 没有 required witness 时仅非保护面保持 ordinary mode，不能借 inactive 绕过 protected-surface admission。
 
-v1 已证明可执行 adapter/guard bytes 在 required/invalid、missing-active、malformed、timeout、adapter-error 路径查询 durable witness 并 fail closed；“普遍 fail-open”旧假设作废。仍明确排除 Codex adapter 在 Node 运行前 syntax-byte corruption 的场景，这是 v1/Standard TCB boundary，不虚称解决。v2 必须在保留这些回归的同时新增 pre-entry、exact argv、direct-writer deny 与共享 verdict corpus，才能 promotion。
+v1 既有 fixtures 只证明 required/invalid、missing-active、malformed、timeout、adapter-error 等已覆盖路径会查询 durable witness 并 fail closed；它们没有证明复合命令分类或并发one-use正确。R-011已经用mutant推翻“这些回归足以构成effect安全下限”的外推，因此新v1 Git effect保持disabled。仍明确排除 Codex adapter 在 Node 运行前 syntax-byte corruption 的场景，这是 v1/Standard TCB boundary，不虚称解决。v2 必须保留既有负面路径、杀死compound/concurrent mutants，并新增 pre-entry、exact argv、direct-writer deny、private ABI 与共享 verdict corpus，才能 promotion。
 
 ### 14.3 Current/new session 边界
 
 - 修改 registration/trust 后，当前 session 不能作为唯一验收；必须启动 fresh Claude 与 fresh Codex session；
-- v1→v2 transaction 由冻结 v1可信环境应用，先进入 `DRAIN_V1` 并安装新 bundle dormant；新 session 验证成功后才 CAS 激活；
+- v1→v2 先由contained v1 exact repo operation安装依赖（不改最终live guard），再由新CLI的public `prepare`创建唯一migration operation；该operation经public `advance`按 capsule→durable `DRAIN_V1`→final guard-last→fresh tests→Gate F→pointer CAS 推进；
 - active runtime pointer 内容寻址，guard 加载固定 bundle SHA，不从可变工作树直接执行新版本；
 - 纯 JS guard 每次 tool call 都会 process-fresh load；只有 registration/trust/launcher path 变化必须 fresh session。当前静态 wiring 已通过，但本规划没有重新证明 fresh controlled-mode verdict digest，Gate M/F 必须补证；
 - 若任一 harness fresh test 失败，active pointer 以 expected-current CAS 回 `DRAIN_V1`/previous，required witness 保持可诊断，禁止半启用。
@@ -765,19 +852,28 @@ v1 已证明可执行 adapter/guard bytes 在 required/invalid、missing-active�
 
 ### 15.1 已安装 v1 → v2 migration bootstrap
 
-“guard 尚不存在的首次 bootstrap”已经在六 Skill MVP 中完成，不能重演。v2 唯一合法入口是由现有 v1 保护的 side-by-side migration：
+“guard 尚不存在的首次 bootstrap”已经在六 Skill MVP 中完成，不能重演。Gate N 只有明确返回 `N0=ENTER_STANDARD` 后，v2 才能通过下列 side-by-side migration；整个流程保持三个 public entry，不暴露 lifecycle `activate` 命令：
 
-1. **Gate M read-only census**：重新运行 v1 `inspect`，要求零 `required`/`invalid`、零 active file、全部 terminal witness↔receipt SHA 有效；冻结 HEAD/main/index/common-dir/worktree/locks/session/open-writer 事实。
-2. 分别冻结：现有 v1 core/controller/guard/adapter/settings bytes；81-row runtime freeze；raw terminal witness/receipt；committed pre-publish receipt SHA；local post-publish attestation SHA；`publish.index` tuple。两份 receipt 是不同生命周期 artifact，不互相覆盖。
-3. 在 Gate M 内只读验证两处既有 personal adapter target、backup、private audit 与所有 deterministic residue；只把 current postimage 当 v2 baseline。不得 apply、rollback、重跑 legacy cutover、接管或删除 v1 backup；未来真实 external mutation 仍另过 Gate E。
-4. 在 scratch 构建 immutable v1 compatibility bundle、stable launcher 与 v2 dormant bundle；architecture/safety/parity/quality 审查 exact migration manifest SHA。
-5. 使用**现有 v1 controller/guard**保护的一次 exact operation 安装 stable launcher与 dormant bytes；launcher 初始只能是 `DRAIN_V1`，同时拒绝新的 v1/v2 `prepare`。
-6. `DRAIN_V1` 对每个 valid v1 nonterminal 只按 raw task/manifest/generation 调冻结 v1 recovery；invalid/stale 保持 fail closed 并进入 Legacy Recovery Gate。绝不翻译、重写或删除 v1 witness/active/receipt。
-7. v2 只建 derived legacy index（legacy path + raw witness/receipt SHA + validity）；terminal v1 已无 full active manifest，禁止重建、导入 authority 或复用 gate/token/`EFFECT_UNKNOWN`。
-8. 只有 legacy reader再次证明 zero required/invalid，fresh Claude/Codex 对 inactive/pre-entry/v1-drain/v2-active/malformed/crash/reverse fixture verdict digest 一致，才可 expected-old CAS 激活 v2。
-9. 任一失败回 `DRAIN_V1`/previous；reverse 只对 current==owned migration postimage。v1 bundle/reader至少保留到 v2 第一笔成功 transaction + recovery drill，旧 receipts 永不因迁移删除。
+1. **Re-census**：重跑 Gate M，要求 v1 zero `required`/`invalid`、零 active、terminal witness↔receipt SHA 有效；冻结 HEAD/main/index/common-dir/worktree/locks/session/open-writer。Git probe 使用 §13.2 safe envelope；route/E3 interface 变化先回计划。
+2. **Freeze inputs**：冻结 contained-v1 core/controller/guard/settings bytes、81-row historical manifest + live drift、raw legacy evidence、personal baseline、published commit blobs与Gate N evidence。legacy evidence/backup不改写、不接管。
+3. **Scratch candidate**：构建 immutable v1 compatibility、stable launcher、v2 bundle与U-004 minimal repo-only effect host；Gate B 冻结 source Files 及以下 operational targets 的 pre/post/reverse/owner：
+   - repo source targets：除最终 `.claude/hooks/controlled-change-guard.mjs` 外的U-003 exact Files；
+   - `<common-dir>/luca-controlled-change-v2/runtime/{v1-compat,v2}/<bundle-sha>/`，其中v2 bundle含由U-004 composer生成的base-only `runtime-entry.mjs`与`capability-profile.json`；
+   - `legacy-index/<snapshot-sha>.json`、migration operation journal/projection；
+   - `launcher-state.json`；
+   - final live guard path（必须是最后一个live repo target）。
+4. **Dependency install under contained v1**：建立一个effect-empty的v1 exact repo operation，只按 dependency-first 顺序安装/更新 source dependencies，`scripts/controlled-change.mjs` entry在其依赖之后写，最终live guard保持U-001 containment版本。每个文件后均process-fresh调用private ABI；crash只允许resume该v1 operation或owned reverse，不能开放Git effect。
+5. **Create the one migration operation**：dependency operation terminal 后，contained guard只允许新CLI的canonical public `prepare --request <migration-request> --approval-evidence <Gate-B-evidence>`。prepare写入唯一 v2 migration operation `M` 与generation 0，不写capsule/live target；从此guard观察到M后拒绝任何新prepare和普通protected writer，只允许exact `advance M <generation>`/status。
+6. **Advance M — capsule first**：public `advance`将content-addressed runtime写到common-dir同文件系统staging，逐文件hash/mode验证、fsync，最后以no-replace目录rename发布；legacy index和journal event随后durable。partial staging不进入launcher，恢复只清理exact-owned staging或幂等resume。
+7. **Advance M — DRAIN durable**：以expected-empty/current CAS写 `launcher-state.json=DRAIN_V1` 并fsync directory。U-001 containment guard必须dual-read M/DRAIN：拒绝所有新prepare，只允许M的下一generation advance/status；legacy nonterminal若意外出现则冻结M并进入Legacy Recovery Gate。
+8. **Advance M — final guard last**：从已发布capsule加载minimal host，以repo-files adapter对最终live guard做exact pre/post CAS；final guard只从fixed bundle SHA读取DRAIN/M。不得在capsule或DRAIN之前改final guard。
+9. **Fresh proof while DRAIN**：fresh Claude/Codex覆盖inactive/pre-entry/v1-drain/v2-active/malformed/private-ABI及逐边界crash corpus；legacy reader再次证明zero required/invalid；compound/concurrent/publication mutants全被杀死。失败保持DRAIN，existing M仍可status/recover。
+10. **Advance M — activation**：只有Gate F后，caller再次使用同一个operation ID与expected generation调用public `advance`；kernel内部lifecycle primitive以expected-`DRAIN_V1` CAS把pointer设为fixed v2 bundle并写activation event/receipt。没有第四public/private activate入口。
+11. **Post-activation**：v2只建path+raw SHA derived legacy index，不重建terminal manifest、不导入旧gate/token/authority。任一失败回DRAIN/previous；reverse只对owned postimage。v1 reader至少保留到首笔成功transaction + recovery drill，旧receipts永不删除。
 
-当前 2026-09-01 snapshot 满足“两个 valid terminal、全局 inactive”，但这只是规划证据；未来 implementation 必须从第 1 步重新证明，不得沿用快照授权。
+逐边界 crash matrix 必须至少覆盖：dependency写前/后、CLI entry写前/后、M PREPARED前/后、capsule staging每文件、bundle rename前/后、legacy-index event、DRAIN CAS前/后、final guard rename前/后、fresh proof后/activation CAS前、activation CAS后/receipt前。每一格只能有一个合法next action；尤其“v1 terminal + M PREPARED + 尚无capsule”和“DRAIN + containment guard + final guard未写”都必须由exact `advance M`恢复。
+
+当前 2026-09-02 snapshot 满足“两个 valid terminal、全局 inactive”，但这只是规划证据；未来 implementation 必须从第 1 步重新证明，不得沿用快照授权。
 
 ### 15.2 Content-addressed runtime
 
@@ -789,7 +885,7 @@ v1 已证明可执行 adapter/guard bytes 在 required/invalid、missing-active�
 
 <git-common-dir>/luca-controlled-change-v2/       # new namespace
 ├── runtime/v1-compat/<bundle-sha256>/...
-├── runtime/v2/<bundle-sha256>/...
+├── runtime/v2/<bundle-sha256>/{runtime-entry.mjs,capability-profile.json,...}
 ├── launcher-state.json                           # DRAIN_V1/current/previous CAS
 ├── legacy-index/<snapshot-sha256>.json            # path + raw SHA only
 ├── operations/<operation-id>/events/<seq>-<sha>.json
@@ -800,9 +896,13 @@ v1 已证明可执行 adapter/guard bytes 在 required/invalid、missing-active�
 
 `launcher-state.json` 只存 mode、current/previous bundle SHA、schema compatibility、activated_at，并以 expected-old CAS 更新。runtime bundle immutable；launcher 必须最小且稳定。v2 event append 使用 per-operation lock/O_EXCL sequence + previous-event hash，不能用会丢更新的无锁 read-check-rename。
 
+这些 common-dir 路径是 **operational targets**，不是 repository source `Files`；但绝不是未声明写入。Gate B 必须把migration的每个目录/文件的canonical identity、filesystem device、pre/post、staging、owner operation M与reverse规则写入manifest。migration阶段唯一写 owner 是public `advance M`内部的lifecycle/state-store primitive；它不接受caller传任意路径，也不暴露独立install/activate CLI。U-003的 `Files` 只列将被版本控制的source bytes，§15.1第3项列的是同一U-block在运行时获批的精确operational write set。后续U-010 composition使用另一个经Gate G批准、绑定Gate N vector与module SHA的upgrade operation；其public `advance`拥有新bundle/pointer operational targets，但不得回写M或旧bundle。
+
 ### 15.3 自升级
 
 - v1 migration 完成后，N 版本 controller 编译 N+1 bundle，N+1 dormant；
+- U-004 的 pure capsule composer 只接受 canonical Gate N vector、base digest与selected module path/blob SHA，生成literal-import `runtime-entry.mjs` + `capability-profile.json`；`SKIP_DARK` module存在、BUILD module缺失、base digest漂移或entry含未选import均拒绝；
+- U-005/U-007/U-008/U-009先产各自独占scratch module，验收后经base repo-files安装dormant source且不改active bundle；U-011再安装最终CLI/kernel/state/receipt postimage；U-010是唯一composition/activation owner，用一次upgrade operation把U-011与全部selected modules静态链接进N+1；
 - N 验证 N+1 schema can-read-old / can-recover-old 与双 harness fresh fixture；
 - Gate F 后 CAS pointer N→N+1；
 - previous N 至少保留到 N+1 完成第一笔真实 transaction 与 recovery drill；
@@ -816,16 +916,19 @@ v1 已证明可执行 adapter/guard bytes 在 required/invalid、missing-active�
 
 ### 16.1 Recovery decision table
 
-| 现场 | 自动允许 | 必须人工 | 禁止 |
+| 现场（互斥selector） | 当前snapshot唯一动作 | 必须人工 | 禁止 |
 |---|---|---|---|
 | v1 required/invalid during drain | frozen v1 exact inspect/diagnostics | Legacy Recovery Gate 下 exact recover | v2 prepare、改写/删除 legacy state |
-| 未产生 effect，所有 preimage 仍旧 | idempotent resume | 可选择 abort | 改 manifest |
-| 部分 repo postimage 且均为 owned | 补未应用资源或 reverse-owned | verification 语义不明时 | 覆盖第三方新变更 |
-| personal postimage owned | reverse-owned | Gate E 重新确认 | current 已漂移时强回滚 |
-| Git local commit/private ref 已建，未 push | 补 receipt/可删除 private ref | 是否继续 Gate R | 移动 main/HEAD |
+| 未产生 effect、所有preimage仍旧且既有approval仍有效（`RESUME_EXACT`） | idempotent resume | 无；该selector下不提供abort/reverse选择 | 改manifest、同generation abort/reverse或改selector |
+| approval已过期或语义/ownership无法唯一决定（`AWAIT_GATE_X`） | durable等待，无live effect | Gate X只批准一个mode并生成新generation | 旧generation resume/abort/reverse |
+| approval current、部分repo postimage均owned且其余均old（`RESUME_EXACT`） | 只补未应用资源 | 无 | 同generation reverse、覆盖foreign；approval过期时误走本行 |
+| 部分repo apply含foreign/unclassifiable（`AWAIT_GATE_X`） | 只进入/保持`RECOVERY_REQUIRED` | Gate X可绑定exact owned set选择`ABORT_OWNED`；不能选择覆盖foreign | 自动补写或reverse、修改foreign |
+| personal postimage owned但无可自动resume（`AWAIT_GATE_X`） | 只等待Gate X，无live effect | Gate X可绑定Gate E原证据生成`RECOVERY_CHOICE(mode=ABORT_OWNED)`新generation | 直接reverse、current漂移时强回滚 |
+| personal `RECOVERY_CHOICE(mode=ABORT_OWNED)` durable | 只reverse仍等于exact owned postimage的target | 无；choice已绑定fresh approval | 改mode、触碰foreign或复用旧generation |
+| approval current、Git local commit/private ref 已建且未push（`RESUME_EXACT`） | 只补local receipt并等待Gate R | Gate R只决定后续remote publish；approval过期则只匹配上方`AWAIT_GATE_X`行 | 同snapshot删除private ref、移动main/HEAD；approval过期时误走本行 |
 | push 结果 unknown | read-only remote reconcile | retry/接受 diverged | 自动 retry/remote rollback |
-| active projection 缺失/损坏但 required 存在 | fail closed + stable launcher diagnostics | exact repair/rollback | ordinary mutation |
-| runtime bundle 损坏 | previous bundle diagnostics | Gate B/G approved rollback | 从 mutable worktree 偷载代码 |
+| approval current、active projection 缺失但required digest有效（`RESUME_EXACT`） | 只重建同digest active | 无 | abort/reverse、ordinary mutation；approval过期时误走本行 |
+| active/runtime证据冲突或bundle损坏（`AWAIT_GATE_X`） | stable launcher保持previous并只诊断 | Gate X绑定Gate B/G原证据后选择exact repair或owned rollback之一 | 从mutable worktree偷载代码、同generation双动作 |
 
 ### 16.2 Receipt / attestation 最小字段
 
@@ -875,7 +978,7 @@ pre-publish candidate receipt 与 post-publish attestation 是两份 artifact，
 - 新 effect/target class、默认触发扩大、保留期/隐私改变、launcher/guard 变化均需 Gate G governance review；
 - 旧 receipt reader 至少覆盖当前 major 与前一 major；migration 产新 projection，不重写旧 journal；
 - deprecated adapter 先拒绝新 prepare，再保留 recovery reader，直到所有非终态 operation 清零；
-- review ownership：architecture=codebase-design owner，safety=redteam/careful owner，parity=harness owner，contract=Plan Agent owner，release=quality gate；不能由实现者单方签发。
+- review ownership：architecture=codebase-design reviewer，safety=独立 redteam reviewer（默认 REFUTED），parity=harness reviewer，contract=Plan Agent reviewer，release=quality gate；`careful` 只提供危险命令的人工约束，在没有 opt-in 机械接线时不被声称为 authority 或 enforcement。不能由实现者单方签发。
 
 ### 17.3 Observability 与 rollout evidence
 
@@ -890,6 +993,7 @@ pre-publish candidate receipt 与 post-publish attestation 是两份 artifact，
 - bypass/incident 与损失等级。
 
 controlled-change 不接管 observability/eval writer 自己的 operational transaction；它只消费脱敏指标。任何 memory/eval 写入继续走既有 governed owner path。
+memory 中的 stable/promoted/mattered 状态也不计入 Gate N/S 的用户授权或完成证据；只有绑定 exact operation 的当前 journal event 与独立可复算指标才能进入 gate payload。
 
 ---
 
@@ -898,21 +1002,21 @@ controlled-change 不接管 observability/eval writer 自己的 operational tran
 | # | 问题域 | 方案答案 | 机械证据 |
 |---|---|---|---|
 | 1 | 第一性价值 | 防范围扩大、stale、并发/partial/unknown；对抗性威胁明示边界 | failure fixtures + obligation census |
-| 2 | 使用面与触发 | Plan/Orchestrator writer 前 prepare；inactive protected surface 机械 admission；其余逐面 shadow/explicit；只读/plan/owner data exempt | policy + pre-entry bypass table tests |
+| 2 | 使用面与触发 | Plan/Orchestrator writer 前 prepare；inactive protected surface 机械 admission；route reminder非authority；E3有则消费attestation；其余逐面 shadow/explicit；只读/plan/owner data exempt | policy + pre-entry/route-authority bypass tests |
 | 3 | 威胁与信任 | cooperative TCB；不防恶意 main、被攻破 runtime、任意同 UID process | threat matrix + negative claims audit |
-| 4 | 能力分层 | Foundation/Standard/High-assurance；目标 Standard，Gate H 才升级 | tier acceptance/kill metrics |
+| 4 | 能力分层 | Foundation containment后Gate N以20次真实证据先判N0，再逐项判N-C/N-D/N-E/N-G；未获证能力零bytes；High-assurance仍仅Gate H | Gate N capability-vector/absence/H branch |
 | 5 | 核心架构 | stable launcher + immutable v1 compatibility + v2 deep kernel/journal/static adapters | module interface/deletion tests |
 | 6 | 状态机 | generation CAS、required-before-active、per-effect unknown freeze、owned abort；v1 raw semantics不重解释 | model/property + crash/migration matrix |
-| 7 | bootstrap/升级 | 已安装 v1 先 DRAIN；side-by-side dormant v2；fresh dual harness；previous rollback | v1 drain + bootstrap/upgrade fixtures |
+| 7 | bootstrap/升级 | v1 effect先contain；Gate N后由operation-bound repo apply安装minimal host与DRAIN；side-by-side dormant v2；fresh dual harness/private ABI；previous rollback | containment + v1 drain + bootstrap/upgrade fixtures |
 | 8 | 多 session 并发 | v1 single-flight；v2 one-manifest-per-op、disjoint ACTIVE、sorted claims + linearizable append + CAS | scheduler/linked-worktree/lost-update/no-age-steal tests |
 | 9 | Claude/Codex 平价 | preserve trusted Codex piggyback；semantic event projection、fresh controlled-mode digest、active fail-closed | conformance corpus + fresh sessions |
 | 10 | effect 模型 | static adapter + DAG；repo/personal/Git；network/API/GUI default deny | adapter contract/mutation tests |
-| 11 | Git 发布 | isolated index/commit-tree/private ref/immutable OID/exact old CAS/reconcile | local bare remote + malicious config + response-loss fixtures |
+| 11 | Git 发布 | program-surface-safe plumbing、isolated index/commit-tree/private ref/immutable OID/exact old CAS/reconcile | local bare remote + fsmonitor/config mutation + response-loss fixtures |
 | 12 | 恢复与审计 | v1 evidence immutable；private receipt/public attestation 分离；owned-only rollback；unknown readback | crash injection + schema/lineage/privacy scan |
 | 13 | 可用性 | Foundation fast path、delta-only gates、typed errors、read-only status | shadow UX metrics / error snapshots |
 | 14 | 治理演进 | version freeze、Gate G、old-reader/recovery compatibility、deprecation | compatibility matrix + policy diff review |
-| 15 | 验证体系 | unit/integration/fresh/concurrency/crash/mutation/config/worktree/publication | assertion matrix U-012 |
-| 16 | 实施路线 | v1 census/drain→compat freeze→v2 core→side-by-side activate→adapters→shadow/mandatory；明确 rollback/kill | U-block/Wave/Gates |
+| 15 | 验证体系 | unit/integration/fresh/concurrency/crash/mutation/config/worktree/publication + 120s预算/安全分片/full-suite保留 | assertion matrix U-012 + Gate V |
+| 16 | 实施路线 | v1 census→containment→Gate N core/capability vector→base v2 migration→仅获证 concurrency/DAG/external/Git→shadow；明确 rollback/kill | U-block/Wave/Gates |
 
 没有把“文档里回答”当成实现承诺；每一域都在后续 U-block 中至少有一个可执行 verification。
 
@@ -922,38 +1026,49 @@ controlled-change 不接管 observability/eval writer 自己的 operational tran
 
 ### 19.1 Complexity、执行角色与成本带
 
+- 复杂度模式：**Hierarchical**。
+- 理由：13 个稳定 U-ID 跨 v1 migration、受保护 hooks、事务/并发、personal/Git effect 与双 harness fresh verification，且含多个人类不可代选 gate。
+- 模式可组合：**Hierarchical 顶层 + Sequential 外层 + 各 Wave 内 Parallel Fan-out + 每阶段 Supervisor（WA/EA）**。
+- 需要用户确认：**是**；当前先停 Gate P，未来每个不可逆 effect 仍分别停 Gate E/R/G/S。
+- 任务规模 Tier：**Deep**。
 - Plan tier：**Deep**（13 个稳定 U-ID、v1 migration、受保护 hooks、personal/Git 不可逆 effect、双 harness fresh 验证）。
 - Model routing：规划/翻案/安全裁决用 reasoning-heavy；内核/adapter 实现用 core-execution；fixture/文档/清单检查用 guided-execution；preflight/格式/hash 用 mechanical。只指定 capability tier，不写死模型名。
 - WA（Work Agent）：每个 U-block 独占 Files；不在 live checkout 直接生成，先写 operation scratch bundle。
 - EA（Eval Agent）：与 WA 隔离、严格只读，不修代码、不推进 generation。
 - trusted applier：只能是 top-level main 通过 `advance` 调用；WA/EA 均不持有 authority。
 - 粗成本：v1 census/compat/migration 3–5 个专注工程日；Standard core + repo adapter 5–8 日；external/Git adapters 5–9 日；full verification/rollout 4–6 日，另加至少 20 次真实 shadow operation 的观察窗口。任一 kill assumption 命中即停止扩展，成本不是继续平台化的授权。
+- Plan Agent 块 1.5（DEV-NNN 反向覆盖）：**N/A**；输入没有产品实现 `task-plan.md`，U-block 来源改由 R-001–R-017 冻结。
+- Plan Agent 块 1.6（ASSERT/TEST-NNN 反向覆盖）：**N/A**；不存在 task-plan ASSERT/TEST 卡，16 域覆盖改由 §18→§21 的 obligation/assertion census 机械验证。
 
 ### 19.2 Future source file inventory
 
-未来实现的拟议最小文件面如下；不代表当前写入授权：
+未来实现的拟议最小文件面分为“计划修改”与“只读不变锨点”；不代表当前写入授权。
+
+**Planned mutation set**（仅能由对应 U-block 写）：
 
 ```text
 .claude/skill-os/controlled-change.schema.json
 .claude/skill-os/controlled-change.yaml
 .claude/hooks/controlled-change-guard.mjs
-.claude/settings.json
-.codex/hooks.json
-.codex/codex-hook-adapter.mjs
 .claude/agents/plan-agent.md
 .claude/agents/orchestrator.md
 scripts/controlled-change.mjs
 scripts/controlled-change-controller.mjs
+scripts/candidate-manifest.mjs
 scripts/lib/controlled-change/admission.mjs
 scripts/lib/controlled-change/launcher.mjs
 scripts/lib/controlled-change/contract.mjs
 scripts/lib/controlled-change/kernel.mjs
 scripts/lib/controlled-change/state-store.mjs
 scripts/lib/controlled-change/receipt-schema.mjs
+scripts/lib/controlled-change/git-object-reader.mjs
 scripts/lib/controlled-change/resource-claims.mjs
+scripts/lib/controlled-change/concurrency-scheduler.mjs
 scripts/lib/controlled-change/patch-pipeline.mjs
 scripts/lib/controlled-change/effect-host.mjs
+scripts/lib/controlled-change/effect-dag.mjs
 scripts/lib/controlled-change/lifecycle.mjs
+scripts/lib/controlled-change/capsule-composer.mjs
 scripts/lib/controlled-change/compat/v1/core.mjs
 scripts/lib/controlled-change/compat/v1/controller.mjs
 scripts/lib/controlled-change/compat/v1/guard.mjs
@@ -962,9 +1077,14 @@ scripts/lib/controlled-change/adapters/external-files.mjs
 scripts/lib/controlled-change/adapters/git-publisher.mjs
 scripts/fixtures/controlled-change/contract-cases.json
 scripts/fixtures/controlled-change/state-cases.json
+scripts/fixtures/controlled-change/claim-cases.json
 scripts/fixtures/controlled-change/harness-cases.json
 scripts/fixtures/controlled-change/effect-cases.json
+scripts/fixtures/controlled-change/effect-dag-cases.json
+scripts/fixtures/controlled-change/capsule-profile-cases.json
 scripts/fixtures/controlled-change/v1-compat-cases.json
+scripts/fixtures/controlled-change/v1-containment-cases.json
+scripts/test-controlled-change.mjs
 scripts/test-controlled-change-contract.mjs
 scripts/test-controlled-change-state.mjs
 scripts/test-controlled-change-migration.mjs
@@ -973,6 +1093,8 @@ scripts/test-controlled-change-repo-files.mjs
 scripts/test-controlled-change-harness.mjs
 scripts/test-controlled-change-claims.mjs
 scripts/test-controlled-change-effects.mjs
+scripts/test-controlled-change-effect-dag.mjs
+scripts/test-controlled-change-capsule-composer.mjs
 scripts/test-controlled-change-external-files.mjs
 scripts/test-controlled-change-git-publisher.mjs
 scripts/test-controlled-change-lifecycle.mjs
@@ -987,8 +1109,30 @@ package.json
 .github/workflows/ci.yml
 AGENTS.md
 CLAUDE.md
+```
+
+**Read-only invariant anchors**（默认必须 byte-identical，不在 U-block `Files`）：
+
+```text
+.claude/settings.json
+.codex/hooks.json
+.codex/codex-hook-adapter.mjs
+.claude/hooks/project-scope-guard.mjs
+.claude/hooks/route-guard.mjs
+.claude/hooks/session-end.mjs
+.claude/skill-os/optional-workflow-graph.yaml
+.claude/skills/office/resolving-merge-conflicts/scripts/conflict-transaction.mjs
+scripts/test-route-guard.mjs
+framework-audit/2026-08-20-routing-steering-handshake/E3-L0-PROBE.md
+framework-audit/2026-08-20-routing-steering-handshake/EXEC-DELIVERY-E1E2.md
+framework-audit/2026-08-30-mattpocock-six-skills-integration/FINAL-MASTER-PLAN.md
+framework-audit/2026-08-30-mattpocock-six-skills-integration/IMPLEMENTATION-RECEIPT.md
+framework-audit/2026-08-30-mattpocock-six-skills-integration/REVIEW-LEDGER.md
+framework-audit/2026-08-30-mattpocock-six-skills-integration/CANDIDATE-MANIFEST.tsv
 framework-audit/2026-08-30-mattpocock-six-skills-integration/PUBLISH-ATTESTATION.json
 ```
+
+只有 Gate G 先产生新 plan SHA、精确说明为何 trusted wrapper/registration/route owner 必须变更，并获得新批准，这些 anchor 才能转入 planned mutation set。E1/E2/E3 与 conflict helper 的本体缺陷由各自 owner 修复；controlled-change 只在 Gate M 验证安全接口/不依赖它们，不做驱动式修补。
 
 约束：不新增 daemon、authority registry、dynamic plugin 目录或 repo-global lease 服务。若 implementation 发现必须新增未列文件，返回 `NEEDS_CONTEXT`，更新计划与 approval digest，不能现场扩写。
 
@@ -997,61 +1141,83 @@ framework-audit/2026-08-30-mattpocock-six-skills-integration/PUBLISH-ATTESTATION
 ```text
 Gate P（当前停点：批准整份 implementation plan）
   ↓
+Gate M0（立即 containment：新 v1 Git effect 保持禁用；冻结 RED mutants）
+  ↓
 Gate M（v1 read-only census / evidence split / clean implementation baseline）
   ↓
-Wave 1: U-001
+Wave 1A: U-001 scratch RED/candidate
   ↓
-Wave 2（scratch，可并行）: U-002 | U-004
+Gate C（Foundation containment exact live subset）
+  ↓
+Wave 1B: U-001 live containment（tests → linear store → guard last）
+  ↓
+Gate N（至少20次contained-Foundation真实operation；冻结 capability vector）
+  ├─ N0=STOP → STOP_AT_CONTAINED_FOUNDATION
+  └─ N0=ENTER；N-C/N-D/N-E/N-G 各自 BUILD 或 SKIP_DARK
+  ↓
+Wave 2（base scratch，可并行）: U-002 | U-004（含 minimal repo-only effect host）
   ↓
 Gate B（v1-protected exact migration bundle + reverse + fresh-test plan）
   ↓
-Wave 3: U-003
+Wave 3A: U-003 pre-activation segment（既有migration operation经public advance安装capsule/minimal host，停在DRAIN并完成fresh proof；U-003仍IN_PROGRESS）
   ↓
 Gate F（DRAIN_V1 → v2；fresh Claude/Codex promotion）
   ↓
-Wave 4（可并行）: U-005 | U-007
+Wave 3B: 同一U-003 / operation M经public advance执行activation CAS并验证receipt；此后U-003才DONE
   ↓
-Wave 5（可并行、文件所有权分离）: U-006 | U-008 | U-009 | U-010
+Wave 4（独占scratch build可并行；repo source install按U-ID串行）: U-006 | [N-C BUILD→U-005] | [N-D BUILD→U-007]
   ↓
-Wave 6: U-011
+Wave 5（独占adapter scratch build可并行；repo source install按U-ID串行）: [N-E BUILD且U-007完成→U-008] | [N-G BUILD且U-007完成→U-009]
   ↓
-Wave 7: U-012
+Wave 6: U-011（安装最后一组dormant runtime UX/evidence source；不从worktree执行）
   ↓
-Wave 8: U-013（disabled → shadow/explicit）
+Wave 7: U-010（唯一composer；包含U-011 postimage，一次静态组合/fresh-proof/activate）
+  ↓
+Wave 8: U-012
+  ↓
+Wave 9: U-013（disabled → shadow/explicit）
   ↓
 Gate S（按 surface shadow → mandatory；U-013 closeout）
   ↓
 Standard 停止线；Gate H 只允许开启一份新的 High-assurance plan
 ```
 
-循环检测结果：无环。U-001 冻结 v1 compat 与 evidence schema；U-003 独占 stable launcher/guard migration；U-008/U-009 并行时只修改 U-007 预建的各自 adapter stub 和各自 test，禁止共同改 `effect-host.mjs`；U-006 只拥有 agent contracts；U-010 只拥有 lifecycle/state compatibility。若实际 ownership 冲突，先串行化，不由 WA 自行合并。
+循环检测结果：无环。U-001 只安装最小 Foundation live subset，且 Gate N 前没有 v2 scratch candidate；`N0=ENTER` 是 U-002/U-004 的外部硬依赖，无证据分支直接停止。U-004 首建 minimal repo-only host与唯一pure composer，U-003串行安装base capsule并独占stable launcher/guard migration。U-005/U-007/U-008/U-009分别受N-C/N-D/N-E/N-G约束，各自先在scratch构建/测试，再用base repo-files经public prepare/advance按U-ID串行安装其独占dormant source；active capsule仍只读fixed common-dir bundle，不从worktree加载。U-011随后以同样方式安装最后一组CLI/kernel/state/receipt source。只有所有selected source postimage冻结后，U-010才以一个upgrade operation静态生成包含U-011与全部selected modules的runtime entry，fresh-proof后CAS activation。U-010不修改stable launcher，因此不触发普通升级之外的Gate M；`gate_disposition=SKIP_DARK`的U-block不实例化。若实际ownership冲突，先串行化，不由WA自行合并。
 
 ### 19.4 Human gates
 
 | Gate | 何时 | 必须展示 | 通过者 | 失败/撤回 |
 |---|---|---|---|---|
 | **Gate P** | 现在 | 最终 plan SHA、全 review ledger、推荐档、成本/停止线 | 用户 | 不实施；本 Session 结束 |
-| **Gate M** | 任一 v2 repo write 前 | v1 zero required/invalid；raw state/receipt/index SHA；pre/post-publish evidence split；personal只读 tuple verdict；clean/isolated baseline | 用户 + safety reviewer | 保持 v1；不得安装/清理/重放 |
+| **Gate M0** | Gate P 后的第一个 implementation gate | 明示新 v1 Git effect 为 disabled；compound-command/concurrent-consume/false-publish/route-non-authority RED evidence；migration禁止Git/任意shell effect，只允许Gate C exact repo subset及containment后canonical public prepare/advance | 用户 + safety reviewer | 停在 legacy read-only；不得用脆弱v1 effect实施迁移 |
+| **Gate M** | 任一 Foundation/v2 repo write 前 | v1 zero required/invalid；raw state/receipt/index SHA；81-row historical + 8/81 live drift；pre/post-publish evidence split；program-safe Git census；E3/route interface；route non-dry-run renderer/schema PASS、四类verdict均非authority、workflow推荐具下游input proof；personal只读 tuple verdict；clean/isolated baseline | 用户 + safety reviewer | route owner缺陷未修或input proof缺失则保持v1 read-only；不得安装/清理/重放，也不得由controlled-change越界修route/graph |
+| **Gate C** | U-001 Foundation live subset 前 | exact live subset/pre/post/reverse；tests→linear-store→guard-last顺序；逐边界crash结果；Git effect default-deny | 用户 + safety reviewer | 丢弃scratch candidate；现有v1 effect继续禁用 |
+| **Gate N** | U-001 containment后、任何v2 byte前 | ≥20次repo-only operation及adjacent denied/task-local tuple；摩擦/时延/零bypass；N0与N-C/N-D/N-E/N-G逐项证据、BUILD/SKIP及蕴含关系 | 用户 + architecture reviewer | N0无证据即STOP；子能力无证据即SKIP_DARK且对应文件不得创建；样本不足则NEEDS_EVIDENCE |
 | **Legacy Recovery Gate** | Gate M 发现 v1 required/invalid | exact raw state、frozen v1唯一 recovery、禁止项 | 用户 + safety reviewer | v2 全停；legacy fail closed |
-| **Gate B** | migration bootstrap 前 | exact files/pre/post/reverse、v1 compat SHA、DRAIN_V1 行为、fresh tests | 用户 | 保持 v1；scratch bundle 可丢弃 |
-| **Gate F** | v2 激活前 | zero legacy required/invalid、Claude/Codex fresh controlled-mode digest、pre-entry/direct-writer/fail-closed/reverse drill | 用户 | pointer 不切或回 DRAIN_V1/previous |
+| **Gate B** | migration bootstrap 前 | exact source files与common-dir operational targets；已批准migration operation/generation；dependency/capsule→DRAIN→final guard-last顺序；逐边界crash/reverse；v1 compat SHA与fresh-test计划 | 用户 | 保持contained v1；scratch bundle可丢弃，v2 operation不推进 |
+| **Gate F** | v2 激活前 | zero legacy required/invalid、M唯一/current generation、完整install crash matrix与mutants、Claude/Codex fresh/private ABI、pre-entry/direct-writer/reverse、base source digest + optional独占path absence map | 用户 | 不调用下一次advance M；pointer保持DRAIN_V1/previous |
+| **Gate X** | v2 snapshot 的确定性恢复不成立，且`RECOVERY_REQUIRED(selector=AWAIT_GATE_X)`已durable | exact snapshot/generation、per-resource old/owned/foreign readback、允许的单一`RESUME_EXACT`或`ABORT_OWNED`模式、owned set、原gate与新approval digest | 用户 + safety reviewer | 不写`RECOVERY_CHOICE`；原generation冻结，只允许status/read-only reconcile |
 | **Gate E** | 每个 personal/external operation | exact target、pre/post hash、backup/reverse、不可逆点 | 用户 | adapter 不执行 |
-| **Gate R** | 每次真实 remote publication | literal remote/dst/expected-old/new OID/FF 证明 | 用户 | 保留 local private ref；不 push |
-| **Gate G** | policy/schema/privacy/launcher 权限面扩大 | semantic diff、兼容性、审计/隐私影响 | owner + 用户 | 旧 policy 继续；新 prepare 拒绝 |
+| **Gate R** | 每次真实 remote publication | literal remote/dst/expected-old/new OID；raw object graph无replace/graft；完整local object closure/no-lazy-fetch；FF证明与force-like CAS摘要 | 用户 | 保留 local private ref；不 push |
+| **Gate G** | policy/schema/privacy/launcher或selected capsule权限面扩大 | Gate N vector digest、base digest、selected独占module path/SHA、literal import profile、semantic diff、兼容/审计/隐私影响 | owner + 用户 | current base capsule继续；U-010不compose/activate，新 prepare拒绝未选能力 |
+| **Gate V** | 新 verifier 接入 precommit/agent 时 | 重复 p50/p95、120s cap、最少 15s headroom；分片 mapping 的 mutation-kill 证据；显式 full-suite 路径 | quality gate + CI owner | 不接入新串行 suite；先优化/安全分片 |
 | **Gate S** | shadow 转 mandatory | 每申请surface至少20次数据、3次recovery drill、false positive、双 harness parity | 用户 | 继续shadow/explicit或退v1-only |
 | **Gate H** | High-assurance 进入条件命中 | 事故证据、TCB 改变、daemon/OS 成本 | 用户，新计划 | Standard 保持，不偷加重型机制 |
 
 ### 19.5 Phase ownership
 
-| Phase | U-block | WA 档位 | 独立 EA | 写入边界 |
-|---|---|---|---|---|
-| v1 census / contract / compat freeze | Gate M + U-001 | core-execution | safety + contract | census read-only；U-001 scratch only |
-| Foundation candidate | U-002, U-004 | core-execution | state + patch EA | scratch only |
-| Side-by-side migration bootstrap | U-003 | core-execution | architecture/safety/parity/quality | Gate B 后由 v1 exact live apply |
-| Standard core | U-005, U-007 | core-execution | concurrency/effect EA | controlled-change self-hosted apply |
-| Integrations/adapters | U-006, U-008, U-009, U-010 | core-execution | role/parity/personal/Git/lifecycle EA | exact owned Files；真实 external/remote 仍 gated |
-| UX/verification | U-011, U-012 | guided + core | independent quality gate | repo only；fixtures/temp/bare-local only |
-| Rollout | U-013 | guided-execution | quality + governance | policy/docs/CI；Gate S 后才 mandatory |
+| Phase | U-block / Gate | 编排模式 | phase_type | model_tier | Agent 分工 | 执行顺序 | 具体产出 | 阶段门控 | 写入边界 |
+|---|---|---|---|---|---|---|---|---|---|
+| P1 Foundation containment | Gate M0 + Gate M + Gate C + U-001 | Sequential Chain + Supervisor | task_execution | core-execution | WA-001独占U-001 Files；EA-001做safety+contract冷审 | M0→M→scratch RED→Gate C→live subset | U-001 exact 7 Files、raw-v1 digest、mutant/crash evidence | U-001全验证PASS且Gate N输入可复算 | Gate C前scratch only；之后仅Foundation subset；无v2 bytes |
+| P2 Standard need evidence | Gate N | Supervisor | task_execution | core-execution | top-level owner汇总只读脱敏样本；EA-002独立判architecture+safety；无writer WA | 严格等待P1；20次operation后一次裁决 | canonical N0/N-C/N-D/N-E/N-G vector、digest与BUILD/SKIP/STOP证据 | 用户+architecture reviewer签署Gate N；不足即NEEDS_EVIDENCE/STOP | 零repo/runtime写；不得为取证生成v2 bytes |
+| P3 Base v2 candidate | U-002 + U-004 | Parallel Fan-out + Supervisor | task_execution | core-execution | WA-002/WA-004各自独占Files并行；EA-003做state/patch ownership审查 | Gate N N0=ENTER后并行，汇聚后进Gate B | U-002/U-004 exact Files的两个scratch bundles与digest | 两块DONE、ownership无交集、Gate B payload完整 | scratch only |
+| P4 Side-by-side bootstrap | U-003 + Gate B/F | Sequential Chain + Supervisor | task_execution | core-execution | WA-003独占U-003 Files；EA-004做architecture/safety/parity/quality | Gate B→dependency source→M→capsule→DRAIN→guard-last→fresh→Gate F→advance activation | U-003 exact Files、content-addressed base capsule、M/activation receipt | Gate F所需fresh/crash/private-ABI断言先PASS；随后activation receipt验证通过，U-003才DONE | 仅既有migration operation经public advance写source/capsule/pointer |
+| P5 Base orchestration + selected core capabilities | U-006 + [U-005] + [U-007] | Parallel Fan-out内建 + Serial install + Supervisor | task_execution | core-execution | WA-006及Gate N选中的WA-005/WA-007独占modules；对应EA审role/concurrency/DAG | scratch build可并行；repo dormant source install按U-ID串行 | U-006 Files及selected U-005/U-007 Files、各自source postimage receipt | 所有实例化U-block DONE；SKIP_DARK无instance/PASS/wait | 不改active capsule；optional不得改base Files |
+| P6 Selected external/Git adapters | [U-008] + [U-009] | Parallel Fan-out内建 + Serial install + Supervisor | task_execution | core-execution | selected WA-008/WA-009独占adapter；EA分别审personal/Git | 严格等待P5/U-007；scratch可并行，repo install按U-ID串行 | selected U-008/U-009 exact Files与dormant source receipts | BUILD分支suite PASS；SKIP分支module absence/base digest不变 | fixture/temp/bare-local；无真实personal/remote effect |
+| P7 Final runtime source | U-011 | Sequential Chain + Supervisor | task_execution | core-execution | WA-011独占CLI/kernel/state/receipt Files；EA-007审UX/evidence/parity | 等待P5/P6全部selected receipts后单独安装 | U-011 exact Files与dormant postimage receipt | active capsule SHA不变、worktree-load mutant被杀 | 只装dormant source；不执行mutable worktree source |
+| P8 Selected capsule composition/lifecycle | U-010 + Gate G | Sequential Chain + Supervisor | task_execution | core-execution | WA-010独占U-010 Files；EA-008审architecture/parity/lifecycle | 等待U-011与全部selected postimages→Gate G→compose→fresh→public advance | U-010 exact Files、literal-import profile、active capsule SHA与activation receipt | launcher byte-identical；双harness fresh PASS；U-010 DONE | 唯一composer/activation owner；stable launcher只读 |
+| P9 Full verification | U-012 + Gate V | Supervisor | task_execution | core-execution | WA-012只写verifier/CI owned Files；独立quality EA复算全部evidence | 严格等待U-010 receipt；contract→mutation→budget→full matrix | U-012 exact Files、assertion/evidence manifest与budget report | 全BLOCKING PASS、criteria PASS、Gate V预算PASS | repo/CI only；fixtures/temp/bare-local；不使用hidden skip |
+| P10 Per-surface rollout/closeout | U-013 + Gate S | Sequential Chain + Supervisor | task_execution | guided-execution（只执行已冻结metrics/docs/policy投影，不做新架构裁决） | WA-013独占三份治理Files；EA-010审quality+governance | disabled→shadow→explicit；每surface证据独立；Gate S后才mandatory | U-013 exact Files、per-surface metrics/recovery ledger与Gate S verdict | 每surface≥20次、3次recovery、parity=100%；到Standard停止线 | 仅policy/docs；Git/personal仍逐operation Gate R/E |
 
 ---
 
@@ -1061,31 +1227,33 @@ Standard 停止线；Gate H 只允许开启一份新的 High-assurance plan
 
 ```yaml
 U-001:
-  Goal: 冻结 installed v1 compatibility/evidence lineage，并编译 controlled-change/v2 strict schema、executable policy、receipt/attestation 状态词与 obligation census
-  Source: R-001, R-003, R-005, R-006, R-007, R-009
-  Dependencies: external: Gate P, Gate M
-  Files: .claude/skill-os/controlled-change.schema.json; .claude/skill-os/controlled-change.yaml; scripts/lib/controlled-change/contract.mjs; scripts/lib/controlled-change/receipt-schema.mjs; scripts/lib/controlled-change/compat/v1/core.mjs; scripts/lib/controlled-change/compat/v1/controller.mjs; scripts/lib/controlled-change/compat/v1/guard.mjs; scripts/fixtures/controlled-change/contract-cases.json; scripts/fixtures/controlled-change/v1-compat-cases.json; scripts/test-controlled-change-contract.mjs; scripts/test-controlled-change-migration.mjs; scripts/validate-skill-integration-receipt.mjs; framework-audit/2026-08-30-mattpocock-six-skills-integration/PUBLISH-ATTESTATION.json
-  Approach: Gate M 先在 scratch 冻结 v1 raw bytes/SHA；compat runtime 保持原语义，v2 compiler 禁止未知字段和隐式扩权；把 committed pre-publish receipt 与 post-publish attestation 分成引用链，不原地覆写；policy bytes 必须由 runtime loader 消费
-  Read List: FINAL-MASTER-PLAN.md sections 1–6、8–10、15–18、19.4；scripts/controlled-change.mjs 与 scripts/controlled-change-controller.mjs 全部 v1 schema/state/atomic-write 段；.claude/hooks/controlled-change-guard.mjs 全文；.claude/skill-os/controlled-change.yaml；六 Skill FINAL-MASTER-PLAN.md、IMPLEMENTATION-RECEIPT.md、REVIEW-LEDGER.md、CANDIDATE-MANIFEST.tsv；scripts/validate-skill-integration-receipt.mjs；Gate M evidence manifest
-  Test scenarios: happy=v1 terminal raw fixture byte-identical可读、v2单 repo update稳定 digest、VERIFIED receipt+PUBLISHED attestation链；edge=arbitrary string v1 generation、aggregated history、缺 terminal manifest、typed NOT_LOADED、rename/symlink/full-ref/external path；error=改写v1、重建terminal manifest、复用旧token/gate、receipt状态枚举漂移、未知字段/glob/path escape/default remote/free shell/dynamic adapter
-  Verification: npm run test:controlled-change --silent && node scripts/test-controlled-change-migration.mjs --raw-v1-fixtures --assert-byte-identical --zero-authority-import && node scripts/test-controlled-change-contract.mjs --all --obligation-census --require-exact-selectors && node scripts/validate-skill-integration-receipt.mjs --prepublish-and-attestation
+  Goal: 只以最小Foundation live patch关闭v1 compound-Git/one-use/publication证据缺口并保留legacy recovery；Gate N前不生成任何v2 bytes
+  Source: R-001, R-003, R-005, R-006, R-007, R-009, R-011
+  Dependencies: external: Gate P, Gate M0, Gate M; live containment phase: Gate C
+  Files: .claude/hooks/controlled-change-guard.mjs; scripts/controlled-change.mjs; scripts/candidate-manifest.mjs; scripts/lib/controlled-change/git-object-reader.mjs; scripts/fixtures/controlled-change/v1-containment-cases.json; scripts/test-controlled-change.mjs; scripts/validate-skill-integration-receipt.mjs
+  Approach: 先在scratch冻结v1 raw bytes/SHA与8/81 live drift，并只写能唯一杀死compound-Git、parallel one-use与false PUBLISHED OID/parent/path-set的Foundation RED selectors；Gate C批准后按fixtures/tests/validator→linear store→guard-last应用全部且仅有本块Files。全过程不mint/consume任何Git或任意shell effect，每一边界process-fresh复验，guard失败即保持Git effect dark。historical verifier从6aaa1c6 commit blobs证明OID/single-parent/baseline/path-set，不对live 8/81 drift报假失败；历史receipt/attestation不改写。v2 schema/policy/compat/contract/journal/launcher/host/adapter及其tests在Gate N前既不安装也不在scratch创建
+  Read List: FINAL-MASTER-PLAN.md sections 1–6、8–10、15–18、19.4；scripts/controlled-change.mjs 与 scripts/controlled-change-controller.mjs 全部 v1 schema/state/atomic-write 段；.claude/hooks/controlled-change-guard.mjs 全文；.claude/skill-os/controlled-change.yaml；六 Skill FINAL-MASTER-PLAN.md、IMPLEMENTATION-RECEIPT.md、REVIEW-LEDGER.md、CANDIDATE-MANIFEST.tsv、PUBLISH-ATTESTATION.json；scripts/candidate-manifest.mjs；scripts/validate-skill-integration-receipt.mjs；R-011两轴finding/reproduction；Gate M evidence manifest
+  Test scenarios: happy=Foundation subset按tests→linear-store→guard-last应用且20次repo-only operation可运行、v1 terminal raw bytes/SHA不变、published commit blob lineage成立；edge=crash在每个live subset边界、8/81合法live drift、aggregated history、缺terminal manifest、typed NOT_LOADED；error=guard先于线性store、partial apply后effect重新开放、compound Git只分类首verb、parallel one-use重用、伪40-hex OID/错parent/错path-set/replace-graft ancestry仍PASS、promisor缺对象触发lazy network、改写legacy evidence、Gate N前出现任一v2文件
+  Verification: node scripts/test-controlled-change.mjs --containment --compound-git-effects --parallel-one-use=32 --apply-order=tests,linear-store,guard-last --crash-every-containment-boundary --git-effects-remain-dark --raw-v1-evidence-immutable --assert-no-v2-bytes && GIT_NO_REPLACE_OBJECTS=1 GIT_NO_LAZY_FETCH=1 node scripts/candidate-manifest.mjs --verify-publish-receipt --published-commit 6aaa1c6511af6845042e9dc541524934ed57bfe9 --require-single-parent --require-exact-path-set --reject-replace-graft --reject-promisor-missing && node scripts/validate-skill-integration-receipt.mjs --prepublish-and-attestation --require-object-existence
   Status: PLANNED
 ```
 
-完成门：EA 逐条证明“没有被允许的未知行为”，且 compat fixture 对 v1 raw bytes 零改写。任何允许式 schema fallback、把 PUBLISHED 写回 committed receipt、或把 legacy history 当新 authority 均为 BLOCKING。Rollback：scratch-only，失败即丢弃候选；不得产生 live/runtime state。
+Gate C 的 Foundation live subset 精确为 U-001 的全部 Files，应用顺序是：`scripts/fixtures/controlled-change/v1-containment-cases.json` → `scripts/lib/controlled-change/git-object-reader.mjs` → `scripts/candidate-manifest.mjs` / `scripts/validate-skill-integration-receipt.mjs` / `scripts/test-controlled-change.mjs` → `scripts/controlled-change.mjs` → `.claude/hooks/controlled-change-guard.mjs`。Gate N 前除这些 Foundation bytes 与其只读 evidence 外没有第二组候选。
+
+完成门：上述 subset 必须按依赖顺序完成且每个 crash boundary 唯一可恢复；EA 逐条证明没有未知放行，raw v1 evidence digest 零变化，并扫描未来 v2 inventory 全部不存在。任何允许式 fallback、把 PUBLISHED 写回 committed receipt、把 legacy history 当新 authority、或门前预建 v2 均为 BLOCKING。Rollback：scratch RED candidate可丢弃；live subset只按 exact owned postimage reverse，但绝不恢复已知脆弱的Git effect开放状态——失败时保留default deny并进入人工恢复。U-001 完成后必须先过 Gate N；未过不得启动 U-002。
 
 ### U-002
 
 ```yaml
 U-002:
-  Goal: 实现 v2 prepare/advance/status 内核候选、线性化 append-only journal、approval binding、generation CAS 与 crash 后唯一 next-action 投影
-  Source: R-001, R-003, R-006, R-008, R-009
-  Dependencies: U-001
-  Files: scripts/controlled-change.mjs; scripts/lib/controlled-change/kernel.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/fixtures/controlled-change/state-cases.json; scripts/test-controlled-change-state.mjs
-  Approach: 三个 public entry 隐藏全部状态转换；caller 只能提交 request+approval evidence 或 operation+expected-generation+必要的新 gate evidence；per-operation append lock/O_EXCL sequence + previous-event hash 串行写入，authority/active/receipt 全由 journal 投影
-  Read List: FINAL-MASTER-PLAN.md sections 7–11、15–16；U-001 v1 compatibility/evidence contract；scripts/project-pin.mjs proposal/epoch CAS；scripts/project-lease.mjs no-age-steal/recovery；.claude/hooks/lib/project-substrate.mjs atomic write/fsync/identity；.claude/observability/scripts/write_observation.py journal recovery；v1 atomicWriteJson lost-update review finding
-  Test scenarios: happy=prepare→required→active→repo-effect→verify→complete；edge=duplicate attempt、approval gate、expiry、required-without-active、receipt-before-cleanup、两个disjoint operations；error=stale generation、malformed projection、partial journal、simultaneous append lost update、two legal next actions、unknown retry、caller自带next_state/authority
-  Verification: node scripts/test-controlled-change-state.mjs --model-all-transitions && node scripts/test-controlled-change-state.mjs --crash-every-journal-boundary --assert-single-next-action && node scripts/test-controlled-change-state.mjs --parallel-append=32 --assert-no-lost-update && node scripts/test-controlled-change-state.mjs --replay
+  Goal: 在N0进入Standard后于scratch首次构建v2 strict schema/policy、raw-v1 compatibility/receipt contract、prepare/advance/status内核、线性化journal与唯一next-action投影
+  Source: R-001, R-003, R-006, R-008, R-009, R-011, R-016
+  Dependencies: U-001, external: Gate N N0=ENTER_STANDARD
+  Files: .claude/skill-os/controlled-change.schema.json; .claude/skill-os/controlled-change.yaml; scripts/controlled-change.mjs; scripts/lib/controlled-change/contract.mjs; scripts/lib/controlled-change/receipt-schema.mjs; scripts/lib/controlled-change/compat/v1/core.mjs; scripts/lib/controlled-change/compat/v1/controller.mjs; scripts/lib/controlled-change/compat/v1/guard.mjs; scripts/lib/controlled-change/kernel.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/fixtures/controlled-change/contract-cases.json; scripts/fixtures/controlled-change/v1-compat-cases.json; scripts/fixtures/controlled-change/state-cases.json; scripts/test-controlled-change-contract.mjs; scripts/test-controlled-change-migration.mjs; scripts/test-controlled-change-state.mjs
+  Approach: 先验证Gate N evidence digest与U-001 inventory absence proof，再首次生成v2 bytes；strict contract拒绝未知字段/隐式target/effect，compat只读raw v1且不导入旧authority，receipt状态与writer同源。三个public entry隐藏全部状态转换；prepare可先无approval写PREPARED+摘要，advance是唯一live/effect推进口；caller只能提交request+可选approval evidence或operation+expected-generation+必要的新gate evidence；per-operation append lock/O_EXCL sequence + previous-event hash串行写入，authority/active/receipt全由journal投影
+  Read List: FINAL-MASTER-PLAN.md sections 4.4、7–11、15–17；Gate N完整capability vector与U-001 raw-v1/evidence digest；scripts/project-pin.mjs proposal/epoch CAS；scripts/project-lease.mjs no-age-steal/recovery；.claude/hooks/lib/project-substrate.mjs atomic write/fsync/identity；.claude/observability/scripts/write_observation.py journal recovery；memory/scripts/consolidate_memory.py proposer/approver/promoter字段与R-016两轴finding；v1 atomicWriteJson lost-update review finding；R-011 route reminder/first-task-text findings
+  Test scenarios: happy=Gate N后首次生成v2 contract/compat、prepare无evidence→PREPARED/approval payload→advance绑定→required→active→repo-effect→verify→complete；edge=raw v1 terminal byte-identical可读、原始显式低风险请求随prepare绑定、duplicate attempt、approval gate、expiry、approval-current required-without-active只resume、approval-current partial repo apply全owned/old只roll-forward、approval-current Git-local只补receipt、required-missing-active/partial-owned/Git-local任一+approval-expired都只选AWAIT_GATE_X、foreign先进入RECOVERY_REQUIRED再由Gate X fresh approval形成新generation choice、receipt-before-cleanup、两个disjoint operations；error=Gate N digest缺失或门前已有v2 bytes、unknown schema/glob/path escape/free shell/dynamic adapter、obligation reminder或promoted-memory/reviewer/mattered记录作approval、旧authority导入、prepare产生live effect、stale generation、malformed projection、partial journal、同一snapshot同时接受resume/abort/reverse、required-missing-active/partial-owned/Git-local+expired错误选RESUME_EXACT、`RECONCILE_READONLY`被当selector、未知`REVERSE_OWNED` mode被接受、choice未绑定snapshot/generation/owned-set、worker自选recovery mode、simultaneous append/one-use lost update、two legal next actions、unknown retry、caller自带next_state/authority
+  Verification: node scripts/test-controlled-change-contract.mjs --all --obligation-census --route-reminder-non-authority --memory-review-non-authority --require-exact-selectors --require-gate-n-first-write && node scripts/test-controlled-change-migration.mjs --raw-v1-fixtures --assert-byte-identical --zero-authority-import && node scripts/test-controlled-change-state.mjs --model-all-transitions && node scripts/test-controlled-change-state.mjs --crash-every-journal-boundary --assert-single-next-action --selector-precedence=unknown,gate-x,resume --reject-expired-resume=required-missing-active,partial-owned,git-local --reject-dual-recovery-snapshot --reject-unknown-recovery-mode --require-approval-bound-recovery-choice && node scripts/test-controlled-change-state.mjs --parallel-append=32 --assert-no-lost-update && node scripts/test-controlled-change-state.mjs --replay
   Status: PLANNED
 ```
 
@@ -1095,31 +1263,31 @@ BLOCKING：任何 projection 可独立改写、approval 可由 worker/caller任�
 
 ```yaml
 U-003:
-  Goal: 由 installed v1 保护 exact side-by-side migration，安装 DRAIN_V1 stable launcher、v1 compatibility 与 v2 dormant runtime，并经 fresh Claude/Codex 验证后 CAS 激活
-  Source: R-001, R-003, R-005, R-008, R-009
+  Goal: 由contained v1安装source dependencies，再创建唯一v2 migration operation M，并只经public advance按capsule→durable DRAIN→final guard-last→fresh proof→Gate F→activation CAS完成side-by-side迁移
+  Source: R-001, R-003, R-005, R-008, R-009, R-011
   Dependencies: U-001, U-002, U-004, external: Gate B
-  Files: .claude/skill-os/controlled-change.schema.json; .claude/skill-os/controlled-change.yaml; .claude/hooks/controlled-change-guard.mjs; scripts/controlled-change.mjs; scripts/controlled-change-controller.mjs; scripts/lib/controlled-change/admission.mjs; scripts/lib/controlled-change/launcher.mjs; scripts/lib/controlled-change/lifecycle.mjs; scripts/lib/controlled-change/contract.mjs; scripts/lib/controlled-change/kernel.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/lib/controlled-change/receipt-schema.mjs; scripts/lib/controlled-change/compat/v1/core.mjs; scripts/lib/controlled-change/compat/v1/controller.mjs; scripts/lib/controlled-change/compat/v1/guard.mjs; scripts/lib/controlled-change/patch-pipeline.mjs; scripts/lib/controlled-change/adapters/repo-files.mjs; scripts/fixtures/controlled-change/contract-cases.json; scripts/fixtures/controlled-change/state-cases.json; scripts/fixtures/controlled-change/harness-cases.json; scripts/fixtures/controlled-change/v1-compat-cases.json; scripts/test-controlled-change-contract.mjs; scripts/test-controlled-change-state.mjs; scripts/test-controlled-change-migration.mjs; scripts/test-controlled-change-admission.mjs; scripts/test-controlled-change-repo-files.mjs; scripts/test-controlled-change-harness.mjs; scripts/verify-codex-wiring.mjs; scripts/validate-skill-integration-receipt.mjs; framework-audit/2026-08-30-mattpocock-six-skills-integration/PUBLISH-ATTESTATION.json
-  Approach: Gate B 冻结 exact pre/post/reverse；现有 v1 guard允许这一笔精确 mutation；stable guard path先进入DRAIN_V1、dual-read raw v1和v2 namespace；保持 .claude/settings.json 与 .codex/hooks.json trust entry bytes不变；zero legacy required/invalid与fresh parity后才CAS v2 pointer
-  Read List: FINAL-MASTER-PLAN.md sections 14–16、19.2–19.4；Gate M/B evidence；.claude/settings.json PreToolUse registration；.codex/hooks.json合法顶层/已授信entry；.codex/codex-hook-adapter.mjs project-scope piggyback与failure fallback；.claude/hooks/project-scope-guard.mjs deny/updatedInput/exception；scripts/verify-codex-wiring.mjs S5b/S11/S11b/S12；全部v1 core 11 cases
-  Test scenarios: happy=valid terminal v1→DRAIN_V1→v2 active、protected inactive write需prepare、active只准canonical controller；edge=v1 valid nonterminal exact recovery、fresh loader、Codex trust unchanged、semantic Read/Write/Bash/apply_patch projection；error=v1 invalid/stale、多v1 required、新prepare during drain、direct target writer、raw allowed_commands wrapper/operator/redirect/substitution、missing/malformed v2、timeout/throw、reverse drill
-  Verification: npm run test:controlled-change --silent && node scripts/test-controlled-change-migration.mjs --drain-v1 --zero-legacy-authority-import --reverse && node scripts/test-controlled-change-admission.mjs --pre-witness --controller-argv-only --deny-direct-writer && node scripts/test-controlled-change-harness.mjs --semantic-conformance-both && node scripts/verify-codex-wiring.mjs；随后 fresh Claude 与 fresh Codex 各跑同一 harness-cases corpus并比较 verdict/reason digest完全相等
+  Files: .claude/skill-os/controlled-change.schema.json; .claude/skill-os/controlled-change.yaml; .claude/hooks/controlled-change-guard.mjs; scripts/controlled-change.mjs; scripts/controlled-change-controller.mjs; scripts/lib/controlled-change/admission.mjs; scripts/lib/controlled-change/launcher.mjs; scripts/lib/controlled-change/lifecycle.mjs; scripts/lib/controlled-change/capsule-composer.mjs; scripts/lib/controlled-change/contract.mjs; scripts/lib/controlled-change/kernel.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/lib/controlled-change/receipt-schema.mjs; scripts/lib/controlled-change/git-object-reader.mjs; scripts/lib/controlled-change/effect-host.mjs; scripts/lib/controlled-change/compat/v1/core.mjs; scripts/lib/controlled-change/compat/v1/controller.mjs; scripts/lib/controlled-change/compat/v1/guard.mjs; scripts/lib/controlled-change/patch-pipeline.mjs; scripts/lib/controlled-change/adapters/repo-files.mjs; scripts/fixtures/controlled-change/contract-cases.json; scripts/fixtures/controlled-change/state-cases.json; scripts/fixtures/controlled-change/harness-cases.json; scripts/fixtures/controlled-change/effect-cases.json; scripts/fixtures/controlled-change/capsule-profile-cases.json; scripts/fixtures/controlled-change/v1-compat-cases.json; scripts/fixtures/controlled-change/v1-containment-cases.json; scripts/test-controlled-change.mjs; scripts/test-controlled-change-contract.mjs; scripts/test-controlled-change-state.mjs; scripts/test-controlled-change-migration.mjs; scripts/test-controlled-change-admission.mjs; scripts/test-controlled-change-repo-files.mjs; scripts/test-controlled-change-harness.mjs; scripts/test-controlled-change-effects.mjs; scripts/test-controlled-change-capsule-composer.mjs; scripts/verify-codex-wiring.mjs
+  Approach: Gate B冻结repo source与§15.1 operational targets；contained-v1 effect-empty operation dependency-first安装除final guard外的source，CLI entry在依赖后；新CLI的public prepare创建M，contained guard随即只准M的exact advance/status；advance以same-filesystem staging/no-replace/fsync发布content-addressed base-only capsule，写legacy index，再durable DRAIN，随后由minimal repo-files host原子替换final guard；fresh双端证明后停在DRAIN且U-003保持IN_PROGRESS，只有用户通过Gate F后才由同一advance M内部CAS activation并产receipt，随后U-003转DONE。Gate F receipt同时冻结base kernel/state-store/effect-host/policy/git-object-reader/composer digest与四组optional独占path的absence map，作为后续capability mutation boundary。保持settings/codex hook/adapter anchors byte-identical，不暴露lifecycle activate或任意install path
+  Read List: FINAL-MASTER-PLAN.md sections 8.1、14–16、19.2–19.4；Gate M0/M/C/N/B evidence；§15.1完整operational target与crash matrix；.claude/settings.json PreToolUse registration；.codex/hooks.json合法顶层/已授信entry；.codex/codex-hook-adapter.mjs project-scope piggyback、hook-failure-decision两种调用与failure fallback；.claude/hooks/project-scope-guard.mjs deny/updatedInput/exception；E1/E2 delivery与E3-L0接口证据；scripts/verify-codex-wiring.mjs S5b/S11/S11b/S12；U-001 containment与U-002 contract/compat/core cases；U-004 minimal host evidence
+  Test scenarios: happy=contained v1 dependency install→public prepare M→base capsule→DRAIN→guard-last→fresh proof→Gate F PASS→public advance activation+base/absence digest；edge=private ABI有/无--repo、M PREPARED但无capsule、DRAIN且final guard未写、Gate F等待期间status/exact recovery、activation CAS后receipt前、fresh loader、Codex trust unchanged、fresh Claude/Codex各执行同一六个approval-selector fixture（required-missing-active/partial-owned/git-local × current/expired）；error=Gate F前activation可发生、Gate F未冻结base/optional absence、base含N-C/D/E/G代码、operational target无owner、dependency前写CLI、DRAIN前写final guard、M之外operation推进、DRAIN后新prepare、第四activate/install入口、cross-device rename、partial capsule可被pointer选择、legacy nonterminal出现仍激活、direct target writer、wrapper/operator/redirect/substitution、private ABI stdout/错exit、任一harness省略六fixture之一、current不唯一RESUME_EXACT或expired不唯一AWAIT_GATE_X
+  Verification: node scripts/test-controlled-change.mjs --containment --compound-git-effects --parallel-one-use=32 && node scripts/test-controlled-change-migration.mjs --public-entry-only --operation=M --ordered=dependencies,capsule,drain,guard-last,fresh,gate-f,activate --deny-activation-before-gate-f --crash-every-install-boundary --assert-single-next-action --operational-target-owner --zero-legacy-authority-import --freeze-base-capability-boundary --reverse && node scripts/test-controlled-change-admission.mjs --pre-witness --controller-argv-only --deny-direct-writer --drain-allows-existing-operation-only && node scripts/test-controlled-change-harness.mjs --semantic-conformance-both --private-hook-failure-abi --raw-v1-v2 --approval-selector-cross-product=required-missing-active,partial-owned,git-local --approval-states=current,expired --require-identical-fixture-ids && node scripts/test-controlled-change-effects.mjs --repo-only-bootstrap --external-git-unselectable && node scripts/test-controlled-change-capsule-composer.mjs --base-profile-only --literal-imports --no-runtime-discovery && node scripts/verify-codex-wiring.mjs；随后 fresh Claude 与 fresh Codex 各跑同一 harness-cases corpus中的六个approval-selector fixture ID，并逐项比较 verdict/reason digest完全相等；缺任一fixture或任一端未执行均FAIL
   Status: PLANNED
 ```
 
-Gate F 只有在 legacy zero required/invalid、fresh 双端 controlled-mode verdict digest、trusted Codex entry bytes unchanged、launcher expected-old CAS、reverse drill全过后才能通过。失败：保持/回 `DRAIN_V1` 或 previous；reverse只覆盖 current==owned-postimage；不得删 v1/v2 required证据来“解锁”。
+Gate F 只有在 legacy zero required/invalid、M是唯一非终态migration operation、完整install crash matrix、compound/concurrent/publication mutants、private `hook-failure-decision` ABI、fresh 双端 controlled-mode digest、trusted Codex entry bytes unchanged、launcher expected-old CAS/reverse drill，以及base source digest + optional独占path absence map全过后才能通过。fresh proof 完成但 Gate F 未通过时，U-003保持`IN_PROGRESS`且pointer保持`DRAIN_V1`；Gate F PASS后才允许同一M的activation generation，receipt验证通过后U-003才`DONE`。失败：保持/回 `DRAIN_V1` 或 previous，只允许 `status`/exact `advance M`恢复；不得删 required evidence来“解锁”。
 
 ### U-004
 
 ```yaml
 U-004:
-  Goal: 建立 scratch candidate bundle census 与只能由 effect host 调用的 repo-files CAS adapter，精确支持 create/update/delete/rename/symlink/mode
-  Source: R-001, R-003, R-006, R-008, R-009
-  Dependencies: U-001
-  Files: scripts/lib/controlled-change/patch-pipeline.mjs; scripts/lib/controlled-change/adapters/repo-files.mjs; scripts/test-controlled-change-repo-files.mjs
-  Approach: worker 只在证明 writable roots不含 live/common-dir 的 scratch生成logical destinations；candidate pipeline只做census；repo-files adapter对exact path/kind/mode/pre/post/reverse做逐资源CAS，自己不能推进kernel state，也不暴露第二个direct apply CLI
+  Goal: 在scratch建立candidate census、最小repo-only effect host/repo-files CAS adapter与唯一pure capsule composer，精确支持base profile及后续静态模块组合
+  Source: R-001, R-003, R-006, R-008, R-009, R-011
+  Dependencies: U-001, external: Gate N N0=ENTER_STANDARD
+  Files: scripts/lib/controlled-change/patch-pipeline.mjs; scripts/lib/controlled-change/effect-host.mjs; scripts/lib/controlled-change/capsule-composer.mjs; scripts/lib/controlled-change/adapters/repo-files.mjs; scripts/fixtures/controlled-change/effect-cases.json; scripts/fixtures/controlled-change/capsule-profile-cases.json; scripts/test-controlled-change-repo-files.mjs; scripts/test-controlled-change-effects.mjs; scripts/test-controlled-change-capsule-composer.mjs
+  Approach: worker只在证明writable roots不含live/common-dir的scratch生成logical destinations；candidate pipeline只做census；minimal host接收composer生成的封闭registry/scheduler，base profile只有repo-files+sequential scheduler，external/Git/unknown都不可选。composer只接受canonical Gate N vector、base digest与literal module path/blob SHA，生成静态runtime entry，不做runtime discovery。repo-files adapter对exact path/kind/mode/pre/post/reverse逐资源CAS，自己不能推进kernel state，也不暴露第二direct apply CLI
   Read List: FINAL-MASTER-PLAN.md sections 7、12.2、16；六 Skill FINAL-MASTER-PLAN.md 的 scratch worker/trusted apply/allowlist formulas；.codex/workflow-runner.mjs 的 scratch workspace isolation；scripts/test-project-transaction.mjs 的 staging/no-replace/byte-exact CAS cases
-  Test scenarios: happy=effect-host fixture调用update/create/rename；edge=dirty unrelated WIP byte-identical、symlink/type/mode/unicode/linked-worktree、partial资源readback；error=direct CLI调用、undeclared file、path traversal、preimage drift、harness direct writer、partial crash、reverse时current非owned postimage
-  Verification: node scripts/test-controlled-change-repo-files.mjs --all-kinds --effect-host-only && node scripts/test-controlled-change-repo-files.mjs --preserve-unrelated-dirty-wip && node scripts/test-controlled-change-repo-files.mjs --crash-and-owned-reverse --classify-old-owned-foreign
+  Test scenarios: happy=minimal host经base profile调用update/create/rename、composer输出literal repo import；edge=dirty unrelated WIP byte-identical、symlink/type/mode/unicode/linked-worktree、partial readback、任意Gate N BUILD/SKIP vector；error=bootstrap无host、base profile含未选module、runtime扫描/动态import、external/Git可选、direct CLI调用、undeclared file、path traversal、preimage drift、harness direct writer、partial crash、reverse时current非owned postimage
+  Verification: node scripts/test-controlled-change-effects.mjs --repo-only-bootstrap --external-git-unselectable --single-mutation-owner && node scripts/test-controlled-change-capsule-composer.mjs --base-profile-only --literal-imports --module-sha-bound --reject-runtime-discovery && node scripts/test-controlled-change-repo-files.mjs --all-kinds --effect-host-only && node scripts/test-controlled-change-repo-files.mjs --preserve-unrelated-dirty-wip && node scripts/test-controlled-change-repo-files.mjs --crash-and-owned-reverse --classify-old-owned-foreign
   Status: PLANNED
 ```
 
@@ -1133,29 +1301,29 @@ BLOCKING：delta census 分母必须来自 candidate 与 live identity 的完整
 U-005:
   Goal: 增加 common-dir 身份下 one-manifest-per-operation、有序资源 claim、disjoint ACTIVE、线性化 generation推进与精确 recovery/no-age-steal
   Source: R-001, R-005, R-006, R-008, R-009
-  Dependencies: U-002, U-003, U-004, external: Gate F
-  Files: scripts/lib/controlled-change/resource-claims.mjs; scripts/lib/controlled-change/kernel.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/test-controlled-change-claims.mjs
-  Approach: 对repo-path ancestor overlap、external path、local-ref、remote-ref、runtime生成canonical key；完整resource set不相交才允许多operation ACTIVE，action按序短时获取；claim只改善合作式调度，journal append和资源apply仍各自CAS
+  Dependencies: U-002, U-003, U-004, external: Gate F, Gate N N-C=BUILD
+  Files: scripts/lib/controlled-change/resource-claims.mjs; scripts/lib/controlled-change/concurrency-scheduler.mjs; scripts/fixtures/controlled-change/claim-cases.json; scripts/test-controlled-change-claims.mjs
+  Approach: 只实现符合U-002 stable scheduler interface的独占module，不改kernel/state-store/base host；对repo-path ancestor overlap、external path、local-ref、remote-ref、runtime生成canonical key，完整resource set不相交才允许多operation ACTIVE，action按序短时获取；claim只改善合作式调度，journal append和资源apply仍各自CAS。module先scratch验收，再由base repo-files通过本U-block的public prepare/advance exact operation安装dormant source；active bundle SHA必须不变，最终仅U-010 composer可静态链接
   Read List: FINAL-MASTER-PLAN.md sections 4.3、10–11、16；scripts/project-lease.mjs 的 acquire/release/owner/recover 段；.claude/hooks/lib/project-substrate.mjs 的 common-dir/worktree identity 段；scripts/test-project-transaction.mjs 的 concurrency/PID-reuse/no-age-steal cases
-  Test scenarios: happy=disjoint manifests并行、overlap后到保持RESOURCE_BUSY；edge=ancestor/descendant path、linked-worktree file独立而ref共享、多资源排序、owner crash/PID reuse；error=manifest union、guard猜owner、age steal、stale generation、lost journal update、partial claim leak、external process漂移
-  Verification: node scripts/test-controlled-change-claims.mjs --scheduler --workers=16 --one-manifest-per-op && node scripts/test-controlled-change-claims.mjs --overlap=ancestor,descendant,ref --linked-worktrees && node scripts/test-controlled-change-claims.mjs --no-age-steal --pid-reuse --no-lost-update --crash-every-boundary
+  Test scenarios: happy=disjoint manifests并行、overlap后到保持RESOURCE_BUSY；edge=ancestor/descendant path、linked-worktree file独立而ref共享、多资源排序、owner crash/PID reuse；error=N-C为SKIP时任一U-005独占file存在、修改kernel/state-store/base host、manifest union、guard猜owner、age steal、stale generation、lost journal update、partial claim leak、external process漂移
+  Verification: node scripts/test-controlled-change-claims.mjs --scheduler --workers=16 --one-manifest-per-op --require-gate=N-C --assert-base-digests-unchanged --install-dormant-source --assert-active-bundle-unchanged && node scripts/test-controlled-change-claims.mjs --overlap=ancestor,descendant,ref --linked-worktrees && node scripts/test-controlled-change-claims.mjs --no-age-steal --pid-reuse --no-lost-update --crash-every-boundary
   Status: PLANNED
 ```
 
-BLOCKING：死锁、claim 泄漏、按时间偷锁、将 claim 误写成外部进程强保证。Rollback：释放仅由 exact owner 持有且 journal 允许的 claims；state code 更新按 runtime previous bundle 回退。
+BLOCKING：死锁、claim 泄漏、按时间偷锁、将 claim 误写成外部进程强保证。Rollback：scratch module丢弃；若已组合则U-010以expected-current pointer CAS回previous，释放仅由exact owner且journal允许的claims；不改base state code。
 
 ### U-006
 
 ```yaml
 U-006:
-  Goal: 把 writer前compile/prepare、approval evidence、risk/effect触发、三入口与六值completion映射接入Plan Agent/Orchestrator，并以六 Skill v1 lineage作为migration fixture
-  Source: R-001, R-003, R-005, R-007, R-010
-  Dependencies: U-003, U-004, U-005, U-007
+  Goal: 把 writer前compile/prepare、approval evidence、risk/effect触发、三入口与六值completion映射接入Plan Agent/Orchestrator，同时明确隔离 route reminder 与可绑定的 E3 attestation
+  Source: R-001, R-003, R-005, R-007, R-010, R-011, R-013, R-015, R-016, R-017
+  Dependencies: U-003, U-004, external: Gate F
   Files: .claude/agents/plan-agent.md; .claude/agents/orchestrator.md; scripts/fixtures/controlled-change/contract-cases.json; scripts/test-controlled-change-orchestration.mjs
-  Approach: 角色合同要求派发writer前prepare并把真实用户裁决绑定为evidence；Orchestrator只能调用入口；worker/EA必须在机械隔离scratch；不改workflow graph、不把controlled-change暴露成Skill，六Skill只验证v1→v2 lineage与触发
-  Read List: FINAL-MASTER-PLAN.md sections 0、8、18–20；.claude/agents/plan-agent.md 的 U-block/Source/Status/Research Gate 段；.claude/agents/orchestrator.md 的 supervisor/human gate/escalation 段；六 Skill FINAL-MASTER-PLAN.md 的 controlled-change U-block、files、publisher、non-goals；.claude/skill-os/optional-workflow-graph.yaml 的状态真值边界
-  Test scenarios: happy=低风险repo U-block在首个writer前prepare且原请求绑定approval；edge=protected/multi-effect升Standard、plan/readonly/owner-data-writer exempt、无sandbox则不委托worker；error=prepare发生在writer后、worker mint/call controller、EA advance、Orchestrator改manifest/代批、workflow graph新增node
-  Verification: node scripts/test-controlled-change-orchestration.mjs --role-matrix --prepare-before-writer && node scripts/test-controlled-change-orchestration.mjs --trigger-table --approval-binding && node scripts/test-controlled-change-orchestration.mjs --six-skill-v1-lineage && git diff --exit-code -- .claude/skill-os/optional-workflow-graph.yaml
+  Approach: 角色合同要求派发writer前prepare；低风险显式原请求可直接绑定，其他先返回PREPARED/approval payload再由advance绑定；Orchestrator只能调用入口；worker/EA必须在机械隔离scratch；.session-obligation/recommendedSkills/PLAN_MODE hint以及semantic-memory stable/promoted/reviewer/mattered均永不作批准或dispatch authority。Gate N vector只由U-002 canonical contract编译，Plan/Orchestrator与Claude/Codex只消费同一digest projection；BUILD才实例化U-block，SKIP_DARK只是gate annotation且不进入六值completion、不计PASS、不等待。Gate M时E3若存在则只适配其attested event interface，若不存在则绑定当前top-level request digest，绝不重解transcript；STOP/SINGLE/MULTI/FRAMEWORK_FLOW/soft candidate无论正确、误派或renderer失败均只能作为不可信提示，不能mint approval、满足obligation或触发writer；route/graph由原owner修复，本块只冻结其通过Gate M后的production schema与bytes，不改workflow graph、不把controlled-change暴露成Skill
+  Read List: FINAL-MASTER-PLAN.md sections 0、4.4、5.1、8、17–20；.claude/agents/plan-agent.md 的 U-block/Source/Status/Research Gate 段；.claude/agents/orchestrator.md 的 supervisor/human gate/escalation 段；六 Skill FINAL-MASTER-PLAN.md 的 controlled-change U-block、files、publisher、non-goals；.claude/skill-os/optional-workflow-graph.yaml 的状态真值边界与scene B code-recon paths；.claude/hooks/route-guard.mjs E1/E2、skillDecision与production STOP renderer；framework-audit/2026-08-20-routing-steering-handshake/EXEC-DELIVERY-E1E2.md；framework-audit/2026-08-20-routing-steering-handshake/E3-L0-PROBE.md；framework-audit/2026-09-02-skill-responsibility-audit/REPORT.md及R-013/R-015/R-017两轴finding；memory/semantic/reviews.jsonl与memory/scripts/consolidate_memory.py的R-016角色归因finding；scripts/test-route-guard.mjs对应fixtures
+  Test scenarios: happy=低风险repo U-block在首个writer前prepare且原请求绑定approval、两harness对同Gate N digest裁出同一BUILD graph、E3 attested event若存在则绑定exact event/task digest、route四类verdict/soft-candidate与memory stable/promoted projection均保持non-authority；edge=16种N-C/D/E/G组合、SKIP无instance/status/PASS/wait、无E3时当前request digest、E3 distance-2 event、礼貌词meta-question误派SINGLE、`.docx`假绿/production soft-candidate崩溃、framework-flow提及、code-recon path recommendation、promoted reviewer与真实approver不一致、protected/multi-effect升Standard、plan/readonly/owner-data-writer exempt、无sandbox则不委托worker；error=route/graph或memory原owner缺陷仍在却越门、任一路由verdict/hint/recommendation或memory fact/reviewer/mattered被当approval/dispatch、workflow path无下游input proof却进入受控调度、SKIP伪装DONE或卡依赖、两端独立解析vector产生不同graph、digest漂移仍执行、第二route event覆盖first exact task text、相邻消息启发式或内部重解transcript、未tracked alias identity被接受、prepare发生在writer后、worker mint/call controller、EA advance、Orchestrator改manifest/代批、controlled-change修改workflow graph或memory store
+  Verification: node scripts/test-controlled-change-orchestration.mjs --role-matrix --prepare-before-writer && node scripts/test-controlled-change-orchestration.mjs --capability-vector-matrix=all --both-harnesses --same-digest-same-graph --gate-disposition-not-completion --skip-no-pass-no-wait && node scripts/test-controlled-change-orchestration.mjs --trigger-table --approval-binding --route-reminder-non-authority --memory-review-non-authority --all-route-verdicts --preserve-first-task-text && node scripts/test-controlled-change-orchestration.mjs --route-production-schema --non-dry-run --renderer-no-crash --soft-candidate-shapes=legacy,meta-question --route-defect-never-authority && node scripts/test-controlled-change-orchestration.mjs --workflow-recommendation-non-authority --require-downstream-input-proof && node scripts/test-controlled-change-orchestration.mjs --e3-interface=auto --no-transcript-parser && node scripts/test-controlled-change-orchestration.mjs --six-skill-v1-lineage && git diff --exit-code -- .claude/hooks/route-guard.mjs .claude/hooks/session-end.mjs scripts/test-route-guard.mjs .claude/skill-os/optional-workflow-graph.yaml
   Status: PLANNED
 ```
 
@@ -1165,31 +1333,31 @@ U-006:
 
 ```yaml
 U-007:
-  Goal: 建立封闭静态 effect host，统一调度repo/external/Git DAG并让kernel成为唯一状态推进者
-  Source: R-001, R-004, R-008, R-009
-  Dependencies: U-002, U-003, U-004
-  Files: scripts/lib/controlled-change/effect-host.mjs; scripts/lib/controlled-change/adapters/external-files.mjs; scripts/lib/controlled-change/adapters/git-publisher.mjs; .claude/skill-os/controlled-change.yaml; scripts/fixtures/controlled-change/effect-cases.json; scripts/test-controlled-change-effects.mjs
-  Approach: 编译期静态表只暴露prepare/apply/readback/compensate；repo-files从第一节点起就走host，external/Git先是deny stub；kernel拥有全部state，任何node UNKNOWN立即冻结后继，禁止hardcoded pre-effect repo apply
-  Read List: FINAL-MASTER-PLAN.md sections 6.1、7、9、12–13、16；旧重型方案的 effect broker/personal/publisher 候选段；scripts/check-capability-parity.mjs 的 static projection 模式
-  Test scenarios: happy=repo effect按DAG完成；edge=多个disjoint effects、compensable node、policy freeze；error=第二repo mutation owner、unknown adapter/dynamic path、adapter自推state、cycle、undeclared target、UNKNOWN后执行尾节点、跨adapter自动补偿
-  Verification: node scripts/test-controlled-change-effects.mjs --contract --static-registry --single-mutation-owner && node scripts/test-controlled-change-effects.mjs --dag-all-topologies && node scripts/test-controlled-change-effects.mjs --unknown-freezes-tail --no-dynamic-loading
+  Goal: 仅在N-D有真实多effect证据时提供可被base host静态组合的独占DAG scheduler，并让kernel继续成为唯一状态推进者
+  Source: R-001, R-004, R-008, R-009, R-011
+  Dependencies: U-002, U-003, U-004, external: Gate F, Gate N N-D=BUILD
+  Files: scripts/lib/controlled-change/effect-dag.mjs; scripts/fixtures/controlled-change/effect-dag-cases.json; scripts/test-controlled-change-effect-dag.mjs
+  Approach: 只实现符合U-004 stable scheduler interface的独占effect-DAG module，不改base effect-host/policy/effect fixtures；module只暴露拓扑计划与prepare/apply/readback/compensate顺序，kernel仍拥有全部state，任何node UNKNOWN立即冻结后继。先scratch验收，再由base repo-files通过本U-block的public prepare/advance exact operation安装dormant source；active bundle SHA不变，最终仅U-010 composer可静态链接。禁止预建external/Git adapter或第二repo mutation owner
+  Read List: FINAL-MASTER-PLAN.md sections 6.1、7、9、12–13、16；U-004 effect-host/composer stable interface与base digest；旧重型方案的 effect broker/personal/publisher 候选段；scripts/check-capability-parity.mjs 的 static projection 模式
+  Test scenarios: happy=独占module规划获证repo DAG；edge=多个disjoint repo effects、compensable node、policy freeze、N-E/N-G蕴含N-D；error=N-D为SKIP仍创建本块bytes、修改base host/policy/effect fixtures、预建external/Git、第二repo mutation owner、unknown adapter/dynamic path、adapter自推state、cycle、undeclared target、UNKNOWN后执行尾节点、跨adapter自动补偿
+  Verification: node scripts/test-controlled-change-effect-dag.mjs --contract --all-topologies --require-gate=N-D --assert-base-digests-unchanged --install-dormant-source --assert-active-bundle-unchanged && node scripts/test-controlled-change-effect-dag.mjs --unknown-freezes-tail --no-dynamic-loading --no-adapter-code
   Status: PLANNED
 ```
 
-删除测试：删 external/Git stub 后 repo-files 仍完整工作；若 kernel import 具体业务语义即 FAIL。Rollback：policy 保持 repo-only，stub 永远 deny，不产生外部 effect。
+删除测试：整个U-007 module不存在时 base sequential repo-files仍完整工作；若 kernel/base host import具体业务语义即FAIL。Rollback：不把module加入下一capsule profile；已激活版本按U-010 pointer CAS回previous。
 
 ### U-008
 
 ```yaml
 U-008:
   Goal: 从六 Skill task-specific cutover提取通用external/personal exact-path durable adapter，同时继承当前postimage baseline而不接管v1 backup ownership
-  Source: R-001, R-003, R-004, R-006, R-008, R-009
-  Dependencies: U-005, U-007
+  Source: R-001, R-003, R-004, R-006, R-008, R-009, R-011
+  Dependencies: U-003, U-007, external: Gate N N-E=BUILD
   Files: scripts/lib/controlled-change/adapters/external-files.mjs; scripts/test-controlled-change-external-files.mjs
-  Approach: 只替换U-007 external deny stub；canonical absolute target、same-dir temp/fsync/rename、0600 private receipt/restricted backup pointer、owned-postimage reverse；Gate M verified v1 adapter postimage成为preimage，但旧backup/audit保持legacy owner
+  Approach: N-E证据与N-D蕴含关系验证后只在scratch首次创建独占external adapter，不改base host/policy；canonical absolute target、same-dir temp/fsync/rename、0600 private receipt/restricted backup pointer、owned-postimage reverse；Gate M verified v1 adapter postimage成为preimage，但旧backup/audit保持legacy owner。scratch tests后只用base repo-files经本U-block public prepare/advance安装dormant source，绝不触发真实external effect且active bundle SHA不变；最终注册仅由U-010 composer以literal import+SHA完成
   Read List: FINAL-MASTER-PLAN.md sections 9、12.3、15–16、19.4；scripts/skill-cutover-transaction.mjs 的targetSummary/apply/verify/rollback/self-test段；scripts/validate-skill-integration-receipt.mjs personal schema；六Skill IMPLEMENTATION-RECEIPT personal boundary；Gate M个人target/backup/audit/residue只读tuple report；.claude/observability/scripts/write_observation.py staging/journal/recovery；旧重型personal候选
-  Test scenarios: happy=temp exact file create/update+confirmed private receipt；edge=existing adapter postimage baseline、typed PASS_WITH_RECORDED_BOUNDARY/NOT_LOADED、mode/unicode/concurrent edit/crash/duplicate；error=重跑legacy cutover/复用旧backup、transaction state推导loader PASS、home/env晚展开、glob/symlink escape、0644 private audit、journal content leak、foreign current reverse
-  Verification: node scripts/test-controlled-change-external-files.mjs --temp-root-only --crash-every-boundary && node scripts/test-controlled-change-external-files.mjs --concurrency=16 --owned-reverse --preserve-legacy-owner && node scripts/test-controlled-change-external-files.mjs --privacy-scan --private-mode=0600 --typed-loader-evidence
+  Test scenarios: happy=N-E后temp exact file create/update+confirmed private receipt；edge=existing adapter postimage baseline、typed PASS_WITH_RECORDED_BOUNDARY/NOT_LOADED、mode/unicode/concurrent edit/crash/duplicate；error=N-E为SKIP仍存在adapter/test bytes、未先完成N-D/U-007、重跑legacy cutover/复用旧backup、transaction state推导loader PASS、home/env晚展开、glob/symlink escape、0644 private audit、journal content leak、foreign current reverse
+  Verification: node scripts/test-controlled-change-external-files.mjs --require-gate=N-E --require-implied-gate=N-D --temp-root-only --crash-every-boundary --assert-base-digests-unchanged --install-dormant-source --assert-active-bundle-unchanged --forbid-real-external-effect && node scripts/test-controlled-change-external-files.mjs --concurrency=16 --owned-reverse --preserve-legacy-owner && node scripts/test-controlled-change-external-files.mjs --privacy-scan --private-mode=0600 --typed-loader-evidence
   Status: PLANNED
 ```
 
@@ -1200,13 +1368,13 @@ U-008:
 ```yaml
 U-009:
   Goal: 实现 isolated-index Git publisher adapter，以 immutable commit/private-ref/expected-old CAS 发布并对响应丢失只读 reconcile
-  Source: R-001, R-003, R-004, R-006, R-008, R-009
-  Dependencies: U-004, U-005, U-007
+  Source: R-001, R-003, R-004, R-006, R-008, R-009, R-011
+  Dependencies: U-003, U-004, U-007, external: Gate N N-G=BUILD
   Files: scripts/lib/controlled-change/adapters/git-publisher.mjs; scripts/test-controlled-change-git-publisher.mjs
-  Approach: 从v1发布证据重建算法而非复用不存在的通用publisher；只替换U-007 Git deny stub；operation私有index/ref构造commit，literal descriptor+credential-only config+expected-old lease，intent后不自动retry；任何v1 terminal auth均不可重放
-  Read List: FINAL-MASTER-PLAN.md sections 11、13、15–16、19.4；六Skill IMPLEMENTATION-RECEIPT 的published tree/commit/remote/ref/index/head facts；CANDIDATE-MANIFEST.tsv；scripts/candidate-manifest.mjs 的只读published-lineage验证；v1 U-008 witness/receipt EFFECT_UNKNOWN历史；旧重型publisher候选；历史rule-execution recovery publisher段；scripts/sync.sh assumptions
-  Test scenarios: happy=local bare remote FF publish confirmed；edge=linked worktree/shared refs、private ref CAS、response loss→new/old/other/unreadable、prepublish receipt+postpublish attestation；error=从v1 COMPLETED重放、dirty index、HEAD/main moved、malicious config/url rewrite/hook、wrong remote/ref、non-FF、empty lease/+refspec、automatic retry
-  Verification: node scripts/test-controlled-change-git-publisher.mjs --local-bare-fixture --linked-worktrees && node scripts/test-controlled-change-git-publisher.mjs --malicious-config-matrix && node scripts/test-controlled-change-git-publisher.mjs --response-loss-all-readbacks --assert-no-retry && git diff --exit-code --cached
+  Approach: N-G证据与N-D蕴含关系验证后只在scratch首次创建独占Git adapter，不改U-001 safe object-reader/base host/policy；从v1发布证据重建算法而非复用不存在的通用publisher。所有identity/discovery/build/readback只读复用safe object-reader，显式中和fsmonitor/hooks/pager/editor/external-diff/textconv/include/url-rewrite/protocol helper，设置GIT_NO_REPLACE_OBJECTS/GIT_NO_LAZY_FETCH/GIT_TERMINAL_PROMPT并拒绝replace refs、grafts、promisor缺对象。local fixtures后只用base repo-files经本U-block public prepare/advance安装dormant source，不调用真实remote且active bundle SHA不变；最终注册仅由U-010 composer以literal import+SHA完成。operation私有index/ref构造commit，Gate R后最小credential transport+expected-old lease，intent后不自动retry；任何v1 terminal auth均不可重放
+  Read List: FINAL-MASTER-PLAN.md sections 11、13、15–16、19.4；六Skill IMPLEMENTATION-RECEIPT 的published tree/commit/remote/ref/index/head facts；CANDIDATE-MANIFEST.tsv；scripts/candidate-manifest.mjs 的published-commit blob lineage验证；v1 U-008 witness/receipt EFFECT_UNKNOWN历史；.claude/skills/office/resolving-merge-conflicts/scripts/conflict-transaction.mjs 的Git env与R-011 fsmonitor reproduction；旧重型publisher候选；历史rule-execution recovery publisher段；scripts/sync.sh assumptions
+  Test scenarios: happy=N-G后sanitized complete-object local bare remote FF publish confirmed；edge=linked worktree/shared refs、private ref CAS、response loss→new/old/other/unreadable、prepublish receipt+postpublish attestation、credential helper仅Gate R transport阶段开放；error=N-G为SKIP仍存在adapter/test bytes、未先完成N-D/U-007、NOT_APPLICABLE probe执行程序面、replace ref/graft伪造parent或ancestor、partial-clone/promisor缺对象触发lazy fetch/credential、historical verifier与publisher object-reader分叉、从v1 COMPLETED重放、dirty index、HEAD/main moved、wrong remote/ref、non-FF、empty lease/+refspec、automatic retry
+  Verification: GIT_NO_REPLACE_OBJECTS=1 GIT_NO_LAZY_FETCH=1 GIT_TERMINAL_PROMPT=0 node scripts/test-controlled-change-git-publisher.mjs --require-gate=N-G --require-implied-gate=N-D --local-bare-fixture --linked-worktrees --program-surface-safe-plumbing --require-complete-object-closure --assert-base-digests-unchanged --install-dormant-source --assert-active-bundle-unchanged --forbid-real-remote && node scripts/test-controlled-change-git-publisher.mjs --malicious-config-matrix=fsmonitor,hooks,pager,editor,external-diff,textconv,include,url-rewrite,protocol,replace-ref,graft,promisor-lazy-fetch --network-denied --shared-object-reader && node scripts/test-controlled-change-git-publisher.mjs --response-loss-all-readbacks --assert-no-retry && git diff --exit-code --cached
   Status: PLANNED
 ```
 
@@ -1218,14 +1386,14 @@ U-009:
 
 ```yaml
 U-010:
-  Goal: 实现 content-addressed runtime capsule、自升级兼容矩阵、previous-bundle 回退与损坏 guard 的稳定 launcher 恢复
+  Goal: 作为唯一composition owner把Gate N选中的独占modules静态链接成content-addressed N+1 capsule，并完成兼容、previous回退与损坏guard恢复
   Source: R-001, R-003, R-005, R-008, R-009
-  Dependencies: U-003, U-005, U-007
-  Files: scripts/lib/controlled-change/lifecycle.mjs; scripts/lib/controlled-change/launcher.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/test-controlled-change-lifecycle.mjs
-  Approach: v1 compat retention先作为不可删下限；v2 N安装N+1 dormant，验证can-read/recover current/previous与fresh harness后CAS pointer；previous保留到首笔成功+recovery drill，stable launcher变更永不混入普通升级
-  Read List: FINAL-MASTER-PLAN.md sections 10、14–17；Gate M/U-001 legacy index/compat evidence；U-003 completion evidence；scripts/codex-trust-hooks.mjs trust dry-run边界；scripts/verify-codex-wiring.mjs registration/trust assertions
-  Test scenarios: happy=v1 retained、N→N+1 dormant/test/activate/first-operation；edge=v1 raw terminal reader、v2 previous nonterminal recovery、minor schema、previous retention；error=删除v1 compat、unknown major、N+1 corrupt、pointer CAS conflict、session verdict divergence、stable launcher/trust change伪装self-upgrade
-  Verification: node scripts/test-controlled-change-lifecycle.mjs --upgrade-matrix=v1-compat,current,previous && node scripts/test-controlled-change-lifecycle.mjs --corrupt-new-bundle --rollback-previous && node scripts/test-controlled-change-lifecycle.mjs --unknown-major-fail-closed --retain-legacy；fresh Claude/Codex 对current/previous各跑harness digest parity
+  Dependencies: U-003, U-006, U-011; conditional: U-005 if N-C=BUILD, U-007 if N-D=BUILD, U-008 if N-E=BUILD, U-009 if N-G=BUILD; external: Gate F, Gate G for selected composition
+  Files: scripts/lib/controlled-change/lifecycle.mjs; scripts/test-controlled-change-lifecycle.mjs
+  Approach: 读取U-004 composer、Gate F base digest、U-011 exact postimage与所有selected dormant module SHA，拒绝optional block修改base files；用一个upgrade operation先安装本块owned lifecycle source，再把当前base + U-011 + Gate N BUILD modules写入profile并生成literal-import runtime entry，SKIP module存在/被import、BUILD/U-011 postimage缺失或hash错均fail。本块不得修改stable launcher/kernel/state-store/effect-host/policy/object-reader/composer；`.claude/hooks`与launcher持续从fixed bundle运行。N+1 dormant通过can-read/recover current/previous、private ABI、U-011 status/evidence与fresh双端后才由public advance CAS pointer；previous保留到首笔成功+recovery drill
+  Read List: FINAL-MASTER-PLAN.md sections 10、14–17；Gate N vector/digest；Gate M/U-001 legacy evidence与U-002 compat contract；U-003 base bundle/composer/launcher digest；U-011 completion与CLI/kernel/state/receipt postimage；所有selected U-005/U-007/U-008/U-009 module SHA与tests；scripts/codex-trust-hooks.mjs trust dry-run边界；scripts/verify-codex-wiring.mjs registration/trust assertions
+  Test scenarios: happy=U-011+selected modules一次静态composition、N→N+1 dormant/fresh/activate/first-operation；edge=四个capability任意BUILD/SKIP组合、source写后capsule前crash、v1 raw terminal reader、v2 previous nonterminal recovery、minor schema、previous retention；error=遗漏U-011 postimage、SKIP module存在/import、BUILD module缺失/hash错、base file含capability delta、runtime discovery/dynamic import、两个U-block各自注册、stable launcher有delta、删除v1 compat、unknown major、N+1 corrupt、pointer CAS conflict、session verdict divergence
+  Verification: node scripts/test-controlled-change-lifecycle.mjs --selected-capability-vector <Gate-N-digest> --include-source=U-011 --single-composition-owner --literal-import-profile --verify-precompose-base-digests --allow-owned-base-delta=lifecycle --reject-unselected-module-or-import --crash-every-source-compose-activate-boundary && node scripts/test-controlled-change-ux.mjs --active-capsule-only --capability-vector-matrix=all --both-harnesses --require-u011-postimage && node scripts/test-controlled-change-evidence.mjs --active-capsule-only --private-public-split --typed-loader --privacy-scan && node scripts/test-controlled-change-lifecycle.mjs --upgrade-matrix=v1-compat,current,previous && node scripts/test-controlled-change-lifecycle.mjs --corrupt-new-bundle --rollback-previous && node scripts/test-controlled-change-lifecycle.mjs --unknown-major-fail-closed --retain-legacy && git diff --exit-code -- scripts/lib/controlled-change/launcher.mjs；fresh Claude/Codex 对current/previous各跑harness digest parity
   Status: PLANNED
 ```
 
@@ -1235,35 +1403,35 @@ stable launcher、hook registration 或 trust 变化仍回 Gate M/Gate G，不�
 
 ```yaml
 U-011:
-  Goal: 完成低仪式prepare摘要、DRAIN/v1/v2只读status、合法recovery actions、typed error与private receipt/public attestation UX
+  Goal: 在最终composition前完成并安装dormant的低仪式prepare/status/recovery/typed-error与private receipt/public attestation runtime source
   Source: R-001, R-006, R-007, R-008, R-009
-  Dependencies: U-006, U-008, U-009, U-010
+  Dependencies: U-003, U-006, external: Gate F
   Files: scripts/controlled-change.mjs; scripts/lib/controlled-change/kernel.mjs; scripts/lib/controlled-change/state-store.mjs; scripts/lib/controlled-change/receipt-schema.mjs; scripts/test-controlled-change-ux.mjs; scripts/test-controlled-change-evidence.mjs
-  Approach: 文本/JSON从canonical projection生成；status合并展示legacy raw validity与v2而不改写；只展示唯一合法next action；Foundation不重复问已绑定的原请求，Standard只展示risk delta；public输出默认redacted
-  Read List: FINAL-MASTER-PLAN.md sections 8.2、15–17、19.4；U-001 receipt/attestation schema；.claude/agents/orchestrator.md escalation；memory/scripts/record_eval.py digest/idempotent audit；现有CLI JSON/text约定；六Skill human receipt中PASS_WITH_RECORDED_BOUNDARY文本
-  Test scenarios: happy=Foundation五行摘要+single advance；edge=DRAIN_V1/legacy terminal/resource busy/stale/expiry/recovery/unknown、JSON stability、redacted public+0600 private、typed loader boundary；error=stack trace替代行动、非法retry、PUBLISHED/VERIFIED混层、transaction state自动推loader PASS、secret/token/URL query/path/body泄漏、status写state
-  Verification: node scripts/test-controlled-change-ux.mjs --golden-errors --all-typed-codes --include-drain-v1 && node scripts/test-controlled-change-ux.mjs --status-readonly --fs-snapshot && node scripts/test-controlled-change-evidence.mjs --private-public-split --typed-loader --privacy-scan
+  Approach: 先在scratch对canonical projection做纯fixture测试；文本/JSON合并legacy raw validity、v2与Gate N vector digest而不改写，BUILD/SKIP_DARK另列annotation且SKIP无instance/PASS/wait。通过后只由base repo-files经本U-block public prepare/advance安装exact dormant CLI/kernel/state/receipt source；active bundle SHA必须不变，运行时不得从mutable worktree加载，只有U-010可把这些postimage组合并激活。只展示唯一合法next action；Foundation不重复问已绑定原请求，Standard只展示risk delta；public输出默认redacted
+  Read List: FINAL-MASTER-PLAN.md sections 8.2、15–17、19.4；U-002 receipt/attestation schema；Gate N capability vector与SKIP_DARK annotation；U-003 active base bundle digest；.claude/agents/orchestrator.md escalation；memory/scripts/record_eval.py digest/idempotent audit；现有CLI JSON/text约定；六Skill human receipt中PASS_WITH_RECORDED_BOUNDARY文本
+  Test scenarios: happy=scratch fixture产Foundation五行摘要+single advance、两harness对同vector投影同selected graph，随后dormant source install且active SHA不变；edge=16种BUILD/SKIP组合、DRAIN_V1/legacy terminal/resource busy/stale/expiry/recovery/unknown、JSON stability、redacted public+0600 private、typed loader boundary；error=install后从worktree直接生效、active bundle改变、SKIP计DONE/PASS或被加入wait、两端vector/digest/status不同、stack trace替代行动、非法retry、PUBLISHED/VERIFIED混层、transaction state自动推loader PASS、secret/token/URL query/path/body泄漏、status写state
+  Verification: node scripts/test-controlled-change-ux.mjs --fixture-only --golden-errors --all-typed-codes --include-drain-v1 && node scripts/test-controlled-change-ux.mjs --fixture-only --capability-vector-matrix=all --both-harnesses --gate-disposition-not-completion --skip-no-pass-no-wait && node scripts/test-controlled-change-evidence.mjs --fixture-only --private-public-split --typed-loader --privacy-scan && node scripts/test-controlled-change-migration.mjs --install-dormant-source=U-011 --assert-active-bundle-unchanged --forbid-worktree-runtime-load
   Status: PLANNED
 ```
 
-UX 指标不降低 safety gate：若低仪式只能靠隐式扩大 authority，则触发 K-01，保持 shadow 而非弱化 contract。Rollback：恢复 CLI/projection code previous bundle；receipt/journal 不重写。
+UX 指标不降低 safety gate：若低仪式只能靠隐式扩大 authority，则触发 K-01，保持 shadow 而非弱化 contract。Rollback：U-010前只reverse exact owned dormant source，active bundle不变；U-010后先expected-current CAS回previous，再在current仍等于owned postimage时reverse source；receipt/journal不重写。
 
 ### U-012
 
 ```yaml
 U-012:
   Goal: 建立全承诺 assertion matrix、unit/integration/fresh/concurrency/crash/mutation/config/worktree/publication 总验证与证据冻结
-  Source: R-001, R-003, R-005, R-006, R-007, R-009
-  Dependencies: U-011
+  Source: R-001, R-003, R-005, R-006, R-007, R-009, R-011
+  Dependencies: U-010
   Files: scripts/verify-controlled-change.mjs; scripts/verify.sh; package.json; .github/workflows/ci.yml
-  Approach: 聚合但不隐藏各 U-block verifier；对每项承诺绑定 exact test selector 和证据 digest，加入 mutation/obligation census，fresh harness 不能被 in-process mock 替代
-  Read List: FINAL-MASTER-PLAN.md sections 1.1、4.1、18、21；所有 U-001–U-011 completion report 与 test selector；scripts/verify.sh 的现有分层；package.json scripts；.github/workflows/ci.yml 现有 job/OS；scripts/verify-codex-wiring.mjs 输出合同
-  Test scenarios: happy=clean isolated clone全矩阵与v1 regression通过；edge=dirty/diverged main、linked worktrees、raw v1 terminal/nonterminal recovery、parallel v2 schedule；error=删除pre-entry/direct-writer-deny/legacy-drain/CAS/hash/gate/unknown-freeze任一控制后仍绿、恶意Git config、fresh parity被mock、receipt validator与writer状态词分叉
-  Verification: npm run test:controlled-change --silent && node scripts/verify-controlled-change.mjs --all --evidence-dir <operation-scratch>/evidence && node scripts/verify-controlled-change.mjs --mutation --require-kill-each-control && npm run verify；fresh Claude/Codex分别跑semantic parity selector，并由独立EA复算evidence manifest SHA
+  Approach: 聚合但不隐藏各 U-block verifier；对每项承诺绑定 exact test selector 和证据 digest，并提供稳定的 `--assert <CC-ID>` 单断言入口与 `--list-assertions` 完整枚举，未知/重复/未覆盖ID一律非零退出；加入 mutation/obligation census，fresh harness 不能被 in-process mock 替代；先测量现有约112s基线，precommit只接入由mutation证明不会漏掉相关控制的deterministic smoke/mapping，full matrix保留独立显式命令与CI evidence；禁止用FAST_COMMIT或隐式skip换取过线
+  Read List: FINAL-MASTER-PLAN.md sections 1.1、4.1、18、21；Gate N capability vector、U-001–U-011中所有selected completion、SKIP_DARK annotation/独占module absence、U-010 profile/base digest与对应selectors；scripts/verify.sh 的现有分层；package.json scripts；.github/workflows/ci.yml 现有 job/OS；scripts/verify-codex-wiring.mjs 输出合同
+  Test scenarios: happy=clean isolated clone按冻结capability vector跑完整selected matrix与v1 regression、未选独占module不存在且base digests不变、precommit selector在预算内且相关mutant全被杀；edge=dirty/diverged main、linked worktrees、raw v1 terminal/nonterminal recovery、N-C/D/E/G任意BUILD/SKIP组合、不同CI机器预算分类；error=SKIP独占module仍存在、capability代码偷塞入base/profile import或被hidden skip伪装、SKIP计PASS/wait、BUILD能力未跑suite/未组合、新增suite直接串行塞进112s链路、p95>102s或headroom<15s、FAST_COMMIT伪装通过、impact mapping漏杀任一控制、删除pre-entry/direct-writer-deny/legacy-drain/CAS/hash/gate/unknown-freeze任一控制后仍绿、恶意Git config、fresh parity被mock、receipt validator与writer状态词分叉、routing/corpus证据未冻结argv/env/input/output/scorer或重跑漂移
+  Verification: node scripts/verify-controlled-change.mjs --contract-smoke --require-mutation-covered-mapping --require-route-evidence-reproducible=argv,env,input,output,scorer && node scripts/verify-controlled-change.mjs --selected-capability-vector <Gate-N-digest> --require-built-tests --require-skipped-module-absence --verify-source-digest-chain=Gate-F,selected-modules,U-011,U-010 --require-exact-owned-deltas --require-active-capsule-matches-final-postimages --reject-capability-in-base --reject-unselected-profile-import --gate-disposition-not-completion --evidence-dir <operation-scratch>/evidence && node scripts/verify-controlled-change.mjs --mutation --require-kill-each-control --require-kill-each-shard-map --mutants=capability-in-base,unselected-import,skip-as-pass,skip-as-wait,omit-u011-from-capsule,worktree-runtime-load && node scripts/verify-controlled-change.mjs --budget --runs=5 --cap-ms=120000 --max-ratio=0.85 --min-headroom-ms=15000 --forbid-fast-commit --forbid-hidden-skip && npm run verify:controlled-change:full -- --selected-capability-vector <Gate-N-digest>；fresh Claude/Codex分别跑semantic parity selector，并由独立EA复算evidence manifest SHA；Gate V通过后才可把contract-smoke接入现有verify/precommit
   Status: PLANNED
 ```
 
-CI 只跑无 secret、无个人目录、无真实远端的 deterministic matrix；publication 的 mandatory local bare fixture 在 CI，真实 disposable remote 只在 U-013/Gate R shadow。Rollback：验证接线失败只撤回 verify/CI 文件的 owned delta，不撤回实现证据或篡改失败记录。
+CI 只跑无 secret、无个人目录、无真实远端的 deterministic matrix；publication 的 mandatory local bare fixture 在 CI，真实 disposable remote 只在 U-013/Gate R shadow。full matrix与precommit smoke是两个显式命名的入口，前者永不因impact mapping消失；Gate V不通过则不修改现有precommit链。Rollback：验证接线失败只撤回 verify/CI 文件的 owned delta，不撤回实现证据或篡改失败记录。
 
 ### U-013
 
@@ -1290,7 +1458,7 @@ U-013:
 
 | Assertion | 精确断言 | 主要 selector |
 |---|---|---|
-| [BLOCKING] CC-000 Legacy drain | v1 raw bytes/SHA immutable；required/invalid时拒绝v2；terminal只建path/SHA derived index；旧token/gate/effect不可导入 | migration raw-v1/drain/zero-authority-import |
+| [BLOCKING] CC-000 Legacy containment/drain | v1 raw evidence immutable；新v1 Git effect保持dark；U-001 live subset零Git/任意shell effect；U-003仅既有M的public advance；required/invalid拒绝v2；terminal只建path/SHA index；旧authority不导入 | containment mutants + migration raw-v1/drain/zero-authority-import |
 | [BLOCKING] CC-001 Contract closure | schema 拒绝未知字段/隐式 target/effect；obligation census 覆盖 R-001 全 16 域 | `test-controlled-change-contract --all --obligation-census` |
 | [BLOCKING] CC-002 One truth | v2 journal 是v2唯一可写truth；projection独改不可推进；v1 raw evidence不被吸收/改写 | state projection-tamper + migration byte-identity |
 | [BLOCKING] CC-003 Admission/required ordering | protected surface无witness也需PREPARE_REQUIRED；required未durable不可active；required异常两端deny | admission pre-witness + state/harness |
@@ -1298,49 +1466,175 @@ U-013:
 | [BLOCKING] CC-005 Scratch-only worker | worker writable root 不含 live/common-dir/external；不能证明则禁止委托/controller | repo-files sandbox + orchestration role fixture |
 | [BLOCKING] CC-006 Exact delta | create/update/delete/rename/symlink/mode 全 census；unrelated dirty WIP byte-identical | repo-files all-kinds/WIP |
 | [BLOCKING] CC-007 Dual parity | Claude/Codex语义事件projection verdict/reason digest 100%一致；registration/trust变化用fresh sessions | fresh semantic harness-cases |
-| [BLOCKING] CC-008 Fail closed / one writer | v1异常保持既有deny；v2 parse/read/timeout/malformed deny；direct target writer永拒，只有advance adapter写 | harness negative + single-owner mutation |
-| [BLOCKING] CC-009 Concurrency | v1 single-flight；v2 one manifest/op、disjoint ACTIVE、overlap busy、无lost append/deadlock/leak/age-steal | claims scheduler + parallel append/crash |
-| [BLOCKING] CC-010 Recovery uniqueness | 每一 crash boundary 只有一个合法 next action | state crash model |
-| [BLOCKING] CC-011 Unknown freeze | effect unknown 后无 retry/compensate/tail effect | effect-host + Git response loss |
-| [BLOCKING] CC-012 Personal ownership | 只 exact path；reverse 仅 current==owned postimage；receipt 无 content/secret | external-files matrix |
-| [BLOCKING] CC-013 Git isolation | shared index、HEAD、main 不变；commit OID/private ref exact | Git local fixture |
-| [BLOCKING] CC-014 Git remote CAS | literal identity/full ref/FF proof/exact expected-old；禁止 +/empty lease/default origin | Git malicious config matrix |
-| [BLOCKING] CC-015 Migration reversibility | exact v1-protected bundle/pre/post/reverse；DRAIN_V1→fresh→v2；失败回drain/previous | migration/lifecycle drill |
+| [BLOCKING] CC-008 Fail closed / one writer | compound command逐effect分类且不能借首verb扩权；one-use消费线性化；v1异常保持deny；v2 parse/read/timeout/malformed deny；direct target writer永拒，只有advance adapter写 | containment/harness negative + single-owner mutation |
+| [BLOCKING] CC-009 Concurrency | base v2保持single-operation correctness；仅N-C BUILD时才要求one manifest/op、disjoint ACTIVE、overlap busy、无lost append/deadlock/leak/age-steal；SKIP则scheduler module absent | selected claims scheduler + parallel append/crash / absence |
+| [BLOCKING] CC-010 Recovery uniqueness | selector按`EFFECT_UNKNOWN/read-only > AWAIT_GATE_X > RESUME_EXACT`互斥优先级裁决；每一durable crash snapshot只有一个合法机械next action，同generation不得同时接受resume/abort/reverse；非确定性recovery须先写snapshot-bound `RECOVERY_REQUIRED(selector=AWAIT_GATE_X)`，再由Gate X fresh top-level approval形成新generation且mode只允许`RESUME_EXACT | ABORT_OWNED` | state crash model + precedence/dual-recovery/unknown-mode mutants |
+| [BLOCKING] CC-011 Unknown freeze | base单effectunknown无retry；N-D BUILD时DAG tail同样冻结；N-G BUILD时response-loss只读reconcile | selected effect-DAG/Git response-loss / base deny |
+| [BLOCKING] CC-012 Personal ownership | 仅N-E BUILD：exact path、reverse仅current==owned postimage、receipt无content/secret；SKIP则external module absent且base deny | selected external-files matrix / absence |
+| [BLOCKING] CC-013 Git isolation | 仅N-G BUILD：shared index/HEAD/main不变、commit OID/private ref exact；SKIP则publisher module absent且base deny | selected Git local fixture / absence |
+| [BLOCKING] CC-014 Git remote CAS/object truth | 仅N-G BUILD：literal identity/full ref/FF/exact expected-old、raw graph拒replace/graft、no-lazy-fetch/object closure、禁+/empty lease/default origin；SKIP则不产publisher | selected Git malicious config/object matrix / absence |
+| [BLOCKING] CC-015 Migration reversibility/bootstrap closure | Gate B绑定source+common-dir operational targets与owner M；dependencies→capsule→durable DRAIN→final guard-last→fresh→Gate F→advance M activation；Gate F前activation必须被拒；每边界唯一恢复；失败回drain/previous | migration install-boundary/lifecycle drill |
 | [BLOCKING] CC-016 Version compatibility | raw v1 reader + v2 current/previous receipt/非终态可读恢复；unknown major deny | v1-compat + lifecycle matrix |
-| [BLOCKING] CC-017 Role/approval separation | worker/EA不能call/mint/advance；Orchestrator不能widen/代批；top-level request+gate evidence单向绑定 | orchestration approval/role matrix |
-| [BLOCKING] CC-018 Trigger containment | protected pre-entry bites；readonly/plan/downstream/owner data exempt；graph无新node | admission + orchestration trigger/git diff |
+| [BLOCKING] CC-017 Role/approval separation | worker/EA不能call/mint/advance；Orchestrator不能widen/代批；top-level request+gate evidence单向绑定；route obligation/verdict/hint/soft-candidate/recommendation及memory stable/promoted/reviewer/mattered永不成为authority | orchestration approval/role/E3/route/memory-non-authority matrix |
+| [BLOCKING] CC-018 Trigger containment | protected pre-entry bites；readonly/plan/downstream/owner data exempt；graph无controlled-change新node；workflow推荐无下游input proof不得调度；E3有则只消费attested interface、无则绑定当前request，均不解析transcript | admission + orchestration trigger/workflow-input/git diff |
 | [BLOCKING] CC-019 Privacy/evidence split | secret/body/URL query不入证据；private 0600；public redacted；prepublish receipt与postpublish attestation分离 | evidence schema/privacy scanners |
 | [BLOCKING] CC-020 Mutation strength | 删除legacy-drain/pre-entry/direct-writer-deny/CAS/hash/gate/unknown-freeze任一控制使唯一test红 | verifier mutation mode |
 | [BLOCKING] CC-021 Freshness | registration/trust/runtime 变更必须 fresh Claude+Codex，不接受同进程 mock | fresh evidence manifest |
 | [BLOCKING] CC-022 Rollout evidence | 每surface至少20次shadow、3次recovery、false-positive阈值、parity满足Gate S | rollout verifier + human ledger |
-| [BLOCKING] CC-023 Evidence vocabulary | writer/renderer/validator共享状态词；PUBLISHED只属attestation；loader boundary不由transaction state推导 | receipt-schema + validator mutation tests |
+| [BLOCKING] CC-023 Evidence vocabulary/lineage | writer/renderer/validator共享状态词；PUBLISHED只属attestation；historical verifier从published commit blob绑定OID/single-parent/baseline/path-set；loader boundary不由transaction state推导 | receipt-schema + historical-lineage mutation tests |
+| [BLOCKING] CC-024 Verification budget integrity | repeated p95≤102s且headroom≥15s；precommit shard/impact mapping逐项被mutation证明；full suite显式保留；FAST_COMMIT/hidden skip不得计PASS | verifier budget/mapping mutation |
+| [BLOCKING] CC-025 Private hook ABI | `hook-failure-decision`两种wrapper form、raw v1/v2状态、空stdout与0/2 exit contract完全冻结；unknown args/launcher unreadable fail closed | harness private-ABI corpus |
+| [BLOCKING] CC-026 Standard need evidence | contained Foundation ≥20次；N0无证据必须STOP且Gate N前无任何v2 bytes；N0进入也不能反向解锁子能力 | Gate N core evidence/absence/negative branch |
+| [BLOCKING] CC-027 Capability build gates | N-C/N-D/N-E/N-G逐项BUILD或SKIP_DARK；N-E/N-G蕴含N-D；optional blocks只拥有独占modules，SKIP时module不存在且base digest/profile无能力delta，BUILD时suite必跑并仅由U-010一次静态组合 | capability-vector + unique-module/base-hash/profile-import mutation matrix |
+| [BLOCKING] CC-028 Gate disposition parity | SKIP_DARK是非completion注解：无U-block instance/status/PASS/wait；Claude/Codex及Plan/Orchestrator对同vector digest裁出同graph；U-010等待U-011与selected postimages，下游只等U-010 receipt | orchestration/UX all-vector dual-harness matrix |
+| [BLOCKING] CC-029 Route anchor quarantine | Gate M时route non-dry-run所有输出shape/renderer PASS；四类verdict与soft candidate全为non-authority；workflow path有下游input proof；evidence冻结argv/env/input/output/scorer SHA；U-006后四个anchor bytes不变 | route-production-schema + non-authority + workflow-input + reproducibility + anchor-diff matrix |
 | [WARNING] CC-W01 Performance | Foundation 中位时延/交互满足 K-01 | shadow metrics |
 | [WARNING] CC-W02 Optional adapter dark | personal/Git 未获 surface Gate S 时保持 deny，不阻塞 repo Foundation | policy projection |
+
+上表是人读覆盖索引；以下是 Orchestrator/quality-gate 使用的 authoritative 单断言命令。U-012 必须保证 `--list-assertions` 精确枚举这些 ID，且每个 `--assert` 只验证该 ID、生成独立 evidence digest；BLOCKING 失败保持非零退出，WARNING 只记录而不阻断后续命令。
+
+```bash
+# [BLOCKING] CC-000 — Legacy containment/drain
+node scripts/verify-controlled-change.mjs --assert CC-000 && echo "PASS CC-000" || { echo "FAIL CC-000"; exit 1; }
+
+# [BLOCKING] CC-001 — Contract closure
+node scripts/verify-controlled-change.mjs --assert CC-001 && echo "PASS CC-001" || { echo "FAIL CC-001"; exit 1; }
+
+# [BLOCKING] CC-002 — One truth
+node scripts/verify-controlled-change.mjs --assert CC-002 && echo "PASS CC-002" || { echo "FAIL CC-002"; exit 1; }
+
+# [BLOCKING] CC-003 — Admission/required ordering
+node scripts/verify-controlled-change.mjs --assert CC-003 && echo "PASS CC-003" || { echo "FAIL CC-003"; exit 1; }
+
+# [BLOCKING] CC-004 — Generation/idempotency
+node scripts/verify-controlled-change.mjs --assert CC-004 && echo "PASS CC-004" || { echo "FAIL CC-004"; exit 1; }
+
+# [BLOCKING] CC-005 — Scratch-only worker
+node scripts/verify-controlled-change.mjs --assert CC-005 && echo "PASS CC-005" || { echo "FAIL CC-005"; exit 1; }
+
+# [BLOCKING] CC-006 — Exact delta
+node scripts/verify-controlled-change.mjs --assert CC-006 && echo "PASS CC-006" || { echo "FAIL CC-006"; exit 1; }
+
+# [BLOCKING] CC-007 — Dual parity
+node scripts/verify-controlled-change.mjs --assert CC-007 && echo "PASS CC-007" || { echo "FAIL CC-007"; exit 1; }
+
+# [BLOCKING] CC-008 — Fail closed / one writer
+node scripts/verify-controlled-change.mjs --assert CC-008 && echo "PASS CC-008" || { echo "FAIL CC-008"; exit 1; }
+
+# [BLOCKING] CC-009 — Concurrency
+node scripts/verify-controlled-change.mjs --assert CC-009 && echo "PASS CC-009" || { echo "FAIL CC-009"; exit 1; }
+
+# [BLOCKING] CC-010 — Recovery uniqueness
+node scripts/verify-controlled-change.mjs --assert CC-010 && echo "PASS CC-010" || { echo "FAIL CC-010"; exit 1; }
+
+# [BLOCKING] CC-011 — Unknown freeze
+node scripts/verify-controlled-change.mjs --assert CC-011 && echo "PASS CC-011" || { echo "FAIL CC-011"; exit 1; }
+
+# [BLOCKING] CC-012 — Personal ownership
+node scripts/verify-controlled-change.mjs --assert CC-012 && echo "PASS CC-012" || { echo "FAIL CC-012"; exit 1; }
+
+# [BLOCKING] CC-013 — Git isolation
+node scripts/verify-controlled-change.mjs --assert CC-013 && echo "PASS CC-013" || { echo "FAIL CC-013"; exit 1; }
+
+# [BLOCKING] CC-014 — Git remote CAS/object truth
+node scripts/verify-controlled-change.mjs --assert CC-014 && echo "PASS CC-014" || { echo "FAIL CC-014"; exit 1; }
+
+# [BLOCKING] CC-015 — Migration reversibility/bootstrap closure
+node scripts/verify-controlled-change.mjs --assert CC-015 && echo "PASS CC-015" || { echo "FAIL CC-015"; exit 1; }
+
+# [BLOCKING] CC-016 — Version compatibility
+node scripts/verify-controlled-change.mjs --assert CC-016 && echo "PASS CC-016" || { echo "FAIL CC-016"; exit 1; }
+
+# [BLOCKING] CC-017 — Role/approval separation
+node scripts/verify-controlled-change.mjs --assert CC-017 && echo "PASS CC-017" || { echo "FAIL CC-017"; exit 1; }
+
+# [BLOCKING] CC-018 — Trigger containment
+node scripts/verify-controlled-change.mjs --assert CC-018 && echo "PASS CC-018" || { echo "FAIL CC-018"; exit 1; }
+
+# [BLOCKING] CC-019 — Privacy/evidence split
+node scripts/verify-controlled-change.mjs --assert CC-019 && echo "PASS CC-019" || { echo "FAIL CC-019"; exit 1; }
+
+# [BLOCKING] CC-020 — Mutation strength
+node scripts/verify-controlled-change.mjs --assert CC-020 && echo "PASS CC-020" || { echo "FAIL CC-020"; exit 1; }
+
+# [BLOCKING] CC-021 — Freshness
+node scripts/verify-controlled-change.mjs --assert CC-021 && echo "PASS CC-021" || { echo "FAIL CC-021"; exit 1; }
+
+# [BLOCKING] CC-022 — Rollout evidence
+node scripts/verify-controlled-change.mjs --assert CC-022 && echo "PASS CC-022" || { echo "FAIL CC-022"; exit 1; }
+
+# [BLOCKING] CC-023 — Evidence vocabulary/lineage
+node scripts/verify-controlled-change.mjs --assert CC-023 && echo "PASS CC-023" || { echo "FAIL CC-023"; exit 1; }
+
+# [BLOCKING] CC-024 — Verification budget integrity
+node scripts/verify-controlled-change.mjs --assert CC-024 && echo "PASS CC-024" || { echo "FAIL CC-024"; exit 1; }
+
+# [BLOCKING] CC-025 — Private hook ABI
+node scripts/verify-controlled-change.mjs --assert CC-025 && echo "PASS CC-025" || { echo "FAIL CC-025"; exit 1; }
+
+# [BLOCKING] CC-026 — Standard need evidence
+node scripts/verify-controlled-change.mjs --assert CC-026 && echo "PASS CC-026" || { echo "FAIL CC-026"; exit 1; }
+
+# [BLOCKING] CC-027 — Capability build gates
+node scripts/verify-controlled-change.mjs --assert CC-027 && echo "PASS CC-027" || { echo "FAIL CC-027"; exit 1; }
+
+# [BLOCKING] CC-028 — Gate disposition parity
+node scripts/verify-controlled-change.mjs --assert CC-028 && echo "PASS CC-028" || { echo "FAIL CC-028"; exit 1; }
+
+# [BLOCKING] CC-029 — Route anchor quarantine
+node scripts/verify-controlled-change.mjs --assert CC-029 && echo "PASS CC-029" || { echo "FAIL CC-029"; exit 1; }
+
+# [WARNING] CC-W01 — Performance
+node scripts/verify-controlled-change.mjs --assert CC-W01 && echo "PASS CC-W01" || echo "FAIL CC-W01"
+
+# [WARNING] CC-W02 — Optional adapter dark
+node scripts/verify-controlled-change.mjs --assert CC-W02 && echo "PASS CC-W02" || echo "FAIL CC-W02"
+```
 
 ### 21.1 Verification layers
 
 1. **Pure unit**：contract canonicalization、policy、state model、resource key、receipt redaction。
 2. **Filesystem integration**：temp root、file kinds、fsync/rename/crash、dirty WIP、linked worktree。
-3. **Migration/legacy**：raw v1 terminal/nonterminal/invalid fixture、DRAIN、零 authority import、byte identity、evidence split。
+3. **Containment/migration/legacy**：compound-Git、parallel one-use、false-PUBLISHED mutants；raw v1 terminal/nonterminal/invalid fixture、DRAIN、operation-bound migration、零 authority import、byte identity、evidence split。
 4. **Harness conformance**：同一 semantic corpus经真实 Claude/Codex adapter；pre-entry/direct-writer/active负面路径fail closed。
-5. **Concurrency scheduler**：16 workers、random order、parallel append lost-update、kill-at-boundary、PID reuse、no-age-steal。
+5. **Concurrency scheduler（N-C BUILD only）**：16 workers、random order、parallel append lost-update、kill-at-boundary、PID reuse、no-age-steal；SKIP分支只验独占module absence与base digest。
 6. **Mutation**：逐个移除legacy drain/pre-entry/direct-writer deny/CAS/hash/gate/unknown freeze，必须有唯一test杀死。
-7. **Git fixture**：operation index、`commit-tree`、private ref、local bare remote、恶意 config、response-loss readback。
-8. **Lifecycle**：v1→DRAIN→v2/reverse、N→N+1、corrupt bundle、previous recovery。
-9. **Shadow**：每个申请promotion的surface至少20次真实低风险framework mutation；至少3次故障注入恢复。
-10. **Publication shadow**：只有 Gate R 后，在 dedicated non-production remote/ref 做一次真实 fixture；不能使用当前业务 remote/ref。
-11. **Independent quality gate**：复算 source/evidence SHA、全 BLOCKING assertions 和范围，不能静默应用修复。
+7. **Git fixture（N-G BUILD only）**：operation index、`commit-tree`、private ref、local bare remote、恶意 config、replace ref/graft、partial-clone/promisor missing object、network-denied lazy-fetch、response-loss readback；SKIP分支只验publisher absence/base deny。
+8. **Lifecycle**：contained-v1 source install、M prepare、capsule staging、DRAIN、guard-last、fresh proof、Gate F、advance activation的逐边界crash与Gate F前activation deny；N→N+1、corrupt bundle、previous recovery。
+9. **Need evidence**：20次contained-Foundation样本与Gate N capability vector，证明门前无v2产物、N0无需求时U-002+不存在、任一子能力SKIP时独占module不存在、base digest与capsule profile无该能力delta，且skip不形成completion/PASS/wait。
+10. **Verification budget**：repeated p50/p95/headroom、impact/shard mapping mutation、显式 full suite、FAST_COMMIT/hidden skip 负面用例。
+11. **Shadow**：每个申请promotion的surface至少20次真实低风险framework mutation；至少3次故障注入恢复。
+12. **Publication shadow**：只有 Gate R 后，在 dedicated non-production remote/ref 做一次真实 fixture；不能使用当前业务 remote/ref。
+13. **Independent quality gate**：复算 source/evidence SHA、全 BLOCKING assertions 和范围，不能静默应用修复。
 
 ### 21.2 Quality criteria
 
-- Correctness：16 域每域至少一个 assertion；state/crash model 无歧义。
-- Safety：safety review 从 `REFUTED` 起，以 exact tests/边界翻案；unknown 不伪装为 failure/success。
-- Architecture：三个 public entry；没有 policy duplication、global registry、dynamic plugin 或 Git core coupling。
-- Maintainability：每个adapter可删；v1 compat可被隔离但只有Gate G证明retention/recovery不再需要后才能归档，绝不随升级清理。
-- Parity：Claude/Codex semantic verdict 100% 一致，差异只在 adapter。
-- Scope：implementation diff 只能覆盖 U-block Files；新增文件必须回 `NEEDS_CONTEXT`。
-- Usability：Foundation 不额外重复问；Standard gate 只呈现风险 delta。
-- Evidence：所有结论可由 command/readback/receipt 复算，不以 agent 自报完成替代。
+```yaml
+criteria:
+  - "[C1] 16/16问题域均映射到至少一个已执行且PASS的CC断言，并且每个crash state只有一个合法下一动作；failure=任一域无证据或恢复多义；evidence=obligation census+crash matrix。"
+  - "[C2] safety reviewer从REFUTED出发逐项翻案，EFFECT_UNKNOWN从未被计为成功/失败或自动retry；failure=默认放行或unknown推进；evidence=safety envelope+unknown/reconcile selectors。"
+  - "[C3] 对外面严格只有prepare/advance/status，未引入daemon/global registry/dynamic plugin/Git-core coupling，且每个optional adapter可单独删除；failure=第四入口、隐性TCB或删除后base失效；evidence=public-ABI census+source inventory+deletion tests。"
+  - "[C4] Claude与Codex对完整semantic corpus的verdict/reason/vector digest达到100%一致，差异只在协议adapter；failure=任一fixture分叉或同进程mock冒充fresh；evidence=双端fresh evidence manifest。"
+  - "[C5] implementation diff的create/update/delete/rename/symlink/mode全集恰好落在实例化U-block Files，且每项结论可从command/readback/receipt复算；failure=计划外文件或仅agent自报；evidence=exact-delta census+evidence manifest SHA。"
+  - "[C6] Foundation不重复询问已绑定低风险请求，Standard只展示risk delta，且20次样本的中位额外交互≤1、运行时间增幅≤30%；failure=仪式超阈或靠扩大authority降摩擦；evidence=U-011 UX fixtures+Gate N/S metrics。"
+  - "[C7] 每个live/crash/publication边界都有满足ownership/CAS的唯一恢复或明确NEEDS_CONTEXT，且不会覆盖foreign current state；failure=自动重试未知effect、清证据或反向覆盖他人变化；evidence=recovery matrix+boundary drills+remote readback。"
+```
+
+### 21.3 Plan Agent failure strategy 与 escalation
+
+| 断言级别 | 统一处理 |
+|---|---|
+| `BLOCKING` | 当前 U-block/Phase 立即停止，不调度任何下游；能由已批准 Files 内局部修复则按同一 Verification 重跑，否则置 `BLOCKED` 或 `NEEDS_CONTEXT` 并走增量重规划。不得降级为 WARNING。 |
+| `WARNING` | 记录 exact ID、证据与影响，当前块只可成为 `DONE_WITH_CONCERNS`；不阻断不依赖该保证的下游，但不得用 WARNING 证明 Gate PASS。 |
+
+Completion status 只允许 §8.2 的六值：`PLANNED | IN_PROGRESS | DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT`。所有阻塞升级必须原样使用以下四段，不能用自由文本掩盖 authority 或现场漂移：
+
+```text
+STATUS: BLOCKED | NEEDS_CONTEXT
+REASON: <具体到U-ID、文件/接口/依赖及失败的CC断言>
+ATTEMPTED: <已执行的只读检查、Verification或安全局部尝试>
+RECOMMENDATION: <下一步可选动作；涉及新Files/authority/不可逆effect时必须回用户Gate>
+```
 
 ---
 
@@ -1348,15 +1642,17 @@ U-013:
 
 | 失败阶段 | 回滚单位 | 机械条件 | 保留证据 |
 |---|---|---|---|
-| Gate M | 无写入可回滚 | read-only census失败 | raw v1/evidence digest与blocking verdict |
+| Gate M0/M | 无写入可回滚 | containment承诺或read-only census失败 | raw v1/evidence digest、RED mutants与blocking verdict |
 | Wave 1–2 scratch | 整个 candidate bundle | 尚未 live apply | compiler/test failure log + bundle digest |
+| U-001 Foundation subset | exact owned source reverse或保持default-deny | tests→linear-store→guard-last；不得恢复脆弱Git effect开放 | containment crash event与mutant结果 |
 | v1-protected migration apply | exact file reverse | current==owned postimage | Gate B、v1 manifest、pre/post/reverse、fresh verdict |
+| Runtime capsule staging | exact M-owned staging cleanup/resume | bundle未no-replace rename/未入launcher | per-file hash、fsync与journal intent |
 | Launcher pointer | v2→DRAIN_V1/previous CAS | expected current bundle SHA | corrupt bundle与切换 journal |
 | Raw v1 state/evidence | **不回滚、不改写** | legacy owner保留 | witness/receipt/index/pre/post publish SHA |
-| Repo apply | per-resource reverse/roll-forward | exact pre/post ownership | partial journal + verification |
-| Resource claim | exact owner release | owner dead + generation/recovery approval | claim owner/attempt/start identity |
-| External file | same-dir reverse | current==owned postimage | redacted target + backup pointer |
-| Local Git publisher | temp index/private ref cleanup | exact owned index/ref OID | tree/commit/ref receipt |
+| Repo apply | safe snapshot默认roll-forward；reverse只来自Gate X后的`ABORT_OWNED`新generation | exact pre/post ownership + selector/choice digest | partial journal + verification |
+| Resource claim | exact owner release | owner dead + generation/Gate X choice | claim owner/attempt/start identity |
+| External file | manifest-bound same-dir reverse；否则Gate X新generation | current==owned postimage + exact choice | redacted target + backup pointer |
+| Local Git publisher | 正常流只补receipt；cleanup只来自Gate X后的owned choice | exact owned index/ref OID + selector/choice digest | tree/commit/ref receipt |
 | Remote Git | **不自动回滚** | 只 readback/reconcile | intent、expected-old/new、remote observation |
 | Policy rollout | mandatory→explicit→shadow | Gate S rollback decision | metrics与触发原因 |
 | High-assurance | 不在本计划 | Gate H 新 plan | incident/TCB evidence |
@@ -1371,32 +1667,36 @@ U-013:
 
 | Installed v1 输入 | v2 归属 | 迁移动作 |
 |---|---|---|
-| strict manifest/tuple/CAS | U-001 + U-004 | 冻结compat；v2泛化kind/identity并保留exact denominator |
-| raw required/active/aggregated receipt | U-001 + U-003 | 原样保留给v1 reader；v2新namespace/journal，不原地转换 |
-| v1 repo-global single-flight | U-003 + U-005 | drain期间维持；v2 only disjoint ACTIVE + linearizable append |
-| harness direct Write/Edit/apply_patch | U-003 + U-004 + U-007 | v1 drain保留；v2 activation撤销，repo adapter成为唯一writer |
-| descriptive YAML policy | U-001 + U-003 | 变为runtime实际加载且digest-bound executable policy |
-| v1 non-frozen EFFECT_UNKNOWN history | U-002 + U-007 | 仅历史 evidence；v2 UNKNOWN冻结DAG tail |
-| exact bootstrap/fresh gates | U-003 | 继承算法，改为v1-protected DRAIN/side-by-side migration |
+| strict manifest/tuple/CAS | U-002 + U-004 | U-001先完成compound/concurrent containment与raw legacy freeze；Gate N后v2才泛化kind/identity并保留exact denominator |
+| raw required/active/aggregated receipt | U-001 + U-002 + U-003 | U-001冻结raw digest；Gate N后U-002建只读compat；U-003安装新namespace/journal，不原地转换 |
+| v1 repo-global single-flight | U-003；N-C BUILD时U-005 | drain期间维持；base v2仍可串行；仅获证后启用disjoint ACTIVE + linearizable append |
+| harness direct Write/Edit/apply_patch | U-003 + U-004 | v1 drain保留；v2 activation撤销，base repo adapter成为唯一writer；optional modules不另获direct写权 |
+| descriptive YAML policy | U-002 + U-003 | Gate N后才生成并在migration中变为runtime实际加载且digest-bound executable policy |
+| v1 compound/one-use Git effect + non-frozen EFFECT_UNKNOWN history | Gate M0 + U-001–U-003；N-D BUILD时另含U-007 | 新v1 Git effect保持禁用；U-001 containment零Git/任意shell effect；v2 migration只经public prepare/advance；历史authority不重放；base kernel冻结UNKNOWN，获证DAG再冻结tail |
+| exact bootstrap/fresh gates | U-003 | 继承算法，改为dependency-first、operation-bound capsule→DRAIN→guard-last→activation migration |
 | task-specific personal cutover | U-008 | postimage作baseline、旧backup owner保留；提取通用算法，不重跑 |
 | publication result/evidence | U-009 | 作为failure/fixture要求；重新实现adapter，不重放completed authority |
-| VERIFIED receipt→local PUBLISHED overwrite | U-001 + U-011 | 拆成immutable prepublish receipt + referencing postpublish attestation |
-| validator只接受VERIFIED / loader overclaim | U-001 + U-011 | 同源状态词 + typed loader evidence；Gate F前闭合 |
+| VERIFIED receipt→local PUBLISHED supplemental artifact | U-001 + U-002 + U-011 | 保留两份历史artifact；Gate N后v2拆成immutable prepublish receipt + referencing postpublish attestation |
+| validator已接受PUBLISHED但只做shape/tuple check；loader overclaim | U-001 + U-002 + U-011 | historical verifier从published commit blob绑定OID/parent/baseline/path-set；Gate N后再建同源状态词 + typed loader evidence；Gate F前闭合 |
+| E1/E2 route obligation + E3 L0前置证据 | Gate M + U-006 | obligation只作提醒、不进authority；按Gate M时真实E3 attested interface适配，禁止内部transcript parser |
 | non-goal daemon/capability/global lease | Standard 继续不采用 | 只有 Gate H 新 plan 可重开 |
 
-v1 已通过 review 的结论在其 frozen selector/hash/failure evidence范围内继续有效；不能自动证明v2。当前 dirty/diverged checkout只用于read-only recon：implementation必须在Gate M选择干净隔离checkout并绑定exact baseline，不能把本Session的“不pull”解释成未来可忽略upstream。
+v1 已通过 review 的结论只在其 frozen selector/hash/failure evidence范围内继续有效；新审计已经推翻“effect面可作为安全下限”的外推，且不能自动证明v2。规划证据由R-001–R-017的不可变commit/diff/eval冻结，不要求之后整个仓库HEAD或其他Session WIP静止；governance scanner、route/graph anchors、self-model freshness、memory promotion与其docs-only报告均不能提供 authority 或 completion evidence，route/graph还必须先由原owner闭合production renderer与workflow input合同，memory的stable/reviewer/mattered只作上下文。implementation必须在Gate M重新选择干净隔离checkout并绑定exact baseline；若相关接口已变化，只重审受影响的消费合同，不沿用本Session snapshot授权，也不因无关commit重做架构。
 
 ### 23.2 Promotion sequence
 
-1. **Current v1 retained**：现有single-flight guard/controller继续工作，不先降级。
-2. **DRAIN_V1 + v2 dormant**：拒绝新prepare；legacy exact recovery only；v2只跑fixtures。
-3. **v2 explicit**：Gate F后只对明确operation启用，首笔是低风险repo fixture；v1 reader持续可用。
-4. **v2 shadow per surface**：记录pre-entry/policy verdict，不阻断尚未mandatory的surface。
-5. **Protected-surface mandatory**：至少20次shadow+3次recovery后，Gate S只提升controlled-change自身stable entry/policy/controller/bootstrap。
-6. **Standard explicit adapters**：并发/external/Git各自启用；personal/Git始终逐operation Gate E/R，不自动mandatory。
-7. **Broader runtime surfaces**：每个surface重新累计证据/Gate S；不继承首批promotion。
-8. **Stop**：Standard稳定后不继续daemon/capability/OS service/network platform。
-9. **Gate H**：真实进入条件命中才开新的High-assurance plan；本计划不得被解释为预批准。
+1. **Current v1 contained**：保留inspect/legacy recovery与exact repo变更能力；新v1 Git effect authorization立即保持disabled，compound/concurrent mutant未杀死前不得恢复。
+2. **Gate N evidence/stop**：contained Foundation真实运行≥20次；先判N0，再冻结N-C/N-D/N-E/N-G BUILD/SKIP。门前无v2 bytes；N0无证据即STOP，子能力无证据即对应U-block零bytes。
+3. **Operation-bound migration → DRAIN_V1 + v2 dormant**：N0进入Standard后才首次构建base v2；contained v1 dependency-first安装source；public prepare创建M；public advance按capsule→DRAIN→guard-last推进。
+4. **v2 explicit**：Gate F后仍由advance M激活；首笔是低风险repo fixture；v1 reader持续可用，旧effect authority永不导入/重放。
+5. **v2 shadow per surface**：记录pre-entry/policy verdict，不阻断尚未mandatory的surface。
+6. **Evidence-gated dormant source**：Gate F后只实例化Gate N标为BUILD的U-005/U-007/U-008/U-009；SKIP只留非completion gate annotation。selected modules与U-011先以exact repo operation安装dormant source，active bundle保持不变。
+7. **Final composition**：U-010等待U-011与全部selected postimages，以唯一upgrade operation静态组合、fresh-proof并激活；stable launcher byte-identical，下游只等待U-010 receipt。
+8. **Protected-surface mandatory**：至少20次v2 shadow+3次recovery后，Gate S只提升controlled-change自身stable entry/policy/controller/bootstrap；这批rollout evidence不能替代更早的Gate N需求证据。
+9. **Standard explicit adapters**：已获证的并发/external/Git各自启用；personal/Git始终逐operation Gate E/R，不自动mandatory。
+10. **Broader runtime surfaces**：每个surface重新累计证据/Gate S；不继承首批promotion。
+11. **Stop**：Standard稳定后不继续daemon/capability/OS service/network platform。
+12. **Gate H**：真实进入条件命中才开新的High-assurance plan；本计划不得被解释为预批准。
 
 ### 23.3 Implementation approval gate
 
@@ -1411,6 +1711,16 @@ Next legal action: user approves/rejects/requests plan revision
 
 即使 Gate P 通过，未来 implementation session 仍必须先重新 preflight：核验最终 plan SHA、选择clean isolated checkout、common-dir/worktree identity、Files preimages、current harness versions 和 Gate M/B 输入。任何漂移都 `NEEDS_CONTEXT`，不依赖本规划时的现场快照继续执行。
 
+### 23.4 新 implementation Session 的平稳入口
+
+1. 新 Session 的首条用户消息必须同时给出最终 plan SHA、handoff SHA 与明确的 `Gate P APPROVED`；缺一项只允许只读核验，不允许写实现。
+2. 首个动作是复算 plan/handoff SHA、读取 final ledger verdict，并对 Gate M0/M 的相关路径做只读 census；不要先 pull、merge、建分支、stage 或修旁支问题。
+3. 选择 clean isolated checkout 后冻结 common-dir/worktree identity、U-001 exact Files preimage 与现有 v1 raw evidence；其他项目、其他 worktree 与非 U-001 文件全部视为 foreign WIP。
+4. 第一批写入只能是 U-001 的 RED fixtures；只有 Gate C 明确通过后，才按 `tests → linear store → guard-last` 应用 Foundation containment。不得提前创建任一 v2 byte。
+5. U-001 完成后必须真实观察至少 20 次 contained Foundation operation，并在人门 Gate N 输出 capability vector；`N0=STOP_AT_CONTAINED_FOUNDATION` 时立即收尾，不能因为本计划描述了 Standard 就继续建设。
+6. 只有 `N0=ENTER_STANDARD` 才按 Wave DAG继续；每个optional capability仍各自要求BUILD证据，SKIP_DARK不创建文件、不计PASS、不进入等待链。
+7. 任一相关接口漂移只使受影响 U-block 返回`NEEDS_CONTEXT`并精确列出path/delta；无关commit、报告或其他owner WIP不得扩大本次Files，也不得触发全计划重做。
+
 ---
 
 ## 24. 最终同 SHA 审查协议
@@ -1423,9 +1733,20 @@ Next legal action: user approves/rejects/requests plan revision
 6. 本 Session 禁止写 memory/eval runtime，因此 quality envelope 在 ledger 标 `NOT_RECORDED_BY_SCOPE`，不得声称已写 `record_eval.py`。
 7. ledger 可在 plan SHA 冻结后追加，因为它不是 plan 内容；但 ledger 必须自报自己的最终 SHA。
 8. 全 PASS 后停在 Gate P，不启动 U-001。
+9. plan reviewer 的签名对象是本文件 SHA 与 R-001–R-017 的不可变来源；live checkout 只用于识别“是否存在推翻已写事实的相关delta”。无关commit、docs-only报告、其他owner WIP或单纯HEAD前进不得使已冻结plan失效。
+10. 若冻结后出现相关路径delta，reviewer必须指出被推翻的确切plan句子/接口/断言；能由未来Gate M preflight吸收的baseline漂移留给implementation，只有改变目标架构或U-block可实施性时才修plan并重签。
+
+### 24.1 Plan Agent 出门自检
+
+- [x] 块 0 已回答该不该做、更小替代、默认形态偏差与 K-00–K-11 kill assumptions。
+- [x] 每个 Phase/U-block 均可追溯到 R-001–R-017；无 task-plan 输入，块 1.5/1.6 已显式标 N/A。
+- [x] 每个不可逆 external/Git/policy/launcher action 都有 BLOCKING assertion 与 Gate E/R/G/S 用户确认；当前 Gate P 之前 authority 为 NONE。
+- [x] 复杂且新颖的外部研究已在 §1.3 显式说明跳过理由，并作为 Gate P 计划整体的一部分等待用户确认；后续仅在出现 Git/hook 单点 fact-gap 时查 primary source。
+- [x] P1–P10 均填写单一 `model_tier`；唯一降档 P10 已写明只做冻结后的 metrics/docs/policy 投影。
+- [x] 本任务是 framework/meta 工程规划，不含设计产出 Phase，OD-first / MagicPath / html-prototype 路由为 N/A。
 
 ## 25. 当前状态
 
-本方案当前处于 `CANDIDATE_UNDER_REVIEW`。在 §24 的全部同 SHA 审查完成前，它没有 implementation authority；审查完成后只允许把状态改为 `READY_FOR_APPROVAL` 并停在 Gate P。
+本方案当前处于 `CANDIDATE_UNDER_REVIEW`，`Gate P` 因 2026-09-03 post-seal review 暂停，implementation authority 仍为 `NONE`。下一合法动作是对 `a7d5fe3..62b6e4f` 做固定范围增量双轴审计，并裁决 `to-tickets` 发布面及 `project-read-grants.mjs` / `project-read.mjs` / grant lifecycle 是否改变目标保护面、只读锚点或 U-block 可实施性；随后补齐可复算 handoff 证据并对新的 plan SHA 完成四类独立复签与 final quality gate。以上完成前不得批准 Gate P 或启动 U-001。
 
 <!-- FILE_END: FINAL-MASTER-PLAN.md -->
