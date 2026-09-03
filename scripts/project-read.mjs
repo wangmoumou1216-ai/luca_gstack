@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync, lstatSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { authorizeRead, readGrantSet } from '../.claude/hooks/lib/project-read-grants.mjs';
+import { READ_GRANTS_ENABLED, authorizeRead, readGrantSet } from '../.claude/hooks/lib/project-read-grants.mjs';
 import {
   PROJECTS_ROOT,
   readProjectState,
@@ -128,6 +128,10 @@ function searchDirectory(root, pattern) {
 const args = parseArgs(process.argv.slice(2));
 const { sessionId, grantId } = parseCap(args.cap);
 const gstackRoot = process.env.CLAUDE_PROJECT_DIR || process.env.LUCA_GSTACK_ROOT || ROOT;
+// 2026-09-03 post-seal 增量审计的独立复审发现：readGrantSet() 本身不带 READ_GRANTS_ENABLED
+// 门——目前无害，只因为下面的 authorizeRead() 恒 deny；但若隔离解除时漏改这个文件，会重演
+// "先信 sidecar 内容、后授权"的原始漏洞形状。门提到最前面，data 层不再靠 consumer 层兜底。
+if (!READ_GRANTS_ENABLED) fail('read grants disabled', 3);
 let set;
 try { set = readGrantSet(gstackRoot, sessionId).value; }
 catch (error) { fail(error.message, 3); }
