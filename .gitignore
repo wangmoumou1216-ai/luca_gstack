@@ -94,6 +94,7 @@ api-project/
 .claude/.session-turn-count-*
 .claude/.session-edit-count-*
 .claude/.session-tool-count-*
+.claude/.session-framework-state-*
 .claude/.session-project-*
 .claude/.session-consumed-turns-*
 .claude/.session-read-grants-*
