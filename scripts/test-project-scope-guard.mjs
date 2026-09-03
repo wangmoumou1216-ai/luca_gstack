@@ -684,10 +684,11 @@ check('IDENTITY-PATH-024e patch body path-like text is data, target header decid
     `*** Update File: ${join(env.gstack, 'scripts', 'x.mjs')}`,
     '@@',
     `+const example = "${displayDir}/handoff";`,
+    '+const officeSkills = ".claude/skills/office/*";',
     '*** End Patch',
   ].join('\n');
   const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: patch } });
-  assert.equal(o, null, '补丁正文不是 shell operand，不得按正文中的示例字符串拒绝');
+  assert.equal(o, null, '补丁正文不是 shell operand，docs 字样或普通 .claude glob 都不得被当成路径拒绝');
 });
 check('IDENTITY-PATH-024f [保护面] patch target header pointing at display scope is denied', () => {
   const env = makeEnv();
@@ -817,6 +818,55 @@ check('READ-GRANT-005 grant sidecars are inaccessible control-plane state', () =
     const out = run(env, { session_id: 'QG', ...payload });
     assert.equal(out.hookSpecificOutput.permissionDecision, 'deny', payload.tool_name);
   }
+});
+
+// 2026-09-03：sidecar 判据的**保护面与误伤面同时钉住**。收窄前「配置目录后任意位置出现元字符
+// 即 deny」把 skills 子目录下的正常通配、以及补丁正文里的路径字面量整类误判成伪造 sidecar
+// （实证：一次纯读的 ls 和一次正常 SKILL.md 编辑都被拦）。两侧都要断言——只钉保护面的话，
+// 收窄回退不会转红；只钉误伤面的话，判据被掏空也不会转红。deny 断言一律核到 reason 含
+// sidecar：不然会被同一次调用里别的 deny（如上行段的越界检查）顶掉，变成钉不住本判据的假绿。
+check('READ-GRANT-006 sidecar 判据只拦够得着 sidecar 的形态（双向）', () => {
+  const env = makeEnv();
+  const cfg = '.claude/';
+  const up = '.'.repeat(2);
+  const sidecar = ['.session', 'read', 'grants-R6'].join('-');
+  const prefixGlob = ['.session', 'read'].join('-') + '*';
+  const skillGlob = cfg + 'skills/office/' + '*';
+  const sidecarDeny = (why, payload) => {
+    const out = run(env, { session_id: 'R6', ...payload });
+    assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny', '[保护面] ' + why);
+    assert.ok(/sidecar/.test(out.hookSpecificOutput.permissionDecisionReason || ''),
+      '[保护面] ' + why + ' 必须由 sidecar 判据拒绝，而不是被别的 deny 顶掉');
+  };
+
+  sidecarDeny('首段通配直接对着配置目录根展开', { tool_name: 'Bash', tool_input: { command: 'cat ' + cfg + '*' } });
+  sidecarDeny('dot-entry 前缀通配（unquotedGlob 差一个尾划线抓不到）',
+    { tool_name: 'Bash', tool_input: { command: 'cat ' + cfg + prefixGlob } });
+  // 注意：命令文本里一旦出现 sidecar 名字片段，会被更早的字面量/partial 检查拦下，断言就钉不到
+  // 收窄判据本身（变异实测：这条曾经恒绿）。故用**不含任何 sidecar 名字**、但绕上去后能展开到
+  // 直挂 dot-entry 的形态，逼着判据走「含上行段 → 整条 tail 退回严判」那一支。
+  sidecarDeny('上行段 + 点号通配：绕回配置目录根并展开到 dot-entry',
+    { tool_name: 'Bash', tool_input: { command: 'cat ' + cfg + 'skills/' + up + '/.' + '*' } });
+  sidecarDeny('命令替换：运行期生成任意文本，同样无法静态定界',
+    { tool_name: 'Bash', tool_input: { command: 'cat ' + cfg + '$' + '(printf x)' } });
+  sidecarDeny('补丁 header 指向 sidecar —— 正文豁免绝不能连 header 一起豁免',
+    { tool_name: 'Bash', tool_input: { command: ['*** Begin Patch', '*** Add File: ' + cfg + sidecar, '+{}', '*** End Patch'].join('\n') } });
+
+  const allowed = [
+    ['skills 子目录通配：glob 不匹配前导点、也无法向上走，够不到直挂的 dot-entry', 'ls ' + skillGlob],
+    ['无元字符的 dot-entry：framework 写豁免开关保持可用', 'touch ' + cfg + '.allow-framework-write'],
+  ];
+  for (const [why, command] of allowed) {
+    assert.equal(run(env, { session_id: 'R6', tool_name: 'Bash', tool_input: { command } }), null, '[误伤面] ' + why);
+  }
+  // 正文必须携带**只有整段文本扫描才会拦**的内容（sidecar 字面量本身——守卫自己的源码就长这样，
+  // 所以修复前 Bash 根本无法承载对它的编辑）。若只放 skills 子目录通配，收窄会先行放行，
+  // 「正文不当路径位」这条就被遮住、单独回退不转红（变异实测）。
+  const benign = ['*** Begin Patch', '*** Update File: ' + cfg + 'skills/office/demo/SKILL.md',
+    '@@', '+一级 skill 集位于 ' + skillGlob + ' 目录。',
+    '+const prefix = ' + sidecar + ';', '*** End Patch'].join('\n');
+  assert.equal(run(env, { session_id: 'R6', tool_name: 'Bash', tool_input: { command: benign } }), null,
+    '[误伤面] 补丁正文里的路径字面量是数据，header 才是路径位');
 });
 
 check('READ-GRANT-004 malformed project state cannot masquerade as NO_PIN', () => {

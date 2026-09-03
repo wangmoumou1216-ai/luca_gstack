@@ -334,10 +334,47 @@ function exactReadBrokerInvocation(command, expectedSessionId) {
   return true;
 }
 
+// 元字符 ≠ 够得着 sidecar（2026-09-03 收窄）。sidecar 是**直挂配置目录下的 dot-entry**，而
+// bash/zsh 默认 glob 不匹配前导点、向下的 glob 也无法向上走。旧判据「配置目录后任意位置出现
+// 元字符即 deny」把正常的框架编辑（skills 子目录下的通配）整类误判成伪造 sidecar。只有三种
+// 形态能真正落到 sidecar 上，逐一保留、其余放行：
+//  ① 首段自带元字符 —— 直接对着配置目录根展开，能命中 dot-entry；这一支刻意留了安全余量：
+//     默认 glob 不匹配前导点，但 dotglob / GLOB_DOTS 一旦打开就能匹配，且守卫看不到调用方
+//     的 shell 选项，故首段一律严判。想再收窄这一支的人请先解决这个不可观测性。
+//  ② tail 含上行段 —— 可向上走，落点无法静态定界，整条 tail 退回旧的严判；
+//  ③ tail 含 $ / 反引号 / ( —— 运行期生成任意文本，同样无法静态定界。
+// 不含元字符的 dot-entry（如 framework 写豁免开关）保持既有放行语义，不因本次收窄改变。
+function grantControlPlaneGlobReach(tail) {
+  if (/[$`(]/.test(tail)) return true;
+  const segments = tail.split('/');
+  return /[*?[\]{}\\]/.test(segments.includes('..') ? tail : segments[0]);
+}
+
+// 路径判据单一实现：补丁 header 目标与 Write/Edit 的 file_path 走同一条，杜绝两处漂移。
+function grantControlPlanePath(path, prefix) {
+  if (typeof path !== 'string' || !path) return null;
+  const absolute = isAbsolute(path) ? resolve(path) : resolve(gstackRoot, path);
+  const dir = resolve(gstackRoot, '.claude');
+  const rel = relative(dir, absolute);
+  if (rel && !rel.startsWith('..') && !isAbsolute(rel) && rel.split('/').pop().startsWith(prefix)) return path;
+  return null;
+}
+
 function readGrantControlPlaneReference(tool, inp) {
   const prefix = '.session-read-';
   if (tool === 'Bash') {
     const command = String(inp.command || '');
+    // 补丁正文是任意源文本、不是路径位（与 inspectApplyPatch 同一条不变量）：识别为补丁时只按
+    // header 目标判定，正文里出现的配置目录字面量不再被当作 shell 路径引用扫描。
+    // 无法识别为补丁（含无 header 的畸形载荷）→ 退回下面的整段文本扫描，方向 fail-closed。
+    const patchTargets = applyPatchTargets(command);
+    if (patchTargets) {
+      for (const target of patchTargets) {
+        const hit = grantControlPlanePath(target, prefix);
+        if (hit) return hit;
+      }
+      return null;
+    }
     const partial = ['.session', 'rea'].join('-');
     for (const source of new Set([command, expandLocalAssignments(command)])) {
       if (source.includes(prefix) || source.includes(partial)) return prefix;
@@ -345,18 +382,12 @@ function readGrantControlPlaneReference(tool, inp) {
       for (const match of references) {
         const tail = match[1] || '';
         const unquotedGlob = tail.replace(/[\[\]{}*?\\]/g, '');
-        if (unquotedGlob.includes(prefix) || /[*?\[\]{}$()\\]/.test(tail)) return match[0].trim();
+        if (unquotedGlob.includes(prefix) || grantControlPlaneGlobReach(tail)) return match[0].trim();
       }
     }
     return null;
   }
-  const path = inp.file_path || inp.notebook_path || inp.path;
-  if (typeof path !== 'string' || !path) return null;
-  const absolute = isAbsolute(path) ? resolve(path) : resolve(gstackRoot, path);
-  const dir = resolve(gstackRoot, '.claude');
-  const rel = relative(dir, absolute);
-  if (rel && !rel.startsWith('..') && !isAbsolute(rel) && rel.split('/').pop().startsWith(prefix)) return path;
-  return null;
+  return grantControlPlanePath(inp.file_path || inp.notebook_path || inp.path, prefix);
 }
 
 function mentionsReadBrokerInvocation(command) {
@@ -710,6 +741,16 @@ function frameworkWriteDeny(tool, inp) {
     return writeSignals.some((re) => re.test(cmd)) ? 'framework/（Bash 写信号）' : null;
   }
   return null;
+}
+
+// 与 inspectApplyPatch 完全同一套识别条件，只取 header 目标：让"正文不是路径位"这条不变量
+// 能被补丁之前的检查复用（无 header 时返回 null → 调用方退回整段文本扫描，方向 fail-closed）。
+function applyPatchTargets(command) {
+  const source = String(command || '');
+  if (!source.startsWith('*** Begin Patch\n') || !source.trimEnd().endsWith('*** End Patch')) return null;
+  const header = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/gm;
+  const targets = [...source.matchAll(header)].map((match) => match[1].trim()).filter(Boolean);
+  return targets.length ? targets : null;
 }
 
 // Codex projects apply_patch into this hook's Bash-shaped input. A patch is not a
