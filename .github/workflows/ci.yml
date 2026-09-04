@@ -11,22 +11,26 @@ jobs:
     name: Validate YAML Files
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install yamllint
         run: pip install yamllint
       - name: Lint YAML files
         # .claude/workflow-state.yaml is a local-only gitignored symlink (absent on
         # clean runners) — lint only committed framework yaml, never the symlink.
         run: |
-          yamllint -d relaxed .claude/skill-os/optional-workflow-graph.yaml
-          yamllint -d relaxed .claude/skill-os/input-modes.yaml
+          # Long scalar values and inline workflow paths are intentional here; validate YAML
+          # structure without emitting non-actionable line-length annotations.
+          yamllint -d '{extends: relaxed, rules: {line-length: disable}}' \
+            .claude/skill-os/optional-workflow-graph.yaml
+          yamllint -d '{extends: relaxed, rules: {line-length: disable}}' \
+            .claude/skill-os/input-modes.yaml
 
   validate-markdown:
     name: Validate Markdown
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
       - name: Install markdownlint
@@ -38,7 +42,7 @@ jobs:
     name: Validate Skill Definitions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check all skills have SKILL.md
         run: bash scripts/validate-skills.sh
 
@@ -46,8 +50,8 @@ jobs:
     name: Validate Framework Logic
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
       - uses: actions/setup-python@v5
@@ -148,8 +152,8 @@ jobs:
     name: Validate HTML Prototypes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
       - name: Check framework HTML files exist
