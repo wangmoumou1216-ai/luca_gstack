@@ -124,7 +124,13 @@ function validateSourceManifest(cutoverReceipt) {
       recoveredCutovers.add(cutover.path);
     }
     const actual = tuple(sourcePath);
-    assert.deepEqual(actual, { type: record.type, mode: record.mode, sha256: record.sha256 }, `source tuple drift at row ${row.index}`);
+    // upstream 行指向一次性 freeze-time 的 ephemeral 本地 clone（/private/tmp/...），从未承诺
+    // 永久存活；系统清理临时目录后该文件必然 absent，这是预期生命周期，不是内容漂移。只容忍
+    // "absent" 这一种缺席形态——clone 若仍存在，hash 不符依旧硬失败，真实篡改/漂移照样抓得住。
+    // legacy 行指向仓内/用户目录的持久备份，不适用本豁免，缺席仍按原样断言失败。
+    if (!(record.source_kind === 'upstream' && actual.type === 'absent')) {
+      assert.deepEqual(actual, { type: record.type, mode: record.mode, sha256: record.sha256 }, `source tuple drift at row ${row.index}`);
+    }
   }
   for (const target of cutoverTargets.filter((target) => target.decision === 'CUTOVER')) {
     assert.equal(recoveredCutovers.has(target.path), true, `CUTOVER target lacks a recoverable SOURCE-MANIFEST legacy SKILL row: ${target.path}`);
