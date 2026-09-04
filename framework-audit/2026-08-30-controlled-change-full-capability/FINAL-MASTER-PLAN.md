@@ -1,11 +1,14 @@
 # LucaGStack controlled-change 受控变更全量能力方案
 
-> 状态：`CANDIDATE_UNDER_REVIEW`
-> 方案日期：2026-08-30；按近期提交审计重基线：2026-09-02；post-seal review 重新打开：2026-09-03（Asia/Shanghai）
+> 状态：`READY_FOR_APPROVAL`（R25，2026-09-04：R24 五项 closure requirement 已收尾，见
+> REVIEW-LEDGER.md §8；无架构/U-block/Files/Verification 改动，R23 四类签名原样成立，不需重签）
+> 方案日期：2026-08-30；按近期提交审计重基线：2026-09-02；post-seal review 重新打开：2026-09-03；
+> post-seal 增量审计闭合：2026-09-04（Asia/Shanghai）
 > 任务类型：Deep / framework-meta / plan-only / `NO_PIN`  
 > 推荐目标档：**Standard**  
-> 当前终点：先闭合 post-seal 增量审计与证据完整性问题，再冻结新计划 SHA；`Gate P` 当前暂停
-> 实施授权：**无**
+> 当前终点：等待用户对本 SHA 的独立、未来显式 `Gate P APPROVED`（与 09-02 handoff 同款协议）；
+> 本状态更新本身不构成、不暗示该批准
+> 实施授权：**无**（`READY_FOR_APPROVAL` 在本文档内从未等价于已获批准，见 §5 R21/R23 各处同款声明）
 
 ## 0. 执行摘要
 
@@ -27,6 +30,17 @@
 六 Skill 主计划里的 controlled-change MVP 已成为第一位真实消费者和 Foundation v1，不是全量结论；旧重型方案只作为机制候选库，daemon、签名 capability、全局 authority registry、repo-global whole-task lease、通用 two-phase publisher 均不恢复为默认架构。
 
 2026-09-03 post-seal review 发现，R23 冻结后落地的 `a16d47bc09e8b10ea19cade6d54881b03286239c` 与 `62b6e4f32feb850ba4f8286a7cb9609202b88f6b` 触及本计划的 workflow/route/project-scope/session 只读接口，并新增 `to-tickets` 发布面与 `project-read-grants.mjs` / `project-read.mjs` 传递信任面；现有 R-001–R-017 尚未对这些 delta 作固定范围裁决。与此同时，`REVIEW-LEDGER.md` 的 canonical SHA 声明复算不一致，且输入 handoff bytes 未在仓库中持久化。按 §24.9–§24.10，R23 的历史 verdict 保留但不再构成当前 Gate P 入口；在增量审计明确这些变化只是 Gate M 可吸收的 baseline drift，或更新受影响的架构/锚点/U-block 并完成新 SHA 四类复签前，本计划保持 `CANDIDATE_UNDER_REVIEW`。是否把第七个工程交付能力和 read-grant 链纳入 controlled-change 保护范围属于架构范围裁决，本轮不代替用户或计划 owner 选择。
+
+**2026-09-04 R25 闭合**（完整记录见 `REVIEW-LEDGER.md` §8）：对上述 delta 的固定范围增量审计
+独立复现全部线索，额外发现并修复一个更晚出现的生产路径崩溃（route-guard.mjs soft-candidate
+渲染，与本节描述的 delta 无关，是后续加固提交引入）。修复落在 commit `46cb0f1`、`9ff30c6`，
+均含独立对抗评审与 `verify.sh` 88/0/1(无关) 为证据。用户在本 Session 内明确把 `to-tickets` 与
+read-grant 链的 controlled-change 边界裁决权交给本 Session 的技术判断，裁决结果：`to-tickets`
+维持在六 Skill v1 保护面之外（未被本轮任何发现触及，与 hook/guard 层无交集）；read-grant 链
+维持 orthogonal 定位不纳入保护范围，且已被完全隔离（`READ_GRANTS_ENABLED = false`，三处独立
+短路），当前贡献零活跃能力。两项裁决均未触及本计划的目标架构、只读锚点、U-block、Files、
+Read List、Verification 或 Gate 顺序，故不生成新 plan SHA，不触发四类独立复签。ledger 自身
+完整性（canonical SHA 声明）与原始 handoff bytes 可复算性问题也已在 §8 独立收尾。
 
 ---
 
@@ -1747,6 +1761,16 @@ Next legal action: user approves/rejects/requests plan revision
 
 ## 25. 当前状态
 
-本方案当前处于 `CANDIDATE_UNDER_REVIEW`，`Gate P` 因 2026-09-03 post-seal review 暂停，implementation authority 仍为 `NONE`。下一合法动作是对 `a7d5fe3..62b6e4f` 做固定范围增量双轴审计，并裁决 `to-tickets` 发布面及 `project-read-grants.mjs` / `project-read.mjs` / grant lifecycle 是否改变目标保护面、只读锚点或 U-block 可实施性；随后补齐可复算 handoff 证据并对新的 plan SHA 完成四类独立复签与 final quality gate。以上完成前不得批准 Gate P 或启动 U-001。
+本方案曾于 `CANDIDATE_UNDER_REVIEW`，因 2026-09-03 post-seal review 暂停 `Gate P`。2026-09-04
+R25 增量审计（详见 `REVIEW-LEDGER.md` §8）已完成 post-seal review 要求的全部五项 closure
+requirement：对 `a7d5fe3..62b6e4f`（实际执行范围扩至 `a7d5fe35..5f57da2`，含后续两轮加固提交）
+做了固定范围双轴审计并独立复现修复；裁决 `to-tickets` 发布面与 `project-read-grants.mjs` /
+`project-read.mjs` / grant lifecycle 均未改变目标保护面、只读锚点或 U-block 可实施性（read-grant
+链已被完全隔离，`to-tickets` 未被任何发现触及）；ledger 自身完整性与原始 handoff bytes 可复算性
+均已收尾。因无架构改动，本文件当前内容意义上与 R23 冻结时一致，四类签名（architecture 9/9、
+safety 13/13、parity 12/12、Plan Agent 17/17）原样成立，不触发重签。implementation authority
+仍为 `NONE`。恢复 `Gate P` 是与本次审计闭合独立的另一动作，须由用户在未来某个 Session 用
+09-02 handoff 同款协议显式给出（首条消息写明 `Gate P APPROVED` 并绑定本文件当时的 SHA）；
+在此之前不得启动 U-001。
 
 <!-- FILE_END: FINAL-MASTER-PLAN.md -->

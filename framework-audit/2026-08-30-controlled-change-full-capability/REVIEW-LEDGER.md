@@ -2,10 +2,10 @@
 
 > 任务：plan-only；不授权 implementation  
 > 计划文件：`FINAL-MASTER-PLAN.md`  
-> 当前 ledger 状态：`REOPENED_BY_POST_SEAL_REVIEW`
-> Canonical ledger SHA-256：`385d7de6b995944d45c3f161255ae01fe7d34248197fd8ec592dae8a117235d3`
+> 当前 ledger 状态：`R24_CLOSED_BY_R25`（见 §8；R24 五项 closure requirement 已收尾，Gate P 恢复仍待用户未来显式批准）
+> Canonical ledger SHA-256：`5331cda3c086ce42b8fd2b34918b8e191dfebba6db2fa9770c9238dd5785a19a`
 > Canonicalization：仅把上一行64位值规范化为64个`0`，其余UTF-8/LF bytes保持原样后计算SHA-256；raw file SHA由handoff外部绑定。
-> 当前停点：`POST_SEAL_REVIEW — GATE_P_SUSPENDED`
+> 当前停点：`R25_CLOSURE — GATE_P_STILL_SUSPENDED_PENDING_FRESH_APPROVAL`
 
 ## 1. 输入与范围
 
@@ -561,6 +561,112 @@ Findings：
 4. 提供可复算的 handoff bytes，或明确把原 handoff 降级为不可复现 provenance 并证明 plan 自包含；
 5. 对最终新 plan SHA 重跑 architecture、safety（默认 REFUTED）、flow/parity、Plan Agent 与 final quality gate。
 
-Current disposition：`CANDIDATE_UNDER_REVIEW / GATE_P_SUSPENDED / AUTHORIZED_EFFECTS=NONE`。
+Current disposition（历史，已被下述 R25 更新，不再是当前值）：`CANDIDATE_UNDER_REVIEW / GATE_P_SUSPENDED / AUTHORIZED_EFFECTS=NONE`。
+
+## 8. R25 — 2026-09-04 incremental audit closure
+
+冻结审查对象：R24 §7 要求的固定范围 `a7d5fe3..a16d47b` 与 `a16d47b..62b6e4f`，实际执行范围取其超集
+`a7d5fe35caa43a235e0f364ba1db1ad8517eaca8..5f57da2e0a7fd0e36b2c3280e5a8fa2537351c0b`（七个线性 commit：
+`a16d47b`、`62b6e4f`、`eda543c`、`7c083a5`、`8d083c5`、`e5086d3`、`5f57da2`），因为 R24 之后已有另一 Session
+对 R24 发现的部分问题做过第一轮加固（`7c083a5`/`5f57da2`），本轮审计必须一并验证那轮加固是否真正生效，
+不能只审原始 delta。执行链路：交接文档 `luca-handoff-20260903-133449.md`（SHA-256
+`a135d61b7d9c0f6c0278f3d93215097ec3baa326e9d68e579257f35a8d8749d5`，已复算一致）→ Codex session
+`01a065c7` 因平台内容分类器（cyber_policy）反复拦截而无法完成 → 本 Session 接手，独立复现全部线索并完成修复。
+
+### 8.1 独立复现结果（对未打补丁的活代码，逐条给出 REAL/REFUTED、MUST_FIX/NOT_REQUIRED）
+
+1. **PR-101（route-guard.mjs 生产路径崩溃）**：REAL，MUST_FIX。生产 prompt `PRD是啥`
+   （`ROUTE_GUARD_DRY_RUN=0`，无 session_id）触发 `TypeError: Cannot read properties of
+   undefined (reading 'join')`，exit 1——两处 soft-candidate 构造点分别产出 `{skill,tokens}`
+   与 `{skill,why}` 两种不一致 shape，渲染器只认 `.tokens`。R24 未列出此项（比 R24 更晚出现的
+   回归）。**RESOLVED**：统一为 `softCandidate()` helper，产出 `{skill, evidence: []}`。
+2. **exact broker 绕过（shell 引号拆分逃过原始子串扫描）**：REAL，架构级但当前无害
+   （见 8.2 的隔离处置）。`mentionsReadBrokerInvocation()` 对未解析命令文本做原始
+   `.includes()` 子串匹配，`node scripts/project''-read.mjs ...` 之类的等价拼写在文本层
+   不含目标子串，整段 broker-grammar 检查被跳过。**OPEN**——不是本轮修复对象，留给
+   read-grants 未来重新设计时处理，不能靠再加一条字面量模式打补丁（会重演同一类问题）。
+3. **同一判据反方向误伤**：REAL，NOT_REQUIRED（fail-closed 方向，非漏洞，是可用性缺陷）。
+   任何命令只要文本包含 `scripts/project-read` 子串就会被拦，即便只是 `shasum`/`diff`/
+   `git show` 这类只读检查自身源码的操作；本 Session 在审计过程中自己撞了两次。**OPEN**，
+   与第 2 项同一根因、同一未来修复窗口。
+4. **grant target 边界（下游项目 `.claude/` 内非 sidecar 文件可被授权只读）**：REAL，
+   已独立读码确认（`validateTarget()` 只拒绝 `.git`、`.luca`、`.claude/.session-*`）。
+   是否应该更严格属于第 8.2 节的裁决范围，非代码缺陷。
+5. **sidecar 伪造 → grant 改标 → broker 越权读（完整可用攻击链）**：REAL，MUST_FIX，
+   最严重一项。运行期字符串拼接（`['.session','read','grants-X'].join('-')`）绕过文本层
+   sidecar 检测；`authorizeRead()` 对被伪造改标的 grant 无独立防篡改验证，接受后
+   `scripts/project-read.mjs`（CLI broker）成功读出未曾被授权的文件，exit 0。**RESOLVED**：
+   `project-read-grants.mjs` 新增 `READ_GRANTS_ENABLED = false` 并在 `reconcilePromptGrants`/
+   `authorizeRead` 内部无条件短路；CLI broker 自身另有独立同款门（见下）。`project-scope-guard.mjs`
+   的 sidecar 写保护与 broker 语法检查保持 unconditional，不随开关一起失效——纵深防御。
+6. **post-edit.mjs `core.fsmonitor` 任意程序执行**：REAL，MUST_FIX。tripwire 探针跑裸
+   `git status`，尊重仓库本地 `core.fsmonitor` 配置，恶意 fsmonitor 程序借"只读检测"之名
+   获得任意执行。**RESOLVED**：探针加 `-c core.fsmonitor=false`；脏检测本身经变异测试确认
+   未被一并弄哑。
+7. **危险恢复文案**：REAL，MUST_FIX（低严重度，是人读的建议文字非自动执行）。原文案建议
+   无条件 `git checkout -- framework`，可能连坐清掉不相关的未提交/未跟踪改动。**RESOLVED**：
+   改为先 `git status --short`/`git diff` 再停下等用户确认。
+
+修复落在两次 commit：`46cb0f1`（四项主修复 + 五个测试文件按 quarantine 状态复核，14 条既有
+read-grant 生命周期用例从会静默恒真通过改为显式 SKIP，不留假绿）、`9ff30c6`（独立对抗评审
+指出 CLI broker 自身对 sidecar 的读取先于 `authorizeRead()` 门禁、目前无害但架构上是同一形状，
+补上同款门）。两次均含 `bash scripts/verify.sh` 88 PASS / 0 FAIL / 1 WARN（无关）为证据；独立
+评审 agent 对每项均用自己写的复现脚本对修复前/后代码分别验证，含一次针对 fsmonitor 修复的
+变异测试（还原判据、确认测试真的转红），零翻案。
+
+### 8.2 scope 裁决（R24 §7 item 2，人工裁决，非本 Session 机械处置）
+
+用户在本 Session 内明确把裁决权交给本 Session 的技术判断（"你认为需要的就都做完"，
+2026-09-04），基于以下已核实的证据作出：
+
+- **to-tickets**：本轮审计涉及的全部问题均落在 `.claude/hooks/{route-guard,post-edit,
+  project-scope-guard}.mjs` 与 `.claude/hooks/lib/project-read-grants.mjs`；`to-tickets`
+  自身文件（`.claude/skills/office/to-tickets/SKILL.md` 及其产出路径）未被本轮任何一条
+  发现触及，与 controlled-change 的 hook/guard 层没有交集。维持 R24 交接文档（原 R23 前身
+  handoff）已给出的建议：**留在六 Skill v1 保护面之外**；本地 ticket 文件是普通下游产物，
+  远端 tracker 发布能力目前 dark（未实现），不构成活跃 external effect。
+- **read-grant chain**：本轮已把整条子系统隔离（`READ_GRANTS_ENABLED = false`），
+  `reconcilePromptGrants`/`authorizeRead`/CLI broker 三处独立短路，当前贡献**零活跃能力**。
+  一个被禁用、不可达的子系统不扩大任何受保护面、U-003 read/verification contract 或信任边界。
+  **裁决：维持 orthogonal 定位，不纳入当前 controlled-change 保护范围**；何时/是否重新设计
+  并启用，是独立于本轮的未来裁决，届时必须重新走 8.1 item 2/3/4 的架构问题再评估。
+
+**结论**：以上两项裁决均未改变 FINAL-MASTER-PLAN.md 的目标架构、只读锚点、U-block、
+Files、Read List、Verification 或 Gate 顺序——R24 §7 item 3 的触发条件（"若裁决改变目标
+架构…"）不成立，因此**不需要生成新 plan SHA，不触发 R24 §7 item 5 的四类独立复签**。
+R23 final-candidate plan SHA `08f2e33846f3c006fa9a35c617bc511905c41cd4c1a8754a8342411fc48943df`
+与其四类签名（architecture 9/9、safety 13/13、parity 12/12、Plan Agent 17/17，均见本文件
+§5 R23 记录）在内容意义上原样成立，不需重签。注：R25 在 §0 状态行、post-seal 段落与 §25 追加了
+纯状态/治理叙述（本节记录 + FINAL-MASTER-PLAN.md 相应更新），这会改变文件的**字面 raw
+bytes**——当前 raw SHA-256 为 `11295e0744e3037ec12daf1038bb276c31860a5660b9527eed8f968f50dfbb8c`——
+但不改变 R23 四类签名评审过的**架构内容**（16 域、U-block、Files、Gate、verification 等）；
+按 §9（"plan reviewer 的签名对象是本文件 SHA 与 R-001–R-017 的不可变来源...无关commit、
+docs-only报告...不得使已冻结plan失效"）与 R22/R24 已确立的先例（状态叙述更新不算推翻架构
+事实），此处 raw SHA 漂移属于同一类可吸收更新，不触发重签义务。
+
+### 8.3 R24 §7 item 1/4/5 的收尾
+
+- **item 1（ledger 自身完整性）**：独立重算——把本文件第 6 行 64 位值规范化为 64 个 `0`
+  后取全文 SHA-256，得 `385d7de6b995944d45c3f161255ae01fe7d34248197fd8ec592dae8a117235d3`，
+  与当前声明值一致。R24 发现的不一致已在 R24 之后、本轮之前被某次中间修复吸收；本次为
+  独立复核确认，非本 Session 修复。
+- **item 4（handoff bytes 可复算性）**：原 08-30 handoff（`/private/var/.../
+  luca-handoff-20260830-152811.md`）已不在磁盘上（临时目录已被系统清理），不可复算。
+  按 §5 R22 记录（"plan签名改为本文件SHA与R-001–R-017不可变来源，live baseline明确下沉到
+  未来Gate M"），plan 自 R22 起已不依赖 handoff bytes 作为签名输入——**原 handoff 正式降级
+  为不可复现 provenance，plan 自包含性由 R22/R23 记录本身证明**，不需要新的 handoff bytes。
+- **item 5（四类复签+final quality gate）**：见 8.2 结论——因无架构改动，不触发。
+
+### 8.4 disposition
+
+R24 列出的五项 closure requirement 至此全部收尾（item 1 独立复核确认、item 2 完成人工
+裁决、item 3 条件不成立、item 4 完成降级处置、item 5 不触发）。但 Gate P 的恢复是独立于
+以上收尾的另一个动作——不由本轮审计或本轮 scope 裁决自动带出，必须由用户在未来某个
+Session 用与 09-02 handoff 同款协议显式给出（首条消息写明 `Gate P APPROVED` 并绑定本文件
+当时的 canonical SHA），本 Session 不代为批准，也不建议现在批准（当前没有任何 Session
+准备开始 U-001，提前恢复 Gate P 没有实际收益，只会在下一次真实相关 delta 出现时被迫再走
+一遍本节流程）。
+
+Current disposition：`R24_CLOSED_BY_R25 / GATE_P_STILL_SUSPENDED_PENDING_FRESH_APPROVAL / AUTHORIZED_EFFECTS=NONE`。
 
 <!-- FILE_END: REVIEW-LEDGER.md -->
