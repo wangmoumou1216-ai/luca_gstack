@@ -113,6 +113,7 @@ check S43 "engineering-delivery 七项 owner/trigger/loader/flow 回归" "npm ru
 check S44 "六项集成终态 receipt 与三路同 SHA 评审闭合" "npm run check:skill-integration-receipt --silent"
 check S46 "wait-what 中文化/显式调用/零副作用契约" "npm run test:wait-what --silent"
 check S47 "handoff 生成时 gate_result/criteria/标题契约会咬" "npm run test:handoff-validator --silent"
+check S48 "writing-for-agents 来源/边界/路由/双 harness 契约" "npm run test:writing-for-agents --silent"
 # S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
 # 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
 # verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。

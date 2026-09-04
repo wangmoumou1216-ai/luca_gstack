@@ -51,6 +51,13 @@ project_skills:
     # 不收「没听懂/换个说法/讲清楚」等泛词，避免劫持普通对话延续。
     triggers: [显式调用wait-what]
 
+  writing_for_agents:
+    invoke: "/writing-for-agents"
+    weight: 8
+    # 上游 model-invoked 范围只覆盖 skill/AGENTS.md/CLAUDE.md 写改；其余 agent-facing
+    # 文档靠显式按名调用，避免劫持 tech-spec、task-plan、to-tickets 与普通「写文档」。
+    triggers: [writing-for-agents, 新增skill, 新建skill, 创建skill, 修改skill, 编辑skill, 修改AGENTS.md, 编辑AGENTS.md, 修改CLAUDE.md, 编辑CLAUDE.md]
+
   idea:
     invoke: "/idea"
     weight: 6

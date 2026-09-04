@@ -10,6 +10,14 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PLAN_SHA = '1db326ae078ddefe95f594b9c6f3ce2c68eae6b70bc25205645973843c76c0f9';
 const AUDIT_REL = 'framework-audit/2026-08-30-mattpocock-six-skills-integration';
 const SOURCE_PATH = join(ROOT, AUDIT_REL, 'SOURCE-MANIFEST.tsv');
+const FROZEN_UPSTREAM_COMMIT = '6654f6b60cd9d5be8b54c6fafe44346dabeb3b76';
+const RECORDED_UPSTREAM_ROOT = '/private/tmp/mattpocock-skills.N87j2v/skills-main';
+const RECOVERABLE_UPSTREAM_SNAPSHOT = join(
+  ROOT,
+  AUDIT_REL,
+  'upstream',
+  `mattpocock-skills-${FROZEN_UPSTREAM_COMMIT}`,
+);
 const RECEIPT_PATH = join(ROOT, AUDIT_REL, 'IMPLEMENTATION-RECEIPT.md');
 const CANDIDATE_PATH = join(ROOT, AUDIT_REL, 'CANDIDATE-MANIFEST.tsv');
 const LEDGER_PATH = join(ROOT, AUDIT_REL, 'REVIEW-LEDGER.md');
@@ -102,10 +110,19 @@ function validateSourceManifest(cutoverReceipt) {
     assert.match(record.sha256, /^[0-9a-f]{64}$/, `SOURCE-MANIFEST row ${row.index} SHA`);
     let sourceRoot;
     if (record.source_kind === 'upstream') {
-      assert.equal(record.commit, '6654f6b60cd9d5be8b54c6fafe44346dabeb3b76');
+      assert.equal(record.commit, FROZEN_UPSTREAM_COMMIT);
       assert.equal(record.legacy_root, '-', `upstream row ${row.index} must not infer a legacy root`);
       assert.equal(isAbsolute(record.upstream_source_root), true, `upstream row ${row.index} root must be absolute`);
-      sourceRoot = record.upstream_source_root;
+      assert.equal(
+        record.upstream_source_root,
+        RECORDED_UPSTREAM_ROOT,
+        `upstream row ${row.index} provenance root drift`,
+      );
+      // SOURCE-MANIFEST records the original capture location for provenance. That location was
+      // under /private/tmp, so it cannot be the durable verification surface. The committed,
+      // commit-named snapshot below preserves the same byte tuples and makes this receipt
+      // reproducible after temp cleanup and on a fresh checkout.
+      sourceRoot = RECOVERABLE_UPSTREAM_SNAPSHOT;
     } else if (record.source_kind === 'legacy') {
       assert.equal(record.commit, '-');
       assert.equal(record.upstream_source_root, '-', `legacy row ${row.index} must not infer an upstream root`);
@@ -124,13 +141,7 @@ function validateSourceManifest(cutoverReceipt) {
       recoveredCutovers.add(cutover.path);
     }
     const actual = tuple(sourcePath);
-    // upstream 行指向一次性 freeze-time 的 ephemeral 本地 clone（/private/tmp/...），从未承诺
-    // 永久存活；系统清理临时目录后该文件必然 absent，这是预期生命周期，不是内容漂移。只容忍
-    // "absent" 这一种缺席形态——clone 若仍存在，hash 不符依旧硬失败，真实篡改/漂移照样抓得住。
-    // legacy 行指向仓内/用户目录的持久备份，不适用本豁免，缺席仍按原样断言失败。
-    if (!(record.source_kind === 'upstream' && actual.type === 'absent')) {
-      assert.deepEqual(actual, { type: record.type, mode: record.mode, sha256: record.sha256 }, `source tuple drift at row ${row.index}`);
-    }
+    assert.deepEqual(actual, { type: record.type, mode: record.mode, sha256: record.sha256 }, `source tuple drift at row ${row.index}`);
   }
   for (const target of cutoverTargets.filter((target) => target.decision === 'CUTOVER')) {
     assert.equal(recoveredCutovers.has(target.path), true, `CUTOVER target lacks a recoverable SOURCE-MANIFEST legacy SKILL row: ${target.path}`);

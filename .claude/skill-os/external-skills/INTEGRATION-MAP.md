@@ -153,3 +153,12 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 
 它不是工程交付图的新节点，也不是 `teach`、`handoff` 或 `ux-writing` 的替代品：`teach` 面向持续教学，
 `handoff` 面向跨会话移交，`ux-writing` 面向产品界面文案；`wait-what` 只修复当前对话中刚刚没讲明白的一条回复。
+
+## 2026-09-04 增补（`writing-for-agents` Agent 文档写作层）
+
+| # | Skill | 场景 | 真值 owner | 角色 | 护栏 |
+|---|---|---|---|---|---|
+| 11 | writing-for-agents | Agent 消费的 skill/AGENTS.md/CLAUDE.md；其他 agent 文档显式调用 | `skill-authoring.md` 独占本地 skill 手艺；skill-creator/领域 skill 各自承重 | 用 two loads、context pointer、information hierarchy、completion criteria、leading word、pruning 写作或评审 Agent-facing 文档 | 不复制既有 doctrine；不改领域事实；review 保持只读；无 workflow edge/handoff/state 或新增 effect authority |
+
+它是横切写作透镜，不是产品 `ux-writing`，也不是新的规格/计划/ticket owner。上游 model-invoked
+范围仅映射到 skill、`AGENTS.md`、`CLAUDE.md` 的写改；spec、ticket、runtime prompt 等更宽对象按名调用。

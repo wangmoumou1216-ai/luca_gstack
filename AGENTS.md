@@ -373,7 +373,7 @@ CLAUDE.md 承载的治理面在 Codex 侧同样生效。**除 Static Fallback �
 
 > **Codex 接线现状（2026-08-04）**：本仓已具备 Codex 侧完整接线，读取顺序与落点如下——
 > `.codex/hooks.json`（6 个生命周期 hook，全部经 `.codex/codex-hook-adapter.mjs` 调用）／
-> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（42 条软链 → `.claude/skills/office/*`）／
+> `.codex/agents/*.toml`（可 spawn subagent）／`.agents/skills/*`（43 个可调用 skill → `.claude/skills/office/*`）／
 > `.codex/workflow-runner.mjs`（Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，本 runner 把
 > workflow 脚本注入的 `agent()` 接到 `codex exec --output-schema` 上，`.claude/workflows/*.js` 零改写即可运行；
 > 用法 `node .codex/workflow-runner.mjs <workflow名> [--args '<json>'] [--dry-run]`。
@@ -531,7 +531,7 @@ Claude Code owns the native slash-command experience:
 
 - `.claude/commands/*`
 - `.claude/skills/office/*`
-- `.claude/skills/{codebase-design,code-review,grilling,diagnosing-bugs,resolving-merge-conflicts,to-spec,to-tickets,wait-what,wayfinder,implement}`：
+- `.claude/skills/{codebase-design,code-review,grilling,diagnosing-bugs,resolving-merge-conflicts,to-spec,to-tickets,wait-what,wayfinder,implement,writing-for-agents}`：
   仅为指向 `office/` 真值源的 Claude native aliases（不复制正文；`code-review`
   覆盖 bundled `/code-review`，其 `/review` alias 仍属原生）
 - Claude-specific guided workflows.
@@ -621,6 +621,7 @@ AGENTS.md 全文注入、**不受该预算约束**，所以路由信息必须落
 | `/to-spec` | 工程层 | 已解决工程讨论 → canonical tech-spec 的 conversation_synthesis 薄入口 |
 | `/to-tickets` | 工程层 | 显式把已过门、SHA 固定的 task-plan 发布为竖切 tickets；task-plan 仍是唯一真值 |
 | `/wait-what` | 会话层 | 显式补足上一条缺失前提，用自然中文和项目术语重新讲清楚；零产物、零状态、零 authority 扩张 |
+| `/writing-for-agents` | 文档层 | 写作/评审 Agent 消费的指令文档；skill-creator 与领域 owner 仍承重 |
 | `/wayfinder` | 规划层 | Plan Agent 薄入口；自动建议仅 huge AND multi-session AND fog，direct 按名可直达 |
 | `/implement` | 工程层 | 已冻结、已批准 task-plan → exact U-ID；Plan Agent 编译，Orchestrator 拥有执行状态 |
 | `/codebase-design` | 代码层 | Module/Interface/Depth/Seam/Adapter 共享原语；模块深化、接口收敛和测试面设计，不是 workflow 节点 |
@@ -850,7 +851,7 @@ Only report this checklist to the user if it affects the work or the user asks.
 - Do not duplicate every Claude skill body here.
 - Do not pretend Codex can directly execute Claude **slash** commands (`/brainstorm` 等语法仍是
   Claude 侧的)。**但同一套 skill 本体在 Codex 下是可达的**（2026-08-04 接线）：`.agents/skills/`
-  下 42 条软链指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
+  下 43 个可调用 skill 指向 `.claude/skills/office/*`，Codex 按 `$<skill-name>` 或 `/skills` 选择器调用，
   读的是同一份 SKILL.md（软链非副本——复制会漂移，见 b2b83d3）。所以正确说法是
   「触发语法不同，skill 本体同源」，不是「Codex 用不了这些 skill」。
 - Do not use this file to store task-specific notes.

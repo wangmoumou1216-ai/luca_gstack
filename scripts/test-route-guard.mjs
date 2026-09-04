@@ -388,6 +388,50 @@ const cases = [
     },
   },
   {
+    name: 'writing-for-agents Codex syntax reaches the shared canonical skill',
+    prompt: '$' + 'writing-for-agents',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/writing-for-agents');
+    },
+  },
+  {
+    name: 'editing AGENTS.md routes to the agent-document writing lens',
+    prompt: '帮我修改AGENTS.md，让agent每次都按同一个流程执行',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/writing-for-agents');
+    },
+  },
+  {
+    name: 'creating a lucagstack skill routes to writing-for-agents after complexity gate',
+    prompt: '在lucagstack新增skill',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/writing-for-agents');
+    },
+  },
+  {
+    name: 'meta question about writing-for-agents does not execute it',
+    prompt: 'writing-for-agents是什么',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'STOP');
+      assert.notEqual(decision.skill, '/writing-for-agents');
+    },
+  },
+  {
+    name: 'interface microcopy remains owned by ux-writing',
+    prompt: '帮我改一下空态文案',
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/ux-writing');
+    },
+  },
+  {
     name: 'G3: 框架 hook 讨论不消费下游项目上下文',
     prompt: '先第一性原理定义是不是问题。其他hook有没有相关问题',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },

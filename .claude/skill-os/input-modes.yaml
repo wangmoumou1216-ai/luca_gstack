@@ -28,6 +28,14 @@ skills:
     quality_gates: ["missing_premise_restored", "natural_chinese", "project_vocabulary_reused_when_available", "repitch_only", "no_side_effects"]
     notes: "显式调用的对话修复覆盖层；只重讲上一条回复，不创建产物/handoff、不改 workflow state、不要求项目 pin。"
 
+  writing-for-agents:
+    modes:
+      standalone:
+        required: ["agent_facing_document_target"]
+        optional: ["consuming_agent", "observed_failure", "target_behavior", "validation_command"]
+    quality_gates: ["truth_owner_preserved", "pointer_reachability", "information_hierarchy", "checkable_completion_criteria", "single_source_of_truth", "no_op_pruned", "requested_effect_only", "fresh_validation_evidence"]
+    notes: "Agent-facing 文档写作/评审参考；skill-creator 或领域 skill 仍拥有流程与事实。本 skill 不独占 workflow 节点，不自产 handoff/state，不扩大 effect authority。"
+
   magicpath:
     modes:
       standalone:

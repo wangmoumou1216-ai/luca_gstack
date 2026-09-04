@@ -27,7 +27,7 @@ assert.match(openai, /allow_implicit_invocation: false/);
 assert.match(command, /office\/wait-what\/SKILL\.md/);
 assert.match(routing, /wait_what:\s+[\s\S]*?invoke: "\/wait-what"[\s\S]*?triggers: \[显式调用wait-what\]/);
 assert.match(modes, /wait-what:\s+[\s\S]*?standalone:[\s\S]*?previous_assistant_message/);
-assert.match(modelRouting, /guided-execution:[\s\S]*?skills: \[[\s\S]*?wait-what\]/);
+assert.match(modelRouting, /guided-execution:[\s\S]*?skills: \[[\s\S]*?\bwait-what\b/);
 
 for (const alias of ['.claude/skills/wait-what', '.agents/skills/wait-what']) {
   assert.equal(lstatSync(alias).isSymbolicLink(), true, `${alias} must be a symlink`);

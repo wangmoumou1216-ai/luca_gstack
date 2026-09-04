@@ -18,6 +18,7 @@
     "check:substrate": "node scripts/test-project-substrate.mjs && node scripts/test-project-identity-wiring.mjs",
     "test:routes": "node scripts/test-route-guard.mjs",
     "test:wait-what": "node scripts/test-wait-what-skill.mjs",
+    "test:writing-for-agents": "node scripts/test-writing-for-agents-skill.mjs",
     "test:handoff-validator": "node scripts/test-handoff-validator.mjs",
     "test:project-scope": "node scripts/test-project-scope-guard.mjs",
     "test:project-read-grants": "node scripts/test-project-read-grants.mjs",

@@ -933,3 +933,20 @@ manual_vetting_2026_09_03:
     why_useful: "提供一个极低成本的显式对话修复按钮：上一条没讲明白时补齐前提，并复用 CONTEXT 通用语言重新讲述。"
     boundary: "只重讲当前回复；不替代 teach 的持续教学、handoff 的跨会话移交或 ux-writing 的产品文案工作。"
     adaptation: "保留 explicit-only、CONTEXT.md/CONTEXT-MAP.md 与 repitch 机制；用户可见描述、指令和输出契约改为自然中文。"
+
+# ── 2026-09-04 用户点名增补（当前 upstream path commit）──
+manual_vetting_2026_09_04:
+  - name: writing-for-agents
+    repo: mattpocock/skills
+    path: skills/productivity/writing-for-agents
+    source_url: https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/skills/productivity/writing-for-agents/SKILL.md
+    pinned: 321658273cb1d20b76026717d027d505790106d4
+    license: MIT
+    hard:
+      safety: PASS
+      compatibility: PASS
+      non_redundancy: PASS
+    verdict: ADOPTED-AS-THIN-ENTRY
+    why_useful: "把已吸收但不可调用的 agent 文档手艺变成可达入口，并覆盖 skill 之外的 AGENTS.md、CLAUDE.md、prompt、spec 与 ticket。"
+    boundary: "只拥有 Agent-facing 结构与措辞；skill-creator 仍拥有创建/打包/eval，skill-authoring.md 仍是本地 skill 手艺真值，领域 owner 仍拥有事实与工作流。"
+    adaptation: "保留上游 two loads、context pointer、information hierarchy、completion criteria、leading word 与 pruning；用指针复用本地既有规范，不复制第二套 skill doctrine。"

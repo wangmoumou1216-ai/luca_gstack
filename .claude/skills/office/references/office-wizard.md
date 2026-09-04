@@ -153,6 +153,10 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone；仅显式 `$wait-what`、`/wait-what` 或裸首 token 调用
                说明：只重讲当前对话，不创建产物、不改 workflow state、不获得新执行权限
 
+/writing-for-agents —    写作或评审 Agent 消费的 skill、AGENTS.md、CLAUDE.md、spec、ticket 或 prompt
+               输入模式：standalone；skill/AGENTS.md/CLAUDE.md 写改可自动命中，其余按名调用
+               说明：只拥有 Agent-facing 结构与措辞；skill-creator/领域 skill 仍拥有流程与事实
+
 ── 全流程编排 ──────────────────────────────────────────────────
 
 /auto          A B C D   全自动多 Agent 编排：自然语言需求 → 自动 Skill Pipeline →

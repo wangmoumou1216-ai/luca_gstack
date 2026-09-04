@@ -39,6 +39,7 @@ skills:
   to-spec: {tier: 1}
   to-tickets: {tier: 1}
   wait-what: {tier: 1}
+  writing-for-agents: {tier: 1}
 
   # ── tier-2：可降级（degrade 必填）──
   deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}

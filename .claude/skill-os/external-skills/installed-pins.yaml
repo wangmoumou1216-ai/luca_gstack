@@ -116,6 +116,17 @@ units:
   pinned_at: '2026-09-03'
   source: adoption-log
   note: explicit-only conversation repair overlay localized to natural Chinese; no artifact, workflow state, graph edge, or authority expansion
+- name: writing-for-agents
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/productivity/writing-for-agents
+  install_path: .claude/skills/office/writing-for-agents
+  pinned_sha: 321658273cb1d20b76026717d027d505790106d4
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-09-04'
+  source: adoption-log
+  note: model-reachable agent-document writing lens; local skill-authoring remains the skill-prose truth and domain owners retain facts/workflow
 - name: wayfinder
   kind: skill
   repo: mattpocock/skills
