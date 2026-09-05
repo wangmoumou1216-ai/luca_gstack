@@ -7,7 +7,7 @@ description: |
   口述+Figma→HTML Demo 编排器。设计师口述需求+提供Figma链接/截图，
   结构化翻译→Socratic映射验证→Blueprint生成→SubAgent逐节点构建→
   组装完整HTML Demo（含演示模式）。大型Demo的节点拆分、Context隔离、
-  状态管理、接口校验全部内置。技术约束继承gstack全局token体系。
+  状态管理、接口校验全部内置。视觉实现遵循用户提供的实际设计规范与 Figma/spec 来源。
   隐藏 skill：2026-07-03 移出一级路由，不经 route-guard 触发词匹配，按名/语义调用。(luca_gstack)
 allowed-tools:
   - Read
@@ -76,12 +76,14 @@ python3 .claude/observability/scripts/get_rules.py figma-demo "*" 2>/dev/null ||
 □ .claude/skills/office/figma-demo/references/interface-schema.md
   （节点间接口定义规范）
 □ .claude/skills/office/references/html-prototype-tokens.md
-  （继承：颜色/字号/间距/AI状态色速查）
-□ framework/README.md
-  （继承：母版体系和MODULE索引）
+  （实际设计规范来源、通用状态与可访问性合同）
+□ framework/README.md（仅明确采用母版时读取；未采用不作为前置）
+  （只读参考源的 MODULE 索引与使用边界）
 ```
 
-**不读完 references 就开始翻译 → 流程错误，必须回退。**
+Preamble 的旧资产探测只供参考，不是生成前置；未采用母版/token 时不要求其存在。
+
+**不读完适用 references 就开始翻译 → 流程错误，必须回退。**
 
 **调度兼容性：**
 - 如果环境支持 Agent/SubAgent tool：按 Phase 4/5 调度 Builder 和 Assembly。
@@ -276,11 +278,11 @@ B）放弃重新开始
 
 列表类：
   - 列表超出容器高度默认可滚动
-  - 列表项默认有 hover 高亮（bg-page-bg）
+  - 列表项默认有 hover 高亮（按实际规范）
   - 空列表有空态提示
 
 输入框类：
-  - 输入框有 focus 态（border-primary）
+  - 输入框有 focus 态（清晰可见，按实际规范）
   - 输入框有 placeholder 文字
 
 页面切换类：
@@ -503,29 +505,17 @@ AskUserQuestion：
 
 ### Step 3.1：全局设计参数提取
 
-从 Figma 解析结果和 gstack token 体系交叉确定：
+从用户提供的实际设计规范与 Figma/spec 提取并记录来源：
 
 ```
-颜色体系：
-  → 优先使用 gstack 的 token 体系（text-n19, bg-primary 等）
-  → Figma 中出现的非 token 颜色 → 找最近的 token 映射
-  → 确实无法映射的 → 记入 blueprint 的 custom_colors 段
-
-字号体系：
-  → 强制使用 gstack 四级字号（text-15/13/12）
-  → Figma 中的字号对应到最近的标准档
-
-间距体系：
-  → 强制使用 gstack 七档间距（4/8/12/16/24/32/40）
-  → Figma 中的间距对齐到最近的标准档
-
-动效体系：
-  → 从 requirement.md 的词典翻译结果提取
-  → 补充未声明的标准动效（hover: 150ms, 状态切换: 200ms）
-
-主色使用计划：
-  → 全页 ≤3 处，在 blueprint 中明确标注哪 3 处
+颜色体系：实际色彩、用途与状态含义；不映射到旧品牌 token
+字号体系：保留实际字体、字号、行高与层级，不压成旧四级值
+间距体系：记录实际间距与密度规律，不吸附到旧七档值
+动效体系：从 requirement.md 的词典翻译提取，补齐反馈与 reduced-motion
+主色使用计划：记录用途及位置，只有实际规范规定配额时才核验该配额
 ```
+
+没有实际设计规范时，按已确认 spec 制定一致的本地约定并记录来源；不宣称外部规范合规。
 
 ### Step 3.2：节点复杂度分级
 
@@ -550,22 +540,11 @@ L 级（Large）：
   - → 必须拆子任务：先布局结构 → 再交互状态 → 最后动效
 ```
 
-### Step 3.3：母版匹配
+### Step 3.3：参考与承载核对
 
-对每个全页节点，匹配 framework 母版：
-
-```
-参照 framework/README.md 的母版选择速查：
-  列表类 → list-page.html
-  详情类 → detail-page-2col.html 或 detail-page-3col.html
-  表单类 → form-page.html
-  首页/仪表盘 → home-page.html
-  AI速记类 → 当前无整页母版，使用局部改动/独立组件，或先补齐对应母版
-  弹窗/抽屉/浮层 → 不使用母版，独立组件模式
-  非标准页面 → 不使用母版，完整 HTML 骨架
-
-多个节点共用同一母版（如列表页和详情页）→ 各自独立复制一份
-```
+默认按已确认 Figma/spec 的平台和范围构建独立节点，`template: none` 合法。
+只有用户明确采用母版时才读取该只读源，记录路径、保持区和替换模块；
+源必须适用于本次目标平台，不按节点关键词自动套入旧桌面壳。缺少母版不阻断独立生成。
 
 ### Step 3.4：生成 blueprint.yaml
 
@@ -599,11 +578,11 @@ docs/prototype/YYYY-MM-DD-<topic>/
 □ 所有节点的 complexity 已标注
 □ L 级节点的 sub_tasks 已定义
 □ 所有节点间的 interface 已定义（进入/退出动效、DOM状态）
-□ 主色使用计划 ≤ 3 处
+□ 主色与状态反馈用途符合实际规范/已确认 spec
 □ 每个节点的 spec.md 已生成
-□ 母版选择合理（已读 framework/README.md）
+□ 参考来源、承载范围与保持区有依据；采用母版时已读其 README
 □ 节点总数和 requirement.md 一致
-□ 全局设计参数只使用 gstack 标准 token
+□ 全局设计参数符合实际规范或明确本地约定，无旧品牌覆盖
 ```
 
 **任一不通过 → 修复后重新检查。**
@@ -794,7 +773,7 @@ cat .claude/skills/office/figma-demo/templates/demo-template.html
 3. 各节点 interface:
    {逐个列出文件路径}
 4. Demo 模板: .claude/skills/office/figma-demo/templates/demo-template.html
-5. Token 参考: framework/tokens.css
+5. 设计规范: blueprint.meta.design_system 的实际来源与参数；未提供外部规范时明确本地约定
 
 ===== 组装要求 =====
 1. 拼合：所有 fragment 按 blueprint 节点顺序放入 demo-template
@@ -918,7 +897,7 @@ AskUserQuestion：
 
 > 下一步？
 >
-> A）**/figma-layer** — 把 Demo 还原到 Figma 交付稿
+> A）**/ux-audit** — 对 Demo 进行 UX 评审（提供截图）
 > B）需要调整某个节点 — 告诉我哪个节点要改
 > C）先停这里
 
@@ -942,11 +921,10 @@ AskUserQuestion：
    当前节点 Working Context。不传其他节点的代码。
 5. **LOCKED 节点不可回退** — 后续节点适配前节点，不反过来改前节点。
    唯一例外：用户明确要求改某个已 LOCKED 节点。
-6. **gstack token 体系是硬约束** — 颜色用 alias 不用 hex，字号用四级不用
-   text-sm，间距用七档不用自定义值。
-7. **品牌色 #FF8000 全页 ≤ 3 处** — 在 blueprint 中明确标注。
+6. **实际设计规范与来源必须记录** — 颜色、字体、间距按已确认来源实现。
+7. **不覆盖外部设计系统** — 无规范时记录本地约定，不伪造合规结论。
 8. **Builder 连续失败 3 次 → BLOCKED** — 不继续循环，升级给用户。
-9. **prototype-spec.md 必须生成** — 对接 /figma-layer 与下游交付审查的硬依赖。
+9. **prototype-spec.md 必须生成** — 对接下游交付审查与恢复的硬依赖。
 10. **演示模式是默认功能** — 每个 Demo 自带键盘切换和全屏能力。
 
 ---
@@ -967,7 +945,7 @@ mkdir -p docs/handoff
 
 必须包含：
 - **决策列表**（≤8条）：Blueprint 映射确认结果、Builder 修正项、LOCKED 节点列表
-- **下游约束**（≤5条）：Demo HTML 路径、gstack token 合规性、品牌色使用数量
+- **下游约束**（≤5条）：Demo HTML 路径、实际规范来源与核验状态、状态覆盖
 - **风险**（≤3条）：REVISION 状态节点、Builder 连续失败的未解决项
 - **产出路径**：Demo HTML 文件路径 + prototype-spec.md 路径 + blueprint 路径
 
@@ -977,6 +955,6 @@ workflow-state 写入以 **Phase 6.2 的 `write_state.py` 为唯一真值源**�
 status / output=docs/prototype/<topic>/index.html / completed_at + `_EXTRA_JSON` 里的
 `blueprint`=docs/prototype/<topic>/blueprint.yaml）。Phase 6.2 已完成写入，**不要在此另手写一套
 顶层 YAML 字段**——手写顶层 `figma-demo:` 键会与脚本产物（`nodes.figma-demo`）结构漂移，且
-blueprint 会写成错误的 `docs/figma/` 路径（该目录是 /figma-layer 的 figma-spec 位置，从不产出 blueprint）。
+blueprint 会写成错误的 `docs/figma/` 路径（该目录保留历史 figma-spec，从不产出 blueprint）。
 
 <!-- FILE_END: figma-demo/SKILL.md -->

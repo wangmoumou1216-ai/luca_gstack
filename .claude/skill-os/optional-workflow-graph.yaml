@@ -3,12 +3,12 @@ principle: "Workflow is optional. It recommends and validates handoff; it does n
 
 design_output:
   primary: open-design        # 主力：交互文档 → OD 生成 HTML（判断后置）→ 落盘。**默认桌面端生成；headless opt-in**
-  fallback: [magicpath, html-prototype]   # 仅「真·daemon-down / 用户要本地 HTML / non-React」才退这两个
-  fallback_trigger:           # 退 magicpath/html-prototype 的条件（仅 daemon 真不可达类）；执行层检测命令见 plan-agent.md Gap 2
-    - "open-design daemon unreachable"
-    - "magicpath auth failed"
-    - "non-react project"
+  fallback: [magicpath, html-prototype]   # 独立能力保留；不是按故障逐级自动切换
+  requires_explicit_tool_choice: true
+  fallback_trigger:           # 只有实际用户选择才换工具；执行条件见 plan-agent.md Gap 2
     - "user requests local html"
+    - "user explicitly selects magicpath"
+    - "user approves named fallback in execution plan"
   od_headless_unavailable:    # daemon UP 但 headless 不能出图 → 降级目标是 OD 桌面端生成（同栈），不退 magicpath/html-prototype
     trigger:
       - "headless 实测不稳：生成慢 >2.5-3min 或 daemon SIGTERM 重启"
@@ -89,7 +89,7 @@ scenes:
   A:
     name: "new_feature"
     recommended_paths:
-      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
+      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design"]
       - ["idea", "brainstorm", "design-brief", "open-design"]
       - ["idea", "superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "open-design"]  # 自带一手定性数据：先综合出洞察再 PRD（追加项 C）
@@ -97,14 +97,14 @@ scenes:
       - ["idea", "brainstorm", "ux-brainstorm", "ux-writing", "design-brief", "open-design"]  # 内容规范 pre-brief：voice-copy-spec 产出后 design-brief Step 1.0b 继承（ux-writing 2026-07-21）
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:  # OD daemon 不可达 / 要本地 HTML 时降级（magicpath/html-prototype 保留不删）
+    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["idea", "brainstorm", "design-brief", "magicpath"]
-      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype", "figma-layer"]
+      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
       - ["idea", "brainstorm", "design-brief", "html-prototype"]
   B:
     name: "existing_feature_optimization"
     recommended_paths:
-      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
+      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "open-design"]
       - ["ux-audit", "design-brief", "open-design"]
       - ["superpowers-brainstorming", "design-brief", "open-design"]  # 轻量路径
       - ["insight-synthesis", "ux-research", "ux-brainstorm", "design-brief", "open-design"]  # 有工单/回访一手数据：综合洞察 + 外部竞品（追加项 C）
@@ -113,27 +113,27 @@ scenes:
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
       - ["code-recon", "tech-spec", "task-plan"]  # 从现有代码起步的工程链（同上）
-    fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
+    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["ux-audit", "design-brief", "magicpath"]
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
       - ["ux-audit", "design-brief", "html-prototype"]
   C:
     name: "online_review_redesign"
     recommended_paths:
-      - ["ux-audit", "design-brief", "open-design", "figma-layer"]
-    fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
-      - ["ux-audit", "design-brief", "magicpath", "figma-layer"]
-      - ["ux-audit", "design-brief", "html-prototype", "figma-layer"]
+      - ["ux-audit", "design-brief", "open-design"]
+    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
+      - ["ux-audit", "design-brief", "magicpath"]
+      - ["ux-audit", "design-brief", "html-prototype"]
   D:
     name: "agent_native_redesign"
     recommended_paths:
-      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design", "figma-layer"]
+      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "open-design"]
       - ["ux-brainstorm", "design-brief", "open-design"]
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "open-design"]  # 有一手用户/使用数据：先综合洞察再 Agent 化设计（追加项 C）
       - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "ux-writing", "design-brief", "open-design"]  # Agent 化全链：摸用户心智 + hedging/agent 状态文案规范（2026-07-21）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:  # OD daemon 不可达时降级（magicpath/html-prototype 保留不删）
+    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["ux-brainstorm", "design-brief", "magicpath"]
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
 
@@ -172,12 +172,12 @@ handoff_gates:
       - "design_generation_packet missing"
       - "tool_consumption_contract missing"
       - "packet contains facts absent from design_brief"
-      - "packet does not declare MagicPath as primary output path"
-      - "component_mapping missing"
+      - "packet does not declare MagicPath as selected output target"
+      - "page_interaction_mapping missing"
       - "decision_cards missing required fields"
       - "traceability_matrix missing"
       - "traceability_gate != PASS"
-      - "prototype_carrier missing"
+      - "output_target_platform_scope missing"
       - "required_state_coverage missing"
       - "ux_brief not written to docs/decisions/"
     allow_standalone_override: false
@@ -190,14 +190,15 @@ handoff_gates:
       - "design_generation_packet missing"
       - "tool_consumption_contract missing"
       - "packet contains facts absent from design_brief"
+      - "page_interaction_mapping missing"
       - "decision_cards missing required fields"
       - "traceability_matrix missing"
       - "traceability_gate != PASS"
-      - "prototype_carrier missing"
+      - "output_target_platform_scope missing"
       - "required_state_coverage missing"
       - "ux_brief not written to docs/decisions/"
     allow_standalone_override: true
-    note: "open-design 是 design_output 主力；OD daemon 不可达时按 design_output.fallback 回退 magicpath/html-prototype。本期只叠 FxUI 品牌色+文字色 token，不要求组件库映射，故无 component_mapping/MagicPath-primary 门项。"
+    note: "open-design 是 design_output 主力；页面与交互位置映射保留D/STATE/来源/AC，不是技术组件映射。源对齐后、编译前按runtime/page-context.md执行一次推荐/确认：仅高置信推荐，低置信reference=none继续；页确认与OD目标/写入权分开。外部DS由用户配置，缺本地token不阻塞。无reference不免除需求与状态门；recover不执行本handoff。"
 
   design_brief_to_html:
     applies_when: "workflow_mode"
@@ -205,11 +206,11 @@ handoff_gates:
       - "design_generation_packet missing"
       - "tool_consumption_contract missing"
       - "packet contains facts absent from design_brief"
-      - "component_mapping missing"
+      - "page_interaction_mapping missing"
       - "decision_cards missing required fields"
       - "traceability_matrix missing"
       - "traceability_gate != PASS"
-      - "prototype_carrier missing"
+      - "output_target_platform_scope missing"
       - "required_state_coverage missing"
     allow_standalone_override: true
     standalone_override_block_if:
@@ -224,14 +225,6 @@ handoff_gates:
       - "screenshot_delta"
       - "figma_demo_blueprint"
 
-  html_or_demo_to_figma:
-    applies_when: "workflow_mode"
-    block_if:
-      - "index_html missing"
-      - "prototype_spec missing"
-    allow_standalone_override: false
-    note: "覆盖 html-prototype / figma-demo / open-design 三种来源 → figma-layer。"
-
   design_brief_to_tech_spec:
     applies_when: "workflow_mode"
     block_if:
@@ -239,7 +232,7 @@ handoff_gates:
       - "decision_cards missing"
       - "traceability_matrix missing"
       - "traceability_gate != PASS"
-      - "prototype_carrier missing"
+      - "output_target_platform_scope missing"
       - "required_state_coverage missing"
       - "prd_artifact missing"
     allow_standalone_override: true
@@ -279,6 +272,6 @@ quality_gates:
   always_enforced:
     - "no fabrication"
     - "one question at a time where user input is required"
-    - "brand and design system constraints"
+    - "verified current project or external design system constraints when provided"
     - "AI/Agent control: visible, pause, take over, undo when agentic execution exists"
     - "artifact paths follow office/SKILL.md conventions"

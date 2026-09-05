@@ -85,12 +85,28 @@ jobs:
         run: python3 scripts/test-gate-verdict-recorder.py
       - name: Routing-map coverage + skill SSOT consistency
         run: npm run check:routing-map
+      - name: Agent root kernel, pointers, discovery, and Static Fallback
+        run: npm run check:agent-context
+      - name: Agent context mutation proof-it-bites
+        run: npm run test:agent-context
+      - name: A/B evaluator adversarial self-test
+        run: npm run test:agent-context-ab-evaluator
+      - name: Conditional context resolution canaries
+        run: npm run test:agent-context-resolution
       - name: Project routing dry-run
         run: npm run check:project-routing
       - name: Coding discipline contracts
         run: npm run check:coding-discipline
       - name: Quality gate contracts
         run: npm run check:quality-gates
+      - name: Quality gate scope isolation
+        run: npm run test:quality-gates-scope
+      - name: Retired design entry guard and preserved paths
+        run: npm run test:design-tool-retirement
+      - name: Design handoff imports, authorization and readback
+        run: npm run test:design-flow-handoff
+      - name: Retired design context stays out of active rules and search
+        run: npm run test:design-context-retirement
       - name: Agent orchestration + verdict/recorder separation contracts
         run: npm run check:agent-contracts
       - name: Memory system tests
@@ -122,13 +138,14 @@ jobs:
       - name: CI contract proof-it-bites
         run: npm run test:ci-contract
 
-      # claude5-unhobble C7：远端补 B1/S18/S19——守 CLAUDE.md 预算/parity 锚/skill 注册
-      # 的三个关键 checker 此前只在本地 verify.sh（FAST_COMMIT 可跳），CI 兜底为事后信号
-      - name: CLAUDE.md byte budget (B1 remote)
+      # 两个独立 root adapter 各用 11 KiB 硬预算；语义完整性由 agent-context 门另行守护。
+      - name: Root adapter byte budgets (B1 remote)
         run: |
-          SZ=$(wc -c < CLAUDE.md)
-          echo "CLAUDE.md=$SZ bytes"
-          [ "$SZ" -le 45098 ]
+          CLAUDE_SZ=$(wc -c < CLAUDE.md)
+          AGENTS_SZ=$(wc -c < AGENTS.md)
+          echo "CLAUDE.md=$CLAUDE_SZ bytes; AGENTS.md=$AGENTS_SZ bytes"
+          [ "$CLAUDE_SZ" -le 11264 ]
+          [ "$AGENTS_SZ" -le 11264 ]
       - name: Capability-parity anchors (S18 remote)
         run: node scripts/check-capability-parity.mjs
       - name: Cross-harness semantic projection proof-it-bites (S40 remote)
@@ -136,7 +153,7 @@ jobs:
       - name: Skill registration sync (S19 remote)
         run: npm run check:registration
       # Phase6 MINOR-3：三个新门补远端网（此前 S31/S32/S33 仅本地、FAST_COMMIT 可跳）
-      - name: Appendix pointer parity (S31 remote)
+      - name: Former mega-appendix absent from runtime context (S31 remote)
         run: node scripts/check-appendix-pointers.mjs
       - name: CONTEXT red-line gate (S32 remote)
         run: |

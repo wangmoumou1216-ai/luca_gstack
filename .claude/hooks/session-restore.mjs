@@ -392,7 +392,7 @@ if (existsSync(memScript)) {
       const errTail = String(e.stderr || '').trim().split('\n').filter(Boolean).pop() || String(e.message || '').slice(0, 80);
       reason = `错误: ${errTail.slice(0, 100)}`; fix = '手动跑 python3 memory/scripts/get_memory.py --summary 看详情';
     }
-    process.stdout.write(`[session-restore] ⚠️ 记忆加载失败（${reason}）→ 本 session 回退至 CLAUDE.md「关键约束速查」节；补救：${fix}\n`);
+    process.stdout.write(`[session-restore] ⚠️ 记忆加载失败（${reason}）→ 本 session 回退至当前 Harness 根文件内联的 Static Fallback；补救：${fix}\n`);
   }
 }
 

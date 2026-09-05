@@ -101,11 +101,17 @@ Dynamic Reference Status：{COMPLETED / SKIPPED_TOOL_UNAVAILABLE / NOT_REQUIRED}
 
 ---
 
-## shadcn 组件清单
+## 页面与交互位置映射
 
-| 页面 | 组件名 | variant | 实现方式 |
-|------|-------|---------|---------|
-| {页} | {组件} | {variant} | shadcn 手写 / framework 复用 |
+对应 design-brief §7，gate：`page_interaction_mapping`。逐项保留语义与来源，补充实际 HTML 定位。
+
+| 页面/语义位置 | 交互职责 | D-ID | 适用 STATE | 需求/真实来源与 AC | 约束/保持区 | 下游目标与实现位置 | 已确认页库引用（可选） |
+|------|------|------|------|------|------|------|------|
+| {页面/区域} | {任务、触发与反馈} | {真实 D-ID 或无上游决策及原因} | {适用状态} | {R/AE 或 brief/截图/UX 来源，及对应 AC} | {约束} | {目标 + HTML 锚点/注释} | {已确认 page_id/region_id 或 reference=none} |
+
+Standalone 缺上游映射时记录本次语义区域计划和追踪缺口，不伪造 D/R/AE；
+`reference=none` 仍须保留位置、职责、状态、来源和验收。历史旧组件映射只读提取语义列，
+不补 variant/classes 或旧技术资产，不重写历史文件。
 
 ---
 
@@ -132,8 +138,7 @@ QA JSON：docs/prototype/YYYY-MM-DD-{topic}/qa-results.json
 | console errors = 0 | {PASS/FAIL/N/A} | |
 | design decisions mapped = N/N | {PASS/FAIL} | |
 | states implemented | {PASS/FAIL} | |
-| token lint violations = 0 | {PASS/FAIL} | |
-| primary color usage ≤ 3 | {PASS/FAIL} | |
+| supplied design rules | {PASS/FAIL/N/A} | {实际来源/版本与静态检验范围；无规范不宣称合规} |
 | no external CDN | {PASS/FAIL} | |
 | no emoji icons | {PASS/FAIL} | |
 
@@ -151,10 +156,10 @@ QA JSON：docs/prototype/YYYY-MM-DD-{topic}/qa-results.json
 ## 交接块（下游 skill 必读）
 
 **本步决定了什么：**
-{信息架构、主要组件选择、关键交互路径、状态覆盖策略}
+{信息架构、页面与交互位置、关键交互职责和路径、状态覆盖策略}
 
-**下游 /figma-layer 需要知道：**
-{设计范围、框架来源、组件映射表路径}
+**下游交付审查与实现 需要知道：**
+{设计范围、框架来源、页面与交互位置映射所在节、D/STATE/AC 与实际实现位置的对应关系}
 
-**下游 /figma-layer 不应该做：**
+**下游交付审查与实现 不应该做：**
 {不应重新设计已决定的信息架构}

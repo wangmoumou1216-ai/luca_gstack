@@ -72,15 +72,15 @@ cat framework/{母版文件名}.html
 按照 CONSTITUTION 中的技术约束和反模式清单，生成 HTML。
 
 **写代码时的检查顺序：**
-1. 颜色 → 只用 Tailwind alias，不手写 hex
-2. 字号 → 只用 text-15/13/12，不用 text-sm/base
-3. 间距 → 只用七档标准值，不用 p-5/p-7/p-[Npx]
+1. 颜色 → 按 blueprint/spec 的实际来源，核对状态语义与可读性
+2. 字号 → 按实际字体层级、字号与行高
+3. 间距 → 按实际密度和间距计划，不吸附到旧七档值
 4. 动效 → 只用 transform/opacity，不对 width/height 做动画
 5. 动效时长 → ≤ 400ms
 6. 主色 → 检查 blueprint 的 primary_usage_plan，只在计划位置使用
-7. 圆角 → 全页统一一种规格
-8. 阴影 → ≤ 3 处，且只在浮层上
-9. 图标 → 不用 emoji，用 framework/assets/icons/ 或文字占位
+7. 圆角 → 按实际设计规范的组件/层级规则，保持同类语义一致
+8. 阴影 → 按实际设计规范表达层级，无规范时只用于有意义的区分，不设全局次数门
+9. 图标 → 不用 emoji，用本次已采用的本地资源或文字占位
 10. 数据 → 用真实感的 B2B 示例，不用 Lorem Ipsum
 
 ### Step 5：写接口定义
@@ -110,9 +110,9 @@ interface_out:
 ```yaml
 self_check:
   pixel_match: true/false
-  color_alias_only: true/false
-  font_standard: true/false
-  spacing_standard: true/false
+  colors_match_spec: true/false
+  fonts_match_spec: true/false
+  spacing_matches_spec: true/false
   animation_gpu_only: true/false
   animation_duration_max: true/false
   reduced_motion: true/false
@@ -120,20 +120,14 @@ self_check:
   no_todo: true/false
   no_emoji_icon: true/false
   primary_color_count: {N}
-  primary_within_plan: true/false
+  primary_matches_spec: true/false
 ```
 
 **检查方法：**
 
 ```bash
-# 检查是否有手写 hex 值（排除注释和 CSS 变量定义）
-grep -n '#[0-9a-fA-F]\{3,8\}' {output_path} | grep -v '<!--' | grep -v 'var(' | grep -v '//' | head -20
-
-# 检查是否使用了禁用字号
-grep -n 'text-sm\|text-base\|text-lg\|text-xs\|text-xl' {output_path} | head -10
-
-# 检查是否使用了禁用间距
-grep -n 'p-5\|p-7\|p-9\|p-\[' {output_path} | head -10
+# 颜色、字体、间距逐项对照 blueprint/spec 的实际来源；无外部规范时只核对本地约定。
+# 只在实际规范禁止某取值时检查它，不按 hex、字体名或 Tailwind 默认值判违规。
 
 # 检查是否有 emoji 图标
 grep -Pn '[\x{1F300}-\x{1F9FF}]' {output_path} | head -10
@@ -175,9 +169,9 @@ blueprint_patch:
 STATUS: DONE
 SELF_CHECK:
   pixel_match: true
-  color_alias_only: true
-  font_standard: true
-  spacing_standard: true
+  colors_match_spec: true
+  fonts_match_spec: true
+  spacing_matches_spec: true
   animation_gpu_only: true
   animation_duration_max: true
   reduced_motion: true
@@ -185,7 +179,7 @@ SELF_CHECK:
   no_todo: true
   no_emoji_icon: true
   primary_color_count: 1
-  primary_within_plan: true
+  primary_matches_spec: true
 BLUEPRINT_PATCH:
   node_status:
     "node-01-home": "LOCKED"
@@ -198,10 +192,9 @@ BLUEPRINT_PATCH:
 STATUS: DONE
 SELF_CHECK:
   ...
-  color_alias_only: false    ← 标出哪项不通过
+  colors_match_spec: false    ← 标出哪项不通过
   ...
-NOTE: 第 47 行使用了手写 hex #f5f5f5，建议替换为 bg-page-bg。
-      已尝试修复但该颜色无精确 token 对应。
+NOTE: 第 47 行的状态反馈与已确认 spec 不一致；列出实际来源、差异与已尝试的修复。
 BLUEPRINT_PATCH:
   node_status:
     "node-01-home": "REVIEW"  ← 不标 LOCKED，等 Orchestrator 决策
@@ -222,7 +215,7 @@ SUGGESTION: {建议的解决方式}
 
 1. **不读取其他节点的 fragment.html** — 只看当前节点 spec + 前节点 interface.yaml
 2. **不修改 framework/ 目录** — 只复制，不改源文件
-3. **不向用户提问** — 不确定时用 gstack 规范填充，记入 BUILD_DECISION 注释
+3. **不向用户提问** — 不影响意图的细节按实际规范填充并记录 BUILD_DECISION；来源冲突或影响意图时返回 BLOCKED 给编排器
 4. **不创建 spec 中未要求的文件** — 只产出 fragment.html + interface.yaml
 5. **fragment.html 头部必须有完整的元数据注释块**
 

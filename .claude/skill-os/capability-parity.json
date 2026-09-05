@@ -2,16 +2,11 @@
   "_comment": "单真值源 parity 自检：保留关键能力 anchor tripwire；同时从 skill frontmatter + authority pointer 派生 Claude/Codex projection 语义。默认同源 symlink，显式 external delegation 仅存 reason/pointer/digest，不复制 obligation catalog。scripts/check-capability-parity.mjs；verify 门 S18/S40。",
   "files": {
     "CLAUDE.md": [
-      "## Loop 宪法",
-      "平凡任务豁免",
-      "命名即切换",
-      "单真值源 + 双检出原则",
-      "Fable 手术刀",
-      "correction-attribution",
-      "侧栏当前页感知",
-      "skill-authoring.md",
-      "语义路由契约",
-      "Brownfield 正门"
+      "<!-- K1:START -->",
+      "<!-- K10:END -->",
+      "agent-context-manifest.json",
+      "generated/skill-catalog.md",
+      "STATIC_FALLBACK:START"
     ],
     ".claude/skills/office/code-recon/SKILL.md": [
       "Brownfield",
@@ -88,9 +83,6 @@
       "_write_marker_result",
       "检索度量",
       "check_upstream_drift"
-    ],
-    ".claude/skill-os/claude-md-appendix.md": [
-      "CLAUDE.md 附录"
     ],
     ".claude/skill-os/skill-authoring.md": [
       "根德性：Predictability",
@@ -222,13 +214,11 @@
       "ack_sha"
     ],
     "AGENTS.md": [
-      "Governance Parity",
-      "extraction-bar.md",
-      "correction-attribution.md",
-      "model-routing.yaml",
-      "关键约束速查",
-      "缺结构化工具",
-      ".session-project-"
+      "<!-- K1:START -->",
+      "<!-- K10:END -->",
+      "agent-context-manifest.json",
+      "generated/skill-catalog.md",
+      "STATIC_FALLBACK:START"
     ]
   }
 }

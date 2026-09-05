@@ -1,28 +1,30 @@
 #!/usr/bin/env node
-// C5 档表门（Phase6 工程盲审 MAJOR-1 修复：原 verify.sh 内联 node -e 经 eval 三层转义
-// 后正则退化 [sS]、断言惰性 fail-open——移入 .mjs 文件按 C1 先例，转义面消失）
+// Model-routing SSOT gate. Root adapters carry only a conditional pointer; the full tier snapshot
+// remains in model-routing.yaml and orchestrator.md.
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const md = readFileSync(join(root, 'CLAUDE.md'), 'utf8');
-const yaml = readFileSync(join(root, '.claude/skill-os/model-routing.yaml'), 'utf8');
+const read = (path) => readFileSync(join(root, path), 'utf8');
+const yaml = read('.claude/skill-os/model-routing.yaml');
+const orchestrator = read('.claude/agents/orchestrator.md');
 
-const errors = [];
 for (const tier of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical']) {
-  const row = md.split('\n').find(l => l.trim().startsWith('| ' + tier + ' '));
-  if (!row) { errors.push(`缺档表行 ${tier}`); continue; }
-  // 锚定 yaml 键定义行（^  tier:）非全文首现——L31 default_tier 引用会让首现匹配吃到错块
-  const m = yaml.match(new RegExp('\\n\\s{2}' + tier + ':\\s*\\n[\\s\\S]{0,300}?resolves_to:\\s*["\']?([\\w.-]+)'));
-  if (!m) { errors.push(`model-routing.yaml 解析不到 ${tier} 的 resolves_to——真值源结构漂移，须同步本检查`); continue; }
-  if (!row.toLowerCase().includes(m[1].toLowerCase())) {
-    errors.push(`档表行 ${tier} 缺当前 alias ${m[1]}（快照漂移）`);
-  }
+  const match = yaml.match(new RegExp(`\\n  ${tier}:\\s*\\n[\\s\\S]{0,300}?resolves_to:\\s*["']?([\\w.-]+)`));
+  assert.ok(match, `model-routing.yaml cannot resolve ${tier}`);
+  const row = orchestrator.split('\n').find((line) => line.trim().startsWith(`| ${tier} `));
+  assert.ok(row, `orchestrator.md lacks ${tier} snapshot row`);
+  assert.ok(row.toLowerCase().includes(match[1].toLowerCase()), `orchestrator ${tier} row lacks ${match[1]}`);
 }
-if (errors.length) {
-  console.error(`FAIL check-model-table (${errors.length}):`);
-  for (const e of errors) console.error('  - ' + e);
-  process.exit(1);
+
+for (const path of ['CLAUDE.md', 'AGENTS.md']) {
+  const text = read(path);
+  assert.match(text, /model-routing\.yaml/, `${path} lacks the model-routing truth pointer`);
+  assert.doesNotMatch(text, /^\| (?:reasoning-heavy|core-execution|guided-execution|mechanical) /m,
+    `${path} must not duplicate the model tier table`);
 }
-console.log('PASS 档表 4 行在场且含当前 alias（强断言，非惰性）');
+assert.match(yaml, /effort_rejected_by_model:\s*\[minimal\]/, 'Codex rejected effort guard missing');
+assert.match(yaml, /mechanical:\s*low\b/, 'Codex mechanical tier must map to low');
+console.log('PASS model-routing SSOT and thin-root pointers');

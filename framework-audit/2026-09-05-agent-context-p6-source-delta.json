@@ -1,0 +1,56 @@
+{
+  "baseline_scope": "2026-09-05-agent-context-p6-review-scope.json",
+  "changed_paths": [
+    {
+      "path": "scripts/build-agent-context.py",
+      "before": {
+        "kind": "file",
+        "sha256": "f87b7ac27756b386394a19b273fab749897a284107393e3577d0cd6e62315175"
+      },
+      "after": {
+        "kind": "file",
+        "sha256": "df72e6319e27b858e94a0a9c1920694440f7deba2afe0eb2b2edc8c3a2d99949"
+      }
+    },
+    {
+      "path": "scripts/run-agent-context-ab.mjs",
+      "before": {
+        "kind": "file",
+        "sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a"
+      },
+      "after": {
+        "kind": "file",
+        "sha256": "15c689040272b06142a50c354e18bf7e58436e56c967bc968f377d6b53be80bb"
+      }
+    },
+    {
+      "path": "scripts/test-agent-context-branch-fixtures.mjs",
+      "before": {
+        "kind": "file",
+        "sha256": "bd2c4dec8d2869830eab077c798e5bb0011328e9a35451654e00d96ac1b9dd7e"
+      },
+      "after": {
+        "kind": "file",
+        "sha256": "ef4c9d38ed3d2a67a2e40484a7289690cae0b8a14cb0d76e45a477f0e5c4ea78"
+      }
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "before": {
+        "kind": "file",
+        "sha256": "53ad2c9275fd984490c55f40067e65922e4e6d2df20d597f0f6691ff4f54ad79"
+      },
+      "after": {
+        "kind": "file",
+        "sha256": "1df448e9c83ed8d621ddfc9c980b94a57678d8ccda697acda89b2facbb2d880e"
+      }
+    }
+  ],
+  "unchanged_paths": 127,
+  "closure_reports": [
+    "2026-09-05-agent-context-p6-standards-writer-closure.md",
+    "2026-09-05-agent-context-p6-standards-scorer-closure.md",
+    "2026-09-05-agent-context-p6-spec-i1-closure.md"
+  ],
+  "status": "SOURCE_FIXES_CLOSED_BEFORE_LIVE_AND_BUDGET"
+}

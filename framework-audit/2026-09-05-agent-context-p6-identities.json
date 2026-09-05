@@ -1,0 +1,906 @@
+{
+  "candidate/claude": {
+    "status": "RELEASE_REQUIRED",
+    "protocol_version": 22,
+    "scoring_revision": "v22-declared-contract-edges-and-frozen-release-binding",
+    "scoring_sha256": "61fe83d1242834fc0c769b0f645d3c765952b9fc8b8d6fd48a73f9c45a064f93",
+    "evaluator_sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a",
+    "release_manifest_sha256": null,
+    "context_sha256": "cd37bd91699ce4f2ab98302722bc31588cf92f9bed6bb07f436c22481c11d73a",
+    "context_file_count": 204,
+    "branch_fixture_version": "p6-page-flow-v2",
+    "unbound_fixtures": [],
+    "fixtures": {
+      "F1": {
+        "fixture_sha256": "551dda65b5a4f0b58c214854d1eeffbbc0e77eb5ad3b7ed35b3d7620747568b0",
+        "schema_sha256": "248f3021d65ed5fafad754c74e40d101a70cff93f3736b0ef6893beb941d56ea",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F2": {
+        "fixture_sha256": "0d4e0c7a7ce1a2e687e5f3a524af0828ce6dc18b58d408867a8d3907b3ac162d",
+        "schema_sha256": "80f53bf7ecd34193871274b05bef27408a45476616dcdb76fa9179ce405acc7a",
+        "claims": 9,
+        "targets": [
+          ".claude/skill-os/runtime/project-session.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F3": {
+        "fixture_sha256": "d924db3d6d962919d73854f31a7b34f33543a030f3a6377f8657a40346d79e0f",
+        "schema_sha256": "ac59a8033baf06ca362ba97b03e2da30a1545881a1ad0eb64dae9daa335fa70c",
+        "claims": 8,
+        "targets": [
+          ".claude/agents/plan-agent.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-direct": {
+        "fixture_sha256": "250b864ee391480be9adb2ea1fc6c114535aafb8a15038f26548bbc5902aa066",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-multi": {
+        "fixture_sha256": "968066c13bd6bce90eefe07e4c1d815683f093fda8f652feee41f6174aca586c",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-stop": {
+        "fixture_sha256": "fb5ba8624647033a0a0ab2efc5dbdbba9171965eadd6a7bcf92005333f5d13a1",
+        "schema_sha256": "a6380741758707ac6e0318cfd069e5e094b52816968bbd5daae52eae815d07a4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F5": {
+        "fixture_sha256": "c29e288dc5184f17b1f398371369c331f382e7e015e1468c97e901cb1c784113",
+        "schema_sha256": "2457220fb073f24cb254046a3b315faacac568c53ab66fb3d3a9f2fabbb44c2f",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F6": {
+        "fixture_sha256": "6713f9990478259856b4f7d792f23749cb6e0d218b83d4df629b7745fa7a8f60",
+        "schema_sha256": "df44c45c62c12d0245d5fc5db2fe12f06c0db830bdb621e1677ebf9b3887d23d",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F7": {
+        "fixture_sha256": "a855fdd052e4c723a9a79a52affdd90306d3ffc3adb54d22ec793eb6e2367b06",
+        "schema_sha256": "6d892639b2b26f79222612bbf3ceb01716dbfad46bb79e21fd58de2e9b4b4ff4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/extraction-bar.md",
+          ".claude/skill-os/correction-attribution.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F8": {
+        "fixture_sha256": "b9fd5dc49885319fa937a3b0b46865de9a7d0420222b47cff22496b92f282aeb",
+        "schema_sha256": "1bea08da1783d869839361b82dbee5b60cc78acdb037eca734c83ac213dce0d7",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F9": {
+        "fixture_sha256": "87e0fff6be549cbe5889387daf5775983ba70d129a82e223b7dc753ecfeed43d",
+        "schema_sha256": "c33aadbd6f904f912c3fc96e3a81ed31b4ee6765bdf508cdce59d74235220d4f",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": true
+      },
+      "F10": {
+        "fixture_sha256": "de62d843134db69bc81ee515333b82981248588267e2ebf4c410c06db7b9ca0a",
+        "schema_sha256": "4143c66e7b245aa746debe787deb8cfd373031a9f450e15fb587cafdb2ac458d",
+        "claims": 2,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F11": {
+        "fixture_sha256": "1b5c4e8c98ad3d4f59d4f9705c5c0e2884ebeec6011e27defbb99bfcfef0043a",
+        "schema_sha256": "a3a7c58889fb2f775012ed8e5e0c085f4a879db92a62c2d385657bcde9d4a4b4",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/runtime/luca-app.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F12": {
+        "fixture_sha256": "0b7312f0c3a6f548b98f0deef6a91536e4f887ea16d61cbdde6bf865ecff85a3",
+        "schema_sha256": "062b38188b0ab7a4cd0482fa79338d2a8c6a82fb4b44d3f81a0228601d1e3ae1",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/runtime/cross-harness.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F13-page-handoff": {
+        "fixture_sha256": "50d814b7b81d0fd7068b7233fc0ea9403aeeffa18f6c167e2b222001ca8027c8",
+        "schema_sha256": "d098b4b1644d43037f73f79da371ae55be736561731b90aa85a13b5fe9480aba",
+        "claims": 32,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md",
+          ".claude/skill-os/page-library/catalog.json"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ],
+          [
+            ".claude/skill-os/runtime/page-context.md",
+            ".claude/skill-os/page-library/catalog.json"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F14-flow-preservation": {
+        "fixture_sha256": "c29d7ba6283f6b2a45c7f0d6581a2e83c10faaa945e7e07b3aa59bc797f84ed6",
+        "schema_sha256": "c7b8f3470e7a8af99839dcc1600228b353be36ec7f9b0710d9f92d86f802d29a",
+        "claims": 42,
+        "targets": [
+          ".claude/skills/office/design-brief/SKILL.md",
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skills/office/ux-audit/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F10-v2": {
+        "fixture_sha256": "e0afe7c146457c8d676279d534952da0dfc558dc95754cd86eb50494bb570188",
+        "schema_sha256": "5bca420c8156d6b1f1f129c4a23c2533097f69fd0af8474820723f9b2c5b71fc",
+        "claims": 7,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F9-v2": {
+        "fixture_sha256": "cdaf80a4e42bc4f23eed526059c062520b4c089ca0f78a31b861a92e74852c3c",
+        "schema_sha256": "81ca35df0d5075f788f6ca2aa76481d5db7d5e8d24e924eac94597aeaaadaa3a",
+        "claims": 4,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": false
+      }
+    }
+  },
+  "candidate/codex": {
+    "status": "RELEASE_REQUIRED",
+    "protocol_version": 22,
+    "scoring_revision": "v22-declared-contract-edges-and-frozen-release-binding",
+    "scoring_sha256": "61fe83d1242834fc0c769b0f645d3c765952b9fc8b8d6fd48a73f9c45a064f93",
+    "evaluator_sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a",
+    "release_manifest_sha256": null,
+    "context_sha256": "cd37bd91699ce4f2ab98302722bc31588cf92f9bed6bb07f436c22481c11d73a",
+    "context_file_count": 204,
+    "branch_fixture_version": "p6-page-flow-v2",
+    "unbound_fixtures": [],
+    "fixtures": {
+      "F1": {
+        "fixture_sha256": "551dda65b5a4f0b58c214854d1eeffbbc0e77eb5ad3b7ed35b3d7620747568b0",
+        "schema_sha256": "248f3021d65ed5fafad754c74e40d101a70cff93f3736b0ef6893beb941d56ea",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F2": {
+        "fixture_sha256": "0d4e0c7a7ce1a2e687e5f3a524af0828ce6dc18b58d408867a8d3907b3ac162d",
+        "schema_sha256": "80f53bf7ecd34193871274b05bef27408a45476616dcdb76fa9179ce405acc7a",
+        "claims": 9,
+        "targets": [
+          ".claude/skill-os/runtime/project-session.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F3": {
+        "fixture_sha256": "d924db3d6d962919d73854f31a7b34f33543a030f3a6377f8657a40346d79e0f",
+        "schema_sha256": "ac59a8033baf06ca362ba97b03e2da30a1545881a1ad0eb64dae9daa335fa70c",
+        "claims": 8,
+        "targets": [
+          ".claude/agents/plan-agent.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-direct": {
+        "fixture_sha256": "250b864ee391480be9adb2ea1fc6c114535aafb8a15038f26548bbc5902aa066",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-multi": {
+        "fixture_sha256": "968066c13bd6bce90eefe07e4c1d815683f093fda8f652feee41f6174aca586c",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-stop": {
+        "fixture_sha256": "fb5ba8624647033a0a0ab2efc5dbdbba9171965eadd6a7bcf92005333f5d13a1",
+        "schema_sha256": "a6380741758707ac6e0318cfd069e5e094b52816968bbd5daae52eae815d07a4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F5": {
+        "fixture_sha256": "c29e288dc5184f17b1f398371369c331f382e7e015e1468c97e901cb1c784113",
+        "schema_sha256": "2457220fb073f24cb254046a3b315faacac568c53ab66fb3d3a9f2fabbb44c2f",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F6": {
+        "fixture_sha256": "6713f9990478259856b4f7d792f23749cb6e0d218b83d4df629b7745fa7a8f60",
+        "schema_sha256": "df44c45c62c12d0245d5fc5db2fe12f06c0db830bdb621e1677ebf9b3887d23d",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F7": {
+        "fixture_sha256": "a855fdd052e4c723a9a79a52affdd90306d3ffc3adb54d22ec793eb6e2367b06",
+        "schema_sha256": "6d892639b2b26f79222612bbf3ceb01716dbfad46bb79e21fd58de2e9b4b4ff4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/extraction-bar.md",
+          ".claude/skill-os/correction-attribution.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F8": {
+        "fixture_sha256": "b9fd5dc49885319fa937a3b0b46865de9a7d0420222b47cff22496b92f282aeb",
+        "schema_sha256": "1bea08da1783d869839361b82dbee5b60cc78acdb037eca734c83ac213dce0d7",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F9": {
+        "fixture_sha256": "87e0fff6be549cbe5889387daf5775983ba70d129a82e223b7dc753ecfeed43d",
+        "schema_sha256": "c33aadbd6f904f912c3fc96e3a81ed31b4ee6765bdf508cdce59d74235220d4f",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": true
+      },
+      "F10": {
+        "fixture_sha256": "de62d843134db69bc81ee515333b82981248588267e2ebf4c410c06db7b9ca0a",
+        "schema_sha256": "4143c66e7b245aa746debe787deb8cfd373031a9f450e15fb587cafdb2ac458d",
+        "claims": 2,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F11": {
+        "fixture_sha256": "1b5c4e8c98ad3d4f59d4f9705c5c0e2884ebeec6011e27defbb99bfcfef0043a",
+        "schema_sha256": "a3a7c58889fb2f775012ed8e5e0c085f4a879db92a62c2d385657bcde9d4a4b4",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/runtime/luca-app.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F12": {
+        "fixture_sha256": "27bad2b90cb3c4464a159decdd554f8c66e2a7c506ef282c52b916ea10e4fc80",
+        "schema_sha256": "062b38188b0ab7a4cd0482fa79338d2a8c6a82fb4b44d3f81a0228601d1e3ae1",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/runtime/cross-harness.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F13-page-handoff": {
+        "fixture_sha256": "50d814b7b81d0fd7068b7233fc0ea9403aeeffa18f6c167e2b222001ca8027c8",
+        "schema_sha256": "d098b4b1644d43037f73f79da371ae55be736561731b90aa85a13b5fe9480aba",
+        "claims": 32,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md",
+          ".claude/skill-os/page-library/catalog.json"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ],
+          [
+            ".claude/skill-os/runtime/page-context.md",
+            ".claude/skill-os/page-library/catalog.json"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F14-flow-preservation": {
+        "fixture_sha256": "c29d7ba6283f6b2a45c7f0d6581a2e83c10faaa945e7e07b3aa59bc797f84ed6",
+        "schema_sha256": "c7b8f3470e7a8af99839dcc1600228b353be36ec7f9b0710d9f92d86f802d29a",
+        "claims": 42,
+        "targets": [
+          ".claude/skills/office/design-brief/SKILL.md",
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skills/office/ux-audit/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F10-v2": {
+        "fixture_sha256": "e0afe7c146457c8d676279d534952da0dfc558dc95754cd86eb50494bb570188",
+        "schema_sha256": "5bca420c8156d6b1f1f129c4a23c2533097f69fd0af8474820723f9b2c5b71fc",
+        "claims": 7,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F9-v2": {
+        "fixture_sha256": "cdaf80a4e42bc4f23eed526059c062520b4c089ca0f78a31b861a92e74852c3c",
+        "schema_sha256": "81ca35df0d5075f788f6ca2aa76481d5db7d5e8d24e924eac94597aeaaadaa3a",
+        "claims": 4,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": false
+      }
+    }
+  },
+  "baseline/claude": {
+    "status": "RELEASE_REQUIRED",
+    "protocol_version": 22,
+    "scoring_revision": "v22-declared-contract-edges-and-frozen-release-binding",
+    "scoring_sha256": "61fe83d1242834fc0c769b0f645d3c765952b9fc8b8d6fd48a73f9c45a064f93",
+    "evaluator_sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a",
+    "release_manifest_sha256": null,
+    "context_sha256": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7",
+    "context_file_count": 191,
+    "branch_fixture_version": "p6-page-flow-v2",
+    "unbound_fixtures": [],
+    "fixtures": {
+      "F1": {
+        "fixture_sha256": "551dda65b5a4f0b58c214854d1eeffbbc0e77eb5ad3b7ed35b3d7620747568b0",
+        "schema_sha256": "248f3021d65ed5fafad754c74e40d101a70cff93f3736b0ef6893beb941d56ea",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F2": {
+        "fixture_sha256": "0d4e0c7a7ce1a2e687e5f3a524af0828ce6dc18b58d408867a8d3907b3ac162d",
+        "schema_sha256": "80f53bf7ecd34193871274b05bef27408a45476616dcdb76fa9179ce405acc7a",
+        "claims": 9,
+        "targets": [
+          ".claude/skill-os/runtime/project-session.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F3": {
+        "fixture_sha256": "d924db3d6d962919d73854f31a7b34f33543a030f3a6377f8657a40346d79e0f",
+        "schema_sha256": "ac59a8033baf06ca362ba97b03e2da30a1545881a1ad0eb64dae9daa335fa70c",
+        "claims": 8,
+        "targets": [
+          ".claude/agents/plan-agent.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-direct": {
+        "fixture_sha256": "250b864ee391480be9adb2ea1fc6c114535aafb8a15038f26548bbc5902aa066",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-multi": {
+        "fixture_sha256": "968066c13bd6bce90eefe07e4c1d815683f093fda8f652feee41f6174aca586c",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-stop": {
+        "fixture_sha256": "fb5ba8624647033a0a0ab2efc5dbdbba9171965eadd6a7bcf92005333f5d13a1",
+        "schema_sha256": "a6380741758707ac6e0318cfd069e5e094b52816968bbd5daae52eae815d07a4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F5": {
+        "fixture_sha256": "c29e288dc5184f17b1f398371369c331f382e7e015e1468c97e901cb1c784113",
+        "schema_sha256": "2457220fb073f24cb254046a3b315faacac568c53ab66fb3d3a9f2fabbb44c2f",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F6": {
+        "fixture_sha256": "6713f9990478259856b4f7d792f23749cb6e0d218b83d4df629b7745fa7a8f60",
+        "schema_sha256": "df44c45c62c12d0245d5fc5db2fe12f06c0db830bdb621e1677ebf9b3887d23d",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F7": {
+        "fixture_sha256": "a855fdd052e4c723a9a79a52affdd90306d3ffc3adb54d22ec793eb6e2367b06",
+        "schema_sha256": "6d892639b2b26f79222612bbf3ceb01716dbfad46bb79e21fd58de2e9b4b4ff4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/extraction-bar.md",
+          ".claude/skill-os/correction-attribution.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F8": {
+        "fixture_sha256": "b9fd5dc49885319fa937a3b0b46865de9a7d0420222b47cff22496b92f282aeb",
+        "schema_sha256": "1bea08da1783d869839361b82dbee5b60cc78acdb037eca734c83ac213dce0d7",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F9": {
+        "fixture_sha256": "87e0fff6be549cbe5889387daf5775983ba70d129a82e223b7dc753ecfeed43d",
+        "schema_sha256": "c33aadbd6f904f912c3fc96e3a81ed31b4ee6765bdf508cdce59d74235220d4f",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": true
+      },
+      "F10": {
+        "fixture_sha256": "de62d843134db69bc81ee515333b82981248588267e2ebf4c410c06db7b9ca0a",
+        "schema_sha256": "4143c66e7b245aa746debe787deb8cfd373031a9f450e15fb587cafdb2ac458d",
+        "claims": 2,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F11": {
+        "fixture_sha256": "1b5c4e8c98ad3d4f59d4f9705c5c0e2884ebeec6011e27defbb99bfcfef0043a",
+        "schema_sha256": "a3a7c58889fb2f775012ed8e5e0c085f4a879db92a62c2d385657bcde9d4a4b4",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/runtime/luca-app.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F12": {
+        "fixture_sha256": "0b7312f0c3a6f548b98f0deef6a91536e4f887ea16d61cbdde6bf865ecff85a3",
+        "schema_sha256": "062b38188b0ab7a4cd0482fa79338d2a8c6a82fb4b44d3f81a0228601d1e3ae1",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/runtime/cross-harness.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F13-page-handoff": {
+        "fixture_sha256": "50d814b7b81d0fd7068b7233fc0ea9403aeeffa18f6c167e2b222001ca8027c8",
+        "schema_sha256": "d098b4b1644d43037f73f79da371ae55be736561731b90aa85a13b5fe9480aba",
+        "claims": 32,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md",
+          ".claude/skill-os/page-library/catalog.json"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ],
+          [
+            ".claude/skill-os/runtime/page-context.md",
+            ".claude/skill-os/page-library/catalog.json"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F14-flow-preservation": {
+        "fixture_sha256": "c29d7ba6283f6b2a45c7f0d6581a2e83c10faaa945e7e07b3aa59bc797f84ed6",
+        "schema_sha256": "c7b8f3470e7a8af99839dcc1600228b353be36ec7f9b0710d9f92d86f802d29a",
+        "claims": 42,
+        "targets": [
+          ".claude/skills/office/design-brief/SKILL.md",
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skills/office/ux-audit/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F10-v2": {
+        "fixture_sha256": "e0afe7c146457c8d676279d534952da0dfc558dc95754cd86eb50494bb570188",
+        "schema_sha256": "5bca420c8156d6b1f1f129c4a23c2533097f69fd0af8474820723f9b2c5b71fc",
+        "claims": 7,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F9-v2": {
+        "fixture_sha256": "cdaf80a4e42bc4f23eed526059c062520b4c089ca0f78a31b861a92e74852c3c",
+        "schema_sha256": "81ca35df0d5075f788f6ca2aa76481d5db7d5e8d24e924eac94597aeaaadaa3a",
+        "claims": 4,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": false
+      }
+    }
+  },
+  "baseline/codex": {
+    "status": "RELEASE_REQUIRED",
+    "protocol_version": 22,
+    "scoring_revision": "v22-declared-contract-edges-and-frozen-release-binding",
+    "scoring_sha256": "61fe83d1242834fc0c769b0f645d3c765952b9fc8b8d6fd48a73f9c45a064f93",
+    "evaluator_sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a",
+    "release_manifest_sha256": null,
+    "context_sha256": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7",
+    "context_file_count": 191,
+    "branch_fixture_version": "p6-page-flow-v2",
+    "unbound_fixtures": [],
+    "fixtures": {
+      "F1": {
+        "fixture_sha256": "551dda65b5a4f0b58c214854d1eeffbbc0e77eb5ad3b7ed35b3d7620747568b0",
+        "schema_sha256": "248f3021d65ed5fafad754c74e40d101a70cff93f3736b0ef6893beb941d56ea",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F2": {
+        "fixture_sha256": "0d4e0c7a7ce1a2e687e5f3a524af0828ce6dc18b58d408867a8d3907b3ac162d",
+        "schema_sha256": "80f53bf7ecd34193871274b05bef27408a45476616dcdb76fa9179ce405acc7a",
+        "claims": 9,
+        "targets": [
+          ".claude/skill-os/runtime/project-session.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F3": {
+        "fixture_sha256": "d924db3d6d962919d73854f31a7b34f33543a030f3a6377f8657a40346d79e0f",
+        "schema_sha256": "ac59a8033baf06ca362ba97b03e2da30a1545881a1ad0eb64dae9daa335fa70c",
+        "claims": 8,
+        "targets": [
+          ".claude/agents/plan-agent.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-direct": {
+        "fixture_sha256": "250b864ee391480be9adb2ea1fc6c114535aafb8a15038f26548bbc5902aa066",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-multi": {
+        "fixture_sha256": "968066c13bd6bce90eefe07e4c1d815683f093fda8f652feee41f6174aca586c",
+        "schema_sha256": "c9c561814241c3d583181f5e22811d99770a717950d1d7ff61d1c1b204892160",
+        "claims": 1,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F4-stop": {
+        "fixture_sha256": "fb5ba8624647033a0a0ab2efc5dbdbba9171965eadd6a7bcf92005333f5d13a1",
+        "schema_sha256": "a6380741758707ac6e0318cfd069e5e094b52816968bbd5daae52eae815d07a4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F5": {
+        "fixture_sha256": "c29e288dc5184f17b1f398371369c331f382e7e015e1468c97e901cb1c784113",
+        "schema_sha256": "2457220fb073f24cb254046a3b315faacac568c53ab66fb3d3a9f2fabbb44c2f",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F6": {
+        "fixture_sha256": "6713f9990478259856b4f7d792f23749cb6e0d218b83d4df629b7745fa7a8f60",
+        "schema_sha256": "df44c45c62c12d0245d5fc5db2fe12f06c0db830bdb621e1677ebf9b3887d23d",
+        "claims": 2,
+        "targets": [
+          ".claude/skill-os/generated/skill-catalog.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F7": {
+        "fixture_sha256": "a855fdd052e4c723a9a79a52affdd90306d3ffc3adb54d22ec793eb6e2367b06",
+        "schema_sha256": "6d892639b2b26f79222612bbf3ceb01716dbfad46bb79e21fd58de2e9b4b4ff4",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/extraction-bar.md",
+          ".claude/skill-os/correction-attribution.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F8": {
+        "fixture_sha256": "b9fd5dc49885319fa937a3b0b46865de9a7d0420222b47cff22496b92f282aeb",
+        "schema_sha256": "1bea08da1783d869839361b82dbee5b60cc78acdb037eca734c83ac213dce0d7",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F9": {
+        "fixture_sha256": "87e0fff6be549cbe5889387daf5775983ba70d129a82e223b7dc753ecfeed43d",
+        "schema_sha256": "c33aadbd6f904f912c3fc96e3a81ed31b4ee6765bdf508cdce59d74235220d4f",
+        "claims": 3,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": true
+      },
+      "F10": {
+        "fixture_sha256": "de62d843134db69bc81ee515333b82981248588267e2ebf4c410c06db7b9ca0a",
+        "schema_sha256": "4143c66e7b245aa746debe787deb8cfd373031a9f450e15fb587cafdb2ac458d",
+        "claims": 2,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F11": {
+        "fixture_sha256": "1b5c4e8c98ad3d4f59d4f9705c5c0e2884ebeec6011e27defbb99bfcfef0043a",
+        "schema_sha256": "a3a7c58889fb2f775012ed8e5e0c085f4a879db92a62c2d385657bcde9d4a4b4",
+        "claims": 1,
+        "targets": [
+          ".claude/skill-os/runtime/luca-app.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F12": {
+        "fixture_sha256": "27bad2b90cb3c4464a159decdd554f8c66e2a7c506ef282c52b916ea10e4fc80",
+        "schema_sha256": "062b38188b0ab7a4cd0482fa79338d2a8c6a82fb4b44d3f81a0228601d1e3ae1",
+        "claims": 3,
+        "targets": [
+          ".claude/skill-os/runtime/cross-harness.md"
+        ],
+        "contract_edges": [],
+        "isolated_root": false,
+        "live_ready": true
+      },
+      "F13-page-handoff": {
+        "fixture_sha256": "50d814b7b81d0fd7068b7233fc0ea9403aeeffa18f6c167e2b222001ca8027c8",
+        "schema_sha256": "d098b4b1644d43037f73f79da371ae55be736561731b90aa85a13b5fe9480aba",
+        "claims": 32,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md",
+          ".claude/skill-os/page-library/catalog.json"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ],
+          [
+            ".claude/skill-os/runtime/page-context.md",
+            ".claude/skill-os/page-library/catalog.json"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F14-flow-preservation": {
+        "fixture_sha256": "c29d7ba6283f6b2a45c7f0d6581a2e83c10faaa945e7e07b3aa59bc797f84ed6",
+        "schema_sha256": "c7b8f3470e7a8af99839dcc1600228b353be36ec7f9b0710d9f92d86f802d29a",
+        "claims": 42,
+        "targets": [
+          ".claude/skills/office/design-brief/SKILL.md",
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skills/office/ux-audit/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F10-v2": {
+        "fixture_sha256": "e0afe7c146457c8d676279d534952da0dfc558dc95754cd86eb50494bb570188",
+        "schema_sha256": "5bca420c8156d6b1f1f129c4a23c2533097f69fd0af8474820723f9b2c5b71fc",
+        "claims": 7,
+        "targets": [
+          ".claude/skills/office/open-design/SKILL.md",
+          ".claude/skill-os/runtime/page-context.md"
+        ],
+        "contract_edges": [
+          [
+            ".claude/skills/office/open-design/SKILL.md",
+            ".claude/skill-os/runtime/page-context.md"
+          ]
+        ],
+        "isolated_root": false,
+        "live_ready": false
+      },
+      "F9-v2": {
+        "fixture_sha256": "cdaf80a4e42bc4f23eed526059c062520b4c089ca0f78a31b861a92e74852c3c",
+        "schema_sha256": "81ca35df0d5075f788f6ca2aa76481d5db7d5e8d24e924eac94597aeaaadaa3a",
+        "claims": 4,
+        "targets": [],
+        "contract_edges": [],
+        "isolated_root": true,
+        "live_ready": false
+      }
+    }
+  }
+}

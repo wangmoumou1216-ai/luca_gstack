@@ -4,51 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><!-- ASSEMBLY: INSERT TITLE --> — Demo</title>
-  <script src="./assets/vendor/tailwindcss.com.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: { DEFAULT: '#FF8000', foreground: '#FFFFFF' },
-            'n19': '#181C25',
-            'n15': '#545861',
-            'n11': '#91959E',
-            'n07': '#C1C5CE',
-            'n05': '#DEE1E8',
-            'page-bg': '#EFF1F3',
-            'surface': '#FFFFFF',
-            'special01': '#F2F4FB',
-            'magenta': '#FF4A66',
-            'magenta-bg': '#FFF0F0',
-            'magenta-border': '#FFC4C7',
-            'warning': '#FF7C19',
-            'warning-bg': '#FFF5E6',
-            'warning-border': '#FFCD94',
-            'info-green': '#87CC3B',
-            'info-green-bg': '#FAFFF0',
-            'info-green-border': '#DDF2BB',
-            'info-blue': '#189DFF',
-            'info-blue-bg': '#E6F9FF',
-            'info-blue-border': '#91DCFF',
-            'link': '#0C6CFF',
-            'row-line': '#EAEBEE',
-          },
-          fontSize: {
-            '11': ['11px', '14px'],
-            '12': ['12px', '18px'],
-            '13': ['13px', '18px'],
-            '14': ['14px', '20px'],
-            '15': ['15px', '24px'],
-            '18': ['18px', '28px'],
-          }
-        }
-      }
-    }
-  </script>
+  <!-- ASSEMBLY: INSERT ACTUAL LOCAL DESIGN RESOURCES HERE -->
   <style>
+    body { margin: 0; }
+    #demo-container { position: relative; width: 100%; height: 100vh; overflow: hidden; }
     /* ========== 动效基础 ========== */
     :root {
+      --demo-control-active: #fff;
       --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
       --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
       --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
@@ -136,7 +98,7 @@
       background: rgba(255, 255, 255, 0.1);
     }
     .demo-controls button.active {
-      color: #FF8000;
+      color: var(--demo-control-active);
     }
 
     /* 进度指示器 */
@@ -154,7 +116,7 @@
       cursor: pointer;
     }
     .demo-progress-dot.active {
-      background: #FF8000;
+      background: var(--demo-control-active);
       transform: scale(1.25);
     }
     .demo-progress-dot:hover {
@@ -172,7 +134,7 @@
     /* ========== ASSEMBLY: INSERT FRAGMENT STYLES HERE ========== */
   </style>
 </head>
-<body class="bg-page-bg">
+<body>
 
   <!-- ========== Demo 容器 ========== -->
   <div id="demo-container" class="relative w-full h-screen overflow-hidden">

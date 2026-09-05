@@ -6,8 +6,8 @@ import assert from 'assert/strict';
 
 const content = readFileSync('.claude/skill-os/skill-routing-map.yaml', 'utf8');
 const claudeMd = readFileSync('CLAUDE.md', 'utf8');
-const claudeHead = claudeMd.split('\n').slice(0, 40).join('\n');
-const agentsHead = readFileSync('AGENTS.md', 'utf8').split('\n').slice(0, 40).join('\n');
+const agentsMd = readFileSync('AGENTS.md', 'utf8');
+const visibility = JSON.parse(readFileSync('.claude/skill-os/skill-visibility.json', 'utf8'));
 // /compare, magicpath, /figma-demo removed 2026-07-03 (full-review P2-6): demoted to
 // hidden skills (zero episodic use in 30 days) — no longer required project_skills.
 const requiredInvokes = [
@@ -21,7 +21,6 @@ const requiredInvokes = [
   '/ux-brainstorm',
   '/design-brief',
   '/html-prototype',
-  '/figma-layer',
   '/tech-spec',
   '/task-plan',
 ];
@@ -38,22 +37,11 @@ assert.match(content, /scope:\s+"?framework_meta"?/, 'framework-evolution must s
 assert.match(content, /老项目/, 'missing old-project trigger');
 assert.match(content, /新项目/, 'missing new-project trigger');
 assert.ok(existsSync('.claude/skills/office/compare/SKILL.md'), 'compare skill file missing');
-assert.match(claudeHead, /Routing Contract TL;DR/, 'CLAUDE.md routing contract must stay in first 40 lines');
-assert.match(agentsHead, /Routing Contract TL;DR/, 'AGENTS.md routing contract must stay in first 40 lines');
-assert.match(claudeHead, /Project Gate first/, 'CLAUDE.md must front-load Project Gate priority');
-assert.match(agentsHead, /Project Gate first/, 'AGENTS.md must front-load Project Gate priority');
-// #14 (benchmark debate): anchor the SHARED TL;DR routing-contract items 2-6
-// across BOTH surfaces so the human-readable contract can't silently drift.
-// Items 1-6 are verbatim-identical in CLAUDE.md and AGENTS.md TL;DR. Item 7
-// (Scene) is intentionally CLAUDE-only (AGENTS carries it later in body), so it
-// is NOT anchored here — forcing it would wrongly inject a 7th item into
-// AGENTS.md's EN-adapted TL;DR (the rejected literal-equality form).
-for (const surface of [{ name: 'CLAUDE.md', head: claudeHead }, { name: 'AGENTS.md', head: agentsHead }]) {
-  assert.match(surface.head, /Complexity second/, `${surface.name} TL;DR missing shared item "Complexity second"`);
-  assert.match(surface.head, /Framework flow before skills/, `${surface.name} TL;DR missing shared item "Framework flow before skills"`);
-  assert.match(surface.head, /Ambiguity next/, `${surface.name} TL;DR missing shared item "Ambiguity next"`);
-  assert.match(surface.head, /Single skill last/, `${surface.name} TL;DR missing shared item "Single skill last"`);
-  assert.match(surface.head, /Keyword source/, `${surface.name} TL;DR missing shared item "Keyword source"`);
+for (const surface of [{ name: 'CLAUDE.md', text: claudeMd }, { name: 'AGENTS.md', text: agentsMd }]) {
+  const k2 = surface.text.match(/<!-- K2:START -->([\s\S]*?)<!-- K2:END -->/)?.[1] || '';
+  assert.match(k2, /Project Gate[\s\S]*Plan[\s\S]*Framework Flow[\s\S]*Multi-Skill[\s\S]*Single-Skill[\s\S]*STOP/,
+    `${surface.name} K2 routing order drift`);
+  assert.match(k2, /skill-routing-map\.yaml/, `${surface.name} K2 missing routing-map truth pointer`);
 }
 
 console.log('PASS routing map coverage');
@@ -95,7 +83,7 @@ function parseHiddenSkills(md) {
   }
   return new Set(names);
 }
-const HIDDEN_SKILLS = parseHiddenSkills(claudeMd);
+const HIDDEN_SKILLS = new Set(visibility.hidden || []);
 // Skills invoked via the Skill tool / external plugins: they live in
 // routing-map + input-modes but have neither a local skill dir nor a command.
 // Derived below from routing-map itself (invoke contains ':') — same
@@ -215,7 +203,6 @@ for (const name of commandSkillNames) {
 // Detects drift like "plan-agent.md v2 added '用户明确要求' but the other two
 // surfaces forgot to sync" (Audit 2026-05-28 finding C3).
 const planAgentMd = readFileSync('.claude/agents/plan-agent.md', 'utf8');
-const agentsMd = readFileSync('AGENTS.md', 'utf8');
 // Each anchor must be unique enough to identify the SPECIFIC trigger condition
 // (not just the general topic word). For drift-prone "example-only" rows like
 // user-explicit, use the example phrase ("先做个计划") instead of the generic
@@ -353,30 +340,7 @@ try {
       ssotErrors.push(`SSOT-10 豁免名单含非法 token "${name}"（须匹配 /^\\/[a-z][\\w-]*$/）`);
     }
   }
-  // (b) 三表同步：CLAUDE.md / AGENTS.md 条件 2 区域含同一名单
-  //     锚定各文件里"条件 2"上下文的一段（避免全文误匹配）。
-  const cond2Ctx = (md, kw) => {
-    const i = md.indexOf(kw);
-    return i === -1 ? '' : md.slice(i, i + 600);
-  };
-  const claudeCtx = cond2Ctx(claudeMd, '内部 HITL 编排类 skill 除外');
-  const agentsCtx = cond2Ctx(agentsMd, 'internal-HITL orchestrator skills');
-  if (!claudeCtx) ssotErrors.push('SSOT-10 CLAUDE.md 条件 2 缺「内部 HITL 编排类 skill 除外」豁免段');
-  if (!agentsCtx) ssotErrors.push('SSOT-10 AGENTS.md 条件 2 缺 "internal-HITL orchestrator skills" 豁免段');
-  // (b) 双向名单同步（2026-07-04 终验修：独立核验发现原实现只查 CLAUDE/AGENTS ⊇ roster，
-  //     反向不查——从 plan-agent.md roster 删项 checker 仍绿，而 CLAUDE.md 是运行时真读的，
-  //     stale 豁免留在那里持续误导 agent 却 CI 绿。现改为双向精确相等）。
-  const claudeNames = new Set([...(claudeCtx.matchAll(/`(\/[a-z][\w-]*)`/g))].map(m => m[1]));
-  const agentsNames = new Set([...(agentsCtx.matchAll(/`?(\/[a-z][\w-]*)`?/g))].map(m => m[1]));
   const rosterStrict = roster.filter(n => STRICT.test(n));
-  for (const name of rosterStrict) {
-    if (claudeCtx && !claudeNames.has(name)) ssotErrors.push(`SSOT-10 CLAUDE.md 条件 2 豁免名单缺 "${name}"（roster 有）`);
-    if (agentsCtx && !agentsNames.has(name)) ssotErrors.push(`SSOT-10 AGENTS.md 条件 2 豁免名单缺 "${name}"（roster 有）`);
-  }
-  // 反向：CLAUDE.md 列了但 roster 没有 = stale 豁免，运行时误导 agent（更危险方向）
-  for (const name of claudeNames) {
-    if (!rosterStrict.includes(name)) ssotErrors.push(`SSOT-10 CLAUDE.md 条件 2 列了 "${name}" 但不在 plan-agent.md roster——stale 豁免须删或补进 roster`);
-  }
   // (c) 每-skill 专属 HITL 门语句锚（本地 skill 才查目录）
   const HITL_ANCHOR = {
     '/auto': /等用户确认/,

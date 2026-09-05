@@ -1,6 +1,6 @@
 # Design-Brief Output Templates — 产出模板集
 
-本文件存放 /design-brief 各 Phase 的产出模板原文（自 SKILL.md 外移，逐字符未改）。
+本文件是 /design-brief 各 Phase 的产出模板权威；执行规则由 SKILL.md 对应 Phase 管理。
 执行到对应 Phase 时按 SKILL.md 中的指针完整读取所需小节，照模板逐字段产出；不要提前加载。
 
 ---
@@ -82,8 +82,9 @@
 **生成目标**
 - 页面 / 组件名称：{name}
 - 目标平台：{desktop CRM / mobile / embedded component}
-- 默认产出路径：Open Design（首选，见 CLAUDE.md 界面产出备选链）
-- fallback：MagicPath React canvas → 本地 HTML prototype（Open Design 不可达时依次降级，或非 React/Canvas、用户明确要求）
+- 输出目标：{用户所选工具 / 尚未选择；Open Design 为默认推荐}
+- 目标依据：{正文 Phase 6 的来源记录}
+- 工具项目标识：{已绑定 ID / 待交接入口确认；不得猜最近项目}
 
 **产品与用户目标**
 - 用户角色：{primary user}
@@ -105,29 +106,42 @@
 - loading：{UI expectation or N/A}
 - error：{UI expectation or N/A}
 - success：{UI expectation or N/A}
-- AI thinking / low confidence / refusal / partial / steer required / hallucination fallback / agent running：{UI expectation or N/A}
+- AI thinking：{semantic expectation or N/A + reason}
+- low confidence：{semantic expectation or N/A + reason}
+- refusal：{semantic expectation or N/A + reason}
+- partial：{semantic expectation or N/A + reason}
+- steer required：{semantic expectation or N/A + reason}
+- hallucination fallback：{semantic expectation or N/A + reason}
+- agent running：{semantic expectation or N/A + reason}
 
-**组件结构**
-- {region} → {shadcn component or 自绘} → {decision IDs}
+**页面与交互位置映射**
+- {语义页面/位置} → {交互职责} → {D-ID} → {全部适用 STATE} → {需求/AC 来源} → {约束} → {下游目标}
 
-**品牌与视觉约束**
-- 使用 #FF8000 不超过 3 处
-- 遵守 design-system-contract / spacing / type scale
-- 不使用已 REMOVED 的方案
+**页面参考上下文（交接入口按 page-context 核验后附入同包）**
+- 参考策略：{正文已有选择 / 明确不用参考 / 待交接入口执行匹配}
+- reference：{none / 已确认参考；未决采用不得作为已确认参考送出}
+- page_id / region_id 或选区：{已确认值 / N/A}
+- 源版本与确认来源：{源 hash、有效预览/选区记录及真人消息索引 / N/A}
+- 接收方可达的参考材料：{整页参考、区域说明/标注图的实际附件或可达地址 / N/A}
+- 改动范围与保持范围：{来自正文及已确认位置；无参考时仍必填}
+
+**设计约束**
+- {正文中的产品、交互、权限与平台约束}
+- 设计系统：由用户在 OD / Claude Design 配置，本包不覆盖其视觉设置
 
 **不得实现**
 - {rejected direction}
 - {out-of-scope item}
 ```
 
-> **Packet 填写指引（围栏外指引，不改变模板结构；2026-07-21）**
+> **Packet 填写指引**
 > **OD 交付边界**：接收方（尤其 Open Design）是自带 design system 与 UI 专业能力的 UI 生成器。Packet 只承载 **UI 之前的设计事实**。灰区判据——这条是在陈述「用户/交互/内容必须达成什么」（可写），还是在替生成工具决定「界面长什么样」（不可写）？px/pt 值、对齐与列布局指令、具体控件选型、逐字文案**不得写入任何块**。显式例外：经验证的 ux-audit P0 问题可携带**验收标准**进入，但不得写成布局处方。
 > **交互结构·信息架构子字段**：按 interaction-architecture 的 IA 判据（§1.6）填——层级 ≤3、命名取用户词汇、含混项显式标出；写「必须达成什么」，不画菜单树。
 > **状态覆盖块**：每状态的 UI expectation 写**语义期望**（如"空态含引导动作""错误可单击重试且保留输入"），内容语义以 brief 正文 Phase 3 的声明为源（Packet 不得含正文没有的事实）。
-> **两块按消费方分流填写（2026-07-21 裁决，解决 shadcn 词表 ↔ OD 的 DS 让渡口径之争）**：Packet 服务多个生成器（见块首），二者要的东西本就不同，门禁已印证——`design_brief_to_magicpath` 门**要求** `component_mapping`，`design_brief_to_open_design` 门**明确不要求**。据此：
-> - **「组件结构」块**：面向 **shadcn 栈**（magicpath / html-prototype）**必填**；面向 **Open Design** 填 `N/A — 组件选型交所选 design system`（OD 自带 DS，压 shadcn 词表进去=拿我们的栈锁它的 UI 能力）。
-> - **「品牌与视觉约束」第 2 行**：面向 shadcn 栈适用；面向 **Open Design 只保留** #FF8000 ≤3 处 + 文字色，`design-system-contract / spacing / type scale` 一行**改写为** `其余视觉（配色/字体/字号/间距/布局）交所选 design system` —— 与 open-design SKILL.md 的 FxUI 收窄口径对齐。
-> - 不确定消费方时按**最不锁能力**的一侧填（即 OD 口径），下游要 shadcn 映射时再补。
+> **位置映射块**：从正文第 7 节引用语义位置、职责及完整 D/STATE/AC，机器门名为 `page_interaction_mapping`。无参考不免除本块，所有核心决策和全部非 N/A 状态都须有下游去向；不得改填组件名、variant、Tailwind/CSS 或品牌色配额。
+> **页面参考上下文块**：唯一执行合同是 `.claude/skill-os/runtime/page-context.md`。设计源已对齐、即将交接时由入口完整读取至 FILE_END，OD 在编译前执行；本模板不触发第二次匹配或询问。仅高置信候选才推荐，采用须真人确认；低置信/无匹配不推荐，以 `reference=none` 非阻塞继续。已有有效确认复用，agent 写的 `confirmation.actor=user` 或 JSON evidence 不能代签。未决推荐或失效的用户指定源按该合同等待；页面采用不授予外部写入权。
+> **单一事实源**：产品、交互、状态、需求/AC 与修改边界只来自正文；第 7 节仅引用 brief 产出时已有的确认。交接入口的新确认附入同次 Packet 的运输元数据（`page-reference.json`），指向已通过门禁的 brief 来源及版本，不反写正文/第 7 节，不改变源 hash 或复制出第二套需求。没有库记录可用语义位置或截图局部定位，不强制入库。参考材料必须对接收方可达，本机路径不是附件。
+> **目标与设计系统**：工具及平台继承正文来源；设计系统由用户在 OD / Claude Design 内配置，本包不注入旧 token 或组件技术映射。Claude Design 使用同包人工附加，导出、外部接收、生成完成分别记录。
 
 ---
 
@@ -137,7 +151,7 @@
 ## 交接块（下游恢复索引，不是事实来源）
 
 **本步决定了什么：**
-- 信息架构、主要组件选择、关键交互路径
+- 信息架构、语义页面/位置与交互职责、关键交互路径
 - AI Native 范式选择及介入节点
 - 12 状态的覆盖策略（包含 AI 专有状态）
 - Agent 的授权边界（仅场景 D）
@@ -145,14 +159,14 @@
 **下游 MagicPath / Open Design / Claude Design / HTML 生成器需要知道：**
 - 主输入是本文件的 `Design Generation Packet`
 - 设计范围（来自 PRD）
-- 原型承载方式（framework 母版 / 局部组件 / standalone mobile prototype）
-- 平台、状态覆盖策略、映射表路径
+- 输出目标、平台与整页/局部范围及各自来源
+- 状态覆盖策略、页面与交互位置映射路径、确认参考或 reference=none
 - **AI 专有状态的 UI 形式** — 本 skill 的状态覆盖表共 12 项，其中 AI 专有 7 项（思考中 / 低置信 / 拒答 / 部分完成 / 待 Steer / 幻觉兜底 / Agent 执行中）。**html-prototype 默认只处理前 5 项（默认/空/加载/错误/成功），若本决策含 AI 功能，必须额外生成所有非 N/A 的 AI 专有状态。**
 
 **下游工具不应该做：**
 - 不应重新设计已锁定的信息架构
-- 不应绕过映射表选用其他组件
-- **不应省略任何非 N/A 状态的实现** — 状态覆盖表里写了描述的状态必须在原型里有对应 UI（用 display:none 切换）
+- 不应遗漏映射表中的交互职责、D/STATE/AC 来源或修改/保留约束
+- **不应省略任何非 N/A 状态的实现** — 状态覆盖表里写了描述的状态必须在产物里有可观察的对应表现
 - 不应把 AI 输出做成"无来源无置信度"的纯文本（违反 Perplexity 锚点）
 - 不应用浮球 / 新标签页作为 AI 入口（违反 Raycast 锚点和 AI Slop 反模式）
 - 不应直接从 research / ux-research / deepresearch 发散新的产品功能
@@ -161,13 +175,9 @@
 **对生成工具的命令式指示（逐条执行）：**
 1. 读取本文件的"体验验证结论"节的 12 状态覆盖表
 2. 对每个"是否需要单独设计 = 是"的状态，**必须**生成对应的状态页
-3. 生成后用 `<!-- STATE: xxx -->` 注释标注，便于后续高级审查核对
+3. HTML 产物用 `<!-- STATE: xxx -->` 注释标注；其他工具提供可核对的状态位置索引，保留 D/STATE/AC 追踪
 4. 若发现状态覆盖表某状态写 N/A 但本质上应该有，**不得静默补充**，返回 AskUserQuestion 确认
 5. 外部工具只复制 `Design Generation Packet`；需要追溯时回到 design-brief 正文，不读取零散上游材料
-
-**下游 /figma-layer 需要知道：**
-- 同上
-- 组件内 shadcn 优先，跳出组件的部分以 HTML 为准
 ```
 
 <!-- FILE_END: design-brief/references/output-templates.md -->

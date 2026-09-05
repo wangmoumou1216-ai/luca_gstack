@@ -98,6 +98,8 @@ topic:        <当前 topic>
 scene:        <当前 scene A/B/C/D>
 output_path:  <skill 的主产出文件路径>
 handoff_path: <handoff summary 文件路径>
+execution_mode: standalone | workflow
+project_session: <已验证 pin 的 session id；框架/meta 为 NO_PIN>
 ```
 
 ### 2.1 检查维度
@@ -107,9 +109,12 @@ handoff_path: <handoff summary 文件路径>
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
 | **完整性** | 产出文件是否存在、非空、字段完整 | 文件存在 && size > 0 && 无空白必填字段 |
-| **约束合规** | CONTEXT.md 红线是否遵守 | grep 红线关键词，确认无违反 |
+| **约束合规** | 框架红线与已验证项目 CONTEXT.md 的实际约束是否遵守 | 按任务作用域逐项检查；不把框架 checkout 的品牌当项目约束 |
 | **Handoff 质量** | handoff summary 是否存在、格式合规、≤2000 tokens | 文件存在 && YAML front matter 有 `gate_result` && 有产出路径/位置章节 && 有决策或约束章节 && chars ≤ 8000 |
-| **workflow-state** | 状态是否已更新为 DONE | 精确定位 `skill_name` 节点，确认 `status: DONE`；若 `output` / `handoff_path` 非空，必须与输入路径一致，禁止用历史 DONE 节点误判 |
+| **workflow-state** | 仅 workflow 模式检查已绑定项目状态 | 精确定位 `skill_name` 节点，确认 `status: DONE`；若 `output` / `handoff_path` 非空，必须与输入路径一致，禁止用历史 DONE 节点误判；standalone 不强制该状态 |
+
+读取产出前按 `.claude/skill-os/runtime/project-session.md` 验证路径作用域。NO_PIN 不读取共享
+`docs/`、workflow-state 或 current-topic；项目输入使用已验证 pin 的绝对目标，不猜“最新项目”。
 
 Handoff 标题允许以下项目内常用变体：
 - 产出：任何包含 `路径` 或 `位置` 的二级标题，例如 `## 产出路径`、`## 产出位置`、`## PRD 位置`、`## Output`
@@ -120,9 +125,12 @@ Handoff 标题允许以下项目内常用变体：
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
-| **品牌一致性** | #FF8000 / hsl(30, 100%, 50%) 使用次数 | ≤3 处可见使用 |
-| **配色体系** | 是否使用 shadcn HSL 变量 | 有 `hsl(var(--primary))` 或 Tailwind `primary` token；生成产物不得新增有效 `--fx-*` 变量 |
-| **母版合规** | data-module 结构保持、顶栏/频道栏未修改 | 检查 HTML 结构完整性 |
+| **视觉与可读性** | 层级、密度、一致性、对比度、响应式与溢出 | 依据真实界面证据逐项检查，不要求固定品牌配额、token 写法或母版 DOM |
+| **交互与状态** | 核心交互、错误恢复、适用 AI 状态、键盘/焦点/可访问性 | 对照决策/STATE/AC 和实际行为；静态图不能证明的行为标 UNKNOWN |
+| **项目设计规范** | 用户提供或明确委托的实际外部规范 | 有规范与来源才能判合规；缺规范不伪造合规结论，仍评一般 UX；不覆盖外部工具的 DS 配置 |
+
+保留各产出 skill 的通用 QA、截图与可观察行为检查；ux-audit 仍以截图为强制输入，沿用
+A=35% / B=40% / C=25%、部分模块评分、严重性、位置证据与场景 C 基线，不把缺证据判为 PASS。
 
 #### 方案产出检查（brainstorm, ux-brainstorm）
 
@@ -140,17 +148,22 @@ Handoff 标题允许以下项目内常用变体：
 #### Brief 合规检查（html-prototype, open-design, figma-demo —— 参考 Ruflo ADR Compliance）
 
 **触发条件：** 当前 skill 是 html-prototype、open-design 或 figma-demo，且上游有 design-brief 的 handoff summary。
-（open-design 2026-07-14 补入——OD 拉回的 HTML 是设计产出主产物，此前恰好绕过品牌合规与 Brief 合规两组检查。）
+OD 回收的真实原型同样适用；仅导出/置入材料时执行下面的材料阶段合同。
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
 | **决策遵守** | 原型是否实现了 design-brief handoff 中 [ADOPTED] 或核心决策 | 逐条对比 brief handoff 的决策章节，确认每个决策在原型中有对应实现或明确降级说明 |
 | **约束遵守** | 原型是否违反了 brief handoff 的约束章节 | 逐条检查约束是否被违反 |
-| **组件映射** | brief 中定义的 component_mapping 是否在原型中完整体现 | 检查 brief 产出文件中的组件列表 vs 原型的 data-module 结构 |
+| **页面与交互位置映射** | brief §7 的 page_interaction_mapping 是否有下游去向 | 逐项核对语义页面/位置、交互职责、D/适用 STATE、来源与 AC、约束及目标；原型使用实际元素/区域证据，不强制 data-module 或旧技术组件名。reference=none 仍须追踪。 |
+
+历史 `component_mapping` 只读提取仍适用的语义与追踪列；不要求恢复 variant/classes 或技术组件资产。
+OD 的 EXPORTED/STAGED 是材料交接状态，不是原型完成：EXPORTED 核对本地同包正文/参考；
+STAGED 另核对准确项目与全部材料的真实外部读回。不能要求尚未生成的 HTML，也不能将材料
+到位算成决策已实现。recover 后才做上述原型覆盖检查。
 
 **检查流程：**
 ```
-1. 从 workflow-state.yaml 找到 design-brief 节点的 handoff_path
+1. 使用调用方已验证的 design-brief handoff；仅有有效项目 pin 且确需查状态时，读取该项目 design-brief 节点的 handoff_path。NO_PIN不读取共享workflow-state；没有上游不伪造。
 2. 读取该 handoff summary 的决策章节和约束章节（支持 §2.1 中的标题变体）
 3. 读取当前 skill 的产出（html 文件）
 4. 逐条对比：
@@ -183,27 +196,13 @@ Handoff 标题允许以下项目内常用变体：
 
 ### Skill Mode
 
-```bash
-# 1. 读取产出文件
-cat "$output_path"
-
-# 2. 读取 handoff summary
-cat "$handoff_path"
-
-# 3. 读取 CONTEXT.md 红线
-grep -A 999 "红线" CONTEXT.md | head -50
-
-# 4. 读取 workflow-state.yaml 确认当前 skill 节点状态，不能只 grep 全局 DONE
-cat .claude/workflow-state.yaml
-
-# 5. 如果是前端产出 → 额外检查品牌色和配色体系
-#    判定标准来自 §2.1：品牌色 ≤3 处可见使用；无 --fx-* 变量
-brand_count=$(grep -oi "#ff8000\|hsl(30" "$output_path" | wc -l | tr -d ' ')   # -o 数出现次数；-c 数行会低估同行多次
-fx_count=$(grep -o "\-\-fx-" "$output_path" | wc -l | tr -d ' ')
-[ "$brand_count" -le 3 ] && echo "PASS 品牌色: ${brand_count}/3" || echo "FAIL 品牌色超限: ${brand_count} 处（阈值 ≤3）"
-[ "$fx_count" -eq 0 ] && echo "PASS 无 --fx-* 变量" || echo "FAIL 发现 --fx-* 变量: ${fx_count} 处"
-
-# 6. 生成报告
+```text
+1. 验证作用域，读取精确 output_path、handoff_path 与适用 CONTEXT 红线。
+2. 运行 node scripts/check-quality-gates.mjs --handoff <精确绝对路径>。
+3. 仅 workflow：读取已验证 pin 项目的状态，精确核对本 skill 的 DONE/output/handoff；
+   需要整项扫描时运行 --project-session <session-id>，不读共享别名。
+4. 按 §2.1 核对适用维度；前端检查真实视觉/行为与上游决策，材料阶段检查同包内容与读回。
+5. 生成逐项证据报告；缺证据标 UNKNOWN，Human Gate/外部写入授权仍分别检查。
 ```
 
 ---
@@ -285,7 +284,7 @@ EVAL_ENVELOPE_JSON
 |-----------|-----------------|
 | PASS | 继续下一个 skill |
 | FAIL | 展示 findings → 询问用户：修复 / 跳过 / 终止 |
-| CONDITIONAL_PASS | 展示 findings → 记录到 workflow-state → 继续 |
+| CONDITIONAL_PASS | 展示 findings → workflow 模式记录到已绑定项目状态；standalone 记录到当前报告 → 继续 |
 
 ---
 
@@ -297,6 +296,7 @@ standalone 模式下，用户可以通过以下方式手动触发 quality-gate�
 请对 <skill-name> 的产出做质量检查
 ```
 
-此时 quality-gate 会读取该 skill 的最新产出和 handoff summary，执行完整检查。
+此时 quality-gate 使用调用方明确的产出和 handoff summary；需查最新产出时只在已验证项目
+作用域内定位，NO_PIN 缺精确输入先报告 NEEDS_CONTEXT。执行该模式的全部适用检查。
 
 <!-- FILE_END: quality-gate.md -->

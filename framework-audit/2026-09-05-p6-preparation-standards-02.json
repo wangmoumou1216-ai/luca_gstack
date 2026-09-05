@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "p6-preparation-standards-20260905-02",
+  "subject": {
+    "skill": "P6",
+    "topic": "preparation-standards",
+    "scene": "unknown",
+    "input_summary": "Second local independent Standards review against nine requirements; final dispatched artifact verified with four self-tests and direct production invoke/executeTask exception injections.",
+    "output_paths": [
+      "scripts/run-agent-context-ab.mjs",
+      "scripts/agent-context-branch-fixtures.mjs",
+      "scripts/test-agent-context-branch-fixtures.mjs"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 9,
+    "total": 9,
+    "findings": [
+      "Resolved during round 2: malformed transport events caused failureEvidence to throw again and lose the attempted row. Parent repaired the same raw-preservation defect; independent null/array/number/malformed-content injections now retain raw output and mark scope UNKNOWN.",
+      "First-round FAIL remains historical evidence; this verdict covers preparation only, not live behavior, candidate freeze, formal phase closure, or B1 reacceptance."
+    ]
+  }
+}

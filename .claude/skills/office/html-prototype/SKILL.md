@@ -4,11 +4,11 @@ preamble-tier: 3
 argument-hint: "[场景 A/B/C + design-brief 路径]"
 version: 1.0.0
 description: |
-  HTML 原型生成与可观测 QA。它是 Open Design 与 MagicPath 皆不可用、非 React/Canvas 场景、
-  或用户明确要求本地 HTML 时的 fallback。三种场景行为完全不同：A（新功能，Step0认知门禁+
+  HTML 原型生成与可观测 QA。仅在用户明确选择本地 HTML，或明确批准包含本地 HTML
+  备用路径的计划且触发条件满足时使用。三种场景行为完全不同：A（新功能，Step0认知门禁+
   原型承载方式确认+全量状态）；B（优化现有，区分改动区/保持区+对照截图）；
   C（评审改版，按 ux-audit报告逐条实现+每处注释FIX-ID）。启动时强制询问场景。
-  技术约束：纯HTML + Tailwind CDN + 原生JS，品牌色#FF8000硬约束。(luca_gstack)
+  技术约束：本地 HTML + 原生 JS，设计规范按用户提供或本次确认的实际来源。(luca_gstack)
 allowed-tools:
   - Read
   - Write
@@ -23,6 +23,11 @@ context-cost:
   template: auto-detect
   recommended-model: core-execution  # 2026-07-10 承重执行档：自写HTML原型
 ---
+
+**入口授权（调用方在进入本 skill 前核对）：** OD / MagicPath 不可达、认证失败或非 React/Canvas
+场景只构成阻塞信息，不授权改成本地 HTML。仅在用户明确选择本地 HTML，或已批准计划明确包含
+该备用路径且触发条件满足时进入；否则保留已选工具，报告 `BLOCKED` 并交还用户。已有明确授权
+不重复询问工具选择，以下质量门禁仍完整执行。
 
 ## Preamble (run first)
 
@@ -67,7 +72,10 @@ python3 .claude/observability/scripts/get_rules.py html-prototype "*" 2>/dev/nul
 | `standalone_mobile_prototype` | 用户直接要求移动端独立原型，且确认不调用 framework 母版 | 否，但必须声明不调用母版原因；不得承诺端到端可追踪完整 |
 
 **Workflow mode**：如果用户明确说“继续流程/进入下一步/按上游产物做”，
-则执行对应 workflow gate。
+则执行对应 workflow gate。workflow / traceable delivery 在所有场景中均须通过
+`page_interaction_mapping`：消费 design-brief §7「页面与交互位置映射」，确认页面/语义位置、
+交互职责、D-ID、适用 STATE、真实需求来源与 AC、约束和下游去向完整。
+页库 `page_id` / `region_id` 仅在已确认时引用；`reference=none` 不免除这些追踪项。
 
 **Standalone mode**：如果用户直接要求做 HTML 原型，允许用 `standalone_brief`
 或其它 source_kind 开始；但如果输入是 research 报告、ux-brainstorm 决策文档、
@@ -77,7 +85,7 @@ PRD / design-brief。此时必须先进入 traceable delivery 链路。
 
 无论哪种模式，以下质量 gate 不可跳过：
 - Step 0 认知门禁
-- framework / brand token / 设计系统约束
+- 已采用参考的来源与实际设计规范核对；无规范时规范合规项 N/A，通用 UX/QA 继续
 - Design Generation Packet gate（workflow / traceable delivery）
 - 动态参考扫描（触发条件成立时）
 - QA 脚本与人工检查
@@ -127,11 +135,17 @@ B）我直接粘贴问题清单
 
 ## Phase 1：前置检查（全部通过才能进入 Step 0）
 
+**输出目标与平台消费：** 新版 design-brief 使用「输出目标」「目标平台与范围」「参考策略」
+「依据」「下游约束」（`output_target_platform_scope`）。按这些已确认字段和当前用户指令继续；
+`reference=none` 是有效参考策略，不是缺输入。用户已选择本地 HTML、平台和整页/局部范围时，
+在该范围内安排独立页面或局部实现，不因缺少旧「原型承载方式 / 母版」字段而再次强制选整页母版。
+若本次已选输出目标仍是 OD / Claude Design / MagicPath，交回相应交接入口，不自行改成本地实现。
+
 **场景A：**
 ```
-□ 确认以下 4 份 reference 文件存在（此处只查存在性，不读取——lazy-load，2026-07-04 G5：
+□ 确认以下适用 reference 文件存在（此处只查存在性，不读取——lazy-load，2026-07-04 G5：
   每份在其消费点已各自有"必须读取"强制，启动全量前读是重复税；挂载点见下方注）
-  · framework/README.md                    → 挂载：框架选择逻辑前 +（如走母版）写 HTML 前
+  · framework/README.md（仅明确采用母版时） → 挂载：框架选择逻辑前 + 写 HTML 前
   · .claude/skills/office/references/html-prototype-tokens.md    → 挂载：Phase 2.5 设计系统宣告前
   · .claude/skills/office/html-prototype/references/dynamic-reference-protocol.md → 挂载：Phase 2.1 动态参考扫描前
   · .claude/skills/office/html-prototype/references/current-aesthetic-rubric.md   → 挂载：Phase 2.25 审美校准前
@@ -140,25 +154,31 @@ B）我直接粘贴问题清单
   - 读取 design-brief.md，确认以下两个字段：
     - `Design Generation Packet`：存在 → 作为 HTML 生成主 brief；不存在 → BLOCKED
     - `Tool Consumption Contract`：存在 → 继续；不存在 → BLOCKED
-    - 「原型承载方式 / 母版」字段：已填写 → 直接使用；未填写 → 执行下方承载方式询问
-    - shadcn 组件映射表：存在 → 继续；不存在 → BLOCKED
+    - 「输出目标」「目标平台与范围」「参考策略」「依据」「下游约束」：消费已确认值；reference=none 可继续；仅实际目标/平台/范围未定或冲突时询问
+    - §7「页面与交互位置映射」（`page_interaction_mapping`）：存在且追踪完整 → 继续；缺失或有未覆盖项 → BLOCKED
     - 状态覆盖表：存在 → 继续；不存在 → BLOCKED
   - 确认 Packet 未引入 design-brief 正文没有的新事实；如无法确认 → BLOCKED，返回 design-brief 修正
 □ Standalone mode 或 source_kind 非 design_brief 时：
   - 从用户 brief / 截图 / blueprint 中提取设计范围
-  - 如果组件映射缺失，不 BLOCKED；改为在 prototype-spec.md 中声明「自绘区域」和假设
+  - 如果页面与交互位置映射缺失，不 BLOCKED；从真实 brief / 截图 / blueprint / UX 问题提取语义位置、交互职责、状态与 AC，在 prototype-spec.md 中声明来源、假设及追踪缺口，不伪造 D/R/AE 编号
 □ 如承载方式为 framework 母版：framework/ 目录存在且包含目标母版文件
   → 否：BLOCKED — 目标母版不存在
-□ 如承载方式为 standalone mobile prototype / 局部组件：不要求目标母版存在，但必须在 prototype-spec.md 中声明不调用母版的原因
-□ framework/tokens.css 存在（Phase 3 token 真值源镜像，独立组件/移动端原型引用它）
-  → 否：BLOCKED — framework/tokens.css 缺失
+□ 如承载方式为独立整页（含 standalone mobile prototype）/ 局部组件：不要求目标母版存在，但必须在 prototype-spec.md 中声明不调用母版的原因
+□ 核验本次实际采用的资源依赖；未采用 framework 时不要求其 token 或母版资产
 ```
 
-**承载方式询问（仅当 design-brief 未填原型承载方式 / 母版时触发）：**
+**历史输入兼容：** 若既有 design-brief 仅有旧 `component_mapping` / shadcn 组件映射表，
+只读提取其中的位置、交互职责、决策、状态、来源与验收语义，按 §7 核对覆盖；不要求补旧
+variant/classes、token 或组件库资产，不重写历史文件。缺少承重语义时按当前模式补齐或报告缺口。
+
+**历史承载兼容：** 旧「原型承载方式 / 母版」仅在能追溯到用户明确选择、且仍适用于本次平台
+与范围时沿用；与新字段冲突时澄清冲突，不自动优先旧值。不补写或改写历史 design-brief。
+
+**承载方式询问（仅用户要求协助选择本地承载，或实际平台/范围仍未定时触发）：**
 
 AskUserQuestion：
 
-> design-brief 里未记录原型承载方式。请确认本次原型使用哪种方式？
+> 本次本地 HTML 的承载范围尚需明确。请结合目标平台选择适用方式；也可说明独立整页或局部范围。
 >
 > 1）**列表页** — framework/list-page.html
 > 2）**详情页（两列）** — framework/detail-page-2col.html
@@ -170,15 +190,15 @@ AskUserQuestion：
 
 注意：当前工程实际可用母版为 5 个。AI 速记入口页、
 录音工作页母版未随包提供；遇到这类需求时，
-必须选择「局部改动/独立组件」，或先补齐对应母版后再继续。
+可在已确认范围内使用独立整页或局部实现；不因没有对应母版而扩大需求或要求补建母版。
 
 **移动端规则：**
 - 如果用户或 design-brief 明确目标是移动端，而 framework 没有对应移动母版，
   不得默认套用 `framework/list-page.html`。
-- 此时必须选择或确认 `standalone mobile prototype` / `局部改动/独立组件`。
-- 未确认前不得写 HTML。
+- 已确认移动平台与范围、且未选择适用母版时，按 `standalone mobile prototype` / 局部实现继续，不重复询问同一决定。
+- 实际平台或整页/局部范围仍未确认或有冲突时，不得写 HTML。
 
-**框架选择逻辑（必须先读 `framework/README.md`）：**
+**框架选择逻辑（仅用户已选择复用母版时使用，必须先读 `framework/README.md`）：**
 
 先判定目标平台：
 - 桌面/后台管理页 → 可使用下表母版速查。
@@ -195,7 +215,7 @@ AskUserQuestion：
 「录音中」「会议进行中」「语料」  → 当前无整页母版，使用局部改动/独立组件
 ```
 
-不明确时，AskUserQuestion 让用户从 5 个母版、「局部改动/独立组件」或「独立移动端原型」中确认。
+已明确不采用母版时跳过此速查；仅复用母版的选择仍不明确时，AskUserQuestion 确认适用于目标平台和范围的承载方式。
 
 **场景B：**
 ```
@@ -253,14 +273,17 @@ AskUserQuestion：
 ### 阶段三：建立信息层次（L1/L2/L3）
 
 ```
-L1（主角）每屏 1-2 个：text-15/text-n19（高对比）/Button primary
-L2（配角）每屏 3-5 个：text-13/text-n19/Button outline
-L3（背景）不限：text-12/text-n11/Button ghost
+L1（主角）每屏 1-2 个：核心任务与主操作，最高视觉优先级
+L2（配角）每屏 3-5 个：正文与次要操作，清晰可读
+L3（背景）不限：辅助信息，降低强调但保持可读性；具体样式按实际设计规范
 ```
 
-### 阶段四：规划自绘区域
+### 阶段四：规划语义交互区域
 
-对 design-brief.md 映射表里「自绘」的区域，规划：视觉角色 + Tailwind 颜色类 + 尺寸和间距。
+按 design-brief §7「页面与交互位置映射」逐区规划：用户任务、交互职责、信息层次、
+触发与反馈、适用 STATE、对应 D-ID / 来源与 AC，以及改动区和保持区；核对每项的下游实现位置。
+Standalone 无该表时从已确认输入建立同样的区域计划，明确未获上游决策支持的假设。
+已有页库引用仅用于定位；无参考页时仍保留区域、决策、状态和验收追踪。
 
 **Step 0 验证：**
 ```
@@ -306,7 +329,7 @@ L3（背景）不限：text-12/text-n11/Button ghost
    - Round 1：候选发现
    - Round 2：剔除营销图、过期材料、非同类功能、不可迁移参考
    - Round 3：从 3-5 个最终参考中提取共性
-   - Round 4：判断哪些共性适合当前 CRM/B2B 场景，哪些必须转译为 framework 语言
+   - Round 4：判断哪些共性适合当前 CRM/B2B 场景，哪些必须适配本次实际设计规范
 
 5. 输出 `Dynamic Reference Scan`，后续写入 `prototype-spec.md`。
 
@@ -375,105 +398,42 @@ Current Aesthetic Score 和空间规划。
 
 **必须在 Phase 3 写 HTML 之前，输出以下宣告（不要写代码，只用 Markdown）：**
 
+先读取 `.claude/skills/office/references/html-prototype-tokens.md` 的中立规范、状态与可访问性合同。
+声明实际规范来源与版本（用户提供的设计系统 / 本次本地实现约定）；缺少外部规范不阻断，
+但不得将本地约定称为外部规范合规，也不把参考页的视觉当作设计系统。
+
 ### 宣告 1：颜色使用计划
 
-引用 `.claude/skills/office/references/html-prototype-tokens.md` 的 token 定义。对本次原型明确：
-
-```
-本次主色使用计划（全页 ≤3 处）：
-  1. {具体位置，如"顶部主 CTA 按钮"} → bg-primary
-  2. {具体位置，如"AI 建议条的 AI 图标"} → text-primary
-  3. {如无第 3 处，写"无"}
-
-中性色层级使用：
-  L1 主标题/重要数据 → text-n19 (#181C25)
-  L2 正文/字段值     → text-n19 (#181C25) 13px
-  L3 字段标签/说明   → text-n11 (#91959E) 13px
-  L4 辅助/时间戳     → text-n11 (#91959E) 12px
-
-页面底色 vs 卡片底色：
-  页面底：bg-page-bg (#EFF1F3)
-  卡片底：bg-white
-  卡片间距离：gap-{N}（必须 ≥ 12px）
-
-AI 专有状态颜色计划（仅含 AI 时声明）：
-  思考中态：骨架屏底色 → 从 tokens.md 引用 --ai-thinking
-  低置信态：文字降权颜色 → --ai-low-confidence
-  拒答态：信息条背景 → --ai-error-bg
-  若本次无 AI 功能 → 本节写 N/A
-```
+逐项写出主操作、正文、辅助信息、背景、边界和状态反馈的用途与实际取值/变量来源。
+含 AI 时覆盖所有适用状态，区分不确定性、拒答、错误与执行进度，并用文字或形状补足颜色含义。
+无 AI 时相关项写 N/A；不设全局品牌色或使用次数配额。
 
 ### 宣告 2：字体层级使用计划
 
-```
-L1 区块标题（页面主标题/卡片标题）：
-  → text-15 font-medium text-n19（15px/500/#181C25）
-  → 本次使用位置：{具体列出}
-
-L2 正文内容（字段值/描述）：
-  → text-13 font-normal text-n19（13px/400/#181C25）
-  → 本次使用位置：{具体列出}
-
-L3 字段标签（form label / table header）：
-  → text-13 font-normal text-n11（13px/400/#91959E）
-  → 本次使用位置：{具体列出}
-
-L4 辅助文字（时间戳/状态标识）：
-  → text-12 font-normal text-n11（12px/400/#91959E）
-  → 本次使用位置：{具体列出}
-
-特殊字体：{无 / 有：描述用途}
-（注意：不使用 Inter、Roboto、Arial、Fraunces 等通用字体；`system-ui` 只能作为 framework 字体栈 fallback，不可作为主字体）
-```
+列出标题、正文、标签、辅助信息的字体、字号、行高及使用位置，依据实际设计规范与可读性。
+字体资源须本地可用；没有指定字体时可用系统字体，不按字体名称判断设计质量。
 
 ### 宣告 3：间距系统使用计划
 
-```
-本次原型使用的间距值（必须从以下 7 档中选）：
-  p-1 (4px)  → {使用位置}
-  p-2 (8px)  → {使用位置}
-  p-3 (12px) → {使用位置}
-  p-4 (16px) → {使用位置}
-  p-6 (24px) → {使用位置}
-  p-8 (32px) → {使用位置}
-  p-10 (40px) → {使用位置}
-
-禁止出现：p-5 / p-7 / p-[22px] 等非标准值
-行高节奏：
-  表格行 → py-3（B2B 高频扫描最低 40px 行高底线）
-  列表项 → py-4
-  段落 → leading-relaxed（1.625）
-```
+列出本次实际使用的间距、行高和密度策略，说明对应区域与层级；沿用已确认规范，
+没有规范时定义一致的本地约定，不强制旧七档值。密集内容仍须可扫描、点击目标可操作。
 
 ### 宣告 4：动效使用计划（有动效时必填）
 
-```
-本次原型涉及的动效：
-  {无动效 / 有动效：逐项列出}
-
-每条动效规格：
-  名称：{如"按钮悬停"}
-  时长：{150/200/300/400ms 中选一个}
-  缓动：{ease-out / ease-in-out，不用 linear}
-  触发：{hover / click / focus / auto}
-
-禁止：
-  - 整页级的 Ken Burns / 视差滚动（B2B 不需要）
-  - 超过 400ms 的过渡（销售高频操作会觉得慢）
-  - 无障碍违规：未处理 prefers-reduced-motion
-```
+逐条记录名称、触发、时长、缓动与反馈目的；无动效写明无。
+保留操作即时反馈与 `prefers-reduced-motion`，避免无任务用途的整页动效和妨碍高频操作的延迟。
 
 ### 宣告完成检查
 
 ```
-□ 四项宣告全部输出，无 "待定" 或 "TBD"
-□ 颜色宣告里的主色使用 ≤ 3 处
-□ 字体宣告的四级每级都有具体使用位置
-□ 间距宣告只出现 7 档标准值
-□ 含 AI 时，AI 专有状态色全部有定义
+□ 四项宣告全部输出，无待定/TBD；不适用项有原因
+□ 颜色、字体、间距都有实际来源或明确本地约定及使用位置
+□ 含 AI 时所有适用状态的反馈形式已定义，不只依赖颜色
+□ 有动效时触发、时序与 reduced-motion 已声明
+□ 已提供规范的可静态检验条款写入 design-rules.json（格式见 Phase 4.5）；无可检验规范则明确 N/A
 ```
 
-**任一不通过 → 回到本 Phase 补完，不得进入 Phase 2.75。**
+**任一适用项不通过 → 回到本 Phase 补完，不得进入 Phase 2.75。**
 
 ---
 
@@ -536,35 +496,9 @@ AskUserQuestion：
 
 ### 技术约束（三场景共用，硬约束）
 
-**必须先读 `framework/README.md`，了解 token 体系和使用方式。**
-
-```html
-<!-- 本地 Tailwind CDN（不用外部 CDN）-->
-<script src="../../../framework/assets/vendor/tailwindcss.com.js"></script>
-<!-- 如果是复制 framework 文件，路径改为 ./assets/vendor/tailwindcss.com.js -->
-```
-
-**颜色体系（优先用 Tailwind alias，不手写色值）：**
-```
-主色:       bg-primary / text-primary          (#ff8000)
-主要文字:   text-n19                            (#181c25)
-次要文字:   text-n11                            (#91959e)
-分割线:     border-n05                          (#dee1e8)
-页面底色:   bg-page-bg                          (#eff1f3)
-卡片底色:   bg-white                            (#ffffff)
-```
-
-**字号（用 framework 自定义尺寸，不用 text-sm/text-base 等）：**
-```
-text-15  → 15px / 24px 行高（区块标题 L1）
-text-13  → 13px / 18px 行高（正文/字段值 L2/L3）
-text-12  → 12px / 18px 行高（弱信息/时间戳 L4）
-```
-
-**主色使用限制：全页 ≤3 处。**
-
-**间距只用：p-1(4px)/p-2(8px)/p-3(12px)/p-4(16px)/p-6(24px)/p-8(32px)/p-10(40px)。**
-禁止：p-5、p-[22px] 等任何表外数值。
+按 Phase 2.5 已声明的实际设计规范实现颜色、字号、间距与动效，保持本地资源可用。
+只有明确采用 framework 母版时才读其 README 并核验选定源依赖；生成到产出目录，源文件只读。
+CSS 可使用实际设计系统变量或本地样式；Tailwind 仅在实际选择使用时配置，不强制注入旧 token。
 
 **JS 只用于交互状态切换（Tab、弹窗、筛选模拟）。**
 
@@ -614,28 +548,14 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 **来源借鉴：** ConardLi/web-design-skill 的 anti-cliché 清单 + B2B SaaS 场景专属约束。
 **判定标准：** 以下任一项出现在产出里 → SELF_CHECK_PASSED 不得写 YES，必须返工。
 
-**字体禁用：**
-- ❌ Inter / Roboto / Arial / Helvetica Neue 作为主字体（这些字体在 AI
-  生成里太通用，一眼就是"AI 做的"）
-- ❌ `system-ui` 单独作为主字体；只允许出现在 framework 字体栈 fallback 中
-- ❌ 用 Google Fonts / 外部字体 CDN（会导致原型离线不可用）
-- ❌ 正文字号 < 13px（B2B 高密度扫描场景的可读性底线）
-- ✅ 只用 framework 里规范的字体栈 + 四级字号（text-15/13/12）
+**字体与颜色核对：**
+- 按实际设计规范检查字体、色彩语义与层级；没有规范时检查可读性和一致性，不伪造规范合规。
+- 字体资源本地可用，正文与辅助信息均须可读，状态反馈不能只靠颜色。
+- 主色、默认蓝色、渐变、字体名称、原始 CSS 色值本身不构成违规；评审其是否服务本次任务与已确认规范。
 
-**颜色禁用：**
-- ❌ 紫粉蓝渐变背景（AI 生成最典型的 slop）
-- ❌ 任何 `bg-gradient-to-*` + 两个高饱和色的组合（不符合 B2B 克制审美）
-- ❌ 纯蓝色主按钮（#3b82f6 / bg-blue-500）配白色文字——这是 AI 默认，不是设计
-- ❌ 手写 hex 色值（必须用 Tailwind alias：bg-primary / text-n19 / border-n05）
-- ❌ 彩虹色数据可视化（图表单色系渐变即可）
-- ✅ 主色（#FF8000）全页 ≤ 3 处
-- ✅ 中性色只用 framework 规范的 n05/n11/n19
-
-**阴影和圆角禁用：**
-- ❌ 每个模块都加 `shadow-lg` / `shadow-xl` —— 信息层级靠颜色和间距，不靠阴影
-- ❌ 卡片圆角 > 12px（B2B 要克制，rounded-md/rounded-lg 足够）
-- ❌ 全页多种圆角混用（统一用一种规格，不要 rounded-sm 和 rounded-2xl 同页出现）
-- ✅ 阴影只用在：悬浮弹窗 / 下拉菜单 / 浮层卡片（频率 ≤ 3 处）
+**阴影与圆角核对：**
+- 按实际设计规范表达组件和层级差异，保持同类语义一致。
+- 没有规范时声明本地规则，避免装饰干扰信息层级，不设全局数值或次数门。
 
 **图标禁用：**
 - ❌ Emoji 充当图标（✨🤖💫📊💼）—— 这是 AI 最典型的偷懒
@@ -645,12 +565,12 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 - ✅ 没找到合适图标时用文字占位 `[icon: 含义]`，不强行画 SVG
 
 **AI 专有状态的视觉禁用：**
-- ❌ AI 建议文字用蓝色/紫色区分（B2B 场景"蓝色 = 链接"，会误导）
-- ❌ 低置信态用红色标注（会让用户误以为是错误，不是不确定）
+- ❌ AI 建议与可点击链接无法区分，或仅靠颜色区分状态
+- ❌ 不确定性与错误使用相同反馈且没有语义说明
 - ❌ AI 思考中态用普通 loading spinner（应该是 skeleton 或流式文字）
 - ❌ 把 AI 输出包在"✨ AI Suggestion"标签里（装饰性，不提供信息）
-- ✅ AI 建议用"灰色降权 + 小徽章"的方式标识（语义：这是辅助，不是主内容）
-- ✅ 低置信态用灰色 + "基于有限数据" 文字标注
+- ✅ AI 建议保持辅助层级，并有可辨认的来源/状态标识
+- ✅ 低置信态明确说明依据有限，并提供补充信息或人工判断出口
 - ✅ 思考中态用 skeleton 或打字机效果 + stop 按钮
 
 **布局禁用：**
@@ -671,14 +591,12 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 **自检清单（Phase 4 产出前必过）：**
 
 ```
-□ 全页主色出现次数 ≤ 3？
-□ 字体只用 framework 字体栈 + text-15/13/12？
-□ 间距只用 p-1/p-2/p-3/p-4/p-6/p-8/p-10 这 7 档？
-□ 没有渐变背景（除非是 skeleton 态的微渐变）？
+□ 字体、色彩和间距符合本次实际规范/本地声明，文字清晰可读？
+□ 信息层级与交互状态可辨认，视觉装饰服务实际任务？
 □ 没有 emoji 图标？
-□ 阴影使用 ≤ 3 处，且都在浮层上？
-□ 所有颜色都用 Tailwind alias，没有手写 hex？
-□ AI 专有状态的视觉符合语义（辅助=灰、不确定=灰+标注、错误=红）？
+□ 阴影与圆角符合实际规范/本地声明，并服务于信息层级？
+□ 已提供设计规范的可检验条款均有证据；缺失规范项明确 N/A？
+□ AI 专有状态区分辅助、不确定、错误和执行中语义，且不只依赖颜色？
 □ 表格/列表行高 ≥ 40px？
 ```
 
@@ -686,10 +604,10 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 
 ### 场景A：新功能实现
 
-**必须读 `framework/README.md` 再执行以下步骤。**
+**仅当用户明确采用母版时先读 `framework/README.md`；其余承载按已确认范围继续。**
 
 ```
-全新页面：
+全新页面（用户已确认使用 framework 母版时）：
   1. 把选定的 framework/*.html 复制到
      docs/prototype/YYYY-MM-DD-<topic>/index.html
   2. 把 framework/assets/ 复制到
@@ -709,18 +627,16 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 
 独立组件（弹窗/抽屉）：
   完整 <html> 骨架
-  引用 ../../../framework/assets/vendor/tailwindcss.com.js
-  引用 ../../../framework/tokens.css（或内联 tokens）
+  使用本地可用资源及本次实际设计规范
   不使用任何框架文件的页面结构
 
-独立移动端原型（standalone mobile prototype）：
+独立整页原型（已选本地 HTML 且未采用母版，含 standalone mobile prototype）：
   完整 <html> 骨架
-  视口宽度按移动设备设计，推荐 375/390px 内容宽度
-  引用 ../../../framework/assets/vendor/tailwindcss.com.js 或复制到本地 assets 后引用
-  内联必要 token，不调用任何 framework 母版页面结构
+  按已确认目标平台与范围设计；移动端推荐 375/390px 内容宽度
+  使用本地资源与必要样式，不调用任何 framework 母版页面结构
   prototype-spec.md 必须声明：
     - 不调用母版的原因
-    - 移动端目标尺寸
+    - 已确认目标平台与尺寸
     - design-brief D 决策覆盖率
     - 状态覆盖率
 ```
@@ -744,7 +660,7 @@ grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\
 | AI 专有状态 | 触发条件 | 基础 UI 规范 |
 |-----------|--------|-----------|
 | 思考中态 | AI 正在生成，流式输出 | 打字机动画 / ghost text / Skeleton + stop 按钮 |
-| 低置信态 | AI 有结果但置信度低 | 结果灰色降权 + "基于有限数据" 标注 + "提供更多信息" 入口 |
+| 低置信态 | AI 有结果但置信度低 | 结果保持辅助层级 + "基于有限数据" 标注 + "提供更多信息" 入口 |
 | 拒答态 | 超出 AI 能力边界 | 明确告知 + 替代操作建议，禁止空白 |
 | 部分完成态 | Agent 中途失败 | 步骤清单：✅/❌/⏸️ + 每步重试/跳过/手动完成按钮 |
 | 待 Steer 态 | AI 给多候选等用户选 | 2-3 个候选并列 + 差异高亮 + "都不满意/重新生成" 按钮 |
@@ -842,6 +758,9 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 
 如果任何 design decision 或 required state 未实现，QA 不得 PASS。
 
+同时保留 §7「页面与交互位置映射」到 HTML 实现位置的对应清单：逐项核对交互职责、
+D/STATE、来源与 AC、约束、下游去向；已确认页库引用或 `reference=none` 如实记录。
+
 **开发交接补全（仅下游=开发/场景1 时追加，非硬 QA 项）**：若原型将进自家开发链（tech-spec/task-plan），
 在 prototype-spec.md 追加一节，补 **组件 props / 响应式断点 / design token 清单 / 动效** 四维
 （从已产出 HTML 抽取，逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`）；
@@ -866,6 +785,11 @@ node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs \
 - `screenshot_delta`：使用 `--mode=screenshot-delta`，验证改动区/保持区声明。
 - 不得伪造 design-brief 作为第二参数。
 
+有实际设计规范时，可在原型目录写 `design-rules.json`，或传 `--design-rules=<path>`。
+格式为 `{ "source": "实际规范来源及版本", "checks": [{ "id": "规则ID", "required": ["必须存在的字面片段"], "forbidden": ["不得出现的字面片段"], "maxOccurrences": { "text": "字面片段", "count": 3 } }] }`。
+每条规则至少含一种检验；按真实规范填写，不复制例子作为规范。检查作用域为生成/改动区（无标记时整页），
+只证明这些静态条款，不代替浏览器与人工 UX 核对。未提供文件时规范项 N/A；明确提供但无效时 FAIL。
+
 该脚本会输出：
 
 ```
@@ -882,12 +806,9 @@ docs/prototype/YYYY-MM-DD-<topic>/screenshots/mobile.png    （Playwright 可用
 □ console errors = 0
 □ design decisions mapped = N/N
 □ states implemented ≥ 5（脚本仅计数 data-prototype-state 与 STATE: 标记；required AI states 是否均有 data-prototype-state 脚本不校验，须人工对照 design-brief 状态覆盖表交叉核对）
-□ primary color usage ≤ 3
-□ token lint violations = 0
+□ supplied design rules：PASS（已提供且可检验）或 N/A（没有实际规范/可自动条款）
 □ no external CDN
 □ no emoji icons
-□ no generic font stack
-□ no Tailwind default blue primary
 □ prototype-spec.md exists
 ```
 
@@ -911,7 +832,7 @@ docs/prototype/YYYY-MM-DD-<topic>/screenshots/mobile.png    （Playwright 可用
 状态页：{N} 个
 决策映射：{N/N}
 QA：{PASS / DONE_WITH_CONCERNS}
-品牌色 #FF8000：已应用
+设计规范：{来源 / 本地约定；外部规范合规未验证时明确说明}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -919,7 +840,7 @@ AskUserQuestion：
 
 > 下一步？
 >
-> A）**/figma-layer** — 搭建 Figma 保险层（场景A/C）
+> A）**/ux-audit** — 对原型进行 UX 评审（提供截图）
 > B）先停这里
 
 ---
@@ -928,8 +849,8 @@ AskUserQuestion：
 
 1. **场景询问不可跳过**
 2. **Step 0 四阶段是强制认知门禁** — 未完成不得写 HTML
-3. **CSS 变量和 tailwind.config 必须写入每个 HTML 文件**
-4. **品牌色 #FF8000 硬约束**
+3. **实现依赖必须在交付环境可用**
+4. **实际设计规范与可读性必须核对**，无外部规范不伪造合规结论
 5. **场景B截图是强制输入** — 没有截图必须主动管用户要
 6. **场景C每处改动必须有 FIX-ID 注释**
 7. **每条 design-brief 决策必须有 DECISION 注释映射**
@@ -952,8 +873,8 @@ AskUserQuestion：
 ```
 
 必须包含：
-- **决策列表**（≤8条）：已实现的 design-brief 决策（DECISION 注释对应项）、QA 通过状态
-- **下游约束**（≤5条）：figma-layer 必须读取的 HTML 文件路径、Aesthetic Score、状态覆盖情况
+- **决策列表**（≤8条）：已实现的 design-brief 决策（DECISION 注释对应项）、页面与交互位置映射的实现去向、QA 通过状态
+- **下游约束**（≤5条）：后续交付审查必须读取的 HTML 文件路径、Aesthetic Score、状态覆盖情况
 - **风险**（≤3条）：未实现的状态、已知浏览器兼容问题
 - **产出路径**：prototype HTML 文件完整路径 + prototype-spec.md 路径
 

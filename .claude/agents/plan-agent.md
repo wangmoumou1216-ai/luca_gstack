@@ -300,12 +300,12 @@ Phase N（task_execution — 默认）:
   phase_type: task_execution
   model_tier: core-execution                              # 必填；降档须注理由，fable 须引白名单
   任务: <描述>
-  产出物: <文件路径（降级走 MagicPath 时为 canvas job_id）>
+  产出物: <文件路径（用户选择 MagicPath 时为 canvas job_id）>
   阶段门控: <判断标准>
   skills_needed:                                          # 可选
     - .claude/skills/office/open-design/SKILL.md         # 设计产出（首选，OD-first）
     - .claude/skills/office/design-brief/SKILL.md
-    - .claude/skills/office/html-prototype/SKILL.md      # 设计产出（末级降级，OD/MagicPath 均不可用时）
+    - .claude/skills/office/html-prototype/SKILL.md      # 设计产出（用户明确选择的本地 HTML 独立能力）
 
 Phase N（skill_execution — 执行某个 skill）:
   编排模式: Supervisor
@@ -396,11 +396,11 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 > **设计产出路由规则（OD-first，与 optional-workflow-graph `design_output` 同步，2026-07-14 纠漂移）：**
 > - **首选 open-design**（execution_context: main_agent——默认桌面端生成需用户按键，headless 为 opt-in）；
 >   断言用产物落盘：`ls docs/prototype/**/*.html`（「拉回来」回收后存在）
-> - OD daemon 真不可达 → 降级 magicpath（`code start → submit`，断言用 job status `completed`/`failed`）
-> - MagicPath 也不可用（auth 失败 / non-React）→ html-prototype（本地文件，断言用 `[ -f path ]`）
-> - 逐级检测命令见 Gap 2；daemon UP 但 headless 失败 → 降级目标是 OD 桌面端（同栈），不退 magicpath
+> - 用户明确选择 MagicPath → `code start → submit`，断言用 job status `completed`/`failed`
+> - 用户明确选择本地 HTML → html-prototype，本地文件与实际 QA 断言；两项也可由用户预先批准的具名备用计划授权
+> - 工具可用性检查见 Gap 2；故障本身不自动换工具。daemon UP 但 headless 失败 → 同项目 OD 桌面端恢复，不退 magicpath
 
-**MagicPath job 断言模板（降级链专用；注意：API 返回带空格 JSON，必须用 python3 解析，不能用 grep）：**
+**MagicPath job 断言模板（用户已选择 MagicPath；注意：API 返回带空格 JSON，必须用 python3 解析，不能用 grep）：**
 ```bash
 # [BLOCKING] <ID> — MagicPath 组件构建完成
 npx -y magicpath-ai code status <jobId> -o json 2>/dev/null \
@@ -494,7 +494,7 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 - [ ] 每个不可逆操作配 [BLOCKING] 断言 + 用户确认点
 - [ ] 复杂且新颖 → 研究 Phase 已排入，或跳过理由已显式写出待确认
 - [ ] 每个 Phase 的 model_tier 已填（fable 仅可引白名单条目）
-- [ ] 设计产出 Phase 走 open-design 首选（magicpath / html-prototype 仅按 Gap 2 降级）
+- [ ] 设计产出 Phase 走 open-design 首选，或用户明确选择的工具（按 Gap 2 核验，不因故障静默换工具）
 
 ---
 
@@ -550,8 +550,8 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 | `ux-brainstorm` | 重型·交互 | 需要与用户共同探索 UX 方案时 | main_agent |
 | `design-brief` | 中型·交互 | 有明确方案需要落成交互规格时 | main_agent |
 | `open-design` | 产出型·交互 | **设计产出首选**：OD 桌面端生成 + 「拉回来」落盘（headless 为 opt-in） | main_agent |
-| `magicpath` | 产出型（隐藏·降级） | OD daemon 真不可达且需 React 组件级原型时（先询问是否可用） | subagent |
-| `html-prototype` | 产出型（末级降级） | OD 与 magicpath 均不可用时的本地 HTML 方案 | subagent |
+| `magicpath` | 产出型（隐藏·独立备选） | 用户明确选择 React 组件级原型时，核验工具可用性 | subagent |
+| `html-prototype` | 产出型（独立备选） | 用户明确选择本地 HTML 方案时 | subagent |
 | `muse-req-triage`（muse） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion GATE-1，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
 
 **编排原则：**
@@ -559,7 +559,7 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 - 非交互型 skill（deepresearch、ux-research）→ 优先 subagent，保护主 Agent context
 - 交互型 skill（brainstorm、ux-brainstorm、design-brief）→ 必须 main_agent（需要用户实时参与）
 - 能并行的 subagent 同一消息并发启动
-- 设计产出默认 open-design（OD-first）；magicpath 仅降级备选，使用前先询问是否可用
+- 设计产出默认 open-design（OD-first）；magicpath/html-prototype 只按真实用户选择或已批准具名备用计划使用
 
 **研究默认门（Research Default Gate）——必须遵守：**
 
@@ -589,7 +589,7 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
     ↓
 [规格阶段]  design-brief → 交互规格文档
     ↓
-[原型阶段]  open-design（首选）→ magicpath → html-prototype（降级检测见 Gap 2）← 独立 Phase，不得跳过
+[原型阶段]  open-design（首选）或用户明确选择的工具（选择/可用性核验见 Gap 2）← 独立 Phase，不得跳过
     ↓
 [技术实现]  task_execution Phase（subagent 并行）
 ```
@@ -605,7 +605,7 @@ Phase 2: brainstorm（main_agent，依赖 Phase 1 产出）
 Phase 3: ux-research（subagent，依赖 Phase 2 PRD）—— 有 UX 设计要求时使用
 Phase 4: ux-brainstorm（main_agent，依赖 Phase 3 产出）
 Phase 5: design-brief（main_agent，依赖 Phase 4）
-Phase 6: open-design（首选；按 Gap 2 降级 magicpath → html-prototype。独立原型 Phase，依赖 Phase 5 handoff gate PASS）
+Phase 6: open-design（首选；或用户按 Gap 2 明确选择的工具。独立原型 Phase，依赖 Phase 5 handoff gate PASS）
 Phase 7+: 技术实现（subagent，按模块并行，依赖 Phase 6 产出）
 ```
 
@@ -624,32 +624,22 @@ ux-research 可以在满足以下**全部条件**时与 brainstorm 并行启动�
 ❌ 不可并行：brainstorm 仍在交互提问阶段，PRD 尚未产出任何文件
 ```
 
-**Gap 2 — 设计产出降级检测与断言切换规则（OD → MagicPath → html-prototype）：**
+**Gap 2 — 已选设计工具的可用性与断言（故障不授予换工具权）：**
 
-Orchestrator 在 Phase 6 启动前按序检测（不由 Work Agent 执行）；本节是 optional-workflow-graph
-`design_output.fallback_trigger` 引用的执行层检测命令真值源：
+Orchestrator 在 Phase 6 启动前核对真实工具选择；只有用户明确改选或已批准具名备用工具的执行计划，
+才满足 optional-workflow-graph 的 `design_output.fallback_trigger`。无改选授权时，daemon 不可达、
+鉴权失败、非 React 限制都只报告阻塞，保留来源和已绑定项目，不自动探测/调用其他生成器。
 
-```bash
-# 第一级：OD daemon 探测（桌面端动态端口，不写死端口号；daemon 重启会换端口）
-pgrep -f "prebundled/daemon/daemon-sidecar" >/dev/null 2>&1 \
-  && echo "OD_OK" || echo "OD_FALLBACK"
+| 已选择工具 | 可用性 owner | Phase 6 断言 |
+|------------|-------------|-------------|
+| open-design（main_agent） | open-design/SKILL.md Phase 0 的 daemon 检查；不可达请用户启动桌面端 | 精确绑定项目的真实 HTML 已回收落盘，EXPORTED/STAGED 不算生成 |
+| magicpath | magicpath/SKILL.md 的可用性和执行合同 | 上述 job status 断言及实际产物 |
+| html-prototype | html-prototype/SKILL.md 的输入/输出与 QA 合同 | 精确产出路径存在且 Phase 4.5 QA 通过 |
 
-# 第二级（仅 OD_FALLBACK 时）：MagicPath 可用性
-npx -y magicpath-ai whoami -o json 2>/dev/null \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('id') else 1)" \
-  && echo "MAGICPATH_OK" || echo "MAGICPATH_FALLBACK"
-```
+`skills_needed` 与用户已确认的选择一致；切换不跳过上游 handoff gate，也不自动扩大外部写入权。
+daemon UP 但已授权 headless 重试后仍失败 → 同一 staged 项目 OD **桌面端**恢复，不退 magicpath。
 
-| 检测结果 | Phase 6 skill | 断言模板 |
-|---------|--------------|---------|
-| `OD_OK` | open-design（main_agent） | `ls docs/prototype/**/*.html 2>/dev/null \| grep -q .`（拉回落盘） |
-| `OD_FALLBACK` + `MAGICPATH_OK` | magicpath | python3 job status 断言（见 MagicPath 断言模板） |
-| 双 FALLBACK | html-prototype | `[ -f docs/prototype/index.html ]`（本地文件断言） |
-
-`skills_needed` 同步切换到对应 SKILL.md。daemon UP 但 headless 出图失败 → 降级目标是
-OD **桌面端**生成（同栈），不退 magicpath（见 open-design SKILL「od_headless_unavailable」）。
-
-**Gap 3 — MagicPath 文件名映射校验断言（降级链专用）：**
+**Gap 3 — MagicPath 文件名映射校验断言（用户已选择 MagicPath）：**
 
 `code start` 脚手架的文件名由平台决定，不可硬编码。断言模板：
 
@@ -664,7 +654,7 @@ ACTUAL=$(ls /tmp/magicpath-<workdir>/src/components/generated/*.tsx 2>/dev/null 
 
 > 此断言级别设为 `[WARNING]`（非 BLOCKING），因为平台生成名称可能有合理的大小写差异，不应阻断流程，但需记录供人工确认。
 
-**原型 Phase（open-design / magicpath / html-prototype）的硬性依赖：** 必须等上游 design-brief handoff gate PASS 且 Gap 2 降级检测完成后才能启动，绝不与任何上游 Phase 并发。
+**原型 Phase（open-design / magicpath / html-prototype）的硬性依赖：** 必须等上游 design-brief handoff gate PASS 且 Gap 2 工具选择/可用性核验完成后才能启动，绝不与任何上游 Phase 并发。
 
 ---
 

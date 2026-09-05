@@ -10,18 +10,18 @@ const required = [
   {
     path: 'CLAUDE.md',
     checks: [
-      /Coding Discipline/,
+      /Coding discipline/i,
       /Think Before Coding/,
       /Simplicity First/,
       /Surgical Changes/,
       /Goal-Driven Execution/,
-      /不进入 `skill-routing-map\.yaml`/,
+      /not a separate route or visible skill/,
     ],
   },
   {
     path: 'AGENTS.md',
     checks: [
-      /Coding Discipline/,
+      /Coding discipline/i,
       /Think Before Coding/,
       /Simplicity First/,
       /Surgical Changes/,
@@ -56,6 +56,9 @@ for (const item of required) {
   const content = read(item.path);
   for (const pattern of item.checks) {
     assert.match(content, pattern, `${item.path} missing ${pattern}`);
+  }
+  if (item.path === 'CLAUDE.md' || item.path === 'AGENTS.md') {
+    assert.match(content, /<!-- K9:START -->[\s\S]*?<!-- K9:END -->/, `${item.path} missing bounded K9 block`);
   }
 }
 

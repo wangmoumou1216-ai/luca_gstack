@@ -10,10 +10,8 @@
 **luca_gstack 是多项目个人开发环境**，不绑定单一"产品"（2026-07-03 修正，见下方"身份声明落地"）。
 下游项目各自在 `~/Desktop/项目/<name>/` 独立记忆与约束，本文件只记跨项目的框架层约束。
 
-**CRM（纷享销客）是可选休眠 profile**：用户任务显式提及"纷享/CRM/FxUI"或指向
-`framework/` 目录时激活（读取 component-map.md 与 brand-tokens.md）；其余 session 不注入
-CRM 专属约束。全文（技术栈/设计体系/品牌色/资产保留/身份声明沿革）见
-`.claude/skill-os/crm-profile.md`。
+**CRM（纷享销客）是可选业务 profile**：用户任务明确涉及 CRM 业务或专项 UX 评审时，先完整读取
+`.claude/skill-os/crm-profile.md`。仅引用 `framework/` 页面不激活品牌约束；视觉规范由当前项目或外部设计工具提供。
 
 ---
 
@@ -22,8 +20,8 @@ CRM 专属约束。全文（技术栈/设计体系/品牌色/资产保留/身份
 > 以下为项目级硬约束，违反即停。每条指向权威源；新增红线追加一行并注明来源。
 > （quality-gate 的约束合规维度 grep 本节，故本节不得空置。）
 
-1. **framework/ 母版只读**：不得直接修改 `framework/` 任何文件（SF-002）。原型须复制母版，不在原地改。此条不因 CRM profile 是否激活而失效——它保护的是磁盘资产完整性，与场景无关。
-2. **品牌主色 #FF8000 全页 ≤3 处**——**仅当 CRM profile 激活时生效**（激活条件=用户任务显式提及"纷享/CRM/FxUI"或指向 `framework/` 目录，全文 `.claude/skill-os/crm-profile.md`）；非 CRM 任务不适用。
+1. **framework/ 参考资产只读**：不得直接修改 `framework/` 任何文件（SC-20260905-001，取代 SF-002）。HTML 原型不再强制基于本地母版；视觉与组件约束来自当前已确认项目或用户在外部工具配置的设计系统。只读保护不因 CRM profile 是否激活而失效。
+2. **当前设计规范有明确来源**：设计系统由用户在外部工具配置，或由当前项目明确提供；不从 CRM 名称或旧页面参考推导品牌、token、字体或组件技术映射强制。
 3. **稳定 ID 永不重编/复用**：R-/AE-/IF-/CMP-/DEC-/DEV- 等已分配编号（前缀为代表，非穷尽）不得改号或回收（brainstorm「Renumbering stable IDs」CRITICAL / quality-gate ID 稳定性维度）。
 4. **最小文件 + 读前先写 + Surgical Changes**：不创建非任务必要文件，优先编辑已有文件；编辑前必先 Read（harness Edit/Write/NotebookEdit 工具层硬强制；bash 写在其外仍须遵守）；只改与目标直接相关的行（最小文件/Surgical：CLAUDE.md 核心行为原则 / Coding Discipline）。
 5. **稳定事实走受控晋升**：不得直接写 `promoted-facts.yaml` 或本文件；先 `propose_semantic.py` 写 candidate，经 review/consolidate 门禁才晋升（SC-20260523-003）。

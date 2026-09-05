@@ -26,8 +26,9 @@ research_default`，与 Plan Agent 研究默认门同一把尺子）→ dispatch
 **R2 · OD-first（设计产出执行面）**
 意图 = 设计 / 原型 / 界面产出 → 默认 `open-design`（`design_output.primary` 的 standalone 执行面）：
 有 design-brief 产物走 chain 入口；用户点名单点产物走 adhoc 交接；无源且要可追踪交付 → 建议先
-`/design-brief`。仅命中 `design_output.fallback_trigger`（OD daemon 不可达 / 用户明确要本地 HTML /
-non-React）才落 `html-prototype` / `magicpath`。重要设计场景 = OD。
+`/design-brief`。工具选择按 `design_output.fallback_trigger`：用户明确选择本地 HTML / MagicPath，
+或已批准包含该具名备用工具的执行计划，才转交相应独立能力。daemon 不可达、鉴权失败或非 React
+本身只报告阻塞，不自动替用户换工具；OD headless 失败的同项目桌面恢复仍按 OD 合同执行。
 
 **R3 · 端到端意图（确认门）**
 「从需求到成品 / 完整跑一遍 / 闭环」类意图 → 列出 `optional-workflow-graph.yaml` 对应场景的
@@ -49,7 +50,7 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 | 渲染页面 / 原型 | `/ux-audit` | 截图为强制输入（其 Phase 0 自拦） |
 | workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
 | 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
-| **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——figma-layer / html-prototype 的自检不算数 |
+| **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——任何产出工具自身的自检不算独立复审 |
 
 *证据标准（**下限非上限**——做得更多永远合法；严禁用打勾替代"针对这个场景该攻什么"的思考）*：
 ①验证者独立于修复者，冷启动派发、不给会话历史与实现过程（07-03）②default-REFUTE，证伪不了才放行

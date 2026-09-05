@@ -38,10 +38,10 @@ echo "BRANCH: $_BRANCH"
 
 | target 是 | 取用 |
 |---|---|
-| 渲染页面 / 原型 HTML | `ux-audit/specialists/module-a-visual.md`（间距白名单 / 品牌色 ≤3 处 / 排版 L1-L4 / 构图 8 锚点）+ `ux-audit/specialists/module-b-interaction.md`（Nielsen 10 · Norman 7 · WCAG 2.1 AA 7 项）+ `references/ai-native-taste-anchors.md`（8 品味锚点含信任/代理维度 + §4b 取证表 —— **已生成的原型同样要过品味检查**，别只做视觉与交互层） |
+| 渲染页面 / 原型 HTML | `ux-audit/specialists/module-a-visual.md`（层级 / 分组 / 对齐 / 可读性 / 一致性 / 构图 8 锚点；有已验证外部规范才比对其合规）+ `ux-audit/specialists/module-b-interaction.md`（Nielsen 10 · Norman 7 · WCAG 2.1 AA 7 项；缺交互或语义证据的检查记 UNKNOWN）+ `references/ai-native-taste-anchors.md`（8 品味锚点含信任/代理维度 + §4b 取证表 —— **已生成的原型同样要过品味检查**，别只做视觉与交互层） |
 | 上行 + 属 CRM 业务页 | 加 `ux-audit/specialists/module-c-crm.md` 或 `references/crm-business-criteria.md` §1.2-1.5（首屏必要字段 / 高频操作路径 / 信息层级） |
 | 设计决策文档（design-brief / 交互方案 / 原型描述） | `references/ai-native-taste-anchors.md`（8 品味锚点 + §4b 取证表 + 严重性分级）+ `references/ai-native-design-framework.md` §8（AI Slop 10 项反模式）+ `references/ai-native-state-coverage.md`（12 状态覆盖） |
-| target 就是一份 design-brief 产出 | 加一项**完整性核查**：对照 `design-brief/SKILL.md` Phase 7 声明的 12 节清单逐节核对（生产者自己声明了节名锁死，但框架里没有别的角色在查）；若同时有原型，核实现与决策映射表是否一致（组件 variant / 类名） |
+| target 就是一份 design-brief 产出 | 加一项**完整性核查**：对照 `design-brief/SKILL.md` Phase 7 声明的 12 节清单逐节核对；若同时有原型，对照 §7「页面与交互位置映射」（`page_interaction_mapping`）核对语义位置、交互职责、D/STATE、来源与 AC、约束及下游实现是否一致。已确认页库引用仅辅助定位，reference=none 不免除语义追踪 |
 | 代码 / hook / skill 规则 / 计划 / 提案 | **不挂判据表**，用通用对抗（本 skill 的默认形态） |
 
 **发现问题之后**：要决定「自己修还是交人」时读 `references/oracle-vs-taste-criteria.md`——
@@ -49,6 +49,9 @@ oracle 型（可机械核对）才允许自动修，taste 型必须交人，**�
 
 上表路径相对 `.claude/skills/office/`。`references/ux-evaluation-framework.md` 是迁移前原件、运行时
 不加载，**不要取用**（其真值源已在上表的 module-a / module-c）。
+
+历史 `component_mapping` / 旧组件映射只读提取位置、职责、决策、状态和来源语义；
+核查覆盖缺口，不要求补 variant/classes、token 或组件库资产，不重写历史证据。
 
 读取 observability 的短规则和近期反馈摘要，用来检查复犯：
 
@@ -89,7 +92,7 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 
 **实现层：**
 - 原型和真实生产的差距，有没有被低估的风险？
-- design-brief 的组件映射缺口，会不会导致核心交互降级？
+- design-brief 的页面与交互位置映射是否遗漏核心职责、决策、状态或验收，导致核心交互降级？
 
 **可观测性层：**
 - 本次是否违反 active rules？

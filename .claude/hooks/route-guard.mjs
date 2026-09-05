@@ -717,6 +717,15 @@ function visibleSlashlessAlias(prompt) {
 
 function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
   const direct = prompt.match(/^[$/][a-z][\w-]*/i)?.[0];
+  // Explicit calls bypass the keyword registry, so retirement must also close
+  // this path. Keep other direct names and their existing dispatch semantics.
+  const retiredName = (direct?.slice(1) || prompt.match(/^\s*([a-z][\w-]*)(?:\s|$)/i)?.[1] || '').toLowerCase();
+  if (retiredName === 'figma-layer') {
+    return {
+      decision: 'STOP', reason: 'retired_skill', candidates: [],
+      message: 'figma-layer 已退役，不能调度旧重建链或据此执行 Figma 写入。历史产物仍可在已授权作用域内只读查询；新设计需求按当前 catalog 和用户所选工具处理。',
+    };
+  }
   if (direct) {
     const skill = direct.startsWith('$') ? `/${direct.slice(1)}` : direct;
     return { decision: 'SINGLE_SKILL', skill, candidates: [skill] };
@@ -1440,6 +1449,7 @@ function decisionToHints(decision) {
         `候选列表（供用户选择）：${decision.candidates.join(', ')}` + reviewAxisHint(decision),
       ];
     case 'STOP': {
+      if (decision.reason === 'retired_skill') return [`[route-guard] ⛔ RETIRED — ${decision.message}`];
       const softCandidates = decision.softCandidates || [];
       const candidateHint = softCandidates.length
         ? '\n基于语义推断，最可能的 skill：\n' +

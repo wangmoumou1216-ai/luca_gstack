@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "p6-preparation-spec-20260905-02",
+  "subject": {
+    "skill": "P6-preparation-spec",
+    "topic": "agent-context-page-flow-fixture-preparation",
+    "scene": "unknown",
+    "input_summary": "Second independent local Spec review: close first-round schema leakage and overstated S9 coverage; verify supplied code identities, raw hashes, process schedule and preparation-only boundaries.",
+    "output_paths": [
+      "scripts/agent-context-branch-fixtures.mjs",
+      "scripts/test-agent-context-branch-fixtures.mjs",
+      "scripts/run-agent-context-ab.mjs",
+      "framework-audit/2026-09-05-agent-context-p6-preparation.md"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": []
+  }
+}

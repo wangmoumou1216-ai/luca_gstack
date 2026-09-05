@@ -62,7 +62,6 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 | /html-prototype | ✅/⬜ | {路径} |
 | /figma-demo | ✅/⬜/N/A | {路径} |
 | /ux-audit | ✅/⬜ | {路径} |
-| /figma-layer | ✅/⬜ | {路径} |
 
 ## 品味检查得分
 

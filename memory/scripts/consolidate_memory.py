@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -47,6 +48,7 @@ def _resolve_root():
 
 
 ROOT = _resolve_root()
+CODE_ROOT = Path(os.environ.get("AGENT_CONTEXT_CODE_ROOT") or Path(__file__).resolve().parents[2]).resolve()
 MEMORY_DIR = ROOT / "memory"
 SEMANTIC_DIR = MEMORY_DIR / "semantic"
 CANDIDATES = SEMANTIC_DIR / "candidates.jsonl"
@@ -515,26 +517,22 @@ def append_optional_metadata(entry: str, candidate: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def sync_claude_fallback(candidate: dict) -> None:
-    claude_md = ROOT / "CLAUDE.md"
-    if not claude_md.exists():
-        return
-    content = claude_md.read_text(encoding="utf-8")
-    marker = "> 维护规则："
+def sync_static_fallback_projections(candidate: dict) -> None:
+    """Run the single projection writer after an allowlisted promotion."""
     fact_id = str(candidate.get("id", ""))
     allow = ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
     allowed = {ln.split("#", 1)[0].strip() for ln in allow.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()} if allow.exists() else set()
-    # 非白名单(宪法级/红线)事实不镜像进每-session SF；只留 promoted-facts.yaml 走 search_memory
     if not fact_id or fact_id not in allowed:
-        return  # by design：非白名单静默跳过是正确行为
-    if marker not in content:
-        # 应镜像但镜像通道断了 → 不再静默（audit F2-08）
-        sys.stderr.write(f"[consolidate] ⚠️ CLAUDE.md 缺 '> 维护规则：' marker，白名单事实 {fact_id} 无法镜像进 SF 节\n")
         return
-    if fact_id in content:
-        return  # 已在 CLAUDE.md（注意：全文匹配，prose 引用会误判已镜像——audit F2-08，反向校验挂 BACKLOG）
-    new_line = f"- [{fact_id} / {candidate.get('domain', '')}] {candidate.get('fact', '')}\n"
-    atomic_write_text(claude_md, content.replace(marker, new_line + "\n" + marker))
+    builder = CODE_ROOT / "scripts" / "build-agent-context.py"
+    if not builder.is_file():
+        raise RuntimeError(f"Static Fallback projection writer missing: {builder}")
+    result = subprocess.run(
+        [sys.executable, str(builder), "sync", "--memory-root", str(ROOT)], cwd=CODE_ROOT, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+    if result.returncode:
+        raise RuntimeError(f"Static Fallback projection sync failed: {result.stderr.strip() or result.stdout.strip()}")
 
 
 def promoted_ids(promoted: list[dict]) -> set[str]:
@@ -554,14 +552,19 @@ def append_promoted(candidate: dict) -> None:
     )
     entry = append_optional_metadata(entry, candidate)
     PROMOTED.parent.mkdir(parents=True, exist_ok=True)
-    if not PROMOTED.exists():
-        atomic_write_text(PROMOTED, f"version: 1\nfacts:\n{entry}")
-    else:
-        content = PROMOTED.read_text(encoding="utf-8")
-        if "facts:" not in content:
-            content = content.rstrip() + "\nfacts:\n"
-        atomic_write_text(PROMOTED, content.rstrip() + "\n" + entry)
-    sync_claude_fallback(candidate)
+    previous = PROMOTED.read_text(encoding="utf-8") if PROMOTED.exists() else None
+    content = previous or "version: 1\nfacts:\n"
+    if "facts:" not in content:
+        content = content.rstrip() + "\nfacts:\n"
+    atomic_write_text(PROMOTED, content.rstrip() + "\n" + entry)
+    try:
+        sync_static_fallback_projections(candidate)
+    except Exception:
+        if previous is None:
+            PROMOTED.unlink(missing_ok=True)
+        else:
+            atomic_write_text(PROMOTED, previous)
+        raise
 
 
 def append_review(candidate_id: str, reviewer: str, decision: str, reason: str) -> None:

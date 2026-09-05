@@ -4,13 +4,13 @@
 
 ## 1. 设计哲学
 
-- **Loop 是"带卡点的 workflow"，不是自由 agent。** 主干（extract→triage→brainstorm→design-map→原型生成+judge核对）是单向链，只能往前走。原型段（2026-07-02 OD 改造后的现行拓扑）：**默认路径 = `open-design` 生成 + `muse-proto-judge` 核对 + 用户主导迭代**（agent 不代理迭代轮），「轮数上限3」在默认路径的含义 = **最多帮用户跑 3 轮 judge 核对**，不是自动重生成；`muse-proto-gen`↔`muse-proto-judge` 的自动内循环（evaluator-optimizer 模式，轮数上限3）**仅作为 OD daemon 不可达时的 fallback 存在**。这是红队验证过的拓扑选型，理由：母版 Orchestrator 的"节点顺序只能前进"硬规则、以及"能画出决策树的任务就不该交给 agent 自由探索"（Anthropic Building Effective Agents 的判据）。
+- **Loop 是"带卡点的 workflow"，不是自由 agent。** 主干（extract→triage→brainstorm→design-map→原型生成+judge核对）是单向链，只能往前走。原型段（2026-07-02 OD 改造后的现行拓扑）：**默认路径 = `open-design` 生成 + `muse-proto-judge` 核对 + 用户主导迭代**（agent 不代理迭代轮），「轮数上限3」在默认路径的含义 = **最多帮用户跑 3 轮 judge 核对**，不是自动重生成；`muse-proto-gen`↔`muse-proto-judge` 的自动内循环（evaluator-optimizer 模式，轮数上限3）**仅在用户明确选择本地生成，或已批准计划明确包含该备用路径且触发条件满足时运行**；OD daemon 不可达本身不授权切换工具。这是红队验证过的拓扑选型，理由：母版 Orchestrator 的"节点顺序只能前进"硬规则、以及"能画出决策树的任务就不该交给 agent 自由探索"（Anthropic Building Effective Agents 的判据）。
 - **2个人类卡点不可省略**：GATE-1（需求 triage 后，人裁真伪/优先级）、GATE-2（design-map 后，人审映射）。这是 Loop 质量的底线，不是可选项，`allow_standalone_override` 恒为 `false`。
 - **机器只提议，人类裁定。** 真伪/优先级判断，机器只做三件事：可回溯性检查、rule-based 打分、提议分类——绝不代替人类拍板。
 
-## 2. FxUI Token 规则
+## 2. 实际设计规范与通用状态合同
 
-**不在本文件重复定义**——权威源是共享参考 `.claude/skills/office/references/html-prototype-tokens.md`（`muse-proto-gen` 的 `shared-refs` 已直接引用）。凡是本 Loop 产出的 HTML/CSS，token 使用规则以该文件为准，不允许硬编码颜色/间距。
+设计系统以用户提供或在目标工具配置的实际规范为准，不注入旧品牌、token 或组件技术映射；只有明确提供/委托的 DS 才核验绑定。通用状态、反馈与可访问性合同见 `.claude/skills/office/references/html-prototype-tokens.md`（`muse-proto-gen` 的 `shared-refs` 已直接引用）。没有外部规范时明确本地约定，规范合规项 N/A，通用 QA 与 AC 判官仍执行。
 
 ## 3. AX（Agent Experience）原则
 

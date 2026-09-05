@@ -49,7 +49,6 @@ recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：�
 | 用户意图 | Skill Pipeline |
 |---------|---------------|
 | 全流程设计（调研→方案→原型） | deepresearch ‖ ux-research → brainstorm → ux-brainstorm → design-brief → open-design |
-| 全流程 + Figma 图层 | 上述 → figma-layer |
 | 调研 + 方案（无原型） | deepresearch ‖ ux-research → brainstorm → ux-brainstorm |
 | 调研 + 原型（快速迭代） | ux-research → design-brief → open-design |
 | 仅研究 | deepresearch ‖ ux-research（并行） |
@@ -58,7 +57,9 @@ recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：�
 
 > `‖` = 并行，`→` = 串行依赖
 >
-> 设计产出终端默认 **open-design**（CLAUDE.md 定的设计产出首选）；OD 不可达时备选链 magicpath → /html-prototype；
+> 设计产出终端默认推荐 **open-design**（CLAUDE.md 定的设计产出首选），以用户已选工具为准。
+> OD 不可达、认证失败或非 React/Canvas 场景不授权自动换工具；仅在用户明确选择 MagicPath / 本地 HTML，
+> 或明确批准包含相应备用路径的计划且触发条件满足时，才 dispatch 对应能力；否则报告 `BLOCKED` 并交还用户。
 > figma-demo 已降级为隐藏 skill，不作默认推荐。
 
 #### 场景 B — 跳过研究阶段（快速原型模式）
@@ -112,10 +113,10 @@ recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：�
   WA-4: /design-brief — <交互契约主题，1句话>
 
 ━━━ Phase 5（依赖 Phase 4）━━━
-  WA-5: open-design — 基于 design-brief 的 Generation Packet 产出设计（OD → HTML →（可选）figma-layer）
+  WA-5: open-design — 基于 design-brief 的 Generation Packet 产出设计（OD 交接与回收 HTML）
 
 预计产出路径：
-  docs/research/ · docs/prd/ · docs/decisions/ · open-design 产出（HTML/Figma）
+  docs/research/ · docs/prd/ · docs/decisions/ · open-design 产出（HTML）
 
 Phase ≥ 3 → 等用户确认后再执行 (y/n)
 ```
@@ -181,6 +182,11 @@ Work Agent 收到指令后必须按以下顺序执行：
 
 #### Work Agent 失败处理（W9）
 
+**工具授权先于重试分流：** 以下重试只限同一已授权工具，不得借 `BLOCKED` 改走未授权备用工具。
+缺少工具切换授权时暂停并交还用户；已有计划明确批准的备用路径可在其触发条件满足时继续，无需重复确认。
+OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢复」，这不是更换工具；
+该一次 retry 由 OD 路径计数，W9 不得通过重启 WA 重置它或重新进入已耗尽的 headless 路径。
+
 | WA 返回状态 | Orchestrator 动作 |
 |------------|-----------------|
 | `DONE` — 产出路径存在 | 继续下一 Phase |
@@ -223,13 +229,12 @@ Work Agent 收到指令后必须按以下顺序执行：
   PRD        → docs/prd/YYYY-MM-DD-<topic>-prd.md
   UX方案     → docs/decisions/YYYY-MM-DD-<topic>-ux-brainstorm.md
   交互契约   → docs/decisions/YYYY-MM-DD-<topic>-design-brief.md
-  Open Design → docs/decisions/ 设计产出（HTML/Figma）
+  Open Design → docs/decisions/ 设计产出（HTML）
 
 关键决策：<各 skill handoff 中的核心决策，3-5 条>
 
 推荐下一步：
   - /ux-audit — 对原型做 UX 评审
-  - /figma-layer — Figma 保险层（可选）
 ```
 
 > 产出路径真值源：`.claude/skills/office/SKILL.md`「产出路径约定」（受保护 glob 见 skill-invariants.md P2）。
@@ -258,7 +263,6 @@ Work Agent 收到指令后必须按以下顺序执行：
 | /open-design | ✅ |
 | magicpath | ✅ |
 | /html-prototype | ✅ |
-| /figma-layer | ✅ |
 | /ux-audit | ✅ |
 
 /auto 是编排器，不是替代者。用户随时可以绕过 /auto 直接用单个 skill。

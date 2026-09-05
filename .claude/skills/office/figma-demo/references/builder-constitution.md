@@ -27,11 +27,11 @@
 
 ```
 HTML:     语义化标签，合理的 DOM 层级
-CSS:      Tailwind CDN（本地版）+ 内联 <style> 补充
+CSS:      本地样式；选择 Tailwind 时用本地版 + 内联 <style> 补充
 JS:       原生 JavaScript，仅用于交互状态切换和动效控制
-字体:     系统字体栈，不引入外部字体
-图标:     framework/assets/icons/ 或 framework/assets/ai-notes/
-CDN:      ./assets/vendor/tailwindcss.com.js（本地离线）
+字体:     实际设计规范指定且本地可用的字体，或系统字体栈
+图标:     本次已采用的本地资源，缺失时文字占位并记录
+资源:     本地离线；仅采用 Tailwind 时使用 ./assets/vendor/tailwindcss.com.js
 ```
 
 **禁止：**
@@ -44,71 +44,12 @@ CDN:      ./assets/vendor/tailwindcss.com.js（本地离线）
 
 ---
 
-## 颜色体系（硬约束）
+## 颜色、字体与间距（按实际规范核对）
 
-```
-主色:         bg-primary / text-primary          (#FF8000)
-              全 Demo ≤ 3 处，由 blueprint 的 primary_usage_plan 指定
-              不在计划内的位置 → 不使用主色
-
-主要文字:     text-n19                            (#181C25)
-次要文字:     text-n11                            (#91959E)
-中灰文字:     text-n15                            (#545861)
-占位文字:     text-n07                            (#C1C5CE)
-分割线:       border-n05                          (#DEE1E8)
-页面底色:     bg-page-bg                          (#EFF1F3)
-卡片底色:     bg-white / bg-surface               (#FFFFFF)
-
-功能色:
-  危险:       text-magenta / bg-magenta-bg         (#FF4A66)
-  警告:       text-warning / bg-warning-bg         (#FF7C19)
-  成功:       text-info-green / bg-info-green-bg   (#87CC3B)
-  信息:       text-info-blue / bg-info-blue-bg     (#189DFF)
-  链接:       text-link                            (#0C6CFF)
-```
-
-**禁止：**
-- 手写 hex 值（必须用 Tailwind alias）
-- text-red-500 / text-blue-500 等 Tailwind 默认色
-- 渐变背景（bg-gradient-to-*）
-- 紫粉蓝渐变
-- 彩虹色
-
----
-
-## 字号体系（硬约束，四级）
-
-```
-L1 区块标题:   text-15 font-medium text-n19  (15px/24px/500)
-L2 正文字段值: text-13 text-n19              (13px/18px/400)
-L3 字段标签:   text-13 text-n11              (13px/18px/400)
-L4 辅助时间戳: text-12 text-n11              (12px/18px/400)
-```
-
-**禁止：**
-- text-xs / text-sm / text-base / text-lg
-- Inter / Roboto / Arial 等指定字体
-- 正文 < 13px
-- Google Fonts
-
----
-
-## 间距体系（硬约束，七档）
-
-```
-4px   → p-1 / gap-1
-8px   → p-2 / gap-2
-12px  → p-3 / gap-3
-16px  → p-4 / gap-4
-24px  → p-6 / gap-6
-32px  → p-8 / gap-8
-40px  → p-10 / gap-10
-```
-
-**禁止：**
-- p-5 / p-7 / p-9
-- p-[22px] 等方括号自定义值
-- 任何不在七档内的间距
+先读 blueprint.meta.design_system 的来源与版本，再按 spec 的实际参数实现。
+不把 Figma 色值、字号或间距吸附到旧 token；不预设字体禁用表或主色配额。
+无外部设计规范时按已确认 spec 与一致的本地约定执行，记录来源，不能自报外部规范合规。
+状态反馈必须可辨认且不只靠颜色；正文、标签与辅助文字均须可读，焦点与操作反馈可见。
 
 ---
 
@@ -167,29 +108,12 @@ spec 中的参数 > blueprint 中的参数 > Constitution 默认值
 ### Figma 还原规则
 
 ```
-颜色：
-  Figma 标注的颜色 → 找最近的 gstack token 映射
-  如果差异 ΔE < 3 → 使用 token（人眼几乎不可辨）
-  如果差异 ΔE ≥ 3 → 在 <style> 中定义 CSS 变量，命名为 --custom-{语义}
-
-字号：
-  Figma 标注字号 → 对齐到最近的标准档（12/13/15）
-  14px → 降为 13px
-  16px → 降为 15px
-  11px → 升为 12px
-
-间距：
-  Figma 标注间距 → 对齐到最近的标准档（4/8/12/16/24/32/40）
-  取最近值，误差 ≤ 2px 可接受
-
-圆角：
-  Figma 标注圆角 → rounded(4px) / rounded-md(6px) / rounded-lg(8px)
-  全页统一使用一种圆角规格
-
+颜色、字号、间距、圆角：
+  按实际 Figma/spec 与已确认设计规范实现，不转译为旧品牌值。
+  发现两份已确认来源矛盾时返回 BLOCKED 给编排器，不静默替换。
 图标：
-  Figma 中的图标 → 先在 framework/assets/icons/ 找同类
-  找不到 → 用 [icon: 含义] 占位，注释说明
-  不手画 SVG 替代
+  使用本次已采用的本地资源；找不到时用 [icon: 含义] 占位并记录缺口。
+
 ```
 
 ### 无 Figma 时的执行规则
@@ -197,8 +121,8 @@ spec 中的参数 > blueprint 中的参数 > Constitution 默认值
 ```
 如果 spec 中没有 Figma 参考：
 1. 完全基于 spec 的文字描述执行
-2. 布局决策参照 gstack 母版的设计模式
-3. 视觉风格遵循 gstack token 体系
+2. 布局决策按已确认的语义区域与交互职责
+3. 视觉风格遵循实际设计规范；无规范时明确本地约定
 4. 所有决策在 fragment.html 的头部注释中记录：
    <!-- BUILD_DECISION: {决策内容} — 无 Figma 参考，基于 spec 推断 -->
 ```
@@ -207,7 +131,7 @@ spec 中的参数 > blueprint 中的参数 > Constitution 默认值
 
 ## 母版使用规则
 
-### 全页节点（使用母版）
+### 全页节点（仅明确采用母版时）
 
 ```
 1. 从 spec 中读取母版来源（framework/xxx.html）
@@ -235,7 +159,7 @@ spec 中的参数 > blueprint 中的参数 > Constitution 默认值
 ```
 1. 输出可被 Assembly 嵌入的节点片段，默认不包含 <html> 骨架
 2. 不写 ../../framework 这类相对路径；运行时资源由 Assembly 统一复制到 prototype_dir/assets
-3. 需要 token 时使用 gstack class / CSS variable 名称，或在片段内写最小局部 CSS；最终 tokens 由 Assembly 注入或链接
+3. 使用实际设计规范的 class / CSS variable 或最小局部 CSS；Assembly 仅合并已声明样式与必要资源，不注入旧品牌
 4. 不使用任何母版结构
 ```
 
@@ -264,8 +188,8 @@ spec 中的参数 > blueprint 中的参数 > Constitution 默认值
 ### AI 专有状态（如 spec 涉及）
 
 ```
-参照 html-prototype-tokens.md 的 AI 状态 token 实现。
-每种 AI 状态的 CSS 变量已在 token 文件中定义，直接引用。
+读取 html-prototype-tokens.md 的通用状态与可访问性合同。
+实现 spec 中全部适用 AI 状态、恢复/接管与不确定性反馈；样式来自实际设计规范。
 ```
 
 ---
@@ -343,9 +267,9 @@ interface_out:
 ```yaml
 self_check:
   pixel_match: true/false          # 与 Figma/spec 的还原度
-  color_alias_only: true/false     # 是否全部使用 Tailwind alias
-  font_standard: true/false        # 是否只用四级字号
-  spacing_standard: true/false     # 是否只用七档间距
+  colors_match_spec: true/false     # 是否符合实际颜色语义与来源
+  fonts_match_spec: true/false        # 是否符合实际字体层级与可读性
+  spacing_matches_spec: true/false     # 是否符合实际间距与密度计划
   animation_gpu_only: true/false   # 动画是否只用 transform/opacity
   animation_duration_max: true/false  # 动画时长 ≤ 400ms
   reduced_motion: true/false       # 是否处理 prefers-reduced-motion
@@ -353,7 +277,7 @@ self_check:
   no_todo: true/false              # 代码中是否没有 TODO
   no_emoji_icon: true/false        # 是否没有 emoji 充当图标
   primary_color_count: {N}         # 主色使用次数（由 Builder 计数）
-  primary_within_plan: true/false  # 主色使用位置是否在 blueprint 计划内
+  primary_matches_spec: true/false  # 主色使用位置是否在 blueprint 计划内
 ```
 
 ### blueprint_patch 格式
@@ -377,25 +301,15 @@ blueprint_patch:
 以下任一项出现在产出中 → self_check 对应项必须标 false：
 
 ```
-字体:
-  ❌ Inter / Roboto / Arial 作为主字体
-  ❌ Google Fonts 引入
-  ❌ 正文 < 13px
+字体与颜色:
+  ❌ 覆盖已确认的实际规范，或无来源声称规范合规
+  ❌ 外部字体依赖导致离线失败
+  ❌ 信息不可读，或交互/状态反馈只依赖颜色
 
-颜色:
-  ❌ 手写 hex 值
-  ❌ bg-gradient-to-* + 高饱和色
-  ❌ 纯蓝按钮（#3b82f6 / bg-blue-500）
-  ❌ text-red-500 等 Tailwind 默认色
-
-阴影:
-  ❌ 每个模块都加 shadow-lg
-  ❌ shadow-xl / shadow-2xl
-  ❌ 全页阴影 > 3 处
-
-圆角:
-  ❌ rounded-xl (12px) 及以上
-  ❌ 同页多种圆角混用
+阴影与圆角:
+  ❌ 覆盖实际规范的层级规则，或同类组件使用无依据的不一致样式
+  ❌ 无任务用途的装饰干扰信息层级
+  ✅ 有规范时逐项按来源核对；无规范时声明一致的本地规则，不设全局数值/次数门
 
 图标:
   ❌ Emoji 充当图标（✨🤖💫📊💼）
@@ -408,7 +322,7 @@ blueprint_patch:
   ❌ 视差滚动 / Ken Burns
 
 布局:
-  ❌ 表格行高 < 40px
+  ❌ 行高或密度偏离已确认的实际规范；无规范时未声明本地约定，或导致文字不可读、操作目标不可用
   ❌ 列表每行都是卡片
   ❌ 空态只有空白
 
@@ -442,12 +356,12 @@ blueprint_patch:
 
 ## 末尾硬约束
 
-1. **不问用户** — 任何不确定的细节，用 gstack 规范填充，在 BUILD_DECISION 注释中记录
+1. **不问用户** — 不影响意图的细节按实际规范填充并记录 BUILD_DECISION；来源冲突或影响意图时返回 BLOCKED 给编排器
 2. **不偏离 spec** — spec 说做什么就做什么，不多做不少做
 3. **不跨节点** — 只看当前节点的 spec，不读其他节点的代码
 4. **不超时长** — 动画 ≤ 400ms
-5. **不手写颜色** — 全部 Tailwind alias
-6. **不用非标间距** — 只用七档
+5. **颜色服从实际规范** — 保留状态语义与可读性
+6. **间距服从已确认计划** — 不强制旧品牌档位
 7. **不留 TODO** — 每个状态都必须实现
 8. **自检必须诚实** — 不通过就标 false，不伪造通过
 

@@ -99,10 +99,15 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
 5. 从 design-brief 正文定向读取以下节，不读全文：
    - `设计决策清单`
    - `体验验证结论` / 状态覆盖表
-   - `shadcn 组件映射表`
+   - §7「页面与交互位置映射」（`page_interaction_mapping`）：页面/语义位置、交互职责、D-ID、适用 STATE、来源与 AC、约束及下游目标
    - `可追踪完整矩阵`
    - （若原型 prototype-spec.md 有"开发交接补全"节）**组件 props / 响应式断点 / design token 清单 / 动效** 四维——作 `CMP-NNN` 合同的实现规格附加字段读入（见 `references/dev-handoff-dimensions.md`）
 6. **不读全文**。如需要具体条款，按需读取对应章节。
+
+语义位置用于定位已定案交互职责和约束；工程接口仍由 Phase 3 形成 IF/CMP 合同，并绑定
+真实 PRD R/AE 与 D/STATE。已确认 `page_id` / `region_id` 可随来源传递，`reference=none`
+不免除 MUST 覆盖门。历史 `component_mapping` / 旧组件映射只读提取语义追踪，不补
+variant/classes、token 或组件库资产，不改写上游历史文件。
 
 如果 PRD 不存在或没有 R-series / AE-series 编号：
 

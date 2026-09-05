@@ -60,10 +60,7 @@ skills:
 
   magicpath: {tier: report, degrade: "外部 magicpath 插件的本地占位（经 Skill 工具 dispatch 全局插件）；Codex 侧装上同名插件即恢复，未装则不可用——不是「按原样跑」"}
 
-  # ── report：能力探针门控 ──
-  figma-layer: {tier: report, degrade: "7 个 mcp__plugin_figma_figma__* 绑定；Codex 挂同一 figma MCP 即恢复"}
-
   # ── tier-3：真锁死（reason 必填，含恢复触发器）──
-  open-design: {tier: 3, reason: "OD 桌面 daemon（动态端口 sidecar）+ USER=luca 订阅会话；headless 实测不稳。云端因无桌面必断；Codex 侧未核验（假设同断，待 spike）。需求经 OD→magicpath→html-prototype 回退链覆盖（地板 html-prototype 为 tier-1）。恢复触发器：OD 出可靠 headless/云端点"}
+  open-design: {tier: 3, reason: "OD 桌面 daemon（动态端口 sidecar）+ USER=luca 订阅会话；headless 实测不稳。云端因无桌面必断；Codex 侧未核验。不可达时报告阻塞；只有用户明确改选或批准具名备用计划才使用独立工具。恢复触发器：真实 OD 桌面能力可用或可靠 headless/云端点"}
   auto: {tier: 3, reason: "多 Work-Agent 并行/串行编排 + 聚合，自身即重编排器。恢复触发器：Codex 暴露 Workflow 等价 + 子 dispatch 成熟"}
   muse-loop-orchestrate: {tier: 3, reason: "自驱状态机 + 内部 dispatch 多 sub-skill + 两个不可省略人类卡点 + route-guard HEAVY 登记；且依赖 OD daemon。恢复触发器：同 auto"}

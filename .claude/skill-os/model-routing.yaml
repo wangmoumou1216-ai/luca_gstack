@@ -66,7 +66,7 @@ tiers:
   mechanical:
     resolves_to: haiku
     description: 机械执行、格式检查、打分、检索
-    skills: [evals, careful, retro, figma-layer]
+    skills: [evals, careful, retro]
 
 # ─── Fable 使用白名单（2026-07-10，dispatch 传 model: fable 的唯一合法依据）───
 # 评估维度：单次 token 量级 × 判断杠杆 × 错判代价。全部是"小上下文、高杠杆"点位。
@@ -125,7 +125,7 @@ codex:
   principle: |
     档位的不变量是**相对序**（判定 > 承重执行 > 轻执行 > 机械），不是某个具体模型。
     Claude 侧这个序落在模型别名上（fable>opus>sonnet>haiku）；
-    Codex 侧落在 reasoning effort 上（xhigh>high>medium>minimal）。
+    Codex 侧落在 reasoning effort 上（xhigh>high>medium>low；max 保留为未映射余量）。
     序保住了，档位语义就保住了——这与"档位名是别名、档内升级自动跟随零维护"同一条原则。
   why_not_model_names: |
     **Codex 模型名不得作为档位落点**——它随账户/订阅状态失效，而 effort 枚举不会。

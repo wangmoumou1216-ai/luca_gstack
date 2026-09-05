@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "phase": "projected",
+  "legacy_roots_required": false,
+  "note": "P5 final cutover: independent K1-K10 roots, one-hop manifest, generated discovery and Static Fallback projections; legacy appendix is outside runtime context."
+}

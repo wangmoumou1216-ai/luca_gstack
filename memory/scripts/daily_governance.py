@@ -207,8 +207,8 @@ def check_model_routing():
                 elif stem not in no_pin:
                     issues.append(f"model-routing: 新场景待评估档位——agents/{af.name} 无 model pin 且未在 agents_no_pin 登记（按 new_scenario_protocol 三问定档）")
 
-        # markdown 速查快照与真值源同步（CLAUDE.md / orchestrator.md 双写点）
-        for md_rel in ("CLAUDE.md", ".claude/agents/orchestrator.md"):
+        # 模型档速查只在 orchestrator 保留；两个 root adapter 仅保留 model-routing.yaml 指针。
+        for md_rel in (".claude/agents/orchestrator.md",):
             md_path = ROOT / md_rel
             if not md_path.is_file():
                 continue
@@ -784,10 +784,7 @@ def check_benchmark_drift(registry_path, marker_path, today, fetch_latest=None):
 
 
 LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
-CLAUDE_MD_SOFT_BUDGET = 43562  # CLAUDE.md 软预算早警阈值 = 落点 42,026 + 1.5KiB（claude5-unhobble
-                               # Phase 5 棘轮；B1 硬门 = 落点 + 3KiB = 45,098，verify.sh:136 单源）。
-                               # 软硬之间留 1.5KiB 告警带、落点之上留 1.5KiB 静默带（R5-①M3：
-                               # 软≡落点会 +1 字节永鸣；2026-07-20 贴剩 2 字节教训沿革保留）
+ROOT_ADAPTER_SOFT_BUDGET = 24576  # 24 KiB early warning; hard 30 KiB is enforced by agent-context checks.
 LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
 DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
 
@@ -835,19 +832,20 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         _verdict, _msg = memory_anomaly_verdict(auth, resolved_root, os.environ)
         (anomalies if _verdict == "ANOMALY" else notes).append(_msg)
 
-        # 4. CLAUDE.md 预算早警：贴 B1 硬门（45,098B，verify.sh 单源）前先软警。
-        # 硬门撞墙式；软目标提前告警，creep 早发现别贴到墙。fail-open，任何异常吞掉。
+        # 4. 两个独立 root adapter 的预算早警；30 KiB 硬门由 check-agent-context 守。
         try:
-            claude_md = auth / "CLAUDE.md"
-            if claude_md.is_file():
-                sz = claude_md.stat().st_size
-                if sz > CLAUDE_MD_SOFT_BUDGET:
+            for root_name in ("CLAUDE.md", "AGENTS.md"):
+                root_md = auth / root_name
+                if not root_md.is_file():
+                    continue
+                sz = root_md.stat().st_size
+                if sz > ROOT_ADAPTER_SOFT_BUDGET:
                     anomalies.append(
-                        f"CLAUDE.md {sz/1024:.1f}KB 超软目标 {CLAUDE_MD_SOFT_BUDGET/1024:.1f}KB、逼近 44.0KiB 硬门（B1）"
-                        "——每-session 注入面接近预算墙，把参考细节 offload 到 claude-md-appendix.md（lazy-load）腾 headroom"
+                        f"{root_name} {sz/1024:.1f}KB 超软目标 {ROOT_ADAPTER_SOFT_BUDGET/1024:.1f}KB、逼近 30.0KiB 硬门"
+                        "——把条件细节迁到 manifest 登记的一跳 owner，保留 K1-K10 kernel"
                     )
                 else:
-                    notes.append(f"CLAUDE.md 预算 OK：{sz/1024:.1f}KB（软 {CLAUDE_MD_SOFT_BUDGET/1024:.1f}KB / 硬 44.0KiB）")
+                    notes.append(f"{root_name} 预算 OK：{sz/1024:.1f}KB（软 {ROOT_ADAPTER_SOFT_BUDGET/1024:.1f}KB / 硬 30.0KiB）")
         except Exception:  # noqa: BLE001
             pass
 

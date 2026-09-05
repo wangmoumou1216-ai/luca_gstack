@@ -1,0 +1,20 @@
+{
+  "candidate": "SC-20260905-001",
+  "approved": {
+    "set_stable": [
+      "SC-20260905-001"
+    ],
+    "reviewer_filled": [],
+    "already_stable": [],
+    "not_found": []
+  },
+  "promoted": [
+    "SC-20260905-001"
+  ],
+  "archived": [
+    "SF-002"
+  ],
+  "external_writes": false,
+  "scope": "only checkout; two external semantic files read by existing ID allocator",
+  "backup": "/private/tmp/br-page-sf002-before-20260905"
+}

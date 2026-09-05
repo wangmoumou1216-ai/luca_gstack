@@ -1,22 +1,5 @@
 version: 1
 facts:
-  - id: SF-001
-    domain: crm
-    fact: "纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25"
-    confidence: high
-    stable: true
-    added: 2026-05-16
-    source: brand-tokens.md
-    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
-
-  - id: SF-002
-    domain: fxui
-    fact: "HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改"
-    confidence: high
-    stable: true
-    added: 2026-05-16
-    source: CLAUDE.md
-
   - id: SF-003
     domain: workflow
     fact: "Skill-first, Graph-optional 架构：每个 skill 默认 standalone 可用，Workflow 仅在用户主动选择流程时启用"
@@ -283,28 +266,6 @@ facts:
     reviewer: "luca"
     scope: "open-design / 任何模板化 HTML 产出"
     tags: ["open-design", "template", "headless", "html"]
-  - id: SC-20260609-003
-    domain: skill-rule
-    fact: "跨多 skill 的 HTML/UI 规范必须分两层：① 视觉层（颜色/字号/间距/品牌）走中心继承——brand-tokens.md + framework/tokens.css + office/SKILL.md 品牌与技术约束节——禁止逐 skill 复制（会漂移，违反 DRY），不得新建专门\"规范 skill\"；② 内容结构层（每个报告/产出的章节骨架与占位变量）天生 per-skill，各 skill 自带 references/ 或 templates/ 子目录存放模板文件（格式按产出类型：md 模板或 html 模板均可），先例：figma-demo/templates/demo-template.html（HTML）、deepresearch/references/report-template.md（md）。通用 skill 无法预知每个报告的内容结构，专门规范 skill 属错误耦合。"
-    confidence: high
-    stable: true
-    added: 2026-06-21
-    source: observation
-    evidence: "2026-06-09 session 3-Explore 调研: 仅4个skill产HTML;视觉规范已在 office/SKILL.md §294 集中继承;figma-demo 已有内置模板先例"
-    reviewer: "luca"
-    scope: "luca_gstack skill-os / 任何跨 skill 横切规范选型"
-    tags: ["skill-os", "ui-spec", "template", "architecture", "DRY"]
-  - id: SC-20260610-001
-    domain: skill-rule
-    fact: "figma-layer 路由边界：该 skill 仅适用于「已有 HTML 原型（来源：html-prototype / figma-demo / open-design）一比一还原到 Figma」；用户要求独立设计直接写入 Figma（无上游 index.html）时不走 figma-layer，改走 figma-generate-design / figma-use。routing-map 含裸词「Figma」触发器，存在结构性误命中风险；执行前必须 pre-flight 核查 docs/prototype/*/index.html 是否存在，不存在则拒绝路由并提示用户先出原型或改用独立设计 skill。"
-    confidence: high
-    stable: true
-    added: 2026-06-21
-    source: observation
-    evidence: "2026-06-10 session：用户给 Figma URL 要求模型独立设计客户列表，route-guard 两次命中 figma-layer；读 SKILL.md 确认职责不符（保险层=1:1还原非独立设计），用户明确确认不用 figma-layer"
-    reviewer: "luca"
-    scope: "figma-layer / route-guard figma 类路由"
-    tags: ["figma-layer", "figma-use", "routing"]
   - id: SC-20260612-001
     domain: skill-rule
     fact: "skill-os 文档拆分判据：外移收益取决于模板使用时机——「执行到 Phase N 才加载」的外移有真实跳过收益（brainstorm/ux-brainstorm/design-brief Phase-gated 模板均属此类）；「读完主文件立刻全用」的外移是零收益改加载顺序+多一次工具调用（plan-agent 出计划模板即此类，已在 2026-06-11 拆分审计中确认暂缓）。提任何文件拆分候选前先核使用时机。"
@@ -944,3 +905,50 @@ facts:
     evidence: "2026-08-30 mattpocock six-skills flow review FC-MAINCHAIN-COMPILE-BARRIER-007：selected preset 先编译代码 U-ID 而 task-plan 后生成，导致旧授权越权、placeholder 扩权或流程死路；源计划同上"
     reviewer: "luca"
     scope: "Plan Agent 编排先产规格/任务图、后进入代码实现的多阶段 workflow"
+  - id: SC-20260905-001
+    domain: fxui
+    fact: "framework/ 为只读参考资产；HTML 原型不再强制基于本地母版，视觉与组件约束来自当前已确认项目或用户在外部工具配置的设计系统。"
+    confidence: high
+    stable: true
+    added: 2026-09-05
+    source: "user-approved BR-PAGE plan S1/S2/S9 and U-008, session 01a06adf continuation 2026-09-05"
+    evidence: "framework-audit/2026-09-05-page-library-design-flow-branch-plan.md §5/S9 and SF-002治理路径; b4_inventory independent text review PASS 2026-09-05"
+    reviewer: "luca-approved U-008; independent b4_inventory text review"
+    supersedes: "SF-002"
+    scope: "framework/meta; HTML prototype source and readonly assets; no external write authority"
+  - id: SC-20260905-002
+    domain: skill-rule
+    fact: "跨多 skill 的 HTML/UI 规范仍分两层：视觉层继承当前已确认项目或用户在外部工具配置的设计系统，并记录实际规范来源；不再把已退役的 brand-tokens.md、旧框架 token 或 office 品牌段当作强制权威。共享的视觉约束避免逐 skill 复制，以免漂移；不得仅为重复规范新建专门规范 skill。内容结构层的章节骨架和占位变量仍由各 skill 的 references/ 或 templates/ 维护，保留既有 Markdown/HTML 模板用途与通用 DRY 原则。"
+    confidence: high
+    stable: true
+    added: 2026-09-05
+    source: "user-approved BR-PAGE R5 review repair 2026-09-05"
+    evidence: "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。"
+    reviewer: "luca (R5 repair authorization; independent content review before promotion)"
+    supersedes: "SC-20260609-003"
+    scope: "luca_gstack skill-os / 跨 skill HTML/UI 规范选型与内容模板；当前设计系统优先"
+    tags: ["skill-os", "ui-spec", "HTML", "规范", "template", "architecture", "DRY", "brand-tokens"]
+  - id: SC-20260905-003
+    domain: skill-rule
+    fact: "figma-layer 已从 luca_gstack 的 skill、命令、Codex alias 与活动路由退役；已有 HTML 原型也不再路由到它，不执行其原型文件 preflight。现有原型保留独立 HTML、figma-demo、MagicPath 与 muse-proto-gen 的已授权用法；用户明确要求独立 Figma 设计时，按当前可用的官方 Figma skill 与工具合同执行，先核对真实用户意图及目标权限，不把关键词 Figma 或 HTML 原型存在当作工具切换或外部写入授权。"
+    confidence: high
+    stable: true
+    added: 2026-09-05
+    source: "user-approved BR-PAGE R5 review repair 2026-09-05"
+    evidence: "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。"
+    reviewer: "luca (R5 repair authorization; independent content review before promotion)"
+    supersedes: "SC-20260610-001"
+    scope: "luca_gstack figma-layer 退役后的 HTML/Figma 路由与输出边界"
+    tags: ["figma-layer", "Figma", "HTML", "routing", "retirement", "figma-use"]
+  - id: SC-20260905-004
+    domain: crm
+    fact: "CRM/FxUI 的旧品牌色与 framework 页面硬编码差异是历史观察，原始数值及证据完整保留在 memory/semantic/archive/superseded-facts-2026.yaml 的 SF-001，不作为当前 UI 约束。brand-tokens.md 已退役，不再是设计规范权威；保留的 framework 只读页面也不授予品牌或 token 继承。当前 CRM 页面与其他项目一样，视觉和组件规范来自已确认项目或用户在外部工具配置的设计系统，并按实际规范与通用可访问性要求验证。"
+    confidence: high
+    stable: true
+    added: 2026-09-05
+    source: "user-approved BR-PAGE R5 same-root retirement completion 2026-09-05"
+    evidence: "R5 final Spec actual brand-tokens search returned SF-001 authority clause; user explicitly requested all review issues resolved before main session commit."
+    reviewer: "luca (R5 all-fixes authorization; independent content review before promotion)"
+    supersedes: "SF-001"
+    scope: "CRM/FxUI 历史品牌资料检索与当前设计规范来源；历史值仅供追溯"
+    tags: ["crm", "FxUI", "品牌", "brand-tokens", "历史", "design-system"]

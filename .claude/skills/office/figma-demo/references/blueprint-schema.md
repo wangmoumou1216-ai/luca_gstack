@@ -25,22 +25,17 @@ meta:
   input_source: ""                   # [必填] "口述+Figma截图N张" / "口述+Figma链接" / "仅口述"
   presentation_target: ""            # [可选] "内部汇报" / "客户演示" / "领导评审" 等
 
-  # 全局设计参数（从 gstack token 体系继承 + Figma 解析补充）
+  # 全局设计参数：实际来源或明确本地约定，不注入旧品牌
   design_system:
-    color_primary: "#FF8000"         # [固定] 不可修改
-    primary_usage_plan:              # [必填] 主色使用位置，≤ 3 项
-      - ""                           # 格式："节点N: 具体位置 → 用法（bg-primary / text-primary）"
-      - ""
-      - ""                           # 无第 3 处写 "无"
-    color_tokens: "gstack-standard"  # [固定] 使用 gstack 标准 token
-    custom_colors: []                # [可选] Figma 中无法映射到 token 的颜色
-                                     # 格式：[{name: "--custom-xxx", hex: "#NNNNNN", usage: "说明"}]
-    typography: "L1:text-15/500 | L2:text-13/400 | L3:text-13/n11 | L4:text-12/n11"
-                                     # [固定] gstack 四级字号
-    spacing: "4/8/12/16/24/32/40px"  # [固定] gstack 七档间距
-    border_radius: ""                # [必填] 统一圆角规格："rounded-md(6px)" 或 "rounded-lg(8px)"
-    shadow_usage: []                 # [可选] 阴影使用位置，≤ 3 项
-                                     # 格式：["弹窗: shadow-lg", "下拉菜单: shadow-md"]
+    source: ""                       # [必填] 用户规范/Figma/spec 来源及版本；无外部规范时写明本地约定
+    color_primary: ""                # [条件] 实际主色；不预设固定值
+    primary_usage_plan: []           # [必填] 实际用途/位置，无固定次数配额
+    color_tokens: ""                 # [可选] 实际规范变量来源；无 token 时可留空
+    custom_colors: []                # [可选] 本次实际颜色与语义用途
+    typography: ""                   # [必填] 实际字体、字号、行高与层级
+    spacing: ""                      # [必填] 实际间距与密度计划
+    border_radius: ""                # [必填] 实际圆角规则
+    shadow_usage: []                 # [可选] 阴影用途与位置
     animation_baseline:              # [必填] 动效基准值
       fast: "150ms"                  # hover/active 反馈
       standard: "200ms"              # 状态切换
@@ -73,7 +68,7 @@ nodes:
     figma_frame: ""                  # [可选] 对应的 Figma Frame 名或编号，多个用逗号分隔
     figma_has_screenshot: false      # [必填] 是否有 Figma 截图可参考
     description: ""                  # [必填] 一句话描述该节点的功能
-    template: ""                     # [必填] "framework/xxx.html" / "none"（弹窗/独立组件）
+    template: ""                     # [必填] "framework/xxx.html" / "none"（未明确采用母版，包括独立整页）
     replace_module: ""               # [条件] 使用母版时必填："mod-main-canvas" 等
     
     # 子任务（仅 L 级节点必填）

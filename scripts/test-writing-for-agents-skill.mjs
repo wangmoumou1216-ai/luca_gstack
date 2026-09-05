@@ -19,6 +19,7 @@ const vetting = read('.claude/skill-os/external-skills/vetting-registry.yaml');
 const integrationMap = read('.claude/skill-os/external-skills/INTEGRATION-MAP.md');
 const claude = read('CLAUDE.md');
 const agents = read('AGENTS.md');
+const catalog = read('.claude/skill-os/generated/skill-catalog.md');
 const wizard = read('.claude/skills/office/references/office-wizard.md');
 
 assert.match(skill, /^name: writing-for-agents$/m);
@@ -65,8 +66,11 @@ assert.match(codexViability, /writing-for-agents: \{tier: 1\}/);
 assert.match(pins, /name: writing-for-agents[\s\S]*?path: skills\/productivity\/writing-for-agents[\s\S]*?pinned_sha: 321658273cb1d20b76026717d027d505790106d4/);
 assert.match(vetting, /name: writing-for-agents[\s\S]*?verdict: ADOPTED-AS-THIN-ENTRY/);
 assert.match(integrationMap, /\| 11 \| writing-for-agents \|/);
-assert.match(claude, /`\/writing-for-agents`/);
-assert.match(agents, /`\/writing-for-agents`/);
+assert.match(catalog, /\| `writing-for-agents` \|[\s\S]*?office\/writing-for-agents\/SKILL\.md/);
+assert.match(claude, /generated\/skill-catalog\.md/);
+assert.match(claude, /native slash-command/);
+assert.match(agents, /generated\/skill-catalog\.md/);
+assert.match(agents, /\$<skill-name>/);
 assert.match(wizard, /\/writing-for-agents/);
 
 for (const alias of ['.claude/skills/writing-for-agents', '.agents/skills/writing-for-agents']) {

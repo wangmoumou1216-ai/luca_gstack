@@ -1,0 +1,756 @@
+{
+  "status": "DONE",
+  "scope": "R5 fixes and same-root SF-001 completion; mainline release acceptance is separate",
+  "head": "94f086233affb3bd08ad8fe33063bcfedb330edf",
+  "r5_review_scope": {
+    "root": "/Users/luca/Desktop/项目/muse/lucagstack",
+    "baseline": "/private/tmp/br-page-r5-before-jxfd26ba",
+    "files": {
+      "scripts/page-context.mjs": {
+        "before_sha256": "5ffb01391abd069848fb57ea416481cc96b3b3d55fa9fc38afbd44f2baede81b",
+        "sha256": "ccb515cebb9f3ebd68a28eabaf0fc1e35b87d48e241b0c973240a4b0cca0b23e"
+      },
+      "scripts/test-design-flow-handoff.mjs": {
+        "before_sha256": "3620171cb416ebacfceadd2e82dd082bfce649c979df80dd50d38ce7c909d079",
+        "sha256": "8f6f2f04eb314d15fe757aa04be7aa330ef5e1df09de574a667e7ccad2c12c44"
+      },
+      "scripts/test-design-context-retirement.py": {
+        "before_sha256": null,
+        "sha256": "2ba6dcb5fe1b2bb931b3e686c680a7a00a6853eb4a675e1824fe269fb5a1dbb1"
+      },
+      "package.json": {
+        "before_sha256": "c988cbebe522fd1eb08d3a8fe04767b642e2e932712308d92c0b804144fe3103",
+        "sha256": "d7cf517f9c569f58e67737feda05437f280bb4019b8273e434cf4379315d4e0d"
+      },
+      "scripts/verify.sh": {
+        "before_sha256": "15ecdd9ebe7780391f0cc2e14e4c3a814314c646cd62b4827b2ac820cd05dfda",
+        "sha256": "e3fba3e59e3ee5c06f63c459b44efbc6e31bf8a3398151a01e3f5e21171f1757"
+      },
+      ".github/workflows/ci.yml": {
+        "before_sha256": "43ef7db2c4676d485b0e2e0fd40f5ab8715c79de3ef0b749af71720a42c538dd",
+        "sha256": "0c77f42d98dd280bc9af53ffdbbe734a05a27e190a211a69a728674ffb326a41"
+      },
+      ".claude/observability/rules.yaml": {
+        "before_sha256": "dc3e4b2523a144a9467c5c77b9729d281acaa208c33270ac596c2a0a273fe6e1",
+        "sha256": "4eecab8d9ccbdd4bb28924d327a36be0c2850cc8f00215893ecd168ab1f69e21"
+      },
+      ".claude/observability/observations.jsonl": {
+        "before_sha256": "cfb38c275f566beb1f4376dd857aff02fdef06a5b8facfd9a83bc9dd06c6b2f0",
+        "sha256": "d66e8f56bacf1cb73c702d20035679aa5eeae8f089ad6ce4728bd4d3e2f67f4d"
+      },
+      "memory/semantic/promoted-facts.yaml": {
+        "before_sha256": "375e10c52bb2454fcb7d52dd981cbb3b077f9194715b50283b31d91f06002bd3",
+        "sha256": "7df68de45a622c69ebda9c6df2ae9e5f8b2027537723a0e03e221fb7680b6aac"
+      },
+      "memory/semantic/archive/superseded-facts-2026.yaml": {
+        "before_sha256": "ddc4e8a98d97c001a078e33daa36a1f8857ba452de606a22d786dfcb058c0523",
+        "sha256": "f66f836ac20b25056dacf54996e468355fa1e2ec736600ed6d0ef924a8ae335f"
+      },
+      "memory/semantic/candidates.jsonl": {
+        "before_sha256": "f7f02c554491fa71497f80ab5e3b7d2485c0c2560ff7ad2284a9f56a52a3a88e",
+        "sha256": "b1bbdf84edf6ade27f3b085c24a986f4d73185ea5908d924b090391ebc850d35"
+      },
+      "memory/semantic/reviews.jsonl": {
+        "before_sha256": "2882dc4220110ad43fea6aa9568c53bf1c1a5f6d4c5df3128f305fc51285d767",
+        "sha256": "dc63a2574d6c6ce3d4e7f2fa0c74bd8561a16d5c098073b252b89fcefa18af0f"
+      }
+    }
+  },
+  "checkout_review_manifest": {
+    ".agents/skills/figma-layer": {
+      "deleted": true
+    },
+    ".agents/skills/magicpath/SKILL.md": {
+      "sha256": "c3f050ce2045b23c573bf78af2dcff4962d688707d7051717e1045187cf37271"
+    },
+    ".claude/agents/orchestrator.md": {
+      "sha256": "a5873fcc846990ddfd8b92dd2be9d90d504eaf56ddc498fa2fbbdc7e8e791835"
+    },
+    ".claude/agents/plan-agent.md": {
+      "sha256": "1bf30e2e05add3db41687399cfe63609419250c99383369e5dc7b5a1496823b3"
+    },
+    ".claude/agents/preflight-agent.md": {
+      "sha256": "dc756139173f248678b8f022b1f742bceafc1c9b343fb3d1fcc81997273554fa"
+    },
+    ".claude/agents/quality-gate.md": {
+      "sha256": "28b27008b5ac114c5f1ab4c66237857de048449374a6bf37b90fce62d30d9144"
+    },
+    ".claude/commands/figma-layer.md": {
+      "deleted": true
+    },
+    ".claude/hooks/route-guard.mjs": {
+      "sha256": "352deb05f6ce8d0e0f37dacbb8f92551e4edd844785bdf2dadeaa8c522368db8"
+    },
+    ".claude/hooks/session-restore.mjs": {
+      "sha256": "e3d599a4e0b2873b4dc5785d718c73bec40b7db1627e0915dadd9f9196714626"
+    },
+    ".claude/observability/observations.jsonl": {
+      "sha256": "d66e8f56bacf1cb73c702d20035679aa5eeae8f089ad6ce4728bd4d3e2f67f4d"
+    },
+    ".claude/observability/rules.yaml": {
+      "sha256": "4eecab8d9ccbdd4bb28924d327a36be0c2850cc8f00215893ecd168ab1f69e21"
+    },
+    ".claude/skill-os/agent-context-manifest.json": {
+      "sha256": "8c5e251bb66f96e1cda2d34825710d248c58efb71620c544a5e802c399fd4ee2"
+    },
+    ".claude/skill-os/agent-context-state.json": {
+      "sha256": "017ab908f800f27ac5a6b3178042d24c712da73984155e33c3482ff4c3916df9"
+    },
+    ".claude/skill-os/agent-root-kernel.json": {
+      "sha256": "1c83723a643399829d4aede7c94c9e393f6510a74bdafbbccd556cbb6c5be956"
+    },
+    ".claude/skill-os/capability-parity.json": {
+      "sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f"
+    },
+    ".claude/skill-os/codex-viability.yaml": {
+      "sha256": "d3b1259355636ac277d1e46469180733a6320ba73616c54b8b29061d638e37ac"
+    },
+    ".claude/skill-os/crm-profile.md": {
+      "sha256": "e1de0646acae17b8b2dc06d9f29a1cb6482c129fec6c8ce36c34d66c43b25251"
+    },
+    ".claude/skill-os/evolution/FUSION-RUNBOOK.md": {
+      "sha256": "10b60b1f1f2596b373384eef0e218e301a6b2d9b97b0fe764ae1406f415fe484"
+    },
+    ".claude/skill-os/evolution/self-model.generated.yaml": {
+      "sha256": "a86512df68d97f27b5e8bc864411c4b1945b84fb0724e5a1d46369a5137572d6"
+    },
+    ".claude/skill-os/evolution/self-model.yaml": {
+      "sha256": "ffbc028e077e6835445e3c14b55c8f3e1bbcf6373bca1c478a6886c772f19dae"
+    },
+    ".claude/skill-os/generated/skill-catalog.md": {
+      "sha256": "5ff782f39baf96078d0c90cfc0484400a10e0da57d4a5497d9552b348ea0613f"
+    },
+    ".claude/skill-os/generated/static-fallback.md": {
+      "sha256": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3"
+    },
+    ".claude/skill-os/input-modes.yaml": {
+      "sha256": "95f5ab9f60b4cf0298911a019dc3e92b0cf501db3afaf906ac89a5fba85b1492"
+    },
+    ".claude/skill-os/model-routing.yaml": {
+      "sha256": "51e76221f642a74c44bf35fc0b3caf1af900ce1d595936d08e2cb545ca34dc4f"
+    },
+    ".claude/skill-os/optional-workflow-graph.yaml": {
+      "sha256": "606bae9b57f00eaaffcb898af8420c40479fa858188b52c9805e1ae6aecd146b"
+    },
+    ".claude/skill-os/page-library/catalog.json": {
+      "sha256": "91d8304b067c775263643645177b5da5fd3c016be69aae93c1f86b76c7d5cce7"
+    },
+    ".claude/skill-os/page-library/schema.json": {
+      "sha256": "aec7c02cdc697c2d25ee72ad14ba098154bd1f61628738aaa6cab5718b9de829"
+    },
+    ".claude/skill-os/routing-chain-check.md": {
+      "sha256": "513e31efb5afaadd2b99d75d803ec6c037dd20f07847f1e7fde4cf9859eb4dd1"
+    },
+    ".claude/skill-os/runtime/cross-harness.md": {
+      "sha256": "78fdc7bcc2f9c1d72fd4df5bf2c30c3cd42e4c3c7bf652e76e9806c4196b3f1e"
+    },
+    ".claude/skill-os/runtime/framework-maintenance.md": {
+      "sha256": "80541e66b9220f9eb59161263f0b243a31acc81aa80b393739ade57c1b945004"
+    },
+    ".claude/skill-os/runtime/harness-boundary.md": {
+      "sha256": "bfe8351b6aca388f18ec6f72ee0d61c757c76498f76560bada8ac0fa81459f1c"
+    },
+    ".claude/skill-os/runtime/long-session.md": {
+      "sha256": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117"
+    },
+    ".claude/skill-os/runtime/luca-app.md": {
+      "sha256": "3efcc7bd232070b4a5bb67aa3115e04769bfc3f293f9c13f7c0eb89a4b621bab"
+    },
+    ".claude/skill-os/runtime/page-context.md": {
+      "sha256": "8a2655c85796d7ee61624ac5341e546b5d0e0b9058013d8f9f0e5e6702baacfb"
+    },
+    ".claude/skill-os/runtime/project-session.md": {
+      "sha256": "9d2724eba9edfa30000f550d5c5323dc75df9950b2b5e36af1dc4c6f857cd3a6"
+    },
+    ".claude/skill-os/skill-routing-map.yaml": {
+      "sha256": "bc588e46235b1d536cd0b9194a2f8ca89650cfd5bae3ce35225aa78b1d8cc0e2"
+    },
+    ".claude/skill-os/skill-visibility.json": {
+      "sha256": "563b72030df9cc9201a49fb2c9839706c2a5d89b7d040e5575f8d7b486789104"
+    },
+    ".claude/skills/office/SKILL.md": {
+      "sha256": "855e5f9506d450b128f811fe5e6fbfbef65ceddd0067a9297d84a9cd374b5f52"
+    },
+    ".claude/skills/office/auto/SKILL.md": {
+      "sha256": "c82fdd257ef292af0b80523572f219d30f3ffb611274d7c20a06ca86314e0314"
+    },
+    ".claude/skills/office/design-brief/README.md": {
+      "sha256": "6e9fff05cb3734efc2ffbee202303d8eefc010cf02a972ec276e469318644131"
+    },
+    ".claude/skills/office/design-brief/SCHEMA.md": {
+      "sha256": "7b35d5c25054d329a64468f038171be149730b112759ccc187dcfdfacfa426b8"
+    },
+    ".claude/skills/office/design-brief/SKILL.md": {
+      "sha256": "3a5b35ccc91251b5d679531dc205b8bb23a8d5a71b2bbc429d97458cb7061e96"
+    },
+    ".claude/skills/office/design-brief/references/output-templates.md": {
+      "sha256": "5470f7fe919fc29bc61f204260d0e8b8b3a531755c809fbcf4fde18cd352810f"
+    },
+    ".claude/skills/office/evals/SKILL.md": {
+      "sha256": "4b589310f9ad5bd47a068aab7d32a3d92911736ac452d7e9e2400ad4708aa53b"
+    },
+    ".claude/skills/office/figma-demo/SCHEMA.md": {
+      "sha256": "3ee0853bc8f0c1cca1b86fe702db6db2b538d430a8ed1b9609bda9c7f67e9807"
+    },
+    ".claude/skills/office/figma-demo/SKILL.md": {
+      "sha256": "7d70d49688ce7888769540cbfeb6f6c57e0883bce561c827e74722704bba161b"
+    },
+    ".claude/skills/office/figma-demo/references/blueprint-schema.md": {
+      "sha256": "b087837d0bf0a8ae80186e2300dcb1fd1402a0c6bc357bcf655d80dccb5f0c3c"
+    },
+    ".claude/skills/office/figma-demo/references/builder-constitution.md": {
+      "sha256": "643343160491d3b0efb9c62f5916963030c4408c03f90134e168bf31d080166c"
+    },
+    ".claude/skills/office/figma-demo/references/semantic-dictionary.md": {
+      "sha256": "c41c214e904b55c5060fc637420cc85be588ff97b78314074aee43c5b6b13804"
+    },
+    ".claude/skills/office/figma-demo/specialists/assembly-agent.md": {
+      "sha256": "7f29f620737f4357414b950e6e6b3389e75683cc0c6e892f3472f81008d2a4e1"
+    },
+    ".claude/skills/office/figma-demo/specialists/builder-agent.md": {
+      "sha256": "27120ca90f3d598fa5f06c0a862f1a49302b45f625af631156a50d3be45387b1"
+    },
+    ".claude/skills/office/figma-demo/templates/demo-template.html": {
+      "sha256": "405b7b2ececee217801c5f7c4676273baf0a3aac58674001130aeee5f55d031f"
+    },
+    ".claude/skills/office/figma-layer/SCHEMA.md": {
+      "deleted": true
+    },
+    ".claude/skills/office/figma-layer/SKILL.md": {
+      "deleted": true
+    },
+    ".claude/skills/office/html-prototype/SCHEMA.md": {
+      "sha256": "b22d539ea3fc9748d3789c05fa3bf7b4fa01042d45ca5f64974039bd52448abd"
+    },
+    ".claude/skills/office/html-prototype/SKILL.md": {
+      "sha256": "9a61002faa85712aa171115f01a76a625c4cd6f7f218950436ce29ed806772b7"
+    },
+    ".claude/skills/office/html-prototype/references/current-aesthetic-rubric.md": {
+      "sha256": "c4520caf330f23926ed6ec585666f5d156bc53a35455c9a0499b93be7c9f83ad"
+    },
+    ".claude/skills/office/html-prototype/references/dynamic-reference-protocol.md": {
+      "sha256": "3509692ea42a172f98de454a00dec0ba4b7f76aa58e7faf9cb8a2b14145d74a3"
+    },
+    ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs": {
+      "sha256": "99dd2a1427ae25c4dcbd5f041d8a8a4bafa108a613c38a985f9c2e51079ff009"
+    },
+    ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs": {
+      "sha256": "c7a4d290cd5827217b3762834f310f98f6aa1bfd5190096e1f4bd835ecf9897c"
+    },
+    ".claude/skills/office/magicpath/SKILL.md": {
+      "sha256": "91f6fcb0ab0a2a429c5de6c142dbe4c0156fe3f2bb7eef3602f3c4b4ccc9a56b"
+    },
+    ".claude/skills/office/muse-loop-orchestrate/SKILL.md": {
+      "sha256": "dc5fb0c9e20ba88c6a4d466fdba5f4675011cc76e7917685e1562550a8208567"
+    },
+    ".claude/skills/office/muse-proto-gen/SKILL.md": {
+      "sha256": "73ee65e25246e96af85865aea6c1a2eb642bbd840ac1c916213c283427d1d912"
+    },
+    ".claude/skills/office/open-design/SKILL.md": {
+      "sha256": "b4ec78a394f9c955066d850b5542bf6944072fcb53e1bd3b0afc8bf8f38372bd"
+    },
+    ".claude/skills/office/redteam/SKILL.md": {
+      "sha256": "4d1fa7302acfbd60692d7ca5f776308f5a6f3ba291a1a423bba78f926edf15fc"
+    },
+    ".claude/skills/office/references/ai-native-state-coverage.md": {
+      "sha256": "455301315a1444490080f825490f0bacd301c42fcdf8dbc55f15b2e4dd716f54"
+    },
+    ".claude/skills/office/references/ai-native-taste-anchors.md": {
+      "sha256": "32437e731794b028108e49ff66cf93a9386558639a25cbbdaf573b2c5c13514d"
+    },
+    ".claude/skills/office/references/design-system-contract.md": {
+      "sha256": "d9d0315229303f3a03da852c289157f4fc7468171c8f67127dcc6664c9d9a005"
+    },
+    ".claude/skills/office/references/dev-handoff-dimensions.md": {
+      "sha256": "8b964e5520a24eb35f1d5edf66e4c2e85ff96b6bcba370b20bbe7db928c34daa"
+    },
+    ".claude/skills/office/references/html-prototype-tokens.md": {
+      "sha256": "ff6ee1dce2ec57a9f4fc7bc07ab13b8f58d0b46fc31350d398d9e67c91ae4160"
+    },
+    ".claude/skills/office/references/interaction-mechanics.md": {
+      "sha256": "0016fcb389d53a677e45b7dfd64783d2995714ab40e44514302f79f8dffee7a7"
+    },
+    ".claude/skills/office/references/office-wizard.md": {
+      "sha256": "0fc179f94ba580a001769326b6ef3cc62cf8e8bf9bf98487370fd602349f0fe9"
+    },
+    ".claude/skills/office/references/ux-evaluation-framework.md": {
+      "sha256": "314428fdc7ede54c03c5edcf068cdb9ec0e1e309c8fb050379064eeaaccbe6d3"
+    },
+    ".claude/skills/office/task-plan/SKILL.md": {
+      "sha256": "a9543304332d75a35c70261b4c469cbf18d3128e7aa5b32a0c97e054583447e3"
+    },
+    ".claude/skills/office/tech-spec/SKILL.md": {
+      "sha256": "a39ae318bbbe9fbd318d71935db357a03a8439c0410ce052cae0b263e0645cc3"
+    },
+    ".claude/skills/office/ux-audit/SCHEMA.md": {
+      "sha256": "7da53e1dde3810289fc2e501828963c7cac87ce238c5fc53e9df726fd0c9a267"
+    },
+    ".claude/skills/office/ux-audit/SKILL.md": {
+      "sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5"
+    },
+    ".claude/skills/office/ux-audit/specialists/module-a-visual.md": {
+      "sha256": "5d834ea31469a621f2186112b2cfb7f67a4dd19b0e5514ca099e79c6226ee13f"
+    },
+    ".claude/skills/office/ux-audit/specialists/module-b-interaction.md": {
+      "sha256": "16fa82ea8979774597a385809c09a0ac956c42a20b28974c34410954d6b42fe6"
+    },
+    ".githooks/commit-msg": {
+      "sha256": "2cf690ab44678e9437673905885d7ab9a627bb07b736c35eda65785e557ed980"
+    },
+    ".github/workflows/ci.yml": {
+      "sha256": "0c77f42d98dd280bc9af53ffdbbe734a05a27e190a211a69a728674ffb326a41"
+    },
+    "AGENTS.md": {
+      "sha256": "c7cd3b46a1a00e2981818080d7919a5ae1db054378f07de252a0575298d60585"
+    },
+    "CHANGELOG.md": {
+      "sha256": "b997d1270c3997e58e64cb5144cc02720e0405f9aa58ec8cb50ea474f5b520e3"
+    },
+    "CLAUDE.md": {
+      "sha256": "c198372530d1a43a8d8471922dedbea026925a580b9a72fa487cee119ad24dbb"
+    },
+    "CONTEXT.md": {
+      "sha256": "26796a2b2ec3925dd0815f4597f9c5e3e72b7c873cb5c797d22701ffa438bd2d"
+    },
+    "brand-tokens.md": {
+      "deleted": true
+    },
+    "constitution.md": {
+      "sha256": "97e146bb56c92826066eec8b8c58338dc5ae0492723fb2d26d0486b1b24427d0"
+    },
+    "memory/evals/eval-log.jsonl": {
+      "sha256": "0c63a983560ae4347d707e00f545d0f9f5ddcd486ddc5efd9e3be7188bf3b09e"
+    },
+    "memory/evals/routing/fixtures.jsonl": {
+      "sha256": "7475f9215988a1dec40bcff8ee4a518b3d3dc248cc68e69d2eff62a6f8875257"
+    },
+    "memory/scripts/check_memory_health.py": {
+      "sha256": "554f0a6c4a6e15e43238f04433926063de6a2e65734d2c2fdfd2d34d799c3f6f"
+    },
+    "memory/scripts/consolidate_memory.py": {
+      "sha256": "3a34fc7e548b2d53805bb39f3d2057234ed660dcacb879063abb26703ac914df"
+    },
+    "memory/scripts/daily_governance.py": {
+      "sha256": "3a710226eb906fa8c9bfd3bdcbc9265c00becf8d50f199c3af3b9a86e030294a"
+    },
+    "memory/semantic/archive/superseded-facts-2026.yaml": {
+      "sha256": "f66f836ac20b25056dacf54996e468355fa1e2ec736600ed6d0ef924a8ae335f"
+    },
+    "memory/semantic/candidates.jsonl": {
+      "sha256": "b1bbdf84edf6ade27f3b085c24a986f4d73185ea5908d924b090391ebc850d35"
+    },
+    "memory/semantic/promoted-facts.yaml": {
+      "sha256": "7df68de45a622c69ebda9c6df2ae9e5f8b2027537723a0e03e221fb7680b6aac"
+    },
+    "memory/semantic/reviews.jsonl": {
+      "sha256": "dc63a2574d6c6ce3d4e7f2fa0c74bd8561a16d5c098073b252b89fcefa18af0f"
+    },
+    "memory/semantic/static-fallback-allowlist.txt": {
+      "sha256": "bd51cc59d214501adb3968e43f8a9c1f1156df7b8004ed69461f4fa2a75b4870"
+    },
+    "package.json": {
+      "sha256": "d7cf517f9c569f58e67737feda05437f280bb4019b8273e434cf4379315d4e0d"
+    },
+    "scripts/agent-context-branch-fixtures.mjs": {
+      "sha256": "161b03cffaea9a29e155bc5a4a6840ed5dbabb9394e1deb1b381f87a3b10e496"
+    },
+    "scripts/build-agent-context.py": {
+      "sha256": "f87b7ac27756b386394a19b273fab749897a284107393e3577d0cd6e62315175"
+    },
+    "scripts/check-agent-context.mjs": {
+      "sha256": "26df78753155cb3dd3ebc403308dd5a06546434d1cc7b7befebb1a9e5dd6d06e"
+    },
+    "scripts/check-agents-parity.mjs": {
+      "sha256": "2e9d5f4e0dd997d205abd036d6259a09a372c2cbe86c5f7a3404755c7aa6057e"
+    },
+    "scripts/check-appendix-pointers.mjs": {
+      "sha256": "8f4a43cbfd4e5394f17224777cd6332e0ea9b00de174a04eb0902174eafa9aa2"
+    },
+    "scripts/check-ci-contract.mjs": {
+      "sha256": "e55146fc2e42c17c52d34ccc83a5ed380d003d8c1487daebb58d428b4e3eab80"
+    },
+    "scripts/check-coding-discipline.mjs": {
+      "sha256": "193e9ec81f778a00882b5a01fc2cb5823bc35de34dd3f79a1a33fcfa92b724ec"
+    },
+    "scripts/check-model-table.mjs": {
+      "sha256": "c61400328148918b01679682fbe14efc8f5d9fe34451da8f5317536fe4a35849"
+    },
+    "scripts/check-muse-loop-sync.mjs": {
+      "sha256": "9ec52c1394c862482d17ce242300652f576904695043fd4b5a30f4d45b5294f0"
+    },
+    "scripts/check-project-routing.mjs": {
+      "sha256": "a9c70b98692752c398bbeec52cdb7e5a39010f0ef8533a5c837952548a97bba1"
+    },
+    "scripts/check-quality-gates.mjs": {
+      "sha256": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45"
+    },
+    "scripts/check-registration-sync.mjs": {
+      "sha256": "d2c1f12ee170b23c276a19ac74f32d8c94a819cf39528ee9ce5fd79a30636e94"
+    },
+    "scripts/check-routing-map.mjs": {
+      "sha256": "015876494f35fac6735a2d475ed19f94dedad31c7eb59be4f110c550d31c6760"
+    },
+    "scripts/check-skill-scene-coverage.py": {
+      "sha256": "68390f0a8a6f41bd4642bdb9e63be56ff98494cf56725e19746f18e65fe307fd"
+    },
+    "scripts/design-flow-handoff.mjs": {
+      "sha256": "05ae006c7ced4eb836484c831bcbf1660123e72e4e87f75d44630655f2ed4836"
+    },
+    "scripts/fusion-preflight.py": {
+      "sha256": "6b6ea4814632dd5d48fbe596cdef84cdbc7d083e78fac00d6667b4a2f890fb9e"
+    },
+    "scripts/page-context-preview.mjs": {
+      "sha256": "465fc1b11b16030b4197349e39c9fab9b6b16186495e637ee12005663a0a1065"
+    },
+    "scripts/page-context.mjs": {
+      "sha256": "ccb515cebb9f3ebd68a28eabaf0fc1e35b87d48e241b0c973240a4b0cca0b23e"
+    },
+    "scripts/resolve-agent-context.mjs": {
+      "sha256": "57336884efe38d0815921e47b4423d6d90a6a3483f28a0f1f6663a3e58bc0ed1"
+    },
+    "scripts/run-agent-context-ab.mjs": {
+      "sha256": "66727557563c806cf1e5ff542a6fbab0aef8aac6b55da93d2eb6d36a24e3b652"
+    },
+    "scripts/sync-magicpath-projection.mjs": {
+      "sha256": "d0d1fec467f52e788734c9f51254842ace375a3a9864237e5f72a3ea4e786f51"
+    },
+    "scripts/test-agent-context-branch-fixtures.mjs": {
+      "sha256": "d7e627e303eaf58f633ccb906c917f06f3dbae98bf7c7b49aac5ae733fa3c7b6"
+    },
+    "scripts/test-agent-context-resolution.mjs": {
+      "sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7"
+    },
+    "scripts/test-agent-context.mjs": {
+      "sha256": "53ad2c9275fd984490c55f40067e65922e4e6d2df20d597f0f6691ff4f54ad79"
+    },
+    "scripts/test-design-context-retirement.py": {
+      "sha256": "2ba6dcb5fe1b2bb931b3e686c680a7a00a6853eb4a675e1824fe269fb5a1dbb1"
+    },
+    "scripts/test-design-flow-handoff.mjs": {
+      "sha256": "8f6f2f04eb314d15fe757aa04be7aa330ef5e1df09de574a667e7ccad2c12c44"
+    },
+    "scripts/test-design-tool-retirement.mjs": {
+      "sha256": "c21a572c3226d0764e9a7bde92d66e27edf2cd3664ac6a4ce1f81af5bcdc7b26"
+    },
+    "scripts/test-design-tool-routing.mjs": {
+      "sha256": "21b49aba2e55f3bf75d0ec7738e0c35021011c25f05489cafb57a35c80e1e714"
+    },
+    "scripts/test-magicpath-projection-sync.mjs": {
+      "sha256": "dc69031921957e16e677fc0e4b33492351127dd646b99db566c7f61d3f62f8bd"
+    },
+    "scripts/test-page-context-preview.mjs": {
+      "sha256": "9ed8065e5855005681ee2000c4b4b531114055b96b422b0a923c0d93309b80a3"
+    },
+    "scripts/test-page-context.mjs": {
+      "sha256": "fa324031409e6332d0e596cdcea1a0a24809ae8a1b2888344daa370d18a0e86b"
+    },
+    "scripts/test-quality-gates-scope.mjs": {
+      "sha256": "8b06be03837ba867a1f99a07b83657f555f04912d606a49075825c42f2070a71"
+    },
+    "scripts/test-writing-for-agents-skill.mjs": {
+      "sha256": "ce9b8dcd50fbdf16b7dc698eb046d59bcb6a87f98da15c03f5da2845551b9019"
+    },
+    "scripts/verify.sh": {
+      "sha256": "e3fba3e59e3ee5c06f63c459b44efbc6e31bf8a3398151a01e3f5e21171f1757"
+    }
+  },
+  "manifest_boundary": "Shared checkout snapshot, includes inherited mainline edits; not a staging list or formal Harness evidence identity. Supersedes B5 snapshot for current versions.",
+  "migration": {
+    "approved": {
+      "set_stable": [
+        "SC-20260905-002",
+        "SC-20260905-003"
+      ],
+      "reviewer_filled": [],
+      "already_stable": [],
+      "not_found": []
+    },
+    "promoted": [
+      "SC-20260905-002",
+      "SC-20260905-003"
+    ],
+    "archived": [
+      "SC-20260609-003",
+      "SC-20260610-001"
+    ],
+    "candidate_content_review": "/private/tmp/br-page-r5-memory-content-review.md",
+    "backup": "/private/tmp/br-page-r5-before-jxfd26ba",
+    "scope": "current checkout only; previously authorized exact external semantic ID scan only",
+    "external_writes": false,
+    "observation": "O-20260905-001",
+    "rule": {
+      "superseded": "R-20260525-001",
+      "active": "R-20260905-001",
+      "history_preserved": true
+    },
+    "preservation": {
+      "unrelated_manifest_drift": [],
+      "other_stable_facts_unchanged": 86,
+      "archived_exact_original_bytes": [
+        "SC-20260609-003",
+        "SC-20260610-001",
+        "SF-001"
+      ],
+      "unrelated_rules_unchanged": 10,
+      "retrieval_log_unchanged": true
+    },
+    "sf001_extension": {
+      "approved": {
+        "set_stable": [
+          "SC-20260905-004"
+        ],
+        "reviewer_filled": [],
+        "already_stable": [],
+        "not_found": []
+      },
+      "promoted": [
+        "SC-20260905-004"
+      ],
+      "archived": [
+        "SF-001"
+      ],
+      "independent_content_reviewer": "r5_final_spec; proposal text PASS before promotion",
+      "content_review_artifact": "/private/tmp/br-page-r5-sf001-content-review.md"
+    }
+  },
+  "governance_records": {
+    "candidates": [
+      {
+        "id": "SC-20260905-002",
+        "created_at": "2026-09-05T12:58:27.019212+00:00",
+        "domain": "skill-rule",
+        "fact": "跨多 skill 的 HTML/UI 规范仍分两层：视觉层继承当前已确认项目或用户在外部工具配置的设计系统，并记录实际规范来源；不再把已退役的 brand-tokens.md、旧框架 token 或 office 品牌段当作强制权威。共享的视觉约束避免逐 skill 复制，以免漂移；不得仅为重复规范新建专门规范 skill。内容结构层的章节骨架和占位变量仍由各 skill 的 references/ 或 templates/ 维护，保留既有 Markdown/HTML 模板用途与通用 DRY 原则。",
+        "confidence": "high",
+        "source": "user-approved BR-PAGE R5 review repair 2026-09-05",
+        "evidence": "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。",
+        "scope": "luca_gstack skill-os / 跨 skill HTML/UI 规范选型与内容模板；当前设计系统优先",
+        "reviewer": "luca (R5 repair authorization; independent content review before promotion)",
+        "tags": [
+          "skill-os",
+          "ui-spec",
+          "HTML",
+          "规范",
+          "template",
+          "architecture",
+          "DRY",
+          "brand-tokens"
+        ],
+        "valid_until": "",
+        "supersedes": "SC-20260609-003",
+        "proposed_stable": true,
+        "stable_requested": true,
+        "status": "CANDIDATE"
+      },
+      {
+        "id": "SC-20260905-003",
+        "created_at": "2026-09-05T12:58:27.134090+00:00",
+        "domain": "skill-rule",
+        "fact": "figma-layer 已从 luca_gstack 的 skill、命令、Codex alias 与活动路由退役；已有 HTML 原型也不再路由到它，不执行其原型文件 preflight。现有原型保留独立 HTML、figma-demo、MagicPath 与 muse-proto-gen 的已授权用法；用户明确要求独立 Figma 设计时，按当前可用的官方 Figma skill 与工具合同执行，先核对真实用户意图及目标权限，不把关键词 Figma 或 HTML 原型存在当作工具切换或外部写入授权。",
+        "confidence": "high",
+        "source": "user-approved BR-PAGE R5 review repair 2026-09-05",
+        "evidence": "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。",
+        "scope": "luca_gstack figma-layer 退役后的 HTML/Figma 路由与输出边界",
+        "reviewer": "luca (R5 repair authorization; independent content review before promotion)",
+        "tags": [
+          "figma-layer",
+          "Figma",
+          "HTML",
+          "routing",
+          "retirement",
+          "figma-use"
+        ],
+        "valid_until": "",
+        "supersedes": "SC-20260610-001",
+        "proposed_stable": true,
+        "stable_requested": true,
+        "status": "CANDIDATE"
+      },
+      {
+        "id": "SC-20260905-004",
+        "created_at": "2026-09-05T13:09:41.777163+00:00",
+        "domain": "crm",
+        "fact": "CRM/FxUI 的旧品牌色与 framework 页面硬编码差异是历史观察，原始数值及证据完整保留在 memory/semantic/archive/superseded-facts-2026.yaml 的 SF-001，不作为当前 UI 约束。brand-tokens.md 已退役，不再是设计规范权威；保留的 framework 只读页面也不授予品牌或 token 继承。当前 CRM 页面与其他项目一样，视觉和组件规范来自已确认项目或用户在外部工具配置的设计系统，并按实际规范与通用可访问性要求验证。",
+        "confidence": "high",
+        "source": "user-approved BR-PAGE R5 same-root retirement completion 2026-09-05",
+        "evidence": "R5 final Spec actual brand-tokens search returned SF-001 authority clause; user explicitly requested all review issues resolved before main session commit.",
+        "scope": "CRM/FxUI 历史品牌资料检索与当前设计规范来源；历史值仅供追溯",
+        "reviewer": "luca (R5 all-fixes authorization; independent content review before promotion)",
+        "tags": [
+          "crm",
+          "FxUI",
+          "品牌",
+          "brand-tokens",
+          "历史",
+          "design-system"
+        ],
+        "valid_until": "",
+        "supersedes": "SF-001",
+        "proposed_stable": true,
+        "stable_requested": true,
+        "status": "CANDIDATE"
+      }
+    ],
+    "reviews": [
+      {
+        "candidate_id": "SC-20260609-003",
+        "decision": "promoted",
+        "reviewer": "luca",
+        "reason": "promotion_ready review queue item",
+        "reviewed_at": "2026-06-21T15:37:12.695232+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260610-001",
+        "decision": "promoted",
+        "reviewer": "luca",
+        "reason": "promotion_ready review queue item",
+        "reviewed_at": "2026-06-21T15:37:12.695588+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260905-002",
+        "decision": "approved_stable",
+        "reviewer": "luca (explicit R5 fix authorization; r5_memory_content_review PASS)",
+        "reason": "人工闸门放行：proposed_stable 置 True",
+        "reviewed_at": "2026-09-05T13:02:25.019138+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260905-003",
+        "decision": "approved_stable",
+        "reviewer": "luca (explicit R5 fix authorization; r5_memory_content_review PASS)",
+        "reason": "人工闸门放行：proposed_stable 置 True",
+        "reviewed_at": "2026-09-05T13:02:25.019645+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260905-002",
+        "decision": "promoted",
+        "reviewer": "luca (R5 repair authorization; independent content review before promotion)",
+        "reason": "promotion_ready review queue item",
+        "reviewed_at": "2026-09-05T13:02:25.170557+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260905-003",
+        "decision": "promoted",
+        "reviewer": "luca (R5 repair authorization; independent content review before promotion)",
+        "reason": "promotion_ready review queue item",
+        "reviewed_at": "2026-09-05T13:02:25.171923+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260609-003",
+        "decision": "archived_superseded",
+        "reviewer": "luca (R5 authorized exact superseded facts)",
+        "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml",
+        "reviewed_at": "2026-09-05T13:02:25.277565+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260610-001",
+        "decision": "archived_superseded",
+        "reviewer": "luca (R5 authorized exact superseded facts)",
+        "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml",
+        "reviewed_at": "2026-09-05T13:02:25.277668+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260905-004",
+        "decision": "approved_stable",
+        "reviewer": "luca (R5 all-fixes authorization; independent r5_final_spec content PASS)",
+        "reason": "人工闸门放行：proposed_stable 置 True",
+        "reviewed_at": "2026-09-05T13:10:55.988200+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SC-20260905-004",
+        "decision": "promoted",
+        "reviewer": "luca (R5 all-fixes authorization; independent content review before promotion)",
+        "reason": "promotion_ready review queue item",
+        "reviewed_at": "2026-09-05T13:10:56.138073+00:00",
+        "source": "consolidate_memory.py"
+      },
+      {
+        "candidate_id": "SF-001",
+        "decision": "archived_superseded",
+        "reviewer": "luca (R5 same-root retirement completion)",
+        "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml",
+        "reviewed_at": "2026-09-05T13:10:56.235864+00:00",
+        "source": "consolidate_memory.py"
+      }
+    ],
+    "observation": [
+      {
+        "id": "O-20260905-001",
+        "time": "2026-09-05T21:03:12+08:00",
+        "skill": "html-prototype",
+        "source": "user-approved R5 review repair",
+        "severity": "medium",
+        "message": "那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。",
+        "problem": "R5 复核确认 R-20260525-001 仍在技能启动时强制母版询问，与已批准的设计规范迁移冲突。",
+        "correction": "html-prototype: 不强制选择本地母版，也不得未经用户确认把 framework/list-page.html 或其他参考资产设为约束；已有明确选择直接沿用，只有用户确实要采用且尚未决定的参考才需询问。视觉和组件规范来自当前已确认项目或用户在外部工具配置的设计系统；framework/ 只读。"
+      }
+    ]
+  },
+  "verification": {
+    "full_verify": {
+      "pass": 93,
+      "fail": 0,
+      "warn": 0,
+      "exit_code": 0
+    },
+    "memory_system": {
+      "tests": 54,
+      "exit_code": 0
+    },
+    "handoff": {
+      "behavior_groups": 7,
+      "mutation_groups": 5,
+      "node_versions": [
+        "20.20.2",
+        "22.23.1"
+      ],
+      "exit_code": 0
+    },
+    "active_context": {
+      "tests": 3,
+      "retired_facts": 3,
+      "retired_rules": 1,
+      "mutation": "restore each predecessor, exact FAIL, restore PASS",
+      "exit_code": 0
+    },
+    "standards": {
+      "verdict": "PASS",
+      "critical": 0,
+      "important": 0,
+      "minor": 0
+    },
+    "spec": {
+      "verdict": "PASS",
+      "passed": 10,
+      "total": 10
+    }
+  },
+  "logs": {
+    "/private/tmp/br-page-r5-import-red.log": "7a10a47120a1fea8763d23de5841d4b6c205f7b4115cadef7d10027b2ba0b66f",
+    "/private/tmp/br-page-r5-context-red.log": "76156e7041f4e7835c67fe46f8ed4ca1bc73edeabb040568799b6931beee8a5e",
+    "/private/tmp/br-page-r5-sf001-red.log": "997b6018f30a50cccac96719b9e89901477fe258b6a4ee5ea5588644d5512432",
+    "/private/tmp/br-page-r5-handoff-green.log": "f289ce5623d92962a2e51b362218aa68ce11694c6094851ed70c7e8df891d077",
+    "/private/tmp/br-page-r5-node20-handoff.log": "f289ce5623d92962a2e51b362218aa68ce11694c6094851ed70c7e8df891d077",
+    "/private/tmp/br-page-r5-memory-tests.log": "ca335c7474ed6aed5754d4143178c51a1d8fcbc3e4e01a96a0046ae974c019d0",
+    "/private/tmp/br-page-r5-final-verify.log": "6b94d0744ccfc1c8bee2ca728b9c4626d38fe6a79c95c120bd814361bb5f9c5b"
+  },
+  "protected_retrieval_sha256": "bbfdea3971688338f05ef9a334de79e55f0f596732d56d4c57b8c5a27f6d9605",
+  "remaining_mainline": [
+    "Freeze final context/fixtures/evaluator and independently validate evidence reuse; run remaining real two-Harness behavior matrix, including F13/F14/F9-v2/F10-v2 under original max19 process budget",
+    "Real OD reception and attachment readback; only exact separately authorized independent mobile-list target, no headless or Figma generation",
+    "Final context budget, safety/mutation/cold review, complete verify and selective commit/push by mainline owner"
+  ],
+  "waived": "New SVG/HTML mixed-source page containment limitation remains per user waiver; no page-library retesting here",
+  "git_effects": {
+    "staged": false,
+    "committed": false,
+    "pushed": false
+  }
+}

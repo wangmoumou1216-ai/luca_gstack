@@ -135,8 +135,12 @@ task-plan 需要设计决策和状态来源，不能只按 tech-spec 拆开发�
 |----------|--------|------|------------|--------|
 | SRC-PRD | docs/prd/... | 产品需求 R/AE | 需求冲突或追踪失败时 | 正常开发时 |
 | SRC-TS | docs/engineering/...-tech-spec.md | 架构/接口/矩阵 | 所有开发任务必读对应节 | 不需整体读 |
-| SRC-DB | docs/decisions/...-design-brief.md | UI 状态/组件/可追踪矩阵 | UI 相关 task 读 §6 组件映射和可追踪矩阵指定节 | 非 UI task 不读 |
+| SRC-DB | docs/decisions/...-design-brief.md | 页面/交互位置、决策、状态及可追踪矩阵 | UI 相关 task 读 §7「页面与交互位置映射」（`page_interaction_mapping`）和可追踪矩阵指定节 | 非 UI task 不读 |
 | SRC-HO | docs/handoff/... | 决策摘要/约束/风险 | 每个 task 开始前确认约束 | 任务执行中途 |
+
+§7 的交互职责、D-ID、适用 STATE、R/AE 与 AC、约束和下游目标进入对应任务的读取清单。
+已确认页库引用仅辅助定位；`reference=none` 不免除 REQ/DEC/STATE 节点和 ASSERT 覆盖。
+历史 `component_mapping` / 旧组件映射只读提取这些语义列；不要求旧技术列或资产，不重写历史。
 
 ---
 

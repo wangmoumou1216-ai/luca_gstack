@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "p6-preparation-spec-20260905-01",
+  "subject": {
+    "skill": "P6-preparation-spec",
+    "topic": "agent-context-page-flow-fixture-preparation",
+    "scene": "unknown",
+    "input_summary": "Independent read-only Spec-axis review against branch plan S9/P-01–P-19, R-2/R-3/R-4 and mainline handoff; draft fixture preparation only.",
+    "output_paths": [
+      "scripts/agent-context-branch-fixtures.mjs",
+      "scripts/test-agent-context-branch-fixtures.mjs",
+      "scripts/run-agent-context-ab.mjs"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 7,
+    "total": 10,
+    "findings": [
+      "FAIL: answerSchemaFor derives array cardinalities from expected answers; two F13 no-page fields are forced to empty arrays, leaking complete policy answers.",
+      "FAIL: F14 declares P-01–P-19 coverage without assertions for P-16 module weighting, partial scores and skip reasons.",
+      "UNKNOWN: supplied FILE_SET does not establish the exact one-candidate-Claude-F4-stop schedule, ceiling 20, or historical raw-record preservation.",
+      "Local self-test passed 4 fixtures and 320 rejected counterexamples; no live harness, actual approval or OD acceptance was verified."
+    ]
+  }
+}

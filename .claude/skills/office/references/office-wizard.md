@@ -27,6 +27,11 @@ AskUserQuestion：
 
 ### Step 2：根据选择推荐 workflow
 
+下列原型工具均是推荐选项，以用户已选工具为准；「备选」不表示故障后自动切换。
+OD 不可达、认证失败或非 React/Canvas 场景只报告阻塞并暂停；只有用户明确选择 MagicPath / 本地 HTML，
+或明确批准包含相应备用路径的计划且触发条件满足，才启用对应能力。缺授权则 `BLOCKED` 交还用户；
+已有明确授权不重复询问。OD headless 失败保留「一次 retry → 同一项目 OD 桌面端恢复」。
+
 **用户选 A（新功能）：**
 
 ```
@@ -45,7 +50,6 @@ AskUserQuestion：
 6. /design-brief    → 轻量交互文档与原型决策（不跑 ux-brainstorm 时可独立使用）
 7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    /html-prototype → （备选）生成 HTML 原型
-8. /figma-layer    → 还原到 Figma
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
 需求范围明确、不需要重型拷问时，可以用 superpowers:brainstorming 替代第3步。
@@ -95,7 +99,6 @@ AskUserQuestion：
 3. /design-brief → 基于评审结论生成轻量交互文档
 4. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
    /html-prototype → （备选）按评审清单逐条生成改版原型
-5. /figma-layer → 还原到 Figma
 从 /idea 开始？
 ```
 
@@ -242,19 +245,14 @@ luca_gstack — 一级可见 Skill 列表
 /open-design   A B C D **设计产出首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
                输入模式：standalone 或 workflow。输入 design-brief 交互文档；
                默认在 OD 桌面端生成 + 在 OD UI 内判断「是否符合需求」，说「拉回来」落盘 docs/prototype/（headless 为 opt-in）
-               说明：注入 FxUI 品牌色+文字色 token（不绑组件库）；OD daemon 不可达时内部退回
-               隐藏 skill `magicpath`（OD daemon 不可达时内部 dispatch，非一级入口）
+               说明：设计系统由用户在 OD 配置；交接需求与已确认参考，OD 不可达或认证失败时报告并暂停。
+               隐藏 skill `magicpath` 仅按用户明确选择或已批准备用路径内部 dispatch，非一级入口
 
-/html-prototype A B C  生成可在浏览器查看的 HTML 原型（OD/MagicPath 不可用时备选）
+/html-prototype A B C  生成可在浏览器查看的 HTML 原型（用户明确选择或已批准的本地 HTML 备用路径）
                输入模式：standalone 或 workflow。可接 design-brief / ux-audit /
                screenshot_delta / figma-demo blueprint / standalone brief
-               质量 gate：Step0认知门禁、framework契约、设计系统、动态参考、QA
+               质量 gate：Step0认知门禁、实际设计规范与参考来源、动态参考、QA
                不因 standalone 取消
-
-/figma-layer   A   C   把 HTML 原型还原到 Figma，作为交付稿（套 FxUI 品牌色+文字色 token）
-               输入模式：standalone 转换工具或 workflow 下游。需要 /open-design、
-               /html-prototype 或 /figma-demo 的 index.html + prototype-spec
-               额外要求：需要 Figma MCP 已连接（新版 use_figma）
 
 ── 工程落地 ────────────────────────────────────────────────────
 
@@ -321,8 +319,8 @@ standalone，不读 optional graph；preset 选择也不授予写入、Git、网
                /muse-loop-orchestrate 内部 dispatch（入口B）
                语义兜底："筛一遍这堆需求"、"要不要先过一遍再进 brainstorm"这类批量需求预筛意图
 
-               说明：muse-proto-gen（隐藏，仅 OD daemon 不可达时被 /muse-loop-orchestrate
-               内部 dispatch）与 muse-proto-judge（agent 定义，仅内部调用）不对用户暴露
+               说明：muse-proto-gen（隐藏，仅按用户明确选择或已批准的本地备用路径被 /muse-loop-orchestrate
+               内部 dispatch；OD 不可达本身不授权切换）与 muse-proto-judge（agent 定义，仅内部调用）不对用户暴露
 
 ── 外部 Skill（superpowers plugin）─────────────────────────
 

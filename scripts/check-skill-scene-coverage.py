@@ -50,7 +50,6 @@ TABLE = {
     "muse-loop-orchestrate": ([f"{D}/prd/*-prd.md"],               [f"{D}/loop/specs/REQ-*"], "weak"),
     "html-prototype": ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/prototype-spec.md"], "weak"),
     "open-design":    ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/index.html"], "weak"),
-    "figma-layer":    ([f"{D}/prototype/*/index.html"],            [f"{D}/figma/*/figma-spec.md"], "strong"),
     # 链头/多形态：代理口径未定，显式 UNMAPPED（诚实优于全覆盖）
     "brainstorm": (None, [f"{D}/prd/*-prd.md"], "unmapped"),
     "deepresearch": (None, [f"{D}/research/*deepresearch*.md"], "unmapped"),

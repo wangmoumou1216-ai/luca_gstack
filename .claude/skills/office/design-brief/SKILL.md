@@ -6,12 +6,12 @@ version: 2.0.0
 description: |
   收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 /
   用户粘贴方案，收敛成可交给 MagicPath、Open Design、Claude Design、/html-prototype
-  和开发的规格契约（决策卡 / 状态覆盖 / 组件映射 / Generation Packet）。
+  和开发的规格契约（决策卡 / 状态覆盖 / 页面与交互位置映射 / Generation Packet）。
   可独立运行；若检测到上游 ux-brainstorm 产出，则继承其 AI-Native 判定与已验证假设，不重做发散分析。
   复杂 / 多方案 / 高不确定 → 先用 /ux-brainstorm 发散，本 skill 负责收敛落地。
   执行顺序锁死：设计坐标系 →
   原生AI四层深度思考 → 假设挑战 → 体验验证 → 品味检查 →
-  每条决策的 8 字段完整化 → 原型承载方式确认 → shadcn 组件映射 →
+  每条决策的 8 字段完整化 → 输出目标与平台核对 → 页面与交互位置映射 →
   可追踪完整门禁 → Design Generation Packet。(luca_gstack)
 allowed-tools:
   - Read
@@ -21,7 +21,7 @@ allowed-tools:
 context-cost:
   self: 39572  # 实测字节数 wc -c，统一口径 2026-07-04（G5）；2026-07-21 复测（interaction-mechanics 挂载 + Step 1.0b + 内容语义规则）
   runtime-estimate: 24000  # 2026-07-21：+interaction-mechanics（10826B ≈ +3.6K tokens，Phase 3 挂载）
-  shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, design-system-contract, interaction-mechanics]
+  shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, interaction-mechanics]
   recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场收敛opus；本 skill 无 judge/oracle 环节
 ---
 
@@ -85,13 +85,15 @@ tradeoff** / 状态覆盖 / PRD 约束引用。
 | `references/ai-native-state-coverage.md`（12 状态清单：5 传统 + 7 AI 专有） | **Phase 3** 体验验证前 |
 | `.claude/skills/office/references/interaction-mechanics.md`（HCI 交互力学：状态建模/错误恢复/决策分块/响应时序/搜索/表单校验语义） | **Phase 3** 体验验证前（场景 C 同 state-coverage 顺延到 **Phase 5 前**）。**禁转写句：其中标 `[仅供推理]` 的内容（px/对齐/布局/控件选型）不得转写进 D-series 或 Packet——那是 OD/DS 执行层；本 reference 用于状态语义推导与交互完整性评估** |
 | `references/ai-native-taste-anchors.md`（8 锚点品味体系） | **Phase 4** 品味检查前 |
-| `references/design-system-contract.md`（品牌/间距/字体/组件硬约束） | **Phase 5** 决策 8 字段化前 |
 
 **任一已执行 Phase 的挂载 reference 未在该 Phase 开始前读完 → 该 Phase 门禁 FAIL，必须补读后返工该 Phase（不得跳读继续产出）。**
-（场景 A/B/D 执行全部 Phase，四份都会被读；**场景 C 跳过 Phase 2+3**——此时 state-coverage 的挂载点
-顺延到 **Phase 5 前**（决策的「状态覆盖」字段仍需要它，Phase 5 约束检查会验），taste-anchors/
-design-system-contract 挂载不变。**场景 C 下 state-coverage 仍是必读，不因 Phase 3 被跳过而豁免**。
-终态语义与原"4 份全部读完"等价：每一份都在其决策被产出前读完。）
+（场景 A/B/D 执行全部 Phase，表中四份都会被读；**场景 C 跳过 Phase 2+3**——此时 state-coverage
+与 interaction-mechanics 的挂载点顺延到 **Phase 5 前**（决策的「状态覆盖」字段仍需要它们，
+Phase 5 约束检查会验），taste-anchors 挂载不变。**场景 C 下状态与交互语义仍是必读，
+不因 Phase 3 被跳过而豁免**。）
+
+设计系统由用户在 OD / Claude Design 配置；本 skill 不加载本地品牌、token 或组件技术映射
+作为交接前提，也不覆盖外部视觉设置。已对齐的产品约束与通用 UX 语义继续保留。
 
 ---
 
@@ -134,7 +136,7 @@ AskUserQuestion：
 >
 > A）**新功能设计** — 约束来自 PRD，设计决策相对自由
 > B）**已有功能优化** — 每条决策必须即时对照 prd-constraints.md 检查，超范围即 REMOVED
-> C）**评审改版** — 基于 ux-audit 报告，先做轻量改版方向推导，再做组件映射
+> C）**评审改版** — 基于 ux-audit 报告，先做轻量改版方向推导，再做页面与交互位置映射
 > D）**Agent 化改造** — 把现有功能从"用户手动"变为"用户监督 Agent"，强制执行代理层设计
 
 **场景判定提醒：**
@@ -160,7 +162,7 @@ Step C-2：轻量改版方向推导（核心）
 ❌ Phase 3（体验验证）— 无 PRD 对照
 ✅ Phase 4（品味检查，发现超范围 → 必须 AskUserQuestion）
 ✅ Phase 5（每条决策 8 字段化）
-✅ Phase 6（母版 + 组件映射）
+✅ Phase 6（输出目标与平台核对 + 页面与交互位置映射）
 ```
 
 **场景 D（Agent 化改造）执行路径（锁死）：**
@@ -172,7 +174,7 @@ Step C-2：轻量改版方向推导（核心）
 ✅ Phase 3（体验验证，状态覆盖含 AI 专有 7 状态全部）
 ✅ Phase 4（品味检查，Cursor/Perplexity/Granola 三锚点强制通过）
 ✅ Phase 5（每条决策 8 字段化）
-✅ Phase 6（母版 + 组件映射）
+✅ Phase 6（输出目标与平台核对 + 页面与交互位置映射）
 ```
 
 **场景 A / B 必须有输入方案：**
@@ -226,7 +228,7 @@ Phase 2：假设挑战
 Phase 3：体验验证（含 AI 专有状态）
 Phase 4：品味检查（8 锚点）
 Phase 5：每条决策 8 字段完整化（新增）
-Phase 6：原型承载方式确认 + shadcn 组件映射表
+Phase 6：输出目标与平台核对 + 页面与交互位置映射
 Phase 6.5：可追踪完整门禁
 Phase 6.75：Design Generation Packet + Tool Consumption Contract
 ```
@@ -507,64 +509,48 @@ A）执行 B）不执行。选 B 记录"已知品味问题"。
 
 ---
 
-## Phase 6：原型承载方式确认 + shadcn 组件映射表
+## Phase 6：输出目标与平台核对 + 页面与交互位置映射
 
-### Step 1：原型承载方式确认（组件映射前必须确定）
+### Step 1：输出目标与平台核对（位置映射前执行）
 
-读取 /idea 或 PRD 里的「母版 / 原型承载方式 / 目标平台」字段。如果已填，直接声明。
-如果未填，或目标平台为移动端但 framework 没有对应移动母版，AskUserQuestion：
-
-> 这次原型使用哪种承载方式？
->
-> 1）列表页母版 — framework/list-page.html
-> 2）详情页母版（两列）— framework/detail-page-2col.html
-> 3）详情页母版（三列）— framework/detail-page-3col.html
-> 4）表单页母版 — framework/form-page.html
-> 5）首页/仪表盘母版 — framework/home-page.html
-> 6）局部改动/独立组件 — 不使用整页母版
-> 7）独立移动端原型 — standalone mobile prototype，不调用 framework 母版
-
-注意：当前工程包只提供 5 个可用母版。AI速记入口页、
-录音工作页母版未随包提供；遇到这类需求时，选择「局部改动/独立组件」
-，或先补齐对应母版后再继续。
-
-**移动端特别规则：**
-- 当前 framework 没有移动端整页母版时，不得默认套用 `framework/list-page.html`。
-- 目标为移动端列表、移动端卡片、移动端筛选器时，`standalone mobile prototype`
-  只是候选，仍必须显式确认或读取上游已确认字段。
-- 未确认承载方式前，不得在 design-brief 中写“必须使用某母版”。
+读取 /idea、PRD 或用户已确认方案中的目标工具、目标平台、整页/局部范围与参考策略，
+逐项记录来源；已明确的选择直接继承。仅当缺失项影响设计意图时向用户确认，不把缺少本地母版
+变成阻断条件。页面参考只说明位置与结构，不能把桌面源的布局或尺寸当成移动端需求。
 
 产出文件必须写入：
 
 ```markdown
-原型承载方式：{framework 母版 / 局部组件 / standalone mobile prototype}
-依据：{PRD字段 / 用户确认 / framework无对应母版}
-下游限制：{html-prototype 是否可调用 framework 母版}
+输出目标：{用户指定工具 / 尚未选择；Open Design 为默认推荐}
+目标平台与范围：{desktop / mobile / embedded；整页 / 局部位置}
+参考策略：{用户已有选择记录 / 明确不用参考 / 待交接入口执行页面匹配}
+依据：{PRD 字段 / 已对齐方案位置 / 用户确认来源}
+下游约束：{已确认的交互、修改/保留范围及平台约束}
 ```
 
-### Step 2：组件映射表
+完成条件：目标、平台与范围有来源或明确未决说明；未决项不被写成用户决定。
+本 Phase 不运行页面推荐或采用询问；唯一执行点及确认规则见 Phase 6.75 的 page-context 指针。
 
-**来源字段硬约束：只能是 `shadcn` 或 `自绘`。**
+### Step 2：页面与交互位置映射
 
-判断逻辑：
-- 交互元素（按钮/输入框/下拉/表格/对话框/标签页）→ `shadcn` + 组件名 + variant
-- 布局容器/背景/分割线/纯文案区域 → `自绘` + Tailwind 颜色和间距
+**产出第 7 节固定标题为「页面与交互位置映射」，机器门名为 `page_interaction_mapping`。**
+每个核心交互点都要落到语义页面/位置，保留决策、所有适用状态与需求/验收的追踪职责。
 
 ```markdown
-| 页面/状态名称 | 区域 | 组件来源 | shadcn 组件名 | variant | 对应决策 ID | 备注 |
-|-------------|------|---------|--------------|---------|-----------|------|
-| {页面名} | {区域} | shadcn | Button | default | D-001 | 主操作，#FF8000 |
-| {页面名} | {区域} | 自绘 | — | — | D-003 | {Tailwind类+颜色+间距} |
+| 语义页面/位置 | 交互职责 | D-ID | 全部适用 STATE | 需求/AC 来源 | 约束 | 下游目标 | 已确认 page_id / region_id（可选） |
+|---------------|----------|------|---------------|-------------|------|----------|----------------------------------|
+| {页面用途 / 区域或截图局部定位} | {用户在此完成什么、系统如何响应} | D-001 | {列出本决策全部非 N/A 状态} | {R/AE、问题 ID 或已对齐方案位置} | {修改/保留范围、授权、恢复等} | {目标工具 / tech-spec} | {确认记录引用；无则 N/A} |
 ```
 
-**AI 功能区域的映射特殊要求：**
-- 思考中态的 UI（ghost text / skeleton / streaming）：必须写自绘或标注 shadcn 组件不够用
-- 低置信态的视觉降级：标注在 variant 或 className 说明
-- 拒答态的文案区：Alert 或 Card variant
+语义页面/位置和来源必填。`reference=none` 仍须完整映射；没有目录记录的实际页面可以用
+用户语言或截图局部位置定位，不强制先入库，也不编造 page_id/region_id。可选 ID 只索引
+已有真人确认，不能靠 agent 填写的 JSON 将候选变为已采用。参考失效由交接入口重新核验。
 
-**常用 shadcn：** Button / Input / Select / Table / Dialog / Tabs / Badge / Card / Form /
-Checkbox / RadioGroup / Switch / DatePicker / Pagination / Alert / Skeleton / Tooltip /
-DropdownMenu / Sheet
+**AI 功能区域的映射要求：**
+- 思考中态写明过程可见性与用户可做的操作。
+- 低置信态写明不确定性表达、人工判断或接管出口。
+- 拒答态写明原因语义与可继续的路径；其他适用 AI 状态同样逐一映射。
+
+组件名、variant、Tailwind/CSS、品牌色配额不属于本表；设计系统由用户在目标设计工具配置。
 
 **场景 B 约束检查（每条映射产出后立即执行）：**
 
@@ -608,9 +594,9 @@ task-plan 前丢失。此门禁不通过，不允许进入 Phase 7 写最终文�
 ### Step 2：建立落地映射矩阵
 
 ```markdown
-| Source Claim ID | 映射到设计决策 | 映射到状态 | 映射到组件映射行 | 下游去向 | 结果 |
+| Source Claim ID | 映射到设计决策 | 映射到状态 | 映射到页面与交互位置行 | 下游去向 | 结果 |
 |----------------|---------------|-----------|----------------|---------|------|
-| REQ-R001 | D-001 | default/success | Role Switch | HTML + tech-spec | MAPPED |
+| REQ-R001 | D-001 | default/success | 角色设置 / 当前角色切换位置 | 目标设计工具 + tech-spec | MAPPED |
 ```
 
 结果只能是 `MAPPED`、`DEFERRED`、`NEEDS_CONTEXT`、`REMOVED`。
@@ -621,9 +607,10 @@ task-plan 前丢失。此门禁不通过，不允许进入 Phase 7 写最终文�
 ```
 □ 所有 PRD MUST R/AE 都是 MAPPED？
 □ 所有 ux-brainstorm 核心决策都有 D-series 去向？
-□ 所有 Oracle 补丁都有状态或组件去向？
-□ 每个 D-series 至少出现在一个组件映射行？
-□ 每个“是否需要单独设计 = 是”的状态都有下游 HTML 指示？
+□ 所有 Oracle 补丁都有状态或页面/交互位置去向？
+□ 每个 D-series 至少出现在一个页面与交互位置映射行？
+□ 每行包含对应 D-series 的全部适用 STATE 与需求/AC 来源？
+□ 每个“是否需要单独设计 = 是”的状态都有下游实现与验收指示？
 □ DEFERRED / NEEDS_CONTEXT / REMOVED 都有原因？
 ```
 
@@ -643,7 +630,7 @@ task-plan 前丢失。此门禁不通过，不允许进入 Phase 7 写最终文�
 PRD MUST: {N/N}
 Design decisions: {N/N}
 States needing design: {N/N}
-Component mappings: {N/N}
+Page/interaction mappings: {N/N}
 ```
 
 `standalone_light` 无 PRD 时不得输出 `TRACEABILITY GATE PASS`；只能输出：
@@ -664,12 +651,23 @@ Phase 7 输出文件必须包含“可追踪完整矩阵”节，内容来自本
 MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使用。
 
 **硬规则：**
-- Packet 只能引用本 design-brief 正文已出现的事实，不得新增产品诉求、交互决策或状态。
+- Packet 的需求与设计事实只能引用本 design-brief 正文，不得新增产品诉求、交互决策或状态；
+  页参考与目标绑定记录由下述交接入口核验后附入，并保留各自来源。
 - Packet 是下游生成工具的主输入；上游 PRD / research / ux-brainstorm 只用于本文件的
   traceability 校验，不让外部工具重新做产品判断。
-- Open Design（/open-design）是默认主路径（界面产出首选）；MagicPath 是 OD 不可用时的
-  fallback，/html-prototype 是 OD / MagicPath 均不可用、非 React/Canvas 场景、或用户明确
-  要求本地 HTML 时的进一步 fallback（顺序与 CLAUDE.md 界面产出备选链一致）。
+- Open Design（/open-design）是默认推荐交接路径；用户指定 Claude Design 时导出同包供人工
+  附加。MagicPath / /html-prototype 的独立入口继续保留，按用户所选目标消费同一契约；
+  工具不可达时在该入口报告状态并保留材料，不自动改用本地生成器。
+
+**页面参考的唯一交接点：** 设计源已对齐、即将交给 OD / Claude Design 时，交接入口必须
+完整读取 `.claude/skill-os/runtime/page-context.md` 至 FILE_END；OD 在 `/open-design`
+编译前执行该合同。design-brief 在此只声明参考策略并引用已有记录，不重复执行匹配/询问。
+仅高置信候选可推荐，采用须真人确认；低置信/无匹配不推荐，以 `reference=none` 非阻塞继续。
+无参考仍保留第 7 节的语义位置与完整追踪。已有有效确认直接复用，JSON 标记不能代签真人。
+第 7 节只引用本 brief 产出时已有的确认。交接入口的新确认放入同次 Packet 的运输元数据
+（`page-reference.json`），指向已通过门禁的 brief 来源及版本；不反写正文或第 7 节，
+不改变已冻结的源 hash，也不复制需求为第二事实源。
+页面采用与外部写入授权分开核验，外部接收/生成状态由对应工具的真实证据判定。
 
 ### Step 1：生成 Design Generation Packet
 
@@ -682,9 +680,9 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 
 | 下游工具 | 主输入 | 可读校验源 | 不允许做 |
 |---------|--------|------------|----------|
-| MagicPath | Design Generation Packet + 组件映射表 + 状态覆盖 | design-brief 正文 | 不得新增 PRD 没有的产品功能；不得忽略 D/STATE 映射 |
-| Open Design / Claude Design | Design Generation Packet | design-brief 正文 | 不得直接从 research 发散新方案；不得复活 REMOVED 方案 |
-| /html-prototype | Design Generation Packet + 原型承载方式 + 组件映射表 | PRD / ux-research / deepresearch 仅用于 traceability 校验 | 不得绕过 design-brief 重新设计交互 |
+| MagicPath | Design Generation Packet + 页面与交互位置映射 + 状态覆盖 | design-brief 正文 | 不得新增 PRD 没有的产品功能；不得忽略 D/STATE/AC 映射 |
+| Open Design / Claude Design | Design Generation Packet（同包附确认参考或 reference=none） | design-brief 正文及 page-context 确认来源 | 不得直接从 research 发散新方案；不得复活 REMOVED 方案；不得把参考页当成外部设计系统 |
+| /html-prototype | Design Generation Packet + 输出目标与平台 + 页面与交互位置映射 | PRD / ux-research / deepresearch 仅用于 traceability 校验 | 不得绕过 design-brief 重新设计交互或遗漏 D/STATE/AC |
 | tech-spec / task-plan | design-brief 正文 + Traceability Matrix | PRD R/AE | 不得从 research/design-brief 编造 R/AE |
 ```
 
@@ -693,11 +691,13 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 ```
 □ Design Generation Packet 存在？
 □ Tool Consumption Contract 存在？
-□ Packet 中所有事实都能在 design-brief 正文找到？
-□ Packet 包含原型承载方式或目标产出路径？
+□ Packet 中所有需求、决策与状态事实都能在 design-brief 正文找到？
+□ Packet 包含有来源的输出目标、平台与参考策略？
 □ Packet 包含所有 MUST D-series 决策？
 □ Packet 包含所有非 N/A 状态？
-□ Packet 的默认主路径 / fallback 顺序与 CLAUDE.md 界面产出备选链一致（Open Design 首选，MagicPath / html-prototype 为 fallback）？
+□ Packet 保留每项语义位置、需求/AC 来源、修改/保留范围及下游目标？
+□ 页面上下文引用 page-context 合同，未决选择不伪报已采用，reference=none 不丢追踪？
+□ Packet 不注入本地 token/组件技术映射，目标与用户选择一致？
 ```
 
 任一不通过 → 不得进入 Phase 7。
@@ -710,7 +710,7 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 `docs/decisions/YYYY-MM-DD-<topic>-design-brief.md`
 
 **产出文件必须包含以下所有节（节名锁死）：** MagicPath / 外部设计生成器 / html-prototype /
-tech-spec / figma-layer 依赖第 4、7 节；**`redteam` 判据挂载表按本清单逐节做完整性核查**。
+tech-spec 依赖第 4、7 节；**`redteam` 判据挂载表按本清单逐节做完整性核查**。
 
 1. 设计坐标系（Phase A 产出）
 2. **原生AI深度思考小结**（Phase 1 产出，内部扩展为四层）
@@ -718,15 +718,15 @@ tech-spec / figma-layer 依赖第 4、7 节；**`redteam` 判据挂载表按本�
 4. **体验验证结论**（Phase 3 产出，含 12 状态覆盖表）
 5. **品味检查四锚点**（Phase 4 产出，节名保持不变，内部扩展为 8 锚点）
 6. 设计决策清单（Phase 5 产出，每条 8 字段）
-7. **shadcn 组件映射表**（Phase 6 产出）
+7. **页面与交互位置映射**（Phase 6 产出；`page_interaction_mapping`）
 8. **可追踪完整矩阵**（Phase 6.5 产出）
 9. **Design Generation Packet**（Phase 6.75 产出，MagicPath / Open Design / Claude Design / HTML 生成器主输入）
 10. **Tool Consumption Contract**（Phase 6.75 产出）
 11. REMOVED 记录（场景 B / D 专有）
 12. **交接块**（下游恢复索引；不得包含正文没有的新事实）
 
-**节名约束说明：** 第 2/3/4/5/7 节的节名必须与原版保持一致——下游按节名定位内容
-（第 4、7 节由 html-prototype / tech-spec / figma-layer / magicpath 直接消费；
+**节名约束说明：** 第 2/3/4/5 节保持原版，第 7 节固定为「页面与交互位置映射」——下游按节名定位内容
+（第 4、7 节由 html-prototype / tech-spec / magicpath 直接消费；
 第 2/3/5 节由 `redteam` 的 12 节完整性核查消费）。内部扩展（如四层思考 / 12 状态 / 8 锚点）
 放在节的子结构里。
 
@@ -781,7 +781,7 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 AI Native：{范式}，决策 {N}→{N'} 次，路径 {N}→{M} 步
 品味检查：{通过 / 阻断项: X / 警告项: Y}；Slop: {N}
 决策清单：{N} 条（每条 8 字段）
-组件映射：{N} shadcn + {M} 自绘
+页面与交互位置映射：{N} 行；D/STATE/AC 覆盖：{N/N}
 状态覆盖：{12 / 12}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -790,11 +790,11 @@ AskUserQuestion：
 
 > 下一步？
 >
-> A）/open-design — 用 Design Generation Packet 编译出设计（HTML →可选 Figma），设计产出首选（推荐）
-> B）magicpath — 生成 MagicPath React canvas 组件（OD 不可用时的 fallback）
-> C）/html-prototype — 本地 HTML 原型（OD / MagicPath 均不可用时的 fallback）
-> D）/figma-layer — 先经 A/B/C 产出 index.html 后才可用，再搭 Figma 保险层
-> E）先停这里
+> A）/open-design — 交接 Design Generation Packet 与页面上下文，由用户在 OD 配置设计系统（推荐）
+> B）magicpath — 用户选择独立 React canvas 产出时使用
+> C）/html-prototype — 用户选择本地 HTML 原型时使用
+> D）先停这里
+> E）Claude Design — 导出同一 Packet 供人工附加，设计系统在工具内配置
 
 ---
 
@@ -802,7 +802,7 @@ AskUserQuestion：
 
 1. **执行顺序锁死**：Phase A 设计坐标系 → Phase 1 四层深度思考 → Phase 2
    假设挑战 → Phase 3 体验验证 → Phase 4 品味检查 → Phase 5 决策 8 字段化
-   → Phase 6 原型承载方式 + 组件映射 → Phase 6.5 可追踪完整门禁
+   → Phase 6 输出目标与平台核对 + 页面与交互位置映射 → Phase 6.5 可追踪完整门禁
    → Phase 6.75 Design Generation Packet
    （**例外**：场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2 执行在 Phase A 之前，
    是进入本序列前的现状核对，不算违反本条——见「⚠️ 执行顺序锁死」节）
@@ -814,7 +814,7 @@ AskUserQuestion：
 6. **场景 B / D 约束检查不可批量** — 每条决策产出后立即检查
 7. **每条决策必须 8 字段完整** — 缺任一项该决策不输出。"排除的备选 ≥
    1 条"、"tradeoff 不为无"是硬约束
-8. **组件映射表来源只能是「shadcn」或「自绘」**
+8. **页面与交互位置映射完整** — 每个 D-series 有语义位置、全部适用 STATE、需求/AC 来源、约束和下游目标；参考 ID 可选
 9. **品味检查 8 锚点必须全部执行** —
    阻断锚点（Linear/Raycast/Perplexity/Cursor/Granola）不通过不得进 Phase 5
 10. **状态覆盖 12 状态必须全部声明** — 场景 D 不允许 N/A
@@ -823,7 +823,7 @@ AskUserQuestion：
 13. **Design Generation Packet 不可省略** — MagicPath / Open Design / Claude Design / HTML 生成器统一消费它
 14. **Tool Consumption Contract 不可省略**
 15. **交接块不可省略** — 交接块只是索引，不是第二事实来源
-16. **节名锁死** — 第 2/3/4/5/7 节的节名保持原版，下游按节名定位内容、redteam 按 12 节清单核完整性
+16. **节名锁死** — 第 2/3/4/5 节保持原版，第 7 节为「页面与交互位置映射」；下游按节名定位内容、redteam 按 12 节清单核完整性
 17. **下游询问必须执行** — 不能静默进入下一步
 
 ---
@@ -839,7 +839,7 @@ AskUserQuestion：
 ```
 
 必须包含：
-- **决策列表**（≤8条）：8字段决策摘要（每条含 decision/rationale/tradeoff）、组件映射、可追踪完整矩阵统计
+- **决策列表**（≤8条）：8字段决策摘要（每条含 decision/rationale/tradeoff）、页面与交互位置映射、可追踪完整矩阵统计
 - **下游约束**（≤5条）：MagicPath / 外部设计生成器 / html-prototype 必须遵守的设计决策、REMOVED 记录中不得复活的方案
 - **风险**（≤3条）：未验证假设、场景覆盖盲点
 - **产出路径**：decisions/ 文件完整路径

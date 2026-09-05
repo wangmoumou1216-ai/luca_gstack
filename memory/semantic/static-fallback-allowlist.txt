@@ -1,6 +1,6 @@
 # Static Fallback 白名单 — 只有宪法级/红线事实才镜像进 CLAUDE.md 的每-session「关键约束速查」节。
 #
-# 准则：换任何任务都必须遵守、且脚本失效时也必须在场的事实——品牌锁 / framework 只读 /
+# 准则：换任何任务都必须遵守、且脚本失效时也必须在场的事实——framework 只读 /
 # 架构定位 / 路由红线 / 记忆红线。niche 操作型事实（figma 字体、OD headless、claude -p、
 # 融合落地坑等）只留 promoted-facts.yaml，按需 search_memory.py 检索，不进本节。
 #
@@ -12,8 +12,8 @@
 # 2026-07-03（全量搭建 review P2-3）：SF-001/SF-004 是 CRM/FxUI profile 专属细节
 # （品牌色具体值/组件库布局清单），非"换任何任务都必须遵守"的宪法级——移出白名单，
 # 转 search-only（memory/scripts/search_memory.py "brand" / "fxui"）。CRM 任务激活时
-# 按 CONTEXT.md「激活条件」读取 brand-tokens.md/component-map.md 全文，不依赖本节镜像。
-SF-002
+# 当前业务 profile 按 CONTEXT.md 激活；视觉规范来自已确认项目或外部设计系统，不依赖旧品牌/技术映射。
+SC-20260905-001
 SF-003
 SF-005
 SC-20260523-001

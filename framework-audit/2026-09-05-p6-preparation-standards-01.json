@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "p6-preparation-standards-20260905-01",
+  "subject": {
+    "skill": "P6",
+    "topic": "preparation-standards",
+    "scene": "unknown",
+    "input_summary": "Independent read-only Standards review of evaluator preparation against nine requirements; production self-test and memory-only counterexamples.",
+    "output_paths": [
+      "scripts/run-agent-context-ab.mjs",
+      "scripts/agent-context-branch-fixtures.mjs",
+      "scripts/test-agent-context-branch-fixtures.mjs"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 6,
+    "total": 9,
+    "findings": [
+      "P1: Codex non-command activity is discarded before shared scope auditing; malformed answers bypass scope auditing.",
+      "P1: Exceptions after successful invocation discard raw stdout, stderr, and trace.",
+      "P1: Timeout kills only the direct child; descendants retaining pipes can prevent bounded completion."
+    ]
+  }
+}

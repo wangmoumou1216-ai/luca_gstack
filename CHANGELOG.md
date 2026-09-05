@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-09-04 · Claude/Codex 根契约轻量化）
+
+- 把 `CLAUDE.md` 与 `AGENTS.md` 从 45–56KB 常驻说明压缩为各自独立、低于 10KB 的 K1–K10
+  runtime adapter；条件细节改由 16 项一跳 manifest 按意图加载，低频 skill 由磁盘生成的 45 项
+  catalog 发现，旧 mega-appendix 退出运行时但保留为回滚证据。为什么：消除 Codex→Claude 根全文
+  依赖、重复事实与陈旧快照，同时保住 Project/Plan/Human Gate、NO_PIN、安全边界和六条无 hook
+  Static Fallback。新增 19 个 mutation 与双 Harness 14 个隔离场景各 5 次 A/B 的测试入口（含无
+  hooks/memory 根文件探针），并把 kernel/pointer/budget/projection/contradiction 门接入 verify、CI
+  与 commit-msg。P6 尚在真实双 Harness 校准与独立复审中，未完成验收、未发布。
+
 ### Fixed（2026-09-03 · 检查发现问题全量收口）
 
 - 收窄 read-grant sidecar 检测：`apply_patch` 正文中的 `.claude/skills/office/*` 等普通路径示例不再被误拦，真实 sidecar 目标仍保持拒绝。

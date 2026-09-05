@@ -37,6 +37,10 @@ def _resolve_root():
 
 
 ROOT = _resolve_root()
+# Projection surfaces belong to the checkout that owns this script. The semantic store may be
+# redirected to the other authoritative checkout by MEMORY_ROOT; mixing those roots makes a fresh
+# worktree change validate stale root documents.
+CODE_ROOT = Path(__file__).resolve().parents[2]
 PROMOTED = ROOT / "memory" / "semantic" / "promoted-facts.yaml"
 
 
@@ -97,22 +101,42 @@ def main() -> int:
             allow_ids = {ln.split("#", 1)[0].strip() for ln in allowlist_path.read_text(encoding="utf-8").splitlines() if ln.split("#", 1)[0].strip()}
             for aid in sorted(allow_ids - seen):
                 errors.append(f"static-fallback-allowlist: {aid} 不在 promoted-facts.yaml")
-            claude_md_path = ROOT / "CLAUDE.md"
-            if claude_md_path.exists():
-                # 只在 Static Fallback 小节内匹配：全文匹配会把路由节的 prose 引用误判为"已镜像"（audit F2-08）
-                md_lines = claude_md_path.read_text(encoding="utf-8").splitlines()
-                start = next((i for i, ln in enumerate(md_lines) if ln.startswith("#") and "Static Fallback" in ln), None)
-                if start is None:
-                    errors.append("CLAUDE.md 缺少 Static Fallback 小节（每-session 注入通道断裂）")
-                    sf_ids = set()
-                else:
-                    end = next((j for j in range(start + 1, len(md_lines)) if md_lines[j].startswith("#")), len(md_lines))
-                    sf_ids = set(re.findall(r"^- \[([A-Z0-9-]+) /", "\n".join(md_lines[start:end]), re.M))
-                for sid in sorted(sf_ids - allow_ids):
-                    errors.append(f"CLAUDE.md SF: {sid} 不在白名单（SF 须为白名单子集）")
-                # 反向（BACKLOG #20）：白名单事实必须真出现在 SF 节，否则事实从 CLAUDE.md 静默消失无人察觉
-                for aid in sorted(allow_ids - sf_ids):
-                    errors.append(f"static-fallback-allowlist: {aid} 未出现在 CLAUDE.md Static Fallback 节（镜像缺失）")
+            # canonical fact body 必须同时精确投影到 generated + 当前 checkout 的两个 root。
+            # 只比对 bounded block，避免正文里的历史引用或同 ID prose 造成假绿。
+            by_id = {str(f.get("id", "")): f for f in facts if isinstance(f, dict)}
+            ordered_ids = [
+                ln.split("#", 1)[0].strip()
+                for ln in allowlist_path.read_text(encoding="utf-8").splitlines()
+                if ln.split("#", 1)[0].strip()
+            ]
+            canonical = [
+                f"- [{fact_id} / {by_id[fact_id].get('domain', '')}] "
+                + re.sub(r"\s+", " ", str(by_id[fact_id].get("fact", ""))).strip()
+                for fact_id in ordered_ids
+                if fact_id in by_id
+            ]
+
+            def bounded_projection(path: Path):
+                if not path.is_file():
+                    errors.append(f"missing Static Fallback projection surface: {path.relative_to(CODE_ROOT)}")
+                    return None
+                match = re.search(
+                    r"<!-- STATIC_FALLBACK:START -->\n([\s\S]*?)\n<!-- STATIC_FALLBACK:END -->",
+                    path.read_text(encoding="utf-8"),
+                )
+                if not match:
+                    errors.append(f"{path.relative_to(CODE_ROOT)} 缺 bounded Static Fallback projection")
+                    return None
+                return [line for line in match.group(1).strip().splitlines() if line]
+
+            for rel in (
+                ".claude/skill-os/generated/static-fallback.md",
+                "CLAUDE.md",
+                "AGENTS.md",
+            ):
+                projected = bounded_projection(CODE_ROOT / rel)
+                if projected is not None and projected != canonical:
+                    errors.append(f"{rel} Static Fallback fact body 与 canonical promoted facts 漂移")
 
     if errors:
         print(json.dumps({"status": "FAIL", "errors": errors}, ensure_ascii=False, indent=2))

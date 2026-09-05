@@ -16,7 +16,7 @@ metadata:
   source: https://github.com/MagicPathAI/agent-skills
   luca-wrapper: .claude/skills/office/magicpath/SKILL.md
   luca-obligation-source: .claude/skill-os/optional-workflow-graph.yaml#handoff_gates.design_brief_to_magicpath
-  luca-obligation-digest: sha256:703328f01d8366d01647ca4ba877a333136ecbb149adfd9df138597a034eed20
+  luca-obligation-digest: sha256:3853710b27d700a65432037c221cd6b161f9f9e557f891f3edaa8f226f8d2931
 allowed-tools: Bash(npx -y magicpath-ai *)
 user-invocable: true
 ---

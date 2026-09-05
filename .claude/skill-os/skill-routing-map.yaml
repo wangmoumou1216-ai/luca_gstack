@@ -119,14 +119,6 @@ project_skills:
     #   按评审对象分流（页面对象仍回本 skill）。保留的复合词全部含"页面/UX/体验"对象信息。
     triggers: [UX问题, 页面评审, 体验评审, UX评审, 评审这个页面, 页面有什么问题, 页面挑毛病]
 
-  figma_layer:
-    invoke: "/figma-layer"
-    weight: 5
-    # 2026-09-02 职责审计：撤裸词 Figma/figma，补 CJK 复合词保召回。依据 SC-20260610-001——
-    # 本 skill 只适用「已有 HTML 原型一比一还原到 Figma」，裸词把一切 Figma 话题
-    # （"figma MCP 怎么配"/独立设计写入）都判成 SINGLE，属结构性误命中。
-    triggers: [保险层, figma保险层, 推到figma, 推到Figma, 同步到figma, 同步到Figma, 还原到figma, 还原到Figma, figma保险]
-
   # figma_demo / compare / magicpath 2026-07-03 移出一级路由（全量搭建 review P2-6，
   # framework-audit/2026-07-03-full-review.md）：近30天 episodic skills_used 零调用，
   # 降级为隐藏 skill（磁盘目录/命令逻辑零删除，仅撤销 /office 展示+关键词触发+slash
@@ -137,7 +129,7 @@ project_skills:
     invoke: "/open-design"
     weight: 8
     # 这里只列「Open Design / OD」产品名提及，作为粗匹配粗网（与 design_brief「交互文档」/
-    # figma_layer「figma」隔离；禁用裸 "od"——substring 会误中 product/model/method）。
+    # 泛 Figma 话题隔离；禁用裸 "od"——substring 会误中 product/model/method）。
     # 【单点交接】"把刚产出的 md 给 OD" 不在此写死交接措辞：它是【语义识别】，由 Claude 按
     # CLAUDE.md「单点交接到 OD」规则结合上下文理解意图后路由（用户要求：结合语义，不靠词表）。
     triggers: [Open Design, open design, opendesign, OpenDesign, OD生成, OD出图, OD设计, OD原型, 用OD做]

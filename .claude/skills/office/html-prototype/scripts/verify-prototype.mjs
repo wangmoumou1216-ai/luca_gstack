@@ -21,6 +21,10 @@ const jsonPath = path.join(outDir, "qa-results.json");
 const screenshotDir = path.join(outDir, "screenshots");
 const prototypeSpecPath = path.join(outDir, "prototype-spec.md");
 const blueprintPath = path.join(outDir, "blueprint.yaml");
+const designRulesArg = extraArgs.find((arg) => arg.startsWith("--design-rules="));
+const designRulesPath = designRulesArg
+  ? path.resolve(designRulesArg.slice("--design-rules=".length))
+  : path.join(outDir, "design-rules.json");
 const html = fs.readFileSync(htmlPath, "utf8");
 const designBrief = designBriefPath && fs.existsSync(designBriefPath)
   ? fs.readFileSync(designBriefPath, "utf8")
@@ -69,11 +73,6 @@ const externalResourcePattern = /\b(?:src|href)=["'](?:https?:)?\/\/(?!localhost
 
 const forbidden = [
   ["No external CDN resources", !externalResourcePattern.test(html), "HTML should use local loaded assets only. Plain text URLs are allowed."],
-  ["No Tailwind default blue primary in generated area", !/\b(bg|text|border)-blue-(400|500|600|700)\b/.test(generatedHtml), "Use framework tokens, not Tailwind default blue."],
-  ["No generic font stack in generated area", !/\b(Inter|Roboto|Arial|Helvetica Neue|Google Fonts)\b|font-family:\s*(system-ui|sans-serif)/i.test(generatedHtml), "Generated area must not introduce generic font stacks; framework-level fallback is ignored."],
-  ["No generic Tailwind font sizes in generated area", !/\btext-(xs|sm|base|lg|xl|2xl|3xl|4xl)\b/.test(generatedHtml), "Use text-15/text-13/text-12 in generated content unless a local token requires otherwise."],
-  ["No decorative gradient utilities in generated area", !/\bbg-gradient-to-[trbl]/.test(generatedHtml), "B2B prototype should avoid generic AI gradient backgrounds."],
-  ["No raw Tailwind gray in generated area (use n-scale)", !/\b(text|bg|border|ring)-(gray|slate|zinc|neutral)-(50|100|200|300|400|500|600|700|800|900|950)\b/.test(generatedHtml), "Use n-scale tokens: text-n19 / text-n11 / text-n07 / bg-n05 / bg-n02 / border-n05 / ring-n05 instead of Tailwind gray utilities."],
   ["No Lorem Ipsum", !/lorem ipsum/i.test(html), "Use realistic CRM copy or marked data placeholders."],
   ["No emoji icons", !/[\u{1F300}-\u{1FAFF}]/u.test(html), "Use local icon assets or text placeholders."],
   ["Prototype spec exists", mode === "muse-proto-gen" || fs.existsSync(prototypeSpecPath), "prototype-spec.md is required (muse-proto-gen exempt: it outputs HTML + qa-results.json only)."]
@@ -84,6 +83,43 @@ addCheck(
   true,
   hasScopedGeneratedRegion ? "Scoped generated/change region detected; style lint applies there." : "No generated/change region markers found; style lint applies to full HTML."
 );
+
+// Literal static clauses come from an actual supplied design source; absence is not compliance.
+if (!designRulesArg && !fs.existsSync(designRulesPath)) {
+  checks.push({ name: "Supplied design rules", passed: true, status: "N/A", detail: "No actual design rules supplied; visual compliance is unverified. General UX/browser checks still apply." });
+} else {
+  try {
+    const rules = JSON.parse(fs.readFileSync(designRulesPath, "utf8"));
+    const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
+    const clauseArray = (value) => Array.isArray(value) && value.length > 0 && value.every(nonempty);
+    if (!nonempty(rules.source) || !Array.isArray(rules.checks) || rules.checks.length === 0) {
+      throw new Error("Expected source and nonempty checks array.");
+    }
+    const seenIds = new Set();
+    for (const rule of rules.checks) {
+      if (!rule || !nonempty(rule.id) || seenIds.has(rule.id)) throw new Error("Each rule needs a unique nonempty id.");
+      seenIds.add(rule.id);
+      const limit = rule.maxOccurrences;
+      if ((rule.required !== undefined && !clauseArray(rule.required))
+        || (rule.forbidden !== undefined && !clauseArray(rule.forbidden))
+        || (limit !== undefined && (!limit || !nonempty(limit.text) || !Number.isInteger(limit.count) || limit.count < 0))
+        || (rule.required === undefined && rule.forbidden === undefined && limit === undefined)) {
+        throw new Error(`Invalid static clauses for ${rule.id}.`);
+      }
+      const missing = (rule.required || []).filter((text) => !generatedHtml.includes(text));
+      const forbidden = (rule.forbidden || []).filter((text) => generatedHtml.includes(text));
+      const occurrences = limit ? generatedHtml.split(limit.text).length - 1 : null;
+      const failures = [
+        ...missing.map((text) => `Missing ${JSON.stringify(text)}`),
+        ...forbidden.map((text) => `Forbidden ${JSON.stringify(text)}`),
+        ...(limit && occurrences > limit.count ? [`Found ${occurrences} occurrences, maximum ${limit.count}`] : [])
+      ];
+      addCheck(`Design rule: ${rule.id}`, failures.length === 0, `Source: ${rules.source}. ${failures.join("; ") || "Declared static clauses satisfied."}`);
+    }
+  } catch (error) {
+    addCheck("Supplied design rules valid", false, error.message);
+  }
+}
 
 if (prototypeSpec) {
   addCheck(
@@ -102,7 +138,6 @@ if (prototypeSpec) {
 }
 
 const primaryCount = count(/\b(bg|text|border)-primary\b/g);
-addCheck("Primary color usage <= 3", primaryCount <= 3, `Found ${primaryCount} primary utility usages.`);
 
 const stateMatches = uniq([...html.matchAll(/data-prototype-state=["']([^"']+)["']/g)].map((m) => m[1]));
 const stateCommentMatches = uniq([...html.matchAll(/STATE:\s*([^\n<]+)/g)].map((m) => m[1].trim()));
@@ -233,7 +268,7 @@ fs.writeFileSync(reportPath, [
   "",
   "| Check | Result | Detail |",
   "|---|---|---|",
-  ...checks.map((check) => `| ${check.name} | ${check.passed ? "PASS" : "FAIL"} | ${String(check.detail).replace(/\n/g, "<br>")} |`),
+  ...checks.map((check) => `| ${check.name} | ${check.status || (check.passed ? "PASS" : "FAIL")} | ${String(check.detail).replace(/\n/g, "<br>")} |`),
   "",
   "## Screenshots",
   "",
@@ -241,7 +276,7 @@ fs.writeFileSync(reportPath, [
   "",
   "## Coverage",
   "",
-  `- Primary utility usages: ${primaryCount}`,
+  `- Primary utility usages (informational, no default quota): ${primaryCount}`,
   `- States: ${allStates.join(", ") || "none"}`,
   `- Design decisions in brief: ${decisionIds.join(", ") || "none"}`,
   `- Design decisions mapped in HTML: ${mappedDecisionIds.join(", ") || "none"}`,

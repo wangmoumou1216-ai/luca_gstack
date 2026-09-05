@@ -26,8 +26,13 @@ const checks = [
   {
     file: '.claude/skills/office/references/html-prototype-tokens.md',
     needle: 'FILE_END: html-prototype-tokens.md',
-    why: 'shared-ref html-prototype-tokens 完整存在',
+    why: '保留原路径的中立共享合同完整存在；文件名不恢复旧 token/母版前提',
   },
+  ...['思考中', '低置信', '拒答', '部分完成', 'Steer', '幻觉兜底', 'Agent 执行中', 'prefers-reduced-motion'].map(needle => ({
+    file: '.claude/skills/office/references/html-prototype-tokens.md',
+    needle,
+    why: '移除旧视觉实现时必须保留 AI 状态与减少动效的通用语义',
+  })),
   {
     file: '.claude/skills/office/muse-proto-gen/SKILL.md',
     needle: '与 html-prototype Phase 3 同一份',

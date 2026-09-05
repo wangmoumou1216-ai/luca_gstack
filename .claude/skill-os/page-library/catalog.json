@@ -1,0 +1,572 @@
+{
+  "schema_version": 1,
+  "retired_page_ids": [],
+  "pages": [
+    {
+      "page_id": "list",
+      "name": "列表页",
+      "aliases": [
+        "列表",
+        "清单",
+        "客户列表",
+        "搜索筛选",
+        "list",
+        "records"
+      ],
+      "intent": "浏览多条记录，搜索和筛选后比较、选择或批量处理；可作为移动列表的信息结构参考，桌面布局不是约束。",
+      "scope": "framework",
+      "source_ref": "framework/list-page.html",
+      "source_hash": "717fe580063301810a1dc2f1c58892cef3f659f2ed934c162927657abc4bae6e",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "default"
+      ],
+      "regions": [
+        {
+          "region_id": "canvas",
+          "parent_id": null,
+          "name": "主内容区",
+          "aliases": [
+            "列表内容",
+            "工作区"
+          ],
+          "intent": "包含标题、搜索筛选、记录及分页；不包括全局导航。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-main-canvas"
+          }
+        },
+        {
+          "region_id": "title",
+          "parent_id": "canvas",
+          "name": "标题和主操作",
+          "aliases": [
+            "新建入口",
+            "导入",
+            "页面标题"
+          ],
+          "intent": "明确列表对象及创建、导入等主操作。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-list-title"
+          }
+        },
+        {
+          "region_id": "filters",
+          "parent_id": "canvas",
+          "name": "搜索和筛选工具栏",
+          "aliases": [
+            "搜索",
+            "筛选",
+            "过滤",
+            "查找",
+            "缩小结果",
+            "filter",
+            "search"
+          ],
+          "intent": "通过搜索和条件组合找到目标记录。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-list-toolbar"
+          }
+        },
+        {
+          "region_id": "records",
+          "parent_id": "canvas",
+          "name": "记录列表",
+          "aliases": [
+            "结果",
+            "条目",
+            "列表行",
+            "客户数据",
+            "表格",
+            "批量处理"
+          ],
+          "intent": "浏览、比较和选择记录；移动端可采用卡片或行式重排。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-list-table"
+          }
+        },
+        {
+          "region_id": "pagination",
+          "parent_id": "canvas",
+          "name": "分页和数量",
+          "aliases": [
+            "下一页",
+            "翻页",
+            "每页条数",
+            "结果数量"
+          ],
+          "intent": "识别记录总量及结果翻页位置。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-list-pagination"
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "detail-2col",
+      "name": "两列详情页",
+      "aliases": [
+        "详情",
+        "双列",
+        "主次栏",
+        "客户资料",
+        "详情和动态"
+      ],
+      "intent": "查看一个对象的关键信息与完整资料，旁侧查看相关动态和协作记录。",
+      "scope": "framework",
+      "source_ref": "framework/detail-page-2col.html",
+      "source_hash": "0c9edbd36d08ef29c1f80269bd9c10c9bdc749448eb3d246b825c50f141f0cc5",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "default"
+      ],
+      "regions": [
+        {
+          "region_id": "canvas",
+          "parent_id": null,
+          "name": "主内容区",
+          "aliases": [
+            "详情页主体"
+          ],
+          "intent": "详情标题和双列内容区域。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-main-canvas"
+          }
+        },
+        {
+          "region_id": "title",
+          "parent_id": "canvas",
+          "name": "对象标题与操作",
+          "aliases": [
+            "客户名称",
+            "详情头部"
+          ],
+          "intent": "识别当前对象并执行对象级操作。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-title-component"
+          }
+        },
+        {
+          "region_id": "key-info",
+          "parent_id": "canvas",
+          "name": "关键信息",
+          "aliases": [
+            "摘要",
+            "关键字段"
+          ],
+          "intent": "快速查看对象关键字段。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-left-key-info"
+          }
+        },
+        {
+          "region_id": "details",
+          "parent_id": "canvas",
+          "name": "详细资料",
+          "aliases": [
+            "字段分组",
+            "基本资料",
+            "属性"
+          ],
+          "intent": "按分组阅读完整对象资料。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-left-detail-panel"
+          }
+        },
+        {
+          "region_id": "activity",
+          "parent_id": "canvas",
+          "name": "动态侧栏",
+          "aliases": [
+            "跟进",
+            "协作",
+            "活动",
+            "时间线"
+          ],
+          "intent": "在资料旁查看相关动态与快捷记录入口。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-right-panel"
+          }
+        },
+        {
+          "region_id": "activity-feed",
+          "parent_id": "activity",
+          "name": "动态记录流",
+          "aliases": [
+            "沟通记录",
+            "跟进日志"
+          ],
+          "intent": "按时间阅读具体协作记录。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-right-activity-feed"
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "detail-3col",
+      "name": "三列详情页",
+      "aliases": [
+        "三列",
+        "客户概览和阶段",
+        "阶段与动态",
+        "摘要详情协作"
+      ],
+      "intent": "并列呈现对象摘要、业务阶段或详细资料、活动协作，适合多信息区同时定位。",
+      "scope": "framework",
+      "source_ref": "framework/detail-page-3col.html",
+      "source_hash": "ea2f9c1e8724022ff15e87c34f53205c25eb33dbcbf1450434319bc4fc3bfdd7",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "default"
+      ],
+      "regions": [
+        {
+          "region_id": "canvas",
+          "parent_id": null,
+          "name": "三列内容区",
+          "aliases": [
+            "详情页主体"
+          ],
+          "intent": "对象摘要、详细信息与动态的并列内容区。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-main-canvas"
+          }
+        },
+        {
+          "region_id": "summary",
+          "parent_id": "canvas",
+          "name": "左侧对象摘要",
+          "aliases": [
+            "左侧栏",
+            "概览",
+            "关键对象"
+          ],
+          "intent": "对象识别、常用操作、团队与摘要字段。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-col-left"
+          }
+        },
+        {
+          "region_id": "center",
+          "parent_id": "canvas",
+          "name": "中间业务详情",
+          "aliases": [
+            "中栏",
+            "业务内容"
+          ],
+          "intent": "业务阶段与分组详情的主阅读区。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-col-center"
+          }
+        },
+        {
+          "region_id": "stage",
+          "parent_id": "center",
+          "name": "业务阶段",
+          "aliases": [
+            "销售阶段",
+            "商机阶段",
+            "进度",
+            "pipeline"
+          ],
+          "intent": "识别业务进度及阶段相关任务。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-center-opportunity-stage"
+          }
+        },
+        {
+          "region_id": "details",
+          "parent_id": "center",
+          "name": "分组详细资料",
+          "aliases": [
+            "详情标签页",
+            "基本信息",
+            "属性分组"
+          ],
+          "intent": "通过标签页或折叠分组阅读字段。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-center-detail-tabs"
+          }
+        },
+        {
+          "region_id": "activity",
+          "parent_id": "canvas",
+          "name": "右侧动态协作",
+          "aliases": [
+            "右侧栏",
+            "动态",
+            "沟通"
+          ],
+          "intent": "协作入口、筛选和活动记录。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-col-right"
+          }
+        },
+        {
+          "region_id": "activity-feed",
+          "parent_id": "activity",
+          "name": "活动记录流",
+          "aliases": [
+            "跟进日志",
+            "日程记录",
+            "会议记录"
+          ],
+          "intent": "定位具体活动及其时间顺序。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-right-activity-feed"
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "form",
+      "name": "表单页",
+      "aliases": [
+        "表单",
+        "新建",
+        "录入",
+        "编辑资料",
+        "字段校验",
+        "填写",
+        "form"
+      ],
+      "intent": "集中创建或编辑对象，按字段分组输入资料；参考信息分组与填写位置，不继承旧组件技术规范。",
+      "scope": "framework",
+      "source_ref": "framework/form-page.html",
+      "source_hash": "f5d57ff5ad8ef6451c72e0772bd0c5ad46def4130f1c94cc3802e732a95de674",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "default"
+      ],
+      "regions": [
+        {
+          "region_id": "title",
+          "parent_id": null,
+          "name": "表单标题",
+          "aliases": [
+            "新建客户",
+            "创建对象"
+          ],
+          "intent": "识别当前创建任务。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h1",
+            "text": "新建 客户",
+            "ancestor_levels": 1
+          }
+        },
+        {
+          "region_id": "basic",
+          "parent_id": null,
+          "name": "基本信息字段组",
+          "aliases": [
+            "客户名称",
+            "主要字段",
+            "基础资料"
+          ],
+          "intent": "填写对象的基本资料。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "基本信息",
+            "ancestor_levels": 1
+          }
+        },
+        {
+          "region_id": "location",
+          "parent_id": null,
+          "name": "地区定位字段组",
+          "aliases": [
+            "地址",
+            "省市区",
+            "地区"
+          ],
+          "intent": "填写或定位地理区域。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "地区定位",
+            "ancestor_levels": 1
+          }
+        },
+        {
+          "region_id": "related-records",
+          "parent_id": null,
+          "name": "关联对象明细",
+          "aliases": [
+            "从对象",
+            "子表",
+            "关联条目",
+            "明细行"
+          ],
+          "intent": "填写或查看关联对象的多行明细。",
+          "anchor": {
+            "kind": "attribute",
+            "name": "data-module",
+            "value": "mod-list-table-wrap"
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "home",
+      "name": "首页与工作台",
+      "aliases": [
+        "首页",
+        "工作台",
+        "仪表盘",
+        "数据概览",
+        "dashboard",
+        "任务总览"
+      ],
+      "intent": "进入工作时汇总关键指标、待处理任务、常用工具、近期动态及日程；卡片内容可按需求增减。",
+      "scope": "framework",
+      "source_ref": "framework/home-page.html",
+      "source_hash": "635b5c0ca37e725f6b45082fb8825c6429a79d5053cf01e0fb7a6dde0799cbaa",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "default"
+      ],
+      "regions": [
+        {
+          "region_id": "metrics",
+          "parent_id": null,
+          "name": "数据概览",
+          "aliases": [
+            "指标",
+            "KPI",
+            "业绩",
+            "数字汇总"
+          ],
+          "intent": "快速查看业务指标与摘要数字。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "数据概览",
+            "ancestor_levels": 2
+          }
+        },
+        {
+          "region_id": "tasks",
+          "parent_id": null,
+          "name": "待处理任务",
+          "aliases": [
+            "待办",
+            "任务",
+            "今日要做"
+          ],
+          "intent": "定位需要处理的任务列表。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "任务",
+            "ancestor_levels": 3
+          }
+        },
+        {
+          "region_id": "tools",
+          "parent_id": null,
+          "name": "常用工具",
+          "aliases": [
+            "快捷入口",
+            "工具",
+            "常用功能"
+          ],
+          "intent": "进入经常使用的工作功能。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "工具",
+            "ancestor_levels": 2
+          }
+        },
+        {
+          "region_id": "activity",
+          "parent_id": null,
+          "name": "跟进动态",
+          "aliases": [
+            "最近活动",
+            "动态",
+            "跟进"
+          ],
+          "intent": "浏览近期跟进信息。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "跟进动态",
+            "ancestor_levels": 2
+          }
+        },
+        {
+          "region_id": "calendar",
+          "parent_id": null,
+          "name": "我的日程",
+          "aliases": [
+            "日程",
+            "安排",
+            "会议",
+            "日历"
+          ],
+          "intent": "查看时间安排。",
+          "anchor": {
+            "kind": "heading",
+            "tag": "h2",
+            "text": "我的日程",
+            "ancestor_levels": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "branch_fixture_version": "p6-page-flow-v2",
+  "contexts": {
+    "candidate": "cd37bd91699ce4f2ab98302722bc31588cf92f9bed6bb07f436c22481c11d73a",
+    "baseline": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7"
+  },
+  "scoring_revision": "v22-declared-contract-edges-and-frozen-release-binding",
+  "scoring_sha256": "61fe83d1242834fc0c769b0f645d3c765952b9fc8b8d6fd48a73f9c45a064f93",
+  "fallback_ids": [
+    "SC-20260905-001",
+    "SF-003",
+    "SF-005",
+    "SC-20260523-001",
+    "SC-20260523-002",
+    "SC-20260523-003"
+  ]
+}

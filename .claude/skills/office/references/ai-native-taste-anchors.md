@@ -4,6 +4,7 @@
 > 本文件用 **诊断 + 处方** 双栏结构。不只告诉你"什么是不好的"，
 > 还告诉你"具体怎么做能通过"。
 > 每个处方按"低/中/高实现成本"分级，配 B2B 销售场景的具体示例。
+> HTML 片段仅表达内容与控制位置，未包含视觉样式或事件实现；按当前项目/设计系统完成样式、接线和可访问性验证。
 > 结构方法论借鉴：Microsoft HAX Design Patterns 的 Problem/Solution/When to use/How to
 > use/Benefits/Pitfalls 六段式。
 
@@ -147,45 +148,41 @@ design-brief 记录"已知违反 Linear 锚点" + 合理理由。
 
 #### 实现方式（按成本分级）
 
-**方式 A · 四级字号规范（低成本，纷享销客规范）**
-```
-L1 区块标题 / 最重要数据：text-15 font-medium text-n19（15px/500/#181C25）
-L2 正文 / 字段值：text-13 font-normal text-n19（13px/400/#181C25）
-L3 字段标签 / 次要说明：text-13 font-normal text-n11（13px/400/#91959E）
-L4 辅助 / 时间戳：text-12 font-normal text-n11（12px/400/#91959E）
-```
-适用：所有 B2B SaaS 信息密集场景
+**方式 A · 明确内容层级（低成本）**
+- L1：区块标题或最重要数据
+- L2：正文、字段值与核心任务信息
+- L3：字段标签和次要说明
+- L4：辅助信息、时间戳等元数据
+按实际内容选用层级；字号、行高、字重与颜色由当前项目/设计系统决定。
 
-**方式 B · 颜色 + 字重分层（中成本）**
-- L1 用品牌色或深黑（#181C25），吸引视线
-- L2 用中黑（#181C25）但字重 400
-- L3 用浅灰（#91959E）主动降权
-- 同行信息层级：L1 字段名 + L2 字段值 一行显示
+**方式 B · 视觉权重分层（中成本）**
+- 主要信息建立焦点，正文维持稳定阅读节奏，次要信息适度降权。
+- 用当前设计系统的大小、字重、颜色共同区分层级；任何真实文字都保持可读。
+- 标签和值在同一信息组内可辨认，不用某个固定颜色代替语义判断。
 
 **方式 C · 空间 + 对齐分层（高成本，精细化）**
-- L1 独占一行，左对齐
-- L2 紧跟 L1，缩进 4-8px
-- L3 右对齐或灰色小字填充
-- 用格子对齐而非自由流
+- 用分组、对齐与阅读顺序表达信息关系，避免自由漂移的元素。
+- 主要信息容易找到，相关详情跟随，辅助信息不争抢焦点。
+- 具体排列与间距由当前项目/设计系统实现。
 
 #### B2B 销售场景反例 vs 正例
 
 ```
-❌ 反例 · 客户详情页所有字段都用 14px / #333
-  - 客户名、成立时间、行业、电话、地址 同等权重
+❌ 反例 · 客户详情页所有字段同等视觉权重
+  - 客户名、成立时间、行业、电话、地址没有主次
   - 销售扫视时视线到处跳，找不到焦点
 
-✅ 正例 · 四级字号分层
-  - L1：客户名 15px/500 + 行业标签（紧跟）
-  - L2：核心联系人 + 上次跟进时间（13px/400 黑）
-  - L3：地址、注册时间（13px/400 灰）
-  - L4：创建时间、最后更新（12px/400 灰）
+✅ 正例 · 按任务建立层级
+  - L1：客户名 + 行业标签
+  - L2：核心联系人 + 上次跟进时间
+  - L3：地址、注册时间
+  - L4：创建时间、最后更新
 ```
 
 #### 不通过动作
 
 重新规划信息层级；不要靠加空白/加卡片/加分割线美化。对照
-`html-prototype-tokens.md` 第 2 节的四级字号规范重做。
+`html-prototype-tokens.md` 第 2 节的层级与可读性要求重做，视觉值采用当前设计系统。
 
 ---
 
@@ -307,9 +304,9 @@ AI**（此场景不适合 AI）。
 做法：结论后加可点击的角标，hover 显示来源摘要，点击跳转原始数据。
 
 ```html
-<div class="text-13">
+<div>
   预测成单概率 73%
-  <sup class="text-12 text-primary cursor-pointer" title="基于近 30 天 47 个同类客户的历史数据">
+  <sup title="基于近 30 天 47 个同类客户的历史数据">
     [1]
   </sup>
 </div>
@@ -326,12 +323,12 @@ B2B 场景示例：
 做法：高/中/低标签 + 颜色 + 一句话说明"什么数据支撑了这个判断"。
 
 ```html
-<div class="flex items-center gap-2 text-12">
-  <span class="text-n11">AI 分析：</span>
-  <span class="bg-warning-bg text-warning border border-warning-border px-2 py-0.5 rounded">
+<div>
+  <span>AI 分析：</span>
+  <span>
     置信度：中
   </span>
-  <span class="text-n11">依据：2 次有效联系 + 1 次报价</span>
+  <span>依据：2 次有效联系 + 1 次报价</span>
 </div>
 ```
 
@@ -346,9 +343,9 @@ B2B 场景示例：
 做法：不只给结论，同时给"如果 X 变了，结论会变成 Y"的敏感性说明。
 
 ```html
-<div class="bg-special01 p-3 rounded text-13 text-n15">
-  <div class="font-medium text-n19 mb-1">建议优先级：第 1 位</div>
-  <div class="text-12 text-n11">
+<div>
+  <div>建议优先级：第 1 位</div>
+  <div>
     如果合同截止日期推迟 2 周 → 优先级降至第 3 位<br>
     如果对方追加需求 → 优先级保持第 1 位
   </div>
@@ -414,11 +411,11 @@ B2B 场景示例：
 当 AI 输入数据不足时，UI 主动告知而不是硬生成：
 
 ```html
-<div class="bg-special01 border border-n05 rounded p-4">
-  <div class="text-13 text-n15">
+<div>
+  <div>
     暂无足够数据生成 AI 建议（该客户仅有 1 次联系记录）
   </div>
-  <div class="text-12 text-n11 mt-2">
+  <div>
     建议在 2 次联系后再使用 AI 分析。
   </div>
 </div>
@@ -429,16 +426,16 @@ B2B 场景示例：
 超出能力时明确拒答，同时给替代路径：
 
 ```html
-<div class="bg-warning-bg border border-warning-border rounded p-4">
-  <div class="text-13 font-medium text-warning mb-1">
+<div>
+  <div>
     AI 暂时无法给出可靠建议
   </div>
-  <div class="text-13 text-n15 mb-3">
+  <div>
     该请求涉及跨地区法务合规，需要专家人工判断。
   </div>
-  <div class="flex gap-3">
-    <button class="text-13 text-primary hover:underline">查看类似案例</button>
-    <button class="text-13 text-primary hover:underline">联系法务支持</button>
+  <div>
+    <button>查看类似案例</button>
+    <button>联系法务支持</button>
   </div>
 </div>
 ```
@@ -490,32 +487,32 @@ B2B 场景示例：
 **低成本：** 执行前显示计划清单，用户批准后整体执行。
 
 ```html
-<div class="bg-info-blue-bg border border-info-blue-border rounded p-4">
-  <div class="text-13 font-medium mb-2">AI 即将执行以下 3 步：</div>
-  <ol class="space-y-1 text-13 text-n15 mb-3">
+<div>
+  <div>AI 即将执行以下 3 步：</div>
+  <ol>
     <li>1. 查询近 30 天的跟进记录</li>
     <li>2. 按成单概率排序客户</li>
     <li>3. 生成本周跟进计划并保存到"我的任务"</li>
   </ol>
-  <button class="text-primary">批准并执行</button>
-  <button class="text-n15 ml-3">取消</button>
+  <button>批准并执行</button>
+  <button>取消</button>
 </div>
 ```
 
 **中成本：** 执行中实时展示每步进度。
 
 ```html
-<div class="space-y-2">
-  <div class="flex items-center gap-3 text-13">
-    <span class="w-5 h-5 rounded-full bg-info-green text-white flex items-center justify-center">✓</span>
+<div>
+  <div>
+    <span>✓</span>
     <span>已查询 47 条跟进记录</span>
   </div>
-  <div class="flex items-center gap-3 text-13">
-    <span class="w-5 h-5 rounded-full bg-info-blue animate-pulse"></span>
+  <div>
+    <span>执行中</span>
     <span>正在按成单概率排序...</span>
   </div>
-  <div class="flex items-center gap-3 text-13 text-n11">
-    <span class="w-5 h-5 rounded-full border-2 border-n07"></span>
+  <div>
+    <span>未执行</span>
     <span>生成计划</span>
   </div>
 </div>
@@ -526,16 +523,16 @@ B2B 场景示例：
 执行中随时可暂停，状态保留。
 
 ```html
-<div class="flex items-center gap-3">
-  <div class="flex-1">AI 正在处理 (2/5)</div>
-  <button class="text-13 text-n15 hover:text-n19">暂停</button>
+<div>
+  <div>AI 正在处理 (2/5)</div>
+  <button>暂停</button>
 </div>
 <!-- 暂停后 -->
-<div class="bg-warning-bg p-3 rounded">
-  <div class="text-13">已暂停在第 3 步。可以随时恢复。</div>
-  <div class="flex gap-3 mt-2">
-    <button class="text-13 text-primary">恢复</button>
-    <button class="text-13 text-n15">接管（手动完成剩余步骤）</button>
+<div>
+  <div>已暂停在第 3 步。可以随时恢复。</div>
+  <div>
+    <button>恢复</button>
+    <button>接管（手动完成剩余步骤）</button>
   </div>
 </div>
 ```
@@ -545,11 +542,11 @@ B2B 场景示例：
 从暂停状态切换到手动，已完成步骤保留。
 
 ```html
-<div class="space-y-2">
+<div>
   <div>已完成步骤（Agent 完成）：</div>
-  <div class="text-13 text-n15">✓ 查询数据 ✓ 排序客户</div>
-  <div class="mt-3">剩余步骤（由您手动完成）：</div>
-  <div class="text-13">☐ 生成计划 — <button class="text-primary">开始手动</button></div>
+  <div>✓ 查询数据 ✓ 排序客户</div>
+  <div>剩余步骤（由您手动完成）：</div>
+  <div>☐ 生成计划 — <button>开始手动</button></div>
 </div>
 ```
 
@@ -558,14 +555,14 @@ B2B 场景示例：
 每个 Agent 动作完成后给"回执"，支持撤销。
 
 ```html
-<div class="bg-special01 p-3 rounded">
-  <div class="text-13">AI 已完成：</div>
-  <ul class="text-12 text-n11 mt-1 space-y-1">
-    <li>修改了 5 条商机阶段（<a class="text-primary">查看</a>）</li>
-    <li>生成了 1 份周报（<a class="text-primary">查看</a>）</li>
-    <li>草拟了 3 封跟进邮件（<a class="text-primary">查看</a>，未发送）</li>
+<div>
+  <div>AI 已完成：</div>
+  <ul>
+    <li>修改了 5 条商机阶段（<a>查看</a>）</li>
+    <li>生成了 1 份周报（<a>查看</a>）</li>
+    <li>草拟了 3 封跟进邮件（<a>查看</a>，未发送）</li>
   </ul>
-  <button class="text-13 text-primary mt-2">全部撤销</button>
+  <button>全部撤销</button>
 </div>
 ```
 

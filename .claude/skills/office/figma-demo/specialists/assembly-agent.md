@@ -131,31 +131,18 @@ DemoController.autoPlayInterval = {blueprint.presentation.auto_play_interval || 
 
 ### Step 7：复制资源文件
 
-```bash
-# 复制 framework 资源到产出目录
-mkdir -p {prototype_dir}/assets
-cp -r framework/assets/vendor {prototype_dir}/assets/
-cp -r framework/assets/icons {prototype_dir}/assets/
-cp framework/tokens.css {prototype_dir}/assets/tokens.css
-# 如果有 fragment 引用了 ai-notes 或 figma 资源
-cp -r framework/assets/ai-notes {prototype_dir}/assets/ 2>/dev/null
-cp -r framework/assets/figma-icons {prototype_dir}/assets/ 2>/dev/null
-```
+核对各 fragment 实际引用的资源，仅复制已采用且有来源的依赖到 `{prototype_dir}/assets/`。
+采用本地 Tailwind 时复制其运行文件；图标/字体按实际引用复制。源文件只读，
+不无条件复制或注入 `framework/tokens.css`；没有实际 token 依赖时使用合并后的本地样式即可。
+记录每项来源、目标路径和未解决依赖，缺实际依赖返回 BLOCKED。
+在模板的 `ASSEMBLY: INSERT ACTUAL LOCAL DESIGN RESOURCES HERE` 位置写入这些实际依赖的
+本地引用；需要 Tailwind 配置时只从 blueprint.meta.design_system 编译，不恢复旧品牌配置块。
 
 ### Step 8：路径修正
 
-```
-所有 fragment 中的资源路径统一修正：
-  ../../framework/assets/ → ./assets/
-  ../../framework/tokens.css → ./assets/tokens.css
-  ../assets/ → ./assets/
-  framework/assets/ → ./assets/
-  framework/tokens.css → ./assets/tokens.css
+把实际复制的资源引用统一改为产出目录内对应路径，保留文件之间的相对关系。
+逐项确认离线可达；不把旧 framework 路径替换表当成自动引入资源的指令。
 
-检查：
-  grep -rn 'framework/assets\|framework/tokens.css\|\.\./' {output_path} | head -20
-  → 确保没有残留的相对路径引用
-```
 
 ### Step 9：自检
 
@@ -176,7 +163,7 @@ grep -A 50 'DemoController.transitions' {output_path} | head -50
 echo "=== 重复 class 定义检查 ==="
 grep -oP '\.[a-zA-Z][\w-]+\s*{' {output_path} | sort | uniq -c | sort -rn | head -10
 
-# 5. Tailwind CDN 路径正确
+# 5. 采用 Tailwind 时核验本地路径；未采用时该项 N/A
 grep 'tailwindcss' {output_path}
 
 # 6. 无 console.error 风险
@@ -238,7 +225,7 @@ wc -l {output_path}
 - 首节点 active：✅
 - 过渡动画完整：✅
 - CSS 无冲突：✅
-- Tailwind 路径：✅
+- 本地资源路径：✅（Tailwind 仅在实际采用时核验）
 - reduced-motion：✅
 
 ## 发现的问题

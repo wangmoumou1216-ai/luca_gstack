@@ -1,0 +1,425 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "scope": "B4/B5 local branch closure under approved R-2; not whole mainline completion",
+  "head": "94f086233affb3bd08ad8fe33063bcfedb330edf",
+  "checkout_review_manifest": {
+    ".agents/skills/figma-layer": {
+      "deleted": true
+    },
+    ".agents/skills/magicpath/SKILL.md": {
+      "sha256": "c3f050ce2045b23c573bf78af2dcff4962d688707d7051717e1045187cf37271"
+    },
+    ".claude/agents/orchestrator.md": {
+      "sha256": "a5873fcc846990ddfd8b92dd2be9d90d504eaf56ddc498fa2fbbdc7e8e791835"
+    },
+    ".claude/agents/plan-agent.md": {
+      "sha256": "1bf30e2e05add3db41687399cfe63609419250c99383369e5dc7b5a1496823b3"
+    },
+    ".claude/agents/preflight-agent.md": {
+      "sha256": "dc756139173f248678b8f022b1f742bceafc1c9b343fb3d1fcc81997273554fa"
+    },
+    ".claude/agents/quality-gate.md": {
+      "sha256": "28b27008b5ac114c5f1ab4c66237857de048449374a6bf37b90fce62d30d9144"
+    },
+    ".claude/commands/figma-layer.md": {
+      "deleted": true
+    },
+    ".claude/hooks/route-guard.mjs": {
+      "sha256": "352deb05f6ce8d0e0f37dacbb8f92551e4edd844785bdf2dadeaa8c522368db8"
+    },
+    ".claude/hooks/session-restore.mjs": {
+      "sha256": "e3d599a4e0b2873b4dc5785d718c73bec40b7db1627e0915dadd9f9196714626"
+    },
+    ".claude/skill-os/agent-context-manifest.json": {
+      "sha256": "8c5e251bb66f96e1cda2d34825710d248c58efb71620c544a5e802c399fd4ee2"
+    },
+    ".claude/skill-os/agent-context-state.json": {
+      "sha256": "017ab908f800f27ac5a6b3178042d24c712da73984155e33c3482ff4c3916df9"
+    },
+    ".claude/skill-os/agent-root-kernel.json": {
+      "sha256": "1c83723a643399829d4aede7c94c9e393f6510a74bdafbbccd556cbb6c5be956"
+    },
+    ".claude/skill-os/capability-parity.json": {
+      "sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f"
+    },
+    ".claude/skill-os/codex-viability.yaml": {
+      "sha256": "d3b1259355636ac277d1e46469180733a6320ba73616c54b8b29061d638e37ac"
+    },
+    ".claude/skill-os/crm-profile.md": {
+      "sha256": "e1de0646acae17b8b2dc06d9f29a1cb6482c129fec6c8ce36c34d66c43b25251"
+    },
+    ".claude/skill-os/evolution/FUSION-RUNBOOK.md": {
+      "sha256": "10b60b1f1f2596b373384eef0e218e301a6b2d9b97b0fe764ae1406f415fe484"
+    },
+    ".claude/skill-os/evolution/self-model.generated.yaml": {
+      "sha256": "a86512df68d97f27b5e8bc864411c4b1945b84fb0724e5a1d46369a5137572d6"
+    },
+    ".claude/skill-os/evolution/self-model.yaml": {
+      "sha256": "ffbc028e077e6835445e3c14b55c8f3e1bbcf6373bca1c478a6886c772f19dae"
+    },
+    ".claude/skill-os/generated/skill-catalog.md": {
+      "sha256": "5ff782f39baf96078d0c90cfc0484400a10e0da57d4a5497d9552b348ea0613f"
+    },
+    ".claude/skill-os/generated/static-fallback.md": {
+      "sha256": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3"
+    },
+    ".claude/skill-os/input-modes.yaml": {
+      "sha256": "95f5ab9f60b4cf0298911a019dc3e92b0cf501db3afaf906ac89a5fba85b1492"
+    },
+    ".claude/skill-os/model-routing.yaml": {
+      "sha256": "51e76221f642a74c44bf35fc0b3caf1af900ce1d595936d08e2cb545ca34dc4f"
+    },
+    ".claude/skill-os/optional-workflow-graph.yaml": {
+      "sha256": "606bae9b57f00eaaffcb898af8420c40479fa858188b52c9805e1ae6aecd146b"
+    },
+    ".claude/skill-os/page-library/catalog.json": {
+      "sha256": "91d8304b067c775263643645177b5da5fd3c016be69aae93c1f86b76c7d5cce7"
+    },
+    ".claude/skill-os/page-library/schema.json": {
+      "sha256": "aec7c02cdc697c2d25ee72ad14ba098154bd1f61628738aaa6cab5718b9de829"
+    },
+    ".claude/skill-os/routing-chain-check.md": {
+      "sha256": "513e31efb5afaadd2b99d75d803ec6c037dd20f07847f1e7fde4cf9859eb4dd1"
+    },
+    ".claude/skill-os/runtime/cross-harness.md": {
+      "sha256": "78fdc7bcc2f9c1d72fd4df5bf2c30c3cd42e4c3c7bf652e76e9806c4196b3f1e"
+    },
+    ".claude/skill-os/runtime/framework-maintenance.md": {
+      "sha256": "80541e66b9220f9eb59161263f0b243a31acc81aa80b393739ade57c1b945004"
+    },
+    ".claude/skill-os/runtime/harness-boundary.md": {
+      "sha256": "bfe8351b6aca388f18ec6f72ee0d61c757c76498f76560bada8ac0fa81459f1c"
+    },
+    ".claude/skill-os/runtime/long-session.md": {
+      "sha256": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117"
+    },
+    ".claude/skill-os/runtime/luca-app.md": {
+      "sha256": "3efcc7bd232070b4a5bb67aa3115e04769bfc3f293f9c13f7c0eb89a4b621bab"
+    },
+    ".claude/skill-os/runtime/page-context.md": {
+      "sha256": "8a2655c85796d7ee61624ac5341e546b5d0e0b9058013d8f9f0e5e6702baacfb"
+    },
+    ".claude/skill-os/runtime/project-session.md": {
+      "sha256": "9d2724eba9edfa30000f550d5c5323dc75df9950b2b5e36af1dc4c6f857cd3a6"
+    },
+    ".claude/skill-os/skill-routing-map.yaml": {
+      "sha256": "bc588e46235b1d536cd0b9194a2f8ca89650cfd5bae3ce35225aa78b1d8cc0e2"
+    },
+    ".claude/skill-os/skill-visibility.json": {
+      "sha256": "563b72030df9cc9201a49fb2c9839706c2a5d89b7d040e5575f8d7b486789104"
+    },
+    ".claude/skills/office/SKILL.md": {
+      "sha256": "855e5f9506d450b128f811fe5e6fbfbef65ceddd0067a9297d84a9cd374b5f52"
+    },
+    ".claude/skills/office/auto/SKILL.md": {
+      "sha256": "c82fdd257ef292af0b80523572f219d30f3ffb611274d7c20a06ca86314e0314"
+    },
+    ".claude/skills/office/design-brief/README.md": {
+      "sha256": "6e9fff05cb3734efc2ffbee202303d8eefc010cf02a972ec276e469318644131"
+    },
+    ".claude/skills/office/design-brief/SCHEMA.md": {
+      "sha256": "7b35d5c25054d329a64468f038171be149730b112759ccc187dcfdfacfa426b8"
+    },
+    ".claude/skills/office/design-brief/SKILL.md": {
+      "sha256": "3a5b35ccc91251b5d679531dc205b8bb23a8d5a71b2bbc429d97458cb7061e96"
+    },
+    ".claude/skills/office/design-brief/references/output-templates.md": {
+      "sha256": "5470f7fe919fc29bc61f204260d0e8b8b3a531755c809fbcf4fde18cd352810f"
+    },
+    ".claude/skills/office/evals/SKILL.md": {
+      "sha256": "4b589310f9ad5bd47a068aab7d32a3d92911736ac452d7e9e2400ad4708aa53b"
+    },
+    ".claude/skills/office/figma-demo/SCHEMA.md": {
+      "sha256": "3ee0853bc8f0c1cca1b86fe702db6db2b538d430a8ed1b9609bda9c7f67e9807"
+    },
+    ".claude/skills/office/figma-demo/SKILL.md": {
+      "sha256": "7d70d49688ce7888769540cbfeb6f6c57e0883bce561c827e74722704bba161b"
+    },
+    ".claude/skills/office/figma-demo/references/blueprint-schema.md": {
+      "sha256": "b087837d0bf0a8ae80186e2300dcb1fd1402a0c6bc357bcf655d80dccb5f0c3c"
+    },
+    ".claude/skills/office/figma-demo/references/builder-constitution.md": {
+      "sha256": "643343160491d3b0efb9c62f5916963030c4408c03f90134e168bf31d080166c"
+    },
+    ".claude/skills/office/figma-demo/references/semantic-dictionary.md": {
+      "sha256": "c41c214e904b55c5060fc637420cc85be588ff97b78314074aee43c5b6b13804"
+    },
+    ".claude/skills/office/figma-demo/specialists/assembly-agent.md": {
+      "sha256": "7f29f620737f4357414b950e6e6b3389e75683cc0c6e892f3472f81008d2a4e1"
+    },
+    ".claude/skills/office/figma-demo/specialists/builder-agent.md": {
+      "sha256": "27120ca90f3d598fa5f06c0a862f1a49302b45f625af631156a50d3be45387b1"
+    },
+    ".claude/skills/office/figma-demo/templates/demo-template.html": {
+      "sha256": "405b7b2ececee217801c5f7c4676273baf0a3aac58674001130aeee5f55d031f"
+    },
+    ".claude/skills/office/figma-layer/SCHEMA.md": {
+      "deleted": true
+    },
+    ".claude/skills/office/figma-layer/SKILL.md": {
+      "deleted": true
+    },
+    ".claude/skills/office/html-prototype/SCHEMA.md": {
+      "sha256": "b22d539ea3fc9748d3789c05fa3bf7b4fa01042d45ca5f64974039bd52448abd"
+    },
+    ".claude/skills/office/html-prototype/SKILL.md": {
+      "sha256": "9a61002faa85712aa171115f01a76a625c4cd6f7f218950436ce29ed806772b7"
+    },
+    ".claude/skills/office/html-prototype/references/current-aesthetic-rubric.md": {
+      "sha256": "c4520caf330f23926ed6ec585666f5d156bc53a35455c9a0499b93be7c9f83ad"
+    },
+    ".claude/skills/office/html-prototype/references/dynamic-reference-protocol.md": {
+      "sha256": "3509692ea42a172f98de454a00dec0ba4b7f76aa58e7faf9cb8a2b14145d74a3"
+    },
+    ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs": {
+      "sha256": "99dd2a1427ae25c4dcbd5f041d8a8a4bafa108a613c38a985f9c2e51079ff009"
+    },
+    ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs": {
+      "sha256": "c7a4d290cd5827217b3762834f310f98f6aa1bfd5190096e1f4bd835ecf9897c"
+    },
+    ".claude/skills/office/magicpath/SKILL.md": {
+      "sha256": "91f6fcb0ab0a2a429c5de6c142dbe4c0156fe3f2bb7eef3602f3c4b4ccc9a56b"
+    },
+    ".claude/skills/office/muse-loop-orchestrate/SKILL.md": {
+      "sha256": "dc5fb0c9e20ba88c6a4d466fdba5f4675011cc76e7917685e1562550a8208567"
+    },
+    ".claude/skills/office/muse-proto-gen/SKILL.md": {
+      "sha256": "73ee65e25246e96af85865aea6c1a2eb642bbd840ac1c916213c283427d1d912"
+    },
+    ".claude/skills/office/open-design/SKILL.md": {
+      "sha256": "b4ec78a394f9c955066d850b5542bf6944072fcb53e1bd3b0afc8bf8f38372bd"
+    },
+    ".claude/skills/office/redteam/SKILL.md": {
+      "sha256": "4d1fa7302acfbd60692d7ca5f776308f5a6f3ba291a1a423bba78f926edf15fc"
+    },
+    ".claude/skills/office/references/ai-native-state-coverage.md": {
+      "sha256": "455301315a1444490080f825490f0bacd301c42fcdf8dbc55f15b2e4dd716f54"
+    },
+    ".claude/skills/office/references/ai-native-taste-anchors.md": {
+      "sha256": "32437e731794b028108e49ff66cf93a9386558639a25cbbdaf573b2c5c13514d"
+    },
+    ".claude/skills/office/references/design-system-contract.md": {
+      "sha256": "d9d0315229303f3a03da852c289157f4fc7468171c8f67127dcc6664c9d9a005"
+    },
+    ".claude/skills/office/references/dev-handoff-dimensions.md": {
+      "sha256": "8b964e5520a24eb35f1d5edf66e4c2e85ff96b6bcba370b20bbe7db928c34daa"
+    },
+    ".claude/skills/office/references/html-prototype-tokens.md": {
+      "sha256": "ff6ee1dce2ec57a9f4fc7bc07ab13b8f58d0b46fc31350d398d9e67c91ae4160"
+    },
+    ".claude/skills/office/references/interaction-mechanics.md": {
+      "sha256": "0016fcb389d53a677e45b7dfd64783d2995714ab40e44514302f79f8dffee7a7"
+    },
+    ".claude/skills/office/references/office-wizard.md": {
+      "sha256": "0fc179f94ba580a001769326b6ef3cc62cf8e8bf9bf98487370fd602349f0fe9"
+    },
+    ".claude/skills/office/references/ux-evaluation-framework.md": {
+      "sha256": "314428fdc7ede54c03c5edcf068cdb9ec0e1e309c8fb050379064eeaaccbe6d3"
+    },
+    ".claude/skills/office/task-plan/SKILL.md": {
+      "sha256": "a9543304332d75a35c70261b4c469cbf18d3128e7aa5b32a0c97e054583447e3"
+    },
+    ".claude/skills/office/tech-spec/SKILL.md": {
+      "sha256": "a39ae318bbbe9fbd318d71935db357a03a8439c0410ce052cae0b263e0645cc3"
+    },
+    ".claude/skills/office/ux-audit/SCHEMA.md": {
+      "sha256": "7da53e1dde3810289fc2e501828963c7cac87ce238c5fc53e9df726fd0c9a267"
+    },
+    ".claude/skills/office/ux-audit/SKILL.md": {
+      "sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5"
+    },
+    ".claude/skills/office/ux-audit/specialists/module-a-visual.md": {
+      "sha256": "5d834ea31469a621f2186112b2cfb7f67a4dd19b0e5514ca099e79c6226ee13f"
+    },
+    ".claude/skills/office/ux-audit/specialists/module-b-interaction.md": {
+      "sha256": "16fa82ea8979774597a385809c09a0ac956c42a20b28974c34410954d6b42fe6"
+    },
+    ".githooks/commit-msg": {
+      "sha256": "2cf690ab44678e9437673905885d7ab9a627bb07b736c35eda65785e557ed980"
+    },
+    ".github/workflows/ci.yml": {
+      "sha256": "43ef7db2c4676d485b0e2e0fd40f5ab8715c79de3ef0b749af71720a42c538dd"
+    },
+    "AGENTS.md": {
+      "sha256": "c7cd3b46a1a00e2981818080d7919a5ae1db054378f07de252a0575298d60585"
+    },
+    "CHANGELOG.md": {
+      "sha256": "b997d1270c3997e58e64cb5144cc02720e0405f9aa58ec8cb50ea474f5b520e3"
+    },
+    "CLAUDE.md": {
+      "sha256": "c198372530d1a43a8d8471922dedbea026925a580b9a72fa487cee119ad24dbb"
+    },
+    "CONTEXT.md": {
+      "sha256": "26796a2b2ec3925dd0815f4597f9c5e3e72b7c873cb5c797d22701ffa438bd2d"
+    },
+    "brand-tokens.md": {
+      "deleted": true
+    },
+    "constitution.md": {
+      "sha256": "97e146bb56c92826066eec8b8c58338dc5ae0492723fb2d26d0486b1b24427d0"
+    },
+    "memory/evals/eval-log.jsonl": {
+      "sha256": "0c63a983560ae4347d707e00f545d0f9f5ddcd486ddc5efd9e3be7188bf3b09e"
+    },
+    "memory/evals/routing/fixtures.jsonl": {
+      "sha256": "7475f9215988a1dec40bcff8ee4a518b3d3dc248cc68e69d2eff62a6f8875257"
+    },
+    "memory/scripts/check_memory_health.py": {
+      "sha256": "554f0a6c4a6e15e43238f04433926063de6a2e65734d2c2fdfd2d34d799c3f6f"
+    },
+    "memory/scripts/consolidate_memory.py": {
+      "sha256": "3a34fc7e548b2d53805bb39f3d2057234ed660dcacb879063abb26703ac914df"
+    },
+    "memory/scripts/daily_governance.py": {
+      "sha256": "3a710226eb906fa8c9bfd3bdcbc9265c00becf8d50f199c3af3b9a86e030294a"
+    },
+    "memory/semantic/archive/superseded-facts-2026.yaml": {
+      "sha256": "ddc4e8a98d97c001a078e33daa36a1f8857ba452de606a22d786dfcb058c0523"
+    },
+    "memory/semantic/promoted-facts.yaml": {
+      "sha256": "375e10c52bb2454fcb7d52dd981cbb3b077f9194715b50283b31d91f06002bd3"
+    },
+    "memory/semantic/reviews.jsonl": {
+      "sha256": "2882dc4220110ad43fea6aa9568c53bf1c1a5f6d4c5df3128f305fc51285d767"
+    },
+    "memory/semantic/static-fallback-allowlist.txt": {
+      "sha256": "bd51cc59d214501adb3968e43f8a9c1f1156df7b8004ed69461f4fa2a75b4870"
+    },
+    "package.json": {
+      "sha256": "c988cbebe522fd1eb08d3a8fe04767b642e2e932712308d92c0b804144fe3103"
+    },
+    "scripts/agent-context-branch-fixtures.mjs": {
+      "sha256": "161b03cffaea9a29e155bc5a4a6840ed5dbabb9394e1deb1b381f87a3b10e496"
+    },
+    "scripts/build-agent-context.py": {
+      "sha256": "f87b7ac27756b386394a19b273fab749897a284107393e3577d0cd6e62315175"
+    },
+    "scripts/check-agent-context.mjs": {
+      "sha256": "26df78753155cb3dd3ebc403308dd5a06546434d1cc7b7befebb1a9e5dd6d06e"
+    },
+    "scripts/check-agents-parity.mjs": {
+      "sha256": "2e9d5f4e0dd997d205abd036d6259a09a372c2cbe86c5f7a3404755c7aa6057e"
+    },
+    "scripts/check-appendix-pointers.mjs": {
+      "sha256": "8f4a43cbfd4e5394f17224777cd6332e0ea9b00de174a04eb0902174eafa9aa2"
+    },
+    "scripts/check-ci-contract.mjs": {
+      "sha256": "e55146fc2e42c17c52d34ccc83a5ed380d003d8c1487daebb58d428b4e3eab80"
+    },
+    "scripts/check-coding-discipline.mjs": {
+      "sha256": "193e9ec81f778a00882b5a01fc2cb5823bc35de34dd3f79a1a33fcfa92b724ec"
+    },
+    "scripts/check-model-table.mjs": {
+      "sha256": "c61400328148918b01679682fbe14efc8f5d9fe34451da8f5317536fe4a35849"
+    },
+    "scripts/check-muse-loop-sync.mjs": {
+      "sha256": "9ec52c1394c862482d17ce242300652f576904695043fd4b5a30f4d45b5294f0"
+    },
+    "scripts/check-project-routing.mjs": {
+      "sha256": "a9c70b98692752c398bbeec52cdb7e5a39010f0ef8533a5c837952548a97bba1"
+    },
+    "scripts/check-quality-gates.mjs": {
+      "sha256": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45"
+    },
+    "scripts/check-registration-sync.mjs": {
+      "sha256": "d2c1f12ee170b23c276a19ac74f32d8c94a819cf39528ee9ce5fd79a30636e94"
+    },
+    "scripts/check-routing-map.mjs": {
+      "sha256": "015876494f35fac6735a2d475ed19f94dedad31c7eb59be4f110c550d31c6760"
+    },
+    "scripts/check-skill-scene-coverage.py": {
+      "sha256": "68390f0a8a6f41bd4642bdb9e63be56ff98494cf56725e19746f18e65fe307fd"
+    },
+    "scripts/design-flow-handoff.mjs": {
+      "sha256": "05ae006c7ced4eb836484c831bcbf1660123e72e4e87f75d44630655f2ed4836"
+    },
+    "scripts/fusion-preflight.py": {
+      "sha256": "6b6ea4814632dd5d48fbe596cdef84cdbc7d083e78fac00d6667b4a2f890fb9e"
+    },
+    "scripts/page-context-preview.mjs": {
+      "sha256": "465fc1b11b16030b4197349e39c9fab9b6b16186495e637ee12005663a0a1065"
+    },
+    "scripts/page-context.mjs": {
+      "sha256": "5ffb01391abd069848fb57ea416481cc96b3b3d55fa9fc38afbd44f2baede81b"
+    },
+    "scripts/resolve-agent-context.mjs": {
+      "sha256": "57336884efe38d0815921e47b4423d6d90a6a3483f28a0f1f6663a3e58bc0ed1"
+    },
+    "scripts/run-agent-context-ab.mjs": {
+      "sha256": "66727557563c806cf1e5ff542a6fbab0aef8aac6b55da93d2eb6d36a24e3b652"
+    },
+    "scripts/sync-magicpath-projection.mjs": {
+      "sha256": "d0d1fec467f52e788734c9f51254842ace375a3a9864237e5f72a3ea4e786f51"
+    },
+    "scripts/test-agent-context-branch-fixtures.mjs": {
+      "sha256": "d7e627e303eaf58f633ccb906c917f06f3dbae98bf7c7b49aac5ae733fa3c7b6"
+    },
+    "scripts/test-agent-context-resolution.mjs": {
+      "sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7"
+    },
+    "scripts/test-agent-context.mjs": {
+      "sha256": "53ad2c9275fd984490c55f40067e65922e4e6d2df20d597f0f6691ff4f54ad79"
+    },
+    "scripts/test-design-flow-handoff.mjs": {
+      "sha256": "3620171cb416ebacfceadd2e82dd082bfce649c979df80dd50d38ce7c909d079"
+    },
+    "scripts/test-design-tool-retirement.mjs": {
+      "sha256": "c21a572c3226d0764e9a7bde92d66e27edf2cd3664ac6a4ce1f81af5bcdc7b26"
+    },
+    "scripts/test-design-tool-routing.mjs": {
+      "sha256": "21b49aba2e55f3bf75d0ec7738e0c35021011c25f05489cafb57a35c80e1e714"
+    },
+    "scripts/test-magicpath-projection-sync.mjs": {
+      "sha256": "dc69031921957e16e677fc0e4b33492351127dd646b99db566c7f61d3f62f8bd"
+    },
+    "scripts/test-page-context-preview.mjs": {
+      "sha256": "9ed8065e5855005681ee2000c4b4b531114055b96b422b0a923c0d93309b80a3"
+    },
+    "scripts/test-page-context.mjs": {
+      "sha256": "fa324031409e6332d0e596cdcea1a0a24809ae8a1b2888344daa370d18a0e86b"
+    },
+    "scripts/test-quality-gates-scope.mjs": {
+      "sha256": "8b06be03837ba867a1f99a07b83657f555f04912d606a49075825c42f2070a71"
+    },
+    "scripts/test-writing-for-agents-skill.mjs": {
+      "sha256": "ce9b8dcd50fbdf16b7dc698eb046d59bcb6a87f98da15c03f5da2845551b9019"
+    },
+    "scripts/verify.sh": {
+      "sha256": "15ecdd9ebe7780391f0cc2e14e4c3a814314c646cd62b4827b2ac820cd05dfda"
+    }
+  },
+  "manifest_boundary": "Current dirty and new runtime files, including inherited mainline edits; not an ownership list or formal Harness context hash. No files staged.",
+  "protected_retrieval_sha256": "bbfdea3971688338f05ef9a334de79e55f0f596732d56d4c57b8c5a27f6d9605",
+  "verification": {
+    "full_verify": "90 PASS / 1 FAIL / 0 WARN; sole S20 expectation still targeted retired skill",
+    "targeted_recheck": "S20 versioned per approved S8, unchanged scorer: 70/70 PASS, allowed_misses=0",
+    "other_fresh": "Agent context/kernel/static projection, memory health, capability parity, registration, routing, muse anchors; design-flow handoff 6 groups + 4 guard mutations; actual retirement guard mutation; NO_PIN quality scope + handoff isolation; actual Chromium prototype design-rule checks and Demo controls",
+    "diff_check": "PASS with core.whitespace=-blank-at-eof; ordinary diff check flags only exact archived SF-002 source block trailing blank line; retained for verbatim archival provenance"
+  },
+  "independent_verdicts": {
+    "consumer_preservation": "b4-preservation-02 CONDITIONAL_PASS 9/10; real OD/Harness UNKNOWN",
+    "shared_refs": "b4-refs-02 PASS 7/7",
+    "keyword_delta": "b5-keyword-01 PASS 1/1",
+    "history": "Both initial B4 FAIL verdicts retained and recorded; final reviews do not rewrite them"
+  },
+  "logs": {
+    "full_verify": {
+      "sha256": "299f61d6fa29d31bb63cb4ba73d4e16a049574d913f232d8f4f6caefc33e38f2",
+      "text": "\n═══════════════════════════════════════\n  luca_gstack 框架健康检查（NO_PIN）\n═══════════════════════════════════════\n\n[ Git 基础设施 ]\n  ✓ G1: Git 仓库已初始化\n  ✓ G2: hooks 路径配置正确\n  ✓ G3: .gitignore 覆盖 .DS_Store\n  ✓ G4: .gitignore 覆盖 .env\n  ✓ G5: pre-commit 存在且可执行\n  ✓ G5b: commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）\n\n[ 标准文档 ]\n  ✓ D1: README.md 存在\n  ✓ D2: CHANGELOG.md 存在\n  ✓ D3: SECURITY.md 存在\n  ✓ D4: CONTRIBUTING.md 存在\n  ✓ D5: LICENSE 存在\n\n[ Claude Code 配置 ]\n  ✓ C1: settings.json 有 SessionStart hook\n  ✓ C2: settings.json 有 UserPromptSubmit hook\n  ✓ C3: settings.json 有 PostToolUse hook\n  ✓ C4: settings.json 有 Stop hook\n  ✓ C5: session-restore.mjs 语法合法\n  ✓ C6: route-guard.mjs 语法合法\n  ✓ C7: post-edit.mjs 语法合法\n  ✓ C8: session-sync.mjs 语法合法\n  ✓ C9: 双 root K1-K10 / pointer / Static Fallback / discovery 门\n  ✓ C10: agent-context mutation proof-it-bites\n  ✓ C10b: A/B evaluator counterexamples / successful read / EOF\n  ✓ C11: Claude hooks 运行时副作用测试通过\n  ✓ C12: settings.json 有 PreToolUse hook（会话级项目隔离）\n  ✓ C13: project-scope-guard.mjs 语法合法\n  ✓ C14: 会话级项目隔离回归通过（重定向/deny/跨session/fail-open）\n  ✓ C15: session-end.mjs 语法合法\n  ✓ C16: self-model 与磁盘一致（audit F4-05）\n  ✓ C17: workflow-state 写入块坏 yaml 时拒写（不擦除既有状态）\n  ✓ C18: redteam 判据挂载表完整且引用路径全部存在\n  ✓ C19: 场景覆盖表结构自洽（SSOT对账+豁免声明双确认+三不规则形态）\n  ✓ C20: 项目绑定事务回归通过（CAS/lease/replay/new/legacy migration）\n\n[ Skill 体系 ]\n  ✓ S1: CLAUDE.md 存在且非空\n  ✓ S3: skill-os 目录存在\n  ✓ S4: office skill 目录存在\n  ✓ S5: validate-skills.sh 通过\n  ✓ S6: auto/SKILL.md 存在且含 FILE_END 标记\n  ✓ S8: work-agent-template 含 DONE_CRITERIA 守卫\n  ✓ S9: route golden tests 通过\n  ✗ S20: 甲类路由命中率 keyword 层回归门（明细: python3 memory/scripts/eval_routing.py --keyword-only）\n  ✓ S10: routing map 覆盖 + skill 单一真相源一致性检查通过\n  ✓ S19: 治理轨道登记面同步（REG-1/2/3）\n  ✓ S11: project routing dry-run 通过\n  ✓ S12: memory 精细检索/写入门禁测试通过\n  ✓ S13: memory stable facts 健康检查通过\n  ✓ S14: quality gate 框架合同检查通过（NO_PIN）\n  ✓ S14b: quality gate 作用域隔离/精确 handoff/已验证项目扫描会咬\n  ✓ S14c: 退休设计入口拒绝且通用路径保留（真实 guard mutation）\n  ✓ S15: coding discipline 合同检查通过\n  ✓ S17: muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）\n  ✓ S18: 能力锚点自检（capability anchors，防误删关键小节）\n  ✓ S40: 跨 harness 语义 projection proof-it-bites（delegation/obligation/order）\n  ✓ S41: controlled-change schema/controller/guard 全量回归\n  ✓ S42: 六项集成冻结 source manifest tuple 可复现\n  ✓ S43: engineering-delivery 七项 owner/trigger/loader/flow 回归\n  ✓ S44: 六项集成终态 receipt 与三路同 SHA 评审闭合\n  ✓ S46: wait-what 中文化/显式调用/零副作用契约\n  ✓ S47: handoff 生成时 gate_result/criteria/标题契约会咬\n  ✓ S48: writing-for-agents 来源/边界/路由/双 harness 契约\n  ✓ S49: 双 harness 条件加载 canary（相关命中、无关不加载）\n  ✓ S45: 六项集成 runtime candidate manifest denominator/blob 闭合（对发布提交求证）\n  ✓ S31: 旧 mega-appendix 已退出 runtime context\n  ✓ S32: CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）\n  ✓ S33: model-routing 单真值源 + 双 root 薄指针\n  ✓ S34: Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）\n  ✓ S35: observability 写入并发与崩溃恢复回归\n  ✓ S36: quality-gate verdict 与 recorder 权限分离回归\n  ✓ S37: CI 阻断覆盖与稳定 gatherer 合同\n  ✓ S38: CI 合同 proof-it-bites（缺关键门必须失败）\n  ✓ S39: Framework HTML 历史债务基线 proof-it-bites\n  ✓ S21: 演进裁决核心回归（default-deny/权重分档/redteam兜底）\n  ✓ S22: Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）\n  ✓ S24: skill-os YAML 语法合法（含外部技能 pin/vetting registry）\n  ✓ S25: luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）\n  ✓ S26: 记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）\n  ✓ S30: harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）\n  ✓ S29: 独立 root parity（K1-K10/预算/指针/harness 差异）\n  ✓ S28: 项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）\n  ✓ S27: MEMORY_STANDALONE 未泄漏进 tracked settings.json（opt-in 防泄漏门）\n  ✓ S23: 单真值源同步（不落后 tracking 分支）\n\n[ CI/CD 基础设施 ]\n  ✓ I1: CI workflow 存在\n  ✓ I2: PR 模板存在\n  ✓ I3: bug_report 模板存在\n\n[ Framework HTML 只读参考资产 ]\n  ✓ F1: list-page.html 存在\n  ✓ F2: detail-page-2col.html 存在\n  ✓ F3: home-page.html 存在\n  ✓ F4: detail-page-3col.html 存在\n  ✓ F5: form-page.html 存在\n  ✓ F6: shared-head.html 历史共享资产保留\n  ✓ B1: CLAUDE.md 与 AGENTS.md 各 ≤ 30KiB\n  ✓ B2: 无 office SKILL.md 超 45KB（context-budget 回归守护）\n\n═══════════════════════════════════════\n  结果: PASS=90  FAIL=1  WARN=0\n═══════════════════════════════════════\n\n❌ 检查未通过，请修复上述 ✗ 项目。\n"
+    },
+    "keyword_before": {
+      "sha256": "95717bd8d89cd5b8a4acab06242934587f4041fca80ebd8cfbd89f1fd1a2e8a2",
+      "text": "[eval_routing] keyword-layer 命中率: 0.986 (69/70)  容忍回归数=0\n  ✗ kw-figma-layer-from-prototype: expected=/figma-layer actual=STOP  ⤷ 把这个原型同步到 Figma 里\n[eval_routing] FAIL: 1 条 keyword 回归 > 容忍数 0（重跑看明细: python3 memory/scripts/eval_routing.py --keyword-only）\n"
+    },
+    "keyword_after": {
+      "sha256": "63a5c70ed36e5b2701bd832cdba55e2f1a7a69833a44586c177eadc9e3a3fcca",
+      "text": "[eval_routing] keyword-layer 命中率: 1.000 (70/70)  容忍回归数=0\n[eval_routing] PASS\n"
+    }
+  },
+  "remaining_mainline": [
+    "Freeze final context/fixtures/evaluator and independently validate evidence reuse; run remaining real two-Harness behavior matrix, including F13/F14/F9-v2/F10-v2 under original max19 process budget",
+    "Real OD reception and attachment readback; only exact separately authorized independent mobile-list target, no headless or Figma generation",
+    "Final context budget, safety/mutation/cold review, complete verify and selective commit/push by mainline owner"
+  ],
+  "waived": "New SVG/HTML mixed-source page containment limitation remains per user waiver; no page-library retesting here"
+}

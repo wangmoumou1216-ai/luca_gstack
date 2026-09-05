@@ -27,7 +27,7 @@ review_after_days: 35
 identity:
   purpose: "多项目个人开发环境的 Claude Code Skill-OS（设计→工程链：PRD→UX→原型→工程规格）；CRM（纷享销客）为可选休眠 profile，非默认场景"
   architecture: "Skill-first, Graph-optional；环境/项目剥离(docs/state/topic 三软链)"
-  brand_authority: "brand-tokens.md #FF8000 仅 CRM profile 激活时生效；framework/ 只读(SF-002)恒成立、与场景无关"
+  brand_authority: "当前项目明确提供的规范或用户在外部工具配置的设计系统；framework/ 只读恒成立，页面参考不成为品牌强制"
   default_model: sonnet            # 镜像 model-routing default_tier=guided-execution
 
 # 七维演进面：每维指向真实文件 + 守卫 + 什么样的外部能帮它

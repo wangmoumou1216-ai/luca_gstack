@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "visible_additions": ["office"],
+  "hidden": [
+    "careful",
+    "challenge",
+    "compare",
+    "evals",
+    "figma-demo",
+    "magicpath",
+    "muse-x-digest",
+    "redteam",
+    "retro"
+  ],
+  "internal": ["muse-proto-gen", "references"],
+  "retired": [
+    {
+      "name": "figma-layer",
+      "status": "retired-unavailable",
+      "replacement": "open-design",
+      "decision_id": "SC-20260905-003",
+      "boundary": "Only luca_gstack's reconstruction/write entry is retired; this neither verifies nor disables Open Design's own Figma capability."
+    }
+  ]
+}

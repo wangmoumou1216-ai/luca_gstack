@@ -13,7 +13,7 @@
    分别翻译后组合（如"丝滑地滑上来" = 丝滑 + 滑上来）
 3. **近似匹配**：没有精确词条 → 找语义最接近的词条，在 requirement.md
    标注「词典近似匹配」
-4. **未知词**：完全没有匹配 → 用 gstack 标准动效（--ease-standard,
+4. **未知词**：完全没有匹配 → 用本词典默认动效（--ease-standard,
    --duration-std），标注「词典无匹配，使用默认值」
 5. **矛盾处理**：设计师口述的参数和词典定义冲突 → 以设计师口述为准，词典只是默认值
 
@@ -99,6 +99,8 @@
 
 ---
 
+示例 CSS 和动效参数仅作本地翻译参考；用户提供的实际设计规范与已确认 spec 优先，不构成组件库技术映射。
+
 ## 4. 视觉感受词
 
 | 设计师口语 | 翻译 | 实现方式 |
@@ -106,7 +108,7 @@
 | 简洁 / 干净 | 大量留白，元素少 | 间距用 p-6/p-8，颜色用中性色 |
 | 密集 / 紧凑 | 信息密度高 | 间距用 p-2/p-3，行高紧凑 |
 | 有层次 / 层次分明 | 视觉层级清晰 | L1/L2/L3 字号+颜色差异明显 |
-| 高级感 | 克制用色+精致间距 | 主色≤2处，阴影≤1处，圆角统一 |
+| 高级感 | 克制用色+精致间距 | 突出主任务，按实际设计规范安排强调、阴影与圆角 |
 | 透气 / 呼吸空间 | 元素间留白充足 | 间距≥p-6，section间≥p-8 |
 | 扁平 | 无阴影无渐变 | shadow:none，bg纯色 |
 | 毛玻璃 / 磨砂 | 背景模糊 | backdrop-filter: blur(12px)，bg rgba白70% |
@@ -138,29 +140,26 @@
 
 | 设计师口语 | 组件类型 | 默认行为 |
 |-----------|---------|---------|
-| 大按钮 / 主按钮 | Button primary | bg-primary text-primary-foreground rounded-md py-2 px-4 ⚠️见下注 |
-| 小按钮 / 次要按钮 | Button outline | border border-n05 text-n19 rounded-md py-1.5 px-3 |
-| 文字按钮 / 链接按钮 | Button ghost | text-primary hover:underline |
-| 输入框 / 搜索框 | Input | border border-n05 rounded-md p-2 text-13 |
+| 大按钮 / 主按钮 | Button primary | 主操作强调、清晰文案与可见反馈；按实际规范实现 |
+| 小按钮 / 次要按钮 | Button outline | 次级操作，保持可读且不抢主操作 |
+| 文字按钮 / 链接按钮 | Button ghost | 文字操作可识别，hover/focus 反馈可见 |
+| 输入框 / 搜索框 | Input | 输入边界与焦点清晰，标签与校验反馈完整 |
 | 下拉 / 下拉选择 | Select / Dropdown | 同 Input + 下拉箭头 |
 | 开关 / 切换 | Toggle / Switch | — |
-| 标签 / Tag | Badge | bg-page-bg text-n15 rounded px-2 py-0.5 text-12 |
+| 标签 / Tag | Badge | 简短状态/类别文本，按实际规范区分含义 |
 | 头像 | Avatar | rounded-full overflow-hidden |
-| 分割线 / 横线 | Divider | border-t border-n05 |
+| 分割线 / 横线 | Divider | 分隔信息区域，按实际规范实现 |
 
-> **⚠️ 主按钮前景色注记（2026-07-22）：** 原值 `text-white` 已改为 `text-primary-foreground`（走 token，不再写死白）。
-> 注意 token 默认仍是白色，而 `#FF8000` + 白字实测 **2.52:1**，不满足 WCAG AA。
-> **面向欧美 / 受 EAA·ADA 影响的项目必须覆盖为近黑 `#181C25`（6.77:1）**。
-> 完整实测表与两条合规解见 `brand-tokens.md` §无障碍合规注记。
-| 卡片 | Card | bg-white rounded-lg border border-n05 p-4 |
+> 按实际设计规范实现视觉参数并核对可读性；按钮前景/背景不能仅因使用 token 就宣称对比度合规。
+| 卡片 | Card | 组织相关内容与操作，保持层级 |
 | 弹窗 / 模态框 | Modal | fixed inset-0 + 遮罩 + 居中卡片 |
 | 抽屉 / 侧边抽屉 | Drawer | fixed right-0 top-0 h-full + 遮罩 |
 | 底部面板 / 底部弹出 | Bottom Sheet | fixed bottom-0 + 遮罩 + 上圆角 |
 | Toast / 提示 | Toast | fixed top-4 right-4 auto-dismiss 3s |
-| 进度条 | Progress | h-1 bg-primary rounded-full |
-| 骨架屏 / loading | Skeleton | animate-pulse bg-special01 |
+| 进度条 | Progress | 展示进度与当前状态，必要时附数值/说明 |
+| 骨架屏 / loading | Skeleton | 加载占位与过程反馈，支持 reduced-motion |
 | Tab / 标签页 | Tabs | 底部下划线切换 |
-| 面包屑 | Breadcrumb | text-n11 + separator |
+| 面包屑 | Breadcrumb | 显示层级位置与可返回路径 |
 | 表格 | Table | border-collapse + 行分割线 |
 | 时间线 / 动态 | Timeline | 左侧竖线 + 节点 |
 

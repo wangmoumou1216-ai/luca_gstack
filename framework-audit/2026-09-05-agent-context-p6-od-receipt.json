@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "status": "STAGED",
+  "tool": "od",
+  "projectId": "luca-p6-mobile-list-20260905-9861eecb",
+  "readRef": "http://127.0.0.1:57478/api/projects/luca-p6-mobile-list-20260905-9861eecb",
+  "files": [
+    {
+      "name": "brief.md",
+      "sha256": "fd25a858b16fef37cc3c177a3851449a534e96cce0b73f4e21d25774bcb800a3"
+    },
+    {
+      "name": "page-reference.json",
+      "sha256": "e849ef85c6e7eb259236fdb1854850272c64f1ae31dca0faf5ccba6c4c160868"
+    },
+    {
+      "name": "reference.png",
+      "sha256": "351ca2b01f45e23f8a9a7de261d175ea538bd5ae362444a15bb614b3791fb2a0"
+    }
+  ],
+  "observed_at": "2026-09-05T14:00:11.016Z",
+  "daemon_version": "0.21.1",
+  "scope": "one new independent mobile-list framework acceptance project",
+  "generation": "NOT_REQUESTED_NOT_GENERATED",
+  "source": {
+    "mode": "adhoc",
+    "id": "P6-MOBILE-LIST-20260905",
+    "sha256": "fd25a858b16fef37cc3c177a3851449a534e96cce0b73f4e21d25774bcb800a3"
+  },
+  "source_body": "# P6 独立移动端列表交接验收样例\n\n这是 lucagstack 框架交接链路的独立测试源，由代理在用户授权的移动端列表验收范围内整理；不代表任何真实客户项目。当前操作只置入与读回材料，不触发设计生成。\n\n目标平台：mobile-standard。设计系统、字体、配色、布局尺寸由用户在 Open Design 中配置；不绑定或覆盖 designSystemId，不继承参考页的 CRM 品牌、桌面宽度或 HTML/CSS。\n\n## 测试需求与边界\n- TEST-R-01：让手机用户按关键词和处理状态组合筛选待处理记录，并清楚看到当前筛选条件。\n- TEST-R-02：让用户浏览记录的名称、状态与更新时间，勾选记录并看到已选数量；本样例不执行真实批量业务操作。\n- TEST-R-03：结果超过一屏时能继续浏览并知道是否到达末尾，具体移动端呈现由 OD 决定。\n- TEST-KEEP-01：全局导航不在本次修改范围；参考页的筛选、记录和分页仅作信息结构参考。\n\n## 必需状态\n正常列表；首次加载；空数据；筛选无结果且可清空条件；加载失败且可重试；已选记录；已到列表末尾。保留用户筛选与选择，重试不丢失当前条件。\n\n## 参考材料解释\n采用已展示 list 页的 canvas 主内容区，包含筛选、记录与分页；reference.png 是完整来源截图，page-reference.json 给出确切区域坐标与源版本。其桌面表格、品牌与像素位置不作为目标移动端实现规范。采用依据为用户真实委托代理处理本轮待决事项后，代理明确选择此区域；没有声称用户点击了选择器。\n\n## 本次验收\n指定 OD 项目必须能读回 brief.md 全文、page-reference.json 与 reference.png 的实际相同字节。上传状态码不替代读回；STAGED 不代表设计已生成。\n",
+  "reference": {
+    "page_id": "list",
+    "source_ref": "framework/list-page.html",
+    "source_hash": "717fe580063301810a1dc2f1c58892cef3f659f2ed934c162927657abc4bae6e",
+    "screenshot_sha256": "351ca2b01f45e23f8a9a7de261d175ea538bd5ae362444a15bb614b3791fb2a0",
+    "usage": "structure-and-location-only",
+    "attachment": "reference.png",
+    "interpretation": "The reference identifies structure and location; visual style and target layout dimensions are decided in the target design tool.",
+    "location": {
+      "kind": "region",
+      "region_id": "canvas",
+      "description": "主内容区: 包含标题、搜索筛选、记录及分页；不包括全局导航。",
+      "bounds": {
+        "x": 284,
+        "y": 48,
+        "width": 1156,
+        "height": 852
+      }
+    },
+    "confirmation": {
+      "actor": "user",
+      "evidence": "Actual user reply: 你觉得应该怎么处理好呢？你就怎么处理。 User delegated the pending decision; the assistant selected the already-shown list/canvas as structure-only reference and stated that choice.",
+      "confirmed_at": "2026-09-05T13:58:07.090Z"
+    },
+    "message_ref": "current-session-user-delegated-finalization-20260905"
+  },
+  "user_decision": {
+    "message": "你觉得应该怎么处理好呢？你就怎么处理。",
+    "interpretation": "User delegated pending choice; agent explicitly selected the shown list/canvas as structure-only reference",
+    "selection": {
+      "schema_version": 1,
+      "status": "confirmed",
+      "page_id": "list",
+      "source_hash": "717fe580063301810a1dc2f1c58892cef3f659f2ed934c162927657abc4bae6e",
+      "kind": "region",
+      "region_id": "canvas",
+      "confirmation": {
+        "actor": "user",
+        "evidence": "Actual user reply: 你觉得应该怎么处理好呢？你就怎么处理。 User delegated the pending decision; the assistant selected the already-shown list/canvas as structure-only reference and stated that choice.",
+        "confirmed_at": "2026-09-05T13:58:07.090Z"
+      }
+    }
+  },
+  "project_metadata": {
+    "platform": "mobile-standard",
+    "fidelity": "high"
+  },
+  "designSystemId": null,
+  "workspaceId": null,
+  "readback_files": [
+    {
+      "name": "brief.md",
+      "sha256": "fd25a858b16fef37cc3c177a3851449a534e96cce0b73f4e21d25774bcb800a3",
+      "size": 1860,
+      "url": "http://127.0.0.1:57478/api/projects/luca-p6-mobile-list-20260905-9861eecb/raw/brief.md"
+    },
+    {
+      "name": "page-reference.json",
+      "sha256": "e849ef85c6e7eb259236fdb1854850272c64f1ae31dca0faf5ccba6c4c160868",
+      "size": 1495,
+      "url": "http://127.0.0.1:57478/api/projects/luca-p6-mobile-list-20260905-9861eecb/raw/page-reference.json"
+    },
+    {
+      "name": "reference.png",
+      "sha256": "351ca2b01f45e23f8a9a7de261d175ea538bd5ae362444a15bb614b3791fb2a0",
+      "size": 209745,
+      "url": "http://127.0.0.1:57478/api/projects/luca-p6-mobile-list-20260905-9861eecb/raw/reference.png"
+    }
+  ],
+  "page_reference": {
+    "source": {
+      "mode": "adhoc",
+      "id": "P6-MOBILE-LIST-20260905",
+      "sha256": "fd25a858b16fef37cc3c177a3851449a534e96cce0b73f4e21d25774bcb800a3"
+    },
+    "target": {
+      "tool": "od",
+      "projectId": "luca-p6-mobile-list-20260905-9861eecb"
+    },
+    "status": "confirmed",
+    "reference": {
+      "page_id": "list",
+      "source_ref": "framework/list-page.html",
+      "source_hash": "717fe580063301810a1dc2f1c58892cef3f659f2ed934c162927657abc4bae6e",
+      "screenshot_sha256": "351ca2b01f45e23f8a9a7de261d175ea538bd5ae362444a15bb614b3791fb2a0",
+      "usage": "structure-and-location-only",
+      "attachment": "reference.png",
+      "interpretation": "The reference identifies structure and location; visual style and target layout dimensions are decided in the target design tool.",
+      "location": {
+        "kind": "region",
+        "region_id": "canvas",
+        "description": "主内容区: 包含标题、搜索筛选、记录及分页；不包括全局导航。",
+        "bounds": {
+          "x": 284,
+          "y": 48,
+          "width": 1156,
+          "height": 852
+        }
+      },
+      "confirmation": {
+        "actor": "user",
+        "evidence": "Actual user reply: 你觉得应该怎么处理好呢？你就怎么处理。 User delegated the pending decision; the assistant selected the already-shown list/canvas as structure-only reference and stated that choice.",
+        "confirmed_at": "2026-09-05T13:58:07.090Z"
+      },
+      "message_ref": "current-session-user-delegated-finalization-20260905"
+    }
+  },
+  "local_evidence_dir": "/private/tmp/p6-od-stage-MKol8M"
+}

@@ -1,0 +1,661 @@
+{
+  "baseline": "94f086233affb3bd08ad8fe33063bcfedb330edf",
+  "mode": "WORKTREE_DIFF plus explicit untracked FILE_SET",
+  "paths": [
+    {
+      "path": ".agents/skills/figma-layer",
+      "kind": "deleted"
+    },
+    {
+      "path": ".agents/skills/magicpath/SKILL.md",
+      "kind": "file",
+      "sha256": "c3f050ce2045b23c573bf78af2dcff4962d688707d7051717e1045187cf37271"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "kind": "file",
+      "sha256": "a5873fcc846990ddfd8b92dd2be9d90d504eaf56ddc498fa2fbbdc7e8e791835"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "kind": "file",
+      "sha256": "1bf30e2e05add3db41687399cfe63609419250c99383369e5dc7b5a1496823b3"
+    },
+    {
+      "path": ".claude/agents/preflight-agent.md",
+      "kind": "file",
+      "sha256": "dc756139173f248678b8f022b1f742bceafc1c9b343fb3d1fcc81997273554fa"
+    },
+    {
+      "path": ".claude/agents/quality-gate.md",
+      "kind": "file",
+      "sha256": "28b27008b5ac114c5f1ab4c66237857de048449374a6bf37b90fce62d30d9144"
+    },
+    {
+      "path": ".claude/commands/figma-layer.md",
+      "kind": "deleted"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "kind": "file",
+      "sha256": "352deb05f6ce8d0e0f37dacbb8f92551e4edd844785bdf2dadeaa8c522368db8"
+    },
+    {
+      "path": ".claude/hooks/session-restore.mjs",
+      "kind": "file",
+      "sha256": "e3d599a4e0b2873b4dc5785d718c73bec40b7db1627e0915dadd9f9196714626"
+    },
+    {
+      "path": ".claude/observability/observations.jsonl",
+      "kind": "file",
+      "sha256": "d66e8f56bacf1cb73c702d20035679aa5eeae8f089ad6ce4728bd4d3e2f67f4d"
+    },
+    {
+      "path": ".claude/observability/rules.yaml",
+      "kind": "file",
+      "sha256": "4eecab8d9ccbdd4bb28924d327a36be0c2850cc8f00215893ecd168ab1f69e21"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "kind": "file",
+      "sha256": "8c5e251bb66f96e1cda2d34825710d248c58efb71620c544a5e802c399fd4ee2"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-state.json",
+      "kind": "file",
+      "sha256": "017ab908f800f27ac5a6b3178042d24c712da73984155e33c3482ff4c3916df9"
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "kind": "file",
+      "sha256": "1c83723a643399829d4aede7c94c9e393f6510a74bdafbbccd556cbb6c5be956"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "kind": "file",
+      "sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f"
+    },
+    {
+      "path": ".claude/skill-os/codex-viability.yaml",
+      "kind": "file",
+      "sha256": "d3b1259355636ac277d1e46469180733a6320ba73616c54b8b29061d638e37ac"
+    },
+    {
+      "path": ".claude/skill-os/crm-profile.md",
+      "kind": "file",
+      "sha256": "e1de0646acae17b8b2dc06d9f29a1cb6482c129fec6c8ce36c34d66c43b25251"
+    },
+    {
+      "path": ".claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "kind": "file",
+      "sha256": "10b60b1f1f2596b373384eef0e218e301a6b2d9b97b0fe764ae1406f415fe484"
+    },
+    {
+      "path": ".claude/skill-os/evolution/self-model.generated.yaml",
+      "kind": "file",
+      "sha256": "a86512df68d97f27b5e8bc864411c4b1945b84fb0724e5a1d46369a5137572d6"
+    },
+    {
+      "path": ".claude/skill-os/evolution/self-model.yaml",
+      "kind": "file",
+      "sha256": "ffbc028e077e6835445e3c14b55c8f3e1bbcf6373bca1c478a6886c772f19dae"
+    },
+    {
+      "path": ".claude/skill-os/generated/skill-catalog.md",
+      "kind": "file",
+      "sha256": "5ff782f39baf96078d0c90cfc0484400a10e0da57d4a5497d9552b348ea0613f"
+    },
+    {
+      "path": ".claude/skill-os/generated/static-fallback.md",
+      "kind": "file",
+      "sha256": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3"
+    },
+    {
+      "path": ".claude/skill-os/input-modes.yaml",
+      "kind": "file",
+      "sha256": "95f5ab9f60b4cf0298911a019dc3e92b0cf501db3afaf906ac89a5fba85b1492"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "kind": "file",
+      "sha256": "51e76221f642a74c44bf35fc0b3caf1af900ce1d595936d08e2cb545ca34dc4f"
+    },
+    {
+      "path": ".claude/skill-os/optional-workflow-graph.yaml",
+      "kind": "file",
+      "sha256": "606bae9b57f00eaaffcb898af8420c40479fa858188b52c9805e1ae6aecd146b"
+    },
+    {
+      "path": ".claude/skill-os/page-library/catalog.json",
+      "kind": "file",
+      "sha256": "91d8304b067c775263643645177b5da5fd3c016be69aae93c1f86b76c7d5cce7"
+    },
+    {
+      "path": ".claude/skill-os/page-library/schema.json",
+      "kind": "file",
+      "sha256": "aec7c02cdc697c2d25ee72ad14ba098154bd1f61628738aaa6cab5718b9de829"
+    },
+    {
+      "path": ".claude/skill-os/routing-chain-check.md",
+      "kind": "file",
+      "sha256": "513e31efb5afaadd2b99d75d803ec6c037dd20f07847f1e7fde4cf9859eb4dd1"
+    },
+    {
+      "path": ".claude/skill-os/runtime/cross-harness.md",
+      "kind": "file",
+      "sha256": "78fdc7bcc2f9c1d72fd4df5bf2c30c3cd42e4c3c7bf652e76e9806c4196b3f1e"
+    },
+    {
+      "path": ".claude/skill-os/runtime/framework-maintenance.md",
+      "kind": "file",
+      "sha256": "80541e66b9220f9eb59161263f0b243a31acc81aa80b393739ade57c1b945004"
+    },
+    {
+      "path": ".claude/skill-os/runtime/harness-boundary.md",
+      "kind": "file",
+      "sha256": "bfe8351b6aca388f18ec6f72ee0d61c757c76498f76560bada8ac0fa81459f1c"
+    },
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "kind": "file",
+      "sha256": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117"
+    },
+    {
+      "path": ".claude/skill-os/runtime/luca-app.md",
+      "kind": "file",
+      "sha256": "3efcc7bd232070b4a5bb67aa3115e04769bfc3f293f9c13f7c0eb89a4b621bab"
+    },
+    {
+      "path": ".claude/skill-os/runtime/page-context.md",
+      "kind": "file",
+      "sha256": "8a2655c85796d7ee61624ac5341e546b5d0e0b9058013d8f9f0e5e6702baacfb"
+    },
+    {
+      "path": ".claude/skill-os/runtime/project-session.md",
+      "kind": "file",
+      "sha256": "9d2724eba9edfa30000f550d5c5323dc75df9950b2b5e36af1dc4c6f857cd3a6"
+    },
+    {
+      "path": ".claude/skill-os/skill-routing-map.yaml",
+      "kind": "file",
+      "sha256": "bc588e46235b1d536cd0b9194a2f8ca89650cfd5bae3ce35225aa78b1d8cc0e2"
+    },
+    {
+      "path": ".claude/skill-os/skill-visibility.json",
+      "kind": "file",
+      "sha256": "563b72030df9cc9201a49fb2c9839706c2a5d89b7d040e5575f8d7b486789104"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "kind": "file",
+      "sha256": "855e5f9506d450b128f811fe5e6fbfbef65ceddd0067a9297d84a9cd374b5f52"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "kind": "file",
+      "sha256": "c82fdd257ef292af0b80523572f219d30f3ffb611274d7c20a06ca86314e0314"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/README.md",
+      "kind": "file",
+      "sha256": "6e9fff05cb3734efc2ffbee202303d8eefc010cf02a972ec276e469318644131"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SCHEMA.md",
+      "kind": "file",
+      "sha256": "7b35d5c25054d329a64468f038171be149730b112759ccc187dcfdfacfa426b8"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "kind": "file",
+      "sha256": "3a5b35ccc91251b5d679531dc205b8bb23a8d5a71b2bbc429d97458cb7061e96"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/references/output-templates.md",
+      "kind": "file",
+      "sha256": "5470f7fe919fc29bc61f204260d0e8b8b3a531755c809fbcf4fde18cd352810f"
+    },
+    {
+      "path": ".claude/skills/office/evals/SKILL.md",
+      "kind": "file",
+      "sha256": "4b589310f9ad5bd47a068aab7d32a3d92911736ac452d7e9e2400ad4708aa53b"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/SCHEMA.md",
+      "kind": "file",
+      "sha256": "3ee0853bc8f0c1cca1b86fe702db6db2b538d430a8ed1b9609bda9c7f67e9807"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/SKILL.md",
+      "kind": "file",
+      "sha256": "7d70d49688ce7888769540cbfeb6f6c57e0883bce561c827e74722704bba161b"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/references/blueprint-schema.md",
+      "kind": "file",
+      "sha256": "b087837d0bf0a8ae80186e2300dcb1fd1402a0c6bc357bcf655d80dccb5f0c3c"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/references/builder-constitution.md",
+      "kind": "file",
+      "sha256": "643343160491d3b0efb9c62f5916963030c4408c03f90134e168bf31d080166c"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/references/semantic-dictionary.md",
+      "kind": "file",
+      "sha256": "c41c214e904b55c5060fc637420cc85be588ff97b78314074aee43c5b6b13804"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/specialists/assembly-agent.md",
+      "kind": "file",
+      "sha256": "7f29f620737f4357414b950e6e6b3389e75683cc0c6e892f3472f81008d2a4e1"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/specialists/builder-agent.md",
+      "kind": "file",
+      "sha256": "27120ca90f3d598fa5f06c0a862f1a49302b45f625af631156a50d3be45387b1"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/templates/demo-template.html",
+      "kind": "file",
+      "sha256": "405b7b2ececee217801c5f7c4676273baf0a3aac58674001130aeee5f55d031f"
+    },
+    {
+      "path": ".claude/skills/office/figma-layer/SCHEMA.md",
+      "kind": "deleted"
+    },
+    {
+      "path": ".claude/skills/office/figma-layer/SKILL.md",
+      "kind": "deleted"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SCHEMA.md",
+      "kind": "file",
+      "sha256": "b22d539ea3fc9748d3789c05fa3bf7b4fa01042d45ca5f64974039bd52448abd"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SKILL.md",
+      "kind": "file",
+      "sha256": "9a61002faa85712aa171115f01a76a625c4cd6f7f218950436ce29ed806772b7"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/references/current-aesthetic-rubric.md",
+      "kind": "file",
+      "sha256": "c4520caf330f23926ed6ec585666f5d156bc53a35455c9a0499b93be7c9f83ad"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/references/dynamic-reference-protocol.md",
+      "kind": "file",
+      "sha256": "3509692ea42a172f98de454a00dec0ba4b7f76aa58e7faf9cb8a2b14145d74a3"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs",
+      "kind": "file",
+      "sha256": "99dd2a1427ae25c4dcbd5f041d8a8a4bafa108a613c38a985f9c2e51079ff009"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs",
+      "kind": "file",
+      "sha256": "c7a4d290cd5827217b3762834f310f98f6aa1bfd5190096e1f4bd835ecf9897c"
+    },
+    {
+      "path": ".claude/skills/office/magicpath/SKILL.md",
+      "kind": "file",
+      "sha256": "91f6fcb0ab0a2a429c5de6c142dbe4c0156fe3f2bb7eef3602f3c4b4ccc9a56b"
+    },
+    {
+      "path": ".claude/skills/office/muse-loop-orchestrate/SKILL.md",
+      "kind": "file",
+      "sha256": "dc5fb0c9e20ba88c6a4d466fdba5f4675011cc76e7917685e1562550a8208567"
+    },
+    {
+      "path": ".claude/skills/office/muse-proto-gen/SKILL.md",
+      "kind": "file",
+      "sha256": "73ee65e25246e96af85865aea6c1a2eb642bbd840ac1c916213c283427d1d912"
+    },
+    {
+      "path": ".claude/skills/office/open-design/SKILL.md",
+      "kind": "file",
+      "sha256": "84a9cd31d86f6239fe3fec4879ac08c46fb8e2bcad85359d915c53966f568459"
+    },
+    {
+      "path": ".claude/skills/office/redteam/SKILL.md",
+      "kind": "file",
+      "sha256": "4d1fa7302acfbd60692d7ca5f776308f5a6f3ba291a1a423bba78f926edf15fc"
+    },
+    {
+      "path": ".claude/skills/office/references/ai-native-state-coverage.md",
+      "kind": "file",
+      "sha256": "455301315a1444490080f825490f0bacd301c42fcdf8dbc55f15b2e4dd716f54"
+    },
+    {
+      "path": ".claude/skills/office/references/ai-native-taste-anchors.md",
+      "kind": "file",
+      "sha256": "32437e731794b028108e49ff66cf93a9386558639a25cbbdaf573b2c5c13514d"
+    },
+    {
+      "path": ".claude/skills/office/references/design-system-contract.md",
+      "kind": "file",
+      "sha256": "d9d0315229303f3a03da852c289157f4fc7468171c8f67127dcc6664c9d9a005"
+    },
+    {
+      "path": ".claude/skills/office/references/dev-handoff-dimensions.md",
+      "kind": "file",
+      "sha256": "8b964e5520a24eb35f1d5edf66e4c2e85ff96b6bcba370b20bbe7db928c34daa"
+    },
+    {
+      "path": ".claude/skills/office/references/html-prototype-tokens.md",
+      "kind": "file",
+      "sha256": "ff6ee1dce2ec57a9f4fc7bc07ab13b8f58d0b46fc31350d398d9e67c91ae4160"
+    },
+    {
+      "path": ".claude/skills/office/references/interaction-mechanics.md",
+      "kind": "file",
+      "sha256": "0016fcb389d53a677e45b7dfd64783d2995714ab40e44514302f79f8dffee7a7"
+    },
+    {
+      "path": ".claude/skills/office/references/office-wizard.md",
+      "kind": "file",
+      "sha256": "0fc179f94ba580a001769326b6ef3cc62cf8e8bf9bf98487370fd602349f0fe9"
+    },
+    {
+      "path": ".claude/skills/office/references/ux-evaluation-framework.md",
+      "kind": "file",
+      "sha256": "314428fdc7ede54c03c5edcf068cdb9ec0e1e309c8fb050379064eeaaccbe6d3"
+    },
+    {
+      "path": ".claude/skills/office/task-plan/SKILL.md",
+      "kind": "file",
+      "sha256": "a9543304332d75a35c70261b4c469cbf18d3128e7aa5b32a0c97e054583447e3"
+    },
+    {
+      "path": ".claude/skills/office/tech-spec/SKILL.md",
+      "kind": "file",
+      "sha256": "a39ae318bbbe9fbd318d71935db357a03a8439c0410ce052cae0b263e0645cc3"
+    },
+    {
+      "path": ".claude/skills/office/ux-audit/SCHEMA.md",
+      "kind": "file",
+      "sha256": "7da53e1dde3810289fc2e501828963c7cac87ce238c5fc53e9df726fd0c9a267"
+    },
+    {
+      "path": ".claude/skills/office/ux-audit/SKILL.md",
+      "kind": "file",
+      "sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5"
+    },
+    {
+      "path": ".claude/skills/office/ux-audit/specialists/module-a-visual.md",
+      "kind": "file",
+      "sha256": "5d834ea31469a621f2186112b2cfb7f67a4dd19b0e5514ca099e79c6226ee13f"
+    },
+    {
+      "path": ".claude/skills/office/ux-audit/specialists/module-b-interaction.md",
+      "kind": "file",
+      "sha256": "16fa82ea8979774597a385809c09a0ac956c42a20b28974c34410954d6b42fe6"
+    },
+    {
+      "path": ".githooks/commit-msg",
+      "kind": "file",
+      "sha256": "2cf690ab44678e9437673905885d7ab9a627bb07b736c35eda65785e557ed980"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "kind": "file",
+      "sha256": "0c77f42d98dd280bc9af53ffdbbe734a05a27e190a211a69a728674ffb326a41"
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "file",
+      "sha256": "c7cd3b46a1a00e2981818080d7919a5ae1db054378f07de252a0575298d60585"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "kind": "file",
+      "sha256": "b997d1270c3997e58e64cb5144cc02720e0405f9aa58ec8cb50ea474f5b520e3"
+    },
+    {
+      "path": "CLAUDE.md",
+      "kind": "file",
+      "sha256": "c198372530d1a43a8d8471922dedbea026925a580b9a72fa487cee119ad24dbb"
+    },
+    {
+      "path": "CONTEXT.md",
+      "kind": "file",
+      "sha256": "26796a2b2ec3925dd0815f4597f9c5e3e72b7c873cb5c797d22701ffa438bd2d"
+    },
+    {
+      "path": "brand-tokens.md",
+      "kind": "deleted"
+    },
+    {
+      "path": "constitution.md",
+      "kind": "file",
+      "sha256": "97e146bb56c92826066eec8b8c58338dc5ae0492723fb2d26d0486b1b24427d0"
+    },
+    {
+      "path": "memory/evals/eval-log.jsonl",
+      "kind": "file",
+      "sha256": "0c63a983560ae4347d707e00f545d0f9f5ddcd486ddc5efd9e3be7188bf3b09e"
+    },
+    {
+      "path": "memory/evals/routing/fixtures.jsonl",
+      "kind": "file",
+      "sha256": "7475f9215988a1dec40bcff8ee4a518b3d3dc248cc68e69d2eff62a6f8875257"
+    },
+    {
+      "path": "memory/scripts/check_memory_health.py",
+      "kind": "file",
+      "sha256": "554f0a6c4a6e15e43238f04433926063de6a2e65734d2c2fdfd2d34d799c3f6f"
+    },
+    {
+      "path": "memory/scripts/consolidate_memory.py",
+      "kind": "file",
+      "sha256": "3a34fc7e548b2d53805bb39f3d2057234ed660dcacb879063abb26703ac914df"
+    },
+    {
+      "path": "memory/scripts/daily_governance.py",
+      "kind": "file",
+      "sha256": "3a710226eb906fa8c9bfd3bdcbc9265c00becf8d50f199c3af3b9a86e030294a"
+    },
+    {
+      "path": "memory/semantic/archive/superseded-facts-2026.yaml",
+      "kind": "file",
+      "sha256": "f66f836ac20b25056dacf54996e468355fa1e2ec736600ed6d0ef924a8ae335f"
+    },
+    {
+      "path": "memory/semantic/promoted-facts.yaml",
+      "kind": "file",
+      "sha256": "7df68de45a622c69ebda9c6df2ae9e5f8b2027537723a0e03e221fb7680b6aac"
+    },
+    {
+      "path": "memory/semantic/reviews.jsonl",
+      "kind": "file",
+      "sha256": "dc63a2574d6c6ce3d4e7f2fa0c74bd8561a16d5c098073b252b89fcefa18af0f"
+    },
+    {
+      "path": "memory/semantic/static-fallback-allowlist.txt",
+      "kind": "file",
+      "sha256": "bd51cc59d214501adb3968e43f8a9c1f1156df7b8004ed69461f4fa2a75b4870"
+    },
+    {
+      "path": "package.json",
+      "kind": "file",
+      "sha256": "d7cf517f9c569f58e67737feda05437f280bb4019b8273e434cf4379315d4e0d"
+    },
+    {
+      "path": "scripts/agent-context-branch-fixtures.mjs",
+      "kind": "file",
+      "sha256": "49d95e6cbad360c34a79bae5a567cf276ab8f7c3c7410e0e4d06df6ef0566b9a"
+    },
+    {
+      "path": "scripts/build-agent-context.py",
+      "kind": "file",
+      "sha256": "f87b7ac27756b386394a19b273fab749897a284107393e3577d0cd6e62315175"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "kind": "file",
+      "sha256": "26df78753155cb3dd3ebc403308dd5a06546434d1cc7b7befebb1a9e5dd6d06e"
+    },
+    {
+      "path": "scripts/check-agents-parity.mjs",
+      "kind": "file",
+      "sha256": "2e9d5f4e0dd997d205abd036d6259a09a372c2cbe86c5f7a3404755c7aa6057e"
+    },
+    {
+      "path": "scripts/check-appendix-pointers.mjs",
+      "kind": "file",
+      "sha256": "8f4a43cbfd4e5394f17224777cd6332e0ea9b00de174a04eb0902174eafa9aa2"
+    },
+    {
+      "path": "scripts/check-ci-contract.mjs",
+      "kind": "file",
+      "sha256": "e55146fc2e42c17c52d34ccc83a5ed380d003d8c1487daebb58d428b4e3eab80"
+    },
+    {
+      "path": "scripts/check-coding-discipline.mjs",
+      "kind": "file",
+      "sha256": "193e9ec81f778a00882b5a01fc2cb5823bc35de34dd3f79a1a33fcfa92b724ec"
+    },
+    {
+      "path": "scripts/check-model-table.mjs",
+      "kind": "file",
+      "sha256": "c61400328148918b01679682fbe14efc8f5d9fe34451da8f5317536fe4a35849"
+    },
+    {
+      "path": "scripts/check-muse-loop-sync.mjs",
+      "kind": "file",
+      "sha256": "9ec52c1394c862482d17ce242300652f576904695043fd4b5a30f4d45b5294f0"
+    },
+    {
+      "path": "scripts/check-project-routing.mjs",
+      "kind": "file",
+      "sha256": "a9c70b98692752c398bbeec52cdb7e5a39010f0ef8533a5c837952548a97bba1"
+    },
+    {
+      "path": "scripts/check-quality-gates.mjs",
+      "kind": "file",
+      "sha256": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45"
+    },
+    {
+      "path": "scripts/check-registration-sync.mjs",
+      "kind": "file",
+      "sha256": "d2c1f12ee170b23c276a19ac74f32d8c94a819cf39528ee9ce5fd79a30636e94"
+    },
+    {
+      "path": "scripts/check-routing-map.mjs",
+      "kind": "file",
+      "sha256": "015876494f35fac6735a2d475ed19f94dedad31c7eb59be4f110c550d31c6760"
+    },
+    {
+      "path": "scripts/check-skill-scene-coverage.py",
+      "kind": "file",
+      "sha256": "68390f0a8a6f41bd4642bdb9e63be56ff98494cf56725e19746f18e65fe307fd"
+    },
+    {
+      "path": "scripts/design-flow-handoff.mjs",
+      "kind": "file",
+      "sha256": "05ae006c7ced4eb836484c831bcbf1660123e72e4e87f75d44630655f2ed4836"
+    },
+    {
+      "path": "scripts/fusion-preflight.py",
+      "kind": "file",
+      "sha256": "6b6ea4814632dd5d48fbe596cdef84cdbc7d083e78fac00d6667b4a2f890fb9e"
+    },
+    {
+      "path": "scripts/page-context-preview.mjs",
+      "kind": "file",
+      "sha256": "465fc1b11b16030b4197349e39c9fab9b6b16186495e637ee12005663a0a1065"
+    },
+    {
+      "path": "scripts/page-context.mjs",
+      "kind": "file",
+      "sha256": "ccb515cebb9f3ebd68a28eabaf0fc1e35b87d48e241b0c973240a4b0cca0b23e"
+    },
+    {
+      "path": "scripts/resolve-agent-context.mjs",
+      "kind": "file",
+      "sha256": "57336884efe38d0815921e47b4423d6d90a6a3483f28a0f1f6663a3e58bc0ed1"
+    },
+    {
+      "path": "scripts/run-agent-context-ab.mjs",
+      "kind": "file",
+      "sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a"
+    },
+    {
+      "path": "scripts/sync-magicpath-projection.mjs",
+      "kind": "file",
+      "sha256": "d0d1fec467f52e788734c9f51254842ace375a3a9864237e5f72a3ea4e786f51"
+    },
+    {
+      "path": "scripts/test-agent-context-branch-fixtures.mjs",
+      "kind": "file",
+      "sha256": "bd2c4dec8d2869830eab077c798e5bb0011328e9a35451654e00d96ac1b9dd7e"
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "kind": "file",
+      "sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7"
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "kind": "file",
+      "sha256": "53ad2c9275fd984490c55f40067e65922e4e6d2df20d597f0f6691ff4f54ad79"
+    },
+    {
+      "path": "scripts/test-design-context-retirement.py",
+      "kind": "file",
+      "sha256": "2ba6dcb5fe1b2bb931b3e686c680a7a00a6853eb4a675e1824fe269fb5a1dbb1"
+    },
+    {
+      "path": "scripts/test-design-flow-handoff.mjs",
+      "kind": "file",
+      "sha256": "8f6f2f04eb314d15fe757aa04be7aa330ef5e1df09de574a667e7ccad2c12c44"
+    },
+    {
+      "path": "scripts/test-design-tool-retirement.mjs",
+      "kind": "file",
+      "sha256": "c21a572c3226d0764e9a7bde92d66e27edf2cd3664ac6a4ce1f81af5bcdc7b26"
+    },
+    {
+      "path": "scripts/test-design-tool-routing.mjs",
+      "kind": "file",
+      "sha256": "21b49aba2e55f3bf75d0ec7738e0c35021011c25f05489cafb57a35c80e1e714"
+    },
+    {
+      "path": "scripts/test-magicpath-projection-sync.mjs",
+      "kind": "file",
+      "sha256": "dc69031921957e16e677fc0e4b33492351127dd646b99db566c7f61d3f62f8bd"
+    },
+    {
+      "path": "scripts/test-page-context-preview.mjs",
+      "kind": "file",
+      "sha256": "9ed8065e5855005681ee2000c4b4b531114055b96b422b0a923c0d93309b80a3"
+    },
+    {
+      "path": "scripts/test-page-context.mjs",
+      "kind": "file",
+      "sha256": "fa324031409e6332d0e596cdcea1a0a24809ae8a1b2888344daa370d18a0e86b"
+    },
+    {
+      "path": "scripts/test-quality-gates-scope.mjs",
+      "kind": "file",
+      "sha256": "8b06be03837ba867a1f99a07b83657f555f04912d606a49075825c42f2070a71"
+    },
+    {
+      "path": "scripts/test-writing-for-agents-skill.mjs",
+      "kind": "file",
+      "sha256": "ce9b8dcd50fbdf16b7dc698eb046d59bcb6a87f98da15c03f5da2845551b9019"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "kind": "file",
+      "sha256": "e3fba3e59e3ee5c06f63c459b44efbc6e31bf8a3398151a01e3f5e21171f1757"
+    }
+  ],
+  "exclusions": [
+    "memory/retrieval-log.jsonl",
+    ".claude/observability/.write.lock"
+  ],
+  "status": "source frozen for current review; post-review delta requires closure"
+}

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "purpose": "Machine-readable obligations that must remain independently inline in CLAUDE.md and AGENTS.md.",
+  "roots": ["CLAUDE.md", "AGENTS.md"],
+  "obligations": [
+    {
+      "id": "K1",
+      "statement": "Declare luca_gstack as a product-neutral Skill OS and obtain product facts only from a verified active project.",
+      "required_terms": ["product-neutral", "Skill OS", "active project"],
+      "required_patterns": ["product-neutral[\\s\\S]{0,40}Skill OS", "only from the verified[\\s\\S]{0,30}active project"],
+      "forbidden_patterns": ["product-specific[\\s\\S]{0,30}Skill OS", "infer (?:product|brand|domain)[^\\n]{0,80}from this framework"]
+    },
+    {
+      "id": "K2",
+      "statement": "Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order.",
+      "required_terms": ["Project Gate", "Plan", "Framework Flow", "Multi", "Single", "STOP"],
+      "required_patterns": ["Project Gate[\\s\\S]*Plan[\\s\\S]*Framework Flow[\\s\\S]*Multi-Skill[\\s\\S]*Single-Skill[\\s\\S]*STOP", "never treat STOP as permission"],
+      "forbidden_patterns": ["STOP (?:is|grants|gives) (?:execution )?permission", "Single-Skill[\\s\\S]{0,80}before[\\s\\S]{0,80}Plan"]
+    },
+    {
+      "id": "K3",
+      "statement": "Apply all five Plan triggers and wait for user approval before Supervisor or Hierarchical execution.",
+      "required_terms": ["five", "Supervisor", "Hierarchical", "approval"],
+      "required_patterns": ["Supervisor[\\s\\S]{0,40}Hierarchical[\\s\\S]{0,80}requires[\\s\\S]{0,40}approval", "failed critical gate[\\s\\S]{0,20}stops[\\s\\S]{0,10}next phase"],
+      "forbidden_patterns": ["(?:Supervisor|Hierarchical)[^\\n]{0,120}(?:without approval|approval (?:is )?not required)", "planning permission is mutation permission"]
+    },
+    {
+      "id": "K4",
+      "statement": "Treat STOP as a semantic-assessment state, not execution permission; preserve the truly mechanical single-file exemption.",
+      "required_terms": ["STOP", "semantic", "single-file", "mechanical"],
+      "required_patterns": ["Route by[\\s\\S]{0,20}semantic[\\s\\S]{0,100}not[\\s\\S]{0,30}keyword", "truly[\\s\\S]{0,20}mechanical single-file"],
+      "forbidden_patterns": ["STOP (?:is|means) permission", "catalog (?:lookup|discovery) is optional"]
+    },
+    {
+      "id": "K5",
+      "statement": "Use the per-session project pin as truth; keep NO_PIN for framework/meta work; shared symlinks are display-only and switching uses an emitted transaction.",
+      "required_terms": ["NO_PIN", "session", "symlink", "transaction"],
+      "required_patterns": ["symlink[\\s\\S]{0,30}(?:are|is) display-only", "NO_PIN[\\s\\S]{0,80}must not touch", "uses only[\\s\\S]{0,40}transaction"],
+      "forbidden_patterns": ["NO_PIN[^\\n]{0,80}(?:may|can) (?:read|write|touch)[^\\n]{0,40}(?:docs|workflow-state)", "(?:may|can) derive[^\\n]{0,60}pin[^\\n]{0,30}symlink"]
+    },
+    {
+      "id": "K6",
+      "statement": "Keep framework read-only, preserve user work, and require scoped authority for destructive or external effects.",
+      "required_terms": ["framework/", "read-only", "user work", "external"],
+      "required_patterns": ["framework/[\\s\\S]{0,30}read-only", "Preserve[\\s\\S]{0,10}user work", "external[\\s\\S]{0,50}require[\\s\\S]{0,40}(?:authority|approval)"],
+      "forbidden_patterns": ["framework/[^\\n]{0,80}(?:may|can|is allowed to) (?:be )?edit", "(?:discard|overwrite) user work"]
+    },
+    {
+      "id": "K7",
+      "statement": "A human decision gate must stop for a real user response even when no structured question widget exists.",
+      "required_terms": ["Human Gate", "structured", "user response"],
+      "required_patterns": ["structured[\\s\\S]{0,60}does not authorize a default", "stop for a real[\\s\\S]{0,20}user response"],
+      "forbidden_patterns": ["(?:absence|no)[^\\n]{0,80}structured[^\\n]{0,80}(?:authorizes|allows|means)[^\\n]{0,30}(?:a )?default", "choose a default without[^\\n]{0,40}user"]
+    },
+    {
+      "id": "K8",
+      "statement": "Inline every allowlisted Static Fallback fact from the governed semantic-memory source in both roots.",
+      "required_terms": ["Static Fallback", "allowlist", "promoted-facts.yaml"],
+      "required_patterns": ["Static Fallback[\\s\\S]{0,180}must remain inline", "exact projection[\\s\\S]{0,120}promoted-facts\\.yaml"],
+      "forbidden_patterns": ["Static Fallback[^\\n]{0,100}(?:need not|does not need to|may not) remain inline", "Static Fallback[^\\n]{0,80}pointer-only"]
+    },
+    {
+      "id": "K9",
+      "statement": "Keep Think Before Coding, Simplicity First, Surgical Changes, and Goal-Driven Execution inline.",
+      "required_terms": ["Think Before Coding", "Simplicity First", "Surgical Changes", "Goal-Driven Execution"],
+      "required_patterns": ["Think Before Coding[\\s\\S]*Simplicity First[\\s\\S]*Surgical Changes[\\s\\S]*Goal-Driven Execution"],
+      "forbidden_patterns": ["(?:skip|ignore|disable)[^\\n]{0,80}(?:Think Before Coding|Simplicity First|Surgical Changes|Goal-Driven Execution)"]
+    },
+    {
+      "id": "K10",
+      "statement": "Keep the minimal startup protocol, bounded conditional loading for classification and execution, read-to-end rule, and truthful Claude/Codex invocation and capability differences inline.",
+      "required_terms": ["startup", "conditional", "FILE_END", "classification", "Claude", "Codex"],
+      "required_patterns": ["Minimal[\\s\\S]{0,20}startup", "conditional[\\s\\S]{0,100}target[\\s\\S]{0,60}(?:EOF|FILE_END)", "framework/meta/`NO_PIN`[\\s\\S]{0,80}project-session", "name/route discovery[\\s\\S]{0,80}catalog is sufficient", "execution-only schemas[\\s\\S]{0,100}implementation owners", "Claude[\\s\\S]{0,220}Codex|Codex[\\s\\S]{0,220}Claude"],
+      "forbidden_patterns": ["Codex (?:uses|executes)[^\\n]{0,60}Claude slash", "Claude (?:uses|invokes)[^\\n]{0,40}\\$<skill-name>"]
+    }
+  ]
+}

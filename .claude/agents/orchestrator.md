@@ -228,7 +228,6 @@ Step 7  记录 eval（每个 skill 各记一条）
 | `open-design` | `.claude/skills/office/open-design/SKILL.md` |
 | `html-prototype` | `.claude/skills/office/html-prototype/SKILL.md` |
 | `figma-demo` | `.claude/skills/office/figma-demo/SKILL.md` |
-| `figma-layer` | `.claude/skills/office/figma-layer/SKILL.md` |
 | `magicpath` | `.claude/skills/office/magicpath/SKILL.md` |
 | `task-plan` | `.claude/skills/office/task-plan/SKILL.md` |
 | `tech-spec` | `.claude/skills/office/tech-spec/SKILL.md` |
@@ -272,11 +271,11 @@ Step 7  记录 eval（每个 skill 各记一条）
 ### 3.1 适用场景
 
 专用于 luca_gstack 设计工作流 skill 链路：
-`idea → brainstorm → ux-research → ux-brainstorm → design-brief → open-design → figma-layer`
+`idea → brainstorm → ux-research → ux-brainstorm → design-brief → open-design`
 
 `open-design` 是设计产出首选（optional-workflow-graph.yaml `design_output.primary`）；
-`magicpath` / `html-prototype` 仅在 OD daemon 不可达或用户明确要求本地 HTML 时按
-`design_output.fallback`（magicpath → html-prototype）降级。
+`magicpath` / `html-prototype` 是独立备选能力，按 `design_output.fallback_trigger` 的真实用户选择
+或已批准的具名备用计划调用；故障不自动授予换工具权。OD 同项目桌面恢复不属于跨工具切换。
 
 ### 3.2 启动流程
 
@@ -300,15 +299,16 @@ Step 6  执行技能循环（见 §3.4）
 | 信息量 | 详细需求文档 | 一句话需求 |
 
 ```
-Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → open-design → figma-layer]
+Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → open-design]
 Scene A 中复杂度 → [idea → brainstorm → design-brief → open-design]
 Scene B 高复杂度 → [brainstorm → ux-audit → ux-research → ux-brainstorm → design-brief → open-design]
 Scene B 低复杂度 → [ux-audit → design-brief → open-design]
-Scene C            → [ux-audit → design-brief → open-design → figma-layer]
+Scene C            → [ux-audit → design-brief → open-design]
 Scene D            → 全量路径（Agent化本身是高复杂度）
 ```
 
-OD daemon 不可达时按 optional-workflow-graph.yaml 各 scene 的 `fallback_paths` 降级（magicpath → html-prototype）。
+各 scene 的 `fallback_paths` 只供用户明确改选或已批准具名备用计划时使用；
+OD daemon 不可达而无该授权时暂停，报告连接问题，不自动 dispatch 其他生成器。
 
 ### 3.4 Skill 执行循环
 

@@ -40,22 +40,30 @@ skills:
     modes:
       standalone:
         required: ["ui_requirement"]
-        optional: ["design_brief_artifact", "brand_tokens"]
+        optional: ["design_brief_artifact", "external_design_system"]
       workflow:
         required: ["design_brief_artifact"]
         optional: ["ux_brainstorm_artifact"]
-    quality_gates: ["design_generation_packet", "tool_consumption_contract", "component_mapping", "state_coverage", "no_packet_fact_drift", "component_rendered", "react_canvas_valid"]
+    quality_gates: ["design_generation_packet", "tool_consumption_contract", "page_interaction_mapping", "state_coverage", "no_packet_fact_drift", "component_rendered", "react_canvas_valid"]
 
   open-design:
     modes:
       standalone:
         required: ["design_source_artifact"]   # chain: design-brief 交互文档 | adhoc: 单点指定的方案 md
-        optional: ["od_skill", "od_design_system", "brand_tokens"]
+        optional: ["od_skill", "od_design_system", "confirmed_page_selection"]
       workflow:
         required: ["design_brief_artifact"]
         optional: ["ux_brainstorm_artifact"]
-    quality_gates: ["input_source_resolved", "design_generation_packet_when_chain", "instruction_compiled", "fxui_brand_text_tokens_only", "platform_designsystem_user_selected", "designsystem_bound_verified", "od_daemon_reachable", "artifact_generated", "prototype_spec_written", "no_source_fact_drift"]   # artifact_generated = desktop_generated_then_recovered(默认) OR headless_generated(opt-in)，产物落盘即 PASS
-    notes: "design_output 主力，**默认桌面端生成（headless opt-in）**：luca 编译指令 → 评估并让用户选 Target platform + Design system → 建项目绑 designSystemId(建后验证) + 写 brief.md → **默认交用户在 OD 桌面端按生成(订阅会话, 可靠) → '拉回来' recover 落盘**；headless 经 daemon /api/chat(带 agentId) 为 opt-in，本 session 实测不稳(生成慢/daemon重启)，失败上限 1 后降级桌面端。人工判断后置(符合/迭代/停)。FxUI 只叠品牌色 #FF8000 + 文字色 #181C25/#91959E，其余走所选 design system 不覆盖。两种进入 chain/adhoc。"
+    entry_modes:
+      chain: "verified task design-brief Generation Packet"
+      adhoc: "explicit aligned design source; no forced PRD workflow"
+      recover: "explicit bound OD project; skip source compilation, page matching and generation"
+    quality_gates: ["input_source_resolved_when_not_recover", "design_generation_packet_when_chain", "no_source_fact_drift", "high_confidence_page_recommendation_only", "reference_confirmed_or_none", "platform_user_confirmed", "external_design_system_not_overridden", "designsystem_bound_verified_when_delegated", "exact_tool_target_and_write_authority"]
+    completion_gates:
+      exported: ["same_source_body_and_reference_materials", "no_claim_of_external_import"]
+      staged: ["od_daemon_reachable", "exact_project_readback", "brief_and_all_reference_bytes_match", "no_claim_of_generation"]
+      recovered: ["bound_project_only", "actual_nonempty_prototype_recovered", "all_related_artifacts_recovered", "prototype_spec_written", "honest_traceability", "project_handoff_when_pinned"]
+    notes: "设计源就绪后仅一次 page-context 步骤：高置信才推荐并待真人采用；低置信不展示，reference=none 直接交接，可选询问不阻塞。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，原请求最多重试1次后回同一staged项目桌面端。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
 
   idea:
     modes:
@@ -142,7 +150,7 @@ skills:
       standalone_light:
         required: ["design_input"]
         note: "May omit PRD, but must not claim end-to-end traceable delivery."
-    quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "component_mapping", "prototype_carrier_confirmation", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract"]
+    quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "page_interaction_mapping", "output_target_platform_scope_sources", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract"]
 
   html-prototype:
     modes:
@@ -153,7 +161,7 @@ skills:
         required: []
         optional: ["design_brief", "ux_audit_report", "prd_artifact"]
     source_kinds: ["design_brief", "ux_audit", "screenshot_delta", "figma_demo_blueprint", "standalone_brief", "standalone_mobile_prototype"]
-    quality_gates: ["step0_cognitive_gate", "framework_contract", "design_system_contract", "design_generation_packet_gate", "prototype_carrier_respected", "decision_mapping_coverage", "state_mapping_coverage", "dynamic_reference_when_triggered", "prototype_qa"]
+    quality_gates: ["step0_cognitive_gate", "source_scope_contract", "current_design_system_when_provided", "design_generation_packet_gate", "prototype_carrier_respected", "decision_mapping_coverage", "state_mapping_coverage", "dynamic_reference_when_triggered", "prototype_qa"]
 
   figma-demo:
     modes:
@@ -164,17 +172,6 @@ skills:
         required: []
         optional: ["design_brief", "prototype_context"]
     quality_gates: ["mapping_verification", "blueprint_schema", "builder_isolation", "assembly_no_new_design"]
-
-  figma-layer:
-    modes:
-      standalone:
-        required: ["index_html", "prototype_spec"]
-        optional: ["blueprint_yaml", "design_brief"]
-      workflow:
-        required: []
-        optional: ["html_prototype_output", "figma_demo_output", "open_design_output"]
-    source_kinds: ["html-prototype", "figma-demo", "open-design"]
-    quality_gates: ["read_actual_html", "figma_mcp_required", "source_specific_component_inventory"]
 
   tech-spec:
     modes:

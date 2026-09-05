@@ -11,3 +11,42 @@ facts:
     reviewer: "luca-delegated"
     scope: "external-skills,evolution"
     tags: ["外部skill", "更新复盘", "对标", "采纳", "watcher"]
+  - id: SF-002
+    domain: fxui
+    fact: "HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: CLAUDE.md
+
+  - id: SC-20260609-003
+    domain: skill-rule
+    fact: "跨多 skill 的 HTML/UI 规范必须分两层：① 视觉层（颜色/字号/间距/品牌）走中心继承——brand-tokens.md + framework/tokens.css + office/SKILL.md 品牌与技术约束节——禁止逐 skill 复制（会漂移，违反 DRY），不得新建专门\"规范 skill\"；② 内容结构层（每个报告/产出的章节骨架与占位变量）天生 per-skill，各 skill 自带 references/ 或 templates/ 子目录存放模板文件（格式按产出类型：md 模板或 html 模板均可），先例：figma-demo/templates/demo-template.html（HTML）、deepresearch/references/report-template.md（md）。通用 skill 无法预知每个报告的内容结构，专门规范 skill 属错误耦合。"
+    confidence: high
+    stable: true
+    added: 2026-06-21
+    source: observation
+    evidence: "2026-06-09 session 3-Explore 调研: 仅4个skill产HTML;视觉规范已在 office/SKILL.md §294 集中继承;figma-demo 已有内置模板先例"
+    reviewer: "luca"
+    scope: "luca_gstack skill-os / 任何跨 skill 横切规范选型"
+    tags: ["skill-os", "ui-spec", "template", "architecture", "DRY"]
+  - id: SC-20260610-001
+    domain: skill-rule
+    fact: "figma-layer 路由边界：该 skill 仅适用于「已有 HTML 原型（来源：html-prototype / figma-demo / open-design）一比一还原到 Figma」；用户要求独立设计直接写入 Figma（无上游 index.html）时不走 figma-layer，改走 figma-generate-design / figma-use。routing-map 含裸词「Figma」触发器，存在结构性误命中风险；执行前必须 pre-flight 核查 docs/prototype/*/index.html 是否存在，不存在则拒绝路由并提示用户先出原型或改用独立设计 skill。"
+    confidence: high
+    stable: true
+    added: 2026-06-21
+    source: observation
+    evidence: "2026-06-10 session：用户给 Figma URL 要求模型独立设计客户列表，route-guard 两次命中 figma-layer；读 SKILL.md 确认职责不符（保险层=1:1还原非独立设计），用户明确确认不用 figma-layer"
+    reviewer: "luca"
+    scope: "figma-layer / route-guard figma 类路由"
+    tags: ["figma-layer", "figma-use", "routing"]
+  - id: SF-001
+    domain: crm
+    fact: "纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25"
+    confidence: high
+    stable: true
+    added: 2026-05-16
+    source: brand-tokens.md
+    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
+

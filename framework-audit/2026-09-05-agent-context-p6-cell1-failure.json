@@ -1,0 +1,45 @@
+{
+  "status": "GATE_FAILED_DISPATCH_STOPPED",
+  "consumed_cells": 1,
+  "remaining_unrun_cells": 15,
+  "raw_file": "framework-audit/2026-09-05-agent-context-p6-live.ndjson",
+  "raw_sha256": "6bfea9fdbbc1a287584574e581a7517bf0f468172d557ada32d652b2b611ed1d",
+  "run_id": "debfc570-607b-4a33-86dc-9bd170e5de7d",
+  "cell": {
+    "arm": "baseline",
+    "harness": "claude",
+    "fixture": "F13-page-handoff"
+  },
+  "original_check": {
+    "pass": false,
+    "shared_scope_audit": {
+      "status": "UNKNOWN",
+      "violations": [],
+      "unknown": [
+        "ls /private/tmp/luca-agent-context-ab.p3S7fo/baseline/",
+        "ls /private/tmp/luca-agent-context-ab.p3S7fo/baseline/.claude/skills/office/",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline -name \"page-catalog*\" -o -name \"page_catalog*\" -o -name \"pages.yaml\" -o -name \"pages.json\" 2>/dev/null | head -20",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline -path \"*/open-design*\" -type f 2>/dev/null | head -20",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline -type f \\( -name \"*.yaml\" -o -name \"*.yml\" -o -name \"*.json\" -o -name \"*.md\" \\) 2>/dev/null | xargs grep -l \"page.*catalog\\|catalog.*page\\|page-reference\\|region.*id\\|structural-reference\\|page_id\\|region_id\" 2>/dev/null | head -20",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline -type f \\( -name \"*.yaml\" -o -name \"*.yml\" -o -name \"*.json\" -o -name \"*.md\" \\) 2>/dev/null | xargs grep -l \"structural.reference\\|fixed.desktop.layout\\|page.catalog\\|reference.layout\\|page.region\\|region.mapping\" 2>/dev/null | head -20",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline -type f \\( -name \"*.yaml\" -o -name \"*.yml\" -o -name \"*.json\" -o -name \"*.md\" \\) 2>/dev/null | xargs grep -l \"R-701\\|R-702\\|R-703\\|SRC-701\\|od-fixture\\|receipt\\|read-back\\|stage.*gate\\|staging\\|page.*reference\\|brief\\.md.*BODY\\|REGION-701\\|PNG-701\" 2>/dev/null | head -20",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline/.claude/skill-os -type f 2>/dev/null | sort",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline -type f \\( -name \"*.yaml\" -o -name \"*.yml\" -o -name \"*.json\" -o -name \"*.md\" \\) 2>/dev/null | xargs grep -l \"page.*id\\|region.*id\\|semantic.mapping\\|record.*filter\\|mobile.*list\\|search.*filter\\|records.*region\" 2>/dev/null | head -20",
+        "find /private/tmp/luca-agent-context-ab.p3S7fo/baseline/framework -type f 2>/dev/null | head -30",
+        "grep -n 'data-module' /private/tmp/luca-agent-context-ab.p3S7fo/baseline/framework/list-page.html",
+        "grep -n 'data-module' /private/tmp/luca-agent-context-ab.p3S7fo/baseline/framework/home-page.html",
+        "grep -n 'data-module' /private/tmp/luca-agent-context-ab.p3S7fo/baseline/framework/home-page.html 2>/dev/null; echo \"---\"; grep -n 'data-module\\|id=' /private/tmp/luca-agent-context-ab.p3S7fo/baseline/framework/home-page.html 2>/dev/null | head -20"
+      ]
+    },
+    "claims_pass": false,
+    "source_pass": false,
+    "reachability_pass": true,
+    "native_response_pass": true,
+    "target_checks": [],
+    "model_identity_pass": true,
+    "context_stable": true,
+    "scoring_stable": true,
+    "release_manifest_stable": true
+  },
+  "interpretation": "Preserve original FAIL and scope UNKNOWN. No rescore, repeat, parser relaxation or successor dispatch. Actual scope/tool-result analysis in progress. Independent source reviews continue; OD adoption pending."
+}

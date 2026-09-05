@@ -7,7 +7,7 @@ description: |
   需求→原型自治 Loop 的独立正向单趟编排器（muse fork 专属新增）。
   extract→triage→map→open-design生成+judge核对 一次性单向链（2026-07-02 OD 改造后
   默认路径=open-design 生成+judge 核对+用户主导迭代，「轮数上限3」=最多3轮 judge 核对；
-  gen↔judge 自动内循环仅为 OD daemon 不可达时的 fallback）。
+  gen↔judge 自动内循环仅用于用户明确选择、或已批准计划明确授权且触发条件满足的本地 fallback；OD 不可达本身不授权切换）。
   自行 dispatch 子任务、自带 Plan-Agent 等效门禁，零接入母版 Orchestrator
   的 Skill Workflow Mode，零改动 workflow-state.yaml/orchestrator.md。
   触发短语（fork 内 skill-routing-map.yaml 注册）：'muse loop'、'muse自进化循环'、
@@ -127,9 +127,14 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 
 **硬性前置（场景 B/C，2026-07-02 新增，镜像上面 traceable_delivery 的模式）：** `baseline.md` + `change-map.md` 不存在，或 change-map 未覆盖 PRD 全部 MUST 级 R → **不得 dispatch** `/design-brief`，先回补对应子步骤；dispatch 时这两份文件作为**输入0**（先于 prd-constraints）喂给 design-brief——这是 Loop 调度层的强制约束，不修改 design-brief 自身的锁死输入清单文本（同 AC 推导子步骤的红队裁定先例：不碰共享 skill）。
 
-产出对照 `muse-loop/references/component-mapping-taxonomy.md` 的词汇表解读。
+产出按 `/design-brief` Phase 6 的页面与交互位置映射及 Phase 6.5 的追踪枚举解读；
+保留 D/STATE/R/AE、去向与原因，不再读取旧组件技术词汇表。
 
 **GATE-2（人类卡点，不可省略）：** 用 `AskUserQuestion` 呈现设计映射结果（含是否达到 traceable_delivery），等用户确认。`allow_standalone_override: false`。
+
+工具选择及备用路径以用户明确选择或已批准计划为准，随 dispatch 传递。GATE-2 若已明确批准
+`muse-proto-gen` 本地备用路径及触发条件，可沿该授权执行，不在中途重复提问；仅确认设计映射
+不等于批准换工具。没有相应授权时，工具故障必须以 `BLOCKED` 交还用户。
 
 **GATE-2 通过后、进 Phase 3 前的 AC 推导子步骤（2026-07-02 补，真实端到端跑第一条REQ时发现的缺口——`design-brief` 真实产出是 D-系列决策卡，没有 Given/When/Then 字段，`muse-proto-judge` 却需要 AC 才能打分。红队裁定：不改 `design-brief` 本身（它的D-系列格式被 `html-prototype`/`tech-spec`/`task-plan` 共用，改了影响面太大），AC归属按真实 Kiro 先例留在需求层，本步骤只做"翻译"，不臆造）：**
 
@@ -146,13 +151,14 @@ fork 的 git 追踪树只留骨架/环境文件（`constitution.md`、`schema.md
 
 ```
 dispatch /open-design（chain：源=本REQ对应的 docs/decisions/*-design-brief.md）
-  → Phase 0-1：确认输入源 + 编译OD指令（Generation Packet + FxUI品牌色/文字色叠加块
+  → Phase 0-1：确认输入源 + 编译OD指令（Generation Packet + 已确认页面上下文或 reference=none
     + 【场景B/C 必含，2026-07-02 新增】change-map 摘要：改动区（MODIFY/REMOVE/ADD+锚点，
     带基线真实名称与定位）+ 保持区（哪些现有模块必须原样保留）——让 OD 知道"改哪、留哪、加在哪"，
     对着真实现状做增量生成，不再从0臆造整页）
-  → Phase 2：真实 AskUserQuestion 问用户选 Target platform + Design system（不可机器代选）
+  → Phase 2：确认 Target platform 与准确工具目标/写入授权（已有真实决定则复用，不可机器代选）；
+    Design system 由用户在 OD 配置，仅在用户明确提供或委托绑定时核验真实 DS 及项目绑定
   → Phase 3D（默认）：建OD项目绑定+写brief.md → 交用户在OD桌面端按生成键 → 用户说"拉回来"
-    [OD daemon 真不可达时的 fallback：见下]
+    [OD daemon 不可达时先停并交还控制权；仅按下方已授权备用路径继续]
   → Phase 4：回收落盘 docs/prototype/YYYY-MM-DD-<topic>/index.html + prototype-spec.md
   → Phase 4 收尾（本编排器，2026-07-08 补）：将回收的最终 index.html 复制一份为
     docs/loop/specs/REQ-*/prototype.html（保持 REQ 目录 L3 契约与 traceability 引用有效），
@@ -168,13 +174,15 @@ dispatch muse-proto-judge（Task 工具冷启动，仅传回收的原型路径 +
                      "轮数上限3"在这条路径下的含义改为"最多帮你跑3轮judge核对"，不是"自动重生成3轮"。
 ```
 
-**Fallback 路径（仅当 open-design 的 preamble 探测 `OD_DAEMON: DOWN` 时）：** dispatch `muse-proto-gen`（`.claude/skills/office/muse-proto-gen/`，**Agent 工具**冷启动、prompt 令其读取该 SKILL.md 执行——与本 skill frontmatter 声明的 allowed-tools 一致，不依赖未授权的 Skill 工具；镜像上方 `muse-proto-judge` 的 Task/Agent 冷启动方式）直接写HTML，走原来的"muse-proto-gen ↔ muse-proto-judge 自动内循环"（轮数上限3，判官打回自动重生成——这条路径不涉及用户手动生成，机制上允许自动重试）。**必须明确告知用户"OD daemon 不可达，降级到本地直接生成"，不静默切换路径。** **Loop 场景下 open-design 探测到 `OD_DAEMON: DOWN` 即停并交还控制权给本编排器，禁用 open-design 自有的 magicpath/html-prototype 备选链——Loop 的 fallback 只走 `muse-proto-gen`**（其产物才带 `DECISION: D-NNN` 追溯注释与受控词汇表，judge 的 AC 契约不断裂）。
+**工具故障与恢复：** Loop 场景下 open-design 探测到 `OD_DAEMON: DOWN`、认证失败或平台不支持（含非 React/Canvas）时，先报告阻塞并交还控制权给本编排器；这些事实本身不授权换工具。OD headless 失败仍保留「一次 retry → 同一项目 OD 桌面端恢复」，不改工具、不另建项目。
+
+**已授权的本地 Fallback 路径：** 仅当用户明确选择本地 HTML 生成，或已批准计划 / GATE-2 明确包含 `muse-proto-gen` 备用路径且触发条件满足时，dispatch `muse-proto-gen`（`.claude/skills/office/muse-proto-gen/`，**Agent 工具**冷启动、prompt 令其读取该 SKILL.md 执行——与本 skill frontmatter 声明的 allowed-tools 一致，不依赖未授权的 Skill 工具；镜像上方 `muse-proto-judge` 的 Task/Agent 冷启动方式），并传入该授权依据。缺少授权 → `BLOCKED` 交还用户，不 dispatch、不把告知用户当作批准；已有明确授权则不重复提问。进入后直接写HTML，走原来的"muse-proto-gen ↔ muse-proto-judge 自动内循环"（轮数上限3，判官打回自动重生成——这条路径不涉及用户手动生成，机制上允许自动重试），并明确告知用户正在执行哪项已批准备用路径。**Loop 不自动调用 open-design 的 magicpath/html-prototype 备选链；已授权的 Loop 本地 fallback 仍只走 `muse-proto-gen`**（其产物才带 `DECISION: D-NNN` 追溯注释与页面/状态映射，judge 的 AC 契约不断裂）。
 
 `muse-proto-judge` 永不静默自动应用修复——无论走哪条路径，是否重新生成/如何处理gap，由本编排器的收敛逻辑（或用户，视路径而定）决定，不是判官自己执行。
 
 **scorecard.md（L4）落盘责任在本编排器（2026-07-08 补）：** `muse-proto-judge` 无 Write 工具，只**返回**评分卡内容；每轮判定后（无论默认路径还是 fallback 路径），由本编排器用 Write 将其落盘到 `docs/loop/specs/REQ-*/scorecard.md`（多轮时追加，格式见 `muse-loop/schema.md`「scorecard.md」节）。
 
-**flip 到 `verified` 前的范围完整性清单（2026-07-02 补，红队裁定 CLEAR_DEFER 完整自动化机制、但先上这个零成本版本）：** `muse-proto-judge` 只对**预先给定的 AC 列表**逐条打分，AC 列表本身若漏了 design-map 阶段规划过的某个组件（比如映射表里有但没人写 AC 的一个状态/组件），判官不会、也不可能发现——它没被问过。全自动的"产出↔规划范围"结构化比对（借鉴 Spec Kit `/converge`）暂不建（红队判定：零端到端跑过的系统上建第二套没验证过的比对机制，跟已经否决的"快速路径"是同类过早施工）。**现在只做**：flip 到 `verified` 前，把这条 REQ 的组件映射表（design-map 产出）和 prototype.html 实际包含的组件并排给用户看一眼，人工确认没有"规划过但没做"的遗漏，再确认。等真跑过 2-3 条 REQ、事后比对真的发现过 AC 列表本身漏东西，再考虑建自动化版本。
+**flip 到 `verified` 前的范围完整性清单（2026-07-02 补，红队裁定 CLEAR_DEFER 完整自动化机制、但先上这个零成本版本）：** `muse-proto-judge` 只对**预先给定的 AC 列表**逐条打分，AC 列表本身若漏了 design-map 阶段规划过的某个组件（比如映射表里有但没人写 AC 的一个状态/组件），判官不会、也不可能发现——它没被问过。全自动的"产出↔规划范围"结构化比对（借鉴 Spec Kit `/converge`）暂不建（红队判定：零端到端跑过的系统上建第二套没验证过的比对机制，跟已经否决的"快速路径"是同类过早施工）。**现在只做**：flip 到 `verified` 前，把这条 REQ 的页面与交互位置映射表（design-map 产出）和 prototype.html 实际包含的区域/交互并排给用户看一眼，人工确认没有"规划过但没做"的遗漏，再确认。等真跑过 2-3 条 REQ、事后比对真的发现过 AC 列表本身漏东西，再考虑建自动化版本。
 
 **收尾（本编排器自己的职责，不是另一个 skill）：** 该 REQ 到达 `verified` 或 `Reviewer Concerns` 时，追加一行到 `docs/loop/traceability.md`（格式定义见 fork 根 `traceability.md`；文件不存在则先建表头）。中间状态（`triaged`/`prd_ready`/`designed`）不重复写。
 

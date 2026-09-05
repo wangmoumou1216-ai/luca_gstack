@@ -45,7 +45,8 @@ python3 .claude/observability/scripts/get_rules.py office "*" 2>/dev/null || tru
   或明确要求“继续流程/进入下一步”。此时检查上游 artifacts 和 handoff
   gate。
 
-读取契约：
+实际执行 skill 时读取 `input-modes.yaml`；仅用户选择 Workflow 或要求继续流程时读取
+`optional-workflow-graph.yaml`。只做路由、分类或 skill 合同判断时不加载 graph：
 ```
 .claude/skill-os/input-modes.yaml
 .claude/skill-os/optional-workflow-graph.yaml
@@ -126,7 +127,8 @@ DONE 合法。compare / status 即此规则的既有实例。standalone 重型 s
 如适用：AI Native 范式判断。
 
 写完后、标记 DONE 或更新 workflow-state 之前，必须运行：
-`node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.md"`。失败先修 handoff，不得继续报 DONE。
+`node scripts/check-quality-gates.mjs --handoff "<已验证项目内 handoff 的绝对路径>"`。路径从已绑定项目确认，
+不靠共享别名推断；NO_PIN 框架维护不执行项目 handoff。失败先修 handoff，不得继续报 DONE。
 
 **下游 skill 启动时读取上游 handoff summary，不读取上游完整 SKILL.md 或完整产出。**
 
@@ -315,45 +317,13 @@ docs/prototype/YYYY-MM-DD-<topic>/requirement.md          ← figma-demo 专有�
 docs/figma/YYYY-MM-DD-<topic>/figma-spec.md
 ```
 
-### 品牌与技术约束（所有 skill 强制遵守）
+### 设计规范与参考资产
 
-> ⚠ **品牌 token 唯一真值源 = `framework/shared-head.html`**（token 母版，verify.sh F6 守护、所有原型页依赖）+ 运行时镜像 `framework/tokens.css`。以下品牌色 / 字体 / 间距为**速查副本**：任何 token 变更改母版并同步本表；下游 skill 与 reference 引用 token 应指向母版、勿再复制字面值（此前多处硬编码已发生漂移）。
-
-**品牌色：**
-- 主色：`#FF8000`（Tailwind: `bg-primary / text-primary`）
-- 全页限制：≤3 处
-
-**字体四级：**
-
-| 级别 | 场景 | 字号 | 字重 | 颜色 |
-|------|------|------|------|------|
-| L1 | 区块标题 | 15px (`text-15`) | 500 | #181C25 (`text-n19`) |
-| L2 | 核心内容/字段值 | 13px (`text-13`) | 400 | #181C25 |
-| L3 | 辅助标签/字段名 | 13px (`text-13`) | 400 | #91959E (`text-n11`) ⚠️见下 |
-| L4 | 弱信息/时间戳 | 12px (`text-12`) | 400 | #91959E ⚠️见下 |
-
-> ⚠️ **L3/L4 颜色的无障碍注记（2026-07-22 实测，默认值未改）：** `#91959E` 在白底上仅 **3.00:1** ——
-> 过得了非文本 3:1，**过不了正文 4.5:1**。而 L3/L4 承载的是**字段名与时间戳等真实文字**，适用正文标准。
-> **面向欧美市场 / 受 EAA·ADA 影响 / 客户合同写明无障碍要求的项目，L3/L4 必须改用同色相压深的
-> `#6E727B`（4.82:1 ✓）**；`#91959E` 保留给分隔点、图标、滚动条等**非文字装饰**。
-> 默认值不改的理由与完整实测表见 `references/brand-tokens.md` §无障碍合规注记（同源问题覆盖整个功能色板）。
-
-**间距系统：**
-合法值：4 / 8 / 12 / 16 / 24 / 32 / 40 px
-对应 Tailwind：p-1 / p-2 / p-3 / p-4 / p-6 / p-8 / p-10
-
-**CSS Token（来自 `framework/tokens.css`）：**
-```
---fx-primary: #ff8000      → bg-primary / text-primary
---fx-n19: #181c25          → text-n19（主要文字）
---fx-n11: #91959e          → text-n11（次要文字）
---fx-n05: #dee1e8          → border-n05（分割线）
---fx-page-bg: #eff1f3      → bg-page-bg
-```
-
-**原型技术栈：** 纯 HTML + 本地 Tailwind CDN（`framework/assets/vendor/tailwindcss.com.js`）+ 原生 JS
-**可用母版（5个）：** 列表页 / 详情页（两列）/ 详情页（三列）/ 表单页 / 首页/仪表盘。AI速记入口页 / 录音工作页当前无整页母版，需走局部改动/独立组件或先补齐母版。（母版清单以本处为唯一真值源；design-brief / figma-demo / html-prototype 引用勿复述，补齐新母版只改此处。）
-**图标：** 先查 `framework/assets/icons/`，找不到则如实说明缺图标、不臆造（原隐藏图标检索工具 fx-icon-search 已于 commit 5aa61a7 删除，勿调用）
+设计系统以用户提供或目标工具中实际配置的规范为准；本仓不强制品牌色、字号、间距、字体或组件技术映射。
+没有实际规范时仍检查信息层级、可读性、状态反馈与无障碍，规范合规项标 N/A/未验证，不伪造合规结论。
+本地 HTML 按已确认平台与范围生成，运行资源须可用并满足离线交付要求；仅在明确采用源资产时核验其依赖。
+`framework/` 是只读参考资产，页面参考与采用合同见 `.claude/skill-os/runtime/page-context.md`；
+参考页默认只定位结构与修改区域，不把其视觉系统或组件实现当成下游规范。
 
 ---
 

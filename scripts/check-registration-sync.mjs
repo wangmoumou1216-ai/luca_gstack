@@ -13,6 +13,9 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 const routing = read('.claude/skill-os/skill-routing-map.yaml');
 const claudeMd = read('CLAUDE.md');
+const contextState = JSON.parse(read('.claude/skill-os/agent-context-state.json'));
+const catalog = read('.claude/skill-os/generated/skill-catalog.md');
+const catalogSkills = new Set([...catalog.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]));
 // office 展示面真值 = references/office-wizard.md（office/SKILL.md:336 指定向导必须读它）
 let officeMd = '';
 try { officeMd = read('.claude/skills/office/references/office-wizard.md'); }
@@ -37,12 +40,16 @@ for (const l of regLines) {
   for (const m of l.matchAll(/`\/([a-z0-9-]+)`/g)) { registered.add(m[1]); break; }
 }
 for (const name of uniq) {
-  if (!registered.has(name)) {
+  const skillMd = `.claude/skills/office/${name}/SKILL.md`;
+  const isLocal = fs.existsSync(path.join(ROOT, skillMd));
+  if (contextState.phase === 'compat' && !registered.has(name)) {
     errors.push(`REG-1 CLAUDE.md 缺一级 skill 注册行（表行或具名 prose 注册段）: /${name}`);
   }
+  if (isLocal && !catalogSkills.has(name)) {
+    errors.push(`REG-1 generated skill catalog 缺一级 local skill: ${name}`);
+  }
   // REG-2: recommended-model 申报（office 本地 skill 才有 SKILL.md；外部/内置跳过）
-  const skillMd = `.claude/skills/office/${name}/SKILL.md`;
-  if (fs.existsSync(path.join(ROOT, skillMd))) {
+  if (isLocal) {
     const fm = read(skillMd).split(/^---$/m)[1] || '';
     if (!/recommended-model:\s*\S+/.test(fm)) {
       errors.push(`REG-2 ${skillMd} frontmatter 未申报 recommended-model（new_scenario_protocol 三问未落）`);

@@ -3,7 +3,7 @@
 > luca_gstack 的轻量交互文档节点。当不需要运行重型 `/ux-brainstorm` 时，基于
 > PRD、UX 研究、UX 评审或用户直接粘贴的方案，
 > 产出**可以直接做原型**的交互决策文档，含 12 状态覆盖、8
-> 字段决策清单和 shadcn 组件映射表。
+> 字段决策清单和页面与交互位置映射。
 
 ## 这个 skill 是什么
 
@@ -11,7 +11,7 @@
 它产出的是"原型前交互文档"——每一个交互点、每一个组件、
 每一个状态，都有明确的决策 + 理由 + 排除的备选 + 接受的 tradeoff。
 
-这份决策清单是 `/html-prototype` 生成原型的直接输入。
+这份决策清单与 Design Generation Packet 是 OD / Claude Design 及用户所选原型工具的同一份设计输入。
 
 ## 它解决的问题
 
@@ -72,8 +72,17 @@
 
 缺任一项，该决策不输出。
 
-### Phase 6 · shadcn 组件映射表
-每个交互区域映射到 shadcn 组件或自绘，附加对应决策 ID。
+### Phase 6 · 页面与交互位置映射
+先核对有来源的输出目标、平台与范围，再将每个核心交互落到语义页面/位置，
+附交互职责、D-ID、全部适用 STATE、需求/AC 来源、约束和下游目标。
+已确认 page_id/region_id 可选；无参考仍有完整位置与追踪，没有目录记录的页面不必先入库。
+
+### Phase 6.5 / 6.75 · 追踪与同包交接
+保留 R/AE、Oracle 补丁去向、非 N/A 状态与 REMOVED 原因；Packet 只承载正文设计事实。
+页面匹配的唯一执行点是源对齐后、OD 编译前，规则见
+`.claude/skill-os/runtime/page-context.md`，design-brief 不重复匹配或询问采用。
+仅高置信才推荐且采用须真人确认；低置信不推荐，以 `reference=none` 非阻塞交接。
+设计系统由用户在 OD / Claude Design 配置；同包不附本地 token、品牌覆盖或组件技术映射。
 
 ## 场景覆盖
 
@@ -110,7 +119,7 @@
 - **12 状态覆盖表的真实填充**（5 传统 + 7 AI 专有，9 个非 N/A）
 - **8 锚点品味检查的具体判断**（每个锚点给出通过/不通过的详细理由）
 - **5 条决策 × 8 字段完整化**（D-001 到 D-005，每条都有排除的备选 + 接受的 tradeoff）
-- shadcn 组件映射表（含"对应决策 ID"字段，让下游 html-prototype 追溯）
+- 旧版技术组件表保留了对应决策 ID；当前产出按 Phase 6 使用页面与交互位置映射，历史表不作为技术规范
 - 交接块的命令式指示（确保 html-prototype 不漏 AI 专有状态）
 
 **这是本 skill 集最重要的参考样本。**
@@ -124,7 +133,7 @@
 4. 体验验证结论（节名锁死，含 12 状态覆盖表）
 5. 品味检查四锚点（节名锁死，内部扩展为 8 锚点）
 6. 设计决策清单（每条 8 字段）
-7. shadcn 组件映射表（节名锁死）
+7. 页面与交互位置映射（节名锁死；`page_interaction_mapping`）
 8. 可追踪完整矩阵（Phase 6.5）
 9. Design Generation Packet（Phase 6.75）
 10. Tool Consumption Contract（Phase 6.75）
@@ -136,12 +145,14 @@
 - `.claude/skills/office/references/ai-native-design-framework.md`（方法论）
 - `.claude/skills/office/references/ai-native-taste-anchors.md`（8 锚点）
 - `.claude/skills/office/references/ai-native-state-coverage.md`（12 状态）
-- `.claude/skills/office/references/design-system-contract.md`（品牌/间距/字体硬约束）
+- `.claude/skills/office/references/interaction-mechanics.md`（状态、反馈、恢复与交互语义）
+- `.claude/skill-os/runtime/page-context.md`（源对齐后、交接编译前的页面参考与确认合同）
 
 ## 下游
 
-- `/html-prototype` — 读组件映射表和 12 状态，生成 HTML 原型
-- `/figma-layer` — 基于原型还原 Figma
+- `/open-design` — 按同一 Packet 交接需求与确认参考，设计系统在 OD 内由用户配置
+- Claude Design — 同包人工交接；导出不代表已导入或生成
+- `/html-prototype` — 用户选择本地原型时，读语义位置、D/STATE/AC 和 12 状态
 - `redteam` — 给它这份 design-brief 当 target，会自动挂载 12 节完整性核查与 8 锚点判据
   （见 `redteam/SKILL.md` 判据挂载表；2026-08-03 起取代原 design-review / taste-review 两个零使用 skill）
 - 高级 redteam — 质疑本次决策的最脆弱假设

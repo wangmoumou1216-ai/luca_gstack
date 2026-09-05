@@ -2,7 +2,7 @@
 name: magicpath
 preamble-tier: 3
 description: |
-  MagicPath 界面产出：需求描述 → React canvas 组件。界面产出备选（OD daemon 不可达时的 React canvas 降级路径；隐藏 skill，仅内部 dispatch）。
+  MagicPath 界面产出：需求描述 → React canvas 组件。仅在用户明确选择 MagicPath，或明确批准包含 MagicPath 备用路径的计划且触发条件满足时使用（隐藏 skill，仅内部 dispatch）。
   workflow 模式下必须消费 design-brief 的 Design Generation Packet。
   本 skill 是外部插件 `magicpath` 的本地占位，供 orchestrator 路径解析用。
 recommended-model: guided-execution  # 2026-07-10 new_scenario_protocol 定档：生成外包给MagicPath平台，本体是轻编排
@@ -16,6 +16,10 @@ metadata:
 # magicpath — 外部插件委托
 
 MagicPath 是全局安装的插件 skill，直接通过 `magicpath` 命令调用。
+
+**调用授权：** OD 不可达、认证失败或非 React/Canvas 场景本身不授权切换到 MagicPath。
+调用方必须持有用户明确选择 MagicPath，或已批准计划明确列出的 MagicPath 备用路径及其触发条件；
+缺少该授权时保留已选工具，报告阻塞并以 `BLOCKED` 交还用户，不委托执行。
 
 ## Codex runtime receipt authority
 
@@ -33,7 +37,7 @@ ux-brainstorm，而是 `design-brief.md` 内的：
 
 - `Design Generation Packet`
 - `Tool Consumption Contract`
-- `shadcn 组件映射表`
+- §7「页面与交互位置映射」（`page_interaction_mapping`）
 - `体验验证结论` 的 12 状态覆盖表
 - `REMOVED 记录`
 
@@ -43,11 +47,16 @@ ux-brainstorm，而是 `design-brief.md` 内的：
 □ Design Generation Packet 存在
 □ Tool Consumption Contract 存在
 □ Packet 未引入 design-brief 正文没有的新事实
-□ Packet 明确 MagicPath 为默认主路径
-□ 所有 MUST D-series 决策、非 N/A 状态、组件映射都有下游去向
+□ Packet 明确 MagicPath 为本次已选定的下游目标
+□ page_interaction_mapping 完整：页面/语义位置、交互职责、D-ID、适用 STATE、真实来源与 AC、约束及下游目标都有对应
+□ 所有 MUST D-series 决策、非 N/A 状态、页面与交互位置映射都有下游去向
 ```
 
 缺任一项 → 不得调用外部 MagicPath；返回 design-brief 修正。
+
+页库 `page_id` / `region_id` 仅在已确认时引用；`reference=none` 不免除上述追踪。
+历史 `component_mapping` / 旧组件映射只读提取位置、职责、D/STATE、来源与 AC，按新门核对；
+不要求恢复 variant/classes、token 或组件库资产，不重写历史文件。
 
 ## Phase 1：委托执行
 

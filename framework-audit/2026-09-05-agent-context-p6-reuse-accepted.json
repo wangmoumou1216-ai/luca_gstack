@@ -1,0 +1,111 @@
+{
+  "status": "BOUNDED_HISTORICAL_REUSE",
+  "review": "2026-09-05-agent-context-p6-contract-initial.md",
+  "source": "framework-audit/2026-09-04-agent-context-ab.ndjson",
+  "source_sha256": "c5ebd6141c3c045ae4a34528d395385cd67fcbbd2efd8ea9715f1caaeb728a20",
+  "rows": [
+    {
+      "raw_line": 489,
+      "run_id": "67032b04-9718-49c2-967f-370a978e1326",
+      "fixture": "F1",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 484,
+      "run_id": "e0fb7f0d-3fde-4b12-ab5c-dd5ef09f8f9b",
+      "fixture": "F2",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 485,
+      "run_id": "824a9145-97e6-4a97-a33c-b5ce09b68855",
+      "fixture": "F3",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 491,
+      "run_id": "24733499-5329-4863-8cfc-d62a27ba2f81",
+      "fixture": "F4-direct",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 490,
+      "run_id": "164e21c3-6924-4e67-9293-8ea008d348e2",
+      "fixture": "F4-multi",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 482,
+      "run_id": "7193f3ef-e87b-4f36-9f90-cd5d8963443b",
+      "fixture": "F4-stop",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 483,
+      "run_id": "e780542b-6edd-47b4-8fe4-23ae60d7f4ed",
+      "fixture": "F5",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 493,
+      "run_id": "e79611c1-3c33-4a84-b884-317d5e660a60",
+      "fixture": "F6",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 488,
+      "run_id": "dfdad00f-10ba-49b9-b400-f411768f1bf9",
+      "fixture": "F7",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 487,
+      "run_id": "38011b83-f3c5-49ea-9cb2-678bb5488f79",
+      "fixture": "F8",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 492,
+      "run_id": "ec021df5-636b-44e5-8bf2-300339b77b29",
+      "fixture": "F11",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    },
+    {
+      "raw_line": 486,
+      "run_id": "867c11da-0237-465b-8604-14fb54c55386",
+      "fixture": "F12",
+      "original_protocol": 20,
+      "original_context_sha256": "7f0b250d036f1e56808d469111b562524c0f0db7263d322bdf7619d0ee6900fe",
+      "scope": "historical unchanged-obligation evidence only; not current-context execution"
+    }
+  ],
+  "limitations": [
+    "Do not rescore or mutate original raw rows.",
+    "Original actual Codex model is null: no verified model-matched causal A/B claim.",
+    "Candidate context hashes are historical, not the unreleased final branch snapshot.",
+    "Old F9 PASS encodes retired SF-002/template policy and cannot prove F9-v2.",
+    "Old F10 FAIL remains failure: do not restore canceled local tokens/component-map policy to turn it green."
+  ]
+}

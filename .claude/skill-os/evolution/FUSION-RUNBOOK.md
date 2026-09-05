@@ -48,5 +48,5 @@
 - 4 路 model 一致：SKILL.md `recommended-model` ↔ `model-routing.yaml` ↔ CLAUDE.md 快照 ↔ orchestrator.md 快照
 - `observability/rules.yaml` 按 skill 名 scope 的规则（skill 改名 → 静默孤儿化）
 - 路由 5 文件同步：skill-routing-map / input-modes / optional-workflow-graph / rules.yaml / CLAUDE.md+AGENTS.md
-- 受保护区：`framework/` 只读、SKILL.md P1-P7、brand-tokens #FF8000
+- 受保护区：`framework/` 只读、SKILL.md P1-P7、当前项目明确提供的设计约束
 <!-- FILE_END: FUSION-RUNBOOK -->

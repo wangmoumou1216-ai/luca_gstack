@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "status": "TWO_CODEX_CELLS_COMPLETE_REMAINDER_WAIVED",
+  "authorization": "On 2026-09-06 the user authorized Codex F14-flow-preservation, then explicitly authorized the second-highest-value Codex F13-page-handoff after F14 failed. The other nine proposed v25 live cells remain USER_WAIVED.",
+  "purpose": "Fresh candidate evidence for every affected or previously unavailable candidate cell after the v25 repair. Historical v22-v24 rows and verdicts remain immutable.",
+  "release_manifest": "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-06-agent-context-p6-release-v25.json",
+  "release_manifest_sha256": "8a3c3024206ba676560a988746aa6b99bd8f5d4e422057c6113cbb56e3560cdd",
+  "candidate_context_sha256": "ee07d89375185daa26a8599fc7aeb7a4a5cfd879d9e714de33c16c34310b4bfc",
+  "baseline_context_sha256": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7",
+  "scoring_revision": "v25-observed-numbered-read-intervals",
+  "scoring_sha256": "7b9dfba8a6c9d1f6af0eeea968c057a313454c30137000d504ba8e872daa3534",
+  "evaluator_sha256": "0ff638cea1e8a7fb7813a9221030c11d6790b30541823310d7c30c34bbf4eb55",
+  "output": "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-06-agent-context-p6-live-v25.ndjson",
+  "batch_id": "p6-v25-repair-20260906",
+  "execution": {
+    "mode": "serial",
+    "trials_per_cell": 1,
+    "concurrency": 1,
+    "require_pass": true,
+    "reruns": 0,
+    "inspect_each_row_before_next": true,
+    "stop_entire_matrix_on": ["FAIL", "TIMEOUT", "RATE_LIMIT", "identity drift", "manifest drift"],
+    "continuing_diagnostics_after_stop_requires_new_authorization": true,
+    "claude_model": "claude-opus-4-6",
+    "codex_model": "default; record actual_model without inference"
+  },
+  "budget": {
+    "prior_authorized_total": 20,
+    "prior_attempts_consumed": 20,
+    "prior_remaining": 0,
+    "additional_calls_in_this_matrix": 11,
+    "additional_calls_authorized": 2,
+    "additional_calls_user_waived": 9,
+    "authorized_cells": [11, 10],
+    "post_failure_continuation_authorized_for_cell": 10
+  },
+  "baseline_reuse": {
+    "new_baseline_calls": 0,
+    "rule": "Keep the four original baseline attempts under their frozen v22-v24 scorer versions as historical background and budget evidence only. They are three FAIL plus one TIMEOUT, not four valid measurements, not a v25 same-scorer control, and not a new baseline PASS. The baseline context is unchanged; do not rescore or relabel those rows. This limited reuse requires independent preflight acceptance before live dispatch."
+  },
+  "historical_candidate_evidence": {
+    "rule": "The old candidate Codex F9-v2 PASS belongs to v24. Preserve it as history; do not count it as v25 acceptance or as a substitute for any cell below."
+  },
+  "observed_results": {
+    "raw_sha256": "e791cc109535ca522634b1a0d1398a43504c4ed40b0656c53ba8d900a35b4495",
+    "executed": 2,
+    "passed": 1,
+    "failed": 1,
+    "F14-flow-preservation": {
+      "run_id": "e334e741-7da8-4d30-892e-07e6ccc3e7f5",
+      "result": "FAIL",
+      "claims_pass": true,
+      "source_pass": true,
+      "scope_pass": true,
+      "reachability_pass": false,
+      "only_violation": "Read .claude/skills/office/references/office-wizard.md although office/SKILL.md limits that reference to the /office command."
+    },
+    "F13-page-handoff": {
+      "run_id": "481b352b-0230-4f49-bf17-4372274e5743",
+      "result": "PASS",
+      "claims_pass": true,
+      "source_pass": true,
+      "scope_pass": true,
+      "reachability_pass": true
+    },
+    "release_interpretation": "The live gate is not PASS. F13 supplies one final-context PASS; F14 is retained as a real model compliance failure. The remaining nine cells are USER_WAIVED."
+  },
+  "command_template": [
+    "node",
+    "scripts/run-agent-context-ab.mjs",
+    "--root",
+    "/Users/luca/Desktop/项目/muse/lucagstack",
+    "--arm",
+    "candidate",
+    "--harness",
+    "{harness}",
+    "--fixture",
+    "{fixture}",
+    "--trials",
+    "1",
+    "--concurrency",
+    "1",
+    "--output",
+    "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-06-agent-context-p6-live-v25.ndjson",
+    "--release-manifest",
+    "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-06-agent-context-p6-release-v25.json",
+    "--batch-id",
+    "p6-v25-repair-20260906",
+    "{harness_model_args}",
+    "--require-pass"
+  ],
+  "harness_model_args": {
+    "claude": ["--claude-model", "claude-opus-4-6"],
+    "codex": []
+  },
+  "cells": [
+    {"cell": 1, "arm": "candidate", "harness": "claude", "fixture": "F9-v2", "covers": ["previous RATE_LIMIT", "isolated root fallback"]},
+    {"cell": 2, "arm": "candidate", "harness": "claude", "fixture": "F4-stop", "covers": ["NO_PIN startup", "STOP discovery"]},
+    {"cell": 3, "arm": "candidate", "harness": "claude", "fixture": "F3", "covers": ["nontrivial contract startup", "Plan owner"]},
+    {"cell": 4, "arm": "candidate", "harness": "claude", "fixture": "F5", "covers": ["catalog-only name discovery", "NO_PIN startup"]},
+    {"cell": 5, "arm": "candidate", "harness": "claude", "fixture": "F2", "covers": ["project owner", "no implementation archaeology", "numbered Read evidence"]},
+    {"cell": 6, "arm": "candidate", "harness": "claude", "fixture": "F10-v2", "covers": ["decision-only contract owners", "retirement discovery", "bounded reads"]},
+    {"cell": 7, "arm": "candidate", "harness": "claude", "fixture": "F13-page-handoff", "covers": ["owner chain", "ID and full requirement body", "bounded reads"]},
+    {"cell": 8, "arm": "candidate", "harness": "claude", "fixture": "F14-flow-preservation", "covers": ["large owner chain", "workflow graph execution boundary", "bounded reads"]},
+    {"cell": 9, "arm": "candidate", "harness": "codex", "fixture": "F10-v2", "covers": ["decision-only contract owners", "retirement discovery", "bounded reads"]},
+    {"cell": 10, "arm": "candidate", "harness": "codex", "fixture": "F13-page-handoff", "covers": ["owner chain", "ID and full requirement body", "bounded reads"]},
+    {"cell": 11, "arm": "candidate", "harness": "codex", "fixture": "F14-flow-preservation", "covers": ["large owner chain", "workflow graph execution boundary", "bounded reads"]}
+  ]
+}

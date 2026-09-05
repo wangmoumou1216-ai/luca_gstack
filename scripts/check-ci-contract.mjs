@@ -21,6 +21,10 @@ for (const command of [
   'npm run test:framework-html-baseline',
   'npm run test:ci-contract',
   'npm run test:semantic-parity',
+  'npm run check:agent-context',
+  'npm run test:agent-context',
+  'npm run test:agent-context-ab-evaluator',
+  'npm run test:agent-context-resolution',
 ]) {
   assert.ok(ci.includes(command), `CI missing blocking command: ${command}`);
 }
