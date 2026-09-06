@@ -415,6 +415,48 @@ const cases = [
     },
   },
   {
+    name: 'current framework identity with observed typo stays NO_PIN',
+    prompt: '进入lucagstck项目',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'current framework identity consumes its adjacent generic project label',
+    prompt: '进入lucagstack项目',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'current framework correction remains a NO_PIN conversational follow-up',
+    prompt: '你现在就在lucagstack下啊',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'plain Chinese current-repository status question does not become a STOP',
+    prompt: '这个项目下有代办吗',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'real downstream project entry still emits an existing-project switch',
+    prompt: '进入luca-dev项目',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, 'switch_existing_project');
+      assert.equal(decision.project, 'luca-dev');
+    },
+  },
+  {
     name: 'meta question about writing-for-agents does not execute it',
     prompt: 'writing-for-agents是什么',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },

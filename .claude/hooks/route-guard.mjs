@@ -206,7 +206,13 @@ function readCurrentProject(projects) {
 // U-003：项目归属不是「meta 关键词豁免表」。先找具名 downstream identity，再用同一组
 // 数据规则区分纯框架对象与框架×未具名项目混合对象；复杂度只在范围闭合后计算。
 const FRAMEWORK_SCOPE_RULES = [
-  { id: 'runtime', pattern: /luca[_\s-]?gstack|lucagstack|skill\s*os/i },
+  // Treat the framework's explicit identity plus an immediately-adjacent generic
+  // label as one scope signal. Otherwise "lucagstack项目" is split into
+  // framework + downstream and becomes a false mixed-scope gate. Keep genuine
+  // downstream objects later in the sentence visible to the residual matcher.
+  // The optional "a" covers the observed one-character typo "lucagstck" without
+  // widening downstream project alias resolution or granting switch authority.
+  { id: 'runtime', pattern: /luca[_\s-]?gsta?ck(?:\s*(?:框架|项目|仓库))?|skill\s*os/i },
   { id: 'runtime-files', pattern: /(?:AGENTS|CLAUDE)\.md|workflow-state/i },
   { id: 'runtime-paths', pattern: /\.claude\/hooks|\.codex\/hooks|memory\/scripts|framework-audit/i },
   { id: 'runtime-guards', pattern: /project-scope-guard|route-guard|session-restore/i },
@@ -804,6 +810,7 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
     const looksLikeTask = prompt.length > 5
       && !prompt.match(/^(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i)
       && !prompt.endsWith('?') && !prompt.endsWith('？')
+      && !/[吗呢么][！!。.\s]*$/.test(prompt)
       && !isContinuation(prompt);
     if (!looksLikeTask) return { decision: 'NONE' };
     const softCandidates = softSkillDecision(prompt, routes);

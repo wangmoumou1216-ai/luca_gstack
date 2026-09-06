@@ -1303,6 +1303,33 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-011 project switch 词边界：amusement 不误触，点名 muse 只准备事务');
 }
 
+// ── FRAMEWORK-IDENTITY-001：当前框架自指/状态问句不得制造下游项目事务 ──
+{
+  const prompts = [
+    '进入lucagstck项目',
+    '进入lucagstack项目',
+    '你现在就在lucagstack下啊',
+    '这个项目下有代办吗',
+  ];
+  for (const [index, prompt] of prompts.entries()) {
+    const root = makeFixture({});
+    const sid = `sess-FRAMEWORK-${index + 1}`;
+    const result = runNode(routeGuardHook, root, {
+      env: {
+        CLAUDE_PROJECT_DIR: root,
+        LUCA_GSTACK_ROOT: root,
+        ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示',
+        ROUTE_GUARD_CURRENT_PROJECT: '',
+      },
+      input: JSON.stringify({ session_id: sid, turn_id: `turn-${sid}`, prompt }),
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.ok(!existsSync(join(root, '.claude', `.session-project-${sid}`)),
+      `框架自指/状态问句不得创建项目事务：${prompt}`);
+  }
+  console.log('PASS FRAMEWORK-IDENTITY-001 当前框架自指/状态问句保持 NO_PIN、零项目事务');
+}
+
 // ── IDENTITY-FIFO-001：NO_PIN route 不得探测 shared workflow-state ──
 // FIFO 没有 writer 时任何 readFileSync 都会永久阻塞；用短 timeout 把“没有读取”变成机械证据。
 {
