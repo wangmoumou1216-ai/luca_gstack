@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
+import { randomUUID } from 'crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -267,6 +268,70 @@ const cases = [
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
       assert.equal(decision.decision, 'NONE', `check-in 应静默，got ${decision.decision}`);
+    },
+  },
+  {
+    name: 'G3: 第二人称进度问句无问号仍是当前任务 check-in',
+    prompt: '你的进度是多少',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE', `进度问句应静默，got ${decision.decision}`);
+    },
+  },
+  {
+    name: 'G3: 完成通知 + 后续 review + 进度问句的复合消息仍是当前任务 follow-up',
+    prompt: '你在做完以后告诉我，我会用高模型进行review。另外你的进度是多少',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE', `复合 follow-up 应静默，got ${decision.decision}`);
+    },
+  },
+  {
+    name: 'G3: 不带业务对象的完成通知是当前任务 follow-up',
+    prompt: '你在做完以后告诉我',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 啊结尾的续接语义显式命中而非靠短句偶然放行',
+    prompt: '现在接着来啊',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3: 并行 session 工作说明是上下文，不触发 handoff STOP',
+    prompt: '我有一个session在做memory的治理。',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+    },
+  },
+  {
+    name: 'G3 反例: 业务对象的进度问句不是 agent check-in',
+    prompt: '订单进度是多少',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'NONE', '业务对象进度不得被 follow-up 豁免吞掉');
+    },
+  },
+  {
+    name: 'G3 反例: 页面内文包含第二人称进度文案仍是实质工作',
+    prompt: '修改页面显示你的进度是多少',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'NONE', '分句内业务文案不得被 follow-up 豁免吞掉');
+    },
+  },
+  {
+    name: 'G3 反例: 并行 session 陈述后追加接手请求不再视为纯上下文',
+    prompt: '我有一个session在做memory的治理，请你接手它',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'NONE');
     },
   },
   {
@@ -1821,11 +1886,15 @@ for (const testCase of cases) {
 // ══════════════════════════════════════════════════════════════════════════
 {
   const INJECT = '📌 当前有未完成任务';
-  const obligationFile = sid => join(process.cwd(), '.claude', `.session-obligation-${sid}`);
+  // route-guard normalizes session_id to at most 36 bytes; keep the namespace
+  // short enough that the readable fixture label survives unchanged.
+  const runNamespace = `${process.pid.toString(36)}-${randomUUID().slice(0, 8)}`;
+  const isolatedSid = sid => `${sid}-${runNamespace}`;
+  const obligationFile = sid => join(process.cwd(), '.claude', `.session-obligation-${isolatedSid(sid)}`);
   const realRoute = (prompt, sid, extraEnv = {}) => {
     const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
       cwd: process.cwd(),
-      input: JSON.stringify({ prompt, session_id: sid }),
+      input: JSON.stringify({ prompt, session_id: isolatedSid(sid) }),
       encoding: 'utf8',
       env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示,muse', ...extraEnv },
     });
@@ -1837,12 +1906,13 @@ for (const testCase of cases) {
     try { return JSON.parse(readFileSync(obligationFile(sid), 'utf8')).state; } catch { return null; }
   };
   const cleanup = sid => {
+    const namespacedSid = isolatedSid(sid);
     for (const name of [
-      `.session-obligation-${sid}`,
-      `.session-read-grants-${sid}`,
-      `.session-read-turn-${sid}`,
-      `.session-read-deny-${sid}`,
-      `.session-consumed-turns-${sid}`,
+      `.session-obligation-${namespacedSid}`,
+      `.session-read-grants-${namespacedSid}`,
+      `.session-read-turn-${namespacedSid}`,
+      `.session-read-deny-${namespacedSid}`,
+      `.session-consumed-turns-${namespacedSid}`,
     ]) {
       try { rmSync(join(process.cwd(), '.claude', name), { force: true }); } catch { }
     }
@@ -1979,7 +2049,7 @@ for (const testCase of cases) {
   check('A-OBLIG-LIFECYCLE Stop 路径行为不因义务改变（session-sync stdout 恒定）', () => {
     const sid = 'oblig-stop'; cleanup(sid);
     const runStop = () => spawnSync('node', ['.claude/hooks/session-sync.mjs'], {
-      cwd: process.cwd(), input: JSON.stringify({ session_id: sid }), encoding: 'utf8',
+      cwd: process.cwd(), input: JSON.stringify({ session_id: isolatedSid(sid) }), encoding: 'utf8',
       env: { ...baseEnv, SESSION_SYNC_BLOCK: '0' },
     }).stdout;
     try {

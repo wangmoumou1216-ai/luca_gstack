@@ -331,14 +331,25 @@ function classifyRoutingScope(prompt, projects, currentProject) {
 // 证据。短 check-in、引用上一轮判断、要求换种说法，以及带明确续接词的长句都属于同一任务。
 // 真正的项目声明在 projectGate 里先检查；明确 skill 词仍会在 skillDecision 命中，因此这里
 // 放宽续接识别不会吞掉“继续项目”或“继续做个原型”。
-const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀了的！!。.？?…\s]*$/;
+const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀啊了的！!。.？?…\s]*$/;
 const CONTEXTUAL_FOLLOWUP_RE = /(?:刚才|上一轮|上一条|上面|前面|这个判断|这个说法|你刚才|你再(?:检查|想想|解释|说明)|接着(?:写|做|说|看|检查|整理|完成)|说我能听懂的话|换(?:个|一种)说法|简单(?:点|一点)|说清楚|用大白话|没听懂)/;
+// 第二人称 agent 进度必须有句首/分句边界和句尾，避免把“订单进度是多少”或
+// “修改页面显示你的进度是多少”吞成闲聊。完成通知同样只收不带业务对象的窄形态。
+const AGENT_PROGRESS_FOLLOWUP_RE = /(?:^|[，,。.!！?？；;\s])(?:(?:你|你这边)(?:现在)?(?:的)?|(?:这次|本次|当前)(?:任务|工作)(?:的)?)(?:整体)?进度(?:是|到)?(?:多少|如何|怎么样)(?=$|[，,。.!！?？；;\s])/;
+const COMPLETION_NOTICE_FOLLOWUP_RE = /(?:^|[，,。.!！?？；;\s])(?:你)?(?:在)?(?:都|全部|这项|这次|本次|当前任务|当前工作)?(?:做完|完成)(?:了|以后|之后|时)?(?:再)?(?:告诉|通知)我(?=$|[，,。.!！?？；;\s])/;
+// 并行 session 的存在说明是当前协作上下文，不是“把本会话交出去”的 /handoff 请求。
+// 只收完整陈述句；带“请你接手”等后续动作时不命中。
+const CONCURRENT_SESSION_CONTEXT_RE = /^\s*我(?:这边)?有(?:一个|个)?\s*session\s*(?:正在|在)\s*(?:做|处理|执行|进行)\s*[^，,。.!！?？；;\n]{1,80}(?:的)?(?:治理|工作|任务|处理)[。.!！]?\s*$/i;
 // 会话 handoff 是项目无关工具。只豁免“明确把当前会话交给新 agent/session”这一窄意图；
 // handoff-protocol、项目级 workflow handoff 等普通提及不能命中。
 const SESSION_HANDOFF_INTENT_RE = /(?:^\s*[$/]?handoff(?:\s|$)|会话交接|生成(?:一份)?交接文档|(?:把)?(?:当前|这个)会话\s*交给(?:下个|下一个)\s*(?:agent|session)|新\s*session\s*接手(?:当前|这个)会话|session\s+handoff)/i;
 function isContinuation(prompt) {
   const text = prompt.trim();
-  return CONTINUATION_RE.test(text) || CONTEXTUAL_FOLLOWUP_RE.test(text);
+  return CONTINUATION_RE.test(text)
+    || CONTEXTUAL_FOLLOWUP_RE.test(text)
+    || AGENT_PROGRESS_FOLLOWUP_RE.test(text)
+    || COMPLETION_NOTICE_FOLLOWUP_RE.test(text)
+    || CONCURRENT_SESSION_CONTEXT_RE.test(text);
 }
 
 function hasProjectWorkIntent(prompt, routingScope) {
