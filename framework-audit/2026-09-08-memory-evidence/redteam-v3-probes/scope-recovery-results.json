@@ -1,0 +1,74 @@
+[
+  {
+    "fallback": false,
+    "scope": null,
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 0,
+    "candidate_retained": true,
+    "persisted_scope": "None"
+  },
+  {
+    "fallback": false,
+    "scope": false,
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 0,
+    "candidate_retained": true,
+    "persisted_scope": "False"
+  },
+  {
+    "fallback": false,
+    "scope": 0,
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 0,
+    "candidate_retained": true,
+    "persisted_scope": "0"
+  },
+  {
+    "fallback": false,
+    "scope": "framework",
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 1,
+    "candidate_retained": false,
+    "persisted_scope": "framework"
+  },
+  {
+    "fallback": true,
+    "scope": null,
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 0,
+    "candidate_retained": true,
+    "persisted_scope": "None"
+  },
+  {
+    "fallback": true,
+    "scope": false,
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 0,
+    "candidate_retained": true,
+    "persisted_scope": "False"
+  },
+  {
+    "fallback": true,
+    "scope": 0,
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 0,
+    "candidate_retained": true,
+    "persisted_scope": "0"
+  },
+  {
+    "fallback": true,
+    "scope": "framework",
+    "admitted": true,
+    "retry_rc": 0,
+    "audit_rows": 1,
+    "candidate_retained": false,
+    "persisted_scope": "framework"
+  }
+]

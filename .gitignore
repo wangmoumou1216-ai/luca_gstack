@@ -112,6 +112,9 @@ api-project/
 .claude/.project-switch.lock/
 .claude/project-state-quarantine/
 .claude/observability/pending-extraction*.md
+.claude/observability/.pending-extraction-claims/
+.claude/observability/pending-extraction-dispositions.jsonl
+.claude/observability/pending-extraction-resolved/
 .claude/.episode-written-*
 .claude/.digest-shown-*
 .claude/current-topic*.txt
@@ -134,6 +137,8 @@ memory/digests/
 # Observability — runtime data, regenerated each session
 # (pending-extraction*.md 含 per-session 后缀变体，见上方 G2 并发隔离节)
 .claude/observability/run-log.jsonl
+# write_observation.py 的 flock inode；锁状态随 fd 释放，空文件本身不是审计证据。
+.claude/observability/.write.lock
 
 # luca_gstack specific — docs/ is a symlink to external project dir, never tracked
 docs

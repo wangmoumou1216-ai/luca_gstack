@@ -145,6 +145,7 @@ check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径�
 check S24 "skill-os YAML 语法合法（含外部技能 pin/vetting registry）" "npm run lint:yaml --silent"
 check S25 "luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）" "npm run check:luca-open --silent"
 check S26 "记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）" "npm run check:memroot --silent"
+check S26b "记忆同步跟随 tracking upstream 且覆盖全部已跟踪账本" "npm run test:sync --silent"
 check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）" "npm run check:harness --silent"
 check S29 "独立 root parity（K1-K10/预算/指针/harness 差异）" "npm run check:agents-parity --silent"
 check S28 "项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）" "npm run check:substrate --silent"

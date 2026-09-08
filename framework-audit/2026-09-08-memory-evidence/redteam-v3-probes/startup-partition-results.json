@@ -1,0 +1,39 @@
+{
+  "scope": "exact frozen governance block, real fixture files; no full native harness, unrelated hook blocks not executed",
+  "original": {
+    "label": "failed",
+    "warning": true,
+    "stdout": "[session-restore] ⚠️ 今日记忆治理失败：WRITER_FAILURE_SENTINEL second line；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n",
+    "marker": {
+      "status": "failed",
+      "error": "WRITER_FAILURE_SENTINEL\nsecond line"
+    }
+  },
+  "healthy": {
+    "label": "healthy",
+    "warning": false,
+    "stdout": "",
+    "marker": {
+      "status": "ok",
+      "error": "WRITER_FAILURE_SENTINEL\nsecond line"
+    }
+  },
+  "mutant": {
+    "label": "mutant",
+    "warning": false,
+    "stdout": "",
+    "marker": {
+      "status": "failed",
+      "error": "WRITER_FAILURE_SENTINEL\nsecond line"
+    }
+  },
+  "restored": {
+    "label": "restored",
+    "warning": true,
+    "stdout": "[session-restore] ⚠️ 今日记忆治理失败：WRITER_FAILURE_SENTINEL second line；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n",
+    "marker": {
+      "status": "failed",
+      "error": "WRITER_FAILURE_SENTINEL\nsecond line"
+    }
+  }
+}

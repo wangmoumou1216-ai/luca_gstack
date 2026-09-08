@@ -1,5 +1,7 @@
 # person 记忆层 —— 方案 v4（终稿）
 
+> **状态校准（2026-09-06）：SUPERSEDED AS EXECUTION SOURCE / HISTORICAL。** v4 是最后一份评审稿，但执行细节已由 v5-exec 的三项定向修复接管；当前完成态以 commits `5672fa5` / `c3fba4b` 为准。以下正文保留为评审时快照。
+
 > 状态：**纯提案。执行了 0 步 M3。范围拍板未解除（luca 裁决①）。**
 > **本文由清洁上下文作者产出；作者 session 对两个 person store 的写入 = 0**（§2 V0，带可失败 control）。
 > 当日两 store 的 10 个文件写入**全部属编排 session `72da83e0`**（前作 §8 台账，我已独立 `find` 复核 = 恰好那 10 个）——不是"零写入"，是"不是我写的、且已登记"。

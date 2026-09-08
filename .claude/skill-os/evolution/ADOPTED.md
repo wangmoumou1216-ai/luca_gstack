@@ -20,7 +20,7 @@
 - repo: `phuryn/pm-skills` · MIT · 20k★ / 2055 fork · gap: `GAP-design-methodology-review` · layer: **application** · reuse_mode: **adapt-idea**
 - 落点: `/ux-brainstorm` 新增 Phase 3.6 机会映射（OST）+ Phase 4.1 锚定
 - 门禁: 静态 45/0 · **行为 A/B PASS**（Opus 回退；非 no-op + 无回归 保守/理想/非显+范式转变+守卫）· 红队清白
-- 落地状态: 编辑 **live in 工作树**（随 /ux-brainstorm 精简重构一起提交）；回滚 ref `tag pre-fuse-ost-uxb`
+- 落地状态: **已落地于 commit `60aba9a`**（随 /ux-brainstorm 精简重构提交）；回滚 ref `tag pre-fuse-ost-uxb`
 - 弃用部分: pm-skills 的 `create-prd`（冗余于 /brainstorm 苏格拉底式 + Oracle，更弱）
 
 ## GOMS/KLM（agent-starter goms-klm-analysis → /ux-audit Module B）
@@ -28,7 +28,7 @@
 - 落点: `/ux-audit` Module B 派发指令新增 GOMS/KLM 操作子计数（K/P/M/H/R/V，当前 N → 建议 N'，移除操作子）
 - 为什么非冗余: Module B 原为定性交互评审；GOMS 加**可测的交互成本量化**（操作子计数），互补
 - 门禁: 静态 45/0 · **行为 A/B PASS**（Sonnet；候选产出 KLM 表 22→13 + 保留交互/a11y 评审无回归）· 红队清白
-- 落地状态: 编辑 **live in 工作树**（随 /ux-audit 精简重构一起提交）；回滚 = 撤该未提交编辑
+- 落地状态: **已落地于 commit `60aba9a`**（随 /ux-audit 精简重构提交）；回滚 = 对该提交中的对应改动做聚焦反向补丁
 - 同源弃用: agent-starter 的 hig-*（HIG 组件库，非设计方法论）。**注：cleanup-* 套件后由 code-hygiene fusion 采纳**（见下，GAP-code-layer-constraint）——对 design-methodology gap 不相关，但对代码层约束相关
 
 ## code-hygiene skill（agent-starter cleanup-* + superpowers verification → 新建 /code-hygiene）
@@ -39,7 +39,7 @@
 - 门禁: 静态 `check:routing-map`/`coding-discipline`/`verify.sh 45/0` 全过 · **红队 FIX_THEN_STANDS**（4 fix 已落：.gitignore / tool-probe 不静默降级 / by-property guards / route-guard M3 框架自维护豁免）
 - **顶层可达性: REACHABLE（实测，非 CodeGraph 式 orphan）** — route-guard 在 active project surface `/code-hygiene`；框架自维护（无 project）走 M3 路径豁免后可达；下游清理（无框架路径）仍正常 PROJECT GATE
 - 同源弃用: agent-starter hig-*（HIG 组件库）；superpowers requesting/receiving-code-review（luca 已有 quality-gate/redteam 覆盖）
-- 落地状态: **live in 工作树**（routing-map/CLAUDE.md/input-modes 已含用户 skill-refactor WIP，随其一起提交，勿单独抽离=SC-20260621-002）；回滚 tag `pre-fuse-code-hygiene`
+- 落地状态: **已落地于 commit `60aba9a`**（routing-map / CLAUDE.md / input-modes 与 skill-refactor 同批提交，遵守 `SC-20260621-002`）；回滚 tag `pre-fuse-code-hygiene`
 
 ## OpenSpec（Fission-AI/OpenSpec → NARROW_BORROW / 下游级，非 luca 核心采纳）
 - repo: `Fission-AI/OpenSpec` · MIT · **55.8k★** · 活跃（pushed 2026-06-13，未归档，gh 核实）· gap: `GAP-no-living-capability-truth`（proposed，待 luca open）· layer: **application/downstream** · reuse_mode: **adapt-idea**

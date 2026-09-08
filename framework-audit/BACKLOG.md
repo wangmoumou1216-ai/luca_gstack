@@ -1,5 +1,7 @@
 # luca_gstack 标杆对标 — 延后项 BACKLOG
 
+> **状态校准（2026-09-06）：** #2、#20、#21 已闭合；#19 的“无源/无失败不可分”已由 commit `ea63c15` 闭合；#17 的提醒送达链已闭合，但人工裁决队列仍开放。当前仍开放的机制项为 #4、#8、#18、#22；以下保留原始论证与历次裁决记录。
+
 > 来源：2026-06-01 标杆对标报告（`luca_gstack-标杆对标报告.md`）。
 > 这些是经红队 + 对抗辩论确认 **gap 真实、但现在做会变死代码/虚假信心/低价值** 的项。
 > 不是否决，是 measure-first 延后。**每条带触发条件——条件满足即应执行，别忘。**
@@ -24,7 +26,7 @@
 
 ## 延后项（带触发条件）
 
-### #2 — Bi-temporal supersedes 读侧一致性过滤
+### #2 — Bi-temporal supersedes 读侧一致性过滤 `[CLOSED]`
 - **真实缺口**：写侧 `consolidate_memory.py:388` 已解析 `valid_until` / `supersedes`，读侧 `get_memory.py` / `search_memory.py` 的 `parse_semantic_facts()` 不消费 → 已作废/过期的旧事实仍会被检索出来污染当前判断。
 - **为何延后**：当前 `promoted-facts.yaml` 里 **0 条** 事实带这两个字段。现在加 ~20 行读侧过滤 = 未经测试的死代码，无法验证真生效。
 - **🔔 触发条件**：晋升流程**第一次真正写入** `supersedes` 或 `valid_until`（即出现第一条被取代的事实）→ 立即补读侧过滤 + 用该真实数据做一次过滤回归测试。
@@ -54,7 +56,7 @@
   暴露面比原文写的更小：`skill-invariants.md` 的 P2-V 目录型产出豁免已把 open-design / figma-demo 类排除，实际只剩单文件型 skill 的同日重跑。
   **红队否决「就地关闭」**（风险仍在，只是观测不到）。**处置**：维持延后，触发条件改写为人可报告的判据——「luca 报告一次『想比对失败产物却找不回』」。不为此建监视机制（成本远超风险）。
 
-### #17 — 记忆治理积压低频自动提醒
+### #17 — 记忆治理积压低频自动提醒 `[DELIVERY CLOSED / HUMAN QUEUE OPEN]`
 - **真实缺口**：candidates/review 队列积压无主动提醒，靠人记得手动跑脚本。
 - **为何延后**：队列实测近空（1 stale / 0 其余）；session-restore 已发 5 个启动 stdout 块，第 6 个会饱和提醒通道、淹没承重的 Project Gate 提醒。且原方案依赖**已否决的 #12**（自动抽取候选记忆）。
 - **🔔 触发条件**：治理队列积压 **≥ 某非空阈值（如 ≥5 条 pending）** 且持续 → 再加**单行**提醒，并设非空阈值（队列 0 项时静默，不占提醒通道）。
@@ -68,14 +70,14 @@
   实测对 07-21 digest：窗口 14 → 23 行，可见候选 id 从 7 → 13，此前被切掉的 6 条超期候选（`SC-20260630-001` 等）现已进入启动提示。**未新增第 6 个 stdout 块**（正是本条当初担心的通道饱和）。
   仍开着的是本体：「提醒到了也没人裁」属人工节奏，不是机制缺口。
 
-### #20 — sync_claude_fallback 反向校验（audit 2026-07-07 F2-08）
+### #20 — sync_claude_fallback 反向校验（audit 2026-07-07 F2-08）`[CLOSED]`
 - **缺口**：`fact_id in content` 全文匹配会把 CLAUDE.md prose 引用误判为「已镜像」（路由节确实引用 SC-20260523-002/003 这类写法）；check_memory_health 只做两个单向差集，缺「白名单已晋升事实必须出现在 SF 节」的反向校验。
 - **已做**：镜像通道断裂（marker 缺失）时不再静默、有 stderr 告警。
 - **✅ 已完成（2026-07-21 收口 Pass）**：`check_memory_health.py` 的 SF 一致性段现为**双向**——新增「白名单 ⊆ CLAUDE.md SF 节」反向断言，且匹配**限定 SF 小节切片**（按 `Static Fallback` 标题定位到下一个标题为止），不再全文匹配。
   会咬三段证据：①现状 PASS ②从 SF 节删掉 `SF-003` → FAIL 指名该 id ③还原 → PASS；另测**关键区分性用例**：把 `SF-003` 从 SF 节删除但在文末留一句 prose 引用（旧的全文匹配会误判"已镜像"）→ 仍 FAIL。
   `consolidate_memory.py:513` 的 `fact_id in content` 全文匹配仍在（写侧），但读侧已有硬门兜住，不再是静默失效。
 
-### #21 — archive 后 episode 检索不可见（audit F2-09，DECIDE）
+### #21 — archive 后 episode 检索不可见（audit F2-09，DECIDE）`[CLOSED]`
 - **缺口**：search_memory/get_memory 只读热 index（50 条满），archive/2026.jsonl 的 7 条真实决策记录对任务检索不可见；而 append_episode 分配 seq 时扫 archive——archive 被视为数据但检索层未跟上。
 - **候选修法**：search_memory 默认并入 archive，或加 `--include-archive`。待 luca 裁决（涉及检索性能与噪音权衡）。
 - **观察者**：`search_memory.py:547-553` 的 miss 提示行（"另有 N 条已归档不在检索面"）——只在检索发生时提示，属弱观察者。
@@ -94,7 +96,7 @@
   但 reader **不是孤枝**：`scripts/test-hooks.mjs:96-98` 的 HOOK-001 断言锁住 `session-sync.mjs` 的崩溃 checkpoint 安全网，且 `makeFixture` 默认 `['IN_PROGRESS','DONE']` 被约 20 个回归块复用——删 reader 要么拆 test-locked 断言、要么重写整张测试网。`session-restore.mjs` 那段还是 CLAUDE.md 启动协议第 2 步的逐字实现。
   **处置**：维持现状，口径改为「**半接线 scaffold，reader 分支已知永不触发**」，不再挂在一个到不了的触发条件上。真要动须等 workflow-mode 实际投产，届时作为独立议题决断（本 Pass 不翻 `BACKLOG:59` 与 `memory/README.md:12` 两道既有冻结裁决）。
 
-### #19 — failing_eval_patterns 无源与无失败不可分（并入 eval 冻结）
+### #19 — failing_eval_patterns 无源与无失败不可分（并入 eval 冻结）`[CLOSED]`
 - **真实缺口**：`consolidate_memory.py:533` `failing_eval_patterns(read_jsonl(EVAL_LOG))`，EVAL_LOG=不存在的 `eval-log.jsonl`，`read_jsonl` 缺文件返回 `[]`（32-34）→ 人看的 review 队列里"无 eval 源"与"无失败模式"**不可分**。
 - **为何延后/不是 bug**：**非 false-green**——grep 跨 `settings.json`/`hooks`/`scripts`/`package.json` **零自动消费者**，该 bucket 仅供 `print_human`/`--json` 给人看，不喂任何自动 gate。且 `eval-log.jsonl` 在 `memory/README.md:65` 冻结范围，明令"勿删除或修复"；现在加 source_absent 哨兵会触碰冻结面 + 破坏 `test_memory_system.py:777-778` 的 populated-path 契约。
 - **🔔 触发条件**：`README:65` eval 冻结**解冻**（ADR-0006 ~10-session 检索度量 + ADR-0007 W3 出结论）时，与"统一两个 eval writer"一并处理：让"无源"与"空结果"可区分。绑定 **#10**（解冻 eval，现否决）。
@@ -103,6 +105,7 @@
   ①「EVAL_LOG=**不存在的** eval-log.jsonl」**现在是错的**——`memory/evals/eval-log.jsonl` 实存 2648 B / 6 行（两检出一致）。
   ②「eval 冻结」**已解**——`memory/README.md` 2026-07-15 记忆层评审裁决（BUILD-lite）写明 `record_eval.py` 已接确定性触发（quality-gate agent 定义 §4b 内置落账），只有 GEPA pairs 与 `run-log.jsonl` 仍 FREEZE，eval-log 被显式排除在冻结外。原「会触碰冻结面」的阻塞理由随之消失。
   歧义本体仍未修：缺文件与空结果仍同为 `[]`。附带发现：6 条记录全是 06-12/06-14，07-15 接线后 **0 新增** → 写侧是否真跑通未经实证。**已列入 DECIDE 清单**（修 source_absent 哨兵 + 顺带验证写侧）。
+- **✅ 已完成（2026-07-22，commit `ea63c15`）**：`consolidate_memory.py` 输出 `eval_source_present`，人读结果明确区分“eval-log 不存在”和“有源但无失败模式”。“07-15 后写侧无新增”仍是独立观察项，不再冒充本条未闭合。
 
 ### #22 — luca app 集成层复审（P5，2026-07-21 收口 Pass 转入）
 - **缺口**：`scripts/luca-open.sh` / `scripts/luca-sidebar.sh` + CLAUDE.md:526-538 三条使用约定 + appendix 侧栏感知，是活跃演进中的集成层，从未做过专项复审。
@@ -118,6 +121,8 @@
 ---
 
 ## 🔔 记忆 candidate 复核提醒
+
+> **状态校准（2026-09-06）：已闭合。** `SC-20260601-001` 已因被既有规则覆盖而拒绝，`SC-20260601-002` 已晋升；处置落于 commit `6fa47d3`。下列提醒保留为当时的历史操作说明，不再是当前待办。
 
 - **≥ 2026-06-08**（满 7 天冷却）复核两条 skill-rule candidate：`SC-20260601-001`（红队 over-kill → 多轮对抗辩论）、`SC-20260601-002`（改 skill 指令须行为级 A/B）。
 - 复核动作：跑 `python3 memory/scripts/consolidate_memory.py --json --dry-run` 看是否进 promotion_ready；若这两个模式在后续 session 已被复用确认且仍成立，标 stable + `review_candidates.py --promote --reviewer luca` 晋升；否则继续留候选或剔除。

@@ -159,6 +159,21 @@ review queue 包含：
 | `episodic/sessions/*.md` | ✗ 原始文件，忽略 |
 | `semantic/promoted-facts.yaml` | ✓ 稳定事实 |
 | `semantic/candidates.jsonl` | ✗ 运行时工作文件 |
-| `semantic/reviews.jsonl` | ✗ 运行时工作文件 |
+| `semantic/reviews.jsonl` | ✓ 晋升/拒绝审计轨迹 |
+| `evals/eval-log.jsonl` | ✓ 质量门评估记录 |
+| `retrieval-log.jsonl` | ✓ ADR-0006 检索决策数据 |
 | `procedural/README.md` | ✓ 说明文档 |
 | `scripts/` | ✓ 全部入库 |
+
+## 运行结果与范围（2026-09-08 修复）
+
+- Stop 捕获的是待裁决证据；marker 只表示已走过一次裁决，不代表有内容落库。后续工作超过增量阈值时另建工作窗口 pending，保留原证据；捕获失败不推进该窗口基线。
+- 启动通常认领一项 pending；claim 锁不可用时明确告警并只读提示一项“未认领”证据，仍可使用 `daily_governance.py pending-disposition`。此降级不恢复锁，也不保证不同启动看到不同项。
+- `QUALIFIED` / `NO_SIGNAL` / `UNRESOLVED` 分别表示合格处置、无强信号、证据不足；QUALIFIED 的自由文本证据仍需实际核验，不能把它的数量当作知识条目数。归档完成事件中断可按原参数和原文哈希恢复；UNRESOLVED 保留 active。
+- `append_episode.py` 将摘要写入检索索引，原文文件绑定唯一 episode ID。`--project` 只接受调用方已经核验的项目归属；不再从共享展示 alias 推断，框架任务用 `--meta`。
+- 项目层检索必须显式传 `--project`；省略时不读项目内容。读取前限缩目录并拒绝穿越/软链逃逸。该 CLI 的 selector 不授予权限，调用方仍须遵守 session pin / exact read grant；跨项目引用依现有 broker 合同。
+- `MEMORY_ROOT` 只指定数据位置，daily governance 调用当前代码目录中的 consolidate，避免重定向到旧检出的实现。
+- 健康报告区分提醒/认领与真实裁决；候选晋升仍走人工门。历史 ID 碰撞保持 fail-closed，先保全原始证据治理冲突，不自动重编号。
+- `scripts/sync.sh` 在任何 Git 效果前拒绝已有暂存事务；推送明确使用当前 HEAD 到 tracking upstream。它会发布 Git 改动，不能把运行它当成只做本地提交。
+
+定向验证：`npm run test:memory`、`npm run check:hooks`、`npm run test:sync`。

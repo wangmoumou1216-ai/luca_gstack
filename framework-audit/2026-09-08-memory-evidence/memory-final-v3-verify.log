@@ -1,0 +1,116 @@
+
+═══════════════════════════════════════
+  luca_gstack 框架健康检查（NO_PIN）
+═══════════════════════════════════════
+
+[ Git 基础设施 ]
+  ✓ G1: Git 仓库已初始化
+  ✓ G2: hooks 路径配置正确
+  ✓ G3: .gitignore 覆盖 .DS_Store
+  ✓ G4: .gitignore 覆盖 .env
+  ✓ G5: pre-commit 存在且可执行
+  ✓ G5b: commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）
+
+[ 标准文档 ]
+  ✓ D1: README.md 存在
+  ✓ D2: CHANGELOG.md 存在
+  ✓ D3: SECURITY.md 存在
+  ✓ D4: CONTRIBUTING.md 存在
+  ✓ D5: LICENSE 存在
+
+[ Claude Code 配置 ]
+  ✓ C1: settings.json 有 SessionStart hook
+  ✓ C2: settings.json 有 UserPromptSubmit hook
+  ✓ C3: settings.json 有 PostToolUse hook
+  ✓ C4: settings.json 有 Stop hook
+  ✓ C5: session-restore.mjs 语法合法
+  ✓ C6: route-guard.mjs 语法合法
+  ✓ C7: post-edit.mjs 语法合法
+  ✓ C8: session-sync.mjs 语法合法
+  ✓ C9: 双 root K1-K10 / pointer / Static Fallback / discovery 门
+  ✓ C10: agent-context mutation proof-it-bites
+  ✓ C10b: A/B evaluator counterexamples / successful read / EOF
+  ✓ C11: Claude hooks 运行时副作用测试通过
+  ✓ C12: settings.json 有 PreToolUse hook（会话级项目隔离）
+  ✓ C13: project-scope-guard.mjs 语法合法
+  ✓ C14: 会话级项目隔离回归通过（重定向/deny/跨session/fail-open）
+  ✓ C15: session-end.mjs 语法合法
+  ✓ C16: self-model 与磁盘一致（audit F4-05）
+  ✓ C17: workflow-state 写入块坏 yaml 时拒写（不擦除既有状态）
+  ✓ C18: redteam 判据挂载表完整且引用路径全部存在
+  ✓ C19: 场景覆盖表结构自洽（SSOT对账+豁免声明双确认+三不规则形态）
+  ✓ C20: 项目绑定事务回归通过（CAS/lease/replay/new/legacy migration）
+
+[ Skill 体系 ]
+  ✓ S1: CLAUDE.md 存在且非空
+  ✓ S3: skill-os 目录存在
+  ✓ S4: office skill 目录存在
+  ✓ S5: validate-skills.sh 通过
+  ✓ S6: auto/SKILL.md 存在且含 FILE_END 标记
+  ✓ S8: work-agent-template 含 DONE_CRITERIA 守卫
+  ✓ S9: route golden tests 通过
+  ✓ S20: 甲类路由命中率 keyword 层回归门（明细: python3 memory/scripts/eval_routing.py --keyword-only）
+  ✓ S10: routing map 覆盖 + skill 单一真相源一致性检查通过
+  ✓ S19: 治理轨道登记面同步（REG-1/2/3）
+  ✓ S11: project routing dry-run 通过
+  ✓ S12: memory 精细检索/写入门禁测试通过
+  ✓ S13: memory stable facts 健康检查通过
+  ✓ S14: quality gate 框架合同检查通过（NO_PIN）
+  ✓ S14b: quality gate 作用域隔离/精确 handoff/已验证项目扫描会咬
+  ✓ S14c: 退休设计入口拒绝且通用路径保留（真实 guard mutation）
+  ✓ S14d: 设计交接导入/授权/读回回归与真实 guard mutation
+  ✓ S14e: 退役设计约束不从活动规则/记忆回流（含恢复旧数据反证）
+  ✓ S15: coding discipline 合同检查通过
+  ✓ S17: muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）
+  ✓ S18: 能力锚点自检（capability anchors，防误删关键小节）
+  ✓ S40: 跨 harness 语义 projection proof-it-bites（delegation/obligation/order）
+  ✓ S41: controlled-change schema/controller/guard 全量回归
+  ✓ S42: 六项集成冻结 source manifest tuple 可复现
+  ✓ S43: engineering-delivery 七项 owner/trigger/loader/flow 回归
+  ✓ S44: 六项集成终态 receipt 与三路同 SHA 评审闭合
+  ✓ S46: wait-what 中文化/显式调用/零副作用契约
+  ✓ S47: handoff 生成时 gate_result/criteria/标题契约会咬
+  ✓ S48: writing-for-agents 来源/边界/路由/双 harness 契约
+  ✓ S49: 双 harness 条件加载 canary（相关命中、无关不加载）
+  ✓ S45: 六项集成 runtime candidate manifest denominator/blob 闭合（对发布提交求证）
+  ✓ S31: 旧 mega-appendix 已退出 runtime context
+  ✓ S32: CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）
+  ✓ S33: model-routing 单真值源 + 双 root 薄指针
+  ✓ S34: Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）
+  ✓ S35: observability 写入并发与崩溃恢复回归
+  ✓ S36: quality-gate verdict 与 recorder 权限分离回归
+  ✓ S37: CI 阻断覆盖与稳定 gatherer 合同
+  ✓ S38: CI 合同 proof-it-bites（缺关键门必须失败）
+  ✓ S39: Framework HTML 历史债务基线 proof-it-bites
+  ✓ S21: 演进裁决核心回归（default-deny/权重分档/redteam兜底）
+  ✓ S22: Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）
+  ✓ S24: skill-os YAML 语法合法（含外部技能 pin/vetting registry）
+  ✓ S25: luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）
+  ✓ S26: 记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）
+  ✓ S26b: 记忆同步跟随 tracking upstream 且覆盖全部已跟踪账本
+  ✓ S30: harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）
+  ✓ S29: 独立 root parity（K1-K10/预算/指针/harness 差异）
+  ✓ S28: 项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）
+  ✓ S27: MEMORY_STANDALONE 未泄漏进 tracked settings.json（opt-in 防泄漏门）
+  ✓ S23: 单真值源同步（不落后 tracking 分支）
+
+[ CI/CD 基础设施 ]
+  ✓ I1: CI workflow 存在
+  ✓ I2: PR 模板存在
+  ✓ I3: bug_report 模板存在
+
+[ Framework HTML 只读参考资产 ]
+  ✓ F1: list-page.html 存在
+  ✓ F2: detail-page-2col.html 存在
+  ✓ F3: home-page.html 存在
+  ✓ F4: detail-page-3col.html 存在
+  ✓ F5: form-page.html 存在
+  ✓ F6: shared-head.html 历史共享资产保留
+  ✓ B1: CLAUDE.md 与 AGENTS.md 各 ≤ 11KiB
+  ✓ B2: 无 office SKILL.md 超 45KB（context-budget 回归守护）
+
+═══════════════════════════════════════
+  结果: PASS=94  FAIL=0  WARN=0
+═══════════════════════════════════════
+
+✅ 所有关键检查通过。

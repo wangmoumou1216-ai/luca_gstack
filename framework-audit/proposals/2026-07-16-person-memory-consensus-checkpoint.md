@@ -1,5 +1,7 @@
 # Checkpoint — person 记忆层共识循环 + muse app 左栏修复（2026-07-16，compact 前落盘）
 
+> **状态校准（2026-09-06）：OBSOLETE / SUPERSEDED。** 这是执行前恢复锚点，其中“待执行”“拍板未解除”已被后续授权与 v5-exec 完成态取代；不得再用本文恢复旧流程。最终证据见 v5-exec、consensus-report 终局段及 commits `5672fa5` / `c3fba4b`。
+
 > session 72da83e0。本文件是 compact 后的恢复锚点。
 > **真值文件**（比本文更全，恢复时优先读）：同目录
 > `2026-07-16-person-memory-consensus-report.md`（问题全史+共识核+残余）

@@ -1,0 +1,21 @@
+{
+  "rc": 0,
+  "yaml_parser_available": true,
+  "source_paths_distinct": true,
+  "original_source": "/private/tmp/memory-redteam-v2-probes-c70su3pt/source-identity/approved\\nsource.txt",
+  "retry_source": "/private/tmp/memory-redteam-v2-probes-c70su3pt/source-identity/approved\nsource.txt",
+  "source_contents_distinct": true,
+  "promoted_source_matches_retry": false,
+  "audit": [
+    {
+      "candidate_id": "SC-20260908-902",
+      "decision": "promoted",
+      "reviewer": "human",
+      "reason": "recovered audit for the same already persisted promotion_ready candidate",
+      "reviewed_at": "2026-09-08T04:35:51.547218+00:00",
+      "source": "consolidate_memory.py"
+    }
+  ],
+  "candidate_retained": false,
+  "retry_output": "{\n  \"candidate_id_collisions\": [],\n  \"duplicate_candidates\": [\n    {\n      \"domain\": \"tech\",\n      \"candidate_ids\": [\n        \"SC-20260908-902\"\n      ],\n      \"promoted_ids\": [\n        \"SC-20260908-902\"\n      ],\n      \"facts\": [\n        \"same approved fact\",\n        \"same approved fact\"\n      ]\n    }\n  ],\n  \"conflicts\": [],\n  \"stale_candidates\": [],\n  \"promotion_ready\": [],\n  \"awaiting_approval\": [],\n  \"noisy_episodes\": [],\n  \"failing_eval_patterns\": [],\n  \"eval_source_present\": false,\n  \"actions\": {\n    \"promoted\": [],\n    \"archived\": [\n      \"SC-20260908-902\"\n    ],\n    \"archived_noisy\": []\n  }\n}\n"
+}

@@ -1,0 +1,84 @@
+{
+  "candidate_id_collisions": [],
+  "duplicate_candidates": [],
+  "conflicts": [],
+  "stale_candidates": [
+    {
+      "id": "SC-20260820-001",
+      "domain": "skill-rule",
+      "age_days": 18,
+      "fact": "project-scope-guard: 守卫的放行判据不得依赖路径拼法。同一目标写相对路径放行、写绝对路径拒绝，不是安全边界而是不一致——两条链（Bash 的 directProjectPathsAllowed 与 Read/Edit 的 classifyPath）必须同口径。框架检出可能物理坐落在 PROJECTS_ROOT 之内，框架作用域豁免要在 classifyPath 里也有，且必须排除三条共享展示路径。"
+    },
+    {
+      "id": "SC-20260820-003",
+      "domain": "skill-rule",
+      "age_days": 18,
+      "fact": "项目切换的 SWITCH_ONLY 终止是机械边界，不应丢失用户原始任务；下一个顶层用户消息到来时应自动续接已明确工作，不再要求重复项目名或再次发送‘继续’，除非命中真实 human gate。"
+    },
+    {
+      "id": "SC-20260821-001",
+      "domain": "skill-rule",
+      "age_days": 18,
+      "fact": "源头修复指针（LRS-20260820-016，尚待握手）：凡安全或恢复 overlay 的优先级高于有界普通事件账本容量门，必须在任何 mutation 前生成 overlay × ledger_admission（AVAILABLE｜FULL）的总积；FULL 仍须具备有界 anti-replay 证据与唯一 recovery/terminal successor，禁止先 append 再发现容量。待框架修复通过实现后，本候选降为对应测试与 commit 指针，仅保留此残余不变量。"
+    },
+    {
+      "id": "SC-20260821-002",
+      "domain": "skill-rule",
+      "age_days": 17,
+      "fact": "search_memory 的 person / project 两层只在母版检出（MEMORY_ROOT=/Users/luca/Desktop/luca_gstack）上加载，其它检出恒返回 0 条且不告警；get_memory --summary 对 person 层根本没有实现。因此 CLAUDE.md 记忆协议里那句『具体任务优先跑 search_memory』在任何非母版检出上对这两层是空转。任何要求把 MEMORY_ROOT 指向临时 clone 的隔离方案，都会静默关掉这两层——必须显式用 MEMORY_PERSON_DIR / MEMORY_PROJECTS_DIR opt-in，或明确声明本次在无这两层的条件下作业。"
+    },
+    {
+      "id": "SC-20260821-003",
+      "domain": "skill-rule",
+      "age_days": 17,
+      "fact": "单真值源有两个检出时，任何『本地扫描取 max+1』式的全局 ID 分配都会撞号——只要被扫的文件本身是 untracked、各检出独立持有。分配全局标识必须跨全部已知检出取 max，或把该文件纳入版本控制。这类损伤门禁看不见：按 ID+字节校验的 verifier 只看自己那一侧，两侧同号不同内容照样各自通过。"
+    },
+    {
+      "id": "SC-20260824-001",
+      "domain": "skill-rule",
+      "age_days": 15,
+      "fact": "把 upstream 改动合进第二个检出会让该检出的 codex hook 全部失去授信：授信哈希锚在 hook 文件内容上，.claude/hooks/*.mjs 一变就对不上，verify.sh 的 S34/S12 当场转红、pre-commit 直接拒绝提交（连 merge commit 也拒）。这不是合并出错——对照组：另一个检出文件内容相同但已授信，同一条检查 18/0 通过。修复是 node scripts/codex-trust-hooks.mjs（--dry-run 只读可先看，它只碰本仓条目、跳过第三方），但该命令要写 Codex 的信任配置，属 luca 明令需授权的全局 harness 配置改动，不得自行执行。故：让某个检出追平 upstream 之前，先把这一步的授权一并要到，否则合并做完必然卡在 pre-commit 上、只能整场 abort。"
+    },
+    {
+      "id": "SC-20260824-002",
+      "domain": "skill-rule",
+      "age_days": 15,
+      "fact": "framework-audit/ 下会出现取证用的嵌套 git 工作区（本例：2026-08-20-routing-steering-handshake/payload-census/workspace/ 内有独立 .git）。对这类目录跑 git add 整目录**不报错**，会把它当 submodule 塞进一条指向本机临时路径的 gitlink——克隆方永远拉不到，且事后极难发现。故补入库历史产物前必须先做文件类型普查（find -type f 按扩展名分类，非文本数 >0 就逐个看），命中嵌套 .git 时改用 find -not -path 逐文件 add，并在暂存后断言两条：git diff --cached --raw 里 160000 模式条目数为 0、暂存清单里不含该子路径。"
+    },
+    {
+      "id": "SC-20260824-003",
+      "domain": "skill-rule",
+      "age_days": 15,
+      "fact": "双检出（母版与 lucagstack）共用同一个 GitHub 远端，且两侧都会追加 memory/episodic/*.jsonl 与 retrieval-log/eval-log 这类 append-only 文件，故它们在每次追平合并时必冲突。标准解法：①合并前先把两侧的 id/行集合抓成基准文件；②按并集去重，episodic 按 (日期, 编号) 排序——先验证该排序能逐字复现两侧各自现有的顺序，证明不是新立规则——再按既有约定重新轮转（最新 50 条入 index，其余入 archive）；③合并后逐条对账「应有 N / 实得 N / 丢失 0 / 多出 0」，并跑真实读取脚本（get_memory.py --summary）而不是只做 JSON 合法性检查。取任一侧覆盖另一侧都是在替对方决定哪些记录不算数，是错的。另：推完 A 检出会让 B 检出立刻 behind，收口时必须对每个检出 fetch 后再复核，否则「全部已同步」是未经验证的断言。"
+    }
+  ],
+  "promotion_ready": [],
+  "awaiting_approval": [
+    {
+      "id": "SC-20260908-001",
+      "domain": "skill-rule",
+      "fact": "Framework Git-remote integrity gates must compare the complete fetch and push URL lists (get-url --all and get-url --push --all), including exact cardinality; checking only the first URL can miss an added endpoint. Source fix pointer: framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs validateRemote().",
+      "reviewer": "luca"
+    },
+    {
+      "id": "SC-20260908-002",
+      "domain": "skill-rule",
+      "fact": "External handoff launch prompts must not hard-code the SHA of a manifest whose artifact hashes change during reviewer closure. Keep stable target/verifier identifiers if useful, but make the live verifier sole PASS authoritative; otherwise each review rebind creates a self-reference drift loop. Source fix pointer: /Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap/NEW-SESSION-PROMPT.md.",
+      "reviewer": "luca"
+    },
+    {
+      "id": "SC-20260908-003",
+      "domain": "skill-rule",
+      "fact": "memory: 默认 Stop 生成可追踪 pending 等待裁决；marker 或 claim 仅表示工作窗口处置或展示，不证明经验已落库。框架修复指针：session-sync/session-restore 的增量捕获与可见降级，daily_governance 的裁决账本/幂等恢复，以及 framework-audit/2026-09-08-memory-evolution-results.md。核验须结合实际 episode/candidate ID 与独立进程读回；软模式不阻塞不等于整体停机。",
+      "reviewer": "luca"
+    }
+  ],
+  "noisy_episodes": [],
+  "failing_eval_patterns": [],
+  "eval_source_present": true,
+  "actions": {
+    "promoted": [],
+    "archived": [],
+    "archived_noisy": []
+  }
+}

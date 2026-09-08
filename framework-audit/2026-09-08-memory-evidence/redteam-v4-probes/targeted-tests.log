@@ -1,0 +1,9 @@
+test_audit_recovery_matches_legacy_scope_serialization (test_memory_failure_recovery.MemoryFailureRecoveryTests.test_audit_recovery_matches_legacy_scope_serialization) ... ok
+test_fallback_decodes_distinct_source_strings_without_aliasing (test_memory_failure_recovery.MemoryFailureRecoveryTests.test_fallback_decodes_distinct_source_strings_without_aliasing) ... ok
+test_governance_writer_failure_is_explicit_in_last_attempt (test_memory_failure_recovery.MemoryFailureRecoveryTests.test_governance_writer_failure_is_explicit_in_last_attempt) ... ok
+test_promotion_audit_failure_retries_before_archiving_source (test_memory_failure_recovery.MemoryFailureRecoveryTests.test_promotion_audit_failure_retries_before_archiving_source) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.286s
+
+OK

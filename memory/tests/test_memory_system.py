@@ -1,10 +1,13 @@
 import importlib.util
+import contextlib
+import io
 import json
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -27,6 +30,17 @@ class MemorySystemTests(unittest.TestCase):
         merged_env = os.environ.copy()
         if env:
             merged_env.update(env)
+            if env.get("MEMORY_ROOT"):
+                # Candidate-ID code normally sees both live checkouts.  Every
+                # fixture root is instead an explicit, fully isolated namespace.
+                fixture_root = str(Path(env["MEMORY_ROOT"]).resolve())
+                merged_env["MEMORY_SEMANTIC_KNOWN_ROOTS"] = env.get(
+                    "MEMORY_SEMANTIC_KNOWN_ROOTS", fixture_root
+                )
+                merged_env["MEMORY_SEMANTIC_ID_LOCK"] = env.get(
+                    "MEMORY_SEMANTIC_ID_LOCK",
+                    str(Path(fixture_root) / ".semantic-candidate-id-test.lock"),
+                )
         result = subprocess.run(
             [sys.executable, str(ROOT / "memory" / "scripts" / script), *args],
             cwd=ROOT,
@@ -909,6 +923,9 @@ facts:
     def test_consolidate_memory_archive_reviewed_moves_candidates(self):
         with tempfile.TemporaryDirectory() as tmp:
             env = self.write_consolidation_fixture(tmp)
+            with Path(tmp, "memory/semantic/reviews.jsonl").open("a") as handle:
+                handle.write(json.dumps({"candidate_id": "SC-promoted", "decision": "promoted",
+                                         "reviewer": "luca", "reason": "completed promotion audit"}) + "\n")
 
             result = self.run_script("consolidate_memory.py", "--archive-reviewed", "--json", env=env)
             queue = json.loads(result.stdout)
@@ -1015,6 +1032,308 @@ facts:
                 self.assertIsNone(dg.last_digest_date())
             finally:
                 dg.DIGESTS = original_digests
+
+
+class SemanticCandidateIdGuardTests(unittest.TestCase):
+    run_script = MemorySystemTests.run_script
+
+    def _env(self, memory_root, roots, lock_path):
+        return {
+            "MEMORY_ROOT": str(memory_root),
+            "MEMORY_SEMANTIC_KNOWN_ROOTS": os.pathsep.join(str(root) for root in roots),
+            "MEMORY_SEMANTIC_ID_LOCK": str(lock_path),
+        }
+
+    def _write_candidates(self, root, records):
+        semantic = Path(root, "memory", "semantic")
+        semantic.mkdir(parents=True, exist_ok=True)
+        (semantic / "candidates.jsonl").write_text(
+            "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records),
+            encoding="utf-8",
+        )
+
+    def _candidate(self, candidate_id, fact, **overrides):
+        record = {
+            "id": candidate_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "domain": "skill-rule",
+            "fact": fact,
+            "confidence": "high",
+            "evidence": "candidate ID regression fixture",
+            "scope": "memory",
+            "reviewer": "fixture",
+            "proposed_stable": False,
+            "status": "CANDIDATE",
+        }
+        record.update(overrides)
+        return record
+
+    def _write_promoted(self, root, candidate_id, fact, domain="skill-rule"):
+        semantic = Path(root, "memory", "semantic")
+        semantic.mkdir(parents=True, exist_ok=True)
+        (semantic / "promoted-facts.yaml").write_text(
+            "version: 1\nfacts:\n"
+            f"  - id: {candidate_id}\n"
+            f"    domain: {domain}\n"
+            f"    fact: {json.dumps(fact, ensure_ascii=False)}\n"
+            "    confidence: high\n"
+            "    stable: true\n",
+            encoding="utf-8",
+        )
+
+    def _semantic_bytes(self, *roots):
+        snapshot = {}
+        for root in roots:
+            semantic = Path(root, "memory", "semantic")
+            if not semantic.exists():
+                continue
+            for path in sorted(semantic.rglob("*")):
+                if path.is_file():
+                    snapshot[(str(root), str(path.relative_to(semantic)))] = path.read_bytes()
+        return snapshot
+
+    def test_concurrent_proposals_across_known_roots_allocate_unique_ids(self):
+        count = 16
+        with tempfile.TemporaryDirectory() as tmp:
+            root_a = Path(tmp, "checkout-a")
+            root_b = Path(tmp, "checkout-b")
+            root_a.mkdir()
+            root_b.mkdir()
+            lock_path = Path(tmp, "shared-semantic-id.lock")
+            script = str(ROOT / "memory" / "scripts" / "propose_semantic.py")
+            processes = []
+            for index in range(count):
+                target = root_a if index % 2 == 0 else root_b
+                env = os.environ.copy()
+                env.update(self._env(target, (root_a, root_b), lock_path))
+                processes.append(subprocess.Popen(
+                    [
+                        sys.executable,
+                        script,
+                        "--domain", "skill-rule",
+                        "--fact", f"concurrent semantic candidate {index}",
+                    ],
+                    cwd=ROOT,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env,
+                ))
+
+            for process in processes:
+                _stdout, stderr = process.communicate(timeout=60)
+                self.assertEqual(process.returncode, 0, stderr)
+
+            rows = []
+            for root in (root_a, root_b):
+                path = root / "memory" / "semantic" / "candidates.jsonl"
+                rows.extend(json.loads(line) for line in path.read_text(encoding="utf-8").splitlines())
+            ids = [row["id"] for row in rows]
+            self.assertEqual(len(ids), count)
+            self.assertEqual(len(set(ids)), count)
+            by_date = {}
+            for candidate_id in ids:
+                prefix, sequence = candidate_id.rsplit("-", 1)
+                by_date.setdefault(prefix, []).append(int(sequence))
+            for sequences in by_date.values():
+                self.assertEqual(sorted(sequences), list(range(1, len(sequences) + 1)))
+
+    def test_allocator_reserves_candidate_archives_promoted_facts_and_reviews(self):
+        prefix = f"SC-{datetime.now(timezone.utc).strftime('%Y%m%d')}-"
+        fixtures = (("candidate_archive", 7), ("promoted", 9), ("rejected_review", 11))
+        for kind, sequence in fixtures:
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
+                root_a = Path(tmp, "checkout-a")
+                root_b = Path(tmp, "checkout-b")
+                root_a.mkdir()
+                root_b.mkdir()
+                reserved_id = f"{prefix}{sequence:03d}"
+                semantic = root_b / "memory" / "semantic"
+                semantic.mkdir(parents=True)
+                if kind == "candidate_archive":
+                    archive = semantic / "archive"
+                    archive.mkdir()
+                    (archive / "candidates-2026.jsonl").write_text(
+                        json.dumps(self._candidate(reserved_id, "archived fact")) + "\n",
+                        encoding="utf-8",
+                    )
+                elif kind == "promoted":
+                    self._write_promoted(root_b, reserved_id, "promoted fact")
+                else:
+                    (semantic / "reviews.jsonl").write_text(
+                        json.dumps({"candidate_id": reserved_id, "decision": "rejected"}) + "\n",
+                        encoding="utf-8",
+                    )
+
+                result = self.run_script(
+                    "propose_semantic.py",
+                    "--domain", "skill-rule",
+                    "--fact", f"new fact after {kind}",
+                    env=self._env(root_a, (root_a, root_b), Path(tmp, "candidate-id.lock")),
+                )
+                self.assertEqual(json.loads(result.stdout)["candidate"], f"{prefix}{sequence + 1:03d}")
+
+    def test_cross_root_collision_is_reported_and_blocks_every_candidate_mutation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root_a = Path(tmp, "checkout-a")
+            root_b = Path(tmp, "checkout-b")
+            root_a.mkdir()
+            root_b.mkdir()
+            collision_id = "SC-20260908-777"
+            self._write_candidates(root_a, [
+                self._candidate(collision_id, "identity from checkout A"),
+                self._candidate("SC-set-target", "set target"),
+                self._candidate("SC-promote-target", "promote target", proposed_stable=True),
+                self._candidate("SC-archive-target", "archive target", status="rejected"),
+            ])
+            self._write_candidates(root_b, [
+                self._candidate(collision_id, "different identity from checkout B"),
+            ])
+            env = self._env(root_a, (root_a, root_b), Path(tmp, "candidate-id.lock"))
+            before = self._semantic_bytes(root_a, root_b)
+
+            dry_run = self.run_script("consolidate_memory.py", "--json", env=env)
+            collision_rows = json.loads(dry_run.stdout)["candidate_id_collisions"]
+            self.assertEqual([item["id"] for item in collision_rows], [collision_id])
+            locations = {
+                location["path"]
+                for identity in collision_rows[0]["identities"]
+                for location in identity["locations"]
+            }
+            self.assertTrue(any(str(root_a) in path for path in locations))
+            self.assertTrue(any(str(root_b) in path for path in locations))
+            self.assertEqual(self._semantic_bytes(root_a, root_b), before)
+
+            mutations = (
+                ("--set-stable", "SC-set-target", "--reviewer", "tester"),
+                ("--reject", "SC-set-target", "--reviewer", "tester"),
+                ("--promote-ready",),
+                ("--archive-reviewed",),
+            )
+            for args in mutations:
+                with self.subTest(args=args):
+                    result = self.run_script(
+                        "consolidate_memory.py", *args, "--json", env=env, check=False
+                    )
+                    self.assertEqual(result.returncode, 2, result.stderr)
+                    self.assertEqual(
+                        [item["id"] for item in json.loads(result.stdout)["candidate_id_collisions"]],
+                        [collision_id],
+                    )
+                    self.assertEqual(self._semantic_bytes(root_a, root_b), before)
+
+            proposal = self.run_script(
+                "propose_semantic.py",
+                "--domain", "skill-rule",
+                "--fact", "must not append while namespace is collided",
+                env=env,
+                check=False,
+            )
+            self.assertEqual(proposal.returncode, 2)
+            self.assertEqual(self._semantic_bytes(root_a, root_b), before)
+
+            legacy_review = self.run_script(
+                "review_candidates.py",
+                "--days", "0",
+                "--promote",
+                "--reviewer", "tester",
+                env=env,
+                check=False,
+            )
+            self.assertEqual(legacy_review.returncode, 2)
+            self.assertEqual(self._semantic_bytes(root_a, root_b), before)
+            self.assertFalse(Path(tmp, "candidate-id.lock").exists())
+
+    def test_lock_directory_failure_is_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp, "isolated-root")
+            root.mkdir()
+            blocker = Path(tmp, "not-a-directory")
+            blocker.write_text("blocks mkdir", encoding="utf-8")
+            env = self._env(root, (root,), blocker / "candidate-id.lock")
+
+            proposal = self.run_script(
+                "propose_semantic.py",
+                "--domain", "skill-rule",
+                "--fact", "lock failure must not append",
+                env=env,
+                check=False,
+            )
+            self.assertEqual(proposal.returncode, 2)
+            self.assertFalse((root / "memory" / "semantic" / "candidates.jsonl").exists())
+
+            self._write_candidates(root, [self._candidate("SC-lock-target", "lock target")])
+            before = self._semantic_bytes(root)
+            mutation = self.run_script(
+                "consolidate_memory.py",
+                "--set-stable", "SC-lock-target",
+                "--reviewer", "tester",
+                env=env,
+                check=False,
+            )
+            self.assertEqual(mutation.returncode, 2)
+            self.assertIn("lock unavailable", mutation.stderr)
+            self.assertEqual(self._semantic_bytes(root), before)
+
+    def test_same_identity_candidate_and_promoted_copy_is_not_a_collision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root_a = Path(tmp, "checkout-a")
+            root_b = Path(tmp, "checkout-b")
+            root_a.mkdir()
+            root_b.mkdir()
+            candidate_id = "SC-20260908-778"
+            fact = "Candidate and promoted forms share one identity"
+            self._write_candidates(root_a, [self._candidate(candidate_id, fact)])
+            self._write_promoted(root_b, candidate_id, fact)
+            result = self.run_script(
+                "consolidate_memory.py",
+                "--json",
+                env=self._env(root_a, (root_a, root_b), Path(tmp, "candidate-id.lock")),
+            )
+            self.assertEqual(json.loads(result.stdout)["candidate_id_collisions"], [])
+
+    def test_archived_wording_does_not_compete_with_current_promoted_identity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root_a = Path(tmp, "checkout-a")
+            root_b = Path(tmp, "checkout-b")
+            root_a.mkdir()
+            root_b.mkdir()
+            candidate_id = "SC-20260908-779"
+            archive = root_a / "memory" / "semantic" / "archive"
+            archive.mkdir(parents=True)
+            (archive / "candidates-2026.jsonl").write_text(
+                json.dumps(self._candidate(candidate_id, "old carrier wording")) + "\n",
+                encoding="utf-8",
+            )
+            self._write_promoted(root_b, candidate_id, "same decision after controlled carrier migration")
+            result = self.run_script(
+                "consolidate_memory.py",
+                "--json",
+                env=self._env(root_a, (root_a, root_b), Path(tmp, "candidate-id.lock")),
+            )
+            self.assertEqual(json.loads(result.stdout)["candidate_id_collisions"], [])
+
+    def test_promotion_checks_cross_root_collision_when_local_candidates_are_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root_a = Path(tmp, "checkout-a")
+            root_b = Path(tmp, "checkout-b")
+            root_a.mkdir()
+            root_b.mkdir()
+            collision_id = "SC-20260908-780"
+            self._write_promoted(root_a, collision_id, "current identity from checkout A")
+            self._write_candidates(root_b, [
+                self._candidate(collision_id, "different current identity from checkout B"),
+            ])
+            result = self.run_script(
+                "review_candidates.py",
+                "--days", "0",
+                "--promote",
+                "--reviewer", "tester",
+                env=self._env(root_a, (root_a, root_b), Path(tmp, "candidate-id.lock")),
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertIn(collision_id, result.stderr)
 
 
 class MemoryReviewRound2026_07_15(unittest.TestCase):
@@ -1131,8 +1450,8 @@ class MemoryReviewRound2026_07_15(unittest.TestCase):
             self.assertTrue(marker.exists())
             self.assertGreater(marker.stat().st_size, 0, "治理健康完成后 marker 必须带结果 JSON（空=崩溃痕）")
 
-    def test_loop_health_pending_backlog_checks_caller_repo(self):
-        # 评审切面 c C1：捕获侧把 pending 写在 fork，只查权威库 = 事故最可能发生的仓失明
+    def test_loop_health_pending_uses_age_claim_and_legacy_in_caller_repo(self):
+        # 捕获侧写在 fork；健康判据是 unresolved age/claim/disposition，而不是 session 原始数量。
         dg = _load_daily_governance()
         with tempfile.TemporaryDirectory() as tmp:
             auth = Path(tmp) / "auth"
@@ -1140,15 +1459,81 @@ class MemoryReviewRound2026_07_15(unittest.TestCase):
             (auth / ".claude" / "observability").mkdir(parents=True)
             fork_obs = fork / ".claude" / "observability"
             fork_obs.mkdir(parents=True)
-            for i in range(dg.LOOP_PENDING_ALERT):
-                (fork_obs / f"pending-extraction-{i}.md").write_text("x", encoding="utf-8")
-            anomalies, _notes = dg.check_loop_health(
+            names = ["pending-extraction.md"] + [f"pending-extraction-{i}.md" for i in range(5)]
+            for name in names:
+                (fork_obs / name).write_text("x", encoding="utf-8")
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            kwargs = dict(
                 observability_dir=auth / ".claude" / "observability",
                 episodic_index=auth / "index.jsonl", digests_dir=auth / "digests",
                 resolved_root=Path(dg.AUTHORITATIVE_MEMORY_ROOT), fork_home=fork,
-                env_memory_root=None, today="2026-07-15")
-            self.assertTrue(any("pending-extraction 积压" in a for a in anomalies),
-                            f"fork 侧积压未被发现：{anomalies}")
+                env_memory_root=None, today=today,
+            )
+            anomalies, notes = dg.check_loop_health(**kwargs)
+            self.assertFalse(any("pending-extraction" in a for a in anomalies),
+                             f"新鲜 raw volume 不应触发 consumer 断链：{anomalies}")
+            self.assertTrue(any("active=6" in n and "legacy=1" in n for n in notes), notes)
+
+            legacy = fork_obs / "pending-extraction.md"
+            stale = datetime.now(timezone.utc).timestamp() - 9 * 24 * 3600
+            os.utime(legacy, (stale, stale))
+            anomalies, _ = dg.check_loop_health(**kwargs)
+            self.assertTrue(any("pending-extraction oldest unresolved" in a for a in anomalies),
+                            f"fork 侧老且无人处理的 evidence 未被发现：{anomalies}")
+
+            claims = fork_obs / dg.PENDING_CLAIMS_DIR
+            claims.mkdir()
+            (claims / "pending-extraction.md.json").write_text(json.dumps({
+                "claimed_at": datetime.now(timezone.utc).isoformat(),
+                "pending_path": ".claude/observability/pending-extraction.md",
+            }), encoding="utf-8")
+            anomalies, notes = dg.check_loop_health(**kwargs)
+            self.assertTrue(any("pending-extraction" in a for a in anomalies),
+                            f"近期 claim 只证明展示，不得掩盖零裁决：{anomalies}")
+            self.assertTrue(any("claimed=1" in n for n in notes), notes)
+
+    def test_pending_disposition_records_before_move_and_recovers_from_failures(self):
+        dg = _load_daily_governance()
+        with tempfile.TemporaryDirectory() as tmp:
+            obs = Path(tmp) / ".claude" / "observability"
+            obs.mkdir(parents=True)
+            pending = obs / "pending-extraction-failure.md"
+            source = b"# Pending\n\nMOVE_FAILURE_SENTINEL\n"
+            pending.write_bytes(source)
+            args = [
+                "--pending", str(pending), "--status", "QUALIFIED",
+                "--evidence", "L4 source fix has concrete verification", "--actor", "memory-test",
+            ]
+
+            # If evidence cannot be fsynced, active bytes must not move at all.
+            with mock.patch.object(dg, "_append_pending_event", side_effect=OSError("manifest unavailable")):
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(dg.pending_disposition_cli(args), 2)
+            self.assertTrue(pending.exists())
+            self.assertEqual(pending.read_bytes(), source)
+            quarantine = obs / "pending-extraction-resolved"
+            self.assertFalse(quarantine.exists(), "manifest evidence 失败时不得先创建/move quarantine")
+
+            # If movement fails after a durable disposition, evidence remains append-only and active is retryable.
+            with mock.patch.object(dg.os, "rename", side_effect=OSError("simulated rename failure")):
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(dg.pending_disposition_cli(args), 2)
+            self.assertTrue(pending.exists())
+            self.assertEqual(pending.read_bytes(), source)
+            manifest = obs / dg.PENDING_MANIFEST
+            events = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines() if line]
+            self.assertEqual(events[-1]["event"], "DISPOSITION_RECORDED")
+            self.assertTrue(events[-1]["active_retained"], "移动成功前 manifest 必须如实标 active 仍保留")
+            self.assertFalse(any(e.get("event") == "ACTIVE_REMOVED" for e in events))
+
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(dg.pending_disposition_cli(args), 0)
+            self.assertFalse(pending.exists())
+            events = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines() if line]
+            self.assertEqual(events[-1]["event"], "ACTIVE_REMOVED")
+            archived = Path(events[-1]["archive_path"])
+            self.assertTrue(archived.exists())
+            self.assertEqual(archived.read_bytes(), source)
 
     def test_loop_health_ignores_empty_checked_markers(self):
         # 评审切面 c C3：空 marker = 认领后未完成，不得算「已治理」而掩蔽崩溃日
@@ -1263,6 +1648,7 @@ class ConsolidationPass2026_07_21(unittest.TestCase):
         try:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
+            mod.CODE_ROOT = Path(tmp)  # The gaps fixture models the executing framework, not its data store.
             return mod.check_gap_recheck()
         finally:
             os.environ.pop("MEMORY_ROOT", None)
@@ -1607,7 +1993,7 @@ class PersonProjectLayerTests(unittest.TestCase):
             self.assertEqual(statuses.get("candidate_feedback_yyy"), "CANDIDATE",
                              "纳入候选时必须带 status，检索者要看得出未裁决")
 
-            proj = self.run_search("蝾螈标记", "--layer", "project", env=env)
+            proj = self.run_search("蝾螈标记", "--layer", "project", "--project", "projX", env=env)
             self.assertTrue(any(r["id"] == "projX/notes" for r in proj))
             self.assertTrue(all(r.get("project") == "projX" for r in proj))
 

@@ -1,0 +1,56 @@
+--- a/memory/scripts/consolidate_memory.py
++++ b/memory/scripts/consolidate_memory.py
+@@ -831,14 +831,17 @@
+             expected = {"domain": candidate.get("domain", ""), "fact": str(candidate.get("fact", "")),
+                         "confidence": candidate.get("confidence", "high"),
+                         "source": str(candidate.get("source") or candidate.get("evidence") or "consolidate_memory")}
+-            optional = ("evidence", "scope", "reviewer", "valid_until", "supersedes")
++            optional = ("evidence", "reviewer", "valid_until", "supersedes")
+             for key in optional:
+                 if str(candidate.get(key) or "").strip():
+                     expected[key] = str(candidate[key])
++            # Legacy scope serialization retains explicit None/False/0 as strings.
++            if str(candidate.get("scope", "")).strip():
++                expected["scope"] = str(candidate.get("scope"))
+             if candidate.get("tags"):
+                 expected["tags"] = json.loads(yaml_list(candidate["tags"]))
+             same = all(fact.get(key) == expected.get(key) for key in
+-                       ("domain", "fact", "confidence", "source", "tags", *optional))
++                       ("domain", "fact", "confidence", "source", "tags", "scope", *optional))
+             if eligible and same and str(fact.get("stable", "")).lower() == "true" and not dry_run:
+                 append_review(cid, str(candidate["reviewer"]), "promoted",
+                               "recovered audit for the same already persisted promotion_ready candidate")
+--- a/memory/tests/test_memory_failure_recovery.py
++++ b/memory/tests/test_memory_failure_recovery.py
+@@ -99,3 +99,31 @@
+                 rows = cm.parse_promoted_facts(path)
+             self.assertEqual([row["source"] for row in rows], [literal, newline])
+             self.assertNotEqual(rows[0]["source"], rows[1]["source"])
++
++    def test_audit_recovery_matches_legacy_scope_serialization(self):
++        for parser in (True, False):
++            for scope in (None, False, 0, "", "framework"):
++                with self.subTest(parser=parser, scope=scope), tempfile.TemporaryDirectory() as tmp:
++                    cm = load("consolidate_memory", Path(tmp))
++                    candidate = {"id": "SC-20260908-901", "domain": "tech", "fact": "approved scoped fact",
++                                 "proposed_stable": True, "confidence": "high", "evidence": "reviewed evidence",
++                                 "scope": scope, "reviewer": "human", "created_at": "2026-09-08"}
++                    with mock.patch.object(cm, "_HAS_YAML", parser):
++                        ready = cm.promotion_ready([candidate], set(), set(), {})
++                        if scope == "":
++                            self.assertFalse(ready, "empty scope remains ineligible")
++                            cm.promote_ready_candidates([candidate], ready, False)
++                            self.assertFalse(cm.PROMOTED.exists())
++                            self.assertFalse(cm.REVIEWS.exists())
++                            continue
++                        self.assertTrue(ready)
++                        with mock.patch.object(cm, "append_review", side_effect=OSError("audit interrupted")):
++                            with self.assertRaises(OSError):
++                                cm.promote_ready_candidates([candidate], ready, False)
++                        before = cm.PROMOTED.read_bytes()
++                        cm.promote_ready_candidates([{**candidate, "scope": "different-scope"}], [], False)
++                        self.assertFalse(cm.REVIEWS.exists())
++                        cm.promote_ready_candidates([candidate], [], False)
++                        cm.promote_ready_candidates([candidate], [], False)
++                        self.assertEqual(len(cm.read_jsonl(cm.REVIEWS)), 1)
++                        self.assertEqual(cm.PROMOTED.read_bytes(), before)

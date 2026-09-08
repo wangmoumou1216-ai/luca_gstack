@@ -1,5 +1,7 @@
 # Loop 架构 ADD/CUT 决策备忘（Phase 2 — 呈批版）
 
+> **状态校准（2026-09-06）：CORE CLOSED / RESIDUAL OPEN。** A1、A2、A3a、C3 已在 commit `cc92154` 落地；C1/C2 按本案裁决撤回。C4 与 A3c 从未作为该提交的一部分执行，仍是独立开放项。以下正文保留为历史决策与执行卡。
+
 > 2026-07-10，Fable 主笔。上游：`2026-07-10-loop-research-addendum.md`（Phase 0，门控=零推翻）+
 > `2026-07-10-loop-evidence-table.md`（Phase 1 自证据）。计划：`~/.claude/plans/claude-code-loop-agentic-coding-loop-lu-tranquil-karp.md`。
 > **本备忘经用户批准后才进 Phase 3 执行。** 证据编号：E0-*=补调研，E1-*=证据表，EP-*=episodic 原始记录。

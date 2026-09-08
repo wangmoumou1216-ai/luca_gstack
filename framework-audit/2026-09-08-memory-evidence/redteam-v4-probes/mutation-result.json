@@ -1,0 +1,7 @@
+{
+  "mutation": "scope truthiness regression (omit explicit null/False/0)",
+  "red_exit": 1,
+  "caught_subtests": 6,
+  "restored_exit": 0,
+  "restored_sha256": "9df101b9bbd4c95257a669d47f06cb168d6821d8e0117d6da37a845a6b1164a3"
+}

@@ -3,7 +3,7 @@
 // 三重防循环、V3 tool-count 实质判据、session-restore 兜底提醒、route-guard 规则注入、
 // 以及 search_memory 的 --project 作用域过滤（MEM）。
 import assert from 'assert/strict';
-import { spawnSync } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import {
   chmodSync,
   existsSync,
@@ -40,6 +40,7 @@ const projectPinScript = resolve(projectRoot, 'scripts/project-pin.mjs');
 const projectLeaseScript = resolve(projectRoot, 'scripts/project-lease.mjs');
 const projectScript = resolve(projectRoot, 'scripts/project.sh');
 const searchScript = resolve(projectRoot, 'memory/scripts/search_memory.py');
+const dailyGovernanceScript = resolve(projectRoot, 'memory/scripts/daily_governance.py');
 const isSymlink = (p) => { try { return lstatSync(p).isSymbolicLink(); } catch { return false; } };
 
 const UTC_TODAY = new Date().toISOString().slice(0, 10);
@@ -109,6 +110,80 @@ function runNode(scriptPath, cwd, { env = {}, input } = {}) {
   return result;
 }
 
+async function runConcurrentNodes(scriptPath, cwd, { env = {}, inputs }) {
+  const baseEnv = { ...process.env };
+  delete baseEnv.SESSION_SYNC_BLOCK;
+  delete baseEnv.SESSION_SYNC_FORCE_ON_STOP;
+  delete baseEnv.MEMORY_ROOT;
+  delete baseEnv.GLOBAL_MEMORY_DIR;
+  for (const key of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) {
+    delete baseEnv[key];
+  }
+  const records = inputs.map((input, index) => {
+    const child = spawn('node', [scriptPath], {
+      cwd,
+      env: { ...baseEnv, ...env },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const record = { child, index, stdout: '', stderr: '' };
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', chunk => { record.stdout += chunk; });
+    child.stderr.on('data', chunk => { record.stderr += chunk; });
+    record.input = input;
+    return record;
+  });
+  const spawned = records.map(({ child }) => new Promise((resolve, reject) => {
+    child.once('spawn', resolve);
+    child.once('error', reject);
+  }));
+  const completed = records.map(record => new Promise((resolve, reject) => {
+    record.child.once('error', reject);
+    record.child.once('close', code => {
+      if (code === 0) resolve();
+      else reject(new Error(`concurrent hook ${record.index} exited ${code}: ${record.stderr || record.stdout}`));
+    });
+  }));
+  await Promise.all(spawned);
+  for (const record of records) record.child.stdin.end(record.input);
+  await Promise.all(completed);
+  return records;
+}
+
+function runPendingDisposition(root, pendingPath, status, evidence) {
+  return spawnSync('python3', [
+    dailyGovernanceScript,
+    'pending-disposition',
+    '--pending', pendingPath,
+    '--status', status,
+    '--evidence', evidence,
+    '--actor', 'test-agent',
+  ], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, MEMORY_ROOT: root },
+  });
+}
+
+function checkPendingHealth(root, today = UTC_TODAY) {
+  const code = [
+    'import importlib.util, json, pathlib',
+    `p = pathlib.Path(${JSON.stringify(dailyGovernanceScript)})`,
+    's = importlib.util.spec_from_file_location("daily_governance_under_test", p)',
+    'm = importlib.util.module_from_spec(s)',
+    's.loader.exec_module(m)',
+    `a, n = m.check_loop_health(${JSON.stringify(join(root, '.claude', 'observability'))}, ${JSON.stringify(join(root, 'memory', 'episodic', 'index.jsonl'))}, ${JSON.stringify(join(root, 'memory', 'digests'))}, ${JSON.stringify(root)}, ${JSON.stringify(root)}, ${JSON.stringify(root)}, ${JSON.stringify(today)})`,
+    'print(json.dumps({"anomalies": a, "notes": n}, ensure_ascii=False))',
+  ].join('; ');
+  const result = spawnSync('python3', ['-c', code], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, MEMORY_ROOT: root },
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return JSON.parse(result.stdout.trim().split('\n').pop());
+}
+
 function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   const projectsRoot = join(root, 'projects');
   const projectRoot = join(projectsRoot, project);
@@ -148,6 +223,36 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
     '实质工作应以 pending 形式留待真正收尾处理'
   );
   console.log('PASS HOOK-000 substantive Stop 默认安静放行并留下 pending');
+}
+
+// ── PENDING-001：Stop 捕获必须留下可追到原会话的中性 adjudication 工单 ──
+{
+  const root = makeFixture();
+  const sid = 'pending-meta';
+  writeFileSync(join(root, '.claude', `.session-edit-count-${sid}`), '1');
+  runNode(sessionSyncHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, LUCA_ACTUAL_HARNESS: 'codex' },
+    input: JSON.stringify({ session_id: sid, transcript_path: '/tmp/pending-meta.jsonl' }),
+  });
+  const pendingPath = join(root, '.claude', 'observability', `pending-extraction-${sid}.md`);
+  const pending = readFileSync(pendingPath, 'utf8');
+  assert.match(pending, /^# Pending Experience Adjudication/m, '模板标题必须中性，不预判为 skill-rule');
+  assert.match(pending, /^> Session-ID: pending-meta$/m);
+  assert.match(pending, /^> Captured-At: \d{4}-\d{2}-\d{2}T/m);
+  assert.match(pending, /^> Topic: session$/m);
+  assert.match(pending, /^> Project: NO_PIN$/m, '无项目 pin 必须显式记录 NO_PIN');
+  assert.match(pending, /^> Harness: codex$/m);
+  assert.match(pending, /^> Transcript-Path: \/tmp\/pending-meta\.jsonl$/m);
+  assert.match(pending, /QUALIFIED[\s\S]*NO_SIGNAL[\s\S]*UNRESOLVED/, '模板必须枚举三种合法 disposition');
+  assert.match(pending, /L1\/L2[\s\S]*L3[\s\S]*L4[\s\S]*L5/, 'QUALIFIED 必须枚举内容层与三种 source-fix 层');
+  assert.match(pending, /daily_governance\.py pending-disposition/, '模板必须给出显式处置入口');
+
+  const legacyRoot = makeFixture({ edits: 1 });
+  runNode(sessionSyncHook, legacyRoot);
+  const legacy = readFileSync(join(legacyRoot, '.claude', 'observability', 'pending-extraction.md'), 'utf8');
+  assert.match(legacy, /^> Session-ID: unavailable$/m, '缺 session locator 必须显式标 unavailable');
+  assert.match(legacy, /^> Transcript-Path: unavailable$/m, '缺 transcript locator 必须显式标 unavailable');
+  console.log('PASS PENDING-001 Stop pending 含完整 locator、中性裁决语言与合法 outcomes');
 }
 
 // ── HOOK-001（critical）：显式旧强制模式仍保留纯 JSON block 契约 ──
@@ -356,6 +461,381 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   console.log('PASS session-restore 启动 memory-light，兜底提醒带真实 topic + person 候选提示');
 }
 
+// ── PENDING-002：每次启动只认领最老一项，老证据保留且 locator/action 可执行 ──
+{
+  const root = makeFixture({ statuses: [] });
+  const obsDir = join(root, '.claude', 'observability');
+  const oldName = 'pending-extraction-old.md';
+  const newName = 'pending-extraction-new.md';
+  const oldBody = [
+    '# Pending Experience Adjudication', '',
+    '> Session-ID: old-session',
+    '> Captured-At: 2026-08-01T00:00:00.000Z',
+    '> Topic: oldest-topic',
+    '> Project: NO_PIN',
+    '> Harness: codex',
+    '> Transcript-Path: /tmp/old-session.jsonl', '',
+    'EVIDENCE_SENTINEL_DO_NOT_DELETE', '',
+  ].join('\n');
+  writeFileSync(join(obsDir, oldName), oldBody);
+  writeFileSync(join(obsDir, newName), [
+    '# Pending Experience Adjudication', '',
+    '> Session-ID: new-session',
+    '> Captured-At: 2026-09-01T00:00:00.000Z',
+    '> Topic: newer-topic',
+    '> Project: NO_PIN',
+    '> Harness: claude',
+    '> Transcript-Path: /tmp/new-session.jsonl', '',
+  ].join('\n'));
+  const oldTime = Date.now() / 1000 - 9 * 24 * 3600;
+  utimesSync(join(obsDir, oldName), oldTime, oldTime);
+  const globalDir = mkdtempSync(join(tmpdir(), 'luca-gstack-empty-person-'));
+  const projectsRoot = join(root, 'projects');
+  mkdirSync(projectsRoot, { recursive: true });
+  writeFileSync(join(root, 'memory', 'scripts', 'get_memory.py'), 'print("pending-test-summary")\n');
+
+  const result = runNode(sessionRestoreHook, root, {
+    env: {
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      MEMORY_ROOT: root,
+      GLOBAL_MEMORY_DIR: globalDir,
+    },
+    input: JSON.stringify({ session_id: 'startup-claimer', source: 'resume' }),
+  });
+  assert.match(result.stdout, new RegExp(`路径: \\.claude/observability/${oldName}`), '启动必须选择最老 pending');
+  assert.doesNotMatch(result.stdout, new RegExp(`路径: \\.claude/observability/${newName}`), '每次启动最多认领一项');
+  assert.match(result.stdout, /old-session[\s\S]*oldest-topic[\s\S]*\/tmp\/old-session\.jsonl/, '提醒必须携带精确 locator');
+  assert.match(result.stdout, /\.claude\/skill-os\/extraction-bar\.md/, '提醒必须指向 extraction bar');
+  assert.match(result.stdout, /QUALIFIED \/ NO_SIGNAL \/ UNRESOLVED/, '提醒必须列出合法 disposition');
+  assert.match(result.stdout, /pending-disposition/, '提醒必须给出可执行处置入口');
+  assert.equal(readFileSync(join(obsDir, oldName), 'utf8'), oldBody, '>7d pending 的证据 bytes 必须原样保留');
+  const claimPath = join(obsDir, '.pending-extraction-claims', `${oldName}.json`);
+  assert.ok(existsSync(claimPath), 'startup 必须持久化单项 claim，而非只打印文件名');
+  const claim = JSON.parse(readFileSync(claimPath, 'utf8'));
+  assert.equal(claim.pending_path, `.claude/observability/${oldName}`);
+  assert.equal(claim.claimed_by_session, 'startup-claimer');
+  assert.equal(claim.claim_count, 1);
+  assert.equal(claim.first_claimed_at, claim.claimed_at);
+  assert.equal(existsSync(join(obsDir, newName)), true, '未认领项必须保留');
+
+  const result2 = runNode(sessionRestoreHook, root, {
+    env: {
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      MEMORY_ROOT: root,
+      GLOBAL_MEMORY_DIR: globalDir,
+    },
+    input: JSON.stringify({ session_id: 'startup-claimer-2', source: 'resume' }),
+  });
+  assert.match(result2.stdout, new RegExp(`路径: \\.claude/observability/${newName}`), '第二次启动必须优先认领从未 claim 的下一项');
+  assert.doesNotMatch(result2.stdout, new RegExp(`路径: \\.claude/observability/${oldName}`), '已 claim 的 oldest 不得永久饿死队列');
+
+  const onlyRoot = makeFixture({ statuses: [] });
+  const onlyObs = join(onlyRoot, '.claude', 'observability');
+  const onlyName = 'pending-extraction-only.md';
+  writeFileSync(join(onlyObs, onlyName), oldBody.replace('old-session', 'only-session'));
+  const onlyGlobal = mkdtempSync(join(tmpdir(), 'luca-gstack-empty-person-'));
+  const onlyProjects = join(onlyRoot, 'projects');
+  mkdirSync(onlyProjects, { recursive: true });
+  writeFileSync(join(onlyRoot, 'memory', 'scripts', 'get_memory.py'), 'print("pending-test-summary")\n');
+  const onlyEnv = {
+    CLAUDE_PROJECT_DIR: onlyRoot,
+    LUCA_GSTACK_ROOT: onlyRoot,
+    LUCA_PROJECTS_ROOT: onlyProjects,
+    MEMORY_ROOT: onlyRoot,
+    GLOBAL_MEMORY_DIR: onlyGlobal,
+  };
+  runNode(sessionRestoreHook, onlyRoot, { env: onlyEnv, input: JSON.stringify({ session_id: 'only-1', source: 'resume' }) });
+  const onlyClaimPath = join(onlyObs, '.pending-extraction-claims', `${onlyName}.json`);
+  const firstOnlyClaim = JSON.parse(readFileSync(onlyClaimPath, 'utf8'));
+  runNode(sessionRestoreHook, onlyRoot, { env: onlyEnv, input: JSON.stringify({ session_id: 'only-2', source: 'resume' }) });
+  const secondOnlyClaim = JSON.parse(readFileSync(onlyClaimPath, 'utf8'));
+  assert.equal(secondOnlyClaim.claim_count, 2, '只有一条时允许重认领并递增 claim_count');
+  assert.equal(secondOnlyClaim.first_claimed_at, firstOnlyClaim.first_claimed_at, '重认领不得丢首次 claim 时间');
+  assert.ok(secondOnlyClaim.claimed_at >= firstOnlyClaim.claimed_at, '重认领应更新最新 claimed_at');
+  console.log('PASS PENDING-002 startup claim-LRU：old→new 不饥饿，单条重认领 count++，>7d bytes 保留');
+}
+
+// ── PENDING-002C：并发双启动的库存选择 + claim RMW 必须属于同一跨进程临界区 ──
+{
+  const rounds = 8;
+  let lostIncrements = 0;
+  let duplicateOldest = 0;
+  for (let round = 0; round < rounds; round += 1) {
+    const largeEvidence = `# Pending Experience Adjudication\n\n> Session-ID: concurrent\n\n${'x'.repeat(512 * 1024)}\n`;
+    const countRoot = makeFixture({ statuses: [] });
+    const countObs = join(countRoot, '.claude', 'observability');
+    const countName = 'pending-extraction-count.md';
+    const countClaims = join(countObs, '.pending-extraction-claims');
+    mkdirSync(countClaims, { recursive: true });
+    writeFileSync(join(countObs, countName), largeEvidence);
+    writeFileSync(join(countRoot, 'memory', 'scripts', 'get_memory.py'), 'print("pending-concurrency-summary")\n');
+    writeFileSync(join(countClaims, `${countName}.json`), `${JSON.stringify({
+      schema_version: 1,
+      event: 'PENDING_CLAIMED',
+      pending_path: `.claude/observability/${countName}`,
+      first_claimed_at: '2026-08-01T00:00:00.000Z',
+      claimed_at: '2026-08-01T00:00:00.000Z',
+      claim_count: 10,
+      claimed_by_session: 'seed',
+    })}\n`);
+    const countProjects = join(countRoot, 'projects');
+    mkdirSync(countProjects, { recursive: true });
+    const countLock = join(countClaims, `.test-claim-${round}.lock`);
+    await runConcurrentNodes(sessionRestoreHook, countRoot, {
+      env: {
+        CLAUDE_PROJECT_DIR: countRoot,
+        LUCA_GSTACK_ROOT: countRoot,
+        LUCA_PROJECTS_ROOT: countProjects,
+        MEMORY_ROOT: countRoot,
+        GLOBAL_MEMORY_DIR: join(countRoot, 'empty-person'),
+        SESSION_RESTORE_PENDING_CLAIM_LOCK: countLock,
+      },
+      inputs: [
+        JSON.stringify({ session_id: `count-a-${round}`, source: 'resume' }),
+        JSON.stringify({ session_id: `count-b-${round}`, source: 'resume' }),
+      ],
+    });
+    const finalCount = JSON.parse(readFileSync(join(countClaims, `${countName}.json`), 'utf8')).claim_count;
+    if (finalCount !== 12) lostIncrements += 1;
+
+    const lruRoot = makeFixture({ statuses: [] });
+    const lruObs = join(lruRoot, '.claude', 'observability');
+    const oldName = 'pending-extraction-oldest.md';
+    const nextName = 'pending-extraction-next.md';
+    writeFileSync(join(lruObs, oldName), largeEvidence.replace('concurrent', 'oldest'));
+    writeFileSync(join(lruObs, nextName), largeEvidence.replace('concurrent', 'next'));
+    const oldTime = Date.now() / 1000 - 3600;
+    utimesSync(join(lruObs, oldName), oldTime, oldTime);
+    writeFileSync(join(lruRoot, 'memory', 'scripts', 'get_memory.py'), 'print("pending-concurrency-summary")\n');
+    const lruProjects = join(lruRoot, 'projects');
+    mkdirSync(lruProjects, { recursive: true });
+    const lruClaims = join(lruObs, '.pending-extraction-claims');
+    const lruLock = join(lruClaims, `.test-claim-${round}.lock`);
+    const results = await runConcurrentNodes(sessionRestoreHook, lruRoot, {
+      env: {
+        CLAUDE_PROJECT_DIR: lruRoot,
+        LUCA_GSTACK_ROOT: lruRoot,
+        LUCA_PROJECTS_ROOT: lruProjects,
+        MEMORY_ROOT: lruRoot,
+        GLOBAL_MEMORY_DIR: join(lruRoot, 'empty-person'),
+        SESSION_RESTORE_PENDING_CLAIM_LOCK: lruLock,
+      },
+      inputs: [
+        JSON.stringify({ session_id: `lru-a-${round}`, source: 'resume' }),
+        JSON.stringify({ session_id: `lru-b-${round}`, source: 'resume' }),
+      ],
+    });
+    const selected = results.map(result => {
+      const match = result.stdout.match(/^路径: \.claude\/observability\/(.+)$/m);
+      assert.ok(match, result.stdout || result.stderr);
+      return match[1];
+    });
+    if (new Set(selected).size !== 2) duplicateOldest += 1;
+  }
+  assert.deepEqual(
+    { lostIncrements, duplicateOldest },
+    { lostIncrements: 0, duplicateOldest: 0 },
+    `并发 claim 事务不得丢 RMW 或重复选择 oldest（${rounds} 轮）`
+  );
+  console.log(`PASS PENDING-002C ${rounds} 轮并发双启动：claim_count 无丢失且两项库存无重复 oldest`);
+}
+
+// ── PENDING-002D：锁路径可注入，临界区异常也必须 finally 释放且下一次可重试 ──
+{
+  const root = makeFixture({ statuses: [] });
+  const obsDir = join(root, '.claude', 'observability');
+  const name = 'pending-extraction-lock-release.md';
+  const claimsDir = join(obsDir, '.pending-extraction-claims');
+  const lockPath = join(claimsDir, '.injected-claim.lock');
+  writeFileSync(join(obsDir, name), '# Pending\n\n> Session-ID: lock-release\n');
+  writeFileSync(join(root, 'memory', 'scripts', 'get_memory.py'), 'print("pending-lock-summary")\n');
+  const projectsRoot = join(root, 'projects');
+  mkdirSync(projectsRoot, { recursive: true });
+  const env = {
+    CLAUDE_PROJECT_DIR: root,
+    LUCA_GSTACK_ROOT: root,
+    LUCA_PROJECTS_ROOT: projectsRoot,
+    MEMORY_ROOT: root,
+    GLOBAL_MEMORY_DIR: join(root, 'empty-person'),
+    SESSION_RESTORE_PENDING_CLAIM_LOCK: lockPath,
+  };
+  const faulted = runNode(sessionRestoreHook, root, {
+    env: { ...env, SESSION_RESTORE_PENDING_CLAIM_FAULT: 'after-acquire' },
+    input: JSON.stringify({ session_id: 'lock-fault', source: 'resume' }),
+  });
+  assert.match(faulted.stdout, /未认领/, '注入异常须显式降级，不得伪报已 claim');
+  assert.equal(existsSync(join(claimsDir, `${name}.json`)), false, '注入异常不得写 sidecar');
+  assert.equal(existsSync(lockPath), false, '临界区异常后必须释放注入锁路径');
+
+  const retried = runNode(sessionRestoreHook, root, {
+    env,
+    input: JSON.stringify({ session_id: 'lock-retry', source: 'resume' }),
+  });
+  assert.match(retried.stdout, new RegExp(`路径: \\.claude/observability/${name}`), '异常释放后下一启动必须可重试');
+  assert.equal(JSON.parse(readFileSync(join(claimsDir, `${name}.json`), 'utf8')).claim_count, 1);
+  assert.equal(existsSync(lockPath), false, '成功事务后也不得残留 canonical lock');
+  console.log('PASS PENDING-002D claim lock 路径可注入，异常/成功均释放且可重试');
+}
+
+// A dead claim owner must not silently suppress the experience consumer.
+{
+  const root = makeFixture({ statuses: [] });
+  const obs = join(root, '.claude', 'observability');
+  const claims = join(obs, '.pending-extraction-claims');
+  mkdirSync(claims, { recursive: true });
+  const lock = join(claims, '.claim.lock');
+  const owner = JSON.stringify({ pid: 99999999, nonce: 'dead-owner', acquired_at: '2020-01-01' });
+  writeFileSync(lock, owner);
+  writeFileSync(join(obs, 'pending-extraction-orphan.md'), 'ORPHAN_EVIDENCE');
+  const env = { CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root, LUCA_PROJECTS_ROOT: join(root, 'projects'),
+    GLOBAL_MEMORY_DIR: join(root, 'person'), SESSION_RESTORE_PENDING_CLAIM_LOCK_TIMEOUT_MS: '5' };
+  for (let i = 0; i < 2; i++) {
+    const out = runNode(sessionRestoreHook, root, { env,
+      input: JSON.stringify({ session_id: `orphan-${i}`, source: 'resume' }) });
+    assert.match(out.stdout, /claim lock/);
+    assert.match(out.stdout, /未认领/);
+    assert.match(out.stdout, /pending-extraction-orphan.md/);
+    assert.equal(readFileSync(lock, 'utf8'), owner, 'do not steal or delete uncertain lock ownership');
+    assert.equal(existsSync(join(claims, 'pending-extraction-orphan.md.json')), false);
+    assert.equal(readFileSync(join(obs, 'pending-extraction-orphan.md'), 'utf8'), 'ORPHAN_EVIDENCE');
+  }
+  const disposition = spawnSync('python3', [dailyGovernanceScript, 'pending-disposition',
+    '--pending', join(obs, 'pending-extraction-orphan.md'), '--status', 'NO_SIGNAL',
+    '--evidence', 'Synthetic test has no durable user experience', '--actor', 'hook-test'],
+  { cwd: root, env: { ...process.env, ...env }, encoding: 'utf8' });
+  assert.equal(disposition.status, 0, disposition.stderr);
+  const after = runNode(sessionRestoreHook, root, { env,
+    input: JSON.stringify({ session_id: 'orphan-after', source: 'resume' }) });
+  assert.doesNotMatch(after.stdout, /路径: .*pending-extraction-orphan.md/);
+  console.log('PASS orphan claim lock remains visible with bounded unclaimed advisory');
+}
+
+// Incremental soft capture must preserve old evidence and distinguish each new work window.
+{
+  const root = makeFixture({ statuses: [] });
+  const sid = 'soft-increment';
+  const obs = join(root, '.claude', 'observability');
+  const pending = join(obs, `pending-extraction-${sid}.md`);
+  writeFileSync(pending, 'OLD_PENDING_EVIDENCE');
+  writeFileSync(join(root, '.claude', `.episode-written-${sid}`), '1 1');
+  writeFileSync(join(root, '.claude', `.session-edit-count-${sid}`), '21');
+  writeFileSync(join(root, '.claude', `.session-tool-count-${sid}`), '61');
+  const input = JSON.stringify({ session_id: sid, transcript_path: '/tmp/soft-increment.jsonl' });
+  const result = runNode(sessionSyncHook, root, { input, env: { SESSION_SYNC_FORCE_ON_STOP: '0' } });
+  assert.equal(readFileSync(pending, 'utf8'), 'OLD_PENDING_EVIDENCE');
+  const added = readdirSync(obs).filter(name => name.startsWith(`pending-extraction-${sid}-`));
+  assert.equal(added.length, 1, 'new work needs its own retained source window');
+  assert.match(readFileSync(join(obs, added[0]), 'utf8'), /> Work-Window: edits=21 tools=61 delta_edits=20 delta_tools=60/);
+  assert.doesNotMatch(result.stderr, /经验已沉淀/);
+  runNode(sessionSyncHook, root, { input, env: { SESSION_SYNC_FORCE_ON_STOP: '0' } });
+  assert.equal(readdirSync(obs).filter(name => name.startsWith(`pending-extraction-${sid}-`)).length, 1);
+  console.log('PASS soft incremental capture preserves evidence and is idempotent');
+}
+
+// ── PENDING-003：显式 disposition 先记 append-only evidence，再移出 active；UNRESOLVED 保留 ──
+{
+  const root = makeFixture({ statuses: [] });
+  const obsDir = join(root, '.claude', 'observability');
+  const pending = join(obsDir, 'pending-extraction-disposition.md');
+  const body = [
+    '# Pending Experience Adjudication', '',
+    '> Session-ID: disposition-session',
+    '> Captured-At: 2026-08-01T00:00:00.000Z',
+    '> Topic: disposition-topic',
+    '> Project: NO_PIN',
+    '> Harness: codex',
+    '> Transcript-Path: unavailable', '',
+    'DISPOSITION_BYTES_SENTINEL', '',
+  ].join('\n');
+  writeFileSync(pending, body);
+  const oldTime = Date.now() / 1000 - 9 * 24 * 3600;
+  utimesSync(pending, oldTime, oldTime);
+
+  const unresolved = runPendingDisposition(root, pending, 'UNRESOLVED', 'transcript locator unavailable; retain for later evidence');
+  assert.equal(unresolved.status, 0, unresolved.stderr || unresolved.stdout);
+  assert.ok(existsSync(pending), 'UNRESOLVED 必须留在 active pending');
+  assert.equal(readFileSync(pending, 'utf8'), body, 'UNRESOLVED 不得改写证据 bytes');
+  const manifest = join(obsDir, 'pending-extraction-dispositions.jsonl');
+  assert.ok(existsSync(manifest), '处置必须写 append-only manifest');
+  let events = readFileSync(manifest, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+  assert.equal(events[0].event, 'DISPOSITION_RECORDED');
+  assert.equal(events[0].status, 'UNRESOLVED');
+  assert.equal(events[0].evidence, 'transcript locator unavailable; retain for later evidence');
+  assert.equal(events[0].active_retained, true);
+
+  const healthAfterUnresolved = checkPendingHealth(root);
+  assert.equal(
+    healthAfterUnresolved.anomalies.filter(a => /pending-extraction/.test(a)).length,
+    0,
+    '老 pending 有近期 UNRESOLVED 处置证据时，不得误报 consumer 断链'
+  );
+  assert.ok(healthAfterUnresolved.notes.some(n => /UNRESOLVED=1/.test(n)), 'loop health 必须消费 disposition 证据');
+
+  const noSignal = runPendingDisposition(root, pending, 'NO_SIGNAL', 'checked extraction bar; none of the four signals applies');
+  assert.equal(noSignal.status, 0, noSignal.stderr || noSignal.stdout);
+  assert.equal(existsSync(pending), false, 'NO_SIGNAL 有证据后才可移出 active pending');
+  events = readFileSync(manifest, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+  const noSignalRecord = events.findIndex(e => e.event === 'DISPOSITION_RECORDED' && e.status === 'NO_SIGNAL');
+  const noSignalRemoved = events.findIndex(e => e.event === 'ACTIVE_REMOVED' && e.status === 'NO_SIGNAL');
+  assert.ok(noSignalRecord >= 0 && noSignalRemoved > noSignalRecord, 'manifest 顺序必须证明 evidence 先于 active removal');
+  const archivedNoSignal = readdirSync(join(obsDir, 'pending-extraction-resolved'))
+    .find(name => name.startsWith('pending-extraction-disposition-'));
+  assert.ok(archivedNoSignal, 'NO_SIGNAL 必须 quarantine 原 bytes，不得直接删除');
+  assert.equal(readFileSync(join(obsDir, 'pending-extraction-resolved', archivedNoSignal), 'utf8'), body);
+
+  const qualified = join(obsDir, 'pending-extraction-qualified.md');
+  writeFileSync(qualified, body.replace('disposition-session', 'qualified-session'));
+  const qualifiedResult = runPendingDisposition(root, qualified, 'QUALIFIED', 'L4 source fix recorded in pending-loop implementation');
+  assert.equal(qualifiedResult.status, 0, qualifiedResult.stderr || qualifiedResult.stdout);
+  assert.equal(existsSync(qualified), false, 'QUALIFIED 有 source-fix evidence 后应移出 active pending');
+  events = readFileSync(manifest, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+  const qualifiedRecord = events.findIndex(e => e.event === 'DISPOSITION_RECORDED' && e.status === 'QUALIFIED');
+  const qualifiedRemoved = events.findIndex(e => e.event === 'ACTIVE_REMOVED' && e.status === 'QUALIFIED');
+  assert.ok(qualifiedRecord >= 0 && qualifiedRemoved > qualifiedRecord, 'QUALIFIED 也必须先记 evidence 再移出 active');
+  console.log('PASS PENDING-003 QUALIFIED/NO_SIGNAL/UNRESOLVED 显式、可审计且保留 bytes');
+}
+
+// ── PENDING-004：loop health 看 age/claim/disposition，legacy 计入；不再按 session 量制造结构性报警 ──
+{
+  const root = makeFixture({ statuses: [] });
+  const obsDir = join(root, '.claude', 'observability');
+  const names = ['pending-extraction.md', ...Array.from({ length: 5 }, (_, i) => `pending-extraction-fresh-${i}.md`)];
+  for (const name of names) writeFileSync(join(obsDir, name), `# Pending\n\n> Session-ID: ${name}\n`);
+
+  const fresh = checkPendingHealth(root);
+  assert.equal(
+    fresh.anomalies.filter(a => /pending-extraction/.test(a)).length,
+    0,
+    '>=5 个新鲜 pending 不得再按 raw session volume 报捕获→消化断链'
+  );
+  assert.ok(fresh.notes.some(n => /active=6/.test(n) && /legacy=1/.test(n)), 'legacy pending-extraction.md 必须计入健康指标');
+
+  const legacy = join(obsDir, 'pending-extraction.md');
+  const oldTime = Date.now() / 1000 - 9 * 24 * 3600;
+  utimesSync(legacy, oldTime, oldTime);
+  const stale = checkPendingHealth(root);
+  assert.ok(stale.anomalies.some(a => /pending-extraction/.test(a) && /9 天|8 天/.test(a)), '老且从未 claim/disposition 才应报警');
+
+  const claimsDir = join(obsDir, '.pending-extraction-claims');
+  mkdirSync(claimsDir, { recursive: true });
+  writeFileSync(join(claimsDir, 'pending-extraction.md.json'), JSON.stringify({
+    pending_path: '.claude/observability/pending-extraction.md',
+    claimed_at: new Date().toISOString(),
+    claimed_by_session: 'health-test',
+  }));
+  const claimed = checkPendingHealth(root);
+  assert.equal(
+    claimed.anomalies.filter(a => /pending-extraction/.test(a)).length,
+    1,
+    'claim 只证明展示；老 evidence 无 disposition 仍须报警'
+  );
+  console.log('PASS PENDING-004 loop health 区分 claim/disposition 且计入 legacy');
+}
+
 // ── STARTUP-IDENTITY-N01/N02：NO_PIN 不得读取 shared workflow-state / docs PROGRESS ──
 // 两个路径各放一个无 writer 的 FIFO；任何 exists 后 read 都会阻塞并触发 timeout。
 for (const which of ['workflow-state', 'progress']) {
@@ -555,8 +1035,8 @@ function runRouteGuard(cwd, prompt) {
   assert.match(bogus, /no matching records/, '不存在的项目应零命中（过滤有区分性）');
 
   const noFilter = runSearch(['work', '--layer', 'episodic']);
-  assert.match(noFilter, /EP-1/);
-  assert.match(noFilter, /EP-2/, '不加过滤时 EP-2 应出现 → 证明 --project 真的删掉了它');
+  assert.doesNotMatch(noFilter, /EP-1|EP-3/, 'NO_PIN 不召回带明确项目归属的历史');
+  assert.match(noFilter, /EP-2/, '无 project 字段的历史仍保留原兼容读取行为');
   console.log('PASS search_memory --project 作用域过滤有区分性（含历史记录 topic 兜底）');
 }
 
@@ -1435,6 +1915,28 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
 // **detached spawn** 的 async ENOENT 'error' 事件必须被 .on('error') 吞掉——否则 hook 崩溃退出 1、
 // 吐 Node 栈盖过干净的"未找到 python3"告警（既报告又崩溃，违反系列 fail-open 契约）。删掉 spawn 的
 // .on('error') 本用例即红。前四轮静态审计全 declared-dry、只有 Round5 运行时分区抓到此 MAJOR。
+{
+  const root = makeFixture();
+  const today = new Date().toISOString().slice(0, 10);
+  const digests = join(root, 'memory', 'digests');
+  mkdirSync(digests, { recursive: true });
+  writeFileSync(join(digests, `${today}.md`), '# Earlier successful evidence\n');
+  writeFileSync(join(digests, `.checked-${today}`), JSON.stringify({status: 'failed', error: 'WRITER_FAILURE_SENTINEL'}));
+  const r = runNode(sessionRestoreHook, root, {env: {CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root}});
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /今日记忆治理失败.*WRITER_FAILURE_SENTINEL/);
+  assert.match(r.stdout, /daily_governance\.py 补跑/);
+  assert.equal(readFileSync(join(digests, `${today}.md`), 'utf8'), '# Earlier successful evidence\n');
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  writeFileSync(join(digests, `.checked-${yesterday}`), JSON.stringify({status: 'failed', error: 'PREVIOUS_DAY_FAILURE'}));
+  writeFileSync(join(digests, `.checked-${today}`), ''); // A fresh claim is not successful recovery.
+  const nextDay = runNode(sessionRestoreHook, root, {env: {CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root}});
+  assert.match(nextDay.stdout, /最近一次.*记忆治理失败.*PREVIOUS_DAY_FAILURE/);
+  writeFileSync(join(digests, `.checked-${today}`), JSON.stringify({promoted: 0, loop_anomalies: 0}));
+  const recovered = runNode(sessionRestoreHook, root, {env: {CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root}});
+  assert.doesNotMatch(recovered.stdout, /记忆治理失败/);
+  console.log('PASS GOVERNANCE-FAILED-ATTEMPT visible even when an earlier digest exists');
+}
 {
   const root = makeFixture();
   writeFileSync(join(root, 'memory', 'scripts', 'daily_governance.py'), 'print("gov")\n'); // govScript 存在 → 触发治理 spawn

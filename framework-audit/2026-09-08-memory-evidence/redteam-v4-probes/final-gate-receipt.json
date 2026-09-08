@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-09-08T05:00:36.612637+00:00",
+  "frozen_files_still_exact": 83,
+  "live_code_test_still_exact": 18,
+  "logs": {
+    "memory-redteam-v4-tests.log": {
+      "sha256": "e3da95ae3258e2aa8d0ef45109a0cc6667ddf1151c6be410034f46c4f38e969f",
+      "size": 13969,
+      "mtime_ns": 1788843225389601825,
+      "tail": "st_symlink_targets_are_never_mutated (test_pending_disposition_recovery.PendingDispositionRecoveryTests.test_symlink_targets_are_never_mutated) ... ok\ntest_unresolved_retry_after_durable_append_does_not_duplicate (test_pending_disposition_recovery.PendingDispositionRecoveryTests.test_unresolved_retry_after_durable_append_does_not_duplicate) ... ok\n\n----------------------------------------------------------------------\nRan 81 tests in 22.398s\n\nOK\n"
+    },
+    "memory-redteam-v4-verify.log": {
+      "sha256": "f38d23962482ea3460f2da570ec69943c0ba1148dd4c00b045bdc341ecddca8e",
+      "size": 6392,
+      "mtime_ns": 1788843426869492668,
+      "tail": "存在\n  ✓ I3: bug_report 模板存在\n\n[ Framework HTML 只读参考资产 ]\n  ✓ F1: list-page.html 存在\n  ✓ F2: detail-page-2col.html 存在\n  ✓ F3: home-page.html 存在\n  ✓ F4: detail-page-3col.html 存在\n  ✓ F5: form-page.html 存在\n  ✓ F6: shared-head.html 历史共享资产保留\n  ✓ B1: CLAUDE.md 与 AGENTS.md 各 ≤ 11KiB\n  ✓ B2: 无 office SKILL.md 超 45KB（context-budget 回归守护）\n\n═══════════════════════════════════════\n  结果: PASS=94  FAIL=0  WARN=0\n═══════════════════════════════════════\n\n✅ 所有关键检查通过。\n"
+    }
+  }
+}

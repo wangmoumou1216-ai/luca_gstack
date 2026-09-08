@@ -58,6 +58,17 @@ EPISODIC_INDEX = MEMORY_DIR / "episodic" / "index.jsonl"
 EVAL_LOG = MEMORY_DIR / "evals" / "eval-log.jsonl"
 EPISODIC_ARCHIVE = MEMORY_DIR / "episodic" / "archive"
 
+# Semantic candidate IDs are shared by the two live checkouts even though their
+# gitignored candidate/review files are not.  Tests and isolated stores override
+# both values so a fixture can never inspect or lock the real stores.
+SEMANTIC_KNOWN_ROOTS_ENV = "MEMORY_SEMANTIC_KNOWN_ROOTS"
+SEMANTIC_ID_LOCK_ENV = "MEMORY_SEMANTIC_ID_LOCK"
+DEFAULT_SEMANTIC_ROOTS = (
+    Path("/Users/luca/Desktop/luca_gstack"),
+    Path("/Users/luca/Desktop/项目/muse/lucagstack"),
+)
+DEFAULT_SEMANTIC_ID_LOCK = Path("/Users/luca/.luca/locks/semantic-candidate-id.lock")
+
 NEGATIVE_MARKERS = ("不得", "不能", "禁止", "不应", "must not", "cannot", "can't", "not", "never")
 POSITIVE_MARKERS = ("必须", "应当", "需要", "must", "should", "required")
 POLARITY_MARKERS = NEGATIVE_MARKERS + POSITIVE_MARKERS
@@ -95,6 +106,76 @@ def episodic_index_lock():
                 os.close(fd)
             except OSError:
                 pass
+
+
+def semantic_known_roots(primary_root: Path | None = None) -> tuple[Path, ...]:
+    """Return the stores participating in the semantic-ID namespace.
+
+    An explicit root outside the two live checkouts is treated as an isolated
+    store unless the caller supplies ``MEMORY_SEMANTIC_KNOWN_ROOTS``.  This
+    keeps ordinary ``MEMORY_ROOT=/tmp/...`` tests from ever reading real data.
+    """
+    override = os.environ.get(SEMANTIC_KNOWN_ROOTS_ENV)
+    resolved_root = (primary_root or ROOT).resolve()
+    if override is not None:
+        configured = [Path(value.strip()) for value in override.split(os.pathsep) if value.strip()]
+    elif resolved_root in {path.resolve() for path in DEFAULT_SEMANTIC_ROOTS}:
+        configured = list(DEFAULT_SEMANTIC_ROOTS)
+    else:
+        configured = []
+
+    roots = []
+    seen = set()
+    for path in [resolved_root, *configured]:
+        try:
+            resolved = path.resolve()
+        except OSError:
+            resolved = path.absolute()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        roots.append(resolved)
+    return tuple(roots)
+
+
+def semantic_id_lock_path(primary_root: Path | None = None) -> Path:
+    override = os.environ.get(SEMANTIC_ID_LOCK_ENV)
+    if override:
+        path = Path(override)
+        if not path.is_absolute():
+            raise ValueError(f"{SEMANTIC_ID_LOCK_ENV} must be an absolute path")
+        return path
+    resolved_root = (primary_root or ROOT).resolve()
+    if resolved_root in {path.resolve() for path in DEFAULT_SEMANTIC_ROOTS}:
+        # Shared by both live checkouts and deliberately outside either repo.
+        return DEFAULT_SEMANTIC_ID_LOCK
+    return semantic_known_roots(resolved_root)[0] / "memory" / "semantic" / ".candidate-id.lock"
+
+
+@contextmanager
+def semantic_id_lock(primary_root: Path | None = None):
+    """Serialize semantic-ID census/allocation and candidate mutations.
+
+    Unlike the best-effort episodic lock, this lock is fail-closed: allocating
+    without it can permanently reuse a stable ID across the two checkouts.
+    """
+    if fcntl is None:
+        raise RuntimeError("semantic candidate ID allocation requires fcntl.flock")
+    lock_path = semantic_id_lock_path(primary_root)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 def atomic_write_text(path: Path, text: str) -> None:
@@ -154,6 +235,11 @@ def read_jsonl_with_raw(path: Path) -> list[tuple[dict | None, str]]:
 
 def clean_scalar(value: str):
     value = value.strip().rstrip(",")
+    if value.startswith('"') or value.startswith("["):
+        try:
+            return json.loads(value)
+        except (ValueError, TypeError):
+            pass
     if value.lower() == "true":
         return True
     if value.lower() == "false":
@@ -239,6 +325,151 @@ def parse_datetime(value: str):
 
 def normalize_fact(text: str) -> str:
     return "".join(re.findall(r"[\w#]+", str(text).lower()))
+
+
+def _semantic_jsonl_records(path: Path, kind: str, id_field: str = "id"):
+    if not path.exists():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        if not raw.strip():
+            continue
+        try:
+            record = json.loads(raw)
+        except json.JSONDecodeError:
+            record = None
+        if not isinstance(record, dict):
+            # A recoverable/truncated row still owns any plainly visible ID.
+            # Its identity is unknown, so it reserves without causing a false
+            # collision (the rewrite paths already preserve these raw rows).
+            match = re.search(rf'"{re.escape(id_field)}"\s*:\s*"([^"]+)"', raw)
+            if match:
+                yield {
+                    "id": match.group(1).strip(),
+                    "kind": kind,
+                    "path": str(path),
+                    "domain": "",
+                    "fact": "",
+                    "identity_known": False,
+                }
+            continue
+        fact_id = str(record.get(id_field, "")).strip()
+        if not fact_id:
+            continue
+        yield {
+            "id": fact_id,
+            "kind": kind,
+            "path": str(path),
+            "domain": str(record.get("domain", "")).strip(),
+            "fact": str(record.get("fact", "")).strip(),
+            # Reviews reserve IDs but cannot assert a domain/fact identity.
+            "identity_known": id_field == "id",
+        }
+
+
+def candidate_id_census(primary_root: Path | None = None) -> dict[str, list[dict]]:
+    """Index every durable reservation in the shared semantic-ID namespace."""
+    census = defaultdict(list)
+    for root in semantic_known_roots(primary_root):
+        semantic = root / "memory" / "semantic"
+        candidate_paths = [(semantic / "candidates.jsonl", "candidate")]
+        archive = semantic / "archive"
+        if archive.is_dir():
+            candidate_paths.extend(
+                (path, "candidate_archive") for path in sorted(archive.glob("candidates-*.jsonl"))
+            )
+        for path, kind in candidate_paths:
+            for record in _semantic_jsonl_records(path, kind):
+                census[record["id"]].append(record)
+
+        promoted_paths = [(semantic / "promoted-facts.yaml", "promoted")]
+        if archive.is_dir():
+            promoted_paths.extend(
+                (path, "promoted_archive") for path in sorted(archive.glob("*facts*.yaml"))
+            )
+        for path, kind in promoted_paths:
+            for fact in parse_promoted_facts(path):
+                fact_id = str(fact.get("id", "")).strip()
+                if not fact_id:
+                    continue
+                census[fact_id].append({
+                    "id": fact_id,
+                    "kind": kind,
+                    "path": str(path),
+                    "domain": str(fact.get("domain", "")).strip(),
+                    "fact": str(fact.get("fact", "")).strip(),
+                    "identity_known": True,
+                })
+
+        review_paths = [(semantic / "reviews.jsonl", "review")]
+        if archive.is_dir():
+            review_paths.extend(
+                (path, "review_archive") for path in sorted(archive.glob("reviews*.jsonl"))
+            )
+        for path, kind in review_paths:
+            for record in _semantic_jsonl_records(path, kind, id_field="candidate_id"):
+                census[record["id"]].append(record)
+    return dict(census)
+
+
+def candidate_id_collisions(census: dict[str, list[dict]] | None = None) -> list[dict]:
+    """Report IDs attached to more than one domain/fact identity.
+
+    Current candidate/promoted records are the authoritative identity.  Their
+    archives reserve the namespace but represent historical states of that
+    same stable ID, so an archived wording change must not compete with a
+    current identity.  When no current record exists, archives retain their
+    identity evidence and can still expose an internally split history.
+    Review-only reservations have no identity and therefore reserve their ID
+    without manufacturing a false positive.
+    """
+    census = census if census is not None else candidate_id_census()
+    collisions = []
+    for fact_id in sorted(census):
+        known_records = [record for record in census[fact_id] if record.get("identity_known")]
+        current_records = [
+            record for record in known_records
+            if record.get("kind") in {"candidate", "promoted"}
+        ]
+        identity_records = current_records or known_records
+        identities = defaultdict(list)
+        for record in identity_records:
+            identity = (
+                str(record.get("domain", "")).strip().casefold(),
+                " ".join(str(record.get("fact", "")).split()).casefold(),
+            )
+            identities[identity].append(record)
+        if len(identities) <= 1:
+            continue
+        rendered = []
+        for identity in sorted(identities):
+            records = identities[identity]
+            rendered.append({
+                "domain": records[0].get("domain", ""),
+                "fact": records[0].get("fact", ""),
+                "locations": [
+                    {"kind": item["kind"], "path": item["path"]}
+                    for item in sorted(records, key=lambda item: (item["path"], item["kind"]))
+                ],
+            })
+        collisions.append({"id": fact_id, "identities": rendered})
+    return collisions
+
+
+def candidate_id_max_sequence(prefix: str, census: dict[str, list[dict]] | None = None) -> int:
+    census = census if census is not None else candidate_id_census()
+    best = 0
+    for fact_id in census:
+        if not fact_id.startswith(prefix):
+            continue
+        sequence = fact_id[len(prefix):]
+        if sequence.isdigit():
+            best = max(best, int(sequence))
+    return best
+
+
+def next_candidate_id(census: dict[str, list[dict]] | None = None) -> str:
+    prefix = f"SC-{datetime.now(timezone.utc).strftime('%Y%m%d')}-"
+    return f"{prefix}{candidate_id_max_sequence(prefix, census) + 1:03d}"
 
 
 def duplicate_candidates(candidates: list[dict], promoted: list[dict]) -> tuple[list[dict], set[str]]:
@@ -579,15 +810,43 @@ def append_review(candidate_id: str, reviewer: str, decision: str, reason: str) 
     }
     with REVIEWS.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
 
 
 def promote_ready_candidates(candidates: list[dict], ready: list[dict], dry_run: bool) -> list[str]:
     ready_ids = {item["id"] for item in ready}
-    existing = promoted_ids(parse_promoted_facts(PROMOTED))
+    existing = {str(item.get("id", "")): item for item in parse_promoted_facts(PROMOTED)}
+    decisions = review_decisions(read_jsonl(REVIEWS))
     promoted = []
     for candidate in candidates:
         cid = str(candidate.get("id", ""))
-        if cid not in ready_ids or cid in existing:
+        if cid in existing:
+            # A prior attempt can persist the fact and fail before its audit append.
+            # Reconcile only the same approved candidate; do not infer a new approval.
+            fact = existing[cid]
+            eligible = promotion_ready([candidate], set(), set(), decisions)
+            # Compare one decoded representation, with exactly the writer's omission rules.
+            # Accepting both raw and escaped variants can conflate two different source paths.
+            expected = {"domain": candidate.get("domain", ""), "fact": str(candidate.get("fact", "")),
+                        "confidence": candidate.get("confidence", "high"),
+                        "source": str(candidate.get("source") or candidate.get("evidence") or "consolidate_memory")}
+            optional = ("evidence", "reviewer", "valid_until", "supersedes")
+            for key in optional:
+                if str(candidate.get(key) or "").strip():
+                    expected[key] = str(candidate[key])
+            # Legacy scope serialization retains explicit None/False/0 as strings.
+            if str(candidate.get("scope", "")).strip():
+                expected["scope"] = str(candidate.get("scope"))
+            if candidate.get("tags"):
+                expected["tags"] = json.loads(yaml_list(candidate["tags"]))
+            same = all(fact.get(key) == expected.get(key) for key in
+                       ("domain", "fact", "confidence", "source", "tags", "scope", *optional))
+            if eligible and same and str(fact.get("stable", "")).lower() == "true" and not dry_run:
+                append_review(cid, str(candidate["reviewer"]), "promoted",
+                              "recovered audit for the same already persisted promotion_ready candidate")
+            continue
+        if cid not in ready_ids:
             continue
         promoted.append(cid)
         if not dry_run:
@@ -726,7 +985,9 @@ def archive_reviewed_candidates(candidate_rows: list[tuple[dict, str]], decision
             continue
         cid = str(candidate.get("id", ""))
         status = str(candidate.get("status", "")).lower()
-        reviewed = cid in promoted_id_set or decisions.get(cid) in {"promoted", "rejected"} or status in {"promoted", "rejected"}
+        reviewed = decisions.get(cid) in {"promoted", "rejected"} or status in {"promoted", "rejected"}
+        if cid in promoted_id_set and decisions.get(cid) != "promoted":
+            reviewed = False  # Keep the original candidate until the execution audit is durable.
         if reviewed:
             archived.append(cid)
             created = parse_datetime(candidate.get("created_at", "")) or datetime.now(timezone.utc)
@@ -782,7 +1043,9 @@ def archive_noisy_episode_rows(episode_rows: list[tuple[dict, str]], noisy: list
     return archived
 
 
-def build_queue() -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict], dict[str, str], list[tuple[dict, str]]]:
+def build_queue(
+    id_collisions: list[dict] | None = None,
+) -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict], dict[str, str], list[tuple[dict, str]]]:
     candidate_rows = read_jsonl_with_raw(CANDIDATES)
     candidates = [row for row, _raw in candidate_rows if row is not None]
     episode_rows = read_jsonl_with_raw(EPISODIC_INDEX)
@@ -792,12 +1055,17 @@ def build_queue() -> tuple[dict, list[dict], list[tuple[dict, str]], list[dict],
     decisions = review_decisions(reviews)
     duplicate_queue, duplicate_ids = duplicate_candidates(candidates, promoted)
     conflict_queue, conflict_ids = conflicts(candidates, promoted)
+    id_collisions = candidate_id_collisions() if id_collisions is None else id_collisions
+    collided_ids = {str(item.get("id", "")) for item in id_collisions}
+    ready = promotion_ready(candidates, duplicate_ids, conflict_ids, decisions)
+    pending_approval = awaiting_approval(candidates, duplicate_ids, conflict_ids, decisions)
     queue = {
+        "candidate_id_collisions": id_collisions,
         "duplicate_candidates": duplicate_queue,
         "conflicts": conflict_queue,
         "stale_candidates": stale_candidates(candidates, decisions),
-        "promotion_ready": promotion_ready(candidates, duplicate_ids, conflict_ids, decisions),
-        "awaiting_approval": awaiting_approval(candidates, duplicate_ids, conflict_ids, decisions),
+        "promotion_ready": [item for item in ready if item.get("id") not in collided_ids],
+        "awaiting_approval": [item for item in pending_approval if item.get("id") not in collided_ids],
         "noisy_episodes": noisy_episodes(episodes),
         "failing_eval_patterns": failing_eval_patterns(read_jsonl(EVAL_LOG)),
         # 区分「无源」与「有源无失败」：二者此前同为空 list，人看不出是 eval 没接通还是真没失败模式
@@ -812,6 +1080,7 @@ def print_human(queue: dict, dry_run: bool) -> None:
     mode = "DRY RUN" if dry_run else "WRITE ENABLED"
     print(f"Memory consolidation review queue ({mode})")
     for key in (
+        "candidate_id_collisions",
         "duplicate_candidates",
         "conflicts",
         "stale_candidates",
@@ -865,29 +1134,80 @@ def main() -> int:
     write_enabled = (args.promote_ready or args.archive_reviewed or args.archive_noisy or args.archive_superseded
                      or args.set_stable or args.reject) and not args.dry_run
 
-    # set-stable/reject 先于 build_queue：写盘后 promotion_ready/decisions 才能看到结果
-    # （支持 --set-stable X --promote-ready、--reject Y --archive-reviewed 单次完成）
-    set_stable_result = set_stable(args.set_stable, dry_run=not write_enabled, reviewer=args.reviewer) if args.set_stable else None
-    reject_result = reject_candidates(args.reject, args.reason, args.reviewer, dry_run=not write_enabled) if args.reject else None
+    def execute_actions(id_collisions: list[dict]) -> dict:
+        # set-stable/reject 先于 build_queue：写盘后 promotion_ready/decisions 才能看到结果
+        # （支持 --set-stable X --promote-ready、--reject Y --archive-reviewed 单次完成）
+        set_stable_result = set_stable(
+            args.set_stable, dry_run=not write_enabled, reviewer=args.reviewer
+        ) if args.set_stable else None
+        reject_result = reject_candidates(
+            args.reject, args.reason, args.reviewer, dry_run=not write_enabled
+        ) if args.reject else None
 
-    queue, candidates, candidate_rows, promoted, decisions, episode_rows = build_queue()
-    if set_stable_result is not None:
-        queue["actions"]["set_stable"] = set_stable_result
-    if reject_result is not None:
-        queue["actions"]["rejected"] = reject_result
+        queue, candidates, candidate_rows, promoted, decisions, episode_rows = build_queue(id_collisions)
+        if set_stable_result is not None:
+            queue["actions"]["set_stable"] = set_stable_result
+        if reject_result is not None:
+            queue["actions"]["rejected"] = reject_result
 
-    if args.promote_ready:
-        queue["actions"]["promoted"] = promote_ready_candidates(candidates, queue["promotion_ready"], dry_run=not write_enabled)
-        if write_enabled:
-            promoted = parse_promoted_facts(PROMOTED)
-    if args.archive_superseded:
-        # 放在 promote_ready 之后：同一次调用里刚晋升的 fact 若带 supersedes，本步立即收尾
-        queue["actions"]["archived_superseded"] = archive_superseded_facts(
-            dry_run=not write_enabled, reviewer=args.reviewer.strip())
-    if args.archive_reviewed:
-        queue["actions"]["archived"] = archive_reviewed_candidates(candidate_rows, decisions, promoted, dry_run=not write_enabled)
-    if args.archive_noisy:
-        queue["actions"]["archived_noisy"] = archive_noisy_episode_rows(episode_rows, queue["noisy_episodes"], dry_run=not write_enabled)
+        if args.promote_ready:
+            queue["actions"]["promoted"] = promote_ready_candidates(
+                candidates, queue["promotion_ready"], dry_run=not write_enabled
+            )
+            if write_enabled:
+                promoted = parse_promoted_facts(PROMOTED)
+                decisions = review_decisions(read_jsonl(REVIEWS))
+        if args.archive_superseded:
+            # 放在 promote_ready 之后：同一次调用里刚晋升的 fact 若带 supersedes，本步立即收尾
+            queue["actions"]["archived_superseded"] = archive_superseded_facts(
+                dry_run=not write_enabled, reviewer=args.reviewer.strip()
+            )
+        if args.archive_reviewed:
+            queue["actions"]["archived"] = archive_reviewed_candidates(
+                candidate_rows, decisions, promoted, dry_run=not write_enabled
+            )
+        if args.archive_noisy:
+            queue["actions"]["archived_noisy"] = archive_noisy_episode_rows(
+                episode_rows, queue["noisy_episodes"], dry_run=not write_enabled
+            )
+        return queue
+
+    semantic_candidate_write = bool(
+        args.set_stable or args.reject or args.promote_ready or args.archive_reviewed
+    )
+
+    def refuse_collided_namespace(id_collisions: list[dict]) -> int:
+        queue, *_ = build_queue(id_collisions)
+        if args.json:
+            print(json.dumps(queue, ensure_ascii=False, indent=2))
+        else:
+            print_human(queue, dry_run=True)
+        print(
+            "semantic candidate ID collision detected; refusing all candidate mutations",
+            file=sys.stderr,
+        )
+        return 2
+
+    if write_enabled and semantic_candidate_write:
+        try:
+            # Refuse a pre-existing collision before even creating/opening the
+            # lock file; the locked recheck below closes the race with proposals.
+            id_collisions = candidate_id_collisions()
+            if id_collisions:
+                return refuse_collided_namespace(id_collisions)
+            # The collision decision and every candidate mutation share the
+            # proposal allocator lock, so no proposal can race this gate or a
+            # candidates.jsonl rewrite.
+            with semantic_id_lock():
+                id_collisions = candidate_id_collisions()
+                if id_collisions:
+                    return refuse_collided_namespace(id_collisions)
+                queue = execute_actions(id_collisions)
+        except (OSError, RuntimeError, ValueError) as exc:
+            print(f"semantic candidate ID lock unavailable; refusing mutation: {exc}", file=sys.stderr)
+            return 2
+    else:
+        queue = execute_actions(candidate_id_collisions())
 
     if args.json:
         print(json.dumps(queue, ensure_ascii=False, indent=2))

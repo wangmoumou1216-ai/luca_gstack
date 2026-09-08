@@ -1,0 +1,17 @@
+{
+  "scope": "three exact baseline-matching tracked files for release; current approved semantic history retained",
+  "files": {
+    "memory/episodic/archive/2026.jsonl": {
+      "before": "e497c07486173559a3106f12e2c90bc95a2152f92ab7cee07421d6ede8bce381",
+      "after": "edaa7228537b4022ff62e35044496cf61af71cebc3db5dc5be245bbf819b1204"
+    },
+    "memory/episodic/index.jsonl": {
+      "before": "fc6e9cd9dce08e27641cd447459560c21fa819f1a184c736f1f2b7fbc2ea87ac",
+      "after": "fc4eedfdc1c4c2ea1301fc003fd1100d63fecac71df5bc73a73082eaca4b5525"
+    },
+    "memory/semantic/archive/candidates-2026.jsonl": {
+      "before": "4194c57db2dbbfc82dbd941813e9103bd72e009f1d84a81c42c8631e07442187",
+      "after": "eec8583eb658e34b69054a9278aa7fc2f9d719f83cf524d5668bb664ad20689c"
+    }
+  }
+}

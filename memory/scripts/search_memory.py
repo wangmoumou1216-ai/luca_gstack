@@ -474,29 +474,35 @@ def load_person_layer() -> tuple[Path, list[dict]]:
     return (PERSON_DIR or ROOT), rows
 
 
-def load_project_layer() -> tuple[Path, list[dict]]:
-    """各下游项目的本地记忆（`<项目>/.luca/memory/*.md`）。与 person 层同样此前零覆盖。
+def load_project_layer(project: str = "") -> tuple[Path, list[dict]]:
+    """Read only the caller's explicitly scoped project, never enumerate neighboring content.
 
-    记录带 `project` 字段，故 `--project <名>` 过滤对本层生效（对 episodic 沿用旧语义）。
+    A selector is not a grant: the harness must still validate the session pin/read grant.
+    NO_PIN callers omit it. Reject traversal and symlink escapes before opening files.
     """
     rows = []
-    if PROJECTS_DIR and PROJECTS_DIR.is_dir():
-        for proj in sorted(PROJECTS_DIR.iterdir()):
-            mem = proj / ".luca" / "memory"
-            if not mem.is_dir():
+    if not PROJECTS_DIR or not project or any(part in ("", ".", "..") for part in project.split("/")):
+        return (PROJECTS_DIR or ROOT), rows
+    base = PROJECTS_DIR.resolve()
+    proj = PROJECTS_DIR / project
+    mem = proj / ".luca" / "memory"
+    if proj.resolve() != base / project or mem.resolve() != base / project / ".luca" / "memory":
+        return (PROJECTS_DIR or ROOT), rows
+    if mem.is_dir():
+        for p in sorted(mem.glob("*.md")):
+            if p.is_symlink() or not p.resolve().is_relative_to(mem.resolve()):
                 continue
-            for p in sorted(mem.glob("*.md")):
-                try:
-                    rec = _md_record(p, "project")
-                    rec["project"] = proj.name
-                    rec["id"] = f"{proj.name}/{p.stem}"
-                    rows.append(rec)
-                except Exception:  # noqa: BLE001
-                    continue
+            try:
+                rec = _md_record(p, "project")
+                rec["project"] = project
+                rec["id"] = f"{project}/{p.stem}"
+                rows.append(rec)
+            except Exception:  # noqa: BLE001
+                continue
     return (PROJECTS_DIR or ROOT), rows
 
 
-def load_layer(layer: str) -> tuple[Path, list[dict]]:
+def load_layer(layer: str, project: str = "") -> tuple[Path, list[dict]]:
     if layer == "episodic":
         rows = read_jsonl(EPISODIC_INDEX)
         if INCLUDE_ARCHIVE:
@@ -507,11 +513,14 @@ def load_layer(layer: str) -> tuple[Path, list[dict]]:
     if layer == "person":
         return load_person_layer()
     if layer == "project":
-        return load_project_layer()
+        return load_project_layer(project)
     return EVAL_LOG, read_jsonl(EVAL_LOG)
 
 
 def passes_filters(layer: str, record: dict, skill: str, topic: str, project: str = "") -> bool:
+    # NO_PIN may recall unscoped framework history, never explicitly project-owned episodes.
+    if layer == "episodic" and not project and str(record.get("project") or "").strip():
+        return False
     if topic and topic.lower() not in str(record.get("topic", "")).lower() and topic.lower() not in as_text(record):
         return False
     if project and layer == "project":
@@ -538,7 +547,7 @@ def search(query: str, limit: int, layer: str, skill: str, topic: str, project: 
     layers = ["episodic", "semantic", "eval", "person", "project"] if layer == "all" else [layer]
     results = []
     for layer_name in layers:
-        path, rows = load_layer(layer_name)
+        path, rows = load_layer(layer_name, project)
         for record in rows:
             if not passes_filters(layer_name, record, skill, topic, project):
                 continue

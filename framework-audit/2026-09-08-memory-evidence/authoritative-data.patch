@@ -1,0 +1,232 @@
+diff --git a/memory/episodic/archive/2026.jsonl b/memory/episodic/archive/2026.jsonl
+index b8c52e6..672d73e 100644
+--- a/memory/episodic/archive/2026.jsonl
++++ b/memory/episodic/archive/2026.jsonl
+@@ -99,3 +99,4 @@
+ {"id": "EP-20260722-099", "date": "2026-07-22", "topic": "luca app 用量监控：功能区入口+弹窗（OAuth usage 端点）", "project": "muse", "skills_used": [], "outcomes": ["app/usage.js", "muse@bda5383", "/Applications/luca.app 已更新"], "blockers": [], "decision": "KILL 假设前置：先 spike 验证数据源再写实现——第一枪 401 暴露 .credentials.json 是过期迁移残留、活凭证在 Keychain，若跳过 spike 直接实现会把 401 当实现 bug 查。端点无官方文档→研究降档为动手 spike+社区 issue 查证（claude-code#31021/#31637），拿到 UA 头决定限流桶这一非显然约束。", "next_risk": "弹窗的实际点击体验未经真人验收（旧版 app 还在跑，重启后才见新版）；Keychain 首读可能弹一次授权框；若 Anthropic 改 limits[] 结构，normalize 有 five_hour/seven_day 兜底但未实测该路径。", "file": "sessions/2026-07-22-luca-app-用量监控功能区入口弹窗oauth-usage-端点.md"}
+ {"id": "EP-20260723-100", "date": "2026-07-23", "topic": "mattpocock-skills-更新对标(血统级)", "skills_used": ["external-skill-scout"], "outcomes": ["对标报告(会话内交付", "未落盘)"], "blockers": [], "decision": "首轮直接列候选问裁决被纠正——采纳建议须先证需求真伪(使用数据+落点直读+语境匹配)再谈落法收益；Rule3 one-at-a-time 考古确认是 05-26 原生教义非吸收物，改它=改自家教义须痛点实证(10轮串行问答+luca反打断偏好构成实证)", "next_risk": "⑤⑥ 待拍板：采则 FUSION 步⑨ 回写 SSOT+ack 推进；不采也须记 ack(当前 4 已装单元 ack 停在 697d4ce9，上游已到 ed37663c)；上游 batch-grill-me/to-questionnaire 均 in-progress，下轮 watch 关注是否转正/被砍", "file": "sessions/2026-07-23-mattpocock-skills-更新对标血统级.md"}
+ {"id": "EP-20260723-101", "date": "2026-07-23", "topic": "mattpocock-更新对标-红队终审与落地", "skills_used": ["redteam"], "outcomes": ["framework-audit/2026-07-23-mattpocock-update-{review", "redteam-findings", "consensus}.md", "commit eab394c"], "blockers": [], "decision": "installed-pins 零编辑：判官指令说推进 ack，但实测 4 单元 path 域 SHA==既有 ack——证据豁免指令；ack 永不用 repo HEAD（watcher 比较键是 path 域，NF2）", "next_risk": "GAP-decision-questionnaire 写入 gaps-register 待 luca 批准（提案全文在 consensus §A-D4）；batch-grill-me 重启触发器=≥2 次实录不耐烦且 Part-6 未解痛；上游两 in-progress skill 转正与否下轮 watch", "file": "sessions/2026-07-23-mattpocock-更新对标-红队终审与落地.md"}
++{"id": "EP-20260723-102", "date": "2026-07-23", "topic": "对标SOP制度化-benchmark-registry+窗口复审节", "skills_used": ["Explore", "Plan"], "outcomes": [".claude/skill-os/evolution/benchmark-registry.yaml", "BENCHMARK-RUNBOOK 窗口复审节", "check_benchmark_drift+5测试"], "blockers": [], "decision": "基线设计铁律=「机读活登记+确定性消费者」双成立（只建文件重蹈 inventory 覆辙）；弃 4 备选：sources-registry（发现通道≠审计基线双真值互踩）/installed-pins（自限 path 域）/vetting-registry（叙事台账非活登记）/session-restore 提醒（无节流预算机制）；V6 真实治理烟测主动跳过（副作用不该被验证触发，注入 dry-run+单测已覆盖）", "next_risk": "check_benchmark_drift 首次真实触发要到 ~2026-10-21（90 天窗），届时验证 digest 行真出现；另一检出（~/Desktop/luca_gstack）待 pull 同步；SC-20260723-001 已提 supersedes 候选，治理时按指针化裁决", "file": "sessions/2026-07-23-对标sop制度化-benchmark-registry窗口复审节.md"}
+diff --git a/memory/episodic/index.jsonl b/memory/episodic/index.jsonl
+index 2da58ae..f660961 100644
+--- a/memory/episodic/index.jsonl
++++ b/memory/episodic/index.jsonl
+@@ -1,4 +1,3 @@
+-{"id": "EP-20260723-102", "date": "2026-07-23", "topic": "对标SOP制度化-benchmark-registry+窗口复审节", "skills_used": ["Explore", "Plan"], "outcomes": [".claude/skill-os/evolution/benchmark-registry.yaml", "BENCHMARK-RUNBOOK 窗口复审节", "check_benchmark_drift+5测试"], "blockers": [], "decision": "基线设计铁律=「机读活登记+确定性消费者」双成立（只建文件重蹈 inventory 覆辙）；弃 4 备选：sources-registry（发现通道≠审计基线双真值互踩）/installed-pins（自限 path 域）/vetting-registry（叙事台账非活登记）/session-restore 提醒（无节流预算机制）；V6 真实治理烟测主动跳过（副作用不该被验证触发，注入 dry-run+单测已覆盖）", "next_risk": "check_benchmark_drift 首次真实触发要到 ~2026-10-21（90 天窗），届时验证 digest 行真出现；另一检出（~/Desktop/luca_gstack）待 pull 同步；SC-20260723-001 已提 supersedes 候选，治理时按指针化裁决", "file": "sessions/2026-07-23-对标sop制度化-benchmark-registry窗口复审节.md"}
+ {"id": "EP-20260723-103", "date": "2026-07-23", "topic": "自进化单点评估-tirth8205/code-review-graph", "skills_used": [], "outcomes": [], "blockers": [], "decision": "不换指针也不棘轮挡掉：现任零使用数据,纸面换指针是空转,故提案把 code-recon Path B 改为两候选并列+首次真实 brownfield/review 场景实测选型(propose-only,待 luca 裁)", "next_risk": "luca 若批准挑战者并列,须改 code-recon SKILL.md Path B 段+补 vetting-registry 登记;该 repo 25k★ trending,后续 scout 大概率再遇,届时先查本条避免重评", "file": "sessions/2026-07-23-自进化单点评估-tirth8205code-review-graph.md"}
+ {"id": "EP-20260723-104", "date": "2026-07-23", "topic": "自成长SOP补单点评估入口-模式1b落地", "skills_used": [], "outcomes": [], "blockers": [], "decision": "红队非阻塞建议（MAX_VERIFY 上限/intake repo 白名单/全 sources off 假失败）按 Surgical Changes 声明不做；backfill 行 repo 不可考时如实标 unverified 不编造标识；REDTEAM_SCHEMA 不加 enum（会改 sweep 行为面，A2 断言要求 sweep 零回归）", "next_risk": "钻孔 wf_5f49549a-af2（code-review-graph 过模式1b）后台运行中：完成后须 bookkeep 落笔+呈报裁决+commit+push+另一检出 pull；若钻孔失败要区分模式1b 实现缺陷 vs 目标仓评估结论", "file": "sessions/2026-07-23-自成长sop补单点评估入口-模式1b落地.md"}
+ {"id": "EP-20260724-105", "date": "2026-07-24", "topic": "ASR重造:流式回填+双大模型引擎+对比模式全链落地", "project": "快速语音录入", "skills_used": ["deepresearch", "quality-gate"], "outcomes": ["/Users/luca/Desktop/项目/快速语音录入/docs/decisions/2026-07-24-asr-engine-streaming-decision.md", "docs/research/2026-07-24-asr-protocol-notes.md", "HANDOFF.md 2026-07-24段", "src-tauri/src/asr/{iflytek_spark", "volcengine}.rs"], "blockers": [], "decision": "厂商自评WER全不可信→不押注单引擎,改双引擎实现+用户语料对比模式实测定胜负;流式增量重采样器立'输出=批处理逐字节前缀'契约用单测锁死,尾段对齐从设计上免疫漂移;回填慢根因先读代码坐实(松开才建连)再研究,避免把架构问题误当引擎问题", "next_risk": "spark eos=10000上限未证实(示例6000,被拒降档);dhw英文热词未实测(若收英文可绕v2中文≤7字限制,价值大);火山免费额度数字未经官方正文确认;项目无git仓库,下轮建议init固化", "file": "sessions/2026-07-24-asr重造流式回填双大模型引擎对比模式全链落地.md"}
+@@ -48,3 +47,4 @@
+ {"id": "EP-20260825-147", "date": "2026-08-25", "topic": "design-brief 产品交互会审与 L0/R0 菜单框架修订", "project": "CRM工作台零摩擦研究", "skills_used": ["design-brief"], "outcomes": ["/Users/luca/Desktop/项目/CRM工作台零摩擦研究/docs/decisions/2026-08-25-crm-workbench-zero-friction-design-brief.md", "/Users/luca/Desktop/项目/CRM工作台零摩擦研究/docs/review/2026-08-25-crm-workbench-zero-friction-interaction-expert-review.md"], "blockers": [], "decision": "现有 CRM 左侧菜单是 L0 产品壳，角色工作台作为一级菜单页 R0；S1/O1/O2/V1 只在页内嵌套。L0 切换是硬 scope boundary，Agent 使用非模态右侧栏。— why：匹配现网入口并防止旧 Agent scope 与新主画布并存。", "next_risk": "需用 1280/1440/1920 可点击原型验证三栏注意负荷、操作预算和具体表达；缺 PRD R/AE，暂不能进入工程链。", "file": "sessions/2026-08-25-design-brief-产品交互会审与-l0r0-菜单框架修订.md"}
+ {"id": "EP-20260826-148", "date": "2026-08-26", "topic": "ict-mobile-workbench-reframe", "project": "muse", "skills_used": ["code-recon", "ux-research", "design-brief", "html-prototype"], "outcomes": [], "blockers": ["另一个在线Codex工作台会话仍绑定旧项目名，项目目录不可安全直接重命名"], "decision": "把内容保真定义为语义、动作与上下文契约不变，而非桌面布局和同屏密度不变；移动端Agent载体须经研究后独立裁决。", "next_risk": "项目重命名需先处理并行会话绑定；移动端需验证100dvh、安全区、软键盘和Agent结果回写。", "file": "sessions/2026-08-26-ict-mobile-workbench-reframe.md"}
+ {"id": "EP-20260826-149", "date": "2026-08-26", "topic": "mobile-reframe-content-conservation-gate", "project": "CRM工作台零摩擦研究", "skills_used": ["code-recon", "html-prototype"], "outcomes": ["/Users/luca/Desktop/项目/CRM工作台零摩擦研究/docs/engineering/2026-08-26-ict-mobile-workbench-architecture-brief.md", "docs/engineering/2026-08-26-ict-mobile-workbench-content-contract.json", "docs/handoff/2026-08-26-ict-mobile-workbench-code-recon-handoff.md"], "blockers": ["首版笼统内容守恒声明不可验证", "详情子页枚举错误"], "next_risk": "生成移动HTML时须逐项映射内容契约，并继续独立验证模块和动作守恒", "file": "sessions/2026-08-26-mobile-reframe-content-conservation-gate.md"}
++{"id": "EP-20260908-150", "date": "2026-09-08", "topic": "memory治理 源头修复与阶段验收", "summary": "MEMORY-EVOLUTION-20260908：官方深调研与独立故障审计确认提醒不等于落库。已修摘要索引、唯一原文、显式项目范围、增量pending、可见锁降级、裁决幂等与日志软链保护、代码/数据根分离、Git同步目标及暂存保护。修复位置与证据见当前框架检出 framework-audit/2026-09-08-memory-evolution-results.md；不要把旧数据检出的脚本当作新执行入口。", "skills_used": ["deepresearch", "code-review"], "outcomes": ["framework-audit/2026-09-08-memory-evolution-results.md", "framework-audit/2026-09-08-memory-evolution-research.md"], "blockers": [], "decision": "先修自有框架确定性缺口，维持文件存储与人工晋升门，不新增后台LLM或向量服务；L4候选SC-20260908-003仅待审，不冒充已批准规则。", "next_risk": "Claude原生探针API403尚不能完整验证；旧无项目字段经验和来源不足pending需逐条保留证据裁决。", "file": "sessions/EP-20260908-150-memory治理-源头修复与阶段验收.md"}
+diff --git a/memory/semantic/archive/candidates-2026.jsonl b/memory/semantic/archive/candidates-2026.jsonl
+index 67e4154..46dd079 100644
+--- a/memory/semantic/archive/candidates-2026.jsonl
++++ b/memory/semantic/archive/candidates-2026.jsonl
+@@ -106,3 +106,7 @@
+ {"id": "SC-20260830-001", "created_at": "2026-08-30T04:45:17.537876+00:00", "domain": "skill-rule", "fact": "凡能力集成计划允许 agent 自主产生 mutation，必须在实施前指定双 harness 可实际拦截的 pre-mutation enforcement plane；prompt 约束、caller 自报 authority ID 与事后 diff/receipt 只能作审计，不能充当授权边界。优先采用隔离 scratch worker + controller 校验 effect 后应用，所有 Git、发布与外部副作用走具名 transaction tool。", "confidence": "high", "source": "observation", "evidence": "2026-08-30 mattpocock six-skills plan safety review SAFE-R3-1：原计划虽有 authority/effect schema，因无真实 hook/controller consumer 仍可先覆盖用户文件，造成整轮返工；源计划 framework-audit/2026-08-30-mattpocock-six-skills-integration/FINAL-EXECUTION-PLAN.md", "scope": "Plan Agent 与 Orchestrator 编排任何具有自主 mutation/internal dispatch 的 skill 或 flow", "reviewer": "luca", "tags": [], "valid_until": "", "supersedes": "", "proposed_stable": true, "stable_requested": true, "status": "CANDIDATE"}
+ {"id": "SC-20260830-002", "created_at": "2026-08-30T04:45:17.545044+00:00", "domain": "skill-rule", "fact": "当 workflow 的代码 U-ID/effect 依赖尚未生成的权威 artifact（如 task-plan）时，初次计划只能编译到 IMPLEMENT_COMPILE_BARRIER；artifact SHA 冻结后必须生成新 Plan revision、重新让人确认并签发绑定新 plan SHA/U-ID/effect 的 authority，旧授权不得跨 revision，也不得用 placeholder 扩权。", "confidence": "high", "source": "observation", "evidence": "2026-08-30 mattpocock six-skills flow review FC-MAINCHAIN-COMPILE-BARRIER-007：selected preset 先编译代码 U-ID 而 task-plan 后生成，导致旧授权越权、placeholder 扩权或流程死路；源计划同上", "scope": "Plan Agent 编排先产规格/任务图、后进入代码实现的多阶段 workflow", "reviewer": "luca", "tags": [], "valid_until": "", "supersedes": "", "proposed_stable": true, "stable_requested": true, "status": "CANDIDATE"}
+ {"id": "SC-20260830-004", "created_at": "2026-08-30T06:36:05.915966+00:00", "domain": "tech", "fact": "Multica v0.4.32 (d60775aa9) 的 local_directory issue 生命周期是 path lock → Prepare/InjectRuntimeConfig → custom-profile wrapper → provider → cleanup；因此 custom wrapper 不是干净的 pre-Prepare 自动同步接缝，chat task 还可能绕过同一路径锁。luca_gstack 对接必须锁定已验证版本，并采用正式 pre-Prepare hook，或使用 staging/LKG 加注入感知事务且禁用未验入口。", "confidence": "high", "source": "expert-panel-2026-08-30", "evidence": "framework-audit/2026-08-30-multica-gstack-expert-review.md；Multica daemon.go d60775aa9 L4756-L4772,L6757-L6844,L7145-L7160,L5037-L5046", "scope": "luca_gstack×Multica v0.4.32 integration", "reviewer": "luca", "tags": ["multica", "runtime", "lifecycle", "auto-sync", "dual-harness"], "valid_until": "", "supersedes": "", "proposed_stable": false, "stable_requested": true, "status": "CANDIDATE"}
++{"id": "SC-20260905-001", "created_at": "2026-09-05T12:12:34.901702+00:00", "domain": "fxui", "fact": "framework/ 为只读参考资产；HTML 原型不再强制基于本地母版，视觉与组件约束来自当前已确认项目或用户在外部工具配置的设计系统。", "confidence": "high", "source": "user-approved BR-PAGE plan S1/S2/S9 and U-008, session 01a06adf continuation 2026-09-05", "evidence": "framework-audit/2026-09-05-page-library-design-flow-branch-plan.md §5/S9 and SF-002治理路径; b4_inventory independent text review PASS 2026-09-05", "scope": "framework/meta; HTML prototype source and readonly assets; no external write authority", "reviewer": "luca-approved U-008; independent b4_inventory text review", "tags": [], "valid_until": "", "supersedes": "SF-002", "proposed_stable": true, "stable_requested": true, "status": "CANDIDATE"}
++{"id": "SC-20260905-002", "created_at": "2026-09-05T12:58:27.019212+00:00", "domain": "skill-rule", "fact": "跨多 skill 的 HTML/UI 规范仍分两层：视觉层继承当前已确认项目或用户在外部工具配置的设计系统，并记录实际规范来源；不再把已退役的 brand-tokens.md、旧框架 token 或 office 品牌段当作强制权威。共享的视觉约束避免逐 skill 复制，以免漂移；不得仅为重复规范新建专门规范 skill。内容结构层的章节骨架和占位变量仍由各 skill 的 references/ 或 templates/ 维护，保留既有 Markdown/HTML 模板用途与通用 DRY 原则。", "confidence": "high", "source": "user-approved BR-PAGE R5 review repair 2026-09-05", "evidence": "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。", "scope": "luca_gstack skill-os / 跨 skill HTML/UI 规范选型与内容模板；当前设计系统优先", "reviewer": "luca (R5 repair authorization; independent content review before promotion)", "tags": ["skill-os", "ui-spec", "HTML", "规范", "template", "architecture", "DRY", "brand-tokens"], "valid_until": "", "supersedes": "SC-20260609-003", "proposed_stable": true, "stable_requested": true, "status": "CANDIDATE"}
++{"id": "SC-20260905-003", "created_at": "2026-09-05T12:58:27.134090+00:00", "domain": "skill-rule", "fact": "figma-layer 已从 luca_gstack 的 skill、命令、Codex alias 与活动路由退役；已有 HTML 原型也不再路由到它，不执行其原型文件 preflight。现有原型保留独立 HTML、figma-demo、MagicPath 与 muse-proto-gen 的已授权用法；用户明确要求独立 Figma 设计时，按当前可用的官方 Figma skill 与工具合同执行，先核对真实用户意图及目标权限，不把关键词 Figma 或 HTML 原型存在当作工具切换或外部写入授权。", "confidence": "high", "source": "user-approved BR-PAGE R5 review repair 2026-09-05", "evidence": "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。", "scope": "luca_gstack figma-layer 退役后的 HTML/Figma 路由与输出边界", "reviewer": "luca (R5 repair authorization; independent content review before promotion)", "tags": ["figma-layer", "Figma", "HTML", "routing", "retirement", "figma-use"], "valid_until": "", "supersedes": "SC-20260610-001", "proposed_stable": true, "stable_requested": true, "status": "CANDIDATE"}
++{"id": "SC-20260905-004", "created_at": "2026-09-05T13:09:41.777163+00:00", "domain": "crm", "fact": "CRM/FxUI 的旧品牌色与 framework 页面硬编码差异是历史观察，原始数值及证据完整保留在 memory/semantic/archive/superseded-facts-2026.yaml 的 SF-001，不作为当前 UI 约束。brand-tokens.md 已退役，不再是设计规范权威；保留的 framework 只读页面也不授予品牌或 token 继承。当前 CRM 页面与其他项目一样，视觉和组件规范来自已确认项目或用户在外部工具配置的设计系统，并按实际规范与通用可访问性要求验证。", "confidence": "high", "source": "user-approved BR-PAGE R5 same-root retirement completion 2026-09-05", "evidence": "R5 final Spec actual brand-tokens search returned SF-001 authority clause; user explicitly requested all review issues resolved before main session commit.", "scope": "CRM/FxUI 历史品牌资料检索与当前设计规范来源；历史值仅供追溯", "reviewer": "luca (R5 all-fixes authorization; independent content review before promotion)", "tags": ["crm", "FxUI", "品牌", "brand-tokens", "历史", "design-system"], "valid_until": "", "supersedes": "SF-001", "proposed_stable": true, "stable_requested": true, "status": "CANDIDATE"}
+diff --git a/memory/semantic/archive/superseded-facts-2026.yaml b/memory/semantic/archive/superseded-facts-2026.yaml
+index b044125..d4e5122 100644
+--- a/memory/semantic/archive/superseded-facts-2026.yaml
++++ b/memory/semantic/archive/superseded-facts-2026.yaml
+@@ -11,3 +11,42 @@ facts:
+     reviewer: "luca-delegated"
+     scope: "external-skills,evolution"
+     tags: ["外部skill", "更新复盘", "对标", "采纳", "watcher"]
++  - id: SC-20260609-003
++    domain: skill-rule
++    fact: "跨多 skill 的 HTML/UI 规范必须分两层：① 视觉层（颜色/字号/间距/品牌）走中心继承——brand-tokens.md + framework/tokens.css + office/SKILL.md 品牌与技术约束节——禁止逐 skill 复制（会漂移，违反 DRY），不得新建专门\"规范 skill\"；② 内容结构层（每个报告/产出的章节骨架与占位变量）天生 per-skill，各 skill 自带 references/ 或 templates/ 子目录存放模板文件（格式按产出类型：md 模板或 html 模板均可），先例：figma-demo/templates/demo-template.html（HTML）、deepresearch/references/report-template.md（md）。通用 skill 无法预知每个报告的内容结构，专门规范 skill 属错误耦合。"
++    confidence: high
++    stable: true
++    added: 2026-06-21
++    source: observation
++    evidence: "2026-06-09 session 3-Explore 调研: 仅4个skill产HTML;视觉规范已在 office/SKILL.md §294 集中继承;figma-demo 已有内置模板先例"
++    reviewer: "luca"
++    scope: "luca_gstack skill-os / 任何跨 skill 横切规范选型"
++    tags: ["skill-os", "ui-spec", "template", "architecture", "DRY"]
++  - id: SC-20260610-001
++    domain: skill-rule
++    fact: "figma-layer 路由边界：该 skill 仅适用于「已有 HTML 原型（来源：html-prototype / figma-demo / open-design）一比一还原到 Figma」；用户要求独立设计直接写入 Figma（无上游 index.html）时不走 figma-layer，改走 figma-generate-design / figma-use。routing-map 含裸词「Figma」触发器，存在结构性误命中风险；执行前必须 pre-flight 核查 docs/prototype/*/index.html 是否存在，不存在则拒绝路由并提示用户先出原型或改用独立设计 skill。"
++    confidence: high
++    stable: true
++    added: 2026-06-21
++    source: observation
++    evidence: "2026-06-10 session：用户给 Figma URL 要求模型独立设计客户列表，route-guard 两次命中 figma-layer；读 SKILL.md 确认职责不符（保险层=1:1还原非独立设计），用户明确确认不用 figma-layer"
++    reviewer: "luca"
++    scope: "figma-layer / route-guard figma 类路由"
++    tags: ["figma-layer", "figma-use", "routing"]
++  - id: SF-001
++    domain: crm
++    fact: "纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25"
++    confidence: high
++    stable: true
++    added: 2026-05-16
++    source: brand-tokens.md
++    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
++
++  - id: SF-002
++    domain: fxui
++    fact: "HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改"
++    confidence: high
++    stable: true
++    added: 2026-05-16
++    source: CLAUDE.md
++
+diff --git a/memory/semantic/promoted-facts.yaml b/memory/semantic/promoted-facts.yaml
+index 283edad..679d533 100644
+--- a/memory/semantic/promoted-facts.yaml
++++ b/memory/semantic/promoted-facts.yaml
+@@ -1,22 +1,5 @@
+ version: 1
+ facts:
+-  - id: SF-001
+-    domain: crm
+-    fact: "纷享销客品牌主色 #FF8000（橙色，--primary/--ring）、主色前景 #FFFFFF、品牌浅色 #FFF7E6（--accent，权威源 brand-tokens.md）；brand-tokens.md 规定背景/正文沿用 shadcn 默认、不做品牌覆盖，但 framework 母版当前硬编码 page-bg #EFF1F3、正文 #181c25"
+-    confidence: high
+-    stable: true
+-    added: 2026-05-16
+-    source: brand-tokens.md
+-    static_fallback: false  # 2026-07-03 移出白名单：CRM profile 专属细节，非宪法级；search-only
+-
+-  - id: SF-002
+-    domain: fxui
+-    fact: "HTML 原型必须基于 framework/ 目录母版，framework/ 为只读保护区不得直接修改"
+-    confidence: high
+-    stable: true
+-    added: 2026-05-16
+-    source: CLAUDE.md
+-
+   - id: SF-003
+     domain: workflow
+     fact: "Skill-first, Graph-optional 架构：每个 skill 默认 standalone 可用，Workflow 仅在用户主动选择流程时启用"
+@@ -283,28 +266,6 @@ facts:
+     reviewer: "luca"
+     scope: "open-design / 任何模板化 HTML 产出"
+     tags: ["open-design", "template", "headless", "html"]
+-  - id: SC-20260609-003
+-    domain: skill-rule
+-    fact: "跨多 skill 的 HTML/UI 规范必须分两层：① 视觉层（颜色/字号/间距/品牌）走中心继承——brand-tokens.md + framework/tokens.css + office/SKILL.md 品牌与技术约束节——禁止逐 skill 复制（会漂移，违反 DRY），不得新建专门\"规范 skill\"；② 内容结构层（每个报告/产出的章节骨架与占位变量）天生 per-skill，各 skill 自带 references/ 或 templates/ 子目录存放模板文件（格式按产出类型：md 模板或 html 模板均可），先例：figma-demo/templates/demo-template.html（HTML）、deepresearch/references/report-template.md（md）。通用 skill 无法预知每个报告的内容结构，专门规范 skill 属错误耦合。"
+-    confidence: high
+-    stable: true
+-    added: 2026-06-21
+-    source: observation
+-    evidence: "2026-06-09 session 3-Explore 调研: 仅4个skill产HTML;视觉规范已在 office/SKILL.md §294 集中继承;figma-demo 已有内置模板先例"
+-    reviewer: "luca"
+-    scope: "luca_gstack skill-os / 任何跨 skill 横切规范选型"
+-    tags: ["skill-os", "ui-spec", "template", "architecture", "DRY"]
+-  - id: SC-20260610-001
+-    domain: skill-rule
+-    fact: "figma-layer 路由边界：该 skill 仅适用于「已有 HTML 原型（来源：html-prototype / figma-demo / open-design）一比一还原到 Figma」；用户要求独立设计直接写入 Figma（无上游 index.html）时不走 figma-layer，改走 figma-generate-design / figma-use。routing-map 含裸词「Figma」触发器，存在结构性误命中风险；执行前必须 pre-flight 核查 docs/prototype/*/index.html 是否存在，不存在则拒绝路由并提示用户先出原型或改用独立设计 skill。"
+-    confidence: high
+-    stable: true
+-    added: 2026-06-21
+-    source: observation
+-    evidence: "2026-06-10 session：用户给 Figma URL 要求模型独立设计客户列表，route-guard 两次命中 figma-layer；读 SKILL.md 确认职责不符（保险层=1:1还原非独立设计），用户明确确认不用 figma-layer"
+-    reviewer: "luca"
+-    scope: "figma-layer / route-guard figma 类路由"
+-    tags: ["figma-layer", "figma-use", "routing"]
+   - id: SC-20260612-001
+     domain: skill-rule
+     fact: "skill-os 文档拆分判据：外移收益取决于模板使用时机——「执行到 Phase N 才加载」的外移有真实跳过收益（brainstorm/ux-brainstorm/design-brief Phase-gated 模板均属此类）；「读完主文件立刻全用」的外移是零收益改加载顺序+多一次工具调用（plan-agent 出计划模板即此类，已在 2026-06-11 拆分审计中确认暂缓）。提任何文件拆分候选前先核使用时机。"
+@@ -944,3 +905,50 @@ facts:
+     evidence: "2026-08-30 mattpocock six-skills flow review FC-MAINCHAIN-COMPILE-BARRIER-007：selected preset 先编译代码 U-ID 而 task-plan 后生成，导致旧授权越权、placeholder 扩权或流程死路；源计划同上"
+     reviewer: "luca"
+     scope: "Plan Agent 编排先产规格/任务图、后进入代码实现的多阶段 workflow"
++  - id: SC-20260905-001
++    domain: fxui
++    fact: "framework/ 为只读参考资产；HTML 原型不再强制基于本地母版，视觉与组件约束来自当前已确认项目或用户在外部工具配置的设计系统。"
++    confidence: high
++    stable: true
++    added: 2026-09-08
++    source: "user-approved BR-PAGE plan S1/S2/S9 and U-008, session 01a06adf continuation 2026-09-05"
++    evidence: "framework-audit/2026-09-05-page-library-design-flow-branch-plan.md §5/S9 and SF-002治理路径; b4_inventory independent text review PASS 2026-09-05"
++    reviewer: "luca-approved U-008; independent b4_inventory text review"
++    supersedes: "SF-002"
++    scope: "framework/meta; HTML prototype source and readonly assets; no external write authority"
++  - id: SC-20260905-002
++    domain: skill-rule
++    fact: "跨多 skill 的 HTML/UI 规范仍分两层：视觉层继承当前已确认项目或用户在外部工具配置的设计系统，并记录实际规范来源；不再把已退役的 brand-tokens.md、旧框架 token 或 office 品牌段当作强制权威。共享的视觉约束避免逐 skill 复制，以免漂移；不得仅为重复规范新建专门规范 skill。内容结构层的章节骨架和占位变量仍由各 skill 的 references/ 或 templates/ 维护，保留既有 Markdown/HTML 模板用途与通用 DRY 原则。"
++    confidence: high
++    stable: true
++    added: 2026-09-08
++    source: "user-approved BR-PAGE R5 review repair 2026-09-05"
++    evidence: "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。"
++    reviewer: "luca (R5 repair authorization; independent content review before promotion)"
++    supersedes: "SC-20260609-003"
++    scope: "luca_gstack skill-os / 跨 skill HTML/UI 规范选型与内容模板；当前设计系统优先"
++    tags: ["skill-os", "ui-spec", "HTML", "规范", "template", "architecture", "DRY", "brand-tokens"]
++  - id: SC-20260905-003
++    domain: skill-rule
++    fact: "figma-layer 已从 luca_gstack 的 skill、命令、Codex alias 与活动路由退役；已有 HTML 原型也不再路由到它，不执行其原型文件 preflight。现有原型保留独立 HTML、figma-demo、MagicPath 与 muse-proto-gen 的已授权用法；用户明确要求独立 Figma 设计时，按当前可用的官方 Figma skill 与工具合同执行，先核对真实用户意图及目标权限，不把关键词 Figma 或 HTML 原型存在当作工具切换或外部写入授权。"
++    confidence: high
++    stable: true
++    added: 2026-09-08
++    source: "user-approved BR-PAGE R5 review repair 2026-09-05"
++    evidence: "framework-audit/2026-09-05-page-library-overall-review.md Spec S-01; user: 那你就全部都解决完以后告诉我完成，然后我交给主 session 去提交。"
++    reviewer: "luca (R5 repair authorization; independent content review before promotion)"
++    supersedes: "SC-20260610-001"
++    scope: "luca_gstack figma-layer 退役后的 HTML/Figma 路由与输出边界"
++    tags: ["figma-layer", "Figma", "HTML", "routing", "retirement", "figma-use"]
++  - id: SC-20260905-004
++    domain: crm
++    fact: "CRM/FxUI 的旧品牌色与 framework 页面硬编码差异是历史观察，原始数值及证据完整保留在 memory/semantic/archive/superseded-facts-2026.yaml 的 SF-001，不作为当前 UI 约束。brand-tokens.md 已退役，不再是设计规范权威；保留的 framework 只读页面也不授予品牌或 token 继承。当前 CRM 页面与其他项目一样，视觉和组件规范来自已确认项目或用户在外部工具配置的设计系统，并按实际规范与通用可访问性要求验证。"
++    confidence: high
++    stable: true
++    added: 2026-09-08
++    source: "user-approved BR-PAGE R5 same-root retirement completion 2026-09-05"
++    evidence: "R5 final Spec actual brand-tokens search returned SF-001 authority clause; user explicitly requested all review issues resolved before main session commit."
++    reviewer: "luca (R5 all-fixes authorization; independent content review before promotion)"
++    supersedes: "SF-001"
++    scope: "CRM/FxUI 历史品牌资料检索与当前设计规范来源；历史值仅供追溯"
++    tags: ["crm", "FxUI", "品牌", "brand-tokens", "历史", "design-system"]
+diff --git a/memory/semantic/reviews.jsonl b/memory/semantic/reviews.jsonl
+index d8de777..9ba763b 100644
+--- a/memory/semantic/reviews.jsonl
++++ b/memory/semantic/reviews.jsonl
+@@ -168,3 +168,15 @@
+ {"candidate_id": "SC-20260828-007", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-02T03:40:54.345815+00:00", "source": "consolidate_memory.py"}
+ {"candidate_id": "SC-20260830-001", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-02T03:40:54.346690+00:00", "source": "consolidate_memory.py"}
+ {"candidate_id": "SC-20260830-002", "decision": "promoted", "reviewer": "luca", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-02T03:40:54.347517+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-001", "decision": "approved_stable", "reviewer": "luca-approved U-008; b4_inventory independent PASS", "reason": "人工闸门放行：proposed_stable 置 True", "reviewed_at": "2026-09-05T12:13:31.772773+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-002", "decision": "approved_stable", "reviewer": "luca (explicit R5 fix authorization; r5_memory_content_review PASS)", "reason": "人工闸门放行：proposed_stable 置 True", "reviewed_at": "2026-09-05T13:02:25.019138+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-003", "decision": "approved_stable", "reviewer": "luca (explicit R5 fix authorization; r5_memory_content_review PASS)", "reason": "人工闸门放行：proposed_stable 置 True", "reviewed_at": "2026-09-05T13:02:25.019645+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-004", "decision": "approved_stable", "reviewer": "luca (R5 all-fixes authorization; independent r5_final_spec content PASS)", "reason": "人工闸门放行：proposed_stable 置 True", "reviewed_at": "2026-09-05T13:10:55.988200+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-001", "decision": "promoted", "reviewer": "luca-approved U-008; independent b4_inventory text review", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-08T03:25:57.349665+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-002", "decision": "promoted", "reviewer": "luca (R5 repair authorization; independent content review before promotion)", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-08T03:25:57.351379+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-003", "decision": "promoted", "reviewer": "luca (R5 repair authorization; independent content review before promotion)", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-08T03:25:57.352750+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260905-004", "decision": "promoted", "reviewer": "luca (R5 all-fixes authorization; independent content review before promotion)", "reason": "promotion_ready review queue item", "reviewed_at": "2026-09-08T03:25:57.354395+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260609-003", "decision": "archived_superseded", "reviewer": "replay verified September 5 approval; memory audit 2026-09-08", "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml", "reviewed_at": "2026-09-08T03:25:57.464536+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SC-20260610-001", "decision": "archived_superseded", "reviewer": "replay verified September 5 approval; memory audit 2026-09-08", "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml", "reviewed_at": "2026-09-08T03:25:57.464654+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SF-001", "decision": "archived_superseded", "reviewer": "replay verified September 5 approval; memory audit 2026-09-08", "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml", "reviewed_at": "2026-09-08T03:25:57.464722+00:00", "source": "consolidate_memory.py"}
++{"candidate_id": "SF-002", "decision": "archived_superseded", "reviewer": "replay verified September 5 approval; memory audit 2026-09-08", "reason": "被后续 stable fact 声明 supersedes，移入 superseded-facts-2026.yaml", "reviewed_at": "2026-09-08T03:25:57.464822+00:00", "source": "consolidate_memory.py"}
+diff --git a/memory/semantic/static-fallback-allowlist.txt b/memory/semantic/static-fallback-allowlist.txt
+index f9e823b..3040064 100644
+--- a/memory/semantic/static-fallback-allowlist.txt
++++ b/memory/semantic/static-fallback-allowlist.txt
+@@ -1,6 +1,6 @@
+ # Static Fallback 白名单 — 只有宪法级/红线事实才镜像进 CLAUDE.md 的每-session「关键约束速查」节。
+ #
+-# 准则：换任何任务都必须遵守、且脚本失效时也必须在场的事实——品牌锁 / framework 只读 /
++# 准则：换任何任务都必须遵守、且脚本失效时也必须在场的事实——framework 只读 /
+ # 架构定位 / 路由红线 / 记忆红线。niche 操作型事实（figma 字体、OD headless、claude -p、
+ # 融合落地坑等）只留 promoted-facts.yaml，按需 search_memory.py 检索，不进本节。
+ #
+@@ -12,8 +12,8 @@
+ # 2026-07-03（全量搭建 review P2-3）：SF-001/SF-004 是 CRM/FxUI profile 专属细节
+ # （品牌色具体值/组件库布局清单），非"换任何任务都必须遵守"的宪法级——移出白名单，
+ # 转 search-only（memory/scripts/search_memory.py "brand" / "fxui"）。CRM 任务激活时
+-# 按 CONTEXT.md「激活条件」读取 brand-tokens.md/component-map.md 全文，不依赖本节镜像。
+-SF-002
++# 当前业务 profile 按 CONTEXT.md 激活；视觉规范来自已确认项目或外部设计系统，不依赖旧品牌/技术映射。
++SC-20260905-001
+ SF-003
+ SF-005
+ SC-20260523-001

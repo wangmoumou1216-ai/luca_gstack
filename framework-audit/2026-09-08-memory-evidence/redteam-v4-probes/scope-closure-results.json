@@ -1,0 +1,172 @@
+[
+  {
+    "kind": "actual_v3_resume",
+    "fallback": false,
+    "scope": null,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "archived_raw_exact": true
+  },
+  {
+    "kind": "actual_v3_resume",
+    "fallback": false,
+    "scope": false,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "archived_raw_exact": true
+  },
+  {
+    "kind": "actual_v3_resume",
+    "fallback": false,
+    "scope": 0,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "archived_raw_exact": true
+  },
+  {
+    "kind": "actual_v3_resume",
+    "fallback": true,
+    "scope": null,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "archived_raw_exact": true
+  },
+  {
+    "kind": "actual_v3_resume",
+    "fallback": true,
+    "scope": false,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "archived_raw_exact": true
+  },
+  {
+    "kind": "actual_v3_resume",
+    "fallback": true,
+    "scope": 0,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "archived_raw_exact": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": false,
+    "scope": null,
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": false,
+    "scope": false,
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": false,
+    "scope": 0,
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "ineligible",
+    "fallback": false,
+    "scope": "missing",
+    "omitted": true,
+    "no_write": true
+  },
+  {
+    "kind": "ineligible",
+    "fallback": false,
+    "scope": "empty",
+    "omitted": true,
+    "no_write": true
+  },
+  {
+    "kind": "ineligible",
+    "fallback": false,
+    "scope": "blank",
+    "omitted": true,
+    "no_write": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": false,
+    "scope": "framework",
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": true,
+    "scope": null,
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": true,
+    "scope": false,
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": true,
+    "scope": 0,
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  },
+  {
+    "kind": "ineligible",
+    "fallback": true,
+    "scope": "missing",
+    "omitted": true,
+    "no_write": true
+  },
+  {
+    "kind": "ineligible",
+    "fallback": true,
+    "scope": "empty",
+    "omitted": true,
+    "no_write": true
+  },
+  {
+    "kind": "ineligible",
+    "fallback": true,
+    "scope": "blank",
+    "omitted": true,
+    "no_write": true
+  },
+  {
+    "kind": "fresh_recovery",
+    "fallback": true,
+    "scope": "framework",
+    "two_audit_faults_retain_evidence": true,
+    "scope_source_revocation_rejection_blocked": true,
+    "audit_once": true,
+    "fact_unchanged": true,
+    "raw_archived": true
+  }
+]

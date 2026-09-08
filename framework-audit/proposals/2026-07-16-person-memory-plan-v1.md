@@ -1,5 +1,7 @@
 # person 记忆层 —— 方案 v1
 
+> **状态校准（2026-09-06）：SUPERSEDED / HISTORICAL。** 本版本未执行，已由 v2–v5 逐轮取代；当前完成态以 v5-exec 及 commits `5672fa5` / `c3fba4b` 为准。以下正文保留为审计链证据。
+
 > 状态：**提案，未执行任何持久改动**。本 session 的全部实验跑在隔离 config dir + 临时 git 仓内，已实证零泄漏（§2 V0）并清理。
 > 前置：`2026-07-15-person-memory-fragmentation.md`（昨案，裂缝 S1–S7 继承）、`2026-07-16-person-memory-unification-plan.md`（v0，红队判死）、`...-REDTEAM.md`（裁决）。
 > 环境：Claude Code `2.1.211`。

@@ -17,10 +17,15 @@ Usage:
 import argparse
 import json
 import os
+import sys
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from consolidate_memory import build_queue, promote_ready_candidates
+from consolidate_memory import (
+    build_queue,
+    promote_ready_candidates,
+    semantic_id_lock,
+)
 
 def _resolve_root():
     """记忆根解析（P1/FIX-1）：统一走 _memroot.resolve_memory_root——含 store-shape 哨兵、
@@ -80,17 +85,7 @@ def has_review_metadata(candidate: dict) -> bool:
     return all(str(candidate.get(field, "")).strip() for field in ("evidence", "scope", "reviewer"))
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--days", type=int, default=7, help="Age threshold in days for promotion eligibility")
-    parser.add_argument("--promote", action="store_true", help="actually promote eligible candidates")
-    parser.add_argument("--reviewer", default="", help="reviewer required when --promote is used")
-    args = parser.parse_args()
-
-    if args.promote and not args.reviewer.strip():
-        print("--promote requires --reviewer", file=__import__("sys").stderr)
-        return 2
-
+def review_candidates(args, queue=None) -> int:
     if not CANDIDATES.exists():
         print("No candidates file found.")
         return 0
@@ -98,7 +93,10 @@ def main() -> int:
     now = datetime.now(timezone.utc)
     promoted_ids = load_promoted_ids()
     promoted, skipped = [], []
-    queue, all_candidates, _candidate_rows, _promoted_facts, _decisions, _episode_rows = build_queue()
+    if queue is None:
+        queue, all_candidates, _candidate_rows, _promoted_facts, _decisions, _episode_rows = build_queue()
+    else:
+        queue, all_candidates, _candidate_rows, _promoted_facts, _decisions, _episode_rows = queue
     promotion_ready_by_id = {item["id"]: item for item in queue.get("promotion_ready", [])}
     ready_after_age = []
 
@@ -145,7 +143,7 @@ def main() -> int:
         else:
             skipped.append((cid, "eligible; rerun with --promote after review"))
 
-    if args.promote and ready_after_age:
+    if args.promote:
         promoted = promote_ready_candidates(all_candidates, ready_after_age, dry_run=False)
         facts_by_id = {candidate.get("id"): candidate.get("fact", "") for candidate in all_candidates}
         for cid in promoted:
@@ -156,6 +154,46 @@ def main() -> int:
 
     print(f"\nSummary: {len(promoted)} promoted, {len(skipped)} skipped")
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--days", type=int, default=7, help="Age threshold in days for promotion eligibility")
+    parser.add_argument("--promote", action="store_true", help="actually promote eligible candidates")
+    parser.add_argument("--reviewer", default="", help="reviewer required when --promote is used")
+    args = parser.parse_args()
+
+    if args.promote and not args.reviewer.strip():
+        print("--promote requires --reviewer", file=sys.stderr)
+        return 2
+
+    if not args.promote:
+        return review_candidates(args)
+
+    try:
+        preflight_queue = build_queue()
+        collisions = preflight_queue[0].get("candidate_id_collisions", [])
+        if collisions:
+            ids = ", ".join(item["id"] for item in collisions)
+            print(
+                f"semantic candidate ID collision detected ({ids}); refusing promotion",
+                file=sys.stderr,
+            )
+            return 2
+        with semantic_id_lock():
+            queue = build_queue()
+            collisions = queue[0].get("candidate_id_collisions", [])
+            if collisions:
+                ids = ", ".join(item["id"] for item in collisions)
+                print(
+                    f"semantic candidate ID collision detected ({ids}); refusing promotion",
+                    file=sys.stderr,
+                )
+                return 2
+            return review_candidates(args, queue=queue)
+    except (OSError, RuntimeError, ValueError) as exc:
+        print(f"semantic candidate ID lock unavailable; refusing promotion: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

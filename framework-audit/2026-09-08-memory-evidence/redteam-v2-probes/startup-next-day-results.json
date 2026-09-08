@@ -1,0 +1,7 @@
+{
+  "scope": "two exact frozen startup blocks; real files; detached scheduling replaced by spy, no child runtime claim",
+  "stdout": "[session-restore] 🌱 已后台触发每日记忆治理（今日首次启动；运行留痕 /tmp/luca-gstack-governance.log）\n",
+  "spawns": 1,
+  "previousFailureVisible": false,
+  "previousFailedMarkerRetained": "failed"
+}

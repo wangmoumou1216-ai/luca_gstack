@@ -1,0 +1,38 @@
+--- v2/scripts/test-hooks.mjs
++++ final/scripts/test-hooks.mjs
+@@ -1035,8 +1035,8 @@
+   assert.match(bogus, /no matching records/, '不存在的项目应零命中（过滤有区分性）');
+ 
+   const noFilter = runSearch(['work', '--layer', 'episodic']);
+-  assert.match(noFilter, /EP-1/);
+-  assert.match(noFilter, /EP-2/, '不加过滤时 EP-2 应出现 → 证明 --project 真的删掉了它');
++  assert.doesNotMatch(noFilter, /EP-1|EP-3/, 'NO_PIN 不召回带明确项目归属的历史');
++  assert.match(noFilter, /EP-2/, '无 project 字段的历史仍保留原兼容读取行为');
+   console.log('PASS search_memory --project 作用域过滤有区分性（含历史记录 topic 兜底）');
+ }
+ 
+--- v2/memory/tests/test_pending_disposition_recovery.py
++++ final/memory/tests/test_pending_disposition_recovery.py
+@@ -220,11 +220,12 @@
+             with self.subTest(target=target), tempfile.TemporaryDirectory() as tmp:
+                 obs, pending, source, args = self._fixture(tmp)
+                 outside = Path(tmp) / "unrelated"
++                outside_bytes = b'{"event":"EXISTING"}\n' if target == "manifest" else source
+                 if target == "archive":
+                     outside.mkdir()
+                     (obs / "pending-extraction-resolved").symlink_to(outside, target_is_directory=True)
+                 else:
+-                    outside.write_bytes(source)
++                    outside.write_bytes(outside_bytes)
+                     link = obs / self.dg.PENDING_MANIFEST if target == "manifest" else pending
+                     if link.exists():
+                         link.unlink()
+@@ -234,7 +235,7 @@
+                 if target == "archive":
+                     self.assertEqual(list(outside.iterdir()), [])
+                 else:
+-                    self.assertEqual(outside.read_bytes(), source)
++                    self.assertEqual(outside.read_bytes(), outside_bytes)
+ 
+     def test_retry_before_rename_reuses_durable_decision(self):
+         with tempfile.TemporaryDirectory() as tmp:

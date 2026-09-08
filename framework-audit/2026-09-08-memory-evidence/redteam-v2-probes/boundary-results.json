@@ -1,0 +1,55 @@
+[
+  {
+    "name": "boundary-different-fact",
+    "reviews": null,
+    "candidate_retained": true,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"same approved claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"source-A\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": []
+  },
+  {
+    "name": "boundary-different-source",
+    "reviews": null,
+    "candidate_retained": true,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"same approved claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"source-A\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": []
+  },
+  {
+    "name": "boundary-escaped-fact",
+    "reviews": null,
+    "candidate_retained": true,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"a\\\\\\\"quoted\\\\\\\" claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"source-A\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": []
+  },
+  {
+    "name": "boundary-escaped-source",
+    "reviews": "{\"candidate_id\": \"SC-20260908-901\", \"decision\": \"promoted\", \"reviewer\": \"human\", \"reason\": \"recovered audit for the same already persisted promotion_ready candidate\", \"reviewed_at\": \"2026-09-08T04:32:24.944104+00:00\", \"source\": \"consolidate_memory.py\"}\n",
+    "candidate_retained": false,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"same approved claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"file\\\\nreference\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": [
+      "{\"id\": \"SC-20260908-901\", \"domain\": \"tech\", \"fact\": \"same approved claim\", \"confidence\": \"high\", \"proposed_stable\": true, \"evidence\": \"reviewed evidence\", \"scope\": \"framework\", \"reviewer\": \"human\", \"source\": \"file\\nreference\", \"tags\": [\"recovery\"]}\n"
+    ]
+  },
+  {
+    "name": "boundary-rejected",
+    "reviews": "{\"candidate_id\": \"SC-20260908-901\", \"decision\": \"rejected\", \"reviewer\": \"human\", \"reason\": \"withdrawn\", \"reviewed_at\": \"2026-09-08T04:32:24.780155+00:00\", \"source\": \"consolidate_memory.py\"}\n",
+    "candidate_retained": true,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"same approved claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"source-A\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": []
+  },
+  {
+    "name": "boundary-same",
+    "reviews": "{\"candidate_id\": \"SC-20260908-901\", \"decision\": \"promoted\", \"reviewer\": \"human\", \"reason\": \"recovered audit for the same already persisted promotion_ready candidate\", \"reviewed_at\": \"2026-09-08T04:32:24.464996+00:00\", \"source\": \"consolidate_memory.py\"}\n",
+    "candidate_retained": false,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"same approved claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"source-A\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": [
+      "{\"id\": \"SC-20260908-901\", \"domain\": \"tech\", \"fact\": \"same approved claim\", \"confidence\": \"high\", \"proposed_stable\": true, \"evidence\": \"reviewed evidence\", \"scope\": \"framework\", \"reviewer\": \"human\", \"source\": \"source-A\", \"tags\": [\"recovery\"]}\n"
+    ]
+  },
+  {
+    "name": "boundary-unapproved",
+    "reviews": null,
+    "candidate_retained": true,
+    "promoted_yaml": "version: 1\nfacts:\n  - id: SC-20260908-901\n    domain: tech\n    fact: \"same approved claim\"\n    confidence: high\n    stable: true\n    added: 2026-09-08\n    source: \"source-A\"\n    evidence: \"reviewed evidence\"\n    reviewer: \"human\"\n    scope: \"framework\"\n    tags: [\"recovery\"]\n",
+    "archived_raw": []
+  }
+]

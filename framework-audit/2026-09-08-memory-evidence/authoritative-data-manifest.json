@@ -1,0 +1,18 @@
+{
+  "role": "read-only audit snapshot; live authority remains MEMORY_ROOT",
+  "baseline": "a7d5fe35caa43a235e0f364ba1db1ad8517eaca8",
+  "files": {
+    "memory/episodic/archive/2026.jsonl": "edaa7228537b4022ff62e35044496cf61af71cebc3db5dc5be245bbf819b1204",
+    "memory/episodic/index.jsonl": "fc4eedfdc1c4c2ea1301fc003fd1100d63fecac71df5bc73a73082eaca4b5525",
+    "memory/semantic/archive/candidates-2026.jsonl": "eec8583eb658e34b69054a9278aa7fc2f9d719f83cf524d5668bb664ad20689c",
+    "memory/semantic/archive/superseded-facts-2026.yaml": "9c319f2aad4489ea8671eda8c5b37d66efaf53819685eaecf768095c7504b98b",
+    "memory/semantic/promoted-facts.yaml": "b624e791c8551f8158831493ca9add403227dd8d7dc1e3b79c211fa951b5e8f6",
+    "memory/semantic/reviews.jsonl": "2920a93b041000ac1da6c2acebf4e486b4218ce42d2b876a914257d53a979a67",
+    "memory/semantic/static-fallback-allowlist.txt": "bd51cc59d214501adb3968e43f8a9c1f1156df7b8004ed69461f4fa2a75b4870"
+  },
+  "excluded": [
+    "memory/evals/eval-log.jsonl",
+    "memory/retrieval-log.jsonl"
+  ],
+  "commit_disposition": "Retained as working data; old checkout pre-commit invokes project alias checks outside NO_PIN scope. Patch and hashes are versioned with the current framework audit; do not bypass hooks."
+}

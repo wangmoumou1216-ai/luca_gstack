@@ -7,11 +7,15 @@
 evidence/scope/reviewer 齐全，且非重复/冲突），本脚本不直接写 promoted-facts.yaml（SC-20260523-003）。
 冲突/重复/stale 等需要判断的，只列进 digest 等你裁决，不自动处理。
 
-永远 exit 0，绝不打断调度。
+无参数的每日调度永远 exit 0；显式 pending-disposition CLI 对失败返回非零，避免伪报处置成功。
 """
 import json
+import argparse
+import fcntl
+import hashlib
 import os
 import re
+import stat
 import subprocess
 import sys
 import time
@@ -43,13 +47,360 @@ def _resolve_root():
 
 
 ROOT = _resolve_root()
-SCRIPTS = ROOT / "memory" / "scripts"
+# MEMORY_ROOT selects data only. Execute the code that owns this governance entry,
+# otherwise a redirected store silently dispatches an older checkout's writer.
+SCRIPTS = Path(__file__).resolve().parent
+CODE_ROOT = SCRIPTS.parents[1]
 DIGESTS = ROOT / "memory" / "digests"
 EPISODIC_INDEX = ROOT / "memory" / "episodic" / "index.jsonl"
 GLOBAL_MEMORY_DIR = Path(os.environ.get(
     "GLOBAL_MEMORY_DIR",
     str(Path.home() / ".claude" / "projects" / "-Users-luca-Desktop-luca-gstack" / "memory"),
 ))
+
+
+PENDING_STATUSES = ("QUALIFIED", "NO_SIGNAL", "UNRESOLVED")
+PENDING_MANIFEST = "pending-extraction-dispositions.jsonl"
+PENDING_CLAIMS_DIR = ".pending-extraction-claims"
+
+
+def _pending_metadata(content: str) -> dict:
+    """Read capture locators without interpreting the pending's semantic content."""
+    fields = {
+        "Session-ID": "session_id",
+        "Captured-At": "captured_at",
+        "Topic": "topic",
+        "Project": "project",
+        "Harness": "harness",
+        "Transcript-Path": "transcript_path",
+    }
+    out = {key: "unavailable" for key in fields.values()}
+    for line in content.splitlines():
+        for label, key in fields.items():
+            prefix = f"> {label}:"
+            if line.startswith(prefix):
+                out[key] = line[len(prefix):].strip() or "unavailable"
+    return out
+
+
+def _validate_pending_path(raw_path: str, *, allow_missing: bool = False) -> Path:
+    candidate = Path(raw_path).expanduser()
+    if not candidate.is_absolute():
+        candidate = Path.cwd() / candidate
+    if candidate.is_symlink():
+        raise ValueError("pending target must not be a symlink")
+    pending = candidate.resolve(strict=not allow_missing)
+    if pending.exists() and not pending.is_file():
+        raise ValueError("pending target must be a regular file")
+    if not pending.exists() and not allow_missing:
+        raise ValueError("pending target must be a regular file")
+    if allow_missing and not pending.parent.is_dir():
+        raise ValueError("pending observability directory does not exist")
+    if pending.parent.name != "observability" or pending.parent.parent.name != ".claude":
+        raise ValueError("pending target must live directly under .claude/observability")
+    if pending.name != "pending-extraction.md" and not re.fullmatch(r"pending-extraction-.+\.md", pending.name):
+        raise ValueError("target is not an active pending-extraction markdown file")
+    return pending
+
+
+def _append_pending_event(handle, record: dict) -> None:
+    handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+    handle.flush()
+    os.fsync(handle.fileno())
+
+
+def _open_pending_manifest(manifest: Path):
+    """Do not follow a replaced leaf or append to a non-regular evidence file."""
+    fd = os.open(manifest, os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+        os.close(fd)
+        raise RuntimeError("pending manifest must be a regular file")
+    return os.fdopen(fd, "a+", encoding="utf-8")
+
+
+def _validate_archive_directory(pending: Path) -> Path:
+    directory = pending.parent / "pending-extraction-resolved"
+    if directory.is_symlink() or directory.resolve() != directory:
+        raise RuntimeError("pending archive directory must not be a symlink")
+    if directory.exists() and not directory.is_dir():
+        raise RuntimeError("pending archive directory must be a directory")
+    return directory
+
+
+def _read_locked_pending_manifest(handle) -> list:
+    """Parse the append-only manifest strictly before a recovery mutation."""
+    handle.flush()
+    handle.seek(0)
+    events = []
+    for line_number, raw_line in enumerate(handle, start=1):
+        if not raw_line.endswith("\n"):
+            raise RuntimeError(f"pending manifest line {line_number} is incomplete")
+        if not raw_line.strip():
+            continue
+        try:
+            event = json.loads(raw_line)
+        except Exception as exc:  # noqa: BLE001 - recovery must fail closed on uncertain evidence
+            raise RuntimeError(f"pending manifest line {line_number} is not valid JSON") from exc
+        if not isinstance(event, dict):
+            raise RuntimeError(f"pending manifest line {line_number} is not an event object")
+        events.append(event)
+    return events
+
+
+def _verified_recovery_archive(pending: Path, record: dict):
+    """Return the exact archived evidence, or None when the recorded move never happened."""
+    disposition_id = record.get("disposition_id")
+    if not isinstance(disposition_id, str) or not re.fullmatch(r"PD-[A-Za-z0-9._-]+", disposition_id):
+        raise RuntimeError("recoverable disposition has an invalid disposition_id")
+    if record.get("source_name") != pending.name:
+        raise RuntimeError("recoverable disposition source_name does not match pending path")
+    source_sha = record.get("source_sha256")
+    if not isinstance(source_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", source_sha):
+        raise RuntimeError("recoverable disposition has an invalid source hash")
+    if record.get("active_retained") is not True or record.get("move_state") != "PENDING":
+        raise RuntimeError("recoverable disposition does not describe a pending archive move")
+
+    expected_archive = (
+        _validate_archive_directory(pending)
+        / f"{pending.stem}-{disposition_id}.md"
+    )
+    if record.get("archive_path") != str(expected_archive):
+        raise RuntimeError("recorded archive path does not match the disposition identity")
+    if expected_archive.is_symlink():
+        raise RuntimeError("recorded archive path must not be a symlink")
+    if not expected_archive.exists():
+        return None
+    if not expected_archive.is_file():
+        raise RuntimeError("recorded archive path is not a regular file")
+    archive_sha = hashlib.sha256(expected_archive.read_bytes()).hexdigest()
+    if archive_sha != source_sha:
+        raise RuntimeError("recorded archive hash does not match durable disposition evidence")
+    return expected_archive
+
+
+def _validate_active_removed_event(record: dict, removed: dict, archive: Path) -> None:
+    expected = {
+        "status": record["status"],
+        "pending_path": record["pending_path"],
+        "source_name": record["source_name"],
+        "source_sha256": record["source_sha256"],
+        "archive_path": str(archive),
+        "active_retained": False,
+        "move_state": "ARCHIVED",
+    }
+    for field, expected_value in expected.items():
+        if removed.get(field) != expected_value:
+            raise RuntimeError(f"ACTIVE_REMOVED {field} does not match disposition evidence")
+
+
+def _recover_pending_disposition(pending: Path, status: str, evidence: str, actor: str) -> dict:
+    """Finish, or confirm, a move whose durable pre-move event already exists."""
+    if status == "UNRESOLVED":
+        raise RuntimeError("UNRESOLVED disposition requires the active pending evidence")
+    manifest = pending.parent / PENDING_MANIFEST
+    if not manifest.is_file() or manifest.is_symlink():
+        raise RuntimeError("active pending is absent and no trustworthy disposition manifest exists")
+
+    with _open_pending_manifest(manifest) as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        # A concurrent process may have recreated or restored the source before this lock was acquired.
+        if pending.exists():
+            raise RuntimeError("active pending reappeared while interrupted-move recovery was waiting")
+        events = _read_locked_pending_manifest(handle)
+        dispositions = {}
+        removed_by_id = {}
+        pending_key = str(pending)
+        for event in events:
+            if event.get("pending_path") != pending_key:
+                continue
+            disposition_id = event.get("disposition_id")
+            if event.get("event") == "DISPOSITION_RECORDED":
+                if disposition_id in dispositions:
+                    raise RuntimeError("ambiguous duplicate DISPOSITION_RECORDED evidence")
+                dispositions[disposition_id] = event
+            elif event.get("event") == "ACTIVE_REMOVED":
+                removed_by_id.setdefault(disposition_id, []).append(event)
+
+        invocation_matches = []
+        for record in dispositions.values():
+            if (
+                record.get("status") != status
+                or record.get("evidence") != evidence
+                or record.get("actor") != actor
+            ):
+                continue
+            archive = _verified_recovery_archive(pending, record)
+            if archive is not None:
+                invocation_matches.append((record, archive))
+
+        if not invocation_matches:
+            raise RuntimeError("active pending is absent and no matching verified archive can recover it")
+        if len(invocation_matches) != 1:
+            raise RuntimeError("ambiguous recovery: multiple matching verified archives exist")
+
+        record, archive = invocation_matches[0]
+        disposition_id = record["disposition_id"]
+        removed_events = removed_by_id.get(disposition_id, [])
+        if len(removed_events) > 1:
+            raise RuntimeError("ambiguous recovery: duplicate ACTIVE_REMOVED evidence exists")
+        if removed_events:
+            _validate_active_removed_event(record, removed_events[0], archive)
+            recovered = False
+            already_complete = True
+        else:
+            _append_pending_event(handle, {
+                "schema_version": 1,
+                "event": "ACTIVE_REMOVED",
+                "disposition_id": disposition_id,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "status": status,
+                "pending_path": pending_key,
+                "source_name": pending.name,
+                "source_sha256": record["source_sha256"],
+                "archive_path": str(archive),
+                "active_retained": False,
+                "move_state": "ARCHIVED",
+                "recovered_after_interrupted_move": True,
+            })
+            recovered = True
+            already_complete = False
+        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+    return {
+        "disposition_id": disposition_id,
+        "status": status,
+        "active_retained": False,
+        "manifest": str(manifest),
+        "archive_path": str(archive),
+        "recovered": recovered,
+        "already_complete": already_complete,
+    }
+
+
+def pending_disposition_cli(argv) -> int:
+    """Record explicit adjudication before an active pending can leave the queue."""
+    parser = argparse.ArgumentParser(prog="daily_governance.py pending-disposition")
+    parser.add_argument("--pending", required=True)
+    parser.add_argument("--status", required=True, choices=PENDING_STATUSES)
+    parser.add_argument("--evidence", required=True)
+    parser.add_argument("--actor", required=True)
+    try:
+        args = parser.parse_args(argv)
+        evidence = " ".join(args.evidence.split()).strip()
+        actor = " ".join(args.actor.split()).strip()
+        if not evidence or evidence.startswith("<") or len(evidence) < 8:
+            raise ValueError("--evidence must contain concrete adjudication evidence")
+        if not actor or actor.startswith("<"):
+            raise ValueError("--actor must identify the adjudicator")
+
+        pending = _validate_pending_path(args.pending, allow_missing=True)
+        if not pending.exists():
+            result = _recover_pending_disposition(pending, args.status, evidence, actor)
+            print(json.dumps(result, ensure_ascii=False))
+            return 0
+        if not pending.is_file():
+            raise ValueError("pending target must be a regular file")
+        source_bytes = pending.read_bytes()
+        source_sha = hashlib.sha256(source_bytes).hexdigest()
+        source_text = source_bytes.decode("utf-8", errors="replace")
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        disposition_id = (
+            f"PD-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')}"
+            f"-{os.getpid()}-{source_sha[:8]}"
+        )
+        manifest = pending.parent / PENDING_MANIFEST
+        quarantine = _validate_archive_directory(pending)
+        archive = quarantine / f"{pending.stem}-{disposition_id}.md"
+        record = {
+            "schema_version": 1,
+            "event": "DISPOSITION_RECORDED",
+            "disposition_id": disposition_id,
+            "recorded_at": now,
+            "status": args.status,
+            "evidence": evidence,
+            "actor": actor,
+            "pending_path": str(pending),
+            "source_name": pending.name,
+            "source_sha256": source_sha,
+            "locator": _pending_metadata(source_text),
+            # This event is fsynced before any rename. Until ACTIVE_REMOVED is appended, the
+            # authoritative state is retained/retryable even for QUALIFIED and NO_SIGNAL.
+            "active_retained": True,
+            "move_state": "NOT_REQUESTED" if args.status == "UNRESOLVED" else "PENDING",
+            "archive_path": None if args.status == "UNRESOLVED" else str(archive),
+        }
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        with _open_pending_manifest(manifest) as handle:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            events = _read_locked_pending_manifest(handle)
+            # Another adjudicator may have moved the same item while this process waited for the lock.
+            if pending.is_symlink() or not pending.is_file() or hashlib.sha256(pending.read_bytes()).hexdigest() != source_sha:
+                raise RuntimeError("active pending changed before disposition could be recorded")
+            # Reuse a durable pre-move decision after rename failure. Conflicting inputs
+            # must not turn an unfinished move into a second, dangling disposition.
+            unfinished = [event for event in events
+                          if event.get("event") == "DISPOSITION_RECORDED"
+                          and event.get("pending_path") == str(pending)
+                          and event.get("source_sha256") == source_sha
+                          and event.get("move_state") == "PENDING"]
+            if len(unfinished) > 1:
+                raise RuntimeError("ambiguous active recovery: multiple durable decisions exist")
+            unresolved_matches = [event for event in events
+                                  if args.status == "UNRESOLVED"
+                                  and event.get("event") == "DISPOSITION_RECORDED"
+                                  and event.get("move_state") == "NOT_REQUESTED"
+                                  and all(event.get(key) == record[key] for key in
+                                          ("status", "pending_path", "source_sha256", "evidence", "actor"))]
+            if unresolved_matches and not unfinished:
+                disposition_id = unresolved_matches[-1]["disposition_id"]
+            elif unfinished:
+                prior = unfinished[0]
+                if any(prior.get(key) != record[key] for key in ("status", "evidence", "actor")):
+                    raise RuntimeError("unfinished disposition requires the exact durable decision inputs")
+                if _verified_recovery_archive(pending, prior) is not None or any(
+                    event.get("event") == "ACTIVE_REMOVED"
+                    and event.get("disposition_id") == prior.get("disposition_id") for event in events
+                ):
+                    raise RuntimeError("active evidence conflicts with an already archived disposition")
+                disposition_id = prior["disposition_id"]
+                archive = Path(prior["archive_path"])
+            else:
+                _append_pending_event(handle, record)
+            if args.status != "UNRESOLVED":
+                _validate_archive_directory(pending)
+                quarantine.mkdir(parents=True, exist_ok=True)
+                if archive.exists() or archive.is_symlink():
+                    raise RuntimeError("archive destination already exists")
+                os.rename(pending, archive)
+                _append_pending_event(handle, {
+                    "schema_version": 1,
+                    "event": "ACTIVE_REMOVED",
+                    "disposition_id": disposition_id,
+                    "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "status": args.status,
+                    "pending_path": str(pending),
+                    "source_name": pending.name,
+                    "source_sha256": source_sha,
+                    "archive_path": str(archive),
+                    "active_retained": False,
+                    "move_state": "ARCHIVED",
+                })
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        print(json.dumps({
+            "disposition_id": disposition_id,
+            "status": args.status,
+            "active_retained": args.status == "UNRESOLVED",
+            "manifest": str(manifest),
+            "archive_path": None if args.status == "UNRESOLVED" else str(archive),
+            "recovered": False,
+            "already_complete": bool(unresolved_matches),
+        }, ensure_ascii=False))
+        return 0
+    except SystemExit:
+        raise
+    except Exception as exc:  # explicit CLI is fail-loud; scheduled governance remains fail-open
+        sys.stderr.write(f"[pending-disposition] {exc}\n")
+        return 2
 
 # 裂脑判别器（P1/FIX-1，2026-07-24 跨-agent 适配）。robust import：subprocess 调用下
 # sys.path[0]=memory/scripts 可直接 from（review_candidates 已同款）；测试经
@@ -136,7 +487,7 @@ def check_model_routing():
     issues = []
     try:
         import yaml
-        routing_path = ROOT / ".claude" / "skill-os" / "model-routing.yaml"
+        routing_path = CODE_ROOT / ".claude" / "skill-os" / "model-routing.yaml"
         if not routing_path.exists():
             return ["model-routing.yaml 不存在（模型路由真值源缺失）"]
         data = yaml.safe_load(routing_path.read_text(encoding="utf-8")) or {}
@@ -152,7 +503,7 @@ def check_model_routing():
                 registered[s] = name
 
         declared = {}
-        skills_dir = ROOT / ".claude" / "skills" / "office"
+        skills_dir = CODE_ROOT / ".claude" / "skills" / "office"
         if skills_dir.is_dir():
             for sk in sorted(skills_dir.iterdir()):
                 f = sk / "SKILL.md"
@@ -184,7 +535,7 @@ def check_model_routing():
                 if sk.name not in declared and sk.name not in registered:
                     issues.append(f"model-routing: 新场景待评估档位——office/{sk.name} 未声明 recommended-model 且未在真值源登记（按 new_scenario_protocol 三问定档）")
         # ② agents/*.md（有 frontmatter 的）：pin 值须与 agents: 登记一致；无 pin 须在 agents_no_pin
-        agents_dir = ROOT / ".claude" / "agents"
+        agents_dir = CODE_ROOT / ".claude" / "agents"
         pinned = {k: str(v) for k, v in (data.get("agents") or {}).items()}
         no_pin = set(data.get("agents_no_pin") or [])
         if agents_dir.is_dir():
@@ -209,7 +560,7 @@ def check_model_routing():
 
         # 模型档速查只在 orchestrator 保留；两个 root adapter 仅保留 model-routing.yaml 指针。
         for md_rel in (".claude/agents/orchestrator.md",):
-            md_path = ROOT / md_rel
+            md_path = CODE_ROOT / md_rel
             if not md_path.is_file():
                 continue
             md_lines = md_path.read_text(encoding="utf-8").splitlines()
@@ -244,7 +595,7 @@ def check_self_model():
     issues = []
     try:
         import yaml
-        sm_path = ROOT / ".claude" / "skill-os" / "evolution" / "self-model.yaml"
+        sm_path = CODE_ROOT / ".claude" / "skill-os" / "evolution" / "self-model.yaml"
         if not sm_path.exists():
             return issues  # 未启用演进子系统时静默跳过
         data = yaml.safe_load(sm_path.read_text(encoding="utf-8")) or {}
@@ -255,7 +606,7 @@ def check_self_model():
             age = (datetime.now(timezone.utc).date() - updated_date).days
             if age > review_days:
                 issues.append(f"self-model: 已 {age} 天未复核（>{review_days}），演进面/缺口/源可能已漂移，建议核对 self-model.yaml + gaps-register.yaml + sources-registry.yaml")
-        gen_path = ROOT / ".claude" / "skill-os" / "evolution" / "self-model.generated.yaml"
+        gen_path = CODE_ROOT / ".claude" / "skill-os" / "evolution" / "self-model.generated.yaml"
         if not gen_path.exists():
             issues.append("self-model: 缺 self-model.generated.yaml，运行 node scripts/build-self-model.mjs 生成实时清单")
     except Exception as e:  # noqa: BLE001 — 校验绝不打断治理
@@ -275,7 +626,7 @@ def check_gap_recheck():
     issues = []
     try:
         import yaml
-        gaps_path = ROOT / ".claude" / "skill-os" / "evolution" / "gaps-register.yaml"
+        gaps_path = CODE_ROOT / ".claude" / "skill-os" / "evolution" / "gaps-register.yaml"
         if not gaps_path.exists():
             return issues  # 未启用演进子系统时静默跳过
         data = yaml.safe_load(gaps_path.read_text(encoding="utf-8")) or {}
@@ -464,7 +815,7 @@ def check_memory_integrity_issues():
             # 此前只有 person 记忆有观察者，方案里的 KILL/[BLOCKING] 无人复查 → 搁置退化成遗忘
             # （源: feedback_blocked-proposals-need-revisit，实证 2026-07-16 person-memory 整批）。
             # 最多列 4 个防刷屏，对齐既有惯例。
-            stalled = getattr(mod, "check_stalled_proposals", lambda *_: [])(ROOT)
+            stalled = getattr(mod, "check_stalled_proposals", lambda *_: [])(CODE_ROOT)
             if stalled:
                 shown = "、".join(f"{d['file']}({d['age_days']}天)" for d in stalled[:4])
                 more = f"，另 {len(stalled) - 4} 份" if len(stalled) > 4 else ""
@@ -499,7 +850,7 @@ def measure_context_injection():
         gmd = GLOBAL_MEMORY_DIR / "MEMORY.md"
         if gmd.is_file():
             parts["person索引"] = len(gmd.read_text(encoding="utf-8"))
-        claude_md = ROOT / "CLAUDE.md"
+        claude_md = CODE_ROOT / "CLAUDE.md"
         if claude_md.is_file():
             parts["CLAUDE.md"] = len(claude_md.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
@@ -783,10 +1134,48 @@ def check_benchmark_drift(registry_path, marker_path, today, fetch_latest=None):
     return issues
 
 
-LOOP_PENDING_ALERT = 5   # pending-extraction 积压 >= 此值 → 捕获→消化链疑似断
+LOOP_PENDING_STALE_DAYS = 7  # 认领只是展示，只有 disposition 能证明执行了裁决
 ROOT_ADAPTER_SOFT_BUDGET = 24576  # 24 KiB early warning; hard 30 KiB is enforced by agent-context checks.
 LOOP_STALE_DAYS = 3      # marker 领先 episodic >= 此值 → 疑 capture(Stop hook/SESSION_SYNC) 停摆
 DORMANT_LOOPS = "muse-loop gen↔judge"  # by-design 零真实运行，永不告警（A2 DORMANT 白名单）
+
+
+def _active_pending_files(observability_dir: Path):
+    if not observability_dir.is_dir():
+        return []
+    out = []
+    for path in observability_dir.iterdir():
+        if not path.is_file():
+            continue
+        if path.name == "pending-extraction.md" or re.fullmatch(r"pending-extraction-.+\.md", path.name):
+            out.append(path)
+    return sorted(out, key=lambda path: (path.stat().st_mtime, path.name))
+
+
+def _read_pending_manifest(observability_dir: Path):
+    events = []
+    manifest = observability_dir / PENDING_MANIFEST
+    if not manifest.is_file():
+        return events
+    try:
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            try:
+                event = json.loads(line)
+            except Exception:  # noqa: BLE001 — one corrupt line must not hide later append-only evidence
+                continue
+            if isinstance(event, dict):
+                event["_observability_dir"] = str(observability_dir.resolve())
+                events.append(event)
+    except OSError:
+        pass
+    return events
+
+
+def _iso_date(value):
+    try:
+        return datetime.strptime(str(value)[:10], "%Y-%m-%d")
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def check_loop_health(observability_dir, episodic_index, digests_dir,
@@ -807,19 +1196,77 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         fork_home = Path(fork_home)
         today_dt = datetime.strptime(today, "%Y-%m-%d")
 
-        # 1. pending-extraction 积压——捕获侧(session-sync)把 pending 写在各自 projectRoot，
-        # 真实 session 多在 fork：只查权威库会在事故最可能发生的仓失明（评审切面 c C1，2026-07-15）。
-        # fork_home 由调用方经 GOVERNANCE_CALLER_ROOT 传入（session-restore spawn 时注入自己的
-        # projectRoot）；母版自跑时两目录相同，union 退化为单目录。
+        # 1. pending-extraction consumer health. Raw session volume is not a failure: Stop deliberately
+        # captures one pending per substantive session. Health is instead "old unresolved evidence with
+        # no recent disposition". Claims measure reminders, not actual adjudication.
         pend_dirs = {observability_dir, Path(fork_home) / ".claude" / "observability"}
-        pend = []
+        pending_items = []
+        disposition_events = []
+        claims = {}
         for pd in pend_dirs:
-            if Path(pd).is_dir():
-                pend += sorted(Path(pd).glob("pending-extraction-*.md"))
-        if len(pend) >= LOOP_PENDING_ALERT:
+            pd = Path(pd)
+            pending_items.extend(_active_pending_files(pd))
+            disposition_events.extend(_read_pending_manifest(pd))
+            claims_dir = pd / PENDING_CLAIMS_DIR
+            if claims_dir.is_dir():
+                for claim_path in claims_dir.glob("*.json"):
+                    try:
+                        claim = json.loads(claim_path.read_text(encoding="utf-8"))
+                        source_name = claim_path.name[:-5]
+                        claims[str((pd / source_name).resolve())] = claim
+                    except Exception:  # noqa: BLE001
+                        continue
+
+        status_counts = {status: 0 for status in PENDING_STATUSES}
+        latest_disposition = {}
+        for event in disposition_events:
+            if event.get("event") != "DISPOSITION_RECORDED" or event.get("status") not in status_counts:
+                continue
+            status_counts[event["status"]] += 1
+            pending_key = str(event.get("pending_path") or "")
+            if not pending_key and event.get("source_name"):
+                pending_key = str((Path(event["_observability_dir"]) / event["source_name"]).resolve())
+            when = _iso_date(event.get("recorded_at"))
+            if pending_key and when and (pending_key not in latest_disposition or when > latest_disposition[pending_key]):
+                latest_disposition[pending_key] = when
+
+        oldest_age = 0
+        stale_unattended = []
+        claimed_active = 0
+        legacy_count = 0
+        for pending_path in pending_items:
+            if pending_path.name == "pending-extraction.md":
+                legacy_count += 1
+            try:
+                captured = datetime.fromtimestamp(pending_path.stat().st_mtime, tz=timezone.utc).replace(tzinfo=None)
+                age_days = max(0, (today_dt - captured).days)
+            except OSError:
+                continue
+            oldest_age = max(oldest_age, age_days)
+            key = str(pending_path.resolve())
+            recent_actions = []
+            claim = claims.get(key)
+            if claim:
+                claimed_active += 1
+            if key in latest_disposition:
+                recent_actions.append(latest_disposition[key])
+            last_action = max(recent_actions) if recent_actions else None
+            action_age = (today_dt - last_action).days if last_action else None
+            if age_days >= LOOP_PENDING_STALE_DAYS and (action_age is None or action_age >= LOOP_PENDING_STALE_DAYS):
+                stale_unattended.append((pending_path, age_days, action_age))
+
+        notes.append(
+            "pending-extraction health: "
+            f"active={len(pending_items)}, legacy={legacy_count}, claimed={claimed_active}, "
+            f"QUALIFIED={status_counts['QUALIFIED']}, NO_SIGNAL={status_counts['NO_SIGNAL']}, "
+            f"UNRESOLVED={status_counts['UNRESOLVED']}, oldest_unresolved={oldest_age} 天"
+        )
+        if stale_unattended:
+            oldest_path, age_days, action_age = max(stale_unattended, key=lambda item: item[1])
+            action_note = "从未 disposition（claim 仅为提醒）" if action_age is None else f"最近 disposition 已 {action_age} 天"
             anomalies.append(
-                f"pending-extraction 积压 {len(pend)} 个（≥{LOOP_PENDING_ALERT}，跨 {len(pend_dirs)} 个仓查得，捕获→消化链疑似断）"
-                "——逐个按 extraction-bar 四信号裁决后清零"
+                f"pending-extraction oldest unresolved 已 {age_days} 天且{action_note}：{oldest_path}"
+                "——consumer 疑停摆；启动时应认领最老一项，不能按年龄删除 evidence"
             )
 
         # 3. 写路径核验（2026-07-24 跨-agent：判别器 FAIL-SAFE 向检测 + standalone opt-in）：
@@ -835,7 +1282,7 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
         # 4. 两个独立 root adapter 的预算早警；30 KiB 硬门由 check-agent-context 守。
         try:
             for root_name in ("CLAUDE.md", "AGENTS.md"):
-                root_md = auth / root_name
+                root_md = fork_home / root_name
                 if not root_md.is_file():
                     continue
                 sz = root_md.stat().st_size
@@ -1163,7 +1610,7 @@ def main() -> int:
     # （网络抖动不得强制写 digest），有货才出小节；节流/比较键/静音语义见函数 docstring。
     try:
         drift = check_upstream_drift(
-            pins_path=ROOT / ".claude" / "skill-os" / "external-skills" / "installed-pins.yaml",
+            pins_path=CODE_ROOT / ".claude" / "skill-os" / "external-skills" / "installed-pins.yaml",
             plugins_json_path=Path.home() / ".claude" / "plugins" / "installed_plugins.json",
             marker_path=DIGESTS / ".upstream-drift-checked",
             today=today,
@@ -1178,7 +1625,7 @@ def main() -> int:
     # 同样不参与写入判定（网络抖动不得强制写 digest）。
     try:
         bdrift = check_benchmark_drift(
-            registry_path=ROOT / ".claude" / "skill-os" / "evolution" / "benchmark-registry.yaml",
+            registry_path=CODE_ROOT / ".claude" / "skill-os" / "evolution" / "benchmark-registry.yaml",
             marker_path=DIGESTS / ".benchmark-drift-checked",
             today=today,
         )
@@ -1195,10 +1642,14 @@ def main() -> int:
             lines += ["**上下文：**"] + [f"- {n}" for n in loop_notes] + [""]
 
     digest_path = DIGESTS / f"{today}.md"
-    if result.get("_error") and digest_path.exists():
-        # DG-02：consolidate 失败且今日已有好 digest → 不用退化版覆盖它。
-        # 不写完成痕：本次运行未健康完成，marker 留由早前成功运行写的内容（若有）。
-        print(json.dumps({"skipped": "consolidate 失败，保留今日已有 digest", "error": result["_error"]}, ensure_ascii=False))
+    if result.get("_error"):
+        # Preserve an earlier digest, but never describe this failed attempt as healthy.
+        failed = {"status": "failed", "error": result["_error"],
+                  "digest_preserved": digest_path.exists()}
+        if not digest_path.exists():
+            digest_path.write_text("\n".join(lines), encoding="utf-8")
+        _write_marker_result(today, failed)
+        print(json.dumps(failed, ensure_ascii=False))
         return 0
     DIGESTS.mkdir(parents=True, exist_ok=True)
     digest_path.write_text("\n".join(lines), encoding="utf-8")
@@ -1216,6 +1667,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "pending-disposition":
+        raise SystemExit(pending_disposition_cli(sys.argv[2:]))
     try:
         raise SystemExit(main())
     except SystemExit:

@@ -1,0 +1,24 @@
+{
+  "standards": {
+    "session_id": "01a07f0d-7539-7d70-8ec9-bbf43565f339",
+    "startup_claim_sidecars": [
+      ".claude/observability/.pending-extraction-claims/pending-extraction-7912c6b7-1512-4f88-9f03-59a6a456c4d6.md.json"
+    ],
+    "post_tool_count": "22",
+    "session_specific_observability_files": [
+      ".claude/observability/pending-extraction-01a07f0d-7539-7d70-8ec9-bbf43565f339.md"
+    ],
+    "native_stop_completed": true
+  },
+  "spec": {
+    "session_id": "01a07f0e-4526-74c2-acbf-deac4becd805",
+    "startup_claim_sidecars": [
+      ".claude/observability/.pending-extraction-claims/pending-extraction-01a06f30-045f-7d10-976a-c89ce4f7d219.md.json"
+    ],
+    "post_tool_count": "22",
+    "session_specific_observability_files": [
+      ".claude/observability/pending-extraction-01a07f0e-4526-74c2-acbf-deac4becd805.md"
+    ],
+    "native_stop_completed": true
+  }
+}

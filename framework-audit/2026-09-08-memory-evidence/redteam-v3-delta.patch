@@ -1,0 +1,124 @@
+--- a/.claude/hooks/session-restore.mjs
++++ b/.claude/hooks/session-restore.mjs
+@@ -559,9 +559,18 @@
+   const todayDigest = join(memoryRoot, 'memory', 'digests', `${today}.md`);
+   const todayChecked = join(memoryRoot, 'memory', 'digests', `.checked-${today}`);
+   try {
+-    const attempt = JSON.parse(readFileSync(todayChecked, 'utf8'));
+-    if (attempt.status === 'failed') {
+-      process.stdout.write(`[session-restore] ⚠️ 今日记忆治理失败：${String(attempt.error || '未知错误').replace(/[\r\n]/g, ' ').slice(0, 240)}；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n`);
++    const digestDir = join(memoryRoot, 'memory', 'digests');
++    const attempts = readdirSync(digestDir).filter(name => /^\.checked-\d{4}-\d{2}-\d{2}$/.test(name)
++      && name <= `.checked-${today}`).sort().reverse();
++    for (const name of attempts) {
++      let attempt;
++      try { attempt = JSON.parse(readFileSync(join(digestDir, name), 'utf8')); } catch { continue; }
++      if (!attempt || typeof attempt !== 'object' || Object.keys(attempt).length === 0) continue;
++      if (attempt.status === 'failed') {
++        const when = name === `.checked-${today}` ? '今日' : `最近一次（${name.slice(9)}）`;
++        process.stdout.write(`[session-restore] ⚠️ ${when}记忆治理失败：${String(attempt.error || '未知错误').replace(/[\r\n]/g, ' ').slice(0, 240)}；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n`);
++      }
++      break; // A later completed attempt supersedes the previous failure, never a blank claim.
+     }
+   } catch { /* Missing/empty legacy claims retain the existing stale-marker handling below. */ }
+   if (existsSync(govScript) && !existsSync(todayDigest)) {
+--- a/memory/scripts/consolidate_memory.py
++++ b/memory/scripts/consolidate_memory.py
+@@ -235,6 +235,11 @@
+ 
+ def clean_scalar(value: str):
+     value = value.strip().rstrip(",")
++    if value.startswith('"') or value.startswith("["):
++        try:
++            return json.loads(value)
++        except (ValueError, TypeError):
++            pass
+     if value.lower() == "true":
+         return True
+     if value.lower() == "false":
+@@ -821,18 +826,19 @@
+             # Reconcile only the same approved candidate; do not infer a new approval.
+             fact = existing[cid]
+             eligible = promotion_ready([candidate], set(), set(), decisions)
+-            same = (
+-                all(str(fact.get(key, "")) == str(candidate.get(key, "")) for key in ("domain", "confidence"))
+-                # Both the YAML parser and the dependency-free scalar fallback are supported.
+-                and all(str(fact.get(key, "")) in {str(candidate.get(key, "")),
+-                                                  str(clean_scalar(yaml_scalar(candidate.get(key, ""))))}
+-                        for key in ("fact", "evidence", "scope", "reviewer", "valid_until", "supersedes"))
+-                and str(fact.get("source")) in {
+-                    str(candidate.get("source") or candidate.get("evidence") or "consolidate_memory"),
+-                    str(clean_scalar(yaml_scalar(candidate.get("source") or candidate.get("evidence") or "consolidate_memory")))}
+-                and (fact.get("tags") or []) in [clean_scalar(yaml_list(candidate.get("tags"))),
+-                                                json.loads(yaml_list(candidate.get("tags")))]
+-            )
++            # Compare one decoded representation, with exactly the writer's omission rules.
++            # Accepting both raw and escaped variants can conflate two different source paths.
++            expected = {"domain": candidate.get("domain", ""), "fact": str(candidate.get("fact", "")),
++                        "confidence": candidate.get("confidence", "high"),
++                        "source": str(candidate.get("source") or candidate.get("evidence") or "consolidate_memory")}
++            optional = ("evidence", "scope", "reviewer", "valid_until", "supersedes")
++            for key in optional:
++                if str(candidate.get(key) or "").strip():
++                    expected[key] = str(candidate[key])
++            if candidate.get("tags"):
++                expected["tags"] = json.loads(yaml_list(candidate["tags"]))
++            same = all(fact.get(key) == expected.get(key) for key in
++                       ("domain", "fact", "confidence", "source", "tags", *optional))
+             if eligible and same and str(fact.get("stable", "")).lower() == "true" and not dry_run:
+                 append_review(cid, str(candidate["reviewer"]), "promoted",
+                               "recovered audit for the same already persisted promotion_ready candidate")
+--- a/memory/tests/test_memory_failure_recovery.py
++++ b/memory/tests/test_memory_failure_recovery.py
+@@ -58,7 +58,8 @@
+             candidate = {"id": "SC-20260908-900", "domain": "tech", "fact": 'durable "approved" evidence',
+                          "proposed_stable": True, "confidence": "high", "evidence": "reviewed source",
+                          "scope": "framework", "reviewer": "human", "created_at": "2026-09-08",
+-                         "tags": ["recovery"], "source": "original review"}
++                         "tags": ["recovery"], "source": "original\\nreview", "valid_until": None,
++                         "supersedes": None}
+             cm.CANDIDATES.parent.mkdir(parents=True, exist_ok=True)
+             raw = json.dumps(candidate)
+             cm.CANDIDATES.write_text(raw + "\n")
+@@ -72,6 +73,7 @@
+             cm.promote_ready_candidates([{**candidate, "proposed_stable": False}], [], False)
+             cm.promote_ready_candidates([{**candidate, "fact": "different claim"}], [], False)
+             cm.promote_ready_candidates([{**candidate, "source": "different source"}], [], False)
++            cm.promote_ready_candidates([{**candidate, "source": "original\nreview"}], [], False)
+             self.assertFalse(cm.REVIEWS.exists(), "recovery must not invent approval or accept mismatched evidence")
+             # The alternate CLI must reconcile even when duplicate filtering leaves no new ready item.
+             retry = subprocess.run([sys.executable, str(CODE / "review_candidates.py"), "--promote", "--reviewer", "human", "--days", "0"],
+@@ -84,3 +86,16 @@
+             self.assertEqual(len(cm.parse_promoted_facts(cm.PROMOTED)), 1)
+             decisions = cm.review_decisions(reviews)
+             self.assertEqual(cm.archive_reviewed_candidates(rows, decisions, cm.parse_promoted_facts(cm.PROMOTED), False), [candidate["id"]])
++
++    def test_fallback_decodes_distinct_source_strings_without_aliasing(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            cm = load("consolidate_memory", Path(tmp))
++            literal = "approved\\nsource"
++            newline = "approved\nsource"
++            path = Path(tmp) / "facts.yaml"
++            path.write_text("facts:\n  - id: A\n    source: " + json.dumps(literal) +
++                            "\n  - id: B\n    source: " + json.dumps(newline) + "\n")
++            with mock.patch.object(cm, "_HAS_YAML", False):
++                rows = cm.parse_promoted_facts(path)
++            self.assertEqual([row["source"] for row in rows], [literal, newline])
++            self.assertNotEqual(rows[0]["source"], rows[1]["source"])
+--- a/scripts/test-hooks.mjs
++++ b/scripts/test-hooks.mjs
+@@ -1927,6 +1927,14 @@
+   assert.match(r.stdout, /今日记忆治理失败.*WRITER_FAILURE_SENTINEL/);
+   assert.match(r.stdout, /daily_governance\.py 补跑/);
+   assert.equal(readFileSync(join(digests, `${today}.md`), 'utf8'), '# Earlier successful evidence\n');
++  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
++  writeFileSync(join(digests, `.checked-${yesterday}`), JSON.stringify({status: 'failed', error: 'PREVIOUS_DAY_FAILURE'}));
++  writeFileSync(join(digests, `.checked-${today}`), ''); // A fresh claim is not successful recovery.
++  const nextDay = runNode(sessionRestoreHook, root, {env: {CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root}});
++  assert.match(nextDay.stdout, /最近一次.*记忆治理失败.*PREVIOUS_DAY_FAILURE/);
++  writeFileSync(join(digests, `.checked-${today}`), JSON.stringify({promoted: 0, loop_anomalies: 0}));
++  const recovered = runNode(sessionRestoreHook, root, {env: {CLAUDE_PROJECT_DIR: root, MEMORY_ROOT: root}});
++  assert.doesNotMatch(recovered.stdout, /记忆治理失败/);
+   console.log('PASS GOVERNANCE-FAILED-ATTEMPT visible even when an earlier digest exists');
+ }
+ {

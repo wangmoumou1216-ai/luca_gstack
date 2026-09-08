@@ -1,5 +1,7 @@
 # 月度自进化子系统 — Checkpoint（2026-07-14，评审加固轮完成）
 
+> **状态校准（2026-09-06）：HISTORICAL。** 本文件是 2026-07 的阶段快照，不再是恢复入口；其中“仍 live-未提交”的 OST、GOMS 与 code-hygiene 接线已在 commit `60aba9a` 落地。后续月度状态以对应 digest、`gaps-register.yaml`、`adoption-log.jsonl` 与 bookkeep 输出为准。
+
 > 性质:Meta/框架任务,产物落 luca_gstack 仓内;不创建下游项目。
 > 接续读本文件 + `ADOPTED.md` / `adoption-log.jsonl` / `digests/2026-07-evolution.md` / `gaps-register.yaml`。
 

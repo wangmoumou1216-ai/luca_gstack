@@ -8,7 +8,7 @@
 //  · 任何异常一律 fail-open —— 不输出 JSON、exit 0，绝不卡住 session 结束。
 //  · 强制模式三重防循环：stop_hook_active / 本 session marker / SESSION_SYNC_BLOCK=0 kill-switch。
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readlinkSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
@@ -21,6 +21,7 @@ import {
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
 import { closeGrants, snapshotGrantTurn } from './lib/project-read-grants.mjs';
+import { actualHarness } from './lib/harness.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -205,7 +206,6 @@ try {
       const rearmTools = parseInt(process.env.SESSION_SYNC_REARM_TOOLS || '50', 10);
       if (deltaEdit >= rearmEdits || deltaTool >= rearmTools) {
         rearm = true;
-        try { writeFileSync(markerFile, `${editCount} ${toolCount}`); } catch { }
       }
     }
   }
@@ -219,11 +219,12 @@ try {
     let canBlock = true;
     try { canBlock = (await import('./lib/harness.mjs')).canEmitControlVerb(process.env); } catch { }
     if (canBlock) {
+      if (rearm) writeFileSync(markerFile, `${editCount} ${toolCount}`);
       process.stdout.write(JSON.stringify({ decision: 'block', reason }));
+      process.exit(0);
     } else {
       process.stderr.write(`[session-sync] ⚠️ 本 session 有实质工作但未沉淀经验（当前 harness 无 Stop-block 强制能力，此为 advisory）：\n${reason}\n`);
     }
-    process.exit(0);
   }
 
   // Only a non-blocking Stop is a turn-closing boundary. A blocked Stop keeps
@@ -250,21 +251,23 @@ try {
   for (const repo of [...new Set([projectRoot, memoryRoot])]) {
     try {
       const dirty = execSync(
-        'git status --porcelain -- memory/episodic/index.jsonl memory/episodic/archive memory/semantic/promoted-facts.yaml memory/semantic/archive memory/evals/eval-log.jsonl .claude/skill-os/evolution .claude/observability/observations.jsonl',
+        'git status --porcelain -- memory/episodic/index.jsonl memory/episodic/archive memory/semantic/promoted-facts.yaml memory/semantic/reviews.jsonl memory/semantic/archive memory/evals/eval-log.jsonl memory/retrieval-log.jsonl .claude/skill-os/evolution .claude/observability/observations.jsonl',
         { cwd: repo, encoding: 'utf8', env: withoutLocalGitEnv() }
       ).trim();
       if (dirty) process.stderr.write(`[session-sync] 🔔 ${repo === projectRoot ? '本仓' : `MEMORY_ROOT 仓（${repo}）`}有未提交的记忆/演进状态 — 收尾请在该仓跑 \`bash scripts/sync.sh\` 推到 GitHub。\n`);
     } catch { }
   }
 
-  if (alreadyExtracted) {
-    // 提取已完成 → 回收本 sid 早先回合落下的 pending 兜底文件，防已处理仍被提醒（audit F1-03）
-    try {
-      const stalePending = join(projectRoot, '.claude', 'observability',
-        hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
-      if (existsSync(stalePending)) unlinkSync(stalePending);
-    } catch { }
-    process.stderr.write(`[session-sync] ✅ 本 session 经验已沉淀（marker 命中），放行。\n`);
+  if (alreadyExtracted && !rearm) {
+    // marker 只证明本 session 做过某种沉淀，不证明这个 pending 已逐项裁决。旧逻辑在这里
+    // 直接 unlink，会把唯一 transcript locator 连同未裁决证据一起静默销毁。active pending
+    // 只能经 daily_governance.py pending-disposition 先写 manifest evidence 后移入 quarantine。
+    const retainedPending = join(projectRoot, '.claude', 'observability',
+      hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
+    const retainedNote = existsSync(retainedPending)
+      ? `；pending 仍保留，须显式记录 QUALIFIED / NO_SIGNAL / UNRESOLVED disposition：${retainedPending}`
+      : '';
+    process.stderr.write(`[session-sync] 本 session 裁决 marker 命中（不代表已有记忆内容落库），放行${retainedNote}。\n`);
     process.exit(0);
   }
 
@@ -272,7 +275,7 @@ try {
   const episodicDir = join(projectRoot, 'memory', 'episodic');
   if (existsSync(episodicDir)) {
     process.stderr.write(
-      `[session-sync] 💡 如需手动沉淀：python3 memory/scripts/append_episode.py --topic "${topic}" --summary "..." --decision "..." --next-risk "..."\n`
+      `[session-sync] 💡 如需手动沉淀：python3 memory/scripts/append_episode.py ${project ? `--project "${project}"` : '--meta'} --topic "${topic}" --summary "..." --decision "..." --next-risk "..."\n`
     );
   }
   // 并发隔离（G2，2026-07-04）：pending 文件按 session 命名——全局单文件会被并发 session
@@ -282,25 +285,46 @@ try {
   // 「未拦截一律写」在 Stop 按回合触发下会让每个 session 首回合都落一个 stub，只增不减）。
   if (!substantive) process.exit(0);
   const pending = join(projectRoot, '.claude', 'observability',
-    hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
+    rearm ? `pending-extraction-${sessionId}-e${editCount}-t${toolCount}.md`
+      : hasSid ? `pending-extraction-${sessionId}.md` : 'pending-extraction.md');
   try {
     if (existsSync(pending)) {
       process.stderr.write(`[session-sync] 📝 ${pending.split('/').pop()} 已存在（待处理），保持不变\n`);
     } else {
       mkdirSync(join(projectRoot, '.claude', 'observability'), { recursive: true });
+      const oneLine = (value, fallback = 'unavailable', max = 512) => {
+        const clean = String(value || '').replace(/[\r\n]+/g, ' ').trim().slice(0, max);
+        return clean || fallback;
+      };
+      const locatorSid = hasSid ? oneLine(sessionId) : 'unavailable';
+      const locatorTranscript = oneLine(payload.transcript_path);
+      const locatorHarness = oneLine(actualHarness(process.env));
+      const relativePending = `.claude/observability/${pending.split('/').pop()}`;
       writeFileSync(pending, [
-        `# Pending Skill-Rule Extraction`, ``,
-        `> 自动生成于 ${now}。下次 session 启动时由 session-restore 提醒处理。`,
-        `> Topic: ${topic}`,
-        ...(project ? [`> Project: ${project}`] : []),
-        `> 处理后请删除此文件。`,
-        `> 提取前先过 .claude/skill-os/extraction-bar.md 四信号门槛，全不中则直接删除本文件。`, ``,
-        `python3 memory/scripts/propose_semantic.py --domain skill-rule --fact "<skill>: <规则>" \\`,
-        `  --confidence high --evidence "<来源>" --scope "<skill>" --reviewer "luca" --tags "<skill>,rule"`, ``,
-      ].join('\n'));
+        `# Pending Experience Adjudication`, ``,
+        `> This is retained evidence awaiting adjudication, not a pre-classified skill-rule.`,
+        `> Session-ID: ${locatorSid}`,
+        `> Captured-At: ${now}`,
+        `> Topic: ${oneLine(topic, 'session')}`,
+        `> Project: ${project ? oneLine(project) : 'NO_PIN'}`,
+        `> Harness: ${locatorHarness}`,
+        `> Transcript-Path: ${locatorTranscript}`, ``,
+        `> Work-Window: edits=${editCount} tools=${toolCount} delta_edits=${deltaEdit} delta_tools=${deltaTool}`, ``,
+        `先读 .claude/skill-os/extraction-bar.md，再显式选择一种 disposition：`, ``,
+        `- QUALIFIED — 记录实际落点证据：L1/L2 内容修正、L3 skill 源头修复、L4 框架源头修复、L5 自有产品源头修复，或门槛允许的受控记忆落点。`,
+        `- NO_SIGNAL — 四信号均不成立；记录判据后移出 active。`,
+        `- UNRESOLVED — transcript/上下文不足；记录缺口并保留 active 文件。`, ``,
+        `不得直接删除。用以下窄入口先写 append-only disposition evidence；QUALIFIED/NO_SIGNAL 随后自动移入 quarantine：`, ``,
+        `python3 memory/scripts/daily_governance.py pending-disposition --pending "${relativePending}" \\`,
+        `  --status <QUALIFIED|NO_SIGNAL|UNRESOLVED> --evidence "<裁决证据或未决缺口>" --actor "<name>"`, ``,
+      ].join('\n'), { flag: 'wx' });
       process.stderr.write(`[session-sync] 📝 已写入 ${pending.split('/').pop()}（下次启动提醒）\n`);
     }
-  } catch { }
+    // A failed capture must retain the previous baseline so the next Stop retries.
+    if (rearm) writeFileSync(markerFile, `${editCount} ${toolCount}`);
+  } catch (error) {
+    process.stderr.write(`[session-sync] ⚠️ pending capture failed; baseline retained for retry: ${String(error?.message || error)}\n`);
+  }
   process.exit(0);
 } catch (e) {
   // fail-open：任何异常都不得阻止 session 结束

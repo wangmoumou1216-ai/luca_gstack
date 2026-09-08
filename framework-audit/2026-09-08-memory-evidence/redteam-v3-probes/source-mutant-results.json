@@ -1,0 +1,9 @@
+[
+  {
+    "fallback": false,
+    "reverse": false,
+    "sources_distinct": true,
+    "wrong_source_retry_rc": 0,
+    "wrong_source_no_audit_and_retained": false
+  }
+]

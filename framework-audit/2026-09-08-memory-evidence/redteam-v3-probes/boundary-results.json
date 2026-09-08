@@ -1,0 +1,384 @@
+[
+  {
+    "label": "same",
+    "rc": 0,
+    "reviews": [
+      {
+        "candidate_id": "SC-20260908-901",
+        "decision": "promoted",
+        "reviewer": "human",
+        "reason": "recovered audit for the same already persisted promotion_ready candidate",
+        "reviewed_at": "2026-09-08T04:50:05.761279+00:00",
+        "source": "consolidate_memory.py"
+      }
+    ],
+    "candidate_retained": false,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "same approved claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "source-A",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": ""
+  },
+  {
+    "label": "unapproved",
+    "rc": 0,
+    "reviews": [],
+    "candidate_retained": true,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": false,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "same approved claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "source-A",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": ""
+  },
+  {
+    "label": "different-source",
+    "rc": 0,
+    "reviews": [],
+    "candidate_retained": true,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-B",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "same approved claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "source-A",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": ""
+  },
+  {
+    "label": "different-fact",
+    "rc": 2,
+    "reviews": [],
+    "candidate_retained": true,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "different claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "same approved claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "source-A",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": "semantic candidate ID collision detected; refusing all candidate mutations\n"
+  },
+  {
+    "label": "rejected",
+    "rc": 0,
+    "reviews": [
+      {
+        "candidate_id": "SC-20260908-901",
+        "decision": "rejected",
+        "reviewer": "human",
+        "reason": "withdrawn",
+        "reviewed_at": "2026-09-08T04:50:06.027745+00:00",
+        "source": "consolidate_memory.py"
+      }
+    ],
+    "candidate_retained": true,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "same approved claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "source-A",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": ""
+  },
+  {
+    "label": "escaped-source",
+    "rc": 0,
+    "reviews": [],
+    "candidate_retained": true,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "file\\nreference",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "same approved claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "file\nreference",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "same approved claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "file\\nreference",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": ""
+  },
+  {
+    "label": "escaped-fact",
+    "rc": 2,
+    "reviews": [],
+    "candidate_retained": true,
+    "original": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "a\\\"quoted\\\" claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "retry_candidate": {
+      "id": "SC-20260908-901",
+      "domain": "tech",
+      "fact": "a\"quoted\" claim",
+      "confidence": "high",
+      "proposed_stable": true,
+      "evidence": "reviewed evidence",
+      "scope": "framework",
+      "reviewer": "human",
+      "source": "source-A",
+      "tags": [
+        "recovery"
+      ]
+    },
+    "parsed_promoted": [
+      {
+        "id": "SC-20260908-901",
+        "domain": "tech",
+        "fact": "a\\\"quoted\\\" claim",
+        "confidence": "high",
+        "stable": true,
+        "added": "2026-09-08",
+        "source": "source-A",
+        "evidence": "reviewed evidence",
+        "reviewer": "human",
+        "scope": "framework",
+        "tags": [
+          "recovery"
+        ]
+      }
+    ],
+    "stderr": "semantic candidate ID collision detected; refusing all candidate mutations\n"
+  }
+]

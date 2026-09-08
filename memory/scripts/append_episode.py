@@ -94,29 +94,8 @@ def slugify(text: str) -> str:
 
 
 def active_project() -> str:
-    """当前激活项目名，从 docs 软链目标 .../Desktop/项目/<name>/docs 推导。
-    无激活项目（软链缺失/损坏）时返回 ""。"""
-    docs = ROOT / "docs"
-    try:
-        target = os.readlink(docs)
-    except OSError:
-        return ""
-    # FIX-2：与 3 个 JS 站点走同一 canonical 裁决（known-projects 最长前缀匹配，无命中回退首段），
-    # 消嵌套路径下的 cross-hook 项目身份分裂。robust import 同 _resolve_root（脚本可能被复制运行）。
-    try:
-        from _project import project_name_from_link
-    except ImportError:
-        import importlib.util as _ilu
-        _p = Path(__file__).resolve().parent / "_project.py"
-        if not _p.is_file():
-            # 不复制会漂移的旧算法（深审：那是第 5 种解析，永不被测）；按"无项目"处理并告警。
-            sys.stderr.write("[append_episode] ⚠️ _project.py 缺失，无法裁决项目 → 按无激活项目处理\n")
-            return ""
-        _s = _ilu.spec_from_file_location("_project", _p)
-        _m = _ilu.module_from_spec(_s)
-        _s.loader.exec_module(_m)
-        project_name_from_link = _m.project_name_from_link
-    return project_name_from_link(target)
+    """No ambient project inference. Callers pass their verified session binding explicitly."""
+    return ""
 
 
 def main() -> int:
@@ -128,16 +107,15 @@ def main() -> int:
     parser.add_argument("--blockers", default="", help="comma-separated blockers encountered")
     parser.add_argument("--decision", default="", help="non-obvious judgment made this session (why, not what)")
     parser.add_argument("--next-risk", default="", help="anticipated risk or open question for next session")
-    parser.add_argument("--project", default="", help="项目作用域；留空则自动从 docs 软链推导（框架级 session 用 --meta 禁止推导）")
+    parser.add_argument("--project", default="", help="调用方已核验的 session 项目名；留空不推断项目")
     parser.add_argument("--meta", action="store_true",
-                        help="框架级/meta session：不归属任何项目，跳过 docs 软链自动推导（防误标，见 EP-20260605-011）")
+                        help="框架级/meta session：不归属任何项目")
     args = parser.parse_args()
 
     project = "" if args.meta else (args.project.strip() or active_project())
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     slug = slugify(args.topic)
-    session_file = f"sessions/{today}-{slug}.md"
 
     skills = [s.strip() for s in args.skills.split(",") if s.strip()]
     outcomes = [o.strip() for o in args.outcomes.split(",") if o.strip()]
@@ -159,14 +137,16 @@ def main() -> int:
         seq = 0
         for src in (INDEX, *(sorted(ARCHIVE.glob("*.jsonl")) if ARCHIVE.exists() else ())):
             if src.exists():
-                for m in re.finditer(r'"EP-\d{8}-(\d{3})"', src.read_text(encoding="utf-8")):
+                for m in re.finditer(r'"EP-\d{8}-(\d{3,})"', src.read_text(encoding="utf-8")):
                     seq = max(seq, int(m.group(1)))
         ep_id = f"EP-{today.replace('-', '')}-{seq + 1:03d}"
+        session_file = f"sessions/{ep_id}-{slug}.md"
 
         record = {
             "id": ep_id,
             "date": today,
             "topic": args.topic,
+            "summary": args.summary,
             **({"project": project} if project else {}),
             "skills_used": skills,
             "outcomes": outcomes,

@@ -1,0 +1,132 @@
+
+> luca-gstack@0.2.1 check:hooks
+> node --check .claude/hooks/session-restore.mjs && node --check .claude/hooks/route-guard.mjs && node --check .claude/hooks/post-edit.mjs && node --check .claude/hooks/session-sync.mjs && node --check .claude/hooks/session-end.mjs && node --check .claude/hooks/project-scope-guard.mjs && node --check .claude/hooks/lib/project-read-grants.mjs && node --check scripts/project-read.mjs && node --check .claude/hooks/controlled-change-guard.mjs && node scripts/test-project-read-grants.mjs && node scripts/test-hooks.mjs && node scripts/test-codex-adapter.mjs && node scripts/test-auto-open.mjs
+
+SKIP exact file directive creates a prompt-bound turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP ordinary path mention is not authorization (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP file grant rejects sibling and write operation (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP explicit directory grant confines descendants and read/list/search (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP session grant survives a new turn only under the same binding snapshot (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP closing witness invalidates stale turn grant even when grant sidecar remains (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP new prompt generation invalidates previous turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP delayed Stop generation CAS cannot revoke a newer turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP lexical traversal is rejected before path normalization (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP incomplete grant transaction lock keeps consumers fail-closed (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP symlink escape, control plane, project root, and global root are rejected (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP malformed sidecar and wrong session fail closed (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP pre-latched interrupted transaction stays denied until a full publish succeeds (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP kill-switch restores baseline deny behavior (read-grants quarantined: READ_GRANTS_ENABLED=false)
+PASS quarantine: reconcilePromptGrants always issues nothing regardless of prompt
+PASS quarantine: authorizeRead denies even a forged grant sidecar retargeted to a different file
+
+RESULT pass=2 fail=0 skip=14
+PASS HOOK-000 substantive Stop 默认安静放行并留下 pending
+PASS PENDING-001 Stop pending 含完整 locator、中性裁决语言与合法 outcomes
+PASS HOOK-001 no-pin substantive 仍 block，且 shared project 零读取/零 checkpoint
+PASS HOOK-001 identity-bound TURN_ACTIVE checkpoint 只落 binding project
+PASS release 路径 stdout 为空，trivial 不落 pending（F1-03）
+PASS substantive+kill-switch 落 pending 且 stderr 留痕（F1-02/F1-03）
+PASS HOOK-002 DONE-only 空 session 放行且不落 checkpoint
+PASS 三重防循环（marker / kill-switch / stop_hook_active）均不 block
+PASS REARM 增量重拦：大增量再拦一次 / 基线刷新防循环 / 空 marker 回填 / 关断阀
+PASS V3 tool-count 兜住"重操作零编辑少轮次"的实质 session
+PASS HOOK-006 纯咨询多轮零产出放行，不当场拦截也不落 pending
+PASS HOOK-007 block reason 为短指针且长度受控，不整段注入
+PASS session-restore 启动 memory-light，兜底提醒带真实 topic + person 候选提示
+PASS PENDING-002 startup claim-LRU：old→new 不饥饿，单条重认领 count++，>7d bytes 保留
+PASS PENDING-002C 8 轮并发双启动：claim_count 无丢失且两项库存无重复 oldest
+PASS PENDING-002D claim lock 路径可注入，异常/成功均释放且可重试
+PASS orphan claim lock remains visible with bounded unclaimed advisory
+PASS soft incremental capture preserves evidence and is idempotent
+PASS PENDING-003 QUALIFIED/NO_SIGNAL/UNRESOLVED 显式、可审计且保留 bytes
+PASS PENDING-004 loop health 区分 claim/disposition 且计入 legacy
+PASS STARTUP-IDENTITY-N01 NO_PIN 对 shared workflow-state 零读取
+PASS STARTUP-IDENTITY-N02 NO_PIN 对 shared progress 零读取
+PASS STARTUP-IDENTITY-N03 corrupt turn epoch 不加载项目上下文
+PASS GOV-001 person 层只读看护：digest 列候选+软上限，全局目录零写入
+PASS route-guard auto-injects active rules for the matched skill
+PASS route-guard stays silent when the matched skill has no rules
+PASS search_memory --project 作用域过滤有区分性（含历史记录 topic 兜底）
+PASS post-edit Writer：edit-count 仅文件编辑递增、tool-count 全工具递增、framework/ 警告
+PASS post-edit framework tripwire：干净不吵/脏了告警/不重复吵/污染仍报/两个豁免口都闭嘴
+PASS post-edit fsmonitor RCE 已中和 + 脏检测保留 + 恢复文案改为先 inspect
+PASS SETTINGS-001 PostToolUse matcher 覆盖 Agent+Task，不误匹配只读工具
+PASS SETTINGS-002 hooks 布线契约：六事件挂对脚本 + README §8 表一致
+PASS RULES-001 get_rules.py 输出格式契约 + retired 过滤 + 坏 YAML fail-open
+PASS CONC-001 post-edit 双 sid 计数隔离，互不污染且不落 legacy
+PASS CONC-002 session-sync 只认本 sid 计数：A 实质 B 放行
+PASS CONC-003 启动 GC 只删可证明过期的临时状态，identity 不按年龄偷删
+PASS CONC-004 digest 展示 O_EXCL 抢占：先到先得，后到静默
+PASS CONC-005 governance 触发 O_EXCL 认领：单日单 spawn（通知在 stdout）
+PASS CONC-006 route-guard 轮次 + pending 全链 per-sid
+PASS CONC-007 project.sh 并发 switch：锁串行化 + 原子替换 + 终态一致
+PASS CONC-008 startup clear 与 switch 共用 lease，忙时 display tuple 保持原样
+PASS CONC-009 startup clear commit 后 lease release 失败保持成功语义并可 exact recovery
+PASS STICKY-001 冷启动无并行 → 清 symlink
+PASS STICKY-002 resume → 保留 symlink，不谎称无激活
+PASS STICKY-003 冷启动+活跃并行 → 保留 + 告知激活项目
+PASS STICKY-003b 活跃探测排除本 sid（own-sid）
+PASS STICKY-003c legacy 无后缀计数不挡清理
+PASS STICKY-004 悬空链无视保留条件直接清（安全 gate）
+PASS STICKY-005 kill-switch 回退旧行为（无条件清）
+PASS STICKY-006 source 缺失 → 保留 + canary
+PASS STICKY-006b 未知 source → 保留 + canary（堵 A1 改名盲区）
+PASS STICKY-007 transcript-mtime 活跃信号触发保留
+PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）
+PASS STICKY-008 继承 display marker 不成为 identity，也不把普通对话变成项目任务
+PASS STICKY-008b 点名只建 SWITCH_ONLY，未点名不从 display symlink auto-adopt
+PASS STICKY-008c 命名切换 → SWITCH_ONLY + tx/epoch + 清标记
+PASS STICKY-009 SessionEnd 清本 sid 临时计数但保留 identity
+PASS STICKY-010 post-edit 不再吐 pin≠docs 事后告警（A 下由重定向兜底）
+PASS SYNC-PIN-001 Stop 链 pin 优先：归因/checkpoint/topic 与 pin 同源，projB 零写入
+PASS SYNC-PIN-002 失效 pin fail-closed 为 no-pin，不回退 display symlink
+PASS SYNC-MEM-001 MEMORY_ROOT 仓脏 → 提醒点名该仓（split-brain 提醒盲区修复）
+PASS STICKY-011 project switch 词边界：amusement 不误触，点名 muse 只准备事务
+PASS FRAMEWORK-IDENTITY-001 当前框架自指/状态问句保持 NO_PIN、零项目事务
+PASS IDENTITY-FIFO-001 NO_PIN route 对 shared workflow-state 零读取
+PASS DIGEST-001 「待你裁决」标题生产端↔消费端正则咬合，且截断可见
+PASS MEMROOT-WIRING-001 session-restore 经 resolveMemoryRoot 解析（幻影 MEMORY_ROOT 回落本仓，不建幻影树）
+PASS WS-B4-CLASSIFY session-restore 记忆加载失败分类可见（python3 缺失=真实可达路径）
+PASS GOVERNANCE-FAILED-ATTEMPT visible even when an earlier digest exists
+PASS GOVERNANCE-SPAWN-FAILOPEN session-restore 云端 python3 缺失下 detached spawn fail-open（Round5 MAJOR 回归门）
+SKIP READ-GRANT-LIFECYCLE blocked Stop preserves turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP READ-GRANT-LIFECYCLE non-blocking Stop closes turn grant (read-grants quarantined: READ_GRANTS_ENABLED=false)
+SKIP READ-GRANT-LIFECYCLE SessionEnd revokes all grants (read-grants quarantined: READ_GRANTS_ENABLED=false)
+
+ALL HOOK/MEMORY REGRESSION TESTS PASSED
+PASS A1 route-guard 纯文本被包成 hookSpecificOutput.additionalContext
+PASS A2 additionalContext 内容非空且保留原提示文本
+PASS A3 hookEventName 正确回填
+PASS B1 apply_patch 被归一化为 Write → 编辑计数器递增（解连锁失效）
+PASS B2 shell 被归一化为 Bash → 工具计数器递增
+PASS C0 Stop hook 确实产出了控制动词（前置断言：动词消失必须红，不能 SKIP 掉）
+PASS C1 Stop 的 decision:block 原样透传（不得译成 continue:false）
+PASS C2 拦截理由经 reason 传出（信息不丢失）
+PASS C3 未产生语义反转的 continue:false
+PASS D1 未绑定项目写产出目录 → deny 原样透传（强制未因 harness 丢失）
+PASS D2 deny 理由非空（模型可据此改正）
+PASS D3 updatedInput 原样透传且自动补 permissionDecision:allow（不再降级成 deny）
+PASS F1 apply_patch(真实 command 载荷) → post-edit 计为编辑（Stop 自成长链不断）
+PASS F2 apply_patch 越界写产出目录 → guard 经命令串扫描拦下（项目隔离在 Codex 下真生效）
+PASS F3 Bash(Codex 真实 shell 工具名) 正常计入工具数
+PASS H1 大 payload(300KB) 完整输出且 JSON 可解析（防 process.exit 截断）
+PASS H2 截断防护下控制动词仍完好（updatedInput + allow 都在）
+PASS E1 [零回归] Claude 直调仍吐 CC 形 permissionDecision
+PASS E2 [零回归] Claude 直调 route-guard 仍输出裸文本（未被包成 JSON）
+PASS G1 apply_patch 的 file_path 被合成 → framework/ 只读保护区告警恢复触发
+PASS G2 多文件 patch → 每个文件各触发一次（对齐 Claude 侧 N 文件 = N 次 Write）
+PASS G3 post-edit 分支：file_path 合成为绝对路径且 tool_name=Write
+PASS G4 [零回归] guard 分支不被 B5 触及：不塞 file_path、tool_name 仍为 Bash（它按 command 串扫越界）
+SKIP I1-I6 Codex typed read broker (read-grants quarantined: READ_GRANTS_ENABLED=false)
+
+=== test-codex-adapter summary: PASS=23 FAIL=0 ===
+  ✅ T1 无 LUCA_APP 不投递 + 计数照常
+  ✅ T2 Write .html 投递一条且字段正确
+  ✅ T3 白名单外(.ts)不投
+  ✅ T4 排除路径(memory/.claude/node_modules)不投
+  ✅ T5 2s 去重窗口生效
+  ✅ T6 非法 stdin 安全退出零投递
+  ✅ T7 Bash/Task 不投
+  ✅ T8 md/mdx/图片不再投递（收窄回归）
+
+test-auto-open: 8/8 全部通过

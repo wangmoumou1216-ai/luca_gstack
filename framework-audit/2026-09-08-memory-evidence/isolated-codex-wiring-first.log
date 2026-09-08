@@ -1,0 +1,26 @@
+── [静态] 接线完整性 ──────────────────────────────────
+PASS S1 .codex/hooks.json 存在且是合法 JSON
+PASS S2 六个事件全部注册
+PASS S3 全部 hook 经 adapter 且目标脚本存在
+PASS S4 SessionStart/UserPromptSubmit 的**每个** hook 都设 additionalContextLimit=0（0=完整直传，语义反直觉）
+PASS S5 Pre/PostToolUse matcher 用实测 tool_name（Bash|apply_patch；写 shell 永不触发）
+PASS S5b Claude 直接注册 controlled-change；Codex 不新增 trust entry而由既有 project-scope entry 在 adapter 内串行强制
+PASS S6 .codex/codex-hook-adapter.mjs 存在且语法合法
+PASS S7 .agents/skills 下每个条目都能解析到 SKILL.md
+PASS S8 .codex/agents/*.toml 已定义
+PASS S8b subagent 档位与 model-routing.yaml 的 codex.agents 一致且无硬编码模型名
+PASS S8c 所有 effort 取值都在模型接受集内，且 yaml 已登记实测禁用值（脚本侧硬编码，改 yaml 松不动）
+PASS S9 adapter 行为测试全绿（scripts/test-codex-adapter.mjs）
+PASS S9b workflow-runner 存在且两个 workflow 零改写可执行（scripts/test-workflow-runner.mjs）
+PASS S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-runtime.mjs）
+PASS S10 Claude 路径零回归（test-harness + test-hooks）
+PASS S11 .codex/hooks.json 顶层只用 description/hooks（多一个自定义键 → 整份文件被拒且警告一闪而过）
+PASS S11b 未在用户级 ~/.codex/hooks.json 重复注册（仓库级已够；全局注册会污染其它项目）
+FAIL S12 本仓 hook 已获授信（未授信时 Codex 静默跳过，hook 一个都不会跑） — 未授信 6/6 条。修复：node scripts/codex-trust-hooks.mjs（先 --dry-run 过目；它用 Codex 自己的 hooks/list + config/batchWrite，只碰本仓条目）
+PASS S13 .codex/config.toml 的 writable_roots 覆盖工作根之外的必写路径（记忆 store + app spool + 产出根）
+
+── [活体] 真实 Codex session ──────────────────────────
+BLOCKED L1-L3 — --static 模式
+
+=== verify-codex-wiring: PASS=18 FAIL=1 BLOCKED=1 ===
+注意：BLOCKED ≠ 通过。活体段未跑通前，不得声称 Codex 接线已端到端验证。

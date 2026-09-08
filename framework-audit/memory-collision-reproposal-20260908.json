@@ -1,0 +1,148 @@
+{
+  "event": "memory-collision-reproposal-20260908",
+  "source": "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/candidates.jsonl",
+  "destination": {
+    "memory_root": "/Users/luca/Desktop/luca_gstack",
+    "candidates": "/Users/luca/Desktop/luca_gstack/memory/semantic/candidates.jsonl",
+    "known_roots": [
+      "/Users/luca/Desktop/luca_gstack",
+      "/Users/luca/Desktop/项目/muse/lucagstack"
+    ],
+    "lock": "/Users/luca/.luca/locks/semantic-candidate-id.lock"
+  },
+  "source_sha256": "b1bbdf84edf6ade27f3b085c24a986f4d73185ea5908d924b090391ebc850d35",
+  "rows": [
+    {
+      "old_id": "SC-20260820-001",
+      "line": "{\"id\": \"SC-20260820-001\", \"created_at\": \"2026-08-20T04:58:00.631021+00:00\", \"domain\": \"skill-rule\", \"fact\": \"Framework Git-remote integrity gates must compare the complete fetch and push URL lists (get-url --all and get-url --push --all), including exact cardinality; checking only the first URL can miss an added endpoint. Source fix pointer: framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs validateRemote().\", \"confidence\": \"high\", \"source\": \"recovery-handoff-redteam\", \"evidence\": \"framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md; A final-candidate P1 and verified source fix\", \"scope\": \"luca_gstack integrity gates that freeze Git remotes\", \"reviewer\": \"luca\", \"tags\": [\"git\", \"remote\", \"integrity-gate\", \"exact-set\", \"redteam\"], \"valid_until\": \"\", \"supersedes\": \"\", \"proposed_stable\": false, \"stable_requested\": true, \"status\": \"CANDIDATE\"}\n",
+      "line_sha256": "fcdfe6b66a8f8bb59d4fb2e468726dad09047034671941d45a771d188ec31289",
+      "record": {
+        "id": "SC-20260820-001",
+        "created_at": "2026-08-20T04:58:00.631021+00:00",
+        "domain": "skill-rule",
+        "fact": "Framework Git-remote integrity gates must compare the complete fetch and push URL lists (get-url --all and get-url --push --all), including exact cardinality; checking only the first URL can miss an added endpoint. Source fix pointer: framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs validateRemote().",
+        "confidence": "high",
+        "source": "recovery-handoff-redteam",
+        "evidence": "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md; A final-candidate P1 and verified source fix",
+        "scope": "luca_gstack integrity gates that freeze Git remotes",
+        "reviewer": "luca",
+        "tags": [
+          "git",
+          "remote",
+          "integrity-gate",
+          "exact-set",
+          "redteam"
+        ],
+        "valid_until": "",
+        "supersedes": "",
+        "proposed_stable": false,
+        "stable_requested": true,
+        "status": "CANDIDATE"
+      }
+    },
+    {
+      "old_id": "SC-20260820-002",
+      "line": "{\"id\": \"SC-20260820-002\", \"created_at\": \"2026-08-20T06:06:54.174312+00:00\", \"domain\": \"skill-rule\", \"fact\": \"External handoff launch prompts must not hard-code the SHA of a manifest whose artifact hashes change during reviewer closure. Keep stable target/verifier identifiers if useful, but make the live verifier sole PASS authoritative; otherwise each review rebind creates a self-reference drift loop. Source fix pointer: /Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap/NEW-SESSION-PROMPT.md.\", \"confidence\": \"high\", \"source\": \"recovery-handoff-prompt-redteam\", \"evidence\": \"framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md and -redteam-b.md prompt self-reference finding and closure\", \"scope\": \"luca_gstack recovery handoff prompts and mutable artifact manifests\", \"reviewer\": \"luca\", \"tags\": [\"handoff\", \"manifest\", \"self-reference\", \"verifier\", \"redteam\"], \"valid_until\": \"\", \"supersedes\": \"\", \"proposed_stable\": false, \"stable_requested\": true, \"status\": \"CANDIDATE\"}\n",
+      "line_sha256": "af552844fa0f99874cfa529cd94d49518d65b13f0f07ec31470424b691117f89",
+      "record": {
+        "id": "SC-20260820-002",
+        "created_at": "2026-08-20T06:06:54.174312+00:00",
+        "domain": "skill-rule",
+        "fact": "External handoff launch prompts must not hard-code the SHA of a manifest whose artifact hashes change during reviewer closure. Keep stable target/verifier identifiers if useful, but make the live verifier sole PASS authoritative; otherwise each review rebind creates a self-reference drift loop. Source fix pointer: /Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap/NEW-SESSION-PROMPT.md.",
+        "confidence": "high",
+        "source": "recovery-handoff-prompt-redteam",
+        "evidence": "framework-audit/2026-08-19-rule-execution-recovery-handoff-redteam-a.md and -redteam-b.md prompt self-reference finding and closure",
+        "scope": "luca_gstack recovery handoff prompts and mutable artifact manifests",
+        "reviewer": "luca",
+        "tags": [
+          "handoff",
+          "manifest",
+          "self-reference",
+          "verifier",
+          "redteam"
+        ],
+        "valid_until": "",
+        "supersedes": "",
+        "proposed_stable": false,
+        "stable_requested": true,
+        "status": "CANDIDATE"
+      }
+    }
+  ],
+  "namespace_owners": [
+    {
+      "id": "SC-20260820-001",
+      "identities": [
+        {
+          "domain": "skill-rule",
+          "fact": "Framework Git-remote integrity gates must compare the complete fetch and push URL lists (get-url --all and get-url --push --all), including exact cardinality; checking only the first URL can miss an added endpoint. Source fix pointer: framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs validateRemote().",
+          "locations": [
+            {
+              "kind": "candidate",
+              "path": "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/candidates.jsonl"
+            }
+          ]
+        },
+        {
+          "domain": "skill-rule",
+          "fact": "project-scope-guard: 守卫的放行判据不得依赖路径拼法。同一目标写相对路径放行、写绝对路径拒绝，不是安全边界而是不一致——两条链（Bash 的 directProjectPathsAllowed 与 Read/Edit 的 classifyPath）必须同口径。框架检出可能物理坐落在 PROJECTS_ROOT 之内，框架作用域豁免要在 classifyPath 里也有，且必须排除三条共享展示路径。",
+          "locations": [
+            {
+              "kind": "candidate",
+              "path": "/Users/luca/Desktop/luca_gstack/memory/semantic/candidates.jsonl"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SC-20260820-002",
+      "identities": [
+        {
+          "domain": "skill-rule",
+          "fact": "External handoff launch prompts must not hard-code the SHA of a manifest whose artifact hashes change during reviewer closure. Keep stable target/verifier identifiers if useful, but make the live verifier sole PASS authoritative; otherwise each review rebind creates a self-reference drift loop. Source fix pointer: /Users/luca/.luca/rex-mpc2-cycle2-recovery-bootstrap/NEW-SESSION-PROMPT.md.",
+          "locations": [
+            {
+              "kind": "candidate",
+              "path": "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/candidates.jsonl"
+            }
+          ]
+        },
+        {
+          "domain": "skill-rule",
+          "fact": "Project Gate 的语义自判必须覆盖已知产品别名到现有项目的唯一映射：用户说『Luca app』或『muse 的 Luca app』时应直接归属 muse，不要求用户改说目录名；若 steered prompt 复用已消费 turn id 导致 SWITCH_ONLY 无法生成，agent 不得承诺用无项目名的『继续』修复，应保留待绑定项目意图或明确触发可恢复的新事务。源头修复应落 route-guard/turn 事务衔接，记忆仅保留本缺口指针。",
+          "locations": [
+            {
+              "kind": "promoted",
+              "path": "/Users/luca/Desktop/luca_gstack/memory/semantic/promoted-facts.yaml"
+            },
+            {
+              "kind": "promoted",
+              "path": "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/promoted-facts.yaml"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "policy": "authoritative store keeps current identities; fork evidence archived and re-proposed, not approved",
+  "promoted_sha256": {
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/promoted-facts.yaml": "9c9db01cc72d9b131f5f353342f07ee9a42a482bb81e43ec20ded5f419ffb666",
+    "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/promoted-facts.yaml": "7df68de45a622c69ebda9c6df2ae9e5f8b2027537723a0e03e221fb7680b6aac"
+  },
+  "stage": "REPROPOSED_PENDING_REVIEW",
+  "mappings": [
+    {
+      "old_id": "SC-20260820-001",
+      "old_line_sha256": "fcdfe6b66a8f8bb59d4fb2e468726dad09047034671941d45a771d188ec31289",
+      "new_candidate": "SC-20260908-001",
+      "source": "memory-collision-reproposal-20260908:fcdfe6b66a8f8bb59d4fb2e468726dad09047034671941d45a771d188ec31289:/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/archive/candidates-memory-collision-reproposal-20260908.jsonl"
+    },
+    {
+      "old_id": "SC-20260820-002",
+      "old_line_sha256": "af552844fa0f99874cfa529cd94d49518d65b13f0f07ec31470424b691117f89",
+      "new_candidate": "SC-20260908-002",
+      "source": "memory-collision-reproposal-20260908:af552844fa0f99874cfa529cd94d49518d65b13f0f07ec31470424b691117f89:/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/archive/candidates-memory-collision-reproposal-20260908.jsonl"
+    }
+  ]
+}

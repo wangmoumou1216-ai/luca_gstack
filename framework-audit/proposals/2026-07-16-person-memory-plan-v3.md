@@ -1,5 +1,7 @@
 # person 记忆层 —— 方案 v3
 
+> **状态校准（2026-09-06）：SUPERSEDED / HISTORICAL。** v3 的三级阶梯进入后续方案，但本稿自身未执行，已由 v4 终稿和 v5-exec 取代；当前完成态以 commits `5672fa5` / `c3fba4b` 为准。以下正文保留为收敛过程证据。
+
 > 状态：**提案。本 session 对两个 person store 的写入 = 0**（§2 V0，带可失败 control）。
 > 前置：昨案（S1–S7 继承）、v0/v1/v2（均判死）、v2-REDTEAM（14 项）。
 > 环境：Claude Code `2.1.211`。

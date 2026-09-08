@@ -1,5 +1,7 @@
 # person 记忆层 —— 方案 v2
 
+> **状态校准（2026-09-06）：SUPERSEDED / HISTORICAL。** 本版本未执行，已由 v3–v5 的无损算子与执行门取代；当前完成态以 v5-exec 及 commits `5672fa5` / `c3fba4b` 为准。以下正文保留为审计链证据。
+
 > 状态：**提案。未执行任何持久改动到 person 记忆层、任何仓、或治理队列。**
 > 本 session 的实验**确实产生了 3 处副作用**（2 个临时 trust key、1 个 transcript 目录、1 个探针目录），**已逐条审计并还原**，还原用的探针带**可失败 control**（§2 V0）。
 > 前置：`2026-07-15-person-memory-fragmentation.md`（昨案，S1–S7 继承）、`2026-07-16-person-memory-unification-plan.md`（v0，判死）、`...-REDTEAM.md`（裁决）、`2026-07-16-person-memory-plan-v1.md`（v1，判死）。

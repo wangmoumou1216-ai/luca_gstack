@@ -1,5 +1,7 @@
 # Handoff — 验收闭环三补丁（acceptance-closure）· 跨 session 移交
 
+> **状态校准（2026-09-06）：CLOSED。** Patch 1–3 已在 commit `867a9d3` 落地，并完成本文 §8 记录的回验；可选 Patch 4 仍按原裁决保持触发式开放，不影响本批次闭合。以下正文保留为历史执行记录。
+
 > **移交方**：2026-07-10「lucagstack 后置流程完整性 + OpenSpec 评估」session（Opus 初评 → Fable 复审两轮）。
 > **接收方**：正在执行 loop 改造批次的 luca 改造 session（`2026-07-10-loop-add-cut-decision.md` 那位）。
 > **状态**：方案已经 luca 确认要做（由接收方执行）；**本文成形于你的 Loop 宪法/C3 落地之前**，交叠声明见 §3，执行前先读 §3。

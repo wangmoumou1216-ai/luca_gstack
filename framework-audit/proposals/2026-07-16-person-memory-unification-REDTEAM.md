@@ -1,5 +1,7 @@
 # 红队裁决：person 记忆统一送审稿 —— **不通过**
 
+> **状态校准（2026-09-06）：HISTORICAL / SCOPED TO v0。** 本裁决只针对已被取代的 v0 送审稿；其发现已进入 v1–v5 修订链，不是当前完成态的阻塞结论。最终执行与验证见 v5-exec 及 commits `5672fa5` / `c3fba4b`。
+
 > 对象：`2026-07-16-person-memory-unification-plan.md`
 > 方法：5 个独立视角，全部指令为「证伪」，默认立场「它错了」。禁止只读文档下结论，必须实证。
 > 模型：redteam 档位 = `reasoning-heavy` → fable 白名单 P1「对抗判定」；**fable 配额用尽 → 按 model-routing 降级链降至 opus，已告知 luca**。

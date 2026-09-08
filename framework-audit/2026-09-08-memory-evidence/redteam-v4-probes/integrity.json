@@ -1,0 +1,98 @@
+{
+  "root": "/private/tmp/memory-redteam-v4-closure-whth54w7",
+  "manifest_sha256": "9269f657c59deea4ec0a15466e67d7bb9d3740798440d0bdcdbc93e4c9ae5dc6",
+  "frozen_verified": 83,
+  "baseline_differences": [
+    "memory/scripts/consolidate_memory.py",
+    "memory/tests/test_memory_failure_recovery.py"
+  ],
+  "delta_exact": true,
+  "live_production": {
+    ".claude/hooks/session-restore.mjs": {
+      "sha256": "8e7b0b944334fe2ce4073ed25bc75b2935fac52c286a4adc9daa12b07fc8251a",
+      "matches": true
+    },
+    ".claude/hooks/session-sync.mjs": {
+      "sha256": "81ac7a53f11f60c4809504637adf7b9ad1aa01bb59a0633b5b9add521ae230d2",
+      "matches": true
+    },
+    "memory/scripts/append_episode.py": {
+      "sha256": "2f06b74989b546bf06a8513fe6d02d18f524555b32e171f1ad1e7c7bc41b39fe",
+      "matches": true
+    },
+    "memory/scripts/consolidate_memory.py": {
+      "sha256": "9df101b9bbd4c95257a669d47f06cb168d6821d8e0117d6da37a845a6b1164a3",
+      "matches": true
+    },
+    "memory/scripts/daily_governance.py": {
+      "sha256": "70d87746ecbf01c8f7fcf2dfd8fa882e168f2911659f44b81f83ce59da10ca02",
+      "matches": true
+    },
+    "memory/scripts/propose_semantic.py": {
+      "sha256": "3db918b6cb884fa371ec12172db337e07e0c1d765153d64b2d4e28f0ddf6b9c4",
+      "matches": true
+    },
+    "memory/scripts/review_candidates.py": {
+      "sha256": "71e93b4dc9d69834d9b17938f2d65116e60eb8fcbb20ed226f7178e8701dd495",
+      "matches": true
+    },
+    "memory/scripts/search_memory.py": {
+      "sha256": "5b53456b3acb20bf0c90caca208f85bd1a5ab02c8f3c11c15fa28c58f4dd5a7e",
+      "matches": true
+    },
+    "memory/tests/test_memory_consumer_health.py": {
+      "sha256": "c08db2c9686a2fb29109fe28d2eb1fc7d74e032837723a4f25987e562285786f",
+      "matches": true
+    },
+    "memory/tests/test_memory_failure_recovery.py": {
+      "sha256": "7428e14b9c7f5fc311750eb4cb5f81316c3fbd44d12c84e351ed57bbe0fce1bf",
+      "matches": true
+    },
+    "memory/tests/test_memory_recall_scope.py": {
+      "sha256": "5085ddf1e84ef04a483e103878f69ca5978e46f09c81d02e90dbc65db379c8dc",
+      "matches": true
+    },
+    "memory/tests/test_memory_system.py": {
+      "sha256": "a5d725817dd4f94706a27a5ecfb6112b8748925830224f346222079d1ea429b6",
+      "matches": true
+    },
+    "memory/tests/test_pending_disposition_recovery.py": {
+      "sha256": "d6438e7765e79a836b861d202b3011d00db1e4a7dc503b9345ebddd532c3bce5",
+      "matches": true
+    },
+    "scripts/sync.sh": {
+      "sha256": "e330a5e9a550009c34c81700d36c4caa0115a9075637cad1dd495776f6ee4ada",
+      "matches": true
+    },
+    "scripts/test-hooks.mjs": {
+      "sha256": "48bb36682252b116281b8f6bd7fde619819770068a707d729fc2ba95014702bd",
+      "matches": true
+    },
+    "scripts/test-sync-real.mjs": {
+      "sha256": "6c0fed43e67b962a64b5d512a9df9916b03f00e66dbd3fa7cdebc1797ef8bbd2",
+      "matches": true
+    },
+    "scripts/test-sync.mjs": {
+      "sha256": "c4030624658f60e5fa68d381c648e256823696cf8b0eaf310cdad51be6384580",
+      "matches": true
+    },
+    "scripts/verify.sh": {
+      "sha256": "695468d6f7aa801568f2882c469ec25bf76e8b5b30df3275bb830a297118861b",
+      "matches": true
+    }
+  },
+  "unchanged_functions_sha256": {
+    "parse_promoted_facts": "4daef2201699926076cb7acc14a89e62da28eed8e540e1ef217168dba3a4fece",
+    "yaml_scalar": "ee5fbb89fec3d9c7f42c389240cef40a1d59545db5d05456dfdc76aaa440962d",
+    "yaml_list": "811be2f99e2705bbd7d53e42cfc3b0cae3fd7739728c57a78c4d3811c442faf7",
+    "append_optional_metadata": "d677041e1fa9fc186e5e5fe9ccf56696a9179392dd4b1fd18dba9bd79f6d0b00",
+    "append_promoted": "69c78d339cc9246eb92a496bb972a1d61bad2a0b032f5ee64b8796442c1854c3",
+    "promotion_ready": "497a48b904f1c3941ba8642f5df38c1eb21cabdef7c26be12637901e0895b700",
+    "archive_reviewed_candidates": "13ec38336ddfbc157b3752a3931753a3f9b75fec1d80fce99a761a7df4a4eed6"
+  },
+  "carry_forward": {
+    "scripts/sync.sh": "e330a5e9a550009c34c81700d36c4caa0115a9075637cad1dd495776f6ee4ada",
+    ".claude/hooks/session-restore.mjs": "8e7b0b944334fe2ce4073ed25bc75b2935fac52c286a4adc9daa12b07fc8251a",
+    "memory/scripts/daily_governance.py": "70d87746ecbf01c8f7fcf2dfd8fa882e168f2911659f44b81f83ce59da10ca02"
+  }
+}

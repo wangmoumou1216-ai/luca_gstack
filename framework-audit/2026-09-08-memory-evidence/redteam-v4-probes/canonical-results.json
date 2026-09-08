@@ -1,0 +1,42 @@
+[
+  {
+    "fallback": false,
+    "reverse": false,
+    "sources_distinct": true,
+    "wrong_source_retry_rc": 0,
+    "wrong_source_no_audit_and_retained": true,
+    "same_nullable_source_recovered": true,
+    "retry_idempotent": true,
+    "candidate_preserved_until_durable_audit": true
+  },
+  {
+    "fallback": false,
+    "reverse": true,
+    "sources_distinct": true,
+    "wrong_source_retry_rc": 0,
+    "wrong_source_no_audit_and_retained": true,
+    "same_nullable_source_recovered": true,
+    "retry_idempotent": true,
+    "candidate_preserved_until_durable_audit": true
+  },
+  {
+    "fallback": true,
+    "reverse": false,
+    "sources_distinct": true,
+    "wrong_source_retry_rc": 0,
+    "wrong_source_no_audit_and_retained": true,
+    "same_nullable_source_recovered": true,
+    "retry_idempotent": true,
+    "candidate_preserved_until_durable_audit": true
+  },
+  {
+    "fallback": true,
+    "reverse": true,
+    "sources_distinct": true,
+    "wrong_source_retry_rc": 0,
+    "wrong_source_no_audit_and_retained": true,
+    "same_nullable_source_recovered": true,
+    "retry_idempotent": true,
+    "candidate_preserved_until_durable_audit": true
+  }
+]

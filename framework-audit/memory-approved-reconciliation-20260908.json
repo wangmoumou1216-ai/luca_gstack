@@ -1,0 +1,81 @@
+{
+  "event": "approved-memory-reconciliation-20260908",
+  "destination": "/Users/luca/Desktop/luca_gstack",
+  "lock": "/Users/luca/.luca/locks/semantic-candidate-id.lock",
+  "code_root": "/Users/luca/Desktop/项目/muse/lucagstack",
+  "known_roots": [
+    "/Users/luca/Desktop/luca_gstack",
+    "/Users/luca/Desktop/项目/muse/lucagstack"
+  ],
+  "ids": [
+    "SC-20260905-001",
+    "SC-20260905-002",
+    "SC-20260905-003",
+    "SC-20260905-004"
+  ],
+  "before": {
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/candidates.jsonl": "18a8ce24f5be25162aeaa5ac6f17898aca6935edad7871456627a6881db8d41c",
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/reviews.jsonl": "71bd273cdeec6db702d730ba511f09d3b5e519c66cb98a2ae3d3cad227fbaa91",
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/promoted-facts.yaml": "9c9db01cc72d9b131f5f353342f07ee9a42a482bb81e43ec20ded5f419ffb666",
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/static-fallback-allowlist.txt": "076e4c1c4e82342da7c4f8001743a31143121bb25b330faca929592ec6dcfbdd"
+  },
+  "source_sha256": {
+    "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/candidates.jsonl": "952458bbb7d8fb13beb25ca1f9ffca4aba3949c83efd357f766340748d98eabd",
+    "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/reviews.jsonl": "dc63a2574d6c6ce3d4e7f2fa0c74bd8561a16d5c098073b252b89fcefa18af0f",
+    "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/promoted-facts.yaml": "7df68de45a622c69ebda9c6df2ae9e5f8b2027537723a0e03e221fb7680b6aac",
+    "/Users/luca/Desktop/项目/muse/lucagstack/memory/semantic/static-fallback-allowlist.txt": "bd51cc59d214501adb3968e43f8a9c1f1156df7b8004ed69461f4fa2a75b4870"
+  },
+  "approval_events": [
+    {
+      "candidate_id": "SC-20260905-001",
+      "decision": "approved_stable",
+      "reviewer": "luca-approved U-008; b4_inventory independent PASS",
+      "reason": "人工闸门放行：proposed_stable 置 True",
+      "reviewed_at": "2026-09-05T12:13:31.772773+00:00",
+      "source": "consolidate_memory.py"
+    },
+    {
+      "candidate_id": "SC-20260905-002",
+      "decision": "approved_stable",
+      "reviewer": "luca (explicit R5 fix authorization; r5_memory_content_review PASS)",
+      "reason": "人工闸门放行：proposed_stable 置 True",
+      "reviewed_at": "2026-09-05T13:02:25.019138+00:00",
+      "source": "consolidate_memory.py"
+    },
+    {
+      "candidate_id": "SC-20260905-003",
+      "decision": "approved_stable",
+      "reviewer": "luca (explicit R5 fix authorization; r5_memory_content_review PASS)",
+      "reason": "人工闸门放行：proposed_stable 置 True",
+      "reviewed_at": "2026-09-05T13:02:25.019645+00:00",
+      "source": "consolidate_memory.py"
+    },
+    {
+      "candidate_id": "SC-20260905-004",
+      "decision": "approved_stable",
+      "reviewer": "luca (R5 all-fixes authorization; independent r5_final_spec content PASS)",
+      "reason": "人工闸门放行：proposed_stable 置 True",
+      "reviewed_at": "2026-09-05T13:10:55.988200+00:00",
+      "source": "consolidate_memory.py"
+    }
+  ],
+  "stage": "RECONCILED",
+  "promoted": [
+    "SC-20260905-001",
+    "SC-20260905-002",
+    "SC-20260905-003",
+    "SC-20260905-004"
+  ],
+  "archived": [
+    "SC-20260609-003",
+    "SC-20260610-001",
+    "SF-001",
+    "SF-002"
+  ],
+  "after": {
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/candidates.jsonl": "83274dfa65c3510d801cae70895d0e09d69ba59d3e181c689869802525c51b3a",
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/reviews.jsonl": "2920a93b041000ac1da6c2acebf4e486b4218ce42d2b876a914257d53a979a67",
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/promoted-facts.yaml": "b624e791c8551f8158831493ca9add403227dd8d7dc1e3b79c211fa951b5e8f6",
+    "/Users/luca/Desktop/luca_gstack/memory/semantic/static-fallback-allowlist.txt": "bd51cc59d214501adb3968e43f8a9c1f1156df7b8004ed69461f4fa2a75b4870"
+  }
+}

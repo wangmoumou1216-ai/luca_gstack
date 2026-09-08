@@ -1,0 +1,27 @@
+[
+  {
+    "label": "absent",
+    "warning": true,
+    "stdout": "[session-restore] ⚠️ 最近一次（2026-09-07）记忆治理失败：YESTERDAY_FAIL；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n"
+  },
+  {
+    "label": "empty",
+    "warning": true,
+    "stdout": "[session-restore] ⚠️ 最近一次（2026-09-07）记忆治理失败：YESTERDAY_FAIL；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n"
+  },
+  {
+    "label": "empty-object",
+    "warning": true,
+    "stdout": "[session-restore] ⚠️ 最近一次（2026-09-07）记忆治理失败：YESTERDAY_FAIL；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n"
+  },
+  {
+    "label": "healthy",
+    "warning": false,
+    "stdout": ""
+  },
+  {
+    "label": "latest-failed",
+    "warning": true,
+    "stdout": "[session-restore] ⚠️ 今日记忆治理失败：TODAY_FAIL；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n"
+  }
+]

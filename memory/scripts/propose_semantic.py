@@ -19,6 +19,26 @@ import yaml
 from datetime import datetime, timezone
 from pathlib import Path
 
+try:
+    from consolidate_memory import (
+        candidate_id_census,
+        candidate_id_collisions,
+        next_candidate_id,
+        semantic_id_lock,
+    )
+except ImportError:
+    # importlib-based tests do not always put memory/scripts on sys.path.
+    import importlib.util as _ilu
+    _consolidate_path = Path(__file__).resolve().parent / "consolidate_memory.py"
+    _spec = _ilu.spec_from_file_location("consolidate_memory", _consolidate_path)
+    _consolidate = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(_consolidate)
+    candidate_id_census = _consolidate.candidate_id_census
+    candidate_id_collisions = _consolidate.candidate_id_collisions
+    next_candidate_id = _consolidate.next_candidate_id
+    semantic_id_lock = _consolidate.semantic_id_lock
+
+
 def _resolve_root():
     """记忆根解析（P1/FIX-1）：统一走 _memroot.resolve_memory_root——含 store-shape 哨兵、
     相对路径拒绝、脚本相对回落，与 JS 侧 memroot.mjs 同算法（防 JS/py 裂脑与 cloud 幻影树）。
@@ -48,60 +68,9 @@ CANDIDATES = ROOT / "memory" / "semantic" / "candidates.jsonl"
 PROMOTED = ROOT / "memory" / "semantic" / "promoted-facts.yaml"
 
 
-# 单真值源是 main，但它有**两个检出**，而 memory/semantic/candidates.jsonl 在两边都是
-# untracked（各持一份、永不合并）。若只扫本地 store 取 max+1，**同一天在两个检出各提一条
-# 必然撞号**——2026-08-20 实测：两边各有一条内容完全不同的 SC-20260820-001 与 -002，
-# 而下游 verifier 只在其中一侧按 ID+字节校验，所以门禁看不见这个损伤。
-# 修法：跨全部已知检出取全局 max。ID 格式不变（下游有 SC-\d{8}-\d{3} 的消费者）。
-KNOWN_ROOTS = (
-    Path("/Users/luca/Desktop/luca_gstack"),              # 母版＝记忆权威 store
-    Path("/Users/luca/Desktop/项目/muse/lucagstack"),      # muse 运行时检出
-)
-
-
-def _seq_from(fact_id: str, prefix: str) -> int:
-    if not fact_id.startswith(prefix):
-        return 0
-    try:
-        return int(fact_id.split("-")[-1])
-    except Exception:
-        return 0
-
-
-def _max_seq_for_prefix(prefix: str) -> int:
-    """跨全部已知检出扫 candidates + promoted，返回该前缀下的最大序号。"""
-    roots = {ROOT.resolve()}
-    for r in KNOWN_ROOTS:
-        try:
-            if r.is_dir():
-                roots.add(r.resolve())
-        except Exception:
-            pass
-    best = 0
-    for root in roots:
-        cand = root / "memory" / "semantic" / "candidates.jsonl"
-        if cand.exists():
-            for line in cand.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    best = max(best, _seq_from(json.loads(line).get("id", ""), prefix))
-                except Exception:
-                    pass
-        prom = root / "memory" / "semantic" / "promoted-facts.yaml"
-        if prom.exists():
-            for line in prom.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line.startswith("- id:") or line.startswith("id:"):
-                    best = max(best, _seq_from(line.split(":", 1)[1].strip().strip('"'), prefix))
-    return best
-
-
-def next_id() -> str:
-    today = datetime.now(timezone.utc).strftime('%Y%m%d')
-    prefix = f"SC-{today}-"
-    return f"{prefix}{_max_seq_for_prefix(prefix) + 1:03d}"
+def next_id(census=None) -> str:
+    """Compatibility wrapper; the proposal path calls this while holding the shared lock."""
+    return next_candidate_id(census if census is not None else candidate_id_census(ROOT))
 
 
 def main() -> int:
@@ -119,9 +88,6 @@ def main() -> int:
     parser.add_argument("--supersedes", default="", help="optional previous fact id superseded by this candidate")
     args = parser.parse_args()
 
-    if is_duplicate(args.domain, args.fact):
-        print("duplicate semantic memory candidate", file=sys.stderr)
-        return 2
     if args.stable:
         missing = [name for name, value in {
             "evidence": args.evidence,
@@ -132,35 +98,62 @@ def main() -> int:
             print(f"--stable requires review metadata: {', '.join(missing)}", file=sys.stderr)
             return 2
 
-    candidate_id = next_id()
-    record = {
-        "id": candidate_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "domain": args.domain,
-        "fact": args.fact,
-        "confidence": args.confidence,
-        "source": args.source,
-        "evidence": args.evidence,
-        "scope": args.scope,
-        "reviewer": args.reviewer,
-        "tags": [tag.strip() for tag in args.tags.split(",") if tag.strip()],
-        "valid_until": args.valid_until,
-        "supersedes": args.supersedes,
-        # 红线 SC-20260523-003：提案者不得自评晋升。--stable 仅记意图，
-        # proposed_stable 只能由人工闸门 consolidate --set-stable 翻转（见 set_stable docstring）。
-        "proposed_stable": False,
-        "stable_requested": bool(args.stable),
-        "status": "CANDIDATE",
-    }
-
     if args.stable and args.confidence != "high":
         print(json.dumps({
             "warning": f"--stable 已设置但 confidence={args.confidence}，当前记录写入候选队列，等待人工审核。"
         }, ensure_ascii=False), file=sys.stderr)
 
-    CANDIDATES.parent.mkdir(parents=True, exist_ok=True)
-    with CANDIDATES.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    try:
+        preflight_census = candidate_id_census(ROOT)
+        preflight_collisions = candidate_id_collisions(preflight_census)
+        if preflight_collisions:
+            print(
+                json.dumps({"candidate_id_collisions": preflight_collisions}, ensure_ascii=False),
+                file=sys.stderr,
+            )
+            print("semantic candidate ID collision detected; refusing proposal", file=sys.stderr)
+            return 2
+        # One critical section covers cross-root census, collision refusal,
+        # max+1 allocation, duplicate recheck, and the append itself.
+        with semantic_id_lock(ROOT):
+            census = candidate_id_census(ROOT)
+            collisions = candidate_id_collisions(census)
+            if collisions:
+                print(json.dumps({"candidate_id_collisions": collisions}, ensure_ascii=False), file=sys.stderr)
+                print("semantic candidate ID collision detected; refusing proposal", file=sys.stderr)
+                return 2
+            if is_duplicate(args.domain, args.fact):
+                print("duplicate semantic memory candidate", file=sys.stderr)
+                return 2
+
+            candidate_id = next_id(census)
+            record = {
+                "id": candidate_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "domain": args.domain,
+                "fact": args.fact,
+                "confidence": args.confidence,
+                "source": args.source,
+                "evidence": args.evidence,
+                "scope": args.scope,
+                "reviewer": args.reviewer,
+                "tags": [tag.strip() for tag in args.tags.split(",") if tag.strip()],
+                "valid_until": args.valid_until,
+                "supersedes": args.supersedes,
+                # 红线 SC-20260523-003：提案者不得自评晋升。--stable 仅记意图，
+                # proposed_stable 只能由人工闸门 consolidate --set-stable 翻转（见 set_stable docstring）。
+                "proposed_stable": False,
+                "stable_requested": bool(args.stable),
+                "status": "CANDIDATE",
+            }
+            CANDIDATES.parent.mkdir(parents=True, exist_ok=True)
+            with CANDIDATES.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+    except (OSError, RuntimeError, ValueError) as exc:
+        print(f"semantic candidate ID lock/census unavailable; refusing proposal: {exc}", file=sys.stderr)
+        return 2
 
     print(json.dumps({"candidate": candidate_id, "status": "pending_review"}, ensure_ascii=False))
     return 0

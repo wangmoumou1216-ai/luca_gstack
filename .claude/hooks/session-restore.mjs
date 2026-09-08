@@ -4,6 +4,7 @@ import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkS
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
+import { randomUUID } from 'crypto';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
 import { acquireProjectLease, releaseProjectLease } from '../../scripts/project-lease.mjs';
 import {
@@ -130,15 +131,8 @@ try {
       if (age > ttl) unlinkSync(join(claudeDir, f));
     } catch { }
   }
-  // pending-extraction 软兜底文件同样 TTL GC（7天）：写后无人处理会无限堆积并制造启动提醒
-  //（audit F1-03：7 天实测积压 11 个，多为 trivial session stub）
-  const obsDir = join(claudeDir, 'observability');
-  for (const f of readdirSync(obsDir)) {
-    if (!f.startsWith('pending-extraction') || !f.endsWith('.md')) continue;
-    try {
-      if (nowMs - statSync(join(obsDir, f)).mtimeMs > COUNTER_TTL) unlinkSync(join(obsDir, f));
-    } catch { }
-  }
+  // pending-extraction 是未裁决证据，不是可按年龄证明死亡的临时计数器。它没有 TTL 删除：
+  // 只有显式 disposition 先写 manifest evidence 后，才能移入 quarantine（见 daily_governance.py）。
 } catch { }
 
 // 只从已验证 binding 读取进度。共享 docs/ 是 display symlink，永不作为身份或启动上下文来源。
@@ -340,28 +334,183 @@ if (cleared || !hasActiveLinks) {
   } catch { }
 }
 
-// Check for pending skill-rule extraction from previous sessions.
-// This intentionally lives outside docs/handoff so startup does not treat it as upstream handoff context.
-// 并发隔离（G2）：pending 文件按 session 命名（pending-extraction-<sid>.md），glob 逐个提醒；
-// 兼容旧的单文件名 pending-extraction.md。最多列 3 个防刷屏，超出报总数。
+// Pending experience adjudication stays outside docs/handoff so startup does not treat it as upstream
+// project context. Each startup claims exactly one oldest active item: bounded work beats printing an
+// ever-growing filename list. Claim metadata is an atomic latest-state sidecar; it never edits evidence.
+// Legacy pending-extraction.md remains a first-class active item.
 try {
   const obsDir = join(projectRoot, '.claude', 'observability');
-  const pendings = existsSync(obsDir)
-    ? readdirSync(obsDir).filter(f => f.startsWith('pending-extraction') && f.endsWith('.md')).sort()
-    : [];
-  for (const f of pendings.slice(0, 3)) {
-    let hint = '';
+  const claimsDir = join(obsDir, '.pending-extraction-claims');
+  const claimLockPath = process.env.SESSION_RESTORE_PENDING_CLAIM_LOCK || join(claimsDir, '.claim.lock');
+  const timeoutCandidate = Number(process.env.SESSION_RESTORE_PENDING_CLAIM_LOCK_TIMEOUT_MS || 5000);
+  const claimLockTimeoutMs = Number.isFinite(timeoutCandidate) && timeoutCandidate >= 0 ? timeoutCandidate : 5000;
+  const claimLockWaitCell = new Int32Array(new SharedArrayBuffer(4));
+  const acquireClaimLock = () => {
+    mkdirSync(dirname(claimLockPath), { recursive: true });
+    const ownerBytes = Buffer.from(`${JSON.stringify({
+      schema_version: 1,
+      pid: process.pid,
+      nonce: randomUUID(),
+      acquired_at: new Date().toISOString(),
+    })}\n`);
+    const deadline = Date.now() + claimLockTimeoutMs;
+    while (true) {
+      let fd = null;
+      try {
+        // `wx` is the cross-process CAS. Waiting only backs off contention; mutual exclusion does
+        // not depend on timing, polling cadence, or a sleep winning the race.
+        fd = openSync(claimLockPath, 'wx', 0o600);
+        writeFileSync(fd, ownerBytes);
+        closeSync(fd);
+        return { ownerBytes };
+      } catch (error) {
+        if (fd !== null) {
+          try { closeSync(fd); } catch { }
+          try { unlinkSync(claimLockPath); } catch { }
+        }
+        if (error?.code !== 'EEXIST') throw error;
+        if (Date.now() >= deadline) throw new Error(`pending claim lock timed out: ${claimLockPath}`);
+        Atomics.wait(claimLockWaitCell, 0, 0, Math.min(4, Math.max(1, deadline - Date.now())));
+      }
+    }
+  };
+  const releaseClaimLock = ({ ownerBytes }) => {
+    const actual = readFileSync(claimLockPath);
+    if (!actual.equals(ownerBytes)) throw new Error(`pending claim lock owner changed: ${claimLockPath}`);
+    const parked = `${claimLockPath}.release-${process.pid}-${randomUUID()}`;
+    renameSync(claimLockPath, parked);
     try {
-      const content = readFileSync(join(obsDir, f), 'utf8');
-      const topicLine = content.split('\n').find(l => l.startsWith('> Topic:'));
-      if (topicLine) hint = ` (${topicLine.replace('> Topic:', '').trim()})`;
+      if (!readFileSync(parked).equals(ownerBytes)) throw new Error(`pending claim parked owner changed: ${parked}`);
+      unlinkSync(parked);
+    } catch (error) {
+      // Canonical name was already moved, so the lock is released. A unique parked residue cannot
+      // block another startup and must not invite retrying an already-completed claim transaction.
+      process.stderr.write(`[session-restore] ⚠️ pending claim lock 已释放，但残留清理失败：${parked} — ${String(error?.message || error)}\n`);
+    }
+  };
+  const withClaimLock = (work) => {
+    const owner = acquireClaimLock();
+    try {
+      if (process.env.SESSION_RESTORE_PENDING_CLAIM_FAULT === 'after-acquire') {
+        throw new Error('injected pending claim fault after-acquire');
+      }
+      return work();
+    } finally {
+      releaseClaimLock(owner);
+    }
+  };
+  const readClaim = (name) => {
+    try {
+      const claim = JSON.parse(readFileSync(join(claimsDir, `${name}.json`), 'utf8'));
+      const claimedMs = Date.parse(claim.claimed_at || '');
+      return Number.isFinite(claimedMs) ? { ...claim, claimedMs } : null;
+    } catch { return null; }
+  };
+  const claimed = existsSync(obsDir) ? withClaimLock(() => {
+    const pendings = readdirSync(obsDir)
+      .filter(f => f === 'pending-extraction.md' || /^pending-extraction-.+\.md$/.test(f))
+      .map(f => {
+        const priorClaim = readClaim(f);
+        try { return { name: f, mtimeMs: statSync(join(obsDir, f)).mtimeMs, priorClaim }; }
+        catch { return { name: f, mtimeMs: Number.POSITIVE_INFINITY, priorClaim }; }
+      })
+      // Claim-LRU: first drain never-claimed evidence in oldest order; only when every item has
+      // been surfaced do we revisit the least-recently claimed. Otherwise one old UNRESOLVED item
+      // can be selected forever and starve the rest of the queue.
+      .sort((a, b) => {
+        if (!a.priorClaim && b.priorClaim) return -1;
+        if (a.priorClaim && !b.priorClaim) return 1;
+        if (a.priorClaim && b.priorClaim && a.priorClaim.claimedMs !== b.priorClaim.claimedMs) {
+          return a.priorClaim.claimedMs - b.priorClaim.claimedMs;
+        }
+        return a.mtimeMs - b.mtimeMs || a.name.localeCompare(b.name);
+      });
+    const selected = pendings[0];
+    if (!selected) return null;
+    const relativePending = `.claude/observability/${selected.name}`;
+    const locator = {
+      session_id: 'unavailable',
+      captured_at: 'unavailable',
+      topic: 'unavailable',
+      project: 'unavailable',
+      harness: 'unavailable',
+      transcript_path: 'unavailable',
+    };
+    try {
+      const content = readFileSync(join(obsDir, selected.name), 'utf8');
+      const fields = {
+        'Session-ID': 'session_id',
+        'Captured-At': 'captured_at',
+        Topic: 'topic',
+        Project: 'project',
+        Harness: 'harness',
+        'Transcript-Path': 'transcript_path',
+      };
+      for (const [label, key] of Object.entries(fields)) {
+        const line = content.split('\n').find(value => value.startsWith(`> ${label}:`));
+        if (line) locator[key] = line.slice(label.length + 3).trim() || 'unavailable';
+      }
     } catch { }
-    process.stdout.write(`[session-restore] 📝 有待提取的 skill-rule${hint}。文件: .claude/observability/${f}\n`);
+
+    let claimRecorded = false;
+    try {
+      mkdirSync(claimsDir, { recursive: true });
+      const claimedAt = new Date().toISOString();
+      const priorCount = Number.isInteger(selected.priorClaim?.claim_count) && selected.priorClaim.claim_count > 0
+        ? selected.priorClaim.claim_count
+        : (selected.priorClaim ? 1 : 0);
+      const claim = {
+        schema_version: 1,
+        event: 'PENDING_CLAIMED',
+        pending_path: relativePending,
+        first_claimed_at: selected.priorClaim?.first_claimed_at || selected.priorClaim?.claimed_at || claimedAt,
+        claimed_at: claimedAt,
+        claim_count: priorCount + 1,
+        claimed_by_session: ownSid || 'unavailable',
+        locator,
+      };
+      const target = join(claimsDir, `${selected.name}.json`);
+      const tmp = join(claimsDir, `.${selected.name}.${process.pid}.tmp`);
+      writeFileSync(tmp, `${JSON.stringify(claim)}\n`, { mode: 0o600 });
+      renameSync(tmp, target);
+      claimRecorded = true;
+    } catch { }
+    return { selected, relativePending, locator, claimRecorded, pendingCount: pendings.length };
+  }) : null;
+  if (claimed) {
+    const { relativePending, locator, claimRecorded, pendingCount } = claimed;
+    const claimLabel = claimRecorded ? '已认领本次启动唯一一项' : '已选中本次启动唯一一项（claim 留痕失败，证据仍保留）';
+    process.stdout.write(
+      `[session-restore] 📝 待裁决经验（${claimLabel}）\n`
+      + `路径: ${relativePending}\n`
+      + `定位: Session-ID=${locator.session_id} | Captured-At=${locator.captured_at} | Topic=${locator.topic} | Project=${locator.project} | Harness=${locator.harness} | Transcript-Path=${locator.transcript_path}\n`
+      + `动作: 先读 .claude/skill-os/extraction-bar.md；选择 QUALIFIED / NO_SIGNAL / UNRESOLVED，不自行预判语义内容。\n`
+      + `记录: python3 memory/scripts/daily_governance.py pending-disposition --pending "${relativePending}" --status <STATUS> --evidence "<证据或缺口>" --actor "<name>"\n`
+    );
+    if (pendingCount > 1) {
+      process.stdout.write(`[session-restore] 📝 另有 ${pendingCount - 1} 项保持排队；本次不展开。\n`);
+    }
   }
-  if (pendings.length > 3) {
-    process.stdout.write(`[session-restore] 📝 …另有 ${pendings.length - 3} 个 pending-extraction 文件待处理\n`);
+} catch (error) {
+  // Losing claim bookkeeping must not silence the consumer. Do not steal a lock whose
+  // owner may have changed; provide one explicitly unclaimed, read-only fallback instead.
+  process.stdout.write(`[session-restore] ⚠️ pending claim lock/认领不可用：${String(error?.message || error)}；未恢复锁。\n`);
+  try {
+    const obs = join(projectRoot, '.claude', 'observability');
+    const names = readdirSync(obs)
+      .filter(name => name === 'pending-extraction.md' || /^pending-extraction-.+\.md$/.test(name))
+      .filter(name => lstatSync(join(obs, name)).isFile())
+      .sort((a, b) => statSync(join(obs, a)).mtimeMs - statSync(join(obs, b)).mtimeMs || a.localeCompare(b));
+    if (names[0]) {
+      const pending = `.claude/observability/${names[0]}`;
+      process.stdout.write(`[session-restore] 📝 待裁决经验（未认领，只读降级；其他启动可能重复展示）\n路径: ${pending}\n`
+        + `先读 .claude/skill-os/extraction-bar.md 和该证据；通过现有窄入口裁决：\n`
+        + `python3 memory/scripts/daily_governance.py pending-disposition --pending "${pending}" --status <STATUS> --evidence "<证据或缺口>" --actor "<name>"\n`);
+    }
+  } catch (fallbackError) {
+    process.stdout.write(`[session-restore] ⚠️ pending 只读提醒也失败：${String(fallbackError?.message || fallbackError)}\n`);
   }
-} catch { }
+}
 
 const memScript = join(projectRoot, 'memory', 'scripts', 'get_memory.py');
 if (existsSync(memScript)) {
@@ -409,6 +558,21 @@ try {
   // 认领标记/digest 探测必须与其一致，否则 redirect 生效时触发侧与写入侧分裂（F2-01/P0）
   const todayDigest = join(memoryRoot, 'memory', 'digests', `${today}.md`);
   const todayChecked = join(memoryRoot, 'memory', 'digests', `.checked-${today}`);
+  try {
+    const digestDir = join(memoryRoot, 'memory', 'digests');
+    const attempts = readdirSync(digestDir).filter(name => /^\.checked-\d{4}-\d{2}-\d{2}$/.test(name)
+      && name <= `.checked-${today}`).sort().reverse();
+    for (const name of attempts) {
+      let attempt;
+      try { attempt = JSON.parse(readFileSync(join(digestDir, name), 'utf8')); } catch { continue; }
+      if (!attempt || typeof attempt !== 'object' || Object.keys(attempt).length === 0) continue;
+      if (attempt.status === 'failed') {
+        const when = name === `.checked-${today}` ? '今日' : `最近一次（${name.slice(9)}）`;
+        process.stdout.write(`[session-restore] ⚠️ ${when}记忆治理失败：${String(attempt.error || '未知错误').replace(/[\r\n]/g, ' ').slice(0, 240)}；未标为健康完成。修复原因后运行 python3 memory/scripts/daily_governance.py 补跑。\n`);
+      }
+      break; // A later completed attempt supersedes the previous failure, never a blank claim.
+    }
+  } catch { /* Missing/empty legacy claims retain the existing stale-marker handling below. */ }
   if (existsSync(govScript) && !existsSync(todayDigest)) {
     // 并发隔离（G2，2026-07-04）：两个 session 近同时启动都读到 !exists → 都 spawn 治理
     // （TOCTOU）。改为 O_EXCL 原子认领 .checked-<date>：抢到的 spawn，EEXIST 的静默跳过；
