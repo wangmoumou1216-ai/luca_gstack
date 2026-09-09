@@ -567,7 +567,11 @@ run('Claude unknown user-like row after cursor', () => {
   const first = attestTestEvent({ candidate: firstCandidate, transcriptPath: realpathSync(transcript) });
   writeFileSync(transcript, [
     readFileSync(transcript, 'utf8').trimEnd(),
-    JSON.stringify(claudeUserRecord(secondCandidate, { origin: null, promptSource: null })),
+    // An origin-less, promptSource-less row is local command echo (<bash-input>,
+    // <command-name>, <local-command-stdout>) and is legitimately skippable. The
+    // shape that must still fail closed is one carrying positive evidence of a
+    // provenance we do not understand — e.g. a future human-bearing origin kind.
+    JSON.stringify(claudeUserRecord(secondCandidate, { origin: { kind: 'future-human-kind' } })),
     JSON.stringify(claudeUserRecord(secondCandidate)),
   ].join('\n') + '\n');
   expectReject('Claude unknown user-like row after cursor', 'UNKNOWN_SCHEMA', () => {

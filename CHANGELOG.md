@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-09-09 · 原生事件识别器对齐真实运行时）
+
+- 原生事件认证在真机上对**两个 harness 全线失效**，Project Gate 因此无法绑定任何项目。三处识别器都是照着想象中的运行时写的，而全部断言只跑手写夹具，无一读过真实 transcript/rollout：
+  - Claude 真人 prompt 判据要求 `isMeta === false`，但 Claude Code 从不发这个字段（实测 2.1.233…2.1.266 共 15 版、924 份 transcript，0 次），324 条真人 prompt 全被判 `unknown` 硬失败。判据改为按真正承载来源的 `origin.kind` + `promptSource` 裁决，`isMeta` 缺失即「非 meta」——与本次改动的设计依据 `TRANSCRIPT-AUTH-EVIDENCE.md` 记的 `human / false-or-absent` 一致。非真人来源走白名单，白名单外仍 `unknown` fail closed。
+  - 带图片的 prompt（content 含 `image` part）被 `strictClaudeText` 判 `UNKNOWN_SCHEMA`。同一份设计依据要求「accept `type=text` 与 `type=image`，校验但不计入授权文本」，实现漏掉了后者；现按此恢复，未知 part 类型仍 fail closed，且无任何 text part 时新增拒绝。
+  - Codex 把注入的回合上下文（AGENTS.md、插件清单、环境前言）记成普通 user 消息，带合法 `msg_*` id 与相同 turn_id，扫描先撞上它 → 每个会话首回合必 `MISMATCH`。改为仅当记录**与候选不匹配且没有 UserMessage 完成事件**时按注入上下文跳过；匹配的记录仍走完整锚校验，`assertNoNewNativeUser` 保持不过滤（放宽它会让追加的原生 prompt 逃过撤销，IDENTITY-STATE-007 覆盖该方向）。
+- 新增 `scripts/test-native-schema-realism.mjs`：冻结真机上实际出现过的十种 user 行形状逐条断言归类，并直接拿 `~/.claude/projects` 与 `~/.codex/sessions` 的真实产物跑公开认证路径（缺文件则跳过，不假绿）。三处修复各自变异后仅对应一侧转红，互不掩盖。
+
 ### Fixed（2026-09-09 · E3 原生事件身份与审查闭环）
 
 - 将共享 `boundary_id` 与原生 `event_id` 分离，候选队列、原生日志游标、消费账本及项目权限在同一事务中更新，避免同一 boundary 下真实消息被当成重放。

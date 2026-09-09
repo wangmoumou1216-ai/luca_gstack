@@ -244,15 +244,27 @@ function strictCodexText(content, expectedType) {
   return parts.join('\n');
 }
 
+// A prompt submitted with a pasted image records an `image` part alongside the
+// `text` part; the prompt bytes the hook sees are the text parts alone (the text
+// part itself carries the "[Image #N]" marker). Non-text parts are therefore
+// skipped — but only the ones we have actually observed. An unrecognized part type
+// still fails closed, so a future content kind cannot be silently dropped from the
+// bytes being compared.
+const CLAUDE_SKIPPABLE_CONTENT_PARTS = ['image'];
+
 function strictClaudeText(content) {
   if (typeof content === 'string') return content;
   if (!Array.isArray(content) || content.length === 0) fail('UNKNOWN_SCHEMA', 'Claude message content schema is unknown');
-  return content.map((part) => {
+  const parts = [];
+  for (const part of content) {
+    if (part && typeof part.type === 'string' && CLAUDE_SKIPPABLE_CONTENT_PARTS.includes(part.type)) continue;
     if (!part || part.type !== 'text' || typeof part.text !== 'string') {
       fail('UNKNOWN_SCHEMA', 'Claude message content part schema is unknown');
     }
-    return part.text;
-  }).join('\n');
+    parts.push(part.text);
+  }
+  if (!parts.length) fail('UNKNOWN_SCHEMA', 'Claude message content carries no text part');
+  return parts.join('\n');
 }
 
 function sameUtf8(text, expected) {
@@ -324,6 +336,27 @@ function isCodexUserRecord(record) {
   const payload = record?.value?.payload;
   return record?.value?.type === 'response_item'
     && payload?.type === 'message' && payload?.role === 'user';
+}
+
+// Codex records injected turn context (AGENTS.md, plugin lists, environment
+// preambles) as ordinary user messages: real `msg_*` id, same turn_id as the human
+// prompt that follows. The one thing they never carry is a completed `UserMessage`
+// item — that event is emitted only for what the person actually sent. The scan
+// therefore skips a user record with no UserMessage anchor instead of comparing its
+// bytes, which previously produced MISMATCH on the first turn of every session.
+//
+// This only skips; it never accepts. A record that does carry an anchor still has to
+// match the candidate byte for byte, so a preamble cannot stand in for a prompt.
+function codexRecordHasUserMessageAnchor(records, sourceIndex) {
+  for (const distance of [1, 2]) {
+    const next = records[sourceIndex + distance];
+    if (!next) return false;
+    if (isCodexUserRecord(next)) return false;
+    const payload = next.value?.payload;
+    if (next.value?.type === 'event_msg' && payload?.type === 'item_completed'
+        && payload?.item?.type === 'UserMessage') return true;
+  }
+  return false;
 }
 
 function codexAnchor(records, sourceIndex, candidate, expected) {
@@ -463,7 +496,14 @@ function attestCodex(candidate, source, records, bytes, cursor, observation, ass
     }
     const sourceText = strictCodexText(payload.content, 'input_text');
     const matchesCandidate = boundary === candidate.boundary_id && sameUtf8(sourceText, expected);
-    if (!matchesCandidate) fail('MISMATCH', 'next Codex native user event does not match the pending candidate');
+    if (!matchesCandidate) {
+      // Only a record that does NOT match the candidate may be dismissed as injected
+      // turn context, and only when it lacks a completed UserMessage item. A record
+      // that DOES match still goes through codexAnchor below, so a missing, over-
+      // distance, or reordered anchor keeps failing closed exactly as before.
+      if (!codexRecordHasUserMessageAnchor(records, index)) continue;
+      fail('MISMATCH', 'next Codex native user event does not match the pending candidate');
+    }
     const anchor = codexAnchor(records, index, candidate, expected);
     const eventId = codexEventId(candidate.session_id, sourceId, anchor.anchorId);
     const stopWitnessId = observation === 'stop'
@@ -502,13 +542,37 @@ function isClaudeToolResult(row) {
     && content.every(part => part?.type === 'tool_result');
 }
 
+// Provenance lives in `origin.kind` + `promptSource`. `isMeta` is written only on
+// meta rows — Claude Code has never emitted `isMeta: false` (verified across
+// 2.1.233…2.1.266), so requiring it literally classified every real human prompt as
+// 'unknown' and hard-failed every attestation. Absent therefore means "not meta".
+const CLAUDE_HUMAN_PROMPT_SOURCES = ['typed', 'queued', 'suggestion_accepted'];
+// Non-human origins are allowlisted rather than inferred: an unrecognized origin stays
+// 'unknown' so a future human-bearing kind fails closed instead of being silently
+// skipped as an intervening user event.
+const CLAUDE_NON_HUMAN_ORIGIN_KINDS = ['task-notification', 'peer', 'auto-continuation'];
+const CLAUDE_ORIGINLESS_PROMPT_SOURCES = ['sdk'];
+
 function claudeUserKind(record) {
   const row = record?.value;
   if (row?.type !== 'user' || row?.message?.role !== 'user') return 'other';
   if (isClaudeToolResult(row)) return 'tool-result';
   if (row.isMeta === true) return 'meta';
-  if (row.isMeta === false && row.origin?.kind === 'human'
-      && ['typed', 'queued'].includes(row.promptSource)) return 'human';
+  if (row.isMeta !== undefined && row.isMeta !== false) return 'unknown';
+  const origin = row.origin;
+  if (origin !== undefined && origin !== null && typeof origin !== 'object') return 'unknown';
+  const kind = origin?.kind;
+  // A slash-command turn carries origin.kind 'human' with no promptSource. It stays a
+  // human event so intervening-user detection still sees it; its recorded text is the
+  // command expansion, so a candidate minted from it is rejected by validateClaudeUser
+  // rather than attesting.
+  if (kind === 'human') {
+    return row.promptSource === undefined || row.promptSource === null
+      || CLAUDE_HUMAN_PROMPT_SOURCES.includes(row.promptSource) ? 'human' : 'unknown';
+  }
+  if (typeof kind === 'string') return CLAUDE_NON_HUMAN_ORIGIN_KINDS.includes(kind) ? 'other' : 'unknown';
+  if (row.promptSource === undefined || row.promptSource === null
+      || CLAUDE_ORIGINLESS_PROMPT_SOURCES.includes(row.promptSource)) return 'other';
   return 'unknown';
 }
 
@@ -527,8 +591,12 @@ function validateClaudeUser(row, candidate) {
   if (rowSession !== candidate.session_id) fail('SESSION_MISMATCH', 'Claude session provenance mismatch');
   if (row.cwd !== candidate.cwd) fail('CWD_MISMATCH', 'Claude cwd provenance mismatch');
   if (typeof row.isSidechain !== 'boolean') fail('UNKNOWN_SCHEMA', 'Claude sidechain provenance is not boolean');
-  if (row.isSidechain || row.userType !== 'external' || row.isMeta !== false
-      || row.origin?.kind !== 'human' || !['typed', 'queued'].includes(row.promptSource)) {
+  // Mirrors claudeUserKind: `isMeta` absent means "not meta", and the accepted prompt
+  // sources come from the shared constant so the two sites cannot drift apart. A
+  // slash-command turn (origin.kind 'human', no promptSource) counts as a human event
+  // when scanning, but is not an attestable prompt source — it is rejected here.
+  if (row.isSidechain || row.userType !== 'external' || row.isMeta === true
+      || row.origin?.kind !== 'human' || !CLAUDE_HUMAN_PROMPT_SOURCES.includes(row.promptSource)) {
     fail('PROVENANCE_MISMATCH', 'Claude source is not a root external user event');
   }
   const nativeId = String(row.uuid || '');
@@ -766,6 +834,10 @@ function assertNoNewNativeUser(records, startIndex, harness) {
   for (let index = startIndex; index < records.length; index += 1) {
     const record = records[index];
     if (harness === 'codex') {
+      // Deliberately unfiltered: a newer user record revokes authority even when it
+      // carries no UserMessage anchor yet. Reusing the scan's "injected context" skip
+      // here would let an appended native prompt pass unseen — IDENTITY-STATE-007
+      // covers exactly that, and it is the fail-open direction, so it stays strict.
       if (isCodexUserRecord(record)) {
         fail('INTERVENING_USER', 'a newer Codex native user event exists after the current authority cursor');
       }
