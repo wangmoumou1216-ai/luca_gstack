@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-09-09 · E3 原生事件身份与审查闭环）
+
+- 将共享 `boundary_id` 与原生 `event_id` 分离，候选队列、原生日志游标、消费账本及项目权限在同一事务中更新，避免同一 boundary 下真实消息被当成重放。
+- 首次认证改用 SessionStart 的输入前日志起点，禁止靠同文本历史尾部认领当前事件；缺少起点的历史会话须重新启动或恢复后再发送输入。Codex 适配层保留原生启动来源，compact 不得建立起点。
+- Stop 拒绝历史及当前重复回复文本造成的归属歧义；起点以前的 Claude cwd、Codex 多模态历史不再污染当前文本消息认证。加入跨 harness 负例、真实 hook 回放及三类变异验证。
+- Claude CLI 活体验证仍按用户豁免保持 UNKNOWN；本轮不部署、重启或修改持久 hook trust。
+
 ### Changed（2026-09-04 · Claude/Codex 根契约轻量化）
 
 - 把 `CLAUDE.md` 与 `AGENTS.md` 从 45–56KB 常驻说明压缩为各自独立、低于 10KB 的 K1–K10

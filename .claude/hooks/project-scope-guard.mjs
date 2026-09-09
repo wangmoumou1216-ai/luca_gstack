@@ -94,11 +94,56 @@ function readSessionState() {
   }
 }
 
-function activeBinding(state) {
-  if (state?.state !== 'TURN_ACTIVE') return null;
+function activeBinding(state, observationError = null) {
+  if (observationError || state?.state !== 'TURN_ACTIVE') return null;
   try {
-    return substrate.validatedBindingForState(state, PROJECTS_ROOT);
+    const boundaryId = observationBoundary(state);
+    if (!boundaryId) return null;
+    if (state.schema_version === substrate?.PROJECT_STATE_SCHEMA && substrate?.activeProjectAuthority) {
+      return substrate.activeProjectAuthority(state, {
+        boundaryId,
+        cwd: data?.cwd || gstackRoot,
+      }, PROJECTS_ROOT)?.binding || null;
+    }
+    return null;
   } catch { return null; }
+}
+
+function observationBoundary(state) {
+  const control = state?.event_control;
+  const harness = control?.candidates?.[0]?.harness || control?.current?.harness;
+  if (harness === 'claude') return sid;
+  return String(data?.turn_id || data?.prompt_id || '');
+}
+
+function attestForPreTool(state) {
+  const control = state?.event_control;
+  const needsObservation = state?.schema_version === substrate?.PROJECT_STATE_SCHEMA
+    && (control?.candidates?.length > 0 || control?.current?.status === 'active');
+  if (!needsObservation) return { state, error: null };
+  if (!substrate?.attestPendingProjectEvent) {
+    return { state, error: new Error('native event attester unavailable') };
+  }
+  try {
+    const result = substrate.attestPendingProjectEvent({
+      gstackRoot,
+      projectsRoot: PROJECTS_ROOT,
+      sessionId: sid,
+      boundaryId: observationBoundary(state),
+      cwd: data?.cwd || gstackRoot,
+      observation: 'pre-tool',
+      transcriptPath: data?.transcript_path || '',
+      codexHome: process.env.CODEX_HOME || '',
+    });
+    return { state: result.state, error: null };
+  } catch (error) {
+    // Attestation failures are fail-closed for project authority. The hook may
+    // still pass an unrelated framework/meta path with no binding.
+    try {
+      process.stderr.write(`[project-scope-guard] native attestation denied (${error?.code || 'ERROR'}): ${String(error?.message || error)}\n`);
+    } catch { }
+    return { state: readSessionState(), error };
+  }
 }
 
 // 本 session 绑定项目的绝对落点
@@ -344,24 +389,37 @@ function exactReadBrokerInvocation(command, expectedSessionId) {
 //  ② tail 含上行段 —— 可向上走，落点无法静态定界，整条 tail 退回旧的严判；
 //  ③ tail 含 $ / 反引号 / ( —— 运行期生成任意文本，同样无法静态定界。
 // 不含元字符的 dot-entry（如 framework 写豁免开关）保持既有放行语义，不因本次收窄改变。
-function grantControlPlaneGlobReach(tail) {
+function sessionControlPlaneGlobReach(tail) {
   if (/[$`(]/.test(tail)) return true;
   const segments = tail.split('/');
   return /[*?[\]{}\\]/.test(segments.includes('..') ? tail : segments[0]);
 }
 
+const SESSION_CONTROL_PLANE_PREFIXES = [
+  '.session-read-',
+  '.session-project-',
+  '.session-consumed-turns-',
+];
+const SESSION_CONTROL_PLANE_PARTIALS = [
+  ['.session', 'rea'].join('-'),
+  ['.session', 'pro'].join('-'),
+  ['.session', 'con'].join('-'),
+];
+
 // 路径判据单一实现：补丁 header 目标与 Write/Edit 的 file_path 走同一条，杜绝两处漂移。
-function grantControlPlanePath(path, prefix) {
+// `.session-project-*` 以前缀整体保护，因此 `.lock` 和 `.lock.release-*` 崩溃残留同样不可触达。
+function sessionControlPlanePath(path) {
   if (typeof path !== 'string' || !path) return null;
   const absolute = isAbsolute(path) ? resolve(path) : resolve(gstackRoot, path);
   const dir = resolve(gstackRoot, '.claude');
   const rel = relative(dir, absolute);
-  if (rel && !rel.startsWith('..') && !isAbsolute(rel) && rel.split('/').pop().startsWith(prefix)) return path;
+  const leaf = rel.split('/').pop();
+  if (rel && !rel.startsWith('..') && !isAbsolute(rel)
+      && SESSION_CONTROL_PLANE_PREFIXES.some(prefix => leaf.startsWith(prefix))) return path;
   return null;
 }
 
-function readGrantControlPlaneReference(tool, inp) {
-  const prefix = '.session-read-';
+function sessionControlPlaneReference(tool, inp) {
   if (tool === 'Bash') {
     const command = String(inp.command || '');
     // 补丁正文是任意源文本、不是路径位（与 inspectApplyPatch 同一条不变量）：识别为补丁时只按
@@ -370,24 +428,30 @@ function readGrantControlPlaneReference(tool, inp) {
     const patchTargets = applyPatchTargets(command);
     if (patchTargets) {
       for (const target of patchTargets) {
-        const hit = grantControlPlanePath(target, prefix);
+        const hit = sessionControlPlanePath(target);
         if (hit) return hit;
       }
       return null;
     }
-    const partial = ['.session', 'rea'].join('-');
-    for (const source of new Set([command, expandLocalAssignments(command)])) {
-      if (source.includes(prefix) || source.includes(partial)) return prefix;
+    for (const rawSource of new Set([command, expandLocalAssignments(command)])) {
+      // `rg/grep <pattern> <path>` 的 pattern 是数据；仅扫描留下的真实路径位，避免搜索或编辑
+      // 守卫源码时因正文出现 sidecar 名称而误拦。未知搜索语法仍保持未遮罩的保守退化。
+      const source = maskSearchPatternArguments(rawSource).command;
+      const exactPrefix = SESSION_CONTROL_PLANE_PREFIXES.find(prefix => source.includes(prefix));
+      if (exactPrefix || SESSION_CONTROL_PLANE_PARTIALS.some(partial => source.includes(partial))) {
+        return exactPrefix || '.session-*';
+      }
       const references = [...source.matchAll(/(?:^|[\s"'`])(?:\.\/)?\.claude\/([^\s"'`;|&<>]*)/g)];
       for (const match of references) {
         const tail = match[1] || '';
         const unquotedGlob = tail.replace(/[\[\]{}*?\\]/g, '');
-        if (unquotedGlob.includes(prefix) || grantControlPlaneGlobReach(tail)) return match[0].trim();
+        if (SESSION_CONTROL_PLANE_PREFIXES.some(prefix => unquotedGlob.includes(prefix))
+            || sessionControlPlaneGlobReach(tail)) return match[0].trim();
       }
     }
     return null;
   }
-  return grantControlPlanePath(inp.file_path || inp.notebook_path || inp.path, prefix);
+  return sessionControlPlanePath(inp.file_path || inp.notebook_path || inp.path);
 }
 
 function mentionsReadBrokerInvocation(command) {
@@ -788,19 +852,21 @@ function inspectApplyPatch(command, binding) {
 }
 
 function main() {
-  const state = readSessionState();
-  const binding = activeBinding(state);
+  const observed = attestForPreTool(readSessionState());
+  const state = observed.state;
+  const binding = activeBinding(state, observed.error);
   const bashCommand = toolName === 'Bash' ? String(input.command || '') : '';
-  // 2026-09-03 post-seal 增量审计 finding #5：sidecar 写保护刻意保持 unconditional，不随
+  // Session sidecar 保护刻意保持 unconditional，不随
   // READ_GRANTS_ENABLED 关闭而放松——authorizeRead/reconcilePromptGrants 已在
-  // project-read-grants.mjs 内部无条件 deny，这条只是纵深防御的另一层，不该被同一个开关连坐掉。
-  const grantControlPlane = readGrantControlPlaneReference(toolName, input);
-  if (grantControlPlane) {
+  // project-read-grants.mjs 内部无条件 deny；project state 同样只能由 hook/project.sh 事务写入。
+  // 这条是两类身份控制平面共享的纵深防御，不应被任何功能开关连坐掉。
+  const sessionControlPlane = sessionControlPlaneReference(toolName, input);
+  if (sessionControlPlane) {
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
       // 文案必须给出改写指引：本判据保留了 dotglob 安全余量，正常路径也可能被它拦下，而一条只说
       // 「你在伪造控制平面」的拒绝会把人推向绕行（实测：一次误拦就催生了「把载荷挪出命令文本」的
       // 方案）。给出两条不绕闸的出路，比让人自己发明第三条强。
-      permissionDecisionReason: `read-grant sidecar 是 hook 内部控制平面，普通工具不得读取、写入或伪造（${grantControlPlane}）。`
+      permissionDecisionReason: `session 状态 sidecar（project-state/read-grant/legacy-consumption）是 hook 内部控制平面，普通工具不得读取、写入或伪造（${sessionControlPlane}）。`
         + '若你并非要碰 sidecar，只是路径里带了通配或运行期展开：把它写成不含元字符的确定路径，'
         + '或改用 Write/Edit 等文件类工具（按 file_path 精确判定，不扫命令文本）。' } });
   }
@@ -832,7 +898,8 @@ function main() {
     const maskedSearch = maskSearchPatternArguments(cmd);
     const guardCmd = maskedSearch.command;
     if (state.state === 'SWITCH_ONLY') {
-      if (exactMutationMatches(state, cmd)) passThrough();
+      if (!observed.error && state.schema_version === substrate?.PROJECT_STATE_SCHEMA
+          && state.event_control?.current?.status === 'active' && exactMutationMatches(state, cmd)) passThrough();
       if (mentionsProjectMutation(cmd) || mentionsInternalProjectController(cmd) || rewriteBash(cmd, null).hasScoped) {
         return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
           permissionDecisionReason: 'SWITCH_ONLY 本轮只允许一条与 tx、target、expected_epoch 完全匹配的 project.sh switch/new；禁止复合命令与同轮项目工作。' } });

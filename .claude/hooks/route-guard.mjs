@@ -20,20 +20,16 @@ import { execSync } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
 import {
   PROJECTS_ROOT,
-  beginProjectTurn,
-  cancelProjectSwitch,
-  closeProjectTurn,
-  closeSwitchTurn,
-  prepareProjectSwitch,
   projectNameFromLink,
+  queueProjectEventCandidate,
   readProjectState,
   validateProjectName,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
+import { actualHarness } from './lib/harness.mjs';
 import {
   READ_GRANTS_ENABLED,
   closeGrants,
-  reconcilePromptGrants,
 } from './lib/project-read-grants.mjs';
 
 // cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
@@ -78,7 +74,8 @@ function nameMatchesIn(text, name) {
 // per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
 let hookSessionId = '';
 let hookPayload = {};
-let hookTurnId = '';
+let hookBoundaryId = '';
+let hookHarness = '';
 function parsePrompt() {
   try {
     const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
@@ -86,7 +83,12 @@ function parsePrompt() {
       const data = JSON.parse(raw || '{}');
       hookPayload = data;
       hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
-      hookTurnId = String(data.turn_id || data.user_message_id || randomUUID());
+      hookHarness = data.prompt_id ? 'claude' : data.turn_id ? 'codex' : actualHarness();
+      // Claude transcript rows expose no independent turn/boundary edge. Bind
+      // them to the native session boundary instead of trusting a hook-only ID.
+      hookBoundaryId = hookHarness === 'claude'
+        ? hookSessionId
+        : String(data.turn_id || data.prompt_id || '');
       return String(data.prompt || data.message || '');
     } catch {
       process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);
@@ -1562,25 +1564,10 @@ const prompt = parsePrompt();
 const routingPrompt = promptForRouting(prompt);
 const hints = [];
 let topLevelProjectState = null;
-let injectProjectOnThisTurn = false;
 let projectStateError = '';
 if (!dryRun && prompt && hookSessionId) {
   try {
-    let current = readProjectState(projectRoot, hookSessionId).value;
-    if (current.state === 'TURN_ACTIVE') {
-      current = closeProjectTurn({
-        gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: hookSessionId,
-        turnId: current.turn.turn_id, expectedEpoch: current.turn.epoch, outcome: 'next-user-prompt',
-      });
-    } else if (current.state === 'BOUND' && current.terminal) {
-      injectProjectOnThisTurn = true;
-      current = closeSwitchTurn({
-        gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: hookSessionId,
-        turnId: current.terminal.turn_id, expectedEpoch: current.binding.epoch, outcome: 'next-user-prompt',
-      });
-    } else if (current.state === 'SWITCH_ONLY') {
-      current = cancelProjectSwitch({ gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: hookSessionId });
-    }
+    const current = readProjectState(projectRoot, hookSessionId).value;
     topLevelProjectState = current;
     runtimeCurrentProject = validatedBindingForState(current, PROJECTS_ROOT)?.project || '';
     if (current.state === 'NO_PIN') {
@@ -1622,69 +1609,47 @@ if (prompt) {
           catch (error) { hints.push(`[route-guard] ⛔ READ GRANTS — 项目切换前撤销失败：${error.message}`); }
         }
         const operation = decision.operation === 'new' ? 'new' : 'switch';
-        const prepared = prepareProjectSwitch({
+        const tx = randomUUID();
+        const expectedEpoch = binding?.epoch || 0;
+        queueProjectEventCandidate({
           gstackRoot: projectRoot,
           projectsRoot: PROJECTS_ROOT,
           sessionId: hookSessionId,
-          operation,
-          target: decision.project,
-          turnId: hookTurnId,
+          boundaryId: hookBoundaryId,
+          cwd: hookPayload.cwd || projectRoot,
+          harness: hookHarness,
+          prompt,
+          promptId: hookPayload.prompt_id || '',
+          intent: {
+            kind: 'switch',
+            tx,
+            operation,
+            target: decision.project,
+            expected_epoch: expectedEpoch,
+          },
         });
-        const sw = prepared.switch;
         decision = {
           ...decision,
-          tx: sw.tx,
-          expectedEpoch: sw.expected_epoch,
-          projectMutation: `./scripts/project.sh ${sw.operation} ${sw.target} --session-id ${hookSessionId} --tx ${sw.tx} --expected-epoch ${sw.expected_epoch}`,
+          tx,
+          expectedEpoch,
+          projectMutation: `./scripts/project.sh ${operation} ${decision.project} --session-id ${hookSessionId} --tx ${tx} --expected-epoch ${expectedEpoch}`,
         };
         try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch { }
         try { unlinkSync(join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`)); } catch { }
       } else {
-        const opened = beginProjectTurn({
+        queueProjectEventCandidate({
           gstackRoot: projectRoot,
           projectsRoot: PROJECTS_ROOT,
           sessionId: hookSessionId,
-          turnId: hookTurnId,
+          boundaryId: hookBoundaryId,
+          cwd: hookPayload.cwd || projectRoot,
+          harness: hookHarness,
+          prompt,
+          promptId: hookPayload.prompt_id || '',
+          intent: { kind: 'turn' },
         });
-        if (READ_GRANTS_ENABLED) {
-          try {
-            const grantResult = reconcilePromptGrants({
-              gstackRoot: projectRoot,
-              projectsRoot: PROJECTS_ROOT,
-              sessionId: hookSessionId,
-              turnId: hookTurnId,
-              prompt,
-              binding: opened.state === 'TURN_ACTIVE' ? opened.binding : null,
-            });
-            for (const grant of grantResult.issued) {
-              hints.push(`[route-guard] 🔐 已授权${grant.lifetime === 'session' ? '本会话' : '本回合'}只读引用：${grant.path}（cap ${hookSessionId}:${grant.id}）`);
-            }
-            for (const hint of grantResult.hints) hints.push(`[route-guard] ⚠️ READ GRANT — ${hint}`);
-          } catch (error) {
-            hints.push(`[route-guard] ⛔ READ GRANT — ${String(error?.message || error)}；跨项目读取保持关闭。`);
-          }
-        }
-        if (opened.state === 'TURN_ACTIVE') {
-          const activeState = join(opened.binding.realpath, '.luca', 'workflow-state.yaml');
-          if (existsSync(activeState)) {
-            const content = readFileSync(activeState, 'utf8');
-            const match = content.match(/^  (\w[\w-]+):\s*\n\s+status:\s*IN_PROGRESS/m);
-            if (match) hints.push(`[route-guard] ⚠️  当前有未完成节点: ${match[1]}`);
-          }
-          if (injectProjectOnThisTurn) {
-            const memory = join(opened.binding.realpath, '.luca', 'memory', 'MEMORY.md');
-            const context = join(opened.binding.realpath, 'CONTEXT.md');
-            if (existsSync(memory)) {
-              const text = readFileSync(memory, 'utf8');
-              if (/^- /m.test(text)) hints.push(`[route-guard] 🧠 项目本地记忆（${opened.binding.project}）:\n${text}`);
-            }
-            if (existsSync(context)) {
-              const lines = readFileSync(context, 'utf8').split('\n').slice(0, 100);
-              const hasRealContent = lines.some(line => !/^(#|>|<!--|\s*$)/.test(line) && !line.includes('<'));
-              if (hasRealContent) hints.push(`[route-guard] 📌 项目 CONTEXT（${opened.binding.project}）:\n${lines.join('\n')}`);
-            }
-          }
-        }
+        // Read grants remain closed until a later PreToolUse/Stop attests the
+        // native event. UserPromptSubmit cannot mint authority from text.
       }
     } catch (error) {
       hints.push(`[route-guard] ⛔ PROJECT STATE — ${String(error?.message || error)}。本轮不得访问项目路径。`);

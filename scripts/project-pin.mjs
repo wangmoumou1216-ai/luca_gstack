@@ -22,13 +22,9 @@ import {
   PROJECTS_ROOT,
   PROJECT_STATE_SCHEMA,
   atomicProjectStateCas,
-  beginProjectTurn,
   canonicalProjectIdentity,
-  closeProjectTurn,
-  closeSwitchTurn,
   inspectProjectStateLock,
   migrateLegacyProjectState,
-  prepareProjectSwitch,
   readProjectState,
   removeProjectStateCas,
   recoverProjectStateLock,
@@ -133,7 +129,19 @@ function assertLink(path, target) {
 
 function proposalFields(state) {
   const sw = state?.switch;
-  if (state?.state !== 'SWITCH_ONLY' || !sw) throw new Error('session is not in SWITCH_ONLY');
+  const control = state?.event_control;
+  const event = control?.current;
+  if (state?.schema_version !== PROJECT_STATE_SCHEMA || state?.state !== 'SWITCH_ONLY' || !sw) {
+    throw new Error('session is not in an attested SWITCH_ONLY event');
+  }
+  if (!control || !Array.isArray(control.candidates) || !Array.isArray(control.consumed_events)
+      || !event || event.status !== 'active'
+      || !String(event.event_id || '') || !String(event.boundary_id || '')
+      || event.event_id !== sw.event_id || event.boundary_id !== sw.boundary_id
+      || !control.consumed_events.some(item => item?.event_id === event.event_id
+        && item?.boundary_id === event.boundary_id)) {
+    throw new Error('SWITCH_ONLY lacks matching native event authority');
+  }
   return sw;
 }
 
@@ -222,7 +230,15 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
       state: 'BOUND',
       session_id: sid,
       binding,
-      terminal: { tx, operation: op, expected_epoch: expected, turn_id: proposal.turn_id, committed_at: new Date().toISOString() },
+      terminal: {
+        tx,
+        operation: op,
+        expected_epoch: expected,
+        event_id: proposal.event_id,
+        boundary_id: proposal.boundary_id,
+        committed_at: new Date().toISOString(),
+      },
+      event_control: initial.value.event_control,
     };
     atomicProjectStateCas(gstackRoot, sid, initial.raw, next);
     committedState = next;
@@ -370,15 +386,8 @@ async function cli() {
   const sessionId = arg('--session') || arg('--session-id');
   const base = roots();
   let result;
-  if (command === 'prepare') {
-    result = prepareProjectSwitch({ ...base, sessionId, operation: arg('--operation'), target: arg('--target'), turnId: arg('--turn-id') });
-    result = { ...result, ...result.switch };
-  } else if (command === 'begin-turn') {
-    result = beginProjectTurn({ ...base, sessionId, turnId: arg('--turn-id') });
-  } else if (command === 'close-turn') {
-    result = closeProjectTurn({ ...base, sessionId, turnId: arg('--turn-id'), expectedEpoch: arg('--expected-epoch'), outcome: arg('--outcome') || 'closed' });
-  } else if (command === 'close-switch-turn') {
-    result = closeSwitchTurn({ ...base, sessionId, turnId: arg('--turn-id'), expectedEpoch: arg('--expected-epoch'), outcome: arg('--outcome') || 'switch-terminal' });
+  if (['prepare', 'begin-turn', 'close-turn', 'close-switch-turn'].includes(command)) {
+    throw new Error(`${command} raw turn-id authority is retired; use UserPromptSubmit candidate plus native event attestation`);
   } else if (command === 'status') {
     result = status(sessionId);
   } else if (command === 'inspect-state-lock') {
@@ -403,7 +412,7 @@ async function cli() {
       expectedEpoch: arg('--expected-epoch'),
     });
   } else {
-    throw new Error('usage: project-pin.mjs <prepare|begin-turn|close-turn|status|switch|new|inspect-state-lock|recover-state-lock|migrate-legacy-pin|quarantine-legacy-pin> ...');
+    throw new Error('usage: project-pin.mjs <status|switch|new|inspect-state-lock|recover-state-lock|migrate-legacy-pin|quarantine-legacy-pin> ...');
   }
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }

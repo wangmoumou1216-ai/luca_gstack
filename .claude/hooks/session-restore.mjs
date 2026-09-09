@@ -9,6 +9,9 @@ import { resolveMemoryRoot } from './lib/memroot.mjs';
 import { acquireProjectLease, releaseProjectLease } from '../../scripts/project-lease.mjs';
 import {
   PROJECTS_ROOT,
+  PROJECT_STATE_SCHEMA,
+  activeProjectAuthority,
+  initializeProjectEventFence,
   projectNameFromLink,
   readProjectState,
   validatedBindingForState,
@@ -39,6 +42,24 @@ try { startPayload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const startSource = typeof startPayload.source === 'string' ? startPayload.source : '';
 const ownSid = String(startPayload.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
 
+// Compact/re-entrant starts run within an existing input and cannot establish
+// a pre-input fence. Missing fences stay fail closed until startup/resume.
+const fenceStartSource = process.env.LUCA_ACTUAL_HARNESS === 'codex'
+  ? startPayload.native_start_source : startSource;
+if (ownSid && ['startup', 'resume'].includes(fenceStartSource)) {
+  try {
+    initializeProjectEventFence({
+      gstackRoot: projectRoot, projectsRoot: PROJECTS_ROOT, sessionId: ownSid,
+      harness: process.env.LUCA_ACTUAL_HARNESS === 'codex' ? 'codex' : 'claude',
+      cwd: startPayload.cwd || projectRoot,
+      transcriptPath: startPayload.transcript_path || '',
+      codexHome: process.env.CODEX_HOME || '',
+    });
+  } catch (error) {
+    process.stderr.write(`[session-restore] native startup fence unavailable (${error?.code || 'ERROR'}): ${error.message}\n`);
+  }
+}
+
 // Startup project context follows the same identity source as every later hook.
 // The shared workflow/docs symlinks are display state only: a NO_PIN session must
 // not even probe their contents (FIFO tests guard against hidden reads). Resume
@@ -47,7 +68,10 @@ let startupBinding = null;
 if (ownSid) {
   try {
     const projectState = readProjectState(projectRoot, ownSid).value;
-    if (['BOUND', 'TURN_ACTIVE', 'TURN_CLOSED'].includes(projectState.state)) {
+    if (projectState.state === 'TURN_ACTIVE' && projectState.schema_version === PROJECT_STATE_SCHEMA) {
+      startupBinding = activeProjectAuthority(projectState, {}, PROJECTS_ROOT)?.binding || null;
+      if (!startupBinding) throw new Error('TURN_ACTIVE lacks current attested native event authority');
+    } else if (['BOUND', 'TURN_CLOSED'].includes(projectState.state)) {
       startupBinding = validatedBindingForState(projectState, PROJECTS_ROOT);
     }
   } catch (error) {

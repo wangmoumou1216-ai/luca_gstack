@@ -10,6 +10,7 @@ import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import assert from 'assert';
+import { createHash } from 'crypto';
 import { READ_GRANTS_ENABLED, reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
 
 // 被测守卫的定位：**按本脚本自身位置**，不按 process.cwd()。
@@ -26,34 +27,139 @@ function ok(name) { pass++; console.log('PASS ' + name); }
 function bad(name, e) { fail++; console.log('FAIL ' + name + ' :: ' + (e && e.message || e)); }
 function check(name, fn) { try { fn(); ok(name); } catch (e) { bad(name, e); } }
 
-// pins 传入则预写 schema v2 TURN_ACTIVE identity+epoch snapshot。
+function nativeEventId(sessionId, nativeId, anchorId) {
+  const hash = createHash('sha256');
+  for (const value of ['luca-native-event:v1:codex', sessionId, nativeId, anchorId]) {
+    const bytes = Buffer.from(String(value), 'utf8');
+    hash.update(Buffer.from(`${bytes.length}:`, 'ascii'));
+    hash.update(bytes);
+  }
+  return `codex:${hash.digest('hex')}`;
+}
+
+const emptyPrefix = createHash('sha256').digest('hex');
+
+function writeCodexCurrentRollout({ codexHome, sessionId, boundaryId, nativeId, anchorId, cwd }) {
+  const rolloutDir = join(codexHome, 'sessions', '2026', '09', '08');
+  mkdirSync(rolloutDir, { recursive: true });
+  const rollout = join(rolloutDir, `rollout-2026-09-08T00-00-00-${sessionId}.jsonl`);
+  const prompt = `active project fixture ${sessionId}`;
+  const records = [
+    {
+      type: 'session_meta',
+      timestamp: '2026-09-08T00:00:00.000Z',
+      payload: {
+        id: sessionId,
+        session_id: sessionId,
+        cwd,
+        thread_source: 'user',
+        originator: 'codex-tui',
+        parent_thread_id: null,
+        forked_from_id: null,
+      },
+    },
+    {
+      type: 'response_item',
+      timestamp: '2026-09-08T00:00:01.000Z',
+      payload: {
+        type: 'message',
+        role: 'user',
+        id: nativeId,
+        content: [{ type: 'input_text', text: prompt }],
+        internal_chat_message_metadata_passthrough: { turn_id: boundaryId },
+      },
+    },
+    {
+      type: 'event_msg',
+      timestamp: '2026-09-08T00:00:01.001Z',
+      payload: {
+        type: 'item_completed',
+        thread_id: sessionId,
+        turn_id: boundaryId,
+        item: { type: 'UserMessage', id: anchorId, content: [{ type: 'text', text: prompt }] },
+      },
+    },
+  ];
+  const body = Buffer.from(`${records.map(record => JSON.stringify(record)).join('\n')}\n`);
+  writeFileSync(rollout, body);
+  const st = statSync(rollout, { bigint: true });
+  return {
+    schema_version: 1,
+    harness: 'codex',
+    transcript_path: realpathSync(rollout),
+    dev: st.dev.toString(),
+    ino: st.ino.toString(),
+    byte_offset: body.length,
+    record_index: records.length,
+    prefix_sha256: createHash('sha256').update(body).digest('hex'),
+  };
+}
+
+// pins 传入则预写 schema v3 的已认证 TURN_ACTIVE snapshot。boundary 只是 transport
+// provenance；真正的授权来自 event_control.current 中的原生 event identity。
 function makeEnv({ pins = {}, nestedFramework = false } = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'psg-root-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'psg-root-')));
   const projects = join(root, 'projects');
   const gstack = nestedFramework ? join(projects, 'muse', 'lucagstack') : join(root, 'gstack');
+  const codexHome = join(dirname(gstack), 'codex-home');
   mkdirSync(join(gstack, '.claude'), { recursive: true });
   mkdirSync(projects, { recursive: true });
+  mkdirSync(codexHome, { recursive: true });
   for (const [sid, proj] of Object.entries(pins)) {
     const project = join(projects, proj);
     mkdirSync(join(project, 'docs'), { recursive: true });
     mkdirSync(join(project, '.luca'), { recursive: true });
     const st = statSync(project);
     const binding = { project: proj, epoch: 1, realpath: realpathSync(project), dev: Number(st.dev), ino: Number(st.ino) };
+    const boundaryId = `turn-${sid}`;
+    const nativeId = `msg_${sid}`;
+    const anchorId = `anchor-${sid}`;
+    const eventId = nativeEventId(sid, nativeId, anchorId);
+    const cursor = writeCodexCurrentRollout({ codexHome, sessionId: sid, boundaryId, nativeId, anchorId, cwd: gstack });
     writeFileSync(join(gstack, '.claude', `.session-project-${sid}`), `${JSON.stringify({
-      schema_version: 2,
+      schema_version: 3,
       state: 'TURN_ACTIVE',
       session_id: sid,
       binding,
-      turn: { turn_id: `turn-${sid}`, epoch: 1 },
+      turn: { event_id: eventId, boundary_id: boundaryId, epoch: 1 },
+      event_control: {
+        candidates: [],
+        current: {
+          event_id: eventId,
+          boundary_id: boundaryId,
+          native_id: nativeId,
+          anchor_id: anchorId,
+          cwd: gstack,
+          harness: 'codex',
+          status: 'active',
+          attested_at: '2026-09-08T00:00:00.000Z',
+        },
+        cursor,
+        consumed_events: [{ event_id: eventId, boundary_id: boundaryId, harness: 'codex', native_id: nativeId, anchor_id: anchorId }],
+      },
     })}\n`);
   }
-  return { root, gstack, projects };
+  return { root, gstack, projects, codexHome };
 }
-function run(env, payload, extraEnv = {}) {
+function run(env, payload, extraEnv = {}, { addDefaultBoundary = true } = {}) {
+  const sid = String(payload?.session_id || '');
+  const observed = {
+    ...payload,
+    ...(!payload?.cwd ? { cwd: env.gstack } : {}),
+    ...(addDefaultBoundary && sid && !payload?.turn_id && !payload?.prompt_id ? { turn_id: `turn-${sid}` } : {}),
+  };
   const r = spawnSync('node', [HOOK], {
-    input: JSON.stringify(payload),
+    input: JSON.stringify(observed),
     cwd: env.gstack,
-    env: { ...process.env, CLAUDE_PROJECT_DIR: env.gstack, LUCA_GSTACK_ROOT: env.gstack, LUCA_PROJECTS_ROOT: env.projects, ...extraEnv },
+    env: {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: env.gstack,
+      LUCA_GSTACK_ROOT: env.gstack,
+      LUCA_PROJECTS_ROOT: env.projects,
+      LUCA_EVENT_ATTESTATION_TEST: '1',
+      CODEX_HOME: env.codexHome,
+      ...extraEnv,
+    },
     encoding: 'utf8',
   });
   assert.equal(r.status, 0, 'hook 必须永远 exit 0（fail-open），stderr=' + r.stderr);
@@ -376,6 +482,167 @@ check('IDENTITY-STATE-002 corrupt turn epoch never authorizes project access', (
   writeFileSync(path, `${JSON.stringify(value)}\n`);
   const o = run(env, { session_id: 'BAD', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+});
+check('IDENTITY-STATE-003 schema2 raw-turn TURN_ACTIVE cannot authorize project access', () => {
+  const env = makeEnv({ pins: { LEGACY: 'alpha' } });
+  const path = join(env.gstack, '.claude', '.session-project-LEGACY');
+  const current = JSON.parse(readFileSync(path, 'utf8'));
+  writeFileSync(path, `${JSON.stringify({
+    schema_version: 2,
+    state: 'TURN_ACTIVE',
+    session_id: 'LEGACY',
+    binding: current.binding,
+    turn: { turn_id: 'turn-LEGACY', epoch: current.binding.epoch },
+  })}\n`);
+  const o = run(env, { session_id: 'LEGACY', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', 'legacy raw turn id must not mint native-event authority');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /TURN_ACTIVE|identity|绑定项目/);
+});
+check('IDENTITY-STATE-004 exact switch command is denied when attested boundary mismatches', () => {
+  const env = makeEnv();
+  const sid = 'SWM';
+  const boundaryId = `turn-${sid}`;
+  const nativeId = `msg_${sid}`;
+  const anchorId = `anchor-${sid}`;
+  const eventId = nativeEventId(sid, nativeId, anchorId);
+  const tx = '123e4567-e89b-12d3-a456-426614174000';
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  writeFileSync(path, `${JSON.stringify({
+    schema_version: 3,
+    state: 'SWITCH_ONLY',
+    session_id: sid,
+    switch: {
+      tx,
+      operation: 'new',
+      target: 'beta',
+      expected_epoch: 0,
+      event_id: eventId,
+      boundary_id: boundaryId,
+    },
+    event_control: {
+      candidates: [],
+      current: {
+        event_id: eventId,
+        boundary_id: boundaryId,
+        native_id: nativeId,
+        anchor_id: anchorId,
+        cwd: env.gstack,
+        harness: 'codex',
+        status: 'active',
+        attested_at: '2026-09-08T00:00:00.000Z',
+      },
+      cursor: {
+        schema_version: 1,
+        harness: 'codex',
+        transcript_path: join(env.root, `rollout-${sid}.jsonl`),
+        dev: '1',
+        ino: '1',
+        byte_offset: 0,
+        record_index: 0,
+        prefix_sha256: emptyPrefix,
+      },
+      consumed_events: [{ event_id: eventId, boundary_id: boundaryId, harness: 'codex', native_id: nativeId, anchor_id: anchorId }],
+    },
+  })}\n`);
+  const command = `./scripts/project.sh new beta --session-id ${sid} --tx ${tx} --expected-epoch 0`;
+  const o = run(env, {
+    session_id: sid,
+    turn_id: 'turn-different-native-event',
+    tool_name: 'Bash',
+    tool_input: { command },
+  });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', 'exact argv cannot bypass native-event observation mismatch');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /SWITCH_ONLY/);
+  const after = JSON.parse(readFileSync(path, 'utf8'));
+  assert.equal(after.event_control.current.boundary_id, boundaryId);
+  assert.equal(after.event_control.consumed_events.length, 1, 'mismatch must not mutate or double-consume event state');
+});
+check('IDENTITY-STATE-005 coherent but non-derived event id cannot authorize project access', () => {
+  const sid = 'FORGED';
+  const env = makeEnv({ pins: { [sid]: 'alpha' } });
+  const baseline = run(env, { session_id: sid, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(baseline.hookSpecificOutput.updatedInput.file_path, abs(env, 'alpha', 'docs/x.md'),
+    'control fixture must authorize access before its native event id is forged');
+
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  const state = JSON.parse(readFileSync(path, 'utf8'));
+  const forgedEventId = `codex:${'0'.repeat(64)}`;
+  assert.notEqual(forgedEventId, state.turn.event_id);
+  state.turn.event_id = forgedEventId;
+  state.event_control.current.event_id = forgedEventId;
+  state.event_control.consumed_events[0].event_id = forgedEventId;
+  writeFileSync(path, `${JSON.stringify(state)}\n`);
+
+  const denied = run(env, { session_id: sid, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny',
+    'current/turn/ledger agreement cannot replace derivation from native source identity');
+});
+check('IDENTITY-STATE-006 pending Codex candidate without PreToolUse boundary fails closed', () => {
+  const env = makeEnv();
+  const sid = 'PENDING-NO-BOUNDARY';
+  const prompt = '继续处理 alpha 项目';
+  const promptBytes = Buffer.from(prompt, 'utf8');
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  writeFileSync(path, `${JSON.stringify({
+    schema_version: 3,
+    state: 'NO_PIN',
+    session_id: sid,
+    event_control: {
+      candidates: [{
+        schema_version: 1,
+        session_id: sid,
+        boundary_id: `turn-${sid}`,
+        cwd: env.gstack,
+        harness: 'codex',
+        prompt_integrity: {
+          encoding: 'utf-8',
+          bytes_base64: promptBytes.toString('base64'),
+          byte_length: promptBytes.length,
+          sha256: createHash('sha256').update(promptBytes).digest('hex'),
+        },
+        intent: { kind: 'turn' },
+      }],
+      current: null,
+      cursor: null,
+      consumed_events: [],
+    },
+  })}\n`);
+
+  const denied = run(env, {
+    hook_event_name: 'PreToolUse',
+    session_id: sid,
+    cwd: env.gstack,
+    tool_name: 'Read',
+    tool_input: { file_path: 'docs/x.md' },
+  }, {}, { addDefaultBoundary: false });
+  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny',
+    'pending identity cannot be consumed or authorize project scope without a native boundary');
+  const after = JSON.parse(readFileSync(path, 'utf8'));
+  assert.equal(after.event_control.candidates.length, 1, 'missing boundary must leave pending candidate unconsumed');
+  assert.equal(after.event_control.consumed_events.length, 0, 'missing boundary must not mint ledger authority');
+});
+check('IDENTITY-STATE-007 failed native freshness observation revokes otherwise-valid binding', () => {
+  const sid = 'STALE';
+  const env = makeEnv({ pins: { [sid]: 'alpha' } });
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  const state = JSON.parse(readFileSync(path, 'utf8'));
+  const prior = readFileSync(state.event_control.cursor.transcript_path);
+  const newerUser = Buffer.from(`${JSON.stringify({
+    type: 'response_item',
+    timestamp: '2026-09-08T00:00:02.000Z',
+    payload: {
+      type: 'message',
+      role: 'user',
+      id: 'msg_newer-native-user',
+      content: [{ type: 'input_text', text: 'newer unqueued prompt' }],
+      internal_chat_message_metadata_passthrough: { turn_id: 'turn-newer' },
+    },
+  })}\n`);
+  writeFileSync(state.event_control.cursor.transcript_path, Buffer.concat([prior, newerUser]));
+
+  const denied = run(env, { session_id: sid, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny',
+    'a valid persisted snapshot cannot authorize after native source freshness fails');
 });
 check('IDENTITY-PATH-001 docs traversal cannot escape active binding', () => {
   const env = makeEnv({ pins: { S: 'alpha' } });
@@ -868,6 +1135,73 @@ check('READ-GRANT-006 sidecar 判据只拦够得着 sidecar 的形态（双向�
     '+const prefix = ' + sidecar + ';', '*** End Patch'].join('\n');
   assert.equal(run(env, { session_id: 'R6', tool_name: 'Bash', tool_input: { command: benign } }), null,
     '[误伤面] 补丁正文里的路径字面量是数据，header 才是路径位');
+});
+
+check('PROJECT-CONTROL-001 project state, lock residue, and legacy sidecars are inaccessible', () => {
+  const env = makeEnv();
+  const state = '.claude/.session-project-VICTIM';
+  const lock = `${state}.lock`;
+  const residue = `${lock}.release-owner-token`;
+  const legacy = '.claude/.session-consumed-turns-VICTIM';
+  for (const path of [state, lock, residue, legacy]) writeFileSync(join(env.gstack, path), 'protected');
+
+  const payloads = [
+    { label: 'Read state', tool_name: 'Read', tool_input: { file_path: state } },
+    { label: 'Write state', tool_name: 'Write', tool_input: { file_path: join(env.gstack, state), content: '{"forged":true}' } },
+    { label: 'Edit lock', tool_name: 'Edit', tool_input: { file_path: lock, old_string: 'protected', new_string: 'forged' } },
+    { label: 'Read release residue', tool_name: 'Read', tool_input: { file_path: residue } },
+    { label: 'Bash read legacy', tool_name: 'Bash', tool_input: { command: `cat ${legacy}` } },
+    { label: 'Bash overwrite state', tool_name: 'Bash', tool_input: { command: `printf forged > ${state}` } },
+    { label: 'apply_patch state header', tool_name: 'Bash', tool_input: { command: [
+      '*** Begin Patch', `*** Update File: ${state}`, '@@', '-protected', '+forged', '*** End Patch',
+    ].join('\n') } },
+  ];
+  for (const { label, ...payload } of payloads) {
+    const out = run(env, { session_id: 'PSC', ...payload }, { LUCA_READ_GRANTS_DISABLE: '1' });
+    assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny', label);
+    assert.match(out.hookSpecificOutput.permissionDecisionReason || '', /sidecar.*控制平面/, label);
+  }
+  for (const path of [state, lock, residue, legacy]) {
+    assert.equal(readFileSync(join(env.gstack, path), 'utf8'), 'protected', `${path} must remain unchanged`);
+  }
+});
+
+check('PROJECT-CONTROL-002 glob, split, and dynamic references fail closed', () => {
+  const env = makeEnv();
+  const cfg = '.claude/';
+  const splitPrefix = `${cfg}.session-`;
+  const commands = [
+    `cat ${cfg}.session-projec[t]-VICTIM`,
+    `cat ${cfg}*`,
+    `cat ${cfg}` + '$' + '(printf x)',
+    `a=${splitPrefix}; b=project-VICTIM.lock; cat "$a$b"`,
+    `a=${splitPrefix}; b=consumed-turns-VICTIM; printf forged > "$a$b"`,
+  ];
+  for (const command of commands) {
+    const out = run(env, { session_id: 'PSC2', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny', command);
+    assert.match(out.hookSpecificOutput.permissionDecisionReason || '', /sidecar.*控制平面/, command);
+  }
+});
+
+check('PROJECT-CONTROL-003 ordinary source inspection and editing are not sidecar references', () => {
+  const env = makeEnv();
+  const source = '.claude/hooks/project-scope-guard.mjs';
+  const names = '.session-project-X .session-consumed-turns-X .session-read-grants-X';
+  for (const payload of [
+    { tool_name: 'Write', tool_input: { file_path: source, content: `const fixtures = '${names}';` } },
+    { tool_name: 'Edit', tool_input: { file_path: source, old_string: 'old', new_string: names } },
+    { tool_name: 'Bash', tool_input: { command: `rg -n ".session-project-" ${source}` } },
+    { tool_name: 'Bash', tool_input: { command: 'ls .claude/hooks/*.mjs' } },
+    { tool_name: 'Bash', tool_input: { command: [
+      '*** Begin Patch', `*** Update File: ${source}`, '@@',
+      `+const fixtures = '${names}';`,
+      '+const dynamicExample = ".claude/$(printf x)";',
+      '*** End Patch',
+    ].join('\n') } },
+  ]) {
+    assert.equal(run(env, { session_id: 'PSC3', ...payload }), null, payload.tool_name);
+  }
 });
 
 check('READ-GRANT-004 malformed project state cannot masquerade as NO_PIN', () => {

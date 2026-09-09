@@ -1441,8 +1441,8 @@ const failures = [];
   }
 }
 
-// Real UserPromptSubmit fixture: this exercises the stateful branch that calls
-// prepareProjectSwitch, not only the dry-run decision builder.
+// Real UserPromptSubmit fixture: switch/new is revoke-and-queue only. The
+// SWITCH_ONLY authority is materialized later by native PreToolUse attestation.
 {
   const root = mkdtempSync(join(tmpdir(), 'route-new-project-'));
   const gstack = join(root, 'gstack');
@@ -1467,11 +1467,14 @@ const failures = [];
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /project\.sh new beta --session-id REALNEW --tx .+ --expected-epoch 0/);
     const state = JSON.parse(readFileSync(join(gstack, '.claude', '.session-project-REALNEW'), 'utf8'));
-    assert.equal(state.state, 'SWITCH_ONLY');
-    assert.equal(state.switch.operation, 'new');
-    assert.equal(state.switch.target, 'beta');
-    assert.equal(state.switch.turn_id, 'turn-new-1');
-    console.log('PASS real route fixture prepares deterministic operation:new transaction');
+    assert.equal(state.state, 'NO_PIN');
+    assert.equal(state.event_control.candidates.length, 1);
+    assert.equal(state.event_control.candidates[0].boundary_id, 'turn-new-1');
+    assert.equal(state.event_control.candidates[0].intent.kind, 'switch');
+    assert.equal(state.event_control.candidates[0].intent.operation, 'new');
+    assert.equal(state.event_control.candidates[0].intent.target, 'beta');
+    assert.equal(state.event_control.consumed_events.length, 0);
+    console.log('PASS real route fixture queues deterministic operation:new without pre-attested authority');
     passCount++;
   } catch (error) {
     console.log(`FAIL real route fixture prepares deterministic operation:new transaction: ${error.message?.split('\n')[0]}`);

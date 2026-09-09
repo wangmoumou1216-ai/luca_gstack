@@ -66,7 +66,13 @@ function rejects(result, reason) {
 }
 
 try {
-  for (const rel of ['scripts/check-quality-gates.mjs', '.claude/agents/preflight-agent.md', '.claude/agents/quality-gate.md', '.claude/hooks/lib/project-substrate.mjs']) {
+  for (const rel of [
+    'scripts/check-quality-gates.mjs',
+    '.claude/agents/preflight-agent.md',
+    '.claude/agents/quality-gate.md',
+    '.claude/hooks/lib/project-substrate.mjs',
+    '.claude/hooks/lib/event-attestation.mjs',
+  ]) {
     mkdirSync(dirname(join(root, rel)), { recursive: true });
     copyFileSync(join(source, rel), join(root, rel));
   }

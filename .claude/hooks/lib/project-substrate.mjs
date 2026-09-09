@@ -27,8 +27,14 @@ import {
   writeFileSync,
 } from 'fs';
 import { dirname, join, isAbsolute, relative, resolve } from 'path';
-import { homedir } from 'os';
-import { randomUUID } from 'crypto';
+import { homedir, tmpdir } from 'os';
+import { createHash, randomUUID } from 'crypto';
+import {
+  attestNativeUserEvent,
+  captureNativeEventFence,
+  MAX_NATIVE_PROMPT_BYTES,
+  observeCurrentNativeEvent,
+} from './event-attestation.mjs';
 
 const DEFAULT_ROOT = join(homedir(), 'Desktop', '项目');
 function normRoot(p) {
@@ -100,11 +106,13 @@ export function projectNameFromLink(target, opts = {}) {
   return segs[0]; // 无 known 前缀（新项目/列表读失败）→ 回退首段
 }
 
-export const PROJECT_STATE_SCHEMA = 2;
+export const PROJECT_STATE_SCHEMA = 3;
+const READABLE_PROJECT_STATE_SCHEMAS = new Set([2, PROJECT_STATE_SCHEMA]);
 export const PROJECT_STATES = new Set(['NO_PIN', 'BOUND', 'SWITCH_ONLY', 'TURN_ACTIVE', 'TURN_CLOSED']);
+export const PROJECT_EVENT_CANDIDATE_LIMIT = 32;
 // The ledger never evicts entries. Once full, the session must rotate instead
-// of making an old turn identifier replayable again.
-export const PROJECT_TURN_HISTORY_LIMIT = 256;
+// of making an old native event replayable again.
+export const PROJECT_EVENT_HISTORY_LIMIT = 256;
 
 export function sanitizeSessionId(value) {
   return String(value || '').replace(/[^\w-]/g, '').slice(0, 36);
@@ -143,14 +151,6 @@ export function projectStatePath(gstackRoot, sessionId) {
   const sid = sanitizeSessionId(sessionId);
   if (!sid) throw new Error('session id required');
   return join(realpathSync(resolve(gstackRoot)), '.claude', `.session-project-${sid}`);
-}
-
-function projectTurnHistoryPath(gstackRoot, sessionId) {
-  const sid = sanitizeSessionId(sessionId);
-  if (!sid) throw new Error('session id required');
-  // Keep the ledger outside `.session-project-*`: check-project-links treats
-  // that prefix as the canonical identity-state census.
-  return join(realpathSync(resolve(gstackRoot)), '.claude', `.session-consumed-turns-${sid}`);
 }
 
 function readOptionalBytes(path) {
@@ -343,16 +343,585 @@ export function readProjectState(gstackRoot, sessionId, projectsRoot = PROJECTS_
   const path = projectStatePath(gstackRoot, sessionId);
   const sid = sanitizeSessionId(sessionId);
   const raw = readOptionalBytes(path);
-  if (raw === null) return { path, raw: null, value: { schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sid } };
+  if (raw === null) return {
+    path,
+    raw: null,
+    value: {
+      schema_version: PROJECT_STATE_SCHEMA,
+      state: 'NO_PIN',
+      session_id: sid,
+      event_control: { candidates: [], current: null, cursor: null, consumed_events: [] },
+    },
+  };
   let value;
   try { value = JSON.parse(raw.toString('utf8')); }
   catch {
     const project = parseLegacyProjectPin(raw);
     throw new Error(`legacy project pin requires explicit migration: session=${sid} project=${project}`);
   }
-  if (value?.schema_version !== PROJECT_STATE_SCHEMA || !PROJECT_STATES.has(value?.state)) throw new Error('invalid project state schema');
+  if (!READABLE_PROJECT_STATE_SCHEMAS.has(value?.schema_version) || !PROJECT_STATES.has(value?.state)) throw new Error('invalid project state schema');
   if (value.session_id !== sid) throw new Error('project state session mismatch');
   return { path, raw, value };
+}
+
+function projectStateFromBytes(raw, sid) {
+  if (raw === null) return {
+    schema_version: PROJECT_STATE_SCHEMA,
+    state: 'NO_PIN',
+    session_id: sid,
+    event_control: { candidates: [], current: null, cursor: null, consumed_events: [] },
+  };
+  let value;
+  try { value = JSON.parse(raw.toString('utf8')); }
+  catch { throw new Error('project state is malformed'); }
+  if (!READABLE_PROJECT_STATE_SCHEMAS.has(value?.schema_version) || !PROJECT_STATES.has(value?.state)) {
+    throw new Error('invalid project state schema');
+  }
+  if (value.session_id !== sid) throw new Error('project state session mismatch');
+  return value;
+}
+
+export class ProjectEventAuthorityError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = 'ProjectEventAuthorityError';
+    this.code = code;
+  }
+}
+
+function validPromptIntegrity(integrity) {
+  if (integrity?.encoding !== 'utf-8' || typeof integrity.bytes_base64 !== 'string'
+      || !Number.isSafeInteger(integrity.byte_length) || integrity.byte_length < 0
+      || integrity.byte_length > MAX_NATIVE_PROMPT_BYTES
+      || !/^[0-9a-f]{64}$/.test(String(integrity.sha256 || ''))
+      || integrity.bytes_base64.length > Math.ceil(MAX_NATIVE_PROMPT_BYTES / 3) * 4 + 4) return false;
+  const bytes = Buffer.from(integrity.bytes_base64, 'base64');
+  return bytes.toString('base64') === integrity.bytes_base64
+    && bytes.length === integrity.byte_length
+    && createHash('sha256').update(bytes).digest('hex') === integrity.sha256;
+}
+
+function validEventCursor(cursor) {
+  return Boolean(cursor?.schema_version === 1
+    && ['claude', 'codex'].includes(cursor.harness)
+    && isAbsolute(String(cursor.transcript_path || ''))
+    && /^\d+$/.test(String(cursor.dev || ''))
+    && /^\d+$/.test(String(cursor.ino || ''))
+    && Number.isSafeInteger(cursor.byte_offset) && cursor.byte_offset >= 0
+    && Number.isSafeInteger(cursor.record_index) && cursor.record_index >= 0
+    && /^[0-9a-f]{64}$/.test(String(cursor.prefix_sha256 || '')));
+}
+
+function validNativeEventRecord(item, sessionId) {
+  if (!item || !['claude', 'codex'].includes(item.harness)
+      || !new RegExp(`^${item.harness}:[0-9a-f]{64}$`).test(String(item.event_id || ''))
+      || !String(item.boundary_id || '') || !String(item.native_id || '')) return false;
+  if (item.harness === 'codex' ? !String(item.anchor_id || '') : item.anchor_id != null) return false;
+  if (item.stop_witness_id != null) {
+    const validWitness = item.harness === 'codex'
+      ? /^msg_[\w-]+$/.test(String(item.stop_witness_id))
+      : /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(item.stop_witness_id));
+    if (!validWitness) return false;
+  }
+  return item.event_id === expectedNativeEventId({ harness: item.harness, session_id: sessionId }, item);
+}
+
+function eventControlFromState(value) {
+  if (value?.schema_version !== PROJECT_STATE_SCHEMA) {
+    return { candidates: [], current: null, cursor: null, consumed_events: [] };
+  }
+  if (!value.event_control) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'schema-v3 project state lacks event control');
+  }
+  const control = value.event_control;
+  if (control.fence != null && !(control.fence.schema_version === 1
+      && control.fence.session_id === value.session_id
+      && ['claude', 'codex'].includes(control.fence.harness)
+      && isAbsolute(String(control.fence.cwd || ''))
+      && (control.fence.source_absent === true ? control.fence.cursor === null
+        : control.fence.source_absent === false && validEventCursor(control.fence.cursor)))) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'native startup fence schema is invalid');
+  }
+  if (!Array.isArray(control.candidates) || !Array.isArray(control.consumed_events)) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'project event control schema is invalid');
+  }
+  if (control.candidates.length > PROJECT_EVENT_CANDIDATE_LIMIT
+      || control.consumed_events.length > PROJECT_EVENT_HISTORY_LIMIT) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'project event control exceeds its durable bounds');
+  }
+  for (const candidate of control.candidates) {
+    if (candidate?.schema_version !== 1 || candidate.session_id !== value.session_id
+        || !String(candidate.boundary_id || '') || !isAbsolute(String(candidate.cwd || ''))
+        || !['claude', 'codex'].includes(candidate.harness)
+        || (candidate.harness === 'claude' && candidate.boundary_id !== candidate.session_id)
+        || !validPromptIntegrity(candidate.prompt_integrity)
+        || !candidate.intent || typeof candidate.intent !== 'object' || Array.isArray(candidate.intent)) {
+      throw new ProjectEventAuthorityError('STATE_SCHEMA', 'project event candidate schema is invalid');
+    }
+  }
+  if (control.cursor != null && !validEventCursor(control.cursor)) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'project event cursor schema is invalid');
+  }
+  if (control.current && (!validNativeEventRecord(control.current, value.session_id)
+      || !String(control.current.boundary_id || '') || !isAbsolute(String(control.current.cwd || ''))
+      || !['claude', 'codex'].includes(control.current.harness)
+      || !['active', 'closed'].includes(control.current.status))) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'current project event schema is invalid');
+  }
+  const seenEvents = new Set();
+  for (const item of control.consumed_events) {
+    if (!validNativeEventRecord(item, value.session_id) || seenEvents.has(item.event_id)) {
+      throw new ProjectEventAuthorityError('STATE_SCHEMA', 'project event ledger schema is invalid');
+    }
+    seenEvents.add(item.event_id);
+  }
+  if ((control.current || control.consumed_events.length > 0) && !validEventCursor(control.cursor)) {
+    throw new ProjectEventAuthorityError('STATE_SCHEMA', 'attested project event state lacks a durable cursor');
+  }
+  if (control.current) {
+    const ledger = control.consumed_events.find(item => item.event_id === control.current.event_id);
+    if (!ledger || ledger.boundary_id !== control.current.boundary_id
+        || ledger.harness !== control.current.harness || ledger.native_id !== control.current.native_id
+        || ledger.anchor_id !== control.current.anchor_id
+        || control.cursor.harness !== control.current.harness) {
+      throw new ProjectEventAuthorityError('STATE_SCHEMA', 'current project event is not bound to its ledger and cursor');
+    }
+  }
+  const harnesses = new Set([
+    ...control.candidates.map(item => item.harness),
+    ...control.consumed_events.map(item => item.harness),
+    ...(control.current ? [control.current.harness] : []),
+    ...(control.fence ? [control.fence.harness] : []),
+  ]);
+  if (harnesses.size > 1) throw new ProjectEventAuthorityError('STATE_SCHEMA', 'project event state mixes native harnesses');
+  return {
+    candidates: control.candidates,
+    current: control.current || null,
+    cursor: control.cursor || null,
+    consumed_events: control.consumed_events,
+    ...(control.fence ? { fence: control.fence } : {}),
+  };
+}
+
+function priorClosedState(current, binding, control) {
+  if (!binding) return { state: 'NO_PIN' };
+  const prior = control.current;
+  if (prior?.event_id && prior?.boundary_id) {
+    return {
+      state: 'TURN_CLOSED',
+      binding,
+      turn: {
+        event_id: prior.event_id,
+        boundary_id: prior.boundary_id,
+        epoch: binding.epoch,
+        outcome: 'next-user-prompt',
+      },
+    };
+  }
+  const legacy = current.state === 'BOUND' ? current.terminal
+    : current.state === 'SWITCH_ONLY' ? current.switch : current.turn;
+  return {
+    state: 'TURN_CLOSED',
+    binding,
+    turn: {
+      turn_id: String(legacy?.turn_id || 'legacy-event-unavailable'),
+      epoch: binding.epoch,
+      outcome: 'next-user-prompt',
+    },
+  };
+}
+
+// UserPromptSubmit records only an unattested candidate. In particular,
+// boundary_id is transport provenance, never a consumed event identity.
+export function queueProjectEventCandidate({
+  gstackRoot,
+  projectsRoot = PROJECTS_ROOT,
+  sessionId,
+  boundaryId,
+  cwd,
+  harness,
+  prompt,
+  promptId = '',
+  intent,
+}) {
+  const sid = sanitizeSessionId(sessionId);
+  const boundary = String(boundaryId || '');
+  const candidateCwd = String(cwd || '');
+  const candidateHarness = String(harness || '');
+  const exactPrompt = String(prompt ?? '');
+  if (!boundary || boundary.length > 256 || /[\u0000-\u001f\u007f]/.test(boundary)) {
+    throw new Error('boundary id is missing or invalid');
+  }
+  if (!isAbsolute(candidateCwd) || /[\u0000\r\n]/.test(candidateCwd)) throw new Error('candidate cwd is missing or invalid');
+  if (!['claude', 'codex'].includes(candidateHarness)) throw new Error('candidate harness is missing or invalid');
+  if (candidateHarness === 'claude' && boundary !== sid) throw new Error('Claude boundary must equal the native session id');
+  if (promptId && (String(promptId).length > 256 || /[\u0000-\u001f\u007f]/.test(String(promptId)))) {
+    throw new Error('prompt id is invalid');
+  }
+  const normalizedIntent = JSON.parse(JSON.stringify(intent ?? null));
+  if (!normalizedIntent || typeof normalizedIntent !== 'object' || Array.isArray(normalizedIntent)) {
+    throw new Error('candidate intent is missing or invalid');
+  }
+  const promptBytes = Buffer.from(exactPrompt, 'utf8');
+  if (promptBytes.length > MAX_NATIVE_PROMPT_BYTES) {
+    throw new Error(`native prompt exceeds ${MAX_NATIVE_PROMPT_BYTES} bytes`);
+  }
+  const candidate = {
+    schema_version: 1,
+    session_id: sid,
+    boundary_id: boundary,
+    cwd: candidateCwd,
+    harness: candidateHarness,
+    ...(promptId ? { prompt_id: String(promptId) } : {}),
+    prompt_integrity: {
+      encoding: 'utf-8',
+      bytes_base64: promptBytes.toString('base64'),
+      byte_length: promptBytes.length,
+      sha256: createHash('sha256').update(promptBytes).digest('hex'),
+    },
+    intent: normalizedIntent,
+  };
+
+  return withProjectStateLock(gstackRoot, sid, () => {
+    const path = projectStatePath(gstackRoot, sid);
+    const current = projectStateFromBytes(readOptionalBytes(path), sid);
+    const binding = validatedBindingForState(current, projectsRoot);
+    const control = eventControlFromState(current);
+    if (control.candidates.length >= PROJECT_EVENT_CANDIDATE_LIMIT) {
+      throw new Error(`project event candidate capacity ${PROJECT_EVENT_CANDIDATE_LIMIT} reached`);
+    }
+    const closed = priorClosedState(current, binding, control);
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA,
+      state: closed.state,
+      session_id: sid,
+      ...(closed.binding ? { binding: closed.binding, turn: closed.turn } : {}),
+      event_control: {
+        candidates: [...control.candidates, candidate],
+        current: control.current ? { ...control.current, status: 'closed' } : null,
+        cursor: control.cursor,
+        consumed_events: control.consumed_events,
+        ...(control.fence ? { fence: control.fence } : {}),
+      },
+    };
+    const body = Buffer.from(`${JSON.stringify(next)}\n`);
+    atomicWriteBytes(path, body, 'project-event-candidate');
+    return next;
+  });
+}
+
+// Only the pre-input startup/resume lifecycle may establish this fence. A
+// prompt or tool call cannot repair missing authority from the transcript tail.
+export function initializeProjectEventFence({
+  gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, harness, cwd,
+  transcriptPath = '', codexHome = '',
+}) {
+  const sid = sanitizeSessionId(sessionId);
+  return withProjectStateLock(gstackRoot, sid, () => {
+    const path = projectStatePath(gstackRoot, sid);
+    const state = projectStateFromBytes(readOptionalBytes(path), sid);
+    const control = eventControlFromState(state);
+    if (control.cursor || control.fence) return state;
+    const binding = validatedBindingForState(state, projectsRoot);
+    const fence = captureNativeEventFence({
+      sessionId: sid, harness, cwd, transcriptPath, codexHome,
+      allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
+    });
+    const closed = priorClosedState(state, binding, control);
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA, session_id: sid, ...closed,
+      event_control: { candidates: [], current: null, cursor: fence.cursor,
+        consumed_events: [], fence },
+    };
+    validatedBindingForState(next, projectsRoot);
+    atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-fence');
+    return next;
+  });
+}
+
+function validateObservationContext({ sessionId, boundaryId, cwd }) {
+  const sid = sanitizeSessionId(sessionId);
+  const boundary = String(boundaryId || '');
+  const workingDirectory = String(cwd || '');
+  if (!sid) throw new ProjectEventAuthorityError('SESSION_MISMATCH', 'session id is missing');
+  if (!boundary) throw new ProjectEventAuthorityError('BOUNDARY_MISMATCH', 'boundary id is missing');
+  if (!isAbsolute(workingDirectory)) throw new ProjectEventAuthorityError('CWD_MISMATCH', 'cwd is missing or non-absolute');
+  return { sid, boundary, workingDirectory };
+}
+
+function currentMatchesObservation(current, boundary, cwd) {
+  return current?.boundary_id === boundary && current?.cwd === cwd;
+}
+
+function eventIdPart(value) {
+  const bytes = Buffer.from(String(value), 'utf8');
+  return Buffer.concat([Buffer.from(`${bytes.length}:`, 'ascii'), bytes]);
+}
+
+function expectedNativeEventId(candidate, evidence) {
+  const hash = createHash('sha256');
+  const domain = `luca-native-event:v1:${candidate.harness}`;
+  const values = candidate.harness === 'codex'
+    ? [domain, candidate.session_id, evidence.native_id, evidence.anchor_id]
+    : [domain, candidate.session_id, evidence.native_id];
+  for (const value of values) hash.update(eventIdPart(value));
+  return `${candidate.harness}:${hash.digest('hex')}`;
+}
+
+function validateAttestedEvidence(candidate, evidence, boundary) {
+  if (!evidence?.event_id || evidence.event_id === boundary
+      || !String(evidence.native_id || '') || evidence.boundary_id !== boundary
+      || !evidence.cursor_after || evidence.cursor_after.schema_version !== 1
+      || evidence.cursor_after.harness !== candidate.harness
+      || !isAbsolute(String(evidence.cursor_after.transcript_path || ''))
+      || !/^\d+$/.test(String(evidence.cursor_after.dev || ''))
+      || !/^\d+$/.test(String(evidence.cursor_after.ino || ''))
+      || !Number.isSafeInteger(evidence.cursor_after.byte_offset) || evidence.cursor_after.byte_offset < 0
+      || !Number.isSafeInteger(evidence.cursor_after.record_index) || evidence.cursor_after.record_index < 0
+      || !/^[0-9a-f]{64}$/.test(String(evidence.cursor_after.prefix_sha256 || ''))
+      || (candidate.harness === 'codex' && !String(evidence.anchor_id || ''))
+      || (candidate.harness === 'claude' && evidence.anchor_id != null)
+      || !['codex', 'claude'].includes(candidate.harness)
+      || evidence.event_id !== expectedNativeEventId(candidate, evidence)) {
+    throw new ProjectEventAuthorityError('UNATTESTED_IDENTITY', 'attester did not return verified native event evidence');
+  }
+}
+
+function insidePath(candidate, root) {
+  const rel = relative(root, candidate);
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+function allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome) {
+  if (process.env.LUCA_EVENT_ATTESTATION_TEST !== '1') return false;
+  try {
+    const tempRoot = realpathSync(resolve(tmpdir()));
+    const gstack = realpathSync(resolve(gstackRoot));
+    const parent = dirname(gstack);
+    const fixtureRoot = parent === tempRoot ? gstack : parent;
+    if (!insidePath(fixtureRoot, tempRoot) || fixtureRoot === tempRoot) return false;
+    const explicit = transcriptPath ? realpathSync(resolve(transcriptPath))
+      : codexHome ? realpathSync(resolve(codexHome)) : '';
+    return Boolean(explicit && insidePath(explicit, fixtureRoot));
+  } catch { return false; }
+}
+
+// The attester runs under the same project-state lock as ledger/cursor/state
+// publication. Its filesystem reader is pure: it returns evidence or throws,
+// and cannot publish partial project authority.
+export function attestPendingProjectEvent({
+  gstackRoot,
+  projectsRoot = PROJECTS_ROOT,
+  sessionId,
+  boundaryId,
+  cwd,
+  observation = 'pre-tool',
+  transcriptPath = '',
+  codexHome = '',
+  assistantText = '',
+}) {
+  const { sid, boundary, workingDirectory } = validateObservationContext({ sessionId, boundaryId, cwd });
+  if (!['pre-tool', 'stop'].includes(observation)) {
+    throw new ProjectEventAuthorityError('OBSERVATION_INVALID', 'observation must be pre-tool or stop');
+  }
+  return withProjectStateLock(gstackRoot, sid, () => {
+    const path = projectStatePath(gstackRoot, sid);
+    const state = projectStateFromBytes(readOptionalBytes(path), sid);
+    const control = eventControlFromState(state);
+    const allowTestSourceRoot = allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome);
+    if (control.candidates.length === 0) {
+      if (control.current?.status === 'active'
+          && currentMatchesObservation(control.current, boundary, workingDirectory)) {
+        const evidence = observeCurrentNativeEvent({
+          event: control.current,
+          sessionId: sid,
+          cursor: control.cursor,
+          transcriptPath,
+          codexHome,
+          observation,
+          assistantText,
+          allowTestSourceRoot,
+          priorEvents: control.consumed_events,
+        });
+        if (evidence.stop_witness_id
+            && evidence.stop_witness_id !== control.current.stop_witness_id) {
+          const next = {
+            ...state,
+            event_control: {
+              ...control,
+              current: { ...control.current, stop_witness_id: evidence.stop_witness_id },
+            },
+          };
+          atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-observed');
+          return { state: next, event: next.event_control.current, idempotent: true };
+        }
+        return { state, event: control.current, idempotent: true };
+      }
+      throw new ProjectEventAuthorityError('NO_PENDING_EVENT', 'no pending native event candidate');
+    }
+    const candidates = control.candidates;
+    const candidate = candidates[candidates.length - 1];
+    if (candidate.session_id !== sid) throw new ProjectEventAuthorityError('SESSION_MISMATCH', 'candidate session mismatch');
+    if (candidate.boundary_id !== boundary) throw new ProjectEventAuthorityError('BOUNDARY_MISMATCH', 'latest candidate boundary mismatch');
+    if (candidate.cwd !== workingDirectory) throw new ProjectEventAuthorityError('CWD_MISMATCH', 'latest candidate cwd mismatch');
+    if (control.consumed_events.length + candidates.length > PROJECT_EVENT_HISTORY_LIMIT) {
+      throw new ProjectEventAuthorityError('EVENT_LEDGER_FULL', `project event history capacity ${PROJECT_EVENT_HISTORY_LIMIT} reached`);
+    }
+    let cursor = control.cursor;
+    const consumed = [...control.consumed_events];
+    const events = [];
+    for (let index = 0; index < candidates.length; index += 1) {
+      const pending = candidates[index];
+      const final = index === candidates.length - 1;
+      const evidence = attestNativeUserEvent({
+        candidate: pending,
+        cursor,
+        transcriptPath,
+        codexHome,
+        bootstrapFence: control.fence || null,
+        observation: final ? observation : 'pre-tool',
+        assistantText: final ? assistantText : '',
+        allowTestSourceRoot,
+        requireNoFollowingUser: final,
+        priorEvents: consumed,
+      });
+      validateAttestedEvidence(pending, evidence, pending.boundary_id);
+      if (consumed.some(item => item?.event_id === evidence.event_id)) {
+        throw new ProjectEventAuthorityError('EVENT_REPLAY', `native event already consumed: ${evidence.event_id}`);
+      }
+      const event = {
+        event_id: evidence.event_id,
+        boundary_id: pending.boundary_id,
+        native_id: evidence.native_id,
+        anchor_id: evidence.anchor_id || null,
+        cwd: pending.cwd,
+        harness: pending.harness,
+        status: final ? 'active' : 'closed',
+        attested_at: new Date().toISOString(),
+        ...(!final ? { outcome: 'superseded-before-observation' } : {}),
+        ...(evidence.stop_witness_id ? { stop_witness_id: evidence.stop_witness_id } : {}),
+      };
+      consumed.push({
+        event_id: event.event_id,
+        boundary_id: event.boundary_id,
+        harness: event.harness,
+        native_id: event.native_id,
+        anchor_id: event.anchor_id,
+      });
+      events.push(event);
+      cursor = evidence.cursor_after;
+    }
+    const event = events[events.length - 1];
+    const binding = validatedBindingForState(state, projectsRoot);
+    const intent = candidate.intent || {};
+    let materialized;
+    if (intent.kind === 'switch' && observation === 'pre-tool') {
+      materialized = {
+        state: 'SWITCH_ONLY',
+        switch: {
+          tx: intent.tx,
+          operation: intent.operation,
+          target: intent.target,
+          expected_epoch: intent.expected_epoch,
+          binding,
+          event_id: event.event_id,
+          boundary_id: boundary,
+        },
+      };
+    } else if (binding) {
+      materialized = {
+        state: 'TURN_ACTIVE',
+        binding,
+        turn: {
+          event_id: event.event_id,
+          boundary_id: boundary,
+          epoch: binding.epoch,
+        },
+      };
+    } else {
+      materialized = { state: 'NO_PIN' };
+    }
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA,
+      state: materialized.state,
+      session_id: sid,
+      ...(materialized.binding ? { binding: materialized.binding, turn: materialized.turn } : {}),
+      ...(materialized.switch ? { switch: materialized.switch } : {}),
+      event_control: {
+        candidates: [],
+        current: event,
+        cursor,
+        consumed_events: consumed,
+        ...(control.fence ? { fence: control.fence } : {}),
+      },
+    };
+    if (process.env.LUCA_EVENT_TX_FAULT === 'after-attest-before-publish') {
+      throw new ProjectEventAuthorityError('INJECTED_FAULT', 'injected event transaction fault after attestation before publish');
+    }
+    atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-attested');
+    return { state: next, event, events, idempotent: false };
+  });
+}
+
+export function activeProjectAuthority(value, expected = {}, projectsRoot = PROJECTS_ROOT) {
+  if (value?.schema_version !== PROJECT_STATE_SCHEMA || value.state !== 'TURN_ACTIVE') return null;
+  const current = eventControlFromState(value).current;
+  if (!current || current.status !== 'active') return null;
+  if (value.turn?.event_id !== current.event_id || value.turn?.boundary_id !== current.boundary_id) return null;
+  if (expected.boundaryId && current.boundary_id !== String(expected.boundaryId)) return null;
+  if (expected.eventId && current.event_id !== String(expected.eventId)) return null;
+  if (expected.cwd && current.cwd !== String(expected.cwd)) return null;
+  const binding = validatedBindingForState(value, projectsRoot);
+  return binding ? { binding, event: current } : null;
+}
+
+export function closeAttestedProjectEvent({
+  gstackRoot,
+  projectsRoot = PROJECTS_ROOT,
+  sessionId,
+  eventId,
+  boundaryId,
+  outcome = 'stop',
+}) {
+  const sid = sanitizeSessionId(sessionId);
+  const event = String(eventId || '');
+  const boundary = String(boundaryId || '');
+  if (!sid || !event || !boundary) throw new ProjectEventAuthorityError('EVENT_MISMATCH', 'complete attested event identity required');
+  return withProjectStateLock(gstackRoot, sid, () => {
+    const path = projectStatePath(gstackRoot, sid);
+    const state = projectStateFromBytes(readOptionalBytes(path), sid);
+    const control = eventControlFromState(state);
+    if (control.current?.event_id !== event || control.current?.boundary_id !== boundary) {
+      throw new ProjectEventAuthorityError('EVENT_MISMATCH', 'attested event snapshot changed before close');
+    }
+    if (control.current.status === 'closed') return state;
+    if (control.current.status !== 'active') throw new ProjectEventAuthorityError('EVENT_MISMATCH', 'attested event is not active');
+    const snapshot = state.state === 'TURN_ACTIVE' ? state.turn
+      : state.state === 'BOUND' ? state.terminal
+        : state.state === 'SWITCH_ONLY' ? state.switch
+          : state.state === 'NO_PIN' ? control.current : null;
+    if (snapshot?.event_id !== event || snapshot?.boundary_id !== boundary) {
+      throw new ProjectEventAuthorityError('EVENT_MISMATCH', 'project state snapshot does not match the current native event');
+    }
+    const binding = ['TURN_ACTIVE', 'BOUND', 'SWITCH_ONLY'].includes(state.state)
+      ? validatedBindingForState(state, projectsRoot)
+      : null;
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA,
+      state: binding ? 'TURN_CLOSED' : 'NO_PIN',
+      session_id: sid,
+      ...(binding ? {
+        binding,
+        turn: { event_id: event, boundary_id: boundary, epoch: binding.epoch, outcome: String(outcome || 'stop') },
+      } : {}),
+      event_control: {
+        ...control,
+        current: { ...control.current, status: 'closed', outcome: String(outcome || 'stop') },
+      },
+    };
+    atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-close');
+    return next;
+  });
 }
 
 function parseLegacyProjectPin(raw) {
@@ -383,7 +952,7 @@ export function migrateLegacyProjectState(gstackRoot, sessionId, projectsRoot = 
     if (!currentRaw?.equals(raw)) throw new Error('legacy project pin changed before explicit migration');
     const identity = canonicalProjectIdentity(project, projectsRoot);
     const next = {
-      schema_version: PROJECT_STATE_SCHEMA,
+      schema_version: 2,
       state: 'TURN_CLOSED',
       session_id: sid,
       binding: { ...identity, epoch: 1 },
@@ -428,43 +997,6 @@ export function quarantineLegacyProjectState(gstackRoot, sessionId, expectedLega
   });
 }
 
-function knownTurnIds(value) {
-  return [value?.terminal?.turn_id, value?.turn?.turn_id, value?.switch?.turn_id]
-    .map(item => String(item || ''))
-    .filter(Boolean);
-}
-
-function consumeTopLevelTurnId(gstackRoot, sessionId, turnId, stateValue) {
-  const sid = sanitizeSessionId(sessionId);
-  const requested = String(turnId || '');
-  if (!requested || requested.length > 256 || /[\u0000-\u001f\u007f]/.test(requested)) {
-    throw new Error('top-level turn id is missing or invalid');
-  }
-  const path = projectTurnHistoryPath(gstackRoot, sid);
-  return withProjectStateLock(gstackRoot, sid, () => {
-    const raw = readOptionalBytes(path);
-    let history = { schema_version: 1, session_id: sid, consumed_turn_ids: [] };
-    if (raw) {
-      try { history = JSON.parse(raw.toString('utf8')); }
-      catch { throw new Error('project turn history is malformed'); }
-      if (history?.schema_version !== 1 || history.session_id !== sid
-          || !Array.isArray(history.consumed_turn_ids)
-          || history.consumed_turn_ids.some(item => typeof item !== 'string')) {
-        throw new Error('project turn history schema is invalid');
-      }
-    }
-    const consumed = [...new Set([...history.consumed_turn_ids, ...knownTurnIds(stateValue)])];
-    if (consumed.includes(requested)) throw new Error(`top-level turn id already consumed: ${requested}`);
-    if (consumed.length >= PROJECT_TURN_HISTORY_LIMIT) {
-      throw new Error(`project turn history capacity ${PROJECT_TURN_HISTORY_LIMIT} reached; rotate the session manually`);
-    }
-    consumed.push(requested);
-    const next = { schema_version: 1, session_id: sid, consumed_turn_ids: consumed };
-    atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-turn-history');
-    return next;
-  });
-}
-
 export function stateBinding(value) {
   if (!value || value.state === 'NO_PIN') return null;
   if (value.state === 'SWITCH_ONLY') return value.switch?.binding || null;
@@ -476,6 +1008,7 @@ export function stateBinding(value) {
 // accepting a different partially-corrupt shape.
 export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
   if (!value || !PROJECT_STATES.has(value.state)) throw new Error('invalid project state');
+  if (value.schema_version === PROJECT_STATE_SCHEMA) eventControlFromState(value);
   if (value.state === 'NO_PIN') {
     if (value.binding || value.switch) throw new Error('NO_PIN cannot carry project identity');
     return null;
@@ -483,17 +1016,30 @@ export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
 
   if (value.state === 'SWITCH_ONLY') {
     const sw = value.switch;
-    if (!sw || !['switch', 'new'].includes(sw.operation) || !String(sw.tx || '') || !String(sw.turn_id || '')) {
+    const eventRefValid = value.schema_version === PROJECT_STATE_SCHEMA
+      ? Boolean(String(sw?.event_id || '') && String(sw?.boundary_id || ''))
+      : Boolean(String(sw?.turn_id || ''));
+    if (!sw || !['switch', 'new'].includes(sw.operation) || !String(sw.tx || '') || !eventRefValid) {
       throw new Error('SWITCH_ONLY transaction shape is invalid');
     }
     validateProjectName(sw.target);
     if (!Number.isSafeInteger(sw.expected_epoch) || sw.expected_epoch < 0) throw new Error('SWITCH_ONLY expected epoch is invalid');
     if (!sw.binding) {
       if (sw.expected_epoch !== 0) throw new Error('unbound SWITCH_ONLY must expect epoch 0');
+      if (value.schema_version === PROJECT_STATE_SCHEMA) {
+        const current = eventControlFromState(value).current;
+        if (current?.status !== 'active' || current.event_id !== sw.event_id
+            || current.boundary_id !== sw.boundary_id) throw new Error('SWITCH_ONLY native event snapshot is invalid');
+      }
       return null;
     }
     if (sw.binding.epoch !== sw.expected_epoch) throw new Error('SWITCH_ONLY binding epoch mismatch');
     verifyProjectBinding(sw.binding, projectsRoot);
+    if (value.schema_version === PROJECT_STATE_SCHEMA) {
+      const current = eventControlFromState(value).current;
+      if (current?.status !== 'active' || current.event_id !== sw.event_id
+          || current.boundary_id !== sw.boundary_id) throw new Error('SWITCH_ONLY native event snapshot is invalid');
+    }
     return sw.binding;
   }
 
@@ -501,17 +1047,36 @@ export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
   verifyProjectBinding(binding, projectsRoot);
   if (value.state === 'BOUND') {
     const terminal = value.terminal;
-    if (!terminal || !String(terminal.tx || '') || !String(terminal.turn_id || '')
+    const eventRefValid = value.schema_version === PROJECT_STATE_SCHEMA
+      ? Boolean(String(terminal?.event_id || '') && String(terminal?.boundary_id || ''))
+      : Boolean(String(terminal?.turn_id || ''));
+    if (!terminal || !String(terminal.tx || '') || !eventRefValid
         || !['switch', 'new'].includes(terminal.operation)
         || !Number.isSafeInteger(terminal.expected_epoch)
         || terminal.expected_epoch !== binding.epoch - 1) {
       throw new Error('BOUND terminal snapshot is invalid');
     }
+    if (value.schema_version === PROJECT_STATE_SCHEMA) {
+      const current = eventControlFromState(value).current;
+      if (current?.status !== 'active' || current.event_id !== terminal.event_id
+          || current.boundary_id !== terminal.boundary_id) throw new Error('BOUND native event snapshot is invalid');
+    }
     return binding;
   }
   const turn = value.turn;
-  if (!turn || !String(turn.turn_id || '') || turn.epoch !== binding.epoch) {
+  const eventRefValid = value.schema_version === PROJECT_STATE_SCHEMA
+    ? Boolean((String(turn?.event_id || '') && String(turn?.boundary_id || ''))
+      || (value.state === 'TURN_CLOSED' && String(turn?.turn_id || '')
+        && (value.event_control?.candidates?.length > 0 || value.event_control?.fence)))
+    : Boolean(String(turn?.turn_id || ''));
+  if (!turn || !eventRefValid || turn.epoch !== binding.epoch) {
     throw new Error(`${value.state} turn epoch snapshot is invalid`);
+  }
+  if (value.schema_version === PROJECT_STATE_SCHEMA && turn.event_id) {
+    const current = eventControlFromState(value).current;
+    const expectedStatus = value.state === 'TURN_ACTIVE' ? 'active' : 'closed';
+    if (current?.status !== expectedStatus || current.event_id !== turn.event_id
+        || current.boundary_id !== turn.boundary_id) throw new Error(`${value.state} native event snapshot is invalid`);
   }
   return binding;
 }
@@ -552,120 +1117,36 @@ export function removeProjectStateCas(gstackRoot, sessionId, expectedRaw) {
     } catch (error) {
       process.stderr.write(`[project-substrate] ⚠️ project state 已从 canonical 路径移除，但残留清理/持久化检查失败；禁止重试解绑：${parked} — ${String(error?.message || error)}\n`);
     }
-    return { schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sanitizeSessionId(sessionId) };
+    return {
+      schema_version: PROJECT_STATE_SCHEMA,
+      state: 'NO_PIN',
+      session_id: sanitizeSessionId(sessionId),
+      event_control: { candidates: [], current: null, cursor: null, consumed_events: [] },
+    };
   });
 }
 
 export function prepareProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, operation, target, turnId = '' }) {
-  const sid = sanitizeSessionId(sessionId);
-  const op = String(operation || '');
-  if (!['switch', 'new'].includes(op)) throw new Error('operation must be switch or new');
-  const project = validateProjectName(target);
-  const requestedTurnId = String(turnId || '');
-  if (!requestedTurnId) throw new Error('switch-only turn id required');
-  const current = readProjectState(gstackRoot, sid, projectsRoot);
-  if (current.value.state === 'SWITCH_ONLY') throw new Error('switch transaction already pending');
-  if (current.value.state === 'TURN_ACTIVE') throw new Error('mid-turn switch is forbidden; close the active turn first');
-  if (!['NO_PIN', 'BOUND', 'TURN_CLOSED'].includes(current.value.state)) throw new Error(`cannot prepare switch from ${current.value.state}`);
-  const binding = validatedBindingForState(current.value, projectsRoot);
-  consumeTopLevelTurnId(gstackRoot, sid, requestedTurnId, current.value);
-  const expectedEpoch = binding?.epoch || 0;
-  const next = {
-    schema_version: PROJECT_STATE_SCHEMA,
-    state: 'SWITCH_ONLY',
-    session_id: sid,
-    switch: {
-      tx: randomUUID(),
-      operation: op,
-      target: project,
-      expected_epoch: expectedEpoch,
-      binding,
-      turn_id: requestedTurnId,
-    },
-  };
-  atomicProjectStateCas(gstackRoot, sid, current.raw, next);
-  return next;
+  void gstackRoot; void projectsRoot; void sessionId; void operation; void target; void turnId;
+  throw new Error('raw turn-id switch authority is retired; queue and attest a native event');
 }
 
 export function beginProjectTurn({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, turnId }) {
-  const sid = sanitizeSessionId(sessionId);
-  const requestedTurnId = String(turnId || '');
-  if (!requestedTurnId) throw new Error('active turn id required');
-  const current = readProjectState(gstackRoot, sid, projectsRoot);
-  if (!['NO_PIN', 'BOUND', 'TURN_CLOSED'].includes(current.value.state)) {
-    throw new Error(`cannot begin project turn from ${current.value.state}`);
-  }
-  const binding = validatedBindingForState(current.value, projectsRoot);
-  if (current.value.state === 'BOUND' && current.value.terminal.turn_id === requestedTurnId) {
-    throw new Error('successful switch is terminal for its originating turn');
-  }
-  consumeTopLevelTurnId(gstackRoot, sid, requestedTurnId, current.value);
-  if (!binding) {
-    // NO_PIN is represented by absence. Do not create a marker that legacy
-    // presence checks could mistake for an active binding.
-    return { schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sid, turn: { turn_id: requestedTurnId } };
-  }
-  const next = {
-    schema_version: PROJECT_STATE_SCHEMA,
-    state: 'TURN_ACTIVE',
-    session_id: sid,
-    binding,
-    turn: { turn_id: requestedTurnId, epoch: binding.epoch },
-  };
-  atomicProjectStateCas(gstackRoot, sid, current.raw, next);
-  return next;
+  void gstackRoot; void projectsRoot; void sessionId; void turnId;
+  throw new Error('raw turn-id project authority is retired; queue and attest a native event');
 }
 
 export function closeProjectTurn({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, turnId, expectedEpoch, outcome = 'closed' }) {
-  const sid = sanitizeSessionId(sessionId);
-  const current = readProjectState(gstackRoot, sid, projectsRoot);
-  if (current.value.state !== 'TURN_ACTIVE') throw new Error(`cannot close non-active turn: ${current.value.state}`);
-  const binding = validatedBindingForState(current.value, projectsRoot);
-  if (!binding) throw new Error('active turn lacks binding');
-  if (current.value.turn?.turn_id !== String(turnId || '')) throw new Error('turn id snapshot mismatch');
-  if (binding.epoch !== Number(expectedEpoch) || current.value.turn?.epoch !== Number(expectedEpoch)) throw new Error('turn epoch snapshot mismatch');
-  const next = {
-    schema_version: PROJECT_STATE_SCHEMA,
-    state: 'TURN_CLOSED',
-    session_id: sid,
-    binding,
-    turn: { ...(current.value.turn || {}), epoch: binding.epoch, outcome },
-  };
-  atomicProjectStateCas(gstackRoot, sid, current.raw, next);
-  return next;
+  void gstackRoot; void projectsRoot; void sessionId; void turnId; void expectedEpoch; void outcome;
+  throw new Error('raw turn-id project authority is retired; close an attested native event');
 }
 
 export function closeSwitchTurn({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, turnId, expectedEpoch, outcome = 'switch-terminal' }) {
-  const sid = sanitizeSessionId(sessionId);
-  const current = readProjectState(gstackRoot, sid, projectsRoot);
-  if (current.value.state !== 'BOUND' || !current.value.terminal) throw new Error(`cannot close non-terminal switch state: ${current.value.state}`);
-  const binding = validatedBindingForState(current.value, projectsRoot);
-  if (current.value.terminal.turn_id !== String(turnId || '')) throw new Error('switch turn id mismatch');
-  if (binding?.epoch !== Number(expectedEpoch)) throw new Error('switch epoch mismatch');
-  const next = {
-    schema_version: PROJECT_STATE_SCHEMA,
-    state: 'TURN_CLOSED',
-    session_id: sid,
-    binding,
-    turn: { turn_id: String(turnId), epoch: binding.epoch, outcome },
-  };
-  atomicProjectStateCas(gstackRoot, sid, current.raw, next);
-  return next;
+  void gstackRoot; void projectsRoot; void sessionId; void turnId; void expectedEpoch; void outcome;
+  throw new Error('raw turn-id switch authority is retired; close an attested native event');
 }
 
 export function cancelProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, outcome = 'switch-abandoned-at-next-prompt' }) {
-  const sid = sanitizeSessionId(sessionId);
-  const current = readProjectState(gstackRoot, sid, projectsRoot);
-  if (current.value.state !== 'SWITCH_ONLY') throw new Error(`cannot cancel non-switch state: ${current.value.state}`);
-  const binding = validatedBindingForState(current.value, projectsRoot);
-  if (!binding) return removeProjectStateCas(gstackRoot, sid, current.raw);
-  const next = {
-    schema_version: PROJECT_STATE_SCHEMA,
-    state: 'TURN_CLOSED',
-    session_id: sid,
-    binding,
-    turn: { turn_id: current.value.switch.turn_id, epoch: binding.epoch, outcome },
-  };
-  atomicProjectStateCas(gstackRoot, sid, current.raw, next);
-  return next;
+  void gstackRoot; void projectsRoot; void sessionId; void outcome;
+  throw new Error('raw turn-id switch authority is retired; close an attested native event');
 }

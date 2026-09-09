@@ -4,6 +4,7 @@
 // 以及 search_memory 的 --project 作用域过滤（MEM）。
 import assert from 'assert/strict';
 import { spawn, spawnSync } from 'child_process';
+import { createHash } from 'crypto';
 import {
   chmodSync,
   existsSync,
@@ -45,6 +46,89 @@ const isSymlink = (p) => { try { return lstatSync(p).isSymbolicLink(); } catch {
 
 const UTC_TODAY = new Date().toISOString().slice(0, 10);
 const FORCE_STOP_ENV = { SESSION_SYNC_FORCE_ON_STOP: '1' };
+const EMPTY_PREFIX_SHA256 = createHash('sha256').digest('hex');
+
+function codexNativeEventId(sessionId, nativeId, anchorId) {
+  const hash = createHash('sha256');
+  for (const value of ['luca-native-event:v1:codex', sessionId, nativeId, anchorId]) {
+    const bytes = Buffer.from(String(value), 'utf8');
+    hash.update(Buffer.from(`${bytes.length}:`, 'ascii'));
+    hash.update(bytes);
+  }
+  return `codex:${hash.digest('hex')}`;
+}
+
+function writeCodexStopFixture(root, sid, boundaryId, nativeId, anchorId, assistantText = `done-${sid}`) {
+  const codexHome = join(root, 'codex-home');
+  const rolloutDir = join(codexHome, 'sessions', '2026', '09', '08');
+  mkdirSync(rolloutDir, { recursive: true });
+  const prompt = `active project fixture ${sid}`;
+  const promptRecords = [
+    {
+      type: 'session_meta',
+      timestamp: '2026-09-08T00:00:00.000Z',
+      payload: {
+        id: sid,
+        session_id: sid,
+        cwd: root,
+        thread_source: 'user',
+        originator: 'codex-tui',
+        parent_thread_id: null,
+        forked_from_id: null,
+      },
+    },
+    {
+      type: 'response_item',
+      timestamp: '2026-09-08T00:00:01.000Z',
+      payload: {
+        type: 'message',
+        role: 'user',
+        id: nativeId,
+        content: [{ type: 'input_text', text: prompt }],
+        internal_chat_message_metadata_passthrough: { turn_id: boundaryId },
+      },
+    },
+    {
+      type: 'event_msg',
+      timestamp: '2026-09-08T00:00:01.001Z',
+      payload: {
+        type: 'item_completed',
+        thread_id: sid,
+        turn_id: boundaryId,
+        item: { type: 'UserMessage', id: anchorId, content: [{ type: 'text', text: prompt }] },
+      },
+    },
+  ];
+  const prefix = Buffer.from(`${promptRecords.map(record => JSON.stringify(record)).join('\n')}\n`);
+  const assistantRecord = Buffer.from(`${JSON.stringify({
+    type: 'response_item',
+    timestamp: '2026-09-08T00:00:02.000Z',
+    payload: {
+      type: 'message',
+      role: 'assistant',
+      id: `msg_assistant_${sid}`,
+      content: [{ type: 'output_text', text: assistantText }],
+    },
+  })}\n`);
+  const rollout = join(rolloutDir, `rollout-2026-09-08T00-00-00-${sid}.jsonl`);
+  writeFileSync(rollout, Buffer.concat([prefix, assistantRecord]));
+  const canonicalRollout = realpathSync(rollout);
+  const st = statSync(canonicalRollout, { bigint: true });
+  return {
+    assistantText,
+    codexHome: realpathSync(codexHome),
+    cursor: {
+      schema_version: 1,
+      harness: 'codex',
+      transcript_path: canonicalRollout,
+      dev: st.dev.toString(),
+      ino: st.ino.toString(),
+      byte_offset: prefix.length,
+      record_index: promptRecords.length,
+      prefix_sha256: createHash('sha256').update(prefix).digest('hex'),
+    },
+  };
+}
 
 function makeFixture({
   topic = '"hook-test"',
@@ -194,23 +278,118 @@ function bindActiveTurn(root, project = 'testproj', sid = 'hook-session') {
   writeFileSync(join(projectRoot, '.luca', 'current-topic.txt'), `${project}\n`);
   const st = statSync(projectRoot);
   const binding = { project, epoch: 1, realpath: realpathSync(projectRoot), dev: Number(st.dev), ino: Number(st.ino) };
+  const nativeId = `msg_${sid}`;
+  const anchorId = `anchor_${sid}`;
+  const eventId = codexNativeEventId(sid, nativeId, anchorId);
+  const boundaryId = `boundary-${sid}`;
+  const native = writeCodexStopFixture(root, sid, boundaryId, nativeId, anchorId);
+  const current = {
+    event_id: eventId,
+    boundary_id: boundaryId,
+    native_id: nativeId,
+    anchor_id: anchorId,
+    cwd: root,
+    harness: 'codex',
+    status: 'active',
+    attested_at: '2026-09-08T00:00:00.000Z',
+  };
   writeFileSync(join(root, '.claude', `.session-project-${sid}`), `${JSON.stringify({
-    schema_version: 2,
+    schema_version: 3,
     state: 'TURN_ACTIVE',
     session_id: sid,
     binding,
-    turn: { turn_id: `turn-${sid}`, epoch: 1 },
+    turn: { event_id: eventId, boundary_id: boundaryId, epoch: 1 },
+    event_control: {
+      candidates: [],
+      current,
+      cursor: native.cursor,
+      consumed_events: [{
+        event_id: eventId,
+        boundary_id: boundaryId,
+        harness: 'codex',
+        native_id: current.native_id,
+        anchor_id: current.anchor_id,
+      }],
+    },
   })}\n`);
   for (const counter of ['turn', 'edit', 'tool']) {
     const legacy = join(root, '.claude', `.session-${counter}-count`);
     if (existsSync(legacy)) writeFileSync(join(root, '.claude', `.session-${counter}-count-${sid}`), readFileSync(legacy));
   }
   return {
-    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot },
-    input: JSON.stringify({ session_id: sid }),
+    env: {
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      LUCA_ACTUAL_HARNESS: 'codex',
+      LUCA_EVENT_ATTESTATION_TEST: '1',
+      CODEX_HOME: native.codexHome,
+    },
+    input: JSON.stringify({
+      session_id: sid,
+      turn_id: boundaryId,
+      cwd: root,
+      last_assistant_message: native.assistantText,
+    }),
     projectRoot,
     sid,
   };
+}
+
+function prepareAttestedSwitch(root, sid, target, operation = 'switch', binding = null) {
+  const tx = `tx-${sid}-${target}`;
+  const expectedEpoch = binding?.epoch || 0;
+  const nativeId = `msg_switch_${sid}`;
+  const anchorId = `anchor_switch_${sid}`;
+  const eventId = codexNativeEventId(sid, nativeId, anchorId);
+  const boundaryId = `switch-boundary-${sid}`;
+  const current = {
+    event_id: eventId,
+    boundary_id: boundaryId,
+    native_id: nativeId,
+    anchor_id: anchorId,
+    cwd: root,
+    harness: 'codex',
+    status: 'active',
+    attested_at: '2026-09-08T00:00:00.000Z',
+  };
+  const state = {
+    schema_version: 3,
+    state: 'SWITCH_ONLY',
+    session_id: sid,
+    switch: {
+      tx,
+      operation,
+      target,
+      expected_epoch: expectedEpoch,
+      binding,
+      event_id: eventId,
+      boundary_id: boundaryId,
+    },
+    event_control: {
+      candidates: [],
+      current,
+      cursor: {
+        schema_version: 1,
+        harness: 'codex',
+        transcript_path: join(root, '.claude', `fixture-switch-transcript-${sid}.jsonl`),
+        dev: '1',
+        ino: '1',
+        byte_offset: 0,
+        record_index: 0,
+        prefix_sha256: EMPTY_PREFIX_SHA256,
+      },
+      consumed_events: [{
+        event_id: eventId,
+        boundary_id: boundaryId,
+        harness: 'codex',
+        native_id: current.native_id,
+        anchor_id: current.anchor_id,
+      }],
+    },
+  };
+  writeFileSync(join(root, '.claude', `.session-project-${sid}`), `${JSON.stringify(state)}\n`);
+  return { tx, expected_epoch: expectedEpoch };
 }
 
 // ── HOOK-000：Stop 是回合边界，不是 SessionEnd；默认只留 pending，不开启新一轮对话 ──
@@ -905,10 +1084,10 @@ for (const which of ['workflow-state', 'progress']) {
       MEMORY_ROOT: root,
     },
   });
-  assert.notEqual(r.error?.code, 'ETIMEDOUT', 'corrupt turn epoch must be rejected before bound workflow FIFO read');
+  assert.notEqual(r.error?.code, 'ETIMEDOUT', 'legacy schema2 TURN_ACTIVE must be rejected before bound workflow FIFO read');
   assert.equal(r.status, 0, r.stderr || r.stdout);
-  assert.match(r.stderr, /identity 无效|epoch snapshot/, 'corrupt epoch rejection must stay visible');
-  console.log('PASS STARTUP-IDENTITY-N03 corrupt turn epoch 不加载项目上下文');
+  assert.doesNotMatch(r.stdout, /node-bad/, 'legacy schema2 TURN_ACTIVE must not restore bound workflow context');
+  console.log('PASS STARTUP-IDENTITY-N03 legacy schema2 TURN_ACTIVE 不获权、不加载项目上下文');
 }
 
 // ── GOV-001：daily_governance 对 person 层只读看护——digest 列候选+软上限，且绝不改全局目录 ──
@@ -1402,11 +1581,7 @@ function runRouteGuard(cwd, prompt) {
     writeFileSync(join(projectsRoot, name, '.luca', 'current-topic.txt'), name);
   }
   const env = { ...process.env, CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot };
-  const prep = (sid, target) => {
-    const r = spawnSync('node', [projectPinScript, 'prepare', '--session', sid, '--operation', 'switch', '--target', target, '--turn-id', `turn-${sid}`], { env, encoding: 'utf8' });
-    assert.equal(r.status, 0, r.stderr);
-    return JSON.parse(r.stdout);
-  };
+  const prep = (sid, target) => prepareAttestedSwitch(root, sid, target);
   const pA = prep('conc-A', 'projA');
   const pB = prep('conc-B', 'projB');
   const cmd = (sid, target, p) => `bash ${JSON.stringify(projectScript)} switch ${target} --session-id ${sid} --tx ${p.tx} --expected-epoch ${p.expected_epoch}`;
@@ -1584,7 +1759,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）');
 }
 
-// STICKY-008：继承 display marker 不得成为生产 identity；普通对话也不得因此制造 gate。
+// STICKY-008：继承 display marker 不得成为生产 identity；普通对话只能排队
+// 未认证 event candidate，不得因此制造 gate 或可用项目权限。
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-inherited-sess-I'), 'projA'); // session-restore 保留态写的
@@ -1593,32 +1769,40 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     input: JSON.stringify({ session_id: 'sess-I', prompt: '随便说点什么' }),
   });
   assert.doesNotMatch(r.stdout, /PROJECT GATE/, 'NO_PIN + 普通对话不是项目意图，不得制造 gate');
-  assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-I')), 'A 下继承态不写 pin（未绑定）');
+  const queued = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-I'), 'utf8'));
+  assert.equal(queued.state, 'NO_PIN', '未认证普通消息不得建立项目 binding');
+  assert.equal(queued.event_control.candidates[0].intent.kind, 'turn');
+  assert.equal(queued.event_control.consumed_events.length, 0, '排队不得预先消费原生 event');
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-I')), '继承标记应一次性读后删');
-  console.log('PASS STICKY-008 继承 display marker 不成为 identity，也不把普通对话变成项目任务');
+  console.log('PASS STICKY-008 继承 display marker 不成为 identity，普通对话仅排队未认证 event');
 }
 
-// STICKY-008b（方案A）：pin 只在"显式声明/确认项目"时写，永不从软链 auto-adopt（跨 session 污染根因）
+// STICKY-008b（方案A）：显式项目意图仅排队 switch candidate，永不从软链
+// auto-adopt；SWITCH_ONLY 必须留给后续 PreToolUse 原生 event 认证产生。
 {
-  // (i) 点名项目只创建 SWITCH_ONLY，不预写 BOUND。
+  // (i) 点名项目只创建待认证 switch candidate，不预写 SWITCH_ONLY/BOUND。
   const rootA = makeFixture({ activeProject: 'projA' });
   runNode(routeGuardHook, rootA, {
     env: { CLAUDE_PROJECT_DIR: rootA, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-Sa', prompt: '继续 projA 的列表' }),
   });
   const stateA = JSON.parse(readFileSync(join(rootA, '.claude', '.session-project-sess-Sa'), 'utf8'));
-  assert.equal(stateA.state, 'SWITCH_ONLY');
-  assert.equal(stateA.switch.target, 'projA');
+  assert.equal(stateA.state, 'NO_PIN');
+  assert.equal(stateA.event_control.candidates[0].intent.kind, 'switch');
+  assert.equal(stateA.event_control.candidates[0].intent.target, 'projA');
+  assert.equal(stateA.event_control.consumed_events.length, 0);
 
-  // (ii) ★no-adopt★ 无标记 + 不点名任何项目（cur=projA 仍在软链）→ 不写 pin（保持未绑定）
+  // (ii) ★no-adopt★ 无标记 + 不点名任何项目（cur=projA 仍在软链）→ 仅排队普通 event。
   const rootB = makeFixture({ activeProject: 'projA' });
   const rB = runNode(routeGuardHook, rootB, {
     env: { CLAUDE_PROJECT_DIR: rootB, ROUTE_GUARD_PROJECTS: 'projA' },
     input: JSON.stringify({ session_id: 'sess-Sb', prompt: '随便说点什么' }),
   });
-  assert.ok(!existsSync(join(rootB, '.claude', '.session-project-sess-Sb')), 'A 下不再从软链 auto-adopt pin');
+  const stateB = JSON.parse(readFileSync(join(rootB, '.claude', '.session-project-sess-Sb'), 'utf8'));
+  assert.equal(stateB.state, 'NO_PIN', 'A 下不得从软链 auto-adopt pin');
+  assert.equal(stateB.event_control.candidates[0].intent.kind, 'turn');
   assert.doesNotMatch(rB.stdout, /并行 session 保留/, '不得残留旧继承措辞');
-  console.log('PASS STICKY-008b 点名只建 SWITCH_ONLY，未点名不从 display symlink auto-adopt');
+  console.log('PASS STICKY-008b 点名只排队 switch event，未点名不从 display symlink auto-adopt');
 }
 
 // STICKY-008c（命名即切换 2026-07-06）：本 session 主动切到具名项目 → emit 立即切换（无"确认后"）；
@@ -1635,11 +1819,13 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   assert.match(r.stdout, /project\.sh switch projB --session-id sess-N --tx .+ --expected-epoch 0/, '应给出 hash-bound 事务命令');
   assert.doesNotMatch(r.stdout, /原在项目/, '自己主动切不得报"被切走"漂移');
   const pin = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-N'), 'utf8'));
-  assert.equal(pin.state, 'SWITCH_ONLY');
-  assert.equal(pin.switch.target, 'projB', 'SWITCH_ONLY target 应为 projB，尚未 BOUND');
+  assert.equal(pin.state, 'NO_PIN', 'UserPromptSubmit 阶段不得预先建立 SWITCH_ONLY 权限');
+  assert.equal(pin.event_control.candidates[0].intent.kind, 'switch');
+  assert.equal(pin.event_control.candidates[0].intent.target, 'projB', '待认证 switch target 应为 projB');
+  assert.equal(pin.event_control.consumed_events.length, 0);
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-N')), '自切应清继承标记');
   assert.ok(!existsSync(join(root, '.claude', '.session-projnag-sess-N')), '自切应清残留漂移计数');
-  console.log('PASS STICKY-008c 命名切换 → SWITCH_ONLY + tx/epoch + 清标记');
+  console.log('PASS STICKY-008c 命名切换 → 待认证 switch candidate + tx/epoch + 清标记');
 }
 
 // STICKY-009：SessionEnd 清计数但保留 identity（End 无 generation，不能安全删 pin）
@@ -1693,14 +1879,53 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   writeFileSync(join(projA, '.luca', 'current-topic.txt'), 'pin-topic\n');
   const st = statSync(projA);
   const binding = { project: 'projA', epoch: 1, realpath: realpathSync(projA), dev: Number(st.dev), ino: Number(st.ino) };
+  const nativeId = 'msg_sessPIN';
+  const anchorId = 'anchor_sessPIN';
+  const eventId = codexNativeEventId('sessPIN', nativeId, anchorId);
+  const boundaryId = 'boundary-sessPIN';
+  const native = writeCodexStopFixture(root, 'sessPIN', boundaryId, nativeId, anchorId);
   writeFileSync(join(root, '.claude', '.session-project-sessPIN'), `${JSON.stringify({
-    schema_version: 2, state: 'TURN_ACTIVE', session_id: 'sessPIN', binding,
-    turn: { turn_id: 'turn-sessPIN', epoch: 1 },
+    schema_version: 3, state: 'TURN_ACTIVE', session_id: 'sessPIN', binding,
+    turn: { event_id: eventId, boundary_id: boundaryId, epoch: 1 },
+    event_control: {
+      candidates: [],
+      current: {
+        event_id: eventId,
+        boundary_id: boundaryId,
+        native_id: nativeId,
+        anchor_id: anchorId,
+        cwd: root,
+        harness: 'codex',
+        status: 'active',
+        attested_at: '2026-09-08T00:00:00.000Z',
+      },
+      cursor: native.cursor,
+      consumed_events: [{
+        event_id: eventId,
+        boundary_id: boundaryId,
+        harness: 'codex',
+        native_id: nativeId,
+        anchor_id: anchorId,
+      }],
+    },
   })}\n`);
   writeFileSync(join(root, '.claude', '.session-edit-count-sessPIN'), '1');
   const r = runNode(sessionSyncHook, root, {
-    env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot, ...FORCE_STOP_ENV },
-    input: JSON.stringify({ session_id: 'sessPIN' }),
+    env: {
+      CLAUDE_PROJECT_DIR: root,
+      LUCA_GSTACK_ROOT: root,
+      LUCA_PROJECTS_ROOT: projectsRoot,
+      LUCA_ACTUAL_HARNESS: 'codex',
+      LUCA_EVENT_ATTESTATION_TEST: '1',
+      CODEX_HOME: native.codexHome,
+      ...FORCE_STOP_ENV,
+    },
+    input: JSON.stringify({
+      session_id: 'sessPIN',
+      turn_id: boundaryId,
+      cwd: root,
+      last_assistant_message: native.assistantText,
+    }),
   });
   const parsed = JSON.parse(r.stdout);
   assert.match(parsed.reason, /当前激活项目「projA」/, '归因必须指向 identity binding 项目 projA');
@@ -1773,17 +1998,20 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     input: JSON.stringify({ session_id: 'sess-SUB', prompt }),
   });
   fire('我在读amusement相关的代码');
-  assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-SUB')),
-    '子串（amusement ⊃ muse）不得绑 pin（P5 实证回归）');
+  const ordinary = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8'));
+  assert.equal(ordinary.state, 'NO_PIN', '子串（amusement ⊃ muse）不得绑 pin（P5 实证回归）');
+  assert.equal(ordinary.event_control.candidates[0].intent.kind, 'turn', '子串只能排队普通 event');
   fire('继续 muse 的任务');
   const prepared = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8'));
-  assert.equal(prepared.state, 'SWITCH_ONLY',
-    '真点名（词边界成立）须进入 SWITCH_ONLY，不能在切换事务完成前伪造 BOUND pin');
-  assert.equal(prepared.switch?.target, 'muse', 'SWITCH_ONLY 必须保留规范化目标项目');
-  console.log('PASS STICKY-011 project switch 词边界：amusement 不误触，点名 muse 只准备事务');
+  assert.equal(prepared.state, 'NO_PIN',
+    '真点名（词边界成立）仍须等原生 event 认证，不能预造 SWITCH_ONLY/BOUND');
+  const switchCandidate = prepared.event_control.candidates.find(candidate => candidate.intent?.kind === 'switch');
+  assert.equal(switchCandidate?.intent?.target, 'muse', '待认证 switch candidate 必须保留规范化目标项目');
+  console.log('PASS STICKY-011 project switch 词边界：amusement 不误触，点名 muse 只排队 switch event');
 }
 
-// ── FRAMEWORK-IDENTITY-001：当前框架自指/状态问句不得制造下游项目事务 ──
+// ── FRAMEWORK-IDENTITY-001：当前框架自指/状态问句不得制造下游项目事务；
+// UserPromptSubmit 仍须为消息本身排队一个无项目权限的普通 candidate。
 {
   const prompts = [
     '进入lucagstck项目',
@@ -1804,10 +2032,13 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
       input: JSON.stringify({ session_id: sid, turn_id: `turn-${sid}`, prompt }),
     });
     assert.equal(result.status, 0, result.stderr || result.stdout);
-    assert.ok(!existsSync(join(root, '.claude', `.session-project-${sid}`)),
-      `框架自指/状态问句不得创建项目事务：${prompt}`);
+    const state = JSON.parse(readFileSync(join(root, '.claude', `.session-project-${sid}`), 'utf8'));
+    assert.equal(state.state, 'NO_PIN', `框架自指/状态问句必须保持 NO_PIN：${prompt}`);
+    assert.equal(state.event_control.candidates[0].intent.kind, 'turn',
+      `框架自指/状态问句不得创建 switch 事务：${prompt}`);
+    assert.equal(state.event_control.consumed_events.length, 0);
   }
-  console.log('PASS FRAMEWORK-IDENTITY-001 当前框架自指/状态问句保持 NO_PIN、零项目事务');
+  console.log('PASS FRAMEWORK-IDENTITY-001 当前框架自指/状态问句保持 NO_PIN、只排队普通 event');
 }
 
 // ── IDENTITY-FIFO-001：NO_PIN route 不得探测 shared workflow-state ──
@@ -1840,8 +2071,10 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   });
   assert.notEqual(r.error?.code, 'ETIMEDOUT', 'NO_PIN route 读取 shared workflow-state 会在 FIFO 上卡死');
   assert.equal(r.status, 0, r.stderr || r.stdout);
-  assert.ok(!existsSync(join(root, '.claude', '.session-project-sess-FIFO')),
-    '纯框架 prompt 不得因 display state 创建项目 identity');
+  const state = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-FIFO'), 'utf8'));
+  assert.equal(state.state, 'NO_PIN', '纯框架 prompt 不得因 display state 建立项目 identity');
+  assert.equal(state.event_control.candidates[0].intent.kind, 'turn');
+  assert.equal(state.event_control.consumed_events.length, 0);
   console.log('PASS IDENTITY-FIFO-001 NO_PIN route 对 shared workflow-state 零读取');
 }
 

@@ -70,7 +70,12 @@ for (const file of stateFiles) {
     }
     throw error;
   }
-  assert.notEqual(state.state, 'NO_PIN', `${file}: NO_PIN must be represented by absence`);
+  if (state.state === 'NO_PIN') {
+    assert.equal(state.schema_version, 3, `${file}: only schema-v3 event control may persist NO_PIN`);
+    assert.ok(state.event_control && Array.isArray(state.event_control.candidates)
+      && Array.isArray(state.event_control.consumed_events),
+    `${file}: persisted NO_PIN must contain bounded native-event control state`);
+  }
   validatedBindingForState(state, PROJECTS_ROOT);
 }
 

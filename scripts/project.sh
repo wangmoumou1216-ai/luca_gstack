@@ -24,7 +24,7 @@ case "$cmd" in
       esac
     done
     if [ -z "$name" ] || [ -z "$session_id" ] || [ -z "$tx" ] || [ -z "$expected_epoch" ]; then
-      echo "❌ $cmd 必须携带 --session-id、--tx、--expected-epoch（先由 UserPromptSubmit/ project-pin prepare 创建 SWITCH_ONLY）" >&2
+      echo "❌ $cmd 必须携带 --session-id、--tx、--expected-epoch（由 UserPromptSubmit 排队、PreToolUse 原生事件认证后创建 SWITCH_ONLY）" >&2
       exit 1
     fi
     LUCA_GSTACK_ROOT="$PROJECT_ROOT" node "$PIN" "$cmd" --target "$name" --session-id "$session_id" --tx "$tx" --expected-epoch "$expected_epoch"

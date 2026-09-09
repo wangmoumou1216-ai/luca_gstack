@@ -15,8 +15,10 @@ import { resolveMemoryRoot } from './lib/memroot.mjs';
 import { withoutLocalGitEnv } from './lib/git-env.mjs';
 import {
   PROJECTS_ROOT as SUBSTRATE_PROJECTS_ROOT,
-  closeProjectTurn,
-  closeSwitchTurn,
+  PROJECT_STATE_SCHEMA,
+  activeProjectAuthority,
+  attestPendingProjectEvent,
+  closeAttestedProjectEvent,
   readProjectState,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
@@ -43,15 +45,57 @@ const PROJECTS_ROOT = SUBSTRATE_PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJ
 let project = '';
 let projectFromPin = false;
 let projectState = null;
+let projectEventSnapshot = null;
+function observationBoundary(state) {
+  const control = state?.event_control;
+  const harness = control?.candidates?.[0]?.harness || control?.current?.harness;
+  if (harness === 'claude') return sessionId;
+  return String(payload.turn_id || payload.prompt_id || '');
+}
 if (hasSid) {
   try {
     projectState = readProjectState(projectRoot, sessionId).value;
-    if (projectState.state === 'TURN_ACTIVE') {
-      const binding = validatedBindingForState(projectState, PROJECTS_ROOT);
-      project = binding.project;
-      projectFromPin = true;
+    const control = projectState?.event_control;
+    if (projectState.schema_version === PROJECT_STATE_SCHEMA
+        && (control?.candidates?.length > 0 || control?.current?.status === 'active')) {
+      const observed = attestPendingProjectEvent({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        sessionId,
+        boundaryId: observationBoundary(projectState),
+        cwd: payload.cwd || projectRoot,
+        observation: 'stop',
+        transcriptPath: payload.transcript_path || '',
+        codexHome: process.env.CODEX_HOME || '',
+        assistantText: typeof payload.last_assistant_message === 'string'
+          ? payload.last_assistant_message : '',
+      });
+      projectState = observed.state;
+      projectEventSnapshot = observed.event;
     }
-  } catch { }
+    if (projectState.schema_version === PROJECT_STATE_SCHEMA && projectEventSnapshot) {
+      const authority = projectState.state === 'TURN_ACTIVE'
+        ? activeProjectAuthority(projectState, {
+          boundaryId: observationBoundary(projectState),
+          cwd: payload.cwd || projectRoot,
+        }, PROJECTS_ROOT)
+        : null;
+      const binding = authority?.binding
+        || (['BOUND', 'TURN_CLOSED', 'SWITCH_ONLY'].includes(projectState.state)
+          ? validatedBindingForState(projectState, PROJECTS_ROOT) : null);
+      if (projectState.state === 'TURN_ACTIVE' && !binding) {
+        throw new Error('TURN_ACTIVE lacks current attested native event authority');
+      }
+      if (authority?.event) projectEventSnapshot = authority.event;
+      if (binding) {
+        project = binding.project;
+        projectFromPin = true;
+      }
+    }
+  } catch (error) {
+    try { process.stderr.write(`[session-sync] ⚠️ native event observation failed (${error?.code || 'ERROR'}): ${String(error?.message || error)}\n`); } catch { }
+    try { projectState = readProjectState(projectRoot, sessionId).value; } catch { }
+  }
 }
 
 let closeSnapshotOnExit = false;
@@ -63,23 +107,14 @@ if (hasSid) {
 process.on('exit', () => {
   if (closeSnapshotOnExit && projectState && hasSid) {
     try {
-      if (projectState.state === 'TURN_ACTIVE') {
-        closeProjectTurn({
+      if (projectState.schema_version === PROJECT_STATE_SCHEMA && projectEventSnapshot?.status === 'active') {
+        closeAttestedProjectEvent({
           gstackRoot: projectRoot,
           projectsRoot: PROJECTS_ROOT,
           sessionId,
-          turnId: projectState.turn.turn_id,
-          expectedEpoch: projectState.turn.epoch,
+          eventId: projectEventSnapshot.event_id,
+          boundaryId: projectEventSnapshot.boundary_id,
           outcome: 'stop',
-        });
-      } else if (projectState.state === 'BOUND' && projectState.terminal) {
-        closeSwitchTurn({
-          gstackRoot: projectRoot,
-          projectsRoot: PROJECTS_ROOT,
-          sessionId,
-          turnId: projectState.terminal.turn_id,
-          expectedEpoch: projectState.binding.epoch,
-          outcome: 'switch-stop',
         });
       }
     } catch (error) {
@@ -229,8 +264,10 @@ try {
 
   // Only a non-blocking Stop is a turn-closing boundary. A blocked Stop keeps
   // TURN_ACTIVE so the required extraction continuation cannot cross epochs.
-  closeSnapshotOnExit = projectState?.state === 'TURN_ACTIVE'
-    || (projectState?.state === 'BOUND' && Boolean(projectState?.terminal));
+  closeSnapshotOnExit = projectState?.schema_version === PROJECT_STATE_SCHEMA
+    ? projectEventSnapshot?.status === 'active'
+    : projectState?.state === 'TURN_ACTIVE'
+      || (projectState?.state === 'BOUND' && Boolean(projectState?.terminal));
   closeReadGrantTurnOnExit = hasSid;
 
   // ---- 放行 ----

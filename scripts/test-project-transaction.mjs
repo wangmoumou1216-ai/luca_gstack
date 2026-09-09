@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'assert';
 import {
+  appendFileSync,
   chmodSync,
   existsSync,
   lstatSync,
@@ -18,6 +19,14 @@ import {
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { spawn, spawnSync } from 'child_process';
+import { randomUUID } from 'crypto';
+import {
+  attestPendingProjectEvent,
+  initializeProjectEventFence,
+  queueProjectEventCandidate,
+  readProjectState,
+  validatedBindingForState,
+} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const REPO = process.cwd();
 const PIN = resolve(REPO, 'scripts/project-pin.mjs');
@@ -34,11 +43,13 @@ function check(name, fn) {
 }
 
 function makeEnv() {
-  const root = mkdtempSync(join(tmpdir(), 'project-tx-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'project-tx-')));
   const gstack = join(root, 'gstack');
   const projects = join(root, 'projects');
+  const transcripts = join(root, 'transcripts');
   mkdirSync(join(gstack, '.claude', 'templates'), { recursive: true });
   mkdirSync(projects, { recursive: true });
+  mkdirSync(transcripts, { recursive: true });
   writeFileSync(join(gstack, '.claude', 'templates', 'workflow-state.yaml'), 'topic: ""\nnodes: {}\n');
   const env = {
     ...process.env,
@@ -46,8 +57,9 @@ function makeEnv() {
     LUCA_GSTACK_ROOT: gstack,
     LUCA_PROJECTS_ROOT: projects,
     LUCA_ACTUAL_HARNESS: 'claude',
+    LUCA_EVENT_ATTESTATION_TEST: '1',
   };
-  return { root, gstack, projects, env };
+  return { root, gstack, projects, transcripts, env };
 }
 
 function makeProject(fx, name) {
@@ -74,9 +86,71 @@ function jsonOut(result) {
   return JSON.parse(result.stdout);
 }
 
+function attestCandidate(fx, sid, observation = 'pre-tool') {
+  const state = readProjectState(fx.gstack, sid, fx.projects).value;
+  const candidate = state.event_control?.candidates?.[0];
+  assert.ok(candidate, 'native event candidate must be queued before attestation');
+  assert.equal(candidate.boundary_id, sid, 'Claude transport boundary must equal the native session id');
+  const prompt = Buffer.from(candidate.prompt_integrity.bytes_base64, 'base64').toString('utf8');
+  const transcriptPath = join(fx.transcripts, `${sid}.jsonl`);
+  appendFileSync(transcriptPath, `${JSON.stringify({
+    type: 'user',
+    uuid: randomUUID(),
+    sessionId: sid,
+    cwd: fx.gstack,
+    userType: 'external',
+    isSidechain: false,
+    isMeta: false,
+    origin: { kind: 'human' },
+    promptSource: 'typed',
+    message: { role: 'user', content: prompt },
+  })}\n`);
+  const previousTestMode = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    return attestPendingProjectEvent({
+      gstackRoot: fx.gstack,
+      projectsRoot: fx.projects,
+      sessionId: sid,
+      boundaryId: sid,
+      cwd: fx.gstack,
+      observation,
+      transcriptPath,
+    });
+  } finally {
+    if (previousTestMode === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = previousTestMode;
+  }
+}
+
 function prepare(fx, sid, operation, target) {
+  initializeFence(fx, sid);
   prepare.serial = (prepare.serial || 0) + 1;
-  return jsonOut(runNode(PIN, ['prepare', '--session', sid, '--operation', operation, '--target', target, '--turn-id', `switch-turn-${prepare.serial}`], fx));
+  const serial = prepare.serial;
+  const current = readProjectState(fx.gstack, sid, fx.projects).value;
+  const binding = validatedBindingForState(current, fx.projects);
+  const proposal = {
+    kind: 'switch',
+    tx: `native-switch-tx-${serial}`,
+    operation,
+    target,
+    expected_epoch: binding?.epoch || 0,
+  };
+  const boundary = sid;
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack,
+    projectsRoot: fx.projects,
+    sessionId: sid,
+    boundaryId: boundary,
+    cwd: fx.gstack,
+    harness: 'claude',
+    prompt: `${operation} project ${target}`,
+    promptId: boundary,
+    intent: proposal,
+  });
+  const attested = attestCandidate(fx, sid);
+  assert.equal(attested.state.state, 'SWITCH_ONLY');
+  return attested.state.switch;
 }
 
 function mutate(fx, sid, operation, target, proposal, extraEnv = {}) {
@@ -98,14 +172,54 @@ function bind(fx, sid, project) {
 }
 
 function beginTurn(fx, sid, turn = 'turn-1') {
-  return jsonOut(runNode(PIN, ['begin-turn', '--session', sid, '--turn-id', turn], fx));
+  initializeFence(fx, sid);
+  const boundary = sid;
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack,
+    projectsRoot: fx.projects,
+    sessionId: sid,
+    boundaryId: boundary,
+    cwd: fx.gstack,
+    harness: 'claude',
+    prompt: `project work ${turn}`,
+    promptId: boundary,
+    intent: { kind: 'route', decision: 'continue' },
+  });
+  return attestCandidate(fx, sid).state;
+}
+
+function initializeFence(fx, sid) {
+  if (readProjectState(fx.gstack, sid, fx.projects).value?.event_control?.fence) return;
+  const previous = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    const transcriptPath = join(fx.transcripts, `${sid}.jsonl`);
+    if (!existsSync(transcriptPath)) writeFileSync(transcriptPath, `${JSON.stringify({ type: 'system', sessionId: sid })}\n`);
+    initializeProjectEventFence({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid,
+      harness: 'claude', cwd: fx.gstack, transcriptPath,
+    });
+  } finally {
+    if (previous === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = previous;
+  }
 }
 
 function guard(fx, payload) {
+  const state = readProjectState(fx.gstack, payload.session_id, fx.projects).value;
+  const boundary = state.event_control?.current?.boundary_id
+    || state.event_control?.candidates?.[0]?.boundary_id
+    || '';
+  const observed = {
+    cwd: fx.gstack,
+    transcript_path: join(fx.transcripts, `${payload.session_id}.jsonl`),
+    ...(boundary && !payload.turn_id && !payload.prompt_id ? { prompt_id: boundary } : {}),
+    ...payload,
+  };
   const result = spawnSync('node', [GUARD], {
     cwd: fx.gstack,
     env: fx.env,
-    input: JSON.stringify(payload),
+    input: JSON.stringify(observed),
     encoding: 'utf8',
   });
   assert.equal(result.status, 0, result.stderr);
@@ -195,42 +309,61 @@ check('stale epoch and replayed tx cannot mutate project or pin', () => {
   assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'S'], fx)).switch.binding.project, 'alpha');
 });
 
-check('top-level turn IDs are single-use across BOUND, TURN_CLOSED, prepare, and begin', () => {
+check('retired raw turn-id control commands stay rejected without changing attested state', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   makeProject(fx, 'beta');
-  const first = prepare(fx, 'S', 'switch', 'alpha');
-  assert.equal(mutate(fx, 'S', 'switch', 'alpha', first).status, 0);
-
-  const boundReplay = runNode(PIN, ['begin-turn', '--session', 'S', '--turn-id', first.turn_id], fx);
-  assert.notEqual(boundReplay.status, 0, 'BOUND must reject its consumed switch turn');
-  assert.equal(jsonOut(runNode(PIN, [
-    'close-switch-turn', '--session', 'S', '--turn-id', first.turn_id,
-    '--expected-epoch', '1',
-  ], fx)).state, 'TURN_CLOSED');
-  const closedReplay = runNode(PIN, ['begin-turn', '--session', 'S', '--turn-id', first.turn_id], fx);
-  assert.notEqual(closedReplay.status, 0, 'BOUND→TURN_CLOSED must not make the old ID reusable');
-
-  assert.equal(beginTurn(fx, 'S', 'fresh-work-turn').state, 'TURN_ACTIVE');
-  assert.equal(jsonOut(runNode(PIN, [
-    'close-turn', '--session', 'S', '--turn-id', 'fresh-work-turn', '--expected-epoch', '1',
-  ], fx)).state, 'TURN_CLOSED');
-  const prepareReplay = runNode(PIN, [
-    'prepare', '--session', 'S', '--operation', 'switch', '--target', 'beta', '--turn-id', 'fresh-work-turn',
-  ], fx);
-  assert.notEqual(prepareReplay.status, 0, 'prepare must reject an ID consumed by begin');
-  assert.equal(jsonOut(runNode(PIN, [
-    'prepare', '--session', 'S', '--operation', 'switch', '--target', 'beta', '--turn-id', 'fresh-switch-turn',
-  ], fx)).state, 'SWITCH_ONLY', 'a distinct top-level turn remains accepted');
+  bind(fx, 'S', 'alpha');
+  const before = stateBytes(fx, 'S');
+  const retired = [
+    ['prepare', '--session', 'S', '--operation', 'switch', '--target', 'beta', '--turn-id', 'raw-switch'],
+    ['begin-turn', '--session', 'S', '--turn-id', 'raw-work'],
+    ['close-turn', '--session', 'S', '--turn-id', 'raw-work', '--expected-epoch', '1'],
+    ['close-switch-turn', '--session', 'S', '--turn-id', 'raw-switch', '--expected-epoch', '1'],
+  ];
+  for (const args of retired) {
+    const result = runNode(PIN, args, fx);
+    assert.notEqual(result.status, 0, `${args[0]} must stay retired`);
+    assert.match(result.stderr, /raw turn-id authority is retired/);
+    assert.deepEqual(stateBytes(fx, 'S'), before, `${args[0]} must not mutate native-event authority`);
+  }
 });
 
-check('NO_PIN begin rejects replay while distinct turn IDs remain accepted', () => {
+check('forged schema-v3 SWITCH_ONLY without matching native event authority cannot mutate', () => {
   const fx = makeEnv();
-  assert.equal(beginTurn(fx, 'S', 'no-pin-turn-a').state, 'NO_PIN');
-  const replay = runNode(PIN, ['begin-turn', '--session', 'S', '--turn-id', 'no-pin-turn-a'], fx);
-  assert.notEqual(replay.status, 0);
-  assert.equal(beginTurn(fx, 'S', 'no-pin-turn-b').state, 'NO_PIN');
-  assert.equal(existsSync(join(fx.gstack, '.claude', '.session-project-S')), false, 'turn ledger must not masquerade as a project pin');
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  const bound = readProjectState(fx.gstack, 'S', fx.projects).value;
+  const forged = {
+    schema_version: 3,
+    state: 'SWITCH_ONLY',
+    session_id: 'S',
+    switch: {
+      tx: 'forged-tx',
+      operation: 'switch',
+      target: 'beta',
+      expected_epoch: 1,
+      binding: bound.binding,
+      event_id: 'claude:forged-event',
+      boundary_id: 'forged-boundary',
+    },
+    event_control: {
+      candidates: [],
+      current: null,
+      cursor: null,
+      consumed_events: [],
+    },
+  };
+  const path = join(fx.gstack, '.claude', '.session-project-S');
+  writeFileSync(path, `${JSON.stringify(forged)}\n`);
+  const before = stateBytes(fx, 'S');
+  const links = linkTuple(fx);
+  const result = mutate(fx, 'S', 'switch', 'beta', forged.switch);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /lacks matching native event authority/);
+  assert.deepEqual(stateBytes(fx, 'S'), before);
+  assert.deepEqual(linkTuple(fx), links);
 });
 
 check('same-turn compound switch+project work is denied; exact mutation is the sole project command', () => {
@@ -241,7 +374,7 @@ check('same-turn compound switch+project work is denied; exact mutation is the s
   const p = prepare(fx, 'S', 'switch', 'beta');
   const exact = `./scripts/project.sh switch beta --session-id S --tx ${p.tx} --expected-epoch ${p.expected_epoch}`;
   const good = guard(fx, { session_id: 'S', tool_name: 'Bash', tool_input: { command: exact } });
-  assert.equal(good, null, 'exact switch mutation should pass unchanged');
+  assert.equal(good, null, `exact switch mutation should pass unchanged: ${JSON.stringify(good)}`);
   const bad = guard(fx, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `${exact} && cat docs/x.md` } });
   assert.equal(bad?.hookSpecificOutput?.permissionDecision, 'deny');
 });
@@ -260,7 +393,8 @@ check('successful switch is terminal until the next top-level user turn', () => 
   const active = beginTurn(fx, 'S', 'next-turn');
   assert.equal(active.state, 'TURN_ACTIVE');
   const nextTurn = guard(fx, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
-  assert.equal(nextTurn?.hookSpecificOutput?.updatedInput?.file_path, join(realpathSync(join(fx.projects, 'beta')), 'docs', 'x.md'));
+  assert.equal(nextTurn?.hookSpecificOutput?.updatedInput?.file_path, join(realpathSync(join(fx.projects, 'beta')), 'docs', 'x.md'),
+    `next-turn project read must redirect: ${JSON.stringify(nextTurn)}`);
 });
 
 check('rename, symlink replacement, and inode replacement invalidate an active binding', () => {
@@ -392,13 +526,15 @@ check('malformed, unknown, and symlink legacy pins fail closed and remain byte-i
   }
 });
 
-check('canonical schema-v2 pins are read without migration rewrite', () => {
+check('canonical schema-v3 native-event pins are read without migration rewrite', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
   const before = stateBytes(fx, 'S');
   const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
-  assert.equal(status.schema_version, 2);
+  assert.equal(status.schema_version, 3);
+  assert.ok(status.event_control?.current?.event_id);
+  assert.ok(status.event_control?.consumed_events?.length === 1);
   assert.deepEqual(stateBytes(fx, 'S'), before);
 });
 
@@ -568,12 +704,13 @@ check('state remove rename is deactivate commit point; cleanup failure stays suc
 check('per-state O_EXCL lock serializes same-sid CAS and never age-steals crash residue', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
-  makeProject(fx, 'beta');
+  const proposal = prepare(fx, 'SAME', 'switch', 'alpha');
   const outA = join(fx.root, 'a.out'), errA = join(fx.root, 'a.err');
   const outB = join(fx.root, 'b.out'), errB = join(fx.root, 'b.err');
+  const exact = `bash "${PROJECT_SH}" switch alpha --session-id SAME --tx ${proposal.tx} --expected-epoch ${proposal.expected_epoch}`;
   const command = [
-    `node "${PIN}" prepare --session SAME --operation switch --target alpha --turn-id turn-a >"${outA}" 2>"${errA}" & a=$!`,
-    `node "${PIN}" prepare --session SAME --operation switch --target beta --turn-id turn-b >"${outB}" 2>"${errB}" & b=$!`,
+    `${exact} >"${outA}" 2>"${errA}" & a=$!`,
+    `${exact} >"${outB}" 2>"${errB}" & b=$!`,
     'wait $a; sa=$?',
     'wait $b; sb=$?',
     'printf "%s %s" "$sa" "$sb"',
@@ -582,7 +719,7 @@ check('per-state O_EXCL lock serializes same-sid CAS and never age-steals crash 
   assert.equal(raced.status, 0, raced.stderr);
   const codes = raced.stdout.trim().split(/\s+/).map(Number);
   assert.equal(codes.filter(code => code === 0).length, 1, `exactly one CAS writer may succeed: ${raced.stdout}`);
-  assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'SAME'], fx)).state, 'SWITCH_ONLY');
+  assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'SAME'], fx)).state, 'BOUND');
 
   const crashFx = makeEnv();
   makeProject(crashFx, 'alpha');
@@ -590,9 +727,17 @@ check('per-state O_EXCL lock serializes same-sid CAS and never age-steals crash 
   writeFileSync(stateLock, 'crash-residue\n');
   const old = new Date(Date.now() - 86400_000);
   utimesSync(stateLock, old, old);
-  const blocked = runNode(PIN, ['prepare', '--session', 'CRASH', '--operation', 'switch', '--target', 'alpha', '--turn-id', 'turn-crash'], crashFx);
-  assert.notEqual(blocked.status, 0);
-  assert.match(blocked.stderr, /manual recovery required|state lock exists/);
+  assert.throws(() => queueProjectEventCandidate({
+    gstackRoot: crashFx.gstack,
+    projectsRoot: crashFx.projects,
+    sessionId: 'CRASH',
+    boundaryId: 'CRASH',
+    cwd: crashFx.gstack,
+    harness: 'claude',
+    prompt: 'switch project alpha',
+    promptId: 'CRASH',
+    intent: { kind: 'switch', tx: 'crash-tx', operation: 'switch', target: 'alpha', expected_epoch: 0 },
+  }), /manual recovery required|state lock exists/);
   assert.equal(existsSync(join(crashFx.gstack, '.claude', '.session-project-CRASH')), false);
 });
 

@@ -242,7 +242,12 @@ function main() {
   // 作者想要的"未知 source → 保守保留 + canary"从未生效。
   // 改为**无条件映射**：codex exec 是一次性脚本调用，把它当"全新工作会话"去翻软链，
   // 比交互式冷启动激进得多；且风险不对称（误清不可逆、误保留可 switch 恢复），故取保守侧。
-  if (event === 'SessionStart') data.source = 'codex-start';
+  if (event === 'SessionStart') {
+    // Preserve the native lifecycle for the pre-input event fence. The display
+    // adapter sentinel must not turn a mid-turn compact into a fresh startup.
+    data.native_start_source = data.source;
+    data.source = 'codex-start';
+  }
 
   const childEnv = { ...process.env };
   // REPO_ROOT 由本文件自身路径推得，永远正确；继承来的同名变量可能指向别的仓库
