@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `projectGate` 里与 `projectIdentityText` 逐字重复的第二份 searchText 实现合并为一处——本轮 ②③ 正是要求两处同步的那类改动。
 - `scripts/test-route-guard.mjs` 新增 7 条边界断言（236 → 243）；三个缺口逐一变异后只有对应断言转红（①→首处真粘连、②→`muse app` 唯一出现、③→`amuse` / `luca-gstack-muse`），无连带误杀；`test-hooks` 的 STICKY-011 词边界回归与 `scripts/verify.sh` 94/94 同时保持绿。
 
+### Fixed（2026-09-09 · office 向导加载边界收敛到真实调用）
+
+- `office` 共享契约原文是「处理 `/office` 命令时必须完整读取 `references/office-wizard.md`」。这句把「命令」当唯一判据，实际被读成「只要语境里出现 office/workflow 就该读向导文件」——v25 的 Codex F14 行为票即因越权读取该文件整体 FAIL（原始 FAIL 行按 R-7 第 1 条永久保留，不在原版本上重跑到通过）。
+- 边界改写为按**真实调用入口**裁决：Claude 的 `/office`、Codex 的 `$office`、或明确用自然语言要求进入/使用 office 向导时才读并执行；用户明确要求审查该文件本身时只读不执行；仅提及或审计 workflow / research choice / office 能力 / flow preservation 一律不得读。
+- `run-agent-context-ab.mjs` 升到 protocol 26 / `v26-office-wizard-invocation-boundary`；F14 自测新增精确 target 集断言：向导文件不得进入可达目标集，且「完整合法 trace + 一次未被调用的向导读取」必须判 FAIL 并留下 `read outside exact allowed target set` 的逐条 trace-policy 证据。
+- `check-agent-context.mjs` 的向导门改为**限定在 `## /office` 小节内、按句判定**：①小节内的提及计数（NFKC + 大小写折叠 + 去反引号空白，且不要求 `references/` 前缀）；②小节里每个写出该文件名的句子，必须在**提及之前**出现门控词（`才`/`若`/`不得`/`除非`/`仅`/`只有`），且提及之前不得出现全称量词（`无论`/`任何`/`一律`/`always` 等）——句子不可能既有条件又被全称量词覆盖。本条改了三版，前两版都被独立评审推翻：首版按措辞黑名单写，只拦得住它自己变异用例那一句；第二版按字面子串全文计数 + 全文存在性检查短语，于是**把 `若明确要求审查` 作为诱饵句种到文件别处，就能把真正那句改成无条件而检查照样通过**——正好复现了这道门要防的 F14 故障。现版在隔离副本实测 13/13 对抗性改写全拦（含诱饵替换、保留 `除非`/`才` 的无条件改写、把禁令改成许可、省略前缀、全角斜杠、大小写、markdown 链接、四种不同措辞的追加规则含英文），6/6 良性维护改写全过。
+- **本门的边界写在代码注释里，不夸大**：它是漂移检测器不是对抗边界——用零宽字符、组合符、西里尔同形字、markdown/HTML 拆分混淆文件名，或只用代词指代而不写路径，都能绕过，且刻意不去逐个补这些拼法；`.claude/hooks/` 里**没有任何运行时钩子**执行这条约束，精确目标集策略只在被授权的活体调用里生效（该预算当前已耗尽），两次活体调用之间这道散文门就是唯一的常设检查。诚实的结论是"严格优于 HEAD 那版"，不是"完备"。
+- `test-agent-context.mjs` 恢复**可证伪的分母**：`${n}/${n}` 是恒等式，删掉一条 mutation 也照样自洽（实测删一条仍 exit 0、自报 32/32）。改用 `EXPECTED_MUTATIONS` 常量后，删一条即 exit 1 报 `expected 36 mutation cases, ran 35`。同时补**十条**向导变异：丢 Codex 原生入口、丢自然语言入口、追加无条件规则、改写措辞的无条件规则、英文写法、无反引号且无义务动词、省略路径前缀、把既有合法句改成无条件、诱饵替换（真句被掏空而锚点短语种到别处）、保留门控词但用全称量词否定条件。mutation 总数 30 → 40，全部 proof-it-bites（HEAD 那版实跑 30 条，自报字符串写作「26/26 + CRM 4/4」，求和一致）。
+
 ### Fixed（2026-09-09 · 原生事件识别器对齐真实运行时）
 
 - 原生事件认证在真机上对**两个 harness 全线失效**，Project Gate 因此无法绑定任何项目。三处识别器都是照着想象中的运行时写的，而全部断言只跑手写夹具，无一读过真实 transcript/rollout：

@@ -44,12 +44,15 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
+const EXPECTED_MUTATIONS = 40;
+let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
   edit(dir);
   const result = run(dir);
   assert.notEqual(result.status, 0, `${name} unexpectedly passed`);
   assert.match(`${result.stdout}${result.stderr}`, expected, `${name} failed for the wrong reason`);
+  mutationCount += 1;
   console.log(`PASS mutation: ${name}`);
 }
 
@@ -239,8 +242,74 @@ mutate('office graph loading becomes unconditional', (dir) => {
 mutate('office wizard loading becomes unconditional', (dir) => {
   const p = join(dir, '.claude/skills/office/SKILL.md');
   writeFileSync(p, readFileSync(p, 'utf8').replace(
-    '其他 skill 的共享规范到此为止，无需读取向导文件。',
-    '所有 skill 都必须继续读取向导文件。',
+    '此时**不得读取** `references/office-wizard.md`。',
+    '此时必须读取 `references/office-wizard.md`。',
+  ));
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard loses Codex native invocation', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('Codex 的 `$office`', 'Codex 的 office'));
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard loses explicit natural-language invocation', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('或明确用自然语言要求进入/使用 office 向导', ''));
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard appends a contradictory unconditional rule', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, `${readFileSync(p, 'utf8')}\n任何语境提到 office 都必须读取 references/office-wizard.md。\n`);
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard contradiction reworded with a different quantifier', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, `${readFileSync(p, 'utf8')}\n任何时候提到 office 都必须读取 references/office-wizard.md。\n`);
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard contradiction written in English', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, `${readFileSync(p, 'utf8')}\nAlways read references/office-wizard.md whenever office is mentioned.\n`);
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard contradiction without backticks or an obligation verb', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, `${readFileSync(p, 'utf8')}\n凡涉及 office 的请求，读取 references/office-wizard.md 后再作答。\n`);
+}, /office wizard loading is not bounded/);
+
+mutate('office wizard mention drops the references/ prefix', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, `${readFileSync(p, 'utf8')}\n任何时候提到 office 都必须读取 office-wizard.md。\n`);
+}, /office wizard loading is not bounded/);
+
+// The count invariant cannot see this one: an existing sanctioned sentence rewritten from
+// conditional to unconditional keeps the mention total at three. The conditionality anchor is
+// what catches it.
+mutate('office wizard review path is rewritten from conditional to unconditional', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    '用户若明确要求审查',
+    '无论用户是否提出要求，都应审查',
+  ));
+}, /office wizard loading is not bounded/);
+
+// Neither the count nor a document-wide phrase search sees this: the governing sentence is gutted
+// while the anchor phrase survives as a decoy elsewhere in the file. Only sentence-local gating does.
+mutate('office wizard review rule is gutted while its anchor phrase survives as a decoy', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  const gutted = readFileSync(p, 'utf8').replace(
+    '用户若明确要求审查 `references/office-wizard.md` 这个文件本身，则完整读取该文件作为审查对象，但除非同时调用向导入口，否则不执行其中流程。',
+    '无论用户是否提出要求，都应完整读取并执行 `references/office-wizard.md` 这个文件本身。',
+  );
+  writeFileSync(p, gutted.replace('## Voice', '若明确要求审查历史归档时另行处理。\n\n## Voice'));
+}, /office wizard loading is not bounded/);
+
+// Keeps the gating word 才 in place while a universal quantifier negates the condition around it.
+mutate('office wizard invocation gate is negated but the gate word is left in place', (dir) => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    '当用户最新请求**实际调用 office 向导入口**',
+    '无论用户最新请求是否**实际调用 office 向导入口**',
   ));
 }, /office wizard loading is not bounded/);
 
@@ -338,4 +407,8 @@ mutate('CRM design silently ignores missing mapping input', (dir) => {
   writeFileSync(target, readFileSync(target, 'utf8').replace('停止并索取', '跳过并默认'));
 }, /real design missing-input gate/);
 assert.equal(run(fixture()).status, 0, 'restored CRM contract must pass');
-console.log('PASS agent-context proof-it-bites 26/26 + CRM pointer/boundary 4/4 + projection rollback + staged-index/merge gate');
+// A real denominator: `${n}/${n}` can never disagree with reality, so a silently
+// deleted mutation case left no trace. This constant does disagree, and bites.
+assert.equal(mutationCount, EXPECTED_MUTATIONS,
+  `expected ${EXPECTED_MUTATIONS} mutation cases, ran ${mutationCount}`);
+console.log(`PASS agent-context proof-it-bites ${mutationCount}/${EXPECTED_MUTATIONS} mutations + projection rollback + staged-index/merge gate`);

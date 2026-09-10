@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_AWAITING_INDEPENDENT_PREFLIGHT_AND_USER_AUTHORIZATION",
+  "authorization": "No live harness calls are authorized by this file. The v25 authorization and process budget are exhausted and do not carry forward.",
+  "purpose": "Close R-7 with fresh v26 same-scorer baseline and candidate evidence after the F14 office-wizard invocation-boundary repair. Preserve every v25 raw row and verdict unchanged.",
+  "release_manifest": "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-08-agent-context-p6-release-v26.json",
+  "release_manifest_sha256": "0b96b017714917a79b0c7de1ca5ba3555120c8812b126c613aaa7f9d516e245e",
+  "candidate_context_sha256": "dcac574487861f55de364b21681e23f75118e6063a8104e47e5b6e45b6bed18a",
+  "baseline_context_sha256": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7",
+  "baseline_source": {
+    "repository_commit": "94f086233affb3bd08ad8fe33063bcfedb330edf",
+    "reconstruction": "Export this immutable commit with git archive into a fresh temporary directory; do not mutate either checkout.",
+    "verified_context_sha256": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7"
+  },
+  "scoring_revision": "v26-office-wizard-invocation-boundary",
+  "scoring_sha256": "0824fe1eb36e626abf5dcfa6d1ed91892aada4b69106002f4ececfedeea8e729",
+  "evaluator_sha256": "9b024cb71abfa2d982e8742f54a148d900924e590398fdc73b0fb91ab2f3b1a1",
+  "output": "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-08-agent-context-p6-live-v26.ndjson",
+  "batch_id": "p6-v26-final-20260908",
+  "execution": {
+    "mode": "serial",
+    "trials_per_cell": 1,
+    "concurrency": 1,
+    "reruns": 0,
+    "best_of": false,
+    "inspect_each_row_before_next": true,
+    "baseline_behavior_failure": "retain as measurement and continue",
+    "candidate_behavior_failure": "retain and stop all remaining dispatch",
+    "stop_entire_matrix_on": [
+      "candidate FAIL",
+      "TIMEOUT",
+      "RATE_LIMIT",
+      "infrastructure error",
+      "model identity failure",
+      "context drift",
+      "scorer drift",
+      "manifest drift"
+    ],
+    "continuing_after_stop_requires_new_authorization": true,
+    "claude_model": "claude-opus-4-6",
+    "codex_model": "default; record actual_model without inference"
+  },
+  "budget": {
+    "prior_v25_budget_remaining": 0,
+    "new_live_calls_requested": 22,
+    "new_live_calls_authorized": 0,
+    "baseline_calls": 11,
+    "candidate_calls": 11
+  },
+  "comparison_boundary": {
+    "same_scorer": true,
+    "exact_same_fixture_pairs": 10,
+    "policy_transition_pairs": 1,
+    "F9_pair": "Baseline must use legacy F9 because the release contract forbids F9-v2 on baseline; candidate uses F9-v2. Treat this as descriptive policy-transition evidence, not an identical-stimulus causal comparison.",
+    "historical_rows": "v22-v25 rows remain immutable background only and are not rescored or counted as v26 cells."
+  },
+  "command_template": [
+    "node",
+    "scripts/run-agent-context-ab.mjs",
+    "--root",
+    "{candidate_root_or_fresh_baseline_root}",
+    "--arm",
+    "{arm}",
+    "--harness",
+    "{harness}",
+    "--fixture",
+    "{fixture}",
+    "--trials",
+    "1",
+    "--concurrency",
+    "1",
+    "--output",
+    "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-08-agent-context-p6-live-v26.ndjson",
+    "--release-manifest",
+    "/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-08-agent-context-p6-release-v26.json",
+    "--batch-id",
+    "p6-v26-final-20260908",
+    "{harness_model_args}",
+    "{arm_args}"
+  ],
+  "template_variables": {
+    "candidate_root_or_fresh_baseline_root": "candidate uses /Users/luca/Desktop/项目/muse/lucagstack; baseline uses a fresh git-archive export of baseline_source.repository_commit whose context hash must equal baseline_context_sha256",
+    "arm": "cells[].arm",
+    "harness": "cells[].harness",
+    "fixture": "cells[].fixture",
+    "harness_model_args": "harness_model_args[cells[].harness]",
+    "arm_args": "arm_args[cells[].arm]"
+  },
+  "harness_model_args": {
+    "claude": ["--claude-model", "claude-opus-4-6"],
+    "codex": []
+  },
+  "arm_args": {
+    "baseline": [],
+    "candidate": ["--require-pass"]
+  },
+  "cells": [
+    {"cell": 1, "arm": "baseline", "harness": "claude", "fixture": "F9", "pair": 1},
+    {"cell": 2, "arm": "baseline", "harness": "claude", "fixture": "F4-stop", "pair": 2},
+    {"cell": 3, "arm": "baseline", "harness": "claude", "fixture": "F3", "pair": 3},
+    {"cell": 4, "arm": "baseline", "harness": "claude", "fixture": "F5", "pair": 4},
+    {"cell": 5, "arm": "baseline", "harness": "claude", "fixture": "F2", "pair": 5},
+    {"cell": 6, "arm": "baseline", "harness": "claude", "fixture": "F10-v2", "pair": 6},
+    {"cell": 7, "arm": "baseline", "harness": "claude", "fixture": "F13-page-handoff", "pair": 7},
+    {"cell": 8, "arm": "baseline", "harness": "claude", "fixture": "F14-flow-preservation", "pair": 8},
+    {"cell": 9, "arm": "baseline", "harness": "codex", "fixture": "F10-v2", "pair": 9},
+    {"cell": 10, "arm": "baseline", "harness": "codex", "fixture": "F13-page-handoff", "pair": 10},
+    {"cell": 11, "arm": "baseline", "harness": "codex", "fixture": "F14-flow-preservation", "pair": 11},
+    {"cell": 12, "arm": "candidate", "harness": "claude", "fixture": "F9-v2", "pair": 1},
+    {"cell": 13, "arm": "candidate", "harness": "claude", "fixture": "F4-stop", "pair": 2},
+    {"cell": 14, "arm": "candidate", "harness": "claude", "fixture": "F3", "pair": 3},
+    {"cell": 15, "arm": "candidate", "harness": "claude", "fixture": "F5", "pair": 4},
+    {"cell": 16, "arm": "candidate", "harness": "claude", "fixture": "F2", "pair": 5},
+    {"cell": 17, "arm": "candidate", "harness": "claude", "fixture": "F10-v2", "pair": 6},
+    {"cell": 18, "arm": "candidate", "harness": "claude", "fixture": "F13-page-handoff", "pair": 7},
+    {"cell": 19, "arm": "candidate", "harness": "claude", "fixture": "F14-flow-preservation", "pair": 8},
+    {"cell": 20, "arm": "candidate", "harness": "codex", "fixture": "F10-v2", "pair": 9},
+    {"cell": 21, "arm": "candidate", "harness": "codex", "fixture": "F13-page-handoff", "pair": 10},
+    {"cell": 22, "arm": "candidate", "harness": "codex", "fixture": "F14-flow-preservation", "pair": 11}
+  ]
+}

@@ -329,6 +329,8 @@ docs/figma/YYYY-MM-DD-<topic>/figma-spec.md
 
 ## /office — 向导式入口
 
-处理 `/office` 命令时，**必须完整读取并执行** `references/office-wizard.md`（含 Step 1-3 向导流程与一级 Skill 列表）。其他 skill 的共享规范到此为止，无需读取向导文件。
+当用户最新请求**实际调用 office 向导入口**（Claude 的 `/office`、Codex 的 `$office`，或明确用自然语言要求进入/使用 office 向导）时，才**必须完整读取并执行** `references/office-wizard.md`（含 Step 1-3 向导流程与一级 Skill 列表）。用户若明确要求审查 `references/office-wizard.md` 这个文件本身，则完整读取该文件作为审查对象，但除非同时调用向导入口，否则不执行其中流程。
+
+仅提及或审计 workflow、research choice、office 能力、flow preservation，或要求保留既有流程，均不构成 office 向导入口调用，也不是对 wizard 文件本身的审查；此时**不得读取** `references/office-wizard.md`。应只读取当前请求由 root、catalog、routing map、`auto` 或 Plan 合同实际授予的 owner。其他 skill 的共享规范到此为止。
 
 <!-- FILE_END: office/SKILL.md -->

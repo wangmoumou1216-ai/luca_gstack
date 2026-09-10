@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "branch_fixture_version": "p6-page-flow-v2",
+  "contexts": {
+    "candidate": "dcac574487861f55de364b21681e23f75118e6063a8104e47e5b6e45b6bed18a",
+    "baseline": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7"
+  },
+  "scoring_revision": "v26-office-wizard-invocation-boundary",
+  "scoring_sha256": "0824fe1eb36e626abf5dcfa6d1ed91892aada4b69106002f4ececfedeea8e729",
+  "fallback_ids": [
+    "SC-20260905-001",
+    "SF-003",
+    "SF-005",
+    "SC-20260523-001",
+    "SC-20260523-002",
+    "SC-20260523-003"
+  ]
+}

@@ -166,4 +166,27 @@ HEAD 仍 `94f086233affb3bd08ad8fe33063bcfedb330edf`，index 空；受保护 retr
 明确不列为自动续办：页库 B1 验收已由用户 USER_WAIVED；OD 生成/Figma/DS 写入从未授权或
 请求。除非用户重新提出，不得重开这些事项。
 
+### R-7 续办处置（2026-09-09 接手 session 更新；上方 1-5 条原文不改）
+
+本节只记处置，不改写上方任何一条的原始判定。**第 1 条的 v25 Codex F14 整体 FAIL 仍是 FAIL**，
+未被、也不得被改写成 PASS。
+
+- **第 1 条（v25 F14 越权读取 office-wizard.md）→ 源头已修，行为票仍空。**
+  修复不在 v25 上重跑：新立 v26 合同（`protocol 26` / `v26-office-wizard-invocation-boundary`）与
+  单票 release manifest `2026-09-09-agent-context-p6-release-v26-single.json`，把向导加载边界从
+  「处理 `/office` 命令时」改写为「实际调用向导入口才读」，并同步 checker 正反例、A/B 评测器 F14
+  精确 target 集断言与 mutation 用例。经用户批准的**唯一 1 次** Codex F14 实测于 2026-09-09 02:34
+  执行并因 codex 用量上限失败（基建故障，非行为 FAIL），按 R4 证据标准 4 记为**空票**，
+  预算已消耗。详见 `framework-audit/2026-09-09-p6-final-closure.md`。
+- **第 2、3 条** 维持原状：Claude CLI 验证仍 `USER_WAIVED`；本轮未做同 scorer 完整 A/B，
+  也未以旧 baseline 充当 v25 baseline。
+- **第 4 条（pending-extraction 存量）→ 仍未闭环，本轮未做。** 机制侧（生产/认领/处置/并发/
+  崩溃恢复）已在 `14cf47d` 修完，但**存量逐项裁决没做**：17 项本机无 transcript locator 只能记
+  `UNRESOLVED`，其余需逐份读原记录才能判 `QUALIFIED/NO_SIGNAL`。本轮启动时 session-restore 报告
+  已认领 1 项 + 另有 63 项排队。不得因本次发布而视为已清。
+- **第 5 条（framework evolution scan）→ 仍未闭环，本轮未做。** 2026-08 与 2026-09 两轮都欠着
+  （含 scene coverage / bookkeep / digest），须先 8 月再 9 月。本次发布不借机执行也不伪称完成。
+
+第 4、5 条与 P6 无依赖关系，是独立治理待办；是否开工由用户决定，执行 session 不自行扩范围。
+
 <!-- FILE_END: AGENT-CONTEXT-MAINLINE-CHECKPOINT -->

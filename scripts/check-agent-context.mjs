@@ -183,8 +183,54 @@ if (!/only user selected Workflow|仅用户选择 Workflow/.test(office)
     || !/classification or skill contract judgment does not load the graph|只做路由、分类或 skill 合同判断时不加载 graph/.test(office)) {
   errors.push('office graph loading is not bounded to Workflow execution');
 }
-if (!/处理 `\/office` 命令时[\s\S]{0,120}office-wizard\.md[\s\S]{0,160}其他 skill[\s\S]{0,80}无需读取向导文件/.test(office)) {
-  errors.push('office wizard loading is not bounded to the /office command');
+// Scope: the office-wizard section only, and each mention is judged by its OWN sentence.
+//
+// Two earlier versions of this guard were refuted by independent review. The first blacklisted
+// phrasings and caught only the sentence its own mutation emitted. The second counted mentions
+// document-wide and checked that the conditionality phrases existed *somewhere* in the file —
+// so replanting `若明确要求审查` as a decoy line elsewhere let the real governing sentence be
+// rewritten to unconditional while the checker still passed. Existence is not the property we
+// need; sentence-local gating is.
+//
+// (1) Mention count inside the `## /office` section, over NFKC-normalised, case-folded,
+//     backtick/space-stripped text, not requiring the `references/` prefix.
+// (2) Every sentence in that section that names the file must carry a gating word BEFORE the
+//     mention, and no universal quantifier before it. A decoy elsewhere cannot satisfy this,
+//     because the test runs on the bearing sentence itself.
+//
+// WHAT THIS DOES NOT DO, stated so no one mistakes its reach: it is a drift detector for ordinary
+// rewrites, not an adversarial boundary. A filename obfuscated with zero-width characters,
+// combining marks, Cyrillic homoglyphs, or markdown/HTML splitting is not recognised as a mention
+// and slips past, as does a pronoun-only reference naming no path. Chasing those spellings is a
+// losing enumeration. Note also that nothing in `.claude/hooks/` enforces this at runtime — the
+// exact-target policy in the A/B evaluator only runs during an authorized live call, so between
+// those runs this prose gate is the only standing check, with the limits just stated.
+const WIZARD_SECTION = /## \/office[\s\S]*$/;
+const WIZARD_GATE_WORDS = /才|若|不得|除非|仅|只有/;
+// A sentence cannot be both gated and universally quantified. This vetoes the shape that keeps the
+// gate word while negating the condition around it ("无论…是否实际调用…时，才必须完整读取 <file>").
+// This enumerates the logical operator class, not phrasings — deliberately small and closed.
+// `均` is excluded on purpose: the prohibition sentence legitimately reads "…均不构成…调用".
+const WIZARD_UNCONDITIONAL_WORDS = /无论|不论|任何|一律|总是|始终|每次|凡|regardless|whenever|always/i;
+const stripForMatch = (text) => text.normalize('NFKC').toLowerCase().replace(/[`\s]/g, '');
+function wizardMentionsAreSanctioned(office) {
+  const section = office.match(WIZARD_SECTION)?.[0];
+  if (!section) return false;
+  if ([...stripForMatch(section).matchAll(/office-wizard\.md/g)].length !== 3) return false;
+  const bearing = section.split(/[。\n]/).filter((line) => stripForMatch(line).includes('office-wizard.md'));
+  // The gate must PRECEDE the mention: a conditional word in a trailing clause does not make the
+  // read conditional. "无论用户是否提出要求，都应审查 <file>，但除非…否则不执行其中流程" still contains
+  // 除非, yet the read it authorises is unconditional.
+  return bearing.length > 0 && bearing.every((line) => {
+    const at = line.toLowerCase().indexOf('office-wizard.md');
+    const head = at >= 0 ? line.slice(0, at) : line;
+    return WIZARD_GATE_WORDS.test(head) && !WIZARD_UNCONDITIONAL_WORDS.test(head);
+  });
+}
+
+if (!/实际调用 office 向导入口[\s\S]{0,100}`\/office`[\s\S]{0,80}`\$office`[\s\S]{0,100}自然语言要求进入\/使用 office 向导[\s\S]{0,180}完整读取[\s\S]{0,20}执行[\s\S]{0,80}office-wizard\.md[\s\S]{0,220}审查对象[\s\S]{0,100}不执行其中流程[\s\S]{0,320}均不构成 office 向导入口调用[\s\S]{0,100}不得读取[\s\S]{0,80}office-wizard\.md/.test(office)
+    || !wizardMentionsAreSanctioned(office)) {
+  errors.push('office wizard loading is not bounded to explicit native or natural-language office-wizard invocation');
 }
 const openDesign = read('.claude/skills/office/open-design/SKILL.md');
 if (!/稳定 ID[^\n]{0,80}完整原文/.test(openDesign) || !/只有 ID 的清单不是需求正文/.test(openDesign)) {
