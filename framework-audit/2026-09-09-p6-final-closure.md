@@ -218,3 +218,45 @@ Status: U-P6-01 DONE. U-P6-02 SPENT / empty vote — infrastructure failure, no 
 review executed and findings fixed; the first independent final-closure round returned NOT_CLOSED and its
 refutation was accepted and repaired (see the correction record above). U-P6-04 gated on an independent
 final closure actually completing.
+
+### Continuation 2026-09-10: the F14 cell was authorized and dispatched; the rig had a second defect
+
+The user granted a fresh single-call authorization after reporting that the Codex CLI had been
+reconnected. All three revisit conditions were checked before dispatch rather than assumed: a minimal
+reachability probe (`codex exec` returning `PROBE_OK`) separated "model unreachable" from "task-level
+failure"; `--describe` returned `RELEASE_BOUND` with `context_sha256` `43b6625…5b04b5`, byte-identical
+to the frozen value, so no re-freeze of the context was required.
+
+The dispatch failed at transport, not at behaviour. Immutable row
+`2026-09-10-agent-context-p6-live-v26-single.ndjson`: `codex exit=1 ... 401 Unauthorized ...
+Incorrect API key provided: agt_code…`. Root cause, isolated with a single-variable control:
+`run-agent-context-ab.mjs` passed `--ignore-user-config`, which drops `$CODEX_HOME/config.toml`
+wholesale — including the `model_providers` block — while auth still resolves from `CODEX_HOME`.
+Codex is now reached through a custom provider (`model_provider = "codex_local_access"`, a local
+proxy), so the flag stripped transport config and the CLI fell back to the default OpenAI endpoint,
+presenting the local provider token as an OpenAI key. Control A (flag absent): success. Control B
+(flag present): 401. Two candidate repairs were probed and rejected — re-injecting the provider via
+`-c` overrides hangs Codex, and a minimal synthetic `CODEX_HOME` hangs it as well.
+
+The shipped repair keeps `--ignore-user-config` whenever the user config selects no custom provider —
+instruction isolation is what the flag is for — and skips it only when a custom provider is what makes
+the model reachable at all. `codexCustomProvider()` was verified against both a positive and a negative
+control. Because `scoring_sha256` and `evaluator_sha256` both hash the runner file itself, editing it
+moved the scorer identity and the frozen manifest correctly rejected the binding. A re-frozen manifest
+was issued (`2026-09-10-agent-context-p6-release-v26-single-b.json`): `contexts`, `fallback_ids` and
+`scoring_revision` are unchanged and the full diff is three transport-only hunks with every scoring
+symbol count unchanged, so the scorer's behaviour is not what moved.
+
+**The F14 v26 behaviour vote is still an empty vote, and its blocker has changed.** Under the repaired
+rig the run reaches `thread.started` / `turn.started` — authentication is fixed and the model transport
+is genuinely entered — and then fails upstream of this repository:
+`502 Bad Gateway: Post "https://aihub.firstshare.cn/v1/responses": net/http: TLS handshake timeout,
+url: http://localhost:54134/v1/responses`. Rows `-b` and `-c` record two consecutive attempts. The
+`Reading additional input from stdin...` line on stderr is a Codex banner, not the failure.
+
+Per `routing-chain-check.md` R4 evidence standard 4 this is again a round lost to infrastructure, so it
+is recorded as neither PASS nor FAIL. **Neither attempt reached a model turn, so no behaviour verdict
+was produced and the authorization was not spent in substance.** Revised revisit condition: re-run the
+same frozen cell against manifest `-single-b` when the `aihub.firstshare.cn` upstream serves the
+local proxy again; the Codex quota and context-drift conditions are both now satisfied and no longer
+gate this cell.

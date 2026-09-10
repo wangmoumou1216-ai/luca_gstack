@@ -7,7 +7,7 @@ import {
   readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { BRANCH_FIXTURE_VERSION, createBranchFixtures } from './agent-context-branch-fixtures.mjs';
 import { branchFixturePositiveClaims, runBranchFixtureContractTests } from './test-agent-context-branch-fixtures.mjs';
@@ -376,6 +376,21 @@ function isCodexSkillBudgetNotice(event) {
     && item?.type === 'error' && Object.keys(item).sort().join(',') === 'id,message,type'
     && typeof item.id === 'string' && item.id.trim().length > 0
     && item.message === CODEX_SKILL_BUDGET_NOTICE;
+}
+
+// Codex resolves auth from CODEX_HOME but reads transport (`model_providers`) from
+// that home's config.toml. A custom provider therefore cannot survive
+// `--ignore-user-config`. Detect one so the caller can keep the isolation flag in
+// the ordinary case and drop it only when the model is otherwise unreachable.
+function codexCustomProvider(codexHomeEnv) {
+  const home = String(codexHomeEnv || join(homedir(), '.codex'));
+  let config;
+  try { config = readFileSync(join(home, 'config.toml'), 'utf8'); } catch { return ''; }
+  const selected = config.match(/^\s*model_provider\s*=\s*"([^"]+)"/m);
+  if (!selected) return '';
+  const name = selected[1];
+  const declared = new RegExp(`^\\s*\\[model_providers\\.${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'm');
+  return declared.test(config) ? name : '';
 }
 
 function codexProjection(events) {
@@ -825,7 +840,15 @@ async function invoke(fixture) {
     }
     const args = ['exec', '--ephemeral', '--sandbox', 'read-only', '--json', '-C', isolation.cwd];
     args.push('--output-schema', schemaPath);
-    args.push('--ignore-user-config');
+    // `--ignore-user-config` drops $CODEX_HOME/config.toml wholesale, including the
+    // `model_providers` block. When Codex is reached through a custom provider the
+    // flag silently strips transport config while auth still resolves from
+    // CODEX_HOME, so the CLI falls back to the default OpenAI endpoint and presents
+    // the local provider token as an OpenAI key: HTTP 401 before any model turn.
+    // Instruction isolation is what the flag is for, so keep it whenever the user
+    // config selects no custom provider, and skip it only when one is required to
+    // reach the model at all. Recorded in the row via harness_config.
+    if (!codexCustomProvider(process.env.CODEX_HOME)) args.push('--ignore-user-config');
     if (fixture.isolatedRoot) args.push('--skip-git-repo-check');
     args.push(prompt);
     result = await run('codex', args, { cwd: isolation.cwd, env: { ...fixture.env, MEMORY_ROOT: root } });
