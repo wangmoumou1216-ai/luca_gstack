@@ -53,7 +53,7 @@ sources:
       - 非冗余：与现有 office skill 不重，除非明显更优（数量以 self-model.generated.yaml 为准，不硬编码计数）
       - 内容实查：base64 解码读 SKILL.md 真身，验名实相符
     # 2026-07-14 回填 2026-07 轮（digest 数据：S1 14→0）；streak 自下轮起由 bookkeep 脚本维护
-    yield_stats: { runs: 2, surfaced: 19, approved: 0, zero_yield_streak: 0 }
+    yield_stats: { runs: 3, surfaced: 27, approved: 0, zero_yield_streak: 1 }
     status: active
 
   - id: S2-anthropic-platform
@@ -74,7 +74,7 @@ sources:
       - 判「补 open 缺口」vs「锦上添花」：前者纳入，后者记录待议
       - 跟进前仍过「是否触碰受保护不变量（framework/、P1-P7、品牌锁）」
     # 2026-07-14 回填 2026-07 轮（digest 数据：S2 8→0）
-    yield_stats: { runs: 2, surfaced: 16, approved: 0, zero_yield_streak: 0 }
+    yield_stats: { runs: 3, surfaced: 17, approved: 0, zero_yield_streak: 1 }
     status: active
 
   - id: S3-agent-frameworks
@@ -93,7 +93,7 @@ sources:
       - 能否「只取模式不取依赖」（纯 idea/小脚本 port，不引入整个 runtime）
       - 框架成熟度（release 节奏、生产采用）作 authority
     # 2026-07-14 回填 2026-07 轮（digest 数据：S3 10→0）
-    yield_stats: { runs: 2, surfaced: 15, approved: 0, zero_yield_streak: 0 }
+    yield_stats: { runs: 3, surfaced: 17, approved: 0, zero_yield_streak: 1 }
     status: active
 
   - id: S4-design-craft
@@ -111,7 +111,7 @@ sources:
       - 品牌冲突检测：带自有默认色/暗色/多品牌 → 必须品牌锁守卫(FM-7)，走 rules.yaml 注入+blockquote，绝不进 route-guard
       - 与 framework/ 母版兼容性
     # 2026-07-14 回填 2026-07 轮（digest 数据：S4 8→0）
-    yield_stats: { runs: 2, surfaced: 11, approved: 0, zero_yield_streak: 0 }
+    yield_stats: { runs: 3, surfaced: 13, approved: 0, zero_yield_streak: 1 }
     status: active
 
   - id: S5-frontier
