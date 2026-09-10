@@ -120,12 +120,26 @@ edits pass (emphasis adverb, bilingual gloss, extra enumeration item, reworded t
 clause, reworded invocation clause). Two mutation cases bind the two invariants the earlier attempts
 lacked; the suite is 40 cases, up from the 30 that HEAD actually runs (HEAD's hardcoded line reads `26/26 + CRM 4/4`, which sums to the same 30 — measured, not taken from the label).
 
-**Known false-fail, recorded rather than fixed under time pressure.** The gate-word set does not include
-the `当…时` conditional, so rewriting `用户若明确要求审查…` as the equally ordinary `当用户明确要求审查…时`
-false-fails. The third closure reviewer found this. It is deliberately not fixed in this release: the error
-is in the safe direction (over-strict, it cannot let a bad contract through), and widening a gate regex
-minutes before publishing — after two earlier versions of this same regex were refuted — is the exact move
-that produced attempt 2. The failing input is recorded here so the fix is a short, calm change later.
+**Known false-fail — attempted afterwards in a calm pass, measured, and deliberately left unfixed.**
+The gate-word set does not include the `当…时` conditional, so rewriting `用户若明确要求审查…` as the equally
+ordinary `当用户明确要求审查…时` false-fails. The third closure reviewer found this.
+
+It was attempted after publication, without time pressure and with the full test matrix available, and the
+attempt was measured to be worse than the wart. Two versions were tried:
+
+1. Admitting a clause-initial `当(?!然)` as a gate word. All six abuse probes were caught
+   (`当然`/`相当`/`应当`/`当下`/`当前`/a far-apart `当…时`), but it also stopped flagging the removal of `才`
+   from the invocation sentence, and bare `当` has real false friends (`当下必须读取 <file>` is unconditional).
+2. Requiring the paired `当…时` form within an 80-character window. 18/18 adversarial edits including all six
+   abuse probes were caught — but the paired form then flagged an edit that is still perfectly conditional,
+   and the case that motivated the whole change only passed because the unrelated word `同时` happened to sit
+   within the window. Correctness would have depended on coincidence.
+
+Both were reverted. The shipped rule — one of six unambiguous conditional markers before the mention — is
+simple, predictable, and errs over-strict: it can never let an unconditional contract through, and a
+maintainer who trips it sees the error and adds `若` or `才` in seconds. That is a better trade than a rule
+whose verdict turns on a nearby coincidence. Recorded here so the next person does not re-run this
+experiment believing it is a quick win — it is not.
 
 **What this still does not do — stated so the claim is not read wider than it is.** It is a drift
 detector for ordinary rewrites, not an adversarial boundary. A filename obfuscated with zero-width
