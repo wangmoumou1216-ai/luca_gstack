@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-09-09 · 项目名边界判据：具名 /goal 消息绑不上项目）
+
+- `route-guard` 的具名项目匹配 `nameMatchesIn` 只检查 `indexOf` 的**第一处**出现，于是**词序决定路由**。实证：一条以「修掉 muse app 的 CLI 更新……」开头、后文才写「权威读序 1) muse 仓的 CLAUDE.md」的 /goal——第一处被 `normalize()` 删空白后连成 `museapp`，后界是 latin 延续、正确地不算命中，函数就此 `return false`，后面收边干净的 `muse 仓的` 根本没被看过 → `namedProject` 落空 → `classifyRoutingScope` 走 `mixed_ambiguous` → `NEEDS_CONTEXT`。用户拿不到 SWITCH_ONLY 事务，整条 /goal 绑不上项目。
+- 同一条判据上另有两个同源缺口，本轮按全集一并补齐：② `normalize()` 删空白使**空格不再是边界**（`muse app` → `museapp`），改为名字逐字拼 `\s*`、在保留空白的文本上匹配，空格恢复为边界；名字自带空格（`ai 宠物提示`）写空格与连写都照旧命中。③ 长名只查后界、不查前界，`amuse`、`luca-gstack-muse`（本仓真实备份 remote 名）会误绑 `muse`；①放开出现位置后该缺口暴露面变大，故同轮改为前后两界同一字符类。无分隔的粘连（`museapp` / `amusement` / `muse-loop`）仍然不命中。
+- `projectGate` 里与 `projectIdentityText` 逐字重复的第二份 searchText 实现合并为一处——本轮 ②③ 正是要求两处同步的那类改动。
+- `scripts/test-route-guard.mjs` 新增 7 条边界断言（236 → 243）；三个缺口逐一变异后只有对应断言转红（①→首处真粘连、②→`muse app` 唯一出现、③→`amuse` / `luca-gstack-muse`），无连带误杀；`test-hooks` 的 STICKY-011 词边界回归与 `scripts/verify.sh` 94/94 同时保持绿。
+
 ### Fixed（2026-09-09 · 原生事件识别器对齐真实运行时）
 
 - 原生事件认证在真机上对**两个 harness 全线失效**，Project Gate 因此无法绑定任何项目。三处识别器都是照着想象中的运行时写的，而全部断言只跑手写夹具，无一读过真实 transcript/rollout：

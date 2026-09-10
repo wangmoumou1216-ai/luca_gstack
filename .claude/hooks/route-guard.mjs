@@ -47,27 +47,39 @@ function promptForRouting(prompt) {
   return kept.join('\n').trim() || '显式只读引用外部资料';
 }
 
-// 项目名词边界匹配（2026-07-14 P5 修复）：projectGate 具名匹配与 pin 层 affirmsCur 共用同一套
-// 严谨度——此前 affirmsCur 用裸 includes()，"amusement" 会误绑 pin=muse（实证）。参数为已
-// normalize 的文本；边界规则与原 projectGate 逐字一致（长名只查后界 latin 延续，短名 ≤2 双侧严查）。
+// 空白保留归一：nameMatchesIn 的边界判定需要"这里原本有空格"这条证据，而 normalize() 把
+// 空白全删之后空格就不再是边界（见下方缺口②）。只做小写 + 空白折叠，不做删除。
+function normalizeLoose(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ');
+}
+
+// 项目名词边界匹配（2026-07-14 P5 修复；2026-09-09 判据重写）：projectGate 具名匹配与 pin 层
+// affirmsCur 共用同一套严谨度——此前 affirmsCur 用裸 includes()，"amusement" 会误绑 pin=muse（实证）。
+//
+// 2026-09-09 一次补齐同一条判据上的三个缺口（封闭集合按全集补，不按 bug 补）：
+//   ① 只判 indexOf 的**第一处**出现，于是词序决定路由。实证：`修掉 muse app 的 CLI 更新……
+//      权威读序 1) muse 仓的 CLAUDE.md` —— 第一处 `museapp` 正确地不算命中，函数就此
+//      return false，后面收边干净的 `muse 仓的` 根本没被看过 → namedProject 落空 →
+//      classifyRoutingScope 走 mixed_ambiguous → NEEDS_CONTEXT，整条 /goal 绑不上项目。
+//      改为同一判据对**每个**出现位置各跑一次（正则天然扫全串）。
+//   ② normalize() 删空白 ⇒ 空格不再是边界：`muse app` 被连成 `museapp`，后界成了 latin 延续。
+//      改为名字逐字拼 `\s*`、在**保留空格**的文本（normalizeLoose）上匹配：空格恢复为边界，
+//      而名字自带空格（`ai 宠物提示`）的宽松命中能力不变——写空格、不写空格都照中。
+//   ③ 长名只查后界、不查前界 ⇒ `amuse`、`luca-gstack-muse` 这类前缀粘连误命中。①放开位置后
+//      这个缺口的暴露面变大，故同轮补齐：前后两界用同一字符类。
+// 判据本身不放松：无分隔的粘连（museapp / amusement / muse-loop）仍然不命中。
 function nameMatchesIn(text, name) {
   const normalizedName = normalize(name);
-  const idx = text.indexOf(normalizedName);
-  if (idx === -1) return false;
-  const charAfter = text[idx + normalizedName.length];
-  // Only English identifier-continuation chars count as "not a boundary".
-  // CJK chars after the name (e.g. "luca-dev 的任务") ARE a boundary, so
-  // common follow-up particles do not break the match.
-  const afterOk = charAfter === undefined || !/[a-z0-9_-]/i.test(charAfter);
-  // Short names (≤2 chars) keep the stricter CJK-also-extends check on both
-  // sides to avoid false positives like 名"AI"误中"AIxxx".
-  if (normalizedName.length <= 2) {
-    const charBefore = idx > 0 ? text[idx - 1] : undefined;
-    const beforeOk = charBefore === undefined || !/[一-鿿a-z0-9]/i.test(charBefore);
-    const strictAfterOk = charAfter === undefined || !/[一-鿿a-z0-9]/i.test(charAfter);
-    return strictAfterOk && beforeOk;
-  }
-  return afterOk;
+  if (!normalizedName) return false;
+  // 逐字转义后用 `\s*` 相连：等价于旧的"两侧都删空白"的宽松 containment，但把空格留在文本
+  // 里供边界判定使用。逐字转义确保项目名里的 . * + - 等不会被当成正则元字符。
+  const body = [...normalizedName]
+    .map(ch => ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\s*');
+  // 长名：只有 latin 标识符延续字符不算边界（CJK/空格/标点/串首尾都算边界，所以
+  // "luca-dev 的任务" 照常命中）。短名 ≤2：CJK 也算延续，避免名 "AI" 误中 "AI方案"。
+  const cls = normalizedName.length <= 2 ? '一-鿿a-z0-9' : 'a-z0-9_-';
+  return new RegExp(`(?<![${cls}])${body}(?![${cls}])`, 'i').test(text);
 }
 
 // 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
@@ -263,9 +275,11 @@ function stripScopeRules(value, rules) {
 }
 
 function projectIdentityText(prompt) {
-  let text = normalize(prompt);
+  // 保留空白（见 nameMatchesIn 缺口②）。触发词剥离随之改成允许字间空白的正则，
+  // 与旧的"先删空白再 split"逐例等价。
+  let text = normalizeLoose(prompt);
   for (const trigger of ['新项目', '新需求', '新功能']) {
-    text = text.split(normalize(trigger)).join('');
+    text = text.replace(new RegExp([...trigger].join('\\s*'), 'g'), '');
   }
   return text;
 }
@@ -379,8 +393,9 @@ function projectGate(prompt, projects, currentProject, routingScope) {
   const hasNewProjectSignal = newProjectTriggers.some(t => text.includes(normalize(t)));
   const hasNewProjectDeclaration = /新项目|新建(?:一个)?项目|创建(?:一个)?(?:名为.{1,80})?新?项目|new\s+project/i.test(prompt);
   const declaredNewProject = explicitNewProjectName(prompt);
-  let searchText = text;
-  for (const t of newProjectTriggers) searchText = searchText.split(normalize(t)).join('');
+  // 与 projectIdentityText 同一份实现：剥同一组触发词、同一套空白处理。此前这里是逐字
+  // 重复的第二份副本，改判据时必然漂移（本轮 ②③ 就要求两处同步）。
+  const searchText = projectIdentityText(prompt);
 
   const named = routingScope?.namedProject || projects.find(name => nameMatchesIn(searchText, name));
 

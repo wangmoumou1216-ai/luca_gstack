@@ -1355,6 +1355,73 @@ const cases = [
       assert.notEqual(decision.decision, 'FRAMEWORK_FLOW');
     },
   },
+  // ── 项目名边界判据（2026-09-09 重写）───────────────────────────────────
+  // 三个缺口各配一条会死的断言（逐机制变异实测：退回"只判第一处"→ ① 那条转红；
+  // 退回"先删空白"→ ② 转红；去掉前界 → ③ 两条转红。变异只杀目标条，无连带）。
+  {
+    // 实证现场：一条以「修掉 muse app 的…」开头、后文才出现「muse 仓的」的 /goal，
+    // 旧实现在第一处 `museapp` 上 return false，整条消息绑不上项目（NEEDS_CONTEXT）。
+    name: '项目名边界①: 首处被空格粘连、后文有干净出现 → 仍须具名命中',
+    prompt: '修掉 muse app 的 CLI 更新，改成自己下载并校验。权威读序 1) muse 仓的 CLAUDE.md',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.project, 'muse');
+    },
+  },
+  {
+    name: '项目名边界①: 首处真粘连（museapp）、后文干净出现 → 仍须具名命中',
+    prompt: 'museapp 这个词先不管，我要改 muse 的更新逻辑',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.project, 'muse');
+    },
+  },
+  {
+    name: '项目名边界②: 空格是边界——「muse app」唯一出现也须命中',
+    prompt: '修掉 muse app 的 CLI 更新，改成自己下载并校验',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.project, 'muse');
+    },
+  },
+  {
+    // ② 的反向守护：名字自带空格时，写空格与不写空格都必须照旧命中。
+    name: '项目名边界②反向: 名字自带空格，连写形态不得因保留空白而失配',
+    prompt: '帮我改ai宠物提示的首页交互',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.equal(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.project, 'ai 宠物提示');
+    },
+  },
+  {
+    name: '项目名边界③: 前缀粘连（amuse）不得误绑 muse',
+    prompt: '写点 amuse 的段子给我',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.project, 'muse');
+    },
+  },
+  {
+    // 真实误伤面：备份 remote 就叫 luca-gstack-muse，提一句推送地址不该切项目。
+    name: '项目名边界③: 连字符前缀（luca-gstack-muse）不得误绑 muse',
+    prompt: '把改动推到 luca-gstack-muse 这个备份仓',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.project, 'muse');
+    },
+  },
+  {
+    name: '项目名边界: 后缀粘连（muse-loop-orchestrate）仍不得误绑 muse',
+    prompt: 'muse-loop-orchestrate 这个 skill 怎么走',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
+    expect: decision => {
+      assert.notEqual(decision.project, 'muse');
+    },
+  },
 ];
 
 const scopeMatrixFixtures = loadScopeMatrixFixtures();
