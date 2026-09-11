@@ -81,4 +81,10 @@ if [ "${FAST_COMMIT:-0}" = "1" ]; then
 fi
 echo ""
 echo "pre-commit: running scripts/verify.sh ..."
+# git 给钩子注入的仓库位置变量不能交给 verify.sh（2026-09-11 实测）：按路径提交（commit -- 路径）与
+# commit -a 注入绝对路径的 GIT_INDEX_FILE，链接 worktree 里的任何提交再加绝对路径的 GIT_DIR。
+# verify.sh 的测试会在临时目录建 fixture 仓并 git add，继承这些变量就会写进本次提交的索引。
+# 上面的密钥扫描要读本次提交的索引，已经做完；verify.sh 查的是工作树与已跟踪文件，用不到它们。
+# 回归测试：scripts/test-pre-commit-env.mjs
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_COMMON_DIR GIT_NAMESPACE GIT_PREFIX
 exec bash scripts/verify.sh

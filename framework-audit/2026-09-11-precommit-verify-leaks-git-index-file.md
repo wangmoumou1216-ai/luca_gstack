@@ -1,6 +1,6 @@
 # pre-commit 里的 verify.sh 污染「按路径提交」的临时索引（GIT_INDEX_FILE 泄漏）
 
-- **发现**：2026-09-11，lucagstack-63（月度演进扫描收尾）。**未修复**——按主 session 规定，与本任务无关的框架缺陷只记录不顺手修。
+- **发现**：2026-09-11，lucagstack-63（月度演进扫描收尾）。发现时未修复（按主 session 规定只记录）；已由主 session 修复，见文末「处置」。
 
 ## 症状
 
@@ -46,3 +46,11 @@ GIT_INDEX_FILE=<scratch>/index-copy git ls-files -s AGENTS.md
 ## 本次处置
 
 `2026-09-evolution.md` 发布状态更正的那次提交用了 `FAST_COMMIT=1`。理由：同一棵树上 verify.sh 已三次 94/0（单独运行、pre-commit 内运行、索引副本对照），被跳过的只是正在触发本缺陷的那一步，不是跳过检查本身。
+
+## 处置（2026-09-11，主 session）
+
+- **"未证实"项已实测**：在临时仓里给 pre-commit 装探针记录环境。主检出普通提交 `GIT_INDEX_FILE=.git/index`（相对，fixture 里解析到它自己的索引，无害）；`commit -- <路径>` 为绝对路径 `.git/next-index-<pid>.lock`；`commit -a` 为绝对路径 `.git/index.lock`；链接 worktree 的普通提交与按路径提交都带绝对路径的 `GIT_DIR` 和索引。暴露面比本报告写的大：`commit -a` 与所有 worktree 提交同样中招。
+- **根因复现**：在隔离克隆里给索引副本设绝对 `GIT_INDEX_FILE`，单跑 `scripts/test-agent-context.mjs`：副本从 1217 条变成 fixture 的 176 条，`AGENTS.md` 变为 `886f0189…`，该对象不在克隆对象库——与报错是同一个对象。
+- **修法（没有照建议逐点补）**：`.githooks/pre-commit` 在密钥扫描之后、`exec bash scripts/verify.sh` 之前剥离位置类 `GIT_*`。扫描要读本次提交的索引，放在剥离之前；verify 查的是工作树与已跟踪文件，用不到这些变量。站点式剥离此前已补过多处（`test-controlled-change.mjs`、`test-sync-real.mjs`），再补一处只堵这一个站点，边界一行覆盖现有和以后的测试。
+- **回归**：`scripts/test-pre-commit-env.mjs`（verify `G5c`）。四个场景各带对照组，先证明泄漏在这台机器的 git 上真实发生；未修代码 4 红，修后 9/0；变异 M2（保留 `GIT_DIR`）两项 worktree 场景红，M3（剥离挪到扫描之前）4 红，M5（去掉 verify）4 红，均与预测一致。
+- **验证边界**：隔离克隆里跑完整门禁时，G5c 在真实钩子环境里通过，但门禁因 S34/S12 失败——Codex 按仓库路径登记 hook 授信，克隆路径没有登记，要通过需写全局 `~/.codex/config.toml`，没有做。按路径提交用的临时索引在提交失败后即删除，所以"失败后查真实索引没被写坏"不构成证据；真正的端到端证据是本修复自身在活体检出以按路径提交、完整门禁（不设 `FAST_COMMIT`）落地成功。

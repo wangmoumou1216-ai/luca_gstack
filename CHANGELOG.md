@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-09-11 · pre-commit 把 git 的索引变量漏给 verify.sh，按路径提交跑不通完整门）
+
+- 共享检出规定用 `git commit -- <路径>` 提交，而 git 此时给 pre-commit 注入的是**绝对路径**的临时索引 `GIT_INDEX_FILE`；`commit -a` 同样是绝对路径，链接 worktree 里的任何提交还会再加绝对路径的 `GIT_DIR`（2026-09-11 在临时仓里装探针实测；只有主检出的普通提交是相对的 `.git/index`）。`verify.sh` 继承这些变量后，`test-agent-context.mjs` 在 fixture 仓里执行的 `git add` 把条目写进了这次提交的索引，blob 却落在 fixture 自己的对象库里 → verify 94/0 通过后建树报 `invalid object`，只能退到 `FAST_COMMIT=1`，完整提交门在规定的提交方式下形同虚设。
+- 修在边界：`.githooks/pre-commit` 在密钥扫描（它要读本次提交的索引）之后、`exec bash scripts/verify.sh` 之前剥离位置类 `GIT_*`（清单与 `controlled-change.mjs` 一致）。没有逐个补 fixture 调用点：这类漏洞此前已按站点补过（`test-controlled-change.mjs`、`test-sync-real.mjs` 各自剥离），边界一行覆盖现有和以后的所有测试。
+- 新增 `scripts/test-pre-commit-env.mjs`（verify `G5c`）：按路径提交、`commit -a`、worktree 按路径提交、worktree 普通提交四个场景，每个都先用只转发变量的裸钩子证明 fixture 确实会泄漏，再验证真实 pre-commit 只提交预期改动、verify 收不到任何位置变量；另锁住密钥扫描仍读本次提交的索引。未修代码上 4 项转红；三个变异（保留 `GIT_DIR`、把剥离挪到扫描之前、去掉 verify）都按预测转红。
+- `test-controlled-change.mjs` 注释里"普通仓只注入相对的 GIT_INDEX_FILE""verify.sh 在每次 worktree 提交时都会走到"两句的前提被本次实测与修复改掉，已同步。
+
 ### Fixed（2026-09-09 · 项目名边界判据：具名 /goal 消息绑不上项目）
 
 - `route-guard` 的具名项目匹配 `nameMatchesIn` 只检查 `indexOf` 的**第一处**出现，于是**词序决定路由**。实证：一条以「修掉 muse app 的 CLI 更新……」开头、后文才写「权威读序 1) muse 仓的 CLAUDE.md」的 /goal——第一处被 `normalize()` 删空白后连成 `museapp`，后界是 latin 延续、正确地不算命中，函数就此 `return false`，后面收边干净的 `muse 仓的` 根本没被看过 → `namedProject` 落空 → `classifyRoutingScope` 走 `mixed_ambiguous` → `NEEDS_CONTEXT`。用户拿不到 SWITCH_ONLY 事务，整条 /goal 绑不上项目。
