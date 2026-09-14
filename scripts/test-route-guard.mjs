@@ -35,6 +35,25 @@ function route(prompt, extraEnv = {}) {
   }
 }
 
+// ── Harness-synthesised prompts never get project routing (2026-09-11) ──
+// Background-task notifications and cross-session messages reach UserPromptSubmit like a user
+// turn. Routing them printed an executable switch transaction the session could never complete
+// and invited the agent to switch projects on a peer's behalf. The control case proves the same
+// words from a human still route, so the harness cases cannot pass by routing nothing at all.
+{
+  const named = '切换到 luca-dev 项目继续';
+  const control = route(named, { ROUTE_GUARD_CURRENT_PROJECT: '' });
+  assert.equal(control.decision, 'PROJECT_SWITCH', `control must still route to a switch, got ${control.decision}`);
+  for (const prompt of [
+    `<cross-session-message from="uds:/tmp/cc-socks/1.sock" from-name="peer" from-mode="prompting">\n${named}\n</cross-session-message>`,
+    `<task-notification>\n<task-id>b1</task-id>\n<summary>${named}</summary>\n</task-notification>`,
+  ]) {
+    const decision = route(prompt, { ROUTE_GUARD_CURRENT_PROJECT: '' });
+    assert.equal(decision.decision, 'HARNESS_MESSAGE', `a harness message must not be routed, got ${decision.decision}`);
+  }
+  console.log('PASS harness-synthesised prompts are never routed to a project switch');
+}
+
 function loadScopeMatrixFixtures() {
   return readFileSync('memory/evals/routing/fixtures.jsonl', 'utf8')
     .split('\n')

@@ -21,15 +21,26 @@ export const MAX_NATIVE_PROMPT_BYTES = 1024 * 1024;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export class NativeEventAttestationError extends Error {
-  constructor(code, message) {
+  constructor(code, message, details = null) {
     super(message);
     this.name = 'NativeEventAttestationError';
     this.code = code;
+    if (details) this.details = details;
   }
 }
 
-function fail(code, message) {
-  throw new NativeEventAttestationError(code, message);
+// `details.next_native_turn_differs` is set at exactly the two sites where the first
+// root human event after the durable cursor is a genuine, different turn. The source
+// is append-only and candidates queue in arrival order, so that fact proves the
+// candidate was never a human turn: harness-synthesised prompts (background-task
+// notifications, cross-session messages) reach UserPromptSubmit but are recorded only
+// as queue-operation/attachment rows. Integrity failures that share the MISMATCH code
+// (anchor provenance, source/anchor text, current-event identity) must never carry it,
+// and neither may "not yet visible": a non-final candidate with no human event after
+// the cursor leaves the final candidate nothing to attest either, so marking it could
+// only widen the skip surface without ever enabling recovery.
+function fail(code, message, details = null) {
+  throw new NativeEventAttestationError(code, message, details);
 }
 
 function canonicalRegularFile(inputPath) {
@@ -502,7 +513,8 @@ function attestCodex(candidate, source, records, bytes, cursor, observation, ass
       // that DOES match still goes through codexAnchor below, so a missing, over-
       // distance, or reordered anchor keeps failing closed exactly as before.
       if (!codexRecordHasUserMessageAnchor(records, index)) continue;
-      fail('MISMATCH', 'next Codex native user event does not match the pending candidate');
+      fail('MISMATCH', 'next Codex native user event does not match the pending candidate',
+        { next_native_turn_differs: true });
     }
     const anchor = codexAnchor(records, index, candidate, expected);
     const eventId = codexEventId(candidate.session_id, sourceId, anchor.anchorId);
@@ -715,10 +727,19 @@ function attestClaude(candidate, source, records, bytes, cursor, observation, as
       catch { /* unreadable history is not evidence for a replay diagnostic */ }
       continue;
     }
+    // A slash-command turn is a human event that can never attest: it carries no promptSource,
+    // its recorded text is the command expansion, and validateClaudeUser rejects its provenance.
+    // Validating it here made it throw for every candidate queued after it, wedging the session
+    // for good. It takes no part in candidate matching and grants nothing;
+    // assertNoNewNativeUser still counts it as an intervening user event.
+    if (row.promptSource === undefined || row.promptSource === null) continue;
     const nativeId = validateClaudeUser(row, candidate);
     const text = strictClaudeText(row.message.content);
     const matchesCandidate = sameUtf8(text, expected);
-    if (!matchesCandidate) fail('MISMATCH', 'next Claude native user event does not match the pending candidate');
+    if (!matchesCandidate) {
+      fail('MISMATCH', 'next Claude native user event does not match the pending candidate',
+        { next_native_turn_differs: true });
+    }
     const eventId = claudeEventId(candidate.session_id, nativeId);
     const stopWitnessId = observation === 'stop'
       ? claudeStopWitness(records, record.index, assistantText) : '';
@@ -941,6 +962,7 @@ export function attestNativeUserEvent({
 // history is excluded, while a proven absent source can later start at byte 0.
 export function captureNativeEventFence({
   sessionId, harness, cwd, transcriptPath = '', codexHome = '', allowTestSourceRoot = false,
+  recoveryCursor = undefined,
 }) {
   const candidate = { session_id: String(sessionId || ''), harness, cwd };
   if (!/^[\w-]{1,36}$/.test(candidate.session_id) || !['codex', 'claude'].includes(harness)
@@ -959,6 +981,33 @@ export function captureNativeEventFence({
   }
   const loaded = recordsFromFile(source);
   if (harness === 'codex') validateCodexProvenance(loaded.records, candidate);
+  if (recoveryCursor !== undefined) {
+    // Explicit recovery may exclude well-formed orphan history, not launder a
+    // replaced source, changed authenticated prefix, or unknown native schema.
+    const offset = recoveryCursor ? validateCursor(recoveryCursor, source, loaded.records, loaded.bytes, harness) : 0;
+    for (const record of loaded.records) {
+      if (record.start < offset) continue;
+      if (harness === 'claude') {
+        const kind = claudeUserKind(record);
+        if (kind === 'unknown') fail('UNKNOWN_SCHEMA', 'deactivate cannot fence unknown Claude provenance');
+        if (kind === 'human' && record.value.promptSource != null) {
+          validateClaudeUser(record.value, candidate);
+          strictClaudeText(record.value.message.content);
+        }
+      } else if (isCodexUserRecord(record)) {
+        const payload = record.value.payload;
+        if (!/^msg_[\w-]+$/.test(String(payload.id || ''))) fail('UNKNOWN_SCHEMA', 'deactivate cannot fence an invalid Codex user id');
+        const text = strictCodexText(payload.content, 'input_text');
+        const boundary = payload.internal_chat_message_metadata_passthrough?.turn_id;
+        if (boundary != null || codexRecordHasUserMessageAnchor(loaded.records, record.index)) {
+          if (typeof boundary !== 'string' || !boundary) fail('UNKNOWN_SCHEMA', 'deactivate cannot fence an invalid Codex boundary');
+          codexAnchor(loaded.records, record.index, {
+            ...candidate, boundary_id: boundary,
+          }, Buffer.from(text, 'utf8'));
+        }
+      }
+    }
+  }
   return { ...fence, cursor: cursorAt(source, loaded.records, loaded.bytes,
     loaded.records.length, loaded.bytes.length, harness) };
 }

@@ -577,7 +577,10 @@ check('new project sanitizes Git hook env, commits the complete skeleton, stays 
     cwd: REPO, env: fx.env, encoding: 'utf8',
   });
   assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
-  assert.equal(existsSync(join(fx.gstack, '.claude', '.session-project-S')), false);
+  const unbound = readProjectState(fx.gstack, 'S', fx.projects).value;
+  assert.equal(unbound.state, 'NO_PIN');
+  assert.equal(validatedBindingForState(unbound, fx.projects), null, 'deactivate must drop the binding');
+  assert.ok(unbound.event_control?.fence, 'deactivate keeps the session attestable instead of deleting its fence');
   assert.deepEqual(linkTuple(fx), [null, null, null]);
   assert.equal(existsSync(beta), true, 'deactivate must preserve project data');
 });
@@ -685,10 +688,18 @@ check('state-file publication uses rename as commit point: pre-rename fails, pos
   }
 });
 
-check('state remove rename is deactivate commit point; cleanup failure stays success-with-warning', () => {
+check('state remove rename is deactivate commit point for a fence-less state; cleanup failure stays success-with-warning', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
+  // A state without a native fence has nothing to rebuild a fence from, so deactivate
+  // still removes it at the rename commit point. It keeps its cursor: an attested binding
+  // without a durable cursor is not a valid state. A fenced state is re-fenced instead;
+  // see the re-fence commit-point and one-way-door checks below.
+  const statePath = join(fx.gstack, '.claude', '.session-project-S');
+  const fenceless = JSON.parse(readFileSync(statePath, 'utf8'));
+  delete fenceless.event_control.fence;
+  writeFileSync(statePath, `${JSON.stringify(fenceless)}\n`);
   const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], {
     cwd: REPO,
     env: { ...fx.env, LUCA_PROJECT_STATE_REMOVE_FAULT: 'after-rename' },
@@ -696,10 +707,458 @@ check('state remove rename is deactivate commit point; cleanup failure stays suc
   });
   assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
   assert.match(deactivated.stderr, /已从 canonical 路径移除.*禁止重试解绑/);
-  assert.equal(existsSync(join(fx.gstack, '.claude', '.session-project-S')), false);
+  assert.equal(existsSync(statePath), false);
   assert.deepEqual(linkTuple(fx), [null, null, null]);
   assert.equal(jsonOut(deactivated).state, 'NO_PIN');
 });
+
+check('re-fence write is the deactivate commit point for a fenced state: pre-rename fails cleanly, post-rename warns but succeeds', () => {
+  {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    bind(fx, 'S', 'alpha');
+    const before = stateBytes(fx, 'S');
+    const links = linkTuple(fx);
+    const failed = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], {
+      cwd: REPO, env: { ...fx.env, LUCA_PROJECT_STATE_WRITE_FAULT: 'before-rename' }, encoding: 'utf8',
+    });
+    assert.notEqual(failed.status, 0, 'a re-fence that never reached its rename must fail');
+    assert.deepEqual(stateBytes(fx, 'S'), before, 'a failed re-fence must leave the binding untouched');
+    assert.deepEqual(linkTuple(fx), links, 'a failed re-fence must restore the display links');
+  }
+  {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    bind(fx, 'S', 'alpha');
+    const committed = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], {
+      cwd: REPO, env: { ...fx.env, LUCA_PROJECT_STATE_WRITE_FAULT: 'after-rename' }, encoding: 'utf8',
+    });
+    assert.equal(committed.status, 0, committed.stderr || committed.stdout);
+    assert.match(committed.stderr, /已原子发布.*禁止重试/);
+    const unbound = readProjectState(fx.gstack, 'S', fx.projects).value;
+    assert.equal(unbound.state, 'NO_PIN');
+    assert.ok(unbound.event_control?.fence, 'the renamed re-fence is committed even when post-rename sync fails');
+    assert.deepEqual(linkTuple(fx), [null, null, null]);
+  }
+});
+
+// ── deactivate must not be a one-way door (2026-09-10) ──
+// A mid-session deactivate used to delete the whole state file, fence included. Only
+// SessionStart may mint a fence, so the session could never attest again — not even to
+// switch — and the only escape was restarting the process. These checks deliberately
+// avoid initializeFence()/prepare()/beginTurn() after deactivating: those helpers mint a
+// fence in-process, which the real runtime cannot do, and would mask exactly this defect.
+
+function queueSwitchWithoutFence(fx, sid, target, tx) {
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: sid,
+    cwd: fx.gstack, harness: 'claude', prompt: `switch project ${target} after deactivate`, promptId: sid,
+    intent: { kind: 'switch', tx, operation: 'switch', target, expected_epoch: 0 },
+  });
+}
+
+check('deactivate is not a one-way door: the same session can attest and switch again without a new SessionStart', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
+  const unbound = readProjectState(fx.gstack, 'S', fx.projects).value;
+  assert.equal(unbound.state, 'NO_PIN');
+  assert.ok(unbound.event_control?.fence, 'deactivate must leave the session attestable');
+  assert.deepEqual(linkTuple(fx), [null, null, null]);
+  queueSwitchWithoutFence(fx, 'S', 'beta', 'native-switch-after-deactivate');
+  assert.equal(attestCandidate(fx, 'S').state.state, 'SWITCH_ONLY');
+  const switched = mutate(fx, 'S', 'switch', 'beta', { tx: 'native-switch-after-deactivate', expected_epoch: 0 });
+  assert.equal(switched.status, 0, switched.stderr || switched.stdout);
+  assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'S'], fx)).binding.project, 'beta');
+});
+
+check('deactivate re-fences at the source tail so a turn it discarded cannot orphan-lock the session', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  // The user typed a turn whose candidate is still pending when deactivate clears it. If
+  // deactivate kept the old cursor instead of re-fencing, that human row would sit first
+  // after the cursor and every later candidate would MISMATCH against it forever.
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+    cwd: fx.gstack, harness: 'claude', prompt: 'a turn discarded by deactivate', promptId: 'S',
+    intent: { kind: 'turn' },
+  });
+  appendFileSync(join(fx.transcripts, 'S.jsonl'), `${JSON.stringify({
+    type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+    isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+    message: { role: 'user', content: 'a turn discarded by deactivate' },
+  })}\n`);
+  const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
+  queueSwitchWithoutFence(fx, 'S', 'beta', 'native-switch-after-discard');
+  assert.equal(attestCandidate(fx, 'S').state.state, 'SWITCH_ONLY');
+});
+
+check('Codex identical prompt text with an older unqueued turn still needs explicit recovery', () => {
+  const sid = randomUUID();
+  const fx = makeCodexEnv(sid);
+  makeProject(fx, 'alpha');
+  withAttestationTest(() => initializeProjectEventFence({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+    cwd: fx.gstack, codexHome: fx.codexHome,
+  }));
+  codexSwitchTurn(fx, sid, 'initial', 'alpha', 'initial-tx');
+  assert.equal(mutate(fx, sid, 'switch', 'alpha', { tx: 'initial-tx', expected_epoch: 0 }).status, 0);
+  const prompt = 'switch project alpha';
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+      content: [{ type: 'input_text', text: prompt }],
+      internal_chat_message_metadata_passthrough: { turn_id: 'unqueued-old-turn' } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: 'unqueued-old-turn',
+      item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: prompt }] } } },
+  ].map(row => JSON.stringify(row)).join('\n') + '\n');
+  assert.throws(() => codexSwitchTurn(fx, sid, 'current-turn', 'alpha', 'blocked-tx'),
+    error => error.code === 'MISMATCH');
+  const pending = readProjectState(fx.gstack, sid, fx.projects).value;
+  assert.equal(pending.state, 'TURN_CLOSED');
+  assert.equal(pending.event_control.candidates.at(-1).boundary_id, 'current-turn');
+  const recovered = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.equal(recovered.status, 0, recovered.stderr);
+  assert.notEqual(mutate(fx, sid, 'switch', 'alpha', { tx: 'blocked-tx', expected_epoch: 0 }).status, 0);
+  assert.equal(codexSwitchTurn(fx, sid, 'fresh-turn', 'alpha', 'fresh-tx').state.switch.tx, 'fresh-tx');
+});
+
+for (const initiallyBound of [false, true]) {
+  check(`NO_PIN recovery after ${initiallyBound ? 'deactivate / delayed flush race' : 'unqueued orphan'} only lowers authority`, () => {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    makeProject(fx, 'beta');
+    if (initiallyBound) bind(fx, 'S', 'alpha');
+    else initializeFence(fx, 'S');
+    queueSwitchWithoutFence(fx, 'S', 'beta', 'stale-switch');
+    if (initiallyBound) {
+      const first = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+      assert.equal(first.status, 0, first.stderr);
+    }
+    appendFileSync(join(fx.transcripts, 'S.jsonl'), `${JSON.stringify({
+      type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+      isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+      message: { role: 'user', content: initiallyBound ? 'switch project beta after deactivate' : 'unqueued orphan human' },
+    })}\n`);
+    queueSwitchWithoutFence(fx, 'S', 'alpha', 'blocked-switch');
+    assert.throws(() => attestDirectly(fx, 'S'), error => error.code === 'MISMATCH');
+    const recovered = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+    assert.equal(recovered.status, 0, recovered.stderr);
+    const state = readProjectState(fx.gstack, 'S', fx.projects).value;
+    assert.equal(state.state, 'NO_PIN');
+    assert.equal(state.event_control.current, null);
+    assert.deepEqual(state.event_control.candidates, []);
+    assert.equal(state.switch, undefined, 'old switch intent cannot survive recovery');
+    assert.throws(() => attestDirectly(fx, 'S'), error => error.code === 'NO_PENDING_EVENT');
+    assert.notEqual(mutate(fx, 'S', 'switch', 'beta', { tx: 'stale-switch', expected_epoch: 0 }).status, 0,
+      'deactivate cannot turn a stale switch transaction into authority');
+    queueSwitchWithoutFence(fx, 'S', 'beta', 'fresh-switch');
+    assert.equal(attestCandidate(fx, 'S').state.switch.tx, 'fresh-switch');
+  });
+}
+
+check('deactivate that cannot re-fence refuses and changes nothing rather than leaving a one-way door', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  const transcript = join(fx.transcripts, 'S.jsonl');
+  const moved = join(fx.transcripts, 'S.real.jsonl');
+  renameSync(transcript, moved);
+  symlinkSync(moved, transcript);
+  const before = stateBytes(fx, 'S');
+  const links = linkTuple(fx);
+  const refused = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.notEqual(refused.status, 0, 'deactivate must refuse when the native fence cannot be rebuilt');
+  assert.deepEqual(stateBytes(fx, 'S'), before);
+  assert.deepEqual(linkTuple(fx), links);
+});
+
+function attestDirectly(fx, sid) {
+  const previous = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    return attestPendingProjectEvent({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: sid,
+      cwd: fx.gstack, observation: 'pre-tool', transcriptPath: join(fx.transcripts, `${sid}.jsonl`),
+    });
+  } finally {
+    if (previous === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = previous;
+  }
+}
+
+const { closeAttestedProjectEvent } = await import('../.claude/hooks/lib/project-substrate.mjs');
+
+check('deactivate resets an exhausted event ledger so a long session is not permanently locked', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  // The ledger never shrinks, so after PROJECT_EVENT_HISTORY_LIMIT attested turns every
+  // attestation throws EVENT_LEDGER_FULL. Fill it with genuine attested turns: ledger entries
+  // are bound to derived event ids, so hand-written padding is rejected as an invalid ledger.
+  let turn = 0;
+  while (readProjectState(fx.gstack, 'S', fx.projects).value.event_control.consumed_events.length < 256) {
+    beginTurn(fx, 'S', `ledger-fill-${turn += 1}`);
+  }
+  const filled = readProjectState(fx.gstack, 'S', fx.projects).value.event_control.current;
+  closeAttestedProjectEvent({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S',
+    eventId: filled.event_id, boundaryId: filled.boundary_id,
+  });
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+    cwd: fx.gstack, harness: 'claude', prompt: 'a turn on an exhausted ledger', promptId: 'S',
+    intent: { kind: 'turn' },
+  });
+  assert.throws(() => attestCandidate(fx, 'S'), error => error?.code === 'EVENT_LEDGER_FULL',
+    'the fixture must reproduce the exhausted-ledger lock before deactivate');
+  const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
+  queueSwitchWithoutFence(fx, 'S', 'beta', 'native-switch-after-full-ledger');
+  assert.equal(attestCandidate(fx, 'S').state.state, 'SWITCH_ONLY');
+});
+
+check('resetting the ledger on deactivate cannot re-grant a turn consumed before it', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
+  // Re-queue the exact bytes of the already consumed switch turn with no new native row.
+  // The empty ledger cannot recognise it; the rebuilt cursor must still refuse it.
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+    cwd: fx.gstack, harness: 'claude', prompt: 'switch project alpha', promptId: 'S',
+    intent: { kind: 'switch', tx: 'replayed-switch', operation: 'switch', target: 'alpha', expected_epoch: 0 },
+  });
+  let replay;
+  try { attestDirectly(fx, 'S'); } catch (error) { replay = error; }
+  assert.equal(replay?.code, 'EVENT_REPLAY', `a consumed turn must stay unattestable after the reset (${replay?.stack || replay})`);
+  assert.equal(readProjectState(fx.gstack, 'S', fx.projects).value.state, 'NO_PIN');
+});
+
+// ── Codex: deactivate re-fences through the real CLI and CODEX_HOME plumbing (2026-09-11) ──
+// Every deactivate check above runs under Claude. The re-fence resolves a Codex rollout from the
+// deactivate process's own CODEX_HOME, so the Codex path is only proven end to end when a session is
+// bound, deactivated and bound again through project.sh with a Codex environment.
+
+function makeCodexEnv(sid) {
+  const fx = makeEnv();
+  const codexHome = join(fx.root, 'codex-home');
+  const rolloutDir = join(codexHome, 'sessions', '2026', '09', '11');
+  mkdirSync(rolloutDir, { recursive: true });
+  const rollout = join(rolloutDir, `rollout-2026-09-11T00-00-00-${sid}.jsonl`);
+  writeFileSync(rollout, `${JSON.stringify({
+    type: 'session_meta',
+    payload: {
+      id: sid, session_id: sid, cwd: fx.gstack, thread_source: 'user', originator: 'codex-tui',
+      parent_thread_id: null, forked_from_id: null,
+    },
+  })}\n`);
+  return { ...fx, codexHome, rollout, env: { ...fx.env, LUCA_ACTUAL_HARNESS: 'codex', CODEX_HOME: codexHome } };
+}
+
+function withAttestationTest(operation) {
+  const previous = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    return operation();
+  } finally {
+    if (previous === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = previous;
+  }
+}
+
+function codexSwitchTurn(fx, sid, boundary, target, tx, { withNativeRows = true } = {}) {
+  const prompt = `switch project ${target}`;
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: boundary,
+    cwd: fx.gstack, harness: 'codex', prompt,
+    intent: { kind: 'switch', tx, operation: 'switch', target, expected_epoch: 0 },
+  });
+  if (withNativeRows) {
+    appendFileSync(fx.rollout, [
+      { type: 'response_item', payload: {
+        type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: prompt }],
+        internal_chat_message_metadata_passthrough: { turn_id: boundary },
+      } },
+      { type: 'event_msg', payload: {
+        type: 'item_completed', thread_id: sid, turn_id: boundary,
+        item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: prompt }] },
+      } },
+    ].map(row => JSON.stringify(row)).join('\n') + '\n');
+  }
+  return withAttestationTest(() => attestPendingProjectEvent({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: boundary,
+    cwd: fx.gstack, observation: 'pre-tool', codexHome: fx.codexHome,
+  }));
+}
+
+check('Codex: deactivate re-fences through project.sh and CODEX_HOME, so the session can switch again', () => {
+  const sid = randomUUID();
+  const fx = makeCodexEnv(sid);
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  withAttestationTest(() => initializeProjectEventFence({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+    cwd: fx.gstack, codexHome: fx.codexHome,
+  }));
+  const first = `boundary-${randomUUID()}`;
+  assert.equal(codexSwitchTurn(fx, sid, first, 'alpha', 'codex-tx-alpha').state.state, 'SWITCH_ONLY');
+  const bound = mutate(fx, sid, 'switch', 'alpha', { tx: 'codex-tx-alpha', expected_epoch: 0 });
+  assert.equal(bound.status, 0, bound.stderr || bound.stdout);
+
+  const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
+  const unbound = readProjectState(fx.gstack, sid, fx.projects).value;
+  assert.equal(unbound.state, 'NO_PIN');
+  assert.equal(unbound.event_control?.fence?.harness, 'codex', 'the rebuilt fence must stay on the Codex source');
+
+  // The consumed alpha turn, re-queued with no new native rows, must stay unattestable after the reset.
+  let replay;
+  try { codexSwitchTurn(fx, sid, first, 'alpha', 'codex-tx-replay', { withNativeRows: false }); } catch (error) { replay = error; }
+  assert.equal(replay?.code, 'EVENT_REPLAY', `a consumed Codex turn must stay unattestable after the reset (${replay?.stack || replay})`);
+
+  // The refused replay stays queued ahead of the next real turn; B skips it and the real turn attests.
+  const second = `boundary-${randomUUID()}`;
+  assert.equal(codexSwitchTurn(fx, sid, second, 'beta', 'codex-tx-beta').state.state, 'SWITCH_ONLY');
+  const rebound = mutate(fx, sid, 'switch', 'beta', { tx: 'codex-tx-beta', expected_epoch: 0 });
+  assert.equal(rebound.status, 0, rebound.stderr || rebound.stdout);
+  assert.equal(jsonOut(runNode(PIN, ['status', '--session', sid], fx)).binding.project, 'beta');
+});
+
+for (const initiallyBound of [false, true]) {
+  check(`Codex NO_PIN recovery: ${initiallyBound ? 'delayed flush after deactivate' : 'orphan'} is recoverable without old switch authority`, () => {
+    const sid = randomUUID();
+    const fx = makeCodexEnv(sid);
+    makeProject(fx, 'alpha');
+    makeProject(fx, 'beta');
+    withAttestationTest(() => initializeProjectEventFence({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+      cwd: fx.gstack, codexHome: fx.codexHome,
+    }));
+    if (initiallyBound) {
+      codexSwitchTurn(fx, sid, 'initial', 'alpha', 'initial-tx');
+      assert.equal(mutate(fx, sid, 'switch', 'alpha', { tx: 'initial-tx', expected_epoch: 0 }).status, 0);
+    }
+    assert.throws(() => codexSwitchTurn(fx, sid, 'late', 'beta', 'old-tx', { withNativeRows: false }),
+      error => error.code === 'SOURCE_NOT_VISIBLE');
+    if (initiallyBound) {
+      const first = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+      assert.equal(first.status, 0, first.stderr);
+    }
+    appendFileSync(fx.rollout, [
+      { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: 'switch project beta' }],
+        internal_chat_message_metadata_passthrough: { turn_id: 'late' } } },
+      { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: 'late',
+        item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: 'switch project beta' }] } } },
+    ].map(row => JSON.stringify(row)).join('\n') + '\n');
+    if (initiallyBound) assert.throws(() => codexSwitchTurn(fx, sid, 'blocked', 'alpha', 'blocked-tx', { withNativeRows: false }),
+      error => error.code === 'MISMATCH');
+    const recovered = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+    assert.equal(recovered.status, 0, recovered.stderr);
+    const state = readProjectState(fx.gstack, sid, fx.projects).value;
+    assert.equal(state.state, 'NO_PIN');
+    assert.equal(state.event_control.current, null);
+    assert.deepEqual(state.event_control.candidates, []);
+    assert.notEqual(mutate(fx, sid, 'switch', 'beta', { tx: 'old-tx', expected_epoch: 0 }).status, 0);
+    assert.throws(() => codexSwitchTurn(fx, sid, 'late', 'beta', 'replay', { withNativeRows: false }),
+      error => error.code === 'EVENT_REPLAY');
+    assert.equal(codexSwitchTurn(fx, sid, 'fresh', 'alpha', 'fresh-tx').state.switch.tx, 'fresh-tx');
+  });
+}
+
+for (const harness of ['claude', 'codex']) {
+  if (harness === 'codex') check(`${harness} recovery refuses unknown source that appeared after an absent-source startup fence`, () => {
+    const sid = randomUUID();
+    const fx = harness === 'codex' ? makeCodexEnv(sid) : makeEnv();
+    const transcript = harness === 'codex' ? fx.rollout : join(fx.transcripts, `${sid}.jsonl`);
+    const saved = join(fx.root, 'saved-source');
+    if (harness === 'codex') renameSync(transcript, saved);
+    withAttestationTest(() => initializeProjectEventFence({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness,
+      cwd: fx.gstack, ...(harness === 'codex' ? { codexHome: fx.codexHome } : { transcriptPath: transcript }),
+    }));
+    assert.equal(readProjectState(fx.gstack, sid, fx.projects).value.event_control.fence.source_absent, true);
+    if (harness === 'codex') renameSync(saved, transcript);
+    appendFileSync(transcript, `${JSON.stringify(harness === 'codex'
+      ? { type: 'response_item', payload: { type: 'message', role: 'user', id: 'bad', content: [{ type: 'input_text', text: 'bad' }] } }
+      : { type: 'user', origin: { kind: 'future' }, message: { role: 'user', content: 'bad' } })}\n`);
+    const before = stateBytes(fx, sid);
+    const refused = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+    assert.notEqual(refused.status, 0);
+    assert.match(refused.stderr, /invalid Codex user id/);
+    assert.deepEqual(stateBytes(fx, sid), before);
+  });
+  for (const damage of ['prefix', 'unknown', 'malformed']) {
+    check(`${harness} recovery refuses ${damage} source damage without publishing or changing links`, () => {
+      const sid = randomUUID();
+      const fx = harness === 'codex' ? makeCodexEnv(sid) : makeEnv();
+      if (harness === 'codex') withAttestationTest(() => initializeProjectEventFence({
+        gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness,
+        cwd: fx.gstack, codexHome: fx.codexHome,
+      }));
+      else initializeFence(fx, sid);
+      const transcript = harness === 'codex' ? fx.rollout : join(fx.transcripts, `${sid}.jsonl`);
+      if (damage === 'prefix') {
+        const bytes = readFileSync(transcript, 'utf8');
+        writeFileSync(transcript, bytes.replace('session', 'sessioN'));
+      } else if (damage === 'malformed') appendFileSync(transcript, '{broken json}\n');
+      else appendFileSync(transcript, `${JSON.stringify(harness === 'codex'
+        ? { type: 'response_item', payload: { type: 'message', role: 'user', id: 'unknown-id',
+          content: [{ type: 'input_text', text: 'unknown source' }] } }
+        : { type: 'user', origin: { kind: 'future-human-kind' }, promptSource: 'typed',
+          message: { role: 'user', content: 'unknown source' } })}\n`);
+      const before = stateBytes(fx, sid);
+      const links = linkTuple(fx);
+      const refused = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+      assert.notEqual(refused.status, 0, 'recovery cannot silently absorb damaged source');
+      assert.deepEqual(stateBytes(fx, sid), before);
+      assert.deepEqual(linkTuple(fx), links);
+    });
+  }
+}
+
+check('Codex recovery refuses a native turn whose UserMessage anchor has not flushed', () => {
+  const sid = randomUUID();
+  const fx = makeCodexEnv(sid);
+  withAttestationTest(() => initializeProjectEventFence({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+    cwd: fx.gstack, codexHome: fx.codexHome,
+  }));
+  appendFileSync(fx.rollout, `${JSON.stringify({ type: 'response_item', payload: {
+    type: 'message', role: 'user', id: `msg_${randomUUID()}`, content: [{ type: 'input_text', text: 'late anchor' }],
+    internal_chat_message_metadata_passthrough: { turn_id: 'late' },
+  } })}\n`);
+  const before = stateBytes(fx, sid);
+  const refused = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.stderr, /anchor/);
+  assert.deepEqual(stateBytes(fx, sid), before);
+});
+
+for (const state of ['TURN_ACTIVE', 'SWITCH_ONLY']) {
+  check(`deactivate recovery still refuses ${state} without changing authority`, () => {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    if (state === 'TURN_ACTIVE') { bind(fx, 'S', 'alpha'); beginTurn(fx, 'S'); }
+    else prepare(fx, 'S', 'switch', 'alpha');
+    const before = stateBytes(fx, 'S');
+    const links = linkTuple(fx);
+    const refused = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+    assert.notEqual(refused.status, 0);
+    assert.deepEqual(stateBytes(fx, 'S'), before);
+    assert.deepEqual(linkTuple(fx), links);
+  });
+}
 
 check('per-state O_EXCL lock serializes same-sid CAS and never age-steals crash residue', () => {
   const fx = makeEnv();

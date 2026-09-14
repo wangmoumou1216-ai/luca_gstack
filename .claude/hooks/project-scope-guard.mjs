@@ -319,12 +319,12 @@ function shellWordSegments(command) {
 
   for (let index = 0; index < command.length; index++) {
     const char = command[index];
-    if (!token && !quote && /\s/.test(char)) continue;
     if (!quote && (char === ';' || char === '|' || char === '&' || char === '\n')) {
       finishToken(index);
       finishSegment();
       continue;
     }
+    if (!token && !quote && /\s/.test(char)) continue;
     if (!token) token = { start: index, end: index, value: '' };
     if (quote) {
       if (char === quote) {
@@ -470,7 +470,34 @@ function exactReadBrokerMaintenance(command) {
 // continue through the normal redirect/deny logic.
 function maskSearchPatternArguments(command) {
   const ranges = [];
-  const noValueFlags = /^-(?:[nHhIiLlSsUuvwcFq]+|-[A-Za-z0-9][\w-]*)$/;
+  // All masking branches use the same quote/escape-aware operator scan. Raw
+  // substring tests here would mistake literal | or << for shell syntax.
+  const shellSyntax = source => {
+    const result = { evaluation: false, heredocs: [], control: false, incomplete: false };
+    let quote = '';
+    for (let i = 0; i < source.length; i++) {
+      const char = source[i];
+      if (quote === "'") { if (char === "'") quote = ''; continue; }
+      if (char === '\\') { i++; continue; }
+      if (char === "'" && !quote) { quote = char; continue; }
+      if (char === '"') { quote = quote ? '' : '"'; continue; }
+      if (!quote && char === '#' && (i === 0 || /[\s;&|]/.test(source[i - 1]))) {
+        while (i < source.length && source[i] !== '\n') i++;
+        continue;
+      }
+      if (char === '$' || char === '`' || (!quote && char === '|')) result.evaluation = true;
+      if (!quote && /[;&|]/.test(char)) result.control = true;
+      if (!quote && char === '<' && source[i + 1] === '<') { result.heredocs.push(i); i++; }
+    }
+    result.incomplete = Boolean(quote);
+    return result;
+  };
+  const syntax = shellSyntax(String(command));
+  const literalWord = word => {
+    const raw = String(command).slice(word.start, word.end);
+    return /^'[^']*'$/.test(raw) || /^"[^"$`\\]*"$/.test(raw)
+      || !/[$`\\*?\[\]{}~'"<>]/.test(raw);
+  };
   const valueFlags = new Set([
     '-A', '-B', '-C', '-g', '-j', '-m', '-t', '-T',
     '--after-context', '--before-context', '--context', '--encoding', '--engine',
@@ -482,7 +509,13 @@ function maskSearchPatternArguments(command) {
     let cursor = 0;
     if (segment[cursor]?.value === 'command') cursor++;
     const executable = (segment[cursor]?.value || '').split('/').pop();
-    if (!['rg', 'grep', 'egrep', 'fgrep'].includes(executable)) continue;
+    if (!['rg', 'grep', 'egrep', 'fgrep'].includes(executable) || syntax.heredocs.length || syntax.incomplete) continue;
+    // grep -r/-E are flags; rg -r/-E take values. Do not guess unknown options.
+    const noValueFlags = executable === 'rg'
+      ? /^-(?:[nHhIiLlSsUuvwcFqo]+|-(?:hidden|no-ignore|files-with-matches|files-without-match|line-number|fixed-strings|ignore-case|count|quiet))$/
+      : /^-(?:[nHhIiLlSsUuvwcFqrREPoxbz]+|-(?:recursive|dereference-recursive|extended-regexp|perl-regexp|only-matching|line-regexp|line-number|fixed-strings|ignore-case|count|quiet))$/;
+    const takesValue = new Set(valueFlags);
+    if (executable === 'rg') { takesValue.add('-r'); takesValue.add('-E'); }
     cursor++;
 
     let defaultPattern = null;
@@ -518,7 +551,7 @@ function maskSearchPatternArguments(command) {
       }
       if (!positionalOnly && value.startsWith('-')) {
         const optionName = value.split('=')[0];
-        if (valueFlags.has(optionName)) {
+        if (takesValue.has(optionName)) {
           if (!value.includes('=')) pending = 'option-value';
           continue;
         }
@@ -531,14 +564,57 @@ function maskSearchPatternArguments(command) {
     }
 
     if (unsupported || pending || pathOperands.length === 0) continue;
-    ranges.push(...explicitPatterns, ...(defaultPattern ? [defaultPattern] : []));
+    ranges.push(...[...explicitPatterns, ...(defaultPattern ? [defaultPattern] : [])]
+      .filter(literalWord));
   }
 
+  // Only literal, non-evaluated payload positions are opaque. Redirection operands,
+  // substitutions, pipelines and printf -v remain visible to every path check.
+  if (!syntax.evaluation && !syntax.heredocs.length && !syntax.incomplete) {
+    for (const segment of shellWordSegments(command)) {
+      const exe = segment[0]?.value;
+      if (['echo', 'printf'].includes(exe) && !(exe === 'printf' && /^-v/.test(segment[1]?.value || ''))) {
+        for (const word of segment.slice(1)) {
+          if (literalWord(word)) ranges.push(word);
+          else if (/[<>]/.test(word.value)) break;
+        }
+      } else if (exe === 'git') {
+        let i = 1;
+        while (segment[i]?.value === '-C' && segment[i + 1] && literalWord(segment[i + 1])) i += 2;
+        if (!['commit', 'tag'].includes(segment[i]?.value)) continue;
+        // Recognize only a leading sequence of message options. After --, an
+        // unknown option or any positional operand, -m can be a path or a value
+        // (e.g. --file -m docs/x); guessing would hide a real project access.
+        for (i++; i < segment.length - 1 && ['-m', '--message'].includes(segment[i].value); i += 2) {
+          if (!literalWord(segment[i + 1])) break;
+          ranges.push(segment[i + 1]);
+        }
+      }
+    }
+  }
+  // A quoted cat/tee heredoc is data, unlike an interpreter heredoc or an unquoted
+  // delimiter (whose body can run substitutions). Recognize only this narrow grammar.
+  const heredoc = /^(?:cat|tee)\b[^\n]*<<(['"])([A-Za-z_][A-Za-z0-9_]*)\1[ \t]*\n/g;
+  for (const match of String(command).matchAll(heredoc)) {
+    const header = shellSyntax(match[0]);
+    if (header.evaluation || header.control || header.incomplete || header.heredocs.length !== 1) continue;
+    const start = match.index + match[0].length;
+    const endMatch = new RegExp(`^${escapeRe(match[2])}(?:\\n|$)`, 'm').exec(command.slice(start));
+    if (!endMatch) continue;
+    const end = start + endMatch.index;
+    // Avoid overlapping ranges from parsing arbitrary payload text as commands.
+    for (let i = ranges.length - 1; i >= 0; i--) {
+      if (ranges[i].start >= start && ranges[i].start < end) ranges.splice(i, 1);
+    }
+    ranges.push({ start, end });
+  }
   if (!ranges.length) return { command, restore: value => value };
   const restorations = [];
   let masked = String(command);
+  let prefix = '__LUCA_LITERAL_DATA_';
+  while (masked.includes(prefix)) prefix += '_';
   [...ranges].sort((a, b) => b.start - a.start).forEach((range, index) => {
-    const marker = `__LUCA_SEARCH_PATTERN_${index}__`;
+    const marker = `${prefix}${index}__`;
     restorations.push([marker, masked.slice(range.start, range.end)]);
     masked = masked.slice(0, range.start) + marker + masked.slice(range.end);
   });
@@ -705,7 +781,16 @@ function resolvedRelativeProjectAccess(candidate, binding) {
 function relativeProjectReference(cmd, binding) {
   let cwd = resolve(gstackRoot);
   try { cwd = realpathSync(cwd); } catch { }
-  const segments = String(cmd || '').split(/&&|\|\||[;\n]/);
+  let literalCmd = String(cmd || '');
+  // Resolve only one immediately preceding literal assignment used once by cd.
+  // Unknown values, reassignment and shell evaluation keep the existing refusal.
+  const assignedCd = /(?:^|[;\n])\s*([A-Za-z_][A-Za-z0-9_]*)=(['"])(\/[^'"$`*?{}\n]+)\2\s*(?:;|&&|\n)\s*cd\s+"\$\1"(?=\s*(?:&&|;|\n|$))/g;
+  literalCmd = literalCmd.replace(assignedCd, (match, name, quote, value) => {
+    if (['HOME', 'PWD', 'OLDPWD', 'PATH', 'CDPATH'].includes(name)
+        || (literalCmd.match(new RegExp(`\\b${escapeRe(name)}\\b`, 'g')) || []).length !== 2) return match;
+    return match.replace(`cd "$${name}"`, `cd "${value}"`);
+  });
+  const segments = literalCmd.split(/&&|\|\||[;\n]/);
   const dotPath = /(^|[\s"'`=:(>])((?:\.{1,2})(?:\/[A-Za-z0-9._@%+,\-\u3400-\u9fff]+)*)(?=$|[\s"'`);&|])/g;
   for (const rawSegment of segments) {
     const segment = rawSegment.trim();
@@ -855,6 +940,9 @@ function main() {
   const observed = attestForPreTool(readSessionState());
   const state = observed.state;
   const binding = activeBinding(state, observed.error);
+  const recoveryHint = observed.error && ['NO_PIN', 'BOUND', 'TURN_CLOSED'].includes(state.state)
+    ? ` 若原生记录尚未落盘，先等待落盘再重试；持续认证失败可显式运行 bash scripts/project.sh deactivate ${sid}，仅清除绑定/旧候选，不授予权限；随后由用户重新提出项目任务。源损坏时恢复也会拒绝，勿修改状态文件。`
+    : '';
   const bashCommand = toolName === 'Bash' ? String(input.command || '') : '';
   // Session sidecar 保护刻意保持 unconditional，不随
   // READ_GRANTS_ENABLED 关闭而放松——authorizeRead/reconcilePromptGrants 已在
@@ -931,7 +1019,7 @@ function main() {
     const direct = directProjectPathsAllowed(guardCmd, binding);
     if (direct.seen && !direct.allowed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `Bash 直接项目路径不属于当前可验证 binding（${direct.value}）；禁止 no-pin/跨项目/失效 identity 访问。` } });
+        permissionDecisionReason: `Bash 直接项目路径不属于当前可验证 binding（${direct.value}）；禁止 no-pin/跨项目/失效 identity 访问。${recoveryHint}` } });
     }
     const r = rewriteBash(guardCmd, binding);
     if (r.unsafe) {
@@ -942,7 +1030,7 @@ function main() {
       // Bash 无 pin 一律 deny：shell 字符串里读/写难可靠区分，且共享展示链可能指向另一
       // session 的项目。框架/meta 任务应跳过项目状态；确需项目资料则先建立 binding。
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。框架任务请跳过项目状态；确需读取或写入项目资料，请先绑定项目。` } });
+        permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。框架任务请跳过项目状态；确需读取或写入项目资料，请先绑定项目。${recoveryHint}` } });
     }
     if (r.changed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: maskedSearch.restore(r.cmd) } } });
@@ -985,7 +1073,7 @@ function main() {
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
       permissionDecisionReason: c.unsafe
         ? `项目路径含 . / .. / 空段 traversal，拒绝「${target}」。`
-        : `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，不能访问共享路径「${target}」。` } });
+        : `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，不能访问共享路径「${target}」。${recoveryHint}` } });
   }
 
   return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, [pathField]: c.redirected } } });

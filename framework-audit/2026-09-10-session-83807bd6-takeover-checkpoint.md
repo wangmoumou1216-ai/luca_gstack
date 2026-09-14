@@ -44,3 +44,50 @@
 - 共享 hook 日志 `/tmp/luca-gstack-hooks.log` 无时间戳无 session id，多 session 无法归因（兄弟 session 记录）。
 - 任何 Bash 超 120s 转后台 → 投递 `<task-notification>` 伪 prompt → 正是本缺陷触发器。
   本 session 已因此造出 4 条毒候选；作业期间一律前台加硬超时。
+
+---
+
+## 2026-09-10 续：B 的判据定稿（比初版收紧，非放宽）
+
+初版 B 只 catch `SOURCE_NOT_VISIBLE`。lucagstack-40 实证补充：cross-session 消息是同一病根的
+第二形态，但错误码是 `MISMATCH`——它确实落进 transcript，只是 harness 加了包装说明，逐字节
+比对对不上。初版对该形态完全无效。
+
+但按错误码跳过是**过宽**的：`MISMATCH` 在 event-attestation.mjs 有 6 个抛出点，其中
+383/386/816/828 是内部一致性损坏（anchor 出处不符、source 与 anchor 文本不一致、current 事件
+身份不一致），按码跳过会吞掉真正的损坏信号。
+
+**定稿判据：钉四个调用点，不钉错误码。** 共同语义＝「在该位置读 source，无法佐证该候选」：
+
+| 站点 | 语义 |
+|---|---|
+| `event-attestation.mjs:505` | 下一条 Codex 原生用户事件与候选不匹配 |
+| `event-attestation.mjs:721` | 下一条 Claude 原生用户事件与候选不匹配 |
+| `event-attestation.mjs:529` | 候选 Codex 事件在 source 中不可见 |
+| `event-attestation.mjs:743` | 候选 Claude 事件在 source 中不可见 |
+
+实现：这四处附加可区分标记（如 `error.candidate_unwitnessed = true`），
+`attestPendingProjectEvent` 只对**非最后一条**且带该标记的候选记账跳过。其余 16 个码 +
+4 个损坏型 MISMATCH 一律整体拒绝。
+
+**用例必须双码双向覆盖**（原计划只测 SOURCE_NOT_VISIBLE，不够）：
+1. 毒候选 SOURCE_NOT_VISIBLE + 其后真实候选可兑 → 跳过，第二条正常 attest
+2. 毒候选 MISMATCH（cross-session 形态）+ 其后真实候选可兑 → 同上
+3. 反向：全部候选均不可兑 → 仍整体拒绝（防 fail-open）
+4. 反向：队尾是毒候选 → 仍整体拒绝，下一个真实回合后自愈
+5. 反向：损坏型 MISMATCH（383/386/816/828）→ 必须仍然整体拒绝，不得被跳过
+6. 反向：EVENT_REPLAY / CANDIDATE_SCHEMA / BOOTSTRAP_UNATTESTED → 必须仍然整体拒绝
+每条写完变异一次，确认断言会转红。
+
+## 已产生的真实损害（记录在案）
+
+本 session 给 lucagstack-40 发的 cross-session 消息**把它的候选队列毒死了第二次**，
+它现在锁在 TURN_CLOSED。缺陷修好前不再发任何 cross-session 消息。
+这条同时是形态二的活体证据来源。
+
+## 阻塞（只有 luca 能解）
+
+1. 写 `.claude/hooks/**` 被 classifier 拒（B/C/T4/T6 全在这几个文件里）。
+   luca 说「按你的结论执行」后又试了一次，仍被拒；不试第三次、不换写法绕行。
+2. `git push upstream main` 被 classifier 拒。两个提交在等：`dddf8e2`（本轮）
+   与 `0284578`（丢失 session 的成果，从未推送过）。

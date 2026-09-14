@@ -7,7 +7,7 @@
 evidence/scope/reviewer 齐全，且非重复/冲突），本脚本不直接写 promoted-facts.yaml（SC-20260523-003）。
 冲突/重复/stale 等需要判断的，只列进 digest 等你裁决，不自动处理。
 
-无参数的每日调度永远 exit 0；显式 pending-disposition CLI 对失败返回非零，避免伪报处置成功。
+无参数的每日调度永远 exit 0；显式 pending-disposition / pending-correction CLI 对失败返回非零，避免伪报处置成功。
 """
 import json
 import argparse
@@ -338,11 +338,15 @@ def pending_disposition_cli(argv) -> int:
                 raise RuntimeError("active pending changed before disposition could be recorded")
             # Reuse a durable pre-move decision after rename failure. Conflicting inputs
             # must not turn an unfinished move into a second, dangling disposition.
+            # A decision later corrected back to UNRESOLVED had its bytes restored to active. It is
+            # superseded evidence, not an unfinished move, and must not block re-disposal forever.
+            restored = {event.get("corrects") for event in events if event.get("event") == "ACTIVE_RESTORED"}
             unfinished = [event for event in events
                           if event.get("event") == "DISPOSITION_RECORDED"
                           and event.get("pending_path") == str(pending)
                           and event.get("source_sha256") == source_sha
-                          and event.get("move_state") == "PENDING"]
+                          and event.get("move_state") == "PENDING"
+                          and event.get("disposition_id") not in restored]
             if len(unfinished) > 1:
                 raise RuntimeError("ambiguous active recovery: multiple durable decisions exist")
             unresolved_matches = [event for event in events
@@ -1152,6 +1156,143 @@ def _active_pending_files(observability_dir: Path):
     return sorted(out, key=lambda path: (path.stat().st_mtime, path.name))
 
 
+def _restore_corrected_pending(handle, pending: Path, record: dict, correction: dict) -> bool:
+    """Return archived evidence to active for an UNRESOLVED correction; resumable after a crash."""
+    archive = Path(correction["archive_path"])
+    source_sha = record["source_sha256"]
+    if pending.is_symlink():
+        raise RuntimeError("active pending path must not be a symlink")
+    if pending.exists():
+        # The rename already happened before a crash; only an exact byte match may be adopted.
+        if archive.exists() or hashlib.sha256(pending.read_bytes()).hexdigest() != source_sha:
+            raise RuntimeError("an unrelated active pending already occupies the restore path")
+    else:
+        if archive.is_symlink() or not archive.is_file():
+            raise RuntimeError("archived evidence to restore is missing")
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != source_sha:
+            raise RuntimeError("archived evidence hash does not match the corrected disposition")
+        os.rename(archive, pending)
+    _append_pending_event(handle, {
+        "schema_version": 1,
+        "event": "ACTIVE_RESTORED",
+        "disposition_id": correction["disposition_id"],
+        "corrects": correction["corrects"],
+        "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "pending_path": str(pending),
+        "source_name": record.get("source_name"),
+        "source_sha256": source_sha,
+        "archive_path": str(archive),
+        "active_retained": True,
+        "move_state": "RESTORED",
+    })
+    return True
+
+
+def pending_correction_cli(argv) -> int:
+    """Correct an archived disposition by appending evidence beside it; never rewrite or delete it.
+
+    A disposition recorded on a false premise must stay visible as history, so the correction is
+    appended next to it. Correcting to UNRESOLVED restores the exact archived bytes to active and
+    marks the original decision superseded, so ordinary disposition can run on it again.
+    """
+    parser = argparse.ArgumentParser(prog="daily_governance.py pending-correction")
+    parser.add_argument("--pending", required=True)
+    parser.add_argument("--disposition-id", required=True)
+    parser.add_argument("--status", required=True, choices=PENDING_STATUSES)
+    parser.add_argument("--evidence", required=True)
+    parser.add_argument("--reason", required=True)
+    parser.add_argument("--actor", required=True)
+    try:
+        args = parser.parse_args(argv)
+        evidence = " ".join(args.evidence.split()).strip()
+        reason = " ".join(args.reason.split()).strip()
+        actor = " ".join(args.actor.split()).strip()
+        for label, value in (("--evidence", evidence), ("--reason", reason)):
+            if not value or value.startswith("<") or len(value) < 8:
+                raise ValueError(f"{label} must contain concrete correction evidence")
+        if not actor or actor.startswith("<"):
+            raise ValueError("--actor must identify the adjudicator")
+        pending = _validate_pending_path(args.pending, allow_missing=True)
+        manifest = pending.parent / PENDING_MANIFEST
+        if not manifest.is_file() or manifest.is_symlink():
+            raise RuntimeError("no trustworthy disposition manifest exists to correct")
+        key = str(pending)
+        inputs = {"status": args.status, "evidence": evidence, "reason": reason, "actor": actor}
+        with _open_pending_manifest(manifest) as handle:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            events = _read_locked_pending_manifest(handle)
+            records = [event for event in events if event.get("event") == "DISPOSITION_RECORDED"
+                       and event.get("disposition_id") == args.disposition_id]
+            if len(records) != 1:
+                raise RuntimeError("correction target must be exactly one recorded disposition")
+            record = records[0]
+            if record.get("pending_path") != key:
+                raise RuntimeError("correction target belongs to a different pending path")
+            removed = [event for event in events if event.get("event") == "ACTIVE_REMOVED"
+                       and event.get("disposition_id") == args.disposition_id]
+            if len(removed) != 1:
+                raise RuntimeError("only an archived disposition can be corrected; dispose an active pending directly")
+            restored = [event for event in events if event.get("event") == "ACTIVE_RESTORED"
+                        and event.get("corrects") == args.disposition_id]
+            corrections = [event for event in events if event.get("event") == "DISPOSITION_CORRECTED"
+                           and event.get("corrects") == args.disposition_id]
+            latest = corrections[-1] if corrections else None
+            if latest and all(latest.get(field) == value for field, value in inputs.items()):
+                # Identical re-run: finish an interrupted restore, otherwise report completion.
+                resumed = False
+                if args.status == "UNRESOLVED" and not restored:
+                    resumed = _restore_corrected_pending(handle, pending, record, latest)
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                print(json.dumps({
+                    "correction_id": latest["disposition_id"], "corrects": args.disposition_id,
+                    "status": args.status, "previous_status": record.get("status"),
+                    "active_retained": args.status == "UNRESOLVED", "restored": resumed,
+                    "already_complete": not resumed,
+                }, ensure_ascii=False))
+                return 0
+            if restored:
+                raise RuntimeError("the corrected evidence is already active again; dispose the active pending instead")
+            archive = _verified_recovery_archive(pending, record)
+            if archive is None:
+                raise RuntimeError("archived evidence for this disposition is missing")
+            _validate_active_removed_event(record, removed[0], archive)
+            correction_id = (
+                f"PC-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')}"
+                f"-{os.getpid()}-{record['source_sha256'][:8]}"
+            )
+            correction = {
+                "schema_version": 1,
+                "event": "DISPOSITION_CORRECTED",
+                "disposition_id": correction_id,
+                "corrects": args.disposition_id,
+                "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "previous_status": record.get("status"),
+                **inputs,
+                "pending_path": key,
+                "source_name": record.get("source_name"),
+                "source_sha256": record.get("source_sha256"),
+                "archive_path": str(archive),
+                "active_retained": args.status == "UNRESOLVED",
+                "move_state": "RESTORE_PENDING" if args.status == "UNRESOLVED" else "ARCHIVED",
+            }
+            _append_pending_event(handle, correction)
+            restored_now = False
+            if args.status == "UNRESOLVED":
+                restored_now = _restore_corrected_pending(handle, pending, record, correction)
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        print(json.dumps({
+            "correction_id": correction_id, "corrects": args.disposition_id, "status": args.status,
+            "previous_status": record.get("status"), "active_retained": args.status == "UNRESOLVED",
+            "restored": restored_now, "already_complete": False,
+        }, ensure_ascii=False))
+        return 0
+    except SystemExit:
+        raise
+    except Exception as exc:  # noqa: BLE001 - an explicit governance CLI must never report a false success
+        sys.stderr.write(f"[daily_governance] pending-correction failed: {exc}\n")
+        return 1
+
+
 def _read_pending_manifest(observability_dir: Path):
     events = []
     manifest = observability_dir / PENDING_MANIFEST
@@ -1218,11 +1359,17 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
                         continue
 
         status_counts = {status: 0 for status in PENDING_STATUSES}
+        corrected_count = 0
         latest_disposition = {}
         for event in disposition_events:
-            if event.get("event") != "DISPOSITION_RECORDED" or event.get("status") not in status_counts:
+            # A correction is an adjudication action too: it refreshes recency and is counted
+            # on its own, so it neither hides a stale item nor inflates the original tallies.
+            if event.get("event") == "DISPOSITION_CORRECTED":
+                corrected_count += 1
+            elif event.get("event") != "DISPOSITION_RECORDED" or event.get("status") not in status_counts:
                 continue
-            status_counts[event["status"]] += 1
+            else:
+                status_counts[event["status"]] += 1
             pending_key = str(event.get("pending_path") or "")
             if not pending_key and event.get("source_name"):
                 pending_key = str((Path(event["_observability_dir"]) / event["source_name"]).resolve())
@@ -1259,7 +1406,7 @@ def check_loop_health(observability_dir, episodic_index, digests_dir,
             "pending-extraction health: "
             f"active={len(pending_items)}, legacy={legacy_count}, claimed={claimed_active}, "
             f"QUALIFIED={status_counts['QUALIFIED']}, NO_SIGNAL={status_counts['NO_SIGNAL']}, "
-            f"UNRESOLVED={status_counts['UNRESOLVED']}, oldest_unresolved={oldest_age} 天"
+            f"UNRESOLVED={status_counts['UNRESOLVED']}, CORRECTED={corrected_count}, oldest_unresolved={oldest_age} 天"
         )
         if stale_unattended:
             oldest_path, age_days, action_age = max(stale_unattended, key=lambda item: item[1])
@@ -1669,6 +1816,8 @@ def main() -> int:
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "pending-disposition":
         raise SystemExit(pending_disposition_cli(sys.argv[2:]))
+    if len(sys.argv) > 1 and sys.argv[1] == "pending-correction":
+        raise SystemExit(pending_correction_cli(sys.argv[2:]))
     try:
         raise SystemExit(main())
     except SystemExit:

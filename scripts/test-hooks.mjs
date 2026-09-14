@@ -434,6 +434,47 @@ function prepareAttestedSwitch(root, sid, target, operation = 'switch', binding 
   console.log('PASS PENDING-001 Stop pending 含完整 locator、中性裁决语言与合法 outcomes');
 }
 
+// ── PENDING-006：Stop 未带 transcript_path 时按 session id 定位原会话，不再误写 unavailable ──
+// 2026-09-10 实证：58 条 pending 写着 unavailable，其中 28 条按文件名里的 session id 仍能找到原文，
+// 却被当作"无证据"批量处置。定位不到时仍须显式 unavailable，绝不猜路径。
+{
+  const esc = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const home = realpathSync(mkdtempSync(join(tmpdir(), 'pending-locator-home-')));
+  const capture = (sid, harness, extraEnv = {}) => {
+    const root = makeFixture();
+    writeFileSync(join(root, '.claude', `.session-edit-count-${sid}`), '1');
+    runNode(sessionSyncHook, root, {
+      env: { CLAUDE_PROJECT_DIR: root, LUCA_ACTUAL_HARNESS: harness, HOME: home, ...extraEnv },
+      input: JSON.stringify({ session_id: sid }),
+    });
+    return readFileSync(join(root, '.claude', 'observability', `pending-extraction-${sid}.md`), 'utf8');
+  };
+
+  const claudeSid = 'c1a0de00-0000-4000-8000-000000000001';
+  const claudeProject = join(home, '.claude', 'projects', '-Users-fixture-repo');
+  mkdirSync(claudeProject, { recursive: true });
+  writeFileSync(join(home, '.claude', 'projects', 'stray-file'), 'not a project directory');
+  const claudeTranscript = join(claudeProject, `${claudeSid}.jsonl`);
+  writeFileSync(claudeTranscript, '{}\n');
+  assert.match(capture(claudeSid, 'claude'), new RegExp(`^> Transcript-Path: ${esc(claudeTranscript)}$`, 'm'),
+    'Claude 会话缺 transcript_path 时须按 session id 在 projects 下定位');
+
+  const codexSid = '01a0f000-0000-7000-8000-000000000002';
+  const codexHome = join(home, 'codex-home');
+  const day = join(codexHome, 'sessions', '2026', '09', '11');
+  mkdirSync(day, { recursive: true });
+  writeFileSync(join(codexHome, 'sessions', '2026', '.DS_Store'), 'stray');
+  const rollout = join(day, `rollout-2026-09-11T00-00-00-${codexSid}.jsonl`);
+  writeFileSync(rollout, '{}\n');
+  assert.match(capture(codexSid, 'codex', { CODEX_HOME: codexHome }), new RegExp(`^> Transcript-Path: ${esc(rollout)}$`, 'm'),
+    'Codex 会话缺 transcript_path 时须按 session id 在 rollout 日期目录下定位，且不被零散文件打断');
+
+  const lostSid = '01a0f000-0000-7000-8000-00000000dead';
+  assert.match(capture(lostSid, 'codex', { CODEX_HOME: codexHome }), /^> Transcript-Path: unavailable$/m,
+    '定位不到的 session 必须显式 unavailable，绝不猜路径');
+  console.log('PASS PENDING-006 缺 transcript_path 时按 session id 定位原会话，定位不到仍显式 unavailable');
+}
+
 // ── HOOK-001（critical）：显式旧强制模式仍保留纯 JSON block 契约 ──
 {
   const root = makeFixture({ turns: 5, edits: 1, activeProject: 'testproj' });
@@ -976,6 +1017,90 @@ function prepareAttestedSwitch(root, sid, target, operation = 'switch', binding 
   const qualifiedRemoved = events.findIndex(e => e.event === 'ACTIVE_REMOVED' && e.status === 'QUALIFIED');
   assert.ok(qualifiedRecord >= 0 && qualifiedRemoved > qualifiedRecord, 'QUALIFIED 也必须先记 evidence 再移出 active');
   console.log('PASS PENDING-003 QUALIFIED/NO_SIGNAL/UNRESOLVED 显式、可审计且保留 bytes');
+}
+
+// ── PENDING-005：错误处置只追加地更正；更正为 UNRESOLVED 恢复原字节，且旧决定不再阻挡再处置 ──
+{
+  const root = makeFixture({ statuses: [] });
+  const obsDir = join(root, '.claude', 'observability');
+  const manifest = join(obsDir, 'pending-extraction-dispositions.jsonl');
+  const bodyFor = (sid) => [
+    '# Pending Experience Adjudication', '',
+    `> Session-ID: ${sid}`,
+    '> Captured-At: 2026-09-02T00:00:00.000Z',
+    '> Topic: correction-topic',
+    '> Project: NO_PIN',
+    '> Harness: codex',
+    '> Transcript-Path: unavailable', '',
+    `CORRECTION_BYTES_SENTINEL ${sid}`, '',
+  ].join('\n');
+  const runCorrection = (pendingPath, dispositionId, status, evidence, reason) => spawnSync('python3', [
+    dailyGovernanceScript, 'pending-correction',
+    '--pending', pendingPath, '--disposition-id', dispositionId, '--status', status,
+    '--evidence', evidence, '--reason', reason, '--actor', 'test-agent',
+  ], { cwd: root, encoding: 'utf8', env: { ...process.env, MEMORY_ROOT: root } });
+  const lastJson = (result) => JSON.parse(result.stdout.trim().split('\n').pop());
+  const dispose = (pendingPath, status, evidence) => {
+    const result = runPendingDisposition(root, pendingPath, status, evidence);
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    return lastJson(result).disposition_id;
+  };
+
+  // A wrong NO_SIGNAL corrected to QUALIFIED: evidence is appended and the original record survives.
+  const pendingA = join(obsDir, 'pending-extraction-correction-a.md');
+  writeFileSync(pendingA, bodyFor('correction-a'));
+  const idA = dispose(pendingA, 'NO_SIGNAL', 'transcript was believed to be unlocatable');
+  const beforeCorrection = readFileSync(manifest, 'utf8');
+  const correctA = () => runCorrection(pendingA, idA, 'QUALIFIED',
+    'transcript located by session id; the in-session correction landed',
+    'first disposition wrongly claimed the transcript was unlocatable');
+  const qualified = correctA();
+  assert.equal(qualified.status, 0, qualified.stderr || qualified.stdout);
+  const afterCorrection = readFileSync(manifest, 'utf8');
+  assert.ok(afterCorrection.startsWith(beforeCorrection), 'a correction must append, never rewrite earlier evidence');
+  const correctionEvent = afterCorrection.trim().split('\n').map(line => JSON.parse(line))
+    .find(event => event.event === 'DISPOSITION_CORRECTED' && event.corrects === idA);
+  assert.ok(correctionEvent, 'the correction must be recorded as its own event');
+  assert.equal(correctionEvent.status, 'QUALIFIED');
+  assert.equal(correctionEvent.previous_status, 'NO_SIGNAL');
+  assert.equal(existsSync(pendingA), false, 'a non-UNRESOLVED correction keeps the evidence archived');
+  const rerun = correctA();
+  assert.equal(rerun.status, 0, rerun.stderr || rerun.stdout);
+  assert.equal(lastJson(rerun).already_complete, true);
+  assert.equal(readFileSync(manifest, 'utf8'), afterCorrection, 'an identical re-run must not append again');
+
+  // A wrong NO_SIGNAL corrected to UNRESOLVED: exact bytes return to active and can be re-disposed.
+  const pendingB = join(obsDir, 'pending-extraction-correction-b.md');
+  writeFileSync(pendingB, bodyFor('correction-b'));
+  const originalB = readFileSync(pendingB);
+  const idB = dispose(pendingB, 'NO_SIGNAL', 'wrongly judged to be without evidence');
+  const unresolved = runCorrection(pendingB, idB, 'UNRESOLVED',
+    'the rule landing can only be verified from the owning project session',
+    'landing was never verified before disposal');
+  assert.equal(unresolved.status, 0, unresolved.stderr || unresolved.stdout);
+  assert.equal(lastJson(unresolved).restored, true);
+  assert.deepEqual(readFileSync(pendingB), originalB, 'restored evidence must be byte-identical');
+  const redisposed = runPendingDisposition(root, pendingB, 'QUALIFIED', 'landing verified inside the owning project session');
+  assert.equal(redisposed.status, 0, `a superseded decision must not block re-disposal: ${redisposed.stderr || redisposed.stdout}`);
+  assert.equal(existsSync(pendingB), false);
+
+  // Refusals: an unknown target, and archived bytes that no longer match their recorded hash.
+  const unknown = runCorrection(pendingA, 'PD-does-not-exist', 'NO_SIGNAL', 'no such disposition exists', 'probing an unknown target');
+  assert.notEqual(unknown.status, 0, 'correcting an unknown disposition must fail');
+  const pendingC = join(obsDir, 'pending-extraction-correction-c.md');
+  writeFileSync(pendingC, bodyFor('correction-c'));
+  const idC = dispose(pendingC, 'NO_SIGNAL', 'disposed before its archive is tampered with');
+  const archiveC = readdirSync(join(obsDir, 'pending-extraction-resolved')).find(name => name.includes(idC));
+  writeFileSync(join(obsDir, 'pending-extraction-resolved', archiveC), 'TAMPERED');
+  const manifestBeforeTamper = readFileSync(manifest, 'utf8');
+  const tampered = runCorrection(pendingC, idC, 'UNRESOLVED', 'restoring bytes changed after archive', 'tamper probe for hash check');
+  assert.notEqual(tampered.status, 0, 'a correction must refuse archived bytes that do not match their recorded hash');
+  assert.equal(existsSync(pendingC), false, 'a refused correction must not restore anything');
+  assert.equal(readFileSync(manifest, 'utf8'), manifestBeforeTamper, 'a refused correction must append nothing');
+
+  const health = checkPendingHealth(root);
+  assert.ok(health.notes.some(note => /CORRECTED=2/.test(note)), 'loop health must count corrections separately');
+  console.log('PASS PENDING-005 corrections are append-only, restore exact bytes, and never leave a decision stuck');
 }
 
 // ── PENDING-004：loop health 看 age/claim/disposition，legacy 计入；不再按 session 量制造结构性报警 ──
@@ -1803,6 +1928,26 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   assert.equal(stateB.event_control.candidates[0].intent.kind, 'turn');
   assert.doesNotMatch(rB.stdout, /并行 session 保留/, '不得残留旧继承措辞');
   console.log('PASS STICKY-008b 点名只排队 switch event，未点名不从 display symlink auto-adopt');
+}
+
+// STICKY-008h（2026-09-11）：harness 合成消息（跨 session 消息 / 后台任务通知）即使点名项目，也不得产出
+// 可执行的切换事务或 switch 意图——它在原生记录里永远不是人类回合，只会误导 agent 替别人切项目。
+// 对照组是紧随其后的 STICKY-008c：同一句话由用户本人说出时仍 emit SWITCH_ONLY。
+{
+  const root = makeFixture({ activeProject: 'projA' });
+  const r = runNode(routeGuardHook, root, {
+    env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA,projB' },
+    input: JSON.stringify({
+      session_id: 'sess-H',
+      prompt: '<cross-session-message from="uds:/tmp/cc-socks/1.sock" from-name="peer" from-mode="prompting">\n继续 projB 的任务\n</cross-session-message>',
+    }),
+  });
+  assert.doesNotMatch(r.stdout, /SWITCH_ONLY|project\.sh (switch|new)/, 'harness 合成消息不得 emit 切换事务');
+  assert.doesNotMatch(r.stdout, /别名候选/, 'harness 合成消息不得产出别名候选');
+  assert.match(r.stdout, /harness 合成消息/, '应明示这是 harness 合成消息且不授予项目权限');
+  const pin = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-H'), 'utf8'));
+  assert.equal(pin.event_control.candidates[0].intent.kind, 'turn', '只能排队 turn 意图，不得排队 switch 意图');
+  console.log('PASS STICKY-008h harness 合成消息点名项目也不产切换事务或 switch 意图');
 }
 
 // STICKY-008c（命名即切换 2026-07-06）：本 session 主动切到具名项目 → emit 立即切换（无"确认后"）；

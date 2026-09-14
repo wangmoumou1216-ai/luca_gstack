@@ -1025,3 +1025,550 @@ lifecycleCheck('a blocked Stop cannot be replayed through repeated text; a disti
     rmSync(fx.root, { recursive: true, force: true });
   }
 });
+
+// ── Harness-synthesised prompts must not wedge the candidate queue (2026-09-10) ──
+// Background-task notifications and cross-session messages reach UserPromptSubmit and
+// are queued like a user turn, but the native source records them only as
+// queue-operation/attachment rows, never as a root human event. Before the fix one such
+// candidate made every later PreToolUse attestation throw, permanently closing project
+// authority for the session. The Claude row shapes below are copied from a real
+// transcript rather than imagined (the recognizer lesson recorded in commit 9cb54cf).
+
+function withAttestationTestEnv(operation) {
+  const before = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    return operation();
+  } finally {
+    if (before === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = before;
+  }
+}
+
+function sha256Utf8(text) {
+  return createHash('sha256').update(Buffer.from(text, 'utf8')).digest('hex');
+}
+
+function expectCode(label, expected, operation) {
+  let caught;
+  try { operation(); } catch (error) { caught = error; }
+  assert.ok(caught, `${label}: expected a ${expected} rejection but attestation succeeded`);
+  assert.equal(caught.code, expected, `${label}: wrong rejection\n${caught?.stack || caught}`);
+  return caught;
+}
+
+const TASK_NOTIFICATION = '<task-notification>\n<task-id>bfixture1</task-id>\n<status>completed</status>\n</task-notification>';
+const CROSS_SESSION = '<cross-session-message from="uds:/tmp/cc-socks/1.sock" from-name="peer" from-mode="prompting">\nhandover note\n</cross-session-message>';
+
+function makeClaudeQueueFixture(label) {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), `e3-claude-queue-${label}-`)));
+  const gstack = join(root, 'gstack');
+  const projects = join(root, 'projects');
+  const session = randomUUID();
+  const transcript = join(root, `${session}.jsonl`);
+  mkdirSync(join(gstack, '.claude'), { recursive: true });
+  mkdirSync(projects, { recursive: true });
+  writeFileSync(transcript, `${JSON.stringify({
+    parentUuid: null, isSidechain: false, type: 'system', subtype: 'informational',
+    content: 'fixture session start', isMeta: false, timestamp: new Date().toISOString(),
+    uuid: randomUUID(), level: 'info', userType: 'external', entrypoint: 'cli',
+    cwd: gstack, sessionId: session,
+  })}\n`);
+  withAttestationTestEnv(() => initializeProjectEventFence({
+    gstackRoot: gstack, projectsRoot: projects, sessionId: session, harness: 'claude',
+    cwd: gstack, transcriptPath: transcript,
+  }));
+  return {
+    root, gstack, projects, session, transcript,
+    statePath: join(gstack, '.claude', `.session-project-${session}`),
+  };
+}
+
+function queueClaude(fx, prompt) {
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: fx.session,
+    boundaryId: fx.session, cwd: fx.gstack, harness: 'claude', prompt, intent: { kind: 'turn' },
+  });
+}
+
+function appendClaudeSynthetic(fx, prompt) {
+  const at = new Date().toISOString();
+  appendFileSync(fx.transcript, [
+    { type: 'queue-operation', operation: 'enqueue', timestamp: at, sessionId: fx.session, content: prompt },
+    {
+      parentUuid: randomUUID(), isSidechain: false, type: 'attachment', uuid: randomUUID(), timestamp: at,
+      userType: 'external', entrypoint: 'cli', cwd: fx.gstack, sessionId: fx.session,
+      session_id: fx.session, version: 'fixture',
+      attachment: { type: 'queued_command', prompt, commandMode: 'prompt', timestamp: at },
+    },
+    { type: 'queue-operation', operation: 'remove', timestamp: at, sessionId: fx.session, content: prompt, reason: 'dequeued' },
+  ].map(row => JSON.stringify(row)).join('\n') + '\n');
+}
+
+function appendClaudeHuman(fx, prompt) {
+  const uuid = randomUUID();
+  appendFileSync(fx.transcript, `${JSON.stringify({
+    parentUuid: randomUUID(), isSidechain: false, promptId: randomUUID(), type: 'user',
+    message: { role: 'user', content: prompt }, uuid, timestamp: new Date().toISOString(),
+    permissionMode: 'default', userType: 'external', entrypoint: 'cli', cwd: fx.gstack,
+    sessionId: fx.session, version: 'fixture', gitBranch: 'main',
+    origin: { kind: 'human' }, promptSource: 'typed',
+  })}\n`);
+  return uuid;
+}
+
+function observeClaude(fx) {
+  return withAttestationTestEnv(() => attestPendingProjectEvent({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: fx.session,
+    boundaryId: fx.session, cwd: fx.gstack, observation: 'pre-tool', transcriptPath: fx.transcript,
+  }));
+}
+
+lifecycleCheck('poisoned queue: a Codex candidate that never became a user turn is skipped once a later turn attests', () => {
+  const fx = makeLifecycleFixture('poison-codex');
+  try {
+    queueLifecycle(fx, TASK_NOTIFICATION);
+    const real = 'real user turn after a background notification';
+    queueLifecycle(fx, real);
+    const native = nativePair(fx, real);
+    const result = observeLifecycle(fx);
+    assert.equal(result.event.native_id, native.sourceId, 'authority must come from the real turn');
+    assert.equal(result.state.event_control.candidates.length, 0);
+    assert.deepEqual(result.unwitnessed.map(item => item.prompt_sha256), [sha256Utf8(TASK_NOTIFICATION)]);
+    assert.equal(result.state.event_control.consumed_events.length, 1,
+      'a skipped candidate must never be recorded as a consumed native event');
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: a Claude cross-session message recorded only as queue/attachment rows is skipped once a later turn attests', () => {
+  const fx = makeClaudeQueueFixture('cross-session');
+  try {
+    queueClaude(fx, CROSS_SESSION);
+    appendClaudeSynthetic(fx, CROSS_SESSION);
+    const real = '继续';
+    queueClaude(fx, real);
+    const uuid = appendClaudeHuman(fx, real);
+    const result = observeClaude(fx);
+    assert.equal(result.event.native_id, uuid, 'authority must come from the real human row');
+    assert.equal(result.state.event_control.candidates.length, 0);
+    assert.deepEqual(result.unwitnessed.map(item => item.prompt_sha256), [sha256Utf8(CROSS_SESSION)]);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: consecutive synthetic prompts are all skipped and none grants authority', () => {
+  const fx = makeClaudeQueueFixture('consecutive');
+  try {
+    queueClaude(fx, TASK_NOTIFICATION);
+    appendClaudeSynthetic(fx, TASK_NOTIFICATION);
+    queueClaude(fx, CROSS_SESSION);
+    appendClaudeSynthetic(fx, CROSS_SESSION);
+    const real = 'real turn after two synthetic prompts';
+    queueClaude(fx, real);
+    const uuid = appendClaudeHuman(fx, real);
+    const result = observeClaude(fx);
+    assert.equal(result.event.native_id, uuid);
+    assert.deepEqual(result.unwitnessed.map(item => item.prompt_sha256),
+      [sha256Utf8(TASK_NOTIFICATION), sha256Utf8(CROSS_SESSION)]);
+    assert.equal(result.state.event_control.consumed_events.length, 1);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: a synthetic final candidate still fails closed, and the next real turn heals the queue', () => {
+  const fx = makeClaudeQueueFixture('final-synthetic');
+  try {
+    queueClaude(fx, CROSS_SESSION);
+    appendClaudeSynthetic(fx, CROSS_SESSION);
+    const before = readFileSync(fx.statePath);
+    expectCode('synthetic final candidate', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before, 'a rejected attestation must not publish state');
+    const real = 'the user types again';
+    queueClaude(fx, real);
+    const uuid = appendClaudeHuman(fx, real);
+    const healed = observeClaude(fx);
+    assert.equal(healed.event.native_id, uuid);
+    assert.deepEqual(healed.unwitnessed.map(item => item.prompt_sha256), [sha256Utf8(CROSS_SESSION)]);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: a queue holding only synthetic prompts is rejected without publishing', () => {
+  const fx = makeClaudeQueueFixture('only-synthetic');
+  try {
+    queueClaude(fx, TASK_NOTIFICATION);
+    appendClaudeSynthetic(fx, TASK_NOTIFICATION);
+    queueClaude(fx, CROSS_SESSION);
+    appendClaudeSynthetic(fx, CROSS_SESSION);
+    const before = readFileSync(fx.statePath);
+    expectCode('only synthetic candidates', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: an integrity failure on an earlier candidate is never skipped', () => {
+  const fx = makeLifecycleFixture('poison-integrity');
+  try {
+    const tampered = 'turn whose anchor text was altered';
+    queueLifecycle(fx, tampered);
+    appendFileSync(fx.rollout, [
+      { type: 'response_item', payload: {
+        type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: tampered }],
+        internal_chat_message_metadata_passthrough: { turn_id: fx.boundary },
+      } },
+      { type: 'event_msg', payload: {
+        type: 'item_completed', thread_id: fx.session, turn_id: fx.boundary,
+        item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: 'ALTERED ANCHOR TEXT' }] },
+      } },
+    ].map(row => JSON.stringify(row)).join('\n') + '\n');
+    const real = 'real turn after the tampered one';
+    queueLifecycle(fx, real);
+    nativePair(fx, real);
+    const before = readFileSync(fx.statePath);
+    let caught;
+    try { observeLifecycle(fx); } catch (error) { caught = error; }
+    assert.ok(caught, 'an integrity failure must reject the whole queue rather than be skipped');
+    assert.notEqual(caught.details?.next_native_turn_differs, true,
+      `an integrity failure must not carry the skip marker (${caught.code})`);
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: a malformed earlier candidate is never skipped', () => {
+  const fx = makeLifecycleFixture('poison-schema');
+  try {
+    queueLifecycle(fx, 'first queued turn');
+    const real = 'second queued turn';
+    queueLifecycle(fx, real);
+    nativePair(fx, real);
+    const state = JSON.parse(readFileSync(fx.statePath, 'utf8'));
+    state.event_control.candidates[0].cwd = 'relative/not-absolute';
+    writeFileSync(fx.statePath, `${JSON.stringify(state)}\n`);
+    const before = readFileSync(fx.statePath);
+    let caught;
+    try { observeLifecycle(fx); } catch (error) { caught = error; }
+    assert.ok(caught, 'a malformed candidate must reject the whole queue');
+    assert.ok(['CANDIDATE_SCHEMA', 'STATE_SCHEMA'].includes(caught.code), `unexpected rejection ${caught?.code}`);
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: a re-queued copy of an already consumed turn grants nothing when skipped', () => {
+  const fx = makeLifecycleFixture('poison-replay');
+  try {
+    const first = 'turn that is attested exactly once';
+    queueLifecycle(fx, first);
+    const firstNative = nativePair(fx, first);
+    observeLifecycle(fx);
+    queueLifecycle(fx, first);
+    const real = 'the next real turn';
+    queueLifecycle(fx, real);
+    const realNative = nativePair(fx, real);
+    const result = observeLifecycle(fx);
+    assert.equal(result.event.native_id, realNative.sourceId);
+    const consumedIds = result.state.event_control.consumed_events.map(item => item.native_id);
+    assert.equal(consumedIds.filter(id => id === firstNative.sourceId).length, 1,
+      'a consumed turn must never be consumed twice');
+    assert.equal(result.unwitnessed.length, 1);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('poisoned queue: a final candidate that meets a different human turn still fails closed with MISMATCH', () => {
+  const fx = makeClaudeQueueFixture('final-meets-other-turn');
+  try {
+    // A real human turn whose candidate never reached the queue sits first after the
+    // cursor. The final candidate must not be skipped past it: that would publish an
+    // empty attestation, or grant authority to a turn the source never shows.
+    appendClaudeHuman(fx, 'a human turn that was never queued');
+    const queued = 'the queued turn';
+    queueClaude(fx, queued);
+    appendClaudeHuman(fx, queued);
+    const before = readFileSync(fx.statePath);
+    const error = expectCode('final candidate behind an unqueued human turn', 'MISMATCH', () => observeClaude(fx));
+    assert.equal(error.details?.next_native_turn_differs, true,
+      'this must be the marked shape, so only the final-candidate guard keeps the queue closed');
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+// Loaded as a namespace so a missing export fails only the check below, not the whole file.
+const projectSubstrate = await import('../.claude/hooks/lib/project-substrate.mjs');
+
+lifecycleCheck('deactivate re-fence refuses when the session source is no longer visible, publishing nothing', () => {
+  const fx = makeLifecycleFixture('refence-source-absent');
+  try {
+    const prompt = 'turn attested before the rollout disappears';
+    queueLifecycle(fx, prompt);
+    nativePair(fx, prompt);
+    observeLifecycle(fx);
+    assert.equal(typeof projectSubstrate.refenceProjectStateForDeactivate, 'function',
+      'project-substrate must export the deactivate re-fence');
+    // A fence captured from an absent source has no cursor. Publishing it would make every
+    // surviving history row look new once the source reappears, re-locking the session.
+    rmSync(fx.rollout);
+    const before = readFileSync(fx.statePath);
+    const error = expectCode('re-fence without a visible source', 'SOURCE_NOT_VISIBLE',
+      () => withAttestationTestEnv(() => projectSubstrate.refenceProjectStateForDeactivate({
+        gstackRoot: fx.gstack, sessionId: fx.session, expectedRaw: before, codexHome: fx.codexHome,
+      })));
+    assert.match(error.message, /cannot rebuild the native fence/);
+    assert.deepEqual(readFileSync(fx.statePath), before, 'a refused re-fence must publish nothing');
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+// ── Slash-command human rows must not wedge the queue (2026-09-11, red-team finding F1) ──
+// Claude records a slash-command turn as a human row with origin.kind 'human' and no promptSource;
+// its text is the command expansion. The row shape below is copied from real transcripts (runtime
+// 2.1.259 and 2.1.261, `/wait-what` and `/loop`). Such a row can never attest, and validating it made
+// every later candidate throw PROVENANCE_MISMATCH, so one slash command permanently cost a pinned
+// session its project authority.
+
+function appendClaudeSlashCommand(fx, name) {
+  const uuid = randomUUID();
+  appendFileSync(fx.transcript, `${JSON.stringify({
+    parentUuid: randomUUID(), isSidechain: false, promptId: randomUUID(), type: 'user',
+    message: { role: 'user', content: `<command-message>${name}</command-message>\n<command-name>/${name}</command-name>` },
+    uuid, timestamp: new Date().toISOString(), userType: 'external', entrypoint: 'cli', cwd: fx.gstack,
+    sessionId: fx.session, version: '2.1.261', gitBranch: 'main', origin: { kind: 'human' },
+  })}\n`);
+  return uuid;
+}
+
+lifecycleCheck('slash command: a slash-command turn queued before a real turn is skipped and the real turn attests', () => {
+  const fx = makeClaudeQueueFixture('slash-before-real');
+  try {
+    queueClaude(fx, '/wait-what');
+    appendClaudeSlashCommand(fx, 'wait-what');
+    const real = 'the real turn after a slash command';
+    queueClaude(fx, real);
+    const uuid = appendClaudeHuman(fx, real);
+    const result = observeClaude(fx);
+    assert.equal(result.event.native_id, uuid, 'authority must come from the real human turn');
+    assert.deepEqual(result.unwitnessed.map(item => item.prompt_sha256), [sha256Utf8('/wait-what')]);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('slash command: a slash command after the final turn still revokes authority as an intervening user event', () => {
+  const fx = makeClaudeQueueFixture('slash-after-real');
+  try {
+    const real = 'a turn followed by a slash command';
+    queueClaude(fx, real);
+    appendClaudeHuman(fx, real);
+    appendClaudeSlashCommand(fx, 'loop');
+    const before = readFileSync(fx.statePath);
+    expectCode('slash command after the final turn', 'INTERVENING_USER', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before, 'a revoked attestation must publish nothing');
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('slash command: a queue holding only a slash-command turn fails closed', () => {
+  const fx = makeClaudeQueueFixture('slash-only');
+  try {
+    queueClaude(fx, '/loop');
+    appendClaudeSlashCommand(fx, 'loop');
+    const before = readFileSync(fx.statePath);
+    expectCode('only a slash-command turn', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+// Trailing injections cannot authorize or disprove delayed human candidates.
+// Deliberately wait for a later human turn; eager strip caused a byte-collision race.
+
+const USAGE_LIMIT_RESET = 'Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work that is already complete.';
+
+function appendClaudeInjection(fx, prompt) {
+  appendFileSync(fx.transcript, `${JSON.stringify({
+    parentUuid: randomUUID(), isSidechain: false, promptId: randomUUID(), type: 'user',
+    message: { role: 'user', content: prompt }, isMeta: true, uuid: randomUUID(),
+    timestamp: new Date().toISOString(), userType: 'external', entrypoint: 'cli', cwd: fx.gstack,
+    sessionId: fx.session, version: '2.1.267', gitBranch: 'main',
+    origin: { kind: 'auto-continuation' }, promptSource: 'system',
+  })}\n`);
+}
+
+lifecycleCheck('harness injection: a continuation after a real prompt grants nothing until the next real prompt', () => {
+  const fx = makeClaudeQueueFixture('injection-after-real');
+  try {
+    const real = 'muse 继续';
+    queueClaude(fx, real);
+    appendClaudeHuman(fx, real);
+    queueClaude(fx, USAGE_LIMIT_RESET);
+    appendClaudeInjection(fx, USAGE_LIMIT_RESET);
+    const before = readFileSync(fx.statePath);
+    expectCode('trailing injection', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+    queueClaude(fx, 'next real prompt');
+    const uuid = appendClaudeHuman(fx, 'next real prompt');
+    const result = observeClaude(fx);
+    assert.equal(result.event.native_id, uuid, 'authority must come from the next real prompt');
+    assert.equal(result.state.event_control.candidates.length, 0);
+    assert.deepEqual(result.unwitnessed.map(item => [item.prompt_sha256, item.reason]),
+      [[sha256Utf8(USAGE_LIMIT_RESET), 'next-native-turn-differs']]);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('harness injection: an injection after a turn has ended grants nothing, remains pending, and the next real prompt heals', () => {
+  const fx = makeClaudeQueueFixture('injection-after-turn');
+  try {
+    const real = 'a turn that has already been attested';
+    queueClaude(fx, real);
+    appendClaudeHuman(fx, real);
+    const first = observeClaude(fx);
+    queueClaude(fx, USAGE_LIMIT_RESET);
+    appendClaudeInjection(fx, USAGE_LIMIT_RESET);
+    expectCode('injection after the turn ended', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    const after = JSON.parse(readFileSync(fx.statePath, 'utf8'));
+    assert.equal(after.event_control.candidates.length, 1, 'a non-human echo cannot disprove a delayed human candidate');
+    assert.notEqual(after.state, 'TURN_ACTIVE', 'clearing injections must never grant authority');
+    assert.equal(after.event_control.current?.status, 'closed', 'queueing the injection already ended the previous turn');
+    assert.equal(after.event_control.consumed_events.length, first.state.event_control.consumed_events.length);
+    const next = 'the user comes back and types again';
+    queueClaude(fx, next);
+    const uuid = appendClaudeHuman(fx, next);
+    assert.equal(observeClaude(fx).event.native_id, uuid, 'the next real prompt must attest normally');
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('harness injection: a human prompt after the injection still revokes authority', () => {
+  const fx = makeClaudeQueueFixture('injection-then-human');
+  try {
+    const real = 'the prompt before the injection';
+    queueClaude(fx, real);
+    appendClaudeHuman(fx, real);
+    queueClaude(fx, USAGE_LIMIT_RESET);
+    appendClaudeInjection(fx, USAGE_LIMIT_RESET);
+    appendClaudeHuman(fx, 'the user speaks again before any tool call');
+    const before = readFileSync(fx.statePath);
+    expectCode('human prompt after the injection', 'MISMATCH', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before, 'a revoked attestation must publish nothing');
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('harness injection: a non-human echo of a real prompt never gets the real prompt dropped', () => {
+  const fx = makeClaudeQueueFixture('injection-echo');
+  try {
+    const real = 'a real prompt that someone else echoed';
+    queueClaude(fx, real);
+    appendClaudeInjection(fx, real);
+    const before = readFileSync(fx.statePath);
+    expectCode('human echo before human flush', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before, 'non-human byte equality cannot discard a delayed human candidate');
+    const uuid = appendClaudeHuman(fx, real);
+    const result = observeClaude(fx);
+    assert.equal(result.event.native_id, uuid, 'a candidate with a matching human row must attest, not be dropped');
+    assert.equal(result.unwitnessed.length, 0);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+for (const shape of ['attachment', 'slash', 'non-human']) {
+  lifecycleCheck(`bounded queue: 40 ${shape} candidates cannot keep the next real prompt out`, () => {
+    const fx = makeClaudeQueueFixture(`capacity-${shape}`);
+    try {
+      const before = JSON.parse(readFileSync(fx.statePath, 'utf8')).event_control;
+      for (let index = 0; index < 40; index += 1) {
+        const prompt = `synthetic ${shape} ${index}`;
+        queueClaude(fx, prompt);
+        if (shape === 'attachment') appendClaudeSynthetic(fx, prompt);
+        else if (shape === 'slash') appendClaudeSlashCommand(fx, `fixture-${index}`);
+        else appendClaudeInjection(fx, prompt);
+      }
+      const pending = JSON.parse(readFileSync(fx.statePath, 'utf8'));
+      assert.equal(pending.event_control.candidates.length, 32);
+      assert.deepEqual(pending.event_control.cursor, before.cursor, 'capacity eviction must not advance cursor');
+      assert.deepEqual(pending.event_control.consumed_events, before.consumed_events);
+      assert.equal(pending.state, 'NO_PIN');
+      const real = 'new human after bounded poison';
+      queueClaude(fx, real);
+      const uuid = appendClaudeHuman(fx, real);
+      const result = observeClaude(fx);
+      assert.equal(result.event.native_id, uuid);
+      assert.equal(result.state.event_control.consumed_events.length, 1);
+    } finally { rmSync(fx.root, { recursive: true, force: true }); }
+  });
+}
+
+lifecycleCheck('bounded queue: evicting a real candidate cannot silently skip its orphan human row', () => {
+  const fx = makeClaudeQueueFixture('capacity-orphan');
+  try {
+    queueClaude(fx, 'a real candidate evicted later');
+    appendClaudeHuman(fx, 'a real candidate evicted later');
+    for (let index = 0; index < 40; index += 1) queueClaude(fx, `poison ${index}`);
+    queueClaude(fx, 'next real');
+    appendClaudeHuman(fx, 'next real');
+    const before = readFileSync(fx.statePath);
+    expectCode('evicted orphan', 'MISMATCH', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('bounded queue: Codex accepts the next real prompt after 40 unwitnessed candidates', () => {
+  const fx = makeLifecycleFixture('capacity-codex');
+  try {
+    for (let index = 0; index < 40; index += 1) queueLifecycle(fx, `poison ${index}`);
+    queueLifecycle(fx, 'new Codex human');
+    const native = nativePair(fx, 'new Codex human');
+    const result = observeLifecycle(fx);
+    assert.equal(result.event.native_id, native.sourceId);
+    assert.equal(result.state.event_control.consumed_events.length, 1);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('harness injection: an injection with no turn behind it grants nothing and remains pending', () => {
+  const fx = makeClaudeQueueFixture('injection-alone-no-current');
+  try {
+    queueClaude(fx, USAGE_LIMIT_RESET);
+    appendClaudeInjection(fx, USAGE_LIMIT_RESET);
+    expectCode('injection with no current turn', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    const after = JSON.parse(readFileSync(fx.statePath, 'utf8'));
+    assert.equal(after.event_control.candidates.length, 1, 'untrusted candidates wait without granting authority');
+    assert.equal(after.event_control.consumed_events.length, 0, 'an injection must never be consumed');
+    assert.notEqual(after.state, 'TURN_ACTIVE');
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('harness injection: an injection not yet written to the source is not dropped on a guess', () => {
+  const fx = makeClaudeQueueFixture('injection-not-flushed');
+  try {
+    queueClaude(fx, USAGE_LIMIT_RESET);
+    const before = readFileSync(fx.statePath);
+    expectCode('unflushed injection', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});

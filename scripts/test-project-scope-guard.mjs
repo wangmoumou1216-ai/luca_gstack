@@ -938,6 +938,94 @@ check('IDENTITY-PATH-024c pinned rg rewrites only the path operand and preserves
   assert.equal(o.hookSpecificOutput.updatedInput.command,
     `rg -n "${protectedPattern}" ${abs(env, 'alpha', displayDir)}/review`);
 });
+for (const command of [
+  'echo "update docs .."',
+  "printf '%s\\n' 'docs/handoff ..'",
+  'git commit -m "update docs .."',
+  'grep -rnE "docs/handoff|.." scripts/',
+  "cat > /tmp/example.txt <<'TEXT'\ndocs/handoff\n..\nTEXT",
+]) {
+  check(`IDENTITY-DATA-001 no-pin literal data is not a path: ${command}`, () => {
+    const env = makeEnv();
+    const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(o, null, 'literal payload must remain byte-identical and executable');
+  });
+}
+
+for (const command of [
+  'echo harmless > docs/x.md',
+  "cat > docs/x.md <<'TEXT'\nsafe\nTEXT",
+  "python3 <<'TEXT'\nopen('../x').read()\nTEXT",
+  'echo "cat docs/x.md" | bash',
+  'printf -v X docs/x.md; cat "$X"',
+  'echo "$(cat docs/x.md)"',
+  'grep -rE safe docs/',
+  'git commit -- -m docs/x.md',
+  'git commit --file -m docs/x.md',
+  'git commit --pathspec-from-file -m docs/x.md',
+  'echo docs/*',
+  "printf '%s' docs/*",
+  'grep -e "$(cat docs/x.md)" scripts/',
+  "cat > /tmp/example.txt <<TEXT\n$(cat docs/x.md)\nTEXT",
+]) {
+  check(`IDENTITY-DATA-002 data masking preserves path/execution boundaries: ${command}`, () => {
+    const env = makeEnv({ nestedFramework: true });
+    const o = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(o?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+}
+
+check('IDENTITY-DATA-005 pinned rewrite preserves payload bytes while redirecting real operands', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  for (const payload of ['echo "docs .."', 'git commit -m "docs .."',
+    `git -C "${env.gstack}" commit -m "docs .."`,
+    "cat > /tmp/example.txt <<'TEXT'\ndocs ..\nTEXT\n",
+    "cat > /tmp/example.txt <<'TEXT'\nTEXT \ndocs ..\nTEXT\n"]) {
+    const separator = payload.endsWith('\n') ? '' : '; ';
+    const command = `${payload}${separator}mkdir docs/review`;
+    const output = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(output?.hookSpecificOutput?.updatedInput?.command,
+      `${payload}${separator}mkdir ${abs(env, 'alpha', 'docs')}/review`);
+  }
+});
+
+check('IDENTITY-DATA-006 git -C message is data but -- and --file operands are paths', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const message = `git -C "${env.gstack}" commit -m "update docs"`;
+  assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command: message } }), null);
+  for (const command of ['git commit -- -m docs/x.md', 'git commit --file -m docs/x.md']) {
+    const out = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command } });
+    assert.equal(out?.hookSpecificOutput?.updatedInput?.command,
+      command.replace('docs/x.md', `${abs(env, 'alpha', 'docs')}/x.md`));
+  }
+});
+
+check('IDENTITY-DATA-007 quoted metacharacters remain literal data on both sides of binding', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  for (const sid of ['NP', 'S']) {
+    for (const command of [
+      "echo 'docs/x|message'", "printf '%s' 'docs/x|message'", "git commit -m 'docs/x|message'",
+      "echo 'docs $literal `literal` < >'", 'echo "docs/x|message"',
+      "printf '%s' '-v' 'docs/x|message'",
+      "echo 'docs/x<<message'", "printf '%s' 'docs/x<<message'", "git commit -m 'docs/x<<message'",
+      'echo "docs/x<<message"', "rg 'docs/x<<message' scripts/", "grep -E 'docs/x<<message' scripts/",
+    ]) assert.equal(run(env, { session_id: sid, tool_name: 'Bash', tool_input: { command } }), null, command);
+  }
+});
+
+check('IDENTITY-DATA-003 single literal framework cd assignment is inspectable', () => {
+  const env = makeEnv({ nestedFramework: true });
+  const command = `TASKROOT="${env.gstack}"; cd "$TASKROOT" && ls`;
+  assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } }), null);
+});
+for (const command of ['cd "$TASKROOT" && ls', 'read TASKROOT; cd "$TASKROOT" && ls',
+  'TASKROOT="/tmp"; TASKROOT=".."; cd "$TASKROOT" && ls']) {
+  check(`IDENTITY-DATA-004 unresolved cd remains refused: ${command}`, () => {
+    const env = makeEnv({ nestedFramework: true });
+    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })?.hookSpecificOutput?.permissionDecision, 'deny');
+  });
+}
+
 check('IDENTITY-PATH-024d project-scope guard source is checkout-portable', () => {
   const source = readFileSync(HOOK, 'utf8');
   const localMachinePrefix = ['/Users', 'luca', 'Desktop'].join('/');

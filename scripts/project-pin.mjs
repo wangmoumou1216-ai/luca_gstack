@@ -26,6 +26,7 @@ import {
   inspectProjectStateLock,
   migrateLegacyProjectState,
   readProjectState,
+  refenceProjectStateForDeactivate,
   removeProjectStateCas,
   recoverProjectStateLock,
   quarantineLegacyProjectState,
@@ -312,7 +313,7 @@ function deactivateProject(sessionId) {
   const sid = sanitizeSessionId(sessionId);
   const { gstackRoot, projectsRoot } = roots();
   const current = readProjectState(gstackRoot, sid);
-  if (!['BOUND', 'TURN_CLOSED'].includes(current.value.state)) throw new Error(`deactivate requires a closed binding, got ${current.value.state}`);
+  if (!['NO_PIN', 'BOUND', 'TURN_CLOSED'].includes(current.value.state)) throw new Error(`deactivate requires NO_PIN or a closed binding, got ${current.value.state}`);
   const binding = validatedBindingForState(current.value, projectsRoot);
   const leaseToken = `${sid}-deactivate-${randomUUID()}`;
   const lease = acquireProjectLease({ root: gstackRoot, ownerToken: leaseToken, pid: process.pid });
@@ -321,18 +322,25 @@ function deactivateProject(sessionId) {
   let committedResult = null;
   let primaryError = null;
   try {
-    const expectedTargets = new Map([
+    // NO_PIN recovery must not consult or touch another session's display links.
+    const expectedTargets = new Map(binding ? [
       [join(gstackRoot, 'docs'), join(binding.realpath, 'docs')],
       [join(gstackRoot, '.claude', 'workflow-state.yaml'), join(binding.realpath, '.luca', 'workflow-state.yaml')],
       [join(gstackRoot, '.claude', 'current-topic.txt'), join(binding.realpath, '.luca', 'current-topic.txt')],
-    ]);
+    ] : []);
     for (const [path, target] of expectedTargets) {
       const snapshot = captureLink(path);
       snapshots.set(path, snapshot);
       if (snapshot.kind === 'symlink' && snapshot.target === target) { unlinkSync(path); touched = true; }
     }
-    removeProjectStateCas(gstackRoot, sid, current.raw);
-    committedResult = { state: 'NO_PIN', deactivated: binding.project };
+    // A fenced state is re-fenced instead of deleted so the session can still attest and
+    // switch; only a state with no fence to rebuild from is removed.
+    const refenced = refenceProjectStateForDeactivate({
+      gstackRoot, sessionId: sid, expectedRaw: current.raw, codexHome: process.env.CODEX_HOME || '',
+    });
+    if (!refenced) removeProjectStateCas(gstackRoot, sid, current.raw);
+    committedResult = { state: 'NO_PIN', deactivated: binding?.project || null,
+      recovery: 'authority removed; submit a new human prompt. If an earlier prompt flushes later, repeat deactivate after it is visible.' };
     return committedResult;
   } catch (error) {
     primaryError = error;

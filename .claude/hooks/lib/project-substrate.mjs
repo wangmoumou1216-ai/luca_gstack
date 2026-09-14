@@ -587,9 +587,6 @@ export function queueProjectEventCandidate({
     const current = projectStateFromBytes(readOptionalBytes(path), sid);
     const binding = validatedBindingForState(current, projectsRoot);
     const control = eventControlFromState(current);
-    if (control.candidates.length >= PROJECT_EVENT_CANDIDATE_LIMIT) {
-      throw new Error(`project event candidate capacity ${PROJECT_EVENT_CANDIDATE_LIMIT} reached`);
-    }
     const closed = priorClosedState(current, binding, control);
     const next = {
       schema_version: PROJECT_STATE_SCHEMA,
@@ -597,7 +594,11 @@ export function queueProjectEventCandidate({
       session_id: sid,
       ...(closed.binding ? { binding: closed.binding, turn: closed.turn } : {}),
       event_control: {
-        candidates: [...control.candidates, candidate],
+        // Candidates are untrusted hints, not an event ledger. Keep admission live
+        // under synthetic floods without advancing the cursor or consuming events.
+        // An evicted human candidate may leave an orphan; only explicit deactivate
+        // recovery can fence it out, never this bounded queue operation.
+        candidates: [...control.candidates, candidate].slice(-PROJECT_EVENT_CANDIDATE_LIMIT),
         current: control.current ? { ...control.current, status: 'closed' } : null,
         cursor: control.cursor,
         consumed_events: control.consumed_events,
@@ -635,6 +636,55 @@ export function initializeProjectEventFence({
     };
     validatedBindingForState(next, projectsRoot);
     atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-fence');
+    return next;
+  });
+}
+
+// Deactivating must not strand the session. Only the pre-input SessionStart lifecycle
+// mints a fence, so a deactivate that deletes the state leaves a session that can never
+// attest again — not even to switch — and the only escape is restarting the process.
+// Instead the binding is dropped and the fence is rebuilt at the current source tail.
+// Every already-flushed native event now sits behind a cursor bound to the source's
+// identity and prefix hash and cannot attest again. An unflushed pending human row
+// can still arrive after this fence; NO_PIN therefore supports the same explicit
+// downgrade again after that row is visible. This is recovery, not automatic orphan
+// skipping, and no discarded switch intent survives it. The cursor prevents replay, so the
+// consumed-event ledger is reset rather than carried forward: carrying it would keep an
+// exhausted ledger (PROJECT_EVENT_HISTORY_LIMIT) exhausted and leave a long session
+// locked. This only ever removes authority: new authority still requires a genuine human
+// turn after the rebuilt fence, so a caller gains nothing by invoking it. Returns null
+// when there is no fence to rebuild from, and throws — publishing nothing — when the
+// source cannot be re-fenced.
+export function refenceProjectStateForDeactivate({
+  gstackRoot, sessionId, expectedRaw, codexHome = '',
+}) {
+  const sid = sanitizeSessionId(sessionId);
+  return withProjectStateLock(gstackRoot, sid, () => {
+    const path = projectStatePath(gstackRoot, sid);
+    const raw = readOptionalBytes(path);
+    if (!raw || !Buffer.isBuffer(expectedRaw) || !raw.equals(expectedRaw)) {
+      throw new Error('project state re-fence CAS mismatch');
+    }
+    const state = projectStateFromBytes(raw, sid);
+    const control = eventControlFromState(state);
+    if (!control.fence) return null;
+    const transcriptPath = control.fence.harness === 'claude'
+      ? String(control.cursor?.transcript_path || control.fence.cursor?.transcript_path || '') : '';
+    const fence = captureNativeEventFence({
+      sessionId: sid, harness: control.fence.harness, cwd: control.fence.cwd, transcriptPath, codexHome,
+      allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
+      recoveryCursor: control.cursor || control.fence.cursor,
+    });
+    if (fence.source_absent) {
+      throw new ProjectEventAuthorityError('SOURCE_NOT_VISIBLE',
+        'deactivate cannot rebuild the native fence because the session source is not visible');
+    }
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA, session_id: sid, state: 'NO_PIN',
+      event_control: { candidates: [], current: null, cursor: fence.cursor,
+        consumed_events: [], fence },
+    };
+    atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-state-refence');
     return next;
   });
 }
@@ -759,6 +809,9 @@ export function attestPendingProjectEvent({
       }
       throw new ProjectEventAuthorityError('NO_PENDING_EVENT', 'no pending native event candidate');
     }
+    // Equal bytes in a non-human row cannot disprove a human row still waiting
+    // to flush. Keep the final candidate; a later real prompt can safely heal
+    // unmatched non-final candidates without guessing their provenance.
     const candidates = control.candidates;
     const candidate = candidates[candidates.length - 1];
     if (candidate.session_id !== sid) throw new ProjectEventAuthorityError('SESSION_MISMATCH', 'candidate session mismatch');
@@ -770,21 +823,44 @@ export function attestPendingProjectEvent({
     let cursor = control.cursor;
     const consumed = [...control.consumed_events];
     const events = [];
+    // A non-final candidate whose scan meets a different genuine human turn cannot
+    // match at this cursor (see `next_native_turn_differs` in event-attestation.mjs).
+    // It may still have named an earlier human event; skipping grants nothing. Without this,
+    // one harness-synthesised prompt wedges the queue and the session permanently loses
+    // project authority. The skip grants nothing: the cursor does not advance, so
+    // authority can still only come from the first human event after the cursor
+    // matching the final candidate byte for byte. It is also deferred rather than
+    // committed — nothing is published until the loop completes, so a queue whose last
+    // entry is unwitnessable still fails closed and is retried, and the next real turn
+    // makes that entry non-final and heals the queue.
+    const unwitnessed = [];
     for (let index = 0; index < candidates.length; index += 1) {
       const pending = candidates[index];
       const final = index === candidates.length - 1;
-      const evidence = attestNativeUserEvent({
-        candidate: pending,
-        cursor,
-        transcriptPath,
-        codexHome,
-        bootstrapFence: control.fence || null,
-        observation: final ? observation : 'pre-tool',
-        assistantText: final ? assistantText : '',
-        allowTestSourceRoot,
-        requireNoFollowingUser: final,
-        priorEvents: consumed,
-      });
+      let evidence;
+      try {
+        evidence = attestNativeUserEvent({
+          candidate: pending,
+          cursor,
+          transcriptPath,
+          codexHome,
+          bootstrapFence: control.fence || null,
+          observation: final ? observation : 'pre-tool',
+          assistantText: final ? assistantText : '',
+          allowTestSourceRoot,
+          requireNoFollowingUser: final,
+          priorEvents: consumed,
+        });
+      } catch (error) {
+        if (final || error?.details?.next_native_turn_differs !== true) throw error;
+        unwitnessed.push({
+          boundary_id: pending.boundary_id,
+          harness: pending.harness,
+          prompt_sha256: pending.prompt_integrity?.sha256 || null,
+          reason: 'next-native-turn-differs',
+        });
+        continue;
+      }
       validateAttestedEvidence(pending, evidence, pending.boundary_id);
       if (consumed.some(item => item?.event_id === evidence.event_id)) {
         throw new ProjectEventAuthorityError('EVENT_REPLAY', `native event already consumed: ${evidence.event_id}`);
@@ -859,7 +935,11 @@ export function attestPendingProjectEvent({
       throw new ProjectEventAuthorityError('INJECTED_FAULT', 'injected event transaction fault after attestation before publish');
     }
     atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-attested');
-    return { state: next, event, events, idempotent: false };
+    const dropped = unwitnessed;
+    for (const item of dropped) {
+      process.stderr.write(`[project-substrate] skipped a queued candidate that cannot match at the current native cursor (session ${sid}, ${item.reason}, prompt sha256 ${String(item.prompt_sha256 || '').slice(0, 12)})\n`);
+    }
+    return { state: next, event, events, unwitnessed: dropped, idempotent: false };
   });
 }
 

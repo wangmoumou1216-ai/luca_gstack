@@ -8,7 +8,8 @@
 //  · 任何异常一律 fail-open —— 不输出 JSON、exit 0，绝不卡住 session 结束。
 //  · 强制模式三重防循环：stop_hook_active / 本 session marker / SESSION_SYNC_BLOCK=0 kill-switch。
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
 import { execSync } from 'child_process';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
@@ -34,6 +35,37 @@ let payload = {};
 // fd 0 直读 stdin：比 '/dev/stdin' 路径在 CI runner / 非交互管道下更可移植
 try { payload = JSON.parse(readFileSync(0, 'utf8') || '{}'); } catch { }
 const stopHookActive = payload.stop_hook_active === true;
+
+// Stop payloads do not always carry transcript_path (Codex rarely does). Recording
+// "unavailable" then reads as "no evidence" at adjudication time, although the session id
+// still locates the native transcript. Resolve it from each harness's own layout; an id
+// that resolves nowhere stays explicitly unavailable rather than becoming a guessed path.
+function locateTranscriptBySessionId(harness, sid) {
+  if (!/^[\w-]{1,64}$/.test(String(sid || ''))) return '';
+  const dirs = (path) => {
+    try { return readdirSync(path, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name); }
+    catch { return []; }
+  };
+  if (harness === 'codex') {
+    const sessions = join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'sessions');
+    const suffix = `-${sid}.jsonl`;
+    for (const year of dirs(sessions)) for (const month of dirs(join(sessions, year))) {
+      for (const day of dirs(join(sessions, year, month))) {
+        let names = [];
+        try { names = readdirSync(join(sessions, year, month, day)); } catch { continue; }
+        const hit = names.find(name => name.startsWith('rollout-') && name.endsWith(suffix));
+        if (hit) return join(sessions, year, month, day, hit);
+      }
+    }
+  } else if (harness === 'claude') {
+    const projects = join(homedir(), '.claude', 'projects');
+    for (const dir of dirs(projects)) {
+      const candidate = join(projects, dir, `${sid}.jsonl`);
+      if (existsSync(candidate)) return candidate;
+    }
+  }
+  return '';
+}
 const hasSid = Boolean(payload.session_id);
 const sessionId =
   (payload.session_id && String(payload.session_id).replace(/[^\w-]/g, '').slice(0, 36)) ||
@@ -334,7 +366,8 @@ try {
         return clean || fallback;
       };
       const locatorSid = hasSid ? oneLine(sessionId) : 'unavailable';
-      const locatorTranscript = oneLine(payload.transcript_path);
+      const locatorTranscript = oneLine(payload.transcript_path
+        || (hasSid ? locateTranscriptBySessionId(actualHarness(process.env), sessionId) : ''));
       const locatorHarness = oneLine(actualHarness(process.env));
       const relativePending = `.claude/observability/${pending.split('/').pop()}`;
       writeFileSync(pending, [

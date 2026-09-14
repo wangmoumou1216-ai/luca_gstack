@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-09-14 · 会话认证锁恢复与命令数据误改）
+
+- 原生事件候选使用有界的最新32条队列，合成通知不再让后续真人提示因容量耗尽永远无法入队；跳过不可匹配候选不推进原生游标、不授予权限，真正的孤儿人类行仍须显式恢复。取消按非人类同文字提前清除候选的判据，避免误删尚未落盘的真人提示。
+- `deactivate` 对已关闭绑定及 NO_PIN 提供只降权恢复：验证来源身份、前缀与原生记录后重建 fence，清除旧绑定/事务；旧消息不能重放，新的权限仍须新真人输入。若旧提示在恢复后才落盘，可能需要落盘后再次显式恢复；来源损坏、不可定位、TURN_ACTIVE/SWITCH_ONLY 仍拒绝，不声称无条件自动恢复。
+- 作用域守卫统一识别引号、转义与操作符，保护明确的 echo/printf 字面量、Git 消息、搜索模式及 quoted cat/tee heredoc 的数据字节；真实路径、管道、展开和重定向仍受检查。Git `--` 后或 `--file` 的值不再被误当 `-m` 消息；静态单次赋值的框架内 cd 可解析，未知动态 cd 不放行。
+- 补齐 pending transcript 定位回退与 append-only 更正/原字节恢复；Claude/Codex 分别覆盖恢复、重放、来源损坏及候选队列行为。独立双轴审查和反例记录见 `framework-audit/2026-09-14-locks-standards-review.md`、`framework-audit/2026-09-14-locks-spec-review.md`。模型行为票、只读降级及演进人工裁决不混算为本次完成项。
+
 ### Fixed（2026-09-11 · pre-commit 把 git 的索引变量漏给 verify.sh，按路径提交跑不通完整门）
 
 - 共享检出规定用 `git commit -- <路径>` 提交，而 git 此时给 pre-commit 注入的是**绝对路径**的临时索引 `GIT_INDEX_FILE`；`commit -a` 同样是绝对路径，链接 worktree 里的任何提交还会再加绝对路径的 `GIT_DIR`（2026-09-11 在临时仓里装探针实测；只有主检出的普通提交是相对的 `.git/index`）。`verify.sh` 继承这些变量后，`test-agent-context.mjs` 在 fixture 仓里执行的 `git add` 把条目写进了这次提交的索引，blob 却落在 fixture 自己的对象库里 → verify 94/0 通过后建树报 `invalid object`，只能退到 `FAST_COMMIT=1`，完整提交门在规定的提交方式下形同虚设。
