@@ -50,6 +50,7 @@
     "check:self-model": "node scripts/build-self-model.mjs --check",
     "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs",
     "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs",
+    "test:evolution-feedback": "node scripts/test-evolution-feedback.mjs",
     "check:agent-contracts": "node scripts/check-agent-contracts.mjs",
     "check:ci-contract": "node scripts/check-ci-contract.mjs",
     "check:framework-html": "node scripts/check-framework-html.mjs",

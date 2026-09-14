@@ -26,8 +26,9 @@
 #   - 负信号检测：archived / 单提交 / link-farm / 教程仓伪装工具 / 星曲线异常
 
 version: 1
-updated: 2026-07-14
+updated: 2026-09-14
 review_after_days: 35
+review_note: "2026-09-14 U-GOV-09：luca批准窄复核，修正官方URL/双harness来源与失效品牌约束；不重跑scout，不改yield。GitHub API直连超时，使用官方网页读回核对规范URL，未伪称全部repo实时元数据可达。"
 
 sources:
   - id: S1-github-stars
@@ -57,6 +58,7 @@ sources:
     status: active
 
   - id: S2-anthropic-platform
+    note: "稳定ID保留；官方平台观察面同时覆盖Claude与Codex，不因旧ID只看单端。"
     class: official-platform
     feeds_dimensions: [hooks, routing, orchestration, skills, observability]
     reuse_mode: [install, adapt-idea]
@@ -64,15 +66,17 @@ sources:
     discovery:
       method: webfetch-diff             # 按「自上次运行以来新增」diff，非 star
       targets:
-        - "https://docs.anthropic.com/en/docs/claude-code (changelog/release notes)"
-        - "https://github.com/anthropics/claude-cookbook"
+        - "https://code.claude.com/docs (Claude Code docs / release notes)"
+        - "https://github.com/anthropics/claude-cookbooks"
+        - "https://learn.chatgpt.com/docs/changelog (Codex official changelog)"
+        - "https://github.com/openai/codex"
         - "https://github.com/anthropics/skills"
         - "https://github.com/modelcontextprotocol (servers/spec)"
     freshness_window_months: 6
     discrimination:                     # S2 专属：能力对应哪个维度、要不要跟
       - 新平台能力映射到哪个演进维度（新 hook 事件→hooks；plugins→skills 安装；subagent 新特性→orchestration；MCP→集成）
       - 判「补 open 缺口」vs「锦上添花」：前者纳入，后者记录待议
-      - 跟进前仍过「是否触碰受保护不变量（framework/、P1-P7、品牌锁）」
+      - 跟进前仍过「是否触碰受保护不变量（framework/只读、P1-P7、已确认项目设计规范）」；Claude和Codex分别判定，不外推跨端生效
     # 2026-07-14 回填 2026-07 轮（digest 数据：S2 8→0）
     yield_stats: { runs: 3, surfaced: 17, approved: 0, zero_yield_streak: 1 }
     status: active
@@ -84,7 +88,8 @@ sources:
     authority_tier: curated
     discovery:
       method: known-hub-deepdive
-      hubs: [langchain-ai/langgraph, letta-ai/letta, promptfoo/promptfoo, confident-ai/deepeval, openai/swarm]
+      hubs: [langchain-ai/langgraph, letta-ai/letta, promptfoo/promptfoo, confident-ai/deepeval, openai/openai-agents-python]
+      retired_hubs: [openai/swarm]  # 2026-09-14：其官方README声明由Agents SDK取代；保留来源历史，不安装SDK。
       also: ["gh-search: agent memory / llm eval harness / agent orchestration / self-improving agent"]
     freshness_window_months: 18
     discrimination:                     # S3 专属：值不值得搬、会不会带复杂度
@@ -98,21 +103,22 @@ sources:
 
   - id: S4-design-craft
     class: domain-craft
-    feeds_dimensions: [skills]          # + 品牌/framework 层
+    feeds_dimensions: [skills]          # 只在有对应设计类open gap时恢复
     reuse_mode: [install, adapt-idea]
     authority_tier: curated
     discovery:
       method: known-hub-deepdive
-      hubs: [amzn/style-dictionary, tokens-studio, shadcn-ui/ui]
+      hubs: [amzn/style-dictionary, tokens-studio/figma-plugin, shadcn-ui/ui]
       also: ["gh-search: design tokens / design to code / accessibility audit / design system"]
     freshness_window_months: 18
     discrimination:                     # S4 专属：改善哪环 + 品牌冲突
-      - 改善 CRM 设计交付的哪一环
-      - 品牌冲突检测：带自有默认色/暗色/多品牌 → 必须品牌锁守卫(FM-7)，走 rules.yaml 注入+blockquote，绝不进 route-guard
-      - 与 framework/ 母版兼容性
+      - 映射到已确认项目的设计问题与对应open gap，不从框架检出推定CRM或品牌
+      - 设计系统由当前项目或用户选定工具提供，外部默认主题不自动成为约束
+      - framework/仅作只读参考，是否采用及采用范围需明确来源
     # 2026-07-14 回填 2026-07 轮（digest 数据：S4 8→0）
     yield_stats: { runs: 3, surfaced: 13, approved: 0, zero_yield_streak: 1 }
-    status: active
+    status: "off"
+    review_note: "U-GOV-07，luca于2026-09-14批准暂停；恢复条件=有明确设计类open gap并确认本源能对口。历史yield原样保留。"
 
   - id: S5-frontier
     class: frontier-signal
@@ -126,4 +132,4 @@ sources:
     discrimination:
       - 仅 adapt-idea；封顶极少量；bar 最高；「有趣」≠「可落地」
     yield_stats: { runs: 0, surfaced: 0, approved: 0, zero_yield_streak: 0 }
-    status: off                         # 用户暂不开，后续按需启用
+    status: "off"                       # 用户暂不开，后续按需启用

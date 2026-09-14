@@ -9,7 +9,7 @@
 # 种子来自 2026-06-21 地毯式审计；2026-06-21 复盘新增双层 gap（应用作业层 + 框架自维护）。
 
 version: 2
-updated: 2026-07-23
+updated: 2026-09-14
 
 gaps:
   - id: GAP-behavioral-verification
@@ -68,10 +68,12 @@ gaps:
   - id: GAP-fusion-impact-automation
     dimension: testing
     layer: framework
-    statement: "fusion 影响分析/隐式耦合检测(FM-6)目前靠 fusion-preflight.py 手写清单，缺自动依赖/代码图谱(随仓库变更自动同步)。"
+    statement: "尚未登记的跨文件隐式耦合缺少发现机制；已登记的模型档位、规则scope和路由登记同步已有确定性检查，不再默认用AST代码图谱解决这些字符串/配置关系。"
     severity: medium
-    desired_capability_keywords: [code graph, dependency graph, impact analysis, codebase index, knowledge graph]
+    desired_capability_keywords: [implicit coupling, configuration contracts, cross-file consistency, change impact]
     status: open
+    covered_by: [daily_governance.check_model_routing, check-routing-map, check-registration-sync]
+    scope_review: "2026-09-14 U-GOV-12，luca批准收窄；保留open，不把未登记耦合当作已解决。证据：2026-09-evolution.md。"
 
   - id: GAP-design-methodology-review
     dimension: skills
@@ -103,7 +105,8 @@ gaps:
     revisit_when: "adoption-log 累计 ≥5 条已融合候选"
     # 前缀 ADJUDICATED（不以 MET 开头）→ check_gap_recheck / scout loader 不再每日报「须裁决」（已裁决，防噪音）。
     # 重新审时把前缀改回 MET 即重新进告警。
-    revisit_status: "ADJUDICATED(2026-07-21) — 曾 MET：实测 distinct fused_candidate_id=23（超阈值 4.6 倍）。裁决(D7,luca授权收口)：本轮**仍不建 DGM 基准**，因样本无输入——23 条里 helped 5 条全占位符/18 条缺键、landing_status 19 条空，基准建了也没数据喂。根因已定位：AdoptionReview phase（scout）读 adoption-log 出 keep/watch/revert 复盘但**不回写 helped 字段**（propose-only 架构，不自动改文件）→ 字段永远空。真『修回填纪律』= 加一条人确认后回填的通道（类比 candidate 晋升的 --set-stable），触及 propose-only 红线、是独立工程。重访条件两段：①（数据就绪触发）第一条采纳经足够使用周期、AdoptionReview 能给非 too-early 的 helped 判断时 → 落地回填通道（复用 evolution-bookkeep + digest 贴人确认命令，不违反 propose-only）；②回填跑满 ≥5 条有 helped 的采纳后 → 再谈建基准。当前卡在①之前：23 条采纳多为 07-12 批量、才 10 天，现在建通道是空管道，故 measure-first 等数据就绪，非撞硬闸。"
+    revisit_status: "MET(2026-09-14) — U-GOV-03/04获luca批准：已有成熟的具体效果证据，开启人工批准的窄反馈回填；本轮不建DGM或新评测平台。至少5条真实反馈后再人工评估基准，不把usage/unknown或同一事件重复归因当独立效果样本。通道：scripts/evolution-feedback.mjs。"
+    prior_adjudication: "ADJUDICATED(2026-07-21)：当时23条采纳多为10天内新项，helped缺失/占位，决定等待成熟证据后再开回填通道；旧完整表述保留于Git历史，当前不撤销先数据后基准的约束。"
     stage2_benchmark_reference: "block/buzz benchmarks/harbor-buzz-orchestra（2026-07-23 模式1b 评估残值，luca 批准记指针）：manifest-as-condition（system prompt sha256 字节锁定+端点/预算/生成参数全声明）+ provisioner 归档不删除留完整时间线 + 一条命令 leaderboard——②建基准时作可复现性设计参照；轻量实现形态优先看 S3 hubs（promptfoo/deepeval/evalite），不搬 Harbor 容器基建"
     # 2026-06-21 裁决：本轮**不追**（显式不静默砍）。DGM 式变体对比需一个**已融合候选基准语料**做 ablation；
     # 当前只有 OST/GOMS/code-hygiene 3 条，样本太小，benchmark 无意义。已有 adoption-log(helped/caused_issue)
@@ -177,10 +180,12 @@ gaps:
   - id: GAP-issue-tracker-integration
     dimension: infrastructure
     layer: framework
-    statement: "是否引入可选的 tracker 承载工作项层（统一适配器+状态 label+原生 blocking+共享地图）——对方 setup/to-spec/to-tickets/triage/wayfinder 五 skill 预设此基础设施；与我方 /Users/luca/Desktop/项目/muse/docs/**+稳定ID+handoff 承重设计的关系须先裁。证据锚:framework-audit/mattpocock-benchmark-2026-07/ 五单元 dossier。"
+    statement: "票据发布facade已由to-tickets覆盖；剩余真实外部tracker连通、原生阻塞关系和实际使用验证，须等用户选择具体tracker及真实项目需求，不把facade当作整套工作项系统已接通。"
     severity: low
     desired_capability_keywords: [issue tracker, work item layer, blocking links, ready-for-agent, shared map]
-    status: open   # 2026-07-12 GATE-2 批准开启探索；tracker 簇候选下轮 evolution 周期按 fit-to-gap 重入
+    status: deferred   # 2026-09-14 U-GOV-08：luca批准部分覆盖+延期，不报完整addressed。
+    completed_scope: "2026-09-02 to-tickets bounded publication facade；task-plan仍是任务真值。"
+    revisit_when: "用户选择具体外部tracker，并出现需验证真实连通/阻塞关系的项目任务。"
 
   # ── 2026-07-23 单点评估入口缺口（同日 plan 获批人裁开启并落地）──
   - id: GAP-punctual-candidate-eval

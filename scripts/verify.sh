@@ -139,6 +139,7 @@ check S37 "CI 阻断覆盖与稳定 gatherer 合同" "npm run check:ci-contract 
 check S38 "CI 合同 proof-it-bites（缺关键门必须失败）" "npm run test:ci-contract --silent"
 check S39 "Framework HTML 历史债务基线 proof-it-bites" "npm run test:framework-html-baseline --silent"
 check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
+check S21b "人工效果反馈（证据/幂等/原始事实保护）" "npm run test:evolution-feedback --silent"
 check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）" "npm run check:agent-contracts --silent"
 # S24：lint:yaml 的能力早已写好（package.json 覆盖 7 个 skill-os yaml），但从无自动调用者——
 # model-routing / self-model / gaps-register / sources-registry 四个真值源因此零 YAML 语法门

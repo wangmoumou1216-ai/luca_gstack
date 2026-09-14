@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "branch_fixture_version": "p6-page-flow-v2",
+  "contexts": {
+    "candidate": "6650c69397aad82f2ff1feec54bb3e09d93f0a1c2d9e30cf2018cc803f4092d7",
+    "baseline": "4faa8176b9029ecbe4ca207528fda6771b0ea467a890a39f6700e126d49360a7"
+  },
+  "scoring_revision": "v28-recovered-transport-and-evidence-rescore",
+  "scoring_sha256": "d127917a3b0e8ec7a7f119926b94fe5e5aa2c1335c384b973d87660416cdabb7",
+  "fallback_ids": [
+    "SC-20260905-001",
+    "SF-003",
+    "SF-005",
+    "SC-20260523-001",
+    "SC-20260523-002",
+    "SC-20260523-003"
+  ]
+}

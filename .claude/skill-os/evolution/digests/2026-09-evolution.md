@@ -272,3 +272,35 @@ writing-for-agents            -       0  UNOBSERVABLE（场景不落盘；命中
 | 11 | `/skill-doctor`（原生）与场景覆盖报告的 native_precedence 对照 | 下次场景覆盖复盘时做 / 否 | 与 auto 截流实验 10-02 复盘一起做 |
 | 12 | GAP-fusion-impact-automation：第 7 次候选全灭，且点名的三类耦合都已有确定性检查 | A 收窄 statement 为「未登记的隐式耦合发现」，并写明已由哪些检查覆盖 / B 转 deferred / C 保持原样 | A——防止下轮继续按原表述去搜代码图谱工具 |
 | 13 | 发布状态 | — | **已发布，无需裁决。** `e80bbc1` 提交时活体 `verify.sh` 为 PASS 92 / FAIL 2（C20 `test:project-transaction`、C11 `check:hooks`），所以本 session 只提交、没有推送；那次提交用了 pre-commit 自带的 `FAST_COMMIT=1`（适用于审计记录/文档，密钥扫描照跑），没用 `--no-verify`。事后查明，两项红灯来自 lucagstack-0c 写进共享检出的 TDD 红测试，见 `framework-audit/2026-09-10-locks-and-blocks-plan.md`「我造成的附带阻塞与处置」。该 session 撤回了活体上的红测试，按它自己的规定在干净检出上独立跑 verify.sh，通过后推送了 `e80bbc1`（2026-09-11 `git fetch upstream` 核实 upstream/main 已含该提交）。 |
+
+## 2026-09-14 人工复审结果（U-GOV-01..12）
+
+授权：luca对 `framework-audit/2026-09-10-locks-and-blocks-plan.md` 的完整十二项方案回复「批准」。以上9月10日的提议与历史统计保留原貌；**本节为较新的处置真值**，不把旧建议“yes（使用层）”当成效果判据。
+
+| ID | 裁决/当前状态 | 落点与证据 |
+|---|---|---|
+| U-GOV-01 | RETIRED（部分范围追认） | adoption row19追加review_records：不恢复全局自动CONTEXT写入；extraction-bar的受控提议门仍保留。原采纳事实不删。 |
+| U-GOV-02 | SUPERSEDED | row12追加superseded_by指向2026-08-31 canonical diagnosing-bugs(row31)，保留旧port日期与落点。 |
+| U-GOV-03 | IMPLEMENTED | 新窄CLI evolution-feedback：默认dry-run；明确批准引用+原日志hash+精确身份+具体证据才apply；仅helped/feedback_history，可审计幂等。无DGM/新基准平台。 |
+| U-GOV-04 | RECORDED | review_id=U-GOV-04-20260914：row4/11/13为yes(outcome)，row8/22/23为unknown(usage)。六条均附证据及原helped状态；row4/11来自同一修锁任务，不能计为两个独立样本。尚不满足≥5独立真实效果反馈的基准启动条件。 |
+| U-GOV-05 | ARCHIVED×4 / WATCH×2 | candidate-log追加opportunity_adjudication：Medusa/obsidian-skills/oh-my-claudecode/OpenViking归档本次机会；ECC/Hindsight观察。原发现记录保留，不卸载、不永久拉黑。 |
+| U-GOV-06 | Q4_CANDIDATE / DEFERRED | garrytan/gstack只登记Q4候选；2026-10复盘由luca决定是否启动模式2对标。未建benchmark-registry假基线，未运行对标。 |
+| U-GOV-07 | PAUSED | S4-design-craft status="off"，稳定ID与全部yield保留；出现匹配的设计类open gap后由人批准恢复。 |
+| U-GOV-08 | PARTIAL / DEFERRED | tracker gap保留2026-09-02 facade覆盖，剩余外部连通/阻塞关系/实际使用等待具体tracker和真实项目任务；不报全量addressed。 |
+| U-GOV-09 | REVIEWED（窄范围） | sources-registry复核官方URL、双harness覆盖和过期品牌约束；S2 ID保留、Claude/Codex各自官方来源，S3 swarm替为官方Agents SDK、S4指到具体插件仓；无新scout、yield零改动。 |
+| U-GOV-10 | NORMALIZED | row27–38内非n/a自由标签可唯一映射则用真实gap ID，否则n/a并保留gap_id_original/gap_id_review；身份、日期、原采纳事实不变。 |
+| U-GOV-11 | SCHEDULED（人工待办） | 2026-10-02 auto实验复盘时，对照Claude原生skill-doctor与本地scene coverage；不是已运行或已创建定时任务。 |
+| U-GOV-12 | NARROWED / OPEN | fusion-impact只剩未登记隐式耦合发现；列明daily_governance.check_model_routing、check-routing-map、check-registration-sync已有覆盖，不新建AST平台。 |
+
+### 后续事项的明确触发与交付
+
+- U-GOV-06：2026年10月复盘；负责人luca裁决、届时执行agent核验。交付立项/继续观察/不做及理由；只有正式对标执行后才能写benchmark baseline。
+- U-GOV-11：2026-10-02 auto实验复盘；负责人luca裁决、届时执行agent采证。交付“原生使用/context成本 vs 本地场景代理/豁免/未观测”逐项覆盖表、样本窗口与混杂因素，以及保留/退场建议。Codex独立确认能力边界，不把Claude slash能力声称为Codex原生工具；任何退场另需人裁。
+- U-GOV-05：归档/观察是人工机会池状态，追加记录不是scout run，也不是REJECTED TTL。现有loader不自动执行这些处置；后续人审消费本节和adjudication记录，只有新的具体gap/证据才重开，不宣称新增了自动过滤能力。
+
+### 来源与验证边界
+
+- 官方页面复核：Claude文档跳转到[code.claude.com/docs](https://code.claude.com/docs)，Cookbook规范仓为[anthropics/claude-cookbooks](https://github.com/anthropics/claude-cookbooks)；Codex来源为[官方changelog](https://learn.chatgpt.com/docs/changelog)和[openai/codex](https://github.com/openai/codex)。
+- [Swarm官方README](https://github.com/openai/swarm)明确说明被[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)替代；[Tokens Studio插件仓](https://github.com/tokens-studio/figma-plugin)已核实。GitHub API含一次提权重试仍超时，故本轮没有声称全部hubs实时元数据/星数已刷新。
+- 反馈实写前dry-run与13项测试通过；真实apply返回count=6，重复apply返回unchanged，日志SHA256=`81cb10fbd4616d4c293812c06fb3cdb39e48827093b7ed28dbc4fc95d5de8583`。批准引用与证据真实性由本次人工裁决担保，CLI只做结构校验；锁与最终hash复检不保证对非合作写者的原子CAS。
+- 本节不代表F14行为票已通过；F14须在治理验证/独立复审后冻结最终上下文，并按单次额度独立记录。

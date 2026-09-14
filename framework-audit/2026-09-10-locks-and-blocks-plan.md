@@ -412,3 +412,84 @@ Source：本轮接管请求、原计划 L1–L10/R3、第二轮报告 MAJOR/MINO
 - 验证边界：Cockpit进程仍在，但观测期没有新的Codex配额日志，故**不伪称已做跨刷新周期黑盒测试**；兼容依据为真实原生Codex读取、完整配置语义等价及官方sanitize分支直接校验。其他工具未来若重新展开为旧表头，第三方原缺陷仍可能重现。
 - 发布白名单：12个已审源码/测试文件、CHANGELOG、本任务checkpoint/plan/四份审查记录、O-20260914-001观察记录；不含memory/retrieval-log.jsonl，不含全局配置或备份。当前暂存区空，upstream/main仍97eb65a；使用精确路径提交与完整pre-commit，不设FAST_COMMIT/--no-verify，不force push。
 - **本节是发布前快照**。恢复时先查`git log --all --oneline --grep='recover closed sessions'`与该提交CI，不把快照里的尚未执行误读为当前仍未发布。最终commit/push/CI证据由Git远端及会话完成报告承载，避免在提交正文里硬编码自己的SHA。
+
+<a id="f14--十二项演进裁决闭环计划待用户明确批准"></a>
+<a id="f14--十二项演进裁决闭环计划2026-09-14-用户已批准"></a>
+
+## F14 + 十二项演进裁决闭环计划（2026-09-14 用户已批准）
+
+Source：用户最新要求「仍有 F14 行为票、12 项演进裁决这个解决」；digest裁决表1–12；P6 final-closure的F14单格合同。
+Baseline：`8d1bfc3d342eddec77de86a2897ef7dbf54d00b0`；计划时受保护脏文件仅`memory/retrieval-log.jsonl`。执行中另出现observations.jsonl与rules.yaml变化，不属本轮治理白名单，保留不暂存。
+
+授权：用户对本节完整提案回复「批准」。下表是获批提案的原文快照；落实状态见九月digest的U-GOV-01..12复审记录。F14额度为一次真实Codex调用，不含自动重试。
+
+### 前提与执行顺序
+
+- 该做：这些是遗留的真实未决项，不以“已发布修锁”代替它们完成。
+- 更小替代：不重新运行整轮scout、不安装外部能力、不启动DGM或全量gstack对标；只做有证据的处置、窄反馈写入能力和一个F14实测。
+- 12项包含人工拥有的规则/采纳/范围取舍。本计划是明确提案，不是先改后请示；用户批准整张表后才执行。
+- 顺序为治理处置→验证/独立审查→最终上下文冻结→F14单次实测→选择性提交/推送/CI。治理文件属于contextIdentity，先F14再改治理会产生新的版本适用性问题。
+- 模式Sequential（主执行）+ Supervisor（独立验收）；执行档core-execution，独立裁决按model-routing的reasoning-heavy映射。
+- 本轮只读旧manifest的describe已拒绝：旧candidate context=`43b6625…5b04b5`，当前=`aa64619e…0dc8cd6`。没有进行模型调用；旧manifest不能直接复用。
+
+### 十二项明确提案
+
+| ID | 对应digest | 提案（批准前均PLANNED） |
+|---|---|---|
+| U-GOV-01 | 1 | 追认不恢复“自动写CONTEXT”的全局行为，补记录与当前受控记忆写入边界的理由；不把旧规则重新塞回root，不删仍在extraction-bar的提议门 |
+| U-GOV-02 | 2 | 旧systematic-debugging移植记录标注由canonical diagnosing-bugs承接，保留原落地事实，不重新安装/追逐旧全局正文 |
+| U-GOV-03 | 3 | 启用经真人确认、有证据的helped回填通道，支持审计与幂等；不新建DGM/评测平台，基准仍须至少5条真实反馈 |
+| U-GOV-04 | 4 | 提议code-hygiene套件(row4)、双轴review/prove-it-bites(row11)、registration-sync(row13)按直接捕获问题证据回填yes；tdd(row8)、quick-research(row22)、changelog(row23)保留unknown，另记使用证据，不把使用次数当效果 |
+| U-GOV-05 | 5 | 上期机会归档Medusa/obsidian-skills/oh-my-claudecode/OpenViking，观察ECC/Hindsight；只作机会池处置，不删除已安装文件 |
+| U-GOV-06 | 6 | gstack留作Q4候选，在10月复盘时决定是否正式立项；本轮不直接开启昂贵全量对标、不伪造benchmark baseline |
+| U-GOV-07 | 7 | S4-design-craft暂停，出现对应设计类open gap再恢复；保留稳定source ID及历史yield，不重置计数 |
+| U-GOV-08 | 8 | tracker gap记部分覆盖并defer剩余真实集成/使用需求；不把to-tickets facade等同完整外部系统接通，不新装tracker |
+| U-GOV-09 | 9 | 现在做sources-registry窄复核：URL/覆盖/失效品牌约束及双harness官方来源；不重新跑候选发现，机械yield值不手改 |
+| U-GOV-10 | 10 | gap_id能唯一对应真实ID则规范化，不能则n/a并保留原值/原因，历史采纳身份与日期不改 |
+| U-GOV-11 | 11 | 原生skill-doctor与本地场景覆盖对照排到10月2日auto实验复盘；本轮只登记明确触发/产物，不现在重复建评测 |
+| U-GOV-12 | 12 | fusion-impact gap收窄为未登记隐式耦合，保留open；列清已有确定性检查覆盖，不再以AST图谱作为默认答案 |
+
+### Phase与文件边界
+
+1. **P-GOV / task_execution**：获批后执行U-GOV-01..12。
+   - 文件：evolution下的digest、adoption-log、gaps-register、sources-registry、candidate-log；新窄反馈入口` scripts/evolution-feedback.mjs`及` scripts/test-evolution-feedback.mjs`、verify/package接线；本计划与CHANGELOG。
+   - 原采纳事实/日期/ID不可改；反馈定位使用日期+fused_candidate_id，歧义即拒绝；缺批准或缺证据不能写；dry-run/幂等/其他行不变必须验证。
+   - 不改框架root、skill正文、全局配置、下游项目或benchmark baseline；若实施需要新增这些面，先delta重规划。
+2. **P-CHECK / task_execution**：窄反馈测试、evolution裁决检查、完整verify与独立精确diff审查；未通过不进F14。
+3. **P-F14 / task_execution**：基于最终文件重冻新manifest（保留旧manifest/失败行）；describe必须RELEASE_BOUND。仅candidate/Codex/F14-flow-preservation、1 trial、concurrency=1、1次真实调用；不替换Claude arm、不自动重试。逐字段判行为票，基础设施失败仍空票，行为FAIL仍FAIL。
+4. **P-PUBLISH / task_execution**：只有对应门完成后，按精确路径提交/普通推送并看CI。若F14失败，保留全部输出并按其失败类型明确报告，不以静态通过补造行为PASS。
+
+### 阶段断言与停止条件
+
+- [BLOCKING] `node scripts/test-evolution-feedback.mjs`：批准/证据缺失拒绝，精确定位，歧义拒绝，幂等，其他行/原始采纳事实不变。
+- [BLOCKING] `node scripts/check-evolution-adjudication.mjs` 与 `bash scripts/verify.sh` 全通过。
+- [BLOCKING] 12个ID各有明示处置与来源；DEFERRED/WATCH不标成已经实施。
+- [BLOCKING] F14发射前RELEASE_BOUND且文件未漂移；新增不可变记录恰好1条，不覆盖历史证据。
+- [BLOCKING] 提交白名单不含遥测/下游/全局配置；远端SHA与对应CI核对。
+- C1：人工效果反馈与使用证据分开；C2：未引入未经批准的新能力/对标；C3：版本绑定和空票/FAIL/PASS记录忠实；C4：所有状态都能追溯到真实证据或明确人类裁决。
+- 新阻断或成本/范围扩张时停止；不把批准这张清单当成无限模型调用、无限研究或新增外部发布权限。
+
+## Replan R-F14-transport（2026-09-14，用户批准最小成本补修）
+
+- Source：用户「补修，淡水最小成本验证」，按「补修，但是最小成本验证」执行。上一轮42项回答及8个必读target通过，但5个原生传输通知被分类为未知活动。
+- 只改受影响P-F14：Sequential轻量维护，主执行core-execution；不重做P-GOV。已存在同类严格runtime_notice先例，不属新颖机制，无外部研究必要。
+- Files：scripts/run-agent-context-ab.mjs（窄分类、内嵌正反例、独立评分版本）；本计划与2026-09-14-evolution-f14-closure.md追加证据。不改旧manifest/原始结果、全局配置、两端root、下游或其他治理文件。
+- 顺序：精确shape+message识别 → 双harness本地evaluator自测与原始日志离线分类回放 → 一次窄独立复核。用户最小成本约束下不启动新live试验、不做整仓重复验证、不发布。
+- [BLOCKING] npm run test:agent-context-ab-evaluator --silent：Claude/Codex本地测试均通过；无网络模型调用。
+- [BLOCKING] 正确已知通知保留原事件；相似文字、额外字段、失败/未知事件不能免责；同流真实越界I/O仍FAIL，缺答案不能通过。临时副本撤分类修复须转红，再恢复PASS。
+- [BLOCKING] 原始F14记录SHA仍eb6eb75213943e8a974a037dcec0199feb449e49262ec0b106c7a77b012ec7f4且1行；离线投影只证明分类修复，不覆盖原0/1或宣称新live PASS。
+- C1：窄分类不削弱default-deny；C2：Codex规则不泛化成Claude新豁免；C3：测试结果/旧live失败/未来实测分列。新增成本或其他发现不自动扩量。
+
+## Replan R-F14-close（2026-09-14，用户授权解决全部并提交发布）
+
+- Source：用户「我要你用最具性价比，最能解决问题的方式解决。然后完成所有闭环，然后提交发布」。授权本次修复、证据复评与普通提交发布；旧失败保留，不强推、不修改其他会话WIP。
+- 价值判断：两份真实原生执行的42项内容/读取已完整，剩余是传输诊断被误当未知操作。继续生成相同模型答案不能修评分器。使用完整不可变raw_stdout复评，可零新增模型样本验证同一上下文行为；不得把复评计作新live或独立增样。
+- P-F14-a（主执行core-execution）：识别严格结构的重连/协议回退通知，只有同一turn最终恢复并有后续答案才免责；失败/无完成/字段夹带/未知I/O仍拒绝。源：官方JSONL事件生命周期文档与两份实测；不依赖枚举每个操作系统错误文案。
+- P-F14-b（依赖a）：在现有runner加受控离线rescore模式：外部指定原文件hash，核源manifest/fixture/schema/context/稳定性，与新冻结评分版本绑定；重新解析原始事件而非信旧answer/check，新文件独占写，记录原run ID和旧分数，new_model_calls=0。两份样本均复评，不择优。
+- P-CHECK：两端本地正反例/mutation、完整verify；独立Standards/Spec两轴串行冷审，明确审查复评是否只是为收口放宽判据。失败则修复并闭合，不宣称PASS。
+- P-PUBLISH：用户已批准。精确白名单提交，全pre-commit与普通push upstream/main，读取对应SHA的全部CI；无FAST_COMMIT/no-verify/force。不触碰observations/rules/retrieval的其他WIP。
+- Files增量：scripts/run-agent-context-ab.mjs（分类/复评/内嵌测试）、CHANGELOG、本计划/closure、新v28 manifest与两份衍生评分制品。已有治理11文件保持已审代码/数据字节（本计划和叙事追加除外）；不改治理context，保证两份原生日志适用性。
+- [BLOCKING] 双harness evaluator selftests：恢复通知/失败turn/缺答案/注入字段/真实越界/相似文字；mutation撤防护必须转红。
+- [BLOCKING] 两份旧日志SHA不变；复评拒绝错hash/错context/fixture/schema/manifest/未完成源，输出不覆盖；完整raw重新评分且所有门PASS。只证明原样本在修正评分器下通过，不新增样本统计。
+- [BLOCKING] bash scripts/verify.sh全过，双轴终版PASS，提交白名单与远端SHA/CI全绿。
+- C1：恢复事件与真实操作分开但不吞未知；C2：Claude独立边界保留；C3：复评来源/旧失败/零新样本诚实；C4：12项裁决与延期触发保留；C5：发布不带其他会话改动。

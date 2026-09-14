@@ -19,6 +19,18 @@ const value = (name) => {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : undefined;
 };
+// An incomplete offline request must NEVER fall through to live model dispatch.
+if (process.argv.some(arg => /^--(?:rescore|source-sha256|source-release-manifest)=/.test(arg))) {
+  console.error('offline options require separate flag and value arguments');
+  process.exit(2);
+}
+for (const flag of ['--rescore', '--source-sha256', '--source-release-manifest']) {
+  const count = process.argv.filter(arg => arg === flag).length;
+  if (count > 1 || (count === 1 && (!value(flag) || value(flag).startsWith('--')))) {
+    console.error(`${flag} requires a value and may appear only once`);
+    process.exit(2);
+  }
+}
 const root = resolve(value('--root') || '');
 const arm = value('--arm');
 const harness = value('--harness');
@@ -30,6 +42,9 @@ const requirePass = process.argv.includes('--require-pass');
 const resumeValid = process.argv.includes('--resume-valid');
 const selfTest = process.argv.includes('--self-test');
 const describe = process.argv.includes('--describe');
+const rescorePath = value('--rescore');
+const sourceSha256 = value('--source-sha256');
+const sourceManifestPath = value('--source-release-manifest');
 const releaseManifestPath = value('--release-manifest');
 let releaseManifest;
 let releaseManifestSha256 = null;
@@ -48,7 +63,7 @@ const claudeModel = value('--claude-model');
 const claudeEffort = value('--claude-effort');
 const batchId = value('--batch-id') || randomUUID();
 const PROTOCOL_VERSION = 26;
-const SCORING_REVISION = 'v26-office-wizard-invocation-boundary';
+const SCORING_REVISION = 'v28-recovered-transport-and-evidence-rescore';
 const ROUTING_CLASSES = ['Project Gate', 'Plan', 'Framework Flow', 'Multi-Skill', 'Single-Skill', 'STOP'];
 const SCOPE_CONTRACT = 'This is NO_PIN framework/meta work. Read only files inside the supplied checkout (or the single supplied root for root-only probes). Do not access docs/, workflow-state, current-topic aliases, downstream projects, or any other checkout. Do not switch or create a project. These scope limits apply equally to baseline and candidate.';
 if (!value('--root') || !existsSync(root) || !['baseline', 'candidate'].includes(arm)
@@ -56,11 +71,20 @@ if (!value('--root') || !existsSync(root) || !['baseline', 'candidate'].includes
     || (!selfTest && !describe && !value('--output'))
     || !Number.isInteger(trials) || trials < 1
     || !Number.isInteger(concurrency) || concurrency < 1) {
-  console.error('usage: run-agent-context-ab.mjs --root <abs> --arm baseline|candidate --harness claude|codex --fixture all|F1 --trials 1 --concurrency 1 --output <ndjson> [--self-test|--describe] [--release-manifest <json>]');
+  console.error('usage: run-agent-context-ab.mjs --root <abs> --arm baseline|candidate --harness claude|codex --fixture all|F1 --trials 1 --concurrency 1 --output <ndjson> [--self-test|--describe] [--release-manifest <json>] [--rescore <source.ndjson> --source-sha256 <sha> --source-release-manifest <json>]');
   process.exit(2);
 }
 if (resumeValid) {
   console.error('--resume-valid is forbidden: preserve every attempted cell and failure; use an explicit evidence selection.');
+  process.exit(2);
+}
+if (rescorePath && (selfTest || describe || harness !== 'codex' || trials !== 1 || concurrency !== 1
+    || !releaseManifestPath || !sourceManifestPath || !/^[a-f0-9]{64}$/.test(sourceSha256 || ''))) {
+  console.error('rescore requires codex, one trial, both release manifests and an explicit --source-sha256; not self-test/describe');
+  process.exit(2);
+}
+if (!rescorePath && (sourceSha256 || sourceManifestPath)) {
+  console.error('source evidence options require --rescore');
   process.exit(2);
 }
 
@@ -378,6 +402,44 @@ function isCodexSkillBudgetNotice(event) {
     && item.message === CODEX_SKILL_BUDGET_NOTICE;
 }
 
+function isCodexTransportNotice(event) {
+  // Native transport status has a stable envelope but platform-dependent reason text.
+  // This only nominates a notice: recovery in the SAME turn is required below.
+  if (event.type === 'error' && Object.keys(event).sort().join(',') === 'message,type') {
+    const match = typeof event.message === 'string'
+      && event.message.match(/^Reconnecting\.\.\. ([1-9]\d{0,2})\/([1-9]\d{0,2}) \(([^\r\n]+)\)$/);
+    return Boolean(match && match[0] === event.message && event.message.length <= 4096
+      && Number(match[1]) <= Number(match[2]) && match[3].trim());
+  }
+  const item = event.item;
+  const prefix = 'Falling back from WebSockets to HTTPS transport. ';
+  return event.type === 'item.completed' && Object.keys(event).sort().join(',') === 'item,type'
+    && item?.type === 'error' && Object.keys(item).sort().join(',') === 'id,message,type'
+    && typeof item.id === 'string' && item.id.trim().length > 0
+    && typeof item.message === 'string' && item.message.startsWith(prefix)
+    && item.message.length <= 4096 && item.message.slice(prefix.length).trim().length > 0
+    && item.message === item.message.trim() && !/[\r\n]/.test(item.message);
+}
+
+function recoveredCodexNotices(events) {
+  const recovered = new Set();
+  let pending = [], active = false, answerAfterNotice = false;
+  for (const event of events) {
+    if (event.type === 'thread.started' || event.type === 'turn.started' || event.type === 'turn.failed') {
+      pending = []; answerAfterNotice = false; active = event.type === 'turn.started';
+    } else if (active && isCodexTransportNotice(event)) {
+      pending.push(event); answerAfterNotice = false;
+    } else if (active && event.type === 'item.completed' && event.item?.type === 'agent_message'
+        && typeof event.item.text === 'string' && event.item.text.trim()) {
+      answerAfterNotice = true;
+    } else if (event.type === 'turn.completed') {
+      if (active && answerAfterNotice) for (const notice of pending) recovered.add(notice);
+      pending = []; active = false; answerAfterNotice = false;
+    }
+  }
+  return recovered;
+}
+
 // Codex resolves auth from CODEX_HOME but reads transport (`model_providers`) from
 // that home's config.toml. A custom provider therefore cannot survive
 // `--ignore-user-config`. Detect one so the caller can keep the isolation flag in
@@ -396,8 +458,9 @@ function codexCustomProvider(codexHomeEnv) {
 function codexProjection(events) {
   const trace = [];
   let final = '';
+  const recoveredNotices = recoveredCodexNotices(events);
   for (const event of events) {
-    if (isCodexSkillBudgetNotice(event)) {
+    if (isCodexSkillBudgetNotice(event) || recoveredNotices.has(event)) {
       trace.push({ type: 'runtime_notice', event });
       continue;
     }
@@ -1006,6 +1069,73 @@ function scoreDecision(fixture, invoked) {
   return { answer, check: evaluate(fixture, answer, invoked.trace, invoked.isolation) };
 }
 
+function validateRescoreSource(row, manifest, manifestHash, currentContext, fixtureId) {
+  assert.equal(row.schema_version, 3, 'rescore source schema mismatch');
+  assert.equal(row.protocol_version, PROTOCOL_VERSION, 'rescore protocol mismatch');
+  assert.equal(row.harness, 'codex', 'rescore supports Codex native evidence only');
+  assert.equal(row.arm, arm, 'rescore arm mismatch');
+  assert.equal(row.fixture, fixtureId, 'rescore fixture mismatch');
+  assert.equal(row.total, 1, 'rescore source total mismatch');
+  assert.equal(row.memory_root, root, 'rescore memory root mismatch');
+  assert.equal(row.memory_root_source, 'evaluator-env', 'rescore memory binding missing');
+  assert.equal(row.prompt_mode, 'single-fixture-repository', 'rescore supports repository fixtures only');
+  assert.equal(typeof row.run_id, 'string', 'rescore source run identity missing');
+  assert.ok(row.run_id.length > 0 && typeof row.raw_stdout === 'string' && row.raw_stdout.trim(), 'rescore raw evidence missing');
+  assert.equal(row.error, undefined, 'rescore invocation did not complete');
+  for (const key of ['context_stable', 'scoring_stable', 'release_manifest_stable', 'model_identity_pass']) {
+    assert.equal(row.check?.[key], true, `rescore source ${key} not true`);
+  }
+  assert.equal(row.context_sha256, currentContext.context_sha256, 'rescore context mismatch');
+  assert.equal(row.context_after_sha256, row.context_sha256, 'rescore source context drift');
+  assert.equal(row.fixture_sha256, fixtureDigest(fixtures[fixtureId]), 'rescore fixture hash mismatch');
+  assert.equal(row.schema_sha256, schemaDigest(fixtures[fixtureId]), 'rescore answer schema mismatch');
+  assert.equal(row.release_manifest_sha256, manifestHash, 'rescore source manifest hash mismatch');
+  assert.equal(manifest.schema_version, 1, 'rescore manifest schema mismatch');
+  assert.equal(manifest.branch_fixture_version, BRANCH_FIXTURE_VERSION, 'rescore branch version mismatch');
+  assert.equal(manifest.contexts?.[arm], row.context_sha256, 'rescore manifest context mismatch');
+  assert.equal(manifest.scoring_revision, row.scoring_revision, 'rescore source scoring revision mismatch');
+  assert.equal(manifest.scoring_sha256, row.scoring_sha256, 'rescore source scoring hash mismatch');
+  assert.deepEqual(manifest.fallback_ids, releaseManifest?.fallback_ids ?? manifest.fallback_ids, 'rescore fallback mismatch');
+  const events = parseEvents(row.raw_stdout);
+  assert.equal(events.filter(e => e.type === 'thread.started').length, 1, 'rescore requires one native thread');
+  assert.equal(events.filter(e => e.type === 'turn.started').length, 1, 'rescore requires one native turn');
+  assert.equal(events.filter(e => e.type === 'turn.completed').length, 1, 'rescore requires native completion');
+  assert.equal(events.at(-1)?.type, 'turn.completed', 'rescore stream not completed');
+  assert.ok(!events.some(e => e.type === 'turn.failed'), 'rescore failed native turn');
+  return events;
+}
+
+function rescoreSavedResult(context, scorer) {
+  assert.equal(selected.length, 1, 'rescore requires one selected fixture');
+  assert.ok(!existsSync(output), 'rescore output already exists; never overwrite evidence');
+  const bytes = readFileSync(rescorePath);
+  assert.equal(sha256(bytes), sourceSha256, 'rescore source SHA-256 mismatch');
+  const rows = bytes.toString('utf8').split('\n').filter(line => line.trim()).map(JSON.parse);
+  assert.equal(rows.length, 1, 'rescore requires exactly one source row');
+  const row = rows[0], sourceManifestBytes = readFileSync(sourceManifestPath);
+  const events = validateRescoreSource(row, JSON.parse(sourceManifestBytes), sha256(sourceManifestBytes), context, selected[0]);
+  const projected = codexProjection(events);
+  // Reconstruct answer AND trace from raw native events, never reuse prior derived checks.
+  const decision = scoreDecision(fixtures[selected[0]], { ...projected, isolation: {} });
+  assert.equal(contextIdentity().context_sha256, context.context_sha256, 'rescore context changed during scoring');
+  assert.equal(scoringIdentity().scoring_sha256, scorer.scoring_sha256, 'rescore scorer changed during scoring');
+  assert.equal(sha256(readFileSync(rescorePath)), sourceSha256, 'rescore source changed during scoring');
+  assert.equal(sha256(readFileSync(sourceManifestPath)), sha256(sourceManifestBytes), 'rescore source manifest changed');
+  assert.equal(sha256(readFileSync(releaseManifestPath)), releaseManifestSha256, 'rescore release changed');
+  const receipt = { schema_version: 1, evidence_kind: 'rescored-existing-live', new_model_calls: 0, replay_binding_pass: true,
+    source_path: relative(root, resolve(rescorePath)), source_sha256: sourceSha256,
+    source_run_id: row.run_id, source_batch_id: row.batch_id, original_passed: row.passed,
+    original_scoring_revision: row.scoring_revision, original_scoring_sha256: row.scoring_sha256,
+    source_release_manifest_sha256: row.release_manifest_sha256,
+    arm, harness, fixture: selected[0], fixture_sha256: row.fixture_sha256, schema_sha256: row.schema_sha256,
+    ...context, ...scorer, scoring_revision: SCORING_REVISION, release_manifest_sha256: releaseManifestSha256,
+    passed: decision.check.pass ? 1 : 0, total: 1, ...decision, trace: projected.trace };
+  mkdirSync(resolve(output, '..'), { recursive: true });
+  writeFileSync(output, `${JSON.stringify(receipt)}\n`, { flag: 'wx' });
+  console.log(`RESCORE source=${row.run_id} passed=${receipt.passed}/1 new_model_calls=0 output=${output}`);
+  return receipt;
+}
+
 const stopsOnBehaviourFailure = (selectedArm) => selectedArm === 'candidate';
 
 function failureEvidence(error, invoked) {
@@ -1208,6 +1338,124 @@ if (selfTest) {
     id: 'item_0', type: 'error', message: CODEX_SKILL_BUDGET_NOTICE,
   } };
   const noticeTrace = codexProjection([skillBudgetNotice]).trace;
+  const reconnect = { type: 'error', message: 'Reconnecting... 2/5 (request timed out)' };
+  const fallback = { type: 'item.completed', item: { id: 'item_1', type: 'error',
+    message: 'Falling back from WebSockets to HTTPS transport. request timed out' } };
+  const finish = [
+    { type: 'item.completed', item: { type: 'agent_message', text: '{"claims":{"result":"4"},"source":[]}' } },
+    { type: 'turn.completed', usage: {} },
+  ];
+  const recoveredStream = (...events) => [{ type: 'turn.started' }, ...events, ...finish];
+  for (const event of [reconnect, fallback,
+    { ...reconnect, message: 'Reconnecting... 3/7 (stream disconnected before completion: Connection reset by peer (os error 54))' },
+    { ...fallback, item: { ...fallback.item, message: 'Falling back from WebSockets to HTTPS transport. another platform transport reason' } },
+  ]) {
+    const projected = codexProjection(recoveredStream(event));
+    assert.deepEqual(projected.trace[0], { type: 'runtime_notice', event }, 'transport notice not preserved');
+    assert.equal(sharedScopeAudit(projected.trace).status, 'PASS');
+    assert.equal(scoreDecision(fixtures.F1, { ...projected, final: '', isolation: {} }).check.pass, false,
+      'notice without an answer passed');
+    for (const selectedArm of ['baseline', 'candidate']) {
+      assert.equal(evaluate(fixtures.F1, { claims: { result: '4' }, source: [] }, projected.trace, {}, selectedArm).pass, true);
+      assert.equal(evaluate(fixtures.F1, { claims: { result: '5' }, source: [] }, projected.trace, {}, selectedArm).pass, false,
+        'notice hid a wrong answer');
+    }
+    for (const [command, expected] of [['unknown-reader', 'UNKNOWN'], ['cat /not-supplied-checkout/forbidden.txt', 'FAIL']]) {
+      const trace = codexProjection(recoveredStream(event, { type: 'item.completed', item: {
+        type: 'command_execution', command, exit_code: 0,
+      } })).trace;
+      assert.equal(sharedScopeAudit(trace).status, expected, 'transport notice hid I/O');
+    }
+  }
+  for (const altered of [
+    { ...reconnect, extra: true }, { ...reconnect, type: 'turn.failed' },
+    ...['Reconnecting... 0/5 (request timed out)', 'Reconnecting... 6/5 (request timed out)',
+      'Reconnecting... 2/0 (request timed out)', 'authentication failed', `${reconnect.message}\n`,
+      `${reconnect.message}; run a command`].map(message => ({ ...reconnect, message })),
+    { ...fallback, extra: true }, { ...fallback, type: 'item.started' },
+    ...[{ extra: true }, { id: '' }, { id: 0 }, { type: 'file_change' },
+      { message: `${fallback.item.message} ` }, { message: 'unknown error' }].map(delta => ({
+      ...fallback, item: { ...fallback.item, ...delta },
+    })),
+  ]) {
+    const projected = codexProjection(recoveredStream(altered));
+    assert.equal(projected.trace[0].type, 'unclassified_activity', 'near-match transport event was exempted');
+    assert.equal(sharedScopeAudit(projected.trace).status, 'UNKNOWN');
+  }
+  for (const events of [
+    [reconnect, ...finish],
+    [{ type: 'turn.started' }, reconnect],
+    [{ type: 'turn.started' }, reconnect, { type: 'turn.completed' }],
+    [{ type: 'turn.started' }, ...finish.slice(0, 1), reconnect, ...finish.slice(1)],
+    [{ type: 'turn.started' }, reconnect, { type: 'turn.failed' }, ...finish],
+    [{ type: 'turn.started' }, reconnect, { type: 'turn.started' }, ...finish],
+    recoveredStream(reconnect, { type: 'error', message: 'unknown fatal error' }),
+  ]) assert.equal(sharedScopeAudit(codexProjection(events).trace).status, 'UNKNOWN', 'unrecovered/unknown error passed');
+  // Codex's native event shapes must not create a cross-harness exemption.
+  const claudeTransportTrace = claudeProjection([{ type: 'assistant', message: { content: [
+    { type: 'tool_use', id: 'transport-lookalike', name: 'Bash', input: {
+      command: 'cat /not-supplied-checkout/forbidden.txt', description: reconnect.message,
+    } },
+  ] } }]).trace;
+  assert.equal(sharedScopeAudit(claudeTransportTrace).status, 'FAIL');
+  const replayDir = mkdtempSync(join(tmpdir(), 'agent-context-rescore-test-'));
+  try {
+    const ctx = contextIdentity(), scorer = scoringIdentity();
+    const governed = readFileSync(join(root, 'memory/semantic/static-fallback-allowlist.txt'), 'utf8')
+      .split('\n').map(line => line.split('#')[0].trim()).filter(Boolean);
+    const oldManifest = { schema_version: 1, branch_fixture_version: BRANCH_FIXTURE_VERSION,
+      contexts: { candidate: ctx.context_sha256, baseline: ctx.context_sha256 },
+      scoring_revision: 'synthetic-old-scorer', scoring_sha256: 'a'.repeat(64), fallback_ids: governed };
+    const oldManifestBytes = JSON.stringify(oldManifest);
+    const nextManifest = { ...oldManifest, scoring_revision: SCORING_REVISION, scoring_sha256: scorer.scoring_sha256 };
+    const row = { schema_version: 3, protocol_version: PROTOCOL_VERSION, harness: 'codex', arm,
+      fixture: 'F1', fixture_sha256: fixtureDigest(fixtures.F1), schema_sha256: schemaDigest(fixtures.F1),
+      total: 1, passed: 0, run_id: 'synthetic-rescore-only', batch_id: 'synthetic',
+      memory_root: root, memory_root_source: 'evaluator-env', prompt_mode: 'single-fixture-repository',
+      context_sha256: ctx.context_sha256, context_after_sha256: ctx.context_sha256,
+      scoring_revision: oldManifest.scoring_revision, scoring_sha256: oldManifest.scoring_sha256,
+      release_manifest_sha256: sha256(oldManifestBytes),
+      check: { context_stable: true, scoring_stable: true, release_manifest_stable: true, model_identity_pass: true },
+      answer: { claims: { result: 'wrong-derived-answer' }, source: [] },
+      raw_stdout: [{ type: 'thread.started', thread_id: 'synthetic-thread' }, ...recoveredStream(reconnect)]
+        .map(event => JSON.stringify(event)).join('\n') };
+    validateRescoreSource(row, oldManifest, sha256(oldManifestBytes), ctx, 'F1');
+    for (const delta of [
+      { context_sha256: 'b'.repeat(64) }, { context_after_sha256: 'b'.repeat(64) },
+      { fixture_sha256: 'b'.repeat(64) }, { schema_sha256: 'b'.repeat(64) },
+      { release_manifest_sha256: 'b'.repeat(64) }, { scoring_sha256: 'b'.repeat(64) },
+      { harness: 'claude' }, { memory_root: '/other-root' }, { error: 'timeout' },
+      { raw_stdout: row.raw_stdout.replace('turn.completed', 'turn.failed') },
+      { check: { ...row.check, context_stable: false } },
+    ]) assert.throws(() => validateRescoreSource({ ...row, ...delta }, oldManifest, sha256(oldManifestBytes), ctx, 'F1'), /rescore/);
+    const source = join(replayDir, 'source.ndjson'), prior = join(replayDir, 'prior.json');
+    const next = join(replayDir, 'next.json'), resultPath = join(replayDir, 'result.ndjson');
+    const sourceBytes = `${JSON.stringify(row)}\n`;
+    writeFileSync(source, sourceBytes); writeFileSync(prior, oldManifestBytes); writeFileSync(next, JSON.stringify(nextManifest));
+    const replayArgs = [RUNNER, '--root', root, '--arm', arm, '--harness', 'codex', '--fixture', 'F1',
+      '--rescore', source, '--source-sha256', sha256(sourceBytes), '--source-release-manifest', prior,
+      '--release-manifest', next, '--output', resultPath];
+    // PATH has no Codex/Claude: accidental live dispatch cannot spend a model call.
+    const replayRun = await run(process.execPath, replayArgs, { env: { PATH: replayDir } });
+    assert.match(replayRun.stdout, /new_model_calls=0/);
+    const replayed = JSON.parse(readFileSync(resultPath, 'utf8'));
+    assert.equal(replayed.passed, 1); assert.equal(replayed.new_model_calls, 0);
+    assert.equal(replayed.answer.claims.result, '4', 'rescore trusted old derived answer');
+    assert.equal(replayed.original_passed, 0); assert.equal(replayed.evidence_kind, 'rescored-existing-live');
+    assert.equal(readFileSync(source, 'utf8'), sourceBytes);
+    await assert.rejects(run(process.execPath, replayArgs, { env: { PATH: replayDir } }), /output already exists/);
+    const wrongHashArgs = [...replayArgs]; wrongHashArgs[wrongHashArgs.indexOf('--source-sha256') + 1] = 'f'.repeat(64);
+    wrongHashArgs[wrongHashArgs.indexOf('--output') + 1] = join(replayDir, 'rejected.ndjson');
+    await assert.rejects(run(process.execPath, wrongHashArgs, { env: { PATH: replayDir } }), /source SHA-256 mismatch/);
+    assert.equal(existsSync(join(replayDir, 'rejected.ndjson')), false);
+    const incomplete = [RUNNER, '--root', root, '--arm', arm, '--harness', 'codex', '--fixture', 'F1',
+      '--output', join(replayDir, 'must-not-run.ndjson'), '--rescore'];
+    await assert.rejects(run(process.execPath, incomplete, { env: { PATH: replayDir } }), /--rescore requires a value/);
+    assert.equal(existsSync(join(replayDir, 'must-not-run.ndjson')), false);
+    await assert.rejects(run(process.execPath, [...incomplete.slice(0, -1), `--rescore=${source}`],
+      { env: { PATH: replayDir } }), /separate flag and value/);
+    await assert.rejects(run(process.execPath, [...replayArgs, '--rescore', source], { env: { PATH: replayDir } }), /may appear only once/);
+  } finally { rmSync(replayDir, { recursive: true, force: true }); }
   assert.deepEqual(noticeTrace, [{ type: 'runtime_notice', event: skillBudgetNotice }]);
   assert.equal(sharedScopeAudit(noticeTrace).status, 'PASS');
   for (const selectedArm of ['baseline', 'candidate']) {
@@ -1752,6 +2000,15 @@ if (describe) {
       live_ready: legacyFixtureIds.includes(id) || Boolean(releaseManifestPath && !(arm === 'baseline' && id === 'F9-v2')),
     }])) }, null, 2));
   process.exit(0);
+}
+if (rescorePath) {
+  try {
+    const receipt = rescoreSavedResult(identity, scorer);
+    process.exit(receipt.passed === 1 ? 0 : 1);
+  } catch (error) {
+    console.error(`Rescore rejected: ${error.message}`);
+    process.exit(2);
+  }
 }
 const harnessConfig = harness === 'claude'
   ? { model: claudeModel || 'default', effort: claudeEffort || 'default' }
