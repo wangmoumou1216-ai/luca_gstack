@@ -113,7 +113,19 @@ function observationBoundary(state) {
   const control = state?.event_control;
   const harness = control?.candidates?.[0]?.harness || control?.current?.harness;
   if (harness === 'claude') return sid;
-  return String(data?.turn_id || data?.prompt_id || '');
+  const supplied = String(data?.turn_id || data?.prompt_id || '');
+  if (supplied) return supplied;
+  // Some Codex PreToolUse payloads omit the transport turn id after a native
+  // event is already attested. This fallback cannot consume a pending prompt:
+  // the substrate must still re-observe this exact current event and reject a
+  // newer native user before the binding is usable.
+  if (harness === 'codex' && state?.schema_version === substrate?.PROJECT_STATE_SCHEMA
+      && state.state === 'TURN_ACTIVE' && control?.candidates?.length === 0
+      && control.current?.status === 'active'
+      && state.turn?.boundary_id === control.current.boundary_id) {
+    return String(control.current.boundary_id || '');
+  }
+  return '';
 }
 
 function attestForPreTool(state) {

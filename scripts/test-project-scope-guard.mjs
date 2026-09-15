@@ -621,6 +621,67 @@ check('IDENTITY-STATE-006 pending Codex candidate without PreToolUse boundary fa
   assert.equal(after.event_control.candidates.length, 1, 'missing boundary must leave pending candidate unconsumed');
   assert.equal(after.event_control.consumed_events.length, 0, 'missing boundary must not mint ledger authority');
 });
+check('IDENTITY-STATE-006a active Codex event without tool boundary rewrites Bash project alias', () => {
+  const sid = 'ACTIVE-NO-BOUNDARY';
+  const env = makeEnv({ pins: { [sid]: 'muse' } });
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  const before = readFileSync(path);
+  const command = 'shasum -a 256 docs/plans/session-lifecycle-plan.md';
+  const result = run(env, {
+    hook_event_name: 'PreToolUse',
+    session_id: sid,
+    cwd: env.gstack,
+    tool_name: 'Bash',
+    tool_input: { command },
+  }, {}, { addDefaultBoundary: false });
+  assert.equal(result.hookSpecificOutput.updatedInput.command,
+    `shasum -a 256 ${abs(env, 'muse', 'docs/plans/session-lifecycle-plan.md')}`);
+  assert.deepEqual(readFileSync(path), before, 'fresh active observation is idempotent');
+});
+check('IDENTITY-STATE-006b explicit wrong Codex tool boundary never borrows active event', () => {
+  const sid = 'WRONG-BOUNDARY';
+  const env = makeEnv({ pins: { [sid]: 'muse' } });
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  const before = readFileSync(path);
+  const denied = run(env, {
+    hook_event_name: 'PreToolUse',
+    session_id: sid,
+    cwd: env.gstack,
+    turn_id: 'turn-unrelated',
+    tool_name: 'Bash',
+    tool_input: { command: 'shasum -a 256 docs/plans/session-lifecycle-plan.md' },
+  }, {}, { addDefaultBoundary: false });
+  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny');
+  assert.deepEqual(readFileSync(path), before, 'mismatch must not advance authority');
+});
+check('IDENTITY-STATE-006c missing boundary never borrows stale active Codex event', () => {
+  const sid = 'STALE-NO-BOUNDARY';
+  const env = makeEnv({ pins: { [sid]: 'muse' } });
+  const path = join(env.gstack, '.claude', `.session-project-${sid}`);
+  const state = JSON.parse(readFileSync(path, 'utf8'));
+  const rollout = state.event_control.cursor.transcript_path;
+  const prior = readFileSync(rollout);
+  const newerUser = Buffer.from(`${JSON.stringify({
+    type: 'response_item',
+    timestamp: '2026-09-08T00:00:02.000Z',
+    payload: {
+      type: 'message', role: 'user', id: 'msg_newer-native-user',
+      content: [{ type: 'input_text', text: 'newer unqueued prompt' }],
+      internal_chat_message_metadata_passthrough: { turn_id: 'turn-newer' },
+    },
+  })}\n`);
+  writeFileSync(rollout, Buffer.concat([prior, newerUser]));
+  const before = readFileSync(path);
+  const denied = run(env, {
+    hook_event_name: 'PreToolUse',
+    session_id: sid,
+    cwd: env.gstack,
+    tool_name: 'Bash',
+    tool_input: { command: 'shasum -a 256 docs/plans/session-lifecycle-plan.md' },
+  }, {}, { addDefaultBoundary: false });
+  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny');
+  assert.deepEqual(readFileSync(path), before, 'a stale event never mutates the pin');
+});
 check('IDENTITY-STATE-007 failed native freshness observation revokes otherwise-valid binding', () => {
   const sid = 'STALE';
   const env = makeEnv({ pins: { [sid]: 'alpha' } });

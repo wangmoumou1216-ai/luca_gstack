@@ -1035,6 +1035,99 @@ check('Codex: deactivate re-fences through project.sh and CODEX_HOME, so the ses
   assert.equal(jsonOut(runNode(PIN, ['status', '--session', sid], fx)).binding.project, 'beta');
 });
 
+check('Codex orphaned active turn recovers without deleting project or shared display links', () => {
+  const sid = randomUUID();
+  const fx = makeCodexEnv(sid);
+  const alpha = makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  withAttestationTest(() => initializeProjectEventFence({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+    cwd: fx.gstack, codexHome: fx.codexHome,
+  }));
+  assert.equal(codexSwitchTurn(fx, sid, 'initial-switch', 'alpha', 'orphan-tx-alpha').state.state, 'SWITCH_ONLY');
+  assert.equal(mutate(fx, sid, 'switch', 'alpha', { tx: 'orphan-tx-alpha', expected_epoch: 0 }).status, 0);
+  const activeBoundary = `active-${randomUUID()}`;
+  const activePrompt = 'continue alpha project';
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: activeBoundary,
+    cwd: fx.gstack, harness: 'codex', prompt: activePrompt, intent: { kind: 'turn' },
+  });
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+      content: [{ type: 'input_text', text: activePrompt }],
+      internal_chat_message_metadata_passthrough: { turn_id: activeBoundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: activeBoundary,
+      item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: activePrompt }] } } },
+  ].map(row => JSON.stringify(row)).join('\n') + '\n');
+  assert.equal(withAttestationTest(() => attestPendingProjectEvent({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: activeBoundary,
+    cwd: fx.gstack, observation: 'pre-tool', codexHome: fx.codexHome,
+  })).state.state, 'TURN_ACTIVE');
+  for (const boundary of [`orphan-${randomUUID()}`, `orphan-${randomUUID()}`]) {
+    const prompt = `unwitnessed user turn ${boundary}`;
+    appendFileSync(fx.rollout, [
+      { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: prompt }],
+        internal_chat_message_metadata_passthrough: { turn_id: boundary } } },
+      { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: boundary,
+        item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: prompt }] } } },
+    ].map(row => JSON.stringify(row)).join('\n') + '\n');
+  }
+  const links = linkTuple(fx);
+  const recovered = spawnSync('bash', [PROJECT_SH, 'recover-session', sid], {
+    cwd: REPO, env: fx.env, encoding: 'utf8',
+  });
+  assert.equal(recovered.status, 0, recovered.stderr || recovered.stdout);
+  assert.equal(jsonOut(recovered).state, 'NO_PIN');
+  const unbound = readProjectState(fx.gstack, sid, fx.projects).value;
+  assert.equal(unbound.event_control.candidates.length, 0);
+  assert.equal(unbound.event_control.fence.cursor.record_index, 9, 'all flushed orphan turns are behind the new fence');
+  assert.deepEqual(linkTuple(fx), links, 'recovery must not mutate shared display links');
+  assert.equal(existsSync(alpha), true, 'recovery must not delete the project');
+  assert.equal(codexSwitchTurn(fx, sid, `fresh-${randomUUID()}`, 'beta', 'orphan-tx-beta').state.state, 'SWITCH_ONLY');
+  assert.equal(mutate(fx, sid, 'switch', 'beta', { tx: 'orphan-tx-beta', expected_epoch: 0 }).status, 0);
+  assert.equal(readProjectState(fx.gstack, sid, fx.projects).value.binding.project, 'beta');
+});
+
+check('recover-session refuses a fresh active native event without changing authority', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  assert.equal(beginTurn(fx, 'S').state, 'TURN_ACTIVE');
+  const before = stateBytes(fx, 'S');
+  const links = linkTuple(fx);
+  const refused = spawnSync('bash', [PROJECT_SH, 'recover-session', 'S'], {
+    cwd: REPO, env: fx.env, encoding: 'utf8',
+  });
+  assert.notEqual(refused.status, 0);
+  assert.match(refused.stderr, /still fresh|RECOVERY_INVALID|superseded/);
+  assert.deepEqual(stateBytes(fx, 'S'), before);
+  assert.deepEqual(linkTuple(fx), links);
+});
+
+check('Claude orphaned active turn can re-fence and then attest a new project prompt', () => {
+  const fx = makeEnv();
+  const alpha = makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  assert.equal(beginTurn(fx, 'S').state, 'TURN_ACTIVE');
+  appendFileSync(join(fx.transcripts, 'S.jsonl'), `${JSON.stringify({
+    type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+    isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+    message: { role: 'user', content: 'new user turn without a project candidate' },
+  })}\n`);
+  const links = linkTuple(fx);
+  const recovered = spawnSync('bash', [PROJECT_SH, 'recover-session', 'S'], {
+    cwd: REPO, env: fx.env, encoding: 'utf8',
+  });
+  assert.equal(recovered.status, 0, recovered.stderr || recovered.stdout);
+  assert.equal(jsonOut(recovered).state, 'NO_PIN');
+  assert.equal(existsSync(alpha), true);
+  assert.deepEqual(linkTuple(fx), links);
+  queueSwitchWithoutFence(fx, 'S', 'beta', 'claude-after-orphan');
+  assert.equal(attestCandidate(fx, 'S').state.state, 'SWITCH_ONLY');
+});
+
 check('Codex TURN_CLOSED with structured skill can attest a fresh turn and re-fence safely', () => {
   const sid = randomUUID();
   const fx = makeCodexEnv(sid);

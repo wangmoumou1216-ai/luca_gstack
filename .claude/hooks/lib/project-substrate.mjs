@@ -689,6 +689,38 @@ export function refenceProjectStateForDeactivate({
   });
 }
 
+// A failed prompt admission can leave genuine native user turns after an
+// active cursor, with no queued candidates. An explicit
+// recovery may remove the stale authority, but only after the source proves
+// that the current event has been superseded. This never attests the orphans.
+export function inspectOrphanedActiveProjectEvent({
+  gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, codexHome = '',
+}) {
+  const sid = sanitizeSessionId(sessionId);
+  const snapshot = readProjectState(gstackRoot, sid);
+  const state = snapshot.value;
+  const control = eventControlFromState(state);
+  if (state.schema_version !== PROJECT_STATE_SCHEMA || state.state !== 'TURN_ACTIVE'
+      || control.candidates.length !== 0 || control.current?.status !== 'active'
+      || !control.fence || state.turn?.event_id !== control.current.event_id
+      || state.turn?.boundary_id !== control.current.boundary_id
+      || !validatedBindingForState(state, projectsRoot)) {
+    throw new ProjectEventAuthorityError('RECOVERY_INVALID', 'only a superseded attested active binding can be recovered');
+  }
+  const transcriptPath = control.current.harness === 'claude' ? control.cursor.transcript_path : '';
+  try {
+    observeCurrentNativeEvent({
+      event: control.current, sessionId: sid, cursor: control.cursor,
+      transcriptPath, codexHome, observation: 'pre-tool',
+      allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
+    });
+  } catch (error) {
+    if (error?.code === 'INTERVENING_USER') return snapshot;
+    throw error;
+  }
+  throw new ProjectEventAuthorityError('RECOVERY_INVALID', 'current native event is still fresh; refusing to remove its authority');
+}
+
 function validateObservationContext({ sessionId, boundaryId, cwd }) {
   const sid = sanitizeSessionId(sessionId);
   const boundary = String(boundaryId || '');

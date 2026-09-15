@@ -39,10 +39,10 @@ case "$cmd" in
     if [ -z "$session_id" ]; then echo "❌ status 需要 session id" >&2; exit 1; fi
     LUCA_GSTACK_ROOT="$PROJECT_ROOT" node "$PIN" status --session "$session_id"
     ;;
-  deactivate)
+  deactivate|recover-session)
     session_id="${2:-${LUCA_SESSION_ID:-}}"
-    if [ -z "$session_id" ]; then echo "❌ deactivate 需要 session id" >&2; exit 1; fi
-    LUCA_GSTACK_ROOT="$PROJECT_ROOT" node "$PIN" deactivate --session "$session_id"
+    if [ -z "$session_id" ]; then echo "❌ $cmd 需要 session id" >&2; exit 1; fi
+    LUCA_GSTACK_ROOT="$PROJECT_ROOT" node "$PIN" "$cmd" --session "$session_id"
     ;;
   *)
     echo "用法:"
@@ -50,5 +50,6 @@ case "$cmd" in
     echo "  project.sh list"
     echo "  project.sh status <session-id>"
     echo "  project.sh deactivate <session-id>"
+    echo "  project.sh recover-session <session-id>  # 仅撤销已被原生新用户轮次取代的旧权限"
     ;;
 esac

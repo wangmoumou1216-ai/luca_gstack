@@ -25,4 +25,6 @@ Cross-project dependency reads do not create a second binding. Only an exact `Âè
 
 Identity parsing is fail-closed. Reject empty, `.` or `..` segments and traversal. A dangling or legacy pin is handled only by the explicit migration/quarantine operation; read-only checks do not mutate it. If the required transaction is unavailable or stale, stop and request a fresh user turn rather than improvising a switch.
 
+An orphaned `TURN_ACTIVE` binding may be explicitly lowered with `project.sh recover-session <session-id>` only when the canonical native source proves that a newer user turn superseded it and no candidate remains. Recovery re-fences to `NO_PIN`; it does not attest the skipped turn, switch a project, or alter project data and shared display aliases. An active current turn, damaged source, or pending candidate refuses recovery. If a dead state lock blocks recovery, first use the existing `inspect-state-lock` ‚Üí `recover-state-lock` exact-owner-handle procedure; never steal a live lock or infer staleness from age. The human must send a fresh project request afterward to obtain new authority.
+
 <!-- FILE_END: skill-os/runtime/project-session.md -->

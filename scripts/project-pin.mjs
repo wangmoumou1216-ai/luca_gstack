@@ -24,6 +24,7 @@ import {
   atomicProjectStateCas,
   canonicalProjectIdentity,
   inspectProjectStateLock,
+  inspectOrphanedActiveProjectEvent,
   migrateLegacyProjectState,
   readProjectState,
   refenceProjectStateForDeactivate,
@@ -372,6 +373,20 @@ function deactivateProject(sessionId) {
   }
 }
 
+function recoverSession(sessionId) {
+  const sid = sanitizeSessionId(sessionId);
+  const { gstackRoot, projectsRoot } = roots();
+  const snapshot = inspectOrphanedActiveProjectEvent({
+    gstackRoot, projectsRoot, sessionId: sid, codexHome: process.env.CODEX_HOME || '',
+  });
+  const refenced = refenceProjectStateForDeactivate({
+    gstackRoot, sessionId: sid, expectedRaw: snapshot.raw, codexHome: process.env.CODEX_HOME || '',
+  });
+  if (!refenced) throw new Error('orphan recovery requires a durable native source fence');
+  return { state: 'NO_PIN', recovered: true,
+    recovery: 'old authority removed without touching project data or shared links; submit a new human project prompt' };
+}
+
 function status(sessionId) {
   const { gstackRoot } = roots();
   const state = readProjectState(gstackRoot, sessionId).value;
@@ -402,6 +417,8 @@ async function cli() {
     result = inspectProjectStateLock(base.gstackRoot, sessionId);
   } else if (command === 'recover-state-lock') {
     result = recoverProjectStateLock(base.gstackRoot, sessionId, JSON.parse(arg('--handle-json') || 'null'));
+  } else if (command === 'recover-session') {
+    result = recoverSession(sessionId);
   } else if (command === 'migrate-legacy-pin') {
     result = migrateLegacyProjectState(base.gstackRoot, sessionId, base.projectsRoot);
   } else if (command === 'quarantine-legacy-pin') {
@@ -420,7 +437,7 @@ async function cli() {
       expectedEpoch: arg('--expected-epoch'),
     });
   } else {
-    throw new Error('usage: project-pin.mjs <status|switch|new|inspect-state-lock|recover-state-lock|migrate-legacy-pin|quarantine-legacy-pin> ...');
+    throw new Error('usage: project-pin.mjs <status|switch|new|recover-session|inspect-state-lock|recover-state-lock|migrate-legacy-pin|quarantine-legacy-pin> ...');
   }
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }
