@@ -661,6 +661,182 @@ function assistantWitness(fx, text) {
   })}\n`);
 }
 
+// Sanitized structure of the two-clipboard-image Codex turn that wedged the cursor.
+function imagePair(fx, prompt, count = 2, mutate = () => {}) {
+  const source = [], anchor = [];
+  for (let n = 1; n <= count; n += 1) {
+    const path = `/tmp/clipboard-${n}.png`;
+    source.push({ type: 'input_text', text: `<image name=[Image #${n}] path="${path}">` },
+      { type: 'input_image', image_url: 'data:image/png;base64,aGVsbG8=', detail: 'high' },
+      { type: 'input_text', text: '</image>' });
+    anchor.push({ type: 'local_image', path });
+  }
+  source.push({ type: 'input_text', text: prompt });
+  anchor.push({ type: 'text', text: prompt, text_elements: [] });
+  mutate(source, anchor);
+  const sourceId = `msg_${randomUUID()}`;
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: sourceId,
+      content: source, internal_chat_message_metadata_passthrough: { turn_id: fx.boundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: fx.session,
+      turn_id: fx.boundary, item: { type: 'UserMessage', id: randomUUID(), content: anchor } } },
+  ].map(JSON.stringify).join('\n') + '\n');
+  return sourceId;
+}
+
+// Sanitized structure emitted when Codex expands an explicitly invoked skill:
+// the native UserMessage anchor carries a structured skill descriptor, followed
+// by one unanchored user-role record containing the resolved skill body.
+function skillPair(fx, prompt, mutate = () => {}) {
+  const sourceId = `msg_${randomUUID()}`;
+  const anchorId = randomUUID();
+  const skill = { type: 'skill', name: 'diagnosing-bugs', path: '/tmp/skills/diagnosing-bugs/SKILL.md' };
+  const injected = `<skill>\n<name>${skill.name}</name>\n<path>${skill.path}</path>\n---\nname: ${skill.name}\n---\nbody\n</skill>`;
+  const source = [{ type: 'input_text', text: prompt }];
+  const anchor = [{ type: 'text', text: prompt, text_elements: [] }, skill];
+  const expansion = [{ type: 'input_text', text: injected }];
+  const expansionPayload = {
+    type: 'message', role: 'user', id: `msg_${randomUUID()}`, content: expansion,
+    internal_chat_message_metadata_passthrough: {
+      turn_id: fx.boundary,
+      create_time: 1_789_443_093.02633,
+      content_item_kinds: ['skills.selected_skill_instructions'],
+    },
+  };
+  mutate(source, anchor, expansion, expansionPayload);
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: sourceId,
+      content: source, internal_chat_message_metadata_passthrough: { turn_id: fx.boundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: fx.session,
+      turn_id: fx.boundary, item: { type: 'UserMessage', id: anchorId, content: anchor } } },
+    { type: 'response_item', payload: { type: 'message', role: 'developer',
+      content: [{ type: 'input_text', text: '[route-guard] project transaction' }] } },
+    { type: 'response_item', payload: expansionPayload },
+  ].map(JSON.stringify).join('\n') + '\n');
+  return { sourceId, anchorId };
+}
+
+lifecycleCheck('Codex structured skill injection remains the current event through Stop', () => {
+  const fx = makeLifecycleFixture('skill-injection');
+  try {
+    const prompt = '用 diagnosing-bugs 定位问题';
+    queueLifecycle(fx, prompt);
+    const native = skillPair(fx, prompt);
+    assert.equal(observeLifecycle(fx).event.native_id, native.sourceId);
+    assistantWitness(fx, 'diagnosed');
+    assert.equal(observeLifecycle(fx, 'stop', 'diagnosed').event.native_id, native.sourceId);
+    queueLifecycle(fx, 'next human');
+    const next = nativePair(fx, 'next human');
+    assert.equal(observeLifecycle(fx).event.native_id, next.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+for (const [name, mutate, code] of [
+  ['unknown anchor part', (_s, a) => { a[1].type = 'future_skill'; }, 'UNKNOWN_SCHEMA'],
+  ['relative skill path', (_s, a) => { a[1].path = 'relative/SKILL.md'; }, 'UNKNOWN_SCHEMA'],
+  ['mismatched injected name', (_s, _a, e) => { e[0].text = e[0].text.replace('diagnosing-bugs</name>', 'other</name>'); }, 'MISMATCH'],
+  ['mismatched injected path', (_s, _a, e) => { e[0].text = e[0].text.replace('/tmp/skills/diagnosing-bugs/SKILL.md', '/tmp/skills/other/SKILL.md'); }, 'MISMATCH'],
+  ['missing injected expansion', (_s, _a, e) => { e.splice(0); }, 'UNKNOWN_SCHEMA'],
+  ['ordinary-user provenance', (_s, _a, _e, p) => { p.internal_chat_message_metadata_passthrough.content_item_kinds = []; }, 'UNKNOWN_SCHEMA'],
+]) lifecycleCheck(`Codex skill rejects ${name} without advancing queue`, () => {
+  const fx = makeLifecycleFixture('skill-negative');
+  try {
+    const prompt = '用 diagnosing-bugs 定位问题';
+    queueLifecycle(fx, prompt); skillPair(fx, prompt, mutate);
+    const before = readFileSync(fx.statePath);
+    expectCode(`skill ${name}`, code, () => observeLifecycle(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Codex skill allowance does not hide a later unanchored user record', () => {
+  const fx = makeLifecycleFixture('skill-intervening-user');
+  try {
+    const prompt = '用 diagnosing-bugs 定位问题';
+    queueLifecycle(fx, prompt); skillPair(fx, prompt);
+    appendFileSync(fx.rollout, `${JSON.stringify({ type: 'response_item', payload: {
+      type: 'message', role: 'user', content: [{ type: 'input_text', text: 'unrelated user record' }],
+    } })}\n`);
+    expectCode('skill later user', 'INTERVENING_USER', () => observeLifecycle(fx));
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+for (const count of [1, 2]) lifecycleCheck(`Codex ${count} local images: current event, Stop and queue continuation`, () => {
+  const fx = makeLifecycleFixture(`images-${count}`);
+  try {
+    const prompt = '请检查截图 [Image #1]';
+    queueLifecycle(fx, prompt);
+    const id = imagePair(fx, prompt, count);
+    assert.equal(observeLifecycle(fx).event.native_id, id);
+    assert.equal(observeLifecycle(fx).event.native_id, id);
+    assistantWitness(fx, 'checked');
+    assert.equal(observeLifecycle(fx, 'stop', 'checked').event.native_id, id);
+    queueLifecycle(fx, 'next human');
+    const next = nativePair(fx, 'next human');
+    assert.equal(observeLifecycle(fx).event.native_id, next.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Codex image backlog drains before later human candidate', () => {
+  const fx = makeLifecycleFixture('image-backlog');
+  try {
+    queueLifecycle(fx, '截图'); imagePair(fx, '截图');
+    queueLifecycle(fx, 'continue'); const next = nativePair(fx, 'continue');
+    const result = observeLifecycle(fx);
+    assert.equal(result.event.native_id, next.sourceId);
+    assert.equal(result.state.event_control.consumed_events.length, 2);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Codex image response-only Stop attests and replay cannot consume it twice', () => {
+  const fx = makeLifecycleFixture('image-stop-only');
+  try {
+    queueLifecycle(fx, '截图'); const id = imagePair(fx, '截图');
+    assistantWitness(fx, 'done');
+    assert.equal(observeLifecycle(fx, 'stop', 'done').event.native_id, id);
+    queueLifecycle(fx, '截图');
+    const before = readFileSync(fx.statePath);
+    expectCode('image event replay', 'EVENT_REPLAY', () => observeLifecycle(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Codex literal image wrapper text remains significant', () => {
+  const fx = makeLifecycleFixture('literal-image-wrapper');
+  try {
+    const prompt = '<image name=[Image #1] path="/tmp/literal.png">\n</image>';
+    queueLifecycle(fx, prompt); const id = nativePair(fx, prompt);
+    assert.equal(observeLifecycle(fx).event.native_id, id.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+for (const [name, mutate] of [
+  ['wrong path', (s, a) => { a[0].path = '/tmp/other.png'; }],
+  ['reversed anchor image order', (s, a) => { [a[0], a[1]] = [a[1], a[0]]; }],
+  ['wrong closing wrapper', s => { s[2].text = '</image>lost text'; }],
+  ['wrong index', s => { s[0].text = s[0].text.replace('#1', '#2'); }],
+  ['relative path', s => { s[0].text = s[0].text.replace('/tmp/', ''); }],
+  ['unwrapped image', s => { s.shift(); }],
+  ['unsupported detail', s => { s[1].detail = 'future'; }],
+  ['noncanonical base64', s => { s[1].image_url = 'data:image/png;base64,aGVsbG8'; }],
+  ['unknown image type', s => { s[1].type = 'future_image'; }],
+  ['invalid data URI', s => { s[1].image_url = 'https://example.com/image.png'; }],
+  ['altered anchor text', (s, a) => { a.at(-1).text = 'tampered'; }],
+  ['missing anchor image', (s, a) => { a.shift(); }],
+  ['unknown anchor type', (s, a) => { a[0].type = 'future_image'; }],
+]) lifecycleCheck(`Codex image rejects ${name} without advancing queue`, () => {
+  const fx = makeLifecycleFixture('image-negative');
+  try {
+    queueLifecycle(fx, '截图'); imagePair(fx, '截图', 2, mutate);
+    queueLifecycle(fx, 'later human'); nativePair(fx, 'later human');
+    const before = readFileSync(fx.statePath);
+    const mismatchCases = ['wrong path', 'altered anchor text', 'missing anchor image', 'reversed anchor image order'];
+    expectCode(`image ${name}`, mismatchCases.includes(name) ? 'MISMATCH' : 'UNKNOWN_SCHEMA',
+      () => observeLifecycle(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
 function queueLifecycle(fx, prompt, intent = { kind: 'turn' }) {
   queueProjectEventCandidate({
     gstackRoot: fx.gstack,

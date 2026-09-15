@@ -245,6 +245,8 @@ function promptBytes(candidate) {
 }
 
 function strictCodexText(content, expectedType) {
+  if (expectedType === 'input_text') return codexUserContent(content, false).text;
+  if (expectedType === 'text') return codexUserContent(content, true).text;
   if (!Array.isArray(content) || content.length === 0) fail('UNKNOWN_SCHEMA', 'Codex message content schema is unknown');
   const parts = content.map((part) => {
     if (!part || part.type !== expectedType || typeof part.text !== 'string') {
@@ -253,6 +255,139 @@ function strictCodexText(content, expectedType) {
     return part.text;
   });
   return parts.join('\n');
+}
+
+// Codex clipboard images are three source parts (opening wrapper, image, closing
+// wrapper), but one local_image anchor part. Strip only that exact envelope;
+// ordinary user text, including literal image tags, remains byte-significant.
+// Never read the paths: they may be temporary/deleted and are provenance, not IO.
+function codexUserContent(content, anchor) {
+  if (!Array.isArray(content) || !content.length) fail('UNKNOWN_SCHEMA', 'Codex user content is empty');
+  const texts = [], paths = [], skills = [];
+  const textType = anchor ? 'text' : 'input_text';
+  for (let index = 0; index < content.length; index += 1) {
+    const part = content[index];
+    if (anchor && part?.type === 'skill') {
+      const keys = Object.keys(part).sort();
+      if (JSON.stringify(keys) !== JSON.stringify(['name', 'path', 'type'])
+          || typeof part.name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(part.name)
+          || typeof part.path !== 'string' || !isAbsolute(part.path)
+          || /[\x00-\x1f<>]/.test(part.path)) {
+        fail('UNKNOWN_SCHEMA', 'Codex structured skill descriptor is invalid');
+      }
+      skills.push({ name: part.name, path: part.path });
+      continue;
+    }
+    if (anchor && part?.type === 'local_image') {
+      if (typeof part.path !== 'string' || !isAbsolute(part.path) || /[\x00-\x1f"<>]/.test(part.path)) {
+        fail('UNKNOWN_SCHEMA', 'Codex local image path is invalid');
+      }
+      paths.push(part.path);
+      continue;
+    }
+    if (!anchor && content[index + 1]?.type === 'input_image') {
+      const match = part?.type === 'input_text' && typeof part.text === 'string'
+        ? /^<image name=\[Image #(\d+)\] path="([^"<>\x00-\x1f]+)">$/.exec(part.text) : null;
+      const image = content[index + 1], close = content[index + 2];
+      if (!match || match[1] !== String(paths.length + 1) || !isAbsolute(match[2])
+          || close?.type !== 'input_text' || close.text !== '</image>'
+          || image.detail !== 'high' || typeof image.image_url !== 'string') {
+        fail('UNKNOWN_SCHEMA', 'Codex image envelope is invalid');
+      }
+      const data = /^data:image\/(?:png|jpeg|webp|gif);base64,([A-Za-z0-9+/]+={0,2})$/.exec(image.image_url);
+      if (!data || Buffer.from(data[1], 'base64').toString('base64') !== data[1]) {
+        fail('UNKNOWN_SCHEMA', 'Codex image data is invalid');
+      }
+      paths.push(match[2]);
+      index += 2;
+      continue;
+    }
+    if (part?.type !== textType || typeof part.text !== 'string') {
+      fail('UNKNOWN_SCHEMA', 'Codex user content part schema is unknown');
+    }
+    texts.push(part.text);
+  }
+  if (!texts.length) fail('UNKNOWN_SCHEMA', 'Codex user content carries no text');
+  return { text: texts.join('\n'), paths, skills };
+}
+
+function validateCodexContentPair(sourceContent, anchorContent) {
+  const source = codexUserContent(sourceContent, false);
+  const anchor = codexUserContent(anchorContent, true);
+  if (JSON.stringify(source.paths) !== JSON.stringify(anchor.paths)
+      || !sameUtf8(source.text, Buffer.from(anchor.text, 'utf8'))) {
+    fail('MISMATCH', 'Codex source and anchor content differ');
+  }
+  return { text: source.text, skills: anchor.skills };
+}
+
+function codexSkillExpansion(record, boundaryId) {
+  if (!isCodexUserRecord(record)) return null;
+  const payload = record.value.payload;
+  const metadata = payload.internal_chat_message_metadata_passthrough;
+  if (!/^msg_[\w-]+$/.test(String(payload.id || ''))
+      || metadata?.turn_id !== boundaryId
+      || !Number.isFinite(metadata?.create_time) || metadata.create_time <= 0
+      || JSON.stringify(metadata?.content_item_kinds) !== JSON.stringify(['skills.selected_skill_instructions'])) {
+    return null;
+  }
+  const content = payload.content;
+  if (!Array.isArray(content) || content.length !== 1
+      || content[0]?.type !== 'input_text' || typeof content[0].text !== 'string') return null;
+  const match = /^<skill>\n<name>([A-Za-z0-9][A-Za-z0-9._:-]*)<\/name>\n<path>([^<>\x00-\x1f]+)<\/path>\n[\s\S]+\n<\/skill>$/.exec(content[0].text);
+  if (!match || !isAbsolute(match[2])) return null;
+  return { name: match[1], path: match[2] };
+}
+
+// Codex expands each structured skill descriptor into a separate user-role
+// record after the native UserMessage anchor. It has no UserMessage anchor of
+// its own, so it cannot grant authority. We ignore it as a revocation only when
+// name, absolute path, order and wrapper all match the attested descriptor.
+function codexSkillInjectionIndexes(records, anchorIndex, skills, boundaryId, requireComplete = true) {
+  const allowed = new Set();
+  if (!skills.length) return allowed;
+  let expected = 0;
+  for (let index = anchorIndex + 1; index < records.length && expected < skills.length; index += 1) {
+    const record = records[index];
+    const payload = record?.value?.payload;
+    if (record?.value?.type === 'event_msg' && payload?.type === 'item_completed'
+        && payload?.item?.type === 'UserMessage') break;
+    if (codexAssistantMessage(record)) break;
+    if (!isCodexUserRecord(record)) continue;
+    const expansion = codexSkillExpansion(record, boundaryId);
+    if (!expansion) {
+      if (record.value.payload?.id != null) break;
+      continue;
+    }
+    const descriptor = skills[expected];
+    if (expansion.name !== descriptor.name || expansion.path !== descriptor.path) {
+      if (requireComplete) {
+        fail('MISMATCH', 'Codex structured skill expansion differs from its UserMessage descriptor');
+      }
+      return new Set();
+    }
+    allowed.add(index);
+    expected += 1;
+  }
+  if (expected !== skills.length) {
+    if (requireComplete) fail('UNKNOWN_SCHEMA', 'Codex structured skill descriptor lacks its native expansion');
+    return new Set();
+  }
+  return allowed;
+}
+
+function codexAllSkillInjectionIndexes(records, anchorLimit = records.length - 1) {
+  const allowed = new Set();
+  for (let index = 0; index <= anchorLimit; index += 1) {
+    const payload = records[index]?.value?.payload;
+    if (records[index]?.value?.type !== 'event_msg' || payload?.type !== 'item_completed'
+        || payload?.item?.type !== 'UserMessage') continue;
+    const { skills } = codexUserContent(payload.item.content, true);
+    for (const allowedIndex of codexSkillInjectionIndexes(records, index, skills, payload.turn_id, false)) {
+      allowed.add(allowedIndex);
+    }
+  }
+  return allowed;
 }
 
 // A prompt submitted with a pasted image records an `image` part alongside the
@@ -393,12 +528,18 @@ function codexAnchor(records, sourceIndex, candidate, expected) {
   if (anchorPayload.thread_id !== candidate.session_id || anchorPayload.turn_id !== candidate.boundary_id) {
     fail('MISMATCH', 'Codex UserMessage anchor provenance mismatch');
   }
+  const pairedContent = validateCodexContentPair(records[sourceIndex].value.payload.content, anchorPayload.item.content);
   if (!sameUtf8(strictCodexText(anchorPayload.item.content, 'text'), expected)) {
     fail('MISMATCH', 'Codex source and anchor text differ');
   }
   const anchorId = String(anchorPayload.item.id || '');
   if (!anchorId) fail('BROKEN_LEG', 'Codex UserMessage anchor lacks native id');
-  return { record: anchor, anchorId, distance: firstIsAnchor ? 1 : 2 };
+  codexSkillInjectionIndexes(records, anchor.index, pairedContent.skills, candidate.boundary_id);
+  return {
+    record: anchor,
+    anchorId,
+    distance: firstIsAnchor ? 1 : 2,
+  };
 }
 
 function codexAssistantMessage(record) {
@@ -410,7 +551,7 @@ function codexAssistantMessage(record) {
   return { id, text: strictCodexText(payload.content, 'output_text') };
 }
 
-function codexStopWitness(records, afterIndex, assistantText, afterWitnessId = '') {
+function codexStopWitness(records, afterIndex, assistantText, afterWitnessId = '', allowedUserIndexes = new Set()) {
   if (typeof assistantText !== 'string' || !assistantText) {
     fail('STOP_WITNESS_MISSING', 'Stop attestation requires the native last assistant message');
   }
@@ -420,7 +561,7 @@ function codexStopWitness(records, afterIndex, assistantText, afterWitnessId = '
   let selected = '';
   for (let index = afterIndex + 1; index < records.length; index += 1) {
     const record = records[index];
-    if (isCodexUserRecord(record)) {
+    if (isCodexUserRecord(record) && !allowedUserIndexes.has(index)) {
       fail('INTERVENING_USER', 'a newer native user event exists before the Stop witness');
     }
     const assistant = codexAssistantMessage(record);
@@ -438,14 +579,15 @@ function codexStopWitness(records, afterIndex, assistantText, afterWitnessId = '
   fail('SOURCE_NOT_VISIBLE', 'native assistant response for this Stop is not yet visible');
 }
 
-function assertCodexStopUnambiguous(records, candidate, currentEventId, currentAnchorIndex, assistantText, priorEvents) {
+function assertCodexStopUnambiguous(records, candidate, currentEventId, currentAnchorIndex, assistantText, priorEvents,
+  allowedUserIndexes = new Set()) {
   const expected = Buffer.from(assistantText, 'utf8');
   // The ledger starts at adoption, not at native session creation. Earlier
   // responses still produce indistinguishable delayed Stop payloads.
   let nativeBoundary = '';
   for (let index = 0; index < currentAnchorIndex; index += 1) {
     const record = records[index];
-    if (isCodexUserRecord(record)) {
+    if (isCodexUserRecord(record) && !allowedUserIndexes.has(index)) {
       nativeBoundary = record.value.payload?.internal_chat_message_metadata_passthrough?.turn_id || '';
       continue;
     }
@@ -474,7 +616,7 @@ function assertCodexStopUnambiguous(records, candidate, currentEventId, currentA
     }
     for (let index = anchorIndex + 1; index < currentAnchorIndex; index += 1) {
       const record = records[index];
-      if (isCodexUserRecord(record)) break;
+      if (isCodexUserRecord(record) && !allowedUserIndexes.has(index)) break;
       const assistant = codexAssistantMessage(record);
       if (assistant && sameUtf8(assistant.text, expected)) {
         fail('STOP_WITNESS_AMBIGUOUS', 'Stop text also names an earlier assistant response under this boundary');
@@ -517,14 +659,16 @@ function attestCodex(candidate, source, records, bytes, cursor, observation, ass
         { next_native_turn_differs: true });
     }
     const anchor = codexAnchor(records, index, candidate, expected);
+    const structuredSkillIndexes = codexAllSkillInjectionIndexes(records, anchor.record.index);
     const eventId = codexEventId(candidate.session_id, sourceId, anchor.anchorId);
     const stopWitnessId = observation === 'stop'
-      ? codexStopWitness(records, anchor.record.index, assistantText) : '';
+      ? codexStopWitness(records, anchor.record.index, assistantText, '', structuredSkillIndexes) : '';
     if (stopWitnessId) {
-      assertCodexStopUnambiguous(records, candidate, eventId, anchor.record.index, assistantText, priorEvents);
+      assertCodexStopUnambiguous(records, candidate, eventId, anchor.record.index, assistantText, priorEvents,
+        structuredSkillIndexes);
     }
     if (requireNoFollowingUser) {
-      assertNoNewNativeUser(records, anchor.record.index + 1, 'codex');
+      assertNoNewNativeUser(records, anchor.record.index + 1, 'codex', structuredSkillIndexes);
     }
     return {
       event_id: eventId,
@@ -830,13 +974,17 @@ function validateCurrentCodexEvent(event, candidate, records, cursor) {
       || sourcePayload?.internal_chat_message_metadata_passthrough?.turn_id !== candidate.boundary_id) {
     fail('CURSOR_MISMATCH', 'Codex cursor is not bound to the current native user source');
   }
-  const sourceText = strictCodexText(sourcePayload.content, 'input_text');
+  const pairedContent = validateCodexContentPair(sourcePayload.content, anchorPayload.item.content);
   const anchorText = strictCodexText(anchorPayload.item.content, 'text');
-  if (!sameUtf8(sourceText, Buffer.from(anchorText, 'utf8'))
+  if (!sameUtf8(pairedContent.text, Buffer.from(anchorText, 'utf8'))
       || codexEventId(candidate.session_id, event.native_id, event.anchor_id) !== event.event_id) {
     fail('MISMATCH', 'Codex current native event identity or source/anchor text is inconsistent');
   }
-  return { afterIndex: anchor.index, distance };
+  codexSkillInjectionIndexes(records, anchor.index, pairedContent.skills, candidate.boundary_id);
+  return {
+    afterIndex: anchor.index,
+    distance,
+  };
 }
 
 function validateCurrentClaudeEvent(event, candidate, records, cursor) {
@@ -851,7 +999,7 @@ function validateCurrentClaudeEvent(event, candidate, records, cursor) {
   return { afterIndex: record.index, distance: 0 };
 }
 
-function assertNoNewNativeUser(records, startIndex, harness) {
+function assertNoNewNativeUser(records, startIndex, harness, allowedUserIndexes = new Set()) {
   for (let index = startIndex; index < records.length; index += 1) {
     const record = records[index];
     if (harness === 'codex') {
@@ -859,7 +1007,7 @@ function assertNoNewNativeUser(records, startIndex, harness) {
       // carries no UserMessage anchor yet. Reusing the scan's "injected context" skip
       // here would let an appended native prompt pass unseen — IDENTITY-STATE-007
       // covers exactly that, and it is the fail-open direction, so it stays strict.
-      if (isCodexUserRecord(record)) {
+      if (isCodexUserRecord(record) && !allowedUserIndexes.has(index)) {
         fail('INTERVENING_USER', 'a newer Codex native user event exists after the current authority cursor');
       }
       continue;
@@ -896,16 +1044,20 @@ export function observeCurrentNativeEvent({
   const validated = candidate.harness === 'codex'
     ? validateCurrentCodexEvent(event, candidate, loaded.records, cursor)
     : validateCurrentClaudeEvent(event, candidate, loaded.records, cursor);
-  assertNoNewNativeUser(loaded.records, cursor.record_index, candidate.harness);
+  const allowedUserIndexes = candidate.harness === 'codex'
+    ? codexAllSkillInjectionIndexes(loaded.records, validated.afterIndex) : new Set();
+  assertNoNewNativeUser(loaded.records, cursor.record_index, candidate.harness,
+    allowedUserIndexes);
   const stopWitnessId = observation === 'stop'
     ? candidate.harness === 'codex'
-      ? codexStopWitness(loaded.records, validated.afterIndex, assistantText, event.stop_witness_id || '')
+      ? codexStopWitness(loaded.records, validated.afterIndex, assistantText, event.stop_witness_id || '',
+        allowedUserIndexes)
       : claudeStopWitness(loaded.records, validated.afterIndex, assistantText, event.stop_witness_id || '')
     : '';
   if (stopWitnessId) {
     if (candidate.harness === 'codex') {
       assertCodexStopUnambiguous(loaded.records, candidate, event.event_id,
-        validated.afterIndex, assistantText, priorEvents);
+        validated.afterIndex, assistantText, priorEvents, allowedUserIndexes);
     } else {
       assertClaudeStopUnambiguous(loaded.records, candidate, event.event_id,
         validated.afterIndex, assistantText, priorEvents);
