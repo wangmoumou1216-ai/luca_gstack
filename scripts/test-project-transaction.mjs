@@ -25,6 +25,7 @@ import {
   initializeProjectEventFence,
   queueProjectEventCandidate,
   readProjectState,
+  refenceProjectStateForDeactivate,
   validatedBindingForState,
 } from '../.claude/hooks/lib/project-substrate.mjs';
 
@@ -1032,6 +1033,54 @@ check('Codex: deactivate re-fences through project.sh and CODEX_HOME, so the ses
   const rebound = mutate(fx, sid, 'switch', 'beta', { tx: 'codex-tx-beta', expected_epoch: 0 });
   assert.equal(rebound.status, 0, rebound.stderr || rebound.stdout);
   assert.equal(jsonOut(runNode(PIN, ['status', '--session', sid], fx)).binding.project, 'beta');
+});
+
+check('Codex TURN_CLOSED with structured skill can attest a fresh turn and re-fence safely', () => {
+  const sid = randomUUID();
+  const fx = makeCodexEnv(sid);
+  makeProject(fx, 'alpha');
+  withAttestationTest(() => initializeProjectEventFence({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+    cwd: fx.gstack, codexHome: fx.codexHome,
+  }));
+  assert.equal(codexSwitchTurn(fx, sid, 'initial-turn', 'alpha', 'initial-skill-tx').state.state, 'SWITCH_ONLY');
+  assert.equal(mutate(fx, sid, 'switch', 'alpha', { tx: 'initial-skill-tx', expected_epoch: 0 }).status, 0);
+  const closed = readProjectState(fx.gstack, sid, fx.projects).value;
+  assert.equal(closed.state, 'BOUND');
+
+  const boundary = `skill-turn-${randomUUID()}`;
+  const prompt = 'switch project alpha with skill';
+  const skill = { type: 'skill', name: 'diagnosing-bugs', path: '/tmp/diagnosing-bugs/SKILL.md' };
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: boundary,
+    cwd: fx.gstack, harness: 'codex', prompt,
+    intent: { kind: 'turn' },
+  });
+  assert.equal(readProjectState(fx.gstack, sid, fx.projects).value.state, 'TURN_CLOSED');
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+      content: [{ type: 'input_text', text: prompt }],
+      internal_chat_message_metadata_passthrough: { turn_id: boundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: boundary,
+      item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: prompt }, skill] } } },
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+      content: [{ type: 'input_text', text: `<skill>\n<name>${skill.name}</name>\n<path>${skill.path}</path>\n---\nbody\n</skill>` }],
+      internal_chat_message_metadata_passthrough: { turn_id: boundary, create_time: 1_789_443_093.02633,
+        content_item_kinds: ['skills.selected_skill_instructions'] } } },
+  ].map(JSON.stringify).join('\n') + '\n');
+  const attested = withAttestationTest(() => attestPendingProjectEvent({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: boundary,
+    cwd: fx.gstack, observation: 'pre-tool', codexHome: fx.codexHome,
+  }));
+  assert.equal(attested.state.state, 'TURN_ACTIVE');
+  const raw = readFileSync(join(fx.gstack, '.claude', `.session-project-${sid}`));
+  const unbound = withAttestationTest(() => refenceProjectStateForDeactivate({
+    gstackRoot: fx.gstack, sessionId: sid, expectedRaw: raw, codexHome: fx.codexHome,
+  }));
+  assert.equal(unbound.state, 'NO_PIN');
+  assert.equal(unbound.event_control.candidates.length, 0);
+  assert.equal(codexSwitchTurn(fx, sid, 'fresh-after-skill-refence', 'alpha', 'fresh-after-skill-tx').state.state,
+    'SWITCH_ONLY');
 });
 
 for (const initiallyBound of [false, true]) {

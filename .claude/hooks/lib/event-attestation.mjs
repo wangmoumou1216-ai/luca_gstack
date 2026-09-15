@@ -257,13 +257,22 @@ function strictCodexText(content, expectedType) {
   return parts.join('\n');
 }
 
+function codexImageDataUrl(value) {
+  if (typeof value !== 'string') fail('UNKNOWN_SCHEMA', 'Codex image data is invalid');
+  const data = /^data:image\/(?:png|jpeg|webp|gif);base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
+  if (!data || Buffer.from(data[1], 'base64').toString('base64') !== data[1]) {
+    fail('UNKNOWN_SCHEMA', 'Codex image data is invalid');
+  }
+  return createHash('sha256').update(value).digest('hex');
+}
+
 // Codex clipboard images are three source parts (opening wrapper, image, closing
 // wrapper), but one local_image anchor part. Strip only that exact envelope;
 // ordinary user text, including literal image tags, remains byte-significant.
 // Never read the paths: they may be temporary/deleted and are provenance, not IO.
 function codexUserContent(content, anchor) {
   if (!Array.isArray(content) || !content.length) fail('UNKNOWN_SCHEMA', 'Codex user content is empty');
-  const texts = [], paths = [], skills = [];
+  const texts = [], paths = [], imageOrder = [], skills = [];
   const textType = anchor ? 'text' : 'input_text';
   for (let index = 0; index < content.length; index += 1) {
     const part = content[index];
@@ -283,9 +292,26 @@ function codexUserContent(content, anchor) {
         fail('UNKNOWN_SCHEMA', 'Codex local image path is invalid');
       }
       paths.push(part.path);
+      imageOrder.push(`local:${part.path}`);
       continue;
     }
-    if (!anchor && content[index + 1]?.type === 'input_image') {
+    if (anchor && part?.type === 'image') {
+      if (JSON.stringify(Object.keys(part).sort()) !== JSON.stringify(['image_url', 'type'])) {
+        fail('UNKNOWN_SCHEMA', 'Codex direct image anchor schema is invalid');
+      }
+      const digest = codexImageDataUrl(part.image_url);
+      imageOrder.push(`direct:${digest}`);
+      continue;
+    }
+    if (!anchor && part?.type === 'input_image') {
+      if (part.detail !== 'high') fail('UNKNOWN_SCHEMA', 'Codex direct image detail is unsupported');
+      const digest = codexImageDataUrl(part.image_url);
+      imageOrder.push(`direct:${digest}`);
+      continue;
+    }
+    if (!anchor && content[index + 1]?.type === 'input_image'
+        && part?.type === 'input_text' && typeof part.text === 'string'
+        && part.text.startsWith('<image ')) {
       const match = part?.type === 'input_text' && typeof part.text === 'string'
         ? /^<image name=\[Image #(\d+)\] path="([^"<>\x00-\x1f]+)">$/.exec(part.text) : null;
       const image = content[index + 1], close = content[index + 2];
@@ -294,11 +320,9 @@ function codexUserContent(content, anchor) {
           || image.detail !== 'high' || typeof image.image_url !== 'string') {
         fail('UNKNOWN_SCHEMA', 'Codex image envelope is invalid');
       }
-      const data = /^data:image\/(?:png|jpeg|webp|gif);base64,([A-Za-z0-9+/]+={0,2})$/.exec(image.image_url);
-      if (!data || Buffer.from(data[1], 'base64').toString('base64') !== data[1]) {
-        fail('UNKNOWN_SCHEMA', 'Codex image data is invalid');
-      }
+      codexImageDataUrl(image.image_url);
       paths.push(match[2]);
+      imageOrder.push(`local:${match[2]}`);
       index += 2;
       continue;
     }
@@ -308,13 +332,13 @@ function codexUserContent(content, anchor) {
     texts.push(part.text);
   }
   if (!texts.length) fail('UNKNOWN_SCHEMA', 'Codex user content carries no text');
-  return { text: texts.join('\n'), paths, skills };
+  return { text: texts.join('\n'), imageOrder, skills };
 }
 
 function validateCodexContentPair(sourceContent, anchorContent) {
   const source = codexUserContent(sourceContent, false);
   const anchor = codexUserContent(anchorContent, true);
-  if (JSON.stringify(source.paths) !== JSON.stringify(anchor.paths)
+  if (JSON.stringify(source.imageOrder) !== JSON.stringify(anchor.imageOrder)
       || !sameUtf8(source.text, Buffer.from(anchor.text, 'utf8'))) {
     fail('MISMATCH', 'Codex source and anchor content differ');
   }
@@ -376,9 +400,9 @@ function codexSkillInjectionIndexes(records, anchorIndex, skills, boundaryId, re
   return allowed;
 }
 
-function codexAllSkillInjectionIndexes(records, anchorLimit = records.length - 1) {
+function codexAllSkillInjectionIndexes(records, anchorLimit = records.length - 1, anchorStart = 0) {
   const allowed = new Set();
-  for (let index = 0; index <= anchorLimit; index += 1) {
+  for (let index = anchorStart; index <= anchorLimit; index += 1) {
     const payload = records[index]?.value?.payload;
     if (records[index]?.value?.type !== 'event_msg' || payload?.type !== 'item_completed'
         || payload?.item?.type !== 'UserMessage') continue;
@@ -659,7 +683,8 @@ function attestCodex(candidate, source, records, bytes, cursor, observation, ass
         { next_native_turn_differs: true });
     }
     const anchor = codexAnchor(records, index, candidate, expected);
-    const structuredSkillIndexes = codexAllSkillInjectionIndexes(records, anchor.record.index);
+    const structuredSkillIndexes = codexAllSkillInjectionIndexes(records, anchor.record.index,
+      cursor.record_index);
     const eventId = codexEventId(candidate.session_id, sourceId, anchor.anchorId);
     const stopWitnessId = observation === 'stop'
       ? codexStopWitness(records, anchor.record.index, assistantText, '', structuredSkillIndexes) : '';
@@ -1045,7 +1070,7 @@ export function observeCurrentNativeEvent({
     ? validateCurrentCodexEvent(event, candidate, loaded.records, cursor)
     : validateCurrentClaudeEvent(event, candidate, loaded.records, cursor);
   const allowedUserIndexes = candidate.harness === 'codex'
-    ? codexAllSkillInjectionIndexes(loaded.records, validated.afterIndex) : new Set();
+    ? codexAllSkillInjectionIndexes(loaded.records, validated.afterIndex, validated.afterIndex) : new Set();
   assertNoNewNativeUser(loaded.records, cursor.record_index, candidate.harness,
     allowedUserIndexes);
   const stopWitnessId = observation === 'stop'
@@ -1137,6 +1162,9 @@ export function captureNativeEventFence({
     // Explicit recovery may exclude well-formed orphan history, not launder a
     // replaced source, changed authenticated prefix, or unknown native schema.
     const offset = recoveryCursor ? validateCursor(recoveryCursor, source, loaded.records, loaded.bytes, harness) : 0;
+    const skillInjectionIndexes = harness === 'codex'
+      ? codexAllSkillInjectionIndexes(loaded.records, loaded.records.length - 1,
+        recoveryCursor ? Math.max(0, recoveryCursor.record_index - 1) : 0) : new Set();
     for (const record of loaded.records) {
       if (record.start < offset) continue;
       if (harness === 'claude') {
@@ -1147,6 +1175,7 @@ export function captureNativeEventFence({
           strictClaudeText(record.value.message.content);
         }
       } else if (isCodexUserRecord(record)) {
+        if (skillInjectionIndexes.has(record.index)) continue;
         const payload = record.value.payload;
         if (!/^msg_[\w-]+$/.test(String(payload.id || ''))) fail('UNKNOWN_SCHEMA', 'deactivate cannot fence an invalid Codex user id');
         const text = strictCodexText(payload.content, 'input_text');

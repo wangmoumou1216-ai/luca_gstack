@@ -84,3 +84,28 @@ Then resume muse research-backed session lifecycle proposal, not implementation.
 - Prove-it-bites: changing the provenance marker in a task-owned scratch copy
   makes the positive skill lifecycle fail with UNKNOWN_SCHEMA; the unmodified
   source passes. No live source mutation was used.
+
+## Closure extension
+
+- Surveyed existing Codex UserMessage anchor kinds across local transcripts:
+  `text`, `local_image`, direct `image`, and structured `skill` (including
+  multiple skills). Runtime recognises only these observed schemas; unknown
+  content remains fail-closed.
+- Direct `input_image` ↔ anchor `image` is attested by validated canonical data
+  URL digest, not by reading a temporary file. Altered/missing URLs fail, and
+  direct/local image order is significant.
+- Re-fence recovery validates the human source/anchor leg but skips only a
+  fully paired same-turn native skill expansion. A `TURN_CLOSED` fixture now
+  reaches `TURN_ACTIVE`, re-fences to `NO_PIN`, then accepts a fresh switch
+  candidate without restarting the session. Ordinary and malformed user rows
+  remain revoking; two skill expansions require descriptor order.
+- The skill scan starts at the durable cursor (or its current anchor for
+  re-fence), so a pre-fence historical unknown anchor does not poison a fresh
+  human turn; unrecognised content after the cursor still cannot grant authority.
+- The previously attested live session is **not** currently recoverable in
+  place: its saved Codex source cursor records inode `177939703` and prefix
+  SHA-256 `9807ba80…`, but the file now at that path has inode `178091218`
+  and prefix SHA-256 `2fb973e3…` at the same offset. This is a changed native
+  source, not an image/skill schema refusal. Preserve the fail-closed
+  `CURSOR_MISMATCH` instead of rebinding an old muse pin to replaced evidence;
+  a fresh user-attested session is required for project-scoped continuation.

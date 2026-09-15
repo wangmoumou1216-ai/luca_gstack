@@ -684,6 +684,83 @@ function imagePair(fx, prompt, count = 2, mutate = () => {}) {
   return sourceId;
 }
 
+function directImagePair(fx, prompt, mutate = () => {}) {
+  const data = 'data:image/png;base64,aGVsbG8=';
+  const source = [{ type: 'input_text', text: prompt },
+    { type: 'input_image', image_url: data, detail: 'high' }];
+  const anchor = [{ type: 'text', text: prompt, text_elements: [] },
+    { type: 'image', image_url: data }];
+  mutate(source, anchor);
+  const sourceId = `msg_${randomUUID()}`;
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: sourceId,
+      content: source, internal_chat_message_metadata_passthrough: { turn_id: fx.boundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: fx.session,
+      turn_id: fx.boundary, item: { type: 'UserMessage', id: randomUUID(), content: anchor } } },
+  ].map(JSON.stringify).join('\n') + '\n');
+  return sourceId;
+}
+
+lifecycleCheck('Codex direct image source and image anchor do not lock Project Gate', () => {
+  const fx = makeLifecycleFixture('direct-image');
+  try {
+    queueLifecycle(fx, 'inspect direct image');
+    const id = directImagePair(fx, 'inspect direct image');
+    assert.equal(observeLifecycle(fx).event.native_id, id);
+    assistantWitness(fx, 'done');
+    assert.equal(observeLifecycle(fx, 'stop', 'done').event.native_id, id);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+for (const [name, mutate, code] of [
+  ['different image bytes', (_s, a) => { a[1].image_url = 'data:image/png;base64,d29ybGQ='; }, 'MISMATCH'],
+  ['unknown image URL', (_s, a) => { a[1].image_url = 'https://example.com/image.png'; }, 'UNKNOWN_SCHEMA'],
+  ['missing anchor image', (_s, a) => { a.pop(); }, 'MISMATCH'],
+]) lifecycleCheck(`Codex direct image rejects ${name} without advancing queue`, () => {
+  const fx = makeLifecycleFixture('direct-image-negative');
+  try {
+    queueLifecycle(fx, 'inspect direct image'); directImagePair(fx, 'inspect direct image', mutate);
+    const before = readFileSync(fx.statePath);
+    expectCode(`direct image ${name}`, code, () => observeLifecycle(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Codex mixed direct/local image order remains significant', () => {
+  const fx = makeLifecycleFixture('mixed-image-order');
+  try {
+    const prompt = 'inspect both images';
+    queueLifecycle(fx, prompt);
+    directImagePair(fx, prompt, (source, anchor) => {
+      source.push({ type: 'input_text', text: '<image name=[Image #1] path="/tmp/local.png">' },
+        { type: 'input_image', image_url: 'data:image/png;base64,aGVsbG8=', detail: 'high' },
+        { type: 'input_text', text: '</image>' });
+      anchor.unshift({ type: 'local_image', path: '/tmp/local.png' });
+    });
+    const before = readFileSync(fx.statePath);
+    expectCode('mixed image order', 'MISMATCH', () => observeLifecycle(fx));
+    assert.deepEqual(readFileSync(fx.statePath), before);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Codex historical unknown anchor behind the startup fence cannot lock a new turn', () => {
+  const fx = makeLifecycleFixture('historical-unknown-anchor', false);
+  try {
+    appendFileSync(fx.rollout, [
+      { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: 'historical' }],
+        internal_chat_message_metadata_passthrough: { turn_id: 'historical-boundary' } } },
+      { type: 'event_msg', payload: { type: 'item_completed', thread_id: fx.session,
+        turn_id: 'historical-boundary', item: { type: 'UserMessage', id: randomUUID(),
+          content: [{ type: 'text', text: 'historical' }, { type: 'future_context' }] } } },
+    ].map(JSON.stringify).join('\n') + '\n');
+    startupFence(fx.gstack, fx.projects, fx.session, fx.gstack, fx.codexHome);
+    queueLifecycle(fx, 'new turn');
+    const native = nativePair(fx, 'new turn');
+    assert.equal(observeLifecycle(fx).event.native_id, native.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
 // Sanitized structure emitted when Codex expands an explicitly invoked skill:
 // the native UserMessage anchor carries a structured skill descriptor, followed
 // by one unanchored user-role record containing the resolved skill body.
@@ -715,6 +792,47 @@ function skillPair(fx, prompt, mutate = () => {}) {
   ].map(JSON.stringify).join('\n') + '\n');
   return { sourceId, anchorId };
 }
+
+function twoSkillPair(fx, prompt, reverse = false) {
+  const sourceId = `msg_${randomUUID()}`;
+  const descriptors = ['diagnosing-bugs', 'code-hygiene'].map(name => ({
+    type: 'skill', name, path: `/tmp/skills/${name}/SKILL.md`,
+  }));
+  const expansions = descriptors.map(skill => ({ type: 'response_item', payload: {
+    type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+    content: [{ type: 'input_text', text: `<skill>\n<name>${skill.name}</name>\n<path>${skill.path}</path>\n---\nbody\n</skill>` }],
+    internal_chat_message_metadata_passthrough: { turn_id: fx.boundary,
+      create_time: 1_789_443_093.02633, content_item_kinds: ['skills.selected_skill_instructions'] },
+  } }));
+  if (reverse) expansions.reverse();
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: sourceId,
+      content: [{ type: 'input_text', text: prompt }],
+      internal_chat_message_metadata_passthrough: { turn_id: fx.boundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: fx.session,
+      turn_id: fx.boundary, item: { type: 'UserMessage', id: randomUUID(),
+        content: [{ type: 'text', text: prompt }, ...descriptors] } } },
+    ...expansions,
+  ].map(JSON.stringify).join('\n') + '\n');
+  return sourceId;
+}
+
+for (const reverse of [false, true]) lifecycleCheck(
+  `Codex two structured skills ${reverse ? 'reject reversed order' : 'attest in order'}`, () => {
+    const fx = makeLifecycleFixture('two-skills');
+    try {
+      const prompt = 'use two skills';
+      queueLifecycle(fx, prompt);
+      const id = twoSkillPair(fx, prompt, reverse);
+      if (reverse) {
+        const before = readFileSync(fx.statePath);
+        expectCode('two skills reversed', 'MISMATCH', () => observeLifecycle(fx));
+        assert.deepEqual(readFileSync(fx.statePath), before);
+      } else {
+        assert.equal(observeLifecycle(fx).event.native_id, id);
+      }
+    } finally { rmSync(fx.root, { recursive: true, force: true }); }
+  });
 
 lifecycleCheck('Codex structured skill injection remains the current event through Stop', () => {
   const fx = makeLifecycleFixture('skill-injection');
