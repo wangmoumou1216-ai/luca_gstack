@@ -4,12 +4,13 @@
 // 与本 skill 无关），并入会被它挡住不执行。
 //
 // 全程 hermetic：任务专用 LUCA_PROJECTS_ROOT + 临时 CLAUDE_PROJECT_DIR，不改写 HOME。
-import { spawnSync } from 'child_process';
+import { spawnSync, spawn } from 'child_process';
 import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import assert from 'assert';
+import { runInNewContext } from 'node:vm';
 import { createHash } from 'crypto';
 import { READ_GRANTS_ENABLED, reconcilePromptGrants } from '../.claude/hooks/lib/project-read-grants.mjs';
 
@@ -637,6 +638,54 @@ check('IDENTITY-STATE-006a active Codex event without tool boundary rewrites Bas
   assert.equal(result.hookSpecificOutput.updatedInput.command,
     `shasum -a 256 ${abs(env, 'muse', 'docs/plans/session-lifecycle-plan.md')}`);
   assert.deepEqual(readFileSync(path), before, 'fresh active observation is idempotent');
+});
+check('ACTIVE-READ-001 reobservation never creates a state lock', () => {
+  const env = makeEnv({ pins: { LOCKFREE: 'muse' } });
+  const preload = join(env.root, 'no-lock.cjs');
+  writeFileSync(preload, `const fs=require('node:fs'); const original=fs.openSync;
+    fs.openSync=function(path, flags, ...rest) {
+      if (String(path).endsWith('.lock') && flags==='wx') throw new Error('read observation created a write lock');
+      return original.call(this,path,flags,...rest);
+    }; require('node:module').syncBuiltinESMExports();`);
+  const o = run(env, { session_id: 'LOCKFREE', tool_name: 'Bash', tool_input: { command: 'cat docs/a.md' } },
+    { NODE_OPTIONS: `--require=${preload}` });
+  assert.equal(o.hookSpecificOutput.updatedInput?.command, `cat ${abs(env, 'muse', 'docs/a.md')}`);
+});
+check('ACTIVE-READ-002 cancelled observer leaves no lock and next read succeeds', () => {
+  const env = makeEnv({ pins: { CANCEL: 'muse' } });
+  const path = join(env.gstack, '.claude', '.session-project-CANCEL');
+  const before = readFileSync(path);
+  const preload = join(env.root, 'cancel.cjs');
+  writeFileSync(preload, `const fs=require('node:fs'); const original=fs.openSync;
+    fs.openSync=function(path,...args) {
+      if (String(path).includes('rollout-')) process.kill(process.pid,'SIGKILL');
+      return original.call(this,path,...args);
+    }; require('node:module').syncBuiltinESMExports();`);
+  const child = spawnSync('node', [HOOK], { cwd: env.gstack, encoding: 'utf8',
+    input: JSON.stringify({ session_id: 'CANCEL', cwd: env.gstack, turn_id: 'turn-CANCEL', tool_name: 'Read', tool_input: { file_path: 'docs/a.md' } }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: env.gstack, LUCA_PROJECTS_ROOT: env.projects,
+      CODEX_HOME: env.codexHome, LUCA_EVENT_ATTESTATION_TEST: '1', NODE_OPTIONS: `--require=${preload}` } });
+  assert.equal(child.signal, 'SIGKILL', 'must hit cancellation inside native observation');
+  assert.equal(existsSync(`${path}.lock`), false, 'cancelled pure observer must not strand a lock');
+  assert.deepEqual(readFileSync(path), before);
+  assert.equal(run(env, { session_id: 'CANCEL', tool_name: 'Read', tool_input: { file_path: 'docs/a.md' } })
+    .hookSpecificOutput.updatedInput?.file_path, abs(env, 'muse', 'docs/a.md'));
+});
+check('ACTIVE-READ-003 state changed during native observation is rejected', () => {
+  const env = makeEnv({ pins: { RACE: 'muse' } });
+  const path = join(env.gstack, '.claude', '.session-project-RACE');
+  const preload = join(env.root, 'state-race.cjs');
+  writeFileSync(preload, `const fs=require('node:fs'); const original=fs.openSync; let changed=false;
+    fs.openSync=function(path,...args) {
+      const result=original.call(this,path,...args);
+      if (!changed && String(path).includes('rollout-')) {
+        changed=true; fs.writeFileSync(${JSON.stringify(path)}, Buffer.from(JSON.stringify({schema_version:3,session_id:'RACE',state:'NO_PIN'})+String.fromCharCode(10)));
+      } return result;
+    }; require('node:module').syncBuiltinESMExports();`);
+  const o = run(env, { session_id: 'RACE', tool_name: 'Read', tool_input: { file_path: 'docs/a.md' } },
+    { NODE_OPTIONS: `--require=${preload}` });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /STATE_CHANGED/);
 });
 check('IDENTITY-STATE-006b explicit wrong Codex tool boundary never borrows active event', () => {
   const sid = 'WRONG-BOUNDARY';
@@ -1365,6 +1414,97 @@ check('READ-GRANT-004 malformed project state cannot masquerade as NO_PIN', () =
   writeFileSync(join(env.gstack, '.claude', '.session-project-RGM'), '{broken');
   const out = run(env, { session_id: 'RGM', tool_name: 'Read', tool_input: { file_path: target } });
   assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+});
+
+// Real sibling processes overlap while observing the same native event. Keep
+// every result (unlike fail-fast Promise.all) so one refusal cannot hide others.
+try {
+  const env = makeEnv({ pins: { PARALLEL: 'muse' } });
+  const path = join(env.gstack, '.claude', '.session-project-PARALLEL');
+  const before = readFileSync(path);
+  const preload = join(env.root, 'overlap.cjs');
+  writeFileSync(preload, `const fs=require('node:fs'); const original=fs.openSync;
+    fs.openSync=function(path,...args) {
+      if (String(path).includes('rollout-')) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,150);
+      return original.call(this,path,...args);
+    }; require('node:module').syncBuiltinESMExports();`);
+  const results = await Promise.all(Array.from({ length: 8 }, () => new Promise((done, reject) => {
+    const child = spawn('node', [HOOK], { cwd: env.gstack,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: env.gstack, LUCA_PROJECTS_ROOT: env.projects,
+        CODEX_HOME: env.codexHome, LUCA_EVENT_ATTESTATION_TEST: '1', NODE_OPTIONS: `--require=${preload}` } });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.on('error', reject);
+    child.on('close', code => done({ code, stdout, stderr }));
+    child.stdin.end(JSON.stringify({ session_id: 'PARALLEL', cwd: env.gstack,
+      tool_name: 'Bash', tool_input: { command: 'cat docs/a.md' } }));
+  })));
+  for (const r of results) {
+    assert.equal(r.code, 0, r.stderr);
+    assert.equal(JSON.parse(r.stdout).hookSpecificOutput.updatedInput?.command, `cat ${abs(env, 'muse', 'docs/a.md')}`);
+  }
+  assert.deepEqual(readFileSync(path), before);
+  assert.equal(existsSync(`${path}.lock`), false);
+  ok('ACTIVE-READ-004 eight parallel observations all pass without residue');
+} catch (e) { bad('ACTIVE-READ-004 eight parallel observations all pass without residue', e); }
+
+for (const dead of [false, true]) check(`ACTIVE-READ-005 ${dead ? 'dead' : 'live'} owner error is not identity failure`, () => {
+  const env = makeEnv({ pins: { HELD: 'muse' } });
+  const lock = join(env.gstack, '.claude', '.session-project-HELD.lock');
+  const owner = { schema_version: 1, owner_token: 'fixture', pid: dead ? 2147483647 : process.pid,
+    process_nonce: 'fixture', acquired_at: new Date().toISOString() };
+  const bytes = `${JSON.stringify(owner)}\n`;
+  writeFileSync(lock, bytes);
+  const o = run(env, { session_id: 'HELD', tool_name: 'Bash', tool_input: { command: 'cat docs/a.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, dead ? /STATE_LOCK_ORPHANED/ : /STATE_LOCK_BUSY/);
+  assert.equal(readFileSync(lock, 'utf8'), bytes, 'no lock theft');
+});
+check('ACTIVE-READ-006 malformed lock remains INVALID and unchanged', () => {
+  const env = makeEnv({ pins: { BROKEN: 'muse' } });
+  const lock = join(env.gstack, '.claude', '.session-project-BROKEN.lock');
+  writeFileSync(lock, 'malformed-owner');
+  const o = run(env, { session_id: 'BROKEN', tool_name: 'Read', tool_input: { file_path: 'docs/a.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /STATE_LOCK_INVALID/);
+  assert.equal(readFileSync(lock, 'utf8'), 'malformed-owner');
+});
+check('ACTIVE-READ-007 relative project path retains orphan diagnosis', () => {
+  const env = makeEnv({ pins: { RELLOCK: 'muse' }, nestedFramework: true });
+  const lock = join(env.gstack, '.claude', '.session-project-RELLOCK.lock');
+  writeFileSync(lock, `${JSON.stringify({schema_version:1,owner_token:'fixture',pid:2147483647,process_nonce:'fixture'})}\n`);
+  const o = run(env, { session_id: 'RELLOCK', tool_name: 'Bash', tool_input: { command: 'cat ../docs/a.md' } });
+  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /STATE_LOCK_ORPHANED/);
+});
+for (const partial of [false, true]) check(`ACTIVE-READ-008 ${partial ? 'partial owner publication' : 'live writer'} waits then succeeds`, () => {
+  const env = makeEnv({ pins: { WAIT: 'muse' } });
+  const lock = join(env.gstack, '.claude', '.session-project-WAIT.lock');
+  writeFileSync(lock, partial ? '' : `${JSON.stringify({schema_version:1,owner_token:'fixture',pid:process.pid,process_nonce:'fixture'})}\n`);
+  const releaser = spawn('node', ['-e', 'setTimeout(()=>require("node:fs").unlinkSync(process.argv[1]),150)', lock], { stdio: 'ignore' });
+  const o = run(env, { session_id: 'WAIT', tool_name: 'Read', tool_input: { file_path: 'docs/a.md' } });
+  assert.equal(o.hookSpecificOutput.updatedInput?.file_path, abs(env, 'muse', 'docs/a.md'));
+  assert.equal(existsSync(lock), false);
+  releaser.unref();
+});
+check('ACTIVE-READ-009 release/reacquire starvation respects one deadline', () => {
+  const source = readFileSync(join(dirname(HOOK), 'lib', 'project-substrate.mjs'), 'utf8');
+  const start = source.indexOf('function waitForProjectStateUnlock(');
+  const end = source.indexOf('\nexport function readProjectState(', start);
+  let clock = 0, attempts = 0;
+  class AuthorityError extends Error { constructor(code, message) { super(message); this.code = code; } }
+  const acquire = runInNewContext(`${source.slice(start, end)}; withProjectStateLock`, {
+    performance: { now: () => { clock += 20; return clock; } },
+    ProjectEventAuthorityError: AuthorityError,
+    inspectProjectStateLock: () => ({ occupied: false }),
+    projectStatePath: () => '/fixture/state', randomUUID: () => 'fixture',
+    process: { pid: 1 },
+    stateLockOwnerBytes: () => Buffer.from('fixture'), Buffer,
+    openSync: () => { attempts++; throw Object.assign(new Error('collision'), { code: 'EEXIST' }); },
+  });
+  assert.throws(() => acquire('/fixture', 'S', () => { throw new Error('must not commit'); }), error => error.code === 'STATE_LOCK_BUSY');
+  assert.ok(attempts < 60, `unbounded reacquisition attempts: ${attempts}`);
 });
 
 console.log(`\n=== test-project-scope-guard summary: PASS=${pass} FAIL=${fail} ===`);

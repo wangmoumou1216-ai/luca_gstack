@@ -952,6 +952,12 @@ function main() {
   const observed = attestForPreTool(readSessionState());
   const state = observed.state;
   const binding = activeBinding(state, observed.error);
+  const authorityFailure = {
+    STATE_LOCK_BUSY: '项目状态正在被另一个操作更新（STATE_LOCK_BUSY），不是身份失效。请等待该操作完成后重试；不要重绑项目或删除锁。',
+    STATE_LOCK_ORPHANED: '项目状态锁的持有进程已退出（STATE_LOCK_ORPHANED）。需要通过 inspect-state-lock → recover-state-lock 精确 owner 句柄恢复；重发提示或重绑不能清除此锁，不要直接删除状态文件。',
+    STATE_LOCK_INVALID: '项目状态锁记录无法验证（STATE_LOCK_INVALID），需要检查锁记录；禁止自动夺锁或重绑来绕过。',
+    STATE_CHANGED: '原生事件校验期间项目状态已变化（STATE_CHANGED）；本次未授予项目权限，请按最新状态重试。',
+  }[observed.error?.code];
   const recoveryHint = observed.error && ['NO_PIN', 'BOUND', 'TURN_CLOSED'].includes(state.state)
     ? ` 若原生记录尚未落盘，先等待落盘再重试；持续认证失败可显式运行 bash scripts/project.sh deactivate ${sid}，仅清除绑定/旧候选，不授予权限；随后由用户重新提出项目任务。源损坏时恢复也会拒绝，勿修改状态文件。`
     : '';
@@ -1002,7 +1008,7 @@ function main() {
           && state.event_control?.current?.status === 'active' && exactMutationMatches(state, cmd)) passThrough();
       if (mentionsProjectMutation(cmd) || mentionsInternalProjectController(cmd) || rewriteBash(cmd, null).hasScoped) {
         return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-          permissionDecisionReason: 'SWITCH_ONLY 本轮只允许一条与 tx、target、expected_epoch 完全匹配的 project.sh switch/new；禁止复合命令与同轮项目工作。' } });
+          permissionDecisionReason: authorityFailure || 'SWITCH_ONLY 本轮只允许一条与 tx、target、expected_epoch 完全匹配的 project.sh switch/new；禁止复合命令与同轮项目工作。' } });
       }
     } else if (mentionsProjectMutation(cmd)) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
@@ -1026,12 +1032,12 @@ function main() {
     const relativeRef = relativeProjectReference(guardCmd, binding);
     if (relativeRef?.denied) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `Bash 相对路径会离开 luca_gstack 并进入未绑定/跨项目作用域（${relativeRef.value}${relativeRef.resolved ? ` → ${relativeRef.resolved}` : ''}）；请先完成项目绑定或改用明确的框架内路径。` } });
+        permissionDecisionReason: authorityFailure || `Bash 相对路径会离开 luca_gstack 并进入未绑定/跨项目作用域（${relativeRef.value}${relativeRef.resolved ? ` → ${relativeRef.resolved}` : ''}）；请先完成项目绑定或改用明确的框架内路径。` } });
     }
     const direct = directProjectPathsAllowed(guardCmd, binding);
     if (direct.seen && !direct.allowed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `Bash 直接项目路径不属于当前可验证 binding（${direct.value}）；禁止 no-pin/跨项目/失效 identity 访问。${recoveryHint}` } });
+        permissionDecisionReason: authorityFailure || `Bash 直接项目路径不属于当前可验证 binding（${direct.value}）；禁止 no-pin/跨项目/失效 identity 访问。${recoveryHint}` } });
     }
     const r = rewriteBash(guardCmd, binding);
     if (r.unsafe) {
@@ -1042,7 +1048,7 @@ function main() {
       // Bash 无 pin 一律 deny：shell 字符串里读/写难可靠区分，且共享展示链可能指向另一
       // session 的项目。框架/meta 任务应跳过项目状态；确需项目资料则先建立 binding。
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。框架任务请跳过项目状态；确需读取或写入项目资料，请先绑定项目。${recoveryHint}` } });
+        permissionDecisionReason: authorityFailure || `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，Bash 不能操作共享 docs/state/topic。框架任务请跳过项目状态；确需读取或写入项目资料，请先绑定项目。${recoveryHint}` } });
     }
     if (r.changed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: maskedSearch.restore(r.cmd) } } });
@@ -1085,7 +1091,7 @@ function main() {
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
       permissionDecisionReason: c.unsafe
         ? `项目路径含 . / .. / 空段 traversal，拒绝「${target}」。`
-        : `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，不能访问共享路径「${target}」。${recoveryHint}` } });
+        : authorityFailure || `项目状态 ${state.state} 没有可验证的 TURN_ACTIVE identity/epoch，不能访问共享路径「${target}」。${recoveryHint}` } });
   }
 
   return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, [pathField]: c.redirected } } });

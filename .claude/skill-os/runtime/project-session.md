@@ -27,4 +27,6 @@ Identity parsing is fail-closed. Reject empty, `.` or `..` segments and traversa
 
 An orphaned `TURN_ACTIVE` binding may be explicitly lowered with `project.sh recover-session <session-id>` only when the canonical native source proves that a newer user turn superseded it and no candidate remains. Recovery re-fences to `NO_PIN`; it does not attest the skipped turn, switch a project, or alter project data and shared display aliases. An active current turn, damaged source, or pending candidate refuses recovery. If a dead state lock blocks recovery, first use the existing `inspect-state-lock` → `recover-state-lock` exact-owner-handle procedure; never steal a live lock or infer staleness from age. The human must send a fresh project request afterward to obtain new authority.
 
+Re-observing an already attested active event is a pure optimistic read and must not create the project-state write lock. Concurrent writers wait only for a live owner within the bounded retry window; `STATE_LOCK_BUSY`, `STATE_LOCK_ORPHANED`, `STATE_LOCK_INVALID`, and `STATE_CHANGED` are distinct authority failures and must not be collapsed into an identity/epoch error. No path automatically removes an orphaned or malformed lock.
+
 <!-- FILE_END: skill-os/runtime/project-session.md -->

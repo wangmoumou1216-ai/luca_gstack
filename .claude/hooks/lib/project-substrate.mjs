@@ -268,6 +268,35 @@ function atomicWriteBytes(path, body, prefix) {
   }
 }
 
+// Contention is not broken identity. Wait only for live owners, never reclaim
+// by age. Partial owner publication can be observed between open and write.
+function waitForProjectStateUnlock(gstackRoot, sessionId, deadline = performance.now() + 1000) {
+  const sleeper = new Int32Array(new SharedArrayBuffer(4));
+  let inspectionError = null;
+  for (;;) {
+    if (performance.now() >= deadline) {
+      if (inspectionError) {
+        throw new ProjectEventAuthorityError('STATE_LOCK_INVALID', String(inspectionError.message));
+      }
+      throw new ProjectEventAuthorityError('STATE_LOCK_BUSY', 'project state lock is busy; retry after the active operation completes');
+    }
+    let held;
+    try { held = inspectProjectStateLock(gstackRoot, sessionId); inspectionError = null; }
+    catch (error) {
+      inspectionError = error;
+      if (performance.now() >= deadline) {
+        throw new ProjectEventAuthorityError('STATE_LOCK_INVALID', String(error.message));
+      }
+    }
+    if (held && !held.occupied) return;
+    if (held?.owner_alive === false) {
+      throw new ProjectEventAuthorityError('STATE_LOCK_ORPHANED',
+        `project state lock exists; manual recovery required: ${held.owner_handle.lock}`);
+    }
+    Atomics.wait(sleeper, 0, 0, 10);
+  }
+}
+
 function withProjectStateLock(gstackRoot, sessionId, work) {
   const statePath = projectStatePath(gstackRoot, sessionId);
   const lockPath = `${statePath}.lock`;
@@ -280,16 +309,24 @@ function withProjectStateLock(gstackRoot, sessionId, work) {
   };
   const bytes = stateLockOwnerBytes(record);
   let fd = null;
+  const deadline = performance.now() + 1000;
   try {
-    fd = openSync(lockPath, 'wx', 0o600);
+    for (;;) {
+      try { fd = openSync(lockPath, 'wx', 0o600); break; }
+      catch (error) {
+        if (error?.code !== 'EEXIST') throw error;
+        waitForProjectStateUnlock(gstackRoot, sessionId, deadline);
+      }
+    }
     writeFileSync(fd, bytes);
     fsyncSync(fd);
     closeSync(fd);
     fd = null;
   } catch (error) {
-    if (fd !== null) try { closeSync(fd); } catch { }
-    if (error?.code === 'EEXIST') throw new Error(`project state lock exists; manual recovery required: ${lockPath}`);
-    try { unlinkSync(lockPath); } catch { }
+    if (fd !== null) {
+      try { closeSync(fd); } catch { }
+      try { unlinkSync(lockPath); } catch { }
+    }
     throw error;
   }
   let completed = false;
@@ -788,9 +825,10 @@ function allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome) {
   } catch { return false; }
 }
 
-// The attester runs under the same project-state lock as ledger/cursor/state
-// publication. Its filesystem reader is pure: it returns evidence or throws,
-// and cannot publish partial project authority.
+// Publication requires the state lock. Re-observation of an already attested
+// event is pure: optimistic byte readback avoids read/read contention and leaves
+// no lock behind if the harness cancels a parallel tool. A writer on either side
+// of the observation must finish, and any changed snapshot revokes this result.
 export function attestPendingProjectEvent({
   gstackRoot,
   projectsRoot = PROJECTS_ROOT,
@@ -805,6 +843,28 @@ export function attestPendingProjectEvent({
   const { sid, boundary, workingDirectory } = validateObservationContext({ sessionId, boundaryId, cwd });
   if (!['pre-tool', 'stop'].includes(observation)) {
     throw new ProjectEventAuthorityError('OBSERVATION_INVALID', 'observation must be pre-tool or stop');
+  }
+  if (observation === 'pre-tool') {
+    waitForProjectStateUnlock(gstackRoot, sid);
+    const path = projectStatePath(gstackRoot, sid);
+    const raw = readOptionalBytes(path);
+    const state = projectStateFromBytes(raw, sid);
+    const control = eventControlFromState(state);
+    if (control.candidates.length === 0 && control.current?.status === 'active'
+        && currentMatchesObservation(control.current, boundary, workingDirectory)) {
+      observeCurrentNativeEvent({
+        event: control.current, sessionId: sid, cursor: control.cursor,
+        transcriptPath, codexHome, observation, assistantText,
+        allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
+        priorEvents: control.consumed_events,
+      });
+      waitForProjectStateUnlock(gstackRoot, sid);
+      const after = readOptionalBytes(path);
+      if (!raw || !after || !raw.equals(after)) {
+        throw new ProjectEventAuthorityError('STATE_CHANGED', 'project state changed during native observation; retry against the new state');
+      }
+      return { state, event: control.current, idempotent: true };
+    }
   }
   return withProjectStateLock(gstackRoot, sid, () => {
     const path = projectStatePath(gstackRoot, sid);

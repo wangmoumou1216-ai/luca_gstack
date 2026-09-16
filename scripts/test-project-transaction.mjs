@@ -1338,7 +1338,7 @@ check('per-state O_EXCL lock serializes same-sid CAS and never age-steals crash 
     prompt: 'switch project alpha',
     promptId: 'CRASH',
     intent: { kind: 'switch', tx: 'crash-tx', operation: 'switch', target: 'alpha', expected_epoch: 0 },
-  }), /manual recovery required|state lock exists/);
+  }), /STATE_LOCK_INVALID|owner record is not canonical|malformed/);
   assert.equal(existsSync(join(crashFx.gstack, '.claude', '.session-project-CRASH')), false);
 });
 
