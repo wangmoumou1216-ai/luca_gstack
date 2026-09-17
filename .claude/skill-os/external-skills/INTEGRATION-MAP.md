@@ -162,3 +162,13 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 
 它是横切写作透镜，不是产品 `ux-writing`，也不是新的规格/计划/ticket owner。上游 model-invoked
 范围仅映射到 skill、`AGENTS.md`、`CLAUDE.md` 的写改；spec、ticket、runtime prompt 等更宽对象按名调用。
+
+## 2026-09-17 增补（domain-modeling 可调用条件原语）
+
+| Skill | 真值 owner | 条件位置 | 护栏 |
+|---|---|---|---|
+| domain-modeling | canonical SKILL.md 独占领域核验/返回合同；父 PRD/brief/spec/U-ID 拥有覆盖、阻塞与恢复 | standalone 手动/语义；brainstorm Oracle 术语漂移、code-recon 代码/领域冲突、tech-spec 依赖领域的合同冲突、Plan/Orchestrator 获批任务条件分支 | 无固定 Flow 节点/state；只取父 authority/effect intersection；真人回答不能模拟；未授权仅分析；NO_PIN 不触下游 |
+
+持续词汇默认 `docs/domain/glossary.md`，已有 owner 路径优先；P2 增量仅保护此持续文件及单文件版本例外。
+ADR 不增默认路径/第二套提议门；根 CONTEXT、framework/、共享项目 aliases、全局 config/hooks 不改。
+验证中：Codex actual live/A-B 待票；Claude live/A-B **DEFERRED_BY_USER**（静态接线不等于 Claude 运行通过）。

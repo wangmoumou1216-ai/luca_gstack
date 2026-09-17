@@ -134,6 +134,12 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
   fallback（Phase 0 已强制问范围+意图）
 - **开放问题**：要继续设计前需向用户澄清的点
 
+若实体归属/术语重载或代码与领域说法冲突影响 brief，完整读取
+`.claude/skills/office/domain-modeling/SKILL.md` 后按其 internal 合同只读分析；
+继承本任务 scope/authority 的交集，返回 code_evidence 与 open_questions，
+分别归本 brief 的 VERIFIED/INFERRED 审计与开放问题，再恢复 Phase 3。
+brief 输出权限不授权修改被 recon 的代码、glossary 或 CONTEXT.md；不新增 Flow 节点。
+
 ---
 
 ## Phase 4：升级分支（大库，装在下游项目、**不进 gstack**）

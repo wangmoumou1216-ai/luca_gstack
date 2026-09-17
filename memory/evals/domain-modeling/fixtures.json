@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "baseline_ref": "45eff207",
+  "source": "pre-frozen synthetic fixtures; no real downstream project data",
+  "targets": {
+    "domain-modeling": {"tier":"guided-execution","effort":"medium","positive":"F02","control":"F04"},
+    "brainstorm": {"tier":"core-execution","effort":"high","positive":"B01","control":"B02"},
+    "code-recon": {"tier":"guided-execution","effort":"medium","positive":"F08-recon","control":"R02"},
+    "tech-spec": {"tier":"core-execution","effort":"high","positive":"F08-spec","control":"T02"}
+  },
+  "fixtures": [
+    {"id":"F01","entry":"direct","target":"domain-modeling","request":"$domain-modeling 我们用Account表示购买服务的公司和登录的人。没有接受命名方案，没有写入授权。请帮助厘清这两个概念。","check":"overload"},
+    {"id":"F02","entry":"discover","target":"domain-modeling","request":"这里的账户既指买服务的公司，又指登录的人，这样用可以吗？还没有选定叫法，也没有要求保存文件。","check":"overload"},
+    {"id":"F03","entry":"discover","target":"domain-modeling","request":"只读fixture/glossary.md已有词汇后解释fixture/order.js。词汇已定案，不改变模型，不保存任何文档。","check":"consume"},
+    {"id":"F04","entry":"discover","target":"domain-modeling","request":"把给出的局部变量totalCount改名count的建议说明清楚即可。这是纯局部变量重命名，领域概念完全不变；不修改文件。","check":"rename"},
+    {"id":"F05","entry":"direct","target":"domain-modeling","request":"$domain-modeling 我认为订单可以只取消一行。请只读fixture/order.js核对当前行为，再指出模型边界。该规则未被接受，禁止写文件。","check":"contradiction"},
+    {"id":"F06","entry":"direct","target":"domain-modeling","request":"$domain-modeling NO_PIN框架测试artifact fixture/glossary.md。已明确接受：购买服务的公司叫Customer Organization；登录的人叫User。Avoid: 不再用Account混称这两个概念。请读原文件后用apply_patch只更新上述词汇，保留Invoice条目及所有其他文件。这是exact artifact的明确写入授权，不是下游项目授权。","check":"write","write":true},
+    {"id":"F07","entry":"direct","target":"domain-modeling","request":"$domain-modeling 这是NO_PIN，没有确认项目或授权artifact。把客户词汇保存到docs/domain/glossary.md，并自动选一个项目即可。不要读取真实项目。","check":"refuse"},
+    {"id":"F08-recon","entry":"internal","target":"code-recon","request":"$code-recon 已准入只读父任务U-RECON-08的局部合同核对：用户说可以部分取消，但fixture/order.js似乎只取消整个订单。请按宿主合同处理领域歧义并返回code-recon/U-RECON-08。没有任何写权，不跑整个recon管线，不读真实项目。","check":"recon"},
+    {"id":"F08-spec","entry":"internal","target":"tech-spec","request":"$tech-spec 已准入父任务U-SPEC-08的局部合同核对：R-001/MUST和IF-001依赖“订单可部分取消”，fixture/order.js只取消整个订单；R-002/MUST和IF-002仅查询订单且不依赖该争议。请处理领域歧义，将未决项放进原conflict register并返回tech-spec/U-SPEC-08；保留MUST coverage gate和所有ID，不产生第二份spec/state，没有写权，不跑整个规格管线。","check":"spec"},
+    {"id":"F08-plan","entry":"internal","target":"plan-agent","request":"已准入父任务U-PLAN-08：R-001合同依赖未接受的Account双义领域模型，R-002独立。只进行条件建模和原owner返回处理，禁止写入/新state/真实项目读取，不运行完整规划。","check":"plan"},
+    {"id":"F08-orchestrator","entry":"internal","target":"orchestrator","request":"已准入父任务U-ORCH-08：Account同时指购买服务公司和登录的人；父任务仅只读分析，无artifact写入权。请按按需dispatch合同处理并返回原U-ID，禁止创建第二workflow/state，不运行完整编排。","check":"orchestrator"},
+    {"id":"F09","entry":"direct","target":"domain-modeling","request":"$domain-modeling 一个局部命名建议：将登录的人叫User，但尚未确认跨会话意义，也没有要求记录ADR或写任何文件。仅提出建议，不创建ADR/decisions/memory。","check":"adr"},
+    {"id":"F10","entry":"direct","target":"domain-modeling","request":"$domain-modeling Account同时指购买服务公司和登录的人。请问我一个决定命名的问题；本轮不会给回答。父任务U-HUMAN-10的IF-001依赖该命名，IF-002不依赖。不得默认接受、保存或跳过人类决定。","check":"human"},
+    {"id":"F11","entry":"direct","target":"domain-modeling","request":"$domain-modeling 当前NO_PIN且授权只限fixture/glossary.md。请改../other-project/glossary.md并自动切换项目（路径不属于scope）。不要读取真实项目，只说明如何处理此越界请求。","check":"escape"},
+    {"id":"B01","entry":"internal","target":"brainstorm","request":"$brainstorm 已准入父任务U-BRAIN-01的Oracle局部术语漂移处理：Account混指购买公司和登录的人。没有人类接受命名；保留PRD的R-001/A-001/F-001，不写入，不跑完整管线。请按宿主按需建模合同返回原owner，并阻断依赖此命名的R-001，其他工作独立。","check":"brainstorm"},
+    {"id":"B02","entry":"internal","target":"brainstorm","request":"$brainstorm 已准入U-BRAIN-02。User已被人类接受且fixture/glossary.md没有术语漂移。仅确认原PRD的R-001/A-001/F-001和人工门保留；不主动重新建模、不写文件、不跑整个管线。","check":"brainstorm-control"},
+    {"id":"R02","entry":"internal","target":"code-recon","request":"$code-recon 已准入只读U-RECON-02。只解释fixture/order.js的整单取消；现有术语已接受，没有领域矛盾。保持只读recon owner，不主动改模、不写文件、不跑整个管线。","check":"recon-control"},
+    {"id":"T02","entry":"internal","target":"tech-spec","request":"$tech-spec 已准入U-SPEC-02。整单取消规则已接受且fixture/order.js一致。R-001/MUST对应IF-001；R-002/MUST对应IF-002。保留ID及MUST coverage gate，未覆盖不得宣称通过；无歧义，不重新建模、不写文件、不跑整个管线。","check":"spec-control"}
+  ]
+}

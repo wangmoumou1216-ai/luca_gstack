@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-09-17 · domain-modeling 条件原语）
+
+- 新增领域建模 canonical 与手动/语义/internal 入口：澄清术语重载、对象归属及关系边界，再返回原调用方，不强插 Flow 节点。为什么：已有零散移植机制无法独立触发；词汇持久化须真人定案与精确文件授权，不再无条件写 CONTEXT。Codex 验证进行中；Claude 活体/A-B 按用户要求暂缓，不声明双运行时通过。
+
 ### Changed（2026-09-14 · 人工演进裁决与效果反馈）
 
 - 新增默认dry-run的 `scripts/evolution-feedback.mjs --input <review.json> [--apply]`：必须提供人工批准引用、精确采纳身份、原日志hash与证据；使用证据只能记unknown。追加反馈历史、同批幂等，保留原始采纳事实；锁及写前复检不冒充对非合作写者的原子CAS。

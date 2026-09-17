@@ -1,3 +1,21 @@
+manual_vetting_2026_09_17:
+  - name: domain-modeling
+    repo: mattpocock/skills
+    path: skills/engineering/domain-modeling
+    source_url: https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/skills/engineering/domain-modeling/SKILL.md
+    pinned: 321658273cb1d20b76026717d027d505790106d4
+    license: MIT
+    hard:
+      safety: PASS
+      compatibility: PENDING_RUNTIME
+      non_redundancy: PASS
+    verdict: APPROVED-INSTALL-VERIFICATION-PENDING
+    why_useful: "把已吸收但不可调用的领域语言方法变成独立手动/语义/internal 原语；与模块设计和只读词汇消费分界。"
+    boundary: "Scope、真人决策和 exact artifact 授权先行；父权限取交集，未答返回原 owner；不新增 Flow 节点或改根 CONTEXT/受治理记忆。"
+    adaptation: "持续 glossary 而非无条件 CONTEXT 写入；ADR 仅引用 extraction-bar 的主动提议门，提议不等于授权。"
+    evidence: framework-audit/2026-09-16-domain-modeling-verification.md
+    claude_runtime: DEFERRED_BY_USER
+
 meta:
   generated: '2026-06-07'
   run_id: wf_643ca739

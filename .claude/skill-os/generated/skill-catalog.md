@@ -15,6 +15,7 @@
 | `deepresearch` | Deep research orchestrator. Launches 5-8 parallel research agents across web, docs, code, and academi… | `.claude/skills/office/deepresearch/SKILL.md` |
 | `design-brief` | 收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 / 用户粘贴方案，收敛成可交给 MagicPath、Open Des… | `.claude/skills/office/design-brief/SKILL.md` |
 | `diagnosing-bugs` | Diagnose an unexpected failure, regression, flaky behavior, or performance regression by first buildi… | `.claude/skills/office/diagnosing-bugs/SKILL.md` |
+| `domain-modeling` | Build or sharpen a domain model when language overloads distinct concepts, relationships or ownership… | `.claude/skills/office/domain-modeling/SKILL.md` |
 | `grilling` | Stress-test a plan, decision, or idea through a one-question-at-a-time human decision tree. Use when… | `.claude/skills/office/grilling/SKILL.md` |
 | `handoff` | 会话级交接工具：把当前对话压缩成一份可供下一个 agent 或 session 直接接手的 Markdown， 保存到操作系统临时目录。仅在用户显式要求会话交接时使用，不替代项目级流程交接。 | `.claude/skills/office/handoff/SKILL.md` |
 | `html-prototype` | HTML 原型生成与可观测 QA。仅在用户明确选择本地 HTML，或明确批准包含本地 HTML 备用路径的计划且触发条件满足时使用。三种场景行为完全不同：A（新功能，Step0认知门禁+ 原型承载方式确… | `.claude/skills/office/html-prototype/SKILL.md` |

@@ -142,6 +142,12 @@ variant/classes、token 或组件库资产，不改写上游历史文件。
 - 如无冲突，写「无需裁决」并继续
 - 每条裁决必须有理由，不允许写「以设计为准」这种空话
 
+若术语重载、实体归属或关系边界冲突影响后续数据/接口合同，完整读取
+`.claude/skills/office/domain-modeling/SKILL.md` 并传入问题、scope、父任务及
+inherited authority/effect intersection。未定案项回本 Conflict Register，
+只阻塞依赖它的数据/接口合同，保留原 MUST coverage 与来源 owner；不得替真人裁决、
+改写上游 PRD/design-brief 或输出第二份 spec，不新增 Flow 节点。
+
 ---
 
 ## Phase 2：系统架构视图

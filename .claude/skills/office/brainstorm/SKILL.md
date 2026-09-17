@@ -135,9 +135,11 @@ deepresearch*.md (or idea)
    environment 放宽）：** 能查到的**事实**（代码库/文档/已有研究，以及跑命令/调工具/web 检索
    可当场确立的）自己查，不消耗提问机会；**决策**永远属于用户——逐个抛出并等待回答。
    判据一句：答案能被检索**或用工具当场确立** → fact；答案取决于用户偏好/取舍 → decision。
-3b. **Oracle 术语定案即持久化（2026-07-12，源 domain-modeling）：** Phase 5 Oracle 的
-   terminology-drift 发现一经定案（选定 canonical 词），当场 inline 写入激活项目 CONTEXT.md
-   词汇节（`**术语**: 定义 _Avoid_: 别名`）——不再是会话内 ephemeral 修正。
+3b. **Oracle 领域歧义条件回路：** Phase 5 的 terminology-drift 确实影响需求含义时，
+   完整读取 `.claude/skills/office/domain-modeling/SKILL.md`，传入问题、scope、父任务与
+   inherited authority/effect intersection。仅在真人定案且 exact glossary artifact 已获授权时，
+   按该唯一合同持久化；PRD 写入权限不等于词汇/CONTEXT.md 写入权限。
+   未答问题归本 PRD 的 Outstanding Questions 与原 coverage owner，不新增 Flow 节点。
    Wait for the answer before asking the next. Never batch multiple questions into a single prompt.
    Never embed questions inside narrative text.
 

@@ -1,0 +1,50 @@
+{
+  "status": "FROZEN",
+  "scope": "framework_meta / NO_PIN",
+  "baseline": "45eff207a585757907f323c6952f969ac76a14b2",
+  "approved_plan_sha256": "fce6beeebd271e91e1ab4b9e18341e36a6dc58710b1fc64e5bbbbd1e24a1ad6f",
+  "approval": "按照你的方案执行。claude先不管",
+  "approval_delta": {
+    "publication_order_user_override": {
+      "approved_at": "2026-09-17",
+      "approvals": ["提交并发布然后在检查", "合并分支和推送"],
+      "effect": "merge the scoped task branch into main and ordinary upstream/main push before remaining live/A-B/independent closure; preserve pending results, then check",
+      "unchanged": "exact file scope, NO_PIN, protected user work, full Git hooks, no force, no global configuration changes"
+    },
+    "scene_registration": {
+      "approved_at": "2026-09-17",
+      "approval": "批准，",
+      "file": "scripts/check-skill-scene-coverage.py",
+      "change": "add only domain-modeling: (None, [], unobservable); preserve all existing mappings and governance",
+      "phase": "U-003"
+    },
+    "claude_live_and_ab": "DEFERRED_BY_USER",
+    "claude_auth": "not a blocking installation prerequisite for this run",
+    "codex_live_and_ab": "REQUIRED",
+    "publication": "focused commit and ordinary upstream HEAD:refs/heads/main push; no force",
+    "completion": "DONE_WITH_CONCERNS if remaining gates pass; never claim dual-harness runtime parity"
+  },
+  "upstream": {
+    "repo": "mattpocock/skills",
+    "path": "skills/engineering/domain-modeling",
+    "commit": "321658273cb1d20b76026717d027d505790106d4",
+    "license": "MIT / Copyright (c) 2026 Matt Pocock",
+    "files": {
+      "SKILL.md": "327a2b50620e2fd70abc6893cd6965e76b20f8d0adb0dc2c8d5eb3845efb643e",
+      "CONTEXT-FORMAT.md": "17ab16ce783e4d2801ee52fd9acdf550cbf44de65ae76797a93943bbedf22a13",
+      "ADR-FORMAT.md": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0"
+    }
+  },
+  "worktree": ".claude/worktrees/fuse-domain-modeling-20260916",
+  "protected_files": {
+    ".claude/observability/observations.jsonl": "290beadb4ef1f1e45bcfce0002be2963e10e797f6cf260b5f027406f2208150e",
+    ".claude/observability/rules.yaml": "6633be1e135357e666b4cbbb3ea04d141e6af16fc8a06399f95f1ada0efceb15",
+    "memory/retrieval-log.jsonl": "d9c74a8fc2ba2485dbfa3b4ab7c91d7a987d4c50cc87028d1deb52722e3f7fbc"
+  },
+  "concurrent_excluded_paths": [
+    "framework-audit/2026-09-17-model-routing-proposal.md",
+    "framework-audit/2026-09-17-model-routing-review.md",
+    "framework-audit/2026-09-17-model-routing-handshake.md"
+  ],
+  "forbidden_effects": ["project switch/create", "shared project aliases", "framework/ writes", "root context/kernel edits", "global harness configuration", "other checkout synchronization", "force push"]
+}

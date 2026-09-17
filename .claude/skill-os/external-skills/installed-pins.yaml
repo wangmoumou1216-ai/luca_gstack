@@ -17,6 +17,17 @@
 # - source     adoption-log = 装机时钉过版本；backfill = 2026-07-15 回填（基线为回填日上游状态，
 #              非装机版本——装机早于回填的单元本地内容可能落后于基线，refresh 时以 FUSION 实 diff 为准）。
 units:
+- name: domain-modeling
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/domain-modeling
+  install_path: .claude/skills/office/domain-modeling
+  pinned_sha: 321658273cb1d20b76026717d027d505790106d4
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-09-17'
+  source: adoption-log
+  note: project-local adapted SSOT; manual/semantic/internal entry; no mandatory Flow node; Codex verification pending, Claude live/A-B deferred by explicit user approval
 - name: tdd
   kind: skill
   repo: mattpocock/skills

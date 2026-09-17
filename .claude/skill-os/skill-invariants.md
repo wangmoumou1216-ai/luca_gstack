@@ -38,6 +38,7 @@
 - `docs/research/research-kit-<topic>-<YYYY-MM-DD>.md`（2026-07-21 新增；docs/research 沿用 name-first 约定）
 - `docs/decisions/YYYY-MM-DD-<topic>-voice-copy-spec.md`（2026-07-21 新增；design-brief Step 1.0b 以 `*-voice-copy-spec.md` 后缀 glob 探测）
 - `docs/evaluation/YYYY-MM-DD-<topic>-ux-writing-review.md`（2026-07-21 新增；不与 ux-audit 产出模式冲突）
+- `docs/domain/glossary.md`（2026-09-17 新增；仅已授权、已确认项目的持续领域词汇真值；已有 owner 路径优先，不迁移）
 
 #### P2-V — 版本管理规则（同日多次运行）
 
@@ -57,6 +58,7 @@ ls docs/prd/$(date +%Y-%m-%d)-*-prd.md 2>/dev/null | grep -q . && echo "需要�
 
 **序号分配：** 取当日已有文件的最大序号 +1，从 001 开始。
 **目录型产出豁免：** 形如 `docs/<dir>/YYYY-MM-DD-<topic>/`（如 open-design/figma-demo 的 `docs/prototype/<date>-<topic>/`）**有意就地覆盖、不加序号**——P2-V 序号规则只适用于**单文件**产出；目录型产出的版本对比走 `history.sh` 或 OD 端迭代，不靠文件名序号。
+**持续词汇单文件豁免：** `docs/domain/glossary.md` 是同一项目持续更新的 SSOT，用户接受且 exact artifact 已授权时就地手术式更新，不创建日期/序号副本；历史由项目 Git 保留。此例外仅适用于该词汇文件，不放宽其他受保护路径或 ADR 写入权限。
 **查看历史版本：** `bash scripts/history.sh <skill-name>`
 **采纳标记：** 在 handoff 文件的 `gate_result` 行后加 `adopted: true/false` 字段，表示该版本是否被最终采用。
 

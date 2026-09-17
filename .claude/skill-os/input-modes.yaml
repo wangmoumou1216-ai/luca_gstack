@@ -28,6 +28,17 @@ skills:
     quality_gates: ["missing_premise_restored", "natural_chinese", "project_vocabulary_reused_when_available", "repitch_only", "no_side_effects"]
     notes: "显式调用的对话修复覆盖层；只重讲上一条回复，不创建产物/handoff、不改 workflow state、不要求项目 pin。"
 
+  domain-modeling:
+    modes:
+      standalone:
+        required: ["domain_question"]
+        optional: ["existing_glossary", "code_evidence", "exact_authorized_artifact"]
+      internal:
+        required: ["caller", "domain_question", "trigger_condition", "scope", "inherited_authority", "authority_effect_intersection"]
+        optional: ["parent_u_id", "exact_authorized_artifact", "existing_glossary", "code_evidence"]
+    quality_gates: ["scope_bound", "facts_separated_from_decisions", "human_answer_required", "code_evidence_honest", "authorized_writes_only", "structured_return", "caller_resumed"]
+    notes: "手动或语义触发，也可由上游条件调用；无独立 workflow 节点/state。未给 exact artifact 写入授权时只分析；NO_PIN 不读写下游项目。"
+
   writing-for-agents:
     modes:
       standalone:

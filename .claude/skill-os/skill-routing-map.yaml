@@ -51,6 +51,13 @@ project_skills:
     # 不收「没听懂/换个说法/讲清楚」等泛词，避免劫持普通对话延续。
     triggers: [显式调用wait-what]
 
+  domain_modeling:
+    invoke: "/domain-modeling"
+    weight: 8
+    # Compound domain intent only; native semantic discovery handles paraphrases.
+    # Bare glossary/account/relationship words must not hijack reading, rename or UI work.
+    triggers: [domain-modeling, 领域建模, 统一领域术语, 领域对象归属, 领域关系边界, 术语重载冲突]
+
   writing_for_agents:
     invoke: "/writing-for-agents"
     weight: 8

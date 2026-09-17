@@ -64,6 +64,11 @@ diagnose-only 回路；只有真实 Git conflict 才进入 `resolving-merge-conf
 父 U-ID 已批准的读写/effect authority，不得扩权，完成后回到原 U-ID 再验证。Orchestrator 不因
 `implement` 自动 stage、commit 或 push；这些 effects 仍须各自的人类 gate 与一次性授权。
 
+领域歧义条件分支：仅当获批父 U-ID 的合同依赖术语、实体归属或关系边界时，完整读取
+`.claude/skills/office/domain-modeling/SKILL.md` 后调用；传入父 U-ID、问题、触发条件、
+scope 与 inherited authority/effect intersection。分析或写入只能取父权限交集，
+open_questions 回原 owner，随后恢复原 U-ID；不新增 workflow state/节点，不自动定案。
+
 ### 2.2 执行流程
 
 ```

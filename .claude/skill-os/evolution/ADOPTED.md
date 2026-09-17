@@ -63,4 +63,13 @@
 - **gap 提案（待 luca 落笔）**：GAP-decision-questionnaire（to-questionnaire 延迟采纳，触发=首次真实递出需求，近似实例 EP-20260722-098）
 - MIT 署名：三处 merge 均为概念级吸收并在落点注明源与日期；行为 A/B 豁免显式记录（一句级增量，以断言 grep + check-routing-map/check-registration-sync 回归替代）
 
+## domain-modeling（2026-09-17，用户批准安装；验证进行中）
+- repo: `mattpocock/skills` · MIT · path pin `321658273cb1d20b76026717d027d505790106d4`
+- reuse_mode: **install+adapt** · project-local `.claude/skills/office/domain-modeling`，双 native alias 指向同一 SSOT
+- 手动/语义/internal 条件调用；不新增 Flow 节点，原 PRD/brief/spec/U-ID 仍拥有阻塞项与恢复点
+- P2 仅增加持续词汇文件例外；真人定案 + exact artifact 授权后才能写入；不恢复旧根 CONTEXT 自动落盘
+- 门禁：Codex actual live/A-B 与静态/变异/独立复审 **PENDING**；Claude live/A-B 按用户明确要求 **DEFERRED**，不得宣称双运行时等价
+- 回滚：`pre-fuse-domain-modeling-20260916`（本地 tag；主安装提交前创建）；发布后用聚焦 `git revert`，不 reset/强推
+- 证据：`framework-audit/2026-09-16-domain-modeling-verification.md`（完成验证后填票）
+
 <!-- FILE_END: ADOPTED -->

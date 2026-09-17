@@ -1,0 +1,6 @@
+interface:
+  display_name: "Domain Modeling"
+  short_description: "Sharpen domain terms, relationships and ownership safely"
+  default_prompt: "Use $domain-modeling to reconcile the overloaded terms and domain boundaries in this task."
+policy:
+  allow_implicit_invocation: true

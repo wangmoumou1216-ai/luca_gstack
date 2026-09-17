@@ -78,6 +78,7 @@ TABLE = {
     "to-tickets": (None, [], "unobservable"),
     "wait-what": (None, [], "unobservable"),
     "writing-for-agents": (None, [], "unobservable"),
+    "domain-modeling": (None, [], "unobservable"),
     "wayfinder": (None, [], "unobservable"),
     "implement": (None, [], "unobservable"),
     "muse-req-triage": (None, [f"{D}/loop/*"], "unmapped"),

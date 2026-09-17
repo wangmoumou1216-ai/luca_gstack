@@ -281,6 +281,12 @@ Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头�
 - Orchestrator 将据此填写 Work Agent 的 `AVAILABLE_SKILL_PATHS` 变量
 - 无 skill 需求的 Phase 省略此字段
 
+领域术语重载、实体归属或关系边界**确实影响该 Phase 合同**时，可将
+`.claude/skills/office/domain-modeling/SKILL.md` 列为条件分支；执行前完整读取该唯一合同。
+传入问题、触发条件、scope、父 U-ID 和 inherited authority/effect intersection；
+子返回的 open_questions/blocking_for_caller 归原计划 owner，只阻塞依赖未决项的合同。
+不强插固定 Phase/Flow 节点，不因调用扩大写入权；真人决策未答不得默认替人选择。
+
 **Phase 有两种类型，必须在模板中声明 `phase_type`：**
 
 | phase_type | 执行内容 | 断言形式 |

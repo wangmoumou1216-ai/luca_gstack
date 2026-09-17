@@ -1,6 +1,6 @@
 # domain-modeling 适配安装执行计划
 
-Status: PLANNED
+Status: IN_PROGRESS — installation and additive C19 registration approved; user explicitly reordered publication before remaining checks; runtime acceptance still pending.
 
 本文件是待用户批准的安装执行 payload。用户随后要求“包含全局推送和提交。你刚才所有的执行都要全局推送和提交”，并要求“继续”：本次已产生的任务文档可以聚焦提交并普通推送；安装仍须展示本文件后获得真实批准，不用文档发布冒充技能安装。
 
@@ -283,5 +283,25 @@ node scripts/test-domain-modeling-skill.mjs --rollout
 当前：2026-09-17 Codex 复核通道恢复，对上一版计划提出两项 MAJOR readiness 缺口：A/B 未覆盖被改 core skill、glossary 输出未登记 P2。本版仅补上述合同与文档发布 delta，等待一次终版独立闭合及安装批准；无安装 worker 运行，所有 U 仍 PLANNED。Claude auth 仍缺票，安装前须通过 KILL-3。最终文档复核另存第 0.1 节 exact review report，绑定本版 SHA，不用自审补 PASS。
 
 恢复读取：本计划、既有redteam报告、source-freeze（产生后）、最新HEAD/status、runtime project-session/framework-maintenance/long-session、FUSION；从首个未完成U继续。不得复用旧baseline或从docs aliases推导项目。
+
+## 8. 已批准安装与恢复 checkpoint（2026-09-17）
+
+- 原批准 payload SHA-256：`fce6beeebd271e91e1ab4b9e18341e36a6dc58710b1fc64e5bbbbd1e24a1ad6f`；用户“按照你的方案执行。claude先不管”批准安装，同时明确暂缓 Claude 活体与 A/B；Codex actual、静态/变异、独立 QA/终审仍阻断发布。不得宣称双 runtime PASS。
+- 用户“批准，”明确批准 U-003 额外文件 `scripts/check-skill-scene-coverage.py`，仅新增 `"domain-modeling": (None, [], "unobservable"),`。不改其他 TABLE 条目、豁免或治理行为。
+- 安装基线：`45eff207a585757907f323c6952f969ac76a14b2`；固定源和保护集见 source-freeze。主 checkout/index/三个 protected WIP hashes 保持原样；model-routing 三个并发审计文档排除。
+- U-001–U-005 本地实施完成，非最终验收：canonical、两个 native alias、command、语义登记、P2 增量、五 caller 指针、来源及演进记录。无 Flow/state/root/global/downstream 改动。
+- U-006 四文件已交接，checker/scorer/mutation PASS；第一次 worker usage-limit 缺票永久保留，恢复后未把旧失败覆盖成成功。
+- 新鲜完整框架 gate：`bash scripts/verify.sh` **PASS 96/0/0**；raw log `/private/tmp/domain-modeling-install.KsdG5S/evidence/verify-resume.log`。U-007 仍须 actual Codex 全场景、四 target A/B、独立 QA/当前字节终审；Claude 继续 DEFERRED。
+- 当前：主线接管 U-006 runner 的 scope trace 细化与烟测，任何未知活动非零；不以自测代替实际/独立票据。随后 U-007，再 U-008 聚焦安装提交+rollout+普通 upstream/main 推送。尚未发布安装，不建 rollback tag、不 squash，直到门禁齐备。
+- 恢复：验证主 HEAD/index/protected hashes；读 source-freeze + verification checkpoint；从首个未完成验证继续，不重建已有 worktree 或覆盖并发工作。
+
+## 9. 最新用户发布顺序覆盖（2026-09-17）
+
+- 用户连续明确指示“你先提交吧”“提交并发布然后在检查”“合并分支和推送”。据最新指令，将本任务分支聚焦提交，squash 合入当前 main，再普通推送到既定 upstream/main；剩余 Codex live/A/B 和独立终审改为发布后检查，不把原 U-007 全通过写成事实。
+- 文件/效果范围仍为原 U-001–U-008 + 已批准单行 C19 delta；不 stage unrelated dirty 或并发 model-routing 文档，不推 task branch/tags、不 force、不改全局配置。不跳过 Git hooks，hook 失败仍停止提交。
+- 发布前已有真实 full verify 96/0/0，以及 registration/routing/context/parity/viability/quality/coding/self-model/routes/semantic/engineering/project-scope/project-transaction 成功。当前专用 runner 已补 fail-closed shell/path/native packet 保护；需 fresh checker/mutation 与完整提交 hooks。
+- 两次旧版本 Codex F01 烟测均 UNKNOWN：sandbox connection refused；获准外部重试 request timed out，无最终答案。不是已通过的 F01，更不能代表 F01–F11 或四 target A/B。
+- 发布后复核必须使用 `--host-catalog-receipt /private/tmp/domain-modeling-install.KsdG5S/smoke-escalated/codex-home-wYNaGD/sessions/2026/09/17/rollout-2026-09-17T14-53-38-01a0ae24-6f78-7a80-a41d-30defe3a681a.jsonl`；仅在任务-owned home 设置 documented disabled overrides，原生 packet receipt 未证明隔离仍 UNKNOWN。
+- Claude 仍 DEFERRED_BY_USER。发布是用户要求的 Git 交付，不是完整行为验收；evolution/verification 的 PENDING 状态保留。剩余检查结果另作聚焦审计提交/普通推送，不 amend 已发历史。
 
 <!-- FILE_END: domain-modeling-install-plan -->
