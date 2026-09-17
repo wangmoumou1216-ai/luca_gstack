@@ -1,6 +1,6 @@
 # domain-modeling 适配安装执行计划
 
-Status: IN_PROGRESS — installation and additive C19 registration approved; user explicitly reordered publication before remaining checks; runtime acceptance still pending.
+Status: PUBLISHED / ACCEPTANCE_BLOCKED — user publication-order override executed; runtime incomplete and second review found surviving MAJOR scorer defects.
 
 本文件是待用户批准的安装执行 payload。用户随后要求“包含全局推送和提交。你刚才所有的执行都要全局推送和提交”，并要求“继续”：本次已产生的任务文档可以聚焦提交并普通推送；安装仍须展示本文件后获得真实批准，不用文档发布冒充技能安装。
 
@@ -303,5 +303,13 @@ node scripts/test-domain-modeling-skill.mjs --rollout
 - 两次旧版本 Codex F01 烟测均 UNKNOWN：sandbox connection refused；获准外部重试 request timed out，无最终答案。不是已通过的 F01，更不能代表 F01–F11 或四 target A/B。
 - 发布后复核必须使用 `--host-catalog-receipt /private/tmp/domain-modeling-install.KsdG5S/smoke-escalated/codex-home-wYNaGD/sessions/2026/09/17/rollout-2026-09-17T14-53-38-01a0ae24-6f78-7a80-a41d-30defe3a681a.jsonl`；仅在任务-owned home 设置 documented disabled overrides，原生 packet receipt 未证明隔离仍 UNKNOWN。
 - Claude 仍 DEFERRED_BY_USER。发布是用户要求的 Git 交付，不是完整行为验收；evolution/verification 的 PENDING 状态保留。剩余检查结果另作聚焦审计提交/普通推送，不 amend 已发历史。
+
+## 10. Git 交付与发布后检查 checkpoint（2026-09-17）
+
+- U-001–U-006 实施及 U-008 用户重排的 Git 交付完成：task commit `4ab85aaa510c71e49ccbd02c3ace1c9ffbb21343`；main squash `8370c470c70adf9a5805fa3b8b543e7d80c9d6fe`；普通 upstream/main push + remote SHA readback 一致。37 个批准任务文件；两次完整 hooks 均 96/0/0，无 unrelated WIP。保留本地 rollback tag/任务分支/worktree，不推 tags/任务分支。
+- 安装提交 CI 已 6/6 success，包括 Required Checks。发布后专用 checker/self-test/最终字节 mutation PASS；精确票据见 verification。共享 alias/state/global/downstream 保持不变。
+- 第三次 final-byte Codex native 烟测证明原生加载 canonical 和 packet 隔离，但仍 request timed out、无最终答案、无 artifact 变更，整体 UNKNOWN。按三次失败规则停止重试；完整 F01–F11/四 target A/B NOT_RUN，U-007 runtime acceptance BLOCKED。Claude 仍 DEFERRED。
+- 独立 QA FAIL 3/9（actual 缺票）；第二轮复审闭合首轮 UID/handoff 两项，但发现评分器两项存活 MAJOR 假阳性。已达两轮上限，停止修改/第三轮，待用户批准专用 scorer 修复与新的 review delta。完整验收 BLOCKED，adoption PENDING；真实票据另附 approved verification/final-review。
+- 仅将检查结论作为聚焦审计提交/普通推送，不 amend 已发安装历史，不将 Git/CI/self-test 成功等同完整模型行为验收。
 
 <!-- FILE_END: domain-modeling-install-plan -->
