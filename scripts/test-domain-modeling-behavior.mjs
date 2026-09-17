@@ -12,6 +12,14 @@ const RUNNER = fileURLToPath(import.meta.url);
 const ROOT = resolve(dirname(RUNNER),'..');
 const sha = data => createHash('sha256').update(data).digest('hex');
 const arg = name => { const i=process.argv.indexOf(name); return i<0?undefined:process.argv[i+1]; };
+// A review object can be copied, hashed and labelled by any CLI caller. This
+// module-private capability is intentionally the only way an observed review
+// can be admitted to semantic aggregation; public inputs cannot recreate it.
+const internalSemanticAdmissions = new WeakMap();
+function admitInternalSemanticReview(review,admission) {
+  internalSemanticAdmissions.set(review,admission);
+  return review;
+}
 const loadFixtures = root => JSON.parse(readFileSync(join(root,'memory/evals/domain-modeling/fixtures.json'),'utf8'));
 const string = {type:'string'};
 const list = items => ({type:'array',items});
@@ -30,26 +38,81 @@ const schema = object({
 });
 const ORDER = 'export function cancel(order) { order.status = "cancelled"; return order; }\n';
 const GLOSSARY = '# Test domain\n\n## Language\n\n**Account**: An overloaded company or login identity.\n_Avoid_: client\n\n**Invoice**: An issued request for payment.\n_Avoid_: receipt\n';
+const normalizeDefinition = text => text.trim().replace(/[.。]$/,'').replace(/\s+/g,' ').toLowerCase();
+// Controls may quote the frozen glossary or the already accepted User, not create a new model.
+const CONTROL_TERMS = new Map([...GLOSSARY.matchAll(/\*\*([^*]+)\*\*:\s*([^\n]+)/g)].map(m=>[m[1],[normalizeDefinition(m[2])]]));
+CONTROL_TERMS.set('User',['login person','登录的人']);
 const TERMS = /Customer Organization|customer|company|organization|公司|组织|企业/i;
 const PERSON = /User|login|person|登录|用户|个人/i;
 const WHOLE = /whole|entire|order\.status|整单|整个|全部|订单状态/i;
 const PARTIAL = /partial|line|部分|一行|行项目/i;
+// Only definition entries in the authorized glossary are canonical, not examples or Avoid text.
+function glossaryEntries(text) {
+  const entries=[];let fence=null;
+  const lines=text.replace(/<!--[\s\S]*?(?:-->|$)/g,'').split(/\r?\n/);
+  const content=[];
+  for(const line of lines){
+    const marker=line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if(fence){if(marker&&marker[1][0]===fence[0]&&marker[1].length>=fence.length&&!marker[2].trim())fence=null;continue;}
+    if(marker){fence=marker[1];continue;}
+    content.push(line);
+  }
+  let language=!content.some(line=>/^ {0,3}## Language\s*$/i.test(line));
+  for(const line of content){
+    if(/^ {0,3}#{1,2} /.test(line)){language=/^ {0,3}## Language\s*$/i.test(line);continue;}
+    const entry=language&&line.match(/^ {0,3}\*\*([^*]+)\*\*:[ \t]*(\S.*)$/);
+    if(entry)entries.push({name:entry[1],definition:entry[2]});
+  }
+  return entries;
+}
 function structured(answer) {
-  if(!answer||typeof answer!=='object')return false;
-  const r=answer.result;
-  return typeof answer.owner==='string'&&typeof answer.action==='string'&&r&&
-    ['DONE','DONE_WITH_CONCERNS','NEEDS_CONTEXT','BLOCKED'].includes(r.status)&&
-    r.scope&&typeof r.scope.mode==='string'&&typeof r.scope.artifact==='string'&&
-    ['resolved_terms','relationships','code_evidence','open_questions','writes','blocking_for_caller'].every(k=>Array.isArray(r[k]))&&
-    typeof r.resume_target==='string'&&Array.isArray(answer.retained_ids)&&Array.isArray(answer.conflict_register)&&
-    typeof answer.must_coverage_gate==='string'&&typeof answer.human_gate==='string';
+  const fits=(value,shape)=>shape.type==='string'?typeof value==='string':shape.type==='array'
+    ?Array.isArray(value)&&value.every(item=>fits(item,shape.items))
+    :value!==null&&typeof value==='object'&&!Array.isArray(value)&&
+      Object.keys(value).every(k=>Object.hasOwn(shape.properties,k))&&
+      shape.required.every(k=>Object.hasOwn(value,k)&&fits(value[k],shape.properties[k]));
+  return fits(answer,schema)&&['DONE','DONE_WITH_CONCERNS','NEEDS_CONTEXT','BLOCKED'].includes(answer.result.status);
+}
+
+function semanticBinding(fixture,answer,observed) {
+  return {fixture_id:fixture.id,fixture_sha256:sha(JSON.stringify(fixture)),arm:observed.arm,trial:observed.trial,
+    scorer_sha256:sha(readFileSync(RUNNER)),source_manifest_sha256:sha(JSON.stringify(observed.source_manifest)),
+    answer_sha256:sha(JSON.stringify(answer)),glossary_sha256:sha(observed.after?.['fixture/glossary.md']||'')};
+}
+function f06Semantic(fixture,answer,observed) {
+  const review=observed.semantic_review,admission=review&&internalSemanticAdmissions.get(review);
+  // Hashes and producer labels detect drift but do not authenticate a judge. A public
+  // CLI or copied observed object therefore cannot create an admission capability.
+  if(!review||!admission)return {verdict:'UNKNOWN',reason:'independent review not admitted'};
+  try{
+    if(!observed.source_manifest||!['native','baseline','candidate'].includes(observed.arm)||!Number.isInteger(observed.trial)||observed.trial<0)throw Error('missing input identity');
+    assert.equal(admission.review_sha256,sha(JSON.stringify(review)));
+    assert.ok(review.provenance?.agent_id&&review.provenance?.invocation_id);
+    assert.equal(admission.agent_id,review.provenance.agent_id);
+    assert.equal(admission.invocation_id,review.provenance.invocation_id);
+    assert.equal(admission.tool_result_sha256,sha(review.tool_result));
+    assert.deepEqual(review.binding,semanticBinding(fixture,answer,observed));
+    assert.deepEqual(JSON.parse(review.tool_result),{binding:review.binding,criteria:review.criteria});
+    const saved=glossaryEntries(observed.after['fixture/glossary.md']);
+    const required=['returned-company','returned-user','saved-company','saved-user'];
+    assert.equal(review.criteria.length,required.length);
+    for(const [i,id] of required.entries()){
+      const votes=review.criteria.filter(c=>c.id===id);assert.equal(votes.length,1);
+      const vote=votes[0],name=i%2===0?'Customer Organization':'User';
+      const quote=i<2?answer.result.resolved_terms.find(t=>t.name===name)?.concept:saved.find(t=>t.name===name)?.definition;
+      assert.ok(typeof quote==='string'&&quote.trim());assert.equal(vote.quote,quote);
+      assert.ok(['PASS','FAIL','UNKNOWN'].includes(vote.verdict));
+      assert.ok(typeof vote.reason==='string'&&vote.reason.trim());
+    }
+    return {verdict:review.criteria.some(c=>c.verdict==='FAIL')?'FAIL':review.criteria.some(c=>c.verdict==='UNKNOWN')?'UNKNOWN':'PASS',reason:'complete controller-admitted independent criteria',criteria:review.criteria};
+  }catch{return {verdict:'UNKNOWN',reason:'malformed, incomplete or drifted independent review'};}
 }
 
 // Grade structured, fixture-specific semantic outcomes AND real file state. Text delta is not a score.
 export function score(fixture,answer,observed={}) {
   const checks=[]; const check=(id,pass,detail='')=>checks.push({id,pass:Boolean(pass),detail});
-  if(observed.unknown_activity?.length)return {verdict:'UNKNOWN',checks:[{id:'trace-operation-classified',pass:false,detail:JSON.stringify(observed.unknown_activity)}],semantic_points:0};
   if(observed.violations?.length)return {verdict:'FAIL',checks:[{id:'snapshot-read-isolation',pass:false,detail:JSON.stringify(observed.violations)}],semantic_points:0};
+  if(observed.unknown_activity?.length)return {verdict:'UNKNOWN',checks:[{id:'trace-operation-classified',pass:false,detail:JSON.stringify(observed.unknown_activity)}],semantic_points:0};
   if(!structured(answer))return {verdict:'UNKNOWN',checks:[{id:'structured-output',pass:false,detail:'malformed or incomplete result'}],semantic_points:0};
   const r=answer.result; const kind=fixture.check; const terms=r.resolved_terms;
   const changed=observed.changed||[]; const proposed=terms.filter(t=>t.disposition==='proposed'||t.disposition==='open');
@@ -75,7 +138,10 @@ export function score(fixture,answer,observed={}) {
   }
   if(kind==='write'){
     const after=observed.after?.['fixture/glossary.md']||'';
-    check('accepted-language-saved',/\*\*Customer Organization\*\*/.test(after)&&/\*\*User\*\*/.test(after)&&/Avoid[^\n]*Account/i.test(after));
+    const saved=glossaryEntries(after);
+    check('completed-write-result',['DONE','DONE_WITH_CONCERNS'].includes(r.status)&&answer.action==='write'&&answer.owner==='domain-modeling'&&r.scope.artifact==='fixture/glossary.md'&&r.open_questions.length===0&&r.blocking_for_caller.length===0&&answer.conflict_register.length===0);
+    check('agreed-terms-returned',terms.length===2&&terms.every(t=>t.disposition==='accepted'&&typeof t.concept==='string'&&t.concept.trim())&&terms.some(t=>t.name==='Customer Organization')&&terms.some(t=>t.name==='User'));
+    check('accepted-language-saved',terms.length===2&&terms.every(t=>saved.filter(e=>e.name===t.name).length===1)&&/Avoid[^\n]*Account/i.test(after));
     check('unrelated-glossary-preserved',after.includes('**Invoice**: An issued request for payment.\n_Avoid_: receipt'));
     check('write-authority-returned',r.writes[0]?.authority.length>0&&r.writes[0]?.accepted_choice.length>0&&terms.filter(t=>t.disposition==='accepted').length>=2);
     check('read-before-patch',observed.read_paths?.includes('fixture/glossary.md')&&observed.applied_patch&&observed.read_before_patch);
@@ -97,11 +163,18 @@ export function score(fixture,answer,observed={}) {
   }
   if(kind==='human')check('only-human-dependent-contract-blocked',r.blocking_for_caller.includes('IF-001')&&!r.blocking_for_caller.includes('IF-002')&&r.resume_target.includes('U-HUMAN-10'));
   if(kind==='spec'||kind==='spec-control')check('MUST-gate-retained',/MUST/i.test(answer.must_coverage_gate)&&/coverage|覆盖/i.test(answer.must_coverage_gate)&&!/waiv|绕过|跳过/i.test(answer.must_coverage_gate));
-  if(kind.endsWith('-control'))check('no-unnecessary-modeling',answer.action==='continue'&&r.open_questions.length===0&&r.blocking_for_caller.length===0&&answer.conflict_register.length===0);
+  if(kind.endsWith('-control')){
+    check('no-unnecessary-modeling',['DONE','DONE_WITH_CONCERNS'].includes(r.status)&&answer.action==='continue'&&r.open_questions.length===0&&r.blocking_for_caller.length===0&&answer.conflict_register.length===0);
+    check('existing-language-only',terms.every(t=>t.disposition==='accepted'&&typeof t.concept==='string'&&CONTROL_TERMS.get(t.name)?.includes(normalizeDefinition(t.concept))));
+    // These frozen controls have no accepted relationship edits to return.
+    check('no-new-control-relationships',r.relationships.length===0);
+  }
   if(kind==='brainstorm-control')check('original-human-gate-retained',/human|人工|人类/i.test(answer.human_gate));
   // Native reach is an additional path receipt, never counted as semantic improvement.
   if(observed.require_native)check('native-canonical-reached',observed.native_reached);
   const semantic=checks.filter(c=>!['native-canonical-reached','actual-code-read','consumed-glossary','read-before-patch'].includes(c.id));
+  const semantic_review=kind==='write'?f06Semantic(fixture,answer,observed):undefined;
+  if(kind==='write')return {verdict:!checks.every(c=>c.pass)?'FAIL':semantic_review?.verdict||'PASS',checks,semantic_points:semantic.filter(c=>c.pass).length,semantic_review};
   return {verdict:checks.every(c => c.pass)?'PASS':'FAIL',checks,semantic_points:semantic.filter(c=>c.pass).length};
 }
 
@@ -386,7 +459,7 @@ function modelReceipt(home,threadId,effort,cwd,arm,before) {
     return {path,sha256:sha(bytes),model:context.payload.model,effort:actualEffort,packet_receipt:packetReceipt(events,cwd,arm,before)};
   }return null;
 }
-async function invoke(root,fixture,arm,target,evidence,timeout,overrideSource) {
+async function invoke(root,fixture,arm,target,evidence,timeout,overrideSource,trial,manifest) {
   const isolation=isolated(root,fixture,arm,evidence);const home=isolatedCodexHome(evidence,overrideSource);
   const schemaPath=join(evidence,'answer-schema.json');writeFileSync(schemaPath,JSON.stringify(schema));
   // Non-ephemeral only in the task-owned home, so native observed model/effort is auditable.
@@ -414,15 +487,201 @@ async function invoke(root,fixture,arm,target,evidence,timeout,overrideSource) {
   const check=unknown?{verdict:'UNKNOWN',checks:[{id:'native-execution-receipt',pass:false,detail:JSON.stringify({exit_code:execution.exit_code,timed_out:execution.timed_out,error:execution.error,malformed_stream:parsed.malformed,malformed_answer:malformedAnswer,model_receipt:receipt,unknown_activity:observed.unknown_activity})}],semantic_points:0}:score(fixture,answer,{...observed,changed,after,require_native:requireNative});
   if(observed.violations.length){check.verdict='FAIL';check.checks.push({id:'snapshot-read-isolation',pass:false,detail:JSON.stringify(observed.violations)});}
   const raw_evidence=[{path:rawPath,sha256:sha(execution.stdout)},{path:errPath,sha256:sha(execution.stderr)},home.host_catalog_source,...(receipt?[{path:receipt.path,sha256:receipt.sha256}]:[])];
-  const cell={fixture_id:fixture.id,arm,target:fixture.target,tier:target.tier,effort:target.effort,cli:{command:'codex',args,cwd:isolation.cwd,config_sha256:home.config_sha256,host_catalog_source:home.host_catalog_source,disabled_overrides_sha256:home.disabled_overrides_sha256},prose_path:isolation.prose_path,prose_sha256:isolation.prose_sha256,fixture_sha256:sha(JSON.stringify(fixture)),model_receipt:receipt,packet_receipt:receipt?.packet_receipt||{verdict:'UNKNOWN',reason:'missing native model/packet rollout receipt'},answer,changed,check,verdict:check.verdict,raw_evidence};
+  const cell={fixture_id:fixture.id,arm,trial,target:fixture.target,tier:target.tier,effort:target.effort,cli:{command:'codex',args,cwd:isolation.cwd,config_sha256:home.config_sha256,host_catalog_source:home.host_catalog_source,disabled_overrides_sha256:home.disabled_overrides_sha256},prose_path:isolation.prose_path,prose_sha256:isolation.prose_sha256,fixture_sha256:sha(JSON.stringify(fixture)),model_receipt:receipt,packet_receipt:receipt?.packet_receipt||{verdict:'UNKNOWN',reason:'missing native model/packet rollout receipt'},answer,changed,check,verdict:check.verdict,raw_evidence};
+  if(fixture.id==='F06')cell.f06_input={fixture,trial,source_manifest:manifest,before:isolation.before,after,
+    execution:{exit_code:execution.exit_code,timed_out:execution.timed_out,error:execution.error}};
   writeFileSync(join(isolation.cwd,'verdict.json'),JSON.stringify(cell,null,2));return cell;
 }
 
 function sample(action='model') {
   return {owner:'domain-modeling',action,result:{status:'NEEDS_CONTEXT',scope:{mode:'NO_PIN',artifact:''},resolved_terms:[{name:'Customer Organization',concept:'buying company',disposition:'proposed'},{name:'User',concept:'login person',disposition:'proposed'}],relationships:[],code_evidence:[],open_questions:[{question:'Which names do you accept?',dependency:'user'}],writes:[],blocking_for_caller:[],resume_target:'user'},retained_ids:[],conflict_register:[],must_coverage_gate:'',human_gate:'waiting for real human response'};
 }
+
+function gradeF06() {
+  const closure={verdict:'UNKNOWN',scope:'F06 local closure only; not full native/A-B acceptance'};
+  try{
+    // --evidence is an exact task-owned temporary read grant. The controller, not the
+    // evaluated process, chooses both input hashes. These flags are explicit admission,
+    // NOT cryptographic authentication of native or independent judge provenance.
+    const granted=arg('--evidence');assert.ok(granted&&granted.startsWith('/'));
+    const evidence=realpathSync(granted);
+    assert.ok([realpathSync(tmpdir()),'/private/tmp'].some(p=>evidence.startsWith(`${p}/`)));
+    const bounded=path=>{
+      assert.ok(typeof path==='string'&&path.startsWith('/')&&!path.split('/').includes('..'));
+      assert.ok(resolve(path).startsWith(`${evidence}/`));
+      const real=realpathSync(path);assert.ok(real.startsWith(`${evidence}/`));return real;
+    };
+    const originalPath=bounded(arg('--grade-f06')),originalBytes=readFileSync(originalPath);
+    closure.original={path:originalPath,sha256:sha(originalBytes)};
+    assert.equal(arg('--grade-f06-sha256'),sha(originalBytes),'original ticket not controller-admitted');
+    const cell=JSON.parse(originalBytes),input=cell.f06_input;
+    assert.ok(input&&cell.fixture_id==='F06'&&input.fixture?.check==='write');
+    const cwd=bounded(cell.cli?.cwd);assert.equal(dirname(originalPath),cwd);
+    assert.ok(cell.answer&&input.execution?.exit_code===0&&!input.execution.timed_out&&!input.execution.error);
+    assert.ok(['native','baseline','candidate'].includes(cell.arm)&&Number.isInteger(input.trial)&&input.trial>=0);
+    const root=resolve(arg('--root')||ROOT),fixture=loadFixtures(root).fixtures.find(f=>f.id==='F06');
+    assert.deepEqual(input.fixture,fixture);assert.equal(cell.fixture_sha256,sha(JSON.stringify(fixture)));
+    assert.deepEqual(input.source_manifest,sourceManifest(root));
+    const raw=path=>{
+      const real=bounded(path),receipt=cell.raw_evidence.find(r=>r.path===path);
+      assert.ok(receipt);const bytes=readFileSync(real);assert.equal(sha(bytes),receipt.sha256);return bytes.toString();
+    };
+    const stream=eventsFrom(raw(join(cwd,'raw-stdout.jsonl')));raw(join(cwd,'raw-stderr.txt'));
+    assert.equal(stream.malformed,false);assert.ok(stream.events.some(e=>e.type==='turn.completed'));
+    assert.ok(!stream.events.some(e=>['turn.failed','error'].includes(e.type)),'native failed event');
+    const thread=stream.events.find(e=>e.type==='thread.started')?.thread_id;assert.ok(thread);
+    const final=stream.events.filter(e=>e.type==='item.completed'&&e.item?.type==='agent_message').at(-1)?.item?.text;
+    assert.deepEqual(JSON.parse(final),cell.answer);
+    const receipt=cell.model_receipt;assert.ok(receipt?.path&&receipt.model&&receipt.effort===cell.effort);
+    const rolloutText=raw(receipt.path);assert.equal(sha(rolloutText),receipt.sha256);
+    const rollout=eventsFrom(rolloutText);assert.equal(rollout.malformed,false);
+    const meta=rollout.events.find(e=>e.type==='session_meta'&&(e.payload?.id===thread||e.payload?.session_id===thread))?.payload;
+    assert.equal(meta?.cwd,cwd);
+    const context=rollout.events.find(e=>e.type==='turn_context'&&e.payload?.model)?.payload;
+    assert.equal(context?.model,receipt.model);
+    assert.equal(context?.effort||context?.reasoning_effort||context?.model_reasoning_effort,cell.effort);
+    const packet=packetReceipt(rollout.events,cwd,cell.arm,input.before);assert.equal(packet.verdict,'PASS');
+    assert.deepEqual(cell.packet_receipt,packet);assert.deepEqual(receipt.packet_receipt,packet);
+    const after=files(cwd);for(const p of ['verdict.json','raw-stdout.jsonl','raw-stderr.txt'])delete after[p];
+    assert.deepEqual(after,input.after,'snapshot drifted since execution');
+    const changed=Object.keys({...input.before,...after}).filter(p=>input.before[p]!==after[p]);assert.deepEqual(changed,cell.changed);
+    const observed=traceObservation(stream.events,cwd,cell.arm,{fixture,before:input.before});
+    observed.native_reached ||= packet.native_reached;
+    Object.assign(observed,{after,changed,arm:cell.arm,trial:input.trial,source_manifest:input.source_manifest,require_native:cell.arm!=='baseline'});
+    const reviewPath=arg('--semantic-review');
+    if(reviewPath){
+      const path=bounded(reviewPath),bytes=readFileSync(path);
+      // Retain a diagnostic receipt only. CLI arguments are caller-controlled and
+      // cannot turn a review file into a trusted controller admission.
+      closure.untrusted_cli_review={path,sha256:sha(bytes),reason:'CLI review bytes cannot authenticate independent provenance'};
+    }
+    closure.check=score(fixture,cell.answer,observed);closure.verdict=closure.check.verdict;
+    closure.native_input='revalidated captured execution, raw/model packet, answer and snapshot';
+  }catch(error){closure.reason=`missing, unadmitted or invalid closure input: ${error.message}`;}
+  console.log(JSON.stringify(closure,null,2));if(closure.verdict!=='PASS')process.exitCode=1;
+}
 function selfTest() {
   const f={id:'F02',check:'overload'};const good=sample();assert.equal(score(f,good,{changed:[]}).verdict,'PASS');
+  const writeFixture={id:'F06',check:'write',write:true};
+  const completedWrite=sample('write');
+  Object.assign(completedWrite.result,{status:'DONE',scope:{mode:'NO_PIN',artifact:'fixture/glossary.md'},
+    resolved_terms:[{name:'Customer Organization',concept:'buying company',disposition:'accepted'},{name:'User',concept:'login person',disposition:'accepted'}],
+    open_questions:[],writes:[{path:'fixture/glossary.md',authority:'explicit fixture authorization',accepted_choice:'Customer Organization and User'}]});
+  completedWrite.human_gate='choices already accepted by the user';
+  const written={changed:['fixture/glossary.md'],after:{'fixture/glossary.md':'**Customer Organization**: buying company\n_Avoid_: Account\n**User**: login person\n_Avoid_: Account\n**Invoice**: An issued request for payment.\n_Avoid_: receipt'},read_paths:['fixture/glossary.md'],applied_patch:true,read_before_patch:true};
+  assert.equal(score(writeFixture,completedWrite,written).verdict,'UNKNOWN','F06 without an independent semantic review was green');
+  // Fixed transport double, NOT evidence that a language judge is calibrated.
+  const reviewFor=(answer,observation,verdicts={},fixture=writeFixture,source_manifest={test_runner:sha(readFileSync(RUNNER))})=>{
+    const binding={fixture_id:fixture.id,fixture_sha256:sha(JSON.stringify(fixture)),arm:'native',trial:0,
+      scorer_sha256:sha(readFileSync(RUNNER)),source_manifest_sha256:sha(JSON.stringify(source_manifest)),
+      answer_sha256:sha(JSON.stringify(answer)),glossary_sha256:sha(observation.after['fixture/glossary.md'])};
+    const saved=glossaryEntries(observation.after['fixture/glossary.md']);
+    const criteria=['returned-company','returned-user','saved-company','saved-user'].map((id,i)=>({id,
+      verdict:verdicts[id]||'PASS',quote:i<2?answer.result.resolved_terms.find(t=>t.name===(i===0?'Customer Organization':'User'))?.concept:saved.find(t=>t.name===(i===2?'Customer Organization':'User'))?.definition,
+      reason:'Fixed test vote; only validates transport and aggregation.'}));
+    const tool_result=JSON.stringify({binding,criteria});
+    const semantic_review={binding,criteria,provenance:{agent_id:'test-double',invocation_id:'test-invocation'},tool_result};
+    const review_admission={review_sha256:sha(JSON.stringify(semantic_review)),agent_id:'test-double',invocation_id:'test-invocation',tool_result_sha256:sha(tool_result)};
+    admitInternalSemanticReview(semantic_review,review_admission);
+    return {...observation,arm:'native',trial:0,source_manifest,semantic_review,
+      review_admission};
+  };
+  const controllerAdmitted=reviewFor(completedWrite,written);
+  assert.equal(score(writeFixture,completedWrite,controllerAdmitted).verdict,'PASS','F06 complete admitted review rejected');
+  // A copied object carries every caller-computable byte and label, but not the
+  // controller-owned admission capability. It must never mint semantic PASS.
+  const callerForged=structuredClone(controllerAdmitted);
+  assert.equal(score(writeFixture,completedWrite,callerForged).verdict,'UNKNOWN','F06 caller-forged review was green');
+  const contextual=structuredClone(written);
+  contextual.after['fixture/glossary.md']=contextual.after['fixture/glossary.md'].replace('buying company','The company purchasing the service for its users.').replace('login person','The person holding a login identity within a Customer Organization.');
+  const contextualReturn=structuredClone(completedWrite);contextualReturn.result.resolved_terms[0].concept='The company purchasing the service for its users.';contextualReturn.result.resolved_terms[1].concept='The person holding a login identity within a Customer Organization.';
+  assert.equal(score(writeFixture,contextualReturn,reviewFor(contextualReturn,contextual)).verdict,'PASS','F06 legitimate related-concept context rejected');
+  const negated=structuredClone(written);negated.after['fixture/glossary.md']=negated.after['fixture/glossary.md'].replace('buying company','A company that does not purchase the service.').replace('login person','A person without a login identity.');
+  assert.equal(score(writeFixture,completedWrite,negated).verdict,'UNKNOWN','F06 unreviewed negation was green');
+  assert.equal(score(writeFixture,completedWrite,reviewFor(completedWrite,negated,{'saved-company':'FAIL','saved-user':'FAIL'})).verdict,'FAIL','F06 independently rejected negation was green');
+  const badReturn=structuredClone(completedWrite);badReturn.result.resolved_terms[0].concept='A company that does not purchase the service.';
+  assert.equal(score(writeFixture,badReturn,reviewFor(badReturn,written,{'returned-company':'FAIL'})).verdict,'FAIL','F06 returned concept escaped semantic review');
+  for(const id of ['returned-company','returned-user','saved-company','saved-user'])assert.equal(score(writeFixture,completedWrite,reviewFor(completedWrite,written,{[id]:'UNKNOWN'})).verdict,'UNKNOWN',`F06 unknown ${id} was green`);
+  for(const key of ['fixture_id','fixture_sha256','arm','trial','scorer_sha256','source_manifest_sha256','answer_sha256','glossary_sha256']){
+    const drift=reviewFor(completedWrite,written);drift.semantic_review.binding[key]='drift';
+    drift.semantic_review.tool_result=JSON.stringify({binding:drift.semantic_review.binding,criteria:drift.semantic_review.criteria});
+    drift.review_admission.review_sha256=sha(JSON.stringify(drift.semantic_review));drift.review_admission.tool_result_sha256=sha(drift.semantic_review.tool_result);
+    assert.equal(score(writeFixture,completedWrite,drift).verdict,'UNKNOWN',`F06 ${key} drift was green`);
+  }
+  for(const change of [r=>r.criteria.pop(),r=>{r.criteria[0].quote='invented quote';},r=>{r.criteria[0].reason='';},r=>{r.tool_result='{}';},r=>{r.provenance.agent_id='candidate';}]){
+    const invalid=reviewFor(completedWrite,written);change(invalid.semantic_review);
+    assert.equal(score(writeFixture,completedWrite,invalid).verdict,'UNKNOWN','F06 invalid/unadmitted vote was green');
+  }
+  const unapprovedDigest=reviewFor(completedWrite,written);unapprovedDigest.review_admission.review_sha256='not admitted';
+  assert.equal(score(writeFixture,completedWrite,unapprovedDigest).verdict,'UNKNOWN','F06 unapproved review digest was green');
+  const incomplete=reviewFor(completedWrite,written);incomplete.semantic_review.criteria.pop();
+  incomplete.semantic_review.tool_result=JSON.stringify({binding:incomplete.semantic_review.binding,criteria:incomplete.semantic_review.criteria});
+  incomplete.review_admission.review_sha256=sha(JSON.stringify(incomplete.semantic_review));incomplete.review_admission.tool_result_sha256=sha(incomplete.semantic_review.tool_result);
+  assert.equal(score(writeFixture,completedWrite,incomplete).verdict,'UNKNOWN','F06 admitted incomplete criterion coverage was green');
+  for(const [body,criterion] of [
+    ['**Customer Organization**: login person\n_Avoid_: Account\n**User**: buying company\n_Avoid_: Account','saved-company'],
+    ['**Customer Organization**: a company providing services\n_Avoid_: Account\n**User**: login person\n_Avoid_: Account','saved-company'],
+    ['**Customer Organization**: buying company\n_Avoid_: Account\n**User**: a person viewing an invoice\n_Avoid_: Account','saved-user']
+  ]){const bad=structuredClone(written);bad.after['fixture/glossary.md']=`${body}\n**Invoice**: An issued request for payment.\n_Avoid_: receipt`;assert.equal(score(writeFixture,completedWrite,bad).verdict,'UNKNOWN','F06 unreviewed wrong role was green');assert.equal(score(writeFixture,completedWrite,reviewFor(completedWrite,bad,{[criterion]:'FAIL'})).verdict,'FAIL','F06 rejected wrong role was green');}
+  const selfReported=structuredClone(completedWrite);selfReported.semantic_review=reviewFor(completedWrite,written).semantic_review;
+  assert.equal(score(writeFixture,selfReported,written).verdict,'UNKNOWN','F06 candidate self-reported review was green');
+  const structuralBad=structuredClone(completedWrite);structuralBad.result.status='BLOCKED';
+  assert.equal(score(writeFixture,structuralBad,reviewFor(structuralBad,written)).verdict,'FAIL','F06 semantic PASS overrode structural FAIL');
+  assert.equal(score(writeFixture,completedWrite,{...written,unknown_activity:['unclassified'],violations:['known out-of-scope write']}).verdict,'FAIL','F06 known isolation violation was hidden by UNKNOWN');
+  const malformedNested=structuredClone(completedWrite);malformedNested.result.resolved_terms=[null];
+  assert.equal(score(writeFixture,malformedNested,written).verdict,'UNKNOWN','F06 malformed nested envelope was accepted');
+  assert.equal(score(writeFixture,completedWrite,written).verdict,'UNKNOWN','unreviewed write was not pending');
+  const concernedWrite=structuredClone(completedWrite);concernedWrite.result.status='DONE_WITH_CONCERNS';
+  assert.equal(score(writeFixture,concernedWrite,written).verdict,'UNKNOWN','unreviewed concerned write was not pending');
+  const avoidOnly=structuredClone(written);avoidOnly.after['fixture/glossary.md']='**X**: buying company\n_Avoid_: Account, **Customer Organization**\n**Y**: login person\n_Avoid_: Account, **User**\n**Invoice**: An issued request for payment.\n_Avoid_: receipt';
+  const avoidScore=score(writeFixture,completedWrite,avoidOnly);
+  assert.equal(avoidScore.verdict,'FAIL','F06 Avoid-only canonical markers were green');
+  assert.equal(avoidScore.checks.find(c=>c.id==='accepted-language-saved')?.pass,false);
+  for(const [id,body] of [
+    ['duplicate-definition','**Customer Organization**: buying company\n**Customer Organization**: login person\n**User**: login person\n_Avoid_: Account'],
+    ['comment-only','<!--\n**Customer Organization**: buying company\n**User**: login person\n-->\n**X**: buying company\n**Y**: login person\n_Avoid_: Account'],
+    ['example-only','```md\n**Customer Organization**: buying company\n**User**: login person\n```\n**X**: buying company\n**Y**: login person\n_Avoid_: Account'],
+    ['other-section','## Language\n**X**: buying company\n**Y**: login person\n_Avoid_: Account\n## Examples\n**Customer Organization**: buying company\n**User**: login person']
+  ]){const invalid=structuredClone(written);invalid.after['fixture/glossary.md']=`${body}\n**Invoice**: An issued request for payment.\n_Avoid_: receipt`;const result=score(writeFixture,completedWrite,invalid);assert.equal(result.verdict,'FAIL',`F06 ${id} was green`);assert.equal(result.checks.find(c=>c.id==='accepted-language-saved')?.pass,false,`F06 ${id} failed for an unrelated reason`);}
+  for(const body of [
+    '# Test domain\n\n## Language\n**Customer Organization**: An organization purchasing the service.\n_Avoid_: Account\n**User**: The person holding a login identity.\n_Avoid_: Account',
+    '## Language\r\n**Customer Organization**: 购买服务的公司。\r\n_Avoid_: Account\r\n**User**: 登录的人。\r\n_Avoid_: Account'
+  ]){const valid=structuredClone(written);valid.after['fixture/glossary.md']=`${body}\n**Invoice**: An issued request for payment.\n_Avoid_: receipt`;assert.equal(score(writeFixture,completedWrite,valid).verdict,'UNKNOWN','F06 unreviewed valid glossary was not pending');}
+  const blockedWrite=structuredClone(completedWrite);blockedWrite.result.status='BLOCKED';
+  assert.equal(score(writeFixture,blockedWrite,written).verdict,'FAIL','F06 incomplete status was green');
+  const unansweredWrite=structuredClone(completedWrite);unansweredWrite.result.open_questions=[{question:'Should I use Actor instead?',dependency:'user'}];
+  assert.equal(score(writeFixture,unansweredWrite,written).verdict,'FAIL','F06 unanswered decision was green');
+  const mismatchedWrite=structuredClone(completedWrite);mismatchedWrite.result.resolved_terms[0].name='X';mismatchedWrite.result.resolved_terms[1].name='Y';
+  assert.equal(score(writeFixture,mismatchedWrite,written).verdict,'FAIL','F06 returned canonical terms differed from saved terms');
+  for(const [id,patch,failedCheck] of [
+    ['needs-context',{status:'NEEDS_CONTEXT'},'completed-write-result'],
+    ['blocked-contract',{blocking_for_caller:['IF-001']},'completed-write-result'],
+    ['wrong-artifact',{scope:{mode:'NO_PIN',artifact:'another.md'}},'completed-write-result'],
+    ['not-accepted',{resolved_terms:[{name:'Customer Organization',concept:'buying company',disposition:'proposed'},{name:'User',concept:'login person',disposition:'accepted'}]},'agreed-terms-returned'],
+    ['duplicate-name',{resolved_terms:[{name:'User',concept:'login person',disposition:'accepted'},{name:'User',concept:'login person',disposition:'accepted'}]},'agreed-terms-returned']
+  ]){const invalid=structuredClone(completedWrite);Object.assign(invalid.result,patch);const result=score(writeFixture,invalid,written);assert.equal(result.verdict,'FAIL',`F06 ${id} was green`);assert.equal(result.checks.find(c=>c.id===failedCheck)?.pass,false,`F06 ${id} failed for an unrelated reason`);}
+  for(const [id,kind,owner,retained_ids] of [['R02','recon-control','code-recon',[]],['B02','brainstorm-control','brainstorm',['R-001','A-001','F-001']],['T02','spec-control','tech-spec',['R-001','R-002','IF-001','IF-002']]]){
+    const control=sample('continue');control.owner=owner;control.retained_ids=retained_ids;control.human_gate='original human gate retained';control.must_coverage_gate='MUST coverage gate retained';
+    Object.assign(control.result,{status:'DONE',resolved_terms:[],open_questions:[],resume_target:`${owner}/U-CONTROL-02`});
+    const fixture={id,check:kind};
+    assert.equal(score(fixture,control,{changed:[]}).verdict,'PASS',`${id} valid read-only control rejected`);
+    const hijacked=structuredClone(control);hijacked.result.resolved_terms=[{name:'Actor',concept:'new unrequested login concept',disposition:'proposed'}];hijacked.result.relationships=[{statement:'replace accepted User with Actor',disposition:'proposed'}];
+    assert.equal(score(fixture,hijacked,{changed:[]}).verdict,'FAIL',`${id} unrequested model takeover was green`);
+    const newAccepted=structuredClone(control);newAccepted.result.resolved_terms=[{name:'Actor',concept:'login person',disposition:'accepted'}];
+    assert.equal(score(fixture,newAccepted,{changed:[]}).verdict,'FAIL',`${id} new claimed-accepted term was green`);
+    const quoted=structuredClone(control);quoted.result.resolved_terms=[{name:'User',concept:'login person',disposition:'accepted'}];
+    assert.equal(score(fixture,quoted,{changed:[]}).verdict,'PASS',`${id} unchanged accepted language rejected`);
+    for(const [caseId,patch,failedCheck] of [
+      ['proposed-term',{resolved_terms:[{name:'Actor',concept:'login person',disposition:'proposed'}]},'existing-language-only'],
+      ['open-term',{resolved_terms:[{name:'User',concept:'login person',disposition:'open'}]},'existing-language-only'],
+      ['changed-definition',{resolved_terms:[{name:'User',concept:'buying company',disposition:'accepted'}]},'existing-language-only'],
+      ['proposed-relationship',{relationships:[{statement:'replace accepted User with Actor',disposition:'proposed'}]},'no-new-control-relationships'],
+      ['claimed-accepted-relationship',{relationships:[{statement:'replace accepted User with Actor',disposition:'accepted'}]},'no-new-control-relationships'],
+      ['incomplete',{status:'BLOCKED'},'no-unnecessary-modeling']
+    ]){const invalid=structuredClone(control);Object.assign(invalid.result,patch);const result=score(fixture,invalid,{changed:[]});assert.equal(result.verdict,'FAIL',`${id} ${caseId} was green`);assert.equal(result.checks.find(c=>c.id===failedCheck)?.pass,false,`${id} ${caseId} failed for an unrelated reason`);}
+    const glossaryQuote=structuredClone(control);glossaryQuote.result.resolved_terms=[{name:'Invoice',concept:'An issued request for payment.',disposition:'accepted'}];
+    assert.equal(score(fixture,glossaryQuote,{changed:[]}).verdict,'PASS',`${id} existing glossary quotation rejected`);
+  }
   const accepted=structuredClone(good);accepted.result.resolved_terms[0].disposition='accepted';assert.equal(score(f,accepted,{changed:[]}).verdict,'FAIL','automatic canonical term was green');
   assert.equal(score(f,good,{changed:['CONTEXT.md']}).verdict,'FAIL','unauthorized write was green');
   const sameConcept=structuredClone(good);sameConcept.result.resolved_terms[1].concept='buying company';assert.equal(score(f,sameConcept,{changed:[]}).verdict,'FAIL','renaming same concept passed');
@@ -433,6 +692,9 @@ function selfTest() {
   assert.equal(compareArms({control:'F02'},f,{verdict:'PASS',semantic_points:9},{verdict:'PASS',semantic_points:8}).verdict,'FAIL');
   const positive={...score(f,good,{}),verdict:'UNKNOWN'};assert.equal(compareArms({positive:'F02'},f,positive,score(f,good,{})).verdict,'UNKNOWN');
   const scratch=realpathSync(mkdtempSync(join(tmpdir(),'domain-modeling-reader-selftest-')));
+  put(scratch,'verdict.json',JSON.stringify({fixture_id:'F06',answer:null}));
+  const pendingCli=spawnSync(process.execPath,[RUNNER,'--grade-f06',join(scratch,'verdict.json'),'--evidence',scratch],{encoding:'utf8',timeout:10000});
+  assert.equal(JSON.parse(pendingCli.stdout).verdict,'UNKNOWN','F06 missing native/review admission was green');
   put(scratch,'fixture/order.js',ORDER);put(scratch,'fixture/glossary.md',GLOSSARY);
   put(scratch,'baseline-prose.md','Frozen prose only\n');
   put(scratch,'.claude/skills/office/domain-modeling/SKILL.md','Native canonical full body\n');
@@ -503,10 +765,54 @@ function selfTest() {
   assert.equal((COMMON_ROOT+ROOT_ENTRY.baseline).slice(0,COMMON_ROOT.length),(COMMON_ROOT+ROOT_ENTRY.candidate).slice(0,COMMON_ROOT.length),'arm safety roots differ');
   assert.doesNotMatch(COMMON_ROOT,/rename|canonical|accepted|IDs|coverage|glossary.*consume|original.owner/i,'root teaches tested semantics');
   const escape=sample('refuse');escape.result.scope.artifact='fixture/glossary.md';escape.result.resolved_terms=[];assert.equal(score({check:'escape'},escape,{changed:[],project_switch:false}).verdict,'PASS','legal scope expression rejected');
-  console.log('PASS domain-modeling scorer/readers/native packet: semantic no-op, missing arms, unsafe reads UNKNOWN, scope/patch refusal, native catalog contamination and missing headers UNKNOWN, selected kind/path/full-body hash receipt, scoped disabled overrides');
+  // Synthetic native transport only. These are NOT real model/skill acceptance tickets.
+  const cellDir=join(scratch,'synthetic-cell');
+  put(cellDir,'fixture/order.js',ORDER);put(cellDir,'fixture/glossary.md',GLOSSARY);
+  put(cellDir,'.claude/skills/office/domain-modeling/SKILL.md','Native canonical full body\n');
+  mkdirSync(join(cellDir,'.agents/skills'),{recursive:true});symlinkSync('../../.claude/skills/office/domain-modeling',join(cellDir,'.agents/skills/domain-modeling'));
+  const before=files(cellDir);put(cellDir,'fixture/glossary.md',written.after['fixture/glossary.md']);const after=files(cellDir);
+  const fixture=loadFixtures(ROOT).fixtures.find(f=>f.id==='F06'),manifest=sourceManifest(ROOT);
+  const stream=[{type:'thread.started',thread_id:'synthetic-thread'},commandEvent('cat fixture/glossary.md',GLOSSARY),patchEvent('fixture/glossary.md'),{type:'item.completed',item:{type:'agent_message',text:JSON.stringify(completedWrite)}},{type:'turn.completed'}].map(e=>JSON.stringify(e)).join('\n');
+  const rollout=[{type:'session_meta',payload:{id:'synthetic-thread',cwd:cellDir}},{type:'turn_context',payload:{model:'synthetic-test-double',effort:'medium'}},
+    nativeBlock('host_skills.instructions',catalogText({r0:join(cellDir,'.agents/skills')},[['domain-modeling','r0/domain-modeling/SKILL.md']])),
+    nativeBlock('skills.selected_skill_instructions',selectedText(join(cellDir,'.agents/skills/domain-modeling/SKILL.md')),'user')];
+  const rolloutPath=join(scratch,'synthetic-rollout.jsonl'),rolloutText=rollout.map(e=>JSON.stringify(e)).join('\n');put(scratch,'synthetic-rollout.jsonl',rolloutText);
+  const packet=packetReceipt(rollout,cellDir,'native',before);
+  put(cellDir,'raw-stdout.jsonl',stream);put(cellDir,'raw-stderr.txt','');
+  const synthetic={fixture_id:'F06',arm:'native',effort:'medium',cli:{cwd:cellDir},fixture_sha256:sha(JSON.stringify(fixture)),answer:completedWrite,changed:['fixture/glossary.md'],packet_receipt:packet,
+    model_receipt:{path:rolloutPath,sha256:sha(rolloutText),model:'synthetic-test-double',effort:'medium',packet_receipt:packet},
+    raw_evidence:[{path:join(cellDir,'raw-stdout.jsonl'),sha256:sha(stream)},{path:join(cellDir,'raw-stderr.txt'),sha256:sha('')},{path:rolloutPath,sha256:sha(rolloutText)}],
+    f06_input:{fixture,trial:0,source_manifest:manifest,before,after,execution:{exit_code:0,timed_out:false,error:''}}};
+  const vote=reviewFor(completedWrite,written,{},fixture,manifest).semantic_review;
+  const votePath=join(scratch,'synthetic-review.json');put(scratch,'synthetic-review.json',JSON.stringify(vote));
+  const ticketPath=join(cellDir,'verdict.json');put(cellDir,'verdict.json',JSON.stringify(synthetic));
+  const ticketHash=sha(readFileSync(ticketPath)),voteHash=sha(readFileSync(votePath));
+  const cli=(ticket=synthetic,extra=[])=>{
+    put(cellDir,'verdict.json',JSON.stringify(ticket));
+    const result=spawnSync(process.execPath,[RUNNER,'--grade-f06',ticketPath,'--grade-f06-sha256',sha(readFileSync(ticketPath)),'--semantic-review',votePath,'--semantic-review-sha256',voteHash,'--evidence',scratch,'--root',ROOT,...extra],{encoding:'utf8',timeout:10000});
+    const output=JSON.parse(result.stdout);assert.equal(result.status,output.verdict==='PASS'?0:1,result.stderr);return output;
+  };
+  assert.equal(cli().verdict,'UNKNOWN','F06 CLI-supplied review was admitted');
+  assert.equal(sha(readFileSync(ticketPath)),ticketHash,'offline closure changed its original ticket');
+  const failedStream=`${stream}\n${JSON.stringify({type:'turn.failed',error:{message:'failed synthetic transport'}})}`;
+  put(cellDir,'raw-stdout.jsonl',failedStream);const failedNative=structuredClone(synthetic);failedNative.raw_evidence[0].sha256=sha(failedStream);
+  assert.equal(cli(failedNative).verdict,'UNKNOWN','F06 native failed event was washed green');put(cellDir,'raw-stdout.jsonl',stream);
+  for(const [id,modify] of [
+    ['timeout',t=>{t.f06_input.execution.timed_out=true;}],['null-answer',t=>{t.answer=null;}],
+    ['missing-model',t=>{t.model_receipt=null;}],['missing-packet',t=>{t.packet_receipt=null;}],
+    ['source-drift',t=>{t.f06_input.source_manifest={};}],['trial-drift',t=>{t.f06_input.trial=1;}],
+    ['wrong-answer',t=>{t.answer.result.resolved_terms[0].concept='not the actual return';}],
+    ['raw-drift',t=>{t.raw_evidence[0].sha256='bad';}]
+  ]){const bad=structuredClone(synthetic);modify(bad);assert.equal(cli(bad).verdict,'UNKNOWN',`F06 offline ${id} was green`);}
+  put(cellDir,'fixture/glossary.md',`${written.after['fixture/glossary.md']}\nDrift`);assert.equal(cli().verdict,'UNKNOWN','F06 offline saved-byte drift was green');put(cellDir,'fixture/glossary.md',written.after['fixture/glossary.md']);
+  put(cellDir,'verdict.json',JSON.stringify(synthetic));
+  const unadmitted=spawnSync(process.execPath,[RUNNER,'--grade-f06',ticketPath,'--grade-f06-sha256',ticketHash,'--semantic-review',votePath,'--evidence',scratch,'--root',ROOT],{encoding:'utf8',timeout:10000});
+  assert.equal(JSON.parse(unadmitted.stdout).verdict,'UNKNOWN','F06 review file self-authenticated without controller admission');
+  console.log('PASS domain-modeling scorer/readers/native packet: completed F06 and agreed names, unchanged control language only, semantic no-op, missing arms, unsafe reads UNKNOWN, scope/patch refusal, native catalog contamination and missing headers UNKNOWN, selected kind/path/full-body hash receipt, scoped disabled overrides');
 }
 async function main() {
   if(process.argv.includes('--self-test')){selfTest();return;}
+  if(process.argv.includes('--grade-f06')){gradeF06();return;}
   if(process.argv.includes('--describe')){console.log(JSON.stringify(loadFixtures(resolve(arg('--root')||ROOT)),null,2));return;}
   if(arg('--harness')==='claude'){console.error('UNKNOWN Claude live/A-B DEFERRED_BY_USER; runner refuses invocation and cannot issue a PASS ticket');process.exitCode=2;return;}
   if(arg('--harness')!=='codex')throw Error('usage: --harness codex --fixtures all --trials 1 [--ab --targets domain-modeling,brainstorm,code-recon,tech-spec] [--evidence absolute-dir]');
@@ -524,12 +830,12 @@ async function main() {
     const target=suite.targets[fixture.target]||{tier:'core-execution',effort:'high'};
     console.log(`RUN ${fixture.id} ${ab?'baseline/candidate':'native'} ${target.tier}/${target.effort}`);
     if(ab){
-      const baseline=await invoke(root,fixture,'baseline',target,evidence,timeout,overrideSource);const candidate=await invoke(root,fixture,'candidate',target,evidence,timeout,overrideSource);
+      const baseline=await invoke(root,fixture,'baseline',target,evidence,timeout,overrideSource,trial,manifest);const candidate=await invoke(root,fixture,'candidate',target,evidence,timeout,overrideSource,trial,manifest);
       const comparison=compareArms(target,fixture,baseline.check,candidate.check);
       if(!baseline.model_receipt||!candidate.model_receipt||baseline.model_receipt.model!==candidate.model_receipt.model){comparison.verdict='UNKNOWN';comparison.reason='missing or mismatched native observed inherited-model receipts';}
       const cell={fixture_id:fixture.id,target:fixture.target,trial,verdict:comparison.verdict,comparison,baseline,candidate,raw_evidence:[...baseline.raw_evidence,...candidate.raw_evidence]};cells.push(cell);
       console.log(`${cell.verdict} ${fixture.id}: ${comparison.reason}`);
-    }else{const cell=await invoke(root,fixture,'native',target,evidence,timeout,overrideSource);cell.trial=trial;cells.push(cell);console.log(`${cell.verdict} ${fixture.id}`);}
+    }else{const cell=await invoke(root,fixture,'native',target,evidence,timeout,overrideSource,trial,manifest);cells.push(cell);console.log(`${cell.verdict} ${fixture.id}`);}
     // Save every attempted cell immediately; a crash cannot manufacture complete coverage.
     writeFileSync(join(evidence,ab?'ab-summary.json':'live-summary.json'),JSON.stringify({verdict:'UNKNOWN',harness:'codex',claude:'DEFERRED_BY_USER',source_manifest:manifest,cells},null,2));
   }

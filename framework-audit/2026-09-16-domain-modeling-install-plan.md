@@ -312,4 +312,210 @@ node scripts/test-domain-modeling-skill.mjs --rollout
 - 独立 QA FAIL 3/9（actual 缺票）；第二轮复审闭合首轮 UID/handoff 两项，但发现评分器两项存活 MAJOR 假阳性。已达两轮上限，停止修改/第三轮，待用户批准专用 scorer 修复与新的 review delta。完整验收 BLOCKED，adoption PENDING；真实票据另附 approved verification/final-review。
 - 仅将检查结论作为聚焦审计提交/普通推送，不 amend 已发安装历史，不将 Git/CI/self-test 成功等同完整模型行为验收。
 
+## Replan R-1（2026-09-17，用户批准评分器修复及新增一轮复审）
+
+- Source：上轮询问“是否批准修复评分器，并新增一轮复审？”；用户当前答“可以”。仅解冻 U-006 的两项 scorer MAJOR 与 U-007 一次新增独立复审，不重编 U-ID，不重做已完成安装。
+- 前提：应修复，公开 score 的反例已证实假阳性；更小替代是只改现有评分分支和同文件自测，无新框架/评分平台/依赖。不得把 scorer 通过默认成 skill runtime 通过；独立 reviewer 以 REFUTE 立场判定。研究 N/A：已有精确源码反例，非新机制。
+- Baseline：main `fad49e05cd1f59943b5d6e11c6da5369b877b3cc`；index 空。NO_PIN；既有三个 unrelated WIP 和所有并发 model-routing 文档排除（保护集当前 observation hash 为 `43162133103c674869daa451f97ee5eb11576e8cf26ddcd58c99edc8865b69db`，为他任务追加，禁止恢复旧快照）。
+- Files：仅 `scripts/test-domain-modeling-behavior.mjs`、本计划、既有 `domain-modeling-verification.md` 与 `domain-modeling-final-review.md` 三个同前缀审计文件。canonical/fixture/registry/graph/global/downstream 不改。
+- 模式：Sequential；主线 U-006 修复，quality-gate 跑局部断言后 default-REFUTE reviewer 跑公开 score 真运行反例，串行。执行 core-execution；独立判定 P1 reasoning-heavy，Codex xhigh，model 继承。仅新授权一轮；仍有 MAJOR 则交用户，不自行延长。
+- U-006：先在既有 `--self-test` 增加 F06 未完成/未答/返回术语不一致的逐项反例，观察原实现 FAIL，再最小实现；随后同样修 R02/B02/T02 控制组禁止 proposed/open/new accepted terms 与关系改模，同时允许原定案词汇/关系的只读消费。测试 seam 为已有公开 `score(fixture, answer, observed)`，不测私有实现；合法样本与反例均来自固定 fixture 合同/已确认的复审票。
+- U-007：语法、全部自测、专用 checker 与 fresh mutation PASS；独立 QA/新增一轮复审绑定 final-byte hash，旧票不覆盖新字节。Claude 仍 user-deferred；三次模型调用失败后的 live/A-B 不盲重试，整体能力验收保持缺票。
+- U-008：仅上述四文件聚焦提交，完整 Git hooks；ordinary upstream/main push 前 remote main 必须等于提交父 SHA，push URL 必须为既定仓库；远端前进即停。无 force/amend/其他分支/tag/全局推送。用户既有“所有执行提交推送”持续适用于本任务成果。
+
+```bash
+# [BLOCKING] RF01 — 两个公开评分边界的合法样本/逐项反例
+node scripts/test-domain-modeling-behavior.mjs --self-test
+# [BLOCKING] RF02 — final-byte contracts 与原 scorer/isolation suites
+node --check scripts/test-domain-modeling-behavior.mjs
+node scripts/test-domain-modeling-skill.mjs --all
+# [BLOCKING] RF03 — 违规转红、恢复转绿，精确新 manifest
+node scripts/test-domain-modeling-skill.mjs --mutation --evidence /private/tmp/domain-modeling-install.KsdG5S/scorer-repair
+```
+
+criteria：C-R1 未完成/未答/命名与已保存结果不一致的 F06 必为 FAIL；C-R2 control 不提出新模型，但只读消费既有 accepted 术语/关系仍 PASS；C-R3 新检查不是恒真，原 isolation/权限/UID/handoff 合同未扩大；C-R4 新 reviewer 独立绑定最终字节，缺 actual/A-B 不写 PASS。任何 BLOCKING FAIL 停下一阶段，新增复审仍有 MAJOR 则停止并升级用户。
+
+### R-1 核验环境 delta（不扩大修复范围）
+
+- 首次局部 quality gate FAIL：判官只读权限不能运行会创建临时文件的 self-test/all；RF03 另发现并行任务修改 model-routing.yaml，使旧 mutation manifest 失效。保留失败票，不忽略漂移或恢复他任务文件。
+- 主线执行者负责生成精确命令/exit/stdout/stderr/hash 回执；同一 quality gate 只读独立核验回执、语法和公开 score 反例。判官不获得写权限，不冒充独立运行 self-test。
+- 修复发布候选固定为 main 基线 fad49e0 加本任务 scorer 新字节；27 项合同中其他 26 项取 Git 基线，在任务临时目录构造隔离测试快照及两个原生 alias。RF01–RF03 在该候选上重跑，判官将 manifest 同逐项 Git 基线/本任务 scorer 比较，而非将未发布的并行 model-routing 工作当成本任务依赖。
+- 固定控制 fixture 没有已定案关系清单，因此合法只读回显限既有术语；返回任何新关系均拒绝。此处澄清测试边界，不修改 fixture/canonical 或普遍禁止 skill 消费实际项目的既有关系。
+- 新增复审仍只有一轮，按 code-review facade 拆成两个冷启动、上下文隔离的 Standards/Spec 轴；同一 scorer FILE_SET 与同一最终字节，不互读票据。质量判官完成后才派发，聚合报告分列，不跨轴覆盖结论，不追加下一轮。
+
+### R-1 terminal checkpoint — BLOCKED
+
+- U-006 focused local patches reject the two original public counterexamples; fresh isolated-candidate tests/mutation and local independent quality PASS 3/3. The first local FAIL and its environment/permission gap remain recorded.
+- U-007 used the one additional user-approved review round: isolated Standards PASS (0 findings), Spec FAIL (1 MAJOR). Saved canonical X/Y with agreed names appearing only in Avoid lines still gets PASS at scorer:84; swapping the saved meanings also passes. Thus C-R1 actual saved-model consistency remains unclosed; exact reproduction and separated findings are in final-review.
+- As specified above, a surviving MAJOR stops source changes and U-008 repair publication. No extra review, no stage/commit/push; HEAD remains fad49e0 and index empty. Root retained the partial patch and three audit updates without touching unrelated WIP, globals or projects. Full live/A-B acceptance is still independently BLOCKED; Claude deferred.
+- Proposed next delta, awaiting real user approval: verify canonical definition entries and their agreed meanings rather than whole-file marker presence; add Avoid-only and swapped-definition counterexamples, red/green/restoration evidence and one new bounded independent closure round. No permission inferred from this proposal.
+
+## Replan R-2（2026-09-17，用户“批准修复，最小代价复审”）
+
+- Source：用户批准剩余 C-R1 actual saved-model consistency 修复及最小定向复审。确有公开 score 假阳性；最薄方案是修既有 saved-language 检查及同文件反例，不增加依赖、通用 Markdown/NLP 平台或模型调用。研究 N/A：已有精确反例和授权 glossary 格式。
+- Baseline/Files/保护集继承 R-1：main fad49e0，index 空，NO_PIN；只改 scorer 与本计划/verification/final-review 四文件。保留 R-1 历史与并行 model-routing/observability/retrieval 工作。U-ID 原样继承。
+- Sequential/task_execution：U-006（core-execution）先补 Avoid-only 与 swapped-definition 反例观察 RED，再让保存检查消费真实规范定义条目而不是全文件词标；名称唯一且公司/登录人含义与接受结果对应，保留 Invoice/授权/先读后写要求。注释、代码示例、其他章节不充当规范定义。
+- U-007：复用任务临时目录候选生成器，但新回执另存 R-2 子目录；候选其他26合同文件取 Git baseline，scorer取最终新字节。主线重跑自测/语法/专用checker/真实guard变异与恢复；quality-gate只读核验回执。复审仅 scorer FILE_SET、两个隔离 Standards/Spec 轴（cold start，REFUTE，P1/xhigh、model继承），一轮；不再审37个安装文件或调用native模型。已有控制组/隔离suite通过保留为回归证据，不替代残缺actual/A-B。
+- U-008：所有局部阻断门闭合后，四文件聚焦提交，完整 hooks、既定 upstream/main 普通推送及远端读回；URL/remote-parent/index候选manifest须与批准边界一致。无新Git效果、无force/amend/其他refs。任一新MAJOR停止，再交用户，不自行追加轮次。
+- criteria：C-R2-1 合法规范条目与原合法F06仍PASS，而Avoid-only/定义互换/同名多定义/注释或示例伪条目FAIL；C-R2-2 新saved-language guard可被定向恒真变异证明、恢复转绿，原4guard和控制/权限/未知活动合同无回归；C-R2-3 独立双轴绑定最终候选，新局部PASS不宣称fullnative/A-B或Claude已通过。
+
+```bash
+# [BLOCKING] R2-01 — 原suite加剩余saved-model反例
+node scripts/test-domain-modeling-behavior.mjs --self-test
+# [BLOCKING] R2-02 — 最终候选，精确命令/manifest及变异回执
+node /private/tmp/domain-modeling-install.KsdG5S/scorer-repair/R2/published-candidate.mjs
+# [BLOCKING] R2-03 — saved-language与原四guard故意移除后RED、恢复GREEN
+node /private/tmp/domain-modeling-install.KsdG5S/scorer-repair/R2/targeted-mutation.mjs
+```
+
+当前 U-006 IN_PROGRESS；U-007/U-008 PLANNED。approved R-2在上述继承边界内执行，无新增人类决定；Claude仍DEFERRED，fullnative/A-B仍BLOCKED。
+
+### R-2 local execution checkpoint
+
+- 用户暂停后“继续”，恢复同一批准范围。U-006 DONE：RED 自测 exit2 `F06 Avoid-only canonical markers were green`；真实规范条目/角色检查后全部自测和 checker exit0。只在既有 scorer 增加小型 glossary-entry 提取：Language 定义行，排除 HTML 注释、代码围栏与其他章节，拒绝重复规范名称及公司/登录人的定义互换；保留合法英/中释义、原返回/权限/控制合同。
+- Frozen scorer SHA-256 `d772f261ca803fdbdead99765bc070097eb1cb933279770fbc357b872746f230`。U-007 IN_PROGRESS：新的隔离候选 `R2/published-candidate-tWMWl0`，其他26合同取 fad49e0，不混入并行工作。根执行者四项回执均 exit0，broad mutation PASS；五个 guard-to-true 变异均 exit2、每次恢复 exit0。`agreed-terms-returned` 的定向变异被精确 check 断言识别，另一保存 guard 仍使总分 FAIL；不声称五种变异都会使总分 PASS。
+- 回执仅在 `/private/tmp/domain-modeling-install.KsdG5S/scorer-repair/R2/`，不覆盖 R-1。独立只读 QA PASS 3/3；唯一冷启动双轴复审 IN_PROGRESS，U-008 尚未 stage/commit/push。局部测试不替代缺失 native/A-B，Claude仍DEFERRED，adoption仍PENDING。
+
+### R-2 terminal checkpoint — BLOCKED
+
+- U-007 consumed the sole newly approved cold dual-axis review: Standards PASS (0), Spec FAIL (1 MAJOR). The real canonical-entry gap is closed for the known negative partition, but whole-sentence role keywords reject valid buying-company/login-person definitions mentioning users/company as context and accept negated buying/login definitions. Exact four public-score reproductions are in final-review.
+- Local independent QA PASS 3/3 and five mutation/restoration receipts do not override Spec failure. Per R-2, stop new scorer edits and reviews; U-007 BLOCKED, U-008 NOT_RUN. No stage/commit/push. HEAD remains fad49e0, index empty; final scorer still d772f261... and the same four task-local files retained. Other tasks' observability/model-routing/retrieval work remains excluded and must not be restored.
+- Next requires real user approval for an explicit semantic acceptance contract and a bounded repair/closure delta; do not infer it from this recommendation. Resume read list: this R-2 checkpoint, final-review R-2 axes, verification R-2 evidence, exact HEAD/index and scorer hash. Full native/A-B missing, Claude deferred, adoption PENDING. No new project/global/mandatory Flow effects.
+
+## Replan R-3 proposal（2026-09-17，语义验收最小改造，待执行批准）
+
+### 0. 来源、前提与批准边界
+
+- Source：上轮建议“先明确语义验收规则，不再叠加关键词正则。是否批准先做这个最小改造方案？”；用户答“可以”。本轮批准的是**出方案**，不是实现、新闭合轮或发布。只追加本计划，不改代码、不 stage/commit/push。R-1/R-2 未提交的成果继续保留。
+- 真问题：本轮只读公开 score 复现 R-2 四例：购买公司的定义提到 users、登录人的定义提到 Customer Organization 均 FAIL；明确不购买/无登录身份的定义均 PASS。初始标准样本仍 PASS；不是目录/授权/模型调用故障。
+- 更薄替代：保留当前安装，人工一次复核实际 F06，评分器不发语义 PASS。这能暂时止住假阳性，但留下评分器错误；推荐在单一现有文件中分开结构验收与语义裁决，不造 NLP 平台。
+- 默认偏差：拆层容易让作者高估“接入一个判官”即解决语义可靠性。后续冷启动 Spec reviewer 默认 REFUTE，必须对独立语义裁决本身做已有反例校准；mock 投票通过不算语义正确证据。
+- Research N/A：现有 `.claude/skill-os/eval-methodology.md` 明确结构用 code、faithfulness/consistency 用逐项 judge 并允许 UNKNOWN；已有源码、固定 F06 与真实反例足够本案设计。不引入外部模型服务或新算法，未来若需要新的 transport/推理能力则重规划。
+- KILL-1：若现有受信主线无法取得独立判官的实际工具返回及完整原始返回/保存内容，不接自动语义 PASS；维持 UNKNOWN，不假造投票或自报身份。
+- KILL-2：若完成最小路径必须改 canonical、fixture、harness 或增加依赖/服务，四文件方案作废，先交用户裁决，不自行扩大。
+
+### 1. 设计对象与最小 interface
+
+采用 `codebase-design` 快速诊断。机械前置 PASS，HEAD fad49e0、index 空、输入充分；其通用检查表无专属 skill 行的提示不要求修改检查表。NO_PIN 跳过项目 handoff/state。
+
+- **Module**：现有 F06 grading 分支；调用者是 runner 的 `invoke` 和已有自测/局部 QA，不是 domain-modeling 被测 agent。
+- **Interface / Seam**：保留 `score(fixture, answer, observed)`。结构观察和受信主线提供的独立语义裁决走 `observed`；被测 `answer` 不能含一个自报 PASS 就获得语义票。私有 helper 不扩大为公共 API。
+- **Implementation**：集中处理规范词条提取、完整输入绑定、裁决有效性与三态聚合，不把这些检查散给五个 skill caller。原 skill 返回 schema 不改。
+- **Adapter**：真实路径是现有受信主线从独立 quality/reviewer 的实际返回录入裁决；测试路径是内存固定裁决对象。两者跨同一个 seam；测试 adapter 只证明接线/聚合，不证明自然语言判官可靠性。未建立真实投票的 runner 路径为 UNKNOWN，不冒称已自动接通。
+- **Depth / Deletion test**：删除此分支会让结构/语义绑定、FAIL 优先与未知处理重新散落给 runner、离线闭合和测试；集中在现有 Module 有 locality。拒绝“通用判官平台”和“传四份关键词配置”的 shallow 方案。
+
+### 2. 验收合同：结构与语义分开，但两层都必须通过
+
+**结构层仍由 code 强制**：完整 DONE/DONE_WITH_CONCERNS、owner/action/exact artifact、无未答/阻断/冲突、两项 accepted 规范名称、Language 中各一个真实定义条目、Avoid Account、Invoice 不变、授权和先读后写、无越域变更。注释/围栏/其他章节的伪条目不算定义。把两项返回名称检查中的含义关键词移给语义层，不能遗漏它或只检查保存内容。
+
+**语义层由独立裁决**，读固定 F06 用户接受内容、两项实际返回 concept 和两项真实保存定义，逐条给 PASS/FAIL/UNKNOWN 及引用：
+
+1. Customer Organization 指购买服务的公司；User 指持有登录身份的人。它们可在关系上下文中提及对方，不因出现另一类词而自动失败。
+2. 返回 concept 与保存定义都忠实于各自的接受角色，不互换、不否定、不重新混称。明确“不购买服务的公司”或“没有登录身份的人”不能获得该接受角色的 PASS。
+3. 判定依据必须是此次实际返回/保存内容；内容含歧义、缺失或诱导判官的指令时不照做，不确定就 UNKNOWN。不得用“被测 agent 说已完成”代替检查。
+
+**三态聚合**：结构违规始终 FAIL，语义票不能覆盖；结构通过且全部有效语义 criterion PASS 才 overall PASS；有效语义 FAIL 则 FAIL；无票、未知、不完整或绑定漂移则 UNKNOWN（非 PASS，也不把未评估的合法定义直接判成语义 FAIL）。未知不能进入 A/B 通过或提升 adoption。
+
+这是对 R-2 “任意自然语言定义可由纯代码直接判 PASS/FAIL”的**明确合同修订，须重新批准**，不是偷偷降低正确性标准。互换/否定等语义违规在独立 FAIL 票后仍 FAIL；没有语义票时不再靠句子关键词猜结果。
+
+**投票绑定与信任边界**：受信主线记录实际 judge 来源/调用记录；投票绑定 fixture+arm/trial、最终 scorer/source manifest、完整 answer 摘要和实际 glossary 字节摘要，覆盖所有语义 criterion 并带原文证据。摘要仅防漂移，不证明身份；仅字符串 `producer=quality-gate` 或任意 JSON 文件不是独立评审证明。候选进程不能写入或选择主线的投票通道，模型返回里的同名字段全部不构成票。
+
+**最小真实接线**：runner 保存 F06 的完整语义输入和 pending 状态；主线通过现有判官只读复核，记录其实际返回。拟在同一 scorer 增加只针对 F06 的离线重评分入口 `--grade-f06 <原始 verdict 路径> --semantic-review <主线批准投票路径>`：不调用模型，不改原始票，只输出新的局部闭合结果。该入口必须校验源/输入/投票绑定及原生执行完整性；null answer、timeout、缺 native packet/model receipt 的旧票不能被语义票洗成 PASS。没有受信裁决通道就仍 UNKNOWN。不创建通用评估脚本或常驻 agent。
+
+### 3. 拟执行顺序与范围（尚未准入）
+
+模式：Sequential 外层 + U-007 单轮 Supervisor 验证；Lightweight 变更范围，但 publication 按不可逆门展开。DEV/ASSERT 反向覆盖 N/A：本案是固定源码/复审票的框架维护，不消费下游 task-plan，不启用产品场景或图。
+
+1. **U-006 / task_execution / core-execution**：Source 为 R-2 MAJOR 与本 R-3 合同；保留结构/权限/控制修复，替换错误 whole-sentence meaning heuristic，完成上述受信裁决 seam、三态聚合和 F06 离线接线。文件仅 scorer 与本计划/既有 verification/final-review；无新的仓库文件、依赖、schema、fixture、skill caller 或 global/Flow 变更。
+2. **U-007 / task_execution / core-execution；独立裁决 P1 reasoning-heavy（Codex xhigh、model inherit）**：先在新 R3 任务临时证据目录构造 baseline other26 + final scorer 候选，根执行者跑真实自测/checker/定向 mutation；只读 QA 核验回执与公开 seam。独立判官盲判 R-2 真实反例及返回 concept 反例，证明裁决本身校准，不只检查 mock。随后同一轮两个冷启动隔离 Standards/Spec 轴，绑定最终字节；每轴一次，存活 MAJOR 停，不自动增加下一轮。
+3. **U-008 / task_execution / core-execution**：Source 为原任务提交/推送要求，仅前两步门全部闭合且用户批准本执行 payload 后四文件聚焦提交；完整 hooks。URL 必须仍为 `https://github.com/wangmoumou1216-ai/luca_gstack.git`；remote refs/heads/main 必须等于提交父 SHA；普通 `git push upstream HEAD:refs/heads/main` 后读回。无 force/amend、其他 refs、全局安装、其他 checkout 或 unrelated dirty 文件。
+
+拟 Files 精确清单：
+
+- `scripts/test-domain-modeling-behavior.mjs`
+- `framework-audit/2026-09-16-domain-modeling-install-plan.md`
+- `framework-audit/2026-09-16-domain-modeling-verification.md`
+- `framework-audit/2026-09-16-domain-modeling-final-review.md`
+
+Read List：本 R-3、R-2 final-review 精确反例、固定 F06/CONTEXT-FORMAT、源码 score/invoke/main、自身 shared/Mode D/R4 owner；不扩大读冷日志/其他任务文档或项目显示别名。
+
+### 4. 阻断断言、criteria 与失败策略
+
+执行期行为断言须在现有公开 seam 的自测中落地；此刻不冒称已存在或通过：
+
+```bash
+# [BLOCKING] R3-01 — 无票/有效票/反例/绑定漂移/原始失败不能被洗绿；既有控制与隔离回归
+node scripts/test-domain-modeling-behavior.mjs --self-test
+# [BLOCKING] R3-02 — 同一 final-byte scorer 的语法和已有合同
+node --check scripts/test-domain-modeling-behavior.mjs
+node scripts/test-domain-modeling-skill.mjs --all
+# [BLOCKING] R3-03 — exact scope whitespace / patch 错误
+git diff --check -- scripts/test-domain-modeling-behavior.mjs framework-audit/2026-09-16-domain-modeling-install-plan.md framework-audit/2026-09-16-domain-modeling-verification.md framework-audit/2026-09-16-domain-modeling-final-review.md
+```
+
+后续 candidate/broad/targeted mutation 生成器在任务临时 R3 中生成，执行前记录精确命令与 final manifest；未生成前不列虚假的已执行回执。离线入口由实际测试造完整 synthetic 票和分区反例，禁止使用旧 null-answer 烟测冒充 native positive。
+
+- **C-R3-1 / code**：原结构/权限/控制违规 FAIL；无语义票 UNKNOWN；有效全 PASS 票才 PASS；结构 FAIL 不受票覆盖。证据：公开 score 真运行与精确 check。
+- **C-R3-2 / independent judge**：R-2 两条关系上下文合法定义 PASS、两条明确否定定义 FAIL；返回 concept 也受同一角色检查；不确定 UNKNOWN。证据：冷启动逐项裁决、完整引用及真实工具返回，不能以测试作者填的 mock 证明。
+- **C-R3-3 / code + reviewer**：错 fixture/arm/trial/source/answer/artifact、缺 criterion/证据、候选自报票与原始 native 失败均不能 PASS；重评分不改原票或跨域读取。证据：离线入口真实分区测试及摘要/authority 检查。
+- **C-R3-4 / code + reviewer**：移除语义必需/绑定/FAIL 优先保护会使对应断言转红，恢复转绿；27项候选只包含 baseline other26 + own final scorer。证据：fresh mutation/restoration 回执与逐项 Git/index 摘要。
+- **C-R3-5 / independent closure**：一次隔离双轴无存活 MAJOR；没有新依赖/Flow/global/真实项目效果，不把接线测试升格成 full skill acceptance。证据：双轴最终 hash 与 scoped diff；Claude 仍 DEFERRED、full native/F matrix/A-B 仍缺票。
+
+任一 BLOCKING FAIL 停下一阶段；UNKNOWN 不能判验收通过；同一故障三次停止盲重试；本次不做第四次原生模型调用。需要新模型 transport/自动 judge dispatch 时重规划，不绕过 scope。后续 review 若仍 MAJOR 交用户；不改写 R-1/R-2 失败历史。
+
+### 5. 当前 checkpoint / 出门自检
+
+方案已写明来源、前提、替代、kill assumptions、真实 seam/adapter、语义 rubric、合同变化、三阶段/精确文件/效果、五条 criteria 与停止条件。无选中的产品设计、optional graph 或强制 workflow handoff。codebase-design 只影响设计分界，没有扩大权限。
+
+当前用户批准的计划输出已完成；U-006/U-007 仍为 R-2 BLOCKED，U-008 NOT_RUN，R-3 执行状态未准入。本轮仅计划文件新增此节；HEAD仍 fad49e0，index为空，scorer仍 `d772f261ca803fdbdead99765bc070097eb1cb933279770fbc357b872746f230`，未 stage/commit/push。并发 model-routing/observability/retrieval 工作保留，不恢复旧摘要。待用户对以上合同/四文件/唯一闭合轮和普通发布 payload 明确批准，才恢复 U-006 → U-007 → U-008。
+
+### R-3 execution admission checkpoint（用户最新“可以”）
+
+- 用户对上轮完整执行/单轮闭合/四文件普通发布问句答“可以”，R-3 合同变化与 U-006 → U-007 → U-008 现在准入；不是扩大原有 global/项目/Flow 权限。Claude deferred。
+- main HEAD `fad49e05cd1f59943b5d6e11c6da5369b877b3cc`，index 空；批准方案原 SHA `39671df55849ade2da9a4a8b7103c6a8d5768a8ea3d455e803287c2343375044`，R2 scorer `d772f261ca803fdbdead99765bc070097eb1cb933279770fbc357b872746f230`。历史 FAIL 保留。其他任务 observability/rules/model-routing/retrieval 与未跟踪产物全部排除，不恢复、不 stage。
+- 根实现者使用 tdd：在已批准 public score 和离线 CLI seam 上一条失败测试 → 最小实现 → 下一条；code-hygiene A/D 与 code-review 单源文件 FILE_SET。计划记录不代替行为票。既有 preflight agent 只读机械前置，QA/语义校准及新冷双轴仅在实现冻结后执行；judgment P1/xhigh、model inherit。
+- U-006 IN_PROGRESS。恢复读表：本 checkpoint、score/invoke/main、固定 F06/CONTEXT-FORMAT；下一步先无语义票 UNKNOWN 的 RED，再实现受信主线观察/绑定和离线分区。任务证据新增 `scorer-repair/R3`，不覆盖 R1/R2。原生第四次模型调用 NOT_AUTHORIZED；完整 F matrix/A-B BLOCKED，adoption PENDING。
+
+### R-3 U-006 frozen / U-007 local checkpoint
+
+- U-006 DONE，scorer 最终 SHA `8590b12a4d79aea81e90ed81d0c6f4bf67a1468259de8c4f717a946b31bdaf60`。公开 seam 的 RED → GREEN：无裁决 PASS→UNKNOWN、完整主线准入裁决 UNKNOWN→PASS、合法关系上下文 FAIL→PASS；已知越域违规被 UNKNOWN 隐藏和 native failed event 洗绿的测试也先 RED 后修复。保留 R1/R2 结构/权限/控制成果。
+- `observed` 是调用者拥有的受信边界；候选 answer 内同名票/producer 标签不构成身份。离线命令除原两路径，要求 `--evidence <本任务临时根>`、`--grade-f06-sha256 <主线确认原票摘要>`、`--semantic-review-sha256 <主线确认独立工具返回包装摘要>`；这三者是主线显式准入，不是 JSON 自认证或密码学来源签名。主线必须实际取得独立工具返回，不能把摘要校验冒称已证独立性。runner 本身不自动 dispatch 判官，未建立裁决仍 UNKNOWN。
+- 新 runner 对 F06 保存 fixture/trial/manifest/完整 before/after/执行状态；离线重新检查原始 stream、native model/packet、最终 answer、当前实际 snapshot 与所有绑定，仅 stdout 新局部 closure，不写原票、不网络/模型调用。旧 null/timeout/缺包票不满足入口。其公开 CLI 正负例全为明确标注的 synthetic transport，不冒充 native 模型 outcomes。
+- 本轮第一候选 broad mutation exit1 `scorer: did not mutate`（源 SHA `affafbe51a05f75628acdab1b7d6d9a83ef4d5d899db9eda3c6ae189a5da56a7`）：旧 checker 按原总分表达式定位变异。只在 scorer 保留非 F06 原表达式兼容点，未改 checker/合同文件；失败保留，不进入独立复审直到恢复通过。
+- 根实际执行的最终新候选 `/private/tmp/domain-modeling-install.KsdG5S/scorer-repair/R3/published-candidate-tPnuAs`，27 项 baseline other26 + scorer；四命令均 exit0，broad PASS；九项定向移除 guard 各 exit2、逐次恢复 exit0。精确新命令为 `node /private/tmp/domain-modeling-install.KsdG5S/scorer-repair/R3/published-candidate.mjs` 和 `node /private/tmp/domain-modeling-install.KsdG5S/scorer-repair/R3/targeted-mutation.mjs`。
+- U-007 IN_PROGRESS：十例冷独立语义盲校准已派发，gold 未交判官；之后只读 QA，再唯一新冷双轴。U-008 NOT_RUN，index 空，未 stage/commit/push。full native/A-B BLOCKED，Claude deferred，adoption PENDING。
+
+### R-3 publication hold checkpoint（用户“快速收尾，提交并发布”）
+
+- 用户再次要求快速四文件提交发布；不扩查、不自行跳过未闭合 critical gate。U-006 final hash 8590b12a... 不变；独立 QA PASS 3/3。真实语义判官通过 live collaboration 工具向 QA 直接确认原输入没有 gold/实现/历史，归档与其实际 FINAL 完整逻辑 JSON 一致，无不同项，未重判/写票。
+- U-007 唯一新双轴 round 已开始：`/root/domain_modeling_r3_standards` 真正 fork none / xhigh；新 Spec spawn 被 runtime 拒绝 `agent thread limit reached`。仅一次失败，不盲重试。可用工具没有 close-agent/释放历史线程入口。尚不能声称双轴闭合或发布准入。
+- 减少停顿的可选 fallback 是复用既有独立 Spec-only 判官做同一 final-byte 单文件终审：它不共享 Standards 当前报告，但不是全新冷上下文；这改变批准的 cold-start 细节，先交用户选择，不自行等同。没有新的语义校准/修复轮。
+- U-008 NOT_RUN，HEAD仍 fad49e0，index空，upstream URL准确且只读远端 main=fad49e0；web-access check-deps PASS。全 hooks 与精确四文件/27hash index检查脚本已准备，未经 gate 不 stage/commit/push。恢复从本checkpoint、QA envelope、最终候选与 Standards 状态继续。原 WIP保留；Claude deferred，full native/A-B/adoption仍BLOCKED/PENDING。
+
+## Replan R-4（2026-09-17，用户批准修复判定来源并重新双轴终审）
+
+- Source：R-3 新的独立 Spec 审查复现：候选可同时提供否定定义、任意 `agent_id`/`invocation_id`、自行计算的 binding/hash 与 `tool_result`，公开 `score()` 仍为 PASS；`--grade-f06` 又从同一 CLI JSON 重建 `review_admission`。用户已批准仅在既定四文件内修复该来源问题、补齐审计记录并重新双轴终审。
+- Scope / freeze：NO_PIN；仅 `scripts/test-domain-modeling-behavior.mjs` 与本计划、verification、final-review。起点 scorer SHA 为 `8590b12a4d79aea81e90ed81d0c6f4bf67a1468259de8c4f717a946b31bdaf60`，HEAD/index 与其他并行 WIP 继续按 R-3 hold 保留和排除。无第四次 native 调用、无新依赖、全局/项目/Flow 效果、stage、commit 或 push。
+- Contract correction：hash、`agent_id`、`invocation_id` 和 JSON 字段只可证明字节一致，不能认证独立评审来源。R-3 关于 CLI flags 为“admission”的历史表述在本边界上被 R-4 取代：公开 CLI 和任何调用者复制的 `observed` 都不得让语义票变 PASS。当前没有 controller-owned process/IPC 可信回传时，结构合法的 F06 为 UNKNOWN；已观察到的结构、权限或隔离违规仍优先 FAIL。内部固定 double 只覆盖三态聚合接线，不是独立判官证据，也不恢复自动语义通过能力。
+- U-006 / task_execution：先在 public `score` seam 和 `--grade-f06` synthetic ticket 增加可复现 forged-review RED 断言；再以 module-private、不可由 CLI/复制对象重建的 admission capability 使 `f06Semantic` 仅消费内部受信控制器已准入的 review。CLI 只重验原票、trace、packet、snapshot 与结构结果；即使携带旧 `--semantic-review` 参数也不转发/准入该 JSON。
+- U-007 / task_execution：final-byte 自测、syntax、skill contract、exact-scope diff，以及至少一个对 admission forwarding 的定向 mutation/restoration 证据；随后两名新的隔离读审分别执行 Standards 与 Spec 轴，并明确检查伪造 direct/CLI review 都不能 PASS。任一 MAJOR、关键 UNKNOWN 或审计记录不一致立即停止，不追加轮次。
+- U-008 / task_execution：仅 U-006/U-007 全部闭合、四文件范围和审计记录一致时才重新评估普通提交/推送；本批准不提前授予发布。完整 native/F matrix/A-B、Claude deferred 与 adoption PENDING 的历史状态不变。
+- Assertions：R4-01 否定定义 + 全部 caller-computable metadata 在 direct public seam 和 CLI 都是 UNKNOWN；R4-02 固定内部 controller double 仅可验证 all-PASS/FAIL/UNKNOWN 聚合，不能证明来源；R4-03 malformed、timeout、raw/source/snapshot drift 仍 UNKNOWN，结构/known-isolation 仍 FAIL；R4-04 final-review 必须成为当前终端状态的唯一可审计入口，不把 local QA 或旧 CLI PASS 升格成 closure。
+
+当前 U-006 IN_PROGRESS；U-007 PLANNED；U-008 NOT_RUN。R-1/R-2/R-3 失败历史保留；本 replan 是用户批准的有界 R-4，不等同于跳过既有 critical gate。
+
+### R-4 U-006 local checkpoint（2026-09-17）
+
+- RED：把当前 controller-admitted test double 深复制为 caller-owned `observed`（保留否定定义、完整 binding、伪造 provenance、matching hashes/tool_result）后，旧 scorer 自测 exit2：`F06 caller-forged review was green`，即公开 seam 实际返回 PASS。旧 synthetic CLI 也以同一 caller-provided review JSON 得到 PASS。
+- GREEN：最终 scorer SHA `79e19a44b66e96596da7c7b55d2f456fa6f734cd8f6a862fdd6df3079cfcef06` 使用 module-private `WeakMap` admission capability；`f06Semantic` 不再读取 `observed.review_admission`。内部固定 double 保留三态聚合测试；其深复制、旧 CLI 参数和 matching hash 都没有 capability，结果为 UNKNOWN。`--grade-f06` 仅将 supplied review bytes 写为 diagnostic receipt，绝不解析、转发或重建 admission。
+- Targeted mutation/restoration：临时将 final lookup 改回 `observed.review_admission`，新 forged regression 即 exit2 同一错误；用 private lookup 恢复后 self-test exit0。最终还须在 frozen byte 上复跑 syntax、skill contract、exact diff 和新的隔离双轴；此处不把 local GREEN 说成 independent closure。
+- U-006 local behavior evidence complete; U-007 remains PLANNED and U-008 NOT_RUN. No stage/commit/push or native/A-B invocation occurred.
+
+### R-4 U-007 independent closure checkpoint（2026-09-17）
+
+- Frozen candidate scorer SHA stayed `79e19a44b66e96596da7c7b55d2f456fa6f734cd8f6a862fdd6df3079cfcef06`. Before review, final `--self-test`、`node --check`、`test-domain-modeling-skill --all` 和 exact four-file `git diff --check` 都 exit0；index remains empty and the protected parallel WIP stayed excluded.
+- Standards axis `/root/r4_standards_review` returned PASS 6/6, `eval_run_id=r4-standards-20260917-79e19a44`: final byte/hash, syntax/self-test, skill contract, fail-closed CLI/copied-review boundary, FAIL precedence, audit traceability and no-publication scope all passed. It explicitly limited its conclusion to Standards-axis closure.
+- Spec axis `/root/r4_spec_review` returned PASS 5/5, `eval_run_id=r4-spec-20260917-79e19a44`: independently reproduced full forged binding/hash/provenance/tool_result/review_admission at exported `score()` as UNKNOWN; confirmed public CLI does not parse/forward review data; reconfirmed structural/scope/isolation FAIL precedence and documented that `WeakMap` is fail-closed rather than cross-process judge authentication. It explicitly did not promote this to native/A-B or publication acceptance.
+- U-007 is DONE for the bounded R-4 scorer/audit closure. U-008 remains NOT_RUN: the user's R-4 approval said to consider commit/push only after review, so this checkpoint does not infer a new external Git publication grant. Full native/F matrix/A-B remains BLOCKED, Claude deferred and adoption PENDING.
+
 <!-- FILE_END: domain-modeling-install-plan -->
