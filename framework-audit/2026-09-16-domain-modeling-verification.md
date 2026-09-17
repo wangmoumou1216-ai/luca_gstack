@@ -154,4 +154,10 @@ User approved “批准修复，最小代价复审”, then paused and resumed w
 - Fresh independent Standards `/root/r4_standards_review`: PASS 6/6, `r4-standards-20260917-79e19a44`. It independently checked final hash, local commands, safety/traceability claims and publication hold; no findings. Fresh independent Spec `/root/r4_spec_review`: PASS 5/5, `r4-spec-20260917-79e19a44`. It directly supplied matching forged review metadata to exported score and observed UNKNOWN; it also verified the public CLI keeps supplied review data diagnostic-only and preserves structural/isolation FAIL. The agents were separate, read-only and did not share findings.
 - The two PASS results close only R-4 U-007’s frozen four-file scorer/audit delta. They do not authenticate a future cross-process judge, reclassify R-3 synthetic transport, satisfy full native/F matrix/A-B acceptance, remove Claude deferral, or authorize Git publication. U-008 remains NOT_RUN.
 
+### R-4 U-008 Git delivery receipt
+
+- User explicitly authorized publication after U-007. Commit `c1ca23d09166f460b6a91eee81f979e7f11e6dff` contains the exact four-file R-4 delta and has parent `fad49e05cd1f59943b5d6e11c6da5369b877b3cc`. Its normal pre-commit ran the full framework verifier successfully: PASS=96, FAIL=0, WARN=0; the direct final-byte local checks and two independent U-007 reports remain recorded above.
+- Remote safety check immediately before effect found `upstream/main=fad49e05cd1f59943b5d6e11c6da5369b877b3cc`, matching the commit parent. Ordinary `git push upstream HEAD:refs/heads/main` then succeeded; post-push `git ls-remote` readback equals `c1ca23d09166f460b6a91eee81f979e7f11e6dff`. No force/update-ref/merge/rebase or unrelated WIP staging occurred.
+- The remote announced an expected Required Checks condition while accepting the push. GitHub Actions CI run `35215542639` for `c1ca23d...` was `in_progress` at receipt time. Delivery is verified; CI and the separately blocked full native/F matrix/A-B acceptance are not claimed PASS.
+
 <!-- FILE_END: domain-modeling-verification -->

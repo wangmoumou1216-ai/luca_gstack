@@ -518,4 +518,11 @@ git diff --check -- scripts/test-domain-modeling-behavior.mjs framework-audit/20
 - Spec axis `/root/r4_spec_review` returned PASS 5/5, `eval_run_id=r4-spec-20260917-79e19a44`: independently reproduced full forged binding/hash/provenance/tool_result/review_admission at exported `score()` as UNKNOWN; confirmed public CLI does not parse/forward review data; reconfirmed structural/scope/isolation FAIL precedence and documented that `WeakMap` is fail-closed rather than cross-process judge authentication. It explicitly did not promote this to native/A-B or publication acceptance.
 - U-007 is DONE for the bounded R-4 scorer/audit closure. U-008 remains NOT_RUN: the user's R-4 approval said to consider commit/push only after review, so this checkpoint does not infer a new external Git publication grant. Full native/F matrix/A-B remains BLOCKED, Claude deferred and adoption PENDING.
 
+### R-4 U-008 delivery receipt（2026-09-17）
+
+- 用户随后明确要求“发布提交推送”。四文件 code/audit commit `c1ca23d09166f460b6a91eee81f979e7f11e6dff`（`fix(domain-modeling): fail closed untrusted reviews`）以 `fad49e05cd1f59943b5d6e11c6da5369b877b3cc` 为父提交；index 精确四路径，其他并行 WIP 未暂存。
+- Commit 前及 hook 内 `scripts/verify.sh` 都完成 PASS=96 / FAIL=0 / WARN=0；pre-commit secret scan passed，未使用 FAST_COMMIT、force、reset、merge 或 rebase。push 前 `upstream` push URL 仍为 `https://github.com/wangmoumou1216-ai/luca_gstack.git`，remote `refs/heads/main` 精确等于该 commit 的父 SHA。
+- 普通 `git push upstream HEAD:refs/heads/main` 成功；随后 `git ls-remote upstream refs/heads/main` readback 精确等于 `c1ca23d09166f460b6a91eee81f979e7f11e6dff`。服务器提示 Required Checks 尚在 expected 状态并放行此次 push；GitHub CI run `35215542639` 已为该 SHA 启动，收据时为 `in_progress`，不把 delivery 写成 CI/full-native acceptance。
+- U-008 Git delivery is DONE_WITH_CONCERNS for the bounded R-4 change. Full native/F matrix/A-B remains BLOCKED, Claude deferred and adoption PENDING; CI outcome must be read separately.
+
 <!-- FILE_END: domain-modeling-install-plan -->

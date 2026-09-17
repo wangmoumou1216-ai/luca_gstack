@@ -1,6 +1,6 @@
 # domain-modeling terminal review — publication and focused repair
 
-Status: BLOCKED. R-4 trust-boundary repair passed its fresh bounded Standards/Spec closure; U-008 Git publication remains NOT_RUN and full native/F matrix/A-B acceptance is still blocked. R-1/R-2/R-3 history below is retained. Prior installation Git publication is DONE_WITH_CONCERNS, not capability acceptance.
+Status: DONE_WITH_CONCERNS. The bounded R-4 trust-boundary repair was committed and ordinarily pushed to `upstream/main`; GitHub CI was still in progress at the delivery receipt. Full native/F matrix/A-B acceptance remains blocked. R-1/R-2/R-3 history below is retained. Prior installation Git publication is DONE_WITH_CONCERNS, not capability acceptance.
 
 Latest user explicitly requested “提交并发布然后在检查”“合并分支和推送”. Task commit `4ab85aaa510c71e49ccbd02c3ace1c9ffbb21343` was squash-integrated as main `8370c470c70adf9a5805fa3b8b543e7d80c9d6fe`, ordinarily pushed to upstream/main and read back. Both full hooks passed 96/0/0; installation CI 6/6 success. Claude live/A/B remains DEFERRED_BY_USER; Codex full outcomes/A/B remain unverified.
 
@@ -112,5 +112,13 @@ Both fresh, read-only reviewers bound their findings to scorer SHA `79e19a44b66e
 - Spec `/root/r4_spec_review`: **PASS 5/5**, no findings, `eval_run_id=r4-spec-20260917-79e19a44`. It independently reproduced a fully self-consistent forged review at direct exported `score()` and got UNKNOWN; it also confirmed `--grade-f06` cannot parse or forward caller review JSON into PASS. It explicitly recognized the private `WeakMap` as fail-closed local capability, not proof of cross-process judge identity.
 
 R-4 U-007 is therefore closed for this scorer/audit delta. This neither overturns the retained historical R-1–R-3 failures nor grants full capability acceptance: native F01–F11/four-target A/B remain missing, Claude remains deferred and adoption remains PENDING. The current user authorization covered repair and review followed by consideration of publication, so **U-008 stays NOT_RUN; nothing has been staged, committed or pushed.**
+
+## R-4 delivery receipt — ordinary push verified (2026-09-17)
+
+After the user explicitly directed “发布提交推送”, the exact four-file repair was committed as `c1ca23d09166f460b6a91eee81f979e7f11e6dff` (`fix(domain-modeling): fail closed untrusted reviews`), parent `fad49e05cd1f59943b5d6e11c6da5369b877b3cc`. The normal pre-commit secret scan and full framework verifier passed **96/0/0**; no bypass, force, reset, merge or rebase was used.
+
+Immediately before push, the verified `upstream` URL was `https://github.com/wangmoumou1216-ai/luca_gstack.git` and remote main exactly equaled the parent. Ordinary `git push upstream HEAD:refs/heads/main` succeeded; subsequent remote readback confirmed `refs/heads/main = c1ca23d09166f460b6a91eee81f979e7f11e6dff`. The server reported Required Checks as expected while accepting the push. GitHub CI run `35215542639` was started for this SHA and remained `in_progress` at the receipt time; this is not represented as CI success.
+
+U-008 is **DONE_WITH_CONCERNS** for Git delivery. It does not change the independent R-4 semantic review result, nor promote missing native F01–F11/four-target A/B outcomes, remove Claude deferral, or mark adoption complete.
 
 <!-- FILE_END: domain-modeling-final-review -->
