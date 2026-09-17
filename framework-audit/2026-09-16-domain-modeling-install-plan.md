@@ -13,7 +13,7 @@ Status: PLANNED
 - 路由：framework-evolution 中针对已点名单个能力的适配接入，复用既有对标证据，再走 FUSION 安装门；不跑全仓 scout、不重做整套 benchmark、不以 research skill 替代框架流程。
 - 研究：已有上游真身、固定版本、MIT 许可和本地机制对标。本计划是成熟接入模式，不做重型外部研究；U-001 重新核验固定源包，变化不得静默换版本。
 - 目标 checkout：`/Users/luca/Desktop/项目/muse/lucagstack`。
-- 实现源基线 HEAD：`0e07efd17e5740aa2a6ceef4a4423281ebc906b4`。旧评审的 `2b01fb...` 不作为本次安装基线。安装可从第 0.1 节列明的文档发布提交继续，但必须验证其相对本源基线仅改变这三个任务文档；实际安装 HEAD 在 U-001 记录精确 SHA，其他历史或实现文件漂移须重规划。
+- 实现源基线 HEAD：`0e07efd17e5740aa2a6ceef4a4423281ebc906b4`。旧评审的 `2b01fb...` 不作为本次安装基线。已发布文档提交 `68dc9403f53c234274a17a84e0e3e4ff81112229`；安装可从第 0.1 节列明的文档提交及本次复核 delta 文档提交继续，但必须验证其相对本源基线仅改变这三个任务文档；实际安装 HEAD 在 U-001 记录精确 SHA，其他历史或实现文件漂移须重规划。
 - 上游：`mattpocock/skills`，path `skills/engineering/domain-modeling`，固定 commit `321658273cb1d20b76026717d027d505790106d4`；保留版权和 LICENSE，适配后的正文不声称与上游原文完全相同。
 - Scope：框架 NO_PIN；不切换或创建真实下游项目；不读写共享 `docs/`、workflow-state、current-topic aliases。
 - 不触碰：`framework/`、根 `CONTEXT.md`、根 `AGENTS.md`/`CLAUDE.md` 的安全内核、受控 semantic 晋升文件、全局 harness 配置与 hooks、个人全局 skill 安装、其他 checkout。
@@ -29,6 +29,7 @@ Status: PLANNED
 - 操作：先独立复核并保存票据，再 exact-path `git add`，一个聚焦文档提交。推送前重新检查当前 HEAD、push URL、远端 main 与该提交的父 SHA 一致，只执行 `git push upstream HEAD:refs/heads/main`，不 force、不自动 pull/merge/rebase、不推任务分支或 tags。
 - 验收：提交实际 tree 仅三文件；hook 通过；普通 push 成功后再用 `git ls-remote` 核对远端 main 等于该提交 SHA。若远端前进、分叉、权限不足或审核缺口不允许发布，保留本地证据并准确报告，不强行覆盖。
 - 文档复核即使结论为 NEEDS_CONTEXT，也可作为明确未就绪的方案归档；它不产生安装 authority，不宣称 framework capability 已通过行为门。安装运行物的发布仍受 U-007/U-008 阻断门约束。
+- 首次文档提交/普通 push 已完成并核对远端 main 为 `68dc9403f53c234274a17a84e0e3e4ff81112229`。随后独立复核恢复，新增两项计划缺口，仅修订本计划与同路径 review report；这次 delta 使用第二个聚焦文档提交及普通推送，不 amend、不改已发布历史；文件面仍仅上述三个任务文档。远端曾提示 `Required Checks` 尚未满足，收据不把 push 成功当 CI PASS；检查实际结果并单独报告。
 
 ### 受保护用户工作
 
@@ -72,8 +73,9 @@ Status: PLANNED
 - 默认只分析/建议。仅当用户的任务或父任务已经授权对应文档写入、接受了具体领域取舍、目标在已核验 scope 内时，使用 apply_patch 落盘；已有授权不再逐行重复询问。
 - 项目默认领域产物：已验证项目根内 `docs/domain/glossary.md`，作为项目规格文档，不是 memory/promoted-facts 或 framework root CONTEXT 的旁路。先读已有术语，保留 canonical + definition + Avoid，并记录必要的关系/边界；有定案内容才懒创建。
 - 若项目已有其他权威 glossary，仅消费/更新已明确授权的那个 owner，不自动迁移、复制或改造项目 CONTEXT。安装过程不创建任何下游 glossary。
+- P2 owner：U-003 只向 `skill-invariants.md` P2 新增 `docs/domain/glossary.md` 保护登记及 P2-V 特例；这是持续就地维护的单一规格文件，不加日期/递增序号、不自动迁移权威 owner，已有内容须读后 surgical patch，版本依已授权的 Git/history 保留。既有 dated 输出的 P2/P2-V 不变；不因这一登记创建实际项目文件。
 - 框架 NO_PIN 调用只处理明确授权的 framework artifact；不推导一个下游项目、不写根 CONTEXT。live 写入测试仅在任务自有隔离框架 fixture 中指定 exact artifact。
-- ADR：只有既有 extraction-bar 三条件全真才提议；用户明确要求记录后才向已授权的 ADR artifact 写入；没有此请求不创建 docs/adr，不直接写 decisions.md、person memory 或 semantic facts。
+- ADR：只有既有 extraction-bar 三条件全真才提议；用户明确要求记录后才向已授权的 exact ADR artifact 写入；格式引用不引入默认 `docs/adr` 输出路径。若确需新默认路径，先停止并做 P2/文件清单 delta 及新批准。没有此请求不创建 docs/adr，不直接写 decisions.md、person memory 或 semantic facts。
 - glossary 更新不是重编稳定 ID 或改变原任务 scope 的授权；需求编号与工程覆盖门仍由原 owner 维护。
 
 ### 宿主消费与 Flow
@@ -114,11 +116,11 @@ Status: PLANNED
 
 - Source：inline 用户“动态识别”“并且支持认为手动和agent自动触发逻辑”（按人工手动理解）；DMR-003/004。
 - Dependencies：U-002。
-- Files：`.claude/commands/domain-modeling.md`、`.claude/skills/domain-modeling`（symlink）、`.agents/skills/domain-modeling`（symlink）；`.claude/skill-os/skill-routing-map.yaml`、`input-modes.yaml`、`model-routing.yaml`、`codex-viability.yaml`、`generated/skill-catalog.md`、`.claude/skills/office/references/office-wizard.md`。
-- Approach：入口只指 canonical，scope-safe narrow triggers；standalone/workflow/internal modes 同一能力合同；catalog 用现有 generator sync，不手改；wizard 仅改直接必要登记行，不执行向导。
+- Files：`.claude/commands/domain-modeling.md`、`.claude/skills/domain-modeling`（symlink）、`.agents/skills/domain-modeling`（symlink）；`.claude/skill-os/skill-routing-map.yaml`、`input-modes.yaml`、`model-routing.yaml`、`codex-viability.yaml`、`generated/skill-catalog.md`、`.claude/skills/office/references/office-wizard.md`、`.claude/skill-os/skill-invariants.md`（仅 P2 新路径登记/P2-V glossary 特例，不改既有保护合同）。
+- Approach：入口只指 canonical，scope-safe narrow triggers；standalone/workflow/internal modes 同一能力合同；catalog 用现有 generator sync，不手改；wizard 仅改直接必要登记行，不执行向导；按第 2 节登记 P2，触及不变量 owner 标 HIGH-INTEGRATION-RISK，U-007 对抗审查须覆盖此 additive delta。
 - Read List：上述 existing targets 编辑前全读；routing/check-registration；model-routing 三问；Codex viability；generator。
-- Test scenarios：/$/selector 入口；无词表关键词的意图；变量改名非触发；equal-weight mixed intent；alias 路径逃逸。
-- Verification：alias realpath 相等；policy、mode、tier、一份正文一致；registration/routing/context/parity suites；actual discovery 位于 U-007。
+- Test scenarios：/$/selector 入口；无词表关键词的意图；变量改名非触发；equal-weight mixed intent；alias 路径逃逸；持续 glossary 就地更新且不自动序号化、既有 dated 输出规则不回归。
+- Verification：alias realpath 相等；policy、mode、tier、一份正文一致；P2 登记与 exception 精确匹配且旧保护合同保留；registration/routing/context/parity suites；actual discovery 位于 U-007。
 - phase_type：task_execution；model_tier：core-execution；Status：PLANNED。
 
 ### U-004 — 接通真实消费面
@@ -148,10 +150,10 @@ Status: PLANNED
 - Source：DMR-003/004；inline 用户“动态识别”“自动触发”。
 - Dependencies：U-002/U-003/U-004/U-005。
 - Files：`scripts/test-domain-modeling-skill.mjs`、`scripts/test-domain-modeling-behavior.mjs`、`memory/evals/domain-modeling/fixtures.json`、`package.json`。
-- Approach：专用小评估器调用实际 Claude/Codex CLI，隔离 fixture、保留 raw evidence，按可观察结局判定；现有 behavioral_ab.py 只作其支持的 Claude guided tier no-op/回归辅助，不伪造 Codex model=sonnet，不把文本差异当建模通过。
+- Approach：专用小评估器调用实际 Claude/Codex CLI，隔离 fixture、保留 raw evidence，按可观察结局判定；A/B 显式按下列 target→tier 矩阵，不统一降为 guided。现有 behavioral_ab.py CLI 不接受 core-execution，但其 `judge(baseline, candidate, claims_change, model, must_hold, epsilon, skill_tier)` 与 TIER_MODELS 已支持 core：runner 对 Claude core arms 调库 `judge(..., model="opus", skill_tier="core-execution")`；guided arms 走现有 CLI sonnet/guided；不扩大范围改通用脚本。上述 guard 仅作辅助，必须同时通过语义结局/回归判定。Codex 独立用 actual inherited model + 对应 effort 的 raw arms 判定，不伪造 model=sonnet/opus。
 - Read List：现有 CLI 调用/trace 先例、behavioral_ab.py、eval-methodology、project-scope 生产测试的隔离先例；code-hygiene。
-- Test scenarios：下列 F01–F11，malformed/truncated output、timeout、missing CLI、错 root/alias、baseline 被 candidate 文件污染、评分器假 PASS。
-- Verification：新 suite 自测；actual runner 不可用/证据缺失必须 nonzero 或 UNKNOWN；mutation 临时变坏 alias、input mode 登记、评分器假阳性，应转红；不改真实项目或 global trust。
+- Test scenarios：下列 F01–F11，malformed/truncated output、timeout、missing CLI、错 root/alias、baseline 被 candidate 文件污染、评分器假 PASS、core arms 偷用 guided 档、缺 target A/B arm 或 missing P2 登记/错误序号化。
+- Verification：新 suite 自测；actual runner 不可用/证据缺失必须 nonzero 或 UNKNOWN；mutation 临时变坏 alias、input mode/P2 登记、评分器假阳性/档位错配，应转红；不改真实项目或 global trust。
 - phase_type：task_execution；model_tier：core-execution；Status：PLANNED。
 
 ### U-007 — 仓库门、双端 live、独立终版复审
@@ -159,7 +161,7 @@ Status: PLANNED
 - Source：DMR-001–004；framework-maintenance/cross-harness/FUSION 强制门。
 - Dependencies：U-001–U-006。
 - Files：`framework-audit/2026-09-16-domain-modeling-verification.md`、`framework-audit/2026-09-16-domain-modeling-final-review.md`（raw traces 放任务临时目录，报告绑定其 exact path/hash）。
-- Approach：先 deterministic suites，再两端 actual probes + Claude guided A/B；冻结 final diff/manifest，独立 quality-gate 与 default-REFUTE reviewer 串行核对；关键 gate FAIL 不进入 U-008。
+- Approach：先 deterministic suites，再两端 actual probes + 下列全部 target 的按档 A/B；冻结 final diff/manifest，独立 quality-gate 与 default-REFUTE reviewer 串行核对，包括 P2 additive delta；关键 gate FAIL 不进入 U-008。
 - Read List：冻结需求、U 清单、assertions、final manifest/diff；reviewer 不读实施历史；model-routing/routing-chain-check。
 - Test scenarios：缺票、误触发、无权限写入、未决项丢失、文本不同但建模未改善、老字节获新 review、测试假绿。
 - Verification：全部 BLOCKING + criteria PASS；UNKNOWN 不硬判 PASS；review 循环≤2，修改后回送终版闭合。
@@ -206,6 +208,19 @@ Wave：U-001 → U-002 → U-003 → U-004 → U-005 → U-006 → U-007 → U-0
 
 Baseline A/B 只接收预冻结 instructions + 相同 raw fixture，不得读取 candidate live文件；candidate discovery probes 可读取自身 isolated snapshot。候选结果必须满足上述结局，文本相似度差异只作辅助，不能充抵行为标准。
 
+### 必做 A/B target 与档位矩阵（FUSION⑥）
+
+| 被改/新增 skill prose | Claude actual arms | Codex actual arms | 覆盖的结局与回归 |
+|---|---|---|---|
+| domain-modeling | guided-execution → sonnet | inherited model、medium effort | 独立/语义建模、人工定案与写权限边界 |
+| brainstorm | core-execution → opus | inherited model、high effort | Oracle 术语歧义按需转介、accepted/proposed 区分、原 PRD/人工门不变 |
+| code-recon | guided-execution → sonnet | inherited model、medium effort | 代码与领域证据转介，不获得写权限、不劫持 recon |
+| tech-spec | core-execution → opus | inherited model、high effort | 领域未决项进入原 register、只阻断依赖合同、MUST gate 不丢失 |
+
+- 每个 target 至少同输入 positive + negative/control 各一对 baseline/candidate，source SHA 与 prose hash 在 U-001/U-007 冻结；用现有 `behavioral_ab.py extract --skill <existing target>` 提取可用 framework 日志中的 inline 输入，不因此跨读真实项目；不足则明示使用预冻结 synthetic fixture。新 domain-modeling baseline 是冻结的既有术语/ADR机制，不制造一个不存在的旧 skill。
+- 正例的预期可观察改进及 control 的原 owner/人工门/只读/覆盖合同逐 target 写入 fixture；只有换措辞或 textual delta 不算能力改进，no-op/回归/档位不符/任一缺 arm 为 BLOCK。
+- actual model、tier/effort、CLI 参数、输出 raw evidence 和拒绝/降级逐 arm 保存；若实际档位与声明不符或认证未产生模型输出则 UNKNOWN/BLOCK，不能自行填写票据。Plan/orchestrator prose 的宿主返回合同另由 F08 两端 actual probes 覆盖，不拿登记文件/存在性当自动 reach 成功。
+
 ## 5. BLOCKING 断言
 
 以下命令在隔离 candidate root 执行（除 rollout gate 明确在批准的目标 checkout）。每个命令 nonzero 阻断后续 phase；不存在的计划产物不得用省略命令当作PASS。
@@ -234,7 +249,8 @@ npm run test:project-transaction --silent
 node scripts/test-domain-modeling-behavior.mjs --harness claude --fixtures all --trials 1
 node scripts/test-domain-modeling-behavior.mjs --harness codex --fixtures all --trials 1
 # [BLOCKING] A05 — required A/B 与 mutation证据，不允许no-op/假阳性充抵
-node scripts/test-domain-modeling-behavior.mjs --harness claude --ab --trials 1
+node scripts/test-domain-modeling-behavior.mjs --harness claude --ab --targets domain-modeling,brainstorm,code-recon,tech-spec --trials 1
+node scripts/test-domain-modeling-behavior.mjs --harness codex --ab --targets domain-modeling,brainstorm,code-recon,tech-spec --trials 1
 node scripts/test-domain-modeling-skill.mjs --mutation
 # [BLOCKING] A06 — 实际落地字节、准确stage清单、保护集、终版独立票据
 node scripts/test-domain-modeling-skill.mjs --rollout
@@ -248,8 +264,8 @@ node scripts/test-domain-modeling-skill.mjs --rollout
 - C2：F03/F04不误触发，F08保留原owner/返回合同；防劫持与伪节点。
 - C3：F06写入仅发生在授权、已定案的exact artifact；F07/F10/F11无未授权写入或自动定案；防 DMR-002。
 - C4：F05显式区分代码证据、陈述与未决项；缺代码不伪造核验；防错误持久化。
-- C5：现有术语/ADR/memory规则一处权威，未复制独立晋升体系、未改root CONTEXT和必经Flow；防重复建设与范围扩大。
-- C6：F01–F11逐端有判定，缺票与基础设施故障不当PASS；final review绑定最后字节；防 DMR-004与旧review覆盖新修改。
+- C5：现有术语/ADR/memory规则一处权威，P2 新 glossary 与就地更新例外已接线、旧保护合同不变；未复制独立晋升体系、未改root CONTEXT和必经Flow；防重复建设与范围扩大。
+- C6：F01–F11逐端有判定，四个 prose targets 在各自档位有双端 A/B；缺票与基础设施故障不当PASS；final review绑定最后字节；防 DMR-004与旧review覆盖新修改。
 
 ## 6. 失败、回滚与批准门
 
@@ -264,7 +280,7 @@ node scripts/test-domain-modeling-skill.mjs --rollout
 
 完成：评审缺口被编译成输入/输出/定案/写入/返回合同、消费面、精确文件与双端验收矩阵；新HEAD已读取，用户dirty保护集已核对；用户新增提交/推送要求已纳入，第 0.1 节 remote/ref 与远端源 SHA 已核验。
 
-当前：本计划待独立静态复核及安装批准；无安装 worker 运行。所有 U 仍 PLANNED。首个 Codex 独立 plan reviewer 因 usage limit 未提供票据，此故障不算完成评审轮；最终文档复核结果另存第 0.1 节 exact review report，绑定本计划 SHA，不用自审补 PASS。
+当前：2026-09-17 Codex 复核通道恢复，对上一版计划提出两项 MAJOR readiness 缺口：A/B 未覆盖被改 core skill、glossary 输出未登记 P2。本版仅补上述合同与文档发布 delta，等待一次终版独立闭合及安装批准；无安装 worker 运行，所有 U 仍 PLANNED。Claude auth 仍缺票，安装前须通过 KILL-3。最终文档复核另存第 0.1 节 exact review report，绑定本版 SHA，不用自审补 PASS。
 
 恢复读取：本计划、既有redteam报告、source-freeze（产生后）、最新HEAD/status、runtime project-session/framework-maintenance/long-session、FUSION；从首个未完成U继续。不得复用旧baseline或从docs aliases推导项目。
 
