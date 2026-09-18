@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm, symlink, lstat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -10,12 +10,17 @@ const cli = process.env.PAGE_CONTEXT_TEST_CLI ?? resolve('scripts/page-context.m
 const root = await mkdtemp(join(tmpdir(), 'page-context-'));
 const html = '<!doctype html><main><h1>Tickets</h1><section data-module="table">Rows</section></main>';
 const hash = createHash('sha256').update(html).digest('hex');
-const page = { page_id: 'list', name: '列表', aliases: ['工单'], intent: '管理记录', scope: 'framework', source_ref: 'framework/list.html', source_hash: hash, viewport: { width: 1200, height: 800 }, states: ['default'], regions: [{ region_id: 'table', parent_id: null, name: '记录表格', aliases: ['数据'], intent: '管理行记录', anchor: { kind: 'attribute', name: 'data-module', value: 'table' } }] };
-let catalog = { schema_version: 1, retired_page_ids: [], pages: [page] };
+const page = { page_id: 'list', name: '列表', aliases: ['工单'], intent: '管理记录', scope: 'framework', lifecycle: 'live', carrier_eligible: false, source_ref: 'framework/list.html', source_hash: hash, viewport: { width: 1200, height: 800 }, states: ['default'], regions: [{ region_id: 'table', parent_id: null, name: '记录表格', aliases: ['数据'], intent: '管理行记录', anchor: { kind: 'attribute', name: 'data-module', value: 'table' } }] };
+let catalog = { schema_version: 2, retired_page_ids: [], pages: [page] };
 const catalogPath = join(root, 'catalog.json');
 async function save() { await writeFile(catalogPath, JSON.stringify(catalog)); }
 function run(...args) {
   const result = spawnSync(process.execPath, [cli, ...args, '--root', root, '--catalog', catalogPath], { encoding: 'utf8' });
+  assert.ok(result.stdout.trim(), result.stderr);
+  return { status: result.status, body: JSON.parse(result.stdout) };
+}
+function runPhaseAAt(testRoot) {
+  const result = spawnSync(process.execPath, [cli, 'phase-a-discovery', '--query', '我想查看工单数据', '--root', testRoot], { encoding: 'utf8' });
   assert.ok(result.stdout.trim(), result.stderr);
   return { status: result.status, body: JSON.parse(result.stdout) };
 }
@@ -33,6 +38,20 @@ try {
   assert.deepEqual(recalled.body.candidates[0].matched_terms, ['工单', '数据']);
   assert.equal(recalled.body.candidates[0].regions[0].region_id, 'table');
   assert.equal('confidence' in recalled.body.candidates[0], false);
+  const noHint = run('phase-a-discovery', '--query', '我想查看工单数据');
+  assert.equal(noHint.status, 0, JSON.stringify(noHint.body));
+  assert.deepEqual(noHint.body, { schema_version: 2, mode: 'phase_a_discovery', status: 'NO_HINT', ephemeral: true, candidate_hints: [] });
+  const missingRoot = join(root, 'missing-phase-a-root');
+  assert.deepEqual(runPhaseAAt(missingRoot), { status: 0, body: noHint.body }, 'an absent root is an unavailable discovery primitive, not a write target');
+  await assert.rejects(lstat(missingRoot), { code: 'ENOENT' }, 'phase A must not initialize a missing root');
+  const emptyRoot = join(root, 'empty-phase-a-root');
+  await mkdir(emptyRoot);
+  assert.deepEqual(runPhaseAAt(emptyRoot), { status: 0, body: noHint.body }, 'an uninitialized root returns the same controlled no-hint result');
+  await mkdir(join(emptyRoot, '.claude/skill-os/page-library'), { recursive: true });
+  await writeFile(join(emptyRoot, '.claude/skill-os/page-library/catalog.json'), '{ not-json');
+  const malformedCatalog = runPhaseAAt(emptyRoot);
+  assert.equal(malformedCatalog.status, 1, JSON.stringify(malformedCatalog.body));
+  assert.equal(malformedCatalog.body.error.code, 'INVALID_INPUT', 'an existing malformed catalog remains fail-closed');
   for (const id of ['detail-two', 'detail-three', 'form', 'home']) catalog.pages.push({ ...page, page_id: id, name: id, aliases: [], regions: [] });
   await mkdir(join(root, '.claude/skill-os/page-library/sources'), { recursive: true });
   await writeFile(join(root, '.claude/skill-os/page-library/sources/timeline.html'), html);
@@ -81,7 +100,7 @@ try {
   assert.equal((await select({ ...boxRecord, selection: { ...boxRecord.selection, width: 900 } }, '--preview', previewPath)).body.error.code, 'BOX_BOUNDS');
   assert.equal((await select({ ...boxRecord, selection: { ...boxRecord.selection, scale: 0 } }, '--preview', previewPath)).body.error.code, 'SCHEMA_INVALID');
   assert.equal((await select(boxRecord, '--preview', previewPath)).status, 0);
-  const { validateSelection, loadCatalog } = await import(pathToFileURL(cli));
+  const { carrierContractForPage, computeBindingHash, computeModuleContractHash, discoverCandidateHints, loadCatalog, validateCarrierBinding, validateCarrierBindingDraft, validateSelection } = await import(pathToFileURL(cli));
   const loaded = await loadCatalog({ root, catalogPath });
   await assert.rejects(validateSelection(loaded, { ...boxRecord, selection: { ...boxRecord.selection, client_x: NaN } }, { root, preview }), { code: 'SCHEMA_INVALID' });
   await assert.rejects(validateSelection(loaded, boxRecord, { root, preview: { manifest: preview, png: Buffer.from('not a PNG') } }), { code: 'STALE_SCREENSHOT' });
@@ -97,6 +116,84 @@ try {
   await assert.rejects(validateSelection(falseParent, realSelection, { root: resolve('.') }), { code: 'REGION_CONTAINMENT' }, 'source parent must actually contain its child region');
   assert.equal((await validateSelection(realCatalog, realSelection, { root: resolve('.') })).status, 'confirmed');
   console.log('PASS: real source containment -> forged filters/pagination rejected -> restored confirmed');
+  assert.equal(realCatalog.schema_version, 2);
+  assert.ok(realCatalog.pages.every(entry => entry.lifecycle === 'live' && entry.carrier_eligible === false));
+  assert.equal(discoverCandidateHints(realCatalog, '客户列表').status, 'NO_HINT', 'ordinary live references cannot become carriers by lexical match');
+  await assert.rejects(Promise.resolve().then(() => carrierContractForPage(realList)), { code: 'CARRIER_INELIGIBLE' });
+  const carrierHtml = '<main id="app"><section id="toolbar" data-module="toolbar"><span id="toolbar-label">Toolbar</span><div id="toolbar-slot"></div></section><section id="content" data-module="content"><span id="content-label">Content</span></section></main>';
+  await writeFile(join(root, 'framework/carrier.html'), carrierHtml);
+  const carrierPage = {
+    page_id: 'carrier', name: 'Carrier fixture', aliases: ['carrier records'], intent: 'Carrier contract fixture', scope: 'framework', lifecycle: 'live', carrier_eligible: true,
+    source_ref: 'framework/carrier.html', source_hash: createHash('sha256').update(carrierHtml).digest('hex'), viewport: { width: 1200, height: 800 }, states: ['default'],
+    regions: [{ region_id: 'canvas', parent_id: null, name: 'Canvas', aliases: [], intent: 'Carrier canvas', anchor: { kind: 'attribute', name: 'id', value: 'app' } }],
+    modules: [
+      { module_id: 'root', parent_module_id: null, name: 'Root', intent: 'Root module', anchor: { kind: 'attribute', name: 'id', value: 'app' }, required: true, allowed_actions: ['modify', 'preserve'], invariants: [{ invariant_id: 'root-shell', name: 'Root shell', anchor: { kind: 'attribute', name: 'id', value: 'app' } }] },
+      { module_id: 'toolbar', parent_module_id: 'root', name: 'Toolbar', intent: 'Toolbar module', anchor: { kind: 'attribute', name: 'data-module', value: 'toolbar' }, required: false, allowed_actions: ['modify', 'preserve'], invariants: [{ invariant_id: 'toolbar-label', name: 'Toolbar label', anchor: { kind: 'attribute', name: 'id', value: 'toolbar-label' } }] },
+      { module_id: 'content', parent_module_id: 'root', name: 'Content', intent: 'Content module', anchor: { kind: 'attribute', name: 'data-module', value: 'content' }, required: false, allowed_actions: ['modify', 'remove', 'preserve'], invariants: [{ invariant_id: 'content-label', name: 'Content label', anchor: { kind: 'attribute', name: 'id', value: 'content-label' } }] }
+    ],
+    slots: [{ slot_id: 'toolbar-slot', parent_module_id: 'toolbar', name: 'Toolbar slot', intent: 'Add toolbar controls', anchor: { kind: 'attribute', name: 'id', value: 'toolbar-slot' }, allowed_actions: ['add'] }]
+  };
+  carrierPage.module_contract_hash = computeModuleContractHash(carrierPage);
+  const carrierCatalog = { schema_version: 2, retired_page_ids: [], pages: [carrierPage] };
+  const carrierDraft = {
+    schema_version: 2, bundle_kind: 'carrier',
+    frozen_packet: { source_packet_sha256: '1'.repeat(64), applicability_set_sha256: '2'.repeat(64) },
+    binding: { page_id: carrierPage.page_id, source_ref: carrierPage.source_ref, source_hash: carrierPage.source_hash, module_contract_hash: carrierPage.module_contract_hash, carrier_profile: 'structural_carrier', actions: [{ action_id: 'C-01', action: 'add', slot_id: 'toolbar-slot' }] }
+  };
+  const prepared = await validateCarrierBindingDraft(carrierCatalog, carrierDraft, { root });
+  assert.equal(prepared.binding_sha256, computeBindingHash({ frozen_packet: carrierDraft.frozen_packet, binding: carrierDraft.binding }));
+  assert.equal(prepared.contract.module_contract_hash, carrierPage.module_contract_hash);
+  assert.equal(discoverCandidateHints(carrierCatalog, 'carrier records').candidate_hints[0].page_id, 'carrier');
+  const manyCarrierPages = Array.from({ length: 4 }, (_, index) => {
+    const entry = structuredClone(carrierPage);
+    entry.page_id = `carrier-${index + 1}`;
+    entry.name = `Carrier ${index + 1}`;
+    entry.aliases = ['carrier'];
+    entry.module_contract_hash = computeModuleContractHash(entry);
+    return entry;
+  });
+  const boundedHints = discoverCandidateHints({ schema_version: 2, retired_page_ids: [], pages: manyCarrierPages }, 'carrier');
+  assert.equal(boundedHints.status, 'CANDIDATE_HINTS');
+  assert.equal(boundedHints.ephemeral, true);
+  assert.equal(boundedHints.candidate_hints.length, 3, 'phase A emits no more than three non-binding hints');
+  const adoption = { actor: 'user', evidence: 'fixture:user confirmed carrier and TAC', confirmed_at: '2026-09-18T12:00:00Z', binding_sha256: prepared.binding_sha256, tac_sha256: '3'.repeat(64), carrier_content_hash: '4'.repeat(64), handoff_bundle_hash: '5'.repeat(64), carrier_profile: 'structural_carrier', output_profile: 'single' };
+  assert.equal((await validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption }, { root })).adoption.output_profile, 'single');
+  await assert.rejects(validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption: { ...adoption, binding_sha256: '0'.repeat(64) } }, { root }), { code: 'STALE_CARRIER_ADOPTION' });
+  await assert.rejects(validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption: { ...adoption, carrier_profile: 'visual_carrier' } }, { root }), { code: 'SCHEMA_INVALID' });
+  const overlapDraft = structuredClone(carrierDraft);
+  overlapDraft.binding.actions = [{ action_id: 'C-01', action: 'modify', module_id: 'root' }, { action_id: 'C-02', action: 'add', slot_id: 'toolbar-slot' }];
+  await assert.rejects(validateCarrierBindingDraft(carrierCatalog, overlapDraft, { root }), { code: 'CARRIER_ACTION_OVERLAP' });
+  const aliasLifecycle = structuredClone(carrierCatalog);
+  aliasLifecycle.pages[0].lifecycle = 'legacy_fixture';
+  aliasLifecycle.pages[0].carrier_eligible = false;
+  delete aliasLifecycle.pages[0].module_contract_hash;
+  delete aliasLifecycle.pages[0].modules;
+  delete aliasLifecycle.pages[0].slots;
+  await assert.rejects(validateCarrierBindingDraft(aliasLifecycle, carrierDraft, { root }), { code: 'PAGE_ALIAS_LIFECYCLE' });
+  aliasLifecycle.pages[0].aliases = [];
+  await assert.rejects(validateCarrierBindingDraft(aliasLifecycle, carrierDraft, { root }), { code: 'CARRIER_LIFECYCLE' });
+  await writeFile(join(root, 'framework/carrier-copy.html'), carrierHtml);
+  const sourceSwap = structuredClone(carrierCatalog);
+  sourceSwap.pages[0].source_ref = 'framework/carrier-copy.html';
+  sourceSwap.pages[0].module_contract_hash = computeModuleContractHash(sourceSwap.pages[0]);
+  assert.notEqual(sourceSwap.pages[0].module_contract_hash, carrierPage.module_contract_hash, 'source_ref participates in the module contract hash even when bytes match');
+  await assert.rejects(validateCarrierBindingDraft(sourceSwap, carrierDraft, { root }), { code: 'STALE_CARRIER_BINDING' });
+  const duplicateHtml = carrierHtml.replace('id="content-label"', 'id="toolbar-label"');
+  await writeFile(join(root, 'framework/carrier-duplicate.html'), duplicateHtml);
+  const duplicateIds = structuredClone(carrierCatalog);
+  duplicateIds.pages[0].source_ref = 'framework/carrier-duplicate.html';
+  duplicateIds.pages[0].source_hash = createHash('sha256').update(duplicateHtml).digest('hex');
+  duplicateIds.pages[0].module_contract_hash = computeModuleContractHash(duplicateIds.pages[0]);
+  const duplicateDraft = structuredClone(carrierDraft);
+  Object.assign(duplicateDraft.binding, { source_ref: duplicateIds.pages[0].source_ref, source_hash: duplicateIds.pages[0].source_hash, module_contract_hash: duplicateIds.pages[0].module_contract_hash });
+  await assert.rejects(validateCarrierBindingDraft(duplicateIds, duplicateDraft, { root }), { code: 'DOM_ID_DUPLICATE' });
+  const reusedAnchor = structuredClone(carrierCatalog);
+  reusedAnchor.pages[0].slots[0].anchor = structuredClone(reusedAnchor.pages[0].modules[1].anchor);
+  reusedAnchor.pages[0].module_contract_hash = computeModuleContractHash(reusedAnchor.pages[0]);
+  const reusedDraft = structuredClone(carrierDraft);
+  reusedDraft.binding.module_contract_hash = reusedAnchor.pages[0].module_contract_hash;
+  await assert.rejects(validateCarrierBindingDraft(reusedAnchor, reusedDraft, { root }), { code: 'REGISTERED_ANCHOR_REUSED' });
+  console.log('PASS: v2 carrier contracts bind frozen inputs, source identity, module graph, lifecycle and registered-anchor invariants');
   const treeHtml = '<main id="outer"><section id="group"><h2>Fields</h2><input><hr><div id="child"><span id="leaf">Value</span></div></section><aside id="sibling">Other</aside></main>';
   const treePage = { ...page, page_id: 'tree', source_ref: 'framework/tree.html', source_hash: createHash('sha256').update(treeHtml).digest('hex'), regions: [
     { ...page.regions[0], region_id: 'group', anchor: { kind: 'heading', tag: 'h2', text: 'Fields', ancestor_levels: 1 } },
@@ -104,7 +201,7 @@ try {
     { ...page.regions[0], region_id: 'sibling', anchor: { kind: 'attribute', name: 'id', value: 'sibling' } }
   ] };
   await writeFile(join(root, treePage.source_ref), treeHtml);
-  const treeCatalog = { schema_version: 1, retired_page_ids: [], pages: [treePage] };
+  const treeCatalog = { schema_version: 2, retired_page_ids: [], pages: [treePage] };
   const treeRecord = { ...confirmed, page_id: 'tree', source_hash: treePage.source_hash, kind: 'region', region_id: 'child' };
   assert.equal((await validateSelection(treeCatalog, treeRecord, { root })).status, 'confirmed', 'heading ancestor resolves to the group container');
   const wrongHeadingParent = structuredClone(treeCatalog);
@@ -147,7 +244,7 @@ try {
     assert.equal(run('validate').status, 0, `${name}: restore`);
     console.log(`PASS mutation: ${name} -> ${code} -> restored PASS`);
   }
-  await catalogMutation('schema version', data => { data.schema_version = 2; }, 'SCHEMA_INVALID');
+  await catalogMutation('schema version', data => { data.schema_version = 1; }, 'SCHEMA_INVALID');
   await catalogMutation('wrong scope', data => { data.pages[0].scope = 'project'; }, 'SCHEMA_INVALID');
   await catalogMutation('retired ID', data => data.retired_page_ids.push('list'), 'PAGE_ID_REUSED');
   await catalogMutation('duplicate page ID', data => data.pages.push(data.pages[0]), 'PAGE_ID_REUSED');

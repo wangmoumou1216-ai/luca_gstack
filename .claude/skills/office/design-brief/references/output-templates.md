@@ -77,14 +77,18 @@
 ## Design Generation Packet（原属 Phase 6.75 Step 1）
 
 ```markdown
-## Design Generation Packet（给 MagicPath / Open Design / Claude Design / HTML 生成器）
+## Design Generation Packet（冻结后给 MagicPath / Open Design / Claude Design / HTML 生成器）
+
+> **唯一需求事实源：** 本块只包含来自 design-brief 正文的需求、AC、D-series、STATE、语义位置和
+> 修改/保留边界。通过 Packet 门禁后按原字节冻结；后续的 `source_packet_sha256` 指向此版本。
+> `CandidateHint`、最终模板/模块 binding、TAC、handoff ID、OD project、授权和收据都不属于本块，
+> 也不得通过修改本块来加入。
 
 **生成目标**
 - 页面 / 组件名称：{name}
 - 目标平台：{desktop CRM / mobile / embedded component}
 - 输出目标：{用户所选工具 / 尚未选择；Open Design 为默认推荐}
 - 目标依据：{正文 Phase 6 的来源记录}
-- 工具项目标识：{已绑定 ID / 待交接入口确认；不得猜最近项目}
 
 **产品与用户目标**
 - 用户角色：{primary user}
@@ -117,14 +121,6 @@
 **页面与交互位置映射**
 - {语义页面/位置} → {交互职责} → {D-ID} → {全部适用 STATE} → {需求/AC 来源} → {约束} → {下游目标}
 
-**页面参考上下文（交接入口按 page-context 核验后附入同包）**
-- 参考策略：{正文已有选择 / 明确不用参考 / 待交接入口执行匹配}
-- reference：{none / 已确认参考；未决采用不得作为已确认参考送出}
-- page_id / region_id 或选区：{已确认值 / N/A}
-- 源版本与确认来源：{源 hash、有效预览/选区记录及真人消息索引 / N/A}
-- 接收方可达的参考材料：{整页参考、区域说明/标注图的实际附件或可达地址 / N/A}
-- 改动范围与保持范围：{来自正文及已确认位置；无参考时仍必填}
-
 **设计约束**
 - {正文中的产品、交互、权限与平台约束}
 - 设计系统：由用户在 OD / Claude Design 配置，本包不覆盖其视觉设置
@@ -139,8 +135,9 @@
 > **交互结构·信息架构子字段**：按 interaction-architecture 的 IA 判据（§1.6）填——层级 ≤3、命名取用户词汇、含混项显式标出；写「必须达成什么」，不画菜单树。
 > **状态覆盖块**：每状态的 UI expectation 写**语义期望**（如"空态含引导动作""错误可单击重试且保留输入"），内容语义以 brief 正文 Phase 3 的声明为源（Packet 不得含正文没有的事实）。
 > **位置映射块**：从正文第 7 节引用语义位置、职责及完整 D/STATE/AC，机器门名为 `page_interaction_mapping`。无参考不免除本块，所有核心决策和全部非 N/A 状态都须有下游去向；不得改填组件名、variant、Tailwind/CSS 或品牌色配额。
-> **页面参考上下文块**：唯一执行合同是 `.claude/skill-os/runtime/page-context.md`。设计源已对齐、即将交接时由入口完整读取至 FILE_END，OD 在编译前执行；本模板不触发第二次匹配或询问。仅高置信候选才推荐，采用须真人确认；低置信/无匹配不推荐，以 `reference=none` 非阻塞继续。已有有效确认复用，agent 写的 `confirmation.actor=user` 或 JSON evidence 不能代签。未决推荐或失效的用户指定源按该合同等待；页面采用不授予外部写入权。
-> **单一事实源**：产品、交互、状态、需求/AC 与修改边界只来自正文；第 7 节仅引用 brief 产出时已有的确认。交接入口的新确认附入同次 Packet 的运输元数据（`page-reference.json`），指向已通过门禁的 brief 来源及版本，不反写正文/第 7 节，不改变源 hash 或复制出第二套需求。没有库记录可用语义位置或截图局部定位，不强制入库。参考材料必须对接收方可达，本机路径不是附件。
+> **冻结与模板运输边界**：唯一执行合同是 `.claude/skill-os/runtime/page-context.md`。先冻结本 Packet，才由交接入口执行最终 `carrier-binding`；Phase-A `CandidateHint` 从不进入 Packet 或代替 adoption。有效 binding、`page-reference.json`、TAC 和 hash 是指向冻结 Packet 的**独立运输元数据**，不反写正文/第 7 节，也不复制出第二套需求。无最终绑定或用户拒绝模板时用互斥 `reference_only` bundle；它没有 base template、TAC、carrier hash 或模板衍生承诺。
+> **carrier 的视觉边界**：`structural_carrier` 只借 DOM、登记模块和内容结构；CSS/token/assets 不是视觉验收标准，OD 的设计系统仍由用户配置。只有显式 `visual_carrier` 且同时有 viewport、截图基线与允许差异阈值，才能把模板视觉作为约束。
+> **授权与可达材料**：最终 binding/adoption 不授予 OD stage；stage、run、recover 分别需要自己的授权。接收方可达的参考材料须通过 control files/实际附件提供，本机路径不是附件。
 > **目标与设计系统**：工具及平台继承正文来源；设计系统由用户在 OD / Claude Design 内配置，本包不注入旧 token 或组件技术映射。Claude Design 使用同包人工附加，导出、外部接收、生成完成分别记录。
 
 ---
@@ -161,6 +158,8 @@
 - 设计范围（来自 PRD）
 - 输出目标、平台与整页/局部范围及各自来源
 - 状态覆盖策略、页面与交互位置映射路径、确认参考或 reference=none
+- Packet 已冻结；`CandidateHint` 不是 Packet 字段或最终模板 binding。carrier 仅在最终 adoption + TAC/hash 确认后存在，否则是 `reference_only`
+- `structural_carrier` 不继承视觉；`visual_carrier` 只有同时具备 viewport、基线和差异阈值时才可用
 - **AI 专有状态的 UI 形式** — 本 skill 的状态覆盖表共 12 项，其中 AI 专有 7 项（思考中 / 低置信 / 拒答 / 部分完成 / 待 Steer / 幻觉兜底 / Agent 执行中）。**html-prototype 默认只处理前 5 项（默认/空/加载/错误/成功），若本决策含 AI 功能，必须额外生成所有非 N/A 的 AI 专有状态。**
 
 **下游工具不应该做：**
@@ -171,13 +170,14 @@
 - 不应用浮球 / 新标签页作为 AI 入口（违反 Raycast 锚点和 AI Slop 反模式）
 - 不应直接从 research / ux-research / deepresearch 发散新的产品功能
 - 不应复活 REMOVED 或 Rejected Directions
+- 不应把 `CandidateHint`、截图参考或 `reference_only` 称为模板衍生；不应以 base template、CSS 或 OD self-report 取代冻结 Packet
 
 **对生成工具的命令式指示（逐条执行）：**
 1. 读取本文件的"体验验证结论"节的 12 状态覆盖表
 2. 对每个"是否需要单独设计 = 是"的状态，**必须**生成对应的状态页
 3. HTML 产物用 `<!-- STATE: xxx -->` 注释标注；其他工具提供可核对的状态位置索引，保留 D/STATE/AC 追踪
 4. 若发现状态覆盖表某状态写 N/A 但本质上应该有，**不得静默补充**，返回 AskUserQuestion 确认
-5. 外部工具只复制 `Design Generation Packet`；需要追溯时回到 design-brief 正文，不读取零散上游材料
+5. 外部工具以冻结 `Design Generation Packet` 为唯一需求真相；carrier 的 TAC 只能投影其已有片段，`reference_only` 不产生模板衍生承诺
 ```
 
 <!-- FILE_END: design-brief/references/output-templates.md -->

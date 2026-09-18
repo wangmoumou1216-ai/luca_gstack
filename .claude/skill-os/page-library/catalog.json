@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "retired_page_ids": [],
   "pages": [
     {
@@ -15,6 +15,8 @@
       ],
       "intent": "浏览多条记录，搜索和筛选后比较、选择或批量处理；可作为移动列表的信息结构参考，桌面布局不是约束。",
       "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
       "source_ref": "framework/list-page.html",
       "source_hash": "717fe580063301810a1dc2f1c58892cef3f659f2ed934c162927657abc4bae6e",
       "viewport": {
@@ -126,6 +128,8 @@
       ],
       "intent": "查看一个对象的关键信息与完整资料，旁侧查看相关动态和协作记录。",
       "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
       "source_ref": "framework/detail-page-2col.html",
       "source_hash": "0c9edbd36d08ef29c1f80269bd9c10c9bdc749448eb3d246b825c50f141f0cc5",
       "viewport": {
@@ -241,6 +245,8 @@
       ],
       "intent": "并列呈现对象摘要、业务阶段或详细资料、活动协作，适合多信息区同时定位。",
       "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
       "source_ref": "framework/detail-page-3col.html",
       "source_hash": "ea2f9c1e8724022ff15e87c34f53205c25eb33dbcbf1450434319bc4fc3bfdd7",
       "viewport": {
@@ -377,6 +383,8 @@
       ],
       "intent": "集中创建或编辑对象，按字段分组输入资料；参考信息分组与填写位置，不继承旧组件技术规范。",
       "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
       "source_ref": "framework/form-page.html",
       "source_hash": "f5d57ff5ad8ef6451c72e0772bd0c5ad46def4130f1c94cc3802e732a95de674",
       "viewport": {
@@ -469,6 +477,8 @@
       ],
       "intent": "进入工作时汇总关键指标、待处理任务、常用工具、近期动态及日程；卡片内容可按需求增减。",
       "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
       "source_ref": "framework/home-page.html",
       "source_hash": "635b5c0ca37e725f6b45082fb8825c6429a79d5053cf01e0fb7a6dde0799cbaa",
       "viewport": {

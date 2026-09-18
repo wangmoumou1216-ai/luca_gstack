@@ -1,9 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:luca:page-library:1",
+  "$id": "urn:luca:page-library:2",
   "$ref": "#/$defs/catalog",
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "token": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z][A-Za-z0-9._:-]*$" },
     "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
     "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "aliases": { "type": "array", "items": { "$ref": "#/$defs/text" }, "uniqueItems": true },
@@ -22,14 +23,40 @@
       "required": ["region_id", "parent_id", "name", "aliases", "intent", "anchor"],
       "properties": { "region_id": { "$ref": "#/$defs/id" }, "parent_id": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }] }, "name": { "$ref": "#/$defs/text" }, "aliases": { "$ref": "#/$defs/aliases" }, "intent": { "$ref": "#/$defs/text" }, "anchor": { "$ref": "#/$defs/anchor" } }
     },
+    "lifecycle": { "enum": ["live", "legacy_fixture", "retired"] },
+    "carrier_action": { "enum": ["add", "modify", "remove", "preserve"] },
+    "carrier_profile": { "const": "structural_carrier" },
+    "module_invariant": {
+      "type": "object", "additionalProperties": false, "required": ["invariant_id", "name", "anchor"],
+      "properties": { "invariant_id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/text" }, "anchor": { "$ref": "#/$defs/anchor" } }
+    },
+    "module": {
+      "type": "object", "additionalProperties": false,
+      "required": ["module_id", "parent_module_id", "name", "intent", "anchor", "required", "allowed_actions", "invariants"],
+      "properties": {
+        "module_id": { "$ref": "#/$defs/id" }, "parent_module_id": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }] },
+        "name": { "$ref": "#/$defs/text" }, "intent": { "$ref": "#/$defs/text" }, "anchor": { "$ref": "#/$defs/anchor" }, "required": { "type": "boolean" },
+        "allowed_actions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["modify", "remove", "preserve"] } },
+        "invariants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/module_invariant" } }
+      }
+    },
+    "slot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slot_id", "parent_module_id", "name", "intent", "anchor", "allowed_actions"],
+      "properties": {
+        "slot_id": { "$ref": "#/$defs/id" }, "parent_module_id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/text" }, "intent": { "$ref": "#/$defs/text" }, "anchor": { "$ref": "#/$defs/anchor" },
+        "allowed_actions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "const": "add" } }
+      }
+    },
     "page": {
       "type": "object", "additionalProperties": false,
-      "required": ["page_id", "name", "aliases", "intent", "scope", "source_ref", "source_hash", "viewport", "states", "regions"],
+      "required": ["page_id", "name", "aliases", "intent", "scope", "source_ref", "source_hash", "viewport", "states", "regions", "lifecycle", "carrier_eligible"],
       "properties": {
         "page_id": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/text" }, "aliases": { "$ref": "#/$defs/aliases" }, "intent": { "$ref": "#/$defs/text" },
         "scope": { "const": "framework" }, "source_ref": { "$ref": "#/$defs/text" }, "source_hash": { "$ref": "#/$defs/hash" }, "viewport": { "$ref": "#/$defs/viewport" },
-        "states": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
-        "regions": { "type": "array", "items": { "$ref": "#/$defs/region" } }
+        "states": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }, "regions": { "type": "array", "items": { "$ref": "#/$defs/region" } },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" }, "carrier_eligible": { "type": "boolean" }, "module_contract_hash": { "$ref": "#/$defs/hash" },
+        "modules": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/module" } }, "slots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/slot" } }
       }
     },
     "confirmation": {
@@ -63,9 +90,36 @@
         { "properties": { "status": { "const": "confirmed" }, "kind": { "const": "box" } }, "required": ["page_id", "source_hash", "kind", "confirmation", "screenshot", "selection"] }
       ]
     },
+    "frozen_packet": {
+      "type": "object", "additionalProperties": false, "required": ["source_packet_sha256", "applicability_set_sha256"],
+      "properties": { "source_packet_sha256": { "$ref": "#/$defs/hash" }, "applicability_set_sha256": { "$ref": "#/$defs/hash" } }
+    },
+    "binding_action": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["action_id", "action", "slot_id"], "properties": { "action_id": { "$ref": "#/$defs/token" }, "action": { "const": "add" }, "slot_id": { "$ref": "#/$defs/id" } } },
+        { "type": "object", "additionalProperties": false, "required": ["action_id", "action", "module_id"], "properties": { "action_id": { "$ref": "#/$defs/token" }, "action": { "enum": ["modify", "remove", "preserve"] }, "module_id": { "$ref": "#/$defs/id" } } }
+      ]
+    },
+    "carrier_binding_target": {
+      "type": "object", "additionalProperties": false, "required": ["page_id", "source_ref", "source_hash", "module_contract_hash", "carrier_profile", "actions"],
+      "properties": { "page_id": { "$ref": "#/$defs/id" }, "source_ref": { "$ref": "#/$defs/text" }, "source_hash": { "$ref": "#/$defs/hash" }, "module_contract_hash": { "$ref": "#/$defs/hash" }, "carrier_profile": { "$ref": "#/$defs/carrier_profile" }, "actions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/binding_action" } } }
+    },
+    "carrier_binding_draft": {
+      "type": "object", "additionalProperties": false, "required": ["schema_version", "bundle_kind", "frozen_packet", "binding"],
+      "properties": { "schema_version": { "const": 2 }, "bundle_kind": { "const": "carrier" }, "frozen_packet": { "$ref": "#/$defs/frozen_packet" }, "binding": { "$ref": "#/$defs/carrier_binding_target" } }
+    },
+    "carrier_adoption": {
+      "type": "object", "additionalProperties": false,
+      "required": ["actor", "evidence", "confirmed_at", "binding_sha256", "tac_sha256", "carrier_content_hash", "handoff_bundle_hash", "carrier_profile", "output_profile"],
+      "properties": { "actor": { "const": "user" }, "evidence": { "$ref": "#/$defs/text" }, "confirmed_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$" }, "binding_sha256": { "$ref": "#/$defs/hash" }, "tac_sha256": { "$ref": "#/$defs/hash" }, "carrier_content_hash": { "$ref": "#/$defs/hash" }, "handoff_bundle_hash": { "$ref": "#/$defs/hash" }, "carrier_profile": { "$ref": "#/$defs/carrier_profile" }, "output_profile": { "enum": ["single", "candidate_set"] } }
+    },
+    "carrier_binding": {
+      "type": "object", "additionalProperties": false, "required": ["schema_version", "bundle_kind", "frozen_packet", "binding", "adoption"],
+      "properties": { "schema_version": { "const": 2 }, "bundle_kind": { "const": "carrier" }, "frozen_packet": { "$ref": "#/$defs/frozen_packet" }, "binding": { "$ref": "#/$defs/carrier_binding_target" }, "adoption": { "$ref": "#/$defs/carrier_adoption" } }
+    },
     "catalog": {
       "type": "object", "additionalProperties": false, "required": ["schema_version", "retired_page_ids", "pages"],
-      "properties": { "schema_version": { "const": 1 }, "retired_page_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }, "pages": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/page" } } }
+      "properties": { "schema_version": { "const": 2 }, "retired_page_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }, "pages": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/page" } } }
     }
   }
 }

@@ -19,6 +19,9 @@ assert.equal(preview.manifest.screenshot.height, 900);
 assert.equal(preview.manifest.screenshot.sha256, createHash('sha256').update(preview.png).digest('hex'));
 assert.equal(preview.manifest.regions.length, 5);
 assert.ok(preview.manifest.regions.find(region => region.region_id === 'filters').bounds.width > 500);
+assert.equal(preview.manifest.render.purpose, 'reference-preview');
+assert.equal(preview.manifest.render.carrier_closure_proof, false);
+await assert.rejects(renderPreview({ catalog, pageId: 'list', root, carrierOnly: true }), { code: 'CARRIER_INELIGIBLE' });
 console.log('PASS screenshot renders the registered list page with styled, positioned regions');
 const browser = await chromium.launch({ headless: true });
 try {
@@ -85,7 +88,7 @@ try {
   const fixtureSource = resolve(fixtureRoot, sourceRef);
   mkdirSync(dirname(fixtureSource), { recursive: true });
   const sixth = {
-    page_id: 'sixth', name: '新增参考页', aliases: ['新增页面'], intent: '验证后续登记的静态页面参考', scope: 'framework', source_ref: sourceRef,
+    page_id: 'sixth', name: '新增参考页', aliases: ['新增页面'], intent: '验证后续登记的静态页面参考', scope: 'framework', lifecycle: 'live', carrier_eligible: false, source_ref: sourceRef,
     source_hash: '', viewport: { width: 320, height: 240 }, states: ['default'],
     regions: [{ region_id: 'card', parent_id: null, name: '信息卡片', aliases: ['主体'], intent: '阅读卡片信息', anchor: { kind: 'heading', tag: 'h1', text: '新增参考页', ancestor_levels: 1 } }],
   };

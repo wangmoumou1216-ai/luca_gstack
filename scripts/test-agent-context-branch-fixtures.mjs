@@ -10,6 +10,17 @@ const positives = {
   'F13-page-handoff': {
     semantic_mapping: ['R-701|list|filters', 'R-702|list|records'],
     reference_layout: 'structural-reference',
+    phase_a_invocation: 'phase-a-discovery',
+    claude_phase_a_status: 'NO_HINT', codex_phase_a_status: 'NO_HINT',
+    claude_unavailable_status: 'NO_HINT', codex_unavailable_status: 'NO_HINT',
+    claude_no_hint_next: 'continue-design-brief', codex_no_hint_next: 'continue-design-brief',
+    candidate_hint_is_packet_truth: false, candidate_hint_is_final_binding: false,
+    final_binding_timing: 'after-frozen-packet', carrier_requires_adoption_tac_hash: true,
+    reference_only_template_derived: false, stage_run_recover_authority: 'separate',
+    recovery_scope: 'handoff-id-output-root', global_html_enumeration: false,
+    structural_inherits_visual: false,
+    visual_carrier_requirements: ['viewport', 'screenshot-baseline', 'difference-threshold'],
+    codex_carrier_before_probe: 'refuse-or-degrade',
     h_confidence: 'high', h_next: 'wait-adoption', h_write_now: false,
     l_visible_page_ids: [], l_reference: 'none', l_next: 'stage-none', l_write_now: true,
     n_reference: 'none', n_write_now: true,
@@ -65,7 +76,7 @@ export function branchFixturePositiveClaims(id) {
 
 export function testBranchFixtureShape() {
   const unbound = createBranchFixtures();
-  assert.equal(BRANCH_FIXTURE_VERSION, 'p6-page-flow-v2');
+  assert.equal(BRANCH_FIXTURE_VERSION, 'template-driven-od-v2');
   assert.deepEqual(Object.keys(unbound).sort(), ['F10-v2', 'F13-page-handoff', 'F14-flow-preservation']);
   assert.equal(unbound['F9-v2'], undefined, 'missing release binding invented an F9-v2 fixture');
   const openDesign = '.claude/skills/office/open-design/SKILL.md';
@@ -75,7 +86,8 @@ export function testBranchFixtureShape() {
     assert.ok(unbound[id].targets.includes(openDesign));
     assert.ok(unbound[id].targets.includes(pageOwner));
     assert.deepEqual(unbound[id].contractEdges, id === 'F13-page-handoff'
-      ? [[openDesign, pageOwner], [pageOwner, pageCatalog]] : [[openDesign, pageOwner]]);
+      ? [['.claude/skills/office/design-brief/SKILL.md', pageOwner], [openDesign, pageOwner], [pageOwner, pageCatalog]]
+      : [[openDesign, pageOwner]]);
   }
   const receiptRequest = unbound['F13-page-handoff'].request;
   for (const file of ['brief.md=BODY-701', 'page-reference.json=REGION-701', 'reference.png=PNG-701']) {
@@ -185,6 +197,13 @@ export function runBranchFixtureContractTests({ claimsMatch, answerSchema }) {
   reject('F13-page-handoff', { ...f13, semantic_mapping: ['R-701|list|pagination', 'R-702|list|records'] }, 'wrong semantic region passed');
   reject('F13-page-handoff', { ...f13, e_page_id: 'home', e_region_id: 'tasks' }, 'automatic ranker overrode explicit valid choice');
   reject('F13-page-handoff', { ...f13, carried_requirements: f13.carried_requirements.map((row) => row.replace('纷享销客', '')) }, 'legal source vocabulary stripped');
+  reject('F13-page-handoff', { ...f13, codex_phase_a_status: 'ERROR' }, 'Codex controlled NO_HINT degraded into an error');
+  reject('F13-page-handoff', { ...f13, claude_no_hint_next: 'bind-template' }, 'Claude bound a template after NO_HINT');
+  reject('F13-page-handoff', { ...f13, candidate_hint_is_packet_truth: true }, 'CandidateHint entered Packet truth');
+  reject('F13-page-handoff', { ...f13, final_binding_timing: 'before-packet' }, 'carrier binding occurred before Packet freeze');
+  reject('F13-page-handoff', { ...f13, reference_only_template_derived: true }, 'reference_only was called template-derived');
+  reject('F13-page-handoff', { ...f13, recovery_scope: 'global-project' }, 'recovery enumerated the project instead of one handoff output root');
+  reject('F13-page-handoff', { ...f13, codex_carrier_before_probe: 'run' }, 'Codex claimed unprobed carrier parity');
   const f14 = positives['F14-flow-preservation'];
   reject('F14-flow-preservation', { ...f14, recover_target: 'od-fixture-999' }, 'most-recent target guessed');
   reject('F14-flow-preservation', { ...f14, variant_bindings: ['od-fixture-a|DS-B', 'od-fixture-b|DS-A'] }, 'design-system bindings crossed');

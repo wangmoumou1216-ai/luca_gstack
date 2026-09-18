@@ -236,6 +236,26 @@ const openDesign = read('.claude/skills/office/open-design/SKILL.md');
 if (!/稳定 ID[^\n]{0,80}完整原文/.test(openDesign) || !/只有 ID 的清单不是需求正文/.test(openDesign)) {
   errors.push('open-design handoff does not preserve ID plus complete source text');
 }
+const designBrief = read('.claude/skills/office/design-brief/SKILL.md');
+if (!/phase-a-discovery/.test(designBrief)
+    || !/CandidateHint[\s\S]{0,180}(?:不得写入|不写入)[\s\S]{0,80}Packet/.test(designBrief)
+    || !/得到 `NO_HINT`，继续\s+design-brief/.test(designBrief)
+    || !/Packet[\s\S]{0,260}冻结[\s\S]{0,600}carrier-binding/.test(designBrief)) {
+  errors.push('design-brief lacks the V2 transient CandidateHint and frozen-Packet binding boundary');
+}
+const referenceOnlyHasExplicitNonDerivation = /reference_only[\s\S]{0,120}(?:必须明确标为|明确标为)[\s\S]{0,80}非模板衍生/.test(designBrief);
+const referenceOnlyHasCarrierBoundary = /reference_only[\s\S]{0,220}(?:不含|没有)[\s\S]{0,160}carrier hash/.test(designBrief);
+if (!referenceOnlyHasExplicitNonDerivation || !referenceOnlyHasCarrierBoundary) {
+  errors.push('design-brief does not keep reference_only separate from template-derived carrier delivery');
+}
+const codexCarrierProbeRefusal = /Codex 不假设 OD carrier parity[\s\S]{0,140}capability probe 有成功证据后才可执行 carrier stage\/run\/recover；\s*此前拒绝或受控降级/.test(openDesign);
+if (!/stage、run、recover 权限彼此独立/.test(openDesign)
+    || !/handoff ID\/output root[\s\S]{0,160}不全项目枚举 HTML/.test(openDesign)
+    || !/structural_carrier[\s\S]{0,200}(?:不构成视觉验收|不继承视觉)/.test(openDesign)
+    || !/visual_carrier[\s\S]{0,180}(?:viewport|基线)[\s\S]{0,120}(?:阈值|差异)/.test(openDesign)
+    || !codexCarrierProbeRefusal) {
+  errors.push('open-design lacks the V2 authority, scoped-recovery, carrier-profile, or Codex-probe boundary');
+}
 const pageContext = read('.claude/skill-os/runtime/page-context.md');
 if (!/只判断[^\n]{0,80}也读取本合同[^\n]{0,80}不运行/.test(pageContext)) {
   errors.push('page-context lacks decision-only contract loading boundary');

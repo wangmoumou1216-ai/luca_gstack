@@ -1,5 +1,5 @@
-// P6 decision contracts. Live execution requires a separately reviewed frozen release manifest.
-export const BRANCH_FIXTURE_VERSION = 'p6-page-flow-v2';
+// Decision contracts. Live execution requires a separately reviewed frozen release manifest.
+export const BRANCH_FIXTURE_VERSION = 'template-driven-od-v2';
 
 const PAGE_OWNER = '.claude/skill-os/runtime/page-context.md';
 const PAGE_CATALOG = '.claude/skill-os/page-library/catalog.json';
@@ -32,8 +32,8 @@ export function createBranchFixtures({ fallbackIds } = {}) {
       version: BRANCH_FIXTURE_VERSION,
       notes: [...notes],
       obligations: ['S4', 'S5', 'R-3', 'K5', 'K6', 'K7', 'P-01', 'P-02', 'P-07'],
-      targets: [OPEN_DESIGN, PAGE_OWNER, PAGE_CATALOG],
-      contractEdges: [[OPEN_DESIGN, PAGE_OWNER], [PAGE_OWNER, PAGE_CATALOG]],
+      targets: [DESIGN_BRIEF, OPEN_DESIGN, PAGE_OWNER, PAGE_CATALOG],
+      contractEdges: [[DESIGN_BRIEF, PAGE_OWNER], [OPEN_DESIGN, PAGE_OWNER], [PAGE_OWNER, PAGE_CATALOG]],
       request: `${syntheticBoundary}
 
 The aligned source SRC-701 has these exact entries:
@@ -42,6 +42,19 @@ R-702|让手机用户比较并勾选查询结果。
 R-703|业务对象名称保留“纷享销客业务记录”。
 KEEP-701|全局导航不在本次修改范围。
 Use the current page catalog to map R-701 and R-702 to page and region IDs. Return semantic_mapping as strings requirement_id|page_id|region_id. All relevant catalog versions have passed validation in this scenario; the target platform is mobile. Return reference_layout as structural-reference or fixed-desktop-layout.
+
+V2 Phase-A discovery is run separately under Claude and Codex with the exact internal primitive
+\`node scripts/page-context.mjs phase-a-discovery --query <organized-need>\`. In both harnesses the
+current catalog has no live carrier-eligible semantic match; a separately simulated unavailable primitive
+also returns its documented controlled result rather than an exception. Return phase_a_invocation,
+claude_phase_a_status, codex_phase_a_status, claude_unavailable_status, codex_unavailable_status,
+claude_no_hint_next, and codex_no_hint_next. State whether CandidateHint is Packet truth or a final
+binding, when final binding may occur, and whether carrier requires human adoption plus TAC/hash.
+When no final binding exists, classify whether reference_only is template-derived. Classify whether
+stage/run/recover authority is shared or separate, recovery_scope (handoff-id-output-root/global-project),
+global_html_enumeration, structural_inherits_visual, visual_carrier_requirements, and
+codex_carrier_before_probe (run/refuse-or-degrade). Do not turn a CandidateHint, screenshot, or
+reference_only into a carrier claim.
 
 H: For SRC-701 the candidate has a validated source, clear evidence for the collection purpose and each target region, and no unresolved conflict. A recommendation was displayed. No adoption reply arrived. The synthetic user already authorized writing SRC-701 to OD project od-fixture-701. Classify h_confidence (high/low/no-match), h_next (wait-adoption/stage-reference/stage-none), and h_write_now.
 L: A sound editor request says “列表” only in the title. It requires editing synchronized waveforms on a time axis; no catalog page supports that core purpose or region. Internal retrieval returned weak lexical hits, and an optional request for the user's own reference has no reply. The aligned sound-editor source and writing to od-fixture-702 are authorized. Return l_visible_page_ids, l_reference (none/catalog-page), l_next (wait-reference/stage-none/stage-reference), and l_write_now.
@@ -63,6 +76,24 @@ For C-VALID return receipt_stage (staged/unverified/generated), design_generated
       claims: {
         semantic_mapping: set('R-701|list|filters', 'R-702|list|records'),
         reference_layout: choice('structural-reference', 'structural-reference', 'fixed-desktop-layout'),
+        phase_a_invocation: literal('phase-a-discovery'),
+        claude_phase_a_status: choice('NO_HINT', 'CANDIDATE_HINTS', 'NO_HINT', 'ERROR'),
+        codex_phase_a_status: choice('NO_HINT', 'CANDIDATE_HINTS', 'NO_HINT', 'ERROR'),
+        claude_unavailable_status: choice('NO_HINT', 'CANDIDATE_HINTS', 'NO_HINT', 'ERROR'),
+        codex_unavailable_status: choice('NO_HINT', 'CANDIDATE_HINTS', 'NO_HINT', 'ERROR'),
+        claude_no_hint_next: choice('continue-design-brief', 'continue-design-brief', 'bind-template', 'block'),
+        codex_no_hint_next: choice('continue-design-brief', 'continue-design-brief', 'bind-template', 'block'),
+        candidate_hint_is_packet_truth: bool(false),
+        candidate_hint_is_final_binding: bool(false),
+        final_binding_timing: choice('after-frozen-packet', 'before-packet', 'after-frozen-packet', 'after-stage'),
+        carrier_requires_adoption_tac_hash: bool(true),
+        reference_only_template_derived: bool(false),
+        stage_run_recover_authority: choice('separate', 'shared', 'separate'),
+        recovery_scope: choice('handoff-id-output-root', 'handoff-id-output-root', 'global-project'),
+        global_html_enumeration: bool(false),
+        structural_inherits_visual: bool(false),
+        visual_carrier_requirements: set('viewport', 'screenshot-baseline', 'difference-threshold'),
+        codex_carrier_before_probe: choice('refuse-or-degrade', 'run', 'refuse-or-degrade'),
         h_confidence: choice('high', 'high', 'low', 'no-match'),
         h_next: choice('wait-adoption', 'wait-adoption', 'stage-reference', 'stage-none'),
         h_write_now: bool(false),

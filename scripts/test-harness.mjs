@@ -38,6 +38,56 @@ ok('H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）',
   ok('H8 claude: CC 专有原语全开', c.blockVerb && c.writeHook && c.inputMutation && c.workflow && c.askUserWidget);
 }
 
+// ── V2 template discovery: the internal Phase-A primitive must degrade to NO_HINT per harness ──
+// This is intentionally a real CLI invocation, not a prose-only promise. It does not reach OD,
+// write framework assets, or bind a template: an absent catalog/primitive is a controlled no-hint
+// result, while malformed supplied data remains the page-context validator's fail-closed concern.
+{
+  const { spawnSync } = await import('node:child_process');
+  const { mkdtempSync, readdirSync, rmSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const { tmpdir } = await import('node:os');
+  const { fileURLToPath } = await import('node:url');
+  const ROOT = fileURLToPath(new URL('..', import.meta.url));
+  const PAGE_CONTEXT = join(ROOT, 'scripts', 'page-context.mjs');
+  const harnessEnv = (kind) => {
+    const env = { ...process.env };
+    delete env.CLAUDE_PROJECT_DIR;
+    delete env.CODEX_HOME;
+    if (kind === 'claude') env.CLAUDE_PROJECT_DIR = ROOT;
+    else env.CODEX_HOME = join(tmpdir(), 'codex-template-discovery');
+    return env;
+  };
+  const invoke = (kind, root) => {
+    const result = spawnSync(process.execPath, [PAGE_CONTEXT, 'phase-a-discovery',
+      '--query', 'unrelated spatial sculpture', '--root', root], {
+      cwd: ROOT, encoding: 'utf8', env: harnessEnv(kind),
+    });
+    let body;
+    try { body = JSON.parse(result.stdout || ''); } catch { body = null; }
+    return { result, body };
+  };
+  for (const kind of ['claude', 'codex']) {
+    const discovered = invoke(kind, ROOT);
+    ok(`V2-${kind} discovery invokes phase-a-discovery without binding`,
+      discovered.result.status === 0 && discovered.body?.schema_version === 2
+      && discovered.body?.mode === 'phase_a_discovery' && discovered.body?.ephemeral === true
+      && discovered.body?.status === 'NO_HINT' && Array.isArray(discovered.body?.candidate_hints)
+      && discovered.body.candidate_hints.length === 0,
+    `status=${discovered.result.status} stdout=${(discovered.result.stdout || '').slice(0, 160)} stderr=${(discovered.result.stderr || '').slice(0, 160)}`);
+
+    const absentRoot = mkdtempSync(join(tmpdir(), `template-discovery-${kind}-`));
+    const unavailable = invoke(kind, absentRoot);
+    ok(`V2-${kind} unavailable discovery primitive degrades to NO_HINT without writes`,
+      unavailable.result.status === 0 && unavailable.body?.mode === 'phase_a_discovery'
+      && unavailable.body?.status === 'NO_HINT' && unavailable.body?.ephemeral === true
+      && Array.isArray(unavailable.body?.candidate_hints) && unavailable.body.candidate_hints.length === 0
+      && readdirSync(absentRoot).length === 0,
+    `status=${unavailable.result.status} stdout=${(unavailable.result.stdout || '').slice(0, 160)} stderr=${(unavailable.result.stderr || '').slice(0, 160)}`);
+    try { rmSync(absentRoot, { recursive: true, force: true }); } catch { }
+  }
+}
+
 // ── [深审 BLOCKER 修复] 端到端接线断言：harness 门必须真作用于**生产 emitter** ──
 // 首版只测纯函数 → harness.mjs 零生产调用者、S30 100% 永绿（守着不存在的不变量）。
 // 现两个 CC 强制动词出口（session-sync 的 decision:block / project-scope-guard 的

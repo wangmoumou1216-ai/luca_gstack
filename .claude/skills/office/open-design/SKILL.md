@@ -2,10 +2,10 @@
 name: open-design
 preamble-tier: 3
 argument-hint: "[design-brief 路径 | 要给 OD 的方案 md(单点交接) | 'recover/拉回来' 回收产物]"
-version: 3.3.1
+version: 4.0.0
 description: |
-  Open Design (OD) 连接器：已对齐设计源 → 高置信页面推荐与采用确认（或无参考）→ 指定 OD 项目交接与读回。
-  chain 消费 design-brief Packet；adhoc 忠实交接用户指定方案；recover 只回收已绑定项目，不重新编译。
+  Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only）
+  → 指定 OD 项目交接与 handoff-id/output-root scoped 读回。chain 消费 design-brief Packet；adhoc 忠实交接用户指定方案。
   设计系统由用户在 OD 配置，不注入本地 token/技术组件映射。默认桌面端生成；headless 必须显式 opt-in。
   用户指定 Claude Design 时仅导出同一中立包供人工交接，不探测 OD、不宣称自动导入。
   回收落盘 docs/prototype/；不接受 PRD 或已生成 HTML 当设计源。(luca_gstack)
@@ -46,12 +46,15 @@ done
 python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null || true
 ```
 
-> **模型（核心）：** luca_gstack 负责「设计源对齐 → 页面参考确认/无参考 → 编译指令 → 确认 platform 与工具目标 → 建项目 + 写 brief.md
-> （=stage）→ **默认交你在 OD 桌面端按生成**（走订阅会话，可靠）→ 你说「拉回来」回收落盘」。headless 一次性出图
-> （经 daemon /api/chat）为 **opt-in**：仅你显式要求"让 agent 自动出/用 headless"才走（实测不稳/慢，失败即回落桌面端）。
+> **模型（核心）：** luca_gstack 负责「已整理需求 → Phase-A 非绑定 CandidateHint → design-brief 冻结 Packet
+> → 最终页面/模块 binding → TAC 草案 → 真人确认 adoption + TAC/hash → stage immutable bundle
+> （=STAGED，不是生成）→ **默认交你在 OD 桌面端按生成** → 你说「拉回来」按 handoff ID 的指定 output root 回收」。headless 一次性出图
+> （经 daemon /api/chat）为 **opt-in**：仅你显式要求"让 agent 自动出/用 headless"且另有 run 授权才走。
 > **人工判断后置**：落盘后展示即止，迭代你在 OD 桌面端自行做（回收/下游由你点名）。与 magicpath/html-prototype 关系：
 > 三者的独立能力保留；本 OD flow 不因 daemon 故障自动换工具。用户明确改选本地 HTML 或 MagicPath 时才转交。
-> **连接走 daemon HTTP（动态端口）；`od mcp` 已注册时也可用其工具，二选一即可。**
+> **连接走 daemon HTTP（动态端口）；`od mcp` 已注册时也可用其工具，二选一即可。Codex 不因本 prose
+> 声称与 Claude 有 OD carrier parity：在各项 capability probe 提供本 harness 的证据前，Codex 对 carrier
+> stage/run/recover 必须拒绝或受控降级，不能执行或声称可达。**
 
 ---
 
@@ -66,7 +69,7 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 
 **0b. 前置检查：**
 ```
-□ [chain] 最新 design-brief 存在 + 含「Design Generation Packet」节？ 否→BLOCKED（先 /design-brief，或改单点交接）。
+□ [chain] 最新 design-brief 存在 + 含「Design Generation Packet」节，且 Packet 已通过门禁并冻结？ 否→BLOCKED（先 /design-brief，或改单点交接）。
 □ [adhoc] 用户点名产物存在、非空、可读？ 否→BLOCKED 明确报错（不静默建空项目）。
 □ [目标=OD] daemon 可达（Preamble OD_DAEMON=UP）？ DOWN→告知「请打开 OD 桌面端」，停在连接，不自动改选工具。
 □ 出图路径：**默认走 Phase 3D（OD 桌面端生成，可靠）**。仅当用户显式 opt-in headless（"让 agent 自动出图/用 headless"）
@@ -76,54 +79,68 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 > **headless 失败处理（可执行规则）：** retry 上限 1 后回落 Phase 3D 桌面端（不稳的具体表现权威见 Phase 3H）；不为它再造 auth/credit 探测。
 > **鉴权前置（正面约束）：** OD spawn 的本机 claude env 的 `USER` 须为真实用户名（如 `luca`）才走订阅；`USER` 缺失/为空/错值会回退 API-credit 账户报「Credit balance is too low」，`LOGNAME` 不顶用。
 
-**0c. 页面参考门（源就绪后、编译前的唯一执行点）：** 完整读取
-`.claude/skill-os/runtime/page-context.md`，执行目录语义判断、隔离预览和选择验证。
-DB 中的“页面与交互位置映射”描述设计职责，不表示用户采用了库页；不能凭映射存在默认附页。
-高置信推荐待用户真实采用/拒绝；低置信不展示，`reference=none` 直接继续，可选询问不阻塞。
-已确认且版本有效的选择复用，源失效则重确认。recover 跳过本步骤。页面确认与工具目标/写入权分开检查。
+**0c. Phase-A 与最终 binding 的边界：** design-brief 里的 `CandidateHint` 是已整理需求阶段的内部、短期
+发现结果，不能作为 page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1
+并冻结 Packet；只有随后完整读取 `.claude/skill-os/runtime/page-context.md`，运行其最终
+`carrier-binding` 验证、隔离预览和真人 adoption，才可进入 `carrier`。`NO_HINT`、无合格候选、
+用户拒绝或明确不用模板均不阻塞 Packet 交接，但只能走互斥 `reference_only`，绝不得称模板衍生。
+页面/模板采用不授予 OD stage；stage、run、recover 各自独立授权。recover 跳过本步骤。
 
 ---
 
 ## Phase 1：编译 OD 指令（luca_gstack 核心活；一次性产出，桌面端/headless 通用）
 
 把输入源编译成一份可交接的指令；这一步不授予生成或外部写入权限：
-- **chain**：抽交互文档的 **Design Generation Packet** 作主体；只用已定设计事实，不倒 PRD/research 原文。
-- **adhoc**：以用户点名产物**原文**为主体，忠实传递，不替它发散/编造。
-- 用户对话里**额外强调的需求点**（如「突出今日待跟进」）按原意编进去作重点；真实中文 B2B 文案，不要 Lorem。
+- **chain**：把已通过门禁的**冻结 Design Generation Packet**逐字节作为唯一需求主体；不倒 PRD/research 原文。
+- **adhoc**：以用户点名产物**原文**为主体，忠实传递，不替它发散/编造；adhoc 不具备冻结 Packet 时只能是 `reference_only`，不得临时伪造 carrier/TAC。
+- 用户在冻结前额外强调的需求必须回到 design-brief 整理并冻结新 Packet；冻结后不得把对话补充悄悄追加为
+  carrier 需求。真实中文 B2B 文案，不要 Lorem。
 
 **正文与参考：** 完整保留已对齐源中的需求/AC、D 决策及依据、非 N/A 状态、被否决方向、改/保留边界。
 每条稳定 ID 必须与其完整原文一起传递；只有 ID 的清单不是需求正文。交接前逐项核对需求、AC 与 KEEP 边界。
-附已验证的 page_id、区域或框选说明、源/截图版本及真人确认索引；无参考明确写 `reference=none`。
+最终 binding 后才附已验证的 page_id、模块/slot、区域或框选说明、源/截图版本及真人确认索引；
+无 carrier 明确写 `reference=none`/`bundle_kind=reference_only`。
 不附旧 token 表、技术组件映射或旧 HTML/CSS 实现命令，也不按品牌词正则清洗合法业务正文。
 旧技术规范若仍混在上游 Packet，返回其 owner 更正，不静默删掉相邻产品约束。
 
 **设计系统：** 用户在目标工具中配置。本仓不注入品牌叠加、不覆盖外部设置；缺本地 token 不阻塞。
-页面截图只用于结构/位置参考，不能暗示继承其桌面宽度、像素布局或视觉系统。
+页面截图只用于结构/位置参考，不能暗示继承其桌面宽度、像素布局或视觉系统。`structural_carrier`
+只允许继承 DOM、登记模块和内容结构；模板 CSS/token/assets 不构成视觉验收。只有人类明确选择
+`visual_carrier` 且提供 viewport、截图基线和允许差异阈值，才可把视觉作为约束。
 
 **生成要求：** 仅在用户明确要求一次性完整生成、且源没有未决设计问题时附对应生成指令；
 仅 stage 或人工导出不添加“已确认一切/不必反问”的授权断言，不吞掉仍需人决定的问题。
 
-运输包装复用 `scripts/design-flow-handoff.mjs`，不另建需求真值。正文、受控 PNG 与位置说明
-组成同一个中立包；本机路径不算接收方可达材料。每次使用唯一临时目录保存包，避免共享
-`/tmp/od_brief.txt` 被并行任务覆盖。Claude Design 只导出该包及附件清单，明确“已导出，尚未导入/生成”，到此交付；不调用 OD。
+运输包装复用 `scripts/design-flow-handoff.mjs`，不另建需求真值。carrier 必须在唯一、路径安全的
+`handoffs/<handoff-id>/` namespace 中拥有不可变 `input/`、`control/` 与 `output/` 根；
+`base-template.html` 只能在 carrier 的 `input/`，不允许回写 framework。`reference_only` 也使用独立
+namespace/输出根，但没有 base/assets/TAC/carrier hash。正文、受控 PNG 与位置说明必须实际作为附件，
+本机路径不算接收方可达材料。Claude Design 只导出相应包及附件清单，明确“已导出，尚未导入/生成”，
+到此交付；不调用 OD。
 
 **helper 调用合同（从仓库根导入；调用方先读实现，不把示例当已执行）：**
 
 ```js
-import { buildDesignHandoff, authorizeStage, verifyReadback, recoverTarget } from './scripts/design-flow-handoff.mjs';
-const bundle = await buildDesignHandoff({
-  source: { mode: inputMode, id: verifiedSourceId, body: alignedSourceBody },
-  target: { tool: targetTool, projectId: authorizedProjectId },
-  selection: pageSelection,
-}, { catalog, root, preview, verifiedUserDecision });
-// bundle.files 始终含 brief.md + page-reference.json；confirmed 时另含 reference.png。
-// 每个文件有 name/mediaType/bytes/sha256；只在已授权目录写这些精确文件，不再找项目别名。
+import {
+  buildDesignHandoff, buildReferenceOnlyHandoff,
+  prepareCarrierHandoff, confirmCarrierBundle, authorizeCarrierStage, authorizeCarrierRun,
+  verifyCarrierReadback, authorizeCarrierRecover, observeCarrierOutput, recoverCarrierOutput,
+  authorizeReferenceStage, verifyReferenceReadback, authorizeReferenceRecover,
+  observeReferenceOutput, recoverReferenceOutput,
+} from './scripts/design-flow-handoff.mjs';
+// carrier: page-context 已验证的 final binding → prepareCarrierHandoff →
+// confirmCarrierBundle(真人 adoption + TAC/hash) → authorizeCarrierStage → verifyCarrierReadback.
+// reference_only: buildReferenceOnlyHandoff → authorizeReferenceStage → verifyReferenceReadback →
+// authorizeReferenceRecover → observeReferenceOutput → recoverReferenceOutput；它不能获得 carrier 语义。
+// 调用前读取实现的精确参数合同；不要从本示例推断 selector、需求或额外写入权限。
 ```
 
-`inputMode=chain|adhoc|ux`；body 是已对齐的完整 Packet/方案/UX 问题正文，不是新写的摘要。
-`verifiedUserDecision` 由调用方核对实际用户消息后提供，包含 messageRef、evidence、confirmedAt、
-selection 及 previewSha256；该对象本身不是人类签名，测试夹具不能代替真实确认。
-selection 的无参考/未决语义以 page-context 为准；confirmed 必须配当前预览 manifest 与 PNG 字节。
+`inputMode=chain|adhoc|ux`；body 是冻结完整 Packet/方案/UX 问题正文，不是新写的摘要。
+carrier 的 final binding 必须使用 `validateCarrierBinding` 的通过结果：含 frozen Packet hash、
+module contract hash、闭合 action、真人 adoption 的 binding/TAC/carrier/bundle hashes 与 output profile。
+测试夹具、`confirmation.actor=user` 或 JSON evidence 不能代签 Human Gate。`single` 是当前确认的
+carrier output profile；`candidate_set` 未另获人类决定不得切换。Codex 在没有其自身 probe 证据时拒绝或
+降级 carrier，不拿 Claude 的成功记录代替能力验证。
 
 ---
 
@@ -143,106 +160,107 @@ selection 的无参考/未决语义以 page-context 为准；confirmed 必须配
 不替用户定。固定目标工具、准确项目 slug、新建/更新范围和写入授权后才进入 Phase 3；
 页面采用确认不替代这些权限。已有准确授权不反复索取。
 
+**2d. carrier profile（独立于设计系统）：** `structural_carrier` 只把不可变 base template 的 DOM、
+登记模块和内容结构作为实现载体；模板 CSS/token/assets 不构成视觉验收或 OD 设计系统输入。
+`visual_carrier` 只有用户明确选择，并同时给出 viewport、截图基线和允许差异阈值时才合法。当前
+Phase 1 合同默认/已确认的是 `structural_carrier + single`；实际每轮仍必须在 adoption/TAC hash 时
+确认相同 profile，不能根据 OD 输出偷偷切换。
+
 ---
 
-## Phase 3D：建项目绑定 + 写 brief.md → 交 OD 桌面端生成（**默认路径**）
+## Phase 3D：确认 namespace 后 stage immutable bundle（**默认桌面端路径的前半段**）
 
-把一切 staged 好，只把"按生成键"交给你在桌面端（走本机已登录订阅会话，可靠，不受 headless 子进程不稳影响）。
+本 Phase 只把已确认材料 stage 到准确 OD 项目；它不触发生成。先固定贯穿 stage/run/recover 的
+`project_id + handoff_id + output_root`：`handoff_id` 只允许 ASCII 字母、数字、`-`、`_`，本轮必须新且
+路径安全；同一轮仅使用 `handoffs/<handoff-id>/`。不得从最近项目、最近文件或同名 slug 推断任一值。
 
-**先定标识（贯穿 建项目→落盘→recover 同一 slug）：** `_TOPIC` 来自已验证任务；`_SLUG` 为明确授权的
-ASCII 安全短名（小写字母/数字/连字符，≤64 字符）。新建时使用唯一 slug，已有同名目标则停下确认，
-不能把碰撞当更新授权。建完核对响应实际 ID 与该 slug 相同，记入交接记录。多方案逐个保存目标绑定和
-读回结果；用户确实委托 DS 时才写 `designSystemId` 并逐目标核对，其他情况不覆盖外部设置。
+**carrier 必经顺序：**
 
-```bash
-# 1) 明确新建授权后建项目；仅用户委托绑定 DS 时向 body 增加已确认 designSystemId
-curl -s -X POST "$_OD_URL/api/projects" -H 'content-type: application/json' \
-  -d '{"id":"<slug>","name":"<topic>","metadata":{"platform":"<选定platform>","fidelity":"high"}}'
-# 2) 读回并核对 project.id 和 project.metadata.platform/fidelity；若用户委托 DS，同时核对 designSystemId
-curl -sf "$_OD_URL/api/projects/<slug>"
-# 3) 将中立包内 brief.md 和每个已采用参考 PNG 分别写入该项目 files API；不触发 /api/chat。
-# 文件 encoding/content 按实际 OD 接口支持的格式传入；不把本机路径当附件内容。
-# 4) GET /api/projects/<slug>/raw/<file> 逐个读回实际字节，与包的正文/附件核对。
-```
-**读回门：** 使用 `scripts/design-flow-handoff.mjs` 核对准确项目、brief 全文和全部附件字节。
-采用区域/框选时包内必须有整页受控截图及对应位置说明；缺附件、错项目、源版本变更或只有上传
-成功码均不能标 STAGED。接口不支持附件或不能读回时停在该项，报告“仅本地导出/接收未验证”，
-保留需求和已确认选择，不谎称已置入。模拟收据只证明本地逻辑，不证明真实 OD 接通。
+1. `page-context` 已返回有效的最终 `carrier-binding`，其 frozen Packet/source/module hashes 仍与当前
+   输入一致；`CandidateHint` 不能替代此结果。
+2. `prepareCarrierHandoff` 形成 immutable `input/`、`control/`、空 `output/` 及 canonical manifest。
+   `input/base-template.html` 和其通过 profile 的 assets 只能作为输入；不能把 framework 文件或输入重命名为输出。
+3. `confirmCarrierBundle` 验证真人 adoption 已覆盖最终 binding、TAC 内容/`tac_sha256`、
+   `carrier_content_hash`、`handoff_bundle_hash` 和 `output_profile=single`。任何 hash 漂移使旧确认失效。
+4. `authorizeCarrierStage` 只接受真实用户对准确 OD project、handoff ID、namespace、完整 staged 文件表、
+   `handoff_bundle_hash` 及单独 `stage=true` 的授权；模板采用、TAC 确认或 recover 授权都不是 stage 授权。
+5. stage 后由 `verifyCarrierReadback` 对 manifest 声明的**所有 immutable 输入**逐字节读回，同时验证
+   output root 仍不存在且全项目 inventory 只有该 namespace 的 allowlisted 输入变化。
 
-写入前调用 `authorizeStage(bundle, {tool:'od', projectId, write:true, messageRef})`，其中授权
-来自真实用户且覆盖本次源/附件和新建或更新范围；失败不发任何写请求。逐文件真实读回后调用
-`verifyReadback(bundle, {tool:'od', projectId, files:[{name,bytes}], readRef})`，`projectId` 来自
-已核对 API 项目响应，files 的 bytes 来自该项目 raw 响应，不可用本地原包冒充读回。
-只有该步骤返回 STAGED 且调用方有真实响应证据才报告接收成功。Claude Design 不调用这两个 OD 步骤。
+`reference_only` 不调用 carrier helpers：它走 `buildReferenceOnlyHandoff` 及独立的
+`authorizeReferenceStage` / `verifyReferenceReadback`，仍绑定其 bundle hash、project、handoff ID 和
+output root，但没有 base/assets/TAC/carrier hash，也不能报告“模板衍生”。两种 bundle
+中出现未知文件、非空/重叠 output 根、错误项目、缺项或仅上传成功码均为 `BLOCKED`，不自动清理证据。
 
-完整读回后一句话告知（不 AskUserQuestion、不阻塞）：
-1. 已在 OD 项目 `<slug>` 写入并读回 `brief.md` 与 `<实际附件清单/无参考>`；设计系统由你在 OD 配置（已委托绑定则报告实际 ID）；
-2. 请在 OD 桌面端打开项目 `<slug>`、引用 `brief.md` 及页面附件让它生成；
-3. 生成完成后说「拉回来」，我走 recover（Phase 4）回收最新 index.html 落盘。
+只有步骤 5 的真实读回能报告 `STAGED`。`STAGED` 只表示材料接收，不等于生成完成、需求验收或项目节点
+DONE。Claude Design 仅可导出包，不能调用 OD stage。Codex 在独立 capability probe 没有成功证据前不得
+执行或声称 carrier stage 可达；它必须给出受控拒绝/降级，而不是复用 Claude 的结果。
 
-> STAGED 只表示材料接收，不等于生成完成或项目节点 DONE；daemon 不可达也不自动转去本地生成器。
+完整读回后一句话告知：已在指定 OD 项目和 `handoff_id` 写入并读回 immutable bundle；请在 OD 桌面端
+从该 handoff namespace 生成。生成后说「拉回来」并给出或引用同一 handoff ID；回收只检查该 output root。
 
 ---
 
 ## Phase 3H：headless 一次性触发生成（**opt-in**；仅你显式要求）
 
-> 你未显式要 headless → 跳过本节，走 Phase 3D。本路径本 session 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启）。
+> 你未显式要 headless → 跳过本节，走 Phase 3D 的桌面端生成。本路径本 session 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启）。
 
 ```bash
-# 先完成 Phase 3D 的目标授权与全部材料读回；conversationId 取建项目响应，不重建目标。
-# 4) headless 触发：/api/chat 必须带 agentId（漏了→AGENT_UNAVAILABLE）；body 用文件避免转义
-# 在本次唯一临时目录内创建请求文件：projectId、conversationId、完整 message（含附件引用）、
-# skillId=web-artifacts-builder、agentId=claude；_OD_CHAT_FILE/_OD_STREAM_FILE 指向同一目录。
+# 先完成 Phase 3D 的 carrier stage/readback；headless 授权另行绑定 run=true、prompt_hash、
+# project_id、handoff_id 和 output_root，绝不由 stage/adoption 推断。
+# /api/chat 必须带 agentId（漏了→AGENT_UNAVAILABLE）；body 从唯一临时请求文件读取，
+# 并只引用当前 handoff namespace 内的 immutable inputs。
 curl -sN --max-time 1800 -X POST "$_OD_URL/api/chat" -H 'content-type: application/json' --data @"$_OD_CHAT_FILE" > "$_OD_STREAM_FILE" 2>&1
 ```
-- 生成耗时几分钟，建议后台任务跑 + 轮询 `/api/projects/<slug>/files` 直到出 `index.html`。
-- daemon 可能中途重启（端口变）→ 轮询/回收前**重新探测 `$_OD_URL`**。
-- 失败处理（**重试上限 1**）：首次 /api/chat 若立即 canceled（SIGTERM）或只出交接材料无原型 → 确认无产物后**原样重试一次**；再次失败（failed/canceled/narrate-but-no-file）→ **不再硬重试**；项目与材料已 stage，**不要重建**，直接跳到 Phase 3D 的「告知用户在桌面端生成」那步。
-- `od mcp` 工具可用时，等价用 `create_project`/`write_file`/`start_run`/`get_run`/`get_artifact`。
+- 生成耗时几分钟；只观察 `handoffs/<handoff-id>/<output_root>`，不得扫项目的其他 HTML 或其他 handoff。
+- daemon 可能中途重启（端口变）→ run/observe/recover 前**重新探测 `$_OD_URL`**。
+- 失败处理（**重试上限 1**）：首次 /api/chat 若立即 canceled（SIGTERM）或指定 output root 没有产物，确认该 root 后原样重试一次；再次失败 → 不再硬重试、不重建，回到桌面端生成说明。
+- `observeCarrierOutput` 只把带可读 run ID/prompt hash/handoff ID 的证据标为 `OD_RUN_OBSERVED`；
+  桌面端用户报告只能是 `USER_GENERATION_REPORTED`。二者随后都还要真实 output readback 才能成为 `GENERATED_OBSERVED`。
+- `od mcp` 工具可用时，等价调用也必须保留上述 namespace、独立 run 授权和证据边界。Codex 无本 harness probe 证据时拒绝本 Phase。
 
 ---
 
-## Phase 4：回收落盘 + 写 prototype-spec.md
+## Phase 4：按 handoff ID / output root 回收 + 写 prototype-spec.md
 
-**recover 先核对已绑定项目：** slug 来自本次用户明确指定或已核验交接记录；未知/多目标未决
-则询问并等待。禁止按最近更新时间猜项目，不重新匹配页面、编译需求、创建项目或触发生成。
-回收仅在当前已验证项目范围落盘；NO_PIN 独立测试只记录显式临时输出，不执行下方 docs 命令。
-先调用 `recoverTarget({tool:'od', projectId:boundProjectId})`；此函数只验证目标标识，不推断授权，
-随后核对真实项目响应 ID 再列取该项目产物。
+**recover 的唯一定位键：** 用户或已核验的 stage record 必须给出同一 `project_id + handoff_id + output_root`
+和本轮 `handoff_bundle_hash`。缺任一项就询问并等待；禁止按最近更新时间、项目级目录、文件名或
+“所有 HTML”猜目标。recover 不重新匹配页面、编译需求、创建项目、触发生成或枚举其他 handoff。
+它有独立 recover 授权，不能由 adoption、stage 或 run 授权推断。
+调用方必须把当前 harness runtime 显式传入 authorization helper；能力收据的 `runtime`
+必须与之完全一致，Codex 不得复用 Claude 收据，反之亦然。recover 授权必须在读取
+output 字节之前完成：`authorizeCarrierRecover` / `authorizeReferenceRecover` 仅绑定已验证的
+STAGED 收据，然后才能调用各自的 `observe*Output`。
 
 ```bash
-# 0) recover 前重探端口（daemon 可能重启换端口）
-_PID=$(pgrep -f "prebundled/daemon/daemon-sidecar"|head -1); _P=$(lsof -nP -p "$_PID" 2>/dev/null|grep -oE '127.0.0.1:[0-9]+ \(LISTEN\)'|grep -oE ':[0-9]+'|tr -d ':'|head -1); [ -n "$_P" ] && _OD_URL="http://127.0.0.1:$_P"
-# 1) _SLUG 必须已由用户或准确交接记录绑定；缺失即停止本段，询问用户，不列最近项目猜测
-[ -n "$_SLUG" ] || { echo "NEEDS_CONTEXT: 缺少已绑定 OD 项目 slug"; exit 1; }
-[ -z "$_TOPIC" ] && _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-# 2) 列出全部 html 产物（OD 可能一次出多个方案 + 一个导航页，别假设只有一个）
-curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;fs=json.load(sys.stdin).get('files',[]);[print(f\"{f['name']}\t{f.get('size',0)}\") for f in fs if f.get('name','').endswith('.html')]"
-# 3) 全部回收到同一目录（保住彼此的同级相对链接），不要只取 index.html
-_DIR="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"; mkdir -p "$_DIR"; _N=0
-for _f in $(curl -s "$_OD_URL/api/projects/$_SLUG/files" | python3 -c "import sys,json;[print(f['name']) for f in json.load(sys.stdin).get('files',[]) if f.get('name','').endswith('.html')]"); do
-  curl -sf "$_OD_URL/api/projects/$_SLUG/files/$_f" -o "$_DIR/$_f" && [ -s "$_DIR/$_f" ] && { echo "回收 $_f"; _N=$((_N+1)); }
-done
-[ "$_N" = "0" ] && echo "OD 项目 $_SLUG 还没出 HTML 产物——请桌面端生成完再说『拉回来』；不落盘、不标 DONE"
-# 4) 判形态：STATE 注释数/体积区分「导航页」与「原型本体」，据此定谁是 index.html
-grep -c "STATE:" "$_DIR"/*.html 2>/dev/null
+# 仅在经授权的准确项目和 handoff namespace 内读取 manifest 声明的 output root。
+# 不调用“列出项目所有 .html”的 API/命令；不读取 input/ 或另一个 handoff 的输出。
+# carrier + single 只允许 handoffs/<handoff-id>/output/index.html 及其已解析的 output/assets 闭包。
+# reference_only 只允许其 manifest 的 expected-files/output profile，不能套用 carrier 收据。
 ```
-> **多产物处置（2026-07-22 实证补入，SC-20260722-004）：** OD **会**一次产出多个设计方向 + 一个导航页
-> （实测：`index.html` 8KB 导航页 + 两个 ~55KB 方案，STATE 注释数 1 / 8 / 8）。旧脚本「优先 index.html」
-> 只会落盘那个导航页，**两个真原型留在 OD 里丢失，且落盘后导航页的同级相对链接全断，还会标 DONE**。
-> 规则：① **全部回收、同目录放置**（保住相对链接）② 用 STATE 注释数/体积**判形态**，别按文件名假设
-> ③ 多方案时 prototype-spec 与 handoff **必须显式写「未收敛，进入正式交付或工程前须先定方案」**
-> ④ 用户选定后，把选定方案 **`mv`（不是 `cp`）到 `index.html`**（下游按此固定路径发现），
-> 原导航页改名保留并修正其链接——`mv` 是为了避免两份副本日后漂移。
-> **守卫：** 只有真·HTML 入口被回收且文件非空，才进 Phase 5/6 标 DONE；否则告知用户产物还没出、不落盘、不写 handoff。
-**回收保真门：** 核对目标、文件清单、实际非空原型、相对链接和需求/状态覆盖，不按旧 FxUI 色值
-黑名单验收外部设计。不掌握目标工具的实际设计规范时，不声称其规范合规；一般 UX 问题仍可记录。
-HTML 使用 `/files/<name>` 取存储原文；`/raw/<name>` 是预览路径，可能注入 bridge 或转换 HTML，不能据此声称字节保真。
+
+调用 `recoverCarrierOutput` 前后必须重验全部 immutable inputs、绑定的 Packet/TAC/carrier/bundle hashes、
+精确 output inventory 和全项目 content-hash inventory。carrier `single` 的 `output/index.html` 必须是
+新、非空、通过输出 asset closure 的文件；有非-`preserve` TAC action 时它必须与 `base-template.html`
+字节不同。任何额外 HTML、candidate、未知文件、输入/输出重叠、逃逸资源、base 改名/复制、锚点或
+preserve 不变量失败都 `BLOCKED`，保留证据但绝不自动删除。`implementation-manifest.json` 只是
+不可信辅助信息，不能单独证明生成或语义完成。
+
+`observeCarrierOutput` 可把指定 root 的实际新产物标为 `GENERATED_OBSERVED`，但 provenance 必须诚实：
+桌面端没有 run ID 时只能记录用户报告和实际 readback；可读 run ID/prompt hash/handoff ID 只提高
+provenance，不能代替 output 完整性或人工语义验收。最终本地 `recovery-receipt.json` 由 recover 写在
+OD 项目外，绑定 handoff ID、所有 hash、实际 output closure、module trace/invariant 结果、机械结论和
+仍待人工确认项；它绝不作为 OD 可改写的输入。
+
+`candidate_set` 是另一个预先确认的 profile；当前 `single` 发现候选或额外 HTML 时不得自动挑选、复制、
+改名或切换 profile。`reference_only` 的正常回收不是模板衍生，也不能含 carrier receipt 字段。
 
 **写 prototype-spec.md**（读 `html-prototype/SCHEMA.md`，框架来源填 `open-design`）：设计意图（迁移自交互文档）；
-Design Decision Coverage 标 best-effort（chain）/「源=<产物>无决策矩阵」（adhoc），**不伪装 100% 可追踪**；
-语义位置与实现清单从实际 HTML 归纳，保留 D/STATE/AC 与已确认参考索引；记录实际外部 design system
-（未核验则 UNKNOWN）+ platform；交接块说明 source=open-design、准确 OD slug、未实现项及实际入口。
+carrier 的 Design Decision Coverage 必须引用 recovery receipt 的 TAC/applicability trace；`reference_only`
+标为「非模板衍生，源=<产物>，无 TAC」，adhoc 不伪装 100% 可追踪。语义位置与实现清单从实际
+`output/index.html` 归纳，保留 D/STATE/AC、已确认 reference/binding 索引和本轮 handoff ID；记录实际
+外部 design system（未核验则 UNKNOWN）+ platform。交接块说明 source=open-design、准确 OD project、
+handoff ID、bundle kind、provenance、未实现项及实际入口。
 
 **开发交接补全（仅下游=开发/场景1 时追加）**：若本原型将进自家开发链（tech-spec/task-plan），
 在 prototype-spec.md 追加"开发交接补全"节，补 **组件 props / 响应式断点 / design token 清单 / 动效**
@@ -253,12 +271,14 @@ Design Decision Coverage 标 best-effort（chain）/「源=<产物>无决策矩�
 
 ## Phase 5：落盘交付 → 迭代主体在用户（OD 桌面端）
 
-落盘后 `open` 产物给用户，一句话告知（**不阻塞提问、不 AskUserQuestion**）：
-1. 产物已落盘 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
+只有 Phase 4 的 scoped recover receipt 通过、且独立语义验收不再待确认时才可标 DONE。落盘后 `open`
+产物给用户，一句话告知（**不阻塞提问、不 AskUserQuestion**）：
+1. 产物已从 `<handoff-id>/output/index.html` 回收至 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
 2. 要迭代请直接在 OD 桌面端继续改，改完说「拉回来」走 recover 入口回收最新版；
 3. 要回这里改字段布局时，点名即可；外部 Figma 交付由用户现有工具操作完成。
 
-> （若本次走 Phase 3D 桌面端生成：你首次说「拉回来」就是**首版回收**，同 Phase 4 逻辑，不是迭代。）
+> （若本次走 Phase 3D 桌面端生成：你首次说「拉回来」就是**首版回收**，同 Phase 4 逻辑，不是迭代；
+> 只有 `reference_only` 时不得把该首版称为模板衍生。）
 
 > 依据 2026-06-10 luca 指示：「要迭代我会在 od 里面去迭代。如果真的需要回到这里改字段
 > 布局，我会在这里跟你说。」agent 不代理迭代轮、不替用户判断符合与否。
@@ -276,24 +296,31 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 ```
 **Handoff**（`docs/handoff/YYYY-MM-DD-<topic>-open-design-handoff.md` ≤2000 tokens）：决策（≤8：选的 platform/DS、
 用户判断结论、已确认参考/无参考）；约束（≤5：实际 index.html 路径、source=open-design、修改/保持边界与外部设置）；
-风险（≤3：traceability best-effort、OD beta/动态端口、未还原项）；产出路径 + **OD 项目 slug=`$_SLUG`（供日后 recover 定位）**。
+风险（≤3：traceability/语义待确认、OD beta/动态端口、未还原项）；产出路径 + **OD 项目、handoff ID、
+output root 与 bundle hash**（供日后 scoped recover 定位）。
 
 ---
 
 ## ⚠️ 末尾核心约束
 
-1. **默认桌面端生成；headless 为 opt-in**（权威见 Phase 0b / 3D / 3H）：默认 stage 后交你在桌面端按生成→「拉回来」回收；headless 为显式 opt-in，其重试上限与回落规则以 Phase 3H 为准。
-2. **人工判断后置，迭代主体=用户在 OD**：落盘后展示即止、不阻塞提问；用户在 OD 桌面端
-   自行迭代，回收（recover）由用户点名触发（2026-06-10 luca 指示）。
-3. **本地 token/技术组件映射不注入交接包**；设计系统由用户在外部工具配置，缺本地资产不阻塞。
-4. **先确认平台、准确目标与写入权再建项目**；设计系统仅在用户明确委托时绑定并核验。
-   页面确认不是外部写入授权；低置信不推荐，reference=none 仍须保留全部需求与状态。
-5. **输入是设计产出**（交互文档 或 单点方案 md），不是 PRD、不是已生成 HTML；源缺失不静默建空项目。
-6. **桌面端动态端口**：每段都用 pgrep+lsof 重测 `$_OD_URL`，不写死；daemon 重启端口会变。
-7. **/api/chat 必须带 `agentId`**（如 "claude"），否则 AGENT_UNAVAILABLE。
-8. **落盘路径固定** `docs/prototype/YYYY-MM-DD-<topic>/index.html` + `prototype-spec.md`，供交付审查与后续实现恢复。
-9. **traceability 诚实标注**；已 pin 的产品回收 **handoff + workflow-state 不可省略**。
-   纯导出/阶段STAGED不提前写节点DONE；NO_PIN维护/独立测试不触碰项目状态。
+1. **Packet 是唯一需求事实，先冻结再绑定**：Phase-A `CandidateHint` 只是内部短期发现，绝不写入 Packet、
+   绑定或 TAC。最终 `carrier-binding` 必须在冻结 Packet 后重新验证，且真人 adoption + TAC/hash 确认不可省略。
+2. **carrier 与 `reference_only` 互斥**：无最终绑定、用户拒绝或明确不用模板就走 `reference_only`；它不含
+   base/assets/TAC/carrier hash，截图/参考也绝不能称为模板衍生。
+3. **structural 与 visual 精确区分**：`structural_carrier` 只继承 DOM/登记模块/内容结构，不继承视觉验收；
+   `visual_carrier` 需明确人类选择 + viewport/基线/差异阈值。不得静默使用模板 CSS/token 作为 OD 设计系统。
+4. **stage、run、recover 权限彼此独立**：adoption/TAC 确认不是 stage 授权；stage 不是 run 授权；run 或
+   用户报告不是 recover/完成授权。每项绑定准确 project、handoff ID、namespace、hash 与范围。
+5. **默认桌面端生成；headless 为 opt-in**：stage 后交用户在 OD 桌面端生成→「拉回来」；headless 还需
+   `run=true + prompt_hash + handoff_id` 的真实授权，重试上限与回落规则以 Phase 3H 为准。
+6. **recovery 永远按 handoff ID/output root**：不全项目枚举 HTML、不猜最近产物、不从 input 复制/改名 base。
+   `single` 只允许指定 `output/index.html` 及闭包；额外/未知文件一律 BLOCKED，不自动删除证据。
+7. **本地 token/技术组件映射不注入交接包**；设计系统由用户在外部工具配置，缺本地资产不阻塞。
+8. **输入是设计产出**（冻结交互 Packet 或单点方案 md），不是 PRD、不是已生成 HTML；源缺失不静默建空项目。
+9. **Codex 不假设 OD carrier parity**：仅在该 harness 的 capability probe 有成功证据后才可执行 carrier stage/run/recover；
+   此前拒绝或受控降级。桌面端动态端口仍须每段重测，`/api/chat` 必须带 `agentId`。
+10. **traceability 与状态诚实标注**：`EXPORTED → STAGED → USER_GENERATION_REPORTED|OD_RUN_OBSERVED → GENERATED_OBSERVED → RECOVERED`；
+    已 pin 的产品回收 **handoff + workflow-state 不可省略**，纯导出/阶段 STAGED 不提前写节点 DONE。
 
 ---
 

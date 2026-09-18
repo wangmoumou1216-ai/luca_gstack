@@ -25,7 +25,7 @@
 | `muse-loop-orchestrate` | 需求→原型自治 Loop 的独立正向单趟编排器（muse fork 专属新增）。 extract→triage→map→open-design生成+judge核对 一次性单向链（2026-07-02 O… | `.claude/skills/office/muse-loop-orchestrate/SKILL.md` |
 | `muse-req-triage` | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/ 优先级裁定留给人类。两种触发方式：① 独立使用（你手头有一堆候选需求/原始 语料，想在投入 /brains… | `.claude/skills/office/muse-req-triage/SKILL.md` |
 | `office` | luca_gstack 入口。向导式：先问你想做什么，推荐对应 workflow。 展示一级可见 skill 列表，含描述和输入模式。 | `.claude/skills/office/SKILL.md` |
-| `open-design` | Open Design (OD) 连接器：已对齐设计源 → 高置信页面推荐与采用确认（或无参考）→ 指定 OD 项目交接与读回。 chain 消费 design-brief Packet；adhoc 忠… | `.claude/skills/office/open-design/SKILL.md` |
+| `open-design` | Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only） → 指定 OD 项目交接与 hand… | `.claude/skills/office/open-design/SKILL.md` |
 | `quick-research` | 轻量研究：把一个待查问题委托给**一个后台 agent**去读 **primary source**（官方文档/源码/ 规范/一手 API），主线不阻塞；产出单个带逐条溯源的 markdown。 **D… | `.claude/skills/office/quick-research/SKILL.md` |
 | `research-kit` | 一手研究工具设计：把 PRD 假设/研究问题变成**可执行的采集工具**——访谈提纲、问卷、 可用性测试计划、卡片分类法方案。 **Defining constraint：只产研究执行物，三不产——不产… | `.claude/skills/office/research-kit/SKILL.md` |
 | `resolving-merge-conflicts` | Resolve a real, currently in-progress Git merge, rebase, cherry-pick, or revert conflict by recoverin… | `.claude/skills/office/resolving-merge-conflicts/SKILL.md` |

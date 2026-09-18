@@ -4,7 +4,7 @@ import { readFile, lstat, realpath, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve, relative, sep, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { loadCatalog, readPageSource } from './page-context.mjs';
+import { carrierContractForPage, loadCatalog, readPageSource } from './page-context.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const origin = 'https://page-context.invalid';
@@ -38,9 +38,10 @@ async function readAsset(root, sourceRef, url) {
   return { url: parsed.href, bytes, contentType: contentTypes[extname(path)] };
 }
 
-export async function renderPreview({ catalog, pageId, root = repoRoot, browser: suppliedBrowser } = {}) {
+export async function renderPreview({ catalog, pageId, root = repoRoot, browser: suppliedBrowser, carrierOnly = false } = {}) {
   const entry = catalog?.pages?.find(page => page.page_id === pageId);
   if (!entry) fail('PREVIEW_PAGE', `Unknown page: ${pageId}`);
+  if (carrierOnly) carrierContractForPage(entry);
   const { bytes } = await readPageSource(entry, { root });
   const browser = suppliedBrowser ?? await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: entry.viewport, deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: false });
@@ -143,7 +144,7 @@ export async function renderPreview({ catalog, pageId, root = repoRoot, browser:
     }), entry.regions);
     const png = await page.screenshot({ type: 'png', animations: 'disabled', fullPage: false });
     const screenshot = { sha256: hash(png), width: png.readUInt32BE(16), height: png.readUInt32BE(20), source_hash: entry.source_hash, viewport: entry.viewport };
-    return { png, manifest: { schema_version: 1, page_id: entry.page_id, name: entry.name, source_hash: entry.source_hash, viewport: entry.viewport, screenshot, regions, render: { mode: 'isolated-static-source', scripts: usesCompiler ? 'pinned-style-compiler' : 'none', removed_events: parsed.removedEvents, network_requests: 0 } } };
+    return { png, manifest: { schema_version: 1, page_id: entry.page_id, name: entry.name, source_hash: entry.source_hash, viewport: entry.viewport, screenshot, regions, render: { mode: 'isolated-static-source', purpose: 'reference-preview', carrier_closure_proof: false, scripts: usesCompiler ? 'pinned-style-compiler' : 'none', removed_events: parsed.removedEvents, network_requests: 0 } } };
   } finally {
     await context.close();
     if (!suppliedBrowser) await browser.close();
@@ -279,14 +280,22 @@ export function selectorHtml({ manifest, png }) {
 async function main() {
   const [command, ...args] = process.argv.slice(2);
   const options = {};
-  for (let i = 0; i < args.length; i += 2) {
-    if (!['--page', '--root', '--catalog', '--output-dir'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context-preview.mjs render --page ID [--root PATH] [--catalog PATH] [--output-dir PATH]');
+  let carrierOnly = false;
+  for (let i = 0; i < args.length;) {
+    if (args[i] === '--carrier-only') {
+      if (carrierOnly) fail('CLI_USAGE', 'carrier-only can be set once');
+      carrierOnly = true;
+      i += 1;
+      continue;
+    }
+    if (!['--page', '--root', '--catalog', '--output-dir'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context-preview.mjs render --page ID [--carrier-only] [--root PATH] [--catalog PATH] [--output-dir PATH]');
     options[args[i]] = args[i + 1];
+    i += 2;
   }
   if (command !== 'render' || !options['--page']) fail('CLI_USAGE', 'Expected render --page ID');
   const root = options['--root'] ?? repoRoot;
   const catalog = await loadCatalog({ root, ...(options['--catalog'] ? { catalogPath: options['--catalog'] } : {}) });
-  const preview = await renderPreview({ catalog, pageId: options['--page'], root });
+  const preview = await renderPreview({ catalog, pageId: options['--page'], root, carrierOnly });
   const output = resolve(root, options['--output-dir'] ?? 'output/playwright/page-library');
   const outputRoot = resolve(root, 'output/playwright');
   if (output !== outputRoot && !output.startsWith(`${outputRoot}${sep}`)) fail('PREVIEW_OUTPUT', 'Preview artifacts must stay under output/playwright/');

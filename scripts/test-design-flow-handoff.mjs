@@ -6,6 +6,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { crc32, deflateSync } from 'node:zlib';
+import { computeBindingHash, computeModuleContractHash } from './page-context.mjs';
+import { canonicalJson, carrierContentHash, resolveAssetClosure } from './carrier-asset-profile.mjs';
 
 const modulePath = process.env.DESIGN_HANDOFF_TEST_MODULE ?? fileURLToPath(new URL('./design-flow-handoff.mjs', import.meta.url));
 const api = await import(pathToFileURL(modulePath));
@@ -29,8 +31,10 @@ function pngFixture(width, height) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(Buffer.alloc((width * 3 + 1) * height))), chunk('IEND', Buffer.alloc(0))]);
 }
 const html = '<!doctype html><main id="records"><section id="filters">Filters</section><section id="rows">Rows</section></main>';
-const page = { page_id: 'list', name: '列表', aliases: [], intent: '记录管理', scope: 'framework', source_ref: 'framework/list.html', source_hash: hash(html), viewport: { width: 1200, height: 800 }, states: ['default'], regions: [{ region_id: 'filters', parent_id: null, name: '筛选区域', aliases: [], intent: '筛选记录', anchor: { kind: 'attribute', name: 'id', value: 'filters' } }] };
-const catalog = { schema_version: 1, retired_page_ids: [], pages: [page] };
+// Legacy reference transport deliberately remains available for a live page
+// that is not eligible for the new carrier branch.
+const page = { page_id: 'list', name: '列表', aliases: [], intent: '记录管理', scope: 'framework', source_ref: 'framework/list.html', source_hash: hash(html), viewport: { width: 1200, height: 800 }, states: ['default'], lifecycle: 'live', carrier_eligible: false, regions: [{ region_id: 'filters', parent_id: null, name: '筛选区域', aliases: [], intent: '筛选记录', anchor: { kind: 'attribute', name: 'id', value: 'filters' } }] };
+const catalog = { schema_version: 2, retired_page_ids: [], pages: [page] };
 const png = pngFixture(1200, 800);
 const screenshot = { sha256: hash(png), width: 1200, height: 800, source_hash: page.source_hash, viewport: page.viewport };
 const preview = { png, manifest: { schema_version: 1, page_id: 'list', source_hash: page.source_hash, viewport: page.viewport, screenshot, regions: [{ region_id: 'filters', bounds: { x: 20, y: 80, width: 1000, height: 120 } }] } };
@@ -193,6 +197,107 @@ try {
   const manualTarget = { tool: 'claude-design', projectId: 'Design Space/Idea v1' };
   assert.deepEqual((await api.buildDesignHandoff({ source, target: manualTarget, selection: none })).target, manualTarget, 'OD slug policy does not rewrite a manual Claude Design identity');
   console.log('PASS: readback checks exact project, complete brief, provenance and every actual attachment byte');
+
+  // V2 carrier fixtures are deliberately isolated from the repository page
+  // library.  They exercise the real page-context V2 validator against a
+  // temporary, eligible page without writing a framework asset.
+  const carrierHtml = Buffer.from('<!doctype html><main id="carrier-root"><section id="carrier-module">before</section><aside id="preserved-module">keep</aside><div id="carrier-slot"></div></main>');
+  await writeFile(join(root, 'framework/carrier.html'), carrierHtml);
+  const carrierPage = {
+    page_id: 'carrier-page', name: 'Carrier page', aliases: [], intent: 'Carrier test', scope: 'framework', source_ref: 'framework/carrier.html', source_hash: hash(carrierHtml), viewport: { width: 1200, height: 800 }, states: ['default'], regions: [], lifecycle: 'live', carrier_eligible: true,
+    modules: [
+      { module_id: 'carrier-root', parent_module_id: null, name: 'Carrier root', intent: 'Carrier root', anchor: { kind: 'attribute', name: 'id', value: 'carrier-root' }, required: true, allowed_actions: ['modify', 'preserve'], invariants: [{ invariant_id: 'root-stays', name: 'Root remains', anchor: { kind: 'attribute', name: 'id', value: 'carrier-root' } }] },
+      { module_id: 'carrier-module', parent_module_id: 'carrier-root', name: 'Carrier module', intent: 'Carrier change', anchor: { kind: 'attribute', name: 'id', value: 'carrier-module' }, required: false, allowed_actions: ['modify', 'remove', 'preserve'], invariants: [{ invariant_id: 'module-stays', name: 'Module remains', anchor: { kind: 'attribute', name: 'id', value: 'carrier-module' } }] },
+      { module_id: 'preserved-module', parent_module_id: 'carrier-root', name: 'Preserved module', intent: 'Keep content', anchor: { kind: 'attribute', name: 'id', value: 'preserved-module' }, required: false, allowed_actions: ['preserve'], invariants: [{ invariant_id: 'preserved-stays', name: 'Preserved remains', anchor: { kind: 'attribute', name: 'id', value: 'preserved-module' } }] }
+    ],
+    slots: [{ slot_id: 'carrier-slot', parent_module_id: 'carrier-root', name: 'Carrier slot', intent: 'Add content', anchor: { kind: 'attribute', name: 'id', value: 'carrier-slot' }, allowed_actions: ['add'] }]
+  };
+  carrierPage.module_contract_hash = computeModuleContractHash(carrierPage);
+  const carrierCatalog = { schema_version: 2, retired_page_ids: [], pages: [carrierPage] };
+  const carrierSource = { mode: 'chain', id: 'carrier-packet-1', body: '# Carrier packet\nD-001: change the module.\n' };
+  const applicability = [{ source_kind: 'decision', id: 'D-001', packet_span_hash: hash(Buffer.from('D-001: change the module.')) }];
+  const frozen = { source_packet_sha256: hash(Buffer.from(carrierSource.body)), applicability_set_sha256: hash(Buffer.from(canonicalJson(applicability))) };
+  const binding = { page_id: carrierPage.page_id, source_ref: carrierPage.source_ref, source_hash: carrierPage.source_hash, module_contract_hash: carrierPage.module_contract_hash, carrier_profile: 'structural_carrier', actions: [{ action_id: 'C-01', action: 'modify', module_id: 'carrier-module' }, { action_id: 'C-02', action: 'preserve', module_id: 'preserved-module' }] };
+  const draftRecord = { schema_version: 2, bundle_kind: 'carrier', frozen_packet: frozen, binding };
+  const carrierHash = carrierContentHash(resolveAssetClosure({ baseTemplate: carrierHtml }), carrierPage.module_contract_hash);
+  const tac = { template: { page_id: carrierPage.page_id, module_contract_hash: carrierPage.module_contract_hash, carrier_content_hash: carrierHash }, source_packet_sha256: frozen.source_packet_sha256, applicability_set_sha256: frozen.applicability_set_sha256, applicability_set: applicability, changes: [{ change_id: 'C-01', action: 'modify', module_id: 'carrier-module', source_projections: applicability }, { change_id: 'C-02', action: 'preserve', module_id: 'preserved-module', invariants: ['preserved-stays'] }], coverage: [{ ...applicability[0], disposition: { kind: 'change', change_id: 'C-01' } }], output: { entry: 'output/index.html', base_must_remain_unchanged: true } };
+  const tacBytes = Buffer.from(canonicalJson(tac), 'utf8');
+  const pageReferenceBytes = Buffer.from(canonicalJson({ page_id: carrierPage.page_id, source_hash: carrierPage.source_hash, source_packet_sha256: frozen.source_packet_sha256 }), 'utf8');
+  const carrierBundle = await api.prepareCarrierHandoff({ source: carrierSource, target, handoffId: 'carrier-handoff-1', carrierBinding: draftRecord, baseTemplate: carrierHtml, tacJson: tacBytes, tacMarkdown: '# TAC\n- C-01 modifies carrier-module\n', pageReference: pageReferenceBytes }, { root, catalog: carrierCatalog });
+  await assert.rejects(api.prepareCarrierHandoff({ source: carrierSource, target, handoffId: 'carrier-bad-coverage', carrierBinding: draftRecord, baseTemplate: carrierHtml, tacJson: Buffer.from(canonicalJson({ ...tac, coverage: [] })), tacMarkdown: '# invalid TAC\n', pageReference: pageReferenceBytes }, { root, catalog: carrierCatalog }), { code: 'TAC_COVERAGE_INVALID' }, 'TAC cannot omit an applicability disposition');
+  assert.equal(carrierBundle.status, 'EXPORTED');
+  assert.equal(carrierBundle.manifest.input_root, 'input');
+  assert.equal(carrierBundle.manifest.output_root, 'output');
+  assert.notEqual(carrierBundle.manifest.input_root, carrierBundle.manifest.output_root);
+  assert.equal(carrierBundle.carrier_output_profile, 'single');
+  assert.equal(carrierBundle.manifest.carrier_profile, 'structural_carrier');
+  assert.deepEqual(carrierBundle.files.map(item => item.path), ['input/base-template.html', 'control/brief.md', 'control/template-adaptation.json', 'control/template-adaptation.md', 'control/page-reference.json', 'control/handoff-manifest.json']);
+  assert.throws(() => api.authorizeCarrierStage(carrierBundle, {}), { code: 'CARRIER_STAGE_NOT_AUTHORIZED' }, 'export does not imply a write grant');
+  const bindingSha256 = computeBindingHash({ frozen_packet: frozen, binding });
+  const finalRecord = { ...draftRecord, adoption: { actor: 'user', evidence: 'fixture:user-carrier-confirmation', confirmed_at: '2026-09-18T10:00:00Z', binding_sha256: bindingSha256, tac_sha256: hash(tacBytes), carrier_content_hash: carrierBundle.carrier_content_hash, handoff_bundle_hash: carrierBundle.handoff_bundle_hash, carrier_profile: 'structural_carrier', output_profile: 'single' } };
+  await assert.rejects(api.confirmCarrierBundle(carrierBundle, { ...finalRecord, adoption: { ...finalRecord.adoption, handoff_bundle_hash: '0'.repeat(64) } }, { root, catalog: carrierCatalog }), { code: 'CARRIER_ADOPTION_STALE' }, 'a stale adoption cannot approve a different bundle');
+  const confirmedCarrier = await api.confirmCarrierBundle(carrierBundle, finalRecord, { root, catalog: carrierCatalog });
+  const callerRuntime = { runtime: 'codex' };
+  const capability = (operations, bundle = carrierBundle) => ({ version: 1, kind: 'od-handoff-capability', status: 'PASS', runtime: 'codex', receipt_ref: `fixture:capability:${operations.join('-')}`, tool: 'od', project_id: target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', operations });
+  const carrierGrant = { tool: 'od', projectId: target.projectId, handoff_id: carrierBundle.handoff_id, namespace: carrierBundle.namespace, handoff_bundle_hash: carrierBundle.handoff_bundle_hash, output_profile: 'single', stage: true, messageRef: 'fixture:user-stage-grant', capabilityReceipt: capability(['stage']) };
+  assert.deepEqual(api.authorizeCarrierStage(confirmedCarrier, carrierGrant, callerRuntime).scope, ['stage']);
+  assert.throws(() => api.authorizeCarrierStage(confirmedCarrier, { ...carrierGrant, capabilityReceipt: undefined }, callerRuntime), { code: 'OD_CAPABILITY_RECEIPT_REQUIRED' }, 'Codex cannot stage without a caller/runtime success receipt');
+  assert.throws(() => api.authorizeCarrierStage(confirmedCarrier, { ...carrierGrant, capabilityReceipt: { ...capability(['stage']), runtime: 'claude' } }, callerRuntime), { code: 'OD_CAPABILITY_RECEIPT_REQUIRED' }, 'Codex cannot reuse a Claude runtime receipt');
+  assert.throws(() => api.authorizeCarrierStage(confirmedCarrier, { ...carrierGrant, namespace: 'handoffs/other' }, callerRuntime), { code: 'CARRIER_STAGE_NOT_AUTHORIZED' }, 'grant binds the exact namespace');
+  assert.throws(() => api.authorizeCarrierStage(confirmedCarrier, { ...carrierGrant, handoff_bundle_hash: '0'.repeat(64) }, callerRuntime), { code: 'CARRIER_STAGE_NOT_AUTHORIZED' }, 'grant binds the exact bundle hash');
+  const preInventory = [{ path: 'existing/readme.txt', bytes: Buffer.from('unchanged') }];
+  const stagedFiles = confirmedCarrier.files.map(item => ({ path: `${confirmedCarrier.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
+  const postStageInventory = [...preInventory, ...stagedFiles];
+  assert.throws(() => api.verifyCarrierReadback(confirmedCarrier, { tool: 'od', projectId: target.projectId, namespace: confirmedCarrier.namespace, readRef: 'fixture:stage-read', files: [...stagedFiles, { path: `${confirmedCarrier.namespace}/output/index.html`, bytes: Buffer.from('premature') }], pre_inventory: preInventory, post_inventory: [...postStageInventory, { path: `${confirmedCarrier.namespace}/output/index.html`, bytes: Buffer.from('premature') }] }), error => ['PROJECT_INVENTORY_CHANGED', 'READBACK_EXTRA_FILE'].includes(error?.code), 'input/output overlap or pre-existing output blocks STAGED');
+  const stagedCarrier = api.verifyCarrierReadback(confirmedCarrier, { tool: 'od', projectId: target.projectId, namespace: confirmedCarrier.namespace, readRef: 'fixture:stage-read', files: stagedFiles, pre_inventory: preInventory, post_inventory: postStageInventory });
+  assert.equal(stagedCarrier.status, 'STAGED', 'readback is only STAGED, never a generated claim');
+  assert.throws(() => api.authorizeCarrierRun(confirmedCarrier, stagedCarrier, carrierGrant, callerRuntime), { code: 'CARRIER_RUN_NOT_AUTHORIZED' }, 'stage grant never implies run');
+  const runAuthorization = api.authorizeCarrierRun(confirmedCarrier, stagedCarrier, { ...carrierGrant, stage: undefined, run: true, prompt_hash: hash(Buffer.from('fixture prompt')), messageRef: 'fixture:user-run-grant', capabilityReceipt: capability(['run']) }, callerRuntime);
+  assert.equal(runAuthorization.status, 'OD_RUN_AUTHORIZED');
+  const derivative = Buffer.from('<!doctype html><main id="carrier-root"><section id="carrier-module">after</section><aside id="preserved-module">keep</aside><div id="carrier-slot"></div></main>');
+  const outputFile = { path: `${confirmedCarrier.namespace}/output/index.html`, bytes: derivative };
+  const mechanical_verification = { module_traces: [{ change_id: 'C-01', source_keys: [`decision:D-001:${applicability[0].packet_span_hash}`], status: 'PASS' }], preserve_invariants: [{ module_id: 'preserved-module', invariant_id: 'preserved-stays', status: 'PASS' }] };
+  const outputReadback = { tool: 'od', projectId: target.projectId, namespace: confirmedCarrier.namespace, readRef: 'fixture:output-read', files: [...stagedFiles, outputFile], post_inventory: [...postStageInventory, outputFile], mechanical_verification };
+  const recoverGrant = { ...carrierGrant, stage: undefined, recover: true, messageRef: 'fixture:user-recover-grant', capabilityReceipt: capability(['recover']) };
+  const recoverAuthorization = api.authorizeCarrierRecover(confirmedCarrier, stagedCarrier, recoverGrant, callerRuntime);
+  assert.throws(() => api.observeCarrierOutput(confirmedCarrier, stagedCarrier, outputReadback), { code: 'CARRIER_RECOVER_NOT_AUTHORIZED' }, 'output bytes cannot be observed before recover authorization');
+  const observedCarrier = api.observeCarrierOutput(confirmedCarrier, stagedCarrier, outputReadback, recoverAuthorization);
+  assert.equal(observedCarrier.status, 'GENERATED_OBSERVED');
+  assert.equal(observedCarrier.provenance, 'output_observed_only', 'a file observation does not overclaim OD causality');
+  assert.throws(() => api.recoverCarrierOutput(confirmedCarrier, observedCarrier), { code: 'CARRIER_RECOVER_NOT_AUTHORIZED' }, 'stage authorization never implies recover');
+  const recovery = api.recoverCarrierOutput(confirmedCarrier, observedCarrier, recoverAuthorization);
+  assert.equal(recovery.status, 'RECOVERED');
+  assert.equal(recovery.semantic_acceptance, 'PENDING_INDEPENDENT_REVIEW');
+  assert.throws(() => api.observeCarrierOutput(confirmedCarrier, stagedCarrier, { ...outputReadback, mechanical_verification: { ...mechanical_verification, preserve_invariants: [] } }, recoverAuthorization), { code: 'PRESERVE_INVARIANT_FAILED' }, 'mechanical PASS requires all preserve invariants');
+  const changedPreserve = { ...outputFile, bytes: Buffer.from(derivative.toString('utf8').replace('>keep</aside>', '>changed</aside>')) };
+  assert.throws(() => api.observeCarrierOutput(confirmedCarrier, stagedCarrier, { ...outputReadback, files: [...stagedFiles, changedPreserve], post_inventory: [...postStageInventory, changedPreserve] }, recoverAuthorization), { code: 'PRESERVE_DOM_CHANGED' }, 'preserve requires canonical DOM identity, not anchor presence alone');
+  const extraOutput = { path: `${confirmedCarrier.namespace}/output/unexpected.txt`, bytes: Buffer.from('evidence stays; no deletion') };
+  assert.throws(() => api.observeCarrierOutput(confirmedCarrier, stagedCarrier, { ...outputReadback, files: [...outputReadback.files, extraOutput], post_inventory: [...outputReadback.post_inventory, extraOutput] }, recoverAuthorization), { code: 'OUTPUT_EXTRA_FILE' }, 'single profile rejects extra output without deleting evidence');
+  const baseOutput = { path: `${confirmedCarrier.namespace}/output/index.html`, bytes: Buffer.from(carrierHtml) };
+  assert.throws(() => api.observeCarrierOutput(confirmedCarrier, stagedCarrier, { ...outputReadback, files: [...stagedFiles, baseOutput], post_inventory: [...postStageInventory, baseOutput] }, recoverAuthorization), { code: 'OUTPUT_BASE_MASQUERADE' }, 'base renamed or copied as output is not a derivative');
+  const staleBundle = { ...confirmedCarrier, files: confirmedCarrier.files.map(item => ({ ...item, bytes: Buffer.from(item.bytes) })) };
+  staleBundle.files.find(item => item.path === 'control/template-adaptation.json').bytes[0] ^= 1;
+  assert.throws(() => api.authorizeCarrierStage(staleBundle, carrierGrant, callerRuntime), { code: 'CARRIER_BUNDLE_CHANGED' }, 'TAC/file mutation invalidates prior confirmation and stage authority');
+  const referenceOnly = await api.buildReferenceOnlyHandoff({ source, target, selection: none, handoffId: 'reference-handoff-1' });
+  assert.equal(referenceOnly.bundle_kind, 'reference_only');
+  assert.equal(referenceOnly.derivation, 'not-template-derived');
+  assert.equal('carrier_content_hash' in referenceOnly, false);
+  assert.ok(referenceOnly.files.every(item => !item.path.startsWith('input/') && !item.path.includes('template-adaptation')), 'reference-only transport has an independent control namespace and no carrier/TAC tree');
+  const referenceGrant = { tool: 'od', projectId: target.projectId, handoff_id: referenceOnly.handoff_id, namespace: referenceOnly.namespace, handoff_bundle_hash: referenceOnly.handoff_bundle_hash, output_profile: 'single', stage: true, messageRef: 'fixture:reference-stage', capabilityReceipt: capability(['stage'], referenceOnly) };
+  assert.deepEqual(api.authorizeReferenceStage(referenceOnly, referenceGrant, callerRuntime).scope, ['stage']);
+  const referenceFiles = referenceOnly.files.map(item => ({ path: `${referenceOnly.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
+  const referencePost = [...preInventory, ...referenceFiles];
+  const stagedReference = api.verifyReferenceReadback(referenceOnly, { tool: 'od', projectId: target.projectId, namespace: referenceOnly.namespace, readRef: 'fixture:reference-stage-read', files: referenceFiles, pre_inventory: preInventory, post_inventory: referencePost });
+  const referenceOutput = { path: `${referenceOnly.namespace}/output/index.html`, bytes: Buffer.from('<!doctype html><main>independent design</main>') };
+  const referenceRecoverGrant = { ...referenceGrant, stage: undefined, recover: true, messageRef: 'fixture:reference-recover', capabilityReceipt: capability(['recover'], referenceOnly) };
+  const referenceRecoverAuthorization = api.authorizeReferenceRecover(referenceOnly, stagedReference, referenceRecoverGrant, callerRuntime);
+  const referenceReadback = { tool: 'od', projectId: target.projectId, namespace: referenceOnly.namespace, readRef: 'fixture:reference-output-read', files: [...referenceFiles, referenceOutput], post_inventory: [...referencePost, referenceOutput] };
+  assert.throws(() => api.observeReferenceOutput(referenceOnly, stagedReference, referenceReadback), { code: 'REFERENCE_RECOVER_NOT_AUTHORIZED' }, 'reference output bytes cannot be observed before recover authorization');
+  const observedReference = api.observeReferenceOutput(referenceOnly, stagedReference, referenceReadback, referenceRecoverAuthorization);
+  const recoveredReference = api.recoverReferenceOutput(referenceOnly, observedReference, referenceRecoverAuthorization);
+  assert.equal(recoveredReference.derivation, 'not-template-derived');
+  assert.equal(['carrier_content_hash', 'module_contract_hash', 'tac_sha256', 'carrier_profile'].some(key => key in recoveredReference), false, 'reference-only recovery never acquires carrier/TAC semantics');
+  console.log('PASS: V2 carrier namespace/hash/TAC/adoption/readback/recovery gates and reference-only separation');
   if (process.argv.includes('--mutation')) {
     const mutantRoot = join(root, 'mutants');
     const mutantScripts = join(mutantRoot, 'scripts');
@@ -200,6 +305,7 @@ try {
     await mkdir(join(mutantRoot, '.claude/skill-os/page-library'), { recursive: true });
     // Copy the real selection dependency unchanged; only the new handoff guard is mutated.
     await writeFile(join(mutantScripts, 'page-context.mjs'), await readFile(new URL('./page-context.mjs', import.meta.url)));
+    await writeFile(join(mutantScripts, 'carrier-asset-profile.mjs'), await readFile(new URL('./carrier-asset-profile.mjs', import.meta.url)));
     await writeFile(join(mutantRoot, '.claude/skill-os/page-library/schema.json'), await readFile(new URL('../.claude/skill-os/page-library/schema.json', import.meta.url)));
     const original = await readFile(modulePath, 'utf8');
     const mutantModule = join(mutantScripts, 'design-flow-handoff.mjs');
@@ -208,7 +314,11 @@ try {
     const mutations = [
       ['caller confirmation guard', witnessGuard, '', 'confirmation record alone must not authorize a reference'],
       ['no-reference attachment exclusion', "if (validated.status === 'confirmed') bundle.files.push", 'if (preview?.png) bundle.files.push', 'no-reference must not attach a rejected or weak candidate'],
-      ['exact target authorization', 'grant.projectId !== bundle.target.projectId', 'false', 'page confirmation cannot substitute for exact OD write authorization'],
+      ['V2 exact bundle-hash authorization', 'grant.handoff_bundle_hash !== bundle.handoff_bundle_hash', 'false', 'grant binds the exact bundle hash'],
+      ['runtime capability receipt', 'return capabilityFor(bundle, grant.capabilityReceipt, operation, runtime);', "return { runtime: 'codex', receipt_ref: 'mutant' };", 'Codex cannot stage without a caller/runtime success receipt'],
+      ['TAC applicability coverage', "if (covered.size !== applicable.size) fail('TAC_COVERAGE_INVALID', 'Coverage must close the complete applicability set');", '', 'TAC cannot omit an applicability disposition'],
+      ['preserve invariant recovery', "if (!isDeepStrictEqual(actualInvariants, normalizedInvariants)) fail('PRESERVE_INVARIANT_FAILED', 'Every declared preserve invariant must have one exact PASS result');", '', 'mechanical PASS requires all preserve invariants'],
+      ['preserve canonical DOM', "if (canonicalAnchoredDom(html, module.anchor) !== canonicalAnchoredDom(baseHtml, module.anchor)) fail('PRESERVE_DOM_CHANGED', `Preserved module canonical DOM changed: ${change.module_id}`);", '', 'preserve requires canonical DOM identity, not anchor presence alone'],
       ['missing attachment readback', missingGuard, '    if (!actual) continue;', 'missing actual attachment bytes cannot be reported as STAGED']
     ];
     const runSuite = () => spawnSync(process.execPath, [fileURLToPath(import.meta.url)], { encoding: 'utf8', env: { ...process.env, DESIGN_HANDOFF_TEST_MODULE: mutantModule } });

@@ -7,12 +7,13 @@ description: |
   收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 /
   用户粘贴方案，收敛成可交给 MagicPath、Open Design、Claude Design、/html-prototype
   和开发的规格契约（决策卡 / 状态覆盖 / 页面与交互位置映射 / Generation Packet）。
+  Packet 冻结后才允许进行最终模板/模块绑定；模板只能定义实现位置，不能成为需求事实来源。
   可独立运行；若检测到上游 ux-brainstorm 产出，则继承其 AI-Native 判定与已验证假设，不重做发散分析。
   复杂 / 多方案 / 高不确定 → 先用 /ux-brainstorm 发散，本 skill 负责收敛落地。
   执行顺序锁死：设计坐标系 →
   原生AI四层深度思考 → 假设挑战 → 体验验证 → 品味检查 →
   每条决策的 8 字段完整化 → 输出目标与平台核对 → 页面与交互位置映射 →
-  可追踪完整门禁 → Design Generation Packet。(luca_gstack)
+  可追踪完整门禁 → Design Generation Packet（冻结需求事实）→ 最终 carrier 绑定。(luca_gstack)
 allowed-tools:
   - Read
   - Write
@@ -127,6 +128,27 @@ task-plan 或开发，必须使用
 
 **产品机制方向冲突检查：** 如果后续 Phase 执行中发现 PRD
 产品机制方向本身有问题，记录并带到 /brainstorm 修订。
+
+### Step 0.5：Phase-A 模板候选发现（仅内部、非绑定）
+
+在本 Step 已把输入整理为可追溯的页面用途、目标动作和范围之后，才可调用
+`page-context:phase_a_discovery` 的内部 primitive：
+
+```bash
+node scripts/page-context.mjs phase-a-discovery --query '<已整理的页面用途、目标动作与范围>'
+```
+
+它只返回最多三项短期 `CandidateHint` 或受控 `NO_HINT`，不能作为页面采用、模块绑定、TAC 输入或
+用户决定；不得写入 Packet、D/STATE/需求映射、正文第 7 节、stable ID 或 selection record。
+
+- 有合格提示：仅存本次执行上下文；不预览、不采用、不写 OD。
+- primitive 不可用、目录不存在或无 `live && carrier_eligible` 候选：得到 `NO_HINT`，继续
+  design-brief；
+  不得伪造候选、把无提示当失败或把词面命中升级为绑定。
+- 本 Step 不是新 skill、路由入口或 Human Gate。最终模板/模块绑定只能发生在 Packet 通过门禁并冻结后，
+  由 `/open-design` 按 `page-context` 的独立最终绑定合同执行。
+
+完成条件：只对已整理需求触发一次；结果仍是临时线索，Packet 无 CandidateHint 或衍生模板事实。
 
 ### Step 1：场景确认
 
@@ -528,7 +550,8 @@ A）执行 B）不执行。选 B 记录"已知品味问题"。
 ```
 
 完成条件：目标、平台与范围有来源或明确未决说明；未决项不被写成用户决定。
-本 Phase 不运行页面推荐或采用询问；唯一执行点及确认规则见 Phase 6.75 的 page-context 指针。
+本 Phase 不运行页面推荐或采用询问。Phase-A 的临时 `CandidateHint` 也不改变本表；唯一的最终
+页面/模块采用点在 Packet 冻结之后，见 Phase 6.75 的 `page-context` 指针。
 
 ### Step 2：页面与交互位置映射
 
@@ -652,26 +675,37 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 
 **硬规则：**
 - Packet 的需求与设计事实只能引用本 design-brief 正文，不得新增产品诉求、交互决策或状态；
-  页参考与目标绑定记录由下述交接入口核验后附入，并保留各自来源。
+  它是**唯一的需求事实源**。页面采用、模板/模块绑定、TAC、hash、OD 项目和生成收据都只能
+  作为 Packet 外的运输或证据元数据，绝不回写、缩写或补充 Packet。
 - Packet 是下游生成工具的主输入；上游 PRD / research / ux-brainstorm 只用于本文件的
   traceability 校验，不让外部工具重新做产品判断。
+- Phase-A `CandidateHint` 是执行期临时线索，不得复制进 Packet 或据此填写 page/module binding。
+  Packet 通过本 Phase 门禁后必须按原字节冻结；后续任何最终绑定都引用其
+  `source_packet_sha256`，而不是改写需求文本。
 - Open Design（/open-design）是默认推荐交接路径；用户指定 Claude Design 时导出同包供人工
   附加。MagicPath / /html-prototype 的独立入口继续保留，按用户所选目标消费同一契约；
   工具不可达时在该入口报告状态并保留材料，不自动改用本地生成器。
 
-**页面参考的唯一交接点：** 设计源已对齐、即将交给 OD / Claude Design 时，交接入口必须
-完整读取 `.claude/skill-os/runtime/page-context.md` 至 FILE_END；OD 在 `/open-design`
-编译前执行该合同。design-brief 在此只声明参考策略并引用已有记录，不重复执行匹配/询问。
-仅高置信候选可推荐，采用须真人确认；低置信/无匹配不推荐，以 `reference=none` 非阻塞继续。
-无参考仍保留第 7 节的语义位置与完整追踪。已有有效确认直接复用，JSON 标记不能代签真人。
-第 7 节只引用本 brief 产出时已有的确认。交接入口的新确认放入同次 Packet 的运输元数据
-（`page-reference.json`），指向已通过门禁的 brief 来源及版本；不反写正文或第 7 节，
-不改变已冻结的源 hash，也不复制需求为第二事实源。
-页面采用与外部写入授权分开核验，外部接收/生成状态由对应工具的真实证据判定。
+**最终载体的唯一交接点：** Packet 冻结后、OD 编译前，`/open-design` 必须完整读取
+`.claude/skill-os/runtime/page-context.md` 至 FILE_END 并执行其**最终** `carrier-binding` 合同。
+它重新验证 `live && carrier_eligible` 的页面、模块/slot、源和模块合同 hash；Phase-A
+`CandidateHint` 从不等于该验证。只有真人明确采用最终 binding，并看见/确认 TAC 内容、
+`tac_sha256`、`carrier_content_hash` 与 `handoff_bundle_hash` 后，才可形成 `carrier` bundle。
+
+无高置信最终绑定、用户拒绝采用或明确不用模板时，必须走互斥的 `reference_only` bundle：完整
+Packet 仍可交接，但不含 base template、资产闭包、TAC、carrier hash 或“模板衍生”表述。最终
+binding/adoption、`page-reference.json` 和 TAC 都是同次 handoff 的运输元数据，指向冻结 Packet；
+它们不反写正文或第 7 节，也不成为第二份需求事实。模板采用、OD stage、OD run 与 recover
+分别要求自己的授权和真实证据。
+
+`reference_only` 必须明确标为**非模板衍生**；截图、参考页或 `CandidateHint` 都不能改变该分类。
 
 ### Step 1：生成 Design Generation Packet
 
 **Load `references/output-templates.md` §Design Generation Packet now — 产出 Design Generation Packet 前必须完整读取该模板。**
+
+写完后先通过 Step 3 的 Packet 门禁并冻结其字节内容。此 skill 不执行最终模板绑定、TAC 生成、
+用户采用、OD stage/run/recover；它只交付可被这些后续动作 hash 绑定的需求事实。
 
 ### Step 2：生成 Tool Consumption Contract
 
@@ -681,7 +715,7 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 | 下游工具 | 主输入 | 可读校验源 | 不允许做 |
 |---------|--------|------------|----------|
 | MagicPath | Design Generation Packet + 页面与交互位置映射 + 状态覆盖 | design-brief 正文 | 不得新增 PRD 没有的产品功能；不得忽略 D/STATE/AC 映射 |
-| Open Design / Claude Design | Design Generation Packet（同包附确认参考或 reference=none） | design-brief 正文及 page-context 确认来源 | 不得直接从 research 发散新方案；不得复活 REMOVED 方案；不得把参考页当成外部设计系统 |
+| Open Design / Claude Design | 冻结 Design Generation Packet；另附 page-reference/TAC 等运输元数据，或互斥 `reference_only` 元数据 | design-brief 正文、page-context 最终 binding 与真人采用记录 | 不得把 CandidateHint 当绑定/需求；不得直接从 research 发散新方案；不得复活 REMOVED 方案；不得把参考页或 structural carrier 当成外部设计系统 |
 | /html-prototype | Design Generation Packet + 输出目标与平台 + 页面与交互位置映射 | PRD / ux-research / deepresearch 仅用于 traceability 校验 | 不得绕过 design-brief 重新设计交互或遗漏 D/STATE/AC |
 | tech-spec / task-plan | design-brief 正文 + Traceability Matrix | PRD R/AE | 不得从 research/design-brief 编造 R/AE |
 ```
@@ -696,7 +730,8 @@ MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使�
 □ Packet 包含所有 MUST D-series 决策？
 □ Packet 包含所有非 N/A 状态？
 □ Packet 保留每项语义位置、需求/AC 来源、修改/保留范围及下游目标？
-□ 页面上下文引用 page-context 合同，未决选择不伪报已采用，reference=none 不丢追踪？
+□ Packet 不含 CandidateHint、最终模板/模块 binding、TAC 或 OD 项目事实，且可按原字节冻结？
+□ 下游已指向 page-context 最终 binding 合同；未决采用不伪报已采用，`reference_only` 不丢追踪也不称模板衍生？
 □ Packet 不注入本地 token/组件技术映射，目标与用户选择一致？
 ```
 
@@ -720,7 +755,7 @@ tech-spec 依赖第 4、7 节；**`redteam` 判据挂载表按本清单逐节做
 6. 设计决策清单（Phase 5 产出，每条 8 字段）
 7. **页面与交互位置映射**（Phase 6 产出；`page_interaction_mapping`）
 8. **可追踪完整矩阵**（Phase 6.5 产出）
-9. **Design Generation Packet**（Phase 6.75 产出，MagicPath / Open Design / Claude Design / HTML 生成器主输入）
+9. **Design Generation Packet**（Phase 6.75 产出并冻结，唯一需求事实；MagicPath / Open Design / Claude Design / HTML 生成器主输入）
 10. **Tool Consumption Contract**（Phase 6.75 产出）
 11. REMOVED 记录（场景 B / D 专有）
 12. **交接块**（下游恢复索引；不得包含正文没有的新事实）
@@ -790,7 +825,7 @@ AskUserQuestion：
 
 > 下一步？
 >
-> A）/open-design — 交接 Design Generation Packet 与页面上下文，由用户在 OD 配置设计系统（推荐）
+> A）/open-design — 交接冻结 Design Generation Packet；之后才进行最终模板/模块 binding 或 reference_only，由用户在 OD 配置设计系统（推荐）
 > B）magicpath — 用户选择独立 React canvas 产出时使用
 > C）/html-prototype — 用户选择本地 HTML 原型时使用
 > D）先停这里
@@ -820,11 +855,12 @@ AskUserQuestion：
 10. **状态覆盖 12 状态必须全部声明** — 场景 D 不允许 N/A
 11. **Phase 6.5 可追踪完整门禁必须 PASS**
 12. **REMOVED 记录必须保留**
-13. **Design Generation Packet 不可省略** — MagicPath / Open Design / Claude Design / HTML 生成器统一消费它
+13. **Design Generation Packet 不可省略且必须冻结** — 它是唯一需求事实；Phase-A CandidateHint、最终 binding、TAC、hash 和 OD 收据不得写入或改写它
 14. **Tool Consumption Contract 不可省略**
 15. **交接块不可省略** — 交接块只是索引，不是第二事实来源
 16. **节名锁死** — 第 2/3/4/5 节保持原版，第 7 节为「页面与交互位置映射」；下游按节名定位内容、redteam 按 12 节清单核完整性
 17. **下游询问必须执行** — 不能静默进入下一步
+18. **最终 carrier 绑定后置** — Packet 冻结后才可由 page-context 验证 `carrier-binding`；须真人采用并确认 TAC/hash。无绑定/拒绝模板一律为 `reference_only`，不得声称模板衍生
 
 ---
 

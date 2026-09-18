@@ -44,7 +44,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 40;
+const EXPECTED_MUTATIONS = 45;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -318,6 +318,31 @@ mutate('open-design handoff drops requirement bodies', (dir) => {
   writeFileSync(p, readFileSync(p, 'utf8').replace('每条稳定 ID 必须与其完整原文一起传递；只有 ID 的清单不是需求正文。',
     '只传稳定 ID 即可。'));
 }, /does not preserve ID plus complete source text/);
+
+mutate('CandidateHint is allowed into Packet truth', (dir) => {
+  const p = join(dir, '.claude/skills/office/design-brief/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replaceAll('不得写入', '可写入'));
+}, /transient CandidateHint and frozen-Packet binding boundary/);
+
+mutate('NO_HINT blocks rather than continuing design-brief', (dir) => {
+  const p = join(dir, '.claude/skills/office/design-brief/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('得到 `NO_HINT`，继续\n  design-brief', '得到 `NO_HINT`，停止\n  design-brief'));
+}, /transient CandidateHint and frozen-Packet binding boundary/);
+
+mutate('reference_only is renamed as a template derivative', (dir) => {
+  const p = join(dir, '.claude/skills/office/design-brief/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replaceAll('模板衍生', 'carrier delivery'));
+}, /reference_only separate from template-derived carrier delivery/);
+
+mutate('recover is allowed to enumerate project HTML', (dir) => {
+  const p = join(dir, '.claude/skills/office/open-design/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('不全项目枚举 HTML', '可全项目枚举 HTML'));
+}, /authority, scoped-recovery, carrier-profile, or Codex-probe boundary/);
+
+mutate('Codex carrier is claimed before its probe', (dir) => {
+  const p = join(dir, '.claude/skills/office/open-design/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replaceAll('拒绝或受控降级', '可直接执行'));
+}, /authority, scoped-recovery, carrier-profile, or Codex-probe boundary/);
 
 mutate('page decision skips its contract owner', (dir) => {
   const p = join(dir, '.claude/skill-os/runtime/page-context.md');

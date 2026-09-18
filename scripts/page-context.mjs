@@ -8,6 +8,38 @@ const catalogDefault = '.claude/skill-os/page-library/catalog.json';
 const schema = JSON.parse(await readFile(new URL('../.claude/skill-os/page-library/schema.json', import.meta.url), 'utf8'));
 const fail = (code, message) => { throw Object.assign(new Error(message), { code }); };
 
+function canonicalJson(value) {
+  if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) fail('CANONICAL_INPUT', 'Non-finite values cannot enter a binding hash');
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`;
+  fail('CANONICAL_INPUT', 'Unsupported value in canonical JSON');
+}
+
+const sha256 = value => createHash('sha256').update(value).digest('hex');
+
+function moduleContractBody(page) {
+  return {
+    contract_version: 2,
+    page_id: page.page_id,
+    source_ref: page.source_ref,
+    source_hash: page.source_hash,
+    modules: page.modules,
+    slots: page.slots,
+  };
+}
+
+export function computeModuleContractHash(page) {
+  return sha256(`luca-page-library-module-contract/v2\0${canonicalJson(moduleContractBody(page))}`);
+}
+
+export function computeBindingHash({ frozen_packet, binding }) {
+  return sha256(`luca-page-context-binding/v2\0${canonicalJson({ frozen_packet, binding })}`);
+}
+
 // This private walker implements only the vocabulary used by this owned schema.
 function shape(value, rule, at = '$') {
   if (rule.$ref) return shape(value, schema.$defs[rule.$ref.split('/').at(-1)], at);
@@ -109,6 +141,110 @@ function anchorsIn(html) {
   return { attributes, headings };
 }
 
+function resolveAnchor(anchors, anchor, code, label) {
+  const matches = anchor.kind === 'attribute'
+    ? anchors.attributes.filter(candidate => candidate.name === anchor.name && candidate.value === anchor.value)
+    : anchors.headings.filter(candidate => candidate.tag === anchor.tag && candidate.text === normalizedText(anchor.text));
+  if (matches.length !== 1) fail(code, `${label}: anchor must match exactly once; found ${matches.length}`);
+  let node = matches[0].node;
+  for (let level = 0; level < (anchor.ancestor_levels ?? 0); level++) {
+    node = node.parent;
+    if (!node) fail(code, `${label}: heading ancestor does not exist`);
+  }
+  return node;
+}
+
+function containsNode(ancestor, node) {
+  for (let cursor = node; cursor; cursor = cursor.parent) if (cursor === ancestor) return true;
+  return false;
+}
+
+function assertAcyclicParents(items, idKey, parentKey, missingCode, cycleCode, label) {
+  const byId = new Map();
+  for (const item of items) {
+    if (byId.has(item[idKey])) fail('MODULE_ID_REUSED', `${label}: duplicate ${idKey} ${item[idKey]}`);
+    byId.set(item[idKey], item);
+  }
+  for (const item of items) {
+    const seen = new Set([item[idKey]]);
+    let parent = item[parentKey];
+    while (parent !== null) {
+      if (!byId.has(parent)) fail(missingCode, `${label}/${item[idKey]}: missing parent ${parent}`);
+      if (seen.has(parent)) fail(cycleCode, `${label}/${item[idKey]}: cyclic parent`);
+      seen.add(parent);
+      parent = byId.get(parent)[parentKey];
+    }
+  }
+  return byId;
+}
+
+function assertCarrierContractShape(page) {
+  if (page.lifecycle !== 'live') fail('CARRIER_LIFECYCLE', `${page.page_id}: only live pages can be carrier eligible`);
+  if (!page.carrier_eligible) fail('CARRIER_INELIGIBLE', `${page.page_id}: page is not carrier eligible`);
+  for (const field of ['module_contract_hash', 'modules', 'slots']) {
+    if (!Object.hasOwn(page, field)) fail('CARRIER_CONTRACT_REQUIRED', `${page.page_id}: carrier page requires ${field}`);
+  }
+  if (computeModuleContractHash(page) !== page.module_contract_hash) fail('MODULE_CONTRACT_HASH', `${page.page_id}: module contract changed; refresh binding and reconfirm`);
+}
+
+function validateCarrierContract(page, anchors) {
+  assertCarrierContractShape(page);
+  const ids = new Map();
+  for (const attribute of anchors.attributes.filter(attribute => attribute.name === 'id')) {
+    if (ids.has(attribute.value)) fail('DOM_ID_DUPLICATE', `${page.page_id}: duplicate DOM id ${attribute.value}`);
+    ids.set(attribute.value, attribute.node);
+  }
+  const modules = assertAcyclicParents(page.modules, 'module_id', 'parent_module_id', 'MODULE_PARENT', 'MODULE_CYCLE', page.page_id);
+  const roots = page.modules.filter(module => module.parent_module_id === null);
+  if (roots.length !== 1 || !roots[0].required || roots[0].allowed_actions.includes('remove')) fail('MODULE_ROOT', `${page.page_id}: carrier contract requires one non-removable required root module`);
+  const slots = new Map();
+  for (const slot of page.slots) {
+    if (slots.has(slot.slot_id) || modules.has(slot.slot_id)) fail('SLOT_ID_REUSED', `${page.page_id}: duplicate module or slot id ${slot.slot_id}`);
+    if (!modules.has(slot.parent_module_id)) fail('SLOT_PARENT', `${page.page_id}/${slot.slot_id}: missing parent module ${slot.parent_module_id}`);
+    if (slot.allowed_actions.length !== 1 || slot.allowed_actions[0] !== 'add') fail('SLOT_ACTION', `${page.page_id}/${slot.slot_id}: slots only allow add`);
+    slots.set(slot.slot_id, slot);
+  }
+  const registeredNodes = new Map();
+  const moduleNodes = new Map();
+  for (const module of page.modules) {
+    if (module.required && module.allowed_actions.includes('remove')) fail('MODULE_REQUIRED_ACTION', `${page.page_id}/${module.module_id}: required module cannot be removed`);
+    const node = resolveAnchor(anchors, module.anchor, 'MODULE_ANCHOR', `${page.page_id}/${module.module_id}`);
+    if (registeredNodes.has(node)) fail('REGISTERED_ANCHOR_REUSED', `${page.page_id}/${module.module_id}: module/slot anchors must resolve to distinct DOM nodes`);
+    registeredNodes.set(node, `module:${module.module_id}`);
+    moduleNodes.set(module.module_id, node);
+    const invariantIds = new Set();
+    for (const invariant of module.invariants) {
+      if (invariantIds.has(invariant.invariant_id)) fail('MODULE_INVARIANT_REUSED', `${page.page_id}/${module.module_id}: duplicate invariant ${invariant.invariant_id}`);
+      invariantIds.add(invariant.invariant_id);
+      const invariantNode = resolveAnchor(anchors, invariant.anchor, 'MODULE_INVARIANT_ANCHOR', `${page.page_id}/${module.module_id}/${invariant.invariant_id}`);
+      if (!containsNode(node, invariantNode)) fail('MODULE_INVARIANT_SCOPE', `${page.page_id}/${module.module_id}/${invariant.invariant_id}: invariant is outside its module`);
+    }
+  }
+  for (const slot of page.slots) {
+    const node = resolveAnchor(anchors, slot.anchor, 'SLOT_ANCHOR', `${page.page_id}/${slot.slot_id}`);
+    if (registeredNodes.has(node)) fail('REGISTERED_ANCHOR_REUSED', `${page.page_id}/${slot.slot_id}: module/slot anchors must resolve to distinct DOM nodes`);
+    if (!containsNode(moduleNodes.get(slot.parent_module_id), node)) fail('SLOT_CONTAINMENT', `${page.page_id}/${slot.slot_id}: slot is outside parent module ${slot.parent_module_id}`);
+    registeredNodes.set(node, `slot:${slot.slot_id}`);
+  }
+  for (const module of page.modules) {
+    if (module.parent_module_id !== null && !containsNode(moduleNodes.get(module.parent_module_id), moduleNodes.get(module.module_id))) fail('MODULE_CONTAINMENT', `${page.page_id}/${module.module_id}: module is outside parent ${module.parent_module_id}`);
+  }
+  return { modules, slots };
+}
+
+export function carrierContractForPage(page) {
+  shape(page, schema.$defs.page);
+  assertCarrierContractShape(page);
+  return {
+    page_id: page.page_id,
+    source_ref: page.source_ref,
+    source_hash: page.source_hash,
+    module_contract_hash: page.module_contract_hash,
+    modules: page.modules,
+    slots: page.slots,
+  };
+}
+
 async function validateCatalog(catalog, root) {
   shape(catalog, schema.$defs.catalog);
   const ids = new Set(catalog.retired_page_ids);
@@ -117,6 +253,11 @@ async function validateCatalog(catalog, root) {
   for (const page of catalog.pages) {
     if (ids.has(page.page_id)) fail('PAGE_ID_REUSED', `Duplicate or retired page_id: ${page.page_id}`);
     ids.add(page.page_id);
+    if (page.lifecycle !== 'live' && page.aliases.length) fail('PAGE_ALIAS_LIFECYCLE', `${page.page_id}: non-live pages cannot retain selectable aliases`);
+    if (page.lifecycle !== 'live' && page.carrier_eligible) fail('CARRIER_LIFECYCLE', `${page.page_id}: only live pages can be carrier eligible`);
+    const carrierFields = ['module_contract_hash', 'modules', 'slots'];
+    if (page.carrier_eligible) assertCarrierContractShape(page);
+    else if (carrierFields.some(field => Object.hasOwn(page, field))) fail('CARRIER_CONTRACT_UNEXPECTED', `${page.page_id}: ineligible pages cannot retain a carrier contract`);
     paths.push(await confinedPath(root, page.source_ref, { source: true }));
     const regions = new Map();
     for (const region of page.regions) {
@@ -137,7 +278,7 @@ async function validateCatalog(catalog, root) {
   for (let i = 0; i < catalog.pages.length; i++) {
     const page = catalog.pages[i];
     const bytes = await readFile(paths[i]);
-    if (createHash('sha256').update(bytes).digest('hex') !== page.source_hash) fail('SOURCE_HASH', `${page.page_id}: source changed; refresh catalog and reconfirm selection`);
+    if (sha256(bytes) !== page.source_hash) fail('SOURCE_HASH', `${page.page_id}: source changed; refresh catalog and reconfirm selection`);
     const anchors = anchorsIn(bytes.toString('utf8'));
     const regionNodes = new Map();
     for (const region of page.regions) {
@@ -158,12 +299,31 @@ async function validateCatalog(catalog, root) {
       while (ancestor && ancestor !== expectedParent) ancestor = ancestor.parent;
       if (ancestor !== expectedParent) fail('REGION_CONTAINMENT', `${page.page_id}/${region.region_id}: source region is not contained by parent ${region.parent_id}`);
     }
+    if (page.carrier_eligible) validateCarrierContract(page, anchors);
   }
   return catalog;
 }
 
 export async function loadCatalog({ root = repoRoot, catalogPath = catalogDefault } = {}) {
   return validateCatalog(JSON.parse(await readFile(await confinedPath(root, catalogPath), 'utf8')), root);
+}
+
+function noCandidateHints() {
+  return { schema_version: 2, mode: 'phase_a_discovery', status: 'NO_HINT', ephemeral: true, candidate_hints: [] };
+}
+
+async function hasNoDefaultCatalog(root) {
+  try { await lstat(resolve(root)); }
+  catch (error) {
+    if (error.code === 'ENOENT') return true;
+    throw error;
+  }
+  try { await lstat(resolve(root, catalogDefault)); }
+  catch (error) {
+    if (error.code === 'ENOENT') return true;
+    throw error;
+  }
+  return false;
 }
 
 export function candidates(catalog, query, { scope = 'framework' } = {}) {
@@ -176,11 +336,34 @@ export function candidates(catalog, query, { scope = 'framework' } = {}) {
     const matched_terms = [...new Set(terms.filter(term => input.includes(term.normalize('NFKC').toLocaleLowerCase())))];
     return { matched_terms, reasons: matched_terms.map(term => `Catalog text occurs in query: ${term}`) };
   }
-  return catalog.pages.filter(page => page.scope === scope).map(page => {
+  return catalog.pages.filter(page => page.scope === scope && page.lifecycle === 'live').map(page => {
     const own = matches(page);
     const regions = page.regions.map(region => ({ region_id: region.region_id, name: region.name, ...matches(region) })).filter(region => region.matched_terms.length);
     return { page_id: page.page_id, name: page.name, source_hash: page.source_hash, matched_terms: [...new Set([...own.matched_terms, ...regions.flatMap(region => region.matched_terms)])], reasons: [...own.reasons, ...regions.flatMap(region => region.reasons.map(reason => `${region.region_id}: ${reason}`))], regions };
   }).filter(page => page.matched_terms.length);
+}
+
+export function discoverCandidateHints(catalog, query, { scope = 'framework' } = {}) {
+  const candidate_hints = candidates(catalog, query, { scope })
+    .map(hint => {
+      const page = catalog.pages.find(candidate => candidate.page_id === hint.page_id);
+      if (!page?.carrier_eligible || page.lifecycle !== 'live') return null;
+      const contract = carrierContractForPage(page);
+      return {
+        page_id: page.page_id,
+        name: page.name,
+        source_ref: page.source_ref,
+        source_hash: page.source_hash,
+        module_contract_hash: contract.module_contract_hash,
+        matched_terms: hint.matched_terms,
+        reasons: hint.reasons,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 3);
+  return candidate_hints.length
+    ? { schema_version: 2, mode: 'phase_a_discovery', status: 'CANDIDATE_HINTS', ephemeral: true, candidate_hints }
+    : noCandidateHints();
 }
 
 export async function readPageSource(page, { root = repoRoot } = {}) {
@@ -189,6 +372,86 @@ export async function readPageSource(page, { root = repoRoot } = {}) {
   const bytes = await readFile(path);
   if (createHash('sha256').update(bytes).digest('hex') !== page.source_hash) fail('SOURCE_HASH', `${page.page_id}: source changed; refresh catalog and reconfirm selection`);
   return { path, bytes };
+}
+
+function isAncestorModule(modules, ancestorId, descendantId) {
+  for (let cursor = descendantId; cursor !== null; cursor = modules.get(cursor).parent_module_id) {
+    if (cursor === ancestorId) return true;
+  }
+  return false;
+}
+
+function assertActionsDoNotOverlap({ modules, slots }, actions) {
+  const targetIds = new Set();
+  const actionIds = new Set();
+  const targets = actions.map(action => {
+    if (actionIds.has(action.action_id)) fail('CARRIER_ACTION_ID_REUSED', `Carrier action_id is reused: ${action.action_id}`);
+    actionIds.add(action.action_id);
+    if (action.action === 'add') {
+      const slot = slots.get(action.slot_id);
+      if (!slot) fail('UNKNOWN_SLOT', `Unknown add slot: ${action.slot_id}`);
+      if (!slot.allowed_actions.includes('add')) fail('CARRIER_ACTION_FORBIDDEN', `Slot ${action.slot_id} does not allow add`);
+      return { ...action, kind: 'slot', id: action.slot_id, parent_module_id: slot.parent_module_id };
+    }
+    const module = modules.get(action.module_id);
+    if (!module) fail('UNKNOWN_MODULE', `Unknown module: ${action.module_id}`);
+    if (!module.allowed_actions.includes(action.action)) fail('CARRIER_ACTION_FORBIDDEN', `Module ${action.module_id} does not allow ${action.action}`);
+    if (action.action === 'remove' && module.required) fail('CARRIER_REQUIRED_MODULE', `Required module ${action.module_id} cannot be removed`);
+    return { ...action, kind: 'module', id: action.module_id };
+  });
+  for (const target of targets) {
+    const key = `${target.kind}:${target.id}`;
+    if (targetIds.has(key)) fail('CARRIER_ACTION_TARGET_REUSED', `Carrier action target is reused: ${key}`);
+    targetIds.add(key);
+  }
+  for (let left = 0; left < targets.length; left++) {
+    for (let right = left + 1; right < targets.length; right++) {
+      const a = targets[left];
+      const b = targets[right];
+      const aModule = a.kind === 'module' ? a.id : a.parent_module_id;
+      const bModule = b.kind === 'module' ? b.id : b.parent_module_id;
+      if (!isAncestorModule(modules, aModule, bModule) && !isAncestorModule(modules, bModule, aModule)) continue;
+      if (aModule === bModule && a.kind === 'slot' && b.kind === 'slot') continue;
+      fail('CARRIER_ACTION_OVERLAP', `Carrier actions ${a.action_id} and ${b.action_id} overlap in the module graph`);
+    }
+  }
+  if (!targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, or remove action');
+  return targets;
+}
+
+export async function validateCarrierBindingDraft(catalog, record, { root = repoRoot } = {}) {
+  shape(record, schema.$defs.carrier_binding_draft);
+  await validateCatalog(catalog, root);
+  const page = catalog.pages.find(candidate => candidate.page_id === record.binding.page_id);
+  if (!page) fail('UNKNOWN_PAGE', `Unknown page: ${record.binding.page_id}`);
+  const contract = carrierContractForPage(page);
+  if (record.binding.source_ref !== contract.source_ref || record.binding.source_hash !== contract.source_hash || record.binding.module_contract_hash !== contract.module_contract_hash) fail('STALE_CARRIER_BINDING', 'Carrier source or module contract changed; rebind and reconfirm');
+  const graph = validateCarrierContract(page, anchorsIn((await readPageSource(page, { root })).bytes.toString('utf8')));
+  const actions = assertActionsDoNotOverlap(graph, record.binding.actions);
+  const binding_sha256 = computeBindingHash({ frozen_packet: record.frozen_packet, binding: record.binding });
+  return {
+    schema_version: 2,
+    bundle_kind: 'carrier',
+    frozen_packet: record.frozen_packet,
+    binding: record.binding,
+    binding_sha256,
+    contract,
+    actions,
+  };
+}
+
+export async function validateCarrierBinding(catalog, record, { root = repoRoot } = {}) {
+  shape(record, schema.$defs.carrier_binding);
+  if (!Number.isFinite(Date.parse(record.adoption.confirmed_at))) fail('CONFIRMATION_INVALID', 'Carrier adoption date is invalid');
+  const draft = await validateCarrierBindingDraft(catalog, {
+    schema_version: record.schema_version,
+    bundle_kind: record.bundle_kind,
+    frozen_packet: record.frozen_packet,
+    binding: record.binding,
+  }, { root });
+  if (record.adoption.binding_sha256 !== draft.binding_sha256) fail('STALE_CARRIER_ADOPTION', 'Carrier adoption does not bind the current frozen packet and module binding');
+  if (record.adoption.carrier_profile !== record.binding.carrier_profile) fail('STALE_CARRIER_ADOPTION', 'Carrier adoption does not bind the selected carrier profile');
+  return { ...draft, adoption: record.adoption };
 }
 
 export async function validateSelection(catalog, record, { root = repoRoot, preview } = {}) {
@@ -203,6 +466,7 @@ export async function validateSelection(catalog, record, { root = repoRoot, prev
   await validateCatalog(catalog, root);
   const page = catalog.pages.find(candidate => candidate.page_id === record.page_id);
   if (!page) fail('UNKNOWN_PAGE', `Unknown page: ${record.page_id}`);
+  if (page.lifecycle !== 'live') fail('PAGE_LIFECYCLE', `Page ${record.page_id} is not a live reference`);
   if (page.source_hash !== record.source_hash) fail('STALE_SELECTION', 'Selection source hash differs from the current catalog; reconfirm');
   const reference = { page_id: page.page_id, source_ref: page.source_ref, source_hash: page.source_hash, viewport: page.viewport, kind: record.kind };
   if (record.kind === 'region') {
@@ -234,18 +498,34 @@ async function main() {
   const [command, ...args] = process.argv.slice(2);
   const options = {};
   for (let i = 0; i < args.length; i += 2) {
-    if (!['--root', '--catalog', '--query', '--scope', '--record', '--preview'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context.mjs validate|candidates|selection [--query text|--record path] [--preview path] [--root path] [--catalog path]');
+    if (!['--root', '--catalog', '--query', '--scope', '--record', '--preview'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context.mjs validate|candidates|phase-a-discovery|selection|carrier-binding-draft|carrier-binding [--query text|--record path] [--preview path] [--root path] [--catalog path]');
     options[args[i]] = args[i + 1];
   }
-  if (!['validate', 'candidates', 'selection'].includes(command)) fail('CLI_USAGE', 'Expected validate, candidates or selection command');
+  if (!['validate', 'candidates', 'phase-a-discovery', 'selection', 'carrier-binding-draft', 'carrier-binding'].includes(command)) fail('CLI_USAGE', 'Expected validate, candidates, phase-a-discovery, selection, carrier-binding-draft or carrier-binding command');
   const root = options['--root'] ?? repoRoot;
+  if (command === 'phase-a-discovery') {
+    if (!options['--query']) fail('CLI_USAGE', 'phase-a-discovery requires --query');
+    if (!options['--catalog'] && await hasNoDefaultCatalog(root)) return noCandidateHints();
+    const catalog = await loadCatalog({ root, catalogPath: options['--catalog'] ?? catalogDefault });
+    return discoverCandidateHints(catalog, options['--query'], { scope: options['--scope'] ?? 'framework' });
+  }
   const catalog = await loadCatalog({ root, catalogPath: options['--catalog'] ?? catalogDefault });
-  if (command === 'candidates') return { candidates: candidates(catalog, options['--query'], { scope: options['--scope'] ?? 'framework' }), interpretation: 'Lexical hints only; agent must judge semantic fit and obtain user confirmation.' };
+  if (command === 'candidates') {
+    if (!options['--query']) fail('CLI_USAGE', 'candidates requires --query');
+    return { candidates: candidates(catalog, options['--query'], { scope: options['--scope'] ?? 'framework' }), interpretation: 'Lexical hints only; agent must judge semantic fit and obtain user confirmation.' };
+  }
   if (command === 'selection') {
     if (!options['--record']) fail('CLI_USAGE', 'selection requires --record path');
     const record = JSON.parse(await readFile(await confinedPath(root, options['--record']), 'utf8'));
     const preview = options['--preview'] ? JSON.parse(await readFile(await confinedPath(root, options['--preview']), 'utf8')) : undefined;
     return validateSelection(catalog, record, { root, preview });
+  }
+  if (command === 'carrier-binding-draft' || command === 'carrier-binding') {
+    if (!options['--record']) fail('CLI_USAGE', `${command} requires --record path`);
+    const record = JSON.parse(await readFile(await confinedPath(root, options['--record']), 'utf8'));
+    return command === 'carrier-binding-draft'
+      ? validateCarrierBindingDraft(catalog, record, { root })
+      : validateCarrierBinding(catalog, record, { root });
   }
   return { valid: true, schema_version: catalog.schema_version, pages: catalog.pages.length, regions: catalog.pages.reduce((count, page) => count + page.regions.length, 0) };
 }

@@ -196,8 +196,9 @@ P0 故事覆盖：{N}/{N} 条通过
 
 **参考与追踪：** `reference=none` 时语义位置、D/STATE/AC 及约束仍必填；没有目录记录的页面
 可以用用户语言或截图局部位置定位，不强制入库，不编造 page_id/region_id。
-页面采用在设计源对齐后、OD 编译前按 `.claude/skill-os/runtime/page-context.md` 执行；本节
-只索引已有确认，JSON 标记不构成真人确认。设计系统由用户在 OD / Claude Design 配置。
+页面采用在 Packet 冻结后、OD 编译前按 `.claude/skill-os/runtime/page-context.md` 的最终
+`carrier-binding` 合同执行；本节只索引已有确认，JSON 标记不构成真人确认。设计系统由用户在
+OD / Claude Design 配置。
 
 **AI 功能区域特殊标注：**
 - 思考中态：{过程可见性、用户可做的操作}
@@ -212,6 +213,22 @@ P0 故事覆盖：{N}/{N} 条通过
 - {决策描述}：REMOVED: OUT OF SCOPE — {原因}
 
 （无则写「无」）
+
+---
+
+### V2 模板载体运输边界（不新增产出节、不是第二事实源）
+
+- `Design Generation Packet` 是唯一需求事实，Phase 6.75 门禁通过后按原字节冻结。Phase-A
+  `CandidateHint` 是内部、短期 discovery 结果，不写入 Packet、正文、页面映射或 stable ID。
+- 最终 carrier 只在冻结 Packet 之后由 `page-context` 验证；它需要有效
+  `source_packet_sha256`、最终 `carrier-binding`、真人 adoption 和 TAC/hash 确认。TAC 只能
+  机械投影 Packet 中已有的 R/AE/D/STATE/AC，不能创造需求、selector、路径或视觉处方。
+- 没有最终绑定、用户拒绝模板或明确不用模板时为互斥 `reference_only`；它不含 base template、
+  TAC、carrier hash 或模板衍生承诺。
+- `structural_carrier` 只继承 DOM/登记模块/内容结构，模板 CSS/token/assets 不是视觉验收标准；
+  `visual_carrier` 需要明确选择以及 viewport、截图基线和允许差异阈值。
+- 最终 binding/adoption、OD stage、OD run 和 recover 是四项独立操作与授权；运输元数据指向
+  冻结 Packet，绝不反写它。
 
 ---
 
