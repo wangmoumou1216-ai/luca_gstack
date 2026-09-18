@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-09-18 · Open Design 模板 carrier V2 与模型路由解析核心）
+
+- Open Design 新增 `structural_carrier + single` 交接链：冻结 Packet、模板/模块 binding、TAC/hash、独立 stage/run/recover 授权、runtime 能力收据、输入输出隔离、读回与 preserve DOM 验证；`reference_only` 保持独立语义。为什么：让 OD 可验地基于不可变 HTML carrier 生成新的衍生产物，不再把截图参考冒充模板派生。
+- 新增 Codex `parser-only` 模型路由政策核心：对 anchor/peak 角色、7 类场景、调用绑定、运行时采用证据与关键失败 latch 做 fail-closed 解析，不改 effort，不声称尚未接线的自动派发可用。
+
 ### Added（2026-09-17 · domain-modeling 条件原语）
 
 - 新增领域建模 canonical 与手动/语义/internal 入口：澄清术语重载、对象归属及关系边界，再返回原调用方，不强插 Flow 节点。为什么：已有零散移植机制无法独立触发；词汇持久化须真人定案与精确文件授权，不再无条件写 CONTEXT。Codex 验证进行中；Claude 活体/A-B 按用户要求暂缓，不声明双运行时通过。
