@@ -158,6 +158,48 @@ codex:
     本段与上方 Claude 侧 agents:/tiers: 是**同一套档位的两个投影**，新增场景须同时补两侧
     （new_scenario_protocol 对 Codex 同样适用）。只补一侧 = 换个 CLI 就掉档。
 
+  # 独立的 model-only 解析政策；尚未接入原生/runner，以上继承路径继续有效。
+  # 存量 effort 设置照常生效，但不参与这里的角色、摘要或裁决票据校验。
+  # 账户模型名仅来自经核验的有效配置与用户确认的 peak 选择点。
+  model_routing:
+    version: 1
+    status: parser-only
+    scope: codex
+    roles:
+      anchor: effective-default
+      peak: user-approved-selection
+    scenes:
+      MR-001:
+        trigger: implementation-interaction-mechanical
+        role: anchor
+        critical: false
+      MR-002:
+        trigger: entered-plan-or-explicit-replan
+        role: peak
+        critical: true
+      MR-003:
+        trigger: redteam-refute-judge-oracle-expert-panel
+        role: peak
+        critical: true
+      MR-004:
+        trigger: semantic-review-or-terminal-decision
+        role: peak
+        critical: true
+      MR-005:
+        trigger: independent-review-before-authorized-irreversible-action
+        role: peak
+        critical: true
+      MR-006:
+        trigger: fact-collection-or-retrieval
+        role: anchor
+        critical: false
+      MR-007:
+        trigger: explicit-long-context-delegation
+        role: by-scene
+        requires_capacity: true
+    critical_failure: refuse-no-fallback
+    evidence: trusted-runtime-adoption-and-same-invocation-success
+
 # ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
 new_scenario_protocol:
   rule: |
