@@ -1485,7 +1485,7 @@ function runRouteGuard(cwd, prompt) {
 // ── SETTINGS-002：hooks 布线契约（S22 手法延伸，2026-07-14）——六 hook 挂对事件 + README §8 表
 //    与真实布线一致。背景：README 曾把 project-scope-guard 写成 PostToolUse、session-end 写成
 //    Stop（重定向必须在工具执行前，写错是语义级误导），手写表零机检漂移了未知时长。
-//    本块两仓逐字一致：fork 专属断言（HEAVY set 注入）以 muse-loop-orchestrate skill 目录存在与否条件化。
+//    通用 HEAVY 扩展机制由 route-guard 的注入回归覆盖；退役能力不得再被生产配置注入。
 {
   const settings = JSON.parse(readFileSync(resolve(projectRoot, '.claude/settings.json'), 'utf8'));
   const wiring = {
@@ -1507,12 +1507,8 @@ function runRouteGuard(cwd, prompt) {
   for (const t of ['Write', 'Edit', 'Read', 'Bash', 'Grep', 'Glob']) {
     assert.ok(preRe.test(t), `PreToolUse matcher 必须匹配 ${t}`);
   }
-  // muse-loop-orchestrate 在场时 HEAVY set 必须经 tracked env 块注入（PLAN_CHECK 双保险；
-  // 2026-07-16 B2 合并起从行内前缀升级为 settings.env——两检出一致生效，无本地配置可丢）
-  if (existsSync(resolve(projectRoot, '.claude/skills/office/muse-loop-orchestrate'))) {
-    assert.match(settings.env?.ROUTE_GUARD_HEAVY_SKILLS ?? '', /(^|,)muse-loop-orchestrate(,|$)/,
-      'settings.json env 块必须注入 muse-loop-orchestrate 进 ROUTE_GUARD_HEAVY_SKILLS');
-  }
+  assert.doesNotMatch(settings.env?.ROUTE_GUARD_HEAVY_SKILLS ?? '', /(^|,)(?:muse-loop-orchestrate|muse-proto-gen)(,|$)/,
+    '退役能力不得进入生产 ROUTE_GUARD_HEAVY_SKILLS');
   // auto 截流实验不变量（2026-08-03，60 天盒到期 2026-10-02）：实验期内 HEAVY 集不得含 auto——
   // 否则实验静默失效且无人发现（复盘会把截流期的零使用误读为需求侧结论）。
   // 实验结束后按复盘裁决删除或反转本断言。

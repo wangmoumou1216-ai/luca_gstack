@@ -43,7 +43,7 @@ export function deriveCaps(src) {
   if (/WebSearch|WebFetch/.test(at) || /WebSearch|WebFetch/.test(body)) caps.add('web');
   if (/AskUserQuestion/.test(at) || /AskUserQuestion/.test(body)) caps.add('askUser');
   // daemon：改行级 + 排除 fallback 语境。全文级匹配会把"当 OD daemon 探测为 DOWN 时才被 dispatch
-  // 作为降级方案"这类**反向依赖**（daemon 挂了它才顶上）误判为依赖 daemon（muse-proto-gen 实测）。
+  // 作为降级方案"这类**反向依赖**（daemon 挂了它才顶上）误判为依赖 daemon。
   const DAEMON_RE = /daemon|pgrep .*sidecar|订阅会话/;
   const DAEMON_DENY = /DOWN|fallback|降级|回退|不可达|不可用|探测/i;
   for (const line of body.split('\n')) {

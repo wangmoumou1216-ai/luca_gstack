@@ -51,7 +51,7 @@ tiers:
       brainstorm 系 4 skill 与 deepresearch 自 reasoning-heavy 迁入（Fable 手术刀，
       见 reasoning-heavy.note）；其内部判定环节（苏格拉底审查/Oracle 对抗）按
       fable_whitelist P1 单独 dispatch fable 微判官。
-    skills: [brainstorm, ux-brainstorm, design-brief, muse-loop-orchestrate,
+    skills: [brainstorm, ux-brainstorm, design-brief,
              deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype,
              code-hygiene, code-review, codebase-design, auto, muse-x-digest,
              grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, to-tickets, implement]
@@ -60,7 +60,7 @@ tiers:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
     skills: [handoff, quick-research, idea, ux-research, ux-audit, figma-demo, challenge,
-             code-recon, muse-req-triage, muse-proto-gen,
+             code-recon, muse-req-triage,
              compare, magicpath, research-kit, ux-writing, wait-what, writing-for-agents, domain-modeling]
 
   mechanical:

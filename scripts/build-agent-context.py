@@ -118,9 +118,15 @@ def render_catalog() -> str:
             fail(f"invalid or duplicate retired skill name: {name}")
         if name in classified or name in paths:
             fail(f"retired skill remains active: {name}")
-        if entry["status"] != "retired-unavailable" or entry["replacement"] not in paths:
+        # A retirement need not invent a successor. Only null means no replacement;
+        # named replacements must still resolve to a current skill.
+        replacement = entry["replacement"]
+        if entry["status"] != "retired-unavailable" or not (
+            replacement is None or isinstance(replacement, str) and replacement in paths
+        ):
             fail(f"invalid retired skill status or replacement: {name}")
-        if not re.fullmatch(r"SC-\d{8}-\d{3}", str(entry["decision_id"])) or not str(entry["boundary"]).strip():
+        # RET identifies a user-approved repository retirement, not a promoted memory fact.
+        if not re.fullmatch(r"(?:SC|RET)-\d{8}-\d{3}", str(entry["decision_id"])) or not str(entry["boundary"]).strip():
             fail(f"invalid retired skill decision or boundary: {name}")
         retired_names.add(name)
 
@@ -149,7 +155,7 @@ def render_catalog() -> str:
         ])
         for entry in sorted(retired, key=lambda item: item["name"]):
             lines.append(
-                f"- `{entry['name']}` — `{entry['status']}`; replacement: `{entry['replacement']}`; "
+                f"- `{entry['name']}` — `{entry['status']}`; replacement: `{entry['replacement'] if entry['replacement'] is not None else 'none'}`; "
                 f"{entry['boundary']} (`{entry['decision_id']}`)"
             )
     lines.extend(["", "<!-- FILE_END: skill-os/generated/skill-catalog.md -->", ""])

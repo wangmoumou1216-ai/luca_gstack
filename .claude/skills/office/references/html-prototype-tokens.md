@@ -216,7 +216,7 @@
 
 ## 8. 消费约定
 
-`html-prototype`、`figma-demo`、`muse-proto-gen` 按需复用本文件的状态和动效语义，保留各自的来源确认、QA 与 AC 门。
+`html-prototype`、`figma-demo` 按需复用本文件的状态和动效语义，保留各自的来源确认、QA 与 AC 门。
 `design-brief` 交接状态和必须达成的交互，不把示例 HTML、视觉类名或技术实现写成需求事实。
 
 ## 9. 维护约定

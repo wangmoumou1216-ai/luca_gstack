@@ -1,7 +1,6 @@
 {
   "env": {
-    "MEMORY_ROOT": "/Users/luca/Desktop/luca_gstack",
-    "ROUTE_GUARD_HEAVY_SKILLS": "muse-loop-orchestrate"
+    "MEMORY_ROOT": "/Users/luca/Desktop/luca_gstack"
   },
   "permissions": {
     "allow": [

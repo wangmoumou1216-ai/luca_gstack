@@ -203,7 +203,8 @@ function installAdapterFixture(f) {
   writeFileSync(join(f.repo, '.claude', 'hooks', 'project-scope-guard.mjs'), 'process.exitCode = 0;\n');
   copyFileSync(GUARD, join(f.repo, '.claude', 'hooks', 'controlled-change-guard.mjs'));
   const hooksBytes = readFileSync(CODEX_HOOKS);
-  assert.equal(sha256Bytes(hooksBytes), 'be5732086a10d51939d382f22a6404827b85818502f30c3f49b965dd52d99dae', 'registered Codex hooks trust bytes drifted');
+  // 2026-09-20: approved Loop env removal, exact-six native hook trust renewed and read back.
+  assert.equal(sha256Bytes(hooksBytes), 'fa3fee9845f4a5e00b2dd5f682474fc8cc33ad48658b89839aaf9cd28a4eec8c', 'registered Codex hooks trust bytes drifted');
   const registered = JSON.parse(hooksBytes).hooks.PreToolUse[0].hooks[0].command;
   const sink = join(f.scratch, 'registered-wrapper.log');
   const executable = registered.replace('2>> /tmp/luca-gstack-hooks.log', `2>> "${sink}"`);

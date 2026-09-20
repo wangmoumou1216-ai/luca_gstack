@@ -29,8 +29,8 @@ _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH | SESSION: $_SESSION_ID"
 # 找 design-brief handoff——若 .claude/current-topic.txt 有值，先按 topic 过滤再取最新，
-# 避免同一天出现多份 design-brief handoff 时取错（muse-loop 这类编排器可能一天内对多个
-# REQ 各跑一次 design-brief，产生多份同日 handoff——2026-07-02 修复的真实回归风险）。
+# 避免同一天对多个 topic 各跑一次 design-brief 时取错同日 handoff
+# （2026-07-02 修复的真实回归风险）。
 _TOPIC_HINT=$(cat .claude/current-topic.txt 2>/dev/null || echo "")
 _FILTERED=0
 if [ -n "$_TOPIC_HINT" ]; then
@@ -181,7 +181,7 @@ inherited authority/effect intersection。未定案项回本 Conflict Register�
 **测试 seam 清单**——本变更将在哪些公共边界被测：优先已有 seam、取最高边界、趋向单一
 （词汇见项目共享 `codebase-design` skill）。与逐需求测试判据互补：判据管"测什么"，seam 管"在哪测"；
 **限定 spec-time 勾画，不复制全局 tdd 的 test-time 确认门**。确认门条件化：交互运行（用户在场）
-用 AskUserQuestion 确认 seam 清单再展开契约；**编排器 headless 运行（如 muse-loop dispatch）
+用 AskUserQuestion 确认 seam 清单再展开契约；**编排器 headless 运行
 把 seam 清单写入产出、不阻塞**——不向编排节点插计划外人类卡点。
 
 每个接口条目格式：

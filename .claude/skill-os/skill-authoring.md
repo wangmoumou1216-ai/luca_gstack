@@ -21,7 +21,7 @@
 这是"使用即留任"（运行期治理）的设计期前置问：新建前先论证这刀的 load 由谁付、为什么值。
 我方既有形态对照：一级可见=付 context load；隐藏 skill=付 cognitive load（CLAUDE.md 语义兜底
 承担索引）；references/ 资产=零入口零 load，被动引用——**组合优于重复**：几行引用一个厚
-primitive，胜过复制它（例：muse-proto-gen 复用 html-prototype 防 slop 规则）。
+primitive，胜过复制它（例：figma-demo 复用 html-prototype 的 QA 引擎）。
 
 ## 2. Leading word（先导词）技法
 

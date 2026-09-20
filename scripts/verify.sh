@@ -111,7 +111,7 @@ check S14e "退役设计约束不从活动规则/记忆回流（含恢复旧数�
 check S14f "页面库九页身份、四 carrier 模块/slot、raw→shadow hash 与负例" "npm run test:page-context --silent && npm run test:carrier-asset-profile --silent"
 check S14g "页面库九页真实浏览器预览与四 carrier-only 静态闭包" "npm run test:page-context-preview --silent"
 check S15 "coding discipline 合同检查通过"        "npm run check:coding-discipline --silent"
-check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
+check S17 "Loop 退役不可调度且独立能力/共享 QA 保留（含 mutation）" "npm run test:loop-retirement --silent"
 check S18 "能力锚点自检（capability anchors，防误删关键小节）"  "node scripts/check-capability-parity.mjs"
 check S40 "跨 harness 语义 projection proof-it-bites（delegation/obligation/order）" "npm run test:semantic-parity --silent"
 check S41 "controlled-change schema/controller/guard 全量回归" "npm run test:controlled-change --silent"

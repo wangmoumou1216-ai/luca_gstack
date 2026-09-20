@@ -80,7 +80,7 @@ Step 2 已有的按 Phase 数缩放的确认门（Hierarchical≥3 Phase 才等�
     Hierarchical≥3 Phase 条件门即属此类）；
 (c) 名单变更必须人工 review，并在下方逐项记录理由——SSOT-10 只校验三表名单同步与门语句锚
     存在（tripwire），**不能**替代对"门是否真实/足够"的人工判断。
-当前符合：`/auto`、`/deepresearch`、`/ux-research`、`/figma-demo`、`/muse-loop-orchestrate`（muse fork 专属）。
+当前符合：`/auto`、`/deepresearch`、`/ux-research`、`/figma-demo`。
 - `/auto`：Step 2 Plan Output，Hierarchical≥3 Phase 等用户确认后再执行（规模缩放门）。
 - `/ux-research`：介入点1「研究规划确认」不可跳过，fan-out 前逐维度确认（最强内门）。
 - `/figma-demo`：Step 2.3 映射确认——"唯一一次打扰设计师的地方"，Blueprint 生成前强制。
@@ -91,12 +91,7 @@ Step 2 已有的按 Phase 数缩放的确认门（Hierarchical≥3 Phase 才等�
   不确认研究角度（**角度确认已由块 2「研究方向编排」上移到 Plan Agent 层、高于本内门**，2026-07-20 追加项 C）；
   接受理由：纯只读 skill、无不可逆操作，其余 4 条件（尤其"用户明确要求
   计划"）仍适用，route-guard 复杂度硬门先于路由生效。
-- `/muse-loop-orchestrate`（muse fork 专属，2026-07-14 编排层评审收编）：GATE-1 在首次 fan-out
-  前——dispatch `muse-req-triage`（入口B）时其 Phase 3 AskUserQuestion 触发，
-  `allow_standalone_override: false` 不可绕过，另有 GATE-2 第二人类卡点。豁免只解条件 2 恒真
-  （防复刻 /auto 当年 50-session 零使用的结构性成因）；muse-loop-orchestrate 的 PLAN_CHECK
-  双保险保留（ROUTE_GUARD_HEAVY_SKILLS 仍升 PLAN_CHECK），其余 4 条件照常检查。
-  /auto 已于 2026-08-03 从 HEAVY 移除做最小干预实验：红队实测其每次触发词命中都被
+- `/auto` 已于 2026-08-03 从 HEAVY 移除做最小干预实验：红队实测其每次触发词命中都被
   PLAN_CHECK 改写成「读本文件出计划」、从未出现「调用 /auto」——移除是唯一能分辨
   「零使用因截流还是因无需求」的办法；60 天后（2026-10-02 起）复盘：读场景覆盖报告 auto 行的 EXPERIMENT 计数
   （= 窗口内 episodic 使用数，非文件 glob——auto 无唯一文件产物）；计数为 0 时先核对
@@ -558,7 +553,7 @@ Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编
 | `open-design` | 产出型·交互 | **设计产出首选**：OD 桌面端生成 + 「拉回来」落盘（headless 为 opt-in） | main_agent |
 | `magicpath` | 产出型（隐藏·独立备选） | 用户明确选择 React 组件级原型时，核验工具可用性 | subagent |
 | `html-prototype` | 产出型（独立备选） | 用户明确选择本地 HTML 方案时 | subagent |
-| `muse-req-triage`（muse） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion GATE-1，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
+| `muse-req-triage`（muse） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion 人类裁决门，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
 
 **编排原则：**
 - 需求越复杂、信息越模糊 → 越需要重型 skill

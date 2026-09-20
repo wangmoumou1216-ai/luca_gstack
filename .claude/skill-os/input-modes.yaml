@@ -347,27 +347,13 @@ skills:
     quality_gates: ["size_probe_decision", "parallel_recon", "verified_vs_inferred_audit", "architecture_brief_written", "native_first_no_forced_mcp"]
     notes: "Brownfield 正门（非设计 skill）：现有代码 → 架构 brief → 作 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入。native-first；codegraph MCP 仅规模阈值命中≥2 时提示、装下游不进 gstack。只读 recon 不改代码。"
 
-  muse-loop-orchestrate:
-    modes:
-      standalone:
-        required: ["corpus_or_instruction"]
-        optional: ["existing_req_id"]
-      workflow:
-        required: []
-        optional: ["existing_req_id"]
-    quality_gates: ["gate1_triage_confirmed", "gate2_design_map_confirmed", "traceable_delivery_required", "cold_start_judge_isolation"]
-    notes: "muse 专属。独立正向单趟状态机（extract→triage→map→gen→judge），零接入母版 Orchestrator。"
-
   muse-req-triage:
     modes:
       standalone:
         required: ["candidate_requirements_or_raw_corpus"]
         optional: []
-      workflow:
-        required: ["candidate_requirements"]
-        optional: []
     quality_gates: ["gate1_human_decision", "no_rice_fabrication", "brainstorm_phase15_firewall"]
-    notes: "muse 专属。standalone 模式：本 skill 自己读原始语料+算信号，accept 项格式化为话题字符串送进 /brainstorm。workflow 模式：被 muse-loop-orchestrate dispatch，接收已抽取候选，输出走 docs/loop/specs/。"
+    notes: "standalone：接收原始语料或结构化候选，忠实提取并计算信号；accept/defer/reject 均须用户裁决。accept 项可格式化为话题字符串交给 /brainstorm，保留其置信度防火墙。"
 
   insight-synthesis:
     modes:
@@ -446,18 +432,6 @@ governance_tools:
       workflow:
         required: []
         optional: ["design_brief", "handoff_review", "ux_audit"]
-
-  # muse fork 专属新增（muse-loop 内部阶段 skill）：不进 project_skills / 不设独立
-  # command 文件 / 不进 skill-routing-map.yaml——只由 muse-loop-orchestrate 内部
-  # dispatch。按本仓 redteam/evals/retro 的 Tier-A 隐藏先例，仅在此登记
-  # governance_tools 契约，保持可治理可见性。muse-req-triage 已提升为
-  # project_skills（见上方），不再在此重复登记。
-  muse_proto_gen:
-    modes:
-      workflow:
-        required: ["design_map_output"]
-        optional: ["prior_judge_gap_feedback"]
-    quality_gates: ["controlled_vocabulary_only", "decision_id_traceable", "verify_prototype_qa"]
 
   # muse-proto-judge 已转为 .claude/agents/muse-proto-judge.md（同 quality-gate 的
   # agent 定义模式：Task 工具冷启动调度，非 Skill 工具+command 文件路径）。

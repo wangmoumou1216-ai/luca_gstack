@@ -53,8 +53,7 @@ OD 不可达、认证失败或非 React/Canvas 场景只报告阻塞并暂停；
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
 需求范围明确、不需要重型拷问时，可以用 superpowers:brainstorming 替代第3步。
-muse fork 专属：手头是一批候选需求想先筛一遍再进 /brainstorm → /muse-req-triage；
-要从需求到原型端到端自治跑完整闭环（含 GATE-1/GATE-2 人类卡点）→ /muse-loop-orchestrate。
+手头是一批候选需求想先筛一遍再进 /brainstorm → /muse-req-triage。
 有假设想先做一手验证（访谈/问卷/可用性测试）→ 第3步后跑 /research-kit 设计采集工具，
 采回数据投 /insight-synthesis；要定产品内容/文案规范（voice/微文案/hedging）→ 第6步前跑
 /ux-writing（design-brief 会继承其语义结论进 Packet）。
@@ -312,19 +311,11 @@ standalone，不读 optional graph；preset 选择也不授予写入、Git、网
 
 ── muse 专属 ───────────────────────────────────────────────
 
-/muse-loop-orchestrate  —  需求→原型自治 Loop 编排器：extract→triage→map→gen→judge
-               单向链（gen↔judge 有界内循环），自带两个不可省略人类卡点（GATE-1/GATE-2）
-               输入模式：standalone。触发短语见 .claude/skill-os/skill-routing-map.yaml
-               （复合词，不撞现有 brainstorm/html-prototype/design-brief 词条）
-               语义兜底："从需求到原型跑一遍完整流程/闭环"这类端到端自治编排意图
-
 /muse-req-triage  —  批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单
-               输入模式：standalone（入口A，筛过再投 /brainstorm）或被
-               /muse-loop-orchestrate 内部 dispatch（入口B）
+               输入模式：standalone（原始语料或结构化候选，人工裁决后可投 /brainstorm）
                语义兜底："筛一遍这堆需求"、"要不要先过一遍再进 brainstorm"这类批量需求预筛意图
 
-               说明：muse-proto-gen（隐藏，仅按用户明确选择或已批准的本地备用路径被 /muse-loop-orchestrate
-               内部 dispatch；OD 不可达本身不授权切换）与 muse-proto-judge（agent 定义，仅内部调用）不对用户暴露
+               说明：muse-proto-judge 保留为独立 AC 核对 agent，不是一级 skill 入口
 
 ── 外部 Skill（superpowers plugin）─────────────────────────
 

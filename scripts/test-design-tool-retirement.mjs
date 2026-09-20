@@ -42,7 +42,7 @@ function verifyRoutes() {
   for (const prompt of ['保险层', 'figma保险层', '推到figma', '同步到Figma', '还原到figma', 'figma保险']) {
     assertNotDispatched(route(prompt), prompt);
   }
-  for (const name of ['html-prototype', 'magicpath', 'figma-demo', 'muse-proto-gen', 'muse-loop-orchestrate',
+  for (const name of ['html-prototype', 'magicpath', 'figma-demo', 'muse-req-triage', 'muse-proto-judge',
     'open-design', 'brainstorm', 'tech-spec', 'task-plan', 'custom-existing-skill', 'figma-layer-helper']) {
     for (const prefix of ['/', '$']) {
       const result = route(`${prefix}${name}`);

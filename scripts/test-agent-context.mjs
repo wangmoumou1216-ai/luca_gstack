@@ -44,7 +44,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 45;
+const EXPECTED_MUTATIONS = 49;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -59,6 +59,21 @@ function mutate(name, edit, expected) {
 const clean = run(fixture());
 assert.equal(clean.status, 0, `clean compatibility fixture must pass\n${clean.stdout}${clean.stderr}`);
 console.log('PASS clean compatibility fixture');
+
+for (const replacement of ['', 'none', 'missing-skill']) {
+  mutate(`retirement rejects invalid replacement ${JSON.stringify(replacement)}`, dir => {
+    const p = join(dir, '.claude/skill-os/skill-visibility.json');
+    const data = JSON.parse(readFileSync(p));
+    data.retired.find(entry => entry.name === 'muse-loop-orchestrate').replacement = replacement;
+    writeFileSync(p, JSON.stringify(data));
+  }, /invalid retired skill metadata/);
+}
+mutate('retirement rejects malformed local decision ID', dir => {
+  const p = join(dir, '.claude/skill-os/skill-visibility.json');
+  const data = JSON.parse(readFileSync(p));
+  data.retired.find(entry => entry.name === 'muse-loop-orchestrate').decision_id = 'RET-no-authority';
+  writeFileSync(p, JSON.stringify(data));
+}, /invalid retired skill metadata/);
 
 {
   const dir = fixture();

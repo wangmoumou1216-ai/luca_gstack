@@ -22,8 +22,7 @@
 | `idea` | 原始语料结构化工具。输入任意形式的原始需求表达（语音转文字、会议纪要、 领导想法、讨论记录），输出诚实的结构化梳理。 不延展、不推断、不加判断。所有输出必须有原文依据。 与 /brainstorm 是独… | `.claude/skills/office/idea/SKILL.md` |
 | `implement` | Thin execution facade that compiles a gated spec and task-plan through Plan Agent, obtains approval f… | `.claude/skills/office/implement/SKILL.md` |
 | `insight-synthesis` | 一手定性综合：把**用户提供的**一手定性资料（访谈/工单/回访/开放问卷）编码成原子观察， 跨来源亲和聚类，经用户确认主题后做 observation→interpretation 跃迁，产出分层洞察… | `.claude/skills/office/insight-synthesis/SKILL.md` |
-| `muse-loop-orchestrate` | 需求→原型自治 Loop 的独立正向单趟编排器（muse fork 专属新增）。 extract→triage→map→open-design生成+judge核对 一次性单向链（2026-07-02 O… | `.claude/skills/office/muse-loop-orchestrate/SKILL.md` |
-| `muse-req-triage` | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/ 优先级裁定留给人类。两种触发方式：① 独立使用（你手头有一堆候选需求/原始 语料，想在投入 /brains… | `.claude/skills/office/muse-req-triage/SKILL.md` |
+| `muse-req-triage` | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/ 优先级裁定留给人类。独立接收原始语料或已整理的候选需求清单，在投入 /brainstorm 前筛选；不代替… | `.claude/skills/office/muse-req-triage/SKILL.md` |
 | `office` | luca_gstack 入口。向导式：先问你想做什么，推荐对应 workflow。 展示一级可见 skill 列表，含描述和输入模式。 | `.claude/skills/office/SKILL.md` |
 | `open-design` | Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only） → 指定 OD 项目交接与 hand… | `.claude/skills/office/open-design/SKILL.md` |
 | `quick-research` | 轻量研究：把一个待查问题委托给**一个后台 agent**去读 **primary source**（官方文档/源码/ 规范/一手 API），主线不阻塞；产出单个带逐条溯源的 markdown。 **D… | `.claude/skills/office/quick-research/SKILL.md` |
@@ -59,7 +58,6 @@
 
 | Skill | Defining constraint | Authority path |
 |---|---|---|
-| `muse-proto-gen` | muse-loop 内部原型生成步骤（L2→L3）**fallback 路径**（2026-07-02 起不再是默认路径—— 真实端到端测试后 luca 指出：真实设计产出流程是走 Open Desig… | `.claude/skills/office/muse-proto-gen/SKILL.md` |
 | `references` | 只读参考资产目录，供其他 skill 读取。不可作为独立 skill 调用。 | `.claude/skills/office/references/SKILL.md` |
 
 ## Retired/unavailable
@@ -67,5 +65,7 @@
 These discovery tombstones are not callable skills or authority-file links.
 
 - `figma-layer` — `retired-unavailable`; replacement: `open-design`; Only luca_gstack's reconstruction/write entry is retired; this neither verifies nor disables Open Design's own Figma capability. (`SC-20260905-003`)
+- `muse-loop-orchestrate` — `retired-unavailable`; replacement: `none`; The unused Muse Loop orchestrator is retired. Refuse its invocation; do not automatically launch a replacement tool or workflow. Standalone triage and the independent prototype judge remain available. (`RET-20260920-001`)
+- `muse-proto-gen` — `retired-unavailable`; replacement: `none`; The Muse Loop-only prototype generator is retired. Refuse its invocation; do not automatically select another generator. Independent design tools retain their own user-selection and quality gates. (`RET-20260920-002`)
 
 <!-- FILE_END: skill-os/generated/skill-catalog.md -->

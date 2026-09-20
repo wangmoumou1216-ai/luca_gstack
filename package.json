@@ -53,7 +53,7 @@
     "check:project-links": "node scripts/check-project-links.mjs",
     "build:self-model": "node scripts/build-self-model.mjs",
     "check:self-model": "node scripts/build-self-model.mjs --check",
-    "check:muse-loop-sync": "node scripts/check-muse-loop-sync.mjs",
+    "test:loop-retirement": "node scripts/test-muse-loop-retirement.mjs --mutation",
     "check:evolution-adjudication": "node scripts/check-evolution-adjudication.mjs",
     "test:evolution-feedback": "node scripts/test-evolution-feedback.mjs",
     "check:agent-contracts": "node scripts/check-agent-contracts.mjs",

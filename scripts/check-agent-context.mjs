@@ -169,11 +169,11 @@ for (const entry of retired) {
   if (!/^[a-z][a-z0-9-]*$/.test(entry.name) || retiredNames.has(entry.name)) errors.push(`invalid or duplicate retired skill ${entry.name}`);
   retiredNames.add(entry.name);
   if (classified.includes(entry.name) || skillNames.includes(entry.name)) errors.push(`retired skill remains active: ${entry.name}`);
-  if (entry.status !== 'retired-unavailable' || !skillNames.includes(entry.replacement)
-      || !/^SC-\d{8}-\d{3}$/.test(entry.decision_id) || typeof entry.boundary !== 'string' || !entry.boundary.trim()) {
+  if (entry.status !== 'retired-unavailable' || !(entry.replacement === null || skillNames.includes(entry.replacement))
+      || !/^(?:SC|RET)-\d{8}-\d{3}$/.test(entry.decision_id) || typeof entry.boundary !== 'string' || !entry.boundary.trim()) {
     errors.push(`invalid retired skill metadata: ${entry.name}`);
   }
-  const line = `- \`${entry.name}\` — \`${entry.status}\`; replacement: \`${entry.replacement}\`; ${entry.boundary} (\`${entry.decision_id}\`)`;
+  const line = `- \`${entry.name}\` — \`${entry.status}\`; replacement: \`${entry.replacement ?? 'none'}\`; ${entry.boundary} (\`${entry.decision_id}\`)`;
   if (!catalog.includes(line)) errors.push(`skill catalog lacks retired tombstone: ${entry.name}`);
 }
 if (!retiredNames.has('figma-layer')) errors.push('required figma-layer retirement tombstone missing');

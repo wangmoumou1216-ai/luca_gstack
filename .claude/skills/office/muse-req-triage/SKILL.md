@@ -2,22 +2,11 @@
 name: muse-req-triage
 preamble-tier: 3
 argument-hint: "[候选需求语料/清单 (原始语料，或已抽取的候选需求列表)]"
-version: 2.3.0
+version: 3.0.0
 description: |
   批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/
-  优先级裁定留给人类。两种触发方式：① 独立使用（你手头有一堆候选需求/原始
-  语料，想在投入 /brainstorm 前先筛一遍）② 被 muse-loop-orchestrate 内部
-  dispatch（Loop 场景，接收已抽取的候选需求）。muse 产品线 skill（2026-07-16
-  F6-04 已并入 main 单真值源）。触发词见 skill-routing-map.yaml。
-  v2.1.0（2026-07-02，fork内）：加 Write 权限，修复"Phase 4 声称写入
-  requirement.md 但自己没有 Write 工具"的责任缺口——写入由本 skill 自己
-  完成，不依赖调度方（muse-loop-orchestrate）代写。
-  v2.2.0（2026-07-02，fork内）：Phase 0 新增设计参照引用的忠实抽取（填入
-  L1 卡 design_reference 字段，语料没有就 null，机器永不自标 greenfield）——
-  第一条真实端到端 REQ 暴露"整条链没看过现有UI"缺口的上游修复点。
-  v2.3.0（2026-07-06，fork内）：加 Bash 权限，修复"Phase 3 要求跑
-  node scripts/check-ears-syntax.mjs 做机械 EARS 校验，但 allowed-tools
-  无 Bash、校验根本执行不了"的工具契约缺口（与 v2.1.0 加 Write 同类）。
+  优先级裁定留给人类。独立接收原始语料或已整理的候选需求清单，在投入
+  /brainstorm 前筛选；不代替 PRD 的证据验证。触发词见 skill-routing-map.yaml。
 allowed-tools:
   - Read
   - Write
@@ -36,18 +25,22 @@ context-cost:
 echo "MUSE_REQ_TRIAGE_ENTRY: $(date +%s)"
 ```
 
-> 本 skill 的真伪判据（第4节）与优先级信号定义（第5节，`qualitative_signal`）以 `constitution.md` 为权威源，本文件不重复定义、只引用。
-
 ## 角色声明
 
 **你是候选需求的 triage 关卡，不是最终裁决者。**
 
 机器只能做三件事：可回溯性检查、rule-based 打分、提议分类。**最终 accept/defer/reject 永远是人类拍板**——这条边界不可省略。
 
+**可回溯性是真伪的必要条件，不是充分条件。** 即使能引用原文，若连不到真实机会/问题，人类仍可拒绝；机会、动机或优先级未明说时保持未知，机器不得补造。真伪不用 RICE/Kano 数值判断，最终优先级排序也由人类决定。
+
 **verify-before-grill 前置门（2026-07-12 对标 merge，源 triage，归入"可回溯性检查"类目）：**
 候选需求若**声称现状**（"现在已经坏了/系统已有 X/上线后没人用 Y"），先做可机验核查——grep 既有
-REQ/PRD/L1 卡与（入口 B）激活项目的 shipped 现状锚点，把核查结果（confirmed/failed/insufficient
+REQ/PRD 与已验证项目的 shipped 现状锚点，把核查结果（confirmed/failed/insufficient
 + 证据指针）作为**信号呈给人类**再进分类。不改变机器权限边界：核查供人裁，不代裁。
+参照物必须区分 `historical_prd`（历史需求）、`same_meeting_earlier_statement`（同场较早陈述）、
+`shipped_product_behavior`（已上线行为）或 `none`；记录具体条目/版本引用及
+`new | duplicate | contradicts | extends` 比较结果。旧 PRD 或会议说法不能冒充已实现证据；
+缺可访问证据时标 `insufficient`，不假定已核查。
 
 ## 为什么不照搬 ux-brainstorm 的 OST 公式或 brainstorm 的 disposition 枚举
 
@@ -56,15 +49,21 @@ REQ/PRD/L1 卡与（入口 B）激活项目的 shipped 现状锚点，把核查�
 
 **结论：本 skill 自建一套更窄的 proxy 打分 + 独立 triage 分类，不冒充上述两套机制，也不是它们的替代品——是它们之前的一道便宜前置筛选。**
 
-## Phase 0：拿到候选清单 + 计算信号（两种入口，行为不同）
+## Phase 0：拿到候选清单 + 忠实抽取
 
-**入口 A（独立使用）：** 你直接把原始语料（会议记录/客户反馈/backlog 列表）或已经整理过的候选需求列表交给本 skill。本 skill 自己读取语料，按 `muse-loop/references/req-extraction-principles.md` 的三铁律做忠实抽取（不延展、不推断意图、不做评价性框定），**同时**为每条候选计算 Phase 1 信号（下方）——因为独立使用时，没有上游步骤替你算好这些信号。
+接收原始语料（会议记录/客户反馈/backlog）或结构化候选清单；带 id 的清单同样走完整独立流程，不因输入已整理而跳过来源核查、信号计算或人工裁定。只读取用户提供或已获授权的输入。
 
-**入口 B（被 muse-loop-orchestrate dispatch）：** 直接接收已抽取的候选需求列表（来自 Loop 内部抽取步骤），跳过语料读取这一步；但仍对每条候选条目执行下方「设计参照引用的忠实抽取」（Phase 0 的一部分，两个入口都做），再进入 Phase 1 打分。
+抽取三铁律：
 
-**两种入口的判断依据（以调用方身份为准，2026-07-08 修正）：** 被 `muse-loop-orchestrate` dispatch → 入口 B；其余情况（用户直接使用）→ 入口 A，**无论输入形态**——独立用户给出带 id 的结构化清单仍走入口 A。输入形态（原始语料 vs 结构化条目）只作辅助提示，不作判据。
+1. **不延展**：只提取语料确实说了/写了/展示了的内容，不补“用户应该还想要”。
+2. **不推断意图**：未明说的动机、优先级、紧急程度标“未知”。
+3. **不做评价性框定**：抽取只判断是否为需求陈述，不评好坏/该不该做；建议分类留到 Phase 2。
 
-**设计参照引用的忠实抽取（v2.2.0 新增，两个入口都做）：** 语料/候选条目里若**真实出现**了对现有UI的引用——Figma 链接或节点指涉、线上页面URL、被点名的截图/设计稿——原样抽出，填入 L1 卡的 `design_reference` 字段（`schema.md` v0.6）；语料里**没有**就填 `null`，**不推断、不臆造、不替用户猜"这个产品应该有现成设计"**（三铁律直接适用）。`none_confirmed_greenfield` 这个值本 skill **机器判定阶段永不自填**——只能由人类在 GATE-1 显式选择，作答后**由编排器（`muse-loop-orchestrate`）回填** `design_reference` 与 `captured_at`（回填契约见其 SKILL.md GATE-1 节）（防止机器静默把改造需求当从0到1处理——2026-07-02 第一条真实端到端 REQ 的真实教训：整条链没看过真实 Figma，把历史记录标签当成了入口按钮）。
+每条保留一句话陈述、`source_trace`（需求从哪来：具体语料位置/引用）、判断依据（为何是需求而非闲聊/背景）。结构化条目缺来源仍标缺失，不伪造可回溯性。
+
+**类型：** `requirement` 是可执行需求，须有忠实于来源的 `statement_ears`；`open_question` 是架构分歧、命名未定、方案待验证等开放问题，可保留疑问句或省略 EARS，不强改成需求。开放问题保持待决策，只有人类明确转为 requirement 后才按需求交接。
+
+**设计参照：** `design_reference` 记“要改的现有 UI 在哪”，不替代 `source_trace`。语料真有 Figma 链接/节点、线上 URL、截图/设计稿引用才原样抽出，并记录类型 `figma | live_html | screenshot` 与 `ref`；没有则 `null`。未实际采集不编造 `captured_at`。机器永不自标 `none_confirmed_greenfield`，只有人类明确确认全新功能后才能记录该值及确认依据。独立初筛不强加设计基线采集问题；缺参照如实呈现，后续实际设计的现状确认由其所属 skill 执行。
 
 ## Phase 1：Proxy 打分（不是 RICE，是队列能提供的真实信号）
 
@@ -75,17 +74,16 @@ REQ/PRD/L1 卡与（入口 B）激活项目的 shipped 现状锚点，把核查�
 | `requester_role` | 提出者角色（客户/销售/产品/内部脑爆） | 不代替优先级，只是背景信息 |
 | `explicitly_flagged_as_priority` | 语料里是否被显式点名为"最重要的一条" | 布尔值，来自原文直接陈述 |
 
-这套信号对应 `muse-loop/schema.md` 的 `priority.qualitative_signal` 字段（v0.2 引入并经 Phase 0 手填测试验证，当前 schema 为 v0.6）。**不产出 RICE 数值**——如果需要 RICE 式量化打分，必须由人类另外提供 reach/impact/effort 这类产品数据，机器不替人编造。
+这些信号统称 `qualitative_signal`；无来源支持的值标未知，不补齐猜测。它们不是量化优先级分数，**不产出可直接排序的单一数值或 RICE 数值**。需要 RICE 时须由人类另供 reach/impact/effort 等真实产品数据，机器不编造；最终排序仍交人类。
 
 ## Phase 2：独立 Triage 分类
 
 ```
-TRIAGE_ACCEPT     — 建议进入下一步（独立使用时=送进/brainstorm；Loop场景=进design-map）
+TRIAGE_ACCEPT     — 可回溯到语料，建议送进 /brainstorm；须人类确认才接受
 TRIAGE_DEFER      — 值得做但本轮不做
 TRIAGE_REJECT     — 建议不做（说明理由）
 TRIAGE_DUPLICATE  — 与已有 REQ/PRD **或已实现能力**重复（引用重复对象；"已实现"参照 =
-                    L1 卡 authenticity.entailment.compared_against=shipped_product_behavior
-                    既有槽位，2026-07-12 扩，源 triage redundancy-check）
+                    compared_against=shipped_product_behavior，不能用历史 PRD 充当实现证据）
 TRIAGE_ESCALATE   — 机器判断不了，直接甩给人类判断（如涉及价格/商业策略）
 ```
 
@@ -93,33 +91,29 @@ TRIAGE_ESCALATE   — 机器判断不了，直接甩给人类判断（如涉及�
 
 ## Phase 3：人工裁定（AskUserQuestion，不可省略）——本节是呈现内容的唯一权威定义
 
-> **权威声明（2026-07-03 修复）：** 本 Phase 是全仓唯一定义"triage 确认时该展示什么"的地方。`muse-loop-orchestrate` 的 GATE-1 复用的正是本 Phase 的 `AskUserQuestion` 调用（dispatch 入口B时触发），不是另一次独立呈现；orchestrate 侧不得复述或另定义呈现清单，只能引用本节。
-
-对每条候选——`TRIAGE_ACCEPT`/`TRIAGE_DEFER`/`TRIAGE_REJECT`/`TRIAGE_ESCALATE` 都要（`TRIAGE_DUPLICATE` 随附引用的重复对象一并呈现）——`AskUserQuestion` 必须展示（**两个入口都做**）。这正是角色声明「最终 accept/defer/reject 永远是人类拍板、不可省略」的落点：机器分类只是提议，**defer/reject 同样须经人类确认才定案，不得在 Phase 2 分类后由机器直接终局**（被拒台账「经人类拍板定案后」登记的前提正在此）。每条展示：
+对每条候选——`TRIAGE_ACCEPT`/`TRIAGE_DEFER`/`TRIAGE_REJECT`/`TRIAGE_ESCALATE` 都要（`TRIAGE_DUPLICATE` 随附引用的重复对象一并呈现）——`AskUserQuestion` 必须展示以下内容；没有结构化提问工具时用普通问题并等待真实回答。机器分类只是提议，**defer/reject 同样须经人类确认才定案，不得在 Phase 2 分类后由机器直接终局**（被拒台账「经人类拍板定案后」登记的前提正在此）。每条展示：
 
 1. 一句话陈述 + 来源引用
 2. Phase 1 信号（`repetition_count`/`emphasis_level`/`requester_role`/`explicitly_flagged_as_priority`）
 3. Phase 2 建议分类
-4. EARS 校验结果——先对 `statement_ears` 做机械校验；**Phase 3 时点 requirement.md 尚未落盘（入口 B 到 Phase 4 才写、入口 A 永不写），用 stdin 模式**：`echo "<statement_ears>" | node scripts/check-ears-syntax.mjs -`。缺"应当"/不匹配任何 EARS 模板标 FAIL，模糊动词/模糊指代标 WARN。FAIL/WARN 时在提示里多写一句"这条需求的陈述本身比较空泛，建议确认前先看一眼原始语料"。机械校验之外，同条目并列展示两条人工语义质量提示：**有无可衡量的完成目标？有无清楚的触发-响应结构？（linter 抓不出语义空洞，须人工判断）**——不阻断、不打回，真正的严格校验交给下游 `/brainstorm` Phase 1.5。
+4. EARS 校验结果——`requirement` 的陈述缺失先标 FAIL（不可借 linter 允许空值的开放问题兼容性过关）；其余用 stdin 把 `statement_ears` 作为纯文本传给 `node scripts/check-ears-syntax.mjs -`，不依赖文件落盘，也不把原文拼成可执行 shell。按事件驱动（当X发生时，系统应当Y）、状态驱动（处于X状态期间，系统应当Y）、条件驱动（如果X，那么系统应当Y）、通用型（系统应当Y）选模板。缺“应当”/不匹配模板标 FAIL，模糊动词/指代标 WARN。`open_question` 则标 N/A、保留待决问题，不为通过校验编造响应。FAIL/WARN 提示“这条需求的陈述本身比较空泛，建议确认前先看一眼原始语料”。并列展示两条人工语义质量提示：**有无可衡量的完成目标？有无清楚的触发-响应结构？（linter 抓不出语义空洞，须人工判断）**——不阻断、不打回，严格校验交给下游 `/brainstorm` Phase 1.5。
 5. `design_reference` 状态一行（Phase 0 忠实抽取所得；`null` 就如实显示 `null`，不代填）
 
-**仅入口 B（被 `muse-loop-orchestrate` dispatch 的 Loop 场景）额外必须展示：**
-
-6. brownfield 触发问法——`design_reference` 为 `null` 且满足 `muse-loop-orchestrate` GATE-1 节定义的任一 brownfield 信号时，在同一个 `AskUserQuestion` 里并入问法："这条需求要改的现有UI在哪？① Figma 链接 ② 线上地址 ③ 我提供截图 ④ 确认这是全新功能（无现有UI）"——触发条件与信号定义、以及答案如何驱动下游基线采集，见 `muse-loop-orchestrate` SKILL.md「GATE-1」节（编排逻辑权威源在那，呈现内容权威源在本节）。入口 A（独立使用，产出是喂给 `/brainstorm` 的话题字符串）不问这一项——现状确认交给下游 `/design-brief` 场景 B 的 Step B-0 处理。
+6. 若声称现状，展示核查结果、参照类型与证据指针；若命中被拒台账，展示旧决定/拒因供确认或重议。
 
 用户的选择才是最终裁定，机器的建议分类/校验结果只是提议与提示。
 
-## Phase 4：输出（两种形态，按入口而定）
+## Phase 4：输出
 
-**入口 A（独立使用）输出：** 每条 `TRIAGE_ACCEPT` 的候选，格式化为一个话题字符串，作为 `/brainstorm` Phase 0.1 的 cold-start 输入——即"这条需求已经过初筛，值得你投入一次完整的 `/brainstorm` 会话，这是它的一句话陈述+来源"。**不产出 `docs/loop/specs/REQ-*/` 这类 Loop 专属格式**——那是 Loop 场景的产物形态，独立使用时不需要。
-
-**入口 B（Loop 场景）输出：** 遵循 `muse-loop/schema.md` v0.6 的完整 L1 需求卡格式（含 `design_reference` 字段——语料有引用就填，没有填 null），**本 skill 自己用 `Write` 工具**写入 `docs/loop/specs/REQ-<项目缩写>-<编号>/requirement.md`（不依赖 `muse-loop-orchestrate` 代写——responsibility 明确在本 skill，调度方只负责 dispatch 和读取写入结果继续下一 Phase）。若目标目录不存在，先创建它。
+对每条经人类确认接受的 `requirement`，输出“一句话陈述 + 来源”的话题字符串，供 `/brainstorm` Phase 0.1 cold-start 使用；不自动启动后续 skill。其余候选保留人类决定/理由，未决开放问题单列。机器建议与人类裁定分开呈现，不把待确认项标成已接受。不生成需求卡目录或编排状态。
 
 ## 防火墙——被接受的需求不能直接顶替 brainstorm 真实 Phase 1.5
 
-**硬约束（两种入口都适用）：** 本 skill 的 Phase 1 proxy 信号（`qualitative_signal`）**不得**被当作 `brainstorm` Phase 1.5 disposition 的 `confidence` 字段直接搬用。被接受的需求，无论走哪个入口，最终都要经过 `/brainstorm` 真实的 Phase 1.5（获得一个真正基于 research/用户访谈证据的 confidence 值），才能让下游 `tech-spec` 的覆盖率门禁信任这条数据。这条防火墙保护 `tech-spec` 覆盖率门禁现有的信任前提，不因本 skill 的介入而悄悄降级。
+**硬约束：** 本 skill 的 Phase 1 proxy 信号（`qualitative_signal`）**不得**被当作 `brainstorm` Phase 1.5 disposition 的 `confidence` 字段直接搬用。被接受的需求仍须经过 `/brainstorm` 真实的 Phase 1.5（获得真正基于 research/用户访谈证据的 confidence 值），才能让下游 `tech-spec` 的覆盖率门禁信任这条数据。初筛不能降低该信任前提。
 
 ## 被拒需求台账（rejected-reqs，2026-07-12 对标 merge，源 .out-of-scope/ 机制）
+
+**项目边界：** 只在已验证 session pin 的项目绝对路径读写台账，不从 cwd 或共享别名猜项目。无 pin 时不读写项目台账，可基于已提供语料初筛并列出待登记内容；需持久化时先完成 Project Gate，不宣称已登记。
 
 **登记（防反复重议）：** TRIAGE_REJECT 经人类拍板定案后，追加一行到激活项目
 `.luca/memory/rejected-reqs.md`：`[RR-YYYYMMDD-N] <概念一句话> — 拒因：<一句> — 来源：<语料引用>`。

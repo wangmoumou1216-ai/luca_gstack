@@ -12,7 +12,7 @@
     "redteam",
     "retro"
   ],
-  "internal": ["muse-proto-gen", "references"],
+  "internal": ["references"],
   "retired": [
     {
       "name": "figma-layer",
@@ -20,6 +20,20 @@
       "replacement": "open-design",
       "decision_id": "SC-20260905-003",
       "boundary": "Only luca_gstack's reconstruction/write entry is retired; this neither verifies nor disables Open Design's own Figma capability."
+    },
+    {
+      "name": "muse-loop-orchestrate",
+      "status": "retired-unavailable",
+      "replacement": null,
+      "decision_id": "RET-20260920-001",
+      "boundary": "The unused Muse Loop orchestrator is retired. Refuse its invocation; do not automatically launch a replacement tool or workflow. Standalone triage and the independent prototype judge remain available."
+    },
+    {
+      "name": "muse-proto-gen",
+      "status": "retired-unavailable",
+      "replacement": null,
+      "decision_id": "RET-20260920-002",
+      "boundary": "The Muse Loop-only prototype generator is retired. Refuse its invocation; do not automatically select another generator. Independent design tools retain their own user-selection and quality gates."
     }
   ]
 }

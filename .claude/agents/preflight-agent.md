@@ -86,14 +86,15 @@ standalone 模式允许 topic 为空，不要求 workflow-state 或工作流上�
 | `quick-research` | 无特殊前置 | — |
 | `code-recon` | 无特殊前置（只读 recon，不改代码） | — |
 | `code-hygiene` | 无特殊前置 | — |
-| `muse-req-triage`（muse） | 无特殊前置（入口A 语料由用户指定） | — |
-| `muse-loop-orchestrate`（muse） | 需求语料可用（由 skill 自身 Phase 0 校验） | — |
+| `muse-req-triage`（muse） | 无特殊前置（原始语料或结构化候选由用户指定） | — |
 
 **未列出的 skill：** 只执行通用检查，且报告必须带一行
 `⚠ WARN: <skill_name> 无专属检查行——若该 skill 有上游依赖，请在本表补行`
 （防新增 skill 前置检查静默裸奔，2026-07-14 编排层评审）。
 
 已退役的 `figma-layer` 请求直接报告不可执行，不适用“未列出 skill”默认放行，也不调 Figma 写入。
+已退役的 `muse-loop-orchestrate`、`muse-proto-gen` 同样直接 FAIL，不适用默认放行或跳过检查，
+不自动启动替代工具或流程；独立 `muse-proto-judge` 不在退役名单内。
 
 ---
 

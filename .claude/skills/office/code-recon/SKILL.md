@@ -34,7 +34,6 @@ context-cost:
 - 全局 `systematic-debugging`=根因排查一个具体 bug；本 skill 是**全局架构理解**，非定点排障。
 - `deepresearch`/`ux-research`=联网/竞品研究外部信息；本 skill 只看**本地这份代码**。
 - `tech-spec`/`task-plan`=索引**需求/设计文档**（RTM）；本 skill 索引**代码结构**，是它们的上游输入。
-- `muse-loop-orchestrate` 的 "map"=需求映射；本 skill 的 map=**代码结构**映射，命名近但对象不同。
 
 下游消费：产出的 brief 作为 `ux-brainstorm` / `design-brief` / `tech-spec` 的 **optional 输入 artifact**
 （见 `input-modes.yaml` 各自 optional 里的 `architecture_brief`）——设计基于真实代码，而非凭空。

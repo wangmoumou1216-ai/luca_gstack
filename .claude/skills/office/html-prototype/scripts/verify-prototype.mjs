@@ -13,6 +13,11 @@ const htmlPath = path.resolve(input);
 const extraArgs = process.argv.slice(3);
 const modeArg = extraArgs.find((arg) => arg.startsWith("--mode="));
 const explicitMode = modeArg ? modeArg.split("=")[1] : null;
+// Retired explicit modes must not silently enter the legacy unknown-mode fallback.
+if (explicitMode?.toLowerCase() === "muse-proto-gen") {
+  console.error("RETIRED: muse-proto-gen QA mode is unavailable; no replacement mode was selected.");
+  process.exit(2);
+}
 const designBriefArg = extraArgs.find((arg) => !arg.startsWith("--"));
 const designBriefPath = designBriefArg ? path.resolve(designBriefArg) : null;
 const outDir = path.dirname(htmlPath);
@@ -38,7 +43,7 @@ const blueprint = fs.existsSync(blueprintPath)
 const inferredMode = /\/figma-demo|figma-demo|Figma Demo Prototype Spec/i.test(prototypeSpec) || Boolean(blueprint)
   ? "figma-demo"
   : "html-prototype";
-const allowedModes = new Set(["html-prototype", "figma-demo", "standalone-mobile", "ux-audit", "screenshot-delta", "muse-proto-gen"]);
+const allowedModes = new Set(["html-prototype", "figma-demo", "standalone-mobile", "ux-audit", "screenshot-delta"]);
 const mode = explicitMode && allowedModes.has(explicitMode) ? explicitMode : inferredMode;
 
 const checks = [];
@@ -75,7 +80,7 @@ const forbidden = [
   ["No external CDN resources", !externalResourcePattern.test(html), "HTML should use local loaded assets only. Plain text URLs are allowed."],
   ["No Lorem Ipsum", !/lorem ipsum/i.test(html), "Use realistic CRM copy or marked data placeholders."],
   ["No emoji icons", !/[\u{1F300}-\u{1FAFF}]/u.test(html), "Use local icon assets or text placeholders."],
-  ["Prototype spec exists", mode === "muse-proto-gen" || fs.existsSync(prototypeSpecPath), "prototype-spec.md is required (muse-proto-gen exempt: it outputs HTML + qa-results.json only)."]
+  ["Prototype spec exists", fs.existsSync(prototypeSpecPath), "prototype-spec.md is required."]
 ];
 for (const [name, passed, detail] of forbidden) addCheck(name, passed, detail);
 addCheck(
@@ -159,8 +164,6 @@ if (mode === "figma-demo") {
     blueprintNodeIds.length > 0 || /nodes\s*:/i.test(blueprint),
     `Blueprint node hints: ${blueprintNodeIds.join(", ") || "nodes key not found"}.`
   );
-} else if (mode === "muse-proto-gen") {
-  addCheck("State coverage recorded (informational)", true, `States: ${allStates.join(", ") || "none"}. muse-proto-gen requires no state markers; AC-level state coverage is muse-proto-judge's job, not this deterministic gate.`);
 } else {
   addCheck("State coverage markers present", allStates.length >= 5, `Found states: ${allStates.join(", ") || "none"}.`);
 }

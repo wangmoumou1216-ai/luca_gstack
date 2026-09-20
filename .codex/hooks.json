@@ -7,7 +7,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 恢复 session 上下文",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
             "additionalContextLimit": 0
           }
         ]
@@ -19,7 +19,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 路由检查",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
             "additionalContextLimit": 0
           }
         ]
@@ -32,7 +32,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 项目边界检查",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]
       }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]
       }
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0"
           }
         ]
       }
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack ROUTE_GUARD_HEAVY_SKILLS=muse-loop-orchestrate node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
+            "command": "MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"2\" ] && exit 2 || exit 0",
             "timeoutSec": 30
           }
         ]

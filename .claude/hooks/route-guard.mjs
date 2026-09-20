@@ -769,6 +769,12 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
       message: 'figma-layer 已退役，不能调度旧重建链或据此执行 Figma 写入。历史产物仍可在已授权作用域内只读查询；新设计需求按当前 catalog 和用户所选工具处理。',
     };
   }
+  if (['muse-loop-orchestrate', 'muse-proto-gen'].includes(retiredName)) {
+    return {
+      decision: 'STOP', reason: 'retired_skill', candidates: [],
+      message: `${retiredName} 已退役，不可调度；不会自动启动替代流程。独立需求分诊与原型验收能力保留，请按当前 catalog 明确选择。`,
+    };
+  }
   if (direct) {
     const skill = direct.startsWith('$') ? `/${direct.slice(1)}` : direct;
     return { decision: 'SINGLE_SKILL', skill, candidates: [skill] };
@@ -920,8 +926,7 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
 // "计划确认"混为一谈；真实差异是内门强弱，不是有无（G4 红队 R4 裁决，正面改写不静默覆盖）。
 //
 // ⚠️ 本 set + 下方 PLAN_CHECK 分支是 fork/env 扩展点，**勿当死代码清理**（code-hygiene
-// 死代码算子注意）：muse fork 的副本在此处有自己的成员（/auto、/muse-loop-orchestrate），
-// 依赖分支机制本身；母版测试经 ROUTE_GUARD_HEAVY_SKILLS 注入回归该分支。
+// 死代码算子注意）：保留通用 env 扩展点；测试经 ROUTE_GUARD_HEAVY_SKILLS 注入回归该分支。
 // env 格式：ASCII 逗号分隔 skill 名；带不带前导 / 均可——下方初始化自动补全双形态。
 const HEAVY_ORCHESTRATOR_SKILLS = new Set(
   envList('ROUTE_GUARD_HEAVY_SKILLS').flatMap(s => {
@@ -1350,8 +1355,9 @@ function buildDecisionCore(prompt) {
 
   // 2026-07-13 fable review B-F1：显式 / 或 $ 直呼 = 用户最新明确请求（规则优先级 #1），不被
   // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
-  // 较软 PLAN_CHECK 门（原为 /auto 设计；auto 已于 2026-08-03 移出 HEAVY 做截流实验，现成员仅 muse-loop-orchestrate）。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
-  const directCall = /^[$/][a-z][\w-]*/i.test(prompt) || !!visibleSlashlessAlias(prompt);
+  // 较软 PLAN_CHECK 门。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
+  const directCall = /^[$/][a-z][\w-]*/i.test(prompt) || !!visibleSlashlessAlias(prompt)
+    || /^(?:muse-loop-orchestrate|muse-proto-gen)(?:\s|$)/i.test(prompt);
   if (!directCall && complexity.decision === 'PLAN_MODE') {
     if (!wayfinderAutoPredicate(prompt, complexity)) return complexity;
     return {

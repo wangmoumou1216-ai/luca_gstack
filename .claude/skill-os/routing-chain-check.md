@@ -32,8 +32,7 @@ research_default`，与 Plan Agent 研究默认门同一把尺子）→ dispatch
 
 **R3 · 端到端意图（确认门）**
 「从需求到成品 / 完整跑一遍 / 闭环」类意图 → 列出 `optional-workflow-graph.yaml` 对应场景的
-recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜底 → `/muse-loop-orchestrate`；
-多产物组合诉求可建议 `/auto`），**问一句确认后进入**——确认即 SF-003「用户主动选择」，
+recommended_path（多产物组合诉求可建议 `/auto`），**问一句确认后进入**——确认即 SF-003「用户主动选择」，
 红线：不得跳过确认静默进整链。
 
 **R4 · 评审请求（资产索引 + 证据标准，非决策树）**
@@ -60,7 +59,7 @@ recommended_path（muse 的端到端自治编排意图另有 CLAUDE.md 语义兜
 observability active rules，看有没有重犯用户已明确指出过的问题。模型档位与串并行规则**不在此处**——
 真值源 `model-routing.yaml` + `feedback_serial-subagents-default`。
 
-*轮次上限（**这是停止条件，不是下限清单的一员**——Loop 宪法四原语之一，与上面"做得更多永远合法"
+*轮次上限（**这是停止条件，不是下限清单的一员**，与上面"做得更多永远合法"
 不矛盾：它防的是无界纠缠，不是防做得深）*：红队↔修订循环默认 ≤2 轮；仍有存活 BLOCKER/MAJOR 时
 **不宣称已握手**，带未决项交用户裁决，而不是自行加轮。判断值得多跑一轮时说明理由再跑。
 
@@ -83,7 +82,7 @@ SHA-256 冻结，由 Plan Agent 编译 exact U-ID，并让用户对同一 payloa
 - 硬门禁 skill（design-brief / open-design / html-prototype / tech-spec / task-plan）自拦，
   路由层不预拦；最多一句提前提示前置（体验优化，非门）。
 - idea 与 brainstorm 相互独立（idea SKILL.md 显式声明），永不作为其前置。
-- headless 编排场景（muse-loop 等 dispatch）不插计划外卡点，写入产出即可（tech-spec seam 先例）。
+- headless 编排场景不插计划外卡点，写入产出即可（tech-spec seam 先例）。
 
 ## 维护规则
 

@@ -12,8 +12,8 @@
 只报告不处置。**仅限本地运行**（数据在 ~/Desktop/项目/ 仓库外，CI 上不存在——
 不得挂 verify.sh 的数据模式；--selftest 纯读仓内，可进 CI）。
 
-产出映射是显式维护的表，禁止猜 glob（三次实证猜错：task-plan 在 engineering/、
-research-kit 是前缀、muse-loop 产出是 REQ-* 目录不带 skill 名）。
+产出映射是显式维护的表，禁止猜 glob（已知不规则：task-plan 在 engineering/、
+research-kit 是前缀）。
 """
 import glob
 import os
@@ -47,7 +47,6 @@ TABLE = {
     "insight-synthesis": (None,                                    [f"{D}/research/insight-synthesis-*.md"], "unobservable"),
     "ux-writing":     ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/decisions/*-voice-copy-spec.md",
                                                                     f"{D}/evaluation/*ux-writing*.md"], "weak"),
-    "muse-loop-orchestrate": ([f"{D}/prd/*-prd.md"],               [f"{D}/loop/specs/REQ-*"], "weak"),
     "html-prototype": ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/prototype-spec.md"], "weak"),
     "open-design":    ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/index.html"], "weak"),
     # 链头/多形态：代理口径未定，显式 UNMAPPED（诚实优于全覆盖）
@@ -81,7 +80,7 @@ TABLE = {
     "domain-modeling": (None, [], "unobservable"),
     "wayfinder": (None, [], "unobservable"),
     "implement": (None, [], "unobservable"),
-    "muse-req-triage": (None, [f"{D}/loop/*"], "unmapped"),
+    "muse-req-triage": (None, [], "unmapped"),
 }
 
 
@@ -153,13 +152,11 @@ def is_exempt(skill: str) -> bool:
 
 def selftest() -> int:
     fails = []
-    # 三个已知不规则保持形态
+    # 已知不规则保持形态
     if "engineering" not in TABLE["task-plan"][1][0]:
         fails.append("task-plan 产出应在 engineering/")
     if not TABLE["research-kit"][1][0].endswith("research-kit-*.md"):
         fails.append("research-kit 是前缀命名")
-    if "REQ-*" not in TABLE["muse-loop-orchestrate"][1][0]:
-        fails.append("muse-loop 产出是 REQ-* 目录")
     # SSOT：TABLE 必须覆盖 routing-map 的全部一级 invoke（新 skill 漏登记即红）
     missing = routing_map_invokes() - set(TABLE)
     if missing:

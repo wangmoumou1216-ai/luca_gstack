@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed（2026-09-20 · Muse Loop 退役）
+
+- 移除未使用的 Muse Loop 编排器、专属原型生成器及路由/状态/QA 豁免；旧入口明确拒绝调度。为什么：按用户选择减掉无用流程，保留独立需求筛选、逐 AC 原型验收和主体设计链，历史数据不删除。
+
 ### Added（2026-09-18 · Open Design 模板 carrier V2 与模型路由解析核心）
 
 - Open Design 新增 `structural_carrier + single` 交接链：冻结 Packet、模板/模块 binding、TAC/hash、独立 stage/run/recover 授权、runtime 能力收据、输入输出隔离、读回与 preserve DOM 验证；`reference_only` 保持独立语义。为什么：让 OD 可验地基于不可变 HTML carrier 生成新的衍生产物，不再把截图参考冒充模板派生。

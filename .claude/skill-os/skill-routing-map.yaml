@@ -225,14 +225,6 @@ project_skills:
     # deepresearch(联网调研) 隔离；不含裸"代码"单字避免广撞。
     triggers: [理解现有代码, 读懂代码库, 读懂现有代码, 摸清代码结构, 现有代码结构, 基于现有代码, 逆向现有代码, 代码结构梳理, 读一下这个代码库, 理解这个代码库, brownfield]
 
-  muse_loop_orchestrate:
-    invoke: "/muse-loop-orchestrate"
-    weight: 7
-    # muse 专属（需求→原型自治 Loop 编排器）。触发短语全部为复合词，
-    # 不含裸"需求"/"原型"单字——避免撞 brainstorm(需求)/html-prototype·design-brief·
-    # magicpath·open-design(原型) 的现有词条。不缩写成"loop"，避免撞内置 loop 定时调度 skill。
-    triggers: [muse loop, muse自进化循环, 需求到原型闭环, 跑一下muse loop]
-
   muse_req_triage:
     invoke: "/muse-req-triage"
     weight: 6
