@@ -27,20 +27,24 @@ let hooks = null;
 try { hooks = JSON.parse(readFileSync(hooksPath, 'utf8')); } catch { }
 ok('S1 .codex/hooks.json 存在且是合法 JSON', !!hooks?.hooks);
 
-// S2 六个生命周期事件齐全
-const NEED = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SessionEnd'];
+// S2 六个基础生命周期事件 + 模型路由的 subagent 事件齐全。
+const NEED = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SessionEnd',
+  'SubagentStart', 'SubagentStop'];
 const have = hooks ? Object.keys(hooks.hooks) : [];
-ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NEED.filter((e) => !have.includes(e))}`);
+ok('S2 基础与 subagent 事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NEED.filter((e) => !have.includes(e))}`);
 
-// S3 每个 hook 都经 adapter，且引用的脚本真实存在
+// S3 兼容 hook 经 adapter；Codex 原生模型路由直接进专用 hook。
 {
   let bad = [];
   for (const ev of have) for (const g of hooks.hooks[ev]) for (const h of g.hooks) {
-    if (!/codex-hook-adapter\.mjs/.test(h.command)) { bad.push(`${ev}:未走adapter`); continue; }
-    const m = h.command.match(/\.claude\/hooks\/([a-z-]+\.mjs)/);
-    if (!m || !existsSync(join(ROOT, '.claude', 'hooks', m[1]))) bad.push(`${ev}:脚本缺失`);
+    if (/codex-hook-adapter\.mjs/.test(h.command || '')) {
+      const m = h.command.match(/\.claude\/hooks\/([a-z-]+\.mjs)/);
+      if (!m || !existsSync(join(ROOT, '.claude', 'hooks', m[1]))) bad.push(`${ev}:兼容脚本缺失`);
+    } else if (/model-route-hook\.mjs/.test(h.command || '')) {
+      if (!existsSync(join(ROOT, '.codex', 'model-route-hook.mjs'))) bad.push(`${ev}:模型路由脚本缺失`);
+    } else bad.push(`${ev}:未识别的hook入口`);
   }
-  ok('S3 全部 hook 经 adapter 且目标脚本存在', bad.length === 0, bad.join(','));
+  ok('S3 兼容/Native 两类 hook 入口合法且目标存在', bad.length === 0, bad.join(','));
 }
 
 // S4 上下文注入不被截断（0 = 完整直传）
@@ -76,6 +80,17 @@ ok('S2 六个事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NE
   const post = hooks?.hooks?.PostToolUse?.[0]?.matcher || '';
   ok('S5 Pre/PostToolUse matcher 用实测 tool_name（Bash|apply_patch；写 shell 永不触发）',
     need(pre) && need(post), `pre=${pre} post=${post}`);
+}
+
+// S5c MultiAgent v2 运行时会把 collaboration.spawn_agent 规范化成
+// `collaborationspawn_agent`；只匹配 API 展示名 spawn_agent 会静默漏掉真实派发。
+{
+  const routeGroup = (hooks?.hooks?.PreToolUse || []).find((group) =>
+    (group.hooks || []).some((hook) => /model-route-hook\.mjs/.test(hook.command || '')));
+  let matchesRuntimeName = false;
+  try { matchesRuntimeName = new RegExp(routeGroup?.matcher || '').test('collaborationspawn_agent'); } catch { }
+  ok('S5c 模型路由 matcher 覆盖 MultiAgent v2 实测规范化名 collaborationspawn_agent',
+    matchesRuntimeName, `matcher=${routeGroup?.matcher || '(missing)'}`);
 }
 
 // S5b Codex 复用既有已授信 project-scope entry；新增 entry 会改变 trust currentHash，
@@ -125,8 +140,8 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   ok('S8 .codex/agents/*.toml 已定义', fs_.length >= 3, `found=${fs_.length}`);
 }
 
-// S8b 档位一致性：.codex/agents/*.toml 的 effort 必须等于 model-routing.yaml 的 codex.agents
-// （两处分散 = 迟早漂移；漂移的症状是"换个 CLI 就悄悄掉档"，不会报错）
+// S8b 固定 effort 一致性：.codex/agents/*.toml 必须等于 model-routing.yaml
+// 的 codex.agents。这是 agent 执行参数防漂移，不是动态模型档位。
 {
   const yml = readFileSync(join(ROOT, '.claude', 'skill-os', 'model-routing.yaml'), 'utf8');
   const seg = yml.split(/^codex:/m)[1] || '';
@@ -144,10 +159,10 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
     if (!eff) { mismatch.push(`${name}:未定档`); continue; }
     if (want[name] && want[name] !== eff) mismatch.push(`${name}:toml=${eff}≠yaml=${want[name]}`);
     if (!want[name]) mismatch.push(`${name}:yaml未登记`);
-    // 模型名硬编码 = 把档位绑在会过期的凭证上（2026-08-04 实证）
+    // 账户模型名只允许在私有 binding；agent TOML 不能开第二份 policy。
     if (/^model\s*=/m.test(t)) mismatch.push(`${name}:硬编码了model名`);
   }
-  ok('S8b subagent 档位与 model-routing.yaml 的 codex.agents 一致且无硬编码模型名',
+  ok('S8b subagent 固定 effort 与 codex.agents 一致且无公开硬编码模型名',
     mismatch.length === 0, mismatch.join(','));
 }
 
@@ -172,11 +187,10 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
     const eff = (readFileSync(join(dir, f), 'utf8').match(/^model_reasoning_effort\s*=\s*"([^"]+)"/m) || [])[1];
     if (eff && rejected.includes(eff)) tomlBad.push(`${f}=${eff}`);
   }
-  const runnerBad = (readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8')
-    .match(/TIER_TO_EFFORT\s*=\s*\{[^}]*\}/) || [''])[0]
-    .split(/['"]/).filter((v) => rejected.includes(v));
+  const runnerSource = readFileSync(join(ROOT, '.codex', 'workflow-runner.mjs'), 'utf8');
+  const runnerBad = /TIER_TO_EFFORT|model_reasoning_effort/.test(runnerSource) ? ['scene-effort-routing'] : [];
   const declaredOk = REJECTED_BY_MODEL.every((v) => declared.includes(v));
-  ok('S8c 所有 effort 取值都在模型接受集内，且 yaml 已登记实测禁用值（脚本侧硬编码，改 yaml 松不动）',
+  ok('S8c 固定 agent effort 仍合法，runner 已移除场景化 effort 路由',
     declaredOk && bad.length === 0 && tomlBad.length === 0 && runnerBad.length === 0,
     `yaml=${bad} toml=${tomlBad} runner=${runnerBad} 未登记=${REJECTED_BY_MODEL.filter((v) => !declared.includes(v))}`);
 }
@@ -186,7 +200,8 @@ ok('S9 adapter 行为测试全绿（scripts/test-codex-adapter.mjs）',
   spawnSync('node', [join(ROOT, 'scripts', 'test-codex-adapter.mjs')], { cwd: ROOT }).status === 0);
 
 // S9b Workflow 后端：Claude 的 Workflow 工具在 Codex 无对应物，靠 .codex/workflow-runner.mjs
-// 把 agent() 接到 codex exec 上。缺它 = 月度治理能力（演进侦察/外部 skill 侦察）在 Codex 下消失。
+// 把 agent() 接到 Codex app-server 的显式模型 thread 上。缺它 = 月度治理能力
+//（演进侦察/外部 skill 侦察）在 Codex 下消失。
 ok('S9b workflow-runner 存在且两个 workflow 零改写可执行（scripts/test-workflow-runner.mjs）',
   existsSync(join(ROOT, '.codex', 'workflow-runner.mjs'))
   && spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner.mjs')],
@@ -199,6 +214,12 @@ ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-run
   spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
     { cwd: ROOT, timeout: 420000 }).status === 0);
 
+// S9d 原生 subagent 的模型改写、同调用 transcript 证据和 critical latch。
+ok('S9d Codex native 模型路由 hook 行为测试全绿',
+  existsSync(join(ROOT, '.codex', 'model-route-hook.mjs'))
+  && spawnSync('node', [join(ROOT, 'scripts', 'test-codex-model-route-hook.mjs')],
+    { cwd: ROOT, timeout: 420000 }).status === 0);
+
 // S10 Claude 侧零回归。
 // 这两套在 verify.sh 里已由 C11（check:hooks → test-hooks）与 S30（check:harness → test-harness）
 // 各跑一次；本处再 spawn 一遍是同一进程组内的纯重复，实测占 verify.sh 总耗时约 5.5 秒。
@@ -208,7 +229,7 @@ ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-run
 // 覆盖面在任何上下文都不减少。跳过是**声明式**的（消息里写明由谁覆盖），不是静默假绿。
 const claudeRegressionCoveredElsewhere = process.env.VERIFY_CODEX_CLAUDE_REGRESSION_COVERED === '1';
 if (claudeRegressionCoveredElsewhere) {
-  ok('S10 Claude 路径零回归（本轮由 verify.sh 的 C11/S30 覆盖，不在此重复 spawn）', true);
+  ok('S10 Claude 路径零回归（本轮已在外部单独运行 test-harness + test-hooks）', true);
 } else {
   ok('S10 Claude 路径零回归（test-harness + test-hooks）',
     spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0
@@ -231,7 +252,7 @@ if (claudeRegressionCoveredElsewhere) {
   // 纵深：确认全局配置里**没有**本仓条目——仓库级可用后再全局注册就是跨项目污染
   let globalHasOurs = false;
   try {
-    globalHasOurs = /codex-hook-adapter/.test(
+    globalHasOurs = /codex-hook-adapter|model-route-hook/.test(
       readFileSync(join(process.env.HOME || '', '.codex', 'hooks.json'), 'utf8'));
   } catch { }
   ok('S11b 未在用户级 ~/.codex/hooks.json 重复注册（仓库级已够；全局注册会污染其它项目）',
@@ -271,7 +292,9 @@ if (claudeRegressionCoveredElsewhere) {
     let needKeys = [];
     for (const [ev, groups] of Object.entries(hooks?.hooks || {})) {
       groups.forEach((grp, gi) => (grp.hooks || []).forEach((h, hi) => {
-        if (/codex-hook-adapter/.test(h.command || '')) needKeys.push(`${ourPath}:${evToSnake(ev)}:${gi}:${hi}`);
+        if (/(?:codex-hook-adapter|model-route-hook)\.mjs/.test(h.command || '')) {
+          needKeys.push(`${ourPath}:${evToSnake(ev)}:${gi}:${hi}`);
+        }
       }));
     }
     const missing = needKeys.filter((k) => !mine.includes(k));

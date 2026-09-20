@@ -5,9 +5,8 @@ description = "独立原型验收判官。评估一份原型是否满足给定�
 # 无 Edit/Write 权限，与"永不静默自动应用修复"一致。
 sandbox_mode = "read-only"
 
-# ── 档位（真值源：model-routing.yaml 的 codex.agents）──
-# model 省略继承父会话；档位落在 effort 上（理由见 quality-gate.toml）。
-# Claude 侧定档 opus（AC 判官）→ 投影为 high。
+# ── 固定 agent effort（真值源：model-routing.yaml 的 codex.agents）──
+# effort 不参与模型路由；model 由共同 policy + 私有 binding 在本次 spawn 时决定。
 model_reasoning_effort = "high"
 
 developer_instructions = """

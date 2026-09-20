@@ -44,7 +44,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 49;
+const EXPECTED_MUTATIONS = 60;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -195,10 +195,44 @@ mutate('one root SF projection drifts', (dir) => {
   writeFileSync(p, readFileSync(p, 'utf8').replace('CRM objects use stable IDs', 'CRM objects use changing IDs'));
 }, /AGENTS\.md Static Fallback projection drift/);
 
-mutate('Codex model prose restores minimal', (dir) => {
+mutate('Codex fixed preflight effort restores minimal', (dir) => {
   const p = join(dir, '.claude/skill-os/model-routing.yaml');
-  writeFileSync(p, readFileSync(p, 'utf8').replace('xhigh>high>medium>low', 'xhigh>high>medium>minimal'));
-}, /effort order contradicts/);
+  writeFileSync(p, readFileSync(p, 'utf8').replace('preflight-agent: low', 'preflight-agent: minimal'));
+}, /fixed preflight-agent effort must remain low/);
+
+for (const [name, from, to, expected] of [
+  ['common policy version drifts', '  version: 2\n  status: active', '  version: 1\n  status: active', /common model policy must be v2/],
+  ['common policy is paused', '  status: active\n  scope: common', '  status: paused\n  scope: common', /common model policy must be active/],
+  ['common policy scope becomes Codex-only', '  scope: common\n  roles:', '  scope: codex\n  roles:', /harness-neutral/],
+  ['light role disappears', '    light: user-approved-lower-selection', '    lower: user-approved-lower-selection', /lacks light role/],
+  ['mechanical scene stops using light', '      role: light\n      critical: false', '      role: anchor\n      critical: false', /mechanical scene must use light/],
+  ['native quality gate mapping drifts', '      quality-gate: MR-004', '      quality-gate: MR-001', /quality-gate dispatch drift/],
+  ['workflow Redteam mapping drifts', '        Redteam: MR-003', '        Redteam: MR-001', /workflow Redteam dispatch drift/],
+  ['effort re-enters routing inputs', '  effort: user-owned-not-a-routing-input', '  effort: route-by-scene', /effort must not be a model-routing input/],
+]) {
+  mutate(name, (dir) => {
+    const p = join(dir, '.claude/skill-os/model-routing.yaml');
+    writeFileSync(p, readFileSync(p, 'utf8').replace(from, to));
+  }, expected);
+}
+
+mutate('Codex regains a nested model policy', (dir) => {
+  const p = join(dir, '.claude/skill-os/model-routing.yaml');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('\ncodex:\n', '\ncodex:\n  model_routing:\n    version: 2\n'));
+}, /Codex contains a second model policy/);
+
+mutate('Codex regains tier-to-effort routing', (dir) => {
+  const p = join(dir, '.claude/skill-os/model-routing.yaml');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('\ncodex:\n', '\ncodex:\n  tier_to_effort:\n    light: low\n'));
+}, /tier_to_effort must remain absent/);
+
+mutate('Codex root routes by reasoning effort again', (dir) => {
+  const p = join(dir, 'AGENTS.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    'Select a subagent model role',
+    'Select subagent reasoning effort',
+  ));
+}, /model role selection independent from reasoning effort/);
 
 mutate('Plan condition disappears', (dir) => {
   const p = join(dir, '.claude/agents/plan-agent.md');

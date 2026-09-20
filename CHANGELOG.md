@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-09-20 · Codex 通用模型路由接线，Claude 延后）
+
+- 启用唯一公共 `anchor / peak / light` 模型选择规则：根会话保持用户实际选择，Codex 原生 subagent 与 app-server workflow runner 按精确场景动态选择上下档；reasoning effort 保持独立，不再承担模型档位语义。新增受信 activation/evidence/critical-latch、错模型拒收、旧票与重启失效、私有0600模型绑定和对应行为/变异回归。仓库 hook 已授信，但当前旧 session 不热加载新增 SessionStart，须由新 Codex 根 session 完成最终活体验收；Claude adapter 按用户决定暂不启用，不宣称双端完成。
+
+### Fixed（2026-09-20 · Codex MultiAgent v2 模型路由别名）
+
+- fresh-session 活体测试发现 quality-gate 仍继承 anchor；根因是 Codex 0.155.1 把真实派发工具规范化为 `collaborationspawn_agent`，旧 matcher 只覆盖 API 展示名。现已在 hook 注册、native adapter 与回归门统一覆盖实测名并刷新 trust；该阶段先保持 H2 pending，等待后续真实采用证据。
+- 后续 fresh-session 已证明根 `gpt-5.6-sol`、quality-gate 子调用 `gpt-6-astra` 的真实动态选模。该活体进一步发现 `SubagentStop` 发生在 transcript 写入 `task_complete` 之前，旧 evidence check 因等待未来事件误拒正确结果；现改为绑定同 turn assistant item 与 hook `last_assistant_message`，并以错消息/错模型负例保持 fail-closed。最终 fresh-session 的 production state 已记录 invocation=`accepted`、`critical_failure=false`，Codex native H2 闭合。
+
 ### Removed（2026-09-20 · Muse Loop 退役）
 
 - 移除未使用的 Muse Loop 编排器、专属原型生成器及路由/状态/QA 豁免；旧入口明确拒绝调度。为什么：按用户选择减掉无用流程，保留独立需求筛选、逐 AC 原型验收和主体设计链，历史数据不删除。

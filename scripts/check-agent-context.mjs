@@ -32,6 +32,12 @@ for (const path of roots) {
   if (!rootText[path].includes('.claude/skill-os/generated/skill-catalog.md')) errors.push(`${path} lacks skill catalog loader`);
   if (!rootText[path].includes('.claude/skill-os/agent-context-manifest.json')) errors.push(`${path} lacks conditional context manifest loader`);
 }
+if (!/Select a subagent model role[\s\S]{0,240}reasoning effort remains independent/.test(rootText['AGENTS.md'])) {
+  errors.push('AGENTS.md must keep model role selection independent from reasoning effort');
+}
+if (/Select subagent reasoning effort/.test(rootText['AGENTS.md'])) {
+  errors.push('AGENTS.md must not route subagents by reasoning effort');
+}
 
 const expectedIds = Array.from({ length: 10 }, (_, i) => `K${i + 1}`);
 const obligations = Array.isArray(kernel.obligations) ? kernel.obligations : [];
@@ -85,12 +91,30 @@ for (const entry of entries.filter((item) => String(item.target || '').startsWit
 }
 
 const model = read('.claude/skill-os/model-routing.yaml');
+const commonStart = model.indexOf('\nmodel_routing:');
+const commonEnd = model.indexOf('\nknown_lineup:', commonStart);
+const commonModel = commonStart >= 0
+  ? model.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
+  : '';
 const codexStart = model.indexOf('\ncodex:');
 const codexEnd = model.indexOf('\nnew_scenario_protocol:', codexStart);
 const codex = codexStart >= 0 ? model.slice(codexStart, codexEnd > codexStart ? codexEnd : undefined) : '';
+if (!/\n\s{2}version:\s*2\b/.test(commonModel)) errors.push('common model policy must be v2');
+if (!/\n\s{2}status:\s*active\b/.test(commonModel)) errors.push('common model policy must be active');
+if (!/\n\s{2}scope:\s*common\b/.test(commonModel)) errors.push('model policy must be harness-neutral');
+for (const role of ['anchor', 'peak', 'light']) {
+  if (!new RegExp(`\\n\\s{4}${role}:`).test(commonModel)) errors.push(`common model policy lacks ${role} role`);
+}
+if (!/MR-008:[\s\S]*?role:\s*light\b/.test(commonModel)) errors.push('low-risk mechanical scene must use light role');
+if (!/quality-gate:\s*MR-004\b/.test(commonModel)) errors.push('native quality-gate dispatch drift');
+if (!/Redteam:\s*MR-003\b/.test(commonModel)) errors.push('workflow Redteam dispatch drift');
+if (!/effort:\s*user-owned-not-a-routing-input\b/.test(commonModel)) errors.push('effort must not be a model-routing input');
+if (/\bgpt-[\w.-]+\b/.test(commonModel)) errors.push('public common policy contains an account model name');
+if (/^\s{2}model_routing:/m.test(codex)) errors.push('Codex contains a second model policy');
+if (/^\s{2}tier_to_effort:/m.test(codex)) errors.push('Codex tier_to_effort must remain absent');
 if (/reasoning effort[^\n]*minimal/i.test(codex)) errors.push('Codex effort order contradicts the rejected minimal value');
 if (!/effort_rejected_by_model:\s*\[minimal\]/.test(codex)) errors.push('Codex rejected effort list must contain minimal');
-if (!/mechanical:\s*low\b/.test(codex)) errors.push('Codex mechanical tier must map to low');
+if (!/\n\s{4}preflight-agent:\s*low\b/.test(codex)) errors.push('Codex fixed preflight-agent effort must remain low');
 if (!/effort_lineup:\s*\[none, low, medium, high, xhigh, max\]/.test(codex)) errors.push('Codex effort lineup drift');
 
 const plan = read('.claude/agents/plan-agent.md');

@@ -21,8 +21,76 @@
 #    Claude 原生逻辑优先，不得与原生机制抢控制权。
 
 version: 2
-updated: 2026-07-10
+updated: 2026-09-20
 review_after_days: 90   # 超过此天数未复核 → digest 提醒重新核对档位映射
+
+# ─── 跨 harness 的唯一模型选择规则 ─────────────────────────────────────────
+# 当前生产 adapter 只启用 Codex native/runner；Claude adapter 按用户要求延期。
+# 模型名称与同端上下关系来自私有 0600 binding，不写入公共政策；effort 归用户所有。
+model_routing:
+  version: 2
+  status: active
+  scope: common
+  roles:
+    anchor: root-effective-selection
+    peak: user-approved-higher-selection
+    light: user-approved-lower-selection
+  scenes:
+    MR-001:
+      trigger: normal-conversation-or-implementation
+      role: anchor
+      critical: false
+    MR-002:
+      trigger: entered-plan-or-explicit-replan
+      role: peak
+      critical: true
+    MR-003:
+      trigger: redteam-refute-judge-oracle-expert-panel
+      role: peak
+      critical: true
+    MR-004:
+      trigger: semantic-review-or-terminal-decision
+      role: peak
+      critical: true
+    MR-005:
+      trigger: independent-review-before-authorized-irreversible-action
+      role: peak
+      critical: true
+    MR-006:
+      trigger: fact-collection-or-retrieval
+      role: anchor
+      critical: false
+    MR-007:
+      trigger: explicit-long-context-delegation
+      role: by-scene
+      requires_capacity: true
+    MR-008:
+      trigger: low-risk-mechanical-subtask
+      role: light
+      critical: false
+  dispatch:
+    native_agent_types:
+      default: MR-001
+      worker: MR-001
+      explorer: MR-006
+      preflight-agent: MR-008
+      quality-gate: MR-004
+      muse-proto-judge: MR-004
+    workflows:
+      external-skill-scout:
+        Load: MR-008
+        Discover: MR-006
+        Verify: MR-004
+      framework-evolution-scout:
+        Load: MR-008
+        Intake: MR-006
+        Discover: MR-006
+        AdoptionReview: MR-004
+        Verify: MR-004
+        Redteam: MR-003
+  critical_failure: refuse-no-fallback
+  evidence: trusted-runtime-adoption-and-same-invocation-success
+  effort: user-owned-not-a-routing-input
 
 # Claude Code 当前已知档位阵容（能力高→低）。会话中发现阵容变化时更新此表。
 known_lineup: [fable, opus, sonnet, haiku]
@@ -118,21 +186,19 @@ dispatch_rules:
     （指挥官档），fable 全部经白名单点状 dispatch；重大架构/审查日可手动
     /model fable 起 session（逃生阀，可选）。
 
-# ─── Codex harness 的档位解析（2026-08-04，跨-harness 档位适配）───
-# 上面整套 tiers/agents/dispatch_rules 的落点是 Claude 模型别名，Codex 不能照搬。
-# 本段是 Codex 侧的**唯一**解析表；.codex/agents/*.toml 与任何 Codex 调度方都从这里取值。
+# ─── Codex 固定 effort 兼容元数据（不参与模型路由）───
+# 模型选择的唯一规则是顶层 common model_routing；账户模型名只在私有 binding。
+# 本段只守护 .codex/agents/*.toml 的固定 reasoning effort 合法性与漂移，
+# 不得被 runner/hook 当作场景档位或模型选择输入。
 codex:
   principle: |
-    档位的不变量是**相对序**（判定 > 承重执行 > 轻执行 > 机械），不是某个具体模型。
-    Claude 侧这个序落在模型别名上（fable>opus>sonnet>haiku）；
-    Codex 侧落在 reasoning effort 上（xhigh>high>medium>low；max 保留为未映射余量）。
-    序保住了，档位语义就保住了——这与"档位名是别名、档内升级自动跟随零维护"同一条原则。
-  why_not_model_names: |
-    **Codex 模型名不得作为档位落点**——它随账户/订阅状态失效，而 effort 枚举不会。
-    2026-08-04 实证：本机 config.toml 写死的 gpt-5.6-sol 在订阅到期后被服务端直接拒绝
-    （"not supported when using Codex with a ChatGPT account"），gpt-5.6-codex 与
-    gpt-5.1-codex 这两个历史上成功跑过的名字同样被拒。把档位绑在模型名上，
-    等于把整个路由系统绑在一张会过期的凭证上。
+    reasoning effort 是 agent 执行参数，不是 anchor/peak/light 模型角色。
+    已有 agent 可保留固定 effort；用户在调用时显式给出的 effort 原样保留。
+    动态路由只改 model，不根据场景升降 effort，也不把 effort 写入路由摘要或证据票。
+  model_name_boundary: |
+    账户可用模型会随订阅变化，因此公共 policy 不写模型名。用户批准的
+    Codex peak/light 及同端上下关系放在 mode 0600 私有 binding；根 anchor 取当前会话
+    effective model。模型选择的消费者是 model-route hook/runner，不是本 Codex 兼容段。
   # 【枚举以**模型**为准，不以 config 解析器为准（2026-08-05 实测教训）】
   # config 解析器接受 none/minimal/low/medium/high/xhigh —— 那是**超集**；
   # 真实模型（gpt-5.6-sol 系）拒绝 minimal，其支持集为 none/low/medium/high/xhigh/max。
@@ -141,64 +207,17 @@ codex:
   # 取枚举必须来自**实际调用**的反馈，不能来自配置层的校验信息。
   effort_lineup: [none, low, medium, high, xhigh, max]   # 实测：真实模型接受集
   effort_rejected_by_model: [minimal]                     # config 层接受但模型拒绝，勿用
-  tier_to_effort:
-    reasoning-heavy: xhigh      # 判定/对抗/裁决——高杠杆小上下文，给满推理预算（上方仍留 max 余量）
-    core-execution: high        # 承重执行与整场交互
-    guided-execution: medium    # 有 checklist 指导的轻执行（默认档）
-    mechanical: low             # 机械执行/格式/计数（原定 minimal，被模型拒绝）
-  model_field: inherit
-  model_field_note: |
-    subagent toml 一律**省略 model 字段** → 继承父会话。理由同 why_not_model_names，
-    且与 main_loop 的"模型是用户 /model 主权"一致：用户换主模型时子 agent 自动跟随。
-  agents:                       # 与上方 agents: 同名同序，值换成 effort
-    quality-gate: high          # 判官≥执行者（对应 Claude 侧 opus）
+  agent_toml_model_field: omit-hook-owned
+  agent_toml_model_field_note: |
+    .codex/agents/*.toml 不写账户模型名。anchor 时继承根会话；peak/light 时由
+    已授信的 model-route hook 按公共 policy 与私有 binding 改写本次 spawn 的 model。
+  agents:                       # 固定 agent effort；不是模型档位、不按场景动态调整
+    quality-gate: high
     muse-proto-judge: high
-    preflight-agent: low        # 纯机械前置检查（对应 Claude 侧 haiku；minimal 被模型拒绝）
-  parity_note: |
-    本段与上方 Claude 侧 agents:/tiers: 是**同一套档位的两个投影**，新增场景须同时补两侧
-    （new_scenario_protocol 对 Codex 同样适用）。只补一侧 = 换个 CLI 就掉档。
-
-  # 独立的 model-only 解析政策；尚未接入原生/runner，以上继承路径继续有效。
-  # 存量 effort 设置照常生效，但不参与这里的角色、摘要或裁决票据校验。
-  # 账户模型名仅来自经核验的有效配置与用户确认的 peak 选择点。
-  model_routing:
-    version: 1
-    status: parser-only
-    scope: codex
-    roles:
-      anchor: effective-default
-      peak: user-approved-selection
-    scenes:
-      MR-001:
-        trigger: implementation-interaction-mechanical
-        role: anchor
-        critical: false
-      MR-002:
-        trigger: entered-plan-or-explicit-replan
-        role: peak
-        critical: true
-      MR-003:
-        trigger: redteam-refute-judge-oracle-expert-panel
-        role: peak
-        critical: true
-      MR-004:
-        trigger: semantic-review-or-terminal-decision
-        role: peak
-        critical: true
-      MR-005:
-        trigger: independent-review-before-authorized-irreversible-action
-        role: peak
-        critical: true
-      MR-006:
-        trigger: fact-collection-or-retrieval
-        role: anchor
-        critical: false
-      MR-007:
-        trigger: explicit-long-context-delegation
-        role: by-scene
-        requires_capacity: true
-    critical_failure: refuse-no-fallback
-    evidence: trusted-runtime-adoption-and-same-invocation-success
+    preflight-agent: low        # minimal 被真实模型拒绝，故固定为 low
+  independence_note: |
+    本段不与 Claude alias/tier 做模型投影。新场景的模型角色只在顶层 common
+    model_routing 登记一次；只有新增/修改某个 Codex agent 的固定 effort 时才更新 agents。
 
 # ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
 new_scenario_protocol:

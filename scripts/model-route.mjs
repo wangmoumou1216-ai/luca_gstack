@@ -20,15 +20,22 @@ function modelOnly(value) {
     .map(key => [key, modelOnly(value[key])]));
 }
 const digest = value => createHash('sha256').update(JSON.stringify(modelOnly(value))).digest('hex');
+export const modelRoutingPolicyDigest = policy => digest(policy);
 
 export function resolve(input, {verifyCapability} = {}) {
   const fail = (disposition, reason) => ({disposition, reason});
   if (!record(input)) return fail('NEEDS_CONTEXT', 'MISSING_REQUEST');
-  if (!['codex-native', 'codex-cli'].includes(input.harness)) return fail('REFUSE', 'UNSUPPORTED_HARNESS');
   const policy = input.role_config;
-  if (!record(policy) || policy.version !== 1 || policy.scope !== 'codex' || policy.status !== 'parser-only') {
+  const v1 = record(policy) && policy.version === 1 && policy.scope === 'codex' && policy.status === 'parser-only';
+  const v2 = record(policy) && policy.version === 2 && policy.scope === 'common'
+    && ['candidate', 'active'].includes(policy.status);
+  if (!v1 && !v2) {
     return fail('NEEDS_CONTEXT', 'INVALID_POLICY');
   }
+  const supportedHarnesses = v1
+    ? ['codex-native', 'codex-cli']
+    : ['codex-native', 'codex-cli', 'claude-native', 'claude-workflow'];
+  if (!supportedHarnesses.includes(input.harness)) return fail('REFUSE', 'UNSUPPORTED_HARNESS');
   if (!text(input.scene)) return fail('NEEDS_CONTEXT', 'UNKNOWN_SCENE');
   const definition = input.role_config?.scenes?.[input.scene];
   let scene = definition;
@@ -36,7 +43,8 @@ export function resolve(input, {verifyCapability} = {}) {
     if (!text(input.delegate_scene)) return fail('NEEDS_CONTEXT', 'UNKNOWN_DELEGATE_SCENE');
     scene = input.role_config.scenes[input.delegate_scene];
   }
-  if (!scene || !['anchor', 'peak'].includes(scene.role)) {
+  const roles = v2 ? ['anchor', 'peak', 'light'] : ['anchor', 'peak'];
+  if (!scene || !roles.includes(scene.role)) {
     return {disposition: 'NEEDS_CONTEXT', reason: definition ? 'UNKNOWN_DELEGATE_SCENE' : 'UNKNOWN_SCENE'};
   }
   if (typeof scene.critical !== 'boolean' || (scene.critical && scene.role !== 'peak')) {
@@ -51,20 +59,50 @@ export function resolve(input, {verifyCapability} = {}) {
     if (!record(config.peak) || !text(config.peak.model) || !text(config.peak.source)) return fail('REFUSE', 'INVALID_PEAK');
     if (config.peak.approved !== true) return fail('REFUSE', 'PEAK_NOT_APPROVED');
   }
-  const choice = config[scene.role];
+  if (v2 && config.light !== undefined && (!record(config.light) || !text(config.light.model) || !text(config.light.source))) {
+    return fail('REFUSE', 'INVALID_LIGHT');
+  }
+  let choice = config[scene.role];
+  let adaptation = scene.role === 'anchor' ? 'ANCHOR_SELECTED' : `${scene.role.toUpperCase()}_SELECTED`;
+  if (v2 && scene.role !== 'anchor') {
+    const order = Array.isArray(config.approved_order) && config.approved_order.every(text)
+      && new Set(config.approved_order).size === config.approved_order.length ? config.approved_order : null;
+    const anchorRank = order?.indexOf(config.anchor.model) ?? -1;
+    const selected = config[scene.role];
+    const selectedRank = selected ? (order?.indexOf(selected.model) ?? -1) : -1;
+    if (scene.role === 'peak') {
+      if (!order || anchorRank < 0 || selectedRank < 0) return fail('NEEDS_CONTEXT', 'UNKNOWN_MODEL_RELATION');
+      if (anchorRank >= selectedRank) {
+        choice = config.anchor;
+        adaptation = 'NO_MODEL_UPGRADE';
+      }
+    } else if (!selected || selected.approved !== true) {
+      choice = config.anchor;
+      adaptation = selected ? 'LIGHT_NOT_APPROVED' : 'LIGHT_NOT_CONFIGURED';
+    } else if (!order || anchorRank < 0 || selectedRank < 0 || selectedRank >= anchorRank) {
+      choice = config.anchor;
+      adaptation = 'NO_MODEL_DOWNGRADE';
+    }
+  }
   const route = {
     scene: input.scene,
     delegate_scene: definition.role === 'by-scene' ? input.delegate_scene : null,
     harness: input.harness,
     role: scene.role,
+    requested_role: scene.role,
     critical: scene.critical,
     requested_model: choice.model,
+    effective_model: choice.model,
     model_source: choice.source,
-    model_relation: !config.peak ? 'PEAK_NOT_CONFIGURED' :
-      config.anchor.model === config.peak.model ? 'NO_MODEL_UPGRADE' : 'DISTINCT_SELECTION',
+    adaptation,
+    model_relation: v1 ? (!config.peak ? 'PEAK_NOT_CONFIGURED' :
+      config.anchor.model === config.peak.model ? 'NO_MODEL_UPGRADE' : 'DISTINCT_SELECTION') : adaptation,
     independent_review_required: scene.critical,
     evidence_requirements: ['trusted-capability-and-config-source', 'runtime-adopted-model', 'same-invocation-success'],
-    policy_source: '.claude/skill-os/model-routing.yaml#codex.model_routing',
+    policy_version: policy.version,
+    policy_source: v1 ? '.claude/skill-os/model-routing.yaml#codex.model_routing' :
+      policy.status === 'active' ? '.claude/skill-os/model-routing.yaml#model_routing' :
+        'framework-audit/candidates/model-routing-v2.yaml#model_routing',
   };
   const stop = (disposition, reason) => ({...route, disposition, reason});
   if (!record(config.security) || !text(config.security.provider) || !text(config.security.sandbox) ||
@@ -98,6 +136,8 @@ export function resolve(input, {verifyCapability} = {}) {
     harness: input.harness,
     anchor: {model: config.anchor.model, source: config.anchor.source},
     peak: config.peak ? {model: config.peak.model, source: config.peak.source, approved: config.peak.approved} : null,
+    light: v2 && config.light ? {model: config.light.model, source: config.light.source, approved: config.light.approved} : null,
+    approved_order: v2 ? config.approved_order ?? null : null,
     security: config.security,
   });
   route.capability_evidence_sha = digest({harness: input.harness, capabilities});
@@ -109,15 +149,31 @@ export function resolve(input, {verifyCapability} = {}) {
   return {...route, disposition: 'READY', reason: 'READY_TO_DISPATCH'};
 }
 
+// Callers provide an exact identity; the common policy never guesses from prompt text.
+export function resolveDispatchScene(policy, caller) {
+  if (!record(policy) || policy.version !== 2 || policy.scope !== 'common' || !record(caller)) return null;
+  if (caller.kind === 'native-agent' && text(caller.agent_type)) {
+    const scene = policy.dispatch?.native_agent_types?.[caller.agent_type];
+    return text(scene) && record(policy.scenes?.[scene]) ? scene : null;
+  }
+  if (caller.kind === 'workflow' && text(caller.workflow_id) && text(caller.phase_id)) {
+    const scene = policy.dispatch?.workflows?.[caller.workflow_id]?.[caller.phase_id];
+    return text(scene) && record(policy.scenes?.[scene]) ? scene : null;
+  }
+  return null;
+}
+
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const bindingFields = ['route_id', 'invocation_id', 'task_id', 'input_sha', 'generation'];
-const routeFields = ['scene', 'delegate_scene', 'harness', 'role', 'critical', 'requested_model', 'model_source',
-  'policy_sha', 'routing_config_sha', 'capability_evidence_sha'];
+const routeFields = ['scene', 'delegate_scene', 'harness', 'role', 'requested_role', 'critical', 'requested_model',
+  'effective_model', 'model_source', 'adaptation', 'policy_version', 'policy_sha', 'routing_config_sha',
+  'capability_evidence_sha'];
 
 // A manifest is a correlation envelope, not a signed authorization or model-success proof.
 export function createRouteManifest(route, bindings) {
-  if (route?.disposition !== 'READY' || !text(route.requested_model) || !['anchor', 'peak'].includes(route.role) ||
-      !text(route.scene) || !text(route.model_source) || !['codex-native', 'codex-cli'].includes(route.harness) ||
+  if (route?.disposition !== 'READY' || !text(route.requested_model) || !['anchor', 'peak', 'light'].includes(route.role) ||
+      !text(route.scene) || !text(route.model_source) ||
+      !['codex-native', 'codex-cli', 'claude-native', 'claude-workflow'].includes(route.harness) ||
       (route.delegate_scene !== null && !text(route.delegate_scene)) ||
       typeof route.critical !== 'boolean' || !['policy_sha', 'routing_config_sha', 'capability_evidence_sha'].every(key => hash(route[key]))) {
     throw new TypeError('complete READY route required');
@@ -126,7 +182,8 @@ export function createRouteManifest(route, bindings) {
       !hash(bindings.input_sha) || !Number.isSafeInteger(bindings.generation) || bindings.generation < 0) {
     throw new TypeError('valid invocation bindings required');
   }
-  return {version: 1, ...Object.fromEntries(routeFields.map(key => [key, route[key]])),
+  return {version: route.policy_version ?? 1,
+    ...Object.fromEntries(routeFields.filter(key => route[key] !== undefined).map(key => [key, route[key]])),
     ...Object.fromEntries(bindingFields.map(key => [key, bindings[key]]))};
 }
 
@@ -176,7 +233,7 @@ function main(args) {
     const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
     // PyYAML is the repository's existing YAML dependency; select this subtree to exclude YAML dates.
     const loaded = spawnSync('python3', ['-c',
-      'import json,sys,yaml;print(json.dumps(yaml.safe_load(open(sys.argv[1])).get("codex",{}).get("model_routing")))',
+      'import json,sys,yaml;d=yaml.safe_load(open(sys.argv[1]));print(json.dumps(d.get("model_routing") or d.get("codex",{}).get("model_routing")))',
       path.join(root, '.claude/skill-os/model-routing.yaml')], {encoding: 'utf8', timeout: 5000});
     result = loaded.status === 0 ? resolve({...input, role_config: JSON.parse(loaded.stdout)}) :
       {disposition: 'NEEDS_CONTEXT', reason: 'INVALID_POLICY'};

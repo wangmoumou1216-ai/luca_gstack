@@ -1,0 +1,66 @@
+# Offline candidate only. Production continues to read
+# .claude/skill-os/model-routing.yaml until the controlled activation gate.
+model_routing:
+  version: 2
+  status: candidate
+  scope: common
+  roles:
+    anchor: root-effective-selection
+    peak: user-approved-higher-selection
+    light: user-approved-lower-selection
+  scenes:
+    MR-001:
+      trigger: normal-conversation-or-implementation
+      role: anchor
+      critical: false
+    MR-002:
+      trigger: entered-plan-or-explicit-replan
+      role: peak
+      critical: true
+    MR-003:
+      trigger: redteam-refute-judge-oracle-expert-panel
+      role: peak
+      critical: true
+    MR-004:
+      trigger: semantic-review-or-terminal-decision
+      role: peak
+      critical: true
+    MR-005:
+      trigger: independent-review-before-authorized-irreversible-action
+      role: peak
+      critical: true
+    MR-006:
+      trigger: fact-collection-or-retrieval
+      role: anchor
+      critical: false
+    MR-007:
+      trigger: explicit-long-context-delegation
+      role: by-scene
+      requires_capacity: true
+    MR-008:
+      trigger: low-risk-mechanical-subtask
+      role: light
+      critical: false
+  dispatch:
+    native_agent_types:
+      default: MR-001
+      worker: MR-001
+      explorer: MR-006
+      preflight-agent: MR-008
+      quality-gate: MR-004
+      muse-proto-judge: MR-004
+    workflows:
+      external-skill-scout:
+        Load: MR-008
+        Discover: MR-006
+        Verify: MR-004
+      framework-evolution-scout:
+        Load: MR-008
+        Intake: MR-006
+        Discover: MR-006
+        AdoptionReview: MR-004
+        Verify: MR-004
+        Redteam: MR-003
+  critical_failure: refuse-no-fallback
+  evidence: trusted-runtime-adoption-and-same-invocation-success
+  effort: user-owned-not-a-routing-input

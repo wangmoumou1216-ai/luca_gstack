@@ -9,7 +9,8 @@
 //
 // 【为什么不是"自建平行机器"（Loop 宪法 §4）】
 // 本文件不实现编排语义——阶段划分、并发分组、门禁、降级全在 workflow 脚本里，原样不动。
-// 它只把 agent() 这一个原语接到 **Codex 原生的 `codex exec`** 上。workflow 脚本零改写。
+// 它只把 agent() 这一个原语接到 Codex app-server 的显式模型 thread 上，
+// 并在接纳结果前核验同一调用的采用与完成证据。workflow 脚本零改写。
 //
 // 【契约（从 workflow 脚本的实际用法反推，不可违反）】
 //  · agent(prompt, {label, phase, schema}) → Promise<对象|null>
@@ -36,11 +37,16 @@
 //     （我此前"10MB 不阻塞"的实测是对**另一条代码路径**——裸 node 写 stdout，
 //       不是 spawn 后管道无人 drain 的情形；结论不适用于此，已更正。）
 
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
+import { createInterface } from 'readline';
 import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, resolve, join, basename } from 'path';
 import { fileURLToPath } from 'url';
+import { modelRoutingPolicyDigest, resolve as resolveModelRoute, resolveDispatchScene } from '../scripts/model-route.mjs';
+import {
+  acceptInvocationEvidence, prepareInvocation, readActivation, releaseDigestForPolicy,
+} from '../scripts/model-route-host.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -68,12 +74,69 @@ if (rawName !== basename(rawName) || !/^[A-Za-z0-9._-]+$/.test(rawName) || rawNa
 const WF = join(ROOT, '.claude', 'workflows', `${rawName}.js`);
 if (!existsSync(WF)) { console.error(`找不到 workflow: ${WF}`); process.exit(2); }
 
-// ── 档位：真值源 .claude/skill-os/model-routing.yaml 的 codex.tier_to_effort ──
-// 不写死模型名（随账户失效）；只映射 effort。mechanical 用 low 而非 minimal：
-// config 解析器接受 minimal，但真实模型 400 拒绝（2026-08-05 实测）。
-const TIER_TO_EFFORT = { 'reasoning-heavy': 'xhigh', 'core-execution': 'high', 'guided-execution': 'medium', mechanical: 'low' };
-const PHASE_TIER = { Redteam: 'reasoning-heavy', Verify: 'core-execution', AdoptionReview: 'core-execution' };
-const effortFor = (phase) => TIER_TO_EFFORT[PHASE_TIER[phase] || 'guided-execution'];
+// Model choice is the shared v2 policy's job. Existing agent/user effort remains untouched and is
+// deliberately absent from every route input, digest, app-server request and evidence envelope.
+const TEST_MODE = process.env.NODE_ENV === 'test';
+const testOverride = (name) => TEST_MODE && process.env[name] ? process.env[name] : null;
+const POLICY_PATH = testOverride('LUCA_MODEL_ROUTE_POLICY_PATH')
+  || join(ROOT, '.claude', 'skill-os', 'model-routing.yaml');
+const BINDINGS_PATH = testOverride('LUCA_MODEL_ROUTE_BINDINGS_PATH')
+  || '/Users/luca/.luca/model-routing-bindings.json';
+const STATE_ROOT = testOverride('LUCA_MODEL_ROUTE_STATE_ROOT') || undefined;
+const ROOT_SESSION_ID = process.env.LUCA_MODEL_ROUTE_ROOT_SESSION_ID || '';
+
+function readCommonPolicy() {
+  const loaded = spawnSync('python3', ['-c',
+    'import json,sys,yaml;d=yaml.safe_load(open(sys.argv[1]));print(json.dumps(d.get("model_routing")))',
+    POLICY_PATH], {encoding: 'utf8', timeout: 5000});
+  if (loaded.status !== 0) throw new Error('MODEL_ROUTE_POLICY_UNREADABLE');
+  const policy = JSON.parse(loaded.stdout);
+  if (!policy || policy.version !== 2 || policy.scope !== 'common' || policy.status !== 'active') {
+    throw new Error('MODEL_ROUTE_POLICY_NOT_ACTIVE');
+  }
+  return policy;
+}
+
+function readCodexBindings() {
+  const parsed = JSON.parse(readFileSync(BINDINGS_PATH, 'utf8'));
+  const binding = parsed?.schema_version === 1 ? parsed?.harnesses?.codex : null;
+  if (!binding || typeof binding.peak_model !== 'string' || typeof binding.light_model !== 'string'
+    || !Array.isArray(binding.approved_order)) throw new Error('MODEL_ROUTE_BINDINGS_INVALID');
+  return binding;
+}
+
+function routeForPhase(phaseName) {
+  if (!ROOT_SESSION_ID) throw new Error('MODEL_ROUTE_ROOT_SESSION_MISSING');
+  const policy = readCommonPolicy();
+  const scene = resolveDispatchScene(policy, {kind: 'workflow', workflow_id: rawName, phase_id: phaseName});
+  if (!scene) throw new Error('MODEL_ROUTE_SCENE_UNKNOWN');
+  const state = readActivation({
+    harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+  });
+  if (!state || state.status !== 'active') throw new Error('MODEL_ROUTE_ACTIVATION_MISSING');
+  const binding = readCodexBindings();
+  const route = resolveModelRoute({
+    harness: 'codex-cli', scene, role_config: policy,
+    effective_config: {
+      anchor: state.root_anchor,
+      peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
+      light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
+      approved_order: binding.approved_order,
+      security: {provider: 'openai', sandbox: SANDBOX, approval_policy: 'never', network: SANDBOX === 'workspace-write'},
+    },
+    runtime_capabilities: {
+      explicit_model_override: true,
+      adopted_model_evidence: true,
+      preserves_safety: true,
+      model_pin: null,
+      evidence: {owner: 'codex-app-server', ref: 'thread/start+turn/completed', harness: 'codex-cli'},
+    },
+  }, {verifyCapability: () => true});
+  if (route.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${route.reason}`);
+  const policySha = modelRoutingPolicyDigest(policy);
+  if (route.policy_sha !== policySha) throw new Error('MODEL_ROUTE_POLICY_DIGEST_MISMATCH');
+  return {route, release_digest: releaseDigestForPolicy(policySha)};
+}
 
 // env 正整数校验（M4/M5）：非法值静默退回默认，绝不产生"零并发/零超时"的静默空转
 function posInt(name, dflt) {
@@ -186,69 +249,180 @@ function reviveFreeform(value, paths) {
   return walk(value, []);
 }
 
+function appServerArgs() {
+  const args = ['app-server', '--listen', 'stdio://', '--disable', 'hooks', '--disable', 'apps',
+    '--disable', 'shell_snapshot', '-c', 'notify=[]', '-c', 'web_search="disabled"'];
+  const meta = spawnSync('python3', ['-c',
+    'import os,pathlib,tomllib,json;p=pathlib.Path(os.environ.get("CODEX_HOME",str(pathlib.Path.home()/".codex")));d=tomllib.loads((p/"config.toml").read_text());print(json.dumps(list(d.get("mcp_servers",{}))))'],
+  {encoding: 'utf8', timeout: 5000});
+  if (meta.status !== 0) throw new Error('MODEL_ROUTE_CONFIG_METADATA_FAILED');
+  for (const name of JSON.parse(meta.stdout)) {
+    if (!/^[A-Za-z0-9_-]+$/.test(name)) throw new Error('MODEL_ROUTE_UNSAFE_MCP_KEY');
+    args.push('-c', `mcp_servers.${name}.enabled=false`);
+  }
+  return args;
+}
+
+let runnerCriticalFailure = false;
 function runCodex(prompt, schema, phaseName) {
   return new Promise((resolveP) => {
-    // B3：executor 全体包 try/catch —— 任何同步异常都必须收敛成 resolve(null)，绝不 reject
-    let settled = false;
-    const done = (val, why) => {
-      if (settled) return;                    // MINOR：error+close 双触发导致计数虚高
+    const id = ++agentSeq;
+    let settled = false, child = null, timer = null, prepared = null, route = null;
+    let threadId = null, turnId = null, adoptedModel = null, rerouted = false;
+    const freeform = [];
+    const finish = (val, why, runtime = {}) => {
+      if (settled) return;
       settled = true;
+      if (timer) clearTimeout(timer);
+      if (child?.pid) liveChildren.delete(child.pid);
+      if (prepared?.envelope) {
+        const accepted = acceptInvocationEvidence({
+          harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+          evidence: {
+            ...prepared.envelope,
+            adopted_model: adoptedModel || '',
+            status: runtime.completed === true ? 'completed' : 'failed',
+            same_invocation_success: runtime.completed === true
+              && runtime.thread_id === threadId && runtime.turn_id === turnId,
+            rerouted,
+            fallback: false,
+            evidence_ref: `app-server:${threadId || 'unstarted'}:${turnId || `call-${id}`}`,
+          },
+        });
+        if (accepted.disposition !== 'ACCEPT') val = null;
+        if (route?.critical && accepted.disposition !== 'ACCEPT') runnerCriticalFailure = true;
+      }
       if (val) agentOk++; else {
         agentFail++;
         process.stderr.write(`   ⚠ agent#${id} 失败(${why})——按契约返回 null 交给 workflow 降级\n`);
       }
+      if (child && child.exitCode === null && child.signalCode === null) {
+        try { child.stdin.end(); } catch { }
+        try { child.kill('SIGTERM'); } catch { }
+      }
       resolveP(val);
     };
-    const id = ++agentSeq;
-    try {
-      const outFile = join(tmp, `out-${id}.json`);
-      const freeform = [];
-      const args = ['exec', '--skip-git-repo-check', '-C', AGENT_CWD, '-s', SANDBOX,
-        '-c', `model_reasoning_effort="${effortFor(phaseName)}"`, '-o', outFile];
-      // 网络开关必须与档位一起接线：原实现只认 LUCA_WF_SANDBOX 却从不设 network_access，
-      // 于是设成 workspace-write 只拿到「写权限」拿不到「网络」——逃生舱恰好只给了危险的一半。
-      if (SANDBOX === 'workspace-write') args.push('-c', 'sandbox_workspace_write.network_access=true');
-      if (schema) {
-        const sf = join(tmp, `schema-${id}.json`);
-        writeFileSync(sf, JSON.stringify(strictifySchema(schema, freeform)));
-        args.push('--output-schema', sf);
-      }
-      args.push(prompt);
 
-      // stdout 设 'ignore'（M7）：runner 不读它（结果走 -o 文件），设 pipe 而无消费者
-      // 会在 >192KB 时挂死到超时。stderr 仍 pipe——订阅检测与报错提取需要它。
-      const p = spawn('codex', args, {
-        cwd: ROOT, stdio: ['ignore', 'ignore', 'pipe'], detached: true,
-      });
-      liveChildren.add(p.pid);
-      let stderr = '';
-      p.stderr.on('data', (d) => {
-        if (stderr.length < 8000) stderr += String(d);   // 总量上限，非每块截断
-      });
-      const timer = setTimeout(() => {
-        // 杀整个进程组（M6）：只杀直接子进程会把 gh/sandbox-exec 等孙进程留成孤儿
-        try { process.kill(-p.pid, 'SIGKILL'); } catch { try { p.kill('SIGKILL'); } catch { } }
-      }, TIMEOUT_MS);
+    (async () => {
+      try {
+        const routed = routeForPhase(phaseName);
+        route = routed.route;
+        prepared = prepareInvocation({
+          harness: 'codex', root_session_id: ROOT_SESSION_ID,
+          release_digest: routed.release_digest, route,
+          task_id: `${rawName}:${phaseName}:${id}`,
+          input_sha: modelRoutingPolicyDigest({prompt, schema: schema || null}),
+          state_root: STATE_ROOT,
+        });
+        if (prepared.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${prepared.reason}`);
+        const outputSchema = schema ? strictifySchema(schema, freeform) : null;
+        // JSON serialization happens before the child starts so cyclic/BigInt schemas still obey
+        // the historical "failure is null, never a rejected workflow promise" contract.
+        if (outputSchema) JSON.stringify(outputSchema);
 
-      p.on('error', () => { clearTimeout(timer); liveChildren.delete(p.pid); done(null, 'spawn 失败'); });
-      p.on('close', (code) => {
-        clearTimeout(timer);
-        liveChildren.delete(p.pid);
-        try {
-          if (/not supported when using Codex with a ChatGPT account/.test(stderr)) return done(null, '模型不可用/订阅');
-          if (code !== 0) {
-            const api = (stderr.match(/"message":\s*"([^"]{0,200})/) || [])[1];
-            return done(null, `exit=${code}${api ? ' | ' + api : ''}`);
+        child = spawn('codex', appServerArgs(), {
+          cwd: AGENT_CWD, stdio: ['pipe', 'pipe', 'pipe'], detached: true,
+        });
+        liveChildren.add(child.pid);
+        let stderr = '', nextRpcId = 0, fatal = null, finalText = '';
+        const pending = new Map();
+        let completeResolve;
+        const completion = new Promise(resolveCompletion => { completeResolve = resolveCompletion; });
+        const send = value => child.stdin.write(`${JSON.stringify(value)}\n`);
+        const rpc = (method, params) => new Promise((resolveRpc, rejectRpc) => {
+          const rpcId = ++nextRpcId;
+          pending.set(rpcId, {resolve: resolveRpc, reject: rejectRpc, method});
+          send({id: rpcId, method, params});
+        });
+        const failTransport = reason => {
+          if (fatal) return;
+          fatal = reason;
+          for (const pendingRpc of pending.values()) pendingRpc.reject(new Error(reason));
+          pending.clear();
+          completeResolve?.(null);
+        };
+        child.stderr.on('data', data => { if (stderr.length < 8000) stderr += String(data); });
+        child.on('error', () => failTransport('APP_SERVER_SPAWN_FAILED'));
+        child.on('exit', (code) => {
+          if (!settled && code !== 0) failTransport(`APP_SERVER_EXIT_${code}`);
+        });
+        createInterface({input: child.stdout}).on('line', line => {
+          let event;
+          try { event = JSON.parse(line); }
+          catch { failTransport('APP_SERVER_INVALID_EVENT'); return; }
+          if (event.id !== undefined && pending.has(event.id)) {
+            const pendingRpc = pending.get(event.id);
+            pending.delete(event.id);
+            if (event.error) pendingRpc.reject(new Error(`APP_SERVER_RPC_${pendingRpc.method}`));
+            else pendingRpc.resolve(event.result);
+            return;
           }
-          const raw = readFileSync(outFile, 'utf8').trim();
-          const m = raw.match(/\{[\s\S]*\}/);            // 容忍模型在 JSON 前后加话
-          if (!m) return done(null, '无 JSON');
-          return done(reviveFreeform(JSON.parse(m[0]), freeform), 'ok');
-        } catch (e) { return done(null, `读回失败(${(e && e.message) || e})`); }
-      });
-    } catch (e) {
-      done(null, `准备阶段异常(${(e && e.message) || e})`);   // EACCES / 循环引用 / BigInt
-    }
+          if (event.id !== undefined && event.method) {
+            send({id: event.id, error: {code: -32601, message: 'runner rejects server requests'}});
+            failTransport('APP_SERVER_REQUEST_REFUSED');
+            return;
+          }
+          if (/model\/rerouted|modelRerouted/i.test(event.method || '')) {
+            rerouted = true;
+            failTransport('MODEL_REROUTED');
+          }
+          if (event.method === 'item/completed' && event.params?.item?.type === 'agentMessage') {
+            finalText = String(event.params.item.text || '');
+          }
+          if (event.method === 'error' && !event.params?.willRetry) failTransport('APP_SERVER_TURN_ERROR');
+          if (event.method === 'turn/completed') completeResolve?.(event.params);
+        });
+        timer = setTimeout(() => {
+          failTransport('APP_SERVER_TIMEOUT');
+          try { process.kill(-child.pid, 'SIGKILL'); } catch { try { child.kill('SIGKILL'); } catch { } }
+        }, TIMEOUT_MS);
+
+        await rpc('initialize', {clientInfo: {name: 'luca_model_route_runner', version: '2'}});
+        send({method: 'initialized', params: {}});
+        const started = await rpc('thread/start', {
+          model: route.requested_model,
+          modelProvider: 'openai',
+          cwd: AGENT_CWD,
+          ephemeral: true,
+          sandbox: SANDBOX === 'workspace-write' ? 'workspaceWrite' : 'readOnly',
+          approvalPolicy: 'never',
+          allowProviderModelFallback: false,
+        });
+        adoptedModel = started?.model || started?.thread?.model || null;
+        threadId = started?.thread?.id || null;
+        if (adoptedModel !== route.requested_model || started?.modelProvider !== 'openai' || !threadId
+          || started?.approvalPolicy !== 'never') throw new Error('APP_SERVER_THREAD_CONTRACT_MISMATCH');
+        const turnParams = {
+          threadId,
+          input: [{type: 'text', text: prompt}],
+          cwd: AGENT_CWD,
+          approvalPolicy: 'never',
+          sandboxPolicy: {
+            type: SANDBOX === 'workspace-write' ? 'workspaceWrite' : 'readOnly',
+            ...(SANDBOX === 'workspace-write' ? {writableRoots: [AGENT_CWD], networkAccess: true} : {}),
+          },
+          model: route.requested_model,
+          ...(outputSchema ? {outputSchema} : {}),
+        };
+        const startedTurn = await rpc('turn/start', turnParams);
+        turnId = startedTurn?.turn?.id || null;
+        if (!turnId) throw new Error('APP_SERVER_TURN_ID_MISSING');
+        const completed = await completion;
+        if (fatal) throw new Error(fatal);
+        const sameCall = completed?.threadId === threadId && completed?.turn?.id === turnId;
+        if (!sameCall || completed?.turn?.status !== 'completed' || completed?.turn?.error) {
+          throw new Error('APP_SERVER_TURN_NOT_COMPLETED');
+        }
+        const match = finalText.trim().match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('APP_SERVER_NO_JSON');
+        finish(reviveFreeform(JSON.parse(match[0]), freeform), 'ok', {
+          completed: true, thread_id: completed.threadId, turn_id: completed.turn.id,
+        });
+      } catch (error) {
+        const message = (error && error.message) || String(error);
+        finish(null, message, {completed: false, thread_id: threadId, turn_id: turnId});
+      }
+    })();
   });
 }
 
@@ -273,7 +447,7 @@ const log = (...a) => process.stderr.write(`   ${a.join(' ')}\n`);
 
 const agent = async (prompt, opts = {}) => {
   const ph = opts.phase || currentPhase;
-  process.stderr.write(`   · agent ${opts.label || '(unlabeled)'} [effort=${effortFor(ph)}]\n`);
+  process.stderr.write(`   · agent ${opts.label || '(unlabeled)'} [model-route phase=${ph || '(unknown)'}]\n`);
   if (DRY) return null;                       // dry-run：不真调模型，走全 null 路径验降级
   // 工作根是 scratch 而非仓库（见 SANDBOX 段），故须显式告知仓库绝对路径——否则脚本里
   // 那些仓库相对路径（self-model.yaml 等）会解析到 scratch 而读不到。
@@ -350,6 +524,7 @@ try {
 cleanup();
 
 process.stderr.write(`\n── runner: agent ok=${agentOk} fail=${agentFail}${DRY ? ' (dry-run)' : ''} ──\n`);
+if (runnerCriticalFailure) failed = failed || '关键模型路由证据失败，已阻断 workflow 可信输出';
 if (failed) { process.stderr.write(`workflow 执行异常: ${failed}\n`); process.exit(1); }
 process.stdout.write(JSON.stringify(result ?? null, null, 2) + '\n');
 

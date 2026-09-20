@@ -11,7 +11,8 @@
 //        说明 TUI 走的正是这个 API）
 //
 // 【安全纪律 — 本脚本刻意的自我限制】
-//  · **只授信 command 里含 `codex-hook-adapter.mjs` 的条目**，即本仓自己的 hook。
+//  · **只授信 command 里含 `codex-hook-adapter.mjs` 或 `model-route-hook.mjs`
+//    的条目**，即本仓自己的 hook。
 //    绝不整体授信、绝不碰第三方条目（如 adrafinil）——那是别人的东西，不该由本脚本代人裁决。
 //  · 写前备份 `~/.codex/config.toml`，并打印一键回退命令。
 //  · 授信是**安全门**：它的意义是"人看过这些 hook 再让它跑"。本脚本不替代那个判断，
@@ -28,7 +29,7 @@ import { join } from 'path';
 
 const DRY = process.argv.includes('--dry-run');
 const CFG = join(homedir(), '.codex', 'config.toml');
-const OURS = /codex-hook-adapter\.mjs/;
+const OURS = /(?:codex-hook-adapter|model-route-hook)\.mjs/;
 
 // 与 app-server 通一次 JSON-RPC：喂请求、收响应
 function rpc(requests, waitMs = 6000) {

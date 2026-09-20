@@ -32,6 +32,7 @@ const pre = read('.claude/agents/preflight-agent.md');
 const qg = read('.claude/agents/quality-gate.md');
 const wa = read('.claude/agents/work-agent-template.md');
 const codexQg = read('.codex/agents/quality-gate.toml');
+const modelRouting = read('.claude/skill-os/model-routing.yaml');
 
 // 1. OD-first 锚（当轮漂移正是三处全漏，缺一即复发）
 t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-design'));
@@ -84,9 +85,28 @@ t('orchestrator 不允许改写 judge verdict', orch.includes('不得改写 verd
 t('Codex quality-gate 如实声明权限继承', codexQg.includes('权限继承父会话'));
 t('Codex quality-gate 不宣称已机械隔离 sandbox', !/^sandbox_mode\s*=/m.test(codexQg));
 
+// 9. 模型选择只有一份公共 policy；Codex 固定 effort 表是兼容元数据，不是第二条模型路由。
+const commonStart = modelRouting.indexOf('\nmodel_routing:');
+const commonEnd = modelRouting.indexOf('\nknown_lineup:', commonStart);
+const commonModel = commonStart >= 0
+  ? modelRouting.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
+  : '';
+const codexModel = (modelRouting.split(/^codex:/m)[1] || '').split(/^new_scenario_protocol:/m)[0] || '';
+t('公共模型 policy 是v2 active/common', /\n\s{2}version:\s*2\b/.test(commonModel)
+  && /\n\s{2}status:\s*active\b/.test(commonModel) && /\n\s{2}scope:\s*common\b/.test(commonModel));
+for (const role of ['anchor', 'peak', 'light'])
+  t(`公共模型 policy 含 ${role}`, new RegExp(`\\n\\s{4}${role}:`).test(commonModel));
+t('低风险机械任务路由到 light', /MR-008:[\s\S]*?role:\s*light\b/.test(commonModel));
+t('关键判官映射到语义复审场景', /quality-gate:\s*MR-004\b/.test(commonModel));
+t('effort 明确不是动态模型路由输入', /effort:\s*user-owned-not-a-routing-input\b/.test(commonModel));
+t('Codex 段不存在第二份 model_routing', !/^\s{2}model_routing:/m.test(codexModel));
+t('Codex 段不存在 tier→effort 动态映射', !/^\s{2}tier_to_effort:/m.test(codexModel));
+t('Codex preflight 固定 effort 保持 low', /\n\s{4}preflight-agent:\s*low\b/.test(codexModel));
+t('公共 policy 不公开账户模型名', !/\bgpt-[\w.-]+\b/.test(commonModel));
+
 if (failures.length) {
   console.error(`❌ agent 契约回归 FAIL（${failures.length}/${n}）：`);
   failures.forEach(f => console.error('  - ' + f));
   process.exit(1);
 }
-console.log(`agent-contracts: ${n}/${n} 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/模型档/能力锚/判决记录分权）`);
+console.log(`agent-contracts: ${n}/${n} 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/公共模型路由/能力锚/判决记录分权）`);

@@ -498,6 +498,40 @@ def check_model_routing():
         tiers = data.get("tiers", {}) or {}
         lineup = data.get("known_lineup", []) or []
 
+        # 新的模型选择真值只能在顶层 common v2。下方 Claude tier 与 Codex
+        # fixed-effort 段在过渡期仍做兼容检查，但不得重新成为第二份模型 policy。
+        common = data.get("model_routing") or {}
+        if common.get("version") != 2:
+            issues.append("model-routing: 公共 model_routing 必须是 v2")
+        if common.get("status") != "active":
+            issues.append("model-routing: 公共 model_routing 必须是 active")
+        if common.get("scope") != "common":
+            issues.append("model-routing: 公共 model_routing 必须跨 harness 共用")
+        roles = common.get("roles") or {}
+        for role in ("anchor", "peak", "light"):
+            if role not in roles:
+                issues.append(f"model-routing: 公共 model_routing 缺角色 {role}")
+        scenes = common.get("scenes") or {}
+        if (scenes.get("MR-008") or {}).get("role") != "light":
+            issues.append("model-routing: MR-008 低风险机械任务必须使用 light")
+        dispatch = common.get("dispatch") or {}
+        native = dispatch.get("native_agent_types") or {}
+        workflows = dispatch.get("workflows") or {}
+        if native.get("quality-gate") != "MR-004":
+            issues.append("model-routing: native quality-gate 必须映射 MR-004")
+        if (workflows.get("framework-evolution-scout") or {}).get("Redteam") != "MR-003":
+            issues.append("model-routing: framework-evolution-scout/Redteam 必须映射 MR-003")
+        if common.get("effort") != "user-owned-not-a-routing-input":
+            issues.append("model-routing: effort 必须由用户所有且不参与模型路由")
+        if re.search(r"\bgpt-[\w.-]+\b", json.dumps(common, ensure_ascii=False)):
+            issues.append("model-routing: 公共 policy 不得公开账户模型名")
+        if (data.get("codex") or {}).get("model_routing") is not None:
+            issues.append("model-routing: Codex 段不得保留第二份 model_routing")
+        if (data.get("codex") or {}).get("tier_to_effort") is not None:
+            issues.append("model-routing: Codex 段不得把模型档位映射为 effort")
+        if ((data.get("codex") or {}).get("agents") or {}).get("preflight-agent") != "low":
+            issues.append("model-routing: Codex preflight-agent 固定 effort 必须为 low")
+
         registered = {}
         for name, t in tiers.items():
             t = t or {}

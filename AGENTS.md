@@ -149,9 +149,10 @@ implementation name is not permission for another read.
 wrappers. **Claude** Code uses native slash commands where present. The workflow backend absent in
 Codex is exposed through `.codex/workflow-runner.mjs`; never claim native-tool equivalence.
 Before answering, cross-harness work loads `.claude/skill-os/runtime/cross-harness.md` and verifies both independently.
-Select subagent reasoning effort from `.claude/skill-os/model-routing.yaml`; inherit when unsure and
-never hardcode a model name. Runtime safety/capability facts bind, while behavioural preferences do
-not erase semantic routing; load `.claude/skill-os/runtime/harness-boundary.md` on such a conflict.
+Select a subagent model role from `.claude/skill-os/model-routing.yaml`; the trusted adapter resolves
+that role through the private binding, while reasoning effort remains independent. Inherit the anchor
+role when unsure and never hardcode a model name. Runtime safety/capability facts bind, while behavioural
+preferences do not erase semantic routing; load `.claude/skill-os/runtime/harness-boundary.md` on such a conflict.
 <!-- K10:END -->
 
 ## Execution and completion
