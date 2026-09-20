@@ -162,7 +162,7 @@ python3 memory/scripts/search_memory.py "<task/skill/topic>" --limit 5
 - Step 1 和 Step 2 是必须的。Step 3 是可选的（任务需要历史经验时运行；无命中跳过）
 - 如果 Step 3 找到了高相关历史成功模式，告知用户并建议复用
 - Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；Pre-Task 总加载量不超过 5K tokens
-- 不读取完整 `observations.jsonl`、`run-log.jsonl`、`semantic/candidates.jsonl`、
+- 不读取完整 `observations.jsonl`、`semantic/candidates.jsonl`、
   `semantic/reviews.jsonl` 或 `evals/eval-log.jsonl`
 - `python3 memory/scripts/consolidate_memory.py --json` 只用于治理、复盘、记忆健康度检查或用户明确询问；
   普通 skill 启动不运行 consolidate
@@ -181,7 +181,7 @@ python3 .claude/observability/scripts/get_rules.py <skill-name> <scene>
 
 规则：
 - 只读取这条命令的输出。
-- 不直接读取 `observations.jsonl` 或 `run-log.jsonl`。
+- 不直接读取 `observations.jsonl`。
 - 不全量读取 `rules.yaml`；必须通过 `get_rules.py` 过滤当前 skill 和 scene。
 - 如果输出 `none`，继续执行。
 - 如果有 active rules，必须在当前 skill 执行中遵守；
@@ -223,24 +223,11 @@ python3 .claude/observability/scripts/write_observation.py \
   --scenes <A|B|C|D|*>
 ```
 
-**收尾时记录轻量 run log —— ⛔ 已冻结，勿执行：**
-
-> `run-log.jsonl` 处于 FREEZE（`memory/README.md`）：**它的持续零写入本身就是裁决票据**，
-> 明令勿新建采集。而 `append_run_log.py` 会 `mkdir + open("a")` 直接创建该文件——照做即抹掉
-> 冻结依据。本块保留仅为说明该通道的形态；解冻前任何 skill 收尾都**不要**运行它。
-
-```bash
-# 冻结中，勿运行
-python3 .claude/observability/scripts/append_run_log.py \
-  --skill <skill-name> \
-  --status DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT \
-  --output "<主要产出路径>" \
-  --rules <命中的规则ID...>
-```
+每次 skill 收尾的 `run-log.jsonl` 采集支路已退役；不要把它重新建成常规完成副作用。
+经 quality-gate 验证的结果由 `record_eval.py` 写入 `memory/evals/eval-log.jsonl`。
 
 **上下文预算红线：**
 - `observations.jsonl` 是冷存储，只有 `/evals`、`redteam`、`retro` 或用户明确要求复盘时读取。
-- `run-log.jsonl` 是冷存储，只有 `/evals`、`retro` 或调试历史时读取。
 - `rules.yaml` 是规则库，但常规 skill 只能通过 `get_rules.py` 加载相关短规则。
 
 ### Skill 成长记录协议（可选自成长层）

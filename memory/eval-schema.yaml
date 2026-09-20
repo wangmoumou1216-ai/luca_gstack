@@ -1,6 +1,6 @@
 # Eval Record Schema v1.0
 # 每次 skill 执行后由 record_eval.py 写入 memory/evals/eval-log.jsonl
-# 目的：为将来的 GEPA 自动优化积累结构化训练数据
+# 目的：保存可检索、可治理的 quality-gate 结构化证据
 
 fields:
   session_date:
@@ -77,7 +77,7 @@ storage:
 
 # ─────────────────────────────────────────────────────────────────────────
 # Routing eval 扩展（2026-07-12）：甲类语义路由命中率度量，由 eval_routing.py 产出。
-# 向后兼容——现有 skill-exec 记录无这些字段、不受影响；GEPA pairs 层不涉及（冻结，见 README:66）。
+# 向后兼容——现有 skill-exec 记录无这些字段、不受影响；已退役的 GEPA pairs collector 不涉及本 schema。
 # fixtures 在 memory/evals/routing/fixtures.jsonl；judge 工作单/结果在同目录。
 # ─────────────────────────────────────────────────────────────────────────
 routing_eval_fields:

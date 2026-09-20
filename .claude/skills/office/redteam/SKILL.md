@@ -61,8 +61,7 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 ```
 
 不要读取完整历史；只把 active rules、近期 observations 中与当前 topic/skill 有关的条目
-纳入质疑。（`run-log.jsonl` 已 FREEZE、零写入即裁决票据，见 `office/SKILL.md` 冻结说明——
-不再作为本 skill 的数据源。）
+纳入质疑。已退役的 per-run collector 不再是本 skill 的数据源。
 
 然后从「最挑剔的用户/竞争对手/产品经理」视角，对以下维度逐一质疑：
 

@@ -11,7 +11,7 @@ eval_routing.py — 甲类语义路由命中率度量。
     orchestrator/主循环起（python 起不了 Claude agent，也不该假装能——语义判断只能在模型内发生）。
 
 复用（不重造）：route-guard.mjs 的 dry-run（ROUTE_GUARD_DRY_RUN=1，零副作用）、eval-methodology 的
-grader 选型（keyword=code / semantic=llm-judge）。不碰冻结的 GEPA（collect_eval/pairs.jsonl/judge_eval）。
+grader 选型（keyword=code / semantic=llm-judge）。不依赖已退役的 GEPA pairs collector。
 
 用法：
   python3 memory/scripts/eval_routing.py --selftest       # 内置小样例自检（断言 keyword 计算正确）

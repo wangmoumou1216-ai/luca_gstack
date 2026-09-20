@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 record_eval.py — 记录 skill 执行的 eval record
-写入 memory/evals/eval-log.jsonl，供将来 GEPA 使用
+写入 memory/evals/eval-log.jsonl，供检索与每日治理摘要消费
 
 用法:
   python3 memory/scripts/record_eval.py \

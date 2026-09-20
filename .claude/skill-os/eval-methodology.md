@@ -81,7 +81,7 @@ criteria:
 
 ## 4. 不做清单（防 scope 蔓延，均带触发条件，见 final-plan §4）
 
-- 不解冻 GEPA eval 数据层（GAP-eval-frozen）；不建 judge_eval.py；不写 pairs.jsonl。
+- 已退役的 GEPA pairs collector 不恢复；需要模型优化实验时，以新的真实需求和消费者重新立项。
 - evals skill 维持 dormant；eval-log.jsonl 为唯一记录层。
 - Solo Mode（不写 handoff 的轻任务）强制评估：measure-first 延后。
 

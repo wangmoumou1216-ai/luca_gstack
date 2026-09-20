@@ -4,8 +4,11 @@ This folder records skill feedback without loading long history into every run.
 
 - `observations.jsonl`: raw user feedback. Cold storage; do not read during normal skill startup.
 - `rules.yaml`: active short rules distilled from feedback. Only load through `scripts/get_rules.py`.
-- `run-log.jsonl`: one line per skill run. Cold storage; use for evals/retro only.
 - `scripts/`: deterministic readers/writers.
+
+The former per-run `run-log.jsonl` collector was retired on 2026-09-20 after its frozen stream
+remained empty. Do not recreate it as a routine skill-completion side effect; verified skill results
+belong in `memory/evals/eval-log.jsonl` through the quality-gate recording path.
 
 Runtime rule:
 

@@ -32,11 +32,10 @@ echo "EXISTING_EVALS: $_EVALS"
 
 读取 docs/ 目录下所有产出文件，记录以下指标。
 
-同时读取 observability 的短规则和近期冷日志摘要：
+同时读取 observability 的短规则和近期纠正摘要：
 
 ```bash
 python3 .claude/observability/scripts/get_rules.py "*" "*" 2>/dev/null || true
-tail -50 .claude/observability/run-log.jsonl 2>/dev/null
 tail -50 .claude/observability/observations.jsonl 2>/dev/null
 ```
 
@@ -107,7 +106,6 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 | Active rules loaded | ✅/⬜ | {规则ID列表或 none} |
 | Historical feedback repeated | ✅无复犯/⚠️疑似/❌复犯 | {说明} |
 | New observations unresolved | ✅无/⚠️有 | {observation IDs} |
-| Run log written | ✅/⬜ | {最近一次 run-log 记录} |
 ```
 
 如果 `/figma-demo` 参与流程，额外记录：

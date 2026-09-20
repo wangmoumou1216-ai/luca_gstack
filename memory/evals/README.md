@@ -1,41 +1,11 @@
-# Eval Data — Skill 评估数据集
+# Eval Data
 
-> GEPA 进化管线的输入数据层。每个 skill 一个子目录，存放 input→output 评估对。
+当前评估数据面只保留有消费者的记录：
 
-## 目录结构
+- `eval-log.jsonl`：quality-gate 结果，由 `record_eval.py` 受控写入，供检索和每日治理摘要消费。
+- `routing/fixtures.jsonl`：路由回归样例，由 `eval_routing.py` 使用。
+- 各 skill 的既有专项 fixture：仅按对应测试或评估入口读取。
 
-```
-memory/evals/
-  README.md           ← 本文件
-  html-prototype/
-    eval-schema.md    ← 字段定义和格式规范
-    pairs.jsonl       ← 评估对（每行一个 JSON）
-    judge-results/    ← LLM judge 的评分结果
-  brainstorm/         ← 待建（需 PRD 质量评估标准）
-  deepresearch/       ← 待建（需研究报告质量标准）
-```
-
-## Eval 对收集原则
-
-1. **只收集真实 session** — 不要编造输入或输出。宁可只有 5 对，不要有 20 对假数据。
-2. **覆盖失败案例** — 至少 30% 的 eval 对应该是"有问题的产出"，配上
-   feedback 说明问题在哪。
-3. **Feedback 必须具体** — 不是"不好"，而是"X 区域用了 text-gray-600 而不是
-   text-n11，导致颜色不一致"。
-4. **每批 session 后追加** — 不要等到收够 20 对再开始。3 对就可以启动。
-
-## GEPA metric 格式
-
-GEPA 的 metric 函数期望每个 eval 对返回：
-
-```python
-dspy.Prediction(
-    score=0.87,   # 0.0 - 1.0，对应 verify-prototype 通过率 + 审美得分组合
-    feedback="n-scale 使用正确。AI 状态覆盖完整。Dynamic Reference 选了 Linear 和 Attio 但没有说明为何选这两个而不是 Granola。"
-)
-```
-
-score 计算建议：
-- 50% 权重：verify-prototype.mjs 通过率（passed checks / total checks）
-- 30% 权重：Current Aesthetic Score（N/30 归一化）
-- 20% 权重：LLM judge 的整体质量评分
+旧 GEPA input→output pairs collector 于 2026-09-20 退役：冻结期间没有产生记录，空数据文件、
+专属 schema 和 collector 一并移除。需要重启模型优化实验时，必须基于新的真实需求和明确消费者
+重新设计，不能恢复成每次 session 的常规副作用。历史定义仍可从 Git 追溯。

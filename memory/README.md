@@ -93,9 +93,9 @@ python3 memory/scripts/search_memory.py "query" [--limit N] [--layer episodic|se
 > **EVAL 子系统状态（2026-07-15 记忆层评审裁决，BUILD-lite）。** `record_eval.py`（写
 > `evals/eval-log.jsonl`）已接确定性触发：quality-gate agent 定义 §4b 内置落账步骤（此前靠
 > orchestrator prose 约定、实证 2026-06-28 起失守——冻结是对既成断链的追认而非原因）；消费侧
-> 走每日 digest「🧪 Skill 评估消费」节。历史勘误与旧制分值语义见 git 历史。GEPA pairs 管线
-> （`collect_eval.py` → `pairs.jsonl`，0 条）与 `run-log.jsonl`（0 字节）仍 **FREEZE**——
-> 后者的持续零写入本身就是裁决票据，勿新建采集。ADR-0006 检索度量是独立路径
+> 走每日 digest「🧪 Skill 评估消费」节。历史勘误与旧制分值语义见 git 历史。旧 GEPA pairs
+> collector 与 observability run-log writer 已于 2026-09-20 退役；两条冻结流均未产生记录，
+> 不再保留可执行采集入口。ADR-0006 检索度量是独立路径
 > （`search_memory.py` → `retrieval-log.jsonl`），见上节。
 
 ## 记忆合并与 review queue
