@@ -102,6 +102,20 @@ try {
   console.log('SKIP: real read-only template package directory is unavailable on this machine');
 }
 
+const shadowManifest = JSON.parse(await readFile('.claude/skill-os/page-library/source-manifest.json', 'utf8'));
+assert.equal(shadowManifest.profile, 'curated-structural-shadow-v1');
+assert.equal(shadowManifest.sources.length, 4);
+for (const source of shadowManifest.sources) {
+  const bytes = await readFile(source.shadow_source);
+  assert.equal(bytes.length, source.shadow_bytes, `${source.page_id}: shadow byte count is frozen`);
+  assert.equal(sha256Bytes(bytes), source.shadow_sha256, `${source.page_id}: shadow hash is frozen`);
+  const result = resolveAssetClosure({ baseTemplate: bytes, assets: [] });
+  assert.equal(result.asset_profile, 'p0-static-v1', `${source.page_id}: shadow needs no inert-content exception`);
+  assert.equal(result.assets.length, 0, `${source.page_id}: shadow is self-contained`);
+  assert.deepEqual(result.active_content, { script_tags: 0, event_handlers: 0, potential_execution: 0 }, `${source.page_id}: shadow has no active content`);
+}
+console.log('PASS: four normalized carrier shadows are deterministic, self-contained and strict P0 static');
+
 assert.equal(canonicalJson({ z: [2, 1], a: 'x' }), '{"a":"x","z":[2,1]}');
 assert.deepEqual(parseCanonicalJson(Buffer.from('{"a":"x","z":[2,1]}')), { a: 'x', z: [2, 1] });
 expectCode(() => parseCanonicalJson(Buffer.from('{"a":1,"a":2}')), 'JSON_DUPLICATE_KEY');

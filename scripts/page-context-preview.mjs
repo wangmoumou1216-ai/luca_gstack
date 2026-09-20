@@ -5,6 +5,7 @@ import { dirname, resolve, relative, sep, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { carrierContractForPage, loadCatalog, readPageSource } from './page-context.mjs';
+import { resolveAssetClosure } from './carrier-asset-profile.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const origin = 'https://page-context.invalid';
@@ -43,6 +44,7 @@ export async function renderPreview({ catalog, pageId, root = repoRoot, browser:
   if (!entry) fail('PREVIEW_PAGE', `Unknown page: ${pageId}`);
   if (carrierOnly) carrierContractForPage(entry);
   const { bytes } = await readPageSource(entry, { root });
+  const carrierClosure = carrierOnly ? resolveAssetClosure({ baseTemplate: bytes, assets: [] }) : null;
   const browser = suppliedBrowser ?? await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: entry.viewport, deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: false });
   try {
@@ -144,7 +146,7 @@ export async function renderPreview({ catalog, pageId, root = repoRoot, browser:
     }), entry.regions);
     const png = await page.screenshot({ type: 'png', animations: 'disabled', fullPage: false });
     const screenshot = { sha256: hash(png), width: png.readUInt32BE(16), height: png.readUInt32BE(20), source_hash: entry.source_hash, viewport: entry.viewport };
-    return { png, manifest: { schema_version: 1, page_id: entry.page_id, name: entry.name, source_hash: entry.source_hash, viewport: entry.viewport, screenshot, regions, render: { mode: 'isolated-static-source', purpose: 'reference-preview', carrier_closure_proof: false, scripts: usesCompiler ? 'pinned-style-compiler' : 'none', removed_events: parsed.removedEvents, network_requests: 0 } } };
+    return { png, manifest: { schema_version: 1, page_id: entry.page_id, name: entry.name, source_hash: entry.source_hash, viewport: entry.viewport, screenshot, regions, render: { mode: 'isolated-static-source', purpose: 'reference-preview', carrier_closure_proof: Boolean(carrierClosure), carrier_asset_profile: carrierClosure?.asset_profile ?? null, scripts: usesCompiler ? 'pinned-style-compiler' : 'none', removed_events: parsed.removedEvents, network_requests: 0 } } };
   } finally {
     await context.close();
     if (!suppliedBrowser) await browser.close();

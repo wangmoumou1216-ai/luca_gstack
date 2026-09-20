@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="luca-shadow-profile" content="curated-structural-shadow-v1">
+  <meta name="luca-source-sha256" content="05921e7ad5340df93c28637118b1599eaefb4a4827a1b8d351afa7868808e58b">
+  <title>客户列表到详情页</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f3f5f7;color:#202a35;font:14px/1.45 system-ui,-apple-system,"PingFang SC",sans-serif}button,input{font:inherit}.app{min-height:900px;display:grid;grid-template-columns:76px 1fr}.side{background:#17212c;color:#dce5ee;padding:18px 10px}.logo{width:40px;height:40px;margin:0 auto 20px;border-radius:10px;background:#3b66f5;display:grid;place-items:center;color:white;font-weight:700}.side-item{padding:10px 4px;margin:4px 0;text-align:center;border-radius:7px;font-size:12px}.side-item.active{background:#2b3948;color:white}.workspace{padding:22px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.top h1{font-size:23px;margin:0}.primary{border:0;border-radius:7px;padding:8px 13px;background:#315bef;color:white}.split{display:grid;grid-template-columns:minmax(420px,.92fr) minmax(540px,1.08fr);gap:14px}.card{background:white;border:1px solid #dfe4ea;border-radius:10px;overflow:hidden}.card-head{padding:14px 16px;border-bottom:1px solid #e5e9ee}.tools{display:flex;gap:8px;margin-top:10px}.search{flex:1;padding:8px;border:1px solid #cbd3dc;border-radius:7px}.slot{border:1px dashed #94a3b8;border-radius:7px;padding:8px;color:#64748b;background:#f8fafc}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid #edf0f3;text-align:left}.table tr.selected{background:#eef3ff}.detail-head{padding:16px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e5e9ee}.detail-head h2{margin:0 0 4px;font-size:20px}.meta{color:#64748b}.tabs{display:flex;gap:3px;padding:10px 12px 0;border-bottom:1px solid #e5e9ee;flex-wrap:wrap}.tab{padding:7px 9px;border:0;background:transparent;color:#526170}.tab.active{color:#315bef;border-bottom:2px solid #315bef}.detail-body{padding:14px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.field{padding:10px;background:#f6f8fa;border-radius:7px}.field b{display:block;font-size:12px;color:#6b7785;margin-bottom:3px}.timeline{margin-top:12px;border-left:2px solid #dbe2ea;padding-left:12px}.timeline p{margin:6px 0}.state-map{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}.state{padding:7px;text-align:center;border:1px solid #dfe4ea;border-radius:6px;font-size:12px}.content-slot{margin-top:12px;min-height:54px}
+  </style>
+</head>
+<body>
+  <main id="customer-app" data-module="customer-app-shell" class="app">
+    <nav id="customer-navigation" data-module="customer-navigation" class="side" aria-label="CRM 主导航">
+      <div id="customer-nav-logo" class="logo">CRM</div>
+      <div class="side-item">首页</div><div class="side-item active">客户</div><div class="side-item">联系人</div><div class="side-item">商机</div><div class="side-item">销售记录</div>
+    </nav>
+
+    <section id="customer-workspace" data-module="customer-workspace" class="workspace">
+      <header id="customer-heading" class="top"><div><h1>客户</h1><div class="meta">列表浏览与详情联动</div></div><button class="primary" type="button">新建客户</button></header>
+      <div class="split">
+        <section id="customer-list" data-module="customer-list" class="card">
+          <header class="card-head"><strong>客户列表</strong><div id="customer-toolbar" data-module="customer-toolbar" class="tools"><input class="search" aria-label="搜索客户" value="搜索名称、负责人"><div id="customer-toolbar-slot" class="slot">工具扩展位</div></div></header>
+          <div id="customer-table" data-module="customer-table">
+            <table class="table">
+              <thead><tr><th>客户名称</th><th>负责人</th><th>阶段</th></tr></thead>
+              <tbody><tr class="selected"><td>Innotech 智能科技</td><td>林嘉</td><td>重点跟进</td></tr><tr><td>DataSync 数据服务</td><td>周宁</td><td>方案确认</td></tr><tr><td>云桥网络</td><td>苏雅</td><td>初步接洽</td></tr><tr><td>远景制造</td><td>沈昊</td><td>商务谈判</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <article id="customer-detail" data-module="customer-detail" class="card">
+          <header id="customer-detail-heading" class="detail-head"><div><h2>Innotech 智能科技</h2><div class="meta">企业客户 · 上海 · 重点客户</div></div><div id="customer-detail-actions-slot" class="slot">详情操作位</div></header>
+          <nav id="customer-detail-tabs" data-module="customer-detail-tabs" class="tabs" aria-label="客户详情页签">
+            <button class="tab active" type="button">基本资料</button><button class="tab" type="button">动态</button><button class="tab" type="button">地址</button><button class="tab" type="button">财务</button><button class="tab" type="button">联系人</button><button class="tab" type="button">商机</button>
+          </nav>
+          <section id="customer-detail-content" data-module="customer-detail-content" class="detail-body">
+            <div class="summary"><div class="field"><b>统一信用代码</b>91310000INNOTECH</div><div class="field"><b>客户级别</b>A 级</div><div class="field"><b>负责人</b>林嘉</div><div class="field"><b>最近联系</b>今天 10:30</div><div class="field"><b>年度合同额</b>¥ 1,280,000</div><div class="field"><b>在途商机</b>3 个</div></div>
+            <div class="timeline"><p><strong>今天</strong> 完成数据平台方案复盘</p><p><strong>昨天</strong> 联系人扩展为 6 人</p></div>
+            <div class="state-map"><div class="state">details</div><div class="state">activities</div><div class="state">address</div><div class="state">financial</div><div class="state">contacts</div><div class="state">opportunities</div><div class="state">contacts-expanded</div><div class="state">datasync-detail</div></div>
+            <div id="customer-detail-content-slot" class="slot content-slot">详情内容扩展位</div>
+          </section>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

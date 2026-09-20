@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="luca-shadow-profile" content="curated-structural-shadow-v1">
+  <meta name="luca-source-sha256" content="7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5">
+  <title>CRM 工作台首页</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#202a35;font:14px/1.45 system-ui,-apple-system,"PingFang SC",sans-serif}button{font:inherit}.app{min-height:900px;display:grid;grid-template-rows:58px 1fr}.global{display:flex;align-items:center;gap:24px;padding:0 20px;background:#17212c;color:#eef3f7}.brand{font-size:18px;font-weight:700}.global-links{display:flex;gap:18px}.global-link.active{color:white}.account{margin-left:auto;color:#cbd5df}.body{display:grid;grid-template-columns:210px minmax(0,1fr) 320px}.crm-nav{padding:20px 14px;background:white;border-right:1px solid #dde3e9}.nav-title{font-weight:700;margin:0 8px 12px}.nav-item{padding:9px 10px;border-radius:7px;margin:3px 0}.nav-item.active{background:#eef3ff;color:#315bef}.workspace{padding:22px}.workspace h1{font-size:24px;margin:0 0 4px}.muted{color:#64748b}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.metric,.card{background:white;border:1px solid #dfe4ea;border-radius:10px}.metric{padding:13px}.metric b{display:block;font-size:22px;margin-top:4px}.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:12px}.card{padding:15px}.card h2{font-size:16px;margin:0 0 12px}.bar{height:12px;margin:9px 0;background:#e8edff;border-radius:6px}.bar:nth-child(3){width:78%}.bar:nth-child(4){width:56%}.tasks{padding:0;margin:0;list-style:none}.tasks li{padding:9px 0;border-bottom:1px solid #edf0f3}.slot{border:1px dashed #94a3b8;border-radius:7px;padding:10px;background:#f8fafc;color:#64748b}.agent{padding:16px;background:#f9fafb;border-left:1px solid #dde3e9;display:flex;flex-direction:column}.agent-head{display:flex;justify-content:space-between;align-items:center}.agent-head h2{font-size:17px;margin:0}.chat{margin-top:14px;display:flex;flex-direction:column;gap:10px}.bubble{padding:10px 12px;border-radius:10px;background:white;border:1px solid #dfe4ea}.bubble.agent-msg{background:#eef3ff;border-color:#d5defd}.drawer{margin-top:auto}.config{margin-top:10px;font-size:12px}.workspace-slot{min-height:62px;margin-top:12px}
+  </style>
+</head>
+<body>
+  <main id="appRoot" data-module="workbench-app-shell" class="app">
+    <header id="globalNavigation" data-module="global-navigation" class="global">
+      <div id="global-brand" class="brand">纷享工作台</div><div class="global-links"><span class="global-link active">CRM</span><span class="global-link">协作</span><span class="global-link">数据</span></div><div class="account">luca · 在线</div>
+    </header>
+    <div class="body">
+      <nav id="crmNavigation" data-module="crm-navigation" class="crm-nav" aria-label="CRM 导航">
+        <div id="crm-nav-heading" class="nav-title">CRM</div><div class="nav-item active">工作台</div><div class="nav-item">客户</div><div class="nav-item">联系人</div><div class="nav-item">商机</div><div class="nav-item">销售记录</div><div class="nav-item">报表</div>
+      </nav>
+
+      <section id="workspace" data-module="workbench-workspace" class="workspace">
+        <header id="workspace-heading"><h1>早上好，luca</h1><div class="muted">这是你今天的销售工作概览</div></header>
+        <div class="metrics"><div class="metric">本月销售额<b>¥ 326k</b></div><div class="metric">新增客户<b>18</b></div><div class="metric">推进中商机<b>27</b></div><div class="metric">今日待办<b>6</b></div></div>
+        <div class="grid">
+          <article id="performanceOverview" data-module="performance-overview" class="card"><h2>销售表现</h2><div class="muted">目标完成 82%</div><div class="bar"></div><div class="bar"></div><div class="bar"></div></article>
+          <article id="todayTasks" data-module="today-tasks" class="card"><h2>今日任务</h2><ul class="tasks"><li>跟进 Innotech 方案</li><li>复核华东区域商机</li><li>提交周销售预测</li></ul></article>
+        </div>
+        <div id="workspaceCard" class="slot workspace-slot" aria-label="工作区卡片扩展位">工作区卡片扩展位</div>
+      </section>
+
+      <aside id="agentPanel" data-module="agent-panel" class="agent">
+        <header id="agent-panel-heading" class="agent-head"><h2>Agent 助手</h2><span class="muted">agent-open</span></header>
+        <div class="chat"><div class="bubble agent-msg">我整理了今天最值得优先推进的 3 个商机。</div><div class="bubble">先看风险最大的一个。</div></div>
+        <div id="chatLog" class="slot" aria-label="Agent 对话扩展位">Agent 对话扩展位</div>
+        <section id="sessionDrawer" data-module="session-drawer" class="card drawer"><h2>会话抽屉</h2><div class="muted">最近会话、上下文与接管入口</div></section>
+        <section id="menuConfig" data-module="menu-config" class="slot config">菜单配置状态 · menu-config</section>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

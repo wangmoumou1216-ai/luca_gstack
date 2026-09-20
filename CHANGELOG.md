@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added（2026-09-18 · Open Design 模板 carrier V2 与模型路由解析核心）
 
 - Open Design 新增 `structural_carrier + single` 交接链：冻结 Packet、模板/模块 binding、TAC/hash、独立 stage/run/recover 授权、runtime 能力收据、输入输出隔离、读回与 preserve DOM 验证；`reference_only` 保持独立语义。为什么：让 OD 可验地基于不可变 HTML carrier 生成新的衍生产物，不再把截图参考冒充模板派生。
+- 页面库新增 `settings-lead-pool`、`customer-list-detail`、`crm-workbench-home`、`sales-record-list-detail` 四个 live structural carrier；原四模板 SHA 与安全静态影子源双向绑定，旧五页不替换、不删除。新增真实浏览器预览、严格 P0 静态闭包及 CI/verify 回归门。为什么：让 Luca/OD 能按稳定模块、状态和 add-slot 体验四类真实页面结构，同时隔离原捕获包的脚本、事件和临时节点 ID。
 - 新增 Codex `parser-only` 模型路由政策核心：对 anchor/peak 角色、7 类场景、调用绑定、运行时采用证据与关键失败 latch 做 fail-closed 解析，不改 effort，不声称尚未接线的自动派发可用。
 
 ### Added（2026-09-17 · domain-modeling 条件原语）

@@ -117,9 +117,45 @@ try {
   assert.equal((await validateSelection(realCatalog, realSelection, { root: resolve('.') })).status, 'confirmed');
   console.log('PASS: real source containment -> forged filters/pagination rejected -> restored confirmed');
   assert.equal(realCatalog.schema_version, 2);
-  assert.ok(realCatalog.pages.every(entry => entry.lifecycle === 'live' && entry.carrier_eligible === false));
-  assert.equal(discoverCandidateHints(realCatalog, '客户列表').status, 'NO_HINT', 'ordinary live references cannot become carriers by lexical match');
+  const referenceIds = ['list', 'detail-2col', 'detail-3col', 'form', 'home'];
+  const carrierIds = ['settings-lead-pool', 'customer-list-detail', 'crm-workbench-home', 'sales-record-list-detail'];
+  assert.deepEqual(realCatalog.pages.slice(0, 5).map(entry => entry.page_id), referenceIds, 'the existing five page identities and order stay intact');
+  assert.ok(realCatalog.pages.slice(0, 5).every(entry => entry.lifecycle === 'live' && entry.carrier_eligible === false), 'the existing five pages remain selectable references, not carriers');
+  assert.deepEqual(realCatalog.pages.filter(entry => entry.carrier_eligible).map(entry => entry.page_id), carrierIds, 'the four confirmed templates are new live carrier pages');
+  assert.equal(discoverCandidateHints(realCatalog, 'CRM 首页').candidate_hints[0].page_id, 'crm-workbench-home');
   await assert.rejects(Promise.resolve().then(() => carrierContractForPage(realList)), { code: 'CARRIER_INELIGIBLE' });
+  for (const pageId of carrierIds) {
+    const entry = realCatalog.pages.find(page => page.page_id === pageId);
+    assert.equal(computeModuleContractHash(entry), entry.module_contract_hash, `${pageId}: module contract hash is current`);
+    assert.equal(carrierContractForPage(entry).page_id, pageId);
+    const addSlot = entry.slots[0];
+    const draft = {
+      schema_version: 2,
+      bundle_kind: 'carrier',
+      frozen_packet: { source_packet_sha256: '7'.repeat(64), applicability_set_sha256: '8'.repeat(64) },
+      binding: {
+        page_id: pageId,
+        source_ref: entry.source_ref,
+        source_hash: entry.source_hash,
+        module_contract_hash: entry.module_contract_hash,
+        carrier_profile: 'structural_carrier',
+        actions: [{ action_id: `C-${pageId}`, action: 'add', slot_id: addSlot.slot_id }]
+      }
+    };
+    assert.equal((await validateCarrierBindingDraft(realCatalog, draft, { root: resolve('.') })).contract.page_id, pageId);
+  }
+  const sourceManifest = JSON.parse(await readFile(resolve('.claude/skill-os/page-library/source-manifest.json'), 'utf8'));
+  assert.equal(sourceManifest.profile, 'curated-structural-shadow-v1');
+  assert.deepEqual(sourceManifest.sources.map(source => source.page_id), carrierIds);
+  for (const source of sourceManifest.sources) {
+    const [rawBytes, shadowBytes] = await Promise.all([readFile(source.raw_source), readFile(resolve(source.shadow_source))]);
+    assert.equal(rawBytes.length, source.raw_bytes, `${source.page_id}: raw byte count is frozen`);
+    assert.equal(createHash('sha256').update(rawBytes).digest('hex'), source.raw_sha256, `${source.page_id}: raw source identity is frozen`);
+    assert.equal(shadowBytes.length, source.shadow_bytes, `${source.page_id}: shadow byte count is frozen`);
+    assert.equal(createHash('sha256').update(shadowBytes).digest('hex'), source.shadow_sha256, `${source.page_id}: shadow source identity is frozen`);
+    assert.equal(realCatalog.pages.find(entry => entry.page_id === source.page_id).source_hash, source.shadow_sha256);
+  }
+  console.log('PASS: existing five references coexist with four raw-bound, live carrier contracts and deterministic shadow sources');
   const carrierHtml = '<main id="app"><section id="toolbar" data-module="toolbar"><span id="toolbar-label">Toolbar</span><div id="toolbar-slot"></div></section><section id="content" data-module="content"><span id="content-label">Content</span></section></main>';
   await writeFile(join(root, 'framework/carrier.html'), carrierHtml);
   const carrierPage = {

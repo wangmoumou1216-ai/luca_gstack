@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="luca-shadow-profile" content="curated-structural-shadow-v1">
+  <meta name="luca-source-sha256" content="1c2f45816993f022e13322757cc87b03b77d66d0be2971397d82b3cb1fad544f">
+  <title>销售记录列表到详情页</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f3f5f7;color:#202a35;font:14px/1.45 system-ui,-apple-system,"PingFang SC",sans-serif}button,input{font:inherit}.app{min-height:900px;display:grid;grid-template-rows:54px 1fr}.topbar{display:flex;align-items:center;padding:0 18px;background:#17212c;color:#eef3f7}.brand{font-size:17px;font-weight:700}.top-actions{margin-left:auto;color:#cbd5df}.body{display:grid;grid-template-columns:68px 190px 1fr}.rail{padding:12px 8px;background:#222e3b;color:#dbe4ed}.rail-item{padding:9px 2px;text-align:center;border-radius:7px;margin:4px 0;font-size:12px}.rail-item.active{background:#315bef;color:white}.sidebar{padding:18px 12px;background:white;border-right:1px solid #dde3e9}.sidebar h2{font-size:15px;margin:0 8px 12px}.side-item{padding:8px 10px;border-radius:7px;margin:3px 0}.side-item.active{background:#eef3ff;color:#315bef}.workspace{padding:20px}.workspace-head{display:flex;align-items:center;justify-content:space-between}.workspace-head h1{margin:0;font-size:23px}.primary{padding:8px 13px;border:0;border-radius:7px;background:#315bef;color:white}.layout{display:grid;grid-template-columns:minmax(520px,1.05fr) minmax(520px,.95fr);gap:13px;margin-top:14px}.card{background:white;border:1px solid #dfe4ea;border-radius:10px;overflow:hidden}.toolbar{display:flex;gap:8px;padding:12px;border-bottom:1px solid #e5e9ee}.search{flex:1;padding:8px;border:1px solid #cbd3dc;border-radius:7px}.slot{padding:8px;border:1px dashed #94a3b8;border-radius:7px;color:#64748b;background:#f8fafc}.records{width:100%;border-collapse:collapse}.records th,.records td{padding:9px;border-bottom:1px solid #edf0f3;text-align:left}.records tr.selected{background:#eef3ff}.detail-head{padding:14px;display:flex;justify-content:space-between;border-bottom:1px solid #e5e9ee}.detail-head h2{margin:0 0 4px;font-size:19px}.muted{color:#64748b}.tabs{display:flex;gap:2px;padding:8px 10px 0;border-bottom:1px solid #e5e9ee;flex-wrap:wrap}.tab{padding:7px 9px;border:0;background:transparent}.tab.active{color:#315bef;border-bottom:2px solid #315bef}.detail-body{padding:12px}.meta-slot{margin-bottom:10px}.panels{display:grid;grid-template-columns:1fr 1fr;gap:8px}.panel-slot{min-height:54px}.tab-slot{min-height:70px;margin-top:8px}.summary{padding:10px;background:#f6f8fa;border-radius:7px;margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <main id="sales-record-app" data-module="sales-record-app-shell" class="app">
+    <header id="sales-global-topbar" data-module="sales-global-topbar" class="topbar"><div id="sales-brand" class="brand">CRM 销售工作台</div><div class="top-actions">搜索 · 消息 · 账户</div></header>
+    <div class="body">
+      <nav id="sales-app-rail" data-module="sales-app-rail" class="rail" aria-label="应用导航"><div class="rail-item">首页</div><div class="rail-item active">CRM</div><div class="rail-item">协作</div><div class="rail-item">数据</div></nav>
+      <nav id="sales-crm-sidebar" data-module="sales-crm-sidebar" class="sidebar" aria-label="CRM 业务导航"><h2 id="sales-sidebar-heading">销售管理</h2><div class="side-item">客户</div><div class="side-item">联系人</div><div class="side-item">商机</div><div class="side-item active">销售记录</div><div class="side-item">目标</div></nav>
+
+      <section id="sales-workspace" data-module="sales-workspace" class="workspace">
+        <header id="sales-workspace-heading" class="workspace-head"><div><h1>销售记录</h1><div class="muted">记录沟通、推进和下一步行动</div></div><button class="primary" type="button">新建销售记录</button></header>
+        <div class="layout">
+          <section id="sales-list-view" data-module="sales-list-view" class="card">
+            <div id="sales-list-toolbar" data-module="sales-list-toolbar" class="toolbar"><input class="search" aria-label="搜索销售记录" value="搜索客户、联系人或摘要"><div id="sales-list-toolbar-slot" class="slot">列表工具扩展位</div></div>
+            <div id="sales-record-table" data-module="sales-record-table">
+              <table class="records"><thead><tr><th>客户</th><th>沟通方式</th><th>记录人</th><th>时间</th></tr></thead><tbody><tr class="selected"><td>Innotech</td><td>方案复盘</td><td>林嘉</td><td>今天 10:30</td></tr><tr><td>DataSync</td><td>需求访谈</td><td>周宁</td><td>昨天 16:10</td></tr><tr><td>云桥网络</td><td>电话跟进</td><td>苏雅</td><td>周一 11:20</td></tr><tr><td>远景制造</td><td>商务会议</td><td>沈昊</td><td>上周五</td></tr></tbody></table>
+            </div>
+          </section>
+
+          <article id="sales-detail-layer" data-module="sales-detail-layer" class="card">
+            <header id="sales-detail-heading" class="detail-head"><div><h2>Innotech · 方案复盘</h2><div class="muted">销售记录详情 · 今天 10:30</div></div><div id="detail-meta-slot" class="slot">详情元信息位</div></header>
+            <nav id="sales-detail-tabs" data-module="sales-detail-tabs" class="tabs" aria-label="销售记录详情页签"><button class="tab active" type="button">摘要</button><button class="tab" type="button">洞察</button><button class="tab" type="button">任务</button><button class="tab" type="button">转写</button><button class="tab" type="button">基础信息</button></nav>
+            <section id="sales-detail-body" data-module="sales-detail-body" class="detail-body">
+              <div class="summary"><strong>本次结论</strong><br>客户认可总体方向，下一步需补充数据迁移风险与上线节奏。</div>
+              <div class="panels"><div id="summary-panel-slot" class="slot panel-slot">摘要面板位</div><div id="insight-panel-slot" class="slot panel-slot">洞察面板位</div><div id="tasks-panel-slot" class="slot panel-slot">任务面板位</div><div id="transcript-panel-slot" class="slot panel-slot">转写面板位</div><div id="basic-panel-slot" class="slot panel-slot">基础信息面板位</div></div>
+              <div id="tab-content-slot" class="slot tab-slot">当前页签内容扩展位</div>
+            </section>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

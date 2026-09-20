@@ -108,6 +108,8 @@ check S14b "quality gate 作用域隔离/精确 handoff/已验证项目扫描会
 check S14c "退休设计入口拒绝且通用路径保留（真实 guard mutation）" "npm run test:design-tool-retirement --silent"
 check S14d "设计交接导入/授权/读回回归与真实 guard mutation" "npm run test:design-flow-handoff --silent"
 check S14e "退役设计约束不从活动规则/记忆回流（含恢复旧数据反证）" "npm run test:design-context-retirement --silent"
+check S14f "页面库九页身份、四 carrier 模块/slot、raw→shadow hash 与负例" "npm run test:page-context --silent && npm run test:carrier-asset-profile --silent"
+check S14g "页面库九页真实浏览器预览与四 carrier-only 静态闭包" "npm run test:page-context-preview --silent"
 check S15 "coding discipline 合同检查通过"        "npm run check:coding-discipline --silent"
 check S17 "muse-loop 共享面锚点一致（模式/防slop/DECISION/shared-ref）" "npm run check:muse-loop-sync --silent"
 check S18 "能力锚点自检（capability anchors，防误删关键小节）"  "node scripts/check-capability-parity.mjs"

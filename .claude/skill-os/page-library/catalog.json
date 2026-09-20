@@ -577,6 +577,164 @@
           }
         }
       ]
+    },
+    {
+      "page_id": "settings-lead-pool",
+      "name": "后台设置 · 线索池",
+      "aliases": ["后台设置", "线索池设置", "转换规则", "归属规则", "跟进规则", "lead pool settings"],
+      "intent": "配置线索池及其转换、归属、跟进、基础规则，并承载详情、编辑、新建和部门范围状态。",
+      "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": true,
+      "source_ref": ".claude/skill-os/page-library/sources/settings-lead-pool.html",
+      "source_hash": "b2916d7bac12315872bec8bd553374b4ba66ed4cbb7265f4d774cc0cf1dd9652",
+      "viewport": {"width": 1440, "height": 900},
+      "states": ["pool", "conversion", "ownership", "followup", "basic", "detail", "edit", "new", "department"],
+      "regions": [
+        {"region_id": "canvas", "parent_id": null, "name": "后台设置应用壳", "aliases": ["管理后台"], "intent": "承载设置导航和配置工作区。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-app"}},
+        {"region_id": "navigation", "parent_id": "canvas", "name": "后台管理导航", "aliases": ["设置导航"], "intent": "在业务设置与组织权限间导航。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-nav"}},
+        {"region_id": "workspace", "parent_id": "canvas", "name": "线索池配置工作区", "aliases": ["配置内容"], "intent": "查看和编辑线索池规则。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-workspace"}},
+        {"region_id": "state-tabs", "parent_id": "workspace", "name": "设置状态页签", "aliases": ["规则页签"], "intent": "切换转换、归属、跟进、基础和编辑状态。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-state-tabs"}},
+        {"region_id": "pool-table", "parent_id": "workspace", "name": "线索池表格", "aliases": ["线索池列表"], "intent": "浏览和管理线索池。", "anchor": {"kind": "attribute", "name": "id", "value": "lead-pool-table"}},
+        {"region_id": "rules", "parent_id": "workspace", "name": "规则面板", "aliases": ["转换归属跟进规则"], "intent": "呈现各类业务规则及其扩展点。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-rule-panels"}},
+        {"region_id": "editor", "parent_id": "workspace", "name": "详情编辑区", "aliases": ["新建编辑"], "intent": "承载详情、编辑和新建状态。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-editor"}}
+      ],
+      "module_contract_hash": "468924402b5c2dd692c6a87af022b40e54ff9b12744a4030cee38d3006f45d0f",
+      "modules": [
+        {"module_id": "app-shell", "parent_module_id": null, "name": "后台设置应用壳", "intent": "保持设置页面的导航与工作区骨架。", "anchor": {"kind": "attribute", "name": "data-module", "value": "settings-app-shell"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "app-root", "name": "应用根节点", "anchor": {"kind": "attribute", "name": "id", "value": "settings-app"}}]},
+        {"module_id": "admin-navigation", "parent_module_id": "app-shell", "name": "后台管理导航", "intent": "保留业务设置与组织权限入口。", "anchor": {"kind": "attribute", "name": "data-module", "value": "settings-admin-navigation"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "navigation-brand", "name": "管理后台标识", "anchor": {"kind": "attribute", "name": "id", "value": "settings-nav-brand"}}]},
+        {"module_id": "settings-workspace", "parent_module_id": "app-shell", "name": "配置工作区", "intent": "承载线索池配置及操作。", "anchor": {"kind": "attribute", "name": "data-module", "value": "settings-workspace"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "workspace-heading", "name": "线索池设置标题", "anchor": {"kind": "attribute", "name": "id", "value": "settings-heading"}}]},
+        {"module_id": "state-tabs", "parent_module_id": "settings-workspace", "name": "设置状态页签", "intent": "表达九种配置状态。", "anchor": {"kind": "attribute", "name": "data-module", "value": "settings-state-tabs"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "tabs-root", "name": "页签根节点", "anchor": {"kind": "attribute", "name": "id", "value": "settings-state-tabs"}}]},
+        {"module_id": "lead-pool-table", "parent_module_id": "settings-workspace", "name": "线索池表格", "intent": "浏览线索池、负责人、成员范围和回收规则。", "anchor": {"kind": "attribute", "name": "data-module", "value": "lead-pool-table"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "pool-table-root", "name": "线索池表格容器", "anchor": {"kind": "attribute", "name": "id", "value": "lead-pool-table"}}]},
+        {"module_id": "rule-panels", "parent_module_id": "settings-workspace", "name": "规则面板", "intent": "呈现转换、归属、跟进和基础规则。", "anchor": {"kind": "attribute", "name": "data-module", "value": "settings-rule-panels"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "conversion-rule", "name": "转换规则状态", "anchor": {"kind": "attribute", "name": "id", "value": "conversion-rule"}}]},
+        {"module_id": "settings-editor", "parent_module_id": "settings-workspace", "name": "详情编辑器", "intent": "承载详情、编辑和新建内容。", "anchor": {"kind": "attribute", "name": "data-module", "value": "settings-editor"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "editor-root", "name": "编辑器容器", "anchor": {"kind": "attribute", "name": "id", "value": "settings-editor"}}]}
+      ],
+      "slots": [
+        {"slot_id": "settings-content-slot", "parent_module_id": "rule-panels", "name": "配置内容扩展位", "intent": "增加规则配置内容。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-content-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "settings-editor-slot", "parent_module_id": "settings-editor", "name": "编辑器扩展位", "intent": "增加详情、编辑或新建字段。", "anchor": {"kind": "attribute", "name": "id", "value": "settings-editor-slot"}, "allowed_actions": ["add"]}
+      ]
+    },
+    {
+      "page_id": "customer-list-detail",
+      "name": "客户列表到详情",
+      "aliases": ["客户列表详情", "客户详情联动", "联系人详情", "客户资料", "customer list detail"],
+      "intent": "从客户列表进入客户详情，浏览资料、动态、地址、财务、联系人与商机状态。",
+      "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": true,
+      "source_ref": ".claude/skill-os/page-library/sources/customer-list-detail.html",
+      "source_hash": "7b06edcfdec9bcba0d68e13e6cd2bf8267550c15b6c8a4c6ed5111fdeea721b6",
+      "viewport": {"width": 1440, "height": 900},
+      "states": ["list", "details", "activities", "address", "financial", "contacts", "opportunities", "contacts-expanded"],
+      "regions": [
+        {"region_id": "canvas", "parent_id": null, "name": "客户应用壳", "aliases": ["客户页面"], "intent": "承载导航、客户列表和详情。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-app"}},
+        {"region_id": "navigation", "parent_id": "canvas", "name": "CRM 主导航", "aliases": ["客户导航"], "intent": "切换客户、联系人、商机和销售记录。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-navigation"}},
+        {"region_id": "workspace", "parent_id": "canvas", "name": "客户工作区", "aliases": ["客户列表详情工作区"], "intent": "并列承载列表与详情。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-workspace"}},
+        {"region_id": "customer-list", "parent_id": "workspace", "name": "客户列表", "aliases": ["客户表格"], "intent": "搜索、浏览并选中客户。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-list"}},
+        {"region_id": "customer-detail", "parent_id": "workspace", "name": "客户详情", "aliases": ["客户资料"], "intent": "阅读选中客户的跨页签详情。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail"}},
+        {"region_id": "detail-tabs", "parent_id": "customer-detail", "name": "详情页签", "aliases": ["资料动态联系人商机"], "intent": "切换详情资料维度。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-tabs"}},
+        {"region_id": "detail-content", "parent_id": "customer-detail", "name": "详情内容", "aliases": ["客户详情内容"], "intent": "承载字段、动态与扩展内容。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-content"}}
+      ],
+      "module_contract_hash": "8774b4adeb9de32b6f1fb8afe013e467ee4b2d6e2e43c4eb1ca20c312b4fa179",
+      "modules": [
+        {"module_id": "app-shell", "parent_module_id": null, "name": "客户应用壳", "intent": "保持导航、列表和详情的骨架。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-app-shell"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "app-root", "name": "客户应用根节点", "anchor": {"kind": "attribute", "name": "id", "value": "customer-app"}}]},
+        {"module_id": "navigation", "parent_module_id": "app-shell", "name": "CRM 主导航", "intent": "保留 CRM 对象导航。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-navigation"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "navigation-logo", "name": "CRM 标识", "anchor": {"kind": "attribute", "name": "id", "value": "customer-nav-logo"}}]},
+        {"module_id": "workspace", "parent_module_id": "app-shell", "name": "客户工作区", "intent": "组织客户列表和详情。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-workspace"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "workspace-heading", "name": "客户标题", "anchor": {"kind": "attribute", "name": "id", "value": "customer-heading"}}]},
+        {"module_id": "customer-list", "parent_module_id": "workspace", "name": "客户列表", "intent": "承载搜索、表格和列表选择。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-list"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "list-root", "name": "客户列表容器", "anchor": {"kind": "attribute", "name": "id", "value": "customer-list"}}]},
+        {"module_id": "customer-toolbar", "parent_module_id": "customer-list", "name": "客户列表工具栏", "intent": "搜索并扩展客户列表操作。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-toolbar"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "toolbar-root", "name": "客户工具栏容器", "anchor": {"kind": "attribute", "name": "id", "value": "customer-toolbar"}}]},
+        {"module_id": "customer-table", "parent_module_id": "customer-list", "name": "客户表格", "intent": "展示客户、负责人和阶段。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-table"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "table-root", "name": "客户表格容器", "anchor": {"kind": "attribute", "name": "id", "value": "customer-table"}}]},
+        {"module_id": "customer-detail", "parent_module_id": "workspace", "name": "客户详情", "intent": "承载选中客户的详情。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-detail"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "detail-heading", "name": "客户详情标题", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-heading"}}]},
+        {"module_id": "detail-tabs", "parent_module_id": "customer-detail", "name": "客户详情页签", "intent": "表达资料、动态、地址、财务、联系人和商机状态。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-detail-tabs"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "tabs-root", "name": "客户详情页签容器", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-tabs"}}]},
+        {"module_id": "detail-content", "parent_module_id": "customer-detail", "name": "客户详情内容", "intent": "承载字段、动态和状态内容。", "anchor": {"kind": "attribute", "name": "data-module", "value": "customer-detail-content"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "content-root", "name": "客户详情内容容器", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-content"}}]}
+      ],
+      "slots": [
+        {"slot_id": "customer-toolbar-slot", "parent_module_id": "customer-toolbar", "name": "列表工具扩展位", "intent": "增加客户列表筛选或批量操作。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-toolbar-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "customer-detail-actions-slot", "parent_module_id": "customer-detail", "name": "详情操作扩展位", "intent": "增加客户级操作。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-actions-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "customer-detail-content-slot", "parent_module_id": "detail-content", "name": "详情内容扩展位", "intent": "增加客户详情区块。", "anchor": {"kind": "attribute", "name": "id", "value": "customer-detail-content-slot"}, "allowed_actions": ["add"]}
+      ]
+    },
+    {
+      "page_id": "crm-workbench-home",
+      "name": "CRM 工作台首页",
+      "aliases": ["工作台首页", "CRM 首页", "Agent 工作台", "销售工作台", "crm workbench"],
+      "intent": "在全局导航和 CRM 菜单内查看销售概览、任务，并与 Agent 面板协作。",
+      "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": true,
+      "source_ref": ".claude/skill-os/page-library/sources/crm-workbench-home.html",
+      "source_hash": "860b6e7b655b5c7e622ab8ab5d7a396c651026658dadae1a3dee925c76392af0",
+      "viewport": {"width": 1440, "height": 900},
+      "states": ["default", "agent-open", "session-drawer", "menu-config"],
+      "regions": [
+        {"region_id": "canvas", "parent_id": null, "name": "工作台应用壳", "aliases": ["CRM 应用"], "intent": "承载全局导航、CRM 导航、工作区和 Agent。", "anchor": {"kind": "attribute", "name": "id", "value": "appRoot"}},
+        {"region_id": "global-navigation", "parent_id": "canvas", "name": "全局导航", "aliases": ["顶部导航"], "intent": "在 CRM、协作和数据之间切换。", "anchor": {"kind": "attribute", "name": "id", "value": "globalNavigation"}},
+        {"region_id": "crm-navigation", "parent_id": "canvas", "name": "CRM 导航", "aliases": ["业务菜单"], "intent": "进入客户、联系人、商机和销售记录。", "anchor": {"kind": "attribute", "name": "id", "value": "crmNavigation"}},
+        {"region_id": "workspace", "parent_id": "canvas", "name": "主工作区", "aliases": ["销售概览"], "intent": "查看指标、销售表现和今日任务。", "anchor": {"kind": "attribute", "name": "id", "value": "workspace"}},
+        {"region_id": "agent-panel", "parent_id": "canvas", "name": "Agent 面板", "aliases": ["智能助手"], "intent": "查看建议、会话和配置。", "anchor": {"kind": "attribute", "name": "id", "value": "agentPanel"}}
+      ],
+      "module_contract_hash": "e63a5a2d14306f9caa53b8766d75fc26004c0e48bc52ff8e3425b76e4390a19e",
+      "modules": [
+        {"module_id": "app-shell", "parent_module_id": null, "name": "工作台应用壳", "intent": "保持导航、工作区和 Agent 的三段骨架。", "anchor": {"kind": "attribute", "name": "data-module", "value": "workbench-app-shell"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "app-root", "name": "工作台根节点", "anchor": {"kind": "attribute", "name": "id", "value": "appRoot"}}]},
+        {"module_id": "global-navigation", "parent_module_id": "app-shell", "name": "全局导航", "intent": "保留产品级导航和账户位置。", "anchor": {"kind": "attribute", "name": "data-module", "value": "global-navigation"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "global-brand", "name": "全局品牌位置", "anchor": {"kind": "attribute", "name": "id", "value": "global-brand"}}]},
+        {"module_id": "crm-navigation", "parent_module_id": "app-shell", "name": "CRM 导航", "intent": "保留 CRM 对象入口。", "anchor": {"kind": "attribute", "name": "data-module", "value": "crm-navigation"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "crm-nav-heading", "name": "CRM 导航标题", "anchor": {"kind": "attribute", "name": "id", "value": "crm-nav-heading"}}]},
+        {"module_id": "workspace", "parent_module_id": "app-shell", "name": "主工作区", "intent": "承载销售概览、指标和任务。", "anchor": {"kind": "attribute", "name": "data-module", "value": "workbench-workspace"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "workspace-heading", "name": "工作区问候标题", "anchor": {"kind": "attribute", "name": "id", "value": "workspace-heading"}}]},
+        {"module_id": "performance-overview", "parent_module_id": "workspace", "name": "销售表现", "intent": "展示目标完成与销售表现。", "anchor": {"kind": "attribute", "name": "data-module", "value": "performance-overview"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "performance-root", "name": "销售表现容器", "anchor": {"kind": "attribute", "name": "id", "value": "performanceOverview"}}]},
+        {"module_id": "today-tasks", "parent_module_id": "workspace", "name": "今日任务", "intent": "展示当日待处理事项。", "anchor": {"kind": "attribute", "name": "data-module", "value": "today-tasks"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "tasks-root", "name": "今日任务容器", "anchor": {"kind": "attribute", "name": "id", "value": "todayTasks"}}]},
+        {"module_id": "agent-panel", "parent_module_id": "app-shell", "name": "Agent 面板", "intent": "承载 Agent 建议、对话和会话管理。", "anchor": {"kind": "attribute", "name": "data-module", "value": "agent-panel"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "agent-heading", "name": "Agent 面板标题", "anchor": {"kind": "attribute", "name": "id", "value": "agent-panel-heading"}}]},
+        {"module_id": "session-drawer", "parent_module_id": "agent-panel", "name": "会话抽屉", "intent": "呈现最近会话与接管入口。", "anchor": {"kind": "attribute", "name": "data-module", "value": "session-drawer"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "session-root", "name": "会话抽屉容器", "anchor": {"kind": "attribute", "name": "id", "value": "sessionDrawer"}}]},
+        {"module_id": "menu-config", "parent_module_id": "agent-panel", "name": "菜单配置", "intent": "表达 Agent 菜单配置状态。", "anchor": {"kind": "attribute", "name": "data-module", "value": "menu-config"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "config-root", "name": "菜单配置容器", "anchor": {"kind": "attribute", "name": "id", "value": "menuConfig"}}]}
+      ],
+      "slots": [
+        {"slot_id": "workspace-card-slot", "parent_module_id": "workspace", "name": "工作区卡片扩展位", "intent": "增加工作台卡片。", "anchor": {"kind": "attribute", "name": "id", "value": "workspaceCard"}, "allowed_actions": ["add"]},
+        {"slot_id": "agent-chat-slot", "parent_module_id": "agent-panel", "name": "Agent 对话扩展位", "intent": "增加 Agent 对话或操作内容。", "anchor": {"kind": "attribute", "name": "id", "value": "chatLog"}, "allowed_actions": ["add"]}
+      ]
+    },
+    {
+      "page_id": "sales-record-list-detail",
+      "name": "销售记录列表到详情",
+      "aliases": ["销售记录", "销售记录详情", "沟通记录", "跟进记录", "sales record detail"],
+      "intent": "浏览销售记录列表并阅读摘要、洞察、任务、转写和基础信息详情。",
+      "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": true,
+      "source_ref": ".claude/skill-os/page-library/sources/sales-record-list-detail.html",
+      "source_hash": "c24c2169aacc682a2c7d124734797d2567b7672b0e21dd74f0ea2e3944aa421c",
+      "viewport": {"width": 1440, "height": 900},
+      "states": ["list", "detail", "summary", "insight", "tasks", "transcript", "basic"],
+      "regions": [
+        {"region_id": "canvas", "parent_id": null, "name": "销售记录应用壳", "aliases": ["销售工作台"], "intent": "承载顶部栏、应用导航、CRM 导航和工作区。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-record-app"}},
+        {"region_id": "topbar", "parent_id": "canvas", "name": "全局顶部栏", "aliases": ["顶部导航"], "intent": "保留品牌、搜索、消息和账户位置。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-global-topbar"}},
+        {"region_id": "app-rail", "parent_id": "canvas", "name": "应用导航轨", "aliases": ["应用切换"], "intent": "切换首页、CRM、协作和数据。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-app-rail"}},
+        {"region_id": "crm-sidebar", "parent_id": "canvas", "name": "CRM 侧栏", "aliases": ["销售管理导航"], "intent": "进入客户、联系人、商机、销售记录和目标。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-crm-sidebar"}},
+        {"region_id": "workspace", "parent_id": "canvas", "name": "销售记录工作区", "aliases": ["记录工作台"], "intent": "承载列表和详情联动。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-workspace"}},
+        {"region_id": "list-view", "parent_id": "workspace", "name": "销售记录列表", "aliases": ["记录表格"], "intent": "搜索、浏览并选择销售记录。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-list-view"}},
+        {"region_id": "detail-layer", "parent_id": "workspace", "name": "销售记录详情", "aliases": ["详情层"], "intent": "阅读销售记录的跨页签内容。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-detail-layer"}},
+        {"region_id": "detail-tabs", "parent_id": "detail-layer", "name": "详情页签", "aliases": ["摘要洞察任务转写"], "intent": "切换详情内容状态。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-detail-tabs"}}
+      ],
+      "module_contract_hash": "b2a9de57c4b4c09862178a187770f6930ab199c3b6967928c6de3015c64d100f",
+      "modules": [
+        {"module_id": "app-shell", "parent_module_id": null, "name": "销售记录应用壳", "intent": "保持全局栏、导航和工作区骨架。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-record-app-shell"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "app-root", "name": "销售记录根节点", "anchor": {"kind": "attribute", "name": "id", "value": "sales-record-app"}}]},
+        {"module_id": "global-topbar", "parent_module_id": "app-shell", "name": "全局顶部栏", "intent": "保留品牌和全局操作位置。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-global-topbar"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "global-brand", "name": "销售工作台标识", "anchor": {"kind": "attribute", "name": "id", "value": "sales-brand"}}]},
+        {"module_id": "app-rail", "parent_module_id": "app-shell", "name": "应用导航轨", "intent": "保留产品级应用切换。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-app-rail"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "rail-root", "name": "应用导航轨容器", "anchor": {"kind": "attribute", "name": "id", "value": "sales-app-rail"}}]},
+        {"module_id": "crm-sidebar", "parent_module_id": "app-shell", "name": "CRM 侧栏", "intent": "保留销售管理对象导航。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-crm-sidebar"}, "required": true, "allowed_actions": ["preserve"], "invariants": [{"invariant_id": "sidebar-heading", "name": "销售管理标题", "anchor": {"kind": "attribute", "name": "id", "value": "sales-sidebar-heading"}}]},
+        {"module_id": "workspace", "parent_module_id": "app-shell", "name": "销售记录工作区", "intent": "组织销售记录列表与详情。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-workspace"}, "required": true, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "workspace-heading", "name": "销售记录标题", "anchor": {"kind": "attribute", "name": "id", "value": "sales-workspace-heading"}}]},
+        {"module_id": "list-view", "parent_module_id": "workspace", "name": "销售记录列表", "intent": "承载列表工具和表格。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-list-view"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "list-root", "name": "销售记录列表容器", "anchor": {"kind": "attribute", "name": "id", "value": "sales-list-view"}}]},
+        {"module_id": "list-toolbar", "parent_module_id": "list-view", "name": "列表工具栏", "intent": "搜索并扩展列表操作。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-list-toolbar"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "toolbar-root", "name": "销售记录工具栏容器", "anchor": {"kind": "attribute", "name": "id", "value": "sales-list-toolbar"}}]},
+        {"module_id": "record-table", "parent_module_id": "list-view", "name": "销售记录表格", "intent": "展示客户、沟通方式、记录人和时间。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-record-table"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "table-root", "name": "销售记录表格容器", "anchor": {"kind": "attribute", "name": "id", "value": "sales-record-table"}}]},
+        {"module_id": "detail-layer", "parent_module_id": "workspace", "name": "销售记录详情层", "intent": "承载详情标题、页签和内容。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-detail-layer"}, "required": false, "allowed_actions": ["modify", "remove", "preserve"], "invariants": [{"invariant_id": "detail-heading", "name": "销售记录详情标题", "anchor": {"kind": "attribute", "name": "id", "value": "sales-detail-heading"}}]},
+        {"module_id": "detail-tabs", "parent_module_id": "detail-layer", "name": "销售记录详情页签", "intent": "表达摘要、洞察、任务、转写和基础信息状态。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-detail-tabs"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "tabs-root", "name": "销售记录详情页签容器", "anchor": {"kind": "attribute", "name": "id", "value": "sales-detail-tabs"}}]},
+        {"module_id": "detail-body", "parent_module_id": "detail-layer", "name": "销售记录详情内容", "intent": "承载各详情面板与当前页签内容。", "anchor": {"kind": "attribute", "name": "data-module", "value": "sales-detail-body"}, "required": false, "allowed_actions": ["modify", "preserve"], "invariants": [{"invariant_id": "body-root", "name": "销售记录详情内容容器", "anchor": {"kind": "attribute", "name": "id", "value": "sales-detail-body"}}]}
+      ],
+      "slots": [
+        {"slot_id": "list-toolbar-slot", "parent_module_id": "list-toolbar", "name": "列表工具扩展位", "intent": "增加列表筛选或批量操作。", "anchor": {"kind": "attribute", "name": "id", "value": "sales-list-toolbar-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "detail-meta-slot", "parent_module_id": "detail-layer", "name": "详情元信息位", "intent": "增加详情级元信息或操作。", "anchor": {"kind": "attribute", "name": "id", "value": "detail-meta-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "summary-panel-slot", "parent_module_id": "detail-body", "name": "摘要面板位", "intent": "增加摘要内容。", "anchor": {"kind": "attribute", "name": "id", "value": "summary-panel-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "insight-panel-slot", "parent_module_id": "detail-body", "name": "洞察面板位", "intent": "增加洞察内容。", "anchor": {"kind": "attribute", "name": "id", "value": "insight-panel-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "tasks-panel-slot", "parent_module_id": "detail-body", "name": "任务面板位", "intent": "增加任务内容。", "anchor": {"kind": "attribute", "name": "id", "value": "tasks-panel-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "transcript-panel-slot", "parent_module_id": "detail-body", "name": "转写面板位", "intent": "增加转写内容。", "anchor": {"kind": "attribute", "name": "id", "value": "transcript-panel-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "basic-panel-slot", "parent_module_id": "detail-body", "name": "基础信息面板位", "intent": "增加基础信息内容。", "anchor": {"kind": "attribute", "name": "id", "value": "basic-panel-slot"}, "allowed_actions": ["add"]},
+        {"slot_id": "tab-content-slot", "parent_module_id": "detail-body", "name": "当前页签内容位", "intent": "增加当前详情页签的主体内容。", "anchor": {"kind": "attribute", "name": "id", "value": "tab-content-slot"}, "allowed_actions": ["add"]}
+      ]
     }
   ]
 }

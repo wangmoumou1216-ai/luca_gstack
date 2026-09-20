@@ -38,10 +38,11 @@ EXPORTED
 - `C-01` modify trace：PASS，绑定 `D-001`。
 - `preserved-module:preserved-stays`：PASS，源/输出锚定 DOM 一致。
 - mechanical validation：PASS。
-- semantic acceptance：`PENDING_INDEPENDENT_REVIEW`；机械闭环不冒充产品语义验收。
+- semantic acceptance：`PASS`。发布后独立读回验收按冻结的 `D-001`/`C-01` 合同执行，10/10 断言通过：需求与保留语义存在、输出等于只替换目标文本的精确派生、旧值消失、新值唯一、保留模块逐字一致、base/output 哈希绑定、namespace 文件集严格等于 allowlist，且项目根 HTML 与用户指定的公开快照哈希一致。
+- 独立验收时项目根 HTML/公开快照 SHA-256 均为 `828edef58c30727deb5f156f7b62fe8198d4cabc4a25abaf8ccd194687dfae33`；base SHA-256 为 `a2edcdcf07dd026ecf0c00bc4eb60e1931251fef17ea7b2406e82fdb56f0e789`。
 
 ## 结论
 
-`structural_carrier + single` 已在发布后代码和用户指定的真实 OD 项目中完成 stage、headless run、精确 output readback 与 recover 闭环。本证据不授权模板迁移、`framework/` 写入或旧模板删除；这些仍属独立的未闭环需求。
+`structural_carrier + single` 已在发布后代码和用户指定的真实 OD 项目中完成 stage、headless run、精确 output readback、recover 与独立语义验收闭环。本证据不授权模板迁移、`framework/` 写入或旧模板删除；这些仍属独立的未启动迁移需求，不是本 carrier 能力的未通过项。
 
 <!-- FILE_END: 2026-09-18-od-v2-live-validation.md -->

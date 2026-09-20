@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { validateSelection } from './page-context.mjs';
+import { computeModuleContractHash, validateSelection } from './page-context.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const { renderPreview, selectorHtml } = await import('./page-context-preview.mjs');
@@ -38,6 +38,12 @@ try {
     }
     assert.equal(shot.manifest.regions.length, entry.regions.length);
     for (const region of shot.manifest.regions) assert.ok(region.visible && region.bounds.width > 0 && region.bounds.height > 0, `${entry.page_id}/${region.region_id}: region must be visible in the default screenshot`);
+    if (entry.carrier_eligible) {
+      const carrierShot = await renderPreview({ catalog, pageId: entry.page_id, root, browser, carrierOnly: true });
+      assert.equal(carrierShot.manifest.render.carrier_closure_proof, true, `${entry.page_id}: carrier-only render proves the static closure`);
+      assert.equal(carrierShot.manifest.render.carrier_asset_profile, 'p0-static-v1', `${entry.page_id}: carrier-only render uses the strict static profile`);
+      assert.equal(carrierShot.manifest.screenshot.sha256, shot.manifest.screenshot.sha256, `${entry.page_id}: carrier-only and reference preview render the same source bytes`);
+    }
     console.log(`PASS actual ${entry.page_id} screenshot and ${entry.regions.length} visible source regions`);
   }
   // The source section contains two 32px field rows, a 12px row gap, and its heading.
@@ -126,6 +132,17 @@ try {
     await renderFixture(staticPage);
     console.log('PASS reviewed-compiler hash guard rejects changed code and safe source renders again');
   } finally { await new Promise(resolve => sentinel.close(resolve)); }
+  const unsafeCarrierHtml = '<main id="unsafe-root" data-module="unsafe-root"><span id="unsafe-label">Unsafe</span><div id="unsafe-slot"></div><script>doNotRun()</script></main>';
+  const unsafeCarrier = {
+    page_id: 'unsafe-carrier', name: 'Unsafe carrier', aliases: [], intent: 'Negative carrier closure fixture', scope: 'framework', lifecycle: 'live', carrier_eligible: true,
+    source_ref: sourceRef, source_hash: createHash('sha256').update(unsafeCarrierHtml).digest('hex'), viewport: { width: 320, height: 240 }, states: ['default'], regions: [],
+    modules: [{ module_id: 'root', parent_module_id: null, name: 'Root', intent: 'Root module', anchor: { kind: 'attribute', name: 'data-module', value: 'unsafe-root' }, required: true, allowed_actions: ['modify', 'preserve'], invariants: [{ invariant_id: 'label', name: 'Label', anchor: { kind: 'attribute', name: 'id', value: 'unsafe-label' } }] }],
+    slots: [{ slot_id: 'content-slot', parent_module_id: 'root', name: 'Content slot', intent: 'Add content', anchor: { kind: 'attribute', name: 'id', value: 'unsafe-slot' }, allowed_actions: ['add'] }]
+  };
+  unsafeCarrier.module_contract_hash = computeModuleContractHash(unsafeCarrier);
+  writeFileSync(fixtureSource, unsafeCarrierHtml);
+  await assert.rejects(renderPreview({ catalog: { schema_version: 2, retired_page_ids: [], pages: [unsafeCarrier] }, pageId: unsafeCarrier.page_id, root: fixtureRoot, browser, carrierOnly: true }), { code: 'ACTIVE_CONTENT_FORBIDDEN' });
+  console.log('PASS carrier-only proof fails closed before rendering active source content');
   const mismatchedImage = { manifest: preview.manifest, png: Buffer.from('not the captured screenshot') };
   assert.throws(() => selectorHtml(mismatchedImage), { code: 'PREVIEW_IMAGE' });
   writeFileSync(fixtureSource, `${staticPage}<!-- source changed -->`);

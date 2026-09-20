@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="luca-shadow-profile" content="curated-structural-shadow-v1">
+  <meta name="luca-source-sha256" content="4bfd4b31b2bc738881507061e5b394de7984ccb93b799a0a1c1824dc673284e0">
+  <title>后台设置 · 线索池规则</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#1f2933;font:14px/1.45 system-ui,-apple-system,"PingFang SC",sans-serif}
+    button{font:inherit}.shell{min-height:900px;display:grid;grid-template-columns:216px 1fr}.nav{padding:22px 16px;background:#17202b;color:#eef3f8}.brand{font-size:18px;font-weight:700;margin-bottom:24px}.nav-group{margin:18px 0 8px;color:#95a4b5;font-size:12px}.nav-item{padding:9px 12px;border-radius:7px;margin:3px 0}.nav-item.active{background:#2b3a4a;color:white}.workspace{padding:24px 30px}.header{display:flex;align-items:center;justify-content:space-between}.header h1{margin:0;font-size:24px}.status{color:#64748b}.tabs{display:flex;gap:6px;margin:20px 0 14px;flex-wrap:wrap}.tab{padding:7px 11px;border:1px solid #d8dee6;border-radius:7px;background:white}.tab.active{border-color:#476dff;color:#294ed8}.card{background:white;border:1px solid #dfe4ea;border-radius:10px;padding:16px;margin-bottom:14px}.card h2{font-size:16px;margin:0 0 10px}.toolbar{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}.search{width:280px;padding:8px 10px;border:1px solid #cbd3dc;border-radius:7px}.primary{border:0;border-radius:7px;padding:8px 14px;background:#315bef;color:white}.pool-table{width:100%;border-collapse:collapse}.pool-table th,.pool-table td{padding:10px 8px;border-bottom:1px solid #edf0f3;text-align:left}.rule-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.rule{padding:12px;border:1px solid #dfe4ea;border-radius:8px}.rule strong{display:block;margin-bottom:5px}.slot{min-height:38px;border:1px dashed #9aa8b6;border-radius:7px;padding:9px;color:#667788;background:#f8fafc}.editor{display:grid;grid-template-columns:1fr 260px;gap:12px}.editor-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field{padding:9px;background:#f5f7fa;border-radius:6px}.state-note{font-size:12px;color:#667788;margin-top:6px}
+  </style>
+</head>
+<body>
+  <main id="settings-app" data-module="settings-app-shell" class="shell">
+    <nav id="settings-nav" data-module="settings-admin-navigation" class="nav" aria-label="后台设置导航">
+      <div id="settings-nav-brand" class="brand">CRM 管理后台</div>
+      <div class="nav-group">业务设置</div>
+      <div class="nav-item active">线索与线索池</div>
+      <div class="nav-item">客户管理</div>
+      <div class="nav-item">销售流程</div>
+      <div class="nav-group">组织与权限</div>
+      <div class="nav-item">部门与人员</div>
+    </nav>
+
+    <section id="settings-workspace" data-module="settings-workspace" class="workspace">
+      <header id="settings-heading" class="header">
+        <div><h1>线索池设置</h1><div class="status">配置线索流转、保有与跟进规则</div></div>
+        <button class="primary" type="button">保存设置</button>
+      </header>
+
+      <nav id="settings-state-tabs" data-module="settings-state-tabs" class="tabs" aria-label="设置状态">
+        <button class="tab active" type="button">线索池</button>
+        <button class="tab" type="button">转换规则</button>
+        <button class="tab" type="button">归属规则</button>
+        <button class="tab" type="button">跟进规则</button>
+        <button class="tab" type="button">基础设置</button>
+        <button class="tab" type="button">详情</button>
+        <button class="tab" type="button">编辑</button>
+        <button class="tab" type="button">新建</button>
+        <button class="tab" type="button">部门范围</button>
+      </nav>
+
+      <section id="lead-pool-table" data-module="lead-pool-table" class="card">
+        <div class="toolbar"><input class="search" aria-label="搜索线索池" value="搜索线索池"><button class="primary" type="button">新建线索池</button></div>
+        <table class="pool-table">
+          <thead><tr><th>线索池</th><th>负责人</th><th>成员范围</th><th>回收规则</th><th>状态</th></tr></thead>
+          <tbody><tr><td>公海线索池</td><td>销售运营</td><td>全部销售部门</td><td>30 天未跟进</td><td>启用</td></tr><tr><td>区域线索池</td><td>区域经理</td><td>华东销售部</td><td>14 天未推进</td><td>启用</td></tr></tbody>
+        </table>
+      </section>
+
+      <section id="settings-rule-panels" data-module="settings-rule-panels" class="card">
+        <h2>规则状态</h2>
+        <div class="rule-grid">
+          <article id="conversion-rule"><strong>转换</strong>满足有效联系人和需求后转为客户<div class="state-note">state-conversion</div></article>
+          <article id="ownership-rule"><strong>归属</strong>按部门、区域与负责人继承<div class="state-note">state-ownership</div></article>
+          <article id="followup-rule"><strong>跟进</strong>超时提醒并回收到线索池<div class="state-note">state-followup</div></article>
+          <article id="basic-rule"><strong>基础</strong>查重、编号与默认可见范围<div class="state-note">state-basic</div></article>
+        </div>
+        <div id="settings-content-slot" class="slot" aria-label="配置内容扩展位">配置内容扩展位</div>
+      </section>
+
+      <section id="settings-editor" data-module="settings-editor" class="card editor">
+        <div><h2>详情 / 编辑 / 新建</h2><div class="editor-fields"><div class="field">名称与说明</div><div class="field">负责人</div><div class="field">成员部门</div><div class="field">回收条件</div></div></div>
+        <div id="settings-editor-slot" class="slot" aria-label="编辑器扩展位">编辑器扩展位</div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
