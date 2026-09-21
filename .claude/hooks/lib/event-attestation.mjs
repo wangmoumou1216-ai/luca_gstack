@@ -1009,6 +1009,7 @@ function validateCurrentCodexEvent(event, candidate, records, cursor) {
   return {
     afterIndex: anchor.index,
     distance,
+    prompt: pairedContent.text.toString('utf8'),
   };
 }
 
@@ -1021,7 +1022,7 @@ function validateCurrentClaudeEvent(event, candidate, records, cursor) {
   if (nativeId !== event.native_id || claudeEventId(candidate.session_id, nativeId) !== event.event_id) {
     fail('MISMATCH', 'Claude current native event identity is inconsistent');
   }
-  return { afterIndex: record.index, distance: 0 };
+  return { afterIndex: record.index, distance: 0, prompt: strictClaudeText(record.value.message.content) };
 }
 
 function assertNoNewNativeUser(records, startIndex, harness, allowedUserIndexes = new Set()) {
@@ -1060,6 +1061,7 @@ export function observeCurrentNativeEvent({
   assistantText = '',
   allowTestSourceRoot = false,
   priorEvents = [],
+  requiredPrompt = null,
 }) {
   if (!['pre-tool', 'stop'].includes(observation)) fail('CANDIDATE_SCHEMA', 'native observation is invalid');
   const candidate = validateCurrentEventShape(event, sessionId);
@@ -1069,6 +1071,9 @@ export function observeCurrentNativeEvent({
   const validated = candidate.harness === 'codex'
     ? validateCurrentCodexEvent(event, candidate, loaded.records, cursor)
     : validateCurrentClaudeEvent(event, candidate, loaded.records, cursor);
+  if (requiredPrompt !== null && validated.prompt !== requiredPrompt) {
+    fail('RELEASE_CONSENT_REQUIRED', 'active release requires the exact current native human release directive');
+  }
   const allowedUserIndexes = candidate.harness === 'codex'
     ? codexAllSkillInjectionIndexes(loaded.records, validated.afterIndex, validated.afterIndex) : new Set();
   assertNoNewNativeUser(loaded.records, cursor.record_index, candidate.harness,

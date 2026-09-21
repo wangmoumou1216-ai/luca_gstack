@@ -20,6 +20,7 @@ import { execSync } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
 import {
   PROJECTS_ROOT,
+  NATIVE_RELEASE_DIRECTIVE,
   projectNameFromLink,
   queueProjectEventCandidate,
   readProjectState,
@@ -1624,6 +1625,7 @@ if (prompt) {
       if (projectStateError) throw new Error(projectStateError);
       const current = topLevelProjectState || readProjectState(projectRoot, hookSessionId).value;
       const binding = validatedBindingForState(current, PROJECTS_ROOT);
+      const releaseRequested = prompt === NATIVE_RELEASE_DIRECTIVE;
       const named = decision.decision === 'HARNESS_MESSAGE'
         ? ''
         : listProjects().find(name => nameMatchesIn(projectIdentityText(routingPrompt), name));
@@ -1639,7 +1641,7 @@ if (prompt) {
         };
       }
 
-      if (decision.decision === 'PROJECT_SWITCH' && decision.project) {
+      if (!releaseRequested && decision.decision === 'PROJECT_SWITCH' && decision.project) {
         if (READ_GRANTS_ENABLED) {
           try { closeGrants({ gstackRoot: projectRoot, sessionId: hookSessionId, scope: 'session' }); }
           catch (error) { hints.push(`[route-guard] ⛔ READ GRANTS — 项目切换前撤销失败：${error.message}`); }
@@ -1682,10 +1684,11 @@ if (prompt) {
           harness: hookHarness,
           prompt,
           promptId: hookPayload.prompt_id || '',
-          intent: { kind: 'turn' },
+          intent: { kind: releaseRequested ? 'release' : 'turn' },
         });
         // Read grants remain closed until a later PreToolUse/Stop attests the
         // native event. UserPromptSubmit cannot mint authority from text.
+        if (releaseRequested) hints.push('[route-guard] 本会话解绑仅在 PreToolUse/Stop 验证精确原生用户事件后生效；不要运行指定 session 的解绑 CLI。');
       }
     } catch (error) {
       hints.push(`[route-guard] ⛔ PROJECT STATE — ${String(error?.message || error)}。本轮不得访问项目路径。`);

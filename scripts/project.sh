@@ -51,5 +51,7 @@ case "$cmd" in
     echo "  project.sh status <session-id>"
     echo "  project.sh deactivate <session-id>"
     echo "  project.sh recover-session <session-id>  # 仅撤销已被原生新用户轮次取代的旧权限"
+    echo "  活跃本会话解绑：用户单独发送『解除本会话项目绑定，恢复 NO_PIN』；仅由原生事件 hook 认证并落账"
+    exit 1
     ;;
 esac

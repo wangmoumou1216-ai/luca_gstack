@@ -107,6 +107,7 @@ export function projectNameFromLink(target, opts = {}) {
 }
 
 export const PROJECT_STATE_SCHEMA = 3;
+export const NATIVE_RELEASE_DIRECTIVE = '解除本会话项目绑定，恢复 NO_PIN';
 const READABLE_PROJECT_STATE_SCHEMAS = new Set([2, PROJECT_STATE_SCHEMA]);
 export const PROJECT_STATES = new Set(['NO_PIN', 'BOUND', 'SWITCH_ONLY', 'TURN_ACTIVE', 'TURN_CLOSED']);
 export const PROJECT_EVENT_CANDIDATE_LIMIT = 32;
@@ -982,6 +983,37 @@ export function attestPendingProjectEvent({
     const event = events[events.length - 1];
     const binding = validatedBindingForState(state, projectsRoot);
     const intent = candidate.intent || {};
+    if (intent.kind === 'release' && binding) {
+      if (!control.fence || !event || event.status !== 'active') {
+        throw new ProjectEventAuthorityError('RELEASE_INVALID', 'native release requires a fenced active event');
+      }
+      const verifyRelease = () => observeCurrentNativeEvent({
+        event, sessionId: sid, cursor, transcriptPath, codexHome,
+        observation: 'pre-tool', requiredPrompt: NATIVE_RELEASE_DIRECTIVE,
+        allowTestSourceRoot, priorEvents: consumed,
+      });
+      verifyRelease();
+      const fence = captureNativeEventFence({
+        sessionId: sid, harness: event.harness, cwd: event.cwd, transcriptPath, codexHome,
+        allowTestSourceRoot, recoveryCursor: cursor,
+      });
+      if (fence.source_absent) {
+        throw new ProjectEventAuthorityError('SOURCE_NOT_VISIBLE', 'release cannot rebuild the native source fence');
+      }
+      // A newer human row during capture must not be swallowed by the new cursor.
+      // A row after this observation remains beyond the captured fence.
+      verifyRelease();
+      const released = {
+        schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sid,
+        event_control: { candidates: [], current: null, cursor: fence.cursor,
+          consumed_events: [], fence },
+      };
+      if (process.env.LUCA_EVENT_TX_FAULT === 'after-attest-before-publish') {
+        throw new ProjectEventAuthorityError('INJECTED_FAULT', 'injected event transaction fault after attestation before publish');
+      }
+      atomicWriteBytes(path, Buffer.from(`${JSON.stringify(released)}\n`), 'project-event-release');
+      return { state: released, event: null, events, unwitnessed, idempotent: false, released: true };
+    }
     let materialized;
     if (intent.kind === 'switch' && observation === 'pre-tool') {
       materialized = {

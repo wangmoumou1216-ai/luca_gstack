@@ -34,6 +34,8 @@ const PIN = resolve(REPO, 'scripts/project-pin.mjs');
 const LEASE = resolve(REPO, 'scripts/project-lease.mjs');
 const PROJECT_SH = resolve(REPO, 'scripts/project.sh');
 const GUARD = resolve(REPO, '.claude/hooks/project-scope-guard.mjs');
+const ROUTE_GUARD = resolve(REPO, '.claude/hooks/route-guard.mjs');
+const STOP_HOOK = resolve(REPO, '.claude/hooks/session-sync.mjs');
 const CHECK_LINKS = resolve(REPO, 'scripts/check-project-links.mjs');
 let pass = 0;
 let fail = 0;
@@ -172,7 +174,7 @@ function bind(fx, sid, project) {
   return jsonOut(runNode(PIN, ['status', '--session', sid], fx));
 }
 
-function beginTurn(fx, sid, turn = 'turn-1') {
+function beginTurn(fx, sid, turn = 'turn-1', prompt = `project work ${turn}`) {
   initializeFence(fx, sid);
   const boundary = sid;
   queueProjectEventCandidate({
@@ -182,7 +184,7 @@ function beginTurn(fx, sid, turn = 'turn-1') {
     boundaryId: boundary,
     cwd: fx.gstack,
     harness: 'claude',
-    prompt: `project work ${turn}`,
+    prompt,
     promptId: boundary,
     intent: { kind: 'route', decision: 'continue' },
   });
@@ -1104,6 +1106,204 @@ check('recover-session refuses a fresh active native event without changing auth
   assert.deepEqual(stateBytes(fx, 'S'), before);
   assert.deepEqual(linkTuple(fx), links);
 });
+
+check('native release intent downgrades only its own attested Claude session, without a CLI', () => {
+  const fx = makeEnv();
+  const alpha = makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  bind(fx, 'T', 'alpha');
+  const other = stateBytes(fx, 'T');
+  const links = linkTuple(fx);
+  const projectBytes = readFileSync(join(alpha, 'CONTEXT.md'));
+  const submitted = spawnSync('node', [ROUTE_GUARD], {
+    cwd: REPO, env: fx.env, encoding: 'utf8',
+    input: JSON.stringify({ hook_event_name: 'UserPromptSubmit', session_id: 'S',
+      cwd: fx.gstack, prompt: '解除本会话项目绑定，恢复 NO_PIN' }),
+  });
+  assert.equal(submitted.status, 0, submitted.stderr);
+  const queued = readProjectState(fx.gstack, 'S', fx.projects).value;
+  assert.equal(queued.event_control.candidates[0].intent.kind, 'release');
+  assert.equal(queued.state, 'TURN_CLOSED', 'UserPromptSubmit cannot release before native attestation');
+  assert.equal(attestCandidate(fx, 'S').state.state, 'NO_PIN');
+  assert.deepEqual(stateBytes(fx, 'T'), other);
+  assert.deepEqual(linkTuple(fx), links);
+  assert.deepEqual(readFileSync(join(alpha, 'CONTEXT.md')), projectBytes);
+  assert.equal(readProjectState(fx.gstack, 'S', fx.projects).value.event_control.current, null);
+  assert.equal(readProjectState(fx.gstack, 'S', fx.projects).value.event_control.consumed_events.length, 0);
+  makeProject(fx, 'beta');
+  queueSwitchWithoutFence(fx, 'S', 'beta', 'after-native-release');
+  assert.equal(attestCandidate(fx, 'S').state.state, 'SWITCH_ONLY');
+});
+
+check('native release directive is byte-exact at UserPromptSubmit', () => {
+  for (const prompt of [' 解除本会话项目绑定，恢复 NO_PIN', '解除本会话项目绑定，恢复 NO_PIN\n']) {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    bind(fx, 'S', 'alpha');
+    const submitted = spawnSync('node', [ROUTE_GUARD], {
+      cwd: REPO, env: fx.env, encoding: 'utf8',
+      input: JSON.stringify({ hook_event_name: 'UserPromptSubmit', session_id: 'S',
+        cwd: fx.gstack, prompt }),
+    });
+    assert.equal(submitted.status, 0, submitted.stderr);
+    const queued = readProjectState(fx.gstack, 'S', fx.projects).value;
+    assert.equal(queued.event_control.candidates.at(-1).intent.kind, 'turn');
+  }
+});
+
+check('PreToolUse native observation releases before any project-scoped tool can run', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+    cwd: fx.gstack, harness: 'claude', prompt: '解除本会话项目绑定，恢复 NO_PIN',
+    intent: { kind: 'release' },
+  });
+  appendFileSync(join(fx.transcripts, 'S.jsonl'), `${JSON.stringify({
+    type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+    isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+    message: { role: 'user', content: '解除本会话项目绑定，恢复 NO_PIN' },
+  })}\n`);
+  const denied = guard(fx, { session_id: 'S', tool_name: 'Read',
+    tool_input: { file_path: 'docs/secret.md' } });
+  assert.equal(denied?.hookSpecificOutput?.permissionDecision, 'deny');
+  assert.equal(readProjectState(fx.gstack, 'S', fx.projects).value.state, 'NO_PIN');
+});
+
+check('Stop native observation releases an unused exact directive without CLI or project work', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+    cwd: fx.gstack, harness: 'claude', prompt: '解除本会话项目绑定，恢复 NO_PIN',
+    intent: { kind: 'release' },
+  });
+  appendFileSync(join(fx.transcripts, 'S.jsonl'), `${JSON.stringify({
+    type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+    isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+    message: { role: 'user', content: '解除本会话项目绑定，恢复 NO_PIN' },
+  })}\n${JSON.stringify({ type: 'assistant', uuid: randomUUID(),
+    message: { role: 'assistant', content: [{ type: 'text', text: '已收到。' }] },
+  })}\n`);
+  const stopped = spawnSync('node', [STOP_HOOK], {
+    cwd: REPO, env: { ...fx.env, SESSION_SYNC_FORCE_ON_STOP: '0' }, encoding: 'utf8',
+    input: JSON.stringify({ hook_event_name: 'Stop', session_id: 'S', cwd: fx.gstack,
+      transcript_path: join(fx.transcripts, 'S.jsonl'), last_assistant_message: '已收到。' }),
+  });
+  assert.equal(stopped.status, 0, stopped.stderr);
+  assert.equal(readProjectState(fx.gstack, 'S', fx.projects).value.state, 'NO_PIN');
+});
+
+for (const [label, prompt, consent] of [
+  ['exact directive preserves shared links and requires a new native turn', '解除本会话项目绑定，恢复 NO_PIN', true],
+  ['rejects ordinary native work prompt', 'continue project work', false],
+  ['rejects leading whitespace', ' 解除本会话项目绑定，恢复 NO_PIN', false],
+  ['rejects trailing newline', '解除本会话项目绑定，恢复 NO_PIN\n', false],
+]) {
+check(`Codex native release ${label}`, () => {
+  const sid = randomUUID();
+  const fx = makeCodexEnv(sid);
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  withAttestationTest(() => initializeProjectEventFence({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, harness: 'codex',
+    cwd: fx.gstack, codexHome: fx.codexHome,
+  }));
+  codexSwitchTurn(fx, sid, 'release-switch', 'alpha', 'release-alpha');
+  assert.equal(mutate(fx, sid, 'switch', 'alpha', { tx: 'release-alpha', expected_epoch: 0 }).status, 0);
+  const boundary = `release-${randomUUID()}`;
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: boundary,
+    cwd: fx.gstack, harness: 'codex', prompt, intent: { kind: 'release' },
+  });
+  appendFileSync(fx.rollout, [
+    { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+      content: [{ type: 'input_text', text: prompt }],
+      internal_chat_message_metadata_passthrough: { turn_id: boundary } } },
+    { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: boundary,
+      item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: prompt }] } } },
+  ].map(row => JSON.stringify(row)).join('\n') + '\n');
+  const before = stateBytes(fx, sid);
+  const links = linkTuple(fx);
+  const attest = () => withAttestationTest(() => attestPendingProjectEvent({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: boundary,
+    cwd: fx.gstack, observation: 'pre-tool', codexHome: fx.codexHome,
+  }));
+  if (!consent) {
+    assert.throws(attest, /native human release directive/);
+    assert.deepEqual(stateBytes(fx, sid), before);
+    assert.deepEqual(linkTuple(fx), links);
+    return;
+  }
+  assert.equal(attest().state.state, 'NO_PIN');
+  assert.deepEqual(linkTuple(fx), links);
+  assert.throws(attest, /no pending native event candidate/);
+  assert.equal(codexSwitchTurn(fx, sid, `fresh-${randomUUID()}`, 'beta', 'release-beta').state.state, 'SWITCH_ONLY');
+});
+}
+
+check('retired release-session CLI cannot release another session, including through nested shell', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  const active = beginTurn(fx, 'S', 'release', '解除本会话项目绑定，恢复 NO_PIN');
+  const before = stateBytes(fx, 'S');
+  const links = linkTuple(fx);
+  const args = ['release-session', 'S', '--expected-event', active.turn.event_id,
+    '--expected-epoch', String(active.binding.epoch)];
+  const direct = spawnSync('bash', [PROJECT_SH, ...args], { cwd: REPO, env: fx.env, encoding: 'utf8' });
+  assert.notEqual(direct.status, 0);
+  const internal = runNode(PIN, ['release-session', '--session', 'S', ...args.slice(2)], fx);
+  assert.notEqual(internal.status, 0);
+  const nested = spawnSync('bash', ['-c', `bash scripts/project.sh ${args.join(' ')}`], {
+    cwd: REPO, env: fx.env, encoding: 'utf8',
+  });
+  assert.notEqual(nested.status, 0);
+  assert.deepEqual(stateBytes(fx, 'S'), before);
+  assert.deepEqual(linkTuple(fx), links);
+});
+
+for (const invalid of ['superseded', 'source', 'fault']) {
+  check(`native release rejects ${invalid} without mutation`, () => {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    bind(fx, 'S', 'alpha');
+    queueProjectEventCandidate({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+      cwd: fx.gstack, harness: 'claude', prompt: '解除本会话项目绑定，恢复 NO_PIN',
+      intent: { kind: 'release' },
+    });
+    const transcriptPath = join(fx.transcripts, 'S.jsonl');
+    appendFileSync(transcriptPath, `${JSON.stringify({
+      type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+      isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+      message: { role: 'user', content: '解除本会话项目绑定，恢复 NO_PIN' },
+    })}\n`);
+    if (invalid === 'superseded') appendFileSync(join(fx.transcripts, 'S.jsonl'), `${JSON.stringify({
+      type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external',
+      isSidechain: false, isMeta: false, origin: { kind: 'human' }, promptSource: 'typed',
+      message: { role: 'user', content: 'newer human turn' },
+    })}\n`);
+    if (invalid === 'source') writeFileSync(transcriptPath, 'corrupt\n');
+    const before = stateBytes(fx, 'S');
+    const links = linkTuple(fx);
+    const previousFault = process.env.LUCA_EVENT_TX_FAULT;
+    if (invalid === 'fault') process.env.LUCA_EVENT_TX_FAULT = 'after-attest-before-publish';
+    try {
+      assert.throws(() => withAttestationTest(() => attestPendingProjectEvent({
+        gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S',
+        cwd: fx.gstack, observation: 'pre-tool', transcriptPath,
+      })), /user|source|JSON|fault|prefix/i);
+    } finally {
+      if (previousFault === undefined) delete process.env.LUCA_EVENT_TX_FAULT;
+      else process.env.LUCA_EVENT_TX_FAULT = previousFault;
+    }
+    assert.deepEqual(stateBytes(fx, 'S'), before);
+    assert.deepEqual(linkTuple(fx), links);
+  });
+}
 
 check('Claude orphaned active turn can re-fence and then attest a new project prompt', () => {
   const fx = makeEnv();
