@@ -115,6 +115,85 @@ async function behaviorSuite(api) {
     });
     eq(replay.reason, 'INVOCATION_ALREADY_CONSUMED', 'accepted evidence cannot be replayed');
 
+    const identities = fixture(api, stateRoot, 'identities');
+    const identityBase = {harness: 'codex', root_session_id: identities.root_session_id, state_root: stateRoot};
+    const bind = (call, field, value) => api.bindInvocationExternalIdentity({
+      ...identityBase, invocation_id: call.envelope.invocation_id, field, value,
+    });
+    const firstIdentity = prepare(api, stateRoot, identities);
+    eq(bind(firstIdentity, 'tool_use_id', 'tool-one').disposition, 'BOUND', 'first tool identity binds');
+    eq(bind(firstIdentity, 'agent_type', 'explorer').disposition, 'BOUND', 'first type binds');
+    eq(bind(firstIdentity, 'agent_id', 'agent-one').disposition, 'BOUND', 'first agent identity binds');
+    const secondIdentity = prepare(api, stateRoot, identities);
+    eq(bind(secondIdentity, 'tool_use_id', 'tool-two').disposition, 'BOUND', 'distinct tool identity binds');
+    eq(bind(secondIdentity, 'agent_type', 'explorer').disposition, 'BOUND', 'agent types are repeatable metadata');
+    eq(bind(secondIdentity, 'agent_id', 'agent-two').disposition, 'BOUND', 'distinct same-type agent binds');
+    const duplicateTool = prepare(api, stateRoot, identities);
+    eq(bind(duplicateTool, 'tool_use_id', 'tool-one').reason, 'EXTERNAL_IDENTITY_DUPLICATE', 'duplicate tool ID is refused');
+    eq(api.readActivation(identityBase).invocations[duplicateTool.envelope.invocation_id].status,
+      'refused', 'failed identity binding does not leave a pending ticket');
+    const duplicateAgent = prepare(api, stateRoot, identities);
+    eq(bind(duplicateAgent, 'agent_id', 'agent-one').reason, 'EXTERNAL_IDENTITY_DUPLICATE', 'duplicate agent ID is refused');
+    eq(bind(secondIdentity, 'agent_type', 'worker').reason, 'EXTERNAL_IDENTITY_REBIND', 'bound type cannot change');
+    eq(api.readActivation(identityBase).invocations[secondIdentity.envelope.invocation_id].status,
+      'refused', 'rebind failure terminates the conflicting ticket');
+    eq(api.readActivation(identityBase).invocations[firstIdentity.envelope.invocation_id].status,
+      'pending', 'identity conflict does not damage the original ticket');
+
+    const recovery = fixture(api, stateRoot, 'incomplete-recovery');
+    const recoveryBase = {harness: 'codex', root_session_id: recovery.root_session_id, state_root: stateRoot};
+    const incomplete = prepare(api, stateRoot, recovery);
+    api.bindInvocationExternalIdentity({...recoveryBase, invocation_id: incomplete.envelope.invocation_id,
+      field: 'tool_use_id', value: 'tool-denied'});
+    const recoverArgs = () => {
+      const snapshot = api.readActivation(recoveryBase);
+      return {...recoveryBase, invocation_id: incomplete.envelope.invocation_id,
+        expected_activation_id: snapshot.activation_id,
+        expected_call_sha: hex(JSON.stringify(snapshot.invocations[incomplete.envelope.invocation_id])),
+        evidence_ref: 'test://captured-pretool-denial'};
+    };
+    eq(api.invalidateIncompleteNativeInvocation({...recoverArgs(), expected_call_sha: hex('stale')}).reason,
+      'RECOVERY_STATE_CHANGED', 'recovery refuses stale evidence');
+    eq(api.invalidateIncompleteNativeInvocation({...recoverArgs(), expected_activation_id: 'old-activation'}).reason,
+      'RECOVERY_STATE_CHANGED', 'recovery refuses a superseded activation');
+    eq(api.invalidateIncompleteNativeInvocation({...recoverArgs(), evidence_ref: ''}).reason,
+      'INVALID_RECOVERY_EVIDENCE', 'recovery requires an audit reference');
+    eq(api.invalidateIncompleteNativeInvocation(recoverArgs()).disposition,
+      'INVALIDATED', 'exact incomplete pre-dispatch ticket is recoverable');
+    eq(api.readActivation(recoveryBase).invocations[incomplete.envelope.invocation_id].status,
+      'invalidated', 'recovery retains the failed invocation for audit');
+    eq(api.invalidateIncompleteNativeInvocation(recoverArgs()).reason,
+      'INVOCATION_NOT_RECOVERABLE', 'recovery cannot consume a terminal ticket again');
+    const started = prepare(api, stateRoot, recovery);
+    for (const [field, value] of [['tool_use_id', 'tool-started'], ['agent_type', 'explorer']]) {
+      api.bindInvocationExternalIdentity({...recoveryBase, invocation_id: started.envelope.invocation_id, field, value});
+    }
+    const startedState = api.readActivation(recoveryBase);
+    eq(api.invalidateIncompleteNativeInvocation({...recoverArgs(), invocation_id: started.envelope.invocation_id,
+      expected_call_sha: hex(JSON.stringify(startedState.invocations[started.envelope.invocation_id]))}).reason,
+      'INVOCATION_NOT_RECOVERABLE', 'recovery cannot invalidate a fully prepared dispatch awaiting agent ID');
+
+    const criticalIdentity = fixture(api, stateRoot, 'critical-identity', {critical: true});
+    const criticalIdentityBase = {harness: 'codex', root_session_id: criticalIdentity.root_session_id, state_root: stateRoot};
+    const criticalIdentityCall = prepare(api, stateRoot, criticalIdentity);
+    api.bindInvocationExternalIdentity({...criticalIdentityBase, invocation_id: criticalIdentityCall.envelope.invocation_id,
+      field: 'tool_use_id', value: 'critical-tool'});
+    const criticalSnapshot = api.readActivation(criticalIdentityBase);
+    const criticalRecovery = {...criticalIdentityBase, invocation_id: criticalIdentityCall.envelope.invocation_id,
+      expected_activation_id: criticalSnapshot.activation_id,
+      expected_call_sha: hex(JSON.stringify(criticalSnapshot.invocations[criticalIdentityCall.envelope.invocation_id])),
+      evidence_ref: 'test://critical-cannot-recover'};
+    eq(api.invalidateIncompleteNativeInvocation(criticalRecovery).reason,
+      'INVOCATION_NOT_RECOVERABLE', 'critical tickets cannot use incomplete recovery');
+    const conflictingCritical = prepare(api, stateRoot, criticalIdentity);
+    eq(api.bindInvocationExternalIdentity({...criticalIdentityBase, invocation_id: conflictingCritical.envelope.invocation_id,
+      field: 'tool_use_id', value: 'critical-tool'}).critical_failure_latched,
+    true, 'critical identity collision latches failure');
+    eq(api.invalidateIncompleteNativeInvocation(criticalRecovery).reason,
+      'ACTIVATION_NOT_RECOVERABLE', 'recovery never clears a critical failure latch');
+    eq(prepare(api, stateRoot, criticalIdentity).reason,
+      'CRITICAL_FAILURE_LATCHED', 'critical collision blocks later dispatch');
+
     const critical = fixture(api, stateRoot, 'critical', {role: 'peak', requested_role: 'peak',
       requested_model: 'peak-model', critical: true});
     const criticalCall = prepare(api, stateRoot, critical);
@@ -226,6 +305,10 @@ async function behaviorSuite(api) {
 async function runMutations() {
   const source = readFileSync(hostPath, 'utf8');
   const mutations = [
+    ['agent type incorrectly unique', "field !== 'agent_type' &&", 'true &&'],
+    ['duplicate identity accepted', 'if (duplicate) {', 'if (false) {'],
+    ['identity failure leaves pending ticket', "call.status = 'refused';\n      call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';",
+      "call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';"],
     ['release mismatch accepted', "if (release_digest !== state.release_digest)", 'if (false)'],
     ['critical latch removed', 'if (!accepted && call.critical) state.critical_failure = true;',
       'if (false) state.critical_failure = true;'],

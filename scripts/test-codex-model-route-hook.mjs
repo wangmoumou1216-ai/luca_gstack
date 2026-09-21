@@ -115,6 +115,23 @@ try {
   equal(anchorStop, {}, 'SubagentStop accepts matching evidence before task_complete is appended');
   equal(Object.values(state(anchorSession).invocations)[0].status, 'accepted', 'accepted native evidence is persisted');
 
+  // A role/type is reusable; correlation still requires distinct invocation and agent IDs.
+  for (const suffix of ['two', 'three']) {
+    equal(pre(anchorSession, {task_name: suffix, message: 'work'}, `tool-${suffix}`)
+      .hookSpecificOutput.permissionDecision, 'allow', 'same type may dispatch again after a completed call');
+    subStart(anchorSession, `agent-${suffix}`, 'default');
+    equal(subStop(anchorSession, `agent-${suffix}`, 'default', transcript({
+      sessionId: anchorSession, agentId: `agent-${suffix}`, agentType: 'default', model: 'gpt-5.6-sol',
+    })), {}, 'same-type calls have independently accepted evidence');
+  }
+  equal(pre(anchorSession, {task_name: 'duplicate', message: 'work'}, 'tool-anchor')
+    .hookSpecificOutput.permissionDecisionReason, 'model-route correlation failed: EXTERNAL_IDENTITY_DUPLICATE',
+  'reusing a tool ID is still refused');
+  equal(Object.values(state(anchorSession).invocations).filter(call => call.status === 'pending').length,
+    0, 'a denied dispatch does not poison subsequent calls');
+  equal(pre(anchorSession, {task_name: 'after-denial', message: 'work'}, 'tool-after-denial')
+    .hookSpecificOutput.permissionDecision, 'allow', 'a fresh noncritical dispatch works after a denial');
+
   const peakSession = 'root-peak';
   start(peakSession);
   const peakPre = pre(peakSession, {task_name: 'review', message: 'judge', agent_type: 'quality-gate', fork_turns: 'all', reasoning_effort: 'high'}, 'tool-peak', 'collaborationspawn_agent');

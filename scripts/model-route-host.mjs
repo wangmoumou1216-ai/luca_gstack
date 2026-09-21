@@ -283,16 +283,57 @@ export function bindInvocationExternalIdentity({
     if (!record(call) || call.status !== 'pending') return outcome('REFUSE', 'INVOCATION_NOT_PENDING');
     call.external_identity ||= {};
     if (text(call.external_identity[field]) && call.external_identity[field] !== value) {
+      call.status = 'refused';
+      call.failure_reason = 'EXTERNAL_IDENTITY_REBIND';
       if (call.critical) state.critical_failure = true;
       writeAtomic(file, state);
       return outcome('REFUSE', 'EXTERNAL_IDENTITY_REBIND', {critical_failure_latched: state.critical_failure});
     }
-    const duplicate = Object.values(state.invocations).some(other => other !== call && record(other)
+    // Types select a role; only tool/agent IDs identify an individual invocation.
+    const duplicate = field !== 'agent_type' && Object.values(state.invocations).some(other => other !== call && record(other)
       && other.external_identity?.[field] === value);
-    if (duplicate) return outcome('REFUSE', 'EXTERNAL_IDENTITY_DUPLICATE');
+    if (duplicate) {
+      call.status = 'refused';
+      call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';
+      if (call.critical) state.critical_failure = true;
+      writeAtomic(file, state);
+      return outcome('REFUSE', 'EXTERNAL_IDENTITY_DUPLICATE', {critical_failure_latched: state.critical_failure});
+    }
     call.external_identity[field] = value;
     writeAtomic(file, state);
     return outcome('BOUND', 'EXTERNAL_IDENTITY_BOUND', {invocation_id});
+  });
+}
+
+// Explicit repair for legacy tickets left between tool-id and type binding. The native
+// hook cannot have allowed a dispatch without the type; fully prepared/live tickets
+// and critical failures are deliberately outside this recovery seam.
+export function invalidateIncompleteNativeInvocation({
+  harness, root_session_id, invocation_id, expected_activation_id, expected_call_sha, evidence_ref, state_root,
+}) {
+  if (!text(invocation_id) || !text(expected_activation_id) || !hash(expected_call_sha) || !text(evidence_ref)) {
+    return outcome('REFUSE', 'INVALID_RECOVERY_EVIDENCE');
+  }
+  const file = statePath({harness, root_session_id, state_root});
+  return withLock(file, () => {
+    const state = readJson(file);
+    if (!validState(state)) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
+    if (state.status !== 'active' || state.critical_failure) return outcome('REFUSE', 'ACTIVATION_NOT_RECOVERABLE');
+    const call = state.invocations[invocation_id];
+    if (!record(call) || state.activation_id !== expected_activation_id
+      || createHash('sha256').update(JSON.stringify(call)).digest('hex') !== expected_call_sha) {
+      return outcome('REFUSE', 'RECOVERY_STATE_CHANGED');
+    }
+    if (call.status !== 'pending' || call.critical || call.route_harness !== 'codex-native'
+      || !text(call.external_identity?.tool_use_id)
+      || Object.keys(call.external_identity).some(key => key !== 'tool_use_id')) {
+      return outcome('REFUSE', 'INVOCATION_NOT_RECOVERABLE');
+    }
+    call.status = 'invalidated';
+    call.invalidation_reason = 'PRE_DISPATCH_CORRELATION_FAILED';
+    call.evidence_ref = evidence_ref;
+    writeAtomic(file, state);
+    return outcome('INVALIDATED', 'INCOMPLETE_NATIVE_INVOCATION_INVALIDATED', {invocation_id});
   });
 }
 
