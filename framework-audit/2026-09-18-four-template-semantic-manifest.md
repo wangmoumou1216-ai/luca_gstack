@@ -1,6 +1,10 @@
 # 四模板结构语义预检 manifest
 
-状态：`READY_FOR_PUBLISH`。用户已于 2026-09-18 明确确认：四个模板登记为四个新 `page_id`，保留现有五个模板，不替换、不删除。该确认授权生成并登记非破坏性的静态影子源；`framework/` 继续只读，原始模板字节不改。2026-09-20 本地实现、结构合同、严格静态闭包、浏览器预览和整仓发布前门均已通过；真实 OD 四页派生读回须在发布后逐页执行。
+> **2026-09-20 用户纠正：本文件的静态影子方案整体作废。** 用户要的是原模板一比一副本，不是结构重写。
+> 下列影子 hash 和测试只保留为错误实现的历史证据，不得作为原模板验收。现行源已改到
+> `.claude/skill-os/page-library/sources/originals/`，四份与原件逐字节一致；原件执行适配未完成，不能宣称 carrier-ready。
+
+状态：`BLOCKED — REVIEW REMEDIATION`。用户已于 2026-09-18 明确确认：四个模板登记为四个新 `page_id`，保留现有五个模板，不替换、不删除。该确认授权生成并登记非破坏性的静态影子源；`framework/` 继续只读，原始模板字节不改。下列 hash/测试为历史基线证据，不能充当整改后版本的验收。2026-09-20 独立深审发现需求追踪、机械恢复与状态物化证明缺口，撤回发布就绪结论；整改真值见 `2026-09-20-template-flow-review-remediation-plan.md`。
 
 ## 冻结输入
 
@@ -27,10 +31,10 @@
 ## 不可跳过的实施门
 
 1. **PASS** — 人工确认“四个新 page ID 影子登记，旧五页保留”；没有 old→new 替换、删除或 ID 复用。
-2. **PASS** — 两份动态 capture 的 `<template>` 状态与当前可见结构均转录到确定性静态影子源，没有把任一单一视图冒充完整结构。
+2. **WITHDRAWN** — 原“全部状态已转录”的 PASS 缺少逐状态结构证据。名称方块/摘要不证明完整物化；整改以 catalog 的 state_support 及来源审计为准，unsupported 状态不得进入 carrier。
 3. **PASS** — carrier 合同只使用有限 `id|data-module` 词汇；原 `data-od-id` 仅作来源证据，`data-source-node` 未进入任何稳定身份。
 4. **PASS** — 四页均通过唯一锚点、ancestor containment、module/slot 不重叠、module contract hash、严格 P0 asset profile、隔离预览与 carrier 正反例。
-5. **POST-PUBLISH PENDING** — 四页逐个完成 TAC 绑定和 OD 派生读回后，才能宣称“四个模板结构语义已做好”。
+5. **BLOCKED** — 原四页固定 page/slot 的验证文本试验仅证明指定路径可运行，不证明自然需求匹配/定位或原状态完整性。整改后须重新验证；未经新证据不得宣称“四个模板结构语义已做好”。
 
 ## 实施与验证证据
 

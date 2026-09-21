@@ -109,9 +109,9 @@ jobs:
       - name: Design handoff imports, authorization and readback
         run: npm run test:design-flow-handoff
       - name: Page-library identities, carrier contracts and asset profiles
-        run: npm run test:page-context && npm run test:carrier-asset-profile
-      - name: Page-library real browser preview and carrier closure
-        run: npm run test:page-context-preview
+        run: npm run test:page-context && npm run test:carrier-asset-profile && npm run test:template-flow && npm run test:template-copy
+      - name: Page-library browser preview and exact-original isolation
+        run: npm run test:page-context-preview && npm run test:original-adapter
       - name: Retired design context stays out of active rules and search
         run: npm run test:design-context-retirement
       - name: Agent orchestration + verdict/recorder separation contracts

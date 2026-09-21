@@ -2,6 +2,7 @@ import { readFile, realpath, lstat } from 'node:fs/promises';
 import { resolve, dirname, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { inspectCarrierPacket } from './carrier-packet.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const catalogDefault = '.claude/skill-os/page-library/catalog.json';
@@ -29,6 +30,7 @@ function moduleContractBody(page) {
     source_hash: page.source_hash,
     modules: page.modules,
     slots: page.slots,
+    state_support: page.state_support ?? [],
   };
 }
 
@@ -38,6 +40,10 @@ export function computeModuleContractHash(page) {
 
 export function computeBindingHash({ frozen_packet, binding }) {
   return sha256(`luca-page-context-binding/v2\0${canonicalJson({ frozen_packet, binding })}`);
+}
+
+export function computeCatalogHash(catalog) {
+  return sha256(`luca-page-catalog/v1\0${canonicalJson(catalog)}`);
 }
 
 // This private walker implements only the vocabulary used by this owned schema.
@@ -229,6 +235,24 @@ function validateCarrierContract(page, anchors) {
   for (const module of page.modules) {
     if (module.parent_module_id !== null && !containsNode(moduleNodes.get(module.parent_module_id), moduleNodes.get(module.module_id))) fail('MODULE_CONTAINMENT', `${page.page_id}/${module.module_id}: module is outside parent ${module.parent_module_id}`);
   }
+  const stateIds = new Set();
+  for (const state of page.state_support ?? []) {
+    if (stateIds.has(state.state_id) || !page.states.includes(state.state_id)) fail('STATE_SUPPORT_INVALID', `${page.page_id}: duplicate or unknown state ${state.state_id}`);
+    stateIds.add(state.state_id);
+    if (state.status === 'unsupported') {
+      if (state.anchors.length || state.target_ids.length) fail('STATE_SUPPORT_INVALID', `${page.page_id}/${state.state_id}: unsupported states cannot authorize targets`);
+      continue;
+    }
+    if (!state.anchors.length || !state.target_ids.length) fail('STATE_SUPPORT_INVALID', `${page.page_id}/${state.state_id}: supported state requires structure and target evidence`);
+    const stateNodes = state.anchors.map(anchor => resolveAnchor(anchors, anchor, 'STATE_SUPPORT_ANCHOR', `${page.page_id}/${state.state_id}`));
+    for (const id of state.target_ids) {
+      const target = modules.get(id) ?? slots.get(id);
+      if (!target) fail('STATE_SUPPORT_TARGET', `${page.page_id}/${state.state_id}: unknown target ${id}`);
+      const node = resolveAnchor(anchors, target.anchor, 'STATE_SUPPORT_TARGET', id);
+      if (!stateNodes.some(parent => containsNode(parent, node))) fail('STATE_SUPPORT_TARGET', `${id}: target is outside the evidenced state structure`);
+    }
+  }
+  if (page.states.some(state => !stateIds.has(state))) fail('STATE_SUPPORT_REQUIRED', `${page.page_id}: every carrier state needs an explicit support decision`);
   return { modules, slots };
 }
 
@@ -242,15 +266,26 @@ export function carrierContractForPage(page) {
     module_contract_hash: page.module_contract_hash,
     modules: page.modules,
     slots: page.slots,
+    state_support: page.state_support ?? [],
   };
 }
 
 async function validateCatalog(catalog, root) {
+  let originals = [];
+  try {
+    const manifestPath = await confinedPath(root, '.claude/skill-os/page-library/source-manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    if (manifest.profile === 'original-template-copy-v1') originals = manifest.sources;
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
   shape(catalog, schema.$defs.catalog);
   const ids = new Set(catalog.retired_page_ids);
   // Validate every path before reading any source bytes.
   const paths = [];
   for (const page of catalog.pages) {
+    if (originals.some(source => page.source_ref === source.rejected_shadow?.source || page.source_hash === source.rejected_shadow?.sha256)) fail('REWRITTEN_TEMPLATE_FORBIDDEN', 'A rejected rewritten shadow cannot re-enter the template library under any page ID');
+    const original = originals.find(source => source.page_id === page.page_id || source.copy_source === page.source_ref || source.raw_sha256 === page.source_hash);
+    if (original && (page.page_id !== original.page_id || page.source_ref !== original.copy_source || page.source_hash !== original.raw_sha256 || page.original_copy?.bytes !== original.raw_bytes || page.original_copy?.sha256 !== original.raw_sha256)) fail('TEMPLATE_COPY_MISMATCH', `${page.page_id}: source binding must reference the exact approved original copy with its protected identity`);
+    if (page.original_copy && (page.carrier_eligible || page.regions.length || page.source_hash !== page.original_copy.sha256)) fail('ORIGINAL_COPY_CONTRACT', 'Original copies cannot reuse rewritten-page bindings or static-carrier approval');
     if (ids.has(page.page_id)) fail('PAGE_ID_REUSED', `Duplicate or retired page_id: ${page.page_id}`);
     ids.add(page.page_id);
     if (page.lifecycle !== 'live' && page.aliases.length) fail('PAGE_ALIAS_LIFECYCLE', `${page.page_id}: non-live pages cannot retain selectable aliases`);
@@ -279,6 +314,12 @@ async function validateCatalog(catalog, root) {
     const page = catalog.pages[i];
     const bytes = await readFile(paths[i]);
     if (sha256(bytes) !== page.source_hash) fail('SOURCE_HASH', `${page.page_id}: source changed; refresh catalog and reconfirm selection`);
+    if (page.original_copy) {
+      if (bytes.length !== page.original_copy.bytes) fail('TEMPLATE_COPY_MISMATCH', `${page.page_id}: original copy length changed`);
+      // This branch attests exact storage only. Complex original HTML is not
+      // silently reinterpreted by the restricted static carrier parser.
+      continue;
+    }
     const anchors = anchorsIn(bytes.toString('utf8'));
     const regionNodes = new Map();
     for (const region of page.regions) {
@@ -347,6 +388,7 @@ export function discoverCandidateHints(catalog, query, { scope = 'framework' } =
   const candidate_hints = candidates(catalog, query, { scope })
     .map(hint => {
       const page = catalog.pages.find(candidate => candidate.page_id === hint.page_id);
+      if (page?.original_copy?.status === 'adapter-available' && page.lifecycle === 'live') return { page_id: page.page_id, name: page.name, source_ref: page.source_ref, source_hash: page.source_hash, binding_mode: 'original-preserving-v1', matched_terms: hint.matched_terms, reasons: hint.reasons };
       if (!page?.carrier_eligible || page.lifecycle !== 'live') return null;
       const contract = carrierContractForPage(page);
       return {
@@ -410,6 +452,10 @@ function assertActionsDoNotOverlap({ modules, slots }, actions) {
       const b = targets[right];
       const aModule = a.kind === 'module' ? a.id : a.parent_module_id;
       const bModule = b.kind === 'module' ? b.id : b.parent_module_id;
+      // An insertion slot is not its entire parent. A sibling module can be
+      // preserved independently even when the slot's parent is the root.
+      if (a.kind === 'slot' && b.kind === 'module' && !isAncestorModule(modules, b.id, a.parent_module_id)) continue;
+      if (b.kind === 'slot' && a.kind === 'module' && !isAncestorModule(modules, a.id, b.parent_module_id)) continue;
       if (!isAncestorModule(modules, aModule, bModule) && !isAncestorModule(modules, bModule, aModule)) continue;
       if (aModule === bModule && a.kind === 'slot' && b.kind === 'slot') continue;
       fail('CARRIER_ACTION_OVERLAP', `Carrier actions ${a.action_id} and ${b.action_id} overlap in the module graph`);
@@ -419,7 +465,61 @@ function assertActionsDoNotOverlap({ modules, slots }, actions) {
   return targets;
 }
 
-export async function validateCarrierBindingDraft(catalog, record, { root = repoRoot } = {}) {
+// This gate verifies inspectable provenance and consistency, not the truth of a
+// model's semantic judgment. High confidence still needs model review + user adoption.
+export function validateMatchAssessment(catalog, assessment, { packetBody, frozen_packet, binding } = {}) {
+  shape(catalog, schema.$defs.catalog);
+  shape(assessment, schema.$defs.match_assessment);
+  if (!packetBody) fail('PACKET_EVIDENCE_REQUIRED', 'Match assessment requires the actual frozen Packet, not caller-supplied fact IDs');
+  const packet = inspectCarrierPacket(packetBody);
+  const expectedFrozen = { source_packet_sha256: packet.source_packet_sha256, applicability_set_sha256: packet.applicability_set_sha256 };
+  if (canonicalJson(assessment.frozen_packet) !== canonicalJson(expectedFrozen) || (frozen_packet && canonicalJson(frozen_packet) !== canonicalJson(expectedFrozen))) fail('STALE_MATCH_PACKET', 'Assessment does not bind the inspected frozen Packet');
+  if (assessment.catalog_sha256 !== computeCatalogHash(catalog)) fail('STALE_MATCH_CATALOG', 'Catalog changed; reassess candidates and reconfirm');
+  const facts = new Map(packet.document.items.map(item => [item.id, item]));
+  const scopedFacts = new Set(packet.document.scopes.flatMap(scope => scope.source_ids));
+  if (assessment.reviewed_fact_ids.length !== facts.size || assessment.reviewed_fact_ids.some(id => !facts.has(id))) fail('MATCH_FACT_COVERAGE', 'Every frozen Packet fact must be reviewed, including constraints and states');
+  const candidateIds = new Set();
+  for (const evidence of assessment.candidate_evidence) {
+    if (candidateIds.has(evidence.page_id) || !catalog.pages.some(page => page.page_id === evidence.page_id && page.lifecycle === 'live')) fail('MATCH_CANDIDATE_INVALID', 'Candidate evidence names a duplicate or unavailable page');
+    candidateIds.add(evidence.page_id);
+  }
+  const pairs = new Set();
+  for (const judgment of assessment.judgments) {
+    const fact = facts.get(judgment.fact_id);
+    if (!fact || fact.text !== judgment.excerpt) fail('MATCH_FACT_EVIDENCE', 'Judgment must quote the complete authoritative Packet item');
+    const page = catalog.pages.find(page => page.page_id === judgment.page_id && page.lifecycle === 'live');
+    const target = [...(page?.modules ?? []), ...(page?.slots ?? [])].find(target => (target.module_id ?? target.slot_id) === judgment.target_id);
+    if (!page || !target || page.intent !== judgment.purpose_excerpt || target.intent !== judgment.target_excerpt) fail('MATCH_TARGET_EVIDENCE', 'Judgment purpose and location must quote current catalog evidence');
+    if (!candidateIds.has(page.page_id)) fail('MATCH_CANDIDATE_INVALID', 'Judgment needs a candidate assessment');
+    const pair = `${judgment.fact_id}:${judgment.action_id}`;
+    if (pairs.has(pair)) fail('MATCH_JUDGMENT_DUPLICATE', 'Duplicate fact/action assessment');
+    pairs.add(pair);
+  }
+  if (assessment.decision === 'needs_context') return { status: 'NEEDS_CONTEXT', reason: assessment.reason, binding_allowed: false };
+  if (assessment.decision === 'reference_only') {
+    if (assessment.candidate_evidence.some(item => item.disposition !== 'rejected') || assessment.judgments.some(item => item.confidence !== 'no_match')) fail('MATCH_DECISION_CONFLICT', 'reference_only cannot carry selected or unresolved candidates');
+    return { status: 'REFERENCE_ONLY', reason: assessment.reason, binding_allowed: false, frozen_packet: expectedFrozen };
+  }
+  if (!binding) fail('MATCH_BINDING_REQUIRED', 'Carrier assessment requires its exact binding targets');
+  const selected = assessment.candidate_evidence.filter(item => item.disposition === 'selected');
+  if (selected.length !== 1 || selected[0].page_id !== binding.page_id || assessment.candidate_evidence.some(item => item.disposition === 'uncertain')) fail('MATCH_AMBIGUOUS', 'Resolve candidate ambiguity before binding');
+  const coveredFacts = new Set();
+  const coveredActions = new Set();
+  for (const judgment of assessment.judgments) {
+    if (judgment.confidence !== 'high' || judgment.alternative_target_ids.length) fail('MATCH_AMBIGUOUS', 'Uncertain confidence or multiple positions requires NEEDS_CONTEXT');
+    const action = binding.actions.find(action => action.action_id === judgment.action_id);
+    if (judgment.page_id !== binding.page_id || !action || (action.slot_id ?? action.module_id) !== judgment.target_id) fail('MATCH_ACTION_EVIDENCE', 'Fact judgment must bind the exact requested action and module/slot');
+    const page = catalog.pages.find(page => page.page_id === judgment.page_id);
+    const state = page.state_support?.find(state => state.state_id === judgment.state_id);
+    if (!state || state.status !== 'supported' || !state.target_ids.includes(judgment.target_id)) fail('MATCH_STATE_UNSUPPORTED', `State ${judgment.state_id} is not supported for ${judgment.target_id}`);
+    coveredFacts.add(judgment.fact_id);
+    coveredActions.add(judgment.action_id);
+  }
+  if ([...facts.keys()].some(id => !scopedFacts.has(id) && !coveredFacts.has(id)) || coveredActions.size !== binding.actions.length) fail('MATCH_FACT_COVERAGE', 'Every unscoped Packet fact and every action requires location evidence; scoped facts remain in reviewed_fact_ids');
+  return { status: 'AWAITING_ADOPTION', binding_allowed: true, semantic_verification: 'model-reviewed-not-machine-proven' };
+}
+
+export async function validateCarrierBindingDraft(catalog, record, { root = repoRoot, packetBody } = {}) {
   shape(record, schema.$defs.carrier_binding_draft);
   await validateCatalog(catalog, root);
   const page = catalog.pages.find(candidate => candidate.page_id === record.binding.page_id);
@@ -428,6 +528,8 @@ export async function validateCarrierBindingDraft(catalog, record, { root = repo
   if (record.binding.source_ref !== contract.source_ref || record.binding.source_hash !== contract.source_hash || record.binding.module_contract_hash !== contract.module_contract_hash) fail('STALE_CARRIER_BINDING', 'Carrier source or module contract changed; rebind and reconfirm');
   const graph = validateCarrierContract(page, anchorsIn((await readPageSource(page, { root })).bytes.toString('utf8')));
   const actions = assertActionsDoNotOverlap(graph, record.binding.actions);
+  const assessment = validateMatchAssessment(catalog, record.binding.match_assessment, { packetBody, frozen_packet: record.frozen_packet, binding: record.binding });
+  if (!assessment.binding_allowed) fail(assessment.status === 'NEEDS_CONTEXT' ? 'MATCH_NEEDS_CONTEXT' : 'MATCH_REFERENCE_ONLY', assessment.reason);
   const binding_sha256 = computeBindingHash({ frozen_packet: record.frozen_packet, binding: record.binding });
   return {
     schema_version: 2,
@@ -440,7 +542,7 @@ export async function validateCarrierBindingDraft(catalog, record, { root = repo
   };
 }
 
-export async function validateCarrierBinding(catalog, record, { root = repoRoot } = {}) {
+export async function validateCarrierBinding(catalog, record, { root = repoRoot, packetBody } = {}) {
   shape(record, schema.$defs.carrier_binding);
   if (!Number.isFinite(Date.parse(record.adoption.confirmed_at))) fail('CONFIRMATION_INVALID', 'Carrier adoption date is invalid');
   const draft = await validateCarrierBindingDraft(catalog, {
@@ -448,7 +550,7 @@ export async function validateCarrierBinding(catalog, record, { root = repoRoot 
     bundle_kind: record.bundle_kind,
     frozen_packet: record.frozen_packet,
     binding: record.binding,
-  }, { root });
+  }, { root, packetBody });
   if (record.adoption.binding_sha256 !== draft.binding_sha256) fail('STALE_CARRIER_ADOPTION', 'Carrier adoption does not bind the current frozen packet and module binding');
   if (record.adoption.carrier_profile !== record.binding.carrier_profile) fail('STALE_CARRIER_ADOPTION', 'Carrier adoption does not bind the selected carrier profile');
   return { ...draft, adoption: record.adoption };
@@ -466,6 +568,7 @@ export async function validateSelection(catalog, record, { root = repoRoot, prev
   await validateCatalog(catalog, root);
   const page = catalog.pages.find(candidate => candidate.page_id === record.page_id);
   if (!page) fail('UNKNOWN_PAGE', `Unknown page: ${record.page_id}`);
+  if (page.original_copy) fail('ORIGINAL_ADAPTER_REQUIRED', 'Use the original-copy-handoff path with exact original locations and adoption; never substitute the static carrier or screenshot transport');
   if (page.lifecycle !== 'live') fail('PAGE_LIFECYCLE', `Page ${record.page_id} is not a live reference`);
   if (page.source_hash !== record.source_hash) fail('STALE_SELECTION', 'Selection source hash differs from the current catalog; reconfirm');
   const reference = { page_id: page.page_id, source_ref: page.source_ref, source_hash: page.source_hash, viewport: page.viewport, kind: record.kind };
@@ -498,7 +601,7 @@ async function main() {
   const [command, ...args] = process.argv.slice(2);
   const options = {};
   for (let i = 0; i < args.length; i += 2) {
-    if (!['--root', '--catalog', '--query', '--scope', '--record', '--preview'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context.mjs validate|candidates|phase-a-discovery|selection|carrier-binding-draft|carrier-binding [--query text|--record path] [--preview path] [--root path] [--catalog path]');
+    if (!['--root', '--catalog', '--query', '--scope', '--record', '--preview', '--packet'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context.mjs validate|candidates|phase-a-discovery|selection|carrier-binding-draft|carrier-binding [--query text|--record path] [--packet path] [--preview path] [--root path] [--catalog path]');
     options[args[i]] = args[i + 1];
   }
   if (!['validate', 'candidates', 'phase-a-discovery', 'selection', 'carrier-binding-draft', 'carrier-binding'].includes(command)) fail('CLI_USAGE', 'Expected validate, candidates, phase-a-discovery, selection, carrier-binding-draft or carrier-binding command');
@@ -523,9 +626,10 @@ async function main() {
   if (command === 'carrier-binding-draft' || command === 'carrier-binding') {
     if (!options['--record']) fail('CLI_USAGE', `${command} requires --record path`);
     const record = JSON.parse(await readFile(await confinedPath(root, options['--record']), 'utf8'));
+    const packetBody = options['--packet'] ? await readFile(await confinedPath(root, options['--packet']), 'utf8') : undefined;
     return command === 'carrier-binding-draft'
-      ? validateCarrierBindingDraft(catalog, record, { root })
-      : validateCarrierBinding(catalog, record, { root });
+      ? validateCarrierBindingDraft(catalog, record, { root, packetBody })
+      : validateCarrierBinding(catalog, record, { root, packetBody });
   }
   return { valid: true, schema_version: catalog.schema_version, pages: catalog.pages.length, regions: catalog.pages.reduce((count, page) => count + page.regions.length, 0) };
 }

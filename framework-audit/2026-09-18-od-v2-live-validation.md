@@ -1,5 +1,13 @@
 # OD V2 发布后真实验证
 
+> **2026-09-20 用户否决影子页基线。** 后续两份 live 测试使用的是被简化的影子页，不能证明符合用户的
+> 原模板复制要求；相关通过结论撤回。完整原件副本已另行校验，原件上的新生成验收尚未进行。
+
+> 历史证据边界（2026-09-20 深审）：本文描述旧版本上的指定 fixture 运行，不证明自然语言模板匹配、
+> 完整 Packet 覆盖或任意输出的可靠机械验收。后续已复现 TAC/DOM/inventory 检验漏洞，正在按
+> `2026-09-20-template-flow-review-remediation-plan.md` 整改。本文历史 run/hash 不用于关闭新版本门禁，
+> 本轮未授权新的 OD 写入/生成，也未恢复 Git 发布。
+
 - 时间：2026-09-18（Asia/Shanghai）
 - 框架仓库：`upstream/main`
 - 发布提交：`87c4c9d feat(open-design): add template carrier handoff v2`

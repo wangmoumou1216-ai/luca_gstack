@@ -206,8 +206,11 @@ function strictCssSafe(bytes, location) {
   let css;
   try { css = utf8.decode(bytes); } catch { fail('CSS_UTF8_REQUIRED', `CSS must be UTF-8: ${location}`); }
   // Comments and escapes make a small resolver unable to prove that url()/an
-  // @import was not obfuscated.  Fail closed until a dedicated CSS parser lands.
-  if (/\0|\/\*|\\|@|url\s*\(|(?:expression|behavior|-moz-binding)\s*\(|(?:data|javascript|https?|file|blob):/i.test(css)) fail('CSS_UNSUPPORTED', `Unsupported CSS syntax or external dependency: ${location}`);
+  // @import/image-set was not obfuscated. HTML character references inside a
+  // style attribute are decoded before CSS parsing, so the byte scanner must
+  // also reject them rather than mistake u&#114;l(...) for inert text. Fail
+  // closed until a dedicated CSS parser lands.
+  if (/\0|\/\*|\\|@|&(?:#(?:x[0-9a-f]+|[0-9]+);?|[a-z][a-z0-9]+;)|url\s*\(|(?:-webkit-)?image-set\s*\(|(?:expression|behavior|-moz-binding)\s*\(|(?:data|javascript|https?|file|blob):/i.test(css)) fail('CSS_UNSUPPORTED', `Unsupported CSS syntax or external dependency: ${location}`);
 }
 
 function parseDataUri(value, location, profile, totals, { allowOpaque = false } = {}) {
@@ -305,8 +308,10 @@ function structuralCssScan(bytes, location, offset, context) {
   let css;
   try { css = utf8.decode(bytes); } catch { fail('CSS_UTF8_REQUIRED', `CSS must be UTF-8: ${location}`); }
   if (css.includes('\0')) fail('CSS_UNSUPPORTED', `NUL is not valid inert CSS evidence: ${location}`);
+  for (const match of css.matchAll(/\\|&(?:#(?:x[0-9a-f]+|[0-9]+);?|[a-z][a-z0-9]+;)/gi)) context.findings.add('css_encoded_syntax', location, match[0], offset + match.index);
   for (const match of css.matchAll(/(?:expression|behavior|-moz-binding)\s*\(/gi)) context.findings.add('potential_css_execution', location, match[0], offset + match.index);
   for (const match of css.matchAll(/@import\b/gi)) context.findings.add('css_import', location, '@import', offset + match.index);
+  for (const match of css.matchAll(/(?:-webkit-)?image-set\s*\(/gi)) context.findings.add('css_image_set', location, match[0], offset + match.index);
 
   const starts = [...css.matchAll(/url\s*\(/gi)];
   const urls = [...css.matchAll(/url\s*\(\s*(?:(["'])([\s\S]*?)\1|([^)]*?))\s*\)/gi)];
@@ -400,6 +405,11 @@ export function resolveAssetClosure({ baseTemplate, assets = [], profile: profil
   const tagPattern = /<([A-Za-z][A-Za-z0-9:-]*)(?:\s+(?:(?:"[^"]*")|(?:'[^']*')|[^'"<>])*)?\s*\/?>/g;
   for (const match of html.matchAll(tagPattern)) {
     const tag = match[1].toLowerCase(); const attrs = attrsFrom(match[0], match[1]);
+    const encodedResourceAttrs = ['type', 'rel', 'as', 'http-equiv', 'src', 'href', 'xlink:href', 'srcset', 'imagesrcset', 'style', 'background', 'poster', 'lowsrc', 'dynsrc'].filter(name => /&(?:#(?:x[0-9a-f]+|[0-9]+);?|[a-z][a-z0-9]+;)/i.test(attrs.get(name) ?? ''));
+    if (encodedResourceAttrs.length) {
+      if (!profile.inertActiveContent) fail('HTML_UNSUPPORTED_SYNTAX', `Encoded resource-dispatch attributes are not supported: ${tag}[${encodedResourceAttrs.join(',')}]`);
+      for (const name of encodedResourceAttrs) findings.add('encoded_resource_attribute', `${tag}[${name}]`, attrs.get(name), match.index);
+    }
     for (const attr of attrs.keys()) if (attr.startsWith('on')) {
       active.event_handlers += 1;
       if (profile.inertActiveContent) findings.add('event_handler', `${tag}[${attr}]`, undefined, match.index);
@@ -409,6 +419,7 @@ export function resolveAssetClosure({ baseTemplate, assets = [], profile: profil
       else strictCssSafe(Buffer.from(attrs.get('style')), `${tag}[style]`);
     }
     if (attrs.has('srcset')) fail('SRCSET_UNSUPPORTED', 'srcset is not parsed by this profile');
+    if (attrs.has('imagesrcset')) fail('SRCSET_UNSUPPORTED', 'imagesrcset is not parsed by this profile');
     if (['iframe', 'object', 'embed', 'base'].includes(tag)) {
       active.potential_execution += 1;
       findings.add('potential_embedded_execution', tag, attrs.get('src') ?? attrs.get('data') ?? attrs.get('href'), match.index);
@@ -422,7 +433,7 @@ export function resolveAssetClosure({ baseTemplate, assets = [], profile: profil
       continue;
     }
     if (tag === 'style') continue;
-    if (tag === 'meta' && attrs.get('http-equiv')?.toLowerCase() === 'refresh') {
+    if (tag === 'meta' && attrs.get('http-equiv')?.trim().toLowerCase() === 'refresh') {
       if (!profile.inertActiveContent) fail('HTML_UNSUPPORTED_SYNTAX', 'Meta refresh is not a safe structural carrier');
       active.potential_execution += 1;
       findings.add('meta_refresh', 'meta[http-equiv]', attrs.get('content'), match.index);
@@ -443,7 +454,14 @@ export function resolveAssetClosure({ baseTemplate, assets = [], profile: profil
       } else if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(href)) findings.add('external_navigation', 'a[href]', href, match.index);
       continue;
     }
-    if ((tag === 'img' || tag === 'source' || tag === 'video' || tag === 'audio' || tag === 'track' || tag === 'image') && attrs.has('src')) register(attrs.get('src'), `${tag}[src]`, match.index);
+    if ((tag === 'img' || tag === 'source' || tag === 'video' || tag === 'audio' || tag === 'track' || tag === 'image' || (tag === 'input' && attrs.get('type')?.toLowerCase() === 'image')) && attrs.has('src')) register(attrs.get('src'), `${tag}[src]`, match.index);
+    // Browser fetch surfaces not expressed through the modern src/href pair.
+    // Treat every legacy background attribute as a URL carrier; accepting it
+    // as decorative text would let generated output bypass the asset closure.
+    if (attrs.has('background')) register(attrs.get('background'), `${tag}[background]`, match.index);
+    if (tag === 'video' && attrs.has('poster')) register(attrs.get('poster'), `${tag}[poster]`, match.index);
+    if (tag === 'img' && attrs.has('lowsrc')) register(attrs.get('lowsrc'), `${tag}[lowsrc]`, match.index);
+    if (tag === 'img' && attrs.has('dynsrc')) register(attrs.get('dynsrc'), `${tag}[dynsrc]`, match.index);
     if ((tag === 'video' || tag === 'image') && attrs.has('href')) register(attrs.get('href'), `${tag}[href]`, match.index);
     if (tag === 'use' && attrs.has('href') && !attrs.get('href').startsWith('#')) fail('SVG_UNSUPPORTED', 'External SVG use references are not supported');
   }

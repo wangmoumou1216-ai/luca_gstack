@@ -11,6 +11,7 @@
   </style>
 </head>
 <body>
+  <aside role="note">结构参考，非原页面状态复刻。仅客户 list 列表区域已登记结构支持；所有详情页签及联系人展开未转录。示例数据与状态名称方块不构成原状态证据。</aside>
   <main id="customer-app" data-module="customer-app-shell" class="app">
     <nav id="customer-navigation" data-module="customer-navigation" class="side" aria-label="CRM 主导航">
       <div id="customer-nav-logo" class="logo">CRM</div>
@@ -38,7 +39,7 @@
           <section id="customer-detail-content" data-module="customer-detail-content" class="detail-body">
             <div class="summary"><div class="field"><b>统一信用代码</b>91310000INNOTECH</div><div class="field"><b>客户级别</b>A 级</div><div class="field"><b>负责人</b>林嘉</div><div class="field"><b>最近联系</b>今天 10:30</div><div class="field"><b>年度合同额</b>¥ 1,280,000</div><div class="field"><b>在途商机</b>3 个</div></div>
             <div class="timeline"><p><strong>今天</strong> 完成数据平台方案复盘</p><p><strong>昨天</strong> 联系人扩展为 6 人</p></div>
-            <div class="state-map"><div class="state">details</div><div class="state">activities</div><div class="state">address</div><div class="state">financial</div><div class="state">contacts</div><div class="state">opportunities</div><div class="state">contacts-expanded</div><div class="state">datasync-detail</div></div>
+            <p role="note">未支持：details / activities / address / financial / contacts / opportunities / contacts-expanded / datasync-detail。以下扩展位不是这些状态的实现。</p>
             <div id="customer-detail-content-slot" class="slot content-slot">详情内容扩展位</div>
           </section>
         </article>

@@ -82,13 +82,22 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 **0c. Phase-A 与最终 binding 的边界：** design-brief 里的 `CandidateHint` 是已整理需求阶段的内部、短期
 发现结果，不能作为 page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1
 并冻结 Packet；只有随后完整读取 `.claude/skill-os/runtime/page-context.md`，运行其最终
-`carrier-binding` 验证、隔离预览和真人 adoption，才可进入 `carrier`。`NO_HINT`、无合格候选、
-用户拒绝或明确不用模板均不阻塞 Packet 交接，但只能走互斥 `reference_only`，绝不得称模板衍生。
+`carrier-binding` 验证、隔离预览和真人 adoption，才可进入 `carrier`。Phase-A `NO_HINT` 不替代
+最终完整目录判断；最终无合格候选、用户拒绝或明确不用模板均不阻塞已对齐 Packet 交接，但只能走
+互斥 `reference_only`，绝不得称模板衍生。需求/位置有歧义则先按该合同澄清，不能借降级越过人类门。
 页面/模板采用不授予 OD stage；stage、run、recover 各自独立授权。recover 跳过本步骤。
 
 ---
 
 ## Phase 1：编译 OD 指令（luca_gstack 核心活；一次性产出，桌面端/headless 通用）
+
+**用户指定原模板时**，交接的 base-template 必须与原件逐字节一致（含 CSS、脚本、资源、隐藏状态）；
+按 page-context 的 original-copy 门核验。没有原样适配能力就停住，不能生成简化影子页后声称用了模板。
+源复制不授权重设视觉或交互；用户要求保持的样式、结构和行为不得被 structural profile 或外部 DS 默认覆盖。
+页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
+page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
+当前原件适配器只支持自包含 HTML；若原 CSP 未阻断的外置 CSS/JS/图片/字体依赖没有经审计后一并运输，
+组包必须以 `ORIGINAL_ASSETS_REQUIRED` 停住，不能只上传 HTML 或改写依赖来宣称原件完整。
 
 把输入源编译成一份可交接的指令；这一步不授予生成或外部写入权限：
 - **chain**：把已通过门禁的**冻结 Design Generation Packet**逐字节作为唯一需求主体；不倒 PRD/research 原文。
@@ -176,10 +185,16 @@ Phase 1 合同默认/已确认的是 `structural_carrier + single`；实际每�
 
 **carrier 必经顺序：**
 
+下面的 helper 名适用于原静态分支；original_copy 对应使用 `prepareOriginalCopyHandoff` →
+`confirmOriginalCopyHandoff` → `authorizeOriginalOperation(stage)` → `verifyOriginalStage`。
+授权、命名空间和完整读回要求相同；有脚本原件另须绑定原件 hash/handoff 的 inert-storage 收据。
+
 1. `page-context` 已返回有效的最终 `carrier-binding`，其 frozen Packet/source/module hashes 仍与当前
    输入一致；`CandidateHint` 不能替代此结果。
 2. `prepareCarrierHandoff` 形成 immutable `input/`、`control/`、空 `output/` 及 canonical manifest。
    `input/base-template.html` 和其通过 profile 的 assets 只能作为输入；不能把 framework 文件或输入重命名为输出。
+   carrier Packet 先由 `inspectCarrierPacket` 提取完整事实，TAC Markdown 由 `renderTacMarkdown`
+   确定性生成；scope 排除须有原 Packet 依据。helper 拒绝伪片段、漏分母和两份 TAC 语义漂移。
 3. `confirmCarrierBundle` 验证真人 adoption 已覆盖最终 binding、TAC 内容/`tac_sha256`、
    `carrier_content_hash`、`handoff_bundle_hash` 和 `output_profile=single`。任何 hash 漂移使旧确认失效。
 4. `authorizeCarrierStage` 只接受真实用户对准确 OD project、handoff ID、namespace、完整 staged 文件表、
@@ -229,8 +244,10 @@ curl -sN --max-time 1800 -X POST "$_OD_URL/api/chat" -H 'content-type: applicati
 它有独立 recover 授权，不能由 adoption、stage 或 run 授权推断。
 调用方必须把当前 harness runtime 显式传入 authorization helper；能力收据的 `runtime`
 必须与之完全一致，Codex 不得复用 Claude 收据，反之亦然。recover 授权必须在读取
-output 字节之前完成：`authorizeCarrierRecover` / `authorizeReferenceRecover` 仅绑定已验证的
-STAGED 收据，然后才能调用各自的 `observe*Output`。
+output 字节之前完成：`authorizeCarrierRecover` 只绑定从同一已验证 `STAGED` 收据产生的
+`USER_GENERATION_REPORTED` 或 `OD_RUN_AUTHORIZED`；裸 `STAGED` 不能授权回收，headless 读回还必须
+证明 run 终态为 succeeded。`authorizeReferenceRecover` 仍按其独立 reference_only 合同执行，
+然后才能调用各自的 `observe*Output`。
 
 ```bash
 # 仅在经授权的准确项目和 handoff namespace 内读取 manifest 声明的 output root。
@@ -245,6 +262,20 @@ STAGED 收据，然后才能调用各自的 `observe*Output`。
 字节不同。任何额外 HTML、candidate、未知文件、输入/输出重叠、逃逸资源、base 改名/复制、锚点或
 preserve 不变量失败都 `BLOCKED`，保留证据但绝不自动删除。`implementation-manifest.json` 只是
 不可信辅助信息，不能单独证明生成或语义完成。
+
+机械验证必须使用与 immutable TAC/模块合同一致的数据；真实 DOM 中的目标、动作变化与非授权
+结构保持均需通过，注释/空白差异不算实施动作。output 的路径、字节数、hash 必须与完整
+post-inventory 一致。仅调用方填写的 `module_traces: PASS` 不是实施证据；独立语义验收仍逐项检查
+实际页面中的需求、状态、AC 与操作结果。
+
+original_copy v1 仅支持 headless 路径：保留本轮 `OD_RUN_AUTHORIZED` 收据与成功 run 读回，再使用
+`authorizeOriginalOperation(recover)` 和异步 `recoverOriginalOutput`。桌面报告缺少独立尝试历史，
+不能排除后续取消的 headless run；`reportOriginalGeneration` 明确拒绝，裸 `STAGED` 与历史
+`USER_GENERATION_REPORTED` 均不能 recover。除实际
+`output/index.html`，还要读回 `output/implementation-manifest.json` 的局部编辑声明。声明不是证据本身：
+验证器重算原件中的真实节点范围，核对实际HTML恰为原始字节加这些编辑，并以原生DOM验证没有解析越界。
+原脚本/样式保持逐字节一致。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出
+保留为证据，不直接宣称成功。界面语义与原交互保留仍需独立浏览器验收。
 
 `observeCarrierOutput` 可把指定 root 的实际新产物标为 `GENERATED_OBSERVED`，但 provenance 必须诚实：
 桌面端没有 run ID 时只能记录用户报告和实际 readback；可读 run ID/prompt hash/handoff ID 只提高

@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { createCarrierPacket, inspectCarrierPacket } from './carrier-packet.mjs';
 
 const cli = process.env.PAGE_CONTEXT_TEST_CLI ?? resolve('scripts/page-context.mjs');
 const root = await mkdtemp(join(tmpdir(), 'page-context-'));
@@ -100,7 +101,18 @@ try {
   assert.equal((await select({ ...boxRecord, selection: { ...boxRecord.selection, width: 900 } }, '--preview', previewPath)).body.error.code, 'BOX_BOUNDS');
   assert.equal((await select({ ...boxRecord, selection: { ...boxRecord.selection, scale: 0 } }, '--preview', previewPath)).body.error.code, 'SCHEMA_INVALID');
   assert.equal((await select(boxRecord, '--preview', previewPath)).status, 0);
-  const { carrierContractForPage, computeBindingHash, computeModuleContractHash, discoverCandidateHints, loadCatalog, validateCarrierBinding, validateCarrierBindingDraft, validateSelection } = await import(pathToFileURL(cli));
+  const { carrierContractForPage, computeBindingHash, computeModuleContractHash, computeCatalogHash, discoverCandidateHints, loadCatalog, validateCarrierBinding, validateCarrierBindingDraft, validateMatchAssessment, validateSelection } = await import(pathToFileURL(cli));
+  const packetBody = createCarrierPacket({ schema_version: 1, packet_kind: 'design-generation', items: [{ source_kind: 'requirement', id: 'R-1', text: 'Add or update the explicitly reviewed list control.' }], scopes: [] });
+  const packet = inspectCarrierPacket(packetBody);
+  const frozen = { source_packet_sha256: packet.source_packet_sha256, applicability_set_sha256: packet.applicability_set_sha256 };
+  const assessmentFor = (cat, binding, state) => {
+    const entry = cat.pages.find(page => page.page_id === binding.page_id);
+    return { schema_version: 1, catalog_sha256: computeCatalogHash(cat), frozen_packet: frozen, decision: 'carrier', reason: 'Fixture model review: the requested control belongs in this evidenced list region.', reviewed_fact_ids: ['R-1'], candidate_evidence: [{ page_id: entry.page_id, disposition: 'selected', reason: 'Fixture candidate purpose review' }], judgments: binding.actions.map(action => {
+      const target_id = action.module_id ?? action.slot_id;
+      const target = [...entry.modules, ...entry.slots].find(target => (target.module_id ?? target.slot_id) === target_id);
+      return { fact_id: 'R-1', excerpt: packet.document.items[0].text, page_id: entry.page_id, state_id: state, target_id, action_id: action.action_id, purpose_excerpt: entry.intent, target_excerpt: target.intent, purpose_evidence: 'Fixture model review: requested list control matches this page purpose.', location_evidence: 'Fixture model review: selected region controls the list; other regions have distinct jobs.', alternative_target_ids: [], confidence: 'high' };
+    }) };
+  };
   const loaded = await loadCatalog({ root, catalogPath });
   await assert.rejects(validateSelection(loaded, { ...boxRecord, selection: { ...boxRecord.selection, client_x: NaN } }, { root, preview }), { code: 'SCHEMA_INVALID' });
   await assert.rejects(validateSelection(loaded, boxRecord, { root, preview: { manifest: preview, png: Buffer.from('not a PNG') } }), { code: 'STALE_SCREENSHOT' });
@@ -121,42 +133,26 @@ try {
   const carrierIds = ['settings-lead-pool', 'customer-list-detail', 'crm-workbench-home', 'sales-record-list-detail'];
   assert.deepEqual(realCatalog.pages.slice(0, 5).map(entry => entry.page_id), referenceIds, 'the existing five page identities and order stay intact');
   assert.ok(realCatalog.pages.slice(0, 5).every(entry => entry.lifecycle === 'live' && entry.carrier_eligible === false), 'the existing five pages remain selectable references, not carriers');
-  assert.deepEqual(realCatalog.pages.filter(entry => entry.carrier_eligible).map(entry => entry.page_id), carrierIds, 'the four confirmed templates are new live carrier pages');
-  assert.equal(discoverCandidateHints(realCatalog, 'CRM 首页').candidate_hints[0].page_id, 'crm-workbench-home');
+  assert.deepEqual(realCatalog.pages.filter(entry => entry.carrier_eligible), [], 'original copies cannot inherit shadow carrier approval');
+  assert.equal(discoverCandidateHints(realCatalog, 'CRM 首页').candidate_hints[0].binding_mode, 'original-preserving-v1');
   await assert.rejects(Promise.resolve().then(() => carrierContractForPage(realList)), { code: 'CARRIER_INELIGIBLE' });
-  for (const pageId of carrierIds) {
-    const entry = realCatalog.pages.find(page => page.page_id === pageId);
-    assert.equal(computeModuleContractHash(entry), entry.module_contract_hash, `${pageId}: module contract hash is current`);
-    assert.equal(carrierContractForPage(entry).page_id, pageId);
-    const addSlot = entry.slots[0];
-    const draft = {
-      schema_version: 2,
-      bundle_kind: 'carrier',
-      frozen_packet: { source_packet_sha256: '7'.repeat(64), applicability_set_sha256: '8'.repeat(64) },
-      binding: {
-        page_id: pageId,
-        source_ref: entry.source_ref,
-        source_hash: entry.source_hash,
-        module_contract_hash: entry.module_contract_hash,
-        carrier_profile: 'structural_carrier',
-        actions: [{ action_id: `C-${pageId}`, action: 'add', slot_id: addSlot.slot_id }]
-      }
-    };
-    assert.equal((await validateCarrierBindingDraft(realCatalog, draft, { root: resolve('.') })).contract.page_id, pageId);
-  }
   const sourceManifest = JSON.parse(await readFile(resolve('.claude/skill-os/page-library/source-manifest.json'), 'utf8'));
-  assert.equal(sourceManifest.profile, 'curated-structural-shadow-v1');
+  assert.equal(sourceManifest.profile, 'original-template-copy-v1');
   assert.deepEqual(sourceManifest.sources.map(source => source.page_id), carrierIds);
   for (const source of sourceManifest.sources) {
-    const [rawBytes, shadowBytes] = await Promise.all([readFile(source.raw_source), readFile(resolve(source.shadow_source))]);
-    assert.equal(rawBytes.length, source.raw_bytes, `${source.page_id}: raw byte count is frozen`);
-    assert.equal(createHash('sha256').update(rawBytes).digest('hex'), source.raw_sha256, `${source.page_id}: raw source identity is frozen`);
-    assert.equal(shadowBytes.length, source.shadow_bytes, `${source.page_id}: shadow byte count is frozen`);
-    assert.equal(createHash('sha256').update(shadowBytes).digest('hex'), source.shadow_sha256, `${source.page_id}: shadow source identity is frozen`);
-    assert.equal(realCatalog.pages.find(entry => entry.page_id === source.page_id).source_hash, source.shadow_sha256);
+    const copy = await readFile(resolve(source.copy_source));
+    assert.equal(copy.length, source.raw_bytes);
+    assert.equal(createHash('sha256').update(copy).digest('hex'), source.raw_sha256);
+    const entry = realCatalog.pages.find(page => page.page_id === source.page_id);
+    assert.equal(entry.source_ref, source.copy_source);
+    assert.equal(entry.source_hash, source.raw_sha256);
+    assert.equal(entry.original_copy.status, 'adapter-available');
+    await assert.rejects(Promise.resolve().then(() => carrierContractForPage(entry)), { code: 'CARRIER_INELIGIBLE' });
+    if (process.argv.includes('--audit-originals')) assert.ok(copy.equals(await readFile(source.raw_source)), 'copy must be byte-for-byte identical to the real original');
   }
-  console.log('PASS: existing five references coexist with four raw-bound, live carrier contracts and deterministic shadow sources');
-  const carrierHtml = '<main id="app"><section id="toolbar" data-module="toolbar"><span id="toolbar-label">Toolbar</span><div id="toolbar-slot"></div></section><section id="content" data-module="content"><span id="content-label">Content</span></section></main>';
+  console.log('PASS: old five references preserved; four original copies are exact and pending, not rewritten carriers');
+  console.log(process.argv.includes('--audit-originals') ? 'PASS: originals compared byte-for-byte' : 'NOT RUN: original desktop source audit (use --audit-originals)');
+  const carrierHtml = '<main id="app"><section id="toolbar" data-module="toolbar"><span id="toolbar-label">Toolbar</span><div id="toolbar-slot"></div></section><section id="content" data-module="content"><span id="content-label">Content</span></section><div id="root-slot"></div></main>';
   await writeFile(join(root, 'framework/carrier.html'), carrierHtml);
   const carrierPage = {
     page_id: 'carrier', name: 'Carrier fixture', aliases: ['carrier records'], intent: 'Carrier contract fixture', scope: 'framework', lifecycle: 'live', carrier_eligible: true,
@@ -167,18 +163,49 @@ try {
       { module_id: 'toolbar', parent_module_id: 'root', name: 'Toolbar', intent: 'Toolbar module', anchor: { kind: 'attribute', name: 'data-module', value: 'toolbar' }, required: false, allowed_actions: ['modify', 'preserve'], invariants: [{ invariant_id: 'toolbar-label', name: 'Toolbar label', anchor: { kind: 'attribute', name: 'id', value: 'toolbar-label' } }] },
       { module_id: 'content', parent_module_id: 'root', name: 'Content', intent: 'Content module', anchor: { kind: 'attribute', name: 'data-module', value: 'content' }, required: false, allowed_actions: ['modify', 'remove', 'preserve'], invariants: [{ invariant_id: 'content-label', name: 'Content label', anchor: { kind: 'attribute', name: 'id', value: 'content-label' } }] }
     ],
-    slots: [{ slot_id: 'toolbar-slot', parent_module_id: 'toolbar', name: 'Toolbar slot', intent: 'Add toolbar controls', anchor: { kind: 'attribute', name: 'id', value: 'toolbar-slot' }, allowed_actions: ['add'] }]
+    slots: [{ slot_id: 'toolbar-slot', parent_module_id: 'toolbar', name: 'Toolbar slot', intent: 'Add toolbar controls', anchor: { kind: 'attribute', name: 'id', value: 'toolbar-slot' }, allowed_actions: ['add'] }, { slot_id: 'root-slot', parent_module_id: 'root', name: 'Root slot', intent: 'Add a new independent sibling module', anchor: { kind: 'attribute', name: 'id', value: 'root-slot' }, allowed_actions: ['add'] }]
   };
+  carrierPage.state_support = [{ state_id: 'default', status: 'supported', reason: 'Self-contained fixture with registered toolbar and content.', anchors: [carrierPage.modules[0].anchor], target_ids: [...carrierPage.modules.map(item => item.module_id), ...carrierPage.slots.map(item => item.slot_id)] }];
   carrierPage.module_contract_hash = computeModuleContractHash(carrierPage);
   const carrierCatalog = { schema_version: 2, retired_page_ids: [], pages: [carrierPage] };
   const carrierDraft = {
     schema_version: 2, bundle_kind: 'carrier',
-    frozen_packet: { source_packet_sha256: '1'.repeat(64), applicability_set_sha256: '2'.repeat(64) },
+    frozen_packet: frozen,
     binding: { page_id: carrierPage.page_id, source_ref: carrierPage.source_ref, source_hash: carrierPage.source_hash, module_contract_hash: carrierPage.module_contract_hash, carrier_profile: 'structural_carrier', actions: [{ action_id: 'C-01', action: 'add', slot_id: 'toolbar-slot' }] }
   };
-  const prepared = await validateCarrierBindingDraft(carrierCatalog, carrierDraft, { root });
+  carrierDraft.binding.match_assessment = assessmentFor(carrierCatalog, carrierDraft.binding, 'default');
+  const prepared = await validateCarrierBindingDraft(carrierCatalog, carrierDraft, { root, packetBody });
   assert.equal(prepared.binding_sha256, computeBindingHash({ frozen_packet: carrierDraft.frozen_packet, binding: carrierDraft.binding }));
   assert.equal(prepared.contract.module_contract_hash, carrierPage.module_contract_hash);
+  await assert.rejects(validateCarrierBindingDraft(carrierCatalog, carrierDraft, { root }), { code: 'PACKET_EVIDENCE_REQUIRED' });
+  for (const [change, code] of [
+    [assessment => { assessment.catalog_sha256 = '0'.repeat(64); }, 'STALE_MATCH_CATALOG'],
+    [assessment => { assessment.frozen_packet.source_packet_sha256 = '0'.repeat(64); }, 'STALE_MATCH_PACKET'],
+    [assessment => { assessment.reviewed_fact_ids = ['INVENTED']; }, 'MATCH_FACT_COVERAGE'],
+    [assessment => { assessment.judgments[0].excerpt = 'Invented fact'; }, 'MATCH_FACT_EVIDENCE'],
+    [assessment => { assessment.judgments[0].target_excerpt = 'Invented location'; }, 'MATCH_TARGET_EVIDENCE'],
+    [assessment => { assessment.judgments[0].alternative_target_ids = ['root-slot']; }, 'MATCH_AMBIGUOUS'],
+    [assessment => { assessment.judgments[0].confidence = 'uncertain'; }, 'MATCH_AMBIGUOUS'],
+    [assessment => { assessment.judgments[0].confidence = 0.99; }, 'SCHEMA_INVALID'],
+    [assessment => { assessment.judgments[0].state_id = 'missing'; }, 'MATCH_STATE_UNSUPPORTED'],
+    [assessment => { assessment.judgments = []; }, 'MATCH_FACT_COVERAGE']
+  ]) {
+    const mutant = structuredClone(carrierDraft);
+    change(mutant.binding.match_assessment);
+    await assert.rejects(validateCarrierBindingDraft(carrierCatalog, mutant, { root, packetBody }), { code });
+  }
+  const uncertain = structuredClone(carrierDraft.binding.match_assessment);
+  uncertain.decision = 'needs_context';
+  uncertain.judgments[0].alternative_target_ids = ['root-slot'];
+  assert.equal(validateMatchAssessment(carrierCatalog, uncertain, { packetBody }).status, 'NEEDS_CONTEXT');
+  const noMatch = { ...uncertain, decision: 'reference_only', candidate_evidence: [{ page_id: carrierPage.page_id, disposition: 'rejected', reason: 'No suitable representation for this frozen requirement' }], judgments: [] };
+  assert.equal(validateMatchAssessment(carrierCatalog, noMatch, { packetBody }).status, 'REFERENCE_ONLY');
+  assert.throws(() => validateMatchAssessment(carrierCatalog, { ...noMatch, reviewed_fact_ids: ['invented'] }, { packetBody }), { code: 'MATCH_FACT_COVERAGE' });
+  const siblingDraft = structuredClone(carrierDraft);
+  siblingDraft.binding.actions = [{ action_id: 'C-01', action: 'add', slot_id: 'root-slot' }, { action_id: 'C-02', action: 'preserve', module_id: 'content' }];
+  siblingDraft.binding.match_assessment = assessmentFor(carrierCatalog, siblingDraft.binding, 'default');
+  assert.equal((await validateCarrierBindingDraft(carrierCatalog, siblingDraft, { root, packetBody })).actions.length, 2, 'adding at root slot does not overlap its sibling preserved module');
+  console.log('PASS: model judgments need real Packet/catalog/target evidence; uncertainty, ambiguous locations and unsupported states fail closed');
   assert.equal(discoverCandidateHints(carrierCatalog, 'carrier records').candidate_hints[0].page_id, 'carrier');
   const manyCarrierPages = Array.from({ length: 4 }, (_, index) => {
     const entry = structuredClone(carrierPage);
@@ -193,27 +220,27 @@ try {
   assert.equal(boundedHints.ephemeral, true);
   assert.equal(boundedHints.candidate_hints.length, 3, 'phase A emits no more than three non-binding hints');
   const adoption = { actor: 'user', evidence: 'fixture:user confirmed carrier and TAC', confirmed_at: '2026-09-18T12:00:00Z', binding_sha256: prepared.binding_sha256, tac_sha256: '3'.repeat(64), carrier_content_hash: '4'.repeat(64), handoff_bundle_hash: '5'.repeat(64), carrier_profile: 'structural_carrier', output_profile: 'single' };
-  assert.equal((await validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption }, { root })).adoption.output_profile, 'single');
-  await assert.rejects(validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption: { ...adoption, binding_sha256: '0'.repeat(64) } }, { root }), { code: 'STALE_CARRIER_ADOPTION' });
-  await assert.rejects(validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption: { ...adoption, carrier_profile: 'visual_carrier' } }, { root }), { code: 'SCHEMA_INVALID' });
+  assert.equal((await validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption }, { root, packetBody })).adoption.output_profile, 'single');
+  await assert.rejects(validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption: { ...adoption, binding_sha256: '0'.repeat(64) } }, { root, packetBody }), { code: 'STALE_CARRIER_ADOPTION' });
+  await assert.rejects(validateCarrierBinding(carrierCatalog, { ...carrierDraft, adoption: { ...adoption, carrier_profile: 'visual_carrier' } }, { root, packetBody }), { code: 'SCHEMA_INVALID' });
   const overlapDraft = structuredClone(carrierDraft);
   overlapDraft.binding.actions = [{ action_id: 'C-01', action: 'modify', module_id: 'root' }, { action_id: 'C-02', action: 'add', slot_id: 'toolbar-slot' }];
-  await assert.rejects(validateCarrierBindingDraft(carrierCatalog, overlapDraft, { root }), { code: 'CARRIER_ACTION_OVERLAP' });
+  await assert.rejects(validateCarrierBindingDraft(carrierCatalog, overlapDraft, { root, packetBody }), { code: 'CARRIER_ACTION_OVERLAP' });
   const aliasLifecycle = structuredClone(carrierCatalog);
   aliasLifecycle.pages[0].lifecycle = 'legacy_fixture';
   aliasLifecycle.pages[0].carrier_eligible = false;
   delete aliasLifecycle.pages[0].module_contract_hash;
   delete aliasLifecycle.pages[0].modules;
   delete aliasLifecycle.pages[0].slots;
-  await assert.rejects(validateCarrierBindingDraft(aliasLifecycle, carrierDraft, { root }), { code: 'PAGE_ALIAS_LIFECYCLE' });
+  await assert.rejects(validateCarrierBindingDraft(aliasLifecycle, carrierDraft, { root, packetBody }), { code: 'PAGE_ALIAS_LIFECYCLE' });
   aliasLifecycle.pages[0].aliases = [];
-  await assert.rejects(validateCarrierBindingDraft(aliasLifecycle, carrierDraft, { root }), { code: 'CARRIER_LIFECYCLE' });
+  await assert.rejects(validateCarrierBindingDraft(aliasLifecycle, carrierDraft, { root, packetBody }), { code: 'CARRIER_LIFECYCLE' });
   await writeFile(join(root, 'framework/carrier-copy.html'), carrierHtml);
   const sourceSwap = structuredClone(carrierCatalog);
   sourceSwap.pages[0].source_ref = 'framework/carrier-copy.html';
   sourceSwap.pages[0].module_contract_hash = computeModuleContractHash(sourceSwap.pages[0]);
   assert.notEqual(sourceSwap.pages[0].module_contract_hash, carrierPage.module_contract_hash, 'source_ref participates in the module contract hash even when bytes match');
-  await assert.rejects(validateCarrierBindingDraft(sourceSwap, carrierDraft, { root }), { code: 'STALE_CARRIER_BINDING' });
+  await assert.rejects(validateCarrierBindingDraft(sourceSwap, carrierDraft, { root, packetBody }), { code: 'STALE_CARRIER_BINDING' });
   const duplicateHtml = carrierHtml.replace('id="content-label"', 'id="toolbar-label"');
   await writeFile(join(root, 'framework/carrier-duplicate.html'), duplicateHtml);
   const duplicateIds = structuredClone(carrierCatalog);
@@ -222,13 +249,13 @@ try {
   duplicateIds.pages[0].module_contract_hash = computeModuleContractHash(duplicateIds.pages[0]);
   const duplicateDraft = structuredClone(carrierDraft);
   Object.assign(duplicateDraft.binding, { source_ref: duplicateIds.pages[0].source_ref, source_hash: duplicateIds.pages[0].source_hash, module_contract_hash: duplicateIds.pages[0].module_contract_hash });
-  await assert.rejects(validateCarrierBindingDraft(duplicateIds, duplicateDraft, { root }), { code: 'DOM_ID_DUPLICATE' });
+  await assert.rejects(validateCarrierBindingDraft(duplicateIds, duplicateDraft, { root, packetBody }), { code: 'DOM_ID_DUPLICATE' });
   const reusedAnchor = structuredClone(carrierCatalog);
   reusedAnchor.pages[0].slots[0].anchor = structuredClone(reusedAnchor.pages[0].modules[1].anchor);
   reusedAnchor.pages[0].module_contract_hash = computeModuleContractHash(reusedAnchor.pages[0]);
   const reusedDraft = structuredClone(carrierDraft);
   reusedDraft.binding.module_contract_hash = reusedAnchor.pages[0].module_contract_hash;
-  await assert.rejects(validateCarrierBindingDraft(reusedAnchor, reusedDraft, { root }), { code: 'REGISTERED_ANCHOR_REUSED' });
+  await assert.rejects(validateCarrierBindingDraft(reusedAnchor, reusedDraft, { root, packetBody }), { code: 'REGISTERED_ANCHOR_REUSED' });
   console.log('PASS: v2 carrier contracts bind frozen inputs, source identity, module graph, lifecycle and registered-anchor invariants');
   const treeHtml = '<main id="outer"><section id="group"><h2>Fields</h2><input><hr><div id="child"><span id="leaf">Value</span></div></section><aside id="sibling">Other</aside></main>';
   const treePage = { ...page, page_id: 'tree', source_ref: 'framework/tree.html', source_hash: createHash('sha256').update(treeHtml).digest('hex'), regions: [
@@ -341,6 +368,12 @@ try {
     const original = await readFile(cli, 'utf8');
     const mutantCli = join(mutantRoot, 'scripts/page-context.mjs');
     await writeFile(join(mutantRoot, '.claude/skill-os/page-library/schema.json'), await readFile(resolve('.claude/skill-os/page-library/schema.json')));
+    for (const dependency of ['carrier-packet.mjs', 'carrier-asset-profile.mjs']) {
+      await writeFile(join(mutantRoot, 'scripts', dependency), await readFile(resolve('scripts', dependency)));
+    }
+    await writeFile(mutantCli, original);
+    const before = spawnSync(process.execPath, [resolve('scripts/test-page-context.mjs')], { env: { ...process.env, PAGE_CONTEXT_TEST_CLI: mutantCli }, encoding: 'utf8' });
+    assert.equal(before.status, 0, `complete isolated dependency fixture must pass before mutation: ${before.stderr}`);
     for (const [name, target, replacement, diagnostic] of [
       ['confirmation guard bypass', 'shape(record, schema.$defs.selection);', '// mutation: bypass selection shape', 'selection actor must be user'],
       ['stale source guard bypass', 'if (page.source_hash !== record.source_hash)', 'if (false)', 'stale source selection must require reconfirmation'],

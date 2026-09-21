@@ -142,6 +142,42 @@
 
 ---
 
+### 结构化冻结（carrier 分支，仍属于同一个 Design Generation Packet）
+
+上面的目标、用户任务、交互结构、D 决策、状态、位置、约束和不得实现项全部保留；需要 carrier
+时，将这些事实逐条放入下面唯一 document，而不是同时维护 Markdown 正文和第二份事实清单。
+已有上游稳定 ID 原样保留；无 ID 的目标/边界在 design-brief 内补稳定 ID 后再冻结，不在交接期发明。
+完整事实写入 `text`，包括理由、位置、关联 ID、非 N/A 状态与验收方式；不得只放摘要或 ID。
+
+```js
+import { createCarrierPacket, inspectCarrierPacket } from './scripts/carrier-packet.mjs';
+const body = createCarrierPacket({
+  schema_version: 1,
+  packet_kind: 'design-generation',
+  items: [
+    { source_kind: 'requirement', id: 'R-001', text: '用户能按负责人筛选客户记录。' },
+    { source_kind: 'decision', id: 'D-001', text: 'R-001：在客户列表的筛选职责区域提供负责人条件；与现有条件组合。' },
+    { source_kind: 'state', id: 'STATE-001', text: 'R-001 无结果时保留所选条件，并提供清空条件的入口。' },
+    { source_kind: 'acceptance', id: 'AE-001', text: '选择负责人后只显示对应记录；清空条件恢复全部记录。' }
+  ],
+  scopes: []
+});
+const frozen = inspectCarrierPacket(body);
+```
+
+实际 Packet 必须含本轮全部事实，不以此四条示例替代。`source_kind` 只取
+`requirement|decision|state|acceptance|constraint`；生成目标、平台、保持边界、已否决方向等放入
+有 ID 的 constraint。`scopes` 仅记录正文已经明确的 `non_template_effect|out_of_scope` 依据，
+关联精确 `source_ids`；out_of_scope 的 `confirmation_ref` 必须对应真实用户决定。
+范围排除不删除 items，coverage 仍逐项说明去向。
+
+helper 生成唯一 Markdown/JSON envelope 并计算原文 hash；冻结 body 必须按字节传递。
+TAC 使用 inspector 返回的全部 applicability，不能重编 ID、手填 hash 或在下游过滤分母。
+旧自由 Markdown 没有这项机器完整性保证：保留原文走 reference_only，或回本 owner 完成新版本冻结。
+格式校验不证明从上游到 Packet 的语义忠实；仍逐项完成 Phase 6.5/6.75 的对照验收。
+
+---
+
 ## 交接块格式（原属 Phase 7，产出文件第 12 节）
 
 ```markdown

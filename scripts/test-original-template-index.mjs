@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { inspectOriginalDom, locateOriginalNode } from './original-template-index.mjs';
+
+const source = Buffer.from('<!doctype html><html><head><title>Queue</title><style>body{color:red}</style></head><body><main id="app"><button id="open">Open</button><div id="duplicate"></div><div id="duplicate"></div></main><template id="detail"><section id="panel"><input placeholder="姓名"></section></template><script>globalThis.executedOriginal=true;fetch("https://must-not-run.invalid/");throw Error("SOURCE EXECUTED")</script></body></html>');
+const before = createHash('sha256').update(source).digest('hex');
+const result = await inspectOriginalDom(source);
+assert.equal(result.source_sha256, before);
+assert.equal(createHash('sha256').update(source).digest('hex'), before);
+assert.equal(result.source_scripts_executed, false);
+assert.deepEqual(result.blocked_requests, []);
+assert.equal(result.scripts.length, 1);
+assert.equal(result.styles.length, 1);
+assert.equal(result.states[0].template_id, 'detail');
+assert.equal(result.anchors.find(x => x.locator.value === 'panel').scope[0].template_id, 'detail');
+assert.ok(result.anchors.filter(x => x.locator.value === 'duplicate').every(x => !x.unique_in_scope));
+assert.ok(result.anchors.some(x => x.label === '姓名' && x.locator.kind === 'element-path'));
+const collisions = await inspectOriginalDom(Buffer.from('<main id="shared"><div id="one" data-slot="same"></div><div data-slot="same"></div></main><svg><g id="shared"></g></svg>'));
+assert.equal(collisions.anchors.find(x => x.locator.value === 'shared').unique_in_scope, false);
+assert.equal(collisions.anchors.find(x => x.locator.name === 'data-slot').unique_in_scope, false);
+const request = { source_sha256: before, scope: [], locator: {kind:'attribute',name:'id',value:'open'} };
+assert.equal((await locateOriginalNode(source, request)).node.label, 'Open');
+await assert.rejects(locateOriginalNode(source, {...request,source_sha256:'0'.repeat(64)}), {code:'ORIGINAL_SOURCE_STALE'});
+await assert.rejects(locateOriginalNode(source, {...request,locator:{kind:'attribute',name:'id',value:'duplicate'}}), {code:'ORIGINAL_LOCATION_UNRESOLVED'});
+await assert.rejects(locateOriginalNode(source, {...request,locator:{kind:'attribute',name:'id',value:'missing'}}), {code:'ORIGINAL_LOCATION_UNRESOLVED'});
+console.log('PASS: original bytes untouched; hidden templates indexed with scope; duplicates marked ambiguous; source scripts never attached or run');

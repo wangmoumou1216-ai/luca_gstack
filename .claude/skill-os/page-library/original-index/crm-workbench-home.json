@@ -1,0 +1,2394 @@
+{
+  "page_id": "crm-workbench-home",
+  "source_ref": ".claude/skill-os/page-library/sources/originals/crm-workbench-home.html",
+  "schema_version": 1,
+  "generated_by": "original-template-index/v1",
+  "parser": {
+    "engine": "chromium-domparser",
+    "version": "149.0.7827.55"
+  },
+  "source_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+  "source_bytes": 219396,
+  "title": "纷享销客 · CRM 工作台",
+  "anchors": [
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "appRoot"
+      },
+      "element_path": [
+        0,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "top-header"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "tag": "header",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "enterprise-brand"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "top-tools"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-search"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "label",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "全局搜索",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tool-recent"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "最近访问",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tool-workbench"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        2
+      ],
+      "tag": "button",
+      "label": "工作台",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tool-contacts"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        3
+      ],
+      "tag": "button",
+      "label": "通讯录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tool-help"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        4
+      ],
+      "tag": "button",
+      "label": "帮助",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tool-quick-note"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        5
+      ],
+      "tag": "button",
+      "label": "快捷记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dataMenuButton"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        6
+      ],
+      "tag": "button",
+      "label": "原型数据",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "openAgent"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        7,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "user-avatar"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        8
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-navigation"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0
+      ],
+      "tag": "aside",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-chat"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "railAgent"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-todo"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-crm"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-work"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-calendar"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        5,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-training"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        6,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-paas"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        7,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-nav-more"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        9,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-navigation"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "tag": "aside",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-title"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "CRM",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-search"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "label",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "crmSearch"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "搜索 CRM 菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "addMenu"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "新增菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "crmMenuList"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-home"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-todo"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-remind"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-rd-cockpit"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-release-review"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-image-workbench"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        5,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-prompt-workbench"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        6,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-dependency"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        7,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-delivery"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        8,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-project"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        9,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-bid"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        10,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-info"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        11,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-data-cockpit"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        12,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-analysis"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        13,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-market"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        14,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-customer"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        15,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-order"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        16,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-presales"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        17,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-profit"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        18,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-renewal"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        19,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-seal"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        20,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-partner"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        21,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-service"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        22,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-product"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        23,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-map"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        24,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu-process"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        25,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "collapse-crm-menu"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "收起菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "workspace"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        2
+      ],
+      "tag": "main",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "workspace-tabs"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        2,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "activeTab"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        2,
+        0,
+        0
+      ],
+      "tag": "span",
+      "label": "首页",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "workspaceCard"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        2,
+        1
+      ],
+      "tag": "section",
+      "label": "首页菜单内容承载区域",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentPanel"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2
+      ],
+      "tag": "aside",
+      "label": "Agent 侧边栏",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-header"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0
+      ],
+      "tag": "header",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentMenu"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "会话记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "newConversation"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "新建会话",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "popoutAgent"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "小窗展示",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "closeAgent"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "关闭 Agent",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "sessionDrawer"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        0
+      ],
+      "tag": "aside",
+      "label": "会话记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "closeSessions"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "关闭会话记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "sessionList"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        0,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentGuidance"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentHero"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-welcome-title"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "您好，今天我有什么能帮您？",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-quick-actions"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-quick-sales"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-quick-onsite"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0,
+        2,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-quick-online"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "continueChat"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        0,
+        3
+      ],
+      "tag": "button",
+      "label": "继续上次会话",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "chatLog"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "composer"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentInput"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        0
+      ],
+      "tag": "textarea",
+      "label": "发送消息",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-mode"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "选择智能体",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "modelSelector"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentAttachment"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "添加附件",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "agentVoice"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        2
+      ],
+      "tag": "button",
+      "label": "语音输入",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "sendMessage"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        3
+      ],
+      "tag": "button",
+      "label": "发送消息",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "modelMenu"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-model-deepseek"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "Deepseek-V4-Flash",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-model-general"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1,
+        2,
+        2,
+        1
+      ],
+      "tag": "button",
+      "label": "通用智能模型",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "toast"
+      },
+      "element_path": [
+        0,
+        1,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dataPopover"
+      },
+      "element_path": [
+        0,
+        1,
+        3
+      ],
+      "tag": "div",
+      "label": "原型数据",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "exportData"
+      },
+      "element_path": [
+        0,
+        1,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "importData"
+      },
+      "element_path": [
+        0,
+        1,
+        3,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "downloadHtml"
+      },
+      "element_path": [
+        0,
+        1,
+        3,
+        3
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "importDataFile"
+      },
+      "element_path": [
+        0,
+        1,
+        4
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "menuDialog"
+      },
+      "element_path": [
+        0,
+        1,
+        5
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "menuConfigForm"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "menuDialogTitle"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "配置 CRM 菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "closeMenuDialog"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "关闭菜单配置",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "menuName"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "请输入菜单名称",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          5,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          5,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          5,
+          0,
+          1,
+          1,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        1,
+        1,
+        2,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          5,
+          0,
+          1,
+          1,
+          1,
+          3,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        1,
+        1,
+        3,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "custom-menu-manager"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "customMenuList"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        1,
+        2,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "cancelMenuDialog"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "取消",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "confirm-add-menu"
+      },
+      "element_path": [
+        0,
+        1,
+        5,
+        0,
+        2,
+        1
+      ],
+      "tag": "button",
+      "label": "添加菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    }
+  ],
+  "states": [],
+  "scripts": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        1,
+        6
+      ],
+      "type": "",
+      "src": null,
+      "normalized_dom_text_sha256": "f58c6850a7332eb6312f84fad234cdd49a09f3cb904db6a3d3c03d3387c5eaa2",
+      "normalized_dom_text_bytes": 29177
+    }
+  ],
+  "styles": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        0,
+        3
+      ],
+      "normalized_dom_text_sha256": "bf1377ed4e4f23d42ea501708633a47dc74bc869284262b3c86493c2a89ee1f7",
+      "normalized_dom_text_bytes": 32580
+    }
+  ],
+  "source_scripts_executed": false,
+  "blocked_requests": [],
+  "assurance": "inert DOM inventory only; paths require source hash and scope; not semantic adoption, interaction validation or generation authority"
+}

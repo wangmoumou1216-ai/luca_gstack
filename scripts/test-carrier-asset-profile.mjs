@@ -27,10 +27,21 @@ for (const [name, source, code] of [
   ['inline script', '<script>doNotRun()</script>', 'ACTIVE_CONTENT_FORBIDDEN'],
   ['event handler', '<button onclick="doNotRun()">x</button>', 'ACTIVE_CONTENT_FORBIDDEN'],
   ['remote URL', '<img src="https://example.invalid/logo.png">', 'REMOTE_URL_FORBIDDEN'],
+  ['legacy background URL', '<table background="https://example.invalid/leak.png"><tr><td>x</td></tr></table>', 'REMOTE_URL_FORBIDDEN'],
+  ['image input URL', '<input type="image" src="https://example.invalid/leak.png">', 'REMOTE_URL_FORBIDDEN'],
+  ['entity-encoded image input type', '<input type="im&#97;ge" src="https://example.invalid/leak.png">', 'HTML_UNSUPPORTED_SYNTAX'],
+  ['video poster URL', '<video poster="https://example.invalid/leak.png"></video>', 'REMOTE_URL_FORBIDDEN'],
+  ['legacy low-resolution URL', '<img lowsrc="https://example.invalid/leak.png">', 'REMOTE_URL_FORBIDDEN'],
   ['path traversal', '<img src="assets/../secret.png">', 'UNSAFE_PATH'],
   ['srcset', '<img srcset="assets/a.png 1x">', 'SRCSET_UNSUPPORTED'],
+  ['link imagesrcset', '<link rel="preload" as="image" href="data:image/png;base64,AA==" imagesrcset="assets/a.png 1x">', 'SRCSET_UNSUPPORTED'],
+  ['encoded meta refresh', '<meta http-equiv="re&#102;resh" content="0;url=https://example.invalid/escape">', 'HTML_UNSUPPORTED_SYNTAX'],
+  ['spaced meta refresh', '<meta http-equiv=" refresh " content="0;url=https://example.invalid/escape">', 'HTML_UNSUPPORTED_SYNTAX'],
   ['inline CSS URL', '<style>.x { background: url(assets/a.png) }</style>', 'CSS_UNSUPPORTED'],
   ['CSS import', '<style>@import "assets/a.css";</style>', 'CSS_UNSUPPORTED'],
+  ['CSS image-set', '<span style=\'background-image:image-set("assets/a.png" 1x)\'>x</span>', 'CSS_UNSUPPORTED'],
+  ['entity-obfuscated CSS URL', '<span style="background-image:u&#114;l(&quot;assets/a.png&quot;)">x</span>', 'HTML_UNSUPPORTED_SYNTAX'],
+  ['unterminated numeric-entity CSS URL', '<span style="background-image:u&#114l(assets/a.png)">x</span>', 'HTML_UNSUPPORTED_SYNTAX'],
   ['external script', '<script src="assets/code.js"></script>', 'SCRIPT_EXTERNAL_FORBIDDEN']
 ]) expectCode(() => resolveAssetClosure({ baseTemplate: Buffer.from(source), assets: [] }), code, `P0 rejects ${name}`);
 expectCode(() => resolveAssetClosure({ baseTemplate: Buffer.from('<img src="assets/logo.png">'), assets: [...assets, { path: 'assets/unused.png', bytes: png }] }), 'UNREFERENCED_ASSET', 'closure never copies an unreferenced asset');
@@ -77,7 +88,7 @@ const realTemplateHashes = new Map([
   ['工作台首页.html', '7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5'],
   ['销售记录列表到详情页单.html', '1c2f45816993f022e13322757cc87b03b77d66d0be2971397d82b3cb1fad544f']
 ]);
-try {
+if (process.argv.includes('--audit-originals')) {
   await access(realTemplateDir);
   const names = (await readdir(realTemplateDir)).filter(name => name.endsWith('.html')).sort();
   assert.deepEqual(names, [...realTemplateHashes.keys()].sort(), 'real package regression uses the exact four read-only HTML files');
@@ -97,24 +108,22 @@ try {
   }
   for (const kind of ['inline_script', 'svg_content', 'css_data_url', 'root_relative_app_navigation', 'missing_visual_css_url']) assert.ok(observedKinds.has(kind), `real packages register ${kind}`);
   console.log('PASS: exact four /Users/luca/Desktop/模版 packages register read-only with raw hashes and inert risk receipts');
-} catch (error) {
-  if (error?.code !== 'ENOENT') throw error;
-  console.log('SKIP: real read-only template package directory is unavailable on this machine');
+} else {
+  console.log('NOT RUN: original desktop source audit (explicit --audit-originals opt-in); repository fixtures are tested below');
 }
 
 const shadowManifest = JSON.parse(await readFile('.claude/skill-os/page-library/source-manifest.json', 'utf8'));
-assert.equal(shadowManifest.profile, 'curated-structural-shadow-v1');
+assert.equal(shadowManifest.profile, 'original-template-copy-v1');
 assert.equal(shadowManifest.sources.length, 4);
 for (const source of shadowManifest.sources) {
-  const bytes = await readFile(source.shadow_source);
-  assert.equal(bytes.length, source.shadow_bytes, `${source.page_id}: shadow byte count is frozen`);
-  assert.equal(sha256Bytes(bytes), source.shadow_sha256, `${source.page_id}: shadow hash is frozen`);
-  const result = resolveAssetClosure({ baseTemplate: bytes, assets: [] });
-  assert.equal(result.asset_profile, 'p0-static-v1', `${source.page_id}: shadow needs no inert-content exception`);
-  assert.equal(result.assets.length, 0, `${source.page_id}: shadow is self-contained`);
-  assert.deepEqual(result.active_content, { script_tags: 0, event_handlers: 0, potential_execution: 0 }, `${source.page_id}: shadow has no active content`);
+  const bytes = await readFile(source.copy_source);
+  assert.equal(bytes.length, source.raw_bytes, `${source.page_id}: original copy byte count is frozen`);
+  assert.equal(sha256Bytes(bytes), source.raw_sha256, `${source.page_id}: original copy hash is frozen`);
+  assert.throws(() => resolveAssetClosure({ baseTemplate: bytes, assets: [] }), 'P0 inability is not permission to rewrite the source');
+  const result = resolveAssetClosure({ baseTemplate: bytes, assets: [], profile: 'structural-embedded-v1', inertStorageReceipt: { version: 1, kind: 'inert-storage', template_sha256: source.raw_sha256, receipt_ref: 'fixture-only:raw-copy-scan-no-execution' } });
+  assert.deepEqual(result.base_template, bytes, 'inert scan never changes original bytes');
 }
-console.log('PASS: four normalized carrier shadows are deterministic, self-contained and strict P0 static');
+console.log('PASS: four original copies stay byte-identical; inert inspection is not executable carrier approval');
 
 assert.equal(canonicalJson({ z: [2, 1], a: 'x' }), '{"a":"x","z":[2,1]}');
 assert.deepEqual(parseCanonicalJson(Buffer.from('{"a":"x","z":[2,1]}')), { a: 'x', z: [2, 1] });

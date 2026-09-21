@@ -1,0 +1,4980 @@
+{
+  "page_id": "sales-record-list-detail",
+  "source_ref": ".claude/skill-os/page-library/sources/originals/sales-record-list-detail.html",
+  "schema_version": 1,
+  "generated_by": "original-template-index/v1",
+  "parser": {
+    "engine": "chromium-domparser",
+    "version": "149.0.7827.55"
+  },
+  "source_sha256": "1c2f45816993f022e13322757cc87b03b77d66d0be2971397d82b3cb1fad544f",
+  "source_bytes": 283609,
+  "title": "FX 工作台通用模板",
+  "anchors": [
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "app-shell"
+      },
+      "element_path": [
+        0,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-topbar"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "tag": "header",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "company-name"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-search"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "select",
+      "label": "搜索范围",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "global-search-input"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        1
+      ],
+      "tag": "input",
+      "label": "全局搜索",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        2
+      ],
+      "tag": "button",
+      "label": "提交搜索",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "global-actions"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2
+      ],
+      "tag": "nav",
+      "label": "全局工具",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "最近使用",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        1
+      ],
+      "tag": "button",
+      "label": "草稿箱",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "通讯录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        3
+      ],
+      "tag": "button",
+      "label": "帮助中心",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          4
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        4
+      ],
+      "tag": "button",
+      "label": "产品能力",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          5
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        5
+      ],
+      "tag": "button",
+      "label": "快速笔记",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          2,
+          6
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        6
+      ],
+      "tag": "button",
+      "label": "更多应用",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "agent-button"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        2,
+        7
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "app-rail"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1
+      ],
+      "tag": "nav",
+      "label": "全局应用",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          3,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          4,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          5,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        5,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          6,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        6,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          7,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        7,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          8,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        8,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-sidebar"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2
+      ],
+      "tag": "aside",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        2
+      ],
+      "tag": "button",
+      "label": "切换应用",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "menu-search"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "添加菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "sidebar-scroll"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "crm-menu"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          3,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          4,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          5,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        5,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          6,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        6,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          7,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        7,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          8,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        8,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          9,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        9,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          10,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        10,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          11,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        11,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          12,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        12,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          13,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        13,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          13,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        13,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          13,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        13,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          14,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        14,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          14,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        14,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          14,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        14,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "sales-record-nav"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          3,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          4,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          5,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        5,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          6,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        6,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          7,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        7,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          8,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        8,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          9,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        9,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          15,
+          1,
+          10,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        15,
+        1,
+        10,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          16,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        16,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          2,
+          0,
+          16,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        2,
+        0,
+        16,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "sidebar-control"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        1
+      ],
+      "tag": "button",
+      "label": "收起菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "main-workspace"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3
+      ],
+      "tag": "main",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "sales-record-workbench"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0
+      ],
+      "tag": "section",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tab-header"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        0
+      ],
+      "tag": "header",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tab-title"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "销售记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "view-switcher"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "全部",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tab-actions"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "mobile-menu-toggle"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "button",
+      "label": "打开菜单",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "create-button"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        2,
+        1
+      ],
+      "tag": "button",
+      "label": "新建",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "tab-content-viewport"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-content-slot"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0
+      ],
+      "tag": "div",
+      "label": "销售记录列表挂载区",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "sales-record-list-view"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "section",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "list-toolbar"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "select",
+      "label": "业务类型",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "筛选",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "record-search"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "select",
+      "label": "搜索字段",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "record-search-input"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        1
+      ],
+      "tag": "input",
+      "label": "搜索销售记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "搜索",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "列表视图",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          3,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        3,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "分栏视图",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          0,
+          3,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        3,
+        1
+      ],
+      "tag": "button",
+      "label": "列表设置",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "refresh-button"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        0,
+        3,
+        2
+      ],
+      "tag": "button",
+      "label": "刷新列表",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "sales-record-table-wrap"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "sales-record-table"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "全选",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-09-03-1478860",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-09-03-1478860",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-09-01-1477384",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-09-01-1477384",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          2,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        2,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-09-01-1476856",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          2,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        2,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-09-01-1476856",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          3,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        3,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-31-1476377",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          3,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        3,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-31-1476377",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          4,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        4,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-31-1475374",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          4,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        4,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-31-1475374",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          5,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        5,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-31-1474689",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          5,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        5,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-31-1474689",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          6,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        6,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-26-1470074",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          6,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        6,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-26-1470074",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          7,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        7,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-20-1465529",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          7,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        7,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-20-1465529",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          8,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        8,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-18-1463174",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          8,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        8,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-18-1463174",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          9,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        9,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-17-1462297",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          9,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        9,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-17-1462297",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          10,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        10,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-14-1460280",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          10,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        10,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-14-1460280",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          11,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        11,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-13-1459525",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          11,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        11,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-13-1459525",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          12,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        12,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-11-1457800",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          12,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        12,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-11-1457800",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          13,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        13,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-08-1455812",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          13,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        13,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-08-1455812",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          14,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        14,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-07-1455775",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          14,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        14,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-07-1455775",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          15,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        15,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-04-1451817",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          15,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        15,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-04-1451817",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          16,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        16,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-03-1451482",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          16,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        16,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-03-1451482",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          17,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        17,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-08-03-1450432",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          17,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        17,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-08-03-1450432",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          18,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        18,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-07-31-1448712",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          18,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        18,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-07-31-1448712",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          19,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        19,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "选择记录 2026-07-31-1448294",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          19,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        19,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "2026-07-31-1448294",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          2,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        2,
+        3
+      ],
+      "tag": "button",
+      "label": "上一页",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          3,
+          0,
+          1,
+          0,
+          0,
+          2,
+          4
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        3,
+        0,
+        1,
+        0,
+        0,
+        2,
+        4
+      ],
+      "tag": "button",
+      "label": "下一页",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-layer"
+      },
+      "element_path": [
+        0,
+        1,
+        2
+      ],
+      "tag": "section",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "sales-record-detail-dialog"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "detail-header"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "tag": "header",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-object-name"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "span",
+      "label": "销售记录",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-record-title"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "strong",
+      "label": "详情",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-prev"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        3,
+        0
+      ],
+      "tag": "button",
+      "label": "上一条",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-next"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        3,
+        1
+      ],
+      "tag": "button",
+      "label": "下一条",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "detail-actions"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "detail-forward-action"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "转发",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "detail-mail-action"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        1
+      ],
+      "tag": "button",
+      "label": "发邮件",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "detail-remind-action"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        2
+      ],
+      "tag": "button",
+      "label": "提醒",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          2,
+          0,
+          0,
+          0,
+          4,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        3
+      ],
+      "tag": "button",
+      "label": "更多操作",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-refresh"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        4
+      ],
+      "tag": "button",
+      "label": "刷新详情",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-fullscreen"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        5
+      ],
+      "tag": "button",
+      "label": "切换为侧滑面板",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-close"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        4,
+        6
+      ],
+      "tag": "button",
+      "label": "关闭详情",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-meta-slot"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "详情摘要挂载区",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "data-od-id",
+        "value": "detail-tab-card"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0
+      ],
+      "tag": "section",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-tabs"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "详情页签",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-tab-summary"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "会议总结",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-tab-insight"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "业务洞察",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-tab-tasks"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        2
+      ],
+      "tag": "button",
+      "label": "待办",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-tab-transcript"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        3
+      ],
+      "tag": "button",
+      "label": "会议原文",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-tab-basic"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        4
+      ],
+      "tag": "button",
+      "label": "基本信息",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-panel-summary"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-panel-insight"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-panel-tasks"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        1,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-panel-transcript"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        1,
+        3
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail-panel-basic"
+      },
+      "element_path": [
+        0,
+        1,
+        2,
+        0,
+        1,
+        0,
+        1,
+        4
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "toast"
+      },
+      "element_path": [
+        0,
+        1,
+        3
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    }
+  ],
+  "states": [],
+  "scripts": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        1,
+        4
+      ],
+      "type": "",
+      "src": null,
+      "normalized_dom_text_sha256": "8ae067ca89b9ab21a876cfb335175dc470d0749e1eb77546fdcc412cddcf1cba",
+      "normalized_dom_text_bytes": 16959
+    }
+  ],
+  "styles": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        0,
+        3
+      ],
+      "normalized_dom_text_sha256": "6dc95adc1161c933bbda885a28504941375fdbe78072b1984875e4668757b362",
+      "normalized_dom_text_bytes": 211875
+    }
+  ],
+  "source_scripts_executed": false,
+  "blocked_requests": [],
+  "assurance": "inert DOM inventory only; paths require source hash and scope; not semantic adoption, interaction validation or generation authority"
+}

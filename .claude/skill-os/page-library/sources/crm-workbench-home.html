@@ -11,6 +11,7 @@
   </style>
 </head>
 <body>
+  <aside role="note">结构参考，非原页面状态复刻。default 仅支持导航和工作区扩展位；指标、销售表现、任务及对话为示意。agent-open、session-drawer 未转录。menu-config 仅转录名称、四个图标选项、菜单列表及操作的静态结构，不包含应用交互执行。</aside>
   <main id="appRoot" data-module="workbench-app-shell" class="app">
     <header id="globalNavigation" data-module="global-navigation" class="global">
       <div id="global-brand" class="brand">纷享工作台</div><div class="global-links"><span class="global-link active">CRM</span><span class="global-link">协作</span><span class="global-link">数据</span></div><div class="account">luca · 在线</div>
@@ -35,9 +36,18 @@
         <div class="chat"><div class="bubble agent-msg">我整理了今天最值得优先推进的 3 个商机。</div><div class="bubble">先看风险最大的一个。</div></div>
         <div id="chatLog" class="slot" aria-label="Agent 对话扩展位">Agent 对话扩展位</div>
         <section id="sessionDrawer" data-module="session-drawer" class="card drawer"><h2>会话抽屉</h2><div class="muted">最近会话、上下文与接管入口</div></section>
-        <section id="menuConfig" data-module="menu-config" class="slot config">菜单配置状态 · menu-config</section>
       </aside>
     </div>
+    <section id="menuConfig" data-module="menu-config" class="card config" aria-label="菜单配置静态结构">
+      <form role="dialog" aria-labelledby="menuDialogTitle">
+        <header><h2 id="menuDialogTitle">配置 CRM 菜单</h2><button type="button" aria-label="关闭菜单配置">关闭</button></header>
+        <label for="menuName">菜单名称 *</label><input id="menuName" name="menuName" type="text" maxlength="20" autocomplete="off" placeholder="请输入菜单名称" required>
+        <fieldset><legend>菜单图标</legend><label><input type="radio" name="menuIcon" value="home" checked>首页</label><label><input type="radio" name="menuIcon" value="todo">待办</label><label><input type="radio" name="menuIcon" value="flag">标记</label><label><input type="radio" name="menuIcon" value="dependency">流程</label></fieldset>
+        <section aria-label="已添加菜单"><h3>已添加菜单</h3><ul id="customMenuList"></ul></section>
+        <footer><button type="button">取消</button><button type="button">添加菜单</button></footer>
+        <p>静态结构转录；SVG 图标替换为原标题文字，应用校验、打开/关闭、添加及持久化行为不支持。</p>
+      </form>
+    </section>
   </main>
 </body>
 </html>

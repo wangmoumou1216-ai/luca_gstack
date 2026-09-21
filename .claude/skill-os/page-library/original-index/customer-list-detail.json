@@ -1,0 +1,9706 @@
+{
+  "page_id": "customer-list-detail",
+  "source_ref": ".claude/skill-os/page-library/sources/originals/customer-list-detail.html",
+  "schema_version": 1,
+  "generated_by": "original-template-index/v1",
+  "parser": {
+    "engine": "chromium-domparser",
+    "version": "149.0.7827.55"
+  },
+  "source_sha256": "05921e7ad5340df93c28637118b1599eaefb4a4827a1b8d351afa7868808e58b",
+  "source_bytes": 4485792,
+  "title": "客户-ShareCRM",
+  "anchors": [
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "app-portal"
+      },
+      "element_path": [
+        0,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-0",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "全部",
+      "source_node_hint": "list-17",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-4877"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        5,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-52",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "list-55",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "list-162",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "fx-topnav-tool-history"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        3,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-180",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "fx-topnav-tool-draft"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        3,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-182",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "fx-topnav-tool-circles"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        3,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-184",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "fx-topnav-tool-help-center"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        3,
+        3
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-186",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-6781"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        3,
+        4,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-189",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "fx-topnav-tool-nav-config"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        3,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "li",
+      "label": "",
+      "source_node_hint": "list-191",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-9665"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-197",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "nheader-shortcuts-manage"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1
+      ],
+      "tag": "li",
+      "label": "",
+      "source_node_hint": "list-330",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "h3",
+      "label": "应用",
+      "source_node_hint": "list-336",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "请输入",
+      "source_node_hint": "list-338",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "sub-tpl"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-357",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-2541"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "list-371",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "list-389",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-8071"
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "list-395",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "list-399",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "list-407",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "客户",
+      "source_node_hint": "list-509",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "list-566",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "list-586",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          4,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        4,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": "list-591",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          4,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        4,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "list-593",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "list-661",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "list-679",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "list-719",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "list-726",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "list-757",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "list-805",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          3,
+          4,
+          0,
+          1,
+          3,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        1,
+        2,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        3,
+        4,
+        0,
+        1,
+        3,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "list-849",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-details-5",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          4,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-details-42",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          4,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        4,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-details-45",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-220"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        0,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "innotech-details-90",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "相关团队",
+      "source_node_hint": "innotech-details-101",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-details-103",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "关键信息",
+      "source_node_hint": "innotech-details-112",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tabItem1788955104409976"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "Activities",
+      "source_node_hint": "innotech-details-230",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tab_form_component"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "Details",
+      "source_node_hint": "innotech-details-232",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tabItem1789024227388688"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3
+      ],
+      "tag": "div",
+      "label": "Address Information",
+      "source_node_hint": "innotech-details-234",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tabItem1789024294204289"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "tag": "div",
+      "label": "Financial Information",
+      "source_node_hint": "innotech-details-236",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tab_ContactObj_account_id_related_list"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5
+      ],
+      "tag": "div",
+      "label": "Contacts",
+      "source_node_hint": "innotech-details-238",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tab_NewOpportunityObj_account_id_related_list"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6
+      ],
+      "tag": "div",
+      "label": "Opportunities",
+      "source_node_hint": "innotech-details-240",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-details",
+          "path": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-details-251",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "动态",
+      "source_node_hint": "innotech-activities-6",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-3423"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        0,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "innotech-activities-39",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        1,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-activities-56",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "仅支持预置文本",
+      "source_node_hint": "innotech-activities-63",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        2
+      ],
+      "tag": "input",
+      "label": "开始时间",
+      "source_node_hint": "innotech-activities-75",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          4
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        4
+      ],
+      "tag": "input",
+      "label": "结束时间",
+      "source_node_hint": "innotech-activities-77",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "开始日期",
+      "source_node_hint": "innotech-activities-98",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "开始时间",
+      "source_node_hint": "innotech-activities-101",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "结束日期",
+      "source_node_hint": "innotech-activities-106",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "结束时间",
+      "source_node_hint": "innotech-activities-109",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-452",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-453",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-454",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        3
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-455",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-activities-457",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-601",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-602",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-603",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        3
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-604",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-activities-606",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-751",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        1,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-753",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "innotech-activities-773",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-recent"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "最近",
+      "source_node_hint": "innotech-activities-807",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-member"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "同事",
+      "source_node_hint": "innotech-activities-808",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-group"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "部门",
+      "source_node_hint": "innotech-activities-809",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-stop"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        3
+      ],
+      "tag": "div",
+      "label": "停用",
+      "source_node_hint": "innotech-activities-810",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-outerErUids"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "tag": "div",
+      "label": "互联用户",
+      "source_node_hint": "innotech-activities-811",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-recent"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-activities-813",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-activities-829",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-activities-844",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-member"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-activities-855",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-group"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-activities-856",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-stop"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        3
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-activities-857",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-outerErUids"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        4
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-activities-858",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-activities",
+          "path": [
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-activities-864",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-address",
+          "path": [
+            0,
+            1,
+            4
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-address-11",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-financial",
+          "path": [
+            0,
+            1,
+            5
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-financial-6",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-67",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-72",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "innotech-opportunities-74",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-8329"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-91",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          3,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-95",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-102",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-1048"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-107",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "商机",
+      "source_node_hint": "innotech-opportunities-115",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-159",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-174",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-214",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-221",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-236",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-267",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-opportunities",
+          "path": [
+            0,
+            1,
+            7
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          5,
+          2,
+          2,
+          0,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        5,
+        2,
+        2,
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-opportunities-299",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-details-5",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          4,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        4,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-details-42",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          4,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        4,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-details-45",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-5663"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        0,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "datasync-details-90",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "相关团队",
+      "source_node_hint": "datasync-details-101",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-details-103",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "关键信息",
+      "source_node_hint": "datasync-details-112",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tabItem1788955104409976"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "Activities",
+      "source_node_hint": "datasync-details-230",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tab_form_component"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "Details",
+      "source_node_hint": "datasync-details-232",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tabItem1789024227388688"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3
+      ],
+      "tag": "div",
+      "label": "Address Information",
+      "source_node_hint": "datasync-details-234",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tabItem1789024294204289"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "tag": "div",
+      "label": "Financial Information",
+      "source_node_hint": "datasync-details-236",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tab_ContactObj_account_id_related_list"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5
+      ],
+      "tag": "div",
+      "label": "Contacts",
+      "source_node_hint": "datasync-details-238",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-tab_NewOpportunityObj_account_id_related_list"
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6
+      ],
+      "tag": "div",
+      "label": "Opportunities",
+      "source_node_hint": "datasync-details-240",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-details",
+          "path": [
+            0,
+            1,
+            8
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-details-251",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h1",
+      "label": "动态",
+      "source_node_hint": "datasync-activities-6",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-9813"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        0,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "datasync-activities-39",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        1,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-activities-56",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          2,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "仅支持预置文本",
+      "source_node_hint": "datasync-activities-63",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        2
+      ],
+      "tag": "input",
+      "label": "开始时间",
+      "source_node_hint": "datasync-activities-75",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          4
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        4
+      ],
+      "tag": "input",
+      "label": "结束时间",
+      "source_node_hint": "datasync-activities-77",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "开始日期",
+      "source_node_hint": "datasync-activities-98",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "开始时间",
+      "source_node_hint": "datasync-activities-101",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "结束日期",
+      "source_node_hint": "datasync-activities-106",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          0,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        0,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "结束时间",
+      "source_node_hint": "datasync-activities-109",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-452",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-453",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-454",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          0,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        0,
+        3
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-455",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-activities-457",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-601",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-602",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-603",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          0,
+          3
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        0,
+        3
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-604",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          0,
+          1,
+          2,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        0,
+        1,
+        2,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-activities-606",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          1,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        1,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-751",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          6,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        6,
+        1,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-753",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "datasync-activities-773",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-recent"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "最近",
+      "source_node_hint": "datasync-activities-807",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-member"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "div",
+      "label": "同事",
+      "source_node_hint": "datasync-activities-808",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-group"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      "tag": "div",
+      "label": "部门",
+      "source_node_hint": "datasync-activities-809",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-stop"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        3
+      ],
+      "tag": "div",
+      "label": "停用",
+      "source_node_hint": "datasync-activities-810",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "tab-outerErUids"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        4
+      ],
+      "tag": "div",
+      "label": "互联用户",
+      "source_node_hint": "datasync-activities-811",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-recent"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-activities-813",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-activities-829",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-activities-844",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-member"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-activities-855",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-group"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-activities-856",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-stop"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        3
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-activities-857",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "pane-outerErUids"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        1,
+        1,
+        4
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-activities-858",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-activities",
+          "path": [
+            0,
+            1,
+            9
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-activities-864",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-address",
+          "path": [
+            0,
+            1,
+            10
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-address-11",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-financial",
+          "path": [
+            0,
+            1,
+            11
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-financial-6",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-contacts-54",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": "datasync-contacts-59",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "datasync-contacts-61",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-3531"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-contacts-78",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          3,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-contacts-82",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-contacts-89",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-9812"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "datasync-contacts-94",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "联系人",
+      "source_node_hint": "datasync-contacts-102",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-140",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-155",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-195",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-202",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-210",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-224",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts",
+          "path": [
+            0,
+            1,
+            12
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          5,
+          2,
+          2,
+          0,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        5,
+        2,
+        2,
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-contacts-250",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-67",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-72",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "datasync-opportunities-74",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-2772"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-91",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          3,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-95",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-102",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-9460"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-107",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "商机",
+      "source_node_hint": "datasync-opportunities-115",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-159",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-174",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-214",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-221",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-236",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-267",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-opportunities",
+          "path": [
+            0,
+            1,
+            13
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          5,
+          2,
+          2,
+          0,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        5,
+        2,
+        2,
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-opportunities-299",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-54",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-59",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "datasync-contacts-expanded-61",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-8761"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-78",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          3,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-82",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-89",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-4696"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-94",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "联系人",
+      "source_node_hint": "datasync-contacts-expanded-102",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-140",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-155",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-195",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-202",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-210",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-224",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "datasync-contacts-expanded",
+          "path": [
+            0,
+            1,
+            14
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          5,
+          2,
+          2,
+          0,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        5,
+        2,
+        2,
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "datasync-contacts-expanded-250",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-54",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "tag": "form",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-59",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": "innotech-contacts-expanded-61",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "el-popover-1827"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-78",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          3,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        3,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-82",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          2,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        2
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-89",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "dropdown-menu-7733"
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        2,
+        3,
+        1
+      ],
+      "tag": "ul",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-94",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "tag": "h2",
+      "label": "联系人",
+      "source_node_hint": "innotech-contacts-expanded-102",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-140",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-155",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          0,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        0,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-195",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        0,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-202",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          1,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        1,
+        1
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-210",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          4,
+          1,
+          2,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        4,
+        1,
+        2,
+        0
+      ],
+      "tag": "table",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-224",
+      "unique_in_scope": true
+    },
+    {
+      "scope": [
+        {
+          "template_id": "innotech-contacts-expanded",
+          "path": [
+            0,
+            1,
+            15
+          ]
+        }
+      ],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          5,
+          2,
+          2,
+          0,
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        5,
+        2,
+        2,
+        0,
+        1,
+        2,
+        1,
+        0
+      ],
+      "tag": "button",
+      "label": "",
+      "source_node_hint": "innotech-contacts-expanded-250",
+      "unique_in_scope": true
+    }
+  ],
+  "states": [
+    {
+      "template_id": "innotech-details",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "template_id": "innotech-activities",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "template_id": "innotech-address",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        4
+      ]
+    },
+    {
+      "template_id": "innotech-financial",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        5
+      ]
+    },
+    {
+      "template_id": "innotech-contacts",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        6
+      ]
+    },
+    {
+      "template_id": "innotech-opportunities",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        7
+      ]
+    },
+    {
+      "template_id": "datasync-details",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        8
+      ]
+    },
+    {
+      "template_id": "datasync-activities",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        9
+      ]
+    },
+    {
+      "template_id": "datasync-address",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        10
+      ]
+    },
+    {
+      "template_id": "datasync-financial",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        11
+      ]
+    },
+    {
+      "template_id": "datasync-contacts",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        12
+      ]
+    },
+    {
+      "template_id": "datasync-opportunities",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        13
+      ]
+    },
+    {
+      "template_id": "datasync-contacts-expanded",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        14
+      ]
+    },
+    {
+      "template_id": "innotech-contacts-expanded",
+      "parent_scope": [],
+      "path": [
+        0,
+        1,
+        15
+      ]
+    }
+  ],
+  "scripts": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        1,
+        17
+      ],
+      "type": "",
+      "src": null,
+      "normalized_dom_text_sha256": "0aa16328fa1ea0170bfbd31e60ebdca24a87ffa061d7071fd358b38faf8d00e5",
+      "normalized_dom_text_bytes": 129321
+    }
+  ],
+  "styles": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        0,
+        4
+      ],
+      "normalized_dom_text_sha256": "65d86d4431cf75903a2d0107f4460fc53fa9374ce067eeafe404f1ff857bed14",
+      "normalized_dom_text_bytes": 3728086
+    },
+    {
+      "scope": [],
+      "path": [
+        0,
+        0,
+        5
+      ],
+      "normalized_dom_text_sha256": "e94d6724fce114b9074c69d569f08f7e3334499bb3c2d5e587dcd1d659593e30",
+      "normalized_dom_text_bytes": 850
+    }
+  ],
+  "source_scripts_executed": false,
+  "blocked_requests": [],
+  "assurance": "inert DOM inventory only; paths require source hash and scope; not semantic adoption, interaction validation or generation authority"
+}

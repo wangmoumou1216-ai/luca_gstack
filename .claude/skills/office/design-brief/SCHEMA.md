@@ -218,6 +218,9 @@ OD / Claude Design 配置。
 
 ### V2 模板载体运输边界（不新增产出节、不是第二事实源）
 
+carrier Packet 的结构化冻结格式与实例由 `references/output-templates.md` §结构化冻结拥有；
+`scripts/carrier-packet.mjs` 计算全部事实条目及其原文 hash。以下边界也适用于该格式。
+
 - `Design Generation Packet` 是唯一需求事实，Phase 6.75 门禁通过后按原字节冻结。Phase-A
   `CandidateHint` 是内部、短期 discovery 结果，不写入 Packet、正文、页面映射或 stable ID。
 - 最终 carrier 只在冻结 Packet 之后由 `page-context` 验证；它需要有效

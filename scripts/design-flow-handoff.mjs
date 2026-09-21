@@ -2,6 +2,9 @@ import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { crc32, inflateSync } from 'node:zlib';
 import * as pageContext from './page-context.mjs';
+import { inspectCarrierPacket, renderTacMarkdown } from './carrier-packet.mjs';
+import { anchoredNodes, parseCarrierDom, structuralDom } from './carrier-dom.mjs';
+export { createCarrierPacket, inspectCarrierPacket, renderTacMarkdown } from './carrier-packet.mjs';
 import {
   canonicalJson, canonicalManifestHash, carrierContentHash, fileRecord,
   parseCanonicalJson, resolveAssetClosure, safeRelativePath, sha256Bytes,
@@ -182,12 +185,47 @@ function bindingDetails(draft) {
 
 const sourceKey = item => `${item.source_kind}:${item.id}:${item.packet_span_hash}`;
 
-function tacDetails(tacJson, tacMarkdown, sourcePacketSha256, moduleContractHash, carrierHash, binding, frozen, contract) {
+function assertTacFields(tac) {
+  const fields = (value, required, optional = []) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || required.some(key => !Object.hasOwn(value, key)) || Object.keys(value).some(key => !required.includes(key) && !optional.includes(key))) fail('TAC_FIELDS_INVALID', 'TAC is a closed projection contract, not a channel for additional instructions or undeclared fields');
+  };
+  const array = value => { if (!Array.isArray(value)) fail('TAC_FIELDS_INVALID', 'TAC projection tables must be arrays'); };
+  const sourceFields = ['source_kind', 'id', 'packet_span_hash'];
+  fields(tac, ['template', 'source_packet_sha256', 'applicability_set_sha256', 'applicability_set', 'changes', 'coverage', 'output'], ['carrier_content_hash']);
+  fields(tac.template, ['page_id', 'module_contract_hash'], ['carrier_content_hash']);
+  for (const name of ['applicability_set', 'changes', 'coverage']) array(tac[name]);
+  for (const item of tac.applicability_set) fields(item, sourceFields);
+  for (const change of tac.changes) {
+    if (change?.action === 'preserve') fields(change, ['change_id', 'action', 'module_id', 'invariants'], ['source_projections']);
+    else {
+      fields(change, ['change_id', 'action', change?.action === 'add' ? 'slot_id' : 'module_id', 'source_projections']);
+    }
+    if (change.source_projections !== undefined) {
+      array(change.source_projections);
+      for (const projection of change.source_projections) fields(projection, sourceFields);
+    }
+  }
+  for (const row of tac.coverage) {
+    fields(row, [...sourceFields, 'disposition']);
+    const disposition = row.disposition;
+    if (disposition?.kind === 'change') fields(disposition, ['kind', 'change_id']);
+    else if (disposition?.kind === 'non_template_effect') fields(disposition, ['kind', 'scope_span_hash']);
+    else if (disposition?.kind === 'out_of_scope') fields(disposition, ['kind', 'scope_span_hash', 'confirmation_ref']);
+    else fail('TAC_FIELDS_INVALID', 'Unknown TAC coverage disposition');
+  }
+  fields(tac.output, ['entry', 'base_must_remain_unchanged']);
+}
+
+function tacDetails(tacJson, tacMarkdown, sourcePacketSha256, moduleContractHash, carrierHash, binding, frozen, contract, packetBody) {
   const json = strictControlJson(tacJson, 'control/template-adaptation.json');
   const markdown = bytesOf(tacMarkdown, 'TAC_REQUIRED', 'Carrier handoff requires the generated readable TAC projection');
   if (markdown.length === 0) fail('TAC_REQUIRED', 'Carrier handoff requires a non-empty readable TAC projection');
   const tac = json.parsed;
+  assertTacFields(tac);
+  const packet = inspectCarrierPacket(packetBody);
+  if (packet.source_packet_sha256 !== sourcePacketSha256 || packet.applicability_set_sha256 !== frozen.applicability_set_sha256 || !isDeepStrictEqual(tac.applicability_set, packet.applicability)) fail('TAC_APPLICABILITY_INVALID', 'Applicability must be the complete ordered fact set derived from actual frozen Packet bytes');
   const expectedCarrier = tac.carrier_content_hash ?? tac.template?.carrier_content_hash;
+  if (Object.hasOwn(tac, 'carrier_content_hash') && Object.hasOwn(tac.template, 'carrier_content_hash') && tac.carrier_content_hash !== tac.template.carrier_content_hash) fail('TAC_STALE', 'Top-level and template carrier hashes cannot disagree');
   if (tac.source_packet_sha256 !== sourcePacketSha256 || tac.template?.page_id !== binding.page_id || tac.template?.module_contract_hash !== moduleContractHash || expectedCarrier !== carrierHash || tac.applicability_set_sha256 !== frozen.applicability_set_sha256) fail('TAC_STALE', 'TAC packet/applicability/module/carrier identity does not match the immutable handoff inputs');
   if (!Array.isArray(tac.applicability_set) || hash(Buffer.from(canonicalJson(tac.applicability_set), 'utf8')) !== frozen.applicability_set_sha256) fail('TAC_APPLICABILITY_INVALID', 'TAC must include the exact canonical applicability set bound by the frozen packet');
   const applicable = new Map();
@@ -213,9 +251,9 @@ function tacDetails(tacJson, tacMarkdown, sourcePacketSha256, moduleContractHash
       const expected = (contractModules.get(change.module_id)?.invariants ?? []).map(item => item.invariant_id).sort();
       const actual = Array.isArray(change.invariants) ? [...change.invariants].sort() : [];
       if (!expected.length || !isDeepStrictEqual(actual, expected)) fail('TAC_PRESERVE_INVALID', 'Preserve actions must list every registered invariant exactly once');
-      if (change.source_projections !== undefined) fail('TAC_PRESERVE_INVALID', 'Preserve actions do not invent source projections');
-    } else {
-      if (!Array.isArray(change.source_projections) || !change.source_projections.length) fail('TAC_TRACE_INVALID', 'Every modifying TAC action needs at least one source projection');
+    }
+    if (change.action !== 'preserve' || change.source_projections !== undefined) {
+      if (!Array.isArray(change.source_projections) || !change.source_projections.length) fail('TAC_TRACE_INVALID', 'A modifying action, or an explicitly fact-backed preserve action, needs source projections');
       const keys = change.source_projections.map(projection => sourceKey(projection));
       if (new Set(keys).size !== keys.length || keys.some(key => !applicable.has(key))) fail('TAC_TRACE_INVALID', 'Change projections must uniquely reference the bound applicability set');
       traceKeys.set(change.change_id, keys.sort());
@@ -224,21 +262,33 @@ function tacDetails(tacJson, tacMarkdown, sourcePacketSha256, moduleContractHash
   }
   if (changes.size !== actions.size || [...actions.keys()].some(id => !changes.has(id))) fail('TAC_ACTION_INVALID', 'TAC must contain exactly one change for every validated binding action');
   const covered = new Set();
+  const dispositions = new Map();
   for (const row of tac.coverage) {
     const key = sourceKey(row ?? {});
     if (!applicable.has(key) || covered.has(key)) fail('TAC_COVERAGE_INVALID', 'Every applicability item needs exactly one non-duplicated coverage row');
     covered.add(key);
     const disposition = row.disposition;
+    dispositions.set(key, disposition);
     if (disposition?.kind === 'change') {
+      if (packet.scopes.some(scope => scope.source_ids.includes(row.id))) fail('TAC_SCOPE_CONFLICT', 'A frozen non-template or out-of-scope decision cannot be overridden by TAC change coverage');
       if (!changes.has(disposition.change_id) || !traceKeys.get(disposition.change_id)?.includes(key)) fail('TAC_COVERAGE_INVALID', 'Change coverage must point to a change that traces the same source item');
     } else if (disposition?.kind === 'non_template_effect') {
       if (!hashHex(disposition.scope_span_hash)) fail('TAC_COVERAGE_INVALID', 'Non-template effects require a packet scope span hash');
     } else if (disposition?.kind === 'out_of_scope') {
       if (!hashHex(disposition.scope_span_hash) || !text(disposition.confirmation_ref)) fail('TAC_COVERAGE_INVALID', 'Out-of-scope coverage requires a packet span and user confirmation');
     } else fail('TAC_COVERAGE_INVALID', 'Coverage disposition must be change, non_template_effect or out_of_scope');
+    if (disposition.kind !== 'change' && !packet.scopes.some(scope => scope.scope_span_hash === disposition.scope_span_hash && scope.kind === disposition.kind && scope.source_ids.includes(row.id) && (scope.kind !== 'out_of_scope' || scope.confirmation_ref === disposition.confirmation_ref))) fail('TAC_SCOPE_INVALID', 'Coverage must cite an actual frozen scope decision for this exact fact and disposition');
   }
   if (covered.size !== applicable.size) fail('TAC_COVERAGE_INVALID', 'Coverage must close the complete applicability set');
+  for (const [changeId, keys] of traceKeys) for (const key of keys) {
+    const disposition = dispositions.get(key);
+    if (disposition?.kind !== 'change' || disposition.change_id !== changeId) fail('TAC_TRACE_COVERAGE_CONFLICT', 'Every modifying source projection must be covered by that exact change, never an exclusion or another action');
+  }
+  const projectedPairs = [...changes.values()].flatMap(change => (change.source_projections ?? []).map(projection => JSON.stringify([projection.id, change.change_id]))).sort();
+  const assessedPairs = binding.match_assessment.judgments.filter(judgment => actions.get(judgment.action_id)?.action !== 'preserve' || changes.get(judgment.action_id)?.source_projections !== undefined).map(judgment => JSON.stringify([judgment.fact_id, judgment.action_id])).sort();
+  if (!isDeepStrictEqual(projectedPairs, assessedPairs)) fail('TAC_MATCH_ASSESSMENT_CONFLICT', 'TAC and assessment must contain exactly the same fact/action pairs for modifications and explicitly fact-backed preserves');
   if (tac.output?.entry !== 'output/index.html' || tac.output?.base_must_remain_unchanged !== true) fail('TAC_OUTPUT_INVALID', 'Single carrier TAC must bind output/index.html and immutable base input');
+  if (!markdown.equals(Buffer.from(renderTacMarkdown(tac, packetBody)))) fail('TAC_MARKDOWN_MISMATCH', 'Readable TAC must be the deterministic projection of this JSON and actual Packet text');
   return { json, markdown, sha256: hash(json.bytes), markdownSha256: hash(markdown), applicability: [...applicable.values()], changes: [...changes.values()], traceKeys };
 }
 
@@ -286,6 +336,12 @@ function carrierManifestFile(manifest) {
   return v2File('control/handoff-manifest.json', 'application/json', bytes);
 }
 
+function assertCarrierConfirmation(bundle, fresh) {
+  const adoption = bundle?.confirmation;
+  if (!adoption || adoption.actor !== 'user' || !text(adoption.evidence) || !Number.isFinite(Date.parse(adoption.confirmed_at)) || adoption.binding_sha256 !== bundle.binding_sha256 || adoption.tac_sha256 !== fresh.manifest.tac_sha256 || adoption.carrier_content_hash !== bundle.carrier_content_hash || adoption.handoff_bundle_hash !== bundle.handoff_bundle_hash || adoption.carrier_profile !== 'structural_carrier' || adoption.output_profile !== 'single') fail('CARRIER_ADOPTION_STALE', 'Carrier confirmation must remain the exact user adoption bound to this TAC, binding, carrier content, profile and bundle hash');
+  return adoption;
+}
+
 function assertCarrierBundleFresh(bundle) {
   if (bundle?.schema_version !== 2 || bundle?.bundle_kind !== 'carrier' || bundle?.status !== 'EXPORTED' || !carrierId(bundle.handoff_id) || bundle.namespace !== `handoffs/${bundle.handoff_id}` || bundle.carrier_output_profile !== 'single' || bundle.carrier_profile !== 'structural_carrier') fail('CARRIER_BUNDLE_INVALID', 'Expected an exported V2 structural-carrier single-output bundle');
   const immutable = one(bundle.files ?? [], item => item.path !== 'control/handoff-manifest.json');
@@ -294,6 +350,7 @@ function assertCarrierBundleFresh(bundle) {
   const manifest = strictControlJson(manifestFile[0].bytes, 'control/handoff-manifest.json').parsed;
   const records = recordsFor(immutable);
   if (manifest.handoff_bundle_hash !== bundle.handoff_bundle_hash || canonicalManifestHash(manifest, records) !== bundle.handoff_bundle_hash || canonicalJson(manifest) !== manifestFile[0].bytes.toString('utf8') || !isDeepStrictEqual(manifest.immutable_files, records)) fail('CARRIER_BUNDLE_CHANGED', 'Carrier manifest/body/file-record hashes are stale');
+  if (!isDeepStrictEqual(manifest.target, bundle.target) || manifest.handoff_id !== bundle.handoff_id || manifest.namespace !== bundle.namespace || manifest.asset_profile !== bundle.asset_profile) fail('CARRIER_BUNDLE_CHANGED', 'Mutable target, namespace or asset profile differs from the immutable manifest');
   const base = one(immutable, item => item.path === 'input/base-template.html');
   if (base.length !== 1 || base[0].sha256 !== bundle.base_template_sha256) fail('CARRIER_BUNDLE_CHANGED', 'Immutable raw base template changed');
   if (!hashHex(bundle.carrier_content_hash) || !hashHex(bundle.source_packet_sha256) || !hashHex(bundle.module_contract_hash) || manifest.carrier_content_hash !== bundle.carrier_content_hash || manifest.source_packet_sha256 !== bundle.source_packet_sha256 || manifest.module_contract_hash !== bundle.module_contract_hash || manifest.carrier_profile !== 'structural_carrier') fail('CARRIER_BUNDLE_CHANGED', 'Carrier identity hashes/profile are incomplete or changed');
@@ -302,7 +359,21 @@ function assertCarrierBundleFresh(bundle) {
   const parsedTac = strictControlJson(tac[0].bytes, 'control/template-adaptation.json').parsed;
   const expectedCarrier = parsedTac.carrier_content_hash ?? parsedTac.template?.carrier_content_hash;
   if (parsedTac.source_packet_sha256 !== bundle.source_packet_sha256 || parsedTac.template?.module_contract_hash !== bundle.module_contract_hash || parsedTac.template?.page_id !== bundle.binding_draft?.binding?.page_id || parsedTac.applicability_set_sha256 !== bundle.binding_draft?.frozen_packet?.applicability_set_sha256 || expectedCarrier !== bundle.carrier_content_hash || manifest.tac_sha256 !== hash(tac[0].bytes)) fail('TAC_STALE', 'TAC no longer binds this frozen packet/applicability/module/carrier');
-  return { manifest, immutable, manifestFile: manifestFile[0] };
+  const readControl = path => {
+    const matches = one(immutable, item => item.path === path);
+    if (matches.length !== 1) fail('CARRIER_BUNDLE_CHANGED', `Missing immutable control: ${path}`);
+    return strictControlJson(matches[0].bytes, path).parsed;
+  };
+  const contract = readControl('control/module-contract.json');
+  const draft = readControl('control/carrier-binding.json');
+  if (pageContext.computeModuleContractHash(contract) !== bundle.module_contract_hash || pageContext.computeBindingHash(draft) !== bundle.binding_sha256 || !isDeepStrictEqual(contract, bundle.carrier_contract) || !isDeepStrictEqual(draft, bundle.binding_draft) || !isDeepStrictEqual(bundle.tac_contract, { applicability: parsedTac.applicability_set, changes: parsedTac.changes })) fail('CARRIER_BUNDLE_CHANGED', 'Mutable carrier/binding/TAC caches must exactly match their hash-bound immutable controls');
+  const brief = one(immutable, item => item.path === 'control/brief.md');
+  const markdown = one(immutable, item => item.path === 'control/template-adaptation.md');
+  if (brief.length !== 1 || markdown.length !== 1 || hash(brief[0].bytes) !== bundle.source_packet_sha256) fail('CARRIER_BUNDLE_CHANGED', 'Missing or stale immutable Packet/Markdown');
+  tacDetails(tac[0].bytes, markdown[0].bytes, bundle.source_packet_sha256, bundle.module_contract_hash, bundle.carrier_content_hash, draft.binding, draft.frozen_packet, contract, brief[0].bytes.toString('utf8'));
+  const fresh = { manifest, immutable, manifestFile: manifestFile[0], contract, changes: parsedTac.changes, packetBody: brief[0].bytes.toString('utf8') };
+  if (Object.hasOwn(bundle, 'confirmation')) assertCarrierConfirmation(bundle, fresh);
+  return fresh;
 }
 
 /**
@@ -313,14 +384,16 @@ function assertCarrierBundleFresh(bundle) {
 export async function prepareCarrierHandoff({ source, target, handoffId, carrierBinding, baseTemplate, assets = [], assetProfile = 'p0-static-v1', tacJson, tacMarkdown, pageReference, inertStorageReceipt }, { catalog, root, validateCarrierBindingDraft } = {}) {
   if (!carrierId(handoffId)) fail('HANDOFF_ID_INVALID', 'handoffId must be a new ASCII letters/numbers/dash/underscore identifier');
   const packet = v2Source(source); const boundTarget = v2Target(target);
-  const draft = await draftValidator({ validateCarrierBindingDraft })(catalog, carrierBinding, { root });
+  inspectCarrierPacket(packet.body);
+  const draft = await draftValidator({ validateCarrierBindingDraft })(catalog, carrierBinding, { root, packetBody: packet.body });
   const details = bindingDetails(draft);
   if (details.frozen.source_packet_sha256 !== packet.sha256) fail('PACKET_STALE', 'Carrier binding draft must be bound to the exact frozen packet bytes');
   const closure = resolveAssetClosure({ baseTemplate: bytesOf(baseTemplate, 'BASE_TEMPLATE_REQUIRED', 'Raw base-template bytes are required'), assets, profile: assetProfile, inertStorageReceipt });
+  parseCarrierDom(closure.base_template.toString('utf8'));
   if (details.binding.source_hash !== closure.raw_template_sha256) fail('CARRIER_SOURCE_STALE', 'Carrier binding source hash must equal the immutable raw base-template bytes');
   const carrierHash = carrierContentHash(closure, details.binding.module_contract_hash);
   if (details.binding.carrier_profile !== 'structural_carrier') fail('CARRIER_PROFILE_UNSUPPORTED', 'P0 transport only supports the explicitly adopted structural_carrier profile');
-  const tac = tacDetails(tacJson, tacMarkdown, packet.sha256, details.binding.module_contract_hash, carrierHash, details.binding, details.frozen, details.draft.contract);
+  const tac = tacDetails(tacJson, tacMarkdown, packet.sha256, details.binding.module_contract_hash, carrierHash, details.binding, details.frozen, details.draft.contract, packet.body);
   const reference = referenceDetails(pageReference, details.binding, packet.sha256);
   const files = [
     v2File('input/base-template.html', 'text/html; charset=utf-8', closure.base_template),
@@ -328,6 +401,8 @@ export async function prepareCarrierHandoff({ source, target, handoffId, carrier
     v2File('control/brief.md', 'text/markdown; charset=utf-8', packet.bytes),
     v2File('control/template-adaptation.json', 'application/json', tac.json.bytes),
     v2File('control/template-adaptation.md', 'text/markdown; charset=utf-8', tac.markdown),
+    v2File('control/module-contract.json', 'application/json', Buffer.from(canonicalJson(details.draft.contract))),
+    v2File('control/carrier-binding.json', 'application/json', Buffer.from(canonicalJson(details.draft))),
     v2File('control/page-reference.json', 'application/json', reference.bytes)
   ];
   const namespace = `handoffs/${handoffId}`;
@@ -351,7 +426,7 @@ export async function prepareCarrierHandoff({ source, target, handoffId, carrier
 // be inferred from either operation.
 export async function confirmCarrierBundle(bundle, carrierBinding, { catalog, root, validateCarrierBinding } = {}) {
   const fresh = assertCarrierBundleFresh(bundle);
-  const finalized = await finalValidator({ validateCarrierBinding })(catalog, carrierBinding, { root });
+  const finalized = await finalValidator({ validateCarrierBinding })(catalog, carrierBinding, { root, packetBody: fresh.packetBody });
   const adoption = finalized?.adoption ?? carrierBinding?.adoption;
   const bindingSha256 = finalized?.binding_sha256 ?? carrierBinding?.binding_sha256;
   if (!adoption || adoption.handoff_bundle_hash !== bundle.handoff_bundle_hash || adoption.carrier_content_hash !== bundle.carrier_content_hash || adoption.tac_sha256 !== fresh.manifest.tac_sha256 || adoption.carrier_profile !== 'structural_carrier' || adoption.output_profile !== 'single' || adoption.binding_sha256 !== bundle.binding_sha256 || bindingSha256 !== bundle.binding_sha256) fail('CARRIER_ADOPTION_STALE', 'User adoption must bind this exact TAC, carrier content, binding, structural carrier profile, single output profile and bundle hash');
@@ -369,16 +444,26 @@ function exactGrant(bundle, grant, operation, code, runtime) {
   return capabilityFor(bundle, grant.capabilityReceipt, operation, runtime);
 }
 
+// Shared transport primitives. Profile owners must validate their immutable
+// bundle before calling these; these functions never perform external I/O.
+export function authorizeScopedOperation(bundle, grant, operation, { runtime } = {}) {
+  if (!['stage', 'run', 'recover'].includes(operation) || !bundle.confirmation) fail('SCOPED_AUTHORIZATION_REQUIRED', 'An adopted bundle and a specific operation are required');
+  const capability = exactGrant(bundle, grant, operation, 'SCOPED_AUTHORIZATION_REQUIRED', runtime);
+  return { tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', scope: [operation], authorization_ref: grant.messageRef, capability };
+}
+
 export function authorizeCarrierStage(bundle, grant, { runtime } = {}) {
-  assertCarrierBundleFresh(bundle);
+  const fresh = assertCarrierBundleFresh(bundle);
   if (!bundle.confirmation) fail('CARRIER_STAGE_NOT_AUTHORIZED', 'Carrier adoption is required before stage authorization');
+  assertCarrierConfirmation(bundle, fresh);
   const capability = exactGrant(bundle, grant, 'stage', 'CARRIER_STAGE_NOT_AUTHORIZED', runtime);
   if (bundle.closure.active_content.script_tags || bundle.closure.active_content.event_handlers) validateInertStorageReceipt(bundle.inert_storage_receipt, { templateSha256: bundle.base_template_sha256, handoffId: bundle.handoff_id });
   return { tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', scope: ['stage'], capability };
 }
 
 export function authorizeCarrierRun(bundle, staged, grant, { runtime } = {}) {
-  assertCarrierBundleFresh(bundle);
+  const fresh = assertCarrierBundleFresh(bundle);
+  assertCarrierConfirmation(bundle, fresh);
   if (staged?.status !== 'STAGED' || staged.handoff_bundle_hash !== bundle.handoff_bundle_hash) fail('CARRIER_RUN_NOT_AUTHORIZED', 'Run authorization requires the exact staged carrier receipt');
   const capability = exactGrant(bundle, grant, 'run', 'CARRIER_RUN_NOT_AUTHORIZED', runtime);
   if (!hashHex(grant.prompt_hash)) fail('CARRIER_RUN_NOT_AUTHORIZED', 'Run authorization must bind the exact prompt hash');
@@ -386,8 +471,9 @@ export function authorizeCarrierRun(bundle, staged, grant, { runtime } = {}) {
 }
 
 export function authorizeCarrierRecover(bundle, staged, grant, { runtime } = {}) {
-  assertCarrierBundleFresh(bundle);
-  if (!['STAGED', 'USER_GENERATION_REPORTED', 'OD_RUN_AUTHORIZED', 'OD_RUN_OBSERVED'].includes(staged?.status) || staged.handoff_bundle_hash !== bundle.handoff_bundle_hash || staged.namespace !== bundle.namespace) fail('CARRIER_RECOVER_NOT_AUTHORIZED', 'Recover authorization requires the exact staged carrier receipt before output readback');
+  const fresh = assertCarrierBundleFresh(bundle);
+  assertCarrierConfirmation(bundle, fresh);
+  if (!['USER_GENERATION_REPORTED', 'OD_RUN_AUTHORIZED'].includes(staged?.status) || staged.handoff_bundle_hash !== bundle.handoff_bundle_hash || staged.namespace !== bundle.namespace) fail('CARRIER_RECOVER_NOT_AUTHORIZED', 'Recover authorization requires an exact desktop generation report or headless run authorization, never a plain STAGED receipt');
   const capability = exactGrant(bundle, grant, 'recover', 'CARRIER_RECOVER_NOT_AUTHORIZED', runtime);
   return { tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', scope: ['recover'], authorization_ref: grant.messageRef, capability };
 }
@@ -436,8 +522,21 @@ function exactNamespaceFiles(expected, actual, namespace) {
   }
 }
 
+function assertReadbackInventory(files, records) {
+  const actual = new Map(records.map(item => [item.path, item]));
+  for (const file of files) {
+    const record = actual.get(file.path);
+    if (!record || record.bytes !== file.bytes.length || record.sha256 !== hash(file.bytes)) fail('READBACK_INVENTORY_MISMATCH', `Namespace bytes must agree with the complete post-inventory: ${file.path}`);
+  }
+}
+
 export function verifyCarrierReadback(bundle, readback) {
-  assertCarrierBundleFresh(bundle);
+  const fresh = assertCarrierBundleFresh(bundle);
+  assertCarrierConfirmation(bundle, fresh);
+  return verifyScopedStageReadback(bundle, readback);
+}
+
+export function verifyScopedStageReadback(bundle, readback) {
   if (!bundle.confirmation || readback?.tool !== 'od' || readback.projectId !== bundle.target.projectId || readback.namespace !== bundle.namespace || !text(readback.readRef)) fail('READBACK_TARGET_MISMATCH', 'Carrier readback must identify the confirmed OD project, namespace and actual read reference');
   const before = inventory(readback.pre_inventory, 'Pre-stage inventory');
   const after = inventory(readback.post_inventory, 'Post-stage inventory');
@@ -447,7 +546,21 @@ export function verifyCarrierReadback(bundle, readback) {
   assertInventoryDelta(before, after, new Set(expected));
   if (after.filter(item => item.path.startsWith(prefix)).length !== expected.length || expected.some(path => !after.find(item => item.path === path))) fail('READBACK_EXTRA_FILE', 'Post-stage namespace does not exactly match immutable inputs');
   exactNamespaceFiles(bundle.files, readback.files, bundle.namespace);
+  assertReadbackInventory(readback.files, after);
   return { status: 'STAGED', tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, read_ref: readback.readRef, project_inventory_sha256: sha256Bytes(Buffer.from(canonicalJson(after), 'utf8')), post_inventory: after };
+}
+
+export function verifyScopedOutputReadback(bundle, staged, readback, outputPaths) {
+  if (readback?.tool !== 'od' || readback.projectId !== bundle.target.projectId || readback.namespace !== bundle.namespace || !text(readback.readRef) || !Array.isArray(readback.files)) fail('READBACK_TARGET_MISMATCH', 'Exact scoped output bytes required');
+  const allowed = new Set(outputPaths.map(path => fullPath(bundle.namespace, safeRelativePath(path))));
+  if (allowed.size !== outputPaths.length) fail('OUTPUT_EXTRA_FILE', 'Duplicate output paths');
+  const outputs = readback.files.filter(file => allowed.has(file.path));
+  if (outputs.length !== allowed.size) fail('OUTPUT_REQUIRED', 'Every declared output must be present');
+  exactNamespaceFiles([...bundle.files.map(file => ({ path: fullPath(bundle.namespace, file.path), bytes: file.bytes })), ...outputs], readback.files, bundle.namespace);
+  const after = inventory(readback.post_inventory, 'Post-generation inventory');
+  assertInventoryDelta(staged.post_inventory, after, allowed);
+  assertReadbackInventory(readback.files, after);
+  return outputs;
 }
 
 export function reportCarrierGeneration(staged, report) {
@@ -455,39 +568,13 @@ export function reportCarrierGeneration(staged, report) {
   return { ...staged, status: 'USER_GENERATION_REPORTED', user_generation: { message_ref: report.messageRef } };
 }
 
-const regexEscape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-function anchorCount(html, anchor) {
-  if (anchor?.kind !== 'attribute' || !text(anchor.name) || !text(anchor.value)) fail('CARRIER_CONTRACT_INVALID', 'Mechanical recovery only accepts registered attribute anchors');
-  const pattern = new RegExp(`\\s${regexEscape(anchor.name)}\\s*=\\s*(["'])${regexEscape(anchor.value)}\\1`, 'g');
-  return [...html.matchAll(pattern)].length;
-}
-
-function canonicalAnchoredDom(html, anchor) {
-  if (anchor?.kind !== 'attribute' || !text(anchor.name) || !text(anchor.value)) fail('CARRIER_CONTRACT_INVALID', 'Preserve comparison requires a registered attribute anchor');
-  const attribute = new RegExp(`\\s${regexEscape(anchor.name)}\\s*=\\s*(["'])${regexEscape(anchor.value)}\\1`, 'i');
-  const openings = [...html.matchAll(/<([a-z][a-z0-9:-]*)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi)].filter(match => attribute.test(match[0]));
-  if (openings.length !== 1) fail('PRESERVE_DOM_CHANGED', `Preserved module anchor must resolve once: ${anchor.name}=${anchor.value}`);
-  const opening = openings[0];
-  const tag = opening[1].toLowerCase();
-  if (/\/\s*>$/.test(opening[0])) return opening[0].replace(/\r\n?/g, '\n').trim();
-  const tags = new RegExp(`<\\/?${regexEscape(tag)}\\b(?:[^>"']|"[^"]*"|'[^']*')*>`, 'gi');
-  tags.lastIndex = opening.index + opening[0].length;
-  let depth = 1;
-  for (const match of html.matchAll(tags)) {
-    if (match.index < tags.lastIndex) continue;
-    if (new RegExp(`^<\\/${regexEscape(tag)}\\b`, 'i').test(match[0])) depth--;
-    else if (!/\/\s*>$/.test(match[0])) depth++;
-    if (depth === 0) return html.slice(opening.index, match.index + match[0].length).replace(/\r\n?/g, '\n').trim();
-  }
-  fail('PRESERVE_DOM_CHANGED', `Preserved module is not structurally closed: ${anchor.name}=${anchor.value}`);
-}
-
-function validateCarrierMechanicalEvidence(bundle, outputBytes, evidence) {
-  const contract = bundle.carrier_contract;
-  const changes = bundle.tac_contract?.changes;
+function validateCarrierMechanicalEvidence(bundle, outputBytes, evidence, { contract, changes }) {
   if (!contract || !Array.isArray(changes) || !evidence || !Array.isArray(evidence.module_traces) || !Array.isArray(evidence.preserve_invariants)) fail('MECHANICAL_EVIDENCE_REQUIRED', 'Recovery requires caller-verified module traces and preserve invariant evidence');
-  const html = outputBytes.toString('utf8');
-  const baseHtml = one(bundle.files, item => item.path === 'input/base-template.html')[0].bytes.toString('utf8');
+  const html = parseCarrierDom(outputBytes.toString('utf8'));
+  const baseHtml = parseCarrierDom(one(bundle.files, item => item.path === 'input/base-template.html')[0].bytes.toString('utf8'));
+  const anchorCount = (tree, anchor) => anchoredNodes(tree, anchor).length;
+  const canonicalAnchoredDom = (tree, anchor) => canonicalJson(structuralDom(anchoredNodes(tree, anchor)[0]));
+  const beforeMasks = new Map(); const afterMasks = new Map();
   const modules = new Map(contract.modules.map(module => [module.module_id, module]));
   const slots = new Map(contract.slots.map(slot => [slot.slot_id, slot]));
   for (const module of contract.modules.filter(item => item.required)) if (anchorCount(html, module.anchor) !== 1) fail('MODULE_ANCHOR_INVALID', `Required module anchor is not unique after generation: ${module.module_id}`);
@@ -508,8 +595,29 @@ function validateCarrierMechanicalEvidence(bundle, outputBytes, evidence) {
     const target = change.action === 'add' ? slots.get(change.slot_id) : modules.get(change.module_id);
     const count = anchorCount(html, target?.anchor);
     if ((change.action === 'remove' && count !== 0) || (change.action !== 'remove' && count !== 1)) fail('MODULE_ACTION_FAILED', `Generated output does not mechanically satisfy ${change.change_id}/${change.action}`);
+    const before = anchoredNodes(baseHtml, target.anchor);
+    const after = anchoredNodes(html, target.anchor);
+    if (before.length !== 1) fail('MODULE_ACTION_FAILED', `Base target must be a unique real node: ${change.change_id}`);
+    const original = structuralDom(before[0]);
+    if (change.action === 'remove') {
+      beforeMasks.set(before[0], null);
+    } else {
+      const generated = structuralDom(after[0]);
+      if (isDeepStrictEqual(original, generated)) fail('MODULE_ACTION_NO_CHANGE', `Action must change actual target structure/content, not comments, whitespace or visual styling: ${change.change_id}`);
+      if (change.action === 'add') {
+        // Addition is insertion inside the slot: its container and every old
+        // child stay unchanged and ordered. Replacing placeholder content is
+        // a modify action, not authority implicitly granted by add.
+        let cursor = 0;
+        for (const child of generated.children) if (isDeepStrictEqual(child, original.children[cursor])) cursor++;
+        if (original.tag !== generated.tag || !isDeepStrictEqual(original.attrs, generated.attrs) || cursor !== original.children.length || generated.children.length <= original.children.length) fail('ADD_SLOT_VIOLATION', `Add must insert inside its exact slot without changing existing content: ${change.change_id}`);
+      }
+      const marker = { authorized_change: change.change_id };
+      beforeMasks.set(before[0], marker); afterMasks.set(after[0], marker);
+    }
     expectedTraces.push({ change_id: change.change_id, source_keys: change.source_projections.map(sourceKey).sort() });
   }
+  if (!isDeepStrictEqual(structuralDom(baseHtml, beforeMasks), structuralDom(html, afterMasks))) fail('UNAUTHORIZED_STRUCTURE_CHANGE', 'Business DOM outside the exact authorized targets changed or a target moved; visual-only CSS/class/head changes are separate');
   const actualTraces = evidence.module_traces.map(item => ({ change_id: item?.change_id, source_keys: Array.isArray(item?.source_keys) ? [...item.source_keys].sort() : [], status: item?.status })).sort((a, b) => String(a.change_id).localeCompare(String(b.change_id)));
   const normalizedExpected = expectedTraces.map(item => ({ ...item, status: 'PASS' })).sort((a, b) => a.change_id.localeCompare(b.change_id));
   if (!isDeepStrictEqual(actualTraces, normalizedExpected)) fail('MODULE_TRACE_INCOMPLETE', 'Every add/modify/remove action must have an exact PASS trace to its TAC source projections');
@@ -534,8 +642,9 @@ function outputFilesFromReadback(bundle, namespaceFiles) {
 }
 
 export function observeCarrierOutput(bundle, staged, readback, authorization) {
-  assertCarrierBundleFresh(bundle);
-  if (!['STAGED', 'USER_GENERATION_REPORTED', 'OD_RUN_AUTHORIZED', 'OD_RUN_OBSERVED'].includes(staged?.status) || staged.projectId !== bundle.target.projectId || staged.namespace !== bundle.namespace || staged.handoff_bundle_hash !== bundle.handoff_bundle_hash) fail('RECOVERY_PRECONDITION', 'Recovery requires the exact prior STAGED carrier receipt');
+  const fresh = assertCarrierBundleFresh(bundle);
+  assertCarrierConfirmation(bundle, fresh);
+  if (!['USER_GENERATION_REPORTED', 'OD_RUN_AUTHORIZED'].includes(staged?.status) || staged.projectId !== bundle.target.projectId || staged.namespace !== bundle.namespace || staged.handoff_bundle_hash !== bundle.handoff_bundle_hash) fail('RECOVERY_PRECONDITION', 'Recovery requires an exact desktop generation report or headless run authorization');
   if (authorization?.scope?.length !== 1 || authorization.scope[0] !== 'recover' || authorization.projectId !== bundle.target.projectId || authorization.handoff_id !== bundle.handoff_id || authorization.namespace !== bundle.namespace || authorization.handoff_bundle_hash !== bundle.handoff_bundle_hash) fail('CARRIER_RECOVER_NOT_AUTHORIZED', 'Output readback requires its independent recover authorization first');
   if (readback?.tool !== 'od' || readback.projectId !== bundle.target.projectId || readback.namespace !== bundle.namespace || !text(readback.readRef)) fail('READBACK_TARGET_MISMATCH', 'Output readback must identify the exact OD project and namespace');
   const namespaceFiles = readback.files;
@@ -545,12 +654,14 @@ export function observeCarrierOutput(bundle, staged, readback, authorization) {
   exactNamespaceFiles(allExpected, namespaceFiles, bundle.namespace);
   const output = outputFilesFromReadback(bundle, namespaceFiles);
   if (output.index.bytes.equals(one(bundle.files, item => item.path === 'input/base-template.html')[0].bytes)) fail('OUTPUT_BASE_MASQUERADE', 'base-template.html copied or renamed as output is not a derivative');
-  const mechanicalEvidence = validateCarrierMechanicalEvidence(bundle, output.index.bytes, readback.mechanical_verification);
+  const mechanicalEvidence = validateCarrierMechanicalEvidence(bundle, output.index.bytes, readback.mechanical_verification, fresh);
   const after = inventory(readback.post_inventory, 'Post-generation inventory');
   const allowedNew = output.allowed;
   assertInventoryDelta(staged.post_inventory, after, allowedNew);
-  const run = readback.run && text(readback.run.run_id) && readback.run.handoff_id === bundle.handoff_id && hashHex(readback.run.prompt_hash) ? { run_id: readback.run.run_id, prompt_hash: readback.run.prompt_hash, handoff_id: bundle.handoff_id } : null;
-  if (staged.status === 'OD_RUN_AUTHORIZED' && (!run || run.prompt_hash !== staged.prompt_hash)) fail('RUN_RECEIPT_MISMATCH', 'Observed headless run must bind its independent authorization prompt hash');
+  assertReadbackInventory(namespaceFiles, after);
+  const run = readback.run && text(readback.run.run_id) && readback.run.handoff_id === bundle.handoff_id && hashHex(readback.run.prompt_hash) && readback.run.status === 'succeeded' ? { run_id: readback.run.run_id, prompt_hash: readback.run.prompt_hash, handoff_id: bundle.handoff_id, status: 'succeeded' } : null;
+  if (staged.status === 'OD_RUN_AUTHORIZED' && (!run || run.prompt_hash !== staged.prompt_hash)) fail('RUN_RECEIPT_MISMATCH', 'Observed headless run must have succeeded and bind its independent authorization prompt hash');
+  if (staged.status === 'USER_GENERATION_REPORTED' && readback.run !== undefined) fail('RUN_RECEIPT_MISMATCH', 'Desktop observation cannot mix in unbound headless run evidence');
   return { status: 'GENERATED_OBSERVED', tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, read_ref: readback.readRef, provenance: run ? 'od_run_observed' : 'output_observed_only', run, mechanical_evidence: mechanicalEvidence, output: { entry: 'output/index.html', sha256: hash(output.index.bytes), bytes: output.index.bytes.length, assets: output.closure.assets.map(asset => ({ path: `output/${asset.path}`, sha256: hash(asset.bytes), bytes: asset.bytes.length })) }, project_inventory_sha256: sha256Bytes(Buffer.from(canonicalJson(after), 'utf8')), post_inventory: after };
 }
 
@@ -558,7 +669,8 @@ export function observeCarrierOutput(bundle, staged, readback, authorization) {
 // caller-owned effect; the receipt intentionally separates mechanical evidence
 // from the still-required semantic acceptance review.
 export function recoverCarrierOutput(bundle, observed, authorization) {
-  assertCarrierBundleFresh(bundle);
+  const fresh = assertCarrierBundleFresh(bundle);
+  assertCarrierConfirmation(bundle, fresh);
   if (observed?.status !== 'GENERATED_OBSERVED' || observed.projectId !== bundle.target.projectId || observed.handoff_id !== bundle.handoff_id || observed.handoff_bundle_hash !== bundle.handoff_bundle_hash || !observed.mechanical_evidence) fail('RECOVERY_PRECONDITION', 'Only an exact mechanically verified carrier output can be recovered');
   if (authorization?.scope?.length !== 1 || authorization.scope[0] !== 'recover' || authorization.projectId !== bundle.target.projectId || authorization.handoff_id !== bundle.handoff_id || authorization.namespace !== bundle.namespace || authorization.handoff_bundle_hash !== bundle.handoff_bundle_hash) fail('CARRIER_RECOVER_NOT_AUTHORIZED', 'Recover requires its independent exact authorization receipt');
   return { schema_version: 1, status: 'RECOVERED', bundle_kind: 'carrier', derivation: 'observed-template-derivative', carrier_profile: 'structural_carrier', handoff_id: bundle.handoff_id, namespace: bundle.namespace, project_id: bundle.target.projectId, source_packet_sha256: bundle.source_packet_sha256, module_contract_hash: bundle.module_contract_hash, carrier_content_hash: bundle.carrier_content_hash, handoff_bundle_hash: bundle.handoff_bundle_hash, provenance: observed.provenance, run: observed.run, output: observed.output, module_traces: observed.mechanical_evidence.module_traces, preserve_invariants: observed.mechanical_evidence.preserve_invariants, mechanical_validation: 'PASS', semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };

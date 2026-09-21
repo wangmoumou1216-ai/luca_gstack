@@ -1,11 +1,12 @@
 {
-  "schema_version": 1,
-  "profile": "curated-structural-shadow-v1",
+  "schema_version": 2,
+  "profile": "original-template-copy-v1",
   "policy": {
     "raw_sources_are_read_only": true,
-    "executable_content_copied": false,
-    "visual_tokens_are_authoritative": false,
-    "capture_node_ids_are_semantic_ids": false,
+    "byte_identical_copy_required": true,
+    "derived_replacement_allowed": false,
+    "html_injection_allowed": false,
+    "execution_authorized_by_copy": false,
     "existing_page_ids_replaced": false
   },
   "sources": [
@@ -14,44 +15,60 @@
       "raw_source": "/Users/luca/Desktop/模版/后台设置.html",
       "raw_bytes": 4061244,
       "raw_sha256": "4bfd4b31b2bc738881507061e5b394de7984ccb93b799a0a1c1824dc673284e0",
-      "shadow_source": ".claude/skill-os/page-library/sources/settings-lead-pool.html",
-      "shadow_bytes": 6042,
-      "shadow_sha256": "b2916d7bac12315872bec8bd553374b4ba66ed4cbb7265f4d774cc0cf1dd9652",
-      "evidence": ["#app-portal", "#sub-tpl", "#crmmanage", "template#state-conversion", "template#state-ownership", "template#state-followup", "template#state-basic", "template#state-detail", "template#state-edit", "template#state-new", "template#state-department"],
-      "materialized_states": ["pool", "conversion", "ownership", "followup", "basic", "detail", "edit", "new", "department"]
+      "copy_source": ".claude/skill-os/page-library/sources/originals/settings-lead-pool.html",
+      "binding_status": "original-preserving-v1",
+      "resource_policy": "Preserve every embedded byte and original URL. Do not synthesize or fetch missing resources.",
+      "rejected_shadow": {
+        "source": ".claude/skill-os/page-library/sources/settings-lead-pool.html",
+        "bytes": 6327,
+        "sha256": "d59066abff15ebca67f0cedbbf44c1f3c435693a008663dd0dabe27b3950a25f",
+        "reason": "User rejected simplified rewrite; cannot be used as original template or acceptance baseline."
+      }
     },
     {
       "page_id": "customer-list-detail",
       "raw_source": "/Users/luca/Desktop/模版/客户列表到详情页.html",
       "raw_bytes": 4485792,
       "raw_sha256": "05921e7ad5340df93c28637118b1599eaefb4a4827a1b8d351afa7868808e58b",
-      "shadow_source": ".claude/skill-os/page-library/sources/customer-list-detail.html",
-      "shadow_bytes": 6430,
-      "shadow_sha256": "7b06edcfdec9bcba0d68e13e6cd2bf8267550c15b6c8a4c6ed5111fdeea721b6",
-      "evidence": ["#app-portal", "#sub-tpl", "innotech detail states", "datasync detail states", "contacts-expanded state", "data-source-node is capture-only"],
-      "materialized_states": ["list", "details", "activities", "address", "financial", "contacts", "opportunities", "contacts-expanded"]
+      "copy_source": ".claude/skill-os/page-library/sources/originals/customer-list-detail.html",
+      "binding_status": "original-preserving-v1",
+      "resource_policy": "Preserve every embedded byte and original URL. Do not synthesize or fetch missing resources.",
+      "rejected_shadow": {
+        "source": ".claude/skill-os/page-library/sources/customer-list-detail.html",
+        "bytes": 6532,
+        "sha256": "dd431a1d03f31e493c448628b360908816fd8f8e67de67e58ec0205f0db7fde2",
+        "reason": "User rejected simplified rewrite; cannot be used as original template or acceptance baseline."
+      }
     },
     {
       "page_id": "crm-workbench-home",
       "raw_source": "/Users/luca/Desktop/模版/工作台首页.html",
       "raw_bytes": 219396,
       "raw_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
-      "shadow_source": ".claude/skill-os/page-library/sources/crm-workbench-home.html",
-      "shadow_bytes": 5236,
-      "shadow_sha256": "860b6e7b655b5c7e622ab8ab5d7a396c651026658dadae1a3dee925c76392af0",
-      "evidence": ["#appRoot", "#workspaceCard", "#agentPanel", "#chatLog", "data-od-id=top-header", "data-od-id=global-navigation", "data-od-id=crm-navigation", "data-od-id=workspace", "data-od-id=agent-panel"],
-      "materialized_states": ["default", "agent-open", "session-drawer", "menu-config"]
+      "copy_source": ".claude/skill-os/page-library/sources/originals/crm-workbench-home.html",
+      "binding_status": "original-preserving-v1",
+      "resource_policy": "Preserve every embedded byte and original URL. Do not synthesize or fetch missing resources.",
+      "rejected_shadow": {
+        "source": ".claude/skill-os/page-library/sources/crm-workbench-home.html",
+        "bytes": 6680,
+        "sha256": "e342b3e112eec5c3582ba1aa6ad92161512713da45bcafa9d443a7a135b0dd8f",
+        "reason": "User rejected simplified rewrite; cannot be used as original template or acceptance baseline."
+      }
     },
     {
       "page_id": "sales-record-list-detail",
       "raw_source": "/Users/luca/Desktop/模版/销售记录列表到详情页单.html",
       "raw_bytes": 283609,
       "raw_sha256": "1c2f45816993f022e13322757cc87b03b77d66d0be2971397d82b3cb1fad544f",
-      "shadow_source": ".claude/skill-os/page-library/sources/sales-record-list-detail.html",
-      "shadow_bytes": 6605,
-      "shadow_sha256": "c24c2169aacc682a2c7d124734797d2567b7672b0e21dd74f0ea2e3944aa421c",
-      "evidence": ["app shell", "global topbar", "app rail", "CRM sidebar", "sales workbench", "list view", "detail layer", "#tab-content-slot", "#detail-meta-slot", "five detail panel slots"],
-      "materialized_states": ["list", "detail", "summary", "insight", "tasks", "transcript", "basic"]
+      "copy_source": ".claude/skill-os/page-library/sources/originals/sales-record-list-detail.html",
+      "binding_status": "original-preserving-v1",
+      "resource_policy": "Preserve every embedded byte and original URL. Do not synthesize or fetch missing resources.",
+      "rejected_shadow": {
+        "source": ".claude/skill-os/page-library/sources/sales-record-list-detail.html",
+        "bytes": 6847,
+        "sha256": "882150a99f3825108db3291ae1a91862de34018d99ab2ebb6eeb69caf03b27ca",
+        "reason": "User rejected simplified rewrite; cannot be used as original template or acceptance baseline."
+      }
     }
   ]
 }

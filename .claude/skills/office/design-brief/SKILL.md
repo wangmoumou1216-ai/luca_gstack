@@ -704,7 +704,7 @@ binding/adoption、`page-reference.json` 和 TAC 都是同次 handoff 的运输�
 
 **Load `references/output-templates.md` §Design Generation Packet now — 产出 Design Generation Packet 前必须完整读取该模板。**
 
-写完后先通过 Step 3 的 Packet 门禁并冻结其字节内容。此 skill 不执行最终模板绑定、TAC 生成、
+carrier 先执行模板的结构化冻结。写完后先通过 Step 3 的 Packet 门禁并冻结其字节内容。此 skill 不执行最终模板绑定、TAC 生成、
 用户采用、OD stage/run/recover；它只交付可被这些后续动作 hash 绑定的需求事实。
 
 ### Step 2：生成 Tool Consumption Contract

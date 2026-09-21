@@ -44,6 +44,7 @@ export async function renderPreview({ catalog, pageId, root = repoRoot, browser:
   if (!entry) fail('PREVIEW_PAGE', `Unknown page: ${pageId}`);
   if (carrierOnly) carrierContractForPage(entry);
   const { bytes } = await readPageSource(entry, { root });
+  if (entry.original_copy) return renderOriginalCopyPreview(entry, bytes, suppliedBrowser);
   const carrierClosure = carrierOnly ? resolveAssetClosure({ baseTemplate: bytes, assets: [] }) : null;
   const browser = suppliedBrowser ?? await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: entry.viewport, deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: false });
@@ -151,6 +152,28 @@ export async function renderPreview({ catalog, pageId, root = repoRoot, browser:
     await context.close();
     if (!suppliedBrowser) await browser.close();
   }
+}
+
+// Original-copy preview is an inert display, not a rewritten HTML derivative.
+// CSP is a response header: stored/transported HTML bytes remain identical.
+async function renderOriginalCopyPreview(entry, bytes, suppliedBrowser) {
+  if (hash(bytes) !== entry.original_copy.sha256 || bytes.length !== entry.original_copy.bytes) fail('TEMPLATE_COPY_MISMATCH', 'Preview requires the exact original bytes');
+  const browser = suppliedBrowser ?? await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: entry.viewport, deviceScaleFactor: 1, serviceWorkers: 'block', acceptDownloads: false });
+  try {
+    const page = await context.newPage();
+    const blocked = [];
+    await context.route('**/*', async route => {
+      if (route.request().url() === `${origin}/original` && route.request().isNavigationRequest() && route.request().frame() === page.mainFrame()) {
+        await route.fulfill({ contentType: 'text/html; charset=utf-8', body: bytes, headers: { 'Content-Security-Policy': "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" } });
+      } else { blocked.push(route.request().url()); await route.abort('blockedbyclient'); }
+    });
+    await page.goto(`${origin}/original`, { waitUntil: 'load' });
+    await page.evaluate(async () => { await document.fonts.ready; });
+    const png = await page.screenshot({ fullPage: true });
+    const dimensions = await page.evaluate(() => ({ width: Math.max(document.documentElement.scrollWidth, innerWidth), height: Math.max(document.documentElement.scrollHeight, innerHeight) }));
+    return { png, manifest: { schema_version: 1, page_id: entry.page_id, source_hash: entry.source_hash, viewport: entry.viewport, screenshot: { sha256: hash(png), width: dimensions.width, height: dimensions.height, source_hash: entry.source_hash, viewport: entry.viewport }, regions: [], fidelity: 'original-bytes-preserved', execution: 'scripts-disabled', scope: 'initial inert display only; not interaction/state or OD acceptance', blocked_requests: blocked } };
+  } finally { await context.close(); if (!suppliedBrowser) await browser.close(); }
 }
 
 function selectorApp(manifest) {

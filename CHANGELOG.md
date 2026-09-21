@@ -20,9 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fresh-session 活体测试发现 quality-gate 仍继承 anchor；根因是 Codex 0.155.1 把真实派发工具规范化为 `collaborationspawn_agent`，旧 matcher 只覆盖 API 展示名。现已在 hook 注册、native adapter 与回归门统一覆盖实测名并刷新 trust；该阶段先保持 H2 pending，等待后续真实采用证据。
 - 后续 fresh-session 已证明根 `gpt-5.6-sol`、quality-gate 子调用 `gpt-6-astra` 的真实动态选模。该活体进一步发现 `SubagentStop` 发生在 transcript 写入 `task_complete` 之前，旧 evidence check 因等待未来事件误拒正确结果；现改为绑定同 turn assistant item 与 hook `last_assistant_message`，并以错消息/错模型负例保持 fail-closed。最终 fresh-session 的 production state 已记录 invocation=`accepted`、`critical_failure=false`，Codex native H2 闭合。
 
+### Corrected（2026-09-20 · 原模板必须一比一复制）
+
+- 撤回四模板静态影子方案：新增原件逐字节副本及 copy 校验门，目录指向原件而不是简化重写；旧影子采用被拒绝。HTML/CSS/脚本/隐藏状态不删改，定位数据放旁车。原件局部适配、外置资源审计及独立回收校验已完成；惰性预览和字节一致性不冒充交互验收。
+
 ### Removed（2026-09-20 · Muse Loop 退役）
 
 - 移除未使用的 Muse Loop 编排器、专属原型生成器及路由/状态/QA 豁免；旧入口明确拒绝调度。为什么：按用户选择减掉无用流程，保留独立需求筛选、逐 AC 原型验收和主体设计链，历史数据不删除。
+
+### Fixed（2026-09-20 · 模板设计链审查整改）
+
+- 以结构化冻结 Packet 的真实事实计算适用集，确定性生成 TAC 可读投影；补齐模板/位置判断依据、状态支持与消歧门，修复不可变合同、真实 DOM 和输出 inventory 校验。新增模板短指南位于 page-library/README.md。为什么：防止漏需求、错位修改及注释假锚点被旧机械 PASS 掩盖；本轮原件测试另经独立终审和浏览器验收，旧影子 live 验证仍不算证据。
 
 ### Added（2026-09-18 · Open Design 模板 carrier V2 与模型路由解析核心）
 

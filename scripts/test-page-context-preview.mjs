@@ -37,12 +37,46 @@ try {
       if (entry.page_id === 'list') writeFileSync(resolve(artifacts, 'list.html'), selectorHtml(shot));
     }
     assert.equal(shot.manifest.regions.length, entry.regions.length);
+    if (entry.original_copy) {
+      assert.equal(shot.manifest.fidelity, 'original-bytes-preserved');
+      assert.equal(shot.manifest.execution, 'scripts-disabled');
+      assert.equal(shot.manifest.source_hash, entry.original_copy.sha256);
+      await assert.rejects(renderPreview({ catalog, pageId: entry.page_id, root, browser, carrierOnly: true }), { code: 'CARRIER_INELIGIBLE' });
+    }
     for (const region of shot.manifest.regions) assert.ok(region.visible && region.bounds.width > 0 && region.bounds.height > 0, `${entry.page_id}/${region.region_id}: region must be visible in the default screenshot`);
     if (entry.carrier_eligible) {
       const carrierShot = await renderPreview({ catalog, pageId: entry.page_id, root, browser, carrierOnly: true });
       assert.equal(carrierShot.manifest.render.carrier_closure_proof, true, `${entry.page_id}: carrier-only render proves the static closure`);
       assert.equal(carrierShot.manifest.render.carrier_asset_profile, 'p0-static-v1', `${entry.page_id}: carrier-only render uses the strict static profile`);
       assert.equal(carrierShot.manifest.screenshot.sha256, shot.manifest.screenshot.sha256, `${entry.page_id}: carrier-only and reference preview render the same source bytes`);
+      const statePage = await browser.newPage();
+      try {
+        await statePage.setContent(readFileSync(resolve(root, entry.source_ref), 'utf8'));
+        const observed = await statePage.evaluate(entry => {
+          const find = anchor => [...document.querySelectorAll(anchor.kind === 'attribute' ? `[${anchor.name}]` : anchor.tag)].filter(node => anchor.kind === 'attribute' ? node.getAttribute(anchor.name) === anchor.value : node.textContent.replace(/\s+/g, ' ').trim() === anchor.text);
+          return entry.state_support.map(state => ({
+            state_id: state.state_id, status: state.status,
+            anchors: state.anchors.map(anchor => find(anchor).length),
+            targets: state.target_ids.map(id => {
+              const target = [...entry.modules, ...entry.slots].find(item => (item.module_id ?? item.slot_id) === id);
+              const nodes = find(target.anchor);
+              return { id, count: nodes.length, contained: nodes.length === 1 && state.anchors.some(anchor => find(anchor).some(parent => parent.contains(nodes[0]))), visible: nodes.length === 1 && nodes[0].getBoundingClientRect().width > 0 && nodes[0].getBoundingClientRect().height > 0 };
+            })
+          }));
+        }, entry);
+        for (const state of observed) {
+          if (state.status === 'supported') {
+            assert.ok(state.anchors.length && state.anchors.every(count => count === 1), `${entry.page_id}/${state.state_id}: supported state anchors exist in actual DOM`);
+            assert.ok(state.targets.length && state.targets.every(target => target.count === 1 && target.contained && target.visible), `${entry.page_id}/${state.state_id}: supported targets have actual contained visible DOM structure`);
+          } else assert.deepEqual(state.targets, [], `${entry.page_id}/${state.state_id}: unsupported states cannot authorize a target`);
+        }
+        if (entry.page_id === 'crm-workbench-home') {
+          assert.equal(await statePage.locator('#menuConfig').getByRole('textbox', { name: '菜单名称', exact: false }).count(), 1);
+          assert.equal(await statePage.locator('#menuConfig').getByRole('radio').count(), 4);
+          assert.equal(await statePage.locator('#menuConfig').getByRole('button', { name: '添加菜单' }).count(), 1);
+          assert.equal(await statePage.locator('#menuConfig').getByRole('button', { name: '取消' }).count(), 1);
+        }
+      } finally { await statePage.close(); }
     }
     console.log(`PASS actual ${entry.page_id} screenshot and ${entry.regions.length} visible source regions`);
   }
