@@ -51,6 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # G5 offline fixtures reconstruct two frozen historical trees.
       - uses: actions/setup-node@v5
         with:
           node-version: '20'
@@ -92,6 +94,16 @@ jobs:
         run: npm run check:agent-context
       - name: Agent context mutation proof-it-bites
         run: npm run test:agent-context
+      - name: Reconstruct frozen G5 offline fixtures
+        run: |
+          sudo mkdir -p /private/tmp/context-lightening-p1.kHzsIW /Users/luca/Desktop/项目/muse/lucagstack/framework-audit
+          sudo chown "$USER:$USER" /private/tmp/context-lightening-p1.kHzsIW /Users/luca/Desktop/项目/muse/lucagstack/framework-audit
+          git worktree add --detach /private/tmp/context-lightening-p1.kHzsIW/baseline 05aa78adc431231455dabbfae94cccf362eb4339
+          git worktree add --detach /private/tmp/context-lightening-p1.kHzsIW/candidate 635416e5892dd554db7ed8081e0ac88b2d301198
+          git -C /private/tmp/context-lightening-p1.kHzsIW/candidate restore --source 05aa78adc431231455dabbfae94cccf362eb4339 --worktree -- .claude/skill-os/page-library .claude/skill-os/runtime/page-context.md .claude/skills/office/design-brief .claude/skills/office/open-design/SKILL.md
+          install -m 0644 framework-audit/2026-09-21-context-lightening-execution-plan.md /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-21-context-lightening-execution-plan.md
+          install -d -m 0755 /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts
+          install -m 0644 framework-audit/2026-09-22-g5-preapproval-readiness.md /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts/g5-preapproval-readiness.md
       - name: A/B evaluator adversarial self-test
         run: npm run test:agent-context-ab-evaluator
       - name: Conditional context resolution canaries
