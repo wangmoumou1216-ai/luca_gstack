@@ -105,7 +105,16 @@ jobs:
           install -d -m 0755 /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts
           install -m 0644 framework-audit/2026-09-22-g5-preapproval-readiness.md /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts/g5-preapproval-readiness.md
       - name: A/B evaluator adversarial self-test
-        run: npm run test:agent-context-ab-evaluator
+        run: |
+          set +e
+          npm run test:agent-context-ab-evaluator 2>&1 | tee /tmp/g5-ab-self-test.log
+          result=${PIPESTATUS[0]}
+          set -e
+          if [ "$result" -ne 0 ]; then
+            failure=$(grep -E 'Error:|AssertionError|ERR_|EACCES|ENOENT|G5_BLOCKED|^  (code|path|actual|expected):' /tmp/g5-ab-self-test.log | tail -8 | tr '\n' ' ' || true)
+            echo "::error::A/B evaluator self-test failed: ${failure:-see job log}"
+            exit "$result"
+          fi
       - name: Conditional context resolution canaries
         run: npm run test:agent-context-resolution
       - name: Project routing dry-run
