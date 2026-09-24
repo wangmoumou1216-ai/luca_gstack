@@ -232,9 +232,14 @@ ok('S9b workflow-runner 存在且两个 workflow 零改写可执行（scripts/te
 // S9c workflow-runner **运行时**覆盖（2026-08-05 深审 M-8）：既有 test-workflow-runner
 // 全用 --dry-run，`if (DRY) return null` 在 runCodex 前短路 → spawn/超时/进程组/schema 写盘/
 // 退出码分支覆盖率为 0%，而三个 BLOCKER 全住在那块。本套用假 codex 二进制真跑该路径。
-ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-runtime.mjs）',
-  spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
-    { cwd: ROOT, timeout: 420000 }).status === 0);
+{
+  const runtime = spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
+    { cwd: ROOT, timeout: 420000, encoding: 'utf8' });
+  const failures = (runtime.stdout || '').split('\n').filter((line) => line.startsWith('FAIL '));
+  ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-runtime.mjs）',
+    runtime.status === 0,
+    failures.join(' | ') || (runtime.stderr || '').trim().slice(-500) || String(runtime.error || ''));
+}
 
 // S9d 原生 subagent 的模型改写、同调用 transcript 证据和 critical latch。
 ok('S9d Codex native 模型路由 hook 行为测试全绿',
