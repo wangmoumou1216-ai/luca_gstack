@@ -1720,13 +1720,24 @@ function g5ReadRecoveryClaim(path) {
   return claim;
 }
 
-function g5AcquireStateGuard(stateRoot) {
+function g5AcquireStateGuard(stateRoot, platform = process.platform) {
   const guardPath = join(stateRoot, '.cell-lock-guard');
-  const result = spawnSync('/usr/bin/shlock', ['-p', String(process.pid), '-f', guardPath], {
-    encoding: 'utf8', timeout: 10_000,
-  });
-  assert.equal(result.error, undefined, `G5 state guard failed to start: ${result.error?.message || ''}`);
-  assert.equal(result.status, 0, `G5 state guard is held by another process: ${result.stderr || result.stdout}`);
+  if (platform === 'darwin') {
+    const result = spawnSync('/usr/bin/shlock', ['-p', String(process.pid), '-f', guardPath], {
+      encoding: 'utf8', timeout: 10_000,
+    });
+    assert.equal(result.error, undefined, `G5 state guard failed to start: ${result.error?.message || ''}`);
+    assert.equal(result.status, 0, `G5 state guard is held by another process: ${result.stderr || result.stdout}`);
+  } else if (platform === 'linux') {
+    // Linux CI has no shlock. Exclusive create is atomic; an orphaned guard fails closed.
+    try { g5WriteOnceDurable(guardPath, `${process.pid}\n`); }
+    catch (error) {
+      if (error.code === 'EEXIST') assert.fail('G5 state guard is held by another process');
+      throw error;
+    }
+  } else {
+    assert.fail(`G5 state guard unsupported platform: ${platform}`);
+  }
   assert.equal(readFileSync(guardPath, 'utf8').trim(), String(process.pid),
     'G5 state guard PID binding mismatch');
   g5FsyncDirectory(stateRoot);
@@ -6618,6 +6629,20 @@ if (selfTest) {
   if (arm === 'baseline') {
     console.log('PASS baseline G5 contract, metric, and production-effect offline self-test');
     process.exit(0);
+  }
+  const guardProbeRoot = mkdtempSync(join(tmpdir(), 'g5-portable-guard-'));
+  try {
+    const firstGuard = g5AcquireStateGuard(guardProbeRoot, 'linux');
+    assert.throws(() => g5AcquireStateGuard(guardProbeRoot, 'linux'),
+      /G5 state guard is held/, 'Linux guard admitted concurrent owners');
+    firstGuard.release();
+    const secondGuard = g5AcquireStateGuard(guardProbeRoot, 'linux');
+    secondGuard.release();
+    writeFileSync(join(guardProbeRoot, '.cell-lock-guard'), '999999\n', { flag: 'wx' });
+    assert.throws(() => g5AcquireStateGuard(guardProbeRoot, 'linux'),
+      /G5 state guard is held/, 'Linux guard silently reclaimed an orphan');
+  } finally {
+    rmSync(guardProbeRoot, { recursive: true, force: true });
   }
   console.log(JSON.stringify({ g5_offline_transport: await runG5OfflineTransportTests() }));
   assert.deepEqual(legacyFixtureIds, ['F1', 'F2', 'F3', 'F4-direct', 'F4-multi', 'F4-stop',
