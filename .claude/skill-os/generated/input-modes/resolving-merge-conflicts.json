@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "resolving-merge-conflicts",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "real_in_progress_git_conflict"
+        ],
+        "optional": [
+          "authorized_read_only_git_observation"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "real_in_progress_git_conflict",
+          "original_u_id"
+        ],
+        "optional": [
+          "inherited_path_scope"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "real_in_progress_git_conflict",
+          "condition_evidence",
+          "original_u_id",
+          "authority_record_sha256",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "inherited_path_scope"
+        ]
+      }
+    },
+    "quality_gates": [
+      "operation_and_unmerged_entries_confirmed",
+      "both_intents_recovered",
+      "mutation_doors_separate",
+      "no_automatic_commit_or_push",
+      "returns_to_original_u_id"
+    ],
+    "notes": "inspect/propose 默认只读；edit/stage/advance/abort 分门授权。"
+  }
+}

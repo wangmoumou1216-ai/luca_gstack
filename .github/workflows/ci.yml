@@ -136,6 +136,8 @@ jobs:
         run: npm run check:harness
       - name: Codex projection static wiring (CI-safe host checks)
         run: node scripts/verify-codex-wiring.mjs --static --ci
+      - name: Verify composition contract and mutation counterexamples
+        run: npm run test:verify-composition
       - name: Evolution adjudication default-deny contracts
         run: npm run check:evolution-adjudication
       - name: CI blocking/coverage/gatherer contract

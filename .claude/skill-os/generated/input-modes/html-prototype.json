@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "html-prototype",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "prototype_brief"
+        ],
+        "optional": [
+          "design_brief",
+          "ux_audit_report",
+          "screenshots",
+          "figma_demo_blueprint"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "design_brief",
+          "ux_audit_report",
+          "prd_artifact"
+        ]
+      }
+    },
+    "source_kinds": [
+      "design_brief",
+      "ux_audit",
+      "screenshot_delta",
+      "figma_demo_blueprint",
+      "standalone_brief",
+      "standalone_mobile_prototype"
+    ],
+    "quality_gates": [
+      "step0_cognitive_gate",
+      "source_scope_contract",
+      "current_design_system_when_provided",
+      "design_generation_packet_gate",
+      "prototype_carrier_respected",
+      "decision_mapping_coverage",
+      "state_mapping_coverage",
+      "dynamic_reference_when_triggered",
+      "prototype_qa"
+    ]
+  }
+}

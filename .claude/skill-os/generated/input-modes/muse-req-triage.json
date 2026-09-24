@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "muse-req-triage",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "candidate_requirements_or_raw_corpus"
+        ],
+        "optional": []
+      }
+    },
+    "quality_gates": [
+      "gate1_human_decision",
+      "no_rice_fabrication",
+      "brainstorm_phase15_firewall"
+    ],
+    "notes": "standalone：接收原始语料或结构化候选，忠实提取并计算信号；accept/defer/reject 均须用户裁决。accept 项可格式化为话题字符串交给 /brainstorm，保留其置信度防火墙。"
+  }
+}

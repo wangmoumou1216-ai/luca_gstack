@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "tech-spec",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "design_brief_handoff",
+          "prd_artifact"
+        ],
+        "optional": [
+          "ai_spec_artifact",
+          "architecture_brief"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "prd_artifact",
+          "design_brief_handoff"
+        ],
+        "optional": [
+          "prd_handoff"
+        ]
+      }
+    },
+    "quality_gates": [
+      "conflict_register",
+      "architecture_view",
+      "interface_contracts",
+      "traceability_matrix",
+      "design_mapping_coverage",
+      "coverage_gate"
+    ],
+    "output_path": "docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md",
+    "handoff_path": "docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "ux-writing",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "product_context_or_copy_to_review"
+        ],
+        "optional": [
+          "prd_artifact",
+          "ux_brainstorm_artifact",
+          "screenshots"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "prd_artifact"
+        ],
+        "optional": [
+          "ux_brainstorm_artifact"
+        ]
+      }
+    },
+    "quality_gates": [
+      "semantic_verbatim_layer_split",
+      "verbatim_never_enters_packet"
+    ],
+    "notes": "内容与语言设计，双相位：相位1 语义规范 pre-brief（产 voice-copy-spec，design-brief Step 1.0b 继承）；相位2 评审改写 standalone。逐字层仅 html-prototype 本地路径，永不进 OD 编译。"
+  }
+}

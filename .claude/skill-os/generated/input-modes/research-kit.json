@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "research-kit",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "research_question_or_hypothesis"
+        ],
+        "optional": [
+          "prd_outstanding_questions",
+          "target_audience"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "research_question_or_hypothesis"
+        ],
+        "optional": [
+          "prd_outstanding_questions",
+          "target_audience"
+        ]
+      }
+    },
+    "quality_gates": [
+      "non_leading_question_check",
+      "every_item_maps_to_research_question"
+    ],
+    "notes": "一手研究工具设计（采集之前）。三不产：不产发现/不产解读/不采集——kit 武装 luca 去采集，insight-synthesis 消化采回的数据，中间是人工步骤。产出 docs/research/research-kit-<topic>-<date>.md。"
+  }
+}

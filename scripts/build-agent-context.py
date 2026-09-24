@@ -2,13 +2,15 @@
 """Build and verify generated agent-context projections.
 
 The script derives the skill catalog from skill frontmatter, the routing map, and explicit
-visibility metadata. It derives Static Fallback text from promoted facts plus the allowlist.
-Generated files are deterministic and are never hand-edited.
+visibility metadata. It derives Static Fallback text from promoted facts plus the allowlist, and
+selected-skill input contracts from the one YAML registry. Generated files are deterministic and
+are never hand-edited.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -29,6 +31,24 @@ PROMOTED = MEMORY_ROOT / "memory" / "semantic" / "promoted-facts.yaml"
 GENERATED = ROOT / ".claude" / "skill-os" / "generated"
 CATALOG = GENERATED / "skill-catalog.md"
 STATIC_FALLBACK = GENERATED / "static-fallback.md"
+CONTEXT_INDEX = GENERATED / "context-index.md"
+CONTEXT_MANIFEST = ROOT / ".claude/skill-os/agent-context-manifest.json"
+INPUT_MODES = ROOT / ".claude/skill-os/input-modes.yaml"
+INPUT_MODE_DIR = GENERATED / "input-modes"
+INPUT_MODE_KEYS = (
+    "auto", "handoff", "wait-what", "domain-modeling", "writing-for-agents", "magicpath",
+    "open-design", "idea", "deepresearch", "quick-research", "brainstorm",
+    "superpowers-brainstorming", "ux-research", "ux-brainstorm", "design-brief",
+    "html-prototype", "figma-demo", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
+    "resolving-merge-conflicts", "to-spec", "to-tickets", "wayfinder", "implement",
+    "code-hygiene", "code-review", "codebase-design", "code-recon", "muse-req-triage",
+    "insight-synthesis", "research-kit", "ux-writing", "compare", "ux-audit", "redteam",
+    "evals", "retro",
+)
+CONTEXT_FIELDS = (
+    "id", "obligation_ids", "runtime", "leading_words", "condition", "load_before",
+    "target", "contains", "loader", "read_to_end", "fallback",
+)
 
 
 def fail(message: str) -> None:
@@ -41,6 +61,26 @@ def set_memory_root(path: Path) -> None:
     MEMORY_ROOT = path.resolve()
     ALLOWLIST = MEMORY_ROOT / "memory" / "semantic" / "static-fallback-allowlist.txt"
     PROMOTED = MEMORY_ROOT / "memory" / "semantic" / "promoted-facts.yaml"
+
+
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Safe YAML loader that rejects ambiguous duplicate mapping keys."""
+
+
+def construct_unique_mapping(loader: UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False) -> dict:
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            fail(f"duplicate YAML key in input-modes.yaml: {key}")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    construct_unique_mapping,
+)
 
 
 def frontmatter(path: Path) -> dict:
@@ -200,8 +240,93 @@ def render_static_fallback() -> str:
     return "\n".join(lines)
 
 
+def render_context_index() -> str:
+    manifest = json.loads(CONTEXT_MANIFEST.read_text(encoding="utf-8"))
+    if manifest.get("version") != 1 or not isinstance(manifest.get("entries"), list):
+        fail("unsupported context manifest")
+    entries = []
+    for entry in manifest["entries"]:
+        # New fields must be classified rather than silently omitted from agent context.
+        if set(entry) != set(CONTEXT_FIELDS) | {"truth_owner", "fixtures"}:
+            fail(f"unclassified or missing context fields: {entry.get('id', '<unknown>')}")
+        projected = {key: entry[key] for key in CONTEXT_FIELDS}
+        if entry["truth_owner"] != entry["target"]:
+            projected["truth_owner"] = entry["truth_owner"]
+        entries.append(projected)
+    lines = [
+        "# Agent context index",
+        "",
+        "> Generated from `.claude/skill-os/agent-context-manifest.json`; do not edit by hand.",
+        "Only implementation-source and test-fixture metadata are omitted. All operational fields are verbatim.",
+        "Match conditions semantically, not by hints alone. Root timing, full owner reads and safety gates are unchanged.",
+        "If this index is missing, unreadable or known stale, use the complete source manifest; never infer no obligations.",
+        "",
+        "```json",
+        "[",
+    ]
+    lines.extend(json.dumps(entry, ensure_ascii=False, separators=(",", ":"))
+                 + ("," if index < len(entries) - 1 else "") for index, entry in enumerate(entries))
+    lines.extend([
+        "]", "```", "", "<!-- FILE_END: skill-os/generated/context-index.md -->", "",
+    ])
+    return "\n".join(lines)
+
+
+def input_mode_views() -> dict[Path, str]:
+    source_bytes = INPUT_MODES.read_bytes()
+    source = yaml.load(source_bytes.decode("utf-8"), Loader=UniqueKeyLoader)
+    if not isinstance(source, dict) or set(source) != {"version", "principle", "skills", "governance_tools"}:
+        fail("input-modes.yaml must contain exactly version/principle/skills/governance_tools")
+    if source["version"] != 1 or not isinstance(source["principle"], str) or not source["principle"].strip():
+        fail("input-modes.yaml has an invalid version or principle")
+    groups = {name: source[name] for name in ("skills", "governance_tools")}
+    if any(not isinstance(group, dict) for group in groups.values()):
+        fail("input-modes.yaml groups must be mappings")
+    overlaps = set(groups["skills"]) & set(groups["governance_tools"])
+    if overlaps:
+        fail(f"input-mode keys overlap across groups: {sorted(overlaps)}")
+    actual = set(groups["skills"]) | set(groups["governance_tools"])
+    expected = set(INPUT_MODE_KEYS)
+    if actual != expected:
+        fail(f"input-mode key set drift: missing={sorted(expected - actual)} extra={sorted(actual - expected)}")
+    digest = hashlib.sha256(source_bytes).hexdigest()
+    rendered = {}
+    for skill in INPUT_MODE_KEYS:
+        group = "skills" if skill in groups["skills"] else "governance_tools"
+        contract = groups[group][skill]
+        if not isinstance(contract, dict) or not contract:
+            fail(f"input-mode contract must be a non-empty mapping: {skill}")
+        view = {
+            "schema_version": 1,
+            "source_sha256": digest,
+            "skill": skill,
+            "group": group,
+            "global": {"version": source["version"], "principle": source["principle"]},
+            "contract": contract,
+        }
+        rendered[INPUT_MODE_DIR / f"{skill}.json"] = json.dumps(
+            view, ensure_ascii=False, indent=2, sort_keys=False,
+        ) + "\n"
+    return rendered
+
+
 def expected_files() -> dict[Path, str]:
-    return {CATALOG: render_catalog(), STATIC_FALLBACK: render_static_fallback()}
+    return {
+        CATALOG: render_catalog(),
+        STATIC_FALLBACK: render_static_fallback(),
+        CONTEXT_INDEX: render_context_index(),
+        **input_mode_views(),
+    }
+
+
+def reject_extra_input_mode_views() -> None:
+    if not INPUT_MODE_DIR.exists():
+        return
+    expected = {f"{key}.json" for key in INPUT_MODE_KEYS}
+    actual = {path.name for path in INPUT_MODE_DIR.iterdir()}
+    extra = sorted(actual - expected)
+    if extra:
+        fail(f"unexpected generated input-mode files: {extra}")
 
 
 def static_fallback_block() -> str:
@@ -218,6 +343,7 @@ def sync_projections() -> None:
     Each installed file uses an atomic rename. A synchronous install error restores every
     preimage; cross-file crash atomicity is neither available nor claimed.
     """
+    reject_extra_input_mode_views()
     planned = expected_files()
     block = static_fallback_block()
     for root_name in ("CLAUDE.md", "AGENTS.md"):
@@ -275,6 +401,7 @@ def sync_projections() -> None:
 
 
 def check_generated() -> None:
+    reject_extra_input_mode_views()
     errors = []
     for path, expected in expected_files().items():
         if not path.is_file():

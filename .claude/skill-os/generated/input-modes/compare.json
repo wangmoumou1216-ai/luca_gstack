@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "compare",
+  "group": "governance_tools",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "comparison_targets"
+        ],
+        "optional": [
+          "skill_name"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "skill_name",
+          "artifact_versions"
+        ]
+      }
+    },
+    "quality_gates": [
+      "both_files_read",
+      "structured_diff",
+      "read_only"
+    ],
+    "notes": "方案/版本/截图对比。只读，不修改文件。输入为两个完整路径，或 skill 名称自动取最新两个版本。"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "to-spec",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "resolved_engineering_conversation"
+        ],
+        "optional": [
+          "repository_evidence"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "resolved_engineering_conversation"
+        ],
+        "optional": [
+          "existing_tech_spec_context"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "resolved_engineering_conversation",
+          "condition_evidence",
+          "authority_record_sha256",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "parent_u_id"
+        ]
+      }
+    },
+    "quality_gates": [
+      "conversation_source_register",
+      "no_product_or_design_invention",
+      "canonical_tech_spec_coverage_gate"
+    ],
+    "notes": "薄 facade，只进入 tech-spec conversation_synthesis；不拥有第二份 spec/state。"
+  }
+}

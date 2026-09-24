@@ -1,16 +1,138 @@
 #!/bin/bash
 # verify.sh — luca_gstack 框架健康检查（NO_PIN，不扫描共享项目别名）
-# 用法: bash scripts/verify.sh
-# 退出码: 0 = 全部通过, 1 = 有 FAIL
+# 用法: bash scripts/verify.sh [--ci]
+# 退出码: 0 = 全部通过, 1 = 有 FAIL, 2 = 环境预检 BLOCKED
 
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+VERIFY_MODE="local"
+case "${1:-}" in
+  "") ;;
+  --ci) VERIFY_MODE="ci" ;;
+  *)
+    echo "⛔ BLOCKED: unsupported verify mode '$1' (expected no argument or --ci)."
+    exit 2
+    ;;
+esac
+if [ "$#" -gt 1 ]; then
+  echo "⛔ BLOCKED: verify accepts at most one explicit mode argument."
+  exit 2
+fi
+
 PASS=0
 FAIL=0
 WARN=0
+DELEGATED=0
+LAST_CHECK_PASSED=0
+C11_PASSED=0
+S30_PASSED=0
+
+preflight_fail() {
+  local id="$1"
+  local desc="$2"
+  local detail="${3:-}"
+  echo "  ✗ $id: $desc"
+  if [ -n "$detail" ]; then
+    printf '    %s\n' "$detail"
+  fi
+  echo "⛔ BLOCKED: environment admission failed before verification suites."
+  exit 2
+}
+
+preflight_command() {
+  local id="$1"
+  local desc="$2"
+  shift 2
+  local output
+  if output="$("$@" 2>&1)"; then
+    echo "  ✓ $id: $desc"
+  else
+    preflight_fail "$id" "$desc" "$output"
+  fi
+}
+
+run_environment_preflight() {
+  echo "[ 环境预检 ]"
+
+  local tool
+  for tool in bash git node npm python3; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      preflight_fail P0a "required tool is unavailable: $tool"
+    fi
+  done
+  echo "  ✓ P0a: required tools available (bash/git/node/npm/python3)"
+
+  preflight_command P0b "Node runtime satisfies package engine (>=20)" \
+    node -e 'if (Number(process.versions.node.split(".")[0]) < 20) process.exit(1)'
+
+  local repo_root git_common_dir deployment_root
+  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  if [ "$repo_root" != "$PROJECT_ROOT" ] || \
+     [ "$(git rev-parse --is-inside-work-tree 2>/dev/null || true)" != "true" ]; then
+    preflight_fail P0c "repository/worktree identity does not match the verify root" \
+      "expected=$PROJECT_ROOT actual=${repo_root:-<none>}"
+  fi
+  if [ "$VERIFY_MODE" = "ci" ] && [ ! -f .github/workflows/ci.yml ]; then
+    preflight_fail P0c "explicit CI mode requires .github/workflows/ci.yml"
+  fi
+  git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+  if [ ! -d "$git_common_dir" ] || [[ "$git_common_dir" != */.git ]]; then
+    preflight_fail P0c "Git deployment root cannot be derived from the common directory" \
+      "git-common-dir=${git_common_dir:-<none>}"
+  fi
+  deployment_root="${git_common_dir%/.git}"
+  if [ ! -f "$deployment_root/.codex/hooks.json" ]; then
+    preflight_fail P0c "deployment check target is missing .codex/hooks.json" \
+      "deployment-root=$deployment_root"
+  fi
+  echo "  ✓ P0c: repository/worktree identity and explicit mode ($VERIFY_MODE; deployment=$deployment_root)"
+
+  preflight_command P0d "OS temporary directory is writable" node -e '
+    const fs = require("node:fs");
+    const os = require("node:os");
+    const path = require("node:path");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "luca-verify-"));
+    try {
+      const probe = path.join(dir, "probe");
+      fs.writeFileSync(probe, "ok");
+      if (fs.readFileSync(probe, "utf8") !== "ok") process.exitCode = 1;
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  '
+
+  preflight_command P0e "candidate-local Playwright matches package-lock" node -e '
+    const fs = require("node:fs");
+    const path = require("node:path");
+    const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+    const expected = lock.packages?.["node_modules/playwright"]?.version;
+    const manifest = require.resolve("playwright/package.json");
+    const actual = JSON.parse(fs.readFileSync(manifest, "utf8")).version;
+    const localPrefix = path.join(process.cwd(), "node_modules") + path.sep;
+    if (!expected || actual !== expected || !manifest.startsWith(localPrefix)) process.exit(1);
+  '
+
+  preflight_command P0f "cached Chromium launches and closes without installation" node -e '
+    const { chromium } = require("playwright");
+    const timer = setTimeout(() => {
+      console.error("Chromium launch/close timed out after 30 seconds");
+      process.exit(124);
+    }, 30_000);
+    (async () => {
+      const browser = await chromium.launch({ headless: true });
+      await browser.close();
+      clearTimeout(timer);
+    })().catch((error) => {
+      clearTimeout(timer);
+      console.error(error?.stack || error);
+      process.exit(1);
+    });
+  '
+  echo ""
+}
 
 check() {
   local id="$1"
@@ -19,9 +141,11 @@ check() {
   if eval "$@" > /dev/null 2>&1; then
     echo "  ✓ $id: $desc"
     PASS=$((PASS + 1))
+    LAST_CHECK_PASSED=1
   else
     echo "  ✗ $id: $desc"
     FAIL=$((FAIL + 1))
+    LAST_CHECK_PASSED=0
   fi
 }
 
@@ -38,11 +162,20 @@ warn() {
   fi
 }
 
+delegate() {
+  local id="$1"
+  local desc="$2"
+  echo "  ↪ $id: $desc (DELEGATED)"
+  DELEGATED=$((DELEGATED + 1))
+}
+
 echo ""
 echo "═══════════════════════════════════════"
 echo "  luca_gstack 框架健康检查（NO_PIN）"
 echo "═══════════════════════════════════════"
 echo ""
+
+run_environment_preflight
 
 echo "[ Git 基础设施 ]"
 check G1 "Git 仓库已初始化" "git rev-parse --is-inside-work-tree >/dev/null 2>&1"
@@ -75,6 +208,7 @@ check C9 "双 root K1-K10 / pointer / Static Fallback / discovery 门" "npm run 
 check C10 "agent-context mutation proof-it-bites" "npm run test:agent-context --silent"
 check C10b "A/B evaluator counterexamples / successful read / EOF" "npm run test:agent-context-ab-evaluator --silent"
 check C11 "Claude hooks 运行时副作用测试通过" "npm run check:hooks --silent"
+C11_PASSED=$LAST_CHECK_PASSED
 check C12 "settings.json 有 PreToolUse hook（会话级项目隔离）" "grep -q 'PreToolUse' .claude/settings.json"
 check C13 "project-scope-guard.mjs 语法合法" "node --check .claude/hooks/project-scope-guard.mjs"
 check C14 "会话级项目隔离回归通过（重定向/deny/跨session/fail-open）" "npm run test:project-scope --silent"
@@ -131,10 +265,23 @@ check S45 "六项集成 runtime candidate manifest denominator/blob 闭合（对
 check S31 "旧 mega-appendix 已退出 runtime context" "node scripts/check-appendix-pointers.mjs"
 check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）" "awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
 check S33 "model-routing 单真值源 + 双 root 薄指针" "node scripts/check-model-table.mjs"
-# VERIFY_CODEX_CLAUDE_REGRESSION_COVERED=1：S34 内部的「S10 Claude 路径零回归」会再 spawn 一遍
-# test-harness + test-hooks，而本文件的 C11/S30 已各跑一次——同一轮内纯重复，实测约 5.5 秒。
-# 单独跑 verify-codex-wiring.mjs 时不设该变量，覆盖面照旧。
-check S34 "Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）" "VERIFY_CODEX_CLAUDE_REGRESSION_COVERED=1 node scripts/verify-codex-wiring.mjs --static"
+# S34 的 Claude 回归子集只有在同一轮 C11 与 S30 已通过后才可显式委托；
+# 委托不是 PASS，且旧环境变量不再具有授权语义。单独运行 wiring 时仍执行完整 S10。
+check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）" "npm run check:harness --silent"
+S30_PASSED=$LAST_CHECK_PASSED
+CODEX_WIRING_ARGS="--static"
+SHOULD_DELEGATE_CLAUDE_REGRESSION=0
+if [ "$C11_PASSED" -eq 1 ] && [ "$S30_PASSED" -eq 1 ]; then
+  CODEX_WIRING_ARGS="$CODEX_WIRING_ARGS --delegate-claude-regression"
+  SHOULD_DELEGATE_CLAUDE_REGRESSION=1
+fi
+if [ "$VERIFY_MODE" = "ci" ]; then
+  CODEX_WIRING_ARGS="$CODEX_WIRING_ARGS --ci"
+fi
+if [ "$SHOULD_DELEGATE_CLAUDE_REGRESSION" -eq 1 ]; then
+  delegate S34/S10 "Claude 回归子集由本轮 C11 与 S30 覆盖"
+fi
+check S34 "Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）" "node scripts/verify-codex-wiring.mjs $CODEX_WIRING_ARGS"
 check S35 "observability 写入并发与崩溃恢复回归" "npm run test:observability --silent"
 check S36 "quality-gate verdict 与 recorder 权限分离回归" "npm run test:gate-verdict --silent"
 check S37 "CI 阻断覆盖与稳定 gatherer 合同" "npm run check:ci-contract --silent"
@@ -150,7 +297,6 @@ check S24 "skill-os YAML 语法合法（含外部技能 pin/vetting registry）"
 check S25 "luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）" "npm run check:luca-open --silent"
 check S26 "记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）" "npm run check:memroot --silent"
 check S26b "记忆同步跟随 tracking upstream 且覆盖全部已跟踪账本" "npm run test:sync --silent"
-check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）" "npm run check:harness --silent"
 check S29 "独立 root parity（K1-K10/预算/指针/harness 差异）" "npm run check:agents-parity --silent"
 check S28 "项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）" "npm run check:substrate --silent"
 # S27（深审 R1）：standalone opt-in 绝不能进版本控制——写进 committed settings.json 会让每个
@@ -178,7 +324,7 @@ check B2 "无 office SKILL.md 超 45KB（context-budget 回归守护）" "! find
 echo ""
 
 echo "═══════════════════════════════════════"
-echo "  结果: PASS=$PASS  FAIL=$FAIL  WARN=$WARN"
+echo "  结果: PASS=$PASS  FAIL=$FAIL  WARN=$WARN  DELEGATED=$DELEGATED"
 echo "═══════════════════════════════════════"
 echo ""
 

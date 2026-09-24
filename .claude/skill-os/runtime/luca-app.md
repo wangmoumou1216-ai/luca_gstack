@@ -1,6 +1,6 @@
 # Luca app runtime actions
 
-Load this file only when `LUCA_APP=1` or the user explicitly refers to the app, sidebar, current page, opening, previewing, or presenting a result.
+Load this file before answering a reference to the app, sidebar, current page, or selection; before reading, opening, or navigating app content; or, after verification, before presenting an HTML or Figma deliverable. LUCA_APP=1 alone neither triggers an unrelated action nor authorizes one.
 
 ## Resolve before acting
 

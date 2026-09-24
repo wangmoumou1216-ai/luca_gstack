@@ -45,10 +45,15 @@ python3 .claude/observability/scripts/get_rules.py office "*" 2>/dev/null || tru
   或明确要求“继续流程/进入下一步”。此时检查上游 artifacts 和 handoff
   gate。
 
-实际执行 skill 时读取 `input-modes.yaml`；仅用户选择 Workflow 或要求继续流程时读取
-`optional-workflow-graph.yaml`。只做路由、分类或 skill 合同判断时不加载 graph：
+实际执行 skill 且输入模式条件命中时，先完整读取
+`.claude/skill-os/runtime/workflow-mode.md`，再只读取所选 skill 的完整静态视图
+`.claude/skill-os/generated/input-modes/<key>.json`；健康视图缺失、不可读或已证实过期时，
+才按 owner 的受控回退完整读取 `.claude/skill-os/input-modes.yaml`。仅用户选择 Workflow
+或要求继续流程时读取 `optional-workflow-graph.yaml`。只做路由、分类或 skill 合同判断时
+不加载静态视图、源表或 graph：
 ```
-.claude/skill-os/input-modes.yaml
+.claude/skill-os/runtime/workflow-mode.md
+.claude/skill-os/generated/input-modes/<key>.json
 .claude/skill-os/optional-workflow-graph.yaml
 ```
 
@@ -93,17 +98,8 @@ Workflow gate 不得阻塞 standalone，除非该 gate 同时是质量或安全 
 2. 是否做出了任何**需要修正的错误假设**，导致返工或调整？
 3. 是否发现了可以让下次同类任务更快/更准的**可复用模式**？
 
-若任一为 YES → 立即运行（`--rule` 为可选，有明确规则时填写）：
-
-```bash
-python3 .claude/observability/scripts/write_observation.py \
-  --skill <skill-name> \
-  --message "<简要描述发现了什么>" \
-  --problem "<执行中遇到的隐性约束或错误假设>" \
-  --correction "<下次如何避免或加速>" \
-  --source self_reflection \
-  [--rule "<一句可执行规则>" --applies-to <skill-name> --scenes "*"]
-```
+若任一为 YES → 完整读取 `.claude/skills/office/references/learning-actions.md`，按其中
+Post-completion self-reflection observation 命令记录；`--rule` 只在存在明确规则时使用。
 
 若三个问题均为 NO → 跳过，直接 DONE。无需向用户解释此步骤。
 
@@ -200,28 +196,9 @@ python3 .claude/observability/scripts/get_rules.py <skill-name> <scene>
 - 「不要再...」
 - 「必须...」
 
-记录命令：
-
-```bash
-python3 .claude/observability/scripts/write_observation.py \
-  --skill <skill-name> \
-  --message "<用户原话或问题摘要>" \
-  --problem "<问题定义>" \
-  --correction "<下次如何避免>"
-```
-
-如果用户给的是明确、可复用的未来约束，同时沉淀为 active rule：
-
-```bash
-python3 .claude/observability/scripts/write_observation.py \
-  --skill <skill-name> \
-  --message "<用户原话或问题摘要>" \
-  --problem "<问题定义>" \
-  --correction "<下次如何避免>" \
-  --rule "<一句可执行规则>" \
-  --applies-to <skill-name> [other-skill] \
-  --scenes <A|B|C|D|*>
-```
+记录前完整读取 `.claude/skills/office/references/learning-actions.md`，使用其中 Explicit user correction
+observation 命令。若用户给的是明确、可复用的未来约束，同时按同一 reference 的 active-rule
+变体沉淀；不得因一次性偏好创建 active rule。
 
 每次 skill 收尾的 `run-log.jsonl` 采集支路已退役；不要把它重新建成常规完成副作用。
 经 quality-gate 验证的结果由 `record_eval.py` 写入 `memory/evals/eval-log.jsonl`。
@@ -241,28 +218,9 @@ python3 .claude/observability/scripts/write_observation.py \
 - 某 skill 发生 2 次以上同类 BLOCKED / DONE_WITH_CONCERNS。
 - Post-Completion Self-Reflection 发现高置信度规则。
 
-候选写入（高置信候选，仍需 review 后晋升）：
-
-```bash
-python3 memory/scripts/propose_semantic.py \
-  --domain skill-rule \
-  --fact "<skill名>: <规则描述>" \
-  --confidence high \
-  --evidence "<来源/复现>" \
-  --scope "<skill名>" \
-  --reviewer "<reviewer>" \
-  --tags "<skill名>,rule"
-```
-
-查询当前已有规则：
-
-```bash
-python3 memory/scripts/search_memory.py "<skill名> skill-rule" --limit 5
-# 需要展开 semantic 层明细时才运行：
-python3 memory/scripts/get_memory.py --layer semantic --domain skill-rule
-```
-
-注：旧的 `.claude/hermes/scripts/*` 路径（propose_growth / review_growth / get_growth_rules）已废弃删除，不要使用；一律改用上述 `memory/scripts/propose_semantic.py --domain skill-rule` 写入、`search_memory.py` / `get_memory.py --domain skill-rule` 读取，candidate 经 memory review 晋升。
+候选写入前完整读取 `.claude/skills/office/references/learning-actions.md`，先查重，再用其中 governed semantic
+candidate 命令。只能写 candidate，必须经 memory review/consolidate 才能晋升；旧
+`.claude/hermes/scripts/*` 路径仍已废弃，禁止恢复。
 
 禁止：
 - 自动写 `CONTEXT.md`

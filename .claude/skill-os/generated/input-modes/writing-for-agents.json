@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "writing-for-agents",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "agent_facing_document_target"
+        ],
+        "optional": [
+          "consuming_agent",
+          "observed_failure",
+          "target_behavior",
+          "validation_command"
+        ]
+      }
+    },
+    "quality_gates": [
+      "truth_owner_preserved",
+      "pointer_reachability",
+      "information_hierarchy",
+      "checkable_completion_criteria",
+      "single_source_of_truth",
+      "no_op_pruned",
+      "requested_effect_only",
+      "fresh_validation_evidence"
+    ],
+    "notes": "Agent-facing 文档写作/评审参考；skill-creator 或领域 skill 仍拥有流程与事实。本 skill 不独占 workflow 节点，不自产 handoff/state，不扩大 effect authority。"
+  }
+}

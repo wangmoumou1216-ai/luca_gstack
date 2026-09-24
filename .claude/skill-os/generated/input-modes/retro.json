@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "retro",
+  "group": "governance_tools",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "completed_decision_or_project"
+        ],
+        "optional": [
+          "review_artifacts"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "design_brief",
+          "handoff_review",
+          "ux_audit"
+        ]
+      }
+    }
+  }
+}

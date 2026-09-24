@@ -36,6 +36,7 @@
     "test:agent-context": "node scripts/test-agent-context.mjs",
     "test:agent-context-resolution": "node scripts/test-agent-context-resolution.mjs",
     "test:agent-context-ab-evaluator": "node scripts/run-agent-context-ab.mjs --root . --arm candidate --harness claude --fixture F1 --trials 1 --concurrency 1 --output /tmp/agent-context-ab-self-test.ndjson --self-test && node scripts/run-agent-context-ab.mjs --root . --arm candidate --harness codex --fixture F1 --trials 1 --concurrency 1 --output /tmp/agent-context-ab-self-test.ndjson --self-test",
+    "test:verify-composition": "node scripts/test-verify-composition.mjs",
     "test:memory": "python3 -m unittest discover -s memory/tests -p 'test_*.py' -v",
     "check:memory-health": "python3 memory/scripts/check_memory_health.py",
     "check:routing-map": "node scripts/check-routing-map.mjs",

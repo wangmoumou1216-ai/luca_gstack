@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "brainstorm",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "idea_or_problem_statement"
+        ],
+        "optional": [
+          "deepresearch_report",
+          "idea_artifact"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "deepresearch_report",
+          "idea_artifact"
+        ]
+      }
+    },
+    "quality_gates": [
+      "socratic_questions",
+      "oracle_review",
+      "stable_ids",
+      "research_claim_coverage",
+      "prd_destination_matrix",
+      "no_unmapped_high_confidence_claims",
+      "handoff_gate"
+    ]
+  }
+}
