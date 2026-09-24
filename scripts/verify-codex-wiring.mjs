@@ -4,8 +4,11 @@
 //   [活体] 需要可用订阅——真跑一次 codex exec，确认 hook 在**真实 Codex session** 里触发。
 //         订阅未恢复时自动跳过并显式标 BLOCKED，绝不用静态结果冒充端到端。
 //
-// 用法： node scripts/verify-codex-wiring.mjs         （自动判断能否跑活体段）
+// 用法： node scripts/verify-codex-wiring.mjs          （自动判断能否跑活体段）
 //        node scripts/verify-codex-wiring.mjs --static （只跑静态段）
+// 聚合入口在同一轮已跑完 Claude 回归时，可显式使用：
+//        node scripts/verify-codex-wiring.mjs --static --delegate-claude-regression
+// 委托项只记 DELEGATED，不记 PASS；CI 模式也必须显式传 --ci，CI=1 不等价。
 
 import { spawnSync } from 'child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
@@ -13,11 +16,30 @@ import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const staticOnly = process.argv.includes('--static');
-const ciMode = process.argv.includes('--ci');
-let pass = 0, fail = 0, blocked = 0;
+const args = process.argv.slice(2);
+const allowedArgs = new Set(['--static', '--ci', '--delegate-claude-regression']);
+const unknownArgs = args.filter((arg) => !allowedArgs.has(arg));
+const duplicateArgs = [...new Set(args.filter((arg, index) => args.indexOf(arg) !== index))];
+const staticOnly = args.includes('--static');
+const ciMode = args.includes('--ci');
+const delegateClaudeRegression = args.includes('--delegate-claude-regression');
+
+if (unknownArgs.length > 0 || duplicateArgs.length > 0 || (delegateClaudeRegression && !staticOnly)) {
+  const problems = [];
+  if (unknownArgs.length > 0) problems.push(`未知参数=${unknownArgs.join(',')}`);
+  if (duplicateArgs.length > 0) problems.push(`重复参数=${duplicateArgs.join(',')}`);
+  if (delegateClaudeRegression && !staticOnly) {
+    problems.push('--delegate-claude-regression 仅允许与 --static 同用');
+  }
+  console.error(`用法错误：${problems.join('；')}`);
+  console.error('用法：node scripts/verify-codex-wiring.mjs [--static] [--ci] [--delegate-claude-regression]');
+  process.exit(2);
+}
+
+let pass = 0, fail = 0, blocked = 0, delegated = 0;
 const ok = (n, c, extra = '') => { c ? (console.log(`PASS ${n}`), pass++) : (console.log(`FAIL ${n}${extra ? ' — ' + extra : ''}`), fail++); };
 const skip = (n, why) => { console.log(`BLOCKED ${n} — ${why}`); blocked++; };
+const delegate = (n, why) => { console.log(`DELEGATED ${n} — ${why}`); delegated++; };
 
 console.log('── [静态] 接线完整性 ──────────────────────────────────');
 
@@ -210,9 +232,14 @@ ok('S9b workflow-runner 存在且两个 workflow 零改写可执行（scripts/te
 // S9c workflow-runner **运行时**覆盖（2026-08-05 深审 M-8）：既有 test-workflow-runner
 // 全用 --dry-run，`if (DRY) return null` 在 runCodex 前短路 → spawn/超时/进程组/schema 写盘/
 // 退出码分支覆盖率为 0%，而三个 BLOCKER 全住在那块。本套用假 codex 二进制真跑该路径。
-ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-runtime.mjs）',
-  spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
-    { cwd: ROOT, timeout: 420000 }).status === 0);
+{
+  const runtime = spawnSync('node', [join(ROOT, 'scripts', 'test-workflow-runner-runtime.mjs')],
+    { cwd: ROOT, timeout: 420000, encoding: 'utf8' });
+  const failures = (runtime.stdout || '').split('\n').filter((line) => line.startsWith('FAIL '));
+  ok('S9c workflow-runner 运行时测试全绿（scripts/test-workflow-runner-runtime.mjs）',
+    runtime.status === 0,
+    failures.join(' | ') || (runtime.stderr || '').trim().slice(-500) || String(runtime.error || ''));
+}
 
 // S9d 原生 subagent 的模型改写、同调用 transcript 证据和 critical latch。
 ok('S9d Codex native 模型路由 hook 行为测试全绿',
@@ -225,11 +252,10 @@ ok('S9d Codex native 模型路由 hook 行为测试全绿',
 // 各跑一次；本处再 spawn 一遍是同一进程组内的纯重复，实测占 verify.sh 总耗时约 5.5 秒。
 // 而 verify.sh 现在要 124 秒、已经超过 agent harness 的 120 秒单命令上限——每次提交必超时，
 // 于是只能退到 FAST_COMMIT=1，**跳过全部 87 项**。省下的每一秒都直接换成门禁的可用性。
-// 故：由 verify.sh 显式声明「本轮已另行覆盖」时跳过重复；**单独跑本脚本时照常执行**，
-// 覆盖面在任何上下文都不减少。跳过是**声明式**的（消息里写明由谁覆盖），不是静默假绿。
-const claudeRegressionCoveredElsewhere = process.env.VERIFY_CODEX_CLAUDE_REGRESSION_COVERED === '1';
-if (claudeRegressionCoveredElsewhere) {
-  ok('S10 Claude 路径零回归（本轮已在外部单独运行 test-harness + test-hooks）', true);
+// 故：只有静态聚合入口显式传 --delegate-claude-regression 时才委托重复子集；单独跑本脚本
+// 仍实际执行两套回归。委托有独立计数，绝不进入 PASS，也不从继承环境推导授权。
+if (delegateClaudeRegression) {
+  delegate('S10 Claude 路径零回归', '由聚合入口本轮的 C11 + S30 覆盖');
 } else {
   ok('S10 Claude 路径零回归（test-harness + test-hooks）',
     spawnSync('node', [join(ROOT, 'scripts', 'test-harness.mjs')], { cwd: ROOT }).status === 0
@@ -408,6 +434,6 @@ if (liveReady) {
   }
 }
 
-console.log(`\n=== verify-codex-wiring: PASS=${pass} FAIL=${fail} BLOCKED=${blocked} ===`);
+console.log(`\n=== verify-codex-wiring: PASS=${pass} FAIL=${fail} BLOCKED=${blocked} DELEGATED=${delegated} ===`);
 if (blocked > 0) console.log('注意：BLOCKED ≠ 通过。活体段未跑通前，不得声称 Codex 接线已端到端验证。');
 process.exit(fail === 0 ? 0 : 1);

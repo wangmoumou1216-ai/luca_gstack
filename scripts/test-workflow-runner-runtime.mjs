@@ -2,7 +2,7 @@
 // Runtime regression for the app-server-backed Codex workflow adapter. All model calls are fake;
 // the runner still executes its real JSON-RPC, route, activation, evidence and sandbox paths.
 import {spawnSync} from 'node:child_process';
-import {chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -21,7 +21,10 @@ const parse = value => { try { return JSON.parse(value); } catch { return null; 
 
 const sandbox = mkdtempSync(join(tmpdir(), 'wf-app-server-test.'));
 const binDir = join(sandbox, 'bin');
-spawnSync('mkdir', ['-p', binDir]);
+mkdirSync(binDir);
+const codexHome = join(sandbox, 'codex-home');
+mkdirSync(codexHome);
+writeFileSync(join(codexHome, 'config.toml'), '', {mode: 0o600});
 const stateRoot = join(sandbox, 'state');
 const policyPath = join(sandbox, 'policy.json');
 const bindingsPath = join(sandbox, 'bindings.json');
@@ -115,6 +118,7 @@ function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
     env: {
       ...process.env,
       NODE_ENV: 'test',
+      CODEX_HOME: codexHome,
       PATH: `${binDir}:${process.env.PATH}`,
       LUCA_MODEL_ROUTE_POLICY_PATH: policyPath,
       LUCA_MODEL_ROUTE_BINDINGS_PATH: bindingsPath,

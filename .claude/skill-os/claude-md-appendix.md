@@ -130,7 +130,7 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 ## Project Gate 附则：总原则 + 绑定即注入（全文）
 
 > **总原则（命名即切换 + 语义自判，2026-07-06）：** 项目归属是**语义判断，不靠词表**——
-> 即使 route-guard 因无关键词输出 STOP，只要你从用户语言能判断出「切某已有项目 / 这是个新项目 /
+> 即使 route-guard 因无关键词只输出 `NONE`/semantic fallback，只要你从用户语言能判断出「切某已有项目 / 这是个新项目 /
 > 当前项目内的新需求」，就**决定性执行**（同 OD 单点交接的「语义不靠词表」原则）。route-guard
 > 词表只是粗网，真判断在你。切换便宜可逆→不确认；新建会 detach 当前+建目录→仅"我自己猜的新项目"
 > 留一句确认。
@@ -149,7 +149,7 @@ meta/框架/审计 session 不适用——只需读某项目记忆做参考时�
 ## insight-synthesis 划界（三处消歧全文，2026-07-20）
 
 `/insight-synthesis` = 一手定性综合，研究段第三"对象角度"（内部一手定性）。数据一律用户提供、skill 不自采。
-三处易混边界（语义判断，route-guard STOP 不豁免；表行只留与 idea 的核心划界，全文在此）：
+三处易混边界（语义判断，route-guard 的确定性命中与 semantic fallback 都不豁免；表行只留与 idea 的核心划界，全文在此）：
 - **与 `/idea` = 忠实 vs 解读**：输入同类（都是一手资料），差别在输出——idea 只忠实结构化·禁推断（只 observation）；
   insight-synthesis 在用户确认主题后做 observation→interpretation 跃迁。
 - **与 deepresearch / ux-research = 对象相反**：它们综合外部知识/竞品/先例；insight-synthesis 综合你自己的一手用户数据。
@@ -216,7 +216,7 @@ session 实调成功即为可达。实现与方案记录：muse 仓 `app/main.js
 
 ## luca app 侧栏感知（全文，2026-07-11）
 
-用户说"看看我侧栏/当前打开的页面/基于侧栏这个页做…"（语义识别非词表，route-guard STOP 不豁免；不进路由表、无斜杠命令）时：
+用户说"看看我侧栏/当前打开的页面/基于侧栏这个页做…"（语义识别非词表，route-guard 走 semantic fallback；不进路由表、无斜杠命令）时：
 ① 先跑 `bash scripts/luca-sidebar.sh`（默认 meta）——返回激活面板、当前页 URL/标题、全部页签清单（输出首行为结果 md 路径；15s 超时 = app 未运行/异常，如实报告，绝不臆造页面内容）。**`mcp__muse__workspace_state` 可见时本步用它等价代替**（meta 同源超集，见「muse 工具通道」）。
 ② 取内容**源头优先于 DOM**：GitHub → `gh` 拉源头；公网文档/文章 → WebFetch；X /status/ 页 → FxTwitter（`api.fxtwitter.com/<handle>/status/<id>` 无 key 恢复全文）；本地 HTML 预览页签 → 直接 Read meta 给的本地路径；登录墙/动态页无法重取 → `bash scripts/luca-sidebar.sh capture` 抓 DOM 正文兜底。
 ③ 下游接轨：诉求为"评估纳入 skill os / 工作流" → 接 `external-skill-scout`（Workflow）；评估通过要采纳 → 走既有治理轨道（main 落地 + routing-map + /office + workflow-graph + model-routing 三问 + parity 锚点），不为此新建机制。
@@ -255,7 +255,7 @@ claude-in-chrome＝act 面（自动化）。判断路径＝语义路由契约的
 - **Chrome（claude-in-chrome）正面用途**：需要页内交互、登录态操作、console/网络取证的
   **自动化**（查找/定位/验证/抓取）。反例：仅为「打开给 luca 看」开 Chrome＝错误路由。
   **route-guard 对 agent_browser 的 SINGLE 命中不豁免本判断**——展示类语义改道侧栏；
-  SINGLE 照常遵守的对象是自动化语义（语义路由契约原文只写了 STOP 不豁免，本句补齐）。
+  SINGLE 照常遵守的对象是自动化语义（语义路由契约对确定性命中与 semantic fallback 都不豁免）。
 - **终态拉回**：Chrome 查找/操作结束后把最终 URL `open_in_view` 进侧栏——Chrome 是查找
   工具，不是交付面。
 - **Figma 定位链**：先查本地线索（docs/handoff、figma-layer 产出、memory 的 fileKey/node-id）
@@ -289,7 +289,7 @@ claude-in-chrome＝act 面（自动化）。判断路径＝语义路由契约的
 > CLAUDE.md「规则优先级体系」第 2 层写作「当前 agent runtime 的 system/developer 安全与工具约束」。
 > 本节界定它**不包含**什么。（沿革：2026-07-28 正文因 B1 门余 4 字节无法内联；claude5-unhobble
 > 瘦身后正文已有本节指针与边界注，本节仍为两问判据全文权威源。）
-> 该条的**确定性投递由 route-guard STOP 分支的研究轴提示钉承担**（见下"结构承载"）；
+> 该条的**确定性投递由 route-guard 的研究轴提示钉承担**（见下"结构承载"）；
 > AGENTS.md 第 2 层已内联同一套语义的英文全文。
 
 **属于第 2 层（可压第 4 层路由）：** harness 的**安全约束与工具能力事实**——不许做什么、

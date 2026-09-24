@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "insight-synthesis",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "primary_qualitative_data"
+        ],
+        "optional": [
+          "research_question"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "primary_qualitative_data"
+        ],
+        "optional": [
+          "research_question"
+        ]
+      }
+    },
+    "quality_gates": [
+      "observation_interpretation_split",
+      "theme_confirmation_gate",
+      "no_confidence_fabrication"
+    ],
+    "notes": "研究段第三对象角度（内部一手定性）。数据一律用户提供、skill 不自采。单 agent 六步：编码→亲和聚类→用户确认主题(AskUserQuestion 卡点)→解读跃迁；observation 带原文引用、interpretation 带置信度，两层永不混。"
+  }
+}

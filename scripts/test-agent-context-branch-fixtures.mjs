@@ -2,7 +2,11 @@
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BRANCH_FIXTURE_VERSION, createBranchFixtures } from './agent-context-branch-fixtures.mjs';
+import {
+  BRANCH_FIXTURE_VERSION, G5_CALIBRATION_CELL_IDS, G5_FIXTURE_IDS, G5_SUITE_VERSION,
+  createBranchFixtures, createG5Fixtures, createG5Matrix, g5ExpectedClaims, g5PublicFixture,
+  g5TurnSchema, splitG5Matrix, validateG5Matrix,
+} from './agent-context-branch-fixtures.mjs';
 
 // Deliberately synthetic IDs exercise input binding, not actual governed-memory publication.
 const TEST_FALLBACK_IDS = ['SF-901', 'SC-20000101-901'];
@@ -72,6 +76,157 @@ const positives = {
 
 export function branchFixturePositiveClaims(id) {
   return structuredClone(positives[id]);
+}
+
+export function testG5FixtureShape() {
+  const fixtures = createG5Fixtures();
+  assert.equal(G5_SUITE_VERSION, 'context-lightening-g5-v1');
+  assert.deepEqual(Object.keys(fixtures), [...G5_FIXTURE_IDS]);
+  assert.deepEqual(G5_FIXTURE_IDS.map((id) => fixtures[id].task), ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']);
+  assert.deepEqual(G5_FIXTURE_IDS.map((id) => fixtures[id].turns.length), [1, 3, 3, 4, 3, 3, 5]);
+  for (const [id, fixture] of Object.entries(fixtures)) {
+    assert.equal(fixture.id, id);
+    assert.equal(fixture.suiteVersion, G5_SUITE_VERSION);
+    assert.equal(fixture.common.concurrency, 1);
+    assert.equal(fixture.common.network, false);
+    assert.equal(fixture.common.sourceScope, 'task-owned-isolated-copy-only');
+    assert.deepEqual(Object.keys(fixture.targetsByArm).sort(), ['baseline', 'candidate']);
+    assert.ok(fixture.targetsByArm.baseline.length > 0 && fixture.targetsByArm.candidate.length > 0);
+    assert.ok([...fixture.targetsByArm.baseline, ...fixture.targetsByArm.candidate]
+      .every((target) => target !== 'AGENTS.md' && target !== 'CLAUDE.md'),
+    `${id}: fixture hard-coded another harness root`);
+    assert.ok(fixture.turns.every((turn, index) => turn.id === `${fixture.task}.${index + 1}`
+      && typeof turn.prompt === 'string' && turn.prompt.length > 0));
+    assert.ok(Array.isArray(fixture.outputClaims) && fixture.outputClaims.length > 0);
+    assert.equal(new Set(fixture.outputClaims).size, fixture.outputClaims.length);
+    assert.ok(fixture.effectContract && !/\b(?:exec|shell|bash)\b/i.test(JSON.stringify(fixture.effectContract)),
+      `${id}: effect contract exposed a general command primitive`);
+    if (fixture.outputClaims.includes('action_requests')) {
+      assert.deepEqual(Object.keys(fixture.effectOwnersByTurnByArm || {}).sort(), ['baseline', 'candidate'],
+        `${id}: effect authority-owner map missing`);
+      for (const armName of ['baseline', 'candidate']) {
+        assert.equal(fixture.effectOwnersByTurnByArm[armName].length, fixture.turns.length,
+          `${id}/${armName}: effect authority-owner turn count drift`);
+        assert.ok(fixture.effectOwnersByTurnByArm[armName].flat()
+          .every((target) => fixture.targetsByArm[armName].includes(target)),
+        `${id}/${armName}: effect owner is outside the frozen target set`);
+        for (const allowed of fixture.effectContract.allowed) {
+          assert.ok(fixture.effectOwnersByTurnByArm[armName][allowed.turn - 1].length > 0,
+            `${id}/${armName}/${allowed.turn}: effect lacks a pre-decision owner`);
+        }
+      }
+    }
+    const publicFixture = g5PublicFixture(fixture);
+    assert.deepEqual(Object.keys(publicFixture).sort(),
+      ['fixture_id', 'output_claims', 'suite_version', 'task', 'title', 'turns']);
+    const publicBytes = JSON.stringify(publicFixture);
+    assert.doesNotMatch(publicBytes, /targetsByArm|effectContract|stateTransitions|"expected"/);
+    assert.equal(publicFixture.turns.some((turn) => Object.hasOwn(turn, 'state')), false,
+      `${id}: runner state was exposed to the model`);
+    for (const [turnIndex, turn] of publicFixture.turns.entries()) {
+      assert.deepEqual(Object.keys(turn).sort(), ['available_actions', 'id', 'output_claims', 'prompt']);
+      const baselineExpected = g5ExpectedClaims(fixture, turnIndex, 'baseline');
+      const candidateExpected = g5ExpectedClaims(fixture, turnIndex, 'candidate');
+      assert.deepEqual(turn.output_claims, Object.keys(baselineExpected), `${id}/${turn.id}: public turn schema drift`);
+      assert.deepEqual(Object.keys(candidateExpected), Object.keys(baselineExpected),
+        `${id}/${turn.id}: arms expose different claim names`);
+      for (const armName of ['baseline', 'candidate']) {
+        const schema = g5TurnSchema(fixture, turnIndex, armName);
+        assert.deepEqual(schema.properties.claims.required,
+          Object.keys(g5ExpectedClaims(fixture, turnIndex, armName)), `${id}/${turn.id}/${armName}: schema key drift`);
+        assert.equal(schema.properties.claims.additionalProperties, false);
+        assert.equal(schema.additionalProperties, false);
+        assert.doesNotMatch(JSON.stringify(schema), /"(?:const|enum)"\s*:/,
+          `${id}/${turn.id}/${armName}: schema leaks a gold value`);
+      }
+    }
+    const expectedActionVocabulary = fixture.outputClaims.includes('action_requests')
+      ? [...new Set([...(fixture.effectContract.allowed || []), ...(fixture.effectContract.denied || [])]
+        .map((entry) => typeof entry === 'string' ? entry : entry.primitive).filter(Boolean))]
+      : [];
+    assert.ok(publicFixture.turns.every((turn) => JSON.stringify(turn.available_actions)
+      === JSON.stringify(expectedActionVocabulary)), `${id}: public action vocabulary drift`);
+  }
+  const t1Public = JSON.stringify(g5PublicFixture(fixtures[G5_FIXTURE_IDS[0]]));
+  for (const hiddenGold of ['"idea"', 'redteam', 'figma-layer']) {
+    assert.equal(t1Public.includes(hiddenGold), false, `T1 public prompt leaks gold ${hiddenGold}`);
+  }
+  for (const task of ['T4', 'T5', 'T6', 'T7']) {
+    const fixture = Object.values(fixtures).find((entry) => entry.task === task);
+    assert.ok(fixture.effectContract.allowed.length > 0, `${task}: no allowed isolated effect`);
+    assert.ok(fixture.effectContract.denied.length > 0, `${task}: no denied boundary`);
+  }
+  assert.deepEqual(fixtures['G5-T2-index-recovery-v1'].stateTransitions.map((entry) => entry.primitive),
+    ['fixture-index-missing', 'fixture-index-stale']);
+  assert.deepEqual(fixtures['G5-T2-index-recovery-v1'].stateTransitions[1].arms, ['candidate']);
+  assert.notDeepEqual(g5ExpectedClaims(fixtures['G5-T2-index-recovery-v1'], 0, 'baseline'),
+    g5ExpectedClaims(fixtures['G5-T2-index-recovery-v1'], 0, 'candidate'));
+  assert.deepEqual(fixtures['G5-T7-resume-degrade-v1'].stateTransitions.map((entry) => entry.beforeTurn), [2, 2, 4]);
+  assert.deepEqual(fixtures['G5-T4-first-project-read-v1'].effectContract.allowed,
+    [{ turn: 2, primitive: 'project-switch-alpha' }, { turn: 3, primitive: 'project-read-alpha-canary' }]);
+  assert.deepEqual(fixtures['G5-T7-resume-degrade-v1'].effectContract.allowed.map((entry) => entry.turn),
+    [1, 4, 5, 5]);
+  fixtures['G5-T7-resume-degrade-v1'].turns[0].prompt = 'MUTATED';
+  assert.notEqual(createG5Fixtures()['G5-T7-resume-degrade-v1'].turns[0].prompt, 'MUTATED',
+    'G5 fixture instances share mutable state');
+  assert.throws(() => g5PublicFixture({ id: 'G5-T8-invented', suiteVersion: G5_SUITE_VERSION }), /unknown G5/);
+  assert.throws(() => g5ExpectedClaims(fixtures[G5_FIXTURE_IDS[0]], -1, 'baseline'), /unknown G5 turn/);
+  assert.throws(() => g5ExpectedClaims(fixtures[G5_FIXTURE_IDS[0]], 0, 'other'), /unknown G5 arm/);
+  const clonedExpected = g5ExpectedClaims(fixtures[G5_FIXTURE_IDS[0]], 0, 'baseline');
+  clonedExpected.route_class = 'MUTATED';
+  assert.notEqual(g5ExpectedClaims(fixtures[G5_FIXTURE_IDS[0]], 0, 'baseline').route_class, 'MUTATED');
+  return { suite: G5_SUITE_VERSION, fixtures: 7, turns: 22, model_gold_exposed: false };
+}
+
+export function testG5MatrixContract() {
+  const matrix = createG5Matrix();
+  assert.deepEqual(validateG5Matrix(matrix), {
+    suite_version: G5_SUITE_VERSION, cells: 56, calibration: 8, remaining: 48,
+  });
+  const { calibration, remaining } = splitG5Matrix(matrix);
+  assert.equal(calibration.length, 8);
+  assert.equal(remaining.length, 48);
+  assert.deepEqual(calibration.map((cell) => `${cell.task}/${cell.harness}/${cell.arm}/r${cell.trial}`), [
+    'T2/claude/baseline/r1', 'T2/claude/candidate/r1', 'T2/codex/candidate/r1', 'T2/codex/baseline/r1',
+    'T3/claude/candidate/r1', 'T3/claude/baseline/r1', 'T3/codex/baseline/r1', 'T3/codex/candidate/r1',
+  ]);
+  assert.deepEqual(calibration.map((cell) => cell.cell_id), [...G5_CALIBRATION_CELL_IDS]);
+  assert.equal(new Set(matrix.map((cell) => cell.cell_id)).size, 56);
+  assert.equal(new Set(calibration.map((cell) => cell.cell_id)
+    .filter((id) => remaining.some((cell) => cell.cell_id === id))).size, 0);
+  const coverage = new Map();
+  for (const cell of matrix) {
+    const key = `${cell.task}/${cell.harness}/${cell.arm}`;
+    coverage.set(key, (coverage.get(key) || 0) + 1);
+  }
+  assert.equal(coverage.size, 28);
+  assert.ok([...coverage.values()].every((count) => count === 2));
+  for (const task of ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']) {
+    for (const trial of [1, 2]) {
+      const seeds = new Set(matrix.filter((cell) => cell.task === task && cell.trial === trial)
+        .map((cell) => cell.task_seed));
+      assert.equal(seeds.size, 1, `${task}/r${trial}: paired cells received different task seeds`);
+    }
+  }
+  const rejectMutation = (name, mutate) => {
+    const changed = createG5Matrix();
+    mutate(changed);
+    assert.throws(() => validateG5Matrix(changed), /G5 matrix/, `${name}: mutation passed`);
+  };
+  rejectMutation('55 cells', (rows) => rows.pop());
+  rejectMutation('57 cells', (rows) => rows.push(structuredClone(rows.at(-1))));
+  rejectMutation('duplicate cell id', (rows) => { rows[1].cell_id = rows[0].cell_id; });
+  rejectMutation('unknown fixture', (rows) => { rows[8].fixture_id = 'G5-T8-invented'; });
+  rejectMutation('calibration drift', (rows) => { rows[0].phase = 'remaining'; });
+  rejectMutation('order drift', (rows) => { [rows[8], rows[9]] = [rows[9], rows[8]]; });
+  rejectMutation('hidden retry', (rows) => { rows[55].trial = 3; });
+  rejectMutation('arm drift', (rows) => { rows[20].arm = rows[20].arm === 'candidate' ? 'baseline' : 'candidate'; });
+  assert.deepEqual(validateG5Matrix(createG5Matrix()).cells, 56, 'restored matrix stayed red');
+  return { cells: 56, calibration: 8, remaining: 48, counterexamples: 8 };
+}
+
+export function runG5ContractTests() {
+  return { fixtures: testG5FixtureShape(), matrix: testG5MatrixContract(), live_sessions: 0 };
 }
 
 export function testBranchFixtureShape() {
@@ -214,5 +369,6 @@ export function runBranchFixtureContractTests({ claimsMatch, answerSchema }) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   console.log(JSON.stringify(testBranchFixtureShape()));
+  console.log(JSON.stringify(runG5ContractTests()));
   console.log('Production matcher tests run via runner --self-test; no live harness or OD evidence was produced.');
 }

@@ -118,3 +118,13 @@ Round 2 independently read back the revised report and source rules: C1 PASS, C2
 ## 7. Open evidence
 
 No candidate version, dual-harness execution comparison, external-injection measurement or performance benefit is yet verified. Final optimization approval is therefore not available. Next gate: agree exact first-batch scope and freeze the implementation plan. C7/C8 remain deferred. Only after scoped implementation and the frozen behavior/cost matrix can the framework be described as lighter without observed chain regressions.
+
+## 8. 用户新增一票：提交验证负担（C10，待评估，不是跳过门禁授权）
+
+用户原话（2026-09-21）："同时把刚才的问题在框架轻盈上记上一票。一会方便你计划"。
+
+- 框架侧事实：`.githooks/pre-commit:83-90` 每次代码提交调用完整 `scripts/verify.sh`；本次约 98 项全仓检查，含页面浏览器、记忆、权限、路由及嵌套测试，不仅是本次三个代码/测试文件的影响面。
+- 执行侧责任分开记：本 agent 先选普通 clone，误把 `CI=1` 当作检查器的 `--ci` 参数，且未提前按浏览器需要选择执行权限，造成额外重复；这部分不能冒充框架必然成本。
+- 待评估方向：按改动依赖分级验证；对精确提交树、测试版本、运行环境绑定的已有证明做安全复用；隔离发布路径应先检查环境前提，避免跑到最后才发现授信/浏览器环境不匹配。
+- 验收边界：必须证明受影响链条全覆盖、陈旧证明被拒绝、漏测/删门禁的变异会失败；全量兜底仍有明确触发与消费者。不采用 FAST_COMMIT、关闭 hooks 或降低安全门作为默认提速方案。
+- 下一轮计划消费：C10 单独建验证/发布负担维度，区分必要防线成本、重复执行成本与 agent 操作失误。当前仅记为用户支持的候选，不在正在提交的冻结六文件版本里追加改动。

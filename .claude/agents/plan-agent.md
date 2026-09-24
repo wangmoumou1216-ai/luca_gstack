@@ -27,27 +27,13 @@ Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 
 ## Engineering-delivery facade modes
 
-这两个 mode 都复用本文件的计划格式、Stable ID Freeze、断言与用户确认门；不创建平行状态。
-
-### `wayfinder` mode（planning owner）
-
-只接受调用方已逐项举证的 `huge AND multi-session AND fog`。三项任一为 false，退回普通 Plan
-Agent 流程；普通大但清晰的任务不得启用。输入必须含 destination、已知决策、frontier、fog、
-out-of-scope 与来源指针。fog 仍无法精确表述时只留在计划的 fog 区，不伪装成 U-block；一旦可精确
-表述，先判它是人类决策还是可执行调查/任务，决策型进入 HITL，只有执行型进入 U-block。
-产出仍是本文件定义的 canonical resumable plan，不创建 tracker map 或第二计划真值。
-
-### `implement compile` mode（execution-plan owner）
-
+两种 facade 均复用本文件的计划格式、Stable ID Freeze、断言与用户确认门，不创建平行状态或
+执行权。`wayfinder` 只接受已举证的 `huge AND multi-session AND fog`。`implement compile` mode
 只接受 Phase gate 已 PASS 的 canonical tech-spec + task-plan，并在编译前回算最终
-`task_plan_sha256`。将每张待执行 DEV/TEST 卡映射为 stable U-ID，保留 Source、Dependencies、exact
-Files、Read List、Test scenarios、Verification，并另列 Git/external effects。输出必须绑定 exact
-task-plan path+SHA、tech-spec source、repo baseline；不得保留 placeholder U-ID、模糊 path 或待补
-authority。optional graph 或 engineering-delivery preset 只提供路由元数据，不能授予执行权。
-
-编译完成后向用户展示上述绑定和 exact U-ID 集；只有用户对该 payload 的明确确认才产生
-`approved U-ID` authority。task-plan/hash/baseline 任一漂移或来自旧计划的批准均使 authority 失效，
-必须重新编译。通过后把同一份计划交给 Orchestrator，不在 facade 或本文件另建执行状态。
+`task_plan_sha256`；engineering-delivery preset 只提供路由元数据。向用户展示 exact U-ID 集后，
+只有对该 payload 的明确确认才产生执行权；随后把同一份计划交给 Orchestrator。
+在提出任一 facade 的相关 Phase 之前，完整读取
+`.claude/agents/references/plan-engineering-modes.md`；其中保存输入、编译和失效细则。
 
 ---
 
@@ -247,16 +233,9 @@ Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头�
 
 ### 块 2 — Phase 分解
 
-**研究方向编排（诉求→对象角度，2026-07-20 追加项 C）：** 分解含研究的 Phase 前，先把诉求映射到
-三个**对象角度**，默认只排**匹配到的最小集**（不自动全跑，防过度研究烧 token）：
-- 外部知识/技术可行性 → `deepresearch`；外部 UX/竞品/先例 → `ux-research`；
-  **用户自己的一手定性数据（访谈/工单/回访）→ `insight-synthesis`**（数据在前时作前置门，先出洞察再进 PRD）；
-  **一手数据还不存在、关键假设需 luca 亲自采集验证 → `research-kit`**（产访谈提纲/问卷/测试计划，
-  采集是人工步骤不排进 Phase 时线，计划里标"工具产出后暂停，采回数据续 insight-synthesis"，2026-07-21）。
-- **盲区主动推荐（骑本计划的用户确认门，不新增单独提问）：** 检测到高价值但用户没提的角度，在 Phase
-  计划确认门上明确建议"你没提但建议加 X（理由）"；未选角度以"考虑过·未选（理由）"一并列出，由用户拍板。
-- **硬防线：** 简单/平凡诉求 → 平凡任务豁免，不触发任何研究编排、不提示。
-- 角度确认由此**上移到 Plan Agent 层**，高于研究 skill 的**深度/成本**内门（见上文 deepresearch 内门注记；ux-research 逐维度确认是另一粒度、不受影响）。
+若 Phase 涉及研究、产品/设计探索、原型或设计工具交接，在提出该 Phase 前完整读取
+`.claude/agents/references/plan-design-guidance.md`。该 owner 保存研究角度、成本门、重型 skill
+隔离、设计链顺序、工具选择与故障边界；用户未选择的工具不得因故障被静默替换。
 
 每个 Phase 必须包含：
 - **编排模式**（5 种之一，可嵌套）
@@ -394,24 +373,9 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 
 循环检测：若发现 U3→U5→U3，分裂其中一个 U-block，原 ID 留空。
 
-> **设计产出路由规则（OD-first，与 optional-workflow-graph `design_output` 同步，2026-07-14 纠漂移）：**
-> - **首选 open-design**（execution_context: main_agent——默认桌面端生成需用户按键，headless 为 opt-in）；
->   断言用产物落盘：`ls docs/prototype/**/*.html`（「拉回来」回收后存在）
-> - 用户明确选择 MagicPath → `code start → submit`，断言用 job status `completed`/`failed`
-> - 用户明确选择本地 HTML → html-prototype，本地文件与实际 QA 断言；两项也可由用户预先批准的具名备用计划授权
-> - 工具可用性检查见 Gap 2；故障本身不自动换工具。daemon UP 但 headless 失败 → 同项目 OD 桌面端恢复，不退 magicpath
-
-**MagicPath job 断言模板（用户已选择 MagicPath；注意：API 返回带空格 JSON，必须用 python3 解析，不能用 grep）：**
-```bash
-# [BLOCKING] <ID> — MagicPath 组件构建完成
-npx -y magicpath-ai code status <jobId> -o json 2>/dev/null \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('status')=='completed' else 1)" \
-  && echo "PASS <ID>" || echo "FAIL <ID>"
-```
-
-**MagicPath Work Agent 注意事项：**
-- `code start` 后必须先 `ls src/components/generated/` 读取实际文件名（脚手架名称大小写由平台决定，不可硬编码）
-- Phase 4（magicpath）必须在上游 design-brief handoff gate PASS 后才能启动，不得并发
+设计产出仍以 open-design 为首选，MagicPath/HTML 仅由用户真实选择或已批准的具名备用计划
+授权；设计工具故障本身不授予切换权。精确可用性、恢复和断言写法由上述
+`plan-design-guidance.md` owner 在相关 Phase 形成前提供。
 
 ### 块 3 — 断言列表
 
@@ -515,147 +479,17 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 
 ---
 
-## 重型 Skill 隔离规则（编排前必读）
+## 条件式工程与设计细则
 
-以下 skill 内部会自行启动多个 subagent，context 消耗极大（每个 20K-80K tokens）：
+五个 Plan 触发条件、内部 HITL 豁免、范围/证据/批准原则、Stable ID Freeze 和失败策略均
+留在本文件。仅当计划将提出对应 Phase 时加载细节：
 
-| 重型 Skill | 内部机制 |
-|-----------|---------|
-| `deepresearch` | 并行多个 Web 搜索 + 研究 agent |
-| `brainstorm` | 多轮对话 + 苏格拉底审查 agent |
-| `ux-research` | 5+1 并行竞品分析 agent |
-| `ux-brainstorm` | 7个UX逼问 + Oracle 审查 agent |
+- `wayfinder` / `implement compile` → 完整读取
+  `.claude/agents/references/plan-engineering-modes.md`；
+- 研究、产品/设计探索、原型或设计工具交接 → 完整读取
+  `.claude/agents/references/plan-design-guidance.md`。
 
-**强制规则：每个重型 skill 必须独占一个 Work Agent（Phase）。**
-
-❌ 禁止：
-```
-Phase 2: WA-2 执行 brainstorm + ux-research（context 爆炸）
-```
-
-✅ 正确：
-```
-Phase 2: WA-2 执行 brainstorm（独占）
-Phase 3: WA-3 执行 ux-research（独占，等 Phase 2 完成）
-```
-
-**重型 Skill 使用判断原则（Plan Agent 自主编排依据）：**
-
-Plan Agent 根据实际需求自主决定使用哪些 skill、以什么顺序编排。以下是判断依据，不是固定脚本：
-
-| Skill | 类型 | 适用场景 | execution_context |
-|-------|------|---------|-------------------|
-| `deepresearch` | 重型·非交互 | 需要大量外部信息支撑决策时 | subagent |
-| `brainstorm` | 重型·交互 | 需要与用户共同推敲 PRD、需求边界模糊时 | main_agent |
-| `ux-research` | 重型·非交互 | 需要竞品/用户体验领域的系统性研究时 | subagent |
-| `ux-brainstorm` | 重型·交互 | 需要与用户共同探索 UX 方案时 | main_agent |
-| `design-brief` | 中型·交互 | 有明确方案需要落成交互规格时 | main_agent |
-| `open-design` | 产出型·交互 | **设计产出首选**：OD 桌面端生成 + 「拉回来」落盘（headless 为 opt-in） | main_agent |
-| `magicpath` | 产出型（隐藏·独立备选） | 用户明确选择 React 组件级原型时，核验工具可用性 | subagent |
-| `html-prototype` | 产出型（独立备选） | 用户明确选择本地 HTML 方案时 | subagent |
-| `muse-req-triage`（muse） | 轻量·交互 | 手头是一批候选需求（workshop 转写/backlog），需要先筛一遍再决定投入哪条做完整 brainstorm | main_agent（内含 AskUserQuestion 人类裁决门，Plan Agent 可编排调度顺序，但不得跳过其自身人类确认门） |
-
-**编排原则：**
-- 需求越复杂、信息越模糊 → 越需要重型 skill
-- 非交互型 skill（deepresearch、ux-research）→ 优先 subagent，保护主 Agent context
-- 交互型 skill（brainstorm、ux-brainstorm、design-brief）→ 必须 main_agent（需要用户实时参与）
-- 能并行的 subagent 同一消息并发启动
-- 设计产出默认 open-design（OD-first）；magicpath/html-prototype 只按真实用户选择或已批准具名备用计划使用
-
-**研究默认门（Research Default Gate）——必须遵守：**
-
-当任务**同时满足【复杂】且【新颖】**时，研究阶段是**默认步骤，不是可选项**：
-- **复杂** = 命中 Plan Agent 任一触发条件（≥3 文件 / ≥2 subagent / 阶段依赖 / 不可逆操作）。
-- **新颖** = 核心机制 / 交互无成熟先例，或用户明确在做"没人做过 / 自己没做过"的东西。
-
-研究强度按 fact-gap 自适应（三档，2026-07-12 起），不必每次都上重型 deepresearch：
-- 明确单题/需读一手文档源码/值得落盘 → `quick-research`（单 agent 后台，primary-source 纪律）
-- 广域多源 / 学术 / 技术可行性 → `deepresearch`
-- 先例 / 竞品 / UX / 行为设计 → `ux-research`
-- 两者可并行；极窄的单点事实可降级为一次 web 联网 spike
-
-**禁止静默跳过研究。** 若判断不需要研究，必须在 Phase 计划里**显式写出跳过理由**并交用户确认；
-不得因"省成本 / 赶进度 / 决策能直接问用户"而默默删掉研究节点。
-> 反面教训：把"决策能从用户问出来"误当成"不需要外部研究"——新颖任务里，用户的偏好若没有
-> 先例垫底，只是"不知道前人踩过哪些坑"的偏好；研究恰恰是去风险处，不是该省处。
-
-**节点顺序硬性规则（必须遵守，不得跳步或合并）：**
-
-```
-[研究阶段]  deepresearch / ux-research（复杂+新颖任务默认走此阶段，可并行；跳过须显式声明理由）
-    ↓
-[产品阶段]  brainstorm → PRD
-    ↓
-[设计阶段]  ux-brainstorm → UX 方案
-    ↓
-[规格阶段]  design-brief → 交互规格文档
-    ↓
-[原型阶段]  open-design（首选）或用户明确选择的工具（选择/可用性核验见 Gap 2）← 独立 Phase，不得跳过
-    ↓
-[技术实现]  task_execution Phase（subagent 并行）
-```
-
-❌ 禁止：将原型阶段与技术实现阶段合并（如"做 Tauri app 兼做原型"）
-❌ 禁止：跳过原型阶段直接进入技术实现
-✅ 原型阶段的唯一职责：产出可视化设计稿验证交互，不是真正可运行的产品
-
-**设计 skill 全链路时的参考 Phase 拆分（Plan Agent 根据实际需求自主选用节点，但顺序不变）：**
-```
-Phase 1: deepresearch（subagent）—— 复杂且新颖任务默认包含；非新颖/低不确定性可显式声明跳过
-Phase 2: brainstorm（main_agent，依赖 Phase 1 产出）
-Phase 3: ux-research（subagent，依赖 Phase 2 PRD）—— 有 UX 设计要求时使用
-Phase 4: ux-brainstorm（main_agent，依赖 Phase 3 产出）
-Phase 5: design-brief（main_agent，依赖 Phase 4）
-Phase 6: open-design（首选；或用户按 Gap 2 明确选择的工具。独立原型 Phase，依赖 Phase 5 handoff gate PASS）
-Phase 7+: 技术实现（subagent，按模块并行，依赖 Phase 6 产出）
-```
-
-**Gap 1 — ux-research 并行启动的精确条件：**
-
-ux-research 可以在满足以下**全部条件**时与 brainstorm 并行启动，否则严格串行等待：
-
-| 条件 | 说明 |
-|------|------|
-| brainstorm 已产出 PRD 文件（`docs/prd/*.md` 存在） | ux-research 需要 PRD 作为研究范围约束 |
-| PRD 包含「目标用户」和「核心功能」两个章节 | 这两项是 ux-research 的最低输入要求 |
-| brainstorm 无 blocking 问题待解决 | 检查 PRD 文件中是否存在「[待确认]」标记 |
-
-```
-✅ 可并行：brainstorm PRD 草稿已写出，ux-research 可基于草稿同步启动
-❌ 不可并行：brainstorm 仍在交互提问阶段，PRD 尚未产出任何文件
-```
-
-**Gap 2 — 已选设计工具的可用性与断言（故障不授予换工具权）：**
-
-Orchestrator 在 Phase 6 启动前核对真实工具选择；只有用户明确改选或已批准具名备用工具的执行计划，
-才满足 optional-workflow-graph 的 `design_output.fallback_trigger`。无改选授权时，daemon 不可达、
-鉴权失败、非 React 限制都只报告阻塞，保留来源和已绑定项目，不自动探测/调用其他生成器。
-
-| 已选择工具 | 可用性 owner | Phase 6 断言 |
-|------------|-------------|-------------|
-| open-design（main_agent） | open-design/SKILL.md Phase 0 的 daemon 检查；不可达请用户启动桌面端 | 精确绑定项目的真实 HTML 已回收落盘，EXPORTED/STAGED 不算生成 |
-| magicpath | magicpath/SKILL.md 的可用性和执行合同 | 上述 job status 断言及实际产物 |
-| html-prototype | html-prototype/SKILL.md 的输入/输出与 QA 合同 | 精确产出路径存在且 Phase 4.5 QA 通过 |
-
-`skills_needed` 与用户已确认的选择一致；切换不跳过上游 handoff gate，也不自动扩大外部写入权。
-daemon UP 但已授权 headless 重试后仍失败 → 同一 staged 项目 OD **桌面端**恢复，不退 magicpath。
-
-**Gap 3 — MagicPath 文件名映射校验断言（用户已选择 MagicPath）：**
-
-`code start` 脚手架的文件名由平台决定，不可硬编码。断言模板：
-
-```bash
-# [BLOCKING] <ID> — MagicPath 生成文件名与 design-brief 约定组件名一致（大小写不敏感）
-EXPECTED=$(grep -i "组件名\|component.*name" docs/decisions/<brief>.md | head -1 \
-  | sed 's/[^a-zA-Z]//g' | tr '[:upper:]' '[:lower:]')
-ACTUAL=$(ls /tmp/magicpath-<workdir>/src/components/generated/*.tsx 2>/dev/null \
-  | xargs -I{} basename {} .tsx | tr '[:upper:]' '[:lower:]' | head -1)
-[ "$EXPECTED" = "$ACTUAL" ] && echo "PASS <ID>" || echo "WARN <ID>: expected=$EXPECTED actual=$ACTUAL"
-```
-
-> 此断言级别设为 `[WARNING]`（非 BLOCKING），因为平台生成名称可能有合理的大小写差异，不应阻断流程，但需记录供人工确认。
-
-**原型 Phase（open-design / magicpath / html-prototype）的硬性依赖：** 必须等上游 design-brief handoff gate PASS 且 Gap 2 工具选择/可用性核验完成后才能启动，绝不与任何上游 Phase 并发。
+相关 reference 必须在 Phase 发布前消费，不能拖到执行期补读；不匹配的计划不加载它们。
 
 ---
 
@@ -718,61 +552,13 @@ ACTUAL=$(ls /tmp/magicpath-<workdir>/src/components/generated/*.tsx 2>/dev/null 
 
 ---
 
-## 断言模板库
+## Assertion example loading
 
-每条模板示例均带有 `[BLOCKING]` 或 `[WARNING]` 级别注释头。实际使用时按业务重要程度选择。
+**行为级断言规则（2026-07-10 验收闭环）：** For a code implementation Phase, every MUST
+requirement still needs at least one behavioural assertion that runs the real relevant test suite
+or script; artifact existence, syntax, or grep does not substitute for behaviour. Only when a plan
+uses a stock assertion template, read
+`.claude/agents/references/plan-assertion-examples.md` through EOF; custom assertions remain
+bound by Block 3 and do not require the template library.
 
-**行为级断言规则（2026-07-10 验收闭环）：** 涉及代码实现的 Phase，每个 MUST 需求 ≥1 条
-**行为级**断言（跑真实测试套件/脚本，见库尾模板）；artifact 级（存在性/语法/grep）不充抵。
-
-```bash
-# [BLOCKING] <ID> — 文件存在
-[ -f <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — 目录存在
-[ -d <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — 文件包含关键词
-grep -q "<keyword>" <file> && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [WARNING] <ID> — 文件不包含某词
-! grep -q "<keyword>" <file> && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — 文件可执行
-[ -x <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — Node.js 语法合法
-node --check <file> && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — Python 语法合法
-python3 -m py_compile <file> && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — YAML 合法
-python3 -c "import yaml; yaml.safe_load(open('<file>'))" && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — JSON 合法
-node -e "JSON.parse(require('fs').readFileSync('<file>'))" && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — Shell 脚本退出码 0
-bash <script> && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — git 仓库存在
-[ -d .git ] && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [WARNING] <ID> — git hooks 路径配置
-git config --get core.hooksPath | grep -q "<path>" && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# —— 行为级模板（跑真实测试，2026-07-10 验收闭环）——
-
-# [BLOCKING] <ID> — npm 测试套件通过
-npm test --silent && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — pytest 套件通过
-python3 -m pytest -q && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — swift 测试套件通过
-swift test && echo "PASS <ID>" || echo "FAIL <ID>"
-
-# [BLOCKING] <ID> — 项目 verify 脚本通过
-bash scripts/verify.sh && echo "PASS <ID>" || echo "FAIL <ID>"
-```
+<!-- FILE_END: agents/plan-agent.md -->

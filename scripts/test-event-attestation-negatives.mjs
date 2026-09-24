@@ -18,6 +18,7 @@ import {
   NativeEventAttestationError,
   attestNativeUserEvent,
   captureNativeEventFence,
+  resolveCodexHome,
 } from '../.claude/hooks/lib/event-attestation.mjs';
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), 'event-attestation-negatives-')));
@@ -212,6 +213,107 @@ function run(name, operation) {
     console.error(error?.stack || error);
   }
 }
+
+run('production Codex home allowlist', () => {
+  const fakeHome = join(root, 'runtime-home');
+  const trusted = join(fakeHome, '.luca', 'codex', 'aihub-direct');
+  const attacker = join(root, 'attacker-codex-home');
+  mkdirSync(join(trusted, 'sessions'), { recursive: true });
+  mkdirSync(attacker, { recursive: true });
+  assert.equal(resolveCodexHome(trusted, fakeHome), realpathSync(trusted));
+  expectReject('arbitrary production CODEX_HOME', 'SOURCE_ROOT', () => {
+    resolveCodexHome(attacker, fakeHome);
+  });
+});
+
+run('Codex recovery skips unanchored startup user context', () => {
+  const nativeCandidate = candidate({ prompt: '恢复真实用户事件' });
+  const codexHome = join(root, 'recovery-context', 'codex-home');
+  const rolloutDir = join(codexHome, 'sessions', '2026', '09', '08');
+  mkdirSync(rolloutDir, { recursive: true });
+  const rollout = join(rolloutDir, `rollout-2026-09-08T00-00-00-${nativeCandidate.session_id}.jsonl`);
+  const injectedBoundary = nativeCandidate.boundary_id;
+  writeFileSync(rollout, [
+    sessionMeta(nativeCandidate.session_id),
+    {
+      type: 'response_item',
+      payload: {
+        type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: '启动上下文注入' }],
+        internal_chat_message_metadata_passthrough: { turn_id: injectedBoundary },
+      },
+    },
+    { type: 'world_state', payload: {} },
+    { type: 'turn_context', payload: { turn_id: injectedBoundary } },
+    sourceRecord({ prompt: promptText(nativeCandidate), boundary: injectedBoundary }),
+    anchorRecord({ prompt: promptText(nativeCandidate), boundary: injectedBoundary, session: nativeCandidate.session_id }),
+  ].map(record => JSON.stringify(record)).join('\n') + '\n');
+  assert.doesNotThrow(() => captureNativeEventFence({
+    sessionId: nativeCandidate.session_id,
+    harness: 'codex',
+    cwd,
+    codexHome,
+    allowTestSourceRoot: true,
+    recoveryCursor: null,
+  }));
+});
+
+run('Codex recovery rejects a context-like record before a different turn', () => {
+  const nativeCandidate = candidate({ prompt: '第二轮真实消息' });
+  const injectedBoundary = `boundary-${randomUUID()}`;
+  const fixture = codexFixture('recovery-cross-turn-context', nativeCandidate, [
+    sessionMeta(nativeCandidate.session_id),
+    sourceRecord({ prompt: '无锚点的上一轮消息', boundary: injectedBoundary }),
+    { type: 'turn_context', payload: { turn_id: injectedBoundary } },
+    sourceRecord({ prompt: promptText(nativeCandidate), boundary: nativeCandidate.boundary_id }),
+    anchorRecord({ prompt: promptText(nativeCandidate), boundary: nativeCandidate.boundary_id, session: nativeCandidate.session_id }),
+  ]);
+  expectReject('Codex recovery cross-turn context', 'UNKNOWN_SCHEMA', () => {
+    captureNativeEventFence({
+      sessionId: nativeCandidate.session_id,
+      harness: 'codex', cwd, codexHome: fixture.codexHome,
+      allowTestSourceRoot: true, recoveryCursor: null,
+    });
+  });
+});
+
+run('Codex recovery validates a distance-2 human UserMessage anchor', () => {
+  const valid = candidate({ prompt: '真实用户消息' });
+  const validPrompt = promptText(valid);
+  const validFixture = codexFixture('recovery-distance-2-valid', valid, [
+    sessionMeta(valid.session_id),
+    sourceRecord({ prompt: validPrompt, boundary: valid.boundary_id }),
+    { type: 'turn_context', payload: { turn_id: valid.boundary_id } },
+    anchorRecord({ prompt: validPrompt, boundary: valid.boundary_id, session: valid.session_id }),
+  ]);
+  assert.doesNotThrow(() => captureNativeEventFence({
+    sessionId: valid.session_id,
+    harness: 'codex', cwd, codexHome: validFixture.codexHome,
+    allowTestSourceRoot: true, recoveryCursor: null,
+  }));
+  for (const [name, change] of [
+    ['text mismatch', anchor => { anchor.payload.item.content[0].text += '-changed'; }],
+    ['thread mismatch', anchor => { anchor.payload.thread_id = randomUUID(); }],
+  ]) {
+    const nativeCandidate = candidate({ prompt: '真实用户消息' });
+    const prompt = promptText(nativeCandidate);
+    const anchor = anchorRecord({ prompt, boundary: nativeCandidate.boundary_id, session: nativeCandidate.session_id });
+    change(anchor);
+    const fixture = codexFixture(`recovery-distance-2-${name.replace(' ', '-')}`, nativeCandidate, [
+      sessionMeta(nativeCandidate.session_id),
+      sourceRecord({ prompt, boundary: nativeCandidate.boundary_id }),
+      { type: 'turn_context', payload: { turn_id: nativeCandidate.boundary_id } },
+      anchor,
+    ]);
+    expectReject(`Codex recovery distance-2 ${name}`, 'MISMATCH', () => {
+      captureNativeEventFence({
+        sessionId: nativeCandidate.session_id,
+        harness: 'codex', cwd, codexHome: fixture.codexHome,
+        allowTestSourceRoot: true, recoveryCursor: null,
+      });
+    });
+  }
+});
 
 run('missing source', () => {
   const nativeCandidate = candidate();

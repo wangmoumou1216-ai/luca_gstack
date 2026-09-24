@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "design-brief",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "design_input"
+        ],
+        "optional": [
+          "prd_artifact",
+          "ux_research_report",
+          "ux_audit_report",
+          "ux_brainstorm_artifact",
+          "pasted_solution",
+          "architecture_brief"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "prd_artifact"
+        ],
+        "optional": [
+          "ux_research_report",
+          "ux_audit_report",
+          "ux_brainstorm_artifact"
+        ]
+      }
+    },
+    "modes_detail": {
+      "traceable_delivery": {
+        "required": [
+          "prd_artifact"
+        ],
+        "note": "Required when output will feed html-prototype, tech-spec, task-plan, or development."
+      },
+      "standalone_light": {
+        "required": [
+          "design_input"
+        ],
+        "note": "May omit PRD, but must not claim end-to-end traceable delivery."
+      }
+    },
+    "quality_gates": [
+      "design_coordinate_system",
+      "ai_native_layers",
+      "eight_field_decision_cards",
+      "state_coverage",
+      "page_interaction_mapping",
+      "output_target_platform_scope_sources",
+      "traceability_gate",
+      "design_generation_packet",
+      "tool_consumption_contract",
+      "single_entry_contract"
+    ]
+  }
+}

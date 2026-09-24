@@ -1,6 +1,6 @@
 # Cross-harness collaboration contract
 
-Load this file when an artifact, skill, hook, or workflow must work in both Claude Code and Codex.
+Load this file before designing or evaluating any artifact, skill, hook, or workflow that must be consumed by both Claude Code and Codex; do not defer it until the final support or parity claim.
 
 The repository truth is shared through tracked files, not hidden conversation history. Claude owns its native slash-command surface; Codex invokes the same project skills through `$<skill-name>` or the skill selector. A slash command and a Codex skill invocation are different loaders for shared authority, not separate skill bodies.
 

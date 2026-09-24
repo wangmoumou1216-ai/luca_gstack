@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "figma-demo",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "spoken_or_written_flow"
+        ],
+        "optional": [
+          "figma_link",
+          "figma_screenshot"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "design_brief",
+          "prototype_context"
+        ]
+      }
+    },
+    "quality_gates": [
+      "mapping_verification",
+      "blueprint_schema",
+      "builder_isolation",
+      "assembly_no_new_design"
+    ]
+  }
+}

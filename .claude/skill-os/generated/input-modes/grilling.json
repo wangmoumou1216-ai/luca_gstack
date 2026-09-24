@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "grilling",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "plan_decision_or_idea"
+        ],
+        "optional": [
+          "retrievable_evidence"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "consequential_unresolved_decision"
+        ],
+        "optional": [
+          "parent_u_id"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "human_decision_gate",
+          "condition_evidence",
+          "authority_record_sha256",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "parent_u_id"
+        ]
+      }
+    },
+    "quality_gates": [
+      "one_decision_question_per_turn",
+      "facts_retrieved_before_asking",
+      "no_authority_expansion"
+    ],
+    "notes": "Direct/semantic/internal 共用一次一个决定规则；internal 只继承父任务 authority。"
+  }
+}

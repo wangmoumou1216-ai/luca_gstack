@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "diagnosing-bugs",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "unexpected_symptom"
+        ],
+        "optional": [
+          "authorized_local_diagnostics"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "unexpected_failure",
+          "original_u_id"
+        ],
+        "optional": [
+          "inherited_path_scope"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "unexpected_failure",
+          "condition_evidence",
+          "original_u_id",
+          "authority_record_sha256",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "inherited_path_scope"
+        ]
+      }
+    },
+    "quality_gates": [
+      "symptom_hitting_red_loop",
+      "expected_tdd_red_excluded",
+      "diagnose_only_default",
+      "returns_to_original_u_id"
+    ],
+    "notes": "自然语言异常主路由；diagnose-only 不获得写入、网络、Git 或 external effect 权限。"
+  }
+}

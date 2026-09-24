@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "ux-research",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "design_question"
+        ],
+        "optional": [
+          "prd_artifact",
+          "screenshots"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "prd_artifact",
+          "brainstorm_output"
+        ]
+      }
+    },
+    "quality_gates": [
+      "human_research_plan_gate",
+      "source_traceability",
+      "consensus_matrix",
+      "research_only"
+    ]
+  }
+}

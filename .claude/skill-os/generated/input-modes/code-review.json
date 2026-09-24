@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "code-review",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "code_change_scope_or_fixed_point"
+        ],
+        "optional": [
+          "spec_source"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "code_change_scope_or_fixed_point"
+        ],
+        "optional": [
+          "spec_source",
+          "tech_spec_handoff",
+          "task_plan_artifact"
+        ]
+      }
+    },
+    "quality_gates": [
+      "fixed_scope_resolves",
+      "non_empty_change_set",
+      "standards_spec_context_isolation",
+      "separate_axis_reporting",
+      "read_only_review"
+    ],
+    "notes": "用户可见代码审查 facade。WORKTREE_DIFF/BASE+HEAD/FILE_SET 三选一；底层权威为 code-hygiene Mode D + routing-chain-check R4。无 spec 时 Spec 轴显式 NOT RUN，不伪造。"
+  }
+}

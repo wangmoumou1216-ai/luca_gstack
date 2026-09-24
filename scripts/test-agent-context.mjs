@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -12,6 +12,9 @@ const fixturePaths = [
   'AGENTS.md', 'CLAUDE.md', 'CONTEXT.md',
   '.claude/skill-os/crm-profile.md',
   '.claude/agents/plan-agent.md',
+  '.claude/agents/references/plan-engineering-modes.md',
+  '.claude/agents/references/plan-design-guidance.md',
+  '.claude/agents/references/plan-assertion-examples.md',
   '.claude/agents/orchestrator.md',
   '.claude/skills/office',
   '.claude/skill-os/agent-root-kernel.json',
@@ -29,6 +32,7 @@ const fixturePaths = [
   'memory/semantic/promoted-facts.yaml',
   'memory/semantic/static-fallback-allowlist.txt',
   'memory/README.md',
+  'framework-audit/2026-09-21-context-case-extract.md',
   'scripts/build-agent-context.py',
   'scripts/check-agent-context.mjs',
   '.githooks/commit-msg',
@@ -44,7 +48,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 60;
+const EXPECTED_MUTATIONS = 105;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -59,6 +63,237 @@ function mutate(name, edit, expected) {
 const clean = run(fixture());
 assert.equal(clean.status, 0, `clean compatibility fixture must pass\n${clean.stdout}${clean.stderr}`);
 console.log('PASS clean compatibility fixture');
+
+const contextIndexPath = '.claude/skill-os/generated/context-index.md';
+const indexBody = readFileSync(join(ROOT, contextIndexPath), 'utf8');
+const indexEntries = JSON.parse(indexBody.match(/```json\n([\s\S]*?)\n```/)[1]);
+const manifestEntries = JSON.parse(readFileSync(join(ROOT, '.claude/skill-os/agent-context-manifest.json'), 'utf8')).entries;
+const projectedFields = ['id', 'obligation_ids', 'runtime', 'leading_words', 'condition', 'load_before',
+  'target', 'contains', 'loader', 'read_to_end', 'fallback', 'truth_owner'];
+assert.deepEqual(indexEntries, manifestEntries.map(entry => Object.fromEntries(projectedFields
+  .filter(key => key in entry && (key !== 'truth_owner' || entry[key] !== entry.target))
+  .map(key => [key, entry[key]]))),
+  'agent index must preserve every operational field of every entry');
+assert.ok(Buffer.byteLength(indexBody) < readFileSync(join(ROOT, '.claude/skill-os/agent-context-manifest.json')).length,
+  'agent projection must be smaller than its machine source');
+console.log('PASS complete operational projection is smaller than the manifest');
+
+function changeIndex(dir, edit) {
+  const path = join(dir, contextIndexPath);
+  const text = readFileSync(path, 'utf8');
+  const projected = JSON.parse(text.match(/```json\n([\s\S]*?)\n```/)[1]);
+  edit(projected);
+  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${JSON.stringify(projected)}\n\`\`\``));
+}
+mutate('index drops a semantic condition', dir => changeIndex(dir, rows => { rows[0].condition = ''; }), /context index.*drift/);
+mutate('index moves the consumption deadline', dir => changeIndex(dir, rows => { rows[0].load_before = 'after execution'; }), /context index.*drift/);
+mutate('index drops a failure posture', dir => changeIndex(dir, rows => { delete rows[0].fallback; }), /context index.*drift/);
+mutate('index omits a conditional entry', dir => changeIndex(dir, rows => { rows.pop(); }), /context index.*drift/);
+mutate('index permits partial authority reads', dir => changeIndex(dir, rows => { rows[0].read_to_end = false; }), /context index.*drift/);
+mutate('index drops a non-default truth owner', dir => changeIndex(dir, rows => { delete rows.find(row => row.truth_owner).truth_owner; }), /context index.*drift/);
+mutate('root loses the generated index loader', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8').replaceAll(contextIndexPath, '.claude/skill-os/generated/unknown-index.md'));
+}, /lacks conditional context index loader/);
+mutate('new manifest field cannot silently disappear from projection', dir => {
+  const path = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const manifest = JSON.parse(readFileSync(path, 'utf8'));
+  manifest.entries[0].new_safety_condition = 'must be classified before projection';
+  writeFileSync(path, JSON.stringify(manifest));
+}, /unclassified manifest field/);
+mutate('root mistakes three reads for a Plan trigger', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8').replace('≥ 3 files created or modified', '≥ 3 files'));
+}, /Plan file trigger must specify creation or modification/);
+mutate('workflow manifest bypasses the static-view owner', dir => {
+  const p = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const data = JSON.parse(readFileSync(p));
+  data.entries.find(entry => entry.id === 'workflow-mode').target = '.claude/skill-os/input-modes.yaml';
+  writeFileSync(p, JSON.stringify(data));
+}, /workflow-mode must keep YAML truth_owner and runtime loading owner separate/);
+mutate('selected input-mode view disappears', dir => {
+  rmSync(join(dir, '.claude/skill-os/generated/input-modes/auto.json'));
+}, /generated input-mode closed set drift/);
+mutate('extra input-mode view expands the approved set', dir => {
+  writeFileSync(join(dir, '.claude/skill-os/generated/input-modes/unapproved.json'), '{}\n');
+}, /generated input-mode closed set drift/);
+mutate('selected input-mode contract loses nested semantics', dir => {
+  const p = join(dir, '.claude/skill-os/generated/input-modes/design-brief.json');
+  const data = JSON.parse(readFileSync(p)); delete data.contract.modes_detail;
+  writeFileSync(p, JSON.stringify(data));
+}, /generated input-mode semantic projection drift/);
+mutate('selected input-mode view lies about source binding', dir => {
+  const p = join(dir, '.claude/skill-os/generated/input-modes/auto.json');
+  const data = JSON.parse(readFileSync(p)); data.source_sha256 = '0'.repeat(64);
+  writeFileSync(p, JSON.stringify(data));
+}, /input-mode view binding/);
+mutate('input-mode source adds an unapproved key', dir => {
+  const p = join(dir, '.claude/skill-os/input-modes.yaml');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('governance_tools:\n', 'governance_tools:\n  unapproved-skill:\n    modes: {}\n'));
+}, /generated input-mode semantic projection drift/);
+mutate('input-mode source accepts an ambiguous duplicate group', dir => {
+  const p = join(dir, '.claude/skill-os/input-modes.yaml');
+  writeFileSync(p, `${readFileSync(p, 'utf8')}\nskills: {}\n`);
+}, /generated input-mode semantic projection drift/);
+mutate('root drops selected input-mode loading', dir => {
+  const p = join(dir, 'AGENTS.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('.claude/skill-os/generated/input-modes/<key>.json', 'all-inputs.json'));
+}, /lacks selected input-mode loading contract/);
+mutate('office restores whole-table default loading', dir => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('先完整读取\n`.claude/skill-os/runtime/workflow-mode.md`，再只读取所选 skill 的完整静态视图',
+    '直接完整读取 `.claude/skill-os/input-modes.yaml`，再读取'));
+}, /office graph loading is not bounded/);
+mutate('office drops the learning action owner', dir => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replaceAll('references/learning-actions.md', 'inline commands'));
+}, /office learning triggers/);
+mutate('plan drops conditional design guidance', dir => {
+  const p = join(dir, '.claude/agents/plan-agent.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replaceAll('.claude/agents/references/plan-design-guidance.md', 'design guidance omitted'));
+}, /plan contract lacks conditional/);
+mutate('plan design guidance drops mandatory design-output gate', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    'When a design chain proceeds from `design-brief` to implementation, the intervening design-output\n'
+      + 'Phase is mandatory: it must not be omitted, merged with implementation, or bypassed by proceeding\n'
+      + 'directly to implementation.\n',
+    '',
+  ));
+}, /mandatory design-output\/no-skip/);
+mutate('plan appends an optional design-output contradiction outside the normative block', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    '<!-- FILE_END: agents/references/plan-design-guidance.md -->',
+    'After design-brief, the design-output Phase is optional.\n\n'
+      + '<!-- FILE_END: agents/references/plan-design-guidance.md -->',
+  ));
+}, /mandatory design-output\/no-skip/);
+mutate('plan hides the exact mandatory gate in an obsolete note outside the normative block', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  const gate = 'When a design chain proceeds from `design-brief` to implementation, the intervening design-output\n'
+    + 'Phase is mandatory: it must not be omitted, merged with implementation, or bypassed by proceeding\n'
+    + 'directly to implementation.\n';
+  writeFileSync(p, readFileSync(p, 'utf8').replace(gate, '')
+    .replace('<!-- FILE_END: agents/references/plan-design-guidance.md -->',
+      `<!-- obsolete example\n${gate}-->\n\n<!-- FILE_END: agents/references/plan-design-guidance.md -->`));
+}, /mandatory design-output\/no-skip/);
+mutate('plan hides the entire exact ordered chain in an obsolete HTML comment', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<!-- obsolete full section\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n-->'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan hides the entire exact ordered chain in a Markdown code fence', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '~~~markdown\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n~~~'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan hides the ordered chain in a three-space-indented CommonMark fence', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '   ~~~markdown\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n   ~~~'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan uses an unlike fence marker to fake closure before the ordered chain', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '```markdown\n~~~\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n```'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan hides the ordered chain in a CommonMark script raw HTML block', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<script type="text/plain">\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n</script>'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan uses a spaced fake script closer before the ordered chain', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<script>\n</script >\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n</script>'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan composes a cross-tag type-1 closer with a blank-terminated HTML block', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<script>\n</pre>\n<div>\n</script>\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n</div>'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan uses a CRLF-normalized end-of-line script opener', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<script\r\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n</script>'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan injects a non-Markdown C0 control character before the ordered chain', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered design chain', '\u000b## Ordered design chain'));
+}, /mandatory design-output\/no-skip/);
+for (const [name, separator] of [['LINE SEPARATOR', '\u2028'], ['PARAGRAPH SEPARATOR', '\u2029']]) {
+  mutate(`plan uses Unicode ${name} as a false Markdown line boundary`, dir => {
+    const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+    writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered design chain', `${separator}## Ordered design chain`));
+  }, /mandatory design-output\/no-skip/);
+}
+mutate('plan hides the ordered-chain heading after a type-7 tag with quoted greater-than', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<x-note data-hidden=">">\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n</x-note>'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan hides the ordered-chain heading in a blank-terminated raw HTML block', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8')
+    .replace('## Ordered design chain', '<div hidden>\n## Ordered design chain')
+    .replace('## Design output choice and authority', '## Design output choice and authority\n</div>'));
+}, /mandatory design-output\/no-skip/);
+for (const [name, whitespace] of [['NBSP', '\u00a0'], ['EM SPACE', '\u2003']]) {
+  mutate(`plan uses ${name} as a false CommonMark blank line`, dir => {
+    const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+    writeFileSync(p, readFileSync(p, 'utf8')
+      .replace('## Ordered design chain', `<div>\n${whitespace}\n## Ordered design chain`)
+      .replace('## Design output choice and authority', '## Design output choice and authority\n</div>'));
+  }, /mandatory design-output\/no-skip/);
+}
+mutate('plan turns the ordered-chain heading into indented code', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered design chain', '    ## Ordered design chain'));
+}, /mandatory design-output\/no-skip/);
+mutate('plan keeps no-skip sentence but permits direct implementation', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    '## Design output choice and authority',
+    'A plan may skip the design-output Phase and proceed directly from design-brief to implementation after recording an applicability assessment.\n\n## Design output choice and authority',
+  ));
+}, /mandatory design-output\/no-skip/);
+mutate('plan keeps no-skip sentence but starts implementation directly from design-brief', dir => {
+  const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace(
+    '## Design output choice and authority',
+    'Implementation may proceed directly from design-brief after an applicability note.\n\n## Design output choice and authority',
+  ));
+}, /mandatory design-output\/no-skip/);
+for (const [name, contradiction] of [
+  ['allows implementation immediately after design-brief',
+    'The implementation phase is allowed to start immediately after design-brief.'],
+  ['makes design-output optional before implementation',
+    'The design-output phase is optional when implementation follows design-brief.'],
+  ['uses an imperative straight-to-implementation bypass',
+    'After design-brief, proceed straight to implementation.'],
+]) {
+  mutate(`plan keeps no-skip sentence but ${name}`, dir => {
+    const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
+    writeFileSync(p, readFileSync(p, 'utf8').replace(
+      '## Design output choice and authority',
+      `${contradiction}\n\n## Design output choice and authority`,
+    ));
+  }, /mandatory design-output\/no-skip/);
+}
+mutate('CONTEXT loses live investigation discipline', dir => {
+  const p = join(dir, 'CONTEXT.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('归因前先拉满样本矩阵', 'historical note removed'));
+}, /CONTEXT historical extraction/);
 
 for (const replacement of ['', 'none', 'missing-skill']) {
   mutate(`retirement rejects invalid replacement ${JSON.stringify(replacement)}`, dir => {
@@ -146,7 +381,7 @@ console.log('PASS real projection writer preserves literal backslashes in both r
   const surfaces = [
     join(semantic, 'promoted-facts.yaml'),
     ...['CLAUDE.md', 'AGENTS.md', '.claude/skill-os/generated/skill-catalog.md',
-      '.claude/skill-os/generated/static-fallback.md'].map((path) => join(codeRoot, path)),
+      '.claude/skill-os/generated/static-fallback.md', contextIndexPath].map((path) => join(codeRoot, path)),
   ];
   const before = new Map(surfaces.map((path) => [path, readFileSync(path)]));
   const failed = spawnSync('python3', [join(ROOT, 'memory/scripts/consolidate_memory.py'), '--promote-ready', '--json'], {
@@ -283,8 +518,8 @@ mutate('root loses bounded classification loading', (dir) => {
 mutate('office graph loading becomes unconditional', (dir) => {
   const p = join(dir, '.claude/skills/office/SKILL.md');
   writeFileSync(p, readFileSync(p, 'utf8').replace(
-    '实际执行 skill 时读取 `input-modes.yaml`；仅用户选择 Workflow 或要求继续流程时读取',
-    '每次路由或分类都读取 `input-modes.yaml`；每次都读取',
+    '仅用户选择 Workflow\n或要求继续流程时读取',
+    '每次路由或分类都读取',
   ));
 }, /office graph loading is not bounded/);
 

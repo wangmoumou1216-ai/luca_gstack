@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "code-recon",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "target_codebase_path"
+        ],
+        "optional": [
+          "design_intent",
+          "scope_paths"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "design_intent",
+          "scope_paths"
+        ]
+      }
+    },
+    "quality_gates": [
+      "size_probe_decision",
+      "parallel_recon",
+      "verified_vs_inferred_audit",
+      "architecture_brief_written",
+      "native_first_no_forced_mcp"
+    ],
+    "notes": "Brownfield 正门（非设计 skill）：现有代码 → 架构 brief → 作 ux-brainstorm/design-brief/tech-spec 的 architecture_brief optional 输入。native-first；codegraph MCP 仅规模阈值命中≥2 时提示、装下游不进 gstack。只读 recon 不改代码。"
+  }
+}

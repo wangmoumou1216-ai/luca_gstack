@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { isAbsolute, join, normalize, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,7 +32,13 @@ const roots = ['CLAUDE.md', 'AGENTS.md'];
 const rootText = Object.fromEntries(roots.map((path) => [path, read(path)]));
 for (const path of roots) {
   if (!rootText[path].includes('.claude/skill-os/generated/skill-catalog.md')) errors.push(`${path} lacks skill catalog loader`);
+  if (!rootText[path].includes('.claude/skill-os/generated/context-index.md')) errors.push(`${path} lacks conditional context index loader`);
   if (!rootText[path].includes('.claude/skill-os/agent-context-manifest.json')) errors.push(`${path} lacks conditional context manifest loader`);
+  if (!rootText[path].includes('≥ 3 files created or modified')) errors.push(`${path} Plan file trigger must specify creation or modification`);
+  if (!rootText[path].includes('.claude/skill-os/runtime/workflow-mode.md')
+      || !rootText[path].includes('.claude/skill-os/generated/input-modes/<key>.json')) {
+    errors.push(`${path} lacks selected input-mode loading contract`);
+  }
 }
 if (!/Select a subagent model role[\s\S]{0,240}reasoning effort remains independent/.test(rootText['AGENTS.md'])) {
   errors.push('AGENTS.md must keep model role selection independent from reasoning effort');
@@ -58,10 +66,24 @@ const requiredFields = [
   'target', 'contains', 'loader', 'read_to_end', 'fallback', 'fixtures',
 ];
 const entries = Array.isArray(manifest.entries) ? manifest.entries : [];
+const contextIndex = read('.claude/skill-os/generated/context-index.md');
+const operationalFields = ['id', 'obligation_ids', 'runtime', 'leading_words', 'condition', 'load_before',
+  'target', 'contains', 'loader', 'read_to_end', 'fallback', 'truth_owner'];
+try {
+  const indexed = JSON.parse(contextIndex.match(/```json\n([\s\S]*?)\n```/)?.[1] || 'null');
+  const expected = entries.map(entry => Object.fromEntries(operationalFields
+    .filter(key => key in entry && (key !== 'truth_owner' || entry[key] !== entry.target))
+    .map(key => [key, entry[key]])));
+  if (JSON.stringify(indexed) !== JSON.stringify(expected)) errors.push('context index operational field/coverage drift');
+} catch { errors.push('context index invalid JSON or operational drift'); }
+if (!contextIndex.includes('<!-- FILE_END: skill-os/generated/context-index.md -->')) errors.push('context index lacks FILE_END');
 const seenEntries = new Set();
 for (const entry of entries) {
   for (const field of requiredFields) {
     if (!(field in entry)) errors.push(`${entry.id || '<unknown>'} missing manifest field ${field}`);
+  }
+  for (const field of Object.keys(entry)) {
+    if (!requiredFields.includes(field)) errors.push(`${entry.id || '<unknown>'} unclassified manifest field ${field}`);
   }
   if (!entry.id || seenEntries.has(entry.id)) errors.push(`duplicate/empty manifest id ${entry.id || '<empty>'}`);
   seenEntries.add(entry.id);
@@ -88,6 +110,61 @@ for (const entry of entries.filter((item) => String(item.target || '').startsWit
   const base = entry.target.split('/').pop();
   if (!text.includes(`<!-- FILE_END: skill-os/runtime/${base} -->`)) errors.push(`${entry.id} target lacks FILE_END`);
   if (/CONTEXT_TARGET:\s*\.claude\/skill-os\//.test(text)) errors.push(`${entry.id} creates a second-hop context pointer`);
+}
+
+const workflowEntry = entries.find((entry) => entry.id === 'workflow-mode');
+if (workflowEntry?.truth_owner !== '.claude/skill-os/input-modes.yaml'
+    || workflowEntry?.target !== '.claude/skill-os/runtime/workflow-mode.md') {
+  errors.push('workflow-mode must keep YAML truth_owner and runtime loading owner separate');
+}
+const workflowMode = read('.claude/skill-os/runtime/workflow-mode.md');
+if (!workflowMode.includes('<!-- FILE_END: skill-os/runtime/workflow-mode.md -->')
+    || !/selected.*generated\/input-modes\/<key>\.json|所选.*generated\/input-modes\/<key>\.json/s.test(workflowMode)
+    || !/missing, unreadable, or proven stale|缺失、不可读或已证实过期/.test(workflowMode)
+    || !/no specific input-mode override|无特定.*override/.test(workflowMode)) {
+  errors.push('workflow-mode lacks selected-view, fallback, missing-key, or EOF contract');
+}
+
+const inputModeKeys = [
+  'auto', 'handoff', 'wait-what', 'domain-modeling', 'writing-for-agents', 'magicpath',
+  'open-design', 'idea', 'deepresearch', 'quick-research', 'brainstorm',
+  'superpowers-brainstorming', 'ux-research', 'ux-brainstorm', 'design-brief',
+  'html-prototype', 'figma-demo', 'tech-spec', 'task-plan', 'grilling', 'diagnosing-bugs',
+  'resolving-merge-conflicts', 'to-spec', 'to-tickets', 'wayfinder', 'implement',
+  'code-hygiene', 'code-review', 'codebase-design', 'code-recon', 'muse-req-triage',
+  'insight-synthesis', 'research-kit', 'ux-writing', 'compare', 'ux-audit', 'redteam',
+  'evals', 'retro',
+];
+const inputModeDir = join(ROOT, '.claude/skill-os/generated/input-modes');
+const generatedModeEntries = existsSync(inputModeDir) ? readdirSync(inputModeDir, { withFileTypes: true }) : [];
+const generatedModeNames = generatedModeEntries.map((entry) => entry.name).sort();
+const expectedModeNames = inputModeKeys.map((key) => `${key}.json`).sort();
+if (JSON.stringify(generatedModeNames) !== JSON.stringify(expectedModeNames)) {
+  errors.push(`generated input-mode closed set drift: expected=39 actual=${generatedModeNames.length}`);
+}
+if (generatedModeEntries.some((entry) => !entry.isFile())) errors.push('generated input-mode closed set contains a non-file entry');
+const inputModeSource = readFileSync(join(ROOT, '.claude/skill-os/input-modes.yaml'));
+const inputModeSourceSha = createHash('sha256').update(inputModeSource).digest('hex');
+for (const key of inputModeKeys) {
+  const view = json(`.claude/skill-os/generated/input-modes/${key}.json`);
+  const fields = Object.keys(view).sort();
+  if (JSON.stringify(fields) !== JSON.stringify(['contract', 'global', 'group', 'schema_version', 'skill', 'source_sha256'])) {
+    errors.push(`${key} input-mode view field set drift`);
+    continue;
+  }
+  if (view.schema_version !== 1 || view.source_sha256 !== inputModeSourceSha || view.skill !== key
+      || !['skills', 'governance_tools'].includes(view.group)
+      || JSON.stringify(Object.keys(view.global || {}).sort()) !== JSON.stringify(['principle', 'version'])
+      || view.global.version !== 1 || view.global.principle !== 'Skill-first, Graph-optional'
+      || !view.contract || typeof view.contract !== 'object' || Array.isArray(view.contract)) {
+    errors.push(`${key} input-mode view binding or complete-contract shape drift`);
+  }
+}
+const builderCheck = spawnSync('python3', [join(ROOT, 'scripts/build-agent-context.py'), 'check'], {
+  cwd: ROOT, encoding: 'utf8',
+});
+if (builderCheck.status !== 0) {
+  errors.push(`generated input-mode semantic projection drift: ${`${builderCheck.stdout}${builderCheck.stderr}`.trim()}`);
 }
 
 const model = read('.claude/skill-os/model-routing.yaml');
@@ -128,6 +205,139 @@ for (const [name, pattern] of [
   ['Hierarchical approval', /Hierarchical[\s\S]{0,120}用户确认/],
 ]) {
   if (!pattern.test(plan)) errors.push(`plan contract missing ${name}`);
+}
+const engineeringModes = read('.claude/agents/references/plan-engineering-modes.md');
+const designGuidance = read('.claude/agents/references/plan-design-guidance.md');
+const expectedDesignGuidanceSha256 = '27d996d59268d48af48494b943d5dad225e294db52f2612a38316a5f3e10c645';
+const designGuidanceSha256 = createHash('sha256').update(designGuidance).digest('hex');
+const assertionExamples = read('.claude/agents/references/plan-assertion-examples.md');
+const mandatoryDesignOutputGate = 'When a design chain proceeds from `design-brief` to implementation, the intervening design-output\n'
+  + 'Phase is mandatory: it must not be omitted, merged with implementation, or bypassed by proceeding\n'
+  + 'directly to implementation.';
+const expectedOrderedDesignChain = [
+  'For a full design chain, preserve this order and omit a node only when its applicability was',
+  'explicitly assessed:',
+  '',
+  '```text',
+  'research → brainstorm/PRD → ux-brainstorm → design-brief → design output → implementation',
+  '```',
+  '',
+  'The design-output Phase is independent from implementation and exists to validate interaction; it',
+  'must not be merged with a production implementation Phase. It starts only after the design-brief',
+  "handoff gate passes and the chosen tool's availability/authority gate is resolved.",
+  '',
+  'When a design chain proceeds from `design-brief` to implementation, the intervening design-output',
+  'Phase is mandatory: it must not be omitted, merged with implementation, or bypassed by proceeding',
+  'directly to implementation.',
+  '',
+  '`ux-research` may run alongside an already-started brainstorm only when a PRD file exists, it',
+  'contains target users and core features, and no blocking `[待确认]` remains. Otherwise it waits.',
+].join('\n');
+const orderedDesignChainMatch = designGuidance.match(/(?:^|\n)## Ordered design chain\n\n([\s\S]*?)\n\n## Design output choice and authority/);
+const orderedDesignChain = orderedDesignChainMatch?.[1];
+const orderedDesignChainPrefix = orderedDesignChainMatch
+  ? designGuidance.slice(0, orderedDesignChainMatch.index) : designGuidance;
+function markdownContainerState(text) {
+  let fence = null;
+  let htmlBlock = null;
+  const blankTerminatedTags = /^(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)$/i;
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
+  if (lines.at(-1) === '') lines.pop();
+  for (const line of lines) {
+    if (fence) {
+      const close = line.match(/^ {0,3}(`{3,}|~{3,})[\t ]*$/);
+      if (close && close[1][0] === fence.marker && close[1].length >= fence.length) fence = null;
+      continue;
+    }
+    if (htmlBlock) {
+      if (htmlBlock.blankTerminated && /^[\t ]*$/.test(line)) htmlBlock = null;
+      else if (htmlBlock.end && htmlBlock.end.test(line)) htmlBlock = null;
+      continue;
+    }
+    const opener = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (opener && !(opener[1][0] === '`' && opener[2].includes('`'))) {
+      fence = { marker: opener[1][0], length: opener[1].length };
+      continue;
+    }
+    const raw = line.replace(/^ {0,3}/, '');
+    const typeOne = raw.match(/^<(script|pre|style|textarea)(?=[\t >]|$)/i);
+    if (typeOne) {
+      const end = /<\/(?:script|pre|style|textarea)>/i;
+      if (!end.test(raw.slice(typeOne[0].length))) htmlBlock = { type: 'raw-tag', end };
+      continue;
+    }
+    if (raw.startsWith('<!--')) {
+      if (!raw.slice(4).includes('-->')) htmlBlock = { type: 'comment', end: /-->/ };
+      continue;
+    }
+    if (raw.startsWith('<?')) {
+      if (!raw.slice(2).includes('?>')) htmlBlock = { type: 'processing', end: /\?>/ };
+      continue;
+    }
+    if (/^<![A-Z]/.test(raw)) {
+      if (!raw.slice(2).includes('>')) htmlBlock = { type: 'declaration', end: />/ };
+      continue;
+    }
+    if (raw.startsWith('<![CDATA[')) {
+      if (!raw.slice(9).includes(']]>')) htmlBlock = { type: 'cdata', end: /\]\]>/ };
+      continue;
+    }
+    const blockTag = raw.match(/^<\/?([A-Za-z][A-Za-z0-9-]*)(?=[\t />]|$)/);
+    if (blockTag && blankTerminatedTags.test(blockTag[1])) {
+      htmlBlock = { type: 'block-tag', blankTerminated: true };
+      continue;
+    }
+    const completeOpenTag = /^<[A-Za-z][A-Za-z0-9-]*(?:[\t ]+[A-Za-z_:][A-Za-z0-9_.:-]*(?:[\t ]*=[\t ]*(?:[^"'=<>`\u0000-\u0020]+|'[^']*'|"[^"]*"))?)*[\t ]*\/?>[\t ]*$/;
+    const completeCloseTag = /^<\/[A-Za-z][A-Za-z0-9-]*[\t ]*>[\t ]*$/;
+    if (completeOpenTag.test(raw) || completeCloseTag.test(raw)) {
+      htmlBlock = { type: 'complete-tag', blankTerminated: true };
+    }
+  }
+  return { inHtmlComment: htmlBlock?.type === 'comment', inRawHtmlBlock: htmlBlock !== null,
+    inCodeFence: fence !== null };
+}
+const orderedDesignChainContainer = markdownContainerState(orderedDesignChainPrefix);
+const invalidDesignControlCharacters = /[\u0000-\u0008\u000b-\u001f\u007f\u2028\u2029]/.test(designGuidance);
+const designGuidanceOutsideOrderedChain = orderedDesignChainMatch
+  ? designGuidance.replace(orderedDesignChainMatch[0], '') : designGuidance;
+const designContradictionCorpus = designGuidance.replace(mandatoryDesignOutputGate, '')
+  .replaceAll('`', '').replace(/\s+/g, ' ');
+const contradictoryDesignOutputGate = [
+  /\b(?:may|can)\s+(?:omit|skip|bypass)[^.]{0,220}\b(?:design-output|prototype)\b[^.]{0,220}\bimplementation\b/i,
+  /\b(?:design-output|prototype)(?:\s+phase)?\b[^.]{0,100}\b(?:optional|unnecessary|dispensable|not\s+required|need\s+not|does\s+not\s+need\s+to|may\s+be\s+(?:omitted|skipped|bypassed)|can\s+be\s+(?:omitted|skipped|bypassed))\b[^.]{0,180}\b(?:implementation|design-brief)\b/i,
+  /\bimplementation(?:\s+phase)?\b[^.]{0,100}\b(?:may|can|is\s+allowed\s+to|is\s+permitted\s+to)\b[^.]{0,100}\b(?:proceed|start|begin|move|advance|transition)\b[^.]{0,60}\b(?:directly|straight|immediately|right\s+away|at\s+once)\b[^.]{0,100}\b(?:from|after)\s+design-brief\b/i,
+  /\b(?:after|from)\s+design-brief\b[^.]{0,160}\b(?:proceed|go|start|begin|move|advance|transition)\b[^.]{0,60}\b(?:directly|straight|immediately|right\s+away|at\s+once)\b[^.]{0,80}\b(?:to|into)\s+(?:the\s+)?implementation\b/i,
+  /\b(?:may|can|is\s+allowed\s+to|is\s+permitted\s+to)\b[^.]{0,80}\b(?:proceed|go|move|advance|transition)\b[^.]{0,50}\b(?:directly|straight|immediately)\b[^.]{0,80}\b(?:from\s+design-brief\s+)?(?:to|into)\s+(?:the\s+)?implementation\b/i,
+  /\b(?:implementation|design-brief)\b[^.]{0,180}\b(?:without|skipping|omitting|bypassing|dispensing\s+with|forgoing)\b[^.]{0,80}\b(?:the\s+)?(?:design-output|prototype)(?:\s+phase)?\b/i,
+].some((pattern) => pattern.test(designContradictionCorpus));
+if (!/wayfinder[\s\S]{0,320}plan-engineering-modes\.md/.test(plan)
+    || !/研究、产品\/设计探索、原型或设计工具交接[\s\S]{0,200}plan-design-guidance\.md/.test(plan)
+    || !/stock assertion template|stock.*template|模板[\s\S]{0,100}plan-assertion-examples\.md/.test(plan)) {
+  errors.push('plan contract lacks conditional engineering/design/assertion reference loading');
+}
+if (!engineeringModes.includes('<!-- FILE_END: agents/references/plan-engineering-modes.md -->')
+    || !/huge AND multi-session AND fog/.test(engineeringModes)
+    || !/task_plan_sha256/.test(engineeringModes) || !/explicit confirmation|明确确认/.test(engineeringModes)) {
+  errors.push('plan engineering-mode reference lost facade eligibility or approval boundary');
+}
+if (!designGuidance.includes('<!-- FILE_END: agents/references/plan-design-guidance.md -->')
+    || designGuidanceSha256 !== expectedDesignGuidanceSha256
+    || !/failure does not|故障.*does not|故障.*不/.test(designGuidance)
+    || !/research → brainstorm\/PRD → ux-brainstorm → design-brief → design output → implementation/.test(designGuidance)
+    || !/must occupy a separate Work Agent\/Phase/.test(designGuidance)
+    || orderedDesignChain !== expectedOrderedDesignChain
+    || orderedDesignChainContainer.inHtmlComment || orderedDesignChainContainer.inRawHtmlBlock
+    || orderedDesignChainContainer.inCodeFence
+    || invalidDesignControlCharacters
+    || /\bimplementation\b/i.test(designGuidanceOutsideOrderedChain)
+    || !designGuidance.includes(mandatoryDesignOutputGate)
+    || contradictoryDesignOutputGate) {
+  errors.push('plan design reference lost research, isolation, order, mandatory design-output/no-skip, or no-tool-switch boundary');
+}
+if (!assertionExamples.includes('<!-- FILE_END: agents/references/plan-assertion-examples.md -->')
+    || !/npm test --silent/.test(assertionExamples) || !/bash scripts\/verify\.sh/.test(assertionExamples)
+    || !/every MUST\s+requirement still needs at least one behavioural/.test(plan)) {
+  errors.push('plan assertion examples or main behavioural-evidence rule drift');
 }
 
 const promoted = read('memory/semantic/promoted-facts.yaml');
@@ -204,8 +414,18 @@ if (!retiredNames.has('figma-layer')) errors.push('required figma-layer retireme
 
 const office = read('.claude/skills/office/SKILL.md');
 if (!/only user selected Workflow|仅用户选择 Workflow/.test(office)
-    || !/classification or skill contract judgment does not load the graph|只做路由、分类或 skill 合同判断时不加载 graph/.test(office)) {
+    || !/只做路由、分类或 skill 合同判断时[\s\S]{0,80}不加载[\s\S]{0,60}graph/.test(office)
+    || !/实际执行 skill 且输入模式条件命中时[\s\S]{0,80}先完整读取[\s\S]{0,80}workflow-mode\.md[\s\S]{0,100}再只读取所选 skill[\s\S]{0,100}generated\/input-modes\/<key>\.json/.test(office)) {
   errors.push('office graph loading is not bounded to Workflow execution');
+}
+const learningActions = read('.claude/skills/office/references/learning-actions.md');
+if (!/三个问题[\s\S]{0,800}\.claude\/skills\/office\/references\/learning-actions\.md/.test(office)
+    || !/用户明确指出问题时必须记录 observation[\s\S]{0,800}\.claude\/skills\/office\/references\/learning-actions\.md/.test(office)
+    || !/候选写入前完整读取 `\.claude\/skills\/office\/references\/learning-actions\.md`/.test(office)
+    || !learningActions.includes('<!-- FILE_END: office/references/learning-actions.md -->')
+    || !/write_observation\.py/.test(learningActions) || !/propose_semantic\.py/.test(learningActions)
+    || !/Never write `CONTEXT\.md`/.test(learningActions)) {
+  errors.push('office learning triggers, action owner, or no-auto-promotion boundary drift');
 }
 // Scope: the office-wizard section only, and each mention is judged by its OWN sentence.
 //
@@ -321,11 +541,19 @@ if (['roots-projected', 'projected'].includes(state.phase)) {
 }
 if (state.phase === 'projected') {
   const context = read('CONTEXT.md');
+  const contextCaseExtract = read('framework-audit/2026-09-21-context-case-extract.md');
   const crmProfile = read('.claude/skill-os/crm-profile.md');
   for (const [path, text] of [['CONTEXT.md', context], ['.claude/skill-os/crm-profile.md', crmProfile]]) {
     if (text.includes('component-map.md')) errors.push(`${path} restores the missing CRM component-map startup pointer`);
   }
   if (!context.includes('`.claude/skill-os/crm-profile.md`')) errors.push('CONTEXT.md lacks the direct CRM profile owner');
+  if (!context.includes('`framework-audit/2026-09-21-context-case-extract.md`')
+      || !/归因前先拉满样本矩阵/.test(context) || !/取数之前先问 luca 近期工作分布/.test(context)
+      || /原生AI思维小结/.test(context)
+      || !contextCaseExtract.includes('<!-- FILE_END: framework-audit/2026-09-21-context-case-extract.md -->')
+      || !/原生AI思维小结/.test(contextCaseExtract)) {
+    errors.push('CONTEXT historical extraction lost archive pointer, live investigation discipline, or exact case');
+  }
   if (!/仅做路由或母版保护规则判定[\s\S]{0,100}不继续读取设计/.test(crmProfile)) {
     errors.push('CRM profile lacks the decision-only asset-read boundary');
   }

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "handoff",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [],
+        "optional": [
+          "next_session_focus"
+        ]
+      }
+    },
+    "quality_gates": [
+      "os_temp_output",
+      "artifact_references_not_duplication",
+      "sensitive_data_redacted",
+      "suggested_skills_verified"
+    ],
+    "notes": "用户显式调用的会话交接工具；输出 OS 临时目录，不碰项目级交接目录、工作流记录、当前话题或 checkpoint，不参与 workflow gate，也不要求项目 pin。"
+  }
+}

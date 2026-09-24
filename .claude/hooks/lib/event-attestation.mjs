@@ -90,18 +90,48 @@ function runtimeHome() {
   return resolve(home);
 }
 
+function insidePath(candidate, root) {
+  const rel = relative(root, candidate);
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+}
+
+function canonicalDirectory(inputPath, label) {
+  const absolute = resolve(String(inputPath || ''));
+  let canonical;
+  try { canonical = realpathSync(absolute); }
+  catch (error) {
+    if (error?.code === 'ENOENT') fail('SOURCE_NOT_VISIBLE', `${label} does not exist`);
+    throw error;
+  }
+  if (canonical !== absolute) fail('SYMLINK_SOURCE', `${label} must be canonical`);
+  return canonical;
+}
+
+// AIHub Direct uses a separate Codex home. Keep the source-root boundary strict:
+// the default home and Luca's own per-provider homes are trusted, arbitrary
+// CODEX_HOME paths are not.
+export function resolveCodexHome(explicitHome = '', osHome = runtimeHome()) {
+  const userHome = resolve(osHome);
+  const defaultHome = join(userHome, '.codex');
+  const requestedHome = explicitHome ? resolve(String(explicitHome)) : defaultHome;
+  const canonicalHome = canonicalDirectory(requestedHome, 'Codex home');
+  if (requestedHome === defaultHome) return canonicalHome;
+
+  const trustedRoot = canonicalDirectory(join(userHome, '.luca', 'codex'), 'Luca Codex home root');
+  if (!insidePath(canonicalHome, trustedRoot)) {
+    fail('SOURCE_ROOT', 'CODEX_HOME must be ~/.codex or a canonical ~/.luca/codex child');
+  }
+  return canonicalHome;
+}
+
 function boundedCodexSource(candidate, explicitHome, allowTestSourceRoot) {
   const home = allowTestSourceRoot
     ? resolve(String(explicitHome || ''))
-    : join(runtimeHome(), '.codex');
+    : resolveCodexHome(explicitHome);
   if (allowTestSourceRoot && !explicitHome) fail('SOURCE_ROOT', 'test Codex source root is missing');
-  let canonicalHome;
-  try { canonicalHome = realpathSync(home); }
-  catch (error) {
-    if (error?.code === 'ENOENT') fail('SOURCE_NOT_VISIBLE', 'Codex home does not exist');
-    throw error;
-  }
-  if (canonicalHome !== home) fail('SYMLINK_SOURCE', 'Codex home must be canonical');
+  const canonicalHome = allowTestSourceRoot
+    ? canonicalDirectory(home, 'Codex home')
+    : home;
   const sessions = join(canonicalHome, 'sessions');
   let canonicalSessions;
   try { canonicalSessions = realpathSync(sessions); }
@@ -525,6 +555,34 @@ function codexRecordHasUserMessageAnchor(records, sourceIndex) {
     const payload = next.value?.payload;
     if (next.value?.type === 'event_msg' && payload?.type === 'item_completed'
         && payload?.item?.type === 'UserMessage') return true;
+  }
+  return false;
+}
+
+function codexRecordIsUnanchoredContext(records, sourceIndex) {
+  const record = records[sourceIndex];
+  if (!isCodexUserRecord(record)) return false;
+  const payload = record.value.payload;
+  const boundary = payload.internal_chat_message_metadata_passthrough?.turn_id;
+  if (!/^msg_[\w-]+$/.test(String(payload.id || '')) || typeof boundary !== 'string' || !boundary) return false;
+  let sawTurnContext = false;
+  for (let distance = 1; distance <= 4; distance += 1) {
+    const next = records[sourceIndex + distance];
+    if (!next) return false;
+    if (isCodexUserRecord(next)) {
+      return sawTurnContext
+        && next.value.payload.internal_chat_message_metadata_passthrough?.turn_id === boundary;
+    }
+    const nextPayload = next.value?.payload;
+    if (next.value?.type === 'turn_context' && nextPayload?.turn_id === boundary) {
+      sawTurnContext = true;
+      continue;
+    }
+    if (next.value?.type === 'event_msg' && nextPayload?.type === 'item_completed'
+        && nextPayload?.item?.type === 'UserMessage') {
+      // An anchored distance-2 human record must be checked by codexAnchor.
+      return false;
+    }
   }
   return false;
 }
@@ -1181,16 +1239,21 @@ export function captureNativeEventFence({
         }
       } else if (isCodexUserRecord(record)) {
         if (skillInjectionIndexes.has(record.index)) continue;
+        // Codex startup/context injection is emitted as a user-role record but
+        // has no completed UserMessage anchor. It is not a human event and must
+        // not be sent through the source/anchor provenance checks below.
         const payload = record.value.payload;
         if (!/^msg_[\w-]+$/.test(String(payload.id || ''))) fail('UNKNOWN_SCHEMA', 'deactivate cannot fence an invalid Codex user id');
+        if (codexRecordIsUnanchoredContext(loaded.records, record.index)) continue;
+        if (!codexRecordHasUserMessageAnchor(loaded.records, record.index)) {
+          fail('UNKNOWN_SCHEMA', 'deactivate cannot fence a Codex user record without a UserMessage anchor');
+        }
         const text = strictCodexText(payload.content, 'input_text');
         const boundary = payload.internal_chat_message_metadata_passthrough?.turn_id;
-        if (boundary != null || codexRecordHasUserMessageAnchor(loaded.records, record.index)) {
-          if (typeof boundary !== 'string' || !boundary) fail('UNKNOWN_SCHEMA', 'deactivate cannot fence an invalid Codex boundary');
-          codexAnchor(loaded.records, record.index, {
-            ...candidate, boundary_id: boundary,
-          }, Buffer.from(text, 'utf8'));
-        }
+        if (typeof boundary !== 'string' || !boundary) fail('UNKNOWN_SCHEMA', 'deactivate cannot fence an invalid Codex boundary');
+        codexAnchor(loaded.records, record.index, {
+          ...candidate, boundary_id: boundary,
+        }, Buffer.from(text, 'utf8'));
       }
     }
   }

@@ -4,8 +4,8 @@ This is the independent Codex entry contract for **luca_gstack**. It contains on
 safety and routing kernel. Detailed truth lives in the one-hop owners named below; read a target
 directly and through its final line when its condition matches. Do not load another runtime's root
 adapter.
-Conditional loading is behavioral: a match requires an observable read of the target before any
-answer, even when this root seems sufficient. Naming or citing an unread target is noncompliant.
+Conditional loading: read matching targets through EOF by their `load_before` boundary; citing one
+unread afterward is noncompliant.
 
 <!-- K1:START -->
 ## K1 — Repository identity
@@ -26,7 +26,7 @@ For every non-mechanical request, classify in this exact order:
 3. **Framework Flow** — framework evolution, self-growth, benchmark, or governance work.
 4. **Multi-Skill** — several independent high-confidence skill matches.
 5. **Single-Skill** — one high-confidence match and no Plan trigger.
-6. **STOP** — ambiguity or no match; assess and discover, never treat STOP as permission.
+6. **STOP** — ambiguity/refusal; assess and discover; never treat STOP as permission. `NONE` + semantic fallback covers unmatched work.
 
 The routing truth is `.claude/skill-os/skill-routing-map.yaml`. A user-chosen Workflow may add
 handoff gates; otherwise skills remain standalone.
@@ -35,24 +35,22 @@ handoff gates; otherwise skills remain standalone.
 <!-- K3:START -->
 ## K3 — Plan and approval gate
 
-The **five** Plan triggers are: `≥ 3 files`; `≥ 2 independent subagents`; explicit **phase
+The **five** Plan triggers are: `≥ 3 files created or modified`; `≥ 2 independent subagents`; explicit **phase
 dependency**; **irreversible operations**; or an explicit user plan request such as “先做个计划”.
-Read `.claude/agents/plan-agent.md` through EOF before answering when any trigger matches. Produce a phase plan
-with assertions first. **Supervisor** or **Hierarchical** execution requires real user **approval**
-after the plan; planning permission is not mutation permission. A failed critical gate stops the
-next phase.
+On a trigger, read `.claude/agents/plan-agent.md` through EOF before producing the phase plan,
+assertions, or approval scope. **Supervisor** or **Hierarchical** execution requires real user **approval**
+after the plan; planning permission is not mutation permission. A failed critical gate
+stops the next phase.
 <!-- K3:END -->
 
 <!-- K4:START -->
 ## K4 — Skill discovery and STOP
 
-Before answering or choosing a skill—including a **STOP** outcome—read
-`.claude/skill-os/generated/skill-catalog.md` through `FILE_END`. Route by **semantic** intent, not
-keyword coincidence. Directly invoked skills still obey Plan and safety gates. The only routing
-exemption is a truly **mechanical single-file** edit with no design, research, review, or product
-judgment. Ambiguous multiple matches require one user choice; no match requires catalog-backed
-discovery before ordinary execution. In a discovery case, **name the exact matching catalog skill**
-and its authority; saying only that the catalog is discoverable is incomplete.
+Before classifying as **Multi-Skill**, **Single-Skill**, or **STOP**, and before choosing or
+invoking a skill, read `.claude/skill-os/generated/skill-catalog.md` through `FILE_END`. Route by
+**semantic** intent, not keyword coincidence. Direct invocation still obeys Plan and safety. Exempt
+only a truly **mechanical single-file** edit with no design, research, review, or product judgment.
+Ambiguity needs user choice; no match needs catalog discovery. In discovery, **name the exact matching catalog skill** and authority; a generic catalog mention is incomplete.
 <!-- K4:END -->
 
 <!-- K5:START -->
@@ -62,10 +60,12 @@ The per-**session** project pin is binding truth. `docs/`, workflow-state, and c
 **symlink** aliases are display-only; never derive or repair a pin from them. Framework/meta work
 stays **NO_PIN** and must not touch those aliases or downstream projects. A project switch/create
 uses only the complete current-turn **transaction** emitted by route-guard—never a hand-written bare
-switch command. Read `.claude/skill-os/runtime/project-session.md` through EOF before any answer
-to framework/meta/`NO_PIN` work or a request that names, implies, switches, creates, or cross-reads
-a project, and before any project-scoped read/write/switch/create or cross-project reference. Codex uses
-`scripts/project-read.mjs` only for an exact granted cross-project text read.
+switch command. Read `.claude/skill-os/runtime/project-session.md` through EOF before deciding
+project identity or project authority, or the first project-scoped read/write/switch/create/cross-
+project reference. A project name, implication, switch, creation, or cross-read reaches it. A
+framework/meta/`NO_PIN` explanation making no such decision or project I/O uses the inline NO_PIN
+floor without reading the cold owner. Codex uses `scripts/project-read.mjs` only for granted
+text reads.
 <!-- K5:END -->
 
 <!-- K6:START -->
@@ -91,10 +91,11 @@ and wait.
 <!-- K8:START -->
 ## K8 — Governed memory and Static Fallback
 
-Normal startup uses memory summary/search only. Memory extraction defaults to no write; on a user
-correction or remember request, read `.claude/skill-os/extraction-bar.md`, then
-`.claude/skill-os/correction-attribution.md`, each through EOF. The **Static Fallback** below is the
-exact projection of `memory/semantic/static-fallback-allowlist.txt` from
+Normal startup uses memory summary/search only; extraction defaults to no write. On a
+correction/remember/governance signal, read `.claude/skill-os/extraction-bar.md` through EOF before deciding whether to store.
+If needed, read `.claude/skill-os/correction-attribution.md` through EOF before choosing a person,
+framework, or project landing or resuming related work. The **Static Fallback** below is the exact projection of
+`memory/semantic/static-fallback-allowlist.txt` from
 `memory/semantic/promoted-facts.yaml`; it must remain inline even when hooks or memory loading fail.
 
 <!-- STATIC_FALLBACK:START -->
@@ -126,15 +127,17 @@ or repository action answers directly and loads no conditional target. Otherwise
 
 1. Run `python3 memory/scripts/get_memory.py --summary`.
 2. Read this checkout's `CONTEXT.md` through its `FILE_END`.
-3. Read `.claude/skill-os/generated/skill-catalog.md` through `FILE_END` before routing.
-4. Evaluate `.claude/skill-os/agent-context-manifest.json`; for each matching **conditional** entry,
-   read its `target` directly through EOF before answering. An explicit framework/meta/`NO_PIN`
-   scope matches `project-session`. Citing an unread target fails this gate; do not follow an
-   invented second-hop pointer.
-5. Only with a verified project pin, read workflow-state and the latest DONE-node project handoff.
+3. Read `.claude/skill-os/generated/context-index.md` through `FILE_END`. Each semantically matching
+   conditional entry's `target` must be read through EOF by its exact `load_before` boundary.
+   Only a boundary that precedes an answer blocks that answer; do not pre-read an owner whose
+   boundary has not been reached. If the index is missing, unreadable, or stale, fully read
+   `.claude/skill-os/agent-context-manifest.json`; absence never removes obligations.
+4. Only with a verified project pin, read workflow-state and the latest DONE-node project handoff.
    A NO_PIN framework/meta session skips both shared project surfaces.
-6. When executing a skill, read `.claude/skills/office/SKILL.md` and that skill's `SKILL.md` fully;
-   use input modes and active rules only when their manifest/skill conditions apply.
+5. Before a skill's preamble, fully read `.claude/skills/office/SKILL.md` and its `SKILL.md`. Once
+   skill/mode are known, read `.claude/skill-os/runtime/workflow-mode.md` and the selected
+   `.claude/skill-os/generated/input-modes/<key>.json` before input/override/handoff decisions;
+   honor fallback. Load active rules only when applicable.
 
 A repository-contract question is non-trivial even when it only asks for classification or an
 explanation. For name/route discovery, the catalog is sufficient. To decide a named skill's input,
@@ -148,11 +151,13 @@ implementation name is not permission for another read.
 `.agents/skills/` aliases point to the same authority bodies. It does not execute Claude slash
 wrappers. **Claude** Code uses native slash commands where present. The workflow backend absent in
 Codex is exposed through `.codex/workflow-runner.mjs`; never claim native-tool equivalence.
-Before answering, cross-harness work loads `.claude/skill-os/runtime/cross-harness.md` and verifies both independently.
-Select a subagent model role from `.claude/skill-os/model-routing.yaml`; the trusted adapter resolves
-that role through the private binding, while reasoning effort remains independent. Inherit the anchor
-role when unsure and never hardcode a model name. Runtime safety/capability facts bind, while behavioural
-preferences do not erase semantic routing; load `.claude/skill-os/runtime/harness-boundary.md` on such a conflict.
+For cross-harness work, first load
+`.claude/skill-os/runtime/cross-harness.md`; verify both before a parity claim. Read
+`.claude/skill-os/model-routing.yaml` before selection/validation/dispatch. Select a subagent model role
+from it; its adapter resolves private binding while reasoning effort remains independent.
+Inherit the anchor role when unsure; never hardcode a model name. Safety/capability facts bind;
+preferences do not erase semantic routing. On conflict, load
+`.claude/skill-os/runtime/harness-boundary.md`.
 <!-- K10:END -->
 
 ## Execution and completion
@@ -161,8 +166,8 @@ preferences do not erase semantic routing; load `.claude/skill-os/runtime/harnes
   and Project Gate → repository router → selected skill contract → local patterns.
 - Restate the operational goal before significant work. Use scene A/B/C/D only for product-design
   work and only from user/context evidence.
-- For long, phased, handoff, compaction, or pre-effect work, load
-  `.claude/skill-os/runtime/long-session.md` and preserve a phase checkpoint.
+- Keep checkpoint/evidence obligations hot; read `.claude/skill-os/runtime/long-session.md`
+  at phase gates, 2 agents, compaction/handoff, Git/external effects.
 - Codex may emulate a shared workflow only by reading its authority files and executing their
   procedure; it must not claim that another harness's slash command ran.
 - Skill completion language is `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, or `NEEDS_CONTEXT` as defined

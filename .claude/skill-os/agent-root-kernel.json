@@ -19,24 +19,24 @@
     },
     {
       "id": "K3",
-      "statement": "Apply all five Plan triggers and wait for user approval before Supervisor or Hierarchical execution.",
-      "required_terms": ["five", "Supervisor", "Hierarchical", "approval"],
-      "required_patterns": ["Supervisor[\\s\\S]{0,40}Hierarchical[\\s\\S]{0,80}requires[\\s\\S]{0,40}approval", "failed critical gate[\\s\\S]{0,20}stops[\\s\\S]{0,10}next phase"],
-      "forbidden_patterns": ["(?:Supervisor|Hierarchical)[^\\n]{0,120}(?:without approval|approval (?:is )?not required)", "planning permission is mutation permission"]
+      "statement": "Apply all five Plan triggers, load the Plan owner before producing a phase plan, assertions, or approval scope, and wait for user approval before Supervisor or Hierarchical execution.",
+      "required_terms": ["five", "plan-agent", "Supervisor", "Hierarchical", "approval"],
+      "required_patterns": ["plan-agent\\.md[\\s\\S]{0,100}before producing[\\s\\S]{0,80}phase plan[\\s\\S]{0,80}assertions[\\s\\S]{0,80}approval scope", "Supervisor[\\s\\S]{0,40}Hierarchical[\\s\\S]{0,80}requires[\\s\\S]{0,40}approval", "failed critical gate[\\s\\S]{0,20}stops[\\s\\S]{0,10}next phase"],
+      "forbidden_patterns": ["plan-agent\\.md[^\\n]{0,100}before answering when any trigger matches", "(?:Supervisor|Hierarchical)[^\\n]{0,120}(?:without approval|approval (?:is )?not required)", "planning permission is mutation permission"]
     },
     {
       "id": "K4",
-      "statement": "Treat STOP as a semantic-assessment state, not execution permission; preserve the truly mechanical single-file exemption.",
-      "required_terms": ["STOP", "semantic", "single-file", "mechanical"],
-      "required_patterns": ["Route by[\\s\\S]{0,20}semantic[\\s\\S]{0,100}not[\\s\\S]{0,30}keyword", "truly[\\s\\S]{0,20}mechanical single-file"],
-      "forbidden_patterns": ["STOP (?:is|means) permission", "catalog (?:lookup|discovery) is optional"]
+      "statement": "Load the skill catalog before Multi-Skill, Single-Skill, or STOP classification and before skill choice or invocation; treat STOP as a semantic-assessment state, not execution permission.",
+      "required_terms": ["STOP", "semantic", "single-file", "mechanical", "skill-catalog"],
+      "required_patterns": ["Before classifying[\\s\\S]{0,100}Multi-Skill[\\s\\S]{0,40}Single-Skill[\\s\\S]{0,40}STOP[\\s\\S]{0,100}before choosing[\\s\\S]{0,40}invoking a skill", "Route by[\\s\\S]{0,20}semantic[\\s\\S]{0,100}not[\\s\\S]{0,30}keyword", "truly[\\s\\S]{0,20}mechanical single-file"],
+      "forbidden_patterns": ["Before answering or choosing a skill", "STOP (?:is|means) permission", "catalog (?:lookup|discovery) is optional"]
     },
     {
       "id": "K5",
-      "statement": "Use the per-session project pin as truth; keep NO_PIN for framework/meta work; shared symlinks are display-only and switching uses an emitted transaction.",
-      "required_terms": ["NO_PIN", "session", "symlink", "transaction"],
-      "required_patterns": ["symlink[\\s\\S]{0,30}(?:are|is) display-only", "NO_PIN[\\s\\S]{0,80}must not touch", "uses only[\\s\\S]{0,40}transaction"],
-      "forbidden_patterns": ["NO_PIN[^\\n]{0,80}(?:may|can) (?:read|write|touch)[^\\n]{0,40}(?:docs|workflow-state)", "(?:may|can) derive[^\\n]{0,60}pin[^\\n]{0,30}symlink"]
+      "statement": "Use the per-session project pin as truth, load its owner before an identity/authority decision or first project action, and let pure framework explanations use the inline NO_PIN floor.",
+      "required_terms": ["NO_PIN", "session", "symlink", "transaction", "project-session"],
+      "required_patterns": ["symlink[\\s\\S]{0,30}(?:are|is) display-only", "NO_PIN[\\s\\S]{0,80}must not touch", "uses only[\\s\\S]{0,40}transaction", "project-session\\.md[\\s\\S]{0,100}before deciding[\\s\\S]{0,40}project identity[\\s\\S]{0,40}project authority[\\s\\S]{0,100}first project-scoped", "framework/meta/`NO_PIN` explanation[\\s\\S]{0,160}inline NO_PIN[\\s\\S]{0,10}floor[\\s\\S]{0,40}without reading[\\s\\S]{0,20}cold owner"],
+      "forbidden_patterns": ["project-session\\.md[^\\n]{0,120}before any answer", "framework/meta/`NO_PIN` work[\\s\\S]{0,120}before any answer", "NO_PIN[^\\n]{0,80}(?:may|can) (?:read|write|touch)[^\\n]{0,40}(?:docs|workflow-state)", "(?:may|can) derive[^\\n]{0,60}pin[^\\n]{0,30}symlink"]
     },
     {
       "id": "K6",
@@ -54,10 +54,10 @@
     },
     {
       "id": "K8",
-      "statement": "Inline every allowlisted Static Fallback fact from the governed semantic-memory source in both roots.",
-      "required_terms": ["Static Fallback", "allowlist", "promoted-facts.yaml"],
-      "required_patterns": ["Static Fallback[\\s\\S]{0,180}must remain inline", "exact projection[\\s\\S]{0,120}promoted-facts\\.yaml"],
-      "forbidden_patterns": ["Static Fallback[^\\n]{0,100}(?:need not|does not need to|may not) remain inline", "Static Fallback[^\\n]{0,80}pointer-only"]
+      "statement": "Load the extraction owner before deciding whether to store, load attribution before choosing a memory landing, and inline every allowlisted Static Fallback fact.",
+      "required_terms": ["Static Fallback", "allowlist", "promoted-facts.yaml", "extraction-bar", "correction-attribution"],
+      "required_patterns": ["extraction-bar\\.md[\\s\\S]{0,80}before deciding whether to store", "correction-attribution\\.md[\\s\\S]{0,100}before choosing[\\s\\S]{0,80}(?:person|framework)[\\s\\S]{0,80}project landing", "Static Fallback[\\s\\S]{0,180}must remain inline", "exact projection[\\s\\S]{0,120}promoted-facts\\.yaml"],
+      "forbidden_patterns": ["extraction-bar\\.md[^\\n]{0,120}then[^\\n]{0,120}correction-attribution\\.md", "Static Fallback[^\\n]{0,100}(?:need not|does not need to|may not) remain inline", "Static Fallback[^\\n]{0,80}pointer-only"]
     },
     {
       "id": "K9",
@@ -68,10 +68,10 @@
     },
     {
       "id": "K10",
-      "statement": "Keep the minimal startup protocol, bounded conditional loading for classification and execution, read-to-end rule, and truthful Claude/Codex invocation and capability differences inline.",
-      "required_terms": ["startup", "conditional", "FILE_END", "classification", "Claude", "Codex"],
-      "required_patterns": ["Minimal[\\s\\S]{0,20}startup", "conditional[\\s\\S]{0,100}target[\\s\\S]{0,60}(?:EOF|FILE_END)", "framework/meta/`NO_PIN`[\\s\\S]{0,80}project-session", "name/route discovery[\\s\\S]{0,80}catalog is sufficient", "execution-only schemas[\\s\\S]{0,100}implementation owners", "Claude[\\s\\S]{0,220}Codex|Codex[\\s\\S]{0,220}Claude"],
-      "forbidden_patterns": ["Codex (?:uses|executes)[^\\n]{0,60}Claude slash", "Claude (?:uses|invokes)[^\\n]{0,40}\\$<skill-name>"]
+      "statement": "Keep the minimal startup protocol, exact load_before boundaries, read-to-end rule, and truthful Claude/Codex invocation and capability differences inline.",
+      "required_terms": ["startup", "conditional", "FILE_END", "classification", "load_before", "Claude", "Codex"],
+      "required_patterns": ["Minimal[\\s\\S]{0,20}startup", "matching[\\s\\S]{0,40}conditional entry[\\s\\S]{0,40}target[\\s\\S]{0,80}EOF[\\s\\S]{0,100}load_before", "Only a boundary that precedes an answer blocks that answer", "do not[\\s\\S]{0,20}pre-read[\\s\\S]{0,80}boundary has not been reached", "name/route discovery[\\s\\S]{0,80}catalog is sufficient", "execution-only schemas[\\s\\S]{0,100}implementation owners", "Claude[\\s\\S]{0,220}Codex|Codex[\\s\\S]{0,220}Claude"],
+      "forbidden_patterns": ["for each matching[^\\n]{0,160}before answering", "framework/meta/`NO_PIN`[\\s\\S]{0,100}matches `project-session`", "Codex (?:uses|executes)[^\\n]{0,60}Claude slash", "Claude (?:uses|invokes)[^\\n]{0,40}\\$<skill-name>"]
     }
   ]
 }

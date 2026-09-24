@@ -1,6 +1,6 @@
 # Framework maintenance contract
 
-Load this file for lucagstack framework evolution, governance, self-maintenance, or benchmark work.
+Load this file before selecting a maintenance flow for lucagstack evolution, governance, or self-maintenance; before beginning a framework audit or benchmark; and before any framework mutation.
 
 Framework/meta work stays `NO_PIN`: do not switch to a downstream project, read shared project aliases, or write project workflow state. The `framework/` template directory remains read-only.
 

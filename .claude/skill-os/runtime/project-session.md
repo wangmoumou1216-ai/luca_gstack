@@ -1,6 +1,6 @@
 # Project session contract
 
-Load this file before a project-scoped read, write, switch, creation, or cross-project reference.
+Load this file before deciding project identity or project authority, and before any project-scoped read, write, switch, creation, or cross-project reference. A framework-only explanation that makes neither decision may use the root's inline NO_PIN floor instead.
 
 ## Identity and pin
 

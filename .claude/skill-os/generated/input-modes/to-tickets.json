@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "to-tickets",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "gated_task_plan"
+        ],
+        "optional": [
+          "publication_target",
+          "parent_reference",
+          "include_partial"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "gated_task_plan",
+          "explicit_ticket_publication_selection"
+        ],
+        "optional": [
+          "selected_engineering_delivery_preset",
+          "publication_target",
+          "parent_reference",
+          "include_partial"
+        ]
+      }
+    },
+    "quality_gates": [
+      "task_plan_sha_bound",
+      "tracer_bullet_projection_only",
+      "preview_approved_before_publish",
+      "blocking_edges_preserved",
+      "published_bodies_read_back"
+    ],
+    "notes": "Explicit-only 发布 facade；task-plan 仍是拆解/断言/依赖的唯一真值。无显式 tracker 时默认本地 .scratch 逐票文件；外部发布单独授权。"
+  }
+}

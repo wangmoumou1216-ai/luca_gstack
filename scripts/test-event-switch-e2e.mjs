@@ -123,6 +123,7 @@ try {
     SESSION_SYNC_BLOCK: '0',
     SESSION_SYNC_FORCE_ON_STOP: '0',
   };
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
   const statePath = join(gstack, '.claude', `.session-project-${session}`);
   const tx = randomUUID();
   const prompt = '切换到 beta 项目';

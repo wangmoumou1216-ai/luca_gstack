@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "wayfinder",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "destination",
+          "huge",
+          "multi_session",
+          "fog"
+        ],
+        "optional": [
+          "known_frontier"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "destination",
+          "huge",
+          "multi_session",
+          "fog"
+        ],
+        "optional": [
+          "parent_plan_context"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "huge_and_multi_session_and_fog",
+          "condition_evidence",
+          "authority_record_sha256",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "parent_u_id"
+        ]
+      }
+    },
+    "quality_gates": [
+      "three_predicates_all_true",
+      "plan_agent_is_only_planning_truth",
+      "no_execution_authority"
+    ],
+    "notes": "三谓词是 conjunction；任一为 false 即回普通 Plan Agent/direct execution。"
+  }
+}

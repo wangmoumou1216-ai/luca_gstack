@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "open-design",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "design_source_artifact"
+        ],
+        "optional": [
+          "od_skill",
+          "od_design_system",
+          "confirmed_page_selection"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "design_brief_artifact"
+        ],
+        "optional": [
+          "ux_brainstorm_artifact"
+        ]
+      }
+    },
+    "entry_modes": {
+      "chain": "verified task design-brief Generation Packet",
+      "adhoc": "explicit aligned design source; no forced PRD workflow",
+      "recover": "explicit bound OD project; skip source compilation, page matching and generation"
+    },
+    "quality_gates": [
+      "input_source_resolved_when_not_recover",
+      "design_generation_packet_when_chain",
+      "no_source_fact_drift",
+      "high_confidence_page_recommendation_only",
+      "reference_confirmed_or_none",
+      "platform_user_confirmed",
+      "external_design_system_not_overridden",
+      "designsystem_bound_verified_when_delegated",
+      "exact_tool_target_and_write_authority"
+    ],
+    "completion_gates": {
+      "exported": [
+        "same_source_body_and_reference_materials",
+        "no_claim_of_external_import"
+      ],
+      "staged": [
+        "od_daemon_reachable",
+        "exact_project_readback",
+        "brief_and_all_reference_bytes_match",
+        "no_claim_of_generation"
+      ],
+      "recovered": [
+        "bound_project_only",
+        "actual_nonempty_prototype_recovered",
+        "all_related_artifacts_recovered",
+        "prototype_spec_written",
+        "honest_traceability",
+        "project_handoff_when_pinned"
+      ]
+    },
+    "notes": "设计源就绪后仅一次 page-context 步骤：高置信才推荐并待真人采用；低置信不展示，reference=none 直接交接，可选询问不阻塞。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，原请求最多重试1次后回同一staged项目桌面端。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
+  }
+}

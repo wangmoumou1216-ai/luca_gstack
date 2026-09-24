@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "source_sha256": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+  "skill": "implement",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "gated_tech_spec",
+          "gated_task_plan"
+        ],
+        "optional": [
+          "current_handoff"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "gated_tech_spec",
+          "gated_task_plan"
+        ],
+        "optional": [
+          "selected_engineering_delivery_preset"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "approved_u_ids",
+          "task_plan_sha256",
+          "condition_evidence",
+          "authority_record_sha256",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "original_u_id"
+        ]
+      }
+    },
+    "quality_gates": [
+      "task_plan_sha_frozen_before_compile",
+      "exact_u_ids_human_confirmed",
+      "plan_agent_compiles",
+      "orchestrator_executes",
+      "graph_optional"
+    ],
+    "notes": "preset selection is routing metadata, never authority；standalone 不读 optional graph。"
+  }
+}

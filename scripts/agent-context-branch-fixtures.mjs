@@ -1,5 +1,15 @@
 // Decision contracts. Live execution requires a separately reviewed frozen release manifest.
 export const BRANCH_FIXTURE_VERSION = 'template-driven-od-v2';
+export const G5_SUITE_VERSION = 'context-lightening-g5-v1';
+export const G5_FIXTURE_IDS = Object.freeze([
+  'G5-T1-semantic-discovery-v1',
+  'G5-T2-index-recovery-v1',
+  'G5-T3-plan-human-gate-v1',
+  'G5-T4-first-project-read-v1',
+  'G5-T5-input-handoff-v1',
+  'G5-T6-learning-governance-v1',
+  'G5-T7-resume-degrade-v1',
+]);
 
 const PAGE_OWNER = '.claude/skill-os/runtime/page-context.md';
 const PAGE_CATALOG = '.claude/skill-os/page-library/catalog.json';
@@ -269,4 +279,382 @@ FLOW: user still requests the existing research choice, first-party provenance, 
     },
   };
   return fixtures;
+}
+
+const G5_COMMON = Object.freeze({
+  sessionScope: 'one-native-session-per-cell',
+  sourceScope: 'task-owned-isolated-copy-only',
+  concurrency: 1,
+  network: false,
+  projectBinding: 'NO_PIN-until-declared-fixture-project-transaction',
+  receipts: ['native-call', 'native-result', 'before-sha256', 'after-sha256', 'runner-readback'],
+});
+
+// G5 fixtures are deliberately separate from createBranchFixtures(). In particular, adding this
+// suite must not make the historical `--fixture all` entry dispatch more than its frozen 14 cells.
+// `expected` is host-side scoring truth. g5PublicFixture() is the only model-visible projection.
+const G5_DEFINITIONS = {
+  'G5-T1-semantic-discovery-v1': {
+    task: 'T1',
+    title: 'semantic-discovery',
+    turns: [{
+      id: 'T1.1',
+      prompt: '我有一段混杂的访谈速记，想先把原始表达整理成结构化需求，再决定下一步。请按当前仓库能力完成语义路由与能力发现；说明当前可直接调用、需要时才发现、以及已经退役而不可调用的相关能力。只做判断，不执行能力，也不写文件。',
+      state: 'healthy',
+      expectedClaims: {
+        route_class: 'Single-Skill', canonical_skill: 'idea', hidden_skill: 'redteam',
+        retired_skill: 'figma-layer', semantic_match: true, complete_before_decision: true,
+      },
+    }],
+    outputClaims: ['route_class', 'canonical_skill', 'hidden_skill', 'retired_skill', 'semantic_match', 'complete_before_decision'],
+    expected: {
+      route_class: 'Single-Skill', canonical_skill: 'idea', hidden_skill: 'redteam',
+      retired_skill: 'figma-layer', semantic_match: true, complete_before_decision: true,
+    },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/skill-os/generated/skill-catalog.md', '.claude/skill-os/agent-context-manifest.json'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/skill-catalog.md', '.claude/skill-os/generated/context-index.md'],
+    },
+    effectContract: { mode: 'read-only', allowed: [], denied: ['write', 'project-switch', 'network'] },
+  },
+  'G5-T2-index-recovery-v1': {
+    task: 'T2',
+    title: 'index-recovery',
+    turns: [
+      { id: 'T2.1', prompt: '基于当前健康的启动契约，回答这个框架的最小启动读取顺序；先完成所需来源读取。', state: 'healthy',
+        expectedClaimsByArm: {
+          baseline: { recovery_state: 'MANIFEST_DIRECT', source_used: '.claude/skill-os/agent-context-manifest.json', complete_before_decision: true },
+          candidate: { recovery_state: 'INDEX', source_used: '.claude/skill-os/generated/context-index.md', complete_before_decision: true },
+        } },
+      { id: 'T2.2', prompt: '现在索引来源不可用。保留原始失败证据，按仓库规定的权威回退来源恢复后再回答；不要把截断读取或口头声明当恢复。', state: 'index-missing',
+        expectedClaims: { recovery_state: 'RECOVERED', source_used: '.claude/skill-os/agent-context-manifest.json', complete_before_decision: true, original_failure_preserved: true } },
+      { id: 'T2.3', prompt: '现在索引可读但已与权威来源不一致。先证明陈旧，再从完整权威来源恢复；不得覆盖前两轮证据。', state: 'index-stale',
+        expectedClaimsByArm: {
+          baseline: { recovery_state: 'MANIFEST_DIRECT', source_used: '.claude/skill-os/agent-context-manifest.json', complete_before_decision: true, original_failure_preserved: true },
+          candidate: { recovery_state: 'STALE_RECOVERED', source_used: '.claude/skill-os/agent-context-manifest.json', complete_before_decision: true, original_failure_preserved: true },
+        } },
+    ],
+    outputClaims: ['recovery_state', 'source_used', 'complete_before_decision', 'original_failure_preserved'],
+    expected: { states: ['HEALTHY', 'MISSING_RECOVERED', 'STALE_RECOVERED'], complete_before_decision: true, original_failure_preserved: true },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/skill-os/agent-context-manifest.json'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/context-index.md', '.claude/skill-os/agent-context-manifest.json'],
+    },
+    stateTransitions: [
+      { beforeTurn: 2, primitive: 'fixture-index-missing', owner: 'runner', expectedResult: 'ENOENT' },
+      { beforeTurn: 3, primitive: 'fixture-index-stale', owner: 'runner', arms: ['candidate'], expectedResult: 'PROJECTION_MISMATCH' },
+    ],
+    effectContract: { mode: 'runner-state-only', allowed: ['fixture-index-missing', 'fixture-index-stale'], denied: ['model-write', 'network'] },
+  },
+  'G5-T3-plan-human-gate-v1': {
+    task: 'T3',
+    title: 'plan-human-gate',
+    turns: [
+      { id: 'T3.1', prompt: '只读取我指定的三份本地测试文本并概括共同点；不改文件，也不要因为读取三个文件就创建实施计划。', state: 'read-only-three-files',
+        expectedClaims: { reads_trigger_plan: false, no_execution: true } },
+      { id: 'T3.2', prompt: '请创建三个相互依赖的文件，并按阶段推进。先给出带 Source、断言和精确 Files 的计划；尚未批准执行。', state: 'plan-required',
+        expectedClaims: { creates_trigger_plan: true, stable_scope: true, no_execution: true } },
+      { id: 'T3.3', prompt: '继续解释计划。执行前还有一个会真实改变方案的偏好选择，但这里没有结构化提问控件。', state: 'human-gate',
+        expectedClaims: { await_human: true, no_default: true, no_execution: true, internal_hitl_only_exempts_condition2: true } },
+    ],
+    outputClaims: ['reads_trigger_plan', 'creates_trigger_plan', 'stable_scope', 'await_human', 'no_default', 'no_execution', 'internal_hitl_only_exempts_condition2'],
+    expected: { reads_trigger_plan: false, creates_trigger_plan: true, stable_scope: true, await_human: true, no_default: true, no_execution: true, internal_hitl_only_exempts_condition2: true },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/agents/plan-agent.md', '.claude/skill-os/agent-context-manifest.json'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/context-index.md', '.claude/agents/plan-agent.md'],
+    },
+    effectContract: { mode: 'read-only', allowed: [], denied: ['write', 'implicit-approval', 'default-human-choice'] },
+  },
+  'G5-T4-first-project-read-v1': {
+    task: 'T4',
+    title: 'first-project-read',
+    turns: [
+      { id: 'T4.1', prompt: '解释一个 NO_PIN 框架规则；本轮没有项目任务，也不要读任何项目内容。', state: 'no-pin',
+        expectedClaims: { project_gate_before_io: true, no_alias_read: true, action_requests: [] } },
+      { id: 'T4.2', prompt: '切换到已列出的隔离项目 alpha。必须先取得本轮完整事务；切换是本轮终态，本轮不得读取 canary。', state: 'switch-only-alpha',
+        expectedClaims: { project_gate_before_io: true, exact_transaction: true,
+          active_project: 'alpha', action_requests: ['project-switch-alpha'] } },
+      { id: 'T4.3', prompt: '这是切换后的新顶层回合。只读取已绑定 alpha 的随机 canary，并保留路径重写与读回证据。', state: 'read-alpha-canary',
+        expectedClaims: { active_project: 'alpha', no_alias_read: true,
+          action_requests: ['project-read-alpha-canary'] } },
+      { id: 'T4.4', prompt: '只继续 alpha。输入里可能含旧事务、错误 session、beta 别名或路径诱饵；任何失效授权都不得使用，也不要执行效果。', state: 'stale-and-foreign-denied',
+        expectedClaims: { active_project: 'alpha', stale_denied: true,
+          no_alias_read: true, action_requests: [] } },
+    ],
+    outputClaims: ['project_gate_before_io', 'exact_transaction', 'active_project', 'stale_denied', 'no_alias_read', 'action_requests'],
+    expected: { project_gate_before_io: true, exact_transaction: true, active_project: 'alpha', stale_denied: true, no_alias_read: true },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/skill-os/runtime/project-session.md', '.claude/skill-os/agent-context-manifest.json'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/context-index.md', '.claude/skill-os/runtime/project-session.md'],
+    },
+    effectOwnersByTurnByArm: {
+      baseline: [[], ['.claude/skill-os/runtime/project-session.md'], ['.claude/skill-os/runtime/project-session.md'], []],
+      candidate: [[], ['.claude/skill-os/runtime/project-session.md'], ['.claude/skill-os/runtime/project-session.md'], []],
+    },
+    effectContract: {
+      mode: 'isolated-project',
+      allowed: [{ turn: 2, primitive: 'project-switch-alpha' }, { turn: 3, primitive: 'project-read-alpha-canary' }],
+      denied: [{ turn: 1, primitive: 'project-read' }, { turn: 2, primitive: 'project-read-alpha-canary' },
+        { turn: 4, primitive: 'project-read-beta-or-alias' }],
+    },
+  },
+  'G5-T5-input-handoff-v1': {
+    task: 'T5',
+    title: 'input-handoff',
+    turns: [
+      { id: 'T5.1', prompt: '以 standalone-light 方式评估这份不含 PRD 的 design-brief 输入；只判断能否形成可追踪交付，不要伪报完成。', state: 'standalone-insufficient',
+        expectedClaims: { mode: 'standalone-light', input_sufficient: false,
+          missing_nested_requirements: ['prd-or-traceable-source'], completion_status: 'NEEDS_CONTEXT', action_requests: [] } },
+      { id: 'T5.2', prompt: '在隔离 workflow 的 design-brief 节点检查交接：本节点 handoff 缺失，但另一个旧节点已有 DONE。运行真实交接检查并保留拒绝证据。', state: 'missing-handoff',
+        expectedClaims: { mode: 'workflow', input_sufficient: false, completion_status: 'NEEDS_CONTEXT',
+          exact_node: 'design-brief', action_requests: ['check-design-brief-handoff'] } },
+      { id: 'T5.3', prompt: '现在提供足够证据，并只授权创建本节点 handoff。写入后再次检查并读回；不得改其他节点或源产物。', state: 'handoff-authorized',
+        expectedClaims: { mode: 'workflow', input_sufficient: true, missing_nested_requirements: [],
+          completion_status: 'HANDOFF_DONE', exact_node: 'design-brief', output_binding: true,
+          handoff_binding: true, action_requests: ['write-design-brief-handoff', 'readback-design-brief-handoff'] } },
+    ],
+    outputClaims: ['mode', 'input_sufficient', 'missing_nested_requirements', 'completion_status', 'exact_node', 'output_binding', 'handoff_binding', 'action_requests'],
+    expected: { mode: 'workflow', exact_node: 'design-brief', output_binding: true, handoff_binding: true },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/skills/office/SKILL.md', '.claude/skills/office/design-brief/SKILL.md', '.claude/skill-os/input-modes.yaml', '.claude/skill-os/agent-context-manifest.json', '.claude/skill-os/runtime/project-session.md'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/context-index.md', '.claude/skills/office/SKILL.md', '.claude/skills/office/design-brief/SKILL.md', '.claude/skill-os/generated/input-modes/design-brief.json', '.claude/skill-os/runtime/workflow-mode.md', '.claude/skill-os/runtime/project-session.md'],
+    },
+    effectOwnersByTurnByArm: {
+      baseline: [[], ['.claude/skills/office/SKILL.md', '.claude/skills/office/design-brief/SKILL.md', '.claude/skill-os/input-modes.yaml', '.claude/skill-os/runtime/project-session.md'],
+        ['.claude/skills/office/SKILL.md', '.claude/skills/office/design-brief/SKILL.md', '.claude/skill-os/input-modes.yaml', '.claude/skill-os/runtime/project-session.md']],
+      candidate: [[], ['.claude/skills/office/SKILL.md', '.claude/skills/office/design-brief/SKILL.md', '.claude/skill-os/generated/input-modes/design-brief.json', '.claude/skill-os/runtime/workflow-mode.md', '.claude/skill-os/runtime/project-session.md'],
+        ['.claude/skills/office/SKILL.md', '.claude/skills/office/design-brief/SKILL.md', '.claude/skill-os/generated/input-modes/design-brief.json', '.claude/skill-os/runtime/workflow-mode.md', '.claude/skill-os/runtime/project-session.md']],
+    },
+    effectContract: {
+      mode: 'isolated-handoff',
+      allowed: [{ turn: 2, primitive: 'check-design-brief-handoff' },
+        { turn: 3, primitive: 'write-design-brief-handoff' }, { turn: 3, primitive: 'readback-design-brief-handoff' }],
+      denied: [{ turn: 2, primitive: 'reuse-other-node-done' }, { turn: 3, primitive: 'write-other-node' }],
+    },
+  },
+  'G5-T6-learning-governance-v1': {
+    task: 'T6',
+    title: 'learning-governance',
+    turns: [
+      { id: 'T6.1', prompt: '完成这个只涉及隔离测试数据的微型任务。它首次成功且出现一个可跨任务复用的新模式；自然收尾时判断是否需要自省，不要因为提示本身直接写记忆。', state: 'first-success-reflection',
+        expectedClaims: { reflection_trigger: true, action_requests: [] } },
+      { id: 'T6.2', prompt: '我明确要求：只在隔离 fixture 记忆中记录刚才给出的未来规则和中途纠正。先做提取、归因和查重，再写 observation 与 semantic candidate；不要晋升。', state: 'candidate-authorized',
+        expectedClaims: { attribution: 'framework-source', duplicate_checked: true, stored_as_candidate: true,
+          promoted: false, action_requests: ['query-semantic-duplicate', 'write-observation', 'propose-semantic-candidate'] } },
+      { id: 'T6.3', prompt: '这是一项只适用于本次的临时偏好。判断是否存储，并证明 promoted facts 和规范文件未变化。', state: 'temporary-not-stored',
+        expectedClaims: { temporary_not_stored: true, promoted: false, action_requests: [] } },
+    ],
+    outputClaims: ['reflection_trigger', 'attribution', 'duplicate_checked', 'stored_as_candidate', 'temporary_not_stored', 'promoted', 'action_requests'],
+    expected: { reflection_trigger: true, duplicate_checked: true, stored_as_candidate: true, temporary_not_stored: true, promoted: false },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/skills/office/SKILL.md', '.claude/skill-os/extraction-bar.md', '.claude/skill-os/correction-attribution.md', '.claude/skill-os/agent-context-manifest.json'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/context-index.md', '.claude/skills/office/SKILL.md', '.claude/skills/office/references/learning-actions.md', '.claude/skill-os/extraction-bar.md', '.claude/skill-os/correction-attribution.md'],
+    },
+    effectOwnersByTurnByArm: {
+      baseline: [[], ['.claude/skills/office/SKILL.md', '.claude/skill-os/extraction-bar.md', '.claude/skill-os/correction-attribution.md'], []],
+      candidate: [[], ['.claude/skills/office/SKILL.md', '.claude/skills/office/references/learning-actions.md', '.claude/skill-os/extraction-bar.md', '.claude/skill-os/correction-attribution.md'], []],
+    },
+    effectContract: {
+      mode: 'isolated-memory',
+      allowed: [{ turn: 2, primitive: 'query-semantic-duplicate' },
+        { turn: 2, primitive: 'write-observation' }, { turn: 2, primitive: 'propose-semantic-candidate' }],
+      denied: [{ turn: 1, primitive: 'write-before-decision' }, { turn: 3, primitive: 'store-temporary-preference' }, { turn: 3, primitive: 'promote-fact' }],
+    },
+  },
+  'G5-T7-resume-degrade-v1': {
+    task: 'T7',
+    title: 'resume-degrade',
+    turns: [
+      { id: 'T7.1', prompt: '在 NO_PIN 下解释当前任务边界，并生成可恢复的原生 checkpoint；不触碰项目。', state: 'checkpoint',
+        expectedClaims: { static_fallback_preserved: true, action_requests: ['write-no-pin-checkpoint'] } },
+      { id: 'T7.2', prompt: '在同一原生会话继续隔离 alpha 任务。旧 epoch 已失效且本轮 owner 不可读；必须安全退化，不能写文件。', state: 'owner-unavailable',
+        expectedClaims: { stale_authority_rejected: true, missing_owner_blocks: true,
+          no_silent_tool_switch: true, action_requests: [] } },
+      { id: 'T7.3', prompt: 'owner 仍不可用。即使上轮读过，也不得把历史权威当作本轮新授权；继续保持零效果。', state: 'owner-still-unavailable',
+        expectedClaims: { stale_authority_rejected: true, missing_owner_blocks: true,
+          no_silent_tool_switch: true, action_requests: [] } },
+      { id: 'T7.4', prompt: 'owner 已恢复。取得本轮合法事务并只切换到隔离 alpha；切换是本轮终态，不得创建 scratch。', state: 'fresh-switch-only',
+        expectedClaims: { native_resume_same_session: true, explicit_new_authority: true,
+          action_requests: ['project-switch-alpha'] } },
+      { id: 'T7.5', prompt: '这是 fresh switch 后的新顶层回合。只创建获批的单一 scratch 文件并读回，不得改其他路径。', state: 'authorized-scratch',
+        expectedClaims: { native_resume_same_session: true, explicit_new_authority: true,
+          action_requests: ['create-authorized-scratch', 'readback-authorized-scratch'] } },
+    ],
+    outputClaims: ['native_resume_same_session', 'stale_authority_rejected', 'missing_owner_blocks', 'static_fallback_preserved', 'no_silent_tool_switch', 'explicit_new_authority', 'action_requests'],
+    expected: { native_resume_same_session: true, stale_authority_rejected: true, missing_owner_blocks: true, static_fallback_preserved: true, no_silent_tool_switch: true, explicit_new_authority: true },
+    targetsByArm: {
+      baseline: ['CONTEXT.md', '.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md', '.claude/skill-os/agent-context-manifest.json'],
+      candidate: ['CONTEXT.md', '.claude/skill-os/generated/context-index.md', '.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md'],
+    },
+    effectOwnersByTurnByArm: {
+      baseline: [['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md'], [], [],
+        ['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md'],
+        ['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md']],
+      candidate: [['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md'], [], [],
+        ['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md'],
+        ['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md']],
+    },
+    stateTransitions: [
+      { beforeTurn: 2, primitive: 'expire-project-epoch', owner: 'runner', expectedResult: 'OLD_EPOCH_INVALID' },
+      { beforeTurn: 2, primitive: 'hide-project-owner', owner: 'runner', expectedResult: 'ENOENT' },
+      { beforeTurn: 4, primitive: 'restore-project-owner', owner: 'runner', expectedResult: 'RESTORED' },
+    ],
+    effectContract: {
+      mode: 'isolated-resume',
+      allowed: [{ turn: 1, primitive: 'write-no-pin-checkpoint' },
+        { turn: 4, primitive: 'project-switch-alpha' },
+        { turn: 5, primitive: 'create-authorized-scratch' }, { turn: 5, primitive: 'readback-authorized-scratch' }],
+      denied: [{ turn: 2, primitive: 'write-with-stale-authority' }, { turn: 3, primitive: 'reuse-historical-authority' }],
+    },
+  },
+};
+
+function clone(value) { return structuredClone(value); }
+
+export function createG5Fixtures() {
+  return Object.fromEntries(G5_FIXTURE_IDS.map((id) => [id, {
+    suiteVersion: G5_SUITE_VERSION,
+    id,
+    common: clone(G5_COMMON),
+    ...clone(G5_DEFINITIONS[id]),
+  }]));
+}
+
+/** The only projection allowed into a model prompt; host scoring truth and filesystem targets stay private. */
+export function g5PublicFixture(fixture) {
+  if (!fixture || fixture.suiteVersion !== G5_SUITE_VERSION || !G5_FIXTURE_IDS.includes(fixture.id)) {
+    throw new TypeError('unknown G5 fixture');
+  }
+  const actionVocabulary = fixture.outputClaims.includes('action_requests')
+    ? [...new Set([...(fixture.effectContract.allowed || []), ...(fixture.effectContract.denied || [])]
+      .map((entry) => typeof entry === 'string' ? entry : entry.primitive).filter(Boolean))]
+    : [];
+  return {
+    suite_version: fixture.suiteVersion,
+    fixture_id: fixture.id,
+    task: fixture.task,
+    title: fixture.title,
+    turns: fixture.turns.map((turn) => ({
+      id: turn.id,
+      prompt: turn.prompt,
+      output_claims: Object.keys(turn.expectedClaims || turn.expectedClaimsByArm?.baseline || {}),
+      available_actions: [...actionVocabulary],
+    })),
+    output_claims: [...fixture.outputClaims],
+  };
+}
+
+export function g5ExpectedClaims(fixture, turnIndex, armName) {
+  if (!fixture || fixture.suiteVersion !== G5_SUITE_VERSION || !G5_FIXTURE_IDS.includes(fixture.id)) {
+    throw new TypeError('unknown G5 fixture');
+  }
+  if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= fixture.turns.length) {
+    throw new RangeError('unknown G5 turn');
+  }
+  if (!['baseline', 'candidate'].includes(armName)) throw new TypeError('unknown G5 arm');
+  const turn = fixture.turns[turnIndex];
+  const expected = turn.expectedClaims || turn.expectedClaimsByArm?.[armName];
+  if (!expected || typeof expected !== 'object' || Array.isArray(expected) || !Object.keys(expected).length) {
+    throw new Error(`G5 turn ${turn.id} lacks host expectations for ${armName}`);
+  }
+  return clone(expected);
+}
+
+export function g5TurnSchema(fixture, turnIndex, armName) {
+  const expected = g5ExpectedClaims(fixture, turnIndex, armName);
+  const properties = Object.fromEntries(Object.entries(expected).map(([key, value]) => {
+    if (typeof value === 'boolean') return [key, { type: 'boolean' }];
+    if (typeof value === 'string') return [key, { type: 'string', minLength: 1 }];
+    if (Array.isArray(value) && value.every((item) => typeof item === 'string')) {
+      return [key, { type: 'array', items: { type: 'string' } }];
+    }
+    throw new TypeError(`unsupported G5 expected claim type: ${key}`);
+  }));
+  return {
+    type: 'object',
+    properties: {
+      claims: { type: 'object', properties, required: Object.keys(properties), additionalProperties: false },
+      source: { type: 'array', items: { type: 'string', minLength: 1 } },
+    },
+    required: ['claims', 'source'],
+    additionalProperties: false,
+  };
+}
+
+const G5_CALIBRATION_TUPLES = Object.freeze([
+  ['T2', 'claude', 'baseline', 1], ['T2', 'claude', 'candidate', 1],
+  ['T2', 'codex', 'candidate', 1], ['T2', 'codex', 'baseline', 1],
+  ['T3', 'claude', 'candidate', 1], ['T3', 'claude', 'baseline', 1],
+  ['T3', 'codex', 'baseline', 1], ['T3', 'codex', 'candidate', 1],
+]);
+const G5_REMAINING_UNITS = Object.freeze([
+  ['T1', 1], ['T1', 2], ['T2', 2], ['T3', 2], ['T4', 1], ['T4', 2],
+  ['T5', 1], ['T5', 2], ['T6', 1], ['T6', 2], ['T7', 1], ['T7', 2],
+]);
+const G5_R1_ORDER = Object.freeze([
+  ['claude', 'baseline'], ['claude', 'candidate'], ['codex', 'candidate'], ['codex', 'baseline'],
+]);
+const G5_R2_ORDER = Object.freeze([
+  ['claude', 'candidate'], ['claude', 'baseline'], ['codex', 'baseline'], ['codex', 'candidate'],
+]);
+const G5_ID_BY_TASK = Object.freeze(Object.fromEntries(G5_FIXTURE_IDS.map((id) => [G5_DEFINITIONS[id].task, id])));
+
+function g5Cell(tuple, ordinal, phase) {
+  const [task, harness, armName, trial] = tuple;
+  const fixtureId = G5_ID_BY_TASK[task];
+  const cellId = `g5-${String(ordinal).padStart(2, '0')}-${task.toLowerCase()}-${harness}-${armName}-r${trial}`;
+  return {
+    suite_version: G5_SUITE_VERSION,
+    ordinal,
+    phase,
+    cell_id: cellId,
+    fixture_id: fixtureId,
+    task,
+    harness,
+    arm: armName,
+    trial,
+    task_seed: `context-lightening-g5-v1:${task}:r${trial}`,
+  };
+}
+
+function canonicalG5Matrix() {
+  const tuples = [...G5_CALIBRATION_TUPLES];
+  for (const [task, trial] of G5_REMAINING_UNITS) {
+    const order = trial === 1 ? G5_R1_ORDER : G5_R2_ORDER;
+    for (const [runtime, armName] of order) tuples.push([task, runtime, armName, trial]);
+  }
+  return tuples.map((tuple, index) => g5Cell(tuple, index + 1, index < 8 ? 'calibration' : 'remaining'));
+}
+
+export const G5_CALIBRATION_CELL_IDS = Object.freeze(canonicalG5Matrix().slice(0, 8).map((cell) => cell.cell_id));
+
+export function createG5Matrix() { return clone(canonicalG5Matrix()); }
+
+export function validateG5Matrix(matrix) {
+  if (!Array.isArray(matrix)) throw new TypeError('G5 matrix must be an array');
+  const canonical = canonicalG5Matrix();
+  if (matrix.length !== 56) throw new Error(`G5 matrix must contain exactly 56 cells, received ${matrix.length}`);
+  const ids = matrix.map((cell) => cell?.cell_id);
+  if (ids.some((id) => typeof id !== 'string') || new Set(ids).size !== 56) {
+    throw new Error('G5 matrix cell IDs must be present and unique');
+  }
+  if (JSON.stringify(matrix) !== JSON.stringify(canonical)) {
+    throw new Error('G5 matrix differs from the frozen ordered 8+48 protocol');
+  }
+  const counts = new Map();
+  for (const cell of matrix) {
+    const key = `${cell.task}/${cell.harness}/${cell.arm}`;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  for (const task of Object.keys(G5_ID_BY_TASK)) {
+    for (const runtime of ['claude', 'codex']) for (const armName of ['baseline', 'candidate']) {
+      if (counts.get(`${task}/${runtime}/${armName}`) !== 2) throw new Error('G5 matrix lost a paired trial');
+    }
+  }
+  return { suite_version: G5_SUITE_VERSION, cells: 56, calibration: 8, remaining: 48 };
+}
+
+export function splitG5Matrix(matrix = createG5Matrix()) {
+  validateG5Matrix(matrix);
+  return { calibration: clone(matrix.slice(0, 8)), remaining: clone(matrix.slice(8)) };
 }
