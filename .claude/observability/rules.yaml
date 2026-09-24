@@ -132,3 +132,73 @@ rules:
   rule: "diagnosing-bugs: 从 luca.app 内嵌会话启动第二个 macOS Electron GUI 测试时，使用可清理的唯一 launchctl 临时 job；直接 spawn 的 AppKit SIGABRT 不归因于产品 renderer"
   source_observations:
     - O-20260914-002
+- id: R-20260920-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["code-hygiene"]
+    scenes: ["*"]
+  rule: "code-hygiene: 提交/推送就绪检查必须从当前分支 @{u} 解析跟踪远端，禁止假设远端名为 origin。"
+  source_observations:
+    - O-20260920-002
+- id: R-20260920-002
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["code-hygiene"]
+    scenes: ["*"]
+  rule: "code-hygiene: 脏工作区的 scoped commit 在推送前必须验证隔离提交树；不得用混合工作树的全绿替代待发布 commit 的验证。"
+  source_observations:
+    - O-20260920-003
+- id: R-20260920-003
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["code-hygiene"]
+    scenes: ["*"]
+  rule: "code-hygiene: scoped task 的完成状态只由其授权范围与验收条件决定；无关全仓 CI 失败只能列为外部旁注，不得改判任务未完成。"
+  source_observations:
+    - O-20260920-004
+- id: R-20260920-004
+  status: active
+  severity: high
+  type: quality_rule
+  scope:
+    skills: ["open-design"]
+    scenes: ["*"]
+  rule: "用户提供原模板时，原HTML、CSS、脚本、资源和隐藏状态必须逐字节复制；原件=仓库副本=交接输入。无法适配时阻断，不以静态影子、截图或简化重写替代。"
+  source_observations:
+    - O-20260920-005
+- id: R-20260923-001
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["diagnosing-bugs"]
+    scenes: ["*"]
+  rule: "diagnosing-bugs: macOS Direct-mode fixes must verify the socket destination and set explicit NO_PROXY/no_proxy for the provider host when the system proxy is enabled."
+  source_observations:
+    - O-20260923-001
+- id: R-20260923-002
+  status: active
+  severity: medium
+  type: quality_rule
+  scope:
+    skills: ["code-hygiene"]
+    scenes: ["*"]
+  rule: "测试夹具直接调用生产边界函数时，测试模式必须在当前进程和子进程环境同时生效"
+  source_observations:
+    - O-20260923-003
+- id: R-20260923-003
+  status: active
+  severity: high
+  type: quality_rule
+  scope:
+    skills: ["office"]
+    scenes: ["*"]
+  rule: "office/route-guard: 普通任务无完整关键词命中时返回 NONE/semantic fallback，不得把 no_keyword_match 映射为 STOP；仅项目或作用域歧义、元问题与受保护拒绝可 STOP。"
+  source_observations:
+    - O-20260923-004

@@ -133,12 +133,29 @@ const cases = [
   {
     // Audit 2026-05-28 C1: with active project, "我想做一个 X" (X 不是泛词
     // "需求/项目") 现行实现 (route-guard.mjs:187 守护 !currentProject) 让其
-    // fall through 到 skillDecision；具体 domain 词无 trigger 命中 → STOP。
-    // 主 Claude 应在 STOP 时询问用户是否新建项目/继续。
-    name: 'new natural idea with active project falls through to STOP',
+    // 这是项目归属歧义，不是 skill 词表缺失：即使已有 current project，
+    // “我想做一个 X” 仍先要求确认新项目/当前项目。
+    name: 'new natural idea with active project keeps the project-scope gate',
     prompt: '我想做一个客户跟进助手',
     expect: decision => {
-      assert.equal(decision.decision, 'STOP', `got ${decision.decision}`);
+      assert.equal(decision.decision, 'PROJECT_STOP', `got ${decision.decision}`);
+      assert.equal(decision.projectAction, 'confirm_new_project');
+    },
+  },
+  {
+    name: 'named current project does not reopen the ownership gate for a new feature',
+    prompt: 'muse 里我想做一个导出按钮',
+    extraEnv: { ROUTE_GUARD_PROJECTS: 'muse', ROUTE_GUARD_CURRENT_PROJECT: 'muse' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE', `got ${decision.decision}/${decision.projectAction}`);
+    },
+  },
+  {
+    name: 'named current project does not reopen the generic demand gate',
+    prompt: 'muse 里我想做一个需求',
+    extraEnv: { ROUTE_GUARD_PROJECTS: 'muse', ROUTE_GUARD_CURRENT_PROJECT: 'muse' },
+    expect: decision => {
+      assert.notEqual(decision.decision, 'PROJECT_STOP', `got ${decision.projectAction}`);
     },
   },
   {
@@ -251,10 +268,11 @@ const cases = [
     },
   },
   {
-    name: '2026-07-03: magicpath demoted to hidden (full-review P2-6, zero 30-day use) — direct interface wording now STOPs, no keyword left to match',
+    name: '2026-07-03: magicpath demoted to hidden (full-review P2-6, zero 30-day use) — direct interface wording has no route',
     prompt: '直接产出一个线索管理界面',
     expect: decision => {
-      assert.equal(decision.decision, 'STOP');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.reason, 'no_keyword_match');
     },
   },
   {
@@ -334,7 +352,9 @@ const cases = [
     prompt: '订单进度是多少',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.notEqual(decision.decision, 'NONE', '业务对象进度不得被 follow-up 豁免吞掉');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.reason, 'no_keyword_match', '业务对象进度不得被 follow-up 静默吞掉');
+      assert.equal(decision.semanticFallback, true);
     },
   },
   {
@@ -342,7 +362,9 @@ const cases = [
     prompt: '修改页面显示你的进度是多少',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
     expect: decision => {
-      assert.notEqual(decision.decision, 'NONE', '分句内业务文案不得被 follow-up 豁免吞掉');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.reason, 'no_keyword_match', '分句内业务文案不得被 follow-up 静默吞掉');
+      assert.equal(decision.semanticFallback, true);
     },
   },
   {
@@ -350,7 +372,9 @@ const cases = [
     prompt: '我有一个session在做memory的治理，请你接手它',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.notEqual(decision.decision, 'NONE');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.reason, 'no_keyword_match');
+      assert.equal(decision.semanticFallback, true);
     },
   },
   {
@@ -596,7 +620,8 @@ const cases = [
     prompt: '帮我看看那位designer的排期表怎么安排',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
     expect: decision => {
-      assert.equal(decision.decision, 'STOP');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.reason, 'no_keyword_match');
       const skills = (decision.softCandidates || []).map(c => c.skill).join(',');
       assert.ok(!/design/.test(skills), `designer 子串不应产出 design 系候选: ${skills}`);
     },
@@ -683,6 +708,27 @@ const cases = [
     prompt: '帮我做一个全面调研',
     expect: decision => {
       assert.equal(decision.skill, '/deepresearch');
+    },
+  },
+  {
+    name: '真实续接语句中的“深研”命中 deepresearch，已绑定同项目不要求重绑',
+    prompt: '继续项目 lui到gui，按已确认的5个产品开始深研。',
+    extraEnv: { ROUTE_GUARD_PROJECTS: 'lui到gui', ROUTE_GUARD_CURRENT_PROJECT: 'lui到gui' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/deepresearch');
+      assert.equal(decision.projectAction, undefined, '同项目已绑定时不得制造 PROJECT_SWITCH');
+    },
+  },
+  {
+    name: '真实续接语句移除“深研”后不阻断，只保留语义 fallback',
+    prompt: '继续项目 lui到gui，按已确认的5个产品开始研究。',
+    extraEnv: { ROUTE_GUARD_PROJECTS: 'lui到gui', ROUTE_GUARD_CURRENT_PROJECT: 'lui到gui' },
+    expect: decision => {
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.reason, 'no_keyword_match');
+      assert.equal(decision.semanticFallback, true);
+      assert.equal(decision.skill, undefined, '无关键词不得伪造确定性 skill');
     },
   },
   // ─────────────────────────────────────────────────────────────────────────
@@ -786,12 +832,13 @@ const cases = [
     // 2026-07-03: compare demoted to hidden (full-review P2-6) — no trigger left,
     // so this prompt falls through to STOP. The M2 content-tool exemption (比较一下)
     // still keeps it out of the project gate, which is the half worth pinning.
-    name: 'compare hidden since 2026-07-03 — M2 exemption keeps it out of project gate, no trigger left → STOP',
+    name: 'compare hidden since 2026-07-03 — M2 exemption keeps it out of project gate, no deterministic route',
     prompt: '比较一下两个方案',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.equal(decision.decision, 'STOP',
-        `hidden compare prompt should fall through to STOP, got ${decision.decision}`);
+      assert.equal(decision.decision, 'NONE',
+        `hidden compare prompt should have no deterministic route, got ${decision.decision}`);
+      assert.equal(decision.reason, 'no_keyword_match');
     },
   },
   {
@@ -902,13 +949,14 @@ const cases = [
     },
   },
   {
-    // 刻意取舍文档化：裸名词枚举（无 build/add 动词）拿不到分 → STOP，由 CLAUDE.md 语义路由契约兜底，
+    // 刻意取舍文档化：裸名词枚举（无 build/add 动词）拿不到分 → NONE，由 CLAUDE.md 语义路由契约兜底，
     // 非 B 兜底。钉住"TRIGGER 门"这个取舍，防未来有人误以为它该被 B 命中。
-    name: 'B 取舍: 裸枚举无动词（订单查询、库存管理、报表导出）落 STOP（语义契约兜底）',
+    name: 'B 取舍: 裸枚举无动词（订单查询、库存管理、报表导出）无确定性路由（语义契约兜底）',
     prompt: '订单查询、库存管理、报表导出',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'STOP', `got ${decision.decision}`);
+      assert.equal(decision.decision, 'NONE', `got ${decision.decision}`);
+      assert.equal(decision.reason, 'no_keyword_match');
       assert.ok(!(decision.signals || []).includes('多功能需求'),
         `无动词裸枚举不应触发多功能需求: ${JSON.stringify(decision.signals)}`);
     },
@@ -996,11 +1044,12 @@ const cases = [
   },
   {
     // 2026-07-13 web_access 裸'搜索'宽词修复：功能需求含'搜索'二字不再被误路由 web-access。
-    name: 'web_access 修复: 加个搜索功能 → 不再误命中 web-access（落 STOP）',
+    name: 'web_access 修复: 加个搜索功能 → 不再误命中 web-access（无确定性路由）',
     prompt: '帮我加个搜索功能',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'STOP', `got ${decision.decision}`);
+      assert.equal(decision.decision, 'NONE', `got ${decision.decision}`);
+      assert.equal(decision.reason, 'no_keyword_match');
       assert.ok(!(decision.candidates || []).includes('web-access'),
         `搜索功能不应命中 web-access: ${JSON.stringify(decision.candidates)}`);
     },
@@ -1502,6 +1551,29 @@ const failures = [];
   }
 }
 
+// No-keyword fallback must remain visible as a non-blocking semantic handoff in
+// the real Claude/Codex hint surface. This is the production-facing regression
+// for the original “去掉深研就 STOP” failure.
+{
+  const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+    cwd: process.cwd(),
+    input: JSON.stringify({ prompt: '继续项目 lui到gui，按已确认的5个产品开始研究。' }),
+    encoding: 'utf8',
+    env: { ...baseEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: 'lui到gui', ROUTE_GUARD_CURRENT_PROJECT: 'lui到gui' },
+  });
+  try {
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /未命中路由词表，不阻断本轮任务/);
+    assert.doesNotMatch(result.stdout, /❓ STOP/);
+    console.log('PASS no-keyword fallback is non-blocking on the real hint surface');
+    passCount++;
+  } catch (error) {
+    console.log(`FAIL no-keyword fallback is non-blocking on the real hint surface: ${error.message?.split('\\n')[0]}`);
+    failures.push({ name: 'no-keyword semantic fallback hint', error: error.message?.split('\\n')[0] });
+    failCount++;
+  }
+}
+
 // PR-101（2026-09-03 post-seal 增量审计 finding #1）永久回归：一个 STOP + meta_question_about_keyword
 // 决策会走 softCandidates 渲染分支。修复前该分支硬编两种不一致的 shape（`{skill,tokens}` 和
 // `{skill,why}`），production renderer 只认 `.tokens`，遇到 `.why` 分支直接 `undefined.join` 崩溃、
@@ -1718,6 +1790,18 @@ for (const testCase of cases) {
       env: { ...baseEnv, ...aliasEnv, LUCA_PROJECTS_ROOT: barrenRoot, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_CURRENT_PROJECT: '' },
     });
     assert.doesNotMatch(barren.stdout, /🔎 别名候选/, '无 manifest 时不得出现候选行');
+  });
+
+  check('A-ALIAS 唯一候选与当前 binding 一致时明确无需 PROJECT_SWITCH', () => {
+    const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+      cwd: process.cwd(), input: JSON.stringify({ prompt: '本会话切换并绑定项目：muse' }), encoding: 'utf8',
+      env: { ...baseEnv, ...aliasEnv, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_CURRENT_PROJECT: 'muse' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /与当前路由项目一致/);
+    assert.match(result.stdout, /不生成 PROJECT_SWITCH/);
+    assert.doesNotMatch(result.stdout, /是否切换由你按语义路由契约判断/,
+      '已绑定同项目不得继续输出开放式切换提示');
   });
 
   check('A-ALIAS 两个不同 canonical 目标全部记录、都不选', () => {

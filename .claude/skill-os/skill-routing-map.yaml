@@ -86,7 +86,7 @@ project_skills:
   deepresearch:
     invoke: "/deepresearch"
     weight: 6
-    triggers: [深度研究, 调研, research, 深入研究, 全面调研, 多agent研究]
+    triggers: [深度研究, 深研, 调研, research, 深入研究, 全面调研, 多agent研究]
   quick_research:
     skill: quick-research
     invoke: "/quick-research"
@@ -122,7 +122,7 @@ project_skills:
     weight: 7
     # 2026-07-31 撤四个零对象泛词（评审/挑毛病/有什么问题/给建议）：它们把**任何**评审意图硬映射到
     #   这个强制截图的页面 skill（实测 `评审代码`/`帮我评审一下刚才那份计划` 全 SINGLE 落此，
-    #   EP-20260714-075 实录误报）。撤后落 STOP → route-guard 评审轴提示钉 → routing-chain-check R4
+    #   EP-20260714-075 实录误报）。撤后落 NONE/semantic fallback → route-guard 评审轴提示钉 → routing-chain-check R4
     #   按评审对象分流（页面对象仍回本 skill）。保留的复合词全部含"页面/UX/体验"对象信息。
     triggers: [UX问题, 页面评审, 体验评审, UX评审, 评审这个页面, 页面有什么问题, 页面挑毛病]
 
@@ -266,7 +266,7 @@ builtin_skills:
     weight: 9
     # 2026-07-13 fable review 遗留修复 + 同日复发修复：≤3 字裸动词短语必子串误撞复合词——
     # '搜索'撞"搜索功能"、'查一下'撞"审查一下/检查一下/排查一下"、'找找'撞"找找原因"（均实测）。
-    # 一律意图锚定形；裸祈使（"查一下天气"）落 STOP 由语义契约兜底。
+    # 一律意图锚定形；裸祈使（"查一下天气"）不强路由，落 NONE 由语义契约兜底。
     triggers: [搜索一下, 帮我搜索, 网上搜, 帮我查一下, 上网, 联网, 网页, 抓取, 爬取, google, 搜一下, 查资料]
 
   agent_browser:

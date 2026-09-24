@@ -73,6 +73,9 @@ t('plan-agent 含块 0 前提门', plan.includes('块 0 — 前提门'));
 t('plan-agent 含增量重规划协议', plan.includes('增量重规划（Replan Protocol'));
 t('plan-agent 含块 5 出门自检', plan.includes('块 5 — 出门自检'));
 t('preflight 含未列出 WARN 规则', pre.includes('无专属检查行'));
+t('preflight 明确 TURN_CLOSED 仍保留有效 binding', pre.includes('`TURN_CLOSED` + 有效 binding 是已绑定状态'));
+t('preflight 不得把 TURN_CLOSED 单独判成失败', pre.includes('不得仅因 `TURN_CLOSED` 判 FAIL'));
+t('preflight 不得对同一项目要求新切换事务', pre.includes('不得要求新的 `PROJECT_SWITCH`'));
 
 // 8. 判决权与记录权分离：judge 只产 envelope，父级 recorder 校验并落账。
 t('quality-gate 不自行调用 eval recorder', !/python3\s+memory\/scripts\/record_eval\.py/.test(qg));

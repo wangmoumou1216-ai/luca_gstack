@@ -6,7 +6,7 @@ eval_routing.py — 甲类语义路由命中率度量。
 
   keyword-layer（确定性，grader:code）：route-guard 关键词粗网是否把"该命中"的 fixture 路由到对的能力。
     这是可随时跑的回归守卫，与 test-route-guard.mjs 互补（那个测分支正确性，这个测"到对的能力"的召回）。
-  semantic-layer（估计，grader:llm-judge）：route-guard STOP/漏的 semantic-dependent fixture，只能靠模型
+  semantic-layer（估计，grader:llm-judge）：route-guard NONE/semantic-fallback 的 semantic-dependent fixture，只能靠模型
     语义判断该路由到哪。本脚本只【确定性地】把这些 fixture 挑出来 + 导出 judge 工作单；实际判官由
     orchestrator/主循环起（python 起不了 Claude agent，也不该假装能——语义判断只能在模型内发生）。
 
@@ -22,7 +22,7 @@ grader 选型（keyword=code / semantic=llm-judge）。不依赖已退役的 GEP
 fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头为注释行，仅本脚本可读）：
   {"id","input","expected","layer","scene","note", 可选 "env":{...}}
     layer=keyword  → route-guard 关键词网应确定性到达 expected（算入 keyword 命中率）
-    layer=semantic → route-guard 设计上 STOP/漏（无触发词），命中只能靠模型；本脚本挑出交 judge
+  layer=semantic → route-guard 设计上 NONE/semantic-fallback（无触发词），命中只能靠模型；本脚本挑出交 judge
     expected 取值（2026-07-13 二轮审查后词表）：
       具体 skill "/brainstorm"（含隐藏 skill 名如 "redteam"）
       决策 "PLAN_MODE"/"PLAN_CHECK"/"project:switch:<项目名>"（校验切对了谁；裸 project:switch 宽匹配）/"project:stop"
@@ -31,7 +31,7 @@ fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头�
            "flow:framework-evolution:<benchmark|scout>" | 语义特例 "special:sidebar"/"special:luca-open"
       链路检查形态 "ask:research-first"（正确响应=按 routing-chain-check R1 先问"先调研还是直接开始"）
                    | "review:dispatch"（评审请求：按 R4 先判评审对象再选资产或自建编排，2026-07-31）
-      平凡任务负样本 "direct"（期望 route-guard 不强路由，落 STOP/NONE，防过度路由）
+      平凡任务负样本 "direct"（期望 route-guard 不强路由，落 NONE/semantic fallback，防过度路由）
       歧义多选 "A|B"（任一即中；标签对抗审查确认存在同等合理路由时使用）
     已删词条：special:od（僵尸——OD 交接本就关键词可达 → "/open-design"）；special:html
     （HTML 预览推送是"产出即推"的执行途中反射、乙类过程纪律，无路由真值，不作 fixture）。
@@ -122,7 +122,7 @@ def keyword_correct(fixture, actual):
     """keyword 层是否命中：确定性二元判定（grader:code）。expected 支持 'A|B' 任一即中（歧义项）。"""
     for exp in str(fixture["expected"]).split("|"):
         if exp == "direct":
-            # 平凡任务：route-guard 正确的行为是不强路由（落 STOP/NONE），交给模型按语义契约判分寸。
+            # 平凡任务：route-guard 正确的行为是不强路由（落 NONE/semantic fallback），交给模型按语义契约判分寸。
             # 若 route-guard 把琐事关键词命中到某 skill/PLAN_MODE = 过度路由 = 错。
             if actual in ("STOP", "NONE"):
                 return True
@@ -258,7 +258,7 @@ def cmd_selftest():
         ("帮我写一份技术规格文档", "/tech-spec", "keyword", True),
         ("帮我加上订单查询、库存管理、报表导出三个功能", "PLAN_MODE", "keyword", True),
         ("luca gstack 自我成长：深度对比 Codex harness", "flow:framework-evolution:benchmark", "keyword", True),
-        ("帮我加个导出按钮", "direct", "keyword", True),          # 琐事应落 STOP/NONE
+        ("帮我加个导出按钮", "direct", "keyword", True),          # 琐事应落 NONE/semantic fallback
         ("帮我写一份技术规格文档", "/brainstorm", "keyword", False),  # 故意错标 → 应判不命中
     ]
     ok = True

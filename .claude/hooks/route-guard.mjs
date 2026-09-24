@@ -507,7 +507,7 @@ function projectGate(prompt, projects, currentProject, routingScope) {
     };
   }
 
-  if (/我想做一个需求|我想做个需求|做一个需求|做个需求|我想做一个项目|我想做个项目/.test(prompt)) {
+  if (!named && /我想做一个需求|我想做个需求|做一个需求|做个需求|我想做一个项目|我想做个项目/.test(prompt)) {
     return {
       decision: 'PROJECT_STOP',
       projectAction: 'clarify_project_scope',
@@ -527,7 +527,11 @@ function projectGate(prompt, projects, currentProject, routingScope) {
     };
   }
 
-  if (!currentProject && (hasNewProjectSignal || /我想做一个.+|我想做个.+|我要做一个.+|我要做个.+/.test(prompt))) {
+  // An unscoped "I want to build X" request is still a project-ownership
+  // question even when a display/current project exists. Keep that human gate
+  // separate from the skill-layer no-keyword fallback below.
+  if ((hasNewProjectSignal && !currentProject)
+      || (!named && /我想做一个.+|我想做个.+|我要做一个.+|我要做个.+/.test(prompt))) {
     return {
       decision: 'PROJECT_STOP',
       projectAction: 'confirm_new_project',
@@ -858,7 +862,12 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
       && !isContinuation(prompt);
     if (!looksLikeTask) return { decision: 'NONE' };
     const softCandidates = softSkillDecision(prompt, routes);
-    return { decision: 'STOP', reason: 'no_keyword_match', softCandidates };
+    return {
+      decision: 'NONE',
+      reason: 'no_keyword_match',
+      semanticFallback: true,
+      softCandidates,
+    };
   }
 
   // 元问句抑制（2026-09-02 skill 职责审计）：句子只是**提到**某个 skill 的关键词，却在问它
@@ -1421,6 +1430,14 @@ function reviewAxisHint(decision) {
 
 function decisionToHints(decision) {
   switch (decision.decision) {
+    case 'NONE': {
+      if (decision.reason !== 'no_keyword_match') return [];
+      const softCandidates = decision.softCandidates || [];
+      const candidateHint = softCandidates.length
+        ? ` 可参考但不得自动执行的候选：${softCandidates.map(c => c.skill).join('、')}。`
+        : '';
+      return [`[route-guard] ↪ 未命中路由词表，不阻断本轮任务；按用户语义继续判断是否需要 skill/流程。${candidateHint}`];
+    }
     case 'HARNESS_MESSAGE':
       return ['[route-guard] ↪ harness 合成消息（后台任务通知或跨 session 消息）：不做项目路由，也不授予项目权限；按内容自行判断，项目切换只能由用户本人提出。'];
     case 'NEEDS_CONTEXT':
@@ -1729,8 +1746,15 @@ if (!dryRun && prompt) {
     const candidates = decision?.aliasResolution?.candidates || [];
     if (candidates.length) {
       const shown = candidates.map(c => `「${c.surface}」→ ${c.canonical}`).join('、');
-      hints.push(`[route-guard] 🔎 别名候选（证据，非授权；本 hook 不裁决切换）：${shown}`
-        + '。是否切换由你按语义路由契约判断；多个候选一律不代选。');
+      const canonicalTargets = [...new Set(candidates.map(c => normalize(c.canonical)).filter(Boolean))];
+      const currentProject = normalize(readCurrentProject(listProjects()));
+      const matchesCurrentBinding = currentProject
+        && canonicalTargets.length === 1
+        && canonicalTargets[0] === currentProject;
+      const suffix = matchesCurrentBinding
+        ? '。唯一候选与当前路由项目一致，本 hook 不生成 PROJECT_SWITCH；继续按本轮任务路由。'
+        : '。是否切换由你按语义路由契约判断；多个候选一律不代选。';
+      hints.push(`[route-guard] 🔎 别名候选（证据，非授权；本 hook 不裁决切换）：${shown}${suffix}`);
     } else if (decision?.aliasResolution?.status === 'CAP_EXCEEDED') {
       hints.push('[route-guard] 🔎 别名候选超过上限，本轮不产候选（证据缺席，非拒绝）。');
     }

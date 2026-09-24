@@ -26,7 +26,7 @@ For every non-mechanical request, classify in this exact order:
 3. **Framework Flow** — framework evolution, self-growth, benchmark, or governance work.
 4. **Multi-Skill** — several independent high-confidence skill matches.
 5. **Single-Skill** — one high-confidence match and no Plan trigger.
-6. **STOP** — ambiguity or no match; assess and discover, never treat STOP as permission.
+6. **STOP** — ambiguity/refusal; assess and discover; never treat STOP as permission. `NONE` + semantic fallback covers unmatched work.
 
 The routing truth is `.claude/skill-os/skill-routing-map.yaml`. A user-chosen Workflow may add
 handoff gates; otherwise skills remain standalone.
@@ -151,7 +151,7 @@ implementation name is not permission for another read.
 `.agents/skills/` aliases point to the same authority bodies. It does not execute Claude slash
 wrappers. **Claude** Code uses native slash commands where present. The workflow backend absent in
 Codex is exposed through `.codex/workflow-runner.mjs`; never claim native-tool equivalence.
-Before designing or evaluating cross-harness work, load
+For cross-harness work, first load
 `.claude/skill-os/runtime/cross-harness.md`; verify both before a parity claim. Read
 `.claude/skill-os/model-routing.yaml` before selection/validation/dispatch. Select a subagent model role
 from it; its adapter resolves private binding while reasoning effort remains independent.
@@ -166,9 +166,8 @@ preferences do not erase semantic routing. On conflict, load
   and Project Gate → repository router → selected skill contract → local patterns.
 - Restate the operational goal before significant work. Use scene A/B/C/D only for product-design
   work and only from user/context evidence.
-- For long work, keep checkpoint/evidence obligations hot; read
-  `.claude/skill-os/runtime/long-session.md` before a phase boundary, two heavy agents,
-  compaction/handoff, or Git/external effect.
+- Keep checkpoint/evidence obligations hot; read `.claude/skill-os/runtime/long-session.md`
+  at phase gates, 2 agents, compaction/handoff, Git/external effects.
 - Codex may emulate a shared workflow only by reading its authority files and executing their
   procedure; it must not claim that another harness's slash command ran.
 - Skill completion language is `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, or `NEEDS_CONTEXT` as defined

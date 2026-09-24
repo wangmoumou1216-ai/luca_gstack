@@ -57,6 +57,20 @@ standalone 模式允许 topic 为空，不要求 workflow-state 或工作流上�
 状态或调用方明确输入取得；NO_PIN 不为补 topic 读取状态。品牌、token、母版和技术组件资产均
 不作为通用前提；实际项目明确提供的设计约束按该项目合同校验。
 
+### 项目状态判定
+
+用调用方提供的 `project_session` 运行
+`node scripts/project-pin.mjs status --session <session-id>`，按状态与 binding 分开判定：
+
+- `TURN_CLOSED` + 有效 binding 是已绑定状态，只表示上一轮工具权限已收回；它不是 `NO_PIN`，
+  也不表示项目解绑。下一条真实用户消息会先排队普通 turn，并在首次相关 PreToolUse 时认证为
+  `TURN_ACTIVE`。
+- 不得仅因 `TURN_CLOSED` 判 FAIL，也不得要求新的 `PROJECT_SWITCH`。当用户点名的项目与
+  binding 相同，Project Gate 已满足；只有目标项目不同或真实状态为 `NO_PIN` 才需要新事务。
+- `TURN_ACTIVE` 是当前工具调用的事件权限，不是“项目是否仍绑定”的唯一判据。若项目文件读取
+  因原生事件尚未认证而被拒，报告事件认证失败；不得改写成“项目绑定丢失”。
+- `SWITCH_ONLY` 仍需调用方先执行已生成的精确事务；preflight 不执行或伪造事务。
+
 ---
 
 ## Skill 专属前置检查表

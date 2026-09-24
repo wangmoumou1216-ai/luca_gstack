@@ -25,7 +25,7 @@ For every non-mechanical request, classify in this exact order:
 3. **Framework Flow** — framework evolution, self-growth, benchmark, or governance work.
 4. **Multi-Skill** — several independent high-confidence skill matches.
 5. **Single-Skill** — one high-confidence match and no Plan trigger.
-6. **STOP** — ambiguity or no match; assess and discover, never treat STOP as permission.
+6. **STOP** — ambiguity/refusal; assess and discover; never treat STOP as permission. `NONE` + semantic fallback covers unmatched work.
 
 The routing truth is `.claude/skill-os/skill-routing-map.yaml`. A user-chosen Workflow may add
 handoff gates; otherwise skills remain standalone.
@@ -147,7 +147,7 @@ implementation name is not permission for another read.
 
 **Claude** Code uses native slash-command wrappers where present and repository hooks. **Codex**
 uses `$skill`/the skill selector and its hook adapter; slash syntax is not portable. Never claim one
-harness invoked the other's mechanism. Before designing or evaluating cross-harness work, load
+harness invoked the other's mechanism. For cross-harness work, first load
 `.claude/skill-os/runtime/cross-harness.md`; verify both independently before a parity claim.
 Safety/capability facts bind; preferences do not erase semantic routing. On conflict, load
 `.claude/skill-os/runtime/harness-boundary.md`. Read
@@ -161,9 +161,8 @@ inherit when unsure and never hardcode a model name.
   and Project Gate → repository router → selected skill contract → local patterns.
 - Restate the operational goal before significant work. Use scene A/B/C/D only for product-design
   work and only from user/context evidence.
-- For long work, keep checkpoint/evidence obligations hot; read
-  `.claude/skill-os/runtime/long-session.md` before a phase boundary, two heavy agents,
-  compaction/handoff, or Git/external effect.
+- Keep checkpoint/evidence obligations hot; read `.claude/skill-os/runtime/long-session.md`
+  at phase gates, 2 agents, compaction/handoff, Git/external effects.
 - Skill completion language is `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, or `NEEDS_CONTEXT` as defined
   by `.claude/skills/office/SKILL.md`.
 - Do not claim completion from file-size reduction or legacy tests alone. Use behaviour evidence,
