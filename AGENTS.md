@@ -56,23 +56,22 @@ Ambiguity needs user choice; no match needs catalog discovery. In discovery, **n
 <!-- K5:START -->
 ## K5 — Project/session isolation
 
-The per-**session** project pin is binding truth. `docs/`, workflow-state, and current-topic
+The per-**session** project pin is truth. `docs/`, workflow-state, and current-topic
 **symlink** aliases are display-only; never derive or repair a pin from them. Framework/meta work
-stays **NO_PIN** and must not touch those aliases or downstream projects. A project switch/create
-uses only the complete current-turn **transaction** emitted by route-guard—never a hand-written bare
-switch command. Read `.claude/skill-os/runtime/project-session.md` through EOF before deciding
+stays **NO_PIN** and must not touch those aliases or projects. A project switch/create uses only
+the public single-call transaction `project.sh switch/new <canonical-name>`; PreToolUse
+boundary injects session/transaction/epoch data, never the model. Read `.claude/skill-os/runtime/project-session.md` through EOF before deciding
 project identity or project authority, or the first project-scoped read/write/switch/create/cross-
 project reference. A project name, implication, switch, creation, or cross-read reaches it. A
 framework/meta/`NO_PIN` explanation making no such decision or project I/O uses the inline NO_PIN
-floor without reading the cold owner. Codex uses `scripts/project-read.mjs` only for granted
-text reads.
+floor without reading the cold owner. Codex uses `scripts/project-read.mjs` only for granted reads.
 <!-- K5:END -->
 
 <!-- K6:START -->
 ## K6 — Safety and scope
 
-Treat `framework/` as **read-only** template source. Preserve **user work**, including unrelated
-dirty files; inspect before editing and keep changes surgical. Destructive, irreversible, Git
+Treat `framework/` as **read-only** template source. Preserve **user work** and unrelated dirty
+files; inspect before surgical edits. Destructive, irreversible, Git
 publication, GUI, network, or other **external** effects require the authority and approval defined
 by the runtime. Never widen a read/write scope merely because a tool can access it. Prefer `rg`,
 deterministic commands, `apply_patch`, and the narrowest reliable verification. A three-times

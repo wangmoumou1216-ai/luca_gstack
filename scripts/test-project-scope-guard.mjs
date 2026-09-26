@@ -428,34 +428,34 @@ check('FW-A2abs: Bash 绝对路径写仓外 framework → 放行（不越界）'
 });
 
 // ── DEV-004 身份边界增量：direct absolute / broad search / malformed state ──
-check('IDENTITY-DIRECT-001 no-pin direct absolute project Read → deny', () => {
+check('IDENTITY-DIRECT-001 no-pin direct absolute project Read → delegated unchanged', () => {
   const env = makeEnv();
   mkdirSync(join(env.projects, 'alpha', 'docs'), { recursive: true });
   const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'alpha', 'docs', 'x.md') } });
-  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(o, null);
 });
 check('IDENTITY-DIRECT-002 active same-project direct absolute Read → canonical allow', () => {
   const env = makeEnv({ pins: { S: 'alpha' } });
   const target = abs(env, 'alpha', 'docs/x.md');
   const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: target } });
-  assert.equal(o.hookSpecificOutput.updatedInput.file_path, target);
+  assert.equal(o, null);
 });
-check('IDENTITY-DIRECT-003 active cross-project direct absolute Read → deny', () => {
+check('IDENTITY-DIRECT-003 active cross-project direct absolute Read → delegated unchanged', () => {
   const env = makeEnv({ pins: { S: 'alpha' } });
   mkdirSync(join(env.projects, 'beta', 'docs'), { recursive: true });
   const o = run(env, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'beta', 'docs', 'x.md') } });
-  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(o, null);
 });
 check('IDENTITY-DIRECT-004 active same-project direct absolute Bash → allow', () => {
   const env = makeEnv({ pins: { S: 'alpha' } });
   const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `test -f ${abs(env, 'alpha', 'docs/x.md')}` } });
   assert.equal(o, null);
 });
-check('IDENTITY-DIRECT-005 active cross-project direct absolute Bash → deny', () => {
+check('IDENTITY-DIRECT-005 active cross-project direct absolute Bash → delegated unchanged', () => {
   const env = makeEnv({ pins: { S: 'alpha' } });
   mkdirSync(join(env.projects, 'beta', 'docs'), { recursive: true });
   const o = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command: `test -f ${join(env.projects, 'beta', 'docs', 'x.md')}` } });
-  assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(o, null);
 });
 check('IDENTITY-BROAD-001 no-pin pathless Grep → deny', () => {
   const env = makeEnv();
@@ -553,7 +553,7 @@ check('IDENTITY-STATE-004 exact switch command is denied when attested boundary 
     tool_input: { command },
   });
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', 'exact argv cannot bypass native-event observation mismatch');
-  assert.match(o.hookSpecificOutput.permissionDecisionReason, /SWITCH_ONLY/);
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /可信 proposal|receipt/);
   const after = JSON.parse(readFileSync(path, 'utf8'));
   assert.equal(after.event_control.current.boundary_id, boundaryId);
   assert.equal(after.event_control.consumed_events.length, 1, 'mismatch must not mutate or double-consume event state');
@@ -844,8 +844,7 @@ check('IDENTITY-PATH-013 APFS case aliases are classified as project scope', () 
   const env = makeEnv();
   const variant = env.projects.replace(/^\/private\//, '/PRIVATE/').replace(/projects$/, 'PROJECTS');
   const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${variant}/alpha/secret` } });
-  if (process.platform === 'darwin') assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
-  else assert.equal(o, null);
+  assert.equal(o, null);
 });
 check('IDENTITY-PATH-014 literal absolute display path rewrites to binding', () => {
   const env = makeEnv({ pins: { S: 'alpha' } });
@@ -924,10 +923,10 @@ check('IDENTITY-PATH-020f [保护面] 豁免不得放开 current-topic.txt', () 
   const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: `${env.gstack}/.claude/current-topic.txt` } });
   assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny');
 });
-check('IDENTITY-PATH-020g [保护面] 豁免不得放开外层承载项目自己的目录', () => {
+check('IDENTITY-PATH-020g explicit absolute outer project path is delegated unchanged', () => {
   const env = makeEnv({ nestedFramework: true });
   const o = run(env, { session_id: 'NP', tool_name: 'Read', tool_input: { file_path: join(env.projects, 'muse', 'docs', 'x.md') } });
-  assert.ok(o && o.hookSpecificOutput.permissionDecision === 'deny', 'lucagstack 的父项目目录不在豁免内');
+  assert.equal(o, null);
 });
 
 // ── IDENTITY-PATH-021：框架豁免不得被 `..` 穿越绕开（2026-08-20 真机实测到的洞）──────
@@ -1194,8 +1193,8 @@ check('IDENTITY-PATH-024h [保护面] patch target header cannot write framework
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny');
 });
 
-// ── READ-GRANT：显式用户授权只扩展精确文本读取，不扩展写入或 raw Bash ──
-check('READ-GRANT-001 NO_PIN exact file grant allows Claude Read only', () => {
+// ── READ-GRANT：legacy grants do not add authority to explicit absolute paths ──
+check('READ-GRANT-001 explicit absolute paths are delegated regardless of legacy grant state', () => {
   const env = makeEnv();
   const target = join(env.projects, 'beta', 'docs', 'reference.md');
   mkdirSync(dirname(target), { recursive: true });
@@ -1205,12 +1204,11 @@ check('READ-GRANT-001 NO_PIN exact file grant allows Claude Read only', () => {
     prompt: `只读引用: \`${target}\``, binding: null,
   });
   const read = run(env, { session_id: 'RG', tool_name: 'Read', tool_input: { file_path: target } });
-  if (GRANTS_DISABLED) assert.equal(read.hookSpecificOutput.permissionDecision, 'deny');
-  else assert.equal(read.hookSpecificOutput.updatedInput.file_path, realpathSync(target));
+  assert.equal(read, null);
   const write = run(env, { session_id: 'RG', tool_name: 'Write', tool_input: { file_path: target, content: 'x' } });
-  assert.equal(write.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(write, null);
   const bash = run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command: `cat ${target}` } });
-  assert.equal(bash.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(bash, null);
 });
 
 check('READ-GRANT-002 directory grant confines Read/Grep/Glob descendants', () => {
@@ -1231,11 +1229,10 @@ check('READ-GRANT-002 directory grant confines Read/Grep/Glob descendants', () =
     { tool_name: 'Glob', tool_input: { path: directory, pattern: '*.md' } },
   ]) {
     const out = run(env, { session_id: 'RGD', ...payload });
-    if (GRANTS_DISABLED) assert.equal(out?.hookSpecificOutput?.permissionDecision, 'deny');
-    else assert.ok(out?.hookSpecificOutput?.updatedInput, `${payload.tool_name} must consume directory grant`);
+    assert.equal(out, null);
   }
   const denied = run(env, { session_id: 'RGD', tool_name: 'Read', tool_input: { file_path: sibling } });
-  assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(denied, null);
 });
 
 check('READ-GRANT-003 broker grammar is exact and composition is denied', () => {
@@ -1262,6 +1259,14 @@ check('READ-GRANT-003 broker grammar is exact and composition is denied', () => 
   }
   const maintenance = run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command: 'node --check scripts/project-read.mjs' } });
   assert.equal(maintenance, null, 'source validation is not a broker consumption attempt');
+  for (const command of [
+    'cat scripts/project-read.mjs',
+    "sed -n '1,20p' scripts/project-read.mjs",
+    'rg -n "scripts/project-read.mjs" .claude/hooks',
+  ]) {
+    assert.equal(run(env, { session_id: 'RG', tool_name: 'Bash', tool_input: { command } }), null,
+      `source mention is not a broker invocation: ${command}`);
+  }
 });
 
 check('READ-GRANT-005 grant sidecars are inaccessible control-plane state', () => {
@@ -1402,7 +1407,7 @@ check('PROJECT-CONTROL-003 ordinary source inspection and editing are not sideca
   }
 });
 
-check('READ-GRANT-004 malformed project state cannot masquerade as NO_PIN', () => {
+check('READ-GRANT-004 malformed project state cannot change explicit absolute-path delegation', () => {
   const env = makeEnv();
   const target = join(env.projects, 'beta', 'docs', 'reference.md');
   mkdirSync(dirname(target), { recursive: true });
@@ -1413,7 +1418,7 @@ check('READ-GRANT-004 malformed project state cannot masquerade as NO_PIN', () =
   });
   writeFileSync(join(env.gstack, '.claude', '.session-project-RGM'), '{broken');
   const out = run(env, { session_id: 'RGM', tool_name: 'Read', tool_input: { file_path: target } });
-  assert.equal(out.hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(out, null);
 });
 
 // Real sibling processes overlap while observing the same native event. Keep

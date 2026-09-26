@@ -14,7 +14,7 @@ Plan Agent 负责规划（输出计划 + 断言）
 Orchestrator 负责执行（按计划执行 + 验证断言）
 
 Plan Agent → 计划 → Orchestrator Free Task Mode → 结果
-workflow-state.yaml → skill 图谱 → Orchestrator Skill Workflow Mode → handoff
+`<WORK_ROOT>/.luca/workflow-state.yaml` → skill 图谱 → Orchestrator Skill Workflow Mode → handoff
 ```
 
 ---
@@ -26,8 +26,8 @@ workflow-state.yaml → skill 图谱 → Orchestrator Skill Workflow Mode → ha
 | Plan Agent 产出了执行计划 | **Free Task Mode** |
 | 任意复杂任务，用户批准计划后 | **Free Task Mode** |
 | 用户输入 `/office` 并选择推荐流程 | **Skill Workflow Mode** |
-| 用户说"继续流程/进入下一步/从断点恢复" | 读 workflow-state → 判断 mode |
-| workflow-state.yaml 有 PENDING 节点 | **Skill Workflow Mode** |
+| 用户说"继续流程/进入下一步/从断点恢复" | 读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 判断 mode |
+| `<WORK_ROOT>/.luca/workflow-state.yaml` 有 PENDING 节点 | **Skill Workflow Mode** |
 
 **不激活：**
 
@@ -213,12 +213,14 @@ Step 7  记录 eval（每个 skill 各记一条）
 ```
 对每个需要质量保证的 Phase：
   1. 用 .claude/agents/work-agent-template.md 实例化 Work Agent prompt
-     → 填写 14 个核心变量 + 2 个条件变量（skill_execution 专用：SKILL_TO_EXECUTE、SKILL_PATH）+ 1 个可选变量（AVAILABLE_SKILL_PATHS）
+     → 填写 15 个核心变量（含派发时解析的绝对 WORK_ROOT）+ 2 个条件变量（skill_execution 专用：SKILL_TO_EXECUTE、SKILL_PATH）+ 1 个可选变量（AVAILABLE_SKILL_PATHS）
      → 见模板变量清单；所有占位符必须被替换，不得保留字面量 {{VARIABLE}}
      → 如果 Plan Agent 的 Phase 定义中有 skills_needed 字段：
          填写可选变量 AVAILABLE_SKILL_PATHS（路径列表）
          否则省略该变量（字面量 {{AVAILABLE_SKILL_PATHS}} 残留时模板有 guard，会自动跳过）
      → 通过 Agent tool 的 prompt 字段传入完整 prompt
+     → PRIMARY_OUTPUTS 在派发前相对 WORK_ROOT 解析成固定绝对路径；后台任务不得跟随共享 display aliases 或后续项目切换改变落点
+     → 取消时先停止尚未派发的新工具动作，再用当前 harness 的中断 primitive；已发出或无法中断的动作必须报告为在途，不能冒称撤销
 
 **Skill 路径映射表（填写 `{{AVAILABLE_SKILL_PATHS}}` 时参照此表）：**
 
@@ -285,11 +287,11 @@ Step 7  记录 eval（每个 skill 各记一条）
 ### 3.2 启动流程
 
 ```
-Step 1  读 workflow-state.yaml → topic, scene, 各 node status
+Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → topic, scene, 各 node status
 Step 2  读 optional-workflow-graph.yaml → 当前 scene 的 recommended_path
 Step 3  根据复杂度信号推荐路径变体（见 §3.3）
 Step 4  找到第一个 status=PENDING 的 node
-Step 5  读上游 node 的 handoff summary（docs/handoff/）
+Step 5  读上游 node 的 handoff summary（`<WORK_ROOT>/docs/handoff/`）
 Step 6  执行技能循环（见 §3.4）
 ```
 
@@ -334,8 +336,8 @@ WHILE 有 PENDING 节点:
         Skill 内部可自由使用 subagent，Orchestrator 不干预
 
   3.4d  Skill 完成后：
-        - 确认 docs/handoff/ 有新文件
-        - 更新 workflow-state.yaml → status: DONE
+        - 确认 `<WORK_ROOT>/docs/handoff/` 有新文件
+        - 以 `_PROJECT_ROOT=<WORK_ROOT>` 调用唯一写入器更新 `.luca/workflow-state.yaml` → status: DONE
         - 调度 @quality-gate subagent 验证产出
         - quality-gate PASS → 观察提取（同 2c-obs 三条检查）→ 继续
         - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS 再询问用户
@@ -350,7 +352,7 @@ WHILE 有 PENDING 节点:
 ### 3.5 断点恢复
 
 ```
-Step 1  读 workflow-state.yaml → 找最后一个 DONE 的 node
+Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 找最后一个 DONE 的 node
 Step 2  读该 node 的 handoff summary
 Step 3  展示："上次完成了 <last_done>，核心决策：<D-001...>"
         "下一步是 <next_pending>，是否继续？"

@@ -190,6 +190,7 @@ function verifySurface() {
 }
 try {
   for (const rel of [hookRel, qaRel, registryRel, '.claude/hooks/lib/project-substrate.mjs',
+    '.claude/hooks/lib/project-selection.mjs',
     '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-read-grants.mjs', '.claude/hooks/lib/harness.mjs',
     '.codex/codex-hook-adapter.mjs', '.claude/skill-os/input-modes.yaml', '.claude/skill-os/model-routing.yaml',
     '.claude/skill-os/codex-viability.yaml']) copy(rel);

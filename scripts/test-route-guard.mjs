@@ -37,13 +37,12 @@ function route(prompt, extraEnv = {}) {
 
 // ── Harness-synthesised prompts never get project routing (2026-09-11) ──
 // Background-task notifications and cross-session messages reach UserPromptSubmit like a user
-// turn. Routing them printed an executable switch transaction the session could never complete
-// and invited the agent to switch projects on a peer's behalf. The control case proves the same
-// words from a human still route, so the harness cases cannot pass by routing nothing at all.
+// turn. Neither human text nor a harness message may mint project authority here;
+// the public project.sh selection command is the only execution entry.
 {
   const named = '切换到 luca-dev 项目继续';
   const control = route(named, { ROUTE_GUARD_CURRENT_PROJECT: '' });
-  assert.equal(control.decision, 'PROJECT_SWITCH', `control must still route to a switch, got ${control.decision}`);
+  assert.equal(control.decision, 'NONE', `route guard must remain neutral, got ${control.decision}`);
   for (const prompt of [
     `<cross-session-message from="uds:/tmp/cc-socks/1.sock" from-name="peer" from-mode="prompting">\n${named}\n</cross-session-message>`,
     `<task-notification>\n<task-id>b1</task-id>\n<summary>${named}</summary>\n</task-notification>`,
@@ -69,13 +68,19 @@ function expectScopeMatrixDecision(fixture, decision) {
     return;
   }
   if (fixture.expected.startsWith('project:switch:')) {
-    assert.equal(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
-    assert.equal(decision.project, fixture.expected.slice('project:switch:'.length));
+    assert.notEqual(decision.decision, 'PROJECT_SWITCH', `route guard minted project authority for ${fixture.input}`);
+    assert.equal(decision.projectAction, undefined);
+    return;
+  }
+  if (fixture.expected === 'direct') {
+    assert.equal(decision.decision, 'NONE', `got ${decision.decision}`);
+    assert.equal(decision.projectAction, undefined);
     return;
   }
   assert.equal(fixture.expected, 'NEEDS_CONTEXT');
-  assert.equal(decision.decision, 'NEEDS_CONTEXT', `got ${decision.decision}`);
-  assert.equal(decision.projectAction, 'clarify_framework_or_project_scope');
+  assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+  assert.notEqual(decision.decision, 'PROJECT_STOP');
+  assert.equal(decision.projectAction, undefined);
 }
 
 const cases = [
@@ -83,51 +88,44 @@ const cases = [
     name: 'explicitly named new project declaration reaches operation:new',
     prompt: '新建项目 beta',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.projectAction, 'create_new_project');
-      assert.equal(decision.operation, 'new');
-      assert.equal(decision.project, 'beta');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
     name: 'quoted new project name with spaces remains deterministic',
     prompt: '创建一个名为「客户 成功」的新项目',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.operation, 'new');
-      assert.equal(decision.project, '客户 成功');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
     name: 'unnamed new project remains a human gate even with an active project',
     prompt: '新项目想做用户管理',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'confirm_new_project_name');
+      assert.equal(decision.decision, 'NONE');
     },
   },
   {
     name: 'ambiguous new project names remain a human gate',
     prompt: '新建项目 alpha 或 beta',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'confirm_new_project_name');
+      assert.equal(decision.decision, 'NONE');
     },
   },
   {
     name: 'new declaration colliding with an existing identity requires a human choice',
     prompt: '新建项目 luca-dev',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'new_project_name_conflict');
+      assert.equal(decision.decision, 'NONE');
     },
   },
   {
     name: 'ambiguous demand asks project context before idea',
     prompt: '我想做一个需求',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'clarify_project_scope');
+      assert.equal(decision.decision, 'NONE');
     },
   },
   {
@@ -138,8 +136,7 @@ const cases = [
     name: 'new natural idea with active project keeps the project-scope gate',
     prompt: '我想做一个客户跟进助手',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP', `got ${decision.decision}`);
-      assert.equal(decision.projectAction, 'confirm_new_project');
+      assert.equal(decision.decision, 'NONE', `got ${decision.decision}`);
     },
   },
   {
@@ -162,33 +159,34 @@ const cases = [
     name: 'old project wording asks which existing project',
     prompt: '我要对老项目进行优化',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'select_existing_project');
-      assert.deepEqual(decision.projects, ['luca-dev', 'ai 宠物提示']);
+      assert.equal(decision.decision, 'NONE');
     },
   },
   {
     name: 'last project wording asks which existing project',
     prompt: '接着上次的项目做 UX评审',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'select_existing_project');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.notEqual(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
     name: 'existing project variant asks which existing project',
     prompt: '已有的项目 需求分析',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'select_existing_project');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.notEqual(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
     name: 'previous one wording asks which existing project',
     prompt: '之前那个 任务计划',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'select_existing_project');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.notEqual(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -198,8 +196,7 @@ const cases = [
     name: 'audit-verb naming an existing project switches, not C2-exempted',
     prompt: '查看 luca-dev 的列表页 UX 问题',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
-      assert.equal(decision.project, 'luca-dev');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH', `got ${decision.decision}`);
     },
   },
   {
@@ -216,9 +213,8 @@ const cases = [
     name: 'named existing project is handled before skill routing',
     prompt: '继续 luca-dev 的任务计划',
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.projectAction, 'switch_existing_project');
-      assert.equal(decision.project, 'luca-dev');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -403,20 +399,20 @@ const cases = [
     },
   },
   {
-    name: 'G3 保护面: 无 pin 时继续做原型仍须先绑定项目',
+    name: 'G3: route guard no longer requires a pin before skill routing',
     prompt: '继续做个原型',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'choose_new_or_existing');
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/html-prototype');
     },
   },
   {
-    name: 'G3 反例: 继续项目 → 仍走老项目 PROJECT_STOP（上游专有检查先赢）',
+    name: 'G3: generic continue-project wording stays neutral',
     prompt: '继续项目',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.decision, 'NONE');
     },
   },
   {
@@ -555,13 +551,12 @@ const cases = [
     },
   },
   {
-    name: 'real downstream project entry still emits an existing-project switch',
+    name: 'real downstream project entry remains a non-authorizing candidate',
     prompt: '进入luca-dev项目',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'luca-dev,ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.projectAction, 'switch_existing_project');
-      assert.equal(decision.project, 'luca-dev');
+      assert.equal(decision.decision, 'NONE');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -598,12 +593,12 @@ const cases = [
     },
   },
   {
-    name: 'G3 保护面: 明确的无 pin 项目修改仍触发 Project Gate',
+    name: 'G3: explicit no-pin product work is not converted into a route-guard project gate',
     prompt: '帮我修改登录页面的交互',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_STOP');
-      assert.equal(decision.projectAction, 'choose_new_or_existing');
+      assert.notEqual(decision.decision, 'PROJECT_STOP');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
     },
   },
   {
@@ -1232,12 +1227,12 @@ const cases = [
   },
   {
     // 红线 SC-20260523-002：M3 豁免加 !named 守卫前，这句会 SINGLE 直达并静默吞掉切换。
-    name: '评审轴/红线: 点名已有项目的框架动词请求仍须过 Project Gate',
+    name: '评审轴: 点名已有项目不得由 route guard 生成切换',
     prompt: '清理一下 muse 里 scripts/ 的死代码',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'crm', ROUTE_GUARD_PROJECTS: 'muse,crm' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH', '点名项目不得绕 Gate');
-      assert.equal(decision.project, 'muse');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -1371,12 +1366,13 @@ const cases = [
     },
   },
   {
-    name: '框架演进轴极性反担保: 真正的框架与未具名产品项目混合请求仍须澄清',
+    name: '框架演进轴极性: mixed scope still cannot mint project authority',
     prompt: '评估 luca_gstack 框架，并同步改造某个产品项目的页面功能',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,crm' },
     expect: decision => {
-      assert.equal(decision.decision, 'NEEDS_CONTEXT');
-      assert.equal(decision.projectAction, 'clarify_framework_or_project_scope');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.notEqual(decision.decision, 'PROJECT_STOP');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -1429,12 +1425,12 @@ const cases = [
   {
     // 实证现场：一条以「修掉 muse app 的…」开头、后文才出现「muse 仓的」的 /goal，
     // 旧实现在第一处 `museapp` 上 return false，整条消息绑不上项目（NEEDS_CONTEXT）。
-    name: '项目名边界①: 首处被空格粘连、后文有干净出现 → 仍须具名命中',
+    name: '项目名边界①: canonical name is evidence but not authority',
     prompt: '修掉 muse app 的 CLI 更新，改成自己下载并校验。权威读序 1) muse 仓的 CLAUDE.md',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.project, 'muse');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -1442,8 +1438,8 @@ const cases = [
     prompt: 'museapp 这个词先不管，我要改 muse 的更新逻辑',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.project, 'muse');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -1451,8 +1447,8 @@ const cases = [
     prompt: '修掉 muse app 的 CLI 更新，改成自己下载并校验',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.project, 'muse');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -1461,8 +1457,8 @@ const cases = [
     prompt: '帮我改ai宠物提示的首页交互',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_PROJECTS: 'muse,luca-dev,ai 宠物提示' },
     expect: decision => {
-      assert.equal(decision.decision, 'PROJECT_SWITCH');
-      assert.equal(decision.project, 'ai 宠物提示');
+      assert.notEqual(decision.decision, 'PROJECT_SWITCH');
+      assert.equal(decision.projectAction, undefined);
     },
   },
   {
@@ -1599,8 +1595,8 @@ const failures = [];
   }
 }
 
-// Real UserPromptSubmit fixture: switch/new is revoke-and-queue only. The
-// SWITCH_ONLY authority is materialized later by native PreToolUse attestation.
+// Real UserPromptSubmit fixture: project words queue only a neutral native turn;
+// no transaction or selection intent is minted by semantic routing.
 {
   const root = mkdtempSync(join(tmpdir(), 'route-new-project-'));
   const gstack = join(root, 'gstack');
@@ -1623,19 +1619,19 @@ const failures = [];
   });
   try {
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /project\.sh new beta --session-id REALNEW --tx .+ --expected-epoch 0/);
+    assert.doesNotMatch(result.stdout, /project\.sh|--tx|PROJECT_SWITCH/);
     const state = JSON.parse(readFileSync(join(gstack, '.claude', '.session-project-REALNEW'), 'utf8'));
     assert.equal(state.state, 'NO_PIN');
     assert.equal(state.event_control.candidates.length, 1);
     assert.equal(state.event_control.candidates[0].boundary_id, 'turn-new-1');
-    assert.equal(state.event_control.candidates[0].intent.kind, 'switch');
-    assert.equal(state.event_control.candidates[0].intent.operation, 'new');
-    assert.equal(state.event_control.candidates[0].intent.target, 'beta');
+    assert.equal(state.event_control.candidates[0].intent.kind, 'turn');
+    assert.equal(state.event_control.candidates[0].intent.operation, undefined);
+    assert.equal(state.event_control.candidates[0].intent.target, undefined);
     assert.equal(state.event_control.consumed_events.length, 0);
-    console.log('PASS real route fixture queues deterministic operation:new without pre-attested authority');
+    console.log('PASS real route fixture queues a neutral event without project authority');
     passCount++;
   } catch (error) {
-    console.log(`FAIL real route fixture prepares deterministic operation:new transaction: ${error.message?.split('\n')[0]}`);
+    console.log(`FAIL real route fixture stays neutral for project words: ${error.message?.split('\n')[0]}`);
     failures.push({ name: 'real route operation:new fixture', error: error.message?.split('\n')[0] });
     failCount++;
   }
@@ -1854,8 +1850,8 @@ for (const testCase of cases) {
   const carry = [
     ['FRAMEWORK_FLOW 早返', '按工程交付流程执行：重构 luca app 的设置页面信息架构，功能堆砌很难找', 'FRAMEWORK_FLOW'],
     ['裸 return complexity（PLAN_MODE）', '重构 luca app 的设置页面的信息架构，新增权限、通知、导出三个分组，层级太深很难找', 'PLAN_MODE'],
-    ['mixed_ambiguous 早返', '改一下 route-guard 里 luca app 项目的东西', 'NEEDS_CONTEXT'],
-    ['gate 短路早返', '切到 crm 项目，顺便看看 luca app 的登录流程', 'PROJECT_SWITCH'],
+    ['mixed scope neutral return', '改一下 route-guard 里 luca app 项目的东西', 'NONE'],
+    ['named project neutral return', '切到 crm 项目，顺便看看 luca app 的登录流程', 'NONE'],
   ];
   for (const [label, prompt, expected] of carry) {
     check(`A-ALIAS 携带模式穿过${label}`, () => {
@@ -1921,32 +1917,27 @@ for (const testCase of cases) {
     });
   }
 
-  // 反向对照 1：具名下游项目**必须继续 gate**（SC-20260523-002）。
-  // 这条专门钉死「修法不是把空臂提到 named 之前一刀切」——那样会让具名项目不再 gate。
-  // fixture 自带 ROUTE_GUARD_PROJECTS 且必须含 muse：默认列表里没有 muse 时，
-  // 本用例与正例同样返回 NONE，零分辨力（会审 R-5 实测）。
-  check('A-SCOPE-NULL 反向对照：具名下游项目仍然 gate', () => {
+  check('A-SCOPE-NULL 具名下游项目也不由 route guard 绑定', () => {
     const decision = route('route-guard 在 muse 里怎么走', scopeEnv);
-    assert.equal(decision.projectAction, 'switch_existing_project', `got ${decision.projectAction}`);
-    assert.equal(decision.project, 'muse');
+    assert.equal(decision.projectAction, undefined);
+    assert.notEqual(decision.decision, 'PROJECT_SWITCH');
   });
 
-  // 反向对照 2：正常的显式新建仍然工作（没有把 explicitNewProjectName 整条废掉）。
-  check('A-SCOPE-NULL 反向对照：正常新建项目仍然工作', () => {
+  check('A-SCOPE-NULL 显式新建文本仍保持非授权', () => {
     const decision = route('新建项目 beta', scopeEnv);
-    assert.equal(decision.projectAction, 'create_new_project');
-    assert.equal(decision.project, 'beta');
+    assert.equal(decision.projectAction, undefined);
+    assert.notEqual(decision.decision, 'PROJECT_SWITCH');
   });
 
   // 反向对照 3（对照组，防过度修复）：无框架信号的显式「新建项目 X」，
   // 肯定式与否定式必须**同样**建项目——那是用户显式声明项目名，不是作用域否定缺陷。
-  check('A-SCOPE-NULL 对照组：显式新建时两种极性行为一致（未被过度修复）', () => {
+  check('A-SCOPE-NULL 对照组：显式新建两种极性均不授权', () => {
     const yes = route('新建项目 涉及项目的东西', scopeEnv);
     const no = route('新建项目 不涉及项目的东西', scopeEnv);
-    assert.equal(yes.projectAction, 'create_new_project');
-    assert.equal(no.projectAction, 'create_new_project');
-    assert.equal(yes.project, '涉及项目的东西');
-    assert.equal(no.project, '不涉及项目的东西');
+    assert.equal(yes.projectAction, undefined);
+    assert.equal(no.projectAction, undefined);
+    assert.notEqual(yes.decision, 'PROJECT_SWITCH');
+    assert.notEqual(no.decision, 'PROJECT_SWITCH');
   });
 }
 
@@ -2165,14 +2156,12 @@ for (const testCase of cases) {
     } finally { cleanup(sid); }
   });
 
-  // 变异体 13：注入若放在 buildDecision 早返之后（或塞进 project-state 块内），
-  // `PROJECT_SWITCH` 回合会静默不注入——而那正是义务必须存活转 DEFERRED 的一轮。
-  check('A-OBLIG-LIFECYCLE 项目切换回合义务存活转 DEFERRED 且保留完整原始字节', () => {
+  check('A-OBLIG-LIFECYCLE 项目措辞不再伪造切换或改变义务状态', () => {
     const sid = 'oblig-defer'; cleanup(sid);
     try {
       realRoute(SIGNAL_A, sid); realRoute(SIGNAL_B, sid);
       realRoute('切到 muse 项目', sid);
-      assert.equal(stateOf(sid), 'DEFERRED_BY_PROJECT_CHANGE');
+      assert.equal(stateOf(sid), 'PENDING');
       const doc = JSON.parse(readFileSync(obligationFile(sid), 'utf8'));
       assert.equal(doc.exact_task_text, SIGNAL_B, '必须保留完整原始任务字节，不得截断');
       assert.equal(injected(realRoute('嗯', sid)), 1, '事务后必须恢复注入');

@@ -417,7 +417,10 @@ function runBoundPreToolTracer() {
       input: JSON.stringify({
         hook_event_name: 'PreToolUse', session_id: session, turn_id: boundary,
         cwd: repoRoot, transcript_path: null, tool_name: 'Read',
-        tool_input: { file_path: join(project, 'CONTEXT.md') },
+        // v3.4 delegates an explicit real project absolute path to the normal
+        // sandbox/tool policy. The display alias still requires current
+        // session authority, so it is the correct seam for replay rejection.
+        tool_input: { file_path: join(gstack, 'docs', 'CONTEXT.md') },
       }),
     });
     const replayOutput = replayScoped.stdout.trim() ? JSON.parse(replayScoped.stdout.trim()) : {};

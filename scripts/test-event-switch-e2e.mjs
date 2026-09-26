@@ -168,11 +168,12 @@ try {
   });
   assert.equal(mutation.status, 0, mutation.stderr || mutation.stdout);
   const bound = JSON.parse(readFileSync(statePath, 'utf8'));
-  assert.equal(bound.state, 'BOUND');
+  assert.equal(bound.state, 'TURN_ACTIVE');
   assert.equal(bound.binding.project, 'beta');
-  assert.equal(bound.terminal.event_id, prepared.event_control.current.event_id);
-  assert.equal(bound.terminal.boundary_id, boundary);
-  assert.equal('turn_id' in bound.terminal, false);
+  assert.equal(bound.turn.event_id, prepared.event_control.current.event_id);
+  assert.equal(bound.turn.boundary_id, boundary);
+  assert.equal(bound.selection.latest_operation.status, 'COMMITTED');
+  assert.equal(bound.selection.last_success.commit_id, tx);
   assert.deepEqual(bound.event_control.cursor, prepared.event_control.cursor);
   assert.deepEqual(bound.event_control.consumed_events, prepared.event_control.consumed_events);
 
@@ -186,8 +187,9 @@ try {
     tool_input: { file_path: 'docs/x.md' },
   }, env);
   assert.equal(sameEventRead.status, 0, sameEventRead.stderr);
-  assert.equal(JSON.parse(sameEventRead.stdout).hookSpecificOutput.permissionDecision, 'deny',
-    'the switch event is terminal and cannot perform same-event project work');
+  assert.equal(JSON.parse(sameEventRead.stdout).hookSpecificOutput.updatedInput.file_path,
+    join(realpathSync(beta), 'docs', 'x.md'),
+    'a committed selection keeps the same native event active for subsequent project work');
 
   const assistantText = 'beta switch completed';
   appendAssistantWitness(rollout, assistantText);
@@ -204,7 +206,7 @@ try {
   const closed = JSON.parse(readFileSync(statePath, 'utf8'));
   assert.equal(closed.state, 'TURN_CLOSED');
   assert.equal(closed.binding.project, 'beta');
-  assert.equal(closed.turn.event_id, bound.terminal.event_id);
+  assert.equal(closed.turn.event_id, bound.turn.event_id);
   assert.equal(closed.event_control.current.status, 'closed');
 
   const nextPrompt = '继续 beta 项目';
@@ -236,7 +238,7 @@ try {
   assert.notEqual(active.event_control.current.event_id, closed.event_control.current.event_id);
   assert.equal(active.event_control.consumed_events.length, 2);
 
-  console.log('PASS attested switch commits BOUND, Stop closes it, and the next native event receives project authority');
+  console.log('PASS attested switch commits TURN_ACTIVE, same-event work proceeds, Stop closes it, and the next native event receives authority');
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }

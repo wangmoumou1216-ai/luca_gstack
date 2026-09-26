@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // Runtime regression for the app-server-backed Codex workflow adapter. All model calls are fake;
 // the runner still executes its real JSON-RPC, route, activation, evidence and sandbox paths.
-import {spawnSync} from 'node:child_process';
-import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {spawn, spawnSync} from 'node:child_process';
+import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {modelRoutingPolicyDigest} from './model-route.mjs';
 import {readActivation, releaseDigestForPolicy, startActivation} from './model-route-host.mjs';
+import {prepareProjectSwitch, readProjectState} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = join(ROOT, '.codex', 'workflow-runner.mjs');
@@ -84,6 +86,11 @@ if (mode === 'hang') {
     }
     if (msg.method === 'turn/start') {
       send({id:msg.id,result:{turn:{id:turnId,status:'inProgress',items:[],error:null}}});
+      if (mode === 'hold') {
+        spawn('sh',['-c','sleep 4; echo alive > "' + (process.env.FAKE_MARKER || '/tmp/no-marker') + '"'],{stdio:'ignore'});
+        if (process.env.FAKE_READY) fs.writeFileSync(process.env.FAKE_READY, 'ready\\n');
+        return;
+      }
       if (mode === 'reroute') send({method:'model/rerouted',params:{from:msg.params.model,to:'other'}});
       if (mode === 'huge') send({method:'test/large',params:{blob:'X'.repeat(2*1024*1024)}});
       let result = {ok:true,who:'fake'};
@@ -133,6 +140,43 @@ function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
     rootSessionId,
     state: readActivation({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot}),
   };
+}
+
+function startWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
+  const name = '__rt_probe';
+  const workflow = join(WF_DIR, `${name}.js`);
+  writeFileSync(workflow, scriptBody);
+  const rootSessionId = `runner-test-${process.pid}-${++sequence}`;
+  startActivation({
+    harness: 'codex', root_session_id: rootSessionId,
+    root_anchor: {model: anchor, source: 'test-root-session'},
+    release_digest: releaseDigest, state_root: stateRoot,
+  });
+  const child = spawn('node', [RUNNER, name], {
+    cwd: ROOT,
+    env: {
+      ...process.env,
+      NODE_ENV: 'test',
+      CODEX_HOME: codexHome,
+      PATH: `${binDir}:${process.env.PATH}`,
+      LUCA_MODEL_ROUTE_POLICY_PATH: policyPath,
+      LUCA_MODEL_ROUTE_BINDINGS_PATH: bindingsPath,
+      LUCA_MODEL_ROUTE_STATE_ROOT: stateRoot,
+      LUCA_MODEL_ROUTE_ROOT_SESSION_ID: rootSessionId,
+      ...extraEnv,
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return {child, workflow};
+}
+
+async function waitFor(predicate, timeoutMs = 5000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (predicate()) return;
+    await new Promise(resolveWait => setTimeout(resolveWait, 25));
+  }
+  throw new Error('timed out waiting for runtime fixture');
 }
 
 try {
@@ -234,6 +278,84 @@ schema_discovery_type_ok:{type:'boolean'},sources:{type:'array',items:{type:'obj
     runWF("phase('Verify'); const x=await agent('hi'); return {x}", {FAKE_DUMP: peakDump});
     const peakCalls = parse(readFileSync(peakDump, 'utf8'))?.record || [];
     ok('R2 critical review selects approved peak model', peakCalls.find(call => call.method === 'thread/start')?.params?.model === 'gpt-6-astra');
+  }
+
+  {
+    const dispatchRoot = join(sandbox, 'dispatch-root');
+    const dispatchGstack = join(dispatchRoot, 'gstack');
+    const dispatchProjects = join(dispatchRoot, 'projects');
+    const workAPath = join(dispatchProjects, 'alpha');
+    const workBPath = join(dispatchProjects, 'beta');
+    mkdirSync(join(dispatchGstack, '.claude'), {recursive: true});
+    mkdirSync(workAPath, {recursive: true});
+    mkdirSync(workBPath, {recursive: true});
+    const workA = realpathSync(workAPath);
+    const workB = realpathSync(workBPath);
+    writeFileSync(join(workA, 'CONTEXT.md'), '# alpha\n');
+    writeFileSync(join(workB, 'CONTEXT.md'), '# beta\n');
+    const aStat = statSync(workA);
+    const sid = 'runner-frozen-work-root';
+    const nativeId = 'fixture-native-a08';
+    const eventHash = createHash('sha256');
+    for (const value of ['luca-native-event:v1:claude', sid, nativeId]) {
+      const bytes = Buffer.from(value);
+      eventHash.update(Buffer.from(`${bytes.length}:`));
+      eventHash.update(bytes);
+    }
+    const transcript = join(dispatchRoot, 'fixture-transcript.jsonl');
+    writeFileSync(transcript, '');
+    const transcriptStat = statSync(transcript);
+    const cursor = {schema_version: 1, harness: 'claude', transcript_path: transcript,
+      dev: String(transcriptStat.dev), ino: String(transcriptStat.ino), byte_offset: 0, record_index: 0,
+      prefix_sha256: createHash('sha256').update('').digest('hex')};
+    const event = {event_id: `claude:${eventHash.digest('hex')}`, boundary_id: 'fixture-boundary-a08', native_id: nativeId,
+      anchor_id: null, cwd: dispatchGstack, harness: 'claude', status: 'active', attested_at: '2026-09-25T00:00:00Z'};
+    writeFileSync(join(dispatchGstack, '.claude', `.session-project-${sid}`), `${JSON.stringify({
+      schema_version: 3, state: 'TURN_ACTIVE', session_id: sid,
+      binding: {project: 'alpha', realpath: workA, dev: Number(aStat.dev), ino: Number(aStat.ino), epoch: 1},
+      turn: {event_id: event.event_id, boundary_id: event.boundary_id, epoch: 1},
+      event_control: {candidates: [], current: event, cursor,
+        consumed_events: [{event_id: event.event_id, boundary_id: event.boundary_id,
+          harness: event.harness, native_id: event.native_id, anchor_id: null}]},
+    })}\n`);
+    const dump = join(sandbox, 'cancel-dispatch.json');
+    const ready = join(sandbox, 'cancel-ready');
+    const marker = join(sandbox, 'cancel-grandchild-alive');
+    const started = startWF("phase('P'); const out=await parallel([1,2,3].map(i=>()=>agent('task-'+i))); return {out}", {
+      FAKE_MODE: 'hold', FAKE_DUMP: dump, FAKE_READY: ready, FAKE_MARKER: marker,
+      LUCA_WF_CONCURRENCY: '1', LUCA_WF_AGENT_TIMEOUT_MS: '30000', LUCA_WF_WORK_ROOT: workA,
+    });
+    let stdout = '', stderr = '';
+    started.child.stdout.on('data', data => { stdout += String(data); });
+    started.child.stderr.on('data', data => { stderr += String(data); });
+    await waitFor(() => existsSync(ready) && existsSync(dump));
+    const proposal = prepareProjectSwitch({gstackRoot: dispatchGstack, projectsRoot: dispatchProjects,
+      sessionId: sid, operation: 'switch', target: 'beta'}).proposal;
+    const switched = spawnSync('/bin/bash', [join(ROOT, 'scripts', 'project.sh'), 'switch', 'beta',
+      '--session-id', sid, '--tx', proposal.tx, '--expected-epoch', '1'], {
+      cwd: dispatchGstack, encoding: 'utf8', env: {...process.env,
+        LUCA_GSTACK_ROOT: dispatchGstack, LUCA_PROJECTS_ROOT: dispatchProjects},
+    });
+    ok('A08 actual session switch A→B succeeds while A work is in flight', switched.status === 0,
+      switched.stderr || switched.stdout);
+    ok('A08 current session binding is B after the switch',
+      readProjectState(dispatchGstack, sid, dispatchProjects).value.binding?.project === 'beta');
+    started.child.kill('SIGTERM');
+    const exit = await new Promise(resolveExit => started.child.on('close', (code, signal) => resolveExit({code, signal})));
+    rmSync(started.workflow, {force: true});
+    const calls = parse(readFileSync(dump, 'utf8'))?.record || [];
+    const turns = calls.filter(call => call.method === 'turn/start');
+    const dispatchedPrompt = turns[0]?.params?.input?.[0]?.text || '';
+    ok('A08 queued A work keeps the frozen absolute A root after the session switches to B',
+      turns.length === 1 && dispatchedPrompt.includes(`WORK_ROOT=${workA}`) && !dispatchedPrompt.includes(`WORK_ROOT=${workB}`));
+    ok('A08 explicit cancellation prevents not-yet-dispatched tool work',
+      turns.length === 1 && /"queued_not_dispatched":2/.test(stderr), stderr.slice(-500));
+    ok('A08 cancellation reports in-flight work and does not claim OS rollback',
+      /"in_flight":1/.test(stderr) && /"os_revocation_guaranteed":false/.test(stderr)
+      && (exit.code === 130 || exit.signal === 'SIGTERM'), `${JSON.stringify(exit)} ${stderr.slice(-500)}`);
+    await new Promise(resolveWait => setTimeout(resolveWait, 4500));
+    ok('A08 cancellation terminates the started child process group', !existsSync(marker),
+      existsSync(marker) ? 'grandchild survived process-group termination' : stdout);
   }
 
   for (const badMode of ['wrong-model', 'reroute', 'failed-turn']) {

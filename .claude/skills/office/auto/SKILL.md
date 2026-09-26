@@ -5,6 +5,7 @@ argument-hint: "[需求描述，或多个任务组合描述]"
 description: |
   全自动多 Agent 设计编排器：自然语言需求 → 自动分解任务 → 映射 skill → 编排 Work Agent 并行/串行 → 聚合产出。luca_gstack 顶层自动化入口，用户无需手动选 skill。(luca_gstack)
 recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：整场多agent编排（大token+中判断杠杆）
+version: 2.0.1
 ---
 
 # /auto — 全自动多 Agent 设计编排器
@@ -138,18 +139,19 @@ SKILL_PATH；否则模板的 MODE 前置守卫会把 WA 当 task_execution 走 S
 {{ROLE}}                  : Skill Executor for <skill-id>
 {{GOAL}}                  : 读取并执行 <skill-id> skill，产出 <output-path>
 {{TASK_CONTEXT}}          : Phase <N> / <用户需求一句话摘要>
+{{WORK_ROOT}}             : <派发时由已验证 binding.realpath 冻结的绝对项目根>
 {{INPUT_FILES}}           : - .claude/skills/office/<skill-id>/SKILL.md — 执行协议
-                            - docs/handoff/<上游 handoff>.md — 上游约束（如有）
+                            - <WORK_ROOT>/docs/handoff/<上游 handoff>.md — 上游约束（如有）
 {{TASK_DESCRIPTION}}      : 读取 SKILL.md，按其执行协议完整执行，
                             输入为：<从用户需求提炼的具体化描述>
 {{INHERITED_CONSTRAINTS}} : - framework/ 只读
                             - <上游 handoff 中的约束，如无填"无">
 {{REFERENCE_ASSETS}}      : - <上游产出路径，作为本 skill 的输入，如无填"无">
-{{PRIMARY_OUTPUTS}}       : - <skill 规定的输出路径>
+{{PRIMARY_OUTPUTS}}       : - <相对 WORK_ROOT 解析后的绝对输出路径>
 {{OUTPUT_FORMAT_SPEC}}    : 遵照 SKILL.md 定义的输出格式
 {{PROTECTED_PATHS}}       : framework/、CLAUDE.md
-{{DONE_CRITERIA}}         : - [ ] <output-path> 文件存在且非空
-                            - [ ] docs/handoff/<date>-<topic>-<skill-id>-handoff.md 已写入
+{{DONE_CRITERIA}}         : - [ ] <absolute-output-path> 文件存在且非空
+                            - [ ] <WORK_ROOT>/docs/handoff/<date>-<topic>-<skill-id>-handoff.md 已写入
 {{AVAILABLE_SKILL_PATHS}} : .claude/skills/office/<skill-id>/SKILL.md
 {{SKILL_TO_EXECUTE}}      : <skill-id>（skill_execution 模式必填）
 {{SKILL_PATH}}            : .claude/skills/office/<skill-id>/SKILL.md（skill_execution 模式必填）
@@ -163,7 +165,7 @@ Work Agent 收到指令后必须按以下顺序执行：
 1. Read {{AVAILABLE_SKILL_PATHS}} 中的 SKILL.md（必须完整读完到 FILE_END 标记）
 2. 按 SKILL.md 的执行协议完整执行（不依赖 Skill 工具，直接遵照协议产出）
 3. 确认产出文件存在于 PRIMARY_OUTPUTS 规定的路径
-4. 写 handoff summary → docs/handoff/<date>-<topic>-<skill-id>-handoff.md（topic-bearing，与 handoff-protocol.md 规范一致）
+4. 写 handoff summary → <WORK_ROOT>/docs/handoff/<date>-<topic>-<skill-id>-handoff.md（topic-bearing，与 handoff-protocol.md 规范一致）
 5. 返回 Completion Report
 ```
 
@@ -179,6 +181,12 @@ Work Agent 收到指令后必须按以下顺序执行：
 串行 Phase（→）: 等待前 Phase 所有 WA 完成 + handoff 写入后，再启动下一 Phase
 质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 重试该 WA
 ```
+
+派发前，主 Agent 必须把全部输入、`PRIMARY_OUTPUTS` 与 handoff 路径相对 `WORK_ROOT`
+解析为固定绝对路径。后续 session 项目选择不能改变已派发任务落点；后台 WA 禁止重新读取共享
+`docs/`、workflow-state 或 current-topic 显示别名来决定路径。明确取消时，主 Agent 先停止尚未
+派发的新工具动作，再调用当前 harness 的中断 primitive 并收集退出/在途结果；已发出或宿主
+无法中断的动作必须如实报告，不能冒称 OS 级撤销。
 
 #### Work Agent 失败处理（W9）
 
@@ -210,7 +218,7 @@ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢�
 
 所有 Phase 完成后：
 
-1. 读取 `docs/handoff/` 中本次 session 的所有 handoff summary
+1. 读取 `<WORK_ROOT>/docs/handoff/` 中本次 session 的所有 handoff summary
 2. 输出汇总报告：
 
 ```

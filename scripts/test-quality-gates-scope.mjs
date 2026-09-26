@@ -71,6 +71,7 @@ try {
     '.claude/agents/preflight-agent.md',
     '.claude/agents/quality-gate.md',
     '.claude/hooks/lib/project-substrate.mjs',
+    '.claude/hooks/lib/project-selection.mjs',
     '.claude/hooks/lib/event-attestation.mjs',
   ]) {
     mkdirSync(dirname(join(root, rel)), { recursive: true });

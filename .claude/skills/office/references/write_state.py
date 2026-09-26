@@ -2,6 +2,7 @@
 """
 workflow-state 写入工具
 用法：
+  export _PROJECT_ROOT="/absolute/resolved/project/root"
   export _TOPIC="customer-list-filter"
   export _SCENE="A"
   export _NODE="brainstorm"
@@ -15,10 +16,21 @@ import datetime
 import os
 import sys
 import json
+from pathlib import Path
 
-STATE_FILE = '.claude/workflow-state.yaml'
+PROJECT_ROOT = os.environ.get('_PROJECT_ROOT', '')
+if not PROJECT_ROOT or not os.path.isabs(PROJECT_ROOT):
+    raise SystemExit('_PROJECT_ROOT must be an absolute, already-resolved project root')
+PROJECT_ROOT_PATH = Path(PROJECT_ROOT).resolve(strict=True)
+STATE_FILE = PROJECT_ROOT_PATH / '.luca' / 'workflow-state.yaml'
+TOPIC_FILE = PROJECT_ROOT_PATH / '.luca' / 'current-topic.txt'
+
+
+def ensure_state_parent():
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 def write_state(node, status, output='', extra=None):
+    ensure_state_parent()
     try:
         with open(STATE_FILE) as f:
             state = yaml.safe_load(f) or {}
@@ -51,6 +63,7 @@ def write_state(node, status, output='', extra=None):
 
 
 def set_topic(topic, scene):
+    ensure_state_parent()
     try:
         with open(STATE_FILE) as f:
             state = yaml.safe_load(f) or {}
@@ -65,7 +78,7 @@ def set_topic(topic, scene):
         yaml.dump(state, f, allow_unicode=True, default_flow_style=False)
 
     # 同时写 current-topic.txt
-    with open('.claude/current-topic.txt', 'w') as f:
+    with open(TOPIC_FILE, 'w') as f:
         f.write(topic)
 
     print(f'topic set: {topic}, scene: {scene}')

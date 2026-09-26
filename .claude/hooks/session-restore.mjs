@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 // Session 启动时：检测中断节点，加载 PROGRESS.md，加载记忆摘要
-import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, readlinkSync, renameSync, symlinkSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, readdirSync, statSync, unlinkSync, lstatSync, openSync, closeSync, mkdirSync, renameSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 import { randomUUID } from 'crypto';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
-import { acquireProjectLease, releaseProjectLease } from '../../scripts/project-lease.mjs';
 import {
   PROJECTS_ROOT,
   PROJECT_STATE_SCHEMA,
   activeProjectAuthority,
   initializeProjectEventFence,
-  projectNameFromLink,
+  listProjects,
   readProjectState,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
@@ -208,150 +207,19 @@ function hasActiveParallelSession() {
   return false;
 }
 
-// ── 激活项目清除决策（G6 会话粘性，2026-07-04；红队定稿）──
-// 原设计：每次启动无条件清三个共享 symlink，"走全新项目流程"。但多并发 session 下，
-// 任一新 session 启动即清空其它 session 正在用的项目上下文（昨日实测撞 3 次）。
-// 改为决策树——清 symlink 当且仅当以下全部成立（否则保留）：
-//  0. 悬空链（readlink 目标不存在）→ 无视下面直接清（R5：安全 gate，非粘性范围，
-//     否则 gate ① 会静默继续一个已删项目、session-sync 会穿悬空链复活已删目录树）。
-//  1. kill-switch SESSION_RESTORE_ALWAYS_CLEAR=1 → 无条件清（一键回退旧行为）。
-//  2. source === 'startup'（冷启动）——allowlist（H1）：resume/compact 清自己上下文本就是
-//     bug（session_id 跨 resume 不变，文档确认）；clear 是清对话非切项目，保留；未知/缺失
-//     source → 保留 + canary（安全侧：误清摧毁并行活 session 数据面不可逆，误保留可 switch 恢复）。
-//  3. 无活跃并行 session（hasActiveParallelSession()=false）——有则保留 + 警告（R1+R2 核心）。
-const docsLink = join(projectRoot, 'docs');
-const stateLink = join(projectRoot, '.claude', 'workflow-state.yaml');
-const topicLink = join(projectRoot, '.claude', 'current-topic.txt');
-const alwaysClear = process.env.SESSION_RESTORE_ALWAYS_CLEAR === '1';
-
-// 当前 docs 链指向的激活项目名（用于保留时的提示；悬空判断也用它）
-let activeProject = '', docsDangling = false;
-try {
-  const tgt = readlinkSync(docsLink); // 悬空链 readlink 仍成功
-  activeProject = projectNameFromLink(tgt); // FIX-2：与其余 3 站同一 canonical 裁决
-  docsDangling = !existsSync(docsLink); // existsSync 跟随链：目标不存在=悬空
-} catch { /* 无链=无激活项目 */ }
-// 终验核验修：三链任一悬空即视为悬空态（原只查 docs——部分悬空态如 state/topic 目标被删而
-// docs 正常 + source=resume 会走保留分支留下悬空链）。
-for (const l of [stateLink, topicLink]) {
-  try { if (lstatSync(l).isSymbolicLink() && !existsSync(l)) docsDangling = true; } catch { }
-}
-
-function captureDisplayLink(path) {
-  try {
-    const st = lstatSync(path);
-    return st.isSymbolicLink() ? { kind: 'symlink', target: readlinkSync(path) } : { kind: 'other' };
-  } catch (error) {
-    if (error?.code === 'ENOENT') return { kind: 'absent' };
-    throw error;
-  }
-}
-const displayPaths = [docsLink, stateLink, topicLink];
-const startupDisplaySnapshot = displayPaths.map(captureDisplayLink);
-const hasActiveLinks = startupDisplaySnapshot.some(item => item.kind === 'symlink');
-const sameDisplaySnapshot = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-
-const doClear = () => {
-  let lease = null;
-  let cleared = false;
-  const removed = [];
-  try {
-    lease = acquireProjectLease({
-      root: projectRoot,
-      ownerToken: `startup-clear-${ownSid || process.pid}`,
-      pid: process.pid,
-    });
-    const current = displayPaths.map(captureDisplayLink);
-    if (!sameDisplaySnapshot(current, startupDisplaySnapshot)) {
-      process.stderr.write('[session-restore] ⚠️ display tuple 在清理前已变化，保守不清（可能有并发 switch）\n');
-      return false;
-    }
-    if (current.some(item => item.kind === 'other')) {
-      process.stderr.write('[session-restore] ⚠️ display tuple 含非 symlink 实体，保守不清，需人工恢复\n');
-      return false;
-    }
-    for (let i = 0; i < displayPaths.length; i++) {
-      if (current[i].kind !== 'symlink') continue;
-      if (!sameDisplaySnapshot(captureDisplayLink(displayPaths[i]), current[i])) {
-        throw new Error(`display link changed before unlink: ${displayPaths[i]}`);
-      }
-      unlinkSync(displayPaths[i]);
-      removed.push(i);
-    }
-    if (!displayPaths.map(captureDisplayLink).every(item => item.kind === 'absent')) {
-      throw new Error('display tuple clear readback failed');
-    }
-    cleared = true;
-  } catch (error) {
-    // Under the same global lease, roll back only entries this call removed.
-    for (const i of removed.reverse()) {
-      try {
-        if (captureDisplayLink(displayPaths[i]).kind === 'absent') {
-          symlinkSync(startupDisplaySnapshot[i].target, displayPaths[i]);
-        }
-      } catch { }
-    }
-    process.stderr.write(`[session-restore] ⚠️ display tuple 未清理：${String(error?.message || error)}\n`);
-    cleared = false;
-  } finally {
-    if (lease) {
-      try {
-        const released = releaseProjectLease({ root: projectRoot, ownerHandle: lease.owner_handle });
-        if (released.cleanup_required) {
-          process.stderr.write(`[session-restore] ⚠️ startup clear lease 已释放，但精确残留清理失败（不应重试 clear）：${released.parked_path} — ${released.error}\n`);
-        }
-      }
-      catch (error) {
-        process.stderr.write(`[session-restore] ⚠️ startup clear 已完成但 lease 释放失败，禁止重试 clear；需用 exact owner_handle 恢复：owner_handle=${JSON.stringify(lease.owner_handle)} error=${String(error?.message || error)}\n`);
-      }
-    }
-  }
-  return cleared;
-};
-// 决策树顺序关键（STICKY-004 回归钉死）：悬空 gate 与 kill-switch 必须**优先于**所有
-// 保留条件——否则 source=resume 时悬空链会被 resume 分支先保留，绕过安全 gate。
-let cleared = false;
-if (hasActiveLinks) {
-  if (docsDangling && !alwaysClear) {
-    // R5 安全 gate：目标已删/改名 → 无视 source/活跃度直接清（否则 gate ① 静默继续已删项目、
-    // session-sync 穿悬空链复活已删目录树）。最高优先。
-    cleared = doClear();
-    if (cleared) process.stderr.write(`[session-restore] 🧹 检测到悬空项目链（目标已删/改名），已清除，走全新流程\n`);
-  } else if (alwaysClear) {
-    cleared = doClear(); // kill-switch 仍须受全局 lease + tuple CAS 约束
-  } else if (startSource === 'resume' || startSource === 'compact') {
-    // resume / compact → 保留（本 session 自己的上下文，清它是 bug；不打扰）
-  } else if (startSource === 'clear') {
-    // /clear 只清对话不切项目 → 保留激活项目（红队 H1）
-  } else if (!startSource) {
-    // source 缺失（stdin 读不到）→ 安全侧保留 + canary（防未来 harness 语义漂移静默误清）
-    process.stderr.write(`[session-restore] ⚠️ SessionStart 未拿到 source 字段，保守保留激活项目 ${activeProject || '(未知)'}（如需清除：SESSION_RESTORE_ALWAYS_CLEAR=1）\n`);
-  } else if (startSource !== 'startup') {
-    // A1 加固（决策红队）：未知非空 source（如 harness 把 'startup' 改名——Task→Agent 同型漂移的
-    // 可能形态）→ 安全侧保留 + canary。旧代码此处会静默保留无警告，冷启动被误判成继承旧项目。
-    process.stderr.write(`[session-restore] ⚠️ SessionStart source 值未知（"${startSource}"，非 startup/resume/clear/compact）——疑似 harness 语义漂移，保守保留激活项目 ${activeProject || '(未知)'}（如确为冷启动需清除：SESSION_RESTORE_ALWAYS_CLEAR=1）\n`);
-  } else if (hasActiveParallelSession()) {
-    // 冷启动但检测到活跃并行 session → 保留 + 显式告知（R2/R4：不再谎称"无激活项目"）
-    process.stdout.write(`[session-restore] 🔗 当前激活项目: ${activeProject || '(未知)'}（检测到活跃并行 session，已保留；如需切换，请在 prompt 中明确项目并只执行 route-guard 生成的完整事务命令）\n\n`);
-    // 一次性继承标记（终验核验修）：只有"为并行 session 而保留"才是真继承；route-guard 认此标记
-    // 而非 cur&&!pin，避免把 self-switch 误判成继承（单 session 正常流程 Msg2 假阳性）。
-    if (ownSid) {
-      try { writeFileSync(join(projectRoot, '.claude', `.session-inherited-${ownSid}`), activeProject || ''); } catch { }
-    }
-  } else {
-    // 冷启动 + 无活跃并行 → 清，走全新项目流程（原始设计意图）
-    cleared = doClear();
-  }
-}
-
-// 显示项目列表（仅在真清除后——保留态已在上面告知激活项目，不再谎称"无激活"，R4）
-if (cleared || !hasActiveLinks) {
+// Shared docs/workflow/topic links are legacy display compatibility only.
+// Session startup neither reads nor mutates them. A verified session binding
+// may be displayed, but it is not execution authority for a future event.
+const activeProject = startupBinding?.project || '';
+const docsDangling = false;
+const cleared = false;
+if (startupBinding) {
+  process.stdout.write(`[session-restore] 🔗 本会话已验证展示归属: ${activeProject}（不授予当前轮执行权限）\n\n`);
+} else {
   try {
     const projectsRoot = PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖
     if (existsSync(projectsRoot)) {
-      const entries = readdirSync(projectsRoot).filter(e => {
-        try { return statSync(join(projectsRoot, e)).isDirectory(); } catch { return false; }
-      });
+      const entries = listProjects(projectsRoot, { realDirectoriesOnly: true });
       const lines = entries.map(e => `  ○ ${e}`).join('\n');
       process.stdout.write(`[session-restore] 📁 项目列表（无激活项目，请告知要做什么）:\n${lines}\n\n`);
     }

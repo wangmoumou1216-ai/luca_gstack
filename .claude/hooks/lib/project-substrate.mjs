@@ -35,6 +35,7 @@ import {
   MAX_NATIVE_PROMPT_BYTES,
   observeCurrentNativeEvent,
 } from './event-attestation.mjs';
+import { readProjectReservation } from './project-selection.mjs';
 
 const DEFAULT_ROOT = join(homedir(), 'Desktop', '项目');
 function normRoot(p) {
@@ -52,21 +53,43 @@ export const PROJECTS_ROOT = (() => {
   return normRoot(ov);
 })();
 
-// PROJECTS_ROOT 直接子目录名（均单段）；软链目录也算（与 py Path.is_dir() 跟随语义一致）
-export function listProjects(projectsRoot = PROJECTS_ROOT) {
+// PROJECTS_ROOT 直接子目录名（均单段）。Host view 可请求同一次枚举的排除原因；
+// 默认返回值保持旧数组合同。
+export function listProjects(projectsRoot = PROJECTS_ROOT, options = {}) {
   try {
-    return readdirSync(projectsRoot, { withFileTypes: true })
-      .filter((d) => {
-        if (d.name.startsWith('.')) return false;
-        if (d.isDirectory()) return true;
-        if (d.isSymbolicLink()) {
-          try { return statSync(join(projectsRoot, d.name)).isDirectory(); } catch { return false; }
-        }
-        return false;
-      })
-      .map((d) => d.name);
-  } catch {
-    return [];
+    const projects = [];
+    const excluded = [];
+    for (const d of readdirSync(projectsRoot, { withFileTypes: true })) {
+      if (d.name.startsWith('.')) continue;
+      if (d.isSymbolicLink() && options.realDirectoriesOnly) {
+        excluded.push({ project: d.name, code: 'SYMLINK' });
+        continue;
+      }
+      let directory = d.isDirectory();
+      if (d.isSymbolicLink()) {
+        try { directory = statSync(join(projectsRoot, d.name)).isDirectory(); }
+        catch { directory = false; }
+      }
+      if (!directory) {
+        if (options.withExcluded) excluded.push({ project: d.name, code: 'NOT_DIRECTORY' });
+        continue;
+      }
+      let reservation;
+      try { reservation = readProjectReservation(projectsRoot, d.name).value; }
+      catch {
+        if (options.withExcluded) excluded.push({ project: d.name, code: 'INVALID_RESERVATION' });
+        continue;
+      }
+      if (reservation && !['READY', 'COMMITTED'].includes(reservation.phase)) {
+        if (options.withExcluded) excluded.push({ project: d.name, code: 'NOT_READY' });
+        continue;
+      }
+      projects.push(d.name);
+    }
+    return options.withExcluded ? { projects, excluded } : projects;
+  } catch (error) {
+    if (options.strictErrors) throw error;
+    return options.withExcluded ? { projects: [], excluded: [] } : [];
   }
 }
 
@@ -133,6 +156,10 @@ export function canonicalProjectIdentity(project, projectsRoot = PROJECTS_ROOT) 
   const candidate = join(root, name);
   const lst = lstatSync(candidate);
   if (lst.isSymbolicLink() || !lst.isDirectory()) throw new Error(`project identity must be a real directory: ${name}`);
+  const reservation = readProjectReservation(root, name).value;
+  if (reservation && !['READY', 'COMMITTED'].includes(reservation.phase)) {
+    throw new Error(`project identity is not READY: ${name}`);
+  }
   const real = realpathSync(candidate);
   if (dirname(real) !== root || relative(root, real) !== name) throw new Error(`project identity escaped canonical root: ${name}`);
   const st = statSync(real);
@@ -569,6 +596,42 @@ function priorClosedState(current, binding, control) {
   };
 }
 
+function selectionAfterEventChange(selection, binding, nextEventId, reason) {
+  if (!selection?.pending || selection.pending.event_id === nextEventId) return selection || null;
+  const pending = selection.pending;
+  const expired = {
+    operation_id: pending.tx,
+    kind: pending.operation,
+    target: pending.target,
+    status: 'EXPIRED_OR_UNKNOWN',
+    created: Boolean(pending.created),
+    bound: false,
+    commit_id: null,
+    expected_epoch: pending.expected_epoch,
+    binding_epoch: binding?.epoch || null,
+    committed_at: null,
+    error_code: reason,
+    ...(pending.phase ? { phase: pending.phase } : {}),
+  };
+  return compactSelectionHistory({
+    ...selection,
+    pending: null,
+    receipts: [...(Array.isArray(selection.receipts) ? selection.receipts : []), expired],
+    latest_operation: expired,
+  });
+}
+
+function compactSelectionHistory(selection) {
+  if (!selection) return null;
+  const receipts = Array.isArray(selection.receipts) ? selection.receipts : [];
+  const unresolvedCreation = item => item?.kind === 'new'
+    && ['RUNNING', 'CREATING', 'OWNERSHIP_UNKNOWN', 'EXPIRED_OR_UNKNOWN'].includes(item?.status);
+  const unresolved = receipts.filter(unresolvedCreation);
+  const recentTerminal = receipts.filter(item => !unresolvedCreation(item)).slice(-16);
+  const keep = new Set([...unresolved, ...recentTerminal]);
+  return { ...selection, receipts: receipts.filter(item => keep.has(item)) };
+}
+
 // UserPromptSubmit records only an unattested candidate. In particular,
 // boundary_id is transport provenance, never a consumed event identity.
 export function queueProjectEventCandidate({
@@ -631,6 +694,7 @@ export function queueProjectEventCandidate({
       state: closed.state,
       session_id: sid,
       ...(closed.binding ? { binding: closed.binding, turn: closed.turn } : {}),
+      ...(current.selection ? { selection: current.selection } : {}),
       event_control: {
         // Candidates are untrusted hints, not an event ledger. Keep admission live
         // under synthetic floods without advancing the cursor or consuming events.
@@ -669,6 +733,7 @@ export function initializeProjectEventFence({
     const closed = priorClosedState(state, binding, control);
     const next = {
       schema_version: PROJECT_STATE_SCHEMA, session_id: sid, ...closed,
+      ...(state.selection ? { selection: state.selection } : {}),
       event_control: { candidates: [], current: null, cursor: fence.cursor,
         consumed_events: [], fence },
     };
@@ -719,6 +784,7 @@ export function refenceProjectStateForDeactivate({
     }
     const next = {
       schema_version: PROJECT_STATE_SCHEMA, session_id: sid, state: 'NO_PIN',
+      ...(state.selection ? { selection: state.selection } : {}),
       event_control: { candidates: [], current: null, cursor: fence.cursor,
         consumed_events: [], fence },
     };
@@ -982,6 +1048,9 @@ export function attestPendingProjectEvent({
     }
     const event = events[events.length - 1];
     const binding = validatedBindingForState(state, projectsRoot);
+    const selection = selectionAfterEventChange(
+      state.selection, binding, event?.event_id || '', 'NATIVE_EVENT_REPLACED_BEFORE_COMMIT',
+    );
     const intent = candidate.intent || {};
     if (intent.kind === 'release' && binding) {
       if (!control.fence || !event || event.status !== 'active') {
@@ -1005,6 +1074,7 @@ export function attestPendingProjectEvent({
       verifyRelease();
       const released = {
         schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sid,
+        ...(selection ? { selection } : {}),
         event_control: { candidates: [], current: null, cursor: fence.cursor,
           consumed_events: [], fence },
       };
@@ -1047,6 +1117,7 @@ export function attestPendingProjectEvent({
       session_id: sid,
       ...(materialized.binding ? { binding: materialized.binding, turn: materialized.turn } : {}),
       ...(materialized.switch ? { switch: materialized.switch } : {}),
+      ...(selection ? { selection } : {}),
       event_control: {
         candidates: [],
         current: event,
@@ -1110,6 +1181,31 @@ export function closeAttestedProjectEvent({
     const binding = ['TURN_ACTIVE', 'BOUND', 'SWITCH_ONLY'].includes(state.state)
       ? validatedBindingForState(state, projectsRoot)
       : null;
+    let selection = state.selection || null;
+    if (selection?.pending) {
+      const pending = selection.pending;
+      const expired = {
+        operation_id: pending.tx,
+        kind: pending.operation,
+        target: pending.target,
+        status: 'EXPIRED_OR_UNKNOWN',
+        created: Boolean(pending.created),
+        bound: false,
+        commit_id: null,
+        expected_epoch: pending.expected_epoch,
+        binding_epoch: binding?.epoch || null,
+        committed_at: null,
+        error_code: 'EVENT_CLOSED_BEFORE_EXECUTION',
+        ...(pending.phase ? { phase: pending.phase } : {}),
+      };
+      selection = {
+        ...selection,
+        pending: null,
+        receipts: [...(Array.isArray(selection.receipts) ? selection.receipts : []), expired],
+        latest_operation: expired,
+      };
+    }
+    selection = compactSelectionHistory(selection);
     const next = {
       schema_version: PROJECT_STATE_SCHEMA,
       state: binding ? 'TURN_CLOSED' : 'NO_PIN',
@@ -1122,6 +1218,7 @@ export function closeAttestedProjectEvent({
         ...control,
         current: { ...control.current, status: 'closed', outcome: String(outcome || 'stop') },
       },
+      ...(selection ? { selection } : {}),
     };
     atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-close');
     return next;
@@ -1331,8 +1428,101 @@ export function removeProjectStateCas(gstackRoot, sessionId, expectedRaw) {
 }
 
 export function prepareProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, operation, target, turnId = '' }) {
-  void gstackRoot; void projectsRoot; void sessionId; void operation; void target; void turnId;
-  throw new Error('raw turn-id switch authority is retired; queue and attest a native event');
+  void turnId;
+  const sid = sanitizeSessionId(sessionId);
+  const op = String(operation || '');
+  const project = validateProjectName(target);
+  if (!sid || !['switch', 'new'].includes(op)) {
+    throw new ProjectEventAuthorityError('INVALID_SELECTION', 'selection requires a session, switch/new operation, and canonical target');
+  }
+  return withProjectStateLock(gstackRoot, sid, () => {
+    const path = projectStatePath(gstackRoot, sid);
+    const raw = readOptionalBytes(path);
+    const state = projectStateFromBytes(raw, sid);
+    const control = eventControlFromState(state);
+    const event = control.current;
+    if (!event || event.status !== 'active') {
+      throw new ProjectEventAuthorityError('NO_ACTIVE_EVENT', 'selection requires the current attested native event');
+    }
+    const binding = validatedBindingForState(state, projectsRoot);
+    const expectedEpoch = binding?.epoch || 0;
+    const proposalTx = randomUUID();
+    let baseSelection = state.selection || {};
+    if (state.state === 'SWITCH_ONLY') {
+      const existing = state.switch;
+      if (existing?.operation === op && existing?.target === project && existing?.event_id === event.event_id
+          && existing?.boundary_id === event.boundary_id) return { state, proposal: existing, idempotent: true };
+      if (existing?.status !== 'PREPARED') {
+        let ownerAlive = false;
+        if (Number.isSafeInteger(existing?.owner_pid) && existing.owner_pid > 0) {
+          try { process.kill(existing.owner_pid, 0); ownerAlive = true; }
+          catch (error) { ownerAlive = error?.code !== 'ESRCH'; }
+        }
+        if (ownerAlive) {
+          throw new ProjectEventAuthorityError('SELECTION_BUSY', 'another selection has started side effects for this native event');
+        }
+        let unresolvedStatus = 'EXPIRED_OR_UNKNOWN';
+        let unresolvedCreated = Boolean(existing.created);
+        if (existing.operation === 'new') {
+          try {
+            const reservation = readProjectReservation(projectsRoot, existing.target).value;
+            if (reservation?.tx === existing.tx && reservation?.session_id === sid
+                && reservation?.target === existing.target) {
+              unresolvedCreated = reservation.dev != null && reservation.ino != null;
+              const targetExists = existsSync(join(realpathSync(resolve(projectsRoot)), existing.target));
+              unresolvedStatus = unresolvedCreated ? 'CREATING'
+                : targetExists ? 'OWNERSHIP_UNKNOWN' : 'RUNNING';
+            } else if (existsSync(join(realpathSync(resolve(projectsRoot)), existing.target))) {
+              unresolvedStatus = 'OWNERSHIP_UNKNOWN';
+            }
+          } catch { unresolvedStatus = 'OWNERSHIP_UNKNOWN'; }
+        }
+        const unresolved = {
+          operation_id: existing.tx, kind: existing.operation, target: existing.target,
+          status: unresolvedStatus, created: unresolvedCreated, bound: false, commit_id: null,
+          expected_epoch: existing.expected_epoch, binding_epoch: binding?.epoch || null,
+          committed_at: null, error_code: existing.error_code || 'OWNER_EXITED_BEFORE_COMMIT',
+          phase: existing.phase || null,
+          superseded_by: proposalTx,
+        };
+        baseSelection = {
+          ...baseSelection,
+          pending: null,
+          receipts: [...(Array.isArray(baseSelection.receipts) ? baseSelection.receipts : []), unresolved],
+          latest_operation: unresolved,
+        };
+      } else {
+        const expired = {
+          operation_id: existing.tx, kind: existing.operation, target: existing.target,
+          status: 'SUPERSEDED', created: false, bound: false, commit_id: null,
+          expected_epoch: existing.expected_epoch, binding_epoch: binding?.epoch || null,
+          committed_at: null, error_code: 'SUPERSEDED_BEFORE_EXECUTION',
+          superseded_by: proposalTx,
+        };
+        baseSelection = {
+          ...baseSelection,
+          pending: null,
+          receipts: [...(Array.isArray(baseSelection.receipts) ? baseSelection.receipts : []), expired],
+          latest_operation: expired,
+        };
+      }
+    }
+    const proposal = {
+      tx: proposalTx, operation: op, target: project, expected_epoch: expectedEpoch,
+      binding: binding || null, event_id: event.event_id, boundary_id: event.boundary_id,
+      status: 'PREPARED', prepared_at: new Date().toISOString(),
+    };
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA, state: 'SWITCH_ONLY', session_id: sid,
+      switch: proposal, event_control: state.event_control,
+      selection: { ...baseSelection, pending: proposal },
+    };
+    const currentRaw = readOptionalBytes(path);
+    const unchanged = currentRaw === null ? raw === null : Buffer.isBuffer(raw) && currentRaw.equals(raw);
+    if (!unchanged) throw new ProjectEventAuthorityError('STATE_CHANGED', 'selection state changed before proposal commit');
+    atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-selection-prepare');
+    return { state: next, proposal, idempotent: false };
+  });
 }
 
 export function beginProjectTurn({ gstackRoot, projectsRoot = PROJECTS_ROOT, sessionId, turnId }) {

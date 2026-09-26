@@ -96,6 +96,7 @@ function verifyGraph() {
 
 try {
   for (const rel of ['.claude/hooks/route-guard.mjs', '.claude/hooks/lib/project-substrate.mjs',
+    '.claude/hooks/lib/project-selection.mjs',
     '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-read-grants.mjs',
     '.claude/hooks/lib/harness.mjs', '.claude/skill-os/skill-routing-map.yaml']) {
     mkdirSync(dirname(join(scratch, rel)), { recursive: true });

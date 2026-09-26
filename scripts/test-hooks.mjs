@@ -1688,7 +1688,7 @@ function runRouteGuard(cwd, prompt) {
   console.log('PASS CONC-006 route-guard 轮次 + pending 全链 per-sid');
 }
 
-// ── CONC-007：project.sh 并发 switch——锁串行化 + 原子替换后三链一致、无 tmp 残留 ──
+// ── CONC-007：不同 session 并发 switch——各自 pin 隔离，display aliases 零写入 ──
 {
   const root = mkdtempSync(join(tmpdir(), 'luca-gstack-conc7-'));
   mkdirSync(join(root, '.claude', 'templates'), { recursive: true });
@@ -1709,18 +1709,19 @@ function runRouteGuard(cwd, prompt) {
   const stress = spawnSync('bash', ['-c', `${cmd('conc-A', 'projA', pA)} &\n${cmd('conc-B', 'projB', pB)} &\nwait`], { env, encoding: 'utf8' });
   assert.equal(stress.status, 0, stress.stderr || stress.stdout);
   assert.ok(!existsSync(join(root, '.claude', '.project-switch.lock')), '锁目录应已释放');
-  // 终态一致性：三链同项目
-  const linkTarget = (p) => { try { return readFileSync(join(root, p), 'utf8') && ''; } catch { return ''; } };
-  const docsT = spawnSync('readlink', [join(root, 'docs')], { encoding: 'utf8' }).stdout.trim();
-  const stateT = spawnSync('readlink', [join(root, '.claude', 'workflow-state.yaml')], { encoding: 'utf8' }).stdout.trim();
-  const topicT = spawnSync('readlink', [join(root, '.claude', 'current-topic.txt')], { encoding: 'utf8' }).stdout.trim();
-  const projOf = (t) => (t.match(/projects\/([^/]+)\//) || [])[1] || '';
-  assert.ok(projOf(docsT) && projOf(docsT) === projOf(stateT) && projOf(docsT) === projOf(topicT),
-    `并发 switch 终态三链必须同项目: docs=${docsT} state=${stateT} topic=${topicT}`);
-  console.log('PASS CONC-007 project.sh 并发 switch：锁串行化 + 原子替换 + 终态一致');
+  const stateA = JSON.parse(readFileSync(join(root, '.claude', '.session-project-conc-A'), 'utf8'));
+  const stateB = JSON.parse(readFileSync(join(root, '.claude', '.session-project-conc-B'), 'utf8'));
+  assert.equal(stateA.state, 'TURN_ACTIVE');
+  assert.equal(stateA.binding.project, 'projA');
+  assert.equal(stateB.state, 'TURN_ACTIVE');
+  assert.equal(stateB.binding.project, 'projB');
+  assert.ok(!existsSync(join(root, 'docs')), 'switch 不得创建或改写共享 docs 展示别名');
+  assert.ok(!existsSync(join(root, '.claude', 'workflow-state.yaml')), 'switch 不得创建共享 state 展示别名');
+  assert.ok(!existsSync(join(root, '.claude', 'current-topic.txt')), 'switch 不得创建共享 topic 展示别名');
+  console.log('PASS CONC-007 project.sh 并发 switch：per-session pin 隔离且 display aliases 零写入');
 }
 
-// ── CONC-008：startup clear 与 switch 共用 global lease，lease 忙时绝不拆 display tuple ──
+// ── CONC-008：startup 不参与 display lease，也不读取/改写 display tuple ──
 {
   const root = makeFixture({ activeProject: 'projA' });
   const links = [join(root, 'docs'), join(root, '.claude', 'workflow-state.yaml'), join(root, '.claude', 'current-topic.txt')];
@@ -1734,123 +1735,118 @@ function runRouteGuard(cwd, prompt) {
     env: { CLAUDE_PROJECT_DIR: root },
     input: JSON.stringify({ session_id: 'startup-racer', source: 'startup' }),
   });
-  assert.match(restore.stderr, /未清理|live owner|lease/, 'lease busy 必须 fail-visible 且保守不清');
+  assert.doesNotMatch(restore.stderr, /未清理|live owner|lease/, 'startup 不应参与 legacy display lease');
   const after = links.map(path => spawnSync('readlink', [path], { encoding: 'utf8' }).stdout.trim());
-  assert.deepEqual(after, before, 'startup clear 不得与持锁 switch 互踩或拆散三链');
+  assert.deepEqual(after, before, 'startup 不得读取、清理或重写 display tuple');
   const released = spawnSync('node', [projectLeaseScript, 'release', '--root', root, '--handle-json', JSON.stringify(held.owner_handle)], {
     cwd: projectRoot, encoding: 'utf8', env: process.env,
   });
   assert.equal(released.status, 0, released.stderr);
-  console.log('PASS CONC-008 startup clear 与 switch 共用 lease，忙时 display tuple 保持原样');
+  console.log('PASS CONC-008 startup 不参与 display lease，display tuple 保持原样');
 }
 
-// ── CONC-009：startup clear 已提交后 release-before-rename 失败，不得谎报 clear 失败/诱发重试 ──
+// ── CONC-009：legacy lease fault injection 不能让 startup 触碰 display aliases ──
 {
   const root = makeFixture({ activeProject: 'projA' });
+  const links = [join(root, 'docs'), join(root, '.claude', 'workflow-state.yaml'), join(root, '.claude', 'current-topic.txt')];
+  const before = links.map(path => spawnSync('readlink', [path], { encoding: 'utf8' }).stdout.trim());
   const restore = runNode(sessionRestoreHook, root, {
     env: { CLAUDE_PROJECT_DIR: root, LUCA_PROJECT_LEASE_FAULT: 'before-release-rename' },
     input: JSON.stringify({ session_id: 'startup-release-fault', source: 'startup' }),
   });
-  assert.ok(!isSymlink(join(root, 'docs')), 'release 失败发生在 clear commit 之后，display tuple 应保持已清理');
-  assert.match(restore.stderr, /startup clear 已完成.*lease 释放失败.*禁止重试 clear/);
-  const inspected = spawnSync('node', [projectLeaseScript, 'inspect', '--root', root], {
-    cwd: projectRoot, encoding: 'utf8', env: process.env,
-  });
-  assert.equal(inspected.status, 0, inspected.stderr);
-  const held = JSON.parse(inspected.stdout);
-  assert.equal(held.owner_alive, false);
-  const recovered = spawnSync('node', [projectLeaseScript, 'recover', '--root', root, '--handle-json', JSON.stringify(held.owner_handle)], {
-    cwd: projectRoot, encoding: 'utf8', env: process.env,
-  });
-  assert.equal(recovered.status, 0, recovered.stderr);
-  console.log('PASS CONC-009 startup clear commit 后 lease release 失败保持成功语义并可 exact recovery');
+  const after = links.map(path => spawnSync('readlink', [path], { encoding: 'utf8' }).stdout.trim());
+  assert.deepEqual(after, before, 'startup 必须忽略 legacy display lease fault injection');
+  assert.doesNotMatch(restore.stderr, /startup clear|lease 释放失败/);
+  assert.ok(!existsSync(join(root, '.claude', '.project-switch.lock')),
+    'startup 不得创建 legacy display lease');
+  console.log('PASS CONC-009 startup 忽略 legacy lease fault，display aliases 与 lease 均不变');
 }
 
-// ══════════════ G6 会话粘性回归（2026-07-04）══════════════
+// ══════════════ v3.4 display-only 启动回归 ═══════════════
 const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionRestoreHook, root, {
   env: { CLAUDE_PROJECT_DIR: root, ...extraEnv },
   input: JSON.stringify(source === null ? { session_id: sid } : { source, session_id: sid }),
 });
 
-// STICKY-001：source=startup + 无活跃并行 → 清 symlink（原始意图保留）
+// STICKY-001：source=startup 也不清理 display symlink
 {
   const root = makeFixture({ activeProject: 'projA' });
   STICKY(root, 'startup');
-  assert.ok(!isSymlink(join(root, 'docs')), 'startup + 无并行应清 docs 链');
-  console.log('PASS STICKY-001 冷启动无并行 → 清 symlink');
+  assert.ok(isSymlink(join(root, 'docs')), 'startup 不得清理 display docs 链');
+  console.log('PASS STICKY-001 冷启动不改 display symlink');
 }
 
-// STICKY-002：source=resume → 保留（恢复态清自己上下文是 bug）
+// STICKY-002：source=resume 保留 display alias，但不得把它称为本 session 激活项目
 {
   const root = makeFixture({ activeProject: 'projA' });
   const r = STICKY(root, 'resume');
   assert.ok(isSymlink(join(root, 'docs')), 'resume 必须保留 docs 链');
-  assert.doesNotMatch(r.stdout, /无激活项目/, 'resume 保留态不得谎称无激活项目');
-  console.log('PASS STICKY-002 resume → 保留 symlink，不谎称无激活');
+  assert.match(r.stdout, /无激活项目/, '没有本 session 可信 pin 时不得从 display alias 推导激活项目');
+  console.log('PASS STICKY-002 resume 保留 display alias，但 identity 仍为 NO_PIN');
 }
 
-// STICKY-003：source=startup + 活跃并行（新鲜他-sid 计数）→ 保留 + 明确告知
+// STICKY-003：并行计数不影响 display alias 的只读兼容属性
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-tool-count-other'), '3'); // 新鲜=活跃
   const r = STICKY(root, 'startup', 'me');
   assert.ok(isSymlink(join(root, 'docs')), 'startup + 活跃并行应保留');
-  assert.match(r.stdout, /当前激活项目: projA（检测到活跃并行/, '应告知保留了激活项目');
-  console.log('PASS STICKY-003 冷启动+活跃并行 → 保留 + 告知激活项目');
+  assert.doesNotMatch(r.stdout, /当前激活项目: projA（检测到活跃并行/, 'startup 不得从 display alias 推导激活项目');
+  console.log('PASS STICKY-003 并行计数不改变 display alias，也不推导项目 identity');
 }
 
-// STICKY-003b：活跃探测排除本 sid 自己（own-sid，R3）——只有自己的计数不算"并行"
+// STICKY-003b：本 sid 计数同样不触发 display alias mutation
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-tool-count-me'), '5'); // 本 sid 自己
   STICKY(root, 'startup', 'me');
-  assert.ok(!isSymlink(join(root, 'docs')), '只有本 sid 计数不算活跃并行 → 应清');
-  console.log('PASS STICKY-003b 活跃探测排除本 sid（own-sid）');
+  assert.ok(isSymlink(join(root, 'docs')), '本 sid 计数不得授权 startup 清理 display alias');
+  console.log('PASS STICKY-003b 本 sid 计数不触发 display mutation');
 }
 
-// STICKY-003c：legacy 无后缀计数（启动自写）不得被当作活跃并行信号（R3 陷阱）
+// STICKY-003c：legacy 无后缀计数也不触发 display alias mutation
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-tool-count'), '9'); // legacy 无后缀
   STICKY(root, 'startup', 'me');
-  assert.ok(!isSymlink(join(root, 'docs')), 'legacy 无后缀计数不是 per-sid，不得挡清理');
-  console.log('PASS STICKY-003c legacy 无后缀计数不挡清理');
+  assert.ok(isSymlink(join(root, 'docs')), 'legacy 无后缀计数不得授权 startup 清理 display alias');
+  console.log('PASS STICKY-003c legacy 无后缀计数不触发 display mutation');
 }
 
-// STICKY-004：悬空链 → 无视保留条件（连 source=resume）直接清（R5 安全 gate）
+// STICKY-004：悬空 display alias 也不由 startup 修复或清理
 {
   const root = makeFixture({ activeProject: 'projA' });
   spawnSync('rm', ['-rf', join(root, '项目', 'projA')]); // 删目标目录制造悬空链
   const r = STICKY(root, 'resume'); // resume 本该保留
-  assert.ok(!isSymlink(join(root, 'docs')), '悬空链应无视 resume 保留直接清');
-  assert.match(r.stderr, /悬空项目链/, '悬空清除应留痕');
-  console.log('PASS STICKY-004 悬空链无视保留条件直接清（安全 gate）');
+  assert.ok(isSymlink(join(root, 'docs')), '悬空 display alias 必须保持原样，由兼容层另行维护');
+  assert.doesNotMatch(r.stderr, /悬空项目链/, 'startup 不应探测或修复悬空 display alias');
+  console.log('PASS STICKY-004 startup 不探测、不修复悬空 display alias');
 }
 
-// STICKY-005：kill-switch SESSION_RESTORE_ALWAYS_CLEAR=1 → 清（回退旧行为）
+// STICKY-005：旧 kill-switch 不再授权 display alias mutation
 {
   const root = makeFixture({ activeProject: 'projA' });
   STICKY(root, 'resume', 'me', { SESSION_RESTORE_ALWAYS_CLEAR: '1' });
-  assert.ok(!isSymlink(join(root, 'docs')), 'kill-switch 应无条件清');
-  console.log('PASS STICKY-005 kill-switch 回退旧行为（无条件清）');
+  assert.ok(isSymlink(join(root, 'docs')), '旧 kill-switch 不得绕过 v3.4 display-only 合同');
+  console.log('PASS STICKY-005 旧 kill-switch 不再触发 display mutation');
 }
 
-// STICKY-006：source 缺失 → 保留 + canary（安全侧，防 harness 语义漂移静默误清）
+// STICKY-006：source 缺失仍保持 display alias，且无需 mutation canary
 {
   const root = makeFixture({ activeProject: 'projA' });
   const r = STICKY(root, null, 'me'); // 不带 source 字段
   assert.ok(isSymlink(join(root, 'docs')), 'source 缺失应保守保留');
-  assert.match(r.stderr, /未拿到 source 字段/, 'source 缺失应有 canary 留痕');
-  console.log('PASS STICKY-006 source 缺失 → 保留 + canary');
+  assert.doesNotMatch(r.stderr, /未拿到 source 字段/, '无 display mutation 分支时无需清理 canary');
+  console.log('PASS STICKY-006 source 缺失也保持 display alias');
 }
 
-// STICKY-006b：未知非空 source（如 harness 把 'startup' 改名）→ 保留 + canary（A1 加固，决策红队）
+// STICKY-006b：未知非空 source 同样保持 display alias
 {
   const root = makeFixture({ activeProject: 'projA' });
   const r = STICKY(root, 'launch', 'me'); // 'launch' = 假设的改名值，非 startup/resume/clear/compact
   assert.ok(isSymlink(join(root, 'docs')), '未知 source 应保守保留（不静默走冷启动清除）');
-  assert.match(r.stderr, /source 值未知/, '未知 source 应有 canary 警告，不得静默保留');
-  console.log('PASS STICKY-006b 未知 source → 保留 + canary（堵 A1 改名盲区）');
+  assert.doesNotMatch(r.stderr, /source 值未知/, '未知 source 不再进入 display mutation 决策');
+  console.log('PASS STICKY-006b 未知 source 同样保持 display alias');
 }
 
 // STICKY-007：transcript-mtime 活跃信号（R1）——他-sid transcript 新鲜 → 保留
@@ -1859,8 +1855,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   const tdir = mkdtempSync(join(tmpdir(), 'luca-gstack-tx-'));
   writeFileSync(join(tdir, 'other-sid.jsonl'), '{}'); // 新鲜他-sid transcript
   STICKY(root, 'startup', 'me', { SESSION_STICKY_TRANSCRIPT_DIR: tdir });
-  assert.ok(isSymlink(join(root, 'docs')), 'transcript 活跃信号应保留（覆盖只读/权限盲区）');
-  console.log('PASS STICKY-007 transcript-mtime 活跃信号触发保留');
+  assert.ok(isSymlink(join(root, 'docs')), 'transcript 状态不得改变 display alias');
+  console.log('PASS STICKY-007 transcript-mtime 不参与 display mutation');
 }
 
 // STICKY-007b：真走【生产路径】——用 payload 的 transcript_path 定位 transcript 目录（不靠 env 覆盖）。
@@ -1876,8 +1872,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root }, // 不设 SESSION_STICKY_TRANSCRIPT_DIR，强制走生产路径
     input: JSON.stringify({ source: 'startup', session_id: 'me', transcript_path: join(tdir, 'me.jsonl') }),
   });
-  assert.ok(isSymlink(join(root, 'docs')), 'payload.transcript_path 应让生产路径正确定位 transcript 目录 → 保留');
-  console.log('PASS STICKY-007b 生产路径经 transcript_path 定位（不靠 env 覆盖，堵假绿）');
+  assert.ok(isSymlink(join(root, 'docs')), 'payload.transcript_path 不得改变 display alias');
+  console.log('PASS STICKY-007b transcript_path 不参与 display mutation');
 }
 
 // STICKY-008：继承 display marker 不得成为生产 identity；普通对话只能排队
@@ -1898,10 +1894,9 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-008 继承 display marker 不成为 identity，普通对话仅排队未认证 event');
 }
 
-// STICKY-008b（方案A）：显式项目意图仅排队 switch candidate，永不从软链
-// auto-adopt；SWITCH_ONLY 必须留给后续 PreToolUse 原生 event 认证产生。
+// STICKY-008b：route guard 对项目名称保持中性，只排队 turn evidence。
 {
-  // (i) 点名项目只创建待认证 switch candidate，不预写 SWITCH_ONLY/BOUND。
+  // (i) 点名项目也不创建 selection proposal。
   const rootA = makeFixture({ activeProject: 'projA' });
   runNode(routeGuardHook, rootA, {
     env: { CLAUDE_PROJECT_DIR: rootA, ROUTE_GUARD_PROJECTS: 'projA' },
@@ -1909,8 +1904,8 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   });
   const stateA = JSON.parse(readFileSync(join(rootA, '.claude', '.session-project-sess-Sa'), 'utf8'));
   assert.equal(stateA.state, 'NO_PIN');
-  assert.equal(stateA.event_control.candidates[0].intent.kind, 'switch');
-  assert.equal(stateA.event_control.candidates[0].intent.target, 'projA');
+  assert.equal(stateA.event_control.candidates[0].intent.kind, 'turn');
+  assert.equal(stateA.event_control.candidates[0].intent.target, undefined);
   assert.equal(stateA.event_control.consumed_events.length, 0);
 
   // (ii) ★no-adopt★ 无标记 + 不点名任何项目（cur=projA 仍在软链）→ 仅排队普通 event。
@@ -1923,12 +1918,10 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   assert.equal(stateB.state, 'NO_PIN', 'A 下不得从软链 auto-adopt pin');
   assert.equal(stateB.event_control.candidates[0].intent.kind, 'turn');
   assert.doesNotMatch(rB.stdout, /并行 session 保留/, '不得残留旧继承措辞');
-  console.log('PASS STICKY-008b 点名只排队 switch event，未点名不从 display symlink auto-adopt');
+  console.log('PASS STICKY-008b 点名与未点名都只排队中性 turn evidence，不从 display symlink auto-adopt');
 }
 
-// STICKY-008h（2026-09-11）：harness 合成消息（跨 session 消息 / 后台任务通知）即使点名项目，也不得产出
-// 可执行的切换事务或 switch 意图——它在原生记录里永远不是人类回合，只会误导 agent 替别人切项目。
-// 对照组是紧随其后的 STICKY-008c：同一句话由用户本人说出时仍 emit SWITCH_ONLY。
+// STICKY-008h：harness 合成消息同样只能排队中性 turn evidence。
 {
   const root = makeFixture({ activeProject: 'projA' });
   const r = runNode(routeGuardHook, root, {
@@ -1946,8 +1939,7 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS STICKY-008h harness 合成消息点名项目也不产切换事务或 switch 意图');
 }
 
-// STICKY-008c（命名即切换 2026-07-06）：本 session 主动切到具名项目 → emit 立即切换（无"确认后"）；
-// pin 记成【目标】项目（非当前），清继承标记 + 清残留漂移计数，且本轮不误报漂移。
+// STICKY-008c：用户点名项目只形成证据，不生成命令、tx 或 selection proposal。
 {
   const root = makeFixture({ activeProject: 'projA' });
   writeFileSync(join(root, '.claude', '.session-inherited-sess-N'), 'projA'); // 继承态
@@ -1956,17 +1948,18 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'projA,projB' },
     input: JSON.stringify({ session_id: 'sess-N', prompt: '继续 projB 的任务' }),
   });
-  assert.match(r.stdout, /SWITCH_ONLY/, '应 emit SWITCH_ONLY transaction');
-  assert.match(r.stdout, /project\.sh switch projB --session-id sess-N --tx .+ --expected-epoch 0/, '应给出 hash-bound 事务命令');
+  assert.doesNotMatch(r.stdout, /SWITCH_ONLY/, 'route guard 不得 emit selection transaction');
+  assert.doesNotMatch(r.stdout, /project\.sh switch/, 'route guard 不得生成切换命令');
+  assert.match(r.stdout, /别名候选（证据，非授权/, '可以展示名称解析证据，但不得把展示当授权');
   assert.doesNotMatch(r.stdout, /原在项目/, '自己主动切不得报"被切走"漂移');
   const pin = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-N'), 'utf8'));
-  assert.equal(pin.state, 'NO_PIN', 'UserPromptSubmit 阶段不得预先建立 SWITCH_ONLY 权限');
-  assert.equal(pin.event_control.candidates[0].intent.kind, 'switch');
-  assert.equal(pin.event_control.candidates[0].intent.target, 'projB', '待认证 switch target 应为 projB');
+  assert.equal(pin.state, 'NO_PIN', 'UserPromptSubmit 阶段不得预先建立项目权限');
+  assert.equal(pin.event_control.candidates[0].intent.kind, 'turn');
+  assert.equal(pin.event_control.candidates[0].intent.target, undefined);
   assert.equal(pin.event_control.consumed_events.length, 0);
   assert.ok(!existsSync(join(root, '.claude', '.session-inherited-sess-N')), '自切应清继承标记');
-  assert.ok(!existsSync(join(root, '.claude', '.session-projnag-sess-N')), '自切应清残留漂移计数');
-  console.log('PASS STICKY-008c 命名切换 → 待认证 switch candidate + tx/epoch + 清标记');
+  assert.ok(existsSync(join(root, '.claude', '.session-projnag-sess-N')), '中性 route 不应改写无关 legacy 漂移计数');
+  console.log('PASS STICKY-008c 项目名只产生非授权证据与 turn candidate，不生成 selection');
 }
 
 // STICKY-009：SessionEnd 清计数但保留 identity（End 无 generation，不能安全删 pin）
@@ -2131,24 +2124,27 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
   console.log('PASS SYNC-MEM-001 MEMORY_ROOT 仓脏 → 提醒点名该仓（split-brain 提醒盲区修复）');
 }
 
-// ── STICKY-011（P5 修复回归 2026-07-14）：affirmsCur 词边界匹配——裸子串不再误绑 pin ──
+// ── STICKY-011：alias evidence 无论精度如何都不产生 selection authority ──
 {
   const root = makeFixture({ activeProject: 'muse' });
   const fire = (prompt) => runNode(routeGuardHook, root, {
     env: { CLAUDE_PROJECT_DIR: root, ROUTE_GUARD_PROJECTS: 'muse', ROUTE_GUARD_CURRENT_PROJECT: 'muse' },
     input: JSON.stringify({ session_id: 'sess-SUB', prompt }),
   });
-  fire('我在读amusement相关的代码');
+  const substring = fire('我在读amusement相关的代码');
   const ordinary = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8'));
   assert.equal(ordinary.state, 'NO_PIN', '子串（amusement ⊃ muse）不得绑 pin（P5 实证回归）');
   assert.equal(ordinary.event_control.candidates[0].intent.kind, 'turn', '子串只能排队普通 event');
-  fire('继续 muse 的任务');
+  assert.doesNotMatch(substring.stdout, /SWITCH_ONLY|project\.sh switch/,
+    '即使 alias evidence 对子串过度召回，也不得生成 selection authority');
+  const named = fire('继续 muse 的任务');
   const prepared = JSON.parse(readFileSync(join(root, '.claude', '.session-project-sess-SUB'), 'utf8'));
   assert.equal(prepared.state, 'NO_PIN',
     '真点名（词边界成立）仍须等原生 event 认证，不能预造 SWITCH_ONLY/BOUND');
-  const switchCandidate = prepared.event_control.candidates.find(candidate => candidate.intent?.kind === 'switch');
-  assert.equal(switchCandidate?.intent?.target, 'muse', '待认证 switch candidate 必须保留规范化目标项目');
-  console.log('PASS STICKY-011 project switch 词边界：amusement 不误触，点名 muse 只排队 switch event');
+  assert.ok(prepared.event_control.candidates.every(candidate => candidate.intent?.kind === 'turn'),
+    '项目点名也只能排队中性 turn evidence');
+  assert.match(named.stdout, /别名候选（证据，非授权/, '完整项目名可以产生非授权 alias evidence');
+  console.log('PASS STICKY-011 alias evidence 对子串或完整名称都不生成 selection authority');
 }
 
 // ── FRAMEWORK-IDENTITY-001：当前框架自指/状态问句不得制造下游项目事务；

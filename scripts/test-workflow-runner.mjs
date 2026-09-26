@@ -92,6 +92,10 @@ return { out }
     /REPO_ROOT=\$\{ROOT\}/.test(src));
   ok('W4c 并发有上限（无节流会打爆速率限制，且 agent 失败是静默 falsy 极难归因）',
     /MAX_CONCURRENCY/.test(src));
+  ok('W4d 取消停止后续调度并终止已启动的子进程组',
+    /process\.kill\(-pid,\s*'SIGKILL'\)/.test(src)
+    && /\['SIGINT',\s*'SIGTERM',\s*'SIGHUP'\]/.test(src)
+    && /child\.kill\('SIGTERM'\)/.test(src));
 }
 
 // ── W5：schema strict 归一化（2026-08-05 实测 BLOCKER 的回归门）──

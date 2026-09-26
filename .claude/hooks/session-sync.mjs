@@ -76,6 +76,7 @@ const sessionId =
 const PROJECTS_ROOT = SUBSTRATE_PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖
 let project = '';
 let projectFromPin = false;
+let projectAbsoluteRoot = '';
 let projectState = null;
 let projectEventSnapshot = null;
 function observationBoundary(state) {
@@ -122,6 +123,7 @@ if (hasSid) {
       if (binding) {
         project = binding.project;
         projectFromPin = true;
+        projectAbsoluteRoot = binding.realpath;
       }
     }
   } catch (error) {
@@ -172,7 +174,7 @@ process.on('exit', () => {
 // ---- 解析 topic + workflow 节点状态（pin 态直读 <pin>/.luca/，与归因落点同源）----
 let topic = 'session';
 let nodeStates = [];
-const stateFile = projectFromPin ? join(PROJECTS_ROOT, project, '.luca', 'workflow-state.yaml') : null;
+const stateFile = projectFromPin ? join(projectAbsoluteRoot, '.luca', 'workflow-state.yaml') : null;
 if (stateFile && existsSync(stateFile)) {
   try {
     const content = readFileSync(stateFile, 'utf8');
@@ -190,15 +192,15 @@ function writeCheckpointIfInProgress() {
   if (inProgress.length === 0 || !project) return;
   try {
     if (!projectFromPin) return;
-    const dir = join(PROJECTS_ROOT, project, 'docs', 'handoff');
+    const dir = join(projectAbsoluteRoot, 'docs', 'handoff');
     mkdirSync(dir, { recursive: true });
     const body = [
       `# Auto Checkpoint — ${now}`, '', `**Topic:** ${topic}`, '', '## 节点状态', '',
       nodeStates.map(n => `- **${n.name}**: ${n.status}`).join('\n'), '', '## 恢复指令', '',
-      '1. 读取 `.claude/workflow-state.yaml` 确认当前节点状态',
+      `1. 读取 \`${join(projectAbsoluteRoot, '.luca', 'workflow-state.yaml')}\` 确认当前节点状态`,
       '2. 运行 `bash scripts/verify.sh` 验证文件完整性',
       `3. 继续 ${inProgress.join(', ')} 节点的工作`,
-      '4. 如有 PROGRESS.md，读取 `docs/PROGRESS.md` 了解实时任务状态', '',
+      `4. 如有 PROGRESS.md，读取 \`${join(projectAbsoluteRoot, 'docs', 'PROGRESS.md')}\` 了解实时任务状态`, '',
     ].join('\n');
     writeFileSync(join(dir, `${dateStr}-auto-checkpoint.md`), body);
     process.stderr.write(`[session-sync] ✅ 已自动写入 checkpoint: ${projectFromPin ? dir : 'docs/handoff'}/${dateStr}-auto-checkpoint.md\n`);

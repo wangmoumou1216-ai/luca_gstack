@@ -218,6 +218,11 @@ check C17 "workflow-state 写入块坏 yaml 时拒写（不擦除既有状态）
 check C18 "redteam 判据挂载表完整且引用路径全部存在" "python3 scripts/test-redteam-mount-table.py"
 check C19 "场景覆盖表结构自洽（SSOT对账+豁免声明双确认+三不规则形态）" "python3 scripts/check-skill-scene-coverage.py --selftest"
 check C20 "项目绑定+原生事件权限回归通过（attestation/CAS/lease/replay/new/legacy migration）" "npm run test:project-transaction --silent"
+check C21 "项目门禁 v3.4 selection/receipt/concurrency 回归通过" "node scripts/test-project-selection-v34.mjs"
+check C22 "项目门禁 v3.4 controlled 授权与恢复回归通过" "node scripts/test-project-controlled-selection.mjs"
+check C23 "宿主项目/session只读投影回归通过" "node scripts/test-project-host-view.mjs"
+check C24 "项目门禁 v3.4 Claude/Codex 双宿主行为回归通过" "node scripts/test-project-gate-v34-dual-host.mjs"
+check C25 "项目门禁 v3.4 A01/A04/A05/A09 mutation proof-it-bites" "node scripts/test-project-gate-v34-mutations.mjs"
 echo ""
 
 echo "[ Skill 体系 ]"
@@ -290,6 +295,8 @@ check S39 "Framework HTML 历史债务基线 proof-it-bites" "npm run test:frame
 check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
 check S21b "人工效果反馈（证据/幂等/原始事实保护）" "npm run test:evolution-feedback --silent"
 check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）" "npm run check:agent-contracts --silent"
+check S22b "Codex workflow runner 离线契约回归" "node scripts/test-workflow-runner.mjs"
+check S22c "固定WORK_ROOT与排队/在途取消运行时回归" "node scripts/test-workflow-runner-runtime.mjs"
 # S24：lint:yaml 的能力早已写好（package.json 覆盖 7 个 skill-os yaml），但从无自动调用者——
 # model-routing / self-model / gaps-register / sources-registry 四个真值源因此零 YAML 语法门
 # （CI 的 validate-yaml 只覆盖其中 2 个）。2026-06-28 体检 HC-21/HC-25 已两次点名，此处接线。

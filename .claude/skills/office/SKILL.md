@@ -18,10 +18,14 @@ _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
 echo "SESSION: $_SESSION_ID"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+_TOPIC=$(if [ -n "${_PROJECT_ROOT:-}" ]; then cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null || echo "none"; else echo "none"; fi)
 echo "CURRENT_TOPIC: $_TOPIC"
 python3 .claude/observability/scripts/get_rules.py office "*" 2>/dev/null || true
 ```
+
+项目态调用在运行 preamble 前，必须把已验证 session pin 的 `binding.realpath` 冻结为绝对
+`_PROJECT_ROOT`；`NO_PIN` 不设置该变量，也不从共享 `docs/`、workflow-state 或 current-topic
+别名推断项目。该变量只表达文件落点，不是执行授权。
 
 ---
 
@@ -115,7 +119,7 @@ DONE 合法。compare / status 即此规则的既有实例。standalone 重型 s
 
 > 本豁免规则与 `references/handoff-protocol.md`「豁免规则」保持同步：阈值（`runtime-estimate ≤ 5000` 等）以 handoff-protocol.md 为详版真值源，改阈值须同步两处。
 
-写入路径：`docs/handoff/YYYY-MM-DD-<topic>-<skill-name>-handoff.md`
+写入路径：`<_PROJECT_ROOT>/docs/handoff/YYYY-MM-DD-<topic>-<skill-name>-handoff.md`
 格式规范：见 `references/handoff-protocol.md`
 硬约束：≤2000 tokens（≈8000 chars）
 
@@ -140,7 +144,7 @@ python3 .claude/observability/scripts/get_rules.py <skill-name> <scene>
 
 **Step 2：检索上游 handoff summary（workflow 模式下）**
 ```bash
-# 读取 workflow-state.yaml 中最新的 DONE 节点的 handoff_path
+# 读取 <_PROJECT_ROOT>/.luca/workflow-state.yaml 中最新的 DONE 节点的 handoff_path
 # 如果 handoff_path 非空 → 读取该文件
 # 重点关注：## 约束 和 ## 风险 章节
 ```

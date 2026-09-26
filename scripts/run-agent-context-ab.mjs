@@ -3326,9 +3326,14 @@ async function g5ProjectSwitch(effect) {
   const statePath = join(effect.gstack, '.claude', `.session-project-${effect.replaySession}`);
   const before = existsSync(statePath) ? sha256(readFileSync(statePath)) : null;
   const route = await g5RouteAndAttest(effect, '切换到已存在的 alpha 项目；本轮只切换。');
-  assert.equal(route.state.state, 'SWITCH_ONLY', 'G5 route hook did not create SWITCH_ONLY');
-  const proposal = route.state.switch;
-  assert.equal(proposal?.target, 'alpha', 'G5 route hook targeted a foreign project');
+  assert.equal(route.state.state, 'NO_PIN', 'G5 neutral route evidence unexpectedly created project authority');
+  const prepared = await g5WithProcessEnv(g5ProjectEnv(effect), async () => effect.substrate.prepareProjectSwitch({
+    gstackRoot: effect.gstack, projectsRoot: effect.projects, sessionId: effect.replaySession,
+    operation: 'switch', target: 'alpha',
+  }));
+  const proposal = prepared.proposal;
+  assert.equal(prepared.state.state, 'SWITCH_ONLY', 'G5 trusted public selection did not prepare SWITCH_ONLY');
+  assert.equal(proposal?.target, 'alpha', 'G5 trusted selection targeted a foreign project');
   const transaction = g5SpawnSync('bash', [join(root, 'scripts', 'project.sh'), 'switch', 'alpha',
     '--session-id', effect.replaySession, '--tx', proposal.tx,
     '--expected-epoch', String(proposal.expected_epoch)], {
@@ -3337,14 +3342,14 @@ async function g5ProjectSwitch(effect) {
   assert.equal(transaction.status, 0, `G5 project transaction failed: ${transaction.stderr || transaction.stdout}`);
   const state = effect.substrate.readProjectState(effect.gstack, effect.replaySession, effect.projects).value;
   const binding = effect.substrate.validatedBindingForState(state, effect.projects);
-  assert.equal(state.state, 'BOUND', 'G5 project transaction did not end BOUND');
+  assert.equal(state.state, 'TURN_ACTIVE', 'G5 project transaction did not preserve same-event authority');
   assert.equal(binding.project, 'alpha', 'G5 project transaction bound a foreign project');
   effect.boundProject = 'alpha';
   effect.lastSwitch = { proposal, state, binding };
-  return { primitive: 'project-switch-alpha', route, transaction_exit: transaction.status,
+  return { primitive: 'project-switch-alpha', route, proposal, transaction_exit: transaction.status,
     transaction_stdout_sha256: sha256(transaction.stdout), authority_state_before_sha256: before,
     authority_state_after_sha256: sha256(readFileSync(statePath)), canonical_target_relative: 'projects/alpha',
-    confined_under_effect_root: true, result: 'SWITCHED_TERMINAL' };
+    confined_under_effect_root: true, result: 'SWITCHED_TURN_ACTIVE' };
 }
 
 async function g5BeginProjectTurn(effect, label) {
@@ -3394,21 +3399,42 @@ function g5DeniedScopeProbe(effect, label, sessionId, toolInput) {
     permission_reason_sha256: sha256(String(specific.permissionDecisionReason || '')), result: 'DENIED' };
 }
 
+function g5DelegatedScopeProbe(effect, label, sessionId, toolInput) {
+  const hookPath = join(root, '.claude', 'hooks', 'project-scope-guard.mjs');
+  const payload = { session_id: sessionId, prompt_id: sessionId,
+    cwd: effect.gstack, transcript_path: effect.transcript, tool_name: 'Read', tool_input: toolInput };
+  const hookInput = JSON.stringify(payload);
+  const hook = g5SpawnSync(process.execPath, [hookPath], {
+    cwd: effect.gstack, env: g5ProjectEnv(effect), input: hookInput,
+  });
+  assert.equal(hook.status, 0, `G5 ${label} delegated scope probe crashed: ${hook.stderr || hook.stdout}`);
+  const response = hook.stdout.trim() ? JSON.parse(hook.stdout) : null;
+  assert.notEqual(response?.hookSpecificOutput?.permissionDecision, 'deny',
+    `G5 ${label} explicit absolute path was not delegated`);
+  return { label, transport: 'HERMETIC_HOOK_REPLAY', hook_kind: 'PreToolUse/project-scope-guard',
+    hook_script_sha256: sha256(readFileSync(hookPath)), hook_input_sha256: sha256(hookInput),
+    hook_exit: hook.status, result: 'DELEGATED' };
+}
+
 function g5RunT4DenialProbes(effect) {
   const proposal = effect.lastSwitch?.proposal;
   assert.ok(proposal, 'G5 T4 denial probes lack the consumed switch transaction');
+  const statePath = join(effect.gstack, '.claude', `.session-project-${effect.replaySession}`);
+  const before = readFileSync(statePath);
   const replay = g5SpawnSync('bash', [join(root, 'scripts', 'project.sh'), 'switch', 'alpha',
     '--session-id', effect.replaySession, '--tx', proposal.tx,
     '--expected-epoch', String(proposal.expected_epoch)], {
     cwd: effect.gstack, env: g5ProjectEnv(effect),
   });
-  assert.notEqual(replay.status, 0, 'G5 T4 consumed transaction replay was accepted');
+  assert.equal(replay.status, 0, `G5 T4 committed replay failed: ${replay.stderr || replay.stdout}`);
+  assert.equal(JSON.parse(replay.stdout).replayed, true, 'G5 T4 committed replay did not identify itself');
+  assert.deepEqual(readFileSync(statePath), before, 'G5 T4 committed replay changed authority bytes');
   const probes = [{ label: 'consumed-transaction', transaction_exit: replay.status,
-    stderr_sha256: sha256(replay.stderr), result: 'DENIED' }];
-  probes.push(g5DeniedScopeProbe(effect, 'foreign-beta-path', effect.replaySession,
+    stdout_sha256: sha256(replay.stdout), result: 'READ_ONLY_REPLAY' }];
+  probes.push(g5DelegatedScopeProbe(effect, 'foreign-beta-absolute-path', effect.replaySession,
     { file_path: join(effect.beta, 'docs', 'canary.txt') }));
   probes.push(g5DeniedScopeProbe(effect, 'wrong-session', `${effect.replaySession}-foreign`,
-    { file_path: join(effect.alpha, 'docs', 'canary.txt') }));
+    { file_path: 'docs/canary.txt' }));
   effect.guard_probes.push(...probes);
   return probes;
 }
@@ -3456,12 +3482,23 @@ async function initializeG5EffectHarness(fixture, isolation, nativeSessionId) {
   } else if (fixture.task === 'T7') {
     const old = await g5ProjectSwitch(effect);
     effect.oldAuthority = old;
+    const closed = await g5WithProcessEnv(g5ProjectEnv(effect), async () =>
+      effect.substrate.closeAttestedProjectEvent({
+        gstackRoot: effect.gstack,
+        projectsRoot: effect.projects,
+        sessionId: effect.replaySession,
+        eventId: old.proposal.event_id,
+        boundaryId: old.proposal.boundary_id,
+        outcome: 'stop',
+      }));
+    assert.equal(closed.state, 'TURN_CLOSED', 'G5 T7 prelude did not close the active selection event');
     const deactivate = g5SpawnSync('bash', [join(root, 'scripts', 'project.sh'), 'deactivate', effect.replaySession], {
       cwd: effect.gstack, env: g5ProjectEnv(effect),
     });
     assert.equal(deactivate.status, 0, `G5 T7 prelude deactivate failed: ${deactivate.stderr || deactivate.stdout}`);
     effect.boundProject = '';
-    effect.prelude_receipts.push(old, { primitive: 'deactivate-to-no-pin',
+    effect.prelude_receipts.push(old, { primitive: 'close-selection-event', result: 'TURN_CLOSED' },
+      { primitive: 'deactivate-to-no-pin',
       transaction_exit: deactivate.status, result: 'NO_PIN' });
   }
   effect.seedSnapshot = g5TreeSnapshot(effect.root);
@@ -3613,8 +3650,10 @@ function auditG5Effect(fixture, isolation) {
   if (fixture.task === 'T4') {
     if (!actual.includes('project-read-alpha-canary')) failures.push('alpha canary was not read');
     if (effect.guard_probes.length !== 3
-        || effect.guard_probes.some((probe) => probe.result !== 'DENIED')) {
-      failures.push('stale/foreign project authority probes were not independently denied');
+        || effect.guard_probes[0]?.result !== 'READ_ONLY_REPLAY'
+        || effect.guard_probes[1]?.result !== 'DELEGATED'
+        || effect.guard_probes[2]?.result !== 'DENIED') {
+      failures.push('receipt replay, explicit absolute delegation, or display-alias denial semantics changed');
     }
   } else if (fixture.task === 'T5') {
     if (!existsSync(effect.handoffPath)) failures.push('design-brief handoff missing');
@@ -3637,7 +3676,10 @@ function auditG5Effect(fixture, isolation) {
       .split('\n').filter(Boolean);
     if (observations.length !== 1) failures.push('observation append count mismatch');
   } else if (fixture.task === 'T7') {
-    if (!effect.oldAuthorityProbe || effect.oldAuthorityProbe.status === 0) failures.push('stale authority replay was not rejected');
+    if (!effect.oldAuthorityProbe || effect.oldAuthorityProbe.status !== 0
+        || effect.oldAuthorityProbe.state_bytes_unchanged !== true) {
+      failures.push('old committed tx was not a read-only receipt replay');
+    }
     if (!effect.checkpointPath || !existsSync(effect.checkpointPath)) failures.push('NO_PIN checkpoint missing');
     if (!effect.scratchPath || !existsSync(effect.scratchPath)) failures.push('authorized scratch missing');
     const create = effect.receipts.find((receipt) => receipt.primitive === 'create-authorized-scratch');
@@ -3823,13 +3865,17 @@ function applyG5Transitions(fixture, turnNumber, isolation) {
       const effect = isolation.effect;
       const proposal = effect?.oldAuthority?.route?.state?.switch || effect?.oldAuthority?.proposal;
       assert.ok(effect && proposal, 'G5 expired-authority probe lacks a production transaction');
+      const statePath = join(effect.gstack, '.claude', `.session-project-${effect.replaySession}`);
+      const before = readFileSync(statePath);
       const replay = g5SpawnSync('bash', [join(root, 'scripts', 'project.sh'), 'switch', 'alpha',
         '--session-id', effect.replaySession, '--tx', proposal.tx,
         '--expected-epoch', String(proposal.expected_epoch)], {
         cwd: effect.gstack, env: g5ProjectEnv(effect),
       });
+      replay.state_bytes_unchanged = readFileSync(statePath).equals(before);
       effect.oldAuthorityProbe = replay;
-      receipt.result = replay.status !== 0 ? 'OLD_EPOCH_INVALID' : 'FAILED';
+      receipt.result = replay.status === 0 && replay.state_bytes_unchanged
+        && JSON.parse(replay.stdout).replayed === true ? 'OLD_TX_RECEIPT_ONLY' : 'FAILED';
       receipt.probe_exit = replay.status;
       receipt.probe_stderr_sha256 = sha256(replay.stderr);
     } else receipt.result = 'UNKNOWN_PRIMITIVE';
@@ -5105,7 +5151,7 @@ function validateG5StoredEffectAudit(fixture, evidence, expected) {
   assert.equal(audit.receipts.length, allowed.length,
     `G5 stored effect receipt count mismatch: ${expected.cell_id}`);
   const expectedResults = {
-    'project-switch-alpha': 'SWITCHED_TERMINAL',
+    'project-switch-alpha': 'SWITCHED_TURN_ACTIVE',
     'project-read-alpha-canary': 'READBACK_MATCH',
     'check-design-brief-handoff': 'MISSING_REJECTED',
     'write-design-brief-handoff': 'CREATED',
@@ -5136,8 +5182,12 @@ function validateG5StoredEffectAudit(fixture, evidence, expected) {
   }
   if (fixture.task === 'T4') {
     assert.equal(audit.guard_probes.length, 3, `G5 T4 guard probe count mismatch: ${expected.cell_id}`);
-    assert.ok(audit.guard_probes.every((probe) => probe?.result === 'DENIED'),
-      `G5 T4 guard probe denial mismatch: ${expected.cell_id}`);
+    assert.equal(audit.guard_probes[0]?.result, 'READ_ONLY_REPLAY',
+      `G5 T4 committed replay mismatch: ${expected.cell_id}`);
+    assert.equal(audit.guard_probes[1]?.result, 'DELEGATED',
+      `G5 T4 explicit absolute delegation mismatch: ${expected.cell_id}`);
+    assert.equal(audit.guard_probes[2]?.result, 'DENIED',
+      `G5 T4 display-alias authority denial mismatch: ${expected.cell_id}`);
   }
   if (fixture.task === 'T7') {
     const create = audit.receipts.find((receipt) => receipt.primitive === 'create-authorized-scratch');

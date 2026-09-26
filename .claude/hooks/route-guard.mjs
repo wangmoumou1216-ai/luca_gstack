@@ -294,27 +294,6 @@ function projectIdentityText(prompt) {
   return text;
 }
 
-function explicitNewProjectName(prompt) {
-  const patterns = [
-    /^\s*(?:请)?(?:新建|创建)(?:一个)?(?:新)?项目\s*(?:名为|叫|名称(?:是|为)|[:：])?\s*(.+?)\s*$/i,
-    /^\s*(?:请)?(?:新项目|一个新项目)\s*(?:名为|叫|名称(?:是|为)|[:：])\s*(.+?)\s*$/i,
-    /^\s*(?:请)?(?:新建|创建)(?:一个)?(?:名为|叫)\s*(.+?)\s*的?新项目\s*$/i,
-    /^\s*new\s+project\s*(?::|named\s+)\s*(.+?)\s*$/i,
-  ];
-  const match = patterns.map(pattern => prompt.match(pattern)).find(Boolean);
-  if (!match) return '';
-  const raw = match[1].trim();
-  if (/\s(?:或|或者|还是|or|and)\s/i.test(raw)) return '';
-  const quoted = raw.match(/^[「『“"'](.+)[」』”"']$/u);
-  const name = quoted ? quoted[1].trim() : raw;
-  // Unquoted declarations deliberately require one token. Names containing
-  // spaces remain supported through explicit quotes, preventing a trailing
-  // requirement sentence from being mistaken for the project identity.
-  if (!quoted && /\s/.test(name)) return '';
-  if (!name || name.length > 80) return '';
-  try { return validateProjectName(name); } catch { return ''; }
-}
-
 function classifyRoutingScope(prompt, projects, currentProject) {
   const namedProject = projects.find(name => nameMatchesIn(projectIdentityText(prompt), name));
   // Some clients surface hook output inside the next visible message. That
@@ -376,187 +355,6 @@ function isContinuation(prompt) {
     || AGENT_PROGRESS_FOLLOWUP_RE.test(text)
     || COMPLETION_NOTICE_FOLLOWUP_RE.test(text)
     || CONCURRENT_SESSION_CONTEXT_RE.test(text);
-}
-
-function hasProjectWorkIntent(prompt, routingScope) {
-  if (routingScope?.kind === 'pure_framework_meta') return false;
-  if (/怎么做|如何做|怎么实现|如何实现|为什么|是什么/.test(prompt)) return false;
-  const directAction = /^\s*(?:(?:请|帮我|麻烦|能不能|可以|继续|接着)\s*)*(?:做(?:个|一个|一下)?|创建|新建|新增|添加|增加|修改|改造|优化|修复|开发|实现|设计|生成|搭建|上线|接入|评审|审查|检查|重构|迁移|删除|调整|更新)/;
-  const baAction = /^\s*(?:(?:请|帮我|麻烦|能不能|可以)\s*)?把.{1,60}(?:做|创建|新增|添加|修改|改造|优化|修复|实现|设计|生成|重构|迁移|删除|调整|更新)/;
-  const desireAction = /^\s*(?:我想|我要|我需要|需要|希望|能不能|可以).{0,30}(?:做|创建|新建|新增|添加|修改|改造|优化|修复|开发|实现|设计|生成|搭建|上线|接入|重构|迁移|删除|调整|更新)/;
-  const projectObject = /产品|业务|需求|页面|功能|原型|交互|用户流程|接口|数据库|应用|网站|代码库|仓库|模块|组件|登录|注册|订单|客户|报表|工作流|\bprd\b|技术规格|设计稿/i;
-  return (directAction.test(prompt) || baAction.test(prompt) || desireAction.test(prompt))
-    && projectObject.test(prompt);
-}
-
-function projectGate(prompt, projects, currentProject, routingScope) {
-  const text = normalize(prompt);
-  if (!text) return null;
-  // 寒暄/确认类非任务输入不进项目门禁（与 skill 路由层 looksLikeTask 同口径；红队 C7 实测漏网）
-  if (/^\s*(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i.test(prompt)) {
-    return null;
-  }
-  // New-project signals must not be misread as switching to an existing
-  // project whose name is a substring (e.g. "项目" ⊂ "新项目"). Strip the
-  // trigger words before matching existing project names.
-  const newProjectTriggers = ['新项目', '新需求', '新功能'];
-  const hasNewProjectSignal = newProjectTriggers.some(t => text.includes(normalize(t)));
-  const hasNewProjectDeclaration = /新项目|新建(?:一个)?项目|创建(?:一个)?(?:名为.{1,80})?新?项目|new\s+project/i.test(prompt);
-  const declaredNewProject = explicitNewProjectName(prompt);
-  // 与 projectIdentityText 同一份实现：剥同一组触发词、同一套空白处理。此前这里是逐字
-  // 重复的第二份副本，改判据时必然漂移（本轮 ②③ 就要求两处同步）。
-  const searchText = projectIdentityText(prompt);
-
-  const named = routingScope?.namedProject || projects.find(name => nameMatchesIn(searchText, name));
-
-  // REQ-SCOPE-NULL-FIRST（§6.1）：作用域否定的结果绝不能走到会改绑定的分支。
-  // 实测缺陷（改前基线为红）：`new project: 不涉及项目的route-guard` 里的否定词**命中**，
-  // 下游信号被 NEGATED_DOWNSTREAM_SCOPE_RULES 剥掉 → mixed_ambiguous 短路消失 →
-  // projectGate 继续往下 → 撞上 explicitNewProjectName → `project.sh new`：
-  // 真的建一个叫「不涉及项目的route-guard」的项目、解绑当前、三条软链重指。
-  // 危险方向是否定词**命中**而非漏掉，所以修法不是补词表（扩得越全越危险），而是臂序：
-  // 空臂先于 explicitNewProjectName 评估。
-  // 边界：**只在没有具名下游项目时**才提前返回——具名项目必须继续 gate
-  // （SC-20260523-002：`route-guard 在 muse 里怎么走` 仍须 gate），故 named 上提到这里。
-  if (routingScope?.kind === 'pure_framework_meta' && !named) return null;
-
-  // 深审 MAJOR-5：上面那条以 `!named` 为条件，于是**否定短语里只要嵌了一个真实项目名**
-  // （`new project: 不涉及项目的muse路由`）就绕开——`named` 为真、kind 变 named_downstream、
-  // 空臂被跳过、explicitNewProjectName 照样开火，实测真的建出
-  // project="不涉及项目的muse路由"（对照：把 muse 换成 zzz → NONE，证明差别就在这里）。
-  // §6.1 的原文是「使**任何**作用域否定结果都到不了会改绑定的分支」，故按否定信号本身闸，
-  // 而不是按有没有具名项目。未命中否定规则的输入完全不受影响（SC-20260523-002 的
-  // `route-guard 在 muse 里怎么走` 无否定词，照常 gate）。
-  if ((routingScope?.negatedDownstreamSignals || []).length > 0) return null;
-
-  if (declaredNewProject) {
-    const existing = projects.find(name => normalize(name) === normalize(declaredNewProject));
-    if (existing) {
-      return {
-        decision: 'PROJECT_STOP',
-        projectAction: 'new_project_name_conflict',
-        project: existing,
-        projects,
-        message: `项目 ${existing} 已存在；请确认是切换到它，还是为新项目换一个名字。`,
-      };
-    }
-    return {
-      decision: 'PROJECT_SWITCH',
-      projectAction: 'create_new_project',
-      operation: 'new',
-      project: declaredNewProject,
-      message: `新建并绑定 ${declaredNewProject} 后再继续路由。`,
-    };
-  }
-
-  // explicit downstream identity 永远先于 meta/content 豁免。即使请求审计的是该项目的
-  // hook/路由，具名项目也必须先绑定；同一项目已经激活时视为 gate 已满足。
-  if (named && normalize(named) !== normalize(currentProject)) {
-    return {
-      decision: 'PROJECT_SWITCH',
-      projectAction: 'switch_existing_project',
-      project: named,
-      message: `切换到 ${named} 后再继续路由。`,
-    };
-  }
-  if (/当前项目|这个项目|本项目/.test(prompt)) return null;
-
-  // 纯 luca_gstack/framework meta 不消费 downstream project context，跳过无项目兜底网。
-  if (routingScope?.kind === 'pure_framework_meta') return null;
-
-  // Audit C2: meta/audit/help questions are framework-level, not project work.
-  // Skip Project Gate so they route via the normal skill/STOP path instead of
-  // forcing "新项目还是继续老项目" on what is clearly a question about the system.
-  // Guarded by !named: an audit-verb query that NAMES an existing project must
-  // still gate (handled by the named-switch below), not be exempted here
-  // (红线 SC-20260523-002; fixes C2 shadowing a genuine project switch).
-  if (!named && /^\s*(评估|审计|查看|看看|为什么|是什么|什么是|解释|说明|讲一下|讲讲|你能|你会|能不能告诉|帮我看看|帮我看一下|帮我解释|给我解释|帮我讲)/.test(prompt)) {
-    return null;
-  }
-  // Audit M2: content-tool skills are standalone-capable — they don't need a
-  // project context (e.g. /idea ingesting meeting notes, /compare diffing two
-  // files, agent-browser/web-access fetching URLs). Let them route via
-  // skillDecision; don't short-circuit them through the project gate.
-  if (SESSION_HANDOFF_INTENT_RE.test(prompt) || /会议纪要|会议语料|语音稿|语音转文字|转文字稿|原始语料|讨论记录|语料转需求|整理这段记录|梳理这段记录|对比|比较一下|版本对比|两个方案比较|看看区别|哪个好|截图|浏览网站|访问网页|浏览器操作|爬取|抓取|翻译/.test(prompt)) {
-    return null;
-  }
-  // Audit M3: framework self-maintenance（code-hygiene 清理/体检或 code-review
-  // 审查 luca 自身 .mjs/.py/hooks/scripts）是 luca_gstack Meta task，不是下游
-  // project work。仅当相应工程触发词与 framework path/artifact 共现时豁免
-  // Project Gate，避免把真正的下游代码任务过度豁免；无 active project 时仍能
-  // 让 /code-hygiene 或 /code-review 到达 skill routing。
-  // Guarded by !named (same as C2 above): naming an existing project must still
-  // gate — else "清理一下 muse 里 scripts/ 的死代码" silently swallows the switch
-  // and runs against the wrong project (红线 SC-20260523-002). 2026-07-31: 评审动词
-  // 同批纳入（否则框架自评审在无激活项目时被 PROJECT_STOP，而 meta session 又不得
-  // switch）；latin 词写容空格形，因本处读原文 prompt 而词表读 normalize 去空格后的
-  // 文本，不容空格会出现"词表中了、豁免没中"的错配。边界：仍要求共现框架路径/制品词，
-  // 故"评审一下我刚做的框架改动"（无路径字样）仍走 gate——有意保守，不为评审拆松 gate。
-  if (!named &&
-      /清理|死代码|代码体检|工程体检|cleanup|完成前验证|code-hygiene|代码去重|弱类型|代码质量|代码审查|代码评审|评审代码|代码\s*review/i.test(prompt) &&
-      /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/.test(prompt)) {
-    return null;
-  }
-
-  if (/老项目|已有项目|已有的项目|旧项目|继续项目|上次那个项目|接着上次|上次的项目|之前那个项目|之前的项目|之前那个/.test(prompt) && !named) {
-    return {
-      decision: 'PROJECT_STOP',
-      projectAction: 'select_existing_project',
-      projects,
-      message: '你说的是老项目，请先指定要继续哪个项目。',
-    };
-  }
-
-  if (!named && /我想做一个需求|我想做个需求|做一个需求|做个需求|我想做一个项目|我想做个项目/.test(prompt)) {
-    return {
-      decision: 'PROJECT_STOP',
-      projectAction: 'clarify_project_scope',
-      currentProject: currentProject || '',
-      projects,
-      message: '请先确认这是新项目、当前项目里的需求，还是继续老项目。',
-    };
-  }
-
-  if (hasNewProjectDeclaration) {
-    return {
-      decision: 'PROJECT_STOP',
-      projectAction: 'confirm_new_project_name',
-      currentProject: currentProject || '',
-      projects,
-      message: '这是新项目声明，但项目名缺失或不唯一；请给出一个明确项目名（含空格时用引号）。',
-    };
-  }
-
-  // An unscoped "I want to build X" request is still a project-ownership
-  // question even when a display/current project exists. Keep that human gate
-  // separate from the skill-layer no-keyword fallback below.
-  if ((hasNewProjectSignal && !currentProject)
-      || (!named && /我想做一个.+|我想做个.+|我要做一个.+|我要做个.+/.test(prompt))) {
-    return {
-      decision: 'PROJECT_STOP',
-      projectAction: 'confirm_new_project',
-      currentProject: currentProject || '',
-      projects,
-      message: '这是新项目或当前项目里的新需求，请先确认项目归属；若是多能力复杂需求，确认后先读 .claude/agents/plan-agent.md 走 Plan Agent，不要直接进单个 skill。',
-    };
-  }
-
-  // NO_PIN 只是状态，不是项目意图。只有“动作 + 项目对象”同时出现，才要求用户先绑定
-  // 项目；普通陈述、纠正和问答交给后续路由，不再由长度/标点制造 Project Gate。
-  if (!currentProject && hasProjectWorkIntent(prompt, routingScope)) {
-    return {
-      decision: 'PROJECT_STOP',
-      projectAction: 'choose_new_or_existing',
-      projects,
-      message: '当前没有激活项目，请先确认新项目还是继续老项目。',
-    };
-  }
-
-  // 对话延续豁免放在所有明确项目工作检查之后：续接本身不制造 gate，但“继续做原型”
-  // 这类仍要落项目产物的请求在 NO_PIN 下必须先绑定。
-  if (isContinuation(prompt)) return null;
-
-  return null;
 }
 
 function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
@@ -1333,35 +1131,7 @@ function buildDecisionCore(prompt) {
   const projects = listProjects();
   const currentProject = readCurrentProject(projects);
   const routingScope = classifyRoutingScope(prompt, projects, currentProject);
-
-  if (routingScope.kind === 'mixed_ambiguous') {
-    return {
-      decision: 'NEEDS_CONTEXT',
-      projectAction: 'clarify_framework_or_project_scope',
-      projects,
-      scopeSignals: {
-        framework: routingScope.frameworkSignals,
-        downstream: routingScope.downstreamSignals,
-      },
-      message: '请求同时指向 luca_gstack 框架与未具名项目，请先说明要改框架本身，还是哪个下游项目。',
-    };
-  }
-
-  const gate = projectGate(prompt, projects, currentProject, routingScope);
   const complexity = complexityDecision(prompt, routingScope);
-
-  // The gate short-circuits before skill/complexity routing. Carry the
-  // complexity result through so a complex requirement bundled into a
-  // new-project / switch message still flags Plan Agent at the gate, instead
-  // of being silently downgraded once the project is confirmed.
-  if (gate) {
-    return {
-      ...gate,
-      complexityScore: complexity.complexityScore,
-      signals: complexity.signals,
-      planHint: complexity.complexityScore >= 6,
-    };
-  }
 
   // 2026-07-13 fable review B-F1：显式 / 或 $ 直呼 = 用户最新明确请求（规则优先级 #1），不被
   // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
@@ -1640,73 +1410,21 @@ if (prompt) {
   if (hookSessionId) {
     try {
       if (projectStateError) throw new Error(projectStateError);
-      const current = topLevelProjectState || readProjectState(projectRoot, hookSessionId).value;
-      const binding = validatedBindingForState(current, PROJECTS_ROOT);
       const releaseRequested = prompt === NATIVE_RELEASE_DIRECTIVE;
-      const named = decision.decision === 'HARNESS_MESSAGE'
-        ? ''
-        : listProjects().find(name => nameMatchesIn(projectIdentityText(routingPrompt), name));
-      // A display symlink is never enough to bind a no-pin session. Explicitly
-      // naming that same display project still creates a real switch transaction.
-      if (named && !binding && decision.decision !== 'PROJECT_SWITCH') {
-        decision = {
-          ...decision,
-          decision: 'PROJECT_SWITCH',
-          projectAction: 'switch_existing_project',
-          project: named,
-          message: `为本 session 事务绑定 ${named} 后再继续。`,
-        };
-      }
-
-      if (!releaseRequested && decision.decision === 'PROJECT_SWITCH' && decision.project) {
-        if (READ_GRANTS_ENABLED) {
-          try { closeGrants({ gstackRoot: projectRoot, sessionId: hookSessionId, scope: 'session' }); }
-          catch (error) { hints.push(`[route-guard] ⛔ READ GRANTS — 项目切换前撤销失败：${error.message}`); }
-        }
-        const operation = decision.operation === 'new' ? 'new' : 'switch';
-        const tx = randomUUID();
-        const expectedEpoch = binding?.epoch || 0;
-        queueProjectEventCandidate({
-          gstackRoot: projectRoot,
-          projectsRoot: PROJECTS_ROOT,
-          sessionId: hookSessionId,
-          boundaryId: hookBoundaryId,
-          cwd: hookPayload.cwd || projectRoot,
-          harness: hookHarness,
-          prompt,
-          promptId: hookPayload.prompt_id || '',
-          intent: {
-            kind: 'switch',
-            tx,
-            operation,
-            target: decision.project,
-            expected_epoch: expectedEpoch,
-          },
-        });
-        decision = {
-          ...decision,
-          tx,
-          expectedEpoch,
-          projectMutation: `./scripts/project.sh ${operation} ${decision.project} --session-id ${hookSessionId} --tx ${tx} --expected-epoch ${expectedEpoch}`,
-        };
-        try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch { }
-        try { unlinkSync(join(projectRoot, '.claude', `.session-projnag-${hookSessionId}`)); } catch { }
-      } else {
-        queueProjectEventCandidate({
-          gstackRoot: projectRoot,
-          projectsRoot: PROJECTS_ROOT,
-          sessionId: hookSessionId,
-          boundaryId: hookBoundaryId,
-          cwd: hookPayload.cwd || projectRoot,
-          harness: hookHarness,
-          prompt,
-          promptId: hookPayload.prompt_id || '',
-          intent: { kind: releaseRequested ? 'release' : 'turn' },
-        });
-        // Read grants remain closed until a later PreToolUse/Stop attests the
-        // native event. UserPromptSubmit cannot mint authority from text.
-        if (releaseRequested) hints.push('[route-guard] 本会话解绑仅在 PreToolUse/Stop 验证精确原生用户事件后生效；不要运行指定 session 的解绑 CLI。');
-      }
+      queueProjectEventCandidate({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        sessionId: hookSessionId,
+        boundaryId: hookBoundaryId,
+        cwd: hookPayload.cwd || projectRoot,
+        harness: hookHarness,
+        prompt,
+        promptId: hookPayload.prompt_id || '',
+        intent: { kind: releaseRequested ? 'release' : 'turn' },
+      });
+      // UserPromptSubmit records only neutral turn evidence. It never turns a
+      // project-name mention into a selection proposal or a switch command.
+      if (releaseRequested) hints.push('[route-guard] 本会话解绑仅在 PreToolUse/Stop 验证精确原生用户事件后生效；不要运行指定 session 的解绑 CLI。');
     } catch (error) {
       hints.push(`[route-guard] ⛔ PROJECT STATE — ${String(error?.message || error)}。本轮不得访问项目路径。`);
     }

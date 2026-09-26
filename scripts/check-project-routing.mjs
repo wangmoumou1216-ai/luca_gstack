@@ -48,11 +48,11 @@ try {
   assert.equal(counterBefore, counterAfter, 'dry-run must not change .session-turn-count');
   assert.deepEqual(readdirSync(claudeDir).sort(), filesBefore, 'dry-run must not create project state files');
   const decision = JSON.parse(result.stdout);
-  assert.equal(decision.decision, 'PROJECT_STOP');
-  assert.equal(decision.projectAction, 'select_existing_project');
-  assert.deepEqual(decision.projects, ['luca-dev', 'ai 宠物提示']);
+  assert.equal(decision.decision, 'NONE', 'route guard must remain neutral instead of selecting a project');
+  assert.equal(decision.projectAction, undefined);
+  assert.equal(decision.targetProject, undefined);
 
-  console.log('PASS project routing dry-run (isolated fixture; checkout aliases not inspected)');
+  console.log('PASS project routing dry-run is neutral and side-effect free (isolated fixture; aliases not inspected)');
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }

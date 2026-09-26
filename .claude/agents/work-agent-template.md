@@ -18,6 +18,7 @@
 | `{{ROLE}}` | 一句话角色描述 | `Shell Script Implementor` |
 | `{{GOAL}}` | 一句话目标（可验证） | `创建 scripts/verify.sh，使其语法合法且退出码为 0` |
 | `{{TASK_CONTEXT}}` | 任务背景 | `Phase 3 / 标准开发规范升级` |
+| `{{WORK_ROOT}}` | 派发时解析并冻结的绝对工作根 | `/Users/luca/Desktop/项目/example` |
 | `{{INPUT_FILES}}` | 文件列表（含读取原因） | `- plan-agent.md — 了解断言列表` |
 | `{{TASK_DESCRIPTION}}` | 具体任务描述（自然语言） | `创建验证脚本，检查 git、docs、hooks 共 26 项` |
 | `{{INHERITED_CONSTRAINTS}}` | 继承约束列表 | `- framework/ 只读` |
@@ -41,10 +42,16 @@
 | **Role** | {{ROLE}} |
 | **Singular Goal** | {{GOAL}} |
 | **Dispatched by** | Orchestrator — {{TASK_CONTEXT}} |
+| **Frozen Work Root** | {{WORK_ROOT}} |
 | **Protected Paths** | {{PROTECTED_PATHS}} |
 
 **我的唯一职责：** {{GOAL}}
 **我不做的事：** 规划、调度其他 Agent、修改职责范围以外的文件、评估自己的产出（质量门控是独立的测试环节）。
+
+所有输入与输出路径在派发时相对 `{{WORK_ROOT}}` 解析为固定绝对路径。后台执行期间不得重新读取
+共享 `docs/`、`.claude/workflow-state.yaml` 或 `.claude/current-topic.txt` 显示别名来改变落点；
+之后的 session 项目选择也不改变本任务根。明确取消时停止尚未派发的新工具动作，并如实区分
+已发出、仍在途和宿主无法中断的操作。
 
 > **MODE 前置守卫：** 读取 `{{MODE}}` 字段，若为 `skill_execution`，**跳过 SECTION 1-3 的 task_execution 执行协议，直接执行 SECTION 0b**。若为 `task_execution`（或字面量 `{{MODE}}` 未填写），按默认流程执行。
 
@@ -63,10 +70,10 @@
 Step 1  [Read Skill] 完整读取 {{SKILL_PATH}}，必须读到最后一行（含 FILE_END 标记）
 Step 2  [Follow Protocol] 按 SKILL.md 中的执行协议完整执行，不跳步
 Step 3  [Produce Outputs] 将产出物写入 SKILL.md 规定的输出路径
-Step 4  [Write Handoff] 将 handoff summary 写入 docs/handoff/YYYY-MM-DD-{{SKILL_TO_EXECUTE}}-handoff.md
+Step 4  [Write Handoff] 将 handoff summary 写入 {{WORK_ROOT}}/docs/handoff/YYYY-MM-DD-{{SKILL_TO_EXECUTE}}-handoff.md
         handoff 必须包含：skill 名称、产出路径列表、gate_result（PASS/FAIL）、关键决策摘要
 Step 5  [Done Criteria]
-        - [ ] docs/handoff/*-{{SKILL_TO_EXECUTE}}-handoff.md 文件存在
+        - [ ] {{WORK_ROOT}}/docs/handoff/*-{{SKILL_TO_EXECUTE}}-handoff.md 文件存在
         - [ ] handoff 包含 gate_result 字段
         - [ ] SKILL.md 规定的主要产出文件存在
 Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON

@@ -34,6 +34,14 @@
 
 import { readFileSync, existsSync, lstatSync, realpathSync } from 'fs';
 import { isAbsolute, join, relative, resolve } from 'path';
+import { discoverControlState } from '../../scripts/controlled-change.mjs';
+import {
+  authorizePublicSelection,
+  expandedSelectionCommand,
+  matchExpandedSelectionState,
+  parseExpandedSelectionCommand,
+  parsePublicSelectionCommand,
+} from './lib/project-selection.mjs';
 
 // harness 门（P0/WS-A0 接线，2026-07-25）：CC 专有强制动词（permissionDecision:deny /
 // updatedInput）只在**正向确定是 Codex** 时降级为纯文本 advisory——claude/unknown 照常输出，
@@ -262,6 +270,28 @@ function classifyPath(p, binding) {
   const rootReal = realOrLiteral(gstackRoot);
   const underRoot = (abs, ...parts) => realTargetOf(abs) || join(rootReal, ...parts);
   const gReal = realTargetOf(s);
+  const lexicalAbsolute = isAbsolute(s) ? resolve(s) : resolve(gstackRoot, s);
+  const lexicalDocs = resolve(gd);
+  if (samePath(lexicalAbsolute, lexicalDocs) || insidePath(lexicalAbsolute, lexicalDocs)) {
+    const rel = relative(lexicalDocs, lexicalAbsolute);
+    const tail = ['docs', ...(rel ? rel.split('/') : [])];
+    const redirected = binding && safeSegments(tail) ? confinedProjectPath(binding, tail) : null;
+    return { scoped: true, redirected, unsafe: !safeSegments(tail) };
+  }
+  if (samePath(lexicalAbsolute, resolve(gState))) {
+    return { scoped: true, redirected: binding ? absState(binding) : null };
+  }
+  if (samePath(lexicalAbsolute, resolve(gTopic))) {
+    return { scoped: true, redirected: binding ? absTopic(binding) : null };
+  }
+  if (insidePath(lexicalAbsolute, resolve(gstackRoot))
+      && (!gReal || !insidePath(gReal, rootReal))) {
+    // A path lexically under the framework that resolves outside it is an
+    // alias boundary, not an explicit PROJECTS_ROOT path. This keeps shared
+    // display aliases, arbitrary backdoors and dangling links protected while
+    // still allowing callers to use the target's true absolute path directly.
+    return { scoped: true, redirected: null, direct: true, unsafe: true };
+  }
   if (gReal
       && insidePath(s, gstackRoot)
       && insidePath(gReal, rootReal)
@@ -279,13 +309,10 @@ function classifyPath(p, binding) {
     if (pathKey(s).startsWith(pathKey(root) + '/')) {
       const rest = s === root ? '' : s.slice(root.length + 1);
       const [project, ...tail] = rest.split('/');
-      const insideBinding = binding && pathKey(project) === pathKey(binding.project);
-      return {
-        scoped: true,
-        redirected: insideBinding && safeSegments([project, ...tail]) ? confinedProjectPath(binding, tail) : null,
-        direct: true,
-        unsafe: !safeSegments([project, ...tail]),
-      };
+      if (!safeSegments([project, ...tail])) return { scoped: true, redirected: null, direct: true, unsafe: true };
+      // Explicit absolute paths already identify their target. A project pin is
+      // display/routing state, not extra filesystem authority.
+      return { scoped: false, direct: true, explicitAbsolute: true };
     }
   }
 
@@ -467,7 +494,10 @@ function sessionControlPlaneReference(tool, inp) {
 }
 
 function mentionsReadBrokerInvocation(command) {
-  return String(command || '').includes('scripts/project-read');
+  const source = String(command || '');
+  return /(?:^|[;&|\n])\s*(?:command\s+)?(?:(?:bash\s+)?(?:\/usr\/bin\/)?node\s+)?(?:\.\/)?scripts\/project-read\.mj(?:s|\?)(?:\b|\s)/.test(source)
+    || /(?:^|[;&|\n])\s*sh\s+-c\s+['"][^'"]*(?:\/usr\/bin\/)?node\s+(?:\.\/)?scripts\/project-read\.mjs\b/.test(source)
+    || /\$\(\s*(?:\/usr\/bin\/)?node\s+(?:\.\/)?scripts\/project-read\.mjs\b/.test(source);
 }
 
 function exactReadBrokerMaintenance(command) {
@@ -758,6 +788,15 @@ function variableProjectReference(cmd, binding) {
   }
   if (process.env.HOME) expanded = expanded.replace(/(^|[\s"'`=:(;&|])~(?=\/)/g, (_m, a) => a + process.env.HOME);
   if (expanded === original) return null;
+  const projectRoots = [PROJECTS_ROOT];
+  try { const real = realpathSync(PROJECTS_ROOT); if (!projectRoots.includes(real)) projectRoots.push(real); } catch { }
+  if (projectRoots.some(root => expanded.includes(root))) {
+    let outsideFramework = expanded;
+    for (const root of [gstackRoot, realTargetOf(gstackRoot)].filter(Boolean)) {
+      outsideFramework = outsideFramework.split(root).join('');
+    }
+    if (projectRoots.some(root => outsideFramework.includes(root))) return { expanded };
+  }
   const direct = directProjectPathsAllowed(expanded, binding);
   const shared = rewriteBash(expanded, binding);
   return direct.seen || shared.hasScoped ? { expanded } : null;
@@ -832,13 +871,6 @@ function relativeProjectReference(cmd, binding) {
 // 只把"命令段起始位"的 project.sh switch/new 当真调用 —— 防 echo/heredoc 里的字符串误置 pin。
 // 按 \n ; & | 切段，每段去掉前导 bash/sh，要求以（可选路径）project.sh 开头才算数
 // （`echo "...project.sh switch x"` 之类整段以 echo 开头，不再误触）。
-function parseExactSwitchMutation(cmd) {
-  const value = String(cmd || '').trim();
-  const match = value.match(/^(?:bash\s+)?(?:\.\/)?scripts\/project\.sh\s+(switch|new)\s+([^\s"';&|]+)\s+--session-id\s+([\w-]{1,36})\s+--tx\s+([A-Za-z0-9-]{8,128})\s+--expected-epoch\s+(\d+)$/);
-  if (!match) return null;
-  return { operation: match[1], target: match[2], session_id: match[3], tx: match[4], expected_epoch: Number(match[5]) };
-}
-
 function mentionsProjectMutation(cmd) {
   return /(?:^|[\s;&|])(?:\.\/)?scripts\/project\.sh\s+(?:switch|new)\b/.test(String(cmd || ''));
 }
@@ -848,14 +880,9 @@ function mentionsInternalProjectController(cmd) {
 }
 
 function exactMutationMatches(state, cmd) {
-  const parsed = parseExactSwitchMutation(cmd);
-  const sw = state?.switch;
-  return Boolean(parsed && sw
-    && parsed.session_id === sid
-    && parsed.operation === sw.operation
-    && parsed.target === sw.target
-    && parsed.tx === sw.tx
-    && parsed.expected_epoch === sw.expected_epoch);
+  const parsed = parseExpandedSelectionCommand(cmd);
+  const matched = parsed ? matchExpandedSelectionState({ parsed, state }) : null;
+  return Boolean(parsed && parsed.session_id === sid && matched?.mode === 'prepare');
 }
 
 // framework/ 只读母版保护（SF-002 宪法红线，保护磁盘母版资产）。与项目隔离正交——纯拒绝、不重定向。
@@ -1003,16 +1030,61 @@ function main() {
     const cmd = bashCommand;
     const maskedSearch = maskSearchPatternArguments(cmd);
     const guardCmd = maskedSearch.command;
-    if (state.state === 'SWITCH_ONLY') {
-      if (!observed.error && state.schema_version === substrate?.PROJECT_STATE_SCHEMA
+    const expandedSelection = parseExpandedSelectionCommand(cmd);
+    if (expandedSelection) {
+      const matched = expandedSelection.session_id === sid
+        ? matchExpandedSelectionState({ parsed: expandedSelection, state })
+        : null;
+      if (!observed.error && matched?.mode === 'replay') passThrough();
+      if (!observed.error && state.state === 'SWITCH_ONLY'
+          && state.schema_version === substrate?.PROJECT_STATE_SCHEMA
           && state.event_control?.current?.status === 'active' && exactMutationMatches(state, cmd)) passThrough();
-      if (mentionsProjectMutation(cmd) || mentionsInternalProjectController(cmd) || rewriteBash(cmd, null).hasScoped) {
+      return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+        permissionDecisionReason: authorityFailure || '内部项目选择 argv 与当前可信 proposal/receipt 不匹配。' } });
+    }
+    const requested = parsePublicSelectionCommand(cmd);
+    if (requested) {
+      if (!requested || observed.error || !substrate?.prepareProjectSwitch
+          || state.schema_version !== substrate?.PROJECT_STATE_SCHEMA
+          || state.event_control?.current?.status !== 'active') {
         return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-          permissionDecisionReason: authorityFailure || 'SWITCH_ONLY 本轮只允许一条与 tx、target、expected_epoch 完全匹配的 project.sh switch/new；禁止复合命令与同轮项目工作。' } });
+          permissionDecisionReason: authorityFailure || 'switch/new 必须是单一公开 argv，且只能在当前已认证原生事件中执行。' } });
+      }
+      try {
+        const controlled = discoverControlState(realpathSync(gstackRoot));
+        if (controlled.kind === 'invalid') throw new Error(`controlled state invalid: ${controlled.reason}`);
+        if (controlled.kind === 'required') {
+          const pending = state.selection?.pending || state.switch;
+          const exactPending = pending?.operation === requested.operation && pending?.target === requested.target;
+          const authorizationMode = exactPending && ['RUNNING', 'CREATING'].includes(pending?.status)
+            ? 'recover' : 'prepare';
+          authorizePublicSelection({
+            manifest: controlled.current.manifest,
+            selection: { ...requested, session_id: sid, tx: pending?.tx },
+            projectsRoot: PROJECTS_ROOT,
+            mode: authorizationMode,
+            trustedRecord: exactPending ? pending : null,
+          });
+        }
+        const prepared = substrate.prepareProjectSwitch({
+          gstackRoot, projectsRoot: PROJECTS_ROOT, sessionId: sid,
+          operation: requested.operation, target: requested.target,
+        });
+        const proposal = prepared.proposal;
+        const expanded = expandedSelectionCommand({ ...proposal, session_id: sid });
+        return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command: expanded } } });
+      } catch (error) {
+        return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+          permissionDecisionReason: `无法准备本次项目选择：${String(error?.message || error)}` } });
       }
     } else if (mentionsProjectMutation(cmd)) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: `当前项目状态 ${state.state} 不允许直接 switch/new；必须由显式切换 prompt 创建 SWITCH_ONLY 事务。` } });
+        permissionDecisionReason: 'switch/new 必须是单一公开 argv；禁止附加 shell、额外参数或目标偷换。' } });
+    } else if (state.state === 'SWITCH_ONLY') {
+      if (mentionsInternalProjectController(cmd) || rewriteBash(cmd, null).hasScoped) {
+        return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+          permissionDecisionReason: authorityFailure || 'SWITCH_ONLY 本轮只允许匹配的公开 project.sh switch/new；禁止同轮项目工作。' } });
+      }
     } else if (mentionsInternalProjectController(cmd)) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: 'project-pin.mjs 是 hook/project.sh 的内部事务接口，不能作为同轮绕过 terminal/epoch 的项目工具调用。' } });

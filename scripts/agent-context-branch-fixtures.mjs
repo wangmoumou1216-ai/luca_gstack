@@ -495,7 +495,7 @@ const G5_DEFINITIONS = {
         ['.claude/skill-os/runtime/long-session.md', '.claude/skill-os/runtime/project-session.md']],
     },
     stateTransitions: [
-      { beforeTurn: 2, primitive: 'expire-project-epoch', owner: 'runner', expectedResult: 'OLD_EPOCH_INVALID' },
+      { beforeTurn: 2, primitive: 'expire-project-epoch', owner: 'runner', expectedResult: 'OLD_TX_RECEIPT_ONLY' },
       { beforeTurn: 2, primitive: 'hide-project-owner', owner: 'runner', expectedResult: 'ENOENT' },
       { beforeTurn: 4, primitive: 'restore-project-owner', owner: 'runner', expectedResult: 'RESTORED' },
     ],

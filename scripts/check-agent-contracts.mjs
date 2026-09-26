@@ -33,6 +33,8 @@ const qg = read('.claude/agents/quality-gate.md');
 const wa = read('.claude/agents/work-agent-template.md');
 const codexQg = read('.codex/agents/quality-gate.toml');
 const modelRouting = read('.claude/skill-os/model-routing.yaml');
+const auto = read('.claude/skills/office/auto/SKILL.md');
+const workflowRunner = read('.codex/workflow-runner.mjs');
 
 // 1. OD-first 锚（当轮漂移正是三处全漏，缺一即复发）
 t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-design'));
@@ -107,9 +109,22 @@ t('Codex 段不存在 tier→effort 动态映射', !/^\s{2}tier_to_effort:/m.tes
 t('Codex preflight 固定 effort 保持 low', /\n\s{4}preflight-agent:\s*low\b/.test(codexModel));
 t('公共 policy 不公开账户模型名', !/\bgpt-[\w.-]+\b/.test(commonModel));
 
+// 10. 项目任务派发冻结绝对根；取消只停止未来调度并如实处理中/不可中断动作。
+for (const [name, source] of [['orchestrator', orch], ['work-agent', wa], ['auto', auto]]) {
+  t(`${name} 派发合同携带冻结 WORK_ROOT`, source.includes('WORK_ROOT'));
+  t(`${name} 不从共享 display aliases 重算已派发落点`,
+    /(?:不得|禁止).*(?:共享|display).*(?:alias|别名)/s.test(source));
+}
+t('auto 取消合同区分未派发、在途与无法中断动作',
+  /尚未\s*派发/.test(auto) && auto.includes('在途') && /(?:无法中断|无法\s*中断)/.test(auto));
+t('Codex runner 信号取消终止子进程组并停止继续调度',
+  /process\.kill\(-pid,\s*'SIGKILL'\)/.test(workflowRunner)
+  && /\['SIGINT',\s*'SIGTERM',\s*'SIGHUP'\]/.test(workflowRunner)
+  && /child\.kill\('SIGTERM'\)/.test(workflowRunner));
+
 if (failures.length) {
   console.error(`❌ agent 契约回归 FAIL（${failures.length}/${n}）：`);
   failures.forEach(f => console.error('  - ' + f));
   process.exit(1);
 }
-console.log(`agent-contracts: ${n}/${n} 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/公共模型路由/能力锚/判决记录分权）`);
+console.log(`agent-contracts: ${n}/${n} 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/公共模型路由/能力锚/判决记录分权/绝对工作根与取消边界）`);

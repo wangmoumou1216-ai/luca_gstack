@@ -39,9 +39,9 @@
 
 import { spawn, spawnSync } from 'child_process';
 import { createInterface } from 'readline';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, existsSync, realpathSync } from 'fs';
 import { tmpdir } from 'os';
-import { dirname, resolve, join, basename } from 'path';
+import { dirname, resolve, join, basename, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { modelRoutingPolicyDigest, resolve as resolveModelRoute, resolveDispatchScene } from '../scripts/model-route.mjs';
 import {
@@ -49,6 +49,13 @@ import {
 } from '../scripts/model-route-host.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// A task-owned project root is captured once at dispatch startup. It is never
+// recomputed from session pins or shared display aliases after a project switch.
+const WORK_ROOT = (() => {
+  const configured = process.env.LUCA_WF_WORK_ROOT || ROOT;
+  if (!isAbsolute(configured)) throw new Error('LUCA_WF_WORK_ROOT must be an absolute path');
+  return realpathSync(configured);
+})();
 const argv = process.argv.slice(2);
 const DRY = argv.includes('--dry-run');
 const rawName = argv.find((a) => !a.startsWith('--') && a !== argvValueAfter('--args'));
@@ -158,6 +165,9 @@ const AGENT_CWD = join(tmp, 'agent-cwd');
 mkdirSync(AGENT_CWD, { recursive: true });
 let agentSeq = 0, agentFail = 0, agentOk = 0;
 const liveChildren = new Set();
+let cancellationRequested = false;
+let queuedWork = 0;
+let activeWork = 0;
 
 // 统一清理：正常/异常/信号三条路径都走这里（M6：原实现只在正常路径清 tmp）
 let cleanedUp = false;
@@ -171,7 +181,22 @@ function cleanup() {
 }
 process.on('exit', cleanup);
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
-  process.on(sig, () => { cleanup(); process.exit(130); });
+  process.on(sig, () => {
+    cancellationRequested = true;
+    const report = {
+      signal: sig,
+      queued_not_dispatched: queuedWork,
+      in_flight: Math.max(activeWork, liveChildren.size),
+      termination_requested: liveChildren.size,
+      os_revocation_guaranteed: false,
+    };
+    // This is an observation of the dispatch boundary, not a claim that the OS
+    // rolled back an already-issued command. The process-group outcome is tested
+    // separately by the runtime fixture.
+    process.stderr.write(`[runner] cancellation ${JSON.stringify(report)}\n`);
+    cleanup();
+    process.exit(130);
+  });
 }
 
 // ── Schema 归一化（OpenAI 结构化输出为 strict 模式）──────────────────────────
@@ -452,7 +477,8 @@ const agent = async (prompt, opts = {}) => {
   // 工作根是 scratch 而非仓库（见 SANDBOX 段），故须显式告知仓库绝对路径——否则脚本里
   // 那些仓库相对路径（self-model.yaml 等）会解析到 scratch 而读不到。
   // 前缀加在 runner 侧 ⇒ workflow 脚本仍然零改写。红队端到端探针已验证模型能据此正确取文件。
-  const prefixed = `REPO_ROOT=${ROOT}\n（你的 CWD 是临时工作目录；仓库相对路径一律按 REPO_ROOT 解析；`
+  const prefixed = `REPO_ROOT=${ROOT}\nWORK_ROOT=${WORK_ROOT}\n（你的 CWD 是临时工作目录；框架仓库相对路径一律按 REPO_ROOT 解析；`
+    + `任务项目与输出路径一律按冻结的 WORK_ROOT 解析，不得从 session pin 或共享展示别名重算；`
     + `仓库只读，任何写入只能落在 CWD 内。）\n\n${prompt}`;
   return runCodex(prefixed, opts.schema, ph);
 };
@@ -462,11 +488,16 @@ const parallel = async (thunks) => {
   const list = Array.from(thunks || []);
   const out = new Array(list.length).fill(null);   // 预填，杜绝稀疏空洞
   let next = 0;
+  queuedWork += list.length;
   const worker = async () => {
     for (;;) {
+      if (cancellationRequested) return;
       const i = next++;
       if (i >= list.length) return;
+      queuedWork--;
+      activeWork++;
       try { out[i] = await list[i](); } catch { out[i] = null; }
+      finally { activeWork--; }
     }
   };
   const width = Math.max(1, Math.min(MAX_CONCURRENCY, list.length));

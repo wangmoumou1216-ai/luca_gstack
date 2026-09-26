@@ -11,15 +11,19 @@ Load this file before deciding project identity or project authority, and before
 ## Project Gate
 
 1. A named or semantically unique existing project selects that project without an extra confirmation.
-2. An explicitly new project may be created from the emitted transaction. If the agent inferred that a vague request is a new project, ask one blocking confirmation first.
+2. An explicitly new project may be created from the public selection call. If the agent inferred that a vague request is a new project, ask one blocking confirmation first.
 3. A request that names no project and needs real work under an inherited, never-confirmed project asks once before proceeding.
 4. Pure framework/meta work remains `NO_PIN` and never switches merely to read a project as reference.
 
-Switching or creation uses only the complete current-turn transaction emitted by route-guard, including session id, transaction id, and expected epoch. Never hand-write a bare `project.sh switch/new` command. After a successful transaction, run the project-link check.
+The agent calls exactly one public command: `./scripts/project.sh switch <canonical-name>` or `./scripts/project.sh new <canonical-name>`. Route-guard records neutral event evidence and name candidates only; it never selects a project or emits an executable transaction. Trusted PreToolUse attests the current native event and injects session id, transaction id, and expected epoch. The model must never invent or override those internal fields. A successful selection remains usable in the same event; it does not start a workflow, restore history, initialize project subsystems, or update shared display links.
 
 ## Cross-project reads
 
-Cross-project dependency reads do not create a second binding. Only an exact `只读引用:` or `只读引用目录:` directive can grant a turn-scoped text read; `本会话…` is the explicit session extension. Grants never authorize writes, raw shell traversal, symlinks, control-plane paths, images, PDFs, or MCP local-path consumption. Codex uses `scripts/project-read.mjs` for the granted path.
+Cross-project dependency reads do not create a second binding. An explicit absolute path is handled by the normal filesystem sandbox and controlled-change policy and does not switch the session. Shared `docs/`/workflow/topic aliases still require a verified binding because their targets are display state. The legacy `scripts/project-read.mjs` broker remains a compatibility entry; merely reading or searching its source filename is not an invocation.
+
+## Host read view
+
+Hosts may read `node <gstack-root>/scripts/project-pin.mjs list --view host` and `node <gstack-root>/scripts/project-pin.mjs status --view host --session-id <trusted-native-session-id> [--operation <opaque-id>]` using an argv array with `shell=false`. These calls are pure projections: they do not attest, prepare, switch, recover, migrate, lock, initialize, or repair anything. `execution_authority` is always `NOT_PROVIDED`; displayed ownership never authorizes execution. A host must source the session id from its trusted native session mapping, never from renderer input, cwd, project text, or display links.
 
 ## Failure posture
 

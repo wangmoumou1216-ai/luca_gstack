@@ -14,6 +14,16 @@ import {
   tupleEqual,
   validateBoundRequired,
 } from '../../scripts/controlled-change.mjs';
+import {
+  PROJECTS_ROOT,
+  readProjectState,
+  sanitizeSessionId,
+} from './lib/project-substrate.mjs';
+import {
+  authorizePublicSelection,
+  matchExpandedSelectionState,
+  parseExpandedSelectionCommand,
+} from './lib/project-selection.mjs';
 
 function emitDeny(reason) {
   const message = `[controlled-change] deny: ${reason}`;
@@ -158,7 +168,29 @@ function guardRequired(data, current) {
       catch (error) { emitDeny(error.message); }
       return;
     }
-    if (manifest.allowed_commands.includes(command.trim())) return;
+    let authorizedCommand = command.trim();
+    const expandedSelection = parseExpandedSelectionCommand(authorizedCommand);
+    if (expandedSelection) {
+      try {
+        if (sanitizeSessionId(expandedSelection.session_id) !== expandedSelection.session_id) {
+          throw new Error('expanded selection session id is not canonical');
+        }
+        const state = readProjectState(manifest.repo_realpath, expandedSelection.session_id, PROJECTS_ROOT).value;
+        const matched = matchExpandedSelectionState({ parsed: expandedSelection, state });
+        if (!matched) throw new Error('expanded selection lacks a matching trusted proposal or committed receipt');
+        authorizedCommand = authorizePublicSelection({
+          manifest,
+          selection: expandedSelection,
+          projectsRoot: PROJECTS_ROOT,
+          mode: matched.mode,
+          trustedRecord: matched.record,
+        }).publicCommand;
+      } catch (error) {
+        emitDeny(`project selection authorization failed: ${error.message}`);
+        return;
+      }
+    }
+    if (manifest.allowed_commands.includes(authorizedCommand)) return;
     emitDeny('Bash is deny-by-default in controlled mode; use an exact manifest allowed_command or a structured exact-path action');
     return;
   }

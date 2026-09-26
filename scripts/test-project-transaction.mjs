@@ -22,12 +22,14 @@ import { spawn, spawnSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import {
   attestPendingProjectEvent,
+  closeAttestedProjectEvent,
   initializeProjectEventFence,
   queueProjectEventCandidate,
   readProjectState,
   refenceProjectStateForDeactivate,
   validatedBindingForState,
 } from '../.claude/hooks/lib/project-substrate.mjs';
+import { projectReservationPath } from '../.claude/hooks/lib/project-selection.mjs';
 
 const REPO = process.cwd();
 const PIN = resolve(REPO, 'scripts/project-pin.mjs');
@@ -174,6 +176,20 @@ function bind(fx, sid, project) {
   return jsonOut(runNode(PIN, ['status', '--session', sid], fx));
 }
 
+function closeCurrentEvent(fx, sid, outcome = 'test-close') {
+  const state = readProjectState(fx.gstack, sid, fx.projects).value;
+  const current = state?.event_control?.current;
+  assert.equal(current?.status, 'active', `session ${sid} must have an active event to close`);
+  closeAttestedProjectEvent({
+    gstackRoot: fx.gstack,
+    projectsRoot: fx.projects,
+    sessionId: sid,
+    eventId: current.event_id,
+    boundaryId: current.boundary_id,
+    outcome,
+  });
+}
+
 function beginTurn(fx, sid, turn = 'turn-1', prompt = `project work ${turn}`) {
   initializeFence(fx, sid);
   const boundary = sid;
@@ -256,26 +272,26 @@ check('NO_PIN denies shared Read/Grep/Glob/Bash instead of following display lin
   }
 });
 
-check('switch transaction commits canonical identity and epoch only after link readback', () => {
+check('switch transaction commits canonical identity and epoch without mutating display aliases', () => {
   const fx = makeEnv();
   const alpha = makeProject(fx, 'alpha');
   const state = bind(fx, 'S', 'alpha');
-  assert.equal(state.state, 'BOUND');
+  assert.equal(state.state, 'TURN_ACTIVE');
   assert.equal(state.binding.project, 'alpha');
   assert.equal(state.binding.epoch, 1);
   assert.equal(state.binding.realpath, realpathSync(alpha));
   assert.ok(Number.isInteger(state.binding.dev));
   assert.ok(Number.isInteger(state.binding.ino));
-  assert.equal(readlinkSync(join(fx.gstack, 'docs')), join(realpathSync(alpha), 'docs'));
-  assert.equal(state.display_links.docs.target, join(realpathSync(alpha), 'docs'));
+  assert.deepEqual(linkTuple(fx), [null, null, null]);
+  assert.equal(Object.hasOwn(state, 'display_links'), false,
+    'ordinary status must not consult compatibility display aliases');
   const listed = spawnSync('bash', [PROJECT_SH, 'list'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
   assert.equal(listed.status, 0, listed.stderr);
-  assert.match(listed.stdout, /项目列表/);
-  assert.match(listed.stdout, /○ alpha/);
+  assert.deepEqual(JSON.parse(listed.stdout).projects.map(item => item.project), ['alpha']);
 });
 
 check('every switch write-boundary fault preserves old pin bytes and old link tuple', () => {
-  const boundaries = ['after-target-validate', 'after-docs-link', 'after-state-link', 'after-topic-link', 'after-readback'];
+  const boundaries = ['after-target-validate'];
   for (const fault of boundaries) {
     const fx = makeEnv();
     makeProject(fx, 'alpha');
@@ -284,32 +300,61 @@ check('every switch write-boundary fault preserves old pin bytes and old link tu
     const before = stateBytes(fx, 'S');
     const links = linkTuple(fx);
     const proposal = prepare(fx, 'S', 'switch', 'beta');
-    const prepared = stateBytes(fx, 'S');
     const result = mutate(fx, 'S', 'switch', 'beta', proposal, { LUCA_PROJECT_FAULT: fault });
     assert.notEqual(result.status, 0, `${fault} should fail`);
-    assert.deepEqual(stateBytes(fx, 'S'), prepared, `${fault}: SWITCH_ONLY CAS bytes changed`);
-    assert.deepEqual(linkTuple(fx), links, `${fault}: links not rolled back`);
+    assert.deepEqual(linkTuple(fx), links, `${fault}: display aliases changed`);
     const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
-    assert.equal(status.switch.binding.project, 'alpha');
-    assert.deepEqual(Buffer.from(JSON.stringify(status.switch.binding.project)), Buffer.from(JSON.stringify('alpha')));
+    assert.equal(status.state, 'TURN_ACTIVE');
+    assert.equal(status.binding.project, 'alpha');
+    assert.equal(status.selection.pending, null);
+    assert.equal(status.selection.latest_operation.status, 'FAILED');
+    const failedBytes = stateBytes(fx, 'S');
+    const retry = mutate(fx, 'S', 'switch', 'beta', proposal);
+    assert.notEqual(retry.status, 0, 'FAILED receipt must not become replay authority');
+    assert.deepEqual(stateBytes(fx, 'S'), failedBytes);
+    assert.deepEqual(Buffer.from(JSON.stringify(status.binding.project)), Buffer.from(JSON.stringify('alpha')));
     assert.ok(before.length > 0);
   }
 });
 
-check('stale epoch and replayed tx cannot mutate project or pin', () => {
+check('committed tx replay is byte-idempotent while a stale epoch cannot mutate project or pin', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   makeProject(fx, 'beta');
   const first = prepare(fx, 'S', 'switch', 'alpha');
   assert.equal(mutate(fx, 'S', 'switch', 'alpha', first).status, 0);
+  const committed = stateBytes(fx, 'S');
   const replay = mutate(fx, 'S', 'switch', 'alpha', first);
-  assert.notEqual(replay.status, 0);
+  assert.equal(replay.status, 0, replay.stderr || replay.stdout);
+  assert.deepEqual(stateBytes(fx, 'S'), committed, 'committed replay must not publish new state bytes');
   const second = prepare(fx, 'S', 'switch', 'beta');
   const stale = spawnSync('bash', [PROJECT_SH, 'switch', 'beta', '--session-id', 'S', '--tx', second.tx, '--expected-epoch', '0'], {
     cwd: REPO, env: fx.env, encoding: 'utf8',
   });
   assert.notEqual(stale.status, 0);
   assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'S'], fx)).switch.binding.project, 'alpha');
+});
+
+check('dead RUNNING owner is recoverable by the same tx without minting new authority', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  makeProject(fx, 'beta');
+  bind(fx, 'S', 'alpha');
+  const proposal = prepare(fx, 'S', 'switch', 'beta');
+  const crashed = mutate(fx, 'S', 'switch', 'beta', proposal, {
+    LUCA_PROJECT_FAULT: 'crash-after-execution-claim',
+  });
+  assert.equal(crashed.status, 86);
+  const interrupted = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
+  assert.equal(interrupted.state, 'SWITCH_ONLY');
+  assert.equal(interrupted.selection.pending.status, 'RUNNING');
+  assert.equal(interrupted.selection.pending.tx, proposal.tx);
+  const resumed = mutate(fx, 'S', 'switch', 'beta', proposal);
+  assert.equal(resumed.status, 0, resumed.stderr || resumed.stdout);
+  const committed = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
+  assert.equal(committed.state, 'TURN_ACTIVE');
+  assert.equal(committed.binding.project, 'beta');
+  assert.equal(committed.selection.last_success.commit_id, proposal.tx);
 });
 
 check('retired raw turn-id control commands stay rejected without changing attested state', () => {
@@ -382,7 +427,7 @@ check('same-turn compound switch+project work is denied; exact mutation is the s
   assert.equal(bad?.hookSpecificOutput?.permissionDecision, 'deny');
 });
 
-check('successful switch is terminal until the next top-level user turn', () => {
+check('successful switch continues in the same attested event while internal injection remains denied', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   makeProject(fx, 'beta');
@@ -390,14 +435,10 @@ check('successful switch is terminal until the next top-level user turn', () => 
   const p = prepare(fx, 'S', 'switch', 'beta');
   assert.equal(mutate(fx, 'S', 'switch', 'beta', p).status, 0);
   const sameTurn = guard(fx, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
-  assert.equal(sameTurn?.hookSpecificOutput?.permissionDecision, 'deny');
+  assert.equal(sameTurn?.hookSpecificOutput?.updatedInput?.file_path, join(realpathSync(join(fx.projects, 'beta')), 'docs', 'x.md'),
+    `same-event project read must redirect: ${JSON.stringify(sameTurn)}`);
   const injectBypass = guard(fx, { session_id: 'S', tool_name: 'Bash', tool_input: { command: 'node scripts/project-pin.mjs inject --target beta' } });
-  assert.equal(injectBypass?.hookSpecificOutput?.permissionDecision, 'deny', 'terminal state must reject internal context-injection bypass');
-  const active = beginTurn(fx, 'S', 'next-turn');
-  assert.equal(active.state, 'TURN_ACTIVE');
-  const nextTurn = guard(fx, { session_id: 'S', tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
-  assert.equal(nextTurn?.hookSpecificOutput?.updatedInput?.file_path, join(realpathSync(join(fx.projects, 'beta')), 'docs', 'x.md'),
-    `next-turn project read must redirect: ${JSON.stringify(nextTurn)}`);
+  assert.equal(injectBypass?.hookSpecificOutput?.permissionDecision, 'deny', 'internal context-injection bypass must stay denied');
 });
 
 check('rename, symlink replacement, and inode replacement invalidate an active binding', () => {
@@ -420,32 +461,40 @@ check('new project staging loses a creation race without changing old binding or
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
   const p = prepare(fx, 'S', 'new', 'beta');
-  const before = stateBytes(fx, 'S');
   const links = linkTuple(fx);
   makeProject(fx, 'beta');
   const result = mutate(fx, 'S', 'new', 'beta', p);
   assert.notEqual(result.status, 0);
-  assert.deepEqual(stateBytes(fx, 'S'), before);
+  const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
+  assert.equal(status.state, 'TURN_ACTIVE');
+  assert.equal(status.binding.project, 'alpha');
+  assert.equal(status.selection.pending, null);
+  assert.equal(status.selection.latest_operation.status, 'FAILED');
+  assert.equal(status.selection.latest_operation.error_code, 'SELECTION_FAILED');
+  assert.equal(existsSync(projectReservationPath(fx.projects, 'beta')), false,
+    'an external pre-existing target must not receive this operation reservation');
   assert.deepEqual(linkTuple(fx), links);
 });
 
-check('empty-target publish race preserves the winner and parks the complete staging tree', () => {
+check('empty-target publish race preserves the winner and leaves only the owned minimal staging tree', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
   const p = prepare(fx, 'S', 'new', 'beta');
-  const before = stateBytes(fx, 'S');
   const links = linkTuple(fx);
   const result = mutate(fx, 'S', 'new', 'beta', p, { LUCA_PROJECT_FAULT: 'empty-target-race' });
   assert.notEqual(result.status, 0);
   const target = join(fx.projects, 'beta');
   assert.equal(lstatSync(target).isDirectory(), true);
   assert.deepEqual(readdirSync(target), [], 'concurrent empty target must remain untouched');
-  const parkedName = readdirSync(fx.projects).find(name => name.startsWith('.luca-aborted-staging-beta-'));
-  assert.ok(parkedName, 'losing staging tree must be parked, not deleted');
-  assert.equal(existsSync(join(fx.projects, parkedName, '.luca', 'workflow-state.yaml')), true);
-  assert.equal(existsSync(join(fx.projects, parkedName, '.git')), true);
-  assert.deepEqual(stateBytes(fx, 'S'), before);
+  const stagingName = `.luca-staging-${p.tx}`;
+  assert.equal(existsSync(join(fx.projects, stagingName)), true, 'same-tx staging must remain recoverable');
+  assert.deepEqual(readdirSync(join(fx.projects, stagingName)), ['CONTEXT.md']);
+  const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
+  assert.equal(status.state, 'TURN_ACTIVE');
+  assert.equal(status.binding.project, 'alpha');
+  assert.equal(status.selection.pending, null);
+  assert.equal(status.selection.latest_operation.status, 'OWNERSHIP_UNKNOWN');
   assert.deepEqual(linkTuple(fx), links);
 });
 
@@ -541,7 +590,7 @@ check('canonical schema-v3 native-event pins are read without migration rewrite'
   assert.deepEqual(stateBytes(fx, 'S'), before);
 });
 
-check('new project sanitizes Git hook env, commits the complete skeleton, stays terminal, and deactivates without deleting project data', () => {
+check('new project sanitizes Git hook env, commits only deterministic CONTEXT, continues, and deactivates without deleting data', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
@@ -557,25 +606,15 @@ check('new project sanitizes Git hook env, commits the complete skeleton, stays 
   assert.equal(created.status, 0, created.stderr || created.stdout);
   assert.doesNotMatch(created.stdout, /项目本地记忆|项目 CONTEXT/, 'switch turn must not inject next-turn context');
   const status = jsonOut(runNode(PIN, ['status', '--session', 'S'], fx));
-  assert.equal(status.state, 'BOUND');
+  assert.equal(status.state, 'TURN_ACTIVE');
   assert.equal(status.binding.project, 'beta');
   assert.equal(status.binding.epoch, 2);
-  for (const required of [
-    'docs/handoff',
-    '.luca/workflow-state.yaml',
-    '.luca/current-topic.txt',
-    '.luca/memory/MEMORY.md',
-    '.luca/memory/decisions.md',
-    'CONTEXT.md',
-    '.git',
-  ]) assert.equal(existsSync(join(beta, required)), true, `new skeleton missing ${required}`);
-  assert.equal(readdirSync(fx.projects).some(name => name.startsWith('.luca-staging-beta-')), false);
-  assert.deepEqual(linkTuple(fx), [
-    join(realpathSync(beta), 'docs'),
-    join(realpathSync(beta), '.luca', 'workflow-state.yaml'),
-    join(realpathSync(beta), '.luca', 'current-topic.txt'),
-  ]);
+  assert.deepEqual(readdirSync(beta), ['CONTEXT.md'], 'new must create only the deterministic minimum');
+  assert.equal(readdirSync(fx.projects).some(name => name.startsWith('.luca-staging-')), false);
+  assert.equal(readdirSync(fx.projects).some(name => name.startsWith('.luca-project-reservation-')), false);
+  assert.deepEqual(linkTuple(fx), [null, null, null]);
 
+  closeCurrentEvent(fx, 'S');
   const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], {
     cwd: REPO, env: fx.env, encoding: 'utf8',
   });
@@ -588,7 +627,7 @@ check('new project sanitizes Git hook env, commits the complete skeleton, stays 
   assert.equal(existsSync(beta), true, 'deactivate must preserve project data');
 });
 
-check('post-commit lease release failure is success-with-warning, never an apparent transaction failure', () => {
+check('selection commit does not depend on or mutate the legacy global display lease', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   makeProject(fx, 'beta');
@@ -598,19 +637,13 @@ check('post-commit lease release failure is success-with-warning, never an appar
     LUCA_PROJECT_FAULT: 'before-lease-release',
   });
   assert.equal(committed.status, 0, committed.stderr || committed.stdout);
-  assert.match(committed.stderr, /已提交.*lease 释放失败.*禁止重试/);
   const result = jsonOut(committed);
-  assert.equal(result.state, 'BOUND');
+  assert.equal(result.state, 'TURN_ACTIVE');
   assert.equal(result.binding.project, 'beta');
-  assert.equal(result.lease_release?.released, false);
-  assert.equal(result.lease_release?.recovery_required, true);
+  assert.equal(result.lease_release, undefined);
   assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'S'], fx)).binding.project, 'beta');
-
-  const held = jsonOut(runNode(LEASE, ['inspect', '--root', fx.gstack], fx));
-  assert.equal(held.owner_handle.owner.process_nonce, result.lease_release.owner_handle.owner.process_nonce);
-  assert.equal(jsonOut(runNode(LEASE, [
-    'recover', '--root', fx.gstack, '--handle-json', JSON.stringify(held.owner_handle),
-  ], fx)).recovered, true);
+  assert.deepEqual(linkTuple(fx), [null, null, null]);
+  assert.equal(existsSync(join(fx.gstack, '.claude', '.project-switch.lock')), false);
 });
 
 check('post-commit state-lock release failure is success-with-warning and exact-recoverable', () => {
@@ -620,7 +653,7 @@ check('post-commit state-lock release failure is success-with-warning and exact-
   bind(fx, 'S', 'alpha');
   const proposal = prepare(fx, 'S', 'switch', 'beta');
   const committed = mutate(fx, 'S', 'switch', 'beta', proposal, {
-    LUCA_PROJECT_STATE_LOCK_FAULT: 'before-release',
+    LUCA_PROJECT_COMMIT_STATE_LOCK_FAULT: 'before-release',
   });
   assert.equal(committed.status, 0, committed.stderr || committed.stdout);
   assert.match(committed.stderr, /state 操作已提交但锁释放失败.*禁止重试/);
@@ -683,11 +716,7 @@ check('state-file publication uses rename as commit point: pre-rename fails, pos
     assert.match(committed.stderr, /已原子发布.*禁止重试/);
     assert.equal(jsonOut(committed).binding.project, 'beta');
     assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'S'], fx)).binding.project, 'beta');
-    assert.deepEqual(linkTuple(fx), [
-      join(realpathSync(join(fx.projects, 'beta')), 'docs'),
-      join(realpathSync(join(fx.projects, 'beta')), '.luca', 'workflow-state.yaml'),
-      join(realpathSync(join(fx.projects, 'beta')), '.luca', 'current-topic.txt'),
-    ]);
+    assert.deepEqual(linkTuple(fx), [null, null, null]);
   }
 });
 
@@ -695,6 +724,7 @@ check('state remove rename is deactivate commit point for a fence-less state; cl
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
+  closeCurrentEvent(fx, 'S');
   // A state without a native fence has nothing to rebuild a fence from, so deactivate
   // still removes it at the rename commit point. It keeps its cursor: an attested binding
   // without a durable cursor is not a valid state. A fenced state is re-fenced instead;
@@ -720,6 +750,7 @@ check('re-fence write is the deactivate commit point for a fenced state: pre-ren
     const fx = makeEnv();
     makeProject(fx, 'alpha');
     bind(fx, 'S', 'alpha');
+    closeCurrentEvent(fx, 'S');
     const before = stateBytes(fx, 'S');
     const links = linkTuple(fx);
     const failed = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], {
@@ -733,6 +764,7 @@ check('re-fence write is the deactivate commit point for a fenced state: pre-ren
     const fx = makeEnv();
     makeProject(fx, 'alpha');
     bind(fx, 'S', 'alpha');
+    closeCurrentEvent(fx, 'S');
     const committed = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], {
       cwd: REPO, env: { ...fx.env, LUCA_PROJECT_STATE_WRITE_FAULT: 'after-rename' }, encoding: 'utf8',
     });
@@ -765,6 +797,7 @@ check('deactivate is not a one-way door: the same session can attest and switch 
   makeProject(fx, 'alpha');
   makeProject(fx, 'beta');
   bind(fx, 'S', 'alpha');
+  closeCurrentEvent(fx, 'S');
   const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
   assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
   const unbound = readProjectState(fx.gstack, 'S', fx.projects).value;
@@ -895,8 +928,6 @@ function attestDirectly(fx, sid) {
   }
 }
 
-const { closeAttestedProjectEvent } = await import('../.claude/hooks/lib/project-substrate.mjs');
-
 check('deactivate resets an exhausted event ledger so a long session is not permanently locked', () => {
   const fx = makeEnv();
   makeProject(fx, 'alpha');
@@ -931,6 +962,7 @@ check('resetting the ledger on deactivate cannot re-grant a turn consumed before
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
+  closeCurrentEvent(fx, 'S');
   const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', 'S'], { cwd: REPO, env: fx.env, encoding: 'utf8' });
   assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
   // Re-queue the exact bytes of the already consumed switch turn with no new native row.
@@ -1018,6 +1050,7 @@ check('Codex: deactivate re-fences through project.sh and CODEX_HOME, so the ses
   const bound = mutate(fx, sid, 'switch', 'alpha', { tx: 'codex-tx-alpha', expected_epoch: 0 });
   assert.equal(bound.status, 0, bound.stderr || bound.stdout);
 
+  closeCurrentEvent(fx, sid);
   const deactivated = spawnSync('bash', [PROJECT_SH, 'deactivate', sid], { cwd: REPO, env: fx.env, encoding: 'utf8' });
   assert.equal(deactivated.status, 0, deactivated.stderr || deactivated.stdout);
   const unbound = readProjectState(fx.gstack, sid, fx.projects).value;
@@ -1338,8 +1371,9 @@ check('Codex TURN_CLOSED with structured skill can attest a fresh turn and re-fe
   }));
   assert.equal(codexSwitchTurn(fx, sid, 'initial-turn', 'alpha', 'initial-skill-tx').state.state, 'SWITCH_ONLY');
   assert.equal(mutate(fx, sid, 'switch', 'alpha', { tx: 'initial-skill-tx', expected_epoch: 0 }).status, 0);
+  closeCurrentEvent(fx, sid);
   const closed = readProjectState(fx.gstack, sid, fx.projects).value;
-  assert.equal(closed.state, 'BOUND');
+  assert.equal(closed.state, 'TURN_CLOSED');
 
   const boundary = `skill-turn-${randomUUID()}`;
   const prompt = 'switch project alpha with skill';
@@ -1520,7 +1554,7 @@ check('per-state O_EXCL lock serializes same-sid CAS and never age-steals crash 
   assert.equal(raced.status, 0, raced.stderr);
   const codes = raced.stdout.trim().split(/\s+/).map(Number);
   assert.equal(codes.filter(code => code === 0).length, 1, `exactly one CAS writer may succeed: ${raced.stdout}`);
-  assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'SAME'], fx)).state, 'BOUND');
+  assert.equal(jsonOut(runNode(PIN, ['status', '--session', 'SAME'], fx)).state, 'TURN_ACTIVE');
 
   const crashFx = makeEnv();
   makeProject(crashFx, 'alpha');
