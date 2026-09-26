@@ -1764,7 +1764,7 @@ function runRouteGuard(cwd, prompt) {
 
 // ══════════════ v3.4 display-only 启动回归 ═══════════════
 const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionRestoreHook, root, {
-  env: { CLAUDE_PROJECT_DIR: root, ...extraEnv },
+  env: { CLAUDE_PROJECT_DIR: root, LUCA_PROJECTS_ROOT: join(root, '项目'), ...extraEnv },
   input: JSON.stringify(source === null ? { session_id: sid } : { source, session_id: sid }),
 });
 
