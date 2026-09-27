@@ -96,7 +96,7 @@ function routeForAgent(payload, agentType) {
       evidence: {owner: 'codex-native-hooks', ref: 'PreToolUse+SubagentStop', harness: 'codex-native'},
     },
   }, {verifyCapability: () => true});
-  if (route.disposition !== 'READY') throw new Error(route.reason);
+  if (route.disposition !== 'READY') throw new Error(route.diagnostic || route.reason);
   return {policy, state, route, release_digest: releaseFor(policy)};
 }
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, readFile, readdir } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   canonicalJson, canonicalManifestHash, carrierContentHash, parseCanonicalJson,
@@ -82,6 +82,7 @@ for (const [name, source, expectedKind] of [
 console.log('PASS: SVG, CSS data, app navigation, missing visual URLs and potential execution are inert-only, receipt-gated findings');
 
 const realTemplateDir = '/Users/luca/Desktop/模版';
+const shadowManifest = JSON.parse(await readFile('.claude/skill-os/page-library/source-manifest.json', 'utf8'));
 const realTemplateHashes = new Map([
   ['后台设置.html', '4bfd4b31b2bc738881507061e5b394de7984ccb93b799a0a1c1824dc673284e0'],
   ['客户列表到详情页.html', '05921e7ad5340df93c28637118b1599eaefb4a4827a1b8d351afa7868808e58b'],
@@ -90,13 +91,21 @@ const realTemplateHashes = new Map([
 ]);
 if (process.argv.includes('--audit-originals')) {
   await access(realTemplateDir);
-  const names = (await readdir(realTemplateDir)).filter(name => name.endsWith('.html')).sort();
-  assert.deepEqual(names, [...realTemplateHashes.keys()].sort(), 'real package regression uses the exact four read-only HTML files');
+  for (const [name, pinnedHash] of realTemplateHashes) assert.ok(shadowManifest.sources.some(source => source.raw_source === join(realTemplateDir,name) && source.raw_sha256 === pinnedHash),'existing original identities remain frozen');
   const observedKinds = new Set();
-  for (const name of names) {
-    const bytes = await readFile(join(realTemplateDir, name));
+  for (const source of shadowManifest.sources) {
+    assert.ok(source.raw_source.startsWith(realTemplateDir+'/'),'audit only registered original template paths');
+    const name = source.page_id;
+    const bytes = await readFile(source.raw_source);
     const templateSha256 = sha256Bytes(bytes);
-    assert.equal(templateSha256, realTemplateHashes.get(name), `${name} raw fixture changed`);
+    assert.equal(templateSha256, source.raw_sha256, `${name} raw fixture changed`);
+    if (source.page_id === 'ai-quick-notes') {
+      // These dynamic originals use original-preserving-v1, whose DOM/resource
+      // package path is exercised by test-original-real-templates.mjs. They must
+      // not be forced through the older static structural parser.
+      expectCode(() => resolveAssetClosure({ baseTemplate: bytes, assets: [], profile: 'structural-embedded-v1' }), 'HTML_UNSUPPORTED_SYNTAX');
+      continue;
+    }
     expectCode(() => resolveAssetClosure({ baseTemplate: bytes, assets: [], profile: 'structural-embedded-v1' }), 'INERT_STORAGE_RECEIPT_REQUIRED', `${name} cannot be registered without exact inert receipt`);
     const result = resolveAssetClosure({
       baseTemplate: bytes, assets: [], profile: 'structural-embedded-v1',
@@ -107,23 +116,26 @@ if (process.argv.includes('--audit-originals')) {
     for (const item of result.inert_findings) observedKinds.add(item.kind);
   }
   for (const kind of ['inline_script', 'svg_content', 'css_data_url', 'root_relative_app_navigation', 'missing_visual_css_url']) assert.ok(observedKinds.has(kind), `real packages register ${kind}`);
-  console.log('PASS: exact four /Users/luca/Desktop/模版 packages register read-only with raw hashes and inert risk receipts');
+  console.log(`PASS: ${shadowManifest.sources.length} registered desktop hashes; existing static-profile receipts preserved, dynamic originals require their original adapter`);
 } else {
   console.log('NOT RUN: original desktop source audit (explicit --audit-originals opt-in); repository fixtures are tested below');
 }
 
-const shadowManifest = JSON.parse(await readFile('.claude/skill-os/page-library/source-manifest.json', 'utf8'));
 assert.equal(shadowManifest.profile, 'original-template-copy-v1');
-assert.equal(shadowManifest.sources.length, 4);
+assert.ok(shadowManifest.sources.length >= realTemplateHashes.size,'existing originals remain registered when the library grows');
 for (const source of shadowManifest.sources) {
   const bytes = await readFile(source.copy_source);
   assert.equal(bytes.length, source.raw_bytes, `${source.page_id}: original copy byte count is frozen`);
   assert.equal(sha256Bytes(bytes), source.raw_sha256, `${source.page_id}: original copy hash is frozen`);
   assert.throws(() => resolveAssetClosure({ baseTemplate: bytes, assets: [] }), 'P0 inability is not permission to rewrite the source');
+  if (source.page_id === 'ai-quick-notes') {
+    expectCode(() => resolveAssetClosure({ baseTemplate: bytes, assets: [], profile: 'structural-embedded-v1' }), 'HTML_UNSUPPORTED_SYNTAX');
+    continue;
+  }
   const result = resolveAssetClosure({ baseTemplate: bytes, assets: [], profile: 'structural-embedded-v1', inertStorageReceipt: { version: 1, kind: 'inert-storage', template_sha256: source.raw_sha256, receipt_ref: 'fixture-only:raw-copy-scan-no-execution' } });
   assert.deepEqual(result.base_template, bytes, 'inert scan never changes original bytes');
 }
-console.log('PASS: four original copies stay byte-identical; inert inspection is not executable carrier approval');
+console.log(`PASS: ${shadowManifest.sources.length} original copies stay byte-identical; inert inspection is not executable carrier approval`);
 
 assert.equal(canonicalJson({ z: [2, 1], a: 'x' }), '{"a":"x","z":[2,1]}');
 assert.deepEqual(parseCanonicalJson(Buffer.from('{"a":"x","z":[2,1]}')), { a: 'x', z: [2, 1] });

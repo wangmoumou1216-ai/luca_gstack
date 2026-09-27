@@ -130,7 +130,7 @@ try {
   console.log('PASS: real source containment -> forged filters/pagination rejected -> restored confirmed');
   assert.equal(realCatalog.schema_version, 2);
   const referenceIds = ['list', 'detail-2col', 'detail-3col', 'form', 'home'];
-  const carrierIds = ['settings-lead-pool', 'customer-list-detail', 'crm-workbench-home', 'sales-record-list-detail'];
+  const carrierIds = ['settings-lead-pool', 'customer-list-detail', 'crm-workbench-home', 'sales-record-list-detail', 'ai-quick-notes', 'shareagent'];
   assert.deepEqual(realCatalog.pages.slice(0, 5).map(entry => entry.page_id), referenceIds, 'the existing five page identities and order stay intact');
   assert.ok(realCatalog.pages.slice(0, 5).every(entry => entry.lifecycle === 'live' && entry.carrier_eligible === false), 'the existing five pages remain selectable references, not carriers');
   assert.deepEqual(realCatalog.pages.filter(entry => entry.carrier_eligible), [], 'original copies cannot inherit shadow carrier approval');
@@ -150,7 +150,7 @@ try {
     await assert.rejects(Promise.resolve().then(() => carrierContractForPage(entry)), { code: 'CARRIER_INELIGIBLE' });
     if (process.argv.includes('--audit-originals')) assert.ok(copy.equals(await readFile(source.raw_source)), 'copy must be byte-for-byte identical to the real original');
   }
-  console.log('PASS: old five references preserved; four original copies are exact and pending, not rewritten carriers');
+  console.log('PASS: old five references preserved; six original copies use the original adapter, not rewritten carriers');
   console.log(process.argv.includes('--audit-originals') ? 'PASS: originals compared byte-for-byte' : 'NOT RUN: original desktop source audit (use --audit-originals)');
   const carrierHtml = '<main id="app"><section id="toolbar" data-module="toolbar"><span id="toolbar-label">Toolbar</span><div id="toolbar-slot"></div></section><section id="content" data-module="content"><span id="content-label">Content</span></section><div id="root-slot"></div></main>';
   await writeFile(join(root, 'framework/carrier.html'), carrierHtml);

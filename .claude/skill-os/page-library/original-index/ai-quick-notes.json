@@ -1,0 +1,319 @@
+{
+  "page_id": "ai-quick-notes",
+  "source_ref": ".claude/skill-os/page-library/sources/originals/ai-quick-notes.html",
+  "schema_version": 1,
+  "generated_by": "original-template-index/v1",
+  "parser": {
+    "engine": "chromium-domparser",
+    "version": "149.0.7827.55"
+  },
+  "source_sha256": "5fbc8bc31f7b4785a28554e46555b60988acc26d13feaac7fcd8e92fe8c6561e",
+  "source_bytes": 1674538,
+  "title": "纷享销客 · AI速记",
+  "anchors": [
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "source-shell"
+      },
+      "element_path": [
+        0,
+        1,
+        0
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      "tag": "input",
+      "label": "搜索范围",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1
+      ],
+      "tag": "input",
+      "label": "搜索",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "rail"
+      },
+      "element_path": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "tag": "header",
+      "label": "应用导航",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "home"
+      },
+      "element_path": [
+        0,
+        1,
+        1
+      ],
+      "tag": "main",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "element-path",
+        "indices": [
+          0,
+          1,
+          2
+        ]
+      },
+      "element_path": [
+        0,
+        1,
+        2
+      ],
+      "tag": "button",
+      "label": "本地交互版 · 还原说明",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "recording"
+      },
+      "element_path": [
+        0,
+        1,
+        3
+      ],
+      "tag": "section",
+      "label": "录音工作区",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "detail"
+      },
+      "element_path": [
+        0,
+        1,
+        4
+      ],
+      "tag": "section",
+      "label": "记录详情",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "minibar"
+      },
+      "element_path": [
+        0,
+        1,
+        5
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "modal-host"
+      },
+      "element_path": [
+        0,
+        1,
+        6
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "popover-host"
+      },
+      "element_path": [
+        0,
+        1,
+        7
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    },
+    {
+      "scope": [],
+      "locator": {
+        "kind": "attribute",
+        "name": "id",
+        "value": "toast"
+      },
+      "element_path": [
+        0,
+        1,
+        8
+      ],
+      "tag": "div",
+      "label": "",
+      "source_node_hint": null,
+      "unique_in_scope": true
+    }
+  ],
+  "states": [],
+  "scripts": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        1,
+        9
+      ],
+      "type": "application/json",
+      "src": null,
+      "normalized_dom_text_sha256": "670dde50095c758535fcf11613ed22bacdc1953193cd0080fdd534b8c09ca9fa",
+      "normalized_dom_text_bytes": 86133
+    },
+    {
+      "scope": [],
+      "path": [
+        0,
+        1,
+        10
+      ],
+      "type": "",
+      "src": null,
+      "normalized_dom_text_sha256": "570b099a2d737f2f6810cd1dc52a03edae7e157e94fbafcc3249550b319ba4aa",
+      "normalized_dom_text_bytes": 66328
+    }
+  ],
+  "styles": [
+    {
+      "scope": [],
+      "path": [
+        0,
+        0,
+        5
+      ],
+      "normalized_dom_text_sha256": "56cc26b89064f677f0eafce0d83ba50a8f05dccf6d908d4859b886f32342e5a4",
+      "normalized_dom_text_bytes": 625411
+    },
+    {
+      "scope": [],
+      "path": [
+        0,
+        0,
+        6
+      ],
+      "normalized_dom_text_sha256": "cf9d6bcff2dfe660e64c9a1266320a3100a8edb198afa2eb8df2560b8a16a9a0",
+      "normalized_dom_text_bytes": 879823
+    }
+  ],
+  "source_scripts_executed": false,
+  "blocked_requests": [],
+  "assurance": "inert DOM inventory only; paths require source hash and scope; not semantic adoption, interaction validation or generation authority"
+}

@@ -4,7 +4,7 @@ import { verifyCopyBytes, verifyTemplateCopies } from './template-copy.mjs';
 import { loadCatalog, validateSelection } from './page-context.mjs';
 
 const manifest = JSON.parse(await readFile('.claude/skill-os/page-library/source-manifest.json', 'utf8'));
-for (const id of ['settings-lead-pool', 'customer-list-detail', 'crm-workbench-home', 'sales-record-list-detail']) assert.ok(manifest.sources.some(entry => entry.page_id === id), `approved original must not disappear: ${id}`);
+for (const id of ['settings-lead-pool', 'customer-list-detail', 'crm-workbench-home', 'sales-record-list-detail', 'ai-quick-notes', 'shareagent']) assert.ok(manifest.sources.some(entry => entry.page_id === id), `approved original must not disappear: ${id}`);
 for (const entry of manifest.sources) {
   const original = await readFile(entry.copy_source);
   assert.equal(verifyCopyBytes(original, entry).fidelity, 'byte-identical');
@@ -26,6 +26,7 @@ for (const entry of manifest.sources) {
   alias.page_id = `alias-${entry.page_id}`;
   delete alias.original_copy;
   await assert.rejects(validateSelection(aliased, { ...record, page_id: alias.page_id }), { code: 'TEMPLATE_COPY_MISMATCH' });
+  if (!entry.rejected_shadow) continue; // New originals never had a rejected shadow.
   const reverted = structuredClone(catalog);
   const wrong = reverted.pages.find(item => item.page_id === entry.page_id);
   wrong.source_ref = entry.rejected_shadow.source;

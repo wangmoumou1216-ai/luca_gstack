@@ -169,10 +169,34 @@ async function renderOriginalCopyPreview(entry, bytes, suppliedBrowser) {
       } else { blocked.push(route.request().url()); await route.abort('blockedbyclient'); }
     });
     await page.goto(`${origin}/original`, { waitUntil: 'load' });
+    const fragmentProjection = await page.evaluate(fragments => {
+      const uniqueId = id => {
+        const nodes = [...document.querySelectorAll('[id]')].filter(node => node.id === id);
+        if (nodes.length !== 1) throw new Error('PREVIEW_FRAGMENT: missing or ambiguous source/target');
+        return nodes[0];
+      };
+      const prepared = fragments.map(fragment => {
+        const script = uniqueId(fragment.script_id), target = uniqueId(fragment.target_id);
+        if (script.tagName !== 'SCRIPT' || script.type !== 'application/json' || /^(SCRIPT|STYLE|HTML|HEAD|BODY)$/.test(target.tagName)) throw new Error('PREVIEW_FRAGMENT: JSON data and a content target required');
+        const data = JSON.parse(script.textContent);
+        if (!Object.hasOwn(data, fragment.json_key) || typeof data[fragment.json_key] !== 'string') throw new Error('PREVIEW_FRAGMENT: source key must contain captured HTML');
+        const template = document.createElement('template');
+        template.innerHTML = data[fragment.json_key];
+        template.content.querySelectorAll('script,style,link,iframe,object,embed,base,meta,template').forEach(node => node.remove());
+        for (const node of template.content.querySelectorAll('*')) for (const attr of [...node.attributes]) {
+          if (/^on/i.test(attr.name) || ['nonce','srcdoc','autofocus','action','formaction','ping'].includes(attr.name)) node.removeAttribute(attr.name);
+          if (['href','xlink:href'].includes(attr.name) && !attr.value.startsWith('#')) node.removeAttribute(attr.name);
+        }
+        return {target, content:template.content};
+      });
+      if (new Set(prepared.map(item=>item.target)).size !== prepared.length || prepared.some((a,i)=>prepared.some((b,j)=>i!==j && a.target.contains(b.target)))) throw new Error('PREVIEW_FRAGMENT: overlapping targets');
+      for (const item of prepared) item.target.replaceChildren(item.content);
+      return { count: fragments.length, sources: fragments, scope: 'inert captured-HTML projection only; projected nodes are not original edit locations' };
+    }, entry.preview_fragments ?? []).catch(error => fail('PREVIEW_FRAGMENT', error.message));
     await page.evaluate(async () => { await document.fonts.ready; });
     const png = await page.screenshot({ fullPage: true });
     const dimensions = await page.evaluate(() => ({ width: Math.max(document.documentElement.scrollWidth, innerWidth), height: Math.max(document.documentElement.scrollHeight, innerHeight) }));
-    return { png, manifest: { schema_version: 1, page_id: entry.page_id, source_hash: entry.source_hash, viewport: entry.viewport, screenshot: { sha256: hash(png), width: dimensions.width, height: dimensions.height, source_hash: entry.source_hash, viewport: entry.viewport }, regions: [], fidelity: 'original-bytes-preserved', execution: 'scripts-disabled', scope: 'initial inert display only; not interaction/state or OD acceptance', blocked_requests: blocked } };
+    return { png, manifest: { schema_version: 1, page_id: entry.page_id, name:entry.name, source_hash: entry.source_hash, viewport: entry.viewport, screenshot: { sha256: hash(png), width: dimensions.width, height: dimensions.height, source_hash: entry.source_hash, viewport: entry.viewport }, regions: [], fidelity: 'original-bytes-preserved', execution: 'scripts-disabled', fragment_projection:fragmentProjection, scope: 'initial inert display only; not interaction/state or OD acceptance', blocked_requests: blocked } };
   } finally { await context.close(); if (!suppliedBrowser) await browser.close(); }
 }
 

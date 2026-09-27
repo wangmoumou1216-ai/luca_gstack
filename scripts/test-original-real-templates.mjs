@@ -5,12 +5,27 @@ import { sha256Bytes as hash } from './carrier-asset-profile.mjs';
 import { createCarrierPacket } from './carrier-packet.mjs';
 import { locateOriginalEditRanges, verifyOriginalEditedOutput } from './original-template-edits.mjs';
 import { prepareOriginalCopyHandoff } from './original-copy-handoff.mjs';
+import { loadCatalog, discoverCandidateHints } from './page-context.mjs';
+const catalog=await loadCatalog();
+for (const [pageId,queries] of [
+  ['ai-quick-notes',['速记','AI速记','快速记录会议笔记','把录音转文字并查看会议纪要','在现场会议的录音工作区里增加说明']],
+  ['shareagent',['ShareAgent','shareagent','share agent','在智能体对话里查看产出物预览','配置定时任务并查看任务日志','管理技能管理和模型配置']]
+]) for (const query of queries) {
+  const hints=discoverCandidateHints(catalog,query).candidate_hints;
+  const hint=hints.find(h=>h.page_id===pageId);
+  assert.ok(hint,`${pageId}: discover real use case ${query}`);
+  assert.equal(hint.binding_mode,'original-preserving-v1');
+  assert.equal(hint.source_hash,catalog.pages.find(p=>p.page_id===pageId).source_hash);
+}
+assert.equal(discoverCandidateHints(catalog,'双轨音频剪辑和试听').status,'NO_HINT','unrelated audio editing is not recording-template adoption');
+console.log('PASS new originals discovered by Chinese/English names and natural-use aliases; unrelated request has no hint');
 const manifest=JSON.parse(await readFile('.claude/skill-os/page-library/source-manifest.json','utf8'));
-const targets={'settings-lead-pool':'crmmanage','customer-list-detail':'sub-tpl','crm-workbench-home':'workspaceCard','sales-record-list-detail':'tab-content-slot'};
+const targets={'settings-lead-pool':'crmmanage','customer-list-detail':'sub-tpl','crm-workbench-home':'workspaceCard','sales-record-list-detail':'tab-content-slot','ai-quick-notes':'source-shell','shareagent':'replica-app'};
 const browser=await chromium.launch({headless:true});
 try {
   for(const source of manifest.sources){
     const base=await readFile(source.copy_source);
+    assert.ok(targets[source.page_id],`${source.page_id}: real original needs an explicit tested target`);
     const action={action_id:'C-01',action:'add',scope:[],locator:{kind:'attribute',name:'id',value:targets[source.page_id]}};
     const proof=await locateOriginalEditRanges(base,[action],{browser});
     const range=proof.targets[0],fragment='<span>Local original-preservation fixture</span>';

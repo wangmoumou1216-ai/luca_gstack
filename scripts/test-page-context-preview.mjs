@@ -41,6 +41,19 @@ try {
       assert.equal(shot.manifest.fidelity, 'original-bytes-preserved');
       assert.equal(shot.manifest.execution, 'scripts-disabled');
       assert.equal(shot.manifest.source_hash, entry.original_copy.sha256);
+      if (entry.preview_fragments) {
+        assert.equal(shot.manifest.fragment_projection.count,entry.preview_fragments.length);
+        assert.deepEqual(shot.manifest.fragment_projection.sources,entry.preview_fragments);
+        const plainCatalog=structuredClone(catalog);
+        delete plainCatalog.pages.find(p=>p.page_id===entry.page_id).preview_fragments;
+        const shell=await renderPreview({catalog:plainCatalog,pageId:entry.page_id,root,browser});
+        assert.notEqual(shell.manifest.screenshot.sha256,shot.manifest.screenshot.sha256,'captured content must appear instead of an empty shell');
+        for (const change of [{json_key:'missing-key'},{target_id:'missing-target'},{script_id:'missing-data'}]) {
+          const bad=structuredClone(catalog);
+          Object.assign(bad.pages.find(p=>p.page_id===entry.page_id).preview_fragments[0],change);
+          await assert.rejects(renderPreview({catalog:bad,pageId:entry.page_id,root,browser}),{code:'PREVIEW_FRAGMENT'});
+        }
+      }
       await assert.rejects(renderPreview({ catalog, pageId: entry.page_id, root, browser, carrierOnly: true }), { code: 'CARRIER_INELIGIBLE' });
     }
     for (const region of shot.manifest.regions) assert.ok(region.visible && region.bounds.width > 0 && region.bounds.height > 0, `${entry.page_id}/${region.region_id}: region must be visible in the default screenshot`);
@@ -159,6 +172,21 @@ try {
     const withEvent = await renderFixture(`${staticPage}<img src="./assets/safe.svg" onload='fetch(${JSON.stringify(remote)})'>`);
     assert.equal(withEvent.manifest.render.removed_events, 1);
     assert.equal(networkHits, 0);
+    const inertRef='.claude/skill-os/page-library/sources/originals/inert-fragment.html';
+    const fragment=`<h1>Captured preview</h1><img src="${remote}" onerror="fetch('${remote}')"><script>fetch('${remote}')</script><iframe src="${remote}"></iframe>`;
+    const original=`<!doctype html><html><head></head><body><main id="target"></main><script id="data" type="application/json">${JSON.stringify({home:fragment,other:fragment}).replaceAll('<','\\u003c')}</script></body></html>`;
+    mkdirSync(dirname(resolve(fixtureRoot,inertRef)),{recursive:true});
+    writeFileSync(resolve(fixtureRoot,inertRef),original);
+    const originalHash=createHash('sha256').update(original).digest('hex');
+    const inertPage={...sixth,page_id:'inert-fragment',source_ref:inertRef,source_hash:originalHash,regions:[],original_copy:{sha256:originalHash,bytes:Buffer.byteLength(original),status:'adapter-available'},preview_fragments:[{script_id:'data',json_key:'home',target_id:'target'}]};
+    const projected=await renderPreview({catalog:{...catalog,pages:[inertPage]},pageId:inertPage.page_id,root:fixtureRoot,browser});
+    assert.equal(projected.manifest.execution,'scripts-disabled');
+    assert.equal(projected.manifest.fragment_projection.count,1);
+    assert.equal(networkHits,0,'projected source scripts, events, frames and resources cannot reach the network');
+    assert.equal(readFileSync(resolve(fixtureRoot,inertRef),'utf8'),original,'projection never writes the stored original');
+    const duplicate={...inertPage,preview_fragments:[...inertPage.preview_fragments,{...inertPage.preview_fragments[0],json_key:'other'}]};
+    await assert.rejects(renderPreview({catalog:{...catalog,pages:[duplicate]},pageId:duplicate.page_id,root:fixtureRoot,browser}),{code:'PREVIEW_FRAGMENT'});
+    console.log('PASS captured JSON projection remains inert, rejects duplicate targets and leaves original bytes intact');
     console.log('PASS source scripts and remote image/CSS requests are rejected; source events stay inert with zero loopback hits');
     mkdirSync(resolve(assets, 'vendor'), { recursive: true });
     writeFileSync(resolve(assets, 'vendor/tailwindcss.com.js'), 'throw new Error("unreviewed compiler")');
@@ -191,7 +219,8 @@ try {
     assert.equal(source.split(guard).length, 2, 'mutation must target exactly one real screenshot guard');
     const mutant = source.replace(guard, '!Buffer.isBuffer(png)')
       .replace("from 'playwright'", () => `from ${JSON.stringify(import.meta.resolve('playwright'))}`)
-      .replace("from './page-context.mjs'", () => `from ${JSON.stringify(pathToFileURL(resolve(root, 'scripts/page-context.mjs')).href)}`);
+      .replace("from './page-context.mjs'", () => `from ${JSON.stringify(pathToFileURL(resolve(root, 'scripts/page-context.mjs')).href)}`)
+      .replace("from './carrier-asset-profile.mjs'", () => `from ${JSON.stringify(pathToFileURL(resolve(root, 'scripts/carrier-asset-profile.mjs')).href)}`);
     const mutantPath = resolve(fixtureRoot, 'mutant-preview.mjs');
     writeFileSync(mutantPath, mutant);
     const modified = await import(pathToFileURL(mutantPath).href);

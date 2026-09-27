@@ -71,7 +71,14 @@ export function resolve(input, {verifyCapability} = {}) {
     const selected = config[scene.role];
     const selectedRank = selected ? (order?.indexOf(selected.model) ?? -1) : -1;
     if (scene.role === 'peak') {
-      if (!order || anchorRank < 0 || selectedRank < 0) return fail('NEEDS_CONTEXT', 'UNKNOWN_MODEL_RELATION');
+      if (!order || anchorRank < 0 || selectedRank < 0) {
+        const missing = order ? [...new Set([config.anchor.model, selected.model])]
+          .filter(model => !order.includes(model)) : [];
+        return {...fail('NEEDS_CONTEXT', 'UNKNOWN_MODEL_RELATION'),
+          diagnostic: order
+            ? `UNKNOWN_MODEL_RELATION: models absent from private binding approved_order: ${missing.join(', ')}`
+            : 'UNKNOWN_MODEL_RELATION: private binding approved_order must be a unique ordered list of model names'};
+      }
       if (anchorRank >= selectedRank) {
         choice = config.anchor;
         adaptation = 'NO_MODEL_UPGRADE';

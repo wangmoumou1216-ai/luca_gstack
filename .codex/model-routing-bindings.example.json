@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "harnesses": {
+    "codex": {
+      "peak_model": "gpt-6-astra",
+      "light_model": "gpt-6-luna",
+      "approved_order": [
+        "gpt-6-luna",
+        "gpt-6-sol",
+        "gpt-6-astra"
+      ]
+    }
+  }
+}

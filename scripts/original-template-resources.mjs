@@ -71,7 +71,29 @@ export async function inspectOriginalResources(bytes, { browser: suppliedBrowser
         const urlTokenCount = value => [...value.matchAll(/url\s*\(/gi)].length;
         const imageSetTokenCount = value => [...value.matchAll(/(?:-webkit-)?image-set\s*\(/gi)].length;
         const serialized = [...sheet.cssRules].map(rule => rule.cssText).join('\n');
-        if (urlTokenCount(lexical) !== urlTokenCount(serialized) || imageSetTokenCount(lexical) !== imageSetTokenCount(serialized)) add('unknown', 'dropped-css-resource', 'css parse', policies, true);
+        if (urlTokenCount(lexical) !== urlTokenCount(serialized) || imageSetTokenCount(lexical) !== imageSetTokenCount(serialized)) {
+          // CSSOM merges repeated declarations, including embedded data URLs.
+          // Inspect every original value: a dropped external resource must still
+          // fail, but duplicated self-contained resources are not missing assets.
+          const parsedUrls = [...lexical.matchAll(/url\([\t\n\f\r ]*(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*'|[^)]*)[\t\n\f\r ]*\)/gi)];
+          for (const match of parsedUrls) scanCssValue(match[0], 'unknown', 'css parse', policies);
+          if (parsedUrls.length !== urlTokenCount(lexical)) add('unknown', 'unparsed-css-resource', 'css parse', policies, true);
+          // Vendor-prefixed and standard image-set declarations may also be
+          // merged. Close each original function before checking its candidates;
+          // bare quoted candidates and malformed functions remain unsupported.
+          for (const match of lexical.matchAll(/(?:-webkit-)?image-set\s*\(/gi)) {
+            let depth = 1, quote = null, end = match.index + match[0].length;
+            for (; end < lexical.length && depth; end++) {
+              const char = lexical[end];
+              if (quote) { if (char === '\\') end++; else if (char === quote) quote = null; }
+              else if (char === '"' || char === "'") quote = char;
+              else if (char === '(') depth++;
+              else if (char === ')') depth--;
+            }
+            if (depth) add('unknown', 'unparsed-image-set', 'css parse', policies, true);
+            else scanCssValue(lexical.slice(match.index, end), 'unknown', 'css parse', policies);
+          }
+        }
         const rules = entries => { for (const rule of entries) {
           if (rule.style) for (const name of rule.style) {
             const value = rule.style.getPropertyValue(name);
@@ -111,9 +133,12 @@ export async function inspectOriginalResources(bytes, { browser: suppliedBrowser
           for (const attr of ['href', 'xlink:href']) if (node.hasAttribute(attr)) add('script', node.getAttribute(attr), `script ${attr}`, policies);
           // SVG ignores `src` and can execute its inline body; SVG href and
           // xlink:href can also carry data scripts. Dynamic import() works in
-          // classic scripts and event handlers. Lexical false positives are
-          // acceptable in this fail-closed single-file profile.
-          if (((isSvg || !node.hasAttribute('src')) && /\bimport\b/.test(node.textContent)) || (type === 'module' && (isSvg || !node.hasAttribute('src')) && /\bexport\b/.test(node.textContent)) || scriptUrls.some(url => /^data:/i.test(url))) add('unknown', 'unclosed-script-graph', 'script graph', policies, true);
+          // classic scripts and event handlers. Import-button labels are not
+          // module graphs; classic scripts require the import(...) form.
+          // String/comment occurrences of that form still fail conservatively.
+          const dynamicImport = /\bimport(?:\s|\/\*[\s\S]*?\*\/|(?:\/\/|<!--|-->)[^\r\n\u2028\u2029]*(?:[\r\n\u2028\u2029]|$))*\(/;
+          const moduleGraph = type === 'module' && /\b(?:import|export)\b/.test(node.textContent);
+          if (((isSvg || !node.hasAttribute('src')) && (dynamicImport.test(node.textContent) || moduleGraph)) || scriptUrls.some(url => /^data:/i.test(url))) add('unknown', 'unclosed-script-graph', 'script graph', policies, true);
           if (type === 'importmap') add('unknown', 'unclosed-import-map', 'import map', policies, true);
         }
         if (tag === 'link' && node.hasAttribute('href')) {

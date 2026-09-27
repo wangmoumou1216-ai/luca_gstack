@@ -153,18 +153,31 @@ const LEARNING_ACTIONS = '.claude/skills/office/references/learning-actions.md';
 const WORKFLOW_MODE = '.claude/skill-os/runtime/workflow-mode.md';
 const INPUT_MODE_SOURCE = '.claude/skill-os/input-modes.yaml';
 const INPUT_MODE_VIEW_TEMPLATE = '.claude/skill-os/generated/input-modes/<key>.json';
-const G5_PLAN_PATH = '/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-21-context-lightening-execution-plan.md';
-const G5_PLAN_SHA256 = '2ca0cd4d696ae86a72bdabb9e7fc29960b1df42b57fead7605d4390888d4ba0a';
-const G5_READINESS_PATH = '/private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts/g5-preapproval-readiness.md';
-const G5_READINESS_SHA256 = '1858f349b669185710327234cc62be3c7c5e2f378fbe01d97a8ba6dbac54a13f';
-const G5_CONTEXTS = Object.freeze({
+let G5_PLAN_PATH = '/Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-21-context-lightening-execution-plan.md';
+let G5_PLAN_SHA256 = '2ca0cd4d696ae86a72bdabb9e7fc29960b1df42b57fead7605d4390888d4ba0a';
+let G5_READINESS_PATH = '/private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts/g5-preapproval-readiness.md';
+let G5_READINESS_SHA256 = '1858f349b669185710327234cc62be3c7c5e2f378fbe01d97a8ba6dbac54a13f';
+let G5_CONTEXTS = Object.freeze({
   baseline: Object.freeze({ root: '/private/tmp/context-lightening-p1.kHzsIW/baseline',
     sha256: 'a3978160c8727cc65ac940bd484529e600a5169e3d0662fdc5871186dc367fec' }),
   candidate: Object.freeze({ root: '/private/tmp/context-lightening-p1.kHzsIW/candidate',
     sha256: '633c5b32d9eb3f4b9f345cd768f1c51dc981cc7e052d70747c6796e16a6a5f2f' }),
 });
 const G5_HARNESS_VERSIONS = Object.freeze({ claude: '2.1.278', codex: '0.156.0' });
-const G5_STATE_PARENT = '/private/tmp/context-lightening-p1.kHzsIW/g5-live-state';
+let G5_STATE_PARENT = '/private/tmp/context-lightening-p1.kHzsIW/g5-live-state';
+// Frozen production bindings stay independent of the explicitly gated offline fixture.
+const G5_PRODUCTION_BINDINGS = Object.freeze({ contexts: G5_CONTEXTS,
+  plan: { path: G5_PLAN_PATH, sha256: G5_PLAN_SHA256 },
+  readiness: { path: G5_READINESS_PATH, sha256: G5_READINESS_SHA256 },
+  state_parent: G5_STATE_PARENT });
+function g5UseBindings(bindings) {
+  G5_CONTEXTS = bindings.contexts;
+  G5_PLAN_PATH = bindings.plan.path;
+  G5_PLAN_SHA256 = bindings.plan.sha256;
+  G5_READINESS_PATH = bindings.readiness.path;
+  G5_READINESS_SHA256 = bindings.readiness.sha256;
+  G5_STATE_PARENT = bindings.state_parent;
+}
 const G5_CODEX_CALIBRATION_PROFILE = 'CODEX_CALIBRATION_4_PARTIAL';
 const G5_CODEX_CALIBRATION_DECISION = 'APPROVED_CODEX_CALIBRATION_4_PARTIAL';
 const G5_PARTIAL_OUTCOME_CEILING = 'INCONCLUSIVE';
@@ -200,6 +213,35 @@ if (g5Mode && (!['describe', 'calibration', 'codex-calibration', 'remaining', 'f
 if (g5OfflineFakeTransport && (!g5Mode || g5Describe || process.env.G5_OFFLINE_FAKE_TRANSPORT !== '1')) {
   console.error('offline fake transport is restricted to an explicitly marked G5 self-test subprocess');
   process.exit(2);
+}
+if (g5Mode && !g5OfflineFakeTransport && releaseManifest?.g5?.test_only === true) {
+  console.error('G5 live release cannot be test-only');
+  process.exit(2);
+}
+if (g5OfflineFakeTransport) {
+  try {
+    assert.equal(releaseManifest?.g5?.test_only, true,
+      'G5 offline fake release must be explicitly test-only');
+    const snapshotPath = process.env.G5_OFFLINE_BINDINGS_PATH;
+    const bytes = readFileSync(snapshotPath);
+    assert.equal(sha256(bytes), process.env.G5_OFFLINE_BINDINGS_SHA256,
+      'G5 offline fixture snapshot bytes drifted');
+    const bindings = JSON.parse(bytes);
+    assert.equal(bindings.test_only, true, 'G5 offline fixture must be test-only');
+    assert.equal(realpathSync(snapshotPath), resolve(snapshotPath), 'G5 offline snapshot path must be canonical');
+    assert.ok(lstatSync(snapshotPath).isFile() && !lstatSync(snapshotPath).isSymbolicLink(),
+      'G5 offline snapshot must be a regular non-symlink file');
+    const fixtureRoot = dirname(snapshotPath);
+    for (const path of [bindings.state_parent, bindings.plan.path, bindings.readiness.path,
+      bindings.contexts.baseline.root, bindings.contexts.candidate.root]) {
+      assert.ok(path.startsWith(`${fixtureRoot}/`) && realpathSync(path) === path,
+        'G5 offline binding must stay inside its canonical fixture');
+    }
+    g5UseBindings(bindings);
+  } catch (error) {
+    console.error(`G5 offline fixture invalid: ${error.message}`);
+    process.exit(2);
+  }
 }
 if (!g5Mode && (g5CellId || g5LedgerPath || codexModel || codexEffort)) {
   console.error('G5 cell/ledger and Codex identity options require --g5-phase');
@@ -437,7 +479,7 @@ function walk(path, files = [], excluded = new Set()) {
   return files;
 }
 
-function contextFiles() {
+function contextFiles(contextRoot = root, contextArm = arm) {
   const sources = [
     'CLAUDE.md', 'AGENTS.md', 'CONTEXT.md', '.claude/agents/plan-agent.md', '.claude/agents/references',
     '.claude/skill-os', '.claude/skills/office', 'memory/scripts/get_memory.py',
@@ -445,17 +487,17 @@ function contextFiles() {
     'memory/semantic/promoted-facts.yaml', 'memory/semantic/static-fallback-allowlist.txt',
     'memory/episodic/index.jsonl', 'memory/evals/eval-log.jsonl',
   ];
-  const excluded = arm === 'candidate'
-    ? new Set([join(root, '.claude/skill-os/claude-md-appendix.md')])
+  const excluded = contextArm === 'candidate'
+    ? new Set([join(contextRoot, '.claude/skill-os/claude-md-appendix.md')])
     : new Set();
-  return sources.flatMap((path) => walk(join(root, path), [], excluded)).sort();
+  return sources.flatMap((path) => walk(join(contextRoot, path), [], excluded)).sort();
 }
 
-function contextIdentity() {
-  const files = contextFiles();
+function contextIdentity(contextRoot = root, contextArm = arm) {
+  const files = contextFiles(contextRoot, contextArm);
   const hash = createHash('sha256');
   for (const path of files) {
-    const rel = relative(root, path);
+    const rel = relative(contextRoot, path);
     const stat = lstatSync(path);
     hash.update(`${rel}\0${stat.isSymbolicLink() ? `LINK:${readlinkSync(path)}` : readFileSync(path)}\0`);
   }
@@ -5909,7 +5951,32 @@ function g5OfflineRelease(stateRoot, frozenBatchId, scorer) {
 }
 
 async function runG5OfflineTransportTests() {
-  mkdirSync(G5_STATE_PARENT, { recursive: true, mode: 0o700 });
+  const fixtureRoot = realpathSync(mkdtempSync(join(tmpdir(), 'g5-offline-context-fixture-')));
+  const bindings = { test_only: true, contexts: {}, state_parent: join(fixtureRoot, 'state') };
+  for (const armName of ['baseline', 'candidate']) {
+    const fixtureCheckout = join(fixtureRoot, armName);
+    mkdirSync(fixtureCheckout);
+    for (const source of contextFiles(root, armName)) {
+      const destination = join(fixtureCheckout, relative(root, source));
+      mkdirSync(dirname(destination), { recursive: true });
+      cpSync(source, destination, { dereference: false });
+    }
+    bindings.contexts[armName] = { root: fixtureCheckout,
+      sha256: contextIdentity(fixtureCheckout, armName).context_sha256 };
+  }
+  for (const kind of ['plan', 'readiness']) {
+    const path = join(fixtureRoot, `${kind}.md`);
+    const bytes = `OFFLINE_FAKE_TRANSPORT_SELF_TEST_ONLY ${kind} fixture\n`;
+    writeFileSync(path, bytes, { flag: 'wx' });
+    bindings[kind] = { path, sha256: sha256(bytes) };
+  }
+  mkdirSync(bindings.state_parent, { mode: 0o700 });
+  const bindingsPath = join(fixtureRoot, 'bindings.json');
+  const bindingsBytes = `${JSON.stringify(bindings)}\n`;
+  writeFileSync(bindingsPath, bindingsBytes, { flag: 'wx', mode: 0o600 });
+  const offlineEnv = { G5_OFFLINE_BINDINGS_PATH: bindingsPath,
+    G5_OFFLINE_BINDINGS_SHA256: sha256(bindingsBytes) };
+  g5UseBindings(bindings);
   const frozenBatchId = `offline-self-test-${randomUUID()}`;
   const stateRoot = join(G5_STATE_PARENT, frozenBatchId);
   const timeoutBatchId = `offline-timeout-self-test-${randomUUID()}`;
@@ -5968,6 +6035,7 @@ async function runG5OfflineTransportTests() {
         ...(options.extraArgs || [])];
       return run(process.execPath, args, { timeoutMs: 60_000, env: {
         ...process.env, PATH: `${fakeRoot}:${process.env.PATH || ''}`,
+        ...offlineEnv,
         ...(options.productionMode ? {} : { G5_OFFLINE_FAKE_TRANSPORT: '1' }),
         G5_FAKE_RESPONSES: JSON.stringify(options.responses || g5OfflineFakeResponses(cell)),
         G5_FAKE_MODEL: model, G5_FAKE_EFFORT: effort, G5_FAKE_LOG: options.fakeLog || fakeLog,
@@ -5985,7 +6053,7 @@ async function runG5OfflineTransportTests() {
       '--offline-fake-transport-self-test',
       ...extraArgs,
     ], { timeoutMs: 60_000, env: { ...process.env,
-      PATH: `${fakeRoot}:${process.env.PATH || ''}`, G5_OFFLINE_FAKE_TRANSPORT: '1' } });
+      PATH: `${fakeRoot}:${process.env.PATH || ''}`, G5_OFFLINE_FAKE_TRANSPORT: '1', ...offlineEnv } });
     const stateLockPath = join(stateRoot, '.cell-lock');
     const writeTestStateLock = (cellId, pid) => {
       writeFileSync(stateLockPath, `${JSON.stringify({
@@ -6017,6 +6085,25 @@ async function runG5OfflineTransportTests() {
       invokeFinalize(['--fallback-ids', 'F1']), /options not valid for G5/);
     await expectNoDispatch('production admission accepted test-only release',
       invokeCell(firstCalibration, { productionMode: true }), /live release cannot be test-only/);
+    const productionFixturePath = join(stateRoot, 'production-fixture-release.json');
+    const productionFixtureRelease = structuredClone(release);
+    delete productionFixtureRelease.g5.test_only;
+    writeFileSync(productionFixturePath, `${JSON.stringify(productionFixtureRelease)}\n`);
+    await expectNoDispatch('production accepted offline bindings from environment',
+      invokeCell(firstCalibration, { productionMode: true, release: productionFixturePath }),
+      /release baseline context binding mismatch/);
+    try {
+      appendFileSync(bindingsPath, '\n');
+      await expectNoDispatch('offline snapshot byte drift reached transport',
+        invokeCell(firstCalibration), /offline fixture snapshot bytes drifted/);
+    } finally { writeFileSync(bindingsPath, bindingsBytes); }
+    const driftPath = join(G5_CONTEXTS[firstCalibration.arm].root, 'CONTEXT.md');
+    const originalContextBytes = readFileSync(driftPath);
+    try {
+      appendFileSync(driftPath, '\nOFFLINE_CONTEXT_DRIFT_SENTINEL\n');
+      await expectNoDispatch('real context byte drift reached transport',
+        invokeCell(firstCalibration), /selected context bytes drifted/);
+    } finally { writeFileSync(driftPath, originalContextBytes); }
     for (const cell of g5MatrixSplit.calibration) {
       let result;
       const responses = g5OfflineFakeResponses(cell);
@@ -6481,12 +6568,14 @@ async function runG5OfflineTransportTests() {
     return { fake_cells_passed_before_mutation: 10, fake_turns_passed: logs.length - 1,
       baseline_fail_continuation_mutations: 1, candidate_fail_blocking_mutations: 1,
       rescore_mutations: 4, provenance_mutations: 8, async_transport_orderings: 2,
-      timeout_attempts: 1, crash_attempts: 1, admission_mutations: 21,
+      timeout_attempts: 1, crash_attempts: 1, admission_mutations: 24,
       finalize_recovery_entry_checks: 4, live_sessions: 0 };
   } finally {
     rmSync(fakeRoot, { recursive: true, force: true });
     rmSync(stateRoot, { recursive: true, force: true });
     rmSync(timeoutStateRoot, { recursive: true, force: true });
+    g5UseBindings(G5_PRODUCTION_BINDINGS);
+    rmSync(fixtureRoot, { recursive: true, force: true });
   }
 }
 

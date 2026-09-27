@@ -722,6 +722,132 @@
         "bytes": 283609,
         "status": "adapter-available"
       }
+    },
+    {
+      "page_id": "ai-quick-notes",
+      "name": "AI 速记",
+      "aliases": [
+        "AI速记",
+        "速记",
+        "会议速记",
+        "快速记录会议笔记",
+        "录音工作区",
+        "实时转写",
+        "录音转文字",
+        "语音转写",
+        "会议纪要",
+        "会议记录",
+        "销售录音",
+        "现场会议",
+        "销售速记",
+        "ai shorthand",
+        "quick notes"
+      ],
+      "intent": "通过现场会议或销售录音入口记录沟通，配置业务类型与记录模板，查看语料、关键信号、会议总结、待办与历史详情；支持本地模拟的暂停、最小化、结束、预览与编辑。",
+      "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
+      "source_ref": ".claude/skill-os/page-library/sources/originals/ai-quick-notes.html",
+      "source_hash": "5fbc8bc31f7b4785a28554e46555b60988acc26d13feaac7fcd8e92fe8c6561e",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "home",
+        "meeting-recording",
+        "sales-recording",
+        "paused",
+        "minimized",
+        "transcript",
+        "signals",
+        "processing",
+        "preview",
+        "edit",
+        "history",
+        "detail",
+        "settings",
+        "import"
+      ],
+      "regions": [],
+      "original_copy": {
+        "sha256": "5fbc8bc31f7b4785a28554e46555b60988acc26d13feaac7fcd8e92fe8c6561e",
+        "bytes": 1674538,
+        "status": "adapter-available"
+      },
+      "preview_fragments": [
+        {
+          "script_id": "embedded-data",
+          "json_key": "home",
+          "target_id": "home"
+        }
+      ]
+    },
+    {
+      "page_id": "shareagent",
+      "name": "ShareAgent 智能体工作区",
+      "aliases": [
+        "ShareAgent",
+        "shareagent",
+        "share agent",
+        "智能体工作区",
+        "AI助手工作区",
+        "智能体对话",
+        "Agent会话",
+        "智能体管理",
+        "技能管理",
+        "定时任务",
+        "任务日志",
+        "产出物预览",
+        "工作看板",
+        "模型配置",
+        "身份记忆",
+        "知识库问答"
+      ],
+      "intent": "在智能体工作区发起对话、管理历史会话与技能，配置定时任务并查看日志，预览和导出产出物，管理看板及个人、模型与记忆设置；业务调用与录音为本地模拟。",
+      "scope": "framework",
+      "lifecycle": "live",
+      "carrier_eligible": false,
+      "source_ref": ".claude/skill-os/page-library/sources/originals/shareagent.html",
+      "source_hash": "ac4ac6f75e90a608b689967d7192ff6532b6b27756a5d158ca55e03acc02bfcc",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "states": [
+        "home",
+        "chat",
+        "agents",
+        "skills",
+        "tasks",
+        "logs",
+        "artifacts",
+        "dashboards",
+        "settings-personal",
+        "settings-models",
+        "settings-memory",
+        "session-panel",
+        "file-preview",
+        "recording"
+      ],
+      "regions": [],
+      "original_copy": {
+        "sha256": "ac4ac6f75e90a608b689967d7192ff6532b6b27756a5d158ca55e03acc02bfcc",
+        "bytes": 2953181,
+        "status": "adapter-available"
+      },
+      "preview_fragments": [
+        {
+          "script_id": "replica-templates",
+          "json_key": "sidebar",
+          "target_id": "replica-sidebar"
+        },
+        {
+          "script_id": "replica-templates",
+          "json_key": "home-main",
+          "target_id": "replica-stage"
+        }
+      ]
     }
   ]
 }

@@ -21,6 +21,23 @@ const args={pageId:'fixture',packetBody,target:{tool:'od',projectId:'original-fi
 const browser=await chromium.launch({headless:true});
 try {
   const rejectsAssets = html => assert.rejects(inspectOriginalResources(Buffer.from(html),{browser}),{code:'ORIGINAL_ASSETS_REQUIRED'});
+  for (const script of ["const action='import-menu'; function importConfirm() {}", "const action='finish-import-skill';"]) {
+    assert.equal((await inspectOriginalResources(Buffer.from(`<html><body><script>${script}</script></body></html>`),{browser})).unresolved.length,0,'import UI labels are not dynamic module imports');
+  }
+  const duplicatedEmbedded = '<style>.x{background:url("data:image/png;base64,AA==");background:url("data:image/png;base64,AA==")}</style>';
+  assert.equal((await inspectOriginalResources(Buffer.from(`<html><head>${duplicatedEmbedded}</head><body></body></html>`),{browser})).unresolved.length,0,'CSSOM merging embedded declarations cannot make a complete original unavailable');
+  const embeddedSet = 'image-set(url("data:image/png;base64,AA==") 1x, url("data:image/png;base64,AQ==") 2x)';
+  assert.equal((await inspectOriginalResources(Buffer.from(`<html><head><style>.x{background:-webkit-${embeddedSet};background:${embeddedSet}}</style></head><body></body></html>`),{browser})).unresolved.length,0,'merged vendor-prefixed embedded image-set candidates stay closed');
+  await rejectsAssets(`<html><head><style>.x{background:image-set("assets/dropped.png" 1x);background:${embeddedSet}}</style></head><body></body></html>`);
+  await rejectsAssets('<html><head><style>.x{background:url("assets/dropped.png");background:url("data:image/png;base64,AA==")}</style></head><body></body></html>');
+  await rejectsAssets('<html><body><script>import // line comment\n /* block comment */ ("./dependency.js")</script></body></html>');
+  for (const newline of ['\n', '\r\n', '\r', '\u2028', '\u2029']) {
+    for (const gap of [`// line comment${newline}`, `<!-- HTML comment${newline}`, `${newline}--> HTML comment${newline}`]) {
+      const code = `import${gap}("https://example.invalid/deferred.mjs");`;
+      new Function(code); // Parse only: valid dynamic-import syntax must still be rejected by the asset audit.
+      await rejectsAssets(`<html><body><script>${code}</script></body></html>`);
+    }
+  }
   for (const dependency of ['<link rel="stylesheet" href="assets/theme.css">','<link rel="preload" as="image" imagesrcset="assets/a.png 1x, assets/b.png 2x">','<link rel="preload" as="image" href="data:image/png;base64,AA==" imagesrcset="assets/a.png 1x">','<script src="assets/app.js"></script>','<img src="assets/logo.png">','<img lowsrc="assets/legacy-low.png">','<img dynsrc="assets/legacy-dynamic.png">','<table background="assets/legacy.png"><tr><td>x</td></tr></table>','<picture><source srcset="assets/a.png 1x, assets/b.png 2x"><img src="data:image/png;base64,AA=="></picture>']) await rejectsAssets(`<html><head></head><body>${dependency}</body></html>`);
   await rejectsAssets('<html><head></head><body background="assets/legacy-body.png"></body></html>');
   for (const refresh of ['<meta http-equiv="re&#102;resh" content="0;url=https://example.invalid/escape">','<meta http-equiv=" refresh " content="0;url=https://example.invalid/escape">','<meta http-equiv="refresh" content="0;https://example.invalid/escape">']) await rejectsAssets(`<html><head>${refresh}</head><body></body></html>`);

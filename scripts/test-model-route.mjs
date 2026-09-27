@@ -287,6 +287,7 @@ test('v2 resolve: peak relation is fail-closed while root anchor ignores ambient
   const unknown = requestV2('MR-003');
   unknown.effective_config.approved_order = ['gpt-5.6-luna', 'gpt-5.6-sol'];
   assert.equal(resolve(unknown, trusted).reason, 'UNKNOWN_MODEL_RELATION');
+  assert.match(resolve(unknown, trusted).diagnostic, /gpt-6-astra/);
 
   const stable = requestV2('MR-001');
   stable.effective_config.ambient_default = {model: 'future-model-a'};
@@ -296,6 +297,30 @@ test('v2 resolve: peak relation is fail-closed while root anchor ignores ambient
   assert.equal(before.requested_model, 'gpt-5.6-sol');
   assert.equal(after.requested_model, 'gpt-5.6-sol');
   assert.equal(before.routing_config_sha, after.routing_config_sha, 'ambient defaults do not replace an explicit root anchor');
+});
+test('v2 resolve: complete 6-series binding routes all roles; missing root names require explicit approval', () => {
+  const example = JSON.parse(readFileSync(join(root, '.codex/model-routing-bindings.example.json'), 'utf8'));
+  assert.equal(example.schema_version, 1);
+  assert.deepEqual(example.harnesses.codex, {peak_model: 'gpt-6-astra', light_model: 'gpt-6-luna',
+    approved_order: ['gpt-6-luna', 'gpt-6-sol', 'gpt-6-astra']});
+  for (const harness of ['codex-native', 'codex-cli']) {
+    for (const [scene, expected] of [['MR-001', 'gpt-6-sol'], ['MR-004', 'gpt-6-astra'], ['MR-008', 'gpt-6-luna']]) {
+      const input = requestV2(scene, harness);
+      input.effective_config.anchor.model = 'gpt-6-sol';
+      input.effective_config.light.model = example.harnesses.codex.light_model;
+      input.effective_config.peak.model = example.harnesses.codex.peak_model;
+      input.effective_config.approved_order = example.harnesses.codex.approved_order;
+      const route = resolve(input, trusted);
+      assert.equal(route.disposition, 'READY');
+      assert.equal(route.requested_model, expected);
+    }
+  }
+  const input = requestV2('MR-004');
+  input.effective_config.anchor.model = 'gpt-6-sol';
+  const denied = resolve(input, trusted);
+  assert.equal(denied.disposition, 'NEEDS_CONTEXT');
+  assert.match(denied.diagnostic, /approved_order: gpt-6-sol$/);
+  assert.equal('requested_model' in denied, false, 'unknown root relation must not silently select peak');
 });
 test('v2 dispatch: exact caller identity maps to scenes and unknown callers never guess', () => {
   assert.equal(resolveDispatchScene(policyV2, {kind: 'native-agent', agent_type: 'quality-gate'}), 'MR-004');
@@ -534,8 +559,8 @@ if (process.argv.includes('--mutation')) {
     ['v2-native-dispatch-misdirected', 'candidate', source => replace(source,
       'quality-gate: MR-004', 'quality-gate: MR-001'), "'MR-004'"],
     ['v2-peak-relation-ignored', 'module', source => replace(source,
-      "if (!order || anchorRank < 0 || selectedRank < 0) return fail('NEEDS_CONTEXT', 'UNKNOWN_MODEL_RELATION');",
-      'if (false) return fail(\'NEEDS_CONTEXT\', \'UNKNOWN_MODEL_RELATION\');'), 'UNKNOWN_MODEL_RELATION'],
+      'if (!order || anchorRank < 0 || selectedRank < 0) {',
+      'if (false) {'), 'UNKNOWN_MODEL_RELATION'],
     ['v2-light-upgrade-guard-removed', 'module', source => replace(source,
       '} else if (!order || anchorRank < 0 || selectedRank < 0 || selectedRank >= anchorRank) {',
       '} else if (false) {'), 'NO_MODEL_DOWNGRADE'],

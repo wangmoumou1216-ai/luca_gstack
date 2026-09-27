@@ -69,6 +69,24 @@
         "sha256": "882150a99f3825108db3291ae1a91862de34018d99ab2ebb6eeb69caf03b27ca",
         "reason": "User rejected simplified rewrite; cannot be used as original template or acceptance baseline."
       }
+    },
+    {
+      "page_id": "ai-quick-notes",
+      "raw_source": "/Users/luca/Desktop/模版/AI速记.html",
+      "raw_bytes": 1674538,
+      "raw_sha256": "5fbc8bc31f7b4785a28554e46555b60988acc26d13feaac7fcd8e92fe8c6561e",
+      "copy_source": ".claude/skill-os/page-library/sources/originals/ai-quick-notes.html",
+      "binding_status": "original-preserving-v1",
+      "resource_policy": "Preserve every embedded byte and original URL. Do not synthesize or fetch missing resources."
+    },
+    {
+      "page_id": "shareagent",
+      "raw_source": "/Users/luca/Desktop/模版/ShareAgent.html",
+      "raw_bytes": 2953181,
+      "raw_sha256": "ac4ac6f75e90a608b689967d7192ff6532b6b27756a5d158ca55e03acc02bfcc",
+      "copy_source": ".claude/skill-os/page-library/sources/originals/shareagent.html",
+      "binding_status": "original-preserving-v1",
+      "resource_policy": "Preserve every embedded byte and original URL. Do not synthesize or fetch missing resources."
     }
   ]
 }

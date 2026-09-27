@@ -286,6 +286,7 @@ async function validateCatalog(catalog, root) {
     const original = originals.find(source => source.page_id === page.page_id || source.copy_source === page.source_ref || source.raw_sha256 === page.source_hash);
     if (original && (page.page_id !== original.page_id || page.source_ref !== original.copy_source || page.source_hash !== original.raw_sha256 || page.original_copy?.bytes !== original.raw_bytes || page.original_copy?.sha256 !== original.raw_sha256)) fail('TEMPLATE_COPY_MISMATCH', `${page.page_id}: source binding must reference the exact approved original copy with its protected identity`);
     if (page.original_copy && (page.carrier_eligible || page.regions.length || page.source_hash !== page.original_copy.sha256)) fail('ORIGINAL_COPY_CONTRACT', 'Original copies cannot reuse rewritten-page bindings or static-carrier approval');
+    if (page.preview_fragments && !page.original_copy) fail('ORIGINAL_COPY_CONTRACT', 'Captured fragment previews require a version-bound original copy');
     if (ids.has(page.page_id)) fail('PAGE_ID_REUSED', `Duplicate or retired page_id: ${page.page_id}`);
     ids.add(page.page_id);
     if (page.lifecycle !== 'live' && page.aliases.length) fail('PAGE_ALIAS_LIFECYCLE', `${page.page_id}: non-live pages cannot retain selectable aliases`);

@@ -20,9 +20,19 @@
 不执行原脚本、不注入HTML。`unique_in_scope=false` 的位置不得直接采用；`data-source-node` 仅是
 捕获线索，不是稳定模块ID。定位前可用 `locateOriginalNode` 从实际原件重新验证，拒绝版本漂移/歧义。
 
-登记信息放在外置 catalog/旁车中，不写入原 HTML。四份原件使用 `original_copy.status=adapter-available` 和
+登记信息放在外置 catalog/旁车中，不写入原 HTML。已通过适配验证的原件使用 `original_copy.status=adapter-available` 和
 `original-preserving-v1` 路径；每轮仍须验证具体位置/范围及实际输出，不表示所有交互均已验收。
 不能沿用旧影子页的 module/slot/state，也不能设为旧静态 `carrier_eligible`。原件交接参数见 runtime §7。
+
+当前原件预设：后台设置、客户列表到详情、CRM 工作台首页、销售记录列表到详情、AI 速记
+（`ai-quick-notes`）和 ShareAgent（`shareagent`）。名称、同义用途和状态由 catalog 登记；新增模板
+沿用同一发现流程，不追加 route-guard 关键词。AI 速记与 ShareAgent 的内部界面由原脚本及内嵌
+JSON 渲染；惰性索引只登记源文件中实际存在的节点，不能把运行后生成的按钮或页签伪造为原件锚点。
+后续修改原脚本/内嵌 JSON 的需求须另审适配范围，当前静态局部编辑器不会开放脚本编辑。
+`preview_fragments` 只描述从原件 `application/json` 数据读取已捕获 HTML 的展示投影：script_id、
+json_key 与 target_id 都来自真实原件。预览器不执行源脚本，去除片段脚本、事件、嵌入上下文与导航，
+继续阻断联网；展示片段不是新的模块/源锚点，不能用于 original_copy 局部编辑。源文件与交接输入
+仍是完整原件字节。缺键、非 HTML 字符串、重复/重叠目标直接拒绝预览，不展示空壳冒充完整页面。
 
 先读 `schema.json` 的 `page`、`module`、`slot` 及状态支持字段，然后参照一个结构相近的现有条目：
 

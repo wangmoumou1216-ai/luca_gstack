@@ -139,7 +139,7 @@ function routeForPhase(phaseName) {
       evidence: {owner: 'codex-app-server', ref: 'thread/start+turn/completed', harness: 'codex-cli'},
     },
   }, {verifyCapability: () => true});
-  if (route.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${route.reason}`);
+  if (route.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${route.diagnostic || route.reason}`);
   const policySha = modelRoutingPolicyDigest(policy);
   if (route.policy_sha !== policySha) throw new Error('MODEL_ROUTE_POLICY_DIGEST_MISMATCH');
   return {route, release_digest: releaseDigestForPolicy(policySha)};

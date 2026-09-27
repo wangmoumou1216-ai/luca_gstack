@@ -199,6 +199,30 @@ try {
   start(compactSession, 'gpt-6-astra', 'compact');
   equal(state(compactSession).root_generation, 1, 'compact root model change advances generation without new activation');
 
+  const seriesSession = 'root-six-series';
+  start(seriesSession, 'gpt-6-sol');
+  const deniedSeries = pre(seriesSession,
+    {task_name: 'six-review', message: 'judge', agent_type: 'quality-gate'}, 'tool-six-denied');
+  equal(deniedSeries.hookSpecificOutput.permissionDecision, 'deny', 'unlisted 6-series anchor fails closed');
+  equal(deniedSeries.hookSpecificOutput.permissionDecisionReason.includes('approved_order: gpt-6-sol'), true,
+    'missing model diagnostic identifies the private binding entry to approve');
+  writeFileSync(bindingsPath, `${JSON.stringify({schema_version: 1, harnesses: {codex: {
+    peak_model: 'gpt-6-astra', light_model: 'gpt-6-luna',
+    approved_order: ['gpt-6-luna', 'gpt-6-sol', 'gpt-6-astra'],
+  }}})}\n`, {mode: 0o600});
+  const repairedSeries = pre(seriesSession,
+    {task_name: 'six-review', message: 'judge', agent_type: 'quality-gate', reasoning_effort: 'high'}, 'tool-six-approved');
+  equal(repairedSeries.hookSpecificOutput.updatedInput.model, 'gpt-6-astra', 'approved 6-series peak is selected after explicit repair');
+  subStart(seriesSession, 'agent-six-review', 'quality-gate');
+  equal(subStop(seriesSession, 'agent-six-review', 'quality-gate', transcript({
+    sessionId: seriesSession, agentId: 'agent-six-review', agentType: 'quality-gate', model: 'gpt-6-astra',
+  })), {}, '6-series peak adopted evidence closes the repaired invocation');
+  equal(pre(seriesSession, {task_name: 'six-light', message: 'check', agent_type: 'preflight-agent'}, 'tool-six-light')
+    .hookSpecificOutput.updatedInput.model, 'gpt-6-luna', '6-series mechanical task selects approved light');
+  start('root-six-anchor', 'gpt-6-sol');
+  equal('model' in pre('root-six-anchor', {task_name: 'six-anchor', message: 'work'}, 'tool-six-anchor')
+    .hookSpecificOutput.updatedInput, false, '6-series normal execution inherits sol');
+
   run({hook_event_name: 'SessionEnd', session_id: lightSession, reason: 'other', cwd: ROOT});
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
 } finally {
