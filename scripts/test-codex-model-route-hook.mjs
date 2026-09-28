@@ -2,16 +2,26 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {cpSync, existsSync, mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {readActivation} from './model-route-host.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'codex-model-route-hook.')));
+const ROOT = join(scratch, 'gstack');
+mkdirSync(ROOT, {mode: 0o700});
+mkdirSync(join(ROOT, '.codex'), {mode: 0o700});
+mkdirSync(join(ROOT, 'scripts'), {mode: 0o700});
+mkdirSync(join(ROOT, '.claude'), {mode: 0o700});
+cpSync(join(repo, '.codex', 'model-route-hook.mjs'), join(ROOT, '.codex', 'model-route-hook.mjs'));
+for (const name of ['model-route.mjs', 'model-route-host.mjs']) {
+  cpSync(join(repo, 'scripts', name), join(ROOT, 'scripts', name));
+}
+cpSync(join(repo, '.claude', 'hooks', 'lib'), join(ROOT, '.claude', 'hooks', 'lib'), {recursive: true});
 const HOOK = join(ROOT, '.codex', 'model-route-hook.mjs');
-const scratch = mkdtempSync(join(tmpdir(), 'codex-model-route-hook.'));
-const protectedFixture = mkdtempSync(join(dirname(ROOT), '.codex-model-route-fixture-'));
+const protectedFixture = mkdtempSync(join(scratch, '.codex-model-route-fixture-'));
 const childStore = join(protectedFixture, 'child-store');
 const childCodexHome = join(protectedFixture, 'codex-home');
 mkdirSync(childStore, {mode: 0o700});
@@ -270,7 +280,6 @@ try {
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
 } finally {
   rmSync(scratch, {recursive: true, force: true});
-  rmSync(protectedFixture, {recursive: true, force: true});
 }
 
 process.stdout.write(`PASS: ${checks} Codex native model-route hook checks\n`);
