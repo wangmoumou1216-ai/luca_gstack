@@ -724,6 +724,8 @@ const cases = [
       assert.equal(decision.reason, 'no_keyword_match');
       assert.equal(decision.semanticFallback, true);
       assert.equal(decision.skill, undefined, '无关键词不得伪造确定性 skill');
+      assert.ok(!(decision.softCandidates || []).some(c => c.skill === '/to-spec'),
+        `generic “已确认的” wording must not suggest /to-spec: ${JSON.stringify(decision.softCandidates)}`);
     },
   },
   // ─────────────────────────────────────────────────────────────────────────

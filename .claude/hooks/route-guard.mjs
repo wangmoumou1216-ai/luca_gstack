@@ -512,8 +512,17 @@ function softSkillDecision(prompt, routes) {
         }
         continue;
       }
+      // Keep exact CJK/mixed phrases eligible, but do not let a generic
+      // four-character fragment from a longer trigger become a soft route.
+      // For example, “已确认的” is only a fragment of the to-spec trigger and
+      // carries no evidence that the user wants specification synthesis.
+      if (text.includes(t)) {
+        score += Math.min(t.length, 6);
+        matchedTokens.push(trigger);
+        continue;
+      }
       let bestLen = 0;
-      for (let len = Math.min(t.length, 6); len >= 3; len--) {
+      for (let len = Math.min(t.length, 6); len >= 5; len--) {
         for (let i = 0; i <= t.length - len; i++) {
           const sub = t.slice(i, i + len);
           // 混合 trigger（如'接入Claude'）滑出的纯 latin 碎片（'claude'）与 C2 同病——
