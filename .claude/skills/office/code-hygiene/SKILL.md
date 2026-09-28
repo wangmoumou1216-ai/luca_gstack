@@ -177,13 +177,26 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 R4 同时说明：既有资产对不上被审对象时，**按场景自建评审编排优于硬套**（如按本次风险面定制
 攻击维度的独立 agent）；下面是资产对得上时的省事路径。
 
+**项目代码的冷启动审查：** 调度方先按 `project-session.md` 验证目标项目，把其规范化绝对仓库根、
+固定的 diff 命令、spec/标准文件的绝对路径，以及展开后的规范化绝对 `FILE_SET` 清单交给 reviewer；
+Git 命令须用字面绝对根
+`git -C '<目标仓库绝对路径>' ...`，不得依赖 reviewer 的 cwd 或共享 `docs/` 等展示别名。
+reviewer 保持自己的 session 身份，不复制父 session 的 pin/SID，也不在子会话运行
+`project.sh switch`。Codex 子会话须核对自身
+`node scripts/project-pin.mjs status --view host --session-id <自身可信 SID>` 为 `CHILD_ASSOCIATED`、
+`binding_validation: VERIFIED`，并确认项目与调度方冻结的根一致；这份关联来自原生父子关系。
+绝对路径读取仍受文件系统权限控制，**不等于技术上的只读授权**；本环节只派只读取证任务。
+关联缺失、读取失败或证据不全记 `UNKNOWN`，不得计为 PASS。要求已验证
+`project_session` 的评审器可使用这份子会话关联；Claude 子会话在对应原生关联接线完成前
+不得据父 SID 或绝对路径冒充已验证的自身项目会话。
+
 **基线三选一**（评审对象怎么界定，`WORKTREE_DIFF` 为默认）：
 
 ```bash
-# ① WORKTREE_DIFF：刚改完还没提交（最常见的 review 请求形态）
-git diff HEAD
+# ① WORKTREE_DIFF：刚改完还没提交（最常见的 review 请求形态）；先替换为固定的字面绝对根
+git -C '<目标仓库绝对路径>' diff HEAD
 # ② BASE_SHA/HEAD_SHA：已提交的一批 commit
-BASE_SHA=$(git rev-parse HEAD~1); HEAD_SHA=$(git rev-parse HEAD)
+git -C '<目标仓库绝对路径>' diff <BASE_SHA>...<HEAD_SHA>
 # ③ FILE_SET：显式文件集（跨多次提交的一条主题线）
 ```
 

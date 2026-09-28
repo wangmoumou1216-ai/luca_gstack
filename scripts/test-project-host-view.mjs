@@ -13,7 +13,7 @@ import { projectReservationPath } from '../.claude/hooks/lib/project-selection.m
 
 const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-const root = mkdtempSync(join(tmpdir(), 'project-host-view-'));
+const root = realpathSync(mkdtempSync(join(tmpdir(), 'project-host-view-')));
 const gstackRoot = join(root, 'gstack');
 const projectsRoot = join(root, 'projects');
 mkdirSync(join(gstackRoot, '.claude'), { recursive: true });

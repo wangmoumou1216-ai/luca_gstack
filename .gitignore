@@ -111,6 +111,7 @@ api-project/
 .claude/.session-inherited-*
 .claude/.project-switch.lock/
 .claude/project-state-quarantine/
+.claude/codex-child-project/
 .claude/observability/pending-extraction*.md
 .claude/observability/.pending-extraction-claims/
 .claude/observability/pending-extraction-dispositions.jsonl

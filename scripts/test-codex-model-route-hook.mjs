@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -10,6 +11,11 @@ import {readActivation} from './model-route-host.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const HOOK = join(ROOT, '.codex', 'model-route-hook.mjs');
 const scratch = mkdtempSync(join(tmpdir(), 'codex-model-route-hook.'));
+const protectedFixture = mkdtempSync(join(dirname(ROOT), '.codex-model-route-fixture-'));
+const childStore = join(protectedFixture, 'child-store');
+const childCodexHome = join(protectedFixture, 'codex-home');
+mkdirSync(childStore, {mode: 0o700});
+mkdirSync(childCodexHome, {mode: 0o700});
 const policyPath = join(scratch, 'policy.json');
 const bindingsPath = join(scratch, 'bindings.json');
 const stateRoot = join(scratch, 'state');
@@ -44,10 +50,13 @@ const env = {
   LUCA_MODEL_ROUTE_BINDINGS_PATH: bindingsPath,
   LUCA_MODEL_ROUTE_STATE_ROOT: stateRoot,
   LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT: transcriptRoot,
+  LUCA_EVENT_ATTESTATION_TEST: '1',
+  LUCA_CHILD_PROJECT_STORE_ROOT: childStore,
+  LUCA_CHILD_PROJECT_TEST_CODEX_HOME: childCodexHome,
 };
 let checks = 0;
-function run(payload) {
-  const result = spawnSync('node', [HOOK], {cwd: ROOT, encoding: 'utf8', input: JSON.stringify(payload), env});
+function run(payload, cwd = ROOT) {
+  const result = spawnSync('node', [HOOK], {cwd, encoding: 'utf8', input: JSON.stringify(payload), env});
   assert.equal(result.status, 0, result.stderr);
   return JSON.parse(result.stdout);
 }
@@ -99,9 +108,43 @@ function subStop(sessionId, agentId, agentType, path, lastAssistantMessage = 'do
 }
 
 try {
+  const poisonCwd = join(scratch, 'poison-cwd');
+  const importMarker = join(scratch, 'poison-imported');
+  mkdirSync(poisonCwd);
+  for (const moduleName of ['json', 'yaml']) {
+    writeFileSync(join(poisonCwd, `${moduleName}.py`),
+      `open(${JSON.stringify(importMarker)}, "w").write("imported")\nraise RuntimeError("poisoned module")\n`);
+  }
+  const isolatedSession = 'root-python-import-isolation';
+  run({hook_event_name: 'SessionStart', session_id: isolatedSession,
+    model: 'gpt-5.6-sol', source: 'startup', cwd: ROOT}, poisonCwd);
+  equal(existsSync(importMarker), false, 'native hook Python parser ignores workdir modules');
+  equal(state(isolatedSession).root_anchor.model, 'gpt-5.6-sol',
+    'native hook still parses policy with isolated Python import path');
+  const renewalSession = 'root-renewal';
+  start(renewalSession);
+  const oldActivationId = state(renewalSession).activation_id;
+  start(renewalSession, 'gpt-5.6-sol', 'resume');
+  equal(state(renewalSession).activation_id !== oldActivationId, true,
+    'a resumed root session creates a new activation');
+  const rootDigest = createHash('sha256').update(ROOT).digest('hex');
+  const activationDigest = createHash('sha256').update(oldActivationId).digest('hex');
+  equal(existsSync(join(childStore, rootDigest, 'revocations',
+    `${renewalSession}-${activationDigest}.revoked.json`)), true,
+  'a new activation permanently tombstones the old generation');
   const anchorSession = 'root-anchor';
   start(anchorSession);
   equal(state(anchorSession).root_anchor.model, 'gpt-5.6-sol', 'SessionStart pins root anchor');
+  const failedProjectObservation = run({
+    hook_event_name: 'PreToolUse', session_id: anchorSession, turn_id: 'turn-root',
+    tool_use_id: 'tool-bad-cwd', tool_name: 'spawn_agent',
+    tool_input: {task_name: 'bad_cwd', message: 'work'},
+    permission_mode: 'default', cwd: join(scratch, 'missing-cwd'), model: 'gpt-5.6-sol',
+  });
+  equal(failedProjectObservation.hookSpecificOutput.permissionDecision, 'deny',
+    'unavailable project observation denies the spawn');
+  equal(Object.values(state(anchorSession).invocations).length, 0,
+    'failed project observation leaves no pending model invocation');
   const anchorPre = pre(anchorSession, {task_name: 'anchor', message: 'work', reasoning_effort: 'max'}, 'tool-anchor');
   const anchorInput = anchorPre.hookSpecificOutput.updatedInput;
   equal(anchorPre.hookSpecificOutput.permissionDecision, 'allow', 'known native agent is allowed');
@@ -227,6 +270,7 @@ try {
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
 } finally {
   rmSync(scratch, {recursive: true, force: true});
+  rmSync(protectedFixture, {recursive: true, force: true});
 }
 
 process.stdout.write(`PASS: ${checks} Codex native model-route hook checks\n`);

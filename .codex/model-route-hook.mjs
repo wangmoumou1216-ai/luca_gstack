@@ -14,6 +14,11 @@ import {
   pauseActivation, prepareInvocation, readActivation, releaseDigestForPolicy, startActivation,
   updateRootAnchor,
 } from '../scripts/model-route-host.mjs';
+import {
+  bindCodexChildProject,
+  prepareCodexChildProject,
+  revokeCodexChildProjectActivation,
+} from '../.claude/hooks/lib/codex-child-project.mjs';
 
 const ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), '..');
 const TEST_MODE = process.env.NODE_ENV === 'test';
@@ -49,9 +54,10 @@ function modelOnly(value) {
 const inputDigest = value => createHash('sha256').update(JSON.stringify(modelOnly(value))).digest('hex');
 
 function readPolicy() {
-  const loaded = spawnSync('python3', ['-c',
+  const loaded = spawnSync('python3', ['-P', '-c',
     'import json,sys,yaml;d=yaml.safe_load(open(sys.argv[1]));print(json.dumps(d.get("model_routing")))',
-    POLICY_PATH], {encoding: 'utf8', timeout: 5000});
+    POLICY_PATH], {encoding: 'utf8', timeout: 5000,
+    env: {...process.env, PYTHONPATH: ''}});
   if (loaded.status !== 0) throw new Error('POLICY_UNREADABLE');
   const policy = JSON.parse(loaded.stdout);
   if (!policy || policy.version !== 2 || policy.scope !== 'common' || policy.status !== 'active') {
@@ -113,6 +119,7 @@ function handleSessionStart(payload) {
     }
     return {};
   }
+  revokeCodexChildProjectActivation({gstackRoot: ROOT, rootSessionId: payload.session_id});
   startActivation({
     harness: 'codex', root_session_id: payload.session_id,
     root_anchor: {model: payload.model, source: `codex-session-${payload.source || 'start'}`},
@@ -149,6 +156,19 @@ function handlePreToolUse(payload) {
     const unbound = Object.values(routed.state.invocations).some(call => call.status === 'pending'
       && call.route_harness === 'codex-native' && !text(call.external_identity?.agent_id));
     if (unbound) return deny('another native subagent is awaiting trusted agent-id correlation');
+    // A failed project observation must not leave a pending model invocation
+    // that blocks every later spawn in this parent session.
+    prepareCodexChildProject({
+      gstackRoot: ROOT,
+      parentSessionId: payload.session_id,
+      turnId: payload.turn_id,
+      toolUseId: payload.tool_use_id,
+      agentType,
+      taskName: payload.tool_input.task_name || '',
+      cwd: payload.cwd || ROOT,
+      transcriptPath: payload.transcript_path || '',
+      codexHome: process.env.CODEX_HOME || '',
+    });
     const prepared = prepareInvocation({
       harness: 'codex', root_session_id: payload.session_id,
       release_digest: routed.release_digest, route: routed.route,
@@ -188,8 +208,31 @@ function handleSubagentStart(payload) {
     invocation_id: candidates[0].invocation_id, field: 'agent_id', value: payload.agent_id,
     state_root: STATE_ROOT,
   });
-  return bound.disposition === 'BOUND' ? {}
-    : {systemMessage: `model-route agent correlation failed: ${bound.reason}`};
+  if (bound.disposition !== 'BOUND') {
+    return {systemMessage: `model-route agent correlation failed: ${bound.reason}`};
+  }
+  const toolUseId = candidates[0].external_identity?.tool_use_id;
+  const taskId = candidates[0].task_id;
+  const suffix = `:${toolUseId}`;
+  if (!text(toolUseId) || !text(taskId) || !taskId.startsWith('native:')
+      || !taskId.endsWith(suffix)) {
+    return {systemMessage: 'project association refused: native spawn turn is unavailable'};
+  }
+  const parentTurnId = taskId.slice('native:'.length, -suffix.length);
+  try {
+    bindCodexChildProject({
+      gstackRoot: ROOT,
+      parentSessionId: payload.session_id,
+      turnId: parentTurnId,
+      toolUseId,
+      agentId: payload.agent_id,
+      agentType: payload.agent_type,
+      codexHome: process.env.CODEX_HOME || '',
+    });
+  } catch (error) {
+    return {systemMessage: `project association refused: ${(error && error.message) || error}`};
+  }
+  return {};
 }
 
 function safeTranscript(path) {
@@ -260,9 +303,12 @@ function handleSubagentStop(payload) {
 }
 
 function handleSessionEnd(payload) {
-  if (text(payload.session_id)) pauseActivation({
-    harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT,
-  });
+  if (text(payload.session_id)) {
+    revokeCodexChildProjectActivation({gstackRoot: ROOT, rootSessionId: payload.session_id});
+    pauseActivation({
+      harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT,
+    });
+  }
   return {};
 }
 
@@ -278,6 +324,6 @@ try {
   else output = {};
 } catch (error) {
   process.stderr.write(`[model-route-hook] ${(error && error.message) || error}\n`);
-  output = {};
+  process.exit(2);
 }
 json(output);

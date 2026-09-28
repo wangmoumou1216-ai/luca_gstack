@@ -56,6 +56,15 @@ const cleanup = () => {
     if (existsSync(p)) rmSync(p, { force: true });
   }
 };
+{
+  const payload = {hook_event_name: 'PreToolUse', session_id: SID, cwd: ROOT,
+    tool_name: 'Bash', tool_input: {command: 'cat docs/PROGRESS.md'}};
+  const failedGuard = runVia('project-scope-guard.mjs', payload,
+    {LUCA_CHILD_SOURCE_ROOT: ROOT, LUCA_CONTROLLED_TEST_ADAPTER_TIMEOUT: 'project-scope'});
+  ok('J1 protected project guard runtime failure blocks even if legacy witness fallback allows',
+    failedGuard.status === 2, `status=${failedGuard.status} stderr=${failedGuard.stderr}`);
+}
+
 cleanup();
 
 // ── A. 出向：纯文本 → additionalContext 包装（route-guard 走这条）────────────

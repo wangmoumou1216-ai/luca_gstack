@@ -4,9 +4,34 @@ Load this file before deciding project identity or project authority, and before
 
 ## Identity and pin
 
-- The per-session `.claude/.session-project-<sid>` pin is the only project binding truth. Never infer or repair it from `docs/`, workflow-state, current-topic, cwd, or another session.
+- A root session's `.claude/.session-project-<sid>` pin is its project binding truth. A Codex child can have a separate verified association delegated at native spawn from that root binding. Never infer or repair either from `docs/`, workflow-state, current-topic, cwd, task text, or an unverified parent SID.
 - A framework/meta/audit task explicitly marked `NO_PIN` stays unbound. It may work only on framework-owned paths and must not read or write shared project aliases.
 - Shared `docs/`, `.claude/workflow-state.yaml`, and `.claude/current-topic.txt` symlinks are display compatibility only. A pinned session is redirected to its pinned project's absolute targets.
+
+## Codex child project association
+
+When a pinned Codex session spawns a child during a native-attested active project turn,
+the framework freezes the parent's validated project identity in a protected pending receipt.
+The child receives its own association only after native SubagentStart claims that receipt and
+the native child ID, parent ID, role, and transcript source match the claim. A direct spawn also
+requires its exact native transcript call; an `exec`-wrapped spawn requires one unambiguous
+protected pending receipt for the current parent turn and role. A descendant must pass the same
+check for each parent-child edge. Delegation receipts live under the native-hook-writable,
+ordinary-tool-unwritable `~/.codex/luca-child-project/` control plane. This association
+is a project identity and scoped task delegation, not a copied human pin or a new human request.
+`project-pin status` reports it as `CHILD_ASSOCIATED`; child project paths use the frozen project
+root. A later parent project switch cannot retarget an existing child. Native cancellation or an
+ended root activation invalidates the delegation; a normal parent turn `Stop` does not. A child
+cannot use this association to call `project.sh switch/new` or make a human-only project decision.
+Missing or inconsistent lineage denies scoped paths. Claude sidechains need their own native
+identity check and do not gain a Codex association by sharing a session ID.
+This release verifies child lineage only from the owner-protected native `~/.codex`
+rollout source; writable provider homes such as `~/.luca/codex` are not association sources.
+The Codex hook runtime requires the reviewed source guard installed under
+`~/.codex/luca-child-project/source-guard/` via `node scripts/install-codex-source-guard.mjs`.
+Every registered hook checks the approved source digest before launch; Node then executes
+only verified source bytes. Missing or changed source fails closed. Updating hook code
+requires a new reviewed manifest and Codex hook trust for the changed command.
 
 ## Project Gate
 

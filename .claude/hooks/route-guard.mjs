@@ -28,6 +28,7 @@ import {
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
 import { actualHarness } from './lib/harness.mjs';
+import { resolveCodexChildProject } from './lib/codex-child-project.mjs';
 import {
   READ_GRANTS_ENABLED,
   closeGrants,
@@ -1385,11 +1386,22 @@ const routingPrompt = promptForRouting(prompt);
 const hints = [];
 let topLevelProjectState = null;
 let projectStateError = '';
+let childProjectAssociation = null;
 if (!dryRun && prompt && hookSessionId) {
   try {
     const current = readProjectState(projectRoot, hookSessionId).value;
     topLevelProjectState = current;
     runtimeCurrentProject = validatedBindingForState(current, PROJECTS_ROOT)?.project || '';
+    if (hookHarness === 'codex' && current.state === 'NO_PIN') {
+      childProjectAssociation = resolveCodexChildProject({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        childSessionId: hookSessionId,
+        cwd: hookPayload.cwd || projectRoot,
+        codexHome: process.env.CODEX_HOME || '',
+      });
+      if (childProjectAssociation) runtimeCurrentProject = childProjectAssociation.binding.project;
+    }
     if (current.state === 'NO_PIN') {
       try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch { }
     }
@@ -1411,7 +1423,7 @@ if (prompt) {
     try {
       if (projectStateError) throw new Error(projectStateError);
       const releaseRequested = prompt === NATIVE_RELEASE_DIRECTIVE;
-      queueProjectEventCandidate({
+      if (!childProjectAssociation) queueProjectEventCandidate({
         gstackRoot: projectRoot,
         projectsRoot: PROJECTS_ROOT,
         sessionId: hookSessionId,

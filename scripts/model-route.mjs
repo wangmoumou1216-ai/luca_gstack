@@ -239,9 +239,10 @@ function main(args) {
     if (!record(input)) throw new Error('request');
     const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
     // PyYAML is the repository's existing YAML dependency; select this subtree to exclude YAML dates.
-    const loaded = spawnSync('python3', ['-c',
+    const loaded = spawnSync('python3', ['-P', '-c',
       'import json,sys,yaml;d=yaml.safe_load(open(sys.argv[1]));print(json.dumps(d.get("model_routing") or d.get("codex",{}).get("model_routing")))',
-      path.join(root, '.claude/skill-os/model-routing.yaml')], {encoding: 'utf8', timeout: 5000});
+      path.join(root, '.claude/skill-os/model-routing.yaml')], {encoding: 'utf8', timeout: 5000,
+      env: {...process.env, PYTHONPATH: ''}});
     result = loaded.status === 0 ? resolve({...input, role_config: JSON.parse(loaded.stdout)}) :
       {disposition: 'NEEDS_CONTEXT', reason: 'INVALID_POLICY'};
   } catch {

@@ -189,7 +189,8 @@ function verifySurface() {
     '幻觉兜底', 'Agent 执行中', 'prefers-reduced-motion']) assert.ok(tokens.includes(needle), needle);
 }
 try {
-  for (const rel of [hookRel, qaRel, registryRel, '.claude/hooks/lib/project-substrate.mjs',
+  for (const rel of [hookRel, qaRel, registryRel, '.claude/hooks/lib/codex-child-project.mjs',
+    'scripts/model-route-host.mjs', '.claude/hooks/lib/project-substrate.mjs',
     '.claude/hooks/lib/project-selection.mjs',
     '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-read-grants.mjs', '.claude/hooks/lib/harness.mjs',
     '.codex/codex-hook-adapter.mjs', '.claude/skill-os/input-modes.yaml', '.claude/skill-os/model-routing.yaml',

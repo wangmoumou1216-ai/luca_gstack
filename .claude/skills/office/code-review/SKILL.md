@@ -52,14 +52,19 @@ Claude 的项目 native alias 会覆盖 bundled `/code-review`；bundled `/revie
 ## 1. 固定审查对象
 
 只选一种基线，并把最终命令/文件集原样交给两个审查轴：
+审下游项目时先按 `project-session.md` 验证目标项目，审框架自身时使用当前框架检出；
+两者都须冻结规范化的绝对仓库根 `REVIEW_ROOT`。
+开头 preamble 的 Git 输出只描述调用者 cwd，不能用它推断被审仓库。
+以下命令中的 `<REVIEW_ROOT_ABS>` 在派发前须替换成同一个**字面、正确 shell 引用**的绝对路径，
+不能把变量名或父会话 cwd 留给冷启动 reviewer。
 
 ### WORKTREE_DIFF
 
 用户说“当前改动/刚改完/未提交/WIP”且未给 ref 时默认使用：
 
 ```bash
-git diff HEAD
-git status --short
+git -C '<REVIEW_ROOT_ABS>' diff HEAD
+git -C '<REVIEW_ROOT_ABS>' status --short
 ```
 
 `git diff HEAD` 不包含 untracked 文件；从 `git status --short` 找到与本次任务相关的 untracked 文件，
@@ -70,9 +75,9 @@ git status --short
 用户给 commit、branch、tag 或“since X”时：
 
 ```bash
-git rev-parse --verify <fixed-point>^{commit}
-git diff <fixed-point>...HEAD
-git log <fixed-point>..HEAD --oneline
+git -C '<REVIEW_ROOT_ABS>' rev-parse --verify <fixed-point>^{commit}
+git -C '<REVIEW_ROOT_ABS>' diff <fixed-point>...HEAD
+git -C '<REVIEW_ROOT_ABS>' log <fixed-point>..HEAD --oneline
 ```
 
 三点 diff 以 merge-base 为比较点。正式 PR/整分支若工具上下文已经提供 base，直接使用；没有 base 且
@@ -81,7 +86,7 @@ git log <fixed-point>..HEAD --oneline
 ### FILE_SET
 
 用户明确给路径，或任务跨多次提交但能列出精确文件时使用。先确认每个路径存在；目录须展开成可审计
-文件清单，不把整个仓库当隐式范围。
+的**绝对路径**文件清单，不把整个仓库当隐式范围。
 
 ref 无效、范围为空或没有任何可读改动时立即停止并报告；不要启动空审查。
 
@@ -105,8 +110,15 @@ ref 无效、范围为空或没有任何可读改动时立即停止并报告；�
 ## 3. 两轴隔离执行
 
 优先在同一轮并行派发两个冷启动 reviewer，不给实现过程或本会话结论；只给相同的范围清单、diff 命令
-和 commit list，再分别给各轴需要的资料。并行不可用时可串行，但第二轴不得读取第一轴报告，聚合前保持
-上下文隔离。
+和 commit list，再分别给各轴需要的资料。项目代码审查按 `code-hygiene` Mode D 的冷启动规则：
+同时给出固定的目标仓库绝对根，以及 spec、标准和 FILE_SET 的规范化绝对路径；reviewer 只按这些
+路径取证，不使用共享项目别名，不借用父会话 pin/SID。Codex reviewer 还须验证自身
+`node scripts/project-pin.mjs status --view host --session-id <自身可信 SID>` 的 `CHILD_ASSOCIATED` 和
+`binding_validation: VERIFIED` 与固定目标一致。
+并行不可用时可串行，但第二轴不得读取第一轴报告，聚合前保持上下文隔离。任一轴关联缺失、
+实际读取失败或范围不全记 `UNKNOWN`，不得写 PASS。要求已验证 `project_session` 的评审器
+可使用这份独立子会话关联；不能以父会话 SID 代填。Claude 子会话在其原生关联接线完成前
+不得把绝对路径读取当作自身项目绑定。
 
 ### Standards 轴
 

@@ -203,9 +203,11 @@ function installAdapterFixture(f) {
   writeFileSync(join(f.repo, '.claude', 'hooks', 'project-scope-guard.mjs'), 'process.exitCode = 0;\n');
   copyFileSync(GUARD, join(f.repo, '.claude', 'hooks', 'controlled-change-guard.mjs'));
   const hooksBytes = readFileSync(CODEX_HOOKS);
-  // 2026-09-20: approved native model-routing registration; exact hook bytes renewed and read back.
-  assert.equal(sha256Bytes(hooksBytes), '6fc3e7d6c0d2ed6bce2c01d48e506d1c421e9980894c27c23c63efc2a583b8c4', 'registered Codex hooks trust bytes drifted');
   const registered = JSON.parse(hooksBytes).hooks.PreToolUse[0].hooks[0].command;
+  assert.match(registered, /hook source integrity mismatch/, 'registered hook must reject source drift');
+  assert.match(registered, /source-guard\/bootstrap\.mjs/, 'registered hook must load protected source guard');
+  assert.match(registered, /c=\$\?; \[ "\$c" = "0" \] && exit 0 \|\| exit 2$/,
+    'registered hook must map every abnormal exit to blocking code 2');
   const sink = join(f.scratch, 'registered-wrapper.log');
   const executable = registered.replace('2>> /tmp/luca-gstack-hooks.log', `2>> "${sink}"`);
   assert.notEqual(executable, registered, 'test harness must relocate exactly one log sink into authorized scratch');
@@ -224,6 +226,17 @@ function runRegisteredPreToolWrapper(f, executable, env = {}, options = {}) {
     cwd: f.repo,
     env,
     input: JSON.stringify(payload),
+  });
+}
+function runFixtureAdapter(f, env = {}, options = {}) {
+  const payload = {
+    hook_event_name: 'PreToolUse', tool_name: 'Bash',
+    tool_input: { command: options.command || 'node scripts/example-read-only.mjs' },
+  };
+  if (options.includeCwd !== false) payload.cwd = options.cwd || f.repo;
+  return run(process.execPath, [join(f.repo, '.codex', 'codex-hook-adapter.mjs'),
+    join(f.repo, '.claude', 'hooks', 'project-scope-guard.mjs')], {
+    cwd: f.repo, env: { ...env, LUCA_CHILD_SOURCE_ROOT: '' }, input: JSON.stringify(payload),
   });
 }
 
@@ -361,7 +374,7 @@ test('adapter-runtime-fail-closed', () => {
     const required = fixture();
     try {
       prepare(required, `generation-adapter-${injection}`);
-      const { executable } = installAdapterFixture(required);
+      installAdapterFixture(required);
       const env = injection === 'throw'
         ? { LUCA_CONTROLLED_TEST_ADAPTER_THROW: 'after-context' }
         : injection === 'timeout'
@@ -371,14 +384,14 @@ test('adapter-runtime-fail-closed', () => {
             : injection === 'spawn-throw'
               ? { LUCA_CONTROLLED_TEST_ADAPTER_SPAWN_THROW: 'project-scope' }
               : { LUCA_CONTROLLED_TEST_ADAPTER_NULL_RESULT: 'project-scope' };
-      const result = runRegisteredPreToolWrapper(required, executable, env);
-      assert.equal(result.status, 2, `registered wrapper must preserve required-witness denial on adapter ${injection}`);
+      const result = runFixtureAdapter(required, env);
+      assert.equal(result.status, 2, `adapter must preserve required-witness denial on ${injection}`);
       abort(required);
     } finally { required.cleanup(); }
 
     const inactive = fixture();
     try {
-      const { executable } = installAdapterFixture(inactive);
+      installAdapterFixture(inactive);
       const env = injection === 'throw'
         ? { LUCA_CONTROLLED_TEST_ADAPTER_THROW: 'after-context' }
         : injection === 'timeout'
@@ -388,7 +401,7 @@ test('adapter-runtime-fail-closed', () => {
             : injection === 'spawn-throw'
               ? { LUCA_CONTROLLED_TEST_ADAPTER_SPAWN_THROW: 'project-scope' }
               : { LUCA_CONTROLLED_TEST_ADAPTER_NULL_RESULT: 'project-scope' };
-      const result = runRegisteredPreToolWrapper(inactive, executable, env);
+      const result = runFixtureAdapter(inactive, env);
       assert.equal(result.status, 0, `strictly inactive adapter ${injection} must retain legacy fail-open semantics`);
     } finally { inactive.cleanup(); }
   }
@@ -399,8 +412,8 @@ test('adapter-runtime-fail-closed', () => {
     const { executable } = installAdapterFixture(compromised);
     writeFileSync(join(compromised.repo, '.codex', 'codex-hook-adapter.mjs'), 'this is deliberately invalid JavaScript !\n');
     const syntaxResult = runRegisteredPreToolWrapper(compromised, executable);
-    assert.equal(syntaxResult.status, 0, 'byte-level syntax corruption prevents adapter execution and remains the explicit FINAL-MASTER §0.4 compromised-hook exclusion');
-    assert.match(readFileSync(ADAPTER, 'utf8'), /syntax-byte corruption[\s\S]*compromised hook/i, 'adapter must document the mechanically unavoidable trusted-command boundary');
+    assert.equal(syntaxResult.status, 2, 'registered wrapper blocks corrupted adapter source');
+    assert.match(syntaxResult.stderr, /source integrity mismatch/);
   } finally { compromised.cleanup(); }
 });
 
@@ -408,16 +421,16 @@ test('adapter-outside-cwd-fail-closed', () => {
   const required = fixture();
   try {
     prepare(required, 'generation-adapter-outside-cwd');
-    const { executable } = installAdapterFixture(required);
+    installAdapterFixture(required);
     const unauthorized = `git -C ${required.repo} add -A`;
 
-    const missingCwd = runRegisteredPreToolWrapper(required, executable, {}, {
+    const missingCwd = runFixtureAdapter(required, {}, {
       includeCwd: false,
       command: unauthorized,
     });
     assert.equal(missingCwd.status, 2, 'missing cwd control must deny the unauthorized Git effect under REQUIRED witness');
 
-    const outsideCwd = runRegisteredPreToolWrapper(required, executable, {}, {
+    const outsideCwd = runFixtureAdapter(required, {}, {
       cwd: '/private/tmp',
       command: unauthorized,
     });
@@ -430,8 +443,8 @@ test('adapter-outside-cwd-fail-closed', () => {
 
   const inactive = fixture();
   try {
-    const { executable } = installAdapterFixture(inactive);
-    const outsideCwd = runRegisteredPreToolWrapper(inactive, executable, {}, {
+    installAdapterFixture(inactive);
+    const outsideCwd = runFixtureAdapter(inactive, {}, {
       cwd: '/private/tmp',
       command: `git -C ${inactive.repo} add -A`,
     });

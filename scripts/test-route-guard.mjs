@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import assert from 'assert/strict';
@@ -1598,7 +1598,7 @@ const failures = [];
 // Real UserPromptSubmit fixture: project words queue only a neutral native turn;
 // no transaction or selection intent is minted by semantic routing.
 {
-  const root = mkdtempSync(join(tmpdir(), 'route-new-project-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'route-new-project-')));
   const gstack = join(root, 'gstack');
   const projects = join(root, 'projects');
   mkdirSync(join(gstack, '.claude'), { recursive: true });

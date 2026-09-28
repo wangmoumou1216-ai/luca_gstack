@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
+import { resolveCodexChildProject } from './codex-child-project.mjs';
 import {
   PROJECTS_ROOT,
   canonicalProjectIdentity,
@@ -119,11 +120,30 @@ function statusBase(sessionId, readStatus, error = null) {
     state: null,
     binding_validation: 'UNKNOWN',
     current_binding: null,
+    association_origin: null,
+    parent_session_id: null,
     current_operation: null,
     queried_receipt: null,
     selection_commit: null,
     execution_authority: 'NOT_PROVIDED',
     error,
+  };
+}
+
+function childStatus({ gstackRoot, projectsRoot, sessionId }) {
+  const child = resolveCodexChildProject({
+    gstackRoot, projectsRoot, childSessionId: sessionId,
+    codexHome: process.env.CODEX_HOME || '',
+  });
+  if (!child) return null;
+  return {
+    ...statusBase(sessionId, 'OK'),
+    snapshot_id: child.receiptDigest,
+    state: 'CHILD_ASSOCIATED',
+    binding_validation: 'VERIFIED',
+    current_binding: { ...child.binding },
+    association_origin: child.origin,
+    parent_session_id: child.parentSessionId,
   };
 }
 
@@ -179,7 +199,13 @@ export function projectStatusHostView({
     return statusBase(sid, unavailable ? 'UNAVAILABLE' : 'INVALID',
       errorValue(unavailable ? 'STATE_READ_UNAVAILABLE' : 'INVALID_STATE', error.message));
   }
-  if (first.raw === null) return statusBase(sid, 'NO_RECORD');
+  if (first.raw === null) {
+    try {
+      return childStatus({ gstackRoot, projectsRoot, sessionId: sid }) || statusBase(sid, 'NO_RECORD');
+    } catch (error) {
+      return statusBase(sid, 'INVALID', errorValue('INVALID_CHILD_ASSOCIATION', error.message));
+    }
+  }
 
   const snapshotId = createHash('sha256').update(first.raw).digest('hex');
   let binding = null;
@@ -217,6 +243,15 @@ export function projectStatusHostView({
   }
   if (!second.equals(first.raw)) return statusBase(sid, 'UNSTABLE', errorValue('STATE_CHANGED_DURING_READ', 'state changed during host projection'));
 
+  if (first.value.state === 'NO_PIN') {
+    try {
+      const child = childStatus({ gstackRoot, projectsRoot, sessionId: sid });
+      if (child) return child;
+    } catch (error) {
+      return statusBase(sid, 'INVALID', errorValue('INVALID_CHILD_ASSOCIATION', error.message));
+    }
+  }
+
   const selection = selected?.selection || {};
   const receipts = selected?.receipts || [];
   const pending = selection.pending;
@@ -232,6 +267,8 @@ export function projectStatusHostView({
     state: first.value.state,
     binding_validation: bindingValidation,
     current_binding: binding ? { ...binding } : null,
+    association_origin: null,
+    parent_session_id: null,
     current_operation: operationView(latest),
     queried_receipt: operationId
       ? (queried ? { lookup: 'FOUND', receipt: receiptView(queried) } : { lookup: 'EXPIRED_OR_UNKNOWN', receipt: null })

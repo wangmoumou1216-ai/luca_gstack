@@ -56,7 +56,7 @@ Ambiguity needs user choice; no match needs catalog discovery. In discovery, **n
 <!-- K5:START -->
 ## K5 — Project/session isolation
 
-The per-**session** project pin is truth. `docs/`, workflow-state, and current-topic
+Root pin or verified Codex child association is truth. `docs/`, workflow-state, and current-topic
 **symlink** aliases are display-only; never derive or repair a pin from them. Framework/meta work
 stays **NO_PIN** and must not touch those aliases or projects. A project switch/create uses only
 the public single-call transaction `project.sh switch/new <canonical-name>`; PreToolUse

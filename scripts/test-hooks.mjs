@@ -10,7 +10,7 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  mkdtempSync,
+  mkdtempSync as rawMkdtempSync,
   readdirSync,
   readFileSync,
   realpathSync,
@@ -22,6 +22,7 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
+const mkdtempSync = prefix => realpathSync(rawMkdtempSync(prefix));
 import { withoutLocalGitEnv } from '../.claude/hooks/lib/git-env.mjs';
 import {
   READ_GRANTS_ENABLED,
@@ -138,7 +139,7 @@ function makeFixture({
   tools = null,
   activeProject = null,
 } = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'luca-gstack-hooks-'));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'luca-gstack-hooks-')));
   mkdirSync(join(root, '.claude', 'observability'), { recursive: true });
   mkdirSync(join(root, 'memory', 'scripts'), { recursive: true });
   mkdirSync(join(root, 'memory', 'episodic'), { recursive: true });
@@ -1735,7 +1736,7 @@ function runRouteGuard(cwd, prompt) {
     env: { CLAUDE_PROJECT_DIR: root },
     input: JSON.stringify({ session_id: 'startup-racer', source: 'startup' }),
   });
-  assert.doesNotMatch(restore.stderr, /未清理|live owner|lease/, 'startup 不应参与 legacy display lease');
+  assert.doesNotMatch(restore.stderr, /未清理|live owner|\blease\b/, 'startup 不应参与 legacy display lease');
   const after = links.map(path => spawnSync('readlink', [path], { encoding: 'utf8' }).stdout.trim());
   assert.deepEqual(after, before, 'startup 不得读取、清理或重写 display tuple');
   const released = spawnSync('node', [projectLeaseScript, 'release', '--root', root, '--handle-json', JSON.stringify(held.owner_handle)], {

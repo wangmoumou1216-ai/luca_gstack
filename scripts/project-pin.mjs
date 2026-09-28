@@ -17,6 +17,7 @@ import {
 import { dirname, join, resolve } from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
+import { resolveCodexChildProject } from '../.claude/hooks/lib/codex-child-project.mjs';
 import {
   PROJECTS_ROOT,
   PROJECT_STATE_SCHEMA,
@@ -534,8 +535,23 @@ function status(sessionId, operationId = '') {
   if (operationId && !/^[A-Za-z0-9-]{8,128}$/.test(String(operationId))) {
     throw new Error('operation id is not canonical');
   }
-  const { gstackRoot } = roots();
+  const { gstackRoot, projectsRoot } = roots();
   const state = readProjectState(gstackRoot, sessionId).value;
+  if (state.state === 'NO_PIN') {
+    const child = resolveCodexChildProject({
+      gstackRoot, projectsRoot, childSessionId: sessionId,
+      codexHome: process.env.CODEX_HOME || '',
+    });
+    if (child) return {
+      state: 'CHILD_ASSOCIATED',
+      session_id: sessionId,
+      association_origin: child.origin,
+      parent_session_id: child.parentSessionId,
+      binding: child.binding,
+      receipt_digest: child.receiptDigest,
+      execution_authority: 'NOT_PROVIDED',
+    };
+  }
   const receipts = Array.isArray(state.selection?.receipts) ? state.selection.receipts : [];
   const receipt = operationId ? receipts.find(item => item?.operation_id === operationId) : null;
   return {

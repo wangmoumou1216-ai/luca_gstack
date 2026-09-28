@@ -74,7 +74,6 @@ let raw = '';
 try { raw = readFileSync(0, 'utf8'); } catch { passThrough(); }
 let data = {};
 try { data = JSON.parse(raw || '{}'); } catch { passThrough(); }
-
 const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
 const toolName = data?.tool_name || '';
 const input = data?.tool_input || {};
@@ -86,11 +85,13 @@ const gstackRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 let PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
 let substrate = null;
 let readGrants = null;
+let childProjects = null;
 try {
   substrate = await import('./lib/project-substrate.mjs');
   if (substrate?.PROJECTS_ROOT) PROJECTS_ROOT = substrate.PROJECTS_ROOT;
 } catch { /* fail-open：用默认根 */ }
 try { readGrants = await import('./lib/project-read-grants.mjs'); } catch { }
+try { childProjects = await import('./lib/codex-child-project.mjs'); } catch { }
 const claudeDir = join(gstackRoot, '.claude');
 
 function readSessionState() {
@@ -454,7 +455,8 @@ function sessionControlPlanePath(path) {
   const rel = relative(dir, absolute);
   const leaf = rel.split('/').pop();
   if (rel && !rel.startsWith('..') && !isAbsolute(rel)
-      && SESSION_CONTROL_PLANE_PREFIXES.some(prefix => leaf.startsWith(prefix))) return path;
+      && (rel.split('/')[0].toLowerCase() === 'codex-child-project'
+        || SESSION_CONTROL_PLANE_PREFIXES.some(prefix => leaf.startsWith(prefix)))) return path;
   return null;
 }
 
@@ -476,6 +478,9 @@ function sessionControlPlaneReference(tool, inp) {
       // `rg/grep <pattern> <path>` 的 pattern 是数据；仅扫描留下的真实路径位，避免搜索或编辑
       // 守卫源码时因正文出现 sidecar 名称而误拦。未知搜索语法仍保持未遮罩的保守退化。
       const source = maskSearchPatternArguments(rawSource).command;
+      if (/(?:^|[^\w.-])\.claude\/codex-child-project(?=$|[^\w.-])/i.test(source)) {
+        return '.claude/codex-child-project';
+      }
       const exactPrefix = SESSION_CONTROL_PLANE_PREFIXES.find(prefix => source.includes(prefix));
       if (exactPrefix || SESSION_CONTROL_PLANE_PARTIALS.some(partial => source.includes(partial))) {
         return exactPrefix || '.session-*';
@@ -976,9 +981,39 @@ function inspectApplyPatch(command, binding) {
 }
 
 function main() {
-  const observed = attestForPreTool(readSessionState());
+  const initialState = readSessionState();
+  let childAssociation = null;
+  // Codex can report the *parent* session_id for a child's nested tool call.
+  // The native transcript_path names the actual child rollout. Never fall back
+  // to the parent's authority when these two identities differ.
+  const transcriptName = String(data?.transcript_path || '').split('/').at(-1) || '';
+  const transcriptSessionId = /^rollout-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-(01[\w-]{34})\.jsonl$/.exec(transcriptName)?.[1] || '';
+  const nestedChild = process.env.LUCA_ACTUAL_HARNESS === 'codex'
+    && transcriptSessionId && transcriptSessionId !== sid;
+  const childSessionId = nestedChild ? transcriptSessionId : sid;
+  if ((nestedChild || initialState.state === 'NO_PIN')
+      && process.env.LUCA_ACTUAL_HARNESS === 'codex' && childProjects?.resolveCodexChildProject) {
+    try {
+      childAssociation = childProjects.resolveCodexChildProject({
+        gstackRoot,
+        projectsRoot: PROJECTS_ROOT,
+        childSessionId,
+        cwd: data?.cwd || gstackRoot,
+        codexHome: process.env.CODEX_HOME || '',
+      });
+      if (nestedChild && childAssociation?.parentSessionId !== sid) childAssociation = null;
+    } catch (error) {
+      try { process.stderr.write(`[project-scope-guard] child association denied: ${String(error?.message || error)}\n`); } catch { }
+    }
+  }
+  // A child task is not a native human prompt. Its verified delegation is
+  // observed separately, so the root-user attester must never consume it.
+  const observed = childAssociation
+    ? { state: { state: 'CHILD_ASSOCIATED' }, error: null }
+    : nestedChild ? { state: { state: 'CHILD_UNVERIFIED' }, error: null }
+      : attestForPreTool(initialState);
   const state = observed.state;
-  const binding = activeBinding(state, observed.error);
+  const binding = childAssociation?.binding || activeBinding(state, observed.error);
   const authorityFailure = {
     STATE_LOCK_BUSY: '项目状态正在被另一个操作更新（STATE_LOCK_BUSY），不是身份失效。请等待该操作完成后重试；不要重绑项目或删除锁。',
     STATE_LOCK_ORPHANED: '项目状态锁的持有进程已退出（STATE_LOCK_ORPHANED）。需要通过 inspect-state-lock → recover-state-lock 精确 owner 句柄恢复；重发提示或重绑不能清除此锁，不要直接删除状态文件。',
@@ -999,7 +1034,7 @@ function main() {
       // 文案必须给出改写指引：本判据保留了 dotglob 安全余量，正常路径也可能被它拦下，而一条只说
       // 「你在伪造控制平面」的拒绝会把人推向绕行（实测：一次误拦就催生了「把载荷挪出命令文本」的
       // 方案）。给出两条不绕闸的出路，比让人自己发明第三条强。
-      permissionDecisionReason: `session 状态 sidecar（project-state/read-grant/legacy-consumption）是 hook 内部控制平面，普通工具不得读取、写入或伪造（${sessionControlPlane}）。`
+      permissionDecisionReason: `session 状态 sidecar（project-state/read-grant/legacy-consumption/child-project）是 hook 内部控制平面，普通工具不得读取、写入或伪造（${sessionControlPlane}）。`
         + '若你并非要碰 sidecar，只是路径里带了通配或运行期展开：把它写成不含元字符的确定路径，'
         + '或改用 Write/Edit 等文件类工具（按 file_path 精确判定，不扫命令文本）。' } });
   }

@@ -48,6 +48,7 @@ const failureContext = { target: '', event: '', inRepository: false };
 
 function witnessAwareRuntimeFailure(reason) {
   diag(reason);
+  if (process.env.LUCA_CHILD_SOURCE_ROOT) return 2;
   if (!failureContext.inRepository
     || failureContext.event !== 'PreToolUse'
     || !/project-scope-guard/.test(failureContext.target)) return 0;
@@ -365,14 +366,12 @@ function main() {
   if (/controlled-change-guard/.test(target) && (r.error || r.status === null || r.status !== 0)) {
     return r.status === 2 ? 2 : 1;
   }
+  if (process.env.LUCA_CHILD_SOURCE_ROOT && (r.error || r.status !== 0)) return 2;
   return r.status === 2 ? 2 : 0;
 }
 
 // A top-level catch can cover runtime throws and child timeouts because these bytes execute.
-// Syntax-byte corruption occurs before Node can evaluate this file; the registered shell command
-// deliberately maps exit 1 to fail-open. FINAL-MASTER §0.4 treats that case as a compromised hook
-// outside the controlled layer. Strengthening it requires changing the already-trusted command
-// bytes (and personal trust state), which Gate A-bootstrap explicitly does not authorize.
+// The registered Codex shell wrapper maps any abnormal adapter exit to blocking code 2.
 try { process.exitCode = main(); }
 catch (error) {
   process.exitCode = witnessAwareRuntimeFailure(`top-level adapter runtime exception: ${error?.message || error}`);

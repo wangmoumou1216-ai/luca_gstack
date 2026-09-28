@@ -15,6 +15,7 @@ import {
   readProjectState,
   validatedBindingForState,
 } from './lib/project-substrate.mjs';
+import { resolveCodexChildProject } from './lib/codex-child-project.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
@@ -75,6 +76,19 @@ if (ownSid) {
     }
   } catch (error) {
     process.stderr.write(`[session-restore] ⚠️ 本 session 项目 identity 无效，按 NO_PIN 启动：${String(error?.message || error)}\n`);
+  }
+}
+if (!startupBinding && ownSid && process.env.LUCA_ACTUAL_HARNESS === 'codex') {
+  try {
+    startupBinding = resolveCodexChildProject({
+      gstackRoot: projectRoot,
+      projectsRoot: PROJECTS_ROOT,
+      childSessionId: ownSid,
+      cwd: startPayload.cwd || projectRoot,
+      codexHome: process.env.CODEX_HOME || '',
+    })?.binding || null;
+  } catch (error) {
+    process.stderr.write(`[session-restore] child project association unavailable: ${String(error?.message || error)}\n`);
   }
 }
 
@@ -404,7 +418,10 @@ try {
   }
 }
 
-const memScript = join(projectRoot, 'memory', 'scripts', 'get_memory.py');
+const hookCodeRoot = process.env.LUCA_ACTUAL_HARNESS === 'codex'
+  && process.env.LUCA_PROTECTED_CODE_ROOT
+  ? process.env.LUCA_PROTECTED_CODE_ROOT : projectRoot;
+const memScript = join(hookCodeRoot, 'memory', 'scripts', 'get_memory.py');
 if (existsSync(memScript)) {
   try {
     // stderr 改 pipe（原 'ignore'）：失败时需要它来区分「无 python3 / 其它」，否则 e.message 只有
@@ -445,7 +462,7 @@ if (existsSync(memScript)) {
 // 改用 .checked-<date> 轻量标记（daily_governance.py 每次调用无条件 touch）判断"今天是否已跑过"。
 try {
   const today = new Date().toISOString().slice(0, 10); // UTC，与 daily_governance 的 digest 文件名一致
-  const govScript = join(projectRoot, 'memory', 'scripts', 'daily_governance.py');
+  const govScript = join(hookCodeRoot, 'memory', 'scripts', 'daily_governance.py');
   // 治理触发路径走 memoryRoot（非 projectRoot）：daily_governance 以 MEMORY_ROOT 解析数据根，
   // 认领标记/digest 探测必须与其一致，否则 redirect 生效时触发侧与写入侧分裂（F2-01/P0）
   const todayDigest = join(memoryRoot, 'memory', 'digests', `${today}.md`);

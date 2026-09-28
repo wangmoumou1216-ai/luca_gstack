@@ -99,7 +99,7 @@ scene:        <当前 scene A/B/C/D>
 output_path:  <skill 的主产出文件路径>
 handoff_path: <handoff summary 文件路径>
 execution_mode: standalone | workflow
-project_session: <已验证 pin 的 session id；框架/meta 为 NO_PIN>
+project_session: <已验证根 pin 或 Codex 原生父子关联的 session id；框架/meta 为 NO_PIN>
 ```
 
 ### 2.1 检查维度
@@ -113,8 +113,11 @@ project_session: <已验证 pin 的 session id；框架/meta 为 NO_PIN>
 | **Handoff 质量** | handoff summary 是否存在、格式合规、≤2000 tokens | 文件存在 && YAML front matter 有 `gate_result` && 有产出路径/位置章节 && 有决策或约束章节 && chars ≤ 8000 |
 | **workflow-state** | 仅 workflow 模式检查已绑定项目状态 | 精确定位 `skill_name` 节点，确认 `status: DONE`；若 `output` / `handoff_path` 非空，必须与输入路径一致，禁止用历史 DONE 节点误判；standalone 不强制该状态 |
 
-读取产出前按 `.claude/skill-os/runtime/project-session.md` 验证路径作用域。NO_PIN 不读取共享
-`docs/`、workflow-state 或 current-topic；项目输入使用已验证 pin 的绝对目标，不猜“最新项目”。
+读取产出前按 `.claude/skill-os/runtime/project-session.md` 验证路径作用域。Codex 子会话须以
+`node scripts/project-pin.mjs status --view host --session-id <自身可信 SID>` 的 `CHILD_ASSOCIATED`、
+`binding_validation: VERIFIED` 和原生父子证明确认
+自己的项目关联；父会话 SID 或路径文本不能代填。NO_PIN 不读取共享 `docs/`、workflow-state 或
+current-topic；项目输入使用已验证关联的绝对目标，不猜“最新项目”。
 
 Handoff 标题允许以下项目内常用变体：
 - 产出：任何包含 `路径` 或 `位置` 的二级标题，例如 `## 产出路径`、`## 产出位置`、`## PRD 位置`、`## Output`
