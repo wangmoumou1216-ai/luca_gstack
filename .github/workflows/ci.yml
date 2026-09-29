@@ -55,7 +55,8 @@ jobs:
           fetch-depth: 0 # G5 offline fixtures reconstruct two frozen historical trees.
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          # The protected hook loader uses node:module.registerHooks.
+          node-version: '22'
       - uses: actions/setup-python@v6
         with:
           python-version: '3.x'
