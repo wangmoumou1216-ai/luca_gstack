@@ -553,7 +553,7 @@ check('IDENTITY-STATE-004 exact switch command is denied when attested boundary 
     tool_input: { command },
   });
   assert.equal(o.hookSpecificOutput.permissionDecision, 'deny', 'exact argv cannot bypass native-event observation mismatch');
-  assert.match(o.hookSpecificOutput.permissionDecisionReason, /可信 proposal|receipt/);
+  assert.match(o.hookSpecificOutput.permissionDecisionReason, /NO_PENDING_EVENT/);
   const after = JSON.parse(readFileSync(path, 'utf8'));
   assert.equal(after.event_control.current.boundary_id, boundaryId);
   assert.equal(after.event_control.consumed_events.length, 1, 'mismatch must not mutate or double-consume event state');

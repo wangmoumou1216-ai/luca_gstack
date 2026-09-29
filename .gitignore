@@ -98,6 +98,9 @@ api-project/
 .claude/.session-framework-state-*
 .claude/.session-project-*
 .claude/.session-consumed-turns-*
+.claude/.session-event-closed-*
+# Legacy host journal evidence remains local after the explicit protected migration.
+.claude/host-launch/*.json
 .claude/.session-read-grants-*
 .claude/.session-read-turn-*
 .claude/.session-read-deny-*

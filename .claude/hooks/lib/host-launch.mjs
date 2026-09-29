@@ -1,11 +1,12 @@
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync, statSync, opendirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync, statSync, opendirSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { canonicalProjectIdentity, readProjectState, atomicProjectStateCas,
-  initializeProjectEventFence, attestPendingProjectEvent, prepareProjectSwitch, validatedBindingForState } from './project-substrate.mjs';
-import { executeProjectTransaction } from '../../../scripts/project-pin.mjs';
+  PROJECT_STATE_SCHEMA, initializeProjectEventFence, attestPendingProjectEvent, validatedBindingForState } from './project-substrate.mjs';
+import { discoverControlState } from '../../../scripts/controlled-change.mjs';
+import { authorizePublicSelection } from './project-selection.mjs';
 import { assertHostLaunchJournal, hostLaunchJournalRoot } from './event-attestation.mjs';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -107,8 +108,104 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
       selectionCommit:current.selection.last_success,executionAuthority:'NOT_PROVIDED'};
     r.status='COMMITTED';r.revision++;persist(r);
   };
+  const recheckCurrentProfile = async r => {
+    let timer, profile;
+    try {
+      profile = await Promise.race([revalidateProfile({launchId:r.launchId,hostRunId:r.request.hostRunId,
+        openRequestId:r.request.openRequestId,profileIdentity:r.request.profileIdentity}),
+        new Promise((_,reject) => { timer=setTimeout(()=>reject(codeError('PROFILE_REVALIDATION_TIMEOUT')),3000); })]);
+    } finally { clearTimeout(timer); }
+    if (!same(profile,r.request.profileIdentity)) throw codeError('PROFILE_CHANGED');
+    identityRecheck(r);
+  };
+  // A private operation over this broker's live record, never a public
+  // no-human-event controller API. Ownership does not grant execution rights.
+  const commitInitialBinding = r => {
+    if (launches.get(r.launchId) !== r || r.status !== 'ATTACHED' || r.cancelRequested
+        || !r.sid || !r.initialTransactionId) throw codeError('CLAIM_REJECTED');
+    const sid = r.sid;
+    const host = { authority:'host_session_start', operationId:r.initialTransactionId,
+      launchId:r.launchId,openRequestId:r.request.openRequestId,hostRunId:r.request.hostRunId,
+      sourceId:r.request.profileIdentity.sourceId,projectIdentity:r.request.projectIdentity };
+    const initial = readProjectState(gstackRoot, sid, projectsRoot);
+    const control = initial.value.event_control;
+    if (initial.value.state !== 'NO_PIN' || initial.value.host_launch_source?.launch_id !== host.launchId
+        || initial.value.selection || initial.value.binding || !control?.fence
+        || control.fence.harness !== 'codex' || control.current !== null
+        || control.candidates.length || control.consumed_events.length) {
+      throw new Error('host initial binding requires an untouched native startup fence');
+    }
+    const identity = canonicalProjectIdentity(host.projectIdentity?.project, projectsRoot);
+    if (['project', 'realpath', 'dev', 'ino'].some(key => String(identity[key]) !== String(host.projectIdentity[key]))) {
+      throw new Error('host launch target identity changed');
+    }
+    const tx = host.operationId;
+    if (existsSync(join(gstackRoot, '.git'))) {
+      const controlled = discoverControlState(gstackRoot);
+      if (controlled.kind === 'invalid') throw new Error(`controlled state invalid: ${controlled.reason}`);
+      if (controlled.kind === 'required') authorizePublicSelection({
+        manifest: controlled.current.manifest, projectsRoot,
+        selection: { operation: 'switch', target: identity.project, session_id: sid, tx, expected_epoch: 0 },
+      });
+    }
+    const binding = { ...identity, epoch: 1 }, committedAt = new Date().toISOString(), streamId = randomUUID();
+    const receipt = {
+      operation_id: tx, kind: 'switch', target: identity.project, status: 'COMMITTED',
+      created: false, bound: true, commit_id: tx, expected_epoch: 0, binding_epoch: 1,
+      committed_at: committedAt, error_code: null,
+      proposal: { tx, operation: 'switch', target: identity.project, expected_epoch: 0, authority: 'host_session_start' },
+      host_launch: host,
+    };
+    const next = {
+      schema_version: PROJECT_STATE_SCHEMA, state: 'HOST_BOUND', session_id: sid,
+      host_launch_source: initial.value.host_launch_source, binding,
+      host_binding: { schema_version: 1, launch_id: host.launchId, operation_id: tx, epoch: 1 },
+      selection: { stream_id: streamId, commit_sequence: 1, pending: null,
+        receipts: [receipt], latest_operation: receipt,
+        last_success: { stream_id: streamId, sequence: 1, commit_id: tx, kind: 'switch',
+          target: identity.project, binding_epoch: 1, committed_at: committedAt, origin: 'host_launch' } },
+      event_control: control,
+    };
+    validatedBindingForState(next, projectsRoot);
+    atomicProjectStateCas(gstackRoot, sid, initial.raw, next);
+    const readback = readProjectState(gstackRoot, sid, projectsRoot).value;
+    if (JSON.stringify(readback) !== JSON.stringify(next)) throw new Error('host initial binding readback mismatch');
+    return readback;
+  };
+  const finishStartup = async r => {
+    reconcile(r);
+    if (r.receipt) {
+      const current = readProjectState(gstackRoot,r.sid,projectsRoot).value;
+      if (!same(validatedBindingForState(current,projectsRoot),r.receipt.binding)
+          || !same(current.selection?.last_success,r.receipt.selectionCommit)) throw codeError('READBACK_MISMATCH');
+    }
+    if (!r.request.projectIdentity || r.status === 'COMMITTED') return {
+      status:r.status,sessionId:r.sid,sourceId:r.request.profileIdentity.sourceId,
+      ...(r.receipt ? {receipt:r.receipt} : {}),
+    };
+    if (r.status !== 'ATTACHED') throw codeError('CLAIM_REJECTED');
+    await recheckCurrentProfile(r);
+    if (r.cancelRequested) throw codeError('CLAIM_REJECTED');
+    r.initialTransactionId ||= randomUUID(); persist(r);
+    fault('before-prepare');
+    if (r.cancelRequested) throw codeError('CLAIM_REJECTED');
+    commitInitialBinding(r);
+    fault('after-controller');
+    reconcile(r);
+    if (r.status !== 'COMMITTED' || !r.receipt) throw codeError('READBACK_MISMATCH');
+    fault('after-commit');
+    return {status:'COMMITTED',sessionId:r.sid,sourceId:r.request.profileIdentity.sourceId,receipt:r.receipt};
+  };
   const output = r => ({ launchId:r.launchId,launchNonce:r.launchNonce,claimHandle:r.claimHandle,status:r.status,revision:r.revision });
-  const parent = (method, params) => serial(async () => {
+  const parent = (method, params) => {
+    // Cancellation must be observable while an earlier claim awaits the host.
+    // Authenticate the operation before marking intent; final persistence stays
+    // serialized with the claim, and a completed CAS remains committed.
+    if (method === 'cancel') {
+      const r = launches.get(params?.launchId);
+      if (r && params.operationId === r.request.operationId) r.cancelRequested = true;
+    }
+    return serial(async () => {
     if (method === 'prepare') {
       const request = validateLaunchRequest(params, projectsRoot), payloadDigest = hash(Buffer.from(JSON.stringify(request)));
       const prior = operations.get(request.operationId);
@@ -147,7 +244,8 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
       identityRecheck(r); r.status='DISPATCHED';r.revision++;persist(r);return {status:r.status};
     }
     throw codeError('METHOD_DENIED');
-  });
+    });
+  };
   const claim = (method, params) => serial(async () => {
     const r = lookup(params), payload=params.nativePayload;
     const supplied = Buffer.from(String(params.claimHandle || params.handle || ''));
@@ -160,7 +258,7 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
     identityRecheck(r);
     if (method === 'attach') {
       if (payload.hook_event_name !== 'SessionStart' || payload.source !== 'startup') throw codeError('NEW_LAUNCH_REQUIRED');
-      if (r.sid) { if (r.sid !== payload.session_id) throw codeError('SID_CONFLICT'); return {status:r.status,sessionId:r.sid,sourceId:r.request.profileIdentity.sourceId}; }
+      if (r.sid) { if (r.sid !== payload.session_id) throw codeError('SID_CONFLICT'); return finishStartup(r); }
       if (r.status !== 'DISPATCHED') throw codeError('CLAIM_REJECTED');
       const state = readProjectState(gstackRoot,payload.session_id,projectsRoot);
       if (state.raw !== null) throw codeError('NEW_LAUNCH_REQUIRED');
@@ -175,18 +273,14 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
         initializeProjectEventFence({gstackRoot,projectsRoot,sessionId:payload.session_id,harness:'codex',cwd:gstackRoot,
           transcriptPath:payload.transcript_path || '',codexHome:r.request.profileIdentity.sourceRoot.realpath});
       } catch (error) { r.status='FAILED'; r.revision++;persist(r);throw error; }
-      r.sid=payload.session_id;r.status='ATTACHED';r.revision++;persist(r);fault('after-attach');return {status:'ATTACHED',sessionId:r.sid,sourceId:r.request.profileIdentity.sourceId};
+      r.sid=payload.session_id;r.status='ATTACHED';r.revision++;persist(r);fault('after-attach');return finishStartup(r);
     }
     if (method !== 'beforeTool' || payload.hook_event_name !== 'PreToolUse' || r.sid !== payload.session_id) throw codeError('METHOD_DENIED');
-    let timer, profile;
-    try {
-      profile = await Promise.race([revalidateProfile({launchId:r.launchId,hostRunId:r.request.hostRunId,
-        openRequestId:r.request.openRequestId,profileIdentity:r.request.profileIdentity}),
-        new Promise((_,reject) => { timer=setTimeout(()=>reject(codeError('PROFILE_REVALIDATION_TIMEOUT')),3000); })]);
-    } finally { clearTimeout(timer); }
-    if (!same(profile,r.request.profileIdentity)) throw codeError('PROFILE_CHANGED');
-    identityRecheck(r);
+    await recheckCurrentProfile(r);
+    if (r.cancelRequested) throw codeError('CLAIM_REJECTED');
     reconcile(r);
+    // Startup must commit before any human candidate can be consumed.
+    if (r.request.projectIdentity && r.status !== 'COMMITTED') throw codeError('INITIAL_BINDING_REQUIRED');
     // Codex can report the parent session ID with a child's transcript. Route
     // that case onward without consuming root authority; the scope guard must
     // independently verify the child's native ancestry and protected receipt.
@@ -233,28 +327,8 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
         ? {status:'COMMITTED',receipt:r.receipt}
         : {status:'COMMITTED',sessionId:r.sid,executionAuthority:'NOT_PROVIDED'};
     }
-    if (observed.state.state !== 'NO_PIN' || observed.state.event_control.consumed_events.length !== 1) throw codeError('FIRST_EVENT_REQUIRED');
-    fault('before-prepare');
-    const prepared=prepareProjectSwitch({gstackRoot,projectsRoot,sessionId:r.sid,operation:'switch',target:r.request.projectIdentity.project});
-    const hostLaunch={launchId:r.launchId,openRequestId:r.request.openRequestId,hostRunId:r.request.hostRunId,
-      eventId:observed.event.event_id,sourceId:r.request.profileIdentity.sourceId};
-    hostLaunch.projectIdentity=r.request.projectIdentity;
-    liveControllerReceipts.add(hostLaunch);
-    let committed;
-    try {
-      committed=executeProjectTransaction({gstackRoot,projectsRoot,sessionId:r.sid,tx:prepared.proposal.tx,operation:'switch',
-        target:r.request.projectIdentity.project,expectedEpoch:prepared.proposal.expected_epoch,hostLaunchReceipt:hostLaunch});
-    } finally { liveControllerReceipts.delete(hostLaunch); }
-    fault('after-controller');
-    const current=readProjectState(gstackRoot,r.sid,projectsRoot).value;
-    const binding=validatedBindingForState(current,projectsRoot), receipt=current.selection?.latest_operation;
-    if (!binding || binding.project!==r.request.projectIdentity.project || receipt?.status!=='COMMITTED'
-      || receipt.operation_id!==prepared.proposal.tx || !same(receipt.host_launch,hostLaunch)
-      || committed.binding.epoch!==binding.epoch) throw codeError('READBACK_MISMATCH');
-    r.receipt={validation:'VERIFIED',sessionId:r.sid,launchId:r.launchId,openRequestId:r.request.openRequestId,
-      hostRunId:r.request.hostRunId,operationId:receipt.operation_id,hostLaunch,binding,
-      selectionCommit:current.selection.last_success,executionAuthority:'NOT_PROVIDED'};
-    r.status='COMMITTED';r.revision++;persist(r);fault('after-commit');return {status:'COMMITTED',receipt:r.receipt};
+    // An authenticated SessionStart retry owns unfinished startup work.
+    throw codeError('INITIAL_BINDING_REQUIRED');
   });
   return {parent,claim};
 }

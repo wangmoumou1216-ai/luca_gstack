@@ -140,17 +140,71 @@ function copySnapshot(root, destination, approved) {
   }
 }
 
+function protectedBytes(path) {
+  const stat = lstatSync(path);
+  if (stat.uid !== process.getuid() || (stat.mode & 0o077) !== 0) fail(`untrusted protected file: ${path}`);
+  return sourceBytes(path);
+}
+function validateSnapshotTree(path) {
+  privateDir(path);
+  for (const entry of readdirSync(path, { withFileTypes: true })) {
+    const child = join(path, entry.name);
+    if (entry.isDirectory()) validateSnapshotTree(child);
+    else if (entry.isFile()) protectedBytes(child);
+    else fail(`unsafe protected snapshot: ${child}`);
+  }
+}
+function preservedManifest(destination, bootstrap, loader) {
+  privateDir(destination); privateDir(join(destination, 'roots'));
+  if (!protectedBytes(join(destination, 'bootstrap.mjs')).equals(bootstrap)
+      || !protectedBytes(join(destination, 'loader.mjs')).equals(loader)) {
+    fail('preserving roots requires identical installed bootstrap and loader');
+  }
+  const bytes = protectedBytes(join(destination, 'manifest.json'));
+  let value;
+  try { value = JSON.parse(bytes); } catch { fail('invalid installed manifest JSON'); }
+  const keys = (object, expected) => object && typeof object === 'object' && !Array.isArray(object)
+    && Object.keys(object).sort().join(',') === [...expected].sort().join(',');
+  if (!keys(value, ['schema_version','loader_sha256','roots']) || value.schema_version !== 1
+      || value.loader_sha256 !== sha(loader) || !Array.isArray(value.roots) || !value.roots.length) {
+    fail('invalid installed manifest');
+  }
+  const seen = new Set();
+  for (const row of value.roots) {
+    if (!keys(row, ['root','snapshot','files']) || typeof row.root !== 'string'
+        || !isAbsolute(row.root) || resolve(row.root) !== row.root || seen.has(row.root)
+        || typeof row.snapshot !== 'string'
+        || !/^[a-f0-9]{64}-[a-f0-9-]{36}$/.test(row.snapshot)
+        || row.snapshot.slice(0,64) !== sha(Buffer.from(row.root))
+        || !row.files || typeof row.files !== 'object' || Array.isArray(row.files)) fail('invalid installed root');
+    seen.add(row.root);
+    for (const [file, approval] of Object.entries(row.files)) {
+      if (!file || file.includes('\\') || isAbsolute(file) || file.split('/').some(part => !part || part === '.' || part === '..')
+          || !/\.(?:mjs|js)$/.test(file) || !keys(approval, ['sha256','format'])
+          || !/^[a-f0-9]{64}$/.test(approval.sha256) || !['module','commonjs'].includes(approval.format)) {
+        fail('invalid installed file approval');
+      }
+    }
+    // Inspect the protected snapshot only, never the preserved source checkout.
+    validateSnapshotTree(join(destination, 'roots', row.snapshot));
+  }
+  return { value, bytes };
+}
+
 const args = process.argv.slice(2);
 const requestedRoots = [];
 let dryRun = false;
+let preserveOtherRoots = false;
 let testDest = '';
 for (let index = 0; index < args.length; index += 1) {
   const arg = args[index];
   if (arg === '--root' && args[index + 1]) requestedRoots.push(args[++index]);
+  else if (arg === '--preserve-other-roots') preserveOtherRoots = true;
   else if (arg === '--dry-run') dryRun = true;
   else if (arg === '--test-dest' && args[index + 1]) testDest = args[++index];
   else fail(`unknown or incomplete argument: ${arg}`);
 }
+if (preserveOtherRoots && !requestedRoots.length) fail('--preserve-other-roots requires explicit --root');
 const roots = [...new Set((requestedRoots.length ? requestedRoots : [scriptRoot])
   .map(path => canonical(path, 'source root')))];
 const expectedDest = join(realpathSync(homedir()), '.codex', 'luca-child-project', 'source-guard');
@@ -165,10 +219,24 @@ if (testDest) {
 }
 const bootstrap = sourceBytes(join(scriptRoot, '.codex', 'codex-source-guard-bootstrap.mjs'));
 const loader = sourceBytes(join(scriptRoot, '.codex', 'codex-source-guard-loader.mjs'));
-const entries = roots.map(root => ({ root,
+// Validate preservation before creating any destination or snapshot.
+if (preserveOtherRoots) {
+  if (testDest) privateDir(dirname(destination));
+  else {
+    const home = canonical(homedir(), 'user home'), stat = lstatSync(home);
+    if (stat.uid !== process.getuid() || (stat.mode & 0o022) !== 0) fail('user home is writable by others');
+    privateDir(join(home, '.codex')); privateDir(join(home, '.codex', 'luca-child-project'));
+  }
+}
+const previous = preserveOtherRoots ? preservedManifest(destination, bootstrap, loader) : null;
+const updated = roots.map(root => ({ root,
   snapshot: `${sha(Buffer.from(root))}-${randomUUID()}`,
   files: approvedJavaScript(root) }));
-const summary = { destination, roots: entries.map(row => ({ root: row.root,
+const replacements = new Map(updated.map(row => [row.root, row]));
+const entries = previous ? previous.value.roots.map(row => {
+  const replacement = replacements.get(row.root); replacements.delete(row.root); return replacement || row;
+}).concat([...replacements.values()]) : updated;
+const summary = { destination, preserve_other_roots: preserveOtherRoots, roots: entries.map(row => ({ root: row.root,
   approved_js: Object.keys(row.files).length, snapshot: row.snapshot })) };
 if (dryRun) {
   process.stdout.write(`${JSON.stringify({ dry_run: true, ...summary }, null, 2)}\n`);
@@ -185,12 +253,18 @@ if (testDest) {
 }
 privateDir(destination, true);
 const snapshots = privateDir(join(destination, 'roots'), true);
-for (const row of entries) {
+for (const row of updated) {
   const snapshotRoot = privateDir(join(snapshots, row.snapshot), true);
   copySnapshot(row.root, snapshotRoot, row.files);
 }
-replaceProtected(join(destination, 'bootstrap.mjs'), bootstrap);
-replaceProtected(join(destination, 'loader.mjs'), loader);
+if (previous) {
+  if (!protectedBytes(join(destination, 'manifest.json')).equals(previous.bytes)
+      || !protectedBytes(join(destination, 'bootstrap.mjs')).equals(bootstrap)
+      || !protectedBytes(join(destination, 'loader.mjs')).equals(loader)) fail('protected installation changed during update');
+} else {
+  replaceProtected(join(destination, 'bootstrap.mjs'), bootstrap);
+  replaceProtected(join(destination, 'loader.mjs'), loader);
+}
 replaceProtected(join(destination, 'manifest.json'), Buffer.from(`${JSON.stringify({
   schema_version: 1, loader_sha256: sha(loader), roots: entries,
 })}\n`));

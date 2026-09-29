@@ -60,7 +60,7 @@ function validateSelection(selection) {
         || !Number.isSafeInteger(success.sequence) || success.sequence < 1
         || !['switch', 'new'].includes(success.kind)
         || !Number.isSafeInteger(success.binding_epoch) || success.binding_epoch < 1
-        || !String(success.committed_at || '') || success.origin !== 'agent_user_selection') {
+        || !String(success.committed_at || '') || !['agent_user_selection', 'host_launch'].includes(success.origin)) {
       throw new Error('selection commit is invalid');
     }
     validateProjectName(success.target);
@@ -107,7 +107,7 @@ function selectionCommitView(item) {
     target: String(item.target || ''),
     binding_epoch: Number(item.binding_epoch),
     committed_at: String(item.committed_at || ''),
-    origin: item.origin === 'agent_user_selection' ? item.origin : 'unknown',
+    origin: ['agent_user_selection', 'host_launch'].includes(item.origin) ? item.origin : 'unknown',
   };
 }
 

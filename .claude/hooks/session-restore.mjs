@@ -71,7 +71,10 @@ if (ownSid) {
     if (projectState.state === 'TURN_ACTIVE' && projectState.schema_version === PROJECT_STATE_SCHEMA) {
       startupBinding = activeProjectAuthority(projectState, { gstackRoot: projectRoot }, PROJECTS_ROOT)?.binding || null;
       if (!startupBinding) throw new Error('TURN_ACTIVE lacks current attested native event authority');
-    } else if (['BOUND', 'TURN_CLOSED'].includes(projectState.state)) {
+    } else if (['BOUND', 'HOST_BOUND', 'TURN_CLOSED'].includes(projectState.state)) {
+      if (projectState.state === 'HOST_BOUND' && process.env.LUCA_ACTUAL_HARNESS !== 'codex') {
+        throw new Error('Codex startup binding requires the Codex harness');
+      }
       startupBinding = validatedBindingForState(projectState, PROJECTS_ROOT);
     }
   } catch (error) {

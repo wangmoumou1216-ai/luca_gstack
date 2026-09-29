@@ -1,16 +1,21 @@
+import test from 'node:test';
 import os from 'node:os';
 import { syncBuiltinESMExports } from 'node:module';
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, renameSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { fork, execFile } from 'node:child_process';
+import { fork, execFile, execFileSync, spawnSync } from 'node:child_process';
 import { connect } from 'node:net';
+import { fileURLToPath } from 'node:url';
 import { createHostLaunchBroker, fileIdentity } from '../.claude/hooks/lib/host-launch.mjs';
-import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity, prepareProjectSwitch, closeAttestedProjectEvent, refenceProjectStateForDeactivate } from '../.claude/hooks/lib/project-substrate.mjs';
+import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity, prepareProjectSwitch,
+  closeAttestedProjectEvent, refenceProjectStateForDeactivate } from '../.claude/hooks/lib/project-substrate.mjs';
 import { captureNativeEventFence, hostLaunchJournalRoot, readHostLaunchSourceScope, resolveCodexHome } from '../.claude/hooks/lib/event-attestation.mjs';
 import { executeProjectTransaction } from './project-pin.mjs';
+import * as projectPinApi from './project-pin.mjs';
+import { parseExpandedSelectionCommand } from '../.claude/hooks/lib/project-selection.mjs';
+import { projectStatusHostView } from '../.claude/hooks/lib/project-host-view.mjs';
 
 test('nested child tools do not consume root events or receive the root receipt', async () => {
   for (const project of [false, true]) {
@@ -38,7 +43,7 @@ test('nested child tools do not consume root events or receive the root receipt'
 
 test('historical journal above 512 preserves replay denial and existing receipts', async () => {
   const f = fixture(), claim = await attached(f);
-  const journal = hostLaunchJournalRoot(f.gstackRoot);
+  const journal = join(f.gstackRoot, '.claude', 'host-launch');
   const savedPath = join(journal, `${claim.launchId}.json`);
   const saved = readFileSync(savedPath);
   for (let i = 0; i < 513; i++) {
@@ -78,7 +83,7 @@ function fixture(options = {}) {
   for (const path of [join(gstackRoot, '.claude'), projectsRoot, join(sourceRoot, 'sessions', '2026', '09', '27')]) mkdirSync(path, { recursive: true });
   const config = join(root, 'settings.json'); writeFileSync(config, '{"profile":"sidecar"}');
   const binary = process.execPath;
-  const sid = randomUUID(), turn = randomUUID();
+  const sid = randomUUID();
   const source = join(sourceRoot, 'sessions', '2026', '09', '27', `rollout-2026-09-27T00-00-00-${sid}.jsonl`);
   writeFileSync(source, JSON.stringify({ type:'session_meta', payload:{ id:sid, session_id:sid, cwd:gstackRoot,
     originator:'codex-tui', thread_source:'user', parent_thread_id:null, forked_from_id:null } }) + '\n');
@@ -89,6 +94,7 @@ function fixture(options = {}) {
     revalidateProfile: async () => profileIdentity, journalRoot:join(gstackRoot,'.claude','host-launch'), ...options });
   const payload = { hook_event_name:'SessionStart', session_id:sid, source:'startup', cwd:gstackRoot, transcript_path:source };
   const appendHuman = () => {
+    const turn = randomUUID();
     const prompt = 'Do the first business task.';
     appendFileSync(source, [
       { type:'response_item', payload:{type:'message',role:'user',id:`msg_${randomUUID()}`,
@@ -113,7 +119,7 @@ test('global new launch authenticates an exact Sidecar source but remains NO_PIN
   assert.ok(!journal.includes(prepared.launchNonce));
 });
 
-async function attached(f, project = false) {
+async function dispatched(f, project = false) {
   if (project) {
     mkdirSync(join(f.projectsRoot,'alpha'));
     f.request.projectIdentity=canonicalProjectIdentity('alpha',f.projectsRoot);
@@ -121,10 +127,32 @@ async function attached(f, project = false) {
   const p=await f.broker.parent('prepare',f.request);
   await f.broker.parent('dispatch',{launchId:p.launchId,operationId:f.request.operationId,launchNonce:p.launchNonce});
   const claim={...p,hostRunId:f.request.hostRunId,openRequestId:f.request.openRequestId,nativePayload:f.payload};
-  await f.broker.claim('attach',claim);
   return claim;
 }
-test('project launch commits through the actual controller with one matching native receipt',async()=>{
+async function attached(f, project = false) {
+  const claim = await dispatched(f, project);
+  await f.broker.claim('attach', claim);
+  return claim;
+}
+test('project is bound at native startup without a prompt or tool and has no execution event', async () => {
+  const f = fixture(), claim = await attached(f, true);
+  const result = await f.broker.parent('readReceipt', { launchId: claim.launchId });
+  assert.equal(result.status, 'COMMITTED');
+  assert.equal(result.receipt.validation, 'VERIFIED');
+  assert.equal(result.receipt.executionAuthority, 'NOT_PROVIDED');
+  const view = projectStatusHostView({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot, sessionId: f.sid });
+  assert.equal(view.read_status, 'OK', JSON.stringify(view.error));
+  assert.equal(view.current_binding.project, 'alpha');
+  assert.equal(view.execution_authority, 'NOT_PROVIDED');
+  const state = readProjectState(f.gstackRoot, f.sid).value;
+  assert.equal(state.event_control.current, null);
+  assert.deepEqual(state.event_control.consumed_events, []);
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim,
+    nativePayload: { ...f.payload, hook_event_name: 'PreToolUse', turn_id: 'fabricated-turn' } }));
+  assert.equal((await f.broker.claim('attach', claim)).receipt.operationId, result.receipt.operationId);
+  assert.equal((await f.broker.parent('readReceipt', { launchId: claim.launchId })).receipt.selectionCommit.sequence, 1);
+});
+test('project startup receipt survives the first attested human event',async()=>{
   const f=fixture(), claim=await attached(f,true), payload=f.appendHuman();
   const result=await f.broker.claim('beforeTool',{...claim,nativePayload:payload});
   assert.equal(result.status,'COMMITTED');assert.equal(result.receipt.validation,'VERIFIED');
@@ -139,10 +167,86 @@ test('project launch commits through the actual controller with one matching nat
   assert.equal(readProjectState(f.gstackRoot,f.sid).value.binding.project,'alpha');
   await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),{code:'CLAIM_REJECTED'});
 });
+test('startup binding alone cannot pass either harness project guard; a real Codex turn can', async () => {
+  const f = fixture(), claim = await attached(f, true);
+  const guard = (harness, payload = {}) => {
+    const result = spawnSync(process.execPath,
+      [fileURLToPath(new URL('../.claude/hooks/project-scope-guard.mjs', import.meta.url))], {
+        cwd: f.gstackRoot, encoding: 'utf8', timeout: 5000,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: f.gstackRoot, LUCA_PROJECTS_ROOT: f.projectsRoot,
+          CODEX_HOME: f.sourceRoot, LUCA_ACTUAL_HARNESS: harness },
+        input: JSON.stringify({ ...f.payload, hook_event_name: 'PreToolUse',
+          tool_name: 'Write', tool_input: { file_path: 'docs/probe.md', content: 'probe' }, ...payload }),
+      });
+    assert.ok(result.stdout.trim(), result.stderr);
+    return JSON.parse(result.stdout).hookSpecificOutput;
+  };
+  assert.equal(guard('codex').permissionDecision, 'deny');
+  assert.equal(guard('claude').permissionDecision, 'deny');
+  const payload = f.appendHuman();
+  await f.broker.claim('beforeTool', { ...claim, nativePayload: payload });
+  const allowed = guard('codex', { turn_id: payload.turn_id });
+  assert.notEqual(allowed.permissionDecision, 'deny');
+  assert.equal(allowed.updatedInput.file_path, join(f.projectsRoot, 'alpha', 'docs', 'probe.md'));
+});
+test('host view refuses a startup binding whose receipt lost its authenticated origin', async () => {
+  const f = fixture(); await attached(f, true);
+  const path = join(f.gstackRoot, '.claude', `.session-project-${f.sid}`);
+  const state = JSON.parse(readFileSync(path, 'utf8'));
+  delete state.selection.latest_operation.host_launch.authority;
+  writeFileSync(path, JSON.stringify(state));
+  const view = projectStatusHostView({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot, sessionId: f.sid });
+  assert.equal(view.read_status, 'INVALID');
+  assert.equal(view.current_binding, null);
+});
+test('Claude startup cannot consume a Codex host-only initial binding', async () => {
+  const f = fixture(); await attached(f, true);
+  const result = spawnSync(process.execPath,
+    [fileURLToPath(new URL('../.claude/hooks/session-restore.mjs', import.meta.url))], {
+      cwd: f.gstackRoot, encoding: 'utf8', timeout: 5000,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: f.gstackRoot, MEMORY_ROOT: f.gstackRoot,
+        LUCA_PROJECTS_ROOT: f.projectsRoot, LUCA_ACTUAL_HARNESS: 'claude' },
+      input: JSON.stringify(f.payload),
+    });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /Codex startup binding requires the Codex harness/);
+});
+test('cancel received during profile revalidation prevents startup commit', async () => {
+  let release, entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const f = fixture({ revalidateProfile: () => {
+    entered(); return new Promise(resolve => { release = () => resolve(f.request.profileIdentity); });
+  } });
+  const claim = await dispatched(f, true);
+  const attach = f.broker.claim('attach', claim);
+  const rejected = assert.rejects(attach, { code: 'CLAIM_REJECTED' });
+  await waiting;
+  const cancel = f.broker.parent('cancel', { launchId: claim.launchId, operationId: f.request.operationId });
+  release();
+  await rejected;
+  assert.equal((await cancel).status, 'CANCELLED');
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.state, 'NO_PIN');
+  assert.equal((await f.broker.parent('readReceipt', { launchId: claim.launchId })).receipt, null);
+  await assert.rejects(f.broker.claim('attach', claim), { code: 'CLAIM_REJECTED' });
+});
+test('invalid cancel received during profile revalidation cannot revoke a launch', async () => {
+  let release, entered;
+  const waiting = new Promise(resolve => { entered = resolve; });
+  const f = fixture({ revalidateProfile: () => {
+    entered(); return new Promise(resolve => { release = () => resolve(f.request.profileIdentity); });
+  } });
+  const claim = await dispatched(f, true), attach = f.broker.claim('attach', claim);
+  await waiting;
+  const cancel = assert.rejects(f.broker.parent('cancel', { launchId: claim.launchId, operationId: 'wrong' }),
+    { code: 'OPERATION_CONFLICT' });
+  release();
+  assert.equal((await attach).status, 'COMMITTED');
+  await cancel;
+});
 test('cancel wins before commit and cannot be revived by a late native callback',async()=>{
-  const f=fixture(),claim=await attached(f,true),payload=f.appendHuman();
+  const f=fixture(),claim=await dispatched(f,true);
   await f.broker.parent('cancel',{launchId:claim.launchId,operationId:f.request.operationId});
-  await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),{code:'CLAIM_REJECTED'});
+  await assert.rejects(f.broker.claim('attach',claim),{code:'CLAIM_REJECTED'});
   assert.equal(readProjectState(f.gstackRoot,f.sid).value.state,'NO_PIN');
 });
 test('ordinary default source policy rejects Sidecar without a framework scope',()=>{
@@ -157,6 +261,18 @@ test('cross-run/nonce/request/SID claims cannot borrow an attached grant',async(
     await assert.rejects(f.broker.claim('attach',{...claim,...patch}));
   }
 });
+test('initial project binding refuses resume, wrong cwd, and a replaced project directory', async () => {
+  for (const patch of [{ source: 'resume' }, { cwd: '/private/tmp' }, { hook_event_name: 'PreToolUse' }]) {
+    const f = fixture(), claim = await dispatched(f, true);
+    await assert.rejects(f.broker.claim('attach', { ...claim, nativePayload: { ...f.payload, ...patch } }));
+    assert.equal(readProjectState(f.gstackRoot, f.sid).value.state, 'NO_PIN');
+  }
+  const f = fixture(), claim = await dispatched(f, true);
+  renameSync(join(f.projectsRoot, 'alpha'), join(f.projectsRoot, 'old-alpha'));
+  mkdirSync(join(f.projectsRoot, 'alpha'));
+  await assert.rejects(f.broker.claim('attach', claim), { code: 'PROJECT_CHANGED' });
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.state, 'NO_PIN');
+});
 test('same operation is idempotent but changed payload and second dispatch are rejected',async()=>{
   const f=fixture(),p=await f.broker.parent('prepare',f.request);
   assert.equal((await f.broker.parent('prepare',f.request)).launchId,p.launchId);
@@ -165,12 +281,13 @@ test('same operation is idempotent but changed payload and second dispatch are r
   await assert.rejects(f.broker.parent('dispatch',{launchId:p.launchId,operationId:f.request.operationId,launchNonce:p.launchNonce}),{code:'DISPATCH_REJECTED'});
 });
 test('profile config drift or failed main revalidation prevents project commit',async()=>{
-  const f=fixture(),claim=await attached(f,true),payload=f.appendHuman();
+  const f=fixture(),claim=await dispatched(f,true);
   writeFileSync(f.config,'{"profile":"different"}');
-  await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),{code:'IDENTITY_CHANGED'});
+  await assert.rejects(f.broker.claim('attach',claim),{code:'IDENTITY_CHANGED'});
   assert.equal(readProjectState(f.gstackRoot,f.sid).value.state,'NO_PIN');
-  const g=fixture({revalidateProfile:async()=>null}),other=await attached(g,true),human=g.appendHuman();
-  await assert.rejects(g.broker.claim('beforeTool',{...other,nativePayload:human}),{code:'PROFILE_CHANGED'});
+  const g=fixture({revalidateProfile:async()=>null}),other=await dispatched(g,true);
+  await assert.rejects(g.broker.claim('attach',other),{code:'PROFILE_CHANGED'});
+  assert.equal(readProjectState(g.gstackRoot,g.sid).value.state,'NO_PIN');
 });
 test('profile identifiers must be normalized nonempty strings',async()=>{
   const f=fixture();
@@ -179,6 +296,20 @@ test('profile identifiers must be normalized nonempty strings',async()=>{
     await assert.rejects(f.broker.parent('prepare',{...f.request,
       profileIdentity:{...f.request.profileIdentity,...patch}}),{code:'PROFILE_INVALID'});
   }
+});
+test('unfinished startup refuses tools without consuming a user event or silently binding', async () => {
+  let fail = true;
+  const f = fixture({ fault: stage => { if (stage === 'before-prepare' && fail) throw new Error('startup paused'); } });
+  const claim = await dispatched(f, true);
+  await assert.rejects(f.broker.claim('attach', claim), /startup paused/);
+  const payload = f.appendHuman();
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim, nativePayload: payload }), { code: 'INITIAL_BINDING_REQUIRED' });
+  const state = readProjectState(f.gstackRoot, f.sid).value;
+  assert.equal(state.state, 'NO_PIN');
+  assert.deepEqual(state.event_control.consumed_events, []);
+  fail = false;
+  await assert.rejects(f.broker.claim('attach', claim), /untouched native startup fence/);
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.state, 'NO_PIN');
 });
 test('SDK/nonhuman provenance cannot acquire launch attestation',async()=>{
   const f=fixture();
@@ -190,11 +321,11 @@ test('SDK/nonhuman provenance cannot acquire launch attestation',async()=>{
 test('after-commit fault has real pin proof and receipt, without a second transaction',async()=>{
   let injected=false;
   const f=fixture({fault:stage=>{if(stage==='after-commit'&&!injected){injected=true;throw new Error('lost acknowledgement');}}});
-  const claim=await attached(f,true),payload=f.appendHuman();
-  await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),/lost acknowledgement/);
+  const claim=await dispatched(f,true);
+  await assert.rejects(f.broker.claim('attach',claim),/lost acknowledgement/);
   assert.equal(readProjectState(f.gstackRoot,f.sid).value.binding.project,'alpha');
   const receipt=await f.broker.parent('readReceipt',{launchId:claim.launchId});assert.equal(receipt.status,'COMMITTED');
-  assert.equal((await f.broker.claim('beforeTool',{...claim,nativePayload:payload})).receipt.operationId,receipt.receipt.operationId);
+  assert.equal((await f.broker.claim('attach',claim)).receipt.operationId,receipt.receipt.operationId);
   assert.equal(readProjectState(f.gstackRoot,f.sid).value.selection.commit_sequence,1);
 });
 test('restart never reconstructs a plaintext handle or silently replays a durable intent',async()=>{
@@ -205,8 +336,8 @@ test('restart never reconstructs a plaintext handle or silently replays a durabl
 });
 test('controller commit before broker acknowledgement reconciles from the authoritative receipt',async()=>{
   const f=fixture({fault:stage=>{if(stage==='after-controller')throw new Error('ack gap');}});
-  const claim=await attached(f,true),payload=f.appendHuman();
-  await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),/ack gap/);
+  const claim=await dispatched(f,true);
+  await assert.rejects(f.broker.claim('attach',claim),/ack gap/);
   const receipt=await f.broker.parent('readReceipt',{launchId:claim.launchId});
   assert.equal(receipt.status,'COMMITTED');assert.equal(receipt.receipt.validation,'VERIFIED');
   const cancelled=await f.broker.parent('cancel',{launchId:claim.launchId,operationId:f.request.operationId});
@@ -251,7 +382,8 @@ test('private broker transport rejects hook prepare and works with an isolated p
       'throw new Error("isolated restore crash");');
     const restore=await invoke('session-restore.mjs',f.payload);
     assert.equal(restore.code,2);assert.match(restore.stderr,/isolated restore crash/);
-    assert.equal(readProjectState(f.gstackRoot,f.sid).value.state,'NO_PIN');
+    assert.equal(readProjectState(f.gstackRoot,f.sid).value.state,'HOST_BOUND');
+    assert.equal(readProjectState(f.gstackRoot,f.sid).value.event_control.current,null);
     writeFileSync(join(f.gstackRoot,'.claude','hooks','route-guard.mjs'),
       'throw new Error("isolated route guard crash");');
     const route=await invoke('route-guard.mjs',{...f.payload,hook_event_name:'UserPromptSubmit',
@@ -274,31 +406,8 @@ test('private broker transport rejects hook prepare and works with an isolated p
     assert.equal(JSON.parse(allowed.stdout).hookSpecificOutput.permissionDecision,'allow');
   }finally{child.disconnect();await new Promise(resolve=>child.once('exit',resolve));}
 });
-test('production broker refuses an unprotected App-style fork before importing framework authority',async()=>{
-  const production=realpathSync(new URL('..',import.meta.url));
-  const f=fixture();
-  const script=new URL('./host-launch-broker.mjs',import.meta.url);
-  const child=fork(script,[production,f.projectsRoot],{
-    silent:true,env:{...process.env,NODE_OPTIONS:'',LUCA_PROTECTED_CODE_ROOT:''},
-  });
-  let stderr='';child.stderr.on('data',chunk=>stderr+=chunk);
-  const code=await new Promise(resolve=>child.once('exit',resolve));
-  assert.notEqual(code,0);
-  assert.match(stderr,/HOST_SOURCE_UNPROTECTED/);
-});
-test('ordinary model import cannot construct production authority or change any existing pin bytes',()=>{
-  const production=realpathSync(new URL('..',import.meta.url));
-  const f=fixture();
-  const snapshot=()=>Object.fromEntries(readdirSync(join(production,'.claude')).filter(n=>/^\.session-project-/.test(n))
-    .map(n=>[n,createHash('sha256').update(readFileSync(join(production,'.claude',n))).digest('hex')]));
-  const before=snapshot();
-  assert.throws(()=>executeProjectTransaction({gstackRoot:production,projectsRoot:f.projectsRoot,sessionId:randomUUID(),
-    tx:randomUUID(),operation:'switch',target:'muse',expectedEpoch:0}),/host launch roots require a receipt/);
-  assert.throws(()=>createHostLaunchBroker({gstackRoot:production,projectsRoot:f.projectsRoot,
-    revalidateProfile:async()=>null}),{code:'HOST_PARENT_DENIED'});
-  assert.throws(()=>executeProjectTransaction({gstackRoot:production,projectsRoot:f.projectsRoot,sessionId:randomUUID(),
-    tx:randomUUID(),operation:'switch',target:'muse',expectedEpoch:0,hostLaunchReceipt:{launchId:randomUUID()}}),{code:'HOST_RECEIPT_DENIED'});
-  assert.deepEqual(snapshot(),before);
+test('project controller has no public no-event initial binding API', () => {
+  assert.equal(Object.hasOwn(projectPinApi, 'executeHostInitialBinding'), false);
 });
 test('grant corruption refuses source scope instead of silently widening the source root',async()=>{
   const f=fixture(),claim=await attached(f);
@@ -308,12 +417,6 @@ test('grant corruption refuses source scope instead of silently widening the sou
   writeFileSync(path,bytes);
   assert.equal(readHostLaunchSourceScope(f.gstackRoot,f.sid).sourceRoot.realpath,f.sourceRoot);
 });
-test('production source grants are outside the agent-writable checkout',()=>{
-  const production=realpathSync(new URL('..',import.meta.url));
-  const journal=hostLaunchJournalRoot(production);
-  assert.ok(journal.includes('/.codex/luca-child-project/host-launch/'));
-  assert.ok(!journal.startsWith(production+'/'));
-});
 test('historical committed receipt never masquerades as the current selection cursor',async()=>{
   const f=fixture(),claim=await attached(f,true),payload=f.appendHuman();
   await f.broker.claim('beforeTool',{...claim,nativePayload:payload});
@@ -322,6 +425,7 @@ test('historical committed receipt never masquerades as the current selection cu
   state.selection.commit_sequence++;state.selection.last_success.sequence++;
   writeFileSync(path,JSON.stringify(state));
   await assert.rejects(f.broker.parent('readReceipt',{launchId:claim.launchId}),{code:'READBACK_MISMATCH'});
+  await assert.rejects(f.broker.claim('attach',claim),{code:'READBACK_MISMATCH'});
   await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),{code:'READBACK_MISMATCH'});
 });
 test('host wrapper fails closed when its legacy route guard crashes, while legacy remains fail-open',async()=>{
@@ -353,29 +457,6 @@ test('ordinary Codex hook keeps legacy fail-open behavior for malformed input',a
     (error,stdout,stderr)=>resolve({code:error?.code || 0,stdout,stderr}));
     child.stdin.end('{malformed');});
   assert.equal(result.code,0);
-});
-test('ordinary protected Codex hook fails closed on a legacy adapter crash',async()=>{
-  const f=fixture();
-  mkdirSync(join(f.gstackRoot,'.codex'));mkdirSync(join(f.gstackRoot,'.claude','hooks'),{recursive:true});
-  cpSync(new URL('../.codex/host-launch-hook.mjs',import.meta.url),join(f.gstackRoot,'.codex','host-launch-hook.mjs'));
-  const target=join(f.gstackRoot,'.claude','hooks','route-guard.mjs');
-  writeFileSync(target,'process.stdout.write("ok");');
-  const result=await new Promise(resolve=>{const child=execFile(process.execPath,
-    [join(f.gstackRoot,'.codex','host-launch-hook.mjs'),target],
-    {env:{PATH:process.env.PATH,LUCA_CHILD_SOURCE_ROOT:f.gstackRoot},cwd:f.gstackRoot,timeout:5000},
-    (error,stdout,stderr)=>resolve({code:error?.code || 0,stdout,stderr}));
-    child.stdin.end(JSON.stringify({...f.payload,hook_event_name:'UserPromptSubmit'}));});
-  assert.equal(result.code,2);
-});
-test('registered Host Launch PreToolUse intercepts every native tool kind',()=>{
-  const hooks=JSON.parse(readFileSync(new URL('../.codex/hooks.json',import.meta.url),'utf8'));
-  const group=hooks.hooks.PreToolUse.find(item => item.hooks?.some(hook =>
-    hook.command.includes('.codex/host-launch-hook.mjs')));
-  assert.ok(group);
-  const matcher=new RegExp(group.matcher);
-  for(const name of ['Bash','apply_patch','collaborationspawn_agent','Agent','unknown_future_tool']) {
-    assert.equal(matcher.test(name),true,name);
-  }
 });
 test('an authenticated global launch remains usable after the initial capability deadline',async()=>{
   const f=fixture(),claim=await attached(f),payload=f.appendHuman();
@@ -433,7 +514,6 @@ test('omitted CODEX_HOME cannot borrow a nondefault host source', async () => {
   assert.throws(() => captureNativeEventFence({ sessionId: f.sid, harness: 'codex',
     cwd: f.gstackRoot, hostSourceScope }), { code: 'SOURCE_ROOT' });
 });
-
 
 test('project host launch permits later controller selections and bounded receipt history', async (t) => {
   const f = fixture(), claim = await attached(f, true);
@@ -497,3 +577,124 @@ test('cancelled selections may evict old receipts without revoking the current h
   assert.equal(readProjectState(f.gstackRoot, f.sid).value.binding.project, 'alpha');
 });
 
+test('default-home public switch crosses the real guard and controller on consecutive human turns', async (t) => {
+  const f = fixture({ defaultCodexHome: true });
+  const previousRoots = [process.env.LUCA_GSTACK_ROOT, process.env.LUCA_PROJECTS_ROOT];
+  process.env.LUCA_GSTACK_ROOT = f.gstackRoot;
+  process.env.LUCA_PROJECTS_ROOT = f.projectsRoot;
+  t.after(() => {
+    for (const [index, key] of ['LUCA_GSTACK_ROOT', 'LUCA_PROJECTS_ROOT'].entries()) {
+      if (previousRoots[index] === undefined) delete process.env[key];
+      else process.env[key] = previousRoots[index];
+    }
+  });
+  execFileSync('git', ['init', '-q', f.gstackRoot]);
+  await attached(f);
+  for (const name of ['alpha', 'beta']) mkdirSync(join(f.projectsRoot, name));
+  const preload = join(f.root, 'default-home.cjs');
+  writeFileSync(preload, `const os = require('node:os'); const original = os.userInfo;
+os.userInfo = () => ({ ...original(), homedir: ${JSON.stringify(join(f.root, 'home'))} });
+require('node:module').syncBuiltinESMExports();`);
+  const env = { ...process.env, CLAUDE_PROJECT_DIR: f.gstackRoot,
+    LUCA_PROJECTS_ROOT: f.projectsRoot, LUCA_ACTUAL_HARNESS: 'codex' };
+  delete env.CODEX_HOME;
+  delete env.NODE_OPTIONS;
+  delete env.LUCA_EVENT_ATTESTATION_TEST;
+  const invoke = (payload, extra = {}) => new Promise(resolve => {
+    const child = execFile(process.execPath, ['--require', preload,
+      fileURLToPath(new URL('../.claude/hooks/project-scope-guard.mjs', import.meta.url))],
+    { cwd: f.gstackRoot, env: { ...env, ...extra }, timeout: 5000 },
+    (error, stdout, stderr) => resolve({ code: error?.code || 0, stdout, stderr }));
+    child.stdin.end(JSON.stringify(payload));
+  });
+  for (const [index, target] of ['alpha', 'beta'].entries()) {
+    const turn = randomUUID(), prompt = `进入 ${target} 项目`;
+    appendFileSync(f.source, [
+      { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
+        content: [{ type: 'input_text', text: prompt }], internal_chat_message_metadata_passthrough: { turn_id: turn } } },
+      { type: 'event_msg', payload: { type: 'item_completed', thread_id: f.sid, turn_id: turn,
+        item: { type: 'UserMessage', id: randomUUID(), content: [{ type: 'text', text: prompt }] } } },
+    ].map(JSON.stringify).join('\n') + '\n');
+    queueProjectEventCandidate({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+      sessionId: f.sid, boundaryId: turn, cwd: f.gstackRoot, harness: 'codex', prompt, intent: { kind: 'turn' } });
+    const payload = { ...f.payload, hook_event_name: 'PreToolUse', turn_id: turn,
+      tool_name: 'Bash', tool_input: { command: `./scripts/project.sh switch ${target}` } };
+    const denied = await invoke(payload, { CODEX_HOME: f.root });
+    assert.ok(denied.stdout.trim(), denied.stderr || `guard returned ${denied.code}`);
+    const failure = JSON.parse(denied.stdout).hookSpecificOutput;
+    assert.equal(failure.permissionDecision, 'deny');
+    assert.match(failure.permissionDecisionReason, /SOURCE_ROOT/);
+    assert.ok(denied.stderr.includes(`[session=${f.sid}]`));
+    const allowed = await invoke(payload);
+    assert.equal(allowed.code, 0, allowed.stderr);
+    const output = JSON.parse(allowed.stdout).hookSpecificOutput;
+    assert.ok(output.updatedInput?.command, JSON.stringify(output));
+    const proposal = parseExpandedSelectionCommand(output.updatedInput.command);
+    assert.ok(proposal);
+    const committed = executeProjectTransaction({
+      sessionId: proposal.session_id, tx: proposal.tx, operation: proposal.operation,
+      target: proposal.target, expectedEpoch: proposal.expected_epoch });
+    assert.equal(committed.binding.project, target);
+    assert.equal(readProjectState(f.gstackRoot, f.sid).value.selection.commit_sequence, index + 1);
+  }
+});
+
+test('production broker refuses an unprotected App-style fork before importing framework authority',async()=>{
+  const production=realpathSync(new URL('..',import.meta.url));
+  const f=fixture();
+  const script=new URL('./host-launch-broker.mjs',import.meta.url);
+  const child=fork(script,[production,f.projectsRoot],{
+    silent:true,env:{...process.env,NODE_OPTIONS:'',LUCA_PROTECTED_CODE_ROOT:''},
+  });
+  let stderr='';child.stderr.on('data',chunk=>stderr+=chunk);
+  const code=await new Promise(resolve=>child.once('exit',resolve));
+  assert.notEqual(code,0);
+  assert.match(stderr,/HOST_SOURCE_UNPROTECTED/);
+});
+
+test('ordinary model import cannot construct production authority or change any existing pin bytes',()=>{
+  const production=realpathSync(new URL('..',import.meta.url));
+  const f=fixture();
+  const snapshot=()=>Object.fromEntries(readdirSync(join(production,'.claude')).filter(n=>/^\.session-project-/.test(n))
+    .map(n=>[n,createHash('sha256').update(readFileSync(join(production,'.claude',n))).digest('hex')]));
+  const before=snapshot();
+  assert.throws(()=>executeProjectTransaction({gstackRoot:production,projectsRoot:f.projectsRoot,sessionId:randomUUID(),
+    tx:randomUUID(),operation:'switch',target:'muse',expectedEpoch:0}),/host launch roots require a receipt/);
+  assert.throws(()=>createHostLaunchBroker({gstackRoot:production,projectsRoot:f.projectsRoot,
+    revalidateProfile:async()=>null}),{code:'HOST_PARENT_DENIED'});
+  assert.throws(()=>executeProjectTransaction({gstackRoot:production,projectsRoot:f.projectsRoot,sessionId:randomUUID(),
+    tx:randomUUID(),operation:'switch',target:'muse',expectedEpoch:0,hostLaunchReceipt:{launchId:randomUUID()}}),{code:'HOST_RECEIPT_DENIED'});
+  assert.deepEqual(snapshot(),before);
+});
+
+test('production source grants are outside the agent-writable checkout',()=>{
+  const production=realpathSync(new URL('..',import.meta.url));
+  const journal=hostLaunchJournalRoot(production);
+  assert.ok(journal.includes('/.codex/luca-child-project/host-launch/'));
+  assert.ok(!journal.startsWith(production+'/'));
+});
+
+test('ordinary protected Codex hook fails closed on a legacy adapter crash',async()=>{
+  const f=fixture();
+  mkdirSync(join(f.gstackRoot,'.codex'));mkdirSync(join(f.gstackRoot,'.claude','hooks'),{recursive:true});
+  cpSync(new URL('../.codex/host-launch-hook.mjs',import.meta.url),join(f.gstackRoot,'.codex','host-launch-hook.mjs'));
+  const target=join(f.gstackRoot,'.claude','hooks','route-guard.mjs');
+  writeFileSync(target,'process.stdout.write("ok");');
+  const result=await new Promise(resolve=>{const child=execFile(process.execPath,
+    [join(f.gstackRoot,'.codex','host-launch-hook.mjs'),target],
+    {env:{PATH:process.env.PATH,LUCA_CHILD_SOURCE_ROOT:f.gstackRoot},cwd:f.gstackRoot,timeout:5000},
+    (error,stdout,stderr)=>resolve({code:error?.code || 0,stdout,stderr}));
+    child.stdin.end(JSON.stringify({...f.payload,hook_event_name:'UserPromptSubmit'}));});
+  assert.equal(result.code,2);
+});
+
+test('registered Host Launch PreToolUse intercepts every native tool kind',()=>{
+  const hooks=JSON.parse(readFileSync(new URL('../.codex/hooks.json',import.meta.url),'utf8'));
+  const group=hooks.hooks.PreToolUse.find(item => item.hooks?.some(hook =>
+    hook.command.includes('.codex/host-launch-hook.mjs')));
+  assert.ok(group);
+  const matcher=new RegExp(group.matcher);
+  for(const name of ['Bash','apply_patch','collaborationspawn_agent','Agent','unknown_future_tool']) {
+    assert.equal(matcher.test(name),true,name);
+  }
+});
