@@ -34,6 +34,7 @@ import {
   captureNativeEventFence,
   MAX_NATIVE_PROMPT_BYTES,
   observeCurrentNativeEvent,
+  readHostLaunchSourceScope,
 } from './event-attestation.mjs';
 import { readProjectReservation } from './project-selection.mjs';
 
@@ -693,6 +694,7 @@ export function queueProjectEventCandidate({
       schema_version: PROJECT_STATE_SCHEMA,
       state: closed.state,
       session_id: sid,
+      ...(current.host_launch_source ? { host_launch_source: current.host_launch_source } : {}),
       ...(closed.binding ? { binding: closed.binding, turn: closed.turn } : {}),
       ...(current.selection ? { selection: current.selection } : {}),
       event_control: {
@@ -728,11 +730,13 @@ export function initializeProjectEventFence({
     const binding = validatedBindingForState(state, projectsRoot);
     const fence = captureNativeEventFence({
       sessionId: sid, harness, cwd, transcriptPath, codexHome,
+      hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
       allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
     });
     const closed = priorClosedState(state, binding, control);
     const next = {
       schema_version: PROJECT_STATE_SCHEMA, session_id: sid, ...closed,
+      ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
       ...(state.selection ? { selection: state.selection } : {}),
       event_control: { candidates: [], current: null, cursor: fence.cursor,
         consumed_events: [], fence },
@@ -775,6 +779,7 @@ export function refenceProjectStateForDeactivate({
       ? String(control.cursor?.transcript_path || control.fence.cursor?.transcript_path || '') : '';
     const fence = captureNativeEventFence({
       sessionId: sid, harness: control.fence.harness, cwd: control.fence.cwd, transcriptPath, codexHome,
+      hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
       allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
       recoveryCursor: control.cursor || control.fence.cursor,
     });
@@ -784,6 +789,7 @@ export function refenceProjectStateForDeactivate({
     }
     const next = {
       schema_version: PROJECT_STATE_SCHEMA, session_id: sid, state: 'NO_PIN',
+      ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
       ...(state.selection ? { selection: state.selection } : {}),
       event_control: { candidates: [], current: null, cursor: fence.cursor,
         consumed_events: [], fence },
@@ -816,6 +822,7 @@ export function inspectOrphanedActiveProjectEvent({
     observeCurrentNativeEvent({
       event: control.current, sessionId: sid, cursor: control.cursor,
       transcriptPath, codexHome, observation: 'pre-tool',
+      hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
       allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
     });
   } catch (error) {
@@ -922,6 +929,7 @@ export function attestPendingProjectEvent({
       observeCurrentNativeEvent({
         event: control.current, sessionId: sid, cursor: control.cursor,
         transcriptPath, codexHome, observation, assistantText,
+        hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
         allowTestSourceRoot: allowFixtureSourceOverride(gstackRoot, transcriptPath, codexHome),
         priorEvents: control.consumed_events,
       });
@@ -947,6 +955,7 @@ export function attestPendingProjectEvent({
           cursor: control.cursor,
           transcriptPath,
           codexHome,
+          hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
           observation,
           assistantText,
           allowTestSourceRoot,
@@ -1004,6 +1013,7 @@ export function attestPendingProjectEvent({
           transcriptPath,
           codexHome,
           bootstrapFence: control.fence || null,
+          hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
           observation: final ? observation : 'pre-tool',
           assistantText: final ? assistantText : '',
           allowTestSourceRoot,
@@ -1058,12 +1068,14 @@ export function attestPendingProjectEvent({
       }
       const verifyRelease = () => observeCurrentNativeEvent({
         event, sessionId: sid, cursor, transcriptPath, codexHome,
+        hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
         observation: 'pre-tool', requiredPrompt: NATIVE_RELEASE_DIRECTIVE,
         allowTestSourceRoot, priorEvents: consumed,
       });
       verifyRelease();
       const fence = captureNativeEventFence({
         sessionId: sid, harness: event.harness, cwd: event.cwd, transcriptPath, codexHome,
+        hostSourceScope: readHostLaunchSourceScope(gstackRoot, sid),
         allowTestSourceRoot, recoveryCursor: cursor,
       });
       if (fence.source_absent) {
@@ -1074,6 +1086,7 @@ export function attestPendingProjectEvent({
       verifyRelease();
       const released = {
         schema_version: PROJECT_STATE_SCHEMA, state: 'NO_PIN', session_id: sid,
+        ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
         ...(selection ? { selection } : {}),
         event_control: { candidates: [], current: null, cursor: fence.cursor,
           consumed_events: [], fence },
@@ -1115,6 +1128,7 @@ export function attestPendingProjectEvent({
       schema_version: PROJECT_STATE_SCHEMA,
       state: materialized.state,
       session_id: sid,
+      ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
       ...(materialized.binding ? { binding: materialized.binding, turn: materialized.turn } : {}),
       ...(materialized.switch ? { switch: materialized.switch } : {}),
       ...(selection ? { selection } : {}),
@@ -1210,6 +1224,7 @@ export function closeAttestedProjectEvent({
       schema_version: PROJECT_STATE_SCHEMA,
       state: binding ? 'TURN_CLOSED' : 'NO_PIN',
       session_id: sid,
+      ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
       ...(binding ? {
         binding,
         turn: { event_id: event, boundary_id: boundary, epoch: binding.epoch, outcome: String(outcome || 'stop') },
@@ -1514,6 +1529,7 @@ export function prepareProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT,
     };
     const next = {
       schema_version: PROJECT_STATE_SCHEMA, state: 'SWITCH_ONLY', session_id: sid,
+      ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
       switch: proposal, event_control: state.event_control,
       selection: { ...baseSelection, pending: proposal },
     };

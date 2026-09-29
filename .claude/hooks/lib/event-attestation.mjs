@@ -7,10 +7,12 @@ import {
   readFileSync,
   readdirSync,
   realpathSync,
+  statSync,
 } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { userInfo } from 'node:os';
 import { basename, isAbsolute, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const MAX_SOURCE_BYTES = 64 * 1024 * 1024;
 const MAX_RECORDS = 200_000;
@@ -124,8 +126,76 @@ export function resolveCodexHome(explicitHome = '', osHome = runtimeHome()) {
   return canonicalHome;
 }
 
-function boundedCodexSource(candidate, explicitHome, allowTestSourceRoot) {
-  const home = allowTestSourceRoot
+const hostSourceScopes = new WeakSet();
+
+export function hostLaunchJournalRoot(gstackRoot) {
+  const root = realpathSync(resolve(gstackRoot));
+  const ownRoot = realpathSync(fileURLToPath(new URL('../../..', import.meta.url)));
+  if (root !== ownRoot && /^\/private\/tmp\/host-launch-[^/]+\/gstack$/.test(root)) {
+    return join(root, '.claude', 'host-launch');
+  }
+  return join(runtimeHome(), '.codex', 'luca-child-project', 'host-launch',
+    createHash('sha256').update(root).digest('hex'));
+}
+
+export function assertHostLaunchJournal(gstackRoot, journal) {
+  const root = realpathSync(resolve(gstackRoot));
+  const expected = hostLaunchJournalRoot(root);
+  if (journal !== expected) fail('SOURCE_ROOT', 'host source journal path changed');
+  const fixture = expected === join(root, '.claude', 'host-launch');
+  const paths = fixture ? [expected] : [
+    join(runtimeHome(), '.codex'),
+    join(runtimeHome(), '.codex', 'luca-child-project'),
+    join(runtimeHome(), '.codex', 'luca-child-project', 'host-launch'),
+    expected,
+  ];
+  for (const path of paths) {
+    const stat = lstatSync(path);
+    if (!stat.isDirectory() || stat.isSymbolicLink() || realpathSync(path) !== path
+        || stat.uid !== process.getuid() || (stat.mode & 0o077) !== 0) {
+      fail('SOURCE_ROOT', 'host source journal is not protected');
+    }
+  }
+}
+
+// Internal framework projection, never an environment/renderer supplied grant.
+export function readHostLaunchSourceScope(gstackRoot, sessionId) {
+  const root = realpathSync(resolve(gstackRoot));
+  if (!/^[\w-]{1,36}$/.test(String(sessionId))) return null;
+  let state;
+  try { state = JSON.parse(readFileSync(join(root, '.claude', `.session-project-${sessionId}`), 'utf8')); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  const ref = state.host_launch_source;
+  if (!ref) return null;
+  if (!/^[a-f\d-]{36}$/i.test(String(ref.launch_id)) || state.session_id !== sessionId) fail('SOURCE_ROOT', 'invalid host source reference');
+  const journal = hostLaunchJournalRoot(root);
+  assertHostLaunchJournal(root, journal);
+  const file = join(journal, `${ref.launch_id}.source.json`);
+  const receiptStat = statSync(file);
+  if (!receiptStat.isFile() || receiptStat.uid !== process.getuid() || (receiptStat.mode & 0o077) !== 0) {
+    fail('SOURCE_ROOT', 'host source receipt is not protected');
+  }
+  if (realpathSync(file) !== file) fail('SOURCE_ROOT', 'host source receipt is not canonical');
+  const bytes = readFileSync(file);
+  if (bytes.length > 16384) fail('SOURCE_ROOT', 'host source receipt exceeds bound');
+  if (createHash('sha256').update(bytes).digest('hex') !== ref.sha256) fail('SOURCE_ROOT', 'host source receipt changed');
+  const grant = JSON.parse(bytes);
+  if (grant.schemaVersion !== 1 || grant.sessionId !== sessionId || grant.launchId !== ref.launch_id || grant.provider !== 'codex'
+      || grant.cwd !== root || !grant.sourceRoot) fail('SOURCE_ROOT', 'host source scope mismatch');
+  const identity = statSync(grant.sourceRoot.realpath);
+  if (!identity.isDirectory() || realpathSync(grant.sourceRoot.realpath) !== grant.sourceRoot.realpath
+      || String(identity.dev) !== String(grant.sourceRoot.dev) || String(identity.ino) !== String(grant.sourceRoot.ino)) {
+    fail('SOURCE_ROOT', 'host source root identity changed');
+  }
+  hostSourceScopes.add(grant);
+  return grant;
+}
+
+function boundedCodexSource(candidate, explicitHome, allowTestSourceRoot, hostSourceScope = null) {
+  if (hostSourceScope && (!hostSourceScopes.has(hostSourceScope)
+      || hostSourceScope.sessionId !== candidate.session_id || hostSourceScope.cwd !== candidate.cwd
+      || resolve(String(explicitHome || '')) !== hostSourceScope.sourceRoot.realpath)) fail('SOURCE_ROOT', 'unverified host source scope');
+  const home = hostSourceScope ? hostSourceScope.sourceRoot.realpath : allowTestSourceRoot
     ? resolve(String(explicitHome || ''))
     : resolveCodexHome(explicitHome);
   if (allowTestSourceRoot && !explicitHome) fail('SOURCE_ROOT', 'test Codex source root is missing');
@@ -200,9 +270,9 @@ function validateClaudeTranscriptLocation(sourcePath, candidate) {
   }
 }
 
-function sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot) {
+function sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot, hostSourceScope = null) {
   if (candidate.harness === 'codex') {
-    return boundedCodexSource(candidate, codexHome, allowTestSourceRoot);
+    return boundedCodexSource(candidate, codexHome, allowTestSourceRoot, hostSourceScope);
   }
   if (candidate.harness === 'claude') {
     if (!transcriptPath) fail('SOURCE_NOT_VISIBLE', 'Claude transcript path is required');
@@ -1120,10 +1190,11 @@ export function observeCurrentNativeEvent({
   allowTestSourceRoot = false,
   priorEvents = [],
   requiredPrompt = null,
+  hostSourceScope = null,
 }) {
   if (!['pre-tool', 'stop'].includes(observation)) fail('CANDIDATE_SCHEMA', 'native observation is invalid');
   const candidate = validateCurrentEventShape(event, sessionId);
-  const source = sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot === true);
+  const source = sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot === true, hostSourceScope);
   const loaded = recordsFromFile(source);
   validateCursor(cursor, source, loaded.records, loaded.bytes, candidate.harness);
   const validated = candidate.harness === 'codex'
@@ -1172,11 +1243,12 @@ export function attestNativeUserEvent({
   assistantText = '',
   allowTestSourceRoot = false,
   requireNoFollowingUser = true,
+  hostSourceScope = null,
   priorEvents = [],
 }) {
   validateCandidate(candidate);
   if (!['pre-tool', 'stop'].includes(observation)) fail('CANDIDATE_SCHEMA', 'native observation is invalid');
-  const source = sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot === true);
+  const source = sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot === true, hostSourceScope);
   const loaded = recordsFromFile(source);
   // A tail selected by prompt equality cannot distinguish a new submission
   // from an unpublished retry of an older, identical native message.
@@ -1203,6 +1275,7 @@ export function attestNativeUserEvent({
 export function captureNativeEventFence({
   sessionId, harness, cwd, transcriptPath = '', codexHome = '', allowTestSourceRoot = false,
   recoveryCursor = undefined,
+  hostSourceScope = null,
 }) {
   const candidate = { session_id: String(sessionId || ''), harness, cwd };
   if (!/^[\w-]{1,36}$/.test(candidate.session_id) || !['codex', 'claude'].includes(harness)
@@ -1214,7 +1287,7 @@ export function captureNativeEventFence({
   }
   const fence = { schema_version: 1, session_id: candidate.session_id, harness, cwd, source_absent: false, cursor: null };
   let source;
-  try { source = sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot === true); }
+  try { source = sourceFor(candidate, transcriptPath, codexHome, allowTestSourceRoot === true, hostSourceScope); }
   catch (error) {
     if (error?.code !== 'SOURCE_NOT_VISIBLE') throw error;
     return { ...fence, source_absent: true };

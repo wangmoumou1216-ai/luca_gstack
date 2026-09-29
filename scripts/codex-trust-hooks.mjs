@@ -23,13 +23,49 @@
 //        node scripts/codex-trust-hooks.mjs             （写入并复核）
 
 import { spawn } from 'child_process';
-import { copyFileSync, existsSync } from 'fs';
+import { copyFileSync, readFileSync } from 'fs';
 import { homedir } from 'os';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 const DRY = process.argv.includes('--dry-run');
-const CFG = join(homedir(), '.codex', 'config.toml');
+const HOST_LAUNCH = process.argv.includes('--host-launch');
+const CODEX_HOME = process.env.CODEX_HOME || join(homedir(), '.codex');
+if (!CODEX_HOME.startsWith('/')) throw new Error('CODEX_HOME must be absolute');
+const CFG = join(CODEX_HOME, 'config.toml');
 const OURS = /(?:codex-hook-adapter|model-route-hook)\.mjs/;
+const GSTACK = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const HOOKS_PATH = join(GSTACK, '.codex', 'hooks.json');
+const registered = JSON.parse(readFileSync(HOOKS_PATH, 'utf8'));
+const routeCommand = registered.hooks.SessionStart.flatMap(group => group.hooks || [])
+  .find(hook => /model-route-hook\.mjs/.test(hook.command || ''))?.command || '';
+const routeEntry = 'node "$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs"';
+const routeEntryAt = routeCommand.indexOf(routeEntry);
+if (routeEntryAt < 0) throw new Error('Codex model-route hook guard prefix is missing');
+const guardedPrefix = routeCommand.slice(0, routeEntryAt);
+const HOST_COMMANDS = new Map([
+  ['sessionStart', 'SessionStart', 'session-restore.mjs'],
+  ['userPromptSubmit', 'UserPromptSubmit', 'route-guard.mjs'],
+  ['preToolUse', 'PreToolUse', 'project-scope-guard.mjs'],
+].map(([event, registration, target]) => [event, {
+  registration,
+  command: `${guardedPrefix}MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node "$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs" "$(git rev-parse --show-toplevel)/.claude/hooks/${target}" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2`,
+}]));
+if (HOST_LAUNCH) for (const { registration, command } of HOST_COMMANDS.values()) {
+  const matches = (registered.hooks[registration] || []).flatMap(group => group.hooks || [])
+    .filter(hook => hook.type === 'command' && hook.command === command);
+  if (matches.length !== 1) throw new Error(`Host Launch ${registration} exact registration is missing or duplicated`);
+}
+const registeredCommands = new Map();
+const evToSnake = event => event.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+for (const [event, groups] of Object.entries(registered.hooks)) {
+  groups.forEach((group, gi) => (group.hooks || []).forEach((hook, hi) => {
+    registeredCommands.set(`${HOOKS_PATH}:${evToSnake(event)}:${gi}:${hi}`, hook.command);
+  }));
+}
+const isOurs = hook => registeredCommands.get(hook.key) === hook.command
+  && (OURS.test(hook.command || '')
+    || (HOST_LAUNCH && HOST_COMMANDS.get(hook.eventName)?.command === hook.command));
 
 // 与 app-server 通一次 JSON-RPC：喂请求、收响应
 function rpc(requests, waitMs = 6000) {
@@ -59,8 +95,13 @@ const listed = listMsgs.find((m) => m.id === 2)?.result?.data || [];
 const all = listed.flatMap((g) => g.hooks || []);
 if (!all.length) { console.error('[trust] hooks/list 未返回条目——检查 ~/.codex/hooks.json'); process.exit(2); }
 
-const ours = all.filter((h) => OURS.test(h.command || ''));
-const foreign = all.filter((h) => !OURS.test(h.command || ''));
+const ours = all.filter(isOurs);
+const foreign = all.filter((h) => !isOurs(h));
+if (HOST_LAUNCH && (registeredCommands.size !== 11 || ours.length !== 11
+    || [...HOST_COMMANDS].some(([event, expected]) =>
+      ours.filter(hook => hook.eventName === event && hook.command === expected.command).length !== 1))) {
+  throw new Error('Host Launch release requires all 11 exact commands in Codex hooks/list');
+}
 const need = ours.filter((h) => h.trustStatus !== 'trusted');
 
 console.log(`本仓条目 ${ours.length} 个（其中待授信 ${need.length}）；第三方条目 ${foreign.length} 个——不碰。`);
@@ -95,7 +136,7 @@ if (wr?.error) {
 // 复核：重新 list，确认状态真的翻转（不信自己的写入自陈）
 const recheck = await rpc([INIT, { jsonrpc: '2.0', id: 4, method: 'hooks/list', params: {} }]);
 const after = (recheck.find((m) => m.id === 4)?.result?.data || []).flatMap((g) => g.hooks || []);
-const stillUntrusted = after.filter((h) => OURS.test(h.command || '') && h.trustStatus !== 'trusted');
+const stillUntrusted = after.filter((h) => isOurs(h) && h.trustStatus !== 'trusted');
 console.log(`\n复核：本仓条目仍未授信 ${stillUntrusted.length} 个`);
 for (const h of stillUntrusted) console.log(`  ✗ ${h.key}`);
 console.log(`\n回退（一条命令还原）： cp "${bak}" "${CFG}"`);

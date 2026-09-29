@@ -104,6 +104,11 @@ jobs:
           install -m 0644 framework-audit/2026-09-21-context-lightening-execution-plan.md /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-21-context-lightening-execution-plan.md
           install -d -m 0755 /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts
           install -m 0644 framework-audit/2026-09-22-g5-preapproval-readiness.md /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts/g5-preapproval-readiness.md
+      - name: Host Launch broker and control-plane regression
+        run: |
+          sudo mkdir -p /private/tmp
+          sudo chmod 1777 /private/tmp
+          node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs
       - name: A/B evaluator adversarial self-test
         run: |
           set +e

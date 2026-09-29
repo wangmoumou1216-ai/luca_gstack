@@ -13,8 +13,8 @@ const cases = [
     id: 'A01',
     test: 'scripts/test-event-switch-e2e.mjs',
     file: 'scripts/project-pin.mjs',
-    from: "      state: 'TURN_ACTIVE',\n      session_id: sid,\n      binding,",
-    to: "      state: 'BOUND',\n      session_id: sid,\n      binding,",
+    from: "      state: 'TURN_ACTIVE',\n      session_id: sid,\n      ...(initial.value.host_launch_source ? { host_launch_source: initial.value.host_launch_source } : {}),\n      binding,",
+    to: "      state: 'BOUND',\n      session_id: sid,\n      ...(initial.value.host_launch_source ? { host_launch_source: initial.value.host_launch_source } : {}),\n      binding,",
     meaning: 'selection commit no longer keeps the native event active',
   },
   {

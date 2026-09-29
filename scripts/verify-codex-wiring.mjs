@@ -56,14 +56,24 @@ const have = hooks ? Object.keys(hooks.hooks) : [];
 ok('S2 基础与 subagent 事件全部注册', NEED.every((e) => have.includes(e)), `缺=${NEED.filter((e) => !have.includes(e))}`);
 
 // S3 兼容 hook 经 adapter；Codex 原生模型路由直接进专用 hook。
+// Host Launch 只替换 SessionStart/UserPromptSubmit/PreToolUse 三个入口，
+// 且必须仍指向各自原有的边界脚本。
 {
   let bad = [];
+  const hostTargets = { SessionStart: 'session-restore.mjs',
+    UserPromptSubmit: 'route-guard.mjs', PreToolUse: 'project-scope-guard.mjs' };
   for (const ev of have) for (const g of hooks.hooks[ev]) for (const h of g.hooks) {
     if (/codex-hook-adapter\.mjs/.test(h.command || '')) {
       const m = h.command.match(/\.claude\/hooks\/([a-z-]+\.mjs)/);
       if (!m || !existsSync(join(ROOT, '.claude', 'hooks', m[1]))) bad.push(`${ev}:兼容脚本缺失`);
     } else if (/model-route-hook\.mjs/.test(h.command || '')) {
       if (!existsSync(join(ROOT, '.codex', 'model-route-hook.mjs'))) bad.push(`${ev}:模型路由脚本缺失`);
+    } else if (/host-launch-hook\.mjs/.test(h.command || '')) {
+      const target = h.command.match(/\.claude\/hooks\/([a-z-]+\.mjs)/)?.[1];
+      if (!hostTargets[ev] || target !== hostTargets[ev]
+          || !existsSync(join(ROOT, '.codex', 'host-launch-hook.mjs'))
+          || !existsSync(join(ROOT, '.codex', 'host-launch-adapter.mjs'))
+          || !existsSync(join(ROOT, '.claude', 'hooks', target))) bad.push(`${ev}:Host Launch 入口非法`);
     } else bad.push(`${ev}:未识别的hook入口`);
   }
   ok('S3 兼容/Native 两类 hook 入口合法且目标存在', bad.length === 0, bad.join(','));
@@ -83,11 +93,7 @@ ok('S2 基础与 subagent 事件全部注册', NEED.every((e) => have.includes(e
     bad.length === 0, bad.join(' '));
 }
 
-// S5 matcher 必须匹配 **实测** tool_name。2026-08-05 用 matcher='.*' 抓真实载荷：
-//   shell 执行 → tool_name='Bash'（**不是 'shell'**）；文件编辑 → 'apply_patch'。
-// 初版据文档写 `^(shell|apply_patch)$`，PreToolUse/PostToolUse 因此**永远不触发**——
-// 即项目隔离强制（project-scope-guard）在 Codex 下完全失效，且静默无声。
-// 本断言现在守实测值；PostToolUse 同样要匹配，否则编辑计数链断。
+// S5 Host Launch 的 beforeTool 必须覆盖全部原生工具；PostToolUse 仍按实测编辑工具匹配。
 {
   // 2026-08-05 评审绕过实证：matcher 写成 `^(Bash|apply_patch)$never`（含全部关键词但
   // **永不匹配任何 tool_name**）时本断言照样 PASS —— 查子串存在性守不住"正则真能用"。
@@ -100,8 +106,10 @@ ok('S2 基础与 subagent 事件全部注册', NEED.every((e) => have.includes(e
   };
   const pre = hooks?.hooks?.PreToolUse?.[0]?.matcher || '';
   const post = hooks?.hooks?.PostToolUse?.[0]?.matcher || '';
-  ok('S5 Pre/PostToolUse matcher 用实测 tool_name（Bash|apply_patch；写 shell 永不触发）',
-    need(pre) && need(post), `pre=${pre} post=${post}`);
+  const hostHook = hooks?.hooks?.PreToolUse?.[0]?.hooks?.some((hook) =>
+    /host-launch-hook\.mjs/.test(hook.command || ''));
+  ok('S5 Host Launch PreToolUse 覆盖全部原生工具；PostToolUse 保留实测编辑工具',
+    hostHook && pre === '.*' && need(post), `pre=${pre} post=${post} hostHook=${hostHook}`);
 }
 
 // S5c MultiAgent v2 运行时会把 collaboration.spawn_agent 规范化成

@@ -455,7 +455,7 @@ function sessionControlPlanePath(path) {
   const rel = relative(dir, absolute);
   const leaf = rel.split('/').pop();
   if (rel && !rel.startsWith('..') && !isAbsolute(rel)
-      && (rel.split('/')[0].toLowerCase() === 'codex-child-project'
+      && (['host-launch', 'codex-child-project'].includes(rel.split('/')[0].toLowerCase())
         || SESSION_CONTROL_PLANE_PREFIXES.some(prefix => leaf.startsWith(prefix)))) return path;
   return null;
 }
@@ -478,7 +478,7 @@ function sessionControlPlaneReference(tool, inp) {
       // `rg/grep <pattern> <path>` 的 pattern 是数据；仅扫描留下的真实路径位，避免搜索或编辑
       // 守卫源码时因正文出现 sidecar 名称而误拦。未知搜索语法仍保持未遮罩的保守退化。
       const source = maskSearchPatternArguments(rawSource).command;
-      if (/(?:^|[^\w.-])\.claude\/codex-child-project(?=$|[^\w.-])/i.test(source)) {
+      if (/(?:^|[^\w.-])\.claude\/(?:host-launch|codex-child-project)(?=$|[^\w.-])/i.test(source)) {
         return '.claude/codex-child-project';
       }
       const exactPrefix = SESSION_CONTROL_PLANE_PREFIXES.find(prefix => source.includes(prefix));
@@ -1034,7 +1034,7 @@ function main() {
       // 文案必须给出改写指引：本判据保留了 dotglob 安全余量，正常路径也可能被它拦下，而一条只说
       // 「你在伪造控制平面」的拒绝会把人推向绕行（实测：一次误拦就催生了「把载荷挪出命令文本」的
       // 方案）。给出两条不绕闸的出路，比让人自己发明第三条强。
-      permissionDecisionReason: `session 状态 sidecar（project-state/read-grant/legacy-consumption/child-project）是 hook 内部控制平面，普通工具不得读取、写入或伪造（${sessionControlPlane}）。`
+      permissionDecisionReason: `session 状态 sidecar（project-state/read-grant/legacy-consumption/host-launch/child-project）是 hook 内部控制平面，普通工具不得读取、写入或伪造（${sessionControlPlane}）。`
         + '若你并非要碰 sidecar，只是路径里带了通配或运行期展开：把它写成不含元字符的确定路径，'
         + '或改用 Write/Edit 等文件类工具（按 file_path 精确判定，不扫命令文本）。' } });
   }

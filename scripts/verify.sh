@@ -223,6 +223,7 @@ check C22 "项目门禁 v3.4 controlled 授权与恢复回归通过" "node scrip
 check C23 "宿主项目/session只读投影回归通过" "node scripts/test-project-host-view.mjs"
 check C24 "项目门禁 v3.4 Claude/Codex 双宿主行为回归通过" "node scripts/test-project-gate-v34-dual-host.mjs"
 check C25 "项目门禁 v3.4 A01/A04/A05/A09 mutation proof-it-bites" "node scripts/test-project-gate-v34-mutations.mjs"
+check C26 "Host Launch broker/claim/source/control-plane 回归通过" "node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs"
 echo ""
 
 echo "[ Skill 体系 ]"

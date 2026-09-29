@@ -33,6 +33,20 @@ Every registered hook checks the approved source digest before launch; Node then
 only verified source bytes. Missing or changed source fails closed. Updating hook code
 requires a new reviewed manifest and Codex hook trust for the changed command.
 
+## App-owned Host Launch
+
+A newly launched Codex session may receive a verified existing-project binding from the Muse App's
+private Host Launch broker. This is an app-owned launch transaction, not an agent-callable alternative
+to `project.sh switch/new`. The broker accepts parent requests only from the verified App main process;
+native hooks can only claim the frozen launch and session identity. An initial global launch remains
+`NO_PIN`. The private launch journal and source grant live under the protected Codex installation,
+outside the agent-writable framework checkout; their state-file reference is not itself a grant.
+Before dispatch, the App must verify the three exact Host Launch hook commands, their current source
+digest, the installed source guard, and Codex trust. The App must also fork the broker under that
+protected source loader; an unprotected broker refuses to load framework authority.
+`node scripts/codex-trust-hooks.mjs --host-launch` reviews and trusts this checkout's 11 exact
+registered commands, including the three Host Launch entries after a source digest change.
+
 ## Project Gate
 
 1. A named or semantically unique existing project selects that project without an extra confirmation.

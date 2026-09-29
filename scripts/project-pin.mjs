@@ -17,6 +17,7 @@ import {
 import { dirname, join, resolve } from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
+import { assertHostLaunchAuthority } from '../.claude/hooks/lib/host-launch.mjs';
 import { resolveCodexChildProject } from '../.claude/hooks/lib/codex-child-project.mjs';
 import {
   PROJECTS_ROOT,
@@ -151,15 +152,24 @@ function proposalFields(state) {
   return sw;
 }
 
-export function executeProjectTransaction({ sessionId, tx, operation, target, expectedEpoch }) {
+export function executeProjectTransaction({ sessionId, tx, operation, target, expectedEpoch,
+  gstackRoot: suppliedGstackRoot = '', projectsRoot: suppliedProjectsRoot = '', hostLaunchReceipt = null }) {
   const sid = sanitizeSessionId(sessionId);
   const op = String(operation || '');
   const project = validateProjectName(target);
   const expected = Number(expectedEpoch);
   if (!sid || !['switch', 'new'].includes(op) || !Number.isSafeInteger(expected) || expected < 0) throw new Error('invalid transaction arguments');
-  const { gstackRoot, projectsRoot } = roots();
+  if ((suppliedGstackRoot || suppliedProjectsRoot)
+      && (!suppliedGstackRoot || !suppliedProjectsRoot || !hostLaunchReceipt)) {
+    throw new Error('host launch roots require a receipt');
+  }
+  const { gstackRoot, projectsRoot } = suppliedGstackRoot && suppliedProjectsRoot
+    ? { gstackRoot: realpathSync(suppliedGstackRoot), projectsRoot: realpathSync(suppliedProjectsRoot) } : roots();
+  if (hostLaunchReceipt) assertHostLaunchAuthority(gstackRoot, projectsRoot, hostLaunchReceipt);
   let current = readProjectState(gstackRoot, sid);
   const initial = current;
+  if (hostLaunchReceipt && (op !== 'switch' || initial.value.host_launch_source?.launch_id !== hostLaunchReceipt.launchId
+      || !hostLaunchReceipt.openRequestId || !hostLaunchReceipt.hostRunId)) throw new Error('host launch receipt mismatch');
   const authorizeController = (mode, trustedRecord) => {
     if (!existsSync(join(gstackRoot, '.git'))) return;
     const controlled = discoverControlState(gstackRoot);
@@ -307,6 +317,8 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
     }
 
     const identity = canonicalProjectIdentity(project, projectsRoot);
+    if (hostLaunchReceipt && ['project','realpath','dev','ino'].some(key =>
+      String(identity[key]) !== String(hostLaunchReceipt.projectIdentity?.[key]))) throw new Error('host launch target identity changed');
     fault('after-target-validate');
     const sameIdentity = oldBinding && ['project', 'realpath', 'dev', 'ino'].every(field => oldBinding[field] === identity[field]);
     const binding = { ...identity, epoch: sameIdentity ? oldBinding.epoch : expected + 1 };
@@ -321,16 +333,18 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
       binding_epoch: binding.epoch, committed_at: committedAt, error_code: null,
       proposal: { tx, operation: op, target: project, expected_epoch: expected,
         event_id: proposal.event_id, boundary_id: proposal.boundary_id },
+      ...(hostLaunchReceipt ? { host_launch: hostLaunchReceipt } : {}),
     };
     const selectionCommit = {
       stream_id: streamId, sequence, commit_id: tx, kind: op, target: project,
       binding_epoch: binding.epoch, committed_at: committedAt,
-      origin: 'agent_user_selection',
+      origin: hostLaunchReceipt ? 'host_launch' : 'agent_user_selection',
     };
     const next = {
       schema_version: PROJECT_STATE_SCHEMA,
       state: 'TURN_ACTIVE',
       session_id: sid,
+      ...(initial.value.host_launch_source ? { host_launch_source: initial.value.host_launch_source } : {}),
       binding,
       turn: {
         event_id: proposal.event_id,
@@ -400,6 +414,7 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
             schema_version: PROJECT_STATE_SCHEMA,
             state: oldBinding ? 'TURN_ACTIVE' : 'NO_PIN',
             session_id: sid,
+            ...(current.value.host_launch_source ? { host_launch_source: current.value.host_launch_source } : {}),
             ...(oldBinding ? { binding: oldBinding, turn: { event_id: proposal.event_id,
               boundary_id: proposal.boundary_id, epoch: oldBinding.epoch } } : {}),
             selection: { ...selection, pending: null,
