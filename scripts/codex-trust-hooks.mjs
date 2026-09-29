@@ -11,8 +11,8 @@
 //        说明 TUI 走的正是这个 API）
 //
 // 【安全纪律 — 本脚本刻意的自我限制】
-//  · **只授信 command 里含 `codex-hook-adapter.mjs` 或 `model-route-hook.mjs`
-//    的条目**，即本仓自己的 hook。
+//  · 只授信当前仓库精确 key、event 和完整 command 匹配的条目。
+//    --host-launch 包含经检查的三个 Host Launch 注册项；默认只选择适配器和路由项。
 //    绝不整体授信、绝不碰第三方条目（如 adrafinil）——那是别人的东西，不该由本脚本代人裁决。
 //  · 写前备份 `~/.codex/config.toml`，并打印一键回退命令。
 //  · 授信是**安全门**：它的意义是"人看过这些 hook 再让它跑"。本脚本不替代那个判断，
@@ -23,7 +23,10 @@
 //        node scripts/codex-trust-hooks.mjs             （写入并复核）
 
 import { spawn } from 'child_process';
-import { copyFileSync, readFileSync } from 'fs';
+import { copyFileSync, readFileSync, chmodSync, constants } from 'fs';
+import assert from 'node:assert/strict';
+import { isDeepStrictEqual } from 'node:util';
+import { createHash } from 'node:crypto';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -36,7 +39,10 @@ const CFG = join(CODEX_HOME, 'config.toml');
 const OURS = /(?:codex-hook-adapter|model-route-hook)\.mjs/;
 const GSTACK = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const HOOKS_PATH = join(GSTACK, '.codex', 'hooks.json');
-const registered = JSON.parse(readFileSync(HOOKS_PATH, 'utf8'));
+const hooksBytes = readFileSync(HOOKS_PATH);
+const registered = JSON.parse(hooksBytes.toString('utf8'));
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const hooksHash = sha(hooksBytes);
 const routeCommand = registered.hooks.SessionStart.flatMap(group => group.hooks || [])
   .find(hook => /model-route-hook\.mjs/.test(hook.command || ''))?.command || '';
 const routeEntry = 'node "$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs"';
@@ -60,84 +66,122 @@ const registeredCommands = new Map();
 const evToSnake = event => event.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 for (const [event, groups] of Object.entries(registered.hooks)) {
   groups.forEach((group, gi) => (group.hooks || []).forEach((hook, hi) => {
-    registeredCommands.set(`${HOOKS_PATH}:${evToSnake(event)}:${gi}:${hi}`, hook.command);
+    registeredCommands.set(`${HOOKS_PATH}:${evToSnake(event)}:${gi}:${hi}`, {
+      eventName: event[0].toLowerCase() + event.slice(1), command: hook.command });
   }));
 }
-const isOurs = hook => registeredCommands.get(hook.key) === hook.command
-  && (OURS.test(hook.command || '')
-    || (HOST_LAUNCH && HOST_COMMANDS.get(hook.eventName)?.command === hook.command));
-
-// 与 app-server 通一次 JSON-RPC：喂请求、收响应
-function rpc(requests, waitMs = 6000) {
-  return new Promise((res) => {
-    const p = spawn('codex', ['app-server'], { stdio: ['pipe', 'pipe', 'pipe'] });
-    let out = '';
-    p.stdout.on('data', (d) => { out += String(d); });
-    p.stderr.on('data', () => { });
-    p.stdin.write(requests.map((r) => JSON.stringify(r)).join('\n') + '\n');
-    setTimeout(() => { try { p.kill('SIGKILL'); } catch { } }, waitMs);
-    p.on('close', () => {
-      const msgs = [];
-      for (const line of out.split('\n')) {
-        try { msgs.push(JSON.parse(line)); } catch { }
-      }
-      res(msgs);
-    });
+const expected = [...registeredCommands].filter(([, row]) => OURS.test(row.command || '')
+  || (HOST_LAUNCH && HOST_COMMANDS.get(row.eventName)?.command === row.command));
+assert.ok(expected.length, 'No exact repository hook registrations');
+if (HOST_LAUNCH) assert.equal(expected.length, 11, 'Host release requires all 11 registered hooks');
+const selectedKeys = new Set(expected.map(([key]) => key));
+function exactRows(all) {
+  return expected.map(([key, row]) => {
+    const matches = all.filter(hook => hook.key === key);
+    assert.equal(matches.length, 1, `Expected exactly one official hook: ${key}`);
+    const hook = matches[0];
+    assert.equal(hook.command, row.command, `Registered command changed: ${key}`);
+    assert.equal(hook.eventName, row.eventName, `Registered event changed: ${key}`);
+    assert.ok(typeof hook.currentHash === 'string' && hook.currentHash, `Missing official hash: ${key}`);
+    return hook;
   });
 }
-const INIT = {
-  jsonrpc: '2.0', id: 1, method: 'initialize',
-  params: { clientInfo: { name: 'luca-gstack-trust', title: 'luca_gstack', version: '1.0.0' } },
-};
 
-const listMsgs = await rpc([INIT, { jsonrpc: '2.0', id: 2, method: 'hooks/list', params: {} }]);
-const listed = listMsgs.find((m) => m.id === 2)?.result?.data || [];
-const all = listed.flatMap((g) => g.hooks || []);
-if (!all.length) { console.error('[trust] hooks/list 未返回条目——检查 ~/.codex/hooks.json'); process.exit(2); }
-
-const ours = all.filter(isOurs);
-const foreign = all.filter((h) => !isOurs(h));
-if (HOST_LAUNCH && (registeredCommands.size !== 11 || ours.length !== 11
-    || [...HOST_COMMANDS].some(([event, expected]) =>
-      ours.filter(hook => hook.eventName === event && hook.command === expected.command).length !== 1))) {
-  throw new Error('Host Launch release requires all 11 exact commands in Codex hooks/list');
+// One bounded official request. Missing/error responses can never mean success.
+function rpc(id, method, params) {
+  return new Promise((resolveResult, reject) => {
+    const child = spawn('codex', ['app-server'], { cwd: GSTACK,
+      stdio: ['pipe', 'pipe', 'ignore'], env: { ...process.env, CODEX_HOME } });
+    let buffer = '', size = 0, settled = false;
+    const finish = (error, result) => {
+      if (settled) return;
+      settled = true; clearTimeout(timer); child.kill('SIGKILL');
+      if (error) reject(error); else resolveResult(result);
+    };
+    const timer = setTimeout(() => finish(new Error(`${method} timed out`)), 10_000);
+    child.once('error', error => finish(error));
+    child.once('close', () => finish(new Error(`Codex closed before ${method} acknowledgement`)));
+    child.stdin.on('error', error => finish(error));
+    child.stdout.on('data', bytes => {
+      size += bytes.length;
+      if (size > 4 * 1024 * 1024) return finish(new Error('Codex response exceeds bound'));
+      buffer += bytes.toString();
+      const lines = buffer.split('\n'); buffer = lines.pop();
+      const matching = [];
+      for (const line of lines) {
+        let response;
+        try { response = JSON.parse(line); } catch { continue; }
+        if (response.id === 1 && response.error) return finish(new Error('Codex initialize failed'));
+        if (response.id === id) matching.push(response);
+      }
+      if (matching.length > 1) return finish(new Error(`Duplicate ${method} response`));
+      if (!matching.length) return;
+      const response = matching[0];
+      if (response.error || !Object.hasOwn(response, 'result')) {
+        return finish(new Error(`${method} failed or omitted its result`));
+      }
+      finish(null, response.result);
+    });
+    child.stdin.write([
+      { jsonrpc: '2.0', id: 1, method: 'initialize', params: {
+        clientInfo: { name: 'luca-gstack-trust', title: 'luca_gstack', version: '1.1.0' } } },
+      { jsonrpc: '2.0', id, method, params },
+    ].map(JSON.stringify).join('\n') + '\n');
+  });
 }
-const need = ours.filter((h) => h.trustStatus !== 'trusted');
-
-console.log(`本仓条目 ${ours.length} 个（其中待授信 ${need.length}）；第三方条目 ${foreign.length} 个——不碰。`);
-for (const h of ours) {
-  console.log(`  [${h.trustStatus}] ${h.eventName}  ${String(h.command).replace(/\s+/g, ' ').slice(0, 110)}…`);
+async function listed() {
+  const result = await rpc(2, 'hooks/list', {});
+  assert.ok(Array.isArray(result?.data), 'Missing official hooks list');
+  return result.data.flatMap(group => group.hooks || []);
 }
-if (foreign.length) {
-  for (const h of foreign) console.log(`  (跳过·第三方) [${h.trustStatus}] ${h.eventName}`);
+async function userLayer() {
+  const read = await rpc(4, 'config/read', { includeLayers: true });
+  const layers = (read?.layers || []).filter(layer => layer?.name?.type === 'user'
+    && layer.name.file === CFG && layer.name.profile == null);
+  assert.equal(layers.length, 1, 'Expected the exact base user configuration layer');
+  assert.ok(layers[0].version && layers[0].config, 'Missing official configuration version');
+  return layers[0];
 }
-if (!need.length) { console.log('\n全部已授信，无需操作。'); process.exit(0); }
-if (DRY) { console.log('\n--dry-run：未写入。确认无误后去掉该参数重跑。'); process.exit(0); }
+const unchangedHooks = () => assert.equal(sha(readFileSync(HOOKS_PATH)), hooksHash,
+  'Hook registrations changed during trust');
+const foreign = rows => rows.filter(row => !selectedKeys.has(row.key))
+  .map(row => [row.key, row.eventName, row.command, row.currentHash, row.trustStatus])
+  .sort((a, b) => a[0].localeCompare(b[0]));
+const before = await listed(), ours = exactRows(before);
+const need = ours.filter(hook => hook.trustStatus !== 'trusted');
+console.log(`本仓精确条目 ${ours.length} 个（待授信 ${need.length}）；第三方 ${before.length - ours.length} 个。`);
+for (const hook of ours) console.log(`  [${hook.trustStatus}] ${hook.eventName}  ${hook.command}`);
+if (!need.length) { console.log('全部已授信，无需操作。'); process.exit(0); }
+if (DRY) { console.log('--dry-run：未写入。'); process.exit(0); }
 
-const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-const bak = `${CFG}.bak-${stamp}`;
-copyFileSync(CFG, bak);
-console.log(`\n已备份 → ${bak}`);
-
-const edits = need.map((h) => ({
-  keyPath: `hooks.state."${h.key}".trusted_hash`,
-  mergeStrategy: 'replace',
-  value: h.currentHash,          // 哈希来自 codex 自身，非本脚本计算
+const configHash = sha(readFileSync(CFG)), layer = await userLayer();
+unchangedHooks();
+assert.equal(sha(readFileSync(CFG)), configHash, 'Configuration changed before trust');
+const again = exactRows(await listed());
+if (!isDeepStrictEqual(again.map(h => [h.key, h.currentHash, h.trustStatus]),
+  ours.map(h => [h.key, h.currentHash, h.trustStatus]))) throw new Error('Official hook identity changed before trust');
+const backup = `${CFG}.bak-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+copyFileSync(CFG, backup, constants.COPYFILE_EXCL); chmodSync(backup, 0o600);
+assert.equal(sha(readFileSync(backup)), configHash, 'Backup differs from reviewed configuration');
+const edits = need.map(hook => ({
+  keyPath: `hooks.state.${JSON.stringify(hook.key)}.trusted_hash`,
+  mergeStrategy: 'replace', value: hook.currentHash,
 }));
-const writeMsgs = await rpc([INIT,
-  { jsonrpc: '2.0', id: 3, method: 'config/batchWrite', params: { edits, reloadUserConfig: true } }]);
-const wr = writeMsgs.find((m) => m.id === 3);
-if (wr?.error) {
-  console.error('[trust] config/batchWrite 失败:', JSON.stringify(wr.error).slice(0, 300));
-  console.error(`回退： cp "${bak}" "${CFG}"`);
-  process.exit(1);
+unchangedHooks();
+await rpc(3, 'config/batchWrite', { edits, expectedVersion: layer.version,
+  filePath: CFG, reloadUserConfig: true });
+const after = await listed(), verified = exactRows(after);
+if (!isDeepStrictEqual(verified.map(h => [h.key, h.command, h.currentHash, h.trustStatus]),
+  ours.map(h => [h.key, h.command, h.currentHash, 'trusted']))) throw new Error('Exact hook readback failed');
+const expectedConfig = structuredClone(layer.config);
+expectedConfig.hooks ||= {}; expectedConfig.hooks.state ||= {};
+for (const hook of need) {
+  expectedConfig.hooks.state[hook.key] ||= {};
+  expectedConfig.hooks.state[hook.key].trusted_hash = hook.currentHash;
 }
-
-// 复核：重新 list，确认状态真的翻转（不信自己的写入自陈）
-const recheck = await rpc([INIT, { jsonrpc: '2.0', id: 4, method: 'hooks/list', params: {} }]);
-const after = (recheck.find((m) => m.id === 4)?.result?.data || []).flatMap((g) => g.hooks || []);
-const stillUntrusted = after.filter((h) => isOurs(h) && h.trustStatus !== 'trusted');
-console.log(`\n复核：本仓条目仍未授信 ${stillUntrusted.length} 个`);
-for (const h of stillUntrusted) console.log(`  ✗ ${h.key}`);
-console.log(`\n回退（一条命令还原）： cp "${bak}" "${CFG}"`);
-process.exit(stillUntrusted.length ? 1 : 0);
+if (!isDeepStrictEqual((await userLayer()).config, expectedConfig)) {
+  throw new Error('Non-target configuration changed');
+}
+if (!isDeepStrictEqual(foreign(after), foreign(before))) throw new Error('Foreign hook state changed');
+unchangedHooks();
+console.log(`已精确授信并复核 ${verified.length} 个；备份：${backup}`);

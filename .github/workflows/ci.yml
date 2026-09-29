@@ -114,6 +114,7 @@ jobs:
           test "$(stat -c %a "$HOME/.codex")" = 700
           test "$(stat -c %u "$HOME/.codex")" = "$(id -u)"
           node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs
+          node --test scripts/test-source-guard-preserve.mjs scripts/test-codex-trust-hooks.mjs scripts/test-host-launch-journal-migration.mjs
       - name: A/B evaluator adversarial self-test
         run: |
           set +e

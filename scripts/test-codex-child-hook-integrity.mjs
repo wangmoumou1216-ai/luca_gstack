@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, cpSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { appendFileSync, cpSync, mkdtempSync, mkdirSync, realpathSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,8 +16,19 @@ assert.equal(new Set(modelCommands).size, 1, 'all native model-route entries mus
 assert.ok(commands.every(command => command.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; h=$(find ')),
   'every privileged native hook entry must verify source integrity before executing workspace code');
 const command = modelCommands[0];
+// Test the actual guarded command against an isolated approved installation.
+// A development worktree must not require changing the user's live approvals.
+const testHome = realpathSync(mkdtempSync(join(tmpdir(), 'codex-child-hook-home-')));
+const guardRoot = join(testHome, '.codex', 'luca-child-project', 'source-guard');
+mkdirSync(dirname(guardRoot), { recursive: true, mode: 0o700 });
+const testEnv = { ...process.env, HOME: testHome, NODE_ENV: 'test', NODE_OPTIONS: '',
+  LUCA_SOURCE_GUARD_TEST_ROOT: guardRoot };
+const installed = spawnSync(process.execPath, [join(root, 'scripts/install-codex-source-guard.mjs'),
+  '--root', root, '--test-dest', guardRoot], { env: testEnv, encoding: 'utf8' });
+assert.equal(installed.status, 0, installed.stderr);
+try {
 const run = cwd => spawnSync('/bin/sh', ['-c', command], {
-  cwd, encoding: 'utf8', input: '{}', timeout: 5000,
+  cwd, encoding: 'utf8', input: '{}', timeout: 5000, env: testEnv,
 });
 const valid = run(root);
 assert.equal(valid.status, 0, valid.stderr);
@@ -30,7 +41,7 @@ try {
   assert.notEqual(visibleStderrCommand, command);
   const missingBootstrap = spawnSync('/bin/sh', ['-c', visibleStderrCommand], {
     cwd: root, encoding: 'utf8', input: '{}', timeout: 5000,
-    env: {...process.env, HOME: missingBootstrapHome},
+    env: {...testEnv, HOME: missingBootstrapHome},
   });
   assert.equal(missingBootstrap.status, 2,
     `missing protected bootstrap must block: ${missingBootstrap.stderr}`);
@@ -60,3 +71,5 @@ try {
 } finally {
   rmSync(fixture, { recursive: true, force: true });
 }
+
+} finally { rmSync(testHome, { recursive: true, force: true }); }

@@ -162,7 +162,7 @@ function attestForPreTool(state) {
     // Attestation failures are fail-closed for project authority. The hook may
     // still pass an unrelated framework/meta path with no binding.
     try {
-      process.stderr.write(`[project-scope-guard] native attestation denied (${error?.code || 'ERROR'}): ${String(error?.message || error)}\n`);
+      process.stderr.write(`[project-scope-guard] native attestation denied [session=${sid}] (${error?.code || 'ERROR'}): ${String(error?.message || error)}\n`);
     } catch { }
     return { state: readSessionState(), error };
   }
@@ -1021,7 +1021,9 @@ function main() {
     STATE_LOCK_ORPHANED: '项目状态锁的持有进程已退出（STATE_LOCK_ORPHANED）。需要通过 inspect-state-lock → recover-state-lock 精确 owner 句柄恢复；重发提示或重绑不能清除此锁，不要直接删除状态文件。',
     STATE_LOCK_INVALID: '项目状态锁记录无法验证（STATE_LOCK_INVALID），需要检查锁记录；禁止自动夺锁或重绑来绕过。',
     STATE_CHANGED: '原生事件校验期间项目状态已变化（STATE_CHANGED）；本次未授予项目权限，请按最新状态重试。',
-  }[observed.error?.code];
+  }[observed.error?.code] || (observed.error
+    ? `项目事件认证失败（${observed.error.code || 'ATTESTATION_FAILED'}），未授予项目权限。请按该错误码检查 hook 诊断日志后处理。`
+    : null);
   const recoveryHint = observed.error && ['NO_PIN', 'BOUND', 'TURN_CLOSED'].includes(state.state)
     ? ` 若原生记录尚未落盘，先等待落盘再重试；持续认证失败可显式运行 bash scripts/project.sh deactivate ${sid}，仅清除绑定/旧候选，不授予权限；随后由用户重新提出项目任务。源损坏时恢复也会拒绝，勿修改状态文件。`
     : '';

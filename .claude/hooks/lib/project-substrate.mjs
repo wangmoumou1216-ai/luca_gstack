@@ -134,7 +134,7 @@ export function projectNameFromLink(target, opts = {}) {
 export const PROJECT_STATE_SCHEMA = 3;
 export const NATIVE_RELEASE_DIRECTIVE = '解除本会话项目绑定，恢复 NO_PIN';
 const READABLE_PROJECT_STATE_SCHEMAS = new Set([2, PROJECT_STATE_SCHEMA]);
-export const PROJECT_STATES = new Set(['NO_PIN', 'BOUND', 'SWITCH_ONLY', 'TURN_ACTIVE', 'TURN_CLOSED']);
+export const PROJECT_STATES = new Set(['NO_PIN', 'BOUND', 'HOST_BOUND', 'SWITCH_ONLY', 'TURN_ACTIVE', 'TURN_CLOSED']);
 export const PROJECT_EVENT_CANDIDATE_LIMIT = 32;
 // The ledger never evicts entries. Once full, the session must rotate instead
 // of making an old native event replayable again.
@@ -572,6 +572,10 @@ function eventControlFromState(value) {
 
 function priorClosedState(current, binding, control) {
   if (!binding) return { state: 'NO_PIN' };
+  // Host startup binds identity without inventing a user turn. Keep that
+  // distinction while UserPromptSubmit queues the first untrusted candidate.
+  if (current.state === 'HOST_BOUND') return { state: 'HOST_BOUND', binding,
+    host_binding: current.host_binding };
   const prior = control.current;
   if (prior?.event_id && prior?.boundary_id) {
     return {
@@ -697,6 +701,7 @@ export function queueProjectEventCandidate({
       session_id: sid,
       ...(current.host_launch_source ? { host_launch_source: current.host_launch_source } : {}),
       ...(closed.binding ? { binding: closed.binding, turn: closed.turn } : {}),
+      ...(closed.host_binding ? { host_binding: closed.host_binding } : {}),
       ...(current.selection ? { selection: current.selection } : {}),
       event_control: {
         // Candidates are untrusted hints, not an event ledger. Keep admission live
@@ -1368,6 +1373,32 @@ export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
 
   const binding = value.binding;
   verifyProjectBinding(binding, projectsRoot);
+  if (value.state === 'HOST_BOUND') {
+    const ready = value.host_binding;
+    const control = eventControlFromState(value);
+    const receipt = value.selection?.latest_operation;
+    const commit = value.selection?.last_success;
+    if (value.schema_version !== PROJECT_STATE_SCHEMA || ready?.schema_version !== 1
+        || !ready.launch_id || !ready.operation_id || ready.epoch !== binding.epoch
+        || value.host_launch_source?.launch_id !== ready.launch_id
+        || control.current !== null || control.consumed_events.length !== 0
+        || control.fence?.harness !== 'codex'
+        || receipt?.status !== 'COMMITTED' || receipt.operation_id !== ready.operation_id
+        || receipt.host_launch?.launchId !== ready.launch_id
+        || receipt.host_launch.authority !== 'host_session_start'
+        || receipt.host_launch.operationId !== ready.operation_id
+        || !receipt.host_launch.openRequestId || !receipt.host_launch.hostRunId || !receipt.host_launch.sourceId
+        || ['project', 'realpath', 'dev', 'ino'].some(key =>
+          String(receipt.host_launch.projectIdentity?.[key]) !== String(binding[key]))
+        || receipt.proposal?.authority !== 'host_session_start'
+        || receipt.binding_epoch !== binding.epoch || receipt.target !== binding.project
+        || commit?.commit_id !== ready.operation_id || commit.origin !== 'host_launch'
+        || commit.binding_epoch !== binding.epoch || commit.target !== binding.project
+        || value.selection?.pending != null || value.turn || value.terminal || value.switch) {
+      throw new Error('HOST_BOUND startup receipt is invalid');
+    }
+    return binding;
+  }
   if (value.state === 'BOUND') {
     const terminal = value.terminal;
     const eventRefValid = value.schema_version === PROJECT_STATE_SCHEMA

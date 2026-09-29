@@ -33,6 +33,13 @@ Every registered hook checks the approved source digest before launch; Node then
 only verified source bytes. Missing or changed source fails closed. Updating hook code
 requires a new reviewed manifest and Codex hook trust for the changed command.
 
+For a single-root update in an existing multi-root installation, use
+`node scripts/install-codex-source-guard.mjs --root <reviewed-root> --preserve-other-roots`.
+This validates the private installed manifest/runtime/snapshots, replaces only the named
+root's entry in its original slot, and preserves other approved entries and snapshots
+without scanning their current source. It refuses changed bootstrap/loader bytes;
+a runtime-wide update requires separate review of every affected root.
+
 ## App-owned Host Launch
 
 A newly launched Codex session may receive a verified existing-project binding from the Muse App's
@@ -41,6 +48,15 @@ to `project.sh switch/new`. The broker accepts parent requests only from the ver
 native hooks can only claim the frozen launch and session identity. An initial global launch remains
 `NO_PIN`. The private launch journal and source grant live under the protected Codex installation,
 outside the agent-writable framework checkout; their state-file reference is not itself a grant.
+Legacy repository journals require an explicit reviewed upgrade with
+`scripts/migrate-host-launch-journal.mjs --root <canonical-root> --plan <private-manifest>`,
+then `--apply <private-manifest> --expected-sha256 <reviewed-manifest-sha256>`.
+The command reauthenticates existing default-profile sources against native provenance and
+unchanged cursor prefixes; it preserves source bytes and pin/state, copies only verified
+receipts, and strips retired capability secrets from replay-only history. It never restores
+live launches or silently reads the old journal as authority. Other source profiles are refused
+and require separate review. Original files remain intact.
+
 Before dispatch, the App must verify the three exact Host Launch hook commands, their current source
 digest, the installed source guard, and Codex trust. The App must also fork the broker under that
 protected source loader; an unprotected broker refuses to load framework authority.
@@ -63,6 +79,42 @@ Cross-project dependency reads do not create a second binding. An explicit absol
 ## Host read view
 
 Hosts may read `node <gstack-root>/scripts/project-pin.mjs list --view host` and `node <gstack-root>/scripts/project-pin.mjs status --view host --session-id <trusted-native-session-id> [--operation <opaque-id>]` using an argv array with `shell=false`. These calls are pure projections: they do not attest, prepare, switch, recover, migrate, lock, initialize, or repair anything. `execution_authority` is always `NOT_PROVIDED`; displayed ownership never authorizes execution. A host must source the session id from its trusted native session mapping, never from renderer input, cwd, project text, or display links.
+
+## Host-selected initial binding
+
+A trusted project-new-session gesture may select the initial project of a new Codex session.
+The existing private host-launch broker authenticates its one-use launch capability and native
+`SessionStart` (`source: startup`), validates the native source fence, and revalidates the frozen
+profile and canonical project identity. Its internal initial-binding transaction then commits
+the existing pin and selection receipt during `attach`, without a user prompt or tool call.
+Only an untouched `NO_PIN` startup fence with no pending/consumed event or previous selection
+is eligible. The transaction cannot create a project, restore a session, retarget an existing
+binding, or be invoked through the public project CLI. Ordinary `project.sh switch/new` keeps
+its native user-event gate.
+
+The no-event commit is a broker-private closure over its live launch record, not an
+exported project-controller API. The supported boundary is the App's private IPC,
+launch capability, native fence and live profile revalidation in cooperative processes.
+The parent-process JavaScript check is a misuse guard, not OS isolation: same-UID
+arbitrary code can replace JavaScript builtins or directly write user-owned state.
+Source integrity checks protect reviewed hook loading; they do not establish that
+missing OS boundary. This contract must not be advertised as protection against a
+compromised same-UID process. Such protection requires a separate OS trust boundary.
+
+`HOST_BOUND` is an additive schema-v3 state with a version-1 `host_binding` receipt reference.
+It means verified ownership, **not execution authority**: no human event, turn ID or active
+tool permission is fabricated. The first genuine user event must still pass native attestation
+before becoming `TURN_ACTIVE`. Claude cannot borrow the Codex fence. Global launches remain
+`NO_PIN`; shared display links and project contents are unchanged. Readers from older builds
+reject the new state rather than infer authority; no legacy pin migration is automatic.
+
+The existing `nativeAttached` / `bindingReceipt` notifications and receipt readback are reused.
+Duplicate attach/readback is idempotent; a committed receipt is never reissued as current after
+selection drift. Failed startup binding blocks tools before consuming a user event and never
+falls back to late binding at `PreToolUse`. Cancellation before commit leaves no binding;
+cancellation after commit reports the durable result without undoing it. Updated hook sources
+require the normal reviewed source-guard manifest activation before production use; tests must
+not change the user's installed hooks, trust or credentials.
 
 ## Failure posture
 
