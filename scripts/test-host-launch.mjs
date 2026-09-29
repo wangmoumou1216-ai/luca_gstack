@@ -7,7 +7,7 @@ import { fork, execFile } from 'node:child_process';
 import { connect } from 'node:net';
 import { createHostLaunchBroker, fileIdentity } from '../.claude/hooks/lib/host-launch.mjs';
 import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity } from '../.claude/hooks/lib/project-substrate.mjs';
-import { captureNativeEventFence, hostLaunchJournalRoot, readHostLaunchSourceScope } from '../.claude/hooks/lib/event-attestation.mjs';
+import { captureNativeEventFence, hostLaunchJournalRoot, readHostLaunchSourceScope, resolveCodexHome } from '../.claude/hooks/lib/event-attestation.mjs';
 import { executeProjectTransaction } from './project-pin.mjs';
 
 function fixture(options = {}) {
@@ -85,7 +85,8 @@ test('cancel wins before commit and cannot be revived by a late native callback'
 });
 test('ordinary default source policy rejects Sidecar without a framework scope',()=>{
   const f=fixture();
-  assert.throws(()=>captureNativeEventFence({sessionId:f.sid,harness:'codex',cwd:f.gstackRoot,codexHome:f.sourceRoot}));
+  mkdirSync(join(f.root,'.luca','codex'),{recursive:true});
+  assert.throws(()=>resolveCodexHome(f.sourceRoot,f.root),{code:'SOURCE_ROOT'});
 });
 test('cross-run/nonce/request/SID claims cannot borrow an attached grant',async()=>{
   const f=fixture(),claim=await attached(f);
