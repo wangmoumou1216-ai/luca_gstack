@@ -37,6 +37,7 @@ import {
   readHostLaunchSourceScope,
 } from './event-attestation.mjs';
 import { readProjectReservation } from './project-selection.mjs';
+import { assertProjectEventOpen, revokeProjectEvent } from './project-event-closure.mjs';
 
 const DEFAULT_ROOT = join(homedir(), 'Desktop', '项目');
 function normRoot(p) {
@@ -938,6 +939,7 @@ export function attestPendingProjectEvent({
       if (!raw || !after || !raw.equals(after)) {
         throw new ProjectEventAuthorityError('STATE_CHANGED', 'project state changed during native observation; retry against the new state');
       }
+      assertProjectEventOpen(gstackRoot, sid, control.current);
       return { state, event: control.current, idempotent: true };
     }
   }
@@ -949,6 +951,7 @@ export function attestPendingProjectEvent({
     if (control.candidates.length === 0) {
       if (control.current?.status === 'active'
           && currentMatchesObservation(control.current, boundary, workingDirectory)) {
+        if (observation === 'pre-tool') assertProjectEventOpen(gstackRoot, sid, control.current);
         const evidence = observeCurrentNativeEvent({
           event: control.current,
           sessionId: sid,
@@ -1143,6 +1146,7 @@ export function attestPendingProjectEvent({
     if (process.env.LUCA_EVENT_TX_FAULT === 'after-attest-before-publish') {
       throw new ProjectEventAuthorityError('INJECTED_FAULT', 'injected event transaction fault after attestation before publish');
     }
+    if (observation === 'pre-tool') assertProjectEventOpen(gstackRoot, sid, event);
     atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-attested');
     const dropped = unwitnessed;
     for (const item of dropped) {
@@ -1160,6 +1164,8 @@ export function activeProjectAuthority(value, expected = {}, projectsRoot = PROJ
   if (expected.boundaryId && current.boundary_id !== String(expected.boundaryId)) return null;
   if (expected.eventId && current.event_id !== String(expected.eventId)) return null;
   if (expected.cwd && current.cwd !== String(expected.cwd)) return null;
+  try { assertProjectEventOpen(expected.gstackRoot, value.session_id, current); }
+  catch { return null; }
   const binding = validatedBindingForState(value, projectsRoot);
   return binding ? { binding, event: current } : null;
 }
@@ -1235,6 +1241,7 @@ export function closeAttestedProjectEvent({
       },
       ...(selection ? { selection } : {}),
     };
+    revokeProjectEvent(gstackRoot, sid, control.current);
     atomicWriteBytes(path, Buffer.from(`${JSON.stringify(next)}\n`), 'project-event-close');
     return next;
   });
@@ -1405,6 +1412,9 @@ export function atomicProjectStateCas(gstackRoot, sessionId, expectedRaw, nextVa
       ? expectedRaw === null
       : Buffer.isBuffer(expectedRaw) && raw.equals(expectedRaw);
     if (!same) throw new Error('project state CAS mismatch');
+    if (nextValue.event_control?.current?.status === 'active') {
+      assertProjectEventOpen(gstackRoot, sessionId, nextValue.event_control.current);
+    }
     const body = Buffer.from(`${JSON.stringify(nextValue)}\n`);
     atomicWriteBytes(path, body, 'project-state-tmp');
     return nextValue;
@@ -1459,6 +1469,7 @@ export function prepareProjectSwitch({ gstackRoot, projectsRoot = PROJECTS_ROOT,
     if (!event || event.status !== 'active') {
       throw new ProjectEventAuthorityError('NO_ACTIVE_EVENT', 'selection requires the current attested native event');
     }
+    assertProjectEventOpen(gstackRoot, sid, event);
     const binding = validatedBindingForState(state, projectsRoot);
     const expectedEpoch = binding?.epoch || 0;
     const proposalTx = randomUUID();

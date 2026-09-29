@@ -70,7 +70,7 @@ try {
     'scripts/check-quality-gates.mjs',
     '.claude/agents/preflight-agent.md',
     '.claude/agents/quality-gate.md',
-    '.claude/hooks/lib/project-substrate.mjs',
+    '.claude/hooks/lib/project-substrate.mjs', '.claude/hooks/lib/project-event-closure.mjs',
     '.claude/hooks/lib/project-selection.mjs',
     '.claude/hooks/lib/event-attestation.mjs',
   ]) {

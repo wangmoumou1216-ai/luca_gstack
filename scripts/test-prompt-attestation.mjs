@@ -20,6 +20,9 @@ import { fileURLToPath } from 'node:url';
 import { attestNativeUserEvent, captureNativeEventFence } from '../.claude/hooks/lib/event-attestation.mjs';
 import {
   attestPendingProjectEvent,
+  atomicProjectStateCas,
+  closeAttestedProjectEvent,
+  prepareProjectSwitch,
   queueProjectEventCandidate,
   initializeProjectEventFence,
 } from '../.claude/hooks/lib/project-substrate.mjs';
@@ -1015,6 +1018,100 @@ function lifecycleCheck(name, operation) {
   }
 }
 
+lifecycleCheck('failed close publication leaves a durable deny and a fresh native event recovers', () => {
+  const fx = makeLifecycleFixture('close-publication-failure');
+  try {
+    queueLifecycle(fx, 'work'); nativePair(fx, 'work');
+    const active = observeLifecycle(fx);
+    const before = readFileSync(fx.statePath);
+    const prior = process.env.LUCA_PROJECT_STATE_WRITE_FAULT;
+    process.env.LUCA_PROJECT_STATE_WRITE_FAULT = 'before-rename';
+    try {
+      assert.throws(() => closeAttestedProjectEvent({ gstackRoot: fx.gstack,
+        projectsRoot: fx.projects, sessionId: fx.session,
+        eventId: active.event.event_id, boundaryId: active.event.boundary_id }));
+    } finally {
+      if (prior === undefined) delete process.env.LUCA_PROJECT_STATE_WRITE_FAULT;
+      else process.env.LUCA_PROJECT_STATE_WRITE_FAULT = prior;
+    }
+    assert.deepEqual(readFileSync(fx.statePath), before);
+    expectCode('closed root observation', 'EVENT_CLOSED', () => observeLifecycle(fx));
+    expectCode('closed event cannot be republished', 'EVENT_CLOSED', () =>
+      atomicProjectStateCas(fx.gstack, fx.session, before, active.state));
+    expectCode('closed event cannot select project', 'EVENT_CLOSED', () =>
+      prepareProjectSwitch({ gstackRoot: fx.gstack, projectsRoot: fx.projects,
+        sessionId: fx.session, operation: 'switch', target: 'next' }));
+    const closure = readdirSync(join(fx.gstack, '.claude')).find(name => name.startsWith('.session-event-closed-'));
+    assert.ok(closure);
+    writeFileSync(join(fx.gstack, '.claude', closure), '{corrupt');
+    expectCode('corrupt closure remains deny', 'EVENT_CLOSED', () => observeLifecycle(fx));
+    queueLifecycle(fx, 'new work'); const fresh = nativePair(fx, 'new work');
+    assert.equal(observeLifecycle(fx).event.native_id, fresh.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('Stop observation failure quarantines its snapshot without granting a continuation', () => {
+  const fx = makeLifecycleFixture('stop-observation-failure');
+  try {
+    queueLifecycle(fx, 'work'); nativePair(fx, 'work'); observeLifecycle(fx);
+    const stopped = stopLifecycle(fx, '');
+    assert.equal(stopped.status, 0, stopped.stderr);
+    assert.match(stopped.stderr, /STOP_WITNESS_MISSING/);
+    expectCode('unobserved Stop snapshot quarantined', 'EVENT_CLOSED', () => observeLifecycle(fx));
+    queueLifecycle(fx, 'new work'); const fresh = nativePair(fx, 'new work');
+    assert.equal(observeLifecycle(fx).event.native_id, fresh.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('native completion rejects old authority but not a later human in the same boundary', () => {
+  const fx = makeLifecycleFixture('native-terminal');
+  try {
+    queueLifecycle(fx, 'work'); nativePair(fx, 'work'); observeLifecycle(fx);
+    appendFileSync(fx.rollout, JSON.stringify({ type: 'event_msg',
+      payload: { type: 'task_complete', turn_id: fx.boundary } }) + '\n');
+    expectCode('completed native turn', 'NATIVE_TURN_CLOSED', () => observeLifecycle(fx));
+    queueLifecycle(fx, 'new work'); const fresh = nativePair(fx, 'new work');
+    assert.equal(observeLifecycle(fx).event.native_id, fresh.sourceId);
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
+lifecycleCheck('trusted Stop snapshot quarantines failure without importing modified workspace code', () => {
+  const fx = makeLifecycleFixture('protected-stop');
+  try {
+    queueLifecycle(fx, 'work'); nativePair(fx, 'work'); observeLifecycle(fx);
+    assistantWitness(fx, 'done');
+    for (const dir of ['.codex', '.claude/hooks/lib', '.claude/skill-os',
+      '.claude/skills/office', '.claude/agents', 'memory/scripts']) {
+      mkdirSync(join(fx.gstack, dir), { recursive: true });
+    }
+    for (const file of ['.codex/stop-integrity-failure.mjs',
+      '.claude/hooks/lib/project-substrate.mjs', '.claude/hooks/lib/event-attestation.mjs',
+      '.claude/hooks/lib/project-selection.mjs', '.claude/hooks/lib/project-event-closure.mjs']) {
+      writeFileSync(join(fx.gstack, file), readFileSync(join(repoRoot, file)));
+    }
+    writeFileSync(join(fx.gstack, 'CLAUDE.md'), '# isolated fixture\n');
+    const guard = join(fx.root, 'protected');
+    const installed = spawnSync(process.execPath, [join(repoRoot, 'scripts/install-codex-source-guard.mjs'),
+      '--root', fx.gstack, '--test-dest', guard], {
+      env: { ...fx.env, NODE_ENV: 'test' }, encoding: 'utf8' });
+    assert.equal(installed.status, 0, installed.stderr);
+    for (const file of ['.codex/stop-integrity-failure.mjs', '.claude/hooks/lib/project-substrate.mjs']) {
+      writeFileSync(join(fx.gstack, file), 'throw new Error("UNREVIEWED_CODE_EXECUTED");\n');
+    }
+    const stopped = spawnSync(process.execPath, ['--import', join(guard, 'bootstrap.mjs'),
+      '--input-type=module', '-e', 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + "/.codex/stop-integrity-failure.mjs")'], {
+      env: { ...fx.env, NODE_ENV: 'test', LUCA_SOURCE_GUARD_TEST_ROOT: guard,
+        LUCA_CHILD_SOURCE_ROOT: fx.gstack, LUCA_PROJECT_STATE_WRITE_FAULT: 'before-rename' },
+      encoding: 'utf8', input: JSON.stringify({ hook_event_name: 'Stop', session_id: fx.session,
+        turn_id: fx.boundary, cwd: fx.gstack, last_assistant_message: 'done' }) });
+    assert.equal(stopped.status, 0, stopped.stderr);
+    assert.equal(JSON.parse(stopped.stdout).continue, false);
+    assert.doesNotMatch(stopped.stderr, /UNREVIEWED_CODE_EXECUTED/);
+    assert.equal(JSON.parse(readFileSync(fx.statePath, 'utf8')).event_control.current.status, 'active');
+    expectCode('protected recovery retained deny', 'EVENT_CLOSED', () => observeLifecycle(fx));
+  } finally { rmSync(fx.root, { recursive: true, force: true }); }
+});
+
 lifecycleCheck('one PreTool transaction consumes a shared-boundary pending batch and activates only the newest event', () => {
   const fx = makeLifecycleFixture('pending-batch');
   try {
@@ -1199,6 +1296,8 @@ lifecycleCheck('a delayed old Stop cannot close a newer already-active same-boun
     assert.match(delayed.stderr, /SOURCE_NOT_VISIBLE|INTERVENING_USER/);
     assert.deepEqual(readFileSync(fx.statePath), before,
       'an old Stop witness must not close or rewrite the newer active event');
+    assert.equal(observeLifecycle(fx).event.native_id, second.sourceId,
+      'a provably stale Stop must not quarantine the new event');
 
     const current = stopLifecycle(fx, 'new active assistant response');
     assert.equal(current.status, 0, current.stderr);
@@ -1230,6 +1329,8 @@ lifecycleCheck('identical assistant text across one boundary makes a delayed Sto
     assert.match(ambiguous.stderr, /STOP_WITNESS_AMBIGUOUS/);
     assert.deepEqual(readFileSync(fx.statePath), before,
       'an indistinguishable delayed Stop must not close or rewrite the newer active event');
+    assert.equal(observeLifecycle(fx).event.native_id, second.sourceId,
+      'ambiguous historical Stop must preserve the newer event authority');
   } finally {
     rmSync(fx.root, { recursive: true, force: true });
   }
@@ -1251,6 +1352,8 @@ lifecycleCheck('Stop ambiguity includes native history before the first attested
     assert.match(stopped.stderr, /STOP_WITNESS_AMBIGUOUS/);
     assert.deepEqual(readFileSync(fx.statePath), before,
       'a historical Stop cannot close the current event just because history was not in the ledger');
+    assert.equal(observeLifecycle(fx).event.status, 'active',
+      'pre-adoption historical Stop must not quarantine current authority');
   } finally {
     rmSync(fx.root, { recursive: true, force: true });
   }
@@ -1304,6 +1407,9 @@ lifecycleCheck('a blocked Stop cannot be replayed through repeated text; a disti
     assert.match(replay.stderr, /SOURCE_NOT_VISIBLE/);
     assert.deepEqual(readFileSync(fx.statePath), held,
       'replaying the already-recorded blocked Stop witness must not close the event');
+    const replayAuthority = observeLifecycle(fx);
+    assert.equal(replayAuthority.event.event_id, heldState.event_control.current.event_id,
+      'an acknowledged Stop replay must preserve continuation authority');
 
     assistantWitness(fx, 'same continuation text');
     const ambiguousReplay = stopLifecycle(fx, 'same continuation text');

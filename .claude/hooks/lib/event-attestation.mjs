@@ -192,7 +192,7 @@ export function readHostLaunchSourceScope(gstackRoot, sessionId) {
 function boundedCodexSource(candidate, explicitHome, allowTestSourceRoot, hostSourceScope = null) {
   if (hostSourceScope && (!hostSourceScopes.has(hostSourceScope)
       || hostSourceScope.sessionId !== candidate.session_id || hostSourceScope.cwd !== candidate.cwd
-      || resolve(String(explicitHome || '')) !== hostSourceScope.sourceRoot.realpath)) fail('SOURCE_ROOT', 'unverified host source scope');
+      || (explicitHome ? resolve(String(explicitHome)) : resolveCodexHome()) !== hostSourceScope.sourceRoot.realpath)) fail('SOURCE_ROOT', 'unverified host source scope');
   const home = hostSourceScope ? hostSourceScope.sourceRoot.realpath : allowTestSourceRoot
     ? resolve(String(explicitHome || ''))
     : resolveCodexHome(explicitHome);
@@ -720,7 +720,13 @@ function codexStopWitness(records, afterIndex, assistantText, afterWitnessId = '
   if (!afterPriorWitness) fail('CURSOR_MISMATCH', 'prior Codex Stop witness is no longer visible');
   if (selected && matches > 1) fail('STOP_WITNESS_AMBIGUOUS', 'Stop text names multiple native assistant responses');
   if (selected) return selected;
-  fail('SOURCE_NOT_VISIBLE', 'native assistant response for this Stop is not yet visible');
+  const stale = records.some((record, index) => {
+    const assistant = codexAssistantMessage(record);
+    return assistant && (index < afterIndex || assistant.id === afterWitnessId)
+      && sameUtf8(assistant.text, expected);
+  });
+  fail('SOURCE_NOT_VISIBLE', 'native assistant response for this Stop is not yet visible',
+    stale ? { stale_stop: true } : null);
 }
 
 function assertCodexStopUnambiguous(records, candidate, currentEventId, currentAnchorIndex, assistantText, priorEvents,
@@ -814,6 +820,7 @@ function attestCodex(candidate, source, records, bytes, cursor, observation, ass
     }
     if (requireNoFollowingUser) {
       assertNoNewNativeUser(records, anchor.record.index + 1, 'codex', structuredSkillIndexes);
+      if (observation === 'pre-tool') assertCodexTurnOpen(records, anchor.record.index + 1, candidate.boundary_id);
     }
     return {
       event_id: eventId,
@@ -956,7 +963,13 @@ function claudeStopWitness(records, afterIndex, assistantText, afterWitnessId = 
   if (!afterPriorWitness) fail('CURSOR_MISMATCH', 'prior Claude Stop witness is no longer visible');
   if (selected && matches > 1) fail('STOP_WITNESS_AMBIGUOUS', 'Stop text names multiple native assistant responses');
   if (selected) return selected;
-  fail('SOURCE_NOT_VISIBLE', 'Claude assistant response for this Stop is not yet visible');
+  const stale = records.some((record, index) => {
+    const text = claudeAssistantVisibleText(record.value);
+    return text != null && (index < afterIndex || record.value?.uuid === afterWitnessId)
+      && sameUtf8(text, expected);
+  });
+  fail('SOURCE_NOT_VISIBLE', 'Claude assistant response for this Stop is not yet visible',
+    stale ? { stale_stop: true } : null);
 }
 
 function assertClaudeStopUnambiguous(records, candidate, currentEventId, currentIndex, assistantText, priorEvents) {
@@ -1168,6 +1181,16 @@ function assertNoNewNativeUser(records, startIndex, harness, allowedUserIndexes 
   }
 }
 
+function assertCodexTurnOpen(records, startIndex, boundary) {
+  for (const record of records.slice(startIndex)) {
+    const payload = record.value?.payload;
+    if (record.value?.type === 'event_msg' && payload?.type === 'task_complete'
+        && payload.turn_id === boundary) {
+      fail('NATIVE_TURN_CLOSED', 'native Codex turn has already completed');
+    }
+  }
+}
+
 // Re-observe an already attested current event. This is intentionally distinct
 // from candidate attestation: it proves the durable cursor still names that
 // exact native event and that no unqueued native user has appeared behind it.
@@ -1199,6 +1222,9 @@ export function observeCurrentNativeEvent({
     ? codexAllSkillInjectionIndexes(loaded.records, validated.afterIndex, validated.afterIndex) : new Set();
   assertNoNewNativeUser(loaded.records, cursor.record_index, candidate.harness,
     allowedUserIndexes);
+  if (observation === 'pre-tool' && candidate.harness === 'codex') {
+    assertCodexTurnOpen(loaded.records, cursor.record_index, candidate.boundary_id);
+  }
   const stopWitnessId = observation === 'stop'
     ? candidate.harness === 'codex'
       ? codexStopWitness(loaded.records, validated.afterIndex, assistantText, event.stop_witness_id || '',

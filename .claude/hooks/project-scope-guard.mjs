@@ -110,6 +110,7 @@ function activeBinding(state, observationError = null) {
     if (!boundaryId) return null;
     if (state.schema_version === substrate?.PROJECT_STATE_SCHEMA && substrate?.activeProjectAuthority) {
       return substrate.activeProjectAuthority(state, {
+        gstackRoot,
         boundaryId,
         cwd: data?.cwd || gstackRoot,
       }, PROJECTS_ROOT)?.binding || null;
@@ -436,6 +437,7 @@ function sessionControlPlaneGlobReach(tail) {
 }
 
 const SESSION_CONTROL_PLANE_PREFIXES = [
+  '.session-event-closed-',
   '.session-read-',
   '.session-project-',
   '.session-consumed-turns-',

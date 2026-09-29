@@ -19,6 +19,7 @@ import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import { assertHostLaunchAuthority } from '../.claude/hooks/lib/host-launch.mjs';
 import { resolveCodexChildProject } from '../.claude/hooks/lib/codex-child-project.mjs';
+import { assertProjectEventOpen } from '../.claude/hooks/lib/project-event-closure.mjs';
 import {
   PROJECTS_ROOT,
   PROJECT_STATE_SCHEMA,
@@ -261,6 +262,9 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
     // This CAS is the execution ownership boundary. No project-directory or
     // binding side effect occurs while the proposal is merely PREPARED.
     claimExecution();
+    if (current.value.event_control?.current?.status === 'active') {
+      assertProjectEventOpen(gstackRoot, sid, current.value.event_control.current);
+    }
     authorizeController(op === 'new' ? 'recover' : 'prepare',
       current.value.selection?.pending || current.value.switch);
     if (process.env.LUCA_PROJECT_FAULT === 'crash-after-execution-claim') process.exit(86);

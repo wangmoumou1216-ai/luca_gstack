@@ -116,7 +116,7 @@ function copyTree(source, destination) {
     else fail(`snapshot source has a special file: ${from}`);
   }
 }
-function copySnapshot(root, destination) {
+function copySnapshot(root, destination, approved) {
   privateDir(join(destination, 'memory'), true);
   copyTree(join(root, 'memory', 'scripts'), join(destination, 'memory', 'scripts'));
   privateDir(join(destination, '.claude'), true);
@@ -126,6 +126,18 @@ function copySnapshot(root, destination) {
     join(destination, '.claude', 'skills', 'office'));
   copyTree(join(root, '.claude', 'agents'), join(destination, '.claude', 'agents'));
   writeNew(join(destination, 'CLAUDE.md'), sourceBytes(join(root, 'CLAUDE.md')));
+  if (existsSync(join(root, '.codex', 'stop-integrity-failure.mjs'))) {
+    privateDir(join(destination, '.codex'), true);
+    privateDir(join(destination, '.claude', 'hooks'), true);
+    privateDir(join(destination, '.claude', 'hooks', 'lib'), true);
+    for (const file of ['.codex/stop-integrity-failure.mjs',
+      '.claude/hooks/lib/project-substrate.mjs', '.claude/hooks/lib/event-attestation.mjs',
+      '.claude/hooks/lib/project-selection.mjs', '.claude/hooks/lib/project-event-closure.mjs']) {
+      const bytes = sourceBytes(join(root, file));
+      if (sha(bytes) !== approved[file]?.sha256) fail(`Stop recovery source changed during installation: ${file}`);
+      writeNew(join(destination, file), bytes);
+    }
+  }
 }
 
 const args = process.argv.slice(2);
@@ -175,7 +187,7 @@ privateDir(destination, true);
 const snapshots = privateDir(join(destination, 'roots'), true);
 for (const row of entries) {
   const snapshotRoot = privateDir(join(snapshots, row.snapshot), true);
-  copySnapshot(row.root, snapshotRoot);
+  copySnapshot(row.root, snapshotRoot, row.files);
 }
 replaceProtected(join(destination, 'bootstrap.mjs'), bootstrap);
 replaceProtected(join(destination, 'loader.mjs'), loader);

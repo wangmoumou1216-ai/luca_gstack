@@ -5,7 +5,7 @@
 //  · 有中断节点时照常写 checkpoint，并关闭本轮项目快照。
 //
 // 安全契约（务必维持）：
-//  · 任何异常一律 fail-open —— 不输出 JSON、exit 0，绝不卡住 session 结束。
+//  · 辅助记录失败不阻塞结束；权限关闭失败保留持久拒绝并终止本轮。
 //  · 强制模式三重防循环：stop_hook_active / 本 session marker / SESSION_SYNC_BLOCK=0 kill-switch。
 //  · 拦截路径 stdout 只能是「纯 JSON」，不能混任何文本（否则 CC 解析 decision 失败）。
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
@@ -25,6 +25,7 @@ import {
 } from './lib/project-substrate.mjs';
 import { closeGrants, snapshotGrantTurn } from './lib/project-read-grants.mjs';
 import { actualHarness } from './lib/harness.mjs';
+import { revokeProjectEvent } from './lib/project-event-closure.mjs';
 
 const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const now = new Date().toISOString();
@@ -79,6 +80,7 @@ let projectFromPin = false;
 let projectAbsoluteRoot = '';
 let projectState = null;
 let projectEventSnapshot = null;
+let nativeObservationFailed = false;
 function observationBoundary(state) {
   const control = state?.event_control;
   const harness = control?.candidates?.[0]?.harness || control?.current?.harness;
@@ -109,6 +111,7 @@ if (hasSid) {
     if (projectState.schema_version === PROJECT_STATE_SCHEMA && projectEventSnapshot) {
       const authority = projectState.state === 'TURN_ACTIVE'
         ? activeProjectAuthority(projectState, {
+          gstackRoot: projectRoot,
           boundaryId: observationBoundary(projectState),
           cwd: payload.cwd || projectRoot,
         }, PROJECTS_ROOT)
@@ -127,18 +130,31 @@ if (hasSid) {
       }
     }
   } catch (error) {
+    nativeObservationFailed = true;
+    // Freeze the exact snapshot already read, never a later "latest" event.
+    // A positively identified old Stop is harmless to the new event.
+    const current = projectState?.event_control?.current;
+    const suppliedBoundary = String(payload.turn_id || payload.prompt_id || '');
+    if (!error?.details?.stale_stop && error?.code !== 'STOP_WITNESS_AMBIGUOUS' && current?.status === 'active'
+        && !projectState?.event_control?.candidates?.length
+        && (!suppliedBoundary || current.boundary_id === suppliedBoundary)) {
+      try { revokeProjectEvent(projectRoot, sessionId, current); }
+      catch (closeError) {
+        try { process.stderr.write(`[session-sync] event quarantine failed; host recovery required: ${closeError.message}\n`); } catch { }
+      }
+    }
     try { process.stderr.write(`[session-sync] ⚠️ native event observation failed (${error?.code || 'ERROR'}): ${String(error?.message || error)}\n`); } catch { }
     try { projectState = readProjectState(projectRoot, sessionId).value; } catch { }
   }
 }
 
-let closeSnapshotOnExit = false;
+let closeSnapshotOnExit = projectEventSnapshot?.status === 'active';
 let closeReadGrantTurnOnExit = false;
 let readGrantTurnSnapshot = null;
 if (hasSid) {
   try { readGrantTurnSnapshot = snapshotGrantTurn(projectRoot, sessionId); } catch { }
 }
-process.on('exit', () => {
+function closeProjectSnapshot() {
   if (closeSnapshotOnExit && projectState && hasSid) {
     try {
       if (projectState.schema_version === PROJECT_STATE_SCHEMA && projectEventSnapshot?.status === 'active') {
@@ -150,11 +166,17 @@ process.on('exit', () => {
           boundaryId: projectEventSnapshot.boundary_id,
           outcome: 'stop',
         });
+        closeSnapshotOnExit = false;
       }
     } catch (error) {
       try { process.stderr.write(`[session-sync] ⚠️ turn snapshot close failed: ${error.message}\n`); } catch { }
+      return false;
     }
   }
+  return true;
+}
+process.on('exit', () => {
+  closeProjectSnapshot();
   if (closeReadGrantTurnOnExit && hasSid && readGrantTurnSnapshot?.open) {
     try {
       closeGrants({
@@ -280,7 +302,7 @@ try {
   }
 
   // ---- 拦截：强制就地提取（首次裁决 或 增量重拦）----
-  if (forceOnStop && !killSwitch && !stopHookActive && ((!alreadyExtracted && substantive) || rearm)) {
+  if (!nativeObservationFailed && forceOnStop && !killSwitch && !stopHookActive && ((!alreadyExtracted && substantive) || rearm)) {
     writeCheckpointIfInProgress();
     const reason = buildReason(rearm, deltaEdit, deltaTool);
     // harness 门（P0/WS-A0 接线，2026-07-25）：decision:block 是 CC 专有动词，正向确定是 Codex
@@ -289,6 +311,7 @@ try {
     try { canBlock = (await import('./lib/harness.mjs')).canEmitControlVerb(process.env); } catch { }
     if (canBlock) {
       if (rearm) writeFileSync(markerFile, `${editCount} ${toolCount}`);
+      closeSnapshotOnExit = false;
       process.stdout.write(JSON.stringify({ decision: 'block', reason }));
       process.exit(0);
     } else {
@@ -303,6 +326,13 @@ try {
     : projectState?.state === 'TURN_ACTIVE'
       || (projectState?.state === 'BOUND' && Boolean(projectState?.terminal));
   closeReadGrantTurnOnExit = hasSid;
+  // Complete security closure before optional capture/checkpoint work. Durable
+  // deny evidence is retained even when the main state publication fails.
+  if (!closeProjectSnapshot()) {
+    process.stdout.write(JSON.stringify({ continue: false,
+      stopReason: 'Project event closure failed; this turn has ended and requires recovery.' }));
+    process.exit(0);
+  }
 
   // ---- 放行 ----
   // kill-switch 可见性（audit 2026-07-07 F1-02）：环境残留 SESSION_SYNC_BLOCK=0 曾静默关停

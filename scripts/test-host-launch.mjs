@@ -1,12 +1,14 @@
+import os from 'node:os';
+import { syncBuiltinESMExports } from 'node:module';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, renameSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { fork, execFile } from 'node:child_process';
 import { connect } from 'node:net';
 import { createHostLaunchBroker, fileIdentity } from '../.claude/hooks/lib/host-launch.mjs';
-import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity } from '../.claude/hooks/lib/project-substrate.mjs';
+import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity, prepareProjectSwitch, closeAttestedProjectEvent, refenceProjectStateForDeactivate } from '../.claude/hooks/lib/project-substrate.mjs';
 import { captureNativeEventFence, hostLaunchJournalRoot, readHostLaunchSourceScope, resolveCodexHome } from '../.claude/hooks/lib/event-attestation.mjs';
 import { executeProjectTransaction } from './project-pin.mjs';
 
@@ -72,7 +74,7 @@ test('native lookup streams large history but still rejects duplicate session so
 
 function fixture(options = {}) {
   const root = realpathSync(mkdtempSync('/private/tmp/host-launch-'));
-  const gstackRoot = join(root, 'gstack'), projectsRoot = join(root, 'projects'), sourceRoot = join(root, 'sidecar');
+  const gstackRoot = join(root, 'gstack'), projectsRoot = join(root, 'projects'), sourceRoot = options.defaultCodexHome ? join(root, 'home', '.codex') : join(root, 'sidecar');
   for (const path of [join(gstackRoot, '.claude'), projectsRoot, join(sourceRoot, 'sessions', '2026', '09', '27')]) mkdirSync(path, { recursive: true });
   const config = join(root, 'settings.json'); writeFileSync(config, '{"profile":"sidecar"}');
   const binary = process.execPath;
@@ -405,3 +407,93 @@ test('active global launch rechecks native evidence on every tool',async()=>{
   await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}));
   assert.equal((await f.broker.parent('readReceipt',{launchId:claim.launchId})).status,'ACTIVE_NO_PIN');
 });
+
+// Real default-profile launches omit CODEX_HOME; a broker still records the
+// canonical default source. Exercise the attester again outside the broker.
+test('host default home without CODEX_HOME survives downstream native source validation', async t => {
+  const f = fixture({ defaultCodexHome: true });
+  const realUserInfo = os.userInfo;
+  t.mock.method(os, 'userInfo', () => ({ ...realUserInfo(), homedir: join(f.root, 'home') }));
+  syncBuiltinESMExports();
+  t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
+  await attached(f);
+  const scope = readHostLaunchSourceScope(f.gstackRoot, f.sid);
+  const options = { sessionId: f.sid, harness: 'codex', cwd: f.gstackRoot, hostSourceScope: scope };
+  assert.doesNotThrow(() => captureNativeEventFence(options));
+  assert.doesNotThrow(() => captureNativeEventFence({ ...options, codexHome: f.sourceRoot }));
+  assert.throws(() => captureNativeEventFence({ ...options, codexHome: f.root }), { code: 'SOURCE_ROOT' });
+  assert.throws(() => captureNativeEventFence({ ...options, sessionId: randomUUID() }), { code: 'SOURCE_ROOT' });
+  assert.throws(() => captureNativeEventFence({ ...options, cwd: f.root }), { code: 'SOURCE_ROOT' });
+  assert.throws(() => captureNativeEventFence({ ...options, hostSourceScope: { ...scope } }), { code: 'SOURCE_ROOT' });
+});
+test('omitted CODEX_HOME cannot borrow a nondefault host source', async () => {
+  const f = fixture();
+  await attached(f);
+  const hostSourceScope = readHostLaunchSourceScope(f.gstackRoot, f.sid);
+  assert.throws(() => captureNativeEventFence({ sessionId: f.sid, harness: 'codex',
+    cwd: f.gstackRoot, hostSourceScope }), { code: 'SOURCE_ROOT' });
+});
+
+
+test('project host launch permits later controller selections and bounded receipt history', async (t) => {
+  const f = fixture(), claim = await attached(f, true);
+  const previousRoots = [process.env.LUCA_GSTACK_ROOT, process.env.LUCA_PROJECTS_ROOT];
+  process.env.LUCA_GSTACK_ROOT = f.gstackRoot;
+  process.env.LUCA_PROJECTS_ROOT = f.projectsRoot;
+  t.after(() => {
+    for (const [index, key] of ['LUCA_GSTACK_ROOT', 'LUCA_PROJECTS_ROOT'].entries()) {
+      if (previousRoots[index] === undefined) delete process.env[key];
+      else process.env[key] = previousRoots[index];
+    }
+  });
+  mkdirSync(join(f.projectsRoot, 'beta'));
+  await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+  for (let index = 0; index < 18; index++) {
+    const payload = f.appendHuman();
+    await f.broker.claim('beforeTool', { ...claim, nativePayload: payload });
+    const prepared = prepareProjectSwitch({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+      sessionId: f.sid, operation: 'switch', target: 'beta' });
+    executeProjectTransaction({
+      sessionId: f.sid, tx: prepared.proposal.tx, operation: 'switch', target: 'beta',
+      expectedEpoch: prepared.proposal.expected_epoch });
+    const result = await f.broker.claim('beforeTool', { ...claim, nativePayload: payload });
+    assert.equal(result.status, 'COMMITTED');
+    assert.equal(result.receipt, undefined, 'historical launch receipt must not describe the current selection');
+    assert.equal(readProjectState(f.gstackRoot, f.sid).value.binding.project, 'beta');
+    if (index === 0) renameSync(join(f.projectsRoot, 'alpha'), join(f.projectsRoot, 'alpha-moved'));
+    const event = readProjectState(f.gstackRoot, f.sid).value.event_control.current;
+    closeAttestedProjectEvent({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+      sessionId: f.sid, eventId: event.event_id, boundaryId: event.boundary_id });
+  }
+  const state = readProjectState(f.gstackRoot, f.sid).value;
+  assert.equal(state.selection.receipts.some(row => row.host_launch), false);
+  refenceProjectStateForDeactivate({ gstackRoot: f.gstackRoot, sessionId: f.sid,
+    expectedRaw: readProjectState(f.gstackRoot, f.sid).raw, codexHome: f.sourceRoot });
+  assert.equal((await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() })).status, 'COMMITTED');
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.state, 'NO_PIN');
+  const prepared = prepareProjectSwitch({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+    sessionId: f.sid, operation: 'switch', target: 'beta' });
+  executeProjectTransaction({
+    sessionId: f.sid, tx: prepared.proposal.tx, operation: 'switch', target: 'beta',
+    expectedEpoch: prepared.proposal.expected_epoch });
+  assert.equal((await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() })).status, 'COMMITTED');
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.binding.project, 'beta');
+  await assert.rejects(f.broker.parent('readReceipt', { launchId: claim.launchId }), { code: 'READBACK_MISMATCH' });
+});
+
+test('cancelled selections may evict old receipts without revoking the current host session', async () => {
+  const f = fixture(), claim = await attached(f, true);
+  mkdirSync(join(f.projectsRoot, 'beta'));
+  await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+  for (let index = 0; index < 17; index++) {
+    await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+    prepareProjectSwitch({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+      sessionId: f.sid, operation: 'switch', target: 'beta' });
+    const event = readProjectState(f.gstackRoot, f.sid).value.event_control.current;
+    closeAttestedProjectEvent({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+      sessionId: f.sid, eventId: event.event_id, boundaryId: event.boundary_id });
+  }
+  assert.equal((await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() })).status, 'COMMITTED');
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.binding.project, 'alpha');
+});
+

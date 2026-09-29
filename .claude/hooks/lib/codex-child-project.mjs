@@ -355,7 +355,7 @@ function parentRootAuthority({ gstackRoot, projectsRoot, parentSessionId, turnId
     gstackRoot, projectsRoot, sessionId: parentSessionId, boundaryId: turnId,
     cwd, observation: 'pre-tool', transcriptPath, codexHome,
   });
-  return activeProjectAuthority(observed.state, { boundaryId: turnId, cwd }, projectsRoot);
+  return activeProjectAuthority(observed.state, { gstackRoot, boundaryId: turnId, cwd }, projectsRoot);
 }
 
 export function prepareCodexChildProject({
@@ -482,7 +482,7 @@ export function bindCodexChildProject({
       const observed = attestPendingProjectEvent({ gstackRoot: root, sessionId: parent,
         boundaryId: value.turnId, cwd: value.cwd, observation: 'pre-tool', codexHome });
       const authority = activeProjectAuthority(observed.state,
-        { eventId: value.parentEventId, boundaryId: value.turnId, cwd: value.cwd });
+        { gstackRoot: root, eventId: value.parentEventId, boundaryId: value.turnId, cwd: value.cwd });
       if (!authority || !sameBinding(authority.binding, value.binding)) {
         fail('PARENT_CLOSED', 'unbound spawn has lost its frozen parent binding');
       }

@@ -69,7 +69,7 @@ if (ownSid) {
   try {
     const projectState = readProjectState(projectRoot, ownSid).value;
     if (projectState.state === 'TURN_ACTIVE' && projectState.schema_version === PROJECT_STATE_SCHEMA) {
-      startupBinding = activeProjectAuthority(projectState, {}, PROJECTS_ROOT)?.binding || null;
+      startupBinding = activeProjectAuthority(projectState, { gstackRoot: projectRoot }, PROJECTS_ROOT)?.binding || null;
       if (!startupBinding) throw new Error('TURN_ACTIVE lacks current attested native event authority');
     } else if (['BOUND', 'TURN_CLOSED'].includes(projectState.state)) {
       startupBinding = validatedBindingForState(projectState, PROJECTS_ROOT);

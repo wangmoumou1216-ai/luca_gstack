@@ -84,7 +84,7 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
   };
   const identityRecheck = record => {
     verifyProfile(record.request.profileIdentity);
-    if (record.request.projectIdentity) {
+    if (record.request.projectIdentity && record.status !== 'COMMITTED') {
       const current = canonicalProjectIdentity(record.request.projectIdentity.project, projectsRoot);
       for (const key of ['project','realpath','dev','ino']) if (String(current[key]) !== String(record.request.projectIdentity[key])) throw codeError('PROJECT_CHANGED');
     }
@@ -210,9 +210,28 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
       const current=readProjectState(gstackRoot,r.sid,projectsRoot).value;
       const receipt=current.selection?.receipts?.find(x=>x.operation_id===r.receipt.operationId);
       const binding=validatedBindingForState(current,projectsRoot);
-      if (!receipt || !same(receipt.host_launch,r.receipt.hostLaunch) || !same(binding,r.receipt.binding)
-        || !same(current.selection.last_success,r.receipt.selectionCommit)) throw codeError('READBACK_MISMATCH');
-      return {status:'COMMITTED',receipt:r.receipt};
+      const selection=current.selection, latest=selection?.last_success;
+      // The launch receipt proves the initial selection, not a permanent pin.
+      // Later authority comes from the current attested event and controller state.
+      const latestReceipt=selection?.receipts?.find(x=>x.operation_id===latest?.commit_id);
+      if (observed.event?.status !== 'active'
+        || selection?.stream_id !== r.receipt.selectionCommit.stream_id
+        || !Number.isSafeInteger(selection.commit_sequence)
+        || selection.commit_sequence < r.receipt.selectionCommit.sequence
+        || latest?.sequence !== selection.commit_sequence
+        || latest?.stream_id !== selection.stream_id
+        || (latestReceipt && (latestReceipt.status !== 'COMMITTED'
+          || latestReceipt.target !== latest.target || latestReceipt.binding_epoch !== latest.binding_epoch))
+        || (receipt && !same(receipt.host_launch,r.receipt.hostLaunch))
+        || ((selection.commit_sequence === r.receipt.selectionCommit.sequence
+          || latest.commit_id === r.receipt.selectionCommit.commit_id)
+          && !same(latest,r.receipt.selectionCommit))
+        || (binding && (binding.project !== latest.target || binding.epoch !== latest.binding_epoch))) {
+        throw codeError('READBACK_MISMATCH');
+      }
+      return same(binding,r.receipt.binding) && same(latest,r.receipt.selectionCommit)
+        ? {status:'COMMITTED',receipt:r.receipt}
+        : {status:'COMMITTED',sessionId:r.sid,executionAuthority:'NOT_PROVIDED'};
     }
     if (observed.state.state !== 'NO_PIN' || observed.state.event_control.consumed_events.length !== 1) throw codeError('FIRST_EVENT_REQUIRED');
     fault('before-prepare');

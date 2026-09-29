@@ -2091,8 +2091,10 @@ const STICKY = (root, source, sid = 'me', extraEnv = {}) => runNode(sessionResto
     env: { CLAUDE_PROJECT_DIR: root, LUCA_GSTACK_ROOT: root, LUCA_PROJECTS_ROOT: projectsRoot, ...FORCE_STOP_ENV },
     input: JSON.stringify({ session_id: 'sessGH' }),
   });
-  assert.doesNotMatch(JSON.parse(r.stdout).reason, /projB/, '失效 pin 不得回退 display symlink projB');
-  assert.match(JSON.parse(r.stdout).reason, /不带 --project/, '失效 pin 应按 no-pin 归因');
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.stdout.trim(), '', '身份观察失败不得请求模型继续执行记忆整理');
+  assert.match(r.stderr, /native event observation failed/, '失效身份必须报告观察失败');
+  assert.deepEqual(readdirSync(projBdocs), [], '失效 pin 不得回退 display symlink 写入 projB');
   assert.ok(!existsSync(join(projectsRoot, 'ghost')), '不得为失效 pin 创建幽灵项目目录');
   console.log('PASS SYNC-PIN-002 失效 pin fail-closed 为 no-pin，不回退 display symlink');
 }

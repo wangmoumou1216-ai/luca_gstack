@@ -96,7 +96,7 @@ function verifyGraph() {
 
 try {
   for (const rel of ['.claude/hooks/route-guard.mjs', '.claude/hooks/lib/codex-child-project.mjs',
-    'scripts/model-route-host.mjs', '.claude/hooks/lib/project-substrate.mjs',
+    'scripts/model-route-host.mjs', '.claude/hooks/lib/project-substrate.mjs', '.claude/hooks/lib/project-event-closure.mjs',
     '.claude/hooks/lib/project-selection.mjs',
     '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-read-grants.mjs',
     '.claude/hooks/lib/harness.mjs', '.claude/skill-os/skill-routing-map.yaml']) {

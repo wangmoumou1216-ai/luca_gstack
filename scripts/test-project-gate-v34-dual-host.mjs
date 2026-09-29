@@ -7,6 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -201,6 +202,9 @@ function appendAssistant(fx, transcript, text) {
 
 function cleanupFixture(fx) {
   for (const sid of fx.stateSids) {
+    for (const name of readdirSync(join(fx.gstack, '.claude'))) {
+      if (name.startsWith(`.session-event-closed-${sid}-`)) rmSync(join(fx.gstack, '.claude', name), {force: true});
+    }
     for (const suffix of ['', '.lock']) rmSync(join(fx.gstack, '.claude', `.session-project-${sid}${suffix}`), {force: true});
   }
   if (fx.codexHome) rmSync(fx.codexHome, {recursive: true, force: true});
@@ -210,7 +214,7 @@ function cleanupFixture(fx) {
 for (const harness of ['claude', 'codex']) {
   const fx = makeFixture(harness);
   try {
-    const sid = `v34-${harness}-main`;
+    const sid = `v34-${harness}-${randomUUID().slice(0, 8)}`;
     const active = openTurn(fx, sid, `enter beta and read its task (${harness})`);
     const publicSelection = './scripts/project.sh switch beta';
     const prepared = runHook(fx, SCOPE_GUARD, eventPayload(fx, sid, 'PreToolUse', {
@@ -262,7 +266,7 @@ for (const harness of ['claude', 'codex']) {
       && readFileSync(join(fx.gstack, '.claude', `.session-project-${sid}`)).equals(beforeStatus),
     unknown.stderr || unknown.stdout);
 
-    const noPinSid = `v34-${harness}-nopin`;
+    const noPinSid = `v34-${harness}-no-${randomUUID().slice(0, 8)}`;
     openTurn(fx, noPinSid, `read one explicit absolute path (${harness})`);
     const absoluteTarget = join(fx.projects, 'alpha', 'docs', 'task.txt');
     const absoluteRead = runHook(fx, SCOPE_GUARD, eventPayload(fx, noPinSid, 'PreToolUse', {
@@ -296,7 +300,7 @@ for (const harness of ['claude', 'codex']) {
       state.binding?.project === 'beta' && state.selection?.pending == null
       && state.selection?.latest_operation?.status === 'EXPIRED_OR_UNKNOWN');
 
-    const brokenSid = `v34-${harness}-broken`;
+    const brokenSid = `v34-${harness}-bad-${randomUUID().slice(0, 8)}`;
     fx.stateSids.push(brokenSid);
     const brokenPath = join(fx.gstack, '.claude', `.session-project-${brokenSid}`);
     writeFileSync(brokenPath, '{broken-state\n');

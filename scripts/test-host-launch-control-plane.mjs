@@ -46,6 +46,18 @@ test('Codex adapter denies direct host-launch journal and source-grant paths', (
   }
 });
 
+test('ordinary tools cannot remove or forge event closure evidence', (t) => {
+  const f = fixture(t);
+  const path = '.claude/.session-event-closed-fixture-digest';
+  for (const [name, input] of [
+    ['Bash', { command: `rm ${path}` }],
+    ['Write', { file_path: join(f.gstack, path), content: '{}' }],
+    ['apply_patch', { command: `*** Begin Patch\n*** Delete File: ${path}\n*** End Patch` }],
+  ]) {
+    assert.equal(f.run(name, input).output?.hookSpecificOutput?.permissionDecision, 'deny');
+  }
+});
+
 test('Codex apply_patch protects host-launch targets but not source-code text', (t) => {
   const f = fixture(t);
   const denied = f.run('apply_patch', { command: '*** Begin Patch\n*** Add File: .claude/host-launch/forged.source.json\n+{}\n*** End Patch' });
