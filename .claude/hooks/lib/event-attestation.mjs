@@ -4,6 +4,7 @@ import {
   fstatSync,
   lstatSync,
   openSync,
+  opendirSync,
   readFileSync,
   readdirSync,
   realpathSync,
@@ -16,9 +17,6 @@ import { fileURLToPath } from 'node:url';
 
 const MAX_SOURCE_BYTES = 64 * 1024 * 1024;
 const MAX_RECORDS = 200_000;
-const MAX_DIRECTORIES = 2_048;
-const MAX_ROLLOUT_FILES = 8_192;
-const MAX_DIRECTORY_ENTRIES = 8_192;
 export const MAX_NATIVE_PROMPT_BYTES = 1024 * 1024;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -211,34 +209,28 @@ function boundedCodexSource(candidate, explicitHome, allowTestSourceRoot, hostSo
   }
   if (canonicalSessions !== sessions) fail('SYMLINK_SOURCE', 'Codex sessions root must be canonical');
 
-  let directoryCount = 0;
-  let fileCount = 0;
-  let entryCount = 0;
   const matches = [];
   const descend = (directory, depth) => {
-    directoryCount += 1;
-    if (directoryCount > MAX_DIRECTORIES) fail('SOURCE_LIMIT', 'Codex session directory bound exceeded');
-    const entries = readdirSync(directory, { withFileTypes: true });
-    entryCount += entries.length;
-    if (entryCount > MAX_DIRECTORY_ENTRIES) fail('SOURCE_LIMIT', 'Codex session directory entry bound exceeded');
-    entries.sort((a, b) => a.name.localeCompare(b.name));
-    for (const entry of entries) {
-      const full = join(directory, entry.name);
-      if (entry.isSymbolicLink()) continue;
-      if (depth < 3) {
-        const validDirectory = depth === 0 ? /^\d{4}$/.test(entry.name)
-          : depth === 1 ? /^(?:0[1-9]|1[0-2])$/.test(entry.name)
-            : /^(?:0[1-9]|[12]\d|3[01])$/.test(entry.name);
-        if (entry.isDirectory() && validDirectory) descend(full, depth + 1);
-        continue;
+    // Stream the full date tree: stopping at a historical count loses uniqueness evidence.
+    const entries = opendirSync(directory);
+    try {
+      let entry;
+      while ((entry = entries.readSync()) !== null) {
+        const full = join(directory, entry.name);
+        if (entry.isSymbolicLink()) continue;
+        if (depth < 3) {
+          const validDirectory = depth === 0 ? /^\d{4}$/.test(entry.name)
+            : depth === 1 ? /^(?:0[1-9]|1[0-2])$/.test(entry.name)
+              : /^(?:0[1-9]|[12]\d|3[01])$/.test(entry.name);
+          if (entry.isDirectory() && validDirectory) descend(full, depth + 1);
+          continue;
+        }
+        if (!entry.isFile()) continue;
+        if (!entry.name.startsWith('rollout-') || !entry.name.endsWith(`-${candidate.session_id}.jsonl`)) continue;
+        matches.push(full);
+        if (matches.length > 1) fail('SOURCE_AMBIGUOUS', 'multiple Codex rollouts match the native session');
       }
-      if (!entry.isFile()) continue;
-      fileCount += 1;
-      if (fileCount > MAX_ROLLOUT_FILES) fail('SOURCE_LIMIT', 'Codex rollout file bound exceeded');
-      if (!entry.name.startsWith('rollout-') || !entry.name.endsWith(`-${candidate.session_id}.jsonl`)) continue;
-      matches.push(full);
-      if (matches.length > 1) fail('SOURCE_AMBIGUOUS', 'multiple Codex rollouts match the native session');
-    }
+    } finally { entries.closeSync(); }
   };
   descend(canonicalSessions, 0);
   if (matches.length !== 1) fail('SOURCE_NOT_VISIBLE', 'no canonical Codex rollout matches the native session');

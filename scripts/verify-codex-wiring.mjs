@@ -48,6 +48,9 @@ const hooksPath = join(ROOT, '.codex', 'hooks.json');
 let hooks = null;
 try { hooks = JSON.parse(readFileSync(hooksPath, 'utf8')); } catch { }
 ok('S1 .codex/hooks.json 存在且是合法 JSON', !!hooks?.hooks);
+ok('S1b 注册源码摘要匹配且篡改被拒（无需宿主授信）',
+  spawnSync(process.execPath, [join(ROOT, 'scripts', 'test-hook-source-digests.mjs')],
+    { cwd: ROOT, stdio: 'inherit' }).status === 0);
 
 // S2 六个基础生命周期事件 + 模型路由的 subagent 事件齐全。
 const NEED = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SessionEnd',

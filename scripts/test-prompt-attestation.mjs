@@ -28,7 +28,7 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const routeGuard = join(repoRoot, '.claude', 'hooks', 'route-guard.mjs');
 const scopeGuard = join(repoRoot, '.claude', 'hooks', 'project-scope-guard.mjs');
 const sessionSync = join(repoRoot, '.claude', 'hooks', 'session-sync.mjs');
-const fixtureRoot = mkdtempSync(join(tmpdir(), 'e3-prompt-attestation-'));
+const fixtureRoot = realpathSync(mkdtempSync(join(tmpdir(), 'e3-prompt-attestation-')));
 
 function startupFence(gstack, projects, session, cwd, codexHome) {
   const prior = process.env.LUCA_EVENT_ATTESTATION_TEST;

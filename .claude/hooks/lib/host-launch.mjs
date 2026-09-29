@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync, statSync, readdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync, statSync, opendirSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -113,12 +113,16 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
       const request = validateLaunchRequest(params, projectsRoot), payloadDigest = hash(Buffer.from(JSON.stringify(request)));
       const prior = operations.get(request.operationId);
       if (prior) { if (prior.payloadDigest !== payloadDigest) throw codeError('OPERATION_CONFLICT'); return output(prior); }
-      const journalFiles = readdirSync(journalRoot).filter(name => /^[a-f\d-]{36}\.json$/i.test(name));
-      if (journalFiles.length > 512) throw codeError('JOURNAL_LIMIT');
-      for (const name of journalFiles) {
-        const saved = JSON.parse(readFileSync(join(journalRoot,name),'utf8'));
-        if (saved.request?.operationId === request.operationId) throw codeError('LAUNCH_RECOVERY_REQUIRED');
-      }
+      // History is a durable replay barrier, not a lifetime launch quota.
+      const journal = opendirSync(journalRoot);
+      try {
+        let entry;
+        while ((entry = journal.readSync()) !== null) {
+          if (!/^[a-f\d-]{36}\.json$/i.test(entry.name)) continue;
+          const saved = JSON.parse(readFileSync(join(journalRoot, entry.name), 'utf8'));
+          if (saved.request?.operationId === request.operationId) throw codeError('LAUNCH_RECOVERY_REQUIRED');
+        }
+      } finally { journal.closeSync(); }
       const r = { launchId:randomUUID(),launchNonce:randomUUID(),claimHandle:randomBytes(32).toString('base64url'),
         status:'PREPARED',revision:1,request,payloadDigest,createdAt:Date.now(),expiresAt:Date.now()+10*60*1000,sid:null,receipt:null };
       persist(r); launches.set(r.launchId,r); operations.set(request.operationId,r); return output(r);
@@ -183,6 +187,15 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
     if (!same(profile,r.request.profileIdentity)) throw codeError('PROFILE_CHANGED');
     identityRecheck(r);
     reconcile(r);
+    // Codex can report the parent session ID with a child's transcript. Route
+    // that case onward without consuming root authority; the scope guard must
+    // independently verify the child's native ancestry and protected receipt.
+    const transcriptName = String(payload.transcript_path || '').split('/').at(-1) || '';
+    const transcriptSessionId = /^rollout-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-(01[\w-]{34})\.jsonl$/.exec(transcriptName)?.[1] || '';
+    if (transcriptSessionId && transcriptSessionId !== payload.session_id) {
+      if (!['ACTIVE_NO_PIN', 'COMMITTED'].includes(r.status)) throw codeError('CHILD_LAUNCH_NOT_ACTIVE');
+      return { status: 'CHILD_TOOL', executionAuthority: 'NOT_PROVIDED' };
+    }
     const observed=attestPendingProjectEvent({gstackRoot,projectsRoot,sessionId:r.sid,boundaryId:payload.turn_id || payload.prompt_id,
       cwd:gstackRoot,observation:'pre-tool',transcriptPath:payload.transcript_path || '',codexHome:r.request.profileIdentity.sourceRoot.realpath});
     if (!r.request.projectIdentity) {

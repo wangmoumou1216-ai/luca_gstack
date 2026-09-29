@@ -147,6 +147,25 @@ try {
     assert.equal(resolved.parentSessionId, rootSid);
     assert.equal(resolved.receiptDigest, bound.receiptDigest);
   });
+  check('large history preserves child association and duplicate source rejection', () => {
+    const sessions = join(codexHome, 'sessions'), history = join(sessions, '2024', '01', '01');
+    mkdirSync(history, { recursive: true });
+    for (let i = 0; i < 8193; i++) writeFileSync(join(history, `rollout-history-${i}.jsonl`), '');
+    for (let year = 4000; year < 6050; year++) mkdirSync(join(sessions, String(year)));
+    const resolveChild = () => resolveCodexChildProject({ gstackRoot: gstack,
+      projectsRoot: projects, childSessionId: childSid, cwd: gstack, codexHome });
+    try {
+      assert.equal(resolveChild().binding.realpath, a.realpath);
+      const duplicate = join(history, `rollout-duplicate-${childSid}.jsonl`);
+      writeFileSync(duplicate, readFileSync(childRollout));
+      assert.throws(resolveChild, { code: 'SOURCE_NOT_UNIQUE' });
+      rmSync(duplicate);
+      assert.equal(resolveChild().binding.realpath, a.realpath);
+    } finally {
+      rmSync(join(sessions, '2024'), { recursive: true, force: true });
+      for (let year = 4000; year < 6050; year++) rmSync(join(sessions, String(year)), { recursive: true });
+    }
+  });
   check('a writable provider Codex home cannot replace native rollout evidence', () => {
     const providerHome = join(fixture, 'provider-codex-home');
     const providerRollouts = join(providerHome, 'sessions', '2026', '09', '28');

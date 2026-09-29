@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { fork, execFile } from 'node:child_process';
@@ -9,6 +9,66 @@ import { createHostLaunchBroker, fileIdentity } from '../.claude/hooks/lib/host-
 import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity } from '../.claude/hooks/lib/project-substrate.mjs';
 import { captureNativeEventFence, hostLaunchJournalRoot, readHostLaunchSourceScope, resolveCodexHome } from '../.claude/hooks/lib/event-attestation.mjs';
 import { executeProjectTransaction } from './project-pin.mjs';
+
+test('nested child tools do not consume root events or receive the root receipt', async () => {
+  for (const project of [false, true]) {
+    const f = fixture(), claim = await attached(f, project);
+    const childPayload = { ...f.payload, hook_event_name: 'PreToolUse', turn_id: randomUUID(),
+      transcript_path: join(f.sourceRoot, 'sessions', '2026', '09', '27',
+        `rollout-2026-09-27T00-00-01-01${randomUUID().slice(2)}.jsonl`) };
+    await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+    const state = () => JSON.stringify(readProjectState(f.gstackRoot, f.sid).value);
+    const before = state();
+    assert.deepEqual(await f.broker.claim('beforeTool', { ...claim, nativePayload: childPayload }),
+      { status: 'CHILD_TOOL', executionAuthority: 'NOT_PROVIDED' });
+    assert.equal(state(), before);
+    writeFileSync(f.config, '{"profile":"changed"}');
+    await assert.rejects(f.broker.claim('beforeTool', { ...claim, nativePayload: childPayload }),
+      { code: 'IDENTITY_CHANGED' });
+    assert.equal(state(), before);
+  }
+  const f = fixture(), claim = await attached(f);
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim, nativePayload: {
+    ...f.payload, hook_event_name: 'PreToolUse', turn_id: randomUUID(),
+    transcript_path: `rollout-2026-09-27T00-00-01-01${randomUUID().slice(2)}.jsonl`,
+  } }), { code: 'CHILD_LAUNCH_NOT_ACTIVE' });
+});
+
+test('historical journal above 512 preserves replay denial and existing receipts', async () => {
+  const f = fixture(), claim = await attached(f);
+  const journal = hostLaunchJournalRoot(f.gstackRoot);
+  const savedPath = join(journal, `${claim.launchId}.json`);
+  const saved = readFileSync(savedPath);
+  for (let i = 0; i < 513; i++) {
+    writeFileSync(join(journal, `${randomUUID()}.json`), JSON.stringify({ request: { operationId: randomUUID() } }));
+  }
+  const restarted = createHostLaunchBroker({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+    revalidateProfile: async () => f.request.profileIdentity });
+  assert.equal((await restarted.parent('prepare', { ...f.request, operationId: randomUUID() })).status, 'PREPARED');
+  await assert.rejects(restarted.parent('prepare', f.request), { code: 'LAUNCH_RECOVERY_REQUIRED' });
+  await assert.rejects(restarted.claim('attach', claim), { code: 'LAUNCH_UNKNOWN' });
+  assert.deepEqual(readFileSync(savedPath), saved);
+  writeFileSync(join(journal, `${randomUUID()}.json`), '{broken');
+  await assert.rejects(restarted.parent('prepare', { ...f.request, operationId: randomUUID() }), SyntaxError);
+});
+
+test('native lookup streams large history but still rejects duplicate session sources', () => {
+  const f = fixture(), sessions = join(f.sourceRoot, 'sessions');
+  const history = join(sessions, '2025', '01', '01');
+  mkdirSync(history, { recursive: true });
+  for (let i = 0; i < 8193; i++) writeFileSync(join(history, `rollout-history-${i}.jsonl`), '');
+  for (let year = 4000; year < 6050; year++) mkdirSync(join(sessions, String(year)));
+  const capture = () => captureNativeEventFence({ sessionId: f.sid, harness: 'codex', cwd: f.gstackRoot,
+    codexHome: f.sourceRoot, allowTestSourceRoot: true });
+  assert.equal(capture().source_absent, false);
+  const other = join(sessions, '2027', '12', '31');
+  mkdirSync(other, { recursive: true });
+  const duplicate = join(other, `rollout-duplicate-${f.sid}.jsonl`);
+  writeFileSync(duplicate, readFileSync(f.source));
+  assert.throws(capture, { code: 'SOURCE_AMBIGUOUS' });
+  rmSync(duplicate);
+  assert.equal(capture().source_absent, false);
+});
 
 function fixture(options = {}) {
   const root = realpathSync(mkdtempSync('/private/tmp/host-launch-'));

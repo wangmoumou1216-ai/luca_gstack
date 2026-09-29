@@ -2,7 +2,7 @@
 // human-attested project pin. Receipts are immutable; claims are single-use.
 import {
   closeSync, constants as fsConstants, existsSync, fstatSync, fsyncSync,
-  lstatSync, mkdirSync, openSync, readFileSync, readdirSync, realpathSync,
+  lstatSync, mkdirSync, openSync, opendirSync, readFileSync, readdirSync, realpathSync,
   writeFileSync,
 } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
@@ -260,26 +260,26 @@ function sourceHome(gstackRoot, rootSessionId, codexHome) {
 function rollout(gstackRoot, rootSessionId, sessionId, codexHome) {
   const home = sourceHome(gstackRoot, rootSessionId, codexHome);
   const sessions = dir(join(home, 'sessions'), 'Codex sessions root');
-  let directories = 0;
-  let files = 0;
   const matches = [];
   function scan(folder, depth) {
-    if (++directories > 2048) fail('SOURCE_LIMIT', 'too many Codex session directories');
-    const entries = readdirSync(folder, { withFileTypes: true });
-    if (entries.length > 8192) fail('SOURCE_LIMIT', 'too many Codex session entries');
-    for (const entry of entries) {
-      if (entry.isSymbolicLink()) continue;
-      const path = join(folder, entry.name);
-      if (depth < 3) {
-        const valid = depth === 0 ? /^\d{4}$/.test(entry.name)
-          : depth === 1 ? /^(?:0[1-9]|1[0-2])$/.test(entry.name)
-            : /^(?:0[1-9]|[12]\d|3[01])$/.test(entry.name);
-        if (entry.isDirectory() && valid) scan(path, depth + 1);
-      } else if (entry.isFile()) {
-        if (++files > 8192) fail('SOURCE_LIMIT', 'too many Codex rollout files');
-        if (entry.name.startsWith('rollout-') && entry.name.endsWith(`-${sessionId}.jsonl`)) matches.push(path);
+    const entries = opendirSync(folder);
+    try {
+      let entry;
+      while ((entry = entries.readSync()) !== null) {
+        if (entry.isSymbolicLink()) continue;
+        const path = join(folder, entry.name);
+        if (depth < 3) {
+          const valid = depth === 0 ? /^\d{4}$/.test(entry.name)
+            : depth === 1 ? /^(?:0[1-9]|1[0-2])$/.test(entry.name)
+              : /^(?:0[1-9]|[12]\d|3[01])$/.test(entry.name);
+          if (entry.isDirectory() && valid) scan(path, depth + 1);
+        } else if (entry.isFile()
+            && entry.name.startsWith('rollout-') && entry.name.endsWith(`-${sessionId}.jsonl`)) {
+          matches.push(path);
+          if (matches.length > 1) fail('SOURCE_NOT_UNIQUE', 'expected exactly one native Codex rollout');
+        }
       }
-    }
+    } finally { entries.closeSync(); }
   }
   scan(sessions, 0);
   if (matches.length !== 1) fail('SOURCE_NOT_UNIQUE', 'expected exactly one native Codex rollout');

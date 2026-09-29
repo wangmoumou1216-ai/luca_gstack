@@ -7,7 +7,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 恢复 session 上下文",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "additionalContextLimit": 0
           }
         ]
@@ -17,7 +17,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 固定根模型路由",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "additionalContextLimit": 0
           }
         ]
@@ -29,7 +29,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 路由检查",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "additionalContextLimit": 0
           }
         ]
@@ -42,7 +42,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 项目边界检查",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       },
@@ -52,7 +52,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 解析子任务模型",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }
@@ -84,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }
@@ -96,7 +96,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 核验子任务模型证据",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       }
@@ -106,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "timeoutSec": 30
           }
         ]
@@ -115,7 +115,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in a8effb46da70f89ed03ffefbbc5c2bbb38dedd4d460d2dd59045f0e21c241cd4) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; h=$(find .codex .claude/hooks scripts memory/scripts -type f \\( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \\) -print | LC_ALL=C sort | xargs /usr/bin/shasum -a 256 | /usr/bin/shasum -a 256); h=${h%% *}; case \"$h\" in e530d8574a219800e3eee37df8c0b43e2b77cf98826b5f73381e9d127cdeeb3b) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "timeoutSec": 30
           }
         ]
