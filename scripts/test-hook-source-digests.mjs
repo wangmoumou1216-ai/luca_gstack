@@ -2,7 +2,8 @@
 // Exercise the registered shell gates without loading any privileged hook.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
+  symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,15 +16,15 @@ const gates = Object.entries(config.hooks).flatMap(([event, groups]) =>
     const index = hook.command.indexOf(marker);
     assert.ok(index > 0, `${event}: missing source gate boundary`);
     const gate = hook.command.slice(0, index);
-    assert.ok(gate.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; h=$(find '),
+    assert.ok(gate.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; links=$(find '),
       `${event}: missing source integrity check`);
     return { event, gate };
   })));
 assert.equal(gates.length, 11, 'all registered privileged entries must be checked');
-function check(cwd, rejected = false) {
+function check(cwd, rejected = false, env = process.env) {
   for (const { event, gate } of gates) {
     const result = spawnSync('/bin/sh', ['-c', gate], {
-      cwd, encoding: 'utf8', timeout: 15000,
+      cwd, encoding: 'utf8', timeout: 15000, env,
     });
     assert.equal(result.error, undefined, `${event}: ${result.error}`);
     assert.equal(result.status, rejected && event !== 'Stop' ? 2 : 0, `${event}: ${result.stderr}`);
@@ -51,6 +52,35 @@ try {
     env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } });
   assert.equal(recovery.status, 0, recovery.stderr);
   assert.equal(recovery.stdout, payload, 'recovery must retain stdin after adapter failure');
+  check(fixture);
+  // A shell word-splitting digest silently omitted filenames containing spaces.
+  const spacedSource = join(fixture, 'scripts', 'hook source fixture.mjs');
+  writeFileSync(spacedSource, 'export {};\n');
+  check(fixture, true);
+  rmSync(spacedSource);
+  check(fixture);
+  const linkedSource = join(fixture, 'scripts', 'linked source.mjs');
+  symlinkSync(join(fixture, 'scripts', 'test-host-launch.mjs'), linkedSource);
+  check(fixture, true);
+  rmSync(linkedSource);
+  check(fixture);
+  const unreadableSource = join(fixture, 'scripts', 'unreadable-source.mjs');
+  writeFileSync(unreadableSource, 'export {};\n');
+  chmodSync(unreadableSource, 0o000);
+  // A privileged test runner may still read mode-000 files; only assert the
+  // command-failure path when shasum itself confirms it cannot read this file.
+  const unreadableProbe = spawnSync('/usr/bin/shasum', ['-a', '256', unreadableSource]);
+  if (unreadableProbe.status !== 0) check(fixture, true);
+  chmodSync(unreadableSource, 0o600);
+  rmSync(unreadableSource);
+  check(fixture);
+  const faultySortDir = join(fixture, 'faulty-sort-bin');
+  mkdirSync(faultySortDir);
+  writeFileSync(join(faultySortDir, 'sort'),
+    '#!/bin/sh\n/usr/bin/sort "$@"\nexit 1\n', { mode: 0o700 });
+  // Even if an upstream stage emits the approved bytes, its failure must fail closed.
+  check(fixture, true, { ...process.env, PATH: `${faultySortDir}:${process.env.PATH}` });
+  rmSync(faultySortDir, { recursive: true });
   check(fixture);
   // Include a test file: changing it without updating the digest caused the release regression.
   for (const name of ['.claude/hooks/lib/codex-child-project.mjs', 'scripts/test-host-launch.mjs']) {

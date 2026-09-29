@@ -13,7 +13,7 @@ const commands = Object.values(config.hooks).flatMap(groups => groups.flatMap(gr
 const modelCommands = commands.filter(command => command.includes('model-route-hook.mjs'));
 assert.equal(modelCommands.length, 5, 'all native model-route hook entries must be present');
 assert.equal(new Set(modelCommands).size, 1, 'all native model-route entries must share one integrity gate');
-assert.ok(commands.every(command => command.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; h=$(find ')),
+assert.ok(commands.every(command => command.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; links=$(find ')),
   'every privileged native hook entry must verify source integrity before executing workspace code');
 const command = modelCommands[0];
 // Test the actual guarded command against an isolated approved installation.
