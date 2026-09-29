@@ -109,6 +109,8 @@ jobs:
         run: |
           sudo mkdir -p /private/tmp
           sudo chmod 1777 /private/tmp
+          # The foreign-source negative case requires an existing default home.
+          mkdir -p "$HOME/.codex"
           node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs
       - name: A/B evaluator adversarial self-test
         run: |
