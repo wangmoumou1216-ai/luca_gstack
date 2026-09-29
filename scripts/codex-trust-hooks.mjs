@@ -158,8 +158,8 @@ const configHash = sha(readFileSync(CFG)), layer = await userLayer();
 unchangedHooks();
 assert.equal(sha(readFileSync(CFG)), configHash, 'Configuration changed before trust');
 const again = exactRows(await listed());
-assert.deepEqual(again.map(h => [h.key, h.currentHash, h.trustStatus]),
-  ours.map(h => [h.key, h.currentHash, h.trustStatus]), 'Official hook identity changed before trust');
+if (!isDeepStrictEqual(again.map(h => [h.key, h.currentHash, h.trustStatus]),
+  ours.map(h => [h.key, h.currentHash, h.trustStatus]))) throw new Error('Official hook identity changed before trust');
 const backup = `${CFG}.bak-${new Date().toISOString().replace(/[:.]/g, '-')}`;
 copyFileSync(CFG, backup, constants.COPYFILE_EXCL); chmodSync(backup, 0o600);
 assert.equal(sha(readFileSync(backup)), configHash, 'Backup differs from reviewed configuration');
@@ -171,8 +171,8 @@ unchangedHooks();
 await rpc(3, 'config/batchWrite', { edits, expectedVersion: layer.version,
   filePath: CFG, reloadUserConfig: true });
 const after = await listed(), verified = exactRows(after);
-assert.deepEqual(verified.map(h => [h.key, h.command, h.currentHash, h.trustStatus]),
-  ours.map(h => [h.key, h.command, h.currentHash, 'trusted']), 'Exact hook readback failed');
+if (!isDeepStrictEqual(verified.map(h => [h.key, h.command, h.currentHash, h.trustStatus]),
+  ours.map(h => [h.key, h.command, h.currentHash, 'trusted']))) throw new Error('Exact hook readback failed');
 const expectedConfig = structuredClone(layer.config);
 expectedConfig.hooks ||= {}; expectedConfig.hooks.state ||= {};
 for (const hook of need) {
@@ -182,6 +182,6 @@ for (const hook of need) {
 if (!isDeepStrictEqual((await userLayer()).config, expectedConfig)) {
   throw new Error('Non-target configuration changed');
 }
-assert.deepEqual(foreign(after), foreign(before), 'Foreign hook state changed');
+if (!isDeepStrictEqual(foreign(after), foreign(before))) throw new Error('Foreign hook state changed');
 unchangedHooks();
 console.log(`已精确授信并复核 ${verified.length} 个；备份：${backup}`);

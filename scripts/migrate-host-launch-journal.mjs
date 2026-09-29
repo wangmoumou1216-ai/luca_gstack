@@ -2,17 +2,20 @@
 // Explicit reviewed upgrade of legacy default-profile journals. Never called by a hook.
 // Plan:  --root /canonical/framework --plan /private/manifest.json
 // Apply: --apply /private/manifest.json --expected-sha256 <reviewed manifest digest>
-import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { constants, closeSync, existsSync, fstatSync, fsyncSync, lstatSync, mkdirSync,
   openSync, readFileSync, readSync, readdirSync, realpathSync, writeFileSync, linkSync, unlinkSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { userInfo } from 'node:os';
+import { isDeepStrictEqual } from 'node:util';
 import { captureNativeEventFence } from '../.claude/hooks/lib/event-attestation.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const uuid = /^[a-f\d-]{36}$/i;
 const fail = message => { throw new Error(`journal migration: ${message}`); };
+function parseJson(bytes, label) {
+  try { return JSON.parse(bytes); } catch { fail(`invalid ${label} JSON`); }
+}
 function physical(path) {
   if (resolve(path) !== path || realpathSync(path) !== path) fail(`noncanonical path: ${path}`);
   return path;
@@ -73,7 +76,7 @@ function verifyCursor(cursor, latest) {
 }
 function outputBytes(bytes, kind) {
   if (kind === 'source') return bytes;
-  const record = JSON.parse(bytes);
+  const record = parseJson(bytes, 'history');
   delete record.claimHandle; delete record.launchNonce;
   return Buffer.from(JSON.stringify(record));
 }
@@ -95,7 +98,7 @@ function makePlan(root) {
   const histories = new Map(), seenOperations = new Set();
   for (const name of files) {
     if (!/^[a-f\d-]{36}\.json$/i.test(name)) continue;
-    const bytes = read(join(legacy, name)), value = JSON.parse(bytes);
+    const bytes = read(join(legacy, name)), value = parseJson(bytes, 'history');
     if (value.launchId !== name.slice(0, -5) || !uuid.test(value.launchId)
       || typeof value.request?.operationId !== 'string' || !value.request.operationId
       || seenOperations.has(value.request.operationId)) fail('invalid or duplicate history identity');
@@ -128,19 +131,19 @@ function makePlan(root) {
     const entry = { name, kind, source_sha256: sha(bytes), output_sha256: sha(outputBytes(bytes, kind)),
       target_preimage: destinationPreimage(join(destination, name)) };
     if (kind === 'source') {
-      const grant = JSON.parse(bytes), history = histories.get(grant.launchId)?.value;
+      const grant = parseJson(bytes, 'source'), history = histories.get(grant.launchId)?.value;
       if (grant.schemaVersion !== 1 || grant.provider !== 'codex' || !uuid.test(grant.sessionId)
         || name !== `${grant.launchId}.source.json` || grant.cwd !== root || !history
         || history.sid !== grant.sessionId) fail('source/launch identity mismatch');
-      assert.deepEqual(grant.sourceRoot, defaultSource, 'only independently verified default Codex home may migrate');
+      if (!isDeepStrictEqual(grant.sourceRoot, defaultSource)) fail('only independently verified default Codex home may migrate');
       const profile = history.request.profileIdentity;
       if (profile?.provider !== 'codex') fail('legacy profile provider mismatch');
-      assert.deepEqual(profile.sourceRoot, defaultSource, 'legacy profile root mismatch');
+      if (!isDeepStrictEqual(profile.sourceRoot, defaultSource)) fail('legacy profile root mismatch');
       for (const field of ['profileId', 'configRevision', 'sourceId']) {
         if (typeof grant[field] !== 'string' || !grant[field] || grant[field] !== profile[field]) fail('legacy profile linkage mismatch');
       }
       const statePath = join(root, '.claude', `.session-project-${grant.sessionId}`);
-      const stateBytes = read(statePath), state = JSON.parse(stateBytes);
+      const stateBytes = read(statePath), state = parseJson(stateBytes, 'session state');
       if (state.session_id !== grant.sessionId || state.host_launch_source?.launch_id !== grant.launchId
         || state.host_launch_source.sha256 !== sha(bytes)) fail('session source reference mismatch');
       const fence = state.event_control?.fence;
@@ -176,7 +179,7 @@ function applyPlan(plan, manifestBytes, approvedHash) {
   if (!/^[a-f0-9]{64}$/.test(approvedHash) || sha(manifestBytes) !== approvedHash) fail('reviewed manifest hash mismatch');
   const current = makePlan(plan.root?.realpath);
   const withoutTargets = value => ({ ...value, entries: value.entries.map(({ target_preimage, ...entry }) => entry) });
-  assert.deepEqual(withoutTargets(current), withoutTargets(plan), 'migration inputs changed since review');
+  if (!isDeepStrictEqual(withoutTargets(current), withoutTargets(plan))) fail('migration inputs changed since review');
   for (const entry of plan.entries) {
     const actual = current.entries.find(item => item.name === entry.name).target_preimage;
     if (actual !== entry.target_preimage && actual !== entry.output_sha256) fail('destination changed since review');
@@ -216,5 +219,5 @@ if (options['--root'] && options['--plan'] && Object.keys(options).length === 2)
     source_receipts: plan.entries.filter(e => e.kind === 'source').length }));
 } else if (options['--apply'] && options['--expected-sha256'] && Object.keys(options).length === 2) {
   const bytes = read(options['--apply']);
-  console.log(JSON.stringify(applyPlan(JSON.parse(bytes), bytes, options['--expected-sha256'])));
+  console.log(JSON.stringify(applyPlan(parseJson(bytes, 'manifest'), bytes, options['--expected-sha256'])));
 } else fail('use --root/--plan or --apply/--expected-sha256');

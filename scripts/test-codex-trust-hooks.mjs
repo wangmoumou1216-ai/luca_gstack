@@ -32,6 +32,7 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
        currentHash:'official-'+rows.length,trustStatus:state.writes?'trusted':'untrusted'});
    }));
    rows.push({...rows[0],key:'foreign',trustStatus:'untrusted',currentHash:'foreign-official'});
+   rows.push({...rows[0],key:'foreign-secret',command:'third-party --token=synthetic_foreign_command_never_print',trustStatus:'untrusted',currentHash:'foreign-secret-official'});
    if(mode==='missing-hash') delete rows[0].currentHash;
    if(state.writes) {
      if(mode==='empty-readback') rows.length=0;
@@ -39,6 +40,7 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
      if(mode==='duplicate-readback') rows.push({...rows[0]});
      if(mode==='hash-drift') rows[0].currentHash='unexpected';
      if(mode==='foreign-drift') rows.at(-1).trustStatus='trusted';
+     if(mode==='foreign-command-drift') rows.at(-1).command='third-party --token=synthetic_foreign_command_never_print --changed';
    }
    return reply({data:[{hooks:rows}]});
  }
@@ -91,7 +93,7 @@ test('dry run neither writes configuration nor creates a backup', t => {
   assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
 });
 for (const mode of ['missing-ack', 'timeout', 'version-conflict', 'duplicate-ack', 'empty-readback',
-  'missing-readback', 'duplicate-readback', 'hash-drift', 'foreign-drift', 'config-drift', 'missing-hash']) {
+  'missing-readback', 'duplicate-readback', 'hash-drift', 'foreign-drift', 'foreign-command-drift', 'config-drift', 'missing-hash']) {
   test(`trust refuses ${mode} instead of reporting success`, t => {
     const f = fixture(t, mode), result = f.run([]);
     assert.notEqual(result.status, 0, mode);
@@ -105,11 +107,14 @@ for (const mode of ['missing-ack', 'timeout', 'version-conflict', 'duplicate-ack
       'duplicate-readback': /Expected exactly one official hook/,
       'hash-drift': /Exact hook readback failed/,
       'foreign-drift': /Foreign hook state changed/,
+      'foreign-command-drift': /Foreign hook state changed/,
       'config-drift': /Non-target configuration changed/,
       'missing-hash': /Missing official hash/,
     };
     assert.match(result.stderr, reasons[mode], 'the intended failure must be reached');
     assert.ok(!result.stderr.includes('synthetic_test_secret_never_print'), 'configuration values must not leak');
+    assert.ok(!result.stderr.includes('synthetic_foreign_command_never_print'), 'foreign commands must not leak to stderr');
+    assert.ok(!result.stdout.includes('synthetic_foreign_command_never_print'), 'foreign commands must not leak to stdout');
     assert.equal(result.error, undefined, 'script must terminate by its own bounded failure');
   });
 }

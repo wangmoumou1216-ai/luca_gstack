@@ -73,13 +73,44 @@ for(const kind of ['source','state','native-prefix','native-replacement','target
   assert.notEqual(r.status,0,kind);assert.equal(r.error,undefined);assert.deepEqual(readFileSync(f.statePath),before);
  });
 }
+test('a changed launch journal fails with bounded diagnostics before copying',t=>{
+ const f=fixture(t),plan=f.plan();
+ writeFileSync(f.historyPath,JSON.stringify({...f.history,status:'DISPATCHED',privateMarker:'never-echo-history'}));
+ const r=f.apply();assert.notEqual(r.status,0);
+ assert.match(r.stderr,/migration inputs changed since review/);
+ assert.ok(r.stderr.length<1500,'private manifest must not be printed on a mismatch');
+ assert.doesNotMatch(r.stderr,/never-echo-history|actual:|expected:/);
+ assert.equal(existsSync(plan.destination),false);
+});
+test('malformed history and manifest do not reveal their contents',t=>{
+ const f=fixture(t),plan=f.plan();
+ writeFileSync(f.historyPath,'{"private":"never-echo-malformed-history",');
+ const history=f.apply();assert.notEqual(history.status,0);
+ assert.match(history.stderr,/invalid history JSON/);
+ assert.doesNotMatch(history.stderr,/never-echo-malformed-history|actual:|expected:/);
+ assert.equal(existsSync(plan.destination),false);
+ writeFileSync(f.manifest,'{"private":"never-echo-malformed-manifest",');
+ const manifest=f.apply();assert.notEqual(manifest.status,0);
+ assert.match(manifest.stderr,/invalid manifest JSON/);
+ assert.doesNotMatch(manifest.stderr,/never-echo-malformed-manifest|actual:|expected:/);
+ assert.equal(existsSync(plan.destination),false);
+});
 test('migration never expands the independently trusted default source root',t=>{
  const f=fixture(t),other=join(f.base,'other');mkdirSync(other);
- const grant=JSON.parse(readFileSync(f.sourcePath));grant.sourceRoot=identity(other);writeFileSync(f.sourcePath,JSON.stringify(grant));
+ const grant=JSON.parse(readFileSync(f.sourcePath));grant.sourceRoot={...identity(other),privateMarker:'never-echo-source'};writeFileSync(f.sourcePath,JSON.stringify(grant));
  const history=JSON.parse(readFileSync(f.historyPath));history.request.profileIdentity.sourceRoot=identity(other);writeFileSync(f.historyPath,JSON.stringify(history));
  const state=JSON.parse(readFileSync(f.statePath));state.host_launch_source.sha256=hash(readFileSync(f.sourcePath));writeFileSync(f.statePath,JSON.stringify(state));
  const r=f.run(['--root',f.root,'--plan',f.manifest]);assert.notEqual(r.status,0);assert.match(r.stderr,/only independently verified default Codex home/);
- assert.equal(existsSync(f.manifest),false);
+ assert.equal(existsSync(f.manifest),false);assert.doesNotMatch(r.stderr,/never-echo-source|actual:|expected:/);
+});
+test('legacy profile root mismatch does not reveal history fields',t=>{
+ const f=fixture(t),plan=f.plan();
+ const history=JSON.parse(readFileSync(f.historyPath));
+ history.request.profileIdentity.sourceRoot.privateMarker='never-echo-profile';
+ writeFileSync(f.historyPath,JSON.stringify(history));
+ const r=f.apply();assert.notEqual(r.status,0);assert.match(r.stderr,/legacy profile root mismatch/);
+ assert.ok(r.stderr.length<1500);assert.doesNotMatch(r.stderr,/never-echo-profile|actual:|expected:/);
+ assert.equal(existsSync(plan.destination),false);
 });
 test('a failed partial installation can resume without overwriting previously copied entries',t=>{
  const f=fixture(t),plan=f.plan();mkdirSync(plan.destination,{recursive:true,mode:0o700});
