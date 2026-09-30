@@ -30,6 +30,7 @@ import { createHash } from 'node:crypto';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { assertHookHealth } from './codex-hook-health.mjs';
 
 const DRY = process.argv.includes('--dry-run');
 const HOST_LAUNCH = process.argv.includes('--host-launch');
@@ -147,7 +148,10 @@ const unchangedHooks = () => assert.equal(sha(readFileSync(HOOKS_PATH)), hooksHa
 const foreign = rows => rows.filter(row => !selectedKeys.has(row.key))
   .map(row => [row.key, row.eventName, row.command, row.currentHash, row.trustStatus])
   .sort((a, b) => a[0].localeCompare(b[0]));
+assertHookHealth(GSTACK);
 const before = await listed(), ours = exactRows(before);
+unchangedHooks();
+assertHookHealth(GSTACK);
 const need = ours.filter(hook => hook.trustStatus !== 'trusted');
 console.log(`本仓精确条目 ${ours.length} 个（待授信 ${need.length}）；第三方 ${before.length - ours.length} 个。`);
 for (const hook of ours) console.log(`  [${hook.trustStatus}] ${hook.eventName}  ${hook.command}`);
@@ -168,6 +172,7 @@ const edits = need.map(hook => ({
   mergeStrategy: 'replace', value: hook.currentHash,
 }));
 unchangedHooks();
+assertHookHealth(GSTACK);
 await rpc(3, 'config/batchWrite', { edits, expectedVersion: layer.version,
   filePath: CFG, reloadUserConfig: true });
 const after = await listed(), verified = exactRows(after);
@@ -184,4 +189,5 @@ if (!isDeepStrictEqual((await userLayer()).config, expectedConfig)) {
 }
 if (!isDeepStrictEqual(foreign(after), foreign(before))) throw new Error('Foreign hook state changed');
 unchangedHooks();
+assertHookHealth(GSTACK);
 console.log(`已精确授信并复核 ${verified.length} 个；备份：${backup}`);

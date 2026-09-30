@@ -4,12 +4,22 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync, re
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
+import { sourceDigest } from './codex-hook-health.mjs';
 
 function fixture(t, mode = 'ok') {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-')));
+  const guardHome = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-home-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  for (const dir of ['scripts', '.codex', 'home', 'bin']) mkdirSync(join(root, dir));
+  t.after(() => rmSync(guardHome, { recursive: true, force: true }));
+  for (const dir of ['scripts', '.codex', 'home', 'bin', 'memory/scripts', '.claude/hooks',
+    '.claude/skill-os', '.claude/skills/office', '.claude/agents']) {
+    mkdirSync(join(root, dir), { recursive: true, mode: 0o700 });
+  }
+  writeFileSync(join(root, 'CLAUDE.md'), 'isolated trust fixture');
   cpSync(new URL('./codex-trust-hooks.mjs', import.meta.url), join(root, 'scripts/codex-trust-hooks.mjs'));
+  cpSync(new URL('./codex-hook-health.mjs', import.meta.url), join(root, 'scripts/codex-hook-health.mjs'));
+  for (const name of ['bootstrap', 'loader']) cpSync(new URL(`../.codex/codex-source-guard-${name}.mjs`, import.meta.url),
+    join(root, '.codex', `codex-source-guard-${name}.mjs`));
   cpSync(new URL('../.codex/hooks.json', import.meta.url), join(root, '.codex/hooks.json'));
   writeFileSync(join(root, 'home/config.toml'), 'model = "user-choice"\n');
   const server = String.raw`
@@ -29,10 +39,16 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
      const snake=event.replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase();
      rows.push({key:path.join(root,'.codex/hooks.json')+':'+snake+':'+gi+':'+hi,
        eventName:event[0].toLowerCase()+event.slice(1),command:hook.command,
-       currentHash:'official-'+rows.length,trustStatus:state.writes?'trusted':'untrusted'});
+       currentHash:'official-'+rows.length,trustStatus:state.writes || mode==='already-trusted'?'trusted':'untrusted'});
    }));
    rows.push({...rows[0],key:'foreign',trustStatus:'untrusted',currentHash:'foreign-official'});
    rows.push({...rows[0],key:'foreign-secret',command:'third-party --token=synthetic_foreign_command_never_print',trustStatus:'untrusted',currentHash:'foreign-secret-official'});
+   if(mode==='registration-drift-trusted' || mode==='registration-drift-dry') {
+     const configPath=path.join(root,'.codex/hooks.json'), config=JSON.parse(fs.readFileSync(configPath));
+     config.description += ' concurrent edit';
+     fs.writeFileSync(configPath,JSON.stringify(config));
+     if(mode==='registration-drift-trusted') rows.forEach(row=>row.trustStatus='trusted');
+   }
    if(mode==='missing-hash') delete rows[0].currentHash;
    if(state.writes) {
      if(mode==='empty-readback') rows.length=0;
@@ -44,7 +60,10 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
    }
    return reply({data:[{hooks:rows}]});
  }
- if(req.method==='config/read') return reply({layers:[{name:{type:'user',file:path.join(root,'home/config.toml'),profile:null},version:state.version,config:state.config}]});
+ if(req.method==='config/read') {
+   if(mode==='source-drift-before-write') fs.appendFileSync(path.join(root,'scripts/codex-trust-hooks.mjs'),'\n// concurrent source drift\n');
+   return reply({layers:[{name:{type:'user',file:path.join(root,'home/config.toml'),profile:null},version:state.version,config:state.config}]});
+ }
  if(req.method==='config/batchWrite') {
    if(req.params.filePath!==path.join(root,'home/config.toml') || req.params.expectedVersion!==state.version) {
      return send({id:req.id,error:{code:-1,message:'missing CAS'}});
@@ -68,12 +87,27 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
 });
 `;
   writeFileSync(join(root, 'bin/codex'), `#!${process.execPath}\n${server}`, { mode: 0o700 });
+  const hooksPath = join(root, '.codex/hooks.json');
+  const syncRegistration = () => {
+    const hooks = JSON.parse(readFileSync(hooksPath));
+    const digest = sourceDigest(root);
+    for (const groups of Object.values(hooks.hooks)) for (const group of groups) for (const hook of group.hooks) {
+      hook.command = hook.command.replace(/case "\$h" in [a-f0-9]{64}/, `case "$h" in ${digest}`);
+    }
+    writeFileSync(hooksPath, JSON.stringify(hooks));
+  };
+  syncRegistration();
+  mkdirSync(join(guardHome, '.codex/luca-child-project'), { recursive: true, mode: 0o700 });
+  const guardRoot = join(guardHome, '.codex/luca-child-project/source-guard');
+  const installed = spawnSync(process.execPath, [new URL('./install-codex-source-guard.mjs', import.meta.url).pathname,
+    '--root', root, '--test-dest', guardRoot], { env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' });
+  assert.equal(installed.status, 0, installed.stderr);
   const run = args => spawnSync(process.execPath, [join(root, 'scripts/codex-trust-hooks.mjs'), '--host-launch', ...args], {
-    env: { ...process.env, CODEX_HOME: join(root, 'home'), NODE_OPTIONS: '', MOCK_ROOT: root,
+    env: { ...process.env, HOME: guardHome, CODEX_HOME: join(root, 'home'), NODE_OPTIONS: '', MOCK_ROOT: root,
       MOCK_MODE: mode, PATH: `${join(root, 'bin')}:${process.env.PATH}` },
     encoding: 'utf8', timeout: 25_000,
   });
-  return { root, run };
+  return { root, run, guardRoot, syncRegistration };
 }
 
 test('official CAS writes only exact repository hooks and preserves same-command foreign hooks', t => {
@@ -118,3 +152,42 @@ for (const mode of ['missing-ack', 'timeout', 'version-conflict', 'duplicate-ack
     assert.equal(result.error, undefined, 'script must terminate by its own bounded failure');
   });
 }
+
+// Symptom regression: trust must not certify a registration whose source gate fails.
+test('trust rejects unhealthy source before a trust write', t => {
+  const f = fixture(t);
+  writeFileSync(join(f.root, '.codex', 'changed-hook.mjs'), 'export const unreviewed = true;\n');
+  const result = f.run([]);
+  assert.notEqual(result.status, 0, 'source drift was accepted and trusted');
+  assert.match(result.stderr, /SOURCE_DIGEST_MISMATCH/);
+  assert.equal(readdirSync(f.root).includes('rpc-state.json'), false, 'must fail before RPC mutation');
+});
+
+test('already trusted still refuses changed source or stale installation', t => {
+  for (const kind of ['source', 'manifest']) {
+    const f = fixture(t, 'already-trusted');
+    writeFileSync(join(f.root, '.codex', 'changed-hook.mjs'), 'export const unreviewed = true;\n');
+    if (kind === 'manifest') f.syncRegistration();
+    const result = f.run(['--dry-run']);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, kind === 'source' ? /SOURCE_DIGEST_MISMATCH/ : /INSTALLED_SOURCE_MISMATCH/);
+    assert.ok(!result.stdout.includes('全部已授信'));
+    assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+  }
+});
+test('source drift between official checks and batchWrite refuses the trust mutation', t => {
+  const f = fixture(t, 'source-drift-before-write'), result = f.run([]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /SOURCE_DIGEST_MISMATCH/);
+  assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+});
+test('registration bytes drifting during lookup refuse trusted and dry-run early returns', t => {
+  for (const mode of ['registration-drift-trusted', 'registration-drift-dry']) {
+    const f = fixture(t, mode), result = f.run(['--dry-run']);
+    assert.notEqual(result.status, 0, mode);
+    assert.match(result.stderr, /Hook registrations changed during trust/);
+    assert.ok(!result.stdout.includes('全部已授信'));
+    assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+    assert.deepEqual(readdirSync(join(f.root, 'home')), ['config.toml']);
+  }
+});

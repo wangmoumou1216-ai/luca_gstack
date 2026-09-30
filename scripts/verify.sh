@@ -224,7 +224,7 @@ check C23 "宿主项目/session只读投影回归通过" "node scripts/test-proj
 check C24 "项目门禁 v3.4 Claude/Codex 双宿主行为回归通过" "node scripts/test-project-gate-v34-dual-host.mjs"
 check C25 "项目门禁 v3.4 A01/A04/A05/A09 mutation proof-it-bites" "node scripts/test-project-gate-v34-mutations.mjs"
 check C26 "Host Launch broker/claim/source/control-plane 回归通过" "node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs"
-check C27 "Source snapshot preservation, exact trust, and journal migration" "node --test scripts/test-source-guard-preserve.mjs scripts/test-codex-trust-hooks.mjs scripts/test-host-launch-journal-migration.mjs"
+check C27 "Hook health, source preservation, exact trust, and journal migration" "node --test scripts/test-codex-hook-health.mjs scripts/test-source-guard-preserve.mjs scripts/test-codex-trust-hooks.mjs scripts/test-host-launch-journal-migration.mjs"
 echo ""
 
 echo "[ Skill 体系 ]"
