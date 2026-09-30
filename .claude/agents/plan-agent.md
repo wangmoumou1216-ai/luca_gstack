@@ -3,8 +3,12 @@
 **定位：** 主 Agent 在执行复杂任务前调用的规划能力。
 **唯一职责：** 判前提 → 分析任务 → 拆分阶段 → 选择编排模式 → 输出断言列表。
 **不执行任务。** 输出计划后，由 Orchestrator（Free Task Mode）负责执行。
-**模型：** 被 spawn 为规划 subagent 时按 model-routing `fable_whitelist` P2（plan-mode 规划期）
-显式传 `model: fable`（本文件无 pin，登记于 `agents_no_pin`；fable 不可用降级 opus 并告知）。
+**模型：** Codex 按 common `model_routing` 的已登记原生身份解析角色，effort 保持用户设置；
+仅填写 `model` 或在 prompt 中写“规划官”不会把 default/anchor 变成 peak。当前 MR-002
+没有独立的 native agent_type；default 子任务只可收集/组织规划输入，关键方案裁决必须
+通过已登记的 `quality-gate`（MR-004/peak）冷审。不得把输入整理称为 peak 规划裁决。
+Claude 兼容路径仍按 `fable_whitelist` P2 显式传 `model: fable`（无 pin，登记于
+`agents_no_pin`；该兼容路径的 opus 降级不适用于 Codex 关键场景）。
 
 ---
 

@@ -11,7 +11,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { readActivation } from '../../../scripts/model-route-host.mjs';
 import {
   PROJECTS_ROOT, activeProjectAuthority, attestPendingProjectEvent,
-  readProjectState, verifyProjectBinding,
+  readProjectState, validatedBindingForState, verifyProjectBinding,
 } from './project-substrate.mjs';
 
 const MAX_SOURCE_BYTES = 64 * 1024 * 1024;
@@ -350,6 +350,14 @@ function requireSpawnWitness(records, value) {
 }
 function parentRootAuthority({ gstackRoot, projectsRoot, parentSessionId, turnId, cwd, transcriptPath, codexHome }) {
   const snapshot = readProjectState(gstackRoot, parentSessionId, projectsRoot).value;
+  // Project delegation is optional for framework work. Validate NO_PIN before
+  // returning no root authority; never consume an unrelated prompt candidate
+  // or mint a project receipt just to dispatch an unbound reviewer. The caller
+  // still checks any genuine inherited child association below.
+  if (snapshot.state === 'NO_PIN') {
+    validatedBindingForState(snapshot, projectsRoot);
+    return null;
+  }
   if (snapshot.state !== 'TURN_ACTIVE' && !snapshot.event_control?.candidates?.length) return null;
   const observed = attestPendingProjectEvent({
     gstackRoot, projectsRoot, sessionId: parentSessionId, boundaryId: turnId,

@@ -12,6 +12,7 @@ const record = value => value !== null && typeof value === 'object' && !Array.is
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const supportedHarnesses = new Set(['codex', 'claude']);
+const supportedRouteHarnesses = new Set(['codex-native', 'codex-cli', 'claude-native', 'claude-workflow']);
 const externalIdentityFields = new Set(['tool_use_id', 'agent_id', 'agent_type']);
 export const MODEL_ROUTE_INTERFACE_VERSION = 'luca-model-route/v2';
 export const MODEL_ROUTE_ADAPTER_CONTRACT_SHA = createHash('sha256').update([
@@ -110,7 +111,8 @@ function validState(state) {
     && text(state.root_session_id) && hash(state.release_digest) && text(state.activation_id)
     && Number.isSafeInteger(state.root_generation) && state.root_generation >= 0
     && validRoot(state.root_anchor) && ['active', 'paused'].includes(state.status)
-    && typeof state.critical_failure === 'boolean' && record(state.invocations);
+    && typeof state.critical_failure === 'boolean' && record(state.invocations)
+    && (state.preparations === undefined || record(state.preparations));
 }
 function outcome(disposition, reason, extra = {}) {
   return {disposition, reason, ...extra};
@@ -120,12 +122,15 @@ function archiveActivation(file, state) {
   writeAtomic(archive, {...state, archived_at: new Date().toISOString()});
 }
 function invalidatePending(state, reason) {
-  for (const call of Object.values(state.invocations)) {
+  for (const call of [...Object.values(state.invocations), ...Object.values(state.preparations || {})]) {
     if (record(call) && call.status === 'pending') {
       call.status = 'invalidated';
       call.invalidation_reason = reason;
     }
   }
+}
+function hasPendingCriticalInvocation(state) {
+  return Object.values(state.invocations).some(call => record(call) && call.status === 'pending' && call.critical === true);
 }
 
 export function startActivation({harness, root_session_id, root_anchor, release_digest, state_root}) {
@@ -147,6 +152,7 @@ export function startActivation({harness, root_session_id, root_anchor, release_
       status: 'active',
       critical_failure: false,
       invocations: {},
+      preparations: {},
     };
     writeAtomic(file, state);
     return structuredClone(state);
@@ -156,7 +162,80 @@ export function startActivation({harness, root_session_id, root_anchor, release_
 export function readActivation({harness, root_session_id, state_root}) {
   const file = statePath({harness, root_session_id, state_root});
   const state = readJson(file);
+  if (state && state.preparations !== undefined && !record(state.preparations)) {
+    throw new Error('MODEL_ROUTE_INVALID_ACTIVATION');
+  }
   return validState(state) ? structuredClone(state) : null;
+}
+
+// Reserve a durable intent before a trusted adapter reads bindings or resolves a
+// critical model choice. An unavailable reservation authorizes no routing work.
+export function beginCriticalPreparation({
+  harness, root_session_id, expected_activation_id, expected_root_generation,
+  critical, task_id, evidence_ref, route_harness, state_root,
+}) {
+  if (critical === false) return outcome('UNCHANGED', 'NONCRITICAL_PREPARATION');
+  if (critical !== true || !supportedHarnesses.has(harness) || !text(root_session_id)
+    || !text(expected_activation_id) || !Number.isSafeInteger(expected_root_generation) || expected_root_generation < 0
+    || !text(task_id) || !text(evidence_ref)
+    || (route_harness !== undefined && (!supportedRouteHarnesses.has(route_harness) || !route_harness.startsWith(`${harness}-`)))) {
+    return outcome('REFUSE', 'INVALID_PREPARATION_INPUT');
+  }
+  const file = statePath({harness, root_session_id, state_root});
+  if (!validState(readJson(file))) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
+  return withLock(file, () => {
+    const state = readJson(file);
+    if (!validState(state)) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
+    if (state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation) {
+      return outcome('REFUSE', 'ACTIVATION_STATE_CHANGED');
+    }
+    if (state.status !== 'active') return outcome('REFUSE', 'ACTIVATION_PAUSED');
+    if (state.critical_failure) return outcome('REFUSE', 'CRITICAL_FAILURE_LATCHED');
+    if (route_harness === 'codex-native' && hasPendingCriticalInvocation(state)) {
+      return outcome('NEEDS_CONTEXT', 'UNRESOLVED_CRITICAL_INVOCATION');
+    }
+    if (Object.values(state.preparations || {}).some(ticket => record(ticket) && ticket.status === 'pending')) {
+      return outcome('NEEDS_CONTEXT', 'UNRESOLVED_CRITICAL_PREPARATION');
+    }
+    const preparation_id = randomUUID();
+    state.preparations ||= {};
+    state.preparations[preparation_id] = {preparation_id, activation_id: state.activation_id,
+      root_generation: state.root_generation, task_id, evidence_ref, status: 'pending',
+      ...(route_harness !== undefined ? {route_harness} : {})};
+    writeAtomic(file, state);
+    return outcome('READY', 'CRITICAL_PREPARATION_RESERVED', {preparation_id});
+  });
+}
+
+// Trusted adapters call this when canonical critical dispatch fails before a ticket
+// exists, or when evidence I/O fails. Bind to their captured activation/generation;
+// a later activation must never inherit an earlier dispatch's failure.
+export function latchCriticalFailure({
+  harness, root_session_id, expected_activation_id, expected_root_generation,
+  critical, reason, evidence_ref, state_root,
+}) {
+  if (critical === false) return outcome('UNCHANGED', 'NONCRITICAL_FAILURE');
+  if (critical !== true || !supportedHarnesses.has(harness) || !text(root_session_id)
+    || !text(expected_activation_id) || !Number.isSafeInteger(expected_root_generation) || expected_root_generation < 0
+    || !text(reason) || !text(evidence_ref)) return outcome('REFUSE', 'INVALID_FAILURE_INPUT');
+  const file = statePath({harness, root_session_id, state_root});
+  // Missing state is not an invitation to create an activation or its directory.
+  if (!validState(readJson(file))) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
+  return withLock(file, () => {
+    const state = readJson(file);
+    if (!validState(state)) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
+    if (state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation) {
+      return outcome('REFUSE', 'ACTIVATION_STATE_CHANGED');
+    }
+    if (state.critical_failure) {
+      return outcome('UNCHANGED', 'CRITICAL_FAILURE_LATCHED', {critical_failure_latched: true});
+    }
+    state.critical_failure = true;
+    state.critical_failure_evidence = {reason, evidence_ref};
+    invalidatePending(state, 'CRITICAL_FAILURE_LATCHED');
+    writeAtomic(file, state);
+    return outcome('LATCHED', 'CRITICAL_FAILURE_LATCHED', {critical_failure_latched: true});
+  });
 }
 
 export function pauseActivation({harness, root_session_id, state_root}) {
@@ -181,6 +260,15 @@ export function updateRootAnchor({harness, root_session_id, root_anchor, state_r
     if (state.root_anchor.model === root_anchor.model && state.root_anchor.source === root_anchor.source) {
       return outcome('UNCHANGED', 'ROOT_ANCHOR_UNCHANGED', {root_generation: state.root_generation});
     }
+    const unresolvedCritical = Object.values(state.preparations || {}).some(ticket => record(ticket) && ticket.status === 'pending')
+      || Object.values(state.invocations).some(call => record(call) && call.status === 'pending' && call.critical === true);
+    if (unresolvedCritical) {
+      state.critical_failure = true;
+      state.critical_failure_evidence ||= {
+        reason: 'ROOT_ANCHOR_CHANGED_WITH_UNRESOLVED_CRITICAL_WORK',
+        evidence_ref: `root-anchor-change:${state.activation_id}:${state.root_generation}->${state.root_generation + 1}`,
+      };
+    }
     invalidatePending(state, 'ROOT_GENERATION_CHANGED');
     state.root_anchor = {model: root_anchor.model, source: root_anchor.source};
     state.root_generation += 1;
@@ -189,7 +277,7 @@ export function updateRootAnchor({harness, root_session_id, root_anchor, state_r
   });
 }
 
-export function prepareInvocation({harness, root_session_id, release_digest, route, task_id, input_sha, state_root}) {
+export function prepareInvocation({harness, root_session_id, release_digest, route, task_id, input_sha, preparation_id, state_root}) {
   if (!record(route) || route.disposition !== 'READY' || !text(route.requested_model)
     || !text(route.requested_role) || !text(route.harness) || !route.harness.startsWith(`${harness}-`)
     || typeof route.critical !== 'boolean'
@@ -203,6 +291,24 @@ export function prepareInvocation({harness, root_session_id, release_digest, rou
     if (!validState(state)) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
     if (state.status !== 'active') return outcome('REFUSE', 'ACTIVATION_PAUSED');
     if (state.critical_failure) return outcome('REFUSE', 'CRITICAL_FAILURE_LATCHED');
+    if (route.harness === 'codex-native' && hasPendingCriticalInvocation(state)) {
+      return outcome('NEEDS_CONTEXT', 'UNRESOLVED_CRITICAL_INVOCATION');
+    }
+    let preparation = null;
+    if (preparation_id !== undefined) {
+      preparation = text(preparation_id) ? state.preparations?.[preparation_id] : null;
+      if (!record(preparation)) return outcome('REFUSE', 'UNKNOWN_PREPARATION');
+      if (preparation.status !== 'pending') return outcome('REFUSE', 'PREPARATION_ALREADY_CONSUMED');
+      if (!route.critical || preparation.activation_id !== state.activation_id
+        || preparation.root_generation !== state.root_generation || preparation.task_id !== task_id
+        || (preparation.route_harness !== undefined && preparation.route_harness !== route.harness)) {
+        return outcome('REFUSE', 'PREPARATION_BINDING_MISMATCH');
+      }
+    }
+    if (Object.values(state.preparations || {}).some(ticket => record(ticket)
+      && ticket.status === 'pending' && ticket !== preparation)) {
+      return outcome('NEEDS_CONTEXT', 'UNRESOLVED_CRITICAL_PREPARATION');
+    }
     if (release_digest !== state.release_digest) return outcome('REFUSE', 'RELEASE_MISMATCH');
     const invocation_id = randomUUID();
     const envelope = {
@@ -223,6 +329,10 @@ export function prepareInvocation({harness, root_session_id, release_digest, rou
       capability_evidence_sha: route.capability_evidence_sha,
     };
     state.invocations[invocation_id] = {...envelope, status: 'pending'};
+    if (preparation) {
+      preparation.status = 'consumed';
+      preparation.invocation_id = invocation_id;
+    }
     writeAtomic(file, state);
     return outcome('READY', 'INVOCATION_PREPARED', {envelope});
   });

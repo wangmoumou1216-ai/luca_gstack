@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {cpSync, existsSync, mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync} from 'node:fs';
+import {cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {readActivation} from './model-route-host.mjs';
+import {readActivation, stateFileForTest} from './model-route-host.mjs';
+import {queueProjectEventCandidate} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'codex-model-route-hook.')));
@@ -131,6 +132,53 @@ try {
   equal(existsSync(importMarker), false, 'native hook Python parser ignores workdir modules');
   equal(state(isolatedSession).root_anchor.model, 'gpt-5.6-sol',
     'native hook still parses policy with isolated Python import path');
+  const noPinSession = 'root-no-pin-forwarded';
+  start(noPinSession);
+  queueProjectEventCandidate({gstackRoot: ROOT, sessionId: noPinSession,
+    boundaryId: 'previous-human-turn', cwd: ROOT, harness: 'codex',
+    prompt: 'Earlier framework request', intent: {kind: 'turn'}});
+  const noPinFile = join(ROOT, '.claude', `.session-project-${noPinSession}`);
+  const noPinBefore = readFileSync(noPinFile, 'utf8');
+  const noPinPre = pre(noPinSession,
+    {task_name: 'framework_review', message: 'authorized framework review',
+      agent_type: 'quality-gate'}, 'tool-no-pin-review');
+  equal(noPinPre.hookSpecificOutput.permissionDecision, 'allow',
+    `NO_PIN framework review does not require project-event attestation: ${noPinPre.hookSpecificOutput.permissionDecisionReason}`);
+  equal(readFileSync(noPinFile, 'utf8'), noPinBefore,
+    'NO_PIN review neither consumes the candidate nor creates project authority');
+  equal(existsSync(join(childStore, createHash('sha256').update(ROOT).digest('hex'), noPinSession)),
+    false, 'NO_PIN review produces no child project receipt');
+  subStart(noPinSession, 'agent-no-pin-review', 'quality-gate');
+  equal(subStop(noPinSession, 'agent-no-pin-review', 'quality-gate', transcript({
+    sessionId: noPinSession, agentId: 'agent-no-pin-review', agentType: 'quality-gate',
+    model: 'gpt-6-astra',
+  })), {}, 'framework review still requires matching model adoption and same-call completion');
+  const invalidNoPinSession = 'root-invalid-no-pin';
+  start(invalidNoPinSession);
+  writeFileSync(join(ROOT, '.claude', `.session-project-${invalidNoPinSession}`),
+    JSON.stringify({schema_version: 2, state: 'NO_PIN', session_id: invalidNoPinSession,
+      binding: {project: 'forged'}}));
+  equal(pre(invalidNoPinSession, {task_name: 'bad_identity', message: 'review'}, 'tool-invalid-no-pin')
+    .hookSpecificOutput.permissionDecision, 'deny', 'NO_PIN carrying a project identity is refused');
+  equal(Object.keys(state(invalidNoPinSession).invocations).length, 0,
+    'invalid NO_PIN creates no pending model invocation');
+  const malformedNoPinSession = 'root-malformed-no-pin';
+  start(malformedNoPinSession);
+  const malformedNoPin = JSON.parse(noPinBefore);
+  malformedNoPin.session_id = malformedNoPinSession;
+  malformedNoPin.event_control.candidates[0].session_id = malformedNoPinSession;
+  malformedNoPin.event_control.candidates[0].boundary_id = '';
+  writeFileSync(join(ROOT, '.claude', `.session-project-${malformedNoPinSession}`),
+    JSON.stringify(malformedNoPin));
+  equal(pre(malformedNoPinSession, {task_name: 'malformed', message: 'review'}, 'tool-malformed-no-pin')
+    .hookSpecificOutput.permissionDecision, 'deny', 'malformed NO_PIN event control remains refused');
+  const scopeCheck = spawnSync(process.execPath, [join(repo, '.claude/hooks/project-scope-guard.mjs')], {
+    cwd: ROOT, encoding: 'utf8', env: {...env, CLAUDE_PROJECT_DIR: ROOT, LUCA_ACTUAL_HARNESS: 'claude'},
+    input: JSON.stringify({session_id: noPinSession, turn_id: 'turn-root', cwd: ROOT,
+      tool_name: 'Read', tool_input: {file_path: 'docs/private-project.md'}}),
+  });
+  equal(JSON.parse(scopeCheck.stdout).hookSpecificOutput.permissionDecision, 'deny',
+    'unbound framework reviewer still cannot access shared project paths');
   const renewalSession = 'root-renewal';
   start(renewalSession);
   const oldActivationId = state(renewalSession).activation_id;
@@ -192,6 +240,19 @@ try {
   equal(peakInput.model, 'gpt-6-astra', 'critical native scene selects peak model');
   equal(peakInput.fork_turns, 'none', 'explicit cross-model child uses a supported fork mode');
   equal(peakInput.reasoning_effort, 'high', 'routing never changes explicit effort');
+  for (const [suffix, rootModel, fork] of [
+    ['same-model', 'gpt-6-astra', 'all'],
+    ['numeric-history', 'gpt-5.6-sol', '3'],
+  ]) {
+    const session = `root-cold-${suffix}`;
+    start(session, rootModel);
+    const cold = pre(session, {task_name: 'cold_review', message: 'judge',
+      agent_type: 'quality-gate', fork_turns: fork, reasoning_effort: 'high'}, `tool-cold-${suffix}`);
+    equal(cold.hookSpecificOutput.updatedInput.fork_turns, 'none',
+      `critical review never inherits producer history (${suffix})`);
+    equal(cold.hookSpecificOutput.updatedInput.reasoning_effort, 'high',
+      `cold review preserves effort (${suffix})`);
+  }
   subStart(peakSession, 'agent-peak', 'quality-gate');
   const wrongStop = subStop(peakSession, 'agent-peak', 'quality-gate', transcript({
     sessionId: peakSession, agentId: 'agent-peak', agentType: 'quality-gate', model: 'gpt-5.6-sol',
@@ -214,6 +275,61 @@ try {
     'SubagentStop refuses a payload message that does not match the same-turn transcript');
   equal(state(messageMismatchSession).critical_failure, true,
     'critical assistant-message mismatch latches activation');
+
+  // A bound critical ticket remains an obligation until evidence is persisted,
+  // including when SubagentStop cannot acquire the state lock.
+  for (const [suffix, adoptedModel] of [
+    ['wrong-model', 'gpt-5.6-sol'], ['matching-model', 'gpt-6-astra'],
+  ]) {
+    const session = `root-native-stop-busy-${suffix}`;
+    const agentId = `agent-native-stop-busy-${suffix}`;
+    start(session);
+    pre(session, {task_name: 'review', message: 'judge', agent_type: 'quality-gate'},
+      `tool-native-stop-busy-${suffix}`);
+    subStart(session, agentId, 'quality-gate');
+    equal(pre(session, {task_name: 'while-reviewing', message: 'work'}, `tool-during-${suffix}`)
+      .hookSpecificOutput.permissionDecision, 'deny',
+      'bound critical native work blocks further dispatch until evidence closes');
+    const path = transcript({sessionId: session, agentId, agentType: 'quality-gate', model: adoptedModel});
+    const lock = `${stateFileForTest({harness: 'codex', root_session_id: session, state_root: stateRoot})}.lock`;
+    writeFileSync(lock, 'native evidence contention');
+    const stopped = spawnSync(process.execPath, [HOOK], {cwd: ROOT, encoding: 'utf8', env,
+      input: JSON.stringify({hook_event_name: 'SubagentStop', session_id: session,
+        agent_id: agentId, agent_type: 'quality-gate', agent_transcript_path: path,
+        stop_hook_active: false, last_assistant_message: 'done', cwd: ROOT})});
+    equal(stopped.status, 2, 'evidence I/O failure is explicit and nonzero');
+    equal(stopped.stderr.includes('MODEL_ROUTE_STATE_BUSY'), true, 'the state lock fault was reached');
+    rmSync(lock);
+    equal(state(session).critical_failure, false, 'failed evidence persistence does not falsely claim a durable latch');
+    equal(Object.values(state(session).invocations)[0].status, 'pending',
+      'bound critical native ticket survives evidence persistence failure');
+    equal(pre(session, {task_name: 'after-fault', message: 'work'}, `tool-after-stop-${suffix}`)
+      .hookSpecificOutput.permissionDecision, 'deny', 'pending native evidence refuses later dispatch after lock recovery');
+    equal(pre(session, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+      `tool-after-stop-runner-${suffix}`, 'Bash').hookSpecificOutput.permissionDecision, 'deny',
+      'pending native evidence also refuses the runner Hook entry');
+    const retry = subStop(session, agentId, 'quality-gate', path);
+    if (adoptedModel === 'gpt-6-astra') {
+      equal(retry, {}, 'retry can close the original invocation with matching evidence');
+      equal(pre(session, {task_name: 'closed', message: 'work'}, `tool-after-closed-${suffix}`)
+        .hookSpecificOutput.permissionDecision, 'allow', 'accepted evidence permits the next native dispatch');
+      equal(pre(session, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+        `tool-after-closed-runner-${suffix}`, 'Bash').hookSpecificOutput.permissionDecision, 'allow',
+        'accepted evidence permits runner entry');
+    } else {
+      equal(retry.continue, false, 'retried mismatching evidence is still refused');
+      equal(state(session).critical_failure, true, 'retried mismatching evidence persists the failure latch');
+    }
+  }
+  const parallelNoncritical = 'root-bound-noncritical';
+  start(parallelNoncritical);
+  pre(parallelNoncritical, {task_name: 'ordinary', message: 'work'}, 'tool-bound-noncritical');
+  subStart(parallelNoncritical, 'agent-bound-noncritical', 'default');
+  equal(pre(parallelNoncritical, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+    'tool-bound-noncritical-runner', 'Bash').hookSpecificOutput.permissionDecision, 'allow',
+    'pending noncritical native evidence does not suspend the runner');
+  equal(pre(parallelNoncritical, {task_name: 'ordinary-next', message: 'work'}, 'tool-bound-noncritical-next')
+    .hookSpecificOutput.permissionDecision, 'allow', 'bound noncritical native work permits ordinary concurrency');
 
   const lightSession = 'root-light';
   start(lightSession);
@@ -239,6 +355,97 @@ try {
     true, 'runner command receives only the trusted root-session reference');
   equal(pre(runnerSession, {command: 'node scripts/other.mjs'}, 'tool-other', 'Bash'), {},
     'unrelated shell commands are untouched');
+  const unresolvedSession = 'root-unresolved-workflow';
+  start(unresolvedSession);
+  const unresolvedState = state(unresolvedSession);
+  unresolvedState.invocations['workflow-pending'] = {
+    status: 'pending', critical: true, route_harness: 'codex-cli',
+  };
+  writeFileSync(stateFileForTest({harness: 'codex', root_session_id: unresolvedSession, state_root: stateRoot}),
+    JSON.stringify(unresolvedState));
+  equal(pre(unresolvedSession, {task_name: 'after-io-failure', message: 'work'}, 'tool-unresolved-native')
+    .hookSpecificOutput.permissionDecision, 'deny',
+    'unresolved critical workflow evidence blocks later native dispatch');
+  equal(pre(unresolvedSession, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+    'tool-unresolved-runner', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
+    'unresolved critical workflow evidence blocks the runner entry');
+
+  const reserveBusy = 'root-reserve-busy';
+  start(reserveBusy, 'gpt-6.1-sol');
+  const reserveBusyLock = `${stateFileForTest({harness: 'codex', root_session_id: reserveBusy, state_root: stateRoot})}.lock`;
+  writeFileSync(reserveBusyLock, 'busy fixture');
+  const reserveDenied = pre(reserveBusy,
+    {task_name: 'reserve_busy', message: 'judge', agent_type: 'quality-gate'}, 'tool-reserve-busy');
+  equal(reserveDenied.hookSpecificOutput.permissionDecision, 'deny', 'unavailable durable preparation refuses dispatch');
+  equal(reserveDenied.hookSpecificOutput.permissionDecisionReason.includes('MODEL_ROUTE_STATE_BUSY'), true,
+    'reservation failure stops before reading model relations');
+  equal(reserveDenied.hookSpecificOutput.permissionDecisionReason.includes('approved_order:'), false,
+    'unknown relation resolver was not run before reservation succeeded');
+  rmSync(reserveBusyLock);
+  equal(state(reserveBusy).critical_failure, false, 'unstarted routing is not falsely recorded as a critical failure');
+  equal(pre(reserveBusy, {task_name: 'reserve_recovered', message: 'work'}, 'tool-reserve-recovered')
+    .hookSpecificOutput.permissionDecision, 'allow', 'storage recovery can start an ordinary unattempted route');
+
+  // Inject contention after a real durable reservation, before the unknown-model resolver fails.
+  const hostFixture = join(ROOT, 'scripts/model-route-host.mjs');
+  const originalHost = readFileSync(hostFixture, 'utf8');
+  assert.equal(originalHost.includes('export function beginCriticalPreparation('), true);
+  writeFileSync(hostFixture, originalHost.replace('export function beginCriticalPreparation(',
+    'function fixtureBeginCriticalPreparation(') + `\nexport function beginCriticalPreparation(args) {\n  const result = fixtureBeginCriticalPreparation(args);\n  if (args.task_id.endsWith(':tool-preparation-latch-busy') && result.disposition === 'READY')\n    writeFileSync(stateFileForTest(args) + '.lock', 'post-reservation contention');\n  return result;\n}\n`);
+  const preparationBusy = 'root-preparation-latch-busy';
+  start(preparationBusy, 'gpt-6.1-sol');
+  const preparedDenied = pre(preparationBusy,
+    {task_name: 'preparation_latch_busy', message: 'judge', agent_type: 'quality-gate'},
+    'tool-preparation-latch-busy');
+  equal(preparedDenied.hookSpecificOutput.permissionDecision, 'deny', 'unknown relation still refuses when failure writing is busy');
+  equal(preparedDenied.hookSpecificOutput.permissionDecisionReason.includes('persistence unavailable'), true,
+    'native hook explicitly reports unpersisted failure');
+  equal(state(preparationBusy).critical_failure, false, 'test distinguishes intent from a persisted failure latch');
+  equal(Object.values(state(preparationBusy).preparations).filter(call => call.status === 'pending').length,
+    1, 'durable preparation intent survives failure-state write contention');
+  rmSync(`${stateFileForTest({harness: 'codex', root_session_id: preparationBusy, state_root: stateRoot})}.lock`);
+  writeFileSync(hostFixture, originalHost);
+  equal(pre(preparationBusy, {task_name: 'after_preparation_busy', message: 'work'}, 'tool-after-preparation-busy')
+    .hookSpecificOutput.permissionDecision, 'deny', 'pending preparation blocks later native dispatch after contention clears');
+  equal(pre(preparationBusy, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+    'tool-after-preparation-runner', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
+    'pending preparation blocks later runner entry after contention clears');
+  const unresolvedActivation = state(preparationBusy).activation_id;
+  start(preparationBusy, 'gpt-6-astra', 'compact');
+  equal(state(preparationBusy).activation_id, unresolvedActivation,
+    'compact model change preserves the same activation');
+  equal(state(preparationBusy).critical_failure, true,
+    'compact model change preserves unresolved critical obligations as a blocking latch');
+  equal(pre(preparationBusy, {task_name: 'after_compact', message: 'work'}, 'tool-after-compact')
+    .hookSpecificOutput.permissionDecision, 'deny', 'compact cannot unlock later native dispatch');
+  equal(pre(preparationBusy, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+    'tool-after-compact-runner', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
+    'compact cannot unlock the runner entry');
+  start(preparationBusy, 'gpt-6-astra', 'resume');
+  equal(state(preparationBusy).critical_failure, false, 'normal new activation can recover compact-blocked work');
+  equal(pre(preparationBusy, {task_name: 'new_activation', message: 'work'}, 'tool-new-activation')
+    .hookSpecificOutput.permissionDecision, 'allow', 'new activation starts an ordinary invocation');
+
+  // B reads an empty snapshot, then A fully dispatches and binds before B resumes.
+  // The host lock, rather than that stale snapshot, must decide admission.
+  assert.equal(originalHost.includes('export function readActivation('), true);
+  writeFileSync(hostFixture, originalHost.replace('export function readActivation(',
+    'function fixtureReadActivation(') + `\nimport {spawnSync as fixtureSpawnSync} from 'node:child_process';\nexport function readActivation(args) {\n  const snapshot = fixtureReadActivation(args);\n  if (args.root_session_id.startsWith('root-native-race-') && snapshot\n      && Object.keys(snapshot.invocations).length === 0\n      && process.env.LUCA_MODEL_ROUTE_INTERLEAVE_CHILD !== '1') {\n    const env = {...process.env, LUCA_MODEL_ROUTE_INTERLEAVE_CHILD: '1'};\n    const payload = {hook_event_name: 'PreToolUse', session_id: args.root_session_id,\n      turn_id: 'turn-root', tool_use_id: 'tool-interleave-first', tool_name: 'spawn_agent',\n      tool_input: {task_name: 'first-review', message: 'judge', agent_type: 'quality-gate'},\n      permission_mode: 'default', cwd: ${JSON.stringify(ROOT)}};\n    const first = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify(payload)});\n    if (first.status !== 0 || JSON.parse(first.stdout).hookSpecificOutput.permissionDecision !== 'allow')\n      throw new Error('interleaved first dispatch failed: ' + first.stderr);\n    const bound = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify({\n        hook_event_name: 'SubagentStart', session_id: args.root_session_id,\n        agent_id: 'agent-interleave-first', agent_type: 'quality-gate', cwd: ${JSON.stringify(ROOT)}})});\n    if (bound.status !== 0) throw new Error('interleaved agent binding failed: ' + bound.stderr);\n  }\n  return snapshot;\n}\n`);
+  for (const agentType of ['quality-gate', 'default']) {
+    const session = `root-native-race-${agentType}`;
+    start(session);
+    const second = pre(session, {task_name: 'second', message: 'work', agent_type: agentType},
+      'tool-interleave-second');
+    equal(second.hookSpecificOutput.permissionDecision, 'deny',
+      `locked admission rejects a stale ${agentType} snapshot after a critical native dispatch`);
+    equal(second.hookSpecificOutput.permissionDecisionReason.includes('UNRESOLVED_CRITICAL_INVOCATION'), true,
+      'locked admission reports the existing critical obligation');
+    equal(Object.keys(state(session).invocations).length, 1, 'interleaving creates only the first invocation');
+    equal(Object.values(state(session).preparations).filter(call => call.status === 'pending').length, 0,
+      'blocked stale admission neither reserves nor consumes another preparation');
+    equal(state(session).critical_failure, false, 'waiting for existing evidence is not a failed critical route');
+  }
+  writeFileSync(hostFixture, originalHost);
 
   const effortA = 'root-effort-a', effortB = 'root-effort-b';
   start(effortA); start(effortB);
@@ -259,10 +466,22 @@ try {
   equal(deniedSeries.hookSpecificOutput.permissionDecision, 'deny', 'unlisted 6-series anchor fails closed');
   equal(deniedSeries.hookSpecificOutput.permissionDecisionReason.includes('approved_order: gpt-6-sol'), true,
     'missing model diagnostic identifies the private binding entry to approve');
+  equal(state(seriesSession).critical_failure, true,
+    'critical native preparation failure persists the host activation latch');
+  equal(pre(seriesSession, {task_name: 'after-critical-preparation', message: 'work'}, 'tool-six-latched')
+    .hookSpecificOutput.permissionDecision, 'deny',
+    'persisted preparation failure blocks later noncritical native dispatch');
+  equal(pre(seriesSession, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
+    'tool-six-runner-latched', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
+    'native preparation failure blocks the runner entry on the same activation');
   writeFileSync(bindingsPath, `${JSON.stringify({schema_version: 1, harnesses: {codex: {
     peak_model: 'gpt-6-astra', light_model: 'gpt-6-luna',
     approved_order: ['gpt-6-luna', 'gpt-6-sol', 'gpt-6-astra'],
   }}})}\n`, {mode: 0o600});
+  equal(pre(seriesSession, {task_name: 'still-latched', message: 'work'}, 'tool-six-repaired-still-latched')
+    .hookSpecificOutput.permissionDecision, 'deny', 'binding repair does not silently clear the critical failure');
+  start(seriesSession, 'gpt-6-sol', 'resume');
+  equal(state(seriesSession).critical_failure, false, 'normal new activation resets the failure latch');
   const repairedSeries = pre(seriesSession,
     {task_name: 'six-review', message: 'judge', agent_type: 'quality-gate', reasoning_effort: 'high'}, 'tool-six-approved');
   equal(repairedSeries.hookSpecificOutput.updatedInput.model, 'gpt-6-astra', 'approved 6-series peak is selected after explicit repair');

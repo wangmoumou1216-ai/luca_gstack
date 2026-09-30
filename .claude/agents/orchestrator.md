@@ -169,7 +169,8 @@ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时
           追加 delta 行：MODIFIED: <原准则> → <新准则> (reason)
         - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
         - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
-        - 模型：判定环节 dispatch quality-gate 时传 model: fable（fable_whitelist P0
+        - 模型：Codex quality-gate 按 common MR-004/peak，冷启动且关键失败不降级。
+          Claude 兼容路径 dispatch quality-gate 时传 model: fable（fable_whitelist P0
           出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
 ```
 
@@ -382,9 +383,25 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 
 ---
 
-## 5. 模型路由（强制传参，2026-07-10 起非建议）
+## 5. 模型路由（强制传参：Claude；Codex 按角色执行）
 
-真值源：`.claude/skill-os/model-routing.yaml`（能力档 + fable_whitelist + dispatch_rules；下表为速查快照，与真值源同步维护）。
+真值源：`.claude/skill-os/model-routing.yaml`。Codex native/runner 只消费顶层 common
+`model_routing`：正常执行/事实收集继承 anchor，已登记的关键审查身份使用 peak，机械任务
+使用已批准且确实更低的 light。模型名和相对顺序来自私有 binding，effort 保持用户设置；
+未知关系和关键采用证据失败均拒绝，不自动降级，也不由 caller 的 model 参数覆盖政策。
+独立审查一律 `fork_turns: none`，是否换模型不改变独立性要求。
+
+原生身份以 `dispatch.native_agent_types` 为准。当前 default/worker 走 MR-001，explorer
+走 MR-006，quality-gate 走 MR-004；未登记的 MR-002/003/005/007 原生用途不能靠 prompt
+或显式 model 参数宣称已接通。方案裁决可用现有 quality-gate 的 MR-004/peak；新增身份
+需单独登记、配置并验证。Workflow runner 按精确 workflow/phase 路由，没有 omit/inherit 豁免。
+
+Codex native 的关键调用在完成证据落盘前，暂停新的 native/runner 派发；已绑定 agent_id
+也不代表证据闭合。因此原生关键会审按顺序完成，非关键原生调用仍可并行。一个已准入的
+runner 内部新建的关键任务仍可并行；新的 runner 必须等待既有关键义务闭合。
+
+下表和后面的 alias 传参/降级规则只描述延期的 Claude adapter 兼容合同，不证明 Claude
+具备 Codex 的运行时强制能力，也不能覆盖 Codex 关键场景政策。
 
 | 能力档 | 任务类型 | 当前解析（2026-07-10） |
 |---------|---------|---------|
@@ -393,7 +410,7 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 | guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
 | mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
 
-**Dispatch 规则（强制）：**
+**Claude 兼容 Dispatch 规则：**
 1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
 2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
 3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。

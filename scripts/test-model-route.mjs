@@ -567,9 +567,12 @@ if (process.argv.includes('--mutation')) {
   ];
   try {
     mkdirSync(join(scratch, 'scripts'));
+    mkdirSync(join(scratch, '.codex'));
     mkdirSync(join(scratch, '.claude/skill-os'), {recursive: true});
     mkdirSync(join(scratch, 'framework-audit/candidates'), {recursive: true});
     writeFileSync(join(scratch, 'scripts/test-model-route.mjs'), readFileSync(fileURLToPath(import.meta.url)));
+    writeFileSync(join(scratch, '.codex/model-routing-bindings.example.json'),
+      readFileSync(join(root, '.codex/model-routing-bindings.example.json')));
     writeFileSync(join(scratch, 'framework-audit/candidates/model-routing-v2.yaml'), candidatePolicySource);
     const runCopy = () => spawnSync(process.execPath, [join(scratch, 'scripts/test-model-route.mjs')],
       {encoding: 'utf8', timeout: 10000});

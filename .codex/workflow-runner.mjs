@@ -45,7 +45,7 @@ import { dirname, resolve, join, basename, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { modelRoutingPolicyDigest, resolve as resolveModelRoute, resolveDispatchScene } from '../scripts/model-route.mjs';
 import {
-  acceptInvocationEvidence, prepareInvocation, readActivation, releaseDigestForPolicy,
+  acceptInvocationEvidence, beginCriticalPreparation, latchCriticalFailure, prepareInvocation, readActivation, releaseDigestForPolicy,
 } from '../scripts/model-route-host.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -112,14 +112,17 @@ function readCodexBindings() {
   return binding;
 }
 
-function routeForPhase(phaseName) {
-  if (!ROOT_SESSION_ID) throw new Error('MODEL_ROUTE_ROOT_SESSION_MISSING');
+function dispatchForPhase(phaseName) {
   const policy = readCommonPolicy();
   const scene = resolveDispatchScene(policy, {kind: 'workflow', workflow_id: rawName, phase_id: phaseName});
   if (!scene) throw new Error('MODEL_ROUTE_SCENE_UNKNOWN');
-  const state = readActivation({
-    harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
-  });
+  const critical = policy.scenes[scene].critical;
+  if (typeof critical !== 'boolean') throw new Error('MODEL_ROUTE_INVALID_SCENE_POLICY');
+  return {policy, scene, critical};
+}
+
+function routeForPhase({policy, scene}, state) {
+  if (!ROOT_SESSION_ID) throw new Error('MODEL_ROUTE_ROOT_SESSION_MISSING');
   if (!state || state.status !== 'active') throw new Error('MODEL_ROUTE_ACTIVATION_MISSING');
   const binding = readCodexBindings();
   const route = resolveModelRoute({
@@ -292,54 +295,112 @@ let runnerCriticalFailure = false;
 function runCodex(prompt, schema, phaseName) {
   return new Promise((resolveP) => {
     const id = ++agentSeq;
-    let settled = false, child = null, timer = null, prepared = null, route = null;
+    let settled = false, child = null, timer = null, prepared = null, route = null, activation = null;
+    let preparationId = null;
+    // Until exact dispatch identity is classified by the canonical policy, failure
+    // cannot be trusted as noncritical. This also covers errors before an envelope exists.
+    let critical = true;
     let threadId = null, turnId = null, adoptedModel = null, rerouted = false;
     const freeform = [];
     const finish = (val, why, runtime = {}) => {
       if (settled) return;
       settled = true;
-      if (timer) clearTimeout(timer);
-      if (child?.pid) liveChildren.delete(child.pid);
-      if (prepared?.envelope) {
-        const accepted = acceptInvocationEvidence({
-          harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
-          evidence: {
-            ...prepared.envelope,
-            adopted_model: adoptedModel || '',
-            status: runtime.completed === true ? 'completed' : 'failed',
-            same_invocation_success: runtime.completed === true
-              && runtime.thread_id === threadId && runtime.turn_id === turnId,
-            rerouted,
-            fallback: false,
-            evidence_ref: `app-server:${threadId || 'unstarted'}:${turnId || `call-${id}`}`,
-          },
-        });
-        if (accepted.disposition !== 'ACCEPT') val = null;
-        if (route?.critical && accepted.disposition !== 'ACCEPT') runnerCriticalFailure = true;
+      // Refuse locally before touching state: persistence itself may be unavailable.
+      if (!val && critical) runnerCriticalFailure = true;
+      try {
+        if (prepared?.envelope) {
+          try {
+            const accepted = acceptInvocationEvidence({
+              harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+              evidence: {
+                ...prepared.envelope,
+                adopted_model: adoptedModel || '',
+                status: runtime.completed === true ? 'completed' : 'failed',
+                same_invocation_success: runtime.completed === true
+                  && runtime.thread_id === threadId && runtime.turn_id === turnId,
+                rerouted,
+                fallback: false,
+                evidence_ref: `app-server:${threadId || 'unstarted'}:${turnId || `call-${id}`}`,
+              },
+            });
+            if (accepted.disposition !== 'ACCEPT') {
+              if (val) why = `MODEL_ROUTE_${accepted.reason}`;
+              val = null;
+            }
+          } catch (error) {
+            val = null;
+            why = `MODEL_ROUTE_EVIDENCE_IO_FAILED: ${error?.message || String(error)}`;
+          }
+        }
+        if (!val && critical) {
+          runnerCriticalFailure = true;
+          let persistence = null;
+          if (activation && preparationId) {
+            try {
+              const latched = latchCriticalFailure({
+                harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+                expected_activation_id: activation.activation_id,
+                expected_root_generation: activation.root_generation,
+                critical: true, reason: why,
+                evidence_ref: `runner:${rawName}:${phaseName}:call-${id}`,
+              });
+              persistence = latched.critical_failure_latched === true ? null : latched.reason;
+            } catch (error) { persistence = error?.message || String(error); }
+          }
+          if (persistence) {
+            process.stderr.write(`   ⚠ MODEL_ROUTE_CRITICAL_FAILURE_NOT_PERSISTED: ${persistence}\n`);
+          } else if (!preparationId) {
+            process.stderr.write('   ⚠ MODEL_ROUTE_CRITICAL_PREPARATION_NOT_STARTED: no durable reservation; routing work was not authorized\n');
+          }
+        }
+        if (val) agentOk++; else {
+          agentFail++;
+          const disposition = runnerCriticalFailure ? '返回 null，阻断 workflow 可信输出' : '按契约返回 null 交给 workflow 降级';
+          process.stderr.write(`   ⚠ agent#${id} 失败(${why})——${disposition}\n`);
+        }
+      } finally {
+        // Never leave the workflow's Promise pending when evidence/latch I/O fails.
+        if (timer) clearTimeout(timer);
+        if (child && child.exitCode === null && child.signalCode === null) {
+          try { child.stdin.end(); } catch { }
+          try { child.kill('SIGTERM'); } catch { }
+        }
+        resolveP(val);
       }
-      if (val) agentOk++; else {
-        agentFail++;
-        process.stderr.write(`   ⚠ agent#${id} 失败(${why})——按契约返回 null 交给 workflow 降级\n`);
-      }
-      if (child && child.exitCode === null && child.signalCode === null) {
-        try { child.stdin.end(); } catch { }
-        try { child.kill('SIGTERM'); } catch { }
-      }
-      resolveP(val);
     };
 
     (async () => {
       try {
-        const routed = routeForPhase(phaseName);
+        const dispatch = dispatchForPhase(phaseName);
+        critical = dispatch.critical;
+        activation = ROOT_SESSION_ID ? readActivation({
+          harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+        }) : null;
+        const taskId = `${rawName}:${phaseName}:${id}`;
+        if (critical) {
+          if (!activation || activation.status !== 'active') throw new Error('MODEL_ROUTE_ACTIVATION_MISSING');
+          const begun = beginCriticalPreparation({
+            harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+            expected_activation_id: activation.activation_id, expected_root_generation: activation.root_generation,
+            critical: true, task_id: taskId, evidence_ref: `runner:${rawName}:${phaseName}:call-${id}`, route_harness: 'codex-cli',
+          });
+          if (begun.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${begun.reason}`);
+          preparationId = begun.preparation_id;
+        }
+        const routed = routeForPhase(dispatch, activation);
         route = routed.route;
         prepared = prepareInvocation({
           harness: 'codex', root_session_id: ROOT_SESSION_ID,
           release_digest: routed.release_digest, route,
-          task_id: `${rawName}:${phaseName}:${id}`,
+          task_id: taskId,
           input_sha: modelRoutingPolicyDigest({prompt, schema: schema || null}),
+          ...(preparationId ? {preparation_id: preparationId} : {}),
           state_root: STATE_ROOT,
         });
-        if (prepared.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${prepared.reason}`);
+        if (prepared.disposition !== 'READY') {
+          if (['CRITICAL_FAILURE_LATCHED', 'UNRESOLVED_CRITICAL_PREPARATION'].includes(prepared.reason)) runnerCriticalFailure = true;
+          throw new Error(`MODEL_ROUTE_${prepared.reason}`);
+        }
         const outputSchema = schema ? strictifySchema(schema, freeform) : null;
         // JSON serialization happens before the child starts so cyclic/BigInt schemas still obey
         // the historical "failure is null, never a rejected workflow promise" contract.
@@ -369,6 +430,7 @@ function runCodex(prompt, schema, phaseName) {
         child.stderr.on('data', data => { if (stderr.length < 8000) stderr += String(data); });
         child.on('error', () => failTransport('APP_SERVER_SPAWN_FAILED'));
         child.on('exit', (code) => {
+          liveChildren.delete(child.pid);
           if (!settled && code !== 0) failTransport(`APP_SERVER_EXIT_${code}`);
         });
         createInterface({input: child.stdout}).on('line', line => {
@@ -404,6 +466,7 @@ function runCodex(prompt, schema, phaseName) {
 
         await rpc('initialize', {clientInfo: {name: 'luca_model_route_runner', version: '2'}});
         send({method: 'initialized', params: {}});
+        if (runnerCriticalFailure) throw new Error('MODEL_ROUTE_CRITICAL_FAILURE_LATCHED');
         const started = await rpc('thread/start', {
           model: route.requested_model,
           modelProvider: 'openai',
@@ -429,6 +492,7 @@ function runCodex(prompt, schema, phaseName) {
           model: route.requested_model,
           ...(outputSchema ? {outputSchema} : {}),
         };
+        if (runnerCriticalFailure) throw new Error('MODEL_ROUTE_CRITICAL_FAILURE_LATCHED');
         const startedTurn = await rpc('turn/start', turnParams);
         turnId = startedTurn?.turn?.id || null;
         if (!turnId) throw new Error('APP_SERVER_TURN_ID_MISSING');
@@ -473,6 +537,7 @@ const log = (...a) => process.stderr.write(`   ${a.join(' ')}\n`);
 const agent = async (prompt, opts = {}) => {
   const ph = opts.phase || currentPhase;
   process.stderr.write(`   · agent ${opts.label || '(unlabeled)'} [model-route phase=${ph || '(unknown)'}]\n`);
+  if (cancellationRequested || runnerCriticalFailure) return null;
   if (DRY) return null;                       // dry-run：不真调模型，走全 null 路径验降级
   // 工作根是 scratch 而非仓库（见 SANDBOX 段），故须显式告知仓库绝对路径——否则脚本里
   // 那些仓库相对路径（self-model.yaml 等）会解析到 scratch 而读不到。
@@ -491,7 +556,7 @@ const parallel = async (thunks) => {
   queuedWork += list.length;
   const worker = async () => {
     for (;;) {
-      if (cancellationRequested) return;
+      if (cancellationRequested || runnerCriticalFailure) return;
       const i = next++;
       if (i >= list.length) return;
       queuedWork--;
@@ -546,6 +611,19 @@ const src = stripTopLevelExports(readFileSync(WF, 'utf8'));
 const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 let result = null, failed = null;
 try {
+  if (ROOT_SESSION_ID) {
+    const entry = readActivation({harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT});
+    if (entry?.critical_failure) throw new Error('MODEL_ROUTE_CRITICAL_FAILURE_LATCHED');
+    if (Object.values(entry?.preparations || {}).some(ticket => ticket?.status === 'pending')) {
+      throw new Error('NEEDS_CONTEXT: MODEL_ROUTE_UNRESOLVED_CRITICAL_PREPARATION; prior critical preparation is not closed');
+    }
+    // Only tickets already pending at entry are unresolved across runs. Tickets
+    // this runner prepares later still support normal parallel critical dispatch.
+    if (Object.values(entry?.invocations || {}).some(call => call?.critical === true
+      && call.status === 'pending')) {
+      throw new Error('NEEDS_CONTEXT: MODEL_ROUTE_UNRESOLVED_CRITICAL_INVOCATION; prior critical invocation evidence is not closed');
+    }
+  }
   // 不得把 meta 作为注入参数名 —— 脚本体内自己 `const meta = {...}`，同名会重复声明报错
   const fn = new AsyncFunction('agent', 'phase', 'parallel', 'log', 'args', src);
   result = await fn(agent, phase, parallel, log, ARGS_JSON);

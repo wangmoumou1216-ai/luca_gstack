@@ -1,4 +1,6 @@
 # 模型路由真值源（Single Source of Truth）
+# Codex native/runner 只执行顶层 model_routing 的 common-v2 角色政策。
+# 以下旧 tier/alias/fable 规则保留为延期的 Claude adapter 兼容合同，不能覆盖 Codex。
 #
 # 规则：
 # 1. 按「能力档（tier）」定义路由，不写死模型版本号。resolves_to 是 Claude Code
@@ -168,6 +170,8 @@ non_dispatchable: [references]
 # ─── Dispatch 规则（执行层，2026-07-10 起为强制，非建议）───
 dispatch_rules:
   principle: |
+    本节只描述 Claude 兼容调度；Codex native/runner 执行顶层 model_routing，
+    不消费 tier/alias，不豁免 workflow，不接受关键场景的自动模型降级。
     spawn 任何 subagent 时，调度方必须解析 tier→alias 并显式传 Agent tool 的
     model 参数（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin，如 Step 3b
     对 quality-gate 传 fable）。不确定归属 → 省略参数继承主循环，不得猜 fable。

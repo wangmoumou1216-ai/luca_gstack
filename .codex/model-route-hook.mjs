@@ -12,7 +12,7 @@ import {
 import {
   acceptInvocationEvidence, bindInvocationExternalIdentity, findInvocationByExternalIdentity,
   pauseActivation, prepareInvocation, readActivation, releaseDigestForPolicy, startActivation,
-  updateRootAnchor,
+  updateRootAnchor, latchCriticalFailure, beginCriticalPreparation,
 } from '../scripts/model-route-host.mjs';
 import {
   bindCodexChildProject,
@@ -75,35 +75,83 @@ function readBindings() {
 function releaseFor(policy) {
   return releaseDigestForPolicy(modelRoutingPolicyDigest(policy));
 }
+// A bound agent may still lack persisted completion evidence. Suspend new
+// dispatch until the critical obligation closes, even after a stop-hook I/O fault.
+const unresolvedCriticalInvocation = state => Object.values(state.invocations).some(call =>
+  call.status === 'pending' && call.critical);
+const pendingPreparation = state => Object.values(state.preparations || {}).some(call =>
+  call.status === 'pending');
+function latchRouteFailure(payload, state, critical, error) {
+  if (!critical || !state) return;
+  const reason = String(error?.message || error);
+  try {
+    const latched = latchCriticalFailure({
+      harness: 'codex', root_session_id: payload.session_id,
+      expected_activation_id: state.activation_id,
+      expected_root_generation: state.root_generation,
+      critical, reason, evidence_ref: `codex-pre-tool:${payload.turn_id}:${payload.tool_use_id}`,
+      state_root: STATE_ROOT,
+    });
+    if (!['LATCHED', 'UNCHANGED'].includes(latched.disposition)
+      || latched.critical_failure_latched !== true) {
+      throw new Error(latched.reason);
+    }
+  } catch (failure) {
+    throw new Error(`${reason}; critical failure persistence unavailable: ${failure?.message || failure}`);
+  }
+}
 function routeForAgent(payload, agentType) {
   const policy = readPolicy();
   const scene = resolveDispatchScene(policy, {kind: 'native-agent', agent_type: agentType});
   if (!scene) throw new Error('UNKNOWN_AGENT_TYPE');
   const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
   if (!state || state.status !== 'active') throw new Error('ACTIVATION_MISSING');
-  const binding = readBindings();
-  const route = resolveModelRoute({
-    harness: 'codex-native', scene, role_config: policy,
-    effective_config: {
-      anchor: state.root_anchor,
-      peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
-      light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
-      approved_order: binding.approved_order,
-      security: {
-        provider: 'openai', sandbox: 'inherit-parent',
-        approval_policy: payload.permission_mode || 'inherit-parent', network: false,
+  if (state.critical_failure) throw new Error('CRITICAL_FAILURE_LATCHED');
+  if (unresolvedCriticalInvocation(state)) throw new Error('CRITICAL_INVOCATION_EVIDENCE_PENDING');
+  if (pendingPreparation(state)) throw new Error('UNRESOLVED_CRITICAL_PREPARATION');
+  let preparation_id;
+  try {
+    if (policy.scenes[scene].critical) {
+      const preparation = beginCriticalPreparation({
+        harness: 'codex', root_session_id: payload.session_id,
+        expected_activation_id: state.activation_id,
+        expected_root_generation: state.root_generation,
+        critical: true, route_harness: 'codex-native',
+        task_id: `native:${payload.turn_id}:${payload.tool_use_id}`,
+        evidence_ref: `codex-pre-tool:${payload.turn_id}:${payload.tool_use_id}`,
+        state_root: STATE_ROOT,
+      });
+      if (preparation.disposition !== 'READY') throw new Error(preparation.reason);
+      preparation_id = preparation.preparation_id;
+    }
+    const binding = readBindings();
+    const route = resolveModelRoute({
+      harness: 'codex-native', scene, role_config: policy,
+      effective_config: {
+        anchor: state.root_anchor,
+        peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
+        light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
+        approved_order: binding.approved_order,
+        security: {
+          provider: 'openai', sandbox: 'inherit-parent',
+          approval_policy: payload.permission_mode || 'inherit-parent', network: false,
+        },
       },
-    },
-    runtime_capabilities: {
-      explicit_model_override: true,
-      adopted_model_evidence: true,
-      preserves_safety: true,
-      model_pin: null,
-      evidence: {owner: 'codex-native-hooks', ref: 'PreToolUse+SubagentStop', harness: 'codex-native'},
-    },
-  }, {verifyCapability: () => true});
-  if (route.disposition !== 'READY') throw new Error(route.diagnostic || route.reason);
-  return {policy, state, route, release_digest: releaseFor(policy)};
+      runtime_capabilities: {
+        explicit_model_override: true,
+        adopted_model_evidence: true,
+        preserves_safety: true,
+        model_pin: null,
+        evidence: {owner: 'codex-native-hooks', ref: 'PreToolUse+SubagentStop', harness: 'codex-native'},
+      },
+    }, {verifyCapability: () => true});
+    if (route.disposition !== 'READY') throw new Error(route.diagnostic || route.reason);
+    return {policy, state, route, preparation_id, release_digest: releaseFor(policy)};
+  } catch (error) {
+    // No bindings or model selection ran if the durable preparation was unavailable.
+    if (preparation_id) latchRouteFailure(payload, state, true, error);
+    throw error;
+  }
 }
 
 function handleSessionStart(payload) {
@@ -142,7 +190,10 @@ function handlePreToolUse(payload) {
     const command = payload.tool_input?.command;
     if (!text(command) || !runnerCommand(command)) return {};
     const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
-    if (!state || state.status !== 'active' || state.critical_failure) return deny('model-route activation is not usable');
+    if (!state || state.status !== 'active' || state.critical_failure
+      || unresolvedCriticalInvocation(state) || pendingPreparation(state)) {
+      return deny('model-route activation is not usable or critical invocation evidence is pending');
+    }
     return allow({...payload.tool_input,
       command: `LUCA_MODEL_ROUTE_ROOT_SESSION_ID=${shellQuote(payload.session_id)} ${command}`});
   }
@@ -151,8 +202,9 @@ function handlePreToolUse(payload) {
     return deny('model-route invocation identity is incomplete');
   }
   const agentType = text(payload.tool_input.agent_type) ? payload.tool_input.agent_type : 'default';
+  let routed, modelPreparationStarted = false;
   try {
-    const routed = routeForAgent(payload, agentType);
+    routed = routeForAgent(payload, agentType);
     const unbound = Object.values(routed.state.invocations).some(call => call.status === 'pending'
       && call.route_harness === 'codex-native' && !text(call.external_identity?.agent_id));
     if (unbound) return deny('another native subagent is awaiting trusted agent-id correlation');
@@ -169,27 +221,42 @@ function handlePreToolUse(payload) {
       transcriptPath: payload.transcript_path || '',
       codexHome: process.env.CODEX_HOME || '',
     });
+    modelPreparationStarted = true;
     const prepared = prepareInvocation({
       harness: 'codex', root_session_id: payload.session_id,
       release_digest: routed.release_digest, route: routed.route,
       task_id: `native:${payload.turn_id}:${payload.tool_use_id}`,
       input_sha: inputDigest(payload.tool_input), state_root: STATE_ROOT,
+      preparation_id: routed.preparation_id,
     });
-    if (prepared.disposition !== 'READY') return deny(`model-route refused: ${prepared.reason}`);
+    if (prepared.disposition !== 'READY') {
+      latchRouteFailure(payload, routed.state, routed.route.critical, prepared.reason);
+      return deny(`model-route refused: ${prepared.reason}`);
+    }
     for (const [field, value] of [['tool_use_id', payload.tool_use_id], ['agent_type', agentType]]) {
       const bound = bindInvocationExternalIdentity({
         harness: 'codex', root_session_id: payload.session_id,
         invocation_id: prepared.envelope.invocation_id, field, value, state_root: STATE_ROOT,
       });
-      if (bound.disposition !== 'BOUND') return deny(`model-route correlation failed: ${bound.reason}`);
+      if (bound.disposition !== 'BOUND') {
+        latchRouteFailure(payload, routed.state, routed.route.critical, bound.reason);
+        return deny(`model-route correlation failed: ${bound.reason}`);
+      }
     }
     const {model: _ignoredModel, ...updated} = payload.tool_input;
     if (routed.route.requested_model !== routed.state.root_anchor.model) {
       updated.model = routed.route.requested_model;
       if (!text(updated.fork_turns) || updated.fork_turns === 'all') updated.fork_turns = 'none';
     }
+    // Review independence is required even when no model upgrade occurs.
+    // Numeric history forks also carry the producer's reasoning into review.
+    if (routed.route.independent_review_required) updated.fork_turns = 'none';
     return allow(updated);
   } catch (error) {
+    if (routed?.preparation_id || (modelPreparationStarted && routed?.route.critical)) {
+      try { latchRouteFailure(payload, routed.state, true, error); }
+      catch (failure) { error = failure; }
+    }
     return deny(`model-route unavailable: ${(error && error.message) || error}`);
   }
 }

@@ -8,7 +8,7 @@ import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {modelRoutingPolicyDigest} from './model-route.mjs';
-import {readActivation, releaseDigestForPolicy, startActivation} from './model-route-host.mjs';
+import {acceptInvocationEvidence, beginCriticalPreparation, bindInvocationExternalIdentity, prepareInvocation, readActivation, releaseDigestForPolicy, startActivation, stateFileForTest} from './model-route-host.mjs';
 import {prepareProjectSwitch, readProjectState} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -68,6 +68,7 @@ const record = [];
 function send(value) { process.stdout.write(JSON.stringify(value) + '\\n'); }
 function save() { if (dump) fs.writeFileSync(dump, JSON.stringify({argv:process.argv.slice(2),record}, null, 2)); }
 process.on('exit', save);
+if (process.env.FAKE_STARTS) fs.appendFileSync(process.env.FAKE_STARTS, String(process.pid) + '\\n');
 if (mode === 'exit') { process.stderr.write('Invalid schema for response_format'); process.exit(1); }
 if (mode === 'hang') {
   spawn('sh',['-c','sleep 8; echo alive > "' + (process.env.FAKE_MARKER || '/tmp/no-marker') + '"'],{stdio:'ignore'});
@@ -102,7 +103,9 @@ if (mode === 'hang') {
       if (process.env.FAKE_RESPONSE) result=JSON.parse(process.env.FAKE_RESPONSE);
       send({method:'item/completed',params:{threadId,turnId,item:{id:'a1',type:'agentMessage',text:JSON.stringify(result)}}});
       const failed = mode === 'failed-turn';
+      if (mode === 'busy-evidence') fs.writeFileSync(process.env.FAKE_STATE_FILE + '.lock', 'occupied\\n', {mode:0o600});
       send({method:'turn/completed',params:{threadId,turn:{id:turnId,status:failed?'failed':'completed',error:failed?{message:'failed'}:null}}});
+      if (mode === 'busy-evidence') setTimeout(()=>process.exit(0),100);
     }
   });
 }
@@ -110,12 +113,12 @@ if (mode === 'hang') {
 chmodSync(fakeCodex, 0o755);
 
 let sequence = 0;
-function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
+function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol', options = {}) {
   const name = '__rt_probe';
   const workflow = join(WF_DIR, `${name}.js`);
   writeFileSync(workflow, scriptBody);
-  const rootSessionId = `runner-test-${process.pid}-${++sequence}`;
-  startActivation({
+  const rootSessionId = options.rootSessionId || `runner-test-${process.pid}-${++sequence}`;
+  if (!options.rootSessionId) startActivation({
     harness: 'codex', root_session_id: rootSessionId,
     root_anchor: {model: anchor, source: 'test-root-session'},
     release_digest: releaseDigest, state_root: stateRoot,
@@ -131,6 +134,7 @@ function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
       LUCA_MODEL_ROUTE_BINDINGS_PATH: bindingsPath,
       LUCA_MODEL_ROUTE_STATE_ROOT: stateRoot,
       LUCA_MODEL_ROUTE_ROOT_SESSION_ID: rootSessionId,
+      FAKE_STATE_FILE: stateFileForTest({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot}),
       ...extraEnv,
     },
   });
@@ -138,7 +142,7 @@ function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
   return {
     ...result,
     rootSessionId,
-    state: readActivation({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot}),
+    state: options.skipStateRead ? null : readActivation({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot}),
   };
 }
 
@@ -167,7 +171,7 @@ function startWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  return {child, workflow};
+  return {child, workflow, rootSessionId};
 }
 
 async function waitFor(predicate, timeoutMs = 5000) {
@@ -177,6 +181,33 @@ async function waitFor(predicate, timeoutMs = 5000) {
     await new Promise(resolveWait => setTimeout(resolveWait, 25));
   }
   throw new Error('timed out waiting for runtime fixture');
+}
+
+function nativeTicket(critical, bound = true) {
+  const rootSessionId = `native-runner-test-${process.pid}-${++sequence}`;
+  const base = {harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot};
+  const activation = startActivation({...base, root_anchor: {model: 'gpt-5.6-sol', source: 'test-native-root'},
+    release_digest: releaseDigest});
+  const taskId = `native-task-${sequence}`;
+  const reservation = critical ? beginCriticalPreparation({...base, expected_activation_id: activation.activation_id,
+    expected_root_generation: activation.root_generation, critical: true, task_id: taskId, evidence_ref: 'test://native-prepare',
+    route_harness: 'codex-native'}) : null;
+  const prepared = prepareInvocation({...base, release_digest: releaseDigest, task_id: taskId, input_sha: releaseDigest,
+    ...(reservation ? {preparation_id: reservation.preparation_id} : {}),
+    route: {disposition: 'READY', harness: 'codex-native', requested_role: critical ? 'peak' : 'anchor',
+      requested_model: critical ? 'gpt-6-astra' : 'gpt-5.6-sol', critical,
+      policy_sha: modelRoutingPolicyDigest(policy), routing_config_sha: releaseDigest, capability_evidence_sha: releaseDigest}});
+  if (prepared.disposition !== 'READY') throw new Error(`native fixture prepare failed: ${prepared.reason}`);
+  if (bound) {
+    for (const [field, value] of [['tool_use_id', `native-tool-${sequence}`],
+      ['agent_type', critical ? 'quality-gate' : 'explorer'], ['agent_id', `native-agent-${sequence}`]]) {
+      const result = bindInvocationExternalIdentity({...base, invocation_id: prepared.envelope.invocation_id, field, value});
+      if (result.disposition !== 'BOUND') throw new Error(`native fixture bind failed: ${result.reason}`);
+    }
+  }
+  return {rootSessionId, base, envelope: prepared.envelope, evidence: {...prepared.envelope,
+    adopted_model: prepared.envelope.requested_model, status: 'completed', same_invocation_success: true,
+    rerouted: false, fallback: false, evidence_ref: 'test://native-completion'}};
 }
 
 try {
@@ -278,6 +309,236 @@ schema_discovery_type_ok:{type:'boolean'},sources:{type:'array',items:{type:'obj
     runWF("phase('Verify'); const x=await agent('hi'); return {x}", {FAKE_DUMP: peakDump});
     const peakCalls = parse(readFileSync(peakDump, 'utf8'))?.record || [];
     ok('R2 critical review selects approved peak model', peakCalls.find(call => call.method === 'thread/start')?.params?.model === 'gpt-6-astra');
+  }
+
+  {
+    const stalePolicyPath = join(sandbox, 'stale-policy.json');
+    const stalePolicy = structuredClone(policy);
+    stalePolicy.scenes['MR-004'].trigger = 'changed-terminal-review';
+    writeFileSync(stalePolicyPath, JSON.stringify({model_routing: stalePolicy}), {mode: 0o600});
+    const cases = [
+      {name: 'unknown model relation', anchor: 'gpt-6-sol', diagnostic: /UNKNOWN_MODEL_RELATION/},
+      {name: 'missing bindings', env: {LUCA_MODEL_ROUTE_BINDINGS_PATH: join(sandbox, 'missing-bindings.json')}, diagnostic: /ENOENT/},
+      {name: 'missing activation', env: {LUCA_MODEL_ROUTE_ROOT_SESSION_ID: 'not-activated'}, diagnostic: /ACTIVATION_MISSING/},
+      {name: 'unprepared release mismatch', env: {LUCA_MODEL_ROUTE_POLICY_PATH: stalePolicyPath}, diagnostic: /RELEASE_MISMATCH/},
+    ];
+    for (const fixture of cases) {
+      const starts = join(sandbox, `pre-dispatch-${fixture.name.replaceAll(' ', '-')}.txt`);
+      const result = runWF("phase('Verify'); const x=await agent('hi'); phase('P'); const y=await agent('later'); return {x:x||{ok:true,fallback:true},y}",
+        {...fixture.env, FAKE_STARTS: starts}, fixture.anchor);
+      ok(`R4 critical pre-dispatch ${fixture.name} blocks fallback output`,
+        result.status !== 0 && String(result.stdout).trim() === '', `${result.status}: ${result.stdout}`);
+      ok(`R4b critical pre-dispatch ${fixture.name} keeps diagnostic`, fixture.diagnostic.test(String(result.stderr)),
+        String(result.stderr).slice(-400));
+      ok(`R4c critical pre-dispatch ${fixture.name} stops later agent dispatch`, !existsSync(starts));
+    }
+  }
+
+  {
+    const result = runWF("phase('P'); const x=await agent('Verify critical terminal review'); return x||{ok:true,fallback:true}",
+      {LUCA_MODEL_ROUTE_BINDINGS_PATH: join(sandbox, 'missing-noncritical-bindings.json')});
+    ok('R5 canonical noncritical pre-dispatch failure preserves null/fallback',
+      result.status === 0 && parse(result.stdout)?.fallback === true && result.state?.critical_failure === false);
+  }
+  for (const fixture of [
+    {name: 'unknown phase', body: "phase('unregistered'); return await agent('hi')||{ok:true,fallback:true}"},
+    {name: 'unreadable policy', body: "phase('P'); return await agent('hi')||{ok:true,fallback:true}",
+      env: {LUCA_MODEL_ROUTE_POLICY_PATH: join(sandbox, 'missing-policy.yaml')}},
+  ]) {
+    const result = runWF(fixture.body, fixture.env);
+    ok(`R6 unclassified ${fixture.name} refuses fallback output`, result.status !== 0 && String(result.stdout).trim() === '');
+  }
+
+  {
+    const queuedMarker = join(sandbox, 'critical-queued-thunk');
+    const starts = join(sandbox, 'critical-queue-starts.txt');
+    const result = runWF(`phase('Verify'); const xs=await parallel([
+()=>agent('critical'),
+async()=>{const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(queuedMarker)},'ran');return agent('later',{phase:'P'})}
+]); return {xs:xs.map(x=>x||{ok:true,fallback:true})}`,
+      {FAKE_MODE: 'wrong-model', FAKE_STARTS: starts, LUCA_WF_CONCURRENCY: '1'});
+    ok('R7 critical evidence failure stops queued workflow thunk', !existsSync(queuedMarker));
+    ok('R7b critical evidence failure starts only the first agent', readFileSync(starts, 'utf8').trim().split('\n').length === 1);
+    ok('R7c critical queue failure blocks fallback output', result.status !== 0 && String(result.stdout).trim() === '');
+  }
+
+  {
+    const first = runWF("phase('Verify'); return await agent('critical')||{ok:true,fallback:true}", {}, 'gpt-6-sol');
+    ok('R8 critical preparation failure persists activation latch', first.status === 1 && first.state?.critical_failure === true);
+    const native = prepareInvocation({
+      harness: 'codex', root_session_id: first.rootSessionId, release_digest: releaseDigest,
+      route: {disposition: 'READY', harness: 'codex-native', requested_role: 'anchor', requested_model: 'gpt-6-sol',
+        critical: false, policy_sha: modelRoutingPolicyDigest(policy), routing_config_sha: releaseDigest,
+        capability_evidence_sha: releaseDigest},
+      task_id: 'native-after-preparation-failure', input_sha: releaseDigest, state_root: stateRoot,
+    });
+    ok('R8b persisted critical preparation failure blocks native prepare', native.reason === 'CRITICAL_FAILURE_LATCHED');
+    const second = runWF("phase('P'); return await agent('later')||{ok:true,fallback:true}", {}, undefined,
+      {rootSessionId: first.rootSessionId});
+    ok('R8c same activation second runner refuses credible output', second.status === 1 && String(second.stdout).trim() === '');
+    const marker = join(sandbox, 'latched-entry-thunk');
+    const noAgent = runWF(`const xs=await parallel([async()=>{const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(marker)},'ran');return {ok:true}}]);return {xs}`, {}, undefined,
+      {rootSessionId: first.rootSessionId});
+    ok('R8d latched entry refuses no-agent thunk before workflow effects', noAgent.status === 1
+      && String(noAgent.stdout).trim() === '' && !existsSync(marker));
+  }
+
+  {
+    const result = runWF("phase('Verify'); return await agent('critical')||{ok:true,fallback:true}", {FAKE_MODE: 'busy-evidence'});
+    ok('R9 evidence state lock failure settles runner with exit 1', result.status === 1 && String(result.stdout).trim() === '',
+      `${result.status}: ${String(result.stderr).slice(-600)}`);
+    ok('R9b evidence I/O failure reports unpersisted critical latch',
+      /MODEL_ROUTE_EVIDENCE_IO_FAILED.*MODEL_ROUTE_STATE_BUSY/.test(String(result.stderr))
+        && /MODEL_ROUTE_CRITICAL_FAILURE_NOT_PERSISTED.*MODEL_ROUTE_STATE_BUSY/.test(String(result.stderr)));
+    ok('R9c blocked evidence does not claim activation latch persisted', result.state?.critical_failure === false
+      && Object.values(result.state?.invocations || {}).some(call => call.status === 'pending'));
+    rmSync(`${stateFileForTest({harness: 'codex', root_session_id: result.rootSessionId, state_root: stateRoot})}.lock`);
+    const second = runWF("phase('P'); return await agent('later')||{ok:true,fallback:true}", {}, undefined,
+      {rootSessionId: result.rootSessionId});
+    ok('R9d unresolved critical ticket blocks second runner after lock is cleared',
+      second.status === 1 && String(second.stdout).trim() === ''
+        && /MODEL_ROUTE_UNRESOLVED_CRITICAL_INVOCATION/.test(String(second.stderr)));
+    ok('R9e unresolved-ticket refusal does not claim persistence succeeded', second.state?.critical_failure === false);
+  }
+
+  {
+    const result = runWF("phase('Verify'); const xs=await parallel([1,2,3].map(i=>()=>agent('review-'+i))); return {ran:xs.filter(Boolean).length}");
+    ok('R10 current runner critical agents retain normal parallel dispatch', result.status === 0 && parse(result.stdout)?.ran === 3);
+    ok('R10b parallel critical evidence is accepted independently',
+      Object.values(result.state?.invocations || {}).filter(call => call.critical && call.status === 'accepted').length === 3);
+  }
+
+  {
+    const fifo = join(sandbox, 'reserved-bindings.fifo');
+    const made = spawnSync('mkfifo', [fifo], {encoding: 'utf8'});
+    if (made.status !== 0) throw new Error(`cannot create binding fixture FIFO: ${made.stderr}`);
+    const started = startWF("phase('Verify'); return await agent('critical')||{ok:true,fallback:true}",
+      {LUCA_MODEL_ROUTE_BINDINGS_PATH: fifo}, 'gpt-6-sol');
+    let stdout = '', stderr = '';
+    started.child.stdout.on('data', data => { stdout += String(data); });
+    started.child.stderr.on('data', data => { stderr += String(data); });
+    const closed = new Promise(resolveExit => started.child.on('close', code => resolveExit(code)));
+    const stateFile = stateFileForTest({harness: 'codex', root_session_id: started.rootSessionId, state_root: stateRoot});
+    let reserved = false;
+    try {
+      await waitFor(() => Object.values(readActivation({harness: 'codex', root_session_id: started.rootSessionId,
+        state_root: stateRoot})?.preparations || {}).some(ticket => ticket.status === 'pending'));
+      reserved = true;
+    } catch { }
+    ok('R11 critical preparation is durable before binding read', reserved);
+    writeFileSync(`${stateFile}.lock`, 'occupied\n', {mode: 0o600});
+    writeFileSync(fifo, readFileSync(bindingsPath, 'utf8'));
+    const status = await closed;
+    rmSync(started.workflow, {force: true});
+    const state = readActivation({harness: 'codex', root_session_id: started.rootSessionId, state_root: stateRoot});
+    ok('R11b unknown relation with failed latch keeps durable preparation intent', status === 1 && stdout.trim() === ''
+      && state?.critical_failure === false && Object.values(state?.preparations || {}).some(ticket => ticket.status === 'pending')
+      && /UNKNOWN_MODEL_RELATION/.test(stderr) && /CRITICAL_FAILURE_NOT_PERSISTED.*MODEL_ROUTE_STATE_BUSY/.test(stderr));
+    rmSync(`${stateFile}.lock`);
+    const second = runWF("phase('P'); return await agent('later')||{ok:true,fallback:true}", {}, undefined,
+      {rootSessionId: started.rootSessionId});
+    ok('R11c pending preparation blocks next runner after write lock clears', second.status === 1
+      && String(second.stdout).trim() === '' && /UNRESOLVED_CRITICAL_PREPARATION/.test(String(second.stderr)));
+    const native = prepareInvocation({harness: 'codex', root_session_id: started.rootSessionId, release_digest: releaseDigest,
+      route: {disposition: 'READY', harness: 'codex-native', requested_role: 'anchor', requested_model: 'gpt-6-sol',
+        critical: false, policy_sha: modelRoutingPolicyDigest(policy), routing_config_sha: releaseDigest, capability_evidence_sha: releaseDigest},
+      task_id: 'native-after-reserved-failure', input_sha: releaseDigest, state_root: stateRoot});
+    ok('R11d pending preparation blocks native prepare', native.reason === 'UNRESOLVED_CRITICAL_PREPARATION');
+  }
+
+  {
+    const rootSessionId = `reserve-busy-${process.pid}`;
+    startActivation({harness: 'codex', root_session_id: rootSessionId,
+      root_anchor: {model: 'gpt-5.6-sol', source: 'test-root-session'}, release_digest: releaseDigest, state_root: stateRoot});
+    const stateFile = stateFileForTest({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot});
+    const starts = join(sandbox, 'reserve-busy-starts');
+    writeFileSync(`${stateFile}.lock`, 'occupied\n', {mode: 0o600});
+    const first = runWF("phase('Verify'); return await agent('critical')||{ok:true,fallback:true}",
+      {LUCA_MODEL_ROUTE_BINDINGS_PATH: join(sandbox, 'never-read-bindings.json'), FAKE_STARTS: starts}, undefined, {rootSessionId});
+    ok('R12 unavailable reservation refuses binding/resolver/model work', first.status === 1 && String(first.stdout).trim() === ''
+      && !/ENOENT|UNKNOWN_MODEL_RELATION/.test(String(first.stderr)) && /MODEL_ROUTE_STATE_BUSY/.test(String(first.stderr)) && !existsSync(starts));
+    ok('R12b refused reservation creates neither failure nor intent', first.state?.critical_failure === false
+      && Object.values(first.state?.preparations || {}).length === 0);
+    rmSync(`${stateFile}.lock`);
+    const second = runWF("phase('P'); return await agent('ordinary')", {}, undefined, {rootSessionId});
+    ok('R12c ordinary work can start after reservation lock clears', second.status === 0 && parse(second.stdout)?.ok === true);
+  }
+
+  {
+    const fifo = join(sandbox, 'ordinary-bindings.fifo');
+    const made = spawnSync('mkfifo', [fifo], {encoding: 'utf8'});
+    if (made.status !== 0) throw new Error(`cannot create ordinary binding fixture FIFO: ${made.stderr}`);
+    const started = startWF("phase('P'); return await agent('ordinary')||{ok:true,fallback:true}", {LUCA_MODEL_ROUTE_BINDINGS_PATH: fifo});
+    let stdout = '', stderr = '';
+    started.child.stdout.on('data', data => { stdout += String(data); });
+    started.child.stderr.on('data', data => { stderr += String(data); });
+    const closed = new Promise(resolveExit => started.child.on('close', code => resolveExit(code)));
+    await waitFor(() => /model-route phase=P/.test(stderr));
+    const state = readActivation({harness: 'codex', root_session_id: started.rootSessionId, state_root: stateRoot});
+    beginCriticalPreparation({harness: 'codex', root_session_id: started.rootSessionId, state_root: stateRoot,
+      expected_activation_id: state.activation_id, expected_root_generation: state.root_generation,
+      critical: true, task_id: 'concurrent-critical-preparation', evidence_ref: 'test://concurrent-preparation'});
+    writeFileSync(fifo, readFileSync(bindingsPath, 'utf8'));
+    const status = await closed;
+    rmSync(started.workflow, {force: true});
+    const after = readActivation({harness: 'codex', root_session_id: started.rootSessionId, state_root: stateRoot});
+    ok('R13 concurrent unresolved preparation blocks noncritical fallback', status === 1 && stdout.trim() === ''
+      && /UNRESOLVED_CRITICAL_PREPARATION/.test(stderr));
+    ok('R13b noncritical pending-intent refusal does not write failure latch', after?.critical_failure === false);
+  }
+
+  {
+    const rootSessionId = `malformed-preparations-${process.pid}`;
+    const state = startActivation({harness: 'codex', root_session_id: rootSessionId,
+      root_anchor: {model: 'gpt-5.6-sol', source: 'test-root-session'}, release_digest: releaseDigest, state_root: stateRoot});
+    state.preparations = [];
+    writeFileSync(stateFileForTest({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot}), JSON.stringify(state));
+    const marker = join(sandbox, 'malformed-entry-thunk');
+    const result = runWF(`const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(marker)},'ran');return {ok:true}`, {}, undefined,
+      {rootSessionId, skipStateRead: true});
+    ok('R14 malformed preparations refuse entry before workflow effects', result.status === 1 && String(result.stdout).trim() === ''
+      && /MODEL_ROUTE_INVALID_ACTIVATION/.test(String(result.stderr)) && !existsSync(marker));
+  }
+
+  {
+    const native = nativeTicket(true);
+    const stateFile = stateFileForTest(native.base);
+    writeFileSync(`${stateFile}.lock`, 'occupied\n', {mode: 0o600});
+    let completionBusy = false;
+    try { acceptInvocationEvidence({...native.base, evidence: native.evidence}); }
+    catch (error) { completionBusy = /MODEL_ROUTE_STATE_BUSY/.test(error.message); }
+    const pending = readActivation(native.base);
+    ok('R15 native completion lock failure retains bound critical ticket', completionBusy && pending.critical_failure === false
+      && pending.invocations[native.envelope.invocation_id].status === 'pending'
+      && Boolean(pending.invocations[native.envelope.invocation_id].external_identity?.agent_id));
+    rmSync(`${stateFile}.lock`);
+    const marker = join(sandbox, 'native-pending-thunk');
+    const blocked = runWF(`const xs=await parallel([async()=>{const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(marker)},'ran');return {ok:true}}]);return {xs}`, {}, undefined,
+      {rootSessionId: native.rootSessionId});
+    ok('R15b unresolved native critical completion blocks no-agent runner effects', blocked.status === 1
+      && String(blocked.stdout).trim() === '' && !existsSync(marker) && /UNRESOLVED_CRITICAL_INVOCATION/.test(String(blocked.stderr)),
+      `${blocked.status}: ${blocked.stdout}`);
+    ok('R15c native pending-ticket refusal does not claim failure latch persisted', blocked.state?.critical_failure === false);
+    const accepted = acceptInvocationEvidence({...native.base, evidence: native.evidence});
+    ok('R15d native critical completion can close normally after lock clears', accepted.disposition === 'ACCEPT');
+    const closedMarker = join(sandbox, 'native-closed-thunk');
+    const allowed = runWF(`const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(closedMarker)},'ran');return {ok:true}`, {}, undefined,
+      {rootSessionId: native.rootSessionId});
+    ok('R15e closed critical native evidence allows runner effects', allowed.status === 0 && parse(allowed.stdout)?.ok === true
+      && existsSync(closedMarker));
+  }
+
+  {
+    const native = nativeTicket(false);
+    const allowed = runWF('return {ok:true}', {}, undefined, {rootSessionId: native.rootSessionId});
+    ok('R16 pending noncritical native work does not block runner entry', allowed.status === 0 && parse(allowed.stdout)?.ok === true);
+  }
+
+  {
+    const native = nativeTicket(true, false);
+    const blocked = runWF('return {ok:true}', {}, undefined, {rootSessionId: native.rootSessionId});
+    ok('R17 unbound critical native ticket also blocks runner entry', blocked.status === 1 && String(blocked.stdout).trim() === ''
+      && /UNRESOLVED_CRITICAL_INVOCATION/.test(String(blocked.stderr)));
   }
 
   {

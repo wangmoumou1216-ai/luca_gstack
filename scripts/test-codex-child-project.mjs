@@ -119,6 +119,15 @@ try {
     root_anchor: { model: 'fixture-model', source: 'fixture' },
     release_digest: 'a'.repeat(64), state_root: stateRoot });
 
+  check('pinned root still rejects a mismatched native candidate boundary', () => {
+    const stateFile = join(gstack, '.claude', `.session-project-${rootSid}`);
+    const before = readFileSync(stateFile);
+    assert.throws(() => prepareCodexChildProject({gstackRoot: gstack, projectsRoot: projects,
+      parentSessionId: rootSid, turnId: 'wrong-boundary', toolUseId,
+      agentType, taskName, cwd: gstack, codexHome}), {code: 'BOUNDARY_MISMATCH'});
+    assert.deepEqual(readFileSync(stateFile), before, 'refusal leaves the native candidate intact');
+    assert.equal(existsSync(receiptFolder(rootSid)), false, 'refusal creates no project receipt');
+  });
   const prepared = prepareCodexChildProject({ gstackRoot: gstack, projectsRoot: projects,
     parentSessionId: rootSid, turnId, toolUseId, agentType, taskName, cwd: gstack, codexHome });
   check('prepare requires and freezes a native-attested parent turn', () => {

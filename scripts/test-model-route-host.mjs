@@ -185,7 +185,7 @@ async function behaviorSuite(api) {
       evidence_ref: 'test://critical-cannot-recover'};
     eq(api.invalidateIncompleteNativeInvocation(criticalRecovery).reason,
       'INVOCATION_NOT_RECOVERABLE', 'critical tickets cannot use incomplete recovery');
-    const conflictingCritical = prepare(api, stateRoot, criticalIdentity);
+    const conflictingCritical = prepare(api, stateRoot, criticalIdentity, {route: {...criticalIdentity.route, harness: 'codex-cli'}});
     eq(api.bindInvocationExternalIdentity({...criticalIdentityBase, invocation_id: conflictingCritical.envelope.invocation_id,
       field: 'tool_use_id', value: 'critical-tool'}).critical_failure_latched,
     true, 'critical identity collision latches failure');
@@ -212,6 +212,212 @@ async function behaviorSuite(api) {
     });
     eq(noncriticalWrong.critical_failure_latched, false, 'noncritical mismatch does not latch critical failure');
     eq(prepare(api, stateRoot, noncritical).disposition, 'READY', 'noncritical mismatch does not block later calls');
+
+    eq(typeof api.latchCriticalFailure, 'function', 'trusted host exposes preparation-failure latch API');
+    const preDispatch = fixture(api, stateRoot, 'pre-dispatch-failure');
+    const preDispatchBase = {harness: 'codex', root_session_id: preDispatch.root_session_id, state_root: stateRoot};
+    const failureArgs = {
+      ...preDispatchBase, expected_activation_id: preDispatch.activation.activation_id,
+      expected_root_generation: preDispatch.activation.root_generation, critical: true,
+      reason: 'UNKNOWN_MODEL_RELATION', evidence_ref: 'test://critical-preparation-failure',
+    };
+    eq(api.latchCriticalFailure({...failureArgs, critical: false}).reason, 'NONCRITICAL_FAILURE',
+      'noncritical preparation failure cannot latch activation');
+    eq(api.readActivation(preDispatchBase).critical_failure, false, 'noncritical preparation leaves activation usable');
+    eq(api.latchCriticalFailure({...failureArgs, expected_activation_id: 'superseded'}).reason,
+      'ACTIVATION_STATE_CHANGED', 'preparation latch refuses superseded activation');
+    eq(api.latchCriticalFailure({...failureArgs, expected_root_generation: 9}).reason,
+      'ACTIVATION_STATE_CHANGED', 'preparation latch refuses stale generation');
+    eq(api.readActivation(preDispatchBase).critical_failure, false, 'stale preparation failure cannot damage current activation');
+    const pendingAtFailure = prepare(api, stateRoot, preDispatch);
+    eq(api.latchCriticalFailure(failureArgs).disposition, 'LATCHED', 'critical preparation failure is persisted without envelope');
+    const failedState = api.readActivation(preDispatchBase);
+    eq(failedState.critical_failure, true, 'preparation failure latch survives a fresh state read');
+    eq(failedState.invocations[pendingAtFailure.envelope.invocation_id].status, 'invalidated',
+      'critical preparation latch terminates pending invocation evidence');
+    eq(prepare(api, stateRoot, preDispatch).reason, 'CRITICAL_FAILURE_LATCHED',
+      'persisted preparation failure blocks native dispatch');
+    eq(api.latchCriticalFailure({...failureArgs, reason: 'different-reason'}).disposition,
+      'UNCHANGED', 'critical preparation latch is monotonic');
+    eq(api.readActivation(preDispatchBase).critical_failure_evidence.reason, 'UNKNOWN_MODEL_RELATION',
+      'first preparation failure evidence remains intact');
+
+    const replacementAtFailure = api.startActivation({...preDispatchBase,
+      root_anchor: {model: 'anchor-model', source: 'root-session'}, release_digest: preDispatch.release_digest});
+    eq(api.latchCriticalFailure(failureArgs).reason, 'ACTIVATION_STATE_CHANGED',
+      'old preparation failure cannot latch restarted activation at same generation');
+    eq(api.readActivation(preDispatchBase).activation_id, replacementAtFailure.activation_id, 'replacement activation is retained');
+    eq(api.readActivation(preDispatchBase).critical_failure, false, 'replacement activation remains usable');
+
+    const absentBase = {...preDispatchBase, root_session_id: 'absent-preparation-failure', state_root: join(stateRoot, 'absent-root')};
+    const absentFile = api.stateFileForTest(absentBase);
+    eq(api.latchCriticalFailure({...failureArgs, ...absentBase}).reason, 'INVALID_ACTIVATION',
+      'preparation failure requires an existing activation');
+    eq(existsSync(absentFile), false, 'preparation failure never creates missing activation state');
+    eq(existsSync(dirname(absentFile)), false, 'preparation failure never creates missing state directory');
+
+    eq(typeof api.beginCriticalPreparation, 'function', 'trusted host exposes durable preparation intent');
+    const intentFx = fixture(api, stateRoot, 'durable-intent', {role: 'peak', requested_role: 'peak', requested_model: 'peak-model', critical: true});
+    const intentBase = {harness: 'codex', root_session_id: intentFx.root_session_id, state_root: stateRoot};
+    const intentArgs = {...intentBase, expected_activation_id: intentFx.activation.activation_id,
+      expected_root_generation: intentFx.activation.root_generation, critical: true, task_id: 'intent-task', evidence_ref: 'test://intent'};
+    eq(api.beginCriticalPreparation({...intentArgs, critical: false}).reason, 'NONCRITICAL_PREPARATION', 'noncritical work does not reserve');
+    eq(Object.values(api.readActivation(intentBase).preparations || {}).length, 0, 'noncritical work creates no preparation ticket');
+    eq(api.beginCriticalPreparation({...intentArgs, expected_activation_id: 'old'}).reason, 'ACTIVATION_STATE_CHANGED', 'intent refuses superseded activation');
+    eq(api.beginCriticalPreparation({...intentArgs, expected_root_generation: 9}).reason, 'ACTIVATION_STATE_CHANGED', 'intent refuses stale generation');
+    eq(api.beginCriticalPreparation({...intentArgs, ...absentBase}).reason, 'INVALID_ACTIVATION', 'intent never creates missing activation');
+    eq(existsSync(dirname(absentFile)), false, 'intent never creates missing state directory');
+    const reserved = api.beginCriticalPreparation(intentArgs);
+    eq(reserved.disposition, 'READY', 'critical intent is durably reserved');
+    eq(api.readActivation(intentBase).preparations[reserved.preparation_id].status, 'pending', 'reserved intent survives state reread');
+    eq(api.beginCriticalPreparation(intentArgs).reason, 'UNRESOLVED_CRITICAL_PREPARATION', 'another preparation cannot bypass unresolved intent');
+    eq(prepare(api, stateRoot, intentFx).reason, 'UNRESOLVED_CRITICAL_PREPARATION', 'native dispatch cannot bypass unresolved intent');
+    eq(prepare(api, stateRoot, intentFx, {preparation_id: reserved.preparation_id, task_id: 'different'}).reason,
+      'PREPARATION_BINDING_MISMATCH', 'intent is bound to its task');
+    const consumed = prepare(api, stateRoot, intentFx, {preparation_id: reserved.preparation_id, task_id: 'intent-task'});
+    eq(consumed.disposition, 'READY', 'matching critical dispatch consumes intent');
+    eq(api.readActivation(intentBase).preparations[reserved.preparation_id].status, 'consumed', 'intent consumption is persisted');
+    eq(api.readActivation(intentBase).preparations[reserved.preparation_id].invocation_id, consumed.envelope.invocation_id,
+      'consumed intent identifies the atomically created invocation');
+    eq(api.acceptInvocationEvidence({...intentBase, evidence: evidence(consumed.envelope)}).disposition,
+      'ACCEPT', 'native invocation closes before replay is tested');
+    eq(prepare(api, stateRoot, intentFx, {preparation_id: reserved.preparation_id, task_id: 'intent-task'}).reason,
+      'PREPARATION_ALREADY_CONSUMED', 'preparation intent cannot be replayed');
+    const failedIntent = api.beginCriticalPreparation({...intentArgs, task_id: 'failed-intent'});
+    api.latchCriticalFailure({...intentArgs, reason: 'UNKNOWN_MODEL_RELATION', evidence_ref: 'test://intent-failure'});
+    eq(api.readActivation(intentBase).preparations[failedIntent.preparation_id].status, 'invalidated', 'failure latch terminates pending intent');
+    eq(api.beginCriticalPreparation(intentArgs).reason, 'CRITICAL_FAILURE_LATCHED', 'failure latch blocks later preparation');
+
+    const intentGeneration = fixture(api, stateRoot, 'intent-generation');
+    const generationIntentBase = {harness: 'codex', root_session_id: intentGeneration.root_session_id, state_root: stateRoot};
+    const generationIntent = api.beginCriticalPreparation({...generationIntentBase,
+      expected_activation_id: intentGeneration.activation.activation_id, expected_root_generation: 0,
+      critical: true, task_id: 'generation-intent', evidence_ref: 'test://generation-intent'});
+    api.updateRootAnchor({...generationIntentBase, root_anchor: {model: 'new-anchor', source: 'root-change'}});
+    eq(api.readActivation(generationIntentBase).preparations[generationIntent.preparation_id].status, 'invalidated',
+      'root generation change invalidates preparation intent');
+    eq(api.readActivation(generationIntentBase).critical_failure, true,
+      'root generation change preserves unresolved critical preparation as failure');
+    eq(api.readActivation(generationIntentBase).critical_failure_evidence?.reason,
+      'ROOT_ANCHOR_CHANGED_WITH_UNRESOLVED_CRITICAL_WORK', 'root change records the unresolved preparation obligation');
+    eq(prepare(api, stateRoot, intentGeneration).reason, 'CRITICAL_FAILURE_LATCHED',
+      'root change cannot reopen dispatch after unresolved critical preparation');
+
+    for (const routeHarness of ['codex-native', 'codex-cli']) {
+      const rootCritical = fixture(api, stateRoot, `root-change-${routeHarness}`, {harness: routeHarness,
+        role: 'peak', requested_role: 'peak', requested_model: 'peak-model', critical: true});
+      const rootCriticalBase = {harness: 'codex', root_session_id: rootCritical.root_session_id, state_root: stateRoot};
+      const beforeRootChange = prepare(api, stateRoot, rootCritical);
+      eq(api.updateRootAnchor({...rootCriticalBase, root_anchor: {model: 'changed-anchor', source: 'compact-root'}}).root_generation,
+        1, `${routeHarness} root change still advances generation`);
+      const afterRootChange = api.readActivation(rootCriticalBase);
+      eq(afterRootChange.root_anchor.model, 'changed-anchor', `${routeHarness} root anchor still changes normally`);
+      eq(afterRootChange.invocations[beforeRootChange.envelope.invocation_id].status, 'invalidated',
+        `${routeHarness} old invocation is invalidated without adopted-model success`);
+      eq(afterRootChange.critical_failure, true, `${routeHarness} unresolved critical invocation survives generation change as failure`);
+      eq(prepare(api, stateRoot, rootCritical).reason, 'CRITICAL_FAILURE_LATCHED', `${routeHarness} same activation remains blocked`);
+      api.startActivation({...rootCriticalBase, root_anchor: {model: 'changed-anchor', source: 'new-root'},
+        release_digest: rootCritical.release_digest});
+      eq(prepare(api, stateRoot, rootCritical).disposition, 'READY', `${routeHarness} new activation can restore dispatch`);
+    }
+
+    const preservedFailure = fixture(api, stateRoot, 'root-change-preserves-first-failure');
+    const preservedBase = {harness: 'codex', root_session_id: preservedFailure.root_session_id, state_root: stateRoot};
+    api.latchCriticalFailure({...preservedBase, expected_activation_id: preservedFailure.activation.activation_id,
+      expected_root_generation: 0, critical: true, reason: 'ORIGINAL_FAILURE', evidence_ref: 'test://original-failure'});
+    api.updateRootAnchor({...preservedBase, root_anchor: {model: 'changed-anchor', source: 'compact-root'}});
+    eq(api.readActivation(preservedBase).critical_failure_evidence.reason, 'ORIGINAL_FAILURE',
+      'generation change preserves first existing failure evidence');
+
+    const malformedIntent = fixture(api, stateRoot, 'malformed-preparations');
+    const malformedBase = {harness: 'codex', root_session_id: malformedIntent.root_session_id, state_root: stateRoot};
+    const malformedFile = api.stateFileForTest(malformedBase);
+    const malformedState = api.readActivation(malformedBase);
+    malformedState.preparations = [];
+    writeFileSync(malformedFile, JSON.stringify(malformedState));
+    assert.throws(() => api.readActivation(malformedBase), /MODEL_ROUTE_INVALID_ACTIVATION/);
+    checks += 1;
+    eq(api.beginCriticalPreparation({...malformedBase, expected_activation_id: malformedIntent.activation.activation_id,
+      expected_root_generation: 0, critical: true, task_id: 'malformed', evidence_ref: 'test://malformed'}).reason,
+      'INVALID_ACTIVATION', 'malformed preparations cannot reserve intent');
+
+    const races = ['critical-begin', 'critical-build', 'ordinary-build'].map(kind => {
+      const fx = fixture(api, stateRoot, `native-admission-${kind}`, {role: 'peak', requested_role: 'peak',
+        requested_model: 'peak-model', critical: true});
+      const base = {harness: 'codex', root_session_id: fx.root_session_id, state_root: stateRoot};
+      const stale = api.readActivation(base);
+      const beginArgs = {...base, expected_activation_id: stale.activation_id, expected_root_generation: stale.root_generation,
+        critical: true, evidence_ref: 'test://native-admission', route_harness: 'codex-native'};
+      const aIntent = api.beginCriticalPreparation({...beginArgs, task_id: 'admitted-A'});
+      const a = prepare(api, stateRoot, fx, {preparation_id: aIntent.preparation_id, task_id: 'admitted-A'});
+      for (const [field, value] of [['tool_use_id', 'native-admitted-A'], ['agent_type', 'quality-gate']]) {
+        api.bindInvocationExternalIdentity({...base, invocation_id: a.envelope.invocation_id, field, value});
+      }
+      let bIntent = null, result;
+      if (kind === 'critical-begin') {
+        result = api.beginCriticalPreparation({...beginArgs, task_id: 'stale-B'});
+      } else if (kind === 'critical-build') {
+        // Legacy reservations still exist; final native admission must not consume
+        // this ticket while an earlier critical invocation remains pending.
+        bIntent = api.beginCriticalPreparation({...beginArgs, route_harness: undefined, task_id: 'stale-B'});
+        result = prepare(api, stateRoot, fx, {preparation_id: bIntent.preparation_id, task_id: 'stale-B'});
+      } else {
+        result = prepare(api, stateRoot, fx, {route: route({harness: 'codex-native'}), task_id: 'stale-B'});
+      }
+      return {kind, fx, base, stale, beginArgs, a, bIntent, result};
+    });
+    eq(races.map(race => race.result.reason), Array(3).fill('UNRESOLVED_CRITICAL_INVOCATION'),
+      'locked native reservation/build reject stale snapshots after A is admitted');
+    for (const race of races) {
+      const current = api.readActivation(race.base);
+      eq([current.activation_id, current.root_generation], [race.stale.activation_id, race.stale.root_generation],
+        `${race.kind} rejection does not rely on generation change`);
+      eq(Object.values(current.invocations).length, 1, `${race.kind} refusal creates no B invocation`);
+      eq(Object.values(current.preparations).length, race.bIntent ? 2 : 1, `${race.kind} refusal creates no extra intent`);
+      if (race.bIntent) eq(current.preparations[race.bIntent.preparation_id].status, 'pending', 'native build refusal does not consume B intent');
+      eq(current.critical_failure, false, `${race.kind} admission refusal does not invent a critical failure`);
+      api.acceptInvocationEvidence({...race.base, evidence: evidence(race.a.envelope)});
+      if (race.kind === 'critical-begin') {
+        const resumed = api.beginCriticalPreparation({...race.beginArgs, task_id: 'resumed-B'});
+        eq(resumed.disposition, 'READY', 'native critical reservation resumes after accepted A evidence');
+      } else {
+        const resumed = prepare(api, stateRoot, race.fx, {task_id: 'stale-B',
+          ...(race.bIntent ? {preparation_id: race.bIntent.preparation_id} : {route: route({harness: 'codex-native'})})});
+        eq(resumed.disposition, 'READY', `${race.kind} native build resumes after accepted A evidence`);
+      }
+    }
+
+    const cliParallel = fixture(api, stateRoot, 'cli-parallel-admission', {harness: 'codex-cli', role: 'peak',
+      requested_role: 'peak', requested_model: 'peak-model', critical: true});
+    const cliBase = {harness: 'codex', root_session_id: cliParallel.root_session_id, state_root: stateRoot};
+    const cliCalls = [1, 2, 3].map(index => {
+      const snapshot = api.readActivation(cliBase);
+      const taskId = `cli-parallel-${index}`;
+      const intent = api.beginCriticalPreparation({...cliBase, expected_activation_id: snapshot.activation_id,
+        expected_root_generation: snapshot.root_generation, critical: true, task_id: taskId,
+        evidence_ref: 'test://cli-parallel', route_harness: 'codex-cli'});
+      return prepare(api, stateRoot, cliParallel, {task_id: taskId, preparation_id: intent.preparation_id});
+    });
+    eq(cliCalls.map(call => call.disposition), ['READY', 'READY', 'READY'], 'admitted CLI runner retains internal critical parallelism');
+
+    const harnessBinding = fixture(api, stateRoot, 'preparation-harness-binding', {harness: 'codex-cli', role: 'peak',
+      requested_role: 'peak', requested_model: 'peak-model', critical: true});
+    const harnessBase = {harness: 'codex', root_session_id: harnessBinding.root_session_id, state_root: stateRoot};
+    const harnessArgs = {...harnessBase, expected_activation_id: harnessBinding.activation.activation_id,
+      expected_root_generation: 0, critical: true, task_id: 'harness-bound', evidence_ref: 'test://harness-bound', route_harness: 'codex-cli'};
+    eq(api.beginCriticalPreparation({...harnessArgs, route_harness: 'codex-unknown'}).reason,
+      'INVALID_PREPARATION_INPUT', 'unknown route harness cannot select an admission rule');
+    const harnessIntent = api.beginCriticalPreparation(harnessArgs);
+    const wrongHarnessBuild = prepare(api, stateRoot, harnessBinding, {preparation_id: harnessIntent.preparation_id,
+      task_id: 'harness-bound', route: {...harnessBinding.route, harness: 'codex-native'}});
+    eq(wrongHarnessBuild.reason, 'PREPARATION_BINDING_MISMATCH', 'explicit preparation harness binds final route harness');
+    eq(api.readActivation(harnessBase).preparations[harnessIntent.preparation_id].status, 'pending', 'harness mismatch does not consume intent');
+    eq(prepare(api, stateRoot, harnessBinding, {preparation_id: harnessIntent.preparation_id, task_id: 'harness-bound'}).disposition,
+      'READY', 'matching harness consumes explicit preparation normally');
+
+    const ordinaryParallel = fixture(api, stateRoot, 'native-ordinary-parallel');
+    eq([prepare(api, stateRoot, ordinaryParallel).disposition, prepare(api, stateRoot, ordinaryParallel).disposition],
+      ['READY', 'READY'], 'native noncritical work retains ordinary parallelism');
 
     const forged = fixture(api, stateRoot, 'forged', {role: 'peak', requested_role: 'peak',
       requested_model: 'peak-model', critical: true});
@@ -247,6 +453,8 @@ async function behaviorSuite(api) {
       harness: 'codex', root_session_id: generation.root_session_id,
       evidence: evidence(pendingBeforeChange.envelope), state_root: stateRoot,
     }).reason, 'INVOCATION_ALREADY_CONSUMED', 'generation change invalidates in-flight tickets');
+    eq(api.readActivation({harness: 'codex', root_session_id: generation.root_session_id, state_root: stateRoot})
+      .critical_failure, false, 'generation change with only pending noncritical work does not latch');
 
     const paused = fixture(api, stateRoot, 'paused');
     const pausedCall = prepare(api, stateRoot, paused);
@@ -294,6 +502,22 @@ async function behaviorSuite(api) {
       harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot,
     }), /MODEL_ROUTE_STATE_BUSY/);
     checks += 1;
+    assert.throws(() => api.latchCriticalFailure({
+      harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot,
+      expected_activation_id: busy.activation.activation_id, expected_root_generation: busy.activation.root_generation,
+      critical: true, reason: 'EVIDENCE_IO_FAILED', evidence_ref: 'test://occupied-lock',
+    }), /MODEL_ROUTE_STATE_BUSY/);
+    checks += 1;
+    eq(api.readActivation({harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot})
+      .critical_failure, false, 'failed persistence cannot claim latch was stored');
+    assert.throws(() => api.beginCriticalPreparation({
+      harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot,
+      expected_activation_id: busy.activation.activation_id, expected_root_generation: busy.activation.root_generation,
+      critical: true, task_id: 'never-started', evidence_ref: 'test://busy-reservation',
+    }), /MODEL_ROUTE_STATE_BUSY/);
+    checks += 1;
+    eq(Object.values(api.readActivation({harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot})
+      .preparations || {}).length, 0, 'unavailable reservation creates no intent');
     rmSync(`${busyFile}.lock`);
 
     return checks;
@@ -305,6 +529,25 @@ async function behaviorSuite(api) {
 async function runMutations() {
   const source = readFileSync(hostPath, 'utf8');
   const mutations = [
+    ['native reservation admission guard removed', "if (route_harness === 'codex-native' && hasPendingCriticalInvocation(state))", 'if (false)'],
+    ['native invocation admission guard removed', "if (route.harness === 'codex-native' && hasPendingCriticalInvocation(state))", 'if (false)'],
+    ['preparation route harness binding bypassed', '(preparation.route_harness !== undefined && preparation.route_harness !== route.harness)', 'false'],
+    ['root change clears unresolved critical obligation', 'if (unresolvedCritical) {', 'if (false) {'],
+    ['root change incorrectly latches noncritical work', "|| Object.values(state.invocations).some(call => record(call) && call.status === 'pending' && call.critical === true);",
+      "|| Object.values(state.invocations).some(call => record(call) && call.status === 'pending');"],
+    ['root change ignores critical invocations', "|| Object.values(state.invocations).some(call => record(call) && call.status === 'pending' && call.critical === true);", '|| false;'],
+    ['unresolved intent permits dispatch', "&& ticket.status === 'pending' && ticket !== preparation", "&& false"],
+    ['intent task binding bypassed', '|| preparation.task_id !== task_id', '|| false'],
+    ['consumed intent remains replayable', "preparation.status = 'consumed';", "preparation.status = 'pending';"],
+    ['preparation failure accepts stale activation', 'state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation',
+      'false || state.root_generation !== expected_root_generation'],
+    ['preparation failure accepts stale generation', 'state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation',
+      'state.activation_id !== expected_activation_id || false'],
+    ['preparation latch removed', 'state.critical_failure = true;\n    state.critical_failure_evidence',
+      'state.critical_failure = false;\n    state.critical_failure_evidence'],
+    ['preparation failure leaves pending tickets', "invalidatePending(state, 'CRITICAL_FAILURE_LATCHED');", '/* mutation */'],
+    ['preparation failure creates missing directory', "if (!validState(readJson(file))) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');",
+      '/* mutation */'],
     ['agent type incorrectly unique', "field !== 'agent_type' &&", 'true &&'],
     ['duplicate identity accepted', 'if (duplicate) {', 'if (false) {'],
     ['identity failure leaves pending ticket', "call.status = 'refused';\n      call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';",
