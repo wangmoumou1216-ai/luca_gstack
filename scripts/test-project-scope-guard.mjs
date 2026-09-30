@@ -5,7 +5,7 @@
 //
 // 全程 hermetic：任务专用 LUCA_PROJECTS_ROOT + 临时 CLAUDE_PROJECT_DIR，不改写 HOME。
 import { spawnSync, spawn } from 'child_process';
-import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -142,14 +142,29 @@ function makeEnv({ pins = {}, nestedFramework = false } = {}) {
   }
   return { root, gstack, projects, codexHome };
 }
-function run(env, payload, extraEnv = {}, { addDefaultBoundary = true } = {}) {
+function run(env, payload, extraEnv = {}, { addDefaultBoundary = true, viaAdapter = false } = {}) {
   const sid = String(payload?.session_id || '');
   const observed = {
     ...payload,
     ...(!payload?.cwd ? { cwd: env.gstack } : {}),
     ...(addDefaultBoundary && sid && !payload?.turn_id && !payload?.prompt_id ? { turn_id: `turn-${sid}` } : {}),
   };
-  const r = spawnSync('node', [HOOK], {
+  let argv = [HOOK];
+  if (viaAdapter) {
+    const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    if (!env.adapterReady) {
+      assert.equal(spawnSync('git', ['init', '-q', env.gstack]).status, 0);
+      for (const file of ['.codex/codex-hook-adapter.mjs', '.claude/hooks/controlled-change-guard.mjs', 'scripts/controlled-change.mjs']) {
+        mkdirSync(dirname(join(env.gstack, file)), { recursive: true });
+        cpSync(join(repo, file), join(env.gstack, file));
+      }
+      cpSync(join(repo, '.claude/hooks/lib'), join(env.gstack, '.claude/hooks/lib'), { recursive: true });
+      cpSync(HOOK, join(env.gstack, '.claude/hooks/project-scope-guard.mjs'));
+      env.adapterReady = true;
+    }
+    argv = [join(env.gstack, '.codex/codex-hook-adapter.mjs'), join(env.gstack, '.claude/hooks/project-scope-guard.mjs')];
+  }
+  const r = spawnSync('node', argv, {
     input: JSON.stringify(observed),
     cwd: env.gstack,
     env: {
@@ -1134,6 +1149,113 @@ for (const command of ['cd "$TASKROOT" && ls', 'read TASKROOT; cd "$TASKROOT" &&
     assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })?.hookSpecificOutput?.permissionDecision, 'deny');
   });
 }
+
+check('IDENTITY-DATA-008 literal Python text write preserves payload and executes in temp scope', () => {
+  const env = makeEnv();
+  const target = join(env.gstack, 'handoff.md');
+  const content = 'docs/handoff .. .claude/workflow-state.yaml .claude/current-topic.txt\n'
+    + '.claude/.session-project-example .claude/host-launch\n'
+    + 'cp generated framework/x; $(touch should-not-exist)';
+  const command = `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text(${JSON.stringify(content)}, encoding='utf-8')\nPY`;
+  const out = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } });
+  assert.equal(out, null, 'literal content is data; the explicit temp target is the only path operand');
+  const written = spawnSync('bash', ['-c', command], { cwd: env.gstack, encoding: 'utf8' });
+  assert.equal(written.status, 0, written.stderr);
+  assert.equal(readFileSync(target, 'utf8'), content);
+  assert.equal(existsSync(join(env.gstack, 'should-not-exist')), false);
+});
+
+check('IDENTITY-DATA-009 pinned Python write rewrites only the target', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const content = "docs/handoff and .claude/workflow-state.yaml remain document text: $& $$ $` $'";
+  const command = `python3 - <<'PY'\nfrom pathlib import Path\nPath('docs/review.md').write_text(${JSON.stringify(content)})\nPY`;
+  const out = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command } });
+  assert.equal(out?.hookSpecificOutput?.updatedInput?.command,
+    command.replace("'docs/review.md'", `'${abs(env, 'alpha', 'docs')}/review.md'`));
+});
+
+check('IDENTITY-DATA-010 literal Python write retains real target protections', () => {
+  const env = makeEnv();
+  for (const target of ['docs/x.md', '.claude/workflow-state.yaml', '.claude/current-topic.txt',
+    '.claude/.session-project-example', '.claude/host-launch/x', 'framework/x.md']) {
+    const command = `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text('harmless')\nPY`;
+    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })
+      ?.hookSpecificOutput?.permissionDecision, 'deny', target);
+  }
+});
+
+check('IDENTITY-DATA-011 Python masking refuses dynamic or additional execution', () => {
+  const env = makeEnv();
+  for (const body of [
+    `from pathlib import Path\nPath('/tmp/x').write_text(f\"{Path('docs/x').read_text()}\")`,
+    `from pathlib import Path\nPath('/tmp/x').write_text('docs/handoff'); Path('docs/x').read_text()`,
+    `from pathlib import Path\nPath('/tmp/x').write_text('docs/handoff')\nimport os`,
+    `from pathlib import Path\nPath(destination).write_text('docs/handoff')`,
+    `from pathlib import Path\nPath('d\\x6fcs/x').write_text('docs/handoff')`,
+  ]) {
+    const command = `python3 - <<'PY'\n${body}\nPY`;
+    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })
+      ?.hookSpecificOutput?.permissionDecision, 'deny', body);
+  }
+});
+
+check('IDENTITY-DATA-012 Python literal variants preserve protected-looking text', () => {
+  const env = makeEnv();
+  for (const content of [
+    `'''docs/handoff\n.claude/workflow-state.yaml\nframework/x'''`,
+    `r"docs/handoff \\n .claude/current-topic.txt"`,
+    `'docs/handoff \\'quoted\\' text'`,
+    `'''guidance\nnode scripts/project-read.mjs read\nSCOPE=".claude/host-launch"\n$SCOPE'''`,
+  ]) {
+    const command = `python3 <<"TEXT"\nfrom pathlib import Path\nPath('/tmp/example.txt').write_text(${content}, encoding="utf-8")\nTEXT\n`;
+    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } }), null, content);
+  }
+  for (const command of [
+    `python3 <<PY\nfrom pathlib import Path\nPath('/tmp/x').write_text('docs/handoff $(cat docs/x)')\nPY`,
+    `python3 <<'PY'\nfrom pathlib import Path\nPath('/tmp/x').write_text('docs/handoff')\nPY\ncat docs/x`,
+    `python3 <<'PY'\nfrom pathlib import Path\nPath('/tmp/x').write_text('docs/handoff' + Path('docs/x').read_text())\nPY`,
+  ]) assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })
+    ?.hookSpecificOutput?.permissionDecision, 'deny', command);
+});
+
+check('IDENTITY-DATA-013 Codex adapter preserves data and enforces real target boundaries', () => {
+  const env = makeEnv({ pins: { S: 'alpha' } });
+  const content = "docs/handoff .claude/workflow-state.yaml .claude/.session-project-example cp x framework/x $& $'";
+  const command = target => `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text(${JSON.stringify(content)})\nPY`;
+  for (const tool of ['Bash', 'shell', 'local_shell']) {
+    const payload = target => ({ hook_event_name: 'PreToolUse', session_id: 'NP', tool_name: tool,
+      tool_input: { command: command(target) } });
+    assert.equal(run(env, payload(join(env.gstack, 'handoff.txt')), {}, { viaAdapter: true }), null, tool);
+    for (const target of ['docs/x', '.claude/.session-project-example', 'framework/x']) {
+      assert.equal(run(env, payload(target), {}, { viaAdapter: true })?.hookSpecificOutput?.permissionDecision, 'deny', `${tool}: ${target}`);
+    }
+    const pinned = run(env, { ...payload('docs/review.md'), session_id: 'S' }, {}, { viaAdapter: true });
+    assert.equal(pinned?.hookSpecificOutput?.permissionDecision, 'allow');
+    assert.equal(pinned?.hookSpecificOutput?.updatedInput?.command, command(abs(env, 'alpha', 'docs/review.md')));
+  }
+});
+
+check('IDENTITY-DATA-014 Python target spaces, traversal and symlink escape retain scope', () => {
+  const env = makeEnv({ pins: { S: 'alpha', B: 'beta' } });
+  const content = 'docs/handoff .claude/workflow-state.yaml $&';
+  const command = target => `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text(${JSON.stringify(content)})\nPY`;
+  symlinkSync(abs(env, 'beta', 'docs'), abs(env, 'alpha', 'docs/escape'));
+  symlinkSync(abs(env, 'beta', 'docs'), abs(env, 'alpha', 'docs/space escape'));
+  for (const viaAdapter of [false, true]) {
+    const invoke = (target, session_id = 'S') => run(env, { hook_event_name: 'PreToolUse', session_id,
+      tool_name: viaAdapter ? 'shell' : 'Bash', tool_input: { command: command(target) } }, {}, { viaAdapter });
+    const scoped = invoke('docs/a b.md');
+    assert.equal(scoped?.hookSpecificOutput?.updatedInput?.command, command(abs(env, 'alpha', 'docs/a b.md')));
+    const written = spawnSync('bash', ['-c', scoped.hookSpecificOutput.updatedInput.command], { cwd: env.gstack, encoding: 'utf8' });
+    assert.equal(written.status, 0, written.stderr);
+    assert.equal(readFileSync(abs(env, 'alpha', 'docs/a b.md'), 'utf8'), content);
+    assert.equal(invoke('docs/a b.md', 'NP')?.hookSpecificOutput?.permissionDecision, 'deny');
+    for (const target of ['docs/./x', 'docs/../x', 'docs/escape/x', 'docs/space escape/x',
+      'FRAMEWORK/x', '././framework/x', 'subdir/../framework/x']) {
+      assert.equal(invoke(target)?.hookSpecificOutput?.permissionDecision, 'deny', `${viaAdapter}: ${target}`);
+    }
+  }
+});
 
 check('IDENTITY-PATH-024d project-scope guard source is checkout-portable', () => {
   const source = readFileSync(HOOK, 'utf8');

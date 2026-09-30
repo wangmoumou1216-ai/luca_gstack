@@ -205,6 +205,13 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 | **Stop** | session-sync | 拦截未沉淀的实质工作、写 checkpoint；真正关闭回合时撤销 turn grant |
 | **SessionEnd** | session-end | 会话真正结束时清理本 session 的计数和全部 read grants（僵尸窗口归零） |
 
+交接正文提到 `docs/` 或共享状态路径时，优先用文件工具的明确目标路径写入。
+项目守卫也识别带引号 heredoc 中的单次静态 Python 文本写入：
+`from pathlib import Path` 后接 `Path('字面目标').write_text('字面正文')`，可指定 `encoding='utf-8'`。
+正文保持原字节，只有真实目标参与拒绝或 pin 重定向；真实共享状态、会话控制文件与只读母版仍受保护。
+目标按完整字面路径检查，包括含空格的软链目录；模板检查同时核对归一化与真实目标，路径穿越不放行。
+动态目标、f-string、附加语句、无引号 heredoc 和其他解释器代码继续按保守路径检查。
+
 Codex Hook 更新后，先运行只读体检 `node scripts/codex-hook-health.mjs`。
 体检独立固定已审注册协议：事件、matcher、完整加载/恢复命令、超时和上下文限制；
 只允许源码摘要随已审代码更新。主动改变注册协议时，须同审并更新体检中的协议指纹。

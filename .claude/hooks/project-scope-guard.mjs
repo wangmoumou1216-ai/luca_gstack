@@ -22,9 +22,8 @@
 // （行首/空白/引号/重定向符 后紧跟 docs/），覆盖 mkdir -p docs/…、cat > docs/…、"docs/…" 等常见形态；
 // 文件类工具（Write/Edit/Read/…）的 file_path 重写是**精确**的。含空格的项目名在无引号 Bash 场景下
 // 可能不完美（罕见，kebab 命名不受影响）。
-// 已知误伤（2026-07-14 实证，接受的权衡）：docs/ 作为**字符串字面量**（grep 模式/echo 文本/JSON
-// payload）同样命中 anchor——未绑定被 deny、绑定被静默改写。anchor 无法区分"模式"与"路径"，收窄
-// anchor 会漏真路径（安全侧优先）；处置=deny 文案给出改写指引，不改重写逻辑。
+// 已知误伤的保守边界：仅遮罩已识别命令的数据位（搜索模式、带引号 heredoc、静态 Python 文本写入等）；
+// 真实路径继续拒绝或重定向。未知语法保守扫描，复杂文本写入优先使用明确 file_path 的文件工具。
 //
 // Claude Code PreToolUse 契约（已核）：stdin JSON = { session_id, tool_name, tool_input }；
 //  重定向：stdout 打印 {"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{…整份输入…}}}
@@ -513,12 +512,62 @@ function exactReadBrokerMaintenance(command) {
   return String(command || '').trim() === 'node --check scripts/project-read.mjs';
 }
 
+// Recognize one complete, static Python text write, never an arbitrary interpreter
+// body. Keeping the plain Path target visible lets the existing scope checks bite.
+function literalPythonTextWrite(command) {
+  const source = String(command || '');
+  const header = /^python3[ \t]+(?:-[ \t]+)?<<(['"])([A-Za-z_][A-Za-z0-9_]*)\1[ \t]*\r?\n/.exec(source);
+  if (!header) return null;
+  const end = new RegExp(`^${escapeRe(header[2])}\\r?(?:\\n|$)`, 'm').exec(source.slice(header[0].length));
+  if (!end || source.slice(header[0].length + end.index + end[0].length).trim()) return null;
+  const bodyEnd = header[0].length + end.index;
+  let cursor = header[0].length;
+  const consume = pattern => {
+    const match = pattern.exec(source.slice(cursor, bodyEnd));
+    if (!match) return false;
+    cursor += match[0].length;
+    return true;
+  };
+  const stringLiteral = ({ target = false } = {}) => {
+    const start = cursor;
+    if (!target && /^[rR]/.test(source[cursor] || '')) cursor++;
+    const quote = source[cursor];
+    if (quote !== "'" && quote !== '"') { cursor = start; return null; }
+    const triple = source.slice(cursor, cursor + 3) === quote.repeat(3);
+    if (target && triple) { cursor = start; return null; }
+    const delimiter = triple ? quote.repeat(3) : quote;
+    cursor += delimiter.length;
+    const valueStart = cursor;
+    while (cursor < bodyEnd) {
+      if (source.slice(cursor, cursor + delimiter.length) === delimiter) {
+        const value = source.slice(valueStart, cursor);
+        cursor += delimiter.length;
+        if (target && /[\x00-\x1f\\$`*?\[\]{}~]/.test(value)) return null;
+        return { start, end: cursor, value };
+      }
+      if (source[cursor] === '\\') { cursor += 2; continue; }
+      if (!triple && /[\r\n]/.test(source[cursor])) return null;
+      cursor++;
+    }
+    return null;
+  };
+  if (!consume(/^\s*from[ \t]+pathlib[ \t]+import[ \t]+Path[ \t]*\r?\n\s*Path[ \t]*\([ \t]*/)) return null;
+  const target = stringLiteral({ target: true });
+  if (!target || !target.value || !consume(/^[ \t]*\)[ \t]*\.[ \t]*write_text[ \t]*\(\s*/)) return null;
+  const content = stringLiteral();
+  if (!content) return null;
+  if (!consume(/^\s*(?:,[ \t]*encoding[ \t]*=[ \t]*(?:'utf-8'|"utf-8")[ \t]*)?\)[ \t\r\n]*$/)) return null;
+  return { target: target.value, targetSpan: target, content };
+}
+
 // Search patterns are data, not path operands. Mask only the pattern argument of a
 // small, explicit command subset and only when an explicit path operand follows it.
 // Unknown options remain unmasked (conservative fallback), while real path operands
 // continue through the normal redirect/deny logic.
 function maskSearchPatternArguments(command) {
   const ranges = [];
+  const pythonWrite = literalPythonTextWrite(command);
+  if (pythonWrite) ranges.push(pythonWrite.content);
   // All masking branches use the same quote/escape-aware operator scan. Raw
   // substring tests here would mistake literal | or << for shell syntax.
   const shellSyntax = source => {
@@ -671,7 +720,7 @@ function maskSearchPatternArguments(command) {
     command: masked,
     restore(value) {
       let restored = value;
-      for (const [marker, original] of restorations) restored = restored.replace(marker, original);
+      for (const [marker, original] of restorations) restored = restored.replace(marker, () => original);
       return restored;
     },
   };
@@ -921,7 +970,14 @@ function frameworkWriteDeny(tool, inp) {
     return isFrameworkPath(p) ? String(p) : null;
   }
   if (tool === 'Bash') {
-    const cmd = String(inp.command || '');
+    const original = String(inp.command || '');
+    const pythonWrite = literalPythonTextWrite(original);
+    if (pythonWrite) {
+      const lexical = resolve(gstackRoot, pythonWrite.target);
+      const actual = realTargetOf(lexical);
+      if ([pythonWrite.target, lexical, actual].some(value => value && isFrameworkPath(value))) return pythonWrite.target;
+    }
+    const cmd = pythonWrite ? maskSearchPatternArguments(original).command : original;
     // fw 匹配：仓根绝对路径 <gstackRoot>/framework/（A#2 手滑级绝对路径）或 (./)framework/（相对）
     const escAbs = join(gstackRoot, 'framework').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const fw = '(?:' + escAbs + '/|(?:\\./)?framework/)';
@@ -1063,6 +1119,27 @@ function main() {
       permissionDecisionReason: `framework/ 是只读母版保护区（SF-002 宪法红线）：「${fwHit}」被拒。原型/演示应把母版复制到项目目录再改，绝不原地写 framework/。确需维护母版本身 → touch .claude/.allow-framework-write（改完 rm）或设 env ALLOW_FRAMEWORK_WRITE=1 后重试。` } });
   }
 
+  // 静态 Python 写入使用完整目标，与文件工具共用路径分类；不能再交给 shell token 扫描截断。
+  const pythonWrite = toolName === 'Bash' ? literalPythonTextWrite(bashCommand) : null;
+  if (pythonWrite) {
+    const parts = pythonWrite.target.split('/');
+    if (isAbsolute(pythonWrite.target)) parts.shift();
+    const c = classifyPath(pythonWrite.target, binding);
+    if (!safeSegments(parts) || (c.scoped && !c.redirected)) {
+      return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+        permissionDecisionReason: authorityFailure || '静态 Python 文本写入的完整目标含 traversal、跨项目软链或缺少可验证绑定。' } });
+    }
+    if (c.redirected) {
+      const { start, end } = pythonWrite.targetSpan;
+      const literal = bashCommand[start] === "'" && !/[\x00-\x1f]/.test(c.redirected)
+        ? "'" + c.redirected.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+        : JSON.stringify(c.redirected);
+      const command = bashCommand.slice(0, start) + literal + bashCommand.slice(end);
+      return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, command } } });
+    }
+    passThrough();
+  }
+
   // Bash 先处理，且优先识别命令位的 project.sh switch/new —— 直接 CLI 切换（! 命令）route-guard 看不到，
   // 在此认领 pin，闭合"CLI 切换后 pin 不更新"的洞。识别后立即用新 pin 继续本命令的重写。
   if (toolName === 'Bash') {
@@ -1128,7 +1205,7 @@ function main() {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
         permissionDecisionReason: 'project-pin.mjs 是 hook/project.sh 的内部事务接口，不能作为同轮绕过 terminal/epoch 的项目工具调用。' } });
     }
-    if (mentionsReadBrokerInvocation(cmd)) {
+    if (mentionsReadBrokerInvocation(guardCmd)) {
       if (exactReadBrokerInvocation(cmd, sid)) passThrough();
       if (!exactReadBrokerMaintenance(cmd)) {
         return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',

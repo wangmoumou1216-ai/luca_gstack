@@ -61,6 +61,8 @@ function run(root, test) {
 
 function copyExecutionTree(target) {
   mkdirSync(join(target, '.claude'), { recursive: true });
+  mkdirSync(join(target, '.codex'), { recursive: true });
+  cpSync(join(SOURCE_ROOT, '.codex', 'codex-hook-adapter.mjs'), join(target, '.codex', 'codex-hook-adapter.mjs'));
   cpSync(join(SOURCE_ROOT, 'scripts'), join(target, 'scripts'), { recursive: true });
   cpSync(join(SOURCE_ROOT, '.claude', 'hooks'), join(target, '.claude', 'hooks'), { recursive: true });
   const writeState = join('.claude', 'skills', 'office', 'references', 'write_state.py');
