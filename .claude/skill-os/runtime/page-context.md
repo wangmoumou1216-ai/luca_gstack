@@ -71,7 +71,7 @@ CLI 为 `node scripts/page-context.mjs adaptation-draft --record <草稿.json> -
 无现成支持记unknown/unsupported并列扩展/更换/裁定，不仅靠名字；设计方案支持扩展须在冻结后合同中验证。
 
 静态定位使用真实module/slot/region ID；原件使用实际inert索引scope/locator/label，含隐藏template。
-原件动作按scope/locator/action去重后联合核对范围兼容性，重复来源/状态不构造重复动作，不同动作/重叠保持区不能报告ready；另过实际源字节范围/禁止目标/void兼容门：void add/modify拒绝，refine允许经原件专用检查。静态state_support必须证明位置支持；原件目录状态名不是交互证明，依据须设计/用户复核。
+原件动作按scope/locator/action去重后联合核对范围兼容性，重复来源/状态不构造重复动作，不同动作/重叠保持区不能报告ready；另过实际源字节范围/禁止目标/void兼容门：void add/modify拒绝，refine允许经原件专用检查。静态carrier动作按action/target去重后，以正式binding的同一module/slot图联合检查重复目标与祖先重叠；合法冲突只能记needs_context，不存在或非法目标仍拒绝。草稿preserve-only只验证定位，不授予最终无变化衍生。静态state_support必须证明位置支持；原件目录状态名不是交互证明，依据须设计/用户复核。
 validator校验原文、全量source/state覆盖、实际源/定位、允许动作及已知状态支持；不会证明语义判断或原交互。
 ready不能含未知/不支持、低置信或替代位置；refine不得与结构动作混用同一profile；返回ADAPTATION_READY仍 `binding_allowed=false`、
 `execution_allowed=false`。closed schema不接受frozen_packet/adoption/TAC/bundle hash，草稿不是最终binding。

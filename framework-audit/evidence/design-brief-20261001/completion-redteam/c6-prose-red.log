@@ -1,0 +1,35 @@
+PASS: stdin / eval / file / non-file launcher imports; direct CLI still executes
+PASS: chain / adhoc / UX preserve the original source bytes, decisions and states
+PASS: declined / no-match metadata excludes candidates; pending and missing source stop
+PASS: confirmed reference requires a separate caller-checked message and screenshot witness
+PASS: regions / converted boxes, safe transport bytes, preview versions and existing source scope guards
+PASS: explicit tool / project / write grant; Claude Design export and bound recover stay independent
+PASS: readback checks exact project, complete brief, provenance and every actual attachment byte
+PASS: immutable prototype byte evidence, source indexing, hash participation and complete carrier readback
+PASS: explicit visual refinement, unchanged business DOM/global CSS/assets, exact module boundary and semantic review separation
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Got unwanted rejection: C6: inline prose examples remain legacy source rather than declaring a structured Packet
+Actual message: "Carrier requires the versioned structured Packet envelope; refreeze legacy prose or explicitly choose reference_only"
+    at async file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/test-design-flow-handoff.mjs:651:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: Error: Carrier requires the versioned structured Packet envelope; refreeze legacy prose or explicitly choose reference_only
+      at fail (file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/carrier-packet.mjs:3:55)
+      at inspectCarrierPacket (file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/carrier-packet.mjs:23:87)
+      at referencePrototypeSourceOptions (file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/design-flow-handoff.mjs:951:20)
+      at Module.buildReferenceOnlyHandoff (file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/design-flow-handoff.mjs:986:93)
+      at async file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/test-design-flow-handoff.mjs:652:22
+      at async waitForActual (node:assert:644:5)
+      at async Function.doesNotReject (node:assert:787:33)
+      at async file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/test-design-flow-handoff.mjs:651:5 {
+    code: 'PACKET_REFREEZE_REQUIRED'
+  },
+  expected: undefined,
+  operator: 'doesNotReject',
+  diff: 'simple'
+}
+
+Node.js v22.23.1

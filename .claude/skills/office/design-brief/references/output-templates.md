@@ -180,6 +180,10 @@ const frozen = inspectCarrierPacket(body);
 
 helper 生成唯一 Markdown/JSON envelope 并计算原文 hash；冻结 body 必须按字节传递。
 TAC 使用 inspector 返回的全部 applicability，不能重编 ID、手填 hash 或在下游过滤分母。
+reference_only若运输实际结构化Packet，原型附件source_ids也必须存在于该Packet，并在导出及完整读回时重核；声明结构化但格式损坏须回Brief重冻，不能降为未验证正文。
+可识别的声明是Packet标题下的对象/围栏，或独立/围栏JSON文档根对象的packet_kind=design-generation（按JSON语义解码）；散文中的字段片段不算声明。不可识别且不能解析的自由正文没有机器ID保证，须回本owner完成结构化冻结，不猜测已损坏的意图。
+旧自由Markdown没有可机读事实索引时，附件明确标unverified-source-index；来源关系仍须由设计/用户核对，不能宣称机器覆盖或把附件当需求源。
+
 旧自由 Markdown 没有这项机器完整性保证：保留原文走 reference_only，或回本 owner 完成新版本冻结。
 格式校验不证明从上游到 Packet 的语义忠实；仍逐项完成 Phase 6.5/6.75 的对照验收。
 

@@ -1,0 +1,379 @@
+--- a/scripts/page-context.mjs
++++ b/scripts/page-context.mjs
+@@ -424,7 +424,7 @@
+   return false;
+ }
+ 
+-function assertActionsDoNotOverlap({ modules, slots }, actions) {
++function assertActionsDoNotOverlap({ modules, slots }, actions, { allowPreserveOnly = false } = {}) {
+   const targetIds = new Set();
+   const actionIds = new Set();
+   const targets = actions.map(action => {
+@@ -462,7 +462,7 @@
+       fail('CARRIER_ACTION_OVERLAP', `Carrier actions ${a.action_id} and ${b.action_id} overlap in the module graph`);
+     }
+   }
+-  if (!targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, remove, or refine action');
++  if (!allowPreserveOnly && !targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, remove, or refine action');
+   return targets;
+ }
+ 
+@@ -542,6 +542,7 @@
+   const source = await readPageSource(page, { root });
+   const pairs = new Set();
+   const originalActions = new Map();
++  const staticActions = new Map();
+   const mixedRefine = record.judgments.some(item => item.action === 'refine') && record.judgments.some(item => !['refine', 'preserve'].includes(item.action));
+   if (mixedRefine && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
+   let unresolved = mixedRefine;
+@@ -575,6 +576,10 @@
+       if (judgment.action === 'remove' && target.required) fail('CARRIER_REQUIRED_MODULE', 'Required modules cannot be removed');
+       const state = page.state_support?.find(item => item.state_id === judgment.state_id);
+       if (judgment.state_status === 'supported' && (!state || state.status !== 'supported' || !state.target_ids.includes(judgment.location.target_id))) fail('MATCH_STATE_UNSUPPORTED', 'Names alone do not prove state support at the requested location');
++      if (page.carrier_eligible) {
++        const actionKey = canonicalJson({ action: judgment.action, target_id: judgment.location.target_id });
++        if (!staticActions.has(actionKey)) staticActions.set(actionKey, { action_id: `DRAFT-${staticActions.size + 1}`, action: judgment.action, [judgment.action === 'add' ? 'slot_id' : 'module_id']: judgment.location.target_id });
++      }
+     }
+     unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || judgment.state_status !== 'supported';
+   }
+@@ -588,6 +593,16 @@
+       await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true });
+     } catch (error) {
+       if (record.decision === 'ready' || !['ORIGINAL_ACTION_OVERLAP', 'ORIGINAL_REFINEMENT_PROFILE', 'ORIGINAL_ACTIONS_REQUIRED'].includes(error.code)) throw error;
++      unresolved = true;
++    }
++  } else if (page.carrier_eligible) {
++    const graph = validateCarrierContract(page, anchorsIn(source.bytes.toString('utf8')));
++    try {
++      // Source/state evidence can repeat one action, but distinct actions must
++      // satisfy the same joint target/ancestry gate as the final binding.
++      assertActionsDoNotOverlap(graph, [...staticActions.values()], { allowPreserveOnly: true });
++    } catch (error) {
++      if (record.decision !== 'needs_context' || !['CARRIER_ACTION_TARGET_REUSED', 'CARRIER_ACTION_OVERLAP'].includes(error.code)) throw error;
+       unresolved = true;
+     }
+   }
+--- a/scripts/test-page-context.mjs
++++ b/scripts/test-page-context.mjs
+@@ -229,6 +229,78 @@
+   assert.equal(prepared.binding_sha256, computeBindingHash({ frozen_packet: carrierDraft.frozen_packet, binding: carrierDraft.binding }));
+   assert.equal(prepared.contract.module_contract_hash, carrierPage.module_contract_hash);
+   await assert.rejects(validateCarrierBindingDraft(carrierCatalog, carrierDraft, { root }), { code: 'PACKET_EVIDENCE_REQUIRED' });
++  const staticAdaptationFor = (placements, cat = carrierCatalog, sources = placements.map((placement, index) => ({ id: `REQ-JOINT-${index + 1}`, text: `Fixture requirement: ${placement.action} at ${placement.target_id}.`, required_states: ['default'] }))) => {
++    const entry = cat.pages[0];
++    return {
++      sources,
++      draft: {
++        ...adaptation, source_revision_sha256: computeDesignSourceRevision(sources), catalog_sha256: computeCatalogHash(cat),
++        reviewed_source_ids: sources.map(item => item.id),
++        judgments: sources.flatMap((item, index) => item.required_states.map(state_id => {
++          const placement = placements[index];
++          const target = [...entry.modules, ...entry.slots, ...entry.regions].find(target => (target.module_id ?? target.slot_id ?? target.region_id) === placement.target_id);
++          return { ...adaptation.judgments[0], source_id: item.id, excerpt: item.text, state_id, action: placement.action, location: { target_id: placement.target_id }, target_excerpt: target?.intent ?? 'Unknown target' };
++        }))
++      }
++    };
++  };
++  const staticDraftFailures = [];
++  for (const [name, placements, code] of [
++    ['same module modify/preserve', [{ action: 'modify', target_id: 'toolbar' }, { action: 'preserve', target_id: 'toolbar' }], 'CARRIER_ACTION_TARGET_REUSED'],
++    ['parent modify/child preserve', [{ action: 'modify', target_id: 'root' }, { action: 'preserve', target_id: 'toolbar' }], 'CARRIER_ACTION_OVERLAP'],
++    ['slot add/ancestor preserve', [{ action: 'add', target_id: 'toolbar-slot' }, { action: 'preserve', target_id: 'root' }], 'CARRIER_ACTION_OVERLAP'],
++    ['same module distinct changes', [{ action: 'modify', target_id: 'content' }, { action: 'remove', target_id: 'content' }], 'CARRIER_ACTION_TARGET_REUSED']
++  ]) {
++    const { draft, sources } = staticAdaptationFor(placements);
++    const finalDraft = structuredClone(carrierDraft);
++    finalDraft.binding.actions = placements.map((placement, index) => ({ action_id: `C-${index + 1}`, action: placement.action, [placement.action === 'add' ? 'slot_id' : 'module_id']: placement.target_id }));
++    finalDraft.binding.match_assessment = assessmentFor(carrierCatalog, finalDraft.binding, 'default');
++    await assert.rejects(validateCarrierBindingDraft(carrierCatalog, finalDraft, { root, packetBody }), { code });
++    try {
++      await assert.rejects(validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources }), { code });
++      console.log(`PASS static draft joint gate: ${name} -> ${code}`);
++    } catch (error) {
++      staticDraftFailures.push(`${name}: ${error.message}`);
++      console.log(`FAIL static draft joint gate: ${name} -> ${error.message}`);
++    }
++    draft.decision = 'needs_context';
++    const unresolvedDraft = await validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources });
++    assert.equal(unresolvedDraft.status, 'NEEDS_CONTEXT');
++    assert.equal(unresolvedDraft.binding_allowed, false);
++    assert.equal(unresolvedDraft.execution_allowed, false);
++  }
++  for (const [placements, code] of [
++    [[{ action: 'modify', target_id: 'imagined' }], 'MATCH_TARGET_EVIDENCE'],
++    [[{ action: 'modify', target_id: 'toolbar-slot' }], 'CARRIER_ACTION_FORBIDDEN'],
++    [[{ action: 'add', target_id: 'canvas' }], 'UNKNOWN_SLOT']
++  ]) {
++    const { draft, sources } = staticAdaptationFor(placements);
++    draft.decision = 'needs_context';
++    draft.judgments[0].state_status = 'unknown';
++    try {
++      await assert.rejects(validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources }), { code });
++    } catch (error) { staticDraftFailures.push(`${code}: ${error.message}`); }
++  }
++  for (const placements of [
++    [{ action: 'add', target_id: 'root-slot' }, { action: 'preserve', target_id: 'content' }],
++    [{ action: 'preserve', target_id: 'content' }]
++  ]) {
++    const { draft, sources } = staticAdaptationFor(placements);
++    assert.equal((await validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources })).status, 'ADAPTATION_READY');
++  }
++  const repeatedCatalog = structuredClone(carrierCatalog);
++  repeatedCatalog.pages[0].states.push('empty');
++  repeatedCatalog.pages[0].state_support.push({ ...repeatedCatalog.pages[0].state_support[0], state_id: 'empty' });
++  repeatedCatalog.pages[0].module_contract_hash = computeModuleContractHash(repeatedCatalog.pages[0]);
++  const repeatedSources = [1, 2].map(index => ({ id: `REQ-REPEATED-${index}`, text: 'Add the same toolbar control in default and empty states.', required_states: ['default', 'empty'] }));
++  const repeated = staticAdaptationFor([{ action: 'add', target_id: 'toolbar-slot' }, { action: 'add', target_id: 'toolbar-slot' }], repeatedCatalog, repeatedSources);
++  assert.equal((await validateAdaptationDraft(repeatedCatalog, repeated.draft, { root, sourceItems: repeated.sources })).status, 'ADAPTATION_READY', 'multiple source/state judgments for one action must be deduplicated');
++  const preserveOnlyBinding = structuredClone(carrierDraft);
++  preserveOnlyBinding.binding.actions = [{ action_id: 'C-01', action: 'preserve', module_id: 'content' }];
++  preserveOnlyBinding.binding.match_assessment = assessmentFor(carrierCatalog, preserveOnlyBinding.binding, 'default');
++  await assert.rejects(validateCarrierBindingDraft(carrierCatalog, preserveOnlyBinding, { root, packetBody }), { code: 'CARRIER_NO_CHANGE' });
++  assert.deepEqual(staticDraftFailures, [], 'static draft joint gate must reject all conflicts and illegal targets');
++  console.log('PASS: static adaptation retains NEEDS_CONTEXT conflicts, rejects illegal targets, deduplicates source/states, permits sibling slots and early preserve-only; final binding still requires change');
+   for (const [change, code] of [
+     [assessment => { assessment.catalog_sha256 = '0'.repeat(64); }, 'STALE_MATCH_CATALOG'],
+     [assessment => { assessment.frozen_packet.source_packet_sha256 = '0'.repeat(64); }, 'STALE_MATCH_PACKET'],
+@@ -429,6 +501,7 @@
+       ['confirmation guard bypass', 'shape(record, schema.$defs.selection);', '// mutation: bypass selection shape', 'selection actor must be user'],
+       ['stale source guard bypass', 'if (page.source_hash !== record.source_hash)', 'if (false)', 'stale source selection must require reconfirmation'],
+       ['early ambiguity guard bypass', "if (record.decision === 'ready' && unresolved)", 'if (false)', 'Missing expected rejection'],
++      ['static draft joint gate bypass', 'assertActionsDoNotOverlap(graph, [...staticActions.values()], { allowPreserveOnly: true });', '// mutation: bypass static draft joint action check', 'static draft joint gate must reject all conflicts'],
+       ['source containment guard bypass', 'if (ancestor !== expectedParent)', 'if (false)', 'source parent must actually contain its child region']
+     ]) {
+       assert.equal(original.split(target).length, 2, `unique mutation seam: ${name}`);
+--- a/scripts/design-flow-handoff.mjs
++++ b/scripts/design-flow-handoff.mjs
+@@ -946,6 +946,20 @@
+   return v2File('control/handoff-manifest.json', 'application/json', Buffer.from(canonicalJson(manifest), 'utf8'));
+ }
+ 
++function referencePrototypeSourceOptions(body) {
++  try {
++    const packet = inspectCarrierPacket(body);
++    return { factIds: packet.applicability.map(item => item.id), sourceIndexVerified: true };
++  } catch (error) {
++    // Recognize only a structured envelope declaration, never infer fact IDs
++    // from prose. A malformed declared envelope must not become legacy input.
++    const [heading, ...lines] = body.trimStart().split('\n').map(line => line.trim());
++    const declaresPacket = /"packet_kind"\s*:\s*"design-generation"/u.test(body) || (heading === '# Design Generation Packet' && lines.some(line => /^```json\b/i.test(line) || line.startsWith('{')));
++    if (error.code !== 'PACKET_REFREEZE_REQUIRED' || declaresPacket) throw error;
++    return { sourceIndexVerified: false };
++  }
++}
++
+ function assertReferenceBundleFresh(bundle) {
+   if (bundle?.schema_version !== 2 || bundle?.bundle_kind !== 'reference_only' || bundle?.status !== 'EXPORTED' || !carrierId(bundle.handoff_id) || bundle.namespace !== `handoffs/${bundle.handoff_id}` || bundle.reference_output_profile !== 'single') fail('REFERENCE_BUNDLE_INVALID', 'Expected an exported V2 reference-only bundle');
+   if ('carrier_content_hash' in bundle || 'module_contract_hash' in bundle || 'tac_sha256' in bundle || 'carrier_profile' in bundle) fail('REFERENCE_SEMANTIC_LEAK', 'Reference-only bundles cannot contain carrier, TAC or template-derivation identity');
+@@ -955,7 +969,13 @@
+   const manifest = strictControlJson(manifestFile[0].bytes, 'control/handoff-manifest.json').parsed;
+   const records = recordsFor(immutable);
+   if (manifest.bundle_kind !== 'reference_only' || manifest.handoff_bundle_hash !== bundle.handoff_bundle_hash || canonicalManifestHash(manifest, records) !== bundle.handoff_bundle_hash || !isDeepStrictEqual(manifest.immutable_files, records) || ['carrier_content_hash', 'module_contract_hash', 'tac_sha256', 'carrier_profile'].some(key => key in manifest)) fail('REFERENCE_BUNDLE_CHANGED', 'Reference-only manifest/hash changed or leaked carrier semantics');
+-  verifyPrototypeEvidence(immutable, manifest.prototype_evidence);
++  let prototypeSource = {};
++  if (manifest.prototype_evidence?.length) {
++    const brief = one(immutable, item => item.path === 'control/brief.md');
++    if (brief.length !== 1 || hash(brief[0].bytes) !== bundle.source_packet_sha256 || manifest.source_packet_sha256 !== bundle.source_packet_sha256) fail('REFERENCE_BUNDLE_CHANGED', 'Prototype evidence must remain bound to the actual immutable source body');
++    prototypeSource = referencePrototypeSourceOptions(brief[0].bytes.toString('utf8'));
++  }
++  verifyPrototypeEvidence(immutable, manifest.prototype_evidence, prototypeSource);
+   return { manifest, immutable };
+ }
+ 
+@@ -963,7 +983,7 @@
+   if (!carrierId(handoffId)) fail('HANDOFF_ID_INVALID', 'reference_only requires a new safe handoffId');
+   const legacy = await buildDesignHandoff(args, options);
+   const namespace = `handoffs/${handoffId}`;
+-  const prototype = preparePrototypeEvidence(prototypeEvidence);
++  const prototype = preparePrototypeEvidence(prototypeEvidence, prototypeEvidence?.length ? referencePrototypeSourceOptions(legacy.brief) : {});
+   const files = [...legacy.files.map(item => v2File(item.name === 'reference.png' ? 'control/reference.png' : `control/${item.name}`, item.mediaType, item.bytes)), ...prototype.files];
+   const records = recordsFor(files);
+   const manifestBody = {
+--- a/scripts/test-design-flow-handoff.mjs
++++ b/scripts/test-design-flow-handoff.mjs
+@@ -7,7 +7,7 @@
+ import { spawnSync } from 'node:child_process';
+ import { crc32, deflateSync } from 'node:zlib';
+ import { computeBindingHash, computeModuleContractHash, computeCatalogHash } from './page-context.mjs';
+-import { canonicalJson, carrierContentHash, resolveAssetClosure } from './carrier-asset-profile.mjs';
++import { canonicalJson, canonicalManifestHash, carrierContentHash, fileRecord, resolveAssetClosure } from './carrier-asset-profile.mjs';
+ 
+ const modulePath = process.env.DESIGN_HANDOFF_TEST_MODULE ?? fileURLToPath(new URL('./design-flow-handoff.mjs', import.meta.url));
+ const api = await import(pathToFileURL(modulePath));
+@@ -585,6 +585,98 @@
+   assert.equal(referenceOnly.derivation, 'not-template-derived');
+   assert.equal('carrier_content_hash' in referenceOnly, false);
+   assert.ok(referenceOnly.files.every(item => !item.path.startsWith('input/') && !item.path.includes('template-adaptation')), 'reference-only transport has an independent control namespace and no carrier/TAC tree');
++  assert.deepEqual(referenceOnly.files.map(item => item.path), ['control/brief.md', 'control/page-reference.json', 'control/handoff-manifest.json']);
++  assert.equal(referenceOnly.handoff_bundle_hash, 'd149b71765fece8832f4525efa42a1e46090fa10e50949b2f96dc4539211ef68', 'no-attachment reference wire identity remains compatible with the original export');
++  assert.equal(referenceOnly.files.at(-1).sha256, '878f53de60af2982bb23e56161b06ba65f5cdb79d2e5b9ce31d4d36752bc5565');
++  assert.equal(Object.hasOwn(referenceOnly.manifest, 'prototype_evidence'), false);
++  const referenceFrozenBody = api.createCarrierPacket({ schema_version: 1, packet_kind: 'design-generation', items: [{ source_kind: 'requirement', id: 'REQ-001', text: 'Preserve the original Save action.' }], scopes: [] });
++  const referenceFrozenSource = { mode: 'chain', id: 'frozen-reference-source', body: referenceFrozenBody };
++  const referenceFrozenArgs = { source: referenceFrozenSource, target, selection: none, handoffId: 'reference-frozen-prototype', prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['REQ-001'] }] };
++  await assert.rejects(api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, factIds: ['ABSENT-FACT'] }, prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['ABSENT-FACT'] }] }, { factIds: ['ABSENT-FACT'], sourceIndexVerified: false }), { code: 'PROTOTYPE_SOURCE_IDS_INVALID' }, 'reference-only structured Packet attachments require IDs from the actual frozen body, not caller claims');
++  const referenceFrozen = await api.buildReferenceOnlyHandoff(referenceFrozenArgs);
++  assert.equal(referenceFrozen.status, 'EXPORTED');
++  assert.equal(referenceFrozen.derivation, 'not-template-derived');
++  assert.equal(referenceFrozen.source_packet_sha256, hash(Buffer.from(referenceFrozenBody)));
++  assert.deepEqual(referenceFrozen.files.find(item => item.path === 'control/brief.md').bytes, Buffer.from(referenceFrozenBody));
++  const frozenPrototypeMetadata = JSON.parse(referenceFrozen.files.find(item => item.path === 'control/prototype-evidence.json').bytes);
++  assert.equal(frozenPrototypeMetadata.source_index_validation, 'frozen-existing-ids', 'an actual structured reference Packet verifies existing IDs without acquiring carrier semantics');
++  assert.deepEqual(frozenPrototypeMetadata.attachments, referenceFrozen.manifest.prototype_evidence);
++  assert.ok(referenceFrozen.manifest.prototype_evidence.every(record => referenceFrozen.manifest.immutable_files.some(item => item.path === record.path && item.sha256 === record.sha256 && item.bytes === record.bytes)));
++  const referenceFrozenWithoutEvidence = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, prototypeEvidence: [] });
++  assert.notEqual(referenceFrozen.handoff_bundle_hash, referenceFrozenWithoutEvidence.handoff_bundle_hash, 'reference prototype bytes and source index participate in the bundle hash');
++  assert.deepEqual(referenceFrozenWithoutEvidence, await api.buildReferenceOnlyHandoff({ source: referenceFrozenSource, target, selection: none, handoffId: referenceFrozenArgs.handoffId }), 'empty attachments preserve the original reference-only structure');
++  const referenceReadbackFor = bundle => {
++    const files = bundle.files.map(item => ({ path: `${bundle.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
++    return { ...target, namespace: bundle.namespace, readRef: 'fixture:reference-source-index-readback', files, pre_inventory: [], post_inventory: files };
++  };
++  assert.equal(api.verifyReferenceReadback(referenceFrozen, referenceReadbackFor(referenceFrozen)).status, 'STAGED');
++  for (const path of ['control/brief.md', 'evidence/prototype/interaction/prototype.html', 'control/prototype-evidence.json']) {
++    const readback = referenceReadbackFor(referenceFrozen);
++    const incomplete = readback.files.filter(item => item.path !== `${referenceFrozen.namespace}/${path}`);
++    assert.throws(() => api.verifyReferenceReadback(referenceFrozen, { ...readback, files: incomplete, post_inventory: incomplete }), error => ['READBACK_MISSING_FILE', 'READBACK_EXTRA_FILE'].includes(error.code), 'structured reference evidence readback requires every actual immutable byte');
++    const changed = readback.files.map(item => ({ ...item, bytes: item.path === `${referenceFrozen.namespace}/${path}` ? Buffer.concat([item.bytes, Buffer.from('\nchanged')]) : item.bytes }));
++    assert.throws(() => api.verifyReferenceReadback(referenceFrozen, { ...readback, files: changed, post_inventory: changed }), { code: 'READBACK_CONTENT_MISMATCH' }, 'structured reference evidence readback compares actual brief, attachment and index bytes');
++  }
++  // Recompute every ordinary hash after a forged edit: only the actual Packet
++  // source check can distinguish a consistent false index from existing facts.
++  const rewriteReference = (original, edit) => {
++    const rewritten = { ...original, manifest: JSON.parse(JSON.stringify(original.manifest)), files: original.files.map(item => ({ ...item, bytes: Buffer.from(item.bytes) })) };
++    edit(rewritten);
++    for (const item of rewritten.files) item.sha256 = hash(item.bytes);
++    const records = rewritten.files.filter(item => item.path !== 'control/handoff-manifest.json').map(item => fileRecord(item.path, item.media_type, item.bytes));
++    rewritten.manifest.immutable_files = records;
++    rewritten.manifest.limits = { file_count: records.length + 1, total_bytes: records.reduce((sum, item) => sum + item.bytes, 0) };
++    rewritten.manifest.handoff_bundle_hash = canonicalManifestHash(rewritten.manifest, records);
++    rewritten.handoff_bundle_hash = rewritten.manifest.handoff_bundle_hash;
++    const manifestFile = rewritten.files.find(item => item.path === 'control/handoff-manifest.json');
++    manifestFile.bytes = Buffer.from(canonicalJson(rewritten.manifest)); manifestFile.sha256 = hash(manifestFile.bytes);
++    return rewritten;
++  };
++  const forgedReferenceIds = rewriteReference(referenceFrozen, rewritten => {
++    rewritten.manifest.prototype_evidence[0].source_ids = ['ABSENT-FACT'];
++    const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
++    const metadata = JSON.parse(index.bytes);
++    metadata.attachments[0].source_ids = ['ABSENT-FACT'];
++    index.bytes = Buffer.from(canonicalJson(metadata));
++  });
++  assert.throws(() => api.verifyReferenceReadback(forgedReferenceIds, referenceReadbackFor(forgedReferenceIds)), { code: 'PROTOTYPE_SOURCE_IDS_INVALID' }, 'reference freshness rechecks actual frozen IDs even when false metadata and all bundle hashes agree');
++  const forgedReferenceMarker = rewriteReference(referenceFrozen, rewritten => {
++    const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
++    index.bytes = Buffer.from(canonicalJson({ ...JSON.parse(index.bytes), source_index_validation: 'unverified-source-index' }));
++  });
++  assert.throws(() => api.verifyReferenceReadback(forgedReferenceMarker, referenceReadbackFor(forgedReferenceMarker)), { code: 'PROTOTYPE_EVIDENCE_CHANGED' }, 'structured reference metadata cannot downgrade the actual verified source index');
++  for (const malformed of [
++    referenceFrozenBody.replace('"items"', '"items":'), referenceFrozenBody.slice(0, -4), referenceFrozenBody.replace('"schema_version":1', '"schema_version": 1'), `\uFEFF${referenceFrozenBody}`, referenceFrozenBody.replaceAll('\n', '\r\n'),
++    referenceFrozenBody.replace('```json\n', '```JSON\n'), referenceFrozenBody.replace('```json\n', '```\n'), referenceFrozenBody.replace('```json\n', ''),
++    referenceFrozenBody.replace('```json\n', 'declared payload:\n```json\n'), referenceFrozenBody.replace('```json\n', 'declared payload:\n'),
++    referenceFrozenBody.replace('# Design Generation Packet\n\n', ''), referenceFrozenBody.replace('# Design Generation Packet', '# Damaged Packet heading'),
++    referenceFrozenBody.replace('```json\n', '').replace('"packet_kind"', '"damaged_kind"')
++  ]) {
++    await assert.rejects(api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, body: malformed } }), error => ['PACKET_INVALID', 'PACKET_REFREEZE_REQUIRED'].includes(error.code), 'a declared structured reference Packet cannot downgrade malformed JSON, envelope or canonical bytes to legacy prose');
++    const malformedBundle = rewriteReference(referenceFrozen, rewritten => {
++      rewritten.files.find(item => item.path === 'control/brief.md').bytes = Buffer.from(malformed);
++      rewritten.source_packet_sha256 = rewritten.manifest.source_packet_sha256 = hash(Buffer.from(malformed));
++    });
++    assert.throws(() => api.verifyReferenceReadback(malformedBundle, referenceReadbackFor(malformedBundle)), error => ['PACKET_INVALID', 'PACKET_REFREEZE_REQUIRED'].includes(error.code), 'reference freshness cannot downgrade a declared malformed structured Packet');
++  }
++  for (const mode of ['chain', 'adhoc', 'ux']) {
++    const legacyReference = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...source, mode }, prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['R-001', 'voice-source-1'] }] });
++    assert.deepEqual(legacyReference.files.find(item => item.path === 'control/brief.md').bytes, Buffer.from(body), 'legacy source bytes including BOM and CRLF remain exact with attachments');
++    assert.equal(JSON.parse(legacyReference.files.find(item => item.path === 'control/prototype-evidence.json').bytes).source_index_validation, 'unverified-source-index', 'plain Markdown IDs are not guessed or treated as a machine source index');
++    assert.equal(legacyReference.status, 'EXPORTED');
++    assert.equal(legacyReference.derivation, 'not-template-derived');
++    assert.equal(api.verifyReferenceReadback(legacyReference, referenceReadbackFor(legacyReference)).status, 'STAGED');
++    const forgedLegacyMarker = rewriteReference(legacyReference, rewritten => {
++      const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
++      index.bytes = Buffer.from(canonicalJson({ ...JSON.parse(index.bytes), source_index_validation: 'frozen-existing-ids' }));
++    });
++    assert.throws(() => api.verifyReferenceReadback(forgedLegacyMarker, referenceReadbackFor(forgedLegacyMarker)), { code: 'PROTOTYPE_EVIDENCE_CHANGED' }, 'legacy source metadata cannot promote a free Markdown index to verified facts');
++    const structuredReference = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, mode } });
++    assert.equal(structuredReference.status, 'EXPORTED');
++    assert.equal(structuredReference.derivation, 'not-template-derived');
++    assert.equal(JSON.parse(structuredReference.files.find(item => item.path === 'control/prototype-evidence.json').bytes).source_index_validation, 'frozen-existing-ids', 'source verification comes from actual structured bytes, never from the input mode');
++  }
++  console.log('PASS: reference-only existing source IDs, truthful legacy metadata, exact immutable bytes and fresh source revalidation');
+   const referencePrototype = await api.buildReferenceOnlyHandoff({ source, target, selection: none, handoffId: 'reference-prototype', prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['voice-source-1'] }] });
+   assert.equal(referencePrototype.source_packet_sha256, hash(Buffer.from(source.body)));
+   assert.equal(referencePrototype.files.find(item => item.path === 'control/brief.md').bytes.toString(), source.body, 'free Markdown source remains exact when prototype evidence is attached');
+@@ -650,6 +742,9 @@
+       ['actual target change', original.split('\n').find(line => line.includes("if (isDeepStrictEqual(original, generated))")), '', 'comment or whitespace alone cannot satisfy a modify action'],
+       ['prototype existing source IDs', original.split('\n').find(line => line.includes("if (sourceIndexVerified && attachment.source_ids.some")), '', 'prototype attachments require safe complete bytes and existing frozen source IDs'],
+       ['prototype closed evidence index', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(expected.records, records)")), '', 'prototype metadata cannot contradict the manifest purpose or source index'],
++      ['reference prototype actual frozen IDs', '    return { factIds: packet.applicability.map(item => item.id), sourceIndexVerified: true };', '    return { sourceIndexVerified: false };', 'reference-only structured Packet attachments require IDs from the actual frozen body, not caller claims'],
++      ['reference prototype fresh source check', "prototypeSource = referencePrototypeSourceOptions(brief[0].bytes.toString('utf8'));", 'prototypeSource = { factIds: manifest.prototype_evidence.flatMap(record => record.source_ids), sourceIndexVerified: true };', 'reference freshness rechecks actual frozen IDs even when false metadata and all bundle hashes agree'],
++      ['reference structured declaration downgrade', original.split('\n').find(line => line.includes('const declaresPacket =')), '    const declaresPacket = false;', 'a declared structured reference Packet cannot downgrade malformed JSON, envelope or canonical bytes to legacy prose'],
+       ['refine separate structural handoff', original.split('\n').find(line => line.includes("if (tac.changes.some(change => change.action === 'refine')")), '', 'refinement and structural changes require separate explicit handoffs'],
+       ['refine business DOM preservation', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(structuralDom(baseHtml), structuralDom(html))")), '', 'refine cannot change business text, data hooks or field values'],
+       ['refine exact text preservation', "  if (node.text !== undefined) return { text: node.text };", "  if (node.text !== undefined) return node.text.trim() ? { text: node.text.replace(/\\s+/g, ' ').trim() } : null;", 'refine must preserve exact text whitespace, textarea/pre data and default input values'],
+--- a/.claude/skills/office/design-brief/SKILL.md
++++ b/.claude/skills/office/design-brief/SKILL.md
+@@ -2,7 +2,7 @@
+ name: design-brief
+ preamble-tier: 3
+ argument-hint: "[PRD/requirements/prototype + target template/module, or spoken intent]"
+-version: 3.0.0
++version: 3.0.1
+ description: |
+   设计收敛与模板适配节点。承接全流程已选方案、已有需求/口述转写，或已有原型的 UI 精修；
+   继承确认事实，补齐关键缺口，按模板语义定位模块、验证动作/状态承载能力，界定生成工具自由度。
+--- a/.claude/skills/office/open-design/SKILL.md
++++ b/.claude/skills/office/open-design/SKILL.md
+@@ -2,7 +2,7 @@
+ name: open-design
+ preamble-tier: 3
+ argument-hint: "[design-brief 路径 | 要给 OD 的方案 md(单点交接) | 'recover/拉回来' 回收产物]"
+-version: 4.0.0
++version: 4.0.1
+ description: |
+   Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only）
+   → 指定 OD 项目交接与 handoff-id/output-root scoped 读回。chain 消费 design-brief Packet；adhoc 忠实交接用户指定方案。
+@@ -97,6 +97,7 @@
+ 页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
+ page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
+ 精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
++reference_only带实际结构化Packet时也核对附件source_ids存在，并在导出/fresh/readback重核；结构化正文损坏不得降级。自由Markdown无可机读索引时显式unverified-source-index，须设计/用户核对来源，不宣称机器完整覆盖。
+ 当前原件适配器只支持自包含 HTML；若原 CSP 未阻断的外置 CSS/JS/图片/字体依赖没有经审计后一并运输，
+ 组包必须以 `ORIGINAL_ASSETS_REQUIRED` 停住，不能只上传 HTML 或改写依赖来宣称原件完整。
+ 
+--- a/.claude/skill-os/runtime/page-context.md
++++ b/.claude/skill-os/runtime/page-context.md
+@@ -71,7 +71,7 @@
+ 无现成支持记unknown/unsupported并列扩展/更换/裁定，不仅靠名字；设计方案支持扩展须在冻结后合同中验证。
+ 
+ 静态定位使用真实module/slot/region ID；原件使用实际inert索引scope/locator/label，含隐藏template。
+-原件动作按scope/locator/action去重后联合核对范围兼容性，重复来源/状态不构造重复动作，不同动作/重叠保持区不能报告ready；另过实际源字节范围/禁止目标/void兼容门：void add/modify拒绝，refine允许经原件专用检查。静态state_support必须证明位置支持；原件目录状态名不是交互证明，依据须设计/用户复核。
++原件动作按scope/locator/action去重后联合核对范围兼容性，重复来源/状态不构造重复动作，不同动作/重叠保持区不能报告ready；另过实际源字节范围/禁止目标/void兼容门：void add/modify拒绝，refine允许经原件专用检查。静态carrier动作按action/target去重后，以正式binding的同一module/slot图联合检查重复目标与祖先重叠；合法冲突只能记needs_context，不存在或非法目标仍拒绝。草稿preserve-only只验证定位，不授予最终无变化衍生。静态state_support必须证明位置支持；原件目录状态名不是交互证明，依据须设计/用户复核。
+ validator校验原文、全量source/state覆盖、实际源/定位、允许动作及已知状态支持；不会证明语义判断或原交互。
+ ready不能含未知/不支持、低置信或替代位置；refine不得与结构动作混用同一profile；返回ADAPTATION_READY仍 `binding_allowed=false`、
+ `execution_allowed=false`。closed schema不接受frozen_packet/adoption/TAC/bundle hash，草稿不是最终binding。
+--- a/.claude/skills/office/design-brief/references/output-templates.md
++++ b/.claude/skills/office/design-brief/references/output-templates.md
+@@ -180,6 +180,9 @@
+ 
+ helper 生成唯一 Markdown/JSON envelope 并计算原文 hash；冻结 body 必须按字节传递。
+ TAC 使用 inspector 返回的全部 applicability，不能重编 ID、手填 hash 或在下游过滤分母。
++reference_only若运输实际结构化Packet，原型附件source_ids也必须存在于该Packet，并在导出及完整读回时重核；声明结构化但格式损坏须回Brief重冻，不能降为未验证正文。
++旧自由Markdown没有可机读事实索引时，附件明确标unverified-source-index；来源关系仍须由设计/用户核对，不能宣称机器覆盖或把附件当需求源。
++
+ 旧自由 Markdown 没有这项机器完整性保证：保留原文走 reference_only，或回本 owner 完成新版本冻结。
+ 格式校验不证明从上游到 Packet 的语义忠实；仍逐项完成 Phase 6.5/6.75 的对照验收。
+ 
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -10,6 +10,11 @@
+ > 与 adoption-log 互补：那边是采纳审计记录，这边是面向使用者的演进叙事。
+ 
+ ## [Unreleased]
++
++### Fixed（2026-10-01 · Design Brief 独立红队闭环）
++
++- Design Brief 3.0.1 / Open Design 4.0.1：静态模板适配在冻结前使用最终binding的同一联合动作检查，拒绝重复目标及父子修改/保持冲突；同动作多来源/状态去重，合法待决冲突不授权执行。为什么：逐项动作可用不能证明联合范围兼容，不能把冲突推迟到冻结后。
++- reference_only运输结构化Packet时，原型附件引用必须是实际冻结事实ID，并在完整读回重核；坏结构化正文不降级，旧自由Markdown保持显式未机器核验。为什么：工具运输方式不应改变证据来源追踪规则。独立红队原始FAIL、修复反例/变异与复审保留于framework-audit/2026-10-01-design-brief-convergence-redteam.md及completion审计。
+ 
+ ### Changed（2026-10-01 · Design Brief 三入口与模板语义收敛）
+ 

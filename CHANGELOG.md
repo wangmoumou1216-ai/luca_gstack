@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-01 · Design Brief 独立红队闭环）
+
+- Design Brief 3.0.1 / Open Design 4.0.1：静态模板适配在冻结前使用最终binding的同一联合动作检查，拒绝重复目标及父子修改/保持冲突；同动作多来源/状态去重，合法待决冲突不授权执行。为什么：逐项动作可用不能证明联合范围兼容，不能把冲突推迟到冻结后。
+- reference_only运输结构化Packet时，原型附件引用必须是实际冻结事实ID，并在完整读回重核；可识别的坏结构化文档不降级，以JSON解码识别转义字段；散文示例不误判，旧自由Markdown保持显式未机器核验。为什么：工具运输方式不应改变证据来源追踪规则。独立红队原始FAIL、修复反例/变异与复审保留于framework-audit/2026-10-01-design-brief-convergence-redteam.md及completion审计。
+
 ### Changed（2026-10-01 · Design Brief 三入口与模板语义收敛）
 
 - Design Brief 3.0：全流程已选方案、已有需求/口述、已有原型精修汇合于 OD 前的同一契约节点。为什么：已有需求与原型无需伪造PRD或重跑发散，模板选择/语义适配必须在事实冻结前解决；正式binding/TAC/adoption仍在冻结后。

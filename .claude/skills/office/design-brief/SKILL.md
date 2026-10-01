@@ -2,7 +2,7 @@
 name: design-brief
 preamble-tier: 3
 argument-hint: "[PRD/requirements/prototype + target template/module, or spoken intent]"
-version: 3.0.0
+version: 3.0.1
 description: |
   设计收敛与模板适配节点。承接全流程已选方案、已有需求/口述转写，或已有原型的 UI 精修；
   继承确认事实，补齐关键缺口，按模板语义定位模块、验证动作/状态承载能力，界定生成工具自由度。

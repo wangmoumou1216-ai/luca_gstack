@@ -1,0 +1,46 @@
+PASS: catalog CLI validates source hash and exact region anchors
+PASS: lexical reasons, explicit empty result and sixth-page extension without route edits
+PASS: confirmed page/region, explicit no-reference branches, pending and stale guards
+PASS: zoom/scroll conversion and screenshot mutation PASS -> STALE_SCREENSHOT/BOX_BOUNDS -> PASS
+PASS: real source containment -> forged filters/pagination rejected -> restored confirmed
+PASS: old five references preserved; six original copies use the original adapter, not rewritten carriers
+NOT RUN: original desktop source audit (use --audit-originals)
+PASS: early adaptation validates full source/state evidence, ambiguity, unsupported capability and stale revisions without freezing/adopting
+FAIL static draft joint gate: same module modify/preserve -> Missing expected rejection.
+FAIL static draft joint gate: parent modify/child preserve -> Missing expected rejection.
+FAIL static draft joint gate: slot add/ancestor preserve -> Missing expected rejection.
+FAIL static draft joint gate: same module distinct changes -> Missing expected rejection.
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: static draft joint gate must reject all conflicts and illegal targets
++ actual - expected
+
++ [
++   'same module modify/preserve: Missing expected rejection.',
++   'parent modify/child preserve: Missing expected rejection.',
++   'slot add/ancestor preserve: Missing expected rejection.',
++   'same module distinct changes: Missing expected rejection.',
++   'UNKNOWN_SLOT: Missing expected rejection.'
++ ]
+- []
+
+    at file:///private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/scripts/test-page-context.mjs:302:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'same module modify/preserve: Missing expected rejection.',
+    'parent modify/child preserve: Missing expected rejection.',
+    'slot add/ancestor preserve: Missing expected rejection.',
+    'same module distinct changes: Missing expected rejection.',
+    'UNKNOWN_SLOT: Missing expected rejection.'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.1
+
+EXIT_STATUS=1

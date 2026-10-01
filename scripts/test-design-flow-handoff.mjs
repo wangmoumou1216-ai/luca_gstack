@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { crc32, deflateSync } from 'node:zlib';
 import { computeBindingHash, computeModuleContractHash, computeCatalogHash } from './page-context.mjs';
-import { canonicalJson, carrierContentHash, resolveAssetClosure } from './carrier-asset-profile.mjs';
+import { canonicalJson, canonicalManifestHash, carrierContentHash, fileRecord, resolveAssetClosure } from './carrier-asset-profile.mjs';
 
 const modulePath = process.env.DESIGN_HANDOFF_TEST_MODULE ?? fileURLToPath(new URL('./design-flow-handoff.mjs', import.meta.url));
 const api = await import(pathToFileURL(modulePath));
@@ -585,6 +585,137 @@ try {
   assert.equal(referenceOnly.derivation, 'not-template-derived');
   assert.equal('carrier_content_hash' in referenceOnly, false);
   assert.ok(referenceOnly.files.every(item => !item.path.startsWith('input/') && !item.path.includes('template-adaptation')), 'reference-only transport has an independent control namespace and no carrier/TAC tree');
+  assert.deepEqual(referenceOnly.files.map(item => item.path), ['control/brief.md', 'control/page-reference.json', 'control/handoff-manifest.json']);
+  assert.equal(referenceOnly.handoff_bundle_hash, 'd149b71765fece8832f4525efa42a1e46090fa10e50949b2f96dc4539211ef68', 'no-attachment reference wire identity remains compatible with the original export');
+  assert.equal(referenceOnly.files.at(-1).sha256, '878f53de60af2982bb23e56161b06ba65f5cdb79d2e5b9ce31d4d36752bc5565');
+  assert.equal(Object.hasOwn(referenceOnly.manifest, 'prototype_evidence'), false);
+  const referenceFrozenBody = api.createCarrierPacket({ schema_version: 1, packet_kind: 'design-generation', items: [{ source_kind: 'requirement', id: 'REQ-001', text: 'Preserve the original Save action.' }], scopes: [] });
+  const referenceFrozenSource = { mode: 'chain', id: 'frozen-reference-source', body: referenceFrozenBody };
+  const referenceFrozenArgs = { source: referenceFrozenSource, target, selection: none, handoffId: 'reference-frozen-prototype', prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['REQ-001'] }] };
+  await assert.rejects(api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, factIds: ['ABSENT-FACT'] }, prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['ABSENT-FACT'] }] }, { factIds: ['ABSENT-FACT'], sourceIndexVerified: false }), { code: 'PROTOTYPE_SOURCE_IDS_INVALID' }, 'reference-only structured Packet attachments require IDs from the actual frozen body, not caller claims');
+  const referenceFrozen = await api.buildReferenceOnlyHandoff(referenceFrozenArgs);
+  assert.equal(referenceFrozen.status, 'EXPORTED');
+  assert.equal(referenceFrozen.derivation, 'not-template-derived');
+  assert.equal(referenceFrozen.source_packet_sha256, hash(Buffer.from(referenceFrozenBody)));
+  assert.deepEqual(referenceFrozen.files.find(item => item.path === 'control/brief.md').bytes, Buffer.from(referenceFrozenBody));
+  const frozenPrototypeMetadata = JSON.parse(referenceFrozen.files.find(item => item.path === 'control/prototype-evidence.json').bytes);
+  assert.equal(frozenPrototypeMetadata.source_index_validation, 'frozen-existing-ids', 'an actual structured reference Packet verifies existing IDs without acquiring carrier semantics');
+  assert.deepEqual(frozenPrototypeMetadata.attachments, referenceFrozen.manifest.prototype_evidence);
+  assert.ok(referenceFrozen.manifest.prototype_evidence.every(record => referenceFrozen.manifest.immutable_files.some(item => item.path === record.path && item.sha256 === record.sha256 && item.bytes === record.bytes)));
+  const referenceFrozenWithoutEvidence = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, prototypeEvidence: [] });
+  assert.notEqual(referenceFrozen.handoff_bundle_hash, referenceFrozenWithoutEvidence.handoff_bundle_hash, 'reference prototype bytes and source index participate in the bundle hash');
+  assert.deepEqual(referenceFrozenWithoutEvidence, await api.buildReferenceOnlyHandoff({ source: referenceFrozenSource, target, selection: none, handoffId: referenceFrozenArgs.handoffId }), 'empty attachments preserve the original reference-only structure');
+  const referenceReadbackFor = bundle => {
+    const files = bundle.files.map(item => ({ path: `${bundle.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
+    return { ...target, namespace: bundle.namespace, readRef: 'fixture:reference-source-index-readback', files, pre_inventory: [], post_inventory: files };
+  };
+  assert.equal(api.verifyReferenceReadback(referenceFrozen, referenceReadbackFor(referenceFrozen)).status, 'STAGED');
+  for (const path of ['control/brief.md', 'evidence/prototype/interaction/prototype.html', 'control/prototype-evidence.json']) {
+    const readback = referenceReadbackFor(referenceFrozen);
+    const incomplete = readback.files.filter(item => item.path !== `${referenceFrozen.namespace}/${path}`);
+    assert.throws(() => api.verifyReferenceReadback(referenceFrozen, { ...readback, files: incomplete, post_inventory: incomplete }), error => ['READBACK_MISSING_FILE', 'READBACK_EXTRA_FILE'].includes(error.code), 'structured reference evidence readback requires every actual immutable byte');
+    const changed = readback.files.map(item => ({ ...item, bytes: item.path === `${referenceFrozen.namespace}/${path}` ? Buffer.concat([item.bytes, Buffer.from('\nchanged')]) : item.bytes }));
+    assert.throws(() => api.verifyReferenceReadback(referenceFrozen, { ...readback, files: changed, post_inventory: changed }), { code: 'READBACK_CONTENT_MISMATCH' }, 'structured reference evidence readback compares actual brief, attachment and index bytes');
+  }
+  // Recompute every ordinary hash after a forged edit: only the actual Packet
+  // source check can distinguish a consistent false index from existing facts.
+  const rewriteReference = (original, edit) => {
+    const rewritten = { ...original, manifest: JSON.parse(JSON.stringify(original.manifest)), files: original.files.map(item => ({ ...item, bytes: Buffer.from(item.bytes) })) };
+    edit(rewritten);
+    for (const item of rewritten.files) item.sha256 = hash(item.bytes);
+    const records = rewritten.files.filter(item => item.path !== 'control/handoff-manifest.json').map(item => fileRecord(item.path, item.media_type, item.bytes));
+    rewritten.manifest.immutable_files = records;
+    rewritten.manifest.limits = { file_count: records.length + 1, total_bytes: records.reduce((sum, item) => sum + item.bytes, 0) };
+    rewritten.manifest.handoff_bundle_hash = canonicalManifestHash(rewritten.manifest, records);
+    rewritten.handoff_bundle_hash = rewritten.manifest.handoff_bundle_hash;
+    const manifestFile = rewritten.files.find(item => item.path === 'control/handoff-manifest.json');
+    manifestFile.bytes = Buffer.from(canonicalJson(rewritten.manifest)); manifestFile.sha256 = hash(manifestFile.bytes);
+    return rewritten;
+  };
+  const forgedReferenceIds = rewriteReference(referenceFrozen, rewritten => {
+    rewritten.manifest.prototype_evidence[0].source_ids = ['ABSENT-FACT'];
+    const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
+    const metadata = JSON.parse(index.bytes);
+    metadata.attachments[0].source_ids = ['ABSENT-FACT'];
+    index.bytes = Buffer.from(canonicalJson(metadata));
+  });
+  assert.throws(() => api.verifyReferenceReadback(forgedReferenceIds, referenceReadbackFor(forgedReferenceIds)), { code: 'PROTOTYPE_SOURCE_IDS_INVALID' }, 'reference freshness rechecks actual frozen IDs even when false metadata and all bundle hashes agree');
+  const forgedReferenceMarker = rewriteReference(referenceFrozen, rewritten => {
+    const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
+    index.bytes = Buffer.from(canonicalJson({ ...JSON.parse(index.bytes), source_index_validation: 'unverified-source-index' }));
+  });
+  assert.throws(() => api.verifyReferenceReadback(forgedReferenceMarker, referenceReadbackFor(forgedReferenceMarker)), { code: 'PROTOTYPE_EVIDENCE_CHANGED' }, 'structured reference metadata cannot downgrade the actual verified source index');
+  const referenceJson = referenceFrozenBody.split('\n')[3];
+  const escapedDeclaredBodies = [
+    referenceFrozenBody.replace('# Design Generation Packet\n\n', '').replace('"packet_kind"', '"packet\\u005fkind"'),
+    referenceFrozenBody.replace('# Design Generation Packet', '# Damaged Packet heading').replace('"design-generation"', '"\\u0064esign-generation"'),
+    referenceJson.replace('"packet_kind"', '"packet\\u005fkind"'),
+    `~~~JSON\n${referenceJson.replace('"design-generation"', '"\\u0064esign-generation"')}\n~~~`,
+    `# Damaged Packet heading\n\n\`\`\`\n${referenceJson.replace('"packet_kind"', '"packet\\u005fkind"')}\n`,
+    `# Notes\n${JSON.stringify({ ...JSON.parse(referenceJson), packet_kind: 'design-generation' }, null, 2).replace('"design-generation"', '"\\u0064esign-generation"')}\n`,
+    `# Notes\n{ incomplete documentation fragment\n\`\`\`json\n${referenceJson.replace('"packet_kind"', '"packet\\u005fkind"')}\n\`\`\``
+  ];
+  for (const declaredBody of escapedDeclaredBodies) {
+    await assert.rejects(api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, body: declaredBody }, prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['ABSENT-FACT'] }] }), error => ['PACKET_INVALID', 'PACKET_REFREEZE_REQUIRED'].includes(error.code), 'C5: escaped standalone or fenced JSON declarations cannot downgrade to unverified legacy source');
+    const declaredBundle = rewriteReference(referenceFrozen, rewritten => {
+      rewritten.files.find(item => item.path === 'control/brief.md').bytes = Buffer.from(declaredBody);
+      rewritten.source_packet_sha256 = rewritten.manifest.source_packet_sha256 = hash(Buffer.from(declaredBody));
+      rewritten.manifest.prototype_evidence[0].source_ids = ['ABSENT-FACT'];
+      const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
+      const metadata = JSON.parse(index.bytes);
+      metadata.source_index_validation = 'unverified-source-index';
+      metadata.attachments[0].source_ids = ['ABSENT-FACT'];
+      index.bytes = Buffer.from(canonicalJson(metadata));
+    });
+    assert.throws(() => api.verifyReferenceReadback(declaredBundle, referenceReadbackFor(declaredBundle)), error => ['PACKET_INVALID', 'PACKET_REFREEZE_REQUIRED'].includes(error.code), 'C5: fresh source revalidation rejects escaped declarations despite self-consistent unverified metadata and all hashes');
+  }
+  for (const mode of ['chain', 'adhoc', 'ux']) for (const proseExampleBody of [
+    '# Notes\nFor documentation, the literal example is `"packet_kind":"design-generation"`.\nREQ-001 Save exists.',
+    '# Notes\nThe inline example is {"packet_kind":"design-generation"}.\nREQ-001 Save exists.',
+    `# Notes\n${JSON.stringify({ packet_kind: 'documentation', nested: JSON.parse(referenceJson) }, null, 2)}\nREQ-001 Save exists.`,
+    `# Notes\n\`\`\`json\n${JSON.stringify([JSON.parse(referenceJson)], null, 2)}\n\`\`\`\nREQ-001 Save exists.`,
+    `# Notes\n\`\`\`json\n${JSON.stringify(referenceJson)}\n\`\`\`\nREQ-001 Save exists.`
+  ]) {
+    let proseExample;
+    await assert.doesNotReject(async () => {
+      proseExample = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...source, mode, body: proseExampleBody }, prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['ABSENT-FACT'] }] });
+    }, 'C6: inline prose examples remain legacy source rather than declaring a structured Packet');
+    assert.deepEqual(proseExample.files.find(item => item.path === 'control/brief.md').bytes, Buffer.from(proseExampleBody), 'inline prose source keeps exact bytes');
+    assert.equal(JSON.parse(proseExample.files.find(item => item.path === 'control/prototype-evidence.json').bytes).source_index_validation, 'unverified-source-index', 'inline prose cannot supply guessed fact IDs');
+    assert.equal(api.verifyReferenceReadback(proseExample, referenceReadbackFor(proseExample)).status, 'STAGED', 'exact simulated legacy readback remains compatible');
+  }
+  for (const malformed of [
+    referenceFrozenBody.replace('"items"', '"items":'), referenceFrozenBody.slice(0, -4), referenceFrozenBody.replace('"schema_version":1', '"schema_version": 1'), `\uFEFF${referenceFrozenBody}`, referenceFrozenBody.replaceAll('\n', '\r\n'),
+    referenceFrozenBody.replace('```json\n', '```JSON\n'), referenceFrozenBody.replace('```json\n', '```\n'), referenceFrozenBody.replace('```json\n', ''),
+    referenceFrozenBody.replace('```json\n', 'declared payload:\n```json\n'), referenceFrozenBody.replace('```json\n', 'declared payload:\n'),
+    referenceFrozenBody.replace('# Design Generation Packet\n\n', ''), referenceFrozenBody.replace('# Design Generation Packet', '# Damaged Packet heading'),
+    referenceFrozenBody.replace('```json\n', '').replace('"packet_kind"', '"damaged_kind"')
+  ]) {
+    await assert.rejects(api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, body: malformed } }), error => ['PACKET_INVALID', 'PACKET_REFREEZE_REQUIRED'].includes(error.code), 'a declared structured reference Packet cannot downgrade malformed JSON, envelope or canonical bytes to legacy prose');
+    const malformedBundle = rewriteReference(referenceFrozen, rewritten => {
+      rewritten.files.find(item => item.path === 'control/brief.md').bytes = Buffer.from(malformed);
+      rewritten.source_packet_sha256 = rewritten.manifest.source_packet_sha256 = hash(Buffer.from(malformed));
+    });
+    assert.throws(() => api.verifyReferenceReadback(malformedBundle, referenceReadbackFor(malformedBundle)), error => ['PACKET_INVALID', 'PACKET_REFREEZE_REQUIRED'].includes(error.code), 'reference freshness cannot downgrade a declared malformed structured Packet');
+  }
+  for (const mode of ['chain', 'adhoc', 'ux']) {
+    const legacyReference = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...source, mode }, prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['R-001', 'voice-source-1'] }] });
+    assert.deepEqual(legacyReference.files.find(item => item.path === 'control/brief.md').bytes, Buffer.from(body), 'legacy source bytes including BOM and CRLF remain exact with attachments');
+    assert.equal(JSON.parse(legacyReference.files.find(item => item.path === 'control/prototype-evidence.json').bytes).source_index_validation, 'unverified-source-index', 'plain Markdown IDs are not guessed or treated as a machine source index');
+    assert.equal(legacyReference.status, 'EXPORTED');
+    assert.equal(legacyReference.derivation, 'not-template-derived');
+    assert.equal(api.verifyReferenceReadback(legacyReference, referenceReadbackFor(legacyReference)).status, 'STAGED');
+    const forgedLegacyMarker = rewriteReference(legacyReference, rewritten => {
+      const index = rewritten.files.find(item => item.path === 'control/prototype-evidence.json');
+      index.bytes = Buffer.from(canonicalJson({ ...JSON.parse(index.bytes), source_index_validation: 'frozen-existing-ids' }));
+    });
+    assert.throws(() => api.verifyReferenceReadback(forgedLegacyMarker, referenceReadbackFor(forgedLegacyMarker)), { code: 'PROTOTYPE_EVIDENCE_CHANGED' }, 'legacy source metadata cannot promote a free Markdown index to verified facts');
+    const structuredReference = await api.buildReferenceOnlyHandoff({ ...referenceFrozenArgs, source: { ...referenceFrozenSource, mode } });
+    assert.equal(structuredReference.status, 'EXPORTED');
+    assert.equal(structuredReference.derivation, 'not-template-derived');
+    assert.equal(JSON.parse(structuredReference.files.find(item => item.path === 'control/prototype-evidence.json').bytes).source_index_validation, 'frozen-existing-ids', 'source verification comes from actual structured bytes, never from the input mode');
+  }
+  console.log('PASS: reference-only existing source IDs, truthful legacy metadata, exact immutable bytes and fresh source revalidation');
   const referencePrototype = await api.buildReferenceOnlyHandoff({ source, target, selection: none, handoffId: 'reference-prototype', prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['voice-source-1'] }] });
   assert.equal(referencePrototype.source_packet_sha256, hash(Buffer.from(source.body)));
   assert.equal(referencePrototype.files.find(item => item.path === 'control/brief.md').bytes.toString(), source.body, 'free Markdown source remains exact when prototype evidence is attached');
@@ -650,6 +781,12 @@ try {
       ['actual target change', original.split('\n').find(line => line.includes("if (isDeepStrictEqual(original, generated))")), '', 'comment or whitespace alone cannot satisfy a modify action'],
       ['prototype existing source IDs', original.split('\n').find(line => line.includes("if (sourceIndexVerified && attachment.source_ids.some")), '', 'prototype attachments require safe complete bytes and existing frozen source IDs'],
       ['prototype closed evidence index', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(expected.records, records)")), '', 'prototype metadata cannot contradict the manifest purpose or source index'],
+      ['reference prototype actual frozen IDs', '    return { factIds: packet.applicability.map(item => item.id), sourceIndexVerified: true };', '    return { sourceIndexVerified: false };', 'reference-only structured Packet attachments require IDs from the actual frozen body, not caller claims'],
+      ['reference prototype fresh source check', "prototypeSource = referencePrototypeSourceOptions(brief[0].bytes.toString('utf8'));", 'prototypeSource = { factIds: manifest.prototype_evidence.flatMap(record => record.source_ids), sourceIndexVerified: true };', 'reference freshness rechecks actual frozen IDs even when false metadata and all bundle hashes agree'],
+      ['reference explicit envelope declaration', original.split('\n').find(line => line.includes('if (explicitEnvelope &&')), '', 'a declared structured reference Packet cannot downgrade malformed JSON, envelope or canonical bytes to legacy prose'],
+      ['reference parsed JSON declaration', original.split('\n').find(line => line.includes("document.packet_kind === 'design-generation'")), '', 'C5: escaped standalone or fenced JSON declarations cannot downgrade to unverified legacy source'],
+      ['reference fenced document partition', original.split('\n').find(line => line.includes('start = end; continue documents;')), '', 'C5: escaped standalone or fenced JSON declarations cannot downgrade to unverified legacy source'],
+      ['reference inline token regression', '    const declaresPacket = declaresReferencePacket(body);', '    const declaresPacket = declaresReferencePacket(body) || /"packet_kind"\\s*:\\s*"design-generation"/u.test(body);', 'C6: inline prose examples remain legacy source rather than declaring a structured Packet'],
       ['refine separate structural handoff', original.split('\n').find(line => line.includes("if (tac.changes.some(change => change.action === 'refine')")), '', 'refinement and structural changes require separate explicit handoffs'],
       ['refine business DOM preservation', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(structuralDom(baseHtml), structuralDom(html))")), '', 'refine cannot change business text, data hooks or field values'],
       ['refine exact text preservation', "  if (node.text !== undefined) return { text: node.text };", "  if (node.text !== undefined) return node.text.trim() ? { text: node.text.replace(/\\s+/g, ' ').trim() } : null;", 'refine must preserve exact text whitespace, textarea/pre data and default input values'],
@@ -679,7 +816,7 @@ try {
       const defeated = runSuite();
       assert.equal(defeated.status, 1, `guard mutation must fail the same public suite: ${name}`);
       assert.ok(defeated.stderr.includes('AssertionError') && defeated.stderr.includes(diagnostic), `mutation must reach its exact public assertion: ${name}\n${defeated.stderr}`);
-      assert.ok(defeated.stderr.includes('Missing expected') || defeated.stderr.includes("operator: 'deepStrictEqual'"), `mutation must expose accepted bad behavior, not an unrelated runtime exception: ${name}\n${defeated.stderr}`);
+      assert.ok(defeated.stderr.includes('Missing expected') || defeated.stderr.includes("operator: 'deepStrictEqual'") || defeated.stderr.includes('Got unwanted rejection'), `mutation must expose incorrect public behavior, not an unrelated runtime exception: ${name}\n${defeated.stderr}`);
       await writeFile(mutantModule, original);
       const restored = runSuite();
       assert.equal(restored.status, 0, `restored public suite: ${restored.stderr}`);
