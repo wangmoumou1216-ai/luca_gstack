@@ -6,7 +6,7 @@ import {
   absolutePathForRow,
   atomicWriteJson,
   canonicalJson,
-  discoverControlState,
+  discoverCheckoutControlState,
   pathTuple,
   repoRealpath,
   sha256Bytes,
@@ -138,6 +138,9 @@ function guardRequired(data, current) {
   const tool = String(data.tool_name || '');
   const input = data.tool_input && typeof data.tool_input === 'object' ? data.tool_input : {};
 
+  // Project/path isolation runs independently; these native tools do not mutate.
+  if (['Read', 'Glob', 'Grep'].includes(tool)) return;
+
   if (tool === 'apply_patch' || tool === 'Bash') {
     const command = String(input.command || '');
     let patchTargets = null;
@@ -212,7 +215,7 @@ function main() {
   try { raw = readFileSync(0, 'utf8'); }
   catch { raw = ''; }
   let state;
-  try { state = discoverControlState(repo); }
+  try { state = discoverCheckoutControlState(repo); }
   catch (error) { emitDeny(`cannot inspect controlled state: ${error.message}`); return; }
   if (state.kind === 'inactive') return;
   if (state.kind === 'invalid') { emitDeny(`controlled state is invalid: ${state.reason}`); return; }

@@ -48,15 +48,17 @@ const statePath = path.join(root, 'rpc-state.json');
 const state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath)) : {
   writes: 0, version: 'v1', config: { model: 'user-choice', secret: 'synthetic_test_secret_never_print', hooks: { state: { foreign: {trusted_hash:'foreign-old'} } } }
 };
+if (mode.startsWith('linked-')) state.config.hooks.state[path.join(root, 'primary/.codex/hooks.json') + ':session_start:0:0'] ||= { enabled: false };
 const send = obj => process.stdout.write(JSON.stringify(obj)+'\n');
 require('node:readline').createInterface({input: process.stdin}).on('line', line => {
  const req = JSON.parse(line), reply = result => send({jsonrpc:'2.0',id:req.id,result});
  if(req.method==='initialize') return reply({});
  if(req.method==='hooks/list') {
-   const hooks=JSON.parse(fs.readFileSync(path.join(root,'.codex/hooks.json'))).hooks, rows=[];
+   const registrationRoot = mode.startsWith('linked-') ? path.join(root, 'primary') : root;
+   const hooks=JSON.parse(fs.readFileSync(path.join(registrationRoot,'.codex/hooks.json'))).hooks, rows=[];
    for(const [event,groups] of Object.entries(hooks)) groups.forEach((group,gi)=>(group.hooks||[]).forEach((hook,hi)=>{
      const snake=event.replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase();
-     rows.push({key:path.join(root,'.codex/hooks.json')+':'+snake+':'+gi+':'+hi,
+     rows.push({key:path.join(registrationRoot,'.codex/hooks.json')+':'+snake+':'+gi+':'+hi,
        eventName:event[0].toLowerCase()+event.slice(1),command:hook.command,
        currentHash:'official-'+rows.length,trustStatus:state.writes || mode==='already-trusted'?'trusted':'untrusted'});
    }));
@@ -80,6 +82,7 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
    return reply({data:[{hooks:rows}]});
  }
  if(req.method==='config/read') {
+   if(mode==='linked-shared-drift') fs.appendFileSync(path.join(root,'primary/.codex/hooks.json'),'\n');
    if(mode==='source-drift-before-write') fs.appendFileSync(path.join(root,'scripts/codex-trust-hooks.mjs'),'\n// concurrent source drift\n');
    return reply({layers:[{name:{type:'user',file:path.join(root,'home/config.toml'),profile:null},version:state.version,config:state.config}]});
  }
@@ -122,6 +125,18 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
     mkdirSync(join(guardHome, '.codex/luca-child-project'), { recursive: true, mode: 0o700 });
     const installed = installTestSourceGuard({roots:[root],destination:guardRoot,directory:guardHome});
     assert.equal(installed.status, 0, installed.stderr);
+  }
+  if (mode.startsWith('linked-')) {
+    const primary = join(root, 'primary');
+    mkdirSync(join(primary, '.codex'), { recursive: true });
+    mkdirSync(join(primary, '.git'), { recursive: true });
+    cpSync(hooksPath, join(primary, '.codex/hooks.json'));
+    if (mode === 'linked-registration-drift') {
+      const registration = JSON.parse(readFileSync(join(primary, '.codex/hooks.json')));
+      registration.hooks.SessionStart[0].hooks[0].command += '; true';
+      writeFileSync(join(primary, '.codex/hooks.json'), JSON.stringify(registration));
+    }
+    writeFileSync(join(root, 'bin/git'), `#!${process.execPath}\nprocess.stdout.write(${JSON.stringify(join(primary, '.git') + '\n')});\n`, { mode: 0o700 });
   }
   const run = args => spawnSync(process.execPath, [join(root, 'scripts/codex-trust-hooks.mjs'), '--host-launch', ...args], {
     env: { ...process.env, HOME: guardHome, CODEX_HOME: join(root, 'home'), NODE_OPTIONS: '', MOCK_ROOT: root,
@@ -232,4 +247,28 @@ test('native trust refuses command insertion before any official trust write', t
   const result = f.run([]);
   assert.notEqual(result.status, 0);
   assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+});
+
+// Codex discovers shared repository registrations at the primary Git worktree.
+test('linked worktree trusts official primary registrations and preserves disabled settings', t => {
+  const f = fixture(t, 'linked-ok'), result = f.run([]);
+  assert.equal(result.status, 0, result.stderr);
+  const state = JSON.parse(readFileSync(join(f.root, 'rpc-state.json')));
+  const keys = Object.keys(state.config.hooks.state).filter(key => key !== 'foreign');
+  assert.equal(keys.length, 11);
+  assert.ok(keys.every(key => key.startsWith(join(f.root, 'primary/.codex/hooks.json') + ':')));
+  assert.equal(state.config.hooks.state[join(f.root, 'primary/.codex/hooks.json') + ':session_start:0:0'].enabled, false);
+});
+test('linked registration divergence refuses before any trust write', t => {
+  const f = fixture(t, 'linked-registration-drift'), result = f.run([]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Shared Git hook registrations differ/);
+  assert.equal(existsSync(join(f.root, 'rpc-state.json')), false);
+});
+
+test('shared primary registration drift during trust refuses before mutation', t => {
+  const f = fixture(t, 'linked-shared-drift'), result = f.run([]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Shared Git hook registrations differ/);
+  assert.equal(existsSync(join(f.root, 'rpc-state.json')), false);
 });

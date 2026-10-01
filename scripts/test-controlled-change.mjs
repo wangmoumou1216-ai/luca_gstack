@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   chmodSync,
   copyFileSync,
+  cpSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
@@ -651,6 +652,104 @@ test('dual-harness-active-guard', () => {
     const partialApply = guard(f, { tool_name: 'Write', tool_input: { file_path: join(f.repo, 'target.txt'), content: 'after\n' } });
     assert.equal(partialApply.status, 2, 'partial apply must turn the next CAS check red');
     writeFileSync(join(f.repo, 'target.txt'), 'before\n');
+    abort(f);
+  } finally { f.cleanup(); }
+});
+
+test('required-checkout-isolation', async () => {
+  const f = fixture();
+  try {
+    const linked = join(f.root, 'linked');
+    git(f.repo, 'worktree', 'add', '--detach', linked, 'HEAD');
+    const other = { ...f, repo: realpathSync(linked) };
+    f.manifest.approved_effects = ['git-stage'];
+    persistManifest(f);
+    prepare(f);
+    const command = 'git add target.txt';
+    assert.equal(controller(f, 'authorize-effect', ['--effect', 'git-stage', '--gate', 'gate-owner-stage',
+      '--command-sha256', sha256Bytes(Buffer.from(command, 'utf8')), '--cwd', f.repo,
+      '--authorization-token', 'owner-effect-token-0001']).status, 0);
+    const before = canonicalJson(discoverControlState(f.repo).current.witness);
+    for (const [tool_name, tool_input] of [
+      ['Read', { file_path: join(other.repo, 'target.txt') }],
+      ['Bash', { command: 'pwd' }],
+      ['collaborationsend_message', { target: 'other', message: 'status' }],
+      ['Bash', { command }],
+    ]) {
+      const result = guard(other, { session_id: 'unrelated-session', cwd: other.repo, tool_name, tool_input });
+      assert.equal(result.status, 0, `valid foreign REQUIRED must not govern ${tool_name}: ${result.stderr}`);
+    }
+    assert.equal(discoverControlState(other.repo).kind, 'required', 'controller discovery remains Git-common-dir scoped');
+    assert.equal(canonicalJson(discoverControlState(f.repo).current.witness), before,
+      'another checkout cannot consume the owner one-use authorization');
+    const fallback = run(process.execPath, [CORE, 'hook-failure-decision', '--repo', other.repo], { cwd: other.repo });
+    assert.equal(fallback.status, 0, 'legacy witness fallback uses the same checkout applicability');
+    installAdapterFixture(other);
+    const adapted = runFixtureAdapter(other, { LUCA_CONTROLLED_TEST_ADAPTER_THROW: 'after-context', LUCA_NATIVE_HOOK_STRICT: '' });
+    assert.equal(adapted.status, 0, 'legacy adapter fallback must not borrow another checkout witness');
+    const strictFailure = runFixtureAdapter(other, { LUCA_CONTROLLED_TEST_ADAPTER_THROW: 'after-context', LUCA_NATIVE_HOOK_STRICT: '1' });
+    assert.equal(strictFailure.status, 2, 'native strict runtime failures remain blocking in every checkout');
+    const concurrent = await Promise.all([f, other].map(checkout => new Promise((resolveResult, reject) => {
+      const env = { ...process.env, CLAUDE_PROJECT_DIR: checkout.repo };
+      for (const key of GIT_LOCATION_ENV) delete env[key];
+      const child = spawn(process.execPath, [GUARD], { cwd: checkout.repo, env, stdio: ['pipe', 'pipe', 'pipe'] });
+      let stderr = '';
+      child.stdout.resume();
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      child.once('error', reject);
+      child.once('close', status => resolveResult({ status, stderr }));
+      child.stdin.end(JSON.stringify({ session_id: checkout === f ? 'owner-session' : 'other-session',
+        cwd: checkout.repo, tool_name: 'Bash', tool_input: { command } }));
+    })));
+    assert.deepEqual(concurrent.map(result => result.status), [0, 0], JSON.stringify(concurrent));
+    assert.equal(discoverControlState(f.repo).current.witness.effect_authorizations[0].remaining_uses, 0,
+      'owner exact Git authorization still consumes once');
+    assert.equal(guard(f, { cwd: f.repo, tool_name: 'Bash', tool_input: { command } }).status, 2);
+    abort(f);
+  } finally { f.cleanup(); }
+});
+
+test('required-owner-read-only-tools', () => {
+  const f = fixture();
+  try {
+    prepare(f);
+    for (const tool_name of ['Read', 'Glob', 'Grep']) {
+      assert.equal(guard(f, { tool_name, tool_input: { file_path: join(f.repo, 'target.txt'), path: f.repo,
+        pattern: 'target' } }).status, 0, `${tool_name} is an explicit non-mutation tool`);
+    }
+    for (const [tool_name, tool_input] of [['Bash', { command: 'cat target.txt' }],
+      ['collaborationsend_message', {}], ['unknown-tool', {}]]) {
+      assert.equal(guard(f, { tool_name, tool_input }).status, 2, `${tool_name} remains deny-by-default`);
+    }
+    assert.equal(guard(f, { tool_name: 'Write', tool_input: { file_path: join(f.repo, 'target.txt') } }).status, 0);
+    assert.equal(guard(f, { tool_name: 'Write', tool_input: { file_path: join(f.repo, 'outside.txt') } }).status, 2);
+    abort(f);
+  } finally { f.cleanup(); }
+});
+
+test('required-invalid-checkouts-fail-closed', () => {
+  const f = fixture();
+  try {
+    const linked = join(f.root, 'linked');
+    git(f.repo, 'worktree', 'add', '--detach', linked, 'HEAD');
+    const other = { ...f, repo: realpathSync(linked) };
+    prepare(f);
+    const current = discoverControlState(f.repo).current;
+    const active = readFileSync(current.paths.active);
+    for (const mode of ['missing-active', 'malformed-active', 'multiple-required']) {
+      const duplicate = join(dirname(current.dir), 'duplicate-required');
+      if (mode === 'missing-active') unlinkSync(current.paths.active);
+      if (mode === 'malformed-active') writeFileSync(current.paths.active, '{broken');
+      if (mode === 'multiple-required') cpSync(current.dir, duplicate, { recursive: true });
+      for (const checkout of [f, other]) {
+        assert.equal(guard(checkout, { tool_name: 'Read', tool_input: { file_path: 'target.txt' } }).status, 2,
+          `${mode} refuses observer tools in every checkout`);
+        assert.equal(run(process.execPath, [CORE, 'hook-failure-decision', '--repo', checkout.repo],
+          { cwd: checkout.repo }).status, 2, `${mode} keeps fallback fail-closed`);
+      }
+      writeFileSync(current.paths.active, active);
+      if (mode === 'multiple-required') rmSync(duplicate, { recursive: true });
+    }
     abort(f);
   } finally { f.cleanup(); }
 });

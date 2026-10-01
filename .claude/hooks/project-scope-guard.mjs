@@ -33,7 +33,7 @@
 
 import { readFileSync, existsSync, lstatSync, realpathSync } from 'fs';
 import { isAbsolute, join, relative, resolve } from 'path';
-import { discoverControlState } from '../../scripts/controlled-change.mjs';
+import { discoverCheckoutControlState } from '../../scripts/controlled-change.mjs';
 import {
   authorizePublicSelection,
   expandedSelectionCommand,
@@ -1167,7 +1167,7 @@ function main() {
           permissionDecisionReason: authorityFailure || 'switch/new 必须是单一公开 argv，且只能在当前已认证原生事件中执行。' } });
       }
       try {
-        const controlled = discoverControlState(realpathSync(gstackRoot));
+        const controlled = discoverCheckoutControlState(realpathSync(gstackRoot));
         if (controlled.kind === 'invalid') throw new Error(`controlled state invalid: ${controlled.reason}`);
         if (controlled.kind === 'required') {
           const pending = state.selection?.pending || state.switch;

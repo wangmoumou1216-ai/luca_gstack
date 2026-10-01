@@ -22,13 +22,13 @@
 // 用法： node scripts/codex-trust-hooks.mjs --dry-run   （只列出，不写）
 //        node scripts/codex-trust-hooks.mjs             （写入并复核）
 
-import { spawn } from 'child_process';
-import { copyFileSync, readFileSync, chmodSync, constants } from 'fs';
+import { spawn, spawnSync } from 'child_process';
+import { copyFileSync, readFileSync, chmodSync, constants, existsSync, realpathSync } from 'fs';
 import assert from 'node:assert/strict';
 import { isDeepStrictEqual } from 'node:util';
 import { createHash } from 'node:crypto';
 import { homedir } from 'os';
-import { join, resolve } from 'path';
+import { join, resolve, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 import { assertHookHealth } from './codex-hook-health.mjs';
 
@@ -44,6 +44,21 @@ const hooksBytes = readFileSync(HOOKS_PATH);
 const registered = JSON.parse(hooksBytes.toString('utf8'));
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const hooksHash = sha(hooksBytes);
+// Codex loads repository registrations from the primary checkout even when the
+// session runs in a linked worktree. Only that Git-related source may supply keys;
+// an unrelated same-command registration is never a trust target.
+const gitEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
+const common = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], {
+  cwd: GSTACK, env: gitEnv, encoding: 'utf8', timeout: 5000,
+});
+let officialHooksPath = HOOKS_PATH;
+if (common.status === 0 && basename(common.stdout.trim()) === '.git') {
+  const candidate = join(dirname(realpathSync(common.stdout.trim())), '.codex/hooks.json');
+  if (existsSync(candidate)) officialHooksPath = candidate;
+}
+const unchangedSharedHooks = () => assert.equal(sha(readFileSync(officialHooksPath)), hooksHash,
+  'Shared Git hook registrations differ from this checkout; reconcile the registrations before trust');
+unchangedSharedHooks();
 const routeCommand = registered.hooks.SessionStart.flatMap(group => group.hooks || [])
   .find(hook => /model-route-hook\.mjs/.test(hook.command || ''))?.command || '';
 const nativeEntry = 'node "$luca_hook_root/.codex/model-route-hook.mjs"';
@@ -70,7 +85,7 @@ const registeredCommands = new Map();
 const evToSnake = event => event.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 for (const [event, groups] of Object.entries(registered.hooks)) {
   groups.forEach((group, gi) => (group.hooks || []).forEach((hook, hi) => {
-    registeredCommands.set(`${HOOKS_PATH}:${evToSnake(event)}:${gi}:${hi}`, {
+    registeredCommands.set(`${officialHooksPath}:${evToSnake(event)}:${gi}:${hi}`, {
       eventName: event[0].toLowerCase() + event.slice(1), command: hook.command });
   }));
 }
@@ -134,7 +149,7 @@ function rpc(id, method, params) {
   });
 }
 async function listed() {
-  const result = await rpc(2, 'hooks/list', {});
+  const result = await rpc(2, 'hooks/list', { cwds: [GSTACK] });
   assert.ok(Array.isArray(result?.data), 'Missing official hooks list');
   return result.data.flatMap(group => group.hooks || []);
 }
@@ -146,8 +161,10 @@ async function userLayer() {
   assert.ok(layers[0].version && layers[0].config, 'Missing official configuration version');
   return layers[0];
 }
-const unchangedHooks = () => assert.equal(sha(readFileSync(HOOKS_PATH)), hooksHash,
-  'Hook registrations changed during trust');
+const unchangedHooks = () => {
+  assert.equal(sha(readFileSync(HOOKS_PATH)), hooksHash, 'Hook registrations changed during trust');
+  unchangedSharedHooks();
+};
 const foreign = rows => rows.filter(row => !selectedKeys.has(row.key))
   .map(row => [row.key, row.eventName, row.command, row.currentHash, row.trustStatus])
   .sort((a, b) => a[0].localeCompare(b[0]));

@@ -140,6 +140,10 @@ function recoveryPre(sessionId, path, extra = {}) {
     permission_mode: 'default', cwd: ROOT, transcript_path: path,
     model: 'untrusted-payload-model', ...extra});
 }
+function recoveryRunner(sessionId, path, extra = {}) {
+  return recoveryPre(sessionId, path, {tool_name: 'Bash',
+    tool_input: {command: 'node .codex/workflow-runner.mjs external-skill-scout'}, ...extra});
+}
 
 try {
   const poisonCwd = join(scratch, 'poison-cwd');
@@ -190,6 +194,25 @@ try {
     'recovered critical review still selects the approved peak without fallback');
   equal(recoveredPeak.hookSpecificOutput.updatedInput.fork_turns, 'none',
     'recovery retains cold independent review requirements');
+  for (const prior of ['missing', 'paused']) {
+    const session = `root-runner-recover-${prior}`;
+    if (prior === 'paused') {
+      start(session);
+      run({hook_event_name: 'SessionEnd', session_id: session, cwd: ROOT});
+    }
+    const before = state(session);
+    const recoveredRunner = recoveryRunner(session, rootTranscript(session));
+    equal(recoveredRunner.hookSpecificOutput.permissionDecision, 'allow',
+      `runner recovers a ${prior} activation from the current native turn`);
+    equal(recoveredRunner.hookSpecificOutput.updatedInput.command.startsWith(
+      `LUCA_MODEL_ROUTE_ROOT_SESSION_ID='${session}' `), true,
+    'recovered runner receives the verified root session reference');
+    equal(state(session).root_anchor.model, 'gpt-5.6-sol', 'runner recovery ignores claimed payload models');
+    equal(state(session).status, 'active', 'runner recovery activates the native session');
+    equal(Object.keys(state(session).invocations).length, 0, 'runner recovery creates no agent invocation');
+    equal(Object.keys(state(session).preparations).length, 0, 'runner recovery creates no critical preparation');
+    if (before) equal(state(session).activation_id, before.activation_id, 'runner retains paused activation identity');
+  }
   for (const [suffix, options] of [
     ['foreign-session', {metaId: 'other-session'}],
     ['foreign-turn', {turnId: 'other-turn'}],
@@ -199,6 +222,8 @@ try {
     const session = `root-recovery-${suffix}`;
     equal(recoveryPre(session, rootTranscript(session, options))
       .hookSpecificOutput.permissionDecision, 'deny', `${suffix} cannot create an activation`);
+    equal(recoveryRunner(session, rootTranscript(session, options))
+      .hookSpecificOutput.permissionDecision, 'deny', `runner ${suffix} cannot create an activation`);
     equal(state(session), null, `${suffix} leaves no activation state`);
   }
   const outsideSession = 'root-recovery-outside';
@@ -206,6 +231,8 @@ try {
   cpSync(rootTranscript(outsideSession), outsidePath);
   equal(recoveryPre(outsideSession, outsidePath).hookSpecificOutput.permissionDecision, 'deny',
     'recovery refuses a transcript outside the canonical native sessions root');
+  equal(recoveryRunner(outsideSession, outsidePath).hookSpecificOutput.permissionDecision, 'deny',
+    'runner recovery also refuses an out-of-scope transcript');
   equal(state(outsideSession), null, 'unsafe transcript paths leave no activation');
   const recoveredChild = 'child-missing-startup';
   const parentBefore = state(recoveredSession);
@@ -237,7 +264,23 @@ try {
       JSON.stringify(blocked));
     equal(recoveryPre(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
       `paused ${suffix} cannot be recovered automatically`);
+    equal(recoveryRunner(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
+      `runner cannot recover paused ${suffix}`);
     equal(state(session), blocked, `paused ${suffix} is never overwritten or washed clean`);
+  }
+  for (const kind of ['critical-failure', 'pending-invocation', 'pending-preparation', 'release-mismatch']) {
+    const session = `runner-active-${kind}`;
+    start(session);
+    const blocked = state(session);
+    if (kind === 'critical-failure') blocked.critical_failure = true;
+    if (kind === 'pending-invocation') blocked.invocations.pending = {status: 'pending', critical: true};
+    if (kind === 'pending-preparation') blocked.preparations.pending = {status: 'pending'};
+    if (kind === 'release-mismatch') blocked.release_digest = '0'.repeat(64);
+    writeFileSync(stateFileForTest({harness: 'codex', root_session_id: session, state_root: stateRoot}),
+      JSON.stringify(blocked));
+    equal(recoveryRunner(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
+      `runner keeps active ${kind} blocked`);
+    equal(state(session), blocked, `runner preserves active ${kind} state`);
   }
   const racedSession = 'root-recovery-race';
   start(racedSession);
@@ -291,6 +334,8 @@ try {
       const path = rootTranscript(session, field === 'payloadCwd' ? {} : {[field]: foreignWorkspace});
       equal(recoveryPre(session, path, field === 'payloadCwd' ? {cwd: foreignWorkspace} : {})
         .hookSpecificOutput.permissionDecision, 'deny', `${field} from another checkout cannot recover`);
+      equal(recoveryRunner(session, path, field === 'payloadCwd' ? {cwd: foreignWorkspace} : {})
+        .hookSpecificOutput.permissionDecision, 'deny', `runner ${field} from another checkout cannot recover`);
       equal(state(session), before, `${field} mismatch cannot create or overwrite activation state`);
     }
   }
@@ -379,6 +424,10 @@ try {
       tool_use_id: `tool-${variant}`, tool_name: 'spawn_agent', transcript_path: path,
       tool_input: {task_name: 'work', message: 'work'}}).hookSpecificOutput.permissionDecision, 'deny',
       `${variant} CODEX_HOME cannot authorize unsupported model recovery`);
+    equal(profileRun({hook_event_name: 'PreToolUse', session_id: session, turn_id: 'turn-root',
+      tool_use_id: `tool-runner-${variant}`, tool_name: 'Bash', transcript_path: path,
+      tool_input: {command: 'node .codex/workflow-runner.mjs external-skill-scout'}})
+      .hookSpecificOutput.permissionDecision, 'deny', `runner refuses unsupported ${variant} CODEX_HOME recovery`);
     equal(state(session), before, `${variant} provider refusal preserves missing or paused activation state`);
   }
   const noPinSession = 'root-no-pin-forwarded';
@@ -464,6 +513,41 @@ try {
   }));
   equal(anchorStop, {}, 'SubagentStop accepts matching evidence before task_complete is appended');
   equal(Object.values(state(anchorSession).invocations)[0].status, 'accepted', 'accepted native evidence is persisted');
+
+  for (const shape of ['top-level', 'event-msg']) {
+    for (const scope of ['historical', 'current', 'unattributed']) {
+      const session = `root-abort-${shape}-${scope}`;
+      const agentId = `agent-${shape}-${scope}`;
+      start(session);
+      pre(session, {task_name: 'review', message: 'judge', agent_type: 'quality-gate'},
+        `tool-${shape}-${scope}`);
+      subStart(session, agentId, 'quality-gate');
+      const file = transcript({sessionId: session, agentId, agentType: 'quality-gate',
+        model: 'gpt-6-astra', complete: false});
+      const events = readFileSync(file, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+      const turnId = scope === 'historical' ? 'old-cancelled-turn' : `turn-${agentId}`;
+      const abort = {type: shape === 'top-level' ? 'turn_aborted' : 'event_msg', payload: {
+        ...(shape === 'event-msg' ? {type: 'turn_aborted'} : {}),
+        ...(scope === 'unattributed' ? {} : {turn_id: turnId}),
+      }};
+      if (scope === 'historical') events.splice(1, 0, abort);
+      else events.push(abort);
+      writeFileSync(file, `${events.map(event => JSON.stringify(event)).join('\n')}\n`);
+      const stopped = subStop(session, agentId, 'quality-gate', file);
+      if (scope === 'historical') {
+        equal(stopped, {}, `${shape} cancellation from a prior turn does not reject current success`);
+        equal(state(session).critical_failure, false, 'historical cancellation does not latch current activation');
+        equal(Object.values(state(session).invocations)[0].status, 'accepted',
+          'successful resumed subagent evidence is persisted');
+      } else {
+        equal(stopped.continue, false, `${shape} ${scope} cancellation refuses completion evidence`);
+        equal(state(session).critical_failure, true, `${scope} cancellation retains the critical failure latch`);
+      }
+      equal(pre(session, {task_name: 'later', message: 'work'}, `tool-later-${shape}-${scope}`)
+        .hookSpecificOutput.permissionDecision, scope === 'historical' ? 'allow' : 'deny',
+      'only a successful current turn permits subsequent dispatch');
+    }
+  }
 
   // A role/type is reusable; correlation still requires distinct invocation and agent IDs.
   for (const suffix of ['two', 'three']) {

@@ -102,10 +102,7 @@ function latchRouteFailure(payload, state, critical, error) {
     throw new Error(`${reason}; critical failure persistence unavailable: ${failure?.message || failure}`);
   }
 }
-function routeForAgent(payload, agentType) {
-  const policy = readPolicy();
-  const scene = resolveDispatchScene(policy, {kind: 'native-agent', agent_type: agentType});
-  if (!scene) throw new Error('UNKNOWN_AGENT_TYPE');
+function ensureNativeActivation(payload, policy) {
   let state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
   if (!state || state.status === 'paused') {
     // Child association still supports the native default home only. Refuse a
@@ -129,6 +126,13 @@ function routeForAgent(payload, agentType) {
   if (state.critical_failure) throw new Error('CRITICAL_FAILURE_LATCHED');
   if (unresolvedCriticalInvocation(state)) throw new Error('CRITICAL_INVOCATION_EVIDENCE_PENDING');
   if (pendingPreparation(state)) throw new Error('UNRESOLVED_CRITICAL_PREPARATION');
+  return state;
+}
+function routeForAgent(payload, agentType) {
+  const policy = readPolicy();
+  const scene = resolveDispatchScene(policy, {kind: 'native-agent', agent_type: agentType});
+  if (!scene) throw new Error('UNKNOWN_AGENT_TYPE');
+  const state = ensureNativeActivation(payload, policy);
   let preparation_id;
   try {
     if (policy.scenes[scene].critical) {
@@ -209,13 +213,13 @@ function handlePreToolUse(payload) {
   if (tool === 'bash') {
     const command = payload.tool_input?.command;
     if (!text(command) || !runnerCommand(command)) return {};
-    const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
-    if (!state || state.status !== 'active' || state.critical_failure
-      || unresolvedCriticalInvocation(state) || pendingPreparation(state)) {
-      return deny('model-route activation is not usable or critical invocation evidence is pending');
+    try {
+      ensureNativeActivation(payload, readPolicy());
+      return allow({...payload.tool_input,
+        command: `LUCA_MODEL_ROUTE_ROOT_SESSION_ID=${shellQuote(payload.session_id)} ${command}`});
+    } catch (error) {
+      return deny(`model-route unavailable: ${(error && error.message) || error}`);
     }
-    return allow({...payload.tool_input,
-      command: `LUCA_MODEL_ROUTE_ROOT_SESSION_ID=${shellQuote(payload.session_id)} ${command}`});
   }
   if (!SPAWN_TOOLS.has(tool)) return {};
   if (!record(payload.tool_input) || !text(payload.tool_use_id) || !text(payload.turn_id)) {
@@ -388,7 +392,14 @@ function transcriptEvidence(path, rootSessionId, agentId, agentType,
     .filter(item => item?.type === 'output_text' && typeof item.text === 'string')
     .map(item => item.text).join('');
   const assistantTurnId = assistant?.internal_chat_message_metadata_passthrough?.turn_id;
-  const aborted = events.some(event => event.type === 'turn_aborted');
+  // A resumed subagent may retain cancelled earlier turns. Only a cancellation
+  // of this evidence turn (or one lacking an attributable turn) blocks success.
+  const aborted = events.some(event => {
+    if (event.type !== 'turn_aborted'
+        && !(event.type === 'event_msg' && event.payload?.type === 'turn_aborted')) return false;
+    const turnId = event.payload?.turn_id || event.turn_id;
+    return !text(turnId) || turnId === context?.turn_id;
+  });
   const identityOk = meta?.id === agentId && meta?.parent_thread_id === rootSessionId
     && meta?.source?.subagent?.thread_spawn?.agent_role === agentType;
   // SubagentStop runs before Codex appends task_complete. Treat the hook event as

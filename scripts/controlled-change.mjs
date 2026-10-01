@@ -684,6 +684,17 @@ export function discoverControlState(repoRoot = repoRealpath(), now = Date.now()
   return { kind: 'inactive', root, entries };
 }
 
+// Controller arbitration stays common-directory scoped. Tool enforcement applies
+// a valid manifest only to its checkout; invalid shared state still fails closed.
+export function discoverCheckoutControlState(repoRoot = repoRealpath(), now = Date.now()) {
+  const checkout = repoRealpath(repoRoot);
+  const state = discoverControlState(checkout, now);
+  if (state.kind === 'required' && state.current.manifest.repo_realpath !== checkout) {
+    return { kind: 'inactive', root: state.root, entries: state.entries, reason: 'required-in-other-checkout' };
+  }
+  return state;
+}
+
 export function loadManifestFile(path) {
   return validateManifest(readJson(path, 'manifest'));
 }
@@ -733,7 +744,7 @@ async function main() {
     return state.kind === 'invalid' ? 2 : 0;
   }
   if (command === 'hook-failure-decision') {
-    const state = discoverControlState(options.repo || undefined);
+    const state = discoverCheckoutControlState(options.repo || undefined);
     if (state.kind === 'inactive') return 0;
     process.stderr.write(`[controlled-change] deny: guard failure while controlled mode is required (${state.reason || state.kind})\n`);
     return 2;
