@@ -8,6 +8,8 @@ import {appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, cpS
 import {join, dirname, resolve, delimiter} from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
 
+const concurrentMode = process.argv.includes('--controlled-concurrent');
+const controlledMode = concurrentMode || process.argv.includes('--controlled-owner');
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // Allowlist inheritance: GIT_*, LUCA_*, CODEX_*, NODE_OPTIONS, secrets,
 // proxy settings and shared memory roots never reach fixture processes.
@@ -41,7 +43,7 @@ mkdirSync(work, {recursive:true});
 const temporary = join(root, 'tmp'), bin = join(root, 'bin');
 mkdirSync(temporary, {mode:0o700}); mkdirSync(bin);
 symlinkSync(binary, join(bin, 'codex'));
-Object.assign(baseEnv, {HOME:isolatedHome, TMPDIR:temporary, TMP:temporary, TEMP:temporary,
+Object.assign(baseEnv, {HOME:isolatedHome, TMPDIR:realpathSync('/tmp'), TMP:temporary, TEMP:temporary,
   PATH:bin + delimiter + (baseEnv.PATH || '/usr/bin:/bin')});
 const hookLog = join(root, 'hook-payloads.jsonl');
 const requestLog = join(root, 'responses-requests.jsonl');
@@ -49,6 +51,7 @@ const archive = spawnSync('git', ['archive','HEAD'], {cwd:repo,env:baseEnv,maxBu
 if(archive.status) throw Error('archive failed');
 if(spawnSync('tar',['-xf','-','-C',work],{input:archive.stdout,env:baseEnv}).status) throw Error('extract failed');
 const overlays = ['.codex/model-route-hook.mjs', 'scripts/codex-trust-hooks.mjs',
+  '.codex/codex-hook-adapter.mjs', 'scripts/controlled-change-controller.mjs', 'scripts/controlled-native-owner.mjs',
   'scripts/controlled-change.mjs', '.claude/hooks/controlled-change-guard.mjs', '.claude/hooks/project-scope-guard.mjs'];
 for(const path of overlays) cpSync(join(repo,path),join(work,path));
 checked('git',['init','-q'],{cwd:work});
@@ -75,8 +78,65 @@ appendFileSync(${JSON.stringify(hookLog)},JSON.stringify({entry:+process.argv[2]
 process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');process.exitCode=result.status??2;
 `);
 
+if (controlledMode) writeFileSync(join(work, 'controlled-target.txt'), 'before\n');
+if (concurrentMode) {
+  writeFileSync(join(work, 'controlled-second.txt'), 'before B\n');
+  writeFileSync(join(work, 'controlled-verification.mjs'), `import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';test('both edits',()=>{assert.equal(readFileSync('controlled-target.txt','utf8'),'after\\n');assert.equal(readFileSync('controlled-second.txt','utf8'),'after B\\n')});`);
+}
 checked('git',['add','-A'],{cwd:work});
 checked('git',['-c','user.name=Isolated Test','-c','user.email=test@invalid','commit','-qm','fixture'],{cwd:work});
+
+let controlledPrograms = [], controlledManifestPath, concurrentSteps = [], concurrentTurns = [], concurrentIds = [], coexistence;
+if (controlledMode) {
+  const core = await import(join(work, 'scripts/controlled-change.mjs'));
+  const scratch = join(root, 'controlled-scratch'); mkdirSync(scratch);
+  const head = checked('git', ['rev-parse', 'HEAD'], { cwd: work });
+  const patch = '*** Begin Patch\n*** Update File: controlled-target.txt\n@@\n-before\n+after\n*** End Patch';
+  controlledManifestPath = join(scratch, 'manifest.json');
+  writeFileSync(controlledManifestPath, JSON.stringify({ schema_version: 1, task_id: 'native-wrapper-owner', u_id: 'U-003',
+    repo_realpath: work, git_common_dir_realpath: core.gitCommonDirRealpath(work), plan_sha256: '1'.repeat(64),
+    plan_recorded_baseline: head, observed_baseline: head, session: 'display-label', scratch_root: scratch,
+    repo_paths: [{ path: 'controlled-target.txt', mutation: 'modify', preimage: core.pathTuple(join(work, 'controlled-target.txt')),
+      postimage: { type: 'file', mode: '100644', sha256: core.sha256Bytes(Buffer.from('after\n')) } }],
+    external_paths: [], mutation_classes: ['modify'], approved_effects: ['git-stage'], allowed_commands: ['printf OWNER_VALIDATION_OK'],
+    metadata: { patch_sha256: core.sha256Bytes(Buffer.from(patch)) } }));
+  const command = operation => `node scripts/controlled-change-controller.mjs ${operation} --manifest '${controlledManifestPath}'`;
+  const shell = cmd => `text(await tools.exec_command({cmd:${JSON.stringify(cmd)},max_output_tokens:100}));`;
+  controlledPrograms = [shell(command('prepare')), `text(await tools.apply_patch(${JSON.stringify(patch)}));`,
+    shell('printf OWNER_VALIDATION_OK'),
+    shell(command('authorize-effect') + ` --effect git-stage --gate fixture-gate --command-sha256 ${core.sha256Bytes(Buffer.from('git add controlled-target.txt'))} --cwd '${work}' --authorization-token wrapper-auth-0001`),
+    shell('git add controlled-target.txt'), shell(command('finish'))];
+  if (concurrentMode) {
+    const secondScratch = join(root, 'controlled-scratch-b'), integrationScratch = join(root, 'controlled-integration');
+    mkdirSync(secondScratch); mkdirSync(integrationScratch);
+    const secondFile = join(secondScratch, 'manifest.json'), integrationFile = join(integrationScratch, 'manifest.json');
+    const original = JSON.parse(readFileSync(controlledManifestPath));
+    const patchB = patch.replaceAll('controlled-target.txt', 'controlled-second.txt').replace('-before\n+after', '-before B\n+after B');
+    const secondManifest = { ...original, task_id: 'native-wrapper-b', scratch_root: secondScratch,
+      repo_paths: [{ path: 'controlled-second.txt', mutation: 'modify', preimage: core.pathTuple(join(work, 'controlled-second.txt')),
+        postimage: { type: 'file', mode: '100644', sha256: core.sha256Bytes(Buffer.from('after B\n')) } }],
+      metadata: { patch_sha256: core.sha256Bytes(Buffer.from(patchB)) } };
+    const integration = { ...original, task_id: 'native-wrapper-integration', scratch_root: integrationScratch,
+      repo_paths: [...original.repo_paths, ...secondManifest.repo_paths].map(row => ({ ...row, preimage: row.postimage })),
+      allowed_commands: ['node --test controlled-verification.mjs'] };
+    writeFileSync(secondFile, JSON.stringify(secondManifest)); writeFileSync(integrationFile, JSON.stringify(integration));
+    const ctl = (file, operation) => `node scripts/controlled-change-controller.mjs ${operation} --manifest '${file}'`;
+    const stage = 'git add controlled-target.txt controlled-second.txt';
+    concurrentSteps = [
+      [shell(command('prepare'))],
+      [shell(ctl(secondFile, 'prepare')), `text(await tools.apply_patch(${JSON.stringify(patchB)}));`],
+      [shell('cat controlled-second.txt'), shell('rg -n after controlled-second.txt'),
+        shell('pwd'), shell('head -n 3 README.md')],
+      [`text(await tools.apply_patch(${JSON.stringify(patch)}));`, shell(command('finish'))],
+      [shell(ctl(secondFile, 'finish'))],
+      [shell(ctl(integrationFile, 'prepare')), shell('node --test controlled-verification.mjs'),
+        shell(ctl(integrationFile, 'authorize-effect') + ` --effect git-stage --gate integration-gate --command-sha256 ${core.sha256Bytes(Buffer.from(stage))} --cwd '${work}' --authorization-token integration-native-auth`),
+        shell(stage), shell(ctl(integrationFile, 'finish'))],
+    ];
+    controlledPrograms = concurrentSteps[0];
+  }
+
+}
 
 function sse(events) {
   return events.map(event => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join('');
@@ -99,7 +159,16 @@ const server = createServer((request, response) => {
     let item;
     const message=text=>({type:'message',role:'assistant',id:'msg_'+requestCount,content:[{type:'output_text',text}]});
     const call=(name,args,namespace)=>({type:'function_call',id:'fc_'+requestCount,call_id:'call_'+requestCount,name,arguments:JSON.stringify(args),...(namespace?{namespace}:{})});
-    if(!lastUser.includes('Isolated framework acceptance:')&&!lastUser.includes('Repeat the isolated acceptance')) item=message('CHILD_DONE');
+    if (controlledMode) {
+      const flatten = (tools, namespace = '') => (tools || []).flatMap(tool => tool.type === 'namespace'
+        ? flatten(tool.tools, tool.name) : [{ name: tool.name, namespace, type: tool.type }]);
+      const offered = flatten([...(parsed.tools || []), ...(parsed.input || []).filter(row => row.type === 'additional_tools').flatMap(row => row.tools || [])]);
+      const wrapper = offered.find(tool => tool.name === 'exec');
+      const program = controlledPrograms[rootStep++];
+      item = program && wrapper ? { type: 'custom_tool_call', id: 'ct_' + requestCount,
+        call_id: 'call_' + requestCount, name: wrapper.name, namespace: wrapper.namespace, input: program }
+        : message(program ? 'WRAPPER_MISSING' : 'CONTROLLED_OWNER_DONE');
+    } else     if(!lastUser.includes('Isolated framework acceptance:')&&!lastUser.includes('Repeat the isolated acceptance')) item=message('CHILD_DONE');
     else {
       rootStep++;
       if(rootStep===1) item=call('exec_command',{cmd:'head -1 README.md',max_output_tokens:100});
@@ -125,7 +194,7 @@ const port = server.address().port;
 const configPath = join(home, 'config.toml');
 writeFileSync(configPath, `model = "gpt-6.1-sol"\nmodel_provider = "localstub"\napproval_policy = "never"\nsandbox_mode = "danger-full-access"\nmodel_reasoning_effort = "low"\ncheck_for_update_on_startup = false\nsuppress_unstable_features_warning = true\n[features]\nhooks = true\napps = false\ndaemon_auto_start = false\nmulti_agent = true\n[model_providers.localstub]\nname = "Local offline stub"\nbase_url = "http://127.0.0.1:${port}/v1"\nenv_key = "LOCAL_STUB_KEY"\nwire_api = "responses"\nsupports_websockets = false\nrequest_max_retries = 0\nstream_max_retries = 0\n[projects.${JSON.stringify(work)}]\ntrust_level = "trusted"\n`);
 
-const isolatedEnv = {...baseEnv,NODE_ENV:'test',PYTHONUSERBASE:pythonUserBase,LUCA_EVENT_ATTESTATION_TEST:'1',LUCA_MODEL_ROUTE_STATE_ROOT:join(root,'state'),LUCA_MODEL_ROUTE_BINDINGS_PATH:bindings,LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT:join(home,'sessions'),LUCA_CHILD_PROJECT_STORE_ROOT:join(root,'child-store'),LUCA_CHILD_PROJECT_TEST_CODEX_HOME:home,LUCA_PROJECTS_ROOT:join(root,'projects'),MEMORY_ROOT:work,HOME:isolatedHome,CODEX_HOME:home,LOCAL_STUB_KEY:'offline',NO_PROXY:'127.0.0.1,localhost',no_proxy:'127.0.0.1,localhost'};
+const isolatedEnv = {...baseEnv,NODE_ENV:'test',PYTHONUSERBASE:pythonUserBase,LUCA_EVENT_ATTESTATION_TEST:'1',LUCA_CONTROLLED_TEST_HOME:isolatedHome,LUCA_MODEL_ROUTE_STATE_ROOT:join(root,'state'),LUCA_MODEL_ROUTE_BINDINGS_PATH:bindings,LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT:join(home,'sessions'),LUCA_CHILD_PROJECT_STORE_ROOT:join(root,'child-store'),LUCA_CHILD_PROJECT_TEST_CODEX_HOME:home,LUCA_PROJECTS_ROOT:join(root,'projects'),MEMORY_ROOT:work,HOME:isolatedHome,CODEX_HOME:home,LOCAL_STUB_KEY:'offline',NO_PROXY:'127.0.0.1,localhost',no_proxy:'127.0.0.1,localhost'};
 function appServerRequest(method, params) {
   return new Promise((resolve,reject) => {
     const app = spawn(binary,['app-server','--listen','stdio://'],{env:isolatedEnv,cwd:work,stdio:['pipe','pipe','pipe']});
@@ -174,12 +243,28 @@ async function runTurn(args) {
  const events=stdout.trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
  return {status,events,stderr};
 }
+if (concurrentMode) {
+  for (let i = 0; i < concurrentSteps.length; i++) {
+    controlledPrograms = concurrentSteps[i]; rootStep = 0;
+    const resume = i === 3 ? concurrentIds[0] : i === 4 ? concurrentIds[1] : null;
+    const args = resume ? ['exec', 'resume', '--json', resume, 'Continue the isolated controlled phase.']
+      : ['exec', '--json', '--skip-git-repo-check', '--sandbox', 'danger-full-access', '-C', work, 'Isolated framework acceptance: controlled phase.'];
+    const result = await runTurn(args); concurrentTurns.push(result);
+    concurrentIds.push(result.events.find(event => event.type === 'thread.started')?.thread_id);
+    if (i === 1) coexistence = ['native-wrapper-owner', 'native-wrapper-b'].map(task =>
+      JSON.parse(readFileSync(join(work, '.git/luca-controlled-change', task, 'required-witness.json'))));
+  }
+  first = concurrentTurns[0]; sid = concurrentIds[0];
+} else {
 first=await runTurn(['exec','--json','--skip-git-repo-check','--sandbox','danger-full-access','-C',work,'Isolated framework acceptance: read README.md, create and edit incident-probe.txt, read it back, explicitly spawn one default child agent and wait, then answer ALL_SCENARIOS_DONE.']);
 sid=first.events.find(x=>x.type==='thread.started')?.thread_id;
 firstActivation=activation(sid);
 rootStep=0;spawnedAgent='';iteration=2;
+if (!controlledMode) {
 second=sid?await runTurn(['exec','resume','--json',sid,'Repeat the isolated acceptance actions in this resumed session, including one child agent.']):null;
 secondActivation=activation(sid);
+}
+}
 } catch(error) {
   writeFileSync(join(root,'failure.json'),JSON.stringify({error:error.stack,first,second},null,2));
   throw new Error(`Native lifecycle failed; evidence: ${root}`,{cause:error});
@@ -189,6 +274,41 @@ const allEvents=[...first.events,...(second?.events||[])];
 const denied=hooks.filter(x=>x.status!==0||/"permissionDecision":"deny"|"continue":false/.test(x.output));
 const requests=readFileSync(requestLog,'utf8').split('\n').filter(Boolean).map(JSON.parse);
 const toolErrors=requests.flatMap(x=>x.input||[]).filter(x=>(x.type==='function_call_output'||x.type==='custom_tool_call_output')&&/unsupported call:|failed to parse function arguments:|hook.*blocked|Process exited with code [1-9]|Exit code: [1-9]/i.test(x.output));
+if (concurrentMode) {
+  const witnesses = ['native-wrapper-owner', 'native-wrapper-b', 'native-wrapper-integration'].map(task =>
+    JSON.parse(readFileSync(join(work, '.git/luca-controlled-change', task, 'required-witness.json'))));
+  const receipts = witnesses.map(w => JSON.parse(readFileSync(join(work, '.git/luca-controlled-change', w.task_id, 'receipt.json'))));
+  const reads = hooks.filter(row => row.payload.session_id === concurrentIds[2] && row.payload.hook_event_name === 'PostToolUse');
+  const checks = { turns: concurrentTurns.every(turn => turn.status === 0 && turn.events.some(event => event.type === 'turn.completed')),
+    cleanHooks: !denied.length && !toolErrors.length,
+    twoOwners: coexistence.every(w => w.state === 'REQUIRED') && new Set(coexistence.map(w => w.native_owner.session_id)).size === 2,
+    thirdSidRead: !coexistence.some(w => w.native_owner.session_id === concurrentIds[2]) && reads.length === 4 && reads.every(row => row.status === 0),
+    naturalCompletion: witnesses.every(w => w.state === 'COMPLETED') && receipts.every(r => !r.history.some(row => row.state === 'ABORTED')),
+    stage: checked('git', ['diff', '--cached', '--name-only'], { cwd: work }) === 'controlled-second.txt\ncontrolled-target.txt',
+    exactEdits: readFileSync(join(work, 'controlled-target.txt'), 'utf8') === 'after\n' && readFileSync(join(work, 'controlled-second.txt'), 'utf8') === 'after B\n' };
+  const result = { pass: Object.values(checks).every(Boolean), root, checks, concurrentIds, witnesses, receipts, coexistence, reads, denied, toolErrors };
+  writeFileSync(join(root, 'concurrent-result.json'), JSON.stringify(result, null, 2));
+  console.log(`${result.pass ? 'PASS' : 'FAIL'} native concurrent wrapper: ${JSON.stringify(checks)}; evidence: ${join(root, 'concurrent-result.json')}`);
+  process.exit(result.pass ? 0 : 1);
+}
+if (controlledMode) {
+  let witness = {};
+  try { witness = JSON.parse(readFileSync(join(work, '.git/luca-controlled-change/native-wrapper-owner/required-witness.json'))); } catch {}
+  const checks = {
+    cli: first.status === 0 && first.events.some(event => event.type === 'turn.completed'),
+    cleanHooks: denied.length === 0 && toolErrors.length === 0,
+    nativeOwner: witness.native_owner?.session_id === sid,
+    terminal: witness.state === 'COMPLETED',
+    exactPatch: readFileSync(join(work, 'controlled-target.txt'), 'utf8') === 'after\n',
+    wrappers: requests.length === controlledPrograms.length + 1,
+    injected: hooks.some(row => row.payload.hook_event_name === 'PostToolUse' && row.payload.tool_input?.command?.includes('--native-owner-claim')),
+  };
+  const result = { pass: Object.values(checks).every(Boolean), root, checks, denied, toolErrors, witness,
+    hookEvents: hooks.map(row => ({ event: row.payload.hook_event_name, tool: row.payload.tool_name, status: row.status })) };
+  writeFileSync(join(root, 'controlled-result.json'), JSON.stringify(result, null, 2));
+  console.log(`${result.pass ? 'PASS' : 'FAIL'} native wrapper controlled owner: ${JSON.stringify(checks)}; evidence: ${join(root, 'controlled-result.json')}`);
+  process.exit(result.pass ? 0 : 1);
+}
 const stops=hooks.filter(x=>x.payload.hook_event_name==='SubagentStop');
 const result={binary,overlays,initialRegistrations,firstActivation,secondActivation,stops:stops.map(x=>({message:x.payload.last_assistant_message,output:x.output})),root,first,second,requestCount,events:hooks.map(x=>({entry:x.entry,event:x.payload.hook_event_name,source:x.payload.source,status:x.status,output:x.output})),denied,toolErrors,finalFile:readFileSync(join(work,'incident-probe.txt'),'utf8')};
 const failures=[];

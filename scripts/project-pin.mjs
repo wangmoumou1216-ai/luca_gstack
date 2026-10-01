@@ -50,7 +50,7 @@ import {
   projectReservationPath,
   readProjectReservation,
 } from '../.claude/hooks/lib/project-selection.mjs';
-import { discoverControlState } from './controlled-change.mjs';
+import { discoverControlState, discoverCheckoutControlState } from './controlled-change.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -173,9 +173,14 @@ export function executeProjectTransaction({ sessionId, tx, operation, target, ex
       || !hostLaunchReceipt.openRequestId || !hostLaunchReceipt.hostRunId)) throw new Error('host launch receipt mismatch');
   const authorizeController = (mode, trustedRecord) => {
     if (!existsSync(join(gstackRoot, '.git'))) return;
-    const controlled = discoverControlState(gstackRoot);
+    // Switching only changes this checkout's SID state; creation also writes
+    // the shared projects root and must retain common-directory arbitration.
+    const controlled = op === 'switch' ? discoverCheckoutControlState(gstackRoot) : discoverControlState(gstackRoot);
     if (controlled.kind === 'invalid') throw new Error(`controlled state invalid: ${controlled.reason}`);
     if (controlled.kind === 'required') {
+      if (!controlled.current || controlled.current.witness.native_owner) {
+        throw new Error('native controlled tasks cannot authorize shared project selection; finish the editing phase before switch/new');
+      }
       authorizePublicSelection({
         manifest: controlled.current.manifest,
         selection: { operation: op, target: project, session_id: sid, tx, expected_epoch: expected },

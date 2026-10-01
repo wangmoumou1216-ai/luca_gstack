@@ -19,14 +19,16 @@ Scope: recover normal Codex execution while preserving the user's disabled produ
 
 Final native evidence: `/private/tmp/luca-native-lifecycle.TXhr2e/result.json`; 44 Hook events, all 11 registrations exercised, two completed child lifecycles, no denials or tool parser errors. Each turn has accepted transcript evidence and no unresolved preparation. This verifies protocol and enforcement, not model judgement or Luca GUI interaction.
 
-## Integration conclusions and remaining boundaries
+## Integration conclusions and remaining boundaries (initial release)
 
 - Registration/trust belongs to each Codex home. Turning off System-profile Hooks does not configure Sidecar/Direct homes. App readiness must identify which home failed.
 - Framework runtime recovery must rely on native event/transcript evidence. Missing evidence is not repaired by granting arbitrary activation.
 - Controlled execution applies to the owning checkout; controller arbitration remains shared across the Git repository. Invalid or multiple REQUIRED records still fail closed.
-- Same-checkout legacy sessions still lack native session ownership binding. This patch does not claim session-level capability isolation there. Do not run multiple controlled tasks in one checkout; use separate worktrees. A future schema migration must bind native identity without trusting free-text session labels.
+- The initial release lacked same-checkout native ownership. The follow-up in [APP-AND-CONCURRENCY.md](APP-AND-CONCURRENCY.md) adds native session-bound disjoint claims and real same-directory acceptance. Legacy-v1 records remain exclusive and are not silently migrated.
 - Production source-guard errors in the earlier incident were addressed by the preceding native registration release. This change does not reinstall that guard or re-enable Hooks.
 - A signed App package and a running process are not GUI acceptance. Current delivery can verify installed module bytes while the existing user process continues; new code is loaded on normal restart.
 - Nondefault-home activation recovery and live-provider/UI lifecycle need separate evidence. No claim of universal failure-free behavior follows from these tests.
 
 Independent reviews covered framework routing/trust, controlled-state applicability and App readiness separately. Their effective mutations demonstrate that the targeted regressions are detected. Publication requires the repository verification gate as well as these focused checks.
+
+The follow-up [App and concurrency review](APP-AND-CONCURRENCY.md) records actual installed-App GUI new/resume acceptance, the first-run configuration fix, same-directory concurrency, and publication evidence. It supersedes the initial-release boundaries only where it supplies new evidence.

@@ -2,13 +2,13 @@ import test from 'node:test';
 import os from 'node:os';
 import { syncBuiltinESMExports } from 'node:module';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, renameSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, renameSync, rmSync, symlinkSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { fork, execFile, execFileSync, spawnSync } from 'node:child_process';
 import { connect } from 'node:net';
 import { fileURLToPath } from 'node:url';
-import { createHostLaunchBroker, fileIdentity } from '../.claude/hooks/lib/host-launch.mjs';
+import { createHostLaunchBroker, fileIdentity, codexConfigIdentity } from '../.claude/hooks/lib/host-launch.mjs';
 import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity, prepareProjectSwitch,
   closeAttestedProjectEvent, refenceProjectStateForDeactivate } from '../.claude/hooks/lib/project-substrate.mjs';
 import { captureNativeEventFence, hostLaunchJournalRoot, readHostLaunchSourceScope, resolveCodexHome } from '../.claude/hooks/lib/event-attestation.mjs';
@@ -16,6 +16,8 @@ import { executeProjectTransaction } from './project-pin.mjs';
 import * as projectPinApi from './project-pin.mjs';
 import { parseExpandedSelectionCommand } from '../.claude/hooks/lib/project-selection.mjs';
 import { projectStatusHostView } from '../.claude/hooks/lib/project-host-view.mjs';
+import { canonicalJson, gitCommonDirRealpath, pathTuple, manifestSha256, witnessAnchor,
+  sha256Bytes, setNativeScopeState, discoverControlState } from './controlled-change.mjs';
 
 test('nested child tools do not consume root events or receive the root receipt', async () => {
   for (const project of [false, true]) {
@@ -134,6 +136,153 @@ async function attached(f, project = false) {
   await f.broker.claim('attach', claim);
   return claim;
 }
+test('fresh private host binding coexists with native scopes and scoped damage but preserves unknown/legacy fences', async () => {
+  const previous = [process.env.LUCA_EVENT_ATTESTATION_TEST, process.env.LUCA_CONTROLLED_TEST_HOME, process.env.TMPDIR];
+  try {
+    for (const mode of ['native', 'scoped-damage', 'unknown-damage', 'legacy', 'foreign-legacy']) {
+      const f = fixture(), home = join(f.root, 'home'); mkdirSync(home);
+      process.env.LUCA_EVENT_ATTESTATION_TEST = '1'; process.env.LUCA_CONTROLLED_TEST_HOME = home; process.env.TMPDIR = '/private/tmp';
+      const env = { ...process.env }; for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
+      execFileSync('/usr/bin/git', ['init', '-q', f.gstackRoot], { env });
+      let controlledCheckout = f.gstackRoot;
+      if (mode === 'foreign-legacy') {
+        execFileSync('/usr/bin/git', ['-C', f.gstackRoot, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+          'commit', '--allow-empty', '-qm', 'fixture'], { env });
+        controlledCheckout = join(f.root, 'foreign-worktree');
+        execFileSync('/usr/bin/git', ['-C', f.gstackRoot, 'worktree', 'add', '--quiet', '--detach', controlledCheckout], { env });
+        assert.equal(gitCommonDirRealpath(controlledCheckout), gitCommonDirRealpath(f.gstackRoot));
+      }
+      const legacy = mode.endsWith('legacy');
+      const paths = [];
+      for (const name of legacy ? ['a'] : ['a', 'b']) {
+        const scratch = join(f.root, `scratch-${name}`); mkdirSync(scratch);
+        const target = join(controlledCheckout, `scope-${name}.txt`); writeFileSync(target, 'fixture\n');
+        const manifest = { schema_version: 1, task_id: `host-scope-${name}`, u_id: 'U-003',
+          repo_realpath: controlledCheckout, git_common_dir_realpath: gitCommonDirRealpath(f.gstackRoot),
+          plan_sha256: '1'.repeat(64), plan_recorded_baseline: '0'.repeat(40), observed_baseline: '0'.repeat(40),
+          session: 'fixture-display-only', scratch_root: scratch,
+          repo_paths: [{ path: `scope-${name}.txt`, mutation: 'modify', preimage: pathTuple(target), postimage: pathTuple(target) }],
+          external_paths: [], mutation_classes: ['modify'], approved_effects: [], allowed_commands: [] };
+        const owner = { version: 1, harness: 'codex', session_id: randomUUID(), repo_realpath: f.gstackRoot };
+        const witness = { schema_version: 1, state: 'REQUIRED', task_id: manifest.task_id, u_id: manifest.u_id,
+          generation: randomUUID(), plan_sha256: manifest.plan_sha256, manifest_sha256: manifestSha256(manifest),
+          repo_realpath: controlledCheckout, created_at: Date.now(), expires_at: Date.now() + 3600000,
+          ...(legacy ? {} : { native_owner: owner }) };
+        const active = { ...witness, state: 'ACTIVE', witness_anchor_sha256: witnessAnchor(witness), manifest };
+        const dir = join(gitCommonDirRealpath(f.gstackRoot), 'luca-controlled-change', manifest.task_id); mkdirSync(dir, { recursive: true });
+        const activePath = join(dir, 'active-context.json'); paths.push(activePath);
+        writeFileSync(activePath, `${canonicalJson(active)}\n`);
+        writeFileSync(join(dir, 'required-witness.json'), `${canonicalJson({ ...witness,
+          active_context_sha256: sha256Bytes(`${canonicalJson(active)}\n`), effect_authorizations: [] })}\n`);
+        if (!legacy) setNativeScopeState(manifest, owner, witness.generation, 'ACTIVE');
+      }
+      if (mode === 'scoped-damage') writeFileSync(paths[1], '{broken');
+      if (mode === 'unknown-damage') {
+        const orphan = join(gitCommonDirRealpath(f.gstackRoot), 'luca-controlled-change/orphan-writer'); mkdirSync(orphan);
+        writeFileSync(join(orphan, 'active-context.json'), '{}');
+      }
+      const state = discoverControlState(f.gstackRoot);
+      assert.equal(state.kind, mode === 'unknown-damage' ? 'invalid' : 'required');
+      const controlledBytes = () => paths.flatMap(path => [readFileSync(path, 'utf8'),
+        readFileSync(path.replace(/active-context\.json$/, 'required-witness.json'), 'utf8')]);
+      const beforeBinding = controlledBytes();
+      const claim = await dispatched(f, true);
+      if (['native', 'scoped-damage', 'foreign-legacy'].includes(mode)) {
+        await f.broker.claim('attach', claim);
+        assert.equal(readProjectState(f.gstackRoot, f.sid).value.binding.project, 'alpha');
+      } else {
+        await assert.rejects(f.broker.claim('attach', claim));
+        assert.equal(readProjectState(f.gstackRoot, f.sid).value.binding, undefined);
+      }
+      assert.deepEqual(controlledBytes(), beforeBinding, 'host binding must not mutate existing controlled records');
+    }
+  } finally {
+    for (const [i, key] of ['LUCA_EVENT_ATTESTATION_TEST', 'LUCA_CONTROLLED_TEST_HOME', 'TMPDIR'].entries()) {
+      if (previous[i] === undefined) delete process.env[key]; else process.env[key] = previous[i];
+    }
+  }
+});
+const codexLaunchConfig = 'model = "fixture-model"\nmodel_provider = "local"\n[model_providers.local]\nbase_url = "http://127.0.0.1:64069/v1"\n';
+function semanticConfigFixture() {
+  const f = fixture();
+  f.nativeConfig = join(f.sourceRoot, 'config.toml');
+  writeFileSync(f.nativeConfig, codexLaunchConfig, { mode: 0o600 });
+  f.request.profileIdentity.configFiles.unshift(codexConfigIdentity(f.nativeConfig));
+  return f;
+}
+function replaceConfig(file, text) {
+  writeFileSync(`${file}.next`, text, { mode: 0o600 });
+  renameSync(`${file}.next`, file);
+}
+test('first-run Codex TUI atomic config writes preserve startup and tool authority', async () => {
+  for (const project of [false, true]) {
+    const f = semanticConfigFixture(), claim = await dispatched(f, project);
+    const original = f.request.profileIdentity.configFiles[0];
+    replaceConfig(f.nativeConfig, `${codexLaunchConfig}\n[tui]\nscreen_reader_detection_done = true\n[tui.model_availability_nux]\n"fixture-model" = 1\n`);
+    assert.deepEqual(codexConfigIdentity(f.nativeConfig), original);
+    await f.broker.claim('attach', claim);
+    replaceConfig(f.nativeConfig, `${codexLaunchConfig}\n[tui]\nscreen_reader_detection_done = false\n[tui.model_availability_nux]\n"fixture-model" = 2\n`);
+    const result = await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+    assert.equal(result.status, project ? 'COMMITTED' : 'ACTIVE_NO_PIN');
+  }
+});
+test('Codex config semantic identity retains all launch settings and non-UI types', async () => {
+  for (const changed of [
+    codexLaunchConfig.replace('fixture-model', 'other-model'),
+    codexLaunchConfig.replace('64069', '64070'),
+    codexLaunchConfig + '\n[hooks]\nenabled = false\n',
+    codexLaunchConfig + '\n[projects."/tmp"]\ntrust_level = "trusted"\n',
+    codexLaunchConfig + '\n[tui]\nunknown_policy = true\n',
+    codexLaunchConfig.replace('model_provider = "local"\n', ''),
+  ]) {
+    const f = semanticConfigFixture(), claim = await dispatched(f);
+    replaceConfig(f.nativeConfig, changed);
+    await assert.rejects(f.broker.claim('attach', claim), { code: 'IDENTITY_CHANGED' });
+    assert.equal(readProjectState(f.gstackRoot, f.sid).raw, null);
+  }
+  const f = semanticConfigFixture();
+  replaceConfig(f.nativeConfig, 'value = 1\n'); const integer = codexConfigIdentity(f.nativeConfig);
+  replaceConfig(f.nativeConfig, 'value = 1.0\n'); assert.notEqual(codexConfigIdentity(f.nativeConfig).sha256, integer.sha256);
+  for (const invalid of ['value = 1979-05-27\n', 'value = nan\n', '[tui]\nscreen_reader_detection_done = "true"\n',
+    '[tui.model_availability_nux]\nmodel = true\n', 'model = "a"\nmodel = "b"\n']) {
+    replaceConfig(f.nativeConfig, invalid);
+    assert.throws(() => codexConfigIdentity(f.nativeConfig), { code: 'CONFIG_PARSE_FAILED' });
+  }
+});
+test('semantic identity cannot be selected for other files, symlinks or legacy profiles', async () => {
+  for (const change of [
+    f => { f.request.profileIdentity.configFiles[0].kind = 'unknown-kind'; },
+    f => { f.request.profileIdentity.configFiles.reverse(); },
+    f => { f.request.profileIdentity.configFiles[0].realpath = f.config; },
+    f => { f.request.profileIdentity.provider = 'claude'; },
+  ]) {
+    const f = semanticConfigFixture(); change(f);
+    await assert.rejects(f.broker.parent('prepare', f.request), { code: 'PROFILE_INVALID' });
+  }
+  const f = semanticConfigFixture(), claim = await dispatched(f);
+  const target = `${f.nativeConfig}.target`; renameSync(f.nativeConfig, target); symlinkSync(target, f.nativeConfig);
+  await assert.rejects(f.broker.claim('attach', claim), { code: 'CONFIG_SCOPE_INVALID' });
+  const legacy = fixture(), legacyClaim = await dispatched(legacy);
+  replaceConfig(legacy.config, readFileSync(legacy.config));
+  await assert.rejects(legacy.broker.claim('attach', legacyClaim), { code: 'IDENTITY_CHANGED' });
+});
+test('a login PATH with old Python first selects an existing TOML-capable runtime', () => {
+  const f = semanticConfigFixture(), originalPath = process.env.PATH;
+  const expected = codexConfigIdentity(f.nativeConfig);
+  const python = execFileSync('python3', ['-c', 'import sys,tomllib;print(sys.executable)'], { encoding: 'utf8' }).trim();
+  const old = join(f.root, 'old-python'), modern = join(f.root, 'modern-python');
+  mkdirSync(old); mkdirSync(modern);
+  writeFileSync(join(old, 'python3'), '#!/bin/sh\necho "ModuleNotFoundError: tomllib" >&2\nexit 1\n');
+  chmodSync(join(old, 'python3'), 0o700); symlinkSync(python, join(modern, 'python3'));
+  try {
+    process.env.PATH = `${old}:${modern}`;
+    assert.deepEqual(codexConfigIdentity(f.nativeConfig), expected);
+    replaceConfig(f.nativeConfig, 'model = "a"\nmodel = "b"\n');
+    assert.throws(() => codexConfigIdentity(f.nativeConfig), { code: 'CONFIG_PARSE_FAILED' });
+    process.env.PATH = old;
+    assert.throws(() => codexConfigIdentity(f.nativeConfig), { code: 'CONFIG_PARSER_UNAVAILABLE' });
+  } finally { process.env.PATH = originalPath; }
+});
 test('project is bound at native startup without a prompt or tool and has no execution event', async () => {
   const f = fixture(), claim = await attached(f, true);
   const result = await f.broker.parent('readReceipt', { launchId: claim.launchId });

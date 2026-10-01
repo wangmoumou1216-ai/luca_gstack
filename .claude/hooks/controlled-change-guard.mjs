@@ -6,6 +6,15 @@ import {
   absolutePathForRow,
   atomicWriteJson,
   canonicalJson,
+  claimPaths,
+  controlRoot,
+  discoverControlState,
+  gitCommonDirRealpath,
+  pathsConflict,
+  readToolReservations,
+  writeToolReservations,
+  blockedScopeConflicts,
+  setNativeScopeState,
   discoverCheckoutControlState,
   pathTuple,
   repoRealpath,
@@ -24,6 +33,8 @@ import {
   matchExpandedSelectionState,
   parseExpandedSelectionCommand,
 } from './lib/project-selection.mjs';
+
+import { attestControlledOwner, controllerInvocation, issueNativeClaim, nativeClaimRoot, readonlyShellInput, reservationSource, sameNativeOwner, withControlLock } from '../../scripts/controlled-native-owner.mjs';
 
 function emitDeny(reason) {
   const message = `[controlled-change] deny: ${reason}`;
@@ -106,7 +117,7 @@ function classifyGitEffect(command) {
   return 'git-worktree-effect';
 }
 
-function consumeEffect(current, effect, command, invocationCwd) {
+function consumeEffect(current, effect, command, invocationCwd, data) {
   const { witness, active, manifest, paths } = current;
   let cwd;
   try { cwd = realpathSync(invocationCwd); }
@@ -128,12 +139,20 @@ function consumeEffect(current, effect, command, invocationCwd) {
   const nextWitness = {
     ...witness,
     effect_authorizations: authorizations,
+    ...(witness.native_owner ? { exclusive_lane: true, lane_tool: laneTool(data, command) } : {}),
   };
+  if (witness.native_owner) setNativeScopeState(manifest, witness.native_owner, witness.generation, 'ACTIVE', true);
   atomicWriteJson(paths.witness, nextWitness, { expectedSha256: sha256File(paths.witness) });
   validateBoundRequired(nextWitness, active);
 }
 
-function guardRequired(data, current) {
+function laneTool(data, command) {
+  return { session_id: data.session_id, turn_id: data.turn_id, tool_use_id: data.tool_use_id,
+    command_sha256: sha256Bytes(Buffer.from(command)), inflight: true };
+}
+
+function guardRequired(data, current, globalState) {
+  if (current.witness.lane_tool?.inflight) { emitDeny('previous exclusive tool is still in flight'); return; }
   const manifest = current.manifest;
   const tool = String(data.tool_name || '');
   const input = data.tool_input && typeof data.tool_input === 'object' ? data.tool_input : {};
@@ -164,10 +183,14 @@ function guardRequired(data, current) {
 
     const effect = classifyGitEffect(command);
     if (effect) {
+      if (current.witness.native_owner && ((globalState.currents.length !== 1 || globalState.blocked.length)
+          || current.witness.effect_authorizations.some(item => item.remaining_uses === 0))) {
+        emitDeny('Git/shared effects require a single REQUIRED and no unresolved effect'); return;
+      }
       const invocationCwd = typeof data.cwd === 'string' && data.cwd
         ? data.cwd
         : (process.env.CLAUDE_PROJECT_DIR || process.cwd());
-      try { consumeEffect(current, effect, command, invocationCwd); }
+      try { consumeEffect(current, effect, command, invocationCwd, data); }
       catch (error) { emitDeny(error.message); }
       return;
     }
@@ -193,7 +216,15 @@ function guardRequired(data, current) {
         return;
       }
     }
-    if (manifest.allowed_commands.includes(authorizedCommand)) return;
+    if (manifest.allowed_commands.includes(authorizedCommand)) {
+      if (current.witness.native_owner) {
+        if ((globalState.currents.length !== 1 || globalState.blocked.length)) { emitDeny('opaque Bash requires checkout-exclusive lane'); return; }
+        setNativeScopeState(manifest, current.witness.native_owner, current.witness.generation, 'ACTIVE', true);
+        atomicWriteJson(current.paths.witness, { ...current.witness, exclusive_lane: true, lane_tool: laneTool(data, command) },
+          { expectedSha256: sha256File(current.paths.witness) });
+      }
+      return;
+    }
     emitDeny('Bash is deny-by-default in controlled mode; use an exact manifest allowed_command or a structured exact-path action');
     return;
   }
@@ -209,22 +240,124 @@ function guardRequired(data, current) {
   emitDeny(`mutation tool is not supported in controlled mode: ${tool || '(missing)'}`);
 }
 
-function main() {
-  const repo = repoRealpath(process.env.CLAUDE_PROJECT_DIR || process.cwd());
-  let raw = '';
-  try { raw = readFileSync(0, 'utf8'); }
-  catch { raw = ''; }
-  let state;
-  try { state = discoverCheckoutControlState(repo); }
-  catch (error) { emitDeny(`cannot inspect controlled state: ${error.message}`); return; }
-  if (state.kind === 'inactive') return;
-  if (state.kind === 'invalid') { emitDeny(`controlled state is invalid: ${state.reason}`); return; }
-  let data;
-  try { data = JSON.parse(raw || '{}'); }
-  catch { emitDeny('hook stdin is malformed while controlled mode is required'); return; }
-  if (!data || typeof data !== 'object' || Array.isArray(data)) { emitDeny('hook stdin must be an object'); return; }
-  guardRequired(data, state.current);
+function structuredTargets(data) {
+  const input = data.tool_input || {};
+  if (data.tool_name === 'apply_patch') {
+    const targets = parsePatchTargets(String(input.command || ''));
+    if (!targets) throw new Error('unrecognized structured patch');
+    return targets;
+  }
+  if (/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(data.tool_name)) {
+    const target = input.file_path || input.notebook_path || input.path;
+    if (typeof target !== 'string' || !target) throw new Error('structured edit lacks an exact path');
+    return [target];
+  }
+  return null;
 }
 
-try { main(); }
-catch (error) { emitDeny(`guard exception while controlled mode is required: ${error.message}`); }
+async function main() {
+  const repo = repoRealpath(process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  const data = JSON.parse(readFileSync(0, 'utf8') || '{}');
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('hook stdin must be an object');
+  if (data.hook_event_name === 'PostToolUse') {
+    if (data.tool_name === 'Bash' && readonlyShellInput(data.tool_input?.command)) return;
+    return withControlLock(controlRoot(repo), () => {
+      const state = discoverControlState(repo);
+      const pending = readToolReservations(repo);
+      const remaining = pending.filter(tool => !(tool.session_id === data.session_id && tool.turn_id === data.turn_id
+        && tool.tool_use_id === data.tool_use_id && tool.repo_realpath === repo));
+      if (remaining.length !== pending.length) writeToolReservations(repo, remaining);
+      if (state.kind !== 'required') return;
+      for (const current of state.currents) {
+        const lane = current.witness.lane_tool;
+        if (lane?.inflight && lane.session_id === data.session_id && lane.turn_id === data.turn_id
+            && lane.tool_use_id === data.tool_use_id && lane.command_sha256 === sha256Bytes(Buffer.from(data.tool_input?.command || ''))) {
+          atomicWriteJson(current.paths.witness, { ...current.witness,
+            lane_tool: { ...lane, inflight: false } }, { expectedSha256: sha256File(current.paths.witness) });
+        }
+      }
+    }, { wait: true });
+  }
+  // Corrupt mutation state must never disable safe inspection.
+  if (['Read', 'Glob', 'Grep'].includes(data.tool_name)) return;
+  if (data.tool_name === 'Bash') {
+    const command = readonlyShellInput(data.tool_input?.command);
+    if (command) {
+      process.stdout.write(`${JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'allow',
+        updatedInput: { ...data.tool_input, command } } })}\n`);
+      return;
+    }
+  }
+  const targets = structuredTargets(data);
+  if (targets) {
+    const reserved = [gitCommonDirRealpath(repo), `${repo}/.git`, `${repo}/.claude/.session`, resolve(nativeClaimRoot(repo), '..')];
+    for (const target of targets) {
+      const absolute = resolve(data.cwd || repo, target);
+      if (reserved.some(path => pathsConflict(absolute, path))
+          || absolute.startsWith(`${repo}/.claude/.session-`)) throw new Error('structured edit targets protected control metadata');
+    }
+  }
+  return withControlLock(controlRoot(repo), () => {
+    const globalState = discoverControlState(repo);
+    const state = discoverCheckoutControlState(repo);
+    if (state.kind === 'invalid') throw new Error(`controlled state is invalid: ${state.reason}`);
+    if (targets?.some(target => globalState.blocked?.some(entry => blockedScopeConflicts(entry, resolve(data.cwd || repo, target))))) throw new Error('structured edit intersects a damaged task scope');
+    const invocation = data.tool_name === 'Bash' ? controllerInvocation(repo, data.tool_input?.command || '') : null;
+    if (invocation) {
+      const owner = attestControlledOwner(repo, data);
+      const existing = globalState.entries.find(entry => entry.witness?.task_id === invocation.manifest?.task_id);
+      if (existing?.witness?.native_owner && !sameNativeOwner(owner, existing.witness.native_owner)) throw new Error('controller belongs to another native owner');
+      if (existing?.kind === 'required' && !existing.witness.native_owner) throw new Error('native controller cannot take over legacy REQUIRED');
+      if (invocation.operation === 'recover-tool') {
+        const reservation = readToolReservations(repo).find(row => row.tool_use_id === invocation.options['tool-use-id']);
+        if (!reservation || reservation.session_id !== owner.session_id || reservation.turn_id !== invocation.options['turn-id']) throw new Error('recovery does not belong to current owner and original turn');
+      }
+      const claim = issueNativeClaim(repo, data, invocation);
+      process.stdout.write(`${JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse',
+        permissionDecision: 'allow', updatedInput: { ...data.tool_input,
+          command: `${data.tool_input.command} --native-owner-claim '${claim.path}'` } } })}\n`);
+      return;
+    }
+    if (!targets && globalState.blocked?.some(row => row.exclusive)) throw new Error('shared exclusive effects require damaged owner reconciliation');
+    if (!targets && readToolReservations(repo).some(row => row.repo_realpath === repo)) throw new Error('opaque Bash is fenced while structured tools await completion or recovery');
+    const reserve = taskId => {
+      if (!targets || data.hook_event_name !== 'PreToolUse' || !data.turn_id) return;
+      const pending = readToolReservations(repo);
+      const absoluteTargets = targets.map(target => resolve(data.cwd || repo, target));
+      if (pending.some(tool => tool.targets.some(path => absoluteTargets.some(target => pathsConflict(target, path))))) throw new Error('structured target already has an in-flight tool');
+      writeToolReservations(repo, [...pending, { session_id: data.session_id, turn_id: data.turn_id,
+        tool_use_id: data.tool_use_id, repo_realpath: repo, task_id: taskId || null, targets: absoluteTargets,
+        created_at: Date.now(), request_sha256: sha256Bytes(canonicalJson([data.tool_name, data.tool_input])),
+        source: reservationSource(repo, data.session_id) }]);
+    };
+    if (state.kind === 'inactive') {
+      if (targets && data.hook_event_name === 'PreToolUse' && data.turn_id) { attestControlledOwner(repo, data); reserve(); }
+      return;
+    }
+    if (!targets && state.blocked?.length) throw new Error('opaque effects cannot run while this checkout has damaged task authority');
+    // Existing unbound records retain their explicit checkout-exclusive compatibility.
+    if (state.current && !state.current.witness.native_owner) { guardRequired(data, state.current, globalState); return; }
+    const owner = attestControlledOwner(repo, data);
+    const owned = state.currents.filter(entry => sameNativeOwner(entry.witness.native_owner, owner));
+    if (owned.length) {
+      const matching = targets ? owned.filter(entry => targets.every(target =>
+        safeScratchTarget(resolve(data.cwd || repo, target), entry.manifest.scratch_root)
+          || rowForTarget(entry.manifest, target))) : owned;
+      if (matching.length !== 1) throw new Error('tool must belong to exactly one native owner task');
+      for (const entry of state.currents) if (entry !== matching[0] && targets?.some(target =>
+        claimPaths(entry.manifest).some(path => pathsConflict(resolve(data.cwd || repo, target), path)))) throw new Error('tool conflicts with another task claim');
+      guardRequired(data, matching[0], globalState);
+      if (!process.exitCode) reserve(matching[0].manifest.task_id);
+      return;
+    }
+    // A third session can make provable disjoint edits, never borrow commands or one-use effects.
+    if (!targets) throw new Error('non-owner opaque mutation is denied while native claims are active');
+    if (state.currents.some(entry => entry.witness.exclusive_lane)) throw new Error('checkout-exclusive lane is active');
+    if (targets.some(target => state.currents.some(entry => claimPaths(entry.manifest).some(path =>
+      pathsConflict(resolve(data.cwd || repo, target), path))))) throw new Error('structured edit conflicts with active owner scope');
+    reserve();
+  }, { wait: true });
+}
+
+try { await main(); }
+catch (error) { emitDeny(`guard refused mutation: ${error.message}`); }

@@ -8,6 +8,10 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   canonicalJson,
+  discoverControlState,
+  setNativeScopeState,
+  witnessAnchor,
+  sha256Bytes,
   gitCommonDirRealpath,
   pathTuple,
 } from './controlled-change.mjs';
@@ -74,7 +78,7 @@ function setup(operation, target) {
   };
   const manifestPath = join(scratch, 'manifest.json');
   writeFileSync(manifestPath, `${canonicalJson(manifest)}\n`);
-  const prepared = run(process.execPath, [CONTROLLER, 'prepare', '--manifest', manifestPath,
+  const prepared = run(process.execPath, [CONTROLLER, 'prepare', '--legacy-checkout-exclusive', 'true', '--manifest', manifestPath,
     '--generation', `generation-${operation}-0001`, '--ttl-seconds', '3600'], { cwd: repo });
   assert.equal(prepared.status, 0, prepared.stderr || prepared.stdout);
   return { root, repo: realpathSync(repo), projects: projectsReal, target, publicCommand };
@@ -167,6 +171,37 @@ const replayed = run('/bin/bash', [PROJECT_SH, 'switch', 'beta', '--session-id',
 assert.equal(replayed.status, 0, replayed.stderr || replayed.stdout);
 assert.deepEqual(readFileSync(join(switchFixture.repo, '.claude', `.session-project-${switchArgs.sid}`)),
   beforeReplay);
+
+const foreignLegacy = setup('switch', 'foreign-owner-only');
+const foreignCheckout = join(foreignLegacy.root, 'other-checkout');
+git(foreignLegacy.repo, 'worktree', 'add', '--quiet', '--detach', foreignCheckout);
+mkdirSync(join(foreignCheckout, '.claude'));
+const foreignSession = { ...foreignLegacy, repo: realpathSync(foreignCheckout) };
+assert.equal(gitCommonDirRealpath(foreignSession.repo), gitCommonDirRealpath(foreignLegacy.repo));
+identity(foreignSession.projects, 'session-target', 1);
+const foreignArgs = { sid: 'foreign-legacy-switch', tx: 'tx-foreign-legacy-switch', operation: 'switch',
+  target: 'session-target', expectedEpoch: 0 };
+const foreignProposal = writeProposal(foreignSession, foreignArgs);
+const foreignControl = discoverControlState(foreignSession.repo).current;
+const controlBytes = () => [foreignControl.paths.witness, foreignControl.paths.active].map(path => readFileSync(path, 'utf8'));
+const beforeForeignSwitch = controlBytes();
+assert.equal(guard(foreignSession, expandedSelectionCommand({ ...foreignProposal, session_id: foreignArgs.sid })).status, 0);
+const foreignSwitched = run('/bin/bash', [PROJECT_SH, 'switch', foreignArgs.target, '--session-id', foreignArgs.sid,
+  '--tx', foreignArgs.tx, '--expected-epoch', '0'], { cwd: foreignSession.repo,
+  env: { LUCA_GSTACK_ROOT: foreignSession.repo, LUCA_PROJECTS_ROOT: foreignSession.projects } });
+assert.equal(foreignSwitched.status, 0, foreignSwitched.stderr || foreignSwitched.stdout);
+assert.equal(JSON.parse(readFileSync(join(foreignSession.repo, '.claude', `.session-project-${foreignArgs.sid}`))).binding.project, foreignArgs.target);
+assert.deepEqual(controlBytes(), beforeForeignSwitch);
+const foreignNewArgs = { sid: 'foreign-legacy-new', tx: 'tx-foreign-legacy-new', operation: 'new',
+  target: 'shared-new-target', expectedEpoch: 0 };
+writeProposal(foreignSession, foreignNewArgs);
+const foreignNew = run('/bin/bash', [PROJECT_SH, 'new', foreignNewArgs.target, '--session-id', foreignNewArgs.sid,
+  '--tx', foreignNewArgs.tx, '--expected-epoch', '0'], { cwd: foreignSession.repo,
+  env: { LUCA_GSTACK_ROOT: foreignSession.repo, LUCA_PROJECTS_ROOT: foreignSession.projects } });
+assert.notEqual(foreignNew.status, 0, 'new must still arbitrate against global controlled state');
+assert.match(foreignNew.stderr, /does not allow canonical project selection/);
+assert.equal(existsSync(join(foreignSession.projects, foreignNewArgs.target)), false);
+assert.deepEqual(controlBytes(), beforeForeignSwitch);
 
 const newFixture = setup('new', 'space project');
 const newArgs = { sid: 'controlled-new', tx: 'tx-controlled-new-0001', operation: 'new',
@@ -278,5 +313,33 @@ assert.notEqual(busyResult.status, 0);
 assert.match(busyResult.stderr, /already running/);
 assert.equal(JSON.parse(readFileSync(join(busy.repo, '.claude', `.session-project-${busyArgs.sid}`))).selection.pending.status,
   'RUNNING', 'a competing controller must not rewrite another live owner');
+
+// Pure fixture conversion exercises native-mode controller refusal independently
+// of the native transcript tests; it does not manufacture production authority.
+const nativeSelection = setup('switch', 'native-beta');
+identity(nativeSelection.projects, 'native-beta', 1);
+const nativeArgs = { sid: 'native-selection-fixture', tx: 'tx-native-selection-0001', operation: 'switch',
+  target: 'native-beta', expectedEpoch: 0 };
+writeProposal(nativeSelection, nativeArgs);
+const home = join(nativeSelection.root, 'home'); mkdirSync(home);
+const oldTest = process.env.LUCA_EVENT_ATTESTATION_TEST, oldHome = process.env.LUCA_CONTROLLED_TEST_HOME;
+process.env.LUCA_EVENT_ATTESTATION_TEST = '1'; process.env.LUCA_CONTROLLED_TEST_HOME = realpathSync(home);
+try {
+  const current = discoverControlState(nativeSelection.repo).current;
+  const owner = { version: 1, harness: 'codex', session_id: nativeArgs.sid, repo_realpath: nativeSelection.repo };
+  const witness = { ...current.witness, native_owner: owner };
+  const active = { ...current.active, native_owner: owner, witness_anchor_sha256: witnessAnchor(witness) };
+  witness.active_context_sha256 = sha256Bytes(`${canonicalJson(active)}\n`);
+  writeFileSync(current.paths.witness, `${canonicalJson(witness)}\n`); writeFileSync(current.paths.active, `${canonicalJson(active)}\n`);
+  setNativeScopeState(current.manifest, owner, witness.generation, 'ACTIVE');
+  const result = run('/bin/bash', [PROJECT_SH, 'switch', nativeArgs.target, '--session-id', nativeArgs.sid,
+    '--tx', nativeArgs.tx, '--expected-epoch', '0'], { cwd: nativeSelection.repo,
+    env: { LUCA_GSTACK_ROOT: nativeSelection.repo, LUCA_PROJECTS_ROOT: nativeSelection.projects } });
+  assert.notEqual(result.status, 0); assert.match(result.stderr, /native controlled tasks cannot authorize shared project selection/);
+  assert.doesNotMatch(result.stderr, /TypeError|Cannot read properties/);
+} finally {
+  if (oldTest === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST; else process.env.LUCA_EVENT_ATTESTATION_TEST = oldTest;
+  if (oldHome === undefined) delete process.env.LUCA_CONTROLLED_TEST_HOME; else process.env.LUCA_CONTROLLED_TEST_HOME = oldHome;
+}
 
 console.log('PASS controlled selection public mapping, trusted argv, replay, exact new row, early/drift recovery, BUSY owner, spaces, and target denial');
