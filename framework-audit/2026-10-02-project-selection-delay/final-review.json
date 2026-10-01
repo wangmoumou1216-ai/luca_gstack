@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "project-entry-final-v3-1002",
+  "subject": {
+    "skill": "project-entry-final-v3",
+    "topic": "Bounded project-entry and native identity repair",
+    "scene": "unknown",
+    "input_summary": "Final literal-change and six-file hash review; independent six-case instruction assessment; retained unchanged-hook runtime, lineage, race and mutation evidence. Real inference, App GUI acceptance and end-to-end latency remain unverified.",
+    "output_paths": [
+      "/tmp/luca-project-create-1002/review-scope-final.json",
+      "/tmp/luca-project-create-1002/review-final.diff",
+      "/private/tmp/luca-native-lifecycle.vlmauB/delayed-start-result.json",
+      "/tmp/luca-project-create-1002/semantic-probes/REPORT.md"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "CONDITIONAL_PASS",
+    "passed": 9,
+    "total": 10,
+    "findings": [
+      "UNKNOWN C10: Real-provider inference and App GUI acceptance remain incomplete; no live semantic-compliance or end-to-end latency claim is supported."
+    ]
+  }
+}

@@ -34,12 +34,11 @@ handoff gates; otherwise skills remain standalone.
 <!-- K3:START -->
 ## K3 — Plan and approval gate
 
-The **five** Plan triggers are: `≥ 3 files created or modified`; `≥ 2 independent subagents`; explicit **phase
-dependency**; **irreversible operations**; or an explicit user plan request such as “先做个计划”.
-On a trigger, read `.claude/agents/plan-agent.md` through EOF before producing the phase plan,
-assertions, or approval scope. **Supervisor** or **Hierarchical** execution requires real user **approval**
-after the plan; planning permission is not mutation permission. A failed critical gate
-stops the next phase.
+**Five** Plan triggers: `≥ 3 files created or modified`; `≥ 2 independent subagents`; explicit **phase
+dependency**; **irreversible operations**; or explicit planning requests, e.g. “先做个计划”.
+Single selection: K5 defines counting.
+On a trigger, read `.claude/agents/plan-agent.md` through EOF before producing phase plan,
+assertions, or approval scope. **Supervisor** or **Hierarchical** requires real user **approval** after planning; planning grants no mutation permission. A failed critical gate stops the next phase.
 <!-- K3:END -->
 
 <!-- K4:START -->
