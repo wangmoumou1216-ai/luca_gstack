@@ -86,6 +86,8 @@ jobs:
         run: npm run check:hooks
       - name: Route-guard golden tests
         run: npm run test:routes
+      - name: Matt38 offline fixture and synthetic oracle contracts
+        run: npm run test:matt-adaptation
       - name: Project-scope guard conformance
         run: npm run test:project-scope
       - name: Project identity transaction conformance

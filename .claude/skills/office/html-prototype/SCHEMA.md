@@ -1,6 +1,10 @@
 # Prototype Spec
 
 生成时间：YYYY-MM-DD HH:MM
+purpose: {ui / logic-validation；无历史字段默认为 ui}
+ui_variant_count: {0 / 2 / 3 / 4 / 5；只有已确认 UI 对比才非零，显式对比未指定数量默认3}
+输入来源 source_kind：{实际来源，与 purpose 正交}
+本地 HTML/精确原型目录授权：{真实指令/批准范围；不推导 Git/发送/生产权限}
 场景：{新功能设计 A / 优化现有 B / 评审改版 C}
 框架来源：{framework/xxx.html / 无框架}
 对应文件：docs/prototype/YYYY-MM-DD-{topic}/index.html
@@ -17,7 +21,7 @@
 
 ## 当前审美校准
 
-Current Aesthetic Score：{NN}/30（必须 ≥ 24）
+Current Aesthetic Score：{NN}/30（UI 必须 ≥24；logic-validation 写 N/A — 逻辑验证并保留可读性/反馈核对；UI 每变体分别评分）
 参考坐标：{Linear / Attio / Notion AI / Granola / Cursor / Atlassian / Vercel / Salesforce Agentforce}
 采用原则：{Calm Density / Invisible AI / Progressive Disclosure / Role Awareness / Trust Before Delight}
 拒绝方向：{不做卡片墙 / 不做聊天框 / 不做大面积渐变 / 不做 Hero 化后台页面 / ...}
@@ -163,3 +167,62 @@ QA JSON：docs/prototype/YYYY-MM-DD-{topic}/qa-results.json
 
 **下游交付审查与实现 不应该做：**
 {不应重新设计已决定的信息架构}
+
+
+---
+
+## Logic Validation Coverage（仅 purpose=logic-validation）
+
+Question source: {真实用户 brief/已确认材料路径与位置，不伪造上游 D-ID}
+可见业务问题：{页面顶部真实文本及定位；问题不清等待用户}
+已确认模型/边界：{领域数据、初态、动作、合法/非法转换、全部状态/错误/reset}
+单自包含 HTML 与单 script：{离线打开证据；资源/存储/真实DB均无依赖}
+Portable logic module：{PROTOTYPE LOGIC START/END、PrototypeLogic 的纯接口及实际提取证据路径}
+方向：{薄 UI 调模块，动作后重绘全部相关状态；模块无 DOM/document/页面反向 callback}
+固定五态：N/A — 逻辑验证（真实需求状态仍全覆盖）
+审美24/30门：N/A — 逻辑验证（字体/层级/错误与反馈可读性仍核对）
+
+| 需求状态/转换/错误 | 来源/AC | 自由动作按钮 | 当前状态面板反馈 | 已执行序列/结果/证据 |
+|---|---|---|---|---|
+| {真实名称} | {真实来源} | {data-logic-action} | {可读领域字段} | {实际浏览器与提取模块同结果；未运行写NOT_RUN} |
+
+| Walkthrough tab | 已知初态/reset按钮 | 真实步骤按钮及预期推进 | 实际操作与 reset 证据 |
+|---|---|---|---|
+| happy | {初态/data-walkthrough-reset} | {data-walkthrough-step + data-logic-action} | {实际证据} |
+| edge | {同一模型的边界初态} | {步骤/反馈} | {实际证据} |
+| illegal | {非法操作前初态} | {非法动作/错误/状态保持} | {实际证据} |
+
+独立便携性 fixture：{原型外的提取结果、同初态/动作对比；不在 HTML 内建测试框架}
+问题回答/真实反馈：{已回答或待决；不把模拟反馈称为用户反馈}
+
+---
+
+## UI Variant Coverage（仅 ui_variant_count>0）
+
+稳定 keys：{A…E 的前 N 个，顺序不变；单 index.html，只切 rendering 子树}
+common_content_ids: ["{从真实来源枚举的角色/场景/模块/指标/表项/动作/详情子页ID}"]
+required_state_ids: ["{从真实来源逐项枚举的全部适用状态ID，包括基础五态与实际AI/需求状态}"]
+宿主来源：{已授权页面/截图、header/sidebar/密度/只读数据；无宿主时真实确认独立页面原因}
+共同 D/STATE/AC：{全部已确认项及其真实来源；所有变体都实现}
+Packet/骨架确认：{每 key 与共同约束/对比假设的真实确认；冲突回原 owner}
+
+| key/名称 | 布局差异 | 信息层级差异 | 主操作差异 | 宿主保持区/只读数据 | 假设及真实来源 | 共同 D/STATE/AC 与内容清单 |
+|---|---|---|---|---|---|---|
+| {A…前N} | {结构，不是颜色} | {结构} | {操作} | {可枚举角色/场景/模块/指标/表项/动作/详情子页} | {真实来源/显式假设} | {逐项对应定位} |
+
+每 key 写独立可机读分数字段，例如 `Variant A Current Aesthetic Score: 24/30`；实际评分证据
+按当前 rubric 逐维列出，checker 读取声明不替代独立评分。每 key 独立基础五态和全部适用
+状态/错误/恢复；共同数据/内容完整，按真实源抽查，不以 marker 自证。
+
+| key | state/action | D/STATE/AC | 截图/操作序列 | console/error | 分数及评分依据 | 内容守恒/来源抽查 |
+|---|---|---|---|---|---|---|
+| {A…前N} | {逐项} | {全部适用} | {真实路径；未运行NOT_RUN} | {真实结果} | {≥24/30，每key} | {真实源与内容} |
+
+Switcher QA：{共享浮动底栏key/名称、左右箭头及键盘环绕、input/textarea/contenteditable焦点不拦截、
+其它query/hash保留、deep link/reload、未知key可恢复错误；实际证据路径}
+真实选择/理由：{用户选key或组合部件；未选保留待决，不代选}
+回流 owner：{原设计/实现 owner，原型不自动晋升}
+原型声明/权限：{只在批准目录，真实route/auth/数据写入/生产未被验证；另行实现须真实build环境
+production guard并移除底栏，Git归档/发送/发布需另获原生授权}
+
+<!-- FILE_END: html-prototype/SCHEMA.md -->

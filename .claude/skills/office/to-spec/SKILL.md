@@ -48,11 +48,32 @@ and point to the appropriate product or design owner; do not conduct an intervie
    - no unresolved product preference is being converted into a requirement;
    - no UI/design decision is being fabricated;
    - every MUST claim has a source pointer and an observable acceptance statement.
-4. If the gate passes, read `../tech-spec/SKILL.md` through its `FILE_END` marker and execute its
+4. Before synthesis, identify the existing public test seams and test prior art from actual authorized
+   code. Prefer the highest existing seam that covers the behavior, ideally one; propose a new seam
+   only when required, at the highest useful point. Confirm the seam selection with the real user,
+   or cite an already valid explicit agreement. This targeted engineering gate is not a new product
+   interview. Unsettled facts return NEEDS_CONTEXT to their owner.
+5. If the gate passes, read `../tech-spec/SKILL.md` through its `FILE_END` marker and execute its
    `conversation_synthesis` mode with the Conversation Source Register as the source contract.
    Preserve its Phase 0 through Phase 6 order and coverage gate.
-5. Report the tech-spec owner's normal completion status and paths. `to-spec` is complete only when
+6. Report the tech-spec owner's normal completion status and paths. `to-spec` is complete only when
    the canonical tech-spec coverage gate passes.
+
+## Complete synthesis, one canonical spec
+
+Map the resolved conversation's full intent into the tech-spec owner's existing fields: user-facing
+problem and solution; a numbered, comprehensive set of sourced actor/feature/benefit stories;
+implementation decisions (modules, complete interfaces, architecture, schemas, contracts and
+interactions); testing decisions (observable behavior, confirmed seams, modules and actual prior
+art); exclusions; and remaining notes. CONV-NNN rows supply provenance and MUST acceptance facts,
+not invented requirements or UI preferences. Preserve stable R/IF/DEV references already present.
+
+Avoid brittle file-path/code inventories in the decision prose; the canonical owner keeps exact
+paths in its proper engineering fields. A prototype's state machine, reducer, schema or type shape
+may be included when it expresses a decision more precisely than prose: trim to decision-rich parts
+and retain prototype path/version provenance. Do not embed the whole demo. The canonical Phase order,
+RTM and coverage gate remain mandatory. This facade publishes no tracker item or second template.
+Source14, MIT, pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`.
 
 ## Failure contract
 

@@ -124,14 +124,15 @@ tiers:
     skills: [brainstorm, ux-brainstorm, design-brief,
              deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype,
              code-hygiene, code-review, codebase-design, auto, muse-x-digest,
-             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, to-tickets, implement]
+             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, to-tickets, implement,
+             writing-workshop, loop-me]
 
   guided-execution:
     resolves_to: sonnet
     description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
     skills: [handoff, quick-research, idea, ux-research, ux-audit, figma-demo, challenge,
              code-recon, muse-req-triage,
-             compare, magicpath, research-kit, ux-writing, wait-what, writing-for-agents, domain-modeling]
+             compare, magicpath, research-kit, ux-writing, wait-what, writing-for-agents, domain-modeling, issue-triage, setup-wizard]
 
   mechanical:
     resolves_to: haiku

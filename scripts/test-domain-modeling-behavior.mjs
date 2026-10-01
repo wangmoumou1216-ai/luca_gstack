@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Legacy deterministic scorer coverage is retained. Its self-test does not prove Matt38 native adoption.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';

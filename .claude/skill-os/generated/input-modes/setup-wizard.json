@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_sha256": "b0db2902ccf3dc00edccdb19720a7114906e5b40dfbd5eb30288906b59419e7c",
+  "skill": "setup-wizard",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "service_goal",
+          "manual_step_contract",
+          "output_path"
+        ],
+        "optional": [
+          "authorized_public_materials",
+          "current_and_target_state",
+          "existing_script_preimage",
+          "confirmed_env_target",
+          "confirmed_ci_target"
+        ]
+      }
+    },
+    "quality_gates": [
+      "explicit_wizard_selection",
+      "complete_manual_contract_human_confirmed",
+      "exact_script_path_authorized",
+      "real_journey_and_recovery",
+      "all_values_classified_and_targeted",
+      "template_library_byte_preservation",
+      "stages_complete_and_total_equal",
+      "runtime_confirm_before_each_effect",
+      "secret_not_in_script_or_logs",
+      "fresh_static_validation",
+      "not_run_by_agent",
+      "actual_context_cost_handoff"
+    ],
+    "notes": "仅制作人运行的 Bash 向导；目标服务、阶段、值分类/来源/落点与精确路径真实确认后写 STAGES。Agent 可直接完成的自动化/排障/实现归原 owner。生成不授予读取真实 secret、浏览器/服务写入、安装、Git 或执行脚本权限；服务配置仍待人运行。"
+  }
+}

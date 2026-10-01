@@ -1,6 +1,6 @@
 interface:
   display_name: "Writing for Agents"
-  short_description: "Write predictable documents for agents"
+  short_description: "Write complete, predictable agent instructions with one method owner"
   default_prompt: "Use $writing-for-agents to write or review this agent-facing document for predictable behaviour."
 policy:
   # Mirrors upstream model invocation for skill/AGENTS.md/CLAUDE.md work; broader documents are explicit.

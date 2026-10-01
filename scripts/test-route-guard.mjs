@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import assert from 'assert/strict';
@@ -33,6 +33,14 @@ function route(prompt, extraEnv = {}) {
   } catch (error) {
     throw new Error(`Expected JSON dry-run output for ${prompt}, got:\n${result.stdout}\n${result.stderr}`);
   }
+}
+
+// Matt38 finite dry-run subset: no project switch, native invocation or installation.
+if (process.argv.includes('--matt-offline')) {
+  const rows = readFileSync('memory/evals/routing/fixtures.jsonl','utf8').split('\n').filter(x=>x.trim()&&!x.trim().startsWith('//')).map(x=>JSON.parse(x)).filter(x=>x.matrix==='Matt-U012-a');
+  assert.equal(rows.length,9);
+  for(const row of rows){const out=route(row.input,{ROUTE_GUARD_CURRENT_PROJECT:''});const skills=[out.skill,...(out.skills||[])].filter(Boolean).map(x=>x.replace(/^\//,''));if(row.expected_skill)assert.ok(skills.includes(row.expected_skill),`${row.id}: ${JSON.stringify(out)}`);if(row.forbidden_skill){assert.ok(!skills.includes(row.forbidden_skill),`${row.id}: competing semantic route`);for(const prefix of ['.claude/skills/office','.claude/skills','.agents/skills'])assert.ok(!existsSync(`${prefix}/${row.forbidden_skill}`),`${row.id}: competing alias`);assert.ok(!readFileSync('.claude/skill-os/skill-routing-map.yaml','utf8').includes(`invoke: "/${row.forbidden_skill}"`),`${row.id}: competing registration`);}}
+  console.log('PASS Matt38 finite offline route subset (static routing only)');process.exit(0);
 }
 
 // ── Harness-synthesised prompts never get project routing (2026-09-11) ──

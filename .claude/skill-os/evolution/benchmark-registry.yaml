@@ -31,6 +31,15 @@ targets:
   ack_commit: null
   last_review:
     kind: window
+    reviewed_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    reviewed_at: '2026-10-01'
+    upstream_commit_date: '2026-09-29T13:37:40+01:00'
+    adopted: 30 adopt/port / 7 no independent package / 1 historical; four new entry bodies; M03/M35 preservation;
+      native/adoption PENDING
+    evidence: framework-audit/2026-09-30-matt-adaptation/PLAN.md; /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+    vetting_entry: mattpocock-skills-adaptation-2026-09-30
+  history:
+  - kind: window
     reviewed_commit: ed37663cc5fbef691ddfecd080dff42f7e7e350d
     reviewed_at: '2026-07-23'
     upstream_commit_date: '2026-07-21'
@@ -39,7 +48,6 @@ targets:
       / 血统复核 4 条（wayfinder no-op 被 OVERTURNED 补吸收）/ plugin 渠道不切"
     evidence: framework-audit/2026-07-23-mattpocock-update-consensus.md
     vetting_entry: mattpocock-skills-update-review-2026-07-23
-  history:
   - kind: full
     reviewed_commit: 391a2701dd948f94f56a39f7533f8eea9a859c87
     reviewed_at: '2026-07-12'

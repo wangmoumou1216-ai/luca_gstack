@@ -40,14 +40,14 @@ python3 .claude/observability/scripts/get_rules.py handoff "*" 2>/dev/null || tr
 - 不把对话逐字转录成文档；目标是让新 agent 用最少上下文可靠续接。
 
 来源：`mattpocock/skills` 的 `skills/productivity/handoff`（MIT），安装锚
-`6654f6b60cd9d5be8b54c6fafe44346dabeb3b76`；本地增加了 Luca 路由、项目隔离与验收约束。
+`d81f3a183412e71a5b1e84ca21bc1a35eea03a60`；本地增加了 Luca 路由、项目隔离与验收约束。
 
 ## 执行流程
 
 ### 1. 确定下个 session 的任务
 
 如果用户传了参数，把参数视为“下个 session 将聚焦什么”，据此裁剪内容。没有参数时，从当前
-对话中提炼尚未完成的目标；只有当目标无法从上下文判断时，才问一个阻塞问题。
+对话中提炼尚未完成的目标；目标仍未知时写 UNKNOWN；若缺失会妨碍可靠续接才问一个阻塞问题，绝不编造下一任务。
 
 ### 2. 收集最小充分上下文
 
@@ -58,6 +58,9 @@ python3 .claude/observability/scripts/get_rules.py handoff "*" 2>/dev/null || tr
 3. 已作出的关键决策、约束和明确不做的事。
 4. 剩余步骤、首个建议动作、已知阻塞与风险。
 5. 已存在的权威制品：spec、plan、ADR、issue、commit、diff、报告等。
+6. 当前批准的 scope/U-ID、权限及未批效果、实际仓库/分支/HEAD、dirty 文件与保护边界；
+   哪些内容实际读/验证过，哪些只是引用或未知。
+7. 可执行的恢复读列表/命令与首个未完成点；接手者先核对 HEAD、preimage 和授权，避免重复效果。
 
 已有内容一律引用路径、commit 或 URL，不复制长段正文。引用本地路径时使用绝对路径，方便新
 session 直接定位；不要为了交接而额外改写那些制品。
@@ -75,7 +78,8 @@ session 直接定位；不要为了交接而额外改写那些制品。
 - Claude 写 `/skill-name`；Codex 使用 `$` 前缀的 `skill-name`。
 - 可先检查 `.claude/skills/office/`、`.agents/skills/` 或当前 skill catalog。
 - 不确定是否存在就不列，禁止编造名字。
-- 每个 skill 用一句话说明“为什么下一步需要它”；没有合适 skill 时写 `None`。
+- 每个 skill 用一句话说明“为什么下一步需要它”，附可核验的 SKILL.md authority 路径。
+- 建议是描述性索引，不表示已经调用、授予执行权或自动转发；没有合适 skill 时写 `None`。
 
 ### 5. 写入 OS 临时目录
 
@@ -86,7 +90,7 @@ node -p 'require("os").tmpdir()'
 ```
 
 在该目录内生成唯一文件名 `luca-handoff-YYYYMMDD-HHMMSS.md`（同秒冲突时追加短随机后缀），
-再用 `Write` 写入。结构至少包含：
+冻结真实规范化绝对路径并确认与 workspace 不相交后，再用 `Write` 写入。不得覆盖现有文件。结构至少包含：
 
 ```markdown
 # Session handoff
@@ -97,6 +101,7 @@ node -p 'require("os").tmpdir()'
 ## Remaining work and first action
 ## Suggested skills
 ## Verification, blockers, and risks
+## Authority and resume instructions
 ```
 
 ### 6. 验证后交付
@@ -104,13 +109,14 @@ node -p 'require("os").tmpdir()'
 完成前必须当场验证：
 
 1. 文件存在，且其规范化绝对路径位于 `os.tmpdir()` 下。
-2. 上述七个标题全部存在。
+2. 上述标题全部存在，恢复命令与已知/未知和权限边界一致。
 3. 权威制品以路径/URL 引用，没有重复粘贴大段内容。
 4. 没有明显 secret、token、password、cookie、私钥或未脱敏 PII。
 5. `Suggested skills` 中的每个名字都能在当前环境找到。
 6. `git status --short` 没有因为本次 handoff 新增 workspace 文件。
 
-最后只需告诉用户：交接文档已生成、绝对路径、为下个 session 聚焦的任务，以及必要时的脱敏提醒。
+读回实际字节后给出绝对文件链接、下个 session focus 和真实限制；不得声称恢复已运行。
+交付后不自动创建/打开新 chat，不向其他 chat 发消息，不把路径引用当作对未读制品的验证。
 本 skill 自身是轻量终端交付，完成后不再生成第二份 framework handoff。
 
 <!-- FILE_END: handoff/SKILL.md -->
