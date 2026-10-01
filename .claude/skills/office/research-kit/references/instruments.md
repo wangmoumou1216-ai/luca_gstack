@@ -40,4 +40,20 @@
 - 类目命名从用户词汇取（卡片分类与访谈原话），不用内部行话。
 - **下一步永远是树测试**：新结构建导航组件前先树测（廉价，且能在构建前暴露 findability 失败）；关键任务上补首点击测试。
 
+## 5. 决策发现问卷（decision-questionnaire，显式分支）
+
+仅当用户显式选择 `entry_mode=decision-questionnaire` 时，完整读取同目录的
+`decision-questionnaire.md`，按其独立方法准备 Markdown discovery questionnaire。
+它面向拥有发送者所缺知识的特定收件人，不是第 2 节的定量 Survey；第 1–4 节的结构、
+量表、样本/编码要求及原下游不变，不把单个审批人当统计样本。
+
+先确认 send 的 role/expertise/relation 与 need-back 决策缺口，再绑定原 owner、scope、
+resume_target 和精确授权 output_path。每题服务一个实际决策、只问一个 idea，声明回答类型
+并留 answer stub；按重要性与主题组织，带目的、from/to/use、背景、回答方式和 anything-else。
+缺 recipient/need-back/path 真实问并等待不写，不能采访发送者代替收件人的独有知识。
+答案只回原 owner；不编造、自动发送、套 Likert 统计或自动送入 insight-synthesis。
+
+本节方法移植自 Matt Pocock `skills/productivity/to-questionnaire/SKILL.md`（MIT），
+pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`；来源身份与完整合同见 `decision-questionnaire.md`。
+
 <!-- FILE_END: research-kit/references/instruments.md -->

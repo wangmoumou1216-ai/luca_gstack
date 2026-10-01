@@ -22,155 +22,175 @@ units:
   repo: mattpocock/skills
   path: skills/engineering/domain-modeling
   install_path: .claude/skills/office/domain-modeling
-  pinned_sha: 321658273cb1d20b76026717d027d505790106d4
-  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
   ack_sha: null
-  pinned_at: '2026-09-17'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: project-local adapted SSOT; manual/semantic/internal entry; no mandatory Flow node; Codex verification pending, Claude live/A-B deferred by explicit user approval
+  note: source05; U003 domain-modeling; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: tdd
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/tdd
   install_path: ~/.agents/skills/tdd
-  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
-  watch_sha: bd453a6742fb8660bf618c298f1e2b80fb9f35e3
-  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
-  pinned_at: '2026-07-12'
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+  ack_sha: null
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: 2026-07-12 refresh 到 391a2701（+seam 门 +tautological）
+  note: source13; U003 G/tdd; source-content anchor only; native PENDING; formal personal installation PENDING;
+    source29 → global-candidates/tdd/references/shoehorn-test-data.md; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: codebase-design
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/codebase-design
   install_path: .claude/skills/office/codebase-design
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
-  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
   ack_sha: null
-  pinned_at: '2026-08-28'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: 项目内共享真值源；.claude/skills native alias 供 Claude、.agents/skills 供 Codex；旧 ~/.claude 个人目录已可恢复备份，原路径软链回本项目以消除 personal>project 遮蔽
+  note: source03; codebase-design (preservation); candidate content prepared; native/adoption PENDING; source24
+    → references/ts-module-boundaries.md; M03 preservation; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: code-review
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/code-review
   install_path: .claude/skills/office/code-review
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
   ack_sha: null
-  pinned_at: '2026-08-28'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: Luca facade 保留 fixed-point + Standards/Spec 两轴，执行权威复用 code-hygiene Mode D 与 routing-chain-check R4；项目 native alias 覆盖 Claude bundled /code-review，/review 仍保留原生 alias
+  note: source02; code-hygiene Mode D; code-review is the delegating facade; candidate content prepared; native/adoption
+    PENDING; batch mattpocock-skills-adaptation-2026-09-30; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: grilling
   kind: skill
   repo: mattpocock/skills
   path: skills/productivity/grilling
   install_path: .claude/skills/office/grilling
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
   ack_sha: null
-  pinned_at: '2026-08-31'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: project canonical independent method; Claude/Codex aliases are thin pointers; one consequential human decision per turn and no authority expansion
+  note: source33; U003 grilling; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: diagnosing-bugs
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/diagnosing-bugs
   install_path: .claude/skills/office/diagnosing-bugs
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
-  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
   ack_sha: null
-  pinned_at: '2026-08-31'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: project canonical unexpected-failure method; expected TDD red stays outside; legacy systematic-debugging remains compatibility-only
+  note: source04; U003 diagnosing-bugs; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: resolving-merge-conflicts
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/resolving-merge-conflicts
   install_path: .claude/skills/office/resolving-merge-conflicts
   pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
-  watch_sha: 321658273cb1d20b76026717d027d505790106d4
-  ack_sha: null
+  watch_sha: daa01d8aa68ad5c61b68970ec2018d0ce9567be6
+  ack_sha: daa01d8aa68ad5c61b68970ec2018d0ce9567be6
   pinned_at: '2026-08-31'
   source: adoption-log
-  note: project canonical real-conflict-only method; personal collision cutover is separately governed by U-006 and does not change this project pin
+  note: source11 historical_removed; preserve historical pin 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76; deletion
+    watch/ack daa01d8aa68ad5c61b68970ec2018d0ce9567be6; existing real-conflict-only owner; native/adoption
+    PENDING; batch mattpocock-skills-adaptation-2026-09-30; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: to-spec
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/to-spec
   install_path: .claude/skills/office/to-spec
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
   ack_sha: null
-  pinned_at: '2026-08-31'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: thin conversation_synthesis facade; canonical tech-spec remains the sole specification truth owner
+  note: source14; U003 to-spec→tech-spec; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: to-tickets
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/to-tickets
   install_path: .claude/skills/office/to-tickets
-  pinned_sha: 321658273cb1d20b76026717d027d505790106d4
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 321658273cb1d20b76026717d027d505790106d4
   ack_sha: null
-  pinned_at: '2026-09-02'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: explicit-only publication facade; canonical task-plan remains sole decomposition truth; local .scratch default and external tracker effects require separate preview approval
+  note: source15; U003 to-tickets→task-plan projection; candidate content prepared; native/adoption PENDING;
+    batch mattpocock-skills-adaptation-2026-09-30; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: wait-what
   kind: skill
   repo: mattpocock/skills
   path: skills/productivity/wait-what
   install_path: .claude/skills/office/wait-what
-  pinned_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
-  watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
   ack_sha: null
-  pinned_at: '2026-09-03'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: explicit-only conversation repair overlay localized to natural Chinese; no artifact, workflow state, graph edge, or authority expansion
+  note: source37; U003 wait-what; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: writing-for-agents
   kind: skill
   repo: mattpocock/skills
   path: skills/productivity/writing-for-agents
   install_path: .claude/skills/office/writing-for-agents
-  pinned_sha: 321658273cb1d20b76026717d027d505790106d4
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 321658273cb1d20b76026717d027d505790106d4
   ack_sha: null
-  pinned_at: '2026-09-04'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: model-reachable agent-document writing lens; local skill-authoring remains the skill-prose truth and domain owners retain facts/workflow
+  note: source38; writing-for-agents owns the common prose method; skill-authoring owns structure/registration;
+    candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30; external
+    content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: wayfinder
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/wayfinder
   install_path: .claude/skills/office/wayfinder
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 321658273cb1d20b76026717d027d505790106d4
   ack_sha: null
-  pinned_at: '2026-08-31'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: thin planning facade; automatic recommendation requires huge AND multi-session AND fog and Plan Agent remains the truth owner
+  note: source17; U003 wayfinder→Plan owner; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: implement
   kind: skill
   repo: mattpocock/skills
   path: skills/engineering/implement
   install_path: .claude/skills/office/implement
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
   ack_sha: null
-  pinned_at: '2026-08-31'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: thin approved-plan execution facade; Plan Agent compiles exact U-IDs and Orchestrator owns execution state
+  note: source07; U003 implement→Plan/Orchestrator; candidate content prepared; native/adoption PENDING; source20
+    → Plan/Orchestrator; source22 → references/pull-request.md; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: teach
   kind: skill
   repo: mattpocock/skills
   path: skills/productivity/teach
   install_path: ~/.claude/skills/teach
-  pinned_sha: 391a2701dd948f94f56a39f7533f8eea9a859c87
-  watch_sha: aa024cb1954fedbc8221967c080fa40b9867f994
-  ack_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd  # 2026-07-15 裁决不采纳：pin 以来仅新增 agents/openai.yaml 元数据（Codex 兼容），对 Claude 环境零价值
-  pinned_at: '2026-07-12'
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: personal install（零框架触面）
+  note: source35; personal Claude teach candidate (preservation; formal install pending); source-content anchor
+    only; native PENDING; formal personal installation PENDING; M35 preservation; Claude only; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
 - name: systematic-debugging
   kind: skill
   repo: obra/superpowers
@@ -232,10 +252,82 @@ units:
   repo: mattpocock/skills
   path: skills/productivity/handoff
   install_path: .claude/skills/office/handoff
-  pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
   watch_sha: d28dfdc39beadc3142a33359b5cfa4765dcbd0bc
   ack_sha: null
-  pinned_at: '2026-08-28'
+  pinned_at: '2026-10-01'
   source: adoption-log
-  note: 用户显式覆盖 2026-07 的 REJECTED 安装裁决；Luca 适配为 explicit-intent-gated、OS-temp
-    session transfer，不替代项目级 workflow handoff、handoff-protocol 或 checkpoint
+  note: source34; U003 handoff; candidate content prepared; native/adoption PENDING; batch mattpocock-skills-adaptation-2026-09-30;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+- name: writing-beats
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/in-progress/writing-beats
+  install_path: .claude/skills/office/writing-workshop
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-10-01'
+  source: adoption-log
+  note: source25; upstream name writing-beats; writing-workshop / beats; four new entry bodies total; native/adoption
+    PENDING; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+- name: writing-fragments
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/in-progress/writing-fragments
+  install_path: .claude/skills/office/writing-workshop
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  ack_sha: null
+  pinned_at: '2026-10-01'
+  source: adoption-log
+  note: source26; upstream name writing-fragments; writing-workshop / fragments; four new entry bodies total;
+    native/adoption PENDING; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+- name: writing-shape
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/in-progress/writing-shape
+  install_path: .claude/skills/office/writing-workshop
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+  ack_sha: null
+  pinned_at: '2026-10-01'
+  source: adoption-log
+  note: source27; upstream name writing-shape; writing-workshop / shape; four new entry bodies total; native/adoption
+    PENDING; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+- name: loop-me
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/in-progress/loop-me
+  install_path: .claude/skills/office/loop-me
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-10-01'
+  source: adoption-log
+  note: source21; upstream name in-progress/loop-me; U005 loop-me; four new entry bodies total; native/adoption
+    PENDING; external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+- name: issue-triage
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/triage
+  install_path: .claude/skills/office/issue-triage
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+  ack_sha: null
+  pinned_at: '2026-10-01'
+  source: adoption-log
+  note: source16; upstream name triage; U006 issue-triage; four new entry bodies total; native/adoption PENDING;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+- name: setup-wizard
+  kind: skill
+  repo: mattpocock/skills
+  path: skills/engineering/wizard
+  install_path: .claude/skills/office/setup-wizard
+  pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  watch_sha: 321658273cb1d20b76026717d027d505790106d4
+  ack_sha: null
+  pinned_at: '2026-10-01'
+  source: adoption-log
+  note: source18; upstream name wizard; U007 setup-wizard; four new entry bodies total; native/adoption PENDING;
+    external content receipt /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json

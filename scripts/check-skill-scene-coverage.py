@@ -80,7 +80,21 @@ TABLE = {
     "domain-modeling": (None, [], "unobservable"),
     "wayfinder": (None, [], "unobservable"),
     "implement": (None, [], "unobservable"),
+    # User-selected exact artifact paths and conditional tracker effects have no unique
+    # project glob. Do not attribute arbitrary writing/spec/scripts or role changes as output.
+    "writing-workshop": (None, [], "unobservable"),
+    "loop-me": (None, [], "unobservable"),
+    "issue-triage": (None, [], "unobservable"),
+    "setup-wizard": (None, [], "unobservable"),
     "muse-req-triage": (None, [], "unmapped"),
+}
+
+
+UNOBSERVABLE_REASONS = {
+    "writing-workshop": "作者批准的 output_path 可在不同 workspace，无唯一项目产物 glob；不把普通文章归本技能",
+    "loop-me": "只写用户批准的 workflow_spec_path，workspace 不由项目 docs 决定；无唯一项目产物 glob",
+    "issue-triage": "离线预览、条件 tracker effects 与可选 KB 分属批准范围，无唯一项目产物 glob",
+    "setup-wizard": "精确脚本 output_path 可为 scratch/用户 scripts；制作与服务配置不同，无唯一项目产物 glob",
 }
 
 
@@ -161,6 +175,9 @@ def selftest() -> int:
     missing = routing_map_invokes() - set(TABLE)
     if missing:
         fails.append(f"TABLE 缺 routing-map 一级 skill: {sorted(missing)}")
+    for skill, reason in UNOBSERVABLE_REASONS.items():
+        if not reason or TABLE.get(skill) != (None, [], "unobservable"):
+            fails.append(f"无唯一产物的 skill 必须诚实无 glob 且具名说明: {skill}")
     # 豁免守护：白名单里每个 skill 的 SKILL.md 必须真含声明（四个字被误删即红）
     for s in sorted(EXEMPT_EXPECTED):
         f = OFFICE / s / "SKILL.md"
@@ -199,7 +216,8 @@ def main():
             print(f"{skill:24} {'-':>6} {used:>7}  SESSION-TOOL（项目无关、OS 临时产物不入库；output=窗口内 episodic 使用数）")
             continue
         if strength == "unobservable":
-            print(f"{skill:24} {'-':>6} {out_n:>7}  UNOBSERVABLE（场景不落盘；命中靠语义兜底 + session-restore kit→synthesis 接力提醒，不判）")
+            reason = UNOBSERVABLE_REASONS.get(skill, "场景不落盘；命中靠语义兜底 + session-restore kit→synthesis 接力提醒")
+            print(f"{skill:24} {'-':>6} {out_n:>7}  UNOBSERVABLE（{reason}，不判）")
             continue
         scene_n = sum(count(p, scene_pats, cutoff) for p in projects)
         age = skill_age_days(skill)

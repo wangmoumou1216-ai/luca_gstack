@@ -7,6 +7,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
+    "test:matt-adaptation": "node scripts/test-matt-skills-adaptation.mjs --all",
     "verify": "bash scripts/verify.sh",
     "validate:skills": "bash scripts/validate-skills.sh",
     "lint:yaml": "python3 -c \"import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]\" .claude/skill-os/optional-workflow-graph.yaml .claude/skill-os/input-modes.yaml .claude/skill-os/evolution/self-model.yaml .claude/skill-os/evolution/gaps-register.yaml .claude/skill-os/evolution/sources-registry.yaml .claude/skill-os/evolution/benchmark-registry.yaml .claude/skill-os/model-routing.yaml .claude/skill-os/external-skills/installed-pins.yaml .claude/skill-os/external-skills/vetting-registry.yaml",

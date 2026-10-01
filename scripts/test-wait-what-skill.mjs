@@ -13,14 +13,15 @@ const modelRouting = readFileSync('.claude/skill-os/model-routing.yaml', 'utf8')
 assert.match(skill, /^name: wait-what$/m);
 assert.match(skill, /^disable-model-invocation: true$/m);
 assert.match(skill, /自然中文/);
-assert.match(skill, /缺失的前提|前提和上下文/);
-assert.match(skill, /`CONTEXT\.md`/);
-assert.match(skill, /`CONTEXT-MAP\.md`/);
-assert.match(skill, /仅当会话已有经过验证的项目绑定/);
-assert.match(skill, /没有项目绑定时，不为本技能发起项目确认或切换/);
-assert.match(skill, /只输出重新讲解的内容/);
-assert.match(skill, /不创建产物.*不写交接文档.*不改工作流状态/s);
-assert.doesNotMatch(skill, /ASD-STE100|Simplified Technical English/);
+assert.match(skill, /缺失前提|最少前提/);
+assert.match(skill, /项目 CONTEXT/);
+assert.match(skill, /多域按已有 map/);
+assert.match(skill, /已有 verified 项目绑定/);
+assert.match(skill, /没有绑定[\s\S]*?不为[\s\S]*?启动 Project Gate\/切换/);
+assert.match(skill, /只输出重讲内容/);
+assert.match(skill, /无文件、handoff、workflow、Git、网络或其他效果/);
+assert.match(skill, /英语表达确为用户所需时[\s\S]*?Simplified Technical English/);
+assert.match(skill, /中文任务保持自然中文/);
 
 assert.match(openai, /display_name: "等等，我没听懂"/);
 assert.match(openai, /allow_implicit_invocation: false/);

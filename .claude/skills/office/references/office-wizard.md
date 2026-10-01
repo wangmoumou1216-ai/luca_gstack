@@ -163,6 +163,16 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone；skill/AGENTS.md/CLAUDE.md 写改可自动命中，其余按名调用
                说明：只拥有 Agent-facing 结构与措辞；skill-creator/领域 skill 仍拥有流程与事实
 
+/writing-workshop —      显式写作工坊；用户选 fragments / shape / beats，真实作者逐个决定
+               输入模式：standalone；三 entry_modes 属同 key；fragments 要 topic/output_path，
+               shape/beats 要 material_path + 独立 output_path（同路径/同 inode 拒绝）
+               说明：普通编辑/文章润色及 UX 微文案仍归原 owner；先重读磁盘，每次只写获准增量
+
+/loop-me       —         从真实 world context 发现循环，并通过 stateful grilling 设计 resolved spec
+               输入模式：standalone；goal 可空，workspace_context_path / workflow_spec_path
+               缺失不写，薄上下文先真实访谈；实际选择后逐轮 ready frontier，保留用户修改
+               说明：只设计；执行既有 routine、自动化调度、安装服务归原 owner
+
 ── 全流程编排 ──────────────────────────────────────────────────
 
 /auto          A B C D   全自动多 Agent 编排：自然语言需求 → 自动 Skill Pipeline →
@@ -198,7 +208,9 @@ luca_gstack — 一级可见 Skill 列表
                计划/卡片分类法方案（采集之前；三不产：不产发现/不产解读/不采集）
                输入模式：standalone（research_question_or_hypothesis 必填）
                产出：docs/research/research-kit-<topic>-<date>.md
-               说明：kit 武装你去采集，采回数据投 /insight-synthesis 出洞察
+               说明：原四模式 kit 武装你去采集，采回数据投 /insight-synthesis 出洞察；显式
+               decision-questionnaire 先定 recipient role/expertise/relation 与 need_back，
+               保留同输出命名，问题逐项映射原决定，真实回复回原 decision_owner，不自动发出
 
 /ux-writing    A B C D   内容与语言设计：voice/tone 规范 + 微文案系统（错误/空态/CTA/
                hedging）+ 界面文案评审改写；D=agent 状态/hedging 文案主战场
@@ -255,7 +267,8 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone 或 workflow。可接 design-brief / ux-audit /
                screenshot_delta / figma-demo blueprint / standalone brief
                质量 gate：Step0认知门禁、实际设计规范与参考来源、动态参考、QA
-               不因 standalone 取消
+               不因 standalone 取消；同 key purpose=ui|logic-validation 与 ui_variant_count，
+               仅显式 UI 对比才2–5（未给数默认3），逻辑必须0且只两门 N/A，仍实际浏览器验证
 
 ── 工程落地 ────────────────────────────────────────────────────
 
@@ -302,12 +315,26 @@ standalone，不读 optional graph；preset 选择也不授予写入、Git、网
 /code-hygiene  —      代码层工程约束：完成前验证铁律（声明 done 前必须有当场跑出的
                证据）+ 8 清理算子（死代码/循环依赖/去重/类型/弱类型/防御性/遗留/slop，
                只自动应用 HIGH 置信）。不是设计场景 skill，代码/工程任务专用
-               输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
+               输入模式：standalone，可路由或显式调用；同 key environment-retro 查真实
+               会话日志/已有 checker 接线并提建议，pre-commit-setup 为按需配方，不自动改 Hook/memory
 
-/code-recon    —      Brownfield 正门：并行只读 recon 把已有代码库逆向成架构 brief
+/code-recon    —      Brownfield 正门：固定五维串行冷只读 recon 逆向成原架构 brief
                （入口/模块/关键流程/数据模型/扩展点，标 VERIFIED vs INFERRED），喂给
                ux-brainstorm/design-brief/tech-spec。只读不改代码
-               输入模式：standalone，可路由（route-guard 触发词）或斜杠调用
+               输入模式：standalone；默认 brief，显式 architecture-opportunities 为同 key，
+               direction / scope 先定，report_path 写前精确授权；离线 HTML 候选报告，真实选中才
+               grilling→codebase-design，不预先改接口/代码/memory；不是 Workflow mode
+
+/issue-triage  —       显式维护者 Issue/PR 状态机；完整材料、旧 notes、verify-before-grill 与 durable brief
+               输入模式：standalone；tracker_material / maintainer_goal、已有 category/state 映射，
+               external_pr_scope 只筛 discovery；out_of_scope_root 可选，conditional write 才应用
+               说明：缺 tracker 不得当远端授权；普通需求批量筛选/代码评审/拆票归原 owner，
+               comment/close/send 逐项明确批准，缺能力保留未应用预览
+
+/setup-wizard  —       为只能由人完成的配置步骤制作 Bash 向导；人确认阶段、secret 分类与落点
+               输入模式：standalone；service_goal / manual_step_contract / 精确 output_path
+               说明：Agent 只写确认的 STAGES 并静态验收；自动化/排障归原 owner，
+               不读真实 secret、不运行向导，交人按真实运行命令完成服务配置
 
 ── muse 专属 ───────────────────────────────────────────────
 
