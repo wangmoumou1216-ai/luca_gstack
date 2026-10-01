@@ -6,7 +6,7 @@ description: |
   Brownfield「从现有代码起步」的正门 skill：把一个已有代码库逆向成一份**设计可消费的架构 brief**，
   再作为输入喂给设计管线（ux-brainstorm / design-brief / tech-spec）。补齐 pipeline 缺的入口——
   现有 skills 默认从需求/语料起步，没有「先读懂现有代码再在其上做产品设计」的正门。
-  **native-first, 零新依赖**：默认用并行只读 recon agent 逆向；只有代码库大到原生 recon 太贵/看不全跨模块耦合时，
+  **native-first, 零新依赖**：默认用固定队列串行只读 recon agent 逆向；只有代码库大到原生 recon 太贵/看不全跨模块耦合时，
   才**提示**（不硬装）在**那个下游项目**装 codegraph MCP。
   边界：不是 code-hygiene（清理）、不是 systematic-debugging（根因）、不是 deepresearch（联网研究）。
   只读 recon——**绝不修改被 recon 的代码**。(luca_gstack)
@@ -21,13 +21,15 @@ context-cost:
   self: 3600
   runtime-estimate: 18000
   shared-refs: [none]
-  recommended-model: guided-execution  # 并行 recon 派发 + brief 合成；判断密度中等
+  recommended-model: guided-execution  # 串行 recon 派发 + brief/候选报告合成
 ---
 
 ## 定位（先读）
 
 **Brownfield 正门**：`已有代码 → 理解结构 → 产出架构 brief → 喂设计管线 →（确认后）继续生成代码`。
-本 skill 只负责**理解 + 产出 brief** 这一步，不做设计、不写实现代码。
+本 skill 默认 `entry_mode=brief`，只负责理解并产出原架构 brief。用户明确请求架构改善/候选选择才
+使用同 key 的 `entry_mode=architecture-opportunities`，只呈现深化机会 HTML，不预先提新 interface。
+两个模式均不修改被读代码、项目词汇或 ADR，不是第二个设计或执行所有者。
 
 与既有能力的边界（**不重复**）：
 - `code-hygiene`=对代码做清理 + 完成前验证，**改代码**；本 skill 只读、只产 brief，正交。
@@ -37,6 +39,13 @@ context-cost:
 
 下游消费：产出的 brief 作为 `ux-brainstorm` / `design-brief` / `tech-spec` 的 **optional 输入 artifact**
 （见 `input-modes.yaml` 各自 optional 里的 `architecture_brief`）——设计基于真实代码，而非凭空。
+
+## 目标权限前置（在 preamble/任何目标 I/O 前）
+
+按 project-session 核验 canonical 绝对根、有限读取路径及报告输出范围；框架/meta 保持 NO_PIN。
+缺 pin、授权根或项目 owner 则停，绝不从 cwd、共享 docs/workflow-state/current-topic symlink
+推断或修复 pin。下面原 preamble 仅作规模诊断；只有目标 scope 已核验、且工具显式工作目录
+是该根时才运行。`pwd` 是诊断输出，不是读写授权。不要在本技能运行项目 switch。
 
 ## Preamble (run first)
 
@@ -61,16 +70,27 @@ python3 .claude/observability/scripts/get_rules.py code-recon "*" 2>/dev/null ||
 
 AskUserQuestion（或在 agent 自调用时按上下文确定）：
 
-> 1）要读懂哪个代码库？（路径，默认=当前目录）
-> 2）读懂之后**想在其上加什么产品设计/功能**？（decides recon 的重点——扩展点该往哪看）
+> 1）要读懂哪个代码库？（已验证的 canonical 路径，无 cwd 默认授权）
+> 2）普通 brief 的产品设计/功能意图是什么？架构机会模式有无指定 module、痛点或方向？
 > 3）范围：全仓，还是某个模块/子目录？
 
 有明确设计意图时，recon 的「扩展点」维度要围绕它展开（"要加 X 该在哪插、会碰哪些现有面"）。
 
-**确定 `<topic>`（供 Phase 3/5 产出文件名 `<date>-<topic>-architecture-brief.md` 用）：** 优先读
-`.claude/current-topic.txt`；为空则从「仓名 + 设计意图」派生一个 2-4 词 kebab-case topic
-（如仓名 `acme-crm` + 意图"加导出" → `acme-crm-export`）。**同一代码库固定复用同一 topic**，
-保证 brief 文件名稳定、下游 ux-brainstorm/design-brief 按名可匹配 `architecture_brief`。
+**确定 `<topic>`（原 brief 文件名与 architecture_brief 消费保持）：** 使用已验证项目 handoff 的
+topic，或用户确认的仓名+意图派生 2–4 词 kebab-case；同一任务固定复用。共享 current-topic
+别名不作身份或落点来源。普通输出在已批准 canonical 目标内保留
+`docs/engineering/<date>-<topic>-architecture-brief.md` 形状，不从共享 docs 别名写入。
+
+架构机会模式先冻结 direction / scope。用户有方向时沿该方向，不用 churn 改写意图；无方向才
+读真实 `git -C '<目标绝对根>' log --oneline` 与有限路径历史定界，高频项须有 commit/path 证据。
+散布时在原批准范围内扩看；无 Git/不可读记 UNVERIFIED，不编 hotspot。先读该项目已授权的
+词汇 owner 和相关 ADR，并把 `.claude/skills/office/codebase-design/SKILL.md` 全文作为架构词汇
+reference 读取（不运行该 skill/preamble），再完整读取
+[references/architecture-candidates-report.md](references/architecture-candidates-report.md)。
+默认建议真实 OS temp 下 `architecture-review-<timestamp>.html`；明确 `report_path` 可以替代。
+两者在写前都须取得 canonical 路径、真实 preimage、有限 scope 与报告写权限，TMPDIR 可见不
+授予任意写。缺落点权限可继续只读准备候选，不能落盘或偷偷改为 repo 文档。
+父 U-ID、scope、resume_target、读写/effect authority 交集始终保留。
 
 ---
 
@@ -95,10 +115,15 @@ Preamble 未预算，需要时现算（如 `git ls-files | xargs wc -l`）；文
 
 ---
 
-## Phase 2：并行 recon（native 默认）
+## Phase 2：串行只读 recon（两模式共用派发内核）
 
-fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维度并行，每个只给**搜索目标 + 路径**，
-不给会话历史（Explore Agent context 预算 < 500 tokens）。建议维度：
+`max_active_subagents=1`。先读取 model-routing，以真实冷 `explorer` / MR-006 anchor、
+`fork_turns=none` 派发；每次只给已核验绝对根、有限路径、词汇/ADR、搜索目标及方向，
+不传作者历史、不复制父 pin/SID，不硬编码模型。多独立代理触发 Plan 时先取得该只读 phase/
+scope 的真实批准。原生任务真实 completed 后，读回同次 accepted、起止、输入 SHA 与实证，
+前一个未闭合不派下一个；缺证据记 UNKNOWN，不由主线模拟 explorer。合成不替代真实派发。
+
+普通 brief 保留以下**固定五维队列**，按 1→5 逐个冷启动，不跳维、不并发：
 
 1. **入口 & 运行形态**：main/入口文件、启动脚本、构建产物、进程/服务形态
 2. **模块划分**：顶层目录/包的职责，谁依赖谁（粗依赖图，读 import/require/package 声明）
@@ -109,11 +134,17 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
 每个 agent 返回时**诚实标注 VERIFIED（读到实证）vs INFERRED（推断）**——复用 gstack-map 的诚实审计习惯，
 不把推断当事实。
 
+architecture-opportunities 不跑五维 brief 队列，而用同一内核派**一个真实冷 explorer**：
+记录理解概念时的跨文件跳转、interface 几乎匹配 implementation 的 shallow module、为测试
+抽纯函数却使调用处真实 bug 难测、跨 seam 泄漏和现有测试盲区。每个候选绑定 files/行与真实
+friction、已知 dependency category 和 deletion evidence：删浅包装复杂度消失→shallow；
+删承重 module 后复杂度散回 N callers→load-bearing，不倒置。未知项保留 UNKNOWN。
+
 ---
 
 ## Phase 3：合成架构 brief
 
-把各 recon agent 的返回合成一份 brief（先 `mkdir -p docs/engineering`），写：
+brief 分支把五维真实返回合成原结构，仅在已批准 canonical 目标输出目录可写时创建目录，写：
 `docs/engineering/<YYYY-MM-DD>-<topic>-architecture-brief.md`
 
 结构：
@@ -125,7 +156,8 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
 - **扩展点**：针对设计意图，"加 X 该在哪插" + 影响面
 - **VERIFIED vs INFERRED 审计**：哪些是读到的、哪些是推断的、哪些没读到（诚实空白）
 - **深化机会（可选透镜，2026-07-12 对标 merge，源 improve-codebase-architecture）**：对疑似浅
-  模块跑 **deletion test**——"删掉它，复杂度是集中还是只挪走？"集中 → 标 deepening candidate。
+  模块跑 **deletion test**：删浅包装后复杂度消失 → shallow/deepening candidate；删 module 后
+  复杂度散回 callers → load-bearing。不能把承重模块误判为应删包装。
   词汇引项目共享 `codebase-design` skill（deep module/seam）；该入口是框架内置工程原语
 - **churn 富化信号（2026-07-23 对标 merge，源 improve-codebase-architecture YAGNI 定界的
   有方向面）**：有 git 历史时对待扩展面跑 `git log --oneline -- <路径>`：高频变动区 →
@@ -138,6 +170,14 @@ fan-out 只读 recon agents（`Agent` tool，Explore 类型，只读），按维
 继承本任务 scope/authority 的交集，返回 code_evidence 与 open_questions，
 分别归本 brief 的 VERIFIED/INFERRED 审计与开放问题，再恢复 Phase 3。
 brief 输出权限不授权修改被 recon 的代码、glossary 或 CONTEXT.md；不新增 Flow 节点。
+
+architecture-opportunities 分支按已全文读取的 report reference 写一个离线 self-contained HTML：
+每卡实际 files/evidence/problem/solution、locality/leverage/testing、recommendation strength、
+dependency category、正确且非空 before/after 图、相关 ADR 冲突 callout，结尾 Top 推荐锚到实卡。
+现状须来自代码，提议明确标 Proposed；不先设计 interface。renderer 用现有通用报告能力或
+内联 CSS/SVG/已验证本地资源，不引 CDN、装依赖、空图或只交 Markdown。不是产品 UI，
+不套五状态/24 分门。授权浏览器打开后验证图实际可见、锚点可导航、console 无错和零网络写；
+未运行浏览器则诚实 NOT_RUN，不能把静态 markup 当可视通过。
 
 ---
 
@@ -153,19 +193,24 @@ brief 输出权限不授权修改被 recon 的代码、glossary 或 CONTEXT.md�
 
 ## Phase 5：交接 + 记忆
 
-- **handoff**：brief 作为下游设计 skill 的输入 artifact。workflow 模式先 `mkdir -p docs/handoff` 再写
+- **handoff**：brief 作为下游设计 skill 的输入 artifact。workflow 模式仅在已批准 canonical
+  项目根内、该有限 handoff 路径有写权限时创建目录并写入（不跟共享 docs symlink），再写
   `docs/handoff/<date>-<topic>-code-recon-handoff.md`（含 gate_result + 产出路径 + 关键架构决策/风险）；
   standalone 轻量模式（终端交付、无下游消费）可免 handoff。之后建议路由到
   `/ux-brainstorm` 或 `/design-brief`（它们把这份 brief 作为 `architecture_brief` optional 输入消费）。
-- **记忆**：把稳定架构事实写进**下游项目**的 `.luca/memory/MEMORY.md`（项目本地，只在该项目激活时注入），
-  下次「理解代码」更便宜。**不**写框架级三层记忆（那是跨项目经验层，不装具体项目代码事实）。
+- **记忆**：输出 brief 不授予事实入库。仅在 governed extraction 门通过、项目落点已核验且有
+  精确写许可时，由相应 memory owner 处理项目事实；未授权只保留建议，不自动写项目/全局 memory。
+- **架构报告交接**：展示绝对 report_path 后真实询问选择，未选/拒绝/owner 缺失停在报告。
+  真实选中才按许可交集交 `grilling`→`codebase-design`，继承同 U-ID/scope/resume_target。
+  load-bearing 拒绝只提议 ADR；领域术语更新回 `domain-modeling` 的真实批准门。不自动改代码、
+  memory、票据、全局配置或新建 Flow；替代 interface 仍须其独立串行设计门。
 
 ---
 
 ## ⚠️ 末尾核心约束
 
-1. **native-first**：默认并行只读 recon 出 brief；codegraph/Graphify 仅在规模阈值命中 ≥2 时**提示**，不硬装、不默认上。
-2. **只读 recon**：本 skill 绝不修改被 recon 的代码；产出只有一份新 brief（+ 可选 handoff/memory）。
+1. **native-first**：两模式同内核、max_active_subagents=1；brief 五维固定冷队列，架构模式一个真实冷 explorer；前票 completed/同次 accepted 后再派。工具仅按原阈值提示，不硬装。
+2. **只读 recon**：绝不修改被读代码；只写获批 brief 或精确 report_path（+ 已授权 handoff），memory 另过治理和写门。
 3. **工具装下游、不进 gstack**：任何 codegraph MCP 属**下游代码项目**，不写进 luca_gstack 仓。
 4. **诚实审计**：brief 必须标 VERIFIED vs INFERRED 与没读到的空白，推断不得冒充事实。
 5. **brief 是设计输入不是终点**：产出后交给 ux-brainstorm/design-brief，不在本 skill 里做设计或写实现。

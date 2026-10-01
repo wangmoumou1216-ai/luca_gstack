@@ -45,7 +45,53 @@ brainstorm(PRD 假设/Outstanding Questions) → /research-kit(假设→工具) 
 场景：A（新功能验证假设）/ B（已有功能摸问题）/ D（Agent 化前摸用户心智）。
 使用节奏天然低频（工具与洞察之间隔着 luca 亲自采集）——60 天零使用属预期，非降级信号。
 
-## 流程（单 agent 内联五步）
+## 显式入口：decision-questionnaire
+
+只有用户显式选择 `entry_mode=decision-questionnaire` 才进入本分支：把发送者无法独自解决的
+决策或事实缺口，变成交给知情收件人填写的 Markdown discovery questionnaire。它沿用
+research-kit 同一入口，不新增 skill 或 Workflow。未选择此模式时，下方原四种研究工具及其
+定标、质量门、outputpath 与 insight-synthesis 下游保持原合同。
+
+- **正路由**：要从特定收件人取得自己欠缺的知识，以支持原来的决策；可异步填写或一起开会填写。
+- **反路由**：量化群体分布仍走原问卷模式；准备真实访谈/测试/卡片分类仍走原工具；已有一手
+  定性资料并请求解读才另行选择 insight-synthesis。普通待审计划的设计树澄清归 grilling。
+- 不把单个专家、审批人或客户当统计样本，不套用 Likert/NPS/SUS、样本量或置信度来包装此分支。
+
+### 输入、权限与流程
+
+1. **先问 send，不问 subject**：向发送者一次确认收件人的 role、expertise、relationship，
+   以及对方知道而发送者不知道的具体知识范围；已有真实回答直接复用。再一次确认要带回的
+   need-back 清单：哪些具体 decisions/facts 未决、每项答案要让谁能够做什么决定或动作。
+   不要求用户先回答这些只能由收件人提供的领域事实，不用推荐、沉默或模拟回答补齐输入。
+2. **绑定回流与精确路径**：确认 from/to、原决策 owner、背景与答案用途；内部调用继承原
+   U-ID、scope、resume_target、authority_record 及权限交集，standalone 则确认这些回流信息。
+   输出沿用 `docs/research/research-kit-<topic>-<YYYY-MM-DD>.md`，同日重跑加 `-001` 序号不覆盖；
+   必须确认命名约定下真实根中的精确已授权 `output_path`，不得从 cwd、共享 docs/ 或 symlink
+   别名推定项目或写权。recipient、need-back 或已授权精确路径缺任一，真实追问后等待，
+   保持 NEEDS_CONTEXT 且不写问卷。发送目的尚未定的独立决策，先完整读取 `../grilling/SKILL.md` 到 FILE_END 再按其合同澄清，
+   只澄清 send 并返回同一 owner，不新开研究闭环或扩大权限。
+3. **Load `references/decision-questionnaire.md` now — 起草前完整读取**。
+   将 need-back 项逐一编号并映射到实际决策/动作，再生成主题和问题；每题一个 idea，标明
+   decision/need-back ID 与期待的回答类型，题下留空 answer stub，不编答复。按重要性优先，
+   含 purpose、from/to/use、简短 context、how-to-answer（deadline/effort、允许 partial/unknown）、
+   themes、必要的 why-it-matters，以及 anything-else 收尾题；未知截止日期不能写成已承诺。
+4. **问卷专属质量门**：每个 need-back item 都有对应题，每题都服务真实决策且能由已确认
+   收件人回答；复合题拆开，预设答案或行话重写。核对重要性顺序、主题、回答类型与空 stub，
+   回流用途能让未参加前述讨论的收件人理解。四种研究工具的统计/编码门不套到本分支；
+   文档只是待回答工具，不能把问题、例子或空 stub 宣称为发现、洞察或收集完成。
+5. **落盘与返回原 owner**：写前实际重读目标及批准 scope，核验 preimage/CAS，保存用户编辑；
+   只写这份已授权问卷，报告真实路径和未答项。答案由人采回；用户之后提供真实回复时，
+   原文、来源、未知项和 decision 映射回到原决策 owner 与原 scope/resume_target，不能自动
+   交给 insight-synthesis、产生新研究结论或替 owner 做决定。不自动发送、发布、追催或调用
+   外部系统；准备文件不授予发送/采集权限，任何另行要求的外部动作仍过其真实授权门。
+
+本分支的共享 handoff 记录 mode、真实 questionnaire 路径与 SHA、收件人/need-back 及逐题覆盖、
+原 owner/scope/resume_target、已解决的 send 决策、未答项与下一真实动作。决定是否免写 handoff 前，完整读取
+`.claude/skills/office/references/handoff-protocol.md` 到 FILE_END，再按实际 context-cost、终端/恢复条件判断；
+不能因 research-kit 的旧轻量用途默认豁免。需要写时沿用下方 handoff 命名约定，先有该精确
+路径的权限；不写 workflow-state，不自动写 memory。内容生成不等于已收答或完成原决策。
+
+## 原四研究模式流程（单 agent 内联五步）
 
 1. **定标（缺任一先问清）**：要回答的研究问题/待验证假设（优先从最新 PRD 的 Outstanding
    Questions / 关键假设节取，`ls -t docs/prd/*.md` 探测；无 PRD 时请用户口述）；
@@ -76,7 +122,7 @@ brainstorm(PRD 假设/Outstanding Questions) → /research-kit(假设→工具) 
    （同日重跑加 `-001` 序号不覆盖）。末尾附一句：「采集完成后，把原始数据投 /insight-synthesis
    产洞察；本文档的研究问题清单可直接作它的定标输入。」
 
-## Handoff（分级：standalone 终端交付免写；workflow 模式必写）
+## Handoff（原四研究模式：standalone 终端交付免写；workflow 模式必写）
 
 standalone 模式下产出即终端交付（luca 拿工具去采集），按 lightweight 豁免 DONE 合法。
 workflow 模式（编排链中、insight-synthesis 为既定下游）必写：

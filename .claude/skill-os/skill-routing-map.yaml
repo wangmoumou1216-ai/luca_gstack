@@ -58,6 +58,28 @@ project_skills:
     # Bare glossary/account/relationship words must not hijack reading, rename or UI work.
     triggers: [domain-modeling, 领域建模, 统一领域术语, 领域对象归属, 领域关系边界, 术语重载冲突]
 
+  # These four workshops are explicit human choices. Narrow phrases expose the index;
+  # generic editing, scheduling, requirement triage and service setup retain their owners.
+  writing_workshop:
+    invoke: "/writing-workshop"
+    weight: 8
+    triggers: [显式调用writing-workshop]
+
+  loop_me:
+    invoke: "/loop-me"
+    weight: 8
+    triggers: [显式调用loop-me]
+
+  issue_triage:
+    invoke: "/issue-triage"
+    weight: 8
+    triggers: [显式调用issue-triage]
+
+  setup_wizard:
+    invoke: "/setup-wizard"
+    weight: 8
+    triggers: [显式调用setup-wizard]
+
   writing_for_agents:
     invoke: "/writing-for-agents"
     weight: 8

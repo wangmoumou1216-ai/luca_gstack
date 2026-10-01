@@ -7,6 +7,7 @@ import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {readActivation, recoverActivation, stateFileForTest} from './model-route-host.mjs';
+import {allocateFixtureRoot, releaseFixtureRoot} from './exact-fixture-slots.mjs';
 import {queueProjectEventCandidate} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -345,7 +346,7 @@ try {
     {metaCwd: subdirectory, contextCwd: subdirectory}), {cwd: subdirectory})
     .hookSpecificOutput.permissionDecision, 'allow',
     'native cwd below this Git checkout resolves to the same workspace identity');
-  const profileFixture = realpathSync(mkdtempSync('/private/tmp/host-launch-model-profile-'));
+  const profileFixture = allocateFixtureRoot('/private/tmp/host-launch-model-profile-');
   profileFixtures.push(profileFixture);
   const profileRoot = join(profileFixture, 'gstack');
   cpSync(ROOT, profileRoot, {recursive: true});
@@ -831,7 +832,7 @@ try {
   run({hook_event_name: 'SessionEnd', session_id: lightSession, reason: 'other', cwd: ROOT});
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
 } finally {
-  for (const fixture of profileFixtures) rmSync(fixture, {recursive: true, force: true});
+  for (const fixture of profileFixtures) releaseFixtureRoot(fixture, () => rmSync(fixture, {recursive: true, force: true}));
   rmSync(scratch, {recursive: true, force: true});
 }
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "40b3312de1c3756e1b1c58129c9922c7d5884d5ae196679acd7dea4a15ed8300",
+  "source_sha256": "836dc06dcfaed560a936d6ecec249eb33bb524d25b8ddc1c172ed47d669480e2",
   "skill": "html-prototype",
   "group": "skills",
   "global": {
@@ -17,7 +17,9 @@
           "design_brief",
           "ux_audit_report",
           "screenshots",
-          "figma_demo_blueprint"
+          "figma_demo_blueprint",
+          "purpose",
+          "ui_variant_count"
         ]
       },
       "workflow": {
@@ -25,9 +27,27 @@
         "optional": [
           "design_brief",
           "ux_audit_report",
-          "prd_artifact"
+          "prd_artifact",
+          "purpose",
+          "ui_variant_count"
         ]
       }
+    },
+    "purposes": [
+      "ui",
+      "logic-validation"
+    ],
+    "ui_variant_count": {
+      "default": 0,
+      "explicit_comparison_default": 3,
+      "allowed": [
+        0,
+        2,
+        3,
+        4,
+        5
+      ],
+      "logic_validation_required": 0
     },
     "source_kinds": [
       "design_brief",
@@ -46,7 +66,12 @@
       "decision_mapping_coverage",
       "state_mapping_coverage",
       "dynamic_reference_when_triggered",
-      "prototype_qa"
-    ]
+      "prototype_qa",
+      "purpose_count_source_contract",
+      "logic_portability_and_real_walkthrough_when_selected",
+      "ui_per_variant_state_content_and_aesthetic_qa",
+      "real_variant_choice_when_comparison"
+    ],
+    "notes": "purpose 和 ui_variant_count 是同 key 输入/CLI属性，不是 Workflow mode。普通 ui/0 保持；显式对比才默认3、合法2–5；logic-validation 必须0且仅固定五态/24分门 N/A，其余门有效。冲突回原 owner，不切 standalone 绕 Packet。"
   }
 }

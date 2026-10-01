@@ -1,5 +1,5 @@
 interface:
   display_name: "Code Review"
-  short_description: "Review code changes on standards and spec separately"
+  short_description: "Fix scope and delegate to the single Mode D review owner"
 policy:
   allow_implicit_invocation: true

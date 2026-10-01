@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "40b3312de1c3756e1b1c58129c9922c7d5884d5ae196679acd7dea4a15ed8300",
+  "source_sha256": "836dc06dcfaed560a936d6ecec249eb33bb524d25b8ddc1c172ed47d669480e2",
   "skill": "code-review",
   "group": "skills",
   "global": {
@@ -32,6 +32,7 @@
       "fixed_scope_resolves",
       "non_empty_change_set",
       "standards_spec_context_isolation",
+      "serial_completed_and_same_invocation_accepted",
       "separate_axis_reporting",
       "read_only_review"
     ],

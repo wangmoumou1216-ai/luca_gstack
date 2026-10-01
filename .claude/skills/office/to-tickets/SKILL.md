@@ -35,7 +35,7 @@ whose Phase 7 gate is PASS. If the input is only a conversation, plan idea, or e
 `NEEDS_CONTEXT` and route it through `task-plan` first.
 
 Source: `mattpocock/skills`, `skills/engineering/to-tickets` (MIT), adapted at upstream commit
-`321658273cb1d20b76026717d027d505790106d4`. The Luca adaptation preserves tracer-bullet slices,
+`d81f3a183412e71a5b1e84ca21bc1a35eea03a60`. The Luca adaptation preserves tracer-bullet slices,
 blocking edges, the pre-publication quiz, and local/real-tracker publication while keeping the local
 task-plan ownership and authority model intact.
 
@@ -49,7 +49,23 @@ task-plan ownership and authority model intact.
 4. Enumerate every MUST `DEV-NNN`, its paired `TEST-NNN`, bound assertions, MVP status, and structured
    `依赖任务` edges. PARTIAL cards are included only when the user explicitly includes them.
 
-## 2. Validate ticket readiness
+## 2. Resolve the existing tracker and domain contract
+
+Local Markdown preview works without setup/configuration. With an explicit external target, read
+the caller-provided existing tracker material and authenticated connector's capability before any
+mutation. Bind provider, exact repository/project/team, permitted request surface, parent and ready
+state mapping. If target or role mappings conflict, ask the real user and wait; a git remote alone is
+not publication selection. Use the existing two category roles (bug/enhancement) and five state roles
+(needs-triage/needs-info/ready-for-agent/ready-for-human/wontfix) when supplied, translating roles to
+existing labels rather than creating labels or treating role names as literal custom labels.
+to-tickets consumes ready-for-agent for its output; issue-triage owns triage classification.
+
+Read the already authorized single-domain glossary or multi-domain map/context glossary and relevant
+ADRs. Use their vocabulary in titles/descriptions and surface contradictions. Absent files need no
+setup; ambiguous vocabulary ownership returns to domain-modeling with only inherited scope.
+Do not install a CLI, edit root AGENTS/CLAUDE, create docs/agents or establish a domain layout.
+
+## 3. Validate ticket readiness
 
 Each proposed ticket must map to one DEV card without changing its stable ID and must satisfy the
 task-plan's tracer-bullet contract:
@@ -62,9 +78,15 @@ task-plan's tracer-bullet contract:
 
 A wide mechanical refactor may use the task-plan's declared expand–migrate–contract exception. If a
 card is horizontal, oversized, missing its paired test, or has ambiguous blockers, stop with
-`NEEDS_CONTEXT` and identify the affected IDs; do not repair the canonical plan inside this facade.
+`NEEDS_CONTEXT` and identify the affected IDs and any evidence for prefactoring; do not repair the canonical plan inside this facade.
 
-## 3. Quiz before any publication
+For wide refactors preserve the canonical expand–migrate–contract sequence: add the new form while
+the old still works; migrate real callers in blast-radius-sized batches, each blocked by expand;
+contract only after all migrate batches. If independently green batches are impossible, retain the
+canonical shared integration branch/final integrate-and-verify task; promise green only at that
+declared point. Proposed prefactoring must return to task-plan for gating, not become a facade ticket.
+
+## 4. Quiz before any publication
 
 Present a numbered preview. For each ticket show:
 
@@ -79,10 +101,13 @@ Publication is a separate mutation gate: no local file or external issue is crea
 approves this exact preview. Approval of a task-plan or implementation does not imply approval to
 publish externally.
 
-## 4. Publish the approved projection
+## 5. Publish the approved projection
 
-Publish blockers before dependants. Every ticket records the source `DEV-NNN`, exact task-plan path and
-SHA-256, end-to-end behaviour, acceptance criteria, blockers, and `ready-for-agent` status.
+Publish blockers before dependants. Every ticket records the source `DEV-NNN`, paired TEST/assertion IDs, exact task-plan path and
+SHA-256, end-to-end behaviour, acceptance criteria, blockers, and mapped ready-for-agent status.
+Use a behavior-centered body: Parent reference (if any); What to build; Acceptance criteria; Blocked
+by; Source binding. Preserve necessary exact canonical paths in the binding, but keep implementation
+prose free of stale file/code inventories. Retain only decision-rich prototype snippets with source.
 
 ### Local markdown
 
@@ -102,7 +127,7 @@ Before the first external create call, restate the tracker, repository/team, iss
 parent/blocking effects. That approval is scoped to those effects only. Never close or edit a parent,
 commit code, start implementation, or push Git history from this skill.
 
-## 5. Read back and report
+## 6. Read back and report
 
 Read every created local file or remote issue back. Verify that:
 
@@ -111,8 +136,12 @@ Read every created local file or remote issue back. Verify that:
 - blockers and acceptance criteria match the canonical task-plan;
 - native relationships or fallback links landed as reported.
 
-Retry a failed body write once. If the second read-back still differs, return `BLOCKED` with the exact
-ticket and mismatch; do not report the batch as complete.
+Before each local write re-read disk and preserve user edits; never overwrite an existing ticket
+by number. If a local body write fails, compare its readback before a scoped retry. For an external
+create with unknown outcome, read back by operation identity/provider evidence first: do not blindly
+retry and duplicate issues. Record partial successes and exact mismatches; unresolved readback means
+BLOCKED, never a completed batch. The approval authorizes only declared local/issue creates and
+relationships; it does not authorize chat/email/comments or label creation.
 
 Finish with the canonical completion status plus the local paths or remote issue URLs. Published
 tickets are a projection, not execution authority: implementation still enters through `implement`

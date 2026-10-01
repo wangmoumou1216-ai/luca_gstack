@@ -35,7 +35,7 @@ function yaml(p) {
 }
 function contracts() {
   const body = read(`${canonical}/SKILL.md`);
-  for (const text of ['name: domain-modeling','guided-execution','NEEDS_CONTEXT','resolved_terms','relationships','code_evidence','open_questions','writes','blocking_for_caller','resume_target','apply_patch','NO_PIN','extraction-bar.md','321658273cb1d20b76026717d027d505790106d4','FILE_END: domain-modeling/SKILL.md']) assert.ok(body.includes(text),`canonical missing ${text}`);
+  for (const text of ['name: domain-modeling','guided-execution','NEEDS_CONTEXT','resolved_terms','relationships','code_evidence','open_questions','writes','blocking_for_caller','resume_target','apply_patch','NO_PIN','extraction-bar.md','d81f3a183412e71a5b1e84ca21bc1a35eea03a60','FILE_END: domain-modeling/SKILL.md']) assert.ok(body.includes(text),`canonical missing ${text}`);
   assert.match(body,/one decision at\s+a time and wait for a real response/);
   assert.match(body,/no workflow\s+node\/state/);
   const frontmatter=spawnSync('python3',['-c',
@@ -61,7 +61,8 @@ function contracts() {
   assert.deepEqual(modes.modes.internal.required.filter(key=>!(key in ordinaryCaller)),[],'a valid non-Plan caller must not need a fabricated U-ID');
   const routing = read('.claude/skill-os/model-routing.yaml');
   assert.match(routing,/guided-execution:[\s\S]*?skills:\s*\[[^\]]*domain-modeling/);
-  assert.match(routing,/core-execution: high/); assert.match(routing,/guided-execution: medium/);
+  assert.match(routing, /native_agent_types:[\s\S]*?worker: MR-001/);
+  assert.match(routing, /MR-001:[\s\S]*?role: anchor/); // Role and requested effort are independent.
   assert.match(read('.claude/skill-os/codex-viability.yaml'),/domain-modeling: \{tier: 1\}/);
   assert.match(read('.claude/skill-os/skill-routing-map.yaml'),/invoke: "\/domain-modeling"/);
   assert.match(read('.claude/skill-os/generated/skill-catalog.md'),/`domain-modeling`.*office\/domain-modeling\/SKILL\.md/);

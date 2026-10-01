@@ -1,6 +1,6 @@
 interface:
   display_name: "Grilling"
-  short_description: "Pressure-test one human decision at a time"
-  default_prompt: "Use $grilling to pressure-test this decision tree one question at a time."
+  short_description: "Ask a numbered round of independent frontier decisions"
+  default_prompt: "Use $grilling to map the design tree, ask the ready independent frontier, and wait for my answers."
 policy:
   allow_implicit_invocation: true

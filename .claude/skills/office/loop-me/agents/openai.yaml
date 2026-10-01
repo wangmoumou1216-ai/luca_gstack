@@ -1,0 +1,5 @@
+interface:
+  display_name: "Loop Me"
+  short_description: "Discover a recurring loop and grill its workflow spec"
+policy:
+  allow_implicit_invocation: false

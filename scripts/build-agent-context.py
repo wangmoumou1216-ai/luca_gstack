@@ -35,16 +35,6 @@ CONTEXT_INDEX = GENERATED / "context-index.md"
 CONTEXT_MANIFEST = ROOT / ".claude/skill-os/agent-context-manifest.json"
 INPUT_MODES = ROOT / ".claude/skill-os/input-modes.yaml"
 INPUT_MODE_DIR = GENERATED / "input-modes"
-INPUT_MODE_KEYS = (
-    "auto", "handoff", "wait-what", "domain-modeling", "writing-for-agents", "magicpath",
-    "open-design", "idea", "deepresearch", "quick-research", "brainstorm",
-    "superpowers-brainstorming", "ux-research", "ux-brainstorm", "design-brief",
-    "html-prototype", "figma-demo", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
-    "resolving-merge-conflicts", "to-spec", "to-tickets", "wayfinder", "implement",
-    "code-hygiene", "code-review", "codebase-design", "code-recon", "muse-req-triage",
-    "insight-synthesis", "research-kit", "ux-writing", "compare", "ux-audit", "redteam",
-    "evals", "retro",
-)
 CONTEXT_FIELDS = (
     "id", "obligation_ids", "runtime", "leading_words", "condition", "load_before",
     "target", "contains", "loader", "read_to_end", "fallback",
@@ -200,8 +190,9 @@ def render_catalog() -> str:
             )
     lines.extend(["", "<!-- FILE_END: skill-os/generated/skill-catalog.md -->", ""])
     rendered = "\n".join(lines)
-    if len(rendered.encode("utf-8")) > 12_288:
-        fail(f"skill catalog exceeds 12KB soft cap: {len(rendered.encode('utf-8'))} bytes")
+    # Four new explicit entries make this discovery index 12648 bytes; root/module budgets remain unchanged.
+    if len(rendered.encode("utf-8")) > 14_336:
+        fail(f"skill catalog exceeds 14KB soft cap: {len(rendered.encode('utf-8'))} bytes")
     return rendered
 
 
@@ -272,7 +263,8 @@ def render_context_index() -> str:
     return "\n".join(lines)
 
 
-def input_mode_views() -> dict[Path, str]:
+def input_mode_source() -> tuple[bytes, dict]:
+    """Read the sole key authority, retaining duplicate/group/shape validation."""
     source_bytes = INPUT_MODES.read_bytes()
     source = yaml.load(source_bytes.decode("utf-8"), Loader=UniqueKeyLoader)
     if not isinstance(source, dict) or set(source) != {"version", "principle", "skills", "governance_tools"}:
@@ -286,12 +278,22 @@ def input_mode_views() -> dict[Path, str]:
     if overlaps:
         fail(f"input-mode keys overlap across groups: {sorted(overlaps)}")
     actual = set(groups["skills"]) | set(groups["governance_tools"])
-    expected = set(INPUT_MODE_KEYS)
-    if actual != expected:
-        fail(f"input-mode key set drift: missing={sorted(expected - actual)} extra={sorted(actual - expected)}")
+    if not actual or any(not isinstance(key, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", key) for key in actual):
+        fail("input-mode registry must contain non-empty canonical skill keys")
+    return source_bytes, source
+
+
+def input_mode_keys() -> tuple[str, ...]:
+    _, source = input_mode_source()
+    return tuple(source["skills"]) + tuple(source["governance_tools"])
+
+
+def input_mode_views() -> dict[Path, str]:
+    source_bytes, source = input_mode_source()
+    groups = {name: source[name] for name in ("skills", "governance_tools")}
     digest = hashlib.sha256(source_bytes).hexdigest()
     rendered = {}
-    for skill in INPUT_MODE_KEYS:
+    for skill in tuple(source["skills"]) + tuple(source["governance_tools"]):
         group = "skills" if skill in groups["skills"] else "governance_tools"
         contract = groups[group][skill]
         if not isinstance(contract, dict) or not contract:
@@ -322,7 +324,7 @@ def expected_files() -> dict[Path, str]:
 def reject_extra_input_mode_views() -> None:
     if not INPUT_MODE_DIR.exists():
         return
-    expected = {f"{key}.json" for key in INPUT_MODE_KEYS}
+    expected = {f"{key}.json" for key in input_mode_keys()}
     actual = {path.name for path in INPUT_MODE_DIR.iterdir()}
     extra = sorted(actual - expected)
     if extra:

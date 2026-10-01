@@ -1,5 +1,5 @@
 interface:
   display_name: "Codebase Design"
-  short_description: "Design deep modules at clear, testable seams"
+  short_description: "Design deep modules and compare approved independent interfaces"
 policy:
   allow_implicit_invocation: true

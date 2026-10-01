@@ -1,6 +1,7 @@
 import test from 'node:test';
+import { allocateFixtureRoot, releaseFixtureRoot } from './exact-fixture-slots.mjs';
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, rmSync } from 'node:fs';
 import { fork, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,10 +9,10 @@ import { fileURLToPath } from 'node:url';
 const repository = dirname(dirname(fileURLToPath(import.meta.url)));
 
 test('broker without an optional source guard still rejects an ordinary Node parent', async (t) => {
-  const root = realpathSync(mkdtempSync('/private/tmp/host-parent-'));
+  const root = allocateFixtureRoot('/private/tmp/host-parent-');
   const projects = join(root, 'projects');
   mkdirSync(projects);
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => releaseFixtureRoot(root, () => rmSync(root, { recursive: true, force: true })));
   const env = { ...process.env };
   for (const name of ['NODE_OPTIONS', 'LUCA_CHILD_SOURCE_ROOT', 'LUCA_PROTECTED_CODE_ROOT']) delete env[name];
   const child = fork(join(repository, 'scripts/host-launch-broker.mjs'), [repository, projects], {
@@ -28,7 +29,7 @@ test('broker without an optional source guard still rejects an ordinary Node par
   assert.doesNotMatch(stderr, /HOST_SOURCE_UNPROTECTED/);
 });
 function fixture(t) {
-  const root = realpathSync(mkdtempSync('/private/tmp/host-guard-'));
+  const root = allocateFixtureRoot('/private/tmp/host-guard-');
   const gstack = join(root, 'gstack');
   mkdirSync(join(gstack, '.claude', 'host-launch'), { recursive: true });
   assert.equal(spawnSync('git', ['init', '--quiet', gstack], { encoding: 'utf8' }).status, 0);
@@ -40,7 +41,7 @@ function fixture(t) {
     cpSync(join(repository, file), join(gstack, file));
   }
   cpSync(join(repository, '.claude/hooks/lib'), join(gstack, '.claude/hooks/lib'), { recursive: true });
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => releaseFixtureRoot(root, () => rmSync(root, { recursive: true, force: true })));
   return { gstack, run: (tool_name, tool_input, extraEnv = {}) => {
     const result = spawnSync(process.execPath, [join(gstack, '.codex/codex-hook-adapter.mjs'),
       join(gstack, '.claude/hooks/project-scope-guard.mjs')], {

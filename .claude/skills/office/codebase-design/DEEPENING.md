@@ -1,44 +1,57 @@
 # Deepening
 
-在已有依赖约束下，安全地把一组 shallow modules 深化。使用 [SKILL.md](SKILL.md) 的
-**Module / Interface / Seam / Adapter** 词汇。
+How to deepen a cluster of shallow modules safely, given its dependencies. Assumes the vocabulary in [SKILL.md](SKILL.md): **module**, **interface**, **seam**, **adapter**.
 
-## 依赖分类
+## Dependency categories
 
-先给候选 module 的依赖分类；分类决定如何跨 seam 测试。
+When assessing a candidate for deepening, classify its dependencies. The category determines how the deepened module is tested across its seam.
 
 ### 1. In-process
 
-纯计算、内存状态、无 I/O。通常可直接合并，在新 interface 上测试，不需要 adapter。
+Pure computation, in-memory state, no I/O. Always deepenable: merge the modules and test through the new interface directly. No adapter needed.
 
 ### 2. Local-substitutable
 
-存在本地测试替身的依赖，例如 PGLite 对 Postgres、内存文件系统对真实文件系统。替身存在时可以深化；
-在测试套件内运行替身。seam 保持 module 内部，不必把 port 暴露成外部 interface。
+Dependencies that have local test stand-ins (PGLite for Postgres, in-memory filesystem). Deepenable if the stand-in exists. The deepened module is tested with the stand-in running in the test suite. The seam is internal; no port at the module's external interface.
 
-### 3. Remote but owned（Ports & Adapters）
+### 3. Remote but owned (Ports & Adapters)
 
-团队自己拥有的跨网络服务。把 port 放在 seam 上，deep module 持有业务逻辑，transport 作为 adapter
-注入。测试用内存 adapter，生产用 HTTP/gRPC/queue adapter。
+Your own services across a network boundary (microservices, internal APIs). Define a **port** (interface) at the seam. The deep module owns the logic; the transport is injected as an **adapter**. Tests use an in-memory adapter. Production uses an HTTP/gRPC/queue adapter.
 
-推荐表达：在 seam 定义 port；生产提供网络 adapter，测试提供内存 adapter，让逻辑仍集中在一个
-deep module 中，即使部署跨越网络。
+Recommendation shape: *"Define a port at the seam, implement an HTTP adapter for production and an in-memory adapter for testing, so the logic sits in one deep module even though it's deployed across a network."*
 
-### 4. True external（Mock）
+### 4. True external (Mock)
 
-无法控制的第三方服务，例如 Stripe/Twilio。deep module 接收外部依赖 port，测试提供 mock adapter。
+Third-party services (Stripe, Twilio, etc.) you don't control. The deepened module takes the external dependency as an injected port; tests provide a mock adapter.
 
-## Seam 纪律
+## Seam discipline
 
-- **一个 adapter 多半是假设，两个 adapter 才证明 seam。** 通常是 production + test；若第二个
-  adapter 没有真实理由，就不要为了间接而间接。
-- **区分 internal seam 与 external seam。** 测试使用的内部 seam 不必泄露进 module 的公共 interface。
+- **One adapter means a hypothetical seam. Two adapters means a real one.** Don't introduce a port unless at least two adapters are justified (typically production + test). A single-adapter seam is just indirection.
+- **Internal seams vs external seams.** A deep module can have internal seams (private to its implementation, used by its own tests) as well as the external seam at its interface. Don't expose internal seams through the interface just because tests use them.
 
-## 测试策略：replace，不 layer
+## Testing strategy: replace, don't layer
 
-- 新 interface 的行为测试已经覆盖旧 shallow module 时，删除绑定内部结构的旧单元测试。
-- 在 deep module interface 上写新测试；interface 就是测试面。
-- 只断言可观察结果，不断言内部状态。
-- 测试应承受 implementation 重构；implementation 一变测试就必须重写，说明测试越过了 interface。
+- Old unit tests on shallow modules become waste once tests at the deepened module's interface exist; delete them.
+- Write new tests at the deepened module's interface. The **interface is the test surface**.
+- Tests assert on observable outcomes through the interface, not internal state.
+- Tests should survive internal refactors, since they describe behaviour, not implementation. If a test has to change when the implementation changes, it's testing past the interface.
+
+
+## Local authority and evidence
+
+Classify every actual dependency from repository evidence before selecting a strategy. An unknown
+stand-in remains unknown; do not invent one. Replace obsolete shallow tests only after interface
+tests preserve the required observable behavior, within an already approved implementation scope.
+This reference is design advice and does not grant deletion, implementation, package installation,
+network or Git authority. Return the chosen strategy and remaining uncertainty to the caller.
+
+## Enforcing an approved TypeScript interface
+
+When the caller explicitly requests TypeScript package import enforcement, read
+[references/ts-module-boundaries.md](references/ts-module-boundaries.md) through EOF before planning
+or implementing its recipe. Root entry files are the public interface; subfolders are private.
+Keep multiple small entry points rather than a subtree barrel. Preserve the five named error rules,
+same-package implementation freedom and own-test fixture exception, while forbidding production
+imports of its own tests. This checks an approved design; it never grants installation or code writes.
 
 <!-- FILE_END: codebase-design/DEEPENING.md -->

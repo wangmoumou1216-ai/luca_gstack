@@ -8,6 +8,7 @@ description: |
   ① 完成前验证铁律（Iron Law）——任何「修好了/通过了/done」的声明前必须有当场跑出的证据，否则=撒谎；
   ② 8 个清理算子（死代码/循环依赖/去重/类型整合/弱类型/防御性/遗留/slop），各自工具检测 + 只自动应用 HIGH 置信 + 逐步验证。
   来源：agent-starter cleanup-* 套件（port-pattern）+ superpowers verification-before-completion（adapt-idea）。
+  同 key 的 environment-retro 只提工程环境改进；pre-commit-setup 是按需配方；改动审查唯一执行体为模式 D。
   **luca 专属护栏**：hook 的 fail-open、Static Fallback、兼容语义、framework/ 只读、WHY 注释 一律保护，绝不当死代码清掉。(luca_gstack)
 allowed-tools:
   - Read
@@ -62,7 +63,14 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 > C）**全量体检**（cleanup-all 顺序）——8 算子按序跑，每步 verify，首个失败即停
 > D）**改动评审**——对一批改动做审查（下方「代码审查环节」），只出 findings 不改代码
 >
+已有明确模式和批准范围时沿用，不重复索取同一决定。默认 A–D 不变；用户明确要求工程会话环境复盘时
+使用同 key 的 `entry_mode=environment-retro`，在读日志/提出建议前完整读取
+[references/environment-retro.md](references/environment-retro.md)。产品设计复盘仍归 `retro`。
+用户明确要求提交前接线时，先完整读取 [references/pre-commit-setup.md](references/pre-commit-setup.md)；
+这是配方而非新增执行器，不能因为读配方就安装依赖、改 Hook 或提交。
+
 > 范围默认=当前改动涉及的文件；可指定路径。框架自维护时范围=被改的 hooks/scripts/memory。
+> 先按 project-session 验证 canonical 目标和有限 scope；框架审计保持 NO_PIN，cwd 不授予目标权限。
 
 **硬前置**：模式 B/C 要求工作树**干净**（每算子需干净 baseline 做逐项回退）。脏树 → 先让用户 stash/commit，或缩到「只对已暂存改动」。模式 A（纯验证）与模式 D（评审不改文件，无需回退 baseline）不要求干净树——**"刚改完还没提交"正是评审的主场景**。
 
@@ -170,55 +178,89 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 
 ---
 
-## 代码审查环节（模式 D 的执行体；`code-review` facade 的唯一权威，不另造 reviewer）
+## 代码审查环节（模式 D 的执行体；`code-review` facade 的唯一权威）
 
-**通用评审纪律（独立性/REFUTE/运行时分区/缺票补票/终版闭合/mutation/复犯检查）按
-`.claude/skill-os/routing-chain-check.md` R4 的证据标准执行**——那里是唯一权威落点，此处不复制。
-R4 同时说明：既有资产对不上被审对象时，**按场景自建评审编排优于硬套**（如按本次风险面定制
-攻击维度的独立 agent）；下面是资产对得上时的省事路径。
+模式 D 直接调用与 code-review facade 消费同一冻结输入、同一方法。facade 只固定范围并委托；
+不复制 smell、评判或报告真值。只读取证、只出 findings，不改文件、index、refs、配置或票据。
+**独立性、REFUTE、运行时分区、缺票补票、终版闭合、mutation 和复犯检查的唯一权威仍是
+`.claude/skill-os/routing-chain-check.md` R4**；实际进入这些门前完整读取，不在此重建副本。
 
-**项目代码的冷启动审查：** 调度方先按 `project-session.md` 验证目标项目，把其规范化绝对仓库根、
-固定的 diff 命令、spec/标准文件的绝对路径，以及展开后的规范化绝对 `FILE_SET` 清单交给 reviewer；
-Git 命令须用字面绝对根
-`git -C '<目标仓库绝对路径>' ...`，不得依赖 reviewer 的 cwd 或共享 `docs/` 等展示别名。
-reviewer 保持自己的 session 身份，不复制父 session 的 pin/SID，也不在子会话运行
-`project.sh switch`。Codex 子会话须核对自身
-`node scripts/project-pin.mjs status --view host --session-id <自身可信 SID>` 为 `CHILD_ASSOCIATED`、
-`binding_validation: VERIFIED`，并确认项目与调度方冻结的根一致；这份关联来自原生父子关系。
-绝对路径读取仍受文件系统权限控制，**不等于技术上的只读授权**；本环节只派只读取证任务。
-关联缺失、读取失败或证据不全记 `UNKNOWN`，不得计为 PASS。要求已验证
-`project_session` 的评审器可使用这份子会话关联；Claude 子会话在对应原生关联接线完成前
-不得据父 SID 或绝对路径冒充已验证的自身项目会话。
+### 1. 冻结实际评审输入
 
-**基线三选一**（评审对象怎么界定，`WORKTREE_DIFF` 为默认）：
+调度方先按 project-session 验证目标，框架审计保持 NO_PIN。冻结规范化绝对 `WORK_ROOT`、
+`FILE_SET`、DESCRIPTION、需求与标准指针及 SHA、baseline、diff 命令、实际 commits。
+不用 reviewer 的 cwd、共享 docs/current-topic 别名、父 SID 或自行切项目推定权限。
+冷 reviewer 保留自己的原生身份；项目子会话核验自身 CHILD_ASSOCIATED / binding_validation:
+VERIFIED 与冻结根一致；关联或实际读取缺失记 UNKNOWN，不能 PASS。
 
-```bash
-# ① WORKTREE_DIFF：刚改完还没提交（最常见的 review 请求形态）；先替换为固定的字面绝对根
-git -C '<目标仓库绝对路径>' diff HEAD
-# ② BASE_SHA/HEAD_SHA：已提交的一批 commit
-git -C '<目标仓库绝对路径>' diff <BASE_SHA>...<HEAD_SHA>
-# ③ FILE_SET：显式文件集（跨多次提交的一条主题线）
-```
+三种范围共用下列前置门：
+- **WORKTREE_DIFF（默认）**：固定 `git -C '<规范化绝对根>' diff HEAD`，确认 HEAD 可解析，
+  合并 index/worktree 的实际范围；显式新增未跟踪文件需要单独已批准的 FILE_SET，不能静默遗漏。
+- **BASE_SHA/HEAD_SHA**：先实际 `rev-parse` 两端及 merge-base，把用户的 branch/tag/ref 解析成
+  不再漂移的 SHA，冻结 `git -C '<规范化绝对根>' diff <BASE_SHA>...<HEAD_SHA>` 与
+  `git -C '<规范化绝对根>' log <BASE_SHA>..<HEAD_SHA> --oneline`。
+- **FILE_SET**：展开有限绝对文件清单，绑定真实 preimage/比较来源与实际 diff；不是免除基线门。
 
-派 `quality-gate` agent（**opus**，见 `model-routing.yaml` pin）跑断言，或 `redteam`（Fable）
-对 diff 做对抗。给 reviewer 精确上下文、**不给会话历史与实现过程**（R4 证据标准①）：附
-DESCRIPTION（建了什么）/ PLAN_OR_REQUIREMENTS（应满足什么）/ 上述基线之一。
-产出=分级 findings（Critical / Important / Minor），**本环节到此为止、不改代码**——这正是
-模式 D 能在脏树上跑的前提。修不修、何时修由调用方决定；决定修时按 Critical 立即修 →
-Important 继续前修 → Minor 记下 → reviewer 错了带理由反推，**修完发回做终版闭合**
-（R4 证据标准：评审后的改动没经确认 = 这一轮没闭合）。
+坏 ref、不可读输入、空 diff 在派发前停止；不能让判官猜范围。两轴运行前后复核 diff/input SHA
+一致；中途漂移则票失效，返回 owner 冻结新输入，不能拼接不同字节的意见。
 
-**双轴分派（diff 有 spec 上游时启用；无 spec 上游维持上面的单轴择一）：** 当被审 diff 存在
-书面上游（tech-spec / PRD / task-plan 卡），**同一条消息并发两个审查 agent**、各自隔离上下文：
-- **Standards 轴**：8 清理算子 + 下方 Fowler 具名 smell 基线（每条都是 judgement call；
-  **仓库文档标准与 luca 护栏显式覆盖基线**——护栏优先关系不变）；
-- **Spec 轴**：只对照上游忠实性（需求→实现有无静默丢失/擅自扩量）。
-聚合时两份报告**分列呈现，禁 merge/禁 rerank/禁跨轴选单一赢家**——分开正是为了防一轴掩盖
-另一轴。（源：mattpocock code-review 两轴抗偏见结构，MIT，对标采纳 2026-07-12）
+### 2. 定位 Spec 来源
 
-Fowler smell 基线（Standards 轴内容，零文档仓库也生效）：Mysterious Name / Duplicated Code /
-Feature Envy / Data Clumps / Primitive Obsession / Repeated Switches / Shotgun Surgery /
-Divergent Change / Speculative Generality / Message Chains / Middle Man / Refused Bequest。
+在已授权读取范围内按顺序查：实际 commit messages 的 issue 引用及既有 tracker 读取合同；
+用户传入的 spec；已批准 docs/specs/scratch 中与主题相符的文档。未经许可不网络抓取票据，
+tracker 缺失不自动 setup。需求源必须绑定真实正文及行号，不把实现摘要当 spec。
+通常改动审查没有书面 spec：Spec 显示 **NOT_RUN — no spec available**，继续 Standards，
+不写 Spec PASS。用户明确要求需求核验却缺需求时，真实询问缺的具体来源并等待；只有用户
+明确表示无 spec 才跳过该轴。缺来源或不可核查的运行证据保留 UNKNOWN，而不是无发现。
+
+### 3. 定位 Standards 与十二种 Fowler smell
+
+读取目标仓库真实 CODING_STANDARDS/CONTRIBUTING/适用约束及既有 checker 接线。
+**仓库标准和 luca 护栏优先**：仓库允许的模式压过 baseline；工具已执行并覆盖的机械规则
+不重复报成手工 finding。8 清理算子仅作只读透镜，模式 D 不调用其自动修复流程。
+smell 总是带证据的 judgement call（如 possible Feature Envy），不是硬违规；无标准文档时
+也可使用以下固定 baseline。必须同时传入 what→fix，不只给十二个名字：
+
+| Smell | What：在实际 diff 中判断 | Fix：建议方向，非自动动作 |
+|---|---|---|
+| Mysterious Name | 函数、变量或类型名不透露用途 | 改为诚实名称；找不到诚实名称则追问设计 |
+| Duplicated Code | 多个 hunk/file 出现同一逻辑形状 | 抽取真实共享形状并由两处调用，避免伪相似过早 DRY |
+| Feature Envy | 方法取别的对象数据比自己的更多 | 把方法移到它依赖的数据一侧 |
+| Data Clumps | 同几项字段/参数总是一起出现 | 归为一个领域 type 再传递 |
+| Primitive Obsession | primitive/string 承担值得命名的领域概念 | 给概念一个小 type |
+| Repeated Switches | 对同一 type 重复 switch/if 链 | 使用多态，或两处共用一张 map |
+| Shotgun Surgery | 一个逻辑变动迫使许多文件分散改动 | 把一起变化的行为收进同一 module |
+| Divergent Change | 一个 module 为几个无关原因一起变 | 按变化原因拆开 module |
+| Speculative Generality | 添加 spec 未需要的抽象、参数或 hook | 删除猜测性扩展，回到现有实际需求 |
+| Message Chains | caller 依赖冗长 a.b().c().d() 导航 | 把导航藏在首个对象的方法后 |
+| Middle Man | class/function 几乎只转发调用 | 删除浅委托，由 caller 调真实目标，保护承重 adapter |
+| Refused Bequest | 子类/实现者忽略或覆盖大半继承合同 | 去除不合适继承，使用组合 |
+
+### 4. 冷判官严格串行、双轴输入隔离
+
+派发前读取当前 model-routing，使用已登记原生 `quality-gate` / **MR-004 peak**，
+`fork_turns=none`；不硬编码账户模型名、不修改私有 binding、不用 producer 补完成证据。
+`max_active_subagents=1`，先 Standards 真实 completed 并读回**同 invocation accepted**，
+核验输入 SHA/原生身份与票据证据，再派 Spec。角色失败或 UNKNOWN 停在门前，不降档假审。
+
+Standards 冷输入仅含固定 diff 命令/commit 清单、DESCRIPTION、标准文件及规则、上表完整
+what→fix 和保护约束，不含作者历史或 Spec 判官意见。要求按文件/hunk 分别报：(a) 实际标准
+违规，引用标准文件+规则；(b) possible smell，引用 hunk，明确硬违规和判断建议，报告宜 <400 字。
+
+Spec 使用另一独立冷上下文：同一 diff/commit 清单、真实 spec 路径/内容/行号、DESCRIPTION，
+**不读取 Standards 报告或其评判**。逐项引用 spec 原句，报告 missing / partial / scope creep /
+wrong implementation，宜 <400 字。没有 spec 时不派该判官，如实 NOT_RUN。
+代码上下文如需补读，只取原 FILE_SET/许可交集，不偷用历史或扩大范围。
+
+### 5. 分轴聚合与闭合
+
+分别呈现 `Standards` 和 `Spec` 原票，可轻清表达，不合并、不跨轴 rerank、不选单一赢家。
+末行各自列 finding count 与本轴 worst（Critical / Important / Minor 或真实空）；NOT_RUN /
+UNKNOWN 原样保留，不能计成 0 findings 的 PASS。标准符合但做错需求与需求符合但违反标准
+是不同结论。附实际 native ID、invocation、输入 SHA、起止、completed/accepted 证据。
+调用方决定修复：Critical/Important 在对应门前处理、Minor 记录，REFUTE 带理由；修后按 R4
+闭合终版证据。模式 D 不自动修复、commit、push、PR 或关闭票据。
+来源：source02 §§1–5，Matt Pocock，MIT，pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`。
 
 ---
 
@@ -229,7 +271,8 @@ Divergent Change / Speculative Generality / Message Chains / Middle Man / Refuse
 3. **luca 护栏优先于算子，且按属性非按文件名**：fail-open catch / 有意 fallback / 兼容语义 / framework/ 只读 / WHY 注释 一律保护——算子说"删"，护栏说"留"时**听护栏**。**未具名但同属性者（如 `memory/scripts/*.py` 的 fail-open `except`）同等保护**，不因不在示例名单里就放行。
 4. **模式 B/C 要求干净工作树**；脏树先 stash/commit 或缩范围。
 5. **每个清理算子改完跑 verify**，失败逐项回退，不让级联坏下去。
-6. **代码审查优先复用 quality-gate/redteam**，不新建常驻 reviewer；对不上被审对象时按 R4 自建场景化评审编排（见「代码审查环节」）。
+6. **模式 D 是唯一审查方法所有者**：Standards→Spec 用当前 quality-gate/MR-004 peak 冷上下文串行；
+   前票真实 completed/同次 accepted 后再派，max_active_subagents=1，分轴、只读；R4 管闭合。
 7. **本 skill 自身的改动也受 Iron Law 约束**——别在没跑 `verify.sh`/`check:*` 前说"接好了"。
 
 <!-- FILE_END: code-hygiene/SKILL.md -->

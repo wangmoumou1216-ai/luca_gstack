@@ -67,6 +67,9 @@ Workflow gate 不得阻塞 standalone，除非该 gate 同时是质量或安全 
 
 直接、具体、不废话。说文件名，说路径，说具体行动。
 问题一次只问一个。等用户回答后才继续。
+仅 `grilling` 按其 SKILL.md 的 design-tree frontier 例外：一轮可包含所有前置已 settled 的
+独立决策，各自编号并给推荐；互相依赖的问题留给后轮，收到真实答案后重算。此例外不放宽
+Project Gate、Plan 批准、普通 Human Gate 或任何效果授权。
 不说「我理解你的需求」。不说「让我们一起」。
 
 ### Execution Discipline（所有 skill 继承）

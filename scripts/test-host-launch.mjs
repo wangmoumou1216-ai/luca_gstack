@@ -1,8 +1,9 @@
 import test from 'node:test';
+import { allocateFixtureRoot } from './exact-fixture-slots.mjs';
 import os from 'node:os';
 import { syncBuiltinESMExports } from 'node:module';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, renameSync, rmSync, symlinkSync, chmodSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, appendFileSync, realpathSync, readdirSync, cpSync, renameSync, rmSync, symlinkSync, chmodSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { fork, execFile, execFileSync, spawnSync } from 'node:child_process';
@@ -80,7 +81,7 @@ test('native lookup streams large history but still rejects duplicate session so
 });
 
 function fixture(options = {}) {
-  const root = realpathSync(mkdtempSync('/private/tmp/host-launch-'));
+  const root = allocateFixtureRoot('/private/tmp/host-launch-');
   const gstackRoot = join(root, 'gstack'), projectsRoot = join(root, 'projects'), sourceRoot = options.defaultCodexHome ? join(root, 'home', '.codex') : join(root, 'sidecar');
   for (const path of [join(gstackRoot, '.claude'), projectsRoot, join(sourceRoot, 'sessions', '2026', '09', '27')]) mkdirSync(path, { recursive: true });
   const config = join(root, 'settings.json'); writeFileSync(config, '{"profile":"sidecar"}');

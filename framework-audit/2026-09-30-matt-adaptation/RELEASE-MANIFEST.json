@@ -1,0 +1,2371 @@
+{
+  "schema_version": 1,
+  "candidate_repair": {"kind":"C24_FIXTURE_COMPATIBILITY_REPAIR","base":"b39493ff54bfd06f878d268e2d7bee831aada0f7","source_digest_D":"ebbaff809e5674bb4d9cee71442cb9229be915f393f43e6bff7eaf36ccd59266","source_count":188,"changed_source":"scripts/test-project-gate-v34-dual-host.mjs","source_sha256":"1e262051718bdd5e324609023d367e0eea7738074831ab969401551ddf79243f","verification":"PENDING_REVALIDATION","evidence_root":"/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/joint-release-convergence-595-v1/execution-preparation-v1","prior_static_packet":"joint_release_convergence records remain historical; not re-certified by this repair"},
+  "kind": "PRECOMMIT_RELEASE_MANIFEST",
+  "project": "NO_PIN",
+  "source_commit": "UNBOUND",
+  "plan_recorded_M0": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "approved_candidate_base_M2": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+  "approved_baseline_delta": "UNBOUND",
+  "source_digest_D": "ebbaff809e5674bb4d9cee71442cb9229be915f393f43e6bff7eaf36ccd59266",
+  "source_counts": {
+    "stable_ids": 38,
+    "current": 37,
+    "adopt_or_port": 30,
+    "no_independent_package": 7,
+    "historical": 1
+  },
+  "finite_scope": [
+    {
+      "path": ".agents/skills/issue-triage",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/loop-me",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/setup-wizard",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/writing-workshop",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/issue-triage.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/loop-me.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/setup-wizard.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/writing-workshop.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/codex-viability.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/ADOPTED.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/adoption-log.jsonl",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/benchmark-registry.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/gaps-register.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/self-model.generated.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/INTEGRATION-MAP.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/installed-pins.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/vetting-registry.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/auto.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/brainstorm.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-hygiene.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-recon.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-review.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/codebase-design.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/compare.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/deepresearch.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/design-brief.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/domain-modeling.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/evals.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/figma-demo.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/grilling.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/handoff.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/html-prototype.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/idea.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/implement.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/issue-triage.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/loop-me.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/magicpath.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/open-design.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/quick-research.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/redteam.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/research-kit.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/retro.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/setup-wizard.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/task-plan.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/tech-spec.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-spec.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-tickets.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-audit.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-research.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-writing.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wait-what.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wayfinder.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-workshop.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/skill-catalog.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/generated/static-fallback.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/input-modes.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/skill-authoring.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/skill-invariants.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/skill-routing-map.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/issue-triage",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".claude/skills/loop-me",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/references/environment-retro.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/references/pre-commit-setup.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-recon/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-recon/references/architecture-candidates-report.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-review/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-review/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/DEEPENING.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/DESIGN-IT-TWICE.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/assets/dependency-cruiser.config.cjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/references/ts-module-boundaries.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/PROVENANCE.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/condition-based-waiting-example.ts",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/condition-based-waiting.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/defense-in-depth.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/root-cause-tracing.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/ADR-FORMAT.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/CONTEXT-FORMAT.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/grilling/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/grilling/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/handoff/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SCHEMA.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/references/logic-validation.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/references/ui-variant-comparison.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs",
+      "type": "file",
+      "mode": "100755"
+    },
+    {
+      "path": ".claude/skills/office/implement/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/implement/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/implement/references/pull-request.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/agent-brief.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/out-of-scope.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/outcomes.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/tracker-contract.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/references/workflow-spec.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/quick-research/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/references/office-wizard.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/references/decision-questionnaire.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/references/instruments.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/references/manual-step-contract.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/template.sh",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/to-spec/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/to-spec/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/to-tickets/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/to-tickets/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/wait-what/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/wait-what/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/wayfinder/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/wayfinder/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/SKILL-MECHANICS.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/references/beats.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/references/fragments.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/references/shape.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/setup-wizard",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".claude/skills/writing-workshop",
+      "type": "symlink",
+      "mode": "120000"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "AGENTS.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "CLAUDE.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/ACCEPTANCE.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/HANDSHAKE.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/MANIFEST.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/PLAN.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/RELEASE-MANIFEST.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/ROLLBACK.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/SOURCE-MAP.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/mocking.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/references/shoehorn-test-data.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/tests.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/GLOSSARY-FORMAT.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/LEARNING-RECORD-FORMAT.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/MISSION-FORMAT.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/RESOURCES-FORMAT.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/SKILL.md",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/evals/domain-modeling/fixtures.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/evals/matt-adaptation/fixtures.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/evals/matt-adaptation/method-coverage.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/evals/routing/fixtures.jsonl",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/behavioral_ab.py",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/tests/test_behavioral_ab_gate.py",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "package.json",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/build-agent-context.py",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/check-skill-scene-coverage.py",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/exact-fixture-slots.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/run-agent-context-ab.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-codex-model-route-hook.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-domain-modeling-behavior.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-domain-modeling-skill.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-engineering-delivery-skills.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-exact-fixture-slots.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-host-launch-control-plane.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-host-launch.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-matt-skills-adaptation.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-project-gate-v34-dual-host.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-wait-what-skill.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-writing-for-agents-skill.mjs",
+      "type": "file",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "type": "file",
+      "mode": "100755"
+    }
+  ],
+  "payload_hashes": [
+    {
+      "path": ".agents/skills/issue-triage",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "3846d4767be104d26e596b56fa70c1cfff38583ad9e86cec712e2b7022d1c3f0"
+    },
+    {
+      "path": ".agents/skills/loop-me",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "11ba1e86051b6b29b96a34c75cea37f6132b204cf98e53349f99b3784b616931"
+    },
+    {
+      "path": ".agents/skills/setup-wizard",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "7df37435460cb064ea59519efa64504847c5568de382d1be7a069f87140c189d"
+    },
+    {
+      "path": ".agents/skills/writing-workshop",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "eb564b0974bf774956941e15bfab803e7f3006ee8b7f4e81ffee28120666ffb1"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "73c0e37f12599965e4a0ada9848a7a9635e7847c23c6aa961145244a1613fbde"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "5fc721a2c49fd10dcfc9af86e49cea2c50f3d737c1c65185ebb08631ecb6a355"
+    },
+    {
+      "path": ".claude/commands/issue-triage.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "468ff74a6e7c88c865490357e0dd505e0eb7ce569634b9ba2d324afc3c40f006"
+    },
+    {
+      "path": ".claude/commands/loop-me.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1433fbb9378ce8871106a8737c903b5aba63a8c9d2fb281dcd3fa7a825b902b6"
+    },
+    {
+      "path": ".claude/commands/setup-wizard.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "f47e68a62f8892dba8ac5ab1987ab9ea62fc498bc91052936be51842fc26ed85"
+    },
+    {
+      "path": ".claude/commands/writing-workshop.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "35f8ba8977b34d9e059d311c3b528feb3873100e8822ce45f249b17d8dad9bdf"
+    },
+    {
+      "path": ".claude/skill-os/codex-viability.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "dfae91cf7ff9fc2c14fad388ff3435d26e563f6c6b7d3b07b2e56ba74fd330f3"
+    },
+    {
+      "path": ".claude/skill-os/evolution/ADOPTED.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "bb23f2019e39016464d57ad20c89cce6a3aafcde79b7d05652654621e6515dde"
+    },
+    {
+      "path": ".claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2f1f57260c860ae9c7bf829dc0da54f227ebb31c1aca7ea54bc514cb406d1681"
+    },
+    {
+      "path": ".claude/skill-os/evolution/adoption-log.jsonl",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "73a2931642c8eb529e9b539f2511c20bb105be9330b3c3270e4fdf1087de4ab1"
+    },
+    {
+      "path": ".claude/skill-os/evolution/benchmark-registry.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8a11c4c340d85cfc9311ef89ea12f809f9ea44a4e9160b57757a1e76c97a5177"
+    },
+    {
+      "path": ".claude/skill-os/evolution/gaps-register.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "d53f2b918c80ea01611a4ecb3b46a7b0a272e9b60b754dce2f5e5f190bf28e9e"
+    },
+    {
+      "path": ".claude/skill-os/evolution/self-model.generated.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "97f6b7ca01cecee41daa1163dafc9ee748637b2d7dc6dede515eea9bc0df83e3"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/INTEGRATION-MAP.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "c55ffbd45c2674295770e263bcd4c8be9cd2411640851fdb502bc171271af7b0"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/installed-pins.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "f595626449ef2067d4f155eda75e2dab9179cc567f80b3644c2f83e58182d919"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/vetting-registry.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "f06682e918139d3c489209fcf8e4afafbae406ea3412b92cfe41cf6fcb8237f0"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "e7ff4c49a40d084579878293078ea9f090ad4a7ec009caec4599f583a6f5653f"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/auto.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "97de7e3dfabf49b9126213bb4db8f798c7e30016dd23e128a40adefaa1a0ae57"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/brainstorm.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7adcd9050143c7d878ff1fd1eaa97686a058f360945b7f2afaf85aebb73cb125"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-hygiene.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "cd597be5dec6864d774d4b18da273c542972cc382657e92ca7dcbd768a5dbc81"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-recon.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "fd090d5a95a6409d5909f25e4e6b5b261528bb3fbe3f4c2c06bd2c223548c6f1"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-review.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "34e53be65a9d2abe7681bfc1bc2ee72df6b0408a40196e007bd283b5e1047228"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/codebase-design.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "02591c6e4adc9539545cd08d405a91c399436d94bbd1e1a97f9d5cc5c698199d"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/compare.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7c931499a49b165cb00effff61581234358b7773c29ad32ccd414b9390a543cc"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/deepresearch.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "aca860ef1c04e4cf1931a7dc6c71b0cd73bc9dd70733df4b97ad5b3c16475164"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/design-brief.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "172dc9320bc64578be483aa6825b3e6a2dcdc4093fac7c373be6786344b64bf4"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a46cf6b61a91c172627aa533a4cc7b58541ff341201a4727fec2646808a88527"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/domain-modeling.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2e48ddb0009f99bb5c1d629693bfcc6b26c06862b322dfc4ddadec068556d49a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/evals.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7825d0567301838352dc257f85a96fb6bc34a012a26fd2c9544a1b17ee0a3ae4"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/figma-demo.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "04dc7206f7c0a5db58b9f7bf591415bfe7b7c0128050c73354b410905d9570a9"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/grilling.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "69f73474bfd5a7ec276a2cb44285ca16e35c15630aed09ce8a32c59ff2490ced"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/handoff.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "51616ae9b90463cad8e12b02439de457b569269134e1e34a178582b5566c2256"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/html-prototype.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a7663c6c4f3141e1179d156b954b3e89c9a1ec226d35ffcfc1caa5111e1f3374"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/idea.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "9d1fbfac4229ac94bd9b9be4f10e6b05e69b317c892d4460b369ea1f60515502"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/implement.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8f90e54f191a8cd8fcdd3b4cc0bec835fd1052eb9ad0d7e71f3a4e2696399d3d"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "832fcc4905ad0b68a17df40a73a1d72e6b0635b1f81e21206dd1b6ba88c1e419"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/issue-triage.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8e2ef43e1c6575371eefb31dad1b7bbfae73834eff3817ecbe685d3b4fbd392f"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/loop-me.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "537baa4a335e5cbd20f78c3b661704712326316bddc411e200e907fbf22fd32d"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/magicpath.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "edea0af619dd050623e0dcc5cf32d97683078327291ea79faf302abc39746144"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "5bdf72d73e83a50c23f07e71f0be02ca69a383f5b2cf28f88f391ea41bdd6c26"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/open-design.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a09f96546fa315c6239d2322ab7aec9d9e2ccea5ad0d8c2497a368dc58fb4b9b"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/quick-research.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "25887da0f477f063d9e423378cfef2fce64b34f4674337b7efc364b1f6f4d2e8"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/redteam.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2f8e6fff109579644eb135bde11566d6e1beceeb4fe1aef7a0165483c7ad0794"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/research-kit.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a886826aa3a3ef5e0c3975985c5503e3dcc527ad56f2edbaee80bb567f313661"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "59881fe897abccc72e8ac68e6862935c3985eed169d7b8fb87adedcefdd1337d"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/retro.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "50aa7bbb8be0d49bd175dd0e610160c6c5e83279d8c4b70966f28e15da1f139a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/setup-wizard.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "cf8a2c4730bf1f31657b3b485cffa92f4840d8ba57e6ad4db9e1c7ecf1488f1c"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "e3dc45101bcee8e1672ca4fd9d23d7c6b09e2d42ffef2157bc69137d43cf9e93"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/task-plan.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "78e8148432a9e6c173d34bf2077150b974dbffeea1ff54c9b6d8d017c53b1382"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/tech-spec.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "ab80d23a5d52359754e2c88fafe5a0b9a4bf251865d907d0dff55a04f12f5233"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-spec.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "278fb9f66df2ed05a982b21b189e10f4d0f3efa087bd880429014161ab013fc6"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-tickets.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "14a9f6095376f4469d19b29a4434fdc69d59e8f89e57aef071ce7f9e11dafb56"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-audit.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "01555aefe0c3d1d09ffd0929f555e1986d7ce102dfa299051f5e54024633757e"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a2551f271af0834ab8b3b4be42bb49ac01f96a0ab077bfca9d7b603a33bce656"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-research.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "5fb5e1e76a73d1944d870a1a85549f7a0243d07d4cc297c12ceda3f89eea3621"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-writing.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8875c8fc042c583ea8c8eb7f6a787ef06c3be58bc08da24590f1ad66a117d8ae"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wait-what.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2ae46bae3e60eddcf90cbc570c11091af3bdfdd11e7a6aff87825142250b9fec"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wayfinder.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "e47825a4a7839779d877d9f11648b5bf9955821ac0d04e10338ceadf714255ba"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "4de4b00f0f7236b8418db3b98b56e3817a4c4ed6f63d2302d1a9871d53613173"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-workshop.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a660efb169a10ba10c3576d0087badb5014f3fe55db43b5518d33a4886916e2d"
+    },
+    {
+      "path": ".claude/skill-os/generated/skill-catalog.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "49b7e5a16617ce19abb3f8adc1c090c8dfb26aff3ab3f537eaa09f696cb8c65c"
+    },
+    {
+      "path": ".claude/skill-os/generated/static-fallback.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3"
+    },
+    {
+      "path": ".claude/skill-os/input-modes.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "836dc06dcfaed560a936d6ecec249eb33bb524d25b8ddc1c172ed47d669480e2"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "975115da5f2c3c4e105017231461631cf03cfa72eaac17c197229d5107106ee1"
+    },
+    {
+      "path": ".claude/skill-os/skill-authoring.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "6a0460d328b9067d2ab0ffcbcd1080ee3a118b31cfd70c2c149b64c510a604fb"
+    },
+    {
+      "path": ".claude/skill-os/skill-invariants.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "842e29bb7d2a70ecada6630ff3e4078dcfb8394d268fe69a44aa05fd6a5ef5d5"
+    },
+    {
+      "path": ".claude/skill-os/skill-routing-map.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7fa0c889a746b0a9b6f130a4019ff6525ade08af1df08053395167da09f06ee7"
+    },
+    {
+      "path": ".claude/skills/issue-triage",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "d6d97232fd34958c6a49a4d3e205222ce9cde20374a6276f7f9ef67a9e320d11"
+    },
+    {
+      "path": ".claude/skills/loop-me",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "cdcca8be8921086dcab0ac73e312cdde01f6fc724b1f41e8f182a3b75053329f"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "0c322537c16312b1c2dda5677975c173d5794afefe907e2146f408569ed02a6d"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/references/environment-retro.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "f005eacffa25accb1b90fa621ea82cbe18e4bebb4fe1b6a0e435fa6340823ff1"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/references/pre-commit-setup.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "f00b3c9bff221836dbcd5fe6c222cae5441d25c466e205bdd8a5f7dd2256b4da"
+    },
+    {
+      "path": ".claude/skills/office/code-recon/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "ded8c1586d47487731eae38a44b254611d9cdd6d0af2370de51f8e2caca75407"
+    },
+    {
+      "path": ".claude/skills/office/code-recon/references/architecture-candidates-report.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "d5e5d1e0593611d4443d94c6037e9f86cde3b2e4e06aebc1cbafef3dd8dcd777"
+    },
+    {
+      "path": ".claude/skills/office/code-review/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "486c4c0871cd6d880a544d0784f19c349490cc83785e2d95cbf57dee341de818"
+    },
+    {
+      "path": ".claude/skills/office/code-review/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "f13da639667311849447c4388fc78ac6ca96919d9d899f1ac2c58d0fbc0a5881"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/DEEPENING.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "66c6bb7ef72ed433927c364934eabf2897aed787b3c087f8b9f624f31f34707b"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/DESIGN-IT-TWICE.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "55a576b9807146de1a23132539c0c292725cd902279688c843a3c8f092a11859"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "b44967f843fd9bbfb71385a21edbb9ac5cc681929f68f9409cb7d02ebed2ce57"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "929acead0dae013daa08bd1cb51003036e7157731493c9009c9c0fd9e8a5b41d"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/assets/dependency-cruiser.config.cjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "3c4973bec69f73b2117654abf9e666a7c28665b213be20e6d39869e29842428e"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/references/ts-module-boundaries.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "63a19049b96c34eaa3dc4a3516313b5ea172186a2b963573742cd5ffd3a4c744"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/PROVENANCE.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8a007ca31e2bcd2ea61a981cfd64b41940c116757d5f611367c8ae081d590c58"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "c8a604156372dc1173243431c62a7a286d5ee40d77eed42fcf16d63dac46d57a"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "35f4c32663f9d729da64ced731fb5369a456404701647ea94591fc1a493681b8"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/condition-based-waiting-example.ts",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2df7432e231d673eb7348f08ecd2fa3b126f6163d5558ef23af73803f770b2e3"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/condition-based-waiting.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "9980b6ffa33102c557dd5f3516730e7e0a1b2aba2d36657831008e082be1ca8e"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/defense-in-depth.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "0c300c10c6b9773fe86de9dd0715b66e5240c19f68ae5f9295a1b738664efb45"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/references/root-cause-tracing.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1b07240b93d30394d65c879aca64f5aeaeb35dd8b3e0ef6054fbeb3d9e1cfeb6"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/ADR-FORMAT.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a405b2dfcbff5929ce71443e7432c4abb3043d1594c6c6bfd17e8151836354aa"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/CONTEXT-FORMAT.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2af30919b2e9dbbc782d742259aa7285208665c06ecce05a14005cc9e29fe532"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "53ea19b75fa1b1a61738dcdef2a1e803493751b9e308951567f9535986d14b77"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "0483d7abeca55e8ee7c8b214c48dc2f63cd316a9c717f8e71bfe62a7eea2f6b5"
+    },
+    {
+      "path": ".claude/skills/office/grilling/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7acd138ad8667f72a43f8cb5a5eff733961a0d7fd066cda7925470552e3fcdc4"
+    },
+    {
+      "path": ".claude/skills/office/grilling/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a5149467ffea6c4ff47e73967da58acbbc51d1320f58ffc70062e71ba11cd820"
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "4141ff03f96a0140631f41852d06f4a955e96f7272a1452421a65a1aa99cfa66"
+    },
+    {
+      "path": ".claude/skills/office/handoff/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "51fa358120ba6adea7ce02a6346850d42fcf4f7b808c336939437b2a48f0ed9b"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SCHEMA.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1414f7d094cd6a333fdd5b5cda44a210c771500b66ac847a4446f31d3320eec1"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "c9b5bd9f4c4812e8a0d7a7fc62319261833458dfbd69372058c57bf062ad3735"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/references/logic-validation.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "17655b016d41f52053015ac9ec9ddae07169f839ef8e48eff7455233ce3ba1bb"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/references/ui-variant-comparison.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "84a5f44834fc552d6174e36e2ca4241e058457a851adaa12fdb66efa8baba486"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7bf93521203747a0df06d4387ace4db70961ce24894d935df2876da66d078117"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs",
+      "type": "file",
+      "mode": "100755",
+      "sha256": "0f0fec3def84b9eafab16d003d5f25cc4aed90f744a3b4130d5dd8a6926aca2c"
+    },
+    {
+      "path": ".claude/skills/office/implement/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "51bd8b2fe63fea7e929491058d3d663f2447f57ecbc5764a126b9886b4560515"
+    },
+    {
+      "path": ".claude/skills/office/implement/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1b2de3f405acd4f507aa3fcade23b09836c378e9fcc8ae478a159ad796df8068"
+    },
+    {
+      "path": ".claude/skills/office/implement/references/pull-request.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "37edd6073655b7736ac7d76e5c44129ec0df0abc767ce29f2ba7940861b75477"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "80582a88bb25af2fe422dc5940fae57e5a30a1b5ffb2c7db7e605b22edd4bfc1"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1be2d5671f67999f893e421346dcc7c141ca4f6936354125d5b6e53e925a7995"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/agent-brief.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "dc7955431ddb1a11be9a1a988fb54449093d5c091aaa7e97b624b7afa62d00ed"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/out-of-scope.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "36a92d624a598f013763518f4a4cbefbf1ddf99cbb2ef4fff9d19313837e08de"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/outcomes.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "59cbba8cdeb245c7dbaef55e2359200ce353d5a09a1aa28974e44be36523c66d"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/references/tracker-contract.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "dcead099564bfedb43e222375b3f2d6d08d75cb1fbe45419a4a1cacd40d28608"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8a2b15ddd46a56ce09ef1e633326afa354f7b487b6b740eacc08123e89cd00a4"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "6340a6cc27433d862df6f79fff6ce6a275924cf8c2234e218f7632d5fd1f692c"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/references/workflow-spec.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "33b199104e73e6f63449d496f6160ca14443a3b4f262cfc8e5e122cf74a90d0f"
+    },
+    {
+      "path": ".claude/skills/office/quick-research/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "9bfbd3b642014a62284d18a2f72996d9f0fc4c5cbefec8800e77f0dc8716a82e"
+    },
+    {
+      "path": ".claude/skills/office/references/office-wizard.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "84a25c95794ef5e66f16fcbf01a836a81662b4628908198de2f2b47fe783f129"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "fe8acf4537e35f94a925408fe44276d0beda9f9578c8b752d018eb8f8a3fccb7"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/references/decision-questionnaire.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "417643454fde6fd3ea0b79158ae635e9aa559f1e2b317b72b7898fbd8004f931"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/references/instruments.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "b20f0dabff739e09b15f734d3b1e8aee47368ded1570fad69688106e1cb167df"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "fae166603d4b123d1436ab42291b99b700de621256e812a8a8bda42f3730b57a"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "6aeb67cb9c26e7e4b7c2e543fc1f58b56ae938d4ba963a507cc441f162e8340f"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/references/manual-step-contract.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "538ac3faaff74f3a285d995c9fec3fe6cfec9efc764104f321dd64a1ae39fccc"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/template.sh",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "66a167fcddf63897ea07a09d1f31ec5a6e47637c8fdf01a86b6bf34c7c7c3a2b"
+    },
+    {
+      "path": ".claude/skills/office/to-spec/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "665fa35ab69ded74b625b3240fd2340762d45d5efd0282276aa472fec3eb9d90"
+    },
+    {
+      "path": ".claude/skills/office/to-spec/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "18a07b880e5aac44585a1fa205e8719d28c2d33967ab1ecc00ca44c87653122f"
+    },
+    {
+      "path": ".claude/skills/office/to-tickets/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "46bcaf55779d7ce9b0c7cef1bb1703b0bbf7a2afced9d97f1b0de5e4fb2a073c"
+    },
+    {
+      "path": ".claude/skills/office/to-tickets/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "6c5606d982277993f773e6d4bf18311590978e80e1e02cf7018c8fe21d02a0d5"
+    },
+    {
+      "path": ".claude/skills/office/wait-what/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "8afa26626e8c9b3b43dc4e35d84ad9d0df8f4c2c8e7385e08b970a0ce68edc61"
+    },
+    {
+      "path": ".claude/skills/office/wait-what/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "5c912ec783ed5aec3a8188661ee5abd0f27e96460e55ace458688c55547e5476"
+    },
+    {
+      "path": ".claude/skills/office/wayfinder/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1dc9128568bbcf7cf0e5d71ffd893cb9b1f104fb94406f17dcf53d2009fa8beb"
+    },
+    {
+      "path": ".claude/skills/office/wayfinder/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "4363167f75c616c58636452b082ab1b7f3b7adf933bae911a5b6385d07b66378"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/SKILL-MECHANICS.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "692bc73adbc77473b4f9291d114456d7ca5afc93d085c7012b0212c311107dbc"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "67523b5a7661f5687be9c619f9bcfe090990b0828c7bb558bf4dc8dace82974e"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "4499bd6ae8473519704092f9d0dfdff616930cf095ce508157808ca60172a57b"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/SKILL.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "36542b26b4fb4c459b48c2851013986782629dcee7d271fe730b63d63c60ae1e"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/agents/openai.yaml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "375e3a8108771380fa254673ca0c380a99784abf5ead4628493f3ceff07867f2"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/references/beats.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "7cd4dd24d277c6f7641f61fb1bce3b2444ef0eb0484c920ef1cc9e4cab685b0e"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/references/fragments.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1994b35dbe1bbaa26e14aef91ac01124f4cb609113e70e5a3689167b8d05482f"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/references/shape.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "4b8fa7dca11697b586f102069e52c4ea2bad09c7aac0e1ca54a6c6ff6e49272d"
+    },
+    {
+      "path": ".claude/skills/setup-wizard",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "dea10470f58fc56076a2c466989a694f2e25a026d850ef0ace47f6a0abb6df39"
+    },
+    {
+      "path": ".claude/skills/writing-workshop",
+      "type": "symlink",
+      "mode": "120000",
+      "sha256": "7eb3dd7e675946ece10f1928b01db1b5795124c106d23d60a6172356093abc27"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "6ea4c6e05e3d61ced51b8cb785dcd04a9ce2acc94494a08e1be304fb42b1dfad"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "472beaa00bb90df626a57cbecbde4b83ca22db248852837f8ac4786a7b7ae373"
+    },
+    {
+      "path": "AGENTS.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "59176ce48d01d7ab68ad698ee17d502f26416ebc13baef535425f9949ad5e511"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "cd1b432c968fb23b1b7430a86fe8e888b919c16d62b6768bb060980770996b8f"
+    },
+    {
+      "path": "CLAUDE.md",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "6391262c1a5b961fe622cb8501d13dd5b24a7c067f464fdb2c93a0e41614da2e"
+    },
+    {
+      "path": "memory/evals/domain-modeling/fixtures.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "3b2f6e940bccb409e0e62f0544601819343b15a4f9eed2743fd05c9c9cc2118b"
+    },
+    {
+      "path": "memory/evals/matt-adaptation/fixtures.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "47047aa0f94809ced9a191d59f14ea041b043f33cddeb0bd0eca006d0ce114c1"
+    },
+    {
+      "path": "memory/evals/matt-adaptation/method-coverage.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "4ba0ddaafc32c97d36079570e3f61128ba4e2c7e9605925fe99339480557bc88"
+    },
+    {
+      "path": "memory/evals/routing/fixtures.jsonl",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2bc0b18c899f453a5cbc855c65c544b5c67adf7ebc676fc117809c28b84ced07"
+    },
+    {
+      "path": "memory/scripts/behavioral_ab.py",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1135ea1a55a8d288ec5d02505c5e19e51d4926ce3b9b8827ed928716831f4a16"
+    },
+    {
+      "path": "memory/tests/test_behavioral_ab_gate.py",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "3622cfc9d5b6441097ca8363d9e4c3116ff2fdd5a8e6bd1e292ac2587b6237eb"
+    },
+    {
+      "path": "package.json",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "27cc140ba7ca9743cb98d657ee3dcce68af9886cfdc5032bc6900fcff43d47aa"
+    },
+    {
+      "path": "scripts/build-agent-context.py",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a4fd415325e78e11cd1320f4c42acbebb1220f615495bfdc09d91dadcf7733f1"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "115bf7ed047b98c66de3124dc6635485776cce1f2425e8bfc2b598173b45ad06"
+    },
+    {
+      "path": "scripts/check-skill-scene-coverage.py",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "cd7efd4671b4be347d9650a0b38951491ff39e945b8ede9ca128c3a169367bf2"
+    },
+    {
+      "path": "scripts/exact-fixture-slots.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "b9580d94bcc704e7ab82aceb70b5d3317ce944d6ef075c1cb182847502eea7f1"
+    },
+    {
+      "path": "scripts/run-agent-context-ab.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "cb1c8c1678dd06fd525c925dba1783384e4681ed501c1a2f91bfdedd59b29492"
+    },
+    {
+      "path": "scripts/test-codex-model-route-hook.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "a6e82bea52eac01c696b328917ed14226e1b92369638085ef9fff54114e45540"
+    },
+    {
+      "path": "scripts/test-domain-modeling-behavior.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "33c51b47c4d9f8c156da84c841c9d81ac62ad7f771f746ffa7a5b94edb3c6126"
+    },
+    {
+      "path": "scripts/test-domain-modeling-skill.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "78dc6b4edb9c3029aa7d693fdd4376602815a465c62f2f6739968c6ddd10aedc"
+    },
+    {
+      "path": "scripts/test-engineering-delivery-skills.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "39672b75f85e059ae2c64b7b7fe1d8916477b391660a6c7daadffa0463753f7f"
+    },
+    {
+      "path": "scripts/test-exact-fixture-slots.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "d512abaa4834d96f21dfcd3cc32b8d485fc77c70b5cdbcd8f0ce4ee362645b7f"
+    },
+    {
+      "path": "scripts/test-host-launch-control-plane.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2a169e3a170c4da1ff2fd17c9d700d883c2025eecae8cc99aae02fb2bc00b567"
+    },
+    {
+      "path": "scripts/test-host-launch.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "bb86ad5aa177da5f835035ad301641b6608d393536df30c0f81629746fc270a0"
+    },
+    {
+      "path": "scripts/test-matt-skills-adaptation.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "04220e7064cb657f530e4aae9ae84b02ce11beaf0a10d21ffbd4dbe5c486f917"
+    },
+    {
+      "path": "scripts/test-project-gate-v34-dual-host.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "1e262051718bdd5e324609023d367e0eea7738074831ab969401551ddf79243f"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082"
+    },
+    {
+      "path": "scripts/test-wait-what-skill.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "75029346ab6d9a119beeffdee31bfed65959d689ef2d420fa67c62fcd6fdbefd"
+    },
+    {
+      "path": "scripts/test-writing-for-agents-skill.mjs",
+      "type": "file",
+      "mode": "100644",
+      "sha256": "2a0d99282aaece9b26da3dd8f6aec9a957ed0af55fbcf990cfc205b621faf36b"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "type": "file",
+      "mode": "100755",
+      "sha256": "872514f4ccd60f043c8e852eddae1fe55e7b1ff5e5bdf436a50da7f288929f02"
+    }
+  ],
+  "payload_hash_policy": "Implementation payload excludes ALL framework-audit/2026-09-30-matt-adaptation/**; personal candidates are listed separately.",
+  "personal_candidates": [
+    {
+      "install_path": "/Users/luca/.agents/skills/tdd/SKILL.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/SKILL.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "dc4d7f99b3a0e7d674eb78b5f7e7a352c09702bf02947c7235db4df11a54afe5"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "5363bb2775679fe9311fbb67947f95359169c6e7f1fac77c0f25e190bca6cf2f",
+        "filesystem_mode": "0o644",
+        "size": 3213
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.agents/skills/tdd/tests.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/tests.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "3f9455b5ba1a985495ceb2c01bca4448eb90f048c744b1113c059af602b6724b"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+        "filesystem_mode": "0o644",
+        "size": 2214
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.agents/skills/tdd/mocking.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/mocking.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "922c5d1c3d4caeef9d9e428d8eafcfb6bc56be6dea4ed2d76d504d25b485348b"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+        "filesystem_mode": "0o644",
+        "size": 1481
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.agents/skills/tdd/agents/openai.yaml",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/agents/openai.yaml",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "f355e4b6baa4ab7cb7f81b8ab48e621d6bca7d8d3ad46e3e52f06bfe0dc36ae5"
+      },
+      "original_preimage": {
+        "type": "absent",
+        "mode": "-",
+        "sha256": null
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.agents/skills/tdd/references/shoehorn-test-data.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/tdd/references/shoehorn-test-data.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "85519fdfa5083c6d4e44e67b822fd6a016cbda6da6e25a14017fd3dc03b1f544"
+      },
+      "original_preimage": {
+        "type": "absent",
+        "mode": "-",
+        "sha256": null
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.claude/skills/teach/SKILL.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/SKILL.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "f34e050e50236d101a79bbddb6fa7ed62257818a0607184d2df8b2928a70e3c4"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "6d2dbe5e03084cf26fef66b535127b36cd1bcbe9478e26b0626029cd51dc2259",
+        "filesystem_mode": "0o644",
+        "size": 9507
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.claude/skills/teach/GLOSSARY-FORMAT.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/GLOSSARY-FORMAT.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "495ae8e5ef1ad7b10de12f61fe5ce34fa4c8cb7454dc1a4b977c1a9541cd3763"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "d177def491519d97873291f2e860d8f1d60ead78feecb82eee022177958069c6",
+        "filesystem_mode": "0o644",
+        "size": 2131
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.claude/skills/teach/LEARNING-RECORD-FORMAT.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/LEARNING-RECORD-FORMAT.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "470710a58fe43500e1f45cc55e1234e501f05636a6269e3a9f5cd37209fd6bac"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "855f81017625256584bbf62bd5edb9b0c86605c4cc1139c56acc36b802595d17",
+        "filesystem_mode": "0o644",
+        "size": 2777
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.claude/skills/teach/MISSION-FORMAT.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/MISSION-FORMAT.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "bf189c4b5bcb3b9fa34c9c8f11bcb4fa6eda3aac66d60b54261e3208e177b5b8"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "8da6d3ac84eb2eb19f17c260b6acf01c560d3ac7a4501c415eea0e985602f4d7",
+        "filesystem_mode": "0o644",
+        "size": 1553
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.claude/skills/teach/RESOURCES-FORMAT.md",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/RESOURCES-FORMAT.md",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "a6cfd53bf642e568e2a871225673cc34b0130db19570fdc98f19e67764544495"
+      },
+      "original_preimage": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "2bc634a64b0d0daa10904f9222e7aa0d361420dfacabbf092fbe3a72222edc08",
+        "filesystem_mode": "0o644",
+        "size": 1926
+      },
+      "formal_installation": "PENDING_Htest"
+    },
+    {
+      "install_path": "/Users/luca/.claude/skills/teach/agents/openai.yaml",
+      "candidate_source": "framework-audit/2026-09-30-matt-adaptation/global-candidates/teach/agents/openai.yaml",
+      "candidate": {
+        "type": "file",
+        "mode": "100644",
+        "sha256": "647056232f592732c98e5b74bee5d56da2b6fbf4c2a2e994332e3676bf83ed18"
+      },
+      "original_preimage": {
+        "type": "absent",
+        "mode": "-",
+        "sha256": null
+      },
+      "formal_installation": "PENDING_Htest"
+    }
+  ],
+  "native_behavior": "NOT_RUN",
+  "adoption": "PENDING",
+  "approved_candidate_base": "UNBOUND",
+  "previous_source_commit_record": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+  "previous_approved_baseline_delta": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/M4-baseline-alignment/v2/M4-APPROVAL-RECEIPT.json",
+  "candidate_binding_status": "FROZEN_STATIC_PROPOSAL_NOT_APPROVED_NOT_APPLIED",
+  "readiness": "STATIC_REVIEW_SUBJECT_ONLY_EFFECTS_NOT_READY",
+  "provisional_object_baseline_L": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+  "latest_baseline_convergence": {
+    "status": "STATIC_PROPOSAL_UNAPPROVED_UNAPPLIED",
+    "frozen_B": "595499e8a2146d2eedca7dad8958fcf3ab6c8bce",
+    "published_OD_M": "facf361f8bfe29aff3153d5e4f85ccc85806b336",
+    "historical_L": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+    "historical_C": "f0c7d1d9e7d06e682fb4ab4de9e42b674213d305",
+    "source_digest_D": "4fda0733f9bdbc498fcb63073168acda3b2a9991e54e308484b583bbe83e76a2",
+    "source_count": 188,
+    "proposal_directory": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/joint-release-convergence-595-v1",
+    "new_C": "UNBOUND",
+    "new_T": "UNBOUND",
+    "real_H0d": "UNBOUND",
+    "Htest": false,
+    "Hpublish": false,
+    "execution_ready": false,
+    "independent_review": "UNBOUND",
+    "optional_slot_partition": [
+      68,
+      1,
+      1,
+      5
+    ],
+    "optional_capture_retire_authorized": false,
+    "readiness": "STATIC_ONLY_EFFECTS_NOT_READY",
+    "candidate_C": "UNBOUND",
+    "candidate_T": "UNBOUND",
+    "approved_base": "UNBOUND",
+    "approval_receipt_sha256": "UNBOUND",
+    "approval_receipt_ref": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/joint-release-convergence-595-v1/H0d-APPROVAL-RECEIPT.json",
+    "historical_L_detailed_contract": "joint_release_rebind_history[0].retained_prior_current_fields.latest_baseline_convergence",
+    "historical_contract_requirements_remain_in_force": true,
+    "historical_execution_bindings_not_current_authority": true,
+    "current_exact_source_scope": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/joint-release-convergence-595-v1/SCOPE.json",
+    "execution_gate": {
+      "status": "NOT_EXECUTABLE",
+      "approval_request_ready": false,
+      "source_or_Git_effects_permitted": false,
+      "fresh_controller_command_and_machine_tuples": "UNBOUND"
+    },
+    "prerequisites": {
+      "fresh_independent_incremental_review": "UNBOUND",
+      "real_H0d_finite_source_and_effect_approval": "UNBOUND",
+      "Htest": "UNAPPROVED",
+      "Hpublish": "UNAPPROVED",
+      "root_fresh_machine_preconditions": "UNBOUND"
+    },
+    "frozen_success_policy": {
+      "methods": 38,
+      "assertions": 203,
+      "gain_methods": 16,
+      "preservation_methods": 22,
+      "G": 17
+    }
+  },
+  "historical_unapproved_provisional_object_baseline_N": "64d763ebbf254e0b5dbd33c0782f88a8350317c0",
+  "historical_unapproved_v2_approval_receipt_ref": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/acceptance-repair-current-main-v2/H0d-APPROVAL-RECEIPT.json",
+  "proposed_H0d_receipt_ref": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/joint-release-convergence-595-v1/H0d-APPROVAL-RECEIPT.json",
+  "joint_release_rebind_history": [
+    {
+      "historical_L": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+      "retained_prior_current_fields": {
+        "latest_baseline_convergence": {
+          "status": "FROZEN_STATIC_PROPOSAL_NOT_APPROVED_NOT_APPLIED",
+          "frozen_L": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+          "historical_M4": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+          "historical_C": "f0c7d1d9e7d06e682fb4ab4de9e42b674213d305",
+          "same_W": "/Users/luca/.codex/worktrees/matt-skills-adaptation/luca_gstack",
+          "semantic_overlap_count": 47,
+          "nongenerated_authorities": 7,
+          "generated_overlap_count": 40,
+          "original_Matt_delta_count": 185,
+          "L_advance_count": 182,
+          "optional_source_count": 5,
+          "source_digest_D": "e8bb0fbaa7b162552fef5bea73d50c42bdfeec33b0bf75b600531907f33dc541",
+          "source_count": 186,
+          "fresh_live_baseline": "UNBOUND",
+          "new_C": "UNBOUND",
+          "new_T": "UNBOUND",
+          "real_H0d": "UNBOUND",
+          "Htest": false,
+          "Hpublish": false,
+          "execution_ready": false,
+          "all_source_Git_native_runtime_effects": "NOT_RUN",
+          "frozen_success_policy": {
+            "methods": 38,
+            "assertions": 203,
+            "gain_methods": 16,
+            "preservation_methods": 22,
+            "G": 17
+          },
+          "exact_source_proposal_not_authority": true
+        }
+      }
+    }
+  ],
+  "joint_release_convergence": {
+    "status": "STATIC_PROPOSAL_UNAPPROVED_UNAPPLIED",
+    "frozen_B": "595499e8a2146d2eedca7dad8958fcf3ab6c8bce",
+    "published_OD_M": "facf361f8bfe29aff3153d5e4f85ccc85806b336",
+    "historical_L": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+    "historical_C": "f0c7d1d9e7d06e682fb4ab4de9e42b674213d305",
+    "source_digest_D": "4fda0733f9bdbc498fcb63073168acda3b2a9991e54e308484b583bbe83e76a2",
+    "source_count": 188,
+    "proposal_directory": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/joint-release-convergence-595-v1",
+    "new_C": "UNBOUND",
+    "new_T": "UNBOUND",
+    "real_H0d": "UNBOUND",
+    "Htest": false,
+    "Hpublish": false,
+    "execution_ready": false,
+    "independent_review": "UNBOUND",
+    "optional_slot_partition": [
+      68,
+      1,
+      1,
+      5
+    ],
+    "optional_capture_retire_authorized": false
+  },
+  "provisional_object_baseline_B": "595499e8a2146d2eedca7dad8958fcf3ab6c8bce"
+}

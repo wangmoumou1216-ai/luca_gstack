@@ -18,7 +18,7 @@ import {dirname, join, relative, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {withoutLocalGitEnv} from '../.claude/hooks/lib/git-env.mjs';
-import {gitCommonDirRealpath} from './controlled-change.mjs';
+import {controlRoot, gitCommonDirRealpath} from './controlled-change.mjs';
 import {
   attestPendingProjectEvent,
   initializeProjectEventFence,
@@ -27,6 +27,16 @@ import {
 } from '../.claude/hooks/lib/project-substrate.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const sourceControl = controlRoot(ROOT);
+function controlSnapshot() {
+  if (!existsSync(sourceControl)) return {};
+  return Object.fromEntries(readdirSync(sourceControl).sort().flatMap(task =>
+    ['required-witness.json', 'active-context.json', 'receipt.json'].flatMap(name => {
+      const file = join(sourceControl, task, name);
+      return existsSync(file) ? [[`${task}/${name}`, readFileSync(file).toString('base64')]] : [];
+    })));
+}
+const sourceControlBefore = controlSnapshot();
 const SCOPE_GUARD = join(ROOT, '.claude', 'hooks', 'project-scope-guard.mjs');
 const CONTROLLED_GUARD = join(ROOT, '.claude', 'hooks', 'controlled-change-guard.mjs');
 const STOP_HOOK = join(ROOT, '.claude', 'hooks', 'session-sync.mjs');
@@ -370,5 +380,53 @@ for (const harness of ['claude', 'codex']) {
     cleanupFixture(fx);
   }
 }
+
+
+{
+  const fx = makeFixture('codex');
+  try {
+    const git = (...args) => {
+      const r = spawnSync('/usr/bin/git', ['-C', fx.gstack, ...args], {
+        env: withoutLocalGitEnv(), encoding: 'utf8', timeout: 30000,
+      });
+      assert.equal(r.status, 0, r.stderr || r.stdout);
+      return r.stdout.trim();
+    };
+    git('config', 'user.name', 'Project Gate Fixture');
+    git('config', 'user.email', 'fixture@example.invalid');
+    git('commit', '--allow-empty', '-qm', 'fixture');
+    const baseline = git('rev-parse', 'HEAD');
+    const scratch = join(fx.root, 'scratch');
+    mkdirSync(scratch);
+    const manifestPath = join(scratch, 'manifest.json');
+    writeFileSync(manifestPath, JSON.stringify({
+      schema_version: 1, task_id: 'project-v34-adapter-failure', u_id: 'U-013',
+      repo_realpath: fx.gstack, git_common_dir_realpath: gitCommonDirRealpath(fx.gstack),
+      plan_sha256: '0'.repeat(64), plan_recorded_baseline: baseline, observed_baseline: baseline,
+      session: 'v34-codex-adapter-failure', scratch_root: scratch,
+      repo_paths: [], external_paths: [], mutation_classes: [], approved_effects: [], allowed_commands: [],
+    }) + '\n');
+    const controller = (...args) => spawnSync(process.execPath, [
+      join(fx.gstack, 'scripts/controlled-change-controller.mjs'), ...args, '--manifest', manifestPath,
+    ], {cwd: fx.gstack, env: hookEnv(fx), encoding: 'utf8', timeout: 30000});
+    const prepared = controller('prepare', '--legacy-checkout-exclusive', 'true', '--generation', 'project-v34-adapter-failure-0001');
+    assert.equal(prepared.status, 0, prepared.stderr || prepared.stdout);
+    const statePath = join(fx.gstack, '.claude', '.session-project-v34-codex-adapter-failure');
+    const failed = runHook(fx, SCOPE_GUARD, {
+      hook_event_name: 'PreToolUse', session_id: 'v34-codex-adapter-failure',
+      cwd: fx.gstack, tool_name: 'Bash', tool_input: {command: './scripts/project.sh switch alpha'},
+    }, {LUCA_CONTROLLED_TEST_ADAPTER_READ_ERROR: 'project-scope'});
+    ok('codex adapter failure under an active fixture controller refuses and preserves selection state',
+      failed.status === 2 && /consulting durable witness|runtime failed|adapter/.test(failed.stderr)
+      && !existsSync(statePath), failed.stderr || failed.stdout);
+    const closed = controller('abort', '--reason', 'fixture-complete');
+    assert.equal(closed.status, 0, closed.stderr || closed.stdout);
+  } finally {
+    cleanupFixture(fx);
+  }
+}
+
+ok('dual-host fixtures preserve the enclosing repository control authority',
+  JSON.stringify(controlSnapshot()) === JSON.stringify(sourceControlBefore));
 
 process.stdout.write(`\n=== project-gate v3.4 dual-host summary: PASS=${pass} FAIL=0 ===\n`);
