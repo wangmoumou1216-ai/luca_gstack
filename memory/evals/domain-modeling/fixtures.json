@@ -1,4 +1,5 @@
 {
+  "matt_adaptation_note":"Legacy requested-effort values are explicit fixture inputs, not model role equivalence or Matt38 native PASS; use the separate frozen evidence contract.",
   "version": 1,
   "baseline_ref": "45eff207",
   "source": "pre-frozen synthetic fixtures; no real downstream project data",

@@ -48,11 +48,33 @@ It has two entry modes:
 4. Read `.claude/agents/plan-agent.md` and invoke its `implement compile` mode. It must map the gated
    task cards to stable U-IDs with dependencies, exact file scope, verification, and separately
    declared Git/external effects.
-5. Present the compiled task-plan SHA, baseline, exact U-ID list, path/effect scope, and assertions
+5. The compiler also freezes the dependency graph, ready frontier, actual integration root/ref/tip,
+   per-U-ID file ownership/preimages, context pointers and `max_active_subagents=1`. Independent
+   ready work is queued in stable U-ID order; it does not authorize concurrent implementers.
+   Present the compiled task-plan SHA, baseline, exact U-ID list, path/effect scope, and assertions
    for human confirmation. Only an explicit approval bound to those bytes makes the U-IDs approved.
-6. Read `.claude/agents/orchestrator.md` and execute only the approved U-IDs. Unexpected failures and
+6. Read `.claude/agents/orchestrator.md` through EOF and hand it the same approved plan. Only that
+   owner executes the approved U-IDs. Unexpected failures and
    real Git conflicts remain exception loops under the original U-ID authority. Finish with the
    canonical code-review path; commit or push only behind its separate human gate.
+
+## Method carried to the execution owner
+
+The compilation preserves every DEV card, paired TEST card, assertion, source, dependency and exact
+scope. At the already user-confirmed public seams, the Orchestrator execution uses TDD where applicable:
+one test red on the intended behavior, one minimal implementation, green, then the next vertical
+slice. Planned TDD red does not trigger diagnosing-bugs. Interface design questions return to
+codebase-design; an unconfirmed seam stays untested until its real human gate is settled.
+
+The same plan carries regular typechecking and focused test-file runs, then the full relevant suite
+once at the end and the final code-review → code-hygiene Mode D Standards/Spec closure with actual
+independent receipts. Missing runner, unknown evidence or failed review is reported truthfully.
+No content facade can substitute for those execution obligations. Refactoring goes through review
+under the original scope rather than speculation inside the red→green loop.
+
+The upstream “commit current branch” step is adapted to only an already approved exact Git effect,
+after fresh checks and final closure. No implicit stage, commit, push or parent-ticket authority.
+Source07, MIT, pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`.
 
 ## Refusal rules
 
@@ -62,5 +84,15 @@ It has two entry modes:
   task-plan path/SHA before compilation; the ticket itself never grants execution authority.
 - Placeholder or partially compiled U-ID: reject it; never ask Orchestrator to infer the missing scope.
 - Optional graph missing in standalone mode: continue; it is not an error or a dependency.
+
+## Publication preparation
+
+Before drafting a PR or marking an existing draft ready after final review, read
+[references/pull-request.md](references/pull-request.md) through EOF. Freeze actual base/head/diff
+and verification evidence; use Summary / Evidence / Merge Danger, with a useful visual sketch,
+real before/after and door/blast radius. A prepared body is reviewable work, not publication authority.
+Orchestrator remains the sole execution owner: only the separately approved exact Git/external effect
+may create/update/send a PR or mark ready. Missing evidence is a named gap; never invent a check URL,
+screenshot or PR link, and never auto-close projected tickets.
 
 <!-- FILE_END: implement/SKILL.md -->

@@ -10,24 +10,27 @@
 | `brainstorm` | Transform a research markdown into a right-sized Product Requirements Document through forcing-questi… | `.claude/skills/office/brainstorm/SKILL.md` |
 | `code-hygiene` | 代码层工程约束 skill：对工程代码（luca_gstack 自身 .mjs/.py/.js 神经系统 + 下游实现） 做「清理 + 完成前验证」的工程体检。两半： ① 完成前验证铁律（Iron La… | `.claude/skills/office/code-hygiene/SKILL.md` |
 | `code-recon` | Brownfield「从现有代码起步」的正门 skill：把一个已有代码库逆向成一份**设计可消费的架构 brief**， 再作为输入喂给设计管线（ux-brainstorm / design-brie… | `.claude/skills/office/code-recon/SKILL.md` |
-| `code-review` | 代码改动双轴审查入口：先固定 WORKTREE_DIFF、commit/branch/tag 比较点或 FILE_SET，再把 Standards 与 Spec 两轴隔离审查并分列报告。用于当前未提交改… | `.claude/skills/office/code-review/SKILL.md` |
+| `code-review` | 固定代码改动范围和需求输入，委托 code-hygiene Mode D 唯一方法权威，只返回分轴 findings。 | `.claude/skills/office/code-review/SKILL.md` |
 | `codebase-design` | 工程模块设计原语：用 Module / Interface / Depth / Seam / Adapter 的稳定词汇，判断模块是否足够深、 接口是否把复杂度藏在正确位置，以及测试面应放在哪里。用于模… | `.claude/skills/office/codebase-design/SKILL.md` |
 | `deepresearch` | Deep research orchestrator. Launches 5-8 parallel research agents across web, docs, code, and academi… | `.claude/skills/office/deepresearch/SKILL.md` |
 | `design-brief` | 收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 / 用户粘贴方案，收敛成可交给 MagicPath、Open Des… | `.claude/skills/office/design-brief/SKILL.md` |
 | `diagnosing-bugs` | Diagnose an unexpected failure, regression, flaky behavior, or performance regression by first buildi… | `.claude/skills/office/diagnosing-bugs/SKILL.md` |
 | `domain-modeling` | Build or sharpen a domain model when language overloads distinct concepts, relationships or ownership… | `.claude/skills/office/domain-modeling/SKILL.md` |
-| `grilling` | Stress-test a plan, decision, or idea through a one-question-at-a-time human decision tree. Use when… | `.claude/skills/office/grilling/SKILL.md` |
+| `grilling` | Stress-test a plan through design-tree rounds: ask all independent ready frontier decisions with reco… | `.claude/skills/office/grilling/SKILL.md` |
 | `handoff` | 会话级交接工具：把当前对话压缩成一份可供下一个 agent 或 session 直接接手的 Markdown， 保存到操作系统临时目录。仅在用户显式要求会话交接时使用，不替代项目级流程交接。 | `.claude/skills/office/handoff/SKILL.md` |
 | `html-prototype` | HTML 原型生成与可观测 QA。仅在用户明确选择本地 HTML，或明确批准包含本地 HTML 备用路径的计划且触发条件满足时使用。三种场景行为完全不同：A（新功能，Step0认知门禁+ 原型承载方式确… | `.claude/skills/office/html-prototype/SKILL.md` |
 | `idea` | 原始语料结构化工具。输入任意形式的原始需求表达（语音转文字、会议纪要、 领导想法、讨论记录），输出诚实的结构化梳理。 不延展、不推断、不加判断。所有输出必须有原文依据。 与 /brainstorm 是独… | `.claude/skills/office/idea/SKILL.md` |
 | `implement` | Thin execution facade that compiles a gated spec and task-plan through Plan Agent, obtains approval f… | `.claude/skills/office/implement/SKILL.md` |
 | `insight-synthesis` | 一手定性综合：把**用户提供的**一手定性资料（访谈/工单/回访/开放问卷）编码成原子观察， 跨来源亲和聚类，经用户确认主题后做 observation→interpretation 跃迁，产出分层洞察… | `.claude/skills/office/insight-synthesis/SKILL.md` |
+| `issue-triage` | 显式维护者入口：用完整 Issue/PR、代码验证和历史 notes 推进两 category、五 state 的 triage 状态机，形成 durable brief 或具体待答问题；维护者选择方向… | `.claude/skills/office/issue-triage/SKILL.md` |
+| `loop-me` | Design recurring workflows from your real world through stateful grilling, then save the resolved spe… | `.claude/skills/office/loop-me/SKILL.md` |
 | `muse-req-triage` | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/ 优先级裁定留给人类。独立接收原始语料或已整理的候选需求清单，在投入 /brainstorm 前筛选；不代替… | `.claude/skills/office/muse-req-triage/SKILL.md` |
 | `office` | luca_gstack 入口。向导式：先问你想做什么，推荐对应 workflow。 展示一级可见 skill 列表，含描述和输入模式。 | `.claude/skills/office/SKILL.md` |
 | `open-design` | Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only） → 指定 OD 项目交接与 hand… | `.claude/skills/office/open-design/SKILL.md` |
 | `quick-research` | 轻量研究：把一个待查问题委托给**一个后台 agent**去读 **primary source**（官方文档/源码/ 规范/一手 API），主线不阻塞；产出单个带逐条溯源的 markdown。 **D… | `.claude/skills/office/quick-research/SKILL.md` |
 | `research-kit` | 一手研究工具设计：把 PRD 假设/研究问题变成**可执行的采集工具**——访谈提纲、问卷、 可用性测试计划、卡片分类法方案。 **Defining constraint：只产研究执行物，三不产——不产… | `.claude/skills/office/research-kit/SKILL.md` |
 | `resolving-merge-conflicts` | Resolve a real, currently in-progress Git merge, rebase, cherry-pick, or revert conflict by recoverin… | `.claude/skills/office/resolving-merge-conflicts/SKILL.md` |
+| `setup-wizard` | 为只能由人完成的服务配置、凭据获取或迁移步骤生成分阶段 Bash 向导；先确认完整人工合同，再交付脚本供人运行。 | `.claude/skills/office/setup-wizard/SKILL.md` |
 | `task-plan` | 任务编排计划节点。把所有上游产物（PRD + design-brief + tech-spec） 转化为渐进式索引 + 断言矩阵 + 开发/测试任务卡。 是后续所有执行 agent 的「执行圣经」入口… | `.claude/skills/office/task-plan/SKILL.md` |
 | `tech-spec` | 工程规格节点。把 PRD + design-brief → 技术合同。 强制验证所有 MUST 级需求的覆盖率，不允许静默跳过。 产出：docs/engineering/YYYY-MM-DD-<topi… | `.claude/skills/office/tech-spec/SKILL.md` |
 | `to-spec` | Thin facade that synthesizes an already-resolved engineering conversation into the canonical tech-spe… | `.claude/skills/office/to-spec/SKILL.md` |
@@ -39,6 +42,7 @@
 | `wait-what` | 显式对话修复入口：当上一条说明没讲明白时，补足缺失前提，并用自然中文和项目术语重新讲清楚。 | `.claude/skills/office/wait-what/SKILL.md` |
 | `wayfinder` | Thin planning facade for work that is simultaneously huge, multi-session, and foggy; delegates to Pla… | `.claude/skills/office/wayfinder/SKILL.md` |
 | `writing-for-agents` | Writing and reviewing agent-facing instructions. Use when creating or editing skills, AGENTS.md, or C… | `.claude/skills/office/writing-for-agents/SKILL.md` |
+| `writing-workshop` | Explicit writing workshop with three modes: fragments explores the author's observations; shape build… | `.claude/skills/office/writing-workshop/SKILL.md` |
 
 ## Hidden/on-demand
 

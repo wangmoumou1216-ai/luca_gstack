@@ -127,7 +127,13 @@ Handoff 写入节的以下内容受保护：
 | Phase 3 HTML 生成 | 注释说明文案、检查项措辞 |
 | Phase 4.5 QA 检查项说明 | 每个检查项的 detail 文案 |
 
-**不可进化：** 审美分 ≥24/30 门槛、QA 检查项列表本身、Phase 4.5 的 `verify-prototype.mjs` 调用。
+**不可进化：** UI 审美分 ≥24/30 门槛、QA 检查项列表本身、Phase 4.5 的 `verify-prototype.mjs` 调用。
+
+**精确用途例外（U008）：** 只有已明确 `purpose=logic-validation` 的逻辑验证原型，
+审美24/30分门和固定默认/空/加载/错误/成功五态可记 N/A。阶段顺序、骨架真实确认、
+全部需求状态/转换/错误/reset、可读性、来源/traceability、真实浏览器与 pure 模块便携证据
+继续有效。purpose 与输入 source_kind/QA mode 正交；普通 UI 和每个 UI 变体均保留完整
+24/30、五态及所有适用状态门，不能借逻辑用途、STATE 注释或自报分数降低验收。
 
 ---
 

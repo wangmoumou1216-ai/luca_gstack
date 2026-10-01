@@ -41,6 +41,9 @@ skills:
   wait-what: {tier: 1}
   writing-for-agents: {tier: 1}
   domain-modeling: {tier: 1}
+  writing-workshop: {tier: 1}
+  issue-triage: {tier: 1}
+  setup-wizard: {tier: 1}
 
   # ── tier-2：可降级（degrade 必填）──
   deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}
@@ -48,11 +51,12 @@ skills:
   brainstorm: {tier: 2, degrade: "3+1 agent 无 ≥5 锁；Oracle 对抗可顺序化/内联"}
   ux-brainstorm: {tier: 2, degrade: "同 brainstorm：3+1 可顺序化"}
   quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明该回退**，故 Codex 上强度弱于 Claude 上的同一 skill"}
-  code-recon: {tier: 2, degrade: "并行 recon fan-out → 可顺序 recon；skill 正文未写明"}
-  code-hygiene: {tier: 2, degrade: "8 算子本就内联；review 段派 quality-gate → 可退单轴/内联"}
-  code-review: {tier: 2, degrade: "Standards/Spec 优先并行冷启动；Codex 并发不可用时按正文串行且禁止跨轴读报告，上下文隔离弱于真并行"}
-  codebase-design: {tier: 2, degrade: "Design It Twice 优先 3 个独立 agent；Codex 并发槽不足时按正文串行做 3 次冷启动式推演，独立性弱于真并行"}
+  code-recon: {tier: 2, degrade: "正文两模式共用峰值1的真实冷 explorer；缺实际 dispatch/completed/accepted 证据则 UNKNOWN 并停在门前，主循环只可准备授权只读输入，不模拟 explorer 或宣称同等行为"}
+  code-hygiene: {tier: 2, degrade: "A–C 及 environment-retro 可按正文主循环处理；Mode D 必须真实冷 quality-gate/MR-004 peak 串行，缺 dispatch 或同次 accepted 则阻断该审查门，不以内联替票；普通无 Spec 诚实 NOT_RUN"}
+  code-review: {tier: 2, degrade: "只消费唯一 code-hygiene Mode D：Standards→Spec 两个真实冷 quality-gate/MR-004 peak 串行且分轴隔离；原生能力/同次 accepted 不足时 UNKNOWN/BLOCKED，不以内联或降档宣称独立审查"}
+  codebase-design: {tier: 2, degrade: "普通深度设计可由主循环执行；用户明确请求替代接口时，按 DESIGN-IT-TWICE 取得至少3个真实 native 冷上下文设计，峰值1严格串行并核验前一同次 completed/accepted；缺 dispatch 或原生完成证据则 UNKNOWN 停门，不以内联推演代替独立设计"}
   wayfinder: {tier: 2, degrade: "Plan Agent 仍是唯一规划真值 owner；Codex 子 agent 不可用时由主循环串行执行同一 wayfinder mode 的 destination/fog/decision-frontier 合同，不伪造并行独立性且不跳过人类决策门"}
+  loop-me: {tier: 2, degrade: "主循环可用真实答案完成同一 world-context/ready-frontier/spec 合同；若父任务要求真实 delegation 或质量票而当前能力不足，停在相应门并记录 UNKNOWN，不伪造子 agent/答案或豁免 shared handoff"}
   implement: {tier: 2, degrade: "Plan Agent compile 与 Orchestrator execution 保持 owner 分离；Codex 子 agent 不可用时由主循环按同一 task-plan SHA 串行执行两个 owner 合同，不合并状态或省略人类确认"}
   ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
   figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}

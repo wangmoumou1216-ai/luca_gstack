@@ -1,43 +1,41 @@
 # Provenance — diagnosing-bugs
 
-This LucaGStack skill adapts two MIT/personal sources frozen by
-`framework-audit/2026-08-30-mattpocock-six-skills-integration/SOURCE-MANIFEST.tsv`.
+## Current method source
 
-## Upstream
+Repository: `mattpocock/skills`; MIT, copyright Matt Pocock.
+Pinned commit: `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`.
+Source: `skills/engineering/diagnosing-bugs` complete directory, recorded by the adaptation source
+index (source04) and repository SOURCE-MAP. Frozen input hashes:
 
-Repository: `mattpocock/skills`  
-Commit: `6654f6b60cd9d5be8b54c6fafe44346dabeb3b76`  
-License: MIT, copyright Matt Pocock
-
-Frozen inputs:
-
-| Relative source | SHA-256 |
+| Source | SHA-256 |
 |---|---|
-| `skills/engineering/diagnosing-bugs/SKILL.md` | `77f3cf31bc99b2f49af943222526531fcc9fc41d047626d3640e875e85af3e84` |
-| `skills/engineering/diagnosing-bugs/agents/openai.yaml` | `3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b` |
-| `skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh` | `35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503` |
+| SKILL.md | 9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40 |
+| agents/openai.yaml | 3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b |
+| scripts/hitl-loop.template.sh | 35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503 |
 
-Preserved method value: build a tight symptom-specific feedback loop, minimise the reproduction, rank
-falsifiable hypotheses, tag instrumentation, and be honest when no correct regression-test seam exists.
+Full method retained: actual fast/deterministic symptom-specific red loop, ten reproduction avenues,
+minimisation with a rerun after every cut, 3–5 ranked falsifiable hypotheses, one-variable probes,
+tagged instrumentation, measurement-first performance diagnosis, correct-seam red-before-fix green
+regression, original-loop recheck and cleanup. No current upstream references directory is invented.
 
-## Legacy Luca source
+## Legacy supplements retained and adapted
 
-Root: `/Users/luca/.agents/skills/systematic-debugging`  
-License column in the frozen manifest: `personal`
+The existing root-cause-tracing, defense-in-depth, condition-based-waiting and TypeScript example
+derive from the personal `systematic-debugging` material frozen in
+`framework-audit/2026-08-30-mattpocock-six-skills-integration/SOURCE-MANIFEST.tsv`.
+They remain attributed legacy supplements, not claimed to be source04 files at the new pin.
+The example is now a self-contained illustrative interface rather than imports from an unavailable
+Lace project. Historical outcome numbers were removed as they are not fresh Luca verification.
 
-The adapted references preserve the frozen legacy techniques for root-cause tracing, defense in depth, and
-condition-based waiting. The canonical `SKILL.md` also retains the legacy discipline of tracing the source
-instead of patching a symptom.
+## Local safety adaptation
 
-## Luca safety rewrite
+Expected TDD red is excluded. Diagnose-only remains read-only/no-network and ends before repair.
+Potentially writing loops require approved scratch/effects; temporary instrumentation is tagged and
+redacted. Source tracing precedes proportionate boundary defenses, not catch-and-mask patches.
+Internal dispatch returns to original U-ID with permission intersection. Git publication, personal
+installation and automatic memory writes are not part of the method.
 
-The canonical method intentionally differs from upstream and legacy defaults:
+The repository LICENSE and all existing safe-diagnostic/snapshot/HITL/polluter scripts are preserved
+byte-for-byte by this content unit; their mentions do not expand execution authority.
 
-- an expected TDD red is an explicit negative trigger;
-- diagnosis is read-only/no-network by default and ends before implementation;
-- write-producing reproductions must use task-owned scratch or separate authority;
-- Git publication effects are never part of diagnosis;
-- internal dispatch returns to the original U-ID with inherited authority only.
-
-The repository-local `LICENSE` contains the upstream MIT text. Legacy personal material remains attributed
-here and in the frozen source manifest.
+<!-- FILE_END: diagnosing-bugs/PROVENANCE.md -->

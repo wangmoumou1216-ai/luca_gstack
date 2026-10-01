@@ -29,37 +29,51 @@ python3 .claude/observability/scripts/get_rules.py quick-research "*" 2>/dev/nul
 cat .claude/current-topic.txt 2>/dev/null || true
 ```
 
-## 定位（研究三档的中档）
+# Quick Research
 
-| 档 | 用它当 | 不用它当 |
-|---|---|---|
-| web spike（就地一查） | 单点事实，一条来源即答（"X 的默认端口是几"） | 答案要落盘复用 |
-| **quick-research（本 skill）** | 一个明确问题，需要读文档/源码才能答实，答案值得落盘 | 题目发散、需多源交叉验证 |
-| deepresearch | 广域多源/学术/可行性，需共识矩阵 | 单点问题（杀鸡用牛刀） |
+一个明确问题 → 一个真实 native 后台执行者 → 一份逐 claim 可追溯 Markdown。
 
-**升降级链**：题目在研究中发散/需交叉验证 → 停下，建议升 `/deepresearch`；
-反向：题目过窄（单点事实、一源即答）→ 用本 skill 而非 deepresearch（deepresearch 无内建降级出口，窄题应在入口/路由处直接选本 skill）。
+## 升降级链（研究任务深度）
 
-## 流程
+单点即时事实可直接查；广域交叉共识需求返回用户建议 deepresearch，不静默启动多路。
+来源：source10 research，MIT，pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`。
 
-1. **收题**：把问题压成一句可判定的研究题（答完能回答"是/否/怎么做"）。模糊 → 先问一句澄清。
-2. **派后台 agent（一个，不 fan-out）**：`Agent` tool、`run_in_background=true`，prompt 只含
-   研究题 + 下方纪律 + 落盘路径。主线（你/用户）继续手头工作，完成通知后回收。
-3. **后台 agent 纪律（写进其 prompt，逐条）**：
-   - **只查 primary source**：官方文档、源码、规范、一手 API——**拒绝二手转述**（博客/教程只可
-     作为找到一手源的线索，不得作为断言依据）；
-   - **每条断言追回 owning source**：断言后随行标 `[源: <URL 或 repo 路径#行>]`，查不到源的
-     写"未证实"，不得凭参数记忆断言；
-   - 产出**单个 markdown**：题目 → 结论（先行）→ 逐条发现（各带源）→ 未证实/边界。
-4. **落盘**：`docs/research/quick-research-<slug>-<YYYY-MM-DD>.md`（与 deepresearch 同目录，
-   前缀区分；同日重跑加 -001 序号不覆盖）。
-5. **回收**：主线读产出 → 一句话把结论回给用户（附文件路径）。**不写 handoff**（轻量 skill +
-   终端交付，按 handoff 分级免写）。
+## 1. 固定问题、证据与落点
 
-## 末尾约束
+压成一句可判定问题；目标含混才澄清。按 project-session 验证授权根，冻结绝对 output_path、
+只读来源范围、网络许可及 caller/U-ID/resume_target。已存在研究约定优先；项目默认路径保留
+`docs/research/quick-research-<slug>-<YYYY-MM-DD>.md`，同日重跑递增 -001，不覆盖。
+NO_PIN 只写已批准 framework/audit 或 OS-temp 精确路径，不碰项目 docs/交接/共享 alias。
+没有落盘权先准备报告或返回具体 NEEDS_CONTEXT，不靠目录存在推断权限。
 
-1. 一个后台 agent，不并发多路——要多路就升 deepresearch。
-2. primary 纯度不妥协：二手源只当路标。断言无源 = 撒谎（Iron Law 同宗）。
-3. 本 skill 不做决策建议——它交付"查证的事实"，决策归用户/上游 skill。
+## 2. 派一个后台 executor
+
+先读 model-routing，按已登记 native 身份和角色派发一名事实执行者；Codex 使用真实
+collaboration/native async primitive，Claude 仅在其实际工具支持时使用后台能力。
+不把 Claude `run_in_background` 字段复制到 Codex，也不以内联研究假称后台。
+传入问题、primary-source 纪律、有限范围、冻结 output_path 与权限交集；全程最多这一名。
+记录真实 agent/invocation ID、启动和完成状态；主线可继续独立工作，但报告需真实返回后回收。
+若当前 harness 无后台能力，诚实报告并取得替代执行选择，不宣称原方法已执行。
+
+## 3. executor 的完整纪律
+
+- 官方文档、源码、规范、第一方 API、论文等 owning primary source 才支持事实。
+  二手博客/教程只用于定位一手材料，不能成为结论依据。
+- 每条 claim 附实际读到的 URL 或绝对 repo path/行/版本。追到 owning source；无法查证写
+  UNVERIFIED 并说明缺口，不从参数记忆补事实。来源过期或互相冲突须显式标注。
+- 一份 Markdown：研究题、先行结论、逐条 findings/citations、未证实项、边界和实际来源。
+  可给事实对方案的含义，但用户取舍仍回原 owner。
+- 只用已有授权读取/网络；不安装依赖、开其他研究 agent、发消息、改变 Git 或写别处。
+
+## 4. 回收与真实 handoff
+
+等待同次 executor 真实完成，读取单文件全文核验 citations 和范围，向用户给结论与绝对路径。
+可用的来源不足时报告 DONE_WITH_CONCERNS/NEEDS_CONTEXT，不伪造引文。
+按 office/references/handoff-protocol 的实际 context-cost、模式和消费关系判断 handoff。
+现有 runtime-estimate=8000 属重型，不能承诺“轻量免交接”；已绑定且获授权项目交接按共享
+格式写验。NO_PIN 不执行项目 handoff，使用已批准审计/临时恢复材料。后续切项目不能改变后台落点。
+
+完成门：唯一 native 后台执行者真实返回、每 claim owning source 可达、单文件实际读回、
+未证实项诚实、实际 handoff 条件已处理。内容文本通过不等于后台行为已验证。
 
 <!-- FILE_END: quick-research/SKILL.md -->

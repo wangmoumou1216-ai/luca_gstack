@@ -4,9 +4,83 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright";
+import vm from "node:vm";
+import { resolvePrototypeOptions, inspectPrototype, extractPortableLogic } from "./verify-prototype.mjs";
 
 const checker = fileURLToPath(new URL("./verify-prototype.mjs", import.meta.url));
+
+// These deterministic tests run without browser, network, dependency installation or report I/O.
+let staticAssertions = 0;
+function check(condition, message) { assert.ok(condition, message); staticAssertions += 1; }
+function rejected(args, html = "", spec = "") {
+  assert.throws(() => resolvePrototypeOptions(args, html, spec), (error) => error.exitCode === 2); staticAssertions += 1;
+}
+const originalOptions = resolvePrototypeOptions([]);
+assert.deepEqual(originalOptions, { purpose: "ui", uiVariantCount: 0 }); staticAssertions += 1;
+assert.deepEqual(resolvePrototypeOptions(["--ui-variants"]), { purpose: "ui", uiVariantCount: 3 }); staticAssertions += 1;
+for (const n of [0, 2, 3, 4, 5]) { assert.equal(resolvePrototypeOptions([`--ui-variants=${n}`]).uiVariantCount, n); staticAssertions += 1; }
+for (const arg of ["--purpose=unknown", "--purpose", "--ui-variants=1", "--ui-variants=6", "--ui-variants=-1", "--ui-variants=2.5", "--ui-variants=03", "--ui-variants="]) rejected([arg]);
+rejected(["--purpose=logic-validation", "--ui-variants=2"]);
+rejected(["--purpose=ui"], '<html data-prototype-purpose="logic-validation">');
+rejected([], '<html data-prototype-purpose="ui">', "purpose: logic-validation\n");
+rejected(["--ui-variants=3"], '<html data-ui-variant-count="2">');
+rejected([], '<html data-ui-variant-count="2">', "ui_variant_count: 3\n");
+rejected(["--purpose=ui", "--purpose=ui"]);
+const prose = "Domain question, current activity, next action, error and recovery control. ".repeat(5);
+const states = ["default", "empty", "loading", "error", "success"];
+const defaultHtml = `<html><body><!-- DECISION: D-001 -->${states.map((s) => `<section data-prototype-state="${s}">${prose}</section>`).join("")}</body></html>`;
+const baseSpec = "Dynamic Reference Status: NOT_REQUIRED\nCurrent Aesthetic Score: 24/30\n";
+const base = { html: defaultHtml, prototypeSpec: baseSpec };
+const failures = (report) => report.checks.filter((c) => !c.passed).map((c) => c.name);
+check(failures(inspectPrototype(base)).length === 0, "Default UI static behavior preserved");
+check(inspectPrototype(base).checks.find((c) => c.name === "Supplied design rules").status === "N/A", "No rules means N/A");
+const rule = { source: "actual fixture source", checks: [{ id: "literal", required: ["Domain question"], forbidden: ["FORBIDDEN"] }] };
+check(failures(inspectPrototype({ ...base, rulesSupplied: true, designRules: rule })).length === 0, "Actual supplied rule passes");
+check(failures(inspectPrototype({ ...base, html: defaultHtml + "FORBIDDEN", rulesSupplied: true, designRules: rule })).includes("Design rule: literal"), "Rule violation fails");
+check(failures(inspectPrototype({ ...base, rulesSupplied: true, designRulesError: "missing file" })).includes("Supplied design rules valid"), "Missing supplied rules fail");
+check(failures(inspectPrototype({ ...base, html: defaultHtml.replace("<!-- DECISION: D-001 -->", "") })).includes("Design decisions mapped"), "UI cannot lose decision gate");
+check(failures(inspectPrototype({ ...base, prototypeSpec: baseSpec.replace("24/30", "23/30") })).includes("Current aesthetic score >= 24/30"), "UI cannot use logic aesthetics exemption");
+check(failures(inspectPrototype({ ...base, html: defaultHtml.replaceAll('data-prototype-state=', 'not-state=') })).includes("State coverage markers present"), "UI fixed states retained");
+const scoped = `FORBIDDEN<!-- GENERATED START -->${defaultHtml}<!-- GENERATED END -->`;
+check(!failures(inspectPrototype({ ...base, html: scoped, rulesSupplied: true, designRules: rule })).includes("Design rule: literal"), "Preserved region remains outside style scope");
+check(inspectPrototype({ ...base, mode: "figma-demo", blueprint: "nodes:\n  node-01-first:\n", prototypeSpec: baseSpec + "blueprint.yaml", html: defaultHtml + '<div data-node="node-01-first"></div>' }).checks.some((c) => c.name === "Figma demo blueprint exists" && c.passed), "Figma gates remain");
+check(failures(inspectPrototype({ ...base, mode: "ux-audit" })).includes("UX audit FIX markers present"), "UX FIX gate remains");
+check(failures(inspectPrototype({ ...base, mode: "screenshot-delta" })).includes("Screenshot delta preserved region declared"), "Screenshot preservation gate remains");
+check(inspectPrototype({ ...base, html: defaultHtml.replace("<!-- DECISION: D-001 -->", ""), mode: "standalone-mobile", prototypeSpec: baseSpec + "standalone mobile traceability 不完整" }).checks.some((c) => c.name === "Standalone mobile traceability limitation recorded" && c.passed), "Standalone gate remains");
+
+const logicModule = `const PrototypeLogic = { initial: () => ({ count: 0 }), transition: (state, action) => action === "add" ? ({ count: state.count + 1 }) : ({ ...state }) };\n`;
+const walks = ["happy", "edge", "illegal"].map((key) => `<section data-prototype-walkthrough="${key}"><button data-walkthrough-reset>Reset</button><button data-walkthrough-step="first" data-logic-action="add">Add</button></section><!-- WALKTHROUGH END: ${key} -->`).join("");
+const logicHtml = `<html data-prototype-purpose="logic-validation"><body><h1 data-prototype-problem>${prose}</h1><dl data-prototype-state-panel data-prototype-state="initial"><dt>Count</dt><dd>0</dd></dl><nav data-prototype-freeplay><button data-logic-action="add">Add</button></nav><nav data-prototype-walkthrough-tabs>${["happy", "edge", "illegal"].map((key) => `<button data-show-walkthrough="${key}">${key}</button>`).join("")}</nav>${walks}<script>// PROTOTYPE LOGIC START\n${logicModule}// PROTOTYPE LOGIC END\n</script></body></html>`;
+const logicSpec = "purpose: logic-validation\nui_variant_count: 0\nDynamic Reference Status: NOT_REQUIRED\nLogic Validation Coverage\nQuestion source: actual confirmed fixture brief\n";
+const logicInput = { html: logicHtml, prototypeSpec: logicSpec, purpose: "logic-validation" };
+check(failures(inspectPrototype(logicInput)).length === 0, "Logic exemption preserves all remaining static gates");
+check(inspectPrototype(logicInput).checks.filter((c) => c.status === "N/A" && /aesthetic|State coverage/.test(c.name)).length === 2, "Only aesthetic and fixed-state gates N/A");
+check(failures(inspectPrototype({ ...logicInput, html: logicHtml.replace("const PrototypeLogic", "document.title; const PrototypeLogic") })).includes("Portable pure logic boundary (static)"), "DOM contamination fails");
+check(failures(inspectPrototype({ ...logicInput, html: logicHtml.replace('data-walkthrough-reset', 'not-reset') })).includes("Logic happy reset and real steps declared (static)"), "Missing known-state reset fails");
+check(failures(inspectPrototype({ ...logicInput, html: logicHtml.replace('data-walkthrough-step="first"', 'not-step="first"') })).includes("Logic happy reset and real steps declared (static)"), "Missing real step fails");
+check(failures(inspectPrototype({ ...logicInput, html: logicHtml.replace('data-prototype-problem', 'not-problem') })).includes("Logic visible problem and readable state declared (static)"), "Missing visible question fails");
+const lifted = vm.runInNewContext(`${extractPortableLogic(logicHtml)}\nPrototypeLogic`, {}, { timeout: 1000 });
+const one = lifted.transition(lifted.initial(), "add");
+check(JSON.stringify(one) === '{"count":1}', "Independent fixture logic block is extractable; not native portability proof");
+
+function variantHtml(keys = ["A", "B", "C"]) {
+  return `<html data-prototype-purpose="ui" data-ui-variant-count="3"><body>${keys.map((key) => `<!-- PROTOTYPE VARIANT START: ${key} --><section data-prototype-variant="${key}" data-variant-name="Layout ${key}"><!-- DECISION: D-001 -->${prose}<p data-prototype-content-id="source-role">Same actual role</p><button data-prototype-action="primary">Inspect source</button>${states.map((s) => `<button data-show-state="${s}">${s}</button><section data-prototype-state="${s}">${prose}</section>`).join("")}</section><!-- PROTOTYPE VARIANT END: ${key} -->`).join("")}<nav data-prototype-variant-switcher><button data-variant-prev>Prev</button><span data-prototype-variant-label></span><button data-variant-next>Next</button></nav><p data-prototype-variant-error><button data-variant-recover="A">Recover</button></p></body></html>`;
+}
+const variantSpec = `purpose: ui\nui_variant_count: 3\nDynamic Reference Status: NOT_REQUIRED\nUI Variant Coverage\ncommon_content_ids: ["source-role"]\n${["A", "B", "C"].map((key) => `Variant ${key} Current Aesthetic Score: 24/30`).join("\n")}\n`;
+const variantInput = { html: variantHtml(), prototypeSpec: variantSpec, uiVariantCount: 3, designBrief: "D-001" };
+check(failures(inspectPrototype(variantInput)).length === 0, "Every variant has its own static contract");
+check(inspectPrototype({ ...variantInput, uiVariantCount: 0 }).variants.length === 0, "Count zero never enables variant traversal from markers");
+check(!failures(inspectPrototype({ ...variantInput, html: variantHtml().replaceAll('data-ui-variant-count="3"', "data-ui-variant-count='3'") })).includes("UI variant count file contract (static)"), "Single-quoted HTML count is equivalent");
+check(failures(inspectPrototype({ ...variantInput, html: variantHtml(["C", "B", "A"]) })).includes("UI variant stable keys and boundaries (static)"), "Reordering stable keys fails");
+check(failures(inspectPrototype({ ...variantInput, prototypeSpec: variantSpec.replace("Variant B Current Aesthetic Score: 24/30", "Variant B Current Aesthetic Score: 23/30") })).includes("Variant B current aesthetic score >= 24/30 (declared)"), "Each variant independently retains score gate");
+check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace('data-prototype-state="empty"', 'not-state="empty"') })).includes("Variant A required UI states (static)"), "State omission in one variant fails despite other variants");
+check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace('data-prototype-content-id="source-role"', 'data-prototype-content-id="other"') })).includes("Variant A common content markers (static)"), "Per-key inventory omission fails, not semantic conservation proof");
+check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace("<!-- DECISION: D-001 -->", "") })).includes("Variant A common decisions mapped (static)"), "Per-key decision omission fails");
+check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace('data-prototype-variant-error', 'not-error') })).includes("UI shared floating control contract (static)"), "Unknown-key recovery contract required");
+console.log(`PASS ${staticAssertions} deterministic assertions; STATIC_CONTRACT_ONLY; native/browser/model semantics/real selection NOT_RUN.`);
+if (process.argv.includes("--static-only")) process.exit(0);
+// The full existing browser regression suite remains the default test entry, for authorized Htest.
+const { chromium } = await import("playwright");
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "prototype-design-rules-"));
 const htmlPath = path.join(dir, "index.html");
 const rulesPath = path.join(dir, "design-rules.json");

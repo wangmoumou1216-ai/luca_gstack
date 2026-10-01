@@ -125,22 +125,30 @@ if (!workflowMode.includes('<!-- FILE_END: skill-os/runtime/workflow-mode.md -->
   errors.push('workflow-mode lacks selected-view, fallback, missing-key, or EOF contract');
 }
 
-const inputModeKeys = [
-  'auto', 'handoff', 'wait-what', 'domain-modeling', 'writing-for-agents', 'magicpath',
-  'open-design', 'idea', 'deepresearch', 'quick-research', 'brainstorm',
-  'superpowers-brainstorming', 'ux-research', 'ux-brainstorm', 'design-brief',
-  'html-prototype', 'figma-demo', 'tech-spec', 'task-plan', 'grilling', 'diagnosing-bugs',
-  'resolving-merge-conflicts', 'to-spec', 'to-tickets', 'wayfinder', 'implement',
-  'code-hygiene', 'code-review', 'codebase-design', 'code-recon', 'muse-req-triage',
-  'insight-synthesis', 'research-kit', 'ux-writing', 'compare', 'ux-audit', 'redteam',
-  'evals', 'retro',
-];
+// Resolve the exact closed set from the same validated YAML authority as the builder.
+const registryKeyRead = spawnSync('python3', ['-c',
+  "import json, runpy, sys; b = runpy.run_path(sys.argv[1]); print(json.dumps(b['input_mode_keys']()))",
+  join(ROOT, 'scripts/build-agent-context.py')], { cwd: ROOT, encoding: 'utf8' });
+let inputModeKeys = [];
+if (registryKeyRead.status !== 0) {
+  errors.push(`input-mode registry key read failed: ${`${registryKeyRead.stdout}${registryKeyRead.stderr}`.trim()}`);
+} else {
+  try {
+    inputModeKeys = JSON.parse(registryKeyRead.stdout);
+    if (!Array.isArray(inputModeKeys) || !inputModeKeys.length
+        || inputModeKeys.some(key => typeof key !== 'string' || !/^[a-z][a-z0-9-]*$/.test(key))
+        || new Set(inputModeKeys).size !== inputModeKeys.length) throw new Error('invalid canonical closed set');
+  } catch (error) {
+    errors.push(`input-mode registry key shape failed: ${error.message}`);
+    inputModeKeys = [];
+  }
+}
 const inputModeDir = join(ROOT, '.claude/skill-os/generated/input-modes');
 const generatedModeEntries = existsSync(inputModeDir) ? readdirSync(inputModeDir, { withFileTypes: true }) : [];
 const generatedModeNames = generatedModeEntries.map((entry) => entry.name).sort();
 const expectedModeNames = inputModeKeys.map((key) => `${key}.json`).sort();
 if (JSON.stringify(generatedModeNames) !== JSON.stringify(expectedModeNames)) {
-  errors.push(`generated input-mode closed set drift: expected=39 actual=${generatedModeNames.length}`);
+  errors.push(`generated input-mode closed set drift: expected=${inputModeKeys.length} actual=${generatedModeNames.length}`);
 }
 if (generatedModeEntries.some((entry) => !entry.isFile())) errors.push('generated input-mode closed set contains a non-file entry');
 const inputModeSource = readFileSync(join(ROOT, '.claude/skill-os/input-modes.yaml'));

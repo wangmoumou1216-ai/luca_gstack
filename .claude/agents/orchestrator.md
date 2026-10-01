@@ -69,6 +69,41 @@ diagnose-only 回路；只有真实 Git conflict 才进入 `resolving-merge-conf
 scope 与 inherited authority/effect intersection。分析或写入只能取父权限交集，
 open_questions 回原 owner，随后恢复原 U-ID；不新增 workflow state/节点，不自动定案。
 
+### 2.1b `implement` 单一集成链调度
+
+`implement` 的实际执行优先使用本节，不走通用 Parallel Fan-out/parallel_skills 或分层并发
+例外。`max_active_subagents=1` 覆盖 worker、探索、merger 与 reviewer；不得嵌套另派执行者。
+依赖 frontier 是可选择集合而非并发许可，本文件其它模式不能绕过此门。
+
+1. 从同一 approved canonical plan 读 graph、U-ID、context pointers、integration root/ref/tip、
+   ownership/preimages、所有明确 effect。实际读回 tip 与工作区；变动、未授权 Git 或 ownership
+   冲突 BLOCKED，回原 U-ID。可选 exploration 只用一个真实冷 explorer、批准范围/外部笔记
+   落点，先 completed/同次 accepted 再进入实现；不借源码读取扩大权限。
+2. 重算 **ready frontier**：所有前置已真实 DONE 且 verification 通过，无未决 HITL/冲突；稳定
+   U-ID 升序取一个。冻结派发时真实 integration tip、文件 tuple、唯一 owner、保护项和读取
+   指针。worker 必须核验自己 workspace/branch/tip/preimages 与绑定一致，不能 reset/rebase/
+   覆盖来消除差异。工作区、branch 或独立 worktree 仅用计划批准的具体方式。
+3. 在原 U-ID 内执行已确认 seam 的 TDD 纵切：真实 red→最小实现→green，定期 typecheck/
+   focused tests；保留同仓其他 worker/user edits。完成报告含实际 diff、命令/输出/退出、
+   tip/preimages/ownership 与剩余 blocker，不能靠自报 success 更新 graph。
+4. 前一个真实 completed 后核验同 invocation accepted、原生 ID/输入 SHA/起止，再由 owner
+   读回实际 diff/pre/postimages。需要集成时用已批准 normal Git effect，先复核 integration tip
+   未漂移，保存真实 integration verification；共享路径按集成后实际字节交下一单元。缺票/
+   tip 漂移/验证失败暂停该依赖链；不用 reset、强推、自动 close ticket 或新执行器。
+5. 集成并验证通过才把该 U-ID 标 DONE，重算 frontier，再派下一个。quality-gate、merger/
+   explorer 都与实现者串行，不留下“后台可并发”例外。planned red 不当 unexpected failure；
+   真实 regression/conflict 仍用 §2.1a 的原 U-ID 异常回路。
+6. 全部依赖完成后跑相关完整 suite，再走 code-review→code-hygiene Mode D 的独立 Standards/
+   Spec 闭合。失败或 UNKNOWN 不标 ready。发布准备时全文读
+   `.claude/skills/office/implement/references/pull-request.md`，以实际 base/head/diff 和证据写
+   Summary / Evidence / Merge Danger；发送/创建/标 ready、commit/push 和 tracker close 各须
+   精确真实授权，没有就交付草稿与缺口，不编 PR/check 链接。
+7. 最后只归档本任务创建、已获批且可恢复的自身受管理 worktree；不删除其它会话或用户 checkout。
+   保留原 U-ID、context pointers、集成/审查与 Git 回执，恢复从实际 tip 和未完成队列开始。
+
+来源：source20 的 task graph/frontier/integration 方法、source22 的 PR 表述方法；本文件为
+唯一执行所有者，`implement` facade 与 Plan 不自行执行或关闭投影票据。
+
 ### 2.2 执行流程
 
 ```
@@ -109,9 +144,9 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
         按编排模式执行：
         - Solo: 主 Agent 直接执行
         - Sequential: 串行执行子任务
-        - Parallel Fan-out: 同一消息中并发启动多个独立任务
+        - Parallel Fan-out: 通用任务并发；implement 一律按 §2.1b ready 队列每次一个
         - Supervisor: 启动 Work Agent → 完成后进入 2c 测试环节
-        - Hierarchical: 分层协调（每层可嵌套上述模式）
+        - Hierarchical: 通用任务分层协调；implement 每层都受 §2.1b 的单活跃门约束
 
   2c  【测试环节】触发 quality-gate 执行本 Phase 的断言
       - 将 Plan Agent 的断言列表 + 产出路径传入 quality-gate
@@ -176,7 +211,8 @@ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时
 
 ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
 
-**适用条件：** Plan Agent 声明了 `parallel_skills` 字段，且所有 skill 均为非交互型（`execution_context: subagent`）。
+**适用条件：** 仅非 implement 的通用计划声明 `parallel_skills`，且所有 skill 均为非交互型
+（`execution_context: subagent`）。implement 不能走本节，按 §2.1b 串行。
 
 ```
 Step 1  读取 parallel_skills 列表（见 plan-agent.md §并行 Skill 声明语法）
@@ -397,8 +433,9 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 需单独登记、配置并验证。Workflow runner 按精确 workflow/phase 路由，没有 omit/inherit 豁免。
 
 Codex native 的关键调用在完成证据落盘前，暂停新的 native/runner 派发；已绑定 agent_id
-也不代表证据闭合。因此原生关键会审按顺序完成，非关键原生调用仍可并行。一个已准入的
-runner 内部新建的关键任务仍可并行；新的 runner 必须等待既有关键义务闭合。
+也不代表证据闭合。因此原生关键会审按顺序完成。通用非 implement 计划的非关键调用或已准入
+runner 内部任务按原权限可并行；implement 始终 max_active_subagents=1，不使用这项例外。
+新的 runner 必须等待既有关键义务闭合。
 
 下表和后面的 alias 传参/降级规则只描述延期的 Claude adapter 兼容合同，不证明 Claude
 具备 Codex 的运行时强制能力，也不能覆盖 Codex 关键场景政策。

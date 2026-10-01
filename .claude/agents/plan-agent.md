@@ -41,6 +41,31 @@ Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 
 ---
 
+## `implement compile`：依赖 frontier 与集成所有权
+
+这是上述编译模式的执行数据，不另造 Plan/票据状态。除 canonical task-plan/SHA 与每张 DEV/TEST/
+断言完整映射外，编译输出还须包含：
+
+- **task graph**：稳定 U-ID、Dependencies、真实外部 blocker、各门结果；循环先处理再批准。
+- **ready frontier**：仅 prerequisites 已 DONE 且验证通过、没有未决真人门、文件 ownership
+  不冲突的 approved U-ID 可入队。按稳定 U-ID 升序取一个，`max_active_subagents=1`。
+  frontier/Wave 表达依赖而非并发许可；原上游 parallel 意图译为待执行队列。
+- **integration**：经核验 canonical WORK_ROOT、实际 integration ref 与 `integration_tip_sha`、
+  基线 SHA、当前 worktree/branch 身份。创建 branch/worktree、merge/stage/commit/push、PR/close/
+  archive 等每个 effect 单列，已有明确许可才可执行，不因编译自动创建。
+- **ownership**：逐 U-ID 规范化有限 Files、实际 preimage tuple、唯一写 owner；共享路径须按
+  前单元实际完成后字节重新绑定。写权限交集、保护例外和验证命令一起交 worker。
+- **context pointers**：spec/task-plan path+SHA、源码读取清单、批准的仓库外研究笔记、已完成
+  单元证据、真实 commits。用这些指针传递上下文，避免重复全文与作者历史污染。
+
+worker 启动前须实际核验其 workspace tip/preimage/owner 与冻结 integration tip 相符；不符
+BLOCKED 回原 U-ID，不能 reset 到 tip、覆盖别人的文件或自动生成新授权。TDD 只在已确认公共
+seam、已授权测试路径运行。真实完成/同次 accepted 与集成验证前，后继不得视为 DONE；完成后
+由 Orchestrator 重算 frontier，最后 code-review 闭合后才可进入获批 ready/publish 步。
+归档只处理本任务创建、可恢复且获批的自身受管理 worktree，不清理其它会话 checkout。
+本节优先于本文件通用 Parallel/Wave 示例，但仅作用于 implement 编译与执行链。
+来源：source20 implement-spec，MIT，pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`。
+
 ## 触发条件
 
 满足以下**任一条件**时，主 Agent 必须先调用 Plan Agent：
@@ -336,7 +361,7 @@ Phase N（parallel_skill_execution — 多个非交互 skill 并行）:
 tracker/单票上限/name-not-ID）：** 跨多 session、终点明确但路径多雾的工作适用三词——
 **destination**（先命名完成状态，它划定 scope）；**fog**（在 scope 内但还提不成精确问题的项，
 PROGRESS.md 可增可选「尚未锐化（fog）」节收留，与「待执行」区分）；**frontier**（阻塞全清的
-U-block/任务卡可并行起）。**毕业判准一句**：fog 项能否**现在精确陈述问题**（非能否回答）——
+U-block/任务卡进入 ready 队列；implement compile 每次只派一个）。**毕业判准一句**：fog 项能否**现在精确陈述问题**（非能否回答）——
 不能 → 留 fog（防把模糊项伪装成任务卡）；能 → 再过一道**类型闸**（2026-07-23 对标裁决，源
 wayfinder decision-ticket 正名）：解属**决策还是执行**（判据同 brainstorm Rule 3——答案取决于
 用户偏好/取舍 → 决策；可检索/可执行验证 → 执行）。**决策型永不毕业成自主执行的 U-block**，
@@ -350,6 +375,8 @@ U-NNN:
   Goal: <具体动词 + 具体对象，不允许"实现XXX模块"这类模糊标题>
   Source: <DEV-NNN | IF-NNN | R-NNN | inline: "用户原话">（溯源必填）
   Dependencies: None | U-NNN, U-MMM | external: <描述>
+  # implement compile 还绑定：Integration tip / Owner / Preimages / Context pointers
+  # frontier 仅依赖验证通过才 ready；稳定 U-ID 升序、max_active_subagents=1
   Files: <要创建/修改的文件列表>
   Approach: <实现思路，一句话>
   Read List: <从关联 DEV-NNN 任务卡的「读取清单」逐条复制；旧版卡无此字段时填 WARNING:legacy-card>
@@ -368,7 +395,7 @@ U-NNN:
 - 分裂一个 U-block → 用 U-NNN-a / U-NNN-b，原 ID 留空不复用
 - 原因：execute skill 跨 session 按 U-ID 引用任务，重编导致追踪链断裂
 
-**Wave 分组（拓扑排序，Wave 内可并行）：**
+**Wave 分组（拓扑排序；通用模式可并行，implement compile 的 Wave 内固定串行）：**
 ```
 Wave 1（可并行）: [U001] [U002] [U004]  ← Dependencies == None
 Wave 2（U001 完成后）: [U003] [U005]    ← Dependencies 全在 Wave 1

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {
   appendFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -12,8 +13,8 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import {homedir, tmpdir} from 'node:os';
-import {dirname, join, resolve} from 'node:path';
+import {tmpdir} from 'node:os';
+import {dirname, join, relative, resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {
@@ -23,7 +24,20 @@ import {
   readProjectState,
 } from '../.claude/hooks/lib/project-substrate.mjs';
 
+import {withoutLocalGitEnv} from '../.claude/hooks/lib/git-env.mjs';
+import {controlRoot, gitCommonDirRealpath} from './controlled-change.mjs';
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const sourceControl = controlRoot(ROOT);
+function controlSnapshot() {
+  if (!existsSync(sourceControl)) return {};
+  return Object.fromEntries(readdirSync(sourceControl).sort().flatMap(task =>
+    ['required-witness.json', 'active-context.json', 'receipt.json'].flatMap(name => {
+      const file = join(sourceControl, task, name);
+      return existsSync(file) ? [[`${task}/${name}`, readFileSync(file).toString('base64')]] : [];
+    })));
+}
+const sourceControlBefore = controlSnapshot();
 const SCOPE_GUARD = join(ROOT, '.claude', 'hooks', 'project-scope-guard.mjs');
 const CONTROLLED_GUARD = join(ROOT, '.claude', 'hooks', 'controlled-change-guard.mjs');
 const STOP_HOOK = join(ROOT, '.claude', 'hooks', 'session-sync.mjs');
@@ -47,16 +61,36 @@ function makeFixture(harness) {
     writeFileSync(join(projects, name, 'CONTEXT.md'), `# ${name}\n`);
     writeFileSync(join(projects, name, 'docs', 'task.txt'), `${name}-task\n`);
   }
-  if (harness === 'codex') {
-    const trustedParent = join(homedir(), '.luca', 'codex');
-    mkdirSync(trustedParent, {recursive: true});
-    const codexHome = realpathSync(mkdtempSync(join(trustedParent, 'project-v34-host-')));
-    return {harness, root, projects: realpathSync(projects), gstack: ROOT, codexHome, stateSids: []};
-  }
   const gstack = join(root, 'gstack');
   mkdirSync(join(gstack, '.claude'), {recursive: true});
-  const initialized = spawnSync('/usr/bin/git', ['init', '-q', gstack], {encoding: 'utf8'});
+  const initialized = spawnSync('/usr/bin/git', ['init', '-q', gstack], {
+    encoding: 'utf8', env: withoutLocalGitEnv(),
+  });
   assert.equal(initialized.status, 0, initialized.stderr || initialized.stdout);
+  // The adapter derives its repository from its own file. Copy the real runtime
+  // into an independent Git fixture so an enclosing commit witness stays intact.
+  const runtimeFiles = [
+    '.codex/codex-hook-adapter.mjs',
+    '.claude/hooks/project-scope-guard.mjs',
+    '.claude/hooks/controlled-change-guard.mjs',
+    '.claude/hooks/session-sync.mjs',
+    'scripts/controlled-change.mjs',
+    'scripts/controlled-change-controller.mjs',
+    'scripts/model-route-host.mjs',
+    'scripts/project.sh', 'scripts/project-pin.mjs', 'scripts/project-lease.mjs',
+  ];
+  for (const file of runtimeFiles) {
+    mkdirSync(dirname(join(gstack, file)), {recursive: true});
+    cpSync(join(ROOT, file), join(gstack, file));
+  }
+  cpSync(join(ROOT, '.claude/hooks/lib'), join(gstack, '.claude/hooks/lib'), {recursive: true});
+  assert.notEqual(gitCommonDirRealpath(gstack), gitCommonDirRealpath(ROOT));
+  if (harness === 'codex') {
+    const codexHome = join(root, 'codex-home');
+    mkdirSync(codexHome);
+    return {harness, root, projects: realpathSync(projects), gstack: realpathSync(gstack),
+      codexHome: realpathSync(codexHome), stateSids: []};
+  }
   const transcripts = join(root, 'transcripts');
   mkdirSync(transcripts);
   return {harness, root, projects: realpathSync(projects), gstack: realpathSync(gstack), transcripts, stateSids: []};
@@ -148,7 +182,7 @@ function openTurn(fx, sid, prompt) {
 
 function hookEnv(fx) {
   return {
-    ...process.env,
+    ...withoutLocalGitEnv(),
     CLAUDE_PROJECT_DIR: fx.gstack,
     LUCA_GSTACK_ROOT: fx.gstack,
     LUCA_PROJECTS_ROOT: fx.projects,
@@ -160,8 +194,10 @@ function hookEnv(fx) {
 
 function runHook(fx, target, payload, extraEnv = {}) {
   const viaAdapter = fx.harness === 'codex';
-  return spawnSync(process.execPath, viaAdapter ? [ADAPTER, target] : [target], {
-    cwd: viaAdapter ? ROOT : fx.gstack,
+  const fixtureTarget = join(fx.gstack, relative(ROOT, target));
+  return spawnSync(process.execPath, viaAdapter
+    ? [join(fx.gstack, relative(ROOT, ADAPTER)), fixtureTarget] : [fixtureTarget], {
+    cwd: fx.gstack,
     env: {...hookEnv(fx), ...extraEnv},
     input: JSON.stringify(payload), encoding: 'utf8', timeout: 30000,
   });
@@ -181,7 +217,7 @@ function eventPayload(fx, sid, event, body) {
 
 function executeExpanded(fx, command) {
   return spawnSync('/bin/bash', ['-lc', command], {
-    cwd: ROOT, env: hookEnv(fx), encoding: 'utf8', timeout: 30000,
+    cwd: fx.gstack, env: hookEnv(fx), encoding: 'utf8', timeout: 30000,
   });
 }
 
@@ -255,9 +291,9 @@ for (const harness of ['claude', 'codex']) {
       && readFileSync(taskPath, 'utf8') === 'beta-task\n', task.stderr || task.stdout);
 
     const beforeStatus = readFileSync(join(fx.gstack, '.claude', `.session-project-${sid}`));
-    const unknown = spawnSync(process.execPath, [PROJECT_PIN, 'status', '--view', 'host',
+    const unknown = spawnSync(process.execPath, [join(fx.gstack, relative(ROOT, PROJECT_PIN)), 'status', '--view', 'host',
       '--session-id', sid, '--operation', 'missing-operation'], {
-      cwd: ROOT, env: hookEnv(fx), encoding: 'utf8', timeout: 30000,
+      cwd: fx.gstack, env: hookEnv(fx), encoding: 'utf8', timeout: 30000,
     });
     const unknownOut = parse(unknown.stdout);
     ok(`${harness} unknown-result lookup is explicit and read-only`, unknown.status === 0
@@ -319,18 +355,50 @@ for (const harness of ['claude', 'codex']) {
 }
 
 {
-  const statePath = join(ROOT, '.claude', '.session-project-v34-codex-adapter-failure');
-  rmSync(statePath, {force: true});
-  const failed = spawnSync(process.execPath, [ADAPTER, SCOPE_GUARD], {
-    cwd: ROOT,
-    env: {...process.env, LUCA_CONTROLLED_TEST_ADAPTER_READ_ERROR: 'project-scope'},
-    input: JSON.stringify({hook_event_name: 'PreToolUse', session_id: 'v34-codex-adapter-failure',
-      cwd: ROOT, tool_name: 'Bash', tool_input: {command: './scripts/project.sh switch alpha'}}),
-    encoding: 'utf8', timeout: 30000,
-  });
-  ok('codex adapter runtime failure consults the durable witness and never prepares a selection',
-    [0, 2].includes(failed.status) && /consulting durable witness|runtime failed|adapter/.test(failed.stderr)
-    && !existsSync(statePath), failed.stderr || failed.stdout);
+  const fx = makeFixture('codex');
+  try {
+    const git = (...args) => {
+      const r = spawnSync('/usr/bin/git', ['-C', fx.gstack, ...args], {
+        env: withoutLocalGitEnv(), encoding: 'utf8', timeout: 30000,
+      });
+      assert.equal(r.status, 0, r.stderr || r.stdout);
+      return r.stdout.trim();
+    };
+    git('config', 'user.name', 'Project Gate Fixture');
+    git('config', 'user.email', 'fixture@example.invalid');
+    git('commit', '--allow-empty', '-qm', 'fixture');
+    const baseline = git('rev-parse', 'HEAD');
+    const scratch = join(fx.root, 'scratch');
+    mkdirSync(scratch);
+    const manifestPath = join(scratch, 'manifest.json');
+    writeFileSync(manifestPath, JSON.stringify({
+      schema_version: 1, task_id: 'project-v34-adapter-failure', u_id: 'U-013',
+      repo_realpath: fx.gstack, git_common_dir_realpath: gitCommonDirRealpath(fx.gstack),
+      plan_sha256: '0'.repeat(64), plan_recorded_baseline: baseline, observed_baseline: baseline,
+      session: 'v34-codex-adapter-failure', scratch_root: scratch,
+      repo_paths: [], external_paths: [], mutation_classes: [], approved_effects: [], allowed_commands: [],
+    }) + '\n');
+    const controller = (...args) => spawnSync(process.execPath, [
+      join(fx.gstack, 'scripts/controlled-change-controller.mjs'), ...args, '--manifest', manifestPath,
+    ], {cwd: fx.gstack, env: hookEnv(fx), encoding: 'utf8', timeout: 30000});
+    const prepared = controller('prepare', '--generation', 'project-v34-adapter-failure-0001');
+    assert.equal(prepared.status, 0, prepared.stderr || prepared.stdout);
+    const statePath = join(fx.gstack, '.claude', '.session-project-v34-codex-adapter-failure');
+    const failed = runHook(fx, SCOPE_GUARD, {
+      hook_event_name: 'PreToolUse', session_id: 'v34-codex-adapter-failure',
+      cwd: fx.gstack, tool_name: 'Bash', tool_input: {command: './scripts/project.sh switch alpha'},
+    }, {LUCA_CONTROLLED_TEST_ADAPTER_READ_ERROR: 'project-scope'});
+    ok('codex adapter runtime failure consults the durable witness and never prepares a selection',
+      failed.status === 2 && /consulting durable witness|runtime failed|adapter/.test(failed.stderr)
+      && !existsSync(statePath), failed.stderr || failed.stdout);
+    const closed = controller('abort', '--reason', 'fixture-complete');
+    assert.equal(closed.status, 0, closed.stderr || closed.stdout);
+  } finally {
+    cleanupFixture(fx);
+  }
 }
+
+ok('dual-host fixtures preserve the enclosing repository control authority',
+  JSON.stringify(controlSnapshot()) === JSON.stringify(sourceControlBefore));
 
 process.stdout.write(`\n=== project-gate v3.4 dual-host summary: PASS=${pass} FAIL=0 ===\n`);

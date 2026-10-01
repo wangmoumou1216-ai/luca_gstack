@@ -2,10 +2,7 @@
 name: code-review
 preamble-tier: 1
 version: 1.0.0
-description: |
-  代码改动双轴审查入口：先固定 WORKTREE_DIFF、commit/branch/tag 比较点或 FILE_SET，再把 Standards
-  与 Spec 两轴隔离审查并分列报告。用于当前未提交改动、分支、PR 或“review since X”；不用于页面 UX、
-  设计文档评审、代码清理或没有明确代码对象的泛 review。(luca_gstack)
+description: "固定代码改动范围和需求输入，委托 code-hygiene Mode D 唯一方法权威，只返回分轴 findings。"
 allowed-tools:
   - Read
   - Bash
@@ -28,135 +25,52 @@ git status --short
 python3 .claude/observability/scripts/get_rules.py code-review "*" 2>/dev/null || true
 ```
 
-## 定位与权威边界
+# Code Review — 固定输入门面
 
-**Defining constraint：固定审查对象 × Standards/Spec 上下文隔离 × 只读 findings。**
+本入口只负责固定审查范围与输入；完整方法的唯一执行权威是
+`../code-hygiene/SKILL.md` 的 Mode D「代码审查环节」。进入执行前完整读取该文件和
+`.claude/skill-os/routing-chain-check.md` 到 EOF，随后把下述固定输入交给 Mode D。
+本文件不派另一组 reviewer，也不保存第二份 smell、两轴流程或报告模板。
 
-本 skill 是用户可见入口，不建立第二套审查制度。执行前读取：
+## 1. 固定范围
 
-1. `../code-hygiene/SKILL.md` 中“代码审查环节”到“末尾核心约束”的完整内容——基线、Fowler smell、
-   分级 findings 与不改代码纪律的唯一执行权威；
-2. `.claude/skill-os/routing-chain-check.md` 的 R4——独立 reviewer、default-REFUTE、运行时分区、mutation
-   抽查与终版闭合的唯一证据权威。
+先按 `.claude/skill-os/runtime/project-session.md` 验证项目身份，冻结规范化绝对
+`REVIEW_ROOT`。框架审查使用明确的框架检出；preamble 的 cwd 输出不决定目标。
+仅选择一个主输入，并保留用户给出的比较语义：
 
-若两处规则与本文件的摘要冲突，以两处权威为准。本 facade 只负责：准确触发、固定范围、组织两轴、
-给出一致输出。
+- `WORKTREE_DIFF`：当前未提交改动默认使用 `git -C '<REVIEW_ROOT_ABS>' diff HEAD`。
+  同时读取 status；diff 不含 untracked，只把已确认属于任务的文件列为附加绝对 `FILE_SET`。
+- `BASE_SHA + HEAD_SHA`：先把 commit/branch/tag 解析为 commit，固定解析后的 SHA、
+  `git -C '<REVIEW_ROOT_ABS>' diff <BASE_SHA>...<HEAD_SHA>` 及对应 commit list。
+  三点比较以 merge-base 为准。没有可唯一确定的比较点时请求真实用户选择。
+- `FILE_SET`：把明确路径或目录展开为有限、存在、可读的规范化绝对文件清单。
 
-来源：`mattpocock/skills` 的 `skills/engineering/code-review`（MIT），上游锚
-`6654f6b60cd9d5be8b54c6fafe44346dabeb3b76`。Luca 适配移除了上游专属 issue-tracker 前置，复用
-现有 `code-hygiene` Mode D 与 R4，不形成规则副本。
+命令中的绝对根和 SHA 必须在派发前替换为字面且正确引用的值；冷 reviewer 不依赖父 cwd、
+共享 alias 或父 SID。坏 ref、空范围、空 diff 且无附加改动时停止，不派空审查。
 
-Claude 的项目 native alias 会覆盖 bundled `/code-review`；bundled `/review` alias 不受覆盖。只有用户
-明确点名 `/review` 时才走原生审查，不把它静默改道回本 facade。
+## 2. 固定需求输入
 
-## 1. 固定审查对象
+把用户已给出的 spec/issue/plan、当前任务或 PR 说明作为来源指针；尚无来源时把明确的
+commit 引用与已授权可读制品线索交给 Mode D 的来源查找步骤。
+通常审查无 spec 可显式 `NOT RUN — no spec source found`；用户要求核对某份需求却缺正文时，
+真实追问并等待，用户明确不存在 spec 后才允许跳过。不得用想象的需求补齐。
 
-只选一种基线，并把最终命令/文件集原样交给两个审查轴：
-审下游项目时先按 `project-session.md` 验证目标项目，审框架自身时使用当前框架检出；
-两者都须冻结规范化的绝对仓库根 `REVIEW_ROOT`。
-开头 preamble 的 Git 输出只描述调用者 cwd，不能用它推断被审仓库。
-以下命令中的 `<REVIEW_ROOT_ABS>` 在派发前须替换成同一个**字面、正确 shell 引用**的绝对路径，
-不能把变量名或父会话 cwd 留给冷启动 reviewer。
+交给 Mode D 的输入为：绝对仓库根、固定 baseline/diff 命令与 commit list、精确文件集、
+需求来源或无来源状态、当前有效标准的绝对路径线索、DESCRIPTION、父 scope/U-ID/resume_target
+以及已有权限交集。来源读取、隔离审查、实际 native 票与分轴报告均由 Mode D 完成。
 
-### WORKTREE_DIFF
+## 3. 委托与返回
 
-用户说“当前改动/刚改完/未提交/WIP”且未给 ref 时默认使用：
+调用 Mode D，原样保留其 Standards/Spec 结论、每轴 count/worst 与未运行/未知状态。
+结果返回原调用者；本轮只读 findings，不编辑代码、不 stage/commit，也不推进 workflow。
+修复需要已有精确实现授权，修后闭合仍按 Mode D/R4。
+调用者把报告与闭合证据带入自己的验收或收尾 handoff，本 facade 不制造空节点。
 
-```bash
-git -C '<REVIEW_ROOT_ABS>' diff HEAD
-git -C '<REVIEW_ROOT_ABS>' status --short
-```
+Claude 的明确 `/review` 仍按其原生入口处理，不静默重定向到本 facade。
+来源：mattpocock/skills source02，MIT，pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`。
+本地消除重复方法；Mode D 的完整 source02 适配归其执行所有者。
 
-`git diff HEAD` 不包含 untracked 文件；从 `git status --short` 找到与本次任务相关的 untracked 文件，
-把它们作为明确 `FILE_SET` 附加，禁止静默漏审或把所有陌生文件归入本次范围。
-
-### BASE + HEAD
-
-用户给 commit、branch、tag 或“since X”时：
-
-```bash
-git -C '<REVIEW_ROOT_ABS>' rev-parse --verify <fixed-point>^{commit}
-git -C '<REVIEW_ROOT_ABS>' diff <fixed-point>...HEAD
-git -C '<REVIEW_ROOT_ABS>' log <fixed-point>..HEAD --oneline
-```
-
-三点 diff 以 merge-base 为比较点。正式 PR/整分支若工具上下文已经提供 base，直接使用；没有 base 且
-不能从明确 upstream/default branch 唯一确定时，只问一个阻塞问题，不猜。
-
-### FILE_SET
-
-用户明确给路径，或任务跨多次提交但能列出精确文件时使用。先确认每个路径存在；目录须展开成可审计
-的**绝对路径**文件清单，不把整个仓库当隐式范围。
-
-ref 无效、范围为空或没有任何可读改动时立即停止并报告；不要启动空审查。
-
-## 2. 找到 Spec 与 Standards 来源
-
-### Spec 来源顺序
-
-1. 用户显式给出的 issue/spec/plan/requirements 路径或内容；
-2. 当前 PR/任务上下文已提供的说明；
-3. commit message 中明确引用的 issue，以及当前可用工具能只读取得的正文；
-4. 与 branch/topic 匹配的 `docs/`、`specs/`、`framework-audit/` 制品。
-
-一般代码审查找不到 spec 时不阻塞：Spec 轴写 `NOT RUN — no spec source found`。如果用户明确要求
-“核对是否符合某份需求”却找不到该需求，只问一个阻塞问题。
-
-### Standards 来源
-
-读取当前 scope 生效的仓库规范，例如 `AGENTS.md`、`CLAUDE.md`、`CONTRIBUTING.md`、编码规范、邻近目录
-规则和任务所指向的质量门。仓库规范覆盖 Fowler smell heuristic；自动工具已机械检查的格式问题不重复报。
-
-## 3. 两轴隔离执行
-
-优先在同一轮并行派发两个冷启动 reviewer，不给实现过程或本会话结论；只给相同的范围清单、diff 命令
-和 commit list，再分别给各轴需要的资料。项目代码审查按 `code-hygiene` Mode D 的冷启动规则：
-同时给出固定的目标仓库绝对根，以及 spec、标准和 FILE_SET 的规范化绝对路径；reviewer 只按这些
-路径取证，不使用共享项目别名，不借用父会话 pin/SID。Codex reviewer 还须验证自身
-`node scripts/project-pin.mjs status --view host --session-id <自身可信 SID>` 的 `CHILD_ASSOCIATED` 和
-`binding_validation: VERIFIED` 与固定目标一致。
-并行不可用时可串行，但第二轴不得读取第一轴报告，聚合前保持上下文隔离。任一轴关联缺失、
-实际读取失败或范围不全记 `UNKNOWN`，不得写 PASS。要求已验证 `project_session` 的评审器
-可使用这份独立子会话关联；不能以父会话 SID 代填。Claude 子会话在其原生关联接线完成前
-不得把绝对路径读取当作自身项目绑定。
-
-### Standards 轴
-
-只检查仓库文档标准、Luca 护栏和 `code-hygiene` Mode D 的 Fowler smell 基线。每条 finding 给出
-`severity + file:line/hunk + rule/smell + evidence + impact`；明确区分硬违规与 judgement call。
-
-### Spec 轴
-
-只检查：遗漏/部分实现、未要求的扩量、表面实现但行为错误。每条 finding 引用 spec 条目与代码证据。
-没有 spec 时不运行，不用 Standards 轴代替它。
-
-## 4. 聚合，不重排
-
-最终报告严格分列：
-
-```markdown
-## Standards
-<findings or PASS>
-
-## Spec
-<findings, PASS, or NOT RUN — no spec source found>
-
-## Axis summary
-Standards: <count + worst within this axis>
-Spec: <count/status + worst within this axis>
-```
-
-可以轻微清理重复措辞，但禁止 merge、跨轴 rerank 或挑一个“总冠军问题”。一轴 PASS 不能遮住另一轴失败。
-
-## 5. 只读边界与闭合
-
-- 本轮只报告 findings，不编辑代码、不暂存、不提交。
-- 用户若同时授权“review 后修复”，先完成并展示两轴结果，再由工程执行阶段处理已接受 findings；修后必须
-  交给独立 reviewer 做终版闭合。
-- 没有当场 diff/read-back/test 证据，不宣称通过。能运行的行为变更按 R4 做运行时分区；声称测试覆盖时
-  视风险做 mutation 抽查。
-- 本 skill 是 standalone/optional quality gate，不新增或推进 workflow 节点。
-- **Handoff 约定：** 本 skill 不拥有 workflow DONE 状态，不单独生成 handoff；调用方需要留痕时，把
-  两轴报告及最终闭合 verdict 写入调用方自己的验收/收尾 handoff。
+完成条件：范围可读且固定、需求状态真实、Mode D 返回已取得、只读边界守住。执行权威不可读或
+回执未完成时报告 BLOCKED/UNKNOWN，不以门面输入整理称完整审查通过。
 
 <!-- FILE_END: code-review/SKILL.md -->

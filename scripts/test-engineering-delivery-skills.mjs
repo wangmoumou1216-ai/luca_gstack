@@ -265,7 +265,7 @@ test('independent-methods', () => {
   const grilling = assertCanonicalSkill('grilling');
   const diagnosing = assertCanonicalSkill('diagnosing-bugs');
   const resolving = assertCanonicalSkill('resolving-merge-conflicts');
-  assertMatches(grilling, [/one question|一次[^\n]{0,20}(?:问题|提问)/i, /human|用户|HITL/i], 'grilling');
+  assertMatches(grilling, [/ready frontier|numbered round|就绪[^\n]{0,30}frontier/i, /human|用户|HITL/i], 'grilling');
   assertMatches(diagnosing, [/diagnos(?:e|is)-only|只诊断|diagnose only/i, /root cause|根因/i, /regression|unexpected failure|异常/i], 'diagnosing-bugs');
   assertMatches(resolving, [/real (?:git )?conflict|真实[^\n]{0,20}冲突/i, /inspect|检查/i, /propose|建议|提案/i], 'resolving-merge-conflicts');
   assertMatches(`${diagnosing}\n${resolving}`, [/never[^\n]{0,80}(?:commit|push)|禁止[^\n]{0,80}(?:commit|push)|不得[^\n]{0,80}(?:commit|push)/i], 'independent safety contract');

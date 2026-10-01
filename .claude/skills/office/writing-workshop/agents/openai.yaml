@@ -1,0 +1,6 @@
+interface:
+  display_name: "Writing Workshop"
+  short_description: "Choose fragments, shape or beats and write incrementally"
+  default_prompt: "Use $writing-workshop in the mode I explicitly choose: fragments, shape or beats. Confirm the exact paths and preserve my file edits."
+policy:
+  allow_implicit_invocation: false

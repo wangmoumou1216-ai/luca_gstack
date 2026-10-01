@@ -968,3 +968,816 @@ manual_vetting_2026_09_04:
     why_useful: "把已吸收但不可调用的 agent 文档手艺变成可达入口，并覆盖 skill 之外的 AGENTS.md、CLAUDE.md、prompt、spec 与 ticket。"
     boundary: "只拥有 Agent-facing 结构与措辞；skill-creator 仍拥有创建/打包/eval，skill-authoring.md 仍是本地 skill 手艺真值，领域 owner 仍拥有事实与工作流。"
     adaptation: "保留上游 two loads、context pointer、information hierarchy、completion criteria、leading word 与 pruning；用指针复用本地既有规范，不复制第二套 skill doctrine。"
+
+manual_vetting_2026_10_01:
+- name: mattpocock-skills-adaptation-2026-09-30
+  repo: mattpocock/skills
+  type: window-update-review
+  reviewed_at: '2026-10-01'
+  window:
+    from: ed37663cc5fbef691ddfecd080dff42f7e7e350d
+    to: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+  upstream_commit_date: '2026-09-29T13:37:40+01:00'
+  source_license: MIT
+  verdict: CONTENT-PREPARED-ADOPTION-PENDING
+  counts:
+    stable_ids: 38
+    current: 37
+    adopt_or_port: 30
+    no_independent_package: 7
+    historical: 1
+  new_entry_bodies:
+  - writing-workshop
+  - loop-me
+  - issue-triage
+  - setup-wizard
+  historical_decisions_preserved: true
+  direction_changes:
+  - previous_record: manual_vetting_2026_07_23 / batch-grill-me
+    previous_decision: REJECTED remains immutable
+    current_direction: source33 uses numbered independent decision frontier, recommendation and real human
+      answers; dependent questions wait
+    approval_scope: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/H0-PAYLOAD.md
+    approval_receipt: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/H0-APPROVAL.json
+  - previous_record: manual_vetting_2026_07_23 / improve-codebase-architecture branch(b)
+    previous_decision: YAGNI no-direction deepening rejection remains immutable
+    current_direction: source08 read-only evidence-backed candidates and offline HTML report; actual human
+      selection precedes interface/code changes
+    approval_scope: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/H0-PAYLOAD.md
+    approval_receipt: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/H0-APPROVAL.json
+  approval_receipt: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/H0-APPROVAL.json
+  baseline_delta_approval: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/M2-BASELINE-APPROVAL.json
+  plan_evidence: framework-audit/2026-09-30-matt-adaptation/PLAN.md
+  external_content_receipt: /Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json
+  native_behavior: NOT_RUN
+  adoption: PENDING
+  classification:
+    gain: 16
+    preservation: 22
+    gain_goals: 17
+    assertions: 203
+  source_rows:
+  - source_id: '01'
+    name: ask-matt
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/ask-matt/SKILL.md
+    source_sha256: 3f0f34614070aba3d9a7e2bd210718d78b9b942dd0f9af0c5869234fe34e16af
+    watch_path: skills/engineering/ask-matt
+    watch_sha: e484a8095543718ced436b9b49a8160ed4554000
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: office/Plan
+    reuse_mode: no-independent-package
+    classification: preservation
+    case_ids:
+    - F01
+    method_id: M01
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增。office、语义路由与 Plan 已承担入口分流，再建总入口增加竞争。
+  - source_id: '02'
+    name: code-review
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/code-review/SKILL.md
+    source_sha256: 47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50
+    watch_path: skills/engineering/code-review
+    watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: code-hygiene Mode D; code-review is the delegating facade
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F02
+    method_id: M02
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，source02完整方法由U010 code-hygiene Mode D持有；U003 code-review仅薄门面，F02同时验收直接和facade调用。
+  - source_id: '03'
+    name: codebase-design
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/codebase-design/SKILL.md
+    source_sha256: 2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2
+    watch_path: skills/engineering/codebase-design
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: codebase-design (preservation)
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F03
+    method_id: M03
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新模块深度及DESIGN-IT-TWICE：至少3个冷独立设计者串行产出不同接口，比较depth/locality/seam并真实选择；F03验收。
+  - source_id: '04'
+    name: diagnosing-bugs
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/diagnosing-bugs/SKILL.md
+    source_sha256: 9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40
+    watch_path: skills/engineering/diagnosing-bugs
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 diagnosing-bugs
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F04
+    method_id: M04
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新诊断方法和参考资料。
+  - source_id: '05'
+    name: domain-modeling
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/domain-modeling/SKILL.md
+    source_sha256: 7b925d7b1e341a2eeae33ad68a8a8c0ab889a38ddd22a7598e4c240e5a7556a3
+    watch_path: skills/engineering/domain-modeling
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 domain-modeling
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F05
+    - F12
+    method_id: M05
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新本地域模型方法。
+  - source_id: '06'
+    name: grill-with-docs
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/grill-with-docs/SKILL.md
+    source_sha256: 7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe
+    watch_path: skills/engineering/grill-with-docs
+    watch_sha: 447ca70872026d5b79d6073a546dac082117fed7
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: grilling→domain-modeling
+    reuse_mode: no-independent-package
+    classification: preservation
+    case_ids:
+    - F06
+    method_id: M06
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增独立包；需要的组合能力由 grilling 调 domain-modeling 实现并单独验收 F06。
+  - source_id: '07'
+    name: implement
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/implement/SKILL.md
+    source_sha256: 6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3
+    watch_path: skills/engineering/implement
+    watch_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 implement→Plan/Orchestrator
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F07
+    method_id: M07
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新薄执行门面，执行所有者仍是 Plan/Orchestrator。
+  - source_id: 08
+    name: improve-codebase-architecture
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/improve-codebase-architecture/SKILL.md
+    source_sha256: 552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392
+    watch_path: skills/engineering/improve-codebase-architecture
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 code-recon
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F08
+    method_id: M08
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，code-recon的architecture-opportunities模式产出有证据的HTML候选/前后图，真实用户选后交grilling→codebase-design；普通brief模式保留，F08验收。
+  - source_id: 09
+    name: prototype
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/prototype/SKILL.md
+    source_sha256: 714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3
+    watch_path: skills/engineering/prototype
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U008 html-prototype
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F09-L
+    - F09-U
+    method_id: M09
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，按用户确认将逻辑验证与UI多方案对比方法移入已有html-prototype；不新增独立prototype。U008分别消费LOGIC/UI完整方法，F09-L/F09-U验收，本地HTML与原生授权边界保留。
+  - source_id: '10'
+    name: research
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/research/SKILL.md
+    source_sha256: 985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4
+    watch_path: skills/engineering/research
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 quick-research
+    reuse_mode: merge-method
+    classification: preservation
+    case_ids:
+    - F10
+    method_id: M10
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新 quick-research 单后台研究方法。
+  - source_id: '11'
+    name: resolving-merge-conflicts
+    source_kind: historical_removed
+    source_commit: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+    source_path: skills/engineering/resolving-merge-conflicts/SKILL.md
+    source_sha256: 9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0
+    watch_path: skills/engineering/resolving-merge-conflicts
+    watch_sha: daa01d8aa68ad5c61b68970ec2018d0ce9567be6
+    pinned_sha: 6654f6b60cd9d5be8b54c6fafe44346dabeb3b76
+    ack_sha: daa01d8aa68ad5c61b68970ec2018d0ce9567be6
+    disposition: preserve_historical
+    unique_owner: resolving-merge-conflicts; historical_removed source
+    reuse_mode: preserve-historical
+    classification: preservation
+    case_ids:
+    - F11
+    method_id: M11
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，保留本地历史能力；不上不存在的新版本。
+  - source_id: '12'
+    name: setup-matt-pocock-skills
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/setup-matt-pocock-skills/SKILL.md
+    source_sha256: 9a0c21694be19fa3eefc39343355d3af7414716ba364882c7432c2f821eac3e9
+    watch_path: skills/engineering/setup-matt-pocock-skills
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: to-tickets/issue-triage/domain
+    reuse_mode: no-independent-package
+    classification: gain
+    case_ids:
+    - F12
+    method_id: M12
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增独立包。实际能力是项目 tracker 选择、五角色标签映射和领域文档消费约定；分别由 to-tickets 的零配置本地票据/显式选择已有集成、issue-triage 的已确认角色映射、domain-modeling
+      的授权词汇与 ADR 所有者承担，按 F12 验收。无需单独的首用配置入口；不自动写根适配器、建立标签或迁移领域布局。
+  - source_id: '13'
+    name: tdd
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/tdd/SKILL.md
+    source_sha256: 93ea419b76e9caaf26153b828e984f7c3fb136f4caa67b14af95f32ea965a1cc
+    watch_path: skills/engineering/tdd
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 G/tdd
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F13
+    method_id: M13
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新个人 tdd。
+  - source_id: '14'
+    name: to-spec
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/to-spec/SKILL.md
+    source_sha256: 43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088
+    watch_path: skills/engineering/to-spec
+    watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 to-spec→tech-spec
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F14
+    method_id: M14
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新本地规格门面。
+  - source_id: '15'
+    name: to-tickets
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/to-tickets/SKILL.md
+    source_sha256: 5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae
+    watch_path: skills/engineering/to-tickets
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 to-tickets→task-plan projection
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F15
+    method_id: M15
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新票据投影方法。
+  - source_id: '16'
+    name: triage
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/triage/SKILL.md
+    source_sha256: 917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf
+    watch_path: skills/engineering/triage
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U006 issue-triage
+    reuse_mode: install+adapt
+    classification: gain
+    case_ids:
+    - F16
+    method_id: M16
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，新issue-triage完整状态机、注意列表、验证、历史拒绝KB及durable brief，F16方法断言和遗漏变异验收。
+  - source_id: '17'
+    name: wayfinder
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/wayfinder/SKILL.md
+    source_sha256: fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1
+    watch_path: skills/engineering/wayfinder
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 wayfinder→Plan owner
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F17
+    method_id: M17
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新长期复杂规划门面。
+  - source_id: '18'
+    name: wizard
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/wizard/SKILL.md
+    source_sha256: bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1
+    watch_path: skills/engineering/wizard
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U007 setup-wizard
+    reuse_mode: install+adapt
+    classification: gain
+    case_ids:
+    - F18
+    method_id: M18
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，新增 setup-wizard。
+  - source_id: '19'
+    name: in-progress/claude-handoff
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/in-progress/claude-handoff/SKILL.md
+    source_sha256: 6738e8b7c7899ea0038fb7a5c859ca1b90c7b1eb40123dcdbe94c51b5b119f12
+    watch_path: skills/in-progress/claude-handoff
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: existing handoff/runtime
+    reuse_mode: no-independent-package
+    classification: preservation
+    case_ids:
+    - F19
+    method_id: M19
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增。平台专用自动交接与现有 handoff、原生 session 权限重叠，不能取得启动会话权限。
+  - source_id: '20'
+    name: implement-spec
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/implement-spec/SKILL.md
+    source_sha256: 7a22dd2e60b8fcece478ced9d2533582adf3520d695acd3ab715341535c9e56d
+    watch_path: skills/engineering/implement-spec
+    watch_sha: c612defa9e5cf9372262d0279eb124993ba77b71
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 Plan/Orchestrator
+    reuse_mode: merge-method
+    classification: preservation
+    case_ids:
+    - F20
+    method_id: M20
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，把 ready frontier、依赖与集成基线移入实际 Plan/Orchestrator。
+  - source_id: '21'
+    name: in-progress/loop-me
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/in-progress/loop-me/SKILL.md
+    source_sha256: e44d1cc3e760fb86ac42964c2a5f1fcac511715db50fb375f3f7be814de1eaa7
+    watch_path: skills/in-progress/loop-me
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U005 loop-me
+    reuse_mode: install+adapt
+    classification: gain
+    case_ids:
+    - F21
+    method_id: M21
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，新loop-me完整world-context discovery/stateful grilling/checkpoint/brief/续接与workflow spec方法，F21验收；无自动scheduler或Muse
+      Loop复活。
+  - source_id: '22'
+    name: pr
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/pr/SKILL.md
+    source_sha256: ab63f1cf78647389edcd386c9427c5dfca27ed2836930c24773ffee834c19bcd
+    watch_path: skills/engineering/pr
+    watch_sha: e484a8095543718ced436b9b49a8160ed4554000
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 implement PR reference
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F22
+    method_id: M22
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，移入 implement/Orchestrator 的 PR 写作参考。
+  - source_id: '23'
+    name: retro
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/engineering/retro/SKILL.md
+    source_sha256: 33fbc28568e3146f20fd908b12998bc0ab30aa4f4c87288199a40793efa94696
+    watch_path: skills/engineering/retro
+    watch_sha: a7d038f6bf7f01b516408e95e2fb56e0b338fa6f
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 code-hygiene environment-retro
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F23
+    method_id: M23
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，移入 code-hygiene 的 environment-retro；本地设计 retro 继续承担设计复盘。
+  - source_id: '24'
+    name: setup-ts-deep-modules
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/in-progress/setup-ts-deep-modules/SKILL.md
+    source_sha256: 29acca66ac99d4532e2a6f0370d8125d7cba1e87c9ac66573203c75189d3e6c7
+    watch_path: skills/in-progress/setup-ts-deep-modules
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 TS recipe
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F24
+    method_id: M24
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，作为 codebase-design 的 TS 模块配方。
+  - source_id: '25'
+    name: writing-beats
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/in-progress/writing-beats/SKILL.md
+    source_sha256: a96abafa2372eede8267d770138b322d6125da8adaa7ccf0a5e08e4ee13ee71e
+    watch_path: skills/in-progress/writing-beats
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: writing-workshop / beats
+    reuse_mode: install+adapt
+    classification: gain
+    case_ids:
+    - F25
+    method_id: M25
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，writing-workshop的beats模式：读者前置概念、requires/grounds可达候选、用户选择、单beat写入、逐次重读保留编辑；F25真实文件/交互验收。
+  - source_id: '26'
+    name: writing-fragments
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/in-progress/writing-fragments/SKILL.md
+    source_sha256: 298b0edd23df229183630de592ed8aa4289233560f2040691f6eb77caeaad4ea
+    watch_path: skills/in-progress/writing-fragments
+    watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: writing-workshop / fragments
+    reuse_mode: install+adapt
+    classification: gain
+    case_ids:
+    - F26
+    method_id: M26
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，writing-workshop的fragments模式：从初始语料访谈探索，单H1与横线分隔无结构碎片，持续追加/重读保留编辑；F26验收。
+  - source_id: '27'
+    name: writing-shape
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/in-progress/writing-shape/SKILL.md
+    source_sha256: f5e6c57bdd85178ace4a260c92f46da6b64ddee18215b461d875739c68976f72
+    watch_path: skills/in-progress/writing-shape
+    watch_sha: 5c89081d4bbeb3d039a42093653f90bb698d780e
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: writing-workshop / shape
+    reuse_mode: install+adapt
+    classification: gain
+    case_ids:
+    - F27
+    method_id: M27
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，writing-workshop的shape模式：只读原料、确认读者前提、2–3开篇供用户选、逐个同意块写入与概念grounding；F27验收。
+  - source_id: '28'
+    name: git-guardrails-claude-code
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/misc/git-guardrails-claude-code/SKILL.md
+    source_sha256: 69b291d655626a01602b998a1836fcb93c058ede68dfafddfd71e87f17074764
+    watch_path: skills/misc/git-guardrails-claude-code
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: existing native guard/trust
+    reuse_mode: no-independent-package
+    classification: preservation
+    case_ids:
+    - F28
+    method_id: M28
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增。本地跨 harness 保护、受控变更和发布门已有所有权，再装 Claude 专用 Hook 会出现双重控制。
+  - source_id: '29'
+    name: migrate-to-shoehorn
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/misc/migrate-to-shoehorn/SKILL.md
+    source_sha256: de4da4c11d924fac79c924b2ee3d2db4a5cb98386eb490a599119463d036ae72
+    watch_path: skills/misc/migrate-to-shoehorn
+    watch_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 G/tdd shoehorn recipe
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F29
+    method_id: M29
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，个人 tdd 的测试数据迁移配方。
+  - source_id: '30'
+    name: scaffold-exercises
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/misc/scaffold-exercises/SKILL.md
+    source_sha256: 75f5c9d771606fb9762f16522efc954df11c324f87148d8ff069bce166257de9
+    watch_path: skills/misc/scaffold-exercises
+    watch_sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: existing generic course/content owners
+    reuse_mode: no-independent-package
+    classification: preservation
+    case_ids:
+    - F30
+    method_id: M30
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增。本次目标不包含课程练习仓库生产；现有 codebase-to-course 负责代码库课程化，不能把特殊练习脚手架当框架通用入口。
+  - source_id: '31'
+    name: setup-pre-commit
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/misc/setup-pre-commit/SKILL.md
+    source_sha256: c9819d7f1e3b198064edc1faa3154224ed67395e9f07f5d3cea4b67cf0a11a98
+    watch_path: skills/misc/setup-pre-commit
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U010 code-hygiene precommit recipe
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F31
+    method_id: M31
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，code-hygiene 的 pre-commit 配方。
+  - source_id: '32'
+    name: productivity/grill-me
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/grill-me/SKILL.md
+    source_sha256: caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637
+    watch_path: skills/productivity/grill-me
+    watch_sha: fcf0071560d32913c9d4f820e0d7ca467c881619
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: no_independent_package
+    unique_owner: existing grilling
+    reuse_mode: no-independent-package
+    classification: preservation
+    case_ids:
+    - F32
+    method_id: M32
+    native_status: PENDING
+    adoption_status: NO_INDEPENDENT_PACKAGE
+    reason: 不新增。grilling 已是唯一追问所有者，再建同义入口无独立能力。
+  - source_id: '33'
+    name: productivity/grilling
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/grilling/SKILL.md
+    source_sha256: 10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2
+    watch_path: skills/productivity/grilling
+    watch_sha: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 grilling
+    reuse_mode: refresh+adapt
+    classification: gain
+    case_ids:
+    - F33
+    method_id: M33
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，整体更新为按独立决策 frontier 分轮追问。
+  - source_id: '34'
+    name: productivity/handoff
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/handoff/SKILL.md
+    source_sha256: 7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25
+    watch_path: skills/productivity/handoff
+    watch_sha: d28dfdc39beadc3142a33359b5cfa4765dcbd0bc
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 handoff
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F34
+    method_id: M34
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，整体更新事实、未决事项与恢复指令方法。
+  - source_id: '35'
+    name: productivity/teach
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/teach/SKILL.md
+    source_sha256: a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43
+    watch_path: skills/productivity/teach
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: personal Claude teach candidate (preservation; formal install pending)
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F35
+    method_id: M35
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，更新个人Claude teach：授权教学workspace的交互HTML课程、即时练习反馈、既有assets复用和真实学习记录；不假设Codex安装，F35验收。
+  - source_id: '36'
+    name: productivity/to-questionnaire
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/to-questionnaire/SKILL.md
+    source_sha256: b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b
+    watch_path: skills/productivity/to-questionnaire
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U009 research-kit questionnaire
+    reuse_mode: merge-method
+    classification: gain
+    case_ids:
+    - F36
+    method_id: M36
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，research-kit 新增 decision-questionnaire。
+  - source_id: '37'
+    name: productivity/wait-what
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/wait-what/SKILL.md
+    source_sha256: d961bb37defd975c539427edb8f450cdbccdcdd552e213c1ece46676a7970905
+    watch_path: skills/productivity/wait-what
+    watch_sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: U003 wait-what
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F37
+    method_id: M37
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，整体更新术语解释方法。
+  - source_id: '38'
+    name: productivity/writing-for-agents
+    source_kind: current
+    source_commit: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    source_path: skills/productivity/writing-for-agents/SKILL.md
+    source_sha256: 551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a
+    watch_path: skills/productivity/writing-for-agents
+    watch_sha: 321658273cb1d20b76026717d027d505790106d4
+    pinned_sha: d81f3a183412e71a5b1e84ca21bc1a35eea03a60
+    ack_sha: null
+    disposition: adopt_or_port
+    unique_owner: writing-for-agents owns the common prose method; skill-authoring owns structure/registration
+    reuse_mode: refresh+adapt
+    classification: preservation
+    case_ids:
+    - F38
+    method_id: M38
+    native_status: PENDING
+    adoption_status: PENDING
+    reason: 需要，整体更新，并由 skill-authoring 引用其写作方法。

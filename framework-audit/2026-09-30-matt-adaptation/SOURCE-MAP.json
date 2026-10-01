@@ -1,0 +1,2753 @@
+{
+  "schema_version": 1,
+  "u_id": "U001-M",
+  "status": "SOURCE_RECORDS_PREPARED_BEHAVIOR_NOT_RUN",
+  "authority": {
+    "plan": {
+      "path": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/FINAL-PLAN.md",
+      "sha256": "ec0b1e1ed5f28bab78b02ae69e1fb73bfcd663bb56397f973ec422fcaed37f5e"
+    },
+    "method_coverage": {
+      "path": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/METHOD-COVERAGE-FINAL.json",
+      "sha256": "3026f50261dbf0dd1007147e31325de8571271cfc1e2eafc076f38f5dee5fd01"
+    },
+    "source_index": {
+      "path": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/SOURCE-INDEX-38-R13.json",
+      "sha256": "cf8b2bb45e34180ec0bf4dd2dc31c80d0188271ab4a68f011cf4c6b4437fc01f"
+    }
+  },
+  "upstream_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+  "current_tree": "b9814f871fb63e6b40b1e82017c363b59075e81c",
+  "current_manifest_sha256": "46577762c7ac99fa10a89290f760f862a2aecbbec49615f3acbbb94f417d3876",
+  "historical_manifest_sha256": "4458b29a84fe3394b6d5ccb88e98c9d923b4ab73d69df5145ac4e54386acedf4",
+  "counts": {
+    "stable_ids": 38,
+    "current": 37,
+    "adopt_or_port": 30,
+    "no_independent_package": 7,
+    "historical": 1
+  },
+  "source_material_is_execution_authority": false,
+  "entries": [
+    {
+      "stable_id": "01",
+      "name": "ask-matt",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/ask-matt/SKILL.md",
+      "source_blob_sha": "ce33ac632400b1f439695bd2b5274fd903355323",
+      "source_sha256": "3f0f34614070aba3d9a7e2bd210718d78b9b942dd0f9af0c5869234fe34e16af",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增。office、语义路由与 Plan 已承担入口分流，再建总入口增加竞争。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/ask-matt/PHASE-BOUNDARIES.md",
+          "blob_sha": "fb58ef9febcfd558cdb4517e370f19034869ba26",
+          "sha256": "a8aa20158609ef39e2b308b6ba0660c91066838d07a867202e63a7744a88a3ed",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/ask-matt/SKILL.md",
+          "blob_sha": "ce33ac632400b1f439695bd2b5274fd903355323",
+          "sha256": "3f0f34614070aba3d9a7e2bd210718d78b9b942dd0f9af0c5869234fe34e16af",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/ask-matt/agents/openai.yaml",
+          "blob_sha": "5c60d51b5b1248d7210bff8c6b42a5a06524b8a4",
+          "sha256": "bdffbc5a0a99ed1b6ef3253d251d755fd18162b9845972e380007f844b09b05c",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "ce33ac632400b1f439695bd2b5274fd903355323",
+      "file_sha256": "3f0f34614070aba3d9a7e2bd210718d78b9b942dd0f9af0c5869234fe34e16af",
+      "unique_consumer": "office/Plan",
+      "method_id": "M01",
+      "source_sections": "SKILL; PHASE-BOUNDARIES",
+      "test_ids": [
+        "F01"
+      ],
+      "assertion_ids": [
+        "M01.P01",
+        "M01.P02",
+        "M01.N01",
+        "M01.E01"
+      ],
+      "omission_ids": [
+        "M01.OP01",
+        "M01.OP02",
+        "M01.ON01",
+        "M01.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "不新增。office、语义路由与 Plan 已承担入口分流，再建总入口增加竞争。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "f43d6650f30d8a476dd3c7984fa93f9de1cd9629fe417180c89661f77c5015b8"
+    },
+    {
+      "stable_id": "02",
+      "name": "code-review",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/code-review/SKILL.md",
+      "source_blob_sha": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4",
+      "source_sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，source02完整方法由U010 code-hygiene Mode D持有；U003 code-review仅薄门面，F02同时验收直接和facade调用。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/code-review/SKILL.md",
+          "blob_sha": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4",
+          "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/code-review/agents/openai.yaml",
+          "blob_sha": "9076774ba327f49068db9273feceda03bfe940fa",
+          "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "consumer": "code-hygiene Mode D; code-review facade",
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4",
+      "file_sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+      "unique_consumer": "U010 code-hygiene Mode D; U003 code-review facade",
+      "method_id": "M02",
+      "source_sections": "SKILL §§1–5",
+      "test_ids": [
+        "F02"
+      ],
+      "assertion_ids": [
+        "M02.P01",
+        "M02.P02",
+        "M02.P03",
+        "M02.P04",
+        "M02.P05",
+        "M02.P06",
+        "M02.N01",
+        "M02.N02",
+        "M02.E01",
+        "M02.E02"
+      ],
+      "omission_ids": [
+        "M02.OP01",
+        "M02.OP02",
+        "M02.OP03",
+        "M02.OP04",
+        "M02.OP05",
+        "M02.OP06",
+        "M02.ON01",
+        "M02.ON02",
+        "M02.OE01",
+        "M02.OE02"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，source02完整方法由U010 code-hygiene Mode D持有；U003 code-review仅薄门面，F02同时验收直接和facade调用。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "90e6d70dd932eaede8df59b551978bb9f402f6c5cec87744b36adbe6b4addc1e",
+      "method_authority": "code-hygiene Mode D",
+      "delegating_facade": "code-review; fixes scope/input and delegates, no method duplicate"
+    },
+    {
+      "stable_id": "03",
+      "name": "codebase-design",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/codebase-design/SKILL.md",
+      "source_blob_sha": "3f63c8146dd2604b419c929e9876b90c30d410e9",
+      "source_sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新模块深度及DESIGN-IT-TWICE：至少3个冷独立设计者串行产出不同接口，比较depth/locality/seam并真实选择；F03验收。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/codebase-design/DEEPENING.md",
+          "blob_sha": "cd94075cfd754d147555c5d747a16431ed4c7dd8",
+          "sha256": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+          "blob_sha": "d0990138c35c800bd821289a73115e52680c1620",
+          "sha256": "52b52e75655a27aea59c6966b410bac82448968ad46ef1ebb9f07c274e3ae010",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/codebase-design/SKILL.md",
+          "blob_sha": "3f63c8146dd2604b419c929e9876b90c30d410e9",
+          "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/codebase-design/agents/openai.yaml",
+          "blob_sha": "3180715edb37f6e96bec42f92f00169faa8886ef",
+          "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "3f63c8146dd2604b419c929e9876b90c30d410e9",
+      "file_sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "unique_consumer": "U003/U010 codebase-design",
+      "method_id": "M03",
+      "source_sections": "SKILL; DEEPENING; DESIGN-IT-TWICE",
+      "test_ids": [
+        "F03"
+      ],
+      "assertion_ids": [
+        "M03.P01",
+        "M03.P02",
+        "M03.P03",
+        "M03.P04",
+        "M03.P05",
+        "M03.N01",
+        "M03.E01"
+      ],
+      "omission_ids": [
+        "M03.OP01",
+        "M03.OP02",
+        "M03.OP03",
+        "M03.OP04",
+        "M03.OP05",
+        "M03.ON01",
+        "M03.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新模块深度及DESIGN-IT-TWICE：至少3个冷独立设计者串行产出不同接口，比较depth/locality/seam并真实选择；F03验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "86086ce3793201cc57e25bbfbe61e20a0fec7c01adfc79959d9f89930bc05987"
+    },
+    {
+      "stable_id": "04",
+      "name": "diagnosing-bugs",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "source_blob_sha": "1b929e29fb519c26b500d3eda744177986883ac8",
+      "source_sha256": "9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新诊断方法和参考资料。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+          "blob_sha": "1b929e29fb519c26b500d3eda744177986883ac8",
+          "sha256": "9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/diagnosing-bugs/agents/openai.yaml",
+          "blob_sha": "a13a755a77634ce61a649a3a0d905a66d3865b35",
+          "sha256": "3e430dbe4334a87597488c060cb3dc3786bb00c9182877d6f5ec41f62490e90b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+          "blob_sha": "243198464a8401a7ba1d63b3708fa43c3d067665",
+          "sha256": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "1b929e29fb519c26b500d3eda744177986883ac8",
+      "file_sha256": "9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40",
+      "unique_consumer": "U003 diagnosing-bugs",
+      "method_id": "M04",
+      "source_sections": "SKILL phases1–6; PROVENANCE; references/root-cause-tracing,defense-in-depth,condition-based-waiting",
+      "test_ids": [
+        "F04"
+      ],
+      "assertion_ids": [
+        "M04.P01",
+        "M04.P02",
+        "M04.P03",
+        "M04.P04",
+        "M04.P05",
+        "M04.P06",
+        "M04.N01",
+        "M04.E01",
+        "M04.E02"
+      ],
+      "omission_ids": [
+        "M04.OP01",
+        "M04.OP02",
+        "M04.OP03",
+        "M04.OP04",
+        "M04.OP05",
+        "M04.OP06",
+        "M04.ON01",
+        "M04.OE01",
+        "M04.OE02"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新诊断方法和参考资料。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "9f6d4177de2c2f328dbff2f262aea17fe09ee0dc216e4aaafdf7e06be708fa43"
+    },
+    {
+      "stable_id": "05",
+      "name": "domain-modeling",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/domain-modeling/SKILL.md",
+      "source_blob_sha": "a4438c6879c517d1a08e2b5fbca049b632688dfe",
+      "source_sha256": "7b925d7b1e341a2eeae33ad68a8a8c0ab889a38ddd22a7598e4c240e5a7556a3",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新本地域模型方法。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/domain-modeling/ADR-FORMAT.md",
+          "blob_sha": "d7e61f30a9fd8ca70d9ee68f019c2a9ebf2d13f7",
+          "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/domain-modeling/GLOSSARY-FORMAT.md",
+          "blob_sha": "9c0b4c7a2e8507c23cbb5e0baa66d81699321cc6",
+          "sha256": "21dcc40cdec8e151a829b98ab1517c1867bc444e3665134a98c6983411996801",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/domain-modeling/SKILL.md",
+          "blob_sha": "a4438c6879c517d1a08e2b5fbca049b632688dfe",
+          "sha256": "7b925d7b1e341a2eeae33ad68a8a8c0ab889a38ddd22a7598e4c240e5a7556a3",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/domain-modeling/agents/openai.yaml",
+          "blob_sha": "7f1522d2f11506ee205275ab7c282aa52366ecf6",
+          "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "a4438c6879c517d1a08e2b5fbca049b632688dfe",
+      "file_sha256": "7b925d7b1e341a2eeae33ad68a8a8c0ab889a38ddd22a7598e4c240e5a7556a3",
+      "unique_consumer": "U003 domain-modeling",
+      "method_id": "M05",
+      "source_sections": "SKILL; GLOSSARY-FORMAT→CONTEXT-FORMAT; ADR-FORMAT",
+      "test_ids": [
+        "F05",
+        "F12"
+      ],
+      "assertion_ids": [
+        "M05.P01",
+        "M05.P02",
+        "M05.P03",
+        "M05.P04",
+        "M05.N01",
+        "M05.E01",
+        "M05.E02"
+      ],
+      "omission_ids": [
+        "M05.OP01",
+        "M05.OP02",
+        "M05.OP03",
+        "M05.OP04",
+        "M05.ON01",
+        "M05.OE01",
+        "M05.OE02"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新本地域模型方法。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "dc663bf2f5d08cfaaaa590785161e663aa5bf6c5bdaaa42b1e57f2ea71b0e3c6"
+    },
+    {
+      "stable_id": "06",
+      "name": "grill-with-docs",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/grill-with-docs/SKILL.md",
+      "source_blob_sha": "62b9efb6f991d1b229adee7506962f13ced0c499",
+      "source_sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增独立包；需要的组合能力由 grilling 调 domain-modeling 实现并单独验收 F06。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/grill-with-docs/SKILL.md",
+          "blob_sha": "62b9efb6f991d1b229adee7506962f13ced0c499",
+          "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/grill-with-docs/agents/openai.yaml",
+          "blob_sha": "5dbe2780a51be3e9b118bd7758a73e54a9384e11",
+          "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "62b9efb6f991d1b229adee7506962f13ced0c499",
+      "file_sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+      "unique_consumer": "grilling→domain-modeling",
+      "method_id": "M06",
+      "source_sections": "grill-with-docs/SKILL",
+      "test_ids": [
+        "F06"
+      ],
+      "assertion_ids": [
+        "M06.P01",
+        "M06.P02",
+        "M06.P03",
+        "M06.N01",
+        "M06.E01"
+      ],
+      "omission_ids": [
+        "M06.OP01",
+        "M06.OP02",
+        "M06.OP03",
+        "M06.ON01",
+        "M06.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "不新增独立包；需要的组合能力由 grilling 调 domain-modeling 实现并单独验收 F06。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "8c39674ec453b54f0d63e325ca742737a7b135876ae6b57931c3d5abbbc59e3c"
+    },
+    {
+      "stable_id": "07",
+      "name": "implement",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/implement/SKILL.md",
+      "source_blob_sha": "7a0b11f5f4fe9505ea5c7983c3083ba1bf754f69",
+      "source_sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新薄执行门面，执行所有者仍是 Plan/Orchestrator。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/implement/SKILL.md",
+          "blob_sha": "7a0b11f5f4fe9505ea5c7983c3083ba1bf754f69",
+          "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/implement/agents/openai.yaml",
+          "blob_sha": "f8794dc153b409052a9167baf10858cf01b36175",
+          "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "7a0b11f5f4fe9505ea5c7983c3083ba1bf754f69",
+      "file_sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+      "unique_consumer": "U003 implement→Plan/Orchestrator",
+      "method_id": "M07",
+      "source_sections": "implement/SKILL; local execution authority",
+      "test_ids": [
+        "F07"
+      ],
+      "assertion_ids": [
+        "M07.P01",
+        "M07.P02",
+        "M07.P03",
+        "M07.N01",
+        "M07.E01"
+      ],
+      "omission_ids": [
+        "M07.OP01",
+        "M07.OP02",
+        "M07.OP03",
+        "M07.ON01",
+        "M07.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新薄执行门面，执行所有者仍是 Plan/Orchestrator。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "8db31884ef261bef517562c73d981a858c0d8e224aa260b1c911eca7e53d67f9"
+    },
+    {
+      "stable_id": "08",
+      "name": "improve-codebase-architecture",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "source_blob_sha": "44cc7d3136c44534d68ac523fa6cd37e759d2846",
+      "source_sha256": "552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，code-recon的architecture-opportunities模式产出有证据的HTML候选/前后图，真实用户选后交grilling→codebase-design；普通brief模式保留，F08验收。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+          "blob_sha": "e39e8255b8797cf8257d014fb6658fb533f3a399",
+          "sha256": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+          "blob_sha": "44cc7d3136c44534d68ac523fa6cd37e759d2846",
+          "sha256": "552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/improve-codebase-architecture/agents/openai.yaml",
+          "blob_sha": "706fdca096da5937fe57875a9154017d50668c42",
+          "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "44cc7d3136c44534d68ac523fa6cd37e759d2846",
+      "file_sha256": "552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392",
+      "unique_consumer": "U010 code-recon",
+      "method_id": "M08",
+      "source_sections": "improve-codebase-architecture/SKILL; HTML-REPORT",
+      "test_ids": [
+        "F08"
+      ],
+      "assertion_ids": [
+        "M08.P01",
+        "M08.P02",
+        "M08.P03",
+        "M08.P04",
+        "M08.P05",
+        "M08.P06",
+        "M08.N01",
+        "M08.N02",
+        "M08.E01"
+      ],
+      "omission_ids": [
+        "M08.OP01",
+        "M08.OP02",
+        "M08.OP03",
+        "M08.OP04",
+        "M08.OP05",
+        "M08.OP06",
+        "M08.ON01",
+        "M08.ON02",
+        "M08.OE01"
+      ],
+      "gain_goal_ids": [
+        "M08.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，code-recon的architecture-opportunities模式产出有证据的HTML候选/前后图，真实用户选后交grilling→codebase-design；普通brief模式保留，F08验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "6a6be85e5cc0316ebe34885399b2de8bec4b3ae0bc768d14a695d0a9f0a59f3b"
+    },
+    {
+      "stable_id": "09",
+      "name": "prototype",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/prototype/SKILL.md",
+      "source_blob_sha": "a0044501fe0d385b4d8575b610188ede9b236ccf",
+      "source_sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，按用户确认将逻辑验证与UI多方案对比方法移入已有html-prototype；不新增独立prototype。U008分别消费LOGIC/UI完整方法，F09-L/F09-U验收，本地HTML与原生授权边界保留。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/prototype/LOGIC.md",
+          "blob_sha": "32be86a0a5d9928db84b3988e55f9debe476ab40",
+          "sha256": "f61c7d249e786a79ef289018901c348271e1798dd0b0bc5607b5c6f4d4a01ab9",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/prototype/SKILL.md",
+          "blob_sha": "a0044501fe0d385b4d8575b610188ede9b236ccf",
+          "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/prototype/UI.md",
+          "blob_sha": "3977951663490882c2632b40695d9f59a2fe2408",
+          "sha256": "723211e878acbc7b6ff09755263f3295cde724ba902ff0064da41eed51d45ad3",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/prototype/agents/openai.yaml",
+          "blob_sha": "1618b147965bc729b7bf3e8da5f130132067aadc",
+          "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "a0044501fe0d385b4d8575b610188ede9b236ccf",
+      "file_sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+      "unique_consumer": "U008 html-prototype",
+      "method_id": "M09",
+      "source_sections": "prototype/SKILL; LOGIC; UI",
+      "test_ids": [
+        "F09-L",
+        "F09-U"
+      ],
+      "assertion_ids": [
+        "M09.P01",
+        "M09.P02",
+        "M09.P03",
+        "M09.N01",
+        "M09.E01"
+      ],
+      "omission_ids": [
+        "M09.OP01",
+        "M09.OP02",
+        "M09.OP03",
+        "M09.ON01",
+        "M09.OE01"
+      ],
+      "gain_goal_ids": [
+        "M09.G01",
+        "M09.G02"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，按用户确认将逻辑验证与UI多方案对比方法移入已有html-prototype；不新增独立prototype。U008分别消费LOGIC/UI完整方法，F09-L/F09-U验收，本地HTML与原生授权边界保留。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "c027f803c790f317c52cef9c2e1c32a15ab151e4eddff466dd298e5504472a4c",
+      "branches": [
+        {
+          "source_path": "skills/engineering/prototype/LOGIC.md",
+          "consumer_path": ".claude/skills/office/html-prototype/references/logic-validation.md",
+          "test_ids": [
+            "F09-L"
+          ]
+        },
+        {
+          "source_path": "skills/engineering/prototype/UI.md",
+          "consumer_path": ".claude/skills/office/html-prototype/references/ui-variant-comparison.md",
+          "test_ids": [
+            "F09-U"
+          ]
+        }
+      ]
+    },
+    {
+      "stable_id": "10",
+      "name": "research",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/research/SKILL.md",
+      "source_blob_sha": "fecee97e9457ba039678d2fcf1b1bc9fca78307d",
+      "source_sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新 quick-research 单后台研究方法。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/research/SKILL.md",
+          "blob_sha": "fecee97e9457ba039678d2fcf1b1bc9fca78307d",
+          "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/research/agents/openai.yaml",
+          "blob_sha": "e18b96ca0ccc1003889d5d6991386207c2454bc2",
+          "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "fecee97e9457ba039678d2fcf1b1bc9fca78307d",
+      "file_sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+      "unique_consumer": "U003 quick-research",
+      "method_id": "M10",
+      "source_sections": "research/SKILL",
+      "test_ids": [
+        "F10"
+      ],
+      "assertion_ids": [
+        "M10.P01",
+        "M10.P02",
+        "M10.N01",
+        "M10.E01"
+      ],
+      "omission_ids": [
+        "M10.OP01",
+        "M10.OP02",
+        "M10.ON01",
+        "M10.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新 quick-research 单后台研究方法。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "45bea4b245605513dbb49d92ad7efacc59eb44683ded4f3407489e7c008f14dd"
+    },
+    {
+      "stable_id": "11",
+      "name": "resolving-merge-conflicts",
+      "source_kind": "historical_removed",
+      "source_commit": "6654f6b60cd9d5be8b54c6fafe44346dabeb3b76",
+      "source_path": "skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "source_blob_sha": "bfb7e5606e231e6808979f623fce76a9aad4b71c",
+      "source_sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-historical-6654f6b60cd9d5be8b54c6fafe44346dabeb3b76",
+      "disposition": "preserve_historical",
+      "decision": "需要，保留本地历史能力；不上不存在的新版本。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/resolving-merge-conflicts/SKILL.md",
+          "blob_sha": "bfb7e5606e231e6808979f623fce76a9aad4b71c",
+          "sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/resolving-merge-conflicts/agents/openai.yaml",
+          "blob_sha": "331ffb9d38937877f51a5f867a66dc61eee259ae",
+          "sha256": "a1f4f96838f2ed6282eb28abbbf99029cb8fadce552baf53da90a025b8bffddf",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "deletion_commit": "daa01d8aa68ad5c61b68970ec2018d0ce9567be6",
+      "repo_sha": "6654f6b60cd9d5be8b54c6fafe44346dabeb3b76",
+      "blob_sha": "bfb7e5606e231e6808979f623fce76a9aad4b71c",
+      "file_sha256": "9d8114f8ef0b31f535a265fc05c364bd8cf2e2895a830040e06c22acb11f54b0",
+      "unique_consumer": "existing resolving-merge-conflicts",
+      "method_id": "M11",
+      "source_sections": "historical SKILL pinned in index",
+      "test_ids": [
+        "F11"
+      ],
+      "assertion_ids": [
+        "M11.P01",
+        "M11.P02",
+        "M11.N01",
+        "M11.E01"
+      ],
+      "omission_ids": [
+        "M11.OP01",
+        "M11.OP02",
+        "M11.ON01",
+        "M11.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，保留本地历史能力；不上不存在的新版本。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "911ee4411a089b7401eb24b5d4f4808a1fb983518b1da54b3e8fe7e02f17542b",
+      "new_upstream_method_body": false,
+      "historical_pin_only": true
+    },
+    {
+      "stable_id": "12",
+      "name": "setup-matt-pocock-skills",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+      "source_blob_sha": "c0d850b976fc47d2c5807e8b0f50a2c03e8a29ab",
+      "source_sha256": "9a0c21694be19fa3eefc39343355d3af7414716ba364882c7432c2f821eac3e9",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增独立包。实际能力是项目 tracker 选择、五角色标签映射和领域文档消费约定；分别由 to-tickets 的零配置本地票据/显式选择已有集成、issue-triage 的已确认角色映射、domain-modeling 的授权词汇与 ADR 所有者承担，按 F12 验收。无需单独的首用配置入口；不自动写根适配器、建立标签或迁移领域布局。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+          "blob_sha": "c0d850b976fc47d2c5807e8b0f50a2c03e8a29ab",
+          "sha256": "9a0c21694be19fa3eefc39343355d3af7414716ba364882c7432c2f821eac3e9",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/agents/openai.yaml",
+          "blob_sha": "65a0da8128c98051183235e490767a8065310868",
+          "sha256": "9527de0110541c45712319025155aeab8dc7d77c6ed6e5e83271bab1851ab939",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/domain.md",
+          "blob_sha": "4032de016c1e91119d33d477633e2b8f265f4195",
+          "sha256": "593a7042218689f1d24df89df14eaf0a20e19e0d0a7d479a01947ac78f0784b9",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
+          "blob_sha": "b258aeb3c44420a2464b72ba228b77b4b3abbaea",
+          "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+          "blob_sha": "251035a6d74b4af8d68f066b8d7f1cef90904570",
+          "sha256": "ea175f73d193b3f55819c0ed9bbccf6ee0e70ad8f928e3d7607596c53380acd6",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+          "blob_sha": "0209a19af92c9c485cf3acc3d9e253171517ea17",
+          "sha256": "7dcda20a2eb4bdc89b95d1143423c0691309921cadae3132e6424f371030506e",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/setup-matt-pocock-skills/triage-labels.md",
+          "blob_sha": "b716855d485f3865f9dfde2a82141721f065b2e7",
+          "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "c0d850b976fc47d2c5807e8b0f50a2c03e8a29ab",
+      "file_sha256": "9a0c21694be19fa3eefc39343355d3af7414716ba364882c7432c2f821eac3e9",
+      "unique_consumer": "to-tickets/issue-triage/domain",
+      "method_id": "M12",
+      "source_sections": "setup-matt-pocock-skills/SKILL",
+      "test_ids": [
+        "F12"
+      ],
+      "assertion_ids": [
+        "M12.P01",
+        "M12.P02",
+        "M12.N01",
+        "M12.E01"
+      ],
+      "omission_ids": [
+        "M12.OP01",
+        "M12.OP02",
+        "M12.ON01",
+        "M12.OE01"
+      ],
+      "gain_goal_ids": [
+        "M12.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "不新增独立包。实际能力是项目 tracker 选择、五角色标签映射和领域文档消费约定；分别由 to-tickets 的零配置本地票据/显式选择已有集成、issue-triage 的已确认角色映射、domain-modeling 的授权词汇与 ADR 所有者承担，按 F12 验收。无需单独的首用配置入口；不自动写根适配器、建立标签或迁移领域布局。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "8e9c833bcb5433b17bd3c9b484e1879f7cac8b4a9ca9a32c6b97f1b78aec9453",
+      "capability_consumers": [
+        {
+          "capability": "tracker target / zero-configuration local ticket projection",
+          "unique_owner": "to-tickets"
+        },
+        {
+          "capability": "existing category/state role-to-label mapping",
+          "unique_owner": "issue-triage"
+        },
+        {
+          "capability": "authorized vocabulary / ADR consumption",
+          "unique_owner": "domain-modeling"
+        }
+      ],
+      "independent_setup_package": false
+    },
+    {
+      "stable_id": "13",
+      "name": "tdd",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/tdd/SKILL.md",
+      "source_blob_sha": "250871ccdfefa7525309acfebda090edf4046882",
+      "source_sha256": "93ea419b76e9caaf26153b828e984f7c3fb136f4caa67b14af95f32ea965a1cc",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新个人 tdd。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/tdd/SKILL.md",
+          "blob_sha": "250871ccdfefa7525309acfebda090edf4046882",
+          "sha256": "93ea419b76e9caaf26153b828e984f7c3fb136f4caa67b14af95f32ea965a1cc",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/tdd/agents/openai.yaml",
+          "blob_sha": "651b838a7663e027b1b8884491e867f26bb9a021",
+          "sha256": "ea6f01cf1b8c06a4b0f5b649d74b1b8ce8685e72af1b38d70d877693e092af0b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/tdd/mocking.md",
+          "blob_sha": "71cbfee674d93244ce81d1830b930ca9a69200bd",
+          "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/tdd/tests.md",
+          "blob_sha": "7ab86479f925a1f9e8ba680af33cb3b12e015381",
+          "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "250871ccdfefa7525309acfebda090edf4046882",
+      "file_sha256": "93ea419b76e9caaf26153b828e984f7c3fb136f4caa67b14af95f32ea965a1cc",
+      "unique_consumer": "U003 G/tdd",
+      "method_id": "M13",
+      "source_sections": "tdd/SKILL; tests; mocking",
+      "test_ids": [
+        "F13"
+      ],
+      "assertion_ids": [
+        "M13.P01",
+        "M13.P02",
+        "M13.P03",
+        "M13.P04",
+        "M13.N01",
+        "M13.E01"
+      ],
+      "omission_ids": [
+        "M13.OP01",
+        "M13.OP02",
+        "M13.OP03",
+        "M13.OP04",
+        "M13.ON01",
+        "M13.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新个人 tdd。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "9665c1a207723db2c2a5f314982596c20c4b75aabe6acbc1d265340923b01447"
+    },
+    {
+      "stable_id": "14",
+      "name": "to-spec",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/to-spec/SKILL.md",
+      "source_blob_sha": "3f52599ae2a4347aee5a07432c2707518e691a7f",
+      "source_sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新本地规格门面。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/to-spec/SKILL.md",
+          "blob_sha": "3f52599ae2a4347aee5a07432c2707518e691a7f",
+          "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/to-spec/agents/openai.yaml",
+          "blob_sha": "549e6f76f020a1b9ba65f52ccda336566ee6222a",
+          "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "3f52599ae2a4347aee5a07432c2707518e691a7f",
+      "file_sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+      "unique_consumer": "U003 to-spec→tech-spec",
+      "method_id": "M14",
+      "source_sections": "to-spec/SKILL; local tech-spec owner",
+      "test_ids": [
+        "F14"
+      ],
+      "assertion_ids": [
+        "M14.P01",
+        "M14.P02",
+        "M14.P03",
+        "M14.N01",
+        "M14.E01"
+      ],
+      "omission_ids": [
+        "M14.OP01",
+        "M14.OP02",
+        "M14.OP03",
+        "M14.ON01",
+        "M14.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新本地规格门面。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "cd92e6306b53ce235687072d4affe6e257828c80b6abe8521cb420f520553ca6"
+    },
+    {
+      "stable_id": "15",
+      "name": "to-tickets",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/to-tickets/SKILL.md",
+      "source_blob_sha": "e868c831fcfb1e124e010bcdf84a429ec879160f",
+      "source_sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新票据投影方法。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/to-tickets/SKILL.md",
+          "blob_sha": "e868c831fcfb1e124e010bcdf84a429ec879160f",
+          "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/to-tickets/agents/openai.yaml",
+          "blob_sha": "24605a5db64e4fc750b999aa94aea126bee814ee",
+          "sha256": "21bc6215fffcd7614e9f772bb1760e87cc5fc7dcc707e7d282bc9414267a6090",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "e868c831fcfb1e124e010bcdf84a429ec879160f",
+      "file_sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+      "unique_consumer": "U003 to-tickets→task-plan projection",
+      "method_id": "M15",
+      "source_sections": "to-tickets/SKILL; local owner",
+      "test_ids": [
+        "F15"
+      ],
+      "assertion_ids": [
+        "M15.P01",
+        "M15.P02",
+        "M15.P03",
+        "M15.P04",
+        "M15.N01",
+        "M15.E01",
+        "M15.E02"
+      ],
+      "omission_ids": [
+        "M15.OP01",
+        "M15.OP02",
+        "M15.OP03",
+        "M15.OP04",
+        "M15.ON01",
+        "M15.OE01",
+        "M15.OE02"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新票据投影方法。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "4102bcd74462f721b24fdf6cc45e79518f47a2be2a4155ce4d9e9f8865e15ced"
+    },
+    {
+      "stable_id": "16",
+      "name": "triage",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/triage/SKILL.md",
+      "source_blob_sha": "3fd5617e906cf9b71a6b17424791adb905fc248b",
+      "source_sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，新issue-triage完整状态机、注意列表、验证、历史拒绝KB及durable brief，F16方法断言和遗漏变异验收。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/triage/AGENT-BRIEF.md",
+          "blob_sha": "1462fcd9e8cc21921158c296149dc05d9be39d20",
+          "sha256": "7f5f87fed3033df1b06e083c480f3e847b1fbb0647746b8a4c6a50f9f26ef44f",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/triage/OUT-OF-SCOPE.md",
+          "blob_sha": "c9fba2f77ee0619975ec8488c0d4861a0c7e3151",
+          "sha256": "1fbf9b432130c6380aa65813b55553cfda150309b27c595e183f8e335b8a190d",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/triage/SKILL.md",
+          "blob_sha": "3fd5617e906cf9b71a6b17424791adb905fc248b",
+          "sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/triage/agents/openai.yaml",
+          "blob_sha": "acb366cf0f2527e8925ff1223b77610ac0b1be4c",
+          "sha256": "2e683717720cf456d165d0bb1a68bb600d0b6a8ccb61841c172e50d26f95351c",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "3fd5617e906cf9b71a6b17424791adb905fc248b",
+      "file_sha256": "917b0baf74be583e74f110857ed45df2766617f75c00baf61fd136d7af515edf",
+      "unique_consumer": "U006 issue-triage",
+      "method_id": "M16",
+      "source_sections": "triage/SKILL; AGENT-BRIEF; OUT-OF-SCOPE",
+      "test_ids": [
+        "F16"
+      ],
+      "assertion_ids": [
+        "M16.P01",
+        "M16.P02",
+        "M16.N01",
+        "M16.N02",
+        "M16.E01"
+      ],
+      "omission_ids": [
+        "M16.OP01",
+        "M16.OP02",
+        "M16.ON01",
+        "M16.ON02",
+        "M16.OE01"
+      ],
+      "gain_goal_ids": [
+        "M16.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，新issue-triage完整状态机、注意列表、验证、历史拒绝KB及durable brief，F16方法断言和遗漏变异验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "7f1df2d594e7f44cac5f04d3af8ef03452981874cc8c4fdaf266b350c7ffe6a9"
+    },
+    {
+      "stable_id": "17",
+      "name": "wayfinder",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/wayfinder/SKILL.md",
+      "source_blob_sha": "812805b760baf328db0ebdef6f3807e381f97016",
+      "source_sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新长期复杂规划门面。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/wayfinder/SKILL.md",
+          "blob_sha": "812805b760baf328db0ebdef6f3807e381f97016",
+          "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/wayfinder/agents/openai.yaml",
+          "blob_sha": "b37544751e0570f9df8de6c02aef238de8c3e1e0",
+          "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "812805b760baf328db0ebdef6f3807e381f97016",
+      "file_sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+      "unique_consumer": "U003 wayfinder→Plan owner",
+      "method_id": "M17",
+      "source_sections": "wayfinder/SKILL mapped to local Plan, no second map",
+      "test_ids": [
+        "F17"
+      ],
+      "assertion_ids": [
+        "M17.P01",
+        "M17.P02",
+        "M17.P03",
+        "M17.N01",
+        "M17.E01",
+        "M17.E02"
+      ],
+      "omission_ids": [
+        "M17.OP01",
+        "M17.OP02",
+        "M17.OP03",
+        "M17.ON01",
+        "M17.OE01",
+        "M17.OE02"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新长期复杂规划门面。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "f62aa3c48eb41e677b134c90309b69e1e22452301d11d00f7d2f9bd22e4729c5"
+    },
+    {
+      "stable_id": "18",
+      "name": "wizard",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/wizard/SKILL.md",
+      "source_blob_sha": "c4294ad8298b9b95fc727496b1b802b1f7363fba",
+      "source_sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，新增 setup-wizard。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/wizard/SKILL.md",
+          "blob_sha": "c4294ad8298b9b95fc727496b1b802b1f7363fba",
+          "sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/wizard/agents/openai.yaml",
+          "blob_sha": "b601bdf3a321e7d32d5714681540b811287d3988",
+          "sha256": "98f44d682d58e262f160dc59a8befc365e0aa65820dd0261864af26aa8e59d83",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/wizard/template.sh",
+          "blob_sha": "1b3cdf40ad4923a9845fd682653d8cc4510f516e",
+          "sha256": "33cbe9dfb1d0e9185b60248a52aabed14bc64785a00cac695e302e739dd6c153",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "c4294ad8298b9b95fc727496b1b802b1f7363fba",
+      "file_sha256": "bdf31d48211ea559878f95a4f344aeabf8d85897488ba564382bab0b000daac1",
+      "unique_consumer": "U007 setup-wizard",
+      "method_id": "M18",
+      "source_sections": "wizard/SKILL; template.sh",
+      "test_ids": [
+        "F18"
+      ],
+      "assertion_ids": [
+        "M18.P01",
+        "M18.P02",
+        "M18.P03",
+        "M18.P04",
+        "M18.N01",
+        "M18.E01"
+      ],
+      "omission_ids": [
+        "M18.OP01",
+        "M18.OP02",
+        "M18.OP03",
+        "M18.OP04",
+        "M18.ON01",
+        "M18.OE01"
+      ],
+      "gain_goal_ids": [
+        "M18.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，新增 setup-wizard。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "a793115c8cd68ffb643358dc3296515174f14599e8f0bdcc1d4035f0b7c912d0"
+    },
+    {
+      "stable_id": "19",
+      "name": "in-progress/claude-handoff",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/in-progress/claude-handoff/SKILL.md",
+      "source_blob_sha": "9ab14e312a0d5cffe926eeeab12cef7dc8f84d54",
+      "source_sha256": "6738e8b7c7899ea0038fb7a5c859ca1b90c7b1eb40123dcdbe94c51b5b119f12",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增。平台专用自动交接与现有 handoff、原生 session 权限重叠，不能取得启动会话权限。",
+      "directory_files": [
+        {
+          "path": "skills/in-progress/claude-handoff/SKILL.md",
+          "blob_sha": "9ab14e312a0d5cffe926eeeab12cef7dc8f84d54",
+          "sha256": "6738e8b7c7899ea0038fb7a5c859ca1b90c7b1eb40123dcdbe94c51b5b119f12",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/claude-handoff/agents/openai.yaml",
+          "blob_sha": "0a7aa5da50d0e73248fc17fb8fe82409ec071eaf",
+          "sha256": "2308a672978864633286fb9f0792b08657e501426b3f7883fc418d5d2eac5eb0",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "9ab14e312a0d5cffe926eeeab12cef7dc8f84d54",
+      "file_sha256": "6738e8b7c7899ea0038fb7a5c859ca1b90c7b1eb40123dcdbe94c51b5b119f12",
+      "unique_consumer": "existing handoff/runtime",
+      "method_id": "M19",
+      "source_sections": "in-progress/claude-handoff/SKILL",
+      "test_ids": [
+        "F19"
+      ],
+      "assertion_ids": [
+        "M19.P01",
+        "M19.N01",
+        "M19.E01"
+      ],
+      "omission_ids": [
+        "M19.OP01",
+        "M19.ON01",
+        "M19.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "不新增。平台专用自动交接与现有 handoff、原生 session 权限重叠，不能取得启动会话权限。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "af2944498ac22a41b82a02b15d7b5553893a97afecd9e2b7cbb3e9cbbd144693"
+    },
+    {
+      "stable_id": "20",
+      "name": "implement-spec",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/implement-spec/SKILL.md",
+      "source_blob_sha": "183923797ab58f1b3ef09e03bc1f1f203c309f37",
+      "source_sha256": "7a22dd2e60b8fcece478ced9d2533582adf3520d695acd3ab715341535c9e56d",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，把 ready frontier、依赖与集成基线移入实际 Plan/Orchestrator。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/implement-spec/SKILL.md",
+          "blob_sha": "183923797ab58f1b3ef09e03bc1f1f203c309f37",
+          "sha256": "7a22dd2e60b8fcece478ced9d2533582adf3520d695acd3ab715341535c9e56d",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/implement-spec/agents/openai.yaml",
+          "blob_sha": "f5e91af21e38eb1a167ea5aa93dfc7da3c4637b4",
+          "sha256": "fd41efb42c60c96320d6531be7e4bf15cbf5518cd652d57dff27ccffa46988e9",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "183923797ab58f1b3ef09e03bc1f1f203c309f37",
+      "file_sha256": "7a22dd2e60b8fcece478ced9d2533582adf3520d695acd3ab715341535c9e56d",
+      "unique_consumer": "U010 Plan/Orchestrator",
+      "method_id": "M20",
+      "source_sections": "implement-spec/SKILL mapped serially",
+      "test_ids": [
+        "F20"
+      ],
+      "assertion_ids": [
+        "M20.P01",
+        "M20.P02",
+        "M20.P03",
+        "M20.N01",
+        "M20.E01"
+      ],
+      "omission_ids": [
+        "M20.OP01",
+        "M20.OP02",
+        "M20.OP03",
+        "M20.ON01",
+        "M20.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，把 ready frontier、依赖与集成基线移入实际 Plan/Orchestrator。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "5e82e40157c17a6c179cfd80496b4b2053974bd980e056bee61585586251eb50"
+    },
+    {
+      "stable_id": "21",
+      "name": "in-progress/loop-me",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/in-progress/loop-me/SKILL.md",
+      "source_blob_sha": "e58a474ca80feffdeb28842bc3bdee37da6510e7",
+      "source_sha256": "e44d1cc3e760fb86ac42964c2a5f1fcac511715db50fb375f3f7be814de1eaa7",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，新loop-me完整world-context discovery/stateful grilling/checkpoint/brief/续接与workflow spec方法，F21验收；无自动scheduler或Muse Loop复活。",
+      "directory_files": [
+        {
+          "path": "skills/in-progress/loop-me/SKILL.md",
+          "blob_sha": "e58a474ca80feffdeb28842bc3bdee37da6510e7",
+          "sha256": "e44d1cc3e760fb86ac42964c2a5f1fcac511715db50fb375f3f7be814de1eaa7",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/loop-me/agents/openai.yaml",
+          "blob_sha": "1a4f4111192ff75b4771e8a248c603994d5eafdc",
+          "sha256": "b66fa10079957051be6a812f45e55b67ac394b71d5ba88349962b4c9205802c3",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "e58a474ca80feffdeb28842bc3bdee37da6510e7",
+      "file_sha256": "e44d1cc3e760fb86ac42964c2a5f1fcac511715db50fb375f3f7be814de1eaa7",
+      "unique_consumer": "U005 loop-me",
+      "method_id": "M21",
+      "source_sections": "in-progress/loop-me/SKILL",
+      "test_ids": [
+        "F21"
+      ],
+      "assertion_ids": [
+        "M21.P01",
+        "M21.P02",
+        "M21.P03",
+        "M21.P04",
+        "M21.N01",
+        "M21.N02",
+        "M21.E01",
+        "M21.E02"
+      ],
+      "omission_ids": [
+        "M21.OP01",
+        "M21.OP02",
+        "M21.OP03",
+        "M21.OP04",
+        "M21.ON01",
+        "M21.ON02",
+        "M21.OE01",
+        "M21.OE02"
+      ],
+      "gain_goal_ids": [
+        "M21.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，新loop-me完整world-context discovery/stateful grilling/checkpoint/brief/续接与workflow spec方法，F21验收；无自动scheduler或Muse Loop复活。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "ef7ce4bad1174cf816438125543e85e68763c7025c6caf5a1a18b4f824cbf581"
+    },
+    {
+      "stable_id": "22",
+      "name": "pr",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/pr/SKILL.md",
+      "source_blob_sha": "84dd4fb2f068e9f6282690235d20dd505b418119",
+      "source_sha256": "ab63f1cf78647389edcd386c9427c5dfca27ed2836930c24773ffee834c19bcd",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，移入 implement/Orchestrator 的 PR 写作参考。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/pr/CREDITS.md",
+          "blob_sha": "5314bda2fa6005e264c9b5c1de7c425e719dc91f",
+          "sha256": "a7a087127665d7298a72280ef6e19c41ad8404523712a788c8dc3ab414bc2497",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/pr/SKILL.md",
+          "blob_sha": "84dd4fb2f068e9f6282690235d20dd505b418119",
+          "sha256": "ab63f1cf78647389edcd386c9427c5dfca27ed2836930c24773ffee834c19bcd",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/pr/agents/openai.yaml",
+          "blob_sha": "48286f48f53b937cc19c0e39899b5f956271a98d",
+          "sha256": "2295b586624db4ef546f3fd4695492f039d941a46d8a1593a702ce3ca511b8ad",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "84dd4fb2f068e9f6282690235d20dd505b418119",
+      "file_sha256": "ab63f1cf78647389edcd386c9427c5dfca27ed2836930c24773ffee834c19bcd",
+      "unique_consumer": "U010 implement PR reference",
+      "method_id": "M22",
+      "source_sections": "pr/SKILL",
+      "test_ids": [
+        "F22"
+      ],
+      "assertion_ids": [
+        "M22.P01",
+        "M22.N01",
+        "M22.E01"
+      ],
+      "omission_ids": [
+        "M22.OP01",
+        "M22.ON01",
+        "M22.OE01"
+      ],
+      "gain_goal_ids": [
+        "M22.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，移入 implement/Orchestrator 的 PR 写作参考。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "8e10e6583f222af75e6b1af154896a53a05aa03459ba3194d1d8c8ac3d4d3a61"
+    },
+    {
+      "stable_id": "23",
+      "name": "retro",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/engineering/retro/SKILL.md",
+      "source_blob_sha": "12149acf2dd23b4514dec57b04a6293eaa1352fa",
+      "source_sha256": "33fbc28568e3146f20fd908b12998bc0ab30aa4f4c87288199a40793efa94696",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，移入 code-hygiene 的 environment-retro；本地设计 retro 继续承担设计复盘。",
+      "directory_files": [
+        {
+          "path": "skills/engineering/retro/SKILL.md",
+          "blob_sha": "12149acf2dd23b4514dec57b04a6293eaa1352fa",
+          "sha256": "33fbc28568e3146f20fd908b12998bc0ab30aa4f4c87288199a40793efa94696",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/engineering/retro/agents/openai.yaml",
+          "blob_sha": "a2f0bac3f9cebf29beee2e79960cb876e0adc65d",
+          "sha256": "cb6fb9d7e6b4be5975f41f6def1dd00a1255bad5d9b02696b124c924a8b8745c",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "12149acf2dd23b4514dec57b04a6293eaa1352fa",
+      "file_sha256": "33fbc28568e3146f20fd908b12998bc0ab30aa4f4c87288199a40793efa94696",
+      "unique_consumer": "U010 code-hygiene environment-retro",
+      "method_id": "M23",
+      "source_sections": "retro/SKILL",
+      "test_ids": [
+        "F23"
+      ],
+      "assertion_ids": [
+        "M23.P01",
+        "M23.P02",
+        "M23.P03",
+        "M23.N01",
+        "M23.E01",
+        "M23.E02"
+      ],
+      "omission_ids": [
+        "M23.OP01",
+        "M23.OP02",
+        "M23.OP03",
+        "M23.ON01",
+        "M23.OE01",
+        "M23.OE02"
+      ],
+      "gain_goal_ids": [
+        "M23.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，移入 code-hygiene 的 environment-retro；本地设计 retro 继续承担设计复盘。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "1b34ca6e2f0597949d215e37ac9f3ef547187db791d58548273e2824e6312070"
+    },
+    {
+      "stable_id": "24",
+      "name": "setup-ts-deep-modules",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/in-progress/setup-ts-deep-modules/SKILL.md",
+      "source_blob_sha": "7e30047eaeda175de5d93886596a37baf365bb90",
+      "source_sha256": "29acca66ac99d4532e2a6f0370d8125d7cba1e87c9ac66573203c75189d3e6c7",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，作为 codebase-design 的 TS 模块配方。",
+      "directory_files": [
+        {
+          "path": "skills/in-progress/setup-ts-deep-modules/SKILL.md",
+          "blob_sha": "7e30047eaeda175de5d93886596a37baf365bb90",
+          "sha256": "29acca66ac99d4532e2a6f0370d8125d7cba1e87c9ac66573203c75189d3e6c7",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/setup-ts-deep-modules/agents/openai.yaml",
+          "blob_sha": "5d0581bdd4f9337cfb1e13feb7e1e18f43ea9db1",
+          "sha256": "159f680217d50747702620c05fd65734a152185b3219a8ca5ee4630878a354fa",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/setup-ts-deep-modules/dependency-cruiser.config.cjs",
+          "blob_sha": "54030ede7d36b7f72fc0f645fa414efa9b6f63ed",
+          "sha256": "3c4973bec69f73b2117654abf9e666a7c28665b213be20e6d39869e29842428e",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "7e30047eaeda175de5d93886596a37baf365bb90",
+      "file_sha256": "29acca66ac99d4532e2a6f0370d8125d7cba1e87c9ac66573203c75189d3e6c7",
+      "unique_consumer": "U010 TS recipe",
+      "method_id": "M24",
+      "source_sections": "setup-ts-deep-modules/SKILL; dependency-cruiser.config.cjs",
+      "test_ids": [
+        "F24"
+      ],
+      "assertion_ids": [
+        "M24.P01",
+        "M24.P02",
+        "M24.P03",
+        "M24.P04",
+        "M24.P05",
+        "M24.P06",
+        "M24.P07",
+        "M24.N01",
+        "M24.E01"
+      ],
+      "omission_ids": [
+        "M24.OP01",
+        "M24.OP02",
+        "M24.OP03",
+        "M24.OP04",
+        "M24.OP05",
+        "M24.OP06",
+        "M24.OP07",
+        "M24.ON01",
+        "M24.OE01"
+      ],
+      "gain_goal_ids": [
+        "M24.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，作为 codebase-design 的 TS 模块配方。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "830cb0f0a98cd24475aa951124782ade073ddded8271c0b42cfc5da968d6b5d7"
+    },
+    {
+      "stable_id": "25",
+      "name": "writing-beats",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/in-progress/writing-beats/SKILL.md",
+      "source_blob_sha": "3d3b25b605491adc5c62ae5423127717a94b9632",
+      "source_sha256": "a96abafa2372eede8267d770138b322d6125da8adaa7ccf0a5e08e4ee13ee71e",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，writing-workshop的beats模式：读者前置概念、requires/grounds可达候选、用户选择、单beat写入、逐次重读保留编辑；F25真实文件/交互验收。",
+      "directory_files": [
+        {
+          "path": "skills/in-progress/writing-beats/SKILL.md",
+          "blob_sha": "3d3b25b605491adc5c62ae5423127717a94b9632",
+          "sha256": "a96abafa2372eede8267d770138b322d6125da8adaa7ccf0a5e08e4ee13ee71e",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/writing-beats/agents/openai.yaml",
+          "blob_sha": "e8eaa188d4c70b582eed2d1775fe4c4ea3562b25",
+          "sha256": "ddaef01da61d8e3c5f482c4403033c20cf5823f08a1dbf1d4c871670831d01e2",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "3d3b25b605491adc5c62ae5423127717a94b9632",
+      "file_sha256": "a96abafa2372eede8267d770138b322d6125da8adaa7ccf0a5e08e4ee13ee71e",
+      "unique_consumer": "U004 writing beats",
+      "method_id": "M25",
+      "source_sections": "writing-beats/SKILL; U004",
+      "test_ids": [
+        "F25"
+      ],
+      "assertion_ids": [
+        "M25.P01",
+        "M25.N01",
+        "M25.E01"
+      ],
+      "omission_ids": [
+        "M25.OP01",
+        "M25.ON01",
+        "M25.OE01"
+      ],
+      "gain_goal_ids": [
+        "M25.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，writing-workshop的beats模式：读者前置概念、requires/grounds可达候选、用户选择、单beat写入、逐次重读保留编辑；F25真实文件/交互验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "c5d388f887b1281afb3d88455476f34e87725c7c8ed10505db33bb85c7f7f598"
+    },
+    {
+      "stable_id": "26",
+      "name": "writing-fragments",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/in-progress/writing-fragments/SKILL.md",
+      "source_blob_sha": "c7c889b880cf9c8d289119dea5ff240641b615ca",
+      "source_sha256": "298b0edd23df229183630de592ed8aa4289233560f2040691f6eb77caeaad4ea",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，writing-workshop的fragments模式：从初始语料访谈探索，单H1与横线分隔无结构碎片，持续追加/重读保留编辑；F26验收。",
+      "directory_files": [
+        {
+          "path": "skills/in-progress/writing-fragments/SKILL.md",
+          "blob_sha": "c7c889b880cf9c8d289119dea5ff240641b615ca",
+          "sha256": "298b0edd23df229183630de592ed8aa4289233560f2040691f6eb77caeaad4ea",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/writing-fragments/agents/openai.yaml",
+          "blob_sha": "be3713e91e3ddc6c71e04e6b512b6ad6502d7cc8",
+          "sha256": "81167f25ee8ea1bb4b4958f12b6702ea972ad31b05e03ec91e39fa4bae0c2641",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "c7c889b880cf9c8d289119dea5ff240641b615ca",
+      "file_sha256": "298b0edd23df229183630de592ed8aa4289233560f2040691f6eb77caeaad4ea",
+      "unique_consumer": "U004 writing fragments",
+      "method_id": "M26",
+      "source_sections": "writing-fragments/SKILL; U004",
+      "test_ids": [
+        "F26"
+      ],
+      "assertion_ids": [
+        "M26.P01",
+        "M26.N01",
+        "M26.E01"
+      ],
+      "omission_ids": [
+        "M26.OP01",
+        "M26.ON01",
+        "M26.OE01"
+      ],
+      "gain_goal_ids": [
+        "M26.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，writing-workshop的fragments模式：从初始语料访谈探索，单H1与横线分隔无结构碎片，持续追加/重读保留编辑；F26验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "a2e1695638ef6b52bcbd744cab5cbfb6a9c5a885d188ab6df2f0e3ce120e9a12"
+    },
+    {
+      "stable_id": "27",
+      "name": "writing-shape",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/in-progress/writing-shape/SKILL.md",
+      "source_blob_sha": "02f2866d13e72504e010f2ad3458eb9b36b876db",
+      "source_sha256": "f5e6c57bdd85178ace4a260c92f46da6b64ddee18215b461d875739c68976f72",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，writing-workshop的shape模式：只读原料、确认读者前提、2–3开篇供用户选、逐个同意块写入与概念grounding；F27验收。",
+      "directory_files": [
+        {
+          "path": "skills/in-progress/writing-shape/SKILL.md",
+          "blob_sha": "02f2866d13e72504e010f2ad3458eb9b36b876db",
+          "sha256": "f5e6c57bdd85178ace4a260c92f46da6b64ddee18215b461d875739c68976f72",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/in-progress/writing-shape/agents/openai.yaml",
+          "blob_sha": "87e0c736be148002f9db275258cd2f405643ad7b",
+          "sha256": "56de45430e23104ff178415f5ecf7821d51a9cfabd8814b1607ebf39da2ef5cd",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "02f2866d13e72504e010f2ad3458eb9b36b876db",
+      "file_sha256": "f5e6c57bdd85178ace4a260c92f46da6b64ddee18215b461d875739c68976f72",
+      "unique_consumer": "U004 writing shape",
+      "method_id": "M27",
+      "source_sections": "writing-shape/SKILL; U004",
+      "test_ids": [
+        "F27"
+      ],
+      "assertion_ids": [
+        "M27.P01",
+        "M27.N01",
+        "M27.E01"
+      ],
+      "omission_ids": [
+        "M27.OP01",
+        "M27.ON01",
+        "M27.OE01"
+      ],
+      "gain_goal_ids": [
+        "M27.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，writing-workshop的shape模式：只读原料、确认读者前提、2–3开篇供用户选、逐个同意块写入与概念grounding；F27验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "682b105ffb63ea029a0b8d7543c63aa7c84db7bcf9111e579b77c389d35d64b7"
+    },
+    {
+      "stable_id": "28",
+      "name": "git-guardrails-claude-code",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/misc/git-guardrails-claude-code/SKILL.md",
+      "source_blob_sha": "58bcdd875b164093b95f436fa32a65c6cb5eb572",
+      "source_sha256": "69b291d655626a01602b998a1836fcb93c058ede68dfafddfd71e87f17074764",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增。本地跨 harness 保护、受控变更和发布门已有所有权，再装 Claude 专用 Hook 会出现双重控制。",
+      "directory_files": [
+        {
+          "path": "skills/misc/git-guardrails-claude-code/SKILL.md",
+          "blob_sha": "58bcdd875b164093b95f436fa32a65c6cb5eb572",
+          "sha256": "69b291d655626a01602b998a1836fcb93c058ede68dfafddfd71e87f17074764",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/misc/git-guardrails-claude-code/agents/openai.yaml",
+          "blob_sha": "3f5d756f1b9b97d94cef1473fb480ccda5fdfbc1",
+          "sha256": "d53cd783fc0ac208dec9a4c267989284384785aab6422dccdaed42f9e40243ec",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/misc/git-guardrails-claude-code/scripts/block-dangerous-git.sh",
+          "blob_sha": "c40b59cb47880fc9da8fe4179bd742f51f09d17d",
+          "sha256": "234922b83c0a1737ee7300806c21ac0f389b07aaeb65c2d71ccedafbc5e1ea4b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100755"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "58bcdd875b164093b95f436fa32a65c6cb5eb572",
+      "file_sha256": "69b291d655626a01602b998a1836fcb93c058ede68dfafddfd71e87f17074764",
+      "unique_consumer": "existing native guard/trust",
+      "method_id": "M28",
+      "source_sections": "git-guardrails-claude-code/SKILL",
+      "test_ids": [
+        "F28"
+      ],
+      "assertion_ids": [
+        "M28.P01",
+        "M28.N01",
+        "M28.E01"
+      ],
+      "omission_ids": [
+        "M28.OP01",
+        "M28.ON01",
+        "M28.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "不新增。本地跨 harness 保护、受控变更和发布门已有所有权，再装 Claude 专用 Hook 会出现双重控制。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "e37405cd5f107902e9b0665041cdcced94c92349f707b467933a476e86bf1c04"
+    },
+    {
+      "stable_id": "29",
+      "name": "migrate-to-shoehorn",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/misc/migrate-to-shoehorn/SKILL.md",
+      "source_blob_sha": "ae4f965e204fc93cedbc4e2c306e92829d93f800",
+      "source_sha256": "de4da4c11d924fac79c924b2ee3d2db4a5cb98386eb490a599119463d036ae72",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，个人 tdd 的测试数据迁移配方。",
+      "directory_files": [
+        {
+          "path": "skills/misc/migrate-to-shoehorn/SKILL.md",
+          "blob_sha": "ae4f965e204fc93cedbc4e2c306e92829d93f800",
+          "sha256": "de4da4c11d924fac79c924b2ee3d2db4a5cb98386eb490a599119463d036ae72",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/misc/migrate-to-shoehorn/agents/openai.yaml",
+          "blob_sha": "3bd79ee2b502075c6d1fe40e6fe98f4fe3f3c5f5",
+          "sha256": "395c2db852e66a199f1cd07f7ed92d66cb6f0787460c5475926f1a5e778b699d",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "ae4f965e204fc93cedbc4e2c306e92829d93f800",
+      "file_sha256": "de4da4c11d924fac79c924b2ee3d2db4a5cb98386eb490a599119463d036ae72",
+      "unique_consumer": "U010 G/tdd shoehorn recipe",
+      "method_id": "M29",
+      "source_sections": "migrate-to-shoehorn/SKILL",
+      "test_ids": [
+        "F29"
+      ],
+      "assertion_ids": [
+        "M29.P01",
+        "M29.P02",
+        "M29.P03",
+        "M29.N01",
+        "M29.E01"
+      ],
+      "omission_ids": [
+        "M29.OP01",
+        "M29.OP02",
+        "M29.OP03",
+        "M29.ON01",
+        "M29.OE01"
+      ],
+      "gain_goal_ids": [
+        "M29.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，个人 tdd 的测试数据迁移配方。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "4e678d2d346b99545e3162d6c2df5abae155a4355d95c87f20a43092263e13bb"
+    },
+    {
+      "stable_id": "30",
+      "name": "scaffold-exercises",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/misc/scaffold-exercises/SKILL.md",
+      "source_blob_sha": "d87df28e7d8abb4e57ecc6e47d71c274d16054c7",
+      "source_sha256": "75f5c9d771606fb9762f16522efc954df11c324f87148d8ff069bce166257de9",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增。本次目标不包含课程练习仓库生产；现有 codebase-to-course 负责代码库课程化，不能把特殊练习脚手架当框架通用入口。",
+      "directory_files": [
+        {
+          "path": "skills/misc/scaffold-exercises/SKILL.md",
+          "blob_sha": "d87df28e7d8abb4e57ecc6e47d71c274d16054c7",
+          "sha256": "75f5c9d771606fb9762f16522efc954df11c324f87148d8ff069bce166257de9",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/misc/scaffold-exercises/agents/openai.yaml",
+          "blob_sha": "963723a58973effa256cbfe0f23a7bcc03a374b8",
+          "sha256": "525b33913340bea7947ad2de17f2a7c5fb94be543345fe80ae753b9a44ba601d",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "d87df28e7d8abb4e57ecc6e47d71c274d16054c7",
+      "file_sha256": "75f5c9d771606fb9762f16522efc954df11c324f87148d8ff069bce166257de9",
+      "unique_consumer": "existing generic course/content owners",
+      "method_id": "M30",
+      "source_sections": "scaffold-exercises/SKILL",
+      "test_ids": [
+        "F30"
+      ],
+      "assertion_ids": [
+        "M30.P01",
+        "M30.N01",
+        "M30.E01"
+      ],
+      "omission_ids": [
+        "M30.OP01",
+        "M30.ON01",
+        "M30.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "不新增。本次目标不包含课程练习仓库生产；现有 codebase-to-course 负责代码库课程化，不能把特殊练习脚手架当框架通用入口。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "4a23e4dd65ea16d2ed5de314f21808b4130badf4abbe7cb77ebe12677acf130a"
+    },
+    {
+      "stable_id": "31",
+      "name": "setup-pre-commit",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/misc/setup-pre-commit/SKILL.md",
+      "source_blob_sha": "1b9708168263067adb4684d06ebb8f4ccfe9682c",
+      "source_sha256": "c9819d7f1e3b198064edc1faa3154224ed67395e9f07f5d3cea4b67cf0a11a98",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，code-hygiene 的 pre-commit 配方。",
+      "directory_files": [
+        {
+          "path": "skills/misc/setup-pre-commit/SKILL.md",
+          "blob_sha": "1b9708168263067adb4684d06ebb8f4ccfe9682c",
+          "sha256": "c9819d7f1e3b198064edc1faa3154224ed67395e9f07f5d3cea4b67cf0a11a98",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/misc/setup-pre-commit/agents/openai.yaml",
+          "blob_sha": "e5a1c63df9e0703893cdad799bd5e2a6b5e6939d",
+          "sha256": "acf41db398c5c43afe504008bb7d615a97b6498b0f1f6c5b2395254c0bfb57d1",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "1b9708168263067adb4684d06ebb8f4ccfe9682c",
+      "file_sha256": "c9819d7f1e3b198064edc1faa3154224ed67395e9f07f5d3cea4b67cf0a11a98",
+      "unique_consumer": "U010 code-hygiene precommit recipe",
+      "method_id": "M31",
+      "source_sections": "setup-pre-commit/SKILL adapted existing .githooks owner",
+      "test_ids": [
+        "F31"
+      ],
+      "assertion_ids": [
+        "M31.P01",
+        "M31.P02",
+        "M31.P03",
+        "M31.P04",
+        "M31.N01",
+        "M31.E01"
+      ],
+      "omission_ids": [
+        "M31.OP01",
+        "M31.OP02",
+        "M31.OP03",
+        "M31.OP04",
+        "M31.ON01",
+        "M31.OE01"
+      ],
+      "gain_goal_ids": [
+        "M31.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，code-hygiene 的 pre-commit 配方。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "51c970dd35d078c7578606d2f598d10ecab6ec5a4643772e6a145903004de9e8"
+    },
+    {
+      "stable_id": "32",
+      "name": "productivity/grill-me",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/grill-me/SKILL.md",
+      "source_blob_sha": "3947ff9c4ad980d14fc07fccbf659d47c114e81d",
+      "source_sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "no_independent_package",
+      "decision": "不新增。grilling 已是唯一追问所有者，再建同义入口无独立能力。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/grill-me/SKILL.md",
+          "blob_sha": "3947ff9c4ad980d14fc07fccbf659d47c114e81d",
+          "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/grill-me/agents/openai.yaml",
+          "blob_sha": "4d6fb0c746c5d21364dce5d0cf8c51eab9712e7b",
+          "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "3947ff9c4ad980d14fc07fccbf659d47c114e81d",
+      "file_sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637",
+      "unique_consumer": "existing grilling",
+      "method_id": "M32",
+      "source_sections": "productivity/grill-me/SKILL",
+      "test_ids": [
+        "F32"
+      ],
+      "assertion_ids": [
+        "M32.P01",
+        "M32.N01",
+        "M32.E01"
+      ],
+      "omission_ids": [
+        "M32.OP01",
+        "M32.ON01",
+        "M32.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "不新增。grilling 已是唯一追问所有者，再建同义入口无独立能力。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "8a00240df03f695c05710f7147bafa274947f92e8c66b34d9a2a4b6dd897067f"
+    },
+    {
+      "stable_id": "33",
+      "name": "productivity/grilling",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/grilling/SKILL.md",
+      "source_blob_sha": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3",
+      "source_sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，整体更新为按独立决策 frontier 分轮追问。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/grilling/SKILL.md",
+          "blob_sha": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3",
+          "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/grilling/agents/openai.yaml",
+          "blob_sha": "ddbdb96139c0c1dfe6bca698f39d0465674b8a39",
+          "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3",
+      "file_sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+      "unique_consumer": "U003 grilling",
+      "method_id": "M33",
+      "source_sections": "grilling/SKILL",
+      "test_ids": [
+        "F33"
+      ],
+      "assertion_ids": [
+        "M33.P01",
+        "M33.P02",
+        "M33.P03",
+        "M33.N01",
+        "M33.E01"
+      ],
+      "omission_ids": [
+        "M33.OP01",
+        "M33.OP02",
+        "M33.OP03",
+        "M33.ON01",
+        "M33.OE01"
+      ],
+      "gain_goal_ids": [
+        "M33.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，整体更新为按独立决策 frontier 分轮追问。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "c8a8783b5c7dd382a8c12d4c84355835627e4dab1ab9a2b1bff8c2ced3b67d00"
+    },
+    {
+      "stable_id": "34",
+      "name": "productivity/handoff",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/handoff/SKILL.md",
+      "source_blob_sha": "2eb98a51b97bb5bac461a26ad14828eeac827909",
+      "source_sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，整体更新事实、未决事项与恢复指令方法。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/handoff/SKILL.md",
+          "blob_sha": "2eb98a51b97bb5bac461a26ad14828eeac827909",
+          "sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/handoff/agents/openai.yaml",
+          "blob_sha": "6e1d8da121beceddc2f9ec7fa8714c1d914dd11a",
+          "sha256": "5c479fd562c691851690e8b18c8501045bef0943c10743d636b2fae26add1d28",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "2eb98a51b97bb5bac461a26ad14828eeac827909",
+      "file_sha256": "7c62de979fdc7ac32fb5ddb2146156c917f80ee070d30fadc9d40343c4b6ed25",
+      "unique_consumer": "U003 handoff",
+      "method_id": "M34",
+      "source_sections": "handoff/SKILL",
+      "test_ids": [
+        "F34"
+      ],
+      "assertion_ids": [
+        "M34.P01",
+        "M34.P02",
+        "M34.N01",
+        "M34.E01"
+      ],
+      "omission_ids": [
+        "M34.OP01",
+        "M34.OP02",
+        "M34.ON01",
+        "M34.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，整体更新事实、未决事项与恢复指令方法。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "76153ccd69a74c28da0f585dc510ba450adacf1b4614192bb4d9f11d385fe791"
+    },
+    {
+      "stable_id": "35",
+      "name": "productivity/teach",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/teach/SKILL.md",
+      "source_blob_sha": "c679eeccd48ca720c8196e5d9a9e58223abf213b",
+      "source_sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，更新个人Claude teach：授权教学workspace的交互HTML课程、即时练习反馈、既有assets复用和真实学习记录；不假设Codex安装，F35验收。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/teach/GLOSSARY-FORMAT.md",
+          "blob_sha": "fdd7e366ad9760588b28981e42b3d3b561e56aca",
+          "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/teach/LEARNING-RECORD-FORMAT.md",
+          "blob_sha": "953c61422776b47612c3c945920358ad7b5daee7",
+          "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/teach/MISSION-FORMAT.md",
+          "blob_sha": "45250bb1bad70988bf381625931df64645e10246",
+          "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/teach/RESOURCES-FORMAT.md",
+          "blob_sha": "18b588c8b6f96a50ae2352f264928c643d2782e4",
+          "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/teach/SKILL.md",
+          "blob_sha": "c679eeccd48ca720c8196e5d9a9e58223abf213b",
+          "sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/teach/agents/openai.yaml",
+          "blob_sha": "3452a850e3b0c1f0a3d41b2bfd45164d2d38d7f6",
+          "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "c679eeccd48ca720c8196e5d9a9e58223abf213b",
+      "file_sha256": "a32df9dcdfc0c4fdc1c98e1ed3940c5f56b84c1aa90ff60346f32b8b53915b43",
+      "unique_consumer": "U003 G/teach Claude",
+      "method_id": "M35",
+      "source_sections": "teach/SKILL; GLOSSARY,LEARNING-RECORD,MISSION,RESOURCES FORMAT",
+      "test_ids": [
+        "F35"
+      ],
+      "assertion_ids": [
+        "M35.P01",
+        "M35.P02",
+        "M35.P03",
+        "M35.P04",
+        "M35.N01",
+        "M35.N02",
+        "M35.E01"
+      ],
+      "omission_ids": [
+        "M35.OP01",
+        "M35.OP02",
+        "M35.OP03",
+        "M35.OP04",
+        "M35.ON01",
+        "M35.ON02",
+        "M35.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，更新个人Claude teach：授权教学workspace的交互HTML课程、即时练习反馈、既有assets复用和真实学习记录；不假设Codex安装，F35验收。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "3fb5edf3263062c46d89faf0bcd339709062eb0bfdfb4ebc94108662ccbfbb62"
+    },
+    {
+      "stable_id": "36",
+      "name": "productivity/to-questionnaire",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/to-questionnaire/SKILL.md",
+      "source_blob_sha": "dadd0c00d6a350acaa15bb9ca1b96b20ead684ca",
+      "source_sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，research-kit 新增 decision-questionnaire。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/to-questionnaire/SKILL.md",
+          "blob_sha": "dadd0c00d6a350acaa15bb9ca1b96b20ead684ca",
+          "sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/to-questionnaire/agents/openai.yaml",
+          "blob_sha": "a58d14765beb4acb4c9708b516310558e1308a22",
+          "sha256": "9e8a06c38c8842eea8d4922cb9d1ead8e3ace647bab259b943c994a1b4742bc2",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "dadd0c00d6a350acaa15bb9ca1b96b20ead684ca",
+      "file_sha256": "b5eb929842ee0e93d867c5e906d183d350f2f2d149eaeaa86967d94d8eda1d3b",
+      "unique_consumer": "U009 research-kit questionnaire",
+      "method_id": "M36",
+      "source_sections": "to-questionnaire/SKILL",
+      "test_ids": [
+        "F36"
+      ],
+      "assertion_ids": [
+        "M36.P01",
+        "M36.P02",
+        "M36.N01",
+        "M36.E01"
+      ],
+      "omission_ids": [
+        "M36.OP01",
+        "M36.OP02",
+        "M36.ON01",
+        "M36.OE01"
+      ],
+      "gain_goal_ids": [
+        "M36.G01"
+      ],
+      "classification": "gain",
+      "disposition_reason": "需要，research-kit 新增 decision-questionnaire。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "7e3bd06d20cc30fddfbfcb5c741a46bf9fd08102c02accebe9c3e37f1490fdc5"
+    },
+    {
+      "stable_id": "37",
+      "name": "productivity/wait-what",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/wait-what/SKILL.md",
+      "source_blob_sha": "9b15cd1a7dda0854ca093e29e3e0de57e241b2ac",
+      "source_sha256": "d961bb37defd975c539427edb8f450cdbccdcdd552e213c1ece46676a7970905",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，整体更新术语解释方法。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/wait-what/SKILL.md",
+          "blob_sha": "9b15cd1a7dda0854ca093e29e3e0de57e241b2ac",
+          "sha256": "d961bb37defd975c539427edb8f450cdbccdcdd552e213c1ece46676a7970905",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/wait-what/agents/openai.yaml",
+          "blob_sha": "6f7a9c33f99ec4ba70d986d6fc0de06c8b811bc3",
+          "sha256": "b41faadf741d51e4ea184148b2d1854d93f947aaf754c7844f70a00f04194999",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "9b15cd1a7dda0854ca093e29e3e0de57e241b2ac",
+      "file_sha256": "d961bb37defd975c539427edb8f450cdbccdcdd552e213c1ece46676a7970905",
+      "unique_consumer": "U003 wait-what",
+      "method_id": "M37",
+      "source_sections": "wait-what/SKILL adapted language",
+      "test_ids": [
+        "F37"
+      ],
+      "assertion_ids": [
+        "M37.P01",
+        "M37.P02",
+        "M37.N01",
+        "M37.E01"
+      ],
+      "omission_ids": [
+        "M37.OP01",
+        "M37.OP02",
+        "M37.ON01",
+        "M37.OE01"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，整体更新术语解释方法。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "8b56d695f1ac2c040615d3b8c9f55df1da09b18bafa0e1ef46d5d833c2026caf"
+    },
+    {
+      "stable_id": "38",
+      "name": "productivity/writing-for-agents",
+      "source_kind": "current",
+      "source_commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "source_path": "skills/productivity/writing-for-agents/SKILL.md",
+      "source_blob_sha": "a37608daf6e835e767deecfb498facecaaba82ba",
+      "source_sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+      "snapshot_root": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/sources/mattpocock-d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "disposition": "adopt_or_port",
+      "decision": "需要，整体更新，并由 skill-authoring 引用其写作方法。",
+      "directory_files": [
+        {
+          "path": "skills/productivity/writing-for-agents/SKILL-MECHANICS.md",
+          "blob_sha": "9cdbdb22aadc438755392216e75ad9a14cc9832e",
+          "sha256": "c768e6307c7c10728c401c213f2c4ba71c542127eeb7ad2956aabd15a0fa0059",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/writing-for-agents/SKILL.md",
+          "blob_sha": "a37608daf6e835e767deecfb498facecaaba82ba",
+          "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        },
+        {
+          "path": "skills/productivity/writing-for-agents/agents/openai.yaml",
+          "blob_sha": "079c933b75743dec18b5d0c01006def20b6aad26",
+          "sha256": "eacb24b2a618cfb81dacb0416f4fdd75ddf3a8060f8ddb99aae1b1e301907e4b",
+          "kind": "file",
+          "type": "file",
+          "mode": "100644"
+        }
+      ],
+      "repo_sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+      "blob_sha": "a37608daf6e835e767deecfb498facecaaba82ba",
+      "file_sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+      "unique_consumer": "U003 writing-for-agents + skill-authoring",
+      "method_id": "M38",
+      "source_sections": "writing-for-agents/SKILL; SKILL-MECHANICS mapped native contract",
+      "test_ids": [
+        "F38"
+      ],
+      "assertion_ids": [
+        "M38.P01",
+        "M38.P02",
+        "M38.P03",
+        "M38.P04",
+        "M38.P05",
+        "M38.N01",
+        "M38.E01",
+        "M38.E02"
+      ],
+      "omission_ids": [
+        "M38.OP01",
+        "M38.OP02",
+        "M38.OP03",
+        "M38.OP04",
+        "M38.OP05",
+        "M38.ON01",
+        "M38.OE01",
+        "M38.OE02"
+      ],
+      "gain_goal_ids": [],
+      "classification": "preservation",
+      "disposition_reason": "需要，整体更新，并由 skill-authoring 引用其写作方法。",
+      "method_implementation_status": "PENDING",
+      "native_behavior_status": "NOT_RUN",
+      "ownership_contract": "One frozen method owner or explicit delegation/composition; no competing method copy.",
+      "directory_manifest_sha256": "240dbbbf119fcb823d56d541281fcc0bafd15622071b704b3c921549b9427ffb"
+    }
+  ],
+  "implementation_baseline": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+  "implementation_baseline_delta": {
+    "approved_base": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+    "previous_base": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+    "real_approval": {
+      "path": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/preapproval/M2-BASELINE-APPROVAL.json",
+      "sha256": "e719a067ba5c7ae7ad973a6d4dca39135ce70e8353ecab66219d900da64a258c",
+      "response_id": "msg_01a0f2d7-e2be-74d1-ac2a-a554a89c0767",
+      "timestamp": "2026-09-30T15:03:49.694Z"
+    },
+    "actual_FF_readback": {
+      "path": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/M2-FF-READBACK.json",
+      "sha256": "220b41cda74d5ad4adeab1344c06ab766b18dd4eb8dd1a2b6ae3c0057908ad77"
+    },
+    "transport_paths": [
+      {
+        "path": ".claude/hooks/project-scope-guard.mjs",
+        "M1": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "f013c1442341bded56b496f7dea0acc57e1e3193",
+          "sha256": "56143bf3386fba9a77a7585b970666269718ef652c5b02f3bd46c68dcd8f29f2"
+        },
+        "M2": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "1a6be720f3875907452f74c5e2ed3cc935c86e52",
+          "sha256": "6794bdd6caa678445b0c0ab0a67f3dd4a8090db294ae94ee530b9b1615fe7e4d"
+        },
+        "current_candidate": {
+          "type": "file",
+          "mode": "100644",
+          "sha256": "56143bf3386fba9a77a7585b970666269718ef652c5b02f3bd46c68dcd8f29f2"
+        },
+        "Matt_owner_u_ids": []
+      },
+      {
+        "path": ".codex/hooks.json",
+        "M1": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "5545175ac9a447011c76350dc4970ec4a90a57a7",
+          "sha256": "59bd427084ecad0bdcce4d29e69605508ad9e9be38181ad4e941cf07c1ea3e54"
+        },
+        "M2": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "150f768169a8d4f68f6ce2c714a6cf0950178670",
+          "sha256": "4bb7777130c6849d078856b366c33e7af0dc752111c7944d47742ed74f965145"
+        },
+        "current_candidate": {
+          "type": "file",
+          "mode": "100644",
+          "sha256": "59bd427084ecad0bdcce4d29e69605508ad9e9be38181ad4e941cf07c1ea3e54"
+        },
+        "Matt_owner_u_ids": [
+          "U013"
+        ]
+      },
+      {
+        "path": "README.md",
+        "M1": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "867142408237b67fbf5eaf8c53b07a14e38f3f80",
+          "sha256": "f2f03d3efc0eb5d7ff2aae37a9f4447c63ee59963f1b38bd00a0b12890639ed6"
+        },
+        "M2": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "4f1217383ab43cf70fc5b7cf55bee7becdbaa321",
+          "sha256": "434aee3173e2e3df1dfddc1cb8813e5249f4ef82d4ab127c32eaf54c04f00250"
+        },
+        "current_candidate": {
+          "type": "file",
+          "mode": "100644",
+          "sha256": "f2f03d3efc0eb5d7ff2aae37a9f4447c63ee59963f1b38bd00a0b12890639ed6"
+        },
+        "Matt_owner_u_ids": []
+      },
+      {
+        "path": "scripts/test-project-gate-v34-mutations.mjs",
+        "M1": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "3e25e385486d551d00fe2192647531451374e669",
+          "sha256": "af95f2c4e80cdbcc1c70ecc774c1220d7b3efb8177981668ac931bdb36a3d414"
+        },
+        "M2": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "c46e9e5188e194f3af38af74e3036db6fe816b25",
+          "sha256": "cdc2226eb5ff0c57d3bef7fdaa4004caee3e67b37dd273251ab4082e52c91987"
+        },
+        "current_candidate": {
+          "type": "file",
+          "mode": "100644",
+          "sha256": "af95f2c4e80cdbcc1c70ecc774c1220d7b3efb8177981668ac931bdb36a3d414"
+        },
+        "Matt_owner_u_ids": []
+      },
+      {
+        "path": "scripts/test-project-scope-guard.mjs",
+        "M1": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "63ce2c9cc985744e2c449765db55d60ec917b4ac",
+          "sha256": "03517ad3cf17fd4aae8c5a6d07f95489154f413e489f1f8cbddcc3316e52b3af"
+        },
+        "M2": {
+          "type": "file",
+          "mode": "100644",
+          "blob_sha": "9f60173d5f55e6474dd2dc72f04e438c75f0c827",
+          "sha256": "aee99ef5c745318ea0ff46a61cd5d28addd574f0f36d99d1f1fea4d91d07a05f"
+        },
+        "current_candidate": {
+          "type": "file",
+          "mode": "100644",
+          "sha256": "03517ad3cf17fd4aae8c5a6d07f95489154f413e489f1f8cbddcc3316e52b3af"
+        },
+        "Matt_owner_u_ids": []
+      }
+    ],
+    "future_E_alignment_path_count": 22,
+    "Htest": false,
+    "Hpublish": false,
+    "method_source_scope_policy_unchanged": true
+  }
+}
