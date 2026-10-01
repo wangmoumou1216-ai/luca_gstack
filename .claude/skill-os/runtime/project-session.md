@@ -27,18 +27,25 @@ Missing or inconsistent lineage denies scoped paths. Claude sidechains need thei
 identity check and do not gain a Codex association by sharing a session ID.
 This release verifies child lineage only from the owner-protected native `~/.codex`
 rollout source; writable provider homes such as `~/.luca/codex` are not association sources.
-The Codex hook runtime requires the reviewed source guard installed under
-`~/.codex/luca-child-project/source-guard/` via `node scripts/install-codex-source-guard.mjs`.
-Every registered hook checks the approved source digest before launch; Node then executes
-only verified source bytes. Missing or changed source fails closed. Updating hook code
-requires a new reviewed manifest and Codex hook trust for the changed command.
+Codex hooks require the private reviewed guard at
+`~/.codex/luca-child-project/source-guard/`. Each hook checks approved source before
+launch; Node executes only verified bytes. Missing/changed source fails closed.
+Stable commands retain exact trust hashes; legacy requires reload and trust.
 
-For a single-root update in an existing multi-root installation, use
-`node scripts/install-codex-source-guard.mjs --root <reviewed-root> --preserve-other-roots`.
-This validates the private installed manifest/runtime/snapshots, replaces only the named
-root's entry in its original slot, and preserves other approved entries and snapshots
-without scanning their current source. It refuses changed bootstrap/loader bytes;
-a runtime-wide update requires separate review of every affected root.
+`scripts/install-codex-source-guard.mjs` contract (usage: `README.md`):
+Freeze `--print-review --root <source>`; review approves the original artifact SHA.
+`--as-root <canonical-deployment-root>` remaps only one review root.
+Install requires `--root`, `--reviewed-file`, `--reviewed-sha` and exact
+`--expected-manifest-sha` (`ABSENT` only for initial install). Full source/JS/config/snapshot
+maps must match before/after copy and at commit; no automatic approval.
+`--preserve-other-roots` keeps other rows/snapshots without rescanning their source;
+bootstrap/loader bytes must remain identical. A private exclusive lock covers exact CAS,
+manifest-last atomic commit, fsync and readback; `--dry-run` writes nothing.
+Interruption retains old or complete new manifest. Post-commit errors report authoritative
+outcome; retry needs fresh CAS. Never steal locks by age: `--recover-lock-sha` plus exact
+manifest CAS removes only the same private inode/nonce lock with an ESRCH dead owner;
+live/EPERM/invalid refuse. Rollback: exact reviewed source, current CAS, other roots
+preserved; stale CAS refuses.
 
 ## App-owned Host Launch
 
@@ -61,7 +68,8 @@ Before dispatch, the App must verify the three exact Host Launch hook commands, 
 digest, the installed source guard, and Codex trust. The App must also fork the broker under that
 protected source loader; an unprotected broker refuses to load framework authority.
 `node scripts/codex-trust-hooks.mjs --host-launch` reviews and trusts this checkout's 11 exact
-registered commands, including the three Host Launch entries after a source digest change.
+registered commands, including the three Host Launch entries. Full approved installation health
+is required; `--source-only` cannot authorize trust.
 
 ## Project Gate
 

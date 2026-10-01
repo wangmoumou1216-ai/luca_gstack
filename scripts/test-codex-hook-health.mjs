@@ -6,7 +6,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import nodeModule from 'node:module';
-import { inspectHookHealth, sourceDigest } from './codex-hook-health.mjs';
+import { inspectHookHealth, sourceDigest, SOURCE_SCAN } from './codex-hook-health.mjs';
+import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
 const recoveryFiles = ['.codex/stop-integrity-failure.mjs', '.claude/hooks/lib/project-substrate.mjs',
   '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-selection.mjs',
   '.claude/hooks/lib/project-event-closure.mjs'];
@@ -25,6 +26,7 @@ function fixture(t, seed = () => {}) {
   cpSync(new URL('../.codex/hooks.json', import.meta.url), join(root, '.codex/hooks.json'));
   mkdirSync(join(root, '.claude/hooks/lib'), { recursive: true });
   for (const name of recoveryFiles) cpSync(new URL(`../${name}`, import.meta.url), join(root, name));
+  cpSync(new URL('../.codex/hook-source-integrity.mjs', import.meta.url), join(root, '.codex/hook-source-integrity.mjs'));
   const hooksPath = join(root, '.codex/hooks.json');
   const refresh = () => {
     const config = JSON.parse(readFileSync(hooksPath)), digest = sourceDigest(root);
@@ -35,10 +37,9 @@ function fixture(t, seed = () => {}) {
   };
   seed(root);
   refresh();
-  const install = spawnSync(process.execPath, [new URL('./install-codex-source-guard.mjs', import.meta.url).pathname,
-    '--root', root, '--test-dest', guardRoot], { env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' });
+  const install = installTestSourceGuard({ roots: [root], destination: guardRoot, directory: base });
   assert.equal(install.status, 0, install.stderr);
-  return { base, root, guardRoot, hooksPath, refresh, inspect: () => inspectHookHealth(root, { guardRoot }) };
+  return { base, root, guardRoot, hooksPath, refresh, inspect: () => { const original=process.env.NODE_ENV; process.env.NODE_ENV='test'; try { return inspectHookHealth(root, { guardRoot }); } finally { if(original===undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV=original; } } };
 }
 function tree(path) {
   return Object.fromEntries(readdirSync(path, { withFileTypes: true }).sort((a,b) => a.name.localeCompare(b.name)).map(entry =>
@@ -60,6 +61,8 @@ test('source-only inspection does not require or initialize a protected installa
   assert.equal(report.ok, true);
   assert.equal(report.scope, 'registration-source');
   assert.equal(report.installation.status, 'NOT_CHECKED');
+  assert.equal(report.approval.status, 'NOT_CHECKED');
+  assert.match(report.approval.reason, /cannot.*grant trust/);
   assert.deepEqual(tree(f.base), before);
   assert.equal(f.inspect().ok, false);
 });
@@ -71,7 +74,7 @@ test('source drift and stale installed bytes are reported as separate failures',
   assert.deepEqual(drift.installation.changed_files, ['scripts/probe.mjs']);
   f.refresh();
   const refreshed = f.inspect();
-  assert.equal(refreshed.registration.status, 'PASS');
+  assert.equal(refreshed.registration.status, 'FAIL');
   assert.equal(refreshed.ok, false);
   assert.match(refreshed.installation.problems.join(), /INSTALLED_SOURCE_MISMATCH/);
 });
@@ -79,7 +82,7 @@ test('refreshing registration does not approve new JavaScript in the installed m
   const f = fixture(t);
   writeFileSync(join(f.root, 'scripts/new.mjs'), 'export {};\n'); f.refresh();
   const report = f.inspect();
-  assert.equal(report.registration.status, 'PASS');
+  assert.equal(report.registration.status, 'FAIL');
   assert.equal(report.ok, false);
   assert.deepEqual(report.installation.unapproved_files, ['scripts/new.mjs']);
 });
@@ -113,7 +116,8 @@ test('Python and policy snapshot drift cannot masquerade as healthy JavaScript a
     const f = fixture(t);
     writeFileSync(join(f.root, name), '# reviewed source changed\n'); f.refresh();
     const report = f.inspect();
-    assert.equal(report.registration.status, 'PASS');
+    if(name.startsWith('memory/')) assert.equal(report.registration.status, 'FAIL');
+    else assert.equal(report.registration.status, 'PASS');
     assert.equal(report.ok, false);
     assert.match(report.installation.problems.join(), /INSTALLED_SNAPSHOT_MISMATCH/);
     assert.deepEqual(report.installation.snapshot_changed_files, [name]);
@@ -143,7 +147,7 @@ test('complete registration contract rejects broken, disabled or misplaced hooks
       config.hooks.PreToolUse[0].hooks[0].command.split('; export LUCA_CHILD_SOURCE_ROOT=')[0]
       + '; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; true'; },
     'fail-open digest': config => { config.hooks.PreToolUse[0].hooks[0].command =
-      config.hooks.PreToolUse[0].hooks[0].command.replace('exit 2;; esac', 'exit 0;; esac'); },
+      config.hooks.PreToolUse[0].hooks[0].command.replace('exit 2; };', 'exit 0; };'); },
     'missing event': config => { config.hooks = { SessionStart: Object.values(config.hooks).flat() }; },
     'inactive matcher': config => { config.hooks.PreToolUse[0].matcher = '^NEVER$'; },
     'short end timeout': config => { config.hooks.SessionEnd[0].hooks[0].timeoutSec = 1; },
@@ -173,7 +177,7 @@ test('approved module formats must match the source extension and nearest packag
     writeFileSync(path, JSON.stringify(manifest));
     const report = f.inspect();
     assert.equal(report.ok, false, `${name}: wrong format passed health`);
-    assert.deepEqual(report.installation.format_changed_files, [name]);
+    assert.match(report.installation.problems.join(), /approval and reviewed artifact root mismatch/);
   }
 });
 test('private runtime drift and invalid manifest metadata are rejected', t => {
@@ -201,14 +205,58 @@ test('a Node runtime without the protected loader capability cannot pass install
     assert.match(report.installation.problems.join(), /RUNTIME_CAPABILITY_MISSING/);
   } finally { nodeModule.registerHooks = original; }
 });
-test('digest matches the real shell gate for spaces, backslashes and newlines in source filenames', t => {
+test('digest preserves the original shasum serialization for special filenames', t => {
   const f = fixture(t);
-  for (const name of ['with space.mjs', 'with\\backslash.mjs', 'with\nnewline.mjs']) writeFileSync(join(f.root, 'scripts', name), 'export {};\n');
-  f.refresh();
-  assert.equal(inspectHookHealth(f.root, { sourceOnly: true }).ok, true);
-  assert.equal(spawnSync('git', ['init', '-q', f.root]).status, 0);
-  const command = JSON.parse(readFileSync(f.hooksPath)).hooks.PreToolUse[0].hooks[0].command;
-  const gate = command.split('; export LUCA_CHILD_SOURCE_ROOT=')[0];
-  const result = spawnSync('/bin/sh', ['-c', gate], { cwd: f.root, encoding: 'utf8' });
+  for (const name of ['with space.mjs', 'with\\backslash.mjs', 'with\nnewline.mjs', 'with\rcarriage.mjs']) writeFileSync(join(f.root, 'scripts', name), 'export {};\n');
+  const result = spawnSync('/bin/bash', ['-o', 'pipefail', '-c', `${SOURCE_SCAN}; printf '%s' "$h"`], { cwd: f.root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
+  assert.equal(sourceDigest(f.root), result.stdout);
+});
+test('legacy literal registration is still identified against the independently pinned complete protocol', t => {
+  const f = fixture(t);
+  // Reconstruct the fixed legacy fixture from fixed launch suffixes; do not require Git history in shallow CI.
+  const config = JSON.parse(readFileSync(f.hooksPath)), digest = sourceDigest(f.root);
+  const exported = String.raw`; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; `;
+  const recover = String.raw`LUCA_CHILD_SOURCE_ROOT="$(pwd -P)" NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + "/.codex/stop-integrity-failure.mjs")' || printf '%s\n' '{"continue":false,"stopReason":"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing."}'`;
+  const start = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SCAN}; case "$h" in ${digest}) ;; *) echo "[luca_gstack] hook source integrity mismatch" >&2; `;
+  for (const [event, groups] of Object.entries(config.hooks)) for (const group of groups) for (const hook of group.hooks) {
+    if (event === 'Stop') {
+      const marker = String.raw`}; printf '%s' "$luca_stop_payload" | MEMORY_ROOT=`;
+      const index = hook.command.indexOf(marker); assert.ok(index >= 0);
+      hook.command = start + recover + '; exit 0;; esac' + exported + 'luca_stop_payload=$(cat); ' + hook.command.slice(index+3);
+    } else {
+      const marker = 'exit 2; }; ', index = hook.command.indexOf(marker); assert.ok(index >= 0);
+      hook.command = start + 'exit 2;; esac' + exported + hook.command.slice(index+marker.length);
+    }
+  }
+  writeFileSync(f.hooksPath, JSON.stringify(config));
+  const report = inspectHookHealth(f.root, { sourceOnly: true });
+  assert.equal(report.ok, true, JSON.stringify(report));
+  assert.equal(report.registration.protocol, 'legacy-literal');
+});
+test('stable health binds config bytes and the complete associated reviewed artifact', t => {
+  const f = fixture(t), original=readFileSync(f.hooksPath);
+  const config=JSON.parse(original); config.description += ' changed presentation'; writeFileSync(f.hooksPath,JSON.stringify(config));
+  assert.equal(inspectHookHealth(f.root,{sourceOnly:true}).ok,true);
+  const report=f.inspect(); assert.equal(report.ok,false); assert.match(report.installation.problems.join(),/INSTALLED_REGISTRATION_MISMATCH/);
+});
+
+test('a stable target passes with a preserved legacy root whose valid JS map uses locale order', t => {
+  const f = fixture(t), legacyRoot=join(f.base,'legacy');
+  for (const folder of ['scripts','memory/scripts','.claude/skill-os','.claude/skills/office','.claude/agents']) mkdirSync(join(legacyRoot,folder),{recursive:true});
+  writeFileSync(join(legacyRoot,'CLAUDE.md'),'legacy fixture');
+  for (const name of ['A.mjs','a.mjs','Z.mjs','z.mjs']) writeFileSync(join(legacyRoot,'scripts',name),'export {};\n');
+  const initial=installTestSourceGuard({roots:[legacyRoot],destination:f.guardRoot,directory:f.base,preserveOtherRoots:true});
+  assert.equal(initial.status,0,initial.stderr);
+  const path=join(f.guardRoot,'manifest.json'), manifest=JSON.parse(readFileSync(path)), row=manifest.roots.find(row=>row.root===legacyRoot);
+  row.files=Object.fromEntries(Object.entries(row.files).sort(([a],[b])=>a.localeCompare(b)));
+  const legacyRow=JSON.stringify(row);
+  // Legacy snapshots have no approval/review metadata; preservation never upgrades them implicitly.
+  rmSync(join(f.guardRoot,'roots',row.snapshot,'.codex/reviewed-install.json'));
+  writeFileSync(path,JSON.stringify(manifest));
+  writeFileSync(join(f.root,'scripts/probe.mjs'),'export const value=2;\n');
+  const updated=installTestSourceGuard({roots:[f.root],destination:f.guardRoot,directory:f.base,preserveOtherRoots:true});
+  assert.equal(updated.status,0,updated.stderr);
+  assert.equal(JSON.stringify(JSON.parse(readFileSync(path)).roots.find(row=>row.root===legacyRoot)),legacyRow);
+  assert.equal(f.inspect().ok,true,JSON.stringify(f.inspect()));
 });

@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { attestNativeUserEvent, captureNativeEventFence } from '../.claude/hooks/lib/event-attestation.mjs';
+import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
 import {
   attestPendingProjectEvent,
   atomicProjectStateCas,
@@ -1091,9 +1092,8 @@ lifecycleCheck('trusted Stop snapshot quarantines failure without importing modi
     }
     writeFileSync(join(fx.gstack, 'CLAUDE.md'), '# isolated fixture\n');
     const guard = join(fx.root, 'protected');
-    const installed = spawnSync(process.execPath, [join(repoRoot, 'scripts/install-codex-source-guard.mjs'),
-      '--root', fx.gstack, '--test-dest', guard], {
-      env: { ...fx.env, NODE_ENV: 'test' }, encoding: 'utf8' });
+    const installed = installTestSourceGuard({ roots: [fx.gstack], destination: guard,
+      directory: fx.root, env: fx.env });
     assert.equal(installed.status, 0, installed.stderr);
     for (const file of ['.codex/stop-integrity-failure.mjs', '.claude/hooks/lib/project-substrate.mjs']) {
       writeFileSync(join(fx.gstack, file), 'throw new Error("UNREVIEWED_CODE_EXECUTED");\n');

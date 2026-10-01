@@ -1,24 +1,26 @@
 #!/usr/bin/env node
 // Read-only preflight. Never installs source, edits registrations, or grants trust.
 import { createHash } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import nodeModule from 'node:module';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SOURCE_SCAN, sourceDigest, readSourceApproval } from '../.codex/hook-source-integrity.mjs';
+import { approvedJavaScript, snapshotSourceInventory, sourceInventory, snapshotInventory, equalArtifact } from './source-guard-review.mjs';
+export { SOURCE_SCAN, sourceDigest } from '../.codex/hook-source-integrity.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const DIGEST = /^[a-f0-9]{64}$/;
 // Keep the registered shell's byte ordering, filename escaping and pipefail semantics.
 // This is a fixed program: never execute command text read from hooks.json.
-export const SOURCE_SCAN = String.raw`links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z "$links" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \( -name "*.mjs" -o -name "*.js" -o -name "*.py" -o -name "*.sh" \) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\n' "$lines" | /usr/bin/shasum -a 256) || h=invalid` + '; h=${h%% *}';
 const GATE_START = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SCAN}; case "$h" in `;
 // Pin the reviewed registration protocol independently of hooks.json. Only the
 // source digest varies; event/group order, matchers, full launch/recovery text,
 // timeouts and context limits must remain reviewed. Description is presentation.
 // Intentional protocol changes require reviewing and updating this pin together.
-const REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
+const LEGACY_REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
+const STABLE_REGISTRATION_CONTRACT = '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189';
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === 'object') return Object.fromEntries(
@@ -87,19 +89,12 @@ function javaScriptFiles(root) {
   scan(root);
   return files.sort();
 }
-export function sourceDigest(root) {
-  const result = spawnSync('/bin/bash', ['-o', 'pipefail', '-c', `${SOURCE_SCAN}; printf '%s' "$h"`],
-    { cwd: root, encoding: 'utf8', timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
-  if (result.error || result.status !== 0 || !DIGEST.test(result.stdout)) {
-    throw new Error('source scan failed (missing/unreadable source, symlink, or failed hashing command)');
-  }
-  return result.stdout;
-}
 export function inspectHookHealth(root, { sourceOnly = false,
   guardRoot = join(homedir(), '.codex', 'luca-child-project', 'source-guard') } = {}) {
   root = resolve(root);
   const report = { schema_version: 1, root, scope: sourceOnly ? 'registration-source' : 'registration-source-installation',
     ok: false, registration: { status: 'FAIL', problems: [] },
+    approval: { status: 'NOT_CHECKED', problems: [], reason: 'source-only scan cannot establish approved installation or grant trust' },
     installation: { status: 'NOT_CHECKED', problems: [], changed_files: [] },
     live_session: 'UNVERIFIED: a fresh process cannot attest the commands cached by an existing session' };
   try {
@@ -109,32 +104,41 @@ export function inspectHookHealth(root, { sourceOnly = false,
     const config = JSON.parse(bytes);
     if (!keys(config, ['description', 'hooks']) || typeof config.description !== 'string') throw new Error('invalid registration config keys');
     if (!config.hooks || typeof config.hooks !== 'object' || Array.isArray(config.hooks)) throw new Error('invalid hooks object');
-    const digests = [], normalized = structuredClone(config.hooks);
-    for (const [event, groups] of Object.entries(config.hooks)) {
-      if (!Array.isArray(groups)) throw new Error(`invalid groups: ${event}`);
-      for (const group of groups) {
-        if (!Array.isArray(group.hooks) || !group.hooks.length) throw new Error(`empty hook group: ${event}`);
-        for (const hook of group.hooks) {
-          const command = hook.command;
-          if (hook.type !== 'command' || typeof command !== 'string' || !command.startsWith(GATE_START)) {
-            throw new Error(`unrecognized source gate: ${event}`);
-          }
-          const match = command.slice(GATE_START.length).match(/^([a-f0-9]{64})\) ;; \*\) echo "\[luca_gstack\] hook source integrity mismatch" >&2;/);
-          if (!match || !command.includes('; export LUCA_CHILD_SOURCE_ROOT=')) throw new Error(`invalid digest gate: ${event}`);
-          digests.push(match[1]);
-        }
+    const commands = Object.values(config.hooks).flatMap(groups => {
+      if (!Array.isArray(groups)) throw new Error('invalid groups');
+      return groups.flatMap(group => {
+        if (!Array.isArray(group.hooks) || !group.hooks.length) throw new Error('empty hook group');
+        return group.hooks.map(hook => {
+          if (hook.type !== 'command' || typeof hook.command !== 'string') throw new Error('unrecognized source gate');
+          return hook.command;
+        });
+      });
+    });
+    if (commands.length !== 11) throw new Error(`expected 11 registrations, found ${commands.length}`);
+    const fullContract = sha(JSON.stringify(canonical(config.hooks)));
+    const digests = [];
+    if (fullContract === STABLE_REGISTRATION_CONTRACT) {
+      report.registration.protocol = 'stable-v3';
+      report.registration.contract_sha256 = fullContract;
+    } else {
+      const normalized = structuredClone(config.hooks);
+      for (const command of commands) {
+        if (!command.startsWith(GATE_START)) throw new Error('REGISTRATION_CONTRACT_MISMATCH: unrecognized source gate');
+        const match = command.slice(GATE_START.length).match(/^([a-f0-9]{64})\) ;; \*\) echo "\[luca_gstack\] hook source integrity mismatch" >&2;/);
+        if (!match) throw new Error('invalid digest gate');
+        digests.push(match[1]);
       }
+      for (const groups of Object.values(normalized)) for (const group of groups) for (const hook of group.hooks) {
+        hook.command = hook.command.replace(/case "\$h" in [a-f0-9]{64}/, 'case "$h" in SOURCE_DIGEST');
+      }
+      report.registration.contract_sha256 = sha(JSON.stringify(canonical(normalized)));
+      if (report.registration.contract_sha256 !== LEGACY_REGISTRATION_CONTRACT) {
+        throw new Error('REGISTRATION_CONTRACT_MISMATCH: event, matcher or complete command differs from the reviewed protocol');
+      }
+      report.registration.protocol = 'legacy-literal';
+      report.registration.expected_digests = [...new Set(digests)];
     }
-    if (digests.length !== 11) throw new Error(`expected 11 registrations, found ${digests.length}`);
-    for (const groups of Object.values(normalized)) for (const group of groups) for (const hook of group.hooks) {
-      hook.command = hook.command.replace(/case "\$h" in [a-f0-9]{64}/, 'case "$h" in SOURCE_DIGEST');
-    }
-    report.registration.contract_sha256 = sha(JSON.stringify(canonical(normalized)));
-    if (report.registration.contract_sha256 !== REGISTRATION_CONTRACT) {
-      throw new Error('REGISTRATION_CONTRACT_MISMATCH: event, matcher or complete command differs from the reviewed protocol');
-    }
-    report.registration.hook_count = digests.length;
-    report.registration.expected_digests = [...new Set(digests)];
+    report.registration.hook_count = commands.length;
     report.registration.current_digest = sourceDigest(root);
     if (digests.some(digest => digest !== report.registration.current_digest)) {
       throw new Error('SOURCE_DIGEST_MISMATCH: registered commands do not match current source; restarting alone cannot repair this');
@@ -149,6 +153,36 @@ export function inspectHookHealth(root, { sourceOnly = false,
       installation.runtime = { node_version: process.version,
         synchronous_loader_supported: typeof nodeModule.registerHooks === 'function' };
       if (!installation.runtime.synchronous_loader_supported) throw new Error('RUNTIME_CAPABILITY_MISSING: Node cannot run the protected synchronous source loader');
+      if (report.registration.protocol === 'stable-v3') {
+        report.approval.status = 'FAIL';
+        delete report.approval.reason;
+        const approved = readSourceApproval(root, { guardRoot });
+        report.approval.sha256 = approved.approval.sha256;
+        report.approval.artifact_sha256 = approved.approval.artifact_sha256;
+        installation.manifest_sha256 = approved.manifestSha256;
+        const current = report.registration.current_digest ?? sourceDigest(root);
+        if (current !== approved.approval.sha256) {
+          report.registration.status = 'FAIL';
+          report.registration.problems.push('SOURCE_DIGEST_MISMATCH: current source differs from protected approval');
+        }
+        const js = approvedJavaScript(root);
+        installation.changed_files = Object.keys(approved.entry.files).filter(name => js[name]?.sha256 !== approved.entry.files[name].sha256);
+        installation.unapproved_files = Object.keys(js).filter(name => !Object.hasOwn(approved.entry.files, name));
+        installation.format_changed_files = Object.keys(approved.entry.files).filter(name => js[name] && js[name].format !== approved.entry.files[name].format);
+        const expectedSnapshot = approved.row.snapshot_files, actualSnapshot = snapshotInventory(approved.snapshotRoot, { excludeMetadata: true });
+        const liveSnapshot = snapshotSourceInventory(root);
+        installation.snapshot_changed_files = [...new Set([...Object.keys(expectedSnapshot), ...Object.keys(liveSnapshot), ...Object.keys(actualSnapshot)])]
+          .filter(name => expectedSnapshot[name] !== liveSnapshot[name] || expectedSnapshot[name] !== actualSnapshot[name]);
+        const inventory = sourceInventory(root);
+        if (sha(fileBytes(join(root, '.codex/hooks.json'))) !== approved.row.hooks_sha256) throw new Error('INSTALLED_REGISTRATION_MISMATCH: hooks.json differs from reviewed artifact');
+        if (installation.changed_files.length || installation.unapproved_files.length) throw new Error('INSTALLED_SOURCE_MISMATCH: reviewed manifest differs from workspace JavaScript');
+        if (installation.format_changed_files.length) throw new Error('INSTALLED_FORMAT_MISMATCH: reviewed formats differ from package rules');
+        if (installation.snapshot_changed_files.length) throw new Error('INSTALLED_SNAPSHOT_MISMATCH: source or protected snapshot differs from reviewed artifact');
+        if (current !== approved.approval.sha256 || !equalArtifact(inventory, approved.row.source_files)) throw new Error('SOURCE_DIGEST_MISMATCH: source inventory differs from reviewed artifact');
+        report.approval.status = 'PASS';
+      } else {
+        report.approval.status = 'NOT_APPLICABLE';
+        report.approval.reason = 'legacy literal digest uses the existing protected installation contract';
       // Validate the protected path and schema without launching workspace hooks.
       if (guardRoot === join(homedir(), '.codex', 'luca-child-project', 'source-guard')) {
         const home = lstatSync(homedir());
@@ -216,8 +250,9 @@ export function inspectHookHealth(root, { sourceOnly = false,
         }
       }
       if (installation.recovery_changed_files.length) throw new Error('INSTALLED_RECOVERY_MISMATCH: protected Stop recovery source is missing or changed');
+      }
       installation.status = 'PASS';
-    } catch (error) { installation.problems.push(error.message); }
+    } catch (error) { installation.problems.push(error.message); if (report.approval.status === 'FAIL') report.approval.problems.push(error.message); }
   }
   report.ok = report.registration.status === 'PASS' && (sourceOnly || report.installation.status === 'PASS');
   return report;

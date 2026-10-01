@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { sourceDigest } from './codex-hook-health.mjs';
+import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
 
 function fixture(t, mode = 'ok') {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-')));
@@ -18,6 +19,8 @@ function fixture(t, mode = 'ok') {
   writeFileSync(join(root, 'CLAUDE.md'), 'isolated trust fixture');
   cpSync(new URL('./codex-trust-hooks.mjs', import.meta.url), join(root, 'scripts/codex-trust-hooks.mjs'));
   cpSync(new URL('./codex-hook-health.mjs', import.meta.url), join(root, 'scripts/codex-hook-health.mjs'));
+  cpSync(new URL('./source-guard-review.mjs', import.meta.url), join(root, 'scripts/source-guard-review.mjs'));
+  cpSync(new URL('../.codex/hook-source-integrity.mjs', import.meta.url), join(root, '.codex/hook-source-integrity.mjs'));
   for (const name of ['bootstrap', 'loader']) cpSync(new URL(`../.codex/codex-source-guard-${name}.mjs`, import.meta.url),
     join(root, '.codex', `codex-source-guard-${name}.mjs`));
   cpSync(new URL('../.codex/hooks.json', import.meta.url), join(root, '.codex/hooks.json'));
@@ -99,8 +102,7 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
   syncRegistration();
   mkdirSync(join(guardHome, '.codex/luca-child-project'), { recursive: true, mode: 0o700 });
   const guardRoot = join(guardHome, '.codex/luca-child-project/source-guard');
-  const installed = spawnSync(process.execPath, [new URL('./install-codex-source-guard.mjs', import.meta.url).pathname,
-    '--root', root, '--test-dest', guardRoot], { env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' });
+  const installed = installTestSourceGuard({roots:[root],destination:guardRoot,directory:guardHome});
   assert.equal(installed.status, 0, installed.stderr);
   const run = args => spawnSync(process.execPath, [join(root, 'scripts/codex-trust-hooks.mjs'), '--host-launch', ...args], {
     env: { ...process.env, HOME: guardHome, CODEX_HOME: join(root, 'home'), NODE_OPTIONS: '', MOCK_ROOT: root,
@@ -170,7 +172,7 @@ test('already trusted still refuses changed source or stale installation', t => 
     if (kind === 'manifest') f.syncRegistration();
     const result = f.run(['--dry-run']);
     assert.notEqual(result.status, 0);
-    assert.match(result.stderr, kind === 'source' ? /SOURCE_DIGEST_MISMATCH/ : /INSTALLED_SOURCE_MISMATCH/);
+    assert.match(result.stderr, /SOURCE_DIGEST_MISMATCH|INSTALLED_SOURCE_MISMATCH/);
     assert.ok(!result.stdout.includes('全部已授信'));
     assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
   }

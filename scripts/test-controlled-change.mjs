@@ -205,6 +205,8 @@ function installAdapterFixture(f) {
   const hooksBytes = readFileSync(CODEX_HOOKS);
   const registered = JSON.parse(hooksBytes).hooks.PreToolUse[0].hooks[0].command;
   assert.match(registered, /hook source integrity mismatch/, 'registered hook must reject source drift');
+  assert.match(registered, /hook-source-integrity\.mjs" --verify/, 'stable registered hook must check protected approval before launch');
+  assert.doesNotMatch(registered, /case "\$h" in [a-f0-9]{64}/, 'source updates must not change the trusted registration bytes');
   assert.match(registered, /source-guard\/bootstrap\.mjs/, 'registered hook must load protected source guard');
   assert.match(registered, /c=\$\?; \[ "\$c" = "0" \] && exit 0 \|\| exit 2$/,
     'registered hook must map every abnormal exit to blocking code 2');

@@ -230,9 +230,16 @@ Python/规则快照和 Stop 恢复副本（含四个依赖）；
 启用前先协调所有共享此物理根的在途会话和子审查：保存检查点，等它们完成或明确暂停，
 维护期间不启动新的审查。只检查 Git HEAD 不够，工作树、注册和安装版本也必须冻结；
 旧会话即使已开始审查，也会在后续调用遇到新的源码摘要而阻断。
-体检不探测会话是否空闲，也不提供并发写锁；不能把体检通过当成可以随时热更新的许可。
-启用必须包含一致的注册摘要、
-`install-codex-source-guard.mjs --root <已审根> --preserve-other-roots` 安装和 11 条精确 Hook 授信。
+体检不探测会话是否空闲；安装事务的锁只串行化合作安装器，不能把体检通过当成可以随时热更新的许可。
+先用 `node scripts/install-codex-source-guard.mjs --print-review --root <候选根>` 冻结完整受审 artifact
+及其原字节 SHA；单 root 的候选→正式根审查可加 `--as-root <canonical正式根>`，内容映射必须一致。
+启用调用 `node scripts/install-codex-source-guard.mjs --root <已审根> --preserve-other-roots --reviewed-file <artifact文件> --reviewed-sha <原字节SHA256> --expected-manifest-sha <当前manifest原字节SHA256>`。
+初装改用 `--expected-manifest-sha ABSENT`；缺少审阅文件或精确 CAS 会拒绝，生产不会现场捕获后自动批准。
+事务校验完整源、JS、配置和复制快照，持有私有独占锁直到 manifest 最后原子发布、fsync 和读回。
+`--dry-run` 不写保护安装；发布后异常回执明确是否已经提交，再次安装需要新的精确 CAS。
+真实进程中断遗留的锁只可用 `--recover-lock-sha <精确锁原字节SHA256> --expected-manifest-sha <当前SHA256或ABSENT>`
+回收；仅 ESRCH 死进程和完整私有锁可通过，不按时间夺锁。回退同样恢复受审源并使用当前 CAS 安装。
+稳定注册的源码更新保留原命令与 trust hash；首次 legacy→stable 迁移需要重载和 11 条精确 Hook 授信。
 这些是已有真人授信门约束下的维护动作；体检不会自动执行它们，也不能通过关闭门禁恢复。
 若当前会话已经被旧命令阻断，应从人工维护终端执行已审启用步骤，不在被拒会话内换入口绕行。
 全部检查通过后重新加载受影响会话，并用一次真实工具调用/审查验证；新进程的检查不能证明旧会话已刷新。
