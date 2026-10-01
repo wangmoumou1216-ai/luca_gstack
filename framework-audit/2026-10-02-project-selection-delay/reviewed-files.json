@@ -1,0 +1,8 @@
+{
+  "AGENTS.md": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+  "CLAUDE.md": "789523a6586d34ddf5ccddc8bc479125621efd2f06737f145548b5517018284f",
+  ".claude/agents/plan-agent.md": "59ccf5ce244626402a094f07200488ef310dc8232d07dd78c2bc53fab681856d",
+  ".claude/skill-os/runtime/project-session.md": "c75e34d9dcfa5cafde745090bc5a9673c84b1aba18548ad647ff8f74e8651821",
+  ".codex/model-route-hook.mjs": "f5df0dd7ead1b2f923911436bf7af3c95da61b3867675dad673c0440516bda9b",
+  "scripts/test-codex-model-route-hook.mjs": "39c75bffd5e6b156ff4863ad907bc5791bcc64849a95cf8125ebe400ab51f874"
+}

@@ -132,7 +132,7 @@ function routeForAgent(payload, agentType) {
   const policy = readPolicy();
   const scene = resolveDispatchScene(policy, {kind: 'native-agent', agent_type: agentType});
   if (!scene) throw new Error('UNKNOWN_AGENT_TYPE');
-  const state = ensureNativeActivation(payload, policy);
+  const state = reconcileNativeStarted(payload, ensureNativeActivation(payload, policy));
   let preparation_id;
   try {
     if (policy.scenes[scene].critical) {
@@ -285,10 +285,70 @@ function handlePreToolUse(payload) {
   }
 }
 
+function bindProjectIdentity(payload, call, agentId) {
+  const toolUseId = call.external_identity?.tool_use_id;
+  const taskId = call.task_id;
+  const suffix = `:${toolUseId}`;
+  if (!text(toolUseId) || !text(taskId) || !taskId.startsWith('native:') || !taskId.endsWith(suffix)) {
+    throw new Error('native spawn turn is unavailable');
+  }
+  return bindCodexChildProject({
+    gstackRoot: ROOT, parentSessionId: payload.session_id,
+    turnId: taskId.slice('native:'.length, -suffix.length), toolUseId,
+    agentId, agentType: call.external_identity.agent_type, codexHome: process.env.CODEX_HOME || '',
+  });
+}
+
+// Native creation is recorded before the child's SubagentStart hook necessarily
+// runs. Reconcile only that exact parent call, never a task name or model output.
+function reconcileNativeStarted(payload, state) {
+  const pending = Object.values(state.invocations).filter(call => call.status === 'pending'
+    && call.route_harness === 'codex-native' && !text(call.external_identity?.agent_id));
+  if (pending.length !== 1 || !text(payload.transcript_path)) return state;
+  const call = pending[0], tool = call.external_identity?.tool_use_id;
+  if (call.task_id !== `native:${payload.turn_id}:${tool}`) return state;
+  const { events } = currentNativeRecords(payload);
+  const calls = events.filter(row => row.type === 'response_item' && row.payload?.call_id === tool);
+  // function_call_output also has call_id; it is not a second invocation.
+  const invocations = calls.filter(row => row.payload.type === 'function_call');
+  const starts = events.filter(row => row.type === 'event_msg' && row.payload?.type === 'item_completed'
+    && row.payload.item?.type === 'SubAgentActivity' && row.payload.item.kind === 'started' && row.payload.item.id === tool);
+  if (invocations.length !== 1 || starts.length !== 1) return state;
+  const nativeCall = invocations[0].payload, started = starts[0].payload;
+  if (!SPAWN_TOOLS.has(String(nativeCall.name || '').toLowerCase())
+      || (nativeCall.namespace && nativeCall.namespace !== 'collaboration')
+      || nativeCall.internal_chat_message_metadata_passthrough?.turn_id !== payload.turn_id
+      || started.thread_id !== payload.session_id || started.turn_id !== payload.turn_id
+      || events.indexOf(starts[0]) <= events.indexOf(invocations[0])) return state;
+  let args;
+  try { args = JSON.parse(nativeCall.arguments); } catch { return state; }
+  const agentId = started.item.agent_thread_id;
+  if (!record(args) || (args.agent_type || 'default') !== call.external_identity?.agent_type
+      || !text(agentId) || agentId === payload.session_id
+      || Object.values(state.invocations).some(other => other.external_identity?.agent_id === agentId)) return state;
+  bindProjectIdentity(payload, call, agentId);
+  const bound = bindInvocationExternalIdentity({
+    harness: 'codex', root_session_id: payload.session_id, invocation_id: call.invocation_id,
+    field: 'agent_id', value: agentId, state_root: STATE_ROOT,
+  });
+  if (bound.disposition !== 'BOUND') throw new Error(`native started correlation failed: ${bound.reason}`);
+  // This changes identity only. Pending completion and critical gates remain intact.
+  return ensureNativeActivation(payload, readPolicy());
+}
+
 function handleSubagentStart(payload) {
   if (!text(payload.session_id) || !text(payload.agent_id) || !text(payload.agent_type)) return {};
   const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
   if (!state) return {systemMessage: 'model-route could not find the parent activation'};
+  const existing = Object.values(state.invocations).filter(call => call.external_identity?.agent_id === payload.agent_id);
+  if (existing.length) {
+    if (existing.length !== 1 || existing[0].external_identity.agent_type !== payload.agent_type) {
+      return {systemMessage: 'model-route agent correlation conflicts with the existing identity'};
+    }
+    try { bindProjectIdentity(payload, existing[0], payload.agent_id); }
+    catch (error) { return {systemMessage: `project association refused: ${error?.message || error}`}; }
+    return {};
+  }
   const candidates = Object.values(state.invocations).filter(call => call.status === 'pending'
     && call.route_harness === 'codex-native'
     && call.external_identity?.agent_type === payload.agent_type
@@ -302,24 +362,8 @@ function handleSubagentStart(payload) {
   if (bound.disposition !== 'BOUND') {
     return {systemMessage: `model-route agent correlation failed: ${bound.reason}`};
   }
-  const toolUseId = candidates[0].external_identity?.tool_use_id;
-  const taskId = candidates[0].task_id;
-  const suffix = `:${toolUseId}`;
-  if (!text(toolUseId) || !text(taskId) || !taskId.startsWith('native:')
-      || !taskId.endsWith(suffix)) {
-    return {systemMessage: 'project association refused: native spawn turn is unavailable'};
-  }
-  const parentTurnId = taskId.slice('native:'.length, -suffix.length);
   try {
-    bindCodexChildProject({
-      gstackRoot: ROOT,
-      parentSessionId: payload.session_id,
-      turnId: parentTurnId,
-      toolUseId,
-      agentId: payload.agent_id,
-      agentType: payload.agent_type,
-      codexHome: process.env.CODEX_HOME || '',
-    });
+    bindProjectIdentity(payload, candidates[0], payload.agent_id);
   } catch (error) {
     return {systemMessage: `project association refused: ${(error && error.message) || error}`};
   }
@@ -338,7 +382,7 @@ function safeTranscript(path, sessionId) {
   if (rel.startsWith('..') || isAbsolute(rel)) throw new Error('TRANSCRIPT_OUTSIDE_CODEX_SESSIONS');
   return actual;
 }
-function currentNativeAnchor(payload) {
+function currentNativeRecords(payload) {
   const actual = safeTranscript(payload.transcript_path, payload.session_id);
   if (!basename(actual).startsWith('rollout-')
       || !basename(actual).endsWith('.jsonl')) {
@@ -376,6 +420,10 @@ function currentNativeAnchor(payload) {
       || activeTurn !== payload.turn_id || !text(context.model)) {
     throw new Error('ROOT_TRANSCRIPT_CURRENT_TURN_MISSING');
   }
+  return { events, context, actual };
+}
+function currentNativeAnchor(payload) {
+  const { context, actual } = currentNativeRecords(payload);
   return {model: context.model, source: `codex-native-transcript:${actual}:${payload.turn_id}`};
 }
 function transcriptEvidence(path, rootSessionId, agentId, agentType,

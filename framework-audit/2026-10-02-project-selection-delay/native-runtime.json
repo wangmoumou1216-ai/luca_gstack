@@ -1,0 +1,18 @@
+{
+  "root": "/private/tmp/luca-native-lifecycle.vlmauB",
+  "binary": "/Users/luca/.codex/packages/standalone/releases/0.159.3-aarch64-apple-darwin/bin/codex",
+  "checks": {
+    "cli": true,
+    "pinned": true,
+    "twoInvocations": true,
+    "accepted": true,
+    "secondBeforeStart": true,
+    "idempotentStarts": true,
+    "cleanHooks": true,
+    "distinctIds": true
+  },
+  "pass": true,
+  "sid": "01a0f9a9-f356-70d3-bd54-c7ac15181f65",
+  "source_sha256": "f5df0dd7ead1b2f923911436bf7af3c95da61b3867675dad673c0440516bda9b",
+  "full_evidence_sha256": "20eabe2fdff39ca174eb092a1c5ce6dec9fdc0f327806266abd6e706276bf8a5"
+}

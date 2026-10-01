@@ -72,12 +72,20 @@ and trust preserves user-disabled settings.
 
 ## Project Gate
 
-1. A named or semantically unique existing project selects that project without an extra confirmation.
-2. An explicitly new project may be created from the public selection call. If the agent inferred that a vague request is a new project, ask one blocking confirmation first.
-3. A request that names no project and needs real work under an inherited, never-confirmed project asks once before proceeding.
-4. Pure framework/meta work remains `NO_PIN` and never switches merely to read a project as reference.
+1. Named/unique existing projects need no confirmation.
+2. Explicit new-project requests authorize creation; inferred intent needs confirmation.
+3. Unnamed inherited projects need confirmation unless already confirmed.
+4. Framework/meta work stays `NO_PIN`, including project-reference reads.
 
-The agent calls exactly one public command: `./scripts/project.sh switch <canonical-name>` or `./scripts/project.sh new <canonical-name>`. Route-guard records neutral event evidence and name candidates only; it never selects a project or emits an executable transaction. Trusted PreToolUse attests the current native event and injects session id, transaction id, and expected epoch. The model must never invent or override those internal fields. A successful selection remains usable in the same event; it does not start a workflow, restore history, initialize project subsystems, or update shared display links.
+After startup and this read, explicit single-project selection calls `./scripts/project.sh switch <canonical-name>` or `./scripts/project.sh new <canonical-name>`
+once. Internal files/stages do not trigger Plan; other work follows the Plan owner's counting
+boundary. Use the main session, without subagents or implementation reads.
+Plan-first requests still plan first; otherwise select before planning later work.
+
+PreToolUse alone injects native session/transaction/epoch data; route-guard records neutral evidence,
+never selects or emits a transaction. Verify committed receipt and target binding. Diagnose actual
+errors; never retry blindly or write state manually. Selection remains usable in the event but
+starts no workflow, restores no history, initializes no project subsystems and changes no shared links.
 
 ## Cross-project reads
 

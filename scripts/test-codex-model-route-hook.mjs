@@ -147,6 +147,52 @@ function recoveryRunner(sessionId, path, extra = {}) {
 }
 
 try {
+  for (const variant of ['valid', 'no-start', 'ambiguous-start', 'wrong-parent', 'wrong-call', 'wrong-turn',
+    'missing-agent', 'reused-agent', 'wrong-role', 'ambiguous-call', 'start-before-call', 'old-ticket', 'critical']) {
+    const sid = `root-started-${variant}`, tool = `tool-started-${variant}`, agent = `agent-started-${variant}`;
+    start(sid);
+    if (variant === 'reused-agent') {
+      pre(sid, { task_name: 'earlier', message: 'work' }, 'tool-earlier');
+      subStart(sid, agent, 'default');
+    }
+    const agentType = variant === 'critical' ? 'quality-gate' : 'default';
+    const args = { task_name: 'first', message: 'work', agent_type: agentType };
+    equal(pre(sid, args, tool).hookSpecificOutput.permissionDecision, 'allow', `${variant} first spawn is admitted`);
+    const path = rootTranscript(sid, { turnId: variant === 'old-ticket' ? 'turn-next' : 'turn-root' });
+    const rows = readFileSync(path, 'utf8').trim().split('\n').map(JSON.parse);
+    const call = { type: 'response_item', payload: { type: 'function_call', name: 'spawn_agent', namespace: 'collaboration',
+      call_id: tool, arguments: JSON.stringify({ ...args, ...(variant === 'wrong-role' ? { agent_type: 'worker' } : {}) }),
+      internal_chat_message_metadata_passthrough: { turn_id: 'turn-root' } } };
+    const started = { type: 'event_msg', payload: { type: 'item_completed', thread_id: sid, turn_id: 'turn-root',
+      item: { type: 'SubAgentActivity', id: tool, kind: 'started', agent_thread_id: agent, agent_path: '/root/first' } } };
+    if (variant === 'wrong-parent') started.payload.thread_id = 'foreign-parent';
+    if (variant === 'wrong-call') started.payload.item.id = 'foreign-call';
+    if (variant === 'wrong-turn') started.payload.turn_id = 'foreign-turn';
+    if (variant === 'missing-agent') delete started.payload.item.agent_thread_id;
+    if (variant === 'start-before-call') rows.push(started, call);
+    else { rows.push(call); if (variant !== 'no-start') rows.push(started); }
+    if (variant === 'ambiguous-start') rows.push(structuredClone(started));
+    if (variant === 'ambiguous-call') rows.push(structuredClone(call));
+    writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    const before = state(sid);
+    const next = run({ hook_event_name: 'PreToolUse', session_id: sid,
+      turn_id: variant === 'old-ticket' ? 'turn-next' : 'turn-root', tool_use_id: 'tool-next', tool_name: 'spawn_agent',
+      tool_input: { task_name: 'next', message: 'work' }, cwd: ROOT, transcript_path: path });
+    if (variant === 'valid') {
+      equal(next.hookSpecificOutput.permissionDecision, 'allow', 'exact native started identity permits the next ordinary spawn');
+      const first = Object.values(state(sid).invocations).find(row => row.external_identity?.tool_use_id === tool);
+      equal(first.external_identity.agent_id, agent, 'native started binds the exact child ID');
+      equal(first.status, 'pending', 'identity binding does not accept model adoption or completion');
+      const after = state(sid);
+      equal(subStart(sid, agent, agentType), {}, 'later SubagentStart is idempotent for the reconciled invocation');
+      equal(state(sid), after, 'idempotent start cannot bind the newer unbound invocation');
+    } else {
+      equal(next.hookSpecificOutput.permissionDecision, 'deny', `${variant} evidence does not authorize another spawn`);
+      equal(state(sid), before, `${variant} evidence does not alter model authority`);
+      if (variant === 'critical') equal(next.hookSpecificOutput.permissionDecisionReason.includes('CRITICAL_INVOCATION_EVIDENCE_PENDING'), true,
+        'native started does not close critical evidence obligations');
+    }
+  }
   const poisonCwd = join(scratch, 'poison-cwd');
   const importMarker = join(scratch, 'poison-imported');
   mkdirSync(poisonCwd);
