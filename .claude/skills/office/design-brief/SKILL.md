@@ -1,19 +1,14 @@
 ---
 name: design-brief
 preamble-tier: 3
-argument-hint: "[path to PRD/ux-research/ux-audit markdown, or paste design ideas]"
-version: 2.0.0
+argument-hint: "[PRD/requirements/prototype + target template/module, or spoken intent]"
+version: 3.0.0
 description: |
-  收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 /
-  用户粘贴方案，收敛成可交给 MagicPath、Open Design、Claude Design、/html-prototype
-  和开发的规格契约（决策卡 / 状态覆盖 / 页面与交互位置映射 / Generation Packet）。
-  Packet 冻结后才允许进行最终模板/模块绑定；模板只能定义实现位置，不能成为需求事实来源。
-  可独立运行；若检测到上游 ux-brainstorm 产出，则继承其 AI-Native 判定与已验证假设，不重做发散分析。
-  复杂 / 多方案 / 高不确定 → 先用 /ux-brainstorm 发散，本 skill 负责收敛落地。
-  执行顺序锁死：设计坐标系 →
-  原生AI四层深度思考 → 假设挑战 → 体验验证 → 品味检查 →
-  每条决策的 8 字段完整化 → 输出目标与平台核对 → 页面与交互位置映射 →
-  可追踪完整门禁 → Design Generation Packet（冻结需求事实）→ 最终 carrier 绑定。(luca_gstack)
+  设计收敛与模板适配节点。承接全流程已选方案、已有需求/口述转写，或已有原型的 UI 精修；
+  继承确认事实，补齐关键缺口，按模板语义定位模块、验证动作/状态承载能力，界定生成工具自由度。
+  输出可追踪决策、状态、位置、验收与唯一冻结 Generation Packet，交给 Open Design 等工具执行。
+  适用于“拿现有需求直接设计”“把原型植入指定模板模块并美化”。不重做成熟上游，不直接生成UI；
+  未定机制/多方案先发散。正式模板绑定/TAC在事实冻结后完成；工程交付仍要求实际PRD。(luca_gstack)
 allowed-tools:
   - Read
   - Write
@@ -49,849 +44,194 @@ python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null 
 
 ---
 
-## 执行前的角色声明
+## 角色与定位
 
-**你是一名 B2B SaaS 首席产品设计师。**
+作为资深产品与交互设计师，把明确的设计输入收敛为可执行、可验收的契约。
+产品、语言、品牌和设计系统来自已确认项目及用户输入，不能从框架模板推断。
+本节点放在**设计输入就绪之后、Open Design 执行之前**；三种入口汇合于此：
 
-本 skill 是轻量交互文档节点，不是 /ux-brainstorm 的弱化替代，也不是代码交付节点。
-它的核心产物是跨工具可消费的交互契约：MagicPath、Open Design、Claude Design、
-/html-prototype 和开发实现都应从同一份 design-brief 中读取设计事实。
-当问题复杂度高、需要多方案探索和 Oracle 对抗审查时，优先使用 /ux-brainstorm。
-当目标是快速把 PRD、UX 研究、评审结论或已有方案收敛成可原型化文档时，
-使用 /design-brief。
+| 入口 | 输入 | 工作 |
+|---|---|---|
+| pipeline | PRD / UX 研究、评审、已选方案 | 继承决策，补齐交互与模板适配 |
+| existing_requirements | 已有需求、口述转写、需求文档 | 建立来源索引，直接收敛设计，不强制重跑需求链 |
+| prototype_visual_refinement | 已有原型 + 模板/模块 + 精修要求 | 继承行为，锁定修改/保持边界，适配后交给 OD 美化 |
 
-设计参照：
-- **Attio**：密度但有层次
-- **Linear**：状态可见性
-- **Superhuman**：高密度下的认知优先级
+入口与 A/B/C/D 场景分开。有效的场景、模板、位置、工具和授权直接继承；
+只有缺失且会改变意图的项目才询问。无 PRD 不等于无法设计生成。
+六项能力：来源继承、口述结构化、模板语义定位、交互/状态适配、执行自由度、统一生成与验收。
 
-**没有 rationale 和 tradeoff 的设计决策不是决策，是偏好。**
-每个决策都要经得起"为什么"的追问。每条决策必须完整包含 8 个字段：
-决策 ID / 组件名称 / 决策内容 / 设计理由 / **排除的备选方案** / **接受的
-tradeoff** / 状态覆盖 / PRD 约束引用。
+## 按需读取（用到前完整读取）
 
-缺任何一项，该决策不输出。
-
----
-
-## 必读 references（按 Phase 挂载，lazy-load——2026-07-04 流程优化 G5）
-
-> **Do NOT read these at skill start.**（移植 brainstorm 既有先例）此前 4 份共 ~52KB 在写下
-> 第一条决策前全量入 context——启动税全仓最重。改为：**每份在其挂载 Phase 开始前必须读完**，
-> 之前不读。质量门语义不变：用到之前必须读完，只是"用到"从"skill 启动"精确到"对应 Phase"。
-
-| reference | 挂载点（该 Phase 开始前读完） |
+| 边界 | 文件 |
 |---|---|
-| `references/ai-native-design-framework.md`（四范式/判定矩阵/四层思考/Slop 反模式） | **Phase A** 设计坐标系前 |
-| `references/ai-native-state-coverage.md`（12 状态清单：5 传统 + 7 AI 专有） | **Phase 3** 体验验证前 |
-| `.claude/skills/office/references/interaction-mechanics.md`（HCI 交互力学：状态建模/错误恢复/决策分块/响应时序/搜索/表单校验语义） | **Phase 3** 体验验证前（场景 C 同 state-coverage 顺延到 **Phase 5 前**）。**禁转写句：其中标 `[仅供推理]` 的内容（px/对齐/布局/控件选型）不得转写进 D-series 或 Packet——那是 OD/DS 执行层；本 reference 用于状态语义推导与交互完整性评估** |
-| `references/ai-native-taste-anchors.md`（8 锚点品味体系） | **Phase 4** 品味检查前 |
+| Phase 0 输入/模式选择 | [输入与原型继承合同](references/input-contract.md) |
+| Phase A 新 AI 判断 | ../references/ai-native-design-framework.md |
+| Phase 0.5 / 6 模板适配 | .claude/skill-os/runtime/page-context.md |
+| Phase 3 状态与交互（所有入口） | ../references/ai-native-state-coverage.md、../references/interaction-mechanics.md |
+| Phase 4 品味检查 | ../references/ai-native-taste-anchors.md |
+| Phase 5 / 6.75 / 7 字段产出 | [输出模板](references/output-templates.md)、[字段 schema](SCHEMA.md) |
 
-**任一已执行 Phase 的挂载 reference 未在该 Phase 开始前读完 → 该 Phase 门禁 FAIL，必须补读后返工该 Phase（不得跳读继续产出）。**
-（场景 A/B/D 执行全部 Phase，表中四份都会被读；**场景 C 跳过 Phase 2+3**——此时 state-coverage
-与 interaction-mechanics 的挂载点顺延到 **Phase 5 前**（决策的「状态覆盖」字段仍需要它们，
-Phase 5 约束检查会验），taste-anchors 挂载不变。**场景 C 下状态与交互语义仍是必读，
-不因 Phase 3 被跳过而豁免**。）
+不在启动时加载全部方法论。原型/成熟方案可继承分析，但状态、来源、范围和冻结门不跳过。
+引用中标“仅供推理”的视觉技术细节不转写成 OD 布局处方；外部 DS 由用户在工具内配置。
 
-设计系统由用户在 OD / Claude Design 配置；本 skill 不加载本地品牌、token 或组件技术映射
-作为交接前提，也不覆盖外部视觉设置。已对齐的产品约束与通用 UX 语义继续保留。
+## Phase 0：输入继承与缺口核对
 
----
+读取用户指定的精确材料，核对可达性、版本、话题和作用域；preamble 的最新文件只是发现线索，
+不得自动混入其他话题。按输入合同登记用户/任务/对象/动作、目标/成功标准、平台/范围、
+修改区/保持区、模板/语义位置、目标工具、来源、确认状态和未决项。
+口述指用户提供的语音转写；不虚构未提供的音频读取/识别能力。
 
-## Phase 0：场景确认 + 输入检查 + 方案选定
+| 交付模式 | 必要来源 | 能力边界 |
+|---|---|---|
+| traceable_delivery | 实际 PRD R/AE + 设计输入 | 设计生成与工程，须过完整 PRD 追踪门 |
+| design_generation | 已有需求/原型的来源索引、明确范围与 AC | 可交 OD / MagicPath / Claude Design / HTML；不宣称 PRD 工程 ready |
+| standalone_light | 只要求探索性文档，关键输入仍未齐 | LIMITED，不能冒充可直接生成或开发的最终契约 |
 
-### Step 0：读取 PRD 设计师关注摘要（traceable delivery 必须，standalone light 可降级）
+缺 ID 用本轮 REQ-/AC-/SRC-；已有 ID 原样保留，不伪造 PRD R/AE。tech-spec/task-plan
+仍需实际 PRD。pipeline 继承已验证假设、AI 范式、Oracle 修正、被否决方向及 voice-spec 语义。
+已有需求不要求先有两份候选方案；原型入口以可观察行为及用户声明为源，不从截图推断隐藏交互。
+B/C/D 读取实际现状和修改边界，现状缺失明确报告；C 继承已确认问题和改版方向。
+D/实际 Agent 功能保留可见、暂停、接管、撤销及授权门。场景影响范围而不明时才消歧。
 
-先判定本次 design-brief 模式：
+完成：成熟输入被继承，关键未知未伪装成事实；仅关键缺口需要真实用户回答。
 
-| 模式 | 适用情况 | PRD 要求 | 可否承诺完整落地 |
-|---|---|---|---|
-| `traceable_delivery` | 下游会进入 html-prototype / tech-spec / task-plan / 开发 | 必须有 PRD R/AE | 可以，但必须通过 Phase 6.5 |
-| `standalone_light` | 用户只要轻量交互文档，不进入开发链 | 可无 PRD | 不可以，只能 DONE_WITH_CONCERNS |
+## Phase A：设计坐标系
 
-场景 A / B / D 若要进入后续 MagicPath、外部设计生成器、HTML、tech-spec、
-task-plan 或开发，必须使用
-`traceable_delivery`。缺 PRD 时返回 `NEEDS_CONTEXT`，不得继续产出“可追踪完整”的 design-brief。
+先确定目标、不能改变的范围、成功标准和设计自由度，再选实现位置。
+有 PRD 摘要则引用；没有则从当前源逐字段声明依据，不制造摘要或产品约束。
+成熟 AI 结论直接继承；纯 UI 精修不新增 AI 机制或重定产品方案。
+原型暴露机制问题时列冲突，不能以“优化”为由静默改变行为。
+完成：目标/边界/自由度都有来源，区分可决定、应继承与待确认。
 
-```
-□ 读取 docs/prd/{最新PRD文件}：优先读「📌 设计师关注摘要」节；
-  该节不存在时，从 PRD 的 Problem Frame / Job-to-be-Done / Weakest Assumption /
-  Anti-Metrics / Scope Boundaries 明确映射出下列 6 字段并**逐字段声明来源**，
-  不得静默拼凑、也不得直接卡死（两条都不合法）：
-  → 产品机制方向
-  → AI 介入程度
-  → 用户核心处境
-  → 最脆弱假设
-  → 设计自由度
-  → 反指标警示
-```
+## Phase 0.5：模板选择与语义适配草稿（冻结前）
 
-**产品机制方向冲突检查：** 如果后续 Phase 执行中发现 PRD
-产品机制方向本身有问题，记录并带到 /brainstorm 修订。
-
-### Step 0.5：Phase-A 模板候选发现（仅内部、非绑定）
-
-在本 Step 已把输入整理为可追溯的页面用途、目标动作和范围之后，才可调用
-`page-context:phase_a_discovery` 的内部 primitive：
+用户不用模板时记 reference=none 并继续；指定模板优先验证。需要模板但未选时，
+按 page-context 读取目录和实际源，做用途/位置匹配、必要预览和真实选择。
+内部线索可调用：
 
 ```bash
-node scripts/page-context.mjs phase-a-discovery --query '<已整理的页面用途、目标动作与范围>'
+node scripts/page-context.mjs phase-a-discovery --query '<页面用途、目标动作与范围>'
 ```
 
-它只返回最多三项短期 `CandidateHint` 或受控 `NO_HINT`，不能作为页面采用、模块绑定、TAC 输入或
-用户决定；不得写入 Packet、D/STATE/需求映射、正文第 7 节、stable ID 或 selection record。
-
-- 有合格提示：仅存本次执行上下文；不预览、不采用、不写 OD。
-- primitive 不可用、目录不存在或无 `live && carrier_eligible` 候选：得到 `NO_HINT`，继续
-  design-brief；
-  不得伪造候选、把无提示当失败或把词面命中升级为绑定。
-- 本 Step 不是新 skill、路由入口或 Human Gate。最终模板/模块绑定只能发生在 Packet 通过门禁并冻结后，
-  由 `/open-design` 按 `page-context` 的独立最终绑定合同执行。
-
-完成条件：只对已整理需求触发一次；结果仍是临时线索，Packet 无 CandidateHint 或衍生模板事实。
-
-### Step 1：场景确认
-
-AskUserQuestion：
-
-> 确认场景：
->
-> A）**新功能设计** — 约束来自 PRD，设计决策相对自由
-> B）**已有功能优化** — 每条决策必须即时对照 prd-constraints.md 检查，超范围即 REMOVED
-> C）**评审改版** — 基于 ux-audit 报告，先做轻量改版方向推导，再做页面与交互位置映射
-> D）**Agent 化改造** — 把现有功能从"用户手动"变为"用户监督 Agent"，强制执行代理层设计
-
-**场景判定提醒：**
-- 场景 D 触发条件：设计目标明显是"减少用户操作"并且 AI 会主动执行 ≥2 步动作
-- 拿不准 A vs D → 选 A（保守）；拿不准 B vs D → 选 D（更严格）
-
-### Step 2：场景专属流程
-
-**场景 C（评审改版）执行路径（锁死）：**
-
-```
-Step C-1：当前页面状态确认（强制）
-          → 采集当前页面截图 + 操作路径
-Step C-2：轻量改版方向推导（核心）
-          → 读取 ux-audit P0/P1 问题清单
-          → 对每个 P0 问题，AI 给出 1-2 个可能的改版方向
-          → 每个方向说明：为什么这样改 + 会不会引入新问题
-          → AskUserQuestion 确认改版方向后锁定
+CandidateHint 只是临时线索，不得写入 Packet；不代替全目录评估、真人选择或正式绑定。
+primitive 不可用或无线索时，得到 `NO_HINT`，继续
+  design-brief；NO_HINT 不证明需求已澄清，也不覆盖用户指定模板。
 
-✅ Phase A · 设计坐标系
-✅ Phase 1（在锁定方向下思考 AI 原生优化，发现超范围机会 → 必须 AskUserQuestion）
-❌ Phase 2（假设挑战）— 无方案可挑战
-❌ Phase 3（体验验证）— 无 PRD 对照
-✅ Phase 4（品味检查，发现超范围 → 必须 AskUserQuestion）
-✅ Phase 5（每条决策 8 字段化）
-✅ Phase 6（输出目标与平台核对 + 页面与交互位置映射）
-```
+用 page-context 的 adaptation-draft 合同记录 来源ID/完整原文→页面用途→区域职责→动作→
+适用状态→源证据/替代位置/冲突。模板的语义由 catalog/原件索引及实际源拥有，
+Brief 承载本轮“需求为什么放这里”的判断和适配结果，不复制维护第二套模板语义库。
+页面合适但有两个合理承载区域时问一个消歧问题；不取词面第一名或编造置信百分比。
+模型 high、JSON actor=user 和惰性预览都不是用户确认或交互已验证。
 
-**场景 D（Agent 化改造）执行路径（锁死）：**
-
-```
-✅ Phase A · 设计坐标系（AI Native 方向必填"代理式执行"或"决策增强"）
-✅ Phase 1（四层深度思考，Layer D 强制执行）
-✅ Phase 2（假设挑战，必须包含"用户信任 Agent"的假设挑战）
-✅ Phase 3（体验验证，状态覆盖含 AI 专有 7 状态全部）
-✅ Phase 4（品味检查，Cursor/Perplexity/Granola 三锚点强制通过）
-✅ Phase 5（每条决策 8 字段化）
-✅ Phase 6（输出目标与平台核对 + 页面与交互位置映射）
-```
+完成：无模板、已确认选择/位置或明确冲突；草稿不是 carrier-binding，不带冻结 hash/TAC/adoption。
 
-**场景 A / B 必须有输入方案：**
+## Phase 1：原生AI四层深度思考（按成熟度继承）
 
-如果同时有 native-design 和 inspired-design：
+有已选上游则填“承接值 + 交互复核证据”，不重做发散；纯精修填“继承原型/本轮不改机制”。
+无 AI 时写 N/A + 来源理由，不强制加 AI。新 AI 判断才做四层：产品任务收益、交互路径/恢复、
+信任/来源/不确定性、代理控制/授权。D/实际 Agent 的 Layer D 强制。
+新 AI 的决策压缩与路径门按 framework 执行；成熟方案复核冲突回原来源/用户，不静默重算。
+完成：AI 判定有继承或推导证据，未扩大精修范围。
 
-AskUserQuestion：
+## Phase 2：假设挑战结论
 
-> 找到两份方案：
-> - **原生推导**：{摘要}
-> - **竞品启发**：{摘要}
->
-> 基于哪份？
-> A）原生推导
-> B）竞品启发
-> C）两份都参考（每条决策注明来源）
+继承已验证假设，只检查本次规格/模板适配是否使其失效；否则识别本轮 1–2 个关键假设及验证点。
+精修重点核“模板能承载原型行为、信息、状态”，不重新挑战已确认目标。
+Agent 保留信任假设和人工 fallback。关键假设失效影响意图时先处理，不能带冲突冻结。
 
-**场景 B 前置步骤（锁死，在 Phase A 之前执行）：**
+## Phase 3：体验验证结论
 
-```
-Step B-0：当前功能状态确认（强制，对齐场景 C 的 Step C-1）
-          → 采集被优化功能的真实现状：线上页面截图 / Figma 现行稿 + 操作路径
-          → 后续每条优化决策必须能落到现状中的具体模块（改动区）；
-            不受影响部分显式归入保持区，禁止只凭 PRD 转述臆测现有 UI 结构
-          → 真实现状无法获取时不静默继续：AskUserQuestion 请用户提供入口
-            （链接 / 截图 / Figma），或由用户显式确认「无现状可依，按新建处理」
-```
+所有入口都对照本轮 MUST/AC 验证主流程、动作、权限、响应、恢复与保持区。
+12 状态全部声明，适用项给触发→可观察响应→下一步/恢复→验收；N/A 有原因。
+D 按状态 owner 的强制覆盖执行。原型已有状态直接继承，关键未知问清楚，不凭默认截图全通过。
+继承 voice-spec 或声明空态引导、错误恢复、轻量成功反馈、AI 不确定性/拒答出口等内容语义。
+记录键盘任务、合理焦点顺序/恢复、状态可感知、窄屏任务保持的验收；UI 实现由工具决定。
 
-> 依据：场景 B 与场景 C 同样是对已有功能动刀；只有评审改版看现状、优化不看，
-> 会让整条决策链建立在 PRD 转述的臆想 UI 上（真实案例：把历史记录分类标签
-> 误当首页入口按钮，MUST 级需求 6 条中 3 条映射失败）。
+逐状态回适配草稿核对实际支持/允许扩展/未知/不支持，不只看同名状态。
+冲突写来源、动作/状态、位置、证据、影响和解决选项。换模板保留需求；改变范围须真实用户决定，
+不能删需求迁就模板。完成：全部 MUST 和适用状态可验收，关键适配冲突已处理。
 
-**场景 B 输入读取顺序锁死（不可调换）：**
-1. prd-constraints.md（第一，建立围栏）
-2. ux-audit 报告（了解现有问题）
-3. ux-research 报告（可借鉴范式，含竞品维度）
-4. prd.md（完整需求上下文）
+## Phase 4：品味检查四锚点
 
-**ux-research 缺失时的处理：** 不静默降级，AskUserQuestion 询问是先运行
-/ux-research 还是继续独立执行（Phase 1 声明"UX 研究缺失"）。
+保留节名，按 taste-anchors 执行 8 锚点、10 项 Slop 与阻断/警告分级。
+未生成界面时视觉项标“待生成后验收”，不能宣称视觉通过。精修只提出授权范围内的质量目标，
+机制/流程问题单列。完成：阻断项处理，警告和待视觉验收点有位置及判据。
 
----
+## Phase 5：设计决策清单
 
-## ⚠️ 执行顺序锁死
+每个核心交互/保持决定有 D-ID；保留已有 ID。按输出模板完整填写名称、内容、rationale、
+至少一项排除备选、真实 tradeoff、AI 引用、状态覆盖、来源/约束（八字段合同）。
+原型继承项引用节点/路径/操作证据；备选说明本轮为什么保留，不虚构历史否决。
+B/D 每条立即核边界；超范围保留 REMOVED 及处理依据。完成：无缺字段、隐藏新功能或无源决定。
 
-**场景 A / B / D：**
-```
-Phase A：设计坐标系（新增，必须第一步）
-Phase 1：原生AI四层深度思考
-Phase 2：假设挑战
-Phase 3：体验验证（含 AI 专有状态）
-Phase 4：品味检查（8 锚点）
-Phase 5：每条决策 8 字段完整化（新增）
-Phase 6：输出目标与平台核对 + 页面与交互位置映射
-Phase 6.5：可追踪完整门禁
-Phase 6.75：Design Generation Packet + Tool Consumption Contract
-```
+## Phase 6：最终适配与页面、交互位置映射
 
-**场景 C：Phase A → Phase 1 → Phase 4 → Phase 5 → Phase 6 → Phase 6.5**
+工具/平台/整页或局部范围/参考策略逐项引用来源；仅影响意图的未决项再问。
+将草稿与最终 D/STATE/AC 全量重核版本、用途、动作、位置、状态、保持区、原型行为与连接器能力。
+初选不等于最终绑定；补齐设计后允许修改适配选择，不能改需求迁就初选。
 
-> 场景专属前置 Step（场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2）执行在 Phase A 之前，
-> 属合法顺序，不算违反"Phase A 必须第一步"——它们是"进入 Phase 序列前的现状核对"，
-> 不是 Phase 序列本身的一员。
+第 7 节固定「页面与交互位置映射」，机器门名 page_interaction_mapping。
+每个 D-ID 至少一行：语义位置、职责、全部适用 STATE、需求/AC 来源、修改/保持约束、下游目标。
+reference=none 仍完整映射；ID 只用实际存在且有效的记录。模板版本/具体ID/选择证据放旁车，
+Packet 只写语义位置。区分“语义适合”“状态/动作支持”“连接器可执行”三项结论。
 
-**这是 A 级验收项。任意顺序错误或场景 D 缺 Layer D → 产出无效，打回重做。**
-
----
-
-## Phase A：设计坐标系（新增，必须第一步）
-
-**来源：designer.md Step A，回注到本 skill。**
-
-在开始任何设计决策之前，先明确以下四件事：
-
-**Load `references/output-templates.md` §设计坐标系 now — 产出【设计坐标系】节前必须完整读取该模板。**
-
-**此节写入产出文件的第 1 节。所有后续决策必须引用此坐标系。**
-
-### Phase A 与 Phase 1 的关系（必读，不理解会导致两个 Phase 重复或脱节）
-
-**Phase A 只定方向和边界，不定实现。**
-
-类比 Shape Up 的 Pitch → Building 关系：
-- **Phase A = Pitch（做决定）：** 回答"AI 应该接收什么意图、被允许做什么、绝对不做什么"
-- **Phase 1 = 第一轮可行性验证（验证决定）：** 验证 Phase A
-  的方向在产品层/交互层/信任层/代理层是否真的成立
-
-具体来说：
-- Phase 1 Layer A 验证"决策路径是否真的被重构"（N - N' ≥ 2？）
-- Phase 1 Layer B 验证"路径是否真的变短"（M < N？）
-- Phase 1 Layer C 验证"信任机制是否成立"
-- Phase 1 Layer D 验证"代理层是否可控"（场景 D）
-
-**关键规则：如果 Phase 1 的 Layer A 或 Layer B 验证失败（路径没有变短、
-没有重构），必须返回 Phase A 修改 AI 方向，而不是跳过 Phase 1 强行继续。**
-Phase 1 不是走过场的确认步骤，它有权否决 Phase A 的结论。
-
----
-
-## Phase 1：原生AI四层深度思考
-
-**⚠️ 本 skill 的核心门禁。详细方法论见 `ai-native-design-framework.md` 第 4 节。
-本 Phase 只负责执行。**
-
-### Step 1.0：上游继承检查（解耦 ux-brainstorm，避免重做）
-
-preamble 已探测 `_UX_BRAINSTORM`（docs/decisions/*-ux-brainstorm.md）。据此分两支——phase 仍执行、顺序不变：
-
-- **有上游产出 → 继承模式**：读取其「AI Native评估」节（N→N'/范式/Evaluability）+「对下游Skill的交接」节（design-brief 需要知道的 / 不应该做的）。
-  **承接** N→N' 压缩、范式判定、Evaluability 等级为**既定输入**，不再从零推导四层。
-  本 Phase 降级为「交互层复核」：只校验承接判定在本规格的组件/交互粒度是否仍成立。
-  保留否决权：若复核与承接结论**冲突** → 触发 `NEEDS_CONTEXT` 回 ux-brainstorm，**不得静默重算**或复活被否定方向。
-  下面【四层思考】只填"承接值 + 交互层复核结论"。
-- **无上游产出 → 独立模式**：按下面【四层思考】完整推导（design-brief standalone 原有行为）。
-
-### Step 1.0b：上游 voice-spec 继承检查（解耦 /ux-writing，同款继承模式）
-
-正文探测（不动 preamble）：`_VOICE_SPEC=$(ls -t docs/decisions/*-voice-copy-spec.md 2>/dev/null | head -1)`。
-
-- **有上游 voice-spec → 继承模式**：读取其「语义层结论」节，**承接**为既定内容语义输入——Phase 3 状态声明中的空态/错误/拒答等描述直接引用其结论（落入 brief 正文，Packet 因此可追溯）。发现冲突 → 向用户确认，不得静默覆盖。
-- **无上游 → 兜底模式**：Phase 3 用内联「内容语义规则」（见该节）自行声明。
-  **提示钉（条件触发，只提示不当门）**：仅当场景 C（文案评审改版是 /ux-writing 自陈主场）、
-  场景 D（hedging/拒答文案是承重面），或**从输入材料已可见**内容语义承重（PRD/评审报告里
-  已出现大量文案面问题）时，向用户提一句「可先跑 `/ux-writing` 相位 1 产 voice-copy-spec，
-  本 skill 会自动继承（Step 1.0b）」；
-  用户不选则继续内联兜底，不追问、不阻断。其余情况不提，避免每次都吵。
-- **消歧**：ux-writing 语义规范与本 skill 内联规则**不并列产同类文档**——有上游则继承不重做，无则内联兜底。
-
-```
-【四层思考】
-
-Layer A · 产品层：AI 是否重构了决策路径？
-→ 当前决策次数 N = {?}
-→ AI 介入后 N' = {?}
-→ 压缩 = N - N' = {?}（**含 AI 时**必须 ≥ 2，否则 Phase A 的 AI 方向设置有问题，返工；**若 Phase A AI 方向 = 不介入 → 本 Layer 记 N/A 并引用不介入理由，不触发 ≥2 返工门**）
-
-Layer B · 交互层：AI 原生路径长什么样？
-→ 传统路径：{步骤} 共 {N} 步
-→ AI 原生路径：{步骤} 共 {M} 步
-→ 比较：{M < N / M = N / M > N（不合格，返工）；**Phase A AI 方向 = 不介入时本 Layer 记 N/A，本 Phase 降级为无 AI 结构优化的路径复核**}
-→ 关键假设：{前提条件}
-→ Fallback：{失败路径}
-
-Layer C · 信任层：用户凭什么相信 AI？
-→ 不确定性表达：{引用依据 / 置信度 / hedging / 多候选 / 预览-执行}
-→ 首次用户建立信任的路径：{说明}
-→ AI 错了用户多久能发现：{说明}
-
-Layer D · 代理层（场景 D 和涉及 agent 的功能强制）：
-→ 过程可见：{是/否 + 具体如何呈现}
-→ 可暂停：{是/否 + 暂停后状态}
-→ 可接管：{是/否 + 接管流程}
-→ 可撤销：{是/否 + undo 粒度}
-→ 授权边界：{哪些动作 agent 可自主做，哪些必须用户确认}
-```
-
-**产出摘要（写入产出文件的「原生AI深度思考小结」节）：**
-
-```
-产品层：决策 {N}→{N'} 次（压缩 {N-N'}）
-交互层：路径 {N}→{M} 步
-信任层：{不确定性表达方式}
-代理层：{仅场景 D / agent 功能填} 可见/暂停/接管/撤销 = {4项结果}
-对当前决策的影响：{采纳了什么 / 预留了什么 / 暂不可行的原因}
-```
-
-**【场景 C 专有】超范围改进必须询问：** 发现 ux-audit 范围外的改进机会
-→ AskUserQuestion 确认 A）纳入 B）不纳入。不得静默纳入。
-
-**【C-02 修复】写入 CONTEXT.md：** Phase 1 小结追加到 `CONTEXT.md` 的「累积洞察」节。
-
----
-
-## Phase 2：假设挑战
-
-**上游继承检查**：若存在 ux-brainstorm 产出，读其「假设前提」节（用户已验证）+「被否定的方向」节。
-有上游 → 切「checkpoint 模式」：核对这些**已验证假设**在本规格下是否仍成立、被否定方向不复活，不从零再挑战；
-无上游 → 按下面流程做本 skill 自己的轻量假设挑战。
-
-读取选定的方案，识别 1-2 个核心假设：
-
-```
-【假设挑战】
-
-核心假设：
-  假设1：{方案假设用户会/有/是什么}
-  假设2：{可选}
-
-若假设错，方案还成立吗？
-  假设1：{成立/不成立，原因}
-
-风险识别：
-  最脆弱假设：{假设N}
-  建议验证节点：{在哪个阶段验证}
-
-【场景 D 专有】信任假设挑战：
-  假设："用户会信任 agent 自动执行 {X 动作}"
-  若用户不信任：{fallback 方案，如降级为"决策增强"范式或保留"预览-确认"}
-
-结论：{方案继续 / 需要调整：{具体调整} / 建议 fallback：{具体设计}}
-```
-
----
-
-## Phase 3：体验验证
-
-对照 PRD P0 用户故事逐条验证：
-
-```
-| P0 用户故事 | 方案覆盖情况 | 说明 |
-|------------|------------|------|
-| P0-001 | ✅/⚠️/❌ | {说明} |
-
-核心任务路径：{步骤} 共 {N} 步
-渐进披露：{是/否 + 说明}
-体验风险：{具体描述}
-设计边界：{没有/有：描述}
-```
-
-### 状态覆盖声明（12 状态全必须声明）
-
-**来源：`ai-native-state-coverage.md`。N/A 的要写原因。**
-
-**内容语义规则（写各状态「方案处理方式」时必须满足；有上游 voice-spec 则以其语义层结论为准——见 Step 1.0b；场景 C 跳过本 Phase 时本规则顺延至 Phase 5 决策的状态覆盖字段）：**
-- 错误态/幻觉兜底态描述必须含三要素：何事 + 为何（有助才写）+ 怎么办；不指责用户、无空话
-- 空态描述必须含引导动作（这里会出现什么 + 下一步）
-- 拒答态/低置信态必须用 hedging 语气（"根据…可能…"，不断言）并给出路
-- 成功态给轻确认，可逆操作附撤销语义
-- 语域统一中文 B2B（真实业务词汇，非 Lorem/口语）
-- **只声明语义（内容必须达成什么），不写逐字文案**——逐字文案属 /ux-writing 逐字层与生成阶段
-
-| 状态 | 方案处理方式 | 是否需要单独设计 |
-|------|-----------|---------------|
-| 默认态 | {描述} | {是/否} |
-| 空态 | {描述 / N/A：原因} | {是/否} |
-| 加载态 | {描述 / N/A：原因} | {是/否} |
-| 错误态 | {描述 / N/A：原因} | {是/否} |
-| 成功态 | {描述 / N/A：原因} | {是/否} |
-| 思考中态 | {描述 / N/A：原因} | {是/否} |
-| 低置信态 | {描述 / N/A：原因} | {是/否} |
-| 拒答态 | {描述 / N/A：原因} | {是/否} |
-| 部分完成态 | {描述 / N/A：原因} | {是/否} |
-| 待 Steer 态 | {描述 / N/A：原因} | {是/否} |
-| 幻觉兜底态 | {描述 / N/A：原因} | {是/否} |
-| Agent 执行中态 | {描述 / N/A：原因} | {是/否} |
-
-**场景自动判定：**
-- 场景 A/B 无 AI → 前 5 个必填，AI 专有 7 个统一写 "N/A — 本功能不涉及 AI"
-- 场景 A/B 含 AI → 前 5 + 思考中/低置信/拒答/待 Steer/幻觉兜底 必填，其他看是否涉及 agent
-- 场景 D → 12 个全部必填，不允许 N/A
-
----
-
-## Phase 4：品味检查（产出节名锁死为「品味检查四锚点」，内容执行 8 锚点三维度）
-
-**来源：`ai-native-taste-anchors.md`。**
-
-### 效率维度（5 锚点）
-
-```
-- Ryo Lu：每个 UI 元素能回答「帮用户完成什么任务」？→ [是/否，如否列出]
-- Linear：核心任务路径步骤数？→ [N步]；能再少？→ [是/否]
-- Attio：信息层次 L1/L2/L3 可辨认？→ [是/否]
-- Notion：首屏主要操作入口数量？→ [N个]；有无重复？→ [有/无]
-- Raycast：AI 入口在任务上下文内？→ [是/否/无 AI]；AI 介入后路径变长？→ [是/否/无 AI]
-```
-
-### 信任维度（新增）
-
-```
-- Perplexity：AI 输出可追溯（来源/推理/置信度）？→ [是/否/无 AI]
-  **无来源的 AI 输出：{个数，必须 = 0}**；不通过点：{列出具体}
-- Granola：AI 诚实表达不确定性？→ [是/否/无 AI]
-  **无不确定性表达的 AI 输出：{个数，必须 = 0}**；过度自信点：{列出具体}
-```
-
-### 代理维度（新增，场景 D 和 agent 功能强制）
-
-```
-- Cursor：AI 动作可见/可暂停/可接管/可撤销？→ [全部是/部分是/无 agent]
-  不通过点：{列出具体}
-```
-
-### AI Slop 扫描（对照 ai-native-design-framework.md 第 8 节 10 项反模式）
-
-按 `SCHEMA.md` §AI Slop 扫描的 **10 行表逐行作答**（每行必须写「有/无」，不允许留空或
-只报总数）——只写「未发现 Slop」等于没扫。逐行答完再算总数。
-
-**处理规则（可判定分级，不是"发现就改"）：**
-`N ≥ 3` → 整体品味不合格，**必须返工**，不得进入 Phase 5；
-`N = 1-2` → 修复建议写入本节，产出标「警告」；
-`N = 0` → 通过。
-
-### 严重性判断（按 ai-native-taste-anchors.md §5 严重性分级）
-
-> 真值源 = ai-native-taste-anchors.md §5；下方阻断/警告清单为执行副本，改动须先改 §5 再同步本处。
-
-- **阻断锚点不通过** → 必须先调整方案，不得进入 Phase 5：Linear / Raycast /
-  Perplexity / Cursor / Granola
-- **警告锚点不通过** → 记录，可在下次迭代修复：Ryo Lu / Attio / Notion
-
-**【场景 C 专有】品味检查发现超范围调整时的处理：** AskUserQuestion 确认
-A）执行 B）不执行。选 B 记录"已知品味问题"。
-
----
-
-## Phase 5：每条决策 8 字段完整化（新增）
-
-**来源：designer.md Layer 3 Quality Standards，回注。**
-
-**对 Phase A 识别的每个核心交互点，产出一条独立决策。每条决策必须完整
-8 字段，缺任何一项则该决策不输出。**
-
-### 决策模版（每条决策独立写）
-
-**Load `references/output-templates.md` §决策模版 now — 产出每条 D-{NNN} 决策前必须完整读取该模板。**
-
-### 约束检查（每条决策产出后立即执行，不可批量）
-
-```
-□ 这个决策在 prd-constraints.md「优化方向边界」内？（场景 B/D）
-□ 不在「Not-Do List」里？（场景 B/D）
-□ 8 字段都填了，无一字段留空？
-□ 设计理由有明确来源引用，不是主观判断？
-□ 排除的备选方案 ≥ 1 条？
-□ 接受的 tradeoff 不为"无"？
-□ AI Native 判定引用了 Phase A 的全局结论？
-□ 状态覆盖含本决策涉及的所有适用状态？
-
-任一不通过 → 返回修正该决策，或删除并记录 REMOVED: OUT OF SCOPE
-```
-
----
-
-## Phase 6：输出目标与平台核对 + 页面与交互位置映射
-
-### Step 1：输出目标与平台核对（位置映射前执行）
-
-读取 /idea、PRD 或用户已确认方案中的目标工具、目标平台、整页/局部范围与参考策略，
-逐项记录来源；已明确的选择直接继承。仅当缺失项影响设计意图时向用户确认，不把缺少本地母版
-变成阻断条件。页面参考只说明位置与结构，不能把桌面源的布局或尺寸当成移动端需求。
-
-产出文件必须写入：
-
-```markdown
-输出目标：{用户指定工具 / 尚未选择；Open Design 为默认推荐}
-目标平台与范围：{desktop / mobile / embedded；整页 / 局部位置}
-参考策略：{用户已有选择记录 / 明确不用参考 / 待交接入口执行页面匹配}
-依据：{PRD 字段 / 已对齐方案位置 / 用户确认来源}
-下游约束：{已确认的交互、修改/保留范围及平台约束}
-```
-
-完成条件：目标、平台与范围有来源或明确未决说明；未决项不被写成用户决定。
-本 Phase 不运行页面推荐或采用询问。Phase-A 的临时 `CandidateHint` 也不改变本表；唯一的最终
-页面/模块采用点在 Packet 冻结之后，见 Phase 6.75 的 `page-context` 指针。
-
-### Step 2：页面与交互位置映射
-
-**产出第 7 节固定标题为「页面与交互位置映射」，机器门名为 `page_interaction_mapping`。**
-每个核心交互点都要落到语义页面/位置，保留决策、所有适用状态与需求/验收的追踪职责。
-
-```markdown
-| 语义页面/位置 | 交互职责 | D-ID | 全部适用 STATE | 需求/AC 来源 | 约束 | 下游目标 | 已确认 page_id / region_id（可选） |
-|---------------|----------|------|---------------|-------------|------|----------|----------------------------------|
-| {页面用途 / 区域或截图局部定位} | {用户在此完成什么、系统如何响应} | D-001 | {列出本决策全部非 N/A 状态} | {R/AE、问题 ID 或已对齐方案位置} | {修改/保留范围、授权、恢复等} | {目标工具 / tech-spec} | {确认记录引用；无则 N/A} |
-```
-
-语义页面/位置和来源必填。`reference=none` 仍须完整映射；没有目录记录的实际页面可以用
-用户语言或截图局部位置定位，不强制先入库，也不编造 page_id/region_id。可选 ID 只索引
-已有真人确认，不能靠 agent 填写的 JSON 将候选变为已采用。参考失效由交接入口重新核验。
-
-**AI 功能区域的映射要求：**
-- 思考中态写明过程可见性与用户可做的操作。
-- 低置信态写明不确定性表达、人工判断或接管出口。
-- 拒答态写明原因语义与可继续的路径；其他适用 AI 状态同样逐一映射。
-
-组件名、variant、Tailwind/CSS、品牌色配额不属于本表；设计系统由用户在目标设计工具配置。
-
-**场景 B 约束检查（每条映射产出后立即执行）：**
-
-```
-□ 在 prd-constraints.md「优化方向边界」范围内？
-□ 不在「明确不做」列表？
-□ 是「如何做」层面，不是「做什么」层面的功能扩展？
-结论：✅ 保留 / REMOVED: OUT OF SCOPE — {原因}
-```
-
----
+精修 refine 与嵌入 add/modify 分开；preserve 不冒充精修。原件路径按 page-context §7，
+不能把原件静默降为截图。能力不足报告具体 BLOCKED，保留契约，不伪报生成完成。
+完成：全量语义映射可追踪，关键冲突解决，无能力谎报。
 
 ## Phase 6.5：可追踪完整门禁
 
-**目标：** 防止 research / PRD / ux-brainstorm 的诉求在进入 HTML、tech-spec、
-task-plan 前丢失。此门禁不通过，不允许进入 Phase 7 写最终文件。
+按输入合同建立来源索引与落地矩阵：完整诉求/确认状态/本轮范围→D→STATE→位置→下游→AC。
+MUST 由明确需求与用户确认确定；研究建议不能自动升级需求。结果仅 MAPPED/DEFERRED/
+NEEDS_CONTEXT/REMOVED；非 MAPPED 有原因，必须项改变范围有真人依据。
 
-### Step 1：建立上游诉求索引
-
-从输入中提取并编号：
-
-```markdown
-| Source Claim ID | 来源文档 | 来源章节 | 诉求摘要 | 类型 | MVP 状态 |
-|----------------|---------|---------|---------|------|---------|
-| REQ-R001 | PRD §R1 | ... | ... | requirement | MUST |
-| AE-A001 | PRD §AE1 | ... | ... | acceptance | MUST |
-| RS-C001 | ux-research §C1 | ... | ... | research constraint | SUPPORTING |
-| UXB-D001 | ux-brainstorm §决策1 | ... | ... | design input | MUST |
-```
-
-规则：
-- **MUST 派生规则（可复现，不靠主观打分）**：R/AE 的 Disposition = REQUIREMENT 且
-  Confidence = explicitly_confirmed → MUST；明标「不在本次范围 / 已知局限」的 AE →
-  强制 DEFERRED 并附原因，不判 MUST；其余高置信但未经确认项 → SUPPORTING。
-- `traceable_delivery`：PRD 中所有 MUST 级 R/AE 必须进入索引。
-- `standalone_light` 且无 PRD：不得伪造 R/AE；PRD 相关行标记 `NEEDS_CONTEXT`，
-  最终状态只能是 `DONE_WITH_CONCERNS`，且交接块必须写“不得直接进入 tech-spec/task-plan”。
-- ux-brainstorm 中所有核心设计决策、Oracle 补丁、下游约束必须进入索引。
-- research 中只纳入被 PRD 或 ux-brainstorm 引用的高置信结论。
-
-### Step 2：建立落地映射矩阵
-
-```markdown
-| Source Claim ID | 映射到设计决策 | 映射到状态 | 映射到页面与交互位置行 | 下游去向 | 结果 |
-|----------------|---------------|-----------|----------------|---------|------|
-| REQ-R001 | D-001 | default/success | 角色设置 / 当前角色切换位置 | 目标设计工具 + tech-spec | MAPPED |
-```
-
-结果只能是 `MAPPED`、`DEFERRED`、`NEEDS_CONTEXT`、`REMOVED`。
-禁止写空白、“后续补充”、“开发时处理”、“设计时自然体现”。
-
-### Step 3：门禁判定
-
-```
-□ 所有 PRD MUST R/AE 都是 MAPPED？
-□ 所有 ux-brainstorm 核心决策都有 D-series 去向？
-□ 所有 Oracle 补丁都有状态或页面/交互位置去向？
-□ 每个 D-series 至少出现在一个页面与交互位置映射行？
-□ 每行包含对应 D-series 的全部适用 STATE 与需求/AC 来源？
-□ 每个“是否需要单独设计 = 是”的状态都有下游实现与验收指示？
-□ DEFERRED / NEEDS_CONTEXT / REMOVED 都有原因？
-```
-
-任一不通过：
-
-```
-⛔ TRACEABILITY GATE FAIL
-未映射项：
-  - {Source Claim ID}: {原因}
-→ 返回 Phase 5/6 修正，或标记 DEFERRED / NEEDS_CONTEXT / REMOVED。
-```
-
-全部通过：
-
-```
-✅ TRACEABILITY GATE PASS
-PRD MUST: {N/N}
-Design decisions: {N/N}
-States needing design: {N/N}
-Page/interaction mappings: {N/N}
-```
-
-`standalone_light` 无 PRD 时不得输出 `TRACEABILITY GATE PASS`；只能输出：
-
-```
-⚠️ TRACEABILITY GATE LIMITED
-原因：缺少 PRD R/AE，不能保证端到端完整落地。
-限制：不得直接进入 tech-spec/task-plan；如要开发，先补 PRD 后重跑 design-brief。
-```
-
-Phase 7 输出文件必须包含“可追踪完整矩阵”节，内容来自本 Phase。
-
----
+门禁逐项检查：所有本轮 MUST/AC、上游核心决定/补丁、原型保持项有去向与验收；
+每个 D 有语义位置、全部适用状态、来源和边界；关键未知未伪报验证，未决关键冲突不冻结。
+traceable_delivery 另核实际 PRD 全部 MUST R/AE。
+通过写 TRACEABILITY GATE PASS，coverage_scope=prd_end_to_end 或 design_source；
+design_source 表示当前设计源完整覆盖，不代表工程 ready。standalone_light 写 LIMITED + 缺口，
+不得直接生成或进入 tech-spec/task-plan。缺 PRD 本身不让 design_generation 降为 LIMITED。
 
 ## Phase 6.75：Design Generation Packet + Tool Consumption Contract
 
-**目标：** 把完整 design-brief 压缩成一个外部工具可直接消费的设计生成包。这个包给
-MagicPath、Open Design、Claude Design、/html-prototype 和开发前评审使用。
+从 Brief 正文提取完整目标/需求/D/适用 STATE/语义位置/AC/修改与保持边界，按输出模板形成唯一
+Packet，核对完整性后按原字节冻结。稳定 ID 与完整原文一起传递；无 PRD 用 REQ/AC，不伪造 R/AE。
+Packet 不含 CandidateHint、最终模板/模块 binding、TAC/hash/adoption、OD 项目或收据。
+原型版本与入口 provenance 放 Brief 来源登记；行为保持事实完整进入 Packet，不能只放附件路径。
+原型 HTML/截图/状态说明用独立不可变证据附件运输实际 bytes；本机路径不是已上传附件，HTML 不执行。
 
-**硬规则：**
-- Packet 的需求与设计事实只能引用本 design-brief 正文，不得新增产品诉求、交互决策或状态；
-  它是**唯一的需求事实源**。页面采用、模板/模块绑定、TAC、hash、OD 项目和生成收据都只能
-  作为 Packet 外的运输或证据元数据，绝不回写、缩写或补充 Packet。
-- Packet 是下游生成工具的主输入；上游 PRD / research / ux-brainstorm 只用于本文件的
-  traceability 校验，不让外部工具重新做产品判断。
-- Phase-A `CandidateHint` 是执行期临时线索，不得复制进 Packet 或据此填写 page/module binding。
-  Packet 通过本 Phase 门禁后必须按原字节冻结；后续任何最终绑定都引用其
-  `source_packet_sha256`，而不是改写需求文本。
-- Open Design（/open-design）是默认推荐交接路径；用户指定 Claude Design 时导出同包供人工
-  附加。MagicPath / /html-prototype 的独立入口继续保留，按用户所选目标消费同一契约；
-  工具不可达时在该入口报告状态并保留材料，不自动改用本地生成器。
+Packet 冻结后按 page-context 执行正式 carrier-binding / 原件适配、TAC 和 bundle 真人采用；
+有效的模板/位置确认重用，不让用户重述。冻结后核验版本/执行承诺，不重做产品或模板选型。
+事实变化回 Brief 修订、重新冻结/绑定；TAC 只投影冻结事实，不允许 OD 现场改需求。
+reference_only 必须明确标为**非模板衍生**；不含 base template、TAC、carrier hash 或模板衍生承诺。
+用户指定原件不能靠此分支绕过冲突；structural_carrier 不继承视觉，visual_carrier 未验证能力不得宣称可用。
 
-**最终载体的唯一交接点：** Packet 冻结后、OD 编译前，`/open-design` 必须完整读取
-`.claude/skill-os/runtime/page-context.md` 至 FILE_END 并执行其**最终** `carrier-binding` 合同。
-它重新验证 `live && carrier_eligible` 的页面、模块/slot、源和模块合同 hash；Phase-A
-`CandidateHint` 从不等于该验证。只有真人明确采用最终 binding，并看见/确认 TAC 内容、
-`tac_sha256`、`carrier_content_hash` 与 `handoff_bundle_hash` 后，才可形成 `carrier` bundle。
+Tool Consumption Contract：生成工具在授权自由度内决定视觉表达，落实全部任务/状态/保持边界；
+精修不得重设计行为、数据语义、权限、状态或复活否决项；工程消费者仍需实际 PRD/工程门禁。
+stage/run/recover 权限及状态分开；导出/置入不称生成完成。完成：正文一致、全量覆盖、事实唯一、运输可达。
 
-无高置信最终绑定、用户拒绝采用或明确不用模板时，必须走互斥的 `reference_only` bundle：完整
-Packet 仍可交接，但不含 base template、资产闭包、TAC、carrier hash 或“模板衍生”表述。最终
-binding/adoption、`page-reference.json` 和 TAC 都是同次 handoff 的运输元数据，指向冻结 Packet；
-它们不反写正文或第 7 节，也不成为第二份需求事实。模板采用、OD stage、OD run 与 recover
-分别要求自己的授权和真实证据。
+## Phase 7：文件、交接与状态
 
-`reference_only` 必须明确标为**非模板衍生**；截图、参考页或 `CandidateHint` 都不能改变该分类。
+按 SCHEMA/output-templates 写 docs/decisions/YYYY-MM-DD-<topic>-design-brief.md，保留 12 节：
+设计坐标系、原生AI深度思考小结、假设挑战结论、体验验证结论、品味检查四锚点、设计决策清单、
+页面与交互位置映射、可追踪完整矩阵、Design Generation Packet、Tool Consumption Contract、REMOVED 记录、交接块。
+继承/N/A 有证据，不伪造新分析。交接块只是索引，不是第二事实源。
 
-### Step 1：生成 Design Generation Packet
+完成协议（Handoff Summary）：写 docs/handoff/YYYY-MM-DD-<topic>-design-brief-handoff.md，
+按 ../references/handoff-protocol.md（≤2000 tokens）填写 3–7 项 criteria 的判定与证据；
+含决策摘要（≤8条，decision/rationale/tradeoff）、位置/追踪统计、下游约束（≤5条）、风险（≤3条）、
+完整产出路径与 AI Native 判断。已有块内另记 entry/delivery_mode/coverage_scope、原型保持、
+适配/选择旁车、冻结 Packet 与下游自由度，不复制事实清单。
 
-**Load `references/output-templates.md` §Design Generation Packet now — 产出 Design Generation Packet 前必须完整读取该模板。**
+verified project scope 用 write_state.py 单写 nodes.design-brief；仅选择 workflow 才核其要求上游，
+standalone 不强制别的节点 DONE。LIMITED/关键未知/缺 handoff 不写 DONE；按事实为 DONE/
+DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED。NO_PIN 框架维护不跑项目 preamble/产出/state。
+不直接追加 CONTEXT.md；经验按 office 治理记忆入口，本轮默认不存。
 
-carrier 先执行模板的结构化冻结。写完后先通过 Step 3 的 Packet 门禁并冻结其字节内容。此 skill 不执行最终模板绑定、TAC 生成、
-用户采用、OD stage/run/recover；它只交付可被这些后续动作 hash 绑定的需求事实。
+## Phase 8：按已授权目标交接
 
-### Step 2：生成 Tool Consumption Contract
-
-```markdown
-## Tool Consumption Contract
-
-| 下游工具 | 主输入 | 可读校验源 | 不允许做 |
-|---------|--------|------------|----------|
-| MagicPath | Design Generation Packet + 页面与交互位置映射 + 状态覆盖 | design-brief 正文 | 不得新增 PRD 没有的产品功能；不得忽略 D/STATE/AC 映射 |
-| Open Design / Claude Design | 冻结 Design Generation Packet；另附 page-reference/TAC 等运输元数据，或互斥 `reference_only` 元数据 | design-brief 正文、page-context 最终 binding 与真人采用记录 | 不得把 CandidateHint 当绑定/需求；不得直接从 research 发散新方案；不得复活 REMOVED 方案；不得把参考页或 structural carrier 当成外部设计系统 |
-| /html-prototype | Design Generation Packet + 输出目标与平台 + 页面与交互位置映射 | PRD / ux-research / deepresearch 仅用于 traceability 校验 | 不得绕过 design-brief 重新设计交互或遗漏 D/STATE/AC |
-| tech-spec / task-plan | design-brief 正文 + Traceability Matrix | PRD R/AE | 不得从 research/design-brief 编造 R/AE |
-```
-
-### Step 3：单入口门禁
-
-```
-□ Design Generation Packet 存在？
-□ Tool Consumption Contract 存在？
-□ Packet 中所有需求、决策与状态事实都能在 design-brief 正文找到？
-□ Packet 包含有来源的输出目标、平台与参考策略？
-□ Packet 包含所有 MUST D-series 决策？
-□ Packet 包含所有非 N/A 状态？
-□ Packet 保留每项语义位置、需求/AC 来源、修改/保留范围及下游目标？
-□ Packet 不含 CandidateHint、最终模板/模块 binding、TAC 或 OD 项目事实，且可按原字节冻结？
-□ 下游已指向 page-context 最终 binding 合同；未决采用不伪报已采用，`reference_only` 不丢追踪也不称模板衍生？
-□ Packet 不注入本地 token/组件技术映射，目标与用户选择一致？
-```
-
-任一不通过 → 不得进入 Phase 7。
-
----
-
-## Phase 7：产出文件 + 写入长期记忆 + 更新状态
-
-读取 SCHEMA.md 作为**字段级模版**（其含前 9 节的字段结构；**产出的节清单以下方 12 节为准**——SCHEMA 未含的「可追踪完整矩阵 / Design Generation Packet / Tool Consumption Contract」三节按 Phase 6.5 / 6.75 产出补入，不得因 SCHEMA 缺节而漏产），写入：
-`docs/decisions/YYYY-MM-DD-<topic>-design-brief.md`
-
-**产出文件必须包含以下所有节（节名锁死）：** MagicPath / 外部设计生成器 / html-prototype /
-tech-spec 依赖第 4、7 节；**`redteam` 判据挂载表按本清单逐节做完整性核查**。
-
-1. 设计坐标系（Phase A 产出）
-2. **原生AI深度思考小结**（Phase 1 产出，内部扩展为四层）
-3. **假设挑战结论**（Phase 2 产出）
-4. **体验验证结论**（Phase 3 产出，含 12 状态覆盖表）
-5. **品味检查四锚点**（Phase 4 产出，节名保持不变，内部扩展为 8 锚点）
-6. 设计决策清单（Phase 5 产出，每条 8 字段）
-7. **页面与交互位置映射**（Phase 6 产出；`page_interaction_mapping`）
-8. **可追踪完整矩阵**（Phase 6.5 产出）
-9. **Design Generation Packet**（Phase 6.75 产出并冻结，唯一需求事实；MagicPath / Open Design / Claude Design / HTML 生成器主输入）
-10. **Tool Consumption Contract**（Phase 6.75 产出）
-11. REMOVED 记录（场景 B / D 专有）
-12. **交接块**（下游恢复索引；不得包含正文没有的新事实）
-
-**节名约束说明：** 第 2/3/4/5 节保持原版，第 7 节固定为「页面与交互位置映射」——下游按节名定位内容
-（第 4、7 节由 html-prototype / tech-spec / magicpath 直接消费；
-第 2/3/5 节由 `redteam` 的 12 节完整性核查消费）。内部扩展（如四层思考 / 12 状态 / 8 锚点）
-放在节的子结构里。
-
-**写入 CONTEXT.md 长期记忆：**
-
-将 Phase 1 的原生AI思维小结、Phase 2 的假设挑战结论、Phase 4
-的品味检查结论追加到 `CONTEXT.md`。
-
-```markdown
-## 来自 [日期] /design-brief 的洞察 — [topic]
-
-**原生AI思维小结（四层）：**
-[Phase 1 四层摘要]
-
-**假设风险：**
-最脆弱假设：[Phase 2 识别]
-建议验证节点：[建议]
-
-**品味检查结论（8 锚点）：**
-[8 锚点结论]
-```
-
-**workflow-state 写入：**
-
-```bash
-export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-[ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/idea/*.md 2>/dev/null | head -1 | \
-           xargs basename 2>/dev/null | \
-           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-idea\.md$//' || echo "unknown")
-export _NODE="design-brief"
-export _STATUS="DONE"
-export _OUTPUT="docs/decisions/$(date +%Y-%m-%d)-${_TOPIC}-design-brief.md"
-python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
-```
-
-**交接块格式：**
-
-**Load `references/output-templates.md` §交接块格式 now — 产出交接块前必须完整读取该模板。**
-
----
-
-## Phase 8：列出下游选项
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-/design-brief 完成
-文件：docs/decisions/YYYY-MM-DD-<topic>-design-brief.md
-场景：{A / B / C / D}
-
-AI Native：{范式}，决策 {N}→{N'} 次，路径 {N}→{M} 步
-品味检查：{通过 / 阻断项: X / 警告项: Y}；Slop: {N}
-决策清单：{N} 条（每条 8 字段）
-页面与交互位置映射：{N} 行；D/STATE/AC 覆盖：{N/N}
-状态覆盖：{12 / 12}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-AskUserQuestion：
-
-> 下一步？
->
-> A）/open-design — 交接冻结 Design Generation Packet；之后才进行最终模板/模块 binding 或 reference_only，由用户在 OD 配置设计系统（推荐）
-> B）magicpath — 用户选择独立 React canvas 产出时使用
-> C）/html-prototype — 用户选择本地 HTML 原型时使用
-> D）先停这里
-> E）Claude Design — 导出同一 Packet 供人工附加，设计系统在工具内配置
-
----
-
-## ⚠️ 末尾核心约束
-
-1. **执行顺序锁死**：Phase A 设计坐标系 → Phase 1 四层深度思考 → Phase 2
-   假设挑战 → Phase 3 体验验证 → Phase 4 品味检查 → Phase 5 决策 8 字段化
-   → Phase 6 输出目标与平台核对 + 页面与交互位置映射 → Phase 6.5 可追踪完整门禁
-   → Phase 6.75 Design Generation Packet
-   （**例外**：场景 B 的 Step B-0 / 场景 C 的 Step C-1、C-2 执行在 Phase A 之前，
-   是进入本序列前的现状核对，不算违反本条——见「⚠️ 执行顺序锁死」节）
-2. **必读 references 4 份，按挂载表在对应 Phase 开始前读完**（lazy-load，勿在 skill 启动时全量读）— 任一已执行 Phase 的挂载 ref 未读完 → 该 Phase 门禁 FAIL，补读后返工
-3. **Phase A 设计坐标系必须第一步**（**场景 B/C 的前置 Step 除外，见上条**）— 不写坐标系直接跳进决策 = 没有设计
-4. **Phase 1 四层深度思考** — Layer A/B 必填，Layer C 所有 AI 功能必填，Layer D
-   场景 D 和 agent 功能必填
-5. **场景 B / D 输入顺序锁死** — prd-constraints 第一
-6. **场景 B / D 约束检查不可批量** — 每条决策产出后立即检查
-7. **每条决策必须 8 字段完整** — 缺任一项该决策不输出。"排除的备选 ≥
-   1 条"、"tradeoff 不为无"是硬约束
-8. **页面与交互位置映射完整** — 每个 D-series 有语义位置、全部适用 STATE、需求/AC 来源、约束和下游目标；参考 ID 可选
-9. **品味检查 8 锚点必须全部执行** —
-   阻断锚点（Linear/Raycast/Perplexity/Cursor/Granola）不通过不得进 Phase 5
-10. **状态覆盖 12 状态必须全部声明** — 场景 D 不允许 N/A
-11. **Phase 6.5 可追踪完整门禁必须 PASS**
-12. **REMOVED 记录必须保留**
-13. **Design Generation Packet 不可省略且必须冻结** — 它是唯一需求事实；Phase-A CandidateHint、最终 binding、TAC、hash 和 OD 收据不得写入或改写它
-14. **Tool Consumption Contract 不可省略**
-15. **交接块不可省略** — 交接块只是索引，不是第二事实来源
-16. **节名锁死** — 第 2/3/4/5 节保持原版，第 7 节为「页面与交互位置映射」；下游按节名定位内容、redteam 按 12 节清单核完整性
-17. **下游询问必须执行** — 不能静默进入下一步
-18. **最终 carrier 绑定后置** — Packet 冻结后才可由 page-context 验证 `carrier-binding`；须真人采用并确认 TAC/hash。无绑定/拒绝模板一律为 `reference_only`，不得声称模板衍生
-
----
-
-## 完成协议（Handoff Summary）
-
-**标记 DONE 之前必须执行，无 handoff 的 DONE 视为不完整。**
-
-**Step 1 — 写入 handoff summary：**
-```
-路径：docs/handoff/YYYY-MM-DD-<topic>-design-brief-handoff.md
-格式：见 .claude/skills/office/references/handoff-protocol.md（≤2000 tokens）
-```
-
-必须包含：
-- **决策列表**（≤8条）：8字段决策摘要（每条含 decision/rationale/tradeoff）、页面与交互位置映射、可追踪完整矩阵统计
-- **下游约束**（≤5条）：MagicPath / 外部设计生成器 / html-prototype 必须遵守的设计决策、REMOVED 记录中不得复活的方案
-- **风险**（≤3条）：未验证假设、场景覆盖盲点
-- **产出路径**：decisions/ 文件完整路径
-- **AI Native 判断**：是否采用 AI Native 范式及核心理由（必填）
-
-**Step 2 — 更新 workflow-state.yaml：**
-> 单写入口：workflow-state 仅由 Phase 7 的 `write_state.py` 写入一次（落 `nodes.design-brief`）。下方 YAML 是该节点的目标形态示意——`gate_result` / `handoff_path` / `ai_native_summary` 为 handoff 附加字段，如 write_state.py 未覆盖则补写到同一节点下（可经 `_EXTRA_JSON`）；**不要另手写顶层 `design-brief:` 键造成双写**（session-restore 只读 `nodes.*`，顶层块永不被读到）。
-
-```yaml
-design-brief:
-  status: DONE
-  output: "docs/decisions/<filename>"
-  completed_at: "<YYYY-MM-DD>"
-  gate_result: PASS
-  handoff_path: "docs/handoff/<filename>"
-  ai_native_summary: "<一句话结论>"
-```
+用户已明确目标及后续范围则继续；未定才提供 OD（推荐）、Claude Design、MagicPath、本地HTML或停在文档。
+不重复许可、不自动换工具。工具不可达保留材料并报告具体状态。
+Brief DONE 只表示契约完成，不表示 OD 已生成或验收通过。
 
 <!-- FILE_END: design-brief/SKILL.md -->

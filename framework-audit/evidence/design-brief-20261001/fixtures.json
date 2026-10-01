@@ -1,0 +1,30 @@
+[
+  {
+    "fixture_id": "F1",
+    "input": "Actual PRD R-1/AE-1 owner filtering; selected D-1 combined filters and STATE-1 preserve/clear empty conditions; AI no-intervention confirmed; selected list/filters/OD."
+  },
+  {
+    "fixture_id": "F2",
+    "input": "Existing spoken requirements: owner filtering for service records, empty retains conditions with clear, preserve other content/permissions. Selected list template; filters controls conditions, table displays results; default/empty support."
+  },
+  {
+    "fixture_id": "F3",
+    "input": "Observed prototype: search, detail, return preserving search, inline empty clear. User selects original record module and OD for UI refinement; behavior/fields/permissions preserved; unique source-bound locator and observed state support."
+  },
+  {
+    "fixture_id": "F4",
+    "input": "Place approval in processing area; both personal todo and administrator configuration fit; role unspecified."
+  },
+  {
+    "fixture_id": "F5",
+    "input": "Chosen template, require error retry and input preservation; only default observed, error support unknown."
+  },
+  {
+    "fixture_id": "F6",
+    "input": "Only default screenshot; UI refinement requested; save/cancel behavior unobserved."
+  },
+  {
+    "fixture_id": "F7",
+    "input": "Ask meaning of a CSS color only; no design contract request."
+  }
+]

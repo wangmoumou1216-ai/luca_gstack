@@ -145,6 +145,77 @@ const bytesOf = (value, code, message) => {
 const one = (array, predicate) => array.filter(predicate);
 const fullPath = (namespace, path) => `${namespace}/${path}`;
 
+const prototypePrefix = 'evidence/prototype/';
+const prototypeIndex = 'control/prototype-evidence.json';
+const prototypeMedia = Object.freeze({
+  html: 'text/html; charset=utf-8', htm: 'text/html; charset=utf-8',
+  png: 'image/png', json: 'application/json', md: 'text/markdown; charset=utf-8'
+});
+
+// Prototype files are inert evidence, never a second requirements document or
+// an executable template. Callers supply bytes; this helper never opens paths.
+// factIds validates only that cited IDs exist, not that the evidence proves them.
+export function preparePrototypeEvidence(prototypeEvidence = [], { factIds, sourceIndexVerified = false } = {}) {
+  if (!Array.isArray(prototypeEvidence) || typeof sourceIndexVerified !== 'boolean') fail('PROTOTYPE_EVIDENCE_INVALID', 'Prototype evidence must be an explicit array of byte attachments');
+  if ((factIds !== undefined && (!Array.isArray(factIds) || factIds.some(id => !text(id)))) || (sourceIndexVerified && !Array.isArray(factIds))) fail('PROTOTYPE_SOURCE_INDEX_REQUIRED', 'Verified prototype source indexes require the actual frozen Packet fact IDs');
+  const knownIds = new Set(factIds ?? []);
+  const seen = new Set();
+  const files = []; const records = [];
+  for (const attachment of prototypeEvidence) {
+    const keys = ['path', 'media_type', 'purpose', 'source_ids', 'bytes'];
+    if (!attachment || typeof attachment !== 'object' || Array.isArray(attachment) || keys.some(key => !Object.hasOwn(attachment, key)) || Object.keys(attachment).some(key => !keys.includes(key))) fail('PROTOTYPE_EVIDENCE_INVALID', 'Each prototype attachment requires only path, media_type, purpose, source_ids and actual bytes');
+    const relative = safeRelativePath(attachment.path);
+    const path = safeRelativePath(`${prototypePrefix}${relative}`);
+    const extension = relative.split('.').at(-1).toLowerCase();
+    if (!prototypeMedia[extension] || attachment.media_type !== prototypeMedia[extension]) fail('PROTOTYPE_MEDIA_TYPE_INVALID', 'Prototype evidence accepts explicit HTML, RGB/RGBA PNG, JSON or Markdown media types matching the file extension');
+    if (seen.has(path.toLowerCase())) fail('PROTOTYPE_EVIDENCE_INVALID', 'Prototype evidence paths must be unique, including case variants');
+    seen.add(path.toLowerCase());
+    if (!['interaction-reference', 'visual-reference'].includes(attachment.purpose)) fail('PROTOTYPE_EVIDENCE_INVALID', 'Prototype purpose must be interaction-reference or visual-reference');
+    if (!Array.isArray(attachment.source_ids) || !attachment.source_ids.length || attachment.source_ids.some(id => !text(id) || id !== id.trim()) || new Set(attachment.source_ids).size !== attachment.source_ids.length) fail('PROTOTYPE_SOURCE_IDS_INVALID', 'Prototype evidence requires a unique non-empty source ID index');
+    if (sourceIndexVerified && attachment.source_ids.some(id => !knownIds.has(id))) fail('PROTOTYPE_SOURCE_IDS_INVALID', 'Prototype source IDs must exist in the actual frozen Packet');
+    if (!Buffer.isBuffer(attachment.bytes) || attachment.bytes.length === 0) fail('PROTOTYPE_BYTES_REQUIRED', 'Attach actual non-empty prototype bytes, never a local path or declared hash');
+    if (attachment.media_type === 'image/png') checkPng(attachment.bytes);
+    else {
+      let body;
+      try { body = new TextDecoder('utf-8', { fatal: true }).decode(attachment.bytes); } catch { fail('PROTOTYPE_MEDIA_TYPE_INVALID', 'Text prototype evidence must contain valid UTF-8 bytes'); }
+      if (body.includes('\0')) fail('PROTOTYPE_MEDIA_TYPE_INVALID', 'Text prototype evidence cannot contain NUL bytes');
+      if (attachment.media_type === 'application/json') {
+        try { JSON.parse(body); } catch { fail('PROTOTYPE_MEDIA_TYPE_INVALID', 'JSON prototype evidence must contain an actual JSON document'); }
+      }
+    }
+    const transported = v2File(path, attachment.media_type, attachment.bytes);
+    files.push(transported);
+    records.push({ ...fileRecord(path, attachment.media_type, transported.bytes), purpose: attachment.purpose, source_ids: [...attachment.source_ids] });
+  }
+  if (records.length) files.push(v2File(prototypeIndex, 'application/json', Buffer.from(canonicalJson({
+    schema_version: 1, usage: 'inert-evidence-only', facts_authority: 'control/brief.md',
+    source_index_validation: sourceIndexVerified ? 'frozen-existing-ids' : 'unverified-source-index', attachments: records
+  }))));
+  return { files, records };
+}
+
+// Shared by structural carrier and original-copy owners. Reconstruct from the
+// actual immutable files so no mutable cache can quietly alter purpose or IDs.
+export function verifyPrototypeEvidence(files, records = [], options = {}) {
+  if (!Array.isArray(files) || !Array.isArray(records)) fail('PROTOTYPE_EVIDENCE_CHANGED', 'Prototype evidence files and manifest records must be complete arrays');
+  const evidenceFiles = files.filter(item => item.path?.startsWith(prototypePrefix));
+  const indexes = files.filter(item => item.path === prototypeIndex);
+  if (!records.length) {
+    if (evidenceFiles.length || indexes.length) fail('PROTOTYPE_EVIDENCE_CHANGED', 'Undeclared prototype evidence is not allowed');
+    return { files: [], records: [] };
+  }
+  if (evidenceFiles.length !== records.length || indexes.length !== 1 || !Buffer.isBuffer(indexes[0].bytes)) fail('PROTOTYPE_EVIDENCE_CHANGED', 'Every declared prototype attachment and its immutable index must be present');
+  const attachments = records.map(record => {
+    if (!record || !text(record.path) || !record.path.startsWith(prototypePrefix)) fail('PROTOTYPE_EVIDENCE_CHANGED', 'Prototype manifest paths must identify evidence attachments');
+    const matches = evidenceFiles.filter(item => item.path === record.path);
+    if (matches.length !== 1 || !Buffer.isBuffer(matches[0].bytes)) fail('PROTOTYPE_EVIDENCE_CHANGED', 'Prototype evidence requires one actual byte attachment per record');
+    return { path: record.path.slice(prototypePrefix.length), media_type: record.media_type, purpose: record.purpose, source_ids: record.source_ids, bytes: matches[0].bytes };
+  });
+  const expected = preparePrototypeEvidence(attachments, options);
+  if (!isDeepStrictEqual(expected.records, records) || !expected.files.at(-1).bytes.equals(indexes[0].bytes) || indexes[0].media_type !== 'application/json' || indexes[0].sha256 !== hash(indexes[0].bytes) || evidenceFiles.some(item => item.sha256 !== hash(item.bytes) || item.media_type !== records.find(record => record.path === item.path)?.media_type)) fail('PROTOTYPE_EVIDENCE_CHANGED', 'Prototype evidence purpose, source index, media type, bytes or immutable metadata changed');
+  return expected;
+}
+
 function v2Source(source) {
   if (!['chain', 'adhoc', 'ux'].includes(source?.mode) || !text(source?.id) || !text(source?.body)) fail('SOURCE_REQUIRED', 'Carrier handoff requires the complete frozen Design Generation Packet body');
   const bytes = Buffer.from(source.body, 'utf8');
@@ -222,6 +293,8 @@ function tacDetails(tacJson, tacMarkdown, sourcePacketSha256, moduleContractHash
   if (markdown.length === 0) fail('TAC_REQUIRED', 'Carrier handoff requires a non-empty readable TAC projection');
   const tac = json.parsed;
   assertTacFields(tac);
+  if (tac.changes.some(change => !['add', 'modify', 'remove', 'preserve', 'refine'].includes(change.action))) fail('TAC_ACTION_INVALID', 'TAC actions must use the explicit supported action vocabulary');
+  if (tac.changes.some(change => change.action === 'refine') && tac.changes.some(change => !['refine', 'preserve'].includes(change.action))) fail('REFINE_MIXED_ACTIONS_UNSUPPORTED', 'Static visual refinement supports only refine and preserve actions; structural changes require a separate frozen handoff');
   const packet = inspectCarrierPacket(packetBody);
   if (packet.source_packet_sha256 !== sourcePacketSha256 || packet.applicability_set_sha256 !== frozen.applicability_set_sha256 || !isDeepStrictEqual(tac.applicability_set, packet.applicability)) fail('TAC_APPLICABILITY_INVALID', 'Applicability must be the complete ordered fact set derived from actual frozen Packet bytes');
   const expectedCarrier = tac.carrier_content_hash ?? tac.template?.carrier_content_hash;
@@ -302,7 +375,7 @@ function recordsFor(files) {
   return files.map(item => ({ path: item.path, media_type: item.media_type, bytes: item.bytes.length, sha256: hash(item.bytes) }));
 }
 
-function manifestFor({ handoffId, namespace, target, binding, frozen, source, closure, carrierHash, tac, reference, files }) {
+function manifestFor({ handoffId, namespace, target, binding, frozen, source, closure, carrierHash, tac, reference, files, prototypeRecords = [] }) {
   const immutable = recordsFor(files);
   const body = {
     schema_version: 2,
@@ -325,7 +398,8 @@ function manifestFor({ handoffId, namespace, target, binding, frozen, source, cl
     control_root: 'control',
     output_root: 'output',
     limits: { file_count: immutable.length + 1, total_bytes: immutable.reduce((sum, item) => sum + item.bytes, 0) },
-    immutable_files: immutable
+    immutable_files: immutable,
+    ...(prototypeRecords.length ? { prototype_evidence: prototypeRecords } : {})
   };
   const handoffBundleHash = canonicalManifestHash(body, immutable);
   return { ...body, handoff_bundle_hash: handoffBundleHash };
@@ -370,6 +444,7 @@ function assertCarrierBundleFresh(bundle) {
   const brief = one(immutable, item => item.path === 'control/brief.md');
   const markdown = one(immutable, item => item.path === 'control/template-adaptation.md');
   if (brief.length !== 1 || markdown.length !== 1 || hash(brief[0].bytes) !== bundle.source_packet_sha256) fail('CARRIER_BUNDLE_CHANGED', 'Missing or stale immutable Packet/Markdown');
+  verifyPrototypeEvidence(immutable, manifest.prototype_evidence, { factIds: inspectCarrierPacket(brief[0].bytes.toString('utf8')).applicability.map(item => item.id), sourceIndexVerified: true });
   tacDetails(tac[0].bytes, markdown[0].bytes, bundle.source_packet_sha256, bundle.module_contract_hash, bundle.carrier_content_hash, draft.binding, draft.frozen_packet, contract, brief[0].bytes.toString('utf8'));
   const fresh = { manifest, immutable, manifestFile: manifestFile[0], contract, changes: parsedTac.changes, packetBody: brief[0].bytes.toString('utf8') };
   if (Object.hasOwn(bundle, 'confirmation')) assertCarrierConfirmation(bundle, fresh);
@@ -381,10 +456,11 @@ function assertCarrierBundleFresh(bundle) {
  * the package, call OD, or imply a user adoption.  The returned bundle hash is
  * what the user must later confirm through confirmCarrierBundle().
  */
-export async function prepareCarrierHandoff({ source, target, handoffId, carrierBinding, baseTemplate, assets = [], assetProfile = 'p0-static-v1', tacJson, tacMarkdown, pageReference, inertStorageReceipt }, { catalog, root, validateCarrierBindingDraft } = {}) {
+export async function prepareCarrierHandoff({ source, target, handoffId, carrierBinding, baseTemplate, assets = [], assetProfile = 'p0-static-v1', tacJson, tacMarkdown, pageReference, inertStorageReceipt, prototypeEvidence }, { catalog, root, validateCarrierBindingDraft } = {}) {
   if (!carrierId(handoffId)) fail('HANDOFF_ID_INVALID', 'handoffId must be a new ASCII letters/numbers/dash/underscore identifier');
   const packet = v2Source(source); const boundTarget = v2Target(target);
-  inspectCarrierPacket(packet.body);
+  const packetFacts = inspectCarrierPacket(packet.body);
+  const prototype = preparePrototypeEvidence(prototypeEvidence, { factIds: packetFacts.applicability.map(item => item.id), sourceIndexVerified: true });
   const draft = await draftValidator({ validateCarrierBindingDraft })(catalog, carrierBinding, { root, packetBody: packet.body });
   const details = bindingDetails(draft);
   if (details.frozen.source_packet_sha256 !== packet.sha256) fail('PACKET_STALE', 'Carrier binding draft must be bound to the exact frozen packet bytes');
@@ -403,10 +479,11 @@ export async function prepareCarrierHandoff({ source, target, handoffId, carrier
     v2File('control/template-adaptation.md', 'text/markdown; charset=utf-8', tac.markdown),
     v2File('control/module-contract.json', 'application/json', Buffer.from(canonicalJson(details.draft.contract))),
     v2File('control/carrier-binding.json', 'application/json', Buffer.from(canonicalJson(details.draft))),
-    v2File('control/page-reference.json', 'application/json', reference.bytes)
+    v2File('control/page-reference.json', 'application/json', reference.bytes),
+    ...prototype.files
   ];
   const namespace = `handoffs/${handoffId}`;
-  const manifest = manifestFor({ handoffId, namespace, target: boundTarget, binding: details.binding, frozen: details.frozen, source: packet, closure, carrierHash, tac, reference, files });
+  const manifest = manifestFor({ handoffId, namespace, target: boundTarget, binding: details.binding, frozen: details.frozen, source: packet, closure, carrierHash, tac, reference, files, prototypeRecords: prototype.records });
   files.push(carrierManifestFile(manifest));
   const bundle = {
     schema_version: 2, bundle_kind: 'carrier', status: 'EXPORTED', handoff_id: handoffId, namespace,
@@ -568,15 +645,197 @@ export function reportCarrierGeneration(staged, report) {
   return { ...staged, status: 'USER_GENERATION_REPORTED', user_generation: { message_ref: report.messageRef } };
 }
 
+function normalizedVisualAttributes(node) {
+  const classes = [...new Set((node.attrs.class ?? '').split(/[\t\n\f\r ]+/).filter(Boolean))].sort();
+  // Normalize CSS whitespace/comments outside quoted values. This establishes
+  // an actual attribute edit, not computed pixels or a proof of interaction.
+  const source = node.attrs.style ?? '';
+  let style = ''; let pendingSpace = false;
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index];
+    if (/\s/.test(char)) { pendingSpace = true; continue; }
+    if (char === '/' && source[index + 1] === '*') {
+      const end = source.indexOf('*/', index + 2);
+      if (end < 0) { style += source.slice(index); break; }
+      index = end + 1; pendingSpace = true; continue;
+    }
+    const punctuation = ':;,()'.includes(char);
+    if (pendingSpace && style && !punctuation && !':;,('.includes(style.at(-1))) style += ' ';
+    pendingSpace = false;
+    if (char === '"' || char === "'") {
+      let quoted = char; let ended = false;
+      while (++index < source.length) {
+        quoted += source[index];
+        if (source[index] === '\\' && index + 1 < source.length) { quoted += source[++index]; continue; }
+        if (source[index] === char) { ended = true; break; }
+      }
+      style += quoted;
+      if (!ended) break;
+    } else style += char;
+  }
+  return { classes, style: style.replace(/;+$/, '') };
+}
+
+// Deliberately bounded synchronous CSS contract, not a general CSS parser or
+// a pixel/behavior proof. Unknown original declarations must stay byte-identical
+// and cannot coexist with a changed supported declaration unless they are known
+// independent longhands. Adding or altering them requires a renderer-backed owner.
+const refineColors = Object.freeze({ black: '#000000ff', silver: '#c0c0c0ff', gray: '#808080ff', white: '#ffffffff', maroon: '#800000ff', red: '#ff0000ff', purple: '#800080ff', fuchsia: '#ff00ffff', green: '#008000ff', lime: '#00ff00ff', olive: '#808000ff', yellow: '#ffff00ff', navy: '#000080ff', blue: '#0000ffff', teal: '#008080ff', aqua: '#00ffffff', orange: '#ffa500ff', transparent: '#00000000', currentcolor: 'currentcolor' });
+const refineSides = ['top', 'right', 'bottom', 'left'];
+const refineCorners = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+function refineColor(value) {
+  const lower = value.toLowerCase();
+  if (Object.hasOwn(refineColors, lower)) return refineColors[lower];
+  if (!/^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(value)) return null;
+  const expanded = lower.length <= 5 ? lower.slice(1).split('').map(char => char + char).join('') : lower.slice(1);
+  return `#${expanded.length === 6 ? expanded + 'ff' : expanded}`;
+}
+function refineLength(value, { negative = false, percent = true } = {}) {
+  const match = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(px|em|rem|%)?$/i.exec(value);
+  if (!match) return null;
+  const number = Number(match[1]); const unit = (match[2] ?? '').toLowerCase();
+  if (!Number.isFinite(number) || (!negative && number < 0) || (!percent && unit === '%') || (!unit && number !== 0)) return null;
+  return number === 0 ? '0' : `${number}${unit}`;
+}
+function refinedDeclaration(property, value) {
+  const lower = value.toLowerCase();
+  const direct = normalized => normalized === null ? null : [[property, normalized]];
+  const box = (prefix, parts, normalize, suffix = '') => {
+    if (!parts.length || parts.length > 4) return null;
+    const values = parts.map(normalize);
+    if (values.some(item => item === null)) return null;
+    const expanded = [values[0], values[1] ?? values[0], values[2] ?? values[0], values[3] ?? values[1] ?? values[0]];
+    return refineSides.map((side, index) => [`${prefix}-${side}${suffix}`, expanded[index]]);
+  };
+  if (['color', 'background-color', 'text-decoration-color', ...refineSides.map(side => `border-${side}-color`)].includes(property)) return direct(refineColor(lower));
+  if (property === 'border-color') return box('border', lower.split(/\s+/), refineColor, '-color');
+  if (property === 'padding' || property === 'margin') return box(property, lower.split(/\s+/), part => property === 'margin' && part === 'auto' ? 'auto' : refineLength(part, { negative: property === 'margin' }));
+  if (/^(?:padding|margin)-(?:top|right|bottom|left)$/.test(property)) return direct(property.startsWith('margin') && lower === 'auto' ? 'auto' : refineLength(lower, { negative: property.startsWith('margin') }));
+  if (['width', 'height', 'min-width', 'min-height', 'max-width', 'max-height'].includes(property)) return direct((['width', 'height'].includes(property) && lower === 'auto') || (property.startsWith('max-') && lower === 'none') ? lower : refineLength(lower));
+  if (property === 'font-size') return direct(['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large', 'xxx-large', 'smaller', 'larger'].includes(lower) ? lower : refineLength(lower));
+  if (property === 'font-weight') return direct(lower === 'normal' ? '400' : lower === 'bold' ? '700' : ['bolder', 'lighter'].includes(lower) ? lower : /^\d+$/.test(lower) && Number(lower) >= 1 && Number(lower) <= 1000 ? String(Number(lower)) : null);
+  if (property === 'font-style') return direct(['normal', 'italic', 'oblique'].includes(lower) ? lower : null);
+  if (property === 'line-height') return direct(lower === 'normal' ? lower : /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(lower) && Number.isFinite(Number(lower)) ? String(Number(lower)) : refineLength(lower));
+  if (property === 'letter-spacing') return direct(lower === 'normal' ? lower : refineLength(lower, { negative: true, percent: false }));
+  if (property === 'opacity') return direct(/^[+]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(lower) && Number(lower) >= 0 && Number(lower) <= 1 ? String(Number(lower)) : null);
+  if (['gap', 'row-gap', 'column-gap'].includes(property)) {
+    const parts = lower.split(/\s+/);
+    const values = parts.map(part => part === 'normal' ? part : refineLength(part));
+    if (values.some(item => item === null) || parts.length > (property === 'gap' ? 2 : 1)) return null;
+    return property === 'gap' ? [['row-gap', values[0]], ['column-gap', values[1] ?? values[0]]] : [[property, values[0]]];
+  }
+  if (property === 'border-radius') {
+    const parts = lower.split(/\s+/);
+    const values = parts.map(part => refineLength(part));
+    if (!parts.length || parts.length > 4 || values.some(item => item === null)) return null;
+    const expanded = [values[0], values[1] ?? values[0], values[2] ?? values[0], values[3] ?? values[1] ?? values[0]];
+    return refineCorners.map((corner, index) => [`border-${corner}-radius`, expanded[index]]);
+  }
+  if (/^border-(?:top-left|top-right|bottom-right|bottom-left)-radius$/.test(property)) return direct(refineLength(lower));
+  return null;
+}
+function inlineCssDeclarations(source) {
+  const parts = []; const delimiters = []; let start = 0; let quote = null;
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index];
+    if (char === '\\') { index++; continue; }
+    if (quote) { if (char === quote) quote = null; continue; }
+    if (char === '"' || char === "'") { quote = char; continue; }
+    if (char === '/' && source[index + 1] === '*') {
+      const end = source.indexOf('*/', index + 2);
+      if (end < 0) fail('REFINE_CSS_UNSUPPORTED', 'Changed inline CSS must have balanced syntax');
+      index = end + 1; continue;
+    }
+    if ('([{'.includes(char)) delimiters.push(char);
+    if (')]}'.includes(char) && delimiters.pop() !== { ')': '(', ']': '[', '}': '{' }[char]) fail('REFINE_CSS_UNSUPPORTED', 'Changed inline CSS must have correctly matched delimiters');
+    if (char === ';' && delimiters.length === 0) { parts.push(source.slice(start, index)); start = index + 1; }
+  }
+  if (quote || delimiters.length) fail('REFINE_CSS_UNSUPPORTED', 'Changed inline CSS must have balanced syntax');
+  parts.push(source.slice(start));
+  return parts.filter(raw => raw.trim()).map(raw => {
+    const match = /^\s*([a-z][\w-]*|--[\w-]+)\s*:([\s\S]*)$/i.exec(raw);
+    const property = match?.[1].toLowerCase() ?? '';
+    const important = /!\s*important\s*$/i.test(match?.[2] ?? '');
+    const value = (match?.[2] ?? '').replace(/\s*!\s*important\s*$/i, '').trim();
+    return { raw, property, important, effects: match ? refinedDeclaration(property, value) : null };
+  });
+}
+// These longhands do not reset or alias any key in refinedDeclaration(). Every
+// other opaque property is conservatively potentially overlapping, independent
+// of order/priority: this avoids incomplete shorthand and logical-alias lists.
+const independentOpaqueCssProperties = new Set(['font-family', 'box-shadow']);
+function opaqueCssMayOverride(property) {
+  return !independentOpaqueCssProperties.has(property);
+}
+function validatedInlineCssChange(before, after) {
+  const previous = inlineCssDeclarations(before); const current = inlineCssDeclarations(after);
+  const opaqueBefore = previous.filter(item => item.effects === null); const opaqueAfter = current.filter(item => item.effects === null);
+  if (!isDeepStrictEqual(opaqueBefore.map(item => item.raw), opaqueAfter.map(item => item.raw))) fail('REFINE_CSS_UNSUPPORTED', 'New or changed CSS must use the supported static property/value contract; unsupported original declarations must remain exact');
+  const effective = declarations => {
+    const values = new Map();
+    for (const declaration of declarations) for (const [key, value] of declaration.effects ?? []) {
+      const prior = values.get(key);
+      if (!prior || declaration.important || !prior.important) values.set(key, { value, important: declaration.important });
+    }
+    return values;
+  };
+  const oldValues = effective(previous); const newValues = effective(current);
+  const changed = [...new Set([...oldValues.keys(), ...newValues.keys()])].filter(key => !isDeepStrictEqual(oldValues.get(key), newValues.get(key)));
+  if (changed.length && opaqueAfter.some(declaration => opaqueCssMayOverride(declaration.property))) fail('REFINE_CSS_UNSUPPORTED', 'An unchanged unsupported declaration may override the proposed CSS change; only known independent original longhands may coexist with changed static CSS');
+  return changed.length > 0;
+}
+
+function completeNonVisualDom(node) {
+  // Whitespace is data in textarea/pre and can affect other text or inline
+  // boundaries. Refinement preserves every text node, including blank ones.
+  if (node.text !== undefined) return { text: node.text };
+  const attrs = Object.fromEntries(Object.entries(node.attrs).filter(([key]) => !['class', 'style'].includes(key)).sort(([a], [b]) => a.localeCompare(b)));
+  return { tag: node.tag, attrs, children: node.children.map(completeNonVisualDom) };
+}
+
+function validateRefinementBoundary(baseHtml, html, baseBytes, outputBytes, changes, modules) {
+  const protectedMarkup = body => [...body.matchAll(/<(script|style)\b(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?<\/\1\s*>|<link\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi)].map(match => match[0]);
+  if (!isDeepStrictEqual(protectedMarkup(baseBytes.toString('utf8')), protectedMarkup(outputBytes.toString('utf8')))) fail('REFINE_GLOBAL_CONTENT_CHANGED', 'Refine must retain every original script, global style and link byte-for-byte');
+  if (!isDeepStrictEqual(structuralDom(baseHtml), structuralDom(html)) || !isDeepStrictEqual(completeNonVisualDom(baseHtml), completeNonVisualDom(html))) fail('REFINE_BUSINESS_DOM_CHANGED', 'Refine must retain every exact text node, business DOM, document topology and non-visual attributes');
+  const scopes = changes.filter(change => change.action === 'refine').map(change => {
+    const target = modules.get(change.module_id);
+    const before = target && anchoredNodes(baseHtml, target.anchor);
+    const after = target && anchoredNodes(html, target.anchor);
+    if (before?.length !== 1 || after?.length !== 1) fail('MODULE_ACTION_FAILED', `Refine requires its exact unique registered module: ${change.change_id}`);
+    const nodes = new Set();
+    const collect = node => { if (node.tag) { nodes.add(node); node.children.forEach(collect); } };
+    collect(before[0]);
+    return { change, nodes, changed: false, cssChanged: false };
+  });
+  const visit = (before, after) => {
+    if (before.attrs.class !== after.attrs.class || before.attrs.style !== after.attrs.style) {
+      const authorized = scopes.filter(scope => scope.nodes.has(before));
+      if (!authorized.length) fail('REFINE_VISUAL_SCOPE_CHANGED', 'Refine cannot change class/style outside its exact authorized modules');
+      if (!isDeepStrictEqual(normalizedVisualAttributes(before), normalizedVisualAttributes(after))) for (const scope of authorized) scope.changed = true;
+      if ((before.attrs.style ?? '') !== (after.attrs.style ?? '') && validatedInlineCssChange(before.attrs.style ?? '', after.attrs.style ?? '')) {
+        for (const scope of authorized) scope.cssChanged = true;
+      }
+    }
+    const left = before.children.filter(node => node.tag);
+    const right = after.children.filter(node => node.tag);
+    left.forEach((node, index) => visit(node, right[index]));
+  };
+  visit(baseHtml, html);
+  for (const scope of scopes) if (!scope.changed) fail('REFINE_NO_VISUAL_CHANGE', `Refine requires an actual class/style change inside its module, not whitespace, comments or attribute formatting: ${scope.change.change_id}`);
+  for (const scope of scopes) if (!scope.cssChanged) fail('REFINE_NO_VALID_CSS_CHANGE', `Static refine requires a determinable effective inline CSS declaration change; class-only or overridden declarations are insufficient: ${scope.change.change_id}`);
+}
+
 function validateCarrierMechanicalEvidence(bundle, outputBytes, evidence, { contract, changes }) {
   if (!contract || !Array.isArray(changes) || !evidence || !Array.isArray(evidence.module_traces) || !Array.isArray(evidence.preserve_invariants)) fail('MECHANICAL_EVIDENCE_REQUIRED', 'Recovery requires caller-verified module traces and preserve invariant evidence');
   const html = parseCarrierDom(outputBytes.toString('utf8'));
-  const baseHtml = parseCarrierDom(one(bundle.files, item => item.path === 'input/base-template.html')[0].bytes.toString('utf8'));
+  const baseBytes = one(bundle.files, item => item.path === 'input/base-template.html')[0].bytes;
+  const baseHtml = parseCarrierDom(baseBytes.toString('utf8'));
   const anchorCount = (tree, anchor) => anchoredNodes(tree, anchor).length;
   const canonicalAnchoredDom = (tree, anchor) => canonicalJson(structuralDom(anchoredNodes(tree, anchor)[0]));
   const beforeMasks = new Map(); const afterMasks = new Map();
   const modules = new Map(contract.modules.map(module => [module.module_id, module]));
   const slots = new Map(contract.slots.map(slot => [slot.slot_id, slot]));
+  if (changes.some(change => change.action === 'refine')) validateRefinementBoundary(baseHtml, html, baseBytes, outputBytes, changes, modules);
   for (const module of contract.modules.filter(item => item.required)) if (anchorCount(html, module.anchor) !== 1) fail('MODULE_ANCHOR_INVALID', `Required module anchor is not unique after generation: ${module.module_id}`);
   const expectedTraces = [];
   const expectedInvariants = [];
@@ -603,7 +862,9 @@ function validateCarrierMechanicalEvidence(bundle, outputBytes, evidence, { cont
       beforeMasks.set(before[0], null);
     } else {
       const generated = structuralDom(after[0]);
-      if (isDeepStrictEqual(original, generated)) fail('MODULE_ACTION_NO_CHANGE', `Action must change actual target structure/content, not comments, whitespace or visual styling: ${change.change_id}`);
+      if (change.action !== 'refine') {
+        if (isDeepStrictEqual(original, generated)) fail('MODULE_ACTION_NO_CHANGE', `Action must change actual target structure/content, not comments, whitespace or visual styling: ${change.change_id}`);
+      }
       if (change.action === 'add') {
         // Addition is insertion inside the slot: its container and every old
         // child stay unchanged and ordered. Replacing placeholder content is
@@ -620,7 +881,7 @@ function validateCarrierMechanicalEvidence(bundle, outputBytes, evidence, { cont
   if (!isDeepStrictEqual(structuralDom(baseHtml, beforeMasks), structuralDom(html, afterMasks))) fail('UNAUTHORIZED_STRUCTURE_CHANGE', 'Business DOM outside the exact authorized targets changed or a target moved; visual-only CSS/class/head changes are separate');
   const actualTraces = evidence.module_traces.map(item => ({ change_id: item?.change_id, source_keys: Array.isArray(item?.source_keys) ? [...item.source_keys].sort() : [], status: item?.status })).sort((a, b) => String(a.change_id).localeCompare(String(b.change_id)));
   const normalizedExpected = expectedTraces.map(item => ({ ...item, status: 'PASS' })).sort((a, b) => a.change_id.localeCompare(b.change_id));
-  if (!isDeepStrictEqual(actualTraces, normalizedExpected)) fail('MODULE_TRACE_INCOMPLETE', 'Every add/modify/remove action must have an exact PASS trace to its TAC source projections');
+  if (!isDeepStrictEqual(actualTraces, normalizedExpected)) fail('MODULE_TRACE_INCOMPLETE', 'Every add/modify/remove/refine action must have an exact PASS trace to its TAC source projections');
   const actualInvariants = evidence.preserve_invariants.map(item => `${item?.module_id}:${item?.invariant_id}:${item?.status}`).sort();
   const normalizedInvariants = expectedInvariants.map(key => `${key}:PASS`).sort();
   if (!isDeepStrictEqual(actualInvariants, normalizedInvariants)) fail('PRESERVE_INVARIANT_FAILED', 'Every declared preserve invariant must have one exact PASS result');
@@ -653,6 +914,11 @@ export function observeCarrierOutput(bundle, staged, readback, authorization) {
   const allExpected = [...immutable, ...namespaceFiles.filter(item => item.path.startsWith(`${bundle.namespace}/output/`))];
   exactNamespaceFiles(allExpected, namespaceFiles, bundle.namespace);
   const output = outputFilesFromReadback(bundle, namespaceFiles);
+  if (fresh.changes.some(change => change.action === 'refine')) {
+    const originalAssets = bundle.files.filter(item => item.path.startsWith('input/assets/')).map(item => ({ path: item.path.slice('input/'.length), bytes: item.bytes }));
+    const actualAssets = output.closure.assets;
+    if (actualAssets.length !== originalAssets.length || originalAssets.some(asset => !actualAssets.some(actual => actual.path === asset.path && actual.bytes.equals(asset.bytes)))) fail('REFINE_ASSETS_CHANGED', 'Refine must retain all original asset paths and bytes without adding output assets');
+  }
   if (output.index.bytes.equals(one(bundle.files, item => item.path === 'input/base-template.html')[0].bytes)) fail('OUTPUT_BASE_MASQUERADE', 'base-template.html copied or renamed as output is not a derivative');
   const mechanicalEvidence = validateCarrierMechanicalEvidence(bundle, output.index.bytes, readback.mechanical_verification, fresh);
   const after = inventory(readback.post_inventory, 'Post-generation inventory');
@@ -689,19 +955,22 @@ function assertReferenceBundleFresh(bundle) {
   const manifest = strictControlJson(manifestFile[0].bytes, 'control/handoff-manifest.json').parsed;
   const records = recordsFor(immutable);
   if (manifest.bundle_kind !== 'reference_only' || manifest.handoff_bundle_hash !== bundle.handoff_bundle_hash || canonicalManifestHash(manifest, records) !== bundle.handoff_bundle_hash || !isDeepStrictEqual(manifest.immutable_files, records) || ['carrier_content_hash', 'module_contract_hash', 'tac_sha256', 'carrier_profile'].some(key => key in manifest)) fail('REFERENCE_BUNDLE_CHANGED', 'Reference-only manifest/hash changed or leaked carrier semantics');
+  verifyPrototypeEvidence(immutable, manifest.prototype_evidence);
   return { manifest, immutable };
 }
 
-export async function buildReferenceOnlyHandoff({ handoffId, ...args }, options) {
+export async function buildReferenceOnlyHandoff({ handoffId, prototypeEvidence, ...args }, options) {
   if (!carrierId(handoffId)) fail('HANDOFF_ID_INVALID', 'reference_only requires a new safe handoffId');
   const legacy = await buildDesignHandoff(args, options);
   const namespace = `handoffs/${handoffId}`;
-  const files = legacy.files.map(item => v2File(item.name === 'reference.png' ? 'control/reference.png' : `control/${item.name}`, item.mediaType, item.bytes));
+  const prototype = preparePrototypeEvidence(prototypeEvidence);
+  const files = [...legacy.files.map(item => v2File(item.name === 'reference.png' ? 'control/reference.png' : `control/${item.name}`, item.mediaType, item.bytes)), ...prototype.files];
   const records = recordsFor(files);
   const manifestBody = {
     schema_version: 2, bundle_kind: 'reference_only', handoff_id: handoffId, namespace, target: legacy.target,
     source_packet_sha256: legacy.source.sha256, reference_output_profile: 'single', control_root: 'control', output_root: 'output',
-    limits: { file_count: records.length + 1, total_bytes: records.reduce((sum, item) => sum + item.bytes, 0) }, immutable_files: records
+    limits: { file_count: records.length + 1, total_bytes: records.reduce((sum, item) => sum + item.bytes, 0) }, immutable_files: records,
+    ...(prototype.records.length ? { prototype_evidence: prototype.records } : {})
   };
   const manifest = { ...manifestBody, handoff_bundle_hash: canonicalManifestHash(manifestBody, records) };
   files.push(referenceManifestFile(manifest));
@@ -724,7 +993,9 @@ export function verifyReferenceReadback(bundle, readback) {
   if (before.some(item => item.path.startsWith(`${bundle.namespace}/`))) fail('NAMESPACE_NOT_FRESH', 'Reference handoff namespace existed before stage');
   const expected = bundle.files.map(item => fullPath(bundle.namespace, item.path));
   assertInventoryDelta(before, after, new Set(expected));
+  if (after.filter(item => item.path.startsWith(`${bundle.namespace}/`)).length !== expected.length || expected.some(path => !after.some(item => item.path === path))) fail('READBACK_EXTRA_FILE', 'Reference post-stage namespace must contain every immutable file exactly');
   exactNamespaceFiles(bundle.files, readback.files, bundle.namespace);
+  assertReadbackInventory(readback.files, after);
   return { status: 'STAGED', bundle_kind: 'reference_only', tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, read_ref: readback.readRef, post_inventory: after };
 }
 
@@ -739,6 +1010,7 @@ export function observeReferenceOutput(bundle, staged, readback, authorization) 
   exactNamespaceFiles([...immutable, index[0]], readback.files, bundle.namespace);
   const after = inventory(readback.post_inventory, 'Post-generation inventory');
   assertInventoryDelta(staged.post_inventory, after, new Set([index[0].path]));
+  assertReadbackInventory(readback.files, after);
   return { status: 'GENERATED_OBSERVED', bundle_kind: 'reference_only', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, read_ref: readback.readRef, output: { entry: 'output/index.html', sha256: hash(index[0].bytes), bytes: index[0].bytes.length } };
 }
 

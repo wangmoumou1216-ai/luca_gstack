@@ -102,8 +102,9 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
         IF execution_context == main_agent：
           主 Agent 直接读取 SKILL.md，在当前对话上下文执行
           （skill 内部协议负责写 handoff，Orchestrator 不重复写）
-          skill 完成后：向用户展示"<skill> 已完成，继续下一 Phase？"等待确认
-          用户确认后继续（不更新 workflow-state.yaml，该文件是 Skill Workflow Mode 专属）
+          skill 完成后展示产出与判定；已有明确后续授权且无未决 Human Gate 时继续，
+          缺授权或需要采用/产品取舍时等待真实确认，不重复已确认事实。
+          （不更新 workflow-state.yaml，该文件是 Skill Workflow Mode 专属）
         → 进入 2c 测试环节（断言：handoff 文件存在 + gate_result PASS）
       ELSE（phase_type == task_execution，默认）：
         按编排模式执行：
@@ -289,10 +290,17 @@ Step 7  记录 eval（每个 skill 各记一条）
 
 ```
 Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → topic, scene, 各 node status
-Step 2  读 optional-workflow-graph.yaml → 当前 scene 的 recommended_path
-Step 3  根据复杂度信号推荐路径变体（见 §3.3）
-Step 4  找到第一个 status=PENDING 的 node
-Step 5  读上游 node 的 handoff summary（`<WORK_ROOT>/docs/handoff/`）
+Step 2  继承用户已选流程及当前精确输入；输入 entry 与 scene 分开。
+        已选路径存在 → 沿其恢复已完成节点，不重跑；
+        选择直接设计且输入就绪 → 读 optional-workflow-graph.yaml 的 design_entry_paths，
+        按 pipeline / existing_requirements / prototype_visual_refinement 选 Brief 起始路径；
+        不要求用户另说“跳过”，也不因无 PRD 先补完整需求链。
+Step 3  仅尚需发现或明确选择场景整链时按 scene 推荐路径变体（见 §3.3）；
+        机制/多方案未定回对应 owner；关键入口不明等待真实答案。
+Step 4  只在本次选定路径内找第一个 status=PENDING 的 node；
+        路径外节点不伪标 DONE，不拿它们的 handoff 阻塞短入口。
+Step 5  读本次路径实际选定上游的精确 handoff summary（`<WORK_ROOT>/docs/handoff/`）；
+        已有需求/原型直接来源由 Brief 继承，不制造上游 handoff。
 Step 6  执行技能循环（见 §3.4）
 ```
 
@@ -315,6 +323,8 @@ Scene C            → [ux-audit → design-brief → open-design]
 Scene D            → 全量路径（Agent化本身是高复杂度）
 ```
 
+本节场景复杂度建议不能覆盖 §3.2 已选路径或就绪设计入口；Brief 仍执行全部质量门，
+短路径仅省去不适用的上游，不省略状态、来源、模板冲突、冻结或最终采用。
 各 scene 的 `fallback_paths` 只供用户明确改选或已批准具名备用计划时使用；
 OD daemon 不可达而无该授权时暂停，报告连接问题，不自动 dispatch 其他生成器。
 
@@ -324,6 +334,7 @@ OD daemon 不可达而无该授权时暂停，报告连接问题，不自动 dis
 WHILE 有 PENDING 节点:
 
   3.4a  检查 handoff gate（optional-workflow-graph.yaml）
+        仅检查本次路径真实适用的 gate，遵守 applies_when；
         IF gate blocked → 告知用户缺什么 → PAUSE
 
   3.4a-pf  【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，传入 skill_name + topic
@@ -344,8 +355,10 @@ WHILE 有 PENDING 节点:
         - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS 再询问用户
           （修复 / 跳过=DONE_WITH_CONCERNS / 终止）——不留"DONE 但 gate FAIL"的矛盾态
 
-  3.4e  human-in-the-loop 检查点（以下 skill 完成后必须等确认）：
-        brainstorm / ux-brainstorm / design-brief / html-prototype
+  3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief / html-prototype
+        有未决方案、范围或采用决定时等待真实确认；已确认事实/所选工具/后续授权直接继承。
+        Brief 完成不产生新的执行授权；同一已授权链可以继续，但最终 bundle/TAC采用、
+        未决产品决定及新 effect 的 Human Gate 保持，不能以“自动”绕过。
 
   3.4f  用户确认后，将采纳决策标记 [ADOPTED]，否决方案标记 [REJECTED]
 ```

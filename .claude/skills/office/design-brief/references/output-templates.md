@@ -10,15 +10,15 @@
 ```
 【设计坐标系】
 
-本次设计必须解决的问题（来自 PRD P0 用户故事 / ux-audit P0 问题）：
+本次设计必须解决的问题（来自实际需求/原话/原型任务/已选方案；有PRD/audit时引用其ID）：
   1. {问题ID}：{问题简述}
   2. ...
 
-本次设计可以借鉴的范式（来自 native-design / inspired-design）：
+本次设计可以借鉴的范式（来自已选方案/实际研究；纯精修可写继承原型及理由）：
   1. {范式名称}：{对本次设计的含义}
   2. ...
 
-本次设计绝对不能碰的范围（来自 prd-constraints.md Not-Do List）：
+本次设计绝对不能碰的范围（来自本轮修改/保持范围；有prd-constraints时继承Not-Do List）：
   1. {不做事项}
   2. ...
 
@@ -26,7 +26,7 @@
   结论：AI {介入 / 不介入}
   [若介入] 范式：{对话式替代 / 嵌入式预测 / 代理式执行 / 决策增强}
   [若介入] 介入节点：{具体交互节点，例："填写跟进记录时" / "筛选客户列表时"}
-  [若不介入] 理由（4 选 1）：{超出语料 / 竞品证据 / 技术前提 / 场景不适合} — {一句话}
+  [若不介入] 理由：{实际任务不需要AI / 本轮只精修并继承机制 / 其他有源理由} — {一句话}
 ```
 
 ---
@@ -38,8 +38,10 @@
 
 - **决策内容：** {做什么，一句话}
 
-- **设计理由：** {为什么这样做，必须引用以下之一}
-  - PRD P0 故事：{引用具体故事编号}
+- **设计理由：** {为什么这样做，引用实际来源之一（无PRD不阻断设计源追踪）}
+  - 已有需求/原话：{来源ID与精确位置}
+  - 原型继承：{版本、节点/路径/操作证据；本轮保持理由}
+  - PRD P0 故事：{引用实际故事编号}
   - ux-audit 发现：{引用具体 issue ID}
   - native-design / inspired-design 方案：{引用具体节}
   - ai-native-design-framework：{引用具体范式或原则}
@@ -69,7 +71,7 @@
 
 - **PRD 约束引用：** {prd-constraints.md 对应条目编号或具体引用}
   场景 A 可以写 "N/A — 新功能，无 prd-constraints"。
-  场景 B / C / D 必填，留空视为决策不完整。
+  场景 B / C / D 必填；没有PRD时引用本轮明确修改/保持边界，不伪造约束文件。
 ```
 
 ---
@@ -86,7 +88,7 @@
 
 **生成目标**
 - 页面 / 组件名称：{name}
-- 目标平台：{desktop CRM / mobile / embedded component}
+- 目标平台：{实际 desktop / mobile / embedded 平台；不从模板推断产品}
 - 输出目标：{用户所选工具 / 尚未选择；Open Design 为默认推荐}
 - 目标依据：{正文 Phase 6 的来源记录}
 
@@ -123,7 +125,12 @@
 
 **设计约束**
 - {正文中的产品、交互、权限与平台约束}
-- 设计系统：由用户在 OD / Claude Design 配置，本包不覆盖其视觉设置
+- 设计系统：由用户在 OD / Claude Design 配置，本包不覆盖其视觉设置；用户明确的行为/保持范围仍须落实
+
+**行为保持与执行自由度**
+- {原型/已选方案必须保留的行为、数据语义、权限、状态与范围；无原型引用当前设计源}
+- {允许生成工具决定的视觉表达；改变产品行为需另确认}
+- {逐项Given/When/Then验收，已在正文中有来源}
 
 **不得实现**
 - {rejected direction}
@@ -131,13 +138,13 @@
 ```
 
 > **Packet 填写指引**
-> **OD 交付边界**：接收方（尤其 Open Design）是自带 design system 与 UI 专业能力的 UI 生成器。Packet 只承载 **UI 之前的设计事实**。灰区判据——这条是在陈述「用户/交互/内容必须达成什么」（可写），还是在替生成工具决定「界面长什么样」（不可写）？px/pt 值、对齐与列布局指令、具体控件选型、逐字文案**不得写入任何块**。显式例外：经验证的 ux-audit P0 问题可携带**验收标准**进入，但不得写成布局处方。
+> **OD 交付边界**：接收方（尤其 Open Design）是自带 design system 与 UI 专业能力的 UI 生成器。Packet 只承载 **UI 之前的设计事实**。灰区判据——这条是在陈述「用户/交互/内容必须达成什么」（可写），还是在替生成工具决定「界面长什么样」（不可写）？模型自行追加的 px/pt、布局、控件与逐字文案处方不得写入。用户明确要求保持的文字、结构、位置或视觉约束属于来源事实，完整继承并标来源/适用范围；与工具设计系统或载体能力冲突时报告，不静默删去。显式例外：经验证的 ux-audit P0 问题可携带**验收标准**进入，但不得写成布局处方。
 > **交互结构·信息架构子字段**：按 interaction-architecture 的 IA 判据（§1.6）填——层级 ≤3、命名取用户词汇、含混项显式标出；写「必须达成什么」，不画菜单树。
 > **状态覆盖块**：每状态的 UI expectation 写**语义期望**（如"空态含引导动作""错误可单击重试且保留输入"），内容语义以 brief 正文 Phase 3 的声明为源（Packet 不得含正文没有的事实）。
 > **位置映射块**：从正文第 7 节引用语义位置、职责及完整 D/STATE/AC，机器门名为 `page_interaction_mapping`。无参考不免除本块，所有核心决策和全部非 N/A 状态都须有下游去向；不得改填组件名、variant、Tailwind/CSS 或品牌色配额。
-> **冻结与模板运输边界**：唯一执行合同是 `.claude/skill-os/runtime/page-context.md`。先冻结本 Packet，才由交接入口执行最终 `carrier-binding`；Phase-A `CandidateHint` 从不进入 Packet 或代替 adoption。有效 binding、`page-reference.json`、TAC 和 hash 是指向冻结 Packet 的**独立运输元数据**，不反写正文/第 7 节，也不复制出第二套需求。无最终绑定或用户拒绝模板时用互斥 `reference_only` bundle；它没有 base template、TAC、carrier hash 或模板衍生承诺。
+> **冻结与模板运输边界**：唯一执行合同是 `.claude/skill-os/runtime/page-context.md`。先冻结本 Packet，才由交接入口执行最终 `carrier-binding`；Brief冻结前的模板选择/语义适配草稿可迭代；Phase-A `CandidateHint` 从不进入 Packet 或代替 adoption。冻结后重核版本与全量事实，不重做已确认选型。有效 binding、`page-reference.json`、TAC 和 hash 是指向冻结 Packet 的**独立运输元数据**，不反写正文/第 7 节，也不复制出第二套需求。用户明确不用/拒绝模板，或未指定模板且没有最终绑定时用互斥 `reference_only` bundle；已指定原件或未决适配冲突不得借此跳过。它没有 base template、TAC、carrier hash 或模板衍生承诺。
 > **carrier 的视觉边界**：`structural_carrier` 只借 DOM、登记模块和内容结构；CSS/token/assets 不是视觉验收标准，OD 的设计系统仍由用户配置。只有显式 `visual_carrier` 且同时有 viewport、截图基线与允许差异阈值，才能把模板视觉作为约束。
-> **授权与可达材料**：最终 binding/adoption 不授予 OD stage；stage、run、recover 分别需要自己的授权。接收方可达的参考材料须通过 control files/实际附件提供，本机路径不是附件。
+> **授权与可达材料**：最终 binding/adoption 不授予 OD stage；stage、run、recover 分别需要自己的授权。接收方可达的参考材料须通过 control files/实际附件提供，本机路径不是附件。已有原型由 prototypeEvidence 以 inert evidence 实际bytes附加，并纳入manifest/完整读回；行为保持事实在Packet正文，附件不当第二事实源。
 > **目标与设计系统**：工具及平台继承正文来源；设计系统由用户在 OD / Claude Design 内配置，本包不注入旧 token 或组件技术映射。Claude Design 使用同包人工附加，导出、外部接收、生成完成分别记录。
 
 ---
@@ -146,7 +153,7 @@
 
 上面的目标、用户任务、交互结构、D 决策、状态、位置、约束和不得实现项全部保留；需要 carrier
 时，将这些事实逐条放入下面唯一 document，而不是同时维护 Markdown 正文和第二份事实清单。
-已有上游稳定 ID 原样保留；无 ID 的目标/边界在 design-brief 内补稳定 ID 后再冻结，不在交接期发明。
+已有上游稳定 ID 原样保留；已有需求/原型无PRD时用本轮REQ-/AC-/SRC-来源ID，不伪造R/AE。无 ID 的目标/边界在 design-brief 内补稳定 ID 后再冻结，不在交接期发明。
 完整事实写入 `text`，包括理由、位置、关联 ID、非 N/A 状态与验收方式；不得只放摘要或 ID。
 
 ```js
@@ -191,7 +198,8 @@ TAC 使用 inspector 返回的全部 applicability，不能重编 ID、手填 ha
 
 **下游 MagicPath / Open Design / Claude Design / HTML 生成器需要知道：**
 - 主输入是本文件的 `Design Generation Packet`
-- 设计范围（来自 PRD）
+- 设计范围（来自实际设计源）；entry/delivery_mode/coverage_scope 与精确来源索引
+- 原型保持/生成工具自由度/模板适配旁车与关键未决项；无PRD时工程交付限制
 - 输出目标、平台与整页/局部范围及各自来源
 - 状态覆盖策略、页面与交互位置映射路径、确认参考或 reference=none
 - Packet 已冻结；`CandidateHint` 不是 Packet 字段或最终模板 binding。carrier 仅在最终 adoption + TAC/hash 确认后存在，否则是 `reference_only`
@@ -210,7 +218,7 @@ TAC 使用 inspector 返回的全部 applicability，不能重编 ID、手填 ha
 
 **对生成工具的命令式指示（逐条执行）：**
 1. 读取本文件的"体验验证结论"节的 12 状态覆盖表
-2. 对每个"是否需要单独设计 = 是"的状态，**必须**生成对应的状态页
+2. 对每个"是否需要单独设计 = 是"的状态，**必须**提供可观察的对应状态表现，保留原型已确认的内联/弹层/页面机制；不能一律变成独立页面
 3. HTML 产物用 `<!-- STATE: xxx -->` 注释标注；其他工具提供可核对的状态位置索引，保留 D/STATE/AC 追踪
 4. 若发现状态覆盖表某状态写 N/A 但本质上应该有，**不得静默补充**，返回 AskUserQuestion 确认
 5. 外部工具以冻结 `Design Generation Packet` 为唯一需求真相；carrier 的 TAC 只能投影其已有片段，`reference_only` 不产生模板衍生承诺

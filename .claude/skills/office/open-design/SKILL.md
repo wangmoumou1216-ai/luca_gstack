@@ -46,7 +46,7 @@ done
 python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null || true
 ```
 
-> **模型（核心）：** luca_gstack 负责「已整理需求 → Phase-A 非绑定 CandidateHint → design-brief 冻结 Packet
+> **模型（核心）：** luca_gstack 负责「已就绪设计输入 → Brief内模板选择/非绑定语义适配 → design-brief 冻结 Packet
 > → 最终页面/模块 binding → TAC 草案 → 真人确认 adoption + TAC/hash → stage immutable bundle
 > （=STAGED，不是生成）→ **默认交你在 OD 桌面端按生成** → 你说「拉回来」按 handoff ID 的指定 output root 回收」。headless 一次性出图
 > （经 daemon /api/chat）为 **opt-in**：仅你显式要求"让 agent 自动出/用 headless"且另有 run 授权才走。
@@ -79,12 +79,12 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 > **headless 失败处理（可执行规则）：** retry 上限 1 后回落 Phase 3D 桌面端（不稳的具体表现权威见 Phase 3H）；不为它再造 auth/credit 探测。
 > **鉴权前置（正面约束）：** OD spawn 的本机 claude env 的 `USER` 须为真实用户名（如 `luca`）才走订阅；`USER` 缺失/为空/错值会回退 API-credit 账户报「Credit balance is too low」，`LOGNAME` 不顶用。
 
-**0c. Phase-A 与最终 binding 的边界：** design-brief 里的 `CandidateHint` 是已整理需求阶段的内部、短期
-发现结果，不能作为 page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1
-并冻结 Packet；只有随后完整读取 `.claude/skill-os/runtime/page-context.md`，运行其最终
+**0c. Brief适配与最终 binding 的边界：** design-brief 里的 `CandidateHint` 是已整理需求阶段的内部、短期
+发现结果；Brief内已确认模板/位置及非绑定适配草稿可继承并重核版本，不重新定义产品或逼用户重述。草稿不能作为 page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1
+并冻结 Packet；正式绑定时完整读取 `.claude/skill-os/runtime/page-context.md`，运行其最终
 `carrier-binding` 验证、隔离预览和真人 adoption，才可进入 `carrier`。Phase-A `NO_HINT` 不替代
-最终完整目录判断；最终无合格候选、用户拒绝或明确不用模板均不阻塞已对齐 Packet 交接，但只能走
-互斥 `reference_only`，绝不得称模板衍生。需求/位置有歧义则先按该合同澄清，不能借降级越过人类门。
+最终完整目录判断；未指定模板且最终无合格候选，或用户明确拒绝/撤回模板约束、明确不用模板，均不阻塞已对齐 Packet 交接，但只能走
+互斥 `reference_only`，绝不得称模板衍生。已指定模板仍有动作/状态冲突时先 NEEDS_CONTEXT/BLOCKED，须有来源的解决或真人明确撤回模板约束；不能借降级越过人类门。
 页面/模板采用不授予 OD stage；stage、run、recover 各自独立授权。recover 跳过本步骤。
 
 ---
@@ -96,6 +96,7 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 源复制不授权重设视觉或交互；用户要求保持的样式、结构和行为不得被 structural profile 或外部 DS 默认覆盖。
 页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
 page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
+精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
 当前原件适配器只支持自包含 HTML；若原 CSP 未阻断的外置 CSS/JS/图片/字体依赖没有经审计后一并运输，
 组包必须以 `ORIGINAL_ASSETS_REQUIRED` 停住，不能只上传 HTML 或改写依赖来宣称原件完整。
 
@@ -103,7 +104,7 @@ page-context §7），不调用只支持静态重排的 carrier helper。该路�
 - **chain**：把已通过门禁的**冻结 Design Generation Packet**逐字节作为唯一需求主体；不倒 PRD/research 原文。
 - **adhoc**：以用户点名产物**原文**为主体，忠实传递，不替它发散/编造；adhoc 不具备冻结 Packet 时只能是 `reference_only`，不得临时伪造 carrier/TAC。
 - 用户在冻结前额外强调的需求必须回到 design-brief 整理并冻结新 Packet；冻结后不得把对话补充悄悄追加为
-  carrier 需求。真实中文 B2B 文案，不要 Lorem。
+  carrier 需求。内容沿Brief已确认语言与术语，不填Lorem，不从模板推断产品或领域。
 
 **正文与参考：** 完整保留已对齐源中的需求/AC、D 决策及依据、非 N/A 状态、被否决方向、改/保留边界。
 每条稳定 ID 必须与其完整原文一起传递；只有 ID 的清单不是需求正文。交接前逐项核对需求、AC 与 KEEP 边界。
@@ -336,7 +337,7 @@ output root 与 bundle hash**（供日后 scoped recover 定位）。
 
 1. **Packet 是唯一需求事实，先冻结再绑定**：Phase-A `CandidateHint` 只是内部短期发现，绝不写入 Packet、
    绑定或 TAC。最终 `carrier-binding` 必须在冻结 Packet 后重新验证，且真人 adoption + TAC/hash 确认不可省略。
-2. **carrier 与 `reference_only` 互斥**：无最终绑定、用户拒绝或明确不用模板就走 `reference_only`；它不含
+2. **carrier 与 `reference_only` 互斥**：未指定模板且无最终绑定、用户拒绝或明确不用模板才走 `reference_only`；指定原件/未决冲突不能借此跳过；它不含
    base/assets/TAC/carrier hash，截图/参考也绝不能称为模板衍生。
 3. **structural 与 visual 精确区分**：`structural_carrier` 只继承 DOM/登记模块/内容结构，不继承视觉验收；
    `visual_carrier` 需明确人类选择 + viewport/基线/差异阈值。不得静默使用模板 CSS/token 作为 OD 设计系统。
@@ -347,7 +348,7 @@ output root 与 bundle hash**（供日后 scoped recover 定位）。
 6. **recovery 永远按 handoff ID/output root**：不全项目枚举 HTML、不猜最近产物、不从 input 复制/改名 base。
    `single` 只允许指定 `output/index.html` 及闭包；额外/未知文件一律 BLOCKED，不自动删除证据。
 7. **本地 token/技术组件映射不注入交接包**；设计系统由用户在外部工具配置，缺本地资产不阻塞。
-8. **输入是设计产出**（冻结交互 Packet 或单点方案 md），不是 PRD、不是已生成 HTML；源缺失不静默建空项目。
+8. **输入是设计产出**（冻结交互 Packet 或单点方案 md），原始PRD/需求或已生成HTML先由Brief归一化为完整契约；已有原型可作不可变证据附件，不能以HTML替代需求事实。源缺失不静默建空项目。
 9. **Codex 不假设 OD carrier parity**：仅在该 harness 的 capability probe 有成功证据后才可执行 carrier stage/run/recover；
    此前拒绝或受控降级。桌面端动态端口仍须每段重测，`/api/chat` 必须带 `agentId`。
 10. **traceability 与状态诚实标注**：`EXPORTED → STAGED → USER_GENERATION_REPORTED|OD_RUN_OBSERVED → GENERATED_OBSERVED → RECOVERED`；

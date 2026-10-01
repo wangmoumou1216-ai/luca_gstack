@@ -11,6 +11,11 @@ const check = (actions, html, replace, code) => {
   return code ? assert.rejects(run,{code}) : run;
 };
 try {
+  await assert.rejects(locateOriginalEditRanges(base,[preserve],{browser}),{code:'ORIGINAL_NO_CHANGE'});
+  const preservationLocation = await locateOriginalEditRanges(base,[preserve],{browser,allowPreserveOnly:true});
+  assert.equal(preservationLocation.targets.length,1);
+  assert.equal(preservationLocation.execution_allowed,false);
+  await assert.rejects(verifyOriginalEditedOutput({base,output:base,actions:[preserve],edits:[]},{browser,allowPreserveOnly:true}),{code:'ORIGINAL_NO_CHANGE'},'location-only permission cannot authorize a no-change derivative');
   const ranges = await locateOriginalEditRanges(base,[action('modify'),preserve],{browser});
   assert.equal(ranges.targets.length,2);
   assert.equal(base.subarray(ranges.targets[0].start_byte,ranges.targets[0].end_byte).toString(),'<div id="edit">Before</div>');
@@ -37,6 +42,38 @@ try {
   assert.equal((await verifyOriginalEditedOutput({base,output:Buffer.from(base.toString().replace('隐藏','新内容')),actions:hidden,edits:[{action_id:'C-01',html:'新内容'}]},{browser})).status,'PASS');
   const duplicate = Buffer.from('<main><p id="edit">A</p><p id="edit">B</p></main>');
   await assert.rejects(locateOriginalEditRanges(duplicate,[action('modify')],{browser}),/missing or ambiguous/);
+  const refineBase = Buffer.from('<!doctype html><html><head><style>.card{color:red}</style></head><body><nav id="keep">Original</nav><section id="edit" class="card" style="color:red"><button id="go" onclick="openDetail()" aria-expanded="false">Go</button><!-- original comment --><template id="local"><p>Hidden</p></template></section><script>function openDetail(){window.opened=true}</script></body></html>');
+  const originalOuter = '<section id="edit" class="card" style="color:red"><button id="go" onclick="openDetail()" aria-expanded="false">Go</button><!-- original comment --><template id="local"><p>Hidden</p></template></section>';
+  const refinedOuter = originalOuter.replace('class="card"','class="card polished"').replace('style="color:red"','style="color:blue; padding:12px"').replace('<button id="go"','<button class="primary" id="go"');
+  const refineCheck = (html, code, output = Buffer.from(refineBase.toString().replace(originalOuter,html))) => {
+    const run = verifyOriginalEditedOutput({base:refineBase,output,actions:[action('refine'),preserve],edits:[{action_id:'C-01',html}]},{browser});
+    return code ? assert.rejects(run,{code}) : run;
+  };
+  const refinement = await refineCheck(refinedOuter);
+  assert.equal(refinement.profile,'original-ui-refinement-v1');
+  assert.equal(refinement.business_dom_preserved,true);
+  assert.equal(refinement.source_executed,false);
+  for (const invalid of [originalOuter.replace('>Go<','>New task<'),originalOuter.replace('onclick="openDetail()"','onclick="differentBehavior()"'),originalOuter.replace('aria-expanded="false"','aria-expanded="true"'),originalOuter.replace('<button','<a').replace('</button>','</a>'),originalOuter.replace('<!-- original comment -->','<!-- changed -->'),originalOuter.replace('>Go<','> Go <'),originalOuter.replace('<p>Hidden</p>','<p>Changed hidden behavior</p>')]) await refineCheck(invalid,'ORIGINAL_REFINEMENT_BUSINESS_CHANGED');
+  for (const noop of [originalOuter,originalOuter.replace('class="card"','class=" card card "'),originalOuter.replace('style="color:red"','style="color: red;"'),originalOuter.replace('style="color:red"','style="color:red;invalid-color:xyz"')]) await refineCheck(noop,'ORIGINAL_NO_CHANGE');
+  for (const style of ['background-image:url(data:image/png;base64,AA==)','background-image:url(https://example.invalid/asset.png)',String.raw`background-image:u\72l(data:image/png;base64,AA==)`,'background-image:image-set("data:image/png;base64,AA==" 1x)','behavior:url(#default#VML)']) await refineCheck(originalOuter.replace('style="color:red"',`style="${style.replaceAll('"','&quot;')}"`),'ORIGINAL_REFINEMENT_ASSET_CHANGED');
+  await refineCheck(refinedOuter,'ORIGINAL_OUTSIDE_EDIT_CHANGED',Buffer.from(refineBase.toString().replace(originalOuter,refinedOuter).replace('Original</nav>','Changed</nav>')));
+  const scriptTarget = Buffer.from('<main id="edit"><script>window.keep=true;</script><p>Keep</p></main>');
+  const changedScript = scriptTarget.toString().replace('<script>','<script class="new">');
+  await assert.rejects(verifyOriginalEditedOutput({base:scriptTarget,output:Buffer.from(changedScript),actions:[action('refine')],edits:[{action_id:'C-01',html:changedScript}]},{browser}),{code:'ORIGINAL_ACTIVE_CONTENT_CHANGED'});
+  await assert.rejects(locateOriginalEditRanges(refineBase,[action('refine'),{...preserve,action:'modify'}],{browser}),{code:'ORIGINAL_REFINEMENT_PROFILE'});
+  const hiddenRefineAction = {...action('refine','state'),scope:[{template_id:'hidden',path:[0,1,3]}]};
+  assert.equal((await verifyOriginalEditedOutput({base,output:Buffer.from(base.toString().replace('<p id="state">隐藏</p>','<p id="state" class="state polished" style="padding:8px">隐藏</p>')),actions:[hiddenRefineAction],edits:[{action_id:'C-01',html:'<p id="state" class="state polished" style="padding:8px">隐藏</p>'}]},{browser})).profile,'original-ui-refinement-v1');
+  const voidRefine = Buffer.from('<main><input id="edit" type="text" value="preserve"></main>');
+  const polishedInput = '<input id="edit" class="field" type="text" value="preserve">';
+  assert.equal((await verifyOriginalEditedOutput({base:voidRefine,output:Buffer.from(voidRefine.toString().replace('<input id="edit" type="text" value="preserve">',polishedInput)),actions:[action('refine')],edits:[{action_id:'C-01',html:polishedInput}]},{browser})).status,'PASS');
+  const iconBase = Buffer.from('<main id="edit"><svg viewBox="0 0 10 10"><path d="M0 0L10 10" stroke="currentColor"></path></svg><button>Keep</button></main>');
+  const iconRefined = iconBase.toString().replace('<main id="edit">','<main id="edit" class="polished">');
+  assert.equal((await verifyOriginalEditedOutput({base:iconBase,output:Buffer.from(iconRefined),actions:[action('refine')],edits:[{action_id:'C-01',html:iconRefined}]},{browser})).business_dom_preserved,true);
+  const assetBase = Buffer.from('<main id="edit" style="background-image:url(data:image/png;base64,AA==);color:red">Keep</main>');
+  const assetRefined = assetBase.toString().replace('color:red','color:blue');
+  assert.equal((await verifyOriginalEditedOutput({base:assetBase,output:Buffer.from(assetRefined),actions:[action('refine')],edits:[{action_id:'C-01',html:assetRefined}]},{browser})).status,'PASS','existing embedded resource remains byte-identical while a separate visual property changes');
+  const assetChanged=assetRefined.replace('AA==','AQ==');
+  await assert.rejects(verifyOriginalEditedOutput({base:assetBase,output:Buffer.from(assetChanged),actions:[action('refine')],edits:[{action_id:'C-01',html:assetChanged}]},{browser}),{code:'ORIGINAL_REFINEMENT_ASSET_CHANGED'});
   assert.ok(base.toString().includes('window.originalBehavior=true;'));
-  console.log('PASS: raw original add/modify/remove/preserve and hidden state; outside bytes, script injection, no-op comments, duplicate locators and HTML parser escape rejected');
+  console.log('PASS: original functional edits and isolated class/style refinement, including void nodes and hidden template state; business changes, mixed profiles, new assets, no-ops, outside bytes and script changes rejected');
 } finally { await browser.close(); }

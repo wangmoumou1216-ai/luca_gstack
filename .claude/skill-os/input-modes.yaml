@@ -74,7 +74,7 @@ skills:
       exported: ["same_source_body_and_reference_materials", "no_claim_of_external_import"]
       staged: ["od_daemon_reachable", "exact_project_readback", "brief_and_all_reference_bytes_match", "no_claim_of_generation"]
       recovered: ["bound_project_only", "actual_nonempty_prototype_recovered", "all_related_artifacts_recovered", "prototype_spec_written", "honest_traceability", "project_handoff_when_pinned"]
-    notes: "设计源就绪后仅一次 page-context 步骤：高置信才推荐并待真人采用；低置信不展示，reference=none 直接交接，可选询问不阻塞。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，原请求最多重试1次后回同一staged项目桌面端。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
+    notes: "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，原请求最多重试1次后回同一staged项目桌面端。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
 
   idea:
     modes:
@@ -150,18 +150,25 @@ skills:
     modes:
       standalone:
         required: ["design_input"]
-        optional: ["prd_artifact", "ux_research_report", "ux_audit_report", "ux_brainstorm_artifact", "pasted_solution", "architecture_brief"]
+        optional: ["prd_artifact", "ux_research_report", "ux_audit_report", "ux_brainstorm_artifact", "pasted_solution", "architecture_brief", "prototype_artifact", "voice_copy_spec"]
       workflow:
-        required: ["prd_artifact"]
-        optional: ["ux_research_report", "ux_audit_report", "ux_brainstorm_artifact"]
+        required: ["design_input"]
+        optional: ["prd_artifact", "ux_research_report", "ux_audit_report", "ux_brainstorm_artifact", "prototype_artifact", "voice_copy_spec"]
+    entry_modes:
+      pipeline: "ready selected design + exact chosen upstream handoff; inherit mature decisions"
+      existing_requirements: "written/spoken requirements; normalize source facts without fabricated PRD"
+      prototype_visual_refinement: "actual prototype + preserve scope + permitted UI changes; template adaptation before freeze"
     modes_detail:
       traceable_delivery:
         required: ["prd_artifact"]
-        note: "Required when output will feed html-prototype, tech-spec, task-plan, or development."
+        note: "Actual PRD end-to-end coverage required for tech-spec/task-plan/development; design-source PASS cannot substitute."
+      design_generation:
+        required: ["design_input"]
+        note: "Complete current-source coverage permits generation from requirements/prototype without forcing PRD or research."
       standalone_light:
         required: ["design_input"]
         note: "May omit PRD, but must not claim end-to-end traceable delivery."
-    quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "page_interaction_mapping", "output_target_platform_scope_sources", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract"]
+    quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "page_interaction_mapping", "output_target_platform_scope_sources", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract", "source_inheritance", "prototype_preservation_when_applicable", "template_adaptation_before_freeze", "scoped_traceability"]
 
   html-prototype:
     modes:
@@ -192,7 +199,7 @@ skills:
       workflow:
         required: ["prd_artifact", "design_brief_handoff"]
         optional: ["prd_handoff"]
-    quality_gates: ["conflict_register", "architecture_view", "interface_contracts", "traceability_matrix", "design_mapping_coverage", "coverage_gate"]
+    quality_gates: ["brief_prd_end_to_end_gate_when_prd_mode", "exact_current_sources", "conflict_register", "architecture_view", "interface_contracts", "traceability_matrix", "design_mapping_coverage", "coverage_gate"]
     output_path: "docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md"
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md"
 
@@ -204,7 +211,7 @@ skills:
       workflow:
         required: ["tech_spec_handoff", "design_brief_handoff"]
         optional: []
-    quality_gates: ["l0_index", "l1_source_index", "l2_node_index", "assertion_matrix", "task_cards", "design_decision_coverage", "state_coverage", "coverage_gate"]
+    quality_gates: ["upstream_handoff_verdicts", "brief_prd_end_to_end_gate", "exact_current_sources", "l0_index", "l1_source_index", "l2_node_index", "assertion_matrix", "task_cards", "design_decision_coverage", "state_coverage", "coverage_gate"]
     output_path: "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md"
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
 

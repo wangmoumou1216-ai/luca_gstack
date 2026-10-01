@@ -1,0 +1,24 @@
+{
+  "verified_root_session": "01a0f60d-37e7-7fe2-a553-d28d8d71bce8",
+  "observed_root_model": "gpt-6.1-sol",
+  "child_specific_model_not_independently_verified": true,
+  "read_trace_assurance": "Provider metadata verifies cold fork and author; message payload is encrypted. Exact prompt/read scope and lack of opposite-arm/live reads are child self-report only, not independently exported tool traces.",
+  "checks": [
+    {
+      "arm": "candidate",
+      "native_author": "/root/candidate_behavior",
+      "ordinal": 1016,
+      "response_id": "amsg_01a0f65c-7f9a-7dd1-93ec-ceee64326b23",
+      "fixtures": 7,
+      "exact_saved_output_match": true
+    },
+    {
+      "arm": "baseline",
+      "native_author": "/root/baseline_behavior",
+      "ordinal": 1018,
+      "response_id": "amsg_01a0f65c-7f9c-7560-9c05-adaccba3b72d",
+      "fixtures": 7,
+      "exact_saved_output_match": true
+    }
+  ]
+}

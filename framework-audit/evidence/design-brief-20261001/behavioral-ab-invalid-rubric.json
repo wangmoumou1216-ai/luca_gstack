@@ -1,0 +1,8 @@
+{
+  "verdict": "BLOCK",
+  "findings": [
+    "BLOCK: 回归——属性 /NEEDS_CONTEXT|需要|问题/ 在 fixture F2 的 candidate 输出中丢失（baseline 有）"
+  ],
+  "max_delta": 0.9103,
+  "fixtures": 7
+}

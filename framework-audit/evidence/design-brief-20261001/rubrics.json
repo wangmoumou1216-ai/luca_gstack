@@ -1,0 +1,36 @@
+{
+  "acceptance_authority": "Pre-dispatch plan A1-A7; earliest plan digest in initial apply-manifest",
+  "initial_auxiliary_regex": "NEEDS_CONTEXT|需要|问题",
+  "initial_problem": "Preserves a baseline missing-PRD blocker that A1 explicitly intends to remove",
+  "corrected_auxiliary_regex": "R-1|AE-1|D-1|STATE-1|负责人|搜索条件|错误.*重试|保存.*取消|审批",
+  "auxiliary_scope": "Exploratory text no-op/retention signal only, no independent quality proof; outputs were not resampled",
+  "semantic_rubric": {
+    "F1": [
+      "retain real R-1/AE-1/D-1/STATE-1 and confirmed AI no-intervention",
+      "inherit valid template/OD choice; adapt before freeze",
+      "require actual end-to-end PRD gate for engineering"
+    ],
+    "F2": [
+      "owner filter, preserve/clear empty conditions, other content/permission preservation all retained",
+      "source IDs without fabricated PRD; generation allowed, engineering not ready",
+      "place condition control in filters, result presentation in table based on actual intents"
+    ],
+    "F3": [
+      "search/detail/return retaining conditions, inline empty clear, fields/permissions preserved",
+      "only visual freedom; structural embedding distinguished from refine",
+      "original exact source/locator + immutable prototype bytes, no claimed live OD or interaction pass"
+    ],
+    "F4": [
+      "wait for role/task distinction; neither candidate selected by default"
+    ],
+    "F5": [
+      "error support unknown, retry/input facts preserved; chosen-template conflict blocks readiness"
+    ],
+    "F6": [
+      "default screenshot does not prove save/cancel behavior; consequential unknown remains unresolved"
+    ],
+    "F7": [
+      "no Design Brief invocation; answer ordinary CSS question"
+    ]
+  }
+}

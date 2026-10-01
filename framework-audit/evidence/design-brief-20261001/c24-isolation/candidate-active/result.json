@@ -1,0 +1,26 @@
+{
+  "witness": "active",
+  "repo": "/private/tmp/design-brief-20261001/c24-diagnosis/candidate-active/repo",
+  "fixtureCommon": "/private/tmp/design-brief-20261001/c24-diagnosis/candidate-active/repo/.git",
+  "actualCommon": "/Users/luca/Desktop/luca_gstack/.git",
+  "head": "71dda8ebabcb05196050827f07cdbfaf79c001d7",
+  "originalTestSha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+  "candidateTestSha256": "1b8fa6b1da6376626719f2b56147843c41b5dfa6998d7438f391af825af0094b",
+  "controlStateHashes": [
+    "99e9b32ee6ad139ba8d3c035962f790117fc603955d6485d55a57c18a027ae74",
+    "b2f1947a8471331f8a86fe6edbfb7aac46c97a8590d68f940f5db223af2707be"
+  ],
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "beforeKind": "required",
+  "afterKind": "required",
+  "ownedDirectories": [
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-claude-n0013u",
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-codex-RJx4JY",
+    "/Users/luca/.luca/codex/project-v34-host-UbuR7x",
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-codex-c6ikN5",
+    "/Users/luca/.luca/codex/project-v34-host-C22gN4"
+  ],
+  "cleanupVerified": true
+}

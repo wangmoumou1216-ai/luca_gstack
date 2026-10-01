@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "mutations": [
+    {
+      "mutation": "refine-profile-mixing",
+      "detected": true,
+      "exit_code": 1,
+      "evidence": "node:internal/modules/run_main:123\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Missing expected rejection.\n    at async file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/test-original-template-edits.mjs:58:3 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: { code: 'ORIGINAL_REFINEMENT_PROFILE' },\n  operator: 'rejects',\n  diff: 'simple'\n}\n\nNode.js v22.23.1\n"
+    },
+    {
+      "mutation": "refine-resource-policy",
+      "detected": true,
+      "exit_code": 1,
+      "evidence": "node:internal/modules/run_main:123\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Missing expected rejection.\n    at async file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/test-original-template-edits.mjs:53:289 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: { code: 'ORIGINAL_REFINEMENT_ASSET_CHANGED' },\n  operator: 'rejects',\n  diff: 'simple'\n}\n\nNode.js v22.23.1\n"
+    },
+    {
+      "mutation": "exact-original-byte-scope",
+      "detected": true,
+      "exit_code": 1,
+      "evidence": "node:internal/modules/run_main:123\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Missing expected rejection.\n    at async file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/test-original-template-edits.mjs:21:3 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: { code: 'ORIGINAL_OUTSIDE_EDIT_CHANGED' },\n  operator: 'rejects',\n  diff: 'simple'\n}\n\nNode.js v22.23.1\n"
+    },
+    {
+      "mutation": "closed-original-manifest",
+      "detected": true,
+      "exit_code": 1,
+      "evidence": "node:internal/modules/run_main:123\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  Comparison {\n+   code: 'READBACK_TARGET_MISMATCH'\n-   code: 'ORIGINAL_BUNDLE_CHANGED'\n  }\n\n    at file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/test-original-copy-handoff.mjs:125:127 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: Error: Carrier readback must identify the confirmed OD project, namespace and actual read reference\n      at fail (file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/design-flow-handoff.mjs:16:55)\n      at verifyScopedStageReadback (file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/design-flow-handoff.mjs:617:176)\n      at verifyOriginalStage (file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/original-copy-handoff.mjs:118:10)\n      at assert.throws.code (file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/test-original-copy-handoff.mjs:125:138)\n      at getActual (node:assert:609:5)\n      at Function.throws (node:assert:757:24)\n      at file:///private/tmp/design-brief-20261001/original-refinement-test/scripts/test-original-copy-handoff.mjs:125:127 {\n    code: 'READBACK_TARGET_MISMATCH'\n  },\n  expected: { code: 'ORIGINAL_BUNDLE_CHANGED' },\n  operator: 'throws',\n  diff: 'simple'\n}\n\nNode.js v22.23.1\n"
+    }
+  ]
+}

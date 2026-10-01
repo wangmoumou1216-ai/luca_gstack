@@ -1,0 +1,23 @@
+{
+  "witness": "inactive",
+  "repo": "/private/tmp/design-brief-20261001/c24-diagnosis/candidate-inactive/repo",
+  "fixtureCommon": "/private/tmp/design-brief-20261001/c24-diagnosis/candidate-inactive/repo/.git",
+  "actualCommon": "/Users/luca/Desktop/luca_gstack/.git",
+  "head": "9e9208447f27e2cdf6971a252e56e5dd3e631e98",
+  "originalTestSha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+  "candidateTestSha256": "1b8fa6b1da6376626719f2b56147843c41b5dfa6998d7438f391af825af0094b",
+  "controlStateHashes": [],
+  "status": 0,
+  "signal": null,
+  "error": null,
+  "beforeKind": "inactive",
+  "afterKind": "inactive",
+  "ownedDirectories": [
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-claude-VGTNgv",
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-codex-0vQADn",
+    "/Users/luca/.luca/codex/project-v34-host-dBHUCU",
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-codex-WINKKm",
+    "/Users/luca/.luca/codex/project-v34-host-fdF0xb"
+  ],
+  "cleanupVerified": true
+}

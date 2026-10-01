@@ -1,7 +1,7 @@
 ---
 name: tech-spec
 preamble-tier: 2
-version: 1.0.2
+version: 1.0.3
 description: |
   工程规格节点。把 PRD + design-brief → 技术合同。
   强制验证所有 MUST 级需求的覆盖率，不允许静默跳过。
@@ -103,6 +103,16 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
    - `可追踪完整矩阵`
    - （若原型 prototype-spec.md 有"开发交接补全"节）**组件 props / 响应式断点 / design token 清单 / 动效** 四维——作 `CMP-NNN` 合同的实现规格附加字段读入（见 `references/dev-handoff-dimensions.md`）
 6. **不读全文**。如需要具体条款，按需读取对应章节。
+
+正常 PRD/Brief 输入的准入质量门（standalone 和 workflow 都执行）：
+- 输入必须来自已验证项目/当前话题的精确 PRD、Brief 与 handoff，preamble 最新路径仅为发现线索。
+- 先运行 `node scripts/check-quality-gates.mjs --handoff "<精确 Brief handoff 绝对路径>"`，
+  核 `gate_result=PASS`、`coverage_scope=prd_end_to_end`，并定向核对 Brief 矩阵覆盖当前实际 PRD
+  的全部 MUST R/AE；文件存在或 source IDs 相似不等于通过。
+- `design_source` 的 PASS 只允许设计生成；缺字段/来源或未知覆盖返回 NEEDS_CONTEXT，
+  FAIL、范围不符或版本漂移返回 BLOCKED，回 Brief 补实际 PRD 追踪并重过门，不改写旧源。
+- 既有 `conversation_synthesis` 仅按本文件独立工程来源合同准入，不因此新增 PRD/Brief 前置；
+  它不能把未定产品/交互事实或 design_source 契约伪装成工程定案。
 
 语义位置用于定位已定案交互职责和约束；工程接口仍由 Phase 3 形成 IF/CMP 合同，并绑定
 真实 PRD R/AE 与 D/STATE。已确认 `page_id` / `region_id` 可随来源传递，`reference=none`

@@ -1,0 +1,38 @@
+{
+  "record_scope": "only this root thread and exact listed child authors; final delivered plaintext retained with provider metadata; raw JSON substring extracted without verdict rewriting",
+  "limitations": "author/cold dispatch metadata can be inspected; encrypted prompt and unavailable child complete tool traces/model identity are not independently certified",
+  "envelopes": [
+    {
+      "eval_run_id": "design-brief-final-runtime-seal-20261001",
+      "sha256": "4ebf396a64ad81e684845ce35f33a2d42bdf261c5e91fa74443febb3c72ecc2c"
+    },
+    {
+      "eval_run_id": "design-brief-final-methods-panel-20261001",
+      "sha256": "cf8c8e01d55c9df872f36e960e9ae47175f1b50f804cf5ef86fe7035c8c3b9d4"
+    },
+    {
+      "eval_run_id": "design-brief-final-runtime-r4-20261001",
+      "sha256": "c2e56f2dae89c43f4e69880a425928b278db61037577c81dd4a333aa330f530b"
+    },
+    {
+      "eval_run_id": "design-brief-final-methods-r4-20261001",
+      "sha256": "6bd188aad8cf1ff61d2149c9d1a30669e7fe36db14ac702990814eb62c88d580"
+    },
+    {
+      "eval_run_id": "design-brief-final-product-r5-20261001",
+      "sha256": "62cedf92e52d023f49111f04c806ac4af8c95e657461b9cef254db8f2f77550f"
+    },
+    {
+      "eval_run_id": "design-brief-final-workflow-20261001",
+      "sha256": "715916b3c8e1d86089e26801a2112cb81e75cd895cfc167986b9679a4ccffb9b"
+    },
+    {
+      "eval_run_id": "design-brief-current-skill-holdout-20261001",
+      "sha256": "aedb86abb8e73230d7662e3e8953965da546b53331b727c634e116b84ed0a124"
+    },
+    {
+      "eval_run_id": "design-brief-final-workflow-r2-20261001",
+      "sha256": "f9f19ed9832b415a3ffec799e29c34c2a584c863ca73f329a57793ec8203a0d8"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "input_sha256": "812487c8fedfe81793d3581356599e861ce50db57591e69c1384828ee99da1c0",
+  "method": "Root corrects specific independently identified cross-fixture action leakage in supplementary artifacts; no original seven-response resampling and no source input changes. Failed round2 preserved. Independent re-review required.",
+  "changes": [
+    "F1/F2 remove unprovided search/detail/navigation-return/inline-empty execution facts and acceptance",
+    "F3/F8 replace generic condition/filter vocabulary with their actual supplied search/detail/return/inline-clear actions"
+  ],
+  "files": [
+    {
+      "path": "F1.md",
+      "sha256": "9ce82ca6fe9b8bff0efd8c7e6128e9cf0a33c6aa03281f99d4a4d0e780b496ac"
+    },
+    {
+      "path": "F2.md",
+      "sha256": "cf952c64a76ceedeebabe1f7c7459e59a989191d5df4255eeee1d1b57c569cd5"
+    },
+    {
+      "path": "F3.md",
+      "sha256": "ae7bdc5df5a4bc93f7d8d74b2f3793356872deafd153dbfd8764bc417eec3f17"
+    },
+    {
+      "path": "F8.md",
+      "sha256": "4a2ce293b786fcb67baabd5c84e6a3e0e4042e252ce2d4e8ff5295ad4cb058a4"
+    }
+  ]
+}

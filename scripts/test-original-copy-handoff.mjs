@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { canonicalJson, sha256Bytes as hash } from './carrier-asset-profile.mjs';
+import { canonicalJson, canonicalManifestHash, fileRecord, sha256Bytes as hash } from './carrier-asset-profile.mjs';
 import { createCarrierPacket } from './carrier-packet.mjs';
 import { prepareOriginalCopyHandoff, confirmOriginalCopyHandoff, authorizeOriginalOperation, verifyOriginalStage, reportOriginalGeneration, recoverOriginalOutput } from './original-copy-handoff.mjs';
 import { inspectOriginalResources } from './original-template-resources.mjs';
@@ -99,6 +99,50 @@ try {
   await assert.rejects(prepareOriginalCopyHandoff({...args,actions:[{...actions[0],confidence:'uncertain'},actions[1]]},{root,browser}),{code:'ORIGINAL_NEEDS_CONTEXT'});
   await assert.rejects(prepareOriginalCopyHandoff({...args,actions:[{...actions[0],source_ids:['FAKE']},actions[1]]},{root,browser}),{code:'ORIGINAL_FACT_BINDING'});
   await assert.rejects(prepareOriginalCopyHandoff({...args,actions:[actions[0]]},{root,browser}),{code:'ORIGINAL_FACT_COVERAGE'});
+  const prototypeEvidence = [{ path:'prototype.html', media_type:'text/html; charset=utf-8', purpose:'interaction-reference', source_ids:['D-001'], bytes:Buffer.from('<main><section>Prototype target</section><script>throw new Error("must never execute")</script></main>') }];
+  const refineArgs = {...args,handoffId:'original-refinement-1',actions:[{...actions[0],action:'refine'},actions[1]],prototypeEvidence};
+  const refineBundle = await prepareOriginalCopyHandoff(refineArgs,{root,browser});
+  assert.equal(refineBundle.carrier_profile,'original-ui-refinement-v1');
+  const refineManifest=JSON.parse(refineBundle.files.at(-1).bytes);
+  assert.equal(refineManifest.prototype_evidence.length,1);
+  assert.ok(refineBundle.files.find(f=>f.path==='evidence/prototype/prototype.html').bytes.equals(prototypeEvidence[0].bytes));
+  const evidenceIndex=JSON.parse(refineBundle.files.find(f=>f.path==='control/prototype-evidence.json').bytes);
+  assert.equal(evidenceIndex.usage,'inert-evidence-only');
+  assert.equal(evidenceIndex.source_index_validation,'frozen-existing-ids');
+  const refineAdoption={...adoption,handoff_bundle_hash:refineBundle.handoff_bundle_hash,tac_sha256:refineManifest.tac_sha256};
+  const refineConfirmed=confirmOriginalCopyHandoff(refineBundle,refineAdoption);
+  // Rehash every byte/record so these failures exercise closed schemas rather
+  // than merely tripping an unrelated stale-hash check.
+  const recanonicalize=(bundle,{manifestChange=()=>{},contractChange}={})=>{
+    const files=bundle.files.map(f=>({...f,bytes:Buffer.from(f.bytes)}));
+    const manifest=JSON.parse(files.at(-1).bytes);
+    if(contractChange){const item=files.find(f=>f.path==='control/original-adaptation.json');const contract=JSON.parse(item.bytes);contractChange(contract);item.bytes=Buffer.from(canonicalJson(contract));item.sha256=hash(item.bytes);manifest.tac_sha256=hash(item.bytes);}
+    const records=files.slice(0,-1).map(({bytes,...rest})=>({...rest,bytes:bytes.length}));
+    manifest.immutable_files=records;manifestChange(manifest);manifest.handoff_bundle_hash=canonicalManifestHash(manifest,records);
+    const body=Buffer.from(canonicalJson(manifest));files[files.length-1]={...fileRecord('control/handoff-manifest.json','application/json',body),bytes:body};
+    return {...bundle,files,handoff_bundle_hash:manifest.handoff_bundle_hash,confirmation:{...bundle.confirmation,handoff_bundle_hash:manifest.handoff_bundle_hash,tac_sha256:manifest.tac_sha256}};
+  };
+  for(const manifestChange of [m=>{m.unrecognized=true;},m=>{m.prototype_evidence=[];},m=>{m.output_profile='multi';}])assert.throws(()=>verifyOriginalStage(recanonicalize(refineConfirmed,{manifestChange}),{}),{code:'ORIGINAL_BUNDLE_CHANGED'});
+  for(const contractChange of [c=>{c.output.unrecognized=true;},c=>{c.actions[1].action='modify';},c=>{c.unrecognized=true;}])assert.throws(()=>verifyOriginalStage(recanonicalize(refineConfirmed,{contractChange}),{}),{code:'ORIGINAL_BUNDLE_CHANGED'});
+  const refineCapability={...capabilityReceipt,handoff_id:refineBundle.handoff_id,namespace:refineBundle.namespace,handoff_bundle_hash:refineBundle.handoff_bundle_hash};
+  const refineGrant={...grant,handoff_id:refineBundle.handoff_id,namespace:refineBundle.namespace,handoff_bundle_hash:refineBundle.handoff_bundle_hash,capabilityReceipt:refineCapability,inertStorageReceipt:{...grant.inertStorageReceipt,handoff_id:refineBundle.handoff_id}};
+  const refineFiles=refineBundle.files.map(f=>({path:`${refineBundle.namespace}/${f.path}`,bytes:f.bytes}));
+  const refineStaged=verifyOriginalStage(refineConfirmed,{tool:'od',projectId:args.target.projectId,namespace:refineBundle.namespace,readRef:'fixture refinement byte readback',files:refineFiles,pre_inventory:prior,post_inventory:[...prior,...refineFiles]});
+  const refineRun=authorizeOriginalOperation(refineConfirmed,{...refineGrant,run:true,prompt_hash:hash(Buffer.from('refine prompt'))},'run',{...runtime,staged:refineStaged});
+  const refineRecover=authorizeOriginalOperation(refineConfirmed,{...refineGrant,recover:true},'recover',{...runtime,staged:refineRun});
+  const refineOuter='<section id="target" class="polished" style="padding:16px">Original</section>';
+  const refineOutput=Buffer.from(base.toString().replace('<section id="target">Original</section>',refineOuter));
+  const refineExtra=[{path:`${refineBundle.namespace}/output/index.html`,bytes:refineOutput},{path:`${refineBundle.namespace}/output/implementation-manifest.json`,bytes:Buffer.from(canonicalJson({schema_version:1,edits:[{action_id:'C-01',html:refineOuter}]}))}];
+  const refineReadback={tool:'od',projectId:args.target.projectId,namespace:refineBundle.namespace,readRef:'fixture refinement actual output',files:[...refineFiles,...refineExtra],post_inventory:[...prior,...refineFiles,...refineExtra],run:{run_id:'fixture-refine-run',handoff_id:refineBundle.handoff_id,prompt_hash:refineRun.prompt_hash,status:'succeeded'}};
+  const refined=await recoverOriginalOutput(refineConfirmed,refineRun,refineReadback,refineRecover,{browser});
+  assert.equal(refined.mechanical_validation.business_dom_preserved,true);
+  assert.equal(refined.semantic_acceptance,'PENDING_INDEPENDENT_REVIEW');
+  await assert.rejects(prepareOriginalCopyHandoff({...refineArgs,prototypeEvidence:[{...prototypeEvidence[0],source_ids:['NONEXISTENT']}]},{root,browser}),{code:'PROTOTYPE_SOURCE_IDS_INVALID'});
+  await assert.rejects(prepareOriginalCopyHandoff({...refineArgs,actions:[{...actions[0],action:'refine'},{...actions[1],action:'modify'}]},{root,browser}),{code:'ORIGINAL_REFINEMENT_PROFILE'});
+  const tamperedEvidence={...refineConfirmed,files:refineConfirmed.files.map(f=>f.path==='evidence/prototype/prototype.html'?{...f,bytes:Buffer.from('changed')}:{...f})};
+  assert.throws(()=>verifyOriginalStage(tamperedEvidence,{}),{code:'ORIGINAL_BUNDLE_CHANGED'});
+  const missingEvidence=refineFiles.filter(f=>!f.path.endsWith('/evidence/prototype/prototype.html'));
+  assert.throws(()=>verifyOriginalStage(refineConfirmed,{tool:'od',projectId:args.target.projectId,namespace:refineBundle.namespace,readRef:'fixture missing evidence',files:missingEvidence,pre_inventory:prior,post_inventory:[...prior,...missingEvidence]}),{code:'READBACK_EXTRA_FILE'});
   assert.ok((await readFile(join(root,ref))).equals(base));
-  console.log('PASS: exact original input → adopted/scoped stage → separately authorized run/recover → raw-byte and native-DOM verification; forged facts, ambiguity, stale identity, missing inventory and canceled runs rejected');
+  console.log('PASS: original functional and UI-only contracts preserve legacy authorization; actual prototype bytes and closed evidence metadata travel in immutable scope; forged IDs, evidence tampering/omission, mixed profiles, stale authority and canceled runs rejected');
 }finally{await browser.close();}

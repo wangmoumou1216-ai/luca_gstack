@@ -101,7 +101,7 @@ try {
   assert.equal((await select({ ...boxRecord, selection: { ...boxRecord.selection, width: 900 } }, '--preview', previewPath)).body.error.code, 'BOX_BOUNDS');
   assert.equal((await select({ ...boxRecord, selection: { ...boxRecord.selection, scale: 0 } }, '--preview', previewPath)).body.error.code, 'SCHEMA_INVALID');
   assert.equal((await select(boxRecord, '--preview', previewPath)).status, 0);
-  const { carrierContractForPage, computeBindingHash, computeModuleContractHash, computeCatalogHash, discoverCandidateHints, loadCatalog, validateCarrierBinding, validateCarrierBindingDraft, validateMatchAssessment, validateSelection } = await import(pathToFileURL(cli));
+  const { carrierContractForPage, computeDesignSourceRevision, validateAdaptationDraft, computeBindingHash, computeModuleContractHash, computeCatalogHash, discoverCandidateHints, loadCatalog, validateCarrierBinding, validateCarrierBindingDraft, validateMatchAssessment, validateSelection } = await import(pathToFileURL(cli));
   const packetBody = createCarrierPacket({ schema_version: 1, packet_kind: 'design-generation', items: [{ source_kind: 'requirement', id: 'R-1', text: 'Add or update the explicitly reviewed list control.' }], scopes: [] });
   const packet = inspectCarrierPacket(packetBody);
   const frozen = { source_packet_sha256: packet.source_packet_sha256, applicability_set_sha256: packet.applicability_set_sha256 };
@@ -168,6 +168,57 @@ try {
   carrierPage.state_support = [{ state_id: 'default', status: 'supported', reason: 'Self-contained fixture with registered toolbar and content.', anchors: [carrierPage.modules[0].anchor], target_ids: [...carrierPage.modules.map(item => item.module_id), ...carrierPage.slots.map(item => item.slot_id)] }];
   carrierPage.module_contract_hash = computeModuleContractHash(carrierPage);
   const carrierCatalog = { schema_version: 2, retired_page_ids: [], pages: [carrierPage] };
+  const sourceItems = [{ id: 'REQ-001', text: '口述：把负责人过滤器放到记录操作区，保持列表记录与原有权限。', required_states: ['default'] }];
+  const adaptation = {
+    schema_version: 1, mode: 'adaptation_draft', source_revision_sha256: computeDesignSourceRevision(sourceItems),
+    catalog_sha256: computeCatalogHash(carrierCatalog), page_id: carrierPage.page_id, source_hash: carrierPage.source_hash,
+    decision: 'ready', reason: 'The explicit record action belongs to the evidenced toolbar slot.', reviewed_source_ids: ['REQ-001'],
+    judgments: [{ source_id: 'REQ-001', excerpt: sourceItems[0].text, state_id: 'default', action: 'add', location: { target_id: 'toolbar-slot' }, purpose_excerpt: carrierPage.intent, target_excerpt: carrierPage.slots[0].intent, location_evidence: 'The toolbar-slot intent is Add toolbar controls; content owns the record results, not filtering actions.', state_evidence: carrierPage.state_support[0].reason, state_status: 'supported', confidence: 'high', alternatives: [] }]
+  };
+  const adaptationResult = await validateAdaptationDraft(carrierCatalog, adaptation, { root, sourceItems });
+  assert.equal(adaptationResult.status, 'ADAPTATION_READY');
+  assert.equal(adaptationResult.binding_allowed, false, 'early semantic adaptation never authorizes a final binding');
+  assert.equal(adaptationResult.execution_allowed, false);
+  assert.equal('frozen_packet' in adaptationResult, false);
+  await assert.rejects(validateAdaptationDraft(carrierCatalog, adaptation, { root }), { code: 'DESIGN_SOURCE_REQUIRED' });
+  for (const [change, code] of [
+    [draft => { draft.source_revision_sha256 = '0'.repeat(64); }, 'STALE_ADAPTATION_SOURCE'],
+    [draft => { draft.catalog_sha256 = '0'.repeat(64); }, 'STALE_MATCH_CATALOG'],
+    [draft => { draft.source_hash = '0'.repeat(64); }, 'STALE_ADAPTATION_TEMPLATE'],
+    [draft => { draft.reviewed_source_ids = ['FAKE']; }, 'ADAPTATION_SOURCE_COVERAGE'],
+    [draft => { draft.judgments[0].excerpt = 'Summary instead of complete requirement'; }, 'ADAPTATION_SOURCE_EVIDENCE'],
+    [draft => { draft.judgments[0].location.target_id = 'imagined'; }, 'MATCH_TARGET_EVIDENCE'],
+    [draft => { draft.judgments[0].target_excerpt = 'Wrong semantic job'; }, 'MATCH_TARGET_EVIDENCE'],
+    [draft => { draft.judgments[0].action = 'modify'; }, 'CARRIER_ACTION_FORBIDDEN'],
+    [draft => { draft.judgments[0].confidence = 'uncertain'; }, 'MATCH_AMBIGUOUS'],
+    [draft => { draft.judgments[0].alternatives = ['root-slot']; }, 'MATCH_AMBIGUOUS'],
+    [draft => { draft.judgments[0].state_status = 'unknown'; }, 'MATCH_AMBIGUOUS'],
+    [draft => { draft.adoption = { actor: 'user' }; }, 'SCHEMA_INVALID'],
+    [draft => { draft.frozen_packet = frozen; }, 'SCHEMA_INVALID']
+  ]) {
+    const changed = structuredClone(adaptation); change(changed);
+    await assert.rejects(validateAdaptationDraft(carrierCatalog, changed, { root, sourceItems }), { code });
+  }
+  const needsContext = structuredClone(adaptation);
+  needsContext.decision = 'needs_context'; needsContext.judgments[0].state_status = 'unknown'; needsContext.judgments[0].alternatives = ['root-slot'];
+  assert.equal((await validateAdaptationDraft(carrierCatalog, needsContext, { root, sourceItems })).status, 'NEEDS_CONTEXT');
+  const moreStates = structuredClone(sourceItems); moreStates[0].required_states.push('error');
+  const incomplete = { ...adaptation, source_revision_sha256: computeDesignSourceRevision(moreStates) };
+  await assert.rejects(validateAdaptationDraft(carrierCatalog, incomplete, { root, sourceItems: moreStates }), { code: 'ADAPTATION_SOURCE_COVERAGE' });
+  const unsupported = structuredClone(incomplete);
+  unsupported.judgments.push({ ...unsupported.judgments[0], state_id: 'error' });
+  await assert.rejects(validateAdaptationDraft(carrierCatalog, unsupported, { root, sourceItems: moreStates }), { code: 'MATCH_STATE_UNSUPPORTED' });
+  unsupported.decision = 'needs_context'; unsupported.judgments[1].state_status = 'unsupported';
+  assert.equal((await validateAdaptationDraft(carrierCatalog, unsupported, { root, sourceItems: moreStates })).status, 'NEEDS_CONTEXT');
+  assert.equal((await validateAdaptationDraft(carrierCatalog, adaptation, { root, sourceItems })).status, 'ADAPTATION_READY');
+  await writeFile(join(root, 'adaptation.json'), JSON.stringify(adaptation));
+  await writeFile(join(root, 'sources.json'), JSON.stringify(sourceItems));
+  await writeFile(join(root, 'adaptation-catalog.json'), JSON.stringify(carrierCatalog));
+  const adaptationCli = spawnSync(process.execPath, [cli, 'adaptation-draft', '--record', 'adaptation.json', '--sources', 'sources.json', '--root', root, '--catalog', 'adaptation-catalog.json'], { encoding: 'utf8' });
+  assert.equal(adaptationCli.status, 0, adaptationCli.stderr + adaptationCli.stdout);
+  assert.equal(JSON.parse(adaptationCli.stdout).binding_allowed, false);
+  console.log('PASS: early adaptation validates full source/state evidence, ambiguity, unsupported capability and stale revisions without freezing/adopting');
+
   const carrierDraft = {
     schema_version: 2, bundle_kind: 'carrier',
     frozen_packet: frozen,
@@ -377,6 +428,7 @@ try {
     for (const [name, target, replacement, diagnostic] of [
       ['confirmation guard bypass', 'shape(record, schema.$defs.selection);', '// mutation: bypass selection shape', 'selection actor must be user'],
       ['stale source guard bypass', 'if (page.source_hash !== record.source_hash)', 'if (false)', 'stale source selection must require reconfirmation'],
+      ['early ambiguity guard bypass', "if (record.decision === 'ready' && unresolved)", 'if (false)', 'Missing expected rejection'],
       ['source containment guard bypass', 'if (ancestor !== expectedParent)', 'if (false)', 'source parent must actually contain its child region']
     ]) {
       assert.equal(original.split(target).length, 2, `unique mutation seam: ${name}`);

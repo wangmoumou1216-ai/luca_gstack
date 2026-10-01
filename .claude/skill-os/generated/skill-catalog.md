@@ -13,7 +13,7 @@
 | `code-review` | 代码改动双轴审查入口：先固定 WORKTREE_DIFF、commit/branch/tag 比较点或 FILE_SET，再把 Standards 与 Spec 两轴隔离审查并分列报告。用于当前未提交改… | `.claude/skills/office/code-review/SKILL.md` |
 | `codebase-design` | 工程模块设计原语：用 Module / Interface / Depth / Seam / Adapter 的稳定词汇，判断模块是否足够深、 接口是否把复杂度藏在正确位置，以及测试面应放在哪里。用于模… | `.claude/skills/office/codebase-design/SKILL.md` |
 | `deepresearch` | Deep research orchestrator. Launches 5-8 parallel research agents across web, docs, code, and academi… | `.claude/skills/office/deepresearch/SKILL.md` |
-| `design-brief` | 收敛引擎 / 跨工具规格契约节点。把 PRD / ux-research / ux-audit / ux-brainstorm 方案 / 用户粘贴方案，收敛成可交给 MagicPath、Open Des… | `.claude/skills/office/design-brief/SKILL.md` |
+| `design-brief` | 设计收敛与模板适配节点。承接全流程已选方案、已有需求/口述转写，或已有原型的 UI 精修； 继承确认事实，补齐关键缺口，按模板语义定位模块、验证动作/状态承载能力，界定生成工具自由度。 输出可追踪决策、… | `.claude/skills/office/design-brief/SKILL.md` |
 | `diagnosing-bugs` | Diagnose an unexpected failure, regression, flaky behavior, or performance regression by first buildi… | `.claude/skills/office/diagnosing-bugs/SKILL.md` |
 | `domain-modeling` | Build or sharpen a domain model when language overloads distinct concepts, relationships or ownership… | `.claude/skills/office/domain-modeling/SKILL.md` |
 | `grilling` | Stress-test a plan, decision, or idea through a one-question-at-a-time human decision tree. Use when… | `.claude/skills/office/grilling/SKILL.md` |

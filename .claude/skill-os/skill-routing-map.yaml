@@ -110,7 +110,7 @@ project_skills:
   design_brief:
     invoke: "/design-brief"
     weight: 6
-    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档, 落地方案, 方案细化]
+    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档, 落地方案, 方案细化, 已有需求转设计契约, 原型植入模板, 原型UI精修契约]
 
   html_prototype:
     invoke: "/html-prototype"

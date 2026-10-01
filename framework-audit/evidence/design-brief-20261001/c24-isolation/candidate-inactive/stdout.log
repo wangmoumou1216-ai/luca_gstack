@@ -1,0 +1,29 @@
+PASS claude enter uses the real scope-hook path
+PASS claude enter rewrites one public argv to a trusted controller argv
+PASS claude enter passes the independent controlled hook
+PASS claude trusted enter controller commits
+PASS claude enter commits beta in the same native event
+PASS claude same-event task resolves only against beta's absolute root
+PASS claude unknown-result lookup is explicit and read-only
+PASS claude NO_PIN absolute read does not force a selection
+PASS claude adapter/hook refusal remains fail-closed for an unbound relative write
+PASS claude cancellation fixture has one unissued PREPARED operation
+PASS claude Stop cancellation runs through the real host hook
+PASS claude cancellation prevents the unissued selection and preserves beta
+PASS claude malformed authority degrades to refusal without repair
+PASS codex enter uses the real scope-hook path
+PASS codex enter rewrites one public argv to a trusted controller argv
+PASS codex adapter preserves updatedInput as an allow decision
+PASS codex trusted enter controller commits
+PASS codex enter commits beta in the same native event
+PASS codex same-event task resolves only against beta's absolute root
+PASS codex unknown-result lookup is explicit and read-only
+PASS codex NO_PIN absolute read does not force a selection
+PASS codex adapter/hook refusal remains fail-closed for an unbound relative write
+PASS codex cancellation fixture has one unissued PREPARED operation
+PASS codex Stop cancellation runs through the real host hook
+PASS codex cancellation prevents the unissued selection and preserves beta
+PASS codex malformed authority degrades to refusal without repair
+PASS codex adapter runtime failure consults the durable witness and never prepares a selection
+
+=== project-gate v3.4 dual-host summary: PASS=27 FAIL=0 ===

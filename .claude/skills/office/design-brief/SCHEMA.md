@@ -2,13 +2,18 @@
 
 生成时间：YYYY-MM-DD HH:MM
 场景：{新功能设计（A）/ 已有功能优化（B）/ 评审改版（C）/ Agent 化改造（D）}
-输入来源：{ux-brainstorm / ux-research / ux-audit / PRD / 用户粘贴方案 / N/A（场景C）}
+输入入口：{pipeline / existing_requirements / prototype_visual_refinement}
+交付模式：{traceable_delivery / design_generation / standalone_light}
+追踪范围：{prd_end_to_end / design_source / limited}
+输入来源：{精确文档/消息/原型版本及观察证据；缺项写原因}
 输出目标：{用户指定工具 / 尚未选择；Open Design 为默认推荐}
 目标平台与范围：{desktop / mobile / embedded；整页 / 局部位置}
 参考策略：{用户已有选择记录 / 明确不用参考 / 待交接入口执行页面匹配}
 依据：{PRD 字段 / 已对齐方案位置 / 用户确认来源}
 下游约束：{已确认的交互、修改/保留范围及平台约束}
-来源 PRD：{文件路径}
+来源 PRD：{实际路径 / N/A — 本轮为设计源追踪，不代表工程ready}
+原型保持与自由度：{可变 / 不可变 / 须确认；来源证据}
+模板适配旁车：{选择/非绑定草稿/冲突与能力核对的索引，非Packet事实}
 来源 constraints：{路径，场景 B/D 专有}
 来源 ux-audit：{路径，场景 C 专有}
 
@@ -29,14 +34,14 @@
 - 结论：AI {介入 / 不介入}
 - [若介入] 范式：{对话式替代 / 嵌入式预测 / 代理式执行 / 决策增强}
 - [若介入] 介入节点：{具体节点}
-- [若不介入] 理由（4 选 1）：{超出语料 / 竞品证据 / 技术前提 / 场景不适合} — {一句话}
+- [若不介入] 理由：{继承已确认方案 / 实际任务不需AI / 本轮只精修且不改机制 / 其他有源理由} — {一句话}
 
 ---
 
 ## 原生AI深度思考小结
 
 **Layer A · 产品层：**
-决策压缩：{N} 次 → {N'} 次主动判断（压缩 {N-N'}，必须 ≥ 2）
+决策压缩：{继承证据 / 新AI判断的N→N' / N/A及理由；精修不重定机制}
 采纳的 AI 介入：{描述 / 暂不可行：原因}
 
 **Layer B · 交互层：**
@@ -80,7 +85,8 @@ AI 错了用户多久能发现：{说明 / N/A}
 
 ## 体验验证结论
 
-P0 故事覆盖：{N}/{N} 条通过
+本轮 MUST 来源/AC 覆盖：{N}/{N}；coverage_scope：{prd_end_to_end / design_source}
+原型保持：{逐项前后对照证据 / 待生成验收，不伪报通过}
 核心任务路径：{N} 步
 设计边界检查：{没有触碰"不做什么" / 有：{描述}}
 
@@ -107,7 +113,7 @@ P0 故事覆盖：{N}/{N} 条通过
 
 ## 品味检查四锚点
 
-（节名保持原版，内部扩展为 8 锚点三维度）
+（节名保持原版，内部扩展为 8 锚点三维度；未生成视觉项记待验，不伪称通过）
 
 ### 效率维度（5 锚点）
 
@@ -165,20 +171,20 @@ P0 故事覆盖：{N}/{N} 条通过
 
 ---
 
-## 原型决策清单
+## 设计决策清单
 
 （每条决策必须完整 8 字段，缺任一项该决策不输出）
 
 ### D-001：{组件/模式名称}
 
 - **决策内容：** {做什么}
-- **设计理由：** {必须引用 PRD P0 / ux-audit / native-design / inspired-design / framework}
+- **设计理由：** {引用实际 PRD / 原话需求 / 原型节点或操作 / 已选方案 / 适用框架}
 - **排除的备选方案：** {≥ 1 条}
   - 备选 1：{描述} → 不选原因：{原因}
 - **接受的 tradeoff：** {不为"无"}
 - **AI Native 判定引用：** {引用设计坐标系的全局结论 + 本决策的体现}
 - **状态覆盖：** {引用 Phase 3 表格中与本决策相关的状态}
-- **PRD 约束引用：** {prd-constraints.md 条目 / 场景 A 可写 N/A}
+- **PRD 约束引用：** {实际PRD约束或本轮修改/保持边界；无PRD不编造}
 
 ### D-002：...
 
@@ -197,7 +203,7 @@ P0 故事覆盖：{N}/{N} 条通过
 **参考与追踪：** `reference=none` 时语义位置、D/STATE/AC 及约束仍必填；没有目录记录的页面
 可以用用户语言或截图局部位置定位，不强制入库，不编造 page_id/region_id。
 页面采用在 Packet 冻结后、OD 编译前按 `.claude/skill-os/runtime/page-context.md` 的最终
-`carrier-binding` 合同执行；本节只索引已有确认，JSON 标记不构成真人确认。设计系统由用户在
+`carrier-binding` 合同执行；模板选择与非绑定语义适配在 Brief 冻结前完成，本节只索引有效确认；JSON 标记不构成真人确认。设计系统由用户在
 OD / Claude Design 配置。
 
 **AI 功能区域特殊标注：**
@@ -222,11 +228,11 @@ carrier Packet 的结构化冻结格式与实例由 `references/output-templates
 `scripts/carrier-packet.mjs` 计算全部事实条目及其原文 hash。以下边界也适用于该格式。
 
 - `Design Generation Packet` 是唯一需求事实，Phase 6.75 门禁通过后按原字节冻结。Phase-A
-  `CandidateHint` 是内部、短期 discovery 结果，不写入 Packet、正文、页面映射或 stable ID。
+  `CandidateHint` 是内部、短期 discovery 结果；已核验的适配草稿为独立旁车，不写入 Packet 或 stable ID；草稿不代替正式binding。
 - 最终 carrier 只在冻结 Packet 之后由 `page-context` 验证；它需要有效
   `source_packet_sha256`、最终 `carrier-binding`、真人 adoption 和 TAC/hash 确认。TAC 只能
   机械投影 Packet 中已有的 R/AE/D/STATE/AC，不能创造需求、selector、路径或视觉处方。
-- 没有最终绑定、用户拒绝模板或明确不用模板时为互斥 `reference_only`；它不含 base template、
+- 用户拒绝/明确不用模板，或未指定模板且没有最终绑定时为互斥 `reference_only`；已指定原件/未决适配冲突不能借此绕过；它不含 base template、
   TAC、carrier hash 或模板衍生承诺。
 - `structural_carrier` 只继承 DOM/登记模块/内容结构，模板 CSS/token/assets 不是视觉验收标准；
   `visual_carrier` 需要明确选择以及 viewport、截图基线和允许差异阈值。

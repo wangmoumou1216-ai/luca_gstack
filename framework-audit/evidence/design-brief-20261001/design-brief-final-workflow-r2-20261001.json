@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "design-brief-final-workflow-r2-20261001",
+  "subject": {
+    "skill": "design-brief",
+    "topic": "design-brief-six-capability-workflow",
+    "scene": "unknown",
+    "input_summary": "NO_PIN只读复审HEAD64d763e候选工作区；四类设计入口、精确来源、冻结及采用边界、普通工程门与conversation_synthesis例外。未执行liveOD或产品UI验收。",
+    "output_paths": [
+      ".claude/agents/orchestrator.md",
+      ".claude/skills/office/auto/SKILL.md",
+      ".claude/skills/office/references/office-wizard.md",
+      ".claude/skills/office/design-brief/SKILL.md",
+      ".claude/skills/office/design-brief/SCHEMA.md",
+      ".claude/skills/office/design-brief/references/input-contract.md",
+      ".claude/skills/office/design-brief/references/output-templates.md",
+      ".claude/skills/office/open-design/SKILL.md",
+      ".claude/skills/office/tech-spec/SKILL.md",
+      ".claude/skills/office/task-plan/SKILL.md",
+      ".claude/skills/office/to-spec/SKILL.md",
+      ".claude/skill-os/input-modes.yaml",
+      ".claude/skill-os/optional-workflow-graph.yaml",
+      ".claude/agents/preflight-agent.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "CONDITIONAL_PASS",
+    "passed": 8,
+    "total": 9,
+    "findings": [
+      "WARN C9 UNKNOWN：缺少liveOD、植入后精修及实际行为保持验收；本次无产品资产且仅审Skill/framework合同，不构成本面板发布阻断，不能据此宣称完整生产端到端通过。",
+      "WARN 上一轮design-brief-final-workflow-20261001的FAIL保留；本轮只记录新增修复闭合后的独立判定。"
+    ]
+  }
+}
