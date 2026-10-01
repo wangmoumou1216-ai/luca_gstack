@@ -171,3 +171,50 @@ Codex desktop should stay disabled; Luca must independently enable its framework
 hooks. The App-side follow-up will use process-local exact registered Hook
 overrides, preserving the shared file, provider, identity and history. This
 follow-up requires its own real App acceptance and publication record.
+
+## Process isolation and final entry fixes
+
+The initial framework release `41f89284edacafe1f8d0fc62a847757e507c7328`
+passed the standard 107-check local gate and GitHub CI run `36873653768`.
+It was adopted by the mother checkout with all 304 preexisting dirty files
+byte-preserved.
+
+App `b76a90f96d34c5194afe03b143e98ecc4bdf7a0b` enables the exact 11 trusted
+framework hooks only in Luca process argv. Official hooks/list and config/read
+prove the five foreign hooks and all other effective settings are unchanged.
+Desktop raw config SHA remains
+`d01a7b6443ae26d2871e2b8782a400ca72c67ec503b29b8c4fe68c3389d5a981`.
+Independent source/package review passed 9/9; focused regressions passed 60/60.
+The real installed v5 App created SID `01a0f7d0-28ce-73e3-88f8-4dc8e2b1ffd4`
+and executed pwd successfully, while exposing two remaining entry-layer errors.
+
+The Host adapter confused valid controlled allow/updatedInput output with a
+failure status. The final patch accepts only the validated PreToolUse allow
+rewrite, retains no-output pass-through, and rejects malformed/unknown outputs,
+explicit denial and runtime failures. Independent review passed 5/5, including
+a mutation that rejected the earlier overbroad candidate before publication.
+
+App `48e6e31f20def6817d12f1cecf42257b23666cba` removes the timed long-command
+PTY injection. System/sidecar login shells receive the CLI and arguments via OS
+argv; direct/host/auxiliary paths retain direct spawning. A CLI exit opens a new
+login shell, so login configuration is reread. Real slow-login node-pty tests
+verify 6KB and metacharacter arguments unchanged, and interactive fallback.
+The regression set passed 47/47; independent source review 5/5 and package 6/6.
+
+The installed v6 ASAR is
+`9c55e83aec6c91e755954a801f499266d1ca1067d39cbf85d9fd5b5be640ade4`; all 441 modules
+were read back, with only main.js changed from v5. Existing installed App
+features, original dirty source checkout and Desktop Hook switches were preserved.
+Receipt: `/private/tmp/luca-hook-closure-1001-v6/native-trust-install-result.json`.
+
+At this checkpoint, normal v6 startup waits for macOS DesktopFolder authorization
+following its changed ad-hoc signature. The same previously authorized scope was
+requested through the native prompt; no TCC database or protection was bypassed.
+Final formal System-profile new/resume readonly pwd, absence of false code2, and
+Desktop-OFF/Luca-ON readback remain unverified until the prompt is accepted.
+The already passed isolated concurrency/denial matrix is not replaced by
+unauthorized production business-file mutations. Status: DONE_WITH_CONCERNS.
+
+Final Host adapter commit `715ceed74a40b8e3dcde5d7a5ec9825e9bd1ef5e` passed
+the full standard local gate again: PASS 107, FAIL 0, WARN 0. Remote CI for this
+follow-up is recorded separately when available; it is not inferred from the prior run.
