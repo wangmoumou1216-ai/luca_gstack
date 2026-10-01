@@ -218,3 +218,13 @@ unauthorized production business-file mutations. Status: DONE_WITH_CONCERNS.
 Final Host adapter commit `715ceed74a40b8e3dcde5d7a5ec9825e9bd1ef5e` passed
 the full standard local gate again: PASS 107, FAIL 0, WARN 0. Remote CI for this
 follow-up is recorded separately when available; it is not inferred from the prior run.
+
+## Final acceptance completed
+
+Status: DONE. The user accepted the native prompt; formal System-profile new
+and same-SID resume both executed successfully with no false Hook code 2.
+Independent final gate passed 4/4, Luca retained 11 enabled framework hooks,
+and the Desktop-OFF configuration remained byte-identical. Framework runtime
+CI 36877648839 succeeded. See [final acceptance](FINAL-ACCEPTANCE.md) for the
+frozen session, versions, hashes and bounded acceptance scope. This supersedes
+the pending items at the earlier checkpoint above.

@@ -11,3 +11,12 @@
 | 3 | Direct guard fixture 只证明 `controlled-change-guard` 正确返回 `allow + updatedInput`；正式 App 还经过 `host-launch-adapter`，旧适配器把“任何 controlled stdout”都视为拒绝，导致命令实际成功却显示 PreToolUse code 2。第一次修订又把任意 status-0 输出当 allow，形成 fail-open。 | 跨层协议必须判定**结构与状态**，不能判定“有无输出”：只接受 `PreToolUse`、显式 `allow`、对象型 `updatedInput` 和非空 command；显式 deny、status 2、异常及未知/非 JSON 输出全部 fail closed；空 status-0 表示无干预。 | 真实 App `pwd` 成功同时 code 2 复现；最终 adapter focused tests 2/2。独立 mutation fixture 证明第一次候选会放行非 JSON，最终测试覆盖 malformed/additionalContext/伪 updatedInput/错事件及 deny 0/2、silent 2、crash；隔离真实 CLI 已覆盖 deny。 | 安装/发布最终 adapter 后，仅需在正式 System profile new/resume 中运行只读 `pwd`，确认结果成功且 UI 无虚假 Hook code 2；无需在生产环境人为制造 deny。 |
 | 4 | 旧 System/Sidecar 流程先开慢 login PTY，再等 120 ms 用 `p.write` 注入完整命令。加入很长的 `hooks.state` 后超过 canonical input 边界而静默截断；短命令 fixture 因此一直绿，真实 legacy resume 才失败。 | 长参数必须从 OS argv 进入进程，禁止经交互终端文本注入。System/Sidecar 用 `-ilc` 与位置参数执行 CLI，退出后 `exec` 新 login shell；Direct、Host launch、auxiliary 继续直接 binary argv，并保持各自 child env/凭据边界。 | 真实 node-pty 红例中 system/sidecar 均收不到完整 resume argv；最终测试以慢 login、6000 字节参数和 shell 元字符验证逐字保留、CLI 后 shell 可用，3/3 通过。v6 surgery 可逆，441 modules 仅 `main.js` 改变，installer read-only preflight 通过；sidecar/direct 的真实 PTY/精确 argv 已有回归证据。 | 正式入口只验 System profile 的 new/resume 能成功进入并执行只读 `pwd`；不要求切换正式模型/账户，也不重复 sidecar/direct 验收。 |
 | 5 | 前面的 fixture 绿而正式 App 失败，并非单一测试“失真”，而是证据停在了相邻层：native fixture 绕过 Electron wrapper，Hook fixture 未经过 Host adapter，短 argv 未经过慢 login PTY，隔离 HOME 也未覆盖 Desktop-off/Luca-on 的同配置现实。 | 每个跨边界改动保留三层证据：①模块级负例/Mutation；②官方 Codex CLI/app-server 的 effective 行为；③安装 App 的真实入口。Framework 只拥有命令、guard 与作用域；Codex 拥有注册、trust、配置合并及 CLI argv 语义；Luca 拥有进程级 opt-in、Host wrapper、PTY transport 与安装 CAS。任一层变化都只重验其相邻边界，避免再次用底层绿票替代 App live 票。 | 本轮已分别补齐隔离 native concurrency/第三 SID/deny/回收、cross-worktree、official effective config、Host adapter malformed-output、真实 node-pty、既有 GUI global/project new/resume 与 surgical package 证据；所有候选均有冻结 SHA/CAS 与独立 gate。 | 最终关闭条件仅为正式 Luca 正常重启后的 System profile new/resume、只读 `pwd` 无虚假 code 2，并同步确认 Desktop OFF/Luca 精确 11 ON。未完成前称 `DONE_WITH_CONCERNS`。 |
+
+## Final live acceptance addendum
+
+Status: DONE. All live items in the historical review above are now resolved.
+Formal System-profile new/resume passed for SID
+`01a0f7e9-1a0e-7042-8b08-039a9fcc1f3e`; both readonly commands succeeded
+without the false Hook error. Independent final Quality Gate passed 4/4.
+Desktop OFF/Luca 11 ON and the installed v6 hash were verified. Runtime CI
+36877648839 succeeded. See [final acceptance](FINAL-ACCEPTANCE.md).
