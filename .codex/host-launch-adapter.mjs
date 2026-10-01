@@ -67,10 +67,22 @@ try {
       ...data, tool_name: originalTool || data.tool_name,
       tool_input: innerOutput?.hookSpecificOutput?.updatedInput || data.tool_input,
     }, env);
-    const controlledOutput = adapt(controlled.stdout, event);
+    const controlledText = String(controlled.stdout || '').trim();
+    let controlledOutput = null;
+    if (controlledText) {
+      try { controlledOutput = JSON.parse(controlledText); } catch { throw new Error('CONTROLLED_OUTPUT_INVALID'); }
+      const object = value => value && typeof value === 'object' && !Array.isArray(value);
+      const hso = controlledOutput?.hookSpecificOutput;
+      if (!object(controlledOutput) || !object(hso) || hso.hookEventName !== 'PreToolUse'
+          || (hso.permissionDecision !== 'deny' && !(hso.permissionDecision === 'allow'
+            && object(hso.updatedInput) && typeof hso.updatedInput.command === 'string'
+            && hso.updatedInput.command.trim()))) throw new Error('CONTROLLED_OUTPUT_INVALID');
+    }
     if (controlledOutput) process.stdout.write(JSON.stringify(controlledOutput) + '\n');
-    if (controlled.status === 2 || controlledOutput) { process.exitCode = 2; }
-    else if (innerOutput) process.stdout.write(JSON.stringify(innerOutput) + '\n');
+    if (controlled.status === 2 || controlledOutput?.hookSpecificOutput?.permissionDecision === 'deny') {
+      if (!controlled.stderr) deny(controlledOutput?.hookSpecificOutput?.permissionDecisionReason || 'controlled guard refused this tool');
+      else process.exitCode = 2;
+    } else if (!controlledOutput && innerOutput) process.stdout.write(JSON.stringify(innerOutput) + '\n');
   } else {
     if (innerOutput) process.stdout.write(JSON.stringify(innerOutput) + '\n');
     process.exitCode = inner.status;

@@ -555,6 +555,58 @@ test('private broker transport rejects hook prepare and works with an isolated p
     assert.equal(JSON.parse(allowed.stdout).hookSpecificOutput.permissionDecision,'allow');
   }finally{child.disconnect();await new Promise(resolve=>child.once('exit',resolve));}
 });
+test('host adapter preserves controlled read rewrites and distinguishes denial from output', () => {
+  const f = fixture();
+  mkdirSync(join(f.gstackRoot, '.codex')); mkdirSync(join(f.gstackRoot, '.claude', 'hooks'), { recursive: true });
+  const adapter = join(f.gstackRoot, '.codex', 'host-launch-adapter.mjs');
+  cpSync(new URL('../.codex/host-launch-adapter.mjs', import.meta.url), adapter);
+  const target = join(f.gstackRoot, '.claude', 'hooks', 'project-scope-guard.mjs');
+  const controlled = join(f.gstackRoot, '.claude', 'hooks', 'controlled-change-guard.mjs');
+  writeFileSync(target, '');
+  execFileSync('/usr/bin/git', ['init', '-q', f.gstackRoot], { env: { PATH: process.env.PATH } });
+  const actualGuard = fileURLToPath(new URL('../.claude/hooks/controlled-change-guard.mjs', import.meta.url));
+  writeFileSync(controlled, `import {spawnSync} from 'node:child_process';import {readFileSync} from 'node:fs';
+    const r=spawnSync(process.execPath,[${JSON.stringify(actualGuard)}],{input:readFileSync(0),env:process.env,encoding:'utf8'});
+    process.stdout.write(r.stdout||'');process.stderr.write(r.stderr||'');process.exitCode=r.status;`);
+  const invoke = command => spawnSync(process.execPath, [adapter, target], {
+    cwd: f.gstackRoot, env: { PATH: process.env.PATH }, encoding: 'utf8',
+    input: JSON.stringify({ ...f.payload, hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command } }),
+  });
+  for (const command of ['pwd', 'head -n 3 README.md']) {
+    const result = invoke(command);
+    assert.equal(result.status, 0, `${command}: ${result.stderr || result.stdout}`);
+    assert.equal(result.stderr, '');
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.hookSpecificOutput.permissionDecision, 'allow');
+    assert.match(output.hookSpecificOutput.updatedInput.command, /^'\/(?:bin\/pwd|usr\/bin\/head)'/);
+    assert.equal(result.stdout.trim().split('\n').length, 1);
+  }
+  for (const status of [0, 2]) {
+    writeFileSync(controlled, `process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',
+      permissionDecision:'deny',permissionDecisionReason:'exact fixture refusal'}}));process.exitCode=${status};`);
+    const result = invoke('pwd');
+    assert.equal(result.status, 2); assert.match(result.stderr, /exact fixture refusal/);
+    assert.equal(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision, 'deny');
+  }
+  for (const output of ['not JSON', '[]', 'null', '{}', JSON.stringify({ additionalContext: 'unexpected' }),
+    JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: 'unexpected' } }),
+    ...[{}, [], null, { command: 123 }, { command: '' }, { command: ' ' }].map(updatedInput => JSON.stringify({ hookSpecificOutput: {
+      hookEventName: 'PreToolUse', permissionDecision: 'allow', updatedInput } })),
+    JSON.stringify({ hookSpecificOutput: { hookEventName: 'PostToolUse', permissionDecision: 'allow', updatedInput: { command: 'pwd' } } }),
+    JSON.stringify({ hookSpecificOutput: { updatedInput: { command: 'pwd' } } })]) {
+    writeFileSync(controlled, `process.stdout.write(${JSON.stringify(output)});`);
+    const result = invoke('pwd');
+    assert.equal(result.status, 2, `unexpected controlled output must refuse: ${output}`);
+    assert.match(result.stderr, /CONTROLLED_OUTPUT_INVALID/);
+  }
+  writeFileSync(controlled, '');
+  const noIntervention = invoke('pwd');
+  assert.equal(noIntervention.status, 0); assert.equal(noIntervention.stdout, ''); assert.equal(noIntervention.stderr, '');
+  writeFileSync(controlled, 'process.exitCode=2;');
+  const silentDenial = invoke('pwd'); assert.equal(silentDenial.status, 2); assert.match(silentDenial.stderr, /controlled guard refused/);
+  writeFileSync(controlled, 'throw new Error("controlled fixture crash");');
+  const crash = invoke('pwd'); assert.equal(crash.status, 2); assert.match(crash.stderr, /controlled fixture crash|INNER_HOOK_FAILED/);
+});
 test('project controller has no public no-event initial binding API', () => {
   assert.equal(Object.hasOwn(projectPinApi, 'executeHostInitialBinding'), false);
 });
