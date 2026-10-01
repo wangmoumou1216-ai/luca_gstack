@@ -1,0 +1,51 @@
+{
+  "baseline_head": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+  "candidate_root": "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree",
+  "files": [
+    {
+      "path": "scripts/page-context.mjs",
+      "baseline_sha256": "0e8a306394c4282b511452f0c1bf79663da47f5f4953ab32e91f64e34b0aadc9",
+      "candidate_sha256": "ea9a82396a1c4606d54353b7a34c46e151745e85e38b6c99c17aefd5e5aa3402"
+    },
+    {
+      "path": "scripts/test-page-context.mjs",
+      "baseline_sha256": "eab824a26155d0d85569b992be162ff92d4c81ffc1a11ad2acb4f96d9b8b945b",
+      "candidate_sha256": "c0946070435a656ff8910e4c53740ac696e252b6a2c984cbbcb55d4ec1d0be8d"
+    },
+    {
+      "path": "scripts/design-flow-handoff.mjs",
+      "baseline_sha256": "d5750500cc2dd2f486077dd8c05b004b2a239b6bfef3460d5ccfd241ec8c5aa4",
+      "candidate_sha256": "29392ac95182d40a1a269612a0ed3b8b30da3af0171fdc786408b5d3dd618a47"
+    },
+    {
+      "path": "scripts/test-design-flow-handoff.mjs",
+      "baseline_sha256": "76e2ac523904977f32cf466e25173b1b42b282bf13fbca150e1e998a837e6e9c",
+      "candidate_sha256": "cf62f3993f169073b66016fc9d688594c289d5b09cbc766ea7fc139733423613"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "baseline_sha256": "c678a0c94079ff5f201b1048f2f84a81aeb87b40cb73ad2d85baab7cf6745d65",
+      "candidate_sha256": "8612f7a4ff3c0495f6fcefb299c63456bee0afe4d25a25fdd97f382b5690aa1b"
+    },
+    {
+      "path": ".claude/skills/office/open-design/SKILL.md",
+      "baseline_sha256": "380bb4fab99493f359538dc7ae9f8f7dda12ea777fb59db9ff1bcdf86a092bd1",
+      "candidate_sha256": "9d0a20ebf7b00fe85dc25bbacd61895cb7df8ec6f645c2bb89b4f146012555d8"
+    },
+    {
+      "path": ".claude/skill-os/runtime/page-context.md",
+      "baseline_sha256": "c3b50765e13df25b0d66c1cd169ac08f69591ced5b753a04ad9beb29486f5ffa",
+      "candidate_sha256": "772a63116b2be445602d109671abd2361ce55a2a2666201703d4bc15ddb8f5bc"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/references/output-templates.md",
+      "baseline_sha256": "73aed967ea7b0b5fa25b11889d56092d9d11834e741d9a38a43c4c226c444ce6",
+      "candidate_sha256": "db7afdf94fdd280949b71a00aa1a254e3dc98e073e75d93f02faa702aa9f7e34"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "baseline_sha256": "3190775bfa5d10cbe0ffa1b2b5923a3930ce86fb709d05ff3031cb6766bf497a",
+      "candidate_sha256": "ad134e3a202135c51162782d70e27625bc44475bfef1f5175653c721645a340a"
+    }
+  ]
+}

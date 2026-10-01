@@ -424,7 +424,7 @@ function isAncestorModule(modules, ancestorId, descendantId) {
   return false;
 }
 
-function assertActionsDoNotOverlap({ modules, slots }, actions) {
+function assertActionsDoNotOverlap({ modules, slots }, actions, { allowPreserveOnly = false } = {}) {
   const targetIds = new Set();
   const actionIds = new Set();
   const targets = actions.map(action => {
@@ -462,7 +462,7 @@ function assertActionsDoNotOverlap({ modules, slots }, actions) {
       fail('CARRIER_ACTION_OVERLAP', `Carrier actions ${a.action_id} and ${b.action_id} overlap in the module graph`);
     }
   }
-  if (!targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, remove, or refine action');
+  if (!allowPreserveOnly && !targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, remove, or refine action');
   return targets;
 }
 
@@ -542,6 +542,7 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
   const source = await readPageSource(page, { root });
   const pairs = new Set();
   const originalActions = new Map();
+  const staticActions = new Map();
   const mixedRefine = record.judgments.some(item => item.action === 'refine') && record.judgments.some(item => !['refine', 'preserve'].includes(item.action));
   if (mixedRefine && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
   let unresolved = mixedRefine;
@@ -575,6 +576,10 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
       if (judgment.action === 'remove' && target.required) fail('CARRIER_REQUIRED_MODULE', 'Required modules cannot be removed');
       const state = page.state_support?.find(item => item.state_id === judgment.state_id);
       if (judgment.state_status === 'supported' && (!state || state.status !== 'supported' || !state.target_ids.includes(judgment.location.target_id))) fail('MATCH_STATE_UNSUPPORTED', 'Names alone do not prove state support at the requested location');
+      if (page.carrier_eligible) {
+        const actionKey = canonicalJson({ action: judgment.action, target_id: judgment.location.target_id });
+        if (!staticActions.has(actionKey)) staticActions.set(actionKey, { action_id: `DRAFT-${staticActions.size + 1}`, action: judgment.action, [judgment.action === 'add' ? 'slot_id' : 'module_id']: judgment.location.target_id });
+      }
     }
     unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || judgment.state_status !== 'supported';
   }
@@ -588,6 +593,16 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
       await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true });
     } catch (error) {
       if (record.decision === 'ready' || !['ORIGINAL_ACTION_OVERLAP', 'ORIGINAL_REFINEMENT_PROFILE', 'ORIGINAL_ACTIONS_REQUIRED'].includes(error.code)) throw error;
+      unresolved = true;
+    }
+  } else if (page.carrier_eligible) {
+    const graph = validateCarrierContract(page, anchorsIn(source.bytes.toString('utf8')));
+    try {
+      // Source/state evidence can repeat one action, but distinct actions must
+      // satisfy the same joint target/ancestry gate as the final binding.
+      assertActionsDoNotOverlap(graph, [...staticActions.values()], { allowPreserveOnly: true });
+    } catch (error) {
+      if (record.decision !== 'needs_context' || !['CARRIER_ACTION_TARGET_REUSED', 'CARRIER_ACTION_OVERLAP'].includes(error.code)) throw error;
       unresolved = true;
     }
   }

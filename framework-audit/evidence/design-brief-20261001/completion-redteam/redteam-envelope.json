@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "design-brief-completion-redteam-20261001",
+  "subject": {
+    "skill": "redteam",
+    "topic": "design-brief-completion",
+    "scene": "unknown",
+    "input_summary": "独立只读审查66个封存Skill/framework文件与A1–A7；内存复现静态动作冲突及reference_only附件索引边界。",
+    "output_paths": [
+      "/private/tmp/design-brief-20261001/completion-redteam/targets.json",
+      ".claude/skills/office/design-brief/SKILL.md",
+      "scripts/page-context.mjs",
+      "scripts/design-flow-handoff.mjs"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 7,
+    "findings": [
+      "FAIL A4/A7 Q-01 BLOCKER: static same-target and ancestor-child modify/preserve conflicts return ADAPTATION_READY, then final binding rejects TARGET_REUSED/OVERLAP; pre-freeze conflict gate is incomplete.",
+      "UNKNOWN A5 Q-02: chain reference_only exports a prototype attachment citing an absent frozen fact ID, explicitly marked unverified-source-index; independent caller validation remains unproven.",
+      "UNKNOWN A1/Q-03: compact contract fixtures and unavailable complete prompt/tool traces do not establish full production invocation or independently certified read isolation."
+    ]
+  }
+}

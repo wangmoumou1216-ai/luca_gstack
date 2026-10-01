@@ -946,6 +946,62 @@ function referenceManifestFile(manifest) {
   return v2File('control/handoff-manifest.json', 'application/json', Buffer.from(canonicalJson(manifest), 'utf8'));
 }
 
+function declaresReferencePacket(body) {
+  const lines = body.trimStart().split(/\r?\n/u);
+  const explicitEnvelope = lines[0].trim() === '# Design Generation Packet';
+  if (explicitEnvelope && lines.slice(1).some(line => /^(?:`{3,}|~{3,}|\{|\[)/u.test(line.trimStart()))) return true;
+  // A declaration must be a complete JSON document at a line boundary. The
+  // neutral bracket scan locates its end; JSON.parse supplies its actual meaning,
+  // including escaped keys/values. Never inspect inline prose or nested objects
+  // as independent documents, and never derive fact IDs from these candidates.
+  documents: for (let start = 0; start < lines.length; start++) {
+    if (!/^[ \t]*[\{\[]/u.test(lines[start])) continue;
+    const begin = start;
+    let depth = 0; let quoted = false; let escaped = false;
+    for (let end = begin; end < lines.length; end++) {
+      const line = lines[end];
+      // Markdown fences partition documents even if an earlier prose fragment
+      // starts with an unmatched bracket. Do not consume a later fenced root.
+      if (/^[ \t]*(?:`{3,}|~{3,})/u.test(line)) { start = end; continue documents; }
+      for (let offset = 0; offset < line.length; offset++) {
+        const char = line[offset];
+        if (quoted) {
+          if (escaped) escaped = false;
+          else if (char === '\\') escaped = true;
+          else if (char === '"') quoted = false;
+        } else if (char === '"') quoted = true;
+        else if (char === '{' || char === '[') depth++;
+        else if (char === '}' || char === ']') {
+          depth--;
+          if (depth !== 0) continue;
+          start = end;
+          if (line.slice(offset + 1).trim()) continue documents;
+          let document;
+          try { document = JSON.parse(lines.slice(begin, end + 1).join('\n')); } catch { continue documents; }
+          if (document && !Array.isArray(document) && typeof document === 'object' && Object.hasOwn(document, 'packet_kind') && document.packet_kind === 'design-generation') return true;
+          continue documents;
+        }
+      }
+    }
+    // An incomplete root consumes its region; its nested objects are not roots.
+    break;
+  }
+  return false;
+}
+
+function referencePrototypeSourceOptions(body) {
+  try {
+    const packet = inspectCarrierPacket(body);
+    return { factIds: packet.applicability.map(item => item.id), sourceIndexVerified: true };
+  } catch (error) {
+    // Recognize only a structured envelope declaration, never infer fact IDs
+    // from prose. A malformed declared envelope must not become legacy input.
+    const declaresPacket = declaresReferencePacket(body);
+    if (error.code !== 'PACKET_REFREEZE_REQUIRED' || declaresPacket) throw error;
+    return { sourceIndexVerified: false };
+  }
+}
+
 function assertReferenceBundleFresh(bundle) {
   if (bundle?.schema_version !== 2 || bundle?.bundle_kind !== 'reference_only' || bundle?.status !== 'EXPORTED' || !carrierId(bundle.handoff_id) || bundle.namespace !== `handoffs/${bundle.handoff_id}` || bundle.reference_output_profile !== 'single') fail('REFERENCE_BUNDLE_INVALID', 'Expected an exported V2 reference-only bundle');
   if ('carrier_content_hash' in bundle || 'module_contract_hash' in bundle || 'tac_sha256' in bundle || 'carrier_profile' in bundle) fail('REFERENCE_SEMANTIC_LEAK', 'Reference-only bundles cannot contain carrier, TAC or template-derivation identity');
@@ -955,7 +1011,13 @@ function assertReferenceBundleFresh(bundle) {
   const manifest = strictControlJson(manifestFile[0].bytes, 'control/handoff-manifest.json').parsed;
   const records = recordsFor(immutable);
   if (manifest.bundle_kind !== 'reference_only' || manifest.handoff_bundle_hash !== bundle.handoff_bundle_hash || canonicalManifestHash(manifest, records) !== bundle.handoff_bundle_hash || !isDeepStrictEqual(manifest.immutable_files, records) || ['carrier_content_hash', 'module_contract_hash', 'tac_sha256', 'carrier_profile'].some(key => key in manifest)) fail('REFERENCE_BUNDLE_CHANGED', 'Reference-only manifest/hash changed or leaked carrier semantics');
-  verifyPrototypeEvidence(immutable, manifest.prototype_evidence);
+  let prototypeSource = {};
+  if (manifest.prototype_evidence?.length) {
+    const brief = one(immutable, item => item.path === 'control/brief.md');
+    if (brief.length !== 1 || hash(brief[0].bytes) !== bundle.source_packet_sha256 || manifest.source_packet_sha256 !== bundle.source_packet_sha256) fail('REFERENCE_BUNDLE_CHANGED', 'Prototype evidence must remain bound to the actual immutable source body');
+    prototypeSource = referencePrototypeSourceOptions(brief[0].bytes.toString('utf8'));
+  }
+  verifyPrototypeEvidence(immutable, manifest.prototype_evidence, prototypeSource);
   return { manifest, immutable };
 }
 
@@ -963,7 +1025,7 @@ export async function buildReferenceOnlyHandoff({ handoffId, prototypeEvidence, 
   if (!carrierId(handoffId)) fail('HANDOFF_ID_INVALID', 'reference_only requires a new safe handoffId');
   const legacy = await buildDesignHandoff(args, options);
   const namespace = `handoffs/${handoffId}`;
-  const prototype = preparePrototypeEvidence(prototypeEvidence);
+  const prototype = preparePrototypeEvidence(prototypeEvidence, prototypeEvidence?.length ? referencePrototypeSourceOptions(legacy.brief) : {});
   const files = [...legacy.files.map(item => v2File(item.name === 'reference.png' ? 'control/reference.png' : `control/${item.name}`, item.mediaType, item.bytes)), ...prototype.files];
   const records = recordsFor(files);
   const manifestBody = {

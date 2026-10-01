@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "design-brief-professional-final-20261001",
+  "subject": {
+    "skill": "design-brief",
+    "topic": "Professional final panel: official writing, six capabilities, Luca integration and necessary abilities",
+    "scene": "unknown",
+    "input_summary": "Independent read-only review of exact authored candidate, upstream/downstream owners, source-sealed native expert reports and holdout artifacts. Latest transport code excluded and assigned to separate independent runtime closure.",
+    "output_paths": [
+      "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/.claude/skills/office/design-brief/SKILL.md",
+      "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/.claude/skills/office/design-brief/references/input-contract.md",
+      "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/.claude/skills/office/design-brief/references/output-templates.md",
+      "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/.claude/skills/office/design-brief/SCHEMA.md",
+      "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree/.claude/skills/office/open-design/SKILL.md",
+      "/Users/luca/.codex/worktrees/9343/luca_gstack/framework-audit/2026-10-01-design-brief-convergence.md",
+      "/Users/luca/.codex/worktrees/9343/luca_gstack/framework-audit/evidence/design-brief-20261001/README.md",
+      "/Users/luca/.codex/worktrees/9343/luca_gstack/framework-audit/evidence/design-brief-20261001/final-native-messages.ndjson",
+      "/Users/luca/.codex/worktrees/9343/luca_gstack/framework-audit/evidence/design-brief-20261001/holdout-responses.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "CONDITIONAL_PASS",
+    "passed": 10,
+    "total": 12,
+    "findings": [
+      "UNKNOWN C11/A1: Full production executions of all three ready entrances, live OD generation/readback/recovery and actual UI interaction are not established by contract fixtures or compact holdout responses.",
+      "UNKNOWN C12/Q03: Original seven-arm experimental read-scope reproducibility cannot be independently established from encrypted prompt metadata and unavailable complete tool/model traces.",
+      "WARN: PASS criteria concern inspected authored contracts and specific artifact/probe evidence; no global rank, statistical generalization, official certification or full skill invocation is claimed.",
+      "WARN: Latest R3 transport implementation and its mutation closure are excluded from this professional axis. Prior completion-redteam FAIL 3/7 and closure FAIL 8/10 and 7/10 remain retained; independent runtime closure and required integration checks must determine release readiness.",
+      "WARN: Final docs bound recognizable structure to explicit Packet declarations and complete standalone/fenced root JSON with decoded packet_kind. Unrecognizable or unparseable free bytes provide no machine source-ID guarantee; legacy unindexed Markdown requires explicit unverified-source-index and source review.",
+      "WARN: original_copy evidence is headless-scoped; desktop generation, external dependency transport and Codex carrier parity require their own actual authorized evidence."
+    ]
+  }
+}
