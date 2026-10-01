@@ -1,0 +1,28 @@
+{
+  "input_sha256": "812487c8fedfe81793d3581356599e861ce50db57591e69c1384828ee99da1c0",
+  "method": "Same-input artifact correction after independent product scope conflict finding. F1/F2/F3 r4 hashes remain unchanged; F8 r4 retained as failed evidence. This is not fresh cold generation or generalization proof.",
+  "change": "F8 freedom table and C-F8-BOUNDARY now distinguish authorized structural embedding S from visual-only refinement R, retaining original behavior/fields/permissions/other regions and separate profiles.",
+  "review_files": [
+    {
+      "fixture_id": "F1",
+      "path": "full-contract-r4/F1.md",
+      "sha256": "9ce82ca6fe9b8bff0efd8c7e6128e9cf0a33c6aa03281f99d4a4d0e780b496ac"
+    },
+    {
+      "fixture_id": "F2",
+      "path": "full-contract-r4/F2.md",
+      "sha256": "cf952c64a76ceedeebabe1f7c7459e59a989191d5df4255eeee1d1b57c569cd5"
+    },
+    {
+      "fixture_id": "F3",
+      "path": "full-contract-r4/F3.md",
+      "sha256": "ae7bdc5df5a4bc93f7d8d74b2f3793356872deafd153dbfd8764bc417eec3f17"
+    },
+    {
+      "fixture_id": "F8",
+      "path": "full-contract-final/F8.md",
+      "sha256": "41f36da4c9e4fb51fa8a8e8eedbc9bfbe6e17f9adf85e36a73798aac51faeaa5"
+    }
+  ],
+  "metadata_correction": "Final F8 completion-path index points to its permanent evidence copy; no source/behavior change."
+}

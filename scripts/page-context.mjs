@@ -462,7 +462,7 @@ function assertActionsDoNotOverlap({ modules, slots }, actions) {
       fail('CARRIER_ACTION_OVERLAP', `Carrier actions ${a.action_id} and ${b.action_id} overlap in the module graph`);
     }
   }
-  if (!targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, or remove action');
+  if (!targets.some(target => target.action !== 'preserve')) fail('CARRIER_NO_CHANGE', 'Carrier binding needs at least one add, modify, remove, or refine action');
   return targets;
 }
 
@@ -518,6 +518,83 @@ export function validateMatchAssessment(catalog, assessment, { packetBody, froze
   }
   if ([...facts.keys()].some(id => !scopedFacts.has(id) && !coveredFacts.has(id)) || coveredActions.size !== binding.actions.length) fail('MATCH_FACT_COVERAGE', 'Every unscoped Packet fact and every action requires location evidence; scoped facts remain in reviewed_fact_ids');
   return { status: 'AWAITING_ADOPTION', binding_allowed: true, semantic_verification: 'model-reviewed-not-machine-proven' };
+}
+
+// The source inventory is supplied separately from the draft, never reconstructed
+// from its judgments. This revision is not a frozen Packet/binding/adoption hash.
+export function computeDesignSourceRevision(sourceItems) {
+  shape(sourceItems, schema.$defs.design_source);
+  if (new Set(sourceItems.map(item => item.id)).size !== sourceItems.length) fail('SOURCE_ID_REUSED', 'Design source IDs must be unique');
+  return sha256(`luca-design-source-revision/v1\0${canonicalJson(sourceItems)}`);
+}
+
+export async function validateAdaptationDraft(catalog, record, { root = repoRoot, sourceItems, browser } = {}) {
+  shape(record, schema.$defs.adaptation_draft);
+  if (!sourceItems) fail('DESIGN_SOURCE_REQUIRED', 'Supply the actual current design source inventory');
+  const revision = computeDesignSourceRevision(sourceItems);
+  await validateCatalog(catalog, root);
+  if (revision !== record.source_revision_sha256) fail('STALE_ADAPTATION_SOURCE', 'Design input changed; reassess placement before freezing');
+  if (computeCatalogHash(catalog) !== record.catalog_sha256) fail('STALE_MATCH_CATALOG', 'Template catalog changed; reassess placement');
+  const page = catalog.pages.find(item => item.page_id === record.page_id && item.lifecycle === 'live');
+  if (!page || page.source_hash !== record.source_hash) fail('STALE_ADAPTATION_TEMPLATE', 'Selected template is unavailable or changed');
+  const facts = new Map(sourceItems.map(item => [item.id, item]));
+  if (record.reviewed_source_ids.length !== facts.size || record.reviewed_source_ids.some(id => !facts.has(id))) fail('ADAPTATION_SOURCE_COVERAGE', 'Review every current source item, including preserve constraints');
+  const source = await readPageSource(page, { root });
+  const pairs = new Set();
+  const originalActions = new Map();
+  const mixedRefine = record.judgments.some(item => item.action === 'refine') && record.judgments.some(item => !['refine', 'preserve'].includes(item.action));
+  if (mixedRefine && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
+  let unresolved = mixedRefine;
+  for (const judgment of record.judgments) {
+    const fact = facts.get(judgment.source_id);
+    if (!fact || fact.text !== judgment.excerpt || !fact.required_states.includes(judgment.state_id)) fail('ADAPTATION_SOURCE_EVIDENCE', 'Use the complete source text and an applicable state');
+    if (judgment.purpose_excerpt !== page.intent) fail('MATCH_TARGET_EVIDENCE', 'Purpose must quote the actual template intent');
+    const pair = `${fact.id}:${judgment.state_id}`;
+    if (pairs.has(pair)) fail('MATCH_JUDGMENT_DUPLICATE', 'One explicit placement per source/state; resolve alternatives first');
+    pairs.add(pair);
+    if (page.original_copy) {
+      if (!judgment.location.scope || !judgment.location.locator) fail('ORIGINAL_ADAPTER_REQUIRED', 'Original templates require exact scope/locator, including hidden template scopes');
+      const { locateOriginalNode } = await import('./original-template-index.mjs');
+      const { locateOriginalEditRanges } = await import('./original-template-edits.mjs');
+      const located = await locateOriginalNode(source.bytes, { source_sha256: page.source_hash, scope: judgment.location.scope, locator: judgment.location.locator }, { browser });
+      if (located.node.label !== judgment.location.label) fail('MATCH_TARGET_EVIDENCE', 'Original node label must match current inert index evidence');
+      const action = { action_id: 'DRAFT-01', action: judgment.action, scope: judgment.location.scope, locator: judgment.location.locator };
+      const actionKey = canonicalJson({ action: judgment.action, scope: judgment.location.scope, locator: judgment.location.locator });
+      if (!originalActions.has(actionKey)) originalActions.set(actionKey, { ...action, action_id: `DRAFT-${originalActions.size + 1}` });
+      const { targets: [range] } = await locateOriginalEditRanges(source.bytes, [action], { browser, allowPreserveOnly: true });
+      if (range.void && ['add', 'modify'].includes(judgment.action) && record.decision === 'ready') fail('ORIGINAL_ACTION_UNSUPPORTED', 'Void-element add/modify cannot be executed by the original adapter; use an explicitly scoped refine or resolve the conflict');
+      unresolved ||= range.void && ['add', 'modify'].includes(judgment.action);
+      // Catalog state names are not a proof of rendered behavior. Evidence must
+      // be reviewed by a designer/user; execution is checked by the original adapter.
+      if (!page.states.includes(judgment.state_id) && judgment.state_status === 'supported') fail('MATCH_STATE_UNSUPPORTED', 'An unlisted original state cannot claim existing support; record a conflict/extension');
+    } else {
+      const target = [...(page.modules ?? []), ...(page.slots ?? []), ...page.regions].find(item => (item.module_id ?? item.slot_id ?? item.region_id) === judgment.location.target_id);
+      if (!target) fail('MATCH_TARGET_EVIDENCE', 'Placement must identify an actual module, slot, or semantic region');
+      if (judgment.target_excerpt !== target.intent) fail('MATCH_TARGET_EVIDENCE', 'Placement must quote the exact current target intent');
+      if (target.allowed_actions && !target.allowed_actions.includes(judgment.action)) fail('CARRIER_ACTION_FORBIDDEN', 'Requested action is not allowed at this template location');
+      if (judgment.action === 'remove' && target.required) fail('CARRIER_REQUIRED_MODULE', 'Required modules cannot be removed');
+      const state = page.state_support?.find(item => item.state_id === judgment.state_id);
+      if (judgment.state_status === 'supported' && (!state || state.status !== 'supported' || !state.target_ids.includes(judgment.location.target_id))) fail('MATCH_STATE_UNSUPPORTED', 'Names alone do not prove state support at the requested location');
+    }
+    unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || judgment.state_status !== 'supported';
+  }
+  if (sourceItems.some(item => item.required_states.some(state => !pairs.has(`${item.id}:${state}`)))) fail('ADAPTATION_SOURCE_COVERAGE', 'Every source item and applicable state needs a placement/conflict judgment');
+  if (page.original_copy) {
+    const { locateOriginalEditRanges } = await import('./original-template-edits.mjs');
+    try {
+      // Multiple source/state judgments can describe one action. Distinct
+      // actions must remain distinct, so conflicting or nested ranges cannot
+      // report ready merely because each position exists in isolation.
+      await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true });
+    } catch (error) {
+      if (record.decision === 'ready' || !['ORIGINAL_ACTION_OVERLAP', 'ORIGINAL_REFINEMENT_PROFILE', 'ORIGINAL_ACTIONS_REQUIRED'].includes(error.code)) throw error;
+      unresolved = true;
+    }
+  }
+
+  if (record.decision === 'ready' && unresolved) fail('MATCH_AMBIGUOUS', 'Resolve unknown states, uncertain positions, and alternatives before ready');
+  if (record.decision === 'reference_only' && record.judgments.some(item => item.confidence !== 'no_match' || item.alternatives.length)) fail('MATCH_DECISION_CONFLICT', 'Reference-only cannot hide unresolved template adoption');
+  return { schema_version: 1, mode: 'adaptation_draft', status: record.decision === 'ready' ? 'ADAPTATION_READY' : record.decision === 'needs_context' ? 'NEEDS_CONTEXT' : 'REFERENCE_ONLY', source_revision_sha256: revision, binding_allowed: false, execution_allowed: false, semantic_verification: 'model-reviewed-not-machine-proven', execution_path: page.original_copy ? 'original_adapter' : page.carrier_eligible ? 'structural_carrier' : 'reference_only', reason: record.reason };
 }
 
 export async function validateCarrierBindingDraft(catalog, record, { root = repoRoot, packetBody } = {}) {
@@ -602,10 +679,10 @@ async function main() {
   const [command, ...args] = process.argv.slice(2);
   const options = {};
   for (let i = 0; i < args.length; i += 2) {
-    if (!['--root', '--catalog', '--query', '--scope', '--record', '--preview', '--packet'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context.mjs validate|candidates|phase-a-discovery|selection|carrier-binding-draft|carrier-binding [--query text|--record path] [--packet path] [--preview path] [--root path] [--catalog path]');
+    if (!['--root', '--catalog', '--query', '--scope', '--record', '--preview', '--packet', '--sources'].includes(args[i]) || !args[i + 1] || Object.hasOwn(options, args[i])) fail('CLI_USAGE', 'Usage: page-context.mjs validate|candidates|phase-a-discovery|selection|adaptation-draft|carrier-binding-draft|carrier-binding [--query text|--record path] [--packet path] [--preview path] [--root path] [--catalog path]');
     options[args[i]] = args[i + 1];
   }
-  if (!['validate', 'candidates', 'phase-a-discovery', 'selection', 'carrier-binding-draft', 'carrier-binding'].includes(command)) fail('CLI_USAGE', 'Expected validate, candidates, phase-a-discovery, selection, carrier-binding-draft or carrier-binding command');
+  if (!['validate', 'candidates', 'phase-a-discovery', 'selection', 'adaptation-draft', 'carrier-binding-draft', 'carrier-binding'].includes(command)) fail('CLI_USAGE', 'Expected validate, candidates, phase-a-discovery, selection, adaptation-draft, carrier-binding-draft or carrier-binding command');
   const root = options['--root'] ?? repoRoot;
   if (command === 'phase-a-discovery') {
     if (!options['--query']) fail('CLI_USAGE', 'phase-a-discovery requires --query');
@@ -623,6 +700,12 @@ async function main() {
     const record = JSON.parse(await readFile(await confinedPath(root, options['--record']), 'utf8'));
     const preview = options['--preview'] ? JSON.parse(await readFile(await confinedPath(root, options['--preview']), 'utf8')) : undefined;
     return validateSelection(catalog, record, { root, preview });
+  }
+  if (command === 'adaptation-draft') {
+    if (!options['--record'] || !options['--sources']) fail('CLI_USAGE', 'adaptation-draft requires --record and --sources');
+    const record = JSON.parse(await readFile(await confinedPath(root, options['--record']), 'utf8'));
+    const sourceItems = JSON.parse(await readFile(await confinedPath(root, options['--sources']), 'utf8'));
+    return validateAdaptationDraft(catalog, record, { root, sourceItems });
   }
   if (command === 'carrier-binding-draft' || command === 'carrier-binding') {
     if (!options['--record']) fail('CLI_USAGE', `${command} requires --record path`);

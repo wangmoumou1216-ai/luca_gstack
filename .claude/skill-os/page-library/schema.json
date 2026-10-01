@@ -24,7 +24,7 @@
       "properties": { "region_id": { "$ref": "#/$defs/id" }, "parent_id": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }] }, "name": { "$ref": "#/$defs/text" }, "aliases": { "$ref": "#/$defs/aliases" }, "intent": { "$ref": "#/$defs/text" }, "anchor": { "$ref": "#/$defs/anchor" } }
     },
     "lifecycle": { "enum": ["live", "legacy_fixture", "retired"] },
-    "carrier_action": { "enum": ["add", "modify", "remove", "preserve"] },
+    "carrier_action": { "enum": ["add", "modify", "remove", "refine", "preserve"] },
     "carrier_profile": { "const": "structural_carrier" },
     "module_invariant": {
       "type": "object", "additionalProperties": false, "required": ["invariant_id", "name", "anchor"],
@@ -36,7 +36,7 @@
       "properties": {
         "module_id": { "$ref": "#/$defs/id" }, "parent_module_id": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }] },
         "name": { "$ref": "#/$defs/text" }, "intent": { "$ref": "#/$defs/text" }, "anchor": { "$ref": "#/$defs/anchor" }, "required": { "type": "boolean" },
-        "allowed_actions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["modify", "remove", "preserve"] } },
+        "allowed_actions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["modify", "remove", "refine", "preserve"] } },
         "invariants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/module_invariant" } }
       }
     },
@@ -104,7 +104,7 @@
     "binding_action": {
       "oneOf": [
         { "type": "object", "additionalProperties": false, "required": ["action_id", "action", "slot_id"], "properties": { "action_id": { "$ref": "#/$defs/token" }, "action": { "const": "add" }, "slot_id": { "$ref": "#/$defs/id" } } },
-        { "type": "object", "additionalProperties": false, "required": ["action_id", "action", "module_id"], "properties": { "action_id": { "$ref": "#/$defs/token" }, "action": { "enum": ["modify", "remove", "preserve"] }, "module_id": { "$ref": "#/$defs/id" } } }
+        { "type": "object", "additionalProperties": false, "required": ["action_id", "action", "module_id"], "properties": { "action_id": { "$ref": "#/$defs/token" }, "action": { "enum": ["modify", "remove", "refine", "preserve"] }, "module_id": { "$ref": "#/$defs/id" } } }
       ]
     },
     "carrier_binding_target": {
@@ -139,6 +139,277 @@
     "carrier_binding": {
       "type": "object", "additionalProperties": false, "required": ["schema_version", "bundle_kind", "frozen_packet", "binding", "adoption"],
       "properties": { "schema_version": { "const": 2 }, "bundle_kind": { "const": "carrier" }, "frozen_packet": { "$ref": "#/$defs/frozen_packet" }, "binding": { "$ref": "#/$defs/carrier_binding_target" }, "adoption": { "$ref": "#/$defs/carrier_adoption" } }
+    },
+    "design_source_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text",
+        "required_states"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/token"
+        },
+        "text": {
+          "$ref": "#/$defs/text"
+        },
+        "required_states": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "design_source": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/design_source_item"
+      }
+    },
+    "adaptation_location": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target_id"
+          ],
+          "properties": {
+            "target_id": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scope",
+            "locator",
+            "label"
+          ],
+          "properties": {
+            "scope": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "template_id"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "template_id": {
+                    "oneOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "$ref": "#/$defs/text"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "locator": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "attribute"
+                    },
+                    "name": {
+                      "enum": [
+                        "id",
+                        "data-od-id",
+                        "data-slot"
+                      ]
+                    },
+                    "value": {
+                      "$ref": "#/$defs/text"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "indices"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "element-path"
+                    },
+                    "indices": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "adaptation_judgment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "excerpt",
+        "state_id",
+        "action",
+        "location",
+        "purpose_excerpt",
+        "location_evidence",
+        "state_evidence",
+        "state_status",
+        "confidence",
+        "alternatives"
+      ],
+      "properties": {
+        "source_id": {
+          "$ref": "#/$defs/token"
+        },
+        "excerpt": {
+          "$ref": "#/$defs/text"
+        },
+        "state_id": {
+          "$ref": "#/$defs/id"
+        },
+        "action": {
+          "$ref": "#/$defs/carrier_action"
+        },
+        "location": {
+          "$ref": "#/$defs/adaptation_location"
+        },
+        "purpose_excerpt": {
+          "$ref": "#/$defs/text"
+        },
+        "target_excerpt": { "$ref": "#/$defs/text" },
+        "location_evidence": {
+          "$ref": "#/$defs/text"
+        },
+        "state_evidence": {
+          "$ref": "#/$defs/text"
+        },
+        "state_status": {
+          "enum": [
+            "supported",
+            "unsupported",
+            "unknown"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "uncertain",
+            "no_match"
+          ]
+        },
+        "alternatives": {
+          "type": "array",
+          "minItems": 0,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        }
+      }
+    },
+    "adaptation_draft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "mode",
+        "source_revision_sha256",
+        "catalog_sha256",
+        "page_id",
+        "source_hash",
+        "decision",
+        "reason",
+        "reviewed_source_ids",
+        "judgments"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "adaptation_draft"
+        },
+        "source_revision_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "catalog_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "page_id": {
+          "$ref": "#/$defs/id"
+        },
+        "source_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "decision": {
+          "enum": [
+            "ready",
+            "needs_context",
+            "reference_only"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/text"
+        },
+        "reviewed_source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/token"
+          }
+        },
+        "judgments": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/adaptation_judgment"
+          }
+        }
+      }
     },
     "catalog": {
       "type": "object", "additionalProperties": false, "required": ["schema_version", "retired_page_ids", "pages"],

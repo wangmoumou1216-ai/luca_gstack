@@ -1,0 +1,115 @@
+{
+  "source": "/Users/luca/.codex/worktrees/9343/luca_gstack",
+  "files": [
+    {
+      "path": ".claude/hooks/controlled-change-guard.mjs",
+      "sha256": "7a5a3d47f1beeca4a3ec2213f4d5e735d749084567431aac6f8c158d5a9c82fc",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/codex-child-project.mjs",
+      "sha256": "02139c51c4815e6766ff58d874f75c10da61b82b4776f7042f8a721d18f9f492",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/event-attestation.mjs",
+      "sha256": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/git-env.mjs",
+      "sha256": "63f19a2f6e2757b6efb5ce17c2c0830c807eb5d629de99e87ff52fe55e6781a0",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/harness.mjs",
+      "sha256": "2ac959d4a04af980863ddea4b2c4263ff52ec14fb91af7fd694530a34a25591a",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/host-launch.mjs",
+      "sha256": "457ff9038cc5df1409d711c053478a92517b8f5331f59cceda7eeff4867fbc99",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/memroot.mjs",
+      "sha256": "84efa17c488da1b596e4b58a37e096ddfe5a4cf62d06d713c6802b573bd7186f",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/project-event-closure.mjs",
+      "sha256": "82b5aa13ed014b30d5c264a45d2a7a5430ca7352079308377c93dc77f0f54e66",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/project-host-view.mjs",
+      "sha256": "4aaaacffc862a94e211182d0d812176f7fff31580de365dd1dbb7cd30a13444c",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/project-read-grants.mjs",
+      "sha256": "14a865804f9378adbe8892ddff5d314359271a1491bc30b1a4146f90982d60dd",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/project-selection.mjs",
+      "sha256": "1ccb5f15e3c39dd90a843f9cc1297332217945c8960412ac435133d60de0b11f",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/lib/project-substrate.mjs",
+      "sha256": "d06015d39668b8e12f1749dcd8d85f462fc404f3b0de90edf07d7a3bd80bd533",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/project-scope-guard.mjs",
+      "sha256": "6794bdd6caa678445b0c0ab0a67f3dd4a8090db294ae94ee530b9b1615fe7e4d",
+      "mode": 420
+    },
+    {
+      "path": ".claude/hooks/session-sync.mjs",
+      "sha256": "2a782c41d0edce6c476a2989d431a1c4ed7aa5e5468580ab2df44ed6022e72ac",
+      "mode": 420
+    },
+    {
+      "path": ".codex/codex-hook-adapter.mjs",
+      "sha256": "26b3c104eaea56adb088dbcec7a886d91fd1184e7d049d3651c111b35dbe6e34",
+      "mode": 420
+    },
+    {
+      "path": "scripts/controlled-change-controller.mjs",
+      "sha256": "5920e378fc321d39d28845c868a83adc1a7c98f383fafca8c3e2eca69ef1953e",
+      "mode": 420
+    },
+    {
+      "path": "scripts/controlled-change.mjs",
+      "sha256": "f7fa38a09b6c95b3441cffd57bee4be58dd4535fc9813e57ace88789c9436a90",
+      "mode": 420
+    },
+    {
+      "path": "scripts/model-route-host.mjs",
+      "sha256": "77b7f952bf39781d57a155e06fa69de8b6427d118c681f4cf1f80a220958bedc",
+      "mode": 420
+    },
+    {
+      "path": "scripts/project-lease.mjs",
+      "sha256": "7e6469c1d62a4eda28f05b01a85dea5c7606e1ea06aa5c06435add96f33b8945",
+      "mode": 420
+    },
+    {
+      "path": "scripts/project-pin.mjs",
+      "sha256": "b2e94ef1f5cf6dd769b6032d76091e1d8f4a11bc7685423ac2414dab461b9e8c",
+      "mode": 420
+    },
+    {
+      "path": "scripts/project.sh",
+      "sha256": "52c1b0a7f717f7d39e2bae2c8bdbbd5ae56487917b50f01f9bb8dd782a87b28c",
+      "mode": 493
+    },
+    {
+      "path": "scripts/test-project-gate-v34-dual-host.mjs",
+      "sha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+      "mode": 420
+    }
+  ]
+}

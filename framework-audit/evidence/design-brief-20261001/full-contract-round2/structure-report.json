@@ -1,0 +1,834 @@
+{
+  "purpose": "supplementary qualitative capability evaluation; independent generation from fixed input; not original seven arms",
+  "input_path": "/private/tmp/design-brief-20261001/evidence/full-contract-round2-inputs.json",
+  "input_sha256": "812487c8fedfe81793d3581356599e861ce50db57591e69c1384828ee99da1c0",
+  "scope": "NO_PIN; writes restricted to four Briefs plus structural report; no live project/OD/preamble/state",
+  "authority_read_files": [
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/CONTEXT.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/generated/context-index.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/generated/skill-catalog.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/runtime/framework-maintenance.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/agents/plan-agent.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/runtime/long-session.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/routing-chain-check.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/SKILL.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/design-brief/SKILL.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/design-brief/SCHEMA.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/design-brief/references/input-contract.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/design-brief/references/output-templates.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/runtime/workflow-mode.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/generated/input-modes/design-brief.json",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/runtime/page-context.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/references/ai-native-state-coverage.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/references/interaction-mechanics.md",
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skills/office/references/ai-native-taste-anchors.md"
+  ],
+  "other_reads": [
+    "/private/tmp/design-brief-20261001/evidence/full-contract-round2-inputs.json"
+  ],
+  "hash_only_read": [
+    "/Users/luca/.codex/worktrees/9343/luca_gstack/.claude/skill-os/input-modes.yaml"
+  ],
+  "commands": [
+    "python3 memory/scripts/get_memory.py --summary",
+    "hash source registry bytes and compare selected generated view source_sha256"
+  ],
+  "semantic_quality": "pending independent expert review; producer reports only observed structural counts and bytes",
+  "files": [
+    {
+      "path": "/private/tmp/design-brief-20261001/evidence/full-contract-round2/F1.md",
+      "sha256": "bf1d118335fb8fc455f9dc4c63ccc155ac955995c22c0f232b567185e3b36ed6",
+      "bytes": 42806,
+      "lines": 229,
+      "headings": [
+        "设计坐标系",
+        "原生AI深度思考小结",
+        "假设挑战结论",
+        "体验验证结论",
+        "品味检查四锚点",
+        "设计决策清单",
+        "页面与交互位置映射",
+        "可追踪完整矩阵",
+        "Design Generation Packet",
+        "Tool Consumption Contract",
+        "REMOVED 记录",
+        "交接块"
+      ],
+      "source_fact_count": 5,
+      "decision_count": 3,
+      "state_category_count": 12,
+      "packet_item_count": 36,
+      "acceptance_count": 5,
+      "source_fact_destination_count": 5,
+      "source_fact_map": [
+        {
+          "source_id": "SRC-F1-01",
+          "requirement_id": "R-1 / AE-1",
+          "excerpt": "Actual PRD R-1/AE-1 owner filtering",
+          "decision": "D-1",
+          "states": [
+            "STATE-F1-DEFAULT",
+            "STATE-1"
+          ],
+          "acceptance": "AC-F1-01",
+          "packet_item": "SRC-F1-01",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F1-02",
+          "requirement_id": "REQ-F1-02",
+          "excerpt": "selected D-1 combined filters",
+          "decision": "D-1",
+          "states": [
+            "STATE-F1-DEFAULT",
+            "STATE-1"
+          ],
+          "acceptance": "AC-F1-02",
+          "packet_item": "SRC-F1-02",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F1-03",
+          "requirement_id": "REQ-F1-03",
+          "excerpt": "STATE-1 preserve/clear empty conditions",
+          "decision": "D-1",
+          "states": [
+            "STATE-F1-DEFAULT",
+            "STATE-1"
+          ],
+          "acceptance": "AC-F1-02",
+          "packet_item": "SRC-F1-03",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F1-04",
+          "requirement_id": "REQ-F1-04",
+          "excerpt": "AI no-intervention confirmed",
+          "decision": "D-F1-02",
+          "states": [
+            "STATE-F1-DEFAULT",
+            "STATE-1"
+          ],
+          "acceptance": "AC-F1-03",
+          "packet_item": "SRC-F1-04",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F1-05",
+          "requirement_id": "REQ-F1-05",
+          "excerpt": "selected list/filters/OD",
+          "decision": "D-F1-03",
+          "states": [
+            "STATE-F1-DEFAULT",
+            "STATE-1"
+          ],
+          "acceptance": "AC-F1-04",
+          "packet_item": "SRC-F1-05",
+          "result": "MAPPED"
+        }
+      ],
+      "mechanical_observations": "12 required section titles observed; eight named fields observed per D; unique Packet item IDs observed; source excerpts observed in exact fixture; no semantic PASS claimed"
+    },
+    {
+      "path": "/private/tmp/design-brief-20261001/evidence/full-contract-round2/F2.md",
+      "sha256": "4679c5ceaee3087b065e779f71a477f15dc90912d26fd39ed7c346ea192cd440",
+      "bytes": 54531,
+      "lines": 262,
+      "headings": [
+        "设计坐标系",
+        "原生AI深度思考小结",
+        "假设挑战结论",
+        "体验验证结论",
+        "品味检查四锚点",
+        "设计决策清单",
+        "页面与交互位置映射",
+        "可追踪完整矩阵",
+        "Design Generation Packet",
+        "Tool Consumption Contract",
+        "REMOVED 记录",
+        "交接块"
+      ],
+      "source_fact_count": 11,
+      "decision_count": 4,
+      "state_category_count": 12,
+      "packet_item_count": 50,
+      "acceptance_count": 7,
+      "source_fact_destination_count": 11,
+      "source_fact_map": [
+        {
+          "source_id": "SRC-F2-01",
+          "requirement_id": "REQ-F2-01",
+          "excerpt": "Existing spoken requirements",
+          "decision": "D-F2-01",
+          "states": [
+            "STATE-F2-DEFAULT"
+          ],
+          "acceptance": "AC-F2-06",
+          "packet_item": "SRC-F2-01",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-02",
+          "requirement_id": "REQ-F2-02",
+          "excerpt": "owner filtering for service records",
+          "decision": "D-F2-01",
+          "states": [
+            "STATE-F2-DEFAULT"
+          ],
+          "acceptance": "AC-F2-01",
+          "packet_item": "SRC-F2-02",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-03",
+          "requirement_id": "REQ-F2-03",
+          "excerpt": "empty retains conditions",
+          "decision": "D-F2-02",
+          "states": [
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-02",
+          "packet_item": "SRC-F2-03",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-04",
+          "requirement_id": "REQ-F2-04",
+          "excerpt": "with clear",
+          "decision": "D-F2-02",
+          "states": [
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-02",
+          "packet_item": "SRC-F2-04",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-05",
+          "requirement_id": "REQ-F2-05",
+          "excerpt": "preserve other content",
+          "decision": "D-F2-03",
+          "states": [
+            "STATE-F2-DEFAULT",
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-03",
+          "packet_item": "SRC-F2-05",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-06",
+          "requirement_id": "REQ-F2-06",
+          "excerpt": "permissions",
+          "decision": "D-F2-03",
+          "states": [
+            "STATE-F2-DEFAULT",
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-03",
+          "packet_item": "SRC-F2-06",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-07",
+          "requirement_id": "REQ-F2-07",
+          "excerpt": "Selected list template",
+          "decision": "D-F2-04",
+          "states": [
+            "STATE-F2-DEFAULT",
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-04",
+          "packet_item": "SRC-F2-07",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-08",
+          "requirement_id": "REQ-F2-08",
+          "excerpt": "filters controls conditions",
+          "decision": "D-F2-04",
+          "states": [
+            "STATE-F2-DEFAULT",
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-04",
+          "packet_item": "SRC-F2-08",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-09",
+          "requirement_id": "REQ-F2-09",
+          "excerpt": "table displays results",
+          "decision": "D-F2-04",
+          "states": [
+            "STATE-F2-DEFAULT",
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-04",
+          "packet_item": "SRC-F2-09",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-10",
+          "requirement_id": "REQ-F2-10",
+          "excerpt": "default/empty support",
+          "decision": "D-F2-04",
+          "states": [
+            "STATE-F2-DEFAULT",
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-05",
+          "packet_item": "SRC-F2-10",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F2-11",
+          "requirement_id": "REQ-F2-11",
+          "excerpt": "default/empty support",
+          "decision": "D-F2-02",
+          "states": [
+            "STATE-F2-EMPTY"
+          ],
+          "acceptance": "AC-F2-05",
+          "packet_item": "SRC-F2-11",
+          "result": "MAPPED"
+        }
+      ],
+      "mechanical_observations": "12 required section titles observed; eight named fields observed per D; unique Packet item IDs observed; source excerpts observed in exact fixture; no semantic PASS claimed"
+    },
+    {
+      "path": "/private/tmp/design-brief-20261001/evidence/full-contract-round2/F3.md",
+      "sha256": "189cbbcfd64d5d2bdfe23d7bb186846c7a2ef3e19d05953343f0face5206ab10",
+      "bytes": 65587,
+      "lines": 294,
+      "headings": [
+        "设计坐标系",
+        "原生AI深度思考小结",
+        "假设挑战结论",
+        "体验验证结论",
+        "品味检查四锚点",
+        "设计决策清单",
+        "页面与交互位置映射",
+        "可追踪完整矩阵",
+        "Design Generation Packet",
+        "Tool Consumption Contract",
+        "REMOVED 记录",
+        "交接块"
+      ],
+      "source_fact_count": 13,
+      "decision_count": 6,
+      "state_category_count": 12,
+      "packet_item_count": 58,
+      "acceptance_count": 7,
+      "source_fact_destination_count": 13,
+      "source_fact_map": [
+        {
+          "source_id": "SRC-F3-01",
+          "requirement_id": "REQ-F3-01",
+          "excerpt": "Observed prototype",
+          "decision": "D-F3-06",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-06",
+          "packet_item": "SRC-F3-01",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-02",
+          "requirement_id": "REQ-F3-02",
+          "excerpt": "search",
+          "decision": "D-F3-01",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-01",
+          "packet_item": "SRC-F3-02",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-03",
+          "requirement_id": "REQ-F3-03",
+          "excerpt": "detail",
+          "decision": "D-F3-02",
+          "states": [
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-SEARCH"
+          ],
+          "acceptance": "AC-F3-02",
+          "packet_item": "SRC-F3-03",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-04",
+          "requirement_id": "REQ-F3-04",
+          "excerpt": "return preserving search",
+          "decision": "D-F3-02",
+          "states": [
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-SEARCH"
+          ],
+          "acceptance": "AC-F3-02",
+          "packet_item": "SRC-F3-04",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-05",
+          "requirement_id": "REQ-F3-05",
+          "excerpt": "inline empty clear",
+          "decision": "D-F3-03",
+          "states": [
+            "STATE-F3-EMPTY",
+            "STATE-F3-SEARCH"
+          ],
+          "acceptance": "AC-F3-03",
+          "packet_item": "SRC-F3-05",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-06",
+          "requirement_id": "REQ-F3-06",
+          "excerpt": "User selects original record module",
+          "decision": "D-F3-05",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-04",
+          "packet_item": "SRC-F3-06",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-07",
+          "requirement_id": "REQ-F3-07",
+          "excerpt": "OD",
+          "decision": "D-F3-05",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-04",
+          "packet_item": "SRC-F3-07",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-08",
+          "requirement_id": "REQ-F3-08",
+          "excerpt": "for UI refinement",
+          "decision": "D-F3-05",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-04",
+          "packet_item": "SRC-F3-08",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-09",
+          "requirement_id": "REQ-F3-09",
+          "excerpt": "behavior/fields/permissions preserved",
+          "decision": "D-F3-04",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-05",
+          "packet_item": "SRC-F3-09",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-10",
+          "requirement_id": "REQ-F3-10",
+          "excerpt": "behavior/fields/permissions preserved",
+          "decision": "D-F3-04",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-05",
+          "packet_item": "SRC-F3-10",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-11",
+          "requirement_id": "REQ-F3-11",
+          "excerpt": "behavior/fields/permissions preserved",
+          "decision": "D-F3-04",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-05",
+          "packet_item": "SRC-F3-11",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F3-12",
+          "requirement_id": "REQ-F3-12",
+          "excerpt": "unique source-bound locator",
+          "decision": "D-F3-06",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-06",
+          "packet_item": "SRC-F3-12",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F3-13",
+          "requirement_id": "REQ-F3-13",
+          "excerpt": "observed state support",
+          "decision": "D-F3-06",
+          "states": [
+            "STATE-F3-SEARCH",
+            "STATE-F3-DETAIL",
+            "STATE-F3-RETURN",
+            "STATE-F3-EMPTY"
+          ],
+          "acceptance": "AC-F3-06",
+          "packet_item": "SRC-F3-13",
+          "result": "NEEDS_CONTEXT"
+        }
+      ],
+      "mechanical_observations": "12 required section titles observed; eight named fields observed per D; unique Packet item IDs observed; source excerpts observed in exact fixture; no semantic PASS claimed"
+    },
+    {
+      "path": "/private/tmp/design-brief-20261001/evidence/full-contract-round2/F8.md",
+      "sha256": "cb2cc294137ff1a7bb8fdbcf64992c3481186500685a83e02e42ce5edbe1255e",
+      "bytes": 78524,
+      "lines": 314,
+      "headings": [
+        "设计坐标系",
+        "原生AI深度思考小结",
+        "假设挑战结论",
+        "体验验证结论",
+        "品味检查四锚点",
+        "设计决策清单",
+        "页面与交互位置映射",
+        "可追踪完整矩阵",
+        "Design Generation Packet",
+        "Tool Consumption Contract",
+        "REMOVED 记录",
+        "交接块"
+      ],
+      "source_fact_count": 19,
+      "decision_count": 6,
+      "state_category_count": 12,
+      "packet_item_count": 70,
+      "acceptance_count": 7,
+      "source_fact_destination_count": 19,
+      "source_fact_map": [
+        {
+          "source_id": "SRC-F8-01",
+          "requirement_id": "REQ-F8-01",
+          "excerpt": "An existing prototype is available",
+          "decision": "D-F8-05",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-05",
+          "packet_item": "SRC-F8-01",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-02",
+          "requirement_id": "REQ-F8-02",
+          "excerpt": "observed search",
+          "decision": "D-F8-02",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-02",
+          "packet_item": "SRC-F8-02",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-03",
+          "requirement_id": "REQ-F8-03",
+          "excerpt": "detail",
+          "decision": "D-F8-02",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-02",
+          "packet_item": "SRC-F8-03",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-04",
+          "requirement_id": "REQ-F8-04",
+          "excerpt": "return retaining search",
+          "decision": "D-F8-02",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-02",
+          "packet_item": "SRC-F8-04",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-05",
+          "requirement_id": "REQ-F8-05",
+          "excerpt": "inline empty clear behavior",
+          "decision": "D-F8-02",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-02",
+          "packet_item": "SRC-F8-05",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-06",
+          "requirement_id": "REQ-F8-06",
+          "excerpt": "User explicitly requests embedding that prototype module",
+          "decision": "D-F8-01",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-01",
+          "packet_item": "SRC-F8-06",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-07",
+          "requirement_id": "REQ-F8-07",
+          "excerpt": "into the chosen template record area",
+          "decision": "D-F8-01",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-01",
+          "packet_item": "SRC-F8-07",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-08",
+          "requirement_id": "REQ-F8-08",
+          "excerpt": "then OD UI beautification",
+          "decision": "D-F8-04",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-04",
+          "packet_item": "SRC-F8-08",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-09",
+          "requirement_id": "REQ-F8-09",
+          "excerpt": "Preserve original fields",
+          "decision": "D-F8-03",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-03",
+          "packet_item": "SRC-F8-09",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-10",
+          "requirement_id": "REQ-F8-10",
+          "excerpt": "permissions",
+          "decision": "D-F8-03",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-03",
+          "packet_item": "SRC-F8-10",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-11",
+          "requirement_id": "REQ-F8-11",
+          "excerpt": "behavior",
+          "decision": "D-F8-02",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-02",
+          "packet_item": "SRC-F8-11",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-12",
+          "requirement_id": "REQ-F8-12",
+          "excerpt": "other template regions",
+          "decision": "D-F8-03",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-03",
+          "packet_item": "SRC-F8-12",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-13",
+          "requirement_id": "REQ-F8-13",
+          "excerpt": "Exact original indexed scope/locator is available as provided fixture information",
+          "decision": "D-F8-05",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-05",
+          "packet_item": "SRC-F8-13",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F8-14",
+          "requirement_id": "REQ-F8-14",
+          "excerpt": "source bytes",
+          "decision": "D-F8-05",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-05",
+          "packet_item": "SRC-F8-14",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F8-15",
+          "requirement_id": "REQ-F8-15",
+          "excerpt": "version",
+          "decision": "D-F8-05",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-05",
+          "packet_item": "SRC-F8-15",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F8-16",
+          "requirement_id": "REQ-F8-16",
+          "excerpt": "permitted add/modify action",
+          "decision": "D-F8-05",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-05",
+          "packet_item": "SRC-F8-16",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F8-17",
+          "requirement_id": "REQ-F8-17",
+          "excerpt": "live state support must still be checked",
+          "decision": "D-F8-05",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-05",
+          "packet_item": "SRC-F8-17",
+          "result": "NEEDS_CONTEXT"
+        },
+        {
+          "source_id": "SRC-F8-18",
+          "requirement_id": "REQ-F8-18",
+          "excerpt": "Embedding is an explicit requirement in F8, separate from pure visual refinement in F3",
+          "decision": "D-F8-06",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-06",
+          "packet_item": "SRC-F8-18",
+          "result": "MAPPED"
+        },
+        {
+          "source_id": "SRC-F8-19",
+          "requirement_id": "REQ-F8-19",
+          "excerpt": "do not mix structural and refine actions in one executable profile",
+          "decision": "D-F8-06",
+          "states": [
+            "STATE-F8-SEARCH",
+            "STATE-F8-DETAIL",
+            "STATE-F8-RETURN",
+            "STATE-F8-EMPTY"
+          ],
+          "acceptance": "AC-F8-06",
+          "packet_item": "SRC-F8-19",
+          "result": "MAPPED"
+        }
+      ],
+      "mechanical_observations": "12 required section titles observed; eight named fields observed per D; unique Packet item IDs observed; source excerpts observed in exact fixture; no semantic PASS claimed"
+    }
+  ],
+  "authority_read_notes": "input-contract.md was re-read through FILE_END after parent reported source-text/refinement guard update; no additional fixture facts inferred."
+}

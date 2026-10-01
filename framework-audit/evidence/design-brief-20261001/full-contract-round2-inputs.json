@@ -1,0 +1,22 @@
+{
+  "purpose": "supplementary qualitative capability evaluation, not a resample of original seven arms",
+  "inputs": [
+    {
+      "fixture_id": "F1",
+      "input": "Actual PRD R-1/AE-1 owner filtering; selected D-1 combined filters and STATE-1 preserve/clear empty conditions; AI no-intervention confirmed; selected list/filters/OD."
+    },
+    {
+      "fixture_id": "F2",
+      "input": "Existing spoken requirements: owner filtering for service records, empty retains conditions with clear, preserve other content/permissions. Selected list template; filters controls conditions, table displays results; default/empty support."
+    },
+    {
+      "fixture_id": "F3",
+      "input": "Observed prototype: search, detail, return preserving search, inline empty clear. User selects original record module and OD for UI refinement; behavior/fields/permissions preserved; unique source-bound locator and observed state support."
+    },
+    {
+      "fixture_id": "F8",
+      "input": "An existing prototype is available with observed search, detail, return retaining search, and inline empty clear behavior. User explicitly requests embedding that prototype module into the chosen template record area, then OD UI beautification. Preserve original fields, permissions, behavior and other template regions. Exact original indexed scope/locator is available as provided fixture information; source bytes, version, permitted add/modify action and live state support must still be checked. Embedding is an explicit requirement in F8, separate from pure visual refinement in F3; do not mix structural and refine actions in one executable profile."
+    }
+  ],
+  "rubric": "Every supplied fact retained with source/semantic location/D/STATE/AC/one Packet destination; F3 no embedding MUST; F8 explicit embedding and separate structural/refine profiles; unknown source/interaction/version cannot become PASS; generation source scope must not fake PRD engineering readiness."
+}

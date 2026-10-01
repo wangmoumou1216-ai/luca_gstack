@@ -1,0 +1,10 @@
+{
+  "status": "ROOT_CAUSE_CONFIRMED",
+  "original_test_sha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+  "inactive_status": 0,
+  "active_status": 1,
+  "exact_assertion": "codex enter rewrites one public argv to a trusted controller argv",
+  "denial": "controlled manifest does not allow canonical project selection: ./scripts/project.sh switch beta",
+  "classification": "Read-only reclassification of stored exact child trace after the frozen driver expected the wrong first assertion; baseline executions are retained unchanged. No test rerun or source mutation.",
+  "stderr_sha256": "631d7dd92e78b819f49d8c60ce43596bd66d00f1c72a7cf312aea72bc54ede4b"
+}

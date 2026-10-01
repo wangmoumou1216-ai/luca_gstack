@@ -22,6 +22,8 @@ AskUserQuestion：
 > C）**我要评审一个线上页面，然后出改版原型** — 先评审，后改版
 > D）**我要把一个现有功能 Agent 化** — 从"用户手动操作"变为"用户监督 Agent"，强制执行代理层设计（可见/暂停/接管/撤销）
 > E）**我已经在流程中了，想用某个具体工具** — 直接看 skill 列表
+> F）**我已有需求/已选方案，直接做设计** — 从 Design Brief 收敛并交给生成工具
+> G）**我已有原型，要植入模板或美化 UI** — 先确认实际修改/保持范围，再进 Design Brief
 
 ---
 
@@ -130,6 +132,15 @@ AskUserQuestion：
 
 ---
 
+**用户选 F/G，或其输入已经明确属于就绪设计入口：**
+
+继承已给需求/已选方案/原型、模板语义位置、工具及范围，按
+optional-workflow-graph.yaml `design_entry_paths` 推荐 design-brief → 已选生成工具。
+不强制先跑研究/PRD/ux-brainstorm，也不要求用户另说“跳过”；仅未决机制/多方案回发散。
+仅美化不授权植入；明确植入再美化由 Brief 分阶段核结构与精修能力。生成以 design_source
+完整追踪为门；工程仍需实际 PRD 与 prd_end_to_end。选择短流程本身不授权外部写入，
+Brief 的关键缺口、冻结后最终 binding/TAC/bundle采用及工具授权继续适用。
+
 **用户选 E，或在任意流程中选「看一级列表」：**
 
 显示以下一级可见 skill 列表。
@@ -235,13 +246,13 @@ luca_gstack — 一级可见 Skill 列表
 
                场景D：对 Agent 类竞品强制做"意图/反馈/权限"三维拆解
 
-/design-brief A B C D 轻量交互文档与原型决策节点
-               输入模式：standalone 或 workflow。
-               场景A/B/D：可接 /ux-brainstorm 产出、/ux-research 报告、PRD，或用户直接粘贴方案
-               场景C：需要 /ux-audit 的产出 + 当前页面截图（Phase 0 会要求提供）
-               场景D：Cursor 锚点强制通过（可见/暂停/接管/撤销），12 状态全部必填
-               说明：产出跨工具 Design Generation Packet，供 MagicPath / Open Design /
-               Claude Design / HTML fallback / 开发消费
+/design-brief A B C D 设计收敛与模板语义适配节点
+               输入模式：standalone 或 workflow；三入口=已选方案、已有书面/口述需求、原型精修
+               继承已确认输入，先核模板职责/位置/动作/状态，补决策与AC，再冻结唯一Packet
+               场景C：继承实际现状及已确认问题/方向；选评审链时消费其ux-audit，不强制重跑
+               场景D：保留可见/暂停/接管/撤销，按状态owner声明12状态
+               说明：design_source完整追踪可交已选生成工具；实际PRD+prd_end_to_end才供工程
+               仅美化与植入分权限；最终binding/TAC/bundle采用在冻结后，不假称已生成
 
 ── 原型实现 ────────────────────────────────────────────────────
 

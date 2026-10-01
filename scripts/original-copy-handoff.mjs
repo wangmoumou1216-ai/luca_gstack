@@ -7,7 +7,7 @@ import { verifyTemplateCopies, verifyCopyBytes } from './template-copy.mjs';
 import { inspectCarrierPacket } from './carrier-packet.mjs';
 import { locateOriginalEditRanges, verifyOriginalEditedOutput } from './original-template-edits.mjs';
 import { inspectOriginalResources } from './original-template-resources.mjs';
-import { authorizeScopedOperation, verifyScopedStageReadback, verifyScopedOutputReadback } from './design-flow-handoff.mjs';
+import { authorizeScopedOperation, verifyScopedStageReadback, verifyScopedOutputReadback, preparePrototypeEvidence, verifyPrototypeEvidence } from './design-flow-handoff.mjs';
 
 const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fail = (code, message) => { throw Object.assign(new Error(message), { code }); };
@@ -25,7 +25,7 @@ function assertOriginalConfirmation(bundle, manifest) {
   return adoption;
 }
 
-export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, handoffId, actions }, { root = defaultRoot, browser } = {}) {
+export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, handoffId, actions, prototypeEvidence }, { root = defaultRoot, browser } = {}) {
   if (!safeId(handoffId) || target?.tool !== 'od' || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(target.projectId ?? '')) fail('ORIGINAL_TARGET_INVALID', 'Exact project and fresh safe handoff ID required');
   await verifyTemplateCopies({ root });
   const sourceManifest = JSON.parse(await readFile(resolve(root, '.claude/skill-os/page-library/source-manifest.json'), 'utf8'));
@@ -43,13 +43,15 @@ export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, h
   }
   if ([...facts.keys()].some(id => !scoped.has(id) && !actions.some(a => a.source_ids.includes(id)))) fail('ORIGINAL_FACT_COVERAGE', 'Every Packet fact must have a disposition; do not shrink the denominator');
   const ranges = await locateOriginalEditRanges(base, actions.map(locateAction), { browser });
+  const profile = actions.some(action => action.action === 'refine') ? 'original-ui-refinement-v1' : 'original-preserving-v1';
+  const prototype = preparePrototypeEvidence(prototypeEvidence, { factIds: [...facts.keys()], sourceIndexVerified: true });
   const contract = {
-    schema_version: 1, profile: 'original-preserving-v1', page_id: pageId,
+    schema_version: 1, profile, page_id: pageId,
     source_sha256: entry.raw_sha256, source_bytes: entry.raw_bytes,
     source_packet_sha256: packet.source_packet_sha256, applicability: packet.applicability,
     actions, original_locations: ranges.targets, resource_audit: resourceAudit,
     coverage: packet.facts.map(f => ({ id: f.id, action_ids: actions.filter(a => a.source_ids.includes(f.id)).map(a => a.action_id), scopes: packet.scopes.filter(s => s.source_ids.includes(f.id)) })),
-    output: { entry: 'output/index.html', edits: 'output/implementation-manifest.json', edits_schema: '{"schema_version":1,"edits":[{"action_id":"...","html":"..."}]}', policy: 'add appends inside the target; modify replaces its inner HTML; remove deletes its whole node; preserve has no edit. All other bytes/scripts/styles stay unchanged. New executable code or assets require another reviewed contract.' }
+    output: { entry: 'output/index.html', edits: 'output/implementation-manifest.json', edits_schema: '{"schema_version":1,"edits":[{"action_id":"...","html":"..."}]}', policy: profile === 'original-ui-refinement-v1' ? 'Refine uses the complete target outerHTML and changes only valid class/style attributes within that exact original scope; preserve has no edit. All business DOM, text, behavior attributes, comments, non-target bytes, original scripts/global styles and resources remain unchanged. New functionality, executable code and assets require a separate reviewed contract. Prototype attachments are inert evidence; frozen facts remain the sole requirement authority.' : 'add appends inside the target; modify replaces its inner HTML; remove deletes its whole node; preserve has no edit. All other bytes/scripts/styles stay unchanged. New executable code or assets require another reviewed contract.' }
   };
   const namespace = `handoffs/${handoffId}`;
   const files = [
@@ -58,26 +60,32 @@ export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, h
     file('control/original-adaptation.json', json(contract)),
     file('control/original-adaptation.md', Buffer.from('# Original template adaptation\n\nUse the complete unchanged original input. Source copy is not a rewrite.\n\n```json\n' + canonicalJson(contract) + '\n```\n\n## Complete frozen facts\n' + packet.facts.map(f => `${JSON.stringify(f.id)}: ${JSON.stringify(f.text)}`).join('\n') + '\n'), 'text/markdown; charset=utf-8')
   ];
+  files.push(...prototype.files);
   const records = files.map(({ bytes, ...rest }) => ({ ...rest, bytes: bytes.length }));
-  const manifest = { schema_version: 3, bundle_kind: 'carrier', carrier_profile: 'original-preserving-v1', target: { tool: 'od', projectId: target.projectId }, handoff_id: handoffId, namespace, page_id: pageId, original_sha256: entry.raw_sha256, source_packet_sha256: packet.source_packet_sha256, tac_sha256: hash(json(contract)), input_root: 'input', output_root: 'output', output_profile: 'single', immutable_files: records };
+  const manifest = { schema_version: 3, bundle_kind: 'carrier', carrier_profile: profile, target: { tool: 'od', projectId: target.projectId }, handoff_id: handoffId, namespace, page_id: pageId, original_sha256: entry.raw_sha256, source_packet_sha256: packet.source_packet_sha256, tac_sha256: hash(json(contract)), input_root: 'input', output_root: 'output', output_profile: 'single', immutable_files: records, ...(prototype.records.length ? { prototype_evidence: prototype.records } : {}) };
   manifest.handoff_bundle_hash = canonicalManifestHash(manifest, records);
   files.push(file('control/handoff-manifest.json', json(manifest)));
-  const bundle = { status: 'EXPORTED', schema_version: 3, bundle_kind: 'carrier', carrier_profile: 'original-preserving-v1', target: manifest.target, handoff_id: handoffId, namespace, handoff_bundle_hash: manifest.handoff_bundle_hash, files };
+  const bundle = { status: 'EXPORTED', schema_version: 3, bundle_kind: 'carrier', carrier_profile: profile, target: manifest.target, handoff_id: handoffId, namespace, handoff_bundle_hash: manifest.handoff_bundle_hash, files };
   assertOriginalBundle(bundle);
   return bundle;
 }
 
 function assertOriginalBundle(bundle) {
-  if (bundle?.status !== 'EXPORTED' || bundle.schema_version !== 3 || bundle.bundle_kind !== 'carrier' || bundle.carrier_profile !== 'original-preserving-v1' || !Array.isArray(bundle.files) || bundle.files.length !== 5) fail('ORIGINAL_BUNDLE_INVALID', 'Expected an immutable original-preserving bundle');
-  const expected = ['input/base-template.html', 'control/brief.md', 'control/original-adaptation.json', 'control/original-adaptation.md', 'control/handoff-manifest.json'];
-  if (!isDeepStrictEqual(bundle.files.map(f => f.path), expected)) fail('ORIGINAL_BUNDLE_CHANGED', 'Exact original input/control file set required');
+  if (bundle?.status !== 'EXPORTED' || bundle.schema_version !== 3 || bundle.bundle_kind !== 'carrier' || !['original-preserving-v1', 'original-ui-refinement-v1'].includes(bundle.carrier_profile) || !Array.isArray(bundle.files) || bundle.files.length < 5) fail('ORIGINAL_BUNDLE_INVALID', 'Expected an immutable original-preserving or original UI-refinement bundle');
+  const expected = ['input/base-template.html', 'control/brief.md', 'control/original-adaptation.json', 'control/original-adaptation.md'];
+  if (!isDeepStrictEqual(bundle.files.slice(0, 4).map(f => f.path), expected) || bundle.files.at(-1)?.path !== 'control/handoff-manifest.json' || new Set(bundle.files.map(f => f.path)).size !== bundle.files.length) fail('ORIGINAL_BUNDLE_CHANGED', 'Exact original input/control file set and unique evidence paths required');
   for (const item of bundle.files) if (!Buffer.isBuffer(item.bytes) || hash(item.bytes) !== item.sha256) fail('ORIGINAL_BUNDLE_CHANGED', 'Immutable file changed');
   const get = path => bundle.files.find(f => f.path === path).bytes;
   const manifest = parseCanonicalJson(get('control/handoff-manifest.json'));
+  const manifestKeys = ['schema_version', 'bundle_kind', 'carrier_profile', 'target', 'handoff_id', 'namespace', 'page_id', 'original_sha256', 'source_packet_sha256', 'tac_sha256', 'input_root', 'output_root', 'output_profile', 'immutable_files', 'handoff_bundle_hash', ...(Object.hasOwn(manifest, 'prototype_evidence') ? ['prototype_evidence'] : [])];
+  if (!shape(manifest, manifestKeys) || manifest.schema_version !== 3 || manifest.bundle_kind !== 'carrier' || manifest.input_root !== 'input' || manifest.output_root !== 'output' || manifest.output_profile !== 'single' || !shape(manifest.target, ['tool', 'projectId']) || manifest.target.tool !== 'od' || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(manifest.target.projectId ?? '') || !safeId(bundle.handoff_id) || (Object.hasOwn(manifest, 'prototype_evidence') && (!Array.isArray(manifest.prototype_evidence) || !manifest.prototype_evidence.length))) fail('ORIGINAL_BUNDLE_CHANGED', 'Original manifest uses a closed versioned schema with optional nonempty prototype evidence');
   const records = bundle.files.slice(0, -1).map(({ bytes, ...rest }) => ({ ...rest, bytes: bytes.length }));
   if (canonicalManifestHash(manifest, records) !== bundle.handoff_bundle_hash || manifest.handoff_bundle_hash !== bundle.handoff_bundle_hash || !isDeepStrictEqual(manifest.immutable_files, records) || !isDeepStrictEqual(manifest.target, bundle.target) || manifest.handoff_id !== bundle.handoff_id || manifest.namespace !== bundle.namespace || bundle.namespace !== `handoffs/${bundle.handoff_id}` || manifest.carrier_profile !== bundle.carrier_profile) fail('ORIGINAL_BUNDLE_CHANGED', 'Original scope/manifest changed');
   const contract = parseCanonicalJson(get('control/original-adaptation.json'));
-  if (hash(get('input/base-template.html')) !== manifest.original_sha256 || hash(get('control/brief.md')) !== manifest.source_packet_sha256 || hash(get('control/original-adaptation.json')) !== manifest.tac_sha256 || contract.source_sha256 !== manifest.original_sha256 || contract.source_packet_sha256 !== manifest.source_packet_sha256) fail('ORIGINAL_BUNDLE_CHANGED', 'Original/Packet/contract identity changed');
+  if (!shape(contract, ['schema_version', 'profile', 'page_id', 'source_sha256', 'source_bytes', 'source_packet_sha256', 'applicability', 'actions', 'original_locations', 'resource_audit', 'coverage', 'output']) || contract.schema_version !== 1 || !Array.isArray(contract.actions) || !contract.actions.length || contract.actions.some(action => !shape(action, ['action_id', 'action', 'scope', 'locator', 'source_ids', 'confidence', 'rationale', 'alternatives']) || !['add', 'modify', 'remove', 'preserve', 'refine'].includes(action.action)) || (contract.profile === 'original-ui-refinement-v1' && contract.actions.some(action => !['refine', 'preserve'].includes(action.action))) || !shape(contract.output, ['entry', 'edits', 'edits_schema', 'policy']) || contract.output.entry !== 'output/index.html' || contract.output.edits !== 'output/implementation-manifest.json') fail('ORIGINAL_BUNDLE_CHANGED', 'Original contract and UI-only action profile must remain closed and version-bound');
+  const packet = inspectCarrierPacket(get('control/brief.md').toString('utf8'));
+  verifyPrototypeEvidence(bundle.files.slice(0, -1), manifest.prototype_evidence, { factIds: packet.facts.map(fact => fact.id), sourceIndexVerified: true });
+  if (bundle.files.length !== 5 + (manifest.prototype_evidence?.length ? manifest.prototype_evidence.length + 1 : 0) || contract.profile !== manifest.carrier_profile || (contract.actions.some(action => action.action === 'refine') ? 'original-ui-refinement-v1' : 'original-preserving-v1') !== contract.profile || hash(get('input/base-template.html')) !== manifest.original_sha256 || hash(get('control/brief.md')) !== manifest.source_packet_sha256 || hash(get('control/original-adaptation.json')) !== manifest.tac_sha256 || contract.source_sha256 !== manifest.original_sha256 || contract.source_packet_sha256 !== manifest.source_packet_sha256) fail('ORIGINAL_BUNDLE_CHANGED', 'Original/Packet/contract/evidence identity changed');
   if (Object.hasOwn(bundle, 'confirmation')) assertOriginalConfirmation(bundle, manifest);
   return { manifest, contract, get };
 }

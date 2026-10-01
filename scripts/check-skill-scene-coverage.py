@@ -38,7 +38,7 @@ D = "docs"
 # strong = 代理与「该 skill 的场景发生」有直接因果；weak = 只是必要条件（对象存在≠需求发生）。
 # None+UNMAPPED = 链头/口径未定，显式不判不猜；"unobservable" = 场景结构上不落盘（如数据由用户手供）。
 TABLE = {
-    "design-brief":   ([f"{D}/prd/*-prd.md"],                      [f"{D}/decisions/*-design-brief.md"], "strong"),
+    "design-brief":   ([f"{D}/prd/*-prd.md"],                      [f"{D}/decisions/*-design-brief.md"], "weak"),  # PRD is one input; speech/prototype readiness is not proven by file presence
     "ux-brainstorm":  ([f"{D}/prd/*-prd.md"],                      [f"{D}/decisions/*-ux-brainstorm.md"], "strong"),
     "tech-spec":      ([f"{D}/handoff/*-design-brief-handoff.md"], [f"{D}/engineering/*-tech-spec.md"], "strong"),
     "task-plan":      ([f"{D}/handoff/*-tech-spec-handoff.md"],    [f"{D}/engineering/*-task-plan.md"], "strong"),

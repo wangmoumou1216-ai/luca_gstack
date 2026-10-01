@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-10-01 · Design Brief 三入口与模板语义收敛）
+
+- Design Brief 3.0：全流程已选方案、已有需求/口述、已有原型精修汇合于 OD 前的同一契约节点。为什么：已有需求与原型无需伪造PRD或重跑发散，模板选择/语义适配必须在事实冻结前解决；正式binding/TAC/adoption仍在冻结后。
+- 区分 design_source 生成追踪与 prd_end_to_end 工程追踪；同步 workflow、输入模式、preflight、OD 和生成视图。原型行为/保持范围进入唯一Packet，实际证据附件参与不可变字节/hash读回。新增非绑定适配校验与 refine 保业务DOM/脚本/全局CSS/资产的受限profile；机械通过仍须独立交互/视觉验收。研究与验证说明见 framework-audit/2026-10-01-design-brief-convergence.md。
+- 接通 auto 2.1、office短入口与 Orchestrator 的输入成熟度/选定路径恢复；tech-spec 1.0.3、task-plan 1.0.2 在 standalone 也核精确来源、上游PASS与 Brief prd_end_to_end，保留纯工程 synthesis 独立合同。为什么：注册短入口不足以改变旧编排默认，设计生成PASS不能被工程消费者误当完整PRD追踪。
+
+- 修复发布时双宿主门禁测试误用工作仓库活动提交控制：真实 adapter/hook 源在独立临时 Git 夹具中执行，保留27项行为检查和生产拒绝规则。为什么：测试会话不应继承提交授权或删除实际仓库固定会话状态；活动/非活动门禁差分及独立会审均通过。
+
 ### Added（2026-09-20 · Codex 通用模型路由接线，Claude 延后）
 
 - 启用唯一公共 `anchor / peak / light` 模型选择规则：根会话保持用户实际选择，Codex 原生 subagent 与 app-server workflow runner 按精确场景动态选择上下档；reasoning effort 保持独立，不再承担模型档位语义。新增受信 activation/evidence/critical-latch、错模型拒收、旧票与重启失效、私有0600模型绑定和对应行为/变异回归。仓库 hook 已授信，但当前旧 session 不热加载新增 SessionStart，须由新 Codex 根 session 完成最终活体验收；Claude adapter 按用户决定暂不启用，不宣称双端完成。

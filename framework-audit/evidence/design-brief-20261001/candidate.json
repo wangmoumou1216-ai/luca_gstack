@@ -1,0 +1,30 @@
+[
+  {
+    "fixture_id": "F1",
+    "output": "入口=pipeline；delivery_mode=traceable_delivery；coverage_scope=prd_end_to_end。直接继承实际PRD的P0 R-1、AE-1，以及已选D-1和STATE-1；AI不介入继承已确认方案，不重新发散或要求用户重复模板、筛选区与OD选择。最小合同：R-1负责人筛选→D-1保留现有筛选组合→筛选职责区域→default/STATE-1→AE-1。验收：Given选择负责人，When执行筛选，Then结果仅含对应负责人记录；Given组合条件无结果，When展示空态，Then保留条件且可清空。其他状态逐项核适用性，未知不能伪填通过。冻结前Phase 0.5做所选模板的非绑定语义适配，Phase 3核动作和状态承载，Phase 6全量重核；冻结后才做正式binding、TAC与最终bundle真人采用。无产品意图问题；真实源版本、支持证据及连接器能力仍由相应校验提供，不伪造验证结果。设计输入可以直接收敛并形成完整Packet；具备实际PRD的工程来源资格，实际工程ready须完整PRD MUST/AE追踪门通过。本dry-run不宣称已经生成、上传或验收。OD可决定授权视觉表达，不能改负责人筛选、条件组合、空态保留与清空机制。Packet保留完整事实和原ID、语义位置与验收；具体模板ID/hash、定位、适配草稿、binding/TAC/adoption及OD收据在旁车。原有选择可重用，但不代签新bundle采用；stage/run/recover分别处理授权与读回。"
+  },
+  {
+    "fixture_id": "F2",
+    "output": "入口=existing_requirements；delivery_mode=design_generation；coverage_scope=design_source。SRC-001完整登记用户原话：‘我已有需求：给服务记录增加负责人筛选，筛选无结果时保留条件、可清空。用列表模板，把它放到负责控制结果的那个区域，其他内容和权限保持，直接交OD’。归一化REQ-001负责人筛选、REQ-002无结果保留条件且可清空、REQ-003保持其他内容和权限；本轮AC用明确需求表达，不伪造PRD R/AE。实际语义链为服务记录管理→list.intent管理记录→filters.intent控制列表条件→负责人筛选动作；table.intent显示结果，负责呈现筛选响应，不能因为‘结果’二字把筛选入口放到table。两个职责明确且唯一，无需位置消歧。D-001在筛选职责区域增加负责人条件；D-002保留无结果条件和清空出口；D-003保持其他内容及权限。验收包含筛选仅显示符合负责人条件的记录、无结果仍保留条件并可清空、保持区及权限前后不变；不额外发明清空其他条件的规则。default/empty有给定支持证据，其他状态如实声明适用性和待验项。冻结前选型与非绑定适配已可沿用户选择推进，版本、实际动作权限与全量状态仍需校验；冻结后再做binding/TAC/bundle采用，不要求重述需求。生成契约可直接收敛，缺PRD不降为LIMITED，也不要求research或两份方案；工程ready=false，tech-spec/task-plan仍需实际PRD。OD在保持边界内决定视觉表达，不改变字段语义、权限与状态。Packet包含完整原话关联、REQ/AC/D/STATE、语义位置及保持事实；filters/table的实际定位、模板版本/hash、确认和运输信息放旁车。‘直接交OD’继承为目标及交接意图，不宣称本轮已调用OD，最终bundle采用和stage/run/recover状态各自记录。"
+  },
+  {
+    "fixture_id": "F3",
+    "output": "入口=prototype_visual_refinement；delivery_mode=design_generation；coverage_scope=design_source。继承实际原型操作证据：搜索→开详情→返回保留搜索条件；无结果使用内联空态且可清空。用户明确只做UI美化、不改行为/字段/权限，并选择原件record区与OD，这些范围不再补问。原型观察与用户保持要求分别登记为SRC/REQ，再建立保持D和Given/When/Then AC：搜索结果及详情入口行为不变；返回后搜索条件仍在；内联空态保留清空动作；字段含义及权限不变。位置依据=已读版本/hash的原件索引scope/main、locator id=record且唯一，不编造hash值或其他节点。模板选择与语义适配在冻结前完成；核全部动作和适用状态，冻结后走page-context §7 original_copy，禁止降成截图或旧静态carrier。合同来源足以直接收敛，无须重做UX/AI机制；工程ready=false，因为没有实际PRD。真实生成执行ready尚需原件资产闭包、动作许可及本运行时连接器能力验证，不能把唯一定位或状态支持当执行证明。‘植入’与‘美化’必须分开：增加或替换模块内容分别登记add/modify；已有节点视觉改动才登记refine，preserve不冒充精修。original-ui-refinement-v1只能refine+preserve，限真实节点内有效class/style变化，业务DOM、行为属性、脚本、全局CSS和资产保持；不得把结构植入混进该profile。若保留原型交互需要新增脚本、事件或混合结构变化而适配器不能支持，报告具体BLOCKED并保留契约，不删除行为绕过。OD只在已授权区决定可执行的视觉表达，不能迁移入口、合并步骤或改字段/权限/状态。Packet完整写行为保持、允许自由度和验收；原型版本/provenance、原件scope/locator/hash、TAC/bundle/adoption在旁车。原型HTML、截图及操作说明以实际bytes、MIME、purpose、既有source_ids和hash作为不可变inert证据运输，不执行HTML，不以路径代替附件。最终bundle须真实采用；stage/run/recover独立授权及读回。本轮没有真实OD调用或生成验收结论。"
+  },
+  {
+    "fixture_id": "F4",
+    "output": "入口=existing_requirements；候选delivery_mode=design_generation，目前NEEDS_CONTEXT。完整登记‘把审批放处理区’，不凭词面把处理区绑定为个人待办或管理员配置，也不推断角色。最小问题：‘这里的审批是让个人处理自己的待办，还是让管理员配置审批规则？’等待真实回答。两个区域分别保留为合理替代位置，语义适配草稿记录冲突及影响，不清空alternatives伪装high；不将歧义交给OD自由选择，不借NO_HINT/no-match/reference_only跳过需求门。回答后才能确定用户、任务、审批动作、权限、区域职责和AC，并在冻结前完成非绑定模板适配、状态复核及最终语义映射；完整事实冻结后才有正式binding/TAC/bundle采用。当前生成ready=false、工程ready=false，不冻结最终Packet、不称TRACEABILITY GATE PASS或DONE。已确认原话保留，未确认解释不升级MUST。OD视觉自由度须等行为/角色与修改保持边界明确后界定；它无权替用户决定审批角色和机制。以后Packet写需求、D/STATE/语义位置/AC；两个实际区域、定位证据、冲突与采用记录留旁车。本轮不调用OD。"
+  },
+  {
+    "fixture_id": "F5",
+    "output": "入口=existing_requirements；delivery_mode=design_generation，但当前NEEDS_CONTEXT。确认需求是错误后可重试并保留输入，作为REQ/STATE/AC完整保留；用户指定模板继续优先，不另选弱候选。只观察default意味着错误状态支持unknown，不能断言原件没有错误态，也不能把默认截图或目录状态名当交互证据。最小问题：‘请提供这个原件中错误后重试并保留输入的操作记录或状态说明，可以吗？’先补必要证据；若随后证明不支持，则呈现明确扩展、更换模板或用户裁定范围的选项，不能删去错误恢复需求迁就模板。错误态验收目标已可登记：Given已有输入且操作失败，When进入错误与重试路径，Then输入仍保留且有可继续的恢复动作；具体已有路径尚不能称验证通过。冻结前适配草稿标注错误状态、目标位置、证据缺口和影响，Phase 3/6解决后才冻结；冻结后才正式binding/TAC/adoption。当前生成ready=false，工程ready=false；若唯一障碍最终是连接器或适配器无法执行，则执行BLOCKED而不是伪报完成。保持输入和重试为行为事实，OD仅能在明确范围内决定视觉表达；不能静默改变恢复流程。Packet不因冲突省略该需求，当前不冻结为最终版本；模板ID/hash、证据、冲突和能力结论放旁车。指定模板及未决冲突不能用reference_only绕过。本轮没有OD调用。"
+  },
+  {
+    "fixture_id": "F6",
+    "output": "入口=prototype_visual_refinement；delivery_mode=design_generation，当前NEEDS_CONTEXT。登记默认截图为实际观察来源，UI精修为用户授权；截图只证明可见默认状态，不能证明保存、取消、分支、输入保持、权限或完成后导航。最小问题：‘保存和取消分别如何反馈、返回，输入是否保留？请提供操作说明或记录。’所需是关键行为证据，不要求重做需求链或两份方案。确认后按SRC/REQ→保持D→适用STATE→语义位置→Given/When/Then AC完成来源覆盖；当前不能把关键流程标N/A、全部状态通过或既有行为已验证。没有指定模板可沿reference=none形成语义契约，不强迫选择模板；如后来使用模板，选择/位置与非绑定适配在冻结前，正式binding/TAC/adoption在冻结后。无参考不消除保存/取消缺口。当前生成ready=false、工程ready=false，不冻结最终Packet或宣称DONE；仅探索文档可标LIMITED，但不能借此宣称可直接生成。OD可美化已授权视觉，保存/取消行为、字段及权限待证据明确后成为不可变边界，不能现场重设计。Packet应完整保留确认的行为与验收，截图版本/provenance及实际bytes证据走不可变附件/旁车；附件不当第二事实源，本机路径不等于已上传。本轮不调用OD、不宣称视觉或交互验收通过。"
+  },
+  {
+    "fixture_id": "F7",
+    "output": "入口=NONE，不触发design-brief。用户只问CSS颜色含义，直接依据给出的实际颜色值或声明解释；若值未提供，仅请求该值，不编造具体颜色。无需来源追踪矩阵、设计决策、12状态、模板选择、Packet、TAC或OD交接。生成ready/工程ready均不适用；没有设计修改、保持区或OD自由度决定。模板步骤与Packet/旁车均不产生，不运行preamble或项目工具，也不调用OD。"
+  }
+]

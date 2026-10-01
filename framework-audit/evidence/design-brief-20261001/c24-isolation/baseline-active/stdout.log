@@ -1,0 +1,14 @@
+PASS claude enter uses the real scope-hook path
+PASS claude enter rewrites one public argv to a trusted controller argv
+PASS claude enter passes the independent controlled hook
+PASS claude trusted enter controller commits
+PASS claude enter commits beta in the same native event
+PASS claude same-event task resolves only against beta's absolute root
+PASS claude unknown-result lookup is explicit and read-only
+PASS claude NO_PIN absolute read does not force a selection
+PASS claude adapter/hook refusal remains fail-closed for an unbound relative write
+PASS claude cancellation fixture has one unissued PREPARED operation
+PASS claude Stop cancellation runs through the real host hook
+PASS claude cancellation prevents the unissued selection and preserves beta
+PASS claude malformed authority degrades to refusal without repair
+PASS codex enter uses the real scope-hook path

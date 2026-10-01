@@ -137,6 +137,19 @@ scenes:
       - ["ux-brainstorm", "design-brief", "magicpath"]
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
 
+# Optional entrances share one convergence stage; they do not activate a workflow by themselves.
+design_entry_paths:
+  pipeline:
+    readiness: "selected design and its chosen upstream handoff are ready"
+    path: ["design-brief", "open-design"]
+  existing_requirements:
+    readiness: "written/spoken requirements are available; Brief resolves gaps"
+    path: ["design-brief", "open-design"]
+  prototype_visual_refinement:
+    readiness: "prototype and UI change/preserve scope are available"
+    path: ["design-brief", "open-design"]
+  convergence: "source inheritance → template choice/semantic adaptation → complete interaction/state/acceptance → frozen Packet → final binding/TAC/adoption → output"
+
 handoff_gates:
   brainstorm_to_downstream:
     applies_when: "workflow_mode"
@@ -157,13 +170,13 @@ handoff_gates:
     note: "kit 与 synthesis 之间隔着 luca 亲自采集（人工步骤，gate 不阻塞等待、不设时限）；synthesis 拿别处数据可独立跑，kit 单独出工具也合法。kit 产出的研究问题清单是 synthesis Step 1 定标输入。"
 
   ux_brainstorm_to_design_brief:
-    applies_when: "workflow_mode"
+    applies_when: "workflow_mode and selected upstream is ux-brainstorm"
     block_if:
       - "ux_brainstorm.blocking_questions is not empty"
       - "selected_approach missing"
       - "interaction_architecture missing"
     allow_standalone_override: true
-    note: "design-brief=收敛引擎：检测到 ux-brainstorm 产出时继承其 §5 AI-Native 判定 / §10 假设 / §9 被否定方向（Phase1 切交互层复核, Phase2 切 checkpoint），不重做发散；无上游则 standalone 全量。二者不并列产同类文档。"
+    note: "design-brief=收敛引擎：检测到 ux-brainstorm 产出时继承其 §5 AI-Native 判定 / §10 假设 / §9 被否定方向（Phase1 切交互层复核, Phase2 切 checkpoint），不重做发散；已有需求/原型入口不强制本上游门，不重做已确认机制；以当前设计源完整覆盖收敛。二者不并列产同类文档。"
 
   design_brief_to_magicpath:
     applies_when: "workflow_mode"
@@ -182,7 +195,7 @@ handoff_gates:
       - "ux_brief not written to docs/decisions/"
     allow_standalone_override: false
     allow_parallel_start: false
-    note: "MagicPath Phase 必须等此 gate PASS 后才能启动，严禁并发"
+    note: "MagicPath Phase 必须等此 gate PASS 后才能启动，严禁并发；design_source或prd_end_to_end的PASS均可生成，前者不代表工程ready。"
 
   design_brief_to_open_design:
     applies_when: "workflow_mode"
@@ -198,7 +211,7 @@ handoff_gates:
       - "required_state_coverage missing"
       - "ux_brief not written to docs/decisions/"
     allow_standalone_override: true
-    note: "open-design 是 design_output 主力；页面与交互位置映射保留D/STATE/来源/AC，不是技术组件映射。源对齐后、编译前按runtime/page-context.md执行一次推荐/确认：仅高置信推荐，低置信reference=none继续；页确认与OD目标/写入权分开。外部DS由用户配置，缺本地token不阻塞。无reference不免除需求与状态门；recover不执行本handoff。"
+    note: "open-design 是 design_output 主力；页面与交互位置映射保留D/STATE/来源/AC，不是技术组件映射。Brief冻结前按runtime/page-context.md完成模板选择/语义适配；冻结后OD复用有效选择，验证正式绑定和完整事实。未指定模板且无匹配可reference=none；指定原件/未决冲突不能绕过。页确认与OD目标/写入权分开。外部DS由用户配置，缺本地token不阻塞。design_source或prd_end_to_end的PASS均可进入生成，保持项/全部状态须覆盖；design_source不等于工程ready。recover不执行本handoff。"
 
   design_brief_to_html:
     applies_when: "workflow_mode"
@@ -235,6 +248,7 @@ handoff_gates:
       - "output_target_platform_scope missing"
       - "required_state_coverage missing"
       - "prd_artifact missing"
+      - "coverage_scope != prd_end_to_end"
     allow_standalone_override: true
     note: "standalone 时也必须提供 PRD + design-brief handoff；不得从 research/design-brief 编造 R/AE"
 

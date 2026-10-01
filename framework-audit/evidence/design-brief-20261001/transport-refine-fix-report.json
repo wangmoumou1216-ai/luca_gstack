@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "scope": "isolated Node logic fixtures; no real OD access, pixel proof or publication",
+  "command": "node scripts/test-design-flow-handoff.mjs --mutation",
+  "cwd": "/tmp/design-brief-20261001/transport-tests",
+  "exit_code": 0,
+  "passed_mutations": 37,
+  "candidates": [
+    {
+      "path": "/tmp/design-brief-20261001/candidate/scripts/design-flow-handoff.mjs",
+      "bytes": 93143,
+      "sha256": "d5750500cc2dd2f486077dd8c05b004b2a239b6bfef3460d5ccfd241ec8c5aa4",
+      "test_mirror_identical": true
+    },
+    {
+      "path": "/tmp/design-brief-20261001/candidate/scripts/test-design-flow-handoff.mjs",
+      "bytes": 99361,
+      "sha256": "76e2ac523904977f32cf466e25173b1b42b282bf13fbca150e1e998a837e6e9c",
+      "test_mirror_identical": true
+    }
+  ],
+  "schema_snapshot_sha256": "4b911a969e32b2150fc79dc0aea1143d8ac87d899e5469046b9fea3a4f3e7533",
+  "dependency_sha256": {
+    "page-context.mjs": "a6ee51bed638c707f90b13dfa38f4b52242a67d6be78c18ccd15826e9b38ae0e",
+    "carrier-asset-profile.mjs": "e83406cd0c26931e4754208bae8352b9aca13f86fb500d39884532860a2dd324",
+    "carrier-packet.mjs": "6085e6b7bfe84e4509b6775a1bf3df635536c16eccc51b49c0a95631e9688e37",
+    "carrier-dom.mjs": "4f8881a5bf68d1a970c6c85021d5e113d38f63b0216d60835747b780d06f00f9"
+  },
+  "dependency_note": "Copied source dependencies; only the scratch schema action enums were extended with planned refine. Root must rerun against final actual dependencies.",
+  "fixes": [
+    "Preserve every exact text node including blank text, textarea/pre data and default field values.",
+    "Require an effective supported inline CSS declaration change; reject class-only and invalid/unsupported new declarations.",
+    "Preserve every opaque original declaration raw segment exactly.",
+    "Default all opaque properties to potentially overlapping with any changed supported key; only exact font-family and box-shadow longhands are known independent.",
+    "Reject opaque text-decoration resets, all six logical sizing aliases and unknown future properties regardless of declaration order or !important.",
+    "Normalize supported values, expand supported shorthands and respect duplicate/important declaration priority.",
+    "Retain independent semantic acceptance and existing script/global CSS/asset/scope guards."
+  ],
+  "static_css_boundary": {
+    "unchanged_opaque_allowlist": [
+      "font-family",
+      "box-shadow"
+    ],
+    "opaque_policy": "Within a changed style attribute, all other opaque declarations block supported declaration changes regardless of order or priority. Unchanged style attributes elsewhere do not block another element's supported change.",
+    "evidence_kind": "bounded inline declaration cascade; does not establish computed pixel difference or behavior equivalence",
+    "additional_public_negative_cases": 9,
+    "new_mutation_witnesses": [
+      "text-decoration default refusal",
+      "inline-size default refusal",
+      "unknown future property default refusal"
+    ]
+  },
+  "mutation_stdout": "PASS: stdin / eval / file / non-file launcher imports; direct CLI still executes\nPASS: chain / adhoc / UX preserve the original source bytes, decisions and states\nPASS: declined / no-match metadata excludes candidates; pending and missing source stop\nPASS: confirmed reference requires a separate caller-checked message and screenshot witness\nPASS: regions / converted boxes, safe transport bytes, preview versions and existing source scope guards\nPASS: explicit tool / project / write grant; Claude Design export and bound recover stay independent\nPASS: readback checks exact project, complete brief, provenance and every actual attachment byte\nPASS: immutable prototype byte evidence, source indexing, hash participation and complete carrier readback\nPASS: explicit visual refinement, unchanged business DOM/global CSS/assets, exact module boundary and semantic review separation\nPASS: V2 carrier namespace/hash/TAC/adoption/readback/recovery gates and reference-only separation\nPASS mutation: caller confirmation guard -> confirmation record alone must not authorize a reference FAIL -> restored PASS\nPASS mutation: no-reference attachment exclusion -> no-reference must not attach a rejected or weak candidate FAIL -> restored PASS\nPASS mutation: V2 exact bundle-hash authorization -> grant binds the exact bundle hash FAIL -> restored PASS\nPASS mutation: runtime capability receipt -> Codex cannot stage without a caller/runtime success receipt FAIL -> restored PASS\nPASS mutation: TAC applicability coverage -> scoped applicable facts cannot disappear from coverage FAIL -> restored PASS\nPASS mutation: preserve invariant recovery -> mechanical PASS requires all preserve invariants FAIL -> restored PASS\nPASS mutation: unauthorized DOM boundary -> unrequested structure outside authorized targets must not change FAIL -> restored PASS\nPASS mutation: deterministic TAC projection -> contradictory readable TAC cannot bypass the exact projection FAIL -> restored PASS\nPASS mutation: TAC closed fields -> a matching Markdown projection cannot authorize extra TAC instruction fields FAIL -> restored PASS\nPASS mutation: compatible carrier hash positions -> two supported carrier hash positions cannot contradict each other FAIL -> restored PASS\nPASS mutation: assessed fact/action projection identity -> TAC cannot swap fact/action mappings after match assessment FAIL -> restored PASS\nPASS mutation: scope original evidence -> scope basis must come from the actual frozen Packet FAIL -> restored PASS\nPASS mutation: scope exclusion cannot authorize modification -> excluded facts cannot simultaneously authorize a modifying projection FAIL -> restored PASS\nPASS mutation: frozen scope cannot be overridden -> TAC change coverage cannot override an explicit frozen scope exclusion FAIL -> restored PASS\nPASS mutation: actual target change -> comment or whitespace alone cannot satisfy a modify action FAIL -> restored PASS\nPASS mutation: prototype existing source IDs -> prototype attachments require safe complete bytes and existing frozen source IDs FAIL -> restored PASS\nPASS mutation: prototype closed evidence index -> prototype metadata cannot contradict the manifest purpose or source index FAIL -> restored PASS\nPASS mutation: refine separate structural handoff -> refinement and structural changes require separate explicit handoffs FAIL -> restored PASS\nPASS mutation: refine business DOM preservation -> refine cannot change business text, data hooks or field values FAIL -> restored PASS\nPASS mutation: refine exact text preservation -> refine must preserve exact text whitespace, textarea/pre data and default input values FAIL -> restored PASS\nPASS mutation: refine supported CSS changes -> unsupported original CSS must remain exact FAIL -> restored PASS\nPASS mutation: refine effective CSS values -> overridden or equivalent CSS declarations cannot satisfy static refinement FAIL -> restored PASS\nPASS mutation: refine important cascade -> an important declaration cannot be overridden by a later normal declaration FAIL -> restored PASS\nPASS mutation: refine unsupported shorthand conflict -> unsupported shorthands cannot mask an ineffective static CSS change FAIL -> restored PASS\nPASS mutation: refine opaque text-decoration default refusal -> opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority FAIL -> restored PASS\nPASS mutation: refine opaque logical alias default refusal -> opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority FAIL -> restored PASS\nPASS mutation: refine unknown future property default refusal -> opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority FAIL -> restored PASS\nPASS mutation: refine class-only refusal -> overridden or equivalent CSS declarations cannot satisfy static refinement FAIL -> restored PASS\nPASS mutation: refine exact visual scope -> refine cannot restyle an unauthorized parent or preserved module FAIL -> restored PASS\nPASS mutation: refine immutable global CSS -> refine must preserve global CSS byte-for-byte, even when the visual result may be equivalent FAIL -> restored PASS\nPASS mutation: refine immutable external assets -> refine must preserve external CSS asset bytes FAIL -> restored PASS\nPASS mutation: readback inventory cross-check -> output bytes must be present in the complete post-inventory FAIL -> restored PASS\nPASS mutation: immutable verification cache binding -> mutable verification contracts must stay bound to immutable bytes FAIL -> restored PASS\nPASS mutation: missing attachment readback -> missing actual attachment bytes cannot be reported as STAGED FAIL -> restored PASS\nPASS mutation: competing Packet scopes -> accepted contradictory fact scope FAIL -> restored PASS\nPASS mutation: paragraph auto-close -> accepted target escape FAIL -> restored PASS\nPASS mutation: old entry-point check -> stdin import FAIL -> restored PASS\n"
+}

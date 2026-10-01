@@ -1,0 +1,20 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: codex enter rewrites one public argv to a trusted controller argv: {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"无法准备本次项目选择：controlled manifest does not allow canonical project selection: ./scripts/project.sh switch beta"}}
+
+    at ok (file:///private/tmp/design-brief-20261001/c24-diagnosis/baseline-active/repo/scripts/test-project-gate-v34-dual-host.mjs:35:10)
+    at file:///private/tmp/design-brief-20261001/c24-diagnosis/baseline-active/repo/scripts/test-project-gate-v34-dual-host.mjs:227:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v22.23.1

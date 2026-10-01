@@ -1,7 +1,7 @@
 ---
 name: task-plan
 preamble-tier: 2
-version: 1.0.1
+version: 1.0.2
 description: |
   任务编排计划节点。把所有上游产物（PRD + design-brief + tech-spec）
   转化为渐进式索引 + 断言矩阵 + 开发/测试任务卡。
@@ -71,6 +71,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 
 
 ## Phase 0：确认输入存在
 
+先定位已验证项目/当前话题的精确输入，最新 glob 仅作发现线索，不静默选其他话题。
 检查以下文件是否存在：
 - `docs/handoff/*tech-spec-handoff.md` — **必须存在**，否则终止并提示先运行 `/tech-spec`
 - `docs/handoff/*design-brief-handoff.md` — **必须存在**，否则终止并提示先运行 `/design-brief`
@@ -89,6 +90,14 @@ task-plan 需要设计决策和状态来源，不能只按 tech-spec 拆开发�
 ```
 
 ---
+
+准入质量门（standalone 和 workflow 都执行）：完整读取两份精确 handoff，分别运行
+`node scripts/check-quality-gates.mjs --handoff "<handoff 绝对路径>"`；
+tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 `gate_result=PASS`
+及 `coverage_scope=prd_end_to_end`。核同一话题/版本及实际 PRD 来源索引，按需核矩阵覆盖
+当前 PRD 全部 MUST R/AE，不读取无关全文。design_source PASS、handoff 存在或 tech-spec
+自己的矩阵计数不能替代上述证据。字段/来源缺失或未知返回 NEEDS_CONTEXT；失败、范围不符
+或漂移返回 BLOCKED，回对应上游 owner 修订过门，不把生成契约直接当工程任务源。
 
 ## Phase 1：输入加载（懒加载）
 

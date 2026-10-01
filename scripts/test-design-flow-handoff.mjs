@@ -207,7 +207,7 @@ try {
     page_id: 'carrier-page', name: 'Carrier page', aliases: [], intent: 'Carrier test', scope: 'framework', source_ref: 'framework/carrier.html', source_hash: hash(carrierHtml), viewport: { width: 1200, height: 800 }, states: ['default'], regions: [], lifecycle: 'live', carrier_eligible: true,
     modules: [
       { module_id: 'carrier-root', parent_module_id: null, name: 'Carrier root', intent: 'Carrier root', anchor: { kind: 'attribute', name: 'id', value: 'carrier-root' }, required: true, allowed_actions: ['modify', 'preserve'], invariants: [{ invariant_id: 'root-stays', name: 'Root remains', anchor: { kind: 'attribute', name: 'id', value: 'carrier-root' } }] },
-      { module_id: 'carrier-module', parent_module_id: 'carrier-root', name: 'Carrier module', intent: 'Carrier change', anchor: { kind: 'attribute', name: 'id', value: 'carrier-module' }, required: false, allowed_actions: ['modify', 'remove', 'preserve'], invariants: [{ invariant_id: 'module-stays', name: 'Module remains', anchor: { kind: 'attribute', name: 'id', value: 'carrier-module' } }] },
+      { module_id: 'carrier-module', parent_module_id: 'carrier-root', name: 'Carrier module', intent: 'Carrier change', anchor: { kind: 'attribute', name: 'id', value: 'carrier-module' }, required: false, allowed_actions: ['modify', 'refine', 'remove', 'preserve'], invariants: [{ invariant_id: 'module-stays', name: 'Module remains', anchor: { kind: 'attribute', name: 'id', value: 'carrier-module' } }] },
       { module_id: 'preserved-module', parent_module_id: 'carrier-root', name: 'Preserved module', intent: 'Keep content', anchor: { kind: 'attribute', name: 'id', value: 'preserved-module' }, required: false, allowed_actions: ['preserve'], invariants: [{ invariant_id: 'preserved-stays', name: 'Preserved remains', anchor: { kind: 'attribute', name: 'id', value: 'preserved-module' } }] }
     ],
     slots: [{ slot_id: 'carrier-slot', parent_module_id: 'carrier-root', name: 'Carrier slot', intent: 'Add content', anchor: { kind: 'attribute', name: 'id', value: 'carrier-slot' }, allowed_actions: ['add'] }]
@@ -297,6 +297,54 @@ try {
   const confirmedCarrier = await api.confirmCarrierBundle(carrierBundle, finalRecord, { root, catalog: carrierCatalog });
   const callerRuntime = { runtime: 'codex' };
   const capability = (operations, bundle = carrierBundle) => ({ version: 1, kind: 'od-handoff-capability', status: 'PASS', runtime: 'codex', receipt_ref: `fixture:capability:${operations.join('-')}`, tool: 'od', project_id: target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', operations });
+  // A prototype stays a byte attachment with a traceable source index. It does
+  // not become requirements or an executable template, even when it has JS.
+  const prototypeEvidence = [{ path: 'interaction/prototype.html', media_type: 'text/html; charset=utf-8', purpose: 'interaction-reference', source_ids: ['D-001'], bytes: Buffer.from('<!doctype html><main><button>Save</button><script>save()</script></main>') }, { path: 'screen.png', media_type: 'image/png', purpose: 'visual-reference', source_ids: ['D-001'], bytes: pngFixture(2, 1) }];
+  assert.deepEqual(api.preparePrototypeEvidence(undefined), { files: [], records: [] });
+  const prototypeExport = await api.prepareCarrierHandoff({ ...prepareArgs, prototypeEvidence }, { root, catalog: carrierCatalog });
+  assert.notEqual(prototypeExport.handoff_bundle_hash, carrierBundle.handoff_bundle_hash, 'prototype attachments and their usage participate in the bundle hash');
+  assert.equal(prototypeExport.source_packet_sha256, carrierBundle.source_packet_sha256);
+  assert.equal(prototypeExport.carrier_content_hash, carrierBundle.carrier_content_hash, 'prototype evidence is outside the immutable template closure');
+  assert.equal(prototypeExport.files.find(item => item.path === 'control/brief.md').bytes.toString(), carrierSource.body, 'prototype HTML never replaces or alters frozen facts');
+  const prototypeRecords = prototypeExport.manifest.prototype_evidence;
+  assert.equal(prototypeRecords.length, 2);
+  assert.ok(prototypeRecords.every(record => prototypeExport.manifest.immutable_files.some(item => item.path === record.path && item.sha256 === record.sha256 && item.bytes === record.bytes)));
+  const prototypeMetadata = JSON.parse(prototypeExport.files.find(item => item.path === 'control/prototype-evidence.json').bytes);
+  assert.equal(prototypeMetadata.usage, 'inert-evidence-only');
+  assert.equal(prototypeMetadata.source_index_validation, 'frozen-existing-ids');
+  assert.deepEqual(prototypeMetadata.attachments, prototypeRecords);
+  for (const [attachment, code] of [
+    [{ ...prototypeEvidence[0], bytes: '/local-only/prototype.html' }, 'PROTOTYPE_BYTES_REQUIRED'],
+    [{ ...prototypeEvidence[0], path: '../outside.html' }, 'UNSAFE_PATH'],
+    [{ ...prototypeEvidence[0], path: 'prototype.png' }, 'PROTOTYPE_MEDIA_TYPE_INVALID'],
+    [{ ...prototypeEvidence[0], purpose: 'execute-template' }, 'PROTOTYPE_EVIDENCE_INVALID'],
+    [{ ...prototypeEvidence[0], source_ids: ['D-unknown'] }, 'PROTOTYPE_SOURCE_IDS_INVALID'],
+    [{ ...prototypeEvidence[0], source_ids: ['D-001', 'D-001'] }, 'PROTOTYPE_SOURCE_IDS_INVALID'],
+    [{ ...prototypeEvidence[0], local_path: '/local/prototype.html' }, 'PROTOTYPE_EVIDENCE_INVALID'],
+    [{ ...prototypeEvidence[1], bytes: Buffer.from('<html>pretend PNG</html>') }, 'PNG_REQUIRED']
+  ]) await assert.rejects(api.prepareCarrierHandoff({ ...prepareArgs, prototypeEvidence: [attachment] }, { root, catalog: carrierCatalog }), { code }, 'prototype attachments require safe complete bytes and existing frozen source IDs');
+  await assert.rejects(api.prepareCarrierHandoff({ ...prepareArgs, prototypeEvidence: [prototypeEvidence[0], { ...prototypeEvidence[0], path: prototypeEvidence[0].path.toUpperCase() }] }, { root, catalog: carrierCatalog }), { code: 'PROTOTYPE_EVIDENCE_INVALID' }, 'case variants cannot duplicate an evidence path');
+  const indexed = api.preparePrototypeEvidence(prototypeEvidence, { factIds: applicability.map(item => item.id), sourceIndexVerified: true });
+  const changedIndex = indexed.files.map(item => ({ ...item, bytes: Buffer.from(item.bytes) }));
+  const changedIndexFile = changedIndex.find(item => item.path === 'control/prototype-evidence.json');
+  const contradictoryIndex = JSON.parse(changedIndexFile.bytes);
+  contradictoryIndex.attachments[0].purpose = 'visual-reference';
+  changedIndexFile.bytes = Buffer.from(canonicalJson(contradictoryIndex)); changedIndexFile.sha256 = hash(changedIndexFile.bytes);
+  assert.throws(() => api.verifyPrototypeEvidence(changedIndex, indexed.records, { factIds: applicability.map(item => item.id), sourceIndexVerified: true }), { code: 'PROTOTYPE_EVIDENCE_CHANGED' }, 'prototype metadata cannot contradict the manifest purpose or source index');
+  const confirmedPrototype = await api.confirmCarrierBundle(prototypeExport, { ...finalRecord, adoption: { ...finalRecord.adoption, handoff_bundle_hash: prototypeExport.handoff_bundle_hash } }, { root, catalog: carrierCatalog });
+  const prototypeFiles = confirmedPrototype.files.map(item => ({ path: `${confirmedPrototype.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
+  const prototypeReadback = { ...target, namespace: confirmedPrototype.namespace, readRef: 'fixture:prototype-stage', files: prototypeFiles, pre_inventory: [], post_inventory: prototypeFiles };
+  assert.equal(api.verifyCarrierReadback(confirmedPrototype, prototypeReadback).status, 'STAGED');
+  for (const path of ['evidence/prototype/interaction/prototype.html', 'evidence/prototype/screen.png', 'control/prototype-evidence.json']) {
+    const full = `${confirmedPrototype.namespace}/${path}`;
+    assert.throws(() => api.verifyCarrierReadback(confirmedPrototype, { ...prototypeReadback, files: prototypeFiles.filter(item => item.path !== full), post_inventory: prototypeFiles.filter(item => item.path !== full) }), error => ['READBACK_EXTRA_FILE', 'READBACK_MISSING_FILE'].includes(error.code), 'missing actual prototype attachment or metadata cannot be reported as staged');
+    const changed = prototypeFiles.map(item => ({ ...item, bytes: item.path === full ? Buffer.concat([item.bytes, Buffer.from('\nchanged')]) : item.bytes }));
+    assert.throws(() => api.verifyCarrierReadback(confirmedPrototype, { ...prototypeReadback, files: changed, post_inventory: changed }), { code: 'READBACK_CONTENT_MISMATCH' }, 'prototype readback must match actual bytes rather than declared hashes');
+  }
+  const locallyChanged = { ...confirmedPrototype, files: confirmedPrototype.files.map(item => ({ ...item, bytes: Buffer.from(item.bytes) })) };
+  locallyChanged.files.find(item => item.path.startsWith('evidence/prototype/')).bytes[0] ^= 1;
+  await assert.rejects(api.confirmCarrierBundle(locallyChanged, finalRecord, { root, catalog: carrierCatalog }), { code: 'CARRIER_BUNDLE_CHANGED' });
+  console.log('PASS: immutable prototype byte evidence, source indexing, hash participation and complete carrier readback');
   const carrierGrant = { tool: 'od', projectId: target.projectId, handoff_id: carrierBundle.handoff_id, namespace: carrierBundle.namespace, handoff_bundle_hash: carrierBundle.handoff_bundle_hash, output_profile: 'single', stage: true, messageRef: 'fixture:user-stage-grant', capabilityReceipt: capability(['stage']) };
   const { confirmation: _removedConfirmation, ...unconfirmedCarrier } = confirmedCarrier;
   assert.throws(() => api.authorizeCarrierStage(unconfirmedCarrier, carrierGrant, callerRuntime), { code: 'CARRIER_STAGE_NOT_AUTHORIZED' }, 'removing the confirmation cannot turn an adopted carrier back into an authorizable draft');
@@ -425,6 +473,87 @@ try {
       assert.throws(() => check(removed.replace('>keep</aside>', '>changed</aside>')), { code: 'PRESERVE_DOM_CHANGED' });
     }
   }
+  // Visual-only refinement is a distinct action. It cannot borrow modify's
+  // authority to alter business content or style any other module.
+  const opaqueOverrideCases = [
+    ['text-decoration-color: red; text-decoration: underline !important', 'text-decoration-color: blue; text-decoration: underline !important'],
+    ['text-decoration: underline; text-decoration-color: red !important', 'text-decoration: underline; text-decoration-color: blue !important'],
+    ['width: 10px; inline-size: 30px !important', 'width: 20px; inline-size: 30px !important'],
+    ['block-size: 30px; height: 10px !important', 'block-size: 30px; height: 20px !important'],
+    ['min-width: 10px; min-inline-size: 30px !important', 'min-width: 20px; min-inline-size: 30px !important'],
+    ['min-block-size: 30px; min-height: 10px !important', 'min-block-size: 30px; min-height: 20px !important'],
+    ['max-width: 10px; max-inline-size: 30px !important', 'max-width: 20px; max-inline-size: 30px !important'],
+    ['max-block-size: 30px; max-height: 10px !important', 'max-block-size: 30px; max-height: 20px !important'],
+    ['color: red; unknown-future-property: preserved', 'color: blue; unknown-future-property: preserved']
+  ];
+  const opaqueOverrideNodes = opaqueOverrideCases.map(([style], index) => `<div id="opaque-override-${index}" style="${style}">Opaque override ${index}</div>`).join('') + '<div id="independent-shadow" style="box-shadow: 0 1px 2px black">Shadow</div>';
+  const refinementHtml = Buffer.from('<!doctype html><html><head><style>.existing { color: navy; }</style><link rel="stylesheet" href="assets/global.css"></head><body><main id="carrier-root"><section id="carrier-module" class="existing" style="padding: 12px"><button type="button" name="save" value="keep" data-action="save">Save</button><textarea name="notes">a  b\nc</textarea><pre>keep  spaces\nline</pre><span>A </span><span> B</span><input name="code" value="a  b"><div id="legacy-visual" style="font-family: Inter, system-ui">Legacy font</div><div id="priority-visual" style="color: red !important">Priority</div><div id="opaque-visual" style="padding: 12px; all: unset">Opaque</div></section><aside id="preserved-module">keep</aside><div id="carrier-slot"></div></main></body></html>'.replace('</section>', opaqueOverrideNodes + '</section>'));
+  const globalCss = Buffer.from('button { border: 0; }');
+  const refinementPage = { ...structuredClone(carrierPage), page_id: 'refinement-page', source_ref: 'framework/refinement.html', source_hash: hash(refinementHtml) };
+  refinementPage.module_contract_hash = computeModuleContractHash(refinementPage);
+  const refinementCatalog = { ...carrierCatalog, pages: [refinementPage] };
+  await writeFile(join(root, refinementPage.source_ref), refinementHtml);
+  const refinementDoc = { ...packetDocument, items: [{ source_kind: 'decision', id: 'D-001', text: 'Refine module typography and spacing only; retain Save behavior, fields and labels.' }] };
+  const refinementBody = api.createCarrierPacket(refinementDoc);
+  const refinementPacket = api.inspectCarrierPacket(refinementBody);
+  const refinementFrozen = { source_packet_sha256: refinementPacket.source_packet_sha256, applicability_set_sha256: refinementPacket.applicability_set_sha256 };
+  const refinementActions = [{ ...binding.actions[0], action: 'refine' }, binding.actions[1]];
+  const refinementAssessment = assessmentFor(refinementActions, refinementDoc.items, refinementFrozen);
+  refinementAssessment.catalog_sha256 = computeCatalogHash(refinementCatalog);
+  refinementAssessment.candidate_evidence[0].page_id = refinementPage.page_id;
+  refinementAssessment.judgments.forEach(item => { item.page_id = refinementPage.page_id; });
+  const refinementDraft = { ...draftRecord, frozen_packet: refinementFrozen, binding: { ...binding, page_id: refinementPage.page_id, source_ref: refinementPage.source_ref, source_hash: refinementPage.source_hash, module_contract_hash: refinementPage.module_contract_hash, actions: refinementActions, match_assessment: refinementAssessment } };
+  const refinementAssets = [{ path: 'assets/global.css', media_type: 'text/css; charset=utf-8', bytes: globalCss }];
+  const refinementCarrierHash = carrierContentHash(resolveAssetClosure({ baseTemplate: refinementHtml, assets: refinementAssets }), refinementPage.module_contract_hash);
+  const refinementTac = { ...tac, template: { page_id: refinementPage.page_id, module_contract_hash: refinementPage.module_contract_hash, carrier_content_hash: refinementCarrierHash }, ...refinementFrozen, applicability_set: refinementPacket.applicability, changes: [{ ...tac.changes[0], action: 'refine', source_projections: refinementPacket.applicability }, tac.changes[1]], coverage: [{ ...refinementPacket.applicability[0], disposition: { kind: 'change', change_id: 'C-01' } }] };
+  const refinementExport = await api.prepareCarrierHandoff({ ...prepareArgs, handoffId: 'carrier-refinement', source: { ...carrierSource, body: refinementBody }, carrierBinding: refinementDraft, baseTemplate: refinementHtml, assets: refinementAssets, tacJson: canonicalJson(refinementTac), tacMarkdown: api.renderTacMarkdown(refinementTac, refinementBody), pageReference: canonicalJson({ page_id: refinementPage.page_id, source_hash: refinementPage.source_hash, source_packet_sha256: refinementFrozen.source_packet_sha256 }) }, { root, catalog: refinementCatalog });
+  const refinementBundle = await api.confirmCarrierBundle(refinementExport, { ...refinementDraft, adoption: { ...finalRecord.adoption, binding_sha256: refinementExport.binding_sha256, tac_sha256: refinementExport.manifest.tac_sha256, carrier_content_hash: refinementExport.carrier_content_hash, handoff_bundle_hash: refinementExport.handoff_bundle_hash } }, { root, catalog: refinementCatalog });
+  const refinementFiles = refinementBundle.files.map(item => ({ path: `${refinementBundle.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
+  const refinementStaged = api.verifyCarrierReadback(refinementBundle, { ...target, namespace: refinementBundle.namespace, readRef: 'fixture:refinement-stage', pre_inventory: [], post_inventory: refinementFiles, files: refinementFiles });
+  const refinementReported = api.reportCarrierGeneration(refinementStaged, { messageRef: 'fixture:refinement-generated' });
+  const refinementGrant = { ...recoverGrant, handoff_id: refinementBundle.handoff_id, namespace: refinementBundle.namespace, handoff_bundle_hash: refinementBundle.handoff_bundle_hash, capabilityReceipt: capability(['recover'], refinementBundle) };
+  const refinementAuthorization = api.authorizeCarrierRecover(refinementBundle, refinementReported, refinementGrant, callerRuntime);
+  const refinementEvidence = { ...mechanical_verification, module_traces: [{ change_id: 'C-01', source_keys: [`decision:D-001:${refinementPacket.applicability[0].packet_span_hash}`], status: 'PASS' }] };
+  const observeRefinement = (bytes, css = globalCss) => {
+    const outputs = [{ path: `${refinementBundle.namespace}/output/index.html`, bytes: Buffer.from(bytes) }, { path: `${refinementBundle.namespace}/output/assets/global.css`, bytes: Buffer.from(css) }];
+    return api.observeCarrierOutput(refinementBundle, refinementReported, { ...target, namespace: refinementBundle.namespace, readRef: 'fixture:refinement-output', files: [...refinementFiles, ...outputs], post_inventory: [...refinementFiles, ...outputs], mechanical_verification: refinementEvidence }, refinementAuthorization);
+  };
+  const visualRefinement = refinementHtml.toString().replace('class="existing" style="padding: 12px"', 'class="existing improved" style="padding: 16px"');
+  const observedRefinement = observeRefinement(visualRefinement);
+  assert.equal(observedRefinement.status, 'GENERATED_OBSERVED');
+  assert.equal(api.recoverCarrierOutput(refinementBundle, observedRefinement, refinementAuthorization).semantic_acceptance, 'PENDING_INDEPENDENT_REVIEW', 'mechanical refinement does not prove interaction equivalence or design quality');
+  for (const unchanged of [refinementHtml.toString() + '<!-- cosmetically claimed -->', refinementHtml.toString().replace('class="existing" style="padding: 12px"', 'class="  existing  " style="padding : 12px ;"')]) {
+    assert.throws(() => observeRefinement(unchanged), { code: 'REFINE_NO_VISUAL_CHANGE' }, 'refine requires an actual visual attribute change, not comments or whitespace');
+  }
+  for (const changed of [visualRefinement.replace('>Save</button>', '>Delete</button>'), visualRefinement.replace('data-action="save"', 'data-action="delete"'), visualRefinement.replace('value="keep"', 'value="changed"')]) {
+    assert.throws(() => observeRefinement(changed), { code: 'REFINE_BUSINESS_DOM_CHANGED' }, 'refine cannot change business text, data hooks or field values');
+  }
+  for (const changed of [visualRefinement.replace('a  b\nc</textarea>', 'a b c</textarea>'), visualRefinement.replace('keep  spaces\nline</pre>', 'keep spaces line</pre>'), visualRefinement.replace('<span>A </span>', '<span>A</span>'), visualRefinement.replace('value="a  b"', 'value="a b"')]) {
+    assert.throws(() => observeRefinement(changed), { code: 'REFINE_BUSINESS_DOM_CHANGED' }, 'refine must preserve exact text whitespace, textarea/pre data and default input values');
+  }
+  assert.throws(() => observeRefinement(visualRefinement.replace('font-family: Inter, system-ui', 'font-family: Other, system-ui')), { code: 'REFINE_CSS_UNSUPPORTED' }, 'unsupported original CSS must remain exact');
+  assert.throws(() => observeRefinement(visualRefinement.replace('padding: 16px', 'padding: 16px; invalid-property: xyz')), { code: 'REFINE_CSS_UNSUPPORTED' }, 'new or changed unsupported CSS is rejected even alongside a valid declaration change');
+  for (const unsupported of ['padding: 12px; invalid-property: xyz', 'padding: broccoli', 'padding: -1px', 'padding: calc(12px + 1px)', 'padding: var(--space)', 'font-family: fn(1]; padding: 16px']) {
+    assert.throws(() => observeRefinement(refinementHtml.toString().replace('style="padding: 12px"', `style="${unsupported}"`)), { code: 'REFINE_CSS_UNSUPPORTED' }, 'invalid-only and unprovable new CSS cannot satisfy static refinement');
+  }
+  for (const unchangedCss of [refinementHtml.toString().replace('style="padding: 12px"', 'style="padding: 12px; padding: 16px; padding: 12px"'), refinementHtml.toString().replace('color: red !important', 'color: #f00 !important')]) {
+    assert.throws(() => observeRefinement(unchangedCss), { code: 'REFINE_NO_VALID_CSS_CHANGE' }, 'overridden or equivalent CSS declarations cannot satisfy static refinement');
+  }
+  assert.throws(() => observeRefinement(refinementHtml.toString().replace('color: red !important', 'color: red !important; color: blue')), { code: 'REFINE_NO_VALID_CSS_CHANGE' }, 'an important declaration cannot be overridden by a later normal declaration');
+  assert.throws(() => observeRefinement(refinementHtml.toString().replace('class="existing"', 'class="existing guessed-token"')), { code: 'REFINE_NO_VALID_CSS_CHANGE' }, 'static class-only refinement requires a separate renderer contract');
+  assert.equal(observeRefinement(refinementHtml.toString().replace('font-family: Inter, system-ui', 'font-family: Inter, system-ui; color: blue')).status, 'GENERATED_OBSERVED', 'unchanged unsupported original declarations can remain beside a supported change');
+  assert.equal(observeRefinement(refinementHtml.toString().replace('box-shadow: 0 1px 2px black', 'box-shadow: 0 1px 2px black; padding: 4px')).status, 'GENERATED_OBSERVED', 'an exact independent box-shadow longhand can remain beside a supported change');
+  assert.throws(() => observeRefinement(refinementHtml.toString().replace('padding: 12px; all: unset', 'padding: 16px; all: unset')), { code: 'REFINE_CSS_UNSUPPORTED' }, 'unsupported shorthands cannot mask an ineffective static CSS change');
+  for (const [before, after] of opaqueOverrideCases) {
+    assert.throws(() => observeRefinement(refinementHtml.toString().replace(before, after)), { code: 'REFINE_CSS_UNSUPPORTED' }, 'opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority');
+  }
+  assert.throws(() => observeRefinement(visualRefinement.replace('<main id=', '<main class="outside" id=')), { code: 'REFINE_VISUAL_SCOPE_CHANGED' }, 'refine cannot restyle an unauthorized parent or preserved module');
+  assert.throws(() => observeRefinement(visualRefinement.replace('<aside id=', '<aside style="color:red" id=')), { code: 'REFINE_VISUAL_SCOPE_CHANGED' }, 'refine cannot restyle an unauthorized parent or preserved module');
+  assert.throws(() => observeRefinement(visualRefinement.replace('<style>', '<STYLE>').replace('</style>', '</STYLE>')), { code: 'REFINE_GLOBAL_CONTENT_CHANGED' }, 'refine must preserve global CSS byte-for-byte, even when the visual result may be equivalent');
+  assert.throws(() => observeRefinement(visualRefinement.replace('color: navy;', 'color:  navy;')), { code: 'REFINE_GLOBAL_CONTENT_CHANGED' }, 'refine must preserve exact global CSS whitespace');
+  assert.throws(() => observeRefinement(visualRefinement, Buffer.from('button { border:  0; }')), { code: 'REFINE_ASSETS_CHANGED' }, 'refine must preserve external CSS asset bytes');
+  assert.throws(() => observeRefinement(visualRefinement.replace('</body>', '<script>newBehavior()</script></body>')), error => ['ACTIVE_CONTENT_FORBIDDEN', 'CARRIER_DOM_UNSUPPORTED'].includes(error.code), 'refine cannot introduce scripts into the supported static carrier subset');
+  console.log('PASS: explicit visual refinement, unchanged business DOM/global CSS/assets, exact module boundary and semantic review separation');
   const pairedDoc = { ...packetDocument, items: [...packetDocument.items, { source_kind: 'decision', id: 'D-002', text: 'Add a filter inside the slot.' }] };
   const pairedBody = api.createCarrierPacket(pairedDoc);
   const pairedPacket = api.inspectCarrierPacket(pairedBody);
@@ -436,6 +565,9 @@ try {
   const pairedTac = { ...tac, ...pairedFrozen, applicability_set: pairedPacket.applicability, changes: pairedActions.map((action, index) => ({ change_id: action.action_id, action: action.action, ...(action.module_id ? { module_id: action.module_id } : { slot_id: action.slot_id }), source_projections: [pairedPacket.applicability[index]] })), coverage: pairedPacket.applicability.map((item, index) => ({ ...item, disposition: { kind: 'change', change_id: pairedActions[index].action_id } })) };
   const pairedArgs = { ...prepareArgs, source: { ...carrierSource, body: pairedBody }, carrierBinding: pairedDraft, tacJson: canonicalJson(pairedTac), tacMarkdown: api.renderTacMarkdown(pairedTac, pairedBody), pageReference: canonicalJson({ page_id: carrierPage.page_id, source_hash: carrierPage.source_hash, source_packet_sha256: pairedFrozen.source_packet_sha256 }) };
   assert.equal((await api.prepareCarrierHandoff(pairedArgs, { root, catalog: carrierCatalog })).status, 'EXPORTED', 'two distinct fact/action mappings are supported');
+  const mixedRefinementDraft = { ...pairedDraft, binding: { ...pairedDraft.binding, actions: pairedActions.map(action => action.action_id === 'C-01' ? { ...action, action: 'refine' } : action) } };
+  const mixedRefinementTac = { ...pairedTac, changes: pairedTac.changes.map(change => change.change_id === 'C-01' ? { ...change, action: 'refine' } : change) };
+  await assert.rejects(api.prepareCarrierHandoff({ ...pairedArgs, carrierBinding: mixedRefinementDraft, tacJson: canonicalJson(mixedRefinementTac), tacMarkdown: api.renderTacMarkdown(mixedRefinementTac, pairedBody) }, { root, catalog: carrierCatalog }), { code: 'REFINE_MIXED_ACTIONS_UNSUPPORTED' }, 'refinement and structural changes require separate explicit handoffs');
   const swappedTac = { ...pairedTac, changes: pairedTac.changes.map((change, index) => ({ ...change, source_projections: [pairedPacket.applicability[1 - index]] })), coverage: pairedTac.coverage.map((row, index) => ({ ...row, disposition: { kind: 'change', change_id: pairedActions[1 - index].action_id } })) };
   await assert.rejects(api.prepareCarrierHandoff({ ...pairedArgs, tacJson: canonicalJson(swappedTac), tacMarkdown: api.renderTacMarkdown(swappedTac, pairedBody) }, { root, catalog: carrierCatalog }), { code: 'TAC_MATCH_ASSESSMENT_CONFLICT' }, 'TAC cannot swap fact/action mappings after match assessment');
   const keepDoc = { ...packetDocument, items: [...packetDocument.items, { source_kind: 'constraint', id: 'KEEP-001', text: 'Keep the preserved module content unchanged.' }] };
@@ -453,6 +585,23 @@ try {
   assert.equal(referenceOnly.derivation, 'not-template-derived');
   assert.equal('carrier_content_hash' in referenceOnly, false);
   assert.ok(referenceOnly.files.every(item => !item.path.startsWith('input/') && !item.path.includes('template-adaptation')), 'reference-only transport has an independent control namespace and no carrier/TAC tree');
+  const referencePrototype = await api.buildReferenceOnlyHandoff({ source, target, selection: none, handoffId: 'reference-prototype', prototypeEvidence: [{ ...prototypeEvidence[0], source_ids: ['voice-source-1'] }] });
+  assert.equal(referencePrototype.source_packet_sha256, hash(Buffer.from(source.body)));
+  assert.equal(referencePrototype.files.find(item => item.path === 'control/brief.md').bytes.toString(), source.body, 'free Markdown source remains exact when prototype evidence is attached');
+  const referencePrototypeMetadata = JSON.parse(referencePrototype.files.find(item => item.path === 'control/prototype-evidence.json').bytes);
+  assert.equal(referencePrototypeMetadata.source_index_validation, 'unverified-source-index', 'reference-only source indexes cannot masquerade as frozen fact coverage');
+  assert.equal(referencePrototype.derivation, 'not-template-derived');
+  const referencePrototypeFiles = referencePrototype.files.map(item => ({ path: `${referencePrototype.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
+  const referencePrototypeReadback = { ...target, namespace: referencePrototype.namespace, readRef: 'fixture:reference-prototype-stage', files: referencePrototypeFiles, pre_inventory: [], post_inventory: referencePrototypeFiles };
+  assert.equal(api.verifyReferenceReadback(referencePrototype, referencePrototypeReadback).status, 'STAGED');
+  for (const path of ['evidence/prototype/interaction/prototype.html', 'control/prototype-evidence.json']) {
+    const full = `${referencePrototype.namespace}/${path}`;
+    const incomplete = referencePrototypeFiles.filter(item => item.path !== full);
+    assert.throws(() => api.verifyReferenceReadback(referencePrototype, { ...referencePrototypeReadback, files: incomplete, post_inventory: incomplete }), error => ['READBACK_MISSING_FILE', 'READBACK_EXTRA_FILE'].includes(error.code), 'reference-only stage requires every actual prototype evidence byte');
+    const changed = referencePrototypeFiles.map(item => ({ ...item, bytes: item.path === full ? Buffer.concat([item.bytes, Buffer.from('\nchanged')]) : item.bytes }));
+    assert.throws(() => api.verifyReferenceReadback(referencePrototype, { ...referencePrototypeReadback, files: changed, post_inventory: changed }), { code: 'READBACK_CONTENT_MISMATCH' }, 'reference-only prototype readback compares actual bytes');
+  }
+  assert.throws(() => api.verifyReferenceReadback(referencePrototype, { ...referencePrototypeReadback, post_inventory: referencePrototypeFiles.slice(1) }), { code: 'READBACK_EXTRA_FILE' }, 'reference-only project inventory must contain every immutable evidence file');
   const referenceGrant = { tool: 'od', projectId: target.projectId, handoff_id: referenceOnly.handoff_id, namespace: referenceOnly.namespace, handoff_bundle_hash: referenceOnly.handoff_bundle_hash, output_profile: 'single', stage: true, messageRef: 'fixture:reference-stage', capabilityReceipt: capability(['stage'], referenceOnly) };
   assert.deepEqual(api.authorizeReferenceStage(referenceOnly, referenceGrant, callerRuntime).scope, ['stage']);
   const referenceFiles = referenceOnly.files.map(item => ({ path: `${referenceOnly.namespace}/${item.path}`, bytes: Buffer.from(item.bytes) }));
@@ -499,6 +648,22 @@ try {
       ['scope exclusion cannot authorize modification', original.split('\n').find(line => line.includes("if (disposition?.kind !== 'change' || disposition.change_id !== changeId)")), '', 'excluded facts cannot simultaneously authorize a modifying projection'],
       ['frozen scope cannot be overridden', original.split('\n').find(line => line.includes("if (packet.scopes.some(scope => scope.source_ids.includes(row.id)))")), '', 'TAC change coverage cannot override an explicit frozen scope exclusion'],
       ['actual target change', original.split('\n').find(line => line.includes("if (isDeepStrictEqual(original, generated))")), '', 'comment or whitespace alone cannot satisfy a modify action'],
+      ['prototype existing source IDs', original.split('\n').find(line => line.includes("if (sourceIndexVerified && attachment.source_ids.some")), '', 'prototype attachments require safe complete bytes and existing frozen source IDs'],
+      ['prototype closed evidence index', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(expected.records, records)")), '', 'prototype metadata cannot contradict the manifest purpose or source index'],
+      ['refine separate structural handoff', original.split('\n').find(line => line.includes("if (tac.changes.some(change => change.action === 'refine')")), '', 'refinement and structural changes require separate explicit handoffs'],
+      ['refine business DOM preservation', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(structuralDom(baseHtml), structuralDom(html))")), '', 'refine cannot change business text, data hooks or field values'],
+      ['refine exact text preservation', "  if (node.text !== undefined) return { text: node.text };", "  if (node.text !== undefined) return node.text.trim() ? { text: node.text.replace(/\\s+/g, ' ').trim() } : null;", 'refine must preserve exact text whitespace, textarea/pre data and default input values'],
+      ['refine supported CSS changes', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(opaqueBefore.map")), '', 'unsupported original CSS must remain exact'],
+      ['refine effective CSS values', '  return changed.length > 0;', '  return current.some(item => item.effects !== null);', 'overridden or equivalent CSS declarations cannot satisfy static refinement'],
+      ['refine important cascade', original.split('\n').find(line => line.includes('if (!prior || declaration.important || !prior.important) values.set')), '      values.set(key, { value, important: declaration.important });', 'an important declaration cannot be overridden by a later normal declaration'],
+      ['refine unsupported shorthand conflict', original.split('\n').find(line => line.includes('if (changed.length && opaqueAfter.some')), '', 'unsupported shorthands cannot mask an ineffective static CSS change'],
+      ['refine opaque text-decoration default refusal', '  return !independentOpaqueCssProperties.has(property);', "  return property !== 'text-decoration' && !independentOpaqueCssProperties.has(property);", 'opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority'],
+      ['refine opaque logical alias default refusal', '  return !independentOpaqueCssProperties.has(property);', "  return property !== 'inline-size' && !independentOpaqueCssProperties.has(property);", 'opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority'],
+      ['refine unknown future property default refusal', '  return !independentOpaqueCssProperties.has(property);', "  return property !== 'unknown-future-property' && !independentOpaqueCssProperties.has(property);", 'opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority'],
+      ['refine class-only refusal', original.split('\n').find(line => line.includes('for (const scope of scopes) if (!scope.cssChanged)')), '', 'overridden or equivalent CSS declarations cannot satisfy static refinement'],
+      ['refine exact visual scope', original.split('\n').find(line => line.includes("if (!authorized.length) fail('REFINE_VISUAL_SCOPE_CHANGED'")), '', 'refine cannot restyle an unauthorized parent or preserved module'],
+      ['refine immutable global CSS', original.split('\n').find(line => line.includes("if (!isDeepStrictEqual(protectedMarkup(")), '', 'refine must preserve global CSS byte-for-byte, even when the visual result may be equivalent'],
+      ['refine immutable external assets', original.split('\n').find(line => line.includes("if (actualAssets.length !== originalAssets.length")), '', 'refine must preserve external CSS asset bytes'],
       ['readback inventory cross-check', '  assertReadbackInventory(namespaceFiles, after);', '', 'output bytes must be present in the complete post-inventory'],
       ['immutable verification cache binding', original.split('\n').find(line => line.includes("if (pageContext.computeModuleContractHash(contract)")), '', 'mutable verification contracts must stay bound to immutable bytes'],
       ['missing attachment readback', missingGuard, '    if (!actual) continue;', 'missing actual attachment bytes cannot be reported as STAGED']

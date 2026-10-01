@@ -85,13 +85,13 @@ standalone 模式允许 topic 为空，不要求 workflow-state 或工作流上�
 |-------|---------|---------|
 | `ux-research` | PRD 文件存在，含"目标用户"和"核心功能" | 读取精确 PRD，同一文件核对两个字段 |
 | `ux-brainstorm` | brainstorm handoff 存在 | 校验精确上游 handoff |
-| `design-brief` | ux-brainstorm 或 brainstorm handoff 存在 | 校验本次选择的精确上游 handoff |
+| `design-brief` | design_input 存在：pipeline / 已有需求 / 已有原型；仅选定 pipeline 时要求精确上游 handoff | 验证实际源及范围；已有需求/原型不强制PRD或ux-brainstorm；工程交付仍要求实际PRD |
 | `html-prototype` | design-brief handoff 存在且 gate_result PASS | 校验精确上游 handoff 及其 gate_result |
 | `open-design` | workflow 模式：design-brief handoff 存在且 gate_result PASS（standalone/adhoc 单点交接只需源产物存在，本行不执行） | 校验精确上游 handoff 及其 gate_result；recover 按同项目恢复合同核验目标 |
 | `magicpath` | 用户明确选择；workflow 的 design-brief handoff 存在且 gate_result PASS | 校验已确认平台与精确上游 handoff |
 | `figma-demo` | （隐藏，仅内部 dispatch）无特殊前置 | — |
-| `tech-spec` | design-brief handoff 存在且 gate_result PASS | 校验精确上游 handoff 及其 gate_result |
-| `task-plan` | tech-spec handoff 存在且 coverage_gate PASS | 校验精确上游 handoff 及其 coverage_gate |
+| `tech-spec` | 实际PRD + design-brief handoff 存在且 gate_result PASS、coverage_scope=prd_end_to_end | 校验精确上游/完整工程追踪；design_source PASS不能代替 |
+| `task-plan` | tech-spec 与 design-brief 精确 handoff 存在且 gate_result PASS；Brief coverage_scope=prd_end_to_end | 验证同话题/版本、实际PRD来源及 tech-spec coverage gate PASS；design_source不代替工程源 |
 | `deepresearch` | 无特殊前置 | — |
 | `brainstorm` | 无特殊前置 | — |
 | `idea` | 无特殊前置 | — |

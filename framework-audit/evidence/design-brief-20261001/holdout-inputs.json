@@ -1,0 +1,28 @@
+{
+  "purpose": "supplemental current-Skill cold instruction response; compact contract decisions, no production/live run",
+  "samples": [
+    {
+      "id": "H1",
+      "entry": "pipeline",
+      "input": "已有实际PRD摘要 R-7/AE-7：按状态筛选任务；已选 D-7=状态与既有条件组合，STATE-7=无结果保留条件并可清空。AI不介入已确认。用户已选列表模板的条件区，交OD。摘要没给PRD全文、模板字节或真实工具能力。只继承这些事实。"
+    },
+    {
+      "id": "H2",
+      "entry": "existing_requirements",
+      "input": "我已有口述需求：给订单增加状态筛选，无匹配时保留条件并提供清空，其他字段和权限保持。采用列表模板；给定目录语义filters=控制条件、table=呈现结果，默认/空态支持只是声明。平台和工具没选，未提供原始音频或全文PRD。这里没有搜索、详情、导航返回、内联空态或AI要求。"
+    },
+    {
+      "id": "H3",
+      "entry": "prototype_visual_refinement",
+      "input": "已有原型且明确已观察：选择标签后查看结果，无匹配保留标签并可清空。仅授权现有模块的视觉美化，全部动作/字段/权限保持；用已选原件标签模块并交OD。未提供具体源定位值或字节。这里没有搜索、详情、返回或植入任务，不能补这些动作。"
+    }
+  ],
+  "rubric": [
+    "all supplied facts/actions preserved",
+    "no unprovided action/fake quote/locator/PRD bytes",
+    "early template semantic responsibility and conflict gate",
+    "prototype pure refinement preserve boundary",
+    "design_source generation separate real engineering PRD",
+    "unknown source remains unready/no false receipt"
+  ]
+}

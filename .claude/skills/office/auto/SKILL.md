@@ -5,7 +5,7 @@ argument-hint: "[需求描述，或多个任务组合描述]"
 description: |
   全自动多 Agent 设计编排器：自然语言需求 → 自动分解任务 → 映射 skill → 编排 Work Agent 并行/串行 → 聚合产出。luca_gstack 顶层自动化入口，用户无需手动选 skill。(luca_gstack)
 recommended-model: core-execution  # 2026-07-10 new_scenario_protocol 定档：整场多agent编排（大token+中判断杠杆）
-version: 2.0.1
+version: 2.1.0
 ---
 
 # /auto — 全自动多 Agent 设计编排器
@@ -37,6 +37,8 @@ version: 2.0.1
 - **功能域**：目标产品的哪个模块/方向
 - **需求类型**：新功能设计 / 已有功能优化 / 全流程评审 / Agent 化改造
 - **期望深度**：仅研究 / 研究+方案 / 研究+方案+原型 / 全链路
+- **设计输入成熟度**：已选方案就绪 / 已有书面或口述需求 / 已有原型与精修范围 / 尚需发现；
+  与 A/B/C/D 场景分开，继承已确认模板、位置、工具及授权。
 
 ---
 
@@ -44,6 +46,16 @@ version: 2.0.1
 
 依据 Semantic Parse 结果，参考 `.claude/skill-os/skill-routing-map.yaml`，
 构建 **Skill Pipeline**（有序 + 依赖标注）：
+
+#### 先按设计入口继承，再推荐场景路径
+
+已有输入就绪且用户目标是设计生成时，以 `.claude/skill-os/optional-workflow-graph.yaml`
+的 `design_entry_paths` 为唯一入口路径 owner：pipeline / existing_requirements /
+prototype_visual_refinement 均从 design-brief → 已选生成工具开始。无需用户另说“跳过调研”，
+也不为进入 Brief 先造 PRD 或重做成熟方案；机制/多方案未定才返回对应发散节点。
+原型仅美化不授权植入；明确植入再精修时由 Brief 分阶段界定 add/modify 与 refine。
+用户已选大流程则沿所选路径继承已完成节点，只执行剩余节点，不自动换成短流程。
+入口不明且会改变工作目标时只问必要的一题；下表仅用于尚需发现或用户明确要求的大流程。
 
 #### Skill 映射规则
 
@@ -74,8 +86,8 @@ version: 2.0.1
 | 「已有调研，直接出 PRD」 | brainstorm → ux-brainstorm |
 | 「已有 PRD，直接出原型」 | design-brief → open-design |
 
-> **判断原则：** 用户未说「跳过」时，默认走完整 Pipeline（场景 A）。
-> 快速模式减少的是 deepresearch + ux-research Phase，不减少质量门控。
+> **判断原则：** 先继承实际输入成熟度和用户所选流程；已有需求/原型不因缺少“跳过”字样重跑整链。
+> 尚需研究且用户选择完整流程时才推荐整链。短入口保持 Brief 来源、状态、适配、冻结和验收门。
 
 ---
 
@@ -91,7 +103,7 @@ version: 2.0.1
 
 ### Step 2 — Plan Output（展示给用户，**Hierarchical 必须等确认**）
 
-输出格式：
+以下是全链路示例；实际按选定 Pipeline 展示 Phase 和输出，短入口不创建空研究/PRD节点：
 
 ```
 【/auto 执行计划】
@@ -216,7 +228,7 @@ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢�
 
 ### Step 4 — Aggregation（主 Agent 执行）
 
-所有 Phase 完成后：
+所有选定 Pipeline 的 Phase 完成后（下例仅展示全链，不宣称未运行节点完成）：
 
 1. 读取 `<WORK_ROOT>/docs/handoff/` 中本次 session 的所有 handoff summary
 2. 输出汇总报告：

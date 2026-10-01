@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "candidate_root": "/tmp/design-brief-20261001/candidate",
+  "isolated_test_root": "/tmp/design-brief-20261001/original-refinement-test",
+  "files": [
+    {
+      "path": "scripts/original-template-edits.mjs",
+      "sha256": "8ebba8b745d2fd77a2a8faa742a92356d8b0d779ee92f2abd33a4d6caa3fb95e"
+    },
+    {
+      "path": "scripts/original-copy-handoff.mjs",
+      "sha256": "a957ba7114b1f742b6fee6d4a4956f54e7fc7fbfd718755f9281f002acb75b76"
+    },
+    {
+      "path": "scripts/test-original-template-edits.mjs",
+      "sha256": "5c931f0f5c1212840eddf79fa123d7de7f96805e652b2b0df933de3cb6f2d0fd"
+    },
+    {
+      "path": "scripts/test-original-copy-handoff.mjs",
+      "sha256": "2c10c81e139c560cfc2c421705aa7be40fc7bf94216ae57cb19362d469a23e35"
+    },
+    {
+      "path": "scripts/test-original-real-templates.mjs",
+      "sha256": "3adddb1f14ca116da8ec7e646e38080cf518f92a71169398276b137689c59cde"
+    }
+  ],
+  "dependency_versions": [
+    {
+      "path": "scripts/design-flow-handoff.mjs",
+      "sha256": "69267e8c6a6360d45dc0f897d2d3026c64d9f546de5e57640feb10841f92b9df"
+    },
+    {
+      "path": "scripts/page-context.mjs",
+      "sha256": "03e97bb90606d16b7918569edb16f6350ac9df5a045764178c9bd6a6116d6811"
+    },
+    {
+      "path": ".claude/skill-os/page-library/schema.json",
+      "sha256": "128a184acc8d2faaad03c92e54b3a1bdd23642f9759c0fbf12dc9bb1cc111402"
+    }
+  ],
+  "runtime": {
+    "node": "v22.23.1",
+    "playwright": "1.61.1",
+    "dependency_path": "/Users/luca/.npm/_npx/e41f203b7505f1fb/node_modules"
+  },
+  "checks": [
+    {
+      "command": "node scripts/test-original-template-edits.mjs",
+      "exit_code": 0,
+      "coverage": "functional legacy and refine/preserve, exact full outerHTML, hidden template scope, void controls, SVG preservation, asset retention; rejects business/behavior/script/assets/outside/no-op/mixed-profile changes"
+    },
+    {
+      "command": "node scripts/test-original-copy-handoff.mjs",
+      "exit_code": 0,
+      "coverage": "legacy scoped grants plus refined profile; actual prototype bytes + canonical evidence; complete rehash schema-negative cases, forged IDs, missing/tampered attachments, canceled runs"
+    },
+    {
+      "command": "node scripts/test-original-real-templates.mjs",
+      "exit_code": 0,
+      "coverage": "six registered original files through legacy complete-copy package and new refine package, exact indexed controls and real adaptation drafts; stale locator/label rejected; binding/execution false"
+    },
+    {
+      "command": "inline baseline export comparison",
+      "exit_code": 0,
+      "coverage": "original-preserving-v1 without evidence exports identical files/bytes and bundle hash to baseline"
+    },
+    {
+      "command": "isolated guard mutations",
+      "exit_code": 0,
+      "coverage": "four mutations detected by assertion failures; original mirror files restored; details original-refinement-mutations.json"
+    }
+  ],
+  "assurance": "Local isolated/inert mechanical validation only. No OD project mutation or source-script execution; visual and interactive semantics remain PENDING_INDEPENDENT_REVIEW."
+}

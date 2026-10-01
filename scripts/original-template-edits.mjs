@@ -58,11 +58,11 @@ function annotatedSlice(html, tokens, marker, start, end) {
   }
   return value + html.slice(cursor, end);
 }
-function validateActions(actions) {
+function validateActions(actions, { allowPreserveOnly = false } = {}) {
   if (!Array.isArray(actions) || !actions.length || actions.length > 32) fail('ORIGINAL_ACTIONS_REQUIRED', 'One to 32 explicit source actions required');
   const ids = new Set();
   for (const action of actions) {
-    if (!action || Object.keys(action).some(k => !['action_id', 'action', 'scope', 'locator'].includes(k)) || !/^[A-Za-z][\w.-]*$/.test(action.action_id ?? '') || ids.has(action.action_id) || !['add', 'modify', 'remove', 'preserve'].includes(action.action) || !Array.isArray(action.scope) || !action.locator) fail('ORIGINAL_ACTION_INVALID', 'Actions must contain only an ID, operation and version-bound original location');
+    if (!action || Object.keys(action).some(k => !['action_id', 'action', 'scope', 'locator'].includes(k)) || !/^[A-Za-z][\w.-]*$/.test(action.action_id ?? '') || ids.has(action.action_id) || !['add', 'modify', 'remove', 'preserve', 'refine'].includes(action.action) || !Array.isArray(action.scope) || !action.locator) fail('ORIGINAL_ACTION_INVALID', 'Actions must contain only an ID, operation and version-bound original location');
     ids.add(action.action_id);
     const path = value => Array.isArray(value) && value.length > 0 && value.length <= 64 && value.every(i => Number.isSafeInteger(i) && i >= 0);
     for (const scope of action.scope) if (!scope || Object.keys(scope).sort().join(',') !== 'path,template_id' || !path(scope.path) || !(scope.template_id === null || typeof scope.template_id === 'string')) fail('ORIGINAL_LOCATOR_INVALID', 'Template scopes need only a bound element path and original template ID');
@@ -71,7 +71,29 @@ function validateActions(actions) {
       if (Object.keys(loc).sort().join(',') !== 'kind,name,value' || !['id', 'data-od-id', 'data-slot'].includes(loc.name) || typeof loc.value !== 'string' || !loc.value) fail('ORIGINAL_LOCATOR_INVALID', 'Only original registered attributes are accepted');
     } else if (loc.kind !== 'element-path' || Object.keys(loc).sort().join(',') !== 'indices,kind' || !path(loc.indices)) fail('ORIGINAL_LOCATOR_INVALID', 'Only an exact original element path is accepted');
   }
-  if (actions.every(a => a.action === 'preserve')) fail('ORIGINAL_NO_CHANGE', 'A derivative needs an actual change');
+  if (!allowPreserveOnly && actions.every(a => a.action === 'preserve')) fail('ORIGINAL_NO_CHANGE', 'A derivative needs an actual change');
+  if (actions.some(a => a.action === 'refine') && actions.some(a => !['refine', 'preserve'].includes(a.action))) fail('ORIGINAL_REFINEMENT_PROFILE', 'UI refinement permits only refine and preserve; functional edits require a separate contract');
+}
+
+// Retain source spelling and every nonvisual byte. Only entire class/style
+// attributes (including their separator) are masked. Strict attribute tokenizing
+// prevents browser recovery from disguising an event/resource/structural change.
+function businessBytes(html) {
+  const tokens = tokensOf(html); let value = '', cursor = 0;
+  for (const token of tokens) {
+    if (token.closing) continue;
+    value += html.slice(cursor, token.nameEnd); cursor = token.nameEnd;
+    let remainder = html.slice(token.nameEnd, token.end), attributes = new Set();
+    while (!/^[\t\n\f\r ]*\/?\>$/.test(remainder)) {
+      const attr = /^([\t\n\f\r ]+)([^\s=<>"'`/]+)(?:[\t\n\f\r ]*=[\t\n\f\r ]*(?:"([^"]*)"|'([^']*)'|([^\s<>"'`=]+)))?/.exec(remainder);
+      if (!attr || attributes.has(attr[2].toLowerCase())) fail('ORIGINAL_REFINEMENT_SYNTAX', 'UI refinement requires explicit unambiguous attribute syntax');
+      const name = attr[2].toLowerCase(); attributes.add(name);
+      if (!['class', 'style'].includes(name)) value += attr[0];
+      remainder = remainder.slice(attr[0].length);
+    }
+    value += remainder; cursor = token.end;
+  }
+  return value + html.slice(cursor);
 }
 async function session(options, task) {
   const browser = options?.browser ?? await chromium.launch({ headless: true });
@@ -126,8 +148,50 @@ async function prepareInPage(page, html, actions, tokens, marker) {
   return { ranges, marked };
 }
 
+async function verifyRefinementInPage(page, html, action, range, replacement) {
+  const original = html.slice(range.start, range.end);
+  if (!replacement || businessBytes(original) !== businessBytes(replacement)) fail('ORIGINAL_REFINEMENT_BUSINESS_CHANGED', 'Refine may change only class/style attributes; preserve all tags, content, comments, behavior attributes and source spelling');
+  const result = await page.evaluate(({ html, action, replacement }) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const path = (node, indices) => indices.reduce((root, i) => root.children[i], node);
+    let scope = doc;
+    for (const step of action.scope) scope = path(scope, step.path).content;
+    const loc = action.locator;
+    const target = loc.kind === 'element-path' ? path(scope, loc.indices) : [...scope.querySelectorAll(`[${loc.name}]`)].find(node => node.getAttribute(loc.name) === loc.value);
+    const context = doc.createRange(); context.selectNode(target);
+    const fragment = context.createContextualFragment(replacement);
+    if (fragment.childNodes.length !== 1 || fragment.firstChild.nodeType !== Node.ELEMENT_NODE) return { ok: false, reason: 'Refine must supply the complete single original outerHTML' };
+    const all = node => [node, ...[...node.children].flatMap(child => all(child)), ...(node.tagName === 'TEMPLATE' ? [...node.content.children].flatMap(child => all(child)) : [])];
+    const left = all(target), right = all(fragment.firstChild);
+    const strip = node => { const copy = node.cloneNode(true); for (const item of all(copy)) { item.removeAttribute('class'); item.removeAttribute('style'); } return copy; };
+    const equal = (a, b) => a.isEqualNode(b) && (a.tagName !== 'TEMPLATE' || equal(a.content, b.content)) && [...(a.querySelectorAll?.('template') ?? [])].every((t, i) => equal(t.content, b.querySelectorAll('template')[i].content));
+    if (left.length !== right.length || !equal(strip(target), strip(fragment.firstChild))) return { ok: false, reason: 'Business DOM or hidden template content changed' };
+    const unescapeCss = value => value.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\\([0-9a-f]{1,6})[\t\n\f\r ]?|\\([^\n\r\f])/gi, (_, hex, char) => hex ? String.fromCodePoint(Math.min(parseInt(hex, 16) || 0xfffd, 0x10ffff)) : char).toLowerCase();
+    const resource = value => /(?:url|image-set|expression)\s*\(|@import\b|javascript\s*:|-moz-binding\b|\bbehavior\s*:/.test(unescapeCss(value));
+    const classes = node => JSON.stringify([...new Set((node.getAttribute('class') ?? '').split(/[\t\n\f\r ]+/).filter(Boolean))].sort());
+    const styles = node => JSON.stringify([...node.style].sort().map(name => [name, node.style.getPropertyValue(name), node.style.getPropertyPriority(name)]));
+    let changed = false;
+    for (let i = 0; i < left.length; i++) {
+      if (right[i].namespaceURI !== left[i].namespaceURI || !left[i].style || !right[i].style) return { ok: false, reason: 'Refinement requires matching source namespaces and browser style declarations' };
+      const oldStyle = left[i].getAttribute('style') ?? '', newStyle = right[i].getAttribute('style') ?? '';
+      // Preserve existing embedded resources exactly; even a new data URL is a
+      // new asset. Invalid/recovered CSS cannot hide a new resource reference.
+      if (oldStyle !== newStyle && (resource(oldStyle) || resource(newStyle))) {
+        const names = new Set([...left[i].style, ...right[i].style]);
+        if ((resource(newStyle) && ![...right[i].style].some(name => resource(`${name}:${right[i].style.getPropertyValue(name)}`))) || [...names].some(name => {
+          const a = `${name}:${left[i].style.getPropertyValue(name)}`, b = `${name}:${right[i].style.getPropertyValue(name)}`;
+          return (resource(a) || resource(b)) && (a !== b || left[i].style.getPropertyPriority(name) !== right[i].style.getPropertyPriority(name));
+        })) return { ok: false, asset: true, reason: 'Refine cannot add, remove or alter resource/executable CSS declarations' };
+      }
+      if (classes(left[i]) !== classes(right[i]) || styles(left[i]) !== styles(right[i])) changed = true;
+    }
+    return { ok: changed, noop: !changed, reason: 'Refine requires a meaningful class token or valid CSS declaration change' };
+  }, { html, action, replacement });
+  if (!result.ok) fail(result.asset ? 'ORIGINAL_REFINEMENT_ASSET_CHANGED' : result.noop ? 'ORIGINAL_NO_CHANGE' : 'ORIGINAL_REFINEMENT_BUSINESS_CHANGED', result.reason);
+}
+
 export async function locateOriginalEditRanges(base, actions, options = {}) {
-  const html = text(base); validateActions(actions); const tokens = tokensOf(html);
+  const html = text(base); validateActions(actions, { allowPreserveOnly: options.allowPreserveOnly === true }); const tokens = tokensOf(html);
   const marker = `data-luca-internal-${randomBytes(12).toString('hex')}`;
   return session(options, async page => {
     const { ranges } = await prepareInPage(page, html, actions, tokens, marker);
@@ -141,7 +205,7 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits 
   if (!Array.isArray(edits) || edits.length !== changing.length || new Set(edits.map(x => x.action_id)).size !== edits.length) fail('ORIGINAL_EDIT_SET', 'Exactly one edit for every modifying action required');
   for (const edit of edits) {
     if (!edit || Object.keys(edit).some(k => !['action_id', 'html'].includes(k)) || !changing.some(a => a.action_id === edit.action_id) || typeof edit.html !== 'string' || Buffer.byteLength(edit.html) > 512 * 1024) fail('ORIGINAL_EDIT_SET', 'Edit manifests cannot add paths, selectors, source offsets or extra instructions');
-    if (edit.html) {
+    if (edit.html && changing.find(a => a.action_id === edit.action_id).action !== 'refine') {
       if (/data-luca-internal-|\b(?:srcdoc|action|formaction|nonce)\s*=/i.test(edit.html) || /<\/?(?:html|head|body|meta|link|base|template)\b/i.test(edit.html)) fail('ORIGINAL_FRAGMENT_UNSAFE', 'New fragments cannot change document controls or executable/navigation policy');
       await inspectOriginalResources(Buffer.from(edit.html), { browser: options.browser });
       resolveAssetClosure({ baseTemplate: Buffer.from(edit.html), assets: [] });
@@ -153,9 +217,11 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits 
   const tokens = tokensOf(html), marker = `data-luca-internal-${randomBytes(12).toString('hex')}`;
   return session(options, async page => {
     const { ranges, marked } = await prepareInPage(page, html, actions, tokens, marker);
+    for (const action of changing.filter(a => a.action === 'refine')) await verifyRefinementInPage(page, html, action, ranges.find(r => r.action_id === action.action_id), edits.find(e => e.action_id === action.action_id).html);
     const substitutions = changing.map(action => {
       const range = ranges.find(r => r.action_id === action.action_id), edit = edits.find(e => e.action_id === action.action_id);
       if (action.action === 'remove') { if (edit.html !== '') fail('ORIGINAL_EDIT_SET', 'Remove must not smuggle replacement content'); return { ...range, from: range.start, to: range.end, replacement: '' }; }
+      if (action.action === 'refine') return { ...range, from: range.start, to: range.end, replacement: edit.html };
       if (range.void) fail('ORIGINAL_RANGE_UNPROVABLE', 'Void-element changes need a separately reviewed attribute edit contract');
       if (action.action === 'add' && !edit.html.trim()) fail('ORIGINAL_NO_CHANGE', 'Add must insert actual content');
       return { ...range, from: action.action === 'add' ? range.closeStart : range.openEnd, to: range.closeStart, replacement: edit.html };
@@ -167,6 +233,11 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits 
     if (output.equals(base)) fail('ORIGINAL_NO_CHANGE', 'Copying the original without a real edit is not a derivative');
     const scriptsAndStyles = value => { const ts = tokensOf(value); return ts.filter(t => !t.closing && ['script', 'style'].includes(t.name)).map(t => { const end = ts[t.id + 1]; return value.slice(t.start, end.end); }); };
     if (JSON.stringify(scriptsAndStyles(actual)) !== JSON.stringify(scriptsAndStyles(html))) fail('ORIGINAL_ACTIVE_CONTENT_CHANGED', 'Original scripts and styles must remain byte-identical');
+    if (actions.some(a => a.action === 'refine')) {
+      // Each complete replacement has already passed byte and contextual DOM
+      // equivalence. Preserve actions and all non-target bytes remain exact.
+      return { status: 'PASS', profile: 'original-ui-refinement-v1', input_sha256: sha(base), output_sha256: sha(output), unchanged_outside_targets: true, business_dom_preserved: true, original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
+    }
     const dom = await page.evaluate(({ before, after, marker, actions, ranges }) => {
       const parse = s => new DOMParser().parseFromString(s, 'text/html'); const a = parse(before), b = parse(after);
       const all = root => [...root.querySelectorAll('*')].flatMap(n => n.tagName === 'TEMPLATE' ? [n, ...all(n.content)] : [n]);

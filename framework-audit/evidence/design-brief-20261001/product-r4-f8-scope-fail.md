@@ -1,0 +1,1 @@
+Product r4 review: all48 supplied facts preserved and prior F1/F2 added actions removed. F8 freedom table and C-F8-BOUNDARY still used unqualified visual-only freedom, contradicting explicit structural embedding MUST. Original r4 kept unchanged. Final F8 separates S structural authorization from R visual-only freedom; requires independent re-review.

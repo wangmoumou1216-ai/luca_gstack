@@ -1,0 +1,40 @@
+[
+  {
+    "witness": "inactive",
+    "repo": "/private/tmp/design-brief-20261001/c24-diagnosis/baseline-inactive/repo",
+    "fixtureCommon": "/private/tmp/design-brief-20261001/c24-diagnosis/baseline-inactive/repo/.git",
+    "actualCommon": "/Users/luca/Desktop/luca_gstack/.git",
+    "head": "e043608ea3a82646ab2371aad197f868d315b626",
+    "originalTestSha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+    "status": 0,
+    "signal": null,
+    "error": null,
+    "beforeKind": "inactive",
+    "afterKind": "inactive",
+    "ownedDirectories": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-claude-QXppje",
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-codex-fErj1a",
+      "/Users/luca/.luca/codex/project-v34-host-g5kXVM"
+    ],
+    "cleanupVerified": true
+  },
+  {
+    "witness": "active",
+    "repo": "/private/tmp/design-brief-20261001/c24-diagnosis/baseline-active/repo",
+    "fixtureCommon": "/private/tmp/design-brief-20261001/c24-diagnosis/baseline-active/repo/.git",
+    "actualCommon": "/Users/luca/Desktop/luca_gstack/.git",
+    "head": "7adc1594328d786399c62112c601ad0f91939350",
+    "originalTestSha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+    "status": 1,
+    "signal": null,
+    "error": null,
+    "beforeKind": "required",
+    "afterKind": "required",
+    "ownedDirectories": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-claude-HhoBss",
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/project-v34-codex-d0bfXQ",
+      "/Users/luca/.luca/codex/project-v34-host-Ztb2UN"
+    ],
+    "cleanupVerified": true
+  }
+]
