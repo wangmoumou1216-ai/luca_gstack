@@ -639,7 +639,7 @@ require('node:module').syncBuiltinESMExports();`);
   }
 });
 
-test('production broker refuses an unprotected App-style fork before importing framework authority',async()=>{
+test('production broker refuses an ordinary parent independently of optional source protection',async()=>{
   const production=realpathSync(new URL('..',import.meta.url));
   const f=fixture();
   const script=new URL('./host-launch-broker.mjs',import.meta.url);
@@ -649,7 +649,7 @@ test('production broker refuses an unprotected App-style fork before importing f
   let stderr='';child.stderr.on('data',chunk=>stderr+=chunk);
   const code=await new Promise(resolve=>child.once('exit',resolve));
   assert.notEqual(code,0);
-  assert.match(stderr,/HOST_SOURCE_UNPROTECTED/);
+  assert.match(stderr,/HOST_PARENT_DENIED/);
 });
 
 test('ordinary model import cannot construct production authority or change any existing pin bytes',()=>{

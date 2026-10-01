@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
+import {createHash, randomUUID} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync} from 'node:fs';
+import {cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {readActivation, stateFileForTest} from './model-route-host.mjs';
+import {readActivation, recoverActivation, stateFileForTest} from './model-route-host.mjs';
 import {queueProjectEventCandidate} from '../.claude/hooks/lib/project-substrate.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'codex-model-route-hook.')));
 const ROOT = join(scratch, 'gstack');
 mkdirSync(ROOT, {mode: 0o700});
+assert.equal(spawnSync('git', ['init', '-q', ROOT], {encoding: 'utf8'}).status, 0);
 mkdirSync(join(ROOT, '.codex'), {mode: 0o700});
 mkdirSync(join(ROOT, 'scripts'), {mode: 0o700});
 mkdirSync(join(ROOT, '.claude'), {mode: 0o700});
@@ -66,6 +67,7 @@ const env = {
   LUCA_CHILD_PROJECT_TEST_CODEX_HOME: childCodexHome,
 };
 let checks = 0;
+const profileFixtures = [];
 function run(payload, cwd = ROOT) {
   const result = spawnSync('node', [HOOK], {cwd, encoding: 'utf8', input: JSON.stringify(payload), env});
   assert.equal(result.status, 0, result.stderr);
@@ -117,6 +119,27 @@ function subStop(sessionId, agentId, agentType, path, lastAssistantMessage = 'do
     stop_hook_active: false, last_assistant_message: lastAssistantMessage, cwd: ROOT,
   });
 }
+function rootTranscript(sessionId, {model = 'gpt-5.6-sol', turnId = 'turn-root',
+  metaId = sessionId, parentId, complete = false, metaCwd = ROOT, contextCwd = ROOT} = {}) {
+  const file = join(transcriptRoot, `rollout-2026-10-01T01-00-00-${sessionId}.jsonl`);
+  const events = [
+    {type: 'session_meta', payload: {id: metaId, cwd: metaCwd,
+      ...(parentId ? {parent_thread_id: parentId,
+        source: {subagent: {thread_spawn: {parent_thread_id: parentId}}}} : {})}},
+    {type: 'event_msg', payload: {type: 'task_started', turn_id: turnId}},
+    {type: 'turn_context', payload: {turn_id: turnId, model, cwd: contextCwd}},
+  ];
+  if (complete) events.push({type: 'event_msg', payload: {type: 'task_complete', turn_id: turnId}});
+  writeFileSync(file, `${events.map(event => JSON.stringify(event)).join('\n')}\n`, {mode: 0o600});
+  return file;
+}
+function recoveryPre(sessionId, path, extra = {}) {
+  return run({hook_event_name: 'PreToolUse', session_id: sessionId, turn_id: 'turn-root',
+    tool_use_id: `tool-recovery-${sessionId}`, tool_name: 'spawn_agent',
+    tool_input: {task_name: 'recovered', message: 'work', model: 'untrusted-tool-model'},
+    permission_mode: 'default', cwd: ROOT, transcript_path: path,
+    model: 'untrusted-payload-model', ...extra});
+}
 
 try {
   const poisonCwd = join(scratch, 'poison-cwd');
@@ -132,6 +155,232 @@ try {
   equal(existsSync(importMarker), false, 'native hook Python parser ignores workdir modules');
   equal(state(isolatedSession).root_anchor.model, 'gpt-5.6-sol',
     'native hook still parses policy with isolated Python import path');
+  const recoveredSession = 'root-missing-startup';
+  const recovered = recoveryPre(recoveredSession, rootTranscript(recoveredSession));
+  equal(recovered.hookSpecificOutput.permissionDecision, 'allow',
+    'a missed startup recovers from the same native transcript turn');
+  equal(state(recoveredSession).root_anchor.model, 'gpt-5.6-sol',
+    'recovery ignores model fields in tool arguments and PreToolUse payload');
+  equal('model' in recovered.hookSpecificOutput.updatedInput, false,
+    'the recovered ordinary dispatch inherits the observed native model');
+  const resumedFilenameSession = 'root-resumed-filename';
+  const resumedFilename = join(transcriptRoot, `rollout-2026-10-01T01-00-00-${randomUUID()}.jsonl`);
+  cpSync(rootTranscript(resumedFilenameSession), resumedFilename);
+  equal(recoveryPre(resumedFilenameSession, resumedFilename).hookSpecificOutput.permissionDecision, 'allow',
+    'resume may use a different filename UUID while native metadata preserves the session identity');
+  equal(state(resumedFilenameSession).root_session_id, resumedFilenameSession,
+    'native metadata SID owns the resumed activation');
+  const wrongResumedSession = 'root-resumed-wrong-meta';
+  const wrongResumedFilename = join(transcriptRoot, `rollout-2026-10-01T01-00-00-${randomUUID()}.jsonl`);
+  cpSync(rootTranscript(wrongResumedSession, {metaId: 'other-native-session'}), wrongResumedFilename);
+  equal(recoveryPre(wrongResumedSession, wrongResumedFilename).hookSpecificOutput.permissionDecision, 'deny',
+    'a changed filename never makes foreign metadata a valid native identity');
+  equal(state(wrongResumedSession), null, 'foreign resumed metadata creates no activation state');
+  const recoveredId = state(recoveredSession).activation_id;
+  start(recoveredSession, 'gpt-5.6-sol', 'compact');
+  equal(state(recoveredSession).activation_id, recoveredId, 'compact retains a recovered activation');
+  equal(Object.keys(state(recoveredSession).invocations).length, 1,
+    'compact retains the native invocation recovered after missed startup');
+  const recoveredReview = 'root-missing-startup-review';
+  const recoveredPeak = recoveryPre(recoveredReview, rootTranscript(recoveredReview), {
+    tool_input: {task_name: 'review', message: 'judge', agent_type: 'quality-gate', model: 'untrusted-tool-model'},
+  });
+  equal(recoveredPeak.hookSpecificOutput.permissionDecision, 'allow', 'recovered critical review can dispatch');
+  equal(recoveredPeak.hookSpecificOutput.updatedInput.model, 'gpt-6-astra',
+    'recovered critical review still selects the approved peak without fallback');
+  equal(recoveredPeak.hookSpecificOutput.updatedInput.fork_turns, 'none',
+    'recovery retains cold independent review requirements');
+  for (const [suffix, options] of [
+    ['foreign-session', {metaId: 'other-session'}],
+    ['foreign-turn', {turnId: 'other-turn'}],
+    ['missing-model', {model: ''}],
+    ['completed-turn', {complete: true}],
+  ]) {
+    const session = `root-recovery-${suffix}`;
+    equal(recoveryPre(session, rootTranscript(session, options))
+      .hookSpecificOutput.permissionDecision, 'deny', `${suffix} cannot create an activation`);
+    equal(state(session), null, `${suffix} leaves no activation state`);
+  }
+  const outsideSession = 'root-recovery-outside';
+  const outsidePath = join(scratch, `rollout-2026-10-01T01-00-00-${outsideSession}.jsonl`);
+  cpSync(rootTranscript(outsideSession), outsidePath);
+  equal(recoveryPre(outsideSession, outsidePath).hookSpecificOutput.permissionDecision, 'deny',
+    'recovery refuses a transcript outside the canonical native sessions root');
+  equal(state(outsideSession), null, 'unsafe transcript paths leave no activation');
+  const recoveredChild = 'child-missing-startup';
+  const parentBefore = state(recoveredSession);
+  equal(recoveryPre(recoveredChild, rootTranscript(recoveredChild, {parentId: recoveredSession}))
+    .hookSpecificOutput.permissionDecision, 'allow', 'nested native identity recovers only its own session');
+  equal(state(recoveredSession), parentBefore, 'child recovery never borrows or changes parent activation');
+  const pausedSession = 'root-recovery-paused';
+  start(pausedSession);
+  run({hook_event_name: 'SessionEnd', session_id: pausedSession, cwd: ROOT});
+  const pausedId = state(pausedSession).activation_id;
+  equal(recoveryPre(pausedSession, rootTranscript(pausedSession))
+    .hookSpecificOutput.permissionDecision, 'allow', 'a clean paused activation resumes from native identity');
+  equal(state(pausedSession).activation_id, pausedId, 'clean recovery retains paused activation identity');
+  for (const suffix of ['critical-failure', 'pending-invocation', 'pending-preparation',
+    'invalidated-critical', 'invalidated-preparation', 'release-mismatch']) {
+    const session = `root-paused-${suffix}`;
+    start(session);
+    const blocked = state(session);
+    blocked.status = 'paused';
+    if (suffix === 'critical-failure') blocked.critical_failure = true;
+    if (suffix === 'pending-invocation') blocked.invocations.pending = {status: 'pending', critical: true};
+    if (suffix === 'pending-preparation') blocked.preparations.pending = {status: 'pending'};
+    if (suffix === 'invalidated-critical') blocked.invocations.unclosed = {
+      status: 'invalidated', critical: true, invalidation_reason: 'ACTIVATION_PAUSED'};
+    if (suffix === 'invalidated-preparation') blocked.preparations.unclosed = {
+      status: 'invalidated', invalidation_reason: 'ACTIVATION_PAUSED'};
+    if (suffix === 'release-mismatch') blocked.release_digest = '0'.repeat(64);
+    writeFileSync(stateFileForTest({harness: 'codex', root_session_id: session, state_root: stateRoot}),
+      JSON.stringify(blocked));
+    equal(recoveryPre(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
+      `paused ${suffix} cannot be recovered automatically`);
+    equal(state(session), blocked, `paused ${suffix} is never overwritten or washed clean`);
+  }
+  const racedSession = 'root-recovery-race';
+  start(racedSession);
+  const raced = state(racedSession);
+  raced.critical_failure = true;
+  raced.invocations.obligation = {status: 'pending', critical: true};
+  writeFileSync(stateFileForTest({harness: 'codex', root_session_id: racedSession, state_root: stateRoot}),
+    JSON.stringify(raced));
+  const recoveredRace = recoverActivation({harness: 'codex', root_session_id: racedSession,
+    root_anchor: {model: 'gpt-5.6-sol', source: 'trusted-native-transcript'},
+    release_digest: raced.release_digest, expected_activation_id: null, state_root: stateRoot});
+  equal(recoveredRace.disposition, 'UNCHANGED', 'an active activation created after a missing snapshot wins the lock');
+  equal(state(racedSession), raced, 'recovery CAS cannot overwrite raced critical state or obligations');
+  const corruptedSession = 'root-recovery-corrupted';
+  const corruptedFile = stateFileForTest({harness: 'codex', root_session_id: corruptedSession, state_root: stateRoot});
+  const corruptedBytes = '{"critical_failure":true, broken';
+  writeFileSync(corruptedFile, corruptedBytes);
+  equal(recoveryPre(corruptedSession, rootTranscript(corruptedSession))
+    .hookSpecificOutput.permissionDecision, 'deny', 'corrupted activation is not treated as missing startup');
+  equal(readFileSync(corruptedFile, 'utf8'), corruptedBytes, 'recovery never overwrites corrupt existing state');
+  for (const field of ['harness', 'root_session_id']) {
+    const session = `root-foreign-${field}`;
+    start(session);
+    const foreign = state(session);
+    foreign.status = 'paused';
+    foreign[field] = field === 'harness' ? 'claude' : 'other-native-session';
+    const file = stateFileForTest({harness: 'codex', root_session_id: session, state_root: stateRoot});
+    const before = JSON.stringify(foreign);
+    writeFileSync(file, before);
+    const recoveredForeign = recoverActivation({harness: 'codex', root_session_id: session,
+      root_anchor: {model: 'gpt-5.6-sol', source: 'trusted-native-transcript'},
+      release_digest: foreign.release_digest, expected_activation_id: foreign.activation_id,
+      expected_root_generation: foreign.root_generation, state_root: stateRoot});
+    equal(recoveredForeign.disposition, 'REFUSE', `recovery rejects a foreign ${field} inside the state file`);
+    equal(readFileSync(file, 'utf8'), before, `foreign ${field} state bytes are not modified by recovery`);
+    equal(recoveryPre(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
+      `native recovery cannot borrow a foreign ${field} record`);
+    equal(readFileSync(file, 'utf8'), before, `native refusal leaves foreign ${field} bytes unchanged`);
+  }
+  const foreignWorkspace = join(scratch, 'foreign-workspace');
+  mkdirSync(foreignWorkspace);
+  assert.equal(spawnSync('git', ['init', '-q', foreignWorkspace], {encoding: 'utf8'}).status, 0);
+  for (const field of ['metaCwd', 'contextCwd', 'payloadCwd']) {
+    for (const paused of [false, true]) {
+      const session = `root-recovery-cwd-${field}-${paused ? 'paused' : 'missing'}`;
+      if (paused) {
+        start(session);
+        run({hook_event_name: 'SessionEnd', session_id: session, cwd: ROOT});
+      }
+      const before = state(session);
+      const path = rootTranscript(session, field === 'payloadCwd' ? {} : {[field]: foreignWorkspace});
+      equal(recoveryPre(session, path, field === 'payloadCwd' ? {cwd: foreignWorkspace} : {})
+        .hookSpecificOutput.permissionDecision, 'deny', `${field} from another checkout cannot recover`);
+      equal(state(session), before, `${field} mismatch cannot create or overwrite activation state`);
+    }
+  }
+  const subdirectorySession = 'root-recovery-subdirectory';
+  const subdirectory = join(ROOT, 'scripts');
+  equal(recoveryPre(subdirectorySession, rootTranscript(subdirectorySession,
+    {metaCwd: subdirectory, contextCwd: subdirectory}), {cwd: subdirectory})
+    .hookSpecificOutput.permissionDecision, 'allow',
+    'native cwd below this Git checkout resolves to the same workspace identity');
+  const profileFixture = realpathSync(mkdtempSync('/private/tmp/host-launch-model-profile-'));
+  profileFixtures.push(profileFixture);
+  const profileRoot = join(profileFixture, 'gstack');
+  cpSync(ROOT, profileRoot, {recursive: true});
+  // Use the unchanged authority implementation from the repository, whose
+  // existing protected OS-temp HostLaunch fixture contract applies to this root.
+  writeFileSync(join(profileRoot, '.claude/hooks/lib/event-attestation.mjs'),
+    `export * from ${JSON.stringify(join(repo, '.claude/hooks/lib/event-attestation.mjs'))};\n`);
+  const profileHome = join(profileFixture, 'sidecar');
+  const profileSessions = join(profileHome, 'sessions');
+  const profileJournal = join(profileRoot, '.claude/host-launch');
+  const profileStore = join(profileFixture, 'child-store');
+  const profileChildHome = join(profileFixture, 'child-home');
+  for (const folder of [profileSessions, profileJournal, profileStore, profileChildHome]) {
+    mkdirSync(folder, {recursive: true, mode: 0o700});
+  }
+  const profileEnv = {...env, CODEX_HOME: profileHome, LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT: '',
+    LUCA_CHILD_PROJECT_STORE_ROOT: profileStore, LUCA_CHILD_PROJECT_TEST_CODEX_HOME: profileChildHome};
+  const profileRun = payload => {
+    const result = spawnSync(process.execPath, [join(profileRoot, '.codex/model-route-hook.mjs')],
+      {cwd: profileRoot, env: profileEnv, encoding: 'utf8', input: JSON.stringify({...payload, cwd: profileRoot})});
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout);
+  };
+  const grantProfile = (session, grantSession = session) => {
+    const launch = randomUUID(), homeStat = statSync(profileHome);
+    const bytes = Buffer.from(JSON.stringify({schemaVersion: 1, provider: 'codex',
+      launchId: launch, sessionId: grantSession, cwd: profileRoot,
+      sourceRoot: {realpath: profileHome, dev: String(homeStat.dev), ino: String(homeStat.ino)}}));
+    writeFileSync(join(profileJournal, `${launch}.source.json`), bytes, {mode: 0o600});
+    writeFileSync(join(profileRoot, '.claude', `.session-project-${session}`), JSON.stringify({
+      schema_version: 3, state: 'NO_PIN', session_id: session,
+      host_launch_source: {launch_id: launch, sha256: createHash('sha256').update(bytes).digest('hex')},
+      event_control: {candidates: [], current: null, cursor: null, consumed_events: []},
+    }));
+  };
+  for (const variant of ['correct-home', 'wrong-home', 'foreign-sid']) {
+    const session = `root-profile-${variant}`, agent = `agent-profile-${variant}`;
+    profileRun({hook_event_name: 'SessionStart', session_id: session, model: 'gpt-5.6-sol', source: 'startup'});
+    grantProfile(session, variant === 'foreign-sid' ? 'other-native-session' : session);
+    const dispatched = profileRun({hook_event_name: 'PreToolUse', session_id: session, turn_id: 'turn-root',
+      tool_use_id: `tool-${variant}`, tool_name: 'spawn_agent',
+      tool_input: {task_name: 'review', message: 'judge', agent_type: 'quality-gate'}});
+    equal(dispatched.hookSpecificOutput.permissionDecision, 'allow', 'existing profile activation retains dispatch behavior');
+    profileRun({hook_event_name: 'SubagentStart', session_id: session, agent_id: agent, agent_type: 'quality-gate'});
+    const original = transcript({sessionId: session, agentId: agent, agentType: 'quality-gate', model: 'gpt-6-astra'});
+    const granted = join(profileSessions, `${agent}.jsonl`);
+    cpSync(original, granted);
+    const stopped = profileRun({hook_event_name: 'SubagentStop', session_id: session,
+      agent_id: agent, agent_type: 'quality-gate', agent_transcript_path: variant === 'wrong-home' ? original : granted,
+      stop_hook_active: false, last_assistant_message: 'done'});
+    equal(variant === 'correct-home' ? stopped : stopped.continue,
+      variant === 'correct-home' ? {} : false,
+      `model completion ${variant} is bounded by the exact protected App source grant`);
+  }
+  const unsupportedProfile = 'root-profile-missing';
+  grantProfile(unsupportedProfile);
+  const profileRootTranscript = join(profileSessions, `rollout-2026-10-01T01-00-00-${unsupportedProfile}.jsonl`);
+  const rootEvents = readFileSync(rootTranscript(unsupportedProfile), 'utf8').replaceAll(ROOT, profileRoot);
+  writeFileSync(profileRootTranscript, rootEvents);
+  equal(profileRun({hook_event_name: 'PreToolUse', session_id: unsupportedProfile, turn_id: 'turn-root',
+    tool_use_id: 'tool-profile-missing', tool_name: 'spawn_agent', transcript_path: profileRootTranscript,
+    tool_input: {task_name: 'work', message: 'work'}}).hookSpecificOutput.permissionDecision, 'deny',
+    'unsupported provider child source refuses missing recovery before writing activation');
+  equal(state(unsupportedProfile), null, 'unsupported provider recovery creates no activation state');
+  for (const variant of ['ungranted', 'paused']) {
+    const session = `root-provider-${variant}`;
+    if (variant === 'paused') {
+      profileRun({hook_event_name: 'SessionStart', session_id: session, model: 'gpt-5.6-sol', source: 'startup'});
+      grantProfile(session);
+      profileRun({hook_event_name: 'SessionEnd', session_id: session});
+    }
+    const before = state(session);
+    const path = join(profileSessions, `rollout-2026-10-01T01-00-00-${session}.jsonl`);
+    writeFileSync(path, readFileSync(rootTranscript(session), 'utf8').replaceAll(ROOT, profileRoot));
+    equal(profileRun({hook_event_name: 'PreToolUse', session_id: session, turn_id: 'turn-root',
+      tool_use_id: `tool-${variant}`, tool_name: 'spawn_agent', transcript_path: path,
+      tool_input: {task_name: 'work', message: 'work'}}).hookSpecificOutput.permissionDecision, 'deny',
+      `${variant} CODEX_HOME cannot authorize unsupported model recovery`);
+    equal(state(session), before, `${variant} provider refusal preserves missing or paused activation state`);
+  }
   const noPinSession = 'root-no-pin-forwarded';
   start(noPinSession);
   queueProjectEventCandidate({gstackRoot: ROOT, sessionId: noPinSession,
@@ -498,6 +747,7 @@ try {
   run({hook_event_name: 'SessionEnd', session_id: lightSession, reason: 'other', cwd: ROOT});
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
 } finally {
+  for (const fixture of profileFixtures) rmSync(fixture, {recursive: true, force: true});
   rmSync(scratch, {recursive: true, force: true});
 }
 

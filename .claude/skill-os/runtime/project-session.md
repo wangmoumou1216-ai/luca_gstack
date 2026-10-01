@@ -27,25 +27,24 @@ Missing or inconsistent lineage denies scoped paths. Claude sidechains need thei
 identity check and do not gain a Codex association by sharing a session ID.
 This release verifies child lineage only from the owner-protected native `~/.codex`
 rollout source; writable provider homes such as `~/.luca/codex` are not association sources.
-Codex hooks require the private reviewed guard at
-`~/.codex/luca-child-project/source-guard/`. Each hook checks approved source before
-launch; Node executes only verified bytes. Missing/changed source fails closed.
-Stable commands retain exact trust hashes; legacy requires reload and trust.
+Agent activation recovery uses the same default-home SID, workspace and current
+turn transcript, with locked CAS and critical obligations preserved. Native metadata
+owns SID, not filenames. Nondefault homes and workflow-runner retain existing gates.
+Active App Stop evidence may use its protected source grant without widening association.
+Default `native-trust-v1` uses Codex exact command trust for the current canonical Git
+workspace; it does not freeze file bytes or require per-worktree source approval.
+Commands clear old loader variables and set `LUCA_NATIVE_HOOK_STRICT=1`; project,
+controlled-change and Host Launch errors still refuse. Changed commands need reload/trust.
 
-`scripts/install-codex-source-guard.mjs` contract (usage: `README.md`):
-Freeze `--print-review --root <source>`; review approves the original artifact SHA.
-`--as-root <canonical-deployment-root>` remaps only one review root.
-Install requires `--root`, `--reviewed-file`, `--reviewed-sha` and exact
-`--expected-manifest-sha` (`ABSENT` only for initial install). Full source/JS/config/snapshot
-maps must match before/after copy and at commit; no automatic approval.
-`--preserve-other-roots` keeps other rows/snapshots without rescanning their source;
-bootstrap/loader bytes must remain identical. A private exclusive lock covers exact CAS,
-manifest-last atomic commit, fsync and readback; `--dry-run` writes nothing.
-Interruption retains old or complete new manifest. Post-commit errors report authoritative
-outcome; retry needs fresh CAS. Never steal locks by age: `--recover-lock-sha` plus exact
-manifest CAS removes only the same private inode/nonce lock with an ESRCH dead owner;
-live/EPERM/invalid refuse. Rollback: exact reviewed source, current CAS, other roots
-preserved; stale CAS refuses.
+Optional legacy guard `~/.codex/luca-child-project/source-guard/` verifies bytes
+and refuses missing/changed approval; it does not gate native-trust.
+
+Optional `scripts/install-codex-source-guard.mjs` retains its reviewed-artifact and
+exact manifest-CAS contract; full usage, snapshot checks and recovery are in `README.md`.
+It never auto-approves source. `--preserve-other-roots` preserves other rows and unchanged
+bootstrap/loader bytes. Private lock, manifest-last commit, fsync and readback protect the
+transaction; dry-run writes nothing. Retry/rollback require fresh exact CAS. Lock recovery
+requires the reviewed same inode/nonce and an ESRCH dead owner, never age alone.
 
 ## App-owned Host Launch
 
@@ -64,12 +63,12 @@ receipts, and strips retired capability secrets from replay-only history. It nev
 live launches or silently reads the old journal as authority. Other source profiles are refused
 and require separate review. Original files remain intact.
 
-Before dispatch, the App must verify the three exact Host Launch hook commands, their current source
-digest, the installed source guard, and Codex trust. The App must also fork the broker under that
-protected source loader; an unprotected broker refuses to load framework authority.
-`node scripts/codex-trust-hooks.mjs --host-launch` reviews and trusts this checkout's 11 exact
-registered commands, including the three Host Launch entries. Full approved installation health
-is required; `--source-only` cannot authorize trust.
+App dispatch requires three exact Host Launch commands, trusted and `enabled === true`.
+Native-trust broker requires the same canonical root, IPC, verified Electron parent,
+profile/source revalidation and launch receipt, without the optional source loader.
+`node scripts/codex-trust-hooks.mjs --host-launch` trusts 11 exact healthy registrations;
+legacy also requires approved installation health. Source-only does not authorize trust,
+and trust preserves user-disabled settings.
 
 ## Project Gate
 
@@ -120,9 +119,10 @@ The existing `nativeAttached` / `bindingReceipt` notifications and receipt readb
 Duplicate attach/readback is idempotent; a committed receipt is never reissued as current after
 selection drift. Failed startup binding blocks tools before consuming a user event and never
 falls back to late binding at `PreToolUse`. Cancellation before commit leaves no binding;
-cancellation after commit reports the durable result without undoing it. Updated hook sources
-require the normal reviewed source-guard manifest activation before production use; tests must
-not change the user's installed hooks, trust or credentials.
+cancellation after commit reports the durable result without undoing it. Updated native-trust
+registrations require ordinary reviewed deployment and exact command trust; legacy guarded
+sources additionally require their reviewed source-guard manifest activation. Tests must not
+change the user's installed hooks, trust or credentials.
 
 ## Failure posture
 

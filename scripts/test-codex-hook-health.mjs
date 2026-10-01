@@ -12,7 +12,23 @@ const recoveryFiles = ['.codex/stop-integrity-failure.mjs', '.claude/hooks/lib/p
   '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-selection.mjs',
   '.claude/hooks/lib/project-event-closure.mjs'];
 
-function fixture(t, seed = () => {}) {
+// Fixed stable-v3 fixture remains independent of the default native registration.
+function stableRegistration(config) {
+  const prefix = "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; ";
+  const stop = "luca_stop_payload=$(cat); luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || { printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0; }; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0; }; printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0";
+  for (const [event, groups] of Object.entries(config.hooks)) for (const group of groups) for (const hook of group.hooks) {
+    if (event === 'Stop') hook.command = stop;
+    else {
+      const marker = 'export LUCA_NATIVE_HOOK_STRICT=1; ';
+      const suffix = hook.command.slice(hook.command.indexOf(marker) + marker.length)
+        .replaceAll('$luca_hook_root', '$(git rev-parse --show-toplevel)');
+      hook.command = prefix + suffix;
+    }
+  }
+  return config;
+}
+
+function fixture(t, seed = () => {}, { native = false, install = true } = {}) {
   const base = realpathSync(mkdtempSync(join(tmpdir(), 'hook-health-')));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, 'repo'), guardRoot = join(base, 'private', 'guard');
@@ -28,6 +44,7 @@ function fixture(t, seed = () => {}) {
   for (const name of recoveryFiles) cpSync(new URL(`../${name}`, import.meta.url), join(root, name));
   cpSync(new URL('../.codex/hook-source-integrity.mjs', import.meta.url), join(root, '.codex/hook-source-integrity.mjs'));
   const hooksPath = join(root, '.codex/hooks.json');
+  if (!native) writeFileSync(hooksPath, JSON.stringify(stableRegistration(JSON.parse(readFileSync(hooksPath)))));
   const refresh = () => {
     const config = JSON.parse(readFileSync(hooksPath)), digest = sourceDigest(root);
     for (const groups of Object.values(config.hooks)) for (const group of groups) for (const hook of group.hooks) {
@@ -36,9 +53,11 @@ function fixture(t, seed = () => {}) {
     writeFileSync(hooksPath, JSON.stringify(config));
   };
   seed(root);
-  refresh();
-  const install = installTestSourceGuard({ roots: [root], destination: guardRoot, directory: base });
-  assert.equal(install.status, 0, install.stderr);
+  if (!native) refresh();
+  if (install) {
+    const installed = installTestSourceGuard({ roots: [root], destination: guardRoot, directory: base });
+    assert.equal(installed.status, 0, installed.stderr);
+  }
   return { base, root, guardRoot, hooksPath, refresh, inspect: () => { const original=process.env.NODE_ENV; process.env.NODE_ENV='test'; try { return inspectHookHealth(root, { guardRoot }); } finally { if(original===undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV=original; } } };
 }
 function tree(path) {
@@ -259,4 +278,36 @@ test('a stable target passes with a preserved legacy root whose valid JS map use
   assert.equal(updated.status,0,updated.stderr);
   assert.equal(JSON.stringify(JSON.parse(readFileSync(path)).roots.find(row=>row.root===legacyRoot)),legacyRow);
   assert.equal(f.inspect().ok,true,JSON.stringify(f.inspect()));
+});
+
+test('native-trust-v1 requires no optional guard and does not scan or approve workspace source', t => {
+  const f = fixture(t, root => symlinkSync('absent', join(root, 'scripts/unscannable.mjs')), { native: true, install: false });
+  const original = nodeModule.registerHooks;
+  try {
+    nodeModule.registerHooks = undefined;
+    const report = f.inspect();
+    assert.equal(report.ok, true, JSON.stringify(report));
+    assert.equal(report.registration.protocol, 'native-trust-v1');
+    assert.equal(report.registration.hook_count, 11);
+    assert.equal(report.registration.current_digest, undefined);
+    assert.equal(report.registration.trust_owner, 'Codex native trusted command');
+    assert.equal(report.native_trust.status, 'NOT_CHECKED');
+    assert.equal(report.approval.status, 'NOT_APPLICABLE');
+    assert.equal(report.installation.status, 'NOT_REQUIRED');
+    assert.equal(report.optional_source_guard.manifest_present, false);
+    writeFileSync(join(f.root, 'scripts/probe.mjs'), 'export const changed = true;\n');
+    assert.equal(f.inspect().ok, true, 'source edits must not invalidate native command registration');
+  } finally { nodeModule.registerHooks = original; }
+  assert.equal(readdirSync(join(f.base, 'private')).length, 0, 'doctor must not create an optional installation');
+});
+test('native-trust-v1 rejects an extra command, missing strict mode or changed registration shape', t => {
+  for (const mutate of [
+    config => { config.hooks.PreToolUse[0].hooks[0].command += '; true'; },
+    config => { config.hooks.PreToolUse[0].hooks[0].command = config.hooks.PreToolUse[0].hooks[0].command.replace('export LUCA_NATIVE_HOOK_STRICT=1; ', ''); },
+    config => { config.hooks.PreToolUse[0].matcher = '^NEVER$'; },
+  ]) {
+    const f = fixture(t, () => {}, { native: true, install: false });
+    const config = JSON.parse(readFileSync(f.hooksPath)); mutate(config); writeFileSync(f.hooksPath, JSON.stringify(config));
+    assert.equal(f.inspect().registration.status, 'FAIL');
+  }
 });

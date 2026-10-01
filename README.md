@@ -214,14 +214,28 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 
 Codex Hook 更新后，先运行只读体检 `node scripts/codex-hook-health.mjs`。
 体检独立固定已审注册协议：事件、matcher、完整加载/恢复命令、超时和上下文限制；
-只允许源码摘要随已审代码更新。主动改变注册协议时，须同审并更新体检中的协议指纹。
-安装清单的模块格式也须与源码扩展名及最近的 `package.json` 规则一致。
-执行体检和 Hook 的 Node 还须支持 `node:module.registerHooks`；体检会拒绝缺失此加载能力的运行时。
-它分别核对 11 条注册命令的源码摘要、受保护 bootstrap/loader、全仓已审 JavaScript 清单、
-Python/规则快照和 Stop 恢复副本（含四个依赖）；
-`--source-only` 仅用于未安装宿主的仓内检查，不代表安装健康或端到端通过。
+主动改变注册协议时，须同审并更新体检中的协议指纹。
+默认 `native-trust-v1` 的 11 条命令由 Codex 原生 Hook 授信执行当前 Git 工作区代码，
+不再要求每个 worktree 单独安装源码审批，也不再因正常脚本修改或新增测试导致整个会话被拦截。
+原生授信绑定完整命令文本，**不冻结源码文件字节**。命令清除继承的旧 source-guard 环境，
+用独立的 `LUCA_NATIVE_HOOK_STRICT=1` 保留项目隔离、受控变更和 Host Launch 的异常拒绝。
+Stop 失败时保留原始输入供恢复处理；无法恢复则安全停止，不伪造事件关闭。
+`--source-only` 仅检查仓内注册，不代表官方授信、开启状态或端到端通过。
 `node scripts/codex-trust-hooks.mjs --host-launch --dry-run` 再检查官方进程中的精确授信状态；
-授信脚本在读取官方状态后、写入前和完成前重查源码健康，失配时拒绝授信。
+授信脚本在读取官方状态后、写入前和完成前重查注册健康，失配时拒绝授信。
+它保留用户的关闭设置。Luca App 要求三个 Host Launch 条目同时精确匹配、已授信且
+`enabled === true`；已授信但已关闭的钩子不会再被误报为就绪。
+
+从旧注册升级时，正常重载受影响会话并授信新的完整命令。新进程可用不代表旧会话已刷新。
+如果启动钩子曾失败而缺少模型激活记录，模型路由仅能从同一会话、工作区和当前回合的真实
+Codex transcript 恢复身份；不会采用工具输入自报的模型，也不会清除未完成审查或 critical failure。
+这项自动恢复覆盖默认原生 home 的子 Agent 路径；非默认 provider 的缺失/暂停激活仍需正常
+SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受保护 source grant 可用于
+核验已激活会话的 Stop 模型证据，但不会扩大 provider 的子会话项目关联权限。
+
+旧 `legacy-literal` / `stable-v3` 源码防护仍可选择使用，以下安装约束只适用于这些旧注册。
+体检核对其 bootstrap/loader、JavaScript 清单、Python/规则和 Stop 恢复快照，
+并要求 Node 支持 `node:module.registerHooks`。默认 native-trust 注册不受这些安装检查约束。
 
 遇到 `hook source integrity mismatch`，先区分**当前磁盘失配**与**旧会话命令缓存**。
 重启不会修复错误的摘要或安装清单。修改 `.codex`、`.claude/hooks`、`scripts`、
@@ -240,7 +254,7 @@ Python/规则快照和 Stop 恢复副本（含四个依赖）；
 真实进程中断遗留的锁只可用 `--recover-lock-sha <精确锁原字节SHA256> --expected-manifest-sha <当前SHA256或ABSENT>`
 回收；仅 ESRCH 死进程和完整私有锁可通过，不按时间夺锁。回退同样恢复受审源并使用当前 CAS 安装。
 稳定注册的源码更新保留原命令与 trust hash；首次 legacy→stable 迁移需要重载和 11 条精确 Hook 授信。
-这些是已有真人授信门约束下的维护动作；体检不会自动执行它们，也不能通过关闭门禁恢复。
+这些是旧源码防护模式下的维护动作；体检不会自动执行它们。
 若当前会话已经被旧命令阻断，应从人工维护终端执行已审启用步骤，不在被拒会话内换入口绕行。
 全部检查通过后重新加载受影响会话，并用一次真实工具调用/审查验证；新进程的检查不能证明旧会话已刷新。
 审查中途若被门禁打断，保留原票的 UNKNOWN/未完成状态和实际回执；稳定运行时及工作树后，

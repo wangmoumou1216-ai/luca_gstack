@@ -14,6 +14,7 @@ import { spawnSync } from 'child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
+import { inspectHookHealth } from './codex-hook-health.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -48,9 +49,17 @@ const hooksPath = join(ROOT, '.codex', 'hooks.json');
 let hooks = null;
 try { hooks = JSON.parse(readFileSync(hooksPath, 'utf8')); } catch { }
 ok('S1 .codex/hooks.json 存在且是合法 JSON', !!hooks?.hooks);
-ok('S1b 注册源码摘要匹配且篡改被拒（无需宿主授信）',
+ok('S1b native-trust-v1 无安装前置且保留 optional stable-v3 回归（不冒充宿主授信）',
   spawnSync(process.execPath, [join(ROOT, 'scripts', 'test-hook-source-digests.mjs')],
     { cwd: ROOT, stdio: 'inherit' }).status === 0);
+
+const registrationHealth = inspectHookHealth(ROOT, { sourceOnly: true });
+ok('S1c 默认 native-trust-v1 精确注册、strict 与旧 guard 环境隔离',
+  registrationHealth.ok && registrationHealth.registration.protocol === 'native-trust-v1'
+  && Object.values(hooks?.hooks || {}).flatMap(groups => groups.flatMap(group => group.hooks || []))
+    .every(hook => hook.command.includes('export LUCA_NATIVE_HOOK_STRICT=1; ')
+      && hook.command.includes('unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; ')
+      && !/hook-source-integrity|source-guard|shasum/.test(hook.command || '')));
 
 // S2 六个基础生命周期事件 + 模型路由的 subagent 事件齐全。
 const NEED = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SessionEnd',

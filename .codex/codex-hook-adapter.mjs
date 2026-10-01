@@ -45,10 +45,12 @@ import { fileURLToPath } from 'url';
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const diag = (m) => { try { process.stderr.write(`[codex-adapter] ${m}\n`); } catch { } };
 const failureContext = { target: '', event: '', inRepository: false };
+const strictRuntime = process.env.LUCA_NATIVE_HOOK_STRICT === '1'
+  || Boolean(process.env.LUCA_CHILD_SOURCE_ROOT);
 
 function witnessAwareRuntimeFailure(reason) {
   diag(reason);
-  if (process.env.LUCA_CHILD_SOURCE_ROOT) return 2;
+  if (strictRuntime) return 2;
   if (!failureContext.inRepository
     || failureContext.event !== 'PreToolUse'
     || !/project-scope-guard/.test(failureContext.target)) return 0;
@@ -183,7 +185,7 @@ function adapt(text, event) {
 // ── 主流程（全程 process.exitCode，绝不用 process.exit —— 见 B2）──────────────
 function main() {
   const target = process.argv[2];
-  if (!target) { diag('缺少目标 hook 路径参数'); return 0; }
+  if (!target) return witnessAwareRuntimeFailure('缺少目标 hook 路径参数');
   failureContext.target = target;
   if (resolve(target) === join(REPO_ROOT, '.claude', 'hooks', 'project-scope-guard.mjs')) {
     // The registered target itself uniquely identifies the trusted PreToolUse entry, so stdin read
@@ -331,6 +333,10 @@ function main() {
       }
       if (controlled?.status === 2) return 2;
       if (!controlled || controlled.error || controlled.status === null || controlled.status !== 0) {
+        if (strictRuntime) {
+          diag('controlled-change runtime failed; native strict mode refuses this PreToolUse call');
+          return 2;
+        }
         diag(`controlled-change guard failed (${controlled?.error?.code || controlled?.error?.message || `status=${controlled?.status}`}); consulting durable witness`);
         const fallback = spawnSync('node', [join(REPO_ROOT, 'scripts', 'controlled-change.mjs'), 'hook-failure-decision'], {
           input: '', env: childEnv, encoding: 'utf8', timeout: 30000, cwd: REPO_ROOT,
@@ -366,7 +372,7 @@ function main() {
   if (/controlled-change-guard/.test(target) && (r.error || r.status === null || r.status !== 0)) {
     return r.status === 2 ? 2 : 1;
   }
-  if (process.env.LUCA_CHILD_SOURCE_ROOT && (r.error || r.status !== 0)) return 2;
+  if (strictRuntime && (r.error || r.status !== 0)) return 2;
   return r.status === 2 ? 2 : 0;
 }
 

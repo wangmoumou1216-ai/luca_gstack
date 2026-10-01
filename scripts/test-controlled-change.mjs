@@ -198,23 +198,25 @@ function installAdapterFixture(f) {
   mkdirSync(join(f.repo, '.claude', 'hooks'), { recursive: true });
   mkdirSync(join(f.repo, 'scripts'), { recursive: true });
   copyFileSync(ADAPTER, join(f.repo, '.codex', 'codex-hook-adapter.mjs'));
+  copyFileSync(join(ROOT, '.codex', 'host-launch-hook.mjs'), join(f.repo, '.codex', 'host-launch-hook.mjs'));
   copyFileSync(CORE, join(f.repo, 'scripts', 'controlled-change.mjs'));
   copyFileSync(CODEX_HOOKS, join(f.repo, '.codex', 'hooks.json'));
   writeFileSync(join(f.repo, '.claude', 'hooks', 'project-scope-guard.mjs'), 'process.exitCode = 0;\n');
   copyFileSync(GUARD, join(f.repo, '.claude', 'hooks', 'controlled-change-guard.mjs'));
   const hooksBytes = readFileSync(CODEX_HOOKS);
   const registered = JSON.parse(hooksBytes).hooks.PreToolUse[0].hooks[0].command;
-  assert.match(registered, /hook source integrity mismatch/, 'registered hook must reject source drift');
-  assert.match(registered, /hook-source-integrity\.mjs" --verify/, 'stable registered hook must check protected approval before launch');
-  assert.doesNotMatch(registered, /case "\$h" in [a-f0-9]{64}/, 'source updates must not change the trusted registration bytes');
-  assert.match(registered, /source-guard\/bootstrap\.mjs/, 'registered hook must load protected source guard');
+  assert.match(registered, /export LUCA_NATIVE_HOOK_STRICT=1;/, 'native registered Hook must preserve strict runtime refusal');
+  assert.match(registered, /unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT;/,
+    'native registered Hook must isolate inherited optional loader state');
+  assert.doesNotMatch(registered, /hook-source-integrity|source-guard|shasum/,
+    'native registered Hook must not require per-workspace source approval');
   assert.match(registered, /c=\$\?; \[ "\$c" = "0" \] && exit 0 \|\| exit 2$/,
     'registered hook must map every abnormal exit to blocking code 2');
   const sink = join(f.scratch, 'registered-wrapper.log');
   const executable = registered.replace('2>> /tmp/luca-gstack-hooks.log', `2>> "${sink}"`);
   assert.notEqual(executable, registered, 'test harness must relocate exactly one log sink into authorized scratch');
   assert.equal(executable.replace(`2>> "${sink}"`, '2>> /tmp/luca-gstack-hooks.log'), registered, 'test wrapper may change only the log sink, not registered command semantics');
-  return { registered, executable };
+  return { registered, executable, log: sink };
 }
 
 function runRegisteredPreToolWrapper(f, executable, env = {}, options = {}) {
@@ -411,11 +413,11 @@ test('adapter-runtime-fail-closed', () => {
   const compromised = fixture();
   try {
     prepare(compromised, 'generation-adapter-syntax');
-    const { executable } = installAdapterFixture(compromised);
+    const { executable, log } = installAdapterFixture(compromised);
     writeFileSync(join(compromised.repo, '.codex', 'codex-hook-adapter.mjs'), 'this is deliberately invalid JavaScript !\n');
     const syntaxResult = runRegisteredPreToolWrapper(compromised, executable);
     assert.equal(syntaxResult.status, 2, 'registered wrapper blocks corrupted adapter source');
-    assert.match(syntaxResult.stderr, /source integrity mismatch/);
+    assert.match(readFileSync(log, 'utf8'), /SyntaxError/, 'real runtime failure remains visible in the isolated Hook log');
   } finally { compromised.cleanup(); }
 });
 

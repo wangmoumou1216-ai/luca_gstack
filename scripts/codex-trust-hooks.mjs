@@ -46,17 +46,20 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const hooksHash = sha(hooksBytes);
 const routeCommand = registered.hooks.SessionStart.flatMap(group => group.hooks || [])
   .find(hook => /model-route-hook\.mjs/.test(hook.command || ''))?.command || '';
-const routeEntry = 'node "$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs"';
+const nativeEntry = 'node "$luca_hook_root/.codex/model-route-hook.mjs"';
+const routeEntry = routeCommand.includes(nativeEntry) ? nativeEntry
+  : 'node "$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs"';
 const routeEntryAt = routeCommand.indexOf(routeEntry);
 if (routeEntryAt < 0) throw new Error('Codex model-route hook guard prefix is missing');
 const guardedPrefix = routeCommand.slice(0, routeEntryAt);
+const entryRoot = routeEntry === nativeEntry ? '$luca_hook_root' : '$(git rev-parse --show-toplevel)';
 const HOST_COMMANDS = new Map([
   ['sessionStart', 'SessionStart', 'session-restore.mjs'],
   ['userPromptSubmit', 'UserPromptSubmit', 'route-guard.mjs'],
   ['preToolUse', 'PreToolUse', 'project-scope-guard.mjs'],
 ].map(([event, registration, target]) => [event, {
   registration,
-  command: `${guardedPrefix}MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node "$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs" "$(git rev-parse --show-toplevel)/.claude/hooks/${target}" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2`,
+  command: `${guardedPrefix}MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node "${entryRoot}/.codex/host-launch-hook.mjs" "${entryRoot}/.claude/hooks/${target}" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2`,
 }]));
 if (HOST_LAUNCH) for (const { registration, command } of HOST_COMMANDS.values()) {
   const matches = (registered.hooks[registration] || []).flatMap(group => group.hooks || [])

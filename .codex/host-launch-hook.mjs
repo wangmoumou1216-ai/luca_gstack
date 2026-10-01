@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const input=readFileSync(0,'utf8');
 const hostLaunch=Boolean(process.env.MUSE_HOST_LAUNCH_ID || process.env.MUSE_HOST_LAUNCH_HANDLE);
-const protectedSource=Boolean(process.env.LUCA_CHILD_SOURCE_ROOT);
+const protectedSource=process.env.LUCA_NATIVE_HOOK_STRICT==='1'
+  || Boolean(process.env.LUCA_CHILD_SOURCE_ROOT);
 async function claim(method,payload){
   const env=process.env;
   const endpoint=env.MUSE_HOST_LAUNCH_ENDPOINT;

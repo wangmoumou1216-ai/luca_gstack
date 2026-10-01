@@ -3,7 +3,7 @@
 // Policy chooses a role/model; this host only binds that choice to a root activation and one call.
 import {createHash, randomUUID} from 'node:crypto';
 import {
-  chmodSync, closeSync, fsyncSync, mkdirSync, openSync, readFileSync,
+  chmodSync, closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync,
   renameSync, unlinkSync, writeFileSync,
 } from 'node:fs';
 import {dirname, join} from 'node:path';
@@ -166,6 +166,56 @@ export function readActivation({harness, root_session_id, state_root}) {
     throw new Error('MODEL_ROUTE_INVALID_ACTIVATION');
   }
   return validState(state) ? structuredClone(state) : null;
+}
+
+// A trusted native adapter may have missed SessionStart because its Hook was
+// unavailable. Recover under the same state lock; never overwrite another
+// dispatch or clear an unresolved obligation after checking a stale snapshot.
+export function recoverActivation({harness, root_session_id, root_anchor, release_digest,
+  expected_activation_id = null, expected_root_generation, state_root}) {
+  if (!supportedHarnesses.has(harness) || !text(root_session_id) || !validRoot(root_anchor)
+      || !hash(release_digest) || (expected_activation_id !== null && !text(expected_activation_id))) {
+    throw new TypeError('valid recovery input required');
+  }
+  const file = statePath({harness, root_session_id, state_root});
+  return withLock(file, () => {
+    const previous = readJson(file);
+    if (previous !== null || existsSync(file)) {
+      if (!validState(previous)) return outcome('REFUSE', 'INVALID_ACTIVATION');
+      if (previous.harness !== harness || previous.root_session_id !== root_session_id) {
+        return outcome('REFUSE', 'ACTIVATION_IDENTITY_MISMATCH');
+      }
+      if (previous.release_digest !== release_digest) return outcome('REFUSE', 'RELEASE_MISMATCH');
+      if (previous.status === 'active') {
+        return outcome('UNCHANGED', 'ACTIVATION_ALREADY_ACTIVE', {state: structuredClone(previous)});
+      }
+      if (previous.activation_id !== expected_activation_id
+          || previous.root_generation !== expected_root_generation) {
+        return outcome('REFUSE', 'ACTIVATION_STATE_CHANGED');
+      }
+      if (previous.critical_failure) return outcome('REFUSE', 'CRITICAL_FAILURE_LATCHED');
+      if (Object.values(previous.invocations).some(call => call.status === 'pending'
+          || (call.critical === true && call.status !== 'accepted'))) {
+        return outcome('REFUSE', 'UNRESOLVED_INVOCATION');
+      }
+      if (Object.values(previous.preparations || {}).some(call => call.status === 'pending'
+          || call.status === 'invalidated')) {
+        return outcome('REFUSE', 'UNRESOLVED_CRITICAL_PREPARATION');
+      }
+      if (previous.root_anchor.model !== root_anchor.model) previous.root_generation += 1;
+      previous.root_anchor = {model: root_anchor.model, source: root_anchor.source};
+      previous.status = 'active';
+      writeAtomic(file, previous);
+      return outcome('RECOVERED', 'ACTIVATION_RESUMED', {state: structuredClone(previous)});
+    }
+    if (expected_activation_id !== null) return outcome('REFUSE', 'ACTIVATION_STATE_CHANGED');
+    const state = {version: 1, harness, root_session_id, release_digest,
+      activation_id: randomUUID(), root_generation: 0,
+      root_anchor: {model: root_anchor.model, source: root_anchor.source},
+      status: 'active', critical_failure: false, invocations: {}, preparations: {}};
+    writeAtomic(file, state);
+    return outcome('RECOVERED', 'ACTIVATION_CREATED', {state: structuredClone(state)});
+  });
 }
 
 // Reserve a durable intent before a trusted adapter reads bindings or resolves a

@@ -1,13 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync, readdirSync, realpathSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync, readdirSync, realpathSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { sourceDigest } from './codex-hook-health.mjs';
 import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
 
-function fixture(t, mode = 'ok') {
+// Fixed stable-v3 fixture remains independent of the default native registration.
+function stableRegistration(config) {
+  const prefix = "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; ";
+  const stop = "luca_stop_payload=$(cat); luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || { printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0; }; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0; }; printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0";
+  for (const [event, groups] of Object.entries(config.hooks)) for (const group of groups) for (const hook of group.hooks) {
+    if (event === 'Stop') hook.command = stop;
+    else {
+      const marker = 'export LUCA_NATIVE_HOOK_STRICT=1; ';
+      const suffix = hook.command.slice(hook.command.indexOf(marker) + marker.length)
+        .replaceAll('$luca_hook_root', '$(git rev-parse --show-toplevel)');
+      hook.command = prefix + suffix;
+    }
+  }
+  return config;
+}
+
+function fixture(t, mode = 'ok', { stable = false } = {}) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-')));
   const guardHome = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-home-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -91,6 +107,7 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
 `;
   writeFileSync(join(root, 'bin/codex'), `#!${process.execPath}\n${server}`, { mode: 0o700 });
   const hooksPath = join(root, '.codex/hooks.json');
+  if (stable) writeFileSync(hooksPath, JSON.stringify(stableRegistration(JSON.parse(readFileSync(hooksPath)))));
   const syncRegistration = () => {
     const hooks = JSON.parse(readFileSync(hooksPath));
     const digest = sourceDigest(root);
@@ -99,11 +116,13 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
     }
     writeFileSync(hooksPath, JSON.stringify(hooks));
   };
-  syncRegistration();
-  mkdirSync(join(guardHome, '.codex/luca-child-project'), { recursive: true, mode: 0o700 });
   const guardRoot = join(guardHome, '.codex/luca-child-project/source-guard');
-  const installed = installTestSourceGuard({roots:[root],destination:guardRoot,directory:guardHome});
-  assert.equal(installed.status, 0, installed.stderr);
+  if (stable) {
+    syncRegistration();
+    mkdirSync(join(guardHome, '.codex/luca-child-project'), { recursive: true, mode: 0o700 });
+    const installed = installTestSourceGuard({roots:[root],destination:guardRoot,directory:guardHome});
+    assert.equal(installed.status, 0, installed.stderr);
+  }
   const run = args => spawnSync(process.execPath, [join(root, 'scripts/codex-trust-hooks.mjs'), '--host-launch', ...args], {
     env: { ...process.env, HOME: guardHome, CODEX_HOME: join(root, 'home'), NODE_OPTIONS: '', MOCK_ROOT: root,
       MOCK_MODE: mode, PATH: `${join(root, 'bin')}:${process.env.PATH}` },
@@ -156,8 +175,8 @@ for (const mode of ['missing-ack', 'timeout', 'version-conflict', 'duplicate-ack
 }
 
 // Symptom regression: trust must not certify a registration whose source gate fails.
-test('trust rejects unhealthy source before a trust write', t => {
-  const f = fixture(t);
+test('optional stable-v3 trust rejects unhealthy source before a trust write', t => {
+  const f = fixture(t, 'ok', { stable: true });
   writeFileSync(join(f.root, '.codex', 'changed-hook.mjs'), 'export const unreviewed = true;\n');
   const result = f.run([]);
   assert.notEqual(result.status, 0, 'source drift was accepted and trusted');
@@ -167,7 +186,7 @@ test('trust rejects unhealthy source before a trust write', t => {
 
 test('already trusted still refuses changed source or stale installation', t => {
   for (const kind of ['source', 'manifest']) {
-    const f = fixture(t, 'already-trusted');
+    const f = fixture(t, 'already-trusted', { stable: true });
     writeFileSync(join(f.root, '.codex', 'changed-hook.mjs'), 'export const unreviewed = true;\n');
     if (kind === 'manifest') f.syncRegistration();
     const result = f.run(['--dry-run']);
@@ -178,7 +197,7 @@ test('already trusted still refuses changed source or stale installation', t => 
   }
 });
 test('source drift between official checks and batchWrite refuses the trust mutation', t => {
-  const f = fixture(t, 'source-drift-before-write'), result = f.run([]);
+  const f = fixture(t, 'source-drift-before-write', { stable: true }), result = f.run([]);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /SOURCE_DIGEST_MISMATCH/);
   assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
@@ -192,4 +211,25 @@ test('registration bytes drifting during lookup refuse trusted and dry-run early
     assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
     assert.deepEqual(readdirSync(join(f.root, 'home')), ['config.toml']);
   }
+});
+
+test('native exact11 trust accepts source edits without creating an optional source guard', t => {
+  const f = fixture(t, 'source-drift-before-write');
+  writeFileSync(join(f.root, '.codex/changed-hook.mjs'), 'export const changed = true;\n');
+  const result = f.run([]);
+  assert.equal(result.status, 0, result.stderr);
+  const state = JSON.parse(readFileSync(join(f.root, 'rpc-state.json')));
+  assert.equal(state.writes, 1);
+  assert.equal(existsSync(f.guardRoot), false, 'native trust must not initialize an optional guard');
+  assert.equal(Object.keys(state.config.hooks.state).length, 12);
+  assert.equal(readdirSync(f.root).includes('rpc-state.json'), true);
+  assert.equal(readdirSync(join(f.root, 'home')).filter(name => name.includes('.bak-')).length, 1);
+});
+test('native trust refuses command insertion before any official trust write', t => {
+  const f = fixture(t), path = join(f.root, '.codex/hooks.json');
+  const config = JSON.parse(readFileSync(path)); config.hooks.PreToolUse[0].hooks[0].command += '; true';
+  writeFileSync(path, JSON.stringify(config));
+  const result = f.run([]);
+  assert.notEqual(result.status, 0);
+  assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
 });

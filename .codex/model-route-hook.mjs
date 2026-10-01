@@ -3,7 +3,7 @@
 import {createHash} from 'node:crypto';
 import {realpathSync, readFileSync} from 'node:fs';
 import {homedir} from 'node:os';
-import {dirname, isAbsolute, relative, resolve as resolvePath} from 'node:path';
+import {basename, dirname, isAbsolute, relative, resolve as resolvePath} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {
@@ -12,13 +12,15 @@ import {
 import {
   acceptInvocationEvidence, bindInvocationExternalIdentity, findInvocationByExternalIdentity,
   pauseActivation, prepareInvocation, readActivation, releaseDigestForPolicy, startActivation,
-  updateRootAnchor, latchCriticalFailure, beginCriticalPreparation,
+  updateRootAnchor, latchCriticalFailure, beginCriticalPreparation, recoverActivation,
 } from '../scripts/model-route-host.mjs';
 import {
   bindCodexChildProject,
   prepareCodexChildProject,
   revokeCodexChildProjectActivation,
 } from '../.claude/hooks/lib/codex-child-project.mjs';
+import {withoutLocalGitEnv} from '../.claude/hooks/lib/git-env.mjs';
+import {readHostLaunchSourceScope} from '../.claude/hooks/lib/event-attestation.mjs';
 
 const ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), '..');
 const TEST_MODE = process.env.NODE_ENV === 'test';
@@ -104,8 +106,26 @@ function routeForAgent(payload, agentType) {
   const policy = readPolicy();
   const scene = resolveDispatchScene(policy, {kind: 'native-agent', agent_type: agentType});
   if (!scene) throw new Error('UNKNOWN_AGENT_TYPE');
-  const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
+  let state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
+  if (!state || state.status === 'paused') {
+    // Child association still supports the native default home only. Refuse a
+    // provider recovery before writing activation rather than failing later.
+    const nativeHome = realpathSync(resolvePath(homedir(), '.codex'));
+    const scope = readHostLaunchSourceScope(ROOT, payload.session_id);
+    if ((scope && scope.sourceRoot.realpath !== nativeHome)
+        || (process.env.CODEX_HOME && realpathSync(process.env.CODEX_HOME) !== nativeHome)) {
+      throw new Error('UNSUPPORTED_RECOVERY_SOURCE');
+    }
+    const anchor = currentNativeAnchor(payload);
+    const recovered = recoverActivation({harness: 'codex', root_session_id: payload.session_id,
+      root_anchor: anchor, release_digest: releaseFor(policy),
+      expected_activation_id: state?.activation_id || null,
+      expected_root_generation: state?.root_generation, state_root: STATE_ROOT});
+    if (!['RECOVERED', 'UNCHANGED'].includes(recovered.disposition)) throw new Error(recovered.reason);
+    state = recovered.state;
+  }
   if (!state || state.status !== 'active') throw new Error('ACTIVATION_MISSING');
+  if (state.release_digest !== releaseFor(policy)) throw new Error('RELEASE_MISMATCH');
   if (state.critical_failure) throw new Error('CRITICAL_FAILURE_LATCHED');
   if (unresolvedCriticalInvocation(state)) throw new Error('CRITICAL_INVOCATION_EVIDENCE_PENDING');
   if (pendingPreparation(state)) throw new Error('UNRESOLVED_CRITICAL_PREPARATION');
@@ -302,17 +322,61 @@ function handleSubagentStart(payload) {
   return {};
 }
 
-function safeTranscript(path) {
+function safeTranscript(path, sessionId) {
   if (!text(path) || !isAbsolute(path)) throw new Error('TRANSCRIPT_MISSING');
-  const root = realpathSync(TRANSCRIPT_ROOT);
+  const scope = readHostLaunchSourceScope(ROOT, sessionId);
+  const expectedRoot = scope ? resolvePath(scope.sourceRoot.realpath, 'sessions') : TRANSCRIPT_ROOT;
+  const root = realpathSync(expectedRoot);
+  if (root !== resolvePath(expectedRoot)) throw new Error('TRANSCRIPT_ROOT_NOT_CANONICAL');
   const actual = realpathSync(path);
+  if (actual !== resolvePath(path)) throw new Error('TRANSCRIPT_NOT_CANONICAL');
   const rel = relative(root, actual);
   if (rel.startsWith('..') || isAbsolute(rel)) throw new Error('TRANSCRIPT_OUTSIDE_CODEX_SESSIONS');
   return actual;
 }
+function currentNativeAnchor(payload) {
+  const actual = safeTranscript(payload.transcript_path, payload.session_id);
+  if (!basename(actual).startsWith('rollout-')
+      || !basename(actual).endsWith('.jsonl')) {
+    throw new Error('ROOT_TRANSCRIPT_IDENTITY_MISMATCH');
+  }
+  const events = readFileSync(actual, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const metas = events.filter(event => event.type === 'session_meta');
+  if (metas.length !== 1 || events[0] !== metas[0] || metas[0].payload?.id !== payload.session_id) {
+    throw new Error('ROOT_TRANSCRIPT_IDENTITY_MISMATCH');
+  }
+  const context = events.filter(event => event.type === 'turn_context').at(-1)?.payload;
+  // Subdirectories are valid only when Git resolves every native cwd to this
+  // exact checkout. A transcript from a different worktree cannot create state
+  // here, even when its SID and model appear otherwise valid.
+  const workspace = realpathSync(ROOT);
+  for (const cwd of [metas[0].payload.cwd, context?.cwd, payload.cwd]) {
+    if (!text(cwd) || !isAbsolute(cwd) || realpathSync(cwd) !== resolvePath(cwd)) {
+      throw new Error('ROOT_TRANSCRIPT_WORKSPACE_MISMATCH');
+    }
+    const observed = spawnSync('git', ['--no-optional-locks', '-C', cwd, 'rev-parse', '--show-toplevel'],
+      {encoding: 'utf8', timeout: 5000, env: withoutLocalGitEnv()});
+    if (observed.status !== 0 || !text(observed.stdout)
+        || realpathSync(observed.stdout.trim()) !== workspace) {
+      throw new Error('ROOT_TRANSCRIPT_WORKSPACE_MISMATCH');
+    }
+  }
+  let activeTurn;
+  for (const event of events) {
+    if (event.type === 'event_msg' && event.payload?.type === 'task_started') activeTurn = event.payload.turn_id;
+    if (event.type === 'turn_aborted' || ['task_complete', 'turn_aborted'].includes(event.payload?.type)) {
+      activeTurn = undefined;
+    }
+  }
+  if (!text(payload.turn_id) || context?.turn_id !== payload.turn_id
+      || activeTurn !== payload.turn_id || !text(context.model)) {
+    throw new Error('ROOT_TRANSCRIPT_CURRENT_TURN_MISSING');
+  }
+  return {model: context.model, source: `codex-native-transcript:${actual}:${payload.turn_id}`};
+}
 function transcriptEvidence(path, rootSessionId, agentId, agentType,
   lastAssistantMessage, stopHookActive) {
-  const actual = safeTranscript(path);
+  const actual = safeTranscript(path, rootSessionId);
   const events = readFileSync(actual, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
   const meta = events.find(event => event.type === 'session_meta')?.payload;
   const contexts = events.filter(event => event.type === 'turn_context').map(event => event.payload);

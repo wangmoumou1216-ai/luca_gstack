@@ -21,6 +21,7 @@ const GATE_START = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SC
 // Intentional protocol changes require reviewing and updating this pin together.
 const LEGACY_REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
 const STABLE_REGISTRATION_CONTRACT = '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189';
+const NATIVE_REGISTRATION_CONTRACT = '4045d37a195d19ab5a3f437f83cf500b24cd41868cf563b5f01790dc6945f476';
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === 'object') return Object.fromEntries(
@@ -117,7 +118,11 @@ export function inspectHookHealth(root, { sourceOnly = false,
     if (commands.length !== 11) throw new Error(`expected 11 registrations, found ${commands.length}`);
     const fullContract = sha(JSON.stringify(canonical(config.hooks)));
     const digests = [];
-    if (fullContract === STABLE_REGISTRATION_CONTRACT) {
+    if (fullContract === NATIVE_REGISTRATION_CONTRACT) {
+      report.registration.protocol = 'native-trust-v1';
+      report.registration.contract_sha256 = fullContract;
+      report.registration.trust_owner = 'Codex native trusted command';
+    } else if (fullContract === STABLE_REGISTRATION_CONTRACT) {
       report.registration.protocol = 'stable-v3';
       report.registration.contract_sha256 = fullContract;
     } else {
@@ -139,12 +144,26 @@ export function inspectHookHealth(root, { sourceOnly = false,
       report.registration.expected_digests = [...new Set(digests)];
     }
     report.registration.hook_count = commands.length;
-    report.registration.current_digest = sourceDigest(root);
+    if (report.registration.protocol !== 'native-trust-v1') report.registration.current_digest = sourceDigest(root);
     if (digests.some(digest => digest !== report.registration.current_digest)) {
       throw new Error('SOURCE_DIGEST_MISMATCH: registered commands do not match current source; restarting alone cannot repair this');
     }
     report.registration.status = 'PASS';
   } catch (error) { report.registration.problems.push(error.message); }
+
+  if (report.registration.protocol === 'native-trust-v1') {
+    report.scope = 'registration-native-trust';
+    report.approval = { status: 'NOT_APPLICABLE', problems: [],
+      reason: 'native-trust-v1 does not require workspace source approval' };
+    report.installation = { status: 'NOT_REQUIRED', problems: [], changed_files: [],
+      reason: 'source guard is optional and is not a default Hook prerequisite' };
+    report.native_trust = { status: 'NOT_CHECKED', owner: 'Codex hooks/list and config/batchWrite',
+      reason: 'registration health does not attest native trust; use the official exact-command trust readback' };
+    report.optional_source_guard = { status: 'NOT_CHECKED',
+      manifest_present: existsSync(join(guardRoot, 'manifest.json')) };
+    report.ok = report.registration.status === 'PASS';
+    return report;
+  }
 
   if (!sourceOnly) {
     const installation = report.installation;

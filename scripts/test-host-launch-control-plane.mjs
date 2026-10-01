@@ -1,11 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { fork, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repository = dirname(dirname(fileURLToPath(import.meta.url)));
+
+test('broker without an optional source guard still rejects an ordinary Node parent', async (t) => {
+  const root = realpathSync(mkdtempSync('/private/tmp/host-parent-'));
+  const projects = join(root, 'projects');
+  mkdirSync(projects);
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const env = { ...process.env };
+  for (const name of ['NODE_OPTIONS', 'LUCA_CHILD_SOURCE_ROOT', 'LUCA_PROTECTED_CODE_ROOT']) delete env[name];
+  const child = fork(join(repository, 'scripts/host-launch-broker.mjs'), [repository, projects], {
+    env, execArgv: [], stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+  });
+  let stderr = '';
+  child.stderr.on('data', chunk => { stderr += chunk; });
+  const status = await new Promise((resolve, reject) => {
+    child.once('error', reject);
+    child.once('exit', resolve);
+  });
+  assert.notEqual(status, 0);
+  assert.match(stderr, /HOST_PARENT_DENIED/);
+  assert.doesNotMatch(stderr, /HOST_SOURCE_UNPROTECTED/);
+});
 function fixture(t) {
   const root = realpathSync(mkdtempSync('/private/tmp/host-guard-'));
   const gstack = join(root, 'gstack');
@@ -20,11 +41,11 @@ function fixture(t) {
   }
   cpSync(join(repository, '.claude/hooks/lib'), join(gstack, '.claude/hooks/lib'), { recursive: true });
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  return { gstack, run: (tool_name, tool_input) => {
+  return { gstack, run: (tool_name, tool_input, extraEnv = {}) => {
     const result = spawnSync(process.execPath, [join(gstack, '.codex/codex-hook-adapter.mjs'),
       join(gstack, '.claude/hooks/project-scope-guard.mjs')], {
       cwd: gstack, env: { ...process.env, LUCA_PROJECTS_ROOT: join(root, 'projects'),
-        LUCA_ACTUAL_HARNESS: 'codex', LUCA_HARNESS_ADAPTED: '1' },
+        LUCA_ACTUAL_HARNESS: 'codex', LUCA_HARNESS_ADAPTED: '1', ...extraEnv },
       input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: 'fixture-new-codex',
         cwd: gstack, tool_name, tool_input }), encoding: 'utf8', timeout: 10_000,
     });
@@ -34,6 +55,37 @@ function fixture(t) {
     return { ...result, output };
   } };
 }
+
+test('native strict mode rejects adapter exceptions independently of the optional source guard', t => {
+  const f = fixture(t);
+  const result = f.run('Bash', { command: 'pwd' }, {
+    LUCA_NATIVE_HOOK_STRICT: '1', LUCA_CHILD_SOURCE_ROOT: '',
+    LUCA_CONTROLLED_TEST_ADAPTER_THROW: 'after-context',
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /injected adapter runtime throw/);
+});
+
+test('native strict host wrapper rejects malformed input without source guard or host launch', () => {
+  const env = { ...process.env, LUCA_NATIVE_HOOK_STRICT: '1' };
+  for (const name of ['NODE_OPTIONS', 'LUCA_CHILD_SOURCE_ROOT', 'LUCA_PROTECTED_CODE_ROOT',
+    'MUSE_HOST_LAUNCH_ID', 'MUSE_HOST_LAUNCH_HANDLE']) delete env[name];
+  const result = spawnSync(process.execPath, [join(repository, '.codex/host-launch-hook.mjs'),
+    join(repository, '.claude/hooks/route-guard.mjs')], {
+    input: '{bad-json', env, cwd: repository, encoding: 'utf8',
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /JSON/);
+});
+
+test('native strict adapter refuses a missing target', () => {
+  const env = { ...process.env, LUCA_NATIVE_HOOK_STRICT: '1', NODE_OPTIONS: '', LUCA_CHILD_SOURCE_ROOT: '' };
+  const result = spawnSync(process.execPath, [join(repository, '.codex/codex-hook-adapter.mjs')], {
+    env, input: '{}', encoding: 'utf8',
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /目标 hook/);
+});
 
 test('Codex adapter denies direct host-launch journal and source-grant paths', (t) => {
   const f = fixture(t);

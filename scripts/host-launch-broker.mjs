@@ -5,7 +5,6 @@ import { mkdtempSync, chmodSync, realpathSync, rmSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { homedir } from 'node:os';
 
 const ownRoot=realpathSync(resolve(dirname(fileURLToPath(import.meta.url)),'..'));
 const gstackRoot=realpathSync(process.argv[2] || ownRoot);
@@ -16,15 +15,8 @@ const fixtureParent=process.argv[4]==='--fixture' && /^\/private\/tmp\/host-laun
 if (!process.send || (!fixtureParent && gstackRoot!==ownRoot)) {
   throw Object.assign(new Error('HOST_PARENT_DENIED'),{code:'HOST_PARENT_DENIED'});
 }
-if (!fixtureParent) {
-  const guardRoot=join(homedir(),'.codex','luca-child-project','source-guard');
-  const snapshot=process.env.LUCA_PROTECTED_CODE_ROOT || '';
-  if (process.env.NODE_OPTIONS!==`--import=${join(guardRoot,'bootstrap.mjs')}`
-      || !snapshot.startsWith(join(guardRoot,'roots')+'/')) {
-    throw Object.assign(new Error('HOST_SOURCE_UNPROTECTED'),{code:'HOST_SOURCE_UNPROTECTED'});
-  }
-}
-// Load framework authority only after the protected loader has been established.
+// Native Hook trust owns the installed command. App IPC and the exact Electron
+// parent remain mandatory; an optional workspace source guard is not launch authority.
 const { createHostLaunchBroker } = await import('../.claude/hooks/lib/host-launch.mjs');
 const challenges=new Map();
 const broker=createHostLaunchBroker({gstackRoot,projectsRoot,revalidateProfile: params=>new Promise((resolve,reject)=>{
