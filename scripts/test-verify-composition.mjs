@@ -316,7 +316,11 @@ ${finalVerdict}
 function makeWiringS10Harness(source, scratch) {
   const preludeEnd = source.indexOf("console.log('── [静态]");
   assert.ok(preludeEnd > 0, 'wiring harness: static section marker missing');
-  const prelude = source.slice(0, preludeEnd);
+  // Keep the real dependency's owner when relocating the wiring harness.
+  const prelude = source.slice(0, preludeEnd).replace(
+    "from './codex-hook-health.mjs'",
+    `from ${JSON.stringify(new URL('./codex-hook-health.mjs', import.meta.url).href)}`,
+  );
   const s10 = extractBetween(source, 'if (delegateClaudeRegression) {', '\n// S11 ', 'wiring S10');
   const path = join(scratch, 'wiring-s10.mjs');
   writeFileSync(path, `${prelude}
