@@ -2964,6 +2964,7 @@ try:
         "code-hygiene", "code-review", "codebase-design", "code-recon", "muse-req-triage",
         "insight-synthesis", "research-kit", "ux-writing", "compare", "ux-audit", "redteam",
         "evals", "retro",
+        "writing-workshop", "loop-me", "issue-triage", "setup-wizard",
     }
     if set(groups["skills"]) | set(groups["governance_tools"]) != expected_keys:
         raise ValueError("key set")

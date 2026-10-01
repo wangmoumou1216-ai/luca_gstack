@@ -72,4 +72,47 @@
 - 回滚：`pre-fuse-domain-modeling-20260916`（本地 tag；主安装提交前创建）；发布后用聚焦 `git revert`，不 reset/强推
 - 证据：`framework-audit/2026-09-16-domain-modeling-verification.md`（完成验证后填票）
 
+
+## 2026-10-01 · Matt38 content prepared; native adoption PENDING
+
+Frozen source `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`, 30 adopt/port + 7 no independent package + 1 historical. These rows record source content and unique reuse ownership; native behavior, gain comparison, personal installation and publication remain PENDING. M03/M35 retain preservation.
+
+External content receipt: `/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json`. Source watch readback: `/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/SOURCE-READBACK.json`.
+
+| Source ID | Unique owner | Reuse mode | Source pin | Native adoption |
+|---|---|---|---|---|
+| 02 | code-hygiene Mode D; code-review is the delegating facade | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 03 | codebase-design (preservation) | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 04 | U003 diagnosing-bugs | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 05 | U003 domain-modeling | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 07 | U003 implement→Plan/Orchestrator | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 08 | U010 code-recon | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 09 | U008 html-prototype | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 10 | U003 quick-research | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 11 | resolving-merge-conflicts; historical_removed source | preserve-historical | `6654f6b60cd9d5be8b54c6fafe44346dabeb3b76` | PENDING |
+| 13 | U003 G/tdd | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 14 | U003 to-spec→tech-spec | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 15 | U003 to-tickets→task-plan projection | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 16 | U006 issue-triage | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 17 | U003 wayfinder→Plan owner | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 18 | U007 setup-wizard | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 20 | U010 Plan/Orchestrator | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 21 | U005 loop-me | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 22 | U010 implement PR reference | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 23 | U010 code-hygiene environment-retro | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 24 | U010 TS recipe | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 25 | writing-workshop / beats | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 26 | writing-workshop / fragments | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 27 | writing-workshop / shape | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 29 | U010 G/tdd shoehorn recipe | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 31 | U010 code-hygiene precommit recipe | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 33 | U003 grilling | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 34 | U003 handoff | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 35 | personal Claude teach candidate (preservation; formal install pending) | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 36 | U009 research-kit questionnaire | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 37 | U003 wait-what | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+| 38 | writing-for-agents owns the common prose method; skill-authoring owns structure/registration | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` | PENDING |
+
+No independent package for IDs 01, 06, 12, 19, 28, 30, 32. Prototype folds into html-prototype; three writing origins share writing-workshop. Method-only ports remain with their existing consumers. Historical source11 retains its historical pin and deletion watch/ack.
+
 <!-- FILE_END: ADOPTED -->

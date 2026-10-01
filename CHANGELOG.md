@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added / Changed（2026-10-01 · Matt38 来源内容适配，原生采用待验）
+
+- 新增 writing-workshop（beats/fragments/shape）、loop-me、issue-triage、setup-wizard 四个入口正文，分别承接选择后逐块写作、有限循环、问题诊断和人工选择安装路径；prototype 方法并入 html-prototype，决策问卷并入 research-kit，避免同义入口竞争。
+- 刷新 Matt 工程、研究与文档方法及 Plan/Orchestrator 的依赖和发布准备契约；code-review 委托 code-hygiene，writing-for-agents 持有通用写作方法；M03/M35 仍按 preservation 验收。个人 tdd/Claude teach 只准备候选，正式安装待另批。
+- 固定 38 来源 ID（30 采用/移植、7 不新增独立包、1 历史来源），按实际目录 Git 变更登记 watch pin，保留七月拒绝及旧对标历史；更新局部离线断言和候选清单，使后续验收可追溯。原生行为、能力增益、采用和发布均 PENDING，未据内容完成宣称已验证收益。
+
 ### Added（2026-09-20 · Codex 通用模型路由接线，Claude 延后）
 
 - 启用唯一公共 `anchor / peak / light` 模型选择规则：根会话保持用户实际选择，Codex 原生 subagent 与 app-server workflow runner 按精确场景动态选择上下档；reasoning effort 保持独立，不再承担模型档位语义。新增受信 activation/evidence/critical-latch、错模型拒收、旧票与重启失效、私有0600模型绑定和对应行为/变异回归。仓库 hook 已授信，但当前旧 session 不热加载新增 SessionStart，须由新 Codex 根 session 完成最终活体验收；Claude adapter 按用户决定暂不启用，不宣称双端完成。

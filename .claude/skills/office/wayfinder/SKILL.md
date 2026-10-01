@@ -56,6 +56,30 @@ An ordinary large-but-clear task is a negative case, not a reason to stretch the
 5. Finish when Plan Agent has produced the canonical resumable plan and its normal confirmation
    gate has been satisfied. Execution remains Orchestrator's responsibility.
 
+## Canonical map and frontier discipline
+
+The existing Plan artifact is an index: destination, notes/standing constraints, accepted decision
+pointers, precise frontier and blocked questions, fog, exclusions, and source pointers. Decision detail
+lives in its already owned artifact once; the index carries a gist/link, not another copy. Human-facing
+references use descriptive names wrapping their stable IDs/links; stable U-IDs are never renumbered.
+
+Chart breadth first after the destination is a real user decision. A precise question may be blocked;
+only an unphraseable in-scope area is fog. Record out-of-scope separately: it never graduates without
+a real destination/scope change. Resolve one real HITL decision and return to the Plan owner to update
+its accepted pointer, re-evaluate dependencies and graduate only newly sharp fog. Human decisions stay
+HITL; executable investigations can become U-blocks under the normal gate. Research finds facts;
+prototype may concretize a decision only under its own tool/permission contract; manual prerequisites
+earn scope only by unblocking a decision. Do not answer the human's half of an exchange.
+
+Resume by reading the low-resolution canonical index and the selected frontier item's evidence only,
+checking baseline/approval and actual blockers. The existing owner chooses its normal session scope
+and checkpoints; there is no arbitrary one-ticket limit or autonomous tracker claim/close operation.
+Planning ends when the route is clear, remaining fog is resolved or explicitly deferred by the user,
+and the normal Plan confirmation gate is satisfied. Then hand off to the execution owner.
+
+Source17, MIT, pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`. Upstream tracker map, automatic research
+branches, claim/comment/close and parallel dispatch are mapped to the existing Plan authority.
+
 ## Safety boundary
 
 Wayfinder is planning only. It does not mutate product code, create external tracker objects, grant

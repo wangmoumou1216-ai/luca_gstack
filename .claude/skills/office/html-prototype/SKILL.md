@@ -1,14 +1,16 @@
 ---
 name: html-prototype
 preamble-tier: 3
-argument-hint: "[场景 A/B/C + design-brief 路径]"
+argument-hint: "[场景 A/B/C + 输入路径 + purpose=ui|logic-validation；显式 UI 对比可选 ui_variant_count=2–5]"
 version: 1.0.0
 description: |
   HTML 原型生成与可观测 QA。仅在用户明确选择本地 HTML，或明确批准包含本地 HTML
   备用路径的计划且触发条件满足时使用。三种场景行为完全不同：A（新功能，Step0认知门禁+
   原型承载方式确认+全量状态）；B（优化现有，区分改动区/保持区+对照截图）；
   C（评审改版，按 ux-audit报告逐条实现+每处注释FIX-ID）。启动时强制询问场景。
-  技术约束：本地 HTML + 原生 JS，设计规范按用户提供或本次确认的实际来源。(luca_gstack)
+  逻辑验证用可移植 pure 模块、自由动作与 tabbed walkthrough 回答状态问题；显式 UI 对比
+  在同一个 HTML 比较结构不同的变体。技术约束：本地 HTML + 原生 JS，设计规范按用户提供
+  或本次确认的实际来源。(luca_gstack)
 allowed-tools:
   - Read
   - Write
@@ -52,6 +54,25 @@ python3 .claude/observability/scripts/get_rules.py html-prototype "*" 2>/dev/nul
 ---
 
 ## Phase 0：强制询问（每次只问一个）
+
+### 用途与显式 UI 对比（先核对，不替代场景及输入 gate）
+
+`purpose` 只取 `ui`（默认）或 `logic-validation`，与 `source_kind`、standalone/workflow
+及 QA 的 `--mode` 正交；不是新的 Workflow mode。问题是状态/业务模型还是界面方向尚未
+明确时，向真实用户确认并等待，不按 cwd、代码邻接或用户不在场代选。已确认值不重复询问。
+
+- `ui` 的普通调用 `ui_variant_count=0`，保持现有单方案流程。只有用户明确要求 UI 对比且已
+  选择本地 HTML 时才启用，未指定数量默认 3，合法非零值为 2–5；不可因生成了候选而代选。
+- `logic-validation` 必须 `ui_variant_count=0`。用途/数量冲突或已冻结 Packet 与对比方向
+  冲突时停止，回原决策 owner 澄清；不能切 standalone 绕过原合同。
+- 在 `prototype-spec.md` 写 `purpose: ...` 和 `ui_variant_count: ...`，HTML 根元素写同值
+  `data-prototype-purpose` / `data-ui-variant-count`。无字段的历史产物仍按 `ui`、0 验证。
+  CLI `--purpose=ui|logic-validation`、`--ui-variants=N` 必须与文件一致；裸 `--ui-variants`
+  仅表示已获授权的默认三方案。未知用途/非法数量/文件与 CLI 冲突均 exit 2，绝不静默降级。
+
+本入口仍只写批准的原型目录；问题、骨架与阶段确认授予该范围内的原型生成权限。
+产出完成不授予 Git 归档/提交/推送、远端 issue 评论/发送、真实 route/auth/data 写入或生产
+实现权限。这些后续动作须由实际 Plan/implement/Git/发送 owner 按原生权限另行批准。
 
 ### 运行模式与输入源判定
 
@@ -364,6 +385,10 @@ Status: COMPLETED / SKIPPED_TOOL_UNAVAILABLE
 
 ## Phase 2.25：当前审美校准（强制，不可跳过）
 
+**用途分支（阶段仍执行）：** `purpose=logic-validation` 在本 Phase 记录审美分门
+`N/A — 逻辑验证`，继续核对可读性、清楚的状态/错误与操作反馈。仅 24/30 分门及固定五态
+有此例外；UI（含每个变体）完整执行下方校准，不可借逻辑用途降低 UI 门。
+
 **目标：** 保证 UI 不只符合 token，还符合当前一线 B2B SaaS / AI Native 产品审美。
 
 **必须读取：** `.claude/skills/office/html-prototype/references/current-aesthetic-rubric.md`
@@ -446,6 +471,10 @@ Current Aesthetic Score 和空间规划。
 
 **输出格式：用 Markdown 伪代码，不写真实 HTML。**
 
+本 Phase 前，逻辑用途完整读 `references/logic-validation.md`；非零 UI 对比完整读
+`references/ui-variant-comparison.md`，均到 FILE_END 并执行「Phase 2.75 骨架」。
+数量 0 沿用下方单骨架；仍等待真实用户确认。
+
 ```
 【骨架确认 · 页面结构】
 
@@ -500,7 +529,11 @@ AskUserQuestion：
 只有明确采用 framework 母版时才读其 README 并核验选定源依赖；生成到产出目录，源文件只读。
 CSS 可使用实际设计系统变量或本地样式；Tailwind 仅在实际选择使用时配置，不强制注入旧 token。
 
-**JS 只用于交互状态切换（Tab、弹窗、筛选模拟）。**
+**UI 的 JS 只用于交互状态切换（Tab、弹窗、筛选模拟）。** UI 对比另有原型目录内的
+共用 variant switcher，只切 rendering 子树，不改变真实应用的 route、auth 或数据读写。
+
+逻辑验证/非零 UI 对比逐字执行对应 reference 的「Phase 3 实现」；本节技术、状态、
+traceability 与权限门仍适用。
 
 ### 可追踪实现注释（强制）
 
@@ -523,7 +556,9 @@ CSS 可使用实际设计系统变量或本地样式；Tailwind 仅在实际选�
 
 ### 状态切换 harness（强制）
 
-所有原型状态必须用统一结构，便于自动检查和截图：
+UI 原型状态必须用统一结构，便于自动检查和截图；非零变体在每个 key 内分别具备此
+harness。逻辑验证的需求状态和动作按 `logic-validation.md` 承载，不强造固定五态；仍逐一
+实现真实状态/转换/错误并给浏览器操作证据，STATE 注释本身不是行为证据：
 
 ```html
 <nav data-prototype-state-switcher>
@@ -641,7 +676,7 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
     - 状态覆盖率
 ```
 
-**全量状态实现（必须，用状态切换 harness 切换）：**
+**UI 全量状态实现（必须，用状态切换 harness 切换；每个变体分别执行）：**
 - 默认态 / 空态 / 加载态 / 错误态 / 成功态
 - 空态不能是空白，必须有提示 + 引导操作
 
@@ -758,6 +793,8 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 
 如果任何 design decision 或 required state 未实现，QA 不得 PASS。
 
+按 SCHEMA 和对应 reference 的「Phase 4 覆盖记录」逐项记录用途覆盖及保持区。
+
 同时保留 §7「页面与交互位置映射」到 HTML 实现位置的对应清单：逐项核对交互职责、
 D/STATE、来源与 AC、约束、下游去向；已确认页库引用或 `reference=none` 如实记录。
 
@@ -777,6 +814,11 @@ node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs \
   "docs/prototype/YYYY-MM-DD-<topic>/index.html" \
   "docs/decisions/YYYY-MM-DD-<topic>-design-brief.md"
 ```
+
+上述默认命令保持单方案 UI 行为。逻辑用途传 `--purpose=logic-validation`；UI 对比传
+`--purpose=ui --ui-variants=N`，并与 HTML/spec 同值。不要用 `--mode` 代替 purpose。
+QA checker 的静态结果只证明参数/marker/声明条款；模块便携、按钮状态、布局差异、分数与
+内容守恒仍要真实操作和人工/独立审查，不能用 STATE 注释或自报分数当浏览器证据。
 
 如果 source_kind 不是 `design_brief`：
 - `standalone_mobile_prototype`：运行同一脚本时使用 `--mode=standalone-mobile`，并在
@@ -805,12 +847,15 @@ docs/prototype/YYYY-MM-DD-<topic>/screenshots/mobile.png    （Playwright 可用
 ```
 □ console errors = 0
 □ design decisions mapped = N/N
-□ states implemented ≥ 5（脚本仅计数 data-prototype-state 与 STATE: 标记；required AI states 是否均有 data-prototype-state 脚本不校验，须人工对照 design-brief 状态覆盖表交叉核对）
+□ UI states implemented ≥ 5（每变体分别核对基础五态及全部适用状态；普通 UI marker 计数不证明按钮状态，人工对照真实来源）
+□ logic-validation：仅固定五态与审美24/30为 N/A；需求状态/转换/错误/reset、可读性、骨架、traceability、真实浏览器和模块便携证据仍全部检查
 □ supplied design rules：PASS（已提供且可检验）或 N/A（没有实际规范/可自动条款）
 □ no external CDN
 □ no emoji icons
 □ prototype-spec.md exists
 ```
+
+逐字执行对应 reference 的「Phase 4.5 浏览器 QA」；自动截图不能代替具体语义证明。
 
 如果脚本 FAIL：
 - 能修复的，必须修复后重跑。
@@ -836,6 +881,9 @@ QA：{PASS / DONE_WITH_CONCERNS}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+按对应 reference 的「Phase 5 真实结果与回流」等待真实选择/反馈。
+后续归档、发送和生产实现各有独立权限门，原型完成不授权执行。
+
 AskUserQuestion：
 
 > 下一步？
@@ -854,8 +902,8 @@ AskUserQuestion：
 5. **场景B截图是强制输入** — 没有截图必须主动管用户要
 6. **场景C每处改动必须有 FIX-ID 注释**
 7. **每条 design-brief 决策必须有 DECISION 注释映射**
-8. **所有状态必须实现** — 空态不能是空白，状态必须有 data-prototype-state
-9. **Current Aesthetic Score ≥ 24/30**
+8. **所有需求状态必须实现** — UI 空态不能是空白，UI 状态用 data-prototype-state 统一 harness；逻辑验证按实际领域面板/状态及 logic-validation reference 承载，仍完整实现全部需求状态/转换/错误/reset
+9. **UI（含每变体）Current Aesthetic Score ≥ 24/30**；逻辑验证仅此分门和固定五态 N/A，其余 gate 不减
 10. **prototype-spec.md 交接块不可省略**
 11. **Phase 4.5 QA 必须运行**
 12. **承载方式不得擅自改写** — design-brief 写 standalone mobile prototype 时，不得调用 framework 母版
@@ -877,6 +925,7 @@ AskUserQuestion：
 - **下游约束**（≤5条）：后续交付审查必须读取的 HTML 文件路径、Aesthetic Score、状态覆盖情况
 - **风险**（≤3条）：未实现的状态、已知浏览器兼容问题
 - **产出路径**：prototype HTML 文件完整路径 + prototype-spec.md 路径
+- **用途与实际结果**：purpose/count/key、逻辑问题回答/提取证据或逐 key QA 与真实选择、未决问题；不得自动晋升或伪造用户选择
 
 **Step 2 — 更新 workflow-state.yaml：**
 

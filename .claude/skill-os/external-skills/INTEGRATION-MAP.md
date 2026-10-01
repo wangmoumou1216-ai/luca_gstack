@@ -172,3 +172,54 @@ Workflow({ name:'external-skill-scout', args:'<focus 领域>' })   # 对 vetting
 持续词汇默认 `docs/domain/glossary.md`，已有 owner 路径优先；P2 增量仅保护此持续文件及单文件版本例外。
 ADR 不增默认路径/第二套提议门；根 CONTEXT、framework/、共享项目 aliases、全局 config/hooks 不改。
 验证中：Codex actual live/A-B 待票；Claude live/A-B **DEFERRED_BY_USER**（静态接线不等于 Claude 运行通过）。
+
+## 2026-10-01 · Matt38 candidate content / native PENDING
+
+Source window `d81f3a183412e71a5b1e84ca21bc1a35eea03a60`: 30 adopt/port, 7 no independent package, 1 historical source. Only writing-workshop, loop-me, issue-triage and setup-wizard add entry bodies. The three writing rows retain separate provenance while sharing writing-workshop. Method ports are consumers of existing owners; the table does not register installed packages.
+
+M03 and M35 remain preservation. Content preparation does not establish native behavior or verified benefit. Personal tdd/Claude teach candidates await separately approved installation. Issue-triage does not establish tracker infrastructure or close its deferred gap.
+
+Frozen authority: `/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/FINAL-PLAN.md` and `/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/METHOD-COVERAGE-FINAL.json`; source bytes/watch evidence: `/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/SOURCE-READBACK.json`; content evidence: `/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json`.
+
+| ID | Actual source / watch directory | Unique consumer | Reuse | Source anchor / watch commit | Native |
+|---|---|---|---|---|---|
+| 01 | `ask-matt` / `skills/engineering/ask-matt` | office/Plan | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `e484a8095543718ced436b9b49a8160ed4554000` | PENDING |
+| 02 | `code-review` / `skills/engineering/code-review` | code-hygiene Mode D; code-review is the delegating facade | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `5c89081d4bbeb3d039a42093653f90bb698d780e` | PENDING |
+| 03 | `codebase-design` / `skills/engineering/codebase-design` | codebase-design (preservation) | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 04 | `diagnosing-bugs` / `skills/engineering/diagnosing-bugs` | U003 diagnosing-bugs | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 05 | `domain-modeling` / `skills/engineering/domain-modeling` | U003 domain-modeling | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 06 | `grill-with-docs` / `skills/engineering/grill-with-docs` | grilling→domain-modeling | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `447ca70872026d5b79d6073a546dac082117fed7` | PENDING |
+| 07 | `implement` / `skills/engineering/implement` | U003 implement→Plan/Orchestrator | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `697d4ce9742da558fd1ba6697c8e9775e2e302dd` | PENDING |
+| 08 | `improve-codebase-architecture` / `skills/engineering/improve-codebase-architecture` | U010 code-recon | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 09 | `prototype` / `skills/engineering/prototype` | U008 html-prototype | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 10 | `research` / `skills/engineering/research` | U003 quick-research | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 11 | `resolving-merge-conflicts` / `skills/engineering/resolving-merge-conflicts` | resolving-merge-conflicts; historical_removed source | preserve-historical | `6654f6b60cd9d5be8b54c6fafe44346dabeb3b76` / `daa01d8aa68ad5c61b68970ec2018d0ce9567be6` | PENDING |
+| 12 | `setup-matt-pocock-skills` / `skills/engineering/setup-matt-pocock-skills` | to-tickets/issue-triage/domain | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 13 | `tdd` / `skills/engineering/tdd` | U003 G/tdd | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 14 | `to-spec` / `skills/engineering/to-spec` | U003 to-spec→tech-spec | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `5c89081d4bbeb3d039a42093653f90bb698d780e` | PENDING |
+| 15 | `to-tickets` / `skills/engineering/to-tickets` | U003 to-tickets→task-plan projection | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 16 | `triage` / `skills/engineering/triage` | U006 issue-triage | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 17 | `wayfinder` / `skills/engineering/wayfinder` | U003 wayfinder→Plan owner | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 18 | `wizard` / `skills/engineering/wizard` | U007 setup-wizard | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 19 | `in-progress/claude-handoff` / `skills/in-progress/claude-handoff` | existing handoff/runtime | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 20 | `implement-spec` / `skills/engineering/implement-spec` | U010 Plan/Orchestrator | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `c612defa9e5cf9372262d0279eb124993ba77b71` | PENDING |
+| 21 | `in-progress/loop-me` / `skills/in-progress/loop-me` | U005 loop-me | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 22 | `pr` / `skills/engineering/pr` | U010 implement PR reference | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `e484a8095543718ced436b9b49a8160ed4554000` | PENDING |
+| 23 | `retro` / `skills/engineering/retro` | U010 code-hygiene environment-retro | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `a7d038f6bf7f01b516408e95e2fb56e0b338fa6f` | PENDING |
+| 24 | `setup-ts-deep-modules` / `skills/in-progress/setup-ts-deep-modules` | U010 TS recipe | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 25 | `writing-beats` / `skills/in-progress/writing-beats` | writing-workshop / beats | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 26 | `writing-fragments` / `skills/in-progress/writing-fragments` | writing-workshop / fragments | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `5c89081d4bbeb3d039a42093653f90bb698d780e` | PENDING |
+| 27 | `writing-shape` / `skills/in-progress/writing-shape` | writing-workshop / shape | install+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `5c89081d4bbeb3d039a42093653f90bb698d780e` | PENDING |
+| 28 | `git-guardrails-claude-code` / `skills/misc/git-guardrails-claude-code` | existing native guard/trust | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 29 | `migrate-to-shoehorn` / `skills/misc/migrate-to-shoehorn` | U010 G/tdd shoehorn recipe | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `697d4ce9742da558fd1ba6697c8e9775e2e302dd` | PENDING |
+| 30 | `scaffold-exercises` / `skills/misc/scaffold-exercises` | existing generic course/content owners | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `697d4ce9742da558fd1ba6697c8e9775e2e302dd` | PENDING |
+| 31 | `setup-pre-commit` / `skills/misc/setup-pre-commit` | U010 code-hygiene precommit recipe | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 32 | `productivity/grill-me` / `skills/productivity/grill-me` | existing grilling | no-independent-package | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `fcf0071560d32913c9d4f820e0d7ca467c881619` | PENDING |
+| 33 | `productivity/grilling` / `skills/productivity/grilling` | U003 grilling | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `85f83d3fde1d3a90d5c9a657f6998c79a6c37308` | PENDING |
+| 34 | `productivity/handoff` / `skills/productivity/handoff` | U003 handoff | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d28dfdc39beadc3142a33359b5cfa4765dcbd0bc` | PENDING |
+| 35 | `productivity/teach` / `skills/productivity/teach` | personal Claude teach candidate (preservation; formal install pending) | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 36 | `productivity/to-questionnaire` / `skills/productivity/to-questionnaire` | U009 research-kit questionnaire | merge-method | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+| 37 | `productivity/wait-what` / `skills/productivity/wait-what` | U003 wait-what | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `d80fa0f4ebe0c5714af0adf8670336065233ecc6` | PENDING |
+| 38 | `productivity/writing-for-agents` / `skills/productivity/writing-for-agents` | writing-for-agents owns the common prose method; skill-authoring owns structure/registration | refresh+adapt | `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` / `321658273cb1d20b76026717d027d505790106d4` | PENDING |
+
+All 38 stable source IDs retain their frozen decision and case IDs in `SOURCE-MAP.json` and this batch vetting entry. Watcher rows keep only its supported skill/plugin schema. The July batch-grill and no-direction deepening rejections remain in the historical registry; the current authorized directions are recorded separately in this batch vetting and H0 scope.

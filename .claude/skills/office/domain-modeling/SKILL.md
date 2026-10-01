@@ -17,8 +17,8 @@ metadata:
 # Domain Modeling — Luca adaptation
 
 Source: `mattpocock/skills`, `skills/engineering/domain-modeling`, MIT, path commit
-`321658273cb1d20b76026717d027d505790106d4`. This edition preserves active modeling,
-concrete scenarios and code cross-checks, not the upstream root-CONTEXT storage policy.
+`d81f3a183412e71a5b1e84ca21bc1a35eea03a60`. This edition preserves active modeling,
+concrete scenarios and code cross-checks, with upstream GLOSSARY storage mapped to the authorized local CONTEXT-FORMAT owner.
 
 ## 1. Bind scope and caller
 
@@ -41,9 +41,19 @@ are explicit. Unrelated UI/interface/module tasks remain with their existing own
 
 ## 2. Challenge and verify
 
-Read existing authorized vocabulary before proposing changes. Call out conflicting or
+Read existing authorized vocabulary before proposing changes. In a single domain use its one
+existing owner; in multiple domains follow the caller-authorized map to the relevant context owners
+and system/context ADRs. If ownership is ambiguous, ask; root framework CONTEXT is not product
+language. Missing vocabulary/ADR files do not block ordinary code exploration, nor authorize setup.
+Use established domain terms in hypotheses, test names, spec prose and ticket titles; surface a
+conflicting ADR explicitly with the reason to reopen it, rather than silently replacing a decision.
+Read relevant existing decisions before offering another ADR. Call out conflicting or
 overloaded terms; distinguish different concepts rather than picking a synonym for both.
-Propose precise terms and stress-test their relationships with concrete edge scenarios.
+Propose precise canonical terms and list avoided synonyms only after acceptance. For example,
+does “account” mean a Customer or a login User? Ask a concrete edge scenario: can one Customer have
+several Users, can a partial cancellation preserve the remaining Order, and which context owns the
+result? Invent scenarios to expose the choice, not answers to fill it. Keep definitions and accepted
+ownership/relationships separate from implementation, schema choices, spec or scratch notes.
 Check authorized code when a claim concerns current behavior; cite exact evidence or mark
 it unverified when unavailable. Separate facts, user statements and proposed model changes.
 Surface code/domain contradictions without silently replacing either side.
@@ -66,13 +76,13 @@ verified scope. Existing specific authority need not be asked again line by line
 Glossary: read [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md) through EOF before an authorized
 glossary patch. Prefer an existing explicitly authorized glossary owner. Otherwise the
 verified project's default is `docs/domain/glossary.md`, a specification document protected
-by skill-invariants P2, not governed memory. Create lazily after an accepted term; update
+by skill-invariants P2, not governed memory. Create lazily after an accepted term and exact path authorization; capture each resolved term immediately rather than batching; update
 in place, without dated copies or automatic migration of project CONTEXT. NO_PIN writes
 only an explicitly authorized framework artifact, never a downstream glossary or root
 CONTEXT. Keep unrelated content and existing scope boundaries intact.
 
 ADR: read `.claude/skill-os/extraction-bar.md` through EOF for the existing offer gate;
-do not duplicate its doctrine here. Only an explicit record request and an authorized
+the three simultaneous offer conditions (hard to reverse, surprising without context, real trade-off) remain owned there; routine or obvious reversible choices do not justify an ADR. Only an explicit record request and an authorized
 exact ADR artifact permit a patch; then read [ADR-FORMAT.md](./ADR-FORMAT.md) through EOF.
 No default ADR directory is introduced. Do not directly write decisions.md, person memory,
 semantic candidates or promoted facts through this skill.

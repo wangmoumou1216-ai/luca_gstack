@@ -186,6 +186,9 @@ gaps:
     status: deferred   # 2026-09-14 U-GOV-08：luca批准部分覆盖+延期，不报完整addressed。
     completed_scope: "2026-09-02 to-tickets bounded publication facade；task-plan仍是任务真值。"
     revisit_when: "用户选择具体外部tracker，并出现需验证真实连通/阻塞关系的项目任务。"
+    matt_2026_09_30_scope: "source16 issue-triage method and source15 bounded publication content prepared; real external tracker connectivity, native blocking relations and actual project use remain deferred. No infrastructure closure."
+    matt_2026_09_30_adoption_status: PENDING
+    matt_2026_09_30_evidence: "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json"
 
   # ── 2026-07-23 单点评估入口缺口（同日 plan 获批人裁开启并落地）──
   - id: GAP-punctual-candidate-eval
@@ -205,3 +208,6 @@ gaps:
     severity: low
     desired_capability_keywords: [decision questionnaire, stakeholder elicitation, async knowledge capture, grill the send]
     status: open   # 延迟采纳非拒绝。触发=第一次真实出现「luca 要把待决递给具名知识持有者」→ 取上游 to-questionnaire 全文 merge 吸收，届时按 SC-20260721-002 判据②裁卡型进 research-kit 正文 vs references 底料。证据锚:framework-audit/2026-07-23-mattpocock-update-consensus.md §A-D4
+    matt_2026_09_30_scope: "source36 decision-questionnaire content is merged into research-kit; F36 native recipient/need-back, actual Markdown and human decision evidence remains PENDING. No addressed claim."
+    matt_2026_09_30_adoption_status: PENDING
+    matt_2026_09_30_evidence: "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/implementation/U013/PRODUCTION-RECEIPT.json"

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Setup Wizard"
+  short_description: "为人工专属步骤生成确认后交付的 Bash 向导"
+  default_prompt: "使用 $setup-wizard，先确认服务目标、人工阶段、每项值的来源/分类/落点和精确脚本路径，再生成供我运行的向导。"
+policy:
+  allow_implicit_invocation: false
