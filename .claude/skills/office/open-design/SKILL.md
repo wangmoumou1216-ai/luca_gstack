@@ -2,7 +2,7 @@
 name: open-design
 preamble-tier: 3
 argument-hint: "[design-brief 路径 | 要给 OD 的方案 md(单点交接) | 'recover/拉回来' 回收产物]"
-version: 4.0.0
+version: 4.0.1
 description: |
   Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only）
   → 指定 OD 项目交接与 handoff-id/output-root scoped 读回。chain 消费 design-brief Packet；adhoc 忠实交接用户指定方案。
@@ -97,6 +97,7 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
 page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
 精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
+reference_only带实际结构化Packet时也核对附件source_ids存在，并在导出/fresh/readback重核；按Brief output-templates的文档声明边界识别结构化正文，识别后格式损坏不得降级。自由Markdown中的字段示例不算声明；无可机读索引时显式unverified-source-index，须设计/用户核对来源，不宣称机器完整覆盖。
 当前原件适配器只支持自包含 HTML；若原 CSP 未阻断的外置 CSS/JS/图片/字体依赖没有经审计后一并运输，
 组包必须以 `ORIGINAL_ASSETS_REQUIRED` 停住，不能只上传 HTML 或改写依赖来宣称原件完整。
 

@@ -70,4 +70,8 @@ The mandatory pre-commit repeat initially failed C24 (106PASS/1FAIL/0WARN/1DELEG
 
 The test now copies actual adapter/hooks/controller sources into an independent temporary Git fixture, verifies distinct commonDir, runs all hook/project commands there and uses a random fixture-owned failure SID. It removes the unconditional deletion of shared root session state. Candidate inactive/active both pass27/27; active outer witness/context bytes remain identical and all ten exact registered fixture directories were cleaned. Independent expert review passes6/6. Setup-exception cleanup is not certified; it may leave an owned temporary directory. This test-only fix does not weaken production guards or alter the frozen66 Skill/runtime/projection implementations. Evidence is in `evidence/design-brief-20261001/c24-isolation/` and the native C24 review. Normal mandatory commit hooks and remote CI remain required publication gates.
 
+## Completion audit and independent redteam supplement
+
+A separate cold redteam of the published6bc5136 source found a static pre-freeze joint-action gap and a structured reference-only attachment-index gap. The initial FAIL and a further malformed-envelope FAIL are retained. Corrective source, red/green/mutation evidence and independent closure are indexed by `2026-10-01-design-brief-completion.md` and `evidence/design-brief-20261001/completion-redteam/` (paths relative to framework-audit). Original unknown production/tool-trace claims are unchanged; see the supplement for current scoped results.
+
 <!-- FILE_END: 2026-10-01-design-brief-convergence.md -->

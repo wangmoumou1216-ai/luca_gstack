@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "design-brief-completion-redteam-closure-20261001",
+  "subject": {
+    "skill": "MR-004/005",
+    "topic": "design-brief-completion-redteam-closure",
+    "scene": "unknown",
+    "input_summary": "Cold read-only review of frozen nine-file corrective candidate against C1–C10; independent ordinary suites, exact seal/diff verification and malformed-envelope memory counterexamples.",
+    "output_paths": [
+      "/private/tmp/design-brief-20261001/completion-redteam/static-draft-fix/tree",
+      "/private/tmp/design-brief-20261001/completion-redteam/candidate-seal.json",
+      "/private/tmp/design-brief-20261001/completion-redteam/combined-candidate.diff",
+      "/private/tmp/design-brief-20261001/completion-redteam/completion-audit.draft.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 8,
+    "total": 10,
+    "findings": [
+      "FAIL C6 MAJOR: referencePrototypeSourceOptions at scripts/design-flow-handoff.mjs:957 downgrades declared structured Packets with corrupted opening JSON fences to unverified legacy prose. Independent probes with ABSENT-FACT return EXPORTED and simulated exact readback returns STAGED.",
+      "FAIL C9: malformed-envelope downgrade remains an in-scope MAJOR and blocks publication.",
+      "WARN: A1 full production invocation and Q-03 original complete prompt/tool traces remain UNKNOWN; live OD and rendered visual/interaction outcomes are not certified. Full repository publication gate remains pending."
+    ]
+  }
+}

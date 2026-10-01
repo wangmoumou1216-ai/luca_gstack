@@ -1,0 +1,46 @@
+PASS: catalog CLI validates source hash and exact region anchors
+PASS: lexical reasons, explicit empty result and sixth-page extension without route edits
+PASS: confirmed page/region, explicit no-reference branches, pending and stale guards
+PASS: zoom/scroll conversion and screenshot mutation PASS -> STALE_SCREENSHOT/BOX_BOUNDS -> PASS
+PASS: real source containment -> forged filters/pagination rejected -> restored confirmed
+PASS: old five references preserved; six original copies use the original adapter, not rewritten carriers
+NOT RUN: original desktop source audit (use --audit-originals)
+PASS: early adaptation validates full source/state evidence, ambiguity, unsupported capability and stale revisions without freezing/adopting
+PASS static draft joint gate: same module modify/preserve -> CARRIER_ACTION_TARGET_REUSED
+PASS static draft joint gate: parent modify/child preserve -> CARRIER_ACTION_OVERLAP
+PASS static draft joint gate: slot add/ancestor preserve -> CARRIER_ACTION_OVERLAP
+PASS static draft joint gate: same module distinct changes -> CARRIER_ACTION_TARGET_REUSED
+PASS: static adaptation retains NEEDS_CONTEXT conflicts, rejects illegal targets, deduplicates source/states, permits sibling slots and early preserve-only; final binding still requires change
+PASS: model judgments need real Packet/catalog/target evidence; uncertainty, ambiguous locations and unsupported states fail closed
+PASS: v2 carrier contracts bind frozen inputs, source identity, module graph, lifecycle and registered-anchor invariants
+PASS: heading container, void elements, missing ancestor, equal-node and reversed containment
+PASS mutation: schema version -> SCHEMA_INVALID -> restored PASS
+PASS mutation: wrong scope -> SCHEMA_INVALID -> restored PASS
+PASS mutation: retired ID -> PAGE_ID_REUSED -> restored PASS
+PASS mutation: duplicate page ID -> PAGE_ID_REUSED -> restored PASS
+PASS mutation: duplicate region ID -> REGION_ID_REUSED -> restored PASS
+PASS mutation: missing parent -> REGION_PARENT -> restored PASS
+PASS mutation: parent cycle -> REGION_CYCLE -> restored PASS
+PASS mutation: missing anchor -> REGION_ANCHOR -> restored PASS
+PASS mutation: anchor selector injection -> REGION_ANCHOR -> restored PASS
+PASS mutation: heading ancestor bound -1 -> SCHEMA_INVALID -> restored PASS
+PASS mutation: heading ancestor bound 1.5 -> SCHEMA_INVALID -> restored PASS
+PASS mutation: heading ancestor bound 5 -> SCHEMA_INVALID -> restored PASS
+PASS mutation: source hash -> SOURCE_HASH -> restored PASS
+PASS mutation: source boundary ../outside.html -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source boundary framework/../../outside.html -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source boundary framework/../docs/private.html -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source boundary /etc/passwd -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source boundary docs/private.html -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source boundary framework\list.html -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source boundary .claude/workflow-state.html -> SOURCE_SCOPE -> restored PASS
+PASS mutation: source symlink -> SOURCE_SYMLINK -> restored PASS
+PASS: project display paths and fake anchors refused; original sources restored
+PASS: heading anchor exactness and ambiguity guard restored
+PASS guard mutation: confirmation guard bypass -> named assertion FAIL -> restored suite PASS
+PASS guard mutation: stale source guard bypass -> named assertion FAIL -> restored suite PASS
+PASS guard mutation: early ambiguity guard bypass -> named assertion FAIL -> restored suite PASS
+PASS guard mutation: static draft joint gate bypass -> named assertion FAIL -> restored suite PASS
+PASS guard mutation: source containment guard bypass -> named assertion FAIL -> restored suite PASS
+
+EXIT_STATUS=0

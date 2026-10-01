@@ -1,0 +1,51 @@
+PASS: stdin / eval / file / non-file launcher imports; direct CLI still executes
+PASS: chain / adhoc / UX preserve the original source bytes, decisions and states
+PASS: declined / no-match metadata excludes candidates; pending and missing source stop
+PASS: confirmed reference requires a separate caller-checked message and screenshot witness
+PASS: regions / converted boxes, safe transport bytes, preview versions and existing source scope guards
+PASS: explicit tool / project / write grant; Claude Design export and bound recover stay independent
+PASS: readback checks exact project, complete brief, provenance and every actual attachment byte
+PASS: immutable prototype byte evidence, source indexing, hash participation and complete carrier readback
+PASS: explicit visual refinement, unchanged business DOM/global CSS/assets, exact module boundary and semantic review separation
+PASS: reference-only existing source IDs, truthful legacy metadata, exact immutable bytes and fresh source revalidation
+PASS: V2 carrier namespace/hash/TAC/adoption/readback/recovery gates and reference-only separation
+PASS mutation: caller confirmation guard -> confirmation record alone must not authorize a reference FAIL -> restored PASS
+PASS mutation: no-reference attachment exclusion -> no-reference must not attach a rejected or weak candidate FAIL -> restored PASS
+PASS mutation: V2 exact bundle-hash authorization -> grant binds the exact bundle hash FAIL -> restored PASS
+PASS mutation: runtime capability receipt -> Codex cannot stage without a caller/runtime success receipt FAIL -> restored PASS
+PASS mutation: TAC applicability coverage -> scoped applicable facts cannot disappear from coverage FAIL -> restored PASS
+PASS mutation: preserve invariant recovery -> mechanical PASS requires all preserve invariants FAIL -> restored PASS
+PASS mutation: unauthorized DOM boundary -> unrequested structure outside authorized targets must not change FAIL -> restored PASS
+PASS mutation: deterministic TAC projection -> contradictory readable TAC cannot bypass the exact projection FAIL -> restored PASS
+PASS mutation: TAC closed fields -> a matching Markdown projection cannot authorize extra TAC instruction fields FAIL -> restored PASS
+PASS mutation: compatible carrier hash positions -> two supported carrier hash positions cannot contradict each other FAIL -> restored PASS
+PASS mutation: assessed fact/action projection identity -> TAC cannot swap fact/action mappings after match assessment FAIL -> restored PASS
+PASS mutation: scope original evidence -> scope basis must come from the actual frozen Packet FAIL -> restored PASS
+PASS mutation: scope exclusion cannot authorize modification -> excluded facts cannot simultaneously authorize a modifying projection FAIL -> restored PASS
+PASS mutation: frozen scope cannot be overridden -> TAC change coverage cannot override an explicit frozen scope exclusion FAIL -> restored PASS
+PASS mutation: actual target change -> comment or whitespace alone cannot satisfy a modify action FAIL -> restored PASS
+PASS mutation: prototype existing source IDs -> prototype attachments require safe complete bytes and existing frozen source IDs FAIL -> restored PASS
+PASS mutation: prototype closed evidence index -> prototype metadata cannot contradict the manifest purpose or source index FAIL -> restored PASS
+PASS mutation: reference prototype actual frozen IDs -> reference-only structured Packet attachments require IDs from the actual frozen body, not caller claims FAIL -> restored PASS
+PASS mutation: reference prototype fresh source check -> reference freshness rechecks actual frozen IDs even when false metadata and all bundle hashes agree FAIL -> restored PASS
+PASS mutation: reference structured declaration downgrade -> a declared structured reference Packet cannot downgrade malformed JSON, envelope or canonical bytes to legacy prose FAIL -> restored PASS
+PASS mutation: refine separate structural handoff -> refinement and structural changes require separate explicit handoffs FAIL -> restored PASS
+PASS mutation: refine business DOM preservation -> refine cannot change business text, data hooks or field values FAIL -> restored PASS
+PASS mutation: refine exact text preservation -> refine must preserve exact text whitespace, textarea/pre data and default input values FAIL -> restored PASS
+PASS mutation: refine supported CSS changes -> unsupported original CSS must remain exact FAIL -> restored PASS
+PASS mutation: refine effective CSS values -> overridden or equivalent CSS declarations cannot satisfy static refinement FAIL -> restored PASS
+PASS mutation: refine important cascade -> an important declaration cannot be overridden by a later normal declaration FAIL -> restored PASS
+PASS mutation: refine unsupported shorthand conflict -> unsupported shorthands cannot mask an ineffective static CSS change FAIL -> restored PASS
+PASS mutation: refine opaque text-decoration default refusal -> opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority FAIL -> restored PASS
+PASS mutation: refine opaque logical alias default refusal -> opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority FAIL -> restored PASS
+PASS mutation: refine unknown future property default refusal -> opaque text-decoration, logical sizing and unknown future properties fail closed regardless of order or priority FAIL -> restored PASS
+PASS mutation: refine class-only refusal -> overridden or equivalent CSS declarations cannot satisfy static refinement FAIL -> restored PASS
+PASS mutation: refine exact visual scope -> refine cannot restyle an unauthorized parent or preserved module FAIL -> restored PASS
+PASS mutation: refine immutable global CSS -> refine must preserve global CSS byte-for-byte, even when the visual result may be equivalent FAIL -> restored PASS
+PASS mutation: refine immutable external assets -> refine must preserve external CSS asset bytes FAIL -> restored PASS
+PASS mutation: readback inventory cross-check -> output bytes must be present in the complete post-inventory FAIL -> restored PASS
+PASS mutation: immutable verification cache binding -> mutable verification contracts must stay bound to immutable bytes FAIL -> restored PASS
+PASS mutation: missing attachment readback -> missing actual attachment bytes cannot be reported as STAGED FAIL -> restored PASS
+PASS mutation: competing Packet scopes -> accepted contradictory fact scope FAIL -> restored PASS
+PASS mutation: paragraph auto-close -> accepted target escape FAIL -> restored PASS
+PASS mutation: old entry-point check -> stdin import FAIL -> restored PASS

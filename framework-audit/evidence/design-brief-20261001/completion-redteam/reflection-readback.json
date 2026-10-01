@@ -1,0 +1,21 @@
+{
+  "status": "ACTUAL_APPEND_RECONCILED_NOT_CONTROLLED_EXECUTION",
+  "cause": "Preview wrapper replaced argv before preserving --preview-store; canonical writer appended the authorized reflection early. Controller prepare then failed before persisting a required witness.",
+  "before_sha256": "9ac78608679b8afef106a9eb4ada8c25584fc076840a4cb25dc92b7a3cf364fa",
+  "after_sha256": "499569be405455f32a175fec6c0bec8d5c7999032799786ed216d19bb8f2c749",
+  "added_records": 1,
+  "record": {
+    "id": "O-20261001-001",
+    "time": "2026-10-01T21:21:46+08:00",
+    "skill": "redteam",
+    "source": "self_reflection",
+    "severity": "high",
+    "message": "独立 completion 红队发现冻结前联合范围冲突、reference_only实际来源ID检查缺口及结构化声明格式识别漏洞。",
+    "problem": "逐项合法不保证联合动作兼容；文字模式不能证明完整JSON文档的语义类型；现有绿色案例并未覆盖独立反例。",
+    "correction": "复用最终联合动作oracle，在实际不可变正文中检查既有ID，以完整JSON文档解析区分声明与散文；保留FAIL、红绿与变异证据，发布等独立关闭，不把fixture提升为生产认证。"
+  },
+  "rules_unchanged": true,
+  "semantic_memory_promotion": false,
+  "publication_scope": "local observation stays unstaged",
+  "corrective_action": "Preserve actual historical event; fix wrapper preview routing, do not rerun or relabel prior execution."
+}

@@ -1,0 +1,273 @@
+{
+  "scope": "66 exact implementation/projection paths: 8 corrective changes, 58 baseline paths unchanged; fullproduction and liveOD are not certified.",
+  "files": [
+    {
+      "path": "scripts/test-page-context.mjs",
+      "sha256": "c0946070435a656ff8910e4c53740ac696e252b6a2c984cbbcb55d4ec1d0be8d"
+    },
+    {
+      "path": "scripts/test-design-flow-handoff.mjs",
+      "sha256": "1e66d0436517412d49664f00fadf0608ce2dfcc845317048e6b1c23c343a6dfd"
+    },
+    {
+      "path": "scripts/test-original-real-templates.mjs",
+      "sha256": "0b2bf99a5a7f2f52e3da3a78973555ffadf4644ef263427e403d290a072ee562"
+    },
+    {
+      "path": "scripts/check-skill-scene-coverage.py",
+      "sha256": "6dc9c9952cfb3702f0ca16a4614789b47048b96909cb3c46a1b9307053d67fa8"
+    },
+    {
+      "path": "scripts/page-context.mjs",
+      "sha256": "ea9a82396a1c4606d54353b7a34c46e151745e85e38b6c99c17aefd5e5aa3402"
+    },
+    {
+      "path": "scripts/original-template-edits.mjs",
+      "sha256": "7ed0d711a709a31cdd37cae992c4fbc938042319b26d103cd7fb4df18b9a1ac4"
+    },
+    {
+      "path": "scripts/test-original-template-edits.mjs",
+      "sha256": "fe3829b0b7179c9c5180f8a277543b7b8a7c35e158e405228d624495e5f5c2d3"
+    },
+    {
+      "path": "scripts/design-flow-handoff.mjs",
+      "sha256": "8ef0acbbe4e04d293a36f627b137714117f32f84dc5995667d915069e8e9fdb8"
+    },
+    {
+      "path": "scripts/original-copy-handoff.mjs",
+      "sha256": "a957ba7114b1f742b6fee6d4a4956f54e7fc7fbfd718755f9281f002acb75b76"
+    },
+    {
+      "path": "scripts/test-original-copy-handoff.mjs",
+      "sha256": "2c10c81e139c560cfc2c421705aa7be40fc7bf94216ae57cb19362d469a23e35"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "sha256": "501c2c61712b32178ea204d65346043fe5e1d8f45350e7e86911ed7df6b92edb"
+    },
+    {
+      "path": ".claude/agents/preflight-agent.md",
+      "sha256": "469eed0c4567caca7ab75f8b2a2d4283d2a619312b6e2799c5dba838e621d593"
+    },
+    {
+      "path": ".claude/skill-os/optional-workflow-graph.yaml",
+      "sha256": "8a266250a08ac6f939162430a5c131baf534e72801703d616dfa45e071fbf6f4"
+    },
+    {
+      "path": ".claude/skill-os/skill-routing-map.yaml",
+      "sha256": "0fb506d8899790f45d410eb82ae95d5bf22e2c3e9afadbbafa812f620f721441"
+    },
+    {
+      "path": ".claude/skill-os/input-modes.yaml",
+      "sha256": "40b3312de1c3756e1b1c58129c9922c7d5884d5ae196679acd7dea4a15ed8300"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SCHEMA.md",
+      "sha256": "0069d3e9e999ba25db5f7b53fd4bce4ddb8c8e586585e70b1fd82c999bd7cb20"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "sha256": "8612f7a4ff3c0495f6fcefb299c63456bee0afe4d25a25fdd97f382b5690aa1b"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "sha256": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078"
+    },
+    {
+      "path": ".claude/skills/office/references/office-wizard.md",
+      "sha256": "f739c77b23e2b7d3782ae4be5d5e7d0b35c388a4936a1025287671ac0ebb5c85"
+    },
+    {
+      "path": ".claude/skills/office/open-design/SKILL.md",
+      "sha256": "57c8f473696c6eed59d606fd59e8801f0dc457ac54151edd94628c6ff813f382"
+    },
+    {
+      "path": ".claude/skills/office/task-plan/SKILL.md",
+      "sha256": "519d80ccc1e3cfb547e7be6db33ccd7990e9e6f284a2966eb5610061ef068890"
+    },
+    {
+      "path": ".claude/skills/office/tech-spec/SKILL.md",
+      "sha256": "10b909c4354365f9c4cb96a902aa81365a0c8c71ab31b9af41970aba9590689c"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/references/input-contract.md",
+      "sha256": "77f3ad68875c94bc475f9e8017cd14afdbcf4f2427e3d7e475947ffecbad128c"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/references/output-templates.md",
+      "sha256": "c83923dcec8513cc6b1f3b4c155cd15f051cfe1eaf4db8a4fcfdc12deb83de16"
+    },
+    {
+      "path": ".claude/skill-os/generated/skill-catalog.md",
+      "sha256": "19077e96e8803ccf561ca480ffb66ffabfe4e16a22779dbc3ee4673623e24a2d"
+    },
+    {
+      "path": ".claude/skill-os/runtime/page-context.md",
+      "sha256": "772a63116b2be445602d109671abd2361ce55a2a2666201703d4bc15ddb8f5bc"
+    },
+    {
+      "path": ".claude/skill-os/page-library/schema.json",
+      "sha256": "87893903ff88e82d3e520f090913f9287cd37ba7199ee92f441481f65f8d95a7"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/html-prototype.json",
+      "sha256": "a004a7a773a17b0631be5f9aa78a182cf69ca56fc37bd55446e4a006fbd199f6"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "sha256": "a165d400e0bae1bc33270395b6f9eb5bd1c51ac49ed11e3eec35d1f81ef4bd6f"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-tickets.json",
+      "sha256": "7d0fe262153fc97464fd2db93b0c19ad3c8aef62ba4803005943d3760ae4accd"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/handoff.json",
+      "sha256": "86bf0715bce5a0cc28b2e6554055c3f64d50e55259df5a1491151e27f0404e2a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "sha256": "f81746894462f5863a17ee7ae6615c37b3e0a138ef3754595182457777291f4d"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/retro.json",
+      "sha256": "689df0b8fc2578c9fdacc5ef7c41b9d7db8e9de8e9b621665e86b861d903ab5b"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/open-design.json",
+      "sha256": "bfb827d9d5e64e025f376ee200465860be7ac98cd20b3e9e3a65921e3fdb3972"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/implement.json",
+      "sha256": "43b173ee14e43cfe8badebd6a33171214cc9de4ea418c51f079cc8719f9caa2a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "sha256": "9d1a8ac7121d04079c529657fd77c54044ddf2a37af1073bc3f3ace4577b7e10"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/quick-research.json",
+      "sha256": "e4d50bdf087db2f089235db11155dc52c091f1c508859535356879031f43d09c"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/brainstorm.json",
+      "sha256": "35fb8c669c47da45401a669043db9ad81e0bf89938b2a811e505029efc215073"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/grilling.json",
+      "sha256": "061bf16909bf88feb7a27c46fd04a580ad5249b6ae50785e0d65d62aa7564ced"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "sha256": "3d5a410048f48b6ef6b2e91a59f672024140e3273f77b386c57620ec1df5c68d"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wait-what.json",
+      "sha256": "1ecf221a648f8f6975cd06a6af8d7247db27f4d677da55c93c3120138ff5341a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/deepresearch.json",
+      "sha256": "0921fec9d0e23e95ab2940a49a5c6a23f6ac6271679989a5e16ebed807aeb21b"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-spec.json",
+      "sha256": "4237faefaa32dbe0e94cc9ae621ebca254825f731ac7430d96b4686ce6e37a0e"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-writing.json",
+      "sha256": "5e9fa2a535a52bb3121d8a2ac67e9728b50052e4b4c7f579bc78d906d15e85bf"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/research-kit.json",
+      "sha256": "40fd58293937cdba40a980f291aac76407219647802707caebdbb4202015648f"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/evals.json",
+      "sha256": "d5ff73e39dbd41ba59449d750918b111d7779144a5c4189fa74e7e02574223c3"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/magicpath.json",
+      "sha256": "57eb801ae0293d0d5de8d628d96a2ed6af5d536d854a1522bc72db17281f3396"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/idea.json",
+      "sha256": "1813a071a4b49833cec58d0de401cc7db4b823d77361228ab99c1603c86e3fbd"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/task-plan.json",
+      "sha256": "1b2904a00a8678a92d2cf9f9031a6595ba9272377c0d2324e77a715d98908cc0"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-audit.json",
+      "sha256": "fe8ec9c2851d5c5047dab18a68328a8eab8847730ad3cbe502c61fb58299c5f4"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/domain-modeling.json",
+      "sha256": "5e36a1b385d256370c72cd64ab2ce863c2000b903fa67bc2ee7df0f579d11a6a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "sha256": "d05ce8bc5d6e494aa9d5cbc88526155cd7e23a7d5d5ddf1615bd10793d57d642"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "sha256": "a1140a247a0fa8498bf50f01191d01cf8d537c2bf0a4b49cebbfe5256650e64a"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/redteam.json",
+      "sha256": "ca226639ec6d72724639706fbf0b57f4b30abaaaccfe2c06be9290433ef05efc"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "sha256": "7850fe1adf4c77198250b3688f3548119324f4a136466a18290c4db0b3a079f0"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/codebase-design.json",
+      "sha256": "6c04a49240968bc1d5b7327663a567bd7b2f170ec3a0ac4c24fe2c6e2929e968"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wayfinder.json",
+      "sha256": "d7478c499b97fa0a2fde3210eb964c312391c5fc6f2c83705d9f70463767fed2"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/auto.json",
+      "sha256": "1186b818b21f4d8a51cf79186b0ce803def7a5b731516dd0192e55f4f4ece162"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-hygiene.json",
+      "sha256": "1fc73e0fd6796dc6dc3f613607261d86a9927a4827794e26436ae4d0097b95d1"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-research.json",
+      "sha256": "8cf25357955553475753781ec26193d7fbd3b0c50216d1f38c98a9504bbcbae0"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-recon.json",
+      "sha256": "d99f44f454d150aef5a3646703c491e5ef1437c67833d330baab8f19bc3fb953"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-review.json",
+      "sha256": "9d471d321e7f5344573c5150de2a9c4fcc08bed487539facfaf26b250ec6890c"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/tech-spec.json",
+      "sha256": "cccba84e66b61b565d45ec37664e0759d11c9bd4664028f0851937b14b297cf6"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/figma-demo.json",
+      "sha256": "69dca4995c4e1fdf25c627ab15d1669ae43d7d8b82a80133ee23c320db005566"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/compare.json",
+      "sha256": "5cbae327beb075796378ae252dd25603c487543a25c08b564130fe31e203fb3b"
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/design-brief.json",
+      "sha256": "13e00da8f46a9b89a751b77e2049a20845dcb98f2f013ec33a7a4c72fdb643ee"
+    }
+  ],
+  "source_requirements": "/private/tmp/design-brief-20261001/plan.md",
+  "evidence_root": "/Users/luca/.codex/worktrees/9343/luca_gstack/framework-audit/evidence/design-brief-20261001",
+  "baseline_head": "6bc51362b1457bea3cba97c098377bd93c1e19fa",
+  "candidate_seal": "candidate-seal-r3.json"
+}

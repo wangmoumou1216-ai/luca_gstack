@@ -229,6 +229,78 @@ try {
   assert.equal(prepared.binding_sha256, computeBindingHash({ frozen_packet: carrierDraft.frozen_packet, binding: carrierDraft.binding }));
   assert.equal(prepared.contract.module_contract_hash, carrierPage.module_contract_hash);
   await assert.rejects(validateCarrierBindingDraft(carrierCatalog, carrierDraft, { root }), { code: 'PACKET_EVIDENCE_REQUIRED' });
+  const staticAdaptationFor = (placements, cat = carrierCatalog, sources = placements.map((placement, index) => ({ id: `REQ-JOINT-${index + 1}`, text: `Fixture requirement: ${placement.action} at ${placement.target_id}.`, required_states: ['default'] }))) => {
+    const entry = cat.pages[0];
+    return {
+      sources,
+      draft: {
+        ...adaptation, source_revision_sha256: computeDesignSourceRevision(sources), catalog_sha256: computeCatalogHash(cat),
+        reviewed_source_ids: sources.map(item => item.id),
+        judgments: sources.flatMap((item, index) => item.required_states.map(state_id => {
+          const placement = placements[index];
+          const target = [...entry.modules, ...entry.slots, ...entry.regions].find(target => (target.module_id ?? target.slot_id ?? target.region_id) === placement.target_id);
+          return { ...adaptation.judgments[0], source_id: item.id, excerpt: item.text, state_id, action: placement.action, location: { target_id: placement.target_id }, target_excerpt: target?.intent ?? 'Unknown target' };
+        }))
+      }
+    };
+  };
+  const staticDraftFailures = [];
+  for (const [name, placements, code] of [
+    ['same module modify/preserve', [{ action: 'modify', target_id: 'toolbar' }, { action: 'preserve', target_id: 'toolbar' }], 'CARRIER_ACTION_TARGET_REUSED'],
+    ['parent modify/child preserve', [{ action: 'modify', target_id: 'root' }, { action: 'preserve', target_id: 'toolbar' }], 'CARRIER_ACTION_OVERLAP'],
+    ['slot add/ancestor preserve', [{ action: 'add', target_id: 'toolbar-slot' }, { action: 'preserve', target_id: 'root' }], 'CARRIER_ACTION_OVERLAP'],
+    ['same module distinct changes', [{ action: 'modify', target_id: 'content' }, { action: 'remove', target_id: 'content' }], 'CARRIER_ACTION_TARGET_REUSED']
+  ]) {
+    const { draft, sources } = staticAdaptationFor(placements);
+    const finalDraft = structuredClone(carrierDraft);
+    finalDraft.binding.actions = placements.map((placement, index) => ({ action_id: `C-${index + 1}`, action: placement.action, [placement.action === 'add' ? 'slot_id' : 'module_id']: placement.target_id }));
+    finalDraft.binding.match_assessment = assessmentFor(carrierCatalog, finalDraft.binding, 'default');
+    await assert.rejects(validateCarrierBindingDraft(carrierCatalog, finalDraft, { root, packetBody }), { code });
+    try {
+      await assert.rejects(validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources }), { code });
+      console.log(`PASS static draft joint gate: ${name} -> ${code}`);
+    } catch (error) {
+      staticDraftFailures.push(`${name}: ${error.message}`);
+      console.log(`FAIL static draft joint gate: ${name} -> ${error.message}`);
+    }
+    draft.decision = 'needs_context';
+    const unresolvedDraft = await validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources });
+    assert.equal(unresolvedDraft.status, 'NEEDS_CONTEXT');
+    assert.equal(unresolvedDraft.binding_allowed, false);
+    assert.equal(unresolvedDraft.execution_allowed, false);
+  }
+  for (const [placements, code] of [
+    [[{ action: 'modify', target_id: 'imagined' }], 'MATCH_TARGET_EVIDENCE'],
+    [[{ action: 'modify', target_id: 'toolbar-slot' }], 'CARRIER_ACTION_FORBIDDEN'],
+    [[{ action: 'add', target_id: 'canvas' }], 'UNKNOWN_SLOT']
+  ]) {
+    const { draft, sources } = staticAdaptationFor(placements);
+    draft.decision = 'needs_context';
+    draft.judgments[0].state_status = 'unknown';
+    try {
+      await assert.rejects(validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources }), { code });
+    } catch (error) { staticDraftFailures.push(`${code}: ${error.message}`); }
+  }
+  for (const placements of [
+    [{ action: 'add', target_id: 'root-slot' }, { action: 'preserve', target_id: 'content' }],
+    [{ action: 'preserve', target_id: 'content' }]
+  ]) {
+    const { draft, sources } = staticAdaptationFor(placements);
+    assert.equal((await validateAdaptationDraft(carrierCatalog, draft, { root, sourceItems: sources })).status, 'ADAPTATION_READY');
+  }
+  const repeatedCatalog = structuredClone(carrierCatalog);
+  repeatedCatalog.pages[0].states.push('empty');
+  repeatedCatalog.pages[0].state_support.push({ ...repeatedCatalog.pages[0].state_support[0], state_id: 'empty' });
+  repeatedCatalog.pages[0].module_contract_hash = computeModuleContractHash(repeatedCatalog.pages[0]);
+  const repeatedSources = [1, 2].map(index => ({ id: `REQ-REPEATED-${index}`, text: 'Add the same toolbar control in default and empty states.', required_states: ['default', 'empty'] }));
+  const repeated = staticAdaptationFor([{ action: 'add', target_id: 'toolbar-slot' }, { action: 'add', target_id: 'toolbar-slot' }], repeatedCatalog, repeatedSources);
+  assert.equal((await validateAdaptationDraft(repeatedCatalog, repeated.draft, { root, sourceItems: repeated.sources })).status, 'ADAPTATION_READY', 'multiple source/state judgments for one action must be deduplicated');
+  const preserveOnlyBinding = structuredClone(carrierDraft);
+  preserveOnlyBinding.binding.actions = [{ action_id: 'C-01', action: 'preserve', module_id: 'content' }];
+  preserveOnlyBinding.binding.match_assessment = assessmentFor(carrierCatalog, preserveOnlyBinding.binding, 'default');
+  await assert.rejects(validateCarrierBindingDraft(carrierCatalog, preserveOnlyBinding, { root, packetBody }), { code: 'CARRIER_NO_CHANGE' });
+  assert.deepEqual(staticDraftFailures, [], 'static draft joint gate must reject all conflicts and illegal targets');
+  console.log('PASS: static adaptation retains NEEDS_CONTEXT conflicts, rejects illegal targets, deduplicates source/states, permits sibling slots and early preserve-only; final binding still requires change');
   for (const [change, code] of [
     [assessment => { assessment.catalog_sha256 = '0'.repeat(64); }, 'STALE_MATCH_CATALOG'],
     [assessment => { assessment.frozen_packet.source_packet_sha256 = '0'.repeat(64); }, 'STALE_MATCH_PACKET'],
@@ -429,6 +501,7 @@ try {
       ['confirmation guard bypass', 'shape(record, schema.$defs.selection);', '// mutation: bypass selection shape', 'selection actor must be user'],
       ['stale source guard bypass', 'if (page.source_hash !== record.source_hash)', 'if (false)', 'stale source selection must require reconfirmation'],
       ['early ambiguity guard bypass', "if (record.decision === 'ready' && unresolved)", 'if (false)', 'Missing expected rejection'],
+      ['static draft joint gate bypass', 'assertActionsDoNotOverlap(graph, [...staticActions.values()], { allowPreserveOnly: true });', '// mutation: bypass static draft joint action check', 'static draft joint gate must reject all conflicts'],
       ['source containment guard bypass', 'if (ancestor !== expectedParent)', 'if (false)', 'source parent must actually contain its child region']
     ]) {
       assert.equal(original.split(target).length, 2, `unique mutation seam: ${name}`);
