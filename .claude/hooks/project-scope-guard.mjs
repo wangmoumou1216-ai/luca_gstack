@@ -1170,6 +1170,7 @@ function main() {
         const controlled = discoverCheckoutControlState(realpathSync(gstackRoot));
         if (controlled.kind === 'invalid') throw new Error(`controlled state invalid: ${controlled.reason}`);
         if (controlled.kind === 'required') {
+          if (!controlled.current || controlled.current.witness.native_owner) throw new Error('project selection requires the checkout-exclusive legacy lane; native concurrent claims cannot authorize shared selection');
           const pending = state.selection?.pending || state.switch;
           const exactPending = pending?.operation === requested.operation && pending?.target === requested.target;
           const authorizationMode = exactPending && ['RUNNING', 'CREATING'].includes(pending?.status)

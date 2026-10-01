@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, realpathSync } from 'node:fs';
+import { existsSync, realpathSync, readdirSync, lstatSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { spawn } from 'node:child_process';
+import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import {
   RECEIPT_STATES,
@@ -16,6 +16,19 @@ import {
   discoverControlState,
   loadManifestFile,
   manifestSha256,
+  manifestsConflict,
+  claimPaths,
+  pathsConflict,
+  readToolReservations,
+  readNativeScopeIndex,
+  setNativeScopeState,
+  blockedScopeConflicts,
+  writeToolReservations,
+  nativeScopeIndexPath,
+  validateNativeScopeIndex,
+  repoRealpath,
+  privateDirectory,
+  inspectStateDirectory,
   parseCli,
   readJson,
   sha256Bytes,
@@ -25,6 +38,8 @@ import {
   validateBoundRequired,
   witnessAnchor,
 } from './controlled-change.mjs';
+
+import { consumeNativeClaim, verifyReservationCompleted, withControlLock } from './controlled-native-owner.mjs';
 
 const GENERATION_RE = /^[A-Za-z0-9][A-Za-z0-9-]{7,127}$/;
 
@@ -47,59 +62,6 @@ function statePaths(manifest) {
     active: `${dir}/active-context.json`,
     receipt: `${dir}/receipt.json`,
   };
-}
-
-const PREPARE_LOCK_HELPER = String.raw`
-import fcntl, os, sys
-root = sys.argv[1]
-fd = os.open(root, os.O_RDONLY)
-try:
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        sys.stderr.write("repo-scoped prepare lock is already held\n")
-        sys.exit(73)
-    sys.stdout.write("LUCA_CONTROLLED_FLOCK_READY\n")
-    sys.stdout.flush()
-    sys.stdin.buffer.read()
-finally:
-    os.close(fd)
-`;
-
-function acquirePrepareFlock(root) {
-  return new Promise((resolveLock, rejectLock) => {
-    const child = spawn('/usr/bin/python3', ['-c', PREPARE_LOCK_HELPER, root], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    let stdout = '';
-    let stderr = '';
-    let ready = false;
-    child.stdout.on('data', (chunk) => {
-      stdout += chunk;
-      if (!ready && stdout.includes('LUCA_CONTROLLED_FLOCK_READY\n')) {
-        ready = true;
-        resolveLock(child);
-      }
-    });
-    child.stderr.on('data', (chunk) => { stderr += chunk; });
-    child.once('error', rejectLock);
-    child.once('close', (status) => {
-      if (!ready) rejectLock(new Error(status === 73
-        ? 'another prepare holds the repo-scoped advisory flock'
-        : `prepare flock helper failed: ${(stderr || stdout || `status ${status}`).trim()}`));
-    });
-  });
-}
-
-function releasePrepareFlock(child) {
-  return new Promise((resolveRelease, rejectRelease) => {
-    child.once('error', rejectRelease);
-    child.once('close', (status) => {
-      if (status === 0) resolveRelease();
-      else rejectRelease(new Error(`prepare flock helper release failed with status ${status}`));
-    });
-    child.stdin.end();
-  });
 }
 
 function readReceipt(path, taskId) {
@@ -149,6 +111,7 @@ function generationFrom(options) {
 function activeFor(manifest, witnessBase) {
   return {
     schema_version: 1,
+    ...(witnessBase.native_owner ? { native_owner: witnessBase.native_owner } : {}),
     state: 'ACTIVE',
     task_id: manifest.task_id,
     u_id: manifest.u_id,
@@ -193,6 +156,7 @@ function resumePrepareIfPossible(manifest, options, paths, at) {
   maybeCrash('after-active');
   appendReceipt(paths.receipt, manifest, witness.generation, 'PREPARED', witness.created_at, { checked_preimages: true });
   maybeCrash('after-prepared-receipt');
+  if (witness.native_owner) setNativeScopeState(manifest, witness.native_owner, witness.generation, 'ACTIVE');
   return {
     state: 'REQUIRED',
     generation: witness.generation,
@@ -214,16 +178,6 @@ function loadBound(paths, now) {
   return validateBoundRequired(witness, active, now);
 }
 
-async function prepareWithLease(manifest, options) {
-  assertBootstrapDormancy(manifest, options);
-  const root = controlRoot(manifest.repo_realpath);
-  mkdirSync(root, { recursive: true, mode: 0o700 });
-  const holder = await acquirePrepareFlock(root);
-  if (process.env.LUCA_CONTROLLED_TEST_FLOCK_READY === '1') process.stderr.write('LUCA_CONTROLLED_FLOCK_READY\n');
-  try { return prepareLocked(manifest, options, nowMs(options)); }
-  finally { await releasePrepareFlock(holder); }
-}
-
 function prepareLocked(manifest, options, preparedAt) {
   const paths = statePaths(manifest);
   if (process.env.LUCA_CONTROLLED_TEST_HOLD_BEFORE_WITNESS_MS) {
@@ -234,9 +188,24 @@ function prepareLocked(manifest, options, preparedAt) {
   const resumed = resumePrepareIfPossible(manifest, options, paths, preparedAt);
   if (resumed) return resumed;
   const current = discoverControlState(manifest.repo_realpath, preparedAt);
-  if (current.kind === 'required' || current.kind === 'invalid') fail(`cannot prepare while controlled state is ${current.kind}: ${current.reason || current.current?.witness?.task_id}`);
+  if (current.kind === 'invalid') fail(`cannot prepare while controlled state is invalid: ${current.reason}`);
+  if (current.kind === 'required') {
+    if (!options.nativeOwner || current.currents.some(entry => !entry.witness.native_owner
+        || entry.witness.exclusive_lane || entry.witness.effect_authorizations.some(item => item.remaining_uses === 0))) {
+      fail('cannot prepare beside checkout-exclusive or unresolved-effect authority');
+    }
+    const blocked = current.blocked.filter(entry => !(entry.task_id === manifest.task_id
+      && entry.state === 'PENDING' && entry.manifest_sha256 === manifestSha256(manifest)
+      && canonicalJson(entry.owner) === canonicalJson(options.nativeOwner)));
+    if (blocked.some(entry => entry.exclusive || claimPaths(manifest).some(path => blockedScopeConflicts(entry, path)))) fail('prepare conflicts with a damaged or pending scope');
+    if (current.currents.some(entry => manifestsConflict(manifest, entry.manifest))) fail('cannot prepare: exact-path claims conflict');
+  }
+  const reservations = readToolReservations(manifest.repo_realpath);
+  if (reservations.some(tool => tool.targets.some(target => claimPaths(manifest).some(path => pathsConflict(target, path))))) fail('prepare conflicts with an in-flight structured tool');
   checkManifest(manifest, 'pre');
-  const generation = generationFrom(options);
+  const indexed = readNativeScopeIndex(manifest.repo_realpath)?.claims.find(row => row.task_id === manifest.task_id && row.state === 'PENDING');
+  if (indexed && options.generation && options.generation !== indexed.generation) fail('pending allocation generation mismatch');
+  const generation = indexed?.generation || generationFrom(options);
   const createdAt = preparedAt;
   const ttl = options['ttl-seconds'] === undefined ? 3600 : Number(options['ttl-seconds']);
   if (!Number.isInteger(ttl) || ttl < 30 || ttl > 86400) fail('--ttl-seconds must be an integer from 30 to 86400');
@@ -246,6 +215,7 @@ function prepareLocked(manifest, options, preparedAt) {
     schema_version: 1,
     task_id: manifest.task_id,
     state: 'REQUIRED',
+    ...(options.nativeOwner ? { native_owner: options.nativeOwner } : {}),
     u_id: manifest.u_id,
     generation,
     plan_sha256: manifest.plan_sha256,
@@ -260,6 +230,8 @@ function prepareLocked(manifest, options, preparedAt) {
     active_context_sha256: sha256Bytes(Buffer.from(`${canonicalJson(active)}\n`, 'utf8')),
     effect_authorizations: [],
   };
+  if (options.nativeOwner) setNativeScopeState(manifest, options.nativeOwner, generation, 'PENDING');
+  maybeCrash('after-scope-index');
   const witnessPre = existsSync(paths.witness) ? sha256File(paths.witness) : '-';
   atomicWriteJson(paths.witness, witness, { expectedSha256: witnessPre });
   maybeCrash('after-witness');
@@ -269,6 +241,7 @@ function prepareLocked(manifest, options, preparedAt) {
   validateBoundRequired(readJson(paths.witness), readJson(paths.active), createdAt);
   appendReceipt(paths.receipt, manifest, generation, 'PREPARED', createdAt, { checked_preimages: true });
   maybeCrash('after-prepared-receipt');
+  if (options.nativeOwner) setNativeScopeState(manifest, options.nativeOwner, generation, 'ACTIVE');
   return { state: 'REQUIRED', generation, manifest_sha256: digest, expires_at: expiresAt, state_dir: paths.dir };
 }
 
@@ -332,6 +305,7 @@ function terminalize(manifest, options, forcedState) {
         if (!/^[0-9a-f]{64}$/.test(String(existingWitness.active_context_sha256 || ''))) fail('terminal witness lacks the bound active-context SHA');
         unlinkJsonCas(paths.active, existingWitness.active_context_sha256);
       }
+      if (existingWitness.native_owner) setNativeScopeState(manifest, existingWitness.native_owner, existingWitness.generation, 'TERMINAL');
       return { state, generation: existingWitness.generation, recovered: true, receipt_sha256: receiptSha };
     }
   }
@@ -349,6 +323,7 @@ function terminalize(manifest, options, forcedState) {
     schema_version: 1,
     task_id: bound.witness.task_id,
     state,
+    ...(bound.witness.native_owner ? { native_owner: bound.witness.native_owner } : {}),
     u_id: bound.witness.u_id,
     generation: bound.witness.generation,
     plan_sha256: bound.witness.plan_sha256,
@@ -364,6 +339,7 @@ function terminalize(manifest, options, forcedState) {
   maybeCrash('after-terminal-witness');
   unlinkJsonCas(paths.active, bound.witness.active_context_sha256);
   maybeCrash('after-active-remove');
+  if (bound.witness.native_owner) setNativeScopeState(manifest, bound.witness.native_owner, bound.witness.generation, 'TERMINAL');
   return { state, generation: bound.witness.generation, receipt_sha256: receiptResult.sha256 };
 }
 
@@ -419,15 +395,103 @@ function authorizeEffect(manifest, options) {
 
 async function main() {
   const { command, options } = parseCli(process.argv.slice(2));
+  if (command === 'inspect-recovery') {
+    if (!options.repo || Object.keys(options).some(key => !['_', 'repo'].includes(key)) || options._.length) fail('inspect-recovery accepts only --repo');
+    const repo = repoRealpath(options.repo), path = nativeScopeIndexPath(repo);
+    process.stdout.write(`${canonicalJson({ scope_index_path: path,
+      scope_index_sha256: existsSync(path) ? sha256File(path) : '-',
+      reservations: readToolReservations(repo).map(row => ({ ...row, reservation_sha256: sha256Bytes(canonicalJson(row)) })),
+      control_state: discoverControlState(repo) })}\n`);
+    return 0;
+  }
+  if (['recover-tool', 'reconcile-tool', 'reconcile-index'].includes(command)) {
+    const repo = repoRealpath(options.repo);
+    if (repo !== options.repo || !options.reason || !options['expected-sha']) fail('recovery requires canonical --repo, --expected-sha and --reason');
+    const offline = command !== 'recover-tool';
+    if (offline) {
+      if (!process.stdin.isTTY || !process.stdout.isTTY || options['native-owner-claim']) fail('offline reconciliation requires a human terminal, not native tool execution');
+      const prompt = createInterface({ input: process.stdin, output: process.stdout });
+      try {
+        const answer = await prompt.question(`Review the exact state and stopped processes. Type RECONCILE ${options['expected-sha']} to record UNKNOWN and continue: `);
+        if (answer !== `RECONCILE ${options['expected-sha']}`) fail('human reconciliation not confirmed');
+      } finally { prompt.close(); }
+    }
+    const result = await withControlLock(controlRoot(repo), () => {
+      if (command === 'reconcile-index') {
+        const path = nativeScopeIndexPath(repo);
+        const before = existsSync(path) ? sha256File(path) : '-';
+        if (before !== options['expected-sha']) fail('scope index reconciliation CAS mismatch');
+        const reviewed = validateNativeScopeIndex(repo, readJson(options['reviewed-index']));
+        // Offline input is explicit human authority, but may never omit a visible native task.
+        const entries = readdirSync(controlRoot(repo)).filter(name => lstatSync(`${controlRoot(repo)}/${name}`).isDirectory())
+          .map(name => inspectStateDirectory(`${controlRoot(repo)}/${name}`));
+        for (const entry of entries) if (entry.witness?.native_owner || entry.active?.native_owner) {
+          if (!reviewed.claims.some(row => row.task_id === entry.witness?.task_id
+              && row.generation === entry.witness?.generation
+              && row.manifest_sha256 === entry.witness?.manifest_sha256
+              && canonicalJson(row.owner) === canonicalJson(entry.witness?.native_owner))) fail('reviewed index omits a visible native task');
+        }
+        privateDirectory(resolve(path, '..'));
+        const auditPath = `${path}.reconciliation.json`;
+        const audit = existsSync(auditPath) ? readJson(auditPath) : { history: [] };
+        atomicWriteJson(auditPath, { history: [...audit.history, { at: Date.now(), prior_sha256: before,
+          reviewed_sha256: sha256Bytes(canonicalJson(reviewed)), reason: options.reason, outcome: 'UNKNOWN' }] },
+        { expectedSha256: existsSync(auditPath) ? sha256File(auditPath) : '-' });
+        atomicWriteJson(path, reviewed, { expectedSha256: before });
+        return { state: 'INDEX_RECONCILED', outcome: 'UNKNOWN' };
+      }
+      const tools = readToolReservations(repo), row = tools.find(tool => tool.tool_use_id === options['tool-use-id']);
+      if (!row || row.repo_realpath !== repo || row.turn_id !== options['turn-id']
+          || sha256Bytes(canonicalJson(row)) !== options['expected-sha']) fail('reservation identity or CAS mismatch');
+      let evidence = { outcome: 'UNKNOWN' };
+      if (offline) {
+        if (row.session_id !== options['session-id'] || options.outcome !== 'UNKNOWN') fail('offline reservation identity/outcome mismatch');
+      } else {
+        const args = process.argv.slice(2), at = args.indexOf('--native-owner-claim');
+        if (at < 0) fail('native recovery requires fresh one-use owner claim');
+        args.splice(at, 2);
+        evidence = verifyReservationCompleted(row);
+        consumeNativeClaim(repo, options['native-owner-claim'], args, null,
+          { version: 1, harness: 'codex', session_id: row.session_id, repo_realpath: repo });
+      }
+      writeToolReservations(repo, tools.filter(tool => tool !== row), { state: 'RECOVERED', mode: command,
+        at: Date.now(), reservation: row, reservation_sha256: options['expected-sha'], reason: options.reason, ...evidence });
+      return { state: 'RECOVERED', tool_use_id: row.tool_use_id, ...evidence };
+    });
+    process.stdout.write(`${canonicalJson(result)}\n`);
+    return 0;
+  }
   if (!command || !options.manifest) fail('usage: controlled-change-controller.mjs <prepare|record|authorize-effect|finish|abort> --manifest <path>');
   const manifest = loadManifestFile(options.manifest);
-  let result;
-  if (command === 'prepare') result = await prepareWithLease(manifest, options);
-  else if (command === 'record') result = record(manifest, options);
-  else if (command === 'authorize-effect') result = authorizeEffect(manifest, options);
-  else if (command === 'finish') result = terminalize(manifest, options);
-  else if (command === 'abort') result = terminalize(manifest, options, 'ABORTED');
-  else fail(`unknown controller command: ${command}`);
+  const result = await withControlLock(controlRoot(manifest.repo_realpath), async () => {
+    if (process.env.LUCA_CONTROLLED_TEST_FLOCK_READY === '1') process.stderr.write('LUCA_CONTROLLED_FLOCK_READY\n');
+    const controlState = discoverControlState(manifest.repo_realpath);
+    if (controlState.kind === 'invalid') fail(`controlled registry requires offline reconciliation: ${controlState.reason}`);
+    const paths = statePaths(manifest);
+    const existing = existsSync(paths.witness) ? readJson(paths.witness) : null;
+    if (['finish', 'abort'].includes(command) && readToolReservations(manifest.repo_realpath).some(tool => tool.task_id === manifest.task_id)) fail('task still has an in-flight structured tool');
+    if (existing?.lane_tool?.inflight) fail('exclusive tool is still in flight; terminal release is forbidden');
+    const claimPath = options['native-owner-claim'];
+    if (claimPath) {
+      const args = process.argv.slice(2);
+      const index = args.indexOf('--native-owner-claim');
+      args.splice(index, 2);
+      options.nativeOwner = consumeNativeClaim(manifest.repo_realpath, claimPath, args, manifest, existing?.native_owner);
+      if (existing?.state === 'REQUIRED' && !existing.native_owner) fail('native mode cannot resume or mutate legacy REQUIRED');
+    } else {
+      if (existing?.native_owner) fail('native owner claim is required; legacy downgrade denied');
+      if (command === 'prepare' && options['legacy-checkout-exclusive'] !== 'true') fail('prepare requires native hook claim or explicit --legacy-checkout-exclusive true');
+    }
+    if (command === 'prepare') {
+      assertBootstrapDormancy(manifest, options);
+      return prepareLocked(manifest, options, nowMs(options));
+    }
+    if (command === 'record') return record(manifest, options);
+    if (command === 'authorize-effect') return authorizeEffect(manifest, options);
+    if (command === 'finish') return terminalize(manifest, options);
+    if (command === 'abort') return terminalize(manifest, options, 'ABORTED');
+    fail(`unknown controller command: ${command}`);
+  });
   process.stdout.write(`${canonicalJson(result)}\n`);
   return 0;
 }

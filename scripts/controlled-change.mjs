@@ -12,13 +12,38 @@ import {
   readdirSync,
   realpathSync,
   renameSync,
+  statSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
+import { userInfo, tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+
+export function privateDirectory(path) {
+  mkdirSync(path, { recursive: true, mode: 0o700 });
+  const st = lstatSync(path);
+  if (!st.isDirectory() || st.isSymbolicLink() || realpathSync(path) !== path
+      || st.uid !== process.getuid() || (st.mode & 0o077)) fail('native claim directory is not private and canonical');
+  return path;
+}
+
+export function nativeClaimRoot(repo, create = false) {
+  let home = userInfo().homedir;
+  // Same constrained scratch-only seam as native-event fixtures; never accepted in a real checkout.
+  if (process.env.LUCA_EVENT_ATTESTATION_TEST === '1' && process.env.LUCA_CONTROLLED_TEST_HOME) {
+    const temp = realpathSync(tmpdir());
+    const testHome = realpathSync(process.env.LUCA_CONTROLLED_TEST_HOME);
+    if (!repo.startsWith(`${temp}/`) || !testHome.startsWith(`${temp}/`)
+        || dirname(repo) !== dirname(testHome)) fail('native test home is outside the isolated fixture');
+    home = testHome;
+  }
+  const root = join(realpathSync(home), '.codex', 'luca-controlled-owner', sha256Bytes(canonicalJson(repo)));
+  return create ? privateDirectory(root) : root;
+}
+
 
 export const SCHEMA_VERSION = 1;
 export const NON_TERMINAL_WITNESS_STATES = new Set(['REQUIRED']);
@@ -571,6 +596,7 @@ export function witnessAnchor(witness) {
     manifest_sha256: witness.manifest_sha256,
     repo_realpath: witness.repo_realpath,
     expires_at: witness.expires_at,
+    ...(witness.native_owner ? { native_owner: witness.native_owner } : {}),
   };
   return sha256Bytes(Buffer.from(canonicalJson(identity), 'utf8'));
 }
@@ -610,6 +636,19 @@ export function validateBoundRequired(witness, active, now = Date.now()) {
   if (!witness || !active) fail('required witness and active context are both required');
   if (witness.schema_version !== SCHEMA_VERSION || active.schema_version !== SCHEMA_VERSION) fail('state schema mismatch');
   if (!NON_TERMINAL_WITNESS_STATES.has(witness.state)) fail(`witness is not non-terminal: ${witness.state}`);
+  if (witness.native_owner || active.native_owner) {
+    const owner = witness.native_owner;
+    if (!owner || owner.version !== 1 || owner.harness !== 'codex'
+        || !/^[A-Za-z0-9_-]{1,36}$/.test(owner.session_id || '') || owner.repo_realpath !== witness.repo_realpath
+        || canonicalJson(owner) !== canonicalJson(active.native_owner)) fail('native owner binding mismatch');
+  }
+  if (witness.lane_tool !== undefined) {
+    const lane = witness.lane_tool;
+    if (!witness.native_owner || !witness.exclusive_lane || !lane || typeof lane.inflight !== 'boolean'
+        || lane.session_id !== witness.native_owner.session_id || !lane.turn_id || !lane.tool_use_id
+        || !SHA256_RE.test(String(lane.command_sha256))) fail('invalid exclusive tool binding');
+  }
+  if (witness.exclusive_lane !== undefined && witness.exclusive_lane !== true) fail('invalid exclusive lane');
   for (const field of ['task_id', 'u_id', 'generation', 'plan_sha256', 'manifest_sha256', 'repo_realpath', 'expires_at']) {
     if (witness[field] !== active[field]) fail(`state binding mismatch: ${field}`);
   }
@@ -664,35 +703,191 @@ export function inspectStateDirectory(dir, now = Date.now()) {
   } catch (error) { return { kind: 'invalid', dir, paths, witness, reason: error.message }; }
 }
 
-export function discoverControlState(repoRoot = repoRealpath(), now = Date.now()) {
-  const root = controlRoot(repoRoot);
-  if (!existsSync(root)) return { kind: 'inactive', root, entries: [] };
-  const entries = [];
-  for (const name of readdirSync(root).sort()) {
-    if (!TASK_RE.test(name)) continue;
-    let stat;
-    try { stat = lstatSync(join(root, name)); } catch { continue; }
-    if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
-    const inspected = inspectStateDirectory(join(root, name), now);
-    if (inspected.kind !== 'inactive') entries.push(inspected);
+// Canonical exact paths plus ancestor and inode aliases. Final symlinks are included
+// both lexically (replacement) and by referent (structured editors may follow them).
+export function claimIdentities(path) {
+  const absolute = resolve(path);
+  let cursor = absolute;
+  while (!existsSync(cursor)) {
+    const parent = dirname(cursor);
+    if (parent === cursor) fail('cannot canonicalize claim path');
+    cursor = parent;
   }
-  const invalid = entries.filter((entry) => entry.kind === 'invalid');
-  if (invalid.length) return { kind: 'invalid', root, entries, reason: invalid.map((e) => `${e.dir}: ${e.reason}`).join('; ') };
-  const required = entries.filter((entry) => entry.kind === 'required');
-  if (required.length > 1) return { kind: 'invalid', root, entries, reason: 'multiple non-terminal required witnesses exist' };
-  if (required.length === 1) return { kind: 'required', root, entries, current: required[0] };
-  return { kind: 'inactive', root, entries };
+  const canonical = resolve(realpathSync(cursor), relative(cursor, absolute));
+  const names = [...new Set([absolute, canonical].map(p => process.platform === 'darwin' ? p.normalize('NFC').toLowerCase() : p))];
+  let inode = null;
+  try { const st = statSync(absolute); inode = `${st.dev}:${st.ino}`; } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  return { names, inode };
 }
 
-// Controller arbitration stays common-directory scoped. Tool enforcement applies
-// a valid manifest only to its checkout; invalid shared state still fails closed.
-export function discoverCheckoutControlState(repoRoot = repoRealpath(), now = Date.now()) {
-  const checkout = repoRealpath(repoRoot);
-  const state = discoverControlState(checkout, now);
-  if (state.kind === 'required' && state.current.manifest.repo_realpath !== checkout) {
-    return { kind: 'inactive', root: state.root, entries: state.entries, reason: 'required-in-other-checkout' };
+export function claimPaths(manifest) {
+  return [manifest.scratch_root,
+    ...manifest.repo_paths.map(row => absolutePathForRow(manifest, row, 'repo_paths')),
+    ...manifest.external_paths.map(row => absolutePathForRow(manifest, row, 'external_paths'))];
+}
+
+export function pathsConflict(left, right) {
+  const a = claimIdentities(left), b = claimIdentities(right);
+  return Boolean(a.inode && a.inode === b.inode) || a.names.some(x => b.names.some(y =>
+    x === y || x.startsWith(`${y}${sep}`) || y.startsWith(`${x}${sep}`)));
+}
+
+export function manifestsConflict(left, right) {
+  return claimPaths(left).some(a => claimPaths(right).some(b => pathsConflict(a, b)));
+}
+
+export function nativeScopeIndexPath(repo) {
+  return join(dirname(nativeClaimRoot(repo)), `common-${sha256Bytes(gitCommonDirRealpath(repo))}`, 'scope-index.json');
+}
+
+function frozenConflict(a, b) {
+  return Boolean(a.inode && a.inode === b.inode) || a.names.some(x => b.names.some(y =>
+    x === y || x.startsWith(`${y}${sep}`) || y.startsWith(`${x}${sep}`)));
+}
+
+export function indexClaimConflicts(claim, path) {
+  const current = claimIdentities(path);
+  return claim.scopes.some(scope => frozenConflict(scope.identity, current) || pathsConflict(scope.path, path));
+}
+
+export function readNativeScopeIndex(repo) {
+  const path = nativeScopeIndexPath(repo);
+  if (!existsSync(path)) return null;
+  const st = lstatSync(path);
+  if (!st.isFile() || st.isSymbolicLink() || realpathSync(path) !== path || st.uid !== process.getuid() || (st.mode & 0o077)) fail('native scope index is not private/canonical');
+  const value = readJson(path);
+  return validateNativeScopeIndex(repo, value);
+}
+
+export function validateNativeScopeIndex(repo, value) {
+  if (value.version !== 1 || value.common_dir !== gitCommonDirRealpath(repo) || !Array.isArray(value.claims)) fail('native scope index identity is invalid');
+  const seen = new Set();
+  for (const claim of value.claims) {
+    if (!TASK_RE.test(claim.task_id || '') || seen.has(claim.task_id) || !/^[A-Za-z0-9][A-Za-z0-9-]{7,127}$/.test(String(claim.generation || ''))
+        || !SHA256_RE.test(claim.manifest_sha256 || '') || !['PENDING', 'ACTIVE', 'TERMINAL'].includes(claim.state)
+        || claim.owner?.version !== 1 || claim.owner?.harness !== 'codex' || !/^[A-Za-z0-9_-]{1,36}$/.test(claim.owner.session_id || '')
+        || claim.owner.repo_realpath !== claim.repo_realpath || !isAbsolute(claim.repo_realpath || '')
+        || !Array.isArray(claim.scopes) || !claim.scopes.length || typeof claim.exclusive !== 'boolean') fail('native scope index row is invalid');
+    seen.add(claim.task_id);
+    for (const scope of claim.scopes) if (!isAbsolute(scope.path || '') || !Array.isArray(scope.identity?.names)
+        || !scope.identity.names.length || scope.identity.names.some(name => !isAbsolute(name))
+        || (scope.identity.inode !== null && !/^\d+:\d+$/.test(scope.identity.inode || ''))) fail('native scope index scope is invalid');
   }
-  return state;
+  const live = value.claims.filter(row => row.state !== 'TERMINAL');
+  for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) {
+    if (live[i].exclusive || live[j].exclusive || live[i].scopes.some(a => live[j].scopes.some(b => frozenConflict(a.identity, b.identity) || pathsConflict(a.path, b.path)))) fail('native scope index contains overlapping claims');
+  }
+  return value;
+}
+
+export function updateNativeScopeIndex(repo, update) {
+  const path = nativeScopeIndexPath(repo);
+  const before = readNativeScopeIndex(repo) || { version: 1, common_dir: gitCommonDirRealpath(repo), claims: [] };
+  const next = validateNativeScopeIndex(repo, update(before));
+  privateDirectory(dirname(path));
+  atomicWriteJson(path, next, { expectedSha256: existsSync(path) ? sha256File(path) : '-' });
+  readNativeScopeIndex(repo);
+}
+
+export function setNativeScopeState(manifest, owner, generation, state, exclusive = false) {
+  updateNativeScopeIndex(manifest.repo_realpath, index => {
+    const old = index.claims.find(row => row.task_id === manifest.task_id);
+    if (old && old.state !== 'TERMINAL' && (old.generation !== generation
+        || old.manifest_sha256 !== manifestSha256(manifest) || canonicalJson(old.owner) !== canonicalJson(owner))) fail('native scope allocation identity changed');
+    const row = old && old.generation === generation ? { ...old, state, exclusive: old.exclusive || exclusive }
+      : { task_id: manifest.task_id, generation, owner, repo_realpath: manifest.repo_realpath,
+        manifest_sha256: manifestSha256(manifest), state, exclusive,
+        scopes: claimPaths(manifest).map(path => ({ path, identity: claimIdentities(path) })) };
+    return { ...index, claims: [...index.claims.filter(row => row.task_id !== manifest.task_id), row] };
+  });
+}
+
+// Short-lived structured tool reservations close the PreToolUse/actual-write gap.
+// They are released only by the matching PostToolUse, never by a timer.
+export function readToolReservations(repo) {
+  const path = join(controlRoot(repo), 'tool-reservations.json');
+  if (!existsSync(path)) return [];
+  const value = readJson(path);
+  if (value.schema_version !== 1 || !Array.isArray(value.tools) || (value.history !== undefined && !Array.isArray(value.history))) fail('tool reservation table is invalid');
+  for (const row of value.tools) {
+    if (!row || !row.session_id || !row.turn_id || !row.tool_use_id || !isAbsolute(row.repo_realpath || '')
+        || !Array.isArray(row.targets) || !row.targets.length || row.targets.some(path => !isAbsolute(path))) fail('structured tool reservation is invalid');
+  }
+  return value.tools;
+}
+
+export function writeToolReservations(repo, tools, event = null) {
+  const path = join(controlRoot(repo), 'tool-reservations.json');
+  const prior = existsSync(path) ? readJson(path) : {};
+  atomicWriteJson(path, { schema_version: 1, tools, history: [...(prior.history || []), ...(event ? [event] : [])] }, { expectedSha256: existsSync(path) ? sha256File(path) : '-' });
+}
+
+export function discoverControlState(repoRoot = repoRealpath(), now = Date.now()) {
+  const root = controlRoot(repoRoot), entries = [];
+  let index;
+  try { readToolReservations(repoRoot); index = readNativeScopeIndex(repoRoot); }
+  catch (error) { return { kind: 'invalid', root, entries, reason: error.message }; }
+  for (const name of existsSync(root) ? readdirSync(root).sort() : []) {
+    if (!TASK_RE.test(name)) continue;
+    const dir = join(root, name);
+    let stat; try { stat = lstatSync(dir); } catch { continue; }
+    if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
+    const inspected = inspectStateDirectory(dir, now);
+    if (inspected.kind !== 'inactive') entries.push(inspected);
+  }
+  const blocked = [], required = [];
+  const bad = reason => ({ kind: 'invalid', root, entries, reason });
+  const registry = new Map((index?.claims || []).map(row => [row.task_id, row]));
+  for (const entry of entries) {
+    const task = entry.dir.slice(root.length + 1), claim = registry.get(task);
+    if (claim) {
+      if (entry.kind === 'terminal' && claim.state === 'TERMINAL') continue;
+      if (claim.state === 'TERMINAL') { blocked.push({ ...claim, reason: 'terminal index conflicts with task state' }); continue; }
+      const healthy = entry.kind === 'required' && claim.generation === entry.witness.generation
+        && claim.manifest_sha256 === entry.witness.manifest_sha256
+        && canonicalJson(claim.owner) === canonicalJson(entry.witness.native_owner)
+        && claim.repo_realpath === entry.manifest.repo_realpath;
+      if (healthy && claim.state === 'ACTIVE' && (!entry.witness.exclusive_lane || claim.exclusive)) required.push(entry);
+      else blocked.push({ ...claim, reason: entry.reason || 'native allocation requires recovery' });
+      continue;
+    }
+    if (entry.witness?.native_owner || entry.active?.native_owner) return bad('native task lacks protected scope index row');
+    if (entry.kind === 'required') { required.push(entry); continue; }
+    if (entry.kind === 'terminal') continue;
+    // Legacy attribution comes only from the durable witness, never active-only hints.
+    const w = entry.witness;
+    try {
+      if (!w || w.schema_version !== 1 || w.task_id !== task || !TASK_RE.test(task)
+          || !w.generation || !SHA256_RE.test(w.plan_sha256 || '') || !SHA256_RE.test(w.manifest_sha256 || '')
+          || !SHA256_RE.test(w.active_context_sha256 || '') || !Number.isInteger(w.expires_at)
+          || ![...NON_TERMINAL_WITNESS_STATES, ...TERMINAL_WITNESS_STATES].includes(w.state)
+          || realpathSync(w.repo_realpath) !== w.repo_realpath || gitCommonDirRealpath(w.repo_realpath) !== gitCommonDirRealpath(repoRoot)) throw new Error('unattributable legacy witness');
+      blocked.push({ task_id: task, repo_realpath: w.repo_realpath, scopes: null, reason: entry.reason });
+    } catch { return bad(entry.reason || 'unattributable controlled state'); }
+  }
+  for (const claim of registry.values()) if (claim.state !== 'TERMINAL'
+      && !entries.some(entry => entry.dir === join(root, claim.task_id))) blocked.push({ ...claim, reason: 'indexed task state is missing' });
+  if (required.length > 1 && required.some(entry => !entry.witness.native_owner)) return bad('multiple legacy checkout-exclusive witnesses');
+  const live = (index?.claims || []).filter(row => row.state !== 'TERMINAL');
+  if (required.some(entry => !entry.witness.native_owner) && live.length) return bad('legacy authority cannot mix with native allocations');
+  if (required.length || blocked.length) return { kind: 'required', root, entries, currents: required, blocked,
+    current: required.length === 1 && !blocked.length ? required[0] : null };
+  return { kind: 'inactive', root, entries, currents: [], blocked: [] };
+}
+
+export function blockedScopeConflicts(blocked, path) {
+  return (blocked.exclusive && pathsConflict(blocked.repo_realpath, path))
+    || (blocked.scopes ? indexClaimConflicts(blocked, path) : pathsConflict(blocked.repo_realpath, path));
+}
+
+export function discoverCheckoutControlState(repoRoot = repoRealpath(), now = Date.now()) {
+  const checkout = repoRealpath(repoRoot), state = discoverControlState(checkout, now);
+  if (state.kind !== 'required') return state;
+  const currents = state.currents.filter(entry => entry.manifest.repo_realpath === checkout);
+  const blocked = state.blocked.filter(entry => entry.repo_realpath === checkout);
+  if (!currents.length && !blocked.length) return { kind: 'inactive', root: state.root, entries: state.entries,
+    currents: [], blocked: [], reason: 'required-in-other-checkout' };
+  return { ...state, currents, blocked, current: currents.length === 1 && !blocked.length ? currents[0] : null };
 }
 
 export function loadManifestFile(path) {

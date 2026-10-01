@@ -57,7 +57,7 @@ function run(command, args, options = {}) {
     env: { ...inherited, ...(options.env || {}) },
     input: options.input,
     encoding: 'utf8',
-    timeout: 30000,
+    timeout: options.timeout || 30000,
   });
 }
 
@@ -109,7 +109,7 @@ function fixture() {
 }
 
 function controller(f, command, extra = [], env = {}) {
-  return run(process.execPath, [CONTROLLER, command, '--manifest', f.manifestPath, ...extra], { cwd: f.repo, env });
+  return run(process.execPath, [CONTROLLER, command, '--manifest', f.manifestPath, ...(command === 'prepare' ? ['--legacy-checkout-exclusive', 'true'] : []), ...extra], { cwd: f.repo, env });
 }
 
 function persistManifest(f) {
@@ -563,7 +563,7 @@ test('controller-required-active-crash', async () => {
     const secondManifestPath = join(concurrent.scratch, 'manifest-second.json');
     writeFileSync(secondManifestPath, `${canonicalJson(secondManifest)}\n`);
     first = spawn(process.execPath, [
-      CONTROLLER, 'prepare', '--manifest', concurrent.manifestPath,
+      CONTROLLER, 'prepare', '--legacy-checkout-exclusive', 'true', '--manifest', concurrent.manifestPath,
       '--generation', 'generation-concurrent-first', '--ttl-seconds', '3600',
     ], {
       cwd: concurrent.repo,
@@ -594,7 +594,7 @@ test('controller-required-active-crash', async () => {
     assert.equal(existsSync(firstWitness), false, 'flock sentinel must precede the first task witness write');
     assert.equal(existsSync(secondWitness), false, 'flock sentinel must precede every competing task witness write');
     const second = run(process.execPath, [
-      CONTROLLER, 'prepare', '--manifest', secondManifestPath,
+      CONTROLLER, 'prepare', '--legacy-checkout-exclusive', 'true', '--manifest', secondManifestPath,
       '--generation', 'generation-concurrent-second', '--ttl-seconds', '3600',
     ], { cwd: concurrent.repo });
     assert.equal(second.status, 2, 'a concurrent prepare for a second task must be rejected before writing its witness');
@@ -717,7 +717,7 @@ test('required-owner-read-only-tools', () => {
       assert.equal(guard(f, { tool_name, tool_input: { file_path: join(f.repo, 'target.txt'), path: f.repo,
         pattern: 'target' } }).status, 0, `${tool_name} is an explicit non-mutation tool`);
     }
-    for (const [tool_name, tool_input] of [['Bash', { command: 'cat target.txt' }],
+    for (const [tool_name, tool_input] of [['Bash', { command: 'node opaque-script.mjs' }],
       ['collaborationsend_message', {}], ['unknown-tool', {}]]) {
       assert.equal(guard(f, { tool_name, tool_input }).status, 2, `${tool_name} remains deny-by-default`);
     }
@@ -742,10 +742,13 @@ test('required-invalid-checkouts-fail-closed', () => {
       if (mode === 'malformed-active') writeFileSync(current.paths.active, '{broken');
       if (mode === 'multiple-required') cpSync(current.dir, duplicate, { recursive: true });
       for (const checkout of [f, other]) {
-        assert.equal(guard(checkout, { tool_name: 'Read', tool_input: { file_path: 'target.txt' } }).status, 2,
-          `${mode} refuses observer tools in every checkout`);
+        assert.equal(guard(checkout, { tool_name: 'Read', tool_input: { file_path: 'target.txt' } }).status, 0,
+          `${mode} permits read-only inspection in every checkout`);
+        const expected = mode === 'multiple-required' || checkout === f ? 2 : 0;
+        assert.equal(guard(checkout, { tool_name: 'Write', tool_input: { file_path: 'target.txt' } }).status, expected,
+          `${mode} fences only attributable checkout, unknown state stays global`);
         assert.equal(run(process.execPath, [CORE, 'hook-failure-decision', '--repo', checkout.repo],
-          { cwd: checkout.repo }).status, 2, `${mode} keeps fallback fail-closed`);
+          { cwd: checkout.repo }).status, expected, `${mode} fallback uses the same attribution`);
       }
       writeFileSync(current.paths.active, active);
       if (mode === 'multiple-required') rmSync(duplicate, { recursive: true });
@@ -861,6 +864,11 @@ function selectedCases(argv) {
   if (argv.includes('--all')) return [...tests.keys()];
   throw new Error('usage: test-controlled-change.mjs --all | --case <name> | --inventory');
 }
+
+test('native-owner-concurrency', () => {
+  const result = run(process.execPath, [join(ROOT, 'scripts', 'test-controlled-native-owner.mjs')], { timeout: 90000 });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
 
 let failures = 0;
 try {

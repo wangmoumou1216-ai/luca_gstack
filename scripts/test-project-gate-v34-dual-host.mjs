@@ -42,7 +42,9 @@ const ok = (name, condition, detail = '') => {
 const parse = value => { try { return JSON.parse(String(value).trim()); } catch { return null; } };
 
 function copyFixtureSources(gstack) {
-  const pending = [SCOPE_GUARD, CONTROLLED_GUARD, STOP_HOOK, ADAPTER, PROJECT_SH, PROJECT_PIN];
+  // Native admission resolves the controller's file identity without importing it.
+  const pending = [SCOPE_GUARD, CONTROLLED_GUARD, STOP_HOOK, ADAPTER, PROJECT_SH, PROJECT_PIN,
+    join(ROOT, 'scripts', 'controlled-change-controller.mjs')];
   const copied = new Set();
   while (pending.length) {
     const source = pending.pop();

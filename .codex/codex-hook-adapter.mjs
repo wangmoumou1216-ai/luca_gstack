@@ -300,6 +300,17 @@ function main() {
     return witnessAwareRuntimeFailure(`project-scope hook runtime failed (${r.error?.code || r.error?.message || `status=${r.status}`})`);
   }
 
+  // Observe completion only. The exclusive lane and EFFECT_UNKNOWN remain durable
+  // until an explicit owner terminal operation; a missing Post never unlocks them.
+  if (/post-edit/.test(target) && event === 'PostToolUse') {
+    const post = spawnSync('node', [join(REPO_ROOT, '.claude/hooks/controlled-change-guard.mjs')], {
+      input: JSON.stringify({ ...data, tool_name: origToolName || data.tool_name }),
+      env: childEnv, encoding: 'utf8', timeout: 30000, cwd: REPO_ROOT,
+    });
+    if (post.stderr) process.stderr.write(post.stderr);
+    if (post.error || post.status !== 0) return 2;
+  }
+
   // controlled-change piggybacks on the already-trusted project-scope PreToolUse entry.
   // Codex trust is bound to hooks.json entry bytes; adding a second entry would be silently
   // skipped in a normal fresh session until ~/.codex/config.toml was mutated, which Gate A does
@@ -350,9 +361,13 @@ function main() {
           return 2;
         }
       }
-      // A controlled guard emits output only for a denial. Preserve the JSON control verb even
-      // if a future implementation accidentally exits zero after emitting it.
-      if (controlledOut) return 2;
+      // Controlled native preparation may inject a one-use claim. Emit exactly one
+      // final hook result; its input already includes any project-scope rewrite.
+      if (controlledOut) {
+        let result;
+        try { result = JSON.parse(controlledOut); } catch { return 2; }
+        return result?.hookSpecificOutput?.permissionDecision === 'deny' ? 2 : 0;
+      }
     }
   }
 

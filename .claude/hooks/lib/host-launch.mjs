@@ -1,11 +1,11 @@
 import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync, statSync, opendirSync } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync, statSync, lstatSync, opendirSync } from 'node:fs';
+import { join, dirname, resolve, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { canonicalProjectIdentity, readProjectState, atomicProjectStateCas,
   PROJECT_STATE_SCHEMA, initializeProjectEventFence, attestPendingProjectEvent, validatedBindingForState } from './project-substrate.mjs';
-import { discoverControlState } from '../../../scripts/controlled-change.mjs';
+import { discoverCheckoutControlState } from '../../../scripts/controlled-change.mjs';
 import { authorizePublicSelection } from './project-selection.mjs';
 import { assertHostLaunchJournal, hostLaunchJournalRoot } from './event-attestation.mjs';
 
@@ -16,6 +16,68 @@ const codeError = (code, message = code) => Object.assign(new Error(message), { 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const id = value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[\x00-\x1f]/.test(value);
 const normalizedId = value => id(value) && value.trim() === value && value.normalize('NFC') === value;
+// Codex atomically writes these presentation-only TUI preferences on first run.
+// Parse TOML, never strip source lines: strings/comments can contain table syntax.
+const CODEX_CONFIG_CANONICALIZER = String.raw`
+import sys, json, math, tomllib
+value = tomllib.loads(sys.stdin.buffer.read().decode('utf-8'))
+tui = value.get('tui')
+if isinstance(tui, dict):
+    if 'screen_reader_detection_done' in tui:
+        if type(tui['screen_reader_detection_done']) is not bool: raise ValueError('invalid screen reader preference')
+        del tui['screen_reader_detection_done']
+    if 'model_availability_nux' in tui:
+        nux = tui['model_availability_nux']
+        if not isinstance(nux, dict) or any(type(v) is not int or not 0 <= v <= 4294967295 for v in nux.values()):
+            raise ValueError('invalid model availability preference')
+        del tui['model_availability_nux']
+    if not tui: del value['tui']
+def typed(v):
+    if isinstance(v, dict): return ['table', [[k, typed(v[k])] for k in sorted(v)]]
+    if isinstance(v, list): return ['array', [typed(x) for x in v]]
+    if type(v) is bool: return ['bool', v]
+    if type(v) is str: return ['string', v]
+    if type(v) is int: return ['integer', str(v)]
+    if type(v) is float and math.isfinite(v): return ['float', v.hex()]
+    raise ValueError('unsupported configuration value type')
+print(json.dumps(typed(value), ensure_ascii=True, separators=(',', ':')))
+`;
+const configParsers = new Map();
+function codexConfigPython() {
+  const search = process.env.PATH || '';
+  if (configParsers.has(search)) return configParsers.get(search);
+  const seen = new Set();
+  for (const directory of search.split(delimiter)) {
+    if (!directory.startsWith('/')) continue;
+    try {
+      const binary = realpathSync(join(directory, 'python3'));
+      if (seen.has(binary) || !statSync(binary).isFile()) continue;
+      seen.add(binary);
+      const ready = execFileSync(binary, ['-c', 'import tomllib; print("codex-toml-ready")'],
+        { timeout: 1000, maxBuffer: 1024, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+      if (ready.trim() !== 'codex-toml-ready') continue;
+      configParsers.set(search, binary);
+      return binary;
+    } catch { /* Finder's login PATH can put an older system Python first. */ }
+  }
+  throw codeError('CONFIG_PARSER_UNAVAILABLE');
+}
+export function codexConfigIdentity(path) {
+  const before = lstatSync(path), canonical = realpathSync(path);
+  if (canonical !== path || !before.isFile() || before.uid !== process.getuid()
+      || before.size > MAX_CONFIG_BYTES) throw codeError('CONFIG_SCOPE_INVALID');
+  const bytes = readFileSync(path), after = lstatSync(path);
+  if (bytes.length > MAX_CONFIG_BYTES || !after.isFile()
+      || ['dev', 'ino', 'size', 'mtimeMs', 'ctimeMs'].some(key => before[key] !== after[key])) throw codeError('IDENTITY_CHANGED');
+  const python = codexConfigPython();
+  let canonicalBytes;
+  try {
+    canonicalBytes = execFileSync(python, ['-c', CODEX_CONFIG_CANONICALIZER],
+      { input: bytes, timeout: 3000, maxBuffer: 16 * MAX_CONFIG_BYTES, stdio: ['pipe', 'pipe', 'pipe'] });
+  } catch { throw codeError('CONFIG_PARSE_FAILED'); }
+  return { kind: 'codex-config-v1', realpath: canonical, dev: String(before.dev),
+    uid: before.uid, mode: before.mode, sha256: hash(canonicalBytes) };
+}
 export function fileIdentity(path, fingerprint = false) {
   const canonical = realpathSync(path), st = statSync(canonical);
   const identity = { realpath: canonical, dev: String(st.dev), ino: String(st.ino) };
@@ -37,7 +99,12 @@ function verifyProfile(profile) {
     || !Array.isArray(profile.configFiles) || !profile.configFiles.length || profile.configFiles.length > 8) throw codeError('PROFILE_INVALID');
   verifyIdentity(profile.sourceRoot); verifyIdentity(profile.binary);
   if (!statSync(profile.sourceRoot.realpath).isDirectory() || !statSync(profile.binary.realpath).isFile()) throw codeError('PROFILE_INVALID');
-  for (const config of profile.configFiles) verifyIdentity(config, true);
+  for (const [index, config] of profile.configFiles.entries()) {
+    if (config.kind !== undefined) {
+      if (index !== 0 || config.kind !== 'codex-config-v1' || config.realpath !== join(profile.sourceRoot.realpath, 'config.toml')) throw codeError('PROFILE_INVALID');
+      if (!same(codexConfigIdentity(config.realpath), config)) throw codeError('IDENTITY_CHANGED');
+    } else verifyIdentity(config, true);
+  }
 }
 export function validateLaunchRequest(request, projectsRoot) {
   if (!request || !['operationId','openRequestId','hostRunId'].every(k => id(request[k]))) throw codeError('REQUEST_INVALID');
@@ -141,10 +208,16 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
     }
     const tx = host.operationId;
     if (existsSync(join(gstackRoot, '.git'))) {
-      const controlled = discoverControlState(gstackRoot);
+      const controlled = discoverCheckoutControlState(gstackRoot);
       if (controlled.kind === 'invalid') throw new Error(`controlled state invalid: ${controlled.reason}`);
-      if (controlled.kind === 'required') authorizePublicSelection({
-        manifest: controlled.current.manifest, projectsRoot,
+      // Fresh host binding writes only this SID's protected state. Native file
+      // claims (including recoverable indexed damage) do not own other SIDs.
+      // Only this checkout's legacy selection requires its exact manifest;
+      // another physical checkout cannot own this SID's private binding.
+      const legacy = controlled.kind === 'required'
+        ? controlled.currents.find(entry => !entry.witness.native_owner) : null;
+      if (legacy) authorizePublicSelection({
+        manifest: legacy.manifest, projectsRoot,
         selection: { operation: 'switch', target: identity.project, session_id: sid, tx, expected_epoch: 0 },
       });
     }
