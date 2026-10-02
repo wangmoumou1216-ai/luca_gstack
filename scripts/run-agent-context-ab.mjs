@@ -2957,7 +2957,7 @@ try:
         raise ValueError("overlap")
     expected_keys = {
         "auto", "handoff", "wait-what", "domain-modeling", "writing-for-agents", "magicpath",
-        "open-design", "idea", "deepresearch", "quick-research", "brainstorm",
+        "open-design", "motion-polish", "idea", "deepresearch", "quick-research", "brainstorm",
         "superpowers-brainstorming", "ux-research", "ux-brainstorm", "design-brief",
         "html-prototype", "figma-demo", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
         "resolving-merge-conflicts", "to-spec", "to-tickets", "wayfinder", "implement",

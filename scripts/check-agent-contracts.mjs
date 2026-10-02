@@ -35,6 +35,10 @@ const codexQg = read('.codex/agents/quality-gate.toml');
 const modelRouting = read('.claude/skill-os/model-routing.yaml');
 const auto = read('.claude/skills/office/auto/SKILL.md');
 const workflowRunner = read('.codex/workflow-runner.mjs');
+const od = read('.claude/skills/office/open-design/SKILL.md');
+const ts = read('.claude/skills/office/tech-spec/SKILL.md');
+const tp = read('.claude/skills/office/task-plan/SKILL.md');
+const compile = read('.claude/agents/references/plan-engineering-modes.md');
 
 // 1. OD-first 锚（当轮漂移正是三处全漏，缺一即复发）
 t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-design'));
@@ -42,6 +46,24 @@ t('plan-agent 设计产出首选非 MagicPath', !/默认使用 MagicPath/.test(p
 t('preflight 检查表含 open-design 行', /\|\s*`open-design`/.test(pre));
 t('quality-gate 前端产出检查含 open-design', /前端产出检查（[^）]*open-design/.test(qg));
 t('quality-gate Brief 合规触发含 open-design', /html-prototype、open-design 或 figma-demo/.test(qg));
+t('已有 HTML refinement 有独立 preflight 行', /\|\s*`motion-polish`/.test(pre));
+t('motion 前端 facet 是接受前 exact candidate 验证', /前端产出检查（[^）]*motion-polish/.test(qg)
+  && qg.includes('PREACCEPT') && /candidate-check --subject <candidate_ref.path> --sha256 <candidate_ref.sha256>/.test(qg));
+for (const [name, source] of [['OD', od], ['TS', ts], ['TP', tp], ['compile', compile]]) {
+  t(`${name} 实际 resolve 精确 final ref`, source.includes('final_artifact_ref')
+    && /prototype-delivery\.mjs resolve --accepted/.test(source)
+    && source.includes('--sha256') && source.includes('--delivery-root') && source.includes('--read-path'));
+}
+t('OD 先机械 recover 后同未完成 phase 子单元', od.includes('不要求 raw semantic PASS')
+  && od.includes('原 raw FAIL 保留') && orch.includes('不等待 raw semantic PASS') && orch.includes('同一未完成 Phase'));
+t('TS CMP 保留 actual artifact evidence；TP L1/card 保留同 ref', ts.includes('artifact_evidence{accepted_ref,final_entry,')
+  && tp.includes('SRC-PROTOTYPE') && tp.includes('DEV/TEST') && tp.includes('accepted_ref'));
+t('compile 重验全链且 TP hash 未变不能豁免漂移', compile.includes('whole current candidate/final/source/base raw')
+  && /same\s+task-plan SHA does not excuse external artifact drift/.test(compile));
+t('Plan/TP/QG 真消费 current-instance owner', plan.includes('project-verification.md')
+  && tp.includes('project-verification.md') && qg.includes('project-verification.md') && qg.includes('before/after'));
+t('Orchestrator/QG 真消费原分母 receipts', orch.includes('evidence-receipts.md')
+  && qg.includes('evidence-receipts.md') && orch.includes('pre-freeze expected') && qg.includes('measurement'));
 
 // 2. 状态枚举同步
 for (const s of ['PLANNED', 'IN_PROGRESS', 'DONE', 'DONE_WITH_CONCERNS', 'BLOCKED', 'NEEDS_CONTEXT'])

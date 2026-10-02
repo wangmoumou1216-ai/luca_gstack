@@ -49,6 +49,7 @@ TABLE = {
                                                                     f"{D}/evaluation/*ux-writing*.md"], "weak"),
     "html-prototype": ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/prototype-spec.md"], "weak"),
     "open-design":    ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/index.html"], "weak"),
+    "motion-polish":  ([f"{D}/prototype/*/index.html"],            [f"{D}/handoff/*-motion-polish-handoff.md"], "weak"),
     # 链头/多形态：代理口径未定，显式 UNMAPPED（诚实优于全覆盖）
     "brainstorm": (None, [f"{D}/prd/*-prd.md"], "unmapped"),
     "deepresearch": (None, [f"{D}/research/*deepresearch*.md"], "unmapped"),

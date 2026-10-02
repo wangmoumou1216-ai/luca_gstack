@@ -38,6 +38,8 @@ Plan Agent 是 Orchestrator Free Task Mode 的**上游规划输入**。
 只有对该 payload 的明确确认才产生执行权；随后把同一份计划交给 Orchestrator。
 在提出任一 facade 的相关 Phase 之前，完整读取
 `.claude/agents/references/plan-engineering-modes.md`；其中保存输入、编译和失效细则。
+实际原型依赖的 `final_artifact_ref` 在编译前按该唯一 owner 实际 resolve 全链；task-plan
+SHA 未变不豁免外部漂移，受影响 TS/TP 回 owner 重过门，不改变集成所有权与原 U-ID。
 
 ---
 
@@ -394,6 +396,10 @@ U-NNN:
 ```
 
 **Read List 执行规则：**
+构造首个 required current-instance 行为 TEST/Verification 并冻结其断言前，完整读取
+`.claude/agents/references/project-verification.md`；复用足够的现有 suite，否则将最小准备放在
+首个依赖 TEST 之前，按源 ASSERT 冻结当前实例/driver/data/evidence 指针。readiness/doctor
+不能充当功能 TEST；这不是另一套调度器，也不授 driver/process/browser/cleanup 效果。
 - WA 在执行 U-block 前，必须按 `Read List` 定向读取每条指定节，不读全文
 - 若读取后发现原始文档与任务卡描述存在矛盾 → 立即触发 `NEEDS_CONTEXT` escalation，不允许 WA 自行裁决
 - 旧版卡（无 `读取清单` 字段）→ WA 记录 `WARNING:legacy-card`，退化为读 tech-spec 对应节，并在 completion report 中标注
@@ -422,13 +428,27 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 
 ```bash
 # [BLOCKING] <ID> — <说明>
-<check_command> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; <check_command> ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [WARNING] <ID> — <说明>
-<check_command> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; <check_command> ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 ```
 
 **级别说明：** Quality Gate 解析每条断言首行注释中的 `[BLOCKING]` 或 `[WARNING]` 标签来判断失败策略。缺少级别标签的断言默认视为 `[BLOCKING]`。
+
+**退出码契约（唯一 owner）：** 每条断言在独立 bash 进程运行；检查成功返回 0，检查失败或工具错误保留非零退出码，先捕获再输出。WARNING 同样返回真实失败码，由 Quality Gate 按级别决定是否阻断。管道启用 `pipefail`；检查体内的 AND/OR 分支也必须显式传播失败，不能以末尾成功命令吞码，`set -e` 不替代本契约。否定内容检查须区分 grep/rg 的未命中（1）与工具错误（>1），仅未命中可作为内容不存在的成功证据。
 
 断言必须覆盖：
 - 每个产出文件是否存在
@@ -438,12 +458,24 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 
 ```bash
 # [BLOCKING] <ID> — skill handoff 文件存在（skill_execution Phase）
-# 注意：[ -f glob ] 不展开 glob，必须用 ls + grep -q 检查
-ls docs/handoff/*-<skill>-handoff.md 2>/dev/null | grep -q . && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; [ -f "<authorized_absolute_handoff_path>" ] ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — skill handoff 包含必要字段
-grep -ql "gate_result" docs/handoff/*-<skill>-handoff.md 2>/dev/null && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; grep -q "gate_result" "<authorized_absolute_handoff_path>" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 ```
+  `<authorized_absolute_handoff_path>` 必须绑定本次已验证、已授权的精确绝对路径；不以共享别名、通配符或“最新”文件代选。
 - 不应存在的内容是否已清除
 
 **产出质量 criteria 子类（llm-judge 型，2026-07-09 E3）：** shell 断言只覆盖存在性/覆盖率/

@@ -102,6 +102,29 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
    - §7「页面与交互位置映射」（`page_interaction_mapping`）：页面/语义位置、交互职责、D-ID、适用 STATE、来源与 AC、约束及下游目标
    - `可追踪完整矩阵`
    - （若原型 prototype-spec.md 有"开发交接补全"节）**组件 props / 响应式断点 / design token 清单 / 动效** 四维——作 `CMP-NNN` 合同的实现规格附加字段读入（见 `references/dev-handoff-dimensions.md`）
+   - 若本次 CMP 依赖交接所选 motion-polish/OD composite 实际原型，intake 前完整读取
+     `.claude/skill-os/runtime/prototype-delivery.md`，使用交接精确 `final_artifact_ref{path,sha256}`
+     与 caller 验证的 delivery root。仅本地文件来源且无 remote/message context 时，在当前
+     真实获准 `read_paths`/`read_roots` 下实际执行以下 CLI：
+
+     ```text
+     node scripts/prototype-delivery.mjs resolve --accepted <final_artifact_ref.path> --sha256 <final_artifact_ref.sha256> --delivery-root <verified root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
+     ```
+
+     当前已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
+     `scripts/prototype-delivery.mjs` 导入 `resolveFinal`，实际调用：
+
+     ```javascript
+     resolveFinal({ path: final_artifact_ref.path, sha256: final_artifact_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
+     ```
+
+     传入 caller 实际提供的完整获准 `currentReadContext`，不从 metadata 构造授权，不丢掉
+     remote/message context 后强制 CLI。只有 CLI 能力且缺所需 API 上下文时返回 NEEDS_CONTEXT；
+     缺真实读取许可仍 BLOCKED。两入口返回相同 resolved final，再执行下列读取与合同绑定。
+
+     从返回 `final_entry/spec_path` 与当前 hashes 实际读取所需 HTML/DOM/CSS/JS/WAAPI/gesture
+     实现证据，按 dev-handoff-dimensions 抽取四维；metadata 不授读权，flags 只编码已有许可。
+     承诺该交付却缺/错/漂移 ref，仅相关 CMP 缺证据并回交付 owner，不按 raw/latest 回退。
 6. **不读全文**。如需要具体条款，按需读取对应章节。
 
 正常 PRD/Brief 输入的准入质量门（standalone 和 workflow 都执行）：
@@ -215,6 +238,11 @@ MVP 状态: MUST | PARTIAL | DEFERRED
   合同可附加 **组件 props / 响应式断点 / design token 清单 / 动效**——它们是**实现规格**（断点维=可测
   reflow 行为契约、写成 Phase 4 测试准则，而非静态布局复述；故不破坏本 skill "不含 UI 布局描述"的 defining
   constraint），绑到组件合同即可，见 `references/dev-handoff-dimensions.md`；无该节则跳过，不伪造。
+- 依赖所选 actual final 的 CMP 必须保存 `artifact_evidence{accepted_ref,final_entry,
+  final_sha256,spec_path,spec_sha256,source_ref,acceptance_ref}`，取自上面实际 `resolveFinal`，并
+  绑定具体四维与相关 D/STATE/AC；跳过 optional 原型节不能跳过已承诺的行为证据。
+  原型是实现证据而非新 R/AE，真实 PRD/Brief MUST coverage 门不变。引用失效只阻受影响合同，
+  不重写未受影响源；用相同 exact ref 交给 TP。
 
 ---
 

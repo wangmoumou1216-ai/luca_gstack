@@ -46,6 +46,7 @@ Use skills according to evidence, not a fixed script:
 | `ux-brainstorm` | live exploration of UX alternatives | main_agent |
 | `design-brief` | convert an agreed solution into interaction specification | main_agent |
 | `open-design` | preferred design output; desktop by default, headless opt-in | main_agent |
+| `motion-polish` | refine motion in actual existing HTML within confirmed scope | main_agent |
 | `magicpath` | user-selected React component prototype alternative | subagent |
 | `html-prototype` | user-selected local HTML alternative | subagent |
 | `muse-req-triage` | user has a requirement corpus needing human triage first | main_agent |
@@ -92,9 +93,16 @@ MagicPath completion example, only after the user selected it:
 
 ```bash
 # [BLOCKING] <ID> — MagicPath component build completed
-npx -y magicpath-ai code status <jobId> -o json 2>/dev/null \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('status')=='completed' else 1)" \
-  && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail;
+  npx -y magicpath-ai code status <jobId> -o json \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('status')=='completed' else 1)"
+); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 ```
 
 After `code start`, list `src/components/generated/` before binding a component filename. When a
@@ -102,6 +110,15 @@ plan compares a generated name with the design brief, use a `[WARNING]` case-ins
 reasonable platform casing must not block the Phase.
 
 ## Phase shape reminder
+
+When the approved design-output Phase promises final motion, schedule the explicitly approved
+`motion-polish` subunit after scoped mechanical OD recovery and before final semantic acceptance.
+Read its SKILL and `.claude/skill-os/runtime/prototype-delivery.md` through EOF at that boundary.
+Raw semantic PASS and an OD DONE handoff are not child prerequisites: preserve any raw FAIL and
+all original D/STATE/AC, repair only the authorized gap inside the same unfinished Phase, then resume
+OD Phase 5/6 after complete independent final PASS. Do not skip the subunit or advance to TS on raw
+FAIL. Stage/recover and local `postprocess_plan` metadata add no copy/edit/browser authority.
+An existing-HTML refinement task uses the same exact artifact gate without adding a new UI Phase.
 
 Research/design phases still use the main Plan contract: declare `phase_type`, orchestration,
 agent ownership, exact outputs, model tier, dependencies, stage gate, binary criteria, and user

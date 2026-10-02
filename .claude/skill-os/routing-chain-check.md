@@ -24,6 +24,8 @@ research_default`，与 Plan Agent 研究默认门同一把尺子）→ dispatch
 简单或有成熟先例 → 直接进，不问。
 
 **R2 · OD-first（设计产出执行面）**
+已有实际 HTML 的动效/微交互完善可语义路由到 `motion-polish`；动画概念解释、代码评审仍由各自
+owner 承接。该入口不授权新界面生成或工具切换，输入/权限见其 SKILL；新 UI 产出仍按下列 OD-first。
 意图 = 设计 / 原型 / 界面产出 → 默认 `open-design`（`design_output.primary` 的 standalone 执行面）：
 有 design-brief 产物走 chain 入口；用户点名单点产物走 adhoc 交接；无源且要可追踪交付 → 建议先
 `/design-brief`。工具选择按 `design_output.fallback_trigger`：用户明确选择本地 HTML / MagicPath，

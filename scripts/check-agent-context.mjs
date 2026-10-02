@@ -113,6 +113,14 @@ for (const entry of entries.filter((item) => String(item.target || '').startsWit
 }
 
 const workflowEntry = entries.find((entry) => entry.id === 'workflow-mode');
+const prototypeEntry = entries.find(entry => entry.id === 'prototype-delivery');
+if (prototypeEntry?.target !== '.claude/skill-os/runtime/prototype-delivery.md'
+    || JSON.stringify(prototypeEntry?.runtime) !== JSON.stringify(['claude', 'codex'])
+    || !/candidate|PREACCEPT/.test(prototypeEntry?.condition || '')
+    || !/resolution.*intake/.test(prototypeEntry?.load_before || '')
+    || !/final_artifact_ref.*missing, invalid or stale/.test(prototypeEntry?.fallback || '')) {
+  errors.push('prototype-delivery conditional owner or fail-closed intake boundary missing');
+}
 if (workflowEntry?.truth_owner !== '.claude/skill-os/input-modes.yaml'
     || workflowEntry?.target !== '.claude/skill-os/runtime/workflow-mode.md') {
   errors.push('workflow-mode must keep YAML truth_owner and runtime loading owner separate');
@@ -144,6 +152,7 @@ if (registryKeyRead.status !== 0) {
   }
 }
 const inputModeDir = join(ROOT, '.claude/skill-os/generated/input-modes');
+if (!inputModeKeys.includes('motion-polish')) errors.push('motion-polish selected input-mode key missing');
 const generatedModeEntries = existsSync(inputModeDir) ? readdirSync(inputModeDir, { withFileTypes: true }) : [];
 const generatedModeNames = generatedModeEntries.map((entry) => entry.name).sort();
 const expectedModeNames = inputModeKeys.map((key) => `${key}.json`).sort();
@@ -216,7 +225,7 @@ for (const [name, pattern] of [
 }
 const engineeringModes = read('.claude/agents/references/plan-engineering-modes.md');
 const designGuidance = read('.claude/agents/references/plan-design-guidance.md');
-const expectedDesignGuidanceSha256 = '27d996d59268d48af48494b943d5dad225e294db52f2612a38316a5f3e10c645';
+const expectedDesignGuidanceSha256 = '71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f';
 const designGuidanceSha256 = createHash('sha256').update(designGuidance).digest('hex');
 const assertionExamples = read('.claude/agents/references/plan-assertion-examples.md');
 const mandatoryDesignOutputGate = 'When a design chain proceeds from `design-brief` to implementation, the intervening design-output\n'
@@ -485,6 +494,22 @@ if (!/实际调用 office 向导入口[\s\S]{0,100}`\/office`[\s\S]{0,80}`\$offi
   errors.push('office wizard loading is not bounded to explicit native or natural-language office-wizard invocation');
 }
 const openDesign = read('.claude/skills/office/open-design/SKILL.md');
+for (const [name, path, pointer] of [
+  ['OD', '.claude/skills/office/open-design/SKILL.md', 'prototype-delivery.md'],
+  ['TS', '.claude/skills/office/tech-spec/SKILL.md', 'prototype-delivery.md'],
+  ['TP', '.claude/skills/office/task-plan/SKILL.md', 'prototype-delivery.md'],
+  ['compile', '.claude/agents/references/plan-engineering-modes.md', 'prototype-delivery.md'],
+  ['implement', '.claude/skills/office/implement/SKILL.md', 'plan-engineering-modes.md'],
+  ['Plan', '.claude/agents/plan-agent.md', 'plan-engineering-modes.md'],
+  ['QG', '.claude/agents/quality-gate.md', 'prototype-delivery.md'],
+  ['Orchestrator', '.claude/agents/orchestrator.md', 'prototype-delivery.md'],
+  ['handoff', '.claude/skills/office/references/handoff-protocol.md', 'prototype-delivery.md'],
+]) {
+  const consumer = read(path);
+  if (!consumer.includes('final_artifact_ref') || !consumer.includes(pointer)) {
+    errors.push(`prototype final consumer ${name} missing exact final_artifact_ref/owner pointer`);
+  }
+}
 if (!/稳定 ID[^\n]{0,80}完整原文/.test(openDesign) || !/只有 ID 的清单不是需求正文/.test(openDesign)) {
   errors.push('open-design handoff does not preserve ID plus complete source text');
 }

@@ -225,4 +225,25 @@ Switcher QA：{共享浮动底栏key/名称、左右箭头及键盘环绕、inpu
 原型声明/权限：{只在批准目录，真实route/auth/数据写入/生产未被验证；另行实现须真实build环境
 production guard并移除底栏，Git归档/发送/发布需另获原生授权}
 
+## Exact derived delivery identity（仅明确选择 motion 后处理时）
+
+身份真值由 `.claude/skill-os/runtime/prototype-delivery.md` 和其 schema/helper 拥有；在写本节或
+消费 `final_artifact_ref` 前完整读取。这里仅记录实际入口，不改变普通原型的既有 QA/用途门。
+
+generation.source: {实际 open-design/html-prototype/用户原件来源}
+raw entry/spec/recovery receipt: {原始精确 path+sha256；保持原件，不重写旧 FAIL}
+postprocess.source: motion-polish
+delivery kind: {adequate-original / adequate-copy / enhanced-copy}
+candidate_ref: {验收前冻结的精确 path+sha256}
+final entry/spec: {实际被验的精确 path+sha256；不得默认 raw/index.html}
+required behavior refs: {全部原始产品 AC/STATE、动效目标、适用输入和 KEEP 的预冻集合}
+patch/methods: {实际变更与适用参考的版本/hash；充分分支 patch 为空}
+runtime evidence: {同 finalhash 的实际 DOM/时间轨迹、required 逐项结果}
+independent acceptance: {caller 核验的真实独立 invocation/output/report refs；自检不冒充独立票}
+final_artifact_ref: {仅最终接受后由普通 handoff 运输的 accepted-delivery.json path+sha256}
+
+复制内容与原同名 spec/QA 资产位于 attempt/content，观察 spec/QA metadata 位于 attempt 根，
+不覆盖原文件。内部 OD 未完成分支使用真实 raw recovery receipt 与源期待，不要求未来的
+Phase6 DONE handoff；完整 final 独立 PASS 后才由 OD completion owner 完成一次。
+
 <!-- FILE_END: html-prototype/SCHEMA.md -->

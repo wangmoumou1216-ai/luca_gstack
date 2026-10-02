@@ -163,6 +163,11 @@ project_skills:
     # CLAUDE.md「单点交接到 OD」规则结合上下文理解意图后路由（用户要求：结合语义，不靠词表）。
     triggers: [Open Design, open design, opendesign, OpenDesign, OD生成, OD出图, OD设计, OD原型, 用OD做]
 
+  motion_polish:
+    invoke: "/motion-polish"
+    weight: 8
+    triggers: [motion-polish, 完善HTML动效, 补足HTML微交互, 润色已有HTML动效]
+
   tech_spec:
     invoke: "/tech-spec"
     weight: 7

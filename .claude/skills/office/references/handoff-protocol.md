@@ -111,6 +111,13 @@ node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.
 
 ## 下游 skill 的读取协议
 
+当交接选择了 motion-polish/OD composite 最终原型时，在 intake/完成前完整读取
+`.claude/skill-os/runtime/prototype-delivery.md`，传递并实际 resolve 精确
+`final_artifact_ref{path,sha256}` 和返回的 final/spec/source/raw provenance；当前 caller 读界限
+必须真实获准，handoff 不授读权。standalone 写普通 motion-polish handoff；内部子单元在既有
+outputs 返回 certificate，由同一 OD caller 最终交接一次，不要求未来 raw OD DONE handoff。
+承诺原型引用无效时不按时间或旧 raw 路径回退；下列摘要读取纪律不免除该精确证据重验。
+
 skill 启动时，Orchestrator（或 skill 自身在 standalone 模式下）按以下顺序读取：
 
 1. **workflow-state.yaml** → 确认上游哪些 skill 已 DONE

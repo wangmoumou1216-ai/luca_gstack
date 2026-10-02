@@ -24,6 +24,7 @@
 | `insight-synthesis` | 一手定性综合：把**用户提供的**一手定性资料（访谈/工单/回访/开放问卷）编码成原子观察， 跨来源亲和聚类，经用户确认主题后做 observation→interpretation 跃迁，产出分层洞察… | `.claude/skills/office/insight-synthesis/SKILL.md` |
 | `issue-triage` | 显式维护者入口：用完整 Issue/PR、代码验证和历史 notes 推进两 category、五 state 的 triage 状态机，形成 durable brief 或具体待答问题；维护者选择方向… | `.claude/skills/office/issue-triage/SKILL.md` |
 | `loop-me` | Design recurring workflows from your real world through stateful grilling, then save the resolved spe… | `.claude/skills/office/loop-me/SKILL.md` |
+| `motion-polish` | Motion Polish inspects and improves motion and microinteractions in selected existing HTML, preservin… | `.claude/skills/office/motion-polish/SKILL.md` |
 | `muse-req-triage` | 批量候选需求 triage：rule-based 打分 + 独立分类，产出待裁清单，最终真伪/ 优先级裁定留给人类。独立接收原始语料或已整理的候选需求清单，在投入 /brainstorm 前筛选；不代替… | `.claude/skills/office/muse-req-triage/SKILL.md` |
 | `office` | luca_gstack 入口。向导式：先问你想做什么，推荐对应 workflow。 展示一级可见 skill 列表，含描述和输入模式。 | `.claude/skills/office/SKILL.md` |
 | `open-design` | Open Design (OD) 连接器：冻结 Packet → 最终模板/模块 binding + TAC/hash 采用（或互斥 reference_only） → 指定 OD 项目交接与 hand… | `.claude/skills/office/open-design/SKILL.md` |

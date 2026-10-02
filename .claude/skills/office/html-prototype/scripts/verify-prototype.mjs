@@ -526,6 +526,6 @@ console.log(`${passed ? "PASS" : "FAIL"} ${reportPath}`);
 return passed ? 0 : 1;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.existsSync(process.argv[1]) && fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = await verifyPrototype();
 }

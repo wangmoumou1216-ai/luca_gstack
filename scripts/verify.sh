@@ -264,6 +264,12 @@ check S47 "handoff 生成时 gate_result/criteria/标题契约会咬" "npm run t
 check S48 "writing-for-agents 来源/边界/路由/双 harness 契约" "npm run test:writing-for-agents --silent"
 check S49 "双 harness 条件加载 canary（相关命中、无关不加载）" "npm run test:agent-context-resolution --silent"
 check S50 "Matt38 离线 fixture 与 synthetic oracle 合同" "npm run test:matt-adaptation --silent"
+check S51 "motion-polish 注册/消费者指针与真实交付 CLI 反例" "npm run test:motion-polish-registration --silent"
+check S52 "精确原型交付/读界限/完整闭包与六 guard mutation" "npm run test:prototype-delivery --silent"
+check S53 "实际 HTML 动态过程与连续性 guard RED/GREEN" "npm run test:motion-polish-browser --silent"
+check S54 "当前实例 driver/data/cleanup receipt 实际契约" "npm run test:project-verification --silent"
+check S55 "原分母切片/读回/measurement receipt 实际契约" "npm run test:evidence-receipts --silent"
+check S56 "文档断言真实失败/工具错误退出码契约" "npm run test:verification-exit-contract --silent"
 # S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
 # 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
 # verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。

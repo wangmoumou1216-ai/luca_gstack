@@ -107,6 +107,28 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
 2. `docs/handoff/*design-brief-handoff.md`（完整读取）
 3. `docs/engineering/*tech-spec.md` 的第 5 节「Requirement Traceability Matrix」（只读这一节）
 4. 如果 design-brief handoff 指向“可追踪完整矩阵”，读取该矩阵所在节；不读全文
+5. 若 TS CMP 的 `artifact_evidence` 依赖 actual final，intake 前完整读取
+   `.claude/skill-os/runtime/prototype-delivery.md`，以同一 exact `final_artifact_ref` / `accepted_ref`
+   和已验证 delivery root。仅本地文件来源且无 remote/message context 时，在 caller 当前真实
+   获准 read context 下实际执行以下 CLI：
+
+   ```text
+   node scripts/prototype-delivery.mjs resolve --accepted <accepted_ref.path> --sha256 <accepted_ref.sha256> --delivery-root <verified root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
+   ```
+
+   当前已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
+   `scripts/prototype-delivery.mjs` 导入 `resolveFinal`，实际调用：
+
+   ```javascript
+   resolveFinal({ path: accepted_ref.path, sha256: accepted_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
+   ```
+
+   传入 caller 实际提供的完整获准 `currentReadContext`，不从 metadata 构造授权，不丢掉
+   remote/message context 后强制 CLI。只有 CLI 能力且缺所需 API 上下文时返回 NEEDS_CONTEXT；
+   缺真实读取许可仍 BLOCKED。两入口返回相同 resolved final，再执行下列 TS 身份核对。
+
+   对照 TS 冻结的 final/spec/source/acceptance hashes，按需读取实际 final/spec；flags 重复但不
+   授读权。缺失/漂移只阻相关 ASSERT/DEV/TEST，并回受影响 TS/交付 owner，不猜 raw/latest。
 
 **不读取**：PRD 全文、UX 文档全文、design-brief 全文。
 
@@ -146,10 +168,12 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
 | SRC-TS | docs/engineering/...-tech-spec.md | 架构/接口/矩阵 | 所有开发任务必读对应节 | 不需整体读 |
 | SRC-DB | docs/decisions/...-design-brief.md | 页面/交互位置、决策、状态及可追踪矩阵 | UI 相关 task 读 §7「页面与交互位置映射」（`page_interaction_mapping`）和可追踪矩阵指定节 | 非 UI task 不读 |
 | SRC-HO | docs/handoff/... | 决策摘要/约束/风险 | 每个 task 开始前确认约束 | 任务执行中途 |
+| SRC-PROTOTYPE | exact accepted_ref + resolved final/spec path+SHA 与 source/acceptance/base provenance | 所选实际原型四维与行为实现证据，非 R/AE 来源 | 相关 CMP/ASSERT/DEV/TEST intake 和执行前重验同一 ref，再读所需实际代码/规格 | 无原型依赖的任务不读 |
 
 §7 的交互职责、D-ID、适用 STATE、R/AE 与 AC、约束和下游目标进入对应任务的读取清单。
 已确认页库引用仅辅助定位；`reference=none` 不免除 REQ/DEC/STATE 节点和 ASSERT 覆盖。
 历史 `component_mapping` / 旧组件映射只读提取这些语义列；不要求旧技术列或资产，不重写历史。
+本 Phase 的 SRC-PROTOTYPE 原样进入输出 §2 L1 Index；不能仅把 ref 藏在文本附录或变成新需求。
 
 ---
 
@@ -202,6 +226,8 @@ Pass 准则: [具体数值/状态/输出，不允许写「正常运行」]
 - 断言描述必须包含「给定/执行/结果」三段
 - Pass 准则必须是可以被代码或人工明确判断 true/false 的陈述
 - 模糊断言（「用户体验好」「功能正常」）→ 写完后进入 Phase 7 会 FAIL
+- 相关 ASSERT 保存同一 SRC-PROTOTYPE exact accepted_ref/final/spec/source/acceptance 指针与
+  具体行为 Pass 准则；stale 只阻该依赖，不能用旧截图/raw 证明。DEV 读取清单及 TEST 原样继承。
 
 ---
 
@@ -259,6 +285,14 @@ Pass 准则: <与断言 Pass 准则一致>
 ```
 
 **规则**：每个 MUST 级 Dev Task 必须有 ≥1 个对应 Test Task。
+
+涉及当前实例行为验证时，在构造/执行 TEST 前完整读取
+`.claude/agents/references/project-verification.md`。TEST 保留源 ASSERT 原分母、真实复用 suite/
+driver path+hash/revision、manifest exact path+hash、current instance before/after probes、
+data/seed/reset 和实际 action/result/stdout/stderr/exit 及 cleanup receipt/retained proof。
+doctor/readiness 是准入而非功能 TEST；driver 坏回 capability owner，产品 FAIL 留原 DEV/U-ID。
+有原型依赖时 DEV/TEST 在既有字段携带同一 SRC-PROTOTYPE ref，执行前实际 revalidate；不加
+第二调度器、不改变 DEV→TEST 顺序或 Phase 7 coverage，不因 receipt 授 process/cleanup 权限。
 
 ---
 

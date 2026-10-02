@@ -30,6 +30,7 @@
 - `docs/prd/YYYY-MM-DD-<slug>-prd.md`
 - `docs/research/deepresearch-{topic-slug}-{date}.md`
 - `docs/prototype/YYYY-MM-DD-<topic>/index.html`
+- `docs/prototype/YYYY-MM-DD-<topic>/motion-polish/<unique-attempt-id>/content/<base.entry_relative>`（完整资产闭包保持原入口名与相对拓扑；metadata 在 attempt 根目录，raw index/spec/recovery receipt 均保留，不覆盖）
 - `docs/decisions/YYYY-MM-DD-<topic>-design-brief.md`
 - `docs/evaluation/YYYY-MM-DD-<topic>-ux-audit.md`
 - `docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md`
@@ -112,6 +113,13 @@ Handoff 写入节的以下内容受保护：
 ### P7 — workflow-state 写入（严格保护）
 
 写入 `.claude/workflow-state.yaml` 的代码不得删除，`_NODE`、`_STATUS`、`_OUTPUT` 变量赋值不得改变含义。
+
+**唯一条件例外（OD composite postprocess）：** 仅在用户已批准的 open-design 同一 design-output
+Phase 中，机械回收后、完成前执行 motion-polish，完整独立源语义与动态 gate PASS 并经
+`resolveFinal` 重验精确 `final_artifact_ref` 后，`_OUTPUT` 才绑定返回的 accepted `final_entry`。
+`_NODE="open-design"`、`_STATUS="DONE"` 和既有 `write_state.py` 路径不变，父节点仅完成一次；
+未触发分支保留原 raw `_OUTPUT` 赋值。定义见 open-design Phase 4–6 与
+`.claude/skill-os/runtime/prototype-delivery.md`；无效引用不回退 raw，不泛化为其他节点的覆盖权。
 
 ---
 

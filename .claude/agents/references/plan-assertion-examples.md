@@ -6,54 +6,157 @@ failure handling, and approval.
 
 ```bash
 # [BLOCKING] <ID> — 文件存在
-[ -f <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; [ -f "<path>" ] ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — 目录存在
-[ -d <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; [ -d "<path>" ] ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — 文件包含关键词
-grep -q "<keyword>" <file> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; grep -q "<keyword>" "<file>" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [WARNING] <ID> — 文件不包含某词
-! grep -q "<keyword>" <file> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail;
+  if grep -q "<keyword>" "<file>"; then
+    exit 1
+  else
+    search_rc=$?
+    if [ "$search_rc" -eq 1 ]; then exit 0; else exit "$search_rc"; fi
+  fi
+); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — 文件可执行
-[ -x <path> ] && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; [ -x "<path>" ] ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — Node.js 语法合法
-node --check <file> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; node --check "<file>" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — Python 语法合法
-python3 -m py_compile <file> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; python3 -m py_compile "<file>" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — YAML 合法
-python3 -c "import yaml; yaml.safe_load(open('<file>'))" && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; python3 -c "import yaml; yaml.safe_load(open('<file>'))" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — JSON 合法
-node -e "JSON.parse(require('fs').readFileSync('<file>'))" && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; node -e "JSON.parse(require('fs').readFileSync('<file>'))" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — Shell 脚本退出码 0
-bash <script> && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; bash "<script>" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — git 仓库存在
-[ -d .git ] && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; [ -d .git ] ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [WARNING] <ID> — git hooks 路径配置
-git config --get core.hooksPath | grep -q "<path>" && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; git config --get core.hooksPath | grep -q "<path>" ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # —— 行为级模板（跑真实测试，2026-07-10 验收闭环）——
 
 # [BLOCKING] <ID> — npm 测试套件通过
-npm test --silent && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; npm test --silent ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — pytest 套件通过
-python3 -m pytest -q && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; python3 -m pytest -q ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — swift 测试套件通过
-swift test && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; swift test ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 
 # [BLOCKING] <ID> — 项目 verify 脚本通过
-bash scripts/verify.sh && echo "PASS <ID>" || echo "FAIL <ID>"
+if ( set -o pipefail; bash scripts/verify.sh ); then
+  echo "PASS <ID>"
+else
+  check_rc=$?
+  echo "FAIL <ID>"
+  exit "$check_rc"
+fi
 ```
 
 <!-- FILE_END: agents/references/plan-assertion-examples.md -->

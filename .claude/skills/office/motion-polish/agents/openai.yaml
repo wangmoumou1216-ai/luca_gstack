@@ -1,0 +1,6 @@
+interface:
+  display_name: "Motion Polish"
+  short_description: "Improve motion and microinteractions in existing HTML"
+  default_prompt: "Use $motion-polish to inspect and improve motion in this selected HTML, then hand the exact final artifact to independent acceptance."
+policy:
+  allow_implicit_invocation: true

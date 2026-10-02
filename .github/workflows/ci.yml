@@ -102,6 +102,16 @@ jobs:
         run: npm run check:agent-context
       - name: Agent context mutation proof-it-bites
         run: npm run test:agent-context
+      - name: Motion registration, exact delivery and actual browser gates
+        run: |
+          npm run test:motion-polish-registration
+          npm run test:prototype-delivery
+          npm run test:motion-polish-browser
+      - name: Current-instance, source receipts and assertion exit contracts
+        run: |
+          npm run test:project-verification
+          npm run test:evidence-receipts
+          npm run test:verification-exit-contract
       - name: Reconstruct frozen G5 offline fixtures
         run: |
           sudo mkdir -p /private/tmp/context-lightening-p1.kHzsIW /Users/luca/Desktop/项目/muse/lucagstack/framework-audit

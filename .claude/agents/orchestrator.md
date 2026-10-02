@@ -140,6 +140,12 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
           skill 完成后展示产出与判定；已有明确后续授权且无未决 Human Gate 时继续，
           缺授权或需要采用/产品取舍时等待真实确认，不重复已确认事实。
           （不更新 workflow-state.yaml，该文件是 Skill Workflow Mode 专属）
+        IF approved open-design postprocess_plan selects motion-polish：
+          机械 scoped recovery 后、最终语义验收前按 OD Phase 4–6 和
+          .claude/skill-os/runtime/prototype-delivery.md 启动已授权 internal 子单元
+          不等待 raw semantic PASS 或未来 OD DONE handoff；保留 raw FAIL 与全部原 D/STATE/AC
+          只在同一未完成 Phase 修复已批准范围，final 完整独立 PASS + exact final_artifact_ref
+          resolve 后回 OD Phase 5/6 完成父级一次；required FAIL/UNKNOWN 不前进、不进 TS
         → 进入 2c 测试环节（断言：handoff 文件存在 + gate_result PASS）
       ELSE（phase_type == task_execution，默认）：
         按编排模式执行：
@@ -258,6 +264,11 @@ Step 7  记录 eval（每个 skill 各记一条）
          否则省略该变量（字面量 {{AVAILABLE_SKILL_PATHS}} 残留时模板有 guard，会自动跳过）
      → 通过 Agent tool 的 prompt 字段传入完整 prompt
      → PRIMARY_OUTPUTS 在派发前相对 WORK_ROOT 解析成固定绝对路径；后台任务不得跟随共享 display aliases 或后续项目切换改变落点
+     → required 多切片/来源合并测量前，完整读取 .claude/agents/references/evidence-receipts.md；
+       派发前 pre-freeze expected 范围/版本/方法与原分母，不能按返回数量重建。
+       在既有 PRIMARY_OUTPUTS / outputs_produced 原样传递 observed、GAP、失败/拒绝理由与真实
+       tool-read/measurement 输出，保留 base/graft 及已有 native invocation/adoption receipts；
+       required GAP 停依赖，optional 仅降对应 claim，不另造完成状态或通用 scheduler。
      → 取消时先停止尚未派发的新工具动作，再用当前 harness 的中断 primitive；已发出或无法中断的动作必须报告为在途，不能冒称撤销
 
 **Skill 路径映射表（填写 `{{AVAILABLE_SKILL_PATHS}}` 时参照此表）：**
@@ -271,6 +282,7 @@ Step 7  记录 eval（每个 skill 各记一条）
 | `ux-brainstorm` | `.claude/skills/office/ux-brainstorm/SKILL.md` |
 | `design-brief` | `.claude/skills/office/design-brief/SKILL.md` |
 | `open-design` | `.claude/skills/office/open-design/SKILL.md` |
+| `motion-polish` | `.claude/skills/office/motion-polish/SKILL.md` |
 | `html-prototype` | `.claude/skills/office/html-prototype/SKILL.md` |
 | `figma-demo` | `.claude/skills/office/figma-demo/SKILL.md` |
 | `magicpath` | `.claude/skills/office/magicpath/SKILL.md` |

@@ -274,6 +274,8 @@ luca_gstack — 一级可见 Skill 列表
                说明：设计系统由用户在 OD 配置；交接需求与已确认参考，OD 不可达或认证失败时报告并暂停。
                隐藏 skill `magicpath` 仅按用户明确选择或已批准备用路径内部 dispatch，非一级入口
 
+/motion-polish A B C D 已有 HTML 的动效与微交互：保留真实产品行为，返回精确产物给独立验收；不生成新 UI
+
 /html-prototype A B C  生成可在浏览器查看的 HTML 原型（用户明确选择或已批准的本地 HTML 备用路径）
                输入模式：standalone 或 workflow。可接 design-brief / ux-audit /
                screenshot_delta / figma-demo blueprint / standalone brief

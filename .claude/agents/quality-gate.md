@@ -29,6 +29,7 @@ tools:
 | 参数 | 模式 |
 |------|------|
 | 有 `assertions` 字段（shell 命令列表） | **Free Task Mode** |
+| `review_stage=PREACCEPT` + exact `candidate_ref` | **Skill Mode 的 motion 前端 facet**；优先于普通 handoff/DONE 检查 |
 | 有 `skill_name` + `output_path` + `handoff_path` | **Skill Mode** |
 
 ---
@@ -63,6 +64,16 @@ Step 4  汇总结果，生成报告（见 §4 报告格式）
 ```
 
 ### 1.3 断言执行规范
+
+当 required 行为 ASSERT 使用当前实例/driver receipt，验收前完整读取
+`.claude/agents/references/project-verification.md`。实际核对源 ASSERT 原分母、冻结 manifest
+path+hash、当前 driver/data 与结果；读取真实 before/after identity probes、操作 stdout/stderr/
+exit/result 和 cleanup 后仍可读回的 retained proof。doctor/readiness PASS 不代本次 TEST；
+错实例、缺 error state、driver 失败或清理毁证据按 required GAP/FAIL 拒绝，不能改分母。
+当 required 结论汇聚多个范围/版本/方法切片，验收前完整读取
+`.claude/agents/references/evidence-receipts.md`，以父级 pre-freeze expected 原分母对比原样
+observed/GAP；实际查 tool-read 输出与范围，按声称的 measurement 方法独立重放。hash/EOF
+自报和摘要不能证明读真实性；错版本/方法、缺片或合并丢片拒绝对应 required claim。
 
 **级别解析（执行前必须做）：**
 每条断言的第一行是注释头，格式为 `# [BLOCKING] <ID> — <说明>` 或 `# [WARNING] <ID> — <说明>`。
@@ -124,7 +135,41 @@ Handoff 标题允许以下项目内常用变体：
 - 决策：`## 核心决策`、`## 决策`、`## 关键决策`
 - 约束：`## 下游约束`、`## 核心约束`、`## 执行约束`、`## 约束`
 
-#### 前端产出检查（html-prototype, open-design, figma-demo）
+#### 前端产出检查（html-prototype, open-design, figma-demo, motion-polish）
+
+**motion PREACCEPT（接受前候选）：** 调用方独立按 common `MR-004` 派发，提供 exact
+`candidate_ref{path,sha256}`、verified delivery root、源期望、预冻结完整 required behavior set
+和实际获准 runtime/read context。在读取/判断前完整读取
+`.claude/skill-os/runtime/prototype-delivery.md` 与
+`.claude/skills/office/references/motion/review.md`。仅本地文件来源且无 remote/message context
+时实际执行以下 CLI：
+
+```text
+node scripts/prototype-delivery.mjs candidate-check --subject <candidate_ref.path> --sha256 <candidate_ref.sha256> --delivery-root <verified root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
+```
+
+当前已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，使用同一
+helper 的 `resolveCandidateSubject` API，传入 exact `candidate_ref`、verified delivery root 和
+caller 实际提供的完整 `currentReadContext`：
+
+```javascript
+resolveCandidateSubject({ path: candidate_ref.path, sha256: candidate_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
+```
+
+API 从 `scripts/prototype-delivery.mjs` 导入；不能从候选 metadata 生成授权上下文，也不能把
+remote/message context 丢掉后强制 CLI。只有 CLI 能力且缺所需 API 上下文时返回 NEEDS_CONTEXT；
+缺真实读取许可仍 BLOCKED。两入口返回相同候选身份并执行下列独立行为验收。
+
+重复 flags 只编码当前 caller 真实读界限；metadata/authority_ref 不授读权。成功返回的
+`final_entry/final_sha256`、`spec_path/spec_sha256`、`source_ref`、base/raw provenance 与完整
+`required_behavior_refs` 是本票对象；PREACCEPT 不要求历史 accepted、raw semantic PASS、OD DONE
+handoff 或 workflow DONE。实际运行最终 HTML，逐原始源 D/STATE/AC/KEEP 与动态 required ID
+检查真实 DOM/time/reverse/repeat/cancel/reduced-motion/keyboard evidence；静态图或 helper
+integrity 不能判动态 PASS。Brief 合规仅当存在真实 handoff 才启动，adhoc 仍保留真实用户期望。
+报告绑定 candidate path+SHA、final SHA 与未缩减 required set，返回真实观察/证据/判决及
+reviewer invocation/output provenance；判官不写 report/certificate，caller 验证独立原票后才
+记录并 seal。缺票、必要 UNKNOWN/FAIL 不得接受；后续已接受产物检查实际 `resolveFinal` 精确
+`final_artifact_ref`，无效引用不回退 raw。一般前端检查继续如下。
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|

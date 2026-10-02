@@ -300,13 +300,35 @@ handoff ID、bundle kind、provenance、未实现项及实际入口。
 四维（从已产出 HTML 抽取，逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`）；
 未进入开发链时**不触发**；保留当前交付规格与来源记录。
 
+**已批准的完成前 motion 子单元（条件分支）：** 只有 caller 已真实批准本地 copy/edit/metadata/
+browser 效果及精确交付根，且上述 scoped 机械回收成功，才在同一未完成 design-output Phase
+调用 `motion-polish` internal。先完整读取其 SKILL 和
+`.claude/skill-os/runtime/prototype-delivery.md`；输入 exact raw entry/完整闭包、raw spec、真实
+recovery receipt、全部原源 D/STATE/AC/KEEP、已存在的真实 Brief handoff（如有）和当前权限交集。
+不要求 raw semantic PASS 或未来 Phase 6 OD DONE handoff；原 raw FAIL 保留。缺 mechanical
+receipt/效果或新产品事实未定返回原 owner，不以 recover/stage/profile 授本地编辑权。
+local `postprocess_plan{skill:motion-polish,stage:pre_completion,required_behavior_refs,
+local_effect_scope_ref}` 只记录已批准范围，不能写入 Packet/TAC/bundle 或作为授权。
+child 只修已批准缺口，保留 raw index/spec/receipt、完整原分母和独立票历史；内部在既有
+outputs 返回 candidate/certificate，不提前写第二份 handoff/state，不新增 Workflow 节点。
+required FAIL/UNKNOWN 保持本 Phase 未完成，不进 TS；完整 final gate 后返回本 caller。
+若将进开发链，以 accepted final 的实际 DOM/CSS/JS/WAAPI/gesture 重新抽取四维并绑定 final spec，
+不从 raw spec 猜最终参数。
+
 ---
 
 ## Phase 5：落盘交付 → 迭代主体在用户（OD 桌面端）
 
-只有 Phase 4 的 scoped recover receipt 通过、且独立语义验收不再待确认时才可标 DONE。落盘后 `open`
-产物给用户，一句话告知（**不阻塞提问、不 AskUserQuestion**）：
-1. 产物已从 `<handoff-id>/output/index.html` 回收至 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
+只有 Phase 4 的 scoped recover receipt 通过、且独立语义验收不再待确认时才可标 DONE。
+若触发已批准 postprocess 分支，独立 `MR-004` PREACCEPT 对当前 exact candidate 执行完整
+原源语义与 motion required set；不是只测修改项。caller 验证原票 provenance 后 seal，再在
+当前真实 `read_paths`/`read_roots` 下 `resolveFinal` 重验同一 `final_artifact_ref`。只有完整独立
+PASS 才交付最终 accepted 入口并进入 Phase 6；保留 raw FAIL，不把机械回收冒充语义 PASS。
+未触发分支继续交付原 raw；触发后缺失/漂移证书不回退 raw，所需浏览器不可用 NEEDS_CONTEXT。
+落盘后 `open` 产物给用户，一句话告知（**不阻塞提问、不 AskUserQuestion**）：
+1. 普通分支：产物已从 `<handoff-id>/output/index.html` 回收至 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
+   composite 分支：展示已 resolve 的实际 `final_entry` 和 `spec_path` 作为最终交付，另注明上述 raw
+   recovery 路径及保留来源，不把 raw index.html 当本次最终入口；
 2. 要迭代请直接在 OD 桌面端继续改，改完说「拉回来」走 recover 入口回收最新版；
 3. 要回这里改字段布局时，点名即可；外部 Figma 交付由用户现有工具操作完成。
 
@@ -321,6 +343,34 @@ handoff ID、bundle kind、provenance、未实现项及实际入口。
 
 ## Phase 6：handoff + 更新 workflow-state（落盘后）
 
+两分支互斥，以真实已批准 postprocess 范围和完整独立 PASS 选择，环境变量不能选择或授权分支。
+已批准 composite 分支先实际执行 exact ref resolution。仅本地文件来源且无 remote/message
+context 时使用以下 CLI：
+
+```text
+node scripts/prototype-delivery.mjs resolve --accepted <final_artifact_ref.path> --sha256 <final_artifact_ref.sha256> --delivery-root <verified authorized delivery root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
+```
+
+当前已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
+`scripts/prototype-delivery.mjs` 导入 `resolveFinal`，实际调用：
+
+```javascript
+resolveFinal({ path: final_artifact_ref.path, sha256: final_artifact_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
+```
+
+`currentReadContext` 必须是 caller 实际提供的完整获准上下文，不能从证书 metadata 构造授权或
+丢掉 remote/message context 后强制 CLI。只有 CLI 能力且缺所需 API 上下文时返回 NEEDS_CONTEXT；
+缺真实读取许可仍 BLOCKED。两入口返回相同 resolved final，均遵守下列 hash 核对及单次完成规则。
+
+flags 可重复，仅编码 caller 当前获准读范围；JSON 不授读权。必须成功并核对返回的
+`accepted_ref`、`final_entry/final_sha256`、`spec_path/spec_sha256`、`source_ref`、`acceptance_ref`
+与原始 base/raw provenance 后，按 P7 唯一例外将 `_OUTPUT` 程序化绑定返回的 `final_entry`，
+保留 `_NODE="open-design"`、`_STATUS="DONE"` 和同一 write_state.py 调用。不能先运行 raw
+完成赋值再改输出，也不能按目录/latest/名字猜证书；父级 handoff/state 仅完成一次。
+composite 分支完全跳过下列普通分支代码块：caller 按成功解析的 JSON 程序化设置这三个变量，
+然后仅调用一次既有 `python3 .claude/skills/office/references/write_state.py`，不再执行 raw 赋值。
+
+**仅普通回收分支执行以下原代码；composite 分支禁止执行：**
 ```bash
 export _TOPIC="${_TOPIC:-$(cat .claude/current-topic.txt 2>/dev/null)}"
 export _NODE="open-design"; export _STATUS="DONE"
@@ -331,6 +381,10 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 用户判断结论、已确认参考/无参考）；约束（≤5：实际 index.html 路径、source=open-design、修改/保持边界与外部设置）；
 风险（≤3：traceability/语义待确认、OD beta/动态端口、未还原项）；产出路径 + **OD 项目、handoff ID、
 output root 与 bundle hash**（供日后 scoped recover 定位）。
+composite handoff 另携带 exact `final_artifact_ref{path,sha256}`、accepted final entry/spec path+SHA
+和独立 acceptance_ref；保留 raw entry/spec、recovery receipt path+SHA、OD project/handoff ID、
+output root/bundle provenance。raw 与 postprocess 双来源不能相互替代；内部 certificate 由
+父级这一份 handoff 运输，未完成 raw 无需先造 DONE handoff。
 
 ---
 

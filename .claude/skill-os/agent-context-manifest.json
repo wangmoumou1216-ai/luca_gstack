@@ -243,6 +243,21 @@
       "read_to_end": true,
       "fallback": "Report the unverified harness as a concern; do not claim parity.",
       "fixtures": ["claude-invocation", "codex-invocation", "dual-harness-parity"]
+    },
+    {
+      "id": "prototype-delivery",
+      "obligation_ids": ["K6", "K9", "K10"],
+      "runtime": ["claude", "codex"],
+      "truth_owner": ".claude/skill-os/runtime/prototype-delivery.md",
+      "leading_words": ["candidate_ref", "final_artifact_ref", "motion-polish", "PREACCEPT"],
+      "condition": "A motion candidate is frozen or reviewed, or an explicitly selected accepted final prototype is consumed by OD, TS, TP or compile.",
+      "load_before": "candidate/PREACCEPT resolution, final resolution or prototype evidence intake",
+      "target": ".claude/skill-os/runtime/prototype-delivery.md",
+      "contains": "Exact candidate and accepted identity, current caller read context, immutable attempt and fail-closed consumer revalidation.",
+      "loader": "selected skill, independent judge or exact final-artifact consumer",
+      "read_to_end": true,
+      "fallback": "Do not claim the selected final or fall back to raw when an explicit required final_artifact_ref is missing, invalid or stale.",
+      "fixtures": ["missing-final-ref", "invalid-final-ref", "finalstale"]
     }
   ]
 }

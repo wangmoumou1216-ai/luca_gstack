@@ -16,6 +16,7 @@ const fixturePaths = [
   '.claude/agents/references/plan-design-guidance.md',
   '.claude/agents/references/plan-assertion-examples.md',
   '.claude/agents/orchestrator.md',
+  '.claude/agents/quality-gate.md',
   '.claude/skills/office',
   '.claude/skill-os/agent-root-kernel.json',
   '.claude/skill-os/agent-context-manifest.json',
@@ -48,7 +49,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 105;
+const EXPECTED_MUTATIONS = 107;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -85,6 +86,16 @@ function changeIndex(dir, edit) {
   edit(projected);
   writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${JSON.stringify(projected)}\n\`\`\``));
 }
+mutate('explicit final prototype consumer pointer disappears', dir => {
+  const p = join(dir, '.claude/skills/office/tech-spec/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replaceAll('final_artifact_ref', 'unselected-artifact'));
+}, /prototype final consumer TS missing exact final_artifact_ref\/owner pointer/);
+mutate('prototype delivery conditional owner disappears', dir => {
+  const p = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const data = JSON.parse(readFileSync(p));
+  data.entries = data.entries.filter(entry => entry.id !== 'prototype-delivery');
+  writeFileSync(p, JSON.stringify(data));
+}, /prototype-delivery conditional owner or fail-closed intake boundary missing/);
 mutate('index drops a semantic condition', dir => changeIndex(dir, rows => { rows[0].condition = ''; }), /context index.*drift/);
 mutate('index moves the consumption deadline', dir => changeIndex(dir, rows => { rows[0].load_before = 'after execution'; }), /context index.*drift/);
 mutate('index drops a failure posture', dir => changeIndex(dir, rows => { delete rows[0].fallback; }), /context index.*drift/);

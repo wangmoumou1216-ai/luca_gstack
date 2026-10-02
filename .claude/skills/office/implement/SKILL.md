@@ -38,6 +38,13 @@ It has two entry modes:
 
 ## Compile barrier
 
+Before compiling a selected accepted/composite prototype dependency or an explicit
+`final_artifact_ref` / `accepted_ref` binding, fully read and execute the revalidation rule in
+`.claude/agents/references/plan-engineering-modes.md` (`implement compile`). Its exact
+`final_artifact_ref` resolution applies even when task-plan bytes are unchanged; drift returns only
+affected TS/TP owners for re-gate/recompile and missing payload approval. Old unselected prototype
+tasks retain their existing contract.
+
 1. Resolve the exact canonical tech-spec and task-plan paths. Verify their gates are PASS and read
    the task-plan through its final line.
 2. Compute the task-plan SHA-256 after the final gated bytes are on disk. Bind the compile request to

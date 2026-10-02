@@ -33,6 +33,7 @@ skills:
   tech-spec: {tier: 1}
   ux-writing: {tier: 1}
   html-prototype: {tier: 1}
+  motion-polish: {tier: 1} # Single local executor; caller owns independent review. Tier is not browser capability or parity evidence.
   grilling: {tier: 1}
   diagnosing-bugs: {tier: 1}
   resolving-merge-conflicts: {tier: 1}
