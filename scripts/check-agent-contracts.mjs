@@ -39,6 +39,9 @@ const od = read('.claude/skills/office/open-design/SKILL.md');
 const ts = read('.claude/skills/office/tech-spec/SKILL.md');
 const tp = read('.claude/skills/office/task-plan/SKILL.md');
 const compile = read('.claude/agents/references/plan-engineering-modes.md');
+const office = read('.claude/skills/office/SKILL.md');
+const handoff = read('.claude/skills/office/references/handoff-protocol.md');
+const evalMethod = read('.claude/skill-os/eval-methodology.md');
 
 // 1. OD-first 锚（当轮漂移正是三处全漏，缺一即复发）
 t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-design'));
@@ -143,6 +146,34 @@ t('Codex runner 信号取消终止子进程组并停止继续调度',
   /process\.kill\(-pid,\s*'SIGKILL'\)/.test(workflowRunner)
   && /\['SIGINT',\s*'SIGTERM',\s*'SIGHUP'\]/.test(workflowRunner)
   && /child\.kill\('SIGTERM'\)/.test(workflowRunner));
+
+// 11. 已发生的执行冲突防回退。仅静态 tripwire，不证明模型行为或整体收益。
+t('阶段继续同时保留已有授权与未决人类门',
+  orch.includes('下一 Phase 已在有效执行授权范围内且无未决 Human Gate')
+  && orch.includes('规划不授予执行权限') && !orch.includes('等待用户确认后继续下一 Phase'));
+t('普通返修的直接消费者不再无条件索取批准',
+  orch.includes('授权内可修复问题交原 owner 返修后重验')
+  && qg.includes('按 orchestrator.md §2.2') && !qg.includes('展示 findings → 询问用户：修复'));
+t('局部交付与整体完成有明确边界及消费入口',
+  orch.includes('必需项未完成或证据未知时，保留整体未完成')
+  && auto.includes('§2.2 的完成边界') && orch.includes('不把短时间/动作数'));
+t('auto 等待超时不当终态，重试收取原结果且保留上限',
+  auto.includes('等待调用超时不等于任务终态') && auto.includes('重试前确认原 WA 已终止')
+  && auto.includes('不重放已完成效果') && auto.includes('单个 WA 最多重试 1 次')
+  && !auto.includes('超时无响应（> 5min）'));
+t('handoff 继承真实决定并保留权限边界',
+  handoff.includes('继承 ADOPTED/REJECTED 及来源') && handoff.includes('不授予本次执行权')
+  && !handoff.includes('skill 完成时先写 PROPOSED'));
+t('office 与恢复入口消费全部必需上游',
+  office.includes('本次全部必需上游') && handoff.includes('不以最近 DONE 代替依赖集合')
+  && orch.includes('最后 DONE 不替代依赖集合') && handoff.includes('standalone 不补 workflow state'));
+t('必需来源不被摘要或预加载建议截断',
+  handoff.includes('摘要不能替代必要来源') && office.includes('5K tokens 是单批预加载建议')
+  && office.includes('无法完整消费时保留缺口并暂停受影响依赖'));
+t('eval 区分主张、版本、前置依赖与未知成本',
+  evalMethod.includes('本次实际候选的提交/内容 hash') && evalMethod.includes('合同一致性')
+  && evalMethod.includes('整体收益/架构替换') && evalMethod.includes('不改判旧成绩')
+  && evalMethod.includes('未知费用留空'));
 
 if (failures.length) {
   console.error(`❌ agent 契约回归 FAIL（${failures.length}/${n}）：`);

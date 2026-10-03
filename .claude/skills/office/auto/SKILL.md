@@ -191,7 +191,7 @@ Work Agent 收到指令后必须按以下顺序执行：
 ```
 并行 Phase（‖）: 在同一条消息中并发启动所有 WA
 串行 Phase（→）: 等待前 Phase 所有 WA 完成 + handoff 写入后，再启动下一 Phase
-质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 重试该 WA
+质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 按 W9 处理
 ```
 
 派发前，主 Agent 必须把全部输入、`PRIMARY_OUTPUTS` 与 handoff 路径相对 `WORK_ROOT`
@@ -207,14 +207,18 @@ Work Agent 收到指令后必须按以下顺序执行：
 OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢复」，这不是更换工具；
 该一次 retry 由 OD 路径计数，W9 不得通过重启 WA 重置它或重新进入已耗尽的 headless 路径。
 
+等待调用超时不等于任务终态。真实失败、取消和资源上限仍按原约束处置。
+重试前确认原 WA 已终止、收取在途结果并核对已完成效果；只按已有授权重试未完成部分。
+原任务仍在运行则沿原句柄等待；无法观察终态则暂停该依赖并报告缺口，不另开同一任务。
+
 | WA 返回状态 | Orchestrator 动作 |
 |------------|-----------------|
-| `DONE` — 产出路径存在 | 继续下一 Phase |
+| `DONE` — 产出路径存在 | 核对该 skill 必需质量门和下游所需证据已通过后继续；存在性不替代验收 |
 | `DONE` — 但产出路径不存在 | 视为隐式 BLOCKED，执行重试 |
-| `BLOCKED` — 首次 | **重试一次**（重新启动同一 WA，传入相同参数） |
+| `BLOCKED` — 首次 | 按上述终态与授权检查，**重试一次**；传入原 blockers 和已完成产物，不重放已完成效果 |
 | `BLOCKED` — 重试后仍失败 | **停止当前 Pipeline**，向用户报告：阻塞 Phase、blockers 列表、建议操作（手动执行该 skill / 跳过该 Phase）|
-| 超时无响应（> 5min） | 同 BLOCKED 首次处理 |
-| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后重跑该 WA；不盲目重试 |
+| 等待超过 5min，尚无任务终态 | 告知进度，沿实际句柄继续等待/取状态；不因此标 BLOCKED 或重启 WA |
+| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后续做未完成部分；不盲目重试 |
 
 **不允许无限重试**：单个 WA 最多重试 1 次，失败后必须上报，不得静默跳过。
 
@@ -229,6 +233,8 @@ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢�
 ### Step 4 — Aggregation（主 Agent 执行）
 
 所有选定 Pipeline 的 Phase 完成后（下例仅展示全链，不宣称未运行节点完成）：
+
+汇总前按 `.claude/agents/orchestrator.md` §2.2 的完成边界核对原需求和未完项；局部交付不关闭整体。
 
 1. 读取 `<WORK_ROOT>/docs/handoff/` 中本次 session 的所有 handoff summary
 2. 输出汇总报告：

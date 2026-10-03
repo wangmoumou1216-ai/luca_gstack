@@ -106,6 +106,13 @@ open_questions 回原 owner，随后恢复原 U-ID；不新增 workflow state/�
 
 ### 2.2 执行流程
 
+**持续责任与完成边界：** 派发时给每个 owner 完整的获批目标、有限文件范围、直接消费者和验收条件；
+共享文件仍由唯一 owner 修改。中间报告、一次测试通过或技术 turn 结束只更新进度；主控收件后主动
+续派该范围内未完成工作及返修，不把短时间/动作数设成重新索取授权的交回点。真实资源上限仍须遵守。
+必需项缺失只暂停依赖它的动作；独立且已授权的工作继续。候选提交和局部发布只关闭对应交付，
+整体完成前按原需求逐项核对实现、验收、采用及未完项。必需项未完成或证据未知时，保留整体未完成，
+在已有计划/checkpoint中写明 owner、下一动作及停止条件；不得据局部成功关闭整体目标或解除剩余责任。
+
 ```
 Step 1  读取 Plan Agent 输出的计划
         - 获取总 Phase 数、当前 Phase、编排模式
@@ -160,12 +167,13 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
       - quality-gate 运行断言，返回 PASS / FAIL(BLOCKING) / FAIL(WARNING) / CONDITIONAL_PASS
       - Orchestrator 处理测试结果：
           PASS → 标记该 Phase 完成，继续下一个 Phase
-          FAIL(BLOCKING) → 停止，展示 findings，等用户决策（修复/跳过/终止）
+          FAIL(BLOCKING) → 暂停受影响依赖，展示 findings；授权内可修复问题交原 owner 返修后重验
+                          缺授权、需改变范围/方案或有未决 Human Gate 时才等用户决策；不得跳过失败门
                           如状态为 BLOCKED/NEEDS_CONTEXT，按 plan-agent.md §4 Escalation Format 输出
                           同一 Phase 连续 2 次 FAIL(BLOCKING)、或修复涉及计划变更 →
                           走 plan-agent.md「增量重规划」协议（delta 重规划，不推倒全案）
           FAIL(WARNING) → 记录 findings，继续执行
-          CONDITIONAL_PASS → 记录 findings 到当前 Phase 日志，继续执行（与 Skill Workflow Mode 处理方式一致）
+          CONDITIONAL_PASS → 记录 findings；仅在下游必需项均已通过时继续，否则保留缺口并暂停该依赖
 
   2c-eval 【Eval 记录／权限分离】dispatch quality-gate 前由 Orchestrator 生成唯一
         `eval_run_id` 并作为输入传入。quality-gate 只返回报告 + `EVAL_ENVELOPE_JSON`，不写文件。
@@ -197,10 +205,12 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
 
   2d  Supervisor/Hierarchical 模式：人工确认检查点
       - 主 Agent 展示当前 Phase 的产出摘要 + 测试结果
-      - 等待用户确认后继续下一 Phase
+      - 下一 Phase 已在有效执行授权范围内且无未决 Human Gate → 继续，不重复索取已有批准
+      - 缺授权、计划/范围变更或待决人类事项 → 等待真实用户确认；规划不授予执行权限
 
 Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
         Orchestrator 汇总并展示：PASS N / FAIL M / WARN K
+        按本节完成边界核对整体需求；断言通过不替代尚未完成的必需实现、采用或发布
 
 Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时（Scene A/B/D）：
         回读 tech-spec §RTM「测试准则」列，逐条判 pass / fail + 证据，三维框架——
@@ -317,7 +327,8 @@ Step 7  记录 eval（每个 skill 各记一条）
      - 有下游依赖 → 暂停依赖链上的所有 Group，按 Escalation Format 告知用户
   3. 按 plan-agent.md §4 的 Escalation Format 输出：
      STATUS / REASON / ATTEMPTED / RECOMMENDATION
-  4. 用户选择：修复该 WA（重新实例化）/ 跳过（标为 DONE_WITH_CONCERNS）/ 终止
+  4. 授权内可修复问题交原 owner 续做未完成部分；缺授权或未决 Human Gate 才等用户选择
+     跳过/终止须有真实决定；必需项被跳过仍保留缺口，不以 DONE_WITH_CONCERNS 冒称整体完成
   5. 修复后从失败的 Phase 续点，已完成的 Group 不重跑
 ```
 
@@ -400,8 +411,8 @@ WHILE 有 PENDING 节点:
         - 以 `_PROJECT_ROOT=<WORK_ROOT>` 调用唯一写入器更新 `.luca/workflow-state.yaml` → status: DONE
         - 调度 @quality-gate subagent 验证产出
         - quality-gate PASS → 观察提取（同 2c-obs 三条检查）→ 继续
-        - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS 再询问用户
-          （修复 / 跳过=DONE_WITH_CONCERNS / 终止）——不留"DONE 但 gate FAIL"的矛盾态
+        - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS；按 §2.2 返修/授权规则处理
+          ——验收未通过不进入后继，不留"DONE 但 gate FAIL"的矛盾态
 
   3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief / html-prototype
         有未决方案、范围或采用决定时等待真实确认；已确认事实/所选工具/后续授权直接继承。
@@ -415,10 +426,12 @@ WHILE 有 PENDING 节点:
 
 ```
 Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 找最后一个 DONE 的 node
-Step 2  读该 node 的 handoff summary
+Step 2  读该 node 的 handoff summary 以恢复进度；随后按 next_skill 的当前输入合同及
+        handoff-protocol.md 核验全部必需上游。最后 DONE 不替代依赖集合；失败/未知不作成功消费
 Step 3  展示："上次完成了 <last_done>，核心决策：<D-001...>"
-        "下一步是 <next_pending>，是否继续？"
-Step 4  用户确认 → 进入 §3.4 执行循环
+        "下一步是 <next_pending>"
+Step 4  下一步在当前有效执行授权范围内且无未决 Human Gate → 进入 §3.4 执行循环
+        否则说明缺授权或待决事项，等待真实用户确认；状态文件本身不授予执行权限
 ```
 
 ---
@@ -508,6 +521,6 @@ runner 内部任务按原权限可并行；implement 始终 max_active_subagents
 - **不嵌套 subagent 调度。** Work Agent 内部的 subagent 由 Work Agent 自己管理。
 - **不修改 skill 内部逻辑。** 只负责"调度谁"和"传递什么"。
 - **不跳过测试环节。** 即使看起来成功，每个 Phase 完成后必须触发 quality-gate。
-- **不自动跳过 human-in-the-loop 检查点。** 除非用户明确说"自动继续"。
+- **不自动跳过 human-in-the-loop 检查点。** 继承已有有效批准；“自动继续”不替代尚未作出的真人决定。
 
 <!-- FILE_END: orchestrator.md -->

@@ -133,7 +133,7 @@ DONE 合法。compare / status 即此规则的既有实例。standalone 重型 s
 `node scripts/check-quality-gates.mjs --handoff "<已验证项目内 handoff 的绝对路径>"`。路径从已绑定项目确认，
 不靠共享别名推断；NO_PIN 框架维护不执行项目 handoff。失败先修 handoff，不得继续报 DONE。
 
-**下游 skill 启动时读取上游 handoff summary，不读取上游完整 SKILL.md 或完整产出。**
+**下游 skill 按 `references/handoff-protocol.md` 消费本次全部必需上游；当前输入合同明示的来源或片段，仍在本次真实读权限内核验，摘要不替代必要来源。**
 
 ### Pre-Task Context Retrieval（所有 skill 继承）
 
@@ -147,9 +147,10 @@ python3 .claude/observability/scripts/get_rules.py <skill-name> <scene>
 
 **Step 2：检索上游 handoff summary（workflow 模式下）**
 ```bash
-# 读取 <_PROJECT_ROOT>/.luca/workflow-state.yaml 中最新的 DONE 节点的 handoff_path
-# 如果 handoff_path 非空 → 读取该文件
-# 重点关注：## 约束 和 ## 风险 章节
+# 按本次已选 workflow 和当前输入合同定位全部必需上游，不取“最新 DONE”代替依赖集合。
+# 从已验证 <_PROJECT_ROOT>/.luca/workflow-state.yaml 取每项精确 handoff_path，
+# 在本次读权限内核版本、真实 gate/证据；缺失、失败或未知不作为成功消费，无适用上游则不造节点。
+# 来源读取按 references/handoff-protocol.md；standalone 不补 workflow state。
 ```
 
 **Step 3：任务相关 memory search（如有）**
@@ -164,7 +165,8 @@ python3 memory/scripts/search_memory.py "<task/skill/topic>" --limit 5
 **规则：**
 - Step 1 和 Step 2 是必须的。Step 3 是可选的（任务需要历史经验时运行；无命中跳过）
 - 如果 Step 3 找到了高相关历史成功模式，告知用户并建议复用
-- Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；Pre-Task 总加载量不超过 5K tokens
+- Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；5K tokens 是单批预加载建议，不覆盖当前输入合同的必需来源。
+- 必需来源在原读权限内分批完整核验；真实宿主/资源上限仍有效，无法完整消费时保留缺口并暂停受影响依赖，不删必需来源或降低 gate。
 - 不读取完整 `observations.jsonl`、`semantic/candidates.jsonl`、
   `semantic/reviews.jsonl` 或 `evals/eval-log.jsonl`
 - `python3 memory/scripts/consolidate_memory.py --json` 只用于治理、复盘、记忆健康度检查或用户明确询问；
