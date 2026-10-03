@@ -142,7 +142,7 @@ Phase ≥ 3 → 等用户确认后再执行 (y/n)
 
 对每个 WA，填写 `.claude/agents/work-agent-template.md` 变量，**以下必填项全部填写，不得保留占位符**
 （auto 的每个 WA 都是 skill 执行器，必须填 MODE=skill_execution 及其两个必填变量 SKILL_TO_EXECUTE /
-SKILL_PATH；否则模板的 MODE 前置守卫会把 WA 当 task_execution 走 SECTION 1-3，skill 永不被执行）：
+SKILL_PATH；缺失/无效 MODE 按模板守卫返回 BLOCKED，不猜 task_execution 默认值）：
 
 ```
 {{MODE}}                  : skill_execution（auto 的每个 WA 都是 skill 执行器，固定此值）
@@ -151,9 +151,9 @@ SKILL_PATH；否则模板的 MODE 前置守卫会把 WA 当 task_execution 走 S
 {{ROLE}}                  : Skill Executor for <skill-id>
 {{GOAL}}                  : 读取并执行 <skill-id> skill，产出 <output-path>
 {{TASK_CONTEXT}}          : Phase <N> / <用户需求一句话摘要>
-{{WORK_ROOT}}             : <派发时由已验证 binding.realpath 冻结的绝对项目根>
+{{WORK_ROOT}}             : <本次冻结的已验证绝对任务根；项目任务取 binding.realpath，NO_PIN 沿已验证框架/meta scope>
 {{INPUT_FILES}}           : - .claude/skills/office/<skill-id>/SKILL.md — 执行协议
-                            - <WORK_ROOT>/docs/handoff/<上游 handoff>.md — 上游约束（如有）
+                            - <本次绑定的精确上游 handoff 绝对路径> — 上游约束（适用时）
 {{TASK_DESCRIPTION}}      : 读取 SKILL.md，按其执行协议完整执行，
                             输入为：<从用户需求提炼的具体化描述>
 {{INHERITED_CONSTRAINTS}} : - framework/ 只读
@@ -163,11 +163,18 @@ SKILL_PATH；否则模板的 MODE 前置守卫会把 WA 当 task_execution 走 S
 {{OUTPUT_FORMAT_SPEC}}    : 遵照 SKILL.md 定义的输出格式
 {{PROTECTED_PATHS}}       : framework/、CLAUDE.md
 {{DONE_CRITERIA}}         : - [ ] <absolute-output-path> 文件存在且非空
-                            - [ ] <WORK_ROOT>/docs/handoff/<date>-<topic>-<skill-id>-handoff.md 已写入
+                            - [ ] 本次所选 skill authority 规定的交接要求已满足（按下述分支）
 {{AVAILABLE_SKILL_PATHS}} : .claude/skills/office/<skill-id>/SKILL.md
 {{SKILL_TO_EXECUTE}}      : <skill-id>（skill_execution 模式必填）
 {{SKILL_PATH}}            : .claude/skills/office/<skill-id>/SKILL.md（skill_execution 模式必填）
 ```
+
+**交接适用性先绑定：** 已选择项目 Workflow 的普通节点保留
+`<WORK_ROOT>/docs/handoff/<date>-<topic>-<skill-id>-handoff.md`、共享规范及 required gate_result/criteria。
+显式会话 handoff skill 按其 authority 绑定 OS 临时产物，不再创建项目节点交接，也不替代普通节点交接；
+NO_PIN 框架/meta 按所选 authority 和已验证 scope 绑定框架/临时产物，不穿 `docs` 展示别名推项目身份。
+所选 skill 的合法终端豁免继续适用，不补造第二份 handoff；该判定及原失败证据随 Completion Report 返回。
+这些分支只解释当前已授权任务的消费要求，不授权新增 skill、路径或领域方法。
 
 #### 3.2 Work Agent 内部执行协议
 
@@ -177,21 +184,21 @@ Work Agent 收到指令后必须按以下顺序执行：
 1. Read {{AVAILABLE_SKILL_PATHS}} 中的 SKILL.md（必须完整读完到 FILE_END 标记）
 2. 按 SKILL.md 的执行协议完整执行（不依赖 Skill 工具，直接遵照协议产出）
 3. 确认产出文件存在于 PRIMARY_OUTPUTS 规定的路径
-4. 写 handoff summary → <WORK_ROOT>/docs/handoff/<date>-<topic>-<skill-id>-handoff.md（topic-bearing，与 handoff-protocol.md 规范一致）
+4. 按已绑定的交接适用分支处理本次精确 handoff；合法终端豁免不生成第二份交接
 5. 返回 Completion Report
 ```
 
 **Work Agent 不得：**
 - 在未完整读完 SKILL.md 的情况下开始执行
 - 修改其他 Phase 的产出
-- 在 skill 未完成时返回 Completion Report
+- 在 skill 未完成时返回 DONE；阻塞/缺信息仍须返回真实失败报告
 
 #### 3.3 Orchestrator 编排规则
 
 ```
 并行 Phase（‖）: 在同一条消息中并发启动所有 WA
-串行 Phase（→）: 等待前 Phase 所有 WA 完成 + handoff 写入后，再启动下一 Phase
-质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 重试该 WA
+串行 Phase（→）: 前 Phase 实际终态、精确 handoff（适用时）与 required 验证/记录通过后，才消费并启动后继
+质量门控     : 核本次实际终态、产物与 skill 质量门；缺失按 W9 处理，在途等待不重启 WA
 ```
 
 派发前，主 Agent 必须把全部输入、`PRIMARY_OUTPUTS` 与 handoff 路径相对 `WORK_ROOT`
@@ -209,12 +216,16 @@ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢�
 
 | WA 返回状态 | Orchestrator 动作 |
 |------------|-----------------|
-| `DONE` — 产出路径存在 | 继续下一 Phase |
-| `DONE` — 但产出路径不存在 | 视为隐式 BLOCKED，执行重试 |
-| `BLOCKED` — 首次 | **重试一次**（重新启动同一 WA，传入相同参数） |
-| `BLOCKED` — 重试后仍失败 | **停止当前 Pipeline**，向用户报告：阻塞 Phase、blockers 列表、建议操作（手动执行该 skill / 跳过该 Phase）|
-| 超时无响应（> 5min） | 同 BLOCKED 首次处理 |
-| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后重跑该 WA；不盲目重试 |
+| `DONE` — 产出路径存在 | 核同次原生终态、精确产物及 required 质量门；通过且后续已有授权、无未决真人门才继续 |
+| `DONE` — 但产出路径不存在 | 保留原报告与缺项，视为隐式 BLOCKED；先核实际终态，再决定已授权修复/重试 |
+| `BLOCKED` — 首次 | 核实际失败终态和已完成效果；原授权内可修复/重试一次，只处理未完成范围，前次仍在途不重启 |
+| `BLOCKED` — 重试后仍失败 | 停受影响依赖，报告阻塞 Phase/原失败及建议；其他在途 WA 仍沿原句柄收取或按已授权取消处理 |
+| 超时无响应（> 5min） | 沿当前调用返回的原生句柄继续 wait/status/read；超时、idle、ACK 不等于失败终态或成功，不因此重新启动 WA |
+| `NEEDS_CONTEXT` — 缺信息/歧义 | 停受影响依赖，呈现具体 blockers；收到真实补充后核原生终态和已完成效果，沿已授权未完点恢复，不盲重跑 |
+
+句柄丢失或无法观察时报告真实缺口并暂停依赖，不能猜测前次已停止；已配置硬截止仍执行
+当前宿主的取消/清理并收取终态或在途限制，不通过另次启动重置预算。新尝试保留前次失败、
+实际效果和资源；OD 专用一次 retry/桌面恢复计数仍按上文，不以 W9 重置。
 
 **不允许无限重试**：单个 WA 最多重试 1 次，失败后必须上报，不得静默跳过。
 
@@ -230,7 +241,7 @@ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢�
 
 所有选定 Pipeline 的 Phase 完成后（下例仅展示全链，不宣称未运行节点完成）：
 
-1. 读取 `<WORK_ROOT>/docs/handoff/` 中本次 session 的所有 handoff summary
+1. 按本次实际任务的 Completion Report 读取已绑定的精确产物及适用交接，核 required 验证/记录；保留合法终端豁免与失败证据，不以目录中的历史 handoff 替代本次结果
 2. 输出汇总报告：
 
 ```

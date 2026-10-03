@@ -19,17 +19,15 @@ Skill-first, Graph-optional, Memory-light, Growth-gated, Governance-callable.
 <!-- K2:START -->
 ## K2 — Routing order
 
-For every non-mechanical request, classify in this exact order:
+For bounded tasks unrelated to framework, skill, project, memory or cross-session recovery,
+read any supplied owner; execute within scope. Before app/content references or tool actions,
+use K10 step 3 to discover and read matching owners by their `load_before`. Other startup reads
+are unnecessary. K3 Plan triggers and human/permission gates still apply. Otherwise route in order:
+**Project Gate**, **Plan**, **Framework Flow**, **Multi-Skill**, **Single-Skill**, **STOP**.
+Assess ambiguity/refusal; never treat STOP as permission. Unmatched work uses `NONE` + semantic fallback.
 
-1. **Project Gate** — old/existing/continuing project before any scenario or skill.
-2. **Plan** — test complexity before accepting a route-guard skill hit.
-3. **Framework Flow** — framework evolution, self-growth, benchmark, or governance work.
-4. **Multi-Skill** — several independent high-confidence skill matches.
-5. **Single-Skill** — one high-confidence match and no Plan trigger.
-6. **STOP** — ambiguity/refusal; assess and discover; never treat STOP as permission. `NONE` + semantic fallback covers unmatched work.
-
-The routing truth is `.claude/skill-os/skill-routing-map.yaml`. A user-chosen Workflow may add
-handoff gates; otherwise skills remain standalone.
+Routing: `.claude/skill-os/skill-routing-map.yaml`. A user-selected Workflow adds handoff gates;
+otherwise skills remain standalone.
 <!-- K2:END -->
 
 <!-- K3:START -->
@@ -45,11 +43,16 @@ assertions, or approval scope. **Supervisor** or **Hierarchical** requires real 
 <!-- K4:START -->
 ## K4 — Skill discovery and STOP
 
+For an explicitly selected applicable method, read its authority through EOF; skip repeat
+catalog discovery. Plan and safety still apply.
+
+For genuine skill discovery or unresolved selection:
 Before classifying as **Multi-Skill**, **Single-Skill**, or **STOP**, and before choosing or
 invoking a skill, read `.claude/skill-os/generated/skill-catalog.md` through `FILE_END`. Route by
-**semantic** intent, not keyword coincidence. Direct invocation still obeys Plan and safety. Exempt
-only a truly **mechanical single-file** edit with no design, research, review, or product judgment.
-Ambiguity needs user choice; no match needs catalog discovery. In discovery, **name the exact matching catalog skill** and authority; a generic catalog mention is incomplete.
+**semantic** intent, not keyword coincidence. A truly **mechanical single-file** edit with no
+design/research/review/product judgment, or a bounded task under K2, needs no discovery.
+Human ambiguity requires a real response. In discovery, **name the exact matching catalog skill**
+and authority.
 <!-- K4:END -->
 
 <!-- K5:START -->
@@ -120,8 +123,8 @@ This discipline is inline and always active; it is not a separate route or visib
 <!-- K10:START -->
 ## K10 — Startup, conditional context, and harness truth
 
-Minimal **startup** applies only to non-trivial work. A trivial mechanical question with no skill
-or repository action answers directly and loads no conditional target. Otherwise:
+Minimal **startup** applies to framework, skill, project, memory or cross-session recovery work.
+Bounded unrelated tasks use K2's required owner discovery, without the other startup reads.
 
 1. Run `python3 memory/scripts/get_memory.py --summary`.
 2. Read this checkout's `CONTEXT.md` through its `FILE_END`.
@@ -137,13 +140,12 @@ or repository action answers directly and loads no conditional target. Otherwise
    `.claude/skill-os/generated/input-modes/<key>.json` before input/override/handoff decisions;
    honor fallback. Load active rules only when applicable.
 
-A repository-contract question is non-trivial even when it only asks for classification or an
-explanation. For name/route discovery, the catalog is sufficient. To decide a named skill's input,
+Repository-contract questions use startup even for classification or explanation.
+For name/route discovery, the catalog is sufficient. To decide a named skill's input,
 authorization, handoff, or completion behavior, read that skill's `SKILL.md` and its explicitly
-applicable one-hop contract owner even when execution is deferred. Do not run its preamble or load
+applicable one-hop contract owner even if deferred. Do not run its preamble or load
 execution-only schemas, templates, scripts, Git history, sibling metadata, or implementation owners.
-Finish the required owners first and stop loading when they answer the request; a referenced
-implementation name is not permission for another read.
+Stop after required owners answer; implementation names do not authorize another read.
 
 **Codex** invokes project skills as `$<skill-name>` or through the skill selector; its
 `.agents/skills/` aliases point to the same authority bodies. It does not execute Claude slash

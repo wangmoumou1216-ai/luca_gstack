@@ -147,9 +147,16 @@ python3 .claude/observability/scripts/get_rules.py <skill-name> <scene>
 
 **Step 2：检索上游 handoff summary（workflow 模式下）**
 ```bash
-# 读取 <_PROJECT_ROOT>/.luca/workflow-state.yaml 中最新的 DONE 节点的 handoff_path
-# 如果 handoff_path 非空 → 读取该文件
-# 重点关注：## 约束 和 ## 风险 章节
+# 仅在本次已选 workflow 路径内，按当前输入合同定位全部必需上游依赖。
+# 从已验证 <_PROJECT_ROOT>/.luca/workflow-state.yaml 取该依赖的精确 handoff_path，
+# 获权实读后核当前版本/摘要、真实 gate/证据及适用 eval 回执；不用“最新 DONE”、时间排序或旧 raw 路径回退。
+# 无适用上游时不伪造节点或读取无关 handoff；失败/缺片/未知/在途阻断对应依赖，不消费为成功。
+# 保留原目标与当前 focus、最新有效授权/更正的来源/范围/owner、未决真人门/效果批准、完成效果及原失败；
+# 保留剩余在途实际句柄与已知/未知状态及未完依赖；timeout、idle、ACK不证明完成或取消、不授权重派。
+# 先核当前事实，再从首个未完成点继续，不重复完成效果，失败只阻断其依赖工作。
+# 精确消费按 references/handoff-protocol.md；前述摘要读取纪律不免除当前 owner 明确要求的完整源/片段核验，也不扩大读权。
+# standalone 不补 workflow state；NO_PIN 框架/meta 不读项目 state 或穿共享 docs 别名，
+# 恢复其获准 checkpoint 时按 .claude/skill-os/runtime/long-session.md。
 ```
 
 **Step 3：任务相关 memory search（如有）**
@@ -164,7 +171,9 @@ python3 memory/scripts/search_memory.py "<task/skill/topic>" --limit 5
 **规则：**
 - Step 1 和 Step 2 是必须的。Step 3 是可选的（任务需要历史经验时运行；无命中跳过）
 - 如果 Step 3 找到了高相关历史成功模式，告知用户并建议复用
-- Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；Pre-Task 总加载量不超过 5K tokens
+- Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；5K tokens 是单批预加载的节制建议，不是本次必需依赖的总量硬帽。
+- 全部必需上游、owner 要求的源与门禁/eval 证据仍须在原读权限内完整消费，可用现有读取方式分批核验，并在既有交接/checkpoint 中保留准确来源、版本及实际读/验证状态；不得为凑 5K 删除依赖、退回最近摘要或用摘要替代必要原源。
+- 宿主真实容量上限仍有效；若无法完整、安全消费必需材料，明确保留未读/未核验缺口并暂停受影响依赖，不伪称加载完成或降低必需标准。
 - 不读取完整 `observations.jsonl`、`semantic/candidates.jsonl`、
   `semantic/reviews.jsonl` 或 `evals/eval-log.jsonl`
 - `python3 memory/scripts/consolidate_memory.py --json` 只用于治理、复盘、记忆健康度检查或用户明确询问；

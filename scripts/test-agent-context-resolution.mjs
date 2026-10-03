@@ -27,6 +27,7 @@ function includes(runtime, prompt, expected) {
 }
 
 for (const runtime of ['claude', 'codex']) {
+  includes(runtime, '当前页是什么', 'luca-app');
   includes(runtime, '继续这个老项目', 'project-session');
   includes(runtime, '请记住这次纠正', 'memory-extraction');
   includes(runtime, 'multi-phase checkpoint before push', 'long-session');

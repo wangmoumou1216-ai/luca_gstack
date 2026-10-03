@@ -1300,16 +1300,21 @@ function decisionToHints(decision) {
       ];
     case 'STOP': {
       if (decision.reason === 'retired_skill') return [`[route-guard] ⛔ RETIRED — ${decision.message}`];
+      const harness = actualHarness();
+      const routingOwner = harness === 'codex' ? 'AGENTS.md K2/K4'
+        : harness === 'claude' ? 'CLAUDE.md K2/K4' : '确认后的当前宿主入口 K2/K4';
+      const entryNotice = harness === 'codex' || harness === 'claude' ? ''
+        : '\n[route-guard] 当前宿主入口未确定；先确认适用入口，STOP 不授予执行权限。';
       const softCandidates = decision.softCandidates || [];
       const candidateHint = softCandidates.length
         ? '\n基于语义推断，最可能的 skill：\n' +
           softCandidates.map((c, i) =>
             `  ${i + 1}. ${c.skill}（参考依据：${c.evidence.join('、')}）`
           ).join('\n') +
-          '\n语义映射清晰可按 CLAUDE.md「语义路由契约」直接路由；否则展示候选请用户确认或补充。'
-        : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
+          `\n语义映射清晰可按 ${routingOwner} 路由；否则展示候选请用户确认或补充。`
+        : `\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 ${routingOwner} 路由（平凡任务豁免适用）。`;
       // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
-      // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
+      // 确定性提醒读当前宿主根的路由规则（别把 STOP 当"直接执行"）。
       // 2026-07-28：研究轴与构建轴分文案。同一颗钉子，但"搞懂某事"和"做某事"该被提醒的
       // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
       // 2026-07-31：评审轴走共享 helper reviewAxisHint（STOP 与 PROJECT GATE 两路复用，见其上注释）。
@@ -1317,11 +1322,11 @@ function decisionToHints(decision) {
       const reviewReminder = reviewAxisHint(decision);
       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
         ? (researchAxis
-          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 CLAUDE.md「语义路由契约」在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
-          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
+          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 ${routingOwner} 在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
+          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 ${routingOwner} 评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
         : '';
       return [
-        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + reviewReminder + complexReminder,
+        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + entryNotice + candidateHint + reviewReminder + complexReminder,
       ];
     }
     default:

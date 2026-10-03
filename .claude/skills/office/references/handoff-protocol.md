@@ -19,6 +19,11 @@ DONE 合法。compare / status 即此规则的既有实例。standalone 重型 s
 
 ## 文件路径
 
+以下是已验证项目根内的路径，必须相对当前 pin 绑定的 `<WORK_ROOT>` 解析；不得经共享
+`docs/` 或 workflow-state 显示别名推断项目。`NO_PIN` 框架/meta 交接用获准的
+`framework-audit/` 或 OS 临时路径，不写项目 handoff；显式会话交接由 `.claude/skills/office/handoff/SKILL.md`
+规定的 OS 临时产物承接，不套用本协议的项目路径。
+
 ```
 docs/handoff/YYYY-MM-DD-<topic>-<skill-name>-handoff.md
 ```
@@ -48,7 +53,9 @@ criteria:
 - `[ADOPTED]`：用户明确采纳的决策（用户说"就这个"/"方案A"/"同意"时标记）
 - `[REJECTED]`：用户明确否决的决策（用户说"不要这个"/"换一个"时标记）
 
-**写入时机：** skill 完成时先写 PROPOSED。用户确认后，由 Orchestrator 或下一个 skill 更新为 ADOPTED/REJECTED。
+**写入时机：** 新建议写 PROPOSED；已有真实用户采纳/否决及最新更正直接继承其状态和来源，
+不退回建议或重复索取确认。后续真实决定由 Orchestrator 或下一个 skill 更新为 ADOPTED/REJECTED；
+历史采纳只作参考，不授予当前执行权，被更正的旧决定不再当作授权。
 
 **脱敏（2026-07-12 增，源 mattpocock handoff，GATE-2 例外批准）：** 交接/checkpoint 文档不得含
 API key/密码/PII——发现即替换为 `<REDACTED>` 占位符（本目录 git-tracked，泄露面真实）。
@@ -82,6 +89,11 @@ API key/密码/PII——发现即替换为 `<REDACTED>` 占位符（本目录 gi
 
 ## 质量评估块（gate_result + criteria，2026-07-09 E1）
 
+在既有决策、约束、风险、待澄清和产出节保留原目标/完成定义与当前 focus、最新有效授权与
+更正的来源/范围/owner、未决真人门与效果批准、已完成效果、原始失败/取消、剩余在途的实际
+句柄与已知/未知状态、未完依赖及首个续点；不得因摘要限额把未完成责任裁掉。
+文件引用与实际读/验证状态分开，证据绑定其真实源和版本，不把路径存在或上游自报当验收。
+
 `gate_result` 不再是孤立单值——**新写的 handoff 必须带 `criteria:` 逐条判定块**（存量不回溯）：
 
 - **3-7 条**，每条是可 true/false 判定的一句话，绑一个真实 failure mode；
@@ -97,7 +109,7 @@ standalone 重型必写，见「写入时机/豁免规则」），`scripts/check
 **写完即验（任何 DONE / workflow-state 更新之前）：**
 
 ```bash
-node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.md"
+node scripts/check-quality-gates.mjs --handoff "<已核验项目内 handoff 的绝对路径>"
 ```
 
 命令失败时不得标记 DONE；先补齐 `gate_result`、`criteria`、决策/约束/风险标题与产出路径。
@@ -120,14 +132,15 @@ outputs 返回 certificate，由同一 OD caller 最终交接一次，不要求�
 
 skill 启动时，Orchestrator（或 skill 自身在 standalone 模式下）按以下顺序读取：
 
-1. **workflow-state.yaml** → 确认上游哪些 skill 已 DONE
-2. **最近一个上游 handoff summary** → 获取决策、约束、风险
-3. **自己的 SKILL.md** → 执行指令
+1. **自己的 SKILL.md** → 完整读取当前执行合同，先确认本次输入、owner 与权限边界
+2. **本次已选路径及输入** → workflow 只读已验证 `<WORK_ROOT>/.luca/workflow-state.yaml` 中本次选定的全部必需上游；standalone 用明确输入，不补 workflow state 或伪造上游 DONE
+3. **精确上游 handoff 与产出引用** → 对全部必需依赖获权实读、核路径与版本/摘要、真实 gate/证据及适用的 eval 回执，保留最新授权与更正、原失败和 required 缺片；不得按时间、“最近 DONE”、glob 存在或旧 raw 路径回退。缺失、漂移、失败/未知/在途阻断对应依赖，不成功合并缺片；独立任务只在原权限、无冲突及既有 implement/model 关键门允许时继续
 4. 如需要 → 共享 references 中的特定文件（按 context-cost.shared-refs 声明加载）
 
-**绝不读取上游 skill 的完整 SKILL.md 或完整产出文件。**
-如果需要上游产出的具体细节，handoff summary 应该包含足够的摘要，或者
-skill 在执行过程中按需读取特定段落。
+不以交接为由批量加载上游完整 SKILL.md 或全部产出。当前 owner 合同明确要求的产出或片段，
+仍在真实读权限内按需读取并验证；摘要不能替代必要的源核验，也不扩大读权。
+恢复时按 `.claude/skill-os/runtime/long-session.md` 核对当前事实，从首个未完成点继续，不重复已完成效果。
+保留原实际句柄；timeout、idle、ACK不证明完成或取消，也不授权再次派发；失去可观察性明确报告。
 
 ## 写入脚本
 
@@ -135,15 +148,18 @@ skill 在执行过程中按需读取特定段落。
 
 ```bash
 # 写入 handoff summary
+# _PROJECT_ROOT 必须来自当前已验证 pin；NO_PIN 不运行此项目写入示例。
+: "${_PROJECT_ROOT:?需要已验证的项目根}"
 DATE=$(date +%Y-%m-%d)
-TOPIC=$(grep "^topic:" .claude/workflow-state.yaml | awk '{print $2}' | tr -d '"')
+TOPIC=$(rg "^topic:" "${_PROJECT_ROOT}/.luca/workflow-state.yaml" | awk '{print $2}' | tr -d '"')
 SKILL_NAME="<当前skill名>"
-mkdir -p docs/handoff
-cat > "docs/handoff/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md" << 'HANDOFF_EOF'
+HANDOFF_DIR="${_PROJECT_ROOT}/docs/handoff"
+mkdir -p "$HANDOFF_DIR"
+cat > "${HANDOFF_DIR}/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md" << 'HANDOFF_EOF'
 # Handoff: <skill-name> → downstream
 ...（按格式填写）
 HANDOFF_EOF
-node scripts/check-quality-gates.mjs --handoff "docs/handoff/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md"
+node scripts/check-quality-gates.mjs --handoff "${HANDOFF_DIR}/${DATE}-${TOPIC}-${SKILL_NAME}-handoff.md"
 ```
 
 ## 在 SKILL.md 共享规范中的嵌入位置
@@ -164,9 +180,12 @@ node scripts/check-quality-gates.mjs --handoff "docs/handoff/${DATE}-${TOPIC}-${
    四段固定结构——标题（Auto Checkpoint + 时间）/ `**Topic:**` / `## 节点状态`（workflow-state
    各节点 status 列表）/ `## 恢复指令`（读 state → verify.sh → 继续 IN_PROGRESS 节点 → 读
    PROGRESS.md）。仅当存在 IN_PROGRESS 节点且有激活项目时写入（HOOK-005）。
-2. **手动 checkpoint**（`<date>-<topic>-checkpoint.md`）：格式真值源是 CLAUDE.md
-   「Context 工程协议 → Checkpoint 写法」的五段结构（已完成✅/进行中/待执行/关键决策/恢复指令），
-   此处不复制全文，防双源漂移。
+2. **手动 checkpoint**（`<date>-<topic>-checkpoint.md`）：内容、触发和恢复真值源是
+   `.claude/skill-os/runtime/long-session.md`，在既有记录中保留目标、真实授权、完成效果、
+   原始失败、未完依赖和恢复读列表；此处不复制另一份固定格式。
+
+上述项目路径仍须已验证 pin；`NO_PIN` 不穿 `docs/` 别名。自动状态快照或 DONE 条目不证明
+真实完成或验收，恢复前仍按 long-session 核当前来源、授权与证据，保留未决项。
 
 命名约定：checkpoint 文件名必须以 `-checkpoint.md` 结尾——误用 `-handoff.md` 后缀会被
 check-quality-gates 按 handoff 校验 `gate_result` 而假红。

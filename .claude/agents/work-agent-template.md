@@ -53,7 +53,15 @@
 之后的 session 项目选择也不改变本任务根。明确取消时停止尚未派发的新工具动作，并如实区分
 已发出、仍在途和宿主无法中断的操作。
 
-> **MODE 前置守卫：** 读取 `{{MODE}}` 字段，若为 `skill_execution`，**跳过 SECTION 1-3 的 task_execution 执行协议，直接执行 SECTION 0b**。若为 `task_execution`（或字面量 `{{MODE}}` 未填写），按默认流程执行。
+**授权继承（两种 MODE 共用）：** 从 TASK_CONTEXT 区分原始目标与当前 Phase，并读取
+SECTION 1 的任务输入/INHERITED_CONSTRAINTS、SECTION 2 的产物及 SECTION 5 的验收要求。
+继承最新有效用户授权的来源、scope、唯一写 owner 与效果边界；已授权且无未决真人决定的
+范围内直接执行。缺少必要授权、输入冲突或需要新决定时返回 BLOCKED/NEEDS_CONTEXT，
+由主会话处理，派发本身不扩大权限。skill_execution 仍由所选 skill 拥有领域方法和质量门。
+
+> **MODE 前置守卫：** 完成上述共用输入/授权检查后，`skill_execution` 执行 SECTION 0b，
+> 跳过 SECTION 3 的直接任务执行步骤；`task_execution` 执行 SECTION 3。
+> MODE 未填写或不在这两值内时输出 BLOCKED，不猜默认模式启动工作。
 
 ---
 
@@ -69,13 +77,15 @@
 ```
 Step 1  [Read Skill] 完整读取 {{SKILL_PATH}}，必须读到最后一行（含 FILE_END 标记）
 Step 2  [Follow Protocol] 按 SKILL.md 中的执行协议完整执行，不跳步
-Step 3  [Produce Outputs] 将产出物写入 SKILL.md 规定的输出路径
-Step 4  [Write Handoff] 将 handoff summary 写入 {{WORK_ROOT}}/docs/handoff/YYYY-MM-DD-{{SKILL_TO_EXECUTE}}-handoff.md
-        handoff 必须包含：skill 名称、产出路径列表、gate_result（PASS/FAIL）、关键决策摘要
+Step 3  [Produce Outputs] 按 SKILL.md 方法产出，路径必须在本次冻结授权内；冲突回报 NEEDS_CONTEXT
+Step 4  [Write Handoff] 沿本次 PRIMARY_OUTPUTS/继承约束绑定的精确 handoff 路径与共享规范写入
+        已选择项目 Workflow 的普通节点保留项目 docs/handoff 节点交接与 gate_result/criteria；
+        显式会话级 handoff skill 沿其 authority 产出 OS 临时文件，不再创建项目节点交接。
+        NO_PIN 框架/meta 按所选 authority 和已验证 scope 写框架/临时产物，不穿 docs 别名；
+        所选 skill 的合法终端豁免继续适用，原判定及失败证据保留
 Step 5  [Done Criteria]
-        - [ ] {{WORK_ROOT}}/docs/handoff/*-{{SKILL_TO_EXECUTE}}-handoff.md 文件存在
-        - [ ] handoff 包含 gate_result 字段
-        - [ ] SKILL.md 规定的主要产出文件存在
+        对照 SECTION 5 及 skill 自有质量门核本次精确产物，不以同名/历史文件存在判完成；
+        required 未通过按 SECTION 6 返回，沿原授权修复不替领域 owner 降门
 Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
 ```
 
@@ -142,6 +152,12 @@ Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
 
 ### 完成报告格式（必须严格遵守，不得添加额外字段）
 
+两种 MODE 均依据本次实际产物、验证结果与终态报告；ACK、idle、进度或一次等待超时不算完成。
+已启动工具仍在途时沿原生句柄继续观察，不仅因等待超时重复启动。失败、未完依赖及无法
+观测/中断的操作原样写入 blockers/notes，不用后次成功覆盖原失败；缺终态不报 DONE。
+最新更正/取消先核对本次任务的影响：仅继续仍有效且独立的已授权动作；停受影响依赖，
+保留原授权来源、已完成效果及未完点供父会话核实，不向旧对象盲重发。
+
 完成所有工作后，输出以下 JSON（放在回复的最后）：
 
 ```json
@@ -205,7 +221,7 @@ Step 3  [Execute]
         不添加未请求的功能、配置、抽象或兜底逻辑。
         每个改动必须能追溯到 GOAL、PRIMARY_OUTPUTS 或 DONE_CRITERIA。
         如果执行过程中某个分支需要 skill 能力：
-          → 检查 SECTION 0 的「可用 Skill」列表
+          → 检查本次注入的「可用 Skill」列表
           → 找到对应 SKILL.md 路径，Read 该文件
           → 遵照 SKILL.md 的执行协议完整执行
           → 产出物写入该 skill 规定的输出路径
@@ -241,7 +257,8 @@ Step 6  [Completion Report]
 - 不修改以下 Protected Paths 中的文件（见 SECTION 0）：{{PROTECTED_PATHS}}
   > **默认保护**：若 `{{PROTECTED_PATHS}}` 未被填写（字面量残留），视为保护 `framework/` 和 `CLAUDE.md`。
 - 不创建任务描述中未提及的文件
-- 不调用其他 Agent 或启动 subagent
+- task_execution 不另派 Agent；skill_execution 仅执行所选 skill 明示且父任务已授权的内部协作，
+  仍遵守继承的模型路由/并发限制；implement 的禁止嵌套与单活跃门不因此放宽
 - 不做规划——如果任务范围不明确，进入 Failure Protocol
 - 不做 speculative abstraction、drive-by refactor、无关格式化、无关注释改写
 - 不在完成报告中遗漏任何 Primary Output（已完成的列在 outputs_produced，未完成的列在 outputs_skipped）
@@ -297,7 +314,7 @@ Step 6  [Completion Report]
 | 限制 | 值 |
 |------|---|
 | 推荐 prompt 长度 | < 2000 tokens |
-| 最大读取文件数 | 10 个（超过则优先读最直接相关的） |
+| 输入包目标 | 直接相关文件优先，约 10 个；必读清单/领域 owner 不因数量被省略，确有容量缺口回报 NEEDS_CONTEXT |
 | 不读取 | 完整会话历史、其他 Phase 的产出（除非 Input Contract 明确列出） |
 
 Work Agent 在冷启动上下文中运行，不依赖会话历史。所有需要的信息必须在 Input Contract 中显式传入。

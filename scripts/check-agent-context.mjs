@@ -569,6 +569,74 @@ for (const path of projectedRoots) {
       if (obligation.id === 'K4' && !match[1].includes('name the exact matching catalog skill')) errors.push(`${path} K4 missing exact skill discovery obligation`);
     }
 }
+if (projectedRoots.includes('AGENTS.md')) {
+  const block = id => (rootText['AGENTS.md'].match(
+    new RegExp(`<!-- ${id}:START -->([\\s\\S]*?)<!-- ${id}:END -->`))?.[1] || '')
+    .replaceAll('**', '');
+  const paragraphs = text => text.split(/\n\s*\n/).map(part => part.replace(/\s+/g, ' ').trim());
+  const runtimeClause = (text, runtime) => String(text || '').match(
+    new RegExp(`${runtime}:\\s*([\\s\\S]*?)(?=\\b(?:Codex|Claude):|$)`, 'i'))?.[1] || '';
+  const catalogEntry = entries.find(entry => entry.id === 'skill-catalog');
+  const discovery = paragraphs(block('K4')).find(part => part.includes('.claude/skill-os/generated/skill-catalog.md')) || '';
+  const selected = paragraphs(block('K4')).find(part => /^For an explicitly selected applicable method,/.test(part)) || '';
+  const codexCondition = runtimeClause(catalogEntry?.condition, 'Codex');
+  const claudeCondition = runtimeClause(catalogEntry?.condition, 'Claude');
+  // A coherent generated projection can still reverse the root's loading branch.
+  // Check the consuming paragraph and each harness clause, not a detached keyword.
+  if (!/^For genuine skill discovery or unresolved selection:/.test(discovery)
+      || !/authority through EOF; skip repeat catalog discovery/.test(selected)
+      || !/Plan and safety still apply/.test(selected)
+      || !/^genuine skill discovery or unresolved selection/.test(codexCondition)
+      || !/explicitly selected applicable method reads its authority without repeat catalog discovery/.test(codexCondition)
+      || !/^before choosing or invoking a skill/.test(claudeCondition)) {
+    errors.push('Codex catalog discovery scope disagrees across root and manifest or drops the Claude prerequisite');
+  }
+  if (!/^completing genuine discovery or unresolved skill selection\./.test(runtimeClause(catalogEntry?.load_before, 'Codex'))
+      || !/^skill selection or invocation\./.test(runtimeClause(catalogEntry?.load_before, 'Claude'))) {
+    errors.push('Codex catalog discovery deadline disagrees with the conditional root branch');
+  }
+  const startup = paragraphs(block('K10')).find(part => /^Minimal startup/.test(part)) || '';
+  const domains = /framework,\s*skill,\s*project,\s*memory or cross-session recovery/;
+  const bounded = paragraphs(block('K2')).find(part => /^For bounded tasks unrelated to/.test(part)) || '';
+  if (!domains.test(bounded) || !/read any supplied owner; execute within scope/.test(bounded)
+      || !/K3 Plan triggers and human\/permission gates still apply/.test(bounded)) {
+    errors.push('Codex bounded-task routing scope loses its owner, scope, or real gates');
+  }
+  if (!/Before app\/content references or tool actions, use K10 step 3 to discover and read matching owners by their `load_before`/.test(bounded)) {
+    errors.push('Codex bounded-task action owner discovery is unreachable before its reference or action');
+  }
+  const appEntry = entries.find(entry => entry.id === 'luca-app');
+  if (!appEntry?.runtime?.includes('codex') || !appEntry?.obligation_ids?.includes('K2')
+      || appEntry?.target !== '.claude/skill-os/runtime/luca-app.md'
+      || !/current page/.test(appEntry?.condition || '')
+      || !/^answering the reference;/.test(appEntry?.load_before || '')) {
+    errors.push('Codex app reference conditional owner loses its consumer, reachability, or before-answer deadline');
+  }
+  if (!domains.test(startup) || !/Bounded unrelated tasks use K2/.test(startup)) {
+    errors.push('Codex startup scope restores unconditional loading or loses the bounded-task route');
+  }
+  const catalogStatement = obligations.find(entry => entry.id === 'K4')?.statement || '';
+  if (!/Codex[^.]*explicitly selected[^.]*authority[^.]*without repeat discovery/.test(catalogStatement)
+      || !/Claude retains its root catalog prerequisite/.test(catalogStatement)) {
+    errors.push('Codex catalog kernel scope disagrees with the harness-specific loading branches');
+  }
+  const startupStatement = obligations.find(entry => entry.id === 'K10')?.statement || '';
+  if (!/Codex startup applies to/.test(startupStatement) || !domains.test(startupStatement)
+      || !/bounded unrelated tasks use K2/.test(startupStatement)
+      || !/Claude retains its root startup scope/.test(startupStatement)) {
+    errors.push('Codex startup kernel scope disagrees with the conditional root branch');
+  }
+  const routingStatement = obligations.find(entry => entry.id === 'K2')?.statement || '';
+  if (!/Codex bounded tasks unrelated to/.test(routingStatement) || !domains.test(routingStatement)
+      || !/supplied owner within scope/.test(routingStatement)
+      || !/real Plan, permission and human gates still apply/.test(routingStatement)) {
+    errors.push('Codex bounded-task routing kernel scope disagrees with the conditional root branch');
+  }
+  if (!/before app\/content references or tool actions, use the conditional index to discover and read matching owners by load_before/.test(routingStatement)
+      || !/use K2 for required owner discovery without other startup reads/.test(startupStatement)) {
+    errors.push('Codex bounded-task action owner kernel disagrees with the required narrow discovery branch');
+  }
+}
 if (['roots-projected', 'projected'].includes(state.phase)) {
   if (/mandatory startup context[\s\S]{0,800}read[^\n]*`?CLAUDE\.md`?/i.test(rootText['AGENTS.md'])) errors.push('AGENTS.md restored unconditional root cross-read');
 }

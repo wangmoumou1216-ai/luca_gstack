@@ -49,7 +49,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 107;
+const EXPECTED_MUTATIONS = 120;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -84,8 +84,91 @@ function changeIndex(dir, edit) {
   const text = readFileSync(path, 'utf8');
   const projected = JSON.parse(text.match(/```json\n([\s\S]*?)\n```/)[1]);
   edit(projected);
-  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${JSON.stringify(projected)}\n\`\`\``));
+  const body = `[\n${projected.map(row => JSON.stringify(row)).join(',\n')}\n]`;
+  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${body}\n\`\`\``));
 }
+function changeCatalogLoading(dir, field, value) {
+  const path = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const manifest = JSON.parse(readFileSync(path, 'utf8'));
+  manifest.entries.find(entry => entry.id === 'skill-catalog')[field] = value;
+  writeFileSync(path, JSON.stringify(manifest));
+  // Keep the projection coherent: failure must concern policy, not generated drift.
+  changeIndex(dir, rows => { rows.find(entry => entry.id === 'skill-catalog')[field] = value; });
+}
+mutate('bounded current-page reference loses conditional owner discovery', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8').replace(
+    /Before app\/content references or tool actions,[\s\S]*?Other startup reads\nare unnecessary\. /, ''));
+}, /Codex bounded-task action owner discovery/);
+mutate('kernel restores supplied-owner-only bounded execution', dir => {
+  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
+  const kernel = JSON.parse(readFileSync(path, 'utf8'));
+  kernel.obligations.find(entry => entry.id === 'K2').statement =
+    'Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order. Codex bounded tasks unrelated to framework, skill, project, memory or cross-session recovery use the supplied owner within scope; real Plan, permission and human gates still apply.';
+  writeFileSync(path, JSON.stringify(kernel));
+}, /Codex bounded-task action owner kernel/);
+for (const [field, value, name] of [
+  ['runtime', ['claude'], 'current-page owner drops the Codex consumer'],
+  ['load_before', 'opening or navigating app content', 'current-page owner loads only after answering its reference'],
+]) {
+  mutate(name, dir => {
+    const path = join(dir, '.claude/skill-os/agent-context-manifest.json');
+    const manifest = JSON.parse(readFileSync(path, 'utf8'));
+    manifest.entries.find(entry => entry.id === 'luca-app')[field] = value;
+    writeFileSync(path, JSON.stringify(manifest));
+    changeIndex(dir, rows => { rows.find(entry => entry.id === 'luca-app')[field] = value; });
+  }, /Codex app reference conditional owner/);
+}
+mutate('coherent catalog sources restore unconditional Codex discovery', dir => {
+  changeCatalogLoading(dir, 'condition', 'Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.');
+}, /Codex catalog discovery scope/);
+mutate('coherent catalog sources move Codex discovery to every invocation', dir => {
+  changeCatalogLoading(dir, 'load_before', 'Skill selection or invocation.');
+}, /Codex catalog discovery deadline/);
+mutate('selected method loses its direct authority branch', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8').replace(
+    /For an explicitly selected applicable method,[\s\S]*?Plan and safety still apply\.\n\n/, ''));
+}, /Codex catalog discovery scope/);
+mutate('catalog condition becomes a detached reference after an unconditional loader', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8')
+    .replace('For genuine skill discovery or unresolved selection:\n', '')
+    .replace('<!-- K4:END -->', 'Reference: For genuine skill discovery or unresolved selection.\n<!-- K4:END -->'));
+}, /Codex catalog discovery scope/);
+mutate('bounded unrelated work restores full root startup', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8').replace(
+    /Minimal \*\*startup\*\* applies to framework,[^\n]*\nBounded unrelated tasks [^\n]*/,
+    'Minimal **startup** applies only to non-trivial work. Otherwise:'));
+}, /Codex startup scope/);
+mutate('startup keeps its exception but the routing root restores full discovery', dir => {
+  const path = join(dir, 'AGENTS.md');
+  writeFileSync(path, readFileSync(path, 'utf8').replace(
+    /For bounded tasks unrelated to framework,[\s\S]*?Otherwise route in order:/,
+    'For every non-mechanical request, route in order:'));
+}, /Codex bounded-task routing scope/);
+mutate('kernel drops bounded-task routing while the startup exception remains', dir => {
+  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
+  const kernel = JSON.parse(readFileSync(path, 'utf8'));
+  kernel.obligations.find(entry => entry.id === 'K2').statement =
+    'Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order.';
+  writeFileSync(path, JSON.stringify(kernel));
+}, /Codex bounded-task routing kernel scope/);
+mutate('kernel erases the Codex and Claude catalog distinction', dir => {
+  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
+  const kernel = JSON.parse(readFileSync(path, 'utf8'));
+  kernel.obligations.find(entry => entry.id === 'K4').statement =
+    'Before skill selection or invocation, read the full catalog. Treat STOP as semantic assessment, not execution permission.';
+  writeFileSync(path, JSON.stringify(kernel));
+}, /Codex catalog kernel scope/);
+mutate('kernel restores full startup for both harnesses', dir => {
+  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
+  const kernel = JSON.parse(readFileSync(path, 'utf8'));
+  kernel.obligations.find(entry => entry.id === 'K10').statement =
+    'Keep minimal startup, exact load_before boundaries, read-to-end rules, and truthful Claude/Codex invocation and capability differences inline.';
+  writeFileSync(path, JSON.stringify(kernel));
+}, /Codex startup kernel scope/);
 mutate('explicit final prototype consumer pointer disappears', dir => {
   const p = join(dir, '.claude/skills/office/tech-spec/SKILL.md');
   writeFileSync(p, readFileSync(p, 'utf8').replaceAll('final_artifact_ref', 'unselected-artifact'));
