@@ -100,7 +100,7 @@
     ],
     ".claude/hooks/route-guard.mjs": [
       "多功能需求",
-      "语义路由契约」路由",
+      "语义映射清晰可按 ${routingOwner} 路由",
       "命名即切换",
       "nameMatchesIn"
     ],
