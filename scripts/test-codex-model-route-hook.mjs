@@ -42,9 +42,11 @@ const policy = {
     'MR-001': {trigger: 'normal', role: 'anchor', critical: false},
     'MR-004': {trigger: 'review', role: 'peak', critical: true},
     'MR-008': {trigger: 'mechanical', role: 'light', critical: false},
+    'MR-009': {trigger: 'bounded-verifiable-fact-collection', role: 'light', critical: false},
   },
   dispatch: {native_agent_types: {
     default: 'MR-001', worker: 'MR-001', 'quality-gate': 'MR-004', 'preflight-agent': 'MR-008',
+    'fact-collector': 'MR-009',
   }, workflows: {}},
   critical_failure: 'refuse-no-fallback',
   evidence: 'trusted-runtime-adoption-and-same-invocation-success',
@@ -715,6 +717,37 @@ try {
   start(lightSession);
   const lightPre = pre(lightSession, {task_name: 'mechanical', message: 'check', agent_type: 'preflight-agent'}, 'tool-light');
   equal(lightPre.hookSpecificOutput.updatedInput.model, 'gpt-5.6-luna', 'mechanical scene selects approved light model');
+
+  for (const adopted of ['gpt-5.6-luna', 'gpt-5.6-sol']) {
+    const sid = `root-collector-${adopted.replaceAll('.', '-')}`, aid = `collector-${adopted.replaceAll('.', '-')}`;
+    start(sid);
+    const input = {task_name: 'facts', message: 'bounded lookup', agent_type: 'fact-collector',
+      fork_turns: 'none', reasoning_effort: 'medium'};
+    const routed = pre(sid, input, `tool-${aid}`);
+    equal(routed.hookSpecificOutput.updatedInput.model, 'gpt-5.6-luna', 'collector selects approved light');
+    equal(routed.hookSpecificOutput.updatedInput.reasoning_effort, 'medium', 'collector preserves explicit effort');
+    subStart(sid, aid, 'fact-collector');
+    subStop(sid, aid, 'fact-collector', transcript({sessionId: sid, agentId: aid,
+      agentType: 'fact-collector', model: adopted}));
+    equal(Object.values(state(sid).invocations)[0].status,
+      adopted === 'gpt-5.6-luna' ? 'accepted' : 'refused', 'collector requires matching actual model');
+  }
+  const savedBindings = readFileSync(bindingsPath, 'utf8');
+  for (const variant of ['missing-light', 'invalid-json', 'light-not-in-order']) {
+    const sid = `root-col-${variant}`; start(sid);
+    const binding = JSON.parse(savedBindings);
+    if (variant === 'missing-light') delete binding.harnesses.codex.light_model;
+    if (variant === 'light-not-in-order') binding.harnesses.codex.light_model = 'unlisted-light';
+    writeFileSync(bindingsPath, variant === 'invalid-json' ? '{' : JSON.stringify(binding));
+    const routed = pre(sid, {task_name: 'facts', message: 'lookup', agent_type: 'fact-collector'}, `tool-${variant}`);
+    if (variant === 'light-not-in-order') {
+      equal('model' in routed.hookSpecificOutput.updatedInput, false, 'valid binding with unordered light inherits anchor');
+      equal(Object.values(state(sid).invocations)[0].requested_model, 'gpt-5.6-sol', 'fallback records the actual anchor');
+    } else {
+      equal(routed.hookSpecificOutput.permissionDecision, 'deny', 'broken binding remains denied at native entry');
+    }
+    writeFileSync(bindingsPath, savedBindings);
+  }
 
   const unknownSession = 'root-unknown';
   start(unknownSession);

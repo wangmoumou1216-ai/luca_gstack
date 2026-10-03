@@ -2,6 +2,7 @@
 // Model-routing SSOT gate. Root adapters carry only a conditional pointer; the full tier snapshot
 // remains in model-routing.yaml and orchestrator.md.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +24,7 @@ assert.match(common, /\n\s{2}scope:\s*common\b/, 'model policy must be harness-n
 for (const role of ['anchor', 'peak', 'light']) {
   assert.match(common, new RegExp(`\\n\\s{4}${role}:`), `common model policy lacks ${role} role`);
 }
-assert.match(common, /MR-008:[\s\S]*?role:\s*light\b/, 'low-risk mechanical work must resolve to light');
+assert.match(common, /^    MR-008:\n(?:      [^\n]*\n)*?      role: light\s*$/m, 'low-risk mechanical work must resolve to light');
 assert.match(common, /quality-gate:\s*MR-004\b/, 'native quality-gate dispatch drift');
 assert.match(common, /Redteam:\s*MR-003\b/, 'workflow Redteam dispatch drift');
 assert.match(common, /effort:\s*user-owned-not-a-routing-input\b/, 'effort must not be a model-routing input');
@@ -50,3 +51,26 @@ assert.doesNotMatch(codex, /^\s{2}tier_to_effort:/m, 'Codex must not map model t
 assert.match(codex, /\n\s{4}preflight-agent:\s*low\b/,
   'Codex fixed preflight-agent effort must remain low');
 console.log('PASS common model-routing SSOT, legacy compatibility, and thin-root pointers');
+
+// Parse the new shared role and its real adapters; prose snapshots alone are insufficient.
+const collector = spawnSync('python3', ['-P', '-c', `
+import pathlib, sys, tomllib, yaml
+root = pathlib.Path(sys.argv[1])
+p = yaml.safe_load((root/'.claude/skill-os/model-routing.yaml').read_text())
+a = tomllib.loads((root/'.codex/agents/fact-collector.toml').read_text())
+body = (root/'.claude/agents/fact-collector.md').read_text()
+f = yaml.safe_load(body.split('---', 2)[1])
+assert p['model_routing']['scenes']['MR-009'] == {'trigger':'bounded-verifiable-fact-collection','role':'light','critical':False}
+assert p['model_routing']['dispatch']['native_agent_types']['fact-collector'] == 'MR-009'
+assert p['agents']['fact-collector'] == f['model'] == 'sonnet'
+assert f['name'] == a['name'] == 'fact-collector'
+assert a['sandbox_mode'] == 'read-only'
+assert 'model' not in a and 'model_reasoning_effort' not in a
+assert p['codex']['agents']['fact-collector'] == 'inherit'
+assert '.claude/agents/fact-collector.md' in a['developer_instructions']
+assert a['developer_instructions'].split('\\n\\n', 1)[1].strip() == body.split('---', 2)[2].strip()
+assert f['tools'] == 'Read, Glob, Grep'
+`, root], {encoding: 'utf8'});
+assert.equal(collector.status, 0, `bounded collector adapter drift: ${collector.stderr}`);
+assert.match(orchestrator, /fact-collector/, 'collector needs a real caller selection instruction');
+console.log('PASS bounded collector shared contract and native adapter registration');

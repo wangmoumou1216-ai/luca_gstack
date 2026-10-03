@@ -182,8 +182,8 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
   ok('S8 .codex/agents/*.toml 已定义', fs_.length >= 3, `found=${fs_.length}`);
 }
 
-// S8b 固定 effort 一致性：.codex/agents/*.toml 必须等于 model-routing.yaml
-// 的 codex.agents。这是 agent 执行参数防漂移，不是动态模型档位。
+// S8b effort 一致性：固定值必须匹配 codex.agents；显式 inherit 必须省略 TOML effort。
+// 这是 agent 执行参数防漂移，不是动态模型档位。
 {
   const yml = readFileSync(join(ROOT, '.claude', 'skill-os', 'model-routing.yaml'), 'utf8');
   const seg = yml.split(/^codex:/m)[1] || '';
@@ -198,13 +198,15 @@ ok('S6 .codex/codex-hook-adapter.mjs 存在且语法合法',
     const name = (t.match(/^name\s*=\s*"([^"]+)"/m) || [])[1];
     const eff = (t.match(/^model_reasoning_effort\s*=\s*"([^"]+)"/m) || [])[1];
     if (!name) { mismatch.push(`${f}:无name`); continue; }
-    if (!eff) { mismatch.push(`${name}:未定档`); continue; }
-    if (want[name] && want[name] !== eff) mismatch.push(`${name}:toml=${eff}≠yaml=${want[name]}`);
     if (!want[name]) mismatch.push(`${name}:yaml未登记`);
+    else if (want[name] === 'inherit') {
+      if (eff) mismatch.push(`${name}:inherit不应固定effort=${eff}`);
+    } else if (!eff) mismatch.push(`${name}:未定档`);
+    else if (want[name] !== eff) mismatch.push(`${name}:toml=${eff}≠yaml=${want[name]}`);
     // 账户模型名只允许在私有 binding；agent TOML 不能开第二份 policy。
     if (/^model\s*=/m.test(t)) mismatch.push(`${name}:硬编码了model名`);
   }
-  ok('S8b subagent 固定 effort 与 codex.agents 一致且无公开硬编码模型名',
+  ok('S8b subagent 固定/继承 effort 与 codex.agents 一致且无公开硬编码模型名',
     mismatch.length === 0, mismatch.join(','));
 }
 

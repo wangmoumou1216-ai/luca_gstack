@@ -25,8 +25,15 @@ const candidatePolicy = JSON.parse(candidateParsed.stdout);
 assert.equal(candidatePolicy?.status, 'candidate', 'audit candidate remains frozen as pre-activation evidence');
 assert.equal(candidatePolicy?.scope, 'common', 'candidate policy is harness-neutral');
 assert.equal(candidatePolicy?.scenes?.['MR-008']?.role, 'light', 'mechanical scene uses light role');
+assert.deepEqual(activePolicy.scenes['MR-009'], {
+  trigger: 'bounded-verifiable-fact-collection', role: 'light', critical: false,
+});
+assert.equal(activePolicy.dispatch.native_agent_types['fact-collector'], 'MR-009');
 const activeComparable = structuredClone(activePolicy); activeComparable.status = 'candidate';
-assert.deepEqual(activeComparable, candidatePolicy, 'active policy must equal the reviewed candidate except status');
+// The historical candidate is immutable; project out only this explicitly tested extension.
+delete activeComparable.scenes['MR-009'];
+delete activeComparable.dispatch.native_agent_types['fact-collector'];
+assert.deepEqual(activeComparable, candidatePolicy, 'all original policy fields must equal the frozen candidate');
 console.log('PASS policy-v2: active policy matches reviewed candidate');
 
 // Historical v1 remains a resolver compatibility fixture, not a second production policy.
@@ -87,6 +94,18 @@ function requestV2(scene = 'MR-001', harness = 'codex-native') {
 }
 // Unit fixtures replace the future trusted host, not a live-model attestation.
 const trusted = {verifyCapability: () => true};
+test('v2 bounded collector: exact identity selects light without downgrading exploration', () => {
+  const selected = resolveDispatchScene(policyV2, {kind: 'native-agent', agent_type: 'fact-collector'});
+  assert.equal(selected, 'MR-009');
+  const route = resolve(requestV2('MR-009'), trusted);
+  assert.equal(route.disposition, 'READY');
+  assert.equal(route.role, 'light');
+  assert.equal(route.critical, false);
+  assert.equal(route.requested_model, 'gpt-5.6-luna');
+  assert.equal(resolve(requestV2('MR-006'), trusted).requested_model, 'gpt-5.6-sol');
+  const missing = requestV2('MR-009'); delete missing.effective_config.light;
+  assert.equal(resolve(missing, trusted).requested_model, 'gpt-5.6-sol');
+});
 test('resolve: execution uses the effective default', () => {
   const route = resolve(request(), trusted);
   assert.equal(route.disposition, 'READY');
