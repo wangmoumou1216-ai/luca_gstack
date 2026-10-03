@@ -279,6 +279,7 @@ check S45 "六项集成 runtime candidate manifest denominator/blob 闭合（对
 check S31 "旧 mega-appendix 已退出 runtime context" "node scripts/check-appendix-pointers.mjs"
 check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）" "awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
 check S33 "model-routing 单真值源 + 双 root 薄指针" "node scripts/check-model-table.mjs"
+check S33b "候选原文出处检查与内容验收边界" "node --test scripts/test-fact-candidates.mjs"
 # S34 的 Claude 回归子集只有在同一轮 C11 与 S30 已通过后才可显式委托；
 # 委托不是 PASS，且旧环境变量不再具有授权语义。单独运行 wiring 时仍执行完整 S10。
 check S30 "harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）" "npm run check:harness --silent"
