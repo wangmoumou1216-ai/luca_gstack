@@ -447,15 +447,31 @@ Step 4  用户确认 → 进入 §3.4 执行循环
 ## 5. 模型路由（强制传参：Claude；Codex 按角色执行）
 
 真值源：`.claude/skill-os/model-routing.yaml`。Codex native/runner 只消费顶层 common
-`model_routing`：正常执行/事实收集继承 anchor，已登记的关键审查身份使用 peak，机械任务
-使用已批准且确实更低的 light。模型名和相对顺序来自私有 binding，effort 保持用户设置；
+`model_routing`：正常执行/承重探索继承 anchor，已登记的关键审查身份使用 peak，机械任务
+与有界可核验采集使用已批准且确实更低的 light。模型名和相对顺序来自私有 binding，effort 保持用户设置；
 未知关系和关键采用证据失败均拒绝，不自动降级，也不由 caller 的 model 参数覆盖政策。
 独立审查一律 `fork_turns: none`，是否换模型不改变独立性要求。
 
 原生身份以 `dispatch.native_agent_types` 为准。当前 default/worker 走 MR-001，explorer
-走 MR-006，quality-gate 走 MR-004；未登记的 MR-002/003/005/007 原生用途不能靠 prompt
+走 MR-006，fact-collector 走 MR-009，quality-gate 走 MR-004；未登记的 MR-002/003/005/007 原生用途不能靠 prompt
 或显式 model 参数宣称已接通。方案裁决可用现有 quality-gate 的 MR-004/peak；新增身份
 需单独登记、配置并验证。Workflow runner 按精确 workflow/phase 路由，没有 omit/inherit 豁免。
+
+**按职责选择入口：** 当原任务确实需要委托一个独立子任务，且问题有限、源范围明确且
+已授权、答案可逐条定位到来源、parent 可低成本核对，并且不含根因/方案权衡/裁决/写入时，
+优先选择 `fact-collector`。给它问题 ID 和必要的材料范围，不复制整段历史；其共享合同在
+`.claude/agents/fact-collector.md`。直接回答更便宜的一步查找不强制派代理。
+
+需要调用链判断、根因分析或研究综合时，继续选 explorer/anchor；实现与测试选
+worker/anchor；计划起草和汇总由 anchor 负责，关键计划裁决/反证/终验复用既有
+quality-gate/peak 冷审。按判断职责选型，不按嵌套深度、research 字样或简单文件数量降档。
+混合或不确定任务保持 anchor，或在原授权内先拆出纯采集部分；不新增失败升档门。
+
+Parent 核对采集的出处、覆盖、缺口和冲突后再整合，采集状态不作为验收票。角色不支持或
+路由机制尚未启用时，明确使用既有 anchor 路径，不能声称轻量采用成功。Codex binding
+缺失/损坏仍由现有 hook 拒绝，不把 resolver 的配置内回退承诺成自动修复配置。
+保留用户 effort 与主循环模型，不把截图中的 medium 设为新的默认值。只有自然任务下的
+实际 caller 选择与同调用采用证据才证明入口被使用；指定角色的探针仅证明可调用。
 
 Codex native 的关键调用在完成证据落盘前，暂停新的 native/runner 派发；已绑定 agent_id
 也不代表证据闭合。因此原生关键会审按顺序完成。通用非 implement 计划的非关键调用或已准入

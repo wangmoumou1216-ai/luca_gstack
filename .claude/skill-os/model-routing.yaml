@@ -70,12 +70,17 @@ model_routing:
       trigger: low-risk-mechanical-subtask
       role: light
       critical: false
+    MR-009:
+      trigger: bounded-verifiable-fact-collection
+      role: light
+      critical: false
   dispatch:
     native_agent_types:
       default: MR-001
       worker: MR-001
       explorer: MR-006
       preflight-agent: MR-008
+      fact-collector: MR-009
       quality-gate: MR-004
       muse-proto-judge: MR-004
     workflows:
@@ -158,6 +163,7 @@ fable_whitelist:
 agents:
   quality-gate: opus        # 判官≥执行者；合同回验模式由调用方参数升 fable（P0）
   muse-proto-judge: opus    # AC 判官（muse）
+  fact-collector: sonnet   # 有界事实采集；不承担综合、裁决或写入
   preflight-agent: haiku    # 纯机械前置检查（effort: low）
 
 # 有意不 pin 的 agent（机检白名单——不在 agents: 也不在此表的 agent 文件 → tripwire 告警）：
@@ -216,7 +222,8 @@ codex:
   agent_toml_model_field_note: |
     .codex/agents/*.toml 不写账户模型名。anchor 时继承根会话；peak/light 时由
     已授信的 model-route hook 按公共 policy 与私有 binding 改写本次 spawn 的 model。
-  agents:                       # 固定 agent effort；不是模型档位、不按场景动态调整
+  agents:                       # 固定 effort 或显式 inherit；不是模型档位
+    fact-collector: inherit     # 不设固定 effort，沿用调用方设置
     quality-gate: high
     muse-proto-judge: high
     preflight-agent: low        # minimal 被真实模型拒绝，故固定为 low

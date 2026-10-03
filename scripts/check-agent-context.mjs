@@ -199,7 +199,7 @@ if (!/\n\s{2}scope:\s*common\b/.test(commonModel)) errors.push('model policy mus
 for (const role of ['anchor', 'peak', 'light']) {
   if (!new RegExp(`\\n\\s{4}${role}:`).test(commonModel)) errors.push(`common model policy lacks ${role} role`);
 }
-if (!/MR-008:[\s\S]*?role:\s*light\b/.test(commonModel)) errors.push('low-risk mechanical scene must use light role');
+if (!/^    MR-008:\n(?:      [^\n]*\n)*?      role: light\s*$/m.test(commonModel)) errors.push('low-risk mechanical scene must use light role');
 if (!/quality-gate:\s*MR-004\b/.test(commonModel)) errors.push('native quality-gate dispatch drift');
 if (!/Redteam:\s*MR-003\b/.test(commonModel)) errors.push('workflow Redteam dispatch drift');
 if (!/effort:\s*user-owned-not-a-routing-input\b/.test(commonModel)) errors.push('effort must not be a model-routing input');
