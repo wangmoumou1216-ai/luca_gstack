@@ -48,7 +48,8 @@ criteria:
 - `[ADOPTED]`：用户明确采纳的决策（用户说"就这个"/"方案A"/"同意"时标记）
 - `[REJECTED]`：用户明确否决的决策（用户说"不要这个"/"换一个"时标记）
 
-**写入时机：** skill 完成时先写 PROPOSED。用户确认后，由 Orchestrator 或下一个 skill 更新为 ADOPTED/REJECTED。
+**写入时机：** 新建议写 PROPOSED；本次已有真实用户采纳/否决的决定，继承 ADOPTED/REJECTED 及来源，不重置或重复确认。
+最新有效更正优先；历史采纳仅作参考，不授予本次执行权。尚未决定或超出当前权限的事项仍须真实用户决定。
 
 **脱敏（2026-07-12 增，源 mattpocock handoff，GATE-2 例外批准）：** 交接/checkpoint 文档不得含
 API key/密码/PII——发现即替换为 `<REDACTED>` 占位符（本目录 git-tracked，泄露面真实）。
@@ -120,14 +121,13 @@ outputs 返回 certificate，由同一 OD caller 最终交接一次，不要求�
 
 skill 启动时，Orchestrator（或 skill 自身在 standalone 模式下）按以下顺序读取：
 
-1. **workflow-state.yaml** → 确认上游哪些 skill 已 DONE
-2. **最近一个上游 handoff summary** → 获取决策、约束、风险
-3. **自己的 SKILL.md** → 执行指令
+1. **自己的 SKILL.md** → 完整读取当前输入合同，确认本次所需来源与权限
+2. **本次全部必需上游** → 在已验证项目根的 workflow-state 中取精确 handoff_path；不以最近 DONE 代替依赖集合，standalone 不补 workflow state
+3. **精确 handoff 及必需来源** → 在本次读权限内核版本、真实 gate/证据；缺失、失败或未知的必需依赖不作为成功消费
 4. 如需要 → 共享 references 中的特定文件（按 context-cost.shared-refs 声明加载）
 
-**绝不读取上游 skill 的完整 SKILL.md 或完整产出文件。**
-如果需要上游产出的具体细节，handoff summary 应该包含足够的摘要，或者
-skill 在执行过程中按需读取特定段落。
+不以交接为由批量加载上游完整 SKILL.md 或全部产出。当前 owner 输入合同明确要求的来源或片段，
+仍须在本次真实读权限内完整读取并核验；摘要不能替代必要来源，也不授予额外读权。
 
 ## 写入脚本
 

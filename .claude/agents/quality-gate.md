@@ -331,8 +331,8 @@ EVAL_ENVELOPE_JSON
 | Gate 结果 | Orchestrator 行为 |
 |-----------|-----------------|
 | PASS | 继续下一个 skill |
-| FAIL | 展示 findings → 询问用户：修复 / 跳过 / 终止 |
-| CONDITIONAL_PASS | 展示 findings → workflow 模式记录到已绑定项目状态；standalone 记录到当前报告 → 继续 |
+| FAIL | 展示 findings；按 orchestrator.md §2.2 暂停受影响依赖，授权内返修后重验，缺授权/未决 Human Gate 才询问用户 |
+| CONDITIONAL_PASS | 展示 findings → workflow 模式记录到已绑定项目状态；standalone 记录到当前报告；按 orchestrator.md §2.2 核对下游必需项后决定是否继续 |
 
 ---
 
