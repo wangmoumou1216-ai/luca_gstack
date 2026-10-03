@@ -1532,6 +1532,60 @@ let passCount = 0;
 let failCount = 0;
 const failures = [];
 
+// The adapter declares the actual CLI while retaining Claude protocol fields.
+// Assert the real hint surface, not only the dry-run decision or source text.
+{
+  const sandbox = realpathSync(mkdtempSync(join(tmpdir(), 'route-root-owner-')));
+  mkdirSync(join(sandbox, '.claude', 'skill-os'), { recursive: true });
+  mkdirSync(join(sandbox, 'projects'));
+  writeFileSync(join(sandbox, '.claude', 'skill-os', 'skill-routing-map.yaml'),
+    readFileSync('.claude/skill-os/skill-routing-map.yaml'));
+  try {
+    for (const harness of ['codex', 'claude']) {
+      for (const prompt of ['PRD是啥', 'PRD是啥，规划一下', 'PRD是什么，了解其机制']) {
+        const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
+          cwd: process.cwd(), input: JSON.stringify({ prompt, prompt_id: 'protocol-field' }), encoding: 'utf8',
+          env: { ...baseEnv, CLAUDE_PROJECT_DIR: sandbox, LUCA_PROJECTS_ROOT: join(sandbox, 'projects'),
+            LUCA_ACTUAL_HARNESS: harness, ROUTE_GUARD_DRY_RUN: '0',
+            ROUTE_GUARD_PROJECTS: 'fixture', ROUTE_GUARD_CURRENT_PROJECT: 'fixture' },
+        });
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /❓ STOP/);
+        const expectedRoot = harness === 'codex' ? 'AGENTS.md' : 'CLAUDE.md';
+        const otherRoot = harness === 'codex' ? 'CLAUDE.md' : 'AGENTS.md';
+        assert.ok(result.stdout.includes(`${expectedRoot} K2/K4`), `${harness} hint points to the wrong root: ${result.stdout}`);
+        assert.ok(!result.stdout.includes(otherRoot), `${harness} hint requires a foreign root`);
+        assert.match(result.stdout, /确认或补充/, 'STOP must retain the unresolved-selection human gate');
+        assert.doesNotMatch(result.stdout, /project\.sh|--tx|PROJECT_SWITCH/, 'hint must not mint project authority');
+        if (prompt.includes('规划一下')) assert.match(result.stdout, /Plan Agent 5 条件/);
+        if (prompt.includes('了解其机制')) assert.match(result.stdout, /研究\/认知信号/);
+        console.log(`PASS ${harness} STOP hint uses its root owner: ${prompt}`);
+        passCount++;
+      }
+    }
+    const unknownEnv = { ...baseEnv, LUCA_PROJECTS_ROOT: join(sandbox, 'projects'),
+      ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: 'fixture', ROUTE_GUARD_CURRENT_PROJECT: 'fixture' };
+    for (const field of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CLAUDE_PROJECT_DIR',
+      'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) delete unknownEnv[field];
+    for (const prompt of ['PRD是啥', 'PRD是啥，规划一下']) {
+      const result = spawnSync('node', [join(process.cwd(), '.claude', 'hooks', 'route-guard.mjs')], {
+        cwd: sandbox, input: JSON.stringify({ prompt }), encoding: 'utf8', env: unknownEnv,
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /❓ STOP/);
+      assert.match(result.stdout, /当前宿主入口未确定/);
+      assert.doesNotMatch(result.stdout, /AGENTS\.md|CLAUDE\.md/, 'unknown identity cannot select a root');
+      assert.match(result.stdout, /确认或补充/);
+      assert.doesNotMatch(result.stdout, /project\.sh|--tx|PROJECT_SWITCH/);
+      if (prompt.includes('规划一下')) assert.match(result.stdout, /Plan Agent 5 条件/);
+      console.log(`PASS unknown STOP hint does not choose a root: ${prompt}`);
+      passCount++;
+    }
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true });
+  }
+}
+
 // Real hint surface (not dry-run JSON): this is what Claude/Codex actually receive.
 // No session_id is supplied, so the hook cannot open or mutate project state.
 {
