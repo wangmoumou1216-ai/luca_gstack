@@ -5,7 +5,8 @@ description: |
   Prefer this narrow role to explorer for that lookup; use explorer for code interpretation or synthesis.
   The parent constructs the versioned request; the user does not need to supply one.
   Parent must read this file before dispatch, run scripts/verify-fact-candidates.mjs on the result,
-  and retain per-question acceptance evidence in the final table or tool output before dependent use.
+  and retain per-question acceptance evidence before dependent use. The final table must include
+  a decision and coverage/exception disposition for every question unless equivalent tool evidence exists.
   Code interpretation, synthesis, implementation and approval belong to anchor or the existing review role.
 tools: Read, Glob, Grep
 model: sonnet
@@ -72,6 +73,16 @@ Codex 无原生读取工具时，仅对获准 request 文件使用单条 `cat FI
    为何完整覆盖、冲突/未知处置、拒收内容及原因（没有则明确无）。共同理由可以明确
    适用于表格全部行。不能仅在私有推理中自认核对；不创建新的工作流状态。
    只有全部问题 ACCEPT/RECOVERED 才可视为已覆盖；UNRESOLVED 停止对应依赖。
+
+   最简交付模板如下（合并结果与出处即可保持简短）：
+
+   | 问题 | 决定 | 核验后结果与出处 | 覆盖与异常处置 |
+   |---|---|---|---|
+   | Q1 | ACCEPT / RECOVERED / UNRESOLVED | 回答与来源定位 | 为何覆盖全部所问；冲突/未知如何处理；拒收哪些内容及原因 |
+
+   若所有行均已完整覆盖且无异常，可在表后明确写“以上各题已覆盖全部所问，
+   无冲突、未知或拒收内容”，作为各行共同的覆盖与异常处置。不能只给答案和行号，
+   也不能用笼统的“已核验”替代这些记录；缺记录时本轮采集任务仍未完成。
 6. 格式/来源检查失败、漏项、冲突未解、越界解释或无法核实时，拒收受影响的候选；
    格式或出处失败时不使用该批未经验证的片段。Parent 自己用 anchor 接手，或按既有流程
    另派 anchor。缺读取授权或证据则保留 UNRESOLVED 并停止依赖项。禁止反复重试 light
