@@ -1,16 +1,16 @@
-# luca_gstack — AI 产品设计工作流 Skill OS
+# luca_gstack — 产品中性的 AI 设计与工程 Skill OS
 
-> 一个跑在 Claude Code 之上的 AI 产品设计操作系统：斜杠命令驱动全链路（需求 → 研究 → 原型 → 工程规格），
-> 但它真正的分量不在这些命令，而在命令背后那一层——**自动路由、会自成长的记忆、多 Agent 编排、
-> 分层模型调度、环境隔离与框架自进化**。skill 只是入口，OS 才是主体。
+> 运行在 **Claude Code 与 Codex** 上的个人开发环境，覆盖需求、研究、设计、原型、工程交付与治理。
+> 共享的 skill 契约连接自动路由、受控记忆、Agent 编排、模型角色调度和会话级项目隔离；
+> 每个 skill 默认独立使用，工作流由你主动选择。
 
 ---
 
 ## Overview — 这是什么
 
-luca_gstack 是一个 **Skill OS**，不是一个被写死的 workflow engine。它把"AI 帮你做产品设计"这件事
-拆成一组可独立调用的 skill，再在它们之上叠一层操作系统：**你说人话，它决定该走哪条路、调哪个模型、
-读哪段记忆、在哪里停下来等你拍板，做完把该记住的沉淀下来。**
+luca_gstack 把设计与工程工作拆成一组可独立调用的 skill，再提供共享的输入、输出、验证与授权契约。
+你可以直接描述目标，也可以按名调用 skill；系统先检查项目上下文与任务复杂度，再选择执行入口。
+产品、品牌、业务词汇和实现约束来自已确认项目及其 `CONTEXT.md`。
 
 五条设计公理（`.claude/skill-os/README.md` 为真值源）：
 
@@ -22,7 +22,7 @@ Growth-gated       记忆/规则的成长走候选 → 评审 → 晋升门禁�
 Governance-callable 治理（评审/评估/复盘/自进化）随时可调，但只提议、不擅自改
 ```
 
-**产品中性，四类场景跨项目适用：**
+**产品设计采用四类场景，跨项目适用：** 工程、文档和框架维护任务不强行套用场景。
 
 | 场景 | 名称 | 说明 |
 |------|------|------|
@@ -30,6 +30,16 @@ Governance-callable 治理（评审/评估/复盘/自进化）随时可调，但
 | **B** | 已有功能优化 | 评审驱动改版 |
 | **C** | 线上评审改版 | 对现网页面做审计与重设计 |
 | **D** | Agent 化改造 | 把"用户手动操作"改成"用户监督 AI 执行" |
+
+当前入口与状态以 [Skill 目录](.claude/skill-os/generated/skill-catalog.md) 为准，
+演进记录见 [CHANGELOG.md](CHANGELOG.md)。近期变化包括：
+
+- **设计收敛**：Design Brief 统一承接全流程已选方案、已有需求/口述与已有原型精修，冻结前完成模板语义适配。
+- **工程交付**：补齐 `wayfinder`、`grilling`、`to-spec`、`to-tickets`、`implement` 与 `code-review` 等入口，复用既有规格和任务计划。
+- **动效与验收**：`motion-polish` 处理现有 HTML 的动效与微交互，交付绑定精确候选、独立验收报告和最终产物引用。
+- **事实采集**：`fact-collector` 用轻量模型摘录有限来源中的显式事实，主模型核验后才采用；解释、综合与关键裁决保持各自分工。
+
+新入口的内容适配、离线回归和原生活体验收分别记录；新增入口不代表所有运行时的采用与收益均已验证。
 
 ---
 
@@ -46,24 +56,24 @@ luca_gstack 的取舍在两者之间，靠的是下面这几条刻意的选择�
 - **机器提议，人类裁定。** 真伪判断、优先级、方向选择这类需要人拍板的节点，机器只做可回溯性检查、
   打分和分类，绝不代替人下结论。关键流程里的人类卡点是硬约束，不是可跳过的礼节。
 - **环境与项目彻底分离。** 这个仓是"运行环境"，本身不存任何项目产出；项目产出与状态放在独立目录，
-  通过 symlink + 会话级项目绑定暴露当前项目。而记忆与观察这类"经验层"是跨项目的，不随项目切换而丢失。
-- **原生优先（native-first）。** 能用 Claude Code harness 原生能力（hooks、subagent、/loop、schedule、
-  Workflow）就不自建平行机器。框架层刻意做薄，只喂输入、设停止条件、卡人类断点、写回记忆。
+  会话级项目绑定决定实际读写目标，symlink 只用于兼容展示。框架维护保持 `NO_PIN`，经验层不随项目切换而丢失。
+- **原生优先（native-first）。** 优先使用各宿主的 hooks、subagent 等原生能力；缺少原语时提供明确适配或降级。
+  Codex 的共享 Workflow 脚本由 `.codex/workflow-runner.mjs` 执行，不声称具有 Claude 的原生 Workflow 工具。
 - **不臆造是硬性质量门。** "没有数据支撑就不编"在所有 skill 里恒定生效——宁可标注"信息缺口"也不
   产出看起来合理的假事实。
 - **框架自己会进化，但只提议。** 内置的自进化侦察会定期扫描外部生态、比对自身能力缺口、给出采纳建议，
   但零自动编辑——所有演进都以 digest 形式等人裁决。
-- **模型是一个旋钮，不是一个常量。** 判定/对抗用重推理档，承重执行用主力档，机械活用廉价档——
-  按任务的"判断杠杆 × 错判代价"分层调度，而不是所有活都用同一个模型硬扛。
+- **模型按角色调度。** Codex 普通执行保持用户当前主模型，关键裁决使用已批准的高档模型，
+  有界事实采集与低风险机械任务使用已批准的轻量模型；reasoning effort 保持独立。
 
-Codex 自动模型的绑定配置、6 系列示例及缺失关系修复见 [模型路由配置说明](.codex/MODEL_ROUTING.md)。
+Codex 模型的私有绑定、示例及缺失关系修复见 [模型路由配置说明](.codex/MODEL_ROUTING.md)。
 
 ---
 
 ## 系统架构
 
 ```text
-Claude Code Runtime（模型 + harness 原生 loop / hooks / subagent）
+Claude Code / Codex Runtime（各自的模型、hooks 与 subagent）
         ↓
 luca_gstack Skill OS
    · standalone skills          每个 skill 自带输入契约与质量 gate
@@ -92,35 +102,37 @@ Optional Workflow Graph（可选，主动启用）
 
 ### 1. 分层智能路由（route-guard）
 
-每次你发消息，`route-guard` 都会按关键词表打分并注入一条路由决策，主 Agent 必须遵守。它不是简单的
-关键词匹配，而是一套**优先级由高到低的分层裁决**：
+`route-guard` 提供触发词打分与路由提示，主 Agent 根据语义和权威目录判定实际入口。
+路由按以下顺序检查，复杂度门先于 skill 命中：
 
 | 层级 | 触发 | 行为 |
 |------|------|------|
 | **项目上下文门禁** | "老项目/已有项目/继续项目" | 先确认或切换项目，不得直接进入某个 skill |
-| **Plan Agent 层** | 复杂度达标 / 命中重编排 skill / 满足 5 条件之一 | 先出结构化计划（阶段分解 + 编排模式 + 断言），等确认 |
-| **Multi-Skill 层** | 多候选、置信度低 | 向你列出候选组合，问清顺序再执行 |
+| **Plan Agent 层** | 满足五个复杂度条件之一 | 先出结构化计划；Supervisor / Hierarchical 按合同等待真实批准 |
+| **Framework Flow 层** | 框架演进、对标或治理 | 在 `NO_PIN` 范围选择对应维护流程 |
+| **Multi-Skill 层** | 多个独立且高置信的 skill 匹配 | 按实际依赖组合，不默认启用工作流 |
 | **Single-Skill 层** | 单一高置信命中且不触发 Plan Agent | 直接调用对应 skill |
-| **低置信兜底** | 零关键词命中 | 展示软匹配候选或 skill 列表请你选，禁止无依据自行执行 |
+| **STOP / NONE 兜底** | 意图有歧义，或没有匹配入口 | 歧义等你选择；无匹配先查目录，再作语义判断 |
 
 关键词真值源是 `.claude/skill-os/skill-routing-map.yaml`。route-guard 还顺带追踪对话轮数，
 到点自动提醒你写 Checkpoint 或 compact。
 
-**Plan Agent 5 条件**（满足任一即先规划、复杂任务暂停等确认）：涉及 ≥3 文件改动 / 需 ≥2 独立 subagent
+**Plan Agent 五个条件**（满足任一即先规划）：涉及 ≥3 文件改动 / 需 ≥2 独立 subagent
 协作 / 有明确阶段依赖 / 涉及不可逆操作 / 你明确要求"先做个计划"。
+内部 HITL 编排的计数例外和批准边界见 [Plan Agent 合同](.claude/agents/plan-agent.md)；规划本身不授予执行权。
 
 ### 2. 三层记忆 + 自成长
 
 | 层 | 存什么 | 何时写 |
 |----|--------|--------|
-| **Episodic** | 单次 session 的经历与决策 | session 结束触发 |
+| **Episodic** | 单次 session 的经历与决策 | 命中提取门槛并完成裁决后记录 |
 | **Semantic** | 跨 session 的稳定事实 | 候选通过评审后晋升 |
 | **Procedural** | skill 规则（已并入 Semantic `domain:skill-rule`）| 同上 |
 
 记忆不是"想记就记"，而是三环自动闭环：
 
 ```text
-捕获（Stop hook 拦截"有实质工作未沉淀"的 session，就地按门槛裁决）
+捕获（Stop 默认留下 pending-extraction，按门槛裁决后才落库）
    ↓
 治理 + 晋升（每日首 session 后台跑：只晋升门禁内候选、降频写 digest、Loop 健康自检）
    ↓
@@ -131,6 +143,8 @@ Optional Workflow Graph（可选，主动启用）
 高重获成本，全不中就什么都不存）和**归属三分**（这条经验是关于"人怎么工作"、"框架规则"、还是
 "某个具体项目"？分别落不同位置，避免跨项目上下文污染）。启动只用 `get_memory.py --summary`
 加载摘要，具体任务用 `search_memory.py` 做相关检索——长历史永远是冷存储。
+pending 与裁决 marker 只表示工作窗口的处理状态，不证明记忆已落库。
+旧强制提取模式需显式设置 `SESSION_SYNC_FORCE_ON_STOP=1`；Claude 可 block，Codex 对该控制动词降级为提示。
 
 ### 3. Observability — 从反馈蒸馏短规则
 
@@ -149,10 +163,14 @@ Optional Workflow Graph（可选，主动启用）
 | **Preflight Agent** | 前置校验 | skill 启动前验证前置条件，返回 PASS/FAIL |
 | **Quality Gate** | 测试层 | 独立 context 跑断言、审查产出质量，不污染主 session |
 | **Work Agent** | 单阶段执行器 | 只做一件有界的事，返回结构化完成报告，不规划、不再派 subagent |
+| **Fact Collector** | 有界原文采集 | 只读授权快照；出处校验后仍需主模型逐题核验，不承担综合或裁决 |
 
 编排模式借鉴 Anthropic *Building Effective Agents*：能画出决策树的任务就用确定性编排，不交给 agent
-自由探索。给每个 agent 的 context 有预算（Explore <500 / Work <2000 / Eval <1000 / Plan <1500 tokens），
-只喂它实际需要的目标与路径，不灌完整会话历史。
+自由探索。按职责控制上下文：探索者接收查询问题，执行者接收任务与文件所有权，
+审查者接收冻结改动、需求与断言。具体预算由编排合同约束。
+
+事实采集结果先由 `scripts/verify-fact-candidates.mjs` 校验出处与逐字内容，再由主模型逐题记录
+接受、接手或未解决。模型采用回执与内容验收分开，校验器退出成功也不等于事实已获认可。
 
 ### 5. Context 工程协议
 
@@ -161,49 +179,58 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
 - **Checkpoint**：启动 ≥2 个重型 Agent、完成一个 Phase、或不可逆操作前，写五要素交接
   （已完成 / 进行中 / 待执行 / 关键决策 / 恢复指令）。
 - **PROGRESS.md**：≥3 Phase 的长任务开场初始化，每 Phase 更新，启动时自动显示。
-- **懒加载**：不在开头全量读文件；长文件先读前 50 行看结构再按需深读。
+- **条件加载**：从各宿主独立的根契约进入，按 context index 加载匹配的一跳 owner；
+  已选中的治理文件必须在规定边界前读到末尾，长历史按需检索。
 - **Compact 触发**：完成 Phase 且后面还有 ≥2 Phase、或超 30 轮对话，在下个 Phase 前 compact（compact 前必先写 Checkpoint）。
-- **断点恢复**：新 session 读最新 checkpoint + 跑 `verify.sh`，从"待执行"继续，不重做已完成项。
+- **断点恢复**：先核对仓库 SHA 与工作树，再读 checkpoint 并重跑当前阶段的最小验证，从未完成项继续。
+  `NO_PIN` 框架任务的 checkpoint 放在 `framework-audit/` 或系统临时目录。
 
-### 6. 模型分层路由（Fable 手术刀）
+### 6. 模型角色路由
 
-真值源 `.claude/skill-os/model-routing.yaml`。按任务的 token 量级 × 判断杠杆 × 错判代价分四档调度：
+真值源是 [.claude/skill-os/model-routing.yaml](.claude/skill-os/model-routing.yaml) 的顶层
+`model_routing`。当前公共角色政策在 **Codex native subagent 与 workflow runner** 接线；Claude 的新 adapter 延后。
 
-| 能力档 | 任务类型 | 解析到 |
-|--------|----------|--------|
-| **reasoning-heavy** | 仅判定场景（出门前裁决 / 对抗判定 / 翻案复审 / 规划期）| 重推理档 |
-| **core-execution** | 承重执行与整场交互（写代码、原型、规格、研究、判官常规）| 主力档 |
-| **guided-execution** | 轻执行 / checklist 审查 / 一般检索 | 引导档 |
-| **mechanical** | 机械执行、格式化、打分、preflight | 廉价档 |
+| 角色 | 用途 | 选择依据 |
+|------|------|----------|
+| **anchor** | 普通对话、实现、解释与综合 | 根会话实际生效的用户模型 |
+| **peak** | 独立语义评审、对抗与关键裁决 | 用户批准的较高模型；anchor 已达该档则保留 |
+| **light** | 低风险机械任务、有界显式事实采集 | 用户批准且明确低于 anchor 的模型 |
 
-档位是**别名**，运行时解析到该档当前最新模型——档内代际升级自动跟随、零维护。派 subagent 时按档位
-显式传模型参数；发现原生动态模型调控发布时，框架会主动让位为语义补充（native-first）。
+账户模型名与顺序保存在权限为 `0600` 的私有 binding，不写入公共政策。
+`fact-collector` 对应 MR-009/light，一般探索 MR-006 保持 anchor；选模不调整用户的 reasoning effort。
+关键调用要求同一次调用的可信采用与完成证据，未知模型关系或关键失败会拒绝继续，不自动降档。
+Claude 现有 tier/alias 作为兼容合同保留，不能用来推导 Codex 行为。
 
 ### 7. 环境 / 项目隔离
 
-这个仓只保留 skills、hooks、framework 母版、scripts、memory、observability——**它是运行环境，不存项目产出**。
+这个仓保存运行时、skills、参考资产、记忆和框架评审证据；项目产出放在独立项目目录。
 
-- `docs/`、`.claude/workflow-state.yaml`、`.claude/current-topic.txt` 都是 **symlink**，指向当前激活项目。
-- 会话级项目绑定（`project-scope-guard`）：pin 是唯一真值，把本 session 对 docs/state 的读写重定向到
-  pin 项目的绝对路径；未绑定 session 写 docs/ 直接拦截，防止落错项目。
-- 跨项目依赖只读：用 `只读引用: \`/绝对/文件路径\``（默认本回合）或
-  `只读引用目录: \`/绝对/目录路径\``；前缀加“本会话”才跨 turn。它不会切项目，也不开放写工具或 raw Bash；
-  当前仅支持文本，图片、PDF 与 MCP local-path 仍为 DEFERRED。
-- **命名即切换**：你一提某个已有项目名，就自动切过去（切换便宜可逆）；只有"名字是猜的新项目"才留一句确认。
+- `docs/`、`.claude/workflow-state.yaml`、`.claude/current-topic.txt` 的 **symlink 是展示兼容层**，不决定会话项目。
+- 会话级项目绑定（`project-scope-guard`）：根 pin 或已验证的 Codex 子关联决定目标，
+  把本 session 对 docs/state 的访问重定向到项目绝对路径；未绑定 session 不能访问共享项目别名。
+- 明确绝对路径的跨项目读取遵循宿主文件系统与受控变更权限，不会自动切换项目；共享别名仍需已验证绑定。
+- **明确选择才切换**：具名且唯一的已有项目无需重复确认；明确新建请求可创建，推断的新项目意图需确认。
+  主会话只调用一次 `project.sh switch/new <canonical-name>`，由 PreToolUse 注入原生事务数据并核验收据。
+- Codex 子 Agent 通过可信原生父子调用关联冻结的项目范围；父会话后来切换项目不会改写既有子 Agent 的目标。
 - `memory/**` 与 `.claude/observability/**` 是跨项目经验层，**不随项目切换**——经验不因换项目而丢。
+
+选择、子关联与跨项目读取的详细边界见 [项目会话合同](.claude/skill-os/runtime/project-session.md)。
 
 ### 8. Session 生命周期 hooks
 
-六个生命周期事件各有 hook 编织，你几乎无感但状态从不丢：
+共享 hooks 覆盖六个主要生命周期事件，Claude 与 Codex 通过各自入口接入：
 
 | 时机 | hook | 做什么 |
 |------|------|--------|
-| **SessionStart** | session-restore | 加载记忆摘要、恢复流程状态、显示 PROGRESS、清理悬空软链 |
-| **UserPromptSubmit** | route-guard | 打分路由 + 项目门禁 + 显式只读 grant 签发 + 轮数追踪提醒 |
-| **PreToolUse** | project-scope-guard | 工具执行**前**重定向 pin 路径并消费精确只读 grant；写入和 raw Bash 不消费 grant |
+| **SessionStart** | session-restore | 加载记忆摘要；仅从已验证绑定读取流程与 PROGRESS，不读取或清理共享展示链接 |
+| **UserPromptSubmit** | route-guard | 路由提示、项目上下文门禁与轮数追踪；不自行选择项目或签发选择事务 |
+| **PreToolUse** | project-scope-guard | 执行前检查会话作用域，重定向绑定项目路径，并守护选择事务与受控变更 |
 | **PostToolUse** | post-edit | 累计活动信号（edit/tool 计数，供 Stop 判"实质工作"）+ framework/ 只读警告 |
-| **Stop** | session-sync | 拦截未沉淀的实质工作、写 checkpoint；真正关闭回合时撤销 turn grant |
+| **Stop** | session-sync | 默认保留待裁决 pending，按需写 checkpoint；真正关闭回合时撤销事件与 turn grant |
 | **SessionEnd** | session-end | 会话真正结束时清理本 session 的计数和全部 read grants（僵尸窗口归零） |
+
+Codex 另用原生 `SubagentStart` / `SubagentStop` 关联子 Agent 身份、项目范围与模型采用证据。
+注册文件分别为 `.claude/settings.json` 和 `.codex/hooks.json`；注册、授信、启用状态与真实会话执行需分别核验。
 
 交接正文提到 `docs/` 或共享状态路径时，优先用文件工具的明确目标路径写入。
 项目守卫也识别带引号 heredoc 中的单次静态 Python 文本写入：
@@ -280,19 +307,25 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
   Simplicity First（只实现所需的最小方案）、Surgical Changes（只改相关行，不顺手重构）、
   Goal-Driven Execution（每个改动可追溯到请求或验证标准）。
 - **完成前验证铁律**：声明"做完了"之前，必须有当场跑出的证据（测试 / 脚本 / 读回文件 / 可观察检查）。
-- **保护区**：`framework/` HTML 母版只读、`docs/evaluation/` 受保护、`skill-invariants.md` P1-P7 保护区、
+- **保护区**：`framework/` 参考资产只读、`docs/evaluation/` 受保护、`skill-invariants.md` P1-P7 保护区、
   记忆红线（稳定事实不得直接写长期上下文）。
-- **单真值源 + 双检出**：`main` 是唯一真值源，两个本地目录均为其检出（框架改动任一检出皆可做：动手前先 pull、做完立即 commit+push，另一侧开工前 pull）；`check-capability-parity.mjs` 降级为仓内能力锚点自检（verify 门 S18），behind tripwire 见 `check-behind-upstream.sh`（S23）。
+- **单真值源、多检出协作**：`main` 是框架真值分支，检出与 worktree 共享版本化契约；开工核对工作树和上游状态，
+  保护其他会话改动。发布依照实际批准范围和仓库验证门执行，不把同步脚本或计划当作发布授权。
 
 ---
 
 ## 端到端流程
 
-### 设计链与工程链（并行，不互相替代）
+### 设计链与工程链
 
 ```text
 设计链     idea → deepresearch → brainstorm → ux-research → ux-brainstorm
-                → design-brief → open-design → figma-layer
+                → design-brief → open-design
+
+已有需求   需求/口述 ───────────────→ design-brief → open-design
+原型精修   已有原型 + 修改/保持范围 → design-brief → open-design
+
+动效交付   选定的现有 HTML → motion-polish → 独立候选验收 → 精确最终引用
 
 一手研究环  brainstorm（假设）→ research-kit（采集工具）→ [你亲自采集]
                 → insight-synthesis（洞察）→ 回到设计链
@@ -300,24 +333,40 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
 内容维度   ux-writing（语义规范产在 design-brief 之前、被其继承进 Packet；
                 逐字文案只喂 html-prototype 本地路径——OD 的生成自由度不被锁）
 
-工程链     brainstorm → design-brief → tech-spec → task-plan → 执行 → 验收回验
+工程链     brainstorm → design-brief → tech-spec → task-plan → implement → code-review
+工程补充   已解决的工程讨论 → to-spec；获批任务计划 → to-tickets（显式发布入口）
+现有代码   code-recon → tech-spec → task-plan
 ```
 
 **发散 vs 收敛的分工**：`ux-brainstorm` 是发散引擎（出 2-3 方案 + Oracle 对抗 + 交互架构 + AI-Native 判定）；
-`design-brief` 是收敛引擎（把方向落成规格契约：决策卡 / 状态覆盖 / 组件映射 / Generation Packet）。
-二者永不并列产同类文档——复杂题先发散再收敛，简单题直接收敛。
+`design-brief` 是收敛节点，继承已确认事实，完成页面/交互位置映射、状态与保持范围覆盖、模板语义适配及 Generation Packet。
+已有需求或原型精修无需伪造 PRD 或重跑发散。`design_source` 的设计生成追踪与 `prd_end_to_end`
+的工程追踪分别验证，设计生成 PASS 不等于工程已就绪。
+
+`open-design` 是推荐的设计产出路径；本地 HTML 与 MagicPath 仅在你明确选择，或已批准的具名备用计划
+满足触发条件时使用。OD 故障本身不授权换工具；已退役的 `figma-layer` 不再参与设计链。
+设计系统来自当前项目或外部工具配置，`framework/` 只作为可选只读参考。
+
+动效验收绑定候选与报告的路径、SHA 和全部必需行为；下游消费明确的 `final_artifact_ref` 时重新核验。
+缺失或漂移的最终引用返回对应 owner 处理，不自动使用原始 HTML 代替。
+完整协议见 [原型交付合同](.claude/skill-os/runtime/prototype-delivery.md)。
 
 ### 4 场景推荐路径（可选，主动启用）
 
 真值源 `.claude/skill-os/optional-workflow-graph.yaml`。每个场景都有从轻到重的多条推荐路径，
 外加"研究默认门"：**任务同时复杂且新颖时，研究阶段是默认步骤而非可选**，跳过必须显式声明理由并经你确认。
 
+工程交付另有可选 `engineering-delivery` preset，只提供推荐边和进入条件。
+它不授予执行权；`implement` 仍将通过门禁的精确 task-plan、SHA、U-ID、基线与效果范围交给 Plan Agent 编译并等你批准。
+执行时按依赖 frontier 逐个派发已批准单元；任务图和 Wave 不代表并发许可。
+
 ### Handoff gate 与可追溯性
 
 流程模式下，节点之间有交接门禁，核心是**可追溯性覆盖**——例如 `tech-spec → task-plan` 会检查每条 MUST
-需求是否都有开发任务、每个设计决策是否都有覆盖，coverage gate 不 PASS 就不许启动下游。standalone 模式
-不被这些 gate 拦截（除非它同时是质量/安全 gate）。始终强制的质量 gate：不臆造、需要用户输入时一次只问
-一个问题、品牌与设计系统约束、agentic 执行必须可见可暂停可接管可撤销。
+需求是否都有开发任务、每个设计决策是否都有覆盖，coverage gate 不 PASS 就不许启动下游。
+standalone 不强制启动整条流程，但仍遵守 skill 自身的输入、来源、质量与安全合同；工程消费者所需的
+上游 PASS 和覆盖范围不能用 standalone 绕过。始终强制的质量 gate 包括不臆造、真实人类决策、
+已确认项目/外部设计系统约束，以及 Agent 执行的可见、暂停、接管和撤销能力。
 
 ### 记忆生命周期
 
@@ -330,38 +379,72 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
 
 ## Skill 索引
 
-一级可见 skill（斜杠命令）：
+以下为当前一级可见入口。**Claude Code 用 `/名称`，Codex 用 `$名称` 或 skill selector**；
+两者读取同一份 `.claude/skills/office/` 契约，Codex 的 `.agents/skills/` 提供发现别名。
 
-| 命令 | 场景 | 用途 |
-|------|------|------|
-| `/office` | — | 显示所有一级可见 skill，向导式推荐 workflow |
-| `/auto` | A B C D | 全自动多 Agent 编排：自然语言 → Skill Pipeline → 并行执行 → 聚合产出 |
-| `/idea` | A B | 已有原始语料忠实结构化（会议纪要/语音稿转需求，不延展不推断）|
-| `/deepresearch` | A B D | 多 Agent 深度研究报告 |
-| `/quick-research` | A B D | 轻量研究（单 agent 查 primary source，三档研究的中档）|
-| `/insight-synthesis` | A B D | 一手定性综合：你提供的访谈/工单/回访 → observation+interpretation 两层洞察 |
-| `/research-kit` | A B D | 一手研究工具设计：假设 → 访谈提纲/问卷/可用性测试计划/卡片分类法（三不产：不产发现/不产解读/不采集）|
-| `/brainstorm` | A B D | 苏格拉底拷问式 PRD |
-| `/ux-research` | A B D | 多维度 UX 深度研究（5+1 并行 agent，共识矩阵）|
-| `/ux-brainstorm` | A B D | 发散引擎：2-3 方案 + Oracle 对抗 + AI-Native 判定 |
-| `/design-brief` | A B C D | 收敛引擎：方向 → 规格契约（决策卡/状态/组件映射）|
-| `/ux-writing` | A B C D | 内容与语言设计：voice/tone 规范 + 微文案系统 + 文案评审改写（语义规范跑在 design-brief 前被继承进 Packet；逐字层只喂本地生成，不锁 OD）|
-| `/open-design` | A B C D | Open Design 产出（设计产出首选）：需求 → HTML →（可选）Figma |
-| `/html-prototype` | A B C | HTML 原型生成（备选，OD 不可用时）|
-| `/ux-audit` | B C | UX 评审（多选模块）|
-| `/figma-layer` | A C | Figma 保险层 |
-| `/tech-spec` | A B D | 工程规格节点：PRD + design-brief → 技术合同，强制覆盖率验证 |
-| `/task-plan` | A B D | 任务编排计划：断言矩阵 + 开发/测试任务卡 |
+### 入口与编排
 
-工程 / 质量 / brownfield skill：
+| Skill | 用途 |
+|-------|------|
+| `office` | 展示可见 skill、输入模式与推荐工作流 |
+| `auto` | 将目标映射为多 skill 执行方案并聚合产出，保留确认与质量门 |
 
-| 命令 | 用途 |
-|------|------|
-| `/code-hygiene` | 代码层工程约束：完成前验证铁律 + 清理算子（死代码/重复/弱类型等，仅自动应用高置信项）|
-| `/code-recon` | 从现有代码起步的入口：并行只读 recon 把代码库逆向成架构 brief，供下游 skill 消费 |
+### 需求、研究与设计
 
-> 完整触发词与路由规则见 `.claude/skill-os/skill-routing-map.yaml` 与 `CLAUDE.md`。
-> 高级/隐藏 skill（challenge、redteam、evals、retro、careful、compare 等）不作一级入口，需要时按名调用。
+| Skill | 用途 |
+|-------|------|
+| `idea` | 忠实结构化已有会议纪要、语音稿等原始语料 |
+| `brainstorm` | 通过逼问形成范围适当、可追溯的 PRD |
+| `deepresearch` | 多来源、多 Agent 深度研究 |
+| `quick-research` | 单 Agent 后台查一手资料，产出带来源的研究文档 |
+| `insight-synthesis` | 综合用户提供的一手定性资料，区分观察与解释 |
+| `research-kit` | 设计访谈、问卷、测试计划等采集工具；实际采集由人完成 |
+| `muse-req-triage` | 对候选需求打分与独立分类，最终真伪及优先级由人裁定 |
+| `ux-research` | 多维 UX 研究与共识验证 |
+| `ux-brainstorm` | 发散设计方案，形成交互架构与对抗判定 |
+| `design-brief` | 三类入口统一收敛，冻结可追溯的设计 Packet |
+| `ux-writing` | 内容语义、voice/tone、微文案与文案评审 |
+| `open-design` | 冻结 Packet 与模板绑定后交接到指定 OD 项目，执行获批的生成与回收 |
+| `html-prototype` | 用户明确选择的本地 HTML 原型与可观测 QA |
+| `motion-polish` | 检查或改善现有 HTML 的动效、微交互及交付质量 |
+| `ux-audit` | 按选定模块评审页面 UX |
+
+### 工程、诊断与质量
+
+| Skill | 用途 |
+|-------|------|
+| `code-recon` | 将现有代码库逆向为可供设计与工程消费的架构 brief |
+| `domain-modeling` | 澄清术语、对象归属与关系边界 |
+| `codebase-design` | 评估模块深度、接口和测试 seam |
+| `wayfinder` | 为规模大、跨 session 且路径模糊的任务提供规划入口 |
+| `grilling` | 按设计决策树追问尚未解决的关键选择 |
+| `to-spec` | 将已解决的工程讨论交给 canonical tech-spec 合同整理 |
+| `tech-spec` | 形成技术合同，验证 MUST 需求与设计覆盖 |
+| `task-plan` | 形成断言矩阵、开发/测试卡与依赖关系 |
+| `to-tickets` | 对精确门禁通过的任务计划预览并获批发布票据，仅显式调用 |
+| `implement` | 编译精确规格与任务计划，获批后按依赖执行并验证 |
+| `diagnosing-bugs` | 从失败证据与因果模型定位根因 |
+| `resolving-merge-conflicts` | 处理真实进行中的 Git 冲突，恢复双方意图并验证 |
+| `code-review` | 固定范围与需求，复用 code-hygiene Mode D 输出分轴 findings |
+| `code-hygiene` | 代码清理与完成前验证 |
+
+### 写作、人工配置与会话工具
+
+| Skill | 用途 |
+|-------|------|
+| `writing-for-agents` | 编写与评审 skill、AGENTS.md 等 Agent 指令 |
+| `writing-workshop` | 显式选择的写作工作坊：fragments、shape、beats |
+| `loop-me` | 从实际工作设计重复流程，澄清后保存规格 |
+| `issue-triage` | 显式维护者入口，基于 Issue/PR 与代码形成诊断 brief |
+| `setup-wizard` | 为人工服务配置或迁移交付分阶段 Bash 向导，供人运行 |
+| `wait-what` | 显式要求补足上下文并用自然中文重讲上一条说明 |
+| `handoff` | 显式要求时生成跨 session 交接文档 |
+
+触发规则见 [路由表](.claude/skill-os/skill-routing-map.yaml)；各宿主根契约分别为
+[CLAUDE.md](CLAUDE.md) 与 [AGENTS.md](AGENTS.md)。
+隐藏入口包括 `careful`、`challenge`、`compare`、`evals`、`figma-demo`、`magicpath`、`muse-x-digest`、
+`redteam`、`retro`，按各自合同按需使用；`references` 只供内部读取。
+`figma-layer`、`muse-loop-orchestrate` 和 `muse-proto-gen` 已退役，不可调用。
 
 ---
 
@@ -369,32 +452,41 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
 
 ### 先决条件
 
-- [Claude Code](https://claude.ai/code) CLI 已安装
+- Claude Code 或 Codex 已安装并可访问此工作区
 - macOS / Linux
-- Git ≥ 2.x
+- Git、Node.js ≥ 20、npm 与 Python 3；完整检查还需 PyYAML 等环境依赖
 
 ### 安装
 
 ```bash
 git clone https://github.com/wangmoumou1216-ai/luca_gstack.git luca_gstack
 cd luca_gstack
+npm ci
 git config core.hooksPath .githooks
 ```
 
+这是个人环境仓库；迁移到其他机器时，先核对 `.codex/config.toml` 中的绝对路径、项目目录与记忆 store。
+安装依赖不等于 hooks 已授信或账户模型绑定已就绪，分别按当前宿主检查。
+
 ### 使用
 
-在项目目录下打开 Claude Code：
+在此工作区打开对应宿主：
 
-- 输入 `/office` 查看所有可用 skill 及推荐工作流；
-- 或者直接说人话描述你要做什么——route-guard 会自动判断该走哪条路（单个 skill / 多 skill 组合 /
-  先做计划 / 先确认项目）。
+- **Claude Code**：输入 `/office` 查看入口，或直接调用 `/design-brief` 等 skill。
+- **Codex**：输入 `$office` 或使用 skill selector；直接调用使用 `$design-brief` 等名称。
+- **自然语言**：描述目标；已有项目先过 Project Gate，复杂任务先规划，框架维护保持 `NO_PIN`。
+
+共享 Workflow 脚本在 `.claude/workflows/`；Codex 通过 `.codex/workflow-runner.mjs` 适配执行。
 
 ### 健康检查
 
 ```bash
-bash scripts/verify.sh   # 项目健康检查（结构、软链、路由、覆盖等）
-bash scripts/sync.sh     # 把记忆与自进化状态推回 GitHub（干净时会直接告诉你无需同步）
+bash scripts/verify.sh                         # NO_PIN 框架完整检查
+node scripts/codex-hook-health.mjs --source-only # 只查仓内 Codex 注册
 ```
+
+`--source-only` 不证明官方授信、启用或端到端通过；完整 hook 体检与旧注册维护步骤见上方生命周期说明。
+`scripts/sync.sh` 含 Git 同步效果，按实际授权使用，不能作为只读健康检查。
 
 ---
 
@@ -403,28 +495,38 @@ bash scripts/sync.sh     # 把记忆与自进化状态推回 GitHub（干净时�
 ```text
 luca_gstack/                  ← 运行环境（不存项目产出）
   CLAUDE.md                   ← Claude Code 配置、路由契约、记忆/context 协议
-  CONTEXT.md                  ← 跨 session 长期项目约束（含红线）
-  brand-tokens.md             ← 品牌色 token
-  framework/                  ← HTML 原型母版（只读保护区）
+  AGENTS.md                   ← Codex 独立根契约
+  CONTEXT.md                  ← 框架跨 session 约束（含红线）
+  framework/                  ← 可选只读参考资产，不强制采用其视觉规范
+  framework-audit/            ← 框架维护、评审与验证证据
+  .agents/skills/             ← Codex skill 发现别名
+  .codex/
+    config.toml               ← 仓库级 Codex 配置
+    hooks.json                ← Codex 原生 hooks 注册
+    agents/                   ← Codex Agent 定义
+    workflow-runner.mjs       ← 共享 Workflow 脚本的 Codex 执行后端
+    MODEL_ROUTING.md          ← 私有模型绑定配置说明
   memory/                     ← 三层记忆系统 + 治理脚本
     episodic/ semantic/ digests/ scripts/
   scripts/                    ← 验证、同步、项目切换等维护脚本
   .claude/
     skills/office/            ← Skill 定义文件
     commands/                 ← 斜杠命令入口
-    skill-os/                 ← 路由表 / 编排图 / 输入模式 / 模型路由 / 自进化 / 契约配置
+    skill-os/                 ← 路由 / 可选图 / 输入模式 / 模型角色 / 自进化 / 一跳契约
+      generated/              ← context index、skill catalog 与单 skill 输入视图
     observability/            ← skill 观察记录与短规则
     agents/                   ← Orchestrator / Plan / Preflight / Quality-gate / Work agent 定义
     hooks/                    ← Session 生命周期钩子（restore / route-guard / post-edit / sync 等）
     workflow-state.yaml       ← symlink → 当前项目 .luca/workflow-state.yaml
-  docs/                       ← symlink → /Users/luca/Desktop/项目/<项目名>/docs
+  docs/                       ← 共享展示 symlink → 项目 docs（不是会话绑定真值）
     handoff/                  ← 当前项目 Skill 交接摘要
 ```
 
-`luca_gstack` 只通过 `docs/` 与 `.claude/workflow-state.yaml` 等 symlink 暴露当前激活项目；
-项目产出与状态放在 `/Users/luca/Desktop/项目/<项目名>/`。切换/新建只执行 route-guard 为当前
-`UserPromptSubmit` 生成的完整事务命令（含 session、tx、expected epoch），不直接调用裸
-`scripts/project.sh switch/new <名>`。
+项目产出与状态放在独立项目目录，当前个人配置使用 `~/Desktop/项目/<项目名>/`。
+根会话 pin 或已验证的 Codex 子关联决定访问目标；共享别名不能用来推导、修复或切换绑定。
+明确切换/新建使用公共单调用事务 `./scripts/project.sh switch/new <canonical-name>`，
+PreToolUse 注入身份、事务与 epoch，route-guard 只记录中立证据。选择不启动 workflow、不恢复项目历史、
+不改共享展示链接；下一步工作仍按路由、输入和授权合同执行。
 
 ---
 
