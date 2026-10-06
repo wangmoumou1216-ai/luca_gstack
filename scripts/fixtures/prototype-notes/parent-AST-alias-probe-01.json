@@ -1,0 +1,45 @@
+{
+  "probe": "parent-AST-computed-global-alias-05",
+  "argv": [
+    "/Users/luca/.hermes/node/bin/node",
+    "--input-type=module",
+    "stdin"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/ec43/luca_gstack",
+  "production_sha256": "ae4f49b184db075dbf802c771201d45be622ceee1eec366e542bb510a64e2c74",
+  "production_after_sha256": "ae4f49b184db075dbf802c771201d45be622ceee1eec366e542bb510a64e2c74",
+  "input": {
+    "source": "<html><head></head><body><button id=\"target\" onclick=\"const w=window; const method=['fe','tch'].join(''); w[method]('https://example.invalid/action.json').catch(()=>{});\">Load</button></body></html>",
+    "notes": {
+      "schema_version": 1,
+      "runtime_version": "1.0.0",
+      "content_guideline_version": "1.0.0",
+      "document_id": "10000000-0000-0000-0000-000000000001",
+      "base_revision": "2914201807edf18b03dcc5087e63b738f35edaf57cca38c8bd737de921e1315c",
+      "notes_revision": 0,
+      "next_display_number": 1,
+      "generation_scope": null,
+      "annotations": [],
+      "provenance": {
+        "source_title": "Parent AST alias boundary",
+        "source_revision": "v1",
+        "business_revision": "2914201807edf18b03dcc5087e63b738f35edaf57cca38c8bd737de921e1315c"
+      },
+      "validation_status": "unreviewed"
+    }
+  },
+  "source_sha256": "2914201807edf18b03dcc5087e63b738f35edaf57cca38c8bd737de921e1315c",
+  "expected": "Reject unsupported computed executable member through global alias before delivery",
+  "observed": {
+    "build_ok": true,
+    "result": null,
+    "extract_ok": true,
+    "html_sha256": "df4bcbb0646e50e45434d5241e09fdeca1ac268cd0d13b4ded4a8b6bf7ef8a79",
+    "requests_aborted": [
+      "https://example.invalid/action.json"
+    ],
+    "browserVersion": "149.0.7827.55",
+    "errors": []
+  },
+  "cleanup": "owned browser/context closed"
+}

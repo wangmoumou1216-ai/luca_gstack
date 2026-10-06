@@ -1,0 +1,125 @@
+{
+  "input_version": 1,
+  "notes": {
+    "schema_version": 1,
+    "runtime_version": "1.0.0",
+    "content_guideline_version": "1.0.0",
+    "document_id": "35c54cd7-472a-48b3-8200-7d3e776ec6f4",
+    "base_revision": "ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3",
+    "notes_revision": 0,
+    "next_display_number": 2,
+    "generation_scope": null,
+    "annotations": [
+      {
+        "id": "c84222bf-f1b6-42bc-8125-936ee459f530",
+        "display_number": 1,
+        "revision": 1,
+        "binding_revision": 1,
+        "title": "项目支持看板",
+        "kind": "interaction",
+        "body": "当前原型：选择“项目支持看板”后显示项目清单，当前标签变为选中状态。",
+        "details": {},
+        "source_refs": [
+          "department-observation"
+        ],
+        "behavior_ids": [],
+        "evidence_status": "observed",
+        "implementation_status": "demonstrated",
+        "creation_origin": "manual",
+        "generation_scope_id": null,
+        "scope_unit_id": null,
+        "page_or_state_context": {
+          "id": "page",
+          "title": "页面",
+          "entry_steps": []
+        },
+        "anchor": {
+          "id": "4445006c-d8c5-49f8-8a9c-6cfde3cc5083",
+          "base_revision": "ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3",
+          "strategy": "semantic",
+          "root_identity": "body",
+          "locator": "#tab-projects",
+          "context_id": "page",
+          "instance_key": null,
+          "fingerprint": {
+            "tag": "button",
+            "role": "tab",
+            "semantic_name": "项目支持看板"
+          },
+          "requires_rebind": false
+        },
+        "field_origins": {
+          "title": {
+            "last_ai_value": null,
+            "human_touched": true,
+            "suggested_value": null,
+            "suggestion_meta": null,
+            "resolved_suggestion_keys": []
+          },
+          "body": {
+            "last_ai_value": null,
+            "human_touched": true,
+            "suggested_value": null,
+            "suggestion_meta": null,
+            "resolved_suggestion_keys": []
+          }
+        },
+        "tombstone": null
+      }
+    ],
+    "provenance": {
+      "source_title": "部门工作台 V1.2.6，原生 OD 用户导出",
+      "source_revision": "OD native version 29 / ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3",
+      "business_revision": "ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3"
+    },
+    "validation_status": "unreviewed"
+  },
+  "sources": [
+    {
+      "id": "department-observation",
+      "title": "部门工作台项目支持看板源码及浏览器观察",
+      "kind": "原型观察",
+      "locator": "/Users/luca/.codex/worktrees/ec43/luca_gstack/framework-audit/2026-10-04-prototype-notes-implementation/u002/real-department-intake-01/source.html:2434"
+    }
+  ],
+  "base": {
+    "entry_path": "/Users/luca/.codex/worktrees/ec43/luca_gstack/framework-audit/2026-10-04-prototype-notes-implementation/u002/real-department-intake-01/source.html",
+    "entry_sha256": "ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3"
+  },
+  "user_confirmation": {
+    "path": "/Users/luca/.codex/worktrees/ec43/luca_gstack/framework-audit/2026-10-04-prototype-notes-implementation/u002/real-department-intake-01/user-confirmation.json",
+    "sha256": "cc99144c78a18363ae94752d4d3f979c013d4ca31babd6e16fcd369664a17e33"
+  },
+  "scope": {
+    "version": 1,
+    "source_sha256": "ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3",
+    "unit": "U002",
+    "initial_note_region": "#tab-projects",
+    "observed_behavior_ids": [
+      "DEP-TAB-01"
+    ],
+    "manual_test_region": "#drawer-title after entering project details",
+    "allowed_effects": "owned local browser copies, notes input/export, no business form submission",
+    "excluded": [
+      "AI full-page generation",
+      "full U003 merge",
+      "full U004 UI",
+      "OD mutation",
+      "project switching"
+    ]
+  },
+  "behaviors": [
+    {
+      "id": "DEP-TAB-01",
+      "unit_id": "project-board-selector",
+      "context_id": "page",
+      "action": "选择项目支持看板",
+      "expected": "项目清单显示且项目标签为选中状态",
+      "source_refs": [
+        "department-observation"
+      ],
+      "critical": true
+    }
+  ],
+  "existing_notes": null
+}
