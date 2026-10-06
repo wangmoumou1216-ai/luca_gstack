@@ -28,6 +28,7 @@ for (const command of [
   'npm run test:prototype-notes',
   'npm run test:prototype-notes-browser:ci',
   'npm run test:prototype-notes-registration',
+  'npm run test:prototype-notes-release',
 ]) {
   const found = command.startsWith('npm run test:prototype-notes') ? ci.split(/\n/).some(line => line.trim() === command) : ci.includes(command);
   assert.ok(found, `CI missing blocking command: ${command}`);
@@ -35,7 +36,7 @@ for (const command of [
 
 const logicSection = ci.split(/^  validate-framework-logic:/m)[1]?.split(/^  [\w-]+:/m)[0] || '';
 assert.match(logicSection, /^\s*run: npx playwright install --with-deps chromium firefox\s*$/m, 'CI must install both browsers used by prototype-notes tests');
-for (const command of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration']) {
+for (const command of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration','npm run test:prototype-notes-release']) {
   assert.ok(logicSection.split(/\n/).some(line => line.trim() === command), `CI notes command must block in validate-framework-logic: ${command}`);
 }
 

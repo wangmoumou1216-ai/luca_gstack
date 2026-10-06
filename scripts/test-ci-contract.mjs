@@ -50,7 +50,7 @@ const browserRejected = run(missingFirefoxPath);
 assert.equal(browserRejected.status, 1, `${browserRejected.stdout}${browserRejected.stderr}`);
 assert.match(`${browserRejected.stdout}${browserRejected.stderr}`, /CI must install both browsers used by prototype-notes tests/);
 console.log('PASS missing Firefox installation is rejected');
-for (const [index, command] of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration'].entries()) {
+for (const [index, command] of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration','npm run test:prototype-notes-release'].entries()) {
   const filename = join(tempDir, `ci-notes-${index}.yml`);
   writeFileSync(filename, readFileSync(ciPath, 'utf8').replace(new RegExp(`^.*${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), '          # omitted notes gate'));
   const child = run(filename);
@@ -59,4 +59,4 @@ for (const [index, command] of ['npm run test:prototype-notes','npm run test:pro
   console.log(`PASS missing notes blocking command rejected: ${command}`);
 }
 rmSync(tempDir, {recursive:true, force:true});
-console.log('PASS CI contract proof-it-bites 7/7');
+console.log('PASS CI contract proof-it-bites 8/8');
