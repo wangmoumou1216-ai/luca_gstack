@@ -58,5 +58,29 @@ for (const [index, command] of ['npm run test:prototype-notes','npm run test:pro
   assert.ok(`${child.stdout}${child.stderr}`.includes(`CI missing blocking command: ${command}`));
   console.log(`PASS missing notes blocking command rejected: ${command}`);
 }
+for (const [index, command] of [
+  'python3 scripts/test-workflow-state-guard.py',
+  'node scripts/test-design-workflow-contract.mjs',
+  'node scripts/test-engineering-delivery-skills.mjs --all',
+  'node scripts/test-original-copy-handoff.mjs',
+].entries()) {
+  const filename = join(tempDir, `ci-design-${index}.yml`);
+  writeFileSync(filename, readFileSync(ciPath, 'utf8').replace(command, '# omitted design gate'));
+  const child = run(filename);
+  assert.equal(child.status, 1, `${child.stdout}${child.stderr}`);
+  assert.ok(`${child.stdout}${child.stderr}`.includes(`CI missing blocking command: ${command}`));
+  console.log(`PASS missing design blocking command rejected: ${command}`);
+}
+for (const [label, mutate] of [
+  ['swallowed', text => text.replace('node scripts/test-design-workflow-contract.mjs', 'node scripts/test-design-workflow-contract.mjs || true')],
+  ['continue-on-error', text => text.replace('      - name: Design workflow core contracts', '      - name: Design workflow core contracts\n        continue-on-error: true')],
+]) {
+  const filename = join(tempDir, `ci-design-${label}.yml`);
+  writeFileSync(filename, mutate(readFileSync(ciPath, 'utf8')));
+  const child = run(filename);
+  assert.equal(child.status, 1, `${child.stdout}${child.stderr}`);
+  assert.match(`${child.stdout}${child.stderr}`, /Design workflow commands must run together/);
+  console.log(`PASS nonblocking design gate rejected: ${label}`);
+}
 rmSync(tempDir, {recursive:true, force:true});
-console.log('PASS CI contract proof-it-bites 8/8');
+console.log('PASS CI contract proof-it-bites 14/14');

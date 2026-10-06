@@ -53,6 +53,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # G5 offline fixtures reconstruct two frozen historical trees.
+          persist-credentials: false # Diagnose-only safety rejects credential-bearing Git config.
       - uses: actions/setup-node@v5
         with:
           # The protected hook loader uses node:module.registerHooks.
@@ -98,6 +99,13 @@ jobs:
         run: python3 scripts/test-observability-writer.py
       - name: Quality-gate verdict recorder authority contract
         run: python3 scripts/test-gate-verdict-recorder.py
+      - name: Design workflow core contracts
+        run: |
+          set -euo pipefail
+          python3 scripts/test-workflow-state-guard.py
+          node scripts/test-design-workflow-contract.mjs
+          node scripts/test-engineering-delivery-skills.mjs --all
+          node scripts/test-original-copy-handoff.mjs
       - name: Routing-map coverage + skill SSOT consistency
         run: npm run check:routing-map
       - name: Agent root kernel, pointers, discovery, and Static Fallback

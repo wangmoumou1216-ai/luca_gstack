@@ -205,6 +205,15 @@ Packet 不受理。scope 的非模板/排除项仍保留在完整覆盖表，不
 
 ## 7. 原件保真执行路径（original_copy）
 
+**能力门：v1 HEADLESS_ONLY。** 在任何 profile/出图路径选择及外部 stage/run 前，继承或收集
+真实用户的显式 headless opt-in 和独立 run grant（准确 OD 目标/handoff、prompt/范围；最终
+bundle/hash 在外部动作前核验）。缺任何一项即 STOP，说明限制并等待真人选择，不默选 headless
+或先 stage；普通 carrier/reference_only 的桌面默认不能适用于原件。
+原件 headless 失败沿 OD Phase 3H 的原请求计数与至多一次授权 retry；桌面生成/回收不支持。
+重试耗尽、缺授权或无法核终态时 STOP，保留失败证据并暂停本次交付及依赖后继。
+完整读取 open-design Phase 0/3H 的选择、重试及恢复合同后才进入对应动作；不重置计数、
+不以桌面报告/旧 STAGED 降级回收，也不自动改选工具。
+
 原件的 `carrier_eligible=false` 表示禁止走旧静态校验器，不代表允许重写或丢弃原模板。使用以下
 独立适配器；所有 scope/locator 来自同 hash 的 original-index，存在歧义时继续询问，不默认选第一个。
 

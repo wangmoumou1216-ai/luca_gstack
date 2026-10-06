@@ -121,6 +121,16 @@ Severity guide:
 
 ---
 
+## Independent Invocation — DESIGN_DRAFT
+
+Before prompt construction or dispatch, fully read `.claude/agents/quality-gate.md` §0.1.
+Use its complete input, independent admission, criterion XML, envelope and parent consumption
+contract. Bind all five original dimensions and the tier rules in SKILL.md Phase 4.1 plus
+`design-proposal-template.md` to the full criteria denominator. This owner retains finding XML.
+Codex: native `quality-gate` / MR-004 冷上下文、前台阻塞；Claude: actual independent reviewer
+capability under its adapter. 缺独立审查能力 → BLOCKED；作者内部推理不计为独立 Oracle 票。
+默认最多两轮。
+
 ## Oracle Prompt Template
 
 ```
@@ -130,6 +140,7 @@ ADVERSARIAL DESIGN REVIEW
 你是一名高级UX架构师，专门做对抗性审查。你的任务是找出这个设计方案的问题。
 你不是要推翻方案，而是要确保方案的质量足以交付给design-brief。
 
+ROUND: {N} of default max 2 (extra rounds require a stated escalation reason)
 SCOPE TIER: {tier}
 SOURCE: {ux-research report path or cold-start}
 
@@ -149,12 +160,12 @@ SOURCE: {ux-research report path or cold-start}
 {Round 2+: findings from previous round and their resolutions}
 </prior_decisions>
 
-Review against the 5 dimensions defined in this document.
+Review all 5 original dimensions and applicable tier requirements. Return the separate criteria_results and envelope under QG §0.1; clean dimensions still need criterion status/evidence.
 
 OUTPUT FORMAT:
 
-<review_findings round="{N}">
-  <finding id="F{N}">
+<review_findings round="{N}" skill_name="ux-brainstorm" review_stage="DESIGN_DRAFT" draft_sha256="{sha256}" scope_tier="{tier}" eval_run_id="{eval_run_id}">
+  <finding id="F{N}.{index}">
     <dimension>{1-5}</dimension>
     <severity>CRITICAL | HIGH | MEDIUM | LOW</severity>
     <issue>{one sentence description}</issue>
@@ -167,7 +178,7 @@ OUTPUT FORMAT:
   <summary>
     <critical_count>{N}</critical_count>
     <high_count>{N}</high_count>
-    <converged>{true if no new critical/high vs previous round}</converged>
+    <converged>{true only if zero critical + zero high and all required criteria have evidence}</converged>
   </summary>
 </review_findings>
 ```
@@ -178,17 +189,22 @@ OUTPUT FORMAT:
 
 | Classification | When | Action |
 |---|---|---|
-| **safe_auto** | Wording fix, terminology alignment, minor gap fill | Apply to draft silently, no user interaction |
+| **safe_auto** | Nonblocking wording fix, terminology alignment, minor gap fill | Apply to draft silently, no user interaction |
 | **gated_auto** | Structural improvement that doesn't change design direction | Surface to user as batch preview, single yes/no approval |
 | **manual** | Challenges a design assumption or approach choice | Walk through one at a time via AskUserQuestion |
 | **fyi** | Observation that doesn't require action now | Append to Reviewer Concerns section |
 
 ---
 
-## Convergence Rules
+## Blocking Gate and Convergence Rules
 
-- Round 1 complete → if zero critical + zero high → converged, exit to Phase 6
-- If new fixable findings → run Round 2 with `<prior_decisions>` populated
-- If same findings persist across 2 rounds → exit, persist as Reviewer Concerns
-- **Max rounds: 3** — hard ceiling, no exceptions
-- Same finding appearing in 2 consecutive rounds with no progress → force-exit, classify as Reviewer Concern
+- critical/CRITICAL → BLOCKER (BLOCKING)；high/HIGH → MAJOR (BLOCKING)。
+- required criterion 为 UNKNOWN 同样阻断；zero critical/high alone is insufficient without
+  evidence for every required criterion. Only a passing current vote permits Phase 6.
+- 默认最多两轮。相同 findings 持续两轮仍存活 → return BLOCKED and unresolved human decisions；
+  不得通过 Reviewer Concerns 进入 Phase 6、DONE 或 handoff-ready。
+- `<converged>` or “no new issues” never overrides surviving blockers; user rejection is a prior
+  decision, not evidence that a blocking finding is resolved.
+- 草稿任何变更要求新 hash 和重新冷审；old votes do not cover changed drafts.
+- 超过两轮先说明理由再升级；不得自动进入 Phase 6。Only nonblocking medium/low/fyi may remain
+  Reviewer Concerns after a valid vote. Human Gate retains all unresolved user tradeoffs.

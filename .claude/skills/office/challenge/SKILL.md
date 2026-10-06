@@ -172,18 +172,36 @@ Claude 在执行前必须确定实际 `_TOPIC`（优先读 `current-topic.txt`�
 PRD 文件名 `docs/prd/*-prd.md` 推断 topic slug**，而非从 brainstorm-first 流程下常为空的
 `docs/idea/` 推断——challenge 恒有 PRD 前置，PRD 才是本 skill 的可靠 topic 源），然后执行：
 
+状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+
 ```bash
-export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-# 如果 _TOPIC 为空或是占位符，从最新 idea 文件名推断
-[ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/prd/*-prd.md 2>/dev/null | head -1 | \
-           xargs basename 2>/dev/null | \
-           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-prd\.md$//' || echo "unknown")
+case "${_PROJECT_ROOT:-}" in
+  /*) ;;
+  *) printf '%s\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;
+esac
+if [ ! -d "$_PROJECT_ROOT" ] || [ "$(cd "$_PROJECT_ROOT" && pwd -P)" != "$_PROJECT_ROOT" ]; then
+  printf '%s\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2
+  exit 1
+fi
+export _TOPIC="${_TOPIC:-$(cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null)}"
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ]; then
+  _TOPIC=$(ls -t "$_PROJECT_ROOT"/docs/prd/*-prd.md 2>/dev/null | head -1 | \
+    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-prd\.md$//')
+fi
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] || [ "$_TOPIC" = "unknown" ] || [ "$_TOPIC" = "none" ]; then
+  printf '%s\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2
+  exit 1
+fi
+# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。
+case "${_SCENE:-}" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac
 export _NODE="challenge"
 export _STATUS="DONE"
 export _OUTPUT="docs/prd/$(date +%Y-%m-%d)-${_TOPIC}-challenge.md"
-python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
+python3 .claude/skills/office/references/write_state.py || {
+  _STATE_RC=$?
+  printf '%s\n' 'ERROR: 产物已生成，但 workflow-state 未同步；保留产物，停止依赖后继，不报告 DONE 或 handoff 成功。' >&2
+  exit "$_STATE_RC"
+}
 ```
 
 ## ⚠️ 末尾核心约束

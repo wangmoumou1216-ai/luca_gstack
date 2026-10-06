@@ -325,6 +325,19 @@ test('facade-owner-candidate', () => {
   assertMatches(text('.claude/agents/orchestrator.md'), [/diagnosing-bugs/i, /resolving-merge-conflicts/i], 'Orchestrator owner');
 });
 
+// Source-mode interface assertions only; no native synthesis/compile execution claim.
+test('conversation-lineage-contract', () => {
+  const ts = text('.claude/skills/office/tech-spec/SKILL.md');
+  const tp = text('.claude/skills/office/task-plan/SKILL.md');
+  assertMatches(ts, [/input_mode.*prd.*conversation_synthesis/s, /source_register.*path.*sha256.*section.*register_sha256/s, /original_sources.*source_must_ids/s], 'TS lineage handoff');
+  assertMatches(tp, [/实际读取.*source_register.*重算.*sha256.*register_sha256/s, /CONV-MUST.*REQ.*ASSERT.*DEV.*TEST/s, /原始来源.*独立.*MUST.*反向/s], 'TP original source coverage');
+  for (const skill of ['tech-spec', 'task-plan']) {
+    const view = JSON.parse(text(`.claude/skill-os/generated/input-modes/${skill}.json`));
+    assert.deepEqual(Object.keys(view.contract.modes), ['standalone', 'workflow']);
+    assertMatches(view.contract.notes, [/required.*仅.*prd/s, /conversation_synthesis.*source_register.*source_must_ids.*同等覆盖/s], skill+' conditional metadata');
+  }
+});
+
 test('dual-loader-parity', () => {
   for (const name of SKILLS) {
     const canonical = realpathSync(required(`.claude/skills/office/${name}`));

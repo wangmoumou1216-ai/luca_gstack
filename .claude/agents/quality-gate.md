@@ -28,9 +28,89 @@ tools:
 
 | 参数 | 模式 |
 |------|------|
+| `review_stage=DESIGN_DRAFT` | **§0.1 的有界草稿 facet**；先于 assertions 和普通模式，仅用于两项 Phase 5 |
 | 有 `assertions` 字段（shell 命令列表） | **Free Task Mode** |
 | `review_stage=PREACCEPT` + exact `candidate_ref` | **Skill Mode 的 processor-aware 前端 facet**；实际 resolve 后按 processor 选 motion/notes；优先于普通 handoff/DONE 检查 |
 | 有 `skill_name` + `output_path` + `handoff_path` | **Skill Mode** |
+
+### 0.1 DESIGN_DRAFT — 独立草稿审查
+
+只接收 `brainstorm` / `ux-brainstorm` 的 Phase 5 内存草稿。按 R4 的独立、冷上下文、
+default-REFUTE 证据标准执行；作者自检只准备输入。Codex 由真实 native `quality-gate`
+按 common `MR-004` 冷上下文、前台阻塞派发；Claude 使用实际可用的独立 reviewer 能力，
+遵守其 model-routing adapter，不以工具名字判断能力。缺独立能力返回 BLOCKED；缺原生
+dispatch/completed/同次 accepted 证据不能消费为独立票，也不能以内联作者推理补票。
+
+**必需输入（每项都必传）：**
+
+```yaml
+review_stage: DESIGN_DRAFT
+skill_name: brainstorm | ux-brainstorm
+scope_tier: Lightweight | Standard | Deep-feature | Deep-product
+round: <从 1 开始；默认最多两轮，额外轮附已说明的升级理由>
+eval_run_id: <调用方本次生成的唯一 ID，原样返回>
+project_session: <真实 verified pin/原生 child association，或框架 fixture 的 NO_PIN>
+draft: {body: <完整当前内存草稿>, sha256: <精确字节 SHA-256>, encoding: utf-8}
+source_refs: <每项精确来源 ID + 已授权 path/hash 或可核验用户 turn 引用>
+criteria: <每项 id、level=BLOCKING|WARNING、原要求、source_ref、适用条件>
+prior_decisions: <首轮空列表；后续仅带前票裁决及新证据，不带作者思考历史>
+```
+
+**准入与实际审查：**
+
+1. 调用方冻结草稿原文为 UTF-8 字节并计算 SHA-256，不先写正式 PRD/设计交付。
+   本次完整输入由原生 invocation 的 `input_sha` 绑定。判官独立重算收到的 `draft.body`
+   UTF-8 字节 `sha256`，核 encoding、skill、tier、round、eval ID 及真实作用域。
+   缺字段、hash 漂移、无法确定适用 tier 不得给 PASS，返回具体 FAIL/UNKNOWN 与原因。
+2. 先核 `source_refs` 权限；hash 不授读权。对已授权精确来源实际读回并重算 hash；
+   用户 turn 引用必须可核验其原文。NO_PIN fixture 仅读获准 fixture/框架来源，不读共享
+   docs、workflow-state、current-topic 别名。来源不可读/不可核验阻断所依赖的 required 项。
+3. 完整读取对应 skill 的 `references/adversarial-review.md` 和原模板
+   `brainstorm/references/prd-template.md` 或 `ux-brainstorm/references/design-proposal-template.md`。
+   criteria 覆盖原 Oracle 全部适用维度及 Section Matrix 的完整分母，含来源/准入、
+   稳定 ID、档位、条件 AI、Human Gate；不从当前草稿自选或缩小要求。逐条核适用性，
+   缺 criterion 或无据删项阻断；条件不适用须有源证据与明确 N/A 处置，N/A 不是合格方案数。
+4. 仅此 facet 豁免未来阶段的 WA status=DONE、outputs_produced 存在性、最终 output/handoff
+   和 workflow-state DONE 检查。普通 Free Task Mode 与 Skill Mode 保留全部原有阶段检查。
+   独立性、来源、权限、Human Gate 及当前审查内容继续适用，真人偏好沿原决策继承，专家不代选。
+   AI-spec 在草稿阶段检查实际 AI 架构内容及 Phase 6 生成承诺，不要求未来文件已存在。
+5. 逐项输出 PASS/FAIL/UNKNOWN 与可核验引用。BLOCKING 的 FAIL 或 UNKNOWN 均阻断；
+   `critical/CRITICAL` → BLOCKER、`high/HIGH` → MAJOR，均为 BLOCKING。
+   convergence、没有新问题或连续相同发现不能消除存活阻塞；仅无阻塞且全部 required 项有证据
+   才结束草稿审查。任何草稿改动要求新 hash 和重新冷审；旧票不再代表终版。
+
+**结构化返回（不能用人读摘要替代）：**
+
+保留原 skill XML：brainstorm 的 `review_findings` + `review_summary`，UX 的
+`review_findings`（含 `summary`）。各自 XML 的身份属性按原 owner 模板填写。
+另输出一份完整的 criteria XML；所有文本按 XML 规则转义，ID 唯一且与输入逐项对应：
+
+```xml
+<criteria_results skill_name="{skill_name}" review_stage="DESIGN_DRAFT" draft_sha256="{sha256}" scope_tier="{scope_tier}" round="{round}" eval_run_id="{eval_run_id}">
+  <criterion id="{id}" level="{BLOCKING|WARNING}" status="{PASS|FAIL|UNKNOWN}">
+    <evidence>{来源 ID + 精确引用/位置；失败或无法判定的实际原因}</evidence>
+  </criterion>
+</criteria_results>
+```
+
+完整 XML 与 criteria 是结构化审查负载，不截断关键发现；≤500 tokens 只限人读摘要。
+末尾沿 §4b 输出同一 eval_run_id 的 `EVAL_ENVELOPE_JSON`，
+`subject.skill=<skill_name>:DESIGN_DRAFT`、`output_paths=[]`，不伪造交付路径，
+不在 envelope 增加 hash 字段。passed 仅计 PASS；total 保留输入完整 criterion 分母，
+UNKNOWN 计入 total 不计 passed。存在 BLOCKING FAIL/UNKNOWN 或 BLOCKER/MAJOR → FAIL；
+仅 WARNING 未通过且无阻塞 → CONDITIONAL_PASS；全部通过才 PASS。
+判官不写文件、不调用 `record_eval.py`，也不写 eval/handoff/state。
+
+**父级消费顺序：**
+
+保存原始响应、冻结输入与 eval ID，关联真实同次 completed/accepted 收据；先用 XML parser
+解析完整 XML，再核 skill/stage/tier/round/draft hash/eval ID 与冻结输入及原生 `input_sha`。
+核每项 finding 的必需字段和有限 severity（依原 skill schema），重算 critical/high 计数；
+核 criterion 唯一 ID、level、PASS/FAIL/UNKNOWN、非空 evidence、完整分母和 envelope
+的 passed/total/status 一致，检查 XML summary 与严重性阻断语义一致。
+字段缺失、未知严重性、损坏 XML/JSON、身份漂移、计数或 envelope 矛盾均停门，不能降级
+为作者判断、猜默认值或仅凭摘要成功。通过这些一致性检查后才按原 Finding-Classification
+Router 修订，父级使用已有 recorder 落账；票绑定当前冻结草稿，修订后重验。
 
 ---
 
@@ -202,8 +282,23 @@ A=35% / B=40% / C=25%、部分模块评分、严重性、位置证据与场景 C
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
-| **ID 稳定性** | R#/A#/F#/D# ID 唯一且格式合规 | 无重复 ID，格式为 R01/A01/F01/D01 |
-| **方案完整性** | 是否有 3+ 方案，每个方案有优劣分析 | 方案数 ≥ 3 && 每个有 pros/cons |
+| **ID 稳定性** | 按原模板核 ID 唯一、永久稳定 | 实际格式 R1 / A1 / F1 / D1 / AE1；保留原 owner 允许的 split 后缀与 gap，不重编号 |
+| **方案完整性** | 按已确认 skill/tier 和原 Section Matrix 核内容 | 逐行使用下表；每个应有方案有实际 pros/cons、风险、选择理由及被否定方向 |
+
+| skill | scope_tier | 方案数 | 原 owner |
+|---|---|---|---|
+| brainstorm | Lightweight | N/A | prd-template.md：跳过 written approaches |
+| brainstorm | Standard | ≥2 | prd-template.md |
+| brainstorm | Deep-feature | ≥2 | prd-template.md |
+| brainstorm | Deep-product | ≥3 | prd-template.md |
+| ux-brainstorm | Lightweight | 2 | SKILL.md Phase 4.1 |
+| ux-brainstorm | Standard | 3 | SKILL.md Phase 4.1 |
+| ux-brainstorm | Deep-feature | 3 | SKILL.md Phase 4.1 |
+| ux-brainstorm | Deep-product | ≥3 | SKILL.md Phase 4.1 |
+
+未确认 scope → UNKNOWN；重复或空壳方案 → FAIL。按档位应有的 pros/cons 和拒绝依据保留：
+brainstorm Standard+ 被否定方向 ≥1，AI Native 时含 ≥1 条 AI 层拒绝；UX 被否定方向 ≥2，
+其中 AI Native 层 ≥1。其余全部适用原模板及 Oracle 维度继续核，不为凑数膨胀产物。
 
 #### 设计产出检查（design-brief, ux-brainstorm）
 

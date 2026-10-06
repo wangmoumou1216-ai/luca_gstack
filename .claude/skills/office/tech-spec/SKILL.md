@@ -66,16 +66,36 @@ python3 .claude/observability/scripts/get_rules.py tech-spec "*" 2>/dev/null || 
 `conversation_synthesis` mode；本文件仍是唯一 owner，仍产相同 tech-spec/handoff 路径，
 不创建第二份 spec、模板或 workflow state。Phase 0→6 的顺序与 Phase 5 覆盖门保持不变。
 
-该 mode 的 Phase 0 用调用方提供的 Conversation Source Register 取代 PRD/design-brief 加载：
-每条明确需求、约束、验收事实、排除项或命名假设分配 `CONV-NNN`，并带用户 turn 或仓库证据
-指针；后续冲突表、接口、追踪矩阵和测试准则全程引用这些 ID。Phase 5 的 MUST 集合来自 register
-中用户明确承诺的 MUST 行，并反向核对每个 `CONV-NNN` 是否具备 Tech Section、IF/CMP 合同与可执行
-测试准则；不得把矩阵自身当来源。Phase 6 仍写 canonical tech-spec 与 handoff，并在 Spec Purpose 和
-handoff 标注 `input_mode: conversation_synthesis` 及 register 摘要。
+来源类型 `input_mode: prd | conversation_synthesis` 与流程位置 standalone / workflow 正交；
+不新增 Workflow。正常调用显式采用 `prd`；历史 handoff 没有 input_mode 但能从原有精确
+PRD/Brief 来源核验时沿用普通分支，不批量重写。不能从缺少 Brief 推断 conversation_synthesis。
+缺 input_mode 且无可核历史 PRD 来源、或无法核验 register 时返回 `NEEDS_CONTEXT`；
+来源漂移、伪造源表、遗漏 MUST 返回 `BLOCKED`，回来源/TS owner 修订后重新过门。
 
-**负门：** 对话中仍有产品取舍，或涉及 UI 布局、交互状态、视觉/品牌决策却没有对应已定案设计
-来源时，返回 `NEEDS_CONTEXT` 并点明缺失 owner；不得通过 synthesis 编造 PRD/design-brief 决策，
-也不得在本 mode 里追加访谈。只有工程范围和验收事实已足够明确时才能继续 Phase 0。
+`conversation_synthesis` Phase 0 完整读取调用方提供的 Conversation Source Register，
+对 `CONV-NNN` 行保留 kind、MUST/PARTIAL/DEFERRED、原文事实、可执行 acceptance 与来源。
+`original_sources` 保存真实用户 turn ID + 完整相关原始内容（可核消息引用），或已授权证据的
+exact path+sha256+节/行及内容；不把作者的需求摘要替代原始来源，不让 hash 授读权。
+从这些原始来源独立枚举 `source_must_ids`（CONV ID + 原始出处），再与 register 行反向核对；
+该集合在构造 RTM 前冻结，不能从 RTM 的行或统计生成 MUST 分母。
+
+to-spec 已有内存 register 无需先写另一个文件：Phase 6 把它和 original_sources、
+source_must_ids 完整保存在同一 canonical tech-spec 的 §1「Source Register」子节；
+也可引用调用方已授权且真实存在的输入文件。不另建第二个 facade 产物、tracker 或状态。
+handoff 使用 `source_register{path,sha256,section,register_sha256}`：path 是上述 canonical TS
+或已有输入的精确绝对路径，sha256 绑定整个文件最终字节，section 指定完整 register 片段，
+register_sha256 绑定该片段的精确 UTF-8 字节（含所记录的边界/换行）。register 包含来源、
+完整行与独立 MUST 集；handoff 摘要只列 exact 引用和 MUST IDs，不替代下游实际读取。
+
+后续 Phase 的冲突表、架构、IF/CMP、RTM 和测试准则均引用 CONV 来源；不得伪造 R/AE、
+PRD 或 Brief。没有 UI 的 D/STATE 映射记 N/A 并附原始来源和工程范围依据；
+已承诺工程运行状态、错误、失败恢复仍是 MUST，必须有可执行测试，不以 N/A 删除。
+Phase 5 从同一原始来源和 register 反查每个 MUST 的 Tech Section、IF/CMP 与测试准则。
+Phase 6 保留 canonical 输出及 input_mode、来源引用、MUST 集和门禁证据，供 task-plan 继承。
+
+**负门：** 对话中仍有产品取舍，或涉及未定 UI 布局、交互状态、视觉/品牌决策时，停在门前
+返回 `NEEDS_CONTEXT` 并交原产品/设计 owner；发现伪装为纯工程、未决 UI 被静默加入则
+`BLOCKED`。不得通过 synthesis 编造设计来源、在本 mode 里追加访谈或跳过 Human Gate。
 
 ---
 
@@ -91,7 +111,9 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
 
 **目标**：用最小 context 建立上游全景，不读全文。
 
-执行步骤：
+先按上述来源模式准入。conversation_synthesis 完整读取 register 及原始来源、冻结 MUST 集
+后进入 Phase 1，不执行下列 PRD/Brief 的发现/加载；preamble glob 仍只作线索，不作来源授权。
+以下执行步骤仅适用于正常 PRD/Brief 分支（input_mode=prd）：
 1. 读取 Preamble 已定位的 `$_HANDOFF`（`docs/handoff/` 中按 `current-topic.txt` 过滤后取最新的 `*design-brief-handoff.md`，< 2000 tokens，标准 handoff 格式）——若 Preamble 输出了同日多份告警且未过滤成功，先向用户确认具体是哪个 topic，不要直接假设"最新的那份"就是对的
 2. 读取 `docs/handoff/` 中最新的 `*brainstorm-handoff.md`（如存在）
 3. 读取 `docs/prd/` 中最新 PRD 文件的前 60 行（确认 R-series 和 AE-series 编号范围）；并定向读取其末尾 `## Outstanding Questions → Deferred to Planning` 子节（上游合法放行、延后到本阶段答的开放问题，不在前 60 行内）。把每条 Deferred 项带入本 spec 风险节，并在 Phase 6 handoff 的「待澄清」节传递给下游——未解决前不得据此做隐式假设。
@@ -142,7 +164,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
 不免除 MUST 覆盖门。历史 `component_mapping` / 旧组件映射只读提取语义追踪，不补
 variant/classes、token 或组件库资产，不改写上游历史文件。
 
-如果 PRD 不存在或没有 R-series / AE-series 编号：
+正常 PRD/Brief 分支如果 PRD 不存在或没有 R-series / AE-series 编号：
 
 ```
 ⛔ BLOCKED — tech-spec 需要正式 PRD 作为需求追踪源。
@@ -150,7 +172,7 @@ variant/classes、token 或组件库资产，不改写上游历史文件。
 请先补 PRD，再运行 /tech-spec。
 ```
 
-**确认输出**（打印，不需要用户确认）：
+**确认输出**（普通 PRD 分支打印，不需要用户确认；纯工程打印 input_mode、register 引用和 source_must_ids）：
 ```
 ✓ design-brief handoff: [路径]
 ✓ design-brief traceability sections: 决策 N 条，状态 N 条，映射 N 条
@@ -190,11 +212,11 @@ inherited authority/effect intersection。未定案项回本 Conflict Register�
 必须包含：
 
 ### 2.1 技术栈约束
-列出技术栈（来自 PRD/上游），标注哪些是 MUST（不可更改）、哪些是建议。
+列出技术栈（来自当前模式的 PRD/上游或 CONV 来源），标注哪些是 MUST（不可更改）、哪些是建议。
 
 ### 2.2 数据模型
 核心实体及其字段、关系。用简洁表格或伪代码，不用 ER 图。
-每个实体标注来源（哪条 PRD 需求驱动）。
+每个实体标注来源（哪条当前来源需求驱动）。
 
 ### 2.3 组件树
 系统的主要模块/组件，层级结构，责任边界。
@@ -225,7 +247,7 @@ inherited authority/effect intersection。未定案项回本 Conflict Register�
 输入: <参数类型>
 输出: <返回类型>
 错误处理: <异常类型和降级行为>
-来源需求: <R-NNN 或 AE-NNN>
+来源需求: <prd: R-NNN 或 AE-NNN；conversation_synthesis: CONV-NNN>
 MVP 状态: MUST | PARTIAL | DEFERRED
 ```
 
@@ -248,8 +270,9 @@ MVP 状态: MUST | PARTIAL | DEFERRED
 
 ## Phase 4：需求 + 设计追踪矩阵
 
-**目标**：把所有 PRD 需求（R-series + AE-series）映射到 design-brief 决策、
-tech section、接口/组件合同和测试准则。
+**目标**：普通 PRD 分支把全部 R/AE 映射到 design-brief 决策、tech section、IF/CMP 与测试准则；
+conversation_synthesis 把原始 CONV 集逐条映射到相同工程列。D/STATE 仅在有依据的无 UI 工程
+范围记 N/A（附来源），其余追踪列和工程状态/错误测试完整保留。
 
 格式（表格）：
 
@@ -261,7 +284,7 @@ tech section、接口/组件合同和测试准则。
 **规则**：
 - 每行的「测试准则」必须是具体可执行的断言，不允许写「功能正常」
 - DEFERRED 需求也要列出，测试准则写「DEFERRED — 不在 MVP 验收范围」
-- 每个 MUST 需求必须绑定至少一个 Design Decision 或 State
+- 普通 PRD 分支每个 MUST 必须绑定至少一个 Design Decision 或 State；CONV 仅按上述有源 N/A 例外
 - 纯 UI 需求可以绑定组件 ID（CMP-NNN），不强行伪造 API 接口
 - 追踪矩阵是 Phase 5 门禁的输入
 
@@ -273,12 +296,17 @@ tech section、接口/组件合同和测试准则。
 
 执行步骤：
 
-**Step 5.1** — 列出所有 MUST 级需求 ID。**来源是上游 PRD（`docs/prd/` 的需求清单），不是 Phase 4 矩阵自身。**（PRD 需求清单本身只标 Type/Confidence，MUST 集合由 PRD 的 In scope / MVP 优先级节圈定。）逐条 PRD MUST 需求核对它是否出现在 Phase 4 矩阵里：若某条 PRD MUST 在矩阵中缺失（需求中途被悄悄丢了），直接判 GATE FAIL，不允许「矩阵里没有就当它不存在」。这道反向核对（PRD 源 → 矩阵）补的是纵向覆盖率查不到的横向漂移。
+**Step 5.1（conversation_synthesis）** — 从 original_sources 独立枚举 MUST，再与冻结
+source_must_ids、register 行和 Phase 4 RTM 逐条反向比对。任一遗漏、重复、来源不可核或漂移
+停门；不能把自己矩阵的 100% 当来源完整性。逐条核 Tech Section、IF/CMP 和可执行测试；
+有源无 UI 的 D/STATE 为 N/A，工程状态/错误 MUST 仍逐条测试，任何失败不能进入 Phase 6。
+
+**Step 5.1（普通 PRD 分支）** — 列出所有 MUST 级需求 ID。**来源是上游 PRD（`docs/prd/` 的需求清单），不是 Phase 4 矩阵自身。**（PRD 需求清单本身只标 Type/Confidence，MUST 集合由 PRD 的 In scope / MVP 优先级节圈定。）逐条 PRD MUST 需求核对它是否出现在 Phase 4 矩阵里：若某条 PRD MUST 在矩阵中缺失（需求中途被悄悄丢了），直接判 GATE FAIL，不允许「矩阵里没有就当它不存在」。这道反向核对（PRD 源 → 矩阵）补的是纵向覆盖率查不到的横向漂移。
 
 **Step 5.2** — 逐条检查：
 ```
-对于每个 MUST 需求 R-NNN / AE-NNN：
-  ✓ 有对应 Design Decision 或 State？
+对于每个 MUST 需求（prd: R-NNN / AE-NNN；conversation_synthesis: CONV-NNN）：
+  ✓ 普通 PRD 有对应 Design Decision 或 State；纯工程无 UI 时是否有来源支持的 N/A？
   ✓ 有对应 Tech Section？
   ✓ 有对应接口 ID（IF-NNN）或组件 ID（CMP-NNN）？
   ✓ 测试准则是具体可执行的断言（不模糊）？
@@ -298,7 +326,7 @@ tech section、接口/组件合同和测试准则。
 ```
 ✅ COVERAGE GATE PASS
    MUST 需求总数: N
-   全部有 Design Decision/State + Tech Section + 接口/组件 ID + 可执行测试准则
+   全部有当前来源映射 + Tech Section + 接口/组件 ID + 可执行测试准则；有源 D/STATE N/A 单列
    继续 Phase 6
 ```
 
@@ -327,12 +355,19 @@ tech section、接口/组件合同和测试准则。
 ## 6. Coverage Gate Result（PASS + 统计数字）
 ```
 
+在 §1 内保留 input_mode 与精确来源；conversation_synthesis 嵌入完整 Source Register、
+original_sources、source_must_ids。输出落盘后回读并计算文件及 register 片段 hash，才写 handoff；
+输出继续变化时须重新过门/重算，不能沿用旧引用。
+
 ### 6.2 写入 Handoff 文件
 
 路径：`docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md`
 格式：遵循 `.claude/skills/office/references/handoff-protocol.md`
 
 Handoff 必须包含：
+- `input_mode: prd | conversation_synthesis`；普通 PRD 的精确 PRD/Brief 来源继续保留。
+- conversation_synthesis 的 `source_register{path,sha256,section,register_sha256}` 与完整
+  `source_must_ids`、original_sources turn/证据引用及 Phase 5 反向覆盖证据；摘要不替代 register。
 - 决策：架构选型、关键技术约束（≤8 条，每条 ≤100 字）
 - 约束：什么不在 tech-spec 范围内，下游 task-plan 必须遵守什么
 - 风险：已知实现风险（≤3 条）
@@ -345,7 +380,7 @@ Handoff 必须包含：
 DONE: tech-spec
   产出: docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md
   Handoff: docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md
-  Gate: COVERAGE GATE PASS（MUST N/N，Design Mapping N/N）
+  Gate: COVERAGE GATE PASS（原始 MUST N/N；适用 Design Mapping N/N，有源 N/A 单列）
   下游建议: /task-plan
 ```
 
@@ -355,7 +390,7 @@ DONE: tech-spec
 
 1. Phase 5 门禁 FAIL → 必须修正，不允许跳过或静默通过
 2. 追踪矩阵每行必须绑定真实的需求 ID，不允许伪造
-3. MUST 需求必须绑定 Design Decision 或 State，不允许只写 PRD→Tech 跳过设计层
+3. 普通 PRD MUST 必须绑定 Design Decision 或 State；CONV 仅允许上述有源无 UI 的 N/A，不跳过来源/工程测试
 4. 测试准则必须具体可执行，不允许写「功能正常」「用户满意」
 5. 不读取 Obsidian Vault（只读）
 6. 不修改 PRD、design-brief、UX 相关文件

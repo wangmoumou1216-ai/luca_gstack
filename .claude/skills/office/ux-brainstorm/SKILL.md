@@ -83,7 +83,7 @@ AI Native不等于「加一个AI按钮」。它意味着：
 - **Phase 3: 设计追问（用户参与，一次一个问题）** — 7个UX逼问（4必选+3条件触发），一次只问一个 · 使用AskUserQuestion，优先单选 · 应用反奉承 + 反驳模式
 - **Phase 3.6: 机会映射（OST，自主，出方案之前）** — 借鉴 Opportunity Solution Tree：从研究+Phase3回答映射 3-7 个客户机会（问题非功能）· Opportunity Score 排序取 top 2-3 · 供 Phase 4 锚定
 - **Phase 4: 方案探索** — 生成2-3个方案（保守 / 理想 / 非显而易见），**锚定到 Phase 3.6 已排序机会** · 至少一个非显而易见角度 · 至少一个满足范式转变约束 · 先呈现方案，再给推荐
-- **Phase 5: 对抗性审查（Oracle，前台阻塞）** — Oracle从5个维度审查方案 · 最多3轮，收敛保护 · 分类处理：safe_auto / gated / manual / fyi
+- **Phase 5: 对抗性审查（Oracle，前台阻塞）** — 独立Oracle按原5个维度审查方案 · 默认最多2轮，存活阻塞停止写盘 · 分类处理：safe_auto / gated / manual / fyi
 - **Phase 6: 写设计方案文档** — 加载references/design-proposal-template.md · 按规模分级填写各章节 · 写入docs/decisions/YYYY-MM-DD-{slug}-ux-brainstorm.md
 - **Phase 7: 生成交互架构文档** — 加载references/interaction-architecture-template.md · 基于选定方案展开结构层设计 · 写入docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 - **Phase 8: 交接菜单** — 有blocking问题时锁定交接 · 选项：修订 / 手动审阅 / 完成
@@ -142,9 +142,10 @@ AI Native不等于「加一个AI按钮」。它意味着：
     4期间是绝对约束。永不说「这个设计很好」「有意思」
     「符合行业惯例」等。选择立场，引用证据，为之辩护。
 
-12. **Oracle是前台阻塞。** Phase 5的对抗性审查使用 `subagent_type="oracle"` +
-    `run_in_background=false`。必须在Phase 6之前完成。最多3轮，
-    收敛保护强制执行。
+12. **Oracle独立且前台阻塞。** 派发前完整读取 `.claude/agents/quality-gate.md` §0.1
+    的 DESIGN_DRAFT facet。Codex 使用 native `quality-gate` / MR-004 冷上下文、前台阻塞；
+    Claude 使用真实独立 reviewer 能力。缺独立审查能力 → BLOCKED。默认最多两轮；
+    存活阻塞不得进入 Phase 6。
 
 13. **懒加载references。** 不在会话开始时读取
     `references/design-proposal-template.md`、`references/pressure-test.md`、
@@ -447,7 +448,8 @@ Deep-product：3+，至少一个非显而易见。
 > 「设计方案的方案探索部分有三个方向。在我锁定推荐之前，
 > 哪个最接近你的设计直觉——或者你有第四个方向？」
 
-使用AskUserQuestion（单选）：选项为 {A, B, C, 「以上都不是——我来描述第四个方向」}。
+使用AskUserQuestion（单选）：选项为实际生成的方案 {A, B, C, ...}，加
+「以上都不是——我来描述其他方向」；当前档位未生成的方案不列为选项。
 
 如果选A/B/C：记录选择，继续。
 如果选「以上都不是」：自由文本获取第四方向，
@@ -477,47 +479,32 @@ Deep-product：3+，至少一个非显而易见。
 如果预门控失败，回退到Phase 3（补充信息）或Phase 4（补充方案）
 ——不在残缺草稿上运行Oracle。
 
-### 5.2 — 调度Oracle
+### 5.2 — 调度独立Oracle
 
-从 `references/adversarial-review.md` 的模板构造Oracle prompt。包含：
-- 规模级别（来自Phase 0）
-- 来源路径（或cold-start标签）
-- 完整设计方案草稿（内存中，尚未写入磁盘）
-- `<prior_decisions>` 块（第1轮为空）
-- Phase 3追问回答摘要（来自 `<interrogation_log>`）
-- Phase 2.5 AI Native评估
+构造 prompt 和派发前，完整读取 `.claude/agents/quality-gate.md` §0.1 和本 skill 的
+`references/adversarial-review.md`。按共享 DESIGN_DRAFT 输入/准入/返回/消费合同，提供当前
+内存设计方案、已确认 tier、精确获准来源、原始完整 criteria 和 prior_decisions，冻结 UTF-8 hash。
+Phase 3 用户回答及 Phase 2.5 AI Native 评估作为实际来源一并提供。
 
-前台发射Oracle：
+Codex 使用 native `quality-gate` / MR-004 冷上下文、前台阻塞；Claude 使用其 adapter 下实际
+独立 reviewer 能力。缺独立审查能力 → BLOCKED；作者自检不产生 Oracle 票。
 
-```
-Subagent调度：Oracle（前台，必须在Phase 6前完成）
-  type: oracle
-  background: false
-  description: "对抗性设计方案审查 — 第{N}轮"
-  prompt: {ORACLE_REVIEW_PROMPT from references/adversarial-review.md}
+### 5.3 — 消费并分类发现
 
-# 如果环境支持task()：
-#   task(subagent_type="oracle", load_skills=[], run_in_background=false, ...)
-# 如果环境不支持task()：
-#   以内部推理执行Oracle prompt，以<review_findings> XML格式输出。
-```
+先按 §0.1 核解析 XML、身份、计数、完整 criteria 分母、envelope 与同次 native accepted 收据；
+缺票或损坏响应停门。通过后按原 router：safe_auto 修正机械问题；gated_auto 批量预览获批；
+manual 经 AskUserQuestion 逐一由真人裁决；fyi 保留非阻塞观察。分类不能改变严重性或代选用户偏好。
 
-### 5.3 — 分类处理发现
+### 5.4 — 阻塞与修订上限
 
-解析Oracle的 `<review_findings>` 响应。按 `references/adversarial-review.md` 的分类路由处理每个发现：
-
-- **safe_auto**：静默应用到内存草稿，无用户交互
-- **gated_auto**：以批量预览呈现给用户，单个yes/no批准
-- **manual**：通过AskUserQuestion逐一处理
-- **fyi**：追加到Reviewer Concerns小节
-
-### 5.4 — 收敛检查
-
-第1轮完成后：
-- 如果零critical + 零high → 收敛，退出到Phase 6
-- 如果有新的可修复发现 → 运行第2轮，填充 `<prior_decisions>`
-- 如果同样的发现在2轮中持续存在 → 退出，持久化为Reviewer Concerns
-- 最大轮次上限：3
+- critical/CRITICAL → BLOCKER (BLOCKING)；high/HIGH → MAJOR (BLOCKING)。
+- required criterion 为 UNKNOWN 同样阻断；只有无阻塞且所有必需项有证据才能进入 Phase 6。
+  converged 标签或“没有新问题”不能覆盖存活阻塞。
+- 默认最多两轮。相同 findings 持续两轮仍存活 → 返回 BLOCKED 与未决真人问题；
+  不得通过 Reviewer Concerns 进入 Phase 6、标 DONE 或 handoff-ready。
+- 草稿任何变更要求新 hash 和重新冷审，旧票不代表修改后的终版。
+- 超过两轮先说明理由再升级；不得自动进入 Phase 6。medium/low/fyi 非阻塞观察可保留，
+  未决取舍仍由用户决定。
 
 ### 5.5 — 快速路径中也是强制的
 
@@ -540,7 +527,8 @@ Phase 5不可跳过。即使用户在Phase 3触发了逃生舱，Oracle审查仍
   它还需要发明什么设计判断？」——必须是「无」
 
 **硬门（与 Phase 5.1 预门控回退语义对齐）：第16项或上述关键项未通过 → 不得进入 6.2 写盘；
-回退 Phase 3（补充信息）或 Phase 4（补充方案）修复后重跑本自检。不完整的设计方案不得写盘、不得标 DONE。**
+回退 Phase 3（补充信息）或 Phase 4（补充方案）修复后，绑定新 hash 并回到 Phase 5 冷审，
+通过后重跑本自检。不完整的设计方案不得写盘、不得标 DONE。**
 
 ### 6.2 — 写入磁盘
 
@@ -551,7 +539,7 @@ Phase 5不可跳过。即使用户在Phase 3触发了逃生舱，Oracle审查仍
 - 章节顺序匹配模板
 - 稳定ID格式为 `D1`, `D2`, ...（不是 `D-01` 或 `DES-001`）
 - 「我注意到你的设计思考方式」节中的引用——使用 `<interrogation_log>` 中用户的原话
-- 如果Reviewer Concerns存在（来自Phase 5），作为待解决问题的最后一个小节
+- 如果非阻塞Reviewer Concerns存在（来自有效Phase 5票），作为待解决问题的最后一个小节；存活BLOCKER/MAJOR不得到达写盘步骤
 
 ### 6.3 — 确认写入
 
@@ -666,7 +654,7 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 | 产出代码、脚手架或实现文件 | CRITICAL | 违反规则#1硬门控；这个skill只写设计方案 |
 | 待解决问题未分blocking vs deferred | HIGH | 交接门控无法运作 |
 | Phase 0加载所有references文件 | MEDIUM | 不必要地污染context |
-| Oracle循环超过3轮 | MEDIUM | 收敛保护存在是为了防止无限修复循环 |
+| 自动Oracle循环超过2轮 | MEDIUM | 额外轮先说明理由，存活阻塞停止写盘 |
 | 输出语言为英文但用户用中文 | HIGH | 违反规则#10；设计方案是给用户团队用的 |
 | 接受模糊回答（「用户会搞明白的」）不反驳 | HIGH | 逼问存在就是为了防止这种情况 |
 | 3个方案都是渐进式变体 | HIGH | 违反规则#6；非显而易见角度不可协商 |
@@ -727,7 +715,8 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 **Phase 5**（Oracle）：
 - 第1轮：Oracle发现2个medium（Approach B缺失空态设计、信任修复机制描述不充分）
 - 两项路由safe_auto → 静默应用
-- 第1轮收敛：零critical+high → 退出
+- 草稿改变 → 冻结新 hash，取得独立第2轮票
+- 第2轮：零critical+high，required criteria 有证据，解析响应与 accepted 收据一致 → 退出
 
 **Phase 6**：写入 `docs/decisions/2026-04-26-ai-followup-ux-brainstorm.md`
 

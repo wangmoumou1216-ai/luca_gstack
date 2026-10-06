@@ -103,6 +103,21 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
 
 ### Step 2 — Plan Output（展示给用户，**Hierarchical 必须等确认**）
 
+每个 Phase 必须声明 `execution_context`，执行位置继承
+`.claude/agents/references/plan-design-guidance.md` 的表及 `.claude/agents/orchestrator.md`
+§2.2 skill_execution 分支；完整读取这两个 owner 后确定阶段。逻辑 WA 标签只表示阶段职责，
+不表示一律 spawn；交互节点由主会话执行，独立研究节点才可在已授权范围内派发。
+
+| Skill | execution_context | 前置 |
+|---|---|---|
+| `deepresearch` | subagent | 主会话已收齐实际 skill 的 Human Gate 参数 |
+| `ux-research` | subagent | 主会话已收齐实际 skill 的 Human Gate 参数 |
+| `brainstorm` | main_agent | 当前对话承接方案与取舍 |
+| `ux-brainstorm` | main_agent | 当前对话承接方案与取舍 |
+| `design-brief` | main_agent | 当前对话承接输入与冻结选择 |
+| `open-design` | main_agent | 当前对话承接工具、授权及采用选择 |
+
+其他 skill 按上述 owner 和自身交互合同确定，不能仅按 WA 标签决定执行位置。
 以下是全链路示例；实际按选定 Pipeline 展示 Phase 和输出，短入口不创建空研究/PRD节点：
 
 ```
@@ -113,20 +128,20 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
 识别类型：<功能域 + 需求类型>
 
 ━━━ Phase 1（并行）━━━
-  WA-1a: /deepresearch — <具体研究方向，1句话>
-  WA-1b: /ux-research  — <竞品/UX 研究方向，1句话>
+  WA-1a: /deepresearch [execution_context=subagent] — <具体研究方向，1句话>
+  WA-1b: /ux-research [execution_context=subagent]  — <竞品/UX 研究方向，1句话>
 
 ━━━ Phase 2（依赖 Phase 1）━━━
-  WA-2: /brainstorm — <PRD 主题，1句话>
+  WA-2: /brainstorm [execution_context=main_agent] — <PRD 主题，1句话>
 
 ━━━ Phase 3（依赖 Phase 2）━━━
-  WA-3: /ux-brainstorm — <UX 设计方向，1句话>
+  WA-3: /ux-brainstorm [execution_context=main_agent] — <UX 设计方向，1句话>
 
 ━━━ Phase 4（依赖 Phase 3）━━━
-  WA-4: /design-brief — <交互契约主题，1句话>
+  WA-4: /design-brief [execution_context=main_agent] — <交互契约主题，1句话>
 
 ━━━ Phase 5（依赖 Phase 4）━━━
-  WA-5: open-design — 基于 design-brief 的 Generation Packet 产出设计（OD 交接与回收 HTML）
+  WA-5: open-design [execution_context=main_agent] — 基于 design-brief 的 Generation Packet 产出设计（OD 交接与回收 HTML）
 
 预计产出路径：
   docs/research/ · docs/prd/ · docs/decisions/ · open-design 产出（HTML）
@@ -140,12 +155,20 @@ Phase ≥ 3 → 等用户确认后再执行 (y/n)
 
 #### 3.1 Work Agent 启动规范
 
-对每个 WA，填写 `.claude/agents/work-agent-template.md` 变量，**以下必填项全部填写，不得保留占位符**
-（auto 的每个 WA 都是 skill 执行器，必须填 MODE=skill_execution 及其两个必填变量 SKILL_TO_EXECUTE /
-SKILL_PATH；否则模板的 MODE 前置守卫会把 WA 当 task_execution 走 SECTION 1-3，skill 永不被执行）：
+主 Agent 先完整读取当前阶段实际 SKILL.md，识别全部适用 Human Gate 和参数，按
+Orchestrator §2.2 运行 preflight。已有真实用户选择直接继承；缺少的研究深度、成本或范围
+参数先在主会话收集真实回答，再把参数及来源显式写进 WA prompt。未决 Human Gate 时停止
+该阶段派发和依赖后继，不静默选档或使用 headless fallback 代答。
+
+`execution_context=main_agent`：主 Agent 直接在当前对话执行该 skill 的完整协议，
+保留其真实提问和用户选择；由 skill 写自己的 handoff，auto 不重复写。
+
+仅 execution_context=subagent 时填写 `.claude/agents/work-agent-template.md` 变量；
+所有必填项必须具体化，并填 MODE=skill_execution、SKILL_TO_EXECUTE、SKILL_PATH，
+避免落入模板的 task_execution 分支：
 
 ```
-{{MODE}}                  : skill_execution（auto 的每个 WA 都是 skill 执行器，固定此值）
+{{MODE}}                  : skill_execution（仅后台 skill 阶段）
 {{PHASE_ID}}              : 阶段编号，如 1a、2、3
 {{TOTAL_PHASES}}          : 总阶段数，如 4
 {{ROLE}}                  : Skill Executor for <skill-id>
@@ -189,9 +212,9 @@ Work Agent 收到指令后必须按以下顺序执行：
 #### 3.3 Orchestrator 编排规则
 
 ```
-并行 Phase（‖）: 在同一条消息中并发启动所有 WA
-串行 Phase（→）: 等待前 Phase 所有 WA 完成 + handoff 写入后，再启动下一 Phase
-质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 按 W9 处理
+并行 Phase（‖）: 仅已确认 execution_context=subagent 且无数据依赖的阶段可并发启动
+串行 Phase（→）: 前 Phase 完成 + handoff gate PASS + 所有必需质量门通过，才执行下一 Phase
+质量门控     : 两种 execution_context 使用相同的依赖、handoff、质量及取消门；任一必需项失败停止对应后继
 ```
 
 派发前，主 Agent 必须把全部输入、`PRIMARY_OUTPUTS` 与 handoff 路径相对 `WORK_ROOT`
@@ -200,11 +223,14 @@ Work Agent 收到指令后必须按以下顺序执行：
 派发的新工具动作，再调用当前 harness 的中断 primitive 并收集退出/在途结果；已发出或宿主
 无法中断的动作必须如实报告，不能冒称 OS 级撤销。
 
-#### Work Agent 失败处理（W9）
+#### Phase 失败处理（W9，含主会话与后台阶段）
 
 **工具授权先于重试分流：** 以下重试只限同一已授权工具，不得借 `BLOCKED` 改走未授权备用工具。
 缺少工具切换授权时暂停并交还用户；已有计划明确批准的备用路径可在其触发条件满足时继续，无需重复确认。
-OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢复」，这不是更换工具；
+OD original_copy v1 是 HEADLESS_ONLY：在该阶段 profile/外部 stage/run 前，由主会话按 OD
+Phase 0 核真实显式 headless opt-in 与独立 run grant，缺项 STOP 等真人选择。原件失败遵守
+OD Phase 3H：桌面生成/回收不支持，不能套 W9 的普通恢复；耗尽或无法核终态就保留失败并停止
+该交付/依赖后继。普通 carrier/reference_only headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢复」，这不是更换工具；
 该一次 retry 由 OD 路径计数，W9 不得通过重启 WA 重置它或重新进入已耗尽的 headless 路径。
 
 等待调用超时不等于任务终态。真实失败、取消和资源上限仍按原约束处置。
@@ -273,7 +299,7 @@ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢�
 - Work Agent 必须完整读完 SKILL.md（到 FILE_END 标记）才能开始执行
 - Hierarchical（≥ 3 Phase）必须等用户确认计划
 - framework/ 只读，不得修改
-- 每个 Work Agent 只负责一个 skill 的调用，不合并多个 skill 到一个 WA
+- 每个逻辑 WA/Phase 只负责一个 skill；其标签不替代 execution_context
 
 ---
 

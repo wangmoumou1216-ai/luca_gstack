@@ -3,7 +3,7 @@ name: brainstorm
 preamble-tier: 2
 description: >
   Transform a research markdown into a right-sized Product Requirements Document through
-  forcing-question interrogation, premise pressure-testing, and adversarial self-review. Ingests
+  forcing-question interrogation, premise pressure-testing, and independent adversarial review. Ingests
   research.md (or runs cold-start if none), classifies scope into Lightweight / Standard /
   Deep-feature / Deep-product, runs one-question-at-a-time Socratic dialogue using 6 adapted
   YC-style forcing questions, generates 2-3 approaches with a non-obvious angle, and writes a PRD
@@ -91,7 +91,7 @@ deepresearch*.md (or idea)
 → Phase 2.5: AI Native Assessment (self-directed) — • Decision path analysis (execution vs judgment steps) • Path compression viability (N→N', delta ≥ 2?) • Landing judgment (fully/partially/assisted/not) • Agent involvement check • Output: routing signals for Phase 4 + Phase 6
 → Phase 3: Collaborative Interrogation (USER IN LOOP) — • Ask 2-6 forcing questions, ONE AT A TIME • Use AskUserQuestion, prefer single-select • Apply anti-sycophancy + pushback patterns
 → Phase 4: Approach Exploration — • Generate 2-3 approaches (minimal / ideal / lateral) • At least one non-obvious angle • Present options BEFORE recommendation
-→ Phase 5: Adversarial Review (Oracle, foreground) — • Oracle reviews draft on 5 dimensions • Max 3 rounds with convergence guard • Classify findings: safe_auto / gated / manual / fyi
+→ Phase 5: Adversarial Review (Oracle, foreground) — • Independent Oracle reviews all applicable original dimensions • Max 2 rounds; surviving blockers stop writing • Classify findings: safe_auto / gated / manual / fyi
 → Phase 6: Write PRD + Conditional AI Spec — • Load references/prd-template.md • Fill per Section Matrix for scope tier • Write PRD to docs/prd/{date}-{slug}-prd.md • If AI Native/Partial: load references/ai-spec-template.md, write docs/prd/{date}-{slug}-prd-ai-spec.md • Write handoff summary (heavy skill, before DONE)
 → Phase 7: Next-Step Menu — • Gated if Resolve-Before-Planning is non-empty • Options: Plan / More Questions / Revise / Done
 ```
@@ -171,9 +171,10 @@ deepresearch*.md (or idea)
     during Phases 3 and 4. Never say "that's interesting," "great question," "you might want to
     consider," etc. Pick a position, state it, defend it with evidence.
 
-11. **Oracle is foreground.** The Phase 5 adversarial review uses `subagent_type="oracle"` with
-    `run_in_background=false`. It must complete before Phase 6. Max 3 rounds with convergence guard
-    enforced.
+11. **Oracle is independent and foreground.** Phase 5 follows the DESIGN_DRAFT facet in
+    `.claude/agents/quality-gate.md` §0.1, loaded before dispatch. Codex uses native `quality-gate` /
+    MR-004 冷上下文、前台阻塞；Claude uses actual independent reviewer capability.
+    缺独立审查能力 → BLOCKED。默认最多两轮，存活阻塞不得进入 Phase 6。
 
 12. **Lazy-load references.** Do NOT read `references/prd-template.md`,
     `references/pressure-test.md`, or `references/adversarial-review.md` at session start. Load
@@ -484,7 +485,8 @@ Surface this to the user for review:
 > "Three approaches for the PRD's Approaches Considered section. Before I lock in a recommendation,
 > which one feels closest — or does a fourth direction come to mind?"
 
-Use a AskUserQuestion (single-select): options are {A, B, C, "None of these — let me describe a fourth"}.
+Use a AskUserQuestion (single-select): options are the actual generated approaches {A, B, C, ...}
+plus "None of these — let me describe another direction"; omit nonexistent options for this tier.
 
 If user picks A/B/C: record choice, proceed.
 If user picks "None": ask for their fourth direction in free-text, then generate a new set of 2-3
@@ -512,52 +514,42 @@ Before invoking Oracle, verify the in-memory PRD draft has:
 - Research & Decision Coverage Matrix drafted (Standard+: always — from Phase-4 approach decisions + user answers; research-claim rows added when a research source exists)
 - Every high-confidence source claim has a disposition and PRD destination
 - Every selected/rejected approach decision has a coverage row
-- Finalization Checklist in `references/prd-template.md` self-run — note any items that fail
+- Finalization Checklist in `references/prd-template.md` self-run — note any items that fail.
+  Apply its scope matrix: 第7项 Lightweight written approaches 为 N/A；第16项在草稿阶段核
+  当前 AI 架构内容及 Phase 6 的生成承诺，不要求未来 `prd-ai-spec.md` 已存在。
 
 If pre-gate fails, loop back to Phase 3 (for missing requirements) or Phase 4 (for missing
 approach) — do not proceed to Oracle on a broken draft.
 
-### 5.2 — Dispatch Oracle
+### 5.2 — Dispatch independent Oracle
 
-Construct the Oracle prompt from the template in `references/adversarial-review.md`. Include:
-- Scope tier (from Phase 0)
-- Source input path (or cold-start label)
-- Full PRD draft (in-memory, not written to disk yet)
-- `<prior_decisions>` block (empty for round 1)
-- User interrogation answer summary (from Phase 3's `<interrogation_log>`)
+Before constructing or dispatching the prompt, fully read `.claude/agents/quality-gate.md` §0.1
+and this skill's `references/adversarial-review.md`. Use the shared DESIGN_DRAFT input/admission/
+return/consumption contract with the current in-memory PRD, confirmed scope tier, exact authorized
+sources, complete original criteria and prior decisions. Freeze its UTF-8 hash for this vote.
+Include Phase 3's interrogation answers and Phase 2.5 assessment as applicable sources.
 
-Fire Oracle in foreground:
+Codex: native `quality-gate` / MR-004 冷上下文、前台阻塞；Claude: actual independent reviewer
+capability under its adapter. 缺独立审查能力 → BLOCKED，作者自检不产生 Oracle 票。
 
-```
-Subagent dispatch: Oracle (foreground, must complete before Phase 6)
-  type: oracle
-  background: false
-  description: "Adversarial PRD review — round {N}"
-  prompt: {ORACLE_REVIEW_PROMPT from references/adversarial-review.md}
+### 5.3 — Consume and route findings
 
-# If environment supports task():
-#   task(subagent_type="oracle", load_skills=[], run_in_background=false, ...)
-# If environment does NOT support task():
-#   Execute the Oracle prompt as internal reasoning, output in <review_findings> XML format.
-```
+Validate the raw parsed XML, identity, counts, complete criterion denominator, envelope and same
+native accepted receipt under §0.1 before using a finding. Invalid or missing response stops the
+gate. Then retain the original router: safe_auto applies mechanical fixes; gated_auto requires
+preview approval; manual uses one AskUserQuestion at a time; fyi records nonblocking concerns.
+The router cannot change severity or replace a required user preference decision.
 
-### 5.3 — Classify findings and apply
+### 5.4 — Blocking and revision ceiling
 
-Parse Oracle's `<review_findings>` response. Route each finding per
-`references/adversarial-review.md` Finding-Classification Router:
-
-- **safe_auto**: apply to in-memory draft silently
-- **gated_auto**: surface to user as a batch preview, single yes/no approval
-- **manual**: walk through one at a time via AskUserQuestion
-- **fyi**: append to `Reviewer Concerns` subsection (create if needed)
-
-### 5.4 — Convergence check
-
-After round 1 completes:
-- If zero critical + zero high findings → converged, exit to Phase 6
-- If new fixable findings → run round 2 with `<prior_decisions>` populated
-- If same findings persist across 2 rounds → exit, persist as `Reviewer Concerns`
-- Max round ceiling: 3
+- critical/CRITICAL → BLOCKER (BLOCKING); high/HIGH → MAJOR (BLOCKING).
+- required criterion 为 UNKNOWN 同样阻断；only no blockers and evidenced required criteria allow
+  Phase 6. A convergence label or “no new findings” does not override this gate.
+- 默认最多两轮。相同 findings 持续两轮仍存活 → return BLOCKED and unresolved human decisions，
+  不得通过 Reviewer Concerns 进入 Phase 6、标 DONE 或 handoff-ready。
+- 草稿任何变更要求新 hash 和重新冷审；旧票不代表修改后的终版。
+- 超过两轮先说明理由再升级；不得自动进入 Phase 6。Nonblocking medium/low/fyi may remain
+  Reviewer Concerns; unresolved user tradeoffs stay with the user.
 
 ### 5.5 — Mandatory even in fast-path
 
@@ -581,6 +573,11 @@ pre-Oracle in Phase 5.1). This run catches any issues Oracle resolved — especi
   `/html-prototype` ran on this now, what product decision would it still invent?" — must be
   "none."
 
+This is still a pre-write check: apply the same tier interpretation as Phase 5.1 (Lightweight
+written approaches N/A). For checklist #16, check current AI architecture content and the Phase 6.3
+generation commitment here; the exact generated AI-spec file is verified after 6.3, before handoff
+or DONE. Other failed or unclear required items return to Phase 3/4 and a fresh Phase 5 vote.
+
 ### 6.2 — Write to disk
 
 Use the Write tool to create the PRD at the path computed in Phase 0.3.
@@ -594,7 +591,7 @@ Template filling rules:
 - Stable IDs use format `R1`, `R2`, ... (not `R-01` or `REQ-001`)
 - Direct quotes in "What I noticed about how you think" section — use the user's actual words
   from `<interrogation_log>`
-- If Reviewer Concerns exists (from Phase 5), include it as the final subsection of Outstanding Questions
+- If nonblocking Reviewer Concerns exists (from a valid Phase 5 vote), include it as the final subsection of Outstanding Questions; surviving BLOCKER/MAJOR prevent reaching this write step
 
 ### 6.3 — Conditional: Write prd-ai-spec.md
 
@@ -613,6 +610,11 @@ implementation code. It helps downstream design/prototype work understand:
 - What is explicitly out of scope for design/prototype handoff
 
 If `agent_involvement.agent_boundary_needed` is `true`, the ai-spec MUST include the Agent Boundary Declaration section.
+
+After generating the triggered spec, read back the exact authorized output path computed above.
+Verify the file exists, is nonempty and includes the required AI architecture content and applicable
+Agent Boundary Declaration. Failure stops handoff/DONE; report the missing obligation. This fulfils
+the final-file part of checklist #16 after generation, without making it a pre-write prerequisite.
 
 **If NOT triggered:** skip this step silently. Do not mention it to the user.
 
@@ -710,7 +712,7 @@ deterministic reach; the reader decides applicability from the line.
 | Emitting code, scaffolds, or implementation artifacts | CRITICAL | Violates rule #1 hard gate; this skill only writes PRDs |
 | Not splitting Outstanding Questions into blocking vs deferred | HIGH | Handoff gate cannot function without this split |
 | Loading all three `references/*.md` files at Phase 0 | MEDIUM | Pollutes context unnecessarily; lazy-load pattern exists for a reason |
-| Looping Oracle beyond 3 rounds | MEDIUM | Convergence guard exists to prevent infinite fix-refix cycles |
+| Automatically looping Oracle beyond 2 rounds | MEDIUM | Explain escalation reasons; surviving blockers stop writing |
 | Outputting PRD in English when user wrote in Chinese/other | HIGH | Rule #9 violation; the PRD is for the user's team, not the skill |
 | Accepting a vague answer ("users want it") without pushback | HIGH | The forcing questions exist specifically to prevent this |
 | Generating 3 incremental variations as "three approaches" | HIGH | Violates rule #6; the Lateral angle is non-negotiable for Standard+ |
@@ -756,7 +758,9 @@ deterministic reach; the reader decides applicability from the line.
 - Round 1: Oracle finds 2 medium findings (terminology drift "offline mode" vs "offline cache",
   missing handoff quality criterion)
 - Both routed safe_auto → applied silently
-- Round 1 converged: zero critical+high → exit
+- Changed draft → freeze new hash and obtain a fresh independent round 2 vote
+- Round 2: zero critical+high, required criteria evidenced, parsed response and accepted receipt
+  consistent → exit
 
 **Phase 6**: Write `docs/prd/2026-04-22-offline-mode-prd.md` with Section Matrix filled for Deep-feature tier.
 
@@ -764,7 +768,7 @@ deterministic reach; the reader decides applicability from the line.
 - Gate check: 1 item in Resolve Before Planning ("Confirm mobile-first platform scope before
   committing to last-50 heuristic")
 - Gate CLOSED → present closed-gate menu → user chooses "Answer blocking question"
-- Loop back to Phase 3 with that single question, then Phase 5 round 2, then Phase 6 rewrite, then
+- Loop back to Phase 3 with that single question, then a fresh Phase 5 review of the current hash, then Phase 6 rewrite, then
   Phase 7 re-check → now gate OPEN → user proceeds to downstream design.
 
 <!-- FILE_END: .claude/skills/office/brainstorm/SKILL.md -->

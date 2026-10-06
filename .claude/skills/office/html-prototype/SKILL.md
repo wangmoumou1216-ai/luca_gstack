@@ -76,10 +76,8 @@ python3 .claude/observability/scripts/get_rules.py html-prototype "*" 2>/dev/nul
 
 ### 运行模式与输入源判定
 
-`html-prototype` 支持 standalone 和 workflow 两种模式。不要把 `/design-brief` 当成全局强制前置。
-但在 workflow / traceable delivery 中，它必须消费 `design-brief` 内的
-`Design Generation Packet`；PRD、deepresearch、ux-research 只用于 traceability 校验，
-不得作为 HTML 直接设计输入。
+standalone 不全局强制 `/design-brief`；workflow / traceable delivery 必须消费其
+`Design Generation Packet`。PRD、deepresearch、ux-research 仅校验 traceability，不得直接设计 HTML。
 
 先根据用户输入和已有 artifacts 判定 `source_kind`：
 
@@ -125,8 +123,6 @@ AskUserQuestion：
 
 如果用户没提供截图：
 
-以下速查表仅当目标平台为桌面 / 后台管理页时适用。移动端必须先按上方平台规则判断。
-
 ```
 ⚠️ 优化场景需要现有功能截图来区分「改动区」和「保持区」。
 没有截图无法保证未改动部分与现有产品一致。
@@ -156,16 +152,14 @@ B）我直接粘贴问题清单
 
 ## Phase 1：前置检查（全部通过才能进入 Step 0）
 
-**输出目标与平台消费：** 新版 design-brief 使用「输出目标」「目标平台与范围」「参考策略」
-「依据」「下游约束」（`output_target_platform_scope`）。按这些已确认字段和当前用户指令继续；
-`reference=none` 是有效参考策略，不是缺输入。用户已选择本地 HTML、平台和整页/局部范围时，
-在该范围内安排独立页面或局部实现，不因缺少旧「原型承载方式 / 母版」字段而再次强制选整页母版。
-若本次已选输出目标仍是 OD / Claude Design / MagicPath，交回相应交接入口，不自行改成本地实现。
+**输出目标与平台消费：** 按 design-brief 已确认的「输出目标」「目标平台与范围」「参考策略」
+「依据」「下游约束」（`output_target_platform_scope`）及当前指令继续；`reference=none` 有效。
+已选本地 HTML/平台/整页或局部范围，就在该范围实现；缺旧「原型承载方式 / 母版」字段不强制重选母版。
+目标仍为 OD / Claude Design / MagicPath 时交回相应入口，不自行改成本地实现。
 
 **场景A：**
 ```
-□ 确认以下适用 reference 文件存在（此处只查存在性，不读取——lazy-load，2026-07-04 G5：
-  每份在其消费点已各自有"必须读取"强制，启动全量前读是重复税；挂载点见下方注）
+□ 仅查下列适用 reference 存在；到所列消费点再必须完整读取（lazy-load，2026-07-04 G5）：
   · framework/README.md（仅明确采用母版时） → 挂载：框架选择逻辑前 + 写 HTML 前
   · .claude/skills/office/references/html-prototype-tokens.md    → 挂载：Phase 2.5 设计系统宣告前
   · .claude/skills/office/html-prototype/references/dynamic-reference-protocol.md → 挂载：Phase 2.1 动态参考扫描前
@@ -188,12 +182,10 @@ B）我直接粘贴问题清单
 □ 核验本次实际采用的资源依赖；未采用 framework 时不要求其 token 或母版资产
 ```
 
-**历史输入兼容：** 若既有 design-brief 仅有旧 `component_mapping` / shadcn 组件映射表，
-只读提取其中的位置、交互职责、决策、状态、来源与验收语义，按 §7 核对覆盖；不要求补旧
-variant/classes、token 或组件库资产，不重写历史文件。缺少承重语义时按当前模式补齐或报告缺口。
-
-**历史承载兼容：** 旧「原型承载方式 / 母版」仅在能追溯到用户明确选择、且仍适用于本次平台
-与范围时沿用；与新字段冲突时澄清冲突，不自动优先旧值。不补写或改写历史 design-brief。
+**历史输入/承载兼容：** 旧 `component_mapping` / shadcn 表只读提取位置、交互职责、决策、状态、来源、
+验收语义，按 §7 核覆盖；缺承重语义按当前模式补齐或报缺口，不补 variant/classes、token、组件库资产。
+旧「原型承载方式 / 母版」须可追溯真人选择且仍适用平台/范围；冲突先澄清，不优先旧值。
+历史 design-brief 及其他历史文件均不补写或改写。
 
 **承载方式询问（仅用户要求协助选择本地承载，或实际平台/范围仍未定时触发）：**
 
@@ -209,9 +201,8 @@ AskUserQuestion：
 > 6）**局部改动/独立组件** — 不使用整页母版
 > 7）**独立移动端原型** — standalone mobile prototype，不调用 framework 母版
 
-注意：当前工程实际可用母版为 5 个。AI 速记入口页、
-录音工作页母版未随包提供；遇到这类需求时，
-可在已确认范围内使用独立整页或局部实现；不因没有对应母版而扩大需求或要求补建母版。
+当前只有 5 个母版；AI 速记入口页、录音工作页未提供，按已确认范围用独立整页/局部实现，
+不因此扩大需求或要求补建母版。
 
 **移动端规则：**
 - 如果用户或 design-brief 明确目标是移动端，而 framework 没有对应移动母版，
@@ -417,9 +408,7 @@ Current Aesthetic Score 和空间规划。
 
 ## Phase 2.5：设计系统宣告（强制前置，写代码前完成）
 
-**来源借鉴：** ConardLi/web-design-skill 的核心方法论——"先用 Markdown
-把设计系统说清楚，再写代码"。
-**原因：** 不声明就直接写代码 → 颜色/字体/间距会随手写，不一致。
+**来源借鉴：** ConardLi/web-design-skill：先用 Markdown 声明设计系统，再写代码，避免颜色/字体/间距不一致。
 
 **必须在 Phase 3 写 HTML 之前，输出以下宣告（不要写代码，只用 Markdown）：**
 
@@ -464,10 +453,7 @@ Current Aesthetic Score 和空间规划。
 
 ## Phase 2.75：骨架确认（v0 Draft，Phase 3 前的中间检查点）
 
-**来源借鉴：** ConardLi 的 v0 draft 策略——尽早用低保真度草稿让用户纠偏，
-而不是黑箱交付完整代码。
-**原因：** 一次性写完整原型 → 发现方向错了只能推翻；先给骨架 → 节省
-80% 的返工时间。
+**来源借鉴：** ConardLi v0 draft：尽早用低保真骨架让用户纠偏，避免完整原型方向错误后推翻；预计节省 80% 返工时间。
 
 **输出格式：用 Markdown 伪代码，不写真实 HTML。**
 
@@ -635,7 +621,7 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 □ 表格/列表行高 ≥ 40px？
 ```
 
-**任一不通过 → 返回修复。** 这是视觉层面的 AI Slop 防火墙。
+**任一不通过 → 返回修复（视觉 AI Slop 防火墙）。**
 
 ### 场景A：新功能实现
 
@@ -688,9 +674,8 @@ grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\
   docs/decisions/*-design-brief.md 2>/dev/null | grep -v "N/A" | head -20
 ```
 
-如果检查结果有非 N/A 的 AI 专有状态，
-**必须额外生成**以下状态页（用状态切换 harness 切换，每个状态加
-`<!-- STATE: xxx -->` 注释和 `data-prototype-state`）：
+检查到非 N/A AI 专有状态时，**必须额外生成**下列状态页，用 harness 切换，并各加
+`<!-- STATE: xxx -->` 和 `data-prototype-state`：
 
 | AI 专有状态 | 触发条件 | 基础 UI 规范 |
 |-----------|--------|-----------|
@@ -754,28 +739,42 @@ grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\
 
 ## Phase 4：产出文件 + 更新状态
 
+状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+
 ```bash
-export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-[ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/idea/*.md 2>/dev/null | head -1 | \
-           xargs basename 2>/dev/null | \
-           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-idea\.md$//' || echo "unknown")
-mkdir -p "docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"
+case "${_PROJECT_ROOT:-}" in
+  /*) ;;
+  *) printf '%s\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;
+esac
+if [ ! -d "$_PROJECT_ROOT" ] || [ "$(cd "$_PROJECT_ROOT" && pwd -P)" != "$_PROJECT_ROOT" ]; then
+  printf '%s\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2
+  exit 1
+fi
+export _TOPIC="${_TOPIC:-$(cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null)}"
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ]; then
+  _TOPIC=$(ls -t "$_PROJECT_ROOT"/docs/idea/*-idea.md 2>/dev/null | head -1 | \
+    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\.md$//')
+fi
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] || [ "$_TOPIC" = "unknown" ] || [ "$_TOPIC" = "none" ]; then
+  printf '%s\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2
+  exit 1
+fi
+# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。
+case "${_SCENE:-}" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac
+mkdir -p "$_PROJECT_ROOT/docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}"
 export _NODE="html-prototype"
 export _STATUS="DONE"
 export _OUTPUT="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
-python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
+python3 .claude/skills/office/references/write_state.py || {
+  _STATE_RC=$?
+  printf '%s\n' 'ERROR: 产物已生成，但 workflow-state 未同步；保留产物，停止依赖后继，不报告 DONE 或 handoff 成功。' >&2
+  exit "$_STATE_RC"
+}
 ```
 
 **主文件：** `docs/prototype/YYYY-MM-DD-<topic>/index.html`
-
-**规格文件（必须，来自 CLAUDE-prototype.md Step 4 交接块）：**
-`docs/prototype/YYYY-MM-DD-<topic>/prototype-spec.md`
-
-读取 SCHEMA.md 作为规格文件模版，填充。
-
-`prototype-spec.md` 必须包含：
+**规格文件（必须，CLAUDE-prototype.md Step 4 交接块）：** 同目录 `prototype-spec.md`。
+读取并填充 SCHEMA.md；必须包含：
 
 ```markdown
 ## Traceability Coverage
@@ -798,10 +797,9 @@ python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "wor
 同时保留 §7「页面与交互位置映射」到 HTML 实现位置的对应清单：逐项核对交互职责、
 D/STATE、来源与 AC、约束、下游去向；已确认页库引用或 `reference=none` 如实记录。
 
-**开发交接补全（仅下游=开发/场景1 时追加，非硬 QA 项）**：若原型将进自家开发链（tech-spec/task-plan），
-在 prototype-spec.md 追加一节，补 **组件 props / 响应式断点 / design token 清单 / 动效** 四维
-（从已产出 HTML 抽取，逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`）；
-下游=Figma（场景2）**不触发**。
+**开发交接补全（仅下游=开发/场景1，非硬 QA 项；Figma/场景2不触发）**：进入 tech-spec/task-plan 时，
+从实际 HTML 抽取 **组件 props / 响应式断点 / design token 清单 / 动效**，追加 prototype-spec.md；
+逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`。
 
 ---
 
@@ -832,7 +830,7 @@ QA checker 的静态结果只证明参数/marker/声明条款；模块便携、�
 每条规则至少含一种检验；按真实规范填写，不复制例子作为规范。检查作用域为生成/改动区（无标记时整页），
 只证明这些静态条款，不代替浏览器与人工 UX 核对。未提供文件时规范项 N/A；明确提供但无效时 FAIL。
 
-该脚本会输出：
+QA 输出：
 
 ```
 docs/prototype/YYYY-MM-DD-<topic>/prototype-qa-report.md

@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-06 · 设计 Workflow 核心合同）
+
+- 状态写入及九个调用方统一进入有界锁事务，坏 YAML 保留原字节、并发更新保留其他节点，投影或同步失败明确阻断后继。为什么：避免已有状态被覆盖及调用方吞错。
+- 草稿审查接入独立 `DESIGN_DRAFT` 合同，按实际档位核方案数量；auto 的交互节点由主会话执行，纯工程来源以原始 MUST 贯通 tech-spec/task-plan。原件模式在外部操作前核 headless 授权，并保留正常 carrier/reference 的桌面恢复。新增合同和行为回归接入 verify/CI；静态与 adapter fixture 不冒充原生全流程或 live OD 验收。
+
 ### Added（2026-10-03 · 有界事实采集模型分工）
 
 - 新增 `fact-collector`，只对授权范围内显式字段值、标识符和原文摘录经 MR-009 使用已批准的轻量模型；代码行为与条件解释、复杂探索、实现与综合继续使用主力模型，关键裁决保留独立高档审查。候选原文通过出处校验后仍由主力逐题核对并记录接受/拒收/接手，错误不以模型采用回执放行。为什么：让有限事实查找有可核验的轻量入口，同时保持用户主模型、推理强度、私有绑定及旧路由行为。
