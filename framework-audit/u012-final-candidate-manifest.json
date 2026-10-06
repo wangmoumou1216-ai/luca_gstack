@@ -1,0 +1,120 @@
+{
+  "baseline": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "branch": "codex/tri-system-evaluation",
+  "root": "/Users/luca/.codex/worktrees/f351/luca_gstack",
+  "files": [
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "sha256": "171550920c487d4a6384ade982a73b77891c91a81df86528fb2b9bb40b5e37b4"
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "sha256": "ed2b41e38882d89c70c021b4807a194a21e6f329fb87338b2fa785923918a9cd"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "sha256": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "sha256": "16f0d4aad8ca4dfabc278094db90a2e57b1b8b716a185ec7b50ac01995d586eb"
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "sha256": "ef213983722c200cc0ba968b43d832e11016fbd85d4414b5ed4fb8714fef5760"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "sha256": "2b3f24a246f9730db5f14c5655eccc610ecaec33906da3464dff2824f758caee"
+    },
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "sha256": "43d88566e323994b532e9cfbe7fafc52c25eca55fd843a02216bf26e701ae312"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "sha256": "3b8ceea6c924e077f62b38132ba70cb132d89bc6709991de9b4d152474ac7fcc"
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "sha256": "3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002"
+    },
+    {
+      "path": ".claude/skills/office/references/handoff-protocol.md",
+      "sha256": "cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "86581149518b00445a8e4abc5e3bb701b5b2f88d19a97379054cdbe59c6a1d1f"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "sha256": "80de955c256440a7fe165d665b4f5b833be015afdb1b5a3f4866136063545a97"
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "sha256": "5b7478e73ba0fcf35bc4dc7cc6554a90146229c7ff6f23779704c50768568cf5"
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "sha256": "5610e8613b0fda90042ab78b4f29bf4231605f19ad34fdde3a3d52fa2b894bdd"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "sha256": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144"
+    },
+    {
+      "path": "scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+    },
+    {
+      "path": "scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af"
+    },
+    {
+      "path": "scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc"
+    },
+    {
+      "path": "scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920"
+    },
+    {
+      "path": "scripts/tri-system-eval/driver.mjs",
+      "sha256": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a"
+    },
+    {
+      "path": "scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "8b317c01dec819b682fea59a80821d250caa4358e87a344c63b3d4bbf6048f68"
+    },
+    {
+      "path": "scripts/tri-system-eval/fixtures/p07-replay.json",
+      "sha256": "58242ba647aeac8a49d565dfbaf7fd032e491200794a680d8ec468cb4ae7115c"
+    },
+    {
+      "path": "scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "7815ed8008c9481b2acfc613c3ce7c7df08db5d5b36afd02ec865b1da9bf2d6f"
+    },
+    {
+      "path": "scripts/tri-system-eval/native-trace-integration.test.mjs",
+      "sha256": "a309fc9eb96b7bab117acbb7335f5b9f4dad94922c67970f6b74b61076585216"
+    },
+    {
+      "path": "scripts/tri-system-eval/native-trace.mjs",
+      "sha256": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce"
+    },
+    {
+      "path": "scripts/tri-system-eval/native-trace.test.mjs",
+      "sha256": "3d18363963e0383c3e077805d573606d66b5ef1c36a66719dd0bb13376884f22"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "sha256": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317"
+    }
+  ],
+  "status": "candidate_only_not_production_adoption"
+}

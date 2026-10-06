@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "issue-triage",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "tracker_material",
+          "maintainer_goal"
+        ],
+        "optional": [
+          "tracker_target",
+          "category_mapping",
+          "state_mapping",
+          "mapping_source",
+          "external_pr_scope",
+          "out_of_scope_root",
+          "existing_notes_or_brief",
+          "conditional_write_capability",
+          "caller",
+          "resume_target"
+        ]
+      }
+    },
+    "quality_gates": [
+      "explicit_maintainer_selection",
+      "actual_material_coverage",
+      "existing_category_state_mapping_confirmed",
+      "three_attention_buckets_oldest_first",
+      "external_pr_discovery_scope_confirmed",
+      "exactly_one_category_and_state",
+      "history_and_reporter_response_preserved",
+      "concept_redundancy_and_rejection_checks",
+      "claim_verified_before_grilling",
+      "durable_outcome_contract",
+      "each_effect_separately_authorized_and_read_back",
+      "actual_context_cost_handoff"
+    ],
+    "notes": "tracker_material 可为已授权离线 Issue/PR；缺 tracker 接入不安装或获得远端权。已有 category/state 映射缺失或冲突须真实确认；external_pr_scope 只筛 discovery，明确点名内部 PR 仍处理。out_of_scope_root 可选且须精确读写范围。无 conditional write capability 只交未应用预览；comment/close/send 明确批准。区别于原始需求批量筛选、代码双轴评审和 task-plan/to-tickets。"
+  }
+}

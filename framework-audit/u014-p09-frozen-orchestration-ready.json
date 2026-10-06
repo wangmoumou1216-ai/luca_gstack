@@ -1,0 +1,99 @@
+{
+  "status": "OWNED_DRIVER_READY_FOR_ROOT_COLLECTION_NOT_ACTUAL_QUALIFICATION_PASS",
+  "issued_at": "2026-10-03T07:25:53.546522+00:00",
+  "owner": "module2-orchestration",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6",
+      "bytes": 58107
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7",
+      "bytes": 80878
+    }
+  ],
+  "source_reference": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "changes": [
+    "C condition accepted; all previous B/T/S/I remain and I-only child control unchanged",
+    "native trace probe cap8 or10 comes from manifest and must exactly match frozen registration on both reads; other values and mismatches rejected",
+    "legacy non-trace cap6/7 and existing native proof/resource/release gates unchanged"
+  ],
+  "tests": {
+    "targeted_red": {
+      "tests": 3,
+      "passed": 1,
+      "failed": 2,
+      "receipt": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/u014-targeted-red-receipt.json"
+    },
+    "targeted_green": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/u014-targeted-green.log"
+    },
+    "full_driver_regression": {
+      "exit_code": 0,
+      "tests": 74,
+      "passed": 73,
+      "failed": 0,
+      "skipped": 1,
+      "skip_reason": "existing W34 real-observer synthetic bundle absent from frozen candidate commit; no substitute invented",
+      "elapsed_ms": 24586.562959,
+      "log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/driver-regression.log",
+      "inputs": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/driver-regression-mirror-inputs.json",
+      "transport": "fixture fake server; not a model or native permission qualification"
+    },
+    "git_diff_check_exit_code": 0
+  },
+  "model_runs_started": 0,
+  "file_freeze": "These two source files are frozen at the hashes above. Further modification requires a concrete incoming finding and updated collection receipt. Reports may continue.",
+  "launch_warning": {
+    "parent_env_only": "NOT verified sufficient. Exact existing codex sandbox dropped PYTHONEXECUTABLE; canonical-bin python3 lookup succeeded but nested loader still EPERM. See progress and python-parent-env-presence.json. This does not prove app-server behavior either way.",
+    "verified_native_command_prefix": [
+      "/usr/bin/env",
+      "PYTHONEXECUTABLE=/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "-B",
+      "case/input/probe.py"
+    ],
+    "evidence": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python-alias-canonical-env.json",
+    "original_profile_preserved": true,
+    "script_preserved": true,
+    "guidance": "Use verified command-scoped prefix in P09 argv. Parent PATH prefix may aid python3 lookup but does not prove env survival. Do not weaken profile or add alias read root."
+  },
+  "root_responsibility": "root freezes matching driver/conditions/case/native-trace/source/registration identities, owns up to2 actual qualification launches, proof adoption and comparison allocation.",
+  "common_B_C_python3_entry": {
+    "status": "LOCAL_SHELL_AND_LOADER_PASS_APPSERVER_ADOPTION_NOT_YET_PROVEN",
+    "driver_change": false,
+    "config_argv_delta": [
+      "-c",
+      "shell_environment_policy.set.PYTHONEXECUTABLE=\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14\""
+    ],
+    "parent_environment": {
+      "PATH_prepend": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin",
+      "PYTHONEXECUTABLE_parent_only": "insufficient in tested sandbox; do not rely on it"
+    },
+    "native_command": "python3 -B ... unchanged through /bin/sh; same permission profile and original loader",
+    "evidence": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python3-command-policy-set.json",
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python3-shell-policy-set.json"
+    ],
+    "passed": true,
+    "loader_stdout_sha256": "66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4",
+    "carrier": "Root may supply these public Codex CLI config argv entries with an isolated task-owned executable wrapper to existing codexCommand. No driver field needed. Do not write global config or candidate framework files. Freeze carrier bytes/config and qualify actual app-server commands before comparison.",
+    "fairness": "Identical task-local canonical Python path and one exact env policy.set apply to all B/T/S/I/C; no alias or broad read grants. Root adopts only with same frozen entry and scope."
+  },
+  "purpose_report": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-orchestration-evidence-limits.md",
+    "sha256": "988e343b8f1bc0e1a461e296de703839036ba0ca2f4e34876114a8636fda3e9c"
+  },
+  "production_docs_unchanged": {
+    ".claude/agents/orchestrator.md": "171550920c487d4a6384ade982a73b77891c91a81df86528fb2b9bb40b5e37b4",
+    ".claude/agents/work-agent-template.md": "ed2b41e38882d89c70c021b4807a194a21e6f329fb87338b2fa785923918a9cd",
+    ".claude/skills/office/auto/SKILL.md": "3b8ceea6c924e077f62b38132ba70cb132d89bc6709991de9b4d152474ac7fcc"
+  },
+  "delivery_status": "DONE_WITH_CONCERNS: owned local repair delivered; actual model qualification/adoption unresolved",
+  "updated_at": "2026-10-03T07:33:15.947366+00:00"
+}

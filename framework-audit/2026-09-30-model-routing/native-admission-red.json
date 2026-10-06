@@ -1,0 +1,8 @@
+{
+  "fixture": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-native-admission-red-yl6n9shw/release",
+  "exit": 1,
+  "assertion": "locked admission rejects a stale quality-gate snapshot after a critical native dispatch",
+  "actual": "allow",
+  "expected": "deny",
+  "stderr": "node:internal/modules/run_main:123\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: locked admission rejects a stale quality-gate snapshot after a critical native dispatch\n\n'allow' !== 'deny'\n\n    at equal (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-native-admission-red-yl6n9shw/release/scripts/test-codex-model-route-hook.mjs:76:10)\n    at file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-native-admission-red-yl6n9shw/release/scripts/test-codex-model-route-hook.mjs:439:5\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 'allow',\n  expected: 'deny',\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v22.23.1\n"
+}

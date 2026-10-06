@@ -1,0 +1,1025 @@
+{
+  "baseline": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01",
+  "worktree": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+  "owned": [
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "before_sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c",
+      "after_sha256": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a",
+      "before_bytes": 92124,
+      "after_bytes": 92398
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "before_sha256": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082",
+      "after_sha256": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144",
+      "before_bytes": 114297,
+      "after_bytes": 117772
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "before_sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f",
+      "after_sha256": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317",
+      "before_bytes": 5956,
+      "after_bytes": 5976
+    }
+  ],
+  "dependency_old_blobs": [
+    {
+      "path": ".agents/skills/auto",
+      "sha256": "5137afb582b8facbe30e178c6ebf9f35eecad67defb9cdde7377f8b9fa2bb553",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/brainstorm",
+      "sha256": "be2e14e3cca296057c8021999ecd57ca99cded9ff8928df6ca69346552ebb5c8",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/careful",
+      "sha256": "86fcb4fb1bb81c4333819b5f86d8425d817ec893f2af03f4ab8de1aed0a1c8fb",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/challenge",
+      "sha256": "bcdfda63e92d2cb62d8c870b884b475b7c4ad6a2cb32f76397432d23e5589b89",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/code-hygiene",
+      "sha256": "b1dd697d291a9b7d09e1b1d70f8805bee93cf433b68e2d7462c31ac5ec71c3b2",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/code-recon",
+      "sha256": "916896a83c13b953ae042c6dacae7bc8dff82996cc0db12b28cdba8b3dc8870b",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/code-review",
+      "sha256": "d3b5d696c10538b21e952a9e779a818a582be316a445e838c6ca216725503673",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/codebase-design",
+      "sha256": "07a24a8df8766369f821cdd7ecba32ff55c9991569d2c7b47ab022d96c872fb4",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/compare",
+      "sha256": "04bf10a6e99d50adb91e24e492ab75a2a6d1311636673a55d9b9178a5d7377fc",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/deepresearch",
+      "sha256": "48692265f95c77b3de1f2f8d8d3ef3a68b90c9836f671ae637fa22c58664ab3c",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/design-brief",
+      "sha256": "545ee81cf09c20209a94820780159021ce1c3dba768a780d1aac37f504af343e",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/diagnosing-bugs",
+      "sha256": "bfcbe45889152d6ad3980d1d2a5d627d1b187fa81a3a5fba062bbf6dc71f9492",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/domain-modeling",
+      "sha256": "8b6f4599f91fb358f419559a525d50a2863b7b4c9fdcb5cd97ea3b135f33b6e1",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/evals",
+      "sha256": "b34fa97b419d0fd00ed71dcca0434c870d7a627c8f4cea82ad8b060dc5db013b",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/figma-demo",
+      "sha256": "1299b35323ec55bb9ca64acbaeb087d120eb217b55dd8f5413d7c20170ccef00",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/grilling",
+      "sha256": "39760d11ffbf1955c36f95000bd4faf40e2630e1d6b93c5a4aa5d9370a9741ad",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/handoff",
+      "sha256": "4c07fe43200e805e28836771a0a07a7baedb35e59ce13525701140f96f3c8382",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/html-prototype",
+      "sha256": "717b9f5bf007a3d5eb415164d00110afab155ab5cacc4cb1d71e8c7419870a1e",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/idea",
+      "sha256": "686f579c87924ccf3e8fb0afb30102b6cc1984e13996f1dee7cbadfa6661bafa",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/implement",
+      "sha256": "f53cad83426fae145bd634a42ebcd01944cd61d692f9865b47ce9e3a8b1eea68",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/insight-synthesis",
+      "sha256": "cf1e53cf23334dde5b8f62f8fa39e3e5825f36de17d2569c94c081e74d339e62",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/issue-triage",
+      "sha256": "3846d4767be104d26e596b56fa70c1cfff38583ad9e86cec712e2b7022d1c3f0",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/loop-me",
+      "sha256": "11ba1e86051b6b29b96a34c75cea37f6132b204cf98e53349f99b3784b616931",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/magicpath/SKILL.md",
+      "sha256": "c3f050ce2045b23c573bf78af2dcff4962d688707d7051717e1045187cf37271",
+      "mode": "100644"
+    },
+    {
+      "path": ".agents/skills/magicpath/references/cli-reference.md",
+      "sha256": "5c65b5a985bf4b2211060ae22ef7a000aaecdfb9de7fb8f7373d1a73206fc7ae",
+      "mode": "100644"
+    },
+    {
+      "path": ".agents/skills/motion-polish",
+      "sha256": "88229e3837056be011aed34bb1f2fe7a7ead72890b24a4043f2f5df435fc37eb",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/muse-req-triage",
+      "sha256": "89bc2d2f4a6097ae8a88bb45b5ea22254b08072bc1f464aa2e3fe847f5bc6852",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/muse-x-digest",
+      "sha256": "75d3e67f3225a9acedb9efec3ec5bc17198c4e8abb61e806271162cfc26f1fd2",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/office",
+      "sha256": "aec3a89646434fa4aff9b3e6b70ace0096239623742ca07067c88026d01206d8",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/open-design",
+      "sha256": "a9cc6ed127a4c179dfe6356a52aa946ab33e3e93585f166a9c994658c16f7f63",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/quick-research",
+      "sha256": "5577b29a3384b0e657c5ad4c87950f29fc21ca4100d50630a662e84048dda4d0",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/redteam",
+      "sha256": "6dd3139d45ccc009efb0cd73c69e6e7d9396a9d14272db84ca4794c4d7c93da5",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/references",
+      "sha256": "834fbc8fc1d0750528b0d9152b6d5438dc05b1ae42c5676a11bde01efbd62193",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/research-kit",
+      "sha256": "eede4a039ad8d6992b33bb60f5f0b8e2f91306dea2e01b01e8ac57526dfdb183",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/resolving-merge-conflicts",
+      "sha256": "d7b732d02cdba08a221f38e4025e98215796eea4e099815ee4d130af7d6a3e2c",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/retro",
+      "sha256": "ba9bbae4e84c69662b6c27f9778e2a5b9d021db1195f4494c8d32fbe19fef63e",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/setup-wizard",
+      "sha256": "7df37435460cb064ea59519efa64504847c5568de382d1be7a069f87140c189d",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/task-plan",
+      "sha256": "580d7e83cfbc127a3c5ae785680bb7bbeebcc6bc0e022d996bfad29ca3a71e5d",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/tech-spec",
+      "sha256": "d2a4f80ed2ec8ac9c495e9ecd84c9c37c10a36cbca6509f0eb5422680e77af5c",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/to-spec",
+      "sha256": "8aec49e2c315eef8b3e5d0c6344bf306456f34897eedd937614845b0c905ce7d",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/to-tickets",
+      "sha256": "eefc3a9946a2f25359b72a2c23573195593e5adc6545cc9946f33feffeb23076",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/ux-audit",
+      "sha256": "d25a7ae40e9452f4e967a3c715f7d2e560bc0126f51d51c5e1857932ce33a00b",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/ux-brainstorm",
+      "sha256": "02188071c901735ff968848e4b12d98308c286866910dc2aaf90b4edeea94be7",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/ux-research",
+      "sha256": "88e1e97c2db8e56c7717c84b6ccca50359b42a96ac0d830301638bc2a85dc195",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/ux-writing",
+      "sha256": "7dc8ad2a1cc831c120df04f93394b250f2f9eb39758936215b682542c103a2c4",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/wait-what",
+      "sha256": "fb7d57709066b7ae353d5180ce673afb4ccba4d5af1267ef1861299ae6741de1",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/wayfinder",
+      "sha256": "45c6f8db7bb074e04ffe2cd116ef125038613ef2ba9040fa53185b0cbfe3cf7a",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/writing-for-agents",
+      "sha256": "2a5f5043f3302562ee3ca933b9fd16a65a6873d497d381ea67cbfed9de9814bd",
+      "mode": "120000"
+    },
+    {
+      "path": ".agents/skills/writing-workshop",
+      "sha256": "eb564b0974bf774956941e15bfab803e7f3006ee8b7f4e81ffee28120666ffb1",
+      "mode": "120000"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "sha256": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "sha256": "00ad93605d8cdaac020f72308556ae972b8f1c352139ad4518b6c762b4319813",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/agents/preflight-agent.md",
+      "sha256": "4ae97467954b6958c0a230fe97438b3ff4eaeb841ba274d7b50bf777112bdb85",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/agents/quality-gate.md",
+      "sha256": "38af1240ff2bfefd4f0f7b49a86b42a4e1e4db4a73a0eef783fed5c856af3ecb",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "sha256": "2d4fb9acbdaff28f82c207b4f085fb8cc6b3c5f695d1baa0f7a781f57ca67bf2",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/codex-child-project.mjs",
+      "sha256": "02139c51c4815e6766ff58d874f75c10da61b82b4776f7042f8a721d18f9f492",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/event-attestation.mjs",
+      "sha256": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/git-env.mjs",
+      "sha256": "63f19a2f6e2757b6efb5ce17c2c0830c807eb5d629de99e87ff52fe55e6781a0",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/harness.mjs",
+      "sha256": "2ac959d4a04af980863ddea4b2c4263ff52ec14fb91af7fd694530a34a25591a",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/memroot.mjs",
+      "sha256": "84efa17c488da1b596e4b58a37e096ddfe5a4cf62d06d713c6802b573bd7186f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/project-event-closure.mjs",
+      "sha256": "82b5aa13ed014b30d5c264a45d2a7a5430ca7352079308377c93dc77f0f54e66",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/project-read-grants.mjs",
+      "sha256": "14a865804f9378adbe8892ddff5d314359271a1491bc30b1a4146f90982d60dd",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/project-selection.mjs",
+      "sha256": "1ccb5f15e3c39dd90a843f9cc1297332217945c8960412ac435133d60de0b11f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/lib/project-substrate.mjs",
+      "sha256": "d06015d39668b8e12f1749dcd8d85f462fc404f3b0de90edf07d7a3bd80bd533",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/post-edit.mjs",
+      "sha256": "0a91e1c04747e71cd7973edcd60d3624384043bfa1a7e97a2318b261cf199522",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/project-scope-guard.mjs",
+      "sha256": "6ae6fe5a03995721dc729d95f4cd9d8709c6cf9d2715a96a03d2773d75e66855",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/session-end.mjs",
+      "sha256": "af74e264eed2f5c789cd850ba56d07e6780f34f0bc2255e332efc0029167b0ef",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/session-restore.mjs",
+      "sha256": "10ef4912c835e75c8e5f0b239bf2dd4e66788ceb34b830d13c365e3861997a04",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/hooks/session-sync.mjs",
+      "sha256": "2a782c41d0edce6c476a2989d431a1c4ed7aa5e5468580ab2df44ed6022e72ac",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/settings.json",
+      "sha256": "3bbdb60d773a99c2125213b69abe8635f9f882b0b3d5fff716f6f6d3ec3ba4d3",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/correction-attribution.md",
+      "sha256": "afdf6a173d9c817a304b24afd7247df4c62c01b2937d4231079a9cd3b7e3618f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/BENCHMARK-RUNBOOK.md",
+      "sha256": "05826d41e56f5af0d069620d6d5cff49d9e59425a60fc2961cd7629f65226b63",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "sha256": "2f1f57260c860ae9c7bf829dc0da54f227ebb31c1aca7ea54bc514cb406d1681",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/evolution/benchmark-registry.yaml",
+      "sha256": "8a11c4c340d85cfc9311ef89ea12f809f9ea44a4e9160b57757a1e76c97a5177",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/external-skills/installed-pins.yaml",
+      "sha256": "f595626449ef2067d4f155eda75e2dab9179cc567f80b3644c2f83e58182d919",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/extraction-bar.md",
+      "sha256": "7e928899fabbf28b5a0f8afb21222457be3a4760c9ab349b636aaa94e70bcd66",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "sha256": "4c4435a3cffb1efc62cb8c4e135219db53e3a33ceb18ffc10b8e86271a587064",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/optional-workflow-graph.yaml",
+      "sha256": "8a266250a08ac6f939162430a5c131baf534e72801703d616dfa45e071fbf6f4",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/routing-chain-check.md",
+      "sha256": "eb346cadedb096457d3c253ff555c270bc30f07b2c861852927dee1c377ccfc2",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/skill-authoring.md",
+      "sha256": "6a0460d328b9067d2ab0ffcbcd1080ee3a118b31cfd70c2c149b64c510a604fb",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skill-os/skill-routing-map.yaml",
+      "sha256": "36bfea4aeeb107af18a60bb61b974956e8df849f67b46e2b244892fd6df95e3a",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "sha256": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/brainstorm/SKILL.md",
+      "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/careful/SKILL.md",
+      "sha256": "4eff2b84a80c3201569ba860e4b6387d21080073c325a841b2ed61d88e4b3e36",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/challenge/SKILL.md",
+      "sha256": "f2ef29f2700a801db8574af90f1fceecb9d14f24d6e31499b145b9db522ba926",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-hygiene/SKILL.md",
+      "sha256": "0c322537c16312b1c2dda5677975c173d5794afefe907e2146f408569ed02a6d",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-recon/SKILL.md",
+      "sha256": "ded8c1586d47487731eae38a44b254611d9cdd6d0af2370de51f8e2caca75407",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/code-review/SKILL.md",
+      "sha256": "486c4c0871cd6d880a544d0784f19c349490cc83785e2d95cbf57dee341de818",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/codebase-design/SKILL.md",
+      "sha256": "b44967f843fd9bbfb71385a21edbb9ac5cc681929f68f9409cb7d02ebed2ce57",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/compare/SKILL.md",
+      "sha256": "d19ee67e80b5f5201b410120f88ed7f0f2dac225bf8adb810a0c6d293ccc15ef",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/deepresearch/SKILL.md",
+      "sha256": "33852645acfc1d70c4af4a5df32648f8f6b5a4270ead37ee6e54ca57a6bbf006",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "sha256": "6817d572af94bbc2939ea22971523ee2774257fe56e3bd5416444b5330606a49",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/diagnosing-bugs/SKILL.md",
+      "sha256": "c8a604156372dc1173243431c62a7a286d5ee40d77eed42fcf16d63dac46d57a",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/domain-modeling/SKILL.md",
+      "sha256": "53ea19b75fa1b1a61738dcdef2a1e803493751b9e308951567f9535986d14b77",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/evals/SKILL.md",
+      "sha256": "9e98b60d2a9357535bdae7938335df72d6d6364faada34bdd2a28f36f69e7d0e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/figma-demo/SKILL.md",
+      "sha256": "7d70d49688ce7888769540cbfeb6f6c57e0883bce561c827e74722704bba161b",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/grilling/SKILL.md",
+      "sha256": "7acd138ad8667f72a43f8cb5a5eff733961a0d7fd066cda7925470552e3fcdc4",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "sha256": "4141ff03f96a0140631f41852d06f4a955e96f7272a1452421a65a1aa99cfa66",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/html-prototype/SKILL.md",
+      "sha256": "c9b5bd9f4c4812e8a0d7a7fc62319261833458dfbd69372058c57bf062ad3735",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/idea/SKILL.md",
+      "sha256": "02923b17e30902d004d1c3fe0eabef472ecfb75fcc4d86f1b3384925c39aab94",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/implement/SKILL.md",
+      "sha256": "ab8b4a326cc44f13f01c9b5a240cbe1d406b434c82c53c350bfa3a28939c4ce4",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/insight-synthesis/SKILL.md",
+      "sha256": "360eebc0010781d43b4fbcb1d47b07c57028a84cafe491fe39613fb237ac544e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/issue-triage/SKILL.md",
+      "sha256": "80582a88bb25af2fe422dc5940fae57e5a30a1b5ffb2c7db7e605b22edd4bfc1",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/loop-me/SKILL.md",
+      "sha256": "8a2b15ddd46a56ce09ef1e633326afa354f7b487b6b740eacc08123e89cd00a4",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/magicpath/SKILL.md",
+      "sha256": "91f6fcb0ab0a2a429c5de6c142dbe4c0156fe3f2bb7eef3602f3c4b4ccc9a56b",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/motion-polish/SKILL.md",
+      "sha256": "9bdc81099c376231140d66b9dc056cb1796626ead51c3a5ac55d18e92142ac59",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/muse-req-triage/SKILL.md",
+      "sha256": "934087ea5b316b4cc81b7d9685223e3d5e341f94770a92e5d48536e66fbaf57f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/muse-x-digest/SKILL.md",
+      "sha256": "647fe7ae9ff1bfc8099948d8abadaf2c17b02f35ed534f065f83824dbeca20a9",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/open-design/SKILL.md",
+      "sha256": "e6e8a67c737c009fa371916b21a52541d2fccb977d8b068769844175e6d2fc2c",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/quick-research/SKILL.md",
+      "sha256": "9bfbd3b642014a62284d18a2f72996d9f0fc4c5cbefec8800e77f0dc8716a82e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/redteam/SKILL.md",
+      "sha256": "a00fcd07aa4be9220fb27c51093092f59c732a7fc8b278d239770f80513c7f18",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/references/SKILL.md",
+      "sha256": "9245a21db1d5b5801af745480bcc3de64beef90ef9fcd718d5de5f7d16bb9469",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/SKILL.md",
+      "sha256": "fe8acf4537e35f94a925408fe44276d0beda9f9578c8b752d018eb8f8a3fccb7",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/resolving-merge-conflicts/SKILL.md",
+      "sha256": "3d86001109e3cf9ac618837108ae2791ddba876d98c0c7eefd66ff7574adfc2b",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/retro/SKILL.md",
+      "sha256": "4780d8a3d8baa3eb8d4cdb8d1c7e2b45455e72f3efc8d717458b26d6fb173191",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/setup-wizard/SKILL.md",
+      "sha256": "fae166603d4b123d1436ab42291b99b700de621256e812a8a8bda42f3730b57a",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/task-plan/SKILL.md",
+      "sha256": "38e80538d73367b87ffac747aa2d6121e4088d0ecd90341d00c1652eba689d60",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/tech-spec/SKILL.md",
+      "sha256": "c12f3f61942375551c72bea203f5c8d2d5e12573188da362fce33b7fe4050c90",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/to-spec/SKILL.md",
+      "sha256": "665fa35ab69ded74b625b3240fd2340762d45d5efd0282276aa472fec3eb9d90",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/to-tickets/SKILL.md",
+      "sha256": "46bcaf55779d7ce9b0c7cef1bb1703b0bbf7a2afced9d97f1b0de5e4fb2a073c",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/ux-audit/SKILL.md",
+      "sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/SKILL.md",
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/ux-research/SKILL.md",
+      "sha256": "44f9acc5e6e9e02a9f416185d4faa73e92f64552a5b5cdda3f7b3acb2cf711ce",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/ux-writing/SKILL.md",
+      "sha256": "612a557223d57d3ee7c515fb038aeed20af0272527127a80221d592850fbe565",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/wait-what/SKILL.md",
+      "sha256": "8afa26626e8c9b3b43dc4e35d84ad9d0df8f4c2c8e7385e08b970a0ce68edc61",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/wayfinder/SKILL.md",
+      "sha256": "1dc9128568bbcf7cf0e5d71ffd893cb9b1f104fb94406f17dcf53d2009fa8beb",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-for-agents/SKILL.md",
+      "sha256": "67523b5a7661f5687be9c619f9bcfe090990b0828c7bb558bf4dc8dace82974e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/skills/office/writing-workshop/SKILL.md",
+      "sha256": "36542b26b4fb4c459b48c2851013986782629dcee7d271fe730b63d63c60ae1e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/workflows/external-skill-scout.js",
+      "sha256": "eb0c955499264aa87d1d3249cfe80f975c13d41212b0fbf099a49d5b9d3dc7e8",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/workflows/framework-evolution-scout.js",
+      "sha256": "3f3136f735a7e1578c8cd3fba044f267563f8da0c0628bc8e096ad39f0751bf6",
+      "mode": "100644"
+    },
+    {
+      "path": ".codex/codex-hook-adapter.mjs",
+      "sha256": "0a08f28ca43b1b2a3ab8b5859b02c13052c28986df53063efc818f0f2beeb6b7",
+      "mode": "100644"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "sha256": "6ea4c6e05e3d61ced51b8cb785dcd04a9ce2acc94494a08e1be304fb42b1dfad",
+      "mode": "100644"
+    },
+    {
+      "path": ".codex/host-launch-adapter.mjs",
+      "sha256": "d51ecb774fb690664b1cdb49fe441ee5287323995a82da9587b091562bc120b8",
+      "mode": "100644"
+    },
+    {
+      "path": ".codex/host-launch-hook.mjs",
+      "sha256": "f1cf91ab00fac7e7c1b5484d31bbee9799039d09c41557117c20522a919f3109",
+      "mode": "100644"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "4566d012635c8c3417325d0824d61667d4469c07cb6980294d4c4c4719c222fa",
+      "mode": "100644"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+      "mode": "100644"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "789523a6586d34ddf5ccddc8bc479125621efd2f06737f145548b5517018284f",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/evals/routing/fixtures.jsonl",
+      "sha256": "2bc0b18c899f453a5cbc855c65c544b5c67adf7ebc676fc117809c28b84ced07",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/consolidate_memory.py",
+      "sha256": "9df101b9bbd4c95257a669d47f06cb168d6821d8e0117d6da37a845a6b1164a3",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/daily_governance.py",
+      "sha256": "e9c93b16a48a591526c68a827f2c5b8665655e437677b46c3aafaa368d5c73fb",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/eval_routing.py",
+      "sha256": "f987baf3444ca22c09ef2c183a4a60fa834d1c4f8c78bb4b47e93f022e905e0d",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/record_eval.py",
+      "sha256": "9a2b360ab69271d54d3eb99f12f0b553f1efe2fff17f2a99aa237445413dd58b",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/review_candidates.py",
+      "sha256": "71e93b4dc9d69834d9b17938f2d65116e60eb8fcbb20ed226f7178e8701dd495",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/scripts/search_memory.py",
+      "sha256": "5b53456b3acb20bf0c90caca208f85bd1a5ab02c8f3c11c15fa28c58f4dd5a7e",
+      "mode": "100644"
+    },
+    {
+      "path": "memory/tests/test_memory_system.py",
+      "sha256": "a5d725817dd4f94706a27a5ecfb6112b8748925830224f346222079d1ea429b6",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/check-agent-contracts.mjs",
+      "sha256": "337121095459c4d769d0c29b28c824a5ed09d6178841b10d2dfed5cc68470fad",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/check-capability-parity.mjs",
+      "sha256": "cea62ebfbd6975cf86d67c6756c51121421bf20044edbbee6cde32246aa0757c",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/check-evolution-adjudication.mjs",
+      "sha256": "7d375137282e2307c104828670f0d13f9e8d029a0398323b2957583c0c33ace6",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/evolution-bookkeep.mjs",
+      "sha256": "75db7911cbe0ec2ae755fa75b2998698b0d9b29b2c2a2e5e70645e4608efe1b1",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/lib/semantic-projection.mjs",
+      "sha256": "0afdbdb3eb389144d542aa159bd2c42ca0f6695851e1d9d9a375e88f72f33898",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/luca-open.sh",
+      "sha256": "db6677cd23e52aae1475cb0e918b9b747038a464f0f1d2c54333c54c8697a6f1",
+      "mode": "100755"
+    },
+    {
+      "path": "scripts/luca-sidebar.sh",
+      "sha256": "9e092ca1ba5660b62e7829c9cd551cba175664b50cb0b295673515a351ec7b78",
+      "mode": "100755"
+    },
+    {
+      "path": "scripts/model-route-host.mjs",
+      "sha256": "77b7f952bf39781d57a155e06fa69de8b6427d118c681f4cf1f80a220958bedc",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-hooks.mjs",
+      "sha256": "3ccd0b3f0cca66e91f572e43a46533e764bcc4260633b419472da7e879c14981",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "sha256": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test-semantic-parity.mjs",
+      "sha256": "3ffd996ad62165754dfb5180996431cdd2f3d2c8c88c9e4579905f4657f093ed",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "sha256": "4d83236d96c9df8bd8e10476174e75bfa07e046f43dfa691d98096c4c85635af",
+      "mode": "100755"
+    },
+    {
+      "path": ".claude/commands/auto.md",
+      "sha256": "669bf4e8d719070795bc92e8fcf754db256caa68fc31ac8a01e82903ce6dbef2",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/brainstorm.md",
+      "sha256": "f6ee1aa8422e6ef1982918e741a54c3ed254b516462dd84a9e3fd87cfd6c3a03",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/code-hygiene.md",
+      "sha256": "9e1d859dccbf69b349554371a77688ec77d97efe86d3ee4bc73106e737d60551",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/code-recon.md",
+      "sha256": "145beaeef19f9e45e7702acf1c8e1b46e265b194e249e4da44215f1b72fbb5bf",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/code-review.md",
+      "sha256": "60cf011864ec12ca25f490cb62d8f112215d8b037d66382b6653ac4de7be325d",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/codebase-design.md",
+      "sha256": "71d26c3886b774847adb011324f93ab873d40beda56299780a426ab18d508a91",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/deepresearch.md",
+      "sha256": "02a7b897bf7cb4b762c5f91b74fa3120b91ae2593f6b45226481bc8ea7728b78",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/design-brief.md",
+      "sha256": "71f63ff2d89beb613152e90ee1725f81d65ae5129a0b3061146e50c8f382b077",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/diagnosing-bugs.md",
+      "sha256": "c9a7979d3f09162fd3e40d7d3ad7810855c02ac83cb288c79b131f302458aabd",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/domain-modeling.md",
+      "sha256": "f88a4009f3750b94600d40ca82c95d5f5dec611baee927a02a4d8f376c1a0c56",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/grilling.md",
+      "sha256": "828d99e06bd0f4a77b6aec1471a388683ca20dcf575718cde98da0083085aa2a",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/handoff.md",
+      "sha256": "936c873f9aca11b91d9ae60199ed95521de34b6afd1c9d4654ffc9b21e702907",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/html-prototype.md",
+      "sha256": "838e9731bae5eeb56acd191545e8ef47fa3f48158698159098667d1a9d658d07",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/idea.md",
+      "sha256": "b4aac089c67544f0d7a285bcb68f782d73b27f08a121ffae696f130b1cc83604",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/implement.md",
+      "sha256": "ecabd4344eaefc6fa2ec4e645e1a18e315a8706374691b4fb110952b89d58f6f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/insight-synthesis.md",
+      "sha256": "fbd73ca60db4ad275b81be2efd03ed8f0dd8da3be336f42adafc9e9f51629228",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/issue-triage.md",
+      "sha256": "468ff74a6e7c88c865490357e0dd505e0eb7ce569634b9ba2d324afc3c40f006",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/loop-me.md",
+      "sha256": "1433fbb9378ce8871106a8737c903b5aba63a8c9d2fb281dcd3fa7a825b902b6",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/motion-polish.md",
+      "sha256": "c147831cba2a795935a3648c0bcdc6ca9a1992de893c37116c03e845366fc661",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/muse-req-triage.md",
+      "sha256": "e5a6ef1d24901e6b0029537bcc361d74221ee0e71ddc4d744ee53e7fb34fc990",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/office.md",
+      "sha256": "87524b9fd6bcadc4a3fa38e7baf19f0ad9d4224e0f1fdb8526c0798d499ea126",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/open-design.md",
+      "sha256": "3f0e9be696cb44e2413e90ad27987c682b62b3ac05cfddbbad33e5a8b7030eca",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/quick-research.md",
+      "sha256": "e3c5881ee2c603d753eed05a0d457b251d6143135239f1afc58b6f967d10cda4",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/research-kit.md",
+      "sha256": "1d67e0eec2d04bd3ccb988c6ce94c9020d668dd225b9c45ee41e3fda00864d40",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/resolving-merge-conflicts.md",
+      "sha256": "4fc2d31a5de8bf7836122e9061977629ba0fa7f14a196b65ab054751df2313cd",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/setup-wizard.md",
+      "sha256": "f47e68a62f8892dba8ac5ab1987ab9ea62fc498bc91052936be51842fc26ed85",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/status.md",
+      "sha256": "999371e56c820021f2f061959c1d596d8f5bd785674e72cb2e5ed3995f917f46",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/task-plan.md",
+      "sha256": "25af493a1121d0300396733433c25ecd1a27b7abe85cae5246ee447cd800f32f",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/tech-spec.md",
+      "sha256": "f0ff484d0cb0f8ad050165ee9e951cabb8e51345377e6b022d5ce39130a272ab",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/to-spec.md",
+      "sha256": "e06444dde177a341065318dcf77b79135116ce00504c8abcdd33c05afd424cb4",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/to-tickets.md",
+      "sha256": "733250fe5d26b3f07e0c6a2b12d9699c83812630704f1b3602980b43d186134d",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/ux-audit.md",
+      "sha256": "58dd08b636c83c607cb84b349bdb3d287d91063dab37dd9bbc3ab195ca6f7787",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/ux-brainstorm.md",
+      "sha256": "5a27e23a6d730c081ede04f2192b3e6d6c10fd5184e0e0ef3ae1b2981cde77ab",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/ux-research.md",
+      "sha256": "0a6247881f97cc8e93b67352d73159c2990dc67f8de5c52d68552c45dbefc63e",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/ux-writing.md",
+      "sha256": "e629215ed34c5e0f412d75c8daa3ca90edb93330db4c5e6b4bcfe9da3b5a8ff7",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/wait-what.md",
+      "sha256": "34c5dce4e6c385ac2bdbae4c7cd7232d6a7b6f67c8248e092f2aa2007d7036ae",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/wayfinder.md",
+      "sha256": "61838e71306c57ad70b6fc13774988bedbf7a575fc63aa81dcf6e47e121a5777",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/writing-for-agents.md",
+      "sha256": "0d5efd3b37efcf9e59c2c8afe2ba704e7b07e705658a511128a401f3ed47e081",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/commands/writing-workshop.md",
+      "sha256": "35f8ba8977b34d9e059d311c3b528feb3873100e8822ce45f249b17d8dad9bdf",
+      "mode": "100644"
+    },
+    {
+      "path": ".claude/observability/rules.yaml",
+      "sha256": "98ff8956517f1bb9f1d6f093674ba68276f1c5ba9dd26e6310cb18b25359fbc2",
+      "mode": "100644"
+    }
+  ]
+}

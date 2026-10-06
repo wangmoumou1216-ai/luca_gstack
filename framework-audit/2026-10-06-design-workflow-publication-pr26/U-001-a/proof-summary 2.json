@@ -1,0 +1,31 @@
+{
+  "work_root": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "production_writer_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+  "guard_sha256": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3",
+  "baseline_exit": 1,
+  "green_exit": 0,
+  "final_exit": 0,
+  "final_passed": 74,
+  "final_total": 74,
+  "mutations": [
+    {
+      "mutation": "mutation-reject",
+      "original_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "mutation_sha256": "d100c73a7628bafe4faec3b29b046d11786330ac05ee51aa0b6a4d5cdf010466",
+      "expected_partition": "reject-corrupt",
+      "red_exit": 1,
+      "restored_exit": 0,
+      "temporary_removed": true
+    },
+    {
+      "mutation": "mutation-lock",
+      "original_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "mutation_sha256": "5623cee6e8faf5ac63d0e940515e150d0b41aad67824c2d2c29ee378ba9dfb10",
+      "expected_partition": "concurrency",
+      "red_exit": 1,
+      "restored_exit": 0,
+      "temporary_removed": true
+    }
+  ],
+  "production_source_unchanged_during_mutations": true
+}

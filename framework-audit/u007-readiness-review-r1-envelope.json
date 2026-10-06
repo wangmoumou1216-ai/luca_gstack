@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u007-readiness-20261003-r1",
+  "subject": {
+    "skill": "U007 readiness review",
+    "topic": "J05 七文件实现与实际运行证据独立复核",
+    "scene": "unknown",
+    "input_summary": "完整读取冻结任务卡、执行计划v4、共同合同、补充1至5、七份代码/测试及root-integration-r3；核对全部冻结身份，抽核P02/P03/P04/P05原始运行证据、技能与hook元数据，定向读取公开D01/D05/D06协议及两份本机命令schema。未读隐藏/private/archive，未修复、测试、联网、派Agent或运行探针。",
+    "output_paths": [],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 1,
+    "total": 6,
+    "findings": [
+      "J1 UNKNOWN — conditions.mjs:237–294、333–367 对选中原文件校验并保留字节，S仅修改三个入口义务；209–225以祖先office目录去重，子树布局保留。u007-native-skill-dedup-check.json两个records实际各有48个repo技能、48个不同名称、无重复、errors=[]；本次逐一核对这96份SKILL.md副本与对应当前源字节一致。此验证不等于所有跨目录依赖、运行包和技能采用均已证明。T/I提示保留原生推理、自检、授权协作和领域owner；共享事实由同一runtime投放。当前证据没有B/S实际模型启动、所有必要owner实际执行或T/I完整原生技能可见性证明，因此不能认定合格B已就绪。",
+      "J1 范围 — u007-hook-layer-root-cause.json原始选择性元数据确有生产R的11个project hooks enabled=false、5个user hooks enabled=true；隔离目录project配置层被禁用。这仅支持特定入口/时刻，不支持全宿主、历史状态或hook执行证明。conditions.mjs:392–406诚实列出workflow bodies、private model bindings、全局/项目状态等缺失。可测候选材料构建、目录发现和静态差异；不得据此替换项目隔离、模型路由、真实workflow、长期记忆、在途恢复或跨宿主控制。",
+      "J2 FAIL — driver.mjs:87–89 在native_command_permissions完全缺省时返回null；182–184仅在该对象存在时要求正式effective_probe；532/561转为普通readOnly，635–636也不因对象缺失判INVALID。因此一个development/hidden READY记录可以省略整个对象，启动缺少已接受读取边界的原生线程；只要未观测到command/image/MCP事件，顶层还可COMPLETED。driver.test.mjs:273–284、385–394明确覆盖了这种无权限对象的离线成功路径。readOnly不证明答案/未来材料/其他run不可读。最小闭合是正式入口必须显式绑定有效边界并在启动前拒绝整段缺失，随后独立验证；本次不实施。",
+      "J2 证据能力边界 — P02结果仅为codex sandbox命令级文件/子进程拒绝，含获准scratch写，不是当前全只读app-server策略证明。P03/P04的result.json均记录thread/start因PATH符号链接可执行文件被拒绝而失败，0 turn。P05 rpc.jsonl:2/4/6/7证实真实0.160.0 app-server、指定profile、无extends、readOnly/networkAccess=false、gpt-6-astra/high回显；这证明配置身份和实际线程启动，不证明有效命令策略。P05 native_tools仅有五次dynamicToolCall、0 commandExecution；不能将未发生的越界尝试当拒绝成功。",
+      "J2 proof消费者限制 — driver.mjs:113–143核结构、driver/version/profile和证据文件hash，但不解释checks或J证据的内容。driver.test.mjs:243–254用同一份仅声明fake_transport_only/no_live_authority的文件作为所有检查和J证据，464–485仍被结构校验接受。这是在信任主协调签发及独立J实质审阅之下的本地声明绑定，不是行为鉴真；符合补充4不建签名服务的约束，但任何真实放行必须由J逐项核原始命令/退出/对象及证据范围，不能将validator通过称实测成立。",
+      "J3 FAIL — case-protocol.mjs:425–429遇EACCES/EPERM/EIO/ENOSPC等I/O错误将invalidRun置true；finalize:462返回status=INVALID_RUN。driver.mjs:589–590无条件把成功返回的finalize结果标COMPLETED，finally:635–636只看fatal/native边界，未传播engine.invalid_run/status。因而I/O故障被工具层捕获后，模型正常结束时，基础设施INVALID可能只留在嵌套engine，顶层/CLI却成功。必须区分运行有效性与候选语义失败，不能依赖下游恰好读到嵌套字段。本发现为静态确定路径，未运行反例。",
+      "J3 正向及归因限制 — 公开D01/D05/D06冻结mandatory_checkpoints与实现顺序一致；D05失败exit2、令牌限次retry及D06保存后fresh均有相应实现和真实模块fake-transport测试。case-protocol.mjs:187–227保留原事件并将语义撤销交独立判断；298–335核顺序/实际checkpoint摘要/有限retry；359–449与driver:283–301/570–582保留父子身份及旧家族退出。读回执明确semantic_consumption/transport_delivery UNKNOWN。共享强制ack、依赖写入屏障、不可变checkpoint及恢复原事件本身已提供控制帮助，因此只能比较共同设施以上的增量；不能把设施阻止的错误算候选合规，也不能把它们算I独有价值。原生子Agent端到端、fresh/compact实际行为仍未证，不能用合成测试补齐。",
+      "J4 FAIL — 计量算术本身通过抽核：P05 rpc.jsonl:92/110/120累计total为19236、39043、59541；首次input19100，最终input59306/output235/cache38528，cache未再次加总。五次工具与result计数一致。121/123/125有interrupt请求、回应和真实interrupted终态；result记SIGTERM成功、SIGKILL ESRCH、transport exit0、unfinished_turns=[]，launch进程exit1保留INVALID。不能把59541说成初始提示量，不能把transport exit0说成试次通过。",
+      "J4 方法影响 — P05只走到work_ready、无命令、无产物，40k上限在第三次累计用量报告触发；共享读材料/推进协议已消耗三轮请求。该单次观察足以否定当前试件已具简单任务正式比较就绪性，但不足以证明所有简单任务必超限、全部开销来自MCP或某框架无价值。P05还有4条willRetry重连错误，未观测传输重试成本保持未知。不得重分类为heavy、扣除共同开销或凭一次结果提高上限；也不能比较只完成设施握手的样本来宣称净价值。",
+      "J4 UNKNOWN — 原生父子usage是否重叠、完整子线程覆盖、真实子进程抗TERM清理仅有离线模拟而非P05实测；P05没创建子Agent。服务端实际模型采用、隐藏重试成本及金额UNKNOWN，按用户豁免不以缺采用回执单独阻断。P05条件实现hash为33b1a3…，本次冻结conditions为211c7d…；root记录其差异为B/S技能去重，P05是T，但该探针不能笼统称当前七文件整体验证。",
+      "J5 PASS — 依据任务卡及root-integration-r3，准备20/20、当前review5/32、行为5/144、能力探针5/6、正式development/hidden均0。余额为准备0、review27、行为139、探针1；8个迁移/关键控制/终版复验预留不能随意释放。当前失败与未测均保留，不追加worker、不转嫁为无限root建设，不因余额降低标准。必要建设无法在原池闭合时，执行计划v4 U007、§6.2与补充5要求停止依赖其证据的替换。",
+      "J6 FAIL — 正式B/T/S/I开发比较和隐藏比较均不放行；不是生产代码发布验收，也不支持改造净收益。唯一优先下一步是由主协调用已有证据形成有据收口：记录两项实现阻断、实际能力已证/未知、一次性成本及保护用途去向，保留现状与旧路径，停止需这些证据支持的替换建议。该收口可使用剩余review/建议池，迁移N/A须以维持现状为依据；不得声称整项比较或框架改造已完成。准备池外的新建设需要明确处理预算增量，不能由本票隐含授权。",
+      "J6 MCP配置选择 — P05 rpc.jsonl:9–26显示node_repl/context7/pencil/cua_repl/shadcn实际启动，driver:496仅禁apps、534禁web_search并继承环境。对所有条件一致排除案例无权使用的外部MCP，在方法上可以作为有界候选配置；必须保留授权本地计算/文件/协作、全局规则与技能。但当前没有该精确进程配置的生效回执，也没有19,100输入中MCP占比或移除后仍能完成简单任务的证据，因此本次判UNKNOWN，不以此作为放行方案或P06必跑理由，不关闭所有原生工具。",
+      "J6 新schema补充 — 已完整读本机v2/CommandExecParams.json：command/exec是无thread/turn的server sandbox argv入口，支持显式permissionProfile且不能与sandboxPolicy并用；它可定向核该入口的同profile文件/子进程拒绝，避免再耗模型握手，但不能证明模型commandExecution选择/接线、thread与child实际权限继承、dynamic结果交付、候选成本、B启动或fresh。ThreadShellCommandParams.json明确unsandboxed full access，禁止拿它作同权限替代。当前同时存在代码与方法阻断，一次standalone成功不足以改变正式放行决定，因此不建议为开跑而花掉最后探针。",
+      "审查记录 — 首次任务卡读取先于时钟采集；可核起始下界2026-10-02 19:34:44 UTC，结束2026-10-02 19:38:51 UTC，精确全程起点UNKNOWN。17次functions封装、19次只读exec_command、2次clock读取、1次向parent报告，保守合计39次工具/命令动作。已有一次大输出截断，遗漏执行计划段落已定向补读；全部要求全文的输入已读完。工具报告的原始输出量合计约120k token（包含未显示的截断部分及补读重复），真实可见/计费token无法精确计数，停止追加调查。未运行任何测试、行为、模型、探针或反例；测试通过数来自冻结root记录，已审测试代码，不冒称亲自重跑。未写文件、eval-log或调用recorder，未联系原owner。七文件最终身份再次全匹配。"
+    ]
+  }
+}

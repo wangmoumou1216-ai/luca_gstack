@@ -1,0 +1,26 @@
+[
+  {
+    "command": "node scripts/test-hook-source-digests.mjs",
+    "exit": 0,
+    "output": "PASS 11 hook gates: clean, changed security/test source rejected, restored\n",
+    "stderr": "",
+    "fixture_root": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-registered-final-rlacx1t8/release",
+    "patch_sha256": "e580ffe30402144b91b4c1036193195696f79cb1bb561244634971e7c654d5f4"
+  },
+  {
+    "command": "node scripts/test-codex-child-hook-integrity.mjs",
+    "exit": 0,
+    "output": "PASS approved native hook source executes\nPASS missing protected bootstrap blocks the native hook\nPASS modified receipt writer and adapter fail before native hook import\n",
+    "stderr": "",
+    "fixture_root": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-registered-final-rlacx1t8/release",
+    "patch_sha256": "e580ffe30402144b91b4c1036193195696f79cb1bb561244634971e7c654d5f4"
+  },
+  {
+    "command": "node scripts/test-codex-child-project.mjs",
+    "exit": 0,
+    "output": "PASS pinned root still rejects a mismatched native candidate boundary\nPASS prepare requires and freezes a native-attested parent turn\nPASS bind refuses a parent with no native spawn call\nPASS native child ancestry resolves the frozen physical project\nPASS large history preserves child association and duplicate source rejection\nPASS a writable provider Codex home cannot replace native rollout evidence\nPASS child cannot borrow an active parent turn for project selection\nPASS direct child may omit forked_from_id but must prove its task path\nPASS same-parent same-role exec child cannot borrow a direct child claim\nPASS forged native parent and cwd fail closed\nPASS exec child needs a protected PreToolUse receipt and native SubagentStart claim\nPASS same-role exec siblings remain unbound when protected pending receipts are ambiguous\nPASS an old-turn protected receipt cannot be claimed by a later native spawn\nPASS a project switch before SubagentStart cannot retarget a protected receipt\nPASS ordinary parent Stop and later project switch do not retarget the child\nPASS a later task completion does not permanently remove child association\nPASS a nested child inherits the same frozen project through a proven native edge\nPASS scope guard points child docs access to the frozen project\nPASS scope guard uses native child transcript when Codex reports parent session ID\nPASS host status reports verified child association without execution authority\nPASS an intermediate child abort revokes its descendant through ancestor revalidation\nPASS native parent cancellation and activation pause revoke association\n",
+    "stderr": "",
+    "fixture_root": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-registered-final-rlacx1t8/release",
+    "patch_sha256": "e580ffe30402144b91b4c1036193195696f79cb1bb561244634971e7c654d5f4"
+  }
+]

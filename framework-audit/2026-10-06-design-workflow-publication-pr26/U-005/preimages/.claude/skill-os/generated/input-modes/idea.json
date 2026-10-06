@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "idea",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "user_raw_idea"
+        ],
+        "optional": [
+          "screenshots",
+          "notes"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "current_topic",
+          "scene"
+        ]
+      }
+    },
+    "quality_gates": [
+      "structured_need_list",
+      "scene_capture"
+    ]
+  }
+}

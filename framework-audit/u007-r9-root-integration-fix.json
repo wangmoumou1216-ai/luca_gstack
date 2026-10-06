@@ -1,0 +1,9 @@
+{
+  "author_snapshot_sha256": "69a2489b38af7baf0b63ea5d3294d2557ea06fc16068e29ae7e75714f03d30e4",
+  "root_test_sha256": "a309fc9eb96b7bab117acbb7335f5b9f4dad94922c67970f6b74b61076585216",
+  "change": "Synthetic aborted rollout/thread with cancelled turn for RPC interrupted; preserve RPC interruption, operations/exit130 and all fail-closed assertions.",
+  "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__src__protocol_event.rs:549",
+  "tests": "Final same-byte affected RED exit1 and GREEN exit0, followed by final 44/44 joint integration exit0",
+  "first_fix_failed": "Cancelled applies to turn, not RolloutStatus. Initial 43/44 failure retained in root-tests/integration.tap.",
+  "evidence": "u007-r9-root-tests/final-integration.json"
+}

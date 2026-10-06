@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "title": "Approved v2",
+  "items": [
+    {
+      "id": "A",
+      "value": 2
+    },
+    {
+      "id": "B",
+      "value": 3
+    }
+  ]
+}

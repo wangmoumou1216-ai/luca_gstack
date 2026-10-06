@@ -1,0 +1,254 @@
+[
+  {
+    "condition": "old",
+    "harness": "codex",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-0.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "codex",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-1.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "codex",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-2.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "claude",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "claude",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "claude",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-2.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "unknown",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-0.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "harness": "unknown",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-1.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "codex",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "codex",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "codex",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-2.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "claude",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "claude",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "claude",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-2.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "unknown",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "harness": "unknown",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "public_entry": "codex",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-0.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "public_entry": "codex",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-1.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "public_entry": "codex",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-2.json",
+    "exit": 0,
+    "identity_correct": false,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "public_entry": "claude",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "public_entry": "claude",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "old",
+    "public_entry": "claude",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-2.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "public_entry": "codex",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "public_entry": "codex",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "public_entry": "codex",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-2.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "public_entry": "claude",
+    "prompt": "PRD是啥",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-0.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "public_entry": "claude",
+    "prompt": "PRD是啥，规划一下",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-1.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  },
+  {
+    "condition": "candidate",
+    "public_entry": "claude",
+    "prompt": "PRD是什么，了解其机制",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-2.json",
+    "exit": 0,
+    "identity_correct": true,
+    "original_gates_retained": true
+  }
+]

@@ -1,0 +1,394 @@
+--- r5/driver.mjs
++++ r6/driver.mjs
+@@ -218,6 +218,7 @@
+     const pending = new Map(), knownThreads = new Map(), usage = new Map(), actionIds = new Set(), calls = new Set();
+     const terminals = new Map(), activeTurns = new Map(), dynamicCounts = new Map(), clientOperations = new Map();
+     const activeFamily = new Set();
++    const hookEvents = [], toolProjections = new Map();
+     const abort = deferred();
+     let fatal = null;
+     const journal = (direction, value) => appendFileSync(files['rpc.jsonl'], JSON.stringify({at: Date.now(), direction, ...value}) + '\n');
+@@ -269,6 +270,13 @@
+       const count = Math.max(counts.callbacks.size, counts.items.size);
+       return action(threadId, turnId, `dynamic:${tool}:${count}`);
+     };
++    const toolProjection = (threadId, turnId, id, source) => {
++      const key = JSON.stringify([threadId, turnId, id]);
++      if (!toolProjections.has(key)) toolProjections.set(key, {
++        thread_id: threadId, turn_id: turnId, call_id: id, sources: []});
++      const record = toolProjections.get(key);
++      if (!record.sources.includes(source)) record.sources.push(source);
++    };
+     const interrupt = async (threadId, turnId, reason) => {
+       const record = {thread_id: threadId, turn_id: turnId, reason, requested_at: Date.now(), response: null, terminal: null};
+       report.interruptions.push(record);
+@@ -309,6 +317,7 @@
+       check(activeTurns.get(p.threadId) === p.turnId, 'STALE_TOOL_TURN');
+       check(validText(p.callId) && !calls.has(keyOf(p.threadId, p.callId)), 'DUPLICATE_TOOL_CALL');
+       calls.add(keyOf(p.threadId, p.callId));
++      toolProjection(p.threadId, p.turnId, p.callId, 'item/tool/call');
+       if (Date.now() >= report.deadline_ms) fail('ABSOLUTE_DEADLINE');
+       if (fatal || stopping || nextControl?.type === 'fresh_context'
+         || !dynamicAction(p.threadId, p.turnId, p.tool, p.callId, 'callbacks')) {
+@@ -356,6 +365,18 @@
+         return;
+       }
+       const p = event.params || {};
++      if (['hook/started', 'hook/completed'].includes(event.method)
++        && ['preToolUse', 'postToolUse'].includes(p.run?.eventName)) {
++        const run = p.run;
++        // P06's observed HookRun ID convention, not a general call-ID schema.
++        // Unknown formats remain evidence gaps; never guess from a final colon.
++        const prefix = `${run.eventName === 'preToolUse' ? 'pre-tool-use' : 'post-tool-use'}:${run.displayOrder}:${run.sourcePath}:`;
++        const callId = Number.isSafeInteger(run.displayOrder) && validText(run.sourcePath)
++          && typeof run.id === 'string' && run.id.startsWith(prefix) ? run.id.slice(prefix.length) : null;
++        hookEvents.push({thread_id: p.threadId, turn_id: p.turnId, event: event.method,
++          hook_run_id: run.id, event_name: run.eventName, source_path: run.sourcePath,
++          source: run.source, status: run.status, call_id: validText(callId) ? callId : null});
++      }
+       if (/model\/rerouted|modelRerouted/.test(event.method || '')) fail('MODEL_REROUTED');
+       if (event.method === 'error') {
+         report.errors.push({at: Date.now(), native: p});
+@@ -399,6 +420,7 @@
+         }
+         const toolTypes = ['commandExecution', 'fileChange', 'mcpToolCall', 'dynamicToolCall', 'collabAgentToolCall', 'webSearch', 'imageView', 'imageGeneration'];
+         if (toolTypes.includes(item.type)) {
++          toolProjection(p.threadId, p.turnId, item.id, event.method);
+           if (item.type === 'dynamicToolCall' && validText(item.tool)) dynamicAction(p.threadId, p.turnId, item.tool, item.id, 'items');
+           else action(p.threadId, p.turnId, item.id);
+           report.native_tools.push({thread_id: p.threadId, turn_id: p.turnId, event: event.method, item});
+@@ -623,6 +645,37 @@
+       if (report.dynamic_tool_counts.some(c => c.item_count && c.callback_count !== c.item_count)) {
+         report.limitations.push('UNKNOWN_DYNAMIC_TOOL_CALLBACK_COVERAGE');
+       }
++      // Reconcile after cleanup so pre/post hooks, items and callbacks may arrive
++      // in either order, including hooks following the terminal notification.
++      // Hooks are activity witnesses, not extra billable actions or success proof.
++      const unmatched = new Map();
++      for (const event of hookEvents) {
++        const key = JSON.stringify([event.thread_id, event.turn_id, event.call_id]);
++        if (event.call_id && toolProjections.has(key)) continue;
++        const gapKey = event.call_id ? key : JSON.stringify([event.thread_id, event.turn_id, event.hook_run_id]);
++        if (!unmatched.has(gapKey)) unmatched.set(gapKey, {
++          thread_id: event.thread_id, turn_id: event.turn_id, call_id: event.call_id,
++          hook_run_ids: [], reason: event.call_id ? 'NO_MATCHING_ITEM_OR_CALLBACK' : 'UNRECOGNIZED_HOOK_ID'});
++        const gap = unmatched.get(gapKey);
++        if (!gap.hook_run_ids.includes(event.hook_run_id)) gap.hook_run_ids.push(event.hook_run_id);
++      }
++      const mappingComplete = unmatched.size === 0
++        && !report.limitations.includes('UNKNOWN_DYNAMIC_TOOL_CALLBACK_COVERAGE');
++      report.visible_tool_actions = report.tool_actions;
++      report.tool_action_observability = {
++        visible_unique_operations: report.visible_tool_actions,
++        counting_basis: 'Unique visible items; dynamic callback/item projections use their per-tool maximum, not their sum. Hook-only activity is not added as a charge; no wrapper/child equivalence is inferred.',
++        mapping_complete: mappingComplete, whole_chain_coverage: 'UNKNOWN',
++        hard_limit_compliance: report.visible_tool_actions > budgets.tool_actions ? 'EXCEEDED' : 'UNKNOWN',
++        formal_comparison_eligible: false,
++        limitation: 'No whole-chain telemetry proof. Visible budget enforcement cannot cap unreported or ambiguously mapped operations; matched hooks prove neither execution success nor native permission behavior.',
++        hook_events: hookEvents, tool_projections: [...toolProjections.values()],
++        unmapped_hook_calls: [...unmatched.values()]};
++      if (!mappingComplete) {
++        report.tool_actions = null; // Do not expose the partial count as a complete scalar.
++        report.limitations.push('INCOMPLETE_TOOL_ACTION_OBSERVABILITY');
++        fail('INCOMPLETE_TOOL_ACTION_OBSERVABILITY');
++      }
+       const missing = [...knownThreads.keys()].filter(id => !usage.has(id));
+       report.usage = {per_thread_cumulative: Object.fromEntries(usage), missing_thread_ids: missing,
+         observed_total_tokens: usage.size ? [...usage.values()].reduce((n, u) => n + u.totalTokens, 0) : null,
+--- r5/driver.test.mjs
++++ r6/driver.test.mjs
+@@ -34,7 +34,34 @@
+     if (mode === 'duplicate') send({id: String(++request), method: 'item/tool/call', params: {
+       threadId: currentThread, turnId: currentTurn, callId: id, tool: name, arguments: args}});
+   };
++  const hook = (callId, phase, completed = false) => event(completed ? 'hook/completed' : 'hook/started', {
++    threadId: currentThread, turnId: currentTurn, run: {
++      id: `${phase === 'preToolUse' ? 'pre-tool-use:0' : 'post-tool-use:2'}:/fixture/hooks.json:${callId}`,
++      eventName: phase, sourcePath: '/fixture/hooks.json', source: 'user',
++      displayOrder: phase === 'preToolUse' ? 0 : 2, status: completed ? 'completed' : 'running'}});
++  const hookPair = id => { hook(id, 'preToolUse'); hook(id, 'preToolUse', true);
++    hook(id, 'postToolUse'); hook(id, 'postToolUse', true); };
+   const startWork = () => {
++    if (mode.startsWith('w25-')) {
++      // P06 RPC 61–64: pre/post hooks for this exact ID, with no tool item.
++      if (mode.startsWith('w25-p06')) hookPair('exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4');
++      if (mode === 'w25-opaque') event('hook/completed', {threadId: currentThread, turnId: currentTurn,
++        run: {id: 'unrecognized-format', eventName: 'postToolUse', sourcePath: '/fixture/hooks.json', displayOrder: 2}});
++      if (mode === 'w25-native') {
++        hookPair('native-1'); hookPair('native-1');
++        event('item/completed', {threadId: currentThread, turnId: currentTurn,
++          item: {type: 'commandExecution', id: 'native-1', command: 'fake only', exitCode: 0}});
++        finish(); return;
++      }
++      const id = 'exec-88a066f0-56ae-4e0d-aa4e-e9d120094bb6';
++      if (mode !== 'w25-late') hookPair(id);
++      event('item/started', {threadId: currentThread, turnId: currentTurn,
++        item: {type: 'dynamicToolCall', id, tool: 'case_checkpoint'}});
++      send({id: 'w25-callback', method: 'item/tool/call', params: {threadId: currentThread,
++        turnId: currentTurn, callId: mode === 'w25-alias' ? 'callback-alias' : id,
++        tool: 'case_checkpoint', arguments: {checkpoint: 'inputs_delivered'}}});
++      return;
++    }
+     const familyModes = ['child-tools-collab', 'child-tools-source', 'child-control', 'child-fresh', 'child-hangs', 'old-family', 'unknown-parent', 'rebind'];
+     if (mode === 'unknown-child') {
+       event('item/completed', {threadId: currentThread, turnId: currentTurn, item: {type: 'agentMessage', id: 'claim', text: 'fixture_worker child has been registered'}});
+@@ -95,6 +122,16 @@
+   createInterface({input: process.stdin}).on('line', line => {
+     const m = JSON.parse(line);
+     if (!m.method) {
++      if (mode.startsWith('w25-')) {
++        const id = 'exec-88a066f0-56ae-4e0d-aa4e-e9d120094bb6';
++        event('item/completed', {threadId: currentThread, turnId: currentTurn,
++          item: {type: 'dynamicToolCall', id, tool: 'case_checkpoint', success: true}});
++        if (mode === 'w25-alias') hookPair('callback-alias');
++        if (mode === 'w25-p06-budget') { usage(currentThread, currentTurn, 2000); return; }
++        finish();
++        if (mode === 'w25-late') { hookPair(id); hookPair(id); }
++        return;
++      }
+       if (mode === 'child-fresh' && step++ === 0) { tool('case_checkpoint'); return; }
+       if (['child-tools-collab', 'child-tools-source', 'child-control'].includes(mode)) {
+         usage('child', 'child-turn', 8);
+@@ -198,7 +235,7 @@
+               }
+               if (mode === 'slow-callback') return await new Promise(() => {});
+               if (call.name === 'case_checkpoint') return {text: 'checkpoint stored', isError: false,
+-                control: {type: mode === 'ordinary-checkpoint' ? 'ready_for_final' : 'fresh_context'}};
++                control: {type: mode === 'ordinary-checkpoint' || mode.startsWith('w25-') ? 'ready_for_final' : 'fresh_context'}};
+               if (call.name === 'case_read') { state.failures.push('original dependency failure'); return {text: state.failures[0], isError: true, control: null}; }
+               return {text: 'write recorded', isError: false, control: null};
+             },
+@@ -299,6 +336,42 @@
+       encoding: 'utf8', timeout: 10000, env: {...process.env, PATH: bin}});
+   }
+ 
++  for (const mode of ['w25-p06', 'w25-p06-budget', 'w25-opaque']) {
++    test(`W25 ${mode} keeps unmatched activity and invalidates comparison accounting`, async t => {
++      const f = fixture(t, mode), r = await f.run();
++      assert.equal(r.tool_actions, null);
++      assert.equal(r.visible_tool_actions, 1);
++      assert.equal(r.status, 'INVALID_RUN');
++      const o = r.tool_action_observability;
++      assert.equal(o.mapping_complete, false);
++      assert.equal(o.whole_chain_coverage, 'UNKNOWN');
++      assert.equal(o.hard_limit_compliance, 'UNKNOWN');
++      assert.equal(o.formal_comparison_eligible, false);
++      assert.equal(o.unmapped_hook_calls.length, 1);
++      assert.ok(o.hook_events.some(e => e.source_path === '/fixture/hooks.json'));
++      if (mode !== 'w25-opaque') {
++        assert.equal(o.unmapped_hook_calls[0].call_id, 'exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4');
++        assert.equal(r.native_tools.some(e => e.item.type === 'commandExecution'), false);
++      }
++      if (mode === 'w25-p06-budget') {
++        assert.ok(r.errors.some(e => e.message === 'OBSERVED_TOKEN_BUDGET'));
++        assert.ok(r.interruptions.some(e => e.confirmed));
++      }
++    });
++  }
++  for (const mode of ['w25-mapped', 'w25-alias', 'w25-late', 'w25-native']) {
++    test(`W25 ${mode} maps hooks without duplicate charges or premature gaps`, async t => {
++      const r = await fixture(t, mode).run();
++      assert.equal(r.status, 'COMPLETED');
++      assert.equal(r.tool_actions, 1);
++      assert.equal(r.visible_tool_actions, 1);
++      assert.equal(r.tool_action_observability.mapping_complete, true);
++      assert.deepEqual(r.tool_action_observability.unmapped_hook_calls, []);
++      assert.equal(r.tool_action_observability.whole_chain_coverage, 'UNKNOWN');
++      assert.equal(r.tool_action_observability.hard_limit_compliance, 'UNKNOWN');
++    });
++  }
++
+   for (const stage of ['development', 'hidden']) {
+     test(`W22 formal ${stage} missing entire permissions object rejects before spawn`, async t => {
+       const f = fixture(t); f.manifest.runtime_release.stage = stage;
+--- r5/integration.test.mjs
++++ r6/integration.test.mjs
+@@ -62,7 +62,7 @@
+     child.unref = () => {};
+     child.kill = signal => { child.emit('exit', null, signal); child.emit('close'); return true; };
+     let rootCount = 0, callCount = 0;
+-    const pending = new Map();
++    const pending = new Map(), usageTotals = new Map();
+     const send = message => { transcript.push({ direction: 'server', message }); child.stdout.write(JSON.stringify(message) + '\n'); };
+     const notify = (method, params) => send({ method, params });
+     const respond = (request, result) => send({ id: request.id, result });
+@@ -70,15 +70,24 @@
+     const terminal = (threadId, status = 'completed') => {
+       terminalThreads.add(threadId);
+       notify('thread/tokenUsage/updated', { threadId, turnId: identity(threadId).turnId,
+-        tokenUsage: { total: { totalTokens: 7, inputTokens: 4, outputTokens: 3, cachedInputTokens: 0, reasoningOutputTokens: 0 } } });
++        tokenUsage: { total: usageTotals.get(threadId) ?? { totalTokens: 7, inputTokens: 4, outputTokens: 3, cachedInputTokens: 0, reasoningOutputTokens: 0 } } });
+       notify('turn/completed', { threadId, turn: { id: identity(threadId).turnId, status, error: null } });
+     };
+     const api = {
+       conditionPath: join(options.cwd, 'AGENTS.md'), conditionRoot: options.cwd,
+-      call: (threadId, tool, arguments_) => new Promise(resolveCall => {
++      // Explicit call IDs let the integration fixture reproduce observed hook /
++      // callback / item correlations without replacing the real observer.
++      call: (threadId, tool, arguments_, callId) => new Promise(resolveCall => {
+         const id = `tool-${++callCount}`; pending.set(id, resolveCall);
+-        send({ id, method: 'item/tool/call', params: { ...identity(threadId), callId: id, tool, arguments: arguments_ } });
++        send({ id, method: 'item/tool/call', params: { ...identity(threadId), callId: callId ?? id, tool, arguments: arguments_ } });
+       }),
++      notify,
++      identity,
++      exhaustTokens: threadId => {
++        const total = { totalTokens: 1001, inputTokens: 1000, outputTokens: 1, cachedInputTokens: 0, reasoningOutputTokens: 0 };
++        usageTotals.set(threadId, total);
++        notify('thread/tokenUsage/updated', { ...identity(threadId), tokenUsage: { total } });
++      },
+       child: (parent, id) => {
+         notify('thread/started', { thread: { id, source: { subAgent: { thread_spawn: { parent_thread_id: parent } } } } });
+         notify('turn/started', { threadId: id, turn: { id: identity(id).turnId } });
+@@ -236,6 +245,19 @@
+     return;
+   }
+   await transport.settle();
++  if (options.inspectObservation) {
++    const result = JSON.parse(readFileSync(join(report.evidence_root, 'result.json')));
++    assert.deepEqual(result, report);
++    const rpc = readFileSync(join(report.evidence_root, 'rpc.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
++    const inbound = rpc.filter(r => r.direction === 'inbound').map(r => JSON.parse(r.raw));
++    t.diagnostic(JSON.stringify({ sourceHashes, status: report.status, tool_actions: report.tool_actions,
++      visible_tool_actions: report.visible_tool_actions, observability: report.tool_action_observability,
++      errors: report.errors, limitations: report.limitations, engine_status: report.engine?.status,
++      snapshot_stage: report.engine_snapshot?.stage, writes: report.engine_snapshot?.writes.length,
++      hook_ids: inbound.filter(e => e.method?.startsWith('hook/')).map(e => e.params.run.id) }));
++    await options.inspectObservation({ report, transport, inbound, data });
++    return { report, transport };
++  }
+   t.diagnostic(JSON.stringify({ stage: manifest.runtime_release.stage, observed_status: report.status,
+     engine_status: report.engine?.status, engine_invalid_run: report.engine?.invalid_run,
+     protocol_errors: report.engine?.protocol_errors.map(e => e.code), sourceHashes }));
+@@ -282,6 +304,131 @@
+     failures: report.engine.failures.length, threads: report.threads.length }));
+   return { report, transport };
+ }
++
++// P06 RPC hook envelope shape, with synthetic identities and source path. These
++// are notifications from the fake app-server peer, never candidate tool text or
++// real global hook configuration. The hook handler's completion is not the
++// command's completion and carries no command-output/permission proof.
++function hookPair(api, thread, callId, { duplicate = false } = {}) {
++  for (const [eventName, prefix, displayOrder] of [['preToolUse', 'pre-tool-use', 0], ['postToolUse', 'post-tool-use', 2]]) {
++    for (const status of ['running', 'completed']) {
++      const method = status === 'running' ? 'hook/started' : 'hook/completed';
++      const sourcePath = '/offline/fixture-hooks.json';
++      const params = { ...api.identity(thread), run: {
++        id: `${prefix}:${displayOrder}:${sourcePath}:${callId}`, eventName, handlerType: 'command',
++        executionMode: 'sync', scope: 'turn', sourcePath, source: 'user', displayOrder, status,
++        statusMessage: null, startedAt: 1, completedAt: status === 'completed' ? 2 : null,
++        durationMs: status === 'completed' ? 1 : null, entries: [] } };
++      api.notify(method, params);
++      if (duplicate) api.notify(method, params);
++    }
++  }
++}
++function dynamicItem(api, thread, id, args, result, { duplicate = false } = {}) {
++  for (const phase of ['started', 'completed']) {
++    const params = { ...api.identity(thread), item: { type: 'dynamicToolCall', id,
++      namespace: null, tool: 'case_checkpoint', arguments: args,
++      status: phase === 'started' ? 'inProgress' : 'completed',
++      contentItems: phase === 'completed' ? result.contentItems : null,
++      success: phase === 'completed' ? result.success : null } };
++    api.notify(`item/${phase}`, params);
++    if (duplicate) api.notify(`item/${phase}`, params);
++  }
++}
++function assertPartialInputs({ report, inbound, data }) {
++  const state = report.engine_snapshot;
++  assert.equal(state.stage, 'inputs_delivered');
++  assert.deepEqual(state.checkpoints, ['request_delivered', 'inputs_delivered']);
++  assert.equal(state.writes.length, 0);
++  assert.equal(state.artifacts.find(a => a.path === 'output/result.json').exists, false);
++  assert.equal(readFileSync(join(report.condition.root, 'case/input/records.json'), 'utf8'), data.initial_files[0].content);
++  assert.equal(report.engine?.completion_claim_verified === true, false);
++  assert.equal(state.necessary_controls, 'NOT_EVALUATED');
++  assert.ok(inbound.some(e => e.method === 'hook/completed' && e.params.run.id.endsWith(':exec-unmapped-native')));
++  assert.ok(inbound.some(e => e.method === 'item/completed' && e.params.item.id === 'exec-visible-checkpoint'));
++  assert.equal(report.native_tools.some(n => n.item.type === 'commandExecution'), false);
++}
++
++for (const interrupted of [false, true]) test(`W26: P06 unmapped hook attempt survives ${interrupted ? 'budget interruption' : 'normal terminal'} as incomplete evidence`, async t => {
++  await run(t, fixture(), 'T', async (api, root) => {
++    hookPair(api, root, 'exec-unmapped-native');
++    const id = 'exec-visible-checkpoint', args = { checkpoint: 'inputs_delivered' };
++    hookPair(api, root, id);
++    const result = await api.call(root, 'case_checkpoint', args, id);
++    assert.equal(result.success, true);
++    dynamicItem(api, root, id, args, result);
++    if (interrupted) {
++      api.exhaustTokens(root);
++      // Leave the turn open. The real driver must interrupt and retain the
++      // unmatched hook evidence as well as its original budget failure.
++    } else api.finish(root);
++  }, { inspectObservation(observation) {
++    const { report } = observation;
++    assertPartialInputs(observation);
++    if (interrupted) {
++      assert.ok(report.errors.some(e => e.message === 'OBSERVED_TOKEN_BUDGET'));
++      assert.ok(report.interruptions.some(e => e.confirmed && e.terminal.turn.status === 'interrupted'));
++    }
++    assert.equal(report.status, 'INVALID_RUN', 'unmapped native activity cannot qualify as a completed comparable run');
++    assert.equal(report.tool_actions, null, 'a partial visible count must not masquerade as a whole-chain total');
++    assert.equal(report.visible_tool_actions, 1, 'one mapped dynamic callback/item action; hook-only activity is separately unresolved');
++    const coverage = report.tool_action_observability;
++    assert.equal(coverage.mapping_complete, false);
++    assert.equal(coverage.whole_chain_coverage, 'UNKNOWN');
++    assert.equal(coverage.hard_limit_compliance, 'UNKNOWN');
++    assert.equal(coverage.formal_comparison_eligible, false);
++    assert.equal(coverage.unmapped_hook_calls.length, 1);
++    const gap = coverage.unmapped_hook_calls[0];
++    assert.equal(gap.call_id, 'exec-unmapped-native');
++    assert.equal(gap.thread_id, 'root-1');
++    assert.equal(gap.turn_id, 'turn-root-1');
++    assert.equal(gap.reason, 'NO_MATCHING_ITEM_OR_CALLBACK');
++    assert.equal(gap.hook_run_ids.length, 2, 'pre/post hooks identify the same unresolved call');
++    assert.equal(coverage.hook_events.length, 8, 'original start/complete and pre/post records remain visible');
++    assert.ok(report.errors.some(e => e.message === 'INCOMPLETE_TOOL_ACTION_OBSERVABILITY'));
++    assert.ok(report.limitations.includes('INCOMPLETE_TOOL_ACTION_OBSERVABILITY'));
++  } });
++});
++
++for (const late of [false, true]) test(`W26: mapped native and dynamic ${late ? 'late duplicate' : 'normal'} items do not double-count or erase candidate errors`, async t => {
++  await run(t, fixture(), 'T', async (api, root) => {
++    const nativeId = 'exec-mapped-native';
++    hookPair(api, root, nativeId, { duplicate: late });
++    const native = { ...api.identity(root), item: { id: nativeId, type: 'commandExecution',
++      command: 'FAKE ONLY: candidate computation failed', commandActions: [], exitCode: 2 } };
++    if (!late) api.notify('item/started', native);
++    const id = 'exec-visible-checkpoint', args = { checkpoint: 'inputs_delivered' };
++    hookPair(api, root, id, { duplicate: late });
++    if (!late) api.notify('item/started', { ...api.identity(root), item: { type: 'dynamicToolCall', id,
++      tool: 'case_checkpoint', arguments: args, status: 'inProgress' } });
++    const result = await api.call(root, 'case_checkpoint', args, id);
++    assert.equal(result.success, true);
++    dynamicItem(api, root, id, args, result, { duplicate: late });
++    api.notify('item/completed', native);
++    if (late) api.notify('item/completed', native);
++    api.finish(root); // Deliberate candidate omission: unfinished protocol.
++  }, { inspectObservation({ report, inbound }) {
++    assert.equal(report.status, 'COMPLETED', 'ordinary candidate failure remains scoreable, not an observer infrastructure failure');
++    assert.equal(report.tool_actions, 2);
++    assert.equal(report.visible_tool_actions, 2);
++    const observation = report.tool_action_observability;
++    assert.equal(observation.mapping_complete, true);
++    assert.deepEqual(observation.unmapped_hook_calls, []);
++    assert.equal(observation.hook_events.length, late ? 16 : 8, 'retain duplicate raw events without counting them twice');
++    assert.equal(observation.whole_chain_coverage, 'UNKNOWN');
++    assert.equal(observation.hard_limit_compliance, 'UNKNOWN');
++    assert.equal(observation.formal_comparison_eligible, false);
++    assert.equal(report.engine.invalid_run, false);
++    assert.equal(report.engine.protocol_complete, false);
++    assert.equal(report.engine.completion_claim_verified, false);
++    assert.ok(report.engine.protocol_errors.some(e => e.code === 'INCOMPLETE_PROTOCOL'));
++    assert.ok(report.errors.some(e => e.native_tool_failure?.exitCode === 2));
++    assert.ok(inbound.some(e => e.method === 'hook/completed'));
++    assert.equal(report.engine.writes.length, 0);
++    assert.equal(report.engine.necessary_controls, 'NOT_EVALUATED');
++    assert.equal(report.limitations.includes('INCOMPLETE_TOOL_ACTION_OBSERVABILITY'), false);
++  } });
++});
+ 
+ for (const condition of ['T', 'I']) test(`real ${condition} materialization, staged tools and finalization`, async t => {
+   const { report } = await run(t, fixture(), condition, async (api, root) => {

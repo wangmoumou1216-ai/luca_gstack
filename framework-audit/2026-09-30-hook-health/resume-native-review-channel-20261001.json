@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "hook-resume-native-review-channel",
+  "status": "BLOCKED",
+  "current_desktop_thread_id": "01a0f528-e1b6-7910-8720-e8dacf612857",
+  "attempts": [
+    {
+      "profile": "system",
+      "native_thread_id": "01a0f531-88cd-7c60-8463-bc208f1bb1b5",
+      "events_path": "/tmp/luca-hook-native-app-publication-review-20261001.jsonl",
+      "events_sha256": "6810e0be727c1ead519050bebeded613a92e08fc960ecf2c6b3ac37e6823fcb4",
+      "errors": [
+        "Reconnecting... 2/5 (request timed out)",
+        "Reconnecting... 3/5 (request timed out)",
+        "Reconnecting... 4/5 (request timed out)",
+        "Reconnecting... 5/5 (request timed out)"
+      ],
+      "turn_failed": false,
+      "review_vote_delivered": false
+    },
+    {
+      "profile": "sidecar",
+      "native_thread_id": "01a0f535-34eb-7002-a0db-616d3ad6c13e",
+      "events_path": "/tmp/luca-hook-native-app-publication-sidecar-review-20261001.jsonl",
+      "events_sha256": "4a497e7ac5c2b1ba3c8fca636efd4645c23542fb035843a2ff5fd11e59ca9347",
+      "errors": [
+        "Reconnecting... 1/5 (unexpected status 502 Bad Gateway: Unknown error, url: http://127.0.0.1:59779/v1/responses)",
+        "Reconnecting... 2/5 (unexpected status 502 Bad Gateway: Unknown error, url: http://127.0.0.1:59779/v1/responses)",
+        "Reconnecting... 3/5 (unexpected status 502 Bad Gateway: Unknown error, url: http://127.0.0.1:59779/v1/responses)",
+        "Reconnecting... 4/5 (unexpected status 502 Bad Gateway: Unknown error, url: http://127.0.0.1:59779/v1/responses)",
+        "Reconnecting... 5/5 (unexpected status 502 Bad Gateway: Unknown error, url: http://127.0.0.1:59779/v1/responses)",
+        "unexpected status 502 Bad Gateway: Unknown error, url: http://127.0.0.1:59779/v1/responses"
+      ],
+      "turn_failed": true,
+      "review_vote_delivered": false
+    }
+  ],
+  "decision": "No critical publication or activation vote exists for this resumed release. Do not borrow the original root SID, forge native evidence, bypass trust, or interpret transport errors as PASS. Existing source review tickets remain scoped to their unchanged source bytes."
+}

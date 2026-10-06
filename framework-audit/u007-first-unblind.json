@@ -1,0 +1,14 @@
+{
+  "registered_at": "2026-10-02T17:34:08.237686+00:00",
+  "actor": "main coordinator /root",
+  "reason": "D and A independently frozen and separate non-author reviews J03/J04 PASS; first coordinator semantic read of D is permitted after this record",
+  "identities": {
+    "u005-independent-design.md": "27831bcf48b9d935bb2718024344f2904064aaca7f5086964445ecda865c06c0",
+    "u005-d-freeze-manifest.json": "146e979362e21af0dc26e0a623a3cefd73c3bd3ca5b4e6ee9b1b1bacc7253d16",
+    "u006-a-freeze-manifest.json": "14b3dcc2913b26622fce8fb9bd8031d0d8cf0358c48b495505b8f9b2ba6c2fd4",
+    "u005-d-review-r1-envelope.json": "41e076e57b7360f0339ecc75894127b83ed06583b6a959330b152cb7cbcefe13",
+    "u006-a-review-r1-envelope.json": "15001f146b8cd6aa8980a5022a4cc74f0c2d6e347a1dfa81496a046e05c2e6bb"
+  },
+  "hidden_access": "forbidden to coordinator and implementation authors",
+  "formal_behavior_runs": 0
+}

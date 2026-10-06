@@ -1,0 +1,29 @@
+TAP version 13
+# Subtest: W35: live trace starts exceed budget before terminal and remain readable after interrupt cleanup
+not ok 1 - W35: live trace starts exceed budget before terminal and remain readable after interrupt cleanup
+  ---
+  duration_ms: 10019.258
+  type: 'test'
+  location: '/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/native-trace-integration.test.mjs:466:1'
+  failureType: 'testCodeFailure'
+  error: 'must interrupt from live starts, not the 8-second wall deadline'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/native-trace-integration.test.mjs:477:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"sourceHashes":{"driver":"1bf9c49969f5ca91591d82c18b29b117c39b6925598b4142ce61b67508144a82","conditions":"216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc","case-protocol":"ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"},"status":"INVALID_RUN","tool_actions":0,"errors":[{"at":1790987463646,"message":"ABSOLUTE_DEADLINE"}],"interruptions":[{"confirmed":true,"reason":"ABSOLUTE_DEADLINE","requested_at":1790987463646}]}
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10057.342542

@@ -1,0 +1,130 @@
+{
+  "review": "J14",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-root-evidence.json",
+      "sha256": "a72383fff39375fc7a3768776a4579a2ae1a0c3f04d42aabaa9da98d52080f26",
+      "bytes": 9883
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-launch.json",
+      "sha256": "a7ba881fd77361b79c2069501005e7d1a227e87cc89d316e327592564bfa63c8",
+      "bytes": 4683
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-registration.json",
+      "sha256": "e0ca6a31c406af813038f4e7ab75dec4ac880cbe3647c6cb4887a29a42aaff92",
+      "bytes": 7006
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-root-release-decision.json",
+      "sha256": "a09ca3cc7acc73caddd85014b4388f416b99eef9d12dfb7fe879c616bbf027d4",
+      "bytes": 1457
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r9-envelope.json",
+      "sha256": "6bcf5d316d3596052bb9c9a889e362705f60e76058837ccfee23180c3d00509b",
+      "bytes": 3911
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-core-only-direction-20261003.md",
+      "sha256": "fc56ed01e8b361680842a0d6388aa660c52fa25392feac2db8944aad754a7294",
+      "bytes": 2366
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-continuous-module-ownership.md",
+      "sha256": "8f0a4212abf5ef5140bb37133676923523d7da693e7c45b00f3e63f33892e5d4",
+      "bytes": 6078
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/result.json",
+      "sha256": "54545568f76a93aa5b3a1c0ca8d2629f57c4a94c96e319f4ab653d8cace5b940",
+      "bytes": 98822
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/rpc.jsonl",
+      "sha256": "b9692956203cd6073e9d538e6e2c81dba74425c239ecffbbdbf5814da8226c0f",
+      "bytes": 232440
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/case-engine/journal.ndjson",
+      "sha256": "90f33a2a82d5c4cb5c1dad380b28d876c78a80d444c7da1d1c943c52aa690a47",
+      "bytes": 23410
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/case-engine/artifacts/1.utf8",
+      "sha256": "5b0e2e1b0ac9d3cd3f46ee79ba1c88cd219353d701fa1f7108942f4638cb98d4",
+      "bytes": 3036
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/manifest.json",
+      "sha256": "e3c15e07587bccafd19c714401e8bd1a334a39c0f086561a6ebd238486a136aa",
+      "bytes": 298
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/trace.jsonl",
+      "sha256": "8f51077b38e2594c59c499e547c1f2d4138be6629f3a5bd08b4d9430f4121437",
+      "bytes": 24992
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/7.json",
+      "sha256": "c3120e8b0c5cb76eceb76cb0dfa74225ee9f651169e67399664badff92ab9200",
+      "bytes": 644
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/8.json",
+      "sha256": "d5af882c5d2bfd93495f720838dbcb973e6700f96eb4b332dd879589cab4a781",
+      "bytes": 3430
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/12.json",
+      "sha256": "dddd2ffe8bdfa435c7bc456a633a4ef99ec188abf240c8a72133f67280e80ba4",
+      "bytes": 264
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/14.json",
+      "sha256": "5b477acd1ac88fae24b0bd0c36d3aeb091eb549ac76d8ba31b66ccedbbdc9290",
+      "bytes": 1152
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/15.json",
+      "sha256": "042c451a671dfd04c2e6bfc863f2632db3ef5ceffb12550f1401d99a097586d8",
+      "bytes": 163
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/16.json",
+      "sha256": "c6030d11a84f6e2807681575d0837848f3aea65dc128f2c4c2380f06311e3095",
+      "bytes": 1209
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/20.json",
+      "sha256": "eef61e86e543efa68217fbda843c6e448292cbaaaf666dd8e255a8f91e544117",
+      "bytes": 157
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/22.json",
+      "sha256": "a373bdda341b827b8673888a5ce37414f0bea4c19ce7e4f2f16fa8017d127112",
+      "bytes": 1216
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/26.json",
+      "sha256": "c6451d09ac00faac12d7e67b14d99ba4c6f2da588eecbb1289e8ff34e9982253",
+      "bytes": 3860
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/28.json",
+      "sha256": "5200399a0743128075a589f2076dbc999110486365bff135b4d8f3bab4ee4cbd",
+      "bytes": 207
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/32.json",
+      "sha256": "7a643b6a59d8565da02ec203252de8a1d975eb7c1ea56e65fa971d995c4649b2",
+      "bytes": 186
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/34.json",
+      "sha256": "80fac29cf89df0ded6c73f59338b92b9c7bb7f61e6223a7de634b859cb42aadf",
+      "bytes": 126
+    }
+  ]
+}

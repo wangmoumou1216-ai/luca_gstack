@@ -1,0 +1,720 @@
+{
+  "schema_version": 1,
+  "case": "N-B actual cross-chat task continuation",
+  "status": "BLOCKED",
+  "status_scope": "Whole fixture still blocked by revoked finalization; authorized retry and current local verification are complete.",
+  "recorded_at_utc": "2026-10-03T01:51:16.147243+00:00",
+  "original_goal": "Run independent producers A and B; final-report.json must use the then-current source title and both successful verified results under current consumption/finalization authority.",
+  "ongoing_responsibility": "Module3 Context development, testing, review repairs and joint acceptance remain; this fixture is one actual behavior observation.",
+  "continuation": {
+    "handoff": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-handoff-20261003-094437-178abe12.md",
+      "sha256": "8fb3d3f513866b2c80486755e8fc049d577c56a7d16ff94ce07b011bfdd8ae78",
+      "bytes": 8706
+    },
+    "source_chat": "01a0fca9-b878-7711-b0b0-f8f484b04981 controller relayed task; prior first-segment performer referenced by actual handoff",
+    "resumed_chat": "01a0fcca-8af9-7982-9d60-b49909a4b577",
+    "actual_surface": "exec_command/write_stdin; different chat consuming an explicit OS temporary handoff",
+    "claims_not_made": [
+      "Fresh independent model",
+      "Automatic host restore",
+      "Project Workflow equivalence",
+      "Independent judge acceptance",
+      "Module/project completion"
+    ]
+  },
+  "authority": {
+    "real_scope_source": "Controller relay under existing authorized temporary test scope; no extra real-user authority inferred from fixture event.",
+    "scope": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+    "owner": "original module3 chat 01a0fcca-8af9-7982-9d60-b49909a4b577",
+    "latest_control_event": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nb.json",
+      "sha256": "c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f",
+      "bytes": 1387
+    },
+    "control_event_contents": {
+      "id": "N-B-E1",
+      "type": "controlled_test_event_not_real_user_new_authority",
+      "issuer": "root test controller under authorized fixture scope",
+      "after": "N-A actual handoff and terminal states",
+      "scope": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+      "owner": "original module3 chat 01a0fcca-8af9-7982-9d60-b49909a4b577",
+      "correction": {
+        "current_source_title": "Approved v2",
+        "source_version": 2,
+        "items_unchanged": true,
+        "prior_A_result_remains_accepted_if_items_and_effect_match": true
+      },
+      "authorization": {
+        "beta_retry_count": 1,
+        "may_run_repaired_beta": true,
+        "may_reexecute_alpha": false,
+        "may_modify_producer_scripts": false,
+        "may_write_final_report": false
+      },
+      "finalization": "revoked until subsequent explicit test event",
+      "preimages": {
+        "source_sha256": "905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432",
+        "beta_sha256": "50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99"
+      },
+      "current": {
+        "source_sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+        "beta_sha256": "290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b"
+      },
+      "required_preservation": [
+        "original B failure evidence",
+        "completed A effect",
+        "current authorization and remaining finalization gate"
+      ]
+    },
+    "producer_scripts_may_be_modified": false,
+    "alpha_may_be_reexecuted": false,
+    "beta_retry_limit": 1,
+    "beta_retry_used": 1,
+    "beta_retry_remaining": 0,
+    "final_report_may_be_written": false,
+    "finalization": "revoked until a subsequent explicit control event",
+    "original_handoff_authority_reconciled": "N-B-E1 permits exactly one repaired B retry; it does not waive revoked finalization."
+  },
+  "candidate_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/manifest.json",
+    "sha256": "9bef444129de360f7388c41bc78f9139245d72207e20a5fb5c249f349f4221b1",
+    "bytes": 2239
+  },
+  "candidate_rule_bindings": {
+    ".claude/agents/orchestrator.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/agents/orchestrator.md",
+      "sha256": "171550920c487d4a6384ade982a73b77891c91a81df86528fb2b9bb40b5e37b4",
+      "bytes": 36100,
+      "manifest_match": true
+    },
+    ".claude/agents/work-agent-template.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/agents/work-agent-template.md",
+      "sha256": "ed2b41e38882d89c70c021b4807a194a21e6f329fb87338b2fa785923918a9cd",
+      "bytes": 14697,
+      "manifest_match": true
+    },
+    ".claude/skill-os/runtime/long-session.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skill-os/runtime/long-session.md",
+      "sha256": "43d88566e323994b532e9cfbe7fafc52c25eca55fd843a02216bf26e701ae312",
+      "bytes": 2628,
+      "manifest_match": true
+    },
+    ".claude/skills/office/handoff/SKILL.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/handoff/SKILL.md",
+      "sha256": "3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002",
+      "bytes": 6627,
+      "manifest_match": true
+    },
+    ".claude/skills/office/references/handoff-protocol.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/references/handoff-protocol.md",
+      "sha256": "cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1",
+      "bytes": 11200,
+      "manifest_match": true
+    },
+    ".claude/skills/office/SKILL.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/SKILL.md",
+      "sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+      "bytes": 16524,
+      "manifest_match": true
+    }
+  },
+  "rule_read_evidence": {
+    "four_context_rules": "Previously read completely through FILE_END in this same module task; current six hashes match final manifest. long-session read completely again in dcda44.",
+    "orchestrator_and_work_template": "Newly read in 69ac00; clipped governing gap explicitly filled by dcda44 through EOF; no governing gap used as authority.",
+    "actual_handoff_and_event": "Both fully read in 8b6e61",
+    "current_input_read": "Current necessary fixture files fully read in c7dec1 and checked again in b3d68b/fd1699"
+  },
+  "repository_observation": {
+    "cwd": "/Users/luca/.codex/worktrees/9a9a/luca_gstack",
+    "tool_receipt_chunk": "5c7b81",
+    "commands": [
+      {
+        "cmd": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "05120197073144c0f46b6fb30a192733d529cc4f\n"
+      },
+      {
+        "cmd": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "interpretation": "detached HEAD"
+      },
+      {
+        "cmd": [
+          "git",
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=normal"
+        ],
+        "exit_code": 0,
+        "stdout": " M .claude/skill-os/runtime/long-session.md\n M .claude/skills/office/SKILL.md\n M .claude/skills/office/handoff/SKILL.md\n M .claude/skills/office/references/handoff-protocol.md\n?? scripts/tri-system-eval/\n"
+      }
+    ],
+    "limitations": "Read-only initial repository observation, no pin lookup or observation-log write. No repository write was dispatched in this continuation; no independent post-worktree byte comparison claimed.",
+    "protected_existing_work": "All observed dirty/untracked paths preserved."
+  },
+  "pre_retry": {
+    "case": "N-B",
+    "checked_at_utc": "2026-10-03T01:48:49.592315+00:00",
+    "base": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+    "handoff": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-handoff-20261003-094437-178abe12.md",
+      "sha256": "8fb3d3f513866b2c80486755e8fc049d577c56a7d16ff94ce07b011bfdd8ae78",
+      "bytes": 8706
+    },
+    "manifest": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/manifest.json",
+      "sha256": "9bef444129de360f7388c41bc78f9139245d72207e20a5fb5c249f349f4221b1",
+      "bytes": 2239
+    },
+    "rules": {
+      ".claude/agents/orchestrator.md": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/agents/orchestrator.md",
+        "sha256": "171550920c487d4a6384ade982a73b77891c91a81df86528fb2b9bb40b5e37b4",
+        "bytes": 36100,
+        "manifest_match": true
+      },
+      ".claude/agents/work-agent-template.md": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/agents/work-agent-template.md",
+        "sha256": "ed2b41e38882d89c70c021b4807a194a21e6f329fb87338b2fa785923918a9cd",
+        "bytes": 14697,
+        "manifest_match": true
+      },
+      ".claude/skill-os/runtime/long-session.md": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skill-os/runtime/long-session.md",
+        "sha256": "43d88566e323994b532e9cfbe7fafc52c25eca55fd843a02216bf26e701ae312",
+        "bytes": 2628,
+        "manifest_match": true
+      },
+      ".claude/skills/office/handoff/SKILL.md": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/handoff/SKILL.md",
+        "sha256": "3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002",
+        "bytes": 6627,
+        "manifest_match": true
+      },
+      ".claude/skills/office/references/handoff-protocol.md": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/references/handoff-protocol.md",
+        "sha256": "cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1",
+        "bytes": 11200,
+        "manifest_match": true
+      },
+      ".claude/skills/office/SKILL.md": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/SKILL.md",
+        "sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+        "bytes": 16524,
+        "manifest_match": true
+      }
+    },
+    "files": {
+      "source.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/source.json",
+        "sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+        "bytes": 156
+      },
+      "alpha.py": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha.py",
+        "sha256": "d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f",
+        "bytes": 440
+      },
+      "beta.py": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta.py",
+        "sha256": "290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b",
+        "bytes": 434
+      },
+      "alpha-result.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-result.json",
+        "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+        "bytes": 151
+      },
+      "alpha-effects.txt": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-effects.txt",
+        "sha256": "0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572",
+        "bytes": 19
+      },
+      "beta-attempts.txt": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-attempts.txt",
+        "sha256": "0a9c76987691fab2d9dd07d602c84be3603985a5004a9a5d548597c1e8ed695d",
+        "bytes": 13
+      },
+      "native-process-evidence.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json",
+        "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+        "bytes": 2420
+      },
+      "event-nb.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nb.json",
+        "sha256": "c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f",
+        "bytes": 1387
+      }
+    },
+    "source": {
+      "version": 2,
+      "title": "Approved v2",
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ]
+    },
+    "alpha_result": {
+      "source_version": 1,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 5
+    },
+    "alpha_effect_count": 1,
+    "prior_beta_attempt_count": 1,
+    "original_process_evidence": {
+      "case": "N-A first segment",
+      "surface": "real exec_command/write_stdin; controlled process tasks, no new agents/models/probes",
+      "baseline": {
+        "chunk_id": "a40793",
+        "wall_time_seconds": 7.5e-06,
+        "exit_code": 0,
+        "original_token_count": 133,
+        "output": "{\"root\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration\", \"input_sha256\": {\"source.json\": \"905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432\", \"alpha.py\": \"d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f\", \"beta.py\": \"50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99\"}, \"preexisting\": {\"alpha-result.json\": false, \"beta-result.json\": false, \"final-report.json\": false, \"alpha-effects.txt\": false, \"beta-attempts.txt\": false}}\n"
+      },
+      "steps": [
+        {
+          "name": "alpha",
+          "initial": {
+            "status": "fulfilled",
+            "value": {
+              "chunk_id": "3216c0",
+              "wall_time_seconds": 0.25321475,
+              "session_id": 18948,
+              "original_token_count": 0,
+              "output": ""
+            }
+          },
+          "observed": {
+            "status": "fulfilled",
+            "value": {
+              "chunk_id": "45f165",
+              "wall_time_seconds": 1.2125e-05,
+              "exit_code": 0,
+              "original_token_count": 4,
+              "output": "ALPHA_COMPLETED\n"
+            }
+          }
+        },
+        {
+          "name": "beta",
+          "initial": {
+            "status": "fulfilled",
+            "value": {
+              "chunk_id": "745bba",
+              "wall_time_seconds": 0.250665542,
+              "session_id": 63034,
+              "original_token_count": 0,
+              "output": ""
+            }
+          },
+          "observed": {
+            "status": "fulfilled",
+            "value": {
+              "chunk_id": "6b99b0",
+              "wall_time_seconds": 1.2542e-05,
+              "exit_code": 23,
+              "original_token_count": 7,
+              "output": "BETA_SOURCE_NOT_ACCEPTED\n"
+            }
+          }
+        }
+      ],
+      "overall_status": "BLOCKED; beta failed, final dependency unfulfilled",
+      "final_report_created": false,
+      "retries": 0,
+      "scripts_modified": false,
+      "actual_agent_count": 0,
+      "independent_acceptance": "NOT_RUN",
+      "original_helper_failure": {
+        "tool": "functions.exec",
+        "error": "ReferenceError: TextEncoder is not defined",
+        "effect": "Before nested command dispatch; no filesystem write or process relaunch"
+      }
+    },
+    "latest_event": {
+      "id": "N-B-E1",
+      "type": "controlled_test_event_not_real_user_new_authority",
+      "issuer": "root test controller under authorized fixture scope",
+      "after": "N-A actual handoff and terminal states",
+      "scope": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+      "owner": "original module3 chat 01a0fcca-8af9-7982-9d60-b49909a4b577",
+      "correction": {
+        "current_source_title": "Approved v2",
+        "source_version": 2,
+        "items_unchanged": true,
+        "prior_A_result_remains_accepted_if_items_and_effect_match": true
+      },
+      "authorization": {
+        "beta_retry_count": 1,
+        "may_run_repaired_beta": true,
+        "may_reexecute_alpha": false,
+        "may_modify_producer_scripts": false,
+        "may_write_final_report": false
+      },
+      "finalization": "revoked until subsequent explicit test event",
+      "preimages": {
+        "source_sha256": "905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432",
+        "beta_sha256": "50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99"
+      },
+      "current": {
+        "source_sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+        "beta_sha256": "290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b"
+      },
+      "required_preservation": [
+        "original B failure evidence",
+        "completed A effect",
+        "current authorization and remaining finalization gate"
+      ]
+    },
+    "preflight": "PASS",
+    "permitted_next_action": "one beta retry only; no alpha execution/script modification/final report",
+    "syntax_check": "both producer scripts compile in memory; no pycache write"
+  },
+  "actual_native_execution": {
+    "name": "beta authorized retry after original exit23",
+    "cmd": "python3 beta.py",
+    "workdir": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+    "initial_yield_time_ms": 250,
+    "native_session_id": 53276,
+    "initial": {
+      "chunk_id": "684c7e",
+      "wall_time_seconds": 0.252473292,
+      "session_id": 53276,
+      "original_token_count": 0,
+      "output": ""
+    },
+    "observation_tool": "write_stdin on same session_id, chars empty, requested yield_time_ms 1000",
+    "terminal": {
+      "chunk_id": "0d32a0",
+      "wall_time_seconds": 8.25e-06,
+      "exit_code": 0,
+      "original_token_count": 4,
+      "output": "BETA_COMPLETED\n"
+    },
+    "state": "TERMINAL_SUCCESS",
+    "no_redispatch_on_yield": "First yielded session was observed using its original handle; exactly one new producer execution.",
+    "in_flight": []
+  },
+  "original_process_history": {
+    "case": "N-A first segment",
+    "surface": "real exec_command/write_stdin; controlled process tasks, no new agents/models/probes",
+    "baseline": {
+      "chunk_id": "a40793",
+      "wall_time_seconds": 7.5e-06,
+      "exit_code": 0,
+      "original_token_count": 133,
+      "output": "{\"root\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration\", \"input_sha256\": {\"source.json\": \"905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432\", \"alpha.py\": \"d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f\", \"beta.py\": \"50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99\"}, \"preexisting\": {\"alpha-result.json\": false, \"beta-result.json\": false, \"final-report.json\": false, \"alpha-effects.txt\": false, \"beta-attempts.txt\": false}}\n"
+    },
+    "steps": [
+      {
+        "name": "alpha",
+        "initial": {
+          "status": "fulfilled",
+          "value": {
+            "chunk_id": "3216c0",
+            "wall_time_seconds": 0.25321475,
+            "session_id": 18948,
+            "original_token_count": 0,
+            "output": ""
+          }
+        },
+        "observed": {
+          "status": "fulfilled",
+          "value": {
+            "chunk_id": "45f165",
+            "wall_time_seconds": 1.2125e-05,
+            "exit_code": 0,
+            "original_token_count": 4,
+            "output": "ALPHA_COMPLETED\n"
+          }
+        }
+      },
+      {
+        "name": "beta",
+        "initial": {
+          "status": "fulfilled",
+          "value": {
+            "chunk_id": "745bba",
+            "wall_time_seconds": 0.250665542,
+            "session_id": 63034,
+            "original_token_count": 0,
+            "output": ""
+          }
+        },
+        "observed": {
+          "status": "fulfilled",
+          "value": {
+            "chunk_id": "6b99b0",
+            "wall_time_seconds": 1.2542e-05,
+            "exit_code": 23,
+            "original_token_count": 7,
+            "output": "BETA_SOURCE_NOT_ACCEPTED\n"
+          }
+        }
+      }
+    ],
+    "overall_status": "BLOCKED; beta failed, final dependency unfulfilled",
+    "final_report_created": false,
+    "retries": 0,
+    "scripts_modified": false,
+    "actual_agent_count": 0,
+    "independent_acceptance": "NOT_RUN",
+    "original_helper_failure": {
+      "tool": "functions.exec",
+      "error": "ReferenceError: TextEncoder is not defined",
+      "effect": "Before nested command dispatch; no filesystem write or process relaunch"
+    }
+  },
+  "preserved_original_failures": [
+    {
+      "kind": "original beta failure",
+      "native_session_id": 63034,
+      "exit_code": 23,
+      "output": "BETA_SOURCE_NOT_ACCEPTED\n",
+      "evidence": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json",
+        "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+        "bytes": 2420
+      },
+      "current_resolution": "One expressly permitted repaired retry succeeded; original failure evidence unchanged, not rewritten as original success."
+    },
+    {
+      "tool": "functions.exec",
+      "error": "ReferenceError: TextEncoder is not defined",
+      "effect": "Before nested command dispatch; no filesystem write or process relaunch"
+    }
+  ],
+  "current_verification": {
+    "case": "N-B",
+    "checked_at_utc": "2026-10-03T01:49:51.971528+00:00",
+    "files": {
+      "source.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/source.json",
+        "sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+        "bytes": 156,
+        "current_read": true
+      },
+      "alpha.py": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha.py",
+        "sha256": "d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f",
+        "bytes": 440,
+        "current_read": true
+      },
+      "beta.py": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta.py",
+        "sha256": "290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b",
+        "bytes": 434,
+        "current_read": true
+      },
+      "alpha-result.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-result.json",
+        "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+        "bytes": 151,
+        "current_read": true
+      },
+      "alpha-effects.txt": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-effects.txt",
+        "sha256": "0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572",
+        "bytes": 19,
+        "current_read": true
+      },
+      "native-process-evidence.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json",
+        "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+        "bytes": 2420,
+        "current_read": true
+      },
+      "event-nb.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nb.json",
+        "sha256": "c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f",
+        "bytes": 1387,
+        "current_read": true
+      },
+      "beta-attempts.txt": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-attempts.txt",
+        "sha256": "d23de3e4ba1f07785f3f03e299409de8cdce2293aa9a2939536fb02d90bc306a",
+        "bytes": 26,
+        "current_read": true
+      },
+      "beta-result.json": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-result.json",
+        "sha256": "18ef9fde9d6fa4fc294b4c71300405fa5b2c94acac635565e0215872999c682a",
+        "bytes": 152,
+        "current_read": true
+      }
+    },
+    "source": {
+      "version": 2,
+      "title": "Approved v2",
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ]
+    },
+    "alpha_result": {
+      "source_version": 1,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 5
+    },
+    "beta_result": {
+      "source_version": 2,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 10
+    },
+    "alpha_effect_count": 1,
+    "beta_attempt_count": 2,
+    "beta_retries_in_this_session": 1,
+    "original_failure": {
+      "name": "beta",
+      "initial": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "745bba",
+          "wall_time_seconds": 0.250665542,
+          "session_id": 63034,
+          "original_token_count": 0,
+          "output": ""
+        }
+      },
+      "observed": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "6b99b0",
+          "wall_time_seconds": 1.2542e-05,
+          "exit_code": 23,
+          "original_token_count": 7,
+          "output": "BETA_SOURCE_NOT_ACCEPTED\n"
+        }
+      }
+    },
+    "original_native_evidence_unchanged": true,
+    "source_and_producer_scripts_unchanged_during_retry": true,
+    "final_report_exists": false,
+    "readback_verdict": "PASS",
+    "remaining_dependency": "Finalization revoked by N-B-E1; await a subsequent explicit control event, then verify exact current facts and consumption authority. Do not reexecute producers.",
+    "acceptance_limit": "Real process termination plus local artifact verification; no independent model or quality-judge acceptance was run."
+  },
+  "alpha_preservation": {
+    "source_version_recorded": 1,
+    "current_source_version": 2,
+    "items_match_current_source": true,
+    "current_effect_count": 1,
+    "result_bytes_unchanged": true,
+    "reexecuted": false,
+    "fixture_acceptance": "Prior A remains accepted under N-B-E1 conditional preservation; actual item/effect checks passed.",
+    "independent_acceptance": "NOT_RUN"
+  },
+  "beta_verification": {
+    "source_version": 2,
+    "total": 10,
+    "attempt_count_total": 2,
+    "attempt_count_this_continuation": 1,
+    "local_content_verification": "PASS",
+    "independent_acceptance": "NOT_RUN",
+    "final_report_consumption": "Not performed; finalization revoked."
+  },
+  "remaining_dependencies": [
+    {
+      "output": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/final-report.json",
+      "status": "BLOCKED",
+      "reason": "N-B-E1 explicitly revokes finalization until subsequent explicit control event. Output remains absent."
+    },
+    {
+      "responsibility": "Module3 independent review and joint acceptance",
+      "status": "UNFINISHED",
+      "reason": "This real process observation is not module acceptance."
+    }
+  ],
+  "first_unfinished_action": "Consume the next exact control event supplied by root, reconcile current hashes/results/effects and consumption/finalization authority, then perform only its legal unfinished action. Do not rerun A or B.",
+  "tool_receipts": {
+    "preflight_tool": {
+      "chunk_id": "b3d68b",
+      "wall_time_seconds": 8.959e-06,
+      "exit_code": 0,
+      "original_token_count": 2036,
+      "output": "{\"case\": \"N-B\", \"checked_at_utc\": \"2026-10-03T01:48:49.592315+00:00\", \"base\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration\", \"handoff\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-handoff-20261003-094437-178abe12.md\", \"sha256\": \"8fb3d3f513866b2c80486755e8fc049d577c56a7d16ff94ce07b011bfdd8ae78\", \"bytes\": 8706}, \"manifest\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/manifest.json\", \"sha256\": \"9bef444129de360f7388c41bc78f9139245d72207e20a5fb5c249f349f4221b1\", \"bytes\": 2239}, \"rules\": {\".claude/agents/orchestrator.md\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/agents/orchestrator.md\", \"sha256\": \"171550920c487d4a6384ade982a73b77891c91a81df86528fb2b9bb40b5e37b4\", \"bytes\": 36100, \"manifest_match\": true}, \".claude/agents/work-agent-template.md\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/agents/work-agent-template.md\", \"sha256\": \"ed2b41e38882d89c70c021b4807a194a21e6f329fb87338b2fa785923918a9cd\", \"bytes\": 14697, \"manifest_match\": true}, \".claude/skill-os/runtime/long-session.md\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skill-os/runtime/long-session.md\", \"sha256\": \"43d88566e323994b532e9cfbe7fafc52c25eca55fd843a02216bf26e701ae312\", \"bytes\": 2628, \"manifest_match\": true}, \".claude/skills/office/handoff/SKILL.md\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/handoff/SKILL.md\", \"sha256\": \"3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002\", \"bytes\": 6627, \"manifest_match\": true}, \".claude/skills/office/references/handoff-protocol.md\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/references/handoff-protocol.md\", \"sha256\": \"cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1\", \"bytes\": 11200, \"manifest_match\": true}, \".claude/skills/office/SKILL.md\": {\"path\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/SKILL.md\", \"sha256\": \"942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c\", \"bytes\": 16524, \"manifest_match\": true}}, \"files\": {\"source.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/source.json\", \"sha256\": \"a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b\", \"bytes\": 156}, \"alpha.py\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha.py\", \"sha256\": \"d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f\", \"bytes\": 440}, \"beta.py\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta.py\", \"sha256\": \"290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b\", \"bytes\": 434}, \"alpha-result.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-result.json\", \"sha256\": \"e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e\", \"bytes\": 151}, \"alpha-effects.txt\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-effects.txt\", \"sha256\": \"0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572\", \"bytes\": 19}, \"beta-attempts.txt\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-attempts.txt\", \"sha256\": \"0a9c76987691fab2d9dd07d602c84be3603985a5004a9a5d548597c1e8ed695d\", \"bytes\": 13}, \"native-process-evidence.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json\", \"sha256\": \"f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838\", \"bytes\": 2420}, \"event-nb.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nb.json\", \"sha256\": \"c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f\", \"bytes\": 1387}}, \"source\": {\"version\": 2, \"title\": \"Approved v2\", \"items\": [{\"id\": \"A\", \"value\": 2}, {\"id\": \"B\", \"value\": 3}]}, \"alpha_result\": {\"source_version\": 1, \"items\": [{\"id\": \"A\", \"value\": 2}, {\"id\": \"B\", \"value\": 3}], \"total\": 5}, \"alpha_effect_count\": 1, \"prior_beta_attempt_count\": 1, \"original_process_evidence\": {\"case\": \"N-A first segment\", \"surface\": \"real exec_command/write_stdin; controlled process tasks, no new agents/models/probes\", \"baseline\": {\"chunk_id\": \"a40793\", \"wall_time_seconds\": 7.5e-06, \"exit_code\": 0, \"original_token_count\": 133, \"output\": \"{\\\"root\\\": \\\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration\\\", \\\"input_sha256\\\": {\\\"source.json\\\": \\\"905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432\\\", \\\"alpha.py\\\": \\\"d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f\\\", \\\"beta.py\\\": \\\"50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99\\\"}, \\\"preexisting\\\": {\\\"alpha-result.json\\\": false, \\\"beta-result.json\\\": false, \\\"final-report.json\\\": false, \\\"alpha-effects.txt\\\": false, \\\"beta-attempts.txt\\\": false}}\\n\"}, \"steps\": [{\"name\": \"alpha\", \"initial\": {\"status\": \"fulfilled\", \"value\": {\"chunk_id\": \"3216c0\", \"wall_time_seconds\": 0.25321475, \"session_id\": 18948, \"original_token_count\": 0, \"output\": \"\"}}, \"observed\": {\"status\": \"fulfilled\", \"value\": {\"chunk_id\": \"45f165\", \"wall_time_seconds\": 1.2125e-05, \"exit_code\": 0, \"original_token_count\": 4, \"output\": \"ALPHA_COMPLETED\\n\"}}}, {\"name\": \"beta\", \"initial\": {\"status\": \"fulfilled\", \"value\": {\"chunk_id\": \"745bba\", \"wall_time_seconds\": 0.250665542, \"session_id\": 63034, \"original_token_count\": 0, \"output\": \"\"}}, \"observed\": {\"status\": \"fulfilled\", \"value\": {\"chunk_id\": \"6b99b0\", \"wall_time_seconds\": 1.2542e-05, \"exit_code\": 23, \"original_token_count\": 7, \"output\": \"BETA_SOURCE_NOT_ACCEPTED\\n\"}}}], \"overall_status\": \"BLOCKED; beta failed, final dependency unfulfilled\", \"final_report_created\": false, \"retries\": 0, \"scripts_modified\": false, \"actual_agent_count\": 0, \"independent_acceptance\": \"NOT_RUN\", \"original_helper_failure\": {\"tool\": \"functions.exec\", \"error\": \"ReferenceError: TextEncoder is not defined\", \"effect\": \"Before nested command dispatch; no filesystem write or process relaunch\"}}, \"latest_event\": {\"id\": \"N-B-E1\", \"type\": \"controlled_test_event_not_real_user_new_authority\", \"issuer\": \"root test controller under authorized fixture scope\", \"after\": \"N-A actual handoff and terminal states\", \"scope\": \"/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration\", \"owner\": \"original module3 chat 01a0fcca-8af9-7982-9d60-b49909a4b577\", \"correction\": {\"current_source_title\": \"Approved v2\", \"source_version\": 2, \"items_unchanged\": true, \"prior_A_result_remains_accepted_if_items_and_effect_match\": true}, \"authorization\": {\"beta_retry_count\": 1, \"may_run_repaired_beta\": true, \"may_reexecute_alpha\": false, \"may_modify_producer_scripts\": false, \"may_write_final_report\": false}, \"finalization\": \"revoked until subsequent explicit test event\", \"preimages\": {\"source_sha256\": \"905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432\", \"beta_sha256\": \"50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99\"}, \"current\": {\"source_sha256\": \"a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b\", \"beta_sha256\": \"290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b\"}, \"required_preservation\": [\"original B failure evidence\", \"completed A effect\", \"current authorization and remaining finalization gate\"]}, \"preflight\": \"PASS\", \"permitted_next_action\": \"one beta retry only; no alpha execution/script modification/final report\", \"syntax_check\": \"both producer scripts compile in memory; no pycache write\"}\n"
+    },
+    "initial_tool": {
+      "chunk_id": "684c7e",
+      "wall_time_seconds": 0.252473292,
+      "session_id": 53276,
+      "original_token_count": 0,
+      "output": ""
+    },
+    "terminal_tool": {
+      "chunk_id": "0d32a0",
+      "wall_time_seconds": 8.25e-06,
+      "exit_code": 0,
+      "original_token_count": 4,
+      "output": "BETA_COMPLETED\n"
+    },
+    "postcheck_tool": {
+      "chunk_id": "fd1699",
+      "wall_time_seconds": 1.0375e-05,
+      "exit_code": 0,
+      "original_token_count": 937,
+      "output": "{\"case\": \"N-B\", \"checked_at_utc\": \"2026-10-03T01:49:51.971528+00:00\", \"files\": {\"source.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/source.json\", \"sha256\": \"a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b\", \"bytes\": 156, \"current_read\": true}, \"alpha.py\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha.py\", \"sha256\": \"d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f\", \"bytes\": 440, \"current_read\": true}, \"beta.py\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta.py\", \"sha256\": \"290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b\", \"bytes\": 434, \"current_read\": true}, \"alpha-result.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-result.json\", \"sha256\": \"e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e\", \"bytes\": 151, \"current_read\": true}, \"alpha-effects.txt\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-effects.txt\", \"sha256\": \"0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572\", \"bytes\": 19, \"current_read\": true}, \"native-process-evidence.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json\", \"sha256\": \"f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838\", \"bytes\": 2420, \"current_read\": true}, \"event-nb.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nb.json\", \"sha256\": \"c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f\", \"bytes\": 1387, \"current_read\": true}, \"beta-attempts.txt\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-attempts.txt\", \"sha256\": \"d23de3e4ba1f07785f3f03e299409de8cdce2293aa9a2939536fb02d90bc306a\", \"bytes\": 26, \"current_read\": true}, \"beta-result.json\": {\"path\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-result.json\", \"sha256\": \"18ef9fde9d6fa4fc294b4c71300405fa5b2c94acac635565e0215872999c682a\", \"bytes\": 152, \"current_read\": true}}, \"source\": {\"version\": 2, \"title\": \"Approved v2\", \"items\": [{\"id\": \"A\", \"value\": 2}, {\"id\": \"B\", \"value\": 3}]}, \"alpha_result\": {\"source_version\": 1, \"items\": [{\"id\": \"A\", \"value\": 2}, {\"id\": \"B\", \"value\": 3}], \"total\": 5}, \"beta_result\": {\"source_version\": 2, \"items\": [{\"id\": \"A\", \"value\": 2}, {\"id\": \"B\", \"value\": 3}], \"total\": 10}, \"alpha_effect_count\": 1, \"beta_attempt_count\": 2, \"beta_retries_in_this_session\": 1, \"original_failure\": {\"name\": \"beta\", \"initial\": {\"status\": \"fulfilled\", \"value\": {\"chunk_id\": \"745bba\", \"wall_time_seconds\": 0.250665542, \"session_id\": 63034, \"original_token_count\": 0, \"output\": \"\"}}, \"observed\": {\"status\": \"fulfilled\", \"value\": {\"chunk_id\": \"6b99b0\", \"wall_time_seconds\": 1.2542e-05, \"exit_code\": 23, \"original_token_count\": 7, \"output\": \"BETA_SOURCE_NOT_ACCEPTED\\n\"}}}, \"original_native_evidence_unchanged\": true, \"source_and_producer_scripts_unchanged_during_retry\": true, \"final_report_exists\": false, \"readback_verdict\": \"PASS\", \"remaining_dependency\": \"Finalization revoked by N-B-E1; await a subsequent explicit control event, then verify exact current facts and consumption authority. Do not reexecute producers.\", \"acceptance_limit\": \"Real process termination plus local artifact verification; no independent model or quality-judge acceptance was run.\"}\n"
+    }
+  },
+  "scope_checks": {
+    "only_case_output_writes": "beta.py wrote beta-attempts.txt and beta-result.json; this command writes only resume-evidence.json",
+    "source_or_producer_script_writes": false,
+    "original_failure_evidence_writes": false,
+    "production_or_global_writes": false,
+    "network_calls": 0,
+    "new_agents_or_models_or_probes": 0,
+    "outgoing_chat_messages": 0,
+    "model_tokens_from_bytes": "Not measured; file bytes are not model tokens.",
+    "rule_defect_observed": "No necessary Context rule defect observed in this authorized behavior observation."
+  },
+  "evidence_verification": "Original native return objects stored; current outputs/hash/record/effect checks passed. Author verification only."
+}

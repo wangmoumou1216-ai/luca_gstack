@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "prototype-notes",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "actual_html_artifact",
+          "requested_notes_scope"
+        ],
+        "optional": [
+          "existing_notes",
+          "confirmed_product_source",
+          "source_handoff",
+          "exact_accepted_ref",
+          "confirmed_prototype_revision",
+          "authorized_delivery_root"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "actual_html_artifact",
+          "requested_notes_scope",
+          "source_handoff"
+        ],
+        "optional": [
+          "existing_notes",
+          "confirmed_product_source",
+          "exact_accepted_ref",
+          "confirmed_prototype_revision",
+          "authorized_delivery_root"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "actual_html_artifact",
+          "requested_notes_scope",
+          "condition_evidence",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "original_u_id",
+          "existing_notes",
+          "confirmed_product_source",
+          "source_handoff",
+          "exact_accepted_ref",
+          "confirmed_prototype_revision",
+          "authorized_delivery_root"
+        ]
+      }
+    },
+    "quality_gates": [
+      "preflight",
+      "input",
+      "semantic",
+      "source-scope",
+      "HTML-behavior",
+      "final-identity",
+      "completion"
+    ],
+    "notes": "已有本地HTML说明加工，独立使用不要求Brief/OD receipt；声明OD来源时验证真实provenance。缺确认仅intake/display，不生成或注入。AI仅当前新增scope，manual-only允许空AI scope且人工编辑整个支持原型。internal继承真实当前确认与权限交集并只返回父caller，独立PREACCEPT/seal/当前exact final后完成一次；checkpoint不签发许可，恢复重取当前权限。业务修改走共享E6，保留上传当前bytes并重新确认，不恢复旧snapshot。"
+  }
+}

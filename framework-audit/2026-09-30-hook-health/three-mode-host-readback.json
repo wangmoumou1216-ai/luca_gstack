@@ -1,0 +1,69 @@
+{
+  "at": "2026-09-30T12:57:23.467Z",
+  "root": "/Users/luca/Desktop/luca_gstack",
+  "results": [
+    {
+      "mode": "system",
+      "attempt": 1,
+      "ms": 54,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "system",
+      "attempt": 2,
+      "ms": 50,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "system",
+      "attempt": 3,
+      "ms": 72,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "direct",
+      "attempt": 1,
+      "ms": 32,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "direct",
+      "attempt": 2,
+      "ms": 28,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "direct",
+      "attempt": 3,
+      "ms": 30,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "sidecar",
+      "attempt": 1,
+      "ms": 28,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "sidecar",
+      "attempt": 2,
+      "ms": 30,
+      "ok": true,
+      "error": null
+    },
+    {
+      "mode": "sidecar",
+      "attempt": 3,
+      "ms": 29,
+      "ok": true,
+      "error": null
+    }
+  ]
+}

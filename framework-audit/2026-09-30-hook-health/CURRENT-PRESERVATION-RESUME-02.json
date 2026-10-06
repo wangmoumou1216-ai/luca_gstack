@@ -1,0 +1,2177 @@
+{
+  "audit_exclusion": {
+    "directory": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health",
+    "policy": "Exclude only this exact directory and lexical descendants from baseline comparisons; preserve all other dirty/untracked paths. Audit records are listed separately and may grow."
+  },
+  "comparison_contract": {
+    "audit_output": "Do not compare full_status_raw_sha256 or excluded_audit_status_records as CAS predicates because this task audit directory is intentionally growing.",
+    "before_effect": "Re-run the same Git facts and porcelain -uall -z parsing with GIT_OPTIONAL_LOCKS=0. Exclude only audit_exclusion.directory and descendants. Require HEAD, branch, index SHA/type/mode, comparison_status_records, and every path/type/mode/permission_mode/SHA/symlink_target tuple to match this baseline; any separately approved effect needs an explicit expected after-image, never blanket exclusions.",
+    "controlled_state": "Re-run the public inspect for each root and require exit=0 and kind=inactive before effects; do not reuse a terminal receipt as new authority."
+  },
+  "finished_at_utc": "2026-10-01T03:44:48.429886+00:00",
+  "kind": "current-preservation-baseline",
+  "read_only_git_environment": {
+    "GIT_OPTIONAL_LOCKS": "0"
+  },
+  "roots": [
+    {
+      "capture_attempt": 1,
+      "captured_at_utc": "2026-10-01T03:44:47.826562+00:00",
+      "coherent_capture": true,
+      "comparison_status_records": [
+        {
+          "path": ".claude/observability/observations.jsonl",
+          "status": " M"
+        },
+        {
+          "path": "memory/evals/eval-log.jsonl",
+          "status": " M"
+        },
+        {
+          "path": "memory/retrieval-log.jsonl",
+          "status": " M"
+        },
+        {
+          "path": ".workbuddy/archify-\u5b9e\u8bc1\u6837\u4f8b-2026-09-17.html",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u63e1\u624b\u65b9\u6848-v2-2026-09-17.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u7ec8\u5c40-v3-2026-09-17.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u7ec8\u5c40-v4-2026-09-17.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u8ba1\u5212-2026-09-17.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/2026-09-16.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/2026-09-17.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/2026-09-18.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/MEMORY.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u4ea4\u4e92\u6ce8\u89e3\u5c42\u8bbe\u8ba1\u7a3f-\u4f1a\u5ba1\u5b9a\u7a3f.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6574\u4f53\u65b9\u6848.html",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6574\u4f53\u65b9\u6848.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6700\u7ec8\u5ba1\u67e5\u62a5\u544a-\u5408\u5e76\u7248.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6700\u7ec8\u5ba1\u67e5\u62a5\u544a-\u5408\u5e76\u7248.md.v1.bak",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6700\u7ec8\u5ba1\u67e5\u62a5\u544a-\u5408\u5e76\u7248.v1.3.bak",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6df1\u5ea6\u4f1a\u5ba1\u62a5\u544a-2026-09-16.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u7ec8\u5c40\u7ed3\u8bba-2026-09-16.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/memory/\u951a\u70b9\u5236\u52a8\u6001\u8c03\u914d\u8bbe\u8ba1\u7a3f-v2.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/reports/2026-09-16-mattpocock-skills-update-check.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/reports/2026-09-16-tdd-sync-execution-brief.md",
+          "status": "??"
+        },
+        {
+          "path": ".workbuddy/\u4ea4\u4e92\u6ce8\u89e3\u5c42-\u7b80\u8981\u65b9\u6848.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/ACTIVATION.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/CHECKPOINT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/DEPLOYMENT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/REPORT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/ROUTING-LOGIC.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/activation-progress.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/activation-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/activation-scope.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/candidate-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/dependency-admission.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/eval-final-round1.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/eval-preliminary.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/eval-refutation-round1.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/final-review-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/full-gate-fixture.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/full-verify-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/live-activation-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/maintenance-window-snapshot.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/mutation-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/native-admission-red.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/native-adoption-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/publication-approval.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/publication-ci-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/publication-commit-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/publication-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-final-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-final-fixture.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-fixture.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round1-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round1.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round2-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round2.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round3-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round3.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round4-full-verify-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round4-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round4.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round5-full-verify-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round5-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round5-registered-hook-evidence.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round5-registered-hook-fixture.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/round5.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-atomic-final-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-atomic-refutation-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-closure-final-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-closure-refutation-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-final-20260930-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-live-activation-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-refutation-20260930-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-release-final-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-release-refutation-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-terminal-final-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/route-terminal-refutation-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/source-digest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/source-manifest-before-activation.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-model-routing/verify-admission.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-tri-system-assessment-master-plan.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-10-01-tri-system-plan-handoff-review.md",
+          "status": "??"
+        }
+      ],
+      "comparison_status_sha256": "c1bf6a354e1434a337c08d2606de7c30ef1024aa9e82fa38e0d285643bc6a35c",
+      "controlled_change": {
+        "command": [
+          "node",
+          "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/controlled-change.mjs",
+          "inspect",
+          "--repo",
+          "/Users/luca/Desktop/luca_gstack"
+        ],
+        "control_root": "/Users/luca/Desktop/luca_gstack/.git/luca-controlled-change",
+        "current_present": false,
+        "exit_code": 0,
+        "inactive_proven": true,
+        "kind": "inactive",
+        "raw_result": {
+          "bytes": 39118,
+          "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CURRENT-CONTROLLED-RESUME-02-M.json",
+          "permission_mode": "0600",
+          "sha256": "404a56a700c457b97ff2d374d63d3495db56abd38628a543ee4f6bf36515fd44"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "dirty_and_untracked_files": [
+        {
+          "bytes": 26607,
+          "mode": "100644",
+          "path": ".claude/observability/observations.jsonl",
+          "permission_mode": "0644",
+          "sha256": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+          "type": "file"
+        },
+        {
+          "bytes": 819631,
+          "mode": "100644",
+          "path": ".workbuddy/archify-\u5b9e\u8bc1\u6837\u4f8b-2026-09-17.html",
+          "permission_mode": "0644",
+          "sha256": "c040b6bce3c9cab51146dfa44120204705ed68dbada05685de3e6ff40ecffdcc",
+          "type": "file"
+        },
+        {
+          "bytes": 7339,
+          "mode": "100644",
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u63e1\u624b\u65b9\u6848-v2-2026-09-17.md",
+          "permission_mode": "0644",
+          "sha256": "377b59fae40af1cec30fc1de4b50a18a205998cd29c814fefe9c583fb3ba532a",
+          "type": "file"
+        },
+        {
+          "bytes": 6222,
+          "mode": "100644",
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u7ec8\u5c40-v3-2026-09-17.md",
+          "permission_mode": "0644",
+          "sha256": "d38917f11a05c024077390c5c447ceca24306b410d95c48f96daf58feea135ea",
+          "type": "file"
+        },
+        {
+          "bytes": 5205,
+          "mode": "100644",
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u7ec8\u5c40-v4-2026-09-17.md",
+          "permission_mode": "0644",
+          "sha256": "d674425b1860b1de8360244b51ca62d3338b71039f2b358bd8cf099e059cbd2c",
+          "type": "file"
+        },
+        {
+          "bytes": 10529,
+          "mode": "100644",
+          "path": ".workbuddy/archify-\u91c7\u7eb3\u8ba1\u5212-2026-09-17.md",
+          "permission_mode": "0644",
+          "sha256": "714df6afe9103af421adaeeea6359e4a1319ca7ec515e0a6bcfc6c600005c823",
+          "type": "file"
+        },
+        {
+          "bytes": 17263,
+          "mode": "100644",
+          "path": ".workbuddy/memory/2026-09-16.md",
+          "permission_mode": "0644",
+          "sha256": "e586f1be4f51c01b4eedc43c637d76df139505453f5dbd22f320c2c2ff57c363",
+          "type": "file"
+        },
+        {
+          "bytes": 8669,
+          "mode": "100644",
+          "path": ".workbuddy/memory/2026-09-17.md",
+          "permission_mode": "0644",
+          "sha256": "ffae7bd96dad3b43696f0054a6c168f75ca2a13339bb3fb3ee97b9e14da73f48",
+          "type": "file"
+        },
+        {
+          "bytes": 16936,
+          "mode": "100644",
+          "path": ".workbuddy/memory/2026-09-18.md",
+          "permission_mode": "0644",
+          "sha256": "57962ecd8fa266fb4e08a74602f29654d80a9392b655378e1dedd0fab29ec509",
+          "type": "file"
+        },
+        {
+          "bytes": 4180,
+          "mode": "100644",
+          "path": ".workbuddy/memory/MEMORY.md",
+          "permission_mode": "0644",
+          "sha256": "dad59f1ca36f4c587df1fa8ed6e6d54a30322e2c1897c646a8a4ae7b509f32ea",
+          "type": "file"
+        },
+        {
+          "bytes": 12305,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u4ea4\u4e92\u6ce8\u89e3\u5c42\u8bbe\u8ba1\u7a3f-\u4f1a\u5ba1\u5b9a\u7a3f.md",
+          "permission_mode": "0644",
+          "sha256": "482af207a854b590fdae9944bec27fbd2225426efd83ac628a05ba5c87cbf975",
+          "type": "file"
+        },
+        {
+          "bytes": 13433,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6574\u4f53\u65b9\u6848.html",
+          "permission_mode": "0644",
+          "sha256": "fe6e3b6227e12679ab008837779122a9aee77751df865641b78bf26e53b561e4",
+          "type": "file"
+        },
+        {
+          "bytes": 10384,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6574\u4f53\u65b9\u6848.md",
+          "permission_mode": "0644",
+          "sha256": "3c0ef03b2ae10a55c82daa0ee2a92209b624c65beb78748fccc6d8f943c13fb8",
+          "type": "file"
+        },
+        {
+          "bytes": 22573,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6700\u7ec8\u5ba1\u67e5\u62a5\u544a-\u5408\u5e76\u7248.md",
+          "permission_mode": "0644",
+          "sha256": "358ce75dcba9fa57f003eff10ed0330dba203067780c526e98faac84beb8e2fe",
+          "type": "file"
+        },
+        {
+          "bytes": 13288,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6700\u7ec8\u5ba1\u67e5\u62a5\u544a-\u5408\u5e76\u7248.md.v1.bak",
+          "permission_mode": "0644",
+          "sha256": "3860b2071ace1979022a06929795db1e379761a7686cb025951e29ded8561f28",
+          "type": "file"
+        },
+        {
+          "bytes": 22214,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6700\u7ec8\u5ba1\u67e5\u62a5\u544a-\u5408\u5e76\u7248.v1.3.bak",
+          "permission_mode": "0644",
+          "sha256": "4ce1025d6d12ce6e99939d5eac9fb1d4b2aabcc6b3b45e4dbdcb9db37e6b610c",
+          "type": "file"
+        },
+        {
+          "bytes": 9900,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u6df1\u5ea6\u4f1a\u5ba1\u62a5\u544a-2026-09-16.md",
+          "permission_mode": "0644",
+          "sha256": "742719828ae2b51a6559f14fd4d9c2f21ed4fab27a42ac37714764c8293f3dde",
+          "type": "file"
+        },
+        {
+          "bytes": 9559,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u6a21\u578b\u8def\u7531\u7ec8\u5c40\u7ed3\u8bba-2026-09-16.md",
+          "permission_mode": "0644",
+          "sha256": "61b20ae7f430ff7d7430ce2c6035ed81446b9ebebe2f5037dc2172cb5710da0d",
+          "type": "file"
+        },
+        {
+          "bytes": 16192,
+          "mode": "100644",
+          "path": ".workbuddy/memory/\u951a\u70b9\u5236\u52a8\u6001\u8c03\u914d\u8bbe\u8ba1\u7a3f-v2.md",
+          "permission_mode": "0644",
+          "sha256": "62dc67caf68b7d602a65f49a0690b3f3c9fb47065d48554f8f6b38f7e7c0669f",
+          "type": "file"
+        },
+        {
+          "bytes": 17197,
+          "mode": "100644",
+          "path": ".workbuddy/reports/2026-09-16-mattpocock-skills-update-check.md",
+          "permission_mode": "0644",
+          "sha256": "b5e02c8541eb6269fdeafd8fe68db51105767badaf52481a1aa0a005368ef4da",
+          "type": "file"
+        },
+        {
+          "bytes": 4895,
+          "mode": "100644",
+          "path": ".workbuddy/reports/2026-09-16-tdd-sync-execution-brief.md",
+          "permission_mode": "0644",
+          "sha256": "fe253b06a83810f8db2de3d9555125f56e04c07a1002d48b06d47a0b56d09578",
+          "type": "file"
+        },
+        {
+          "bytes": 5504,
+          "mode": "100644",
+          "path": ".workbuddy/\u4ea4\u4e92\u6ce8\u89e3\u5c42-\u7b80\u8981\u65b9\u6848.md",
+          "permission_mode": "0644",
+          "sha256": "34c8df43a05e88361dad49988129bdb37e93338ba42dd6cfc0a39c5c7a7fb036",
+          "type": "file"
+        },
+        {
+          "bytes": 1789,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/ACTIVATION.md",
+          "permission_mode": "0644",
+          "sha256": "7ce5e1522bcf0639473a0dcfa579423f89f3eb97a357395c52b3e74aaef0ff56",
+          "type": "file"
+        },
+        {
+          "bytes": 15395,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/CHECKPOINT.md",
+          "permission_mode": "0644",
+          "sha256": "921fba06884c4cc13dae8fdbb43bc9e2f4eccc31e194f6eafa0aad7ba9f15023",
+          "type": "file"
+        },
+        {
+          "bytes": 2650,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/DEPLOYMENT.md",
+          "permission_mode": "0644",
+          "sha256": "0b0af7ff2f541ab0965fba40d8a9d8243f191aa7e3490db82d3e91e9d06f0bb4",
+          "type": "file"
+        },
+        {
+          "bytes": 21466,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/REPORT.md",
+          "permission_mode": "0644",
+          "sha256": "649f887e2794cce2ef0edfefdf35a66d57d593fe19adc0aa89cddb6caf882650",
+          "type": "file"
+        },
+        {
+          "bytes": 4399,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/ROUTING-LOGIC.md",
+          "permission_mode": "0644",
+          "sha256": "33235be3b54e3e4238255783497d69a29aac0e7a36bd1af14737c476e49bdc58",
+          "type": "file"
+        },
+        {
+          "bytes": 1201,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/activation-progress.json",
+          "permission_mode": "0644",
+          "sha256": "1ca1138eda3c60278a2ecf54d130804deff30335a1bb9d0cd76b5b3f72aed292",
+          "type": "file"
+        },
+        {
+          "bytes": 1765,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/activation-result.json",
+          "permission_mode": "0644",
+          "sha256": "fbe356511705b7b90d6c6a6a32a061a09e08191761a3bcd000ea98067393ebbe",
+          "type": "file"
+        },
+        {
+          "bytes": 3251,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/activation-scope.json",
+          "permission_mode": "0644",
+          "sha256": "1ee5e062229621e9dfd7fdd22505327e7d376020125a4199b018e399ee0f7d55",
+          "type": "file"
+        },
+        {
+          "bytes": 3783,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/candidate-manifest.json",
+          "permission_mode": "0644",
+          "sha256": "6f0118c30cfc726583dda13126f2b3257de2b416706f206c974e135b059a34b2",
+          "type": "file"
+        },
+        {
+          "bytes": 206,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/dependency-admission.json",
+          "permission_mode": "0644",
+          "sha256": "1935b67589dea5b447fa8be067ab599d878ea4b9823d0f74008385182dd157a4",
+          "type": "file"
+        },
+        {
+          "bytes": 1500,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/eval-final-round1.json",
+          "permission_mode": "0644",
+          "sha256": "03518f9daa0a7b6b192e10da8139f8d49c569cf657552ca1bfa7f03914dde382",
+          "type": "file"
+        },
+        {
+          "bytes": 1280,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/eval-preliminary.json",
+          "permission_mode": "0644",
+          "sha256": "da7bf25d3c604badb532c2f6975d4be60449253506d70746b41c16f3d2511b3d",
+          "type": "file"
+        },
+        {
+          "bytes": 1579,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/eval-refutation-round1.json",
+          "permission_mode": "0644",
+          "sha256": "6a5f2d4101604e87568cd9d33da80590fdd9102a890cace59528a071a5583b3e",
+          "type": "file"
+        },
+        {
+          "bytes": 1301,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/final-review-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "d4cf6d47ae2a0a1699f74cc926419ec0b11e33dfa3c253c8ca692f7856b3eea0",
+          "type": "file"
+        },
+        {
+          "bytes": 53,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/full-gate-fixture.txt",
+          "permission_mode": "0644",
+          "sha256": "adf2d4d421eefaf1df0c9785f47ab025179b2db60e0e78b8334243e8dd54ac30",
+          "type": "file"
+        },
+        {
+          "bytes": 321,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/full-verify-result.json",
+          "permission_mode": "0644",
+          "sha256": "a9b96544146134280f624d458e0362ccb318dd113e8cf8ba1544ee947b6663e2",
+          "type": "file"
+        },
+        {
+          "bytes": 1095,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/live-activation-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "b8cfe5e6bfce02c28ea770efb5172c8bc9cee9bfbaf046fcc1a0a74f34888c70",
+          "type": "file"
+        },
+        {
+          "bytes": 4089,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/maintenance-window-snapshot.json",
+          "permission_mode": "0644",
+          "sha256": "b4cc46c51daa89b641ee29ae75ac5575080f2fb7756ea5b906761bcb29ee6265",
+          "type": "file"
+        },
+        {
+          "bytes": 2086,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/mutation-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "de41fc358615ffc268503e27338efe81ae8022d4a485c1b29f3fafcc0c3406d5",
+          "type": "file"
+        },
+        {
+          "bytes": 1260,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/native-admission-red.json",
+          "permission_mode": "0644",
+          "sha256": "f6d27832e705bc2e007bae9b6912c974eea330ca7392c66f4b4947436f553ee0",
+          "type": "file"
+        },
+        {
+          "bytes": 4423,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/native-adoption-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "93530e101cbd8d48f077c1ce061dc49ec072de2bd9c2bc8e55149a869f0fc04c",
+          "type": "file"
+        },
+        {
+          "bytes": 682,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/publication-approval.json",
+          "permission_mode": "0644",
+          "sha256": "bd8af0d799c3ce5f0514745192f5f805327dcbae7380387e17342047480530bc",
+          "type": "file"
+        },
+        {
+          "bytes": 24699,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/publication-ci-result.json",
+          "permission_mode": "0644",
+          "sha256": "e02fae1f0512edf8a906afb4d73dc5cf64da46503833273c1a94ddccc3073e1f",
+          "type": "file"
+        },
+        {
+          "bytes": 175,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/publication-commit-result.json",
+          "permission_mode": "0644",
+          "sha256": "80f9c9c51a0b7c6dcbf417005090e307676935e071c6a4b7005c170e53d00a60",
+          "type": "file"
+        },
+        {
+          "bytes": 2345,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/publication-result.json",
+          "permission_mode": "0644",
+          "sha256": "c5a23fabca48ab6718f7d2ac8be3a3897c78b59f6631aaa64be18e0f531d6114",
+          "type": "file"
+        },
+        {
+          "bytes": 615,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "440223f0db40c4c806d10f8252bcfc85c40f9a485b3ba939a25463c7ae30bf0e",
+          "type": "file"
+        },
+        {
+          "bytes": 2874,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-final-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "eb277e609f5c1499c4b206e0c7347c55bed1f8f5d16328900ad32b2d3a44f4a8",
+          "type": "file"
+        },
+        {
+          "bytes": 97,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-final-fixture.txt",
+          "permission_mode": "0644",
+          "sha256": "2ed7a28c94b40f3d2e599cef3a95451e854f81d5fb9b7b44b4ca2d0e797bbdb0",
+          "type": "file"
+        },
+        {
+          "bytes": 54,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/registered-hook-fixture.txt",
+          "permission_mode": "0644",
+          "sha256": "85851c6110913a5cc4a082ea82d13b7217df3f35fdf4a7c9a8a25b1505710cda",
+          "type": "file"
+        },
+        {
+          "bytes": 135379,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+          "permission_mode": "0644",
+          "sha256": "9b2c53963b74f829af785b0167a0055fb35cad1fdf71668438f3bd8fdac54361",
+          "type": "file"
+        },
+        {
+          "bytes": 2749,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round1-manifest.json",
+          "permission_mode": "0644",
+          "sha256": "0e4c5e9616997a4c1c259877e976b9a945fa3a2bfd998bfc8e5e17392b4b2021",
+          "type": "file"
+        },
+        {
+          "bytes": 24825,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round1.patch",
+          "permission_mode": "0644",
+          "sha256": "5a9cefef037dc6714f3cc81cc1af33c0310a03c6999e11f47609c2e1d0d48bd7",
+          "type": "file"
+        },
+        {
+          "bytes": 3229,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round2-manifest.json",
+          "permission_mode": "0644",
+          "sha256": "710fe9b0ef151b5f3f7874af9fe305e1fb1e044b7abe96c80f74fc944136a12f",
+          "type": "file"
+        },
+        {
+          "bytes": 55403,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round2.patch",
+          "permission_mode": "0644",
+          "sha256": "ba1fb45a4609d5a96684d81e40a8c4a79460fc237397def354f8cf307fdb12bd",
+          "type": "file"
+        },
+        {
+          "bytes": 3457,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round3-manifest.json",
+          "permission_mode": "0644",
+          "sha256": "9d9bebe05cbb90d654c8efe2eff7d3e8244b763805e20f8a2b7e7729492d765e",
+          "type": "file"
+        },
+        {
+          "bytes": 106922,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round3.patch",
+          "permission_mode": "0644",
+          "sha256": "a7496b3f20a0ccd20636009b6652deeed02201f37a91b89085e47fea2dd56c39",
+          "type": "file"
+        },
+        {
+          "bytes": 235,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round4-full-verify-result.json",
+          "permission_mode": "0644",
+          "sha256": "54b130b526c929aefd41d66d262195b230a43d55bae4485fdec09ffad40f7aed",
+          "type": "file"
+        },
+        {
+          "bytes": 3457,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round4-manifest.json",
+          "permission_mode": "0644",
+          "sha256": "0e79e729dfd70a14cf122ed4b0c365b4fd4db793788de33eadd8db8e6557f428",
+          "type": "file"
+        },
+        {
+          "bytes": 112991,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round4.patch",
+          "permission_mode": "0644",
+          "sha256": "8fbd65304dc4a1bab125f40e3bdee753cc75ff25f9560e14dda7e3b1d68638e6",
+          "type": "file"
+        },
+        {
+          "bytes": 321,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round5-full-verify-result.json",
+          "permission_mode": "0644",
+          "sha256": "d400c69b58969e4547f12f8c4cd15dadbb3f0dd3f643e6f7d993a12a90d90ca4",
+          "type": "file"
+        },
+        {
+          "bytes": 3544,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round5-manifest.json",
+          "permission_mode": "0644",
+          "sha256": "40321943b59251c756a61c89b4e41c25dc3240cbf44d7743952f6748fbc7c6f9",
+          "type": "file"
+        },
+        {
+          "bytes": 2871,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round5-registered-hook-evidence.json",
+          "permission_mode": "0644",
+          "sha256": "45b33739b1f09247fe4afe785db22ff0de7ac418029fb6eaed07fda728ccc7a3",
+          "type": "file"
+        },
+        {
+          "bytes": 96,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round5-registered-hook-fixture.txt",
+          "permission_mode": "0644",
+          "sha256": "47e559645c7d9cb5427a789b8253a855c5aab0bc4e448ef6f384c914487387cf",
+          "type": "file"
+        },
+        {
+          "bytes": 122887,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/round5.patch",
+          "permission_mode": "0644",
+          "sha256": "e580ffe30402144b91b4c1036193195696f79cb1bb561244634971e7c654d5f4",
+          "type": "file"
+        },
+        {
+          "bytes": 867,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-atomic-final-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "25ba93e6895220e6dcfc05915f09b2946bc4d17249e6f4fec54dfdc1d2f683ce",
+          "type": "file"
+        },
+        {
+          "bytes": 917,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-atomic-refutation-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "bbe136ccfe4c71af513f4c56dcf3d22ef7501077ba2eaf5673fec7e3942a6e3b",
+          "type": "file"
+        },
+        {
+          "bytes": 1486,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-closure-final-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "2a97065d3c494d0befe6971ad864694acdfc41cfc1a000903711ae854de9f15e",
+          "type": "file"
+        },
+        {
+          "bytes": 1632,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-closure-refutation-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "01a3f3ac93724e4a0363516e3ff66693a8ea92d5663d50a396c5b78136fe54e9",
+          "type": "file"
+        },
+        {
+          "bytes": 1624,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-final-20260930-02.json",
+          "permission_mode": "0644",
+          "sha256": "554508a7af8a8c1cea487c2945aa826e97486bbd72cc89b072a4c662f0baf0ad",
+          "type": "file"
+        },
+        {
+          "bytes": 1098,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-live-activation-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "a30a1711c35c4a43c5b11fb0c776be2ec875f154d43253de65bf43c1ed387a1d",
+          "type": "file"
+        },
+        {
+          "bytes": 1906,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-refutation-20260930-02.json",
+          "permission_mode": "0644",
+          "sha256": "30ca26544c53eeb01d0fd4b1be7a004e2f27f672f76fd12cb51c2b3b8c258f62",
+          "type": "file"
+        },
+        {
+          "bytes": 922,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-release-final-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "cb48f630b0d274bd9715ca64b727df017146df0b5d2433715b9b96d2e506854d",
+          "type": "file"
+        },
+        {
+          "bytes": 1725,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-release-refutation-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "4e6c2b33a5322851ac17ce796e6e2ff50072e77329ee9541d9a4fa1e5894c97c",
+          "type": "file"
+        },
+        {
+          "bytes": 1217,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-terminal-final-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "3ce71097f8815c66a89001f738b28bd8977457d4de8913a0d83dd4fae1b43229",
+          "type": "file"
+        },
+        {
+          "bytes": 1421,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/route-terminal-refutation-20260930-01.json",
+          "permission_mode": "0644",
+          "sha256": "0822620f72e87a3390caeafdd87fd248aa7f6ddcf94ceee61f040d4a05475550",
+          "type": "file"
+        },
+        {
+          "bytes": 229,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/source-digest.json",
+          "permission_mode": "0644",
+          "sha256": "2d7048e165caea271fd57fc2598c4b4d1d68cbd630fe38a002be45419f02ea31",
+          "type": "file"
+        },
+        {
+          "bytes": 129323,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/source-manifest-before-activation.json",
+          "permission_mode": "0600",
+          "sha256": "9a9c4aea0ce17ad59a261b2ffdf2677ab5a2f7d4f56d689207c12f7bd7315197",
+          "type": "file"
+        },
+        {
+          "bytes": 1858,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-model-routing/verify-admission.json",
+          "permission_mode": "0644",
+          "sha256": "03d2b8c7cb7a46d90b0cf120899d3ae1d012a4090df929e42688a698688bc316",
+          "type": "file"
+        },
+        {
+          "bytes": 20468,
+          "mode": "100644",
+          "path": "framework-audit/2026-09-30-tri-system-assessment-master-plan.md",
+          "permission_mode": "0644",
+          "sha256": "7e2ed0da0b32da2e81f9d055960ed34ebc9de6c117df709c16a75d2447e19fb4",
+          "type": "file"
+        },
+        {
+          "bytes": 4445,
+          "mode": "100644",
+          "path": "framework-audit/2026-10-01-tri-system-plan-handoff-review.md",
+          "permission_mode": "0644",
+          "sha256": "bd6390bf24428e33111ca997e12aa41e2d3d77bdbe8a8f89da9afb3a3703bf47",
+          "type": "file"
+        },
+        {
+          "bytes": 94266,
+          "mode": "100644",
+          "path": "memory/evals/eval-log.jsonl",
+          "permission_mode": "0644",
+          "sha256": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+          "type": "file"
+        },
+        {
+          "bytes": 152635,
+          "mode": "100644",
+          "path": "memory/retrieval-log.jsonl",
+          "permission_mode": "0644",
+          "sha256": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+          "type": "file"
+        }
+      ],
+      "excluded_audit_record_count": 169,
+      "excluded_audit_status_records": [
+        {
+          "path": "framework-audit/2026-09-30-hook-health/ACTIVATION-SCOPE-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/ACTIVATION.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CACHE-FINAL-CHECKPOINT-01.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CHECKPOINT-CACHE-RELEASE-02.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CHECKPOINT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CI-54ef203.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CI-SHELL-DEPENDENCY-RESUME-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CI-SHELL-PUBLICATION-RESUME-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/CODEX-CACHE-CHECKPOINT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/DIRECT-PROFILE-REVIEW.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/FINAL-ACTIVATION-CHECKPOINT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/FINAL-REVIEW.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/FOLLOWUP-CHECKPOINT-03.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/FOLLOWUP-CHECKPOINT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/FOLLOWUP-PLAN.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/MOTHER-DIRECT-UPDATE.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/PATH-DATA-REVIEW.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/PAUSED-CHECKPOINT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/PRE-RELEASE-REVIEW.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/REPORT.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/RESUME-20261001.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/SIDE-REPAIR-SCOPE-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/SIDE-REPAIR-SCOPE.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/SIDECAR-PUBLIC-SETTINGS-RESUME-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/STABLE-APP-PUBLICATION-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/STABLE-PUBLICATION-RESUME-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activate-reviewed.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activate-stable-cache.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activate-text-target-03.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activation-close-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activation-helper-reviewed.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activation-progress.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activation-readiness.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/activation-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-app-02.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-app.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-framework-02.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-framework.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-spec-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-spec-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-standards-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-final-standards-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/cache-source-native-review-proof-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/candidate-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/candidate.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/candidate.tar.gz",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/ci-publication-review-native-resume05.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/ci-publication-review-resume05.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/ci-shell-focused-commit-resume01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/ci-shell-workflow-resume01.yml.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/controller-schema3-actual-ci-resume01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/deployment-snapshot-delta.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/direct-final-health.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/direct-profile-readback.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/direct-repair-proof.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/REQUIREMENTS-02.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/REQUIREMENTS-03.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/REQUIREMENTS.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/SCOPE-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/SCOPE-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/SCOPE.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/candidate-02.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/candidate-03.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/candidate.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/source-health-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/source-health-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/spec-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/spec-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/spec-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/standards-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/standards-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/followup-review/standards-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/freeze-cache-review.mjs.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/freeze-stable-r2.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/hook-health-activation-helper-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/hook-health-activation-helper-20260930-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/hook-health-final-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/hook-health-final-20260930-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/hook-health-plan-20260930-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/hook-health-plan-20260930-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/install-stable-app.mjs.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/mother-direct-project-repair.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/mother-direct-trust-readback.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/mother-sidecar-project-repair.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/plan-r1-eval.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/plan-r2-eval.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/plan-r3-eval.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/post-restart-health.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/prepare-cache-app-bundle.mjs.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/publication-ci.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/publication-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/PLAN.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/PROFILE-FINAL.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/PROFILE-REQUIREMENTS.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/REQUIREMENTS.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/SCOPE-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/SCOPE-03-preflight-failed.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/SCOPE-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/SCOPE-04.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/SCOPE.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/activate-reviewed-v2.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/final-artifact-proof.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/helper-readonly-proof.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/interim-v3/activate-reviewed.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/interim-v3/candidate-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/interim-v3/candidate.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/interim-v3/candidate.tar.gz",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/mutation-proof.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-before-activate-reviewed.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-before-test-activation-reviewed.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-spec-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-spec-04.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-standards-03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-standards-04.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/profile-supplement.diff",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/red-regressions.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/registration-negative-probe.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/revision2/candidate-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/revision2/candidate.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/revision2/candidate.tar.gz",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/spec-01.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/spec-02.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/spec-eval-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/spec-eval-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/standards-01.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/standards-02.md",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/standards-eval-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/standards-eval-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/stop-runtime-proof.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/release-review/test-activation-reviewed.py",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/repair-sidecar-settings-resume02.mjs.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/repair-sidecar-settings.mjs.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/resume-native-review-channel-20261001.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/rollback.tar.gz",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/round1/candidate-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/round1/candidate.patch",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/round1/candidate.tar.gz",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-lease-refusal.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-manifest-resume02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-repair-manifest.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-spec-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-spec-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-standards-01.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/sidecar-settings-standards-02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/source-manifest-before-activation.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-app-already-installed.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-app-focused-commit-receipt.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-app-package-receipt.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-framework-focused-commit-receipt-resume02.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-hooks-r2.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-hooks-r3.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-install-review-final1.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-install-review-final2.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-install-review-final3.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-install-review-r3.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-publication-receipt-resume04.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-publication-review-native-resume03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-publication-review-native-resume04.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-publication-review-resume03.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/stable-publication-review-resume04.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/test-cross-repo.mjs.txt",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/text-target-activation-result.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/text-target-maintenance-window.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/three-mode-host-readback.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/trust-targets-before-activation.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/window-latest-readback.json",
+          "status": "??"
+        },
+        {
+          "path": "framework-audit/2026-09-30-hook-health/window-precheck.json",
+          "status": "??"
+        }
+      ],
+      "file_tuples_sha256": "7ab93cafd7593c4f572636e6f77d1b8a010d9110fa8a5d2f5396f6e76948e760",
+      "full_status_raw_sha256": "1be6b756a38ec0a12fb945a376001a683fb157ec533ef678b7cd12a41775a355",
+      "full_status_record_count": 253,
+      "git": {
+        "HEAD": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+        "branch": "main",
+        "git_common_dir": "/Users/luca/Desktop/luca_gstack/.git",
+        "index": {
+          "bytes": 178748,
+          "mode": "100644",
+          "permission_mode": "0644",
+          "sha256": "2a1efc938f8ced05f0805ba7784f5faedf0caff16d114f6511b942c5c4361081",
+          "type": "file"
+        },
+        "index_path": "/Users/luca/Desktop/luca_gstack/.git/index"
+      },
+      "label": "M",
+      "root": "/Users/luca/Desktop/luca_gstack",
+      "status_command": [
+        "git",
+        "status",
+        "--porcelain",
+        "-uall",
+        "-z"
+      ]
+    },
+    {
+      "capture_attempt": 1,
+      "captured_at_utc": "2026-10-01T03:44:48.099631+00:00",
+      "coherent_capture": true,
+      "comparison_status_records": [],
+      "comparison_status_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "controlled_change": {
+        "command": [
+          "node",
+          "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/controlled-change.mjs",
+          "inspect",
+          "--repo",
+          "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack"
+        ],
+        "control_root": "/Users/luca/Desktop/luca_gstack/.git/luca-controlled-change",
+        "current_present": false,
+        "exit_code": 0,
+        "inactive_proven": true,
+        "kind": "inactive",
+        "raw_result": {
+          "bytes": 39118,
+          "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CURRENT-CONTROLLED-RESUME-02-C.json",
+          "permission_mode": "0600",
+          "sha256": "404a56a700c457b97ff2d374d63d3495db56abd38628a543ee4f6bf36515fd44"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "dirty_and_untracked_files": [],
+      "excluded_audit_record_count": 0,
+      "excluded_audit_status_records": [],
+      "file_tuples_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "full_status_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_status_record_count": 0,
+      "git": {
+        "HEAD": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+        "branch": "codex/hook-text-data",
+        "git_common_dir": "/Users/luca/Desktop/luca_gstack/.git",
+        "index": {
+          "bytes": 179044,
+          "mode": "100644",
+          "permission_mode": "0644",
+          "sha256": "33ed50213d9edefbcc29af1ea6b8a5c9f8f060cb7bb0e757690fa882e6fce13c",
+          "type": "file"
+        },
+        "index_path": "/Users/luca/Desktop/luca_gstack/.git/worktrees/luca_gstack/index"
+      },
+      "label": "C",
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "status_command": [
+        "git",
+        "status",
+        "--porcelain",
+        "-uall",
+        "-z"
+      ]
+    },
+    {
+      "capture_attempt": 1,
+      "captured_at_utc": "2026-10-01T03:44:48.374667+00:00",
+      "coherent_capture": true,
+      "comparison_status_records": [
+        {
+          "path": ".luca/memory/muse-gstack-fork-isolation.md",
+          "status": " M"
+        },
+        {
+          "path": "CHECKPOINT.md",
+          "status": " M"
+        },
+        {
+          "path": "CONTEXT.md",
+          "status": " M"
+        },
+        {
+          "path": "app/main.js",
+          "status": " M"
+        },
+        {
+          "path": "app/preload.cjs",
+          "status": " M"
+        },
+        {
+          "path": "app/renderer/app.js",
+          "status": " M"
+        },
+        {
+          "path": "app/renderer/index.html",
+          "status": " M"
+        },
+        {
+          "path": "app/renderer/styles.css",
+          "status": " M"
+        },
+        {
+          "path": "app/session-open.js",
+          "status": " M"
+        },
+        {
+          "path": "app/settings-store.js",
+          "status": " M"
+        },
+        {
+          "path": "app/test-codex-direct-e2e.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-default-provider-wiring.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-session-open-e2e.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-session-spool.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-settings-navigation-v2.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-settings-store.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-theme-follow-e2e.mjs",
+          "status": " M"
+        },
+        {
+          "path": "app/test-framework-mount.mjs",
+          "status": "??"
+        },
+        {
+          "path": "docs/engineering/2026-10-01-codex-connection-settings.md",
+          "status": "??"
+        },
+        {
+          "path": "docs/evaluation/2026-09-30-master-framework-mount.md",
+          "status": "??"
+        },
+        {
+          "path": "docs/handoff/2026-09-30-luca-cross-cli-messaging-handoff.md",
+          "status": "??"
+        },
+        {
+          "path": "docs/plans/2026-09-30-luca-cross-cli-messaging-execution-plan.md",
+          "status": "??"
+        },
+        {
+          "path": "docs/research/2026-09-30-luca-cross-cli-communication-feasibility.md",
+          "status": "??"
+        },
+        {
+          "path": "docs/research/evidence/2026-09-30-cross-cli-communication/claude-results.json",
+          "status": "??"
+        },
+        {
+          "path": "docs/research/evidence/2026-09-30-cross-cli-communication/codex-summary.json",
+          "status": "??"
+        }
+      ],
+      "comparison_status_sha256": "134a0a863db28dbfa2470ca267e22f2dc0956257577d28a0b57faecb884a6ec9",
+      "controlled_change": {
+        "command": [
+          "node",
+          "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/controlled-change.mjs",
+          "inspect",
+          "--repo",
+          "/Users/luca/Desktop/\u9879\u76ee/muse"
+        ],
+        "control_root": "/Users/luca/Desktop/\u9879\u76ee/muse/.git/luca-controlled-change",
+        "current_present": false,
+        "exit_code": 0,
+        "inactive_proven": true,
+        "kind": "inactive",
+        "raw_result": {
+          "bytes": 102,
+          "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CURRENT-CONTROLLED-RESUME-02-P.json",
+          "permission_mode": "0600",
+          "sha256": "b8451056082b469ae6985bb31bc62aebba95b4e93004eaff8c6941e15938780c"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "dirty_and_untracked_files": [
+        {
+          "bytes": 3362,
+          "mode": "100644",
+          "path": ".luca/memory/muse-gstack-fork-isolation.md",
+          "permission_mode": "0644",
+          "sha256": "721af0a1088ea9e3c2683a29abeb47482007bc53bc793f7b2d4a9ab3a7244404",
+          "type": "file"
+        },
+        {
+          "bytes": 58210,
+          "mode": "100644",
+          "path": "CHECKPOINT.md",
+          "permission_mode": "0644",
+          "sha256": "a99f2062decca98704e1ef1b077b7b5f6ef9d92f70b795b1f19f2f8be79f3883",
+          "type": "file"
+        },
+        {
+          "bytes": 10073,
+          "mode": "100644",
+          "path": "CONTEXT.md",
+          "permission_mode": "0644",
+          "sha256": "505bc5b36acd496eb655b67300b9c05f5b82420f074f27430603359db7645eb6",
+          "type": "file"
+        },
+        {
+          "bytes": 204233,
+          "mode": "100644",
+          "path": "app/main.js",
+          "permission_mode": "0644",
+          "sha256": "d2f3f66ae17033832b0e3fad6eb77c2bb2b79d4af439f4dc556bd81e25bae220",
+          "type": "file"
+        },
+        {
+          "bytes": 13818,
+          "mode": "100644",
+          "path": "app/preload.cjs",
+          "permission_mode": "0644",
+          "sha256": "bf9f37a1ddd83f1da70e3cb528aa3672a428ebe5bec9f0e7b7b5c30621386714",
+          "type": "file"
+        },
+        {
+          "bytes": 254162,
+          "mode": "100644",
+          "path": "app/renderer/app.js",
+          "permission_mode": "0644",
+          "sha256": "93f0c23a3048151a85c85766dba12ac7b1e0312d4a8f0c28b1aacc39c383b127",
+          "type": "file"
+        },
+        {
+          "bytes": 61320,
+          "mode": "100644",
+          "path": "app/renderer/index.html",
+          "permission_mode": "0644",
+          "sha256": "cb211b83a66c83f6d63d8832a9ce5483619e058aa703b730f7d6f97386c13f69",
+          "type": "file"
+        },
+        {
+          "bytes": 61165,
+          "mode": "100644",
+          "path": "app/renderer/styles.css",
+          "permission_mode": "0644",
+          "sha256": "764f2bdf4d8d285c792ef6feeb81181c5c24ef0262dbd8f850e95e5463446be6",
+          "type": "file"
+        },
+        {
+          "bytes": 45500,
+          "mode": "100644",
+          "path": "app/session-open.js",
+          "permission_mode": "0644",
+          "sha256": "0d74a64f5d199389e1b566b332acbb44ef29076cd307c0d923bc67aeb755c57b",
+          "type": "file"
+        },
+        {
+          "bytes": 26726,
+          "mode": "100644",
+          "path": "app/settings-store.js",
+          "permission_mode": "0644",
+          "sha256": "1f108ca2622174f7d24a5c01595103ecc92b4c402c7660fd596cb66b72aeb099",
+          "type": "file"
+        },
+        {
+          "bytes": 12347,
+          "mode": "100644",
+          "path": "app/test-codex-direct-e2e.mjs",
+          "permission_mode": "0644",
+          "sha256": "fab6ea87cc379b35e0ee4925ee23d7afc550bfd76a6177756277978867b9d9c3",
+          "type": "file"
+        },
+        {
+          "bytes": 2465,
+          "mode": "100644",
+          "path": "app/test-default-provider-wiring.mjs",
+          "permission_mode": "0644",
+          "sha256": "b435c17edad6b6e367a27de2004c1b61d190ceb2a2beeaeeb6ce98eb59f21c82",
+          "type": "file"
+        },
+        {
+          "bytes": 20322,
+          "mode": "100644",
+          "path": "app/test-framework-mount.mjs",
+          "permission_mode": "0644",
+          "sha256": "f32a5932718fb6bac900172107e7030139c23f8c42fdd777e5466706ab60788c",
+          "type": "file"
+        },
+        {
+          "bytes": 10493,
+          "mode": "100644",
+          "path": "app/test-session-open-e2e.mjs",
+          "permission_mode": "0644",
+          "sha256": "3c76887f5ced05c7b493094a7e9e95cd5090d08bc526c1c2ac3a2c1d1ef78f9b",
+          "type": "file"
+        },
+        {
+          "bytes": 14807,
+          "mode": "100644",
+          "path": "app/test-session-spool.mjs",
+          "permission_mode": "0644",
+          "sha256": "fa33172c8ea12ce3b8610ff123670d141f113bb11270b50080327c2f835852c9",
+          "type": "file"
+        },
+        {
+          "bytes": 51182,
+          "mode": "100644",
+          "path": "app/test-settings-navigation-v2.mjs",
+          "permission_mode": "0644",
+          "sha256": "bbb198bf482e0c455d33bee7f8ab4733906a0e363890a12ba26bbf7a39f69bcb",
+          "type": "file"
+        },
+        {
+          "bytes": 35598,
+          "mode": "100644",
+          "path": "app/test-settings-store.mjs",
+          "permission_mode": "0644",
+          "sha256": "6a17f96fccb22bdb785587fb8bafddef3bbe638299a695744fd8ed0be4bf0879",
+          "type": "file"
+        },
+        {
+          "bytes": 15211,
+          "mode": "100644",
+          "path": "app/test-theme-follow-e2e.mjs",
+          "permission_mode": "0644",
+          "sha256": "5f51acd8f5e59577149c5d392c76fd716ce334f4b4eb30c4d63bb3b6d6ddd0ae",
+          "type": "file"
+        },
+        {
+          "bytes": 2761,
+          "mode": "100644",
+          "path": "docs/engineering/2026-10-01-codex-connection-settings.md",
+          "permission_mode": "0644",
+          "sha256": "4e403a9b56107bb1cb7e70c0266b7ce85d8d4b7dc3ce724866fd93cbb28ac289",
+          "type": "file"
+        },
+        {
+          "bytes": 2259,
+          "mode": "100644",
+          "path": "docs/evaluation/2026-09-30-master-framework-mount.md",
+          "permission_mode": "0644",
+          "sha256": "5cc8b6c381c9272c05b3c7669114048aa81d981c9dc952e5cb92a9841edc0e02",
+          "type": "file"
+        },
+        {
+          "bytes": 3186,
+          "mode": "100644",
+          "path": "docs/handoff/2026-09-30-luca-cross-cli-messaging-handoff.md",
+          "permission_mode": "0644",
+          "sha256": "5d4d9310f55bfb0cb8e9228c05f55c3ba957cde1bdce8c4036b3f6e588c39488",
+          "type": "file"
+        },
+        {
+          "bytes": 19653,
+          "mode": "100644",
+          "path": "docs/plans/2026-09-30-luca-cross-cli-messaging-execution-plan.md",
+          "permission_mode": "0644",
+          "sha256": "2cd2f812f3b1549207b858d90a362fe2d1797348d8676ad3797847dc17512b2b",
+          "type": "file"
+        },
+        {
+          "bytes": 7888,
+          "mode": "100644",
+          "path": "docs/research/2026-09-30-luca-cross-cli-communication-feasibility.md",
+          "permission_mode": "0644",
+          "sha256": "1beb21cac99992d1c309d4701866363cfc063631eabb181b76f93e83d07e07e7",
+          "type": "file"
+        },
+        {
+          "bytes": 993,
+          "mode": "100644",
+          "path": "docs/research/evidence/2026-09-30-cross-cli-communication/claude-results.json",
+          "permission_mode": "0644",
+          "sha256": "e239cb7254528cf089268a0cf3a8aaeb7dfbcb544eb2c7ed4099f861cbc3e61f",
+          "type": "file"
+        },
+        {
+          "bytes": 1062,
+          "mode": "100644",
+          "path": "docs/research/evidence/2026-09-30-cross-cli-communication/codex-summary.json",
+          "permission_mode": "0644",
+          "sha256": "b7ba82c4cef8eeff18a9717bad788ae5dba09ce50a81017eb3384e98a96da5c0",
+          "type": "file"
+        }
+      ],
+      "excluded_audit_record_count": 0,
+      "excluded_audit_status_records": [],
+      "file_tuples_sha256": "052c825204f17f5444213b81babd454f834b8aed39238388a969c2d87973c4db",
+      "full_status_raw_sha256": "c06e8e47ec7b53e9b0492df8e5cb42f8d48a64789df21e4247eb950d30899dc3",
+      "full_status_record_count": 25,
+      "git": {
+        "HEAD": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+        "branch": "refactor/claude-code-kernel",
+        "git_common_dir": "/Users/luca/Desktop/\u9879\u76ee/muse/.git",
+        "index": {
+          "bytes": 35061,
+          "mode": "100644",
+          "permission_mode": "0644",
+          "sha256": "0ee0b48f52d5fbf0f0ab66eb820c5bc2c6aa2ed684a7fb6259c90e24ea0800f8",
+          "type": "file"
+        },
+        "index_path": "/Users/luca/Desktop/\u9879\u76ee/muse/.git/index"
+      },
+      "label": "P",
+      "root": "/Users/luca/Desktop/\u9879\u76ee/muse",
+      "status_command": [
+        "git",
+        "status",
+        "--porcelain",
+        "-uall",
+        "-z"
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "started_at_utc": "2026-10-01T03:44:47.612707+00:00"
+}

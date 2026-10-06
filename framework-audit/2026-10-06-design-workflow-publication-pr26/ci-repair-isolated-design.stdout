@@ -1,0 +1,224 @@
+STATIC_ONLY_NOT_NATIVE root=/Users/luca/.codex/worktrees/design-workflow-commit-check/luca_gstack pid=45481 cwd=/Users/luca/.codex/worktrees/design-workflow-commit-check/luca_gstack
+SOURCE_HASHES {".claude/skills/office/brainstorm/SKILL.md":"9a92eb459013e3931ecb7e7e82d45095714b4ea2d8a092610455ab9344d7eac3",".claude/skills/office/ux-brainstorm/SKILL.md":"fda273a42fe3c2e24976988bd55d2ba73eb7478bd4adf4684a547674fd149769",".claude/skills/office/brainstorm/references/adversarial-review.md":"bcdeda78f299848d99f12f4e6dab692f2fe5ed2ec5fbd4910f6e94b368eeafdf",".claude/skills/office/ux-brainstorm/references/adversarial-review.md":"43e7f372aa8c46dbb6e8df352d74901b97051def3cf3eab0ac10e627199dc5a4",".claude/skill-os/codex-viability.yaml":"611813287972b50a27c63ee7d984bb19b05a6daeb514ee884cafe5f85f06fe3d",".claude/agents/quality-gate.md":"11078c693bff65123d7ded36362b1e8f92a6e957e42913aba04ec366df3b60ff",".claude/skills/office/auto/SKILL.md":"64f98f8b7fba38b91f5451c1abce1bc667533077f59ec7893f176fb38ae36ea0",".claude/skills/office/tech-spec/SKILL.md":"225d60fc1e739e3f4329bb512cfdf594810f136b1febc23e55be096579b90643",".claude/skills/office/task-plan/SKILL.md":"6f483b198ce65f1217284090a6f539d839a83e8c5bf350348d7372e9c8bec0c4",".claude/agents/preflight-agent.md":"8a2d28351a7c60d50a5beadf5d5ad752890d61426542673acb1387b5a556463c",".claude/skill-os/input-modes.yaml":"b342a8b5647c46a8e1f1c18dcb258589df720c47a6bd5c7ad26dc0a1370d37a2",".claude/skill-os/generated/input-modes/tech-spec.json":"508a7a53815b7ee6bd344ae25ff162bdc1d5b57181154ae89eca51f0c210ced0",".claude/skill-os/generated/input-modes/task-plan.json":"a2ea7cf33167750485bfc1815dfa84b0bc507345797ccc5ed1d2b47a4b12f848",".claude/skills/office/open-design/SKILL.md":"27f4812efa6c6d6e5a2ed8ea6d19921e72d17d31696c0437916fc0000022e3e6",".claude/skill-os/runtime/page-context.md":"0d2f260cb6c87289b6e0a6f17a750c851beb7ddab57ec6415c511066dfdc4d36",".claude/agents/references/plan-design-guidance.md":"2922306d1260eae30aaa362641e1d35a48bd80ca2187384cd4746aadb6d73b28","scripts/original-copy-handoff.mjs":"a957ba7114b1f742b6fee6d4a4956f54e7fc7fbfd718755f9281f002acb75b76",".claude/skill-os/generated/input-modes/open-design.json":"1d15aa8eedc4d896a97256de2358613259a5266661abe7006815bae5bf80ad64"}
+PASS draft facet precedes assertions and ordinary Skill Mode
+PASS draft required field review_stage
+PASS draft required field skill_name
+PASS draft required field scope_tier
+PASS draft required field round
+PASS draft required field eval_run_id
+PASS draft required field project_session
+PASS draft required field draft
+PASS draft required field source_refs
+PASS draft required field criteria
+PASS draft required field prior_decisions
+PASS bounded two skills
+PASS frozen exact UTF8 bytes
+PASS independent recomputation
+PASS source permission and readback
+PASS verifiable user turn sources
+PASS full original criteria denominator
+PASS missing fields reject
+PASS required UNKNOWN blocks
+PASS Human Gate preserved
+PASS draft-only future-stage exemption
+PASS ordinary modes untouched
+PASS native input binding
+PASS XML criterion grammar
+PASS criterion evidence grammar
+PASS criterion identity wrapper
+PASS full structured payload not token truncated
+PASS facet subject
+PASS empty output paths
+PASS caller eval ID same
+PASS no envelope hash extension
+PASS judge no writes
+PASS parse XML before consuming
+PASS unknown severity or corrupt response stops
+PASS parsed count denominator envelope consistency
+PASS same native accepted binding
+PASS fresh vote after change
+PASS ordinary WA DONE prerequisite retained
+PASS ordinary outputs_produced existence retained
+PASS ordinary handoff existence retained
+PASS ordinary scoped workflow DONE retained
+PASS ordinary handoff CLI retained
+PASS matrix fixture brainstorm/Lightweight=N/A
+PASS matrix fixture brainstorm/Standard=≥2
+PASS matrix fixture brainstorm/Deep-feature=≥2
+PASS matrix fixture brainstorm/Deep-product=≥3
+PASS matrix fixture ux-brainstorm/Lightweight=2
+PASS matrix fixture ux-brainstorm/Standard=3
+PASS matrix fixture ux-brainstorm/Deep-feature=3
+PASS matrix fixture ux-brainstorm/Deep-product=≥3
+PASS actual stable IDs and gaps
+PASS no obsolete zero padded IDs
+PASS tier confirmation and distinct content
+PASS tier required pros cons and rejected directions
+PASS brainstorm two round ceiling
+PASS brainstorm obsolete three round paths removed
+PASS brainstorm no author Oracle fallback
+PASS brainstorm independent native Codex dispatch
+PASS brainstorm no capability stops gate
+PASS brainstorm severity critical blocks
+PASS brainstorm severity high blocks
+PASS brainstorm persistence cannot pass
+PASS brainstorm required UNKNOWN blocks
+PASS brainstorm changed draft fresh vote
+PASS brainstorm reasoned escalation only
+PASS brainstorm independent admission owner reached
+PASS ux two round ceiling
+PASS ux obsolete three round paths removed
+PASS ux no author Oracle fallback
+PASS ux independent native Codex dispatch
+PASS ux no capability stops gate
+PASS ux severity critical blocks
+PASS ux severity high blocks
+PASS ux persistence cannot pass
+PASS ux required UNKNOWN blocks
+PASS ux changed draft fresh vote
+PASS ux reasoned escalation only
+PASS ux independent admission owner reached
+PASS prdReview two round ceiling
+PASS prdReview obsolete three round paths removed
+PASS prdReview no author Oracle fallback
+PASS prdReview independent native Codex dispatch
+PASS prdReview no capability stops gate
+PASS prdReview severity critical blocks
+PASS prdReview severity high blocks
+PASS prdReview persistence cannot pass
+PASS prdReview required UNKNOWN blocks
+PASS prdReview changed draft fresh vote
+PASS prdReview reasoned escalation only
+PASS prdReview independent admission owner reached
+PASS uxReview two round ceiling
+PASS uxReview obsolete three round paths removed
+PASS uxReview no author Oracle fallback
+PASS uxReview independent native Codex dispatch
+PASS uxReview no capability stops gate
+PASS uxReview severity critical blocks
+PASS uxReview severity high blocks
+PASS uxReview persistence cannot pass
+PASS uxReview required UNKNOWN blocks
+PASS uxReview changed draft fresh vote
+PASS uxReview reasoned escalation only
+PASS uxReview independent admission owner reached
+PASS prdReview full original dimension 1
+PASS prdReview full original dimension 2
+PASS prdReview full original dimension 3
+PASS prdReview full original dimension 4
+PASS prdReview full original dimension 5
+PASS prdReview full original dimension 6
+PASS prdReview full original dimension 7
+PASS uxReview full original dimension 1
+PASS uxReview full original dimension 2
+PASS uxReview full original dimension 3
+PASS uxReview full original dimension 4
+PASS uxReview full original dimension 5
+PASS PRD current AI architecture content and Phase6 commitment
+PASS PRD no future file admission
+PASS PRD scope-aware prewrite template interpretation
+PASS PRD XML summary counts
+PASS UX convergence means no surviving critical high
+PASS PRD XML identity
+PASS UX XML identity
+PASS PRD severity finite grammar
+PASS UX severity finite grammar
+PASS PRD no concerns blocker downgrade
+PASS UX no no-new severity bypass
+PASS PRD human approach preference retained
+PASS UX human approach preference retained
+PASS registry brainstorm independent review
+PASS registry ux-brainstorm independent review
+PASS auto declares execution_context per phase
+PASS auto interactive brainstorm main_agent
+PASS auto interactive ux-brainstorm main_agent
+PASS auto interactive design-brief main_agent
+PASS auto interactive open-design main_agent
+PASS auto research deepresearch subagent
+PASS auto research ux-research subagent
+PASS auto logical WA ownership independent of spawn
+PASS auto dispatch reads actual skill Human Gate
+PASS auto research parameters collected in main first
+PASS auto missing human decision stops dispatch
+PASS auto WA template limited to subagent
+PASS auto main direct execution and skill handoff
+PASS auto old all-WA mandate removed
+PASS auto same gates for both contexts
+PASS auto only subagent phase fanout
+PASS auto cancellation stops new successors
+PASS ts source mode separate from workflow
+PASS ts never infer CONV from missing Brief
+PASS ts missing mode or register needs context
+PASS ts drift blocks
+PASS ts source register path hash section binding
+PASS ts original source and independent MUST set
+PASS ts original source reverse enumeration
+PASS ts sourced no UI NA
+PASS ts engineering errors remain tested MUST
+PASS ts canonical handoff mode preserved
+PASS ts normal prd end to end retained
+PASS tp source mode separate from workflow
+PASS tp never infer CONV from missing Brief
+PASS tp missing mode or register needs context
+PASS tp drift blocks
+PASS tp source register path hash section binding
+PASS tp original source and independent MUST set
+PASS tp original source reverse enumeration
+PASS tp sourced no UI NA
+PASS tp engineering errors remain tested MUST
+PASS tp canonical handoff mode preserved
+PASS tp normal prd end to end retained
+PASS TS persists in-memory register in canonical output
+PASS TS no second facade artifact
+PASS TP actual source read and hash before RTM
+PASS TP full CONV chain
+PASS TP own 100 percent not evidence
+PASS preflight tech-spec explicit source branches
+PASS preflight task-plan explicit source branches
+PASS tech-spec projection input source notes
+PASS tech-spec unchanged workflow modes
+PASS tech-spec register coverage quality gate
+PASS tech-spec projection hash current
+PASS task-plan projection input source notes
+PASS task-plan unchanged workflow modes
+PASS task-plan register coverage quality gate
+PASS task-plan projection hash current
+PASS OD original-copy HEADLESS_ONLY in intake before profile/stage
+PASS OD original-copy opt-in AND run grant required
+PASS OD original-copy generic desktop default excluded
+PASS OD stage gate already headless chosen and run granted
+PASS OD stage completion message conditional
+PASS OD failed original headless never desktop
+PASS OD normal retry counter retained
+PASS OD no headless fallback respects original mode
+PASS OD completion original desktop iteration excluded
+PASS OD core default exception retained
+PASS page original-copy capability ahead of operation sequence
+PASS page original-copy failure stops desktop recovery
+PASS auto W9 original exception precedes generic retry
+PASS auto keeps normal desktop recovery retry counter
+PASS Plan direct consumer original-copy capability exception
+PASS Plan direct consumer normal desktop recovery retained
+PASS OD metadata original-copy exception
+PASS OD metadata source hash current
+PASS adapter existing desktop hard refusal preserved
+PASS adapter existing successful exact run prerequisite preserved
+PASS source stable .claude/skills/office/brainstorm/SKILL.md
+PASS source stable .claude/skills/office/ux-brainstorm/SKILL.md
+PASS source stable .claude/skills/office/brainstorm/references/adversarial-review.md
+PASS source stable .claude/skills/office/ux-brainstorm/references/adversarial-review.md
+PASS source stable .claude/skill-os/codex-viability.yaml
+PASS source stable .claude/agents/quality-gate.md
+PASS source stable .claude/skills/office/auto/SKILL.md
+PASS source stable .claude/skills/office/tech-spec/SKILL.md
+PASS source stable .claude/skills/office/task-plan/SKILL.md
+PASS source stable .claude/agents/preflight-agent.md
+PASS source stable .claude/skill-os/input-modes.yaml
+PASS source stable .claude/skill-os/generated/input-modes/tech-spec.json
+PASS source stable .claude/skill-os/generated/input-modes/task-plan.json
+PASS source stable .claude/skills/office/open-design/SKILL.md
+PASS source stable .claude/skill-os/runtime/page-context.md
+PASS source stable .claude/agents/references/plan-design-guidance.md
+PASS source stable scripts/original-copy-handoff.mjs
+PASS source stable .claude/skill-os/generated/input-modes/open-design.json
+RESULT 221/221 PASS; STATIC_ONLY_NOT_NATIVE

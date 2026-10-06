@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-02T19:29:38.736338+00:00",
+  "status": "BUILD_ONLY; independent readiness review pending",
+  "root_files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "211c7d3530ccff80b589cb8f152e2f916c0a21d95c54d24755d26b5bde2cdf2f",
+      "bytes": 24320
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "30e75cff9be6573f618062d0ba854379103bd8a47d5eab2b334f5174bfe5b643",
+      "bytes": 19583
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "8b6152faeaf1cb29db7e9e32493939f37d7a022ec4eb34f3d2f06fd9e0a25dee",
+      "bytes": 44329
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "c91ad8d4a74f63adce1c0fc7a26dd5bc04b9c8d4d0c5308815d917c82f0e59d1",
+      "bytes": 44685
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "cf43047b371b8cecfa7646d3069d3807a4f86c7d912afa5a021245e82068105e",
+      "bytes": 27263
+    }
+  ],
+  "root_owned_corrections": {
+    "diff": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-corrections.diff",
+    "sha256": "e3a3ee1342a57e825002b2c339ec1fcaf0c80da2842b8f34e90433b5c6c18de6",
+    "changes": [
+      "Accept actual tri_system_eval initialize user-agent prefix while retaining exact version/user-agent proof checks.",
+      "Copy each native skill owner once by retaining ancestor office subtree; preserve all 48 nested owners and relative assets."
+    ],
+    "cost": "Root integration work and checks, separate from 20 dispatched preparation calls; actual root tool trace, tokens/money unknown. Not attributed to original owners."
+  },
+  "test_runs": [
+    {
+      "command": "node --test scripts/tri-system-eval/conditions.test.mjs",
+      "pass": 18,
+      "fail": 0,
+      "exit_code": 0,
+      "duration_ms": 599.7,
+      "tool_evidence": [
+        "6f08a7"
+      ],
+      "scope": "current conditions pair; previous failure dced88 retained in tool trace"
+    },
+    {
+      "command": "node --test scripts/tri-system-eval/driver.test.mjs",
+      "pass": 35,
+      "fail": 0,
+      "exit_code": 0,
+      "duration_ms": 10767.87725,
+      "tool_evidence": [
+        "50c32f",
+        "2926df"
+      ],
+      "scope": "current driver pair with fake transport; no model"
+    },
+    {
+      "command": "node --test scripts/tri-system-eval/integration.test.mjs",
+      "pass": 10,
+      "fail": 0,
+      "exit_code": 0,
+      "duration_ms": 17566.901084,
+      "tool_evidence": [
+        "67fa56",
+        "f11797"
+      ],
+      "scope": "current 3 real modules with fake transport; no model"
+    }
+  ],
+  "test_limitations": [
+    "These are separate test invocations, not a newly run aggregate full suite.",
+    "Unchanged case-protocol pair has earlier 25-test verification; not rerun in this integration round.",
+    "Offline tests do not establish live native safety or comparative value."
+  ],
+  "native_skill_metadata": [
+    {
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B",
+      "errors": [],
+      "repo_count": 48,
+      "repo_names": 48,
+      "duplicates": {},
+      "scope_counts": {
+        "repo": 48,
+        "user": 69,
+        "system": 5
+      }
+    },
+    {
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S",
+      "errors": [],
+      "repo_count": 48,
+      "repo_names": 48,
+      "duplicates": {},
+      "scope_counts": {
+        "repo": 48,
+        "user": 69,
+        "system": 5
+      }
+    }
+  ],
+  "native_metadata_limits": "Discovery metadata only; no model/tool adoption proof. External MagicPath alias and unexecuted hooks remain limited.",
+  "probe_summaries": [
+    {
+      "id": "P03",
+      "result": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf/runs/u007-p03-native-appserver-r1/evidence/result.json",
+      "result_sha256": "9865180c6316fd74b6179f314cdf848613fd8d2315db2c82f49f8fd1200f1cef",
+      "status": "INVALID_RUN",
+      "observed_threads": 0,
+      "observed_turns": 0,
+      "observed_total_tokens": null,
+      "tool_actions": 0,
+      "completed_tools": [],
+      "native_command_items": 0,
+      "errors": [
+        "RPC_thread/start:{\"code\":-32603,\"message\":\"error creating thread: failed to load AGENTS.md instructions for environment `local`: fs sandbox helper failed with status exit status: 71: sandbox-exec: execvp() of '/Users/luca/.local/bin/codex' failed: Operation not permitted\"}"
+      ],
+      "unfinished_turns": [],
+      "boundary_status": "NATIVE_BOUNDARY_UNVERIFIED",
+      "parent_checks": {
+        "denied_marker_unchanged": true,
+        "no_outside_write": true,
+        "no_case_write": true
+      },
+      "elapsed_seconds": 4.134
+    },
+    {
+      "id": "P04",
+      "result": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p04-3v_neg6p/runs/u007-p04-native-appserver-r1/evidence/result.json",
+      "result_sha256": "2a5425138237afd648c684d5ceceb4ae38ebf9e0fa85627e11744e4ec701bbc1",
+      "status": "INVALID_RUN",
+      "observed_threads": 0,
+      "observed_turns": 0,
+      "observed_total_tokens": null,
+      "tool_actions": 0,
+      "completed_tools": [],
+      "native_command_items": 0,
+      "errors": [
+        "RPC_thread/start:{\"code\":-32603,\"message\":\"error creating thread: failed to load AGENTS.md instructions for environment `local`: fs sandbox helper failed with status exit status: 71: sandbox-exec: execvp() of '/Users/luca/.local/bin/codex' failed: Operation not permitted\"}"
+      ],
+      "unfinished_turns": [],
+      "boundary_status": "NATIVE_BOUNDARY_UNVERIFIED",
+      "parent_checks": {
+        "denied_marker_unchanged": true,
+        "no_outside_write": true,
+        "no_case_write": true
+      },
+      "elapsed_seconds": 4.798
+    },
+    {
+      "id": "P05",
+      "result": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p05-grh048va/runs/u007-p05-native-appserver-r1/evidence/result.json",
+      "result_sha256": "e5807c2752e7b6a0f1f7e0a23f1a78f46512a082af67eb3266ab12da11046317",
+      "status": "INVALID_RUN",
+      "observed_threads": 1,
+      "observed_turns": 1,
+      "observed_total_tokens": 59541,
+      "tool_actions": 5,
+      "completed_tools": [
+        "case_read",
+        "case_checkpoint",
+        "case_read",
+        "case_read",
+        "case_checkpoint"
+      ],
+      "native_command_items": 0,
+      "errors": [
+        "Reconnecting... 2/5",
+        "Reconnecting... 3/5",
+        "Reconnecting... 4/5",
+        "Reconnecting... 5/5",
+        "OBSERVED_TOKEN_BUDGET"
+      ],
+      "unfinished_turns": [],
+      "boundary_status": "NATIVE_BOUNDARY_UNVERIFIED",
+      "parent_checks": {
+        "denied_marker_unchanged": true,
+        "no_outside_write": true,
+        "no_case_write": true
+      },
+      "elapsed_seconds": 134.591
+    }
+  ],
+  "p05_usage_interpretation": {
+    "initial_input_tokens": 19100,
+    "cumulative_input_tokens": 59306,
+    "cumulative_output_tokens": 235,
+    "cumulative_total_tokens": 59541,
+    "cached_input_tokens": 38528,
+    "note": "Cumulative three usage updates, not 59541 initial prompt tokens; cache is not added again. Token cap was 40000; stops at first reported overage, not a hard preemptive inference cap."
+  },
+  "pools": {
+    "preparation": {
+      "used": 20,
+      "cap": 20
+    },
+    "review": {
+      "used": 4,
+      "cap": 32
+    },
+    "behavior": {
+      "used": 5,
+      "cap": 144
+    },
+    "capability_probe": {
+      "used": 5,
+      "cap": 6
+    },
+    "formal_development_runs": 0,
+    "formal_hidden_runs": 0
+  },
+  "live_owners": "All original three chats idle/completed; no W21 dispatched.",
+  "next": "Independent bounded code/readiness and method review; P06 not prepared, registered or launched. No production replacement, commit or push."
+}

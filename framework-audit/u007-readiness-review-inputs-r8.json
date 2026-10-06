@@ -1,0 +1,170 @@
+{
+  "eval_run_id": "tri-system-u007-r8-offline-repair-20261003",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-10.md",
+      "sha256": "c86c07c039654d5161a0015863f40abc1a663f10745b9a52e9faff763ec39f65",
+      "bytes": 3537
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r7.md",
+      "sha256": "ec26fb38e8c4b16802b6049283abfeadf14f4425b17c53a7e80597d58905dfc3",
+      "bytes": 2525
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r8.json",
+      "sha256": "0468d45131a551cc35dab091a05c9edbd96b51b7dbd3e07d364d395becb8a7d9",
+      "bytes": 4263
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r7-r8.diff",
+      "sha256": "bb466bf17e8990569b377445c30f18b8e1d5ab0f04b65cb8a3af19f482544595",
+      "bytes": 23628
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-replay-fixture.json",
+      "sha256": "58242ba647aeac8a49d565dfbaf7fd032e491200794a680d8ec468cb4ae7115c",
+      "bytes": 23435
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-prepare.py",
+      "sha256": "77cdee823858edd93c739cb291f56641b1e870ae9eaee7393c85618089ad670a",
+      "bytes": 16322
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-probe-program-r8.py",
+      "sha256": "56fa4f358c982813f736244d543c3f17468d09aae80cb04d1a5fe6eac5b1d2a4",
+      "bytes": 6075
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-probe-program-r8.test.py",
+      "sha256": "1f9dfb91f87bfb49ce72193f90ac1c3eb9e2ba02ca83f61411824d84bca055e8",
+      "bytes": 12368
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-root-portability.json",
+      "sha256": "14787a9497c922596e2dbbeee4118a9a70c031dc5a8734f73d584a80a7e1c5fd",
+      "bytes": 533
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-root-portability.tap",
+      "sha256": "ed0092effeba0e0c86c3b80f3de4a0003dda68c4641e10b6ed082bc605c76425",
+      "bytes": 35593
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-probe-repair-report.md",
+      "sha256": "ac73cc3500d00d0f909f2fded48092d204c9fbf17e9934b4ab623616100fbb2f",
+      "bytes": 2958
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-driver-repair-report.md",
+      "sha256": "6b1bf59b7666621f987c3e9de0f8f121bff2070a0d22c795974e8ca736dfcf91",
+      "bytes": 3056
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-integration-report.md",
+      "sha256": "523d2d41cb1907115c7a36c4d413a11f443c5771f22d880b4b42018578e01444",
+      "bytes": 2754
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-runtime-obligations.md",
+      "sha256": "65bcdb48025c29d591dc0055a0c35b111125223752f17a97712f527e3f86d01f",
+      "bytes": 8883
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "bytes": 24895
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "bytes": 22755
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "1bf9c49969f5ca91591d82c18b29b117c39b6925598b4142ce61b67508144a82",
+      "bytes": 51441
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "6833ff42eb749e4150de57036044df14c3b6b539307a61d19fd9382b76a0a52f",
+      "bytes": 67410
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "7815ed8008c9481b2acfc613c3ce7c7df08db5d5b36afd02ec865b1da9bf2d6f",
+      "bytes": 57741
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/fixtures/p07-replay.json",
+      "sha256": "58242ba647aeac8a49d565dfbaf7fd032e491200794a680d8ec468cb4ae7115c",
+      "bytes": 23435
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w30-offline-evidence-xklxguef/evidence.json",
+      "sha256": "4fd752855e2f36fda1c139755544db6afec0a7276f8b2c9dd45edb6891ca68e7",
+      "bytes": 3308
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w30-offline-evidence-xklxguef/test-run.json",
+      "sha256": "b7e906fbf45b7e375c6b35a7288220f2d70e7d6e2169532def3c2d09c13d1a95",
+      "bytes": 476
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w30-offline-evidence-xklxguef/tests.stderr",
+      "sha256": "b56a62f3c7c43d6b41bf326ce33246e3adbfdf3098be8773d4ff0f3a84cb08e2",
+      "bytes": 2479
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w31-evidence-thg55rlm/evidence.json",
+      "sha256": "8592a663465c9e11217164d4606a5727f732fe3557af85c7c006e661647eb049",
+      "bytes": 3812
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w31-evidence-thg55rlm/red.tap",
+      "sha256": "f3ccffce4cea1a3a1d69b10ff9a8312bb51a6113890ece433724e8b1e0ad3e4f",
+      "bytes": 6689
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w31-evidence-thg55rlm/green-targeted-2.tap",
+      "sha256": "7674213404e0b32ed761b2db29068a80f0e9900f41646377c46a522e97f6ae39",
+      "bytes": 1788
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w31-evidence-thg55rlm/full.tap",
+      "sha256": "0c787c46b2d08b587ca6279aef1a2e374b083d6bd252c322ab893bdc66259e5e",
+      "bytes": 14673
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w32-evidence-x1k4e5ba/evidence-index.json",
+      "sha256": "4f87397cd90e81a5fc44f2326265df5c109000a30055fb653447e3126e138586",
+      "bytes": 9215
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w32-evidence-x1k4e5ba/red.tap",
+      "sha256": "8676bdda6a41bc762db2769dcf87d341445fbbc4892b00ceb65d4279675711f1",
+      "bytes": 55768
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w32-evidence-x1k4e5ba/green-targeted.tap",
+      "sha256": "af19c05e65d6e2be824946aec56c54576b9a6a615a66f36df19fdf53ad15adc2",
+      "bytes": 33926
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w32-evidence-x1k4e5ba/green-regression.tap",
+      "sha256": "7a4973f359a0591384445948f45c52c63ccfeed522bb9f7ea6409e32e00b6af8",
+      "bytes": 88320
+    }
+  ]
+}

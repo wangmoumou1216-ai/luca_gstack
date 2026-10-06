@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-spec-20260930-01",
+  "subject": {
+    "skill": "code-review-spec",
+    "topic": "hook-health-pre-release",
+    "scene": "unknown",
+    "input_summary": "Independent frozen-scope Spec review R1–R8; readonly source/syntax and memory negative probes.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/spec-01.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 1,
+    "total": 8,
+    "findings": [
+      "R2 Important: corrupted module format passes health but actual loader produces unparseable CommonJS.",
+      "R3 Important: registration drift during official lookup missed by trusted/dry-run early returns.",
+      "R7 Important: unbound targets and inconsistent new flags delete unrelated existing files on rollback.",
+      "UNKNOWN: R1 lifecycle, R4 install, R5 protected recovery, R6 coordinated maintenance."
+    ]
+  }
+}

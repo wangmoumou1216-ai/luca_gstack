@@ -1,0 +1,1248 @@
+{
+  "schema_version": 1,
+  "kind": "luca-source-guard-review",
+  "bootstrap_sha256": "f4c5dd3d5996e1fe09b74a7f564b79a8b49fdffe4c88165deac5810feb864e32",
+  "loader_sha256": "d784256e26da61a7d46fa5d47ac4e5c549f81b69e820d3bb69da3fa89f2fbf30",
+  "roots": [
+    {
+      "root": "/Users/luca/Desktop/luca_gstack",
+      "files": {
+        ".claude/hooks/controlled-change-guard.mjs": {
+          "sha256": "7a5a3d47f1beeca4a3ec2213f4d5e735d749084567431aac6f8c158d5a9c82fc",
+          "format": "module"
+        },
+        ".claude/hooks/lib/codex-child-project.mjs": {
+          "sha256": "02139c51c4815e6766ff58d874f75c10da61b82b4776f7042f8a721d18f9f492",
+          "format": "module"
+        },
+        ".claude/hooks/lib/event-attestation.mjs": {
+          "sha256": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6",
+          "format": "module"
+        },
+        ".claude/hooks/lib/git-env.mjs": {
+          "sha256": "63f19a2f6e2757b6efb5ce17c2c0830c807eb5d629de99e87ff52fe55e6781a0",
+          "format": "module"
+        },
+        ".claude/hooks/lib/harness.mjs": {
+          "sha256": "2ac959d4a04af980863ddea4b2c4263ff52ec14fb91af7fd694530a34a25591a",
+          "format": "module"
+        },
+        ".claude/hooks/lib/host-launch.mjs": {
+          "sha256": "457ff9038cc5df1409d711c053478a92517b8f5331f59cceda7eeff4867fbc99",
+          "format": "module"
+        },
+        ".claude/hooks/lib/memroot.mjs": {
+          "sha256": "84efa17c488da1b596e4b58a37e096ddfe5a4cf62d06d713c6802b573bd7186f",
+          "format": "module"
+        },
+        ".claude/hooks/lib/project-event-closure.mjs": {
+          "sha256": "82b5aa13ed014b30d5c264a45d2a7a5430ca7352079308377c93dc77f0f54e66",
+          "format": "module"
+        },
+        ".claude/hooks/lib/project-host-view.mjs": {
+          "sha256": "4aaaacffc862a94e211182d0d812176f7fff31580de365dd1dbb7cd30a13444c",
+          "format": "module"
+        },
+        ".claude/hooks/lib/project-read-grants.mjs": {
+          "sha256": "14a865804f9378adbe8892ddff5d314359271a1491bc30b1a4146f90982d60dd",
+          "format": "module"
+        },
+        ".claude/hooks/lib/project-selection.mjs": {
+          "sha256": "1ccb5f15e3c39dd90a843f9cc1297332217945c8960412ac435133d60de0b11f",
+          "format": "module"
+        },
+        ".claude/hooks/lib/project-substrate.mjs": {
+          "sha256": "d06015d39668b8e12f1749dcd8d85f462fc404f3b0de90edf07d7a3bd80bd533",
+          "format": "module"
+        },
+        ".claude/hooks/post-edit.mjs": {
+          "sha256": "0a91e1c04747e71cd7973edcd60d3624384043bfa1a7e97a2318b261cf199522",
+          "format": "module"
+        },
+        ".claude/hooks/project-scope-guard.mjs": {
+          "sha256": "6794bdd6caa678445b0c0ab0a67f3dd4a8090db294ae94ee530b9b1615fe7e4d",
+          "format": "module"
+        },
+        ".claude/hooks/route-guard.mjs": {
+          "sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c",
+          "format": "module"
+        },
+        ".claude/hooks/session-end.mjs": {
+          "sha256": "af74e264eed2f5c789cd850ba56d07e6780f34f0bc2255e332efc0029167b0ef",
+          "format": "module"
+        },
+        ".claude/hooks/session-restore.mjs": {
+          "sha256": "10ef4912c835e75c8e5f0b239bf2dd4e66788ceb34b830d13c365e3861997a04",
+          "format": "module"
+        },
+        ".claude/hooks/session-sync.mjs": {
+          "sha256": "2a782c41d0edce6c476a2989d431a1c4ed7aa5e5468580ab2df44ed6022e72ac",
+          "format": "module"
+        },
+        ".claude/skills/office/diagnosing-bugs/scripts/safe-diagnostic-runner.mjs": {
+          "sha256": "db7f2612a3a3822bb76c253a950140ec19d51f8885e2c6c71bcb7dec2db93d3d",
+          "format": "module"
+        },
+        ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs": {
+          "sha256": "99dd2a1427ae25c4dcbd5f041d8a8a4bafa108a613c38a985f9c2e51079ff009",
+          "format": "module"
+        },
+        ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs": {
+          "sha256": "90673aac93b2b080ff3e23cb6cfb75a0854fd6db28fd9753bc33b2f6c5adbe3c",
+          "format": "module"
+        },
+        ".claude/skills/office/resolving-merge-conflicts/scripts/conflict-transaction.mjs": {
+          "sha256": "13e294132242001b3a1325aad86ea37397e72f1f01b0295a2bac743931ca53b3",
+          "format": "module"
+        },
+        ".claude/workflows/external-skill-scout.js": {
+          "sha256": "eb0c955499264aa87d1d3249cfe80f975c13d41212b0fbf099a49d5b9d3dc7e8",
+          "format": "commonjs"
+        },
+        ".claude/workflows/framework-evolution-scout.js": {
+          "sha256": "3f3136f735a7e1578c8cd3fba044f267563f8da0c0628bc8e096ad39f0751bf6",
+          "format": "commonjs"
+        },
+        ".codex/codex-hook-adapter.mjs": {
+          "sha256": "c0107d70c75a1371b2ab2efa9a2df323a1b3960fa29c0e99dd6a2c4adeedda71",
+          "format": "module"
+        },
+        ".codex/codex-source-guard-bootstrap.mjs": {
+          "sha256": "f4c5dd3d5996e1fe09b74a7f564b79a8b49fdffe4c88165deac5810feb864e32",
+          "format": "module"
+        },
+        ".codex/codex-source-guard-loader.mjs": {
+          "sha256": "d784256e26da61a7d46fa5d47ac4e5c549f81b69e820d3bb69da3fa89f2fbf30",
+          "format": "module"
+        },
+        ".codex/hook-source-integrity.mjs": {
+          "sha256": "5668e523584fe27bf0d53430756a9974c69729325e83eea80728ee071ff7735b",
+          "format": "module"
+        },
+        ".codex/host-launch-adapter.mjs": {
+          "sha256": "0a2b35dfdfe552eae177f0b96ae600dbcc1a4d3dfcded8436e951fec565216d8",
+          "format": "module"
+        },
+        ".codex/host-launch-hook.mjs": {
+          "sha256": "03ef627c982aac4ff675a81bf85e332e242c0c19f6c60d72a6f4587f2e52bee9",
+          "format": "module"
+        },
+        ".codex/model-route-hook.mjs": {
+          "sha256": "9d686b8ed9eb434580e3fa33f67aa8e910e2c2d6f2c21d7f8593f852f7e0f696",
+          "format": "module"
+        },
+        ".codex/stop-integrity-failure.mjs": {
+          "sha256": "406758f657317488b36556c7f076b22862867afae9640ed6f4c3bff61a8a7b4c",
+          "format": "module"
+        },
+        ".codex/workflow-runner.mjs": {
+          "sha256": "d794913d9c003549dae33545f1d09a6704f41190fa4b2b66905e8aa4e7a8c531",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/audit.mjs": {
+          "sha256": "1cb4319e7bd83cfbdb4189186021b77486699273219b9b1eabfc491b24164137",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/build-harness-matrix.mjs": {
+          "sha256": "44235b5d213b651164f531d9251b255e3cf77d6327bfa063aa12d10738afcb89",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/build-manifest.mjs": {
+          "sha256": "92e6caa3b78391c1b8061c513a88ee0799954cd0fccf4b848412cd88eb560778",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/make-signed-journal-fixture.mjs": {
+          "sha256": "73fe6441575a9896cebab41d570256394f3f7cc82b26dffb9ffaa76bce3073fe",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/make-signed-receipt-fixture.mjs": {
+          "sha256": "e34a59eb391adf23314b2e28cbca7325bbfdbfb1ec4ef4462c74baf15f0104c6",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/replay-census.mjs": {
+          "sha256": "7d56e7459b4ee7c2fe69717b6f1d8cb0d5031715c20734b23740551b567e7538",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/run-fixtures.mjs": {
+          "sha256": "62dbad724ab813be12977978d665c48139dea14df23fb6fadaeb8c21d8bae856",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/verify-final-handoff.mjs": {
+          "sha256": "dd4f69dc08d9d16f4979af67b19c3d69fff791086ee081254307118062191374",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/verify-journal.mjs": {
+          "sha256": "24512bf6a466818be705f0270e56c0a9d0d5a60cfa78761bb44689371a1f22f4",
+          "format": "module"
+        },
+        "framework-audit/2026-08-09-mattpocock-handshake-cycle2/tools/verify-receipt.mjs": {
+          "sha256": "53d20c191d30cea786a3895cc7a0b04ac623c57645ee262cca046cd7bcd54751",
+          "format": "module"
+        },
+        "framework-audit/2026-08-11-mattpocock-selected-skills-reassessment/tools/verify-change-order.mjs": {
+          "sha256": "dded702d7d7a1e822454122bfa7cdb7a3151edbd6a4fe38dd6b9daeb203a790c",
+          "format": "module"
+        },
+        "framework-audit/2026-08-11-rule-execution-handshake/tools/verify-final-plan.mjs": {
+          "sha256": "89b80647830b2469a7ba09068e02ec2dfcc2527bcde6ef9cac6618428560d24c",
+          "format": "module"
+        },
+        "framework-audit/2026-08-11-rule-execution-handshake/tools/verify-u001-package.mjs": {
+          "sha256": "56950e28978929328b2fd656be7d08222ebf9969a0d9b84b4849d0758005202d",
+          "format": "module"
+        },
+        "framework-audit/2026-08-19-rule-execution-recovery-handoff/tools/verify-recovery-handoff.mjs": {
+          "sha256": "05629524c4d2bb18aab77d47b2673a5e3f7f67bd55d060b4cf17c061d4b827af",
+          "format": "module"
+        },
+        "framework-audit/2026-08-20-routing-steering-handshake/payload-census/collector.mjs": {
+          "sha256": "97efbbeed945e51b94d91841b95a4ffcbf34e6e8eead522cd5570421aeaed881",
+          "format": "module"
+        },
+        "framework-audit/2026-09-02-skill-responsibility-audit/evidence/probe.mjs": {
+          "sha256": "1001aee8072c10d11e81cda7223737b9599bd3aff52d7f47b7ff4a747601fc8a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v22-scorer/agent-context-branch-fixtures.mjs": {
+          "sha256": "49d95e6cbad360c34a79bae5a567cf276ab8f7c3c7410e0e4d06df6ef0566b9a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v22-scorer/run-agent-context-ab.mjs": {
+          "sha256": "4e244a26240c703f56e803f2689c0d3b0959b116def92b28fdced0413b28803a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v22-scorer/test-agent-context-branch-fixtures.mjs": {
+          "sha256": "bd2c4dec8d2869830eab077c798e5bb0011328e9a35451654e00d96ac1b9dd7e",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v23-scorer/agent-context-branch-fixtures.mjs": {
+          "sha256": "49d95e6cbad360c34a79bae5a567cf276ab8f7c3c7410e0e4d06df6ef0566b9a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v23-scorer/run-agent-context-ab.mjs": {
+          "sha256": "15c689040272b06142a50c354e18bf7e58436e56c967bc968f377d6b53be80bb",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v23-scorer/test-agent-context-branch-fixtures.mjs": {
+          "sha256": "ef4c9d38ed3d2a67a2e40484a7289690cae0b8a14cb0d76e45a477f0e5c4ea78",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v24-scorer/agent-context-branch-fixtures.mjs": {
+          "sha256": "49d95e6cbad360c34a79bae5a567cf276ab8f7c3c7410e0e4d06df6ef0566b9a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v24-scorer/run-agent-context-ab.mjs": {
+          "sha256": "6785d1fe7e6e5f4624ff0436cf7dddabd73b5d5ef5f2f40431efebad6baba779",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-p6-v24-scorer/test-agent-context-branch-fixtures.mjs": {
+          "sha256": "ef4c9d38ed3d2a67a2e40484a7289690cae0b8a14cb0d76e45a477f0e5c4ea78",
+          "format": "module"
+        },
+        "framework-audit/2026-09-05-agent-context-runner-v20.mjs": {
+          "sha256": "031d3aeea98c839dd1975081805d2c4834b42e36ba51f90b8b6966ec5f3fddfd",
+          "format": "module"
+        },
+        "framework-audit/2026-09-06-agent-context-p6-v25-scorer/agent-context-branch-fixtures.mjs": {
+          "sha256": "49d95e6cbad360c34a79bae5a567cf276ab8f7c3c7410e0e4d06df6ef0566b9a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-06-agent-context-p6-v25-scorer/run-agent-context-ab.mjs": {
+          "sha256": "0ff638cea1e8a7fb7813a9221030c11d6790b30541823310d7c30c34bbf4eb55",
+          "format": "module"
+        },
+        "framework-audit/2026-09-06-agent-context-p6-v25-scorer/test-agent-context-branch-fixtures.mjs": {
+          "sha256": "ef4c9d38ed3d2a67a2e40484a7289690cae0b8a14cb0d76e45a477f0e5c4ea78",
+          "format": "module"
+        },
+        "framework-audit/2026-09-08-agent-context-p6-v26-scorer/agent-context-branch-fixtures.mjs": {
+          "sha256": "49d95e6cbad360c34a79bae5a567cf276ab8f7c3c7410e0e4d06df6ef0566b9a",
+          "format": "module"
+        },
+        "framework-audit/2026-09-08-agent-context-p6-v26-scorer/run-agent-context-ab.mjs": {
+          "sha256": "9b024cb71abfa2d982e8742f54a148d900924e590398fdc73b0fb91ab2f3b1a1",
+          "format": "module"
+        },
+        "framework-audit/2026-09-08-agent-context-p6-v26-scorer/test-agent-context-branch-fixtures.mjs": {
+          "sha256": "ef4c9d38ed3d2a67a2e40484a7289690cae0b8a14cb0d76e45a477f0e5c4ea78",
+          "format": "module"
+        },
+        "framework/assets/vendor/tailwindcss.com.js": {
+          "sha256": "176e894661aa9cdc9a5cba6c720044cbbf7b8bd80d1c9a142a7c24b1b6c50d15",
+          "format": "commonjs"
+        },
+        "scripts/agent-context-branch-fixtures.mjs": {
+          "sha256": "f751525df7a1c335964146baa97ca8689ca43db33dcd068dae03494b9aea25a3",
+          "format": "module"
+        },
+        "scripts/build-self-model.mjs": {
+          "sha256": "bc6d9bddc03fc170a2109aaf7c5ddcc652925b4ebc3d06b89dfba0c0a31adbbd",
+          "format": "module"
+        },
+        "scripts/candidate-manifest.mjs": {
+          "sha256": "4adeafc29cc96e3468a3fae4d71f25627b1afa638c5fd877d5c887e215c9b37f",
+          "format": "module"
+        },
+        "scripts/carrier-asset-profile.mjs": {
+          "sha256": "e83406cd0c26931e4754208bae8352b9aca13f86fb500d39884532860a2dd324",
+          "format": "module"
+        },
+        "scripts/carrier-dom.mjs": {
+          "sha256": "4f8881a5bf68d1a970c6c85021d5e113d38f63b0216d60835747b780d06f00f9",
+          "format": "module"
+        },
+        "scripts/carrier-packet.mjs": {
+          "sha256": "6085e6b7bfe84e4509b6775a1bf3df635536c16eccc51b49c0a95631e9688e37",
+          "format": "module"
+        },
+        "scripts/check-agent-context.mjs": {
+          "sha256": "a621583456491da8067bfd84bd425348ec2a89e4e197d643e54ceea536b14b7a",
+          "format": "module"
+        },
+        "scripts/check-agent-contracts.mjs": {
+          "sha256": "f85dcc5661ec851e1acb202fadedff853f25105fcae0a6f21898b55424d6f1c5",
+          "format": "module"
+        },
+        "scripts/check-agents-parity.mjs": {
+          "sha256": "faad88f98073a4c30b0c53ec780dedc664b4c9d4e099764476c5d13976fab84b",
+          "format": "module"
+        },
+        "scripts/check-appendix-pointers.mjs": {
+          "sha256": "8f4a43cbfd4e5394f17224777cd6332e0ea9b00de174a04eb0902174eafa9aa2",
+          "format": "module"
+        },
+        "scripts/check-capability-parity.mjs": {
+          "sha256": "cea62ebfbd6975cf86d67c6756c51121421bf20044edbbee6cde32246aa0757c",
+          "format": "module"
+        },
+        "scripts/check-ci-contract.mjs": {
+          "sha256": "e55146fc2e42c17c52d34ccc83a5ed380d003d8c1487daebb58d428b4e3eab80",
+          "format": "module"
+        },
+        "scripts/check-codex-viability.mjs": {
+          "sha256": "bfb83188ae6a15bf43133f2a98016337972259d83ebcf6d7f64409d3ea38fc93",
+          "format": "module"
+        },
+        "scripts/check-coding-discipline.mjs": {
+          "sha256": "193e9ec81f778a00882b5a01fc2cb5823bc35de34dd3f79a1a33fcfa92b724ec",
+          "format": "module"
+        },
+        "scripts/check-ears-syntax.mjs": {
+          "sha256": "7b37095e9e2feae116eaf941166095049c9732b6f8c751267658bca35cf7d9ac",
+          "format": "module"
+        },
+        "scripts/check-evolution-adjudication.mjs": {
+          "sha256": "7d375137282e2307c104828670f0d13f9e8d029a0398323b2957583c0c33ace6",
+          "format": "module"
+        },
+        "scripts/check-framework-html.mjs": {
+          "sha256": "6c03b21c852bd0b4f6b44d92f51a7c44277652d951f2944bd2d30f9fa7a44849",
+          "format": "module"
+        },
+        "scripts/check-model-table.mjs": {
+          "sha256": "e16df8ee1657a028ebee3147b27b8c771dd4a5d4af93807d01157bca642f4268",
+          "format": "module"
+        },
+        "scripts/check-project-links.mjs": {
+          "sha256": "6d6a91b135b50afcc06b3b91d2add601c360648ceea691f195e6e6fb37801f5e",
+          "format": "module"
+        },
+        "scripts/check-project-routing.mjs": {
+          "sha256": "b9ebcee99466eb4d85b2e3e7ca7b4ed57b43d06149114b964876ad61a9b68305",
+          "format": "module"
+        },
+        "scripts/check-quality-gates.mjs": {
+          "sha256": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45",
+          "format": "module"
+        },
+        "scripts/check-registration-sync.mjs": {
+          "sha256": "d2c1f12ee170b23c276a19ac74f32d8c94a819cf39528ee9ce5fd79a30636e94",
+          "format": "module"
+        },
+        "scripts/check-routing-map.mjs": {
+          "sha256": "49e3d28f8254c5cb822951a760dc6ce82cf8616e004aeebb9467159267b6b934",
+          "format": "module"
+        },
+        "scripts/codex-hook-health.mjs": {
+          "sha256": "1d94cbc492156d764a2b193394b122a752ed17b920303a2b3682ab8d63f0ef78",
+          "format": "module"
+        },
+        "scripts/codex-trust-hooks.mjs": {
+          "sha256": "8f8a4106713d550efe5863d3823897ca3ed889d6625c3c793c783f3e41776ee9",
+          "format": "module"
+        },
+        "scripts/controlled-change-controller.mjs": {
+          "sha256": "5920e378fc321d39d28845c868a83adc1a7c98f383fafca8c3e2eca69ef1953e",
+          "format": "module"
+        },
+        "scripts/controlled-change.mjs": {
+          "sha256": "f7fa38a09b6c95b3441cffd57bee4be58dd4535fc9813e57ace88789c9436a90",
+          "format": "module"
+        },
+        "scripts/design-flow-handoff.mjs": {
+          "sha256": "25b2e4ab8f8bb2a6efcf2e3877045540630c52a77fd67c9ec6da307660d51f0f",
+          "format": "module"
+        },
+        "scripts/evolution-bookkeep.mjs": {
+          "sha256": "75db7911cbe0ec2ae755fa75b2998698b0d9b29b2c2a2e5e70645e4608efe1b1",
+          "format": "module"
+        },
+        "scripts/evolution-feedback.mjs": {
+          "sha256": "ecda92d33c5fcb466c38ac691e9c0fdeb174e32c0afc0047f014ada53ef8aeff",
+          "format": "module"
+        },
+        "scripts/host-launch-broker.mjs": {
+          "sha256": "7b96359f2462cefb4592bcf5caa4b5a14f191416fe40f267719cb8f7c7f222a5",
+          "format": "module"
+        },
+        "scripts/install-codex-source-guard.mjs": {
+          "sha256": "3827b0a42f0bb8464b93f4e13b315a989ead5ea01f5fb620fd666d6c5f3191cd",
+          "format": "module"
+        },
+        "scripts/lib/semantic-projection.mjs": {
+          "sha256": "0afdbdb3eb389144d542aa159bd2c42ca0f6695851e1d9d9a375e88f72f33898",
+          "format": "module"
+        },
+        "scripts/migrate-host-launch-journal.mjs": {
+          "sha256": "8812781d410b5f8dd2ad9b74cb5360db7d16e0505936ede2c291a52ec8546aab",
+          "format": "module"
+        },
+        "scripts/model-route-host.mjs": {
+          "sha256": "1d7f3b3cd91a9c60c2afa1e594a5a5af1d10cad89e10ef6ca6998ea21bb533be",
+          "format": "module"
+        },
+        "scripts/model-route.mjs": {
+          "sha256": "7de71af51b8accc6046b04e77de828375fbb34ef7aab63a6e3305cb660858333",
+          "format": "module"
+        },
+        "scripts/original-copy-handoff.mjs": {
+          "sha256": "c95089e6f9576310968ab2e9df7b6dcbd58c4c94e4d89dce5f27e98c9c83a813",
+          "format": "module"
+        },
+        "scripts/original-template-edits.mjs": {
+          "sha256": "a6f779b25d3a340351030e6802831c07ffb4aa61bffa5668d1b45701258ef6e7",
+          "format": "module"
+        },
+        "scripts/original-template-index.mjs": {
+          "sha256": "1e03a20b807ba9fa6127e420415270154ae6f314ae44ee9e0d048700a1e27138",
+          "format": "module"
+        },
+        "scripts/original-template-resources.mjs": {
+          "sha256": "a8fd8398c4b4865fa39a97661eec44388704b530ee12c3d6f29844aa0f6ec821",
+          "format": "module"
+        },
+        "scripts/page-context-preview.mjs": {
+          "sha256": "d1dd3f06222b03c34d575a8bd8b6ed8e7786204d6d6f0079d32c34b1d0a4e45e",
+          "format": "module"
+        },
+        "scripts/page-context.mjs": {
+          "sha256": "a6ee51bed638c707f90b13dfa38f4b52242a67d6be78c18ccd15826e9b38ae0e",
+          "format": "module"
+        },
+        "scripts/project-lease.mjs": {
+          "sha256": "7e6469c1d62a4eda28f05b01a85dea5c7606e1ea06aa5c06435add96f33b8945",
+          "format": "module"
+        },
+        "scripts/project-pin.mjs": {
+          "sha256": "b2e94ef1f5cf6dd769b6032d76091e1d8f4a11bc7685423ac2414dab461b9e8c",
+          "format": "module"
+        },
+        "scripts/project-read.mjs": {
+          "sha256": "00ac1012a4b50e63b3aad64cdc8f25e2d7ea5b280467acf772d74232285e053b",
+          "format": "module"
+        },
+        "scripts/resolve-agent-context.mjs": {
+          "sha256": "57336884efe38d0815921e47b4423d6d90a6a3483f28a0f1f6663a3e58bc0ed1",
+          "format": "module"
+        },
+        "scripts/run-agent-context-ab.mjs": {
+          "sha256": "46be0921c2933c593d2c173773439ecbb4944749002594e4ca62a8772bc2810f",
+          "format": "module"
+        },
+        "scripts/skill-cutover-transaction.mjs": {
+          "sha256": "47b91545b65072672ad5130a0c853bd6c85800257749acdce4580274830673ae",
+          "format": "module"
+        },
+        "scripts/source-guard-review.mjs": {
+          "sha256": "2ce571965a8bf5986f70c6e34a63e2cca291e7d1cb8934d794556d50f3f1e51f",
+          "format": "module"
+        },
+        "scripts/source-guard-test-fixture.mjs": {
+          "sha256": "7c14168075ca140326ab5008852c36f1ca21d234d5fdb904c8a2e24a67730a3b",
+          "format": "module"
+        },
+        "scripts/sync-magicpath-projection.mjs": {
+          "sha256": "d0d1fec467f52e788734c9f51254842ace375a3a9864237e5f72a3ea4e786f51",
+          "format": "module"
+        },
+        "scripts/template-copy.mjs": {
+          "sha256": "d329e493a4f90675f198a47eaffff3d52ac367e36739d0afa6844016b786452e",
+          "format": "module"
+        },
+        "scripts/test-agent-context-branch-fixtures.mjs": {
+          "sha256": "60515273baaf7dd6623a588d1ff97c45cd5475cfa25ff490b3c442e69e09faf6",
+          "format": "module"
+        },
+        "scripts/test-agent-context-resolution.mjs": {
+          "sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7",
+          "format": "module"
+        },
+        "scripts/test-agent-context.mjs": {
+          "sha256": "1e887bd0dc88189fbd057fc5c8fa756dcd905e13cf54f4a48b29e680d9ade14b",
+          "format": "module"
+        },
+        "scripts/test-auto-open.mjs": {
+          "sha256": "367b54ccf71651433870671f61721b386bd37ed1597887178132821b0be47ccd",
+          "format": "module"
+        },
+        "scripts/test-carrier-asset-profile.mjs": {
+          "sha256": "34f172a7933c7c1c8e066b1f1e2b2de966e70669a8a65b54a932cee6ea1243bf",
+          "format": "module"
+        },
+        "scripts/test-ci-contract.mjs": {
+          "sha256": "d2df174c5a78db814efa22e0d7fc7ef673516c689009d2f23c9658e0878d236e",
+          "format": "module"
+        },
+        "scripts/test-codex-adapter.mjs": {
+          "sha256": "b34cc88b170073944a94dafca6b2b419b2d1d84a65ffe020c2a66ea58980c205",
+          "format": "module"
+        },
+        "scripts/test-codex-child-hook-integrity.mjs": {
+          "sha256": "4a0aa8e267b16ec7b26eb9a73d00414e58768d8a360ae4e684a14e83d7125eb8",
+          "format": "module"
+        },
+        "scripts/test-codex-child-project.mjs": {
+          "sha256": "c8309b1f1e0338993b85bd17f9665f838d91e5b4cc05486f82bc6f98a33489c8",
+          "format": "module"
+        },
+        "scripts/test-codex-hook-health.mjs": {
+          "sha256": "83e4af05598211589b05aeaeb61205e8072bf9643930033edeea08862fa907f5",
+          "format": "module"
+        },
+        "scripts/test-codex-model-route-hook.mjs": {
+          "sha256": "7eb586b56f6b33b11073052eff4e5abda36c2a0913d0c8c544545465710daa47",
+          "format": "module"
+        },
+        "scripts/test-codex-trust-hooks.mjs": {
+          "sha256": "b774ac99f1621730b7b53f5ea111f2eaf03c9bb7056907cd166e9109b33c4706",
+          "format": "module"
+        },
+        "scripts/test-controlled-change.mjs": {
+          "sha256": "02ba3a880d24a783169b6782edafb362054dc76287654df43b56b6d5f443bc09",
+          "format": "module"
+        },
+        "scripts/test-design-flow-handoff.mjs": {
+          "sha256": "64b7a14088699d4702f0f0db753e15b35035990549b9ca5e24f975b650e8652d",
+          "format": "module"
+        },
+        "scripts/test-design-tool-retirement.mjs": {
+          "sha256": "47289dc957dd747a47caadbef7a960ab5fa3642a50f1d3a6ab8bece19518e435",
+          "format": "module"
+        },
+        "scripts/test-design-tool-routing.mjs": {
+          "sha256": "21b49aba2e55f3bf75d0ec7738e0c35021011c25f05489cafb57a35c80e1e714",
+          "format": "module"
+        },
+        "scripts/test-domain-modeling-behavior.mjs": {
+          "sha256": "79e19a44b66e96596da7c7b55d2f456fa6f734cd8f6a862fdd6df3079cfcef06",
+          "format": "module"
+        },
+        "scripts/test-domain-modeling-skill.mjs": {
+          "sha256": "2bf61b3224bd67d8ddb4e47501338e2262108925ad64e81c23136bc91c8ee42b",
+          "format": "module"
+        },
+        "scripts/test-engineering-delivery-skills.mjs": {
+          "sha256": "f1c828aff9655b3b96fa77efa85efff0831a133df077acfed48aca058f36b711",
+          "format": "module"
+        },
+        "scripts/test-event-attestation-mutations.mjs": {
+          "sha256": "eb43fc6d97ad058b07a04a896a98456de7554b0034987aea956fe8ec207daf82",
+          "format": "module"
+        },
+        "scripts/test-event-attestation-negatives.mjs": {
+          "sha256": "8e3723719774d056f892b4af60c1926f0bad2cefabfc702d3674ec458a62a177",
+          "format": "module"
+        },
+        "scripts/test-event-switch-e2e.mjs": {
+          "sha256": "bc5226965d63260166483dc6f219979f5c2bad961a36b2242d464c763a3b4bc3",
+          "format": "module"
+        },
+        "scripts/test-event-transaction-faults.mjs": {
+          "sha256": "0199bf06cc51ab01d380b467695397d8d58ae4429886a7b0d8877dfe8c7b1008",
+          "format": "module"
+        },
+        "scripts/test-evolution-feedback.mjs": {
+          "sha256": "5a03d2410e9d6e1f6e1a6f5df58fa45602188deba5efd30ac27827c8903a0348",
+          "format": "module"
+        },
+        "scripts/test-framework-html-baseline.mjs": {
+          "sha256": "be1b6c8bb26f936dc346b4a425a427fcd2188d809369fbac69645ad5291a4a91",
+          "format": "module"
+        },
+        "scripts/test-handoff-validator.mjs": {
+          "sha256": "b795c1c1e1909275f94c60bacb0429da0e32936ac77ee6d76db768fd318b1a44",
+          "format": "module"
+        },
+        "scripts/test-harness.mjs": {
+          "sha256": "9fe3f2a85b417f32fe79aad7206f37bfaa23eefc349ecab5c443cf365de688fa",
+          "format": "module"
+        },
+        "scripts/test-hook-source-digests.mjs": {
+          "sha256": "6a87c9afa8a27fb1fe27b8dabcb75effe9efd159cf1f7b042714dcc6725870c7",
+          "format": "module"
+        },
+        "scripts/test-hooks.mjs": {
+          "sha256": "3ccd0b3f0cca66e91f572e43a46533e764bcc4260633b419472da7e879c14981",
+          "format": "module"
+        },
+        "scripts/test-host-launch-control-plane.mjs": {
+          "sha256": "1dfdfa2f0fabde50a05f4620c05aeafcc7163973abbfbfceb29ed329eb780e22",
+          "format": "module"
+        },
+        "scripts/test-host-launch-journal-migration.mjs": {
+          "sha256": "13ee7e945ae8a36e4fe58e659e828546388315e3628aab1577c2d9b4d34bf0b4",
+          "format": "module"
+        },
+        "scripts/test-host-launch.mjs": {
+          "sha256": "a3be978e16e740680cc7b6e28f3380ebec3fcf22621837eb0670a40df838d620",
+          "format": "module"
+        },
+        "scripts/test-luca-open-url.mjs": {
+          "sha256": "7b0c1b018a17b7b4938cb58a265b82d2afd7814ea7ca07c90b5eb5bc550de692",
+          "format": "module"
+        },
+        "scripts/test-magicpath-projection-sync.mjs": {
+          "sha256": "dc69031921957e16e677fc0e4b33492351127dd646b99db566c7f61d3f62f8bd",
+          "format": "module"
+        },
+        "scripts/test-memroot-parity.mjs": {
+          "sha256": "34fb7ba28e717bf61fa441027e02cf3406062592de9953f10306638c719adb14",
+          "format": "module"
+        },
+        "scripts/test-model-route-host.mjs": {
+          "sha256": "58eba3d346a8a17b2cafc259a8cecaddd06aa88ccfc52631df0a0f7d274ed774",
+          "format": "module"
+        },
+        "scripts/test-model-route.mjs": {
+          "sha256": "678a1e20f552ce628ed94da4381d3f6622c23ebcc1b020ae2b03cf81b85497f3",
+          "format": "module"
+        },
+        "scripts/test-muse-loop-retirement.mjs": {
+          "sha256": "6d3fc82700778ef50f94579dd9aca1b65d941ea6a0f5ee1bb2e6d3b46e7deba3",
+          "format": "module"
+        },
+        "scripts/test-native-schema-realism.mjs": {
+          "sha256": "1ffdff73f2d6a653512e1f9a90ba73f5312a49e0866f9e645c41a77ddfc14f3d",
+          "format": "module"
+        },
+        "scripts/test-original-copy-handoff.mjs": {
+          "sha256": "eb64c78c9f15d0094b07d86b218dd0cc388a05a5f27320cba4a867a1c36d5cb7",
+          "format": "module"
+        },
+        "scripts/test-original-real-templates.mjs": {
+          "sha256": "a02ad1aad88b534406bd3d5f9b83914dc6af73d921a223a5e1a1d0f3090f7aa8",
+          "format": "module"
+        },
+        "scripts/test-original-template-edits.mjs": {
+          "sha256": "deeb52a3b3044c7dce40b2eb7cf35a7c3cff1d7afa0f59c99b9be1b198e102db",
+          "format": "module"
+        },
+        "scripts/test-original-template-index.mjs": {
+          "sha256": "28613429b53e3392e3cc1c69dfe0e65744952c6b2bc6bc485744c2eb39582269",
+          "format": "module"
+        },
+        "scripts/test-page-context-preview.mjs": {
+          "sha256": "d44c105668db5754bd69eef43c982e67db57209ad9060624927285e72fd54407",
+          "format": "module"
+        },
+        "scripts/test-page-context.mjs": {
+          "sha256": "287dfed7bf9711ce02c862aafa108ff292f680d0c3f368eaca4a5e64d4855105",
+          "format": "module"
+        },
+        "scripts/test-pre-commit-env.mjs": {
+          "sha256": "d49ffc502f7eaabc0e39f73d56ebfbb10eb6c88aa8701f9f7bde8c0ffaf6bc37",
+          "format": "module"
+        },
+        "scripts/test-project-controlled-selection.mjs": {
+          "sha256": "1f2f63bf35cf37c5b636d5a04d56690265ff6fd282342f5183a4b56e68588d73",
+          "format": "module"
+        },
+        "scripts/test-project-gate-v34-dual-host.mjs": {
+          "sha256": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+          "format": "module"
+        },
+        "scripts/test-project-gate-v34-mutations.mjs": {
+          "sha256": "cdc2226eb5ff0c57d3bef7fdaa4004caee3e67b37dd273251ab4082e52c91987",
+          "format": "module"
+        },
+        "scripts/test-project-host-view.mjs": {
+          "sha256": "950d86e679a8fc2e46c444a3316b757aadf5c39dc7fc9e7cff73e555c6dda779",
+          "format": "module"
+        },
+        "scripts/test-project-identity-wiring.mjs": {
+          "sha256": "fd53fe236fd108207a4cc287b1a8aeff3dc9ec3c9c35934ecc343eb8431f3d82",
+          "format": "module"
+        },
+        "scripts/test-project-read-grants.mjs": {
+          "sha256": "3f07a4ca0c5029d22c891e4755e5975d57f014946e3c6fef43891db38fae9aa1",
+          "format": "module"
+        },
+        "scripts/test-project-scope-guard.mjs": {
+          "sha256": "aee99ef5c745318ea0ff46a61cd5d28addd574f0f36d99d1f1fea4d91d07a05f",
+          "format": "module"
+        },
+        "scripts/test-project-selection-v34.mjs": {
+          "sha256": "b1b4ae742e0137a235fbec2edb400caf8031f63dd985a152463d8888e5cf2851",
+          "format": "module"
+        },
+        "scripts/test-project-substrate.mjs": {
+          "sha256": "780fe34104de90200d74fbbc8f443422ef7c0316e41b27edc03cf192aab29608",
+          "format": "module"
+        },
+        "scripts/test-project-transaction.mjs": {
+          "sha256": "807dcea2f2140d617bf6f3fc8fdff9e9bb10632990a43b207977720668b86955",
+          "format": "module"
+        },
+        "scripts/test-prompt-attestation.mjs": {
+          "sha256": "16d4e54dd597740049a714e3e1e620b4d18b872da7a515e8b777bae5bec39124",
+          "format": "module"
+        },
+        "scripts/test-quality-gates-scope.mjs": {
+          "sha256": "ee5e8ed617081c0df97cfe438634ab91f6f2dbd94cf9323ca3f7fce3592e4bef",
+          "format": "module"
+        },
+        "scripts/test-route-guard.mjs": {
+          "sha256": "89440ed3576ce97e01dcacfd5a54d753832f522ab764250fabc9f517d1525786",
+          "format": "module"
+        },
+        "scripts/test-semantic-parity.mjs": {
+          "sha256": "3ffd996ad62165754dfb5180996431cdd2f3d2c8c88c9e4579905f4657f093ed",
+          "format": "module"
+        },
+        "scripts/test-source-guard-preserve.mjs": {
+          "sha256": "17f6334c3a8a8d2808a1d66910eebb6451a2ecd6c4396da85acbbcc6b601528c",
+          "format": "module"
+        },
+        "scripts/test-sync-real.mjs": {
+          "sha256": "6c0fed43e67b962a64b5d512a9df9916b03f00e66dbd3fa7cdebc1797ef8bbd2",
+          "format": "module"
+        },
+        "scripts/test-sync.mjs": {
+          "sha256": "c4030624658f60e5fa68d381c648e256823696cf8b0eaf310cdad51be6384580",
+          "format": "module"
+        },
+        "scripts/test-template-copy.mjs": {
+          "sha256": "0e1fb5c6472aeda9888b988bee199e862c9034a11e96388d400303a16ad906a2",
+          "format": "module"
+        },
+        "scripts/test-template-flow.mjs": {
+          "sha256": "237cd3412f36d5c8d09c1a3b0e56db93d64f42c90311a2f3c1121de6c7620532",
+          "format": "module"
+        },
+        "scripts/test-verify-composition.mjs": {
+          "sha256": "8c23ff50342ad760d4483e40120e3060c7107b5cbb4114aca3fb5fc550bbfff5",
+          "format": "module"
+        },
+        "scripts/test-wait-what-skill.mjs": {
+          "sha256": "7a598d49efabc7eca235afb2783eaeaa51fcc6fe62f9e2e364d0061f4578de20",
+          "format": "module"
+        },
+        "scripts/test-workflow-runner-runtime.mjs": {
+          "sha256": "5a1e80eb5220dcbf5133920e3663e4d79c56a2197e34f0b42877157077cbb5ba",
+          "format": "module"
+        },
+        "scripts/test-workflow-runner.mjs": {
+          "sha256": "25553e2e644203f9fd6274e1f9f80440659252b0048924bd82f11f61eee238e5",
+          "format": "module"
+        },
+        "scripts/test-writing-for-agents-skill.mjs": {
+          "sha256": "ce9b8dcd50fbdf16b7dc698eb046d59bcb6a87f98da15c03f5da2845551b9019",
+          "format": "module"
+        },
+        "scripts/validate-skill-integration-receipt.mjs": {
+          "sha256": "5b898e938a635e9ad653613ddf2f9bc23d7d2900200df959d8e09ca6826af8f1",
+          "format": "module"
+        },
+        "scripts/verify-codex-wiring.mjs": {
+          "sha256": "0f92423839e7875660278faa5dc64b13f82f1b411d04fc409d5a02ade9bd5225",
+          "format": "module"
+        }
+      },
+      "snapshot_files": {
+        ".claude/agents/muse-proto-judge.md": "71e3a1b42c2c53ba98a38c7700b0b3c2fe8f229aace9012c7a768387fcbfc4a6",
+        ".claude/agents/orchestrator.md": "449ae3b5830892a39d2beca8e7b61603838cb5f6cb5ec26dc71129f7469231a7",
+        ".claude/agents/plan-agent.md": "30f7959d062bfe28e774e7771a1b6e5dd19270b78a107bcc68c4553d375723cb",
+        ".claude/agents/preflight-agent.md": "527c46ad8a2c095b7dd622a411252c4502eeb33f0c30b23b2db8975220d2ad8d",
+        ".claude/agents/quality-gate.md": "5cf6ff8b7f4d2ba1d83820dd1385487bfbe31561b30150d1ee037c661c3d04d3",
+        ".claude/agents/references/plan-assertion-examples.md": "ecbfd50cff48affdcf0ca4efde94fb62a5e6652558f9bcbc94a4b80a90c89184",
+        ".claude/agents/references/plan-design-guidance.md": "27d996d59268d48af48494b943d5dad225e294db52f2612a38316a5f3e10c645",
+        ".claude/agents/references/plan-engineering-modes.md": "fe51425fbc3403883bc3fad6c7a7b89bbf107e21f6d67aaed1c6e5fbca07124a",
+        ".claude/agents/work-agent-template.md": "2d4fb9acbdaff28f82c207b4f085fb8cc6b3c5f695d1baa0f7a781f57ca67bf2",
+        ".claude/hooks/lib/event-attestation.mjs": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6",
+        ".claude/hooks/lib/project-event-closure.mjs": "82b5aa13ed014b30d5c264a45d2a7a5430ca7352079308377c93dc77f0f54e66",
+        ".claude/hooks/lib/project-selection.mjs": "1ccb5f15e3c39dd90a843f9cc1297332217945c8960412ac435133d60de0b11f",
+        ".claude/hooks/lib/project-substrate.mjs": "d06015d39668b8e12f1749dcd8d85f462fc404f3b0de90edf07d7a3bd80bd533",
+        ".claude/skill-os/README.md": "d1c23e05478e1e61f3d9e8ce74dc9d253ef2707d90af38ab88a2444b7766afc9",
+        ".claude/skill-os/agent-context-manifest.json": "99a00b1f193a845314c722520f063b7e995cb1c04f5a3b3dac112578396743f2",
+        ".claude/skill-os/agent-context-state.json": "017ab908f800f27ac5a6b3178042d24c712da73984155e33c3482ff4c3916df9",
+        ".claude/skill-os/agent-root-kernel.json": "a9d480eb21bc1d29be5629555d4865b358f0e3592a7081ebb13dd2648820782c",
+        ".claude/skill-os/capability-parity.json": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f",
+        ".claude/skill-os/claude-md-appendix.md": "18584add225a53f863d12d99d48f0e577934fefdf6d52af5b5b702c31dac6b79",
+        ".claude/skill-os/codex-viability.yaml": "e0495ee4c802292c92245c316112f330c0d29c4e88f2e92f6b71bd2da5259cee",
+        ".claude/skill-os/compat/resolving-merge-conflicts/SKILL.md": "95eed4a2d01844c772cc61fe7f0b9843d9dfa3f1c5b5f15c0e928e35a71e071d",
+        ".claude/skill-os/compat/systematic-debugging/SKILL.md": "52de09479bbaced8601b4862558d531e1cc21c9b63be89d64d962b2e4d4f052b",
+        ".claude/skill-os/controlled-change.yaml": "618a42a2c7e83be9a2a96a954383e43a2e097982f76fa6083c528609a4e7b5f5",
+        ".claude/skill-os/correction-attribution.md": "afdf6a173d9c817a304b24afd7247df4c62c01b2937d4231079a9cd3b7e3618f",
+        ".claude/skill-os/crm-profile.md": "e1de0646acae17b8b2dc06d9f29a1cb6482c129fec6c8ce36c34d66c43b25251",
+        ".claude/skill-os/eval-methodology.md": "a78d75d48ad12cdb0c0b564d5945dbb8ab4d6ca031cd477e037a3b2c356b8da8",
+        ".claude/skill-os/evolution/ADOPTED.md": "5477e7d228952a29a9e8dda888126e087bc4dc82125c8570d43920643fab62ed",
+        ".claude/skill-os/evolution/BENCHMARK-RUNBOOK.md": "05826d41e56f5af0d069620d6d5cff49d9e59425a60fc2961cd7629f65226b63",
+        ".claude/skill-os/evolution/CHECKPOINT.md": "00d5e64d9d83efea173d0c493090ce1db2674747a4b8a23c98e5c292e302bdfb",
+        ".claude/skill-os/evolution/FUSION-RUNBOOK.md": "10b60b1f1f2596b373384eef0e218e301a6b2d9b97b0fe764ae1406f415fe484",
+        ".claude/skill-os/evolution/adoption-log.jsonl": "2c3ae5a81d62ec389bd8d562792347b0e07c8a26bf2bad2937f6f27e6c6cc50a",
+        ".claude/skill-os/evolution/benchmark-registry.yaml": "b8c9602b1a8a5afb4fc6efd1595d8df41362b8d6b190c1086857954141bbc1c3",
+        ".claude/skill-os/evolution/candidate-log.jsonl": "e4975b12b2b2613235ca57868362b8c95bd478f063e5f65e9009ffcb64250b7b",
+        ".claude/skill-os/evolution/digests/2026-06-evolution.md": "e4b62e2096b66359a1a200a1c9933217c6b023a7887c40364e325fe43c19c2c4",
+        ".claude/skill-os/evolution/digests/2026-07-evolution.md": "23d18b29e4a49ddd848b820ceaaeea84b2bb0eebcec8a433cca198914f2602ca",
+        ".claude/skill-os/evolution/digests/2026-09-evolution.md": "b8011c38171a8424c668c05d5e42776302d2447556487245bcb678ae89bf0903",
+        ".claude/skill-os/evolution/gaps-register.yaml": "e7761e0c6d7535ce9b89fb6ec760d7122b848085ef6f142693d2ddb94f97ec77",
+        ".claude/skill-os/evolution/self-model.generated.yaml": "13af1a8fefe506398539e6340440866d34a58366b43bc93d780e366f2aca8905",
+        ".claude/skill-os/evolution/self-model.yaml": "ffbc028e077e6835445e3c14b55c8f3e1bbcf6373bca1c478a6886c772f19dae",
+        ".claude/skill-os/evolution/sources-registry.yaml": "ba5472a8637f8f4f388b54484de848bc5bf1b2eeb5b1f4f1214350adc69159de",
+        ".claude/skill-os/external-skills/INTEGRATION-MAP.md": "90989b8e67b6679c0cc851343f298913b039c8b2b80564f7f9e539e75ea73924",
+        ".claude/skill-os/external-skills/RECOMMENDATIONS-2026-06-07.md": "f2f518a30c4d740945e9f02b47d2e7c4660179bd723af8e47c4ecba6327e0fee",
+        ".claude/skill-os/external-skills/installed-pins.yaml": "b1c0a5876227733fcdec4d428d51c0cb8ec5d8c56f91c7160e246da927c85b62",
+        ".claude/skill-os/external-skills/vetting-registry.yaml": "2b5f319fe267428834221f7cde010c74a60c2cc7b97373b7b3aa9cfad7d7412d",
+        ".claude/skill-os/extraction-bar.md": "7e928899fabbf28b5a0f8afb21222457be3a4760c9ab349b636aaa94e70bcd66",
+        ".claude/skill-os/generated/context-index.md": "e7ff4c49a40d084579878293078ea9f090ad4a7ec009caec4599f583a6f5653f",
+        ".claude/skill-os/generated/input-modes/auto.json": "bacaf2d165ec945910306e0e158bbfb0232ac28314be95731ee194073417d121",
+        ".claude/skill-os/generated/input-modes/brainstorm.json": "f4c6ced339491b9dcc4885716d4676d595e9a4c38ad753079eaaea5e66ef6e76",
+        ".claude/skill-os/generated/input-modes/code-hygiene.json": "9e16c2432fe4d936c735590cfa4ca7e709684d0aeb6e2bf371747ead3d19b824",
+        ".claude/skill-os/generated/input-modes/code-recon.json": "25a59fedb18d3db1d913c61dc13441f20e58cdbb723a3b26ac6e015cc15245c2",
+        ".claude/skill-os/generated/input-modes/code-review.json": "ef34f9049fefb3bcea72591965a6e069e55724e9b7c3d543aef498895bac0768",
+        ".claude/skill-os/generated/input-modes/codebase-design.json": "579c5ecfa70e372ad59cd7ffa9595f0ad27e78fa223c0df1e29dba05c5f4a7da",
+        ".claude/skill-os/generated/input-modes/compare.json": "d500e5387c9fd924ec78bc759a80af7b532f11a67e13a91c3caecab658251c86",
+        ".claude/skill-os/generated/input-modes/deepresearch.json": "f9d5705d769ea0baf70ab92c5e7cf4571a0634ba22e473cd58c0122f67d17d4d",
+        ".claude/skill-os/generated/input-modes/design-brief.json": "d8b9536ea9854958cb2dbed79d51c7a2383de41402e8c6081227592b27bdda8e",
+        ".claude/skill-os/generated/input-modes/diagnosing-bugs.json": "ff997c31807bbb9501b1323d178076c8c3fb9525f0f9998411b66ab8600659e8",
+        ".claude/skill-os/generated/input-modes/domain-modeling.json": "c9d13bc6168a5e7cf3acc916b00d3114e45e2452be78da985e9ea404a2756a64",
+        ".claude/skill-os/generated/input-modes/evals.json": "17d17415ce3ee1c5eb526357d7277100abd04959af3ad428b3016d816b71af9c",
+        ".claude/skill-os/generated/input-modes/figma-demo.json": "8f661377d30e9b471297767cd8f63abf354a59cb8058bb9d598e625f2e53fe04",
+        ".claude/skill-os/generated/input-modes/grilling.json": "acb0c578cb45f8656a692da4896ef119b9657f875e89da8a8a51dd2a94d5f3ee",
+        ".claude/skill-os/generated/input-modes/handoff.json": "6e41ee6789ee42b8de78147eb5a57144f3fbb3b2bdaa28ed0972638c35efb0c6",
+        ".claude/skill-os/generated/input-modes/html-prototype.json": "ecc27ac601e48e552b7ee6210854a8424a0fa3175868bba7d1aa271181101821",
+        ".claude/skill-os/generated/input-modes/idea.json": "313efeb47081213b2c5c9cb61a7d09d064a070d64124453068613925ccefc016",
+        ".claude/skill-os/generated/input-modes/implement.json": "be291eddaa6bad85f818214555693f307252272b1fd213d417f0918217e0ecc3",
+        ".claude/skill-os/generated/input-modes/insight-synthesis.json": "2c52756ffb66240ff2558e964c847e56634b43233c8c1a8a2eb4c9f49923e8f2",
+        ".claude/skill-os/generated/input-modes/magicpath.json": "de247d2d6f80f8e93e3acde488f61aa000f12b79ae69abe0c926588a44eb1814",
+        ".claude/skill-os/generated/input-modes/muse-req-triage.json": "562934fcb5ebe3475bab6950acbe683c1b7de0447ce2452c4964fae0c21c43bf",
+        ".claude/skill-os/generated/input-modes/open-design.json": "5326a41abe24a3bec1614a6d6ac5e2a3c73ad7237d0c1af8368e7366a0b195f8",
+        ".claude/skill-os/generated/input-modes/quick-research.json": "774e90dd9262ba39b27852ec203d1a06625d338f979eb57449669f210617cc04",
+        ".claude/skill-os/generated/input-modes/redteam.json": "a844a5581e93836e4b429feeaa3d52619b421de461786cb58e9338256090a38a",
+        ".claude/skill-os/generated/input-modes/research-kit.json": "66440df54a9ddc53f9a81a26d22f6cf2697b44bee73136bea84fe8a41b851196",
+        ".claude/skill-os/generated/input-modes/resolving-merge-conflicts.json": "c1ff925fbe697cfc20e54eacc294cd54f9c280e4703905d8b43a25aadac0f450",
+        ".claude/skill-os/generated/input-modes/retro.json": "e4ec03174e7a037c9a0c8b3bc72f4ce0666b294426519b51b836858ae2c07d71",
+        ".claude/skill-os/generated/input-modes/superpowers-brainstorming.json": "95d50fca05b1dccba784dc4e4fdf1157a0bcb27dfa3f1a59da3da187b0926117",
+        ".claude/skill-os/generated/input-modes/task-plan.json": "f26bc7556a86de1ef5beb42bd5931abdd569f4fcc7b5f73b9ac90400021b84e7",
+        ".claude/skill-os/generated/input-modes/tech-spec.json": "c73a8fefaa23ad709679b2490928adfec4b90d06b004df6540ab5f09f7751b8f",
+        ".claude/skill-os/generated/input-modes/to-spec.json": "979f7efaec0d8ee6f0480ff8f6724069233693780d11f9392df63e1040696c9a",
+        ".claude/skill-os/generated/input-modes/to-tickets.json": "efa47190b91b311a92885ad684a2aca717c9cdd2d90fe4715825f3b5f4d014e7",
+        ".claude/skill-os/generated/input-modes/ux-audit.json": "20b18d8c61a6e049fe770b2a0c1632a3a1dd23be1419acd0dd69c6ba782ecf13",
+        ".claude/skill-os/generated/input-modes/ux-brainstorm.json": "3e830e14c0d49126ca9f315e10634fbfc60a79d5284889901723ff3b6dd23e75",
+        ".claude/skill-os/generated/input-modes/ux-research.json": "2a9bd80d183ac3a421e02f8db36c7f640b772e7938f62f81e8507ca7d7d56e2d",
+        ".claude/skill-os/generated/input-modes/ux-writing.json": "3ad3a024ddc9a516306d0352b9b597ebe0eefbe2b7991335cad1cde5e8638f75",
+        ".claude/skill-os/generated/input-modes/wait-what.json": "16cf756184151c30cde3563a12ed799a37044d3352806d8a45de0ba844c313b3",
+        ".claude/skill-os/generated/input-modes/wayfinder.json": "e3d5b9d94e17aad348c48dffc1dbec8adee8514f7fdd1c7cb9e469a544589bd1",
+        ".claude/skill-os/generated/input-modes/writing-for-agents.json": "a1484a616f531371fac1af6c9c0b20c2b77dfc6f632c0fb04a166bc18bf7fa66",
+        ".claude/skill-os/generated/skill-catalog.md": "9b9ab727ac94e67b868dd0ed2614c6bd1f8c20b63597109dc881e892b0801292",
+        ".claude/skill-os/generated/static-fallback.md": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3",
+        ".claude/skill-os/input-modes.yaml": "108ad3ddc6665a59c2092c9a0d9065b3ffb9aabae6cfa3c05e675313017528c0",
+        ".claude/skill-os/model-routing.yaml": "07265b4ca0fd4a217f8f5094d34a47c4937f4ea918be8be06d5f904f07b493c8",
+        ".claude/skill-os/optional-workflow-graph.yaml": "606bae9b57f00eaaffcb898af8420c40479fa858188b52c9805e1ae6aecd146b",
+        ".claude/skill-os/page-library/README.md": "0e4339d004efa52781db4432882de5a665181335ac24c94d6c89a5af53af6481",
+        ".claude/skill-os/page-library/catalog.json": "cb5778b7dd919e01eb4460ddeb44e606f36e0d4122c61babe23d3ffafb2646af",
+        ".claude/skill-os/page-library/original-index/ai-quick-notes.json": "85756f7e1c34683d004ea4799266b56dc62124debd5d92fb64e40c1587eda9f2",
+        ".claude/skill-os/page-library/original-index/crm-workbench-home.json": "a2cb91b43306ca70dc60c28944c4a9edf32cfe71f2009e98c855e4feb6ee9e07",
+        ".claude/skill-os/page-library/original-index/customer-list-detail.json": "f8f8034753cf04402ba27eef1480655b477c217eb9e49adc40c6066187062883",
+        ".claude/skill-os/page-library/original-index/sales-record-list-detail.json": "b2b634d01f3974f4f6e557430b258b6898536aa47ceb86cc9c2826e205993921",
+        ".claude/skill-os/page-library/original-index/settings-lead-pool.json": "4ae112aa32ee6615b3cc1e55c83496d665cf8ab31737c08495945c149cb78e90",
+        ".claude/skill-os/page-library/original-index/shareagent.json": "d290233064cf3ce475a77019c2cffceb7180968be8d04d07840d6f5f912960d5",
+        ".claude/skill-os/page-library/schema.json": "6b23368579a8628a7c6c04997d33cc2feb0945461f112613dad1b2299e0899d6",
+        ".claude/skill-os/page-library/source-manifest.json": "715a7ea096dbbb7101217ad02fc86b75c2b4cb97de0618ceaf6b6dda9b9bf0b5",
+        ".claude/skill-os/page-library/sources/crm-workbench-home.html": "e342b3e112eec5c3582ba1aa6ad92161512713da45bcafa9d443a7a135b0dd8f",
+        ".claude/skill-os/page-library/sources/customer-list-detail.html": "dd431a1d03f31e493c448628b360908816fd8f8e67de67e58ec0205f0db7fde2",
+        ".claude/skill-os/page-library/sources/originals/ai-quick-notes.html": "5fbc8bc31f7b4785a28554e46555b60988acc26d13feaac7fcd8e92fe8c6561e",
+        ".claude/skill-os/page-library/sources/originals/crm-workbench-home.html": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+        ".claude/skill-os/page-library/sources/originals/customer-list-detail.html": "05921e7ad5340df93c28637118b1599eaefb4a4827a1b8d351afa7868808e58b",
+        ".claude/skill-os/page-library/sources/originals/sales-record-list-detail.html": "1c2f45816993f022e13322757cc87b03b77d66d0be2971397d82b3cb1fad544f",
+        ".claude/skill-os/page-library/sources/originals/settings-lead-pool.html": "4bfd4b31b2bc738881507061e5b394de7984ccb93b799a0a1c1824dc673284e0",
+        ".claude/skill-os/page-library/sources/originals/shareagent.html": "ac4ac6f75e90a608b689967d7192ff6532b6b27756a5d158ca55e03acc02bfcc",
+        ".claude/skill-os/page-library/sources/sales-record-list-detail.html": "882150a99f3825108db3291ae1a91862de34018d99ab2ebb6eeb69caf03b27ca",
+        ".claude/skill-os/page-library/sources/settings-lead-pool.html": "d59066abff15ebca67f0cedbbf44c1f3c435693a008663dd0dabe27b3950a25f",
+        ".claude/skill-os/routing-chain-check.md": "e287974957d0b56a0e1a0828ab40955ce15ed5d8d630092a4e8120437930cac4",
+        ".claude/skill-os/runtime/cross-harness.md": "d9899018487257331988a965799543bc89aa55f31a1fe964c35a47e3a6825c5f",
+        ".claude/skill-os/runtime/framework-maintenance.md": "7d4259d0abd0127b5c4fe299e76d652d57c7fedc17178c43240b81ef12f6664a",
+        ".claude/skill-os/runtime/harness-boundary.md": "bfe8351b6aca388f18ec6f72ee0d61c757c76498f76560bada8ac0fa81459f1c",
+        ".claude/skill-os/runtime/long-session.md": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117",
+        ".claude/skill-os/runtime/luca-app.md": "5b482a9872cb828c02e4ec39273ec253e74b7aad0a8f3479f01c950750adb86f",
+        ".claude/skill-os/runtime/page-context.md": "c064e5c95a6e77d37089cc590b2169701f07f1160326736fcd01dafbd58f2435",
+        ".claude/skill-os/runtime/project-session.md": "062844d516979f12a1b22e512905060b47cff3630c4a7f683dc87107d872ea1c",
+        ".claude/skill-os/runtime/workflow-mode.md": "e6573465a8d369d0da3b7a5954ff58e191ccd8315cdad69c9da505ff5d55f0f5",
+        ".claude/skill-os/skill-authoring.md": "7f669802c03376bd3df0a6174704df43debc4ffb9df77a1f87fbbefb13283506",
+        ".claude/skill-os/skill-invariants.md": "e343b9b20962c645c35fcad5837552f0d0420f097565dae3a07ced97f2aa9e39",
+        ".claude/skill-os/skill-routing-map.yaml": "5a3c34e555507e7c25fca4a104126d127543e8298a6ea4d7070ce4abd8ac1273",
+        ".claude/skill-os/skill-visibility.json": "8320e3eee8a94868a247b871d200a3ca630ab1cbc06d53797e949ea156a7ed94",
+        ".claude/skills/office/SKILL.md": "bb3d9731452c253cfefebe141f01e05fbceb172fe99e8a55e7011575f323ae74",
+        ".claude/skills/office/auto/SKILL.md": "8ba69bea38e44193d9ddfc5a736a21a5463643664b1509ac864d2c42eddd9359",
+        ".claude/skills/office/brainstorm/SKILL.md": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d",
+        ".claude/skills/office/brainstorm/references/adversarial-review.md": "9277609f8dafef5541480a2a7112a99580db14af91ffa852455483461026c6e9",
+        ".claude/skills/office/brainstorm/references/ai-spec-template.md": "c64c857324b3decfacb5303ad7e2b53a5165dc2580698ac5b275f02e73d3a698",
+        ".claude/skills/office/brainstorm/references/phase1-dispatch-prompts.md": "b416210c28d1bdfb92831c3f29347a74bb5cc9625af2849aa5c7bcaede0b1236",
+        ".claude/skills/office/brainstorm/references/prd-template.md": "b572ad4a5b16761e70bca8316cf448e08ba5381438bd0efde9fc1328294999fe",
+        ".claude/skills/office/brainstorm/references/pressure-test.md": "683bb16ffac775a316018d7ea1af8683fa18b117562c89a2576756ed8687d8e6",
+        ".claude/skills/office/careful/SKILL.md": "4eff2b84a80c3201569ba860e4b6387d21080073c325a841b2ed61d88e4b3e36",
+        ".claude/skills/office/careful/bin/check-careful.sh": "c3bcb126fc4f7df52ee5633b463f87e9c36e434c254968492779c191f56ffbbc",
+        ".claude/skills/office/challenge/SCHEMA.md": "abf447e2293fd923ceefde28423b03ddeeeda2033aed65f91b651737f4a25f90",
+        ".claude/skills/office/challenge/SKILL.md": "f2ef29f2700a801db8574af90f1fceecb9d14f24d6e31499b145b9db522ba926",
+        ".claude/skills/office/code-hygiene/SKILL.md": "082154380da8bb6fba4e41f3bef049607801204a4a2f8ee546288a5865c34e20",
+        ".claude/skills/office/code-recon/SKILL.md": "d99eef0bbd5332ac3048d36ef4123c18a0ec7239eba455fa8b3b2a6fc0aa1551",
+        ".claude/skills/office/code-review/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/code-review/SKILL.md": "8c2f739fceadb24e7e977d3c408aede963c610154243bb703a2d19410ad13e72",
+        ".claude/skills/office/code-review/agents/openai.yaml": "4a7d7da7072b31148a3fe74c8d2272b7743015fcd5b35834dc7ce592078ffc73",
+        ".claude/skills/office/codebase-design/DEEPENING.md": "41fdf8b2c264749655c012ac72e1c0c4ceb9c0f1b1564bc1f7a221eed76e6950",
+        ".claude/skills/office/codebase-design/DESIGN-IT-TWICE.md": "cb6435b07bba8bab52a519f0834ea16d2d34c79f575719f4c121a0ad6a412baf",
+        ".claude/skills/office/codebase-design/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/codebase-design/SKILL.md": "1a43290d96fb73069db676f1b03687483a36796c1d94989f466a1cdcc066308b",
+        ".claude/skills/office/codebase-design/agents/openai.yaml": "64c67a406881639f6c07e711b9e036d4ce978a86974461dcb72873277ee2e302",
+        ".claude/skills/office/compare/SKILL.md": "d19ee67e80b5f5201b410120f88ed7f0f2dac225bf8adb810a0c6d293ccc15ef",
+        ".claude/skills/office/deepresearch/SKILL.md": "33852645acfc1d70c4af4a5df32648f8f6b5a4270ead37ee6e54ca57a6bbf006",
+        ".claude/skills/office/deepresearch/references/agent-prompt-template.md": "84ac335b3b919610872ff5b9716d90e6240b289c0018f85e4441e3f3f0b601d2",
+        ".claude/skills/office/deepresearch/references/report-template.md": "fc4f5d6154802fd3be811ef11640041f3ff20929459029dd492d1d98435c245a",
+        ".claude/skills/office/deepresearch/references/socratic-prompt.md": "983b192f504cf87fa061869be649755419d7000aa6ee3a40ee05e2ca74de3671",
+        ".claude/skills/office/design-brief/README.md": "6e9fff05cb3734efc2ffbee202303d8eefc010cf02a972ec276e469318644131",
+        ".claude/skills/office/design-brief/SCHEMA.md": "1f3306b68190473c818d60c6305acfc2f9aef0856bbc2e440af3049837a3fd23",
+        ".claude/skills/office/design-brief/SKILL.md": "4b9343a5611921d5f77afa09f72df4aa764eb03d033a51cd85de13dfcad05c9d",
+        ".claude/skills/office/design-brief/examples/2026-04-23-ai-followup-design-brief.md": "2ebe51931b492053c92d6c61cac75d74e3a39c793a6461522c01d7a03eeb3b63",
+        ".claude/skills/office/design-brief/examples/2026-04-23-lead-triage-design-brief-scene-d.md": "e9a1a375cf032b0ef631da715111c58ebf4e6e438894a6f28ba1378cff50dc26",
+        ".claude/skills/office/design-brief/references/output-templates.md": "7dc6164ccfe86bb1569ebb8e8579a0f95c161e169551e7bf72d4edef65e94c8a",
+        ".claude/skills/office/diagnosing-bugs/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/diagnosing-bugs/PROVENANCE.md": "3eafb3650d5f1316223fe054d83456ed971eabadb4ff7db8d61317c546a69e52",
+        ".claude/skills/office/diagnosing-bugs/SKILL.md": "46dc203cfa203d30b75435da9b28f1aa28518c9ca09c5930aeaf93b376497ea8",
+        ".claude/skills/office/diagnosing-bugs/agents/openai.yaml": "2eaca987d3129004622b65b6514bc8cd3e5c228eaa4a5a2d4e7852f37bd8458b",
+        ".claude/skills/office/diagnosing-bugs/references/condition-based-waiting-example.ts": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+        ".claude/skills/office/diagnosing-bugs/references/condition-based-waiting.md": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+        ".claude/skills/office/diagnosing-bugs/references/defense-in-depth.md": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+        ".claude/skills/office/diagnosing-bugs/references/root-cause-tracing.md": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+        ".claude/skills/office/diagnosing-bugs/scripts/find-polluter.sh": "42d0ba249e27a7674e40267825c0c1a27b5b901420552a145b6ccb293f667192",
+        ".claude/skills/office/diagnosing-bugs/scripts/hitl-loop.template.sh": "35103539fc36873eea36074769ad454f9379d6fc8b2dc0e26ce987fd3bfe5503",
+        ".claude/skills/office/diagnosing-bugs/scripts/safe-diagnostic-runner.mjs": "db7f2612a3a3822bb76c253a950140ec19d51f8885e2c6c71bcb7dec2db93d3d",
+        ".claude/skills/office/diagnosing-bugs/scripts/safe-snapshot-copy.py": "00b60df53cd14647b276dfb21eca8136bf0a2323b1e6f70a590bbb631fc80f02",
+        ".claude/skills/office/domain-modeling/ADR-FORMAT.md": "bd45920e4493cbe526cea88c6a76ad2d3cfa9a38fe9c957c45fcc04271ebd852",
+        ".claude/skills/office/domain-modeling/CONTEXT-FORMAT.md": "2bb3f6bcdd4de834bceb0f68b11df13d6320863c721253f1dfc97abb7ad6cf07",
+        ".claude/skills/office/domain-modeling/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/domain-modeling/SKILL.md": "bb4ad397fd99364112f3e64bf9fbffcb6d5a8716c0c489b2e4d5ab3d8c05ccd4",
+        ".claude/skills/office/domain-modeling/agents/openai.yaml": "b5f2258fdd18957c1604415f03e31e3b6ff65c0632669b287063b385ced20018",
+        ".claude/skills/office/evals/SKILL.md": "9e98b60d2a9357535bdae7938335df72d6d6364faada34bdd2a28f36f69e7d0e",
+        ".claude/skills/office/figma-demo/SCHEMA.md": "3ee0853bc8f0c1cca1b86fe702db6db2b538d430a8ed1b9609bda9c7f67e9807",
+        ".claude/skills/office/figma-demo/SKILL.md": "7d70d49688ce7888769540cbfeb6f6c57e0883bce561c827e74722704bba161b",
+        ".claude/skills/office/figma-demo/references/blueprint-schema.md": "b087837d0bf0a8ae80186e2300dcb1fd1402a0c6bc357bcf655d80dccb5f0c3c",
+        ".claude/skills/office/figma-demo/references/builder-constitution.md": "643343160491d3b0efb9c62f5916963030c4408c03f90134e168bf31d080166c",
+        ".claude/skills/office/figma-demo/references/interface-schema.md": "3c399a323f6e2464113d9d8f1cac13e9e825b00c727489227608f4aa1ab4ff95",
+        ".claude/skills/office/figma-demo/references/mapping-verification.md": "16343a3595d32bd42faa8139d7b228eea6bc5d72c979069edebab2643d04404c",
+        ".claude/skills/office/figma-demo/references/semantic-dictionary.md": "c41c214e904b55c5060fc637420cc85be588ff97b78314074aee43c5b6b13804",
+        ".claude/skills/office/figma-demo/specialists/assembly-agent.md": "7f29f620737f4357414b950e6e6b3389e75683cc0c6e892f3472f81008d2a4e1",
+        ".claude/skills/office/figma-demo/specialists/builder-agent.md": "27120ca90f3d598fa5f06c0a862f1a49302b45f625af631156a50d3be45387b1",
+        ".claude/skills/office/figma-demo/templates/blueprint-init.yaml": "b12b970dbdcce5a3e78bc575cbd9f8c4570d0f2c3db81780a3429ffb403e2719",
+        ".claude/skills/office/figma-demo/templates/demo-template.html": "405b7b2ececee217801c5f7c4676273baf0a3aac58674001130aeee5f55d031f",
+        ".claude/skills/office/grilling/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/grilling/SKILL.md": "77a4e6260c40c3edadbab6cc260157979cce33d6a87e6799ae3961cef573a0fd",
+        ".claude/skills/office/grilling/agents/openai.yaml": "2c63579ba489397d1236316bf0eacf04c9f842d1dbbcf31927698a361c61ddb2",
+        ".claude/skills/office/handoff/SKILL.md": "41f867ee82e5f4cc80e8f1095992e70055382be94e429e3df5b82fc4c90a067b",
+        ".claude/skills/office/handoff/agents/openai.yaml": "43ecdf5622304b442ea80898fb4128d8812e9a6a261259b7e02247b74a820cff",
+        ".claude/skills/office/html-prototype/SCHEMA.md": "b22d539ea3fc9748d3789c05fa3bf7b4fa01042d45ca5f64974039bd52448abd",
+        ".claude/skills/office/html-prototype/SKILL.md": "9a61002faa85712aa171115f01a76a625c4cd6f7f218950436ce29ed806772b7",
+        ".claude/skills/office/html-prototype/references/current-aesthetic-rubric.md": "c4520caf330f23926ed6ec585666f5d156bc53a35455c9a0499b93be7c9f83ad",
+        ".claude/skills/office/html-prototype/references/dynamic-reference-protocol.md": "3509692ea42a172f98de454a00dec0ba4b7f76aa58e7faf9cb8a2b14145d74a3",
+        ".claude/skills/office/html-prototype/scripts/test-verify-prototype.mjs": "99dd2a1427ae25c4dcbd5f041d8a8a4bafa108a613c38a985f9c2e51079ff009",
+        ".claude/skills/office/html-prototype/scripts/verify-prototype.mjs": "90673aac93b2b080ff3e23cb6cfb75a0854fd6db28fd9753bc33b2f6c5adbe3c",
+        ".claude/skills/office/idea/SCHEMA.md": "f4e8dab7092ea0b7f0fcf6fad4cd8821e9b969070732572b7eab3d607610683e",
+        ".claude/skills/office/idea/SKILL.md": "02923b17e30902d004d1c3fe0eabef472ecfb75fcc4d86f1b3384925c39aab94",
+        ".claude/skills/office/implement/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/implement/SKILL.md": "798ace04cc323e5e8a9dd845144f7273047406a897f939921ab2dd667ca9ca10",
+        ".claude/skills/office/implement/agents/openai.yaml": "88b4150956f2e6e10a7c4005098d2916db9b57763e6c5c168eb3283789921cb5",
+        ".claude/skills/office/insight-synthesis/SKILL.md": "360eebc0010781d43b4fbcb1d47b07c57028a84cafe491fe39613fb237ac544e",
+        ".claude/skills/office/magicpath/SKILL.md": "91f6fcb0ab0a2a429c5de6c142dbe4c0156fe3f2bb7eef3602f3c4b4ccc9a56b",
+        ".claude/skills/office/muse-req-triage/SKILL.md": "934087ea5b316b4cc81b7d9685223e3d5e341f94770a92e5d48536e66fbaf57f",
+        ".claude/skills/office/muse-x-digest/SKILL.md": "647fe7ae9ff1bfc8099948d8abadaf2c17b02f35ed534f065f83824dbeca20a9",
+        ".claude/skills/office/muse-x-digest/references/interpretation-depth.md": "d6d1e1b426d993d6ed7f2dffad1bd88b18364518df74403bbec772a357dfc5bd",
+        ".claude/skills/office/muse-x-digest/references/recovery.md": "2594fb1e1162824705524332c015d7cfe3ceac45c5be628fab80c2af6590c1e1",
+        ".claude/skills/office/muse-x-digest/references/translation-quality.md": "242549d314d3ee5a31a54edf3cd7138c8ba95345409cbdcd8088e8058f52e52a",
+        ".claude/skills/office/open-design/SKILL.md": "c1b4b19034328f188acd508458d8f708fd6db182eeadeaf1770ebc70c310d8a8",
+        ".claude/skills/office/quick-research/SKILL.md": "5ee7d10cb6ac841b3045e9be869fee84a9ff88e4bf132ab4a065770b11be913e",
+        ".claude/skills/office/redteam/SCHEMA.md": "32e981f2608f36f2849995cb464587ffd8de35f7121c9ede93e1e5852f74a678",
+        ".claude/skills/office/redteam/SKILL.md": "a00fcd07aa4be9220fb27c51093092f59c732a7fc8b278d239770f80513c7f18",
+        ".claude/skills/office/references/SKILL.md": "9245a21db1d5b5801af745480bcc3de64beef90ef9fcd718d5de5f7d16bb9469",
+        ".claude/skills/office/references/ai-native-design-framework.md": "3c5a8f37f69e48d4b8b34fab261d586c3a66f25215b561d478990d5480091fd6",
+        ".claude/skills/office/references/ai-native-state-coverage.md": "455301315a1444490080f825490f0bacd301c42fcdf8dbc55f15b2e4dd716f54",
+        ".claude/skills/office/references/ai-native-taste-anchors.md": "32437e731794b028108e49ff66cf93a9386558639a25cbbdaf573b2c5c13514d",
+        ".claude/skills/office/references/crm-business-criteria.md": "c9c4c1d1ca80a64dd578f639460dc24bf3ee3e03138a3b592f1f943cbba9a6a5",
+        ".claude/skills/office/references/design-system-contract.md": "d9d0315229303f3a03da852c289157f4fc7468171c8f67127dcc6664c9d9a005",
+        ".claude/skills/office/references/dev-handoff-dimensions.md": "8b964e5520a24eb35f1d5edf66e4c2e85ff96b6bcba370b20bbe7db928c34daa",
+        ".claude/skills/office/references/handoff-protocol.md": "35eaa94321469fecdef4863c68b9a19c58d93724d89f73e204049f1b2d4cf6d9",
+        ".claude/skills/office/references/html-prototype-tokens.md": "daafd0d00683c6c332dd1bb992cf70262b0e39d28a76f329e44fae4aa2ff3628",
+        ".claude/skills/office/references/interaction-mechanics.md": "0016fcb389d53a677e45b7dfd64783d2995714ab40e44514302f79f8dffee7a7",
+        ".claude/skills/office/references/learning-actions.md": "b68f3e43715acd526004a5f18ea90d5fdbc1055a87d4e9950865c856d90f4bf2",
+        ".claude/skills/office/references/office-wizard.md": "73210c101271b363fe54f9bbf5ad5d925e27cbba93609778aa9ce40c3ab34440",
+        ".claude/skills/office/references/oracle-vs-taste-criteria.md": "b895f00fe4175bd758b754d678c1963a83271700d54c9e45fa6223df293ad73e",
+        ".claude/skills/office/references/role-sales-fxiaoke.md": "62c1080ff80636789463398886ff959472a17006f6d702314f1f9ab49ad2e8ee",
+        ".claude/skills/office/references/ux-evaluation-framework.md": "314428fdc7ede54c03c5edcf068cdb9ec0e1e309c8fb050379064eeaaccbe6d3",
+        ".claude/skills/office/references/ux-writing.md": "ddf02ebf6d8c3bada3b12a9a4e65b8c53f1ab538c8f55678f5e2679b4d4f9a96",
+        ".claude/skills/office/references/write_state.py": "2c1caf2c41cc6ad4a19ebbc818c51498d2dcfc84ef7f511f72d02c3f86ebf2ad",
+        ".claude/skills/office/research-kit/SKILL.md": "c7237f52d0b2ec33bd652371f1203975cde2bb0524da06c8fb06c764e52dcdb0",
+        ".claude/skills/office/research-kit/references/instruments.md": "d9fd2070889dca7c8d74fee52b8f92a314d29e3b801a9b141979b0dbb7e06074",
+        ".claude/skills/office/resolving-merge-conflicts/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/resolving-merge-conflicts/SKILL.md": "3d86001109e3cf9ac618837108ae2791ddba876d98c0c7eefd66ff7574adfc2b",
+        ".claude/skills/office/resolving-merge-conflicts/agents/openai.yaml": "df19f27f61779c9fbaab72eded82d38a61d754307d741e7cf42f5ff47ede37a2",
+        ".claude/skills/office/resolving-merge-conflicts/scripts/conflict-transaction.mjs": "13e294132242001b3a1325aad86ea37397e72f1f01b0295a2bac743931ca53b3",
+        ".claude/skills/office/retro/SCHEMA.md": "c535897ea6354093afc7d105103221903c80c415c11153aacf0707a6f5dc9b04",
+        ".claude/skills/office/retro/SKILL.md": "4780d8a3d8baa3eb8d4cdb8d1c7e2b45455e72f3efc8d717458b26d6fb173191",
+        ".claude/skills/office/task-plan/SKILL.md": "a9543304332d75a35c70261b4c469cbf18d3128e7aa5b32a0c97e054583447e3",
+        ".claude/skills/office/tech-spec/SKILL.md": "2cde2727302116ccfc6186761b773f33df7694a8c5e9ea55963b77a0bb21c2c7",
+        ".claude/skills/office/to-spec/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/to-spec/SKILL.md": "02cbb6f410ef7382695879e04802cbdb257ef7dd3c4d6b7da2fb7b862a908390",
+        ".claude/skills/office/to-spec/agents/openai.yaml": "864daa7dfdc0c04d559619d12efc7bbf465505e4f28d3fc3e9d86ef28d7bdce4",
+        ".claude/skills/office/to-tickets/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/to-tickets/SKILL.md": "e422e8ca0390976494953deeaec3cd9c5e0a11c0713bd1efa930284db757c3ac",
+        ".claude/skills/office/to-tickets/agents/openai.yaml": "549de6d0bfa6e5d1d879686d4ac2acee621bb6ea659ca602dca3d9c40c991fe3",
+        ".claude/skills/office/ux-audit/SCHEMA.md": "7da53e1dde3810289fc2e501828963c7cac87ce238c5fc53e9df726fd0c9a267",
+        ".claude/skills/office/ux-audit/SKILL.md": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5",
+        ".claude/skills/office/ux-audit/specialists/module-a-visual.md": "5d834ea31469a621f2186112b2cfb7f67a4dd19b0e5514ca099e79c6226ee13f",
+        ".claude/skills/office/ux-audit/specialists/module-b-interaction.md": "16fa82ea8979774597a385809c09a0ac956c42a20b28974c34410954d6b42fe6",
+        ".claude/skills/office/ux-audit/specialists/module-c-crm.md": "6572ab5fd72accd6c5cdc1378befad0e2f754bfe94b0af79d12f89554cd7799f",
+        ".claude/skills/office/ux-brainstorm/SKILL.md": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949",
+        ".claude/skills/office/ux-brainstorm/references/adversarial-review.md": "69c3f254e50e1c39f26032ff4617ce09694d4b4aa52e9f43ef2f42c8789d947d",
+        ".claude/skills/office/ux-brainstorm/references/design-proposal-template.md": "37384e624c2240040c4f3ede00faf6703d3183d773a85f50c58f3b378e004c43",
+        ".claude/skills/office/ux-brainstorm/references/interaction-architecture-template.md": "c6541f8fcfd20a77c6926a762a089d5c94fd17d9fd66b73dc5bf2ae47fdc03a2",
+        ".claude/skills/office/ux-brainstorm/references/phase1-agent-prompts.md": "caf5971437a8013eff26ca4f00ae15605c9afa2cb33b3977aac198fb6ce3353f",
+        ".claude/skills/office/ux-brainstorm/references/pressure-test.md": "d7450829e790feb29933897b8ade6b4f7bc7fb1e505b330d645407a327faeb74",
+        ".claude/skills/office/ux-research/SKILL.md": "44f9acc5e6e9e02a9f416185d4faa73e92f64552a5b5cdda3f7b3acb2cf711ce",
+        ".claude/skills/office/ux-research/references/agent-prompt-template.md": "5c4981d50a73676d3e6ff4a2161620b0f2917b15ba814c60799dd2219e326e83",
+        ".claude/skills/office/ux-research/references/report-template.md": "80968cbf66c2f0fbb6e536cd1a09bb320d4593d50b910a680de7e265621593d1",
+        ".claude/skills/office/ux-research/references/socratic-prompt.md": "cd62916cd92319b195fe6860f2250dc3a4453c456f12b8567930a72ecd733bf7",
+        ".claude/skills/office/ux-writing/SKILL.md": "612a557223d57d3ee7c515fb038aeed20af0272527127a80221d592850fbe565",
+        ".claude/skills/office/wait-what/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/wait-what/SKILL.md": "b64a67e1bc37f2f801052327447a8cf20ef22c0a97338b265f7da3d02238dbdd",
+        ".claude/skills/office/wait-what/agents/openai.yaml": "aa941a08cfdab046bd09002e3818a0a2c9a956e71b35082db82cfa04dfe34476",
+        ".claude/skills/office/wayfinder/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/wayfinder/SKILL.md": "ec3c14fbb05e8870ba95e24b4621d18166b12370ec93a46f6930d9ed646b3545",
+        ".claude/skills/office/wayfinder/agents/openai.yaml": "15b245f05e13e33292acd7c5949f6d68da582b1f967981d23a8379f15b77a185",
+        ".claude/skills/office/writing-for-agents/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        ".claude/skills/office/writing-for-agents/SKILL-MECHANICS.md": "1ee48502def8409b4fbca2e53feca7369e28a5f18a9c10cc9db9e84c10fbc210",
+        ".claude/skills/office/writing-for-agents/SKILL.md": "3e3b9bbe20696a292d9926735be44d45185a1ef41b55217af042668aada7e233",
+        ".claude/skills/office/writing-for-agents/agents/openai.yaml": "5e70768848393594c40ce825fed0d122b716383bddb1fab2bc13751381e82049",
+        ".codex/stop-integrity-failure.mjs": "406758f657317488b36556c7f076b22862867afae9640ed6f4c3bff61a8a7b4c",
+        "CLAUDE.md": "6391262c1a5b961fe622cb8501d13dd5b24a7c067f464fdb2c93a0e41614da2e",
+        "memory/scripts/_memroot.py": "ec00e3d502d84842cf5200a617f04c750a72c49d9d04c0683190b58be66477f5",
+        "memory/scripts/_project.py": "41b98bc407df5b204af9d45d0a2765027d707be0d255770a7b778ef1c8f73ed9",
+        "memory/scripts/append_episode.py": "2f06b74989b546bf06a8513fe6d02d18f524555b32e171f1ad1e7c7bc41b39fe",
+        "memory/scripts/behavioral_ab.py": "67f9da0547b64cd208cb0db36885183102a595c3008c58224e668d78bd8158b9",
+        "memory/scripts/check_memory_health.py": "554f0a6c4a6e15e43238f04433926063de6a2e65734d2c2fdfd2d34d799c3f6f",
+        "memory/scripts/check_memory_integrity.py": "e6fc632f56b888402fd96e7be48da751b46cef62ecb43e4f6a2fdf22f26d3504",
+        "memory/scripts/consolidate_memory.py": "9df101b9bbd4c95257a669d47f06cb168d6821d8e0117d6da37a845a6b1164a3",
+        "memory/scripts/daily_governance.py": "e9c93b16a48a591526c68a827f2c5b8665655e437677b46c3aafaa368d5c73fb",
+        "memory/scripts/eval_routing.py": "f987baf3444ca22c09ef2c183a4a60fa834d1c4f8c78bb4b47e93f022e905e0d",
+        "memory/scripts/get_memory.py": "2f400e2e0176d106813710ee5952a81cf1ca89435583edcccfced94491ecdf15",
+        "memory/scripts/propose_semantic.py": "3db918b6cb884fa371ec12172db337e07e0c1d765153d64b2d4e28f0ddf6b9c4",
+        "memory/scripts/record_eval.py": "9a2b360ab69271d54d3eb99f12f0b553f1efe2fff17f2a99aa237445413dd58b",
+        "memory/scripts/review_candidates.py": "71e93b4dc9d69834d9b17938f2d65116e60eb8fcbb20ed226f7178e8701dd495",
+        "memory/scripts/search_memory.py": "5b53456b3acb20bf0c90caca208f85bd1a5ab02c8f3c11c15fa28c58f4dd5a7e"
+      },
+      "source_files": {
+        ".claude/hooks/controlled-change-guard.mjs": "7a5a3d47f1beeca4a3ec2213f4d5e735d749084567431aac6f8c158d5a9c82fc",
+        ".claude/hooks/lib/codex-child-project.mjs": "02139c51c4815e6766ff58d874f75c10da61b82b4776f7042f8a721d18f9f492",
+        ".claude/hooks/lib/event-attestation.mjs": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6",
+        ".claude/hooks/lib/git-env.mjs": "63f19a2f6e2757b6efb5ce17c2c0830c807eb5d629de99e87ff52fe55e6781a0",
+        ".claude/hooks/lib/harness.mjs": "2ac959d4a04af980863ddea4b2c4263ff52ec14fb91af7fd694530a34a25591a",
+        ".claude/hooks/lib/host-launch.mjs": "457ff9038cc5df1409d711c053478a92517b8f5331f59cceda7eeff4867fbc99",
+        ".claude/hooks/lib/memroot.mjs": "84efa17c488da1b596e4b58a37e096ddfe5a4cf62d06d713c6802b573bd7186f",
+        ".claude/hooks/lib/project-event-closure.mjs": "82b5aa13ed014b30d5c264a45d2a7a5430ca7352079308377c93dc77f0f54e66",
+        ".claude/hooks/lib/project-host-view.mjs": "4aaaacffc862a94e211182d0d812176f7fff31580de365dd1dbb7cd30a13444c",
+        ".claude/hooks/lib/project-read-grants.mjs": "14a865804f9378adbe8892ddff5d314359271a1491bc30b1a4146f90982d60dd",
+        ".claude/hooks/lib/project-selection.mjs": "1ccb5f15e3c39dd90a843f9cc1297332217945c8960412ac435133d60de0b11f",
+        ".claude/hooks/lib/project-substrate.mjs": "d06015d39668b8e12f1749dcd8d85f462fc404f3b0de90edf07d7a3bd80bd533",
+        ".claude/hooks/post-edit.mjs": "0a91e1c04747e71cd7973edcd60d3624384043bfa1a7e97a2318b261cf199522",
+        ".claude/hooks/project-scope-guard.mjs": "6794bdd6caa678445b0c0ab0a67f3dd4a8090db294ae94ee530b9b1615fe7e4d",
+        ".claude/hooks/route-guard.mjs": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c",
+        ".claude/hooks/session-end.mjs": "af74e264eed2f5c789cd850ba56d07e6780f34f0bc2255e332efc0029167b0ef",
+        ".claude/hooks/session-restore.mjs": "10ef4912c835e75c8e5f0b239bf2dd4e66788ceb34b830d13c365e3861997a04",
+        ".claude/hooks/session-sync.mjs": "2a782c41d0edce6c476a2989d431a1c4ed7aa5e5468580ab2df44ed6022e72ac",
+        ".codex/codex-hook-adapter.mjs": "c0107d70c75a1371b2ab2efa9a2df323a1b3960fa29c0e99dd6a2c4adeedda71",
+        ".codex/codex-source-guard-bootstrap.mjs": "f4c5dd3d5996e1fe09b74a7f564b79a8b49fdffe4c88165deac5810feb864e32",
+        ".codex/codex-source-guard-loader.mjs": "d784256e26da61a7d46fa5d47ac4e5c549f81b69e820d3bb69da3fa89f2fbf30",
+        ".codex/hook-source-integrity.mjs": "5668e523584fe27bf0d53430756a9974c69729325e83eea80728ee071ff7735b",
+        ".codex/host-launch-adapter.mjs": "0a2b35dfdfe552eae177f0b96ae600dbcc1a4d3dfcded8436e951fec565216d8",
+        ".codex/host-launch-hook.mjs": "03ef627c982aac4ff675a81bf85e332e242c0c19f6c60d72a6f4587f2e52bee9",
+        ".codex/model-route-hook.mjs": "9d686b8ed9eb434580e3fa33f67aa8e910e2c2d6f2c21d7f8593f852f7e0f696",
+        ".codex/stop-integrity-failure.mjs": "406758f657317488b36556c7f076b22862867afae9640ed6f4c3bff61a8a7b4c",
+        ".codex/workflow-runner.mjs": "d794913d9c003549dae33545f1d09a6704f41190fa4b2b66905e8aa4e7a8c531",
+        "memory/scripts/_memroot.py": "ec00e3d502d84842cf5200a617f04c750a72c49d9d04c0683190b58be66477f5",
+        "memory/scripts/_project.py": "41b98bc407df5b204af9d45d0a2765027d707be0d255770a7b778ef1c8f73ed9",
+        "memory/scripts/append_episode.py": "2f06b74989b546bf06a8513fe6d02d18f524555b32e171f1ad1e7c7bc41b39fe",
+        "memory/scripts/behavioral_ab.py": "67f9da0547b64cd208cb0db36885183102a595c3008c58224e668d78bd8158b9",
+        "memory/scripts/check_memory_health.py": "554f0a6c4a6e15e43238f04433926063de6a2e65734d2c2fdfd2d34d799c3f6f",
+        "memory/scripts/check_memory_integrity.py": "e6fc632f56b888402fd96e7be48da751b46cef62ecb43e4f6a2fdf22f26d3504",
+        "memory/scripts/consolidate_memory.py": "9df101b9bbd4c95257a669d47f06cb168d6821d8e0117d6da37a845a6b1164a3",
+        "memory/scripts/daily_governance.py": "e9c93b16a48a591526c68a827f2c5b8665655e437677b46c3aafaa368d5c73fb",
+        "memory/scripts/eval_routing.py": "f987baf3444ca22c09ef2c183a4a60fa834d1c4f8c78bb4b47e93f022e905e0d",
+        "memory/scripts/get_memory.py": "2f400e2e0176d106813710ee5952a81cf1ca89435583edcccfced94491ecdf15",
+        "memory/scripts/propose_semantic.py": "3db918b6cb884fa371ec12172db337e07e0c1d765153d64b2d4e28f0ddf6b9c4",
+        "memory/scripts/record_eval.py": "9a2b360ab69271d54d3eb99f12f0b553f1efe2fff17f2a99aa237445413dd58b",
+        "memory/scripts/review_candidates.py": "71e93b4dc9d69834d9b17938f2d65116e60eb8fcbb20ed226f7178e8701dd495",
+        "memory/scripts/search_memory.py": "5b53456b3acb20bf0c90caca208f85bd1a5ab02c8f3c11c15fa28c58f4dd5a7e",
+        "scripts/agent-context-branch-fixtures.mjs": "f751525df7a1c335964146baa97ca8689ca43db33dcd068dae03494b9aea25a3",
+        "scripts/build-agent-context.py": "3eabf37ce66969b9442971af87a6a1071fff129c76ac22dc29179b0dbc45f74f",
+        "scripts/build-self-model.mjs": "bc6d9bddc03fc170a2109aaf7c5ddcc652925b4ebc3d06b89dfba0c0a31adbbd",
+        "scripts/candidate-manifest.mjs": "4adeafc29cc96e3468a3fae4d71f25627b1afa638c5fd877d5c887e215c9b37f",
+        "scripts/carrier-asset-profile.mjs": "e83406cd0c26931e4754208bae8352b9aca13f86fb500d39884532860a2dd324",
+        "scripts/carrier-dom.mjs": "4f8881a5bf68d1a970c6c85021d5e113d38f63b0216d60835747b780d06f00f9",
+        "scripts/carrier-packet.mjs": "6085e6b7bfe84e4509b6775a1bf3df635536c16eccc51b49c0a95631e9688e37",
+        "scripts/check-agent-context.mjs": "a621583456491da8067bfd84bd425348ec2a89e4e197d643e54ceea536b14b7a",
+        "scripts/check-agent-contracts.mjs": "f85dcc5661ec851e1acb202fadedff853f25105fcae0a6f21898b55424d6f1c5",
+        "scripts/check-agents-parity.mjs": "faad88f98073a4c30b0c53ec780dedc664b4c9d4e099764476c5d13976fab84b",
+        "scripts/check-appendix-pointers.mjs": "8f4a43cbfd4e5394f17224777cd6332e0ea9b00de174a04eb0902174eafa9aa2",
+        "scripts/check-behind-upstream.sh": "6e4aef2579fdc3f9a1a1d0cb26bdeeaa4a0968830237fc7878a1a3a294fd8fa8",
+        "scripts/check-capability-parity.mjs": "cea62ebfbd6975cf86d67c6756c51121421bf20044edbbee6cde32246aa0757c",
+        "scripts/check-ci-contract.mjs": "e55146fc2e42c17c52d34ccc83a5ed380d003d8c1487daebb58d428b4e3eab80",
+        "scripts/check-codex-viability.mjs": "bfb83188ae6a15bf43133f2a98016337972259d83ebcf6d7f64409d3ea38fc93",
+        "scripts/check-coding-discipline.mjs": "193e9ec81f778a00882b5a01fc2cb5823bc35de34dd3f79a1a33fcfa92b724ec",
+        "scripts/check-ears-syntax.mjs": "7b37095e9e2feae116eaf941166095049c9732b6f8c751267658bca35cf7d9ac",
+        "scripts/check-evolution-adjudication.mjs": "7d375137282e2307c104828670f0d13f9e8d029a0398323b2957583c0c33ace6",
+        "scripts/check-framework-html.mjs": "6c03b21c852bd0b4f6b44d92f51a7c44277652d951f2944bd2d30f9fa7a44849",
+        "scripts/check-model-table.mjs": "e16df8ee1657a028ebee3147b27b8c771dd4a5d4af93807d01157bca642f4268",
+        "scripts/check-project-links.mjs": "6d6a91b135b50afcc06b3b91d2add601c360648ceea691f195e6e6fb37801f5e",
+        "scripts/check-project-routing.mjs": "b9ebcee99466eb4d85b2e3e7ca7b4ed57b43d06149114b964876ad61a9b68305",
+        "scripts/check-quality-gates.mjs": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45",
+        "scripts/check-registration-sync.mjs": "d2c1f12ee170b23c276a19ac74f32d8c94a819cf39528ee9ce5fd79a30636e94",
+        "scripts/check-routing-map.mjs": "49e3d28f8254c5cb822951a760dc6ce82cf8616e004aeebb9467159267b6b934",
+        "scripts/check-skill-scene-coverage.py": "16c7debbf444cda45ec57f55a93a9042c1711fb5734719452628a06042046e10",
+        "scripts/codex-hook-health.mjs": "1d94cbc492156d764a2b193394b122a752ed17b920303a2b3682ab8d63f0ef78",
+        "scripts/codex-trust-hooks.mjs": "8f8a4106713d550efe5863d3823897ca3ed889d6625c3c793c783f3e41776ee9",
+        "scripts/controlled-change-controller.mjs": "5920e378fc321d39d28845c868a83adc1a7c98f383fafca8c3e2eca69ef1953e",
+        "scripts/controlled-change.mjs": "f7fa38a09b6c95b3441cffd57bee4be58dd4535fc9813e57ace88789c9436a90",
+        "scripts/design-flow-handoff.mjs": "25b2e4ab8f8bb2a6efcf2e3877045540630c52a77fd67c9ec6da307660d51f0f",
+        "scripts/evolution-bookkeep.mjs": "75db7911cbe0ec2ae755fa75b2998698b0d9b29b2c2a2e5e70645e4608efe1b1",
+        "scripts/evolution-feedback.mjs": "ecda92d33c5fcb466c38ac691e9c0fdeb174e32c0afc0047f014ada53ef8aeff",
+        "scripts/fusion-preflight.py": "6b6ea4814632dd5d48fbe596cdef84cdbc7d083e78fac00d6667b4a2f890fb9e",
+        "scripts/history.sh": "163f3cf5e06653218b1a1bf37841fdcbfae3db6c39b8007e4980118afca81e5f",
+        "scripts/host-launch-broker.mjs": "7b96359f2462cefb4592bcf5caa4b5a14f191416fe40f267719cb8f7c7f222a5",
+        "scripts/install-codex-source-guard.mjs": "3827b0a42f0bb8464b93f4e13b315a989ead5ea01f5fb620fd666d6c5f3191cd",
+        "scripts/lib/semantic-projection.mjs": "0afdbdb3eb389144d542aa159bd2c42ca0f6695851e1d9d9a375e88f72f33898",
+        "scripts/luca-open.sh": "db6677cd23e52aae1475cb0e918b9b747038a464f0f1d2c54333c54c8697a6f1",
+        "scripts/luca-sidebar.sh": "9e092ca1ba5660b62e7829c9cd551cba175664b50cb0b295673515a351ec7b78",
+        "scripts/migrate-host-launch-journal.mjs": "8812781d410b5f8dd2ad9b74cb5360db7d16e0505936ede2c291a52ec8546aab",
+        "scripts/model-route-host.mjs": "1d7f3b3cd91a9c60c2afa1e594a5a5af1d10cad89e10ef6ca6998ea21bb533be",
+        "scripts/model-route.mjs": "7de71af51b8accc6046b04e77de828375fbb34ef7aab63a6e3305cb660858333",
+        "scripts/original-copy-handoff.mjs": "c95089e6f9576310968ab2e9df7b6dcbd58c4c94e4d89dce5f27e98c9c83a813",
+        "scripts/original-template-edits.mjs": "a6f779b25d3a340351030e6802831c07ffb4aa61bffa5668d1b45701258ef6e7",
+        "scripts/original-template-index.mjs": "1e03a20b807ba9fa6127e420415270154ae6f314ae44ee9e0d048700a1e27138",
+        "scripts/original-template-resources.mjs": "a8fd8398c4b4865fa39a97661eec44388704b530ee12c3d6f29844aa0f6ec821",
+        "scripts/page-context-preview.mjs": "d1dd3f06222b03c34d575a8bd8b6ed8e7786204d6d6f0079d32c34b1d0a4e45e",
+        "scripts/page-context.mjs": "a6ee51bed638c707f90b13dfa38f4b52242a67d6be78c18ccd15826e9b38ae0e",
+        "scripts/project-lease.mjs": "7e6469c1d62a4eda28f05b01a85dea5c7606e1ea06aa5c06435add96f33b8945",
+        "scripts/project-pin.mjs": "b2e94ef1f5cf6dd769b6032d76091e1d8f4a11bc7685423ac2414dab461b9e8c",
+        "scripts/project-read.mjs": "00ac1012a4b50e63b3aad64cdc8f25e2d7ea5b280467acf772d74232285e053b",
+        "scripts/project.sh": "52c1b0a7f717f7d39e2bae2c8bdbbd5ae56487917b50f01f9bb8dd782a87b28c",
+        "scripts/resolve-agent-context.mjs": "57336884efe38d0815921e47b4423d6d90a6a3483f28a0f1f6663a3e58bc0ed1",
+        "scripts/run-agent-context-ab.mjs": "46be0921c2933c593d2c173773439ecbb4944749002594e4ca62a8772bc2810f",
+        "scripts/skill-cutover-transaction.mjs": "47b91545b65072672ad5130a0c853bd6c85800257749acdce4580274830673ae",
+        "scripts/source-guard-review.mjs": "2ce571965a8bf5986f70c6e34a63e2cca291e7d1cb8934d794556d50f3f1e51f",
+        "scripts/source-guard-test-fixture.mjs": "7c14168075ca140326ab5008852c36f1ca21d234d5fdb904c8a2e24a67730a3b",
+        "scripts/status.sh": "b579159ee3bd91df55d1fbcded227cd192daba2a9a928eb72205fe8a708bc49f",
+        "scripts/sync-magicpath-projection.mjs": "d0d1fec467f52e788734c9f51254842ace375a3a9864237e5f72a3ea4e786f51",
+        "scripts/sync.sh": "e330a5e9a550009c34c81700d36c4caa0115a9075637cad1dd495776f6ee4ada",
+        "scripts/template-copy.mjs": "d329e493a4f90675f198a47eaffff3d52ac367e36739d0afa6844016b786452e",
+        "scripts/test-agent-context-branch-fixtures.mjs": "60515273baaf7dd6623a588d1ff97c45cd5475cfa25ff490b3c442e69e09faf6",
+        "scripts/test-agent-context-resolution.mjs": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7",
+        "scripts/test-agent-context.mjs": "1e887bd0dc88189fbd057fc5c8fa756dcd905e13cf54f4a48b29e680d9ade14b",
+        "scripts/test-auto-open.mjs": "367b54ccf71651433870671f61721b386bd37ed1597887178132821b0be47ccd",
+        "scripts/test-carrier-asset-profile.mjs": "34f172a7933c7c1c8e066b1f1e2b2de966e70669a8a65b54a932cee6ea1243bf",
+        "scripts/test-ci-contract.mjs": "d2df174c5a78db814efa22e0d7fc7ef673516c689009d2f23c9658e0878d236e",
+        "scripts/test-codex-adapter.mjs": "b34cc88b170073944a94dafca6b2b419b2d1d84a65ffe020c2a66ea58980c205",
+        "scripts/test-codex-child-hook-integrity.mjs": "4a0aa8e267b16ec7b26eb9a73d00414e58768d8a360ae4e684a14e83d7125eb8",
+        "scripts/test-codex-child-project.mjs": "c8309b1f1e0338993b85bd17f9665f838d91e5b4cc05486f82bc6f98a33489c8",
+        "scripts/test-codex-hook-health.mjs": "83e4af05598211589b05aeaeb61205e8072bf9643930033edeea08862fa907f5",
+        "scripts/test-codex-model-route-hook.mjs": "7eb586b56f6b33b11073052eff4e5abda36c2a0913d0c8c544545465710daa47",
+        "scripts/test-codex-trust-hooks.mjs": "b774ac99f1621730b7b53f5ea111f2eaf03c9bb7056907cd166e9109b33c4706",
+        "scripts/test-controlled-change.mjs": "02ba3a880d24a783169b6782edafb362054dc76287654df43b56b6d5f443bc09",
+        "scripts/test-design-context-retirement.py": "2ba6dcb5fe1b2bb931b3e686c680a7a00a6853eb4a675e1824fe269fb5a1dbb1",
+        "scripts/test-design-flow-handoff.mjs": "64b7a14088699d4702f0f0db753e15b35035990549b9ca5e24f975b650e8652d",
+        "scripts/test-design-tool-retirement.mjs": "47289dc957dd747a47caadbef7a960ab5fa3642a50f1d3a6ab8bece19518e435",
+        "scripts/test-design-tool-routing.mjs": "21b49aba2e55f3bf75d0ec7738e0c35021011c25f05489cafb57a35c80e1e714",
+        "scripts/test-domain-modeling-behavior.mjs": "79e19a44b66e96596da7c7b55d2f456fa6f734cd8f6a862fdd6df3079cfcef06",
+        "scripts/test-domain-modeling-skill.mjs": "2bf61b3224bd67d8ddb4e47501338e2262108925ad64e81c23136bc91c8ee42b",
+        "scripts/test-engineering-delivery-skills.mjs": "f1c828aff9655b3b96fa77efa85efff0831a133df077acfed48aca058f36b711",
+        "scripts/test-event-attestation-mutations.mjs": "eb43fc6d97ad058b07a04a896a98456de7554b0034987aea956fe8ec207daf82",
+        "scripts/test-event-attestation-negatives.mjs": "8e3723719774d056f892b4af60c1926f0bad2cefabfc702d3674ec458a62a177",
+        "scripts/test-event-switch-e2e.mjs": "bc5226965d63260166483dc6f219979f5c2bad961a36b2242d464c763a3b4bc3",
+        "scripts/test-event-transaction-faults.mjs": "0199bf06cc51ab01d380b467695397d8d58ae4429886a7b0d8877dfe8c7b1008",
+        "scripts/test-evolution-feedback.mjs": "5a03d2410e9d6e1f6e1a6f5df58fa45602188deba5efd30ac27827c8903a0348",
+        "scripts/test-framework-html-baseline.mjs": "be1b6c8bb26f936dc346b4a425a427fcd2188d809369fbac69645ad5291a4a91",
+        "scripts/test-gate-verdict-recorder.py": "34ac9487aac23690997c4f9f162a01b030cf69db137d9ce3c5a63f7d21c02869",
+        "scripts/test-handoff-validator.mjs": "b795c1c1e1909275f94c60bacb0429da0e32936ac77ee6d76db768fd318b1a44",
+        "scripts/test-harness.mjs": "9fe3f2a85b417f32fe79aad7206f37bfaa23eefc349ecab5c443cf365de688fa",
+        "scripts/test-hook-source-digests.mjs": "6a87c9afa8a27fb1fe27b8dabcb75effe9efd159cf1f7b042714dcc6725870c7",
+        "scripts/test-hooks.mjs": "3ccd0b3f0cca66e91f572e43a46533e764bcc4260633b419472da7e879c14981",
+        "scripts/test-host-launch-control-plane.mjs": "1dfdfa2f0fabde50a05f4620c05aeafcc7163973abbfbfceb29ed329eb780e22",
+        "scripts/test-host-launch-journal-migration.mjs": "13ee7e945ae8a36e4fe58e659e828546388315e3628aab1577c2d9b4d34bf0b4",
+        "scripts/test-host-launch.mjs": "a3be978e16e740680cc7b6e28f3380ebec3fcf22621837eb0670a40df838d620",
+        "scripts/test-luca-open-url.mjs": "7b0c1b018a17b7b4938cb58a265b82d2afd7814ea7ca07c90b5eb5bc550de692",
+        "scripts/test-magicpath-projection-sync.mjs": "dc69031921957e16e677fc0e4b33492351127dd646b99db566c7f61d3f62f8bd",
+        "scripts/test-memroot-parity.mjs": "34fb7ba28e717bf61fa441027e02cf3406062592de9953f10306638c719adb14",
+        "scripts/test-model-route-host.mjs": "58eba3d346a8a17b2cafc259a8cecaddd06aa88ccfc52631df0a0f7d274ed774",
+        "scripts/test-model-route.mjs": "678a1e20f552ce628ed94da4381d3f6622c23ebcc1b020ae2b03cf81b85497f3",
+        "scripts/test-muse-loop-retirement.mjs": "6d3fc82700778ef50f94579dd9aca1b65d941ea6a0f5ee1bb2e6d3b46e7deba3",
+        "scripts/test-native-schema-realism.mjs": "1ffdff73f2d6a653512e1f9a90ba73f5312a49e0866f9e645c41a77ddfc14f3d",
+        "scripts/test-observability-writer.py": "d507e23e5780960550902488d6176b1a301b887470784973d8a0e6a2d85871f2",
+        "scripts/test-original-copy-handoff.mjs": "eb64c78c9f15d0094b07d86b218dd0cc388a05a5f27320cba4a867a1c36d5cb7",
+        "scripts/test-original-real-templates.mjs": "a02ad1aad88b534406bd3d5f9b83914dc6af73d921a223a5e1a1d0f3090f7aa8",
+        "scripts/test-original-template-edits.mjs": "deeb52a3b3044c7dce40b2eb7cf35a7c3cff1d7afa0f59c99b9be1b198e102db",
+        "scripts/test-original-template-index.mjs": "28613429b53e3392e3cc1c69dfe0e65744952c6b2bc6bc485744c2eb39582269",
+        "scripts/test-page-context-preview.mjs": "d44c105668db5754bd69eef43c982e67db57209ad9060624927285e72fd54407",
+        "scripts/test-page-context.mjs": "287dfed7bf9711ce02c862aafa108ff292f680d0c3f368eaca4a5e64d4855105",
+        "scripts/test-pre-commit-env.mjs": "d49ffc502f7eaabc0e39f73d56ebfbb10eb6c88aa8701f9f7bde8c0ffaf6bc37",
+        "scripts/test-project-controlled-selection.mjs": "1f2f63bf35cf37c5b636d5a04d56690265ff6fd282342f5183a4b56e68588d73",
+        "scripts/test-project-gate-v34-dual-host.mjs": "1c9c89994c1ce6484ab24cd6ff7a67900091b70a32f5ee1ab87deb8b067b483d",
+        "scripts/test-project-gate-v34-mutations.mjs": "cdc2226eb5ff0c57d3bef7fdaa4004caee3e67b37dd273251ab4082e52c91987",
+        "scripts/test-project-host-view.mjs": "950d86e679a8fc2e46c444a3316b757aadf5c39dc7fc9e7cff73e555c6dda779",
+        "scripts/test-project-identity-wiring.mjs": "fd53fe236fd108207a4cc287b1a8aeff3dc9ec3c9c35934ecc343eb8431f3d82",
+        "scripts/test-project-read-grants.mjs": "3f07a4ca0c5029d22c891e4755e5975d57f014946e3c6fef43891db38fae9aa1",
+        "scripts/test-project-scope-guard.mjs": "aee99ef5c745318ea0ff46a61cd5d28addd574f0f36d99d1f1fea4d91d07a05f",
+        "scripts/test-project-selection-v34.mjs": "b1b4ae742e0137a235fbec2edb400caf8031f63dd985a152463d8888e5cf2851",
+        "scripts/test-project-substrate.mjs": "780fe34104de90200d74fbbc8f443422ef7c0316e41b27edc03cf192aab29608",
+        "scripts/test-project-transaction.mjs": "807dcea2f2140d617bf6f3fc8fdff9e9bb10632990a43b207977720668b86955",
+        "scripts/test-prompt-attestation.mjs": "16d4e54dd597740049a714e3e1e620b4d18b872da7a515e8b777bae5bec39124",
+        "scripts/test-quality-gates-scope.mjs": "ee5e8ed617081c0df97cfe438634ab91f6f2dbd94cf9323ca3f7fce3592e4bef",
+        "scripts/test-redteam-mount-table.py": "2ded9820f04223f50dbaef6a5cb68e8609245745adcaf80a0e2ba18f1814ce3d",
+        "scripts/test-route-guard.mjs": "89440ed3576ce97e01dcacfd5a54d753832f522ab764250fabc9f517d1525786",
+        "scripts/test-semantic-parity.mjs": "3ffd996ad62165754dfb5180996431cdd2f3d2c8c88c9e4579905f4657f093ed",
+        "scripts/test-source-guard-preserve.mjs": "17f6334c3a8a8d2808a1d66910eebb6451a2ecd6c4396da85acbbcc6b601528c",
+        "scripts/test-sync-real.mjs": "6c0fed43e67b962a64b5d512a9df9916b03f00e66dbd3fa7cdebc1797ef8bbd2",
+        "scripts/test-sync.mjs": "c4030624658f60e5fa68d381c648e256823696cf8b0eaf310cdad51be6384580",
+        "scripts/test-template-copy.mjs": "0e1fb5c6472aeda9888b988bee199e862c9034a11e96388d400303a16ad906a2",
+        "scripts/test-template-flow.mjs": "237cd3412f36d5c8d09c1a3b0e56db93d64f42c90311a2f3c1121de6c7620532",
+        "scripts/test-verify-composition.mjs": "8c23ff50342ad760d4483e40120e3060c7107b5cbb4114aca3fb5fc550bbfff5",
+        "scripts/test-wait-what-skill.mjs": "7a598d49efabc7eca235afb2783eaeaa51fcc6fe62f9e2e364d0061f4578de20",
+        "scripts/test-workflow-runner-runtime.mjs": "5a1e80eb5220dcbf5133920e3663e4d79c56a2197e34f0b42877157077cbb5ba",
+        "scripts/test-workflow-runner.mjs": "25553e2e644203f9fd6274e1f9f80440659252b0048924bd82f11f61eee238e5",
+        "scripts/test-workflow-state-guard.py": "4f87398636955ebafb08b13bb0f6995f7b0ec52879ec8e11a565150f3dbac48d",
+        "scripts/test-writing-for-agents-skill.mjs": "ce9b8dcd50fbdf16b7dc698eb046d59bcb6a87f98da15c03f5da2845551b9019",
+        "scripts/validate-skill-integration-receipt.mjs": "5b898e938a635e9ad653613ddf2f9bc23d7d2900200df959d8e09ca6826af8f1",
+        "scripts/validate-skills.sh": "571cb9da176dcf541d66d04c2c36336cab5f1e947416739ed85a31f106015fce",
+        "scripts/verify-codex-wiring.mjs": "0f92423839e7875660278faa5dc64b13f82f1b411d04fc409d5a02ade9bd5225",
+        "scripts/verify.sh": "f8a88af3a884358aa8de7a49567df000f501cf9d1c35096e2b1d10b5956f636f"
+      },
+      "source_sha256": "5b26da2683c9ce7c67eacd65b7ef1fcc4e0d5db8477998a724105b853c7fe2cc",
+      "hooks_sha256": "9945d170a1163417bdd0807cae9e7f84e4c8434d5ffb056292f094ab6e503c17"
+    }
+  ]
+}

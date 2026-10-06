@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""Prepare exact schema3 release and local-review prompt only after genuine successful CI readback."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import sys
+import types
+
+A = Path('/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health')
+SELF = A / 'prepare-final-schema3-release-resume06.py.txt'
+CONTROLLER = A / 'activate-stable-cache.py'
+CONTROLLER_SHA = '707ac360542f6dc268b735a5fe2a220e27e1fb8183bfa2723265daede19f342d'
+FINAL_RELEASE = A / 'STABLE-CACHE-RELEASE-FINAL-RESUME-06.json'
+FINAL_PROMPT = A / 'final-local-release-resume06.prompt.txt'
+TARGET = 'd6acaf21e89e4c662289c716f7dcd4d3102751e0'
+APP_TARGET = 'b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd'
+SOURCE_ROOT = '01a0f0fe-e6fa-7660-beb5-181b1a9b6444'
+SOURCE_ACTIVATION = '5810f7ad-5cc6-4da1-a4c3-a831ea43ffba'
+MANIFEST_CAS = '02419f4cdd555568b8e92af1c9a3336cb23513fb8ecdde1f63f87958e135be80'
+sha = lambda value: hashlib.sha256(value).hexdigest()
+
+
+def require(value, message):
+    if not value:
+        raise RuntimeError(message)
+
+
+def ref(name, digest):
+    return {'path': str(A / name), 'sha256': digest}
+
+
+FROZEN = {
+    'prior_publication': ref('STABLE-PUBLICATION-RESUME-02.json', '25af2a1eac0fa2a0bf3e554edc3afbfe707803ff55a8c11dd33617042a33b1c1'),
+    'prior_publication_receipt': ref('stable-publication-receipt-resume04.json', 'ebb85d67117b2cb0cbee9a59fa90f9d4374bdd91a414ded8f760c57ec5eea694'),
+    'app_publication': ref('STABLE-APP-PUBLICATION-01.json', '7a8a194ad94e7d943d0fcefd343191d26353bcba0157af00c22a8cb919c14400'),
+    'scope': ref('CACHE-FINAL-SCOPE-02.json', '1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97'),
+    'install_review': ref('stable-install-review-final3.json', '5e2b94932405678b79ea4f38a6b5ca588e94669a9f2e8f4547df694813b4dd02'),
+    'code_install_review': ref('stable-install-review-final2.json', 'd42a7983e364cf07cda45f792428c149eb60f25cf4e2e54a0a8c40d0f6374181'),
+    'deployment_snapshot_delta': ref('deployment-snapshot-delta.json', 'bca6721fd745f5f1774fdcac0c605bb64734a4ed410db840bd734ef81938f76e'),
+    'installed_app': ref('stable-app-already-installed.json', '003bd6f3127f01479ed2f1746ecdfad976c3cec76b55706b042dbc875b180919'),
+    'ci_environment': ref('CI-SHELL-DEPENDENCY-RESUME-01.json', 'e93faaa4b19f3e5f3503adb57ebac24338cfe805f0c325892d7c165c01ecbf51'),
+    'source_native_proof': ref('cache-source-native-review-proof-02.json', '916cf6266c453477868257e6a32e5389a4b10795ba23e6c2abeeb8be8f7cea47'),
+    'sidecar_companion': ref('SIDECAR-PUBLIC-SETTINGS-RESUME-02.json', 'b36cb376d5c45f8588cb86c9d3ed8c5e6eb0a19a05cb316ff0b766c3179e0042'),
+    'criteria': ref('final-local-release-resume06.criteria.txt', 'f230c064ba78ee8465b02f06b45323a4aa14fae783d83a74a86960223c2d246b'),
+    'existing_107_evidence': ref('ci-shell-precommit-resume01.log', 'a9f965748aa8b2316e1ff10a9ab54869753da1827c58563b410b37ede8c70e03'),
+    'existing_22_source': {'path': '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cache-ci-schema3.XXXXXX.6rMb7JNJna/probe-controller-schema3.py',
+                           'sha256': '45e19d7c103cb2126594a9df46690777e9709a3fb3947e448c1644e704beaeed'},
+    'existing_22_dependency': {'path': '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cache-controller-resume.yrB8NG6dCY/probe-controller.py',
+                               'sha256': '13b94bb42d7bdd78816c9fe7ab2f3ffe1c3a0b5f57983f6a3fc20b7e518f6ce2'},
+    'existing_22_evidence': {'path': '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cache-ci-schema3.XXXXXX.6rMb7JNJna/probe-result.log',
+                             'sha256': '6bc2691cdd49e00dd2c7b4012120e33b456e5022c960a72c6d662dd85e0a263b'},
+    'actual_ci_chain_readonly': {'path': '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cache-ci-schema3.XXXXXX.6rMb7JNJna/actual-ci-readonly-result.json',
+                                 'sha256': '69a71b6e19528352058422b75bafe1e781bc3a454eba84397d32b7046390844e'},
+}
+
+
+def publish_exclusive(destination, value):
+    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    try:
+        with os.fdopen(fd, 'wb', closefd=False) as output:
+            output.write(value); output.flush(); os.fsync(output.fileno())
+    finally:
+        os.close(fd)
+    directory = os.open(A, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--generator-sha', required=True)
+    parser.add_argument('--ci', required=True, help='Existing raw official gh run view JSON under the fixed audit directory')
+    args = parser.parse_args()
+    require(Path(__file__).resolve() == SELF and A.resolve(strict=True) == A, 'generator/audit identity changed')
+    controller_bytes = CONTROLLER.read_bytes()
+    require(sha(controller_bytes) == CONTROLLER_SHA, 'frozen controller changed')
+    c = types.ModuleType('frozen_release_controller'); c.__file__ = str(CONTROLLER)
+    exec(compile(controller_bytes, str(CONTROLLER), 'exec'), c.__dict__)
+    require(c.digest(args.generator_sha) and sha(c.regular_bytes(SELF)) == args.generator_sha, 'generator bytes changed')
+    require(not any(os.path.lexists(file) for file in (FINAL_RELEASE, FINAL_PROMPT)), 'final output already exists; preserve and inspect it')
+    ci_file = Path(args.ci)
+    require(ci_file.parent == A and ci_file.suffix == '.json' and ci_file not in (FINAL_RELEASE, FINAL_PROMPT), 'CI input must be an existing canonical audit JSON file')
+    ci_bytes = c.regular_bytes(ci_file)
+    ci_ref = {'path': str(ci_file), 'sha256': sha(ci_bytes)}
+    ci_value = json.loads(ci_bytes)
+    require(isinstance(ci_value, dict) and type(ci_value.get('databaseId')) is int and ci_value['databaseId'] > 0, 'real official CI run_id required')
+    run_id = ci_value['databaseId']
+    c.ci_projection(ci_value, TARGET, run_id)
+    authenticated = {}
+    for name, reference in FROZEN.items():
+        value = c.regular_bytes(reference['path'])
+        require(sha(value) == reference['sha256'], 'frozen input changed: ' + name)
+        authenticated[name] = value
+    prior = json.loads(authenticated['prior_publication'])
+    app = json.loads(authenticated['app_publication'])
+    reviews = prior['source_reviews']
+    require(prior['scope'] == FROZEN['scope'] and prior['source_native_proof'] == FROZEN['source_native_proof']
+            and app['source_reviews'] == reviews and app['root_session_id'] == SOURCE_ROOT
+            and app['activation_id'] == SOURCE_ACTIVATION and app['target_commit'] == APP_TARGET
+            and app['branch'] == c.APP_BRANCH, 'original source identity/App binding changed')
+    for axis, ticket in reviews.items():
+        verdict = c.frozen({'path': ticket['path'], 'sha256': ticket['sha256']})
+        require(verdict.get('eval_run_id') == ticket['eval_run_id'] and verdict.get('verdict', {}).get('status') == 'PASS'
+                and FROZEN['scope']['path'] in verdict.get('subject', {}).get('output_paths', []), 'source vote binding changed: ' + axis)
+    proof = json.loads(authenticated['source_native_proof'])
+    require(proof.get('activation_id') == SOURCE_ACTIVATION and proof.get('critical_failure') is False, 'source native proof changed')
+    for ticket in reviews.values():
+        call = proof['invocations'].get(ticket['invocation_id'], {})
+        require(call.get('root_session_id') == SOURCE_ROOT and call.get('activation_id') == SOURCE_ACTIVATION
+                and call.get('invocation_id') == ticket['invocation_id'] and call.get('status') == 'accepted'
+                and call.get('requested_role') == 'peak' and call.get('critical') is True
+                and call.get('route_harness') == 'codex-native'
+                and call.get('external_identity', {}).get('agent_id') == ticket['agent_id']
+                and call.get('evidence_ref') == ticket['evidence_ref'], 'original accepted native call changed')
+    release = {'schema_version': 3, 'kind': 'luca-stable-cache-activation', 'controller_sha256': CONTROLLER_SHA,
+               'target_commit': TARGET, **{name: FROZEN[name] for name in ['scope', 'install_review', 'code_install_review',
+                   'deployment_snapshot_delta', 'installed_app', 'ci_environment']}, 'reviews': reviews,
+               'publication': {'target_commit': TARGET, 'branch': 'main', 'remote_sha': TARGET, 'run_id': run_id, 'ci_run': ci_ref},
+               'app_publication': {'target_commit': APP_TARGET, 'branch': c.APP_BRANCH, 'remote_sha': APP_TARGET, 'local_head': APP_TARGET},
+               'expected_manifest_sha256': MANIFEST_CAS, 'root_session_id': SOURCE_ROOT,
+               'activation_id': SOURCE_ACTIVATION, 'app_mode': 'already-installed'}
+    c.validate_release(release)
+    scope = json.loads(authenticated['scope']); c.validate_scope(scope, release)
+    environment = c.ci_environment_binding(release)
+    companion = json.loads(authenticated['sidecar_companion'])
+    require(companion.get('status') == 'PREPARED_REVIEW_REQUIRED'
+            and companion.get('helper', {}).get('sha256') == 'e145f9f4ab64b751f3081a21e89debf085b556dac00d0ddacbb1b41cfb80bf02'
+            and companion.get('embedded_manifest_sha256') == '5cfeea18143c6f0b9bc75d51ce53c9012a0f0e59b4e0a352127729d9f34796b4', 'Sidecar pre-review companion changed')
+    evidence = dict(FROZEN, controller={'path': str(CONTROLLER), 'sha256': CONTROLLER_SHA},
+                    ci_run=ci_ref, ci_postimage=environment['postimage'], source_reviews=reviews)
+    for name in ['helper', 'manifest', 'probe_log', 'probe_source']:
+        reference = companion[name]
+        require(c.exact(reference, ['path', 'sha256']) and c.digest(reference['sha256'])
+                and sha(c.regular_bytes(reference['path'])) == reference['sha256'], 'Sidecar evidence changed: ' + name)
+        evidence['sidecar_' + name] = reference
+    execution = c.Execution()
+    require(execution.run('generator-candidate-head', ['git', 'rev-parse', 'HEAD'], c.CANDIDATE).strip() == TARGET, 'candidate HEAD changed')
+    require(execution.run('generator-app-head', ['git', 'rev-parse', 'HEAD'], c.APP_ROOT).strip() == APP_TARGET, 'App HEAD changed')
+    require(execution.run('generator-app-branch', ['git', 'branch', '--show-current'], c.APP_ROOT).strip() == c.APP_BRANCH, 'App branch changed')
+    c.remote_head(execution, 'generator-framework-remote', c.ROOT, 'main', TARGET, c.FRAMEWORK_ORIGIN)
+    c.remote_head(execution, 'generator-app-remote', c.APP_ROOT, c.APP_BRANCH, APP_TARGET, c.APP_ORIGIN)
+    official_ci = c.verify_ci(execution, release['publication'], 'generator-official-ci-live')
+    # No native/runtime/settings/installer effects. These audit outputs are proposals for the separate fresh gate.
+    for name, reference in FROZEN.items():
+        require(c.regular_bytes(reference['path']) == authenticated[name], 'frozen input changed before output: ' + name)
+    require(c.regular_bytes(CONTROLLER) == controller_bytes and sha(c.regular_bytes(SELF)) == args.generator_sha
+            and c.regular_bytes(ci_file) == ci_bytes, 'generator/controller/CI bytes changed before output')
+    release_bytes = (json.dumps(release, ensure_ascii=False, indent=2) + '\n').encode()
+    release_sha = sha(release_bytes)
+    evidence['final_release'] = {'path': str(FINAL_RELEASE), 'sha256': release_sha}
+    header = {'kind': 'fresh-native-local-release-and-sidecar-prereview', 'final_release': evidence['final_release'],
+              'official_ci': official_ci, 'evidence': evidence,
+              'authorization': 'Review only. Separate accepted critical peak fresh ACTIVE native local gate required before controller apply; Sidecar remains gated after source activation/C07/normal shutdown/fresh CAS.',
+              'native_gate_schema': 2, 'local_gate_path': str(c.LOCAL_APPROVAL)}
+    prompt_bytes = (json.dumps(header, ensure_ascii=False, indent=2) + '\n\n'
+                    + authenticated['criteria'].decode('utf-8')).encode()
+    publish_exclusive(FINAL_RELEASE, release_bytes)
+    publish_exclusive(FINAL_PROMPT, prompt_bytes)
+    print(json.dumps({'status': 'RELEASE_AND_REVIEW_PROMPT_FROZEN_REAL_CI_AUTHENTICATED_LOCAL_GATE_PENDING',
+                      'release': evidence['final_release'], 'prompt': {'path': str(FINAL_PROMPT), 'sha256': sha(prompt_bytes)},
+                      'ci_run': ci_ref, 'run_id': run_id, 'local_activation_performed': False,
+                      'sidecar_pre_review_only': True}, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as error:
+        print(json.dumps({'status': 'REFUSED_NO_FAKE_CI_OR_OVERWRITE', 'error': str(error)}), file=sys.stderr)
+        raise SystemExit(1)

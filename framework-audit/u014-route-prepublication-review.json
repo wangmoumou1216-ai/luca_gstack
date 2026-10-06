@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-03T08:54:51.093976+00:00",
+  "reviewer": "/root/adoption_value_audit",
+  "native_thread": "01a1007d-ad0a-7df1-98ca-73a8c40f47e5",
+  "source": "native collaboration message received by root, J32 before publication",
+  "commit": "164290856a20accf74118c4e5911d462b2b4eba3",
+  "decision": "ALLOW_ROUTE_ONLY_PUBLICATION",
+  "C1": "PASS 28 explicit old/new calls;8 wrong references corrected",
+  "C2": "PASS purpose/Plan/HumanGate preserved,prose baseline",
+  "C3": "PASS exact postimage binds executable evidence;layer claims bounded",
+  "C4": "PASS minimal closure,normal fullgate114/0/0/1,clean baseline parent",
+  "C5": "UNKNOWN until actual remote/local/dirty readback",
+  "not_final_eval_envelope": true
+}

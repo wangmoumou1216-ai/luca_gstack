@@ -1,0 +1,117 @@
+{
+  "scope": "P09 outcome review plus final single P10 readiness; no production adoption",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-case-draft.json",
+      "sha256": "5a403cae7809f0adc04b5b6ad58004425b5ff03ea947bc2329c62106e11653d7",
+      "bytes": 22579
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-registration-draft.json",
+      "sha256": "bc2448ae0c6a377989a447e835a972c6046991f22a59652f6dea8ddcc56c070b",
+      "bytes": 7813
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-manifest-draft.json",
+      "sha256": "aa15e56e461fc696d64817f615196ffcbf820f99f6b5d9836c2cb7c9962e6891",
+      "bytes": 11014
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-preparation.json",
+      "sha256": "94b072692e45ae0f0eb507556fce9f501e8ea46ed98ae6d6ba13097e531e35d2",
+      "bytes": 12650
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-launch.py",
+      "sha256": "44762553e7ce6a0ceae8505328a5309f4de2cffcdda387cf309eee96790e399e",
+      "bytes": 10973
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-offline-sandbox.json",
+      "sha256": "1ecd87bb5ccce6dac34f1785f56d848b133765b8a64f363a4dd194c6dc366664",
+      "bytes": 5135
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-offline-sandbox-inner-env.json",
+      "sha256": "bc92ae4eb15515e53e5ecfddcf96fbeeb5300e74f04872c38708647ac0460046",
+      "bytes": 6972
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-frozen-orchestration-ready.json",
+      "sha256": "c898f8576c5fc3fc289826209486c246c823a17fab8b00206425ae282e37e752",
+      "bytes": 5924
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-routing-ready.json",
+      "sha256": "406ab496f5c839366e01ea8f2fd65b27f743be3b19b092ee5da2389d02b008b9",
+      "bytes": 3151
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-collection-driver.json",
+      "sha256": "b17b918eb23a6945d73a0f6acb3dd0d12eda168811eb7d95324f96b30017eb05",
+      "bytes": 953
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-collection-conditions.json",
+      "sha256": "9a5483b5fa351a62cee6a028e07796c30767f9f0989d13fd58a58dfd0ff27ed7",
+      "bytes": 882
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6",
+      "bytes": 58107
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7",
+      "bytes": 80878
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "81b3cde5a44e6fb3d60145be7c14578098534a8444adc4d6d20c2b7d1b1edd4c",
+      "bytes": 25184
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "cea5b35c866bd8c157685d9f7425d11365f894b817c6f382f24c5c43f27f718f",
+      "bytes": 25121
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/native-trace.mjs",
+      "sha256": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce",
+      "bytes": 21081
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+      "sha256": "38cae34f13f229364c7f137597b38d610327c367581bdc43a81e98a57a3c8e02",
+      "bytes": 737
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-local-entry-check.json",
+      "sha256": "7b3f557fb43d4cfb50dcdcaf4f00ae562ebde532b8b18223a1e8c0fabac87a4f",
+      "bytes": 1230
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-launch.json",
+      "sha256": "a032dfe324948a56fdec230e0f0ef86c2d7ebf75dd56a6eb9c1e33355a8b4d23",
+      "bytes": 4640
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/evidence/result.json",
+      "sha256": "97c7545de96bed185fd2d213f3657e074632c36b5e423771a73f8301f0a91dc1",
+      "bytes": 122383
+    }
+  ],
+  "assertions": [
+    "P09 actual eight checks pass but INVALID_RUN remains; no qualification/quality/value PASS",
+    "P10 exact eight checks, same T condition, permissions, cap and protocol; unrelated MCP definitions disabled process-locally only",
+    "Actual app-server adoption is tested, not inferred from CLI list; scope excludes MCP/UI/external integrations",
+    "Last qualification #10 in 144 total; no automatic retry; stop U014-b on failure",
+    "Exact reviewed hashes, live terminal/usage/process cleanup and original evidence preserved"
+  ]
+}

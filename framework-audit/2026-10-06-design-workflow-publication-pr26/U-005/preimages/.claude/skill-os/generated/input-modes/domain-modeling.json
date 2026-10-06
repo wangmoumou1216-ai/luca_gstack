@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "domain-modeling",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "domain_question"
+        ],
+        "optional": [
+          "existing_glossary",
+          "code_evidence",
+          "exact_authorized_artifact"
+        ]
+      },
+      "internal": {
+        "required": [
+          "caller",
+          "domain_question",
+          "trigger_condition",
+          "scope",
+          "inherited_authority",
+          "authority_effect_intersection"
+        ],
+        "optional": [
+          "parent_u_id",
+          "exact_authorized_artifact",
+          "existing_glossary",
+          "code_evidence"
+        ]
+      }
+    },
+    "quality_gates": [
+      "scope_bound",
+      "facts_separated_from_decisions",
+      "human_answer_required",
+      "code_evidence_honest",
+      "authorized_writes_only",
+      "structured_return",
+      "caller_resumed"
+    ],
+    "notes": "手动或语义触发，也可由上游条件调用；无独立 workflow 节点/state。未给 exact artifact 写入授权时只分析；NO_PIN 不读写下游项目。"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "python3",
+    "scripts/build-agent-context.py",
+    "check"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "exit": 0,
+  "stdout": "PASS generated agent context is current\n",
+  "stderr": ""
+}

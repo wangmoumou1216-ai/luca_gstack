@@ -1,0 +1,75 @@
+{
+  "purpose": "actual cold caller/admission policy probe, no mock returns and no independent votes manufactured",
+  "cases": [
+    {
+      "id": "bad-draft-hash",
+      "input_path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/bad-draft-hash.json",
+      "input_sha256": "7a5afe40882035395e837400ed34ac90de252be693f5ab3c32a9cc8aca817513",
+      "expected": "STOP admission, noPASS"
+    },
+    {
+      "id": "unreadable-source",
+      "input_path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/unreadable-source.json",
+      "input_sha256": "5aef7d41ef2bd51f0bee8fe98e195efcfb85c4a9af765ef0797174bea41ee156",
+      "expected": "STOP requiredsource, noPASS"
+    },
+    {
+      "id": "missing-original-criterion",
+      "input_path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/missing-original-criterion.json",
+      "input_sha256": "e07ff681b5a1cbf71fa4db182eb1da943b79b7da18450914f43f8b80292eadc3",
+      "expected": "STOP reduceddenominator, noPASS"
+    },
+    {
+      "id": "missing-round",
+      "input_path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/missing-round.json",
+      "input_sha256": "2c9a3edd1f0b47ecf8fa1a68d291bae4987957befd46598b85042511c031ee79",
+      "expected": "STOP missingfield, noPASS"
+    },
+    {
+      "id": "unknown-tier",
+      "input_path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/unknown-tier.json",
+      "input_sha256": "99f4b176baca8b6389c8ef91f323edd5cfa10651a251ec18731a50d9ba67059d",
+      "expected": "UNKNOWN required tier, noPASS"
+    },
+    {
+      "id": "standard-missing-second-approach",
+      "input_path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/standard-missing-second-approach.json",
+      "input_sha256": "6d0700478d27dbab11fa9d51c6d9b7ca11b9c5073c5605217bf184d1ae6e61dc",
+      "expected": "FAIL C8 scope matrix, noPhase6"
+    }
+  ],
+  "caller_cases": [
+    {
+      "id": "no-independent-capability",
+      "current_allowed_operations": [
+        "read authorized exactfixture/framework source",
+        "report BLOCKED"
+      ],
+      "independent_review_capability": "NONE",
+      "expected": "BLOCKED; no internal Oracle or Phase6"
+    },
+    {
+      "id": "ordinary-skill-no-handoff",
+      "review_stage": null,
+      "skill_name": "brainstorm",
+      "output_path": "in-memory only",
+      "handoff_path": null,
+      "expected": "ordinary Skill Mode missing completed delivery remains NEEDS_CONTEXT/FAIL; draft exemption doesnotapply"
+    },
+    {
+      "id": "persisting-high-round2",
+      "round": 2,
+      "prior_severity": "high",
+      "current_severity": "high",
+      "convergence_signal": "Same issues persisting; noNEW",
+      "required_criteria": "all others PASS",
+      "expected": "BLOCKED; noPhase6/DONE; cannotdowngradeintoReviewerConcerns"
+    },
+    {
+      "id": "changed-draft-old-vote",
+      "old_vote_hash": "c513608ac5f6b56d524063f908a6989555ba910a83c4191f9a46991a8f32f5ce",
+      "current_draft_hash": "277497c562d49c2ac888b525942bc5abddacee6539965452b832986568d4f3b3",
+      "expected": "STOP oldvote; newhash+coldvote required"
+    }
+  ]
+}

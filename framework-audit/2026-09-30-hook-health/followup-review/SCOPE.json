@@ -1,0 +1,29 @@
+{
+  "review_root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+  "base": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.claude/hooks/project-scope-guard.mjs",
+      "relative": ".claude/hooks/project-scope-guard.mjs",
+      "sha256": "fdaa497c6b6f9c275d9775c3df08eb6ecb24073101a6480ab433390eb15e61e0"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-project-scope-guard.mjs",
+      "relative": "scripts/test-project-scope-guard.mjs",
+      "sha256": "060e930d23e537892ff79c6d88819e6e70c2f24d9fd64ac7e16587a7b7f2da08"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/hooks.json",
+      "relative": ".codex/hooks.json",
+      "sha256": "f92edc73bd75a1fa1f677e303d499e216f5b3def2cd93493e786b82dfc8b0d52"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/README.md",
+      "relative": "README.md",
+      "sha256": "c892eecf7e589a7caac552ea4fc36e0bfbebf725883a2ca6fbe69f6a43fa196e"
+    }
+  ],
+  "diff_sha256": "7a744bdb138dd84c66c39da78a4f08eedd2543f37b07b43b4956200215c3d909",
+  "patch": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/followup-review/candidate.patch",
+  "source_digest": "9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd"
+}

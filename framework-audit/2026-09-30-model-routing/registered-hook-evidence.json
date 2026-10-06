@@ -1,0 +1,14 @@
+[
+  {
+    "command": "node scripts/test-hook-source-digests.mjs",
+    "exit": 0,
+    "output": "PASS 11 hook gates: clean, changed security/test source rejected, restored\n",
+    "fixture_root": "/private/tmp/luca-routing-registered-ivk33hjv/release"
+  },
+  {
+    "command": "node scripts/test-codex-child-hook-integrity.mjs",
+    "exit": 0,
+    "output": "PASS approved native hook source executes\nPASS missing protected bootstrap blocks the native hook\nPASS modified receipt writer and adapter fail before native hook import\n",
+    "fixture_root": "/private/tmp/luca-routing-registered-ivk33hjv/release"
+  }
+]

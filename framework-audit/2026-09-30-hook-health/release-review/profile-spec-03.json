@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-profile-spec-20260930-03",
+  "subject": {
+    "skill": "code-review-spec",
+    "topic": "hook-health configuration-profile spec supplement",
+    "scene": "unknown",
+    "input_summary": "NO_PIN；配置目录补充独立只读审查，冻结范围及内存失败注入。真实启用与会话验收不包含在本票。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/SCOPE-03.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 4,
+    "findings": [
+      "P1: activate-reviewed.py:42–44 在比较前由 Path 规范化，普通及优化模式均接受包含重复斜杠、点段或尾随斜杠的非规范 CODEX_HOME；现有测试未覆盖真实 Path 规范化行为。"
+    ]
+  }
+}

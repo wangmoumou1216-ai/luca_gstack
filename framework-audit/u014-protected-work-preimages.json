@@ -1,0 +1,20 @@
+{
+  "protected_existing_dirty": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/observations.jsonl",
+      "sha256": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "bytes": 26607
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/evals/eval-log.jsonl",
+      "sha256": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "bytes": 94266
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/retrieval-log.jsonl",
+      "sha256": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "bytes": 152635
+    }
+  ],
+  "rule": "never stage/reset; later concurrent appends are not automatically our mutation"
+}

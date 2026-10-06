@@ -1,0 +1,60 @@
+{
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "baseline_sha256": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+      "candidate_sha256": "86581149518b00445a8e4abc5e3bb701b5b2f88d19a97379054cdbe59c6a1d1f",
+      "root_before_sha256": "6f603c20c0350045eb1c29ba6e0bdf9b29281e15d09479b19f8191fee46e9526"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "baseline_sha256": "9c7c3d4ccfe1c0aeb1cb970617701ab8a060906ad4def72085e55b88622ef034",
+      "candidate_sha256": "16f0d4aad8ca4dfabc278094db90a2e57b1b8b716a185ec7b50ac01995d586eb",
+      "root_before_sha256": "3db5eb53ed80c1c3a7f4fc9e4d142daa652ce2004160e1db81d14339fd1b8a31"
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "baseline_sha256": "a9d480eb21bc1d29be5629555d4865b358f0e3592a7081ebb13dd2648820782c",
+      "candidate_sha256": "ef213983722c200cc0ba968b43d832e11016fbd85d4414b5ed4fb8714fef5760",
+      "root_before_sha256": "05166c1d125badc4f1e85575e025d8e410d1c52a4876bc1dc268716e41176b99"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "baseline_sha256": "9f40be97d14e6b8b18efb00464e5742b0a71c6580b00b2208f1adb6716e4dee2",
+      "candidate_sha256": "2b3f24a246f9730db5f14c5655eccc610ecaec33906da3464dff2824f758caee",
+      "root_before_sha256": "d94ee8042a88933d955d7d0612e3beae7948cc06eb69cb80d6d196f03f82c7d9"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "baseline_sha256": "300d3eb50b55c51af4f4237700639b0344c2c778d55137bc060a401796810cfd",
+      "candidate_sha256": "80de955c256440a7fe165d665b4f5b833be015afdb1b5a3f4866136063545a97",
+      "root_before_sha256": "6891cf4040ac5dee78cec5bfaed9b841b2bbc2e88631bb9d628b2a76a9d860de"
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "baseline_sha256": "2c2975fb847737408385a868f3e12484927c504ca2dedc825a3883818b1bc086",
+      "candidate_sha256": "5610e8613b0fda90042ab78b4f29bf4231605f19ad34fdde3a3d52fa2b894bdd",
+      "root_before_sha256": "261e1603f2bf7c3ff3de552b0cf132a0edd668715b6b3a0841d797c29a98e091"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "baseline_sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c",
+      "candidate_sha256": "38f4364fd544e536f7fcac4e054212eec001b96c75439f19a347103c7474a1cd",
+      "root_before_sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "baseline_sha256": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082",
+      "candidate_sha256": "245f7b6a88678919386e5f2cee8d5696a42faf929e0506439ff9db612e32e308",
+      "root_before_sha256": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082"
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "baseline_sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7",
+      "candidate_sha256": "5b7478e73ba0fcf35bc4dc7cc6554a90146229c7ff6f23779704c50768568cf5",
+      "root_before_sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7"
+    }
+  ],
+  "scope": "Current tested routing candidate captured by root while owner finishes report; identity will be reconciled with final author delivery",
+  "baseline_head": "05120197073144c0f46b6fb30a192733d529cc4f"
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+  "scope": "registration-source",
+  "ok": true,
+  "registration": {
+    "status": "PASS",
+    "problems": [],
+    "config_sha256": "ab8ca4a0eb79327889a2a0cce3e013900e05939294e0d97ffa06b857d6f0261e",
+    "contract_sha256": "0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a",
+    "hook_count": 11,
+    "expected_digests": [
+      "18f88a1a3f210572b061ef6be4703170ec859f3ccf6cbe93eb694263b1634bb1"
+    ],
+    "current_digest": "18f88a1a3f210572b061ef6be4703170ec859f3ccf6cbe93eb694263b1634bb1"
+  },
+  "installation": {
+    "status": "NOT_CHECKED",
+    "problems": [],
+    "changed_files": []
+  },
+  "live_session": "UNVERIFIED: a fresh process cannot attest the commands cached by an existing session"
+}

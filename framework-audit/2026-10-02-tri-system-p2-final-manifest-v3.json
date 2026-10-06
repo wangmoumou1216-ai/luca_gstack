@@ -1,0 +1,102 @@
+{
+  "phase": "P2",
+  "review_round": 2,
+  "eval_run_id": "tri-system-p2-final-20261002-r2",
+  "criteria": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "C7"
+  ],
+  "status": "frozen_for_method_review",
+  "outputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-evaluation-execution-plan-v3.md",
+      "sha256": "76841b961ddaadac8f2013657f66a18c1ce93b62fe95b039a021cf545335f3a6",
+      "lines": 352
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-routing-execution-pack-v2.md",
+      "sha256": "d7f0d43ff6651b0b9a97d9c685e171f2cd53ef26cbdc099311ac528054aaa754",
+      "lines": 314
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-orchestration-execution-pack-v2.md",
+      "sha256": "e125f1c5a56a8f521326b045b8563ecbb32162818bae859572b262514620b4c7",
+      "lines": 217
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-context-execution-pack-v2.md",
+      "sha256": "b2425c915a0089d90c03f77c079c44aa5d130229c8a99c8ee4fc021eb5481d39",
+      "lines": 270
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-tri-system-assessment-master-plan.md",
+      "sha256": "7bde6cb9232187e89d99e4075337feebaeb7f29d9e9c1ece524cb3360968ed6e",
+      "lines": 343
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-neutral-purpose.md",
+      "sha256": "02bb3f7e16dfbc228660bd5af58b91f6ced3c7d7350ff6c7bd2821df30212421",
+      "lines": 64
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-supervision-resolution.md",
+      "sha256": "7cd833212a6624d59fe1ed91b9f6eedad4e89c059957069e675660e4a3e48a33",
+      "lines": 60
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-routing-coverage-audit.md",
+      "sha256": "4b38e35eb80f036673babcf56208ce44377a8ad96573b11af11cd2aef8bffc38",
+      "lines": 182
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-orchestration-coverage-audit.md",
+      "sha256": "e060cf8ce2e45fd8680c787ba5628a084d276b3f7c34b692cf5e40c7c9976681",
+      "lines": 188
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-context-coverage-audit.md",
+      "sha256": "63b784014cfe6a55d4d7e0b19674dc1c7b4fb874af8f29caeff8fb6ad07bc925",
+      "lines": 180
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-review-r1.md",
+      "sha256": "a9086c5159e1342cc1a5ac1910c5f72c3845d73859f3f20bb33380d4a402b75c",
+      "lines": 40
+    }
+  ],
+  "historical_manifest": "2026-10-02-tri-system-p2-final-manifest-v2.json",
+  "historical_verdict": "R1 PASS preserved; gate withheld after concrete coverage gaps",
+  "scope": "Plan method acceptance only. Formal behavior runs=0.",
+  "parent_read_evidence": {
+    "routing": [
+      "81ced3",
+      "2aff19",
+      "e56797",
+      "be1fdf"
+    ],
+    "orchestration": [
+      "e9f05b",
+      "99189b"
+    ],
+    "context": [
+      "7012a5"
+    ],
+    "coverage_audits": [
+      "9af4d3",
+      "78e165",
+      "e8a1c9",
+      "59c57d"
+    ],
+    "main_v3": [
+      "c745f1",
+      "ac011b",
+      "main-author edits"
+    ]
+  },
+  "historical_draft_binding": "Module draft-read hashes document authoring provenance only; active shared execution binding is the v3 path/hash in this manifest."
+}

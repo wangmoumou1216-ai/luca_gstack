@@ -1,0 +1,24 @@
+{
+  "case": "N-D",
+  "expected": [
+    {
+      "id": "R1",
+      "count": 300,
+      "quantity": 14645,
+      "weighted_total": 391939
+    },
+    {
+      "id": "R2",
+      "count": 300,
+      "quantity": 14712,
+      "weighted_total": 392644
+    },
+    {
+      "id": "R3",
+      "count": 300,
+      "quantity": 14682,
+      "weighted_total": 394737
+    }
+  ],
+  "scope": "actual complete required data source consumption; not proven model token capacity or project workflow handoff equivalence"
+}

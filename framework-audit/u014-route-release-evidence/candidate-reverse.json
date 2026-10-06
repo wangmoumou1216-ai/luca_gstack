@@ -1,0 +1,42 @@
+{
+  "argv": [
+    "git",
+    "apply",
+    "--reverse",
+    "--check",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/minimal.patch"
+  ],
+  "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate",
+  "env_overrides": {
+    "CLAUDE_PROJECT_DIR": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate",
+    "LUCA_PROJECTS_ROOT": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate/fixture-projects",
+    "MEMORY_ROOT": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate/fixture-memory"
+  },
+  "env_removed": [
+    "NODE_OPTIONS",
+    "LUCA_CHILD_SOURCE_ROOT",
+    "LUCA_PROTECTED_CODE_ROOT",
+    "LUCA_ACTUAL_HARNESS",
+    "LUCA_HARNESS_ADAPTED",
+    "CODEX_HOME",
+    "CODEX_SANDBOX",
+    "CODEX_SESSION_ID",
+    "MUSE_HOST_LAUNCH_ID",
+    "MUSE_HOST_LAUNCH_HANDLE",
+    "LUCA_PARITY_ROOT",
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE"
+  ],
+  "source_hashes": {
+    ".claude/hooks/route-guard.mjs": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a",
+    "scripts/test-route-guard.mjs": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144",
+    ".claude/skill-os/capability-parity.json": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317"
+  },
+  "started_at": "2026-10-03T08:08:04.048231+00:00",
+  "ended_at": "2026-10-03T08:08:04.066475+00:00",
+  "exit": 0,
+  "elapsed_seconds": 0.018,
+  "stdout": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-reverse.stdout",
+  "stderr": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-reverse.stderr"
+}

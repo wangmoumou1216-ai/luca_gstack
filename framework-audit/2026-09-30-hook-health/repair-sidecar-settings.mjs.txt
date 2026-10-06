@@ -1,0 +1,146 @@
+// Offline use of the application's public settings transaction. Never bypass a live writer lease.
+import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
+import path from 'node:path';
+import {createHash, randomUUID} from 'node:crypto';
+import {isDeepStrictEqual} from 'node:util';
+import {createStateWriter, readJsonState} from '/Users/luca/Desktop/项目/muse/app/state-writer.js';
+import {createSettingsStore} from '/Users/luca/Desktop/项目/muse/app/settings-store.js';
+import {normalizeCodexConnection, serializableCodexConnection, validateDirectConfig, codexConnectionStatus} from '/Users/luca/Desktop/项目/muse/app/codex-connections.js';
+
+const audit='/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health';
+const manifest=JSON.parse(await fs.readFile(audit+'/sidecar-settings-repair-manifest.json','utf8'));
+const apply=process.argv.slice(2).includes('--apply');
+if(process.argv.slice(2).some(arg=>arg!=='--apply')) throw Error('Usage: node --input-type=module - [--apply] < reviewed source');
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+const require=(value,message)=>{if(!value)throw Error(message);};
+const settingsPath='/Users/luca/Library/Application Support/luca/state-v2/settings.json';
+require(manifest.settingsPath===settingsPath,'settings target changed');
+for(const item of manifest.modules) require(sha(await fs.readFile(item.path))===item.sha256,'public module changed');
+require(await fs.realpath(path.dirname(settingsPath))===path.dirname(settingsPath),'settings root is not canonical');
+const beforeBytes=await fs.readFile(settingsPath);
+require(sha(beforeBytes)===manifest.settingsSha,'settings preimage changed; inspect and re-freeze');
+const before=await readJsonState(settingsPath,{schemaVersion:2});
+const entry=before.connections['codex:active'];
+require(before.revision===manifest.storeRevision && entry.revision===manifest.connectionRevision
+  && before.credentialRevision===manifest.credentialRevision,'settings revision changed');
+require(entry.config.mode===manifest.mode && isDeepStrictEqual(entry.config.sidecar,manifest.beforeSidecar),'connection changed');
+require(isDeepStrictEqual(before.activation['codex:active'],manifest.activation)
+  && manifest.activation.configRevision===entry.revision,'active connection is not the reviewed configuration');
+const expectedSidecar={binary:'/Users/luca/.local/bin/codex-luca-aihub',codexHome:'/Users/luca/.codex-aihub-test'};
+const codexBin='/Users/luca/.local/bin/codex';
+await fs.access(codexBin,fsSync.constants.X_OK);
+require(isDeepStrictEqual(manifest.afterSidecar,expectedSidecar),'target sidecar changed');
+await fs.access(expectedSidecar.binary,fsSync.constants.X_OK);
+require((await fs.stat(expectedSidecar.codexHome)).isDirectory(),'sidecar home missing');
+require(entry.config.mode==='direct' && entry.config.direct.credentialRef==='luca:codex.aihub_direct','unexpected active mode or credential reference');
+require(before.credentialTargets['codex-direct'].status==='confirmed'
+  && before.credentialTargets['codex-direct'].hasSecret===true,'existing direct credential is not confirmed');
+const candidate=serializableCodexConnection({...entry.config,sidecar:expectedSidecar});
+require(isDeepStrictEqual(candidate.direct,entry.config.direct),'normalization would change Direct configuration');
+require(validateDirectConfig(candidate).ok,'existing Direct configuration is invalid');
+if(!apply){console.log(JSON.stringify({status:'PREFLIGHT_PASS_NO_MUTATION',mode:entry.config.mode,
+  revision:before.revision,sidecarBefore:manifest.beforeSidecar,sidecarAfter:expectedSidecar}));process.exit(0);}
+const receiptPath=audit+'/sidecar-settings-repair-result.json';
+require(!fsSync.existsSync(receiptPath),'repair has already been attempted; inspect its receipt');
+const writer=await createStateWriter({storageRoot:path.dirname(settingsPath),appId:'com.luca.muse.session-v2'});
+let journal=null, store=null, stage='lease';
+const durableJournal=async value=>{
+  const temporary=receiptPath+'.'+randomUUID()+'.tmp';
+  let handle;
+  try{
+    handle=await fs.open(temporary,'wx',0o600);
+    await handle.writeFile(JSON.stringify(value,null,2)+'\n');await handle.sync();await handle.close();handle=null;
+    await fs.rename(temporary,receiptPath);
+    const directory=await fs.open(path.dirname(receiptPath),'r');try{await directory.sync();}finally{await directory.close();}
+    journal=value;
+  }finally{await handle?.close().catch(()=>{});await fs.unlink(temporary).catch(()=>{});}
+};
+const unchanged=state=>{
+  for(const key of ['preferences','preferenceRevision','credentialTargets','credentialRevision','baseline'])
+    require(isDeepStrictEqual(before[key],state[key]),'unrelated state changed: '+key);
+  for(const [key,value] of Object.entries(before.connections))if(key!=='codex:active')
+    require(isDeepStrictEqual(value,state.connections[key]),'other connection changed');
+  for(const [key,value] of Object.entries(before.activation))if(key!=='codex:active')
+    require(isDeepStrictEqual(value,state.activation[key]),'other activation changed');
+  for(const [key,value] of Object.entries(before.receipts))require(isDeepStrictEqual(value,state.receipts[key]),'prior receipt changed');
+};
+const active=state=>state.activation['codex:active']?.configRevision===state.connections['codex:active']?.revision
+  && state.activation['codex:active']?.credentialRevision===before.credentialRevision;
+const summary=state=>({revision:state.revision,connectionRevision:state.connections['codex:active']?.revision,
+  configSha:sha(JSON.stringify(state.connections['codex:active']?.config)),activation:state.activation['codex:active']||null,
+  saveReceipt:state.receipts[journal.operationId+'-save']?.status||null,
+  activateReceipt:state.receipts[journal.operationId+'-activate']?.status||null});
+try{
+  require(writer.lease.mode==='writer','application writer is active; close Luca normally before applying');
+  require(sha(await fs.readFile(settingsPath))===manifest.settingsSha,'settings changed before lease acquisition');
+  const forbidden=()=>{throw Error('credential access is outside this repair');};
+  store=createSettingsStore({writer,credentialBackend:{status:forbidden,set:forbidden,remove:forbidden},
+    validateConnection:({profileId,config})=>{
+      const c=normalizeCodexConnection(config);
+      if(profileId!=='codex:active' || !validateDirectConfig(c).ok
+        || !path.isAbsolute(c.sidecar.binary) || !path.isAbsolute(c.sidecar.codexHome)) return {ok:false};
+      return {ok:true,config:serializableCodexConnection(c)};
+    },
+    readiness:({profileId,config,credentialTarget})=>{
+      if(profileId!=='codex:active')return {ok:false,reason:'unknown_profile'};
+      const c=normalizeCodexConnection(config), local=codexConnectionStatus(c,{codexBin,checkCredential:false});
+      if(!local.available)return {ok:false,reason:local.reason};
+      if(c.mode==='system'||c.mode==='sidecar')return {ok:true,kind:'external'};
+      return c.direct.credentialRef==='luca:codex.aihub_direct' && credentialTarget.status==='confirmed'
+        && credentialTarget.hasSecret===true ? {ok:true,kind:'confirmed'} : {ok:false,reason:'credential_unavailable'};
+    }});
+  const backup=settingsPath+'.pre-sidecar-path-'+randomUUID();
+  const backupFile=await fs.open(backup,'wx',0o600);
+  try{await backupFile.writeFile(beforeBytes);await backupFile.sync();}finally{await backupFile.close();}
+  const backupDirectory=await fs.open(path.dirname(backup),'r');try{await backupDirectory.sync();}finally{await backupDirectory.close();}
+  const operationId='hook-sidecar-path-repair-'+randomUUID();
+  await durableJournal({status:'PREPARED',stage:'before-save',operationId,backup,backupSha:sha(beforeBytes),
+    manifestSha:sha(await fs.readFile(audit+'/sidecar-settings-repair-manifest.json')),at:new Date().toISOString()});
+  stage='save';
+  const saved=await store.connectionSave({profileId:'codex:active',patch:{sidecar:expectedSidecar},
+    baseConnectionRevision:entry.revision,expectedCredentialRevision:before.credentialRevision,operationId:operationId+'-save'});
+  await durableJournal({...journal,status:'SAVED_ACTIVATION_PENDING',stage:'before-activate',savedRevision:saved.connection.revision});
+  stage='activate';
+  const activated=await store.connectionActivate({profileId:'codex:active',expectedConnectionRevision:saved.connection.revision,
+    expectedCredentialRevision:before.credentialRevision,operationId:operationId+'-activate'});
+  stage='readback';
+  const after=(await store.get()).state;
+  require(isDeepStrictEqual(after.connections['codex:active'].config,candidate),'configuration readback mismatch');
+  unchanged(after);
+  require(activated.activation.configRevision===after.connections['codex:active'].revision
+    && activated.activation.credentialRevision===before.credentialRevision,'activation readback mismatch');
+  const result={status:'PUBLIC_TRANSACTION_APPLIED',at:new Date().toISOString(),backup,
+    revisionBefore:before.revision,revisionAfter:after.revision,mode:after.connections['codex:active'].config.mode,
+    sidecar:after.connections['codex:active'].config.sidecar,credentialRevision:after.credentialRevision,
+    activation:after.activation['codex:active'],gui:'UNVERIFIED; restart Luca to hydrate canonical configuration'};
+  stage='result';
+  await durableJournal({...journal,...result,stage:'verified'});
+  console.log(JSON.stringify(result));
+}catch(error){
+  if(journal && store){
+    let outcome='RECOVERY_REQUIRED', observed=null, recoveryError=null;
+    try{
+      const current=(await store.get()).state;unchanged(current);observed=summary(current);
+      const config=current.connections['codex:active'].config;
+      if(isDeepStrictEqual(config,candidate)&&active(current))outcome='APPLIED_VERIFIED_AFTER_ERROR';
+      else if(isDeepStrictEqual(config,entry.config)&&active(current))outcome='UNCHANGED_OR_RESTORED';
+      else if(isDeepStrictEqual(config,candidate)
+        && isDeepStrictEqual(current.receipts[journal.operationId+'-save']?.result?.connection?.config,candidate)){
+        const rollback=await store.connectionSave({profileId:'codex:active',patch:entry.config,
+          baseConnectionRevision:current.connections['codex:active'].revision,
+          expectedCredentialRevision:before.credentialRevision,operationId:journal.operationId+'-rollback-save'});
+        await store.connectionActivate({profileId:'codex:active',expectedConnectionRevision:rollback.connection.revision,
+          expectedCredentialRevision:before.credentialRevision,operationId:journal.operationId+'-rollback-activate'});
+        const restored=(await store.get()).state;unchanged(restored);
+        require(isDeepStrictEqual(restored.connections['codex:active'].config,entry.config)&&active(restored),'rollback readback mismatch');
+        observed=summary(restored);outcome='ROLLED_BACK_THROUGH_PUBLIC_TRANSACTIONS';
+      }
+    }catch(recovery){recoveryError=recovery.message;}
+    const failed={...journal,status:outcome,failedStage:stage,error:error.message,recoveryError,observed,
+      recovery:'Do not overwrite settings.json or re-run --apply. Keep the durable backup and receipts. If RECOVERY_REQUIRED, close Luca normally, inspect current connection/credential revisions and existing operation receipts, then use public connectionSave/connectionActivate with fresh revision checks. Never fabricate activation. GUI remains unverified.'};
+    try{await durableJournal(failed);}catch(recordError){console.error(JSON.stringify({...failed,journalError:recordError.message}));}
+    console.error(JSON.stringify(failed));
+  }
+  throw error;
+}finally{await writer.close();}

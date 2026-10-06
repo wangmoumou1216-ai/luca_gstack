@@ -1,0 +1,20 @@
+{
+  "collected_at": "2026-10-02T20:20:06.032930+00:00",
+  "scope": "W21 conditions pair + W23 integration; no other source edit or behavior release",
+  "source_report_full_reads": {
+    "W21": "db5550",
+    "W23": "c48cae"
+  },
+  "old_hashes": {
+    "conditions.mjs": "211c7d3530ccff80b589cb8f152e2f916c0a21d95c54d24755d26b5bde2cdf2f",
+    "conditions.test.mjs": "30e75cff9be6573f618062d0ba854379103bd8a47d5eab2b334f5174bfe5b643",
+    "integration.test.mjs": "cf43047b371b8cecfa7646d3069d3807a4f86c7d912afa5a021245e82068105e"
+  },
+  "new_hashes": {
+    "conditions.mjs": "1406739d77c6025cac9b7efc1cd4621d0c1a3ed51a456273df26f7f3db1c88a3",
+    "conditions.test.mjs": "c9a95ac014676c7ea50121a5e59e446a845ce448474b45d2ebc6f0fcd48a8775",
+    "integration.test.mjs": "fa583ca373a60d32e7172baec7690402e67e7e9d4ae3720a13a371dacabd3b57"
+  },
+  "destination": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval",
+  "prior_r3_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r3"
+}

@@ -1,0 +1,66 @@
+{
+  "status": "RELEASE_REVIEW_FAILED_PENDING_REPAIR",
+  "candidate_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq",
+  "source_root": "/Users/luca/Desktop/luca_gstack",
+  "files": [
+    {
+      "path": "scripts/codex-hook-health.mjs",
+      "before_sha256": null,
+      "after_sha256": "c0070e48f56d3a3cda2c93fc6f46a57e8d0f1a11b23429f4555acecc5fddb1fe",
+      "new": true
+    },
+    {
+      "path": "scripts/codex-trust-hooks.mjs",
+      "before_sha256": "333858e5d3a297c9344e445d63f5eaa95e660794c8acab6b70d0c7cce08d95ec",
+      "after_sha256": "2bfe1f64a595a3e793c1ea914095e035c03ab9e262288bf6549304cda3c9e531",
+      "new": false
+    },
+    {
+      "path": "scripts/test-codex-hook-health.mjs",
+      "before_sha256": null,
+      "after_sha256": "b97c71efafe17775db428b04c8f4ab1a191cd216fef0be2a39d61c4d5f9bb04c",
+      "new": true
+    },
+    {
+      "path": "scripts/test-codex-trust-hooks.mjs",
+      "before_sha256": "b616238b873f38b5668502d2757e9fd7aee9d5c069bef6d6e96cf332af32b49d",
+      "after_sha256": "1c18253aa68a28178cc900a22e4df5b54781eea49999fb070fb17ca886154e55",
+      "new": false
+    },
+    {
+      "path": "scripts/verify.sh",
+      "before_sha256": "6cf90be0c5d5bec39ffadde202d4f05ec67a024e9539a4e3fe1309f08d78125a",
+      "after_sha256": "f8a88af3a884358aa8de7a49567df000f501cf9d1c35096e2b1d10b5956f636f",
+      "new": false
+    },
+    {
+      "path": "README.md",
+      "before_sha256": "ce8307b0a2ea79237e275b7d85de3ae5e2b83f791b2d19cf756027569058a1bc",
+      "after_sha256": "a05236cdd71e7bf89eec2d1ff15ffdd3bb6d661ab87e6207f0702329a351a35e",
+      "new": false
+    },
+    {
+      "path": ".codex/hooks.json",
+      "before_sha256": "5588e34ad2dcec9dc9ff8dc89bcdf56f98b0d16866b20dfb59f0ac4081d4a07b",
+      "after_sha256": "9ba3cb4b7ed0a5fe09f3ae11b253b34e527ce3aea7293b90e5481d2b94417216",
+      "new": false
+    }
+  ],
+  "baseline_source_digest": "a229918d10266b91b6205ec46efb8ab65e3d612b3bd5458762caad617cecebf3",
+  "candidate_source_digest": "40a3fec4f9a68166a52cc52464ec3f4a18977fcd4c04e41b645d6f1b2f7a23f1",
+  "patch_sha256": "faa9282bb2aacf2a9da738fa358632d400170fdeb10da8215921bedc3a644b19",
+  "activation_effects": [
+    "Coordinate a maintenance window: shared-root reviews complete or explicitly paused, no new review until live verification",
+    "Apply seven baseline-checked files",
+    "Install reviewed source manifest for this root preserving other roots",
+    "Official exact trust update for eleven commands",
+    "Reload session and verify a real tool invocation"
+  ],
+  "git_publication": false,
+  "revision": 2,
+  "baseline_commit": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "candidate_archive_sha256": "301c545d6249cbf35e43ff977a253d331121c05bf66b671195e3e7a03d9010c5",
+  "rollback_archive_sha256": "43a70cd0a1b7f7374881fa907e1ae594e6d01e88f0211e2fd430200cbff2518b",
+  "review_run_id": "hook-health-final-20260930-02",
+  "release_review": "release-review/standards-01.md"
+}

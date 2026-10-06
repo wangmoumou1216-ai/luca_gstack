@@ -1,0 +1,71 @@
+# Codex 存活性 registry（P0 / WS-A0b，2026-07-25）
+#
+# 【只存不可派生量】tier 裁决 + degrade 路径 / 锁死 reason。
+# **可派生量（fanout / mcp / web / askUser / daemon / workflow）不写在这里**——由
+# scripts/check-codex-viability.mjs 从 SKILL.md 的 allowed-tools + 正文实时派生，单一来源
+# 就是 skill 文件本身。registry 若复述可派生量必然漂移（深审 R3C-5 已证：手维护的能力表
+# 当场与代码不符）。
+#
+# tier 语义：
+#   1      = 干净移植（Codex 上按原样跑）
+#   2      = 可降级（**必须写 degrade**：具体降级路径，且诚实标注强度弱于 Claude）
+#   report = 能力探针门控（缺的能力一旦挂上即恢复，如 MCP server）
+#   3      = 真锁死（**必须写 reason**：点名原因 + 恢复触发器）
+#
+# tripwire（verify.sh S30）：磁盘上每个 skill 必须定档；派生出阻断性能力（fanout/mcp/daemon/
+# workflow）者不得判 tier-1；tier-2 必须有 degrade；tier-3 必须有 reason。新增 skill 未定档即红。
+
+skills:
+  # ── tier-1：干净移植（无阻断能力；askUser/web 属可降级的软依赖，见 AGENTS.md §4.8.4）──
+  challenge: {tier: 1}
+  compare: {tier: 1}
+  design-brief: {tier: 1}
+  evals: {tier: 1}
+  handoff: {tier: 1}
+  idea: {tier: 1}
+  insight-synthesis: {tier: 1}
+  muse-req-triage: {tier: 1}
+  muse-x-digest: {tier: 1}
+  redteam: {tier: 1}
+  research-kit: {tier: 1}
+  retro: {tier: 1}
+  task-plan: {tier: 1}
+  tech-spec: {tier: 1}
+  ux-writing: {tier: 1}
+  html-prototype: {tier: 1}
+  motion-polish: {tier: 1} # Single local executor; caller owns independent review. Tier is not browser capability or parity evidence.
+  prototype-notes: {tier: 1} # Single local executor; caller owns independent MR-004 review. Missing actual browser capability fails its gate; tier is not runtime/parity evidence.
+  grilling: {tier: 1}
+  diagnosing-bugs: {tier: 1}
+  resolving-merge-conflicts: {tier: 1}
+  to-spec: {tier: 1}
+  to-tickets: {tier: 1}
+  wait-what: {tier: 1}
+  writing-for-agents: {tier: 1}
+  domain-modeling: {tier: 1}
+  writing-workshop: {tier: 1}
+  issue-triage: {tier: 1}
+  setup-wizard: {tier: 1}
+
+  # ── tier-2：可降级（degrade 必填）──
+  deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}
+  ux-research: {tier: 2, degrade: "正文自带顺序回退（环境不支持时顺序执行，逻辑不变）"}
+  brainstorm: {tier: 2, degrade: "3+1 agent 无 ≥5 锁；Oracle 对抗可顺序化/内联"}
+  ux-brainstorm: {tier: 2, degrade: "同 brainstorm：3+1 可顺序化"}
+  quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明该回退**，故 Codex 上强度弱于 Claude 上的同一 skill"}
+  code-recon: {tier: 2, degrade: "正文两模式共用峰值1的真实冷 explorer；缺实际 dispatch/completed/accepted 证据则 UNKNOWN 并停在门前，主循环只可准备授权只读输入，不模拟 explorer 或宣称同等行为"}
+  code-hygiene: {tier: 2, degrade: "A–C 及 environment-retro 可按正文主循环处理；Mode D 必须真实冷 quality-gate/MR-004 peak 串行，缺 dispatch 或同次 accepted 则阻断该审查门，不以内联替票；普通无 Spec 诚实 NOT_RUN"}
+  code-review: {tier: 2, degrade: "只消费唯一 code-hygiene Mode D：Standards→Spec 两个真实冷 quality-gate/MR-004 peak 串行且分轴隔离；原生能力/同次 accepted 不足时 UNKNOWN/BLOCKED，不以内联或降档宣称独立审查"}
+  codebase-design: {tier: 2, degrade: "普通深度设计可由主循环执行；用户明确请求替代接口时，按 DESIGN-IT-TWICE 取得至少3个真实 native 冷上下文设计，峰值1严格串行并核验前一同次 completed/accepted；缺 dispatch 或原生完成证据则 UNKNOWN 停门，不以内联推演代替独立设计"}
+  wayfinder: {tier: 2, degrade: "Plan Agent 仍是唯一规划真值 owner；Codex 子 agent 不可用时由主循环串行执行同一 wayfinder mode 的 destination/fog/decision-frontier 合同，不伪造并行独立性且不跳过人类决策门"}
+  loop-me: {tier: 2, degrade: "主循环可用真实答案完成同一 world-context/ready-frontier/spec 合同；若父任务要求真实 delegation 或质量票而当前能力不足，停在相应门并记录 UNKNOWN，不伪造子 agent/答案或豁免 shared handoff"}
+  implement: {tier: 2, degrade: "Plan Agent compile 与 Orchestrator execution 保持 owner 分离；Codex 子 agent 不可用时由主循环按同一 task-plan SHA 串行执行两个 owner 合同，不合并状态或省略人类确认"}
+  ux-audit: {tier: 2, degrade: "本就串行单-agent 调度 → 可退内联"}
+  figma-demo: {tier: 2, degrade: "Builder/Assembly SubAgent 有顺序回退（:87-89）；恢复=subagent dispatch，**非**挂 figma MCP"}
+  careful: {tier: 2, degrade: "其 deny 挂 Bash-PreToolUse hook，但该 hook 由 **Claude 读 SKILL.md frontmatter 注册**且路径用 ${CLAUDE_SKILL_DIR}——Codex 无此加载器，故降级为「文档规则+人工自觉」，弱于 Claude；若 Codex 提供等价 skill-hook 注册则可恢复"}
+
+  magicpath: {tier: report, degrade: "外部 magicpath 插件的本地占位（经 Skill 工具 dispatch 全局插件）；Codex 侧装上同名插件即恢复，未装则不可用——不是「按原样跑」"}
+
+  # ── tier-3：真锁死（reason 必填，含恢复触发器）──
+  open-design: {tier: 3, reason: "OD 桌面 daemon（动态端口 sidecar）+ USER=luca 订阅会话；headless 实测不稳。云端因无桌面必断；Codex 侧未核验。不可达时报告阻塞；只有用户明确改选或批准具名备用计划才使用独立工具。恢复触发器：真实 OD 桌面能力可用或可靠 headless/云端点"}
+  auto: {tier: 3, reason: "多 Work-Agent 并行/串行编排 + 聚合，自身即重编排器。恢复触发器：Codex 暴露 Workflow 等价 + 子 dispatch 成熟"}

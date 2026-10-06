@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "superpowers-brainstorming",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "source": "superpowers plugin",
+    "invoke": "Skill tool → superpowers:brainstorming",
+    "modes": {
+      "standalone": {
+        "required": [
+          "idea_or_problem_statement"
+        ],
+        "optional": [
+          "idea_artifact",
+          "deepresearch_report"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "idea_artifact"
+        ]
+      }
+    },
+    "quality_gates": [
+      "design_doc_written",
+      "user_approved_design"
+    ],
+    "notes": "/brainstorm 的轻量替代。不含 subagent、Oracle、AI Native 评估。适用场景 A/B。"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u014-readiness-p10",
+  "subject": {
+    "skill": "U014-P10-readiness",
+    "topic": "J28 P09 actual outcome and final P10 single-run readiness",
+    "scene": "unknown",
+    "input_summary": "Read-only reused non-author review of all 21 frozen input hashes and byte lengths, P09 raw native result payload and terminal/usage/cleanup evidence, P10 source-preserving deltas, task-local wrapper, release closure and ledger. No model invocation or hidden access.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-review-inputs.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-launch.py",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-launch.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": [
+      "P09 remains INVALID_RUN: all eight native checks passed and before_final_submission was reached, but observed tokens reached 132970 against 120000; the model turn was interrupted and engine finalization did not succeed.",
+      "PASS permits only the frozen P10 tenth and final qualification attempt. No automatic rerun; failure stops U014-b.",
+      "CLI MCP disabled output does not prove effective app-server adoption. Actual adoption and terminal, budget, trace and cleanup evidence must be reviewed after P10; production publication remains HOLD.",
+      "Task-local wrapper must apply identically to all later comparison conditions if qualified. Findings do not extend to MCP, UI, external integrations, native subagents, fresh context or compact.",
+      "505 seconds is the watchdog threshold followed by bounded cleanup. Observed token/action limits do not guarantee an unreported whole-chain hard cap."
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-B1-standard-v1",
+  "subject": {
+    "skill": "brainstorm:DESIGN_DRAFT",
+    "topic": "design-workflow-fixture",
+    "scene": "unknown",
+    "input_summary": "独立审查 Standard 第1轮 NO_PIN 内存草稿；核验 decoded UTF-8 草稿及 PLAN/E1/USER 哈希，对照七维原 Oracle、完整 Standard Section Matrix、Checklist 与 U-001-a 原分母。两案合法；原要求转移和覆盖矩阵不完整。",
+    "output_paths": [],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 7,
+    "total": 10,
+    "findings": [
+      "F1.1 high：遗漏 U-001-a 锁生命周期、投影原子更新及完整验证分母；C5/C6/C8 FAIL。",
+      "F1.2 high：已选/拒绝决策覆盖行不全，缺 Claim/Decision 与 Confidence；C6/C8 FAIL。",
+      "F1.3 medium：Standard 必需章节部分内容不全；C8 FAIL。",
+      "F1.4 medium：一条用户直接引语在授权来源中无法核验，真实性 UNKNOWN；C8 不满足完整内容要求。"
+    ]
+  }
+}

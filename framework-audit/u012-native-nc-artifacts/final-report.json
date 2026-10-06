@@ -1,0 +1,87 @@
+{
+  "status": "DONE",
+  "status_scope": "Controlled temporary task final report only",
+  "title": "Approved v2",
+  "source_version": 2,
+  "source": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/source.json",
+    "sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+    "bytes": 156,
+    "current_read": true
+  },
+  "results": {
+    "alpha": {
+      "source_version": 1,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 5
+    },
+    "beta": {
+      "source_version": 2,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 10
+    }
+  },
+  "result_sources": {
+    "alpha": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-result.json",
+      "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+      "bytes": 151,
+      "current_read": true
+    },
+    "beta": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-result.json",
+      "sha256": "18ef9fde9d6fa4fc294b4c71300405fa5b2c94acac635565e0215872999c682a",
+      "bytes": 152,
+      "current_read": true
+    }
+  },
+  "history": {
+    "original_beta_failure": {
+      "exit_code": 23,
+      "output": "BETA_SOURCE_NOT_ACCEPTED\n",
+      "native_session_id": 63034,
+      "source": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json",
+        "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+        "bytes": 2420,
+        "current_read": true
+      }
+    },
+    "authorized_retry": {
+      "native_session_id": 53276,
+      "exit_code": 0,
+      "source": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/resume-evidence.json",
+        "sha256": "bfe2a79fbfdaf202d4221c2a3740b53aa58f72f8ab2775eb4096210affbc499d",
+        "bytes": 43016,
+        "current_read": true
+      }
+    },
+    "current_authority": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nc.json",
+      "sha256": "d01f891f48e3d1c808f2ebd44e307819a3630862b9ce850eb13cf9208ed70dcb",
+      "bytes": 781,
+      "current_read": true
+    },
+    "alpha_acceptance_basis": "N-B-E1 preserves the prior result if current items and single effect match; N-C permits current verified A/B consumption.",
+    "additional_producer_runs": 0
+  }
+}

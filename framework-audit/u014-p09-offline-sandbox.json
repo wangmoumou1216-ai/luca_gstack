@@ -1,0 +1,31 @@
+{
+  "kind": "deterministic local sandbox check, not app-server model qualification",
+  "model_runs": 0,
+  "argv": [
+    "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+    "sandbox",
+    "-C",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/offline-condition",
+    "-P",
+    "u007-native-read-boundary",
+    "-c",
+    "permissions.u007-native-read-boundary={\"filesystem\"={\":root\"=\"deny\",\":minimal\"=\"read\",\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14\"=\"read\",\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime\"=\"read\",\"/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin\"=\"read\",\"/Users/luca/Library/Python/3.14/lib/python/site-packages\"=\"read\",\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/offline-condition\"=\"read\"},\"network\"={\"enabled\"=false}}",
+    "-c",
+    "default_permissions=\"u007-native-read-boundary\"",
+    "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "case/input/probe.py",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside",
+    "60949",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime"
+  ],
+  "process_local_environment": {
+    "PYTHONEXECUTABLE": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "PATH_prepend": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin"
+  },
+  "exit_code": 1,
+  "stdout": "{\"checks\": [{\"id\": \"allowed-read\", \"passed\": true}, {\"errno\": 1, \"exception\": {\"errno\": 1, \"filename\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/denied.txt\", \"message\": \"[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/denied.txt'\", \"type\": \"PermissionError\"}, \"expected_denial\": true, \"id\": \"outside-read\", \"passed\": true}, {\"errno\": 1, \"exception\": {\"errno\": 1, \"filename\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime/escape.txt\", \"message\": \"[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime/escape.txt'\", \"type\": \"PermissionError\"}, \"expected_denial\": true, \"id\": \"symlink-escape-denied\", \"passed\": true}, {\"errno\": 1, \"exception\": {\"errno\": 1, \"filename\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/offline-condition/case/input/forbidden-write.txt\", \"message\": \"[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/offline-condition/case/input/forbidden-write.txt'\", \"type\": \"PermissionError\"}, \"expected_denial\": true, \"id\": \"readonly-case-write\", \"passed\": true}, {\"errno\": 1, \"exception\": {\"errno\": 1, \"filename\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/forbidden-write.txt\", \"message\": \"[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/forbidden-write.txt'\", \"type\": \"PermissionError\"}, \"expected_denial\": true, \"id\": \"outside-write\", \"passed\": true}, {\"exit_code\": 1, \"id\": \"child-inherits-denial\", \"passed\": true, \"stderr\": \"cat: /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/denied.txt: Operation not permitted\\n\", \"stdout\": \"\"}, {\"errno\": 1, \"exception\": {\"errno\": 1, \"filename\": null, \"message\": \"[Errno 1] Operation not permitted\", \"type\": \"PermissionError\"}, \"expected_denial\": true, \"id\": \"network-connect-denied\", \"passed\": true}, {\"command\": [\"/opt/homebrew/opt/python@3.14/bin/python3.14\", \"-B\", \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/offline-condition/case/input/baseline/.claude/observability/scripts/get_rules.py\", \"office\", \"*\"], \"error\": {\"errno\": 1, \"filename\": \"/opt/homebrew/opt/python@3.14/bin/python3.14\", \"message\": \"[Errno 1] Operation not permitted: '/opt/homebrew/opt/python@3.14/bin/python3.14'\", \"type\": \"PermissionError\"}, \"exit_code\": null, \"expected_sha256\": \"66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4\", \"failures\": [\"loader_exception\"], \"id\": \"baseline-active-rules\", \"parse_failure_reported\": null, \"passed\": false, \"stderr\": null, \"stdout\": null, \"stdout_sha256\": null}], \"kind\": \"P06 native command probe\", \"passed\": false, \"revision\": \"R8\"}\n",
+  "stderr": "",
+  "permission_change": "only fresh offline condition directory substitutes actual run condition, same grants",
+  "material_digest": "66bee6476856dc260e2425e8b4785522db699e066d49fa8fd6d3f7ffba77d2e5"
+}

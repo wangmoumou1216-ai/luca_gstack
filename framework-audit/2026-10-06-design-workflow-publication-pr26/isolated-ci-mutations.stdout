@@ -1,0 +1,15 @@
+PASS real CI contract
+PASS missing blocking command is rejected
+PASS incompatible validate-html runtime is rejected
+PASS missing Firefox installation is rejected
+PASS missing notes blocking command rejected: npm run test:prototype-notes
+PASS missing notes blocking command rejected: npm run test:prototype-notes-browser:ci
+PASS missing notes blocking command rejected: npm run test:prototype-notes-registration
+PASS missing notes blocking command rejected: npm run test:prototype-notes-release
+PASS missing design blocking command rejected: python3 scripts/test-workflow-state-guard.py
+PASS missing design blocking command rejected: node scripts/test-design-workflow-contract.mjs
+PASS missing design blocking command rejected: node scripts/test-engineering-delivery-skills.mjs --all
+PASS missing design blocking command rejected: node scripts/test-original-copy-handoff.mjs
+PASS nonblocking design gate rejected: swallowed
+PASS nonblocking design gate rejected: continue-on-error
+PASS CI contract proof-it-bites 14/14

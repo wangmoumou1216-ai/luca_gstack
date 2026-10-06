@@ -1,0 +1,23 @@
+{
+  "status": "PASS_OFFLINE_ONLY",
+  "tests": 31,
+  "failed": 0,
+  "skipped": 0,
+  "exit_code": 0,
+  "duration_ms": 10188.27975,
+  "command": "node --test scripts/tri-system-eval/driver.test.mjs scripts/tri-system-eval/integration.test.mjs",
+  "actual_tool_evidence": [
+    "58727d",
+    "9a6da5"
+  ],
+  "scope": "26 driver tests and 5 real-three-module integration paths with fake native transport; no model behavior or independent review",
+  "source_hashes": {
+    "driver.test.mjs": "54dc9b5d0dc1152e59cf40c0b619165499cbdb0eaab4aca4866689935b9681c5",
+    "case-protocol.test.mjs": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+    "conditions.test.mjs": "9146af4df873a5a29028305a3a313d231e10ebed6b7c3cd9509bd738b5d4f1cd",
+    "integration.test.mjs": "86bd838a432e0546e103aa490ea5f374e307338532e7d1f7910d91a0cd8355a1",
+    "conditions.mjs": "0337ed8b1d78805de5b2a3658623de00db87cd5c29aac29a3aa760c1dec63dc4",
+    "case-protocol.mjs": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+    "driver.mjs": "0dccdb661a73cab30dd3d082d8700451f2e46711708527f5994c3186b24316d3"
+  }
+}

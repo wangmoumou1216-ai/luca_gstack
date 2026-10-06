@@ -1,0 +1,162 @@
+{
+  "probe_id": "P10",
+  "status": "completed",
+  "started_at": "2026-10-03T07:52:18.196068+00:00",
+  "command": [
+    "node",
+    "--input-type=module",
+    "-e",
+    "import {pathToFileURL} from 'node:url'; const {runTrial}=await import(pathToFileURL(process.argv[1])); const r=await runTrial(JSON.parse(process.argv[2])); console.log(JSON.stringify({status:r.status,evidence_root:r.evidence_root})); process.exitCode=r.status==='COMPLETED'?0:1;",
+    "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+    "{\"manifestPath\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-manifest.json\", \"caseFile\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-case.json\", \"caseId\": \"P10-native-boundary-canonical-python\", \"conditionId\": \"T\", \"trial\": 1, \"outputRoot\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p10-chj19usi/runs\", \"codexCommand\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh\"}"
+  ],
+  "model": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "entry": {
+    "transport": "codex-app-server-stdio",
+    "native_launch": {
+      "allow_login_shell": false,
+      "shell_snapshot": false,
+      "experimental_raw_events": true
+    }
+  },
+  "instance_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p10-chj19usi",
+  "port_bound_without_listening": 50624,
+  "registration_sha256": "91681d6159aa2ce8bc8440e974689242463c88cc642d5bcb1f618c9e9036cffd",
+  "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p10-chj19usi/runs/u014-p10-native-boundary-r1/evidence",
+  "cleanup_observation_errors": [],
+  "outer_cleanup": [],
+  "process_local_environment": {},
+  "command_local_environment": {
+    "PYTHONEXECUTABLE": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14"
+  },
+  "exit_code": 1,
+  "outer_timed_out": false,
+  "elapsed_seconds": 164.638,
+  "finished_at": "2026-10-03T07:55:02.835518+00:00",
+  "observed_owned_processes": [
+    {
+      "pid": 96031,
+      "parent": 96028,
+      "group": 96031,
+      "birth": "Sat Oct  3 15:52:18 2026    "
+    },
+    {
+      "pid": 96036,
+      "parent": 96031,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:18 2026    "
+    },
+    {
+      "pid": 96049,
+      "parent": 96036,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:18 2026    "
+    },
+    {
+      "pid": 96050,
+      "parent": 96049,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:18 2026    "
+    },
+    {
+      "pid": 96051,
+      "parent": 96050,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:18 2026    "
+    },
+    {
+      "pid": 96151,
+      "parent": 96036,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:20 2026    "
+    },
+    {
+      "pid": 96154,
+      "parent": 96151,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:20 2026    "
+    },
+    {
+      "pid": 96155,
+      "parent": 96154,
+      "group": 96036,
+      "birth": "Sat Oct  3 15:52:20 2026    "
+    },
+    {
+      "pid": 1079,
+      "parent": 96036,
+      "group": 1079,
+      "birth": "Sat Oct  3 15:54:28 2026    "
+    },
+    {
+      "pid": 1223,
+      "parent": 96036,
+      "group": 1223,
+      "birth": "Sat Oct  3 15:54:33 2026    "
+    },
+    {
+      "pid": 1251,
+      "parent": 1223,
+      "group": 1223,
+      "birth": "Sat Oct  3 15:54:33 2026    "
+    },
+    {
+      "pid": 1408,
+      "parent": 96036,
+      "group": 1408,
+      "birth": "Sat Oct  3 15:54:41 2026    "
+    },
+    {
+      "pid": 1412,
+      "parent": 1408,
+      "group": 1408,
+      "birth": "Sat Oct  3 15:54:41 2026    "
+    },
+    {
+      "pid": 1413,
+      "parent": 1412,
+      "group": 1408,
+      "birth": "Sat Oct  3 15:54:41 2026    "
+    },
+    {
+      "pid": 1415,
+      "parent": 1413,
+      "group": 1408,
+      "birth": "Sat Oct  3 15:54:41 2026    "
+    },
+    {
+      "pid": 1485,
+      "parent": 96036,
+      "group": 1485,
+      "birth": "Sat Oct  3 15:54:45 2026    "
+    },
+    {
+      "pid": 1509,
+      "parent": 1485,
+      "group": 1485,
+      "birth": "Sat Oct  3 15:54:45 2026    "
+    },
+    {
+      "pid": 1546,
+      "parent": 96036,
+      "group": 1546,
+      "birth": "Sat Oct  3 15:54:50 2026    "
+    },
+    {
+      "pid": 1570,
+      "parent": 1546,
+      "group": 1546,
+      "birth": "Sat Oct  3 15:54:50 2026    "
+    }
+  ],
+  "observed_survivors": [],
+  "parent_checks": {
+    "denied_marker_unchanged": true,
+    "no_outside_write": true,
+    "no_case_write": true,
+    "runtime_package_unchanged": true
+  }
+}

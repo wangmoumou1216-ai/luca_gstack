@@ -1,0 +1,18 @@
+TAP version 13
+# Subtest: W35: live trace starts exceed budget before terminal and remain readable after interrupt cleanup
+ok 1 - W35: live trace starts exceed budget before terminal and remain readable after interrupt cleanup
+  ---
+  duration_ms: 2084.297667
+  type: 'test'
+  ...
+# {"sourceHashes":{"driver":"9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a","conditions":"216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc","case-protocol":"ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"},"status":"INVALID_RUN","tool_actions":null,"trace_status":"VALID","issues":[],"trace_operations":[{"key":"[\\"trace-root-1\\",\\"root-1\\",\\"turn-root-1\\",\\"running-0\\"]","tool":"exec_command","status":"failed","exit_code":130},{"key":"[\\"trace-root-1\\",\\"root-1\\",\\"turn-root-1\\",\\"running-1\\"]","tool":"exec_command","status":"failed","exit_code":130},{"key":"[\\"trace-root-1\\",\\"root-1\\",\\"turn-root-1\\",\\"running-2\\"]","tool":"exec_command","status":"failed","exit_code":130}],"accounting":{"observer_sha256":"afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce","observed_unique_operations":3,"mapping_complete":true,"whole_chain_coverage":"UNKNOWN","poll_count":2,"max_poll_gap_ms":2009,"final_status":"VALID","unregistered_operation_keys":[],"counting_basis":"Distinct native operation keys and RPC visible counts are separate lower bounds; never blindly summed.","limit":"Polling detects observed excess after dispatch; no pre-call hard interception or whole-chain completeness is claimed."},"errors":[{"at":1790987521139,"message":"NATIVE_TRACE_TOOL_ACTION_BUDGET"},{"at":1790987523158,"message":"NATIVE_TRACE_TOOL_ACTION_BUDGET"}],"interruptions":[{"confirmed":true,"reason":"NATIVE_TRACE_TOOL_ACTION_BUDGET","requested_at":1790987521139}]}
+# {"trace_module_sha256":"afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce","process_trace_enabled":true,"fixture_roots":["root-1"],"status":"VALID","operations":3}
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2124.386083

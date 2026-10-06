@@ -1,0 +1,10 @@
+{
+  "status": "PASS_CANDIDATE_ONLY",
+  "helper_sha256": "b5305bffc7826970ae9d41782a90d7878c016396870548a70e20a06f21360912",
+  "scope_sha256": "f3271a935f013b987d2577ecaa8eb0def22040a8686c9be51f40ec941018d3ff",
+  "standards_run_id": "hook-release-standards-20260930-02",
+  "spec_run_id": "hook-release-spec-20260930-02",
+  "activation": "NOT_EXECUTED",
+  "authority": "AWAITING_HUMAN_ACTIVATION_DECISION",
+  "live_session": "UNVERIFIED"
+}

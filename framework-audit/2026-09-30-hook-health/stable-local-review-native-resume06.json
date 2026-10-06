@@ -1,0 +1,34 @@
+{
+  "producer": "parent-readonly-observation",
+  "release_sha256": "561d386794cbece4ab5e2c7a1acfd2d041991b0cdb51f1e911c55c8ca9cac611",
+  "native_state": {
+    "root_session_id": "01a0f592-1c01-7681-9a1c-791758f66556",
+    "status": "active",
+    "critical_failure": false,
+    "activation_id": "9909267a-d8d5-4674-af6d-4a5043e737d2",
+    "root_generation": 0,
+    "release_digest": "d929a9ee4201fb71cea3a55257978b572411861c17efbf6599b6113b1f71af12",
+    "call": {
+      "invocation_id": "e5e44229-eece-4462-b023-c220ec2c5904",
+      "status": "accepted",
+      "requested_role": "peak",
+      "critical": true,
+      "route_harness": "codex-native",
+      "external_identity": {
+        "tool_use_id": "call_RWGoTsKD70CGwoShKQ3Jfu4O",
+        "agent_type": "quality-gate",
+        "agent_id": "01a0f5a7-692e-7553-ba35-6e6706b7ec50"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T12-09-44-01a0f5a7-692e-7553-ba35-6e6706b7ec50.jsonl:01a0f5a7-699b-7980-9388-203743201d2b",
+      "activation_id": "9909267a-d8d5-4674-af6d-4a5043e737d2",
+      "root_generation": 0,
+      "release_digest": "d929a9ee4201fb71cea3a55257978b572411861c17efbf6599b6113b1f71af12",
+      "root_session_id": "01a0f592-1c01-7681-9a1c-791758f66556"
+    }
+  },
+  "actual_completed_turn_id": "01a0f5a7-699b-7980-9388-203743201d2b",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-local-review-resume06.json",
+    "sha256": "7aaf670a736ecba48e6b37e24572421d00e6d70331bc634cb7fc8dcd209e2f23"
+  }
+}

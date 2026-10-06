@@ -1,0 +1,41 @@
+{
+  "status": "FAIL",
+  "EVAL_ENVELOPE_JSON": {
+    "schema_version": 1,
+    "producer": "quality-gate",
+    "eval_run_id": "hook-cache-ci-publication-20261001-resume05",
+    "subject": {
+      "skill": "hook-cache-ci-publication-resume05",
+      "topic": "hook-cache-ci-publication",
+      "scene": "unknown",
+      "input_summary": "Readonly default-REFUTE review of frozen CI publication payload and seven criteria. Verified exact Git delta, original17 bytes, native completed source review envelopes, local receipt and actual remote head. Current controlled-state/preservation evidence and original CI shell-launch failure evidence remain unsupported.",
+      "output_paths": [
+        "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-PUBLICATION-RESUME-01.json"
+      ],
+      "duration": "heavy"
+    },
+    "verdict": {
+      "status": "FAIL",
+      "passed": 5,
+      "total": 7,
+      "findings": [
+        "UNKNOWN C5: Frozen evidence lacks current public controlled-state readback and complete unrelated-user-work byte baseline; current App dirty set exceeds historical receipt, which proves neither preservation nor damage.",
+        "UNKNOWN C7: Exact five-line environment dependency insertion preserves all prior tests and safety assertions, but referenced evidence does not establish the original CI shell-launch null failure."
+      ]
+    }
+  },
+  "native_proof": {
+    "root_session_id": "01a0f580-b0f2-7513-b5d8-19b42c79eff5",
+    "activation_id": "9da742f9-c597-458d-8474-9dc4ec3b2bef",
+    "invocation_id": "4ef8fccc-eaf6-4a95-8330-0f09dbaa2f86",
+    "agent_id": "01a0f583-948e-7202-8f3a-5114762e637f",
+    "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T11-30-36-01a0f583-948e-7202-8f3a-5114762e637f.jsonl:01a0f583-94f8-77a1-9f0c-76eda0773e79",
+    "release_digest": "d929a9ee4201fb71cea3a55257978b572411861c17efbf6599b6113b1f71af12",
+    "root_generation": 0,
+    "status": "accepted",
+    "requested_role": "peak",
+    "critical": true,
+    "route_harness": "codex-native"
+  },
+  "payload_sha256": "c9bb4771b19a8a4ceb9ccdaa25ebd9b58b42cd40f0e4b964f033d81b33ba7b8a"
+}

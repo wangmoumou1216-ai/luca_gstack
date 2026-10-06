@@ -1,0 +1,141 @@
+{
+  "package": "u004-cases",
+  "schema_version": 2,
+  "freeze": "v1.1 contract clarification before any formal run",
+  "frozen_at_utc": "2026-10-02T16:03:26.914827+00:00",
+  "source_task_sha256": "484d1b4863f181768c55496ed67bd95ad0218480a22ae6ee24afc7331ecaa3c9",
+  "counts": {
+    "development": 6,
+    "hidden": 12,
+    "development_simple": 2,
+    "development_heavy": 4,
+    "hidden_simple": 4,
+    "hidden_heavy": 8,
+    "formal_behavior_runs": 0
+  },
+  "files": [
+    {
+      "path": "private/freeze-0/hidden-cases.json",
+      "bytes": 305861,
+      "sha256": "7cfeaba878470e413d580795487bdb96a4ae6aed3d7c2ce1e26a85a069efa974"
+    },
+    {
+      "path": "private/hidden-cases.json",
+      "bytes": 469696,
+      "sha256": "8d7475abc4a31b06615ded254704e7e8b04dfbe180d8a484c47a4587e2b7b49c"
+    },
+    {
+      "path": "public/README.md",
+      "bytes": 8570,
+      "sha256": "cf79f0efbc0e06ea3040a78591044aa96c65bcff3daeeedb7bc1740f5a9b4955"
+    },
+    {
+      "path": "public/coverage.md",
+      "bytes": 4544,
+      "sha256": "7dbfe3b8dd57e312a2e3d7bd4f0fdcdd50ad91a89f2301e6b0076e03d4655dab"
+    },
+    {
+      "path": "public/developer-cases.json",
+      "bytes": 233071,
+      "sha256": "b3e2e3da312e3ef95be0b64f384cf60c0e0e078137a1ec629701a5cca8b4171f"
+    },
+    {
+      "path": "public/freeze-0/README.md",
+      "bytes": 7818,
+      "sha256": "7b698e05573f84b1a3c6fa62de31b96a2f0b2909405edbdde33c6769129e028c"
+    },
+    {
+      "path": "public/freeze-0/coverage.md",
+      "bytes": 4544,
+      "sha256": "7dbfe3b8dd57e312a2e3d7bd4f0fdcdd50ad91a89f2301e6b0076e03d4655dab"
+    },
+    {
+      "path": "public/freeze-0/developer-cases.json",
+      "bytes": 151126,
+      "sha256": "021b286cbf7b9d679e1a45a5fcca750a55b788f2f034935434c351683caa1005"
+    },
+    {
+      "path": "public/freeze-0/manifest.json",
+      "bytes": 2975,
+      "sha256": "fb8a03d46797f049ed21715046d108f0610a219c0d62ee2cc60a65856c61590f"
+    },
+    {
+      "path": "public/freeze-amendment.md",
+      "bytes": 2518,
+      "sha256": "113a1ba8b727d1cbbe3e08da97f58815a4e5b7422257e2b545c7bfaabc7e4a97"
+    }
+  ],
+  "self_excluded": {
+    "path": "public/manifest.json",
+    "reason": "A file cannot contain its own stable digest; SHA delivered separately."
+  },
+  "self_checks": {
+    "count_matrix": "PASS",
+    "unique_case_ids": "PASS",
+    "complexity_matrix": "PASS",
+    "mandatory_hidden_tags": "PASS",
+    "stop_continue_contrast": "PASS",
+    "events_have_fixed_driver_nodes_and_full_authority_fields": "PASS",
+    "every_event_node_listed_in_case_protocol": "PASS",
+    "material_bytes_and_sha256": "PASS",
+    "answer_and_structured_assertion_binding": "PASS",
+    "quality_targets_predeclared": "PASS",
+    "no_runtime_fact_regeneration": "PASS",
+    "hidden_operations_differ_from_development": "PASS",
+    "private_readback_matches_written_data": "PASS",
+    "private_content_not_emitted_to_tool_output": "PASS",
+    "public_exact_secret_leak_scan": "PASS",
+    "all_payload_files_listed": "PASS",
+    "candidate_visible_nested_schemas": "PASS",
+    "prescribed_actions_and_smoke_inputs_visible": "PASS",
+    "initial_view_does_not_expose_final_authority_branch": "PASS",
+    "construction_driver_node_simulation": "PASS",
+    "expected_answers_match_visible_schema": "PASS",
+    "missing_required_key_mutations_rejected": "PASS",
+    "initial_freeze_retained_byte_for_byte": "PASS",
+    "run_count_contract_corrected": "PASS"
+  },
+  "qualification": "Construction/structural checks only. No candidate behavior, real driver injection, external tool, real host or human acceptance has been verified.",
+  "resources": {
+    "preparation_pool_slot": "W01 1/20",
+    "formal_runs": 0,
+    "extra_agents": 0,
+    "declared_budget_minutes": 45,
+    "declared_tool_action_limit": 90,
+    "observable_token_limit": 120000,
+    "actual_token_usage": "unavailable; no trustworthy per-agent token meter",
+    "generator_and_selfcheck_seconds": 0.01,
+    "actual_start_time_utc": "unavailable; not sampled at delegation",
+    "earliest_observed_construction_time_utc": "2026-10-02T15:54:47.065303+00:00",
+    "case_contract_amendment_time_utc": "2026-10-02T16:00:53.191978+00:00",
+    "final_manifest_time_utc": "2026-10-02T16:03:26.914827+00:00",
+    "actual_full_elapsed_seconds": "unavailable; approximate progress commentary is not a measurement",
+    "tool_action_evidence": "Custodian used seven exec_command calls through six functions.exec calls before this final verification; one contract-amendment self-check failed once on shared public schema classification, followed by diagnostic read and successful completion."
+  },
+  "access_boundary": "Explicit no-read policy, not OS security. Custodian may read all. Coordinator and A/D candidates must not read private/; driver discloses one current case request and eligible materials, never answer or other hidden cases. Judge receives only the currently authorized blind review packet.",
+  "uncovered_use_ids": [],
+  "uncovered_scope_policy": "All real-world and runtime ranges listed in coverage.md remain protected; local synthetic coverage cannot authorize removal.",
+  "case_material_frozen_at_utc": "2026-10-02T16:00:53.191978+00:00",
+  "previous_manifest_sha256": "fb8a03d46797f049ed21715046d108f0610a219c0d62ee2cc60a65856c61590f",
+  "run_contract": {
+    "conditions": 4,
+    "development_cases": 6,
+    "development_repeats_per_condition": 1,
+    "development_base_runs": 24,
+    "hidden_cases": 12,
+    "hidden_repeats_per_condition": 2,
+    "hidden_base_runs": 96,
+    "base_total_runs": 120,
+    "unified_total_ceiling": 144,
+    "actual_formal_runs": 0
+  },
+  "construction_checks": {
+    "cases": 18,
+    "artifacts_schema_checked": 35,
+    "mandatory_nodes_walked": 87,
+    "events_delivered_in_simulation": 21,
+    "missing_key_mutations_rejected": 35,
+    "actual_candidate_behavior_runs": 0
+  },
+  "selfcheck_note": "Construction-only simulation and schema/missing-key mutations; not actual candidate behavior or a deployed driver. Shared public contract bytes are explicitly allowed by leak scan; no hidden request/answer/fact or blind mapping is printed."
+}

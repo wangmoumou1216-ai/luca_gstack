@@ -1,0 +1,38 @@
+[
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+    "sha256": "ab5262eb6940e3b5f914147ff66030d7a843f0848d038a6ce73a042334a55cf2"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/brainstorm/references/adversarial-review.md",
+    "sha256": "9277609f8dafef5541480a2a7112a99580db14af91ffa852455483461026c6e9"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/ux-brainstorm/references/adversarial-review.md",
+    "sha256": "69c3f254e50e1c39f26032ff4617ce09694d4b4aa52e9f43ef2f42c8789d947d"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/references/plan-engineering-modes.md",
+    "sha256": "aa20d80370718580cf3148b1923990b2f03254f8bcd81459569bdbf6cddca60e"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/implement/SKILL.md",
+    "sha256": "ab8b4a326cc44f13f01c9b5a240cbe1d406b434c82c53c350bfa3a28939c4ce4"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/scripts/test-matt-skills-adaptation.mjs",
+    "sha256": "04220e7064cb657f530e4aae9ae84b02ce11beaf0a10d21ffbd4dbe5c486f917"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/scripts/build-agent-context.py",
+    "sha256": "a4fd415325e78e11cd1320f4c42acbebb1220f615495bfdc09d91dadcf7733f1"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/scripts/check-quality-gates.mjs",
+    "sha256": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45"
+  },
+  {
+    "path": "/Users/luca/Desktop/luca_gstack/scripts/test-original-copy-handoff.mjs",
+    "sha256": "2c10c81e139c560cfc2c421705aa7be40fc7bf94216ae57cb19362d469a23e35"
+  }
+]

@@ -1,0 +1,66 @@
+{
+  "brainstorm": [
+    {
+      "dimension": 1,
+      "preserved_original_sha256": "bcf3d75c1dc3d334150275f561dc55d6978b696c65fff7533be3d5867cc550cc",
+      "exception": null
+    },
+    {
+      "dimension": 2,
+      "preserved_original_sha256": "f3a6e65100cdbdad176ad49e1a9734f067dc1fcf618b2e1b8d5f60dac39cb7ad",
+      "exception": null
+    },
+    {
+      "dimension": 3,
+      "preserved_original_sha256": "ba1ac9b631eb627ddfa1d42f6de9eb4b8cfbe1cb1382828345fed13908793cad",
+      "exception": null
+    },
+    {
+      "dimension": 4,
+      "preserved_original_sha256": "150b26c1b66b105584a4659e2a3037a47b21cc9f6d8b34f404722a904d7887a8",
+      "exception": null
+    },
+    {
+      "dimension": 5,
+      "preserved_original_sha256": "8ebc3abc142875dde5ffc6d43d08847e940abfc84484957e9582c7f622570d31",
+      "exception": null
+    },
+    {
+      "dimension": 6,
+      "preserved_original_sha256": "1e6a1c28e91880b8aa42eb5efc3853ab3f25fc68a48770277318d911f7781339",
+      "exception": null
+    },
+    {
+      "dimension": 7,
+      "preserved_original_sha256": "8010eb316603965f0f545fa8147ddd32563c466f463dad815b0a8010abb5bf70",
+      "exception": "AI-spec check moved from future file existence to draft content + generation commitment"
+    }
+  ],
+  "ux-brainstorm": [
+    {
+      "dimension": 1,
+      "preserved_original_sha256": "344bad7051290bc61995b521c2ac3b185ebd118d06efe334f35f75694378ffc9",
+      "exception": null
+    },
+    {
+      "dimension": 2,
+      "preserved_original_sha256": "4f369377f2dee191a0b87c75be5fa6075de02e104eb41e6086205dd3a4715c65",
+      "exception": null
+    },
+    {
+      "dimension": 3,
+      "preserved_original_sha256": "3140a9fce10c2228aec54f98f8da9ee5fa1255467d520f0ae742175f633217f7",
+      "exception": null
+    },
+    {
+      "dimension": 4,
+      "preserved_original_sha256": "0f601af52e82ed646128fa1a67eef93b4ce6945474076b34311988313a6e4225",
+      "exception": null
+    },
+    {
+      "dimension": 5,
+      "preserved_original_sha256": "334359b90efed75da5f0ada1d5e6b256f4a6bd0aee7eb39c0f90182a021ffc8b",
+      "exception": null
+    }
+  ]
+}

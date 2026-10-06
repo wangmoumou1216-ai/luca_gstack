@@ -1,0 +1,129 @@
+{
+  "observed": [
+    {
+      "session_id": "01a0f07c-fb63-73a0-bd05-9a98511e0772",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T12-05-17-01a0f07c-fb63-73a0-bd05-9a98511e0772.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f07c-fbca-74f1-ada2-9c3769121a67",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        },
+        {
+          "turn_id": "01a0f090-2892-79c1-8956-07dbfe468b17",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f07c-fbca-74f1-ada2-9c3769121a67",
+        "01a0f090-2892-79c1-8956-07dbfe468b17"
+      ]
+    },
+    {
+      "session_id": "01a0f07c-a397-7bb2-8509-83b94ec762e4",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T12-04-55-01a0f07c-a397-7bb2-8509-83b94ec762e4.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f07c-a3f3-7702-95e2-b5ffce4fa18f",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        },
+        {
+          "turn_id": "01a0f08f-d4e5-7693-aa4d-d5f095f3a277",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f07c-a3f3-7702-95e2-b5ffce4fa18f",
+        "01a0f08f-d4e5-7693-aa4d-d5f095f3a277"
+      ]
+    },
+    {
+      "session_id": "01a0f0a5-a4a6-7fe2-9698-01b66934d0c8",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T12-49-42-01a0f0a5-a4a6-7fe2-9698-01b66934d0c8.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f0a5-a50a-7e30-9fa5-99f17c5992cc",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f0a5-a50a-7e30-9fa5-99f17c5992cc"
+      ]
+    },
+    {
+      "session_id": "01a0f0b7-f5f2-70d0-baa0-c1191ee0e083",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T13-09-43-01a0f0b7-f5f2-70d0-baa0-c1191ee0e083.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f0b7-f651-71c1-803d-ec683013e401",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f0b7-f651-71c1-803d-ec683013e401"
+      ]
+    },
+    {
+      "session_id": "01a0f068-b625-73e3-8d74-dfcd57670432",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T11-43-09-01a0f068-b625-73e3-8d74-dfcd57670432.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f068-b68b-7951-a73a-eebfc5b43612",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f068-b68b-7951-a73a-eebfc5b43612"
+      ]
+    },
+    {
+      "session_id": "01a0f0b8-791f-72f0-bb20-becfc0b61b4f",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T13-10-16-01a0f0b8-791f-72f0-bb20-becfc0b61b4f.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f0b8-7980-7192-8d12-a053ec7542d6",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f0b8-7980-7192-8d12-a053ec7542d6"
+      ]
+    },
+    {
+      "session_id": "01a0f0a6-1cf9-73d0-a83d-298f92a1bf39",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T12-50-13-01a0f0a6-1cf9-73d0-a83d-298f92a1bf39.jsonl",
+      "turns": [
+        {
+          "turn_id": "01a0f0a6-1d5d-7961-b447-fe6434dc6222",
+          "model": "gpt-6-astra",
+          "effort": "high"
+        }
+      ],
+      "completed_turn_ids": [
+        "01a0f0a6-1d5d-7961-b447-fe6434dc6222"
+      ]
+    }
+  ],
+  "limits": "Actual model and same-turn completion only; no exhaustive internal reroute observation or candidate deployment proof."
+}

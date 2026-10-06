@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-10-02T22:48:32.509039+00:00",
+  "source": "safe projection of only model/model_reasoning_effort from existing Codex user configuration",
+  "model": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "matches_frozen_p06_and_p07": true,
+  "global_mutations": false
+}

@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-03T01:14:24.364228+00:00",
+  "files": [
+    {
+      "relative_path": ".claude/skills/office/references/handoff-protocol.md",
+      "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+      "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/references/handoff-protocol.md",
+      "pre_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+      "sha256": "b4f169955b69afbea1c0b375a96e65e4698ca7190ead6a600846afd7c93041c1",
+      "pre_bytes": 8740,
+      "bytes": 10809,
+      "root_observed_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+      "root_adoption_status": "PENDING_ROOT_ADOPTION"
+    },
+    {
+      "relative_path": ".claude/skills/office/SKILL.md",
+      "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/SKILL.md",
+      "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/SKILL.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/SKILL.md",
+      "pre_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+      "sha256": "72431cbfbc4e3c874165306eb6d8bb9ea9fd9c40f01b14d78cadff84a61d6ac9",
+      "pre_bytes": 14954,
+      "bytes": 15770,
+      "root_observed_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+      "root_adoption_status": "PENDING_ROOT_ADOPTION"
+    }
+  ],
+  "evidence_hashes_verified": true,
+  "review_pending": true,
+  "scope": "Exact frozen consumer bytes collected while original owner finishes report; no owner worktree changes."
+}

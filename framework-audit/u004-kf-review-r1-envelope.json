@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u004-kf-20261002-r1",
+  "subject": {
+    "skill": "U004-KF-readiness",
+    "topic": "三体系评估K/F输入核查v1.1",
+    "scene": "unknown",
+    "input_summary": "独立只读审查J1—J6；案例manifest SHA256 8144e6c77b3ed7502bb8e61729a8d183d9fe2be513ae0e23abc97a3dbd67e256。U002/F冻结身份匹配；18题全不同语义内容已读。1.2尚未收到。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/manifest.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u004-native-capability-facts.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u004-native-capability-facts.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u002-neutral-protected-purpose.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 6,
+    "findings": [
+      "J3 FAIL：D03/D04/D06可见规则与精确判据绑定不足；私有H05/H06/H07/H08存在判定规则、表示或状态推导缺口。",
+      "J4 FAIL：私有H08/H11操作关系新颖性不足。",
+      "J5 UNKNOWN：F历史读取真实性无原始capture；当前Codex主要事实有独立补充证据，API/Claude仍未知。",
+      "本版案例不得整包释放；U007行为验证仍未通过；r2未判。"
+    ]
+  }
+}

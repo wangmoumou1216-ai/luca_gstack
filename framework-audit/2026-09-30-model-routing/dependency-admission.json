@@ -1,0 +1,6 @@
+{
+  "fixture_root": "/private/tmp/luca-routing-full-gate-8hq7n9pg/release",
+  "command": "npm ci --offline --ignore-scripts --no-audit --no-fund",
+  "exit": 0,
+  "output": "\nadded 3 packages in 405ms\n"
+}

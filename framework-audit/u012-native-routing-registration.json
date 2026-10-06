@@ -1,0 +1,37 @@
+{
+  "kind": "limited_native_routing_consumption",
+  "surface": "native subagent explicit candidate contract; not automatic injection or comparative gain",
+  "root_path": "/Users/luca/.codex/worktrees/f351/luca_gstack",
+  "root_sha256": "86581149518b00445a8e4abc5e3bb701b5b2f88d19a97379054cdbe59c6a1d1f",
+  "pool": "reserved_migration",
+  "is_capability_probe": false,
+  "scope": "read-only framework authority and response; no real project/app/network/global configuration access; no writes",
+  "cases": [
+    {
+      "id": "N-E",
+      "task": "bounded arithmetic",
+      "question": "17乘23等于多少？"
+    },
+    {
+      "id": "N-F",
+      "task": "explicit method contract",
+      "question": "我明确选择handoff；只告诉我它生成什么、保存在哪里、是否需要项目pin，不执行交接。"
+    },
+    {
+      "id": "N-G",
+      "task": "catalog discovery",
+      "question": "在这个框架内，我想把一段原始需求口述梳理成清楚的需求材料，先不做方案延展。应选哪个skill？给名称和权威文件路径，不执行。"
+    },
+    {
+      "id": "N-H",
+      "task": "app content owner discovery",
+      "question": "当前页是什么？本题未提供可读页面或UI授权。"
+    }
+  ],
+  "limits": [
+    "explicit contract read is setup cost, not evidence automatic loading works",
+    "no proof of all Plan/Project/Human scenarios",
+    "no private hidden cases or answers used"
+  ],
+  "registered_at": "2026-10-03T02:02:38.266118+00:00"
+}

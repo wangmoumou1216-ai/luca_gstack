@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u007-readiness-20261003-r9",
+  "subject": {
+    "skill": "quality-gate",
+    "topic": "J13 R9核心代码与单次P08就绪复核",
+    "scene": "unknown",
+    "input_summary": "独立核对32项冻结输入，完整读取新增reader、当前driver和launcher，定向核官方源码字段及写入/终态、作者测试与P08绑定；复用J11/J12未变模块，未读取W35可变文件。",
+    "output_paths": [],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 4,
+    "total": 4,
+    "findings": [
+      "J13-1 PASS：native-trace.mjs按官方raw_event/payload/dispatch字段识别operation，只计tool_call_started；model_visible_call_id与code_mode_runtime_tool_id分开，wrapper仅由匹配cell取得。序列、rollout/thread/turn、引用路径、symlink、已读字节改写及终态检查保留；live缺初始文件、未结束bundle及不完整尾行保持PENDING，final缺失/未结束INVALID。已有完整事件的必要引用缺失不会被当成功。只从原生runtime结果取exit，包装器JSON不能伪造。作者最终32/32、exit0绑定当前reader/test；已核关键fixture和live断言，不把synthetic VALID等同实际版本或全链覆盖证明。",
+      "J13-2 PASS：driver严格校验native_trace对象、observer哈希、登记同对象和cap8；旧路径保留6/7。trace位于本run evidence专属目录，与候选condition及runtime读取根隔离，只给自有进程增加CODEX_ROLLOUT_TRACE_ROOT。25ms轮询不重入；原生集合与RPC集合分别检查超限，不盲相加，仅可信thread/turn/tool_call_id参与对应。最终读取在终态及进程清理后；final超时的traceAbandoned保护阻止迟到结果改写报告。保留原取消、失败、nullable计数、UNKNOWN和formal=false。最终字节定向8/8；71/71完整回归属于此前driver哈希，未冒称最终全量重跑。实际轮询滞后、目录权限效果、停止与trace产出仍待P08观察。",
+      "J13-3 PASS：P08 registration/manifest的run、bindings、model、resources、entry、native_trace和权限对象逐项一致；case内R8程序逐字节相同，输入hash全部匹配，原八判据及四协议点保留，无Agent child/fresh步骤。模型仍为冻结配置；权限根无本次扩大，effective_probe=null。launcher要求本票PASS和root决定，核冻结输入、二进制与26个包文件、marker及symlink；精确bind54757、不监听，排他attempt标记、原字节复制case、登记后只调用一次runTrial。480s/30动作/120000观察token、外505s及自有进程组清理/parent witness均保留。实际文件核对确认未登记、未运行，包与marker身份一致。清理只能声称已观察范围，不能保证未观察后代绝对不存在。",
+      "J13-4 PASS：本票允许范围严格为W35联合核心检查通过且root核最终字节未变后的单次P08，不代W35结果。W35若发现需修改本票核心输入，当前票不覆盖新字节。实际版本支持、trace结构/操作对应、八项边界与loader、动态受控写入、协议终态应由该核心实例取得；未知结果不构成预先成功。原生child/fresh留给实际采用场景的必要验证，未从候选能力删除，不将全面比较/隐藏/迁移提前变可回退开发门。正式比较、生产与用户全生命周期完成均未放行。实际范围：源码缓存仅字段、dispatch、写入和终态相关段落；未重新联网研究，测试日志按相关项和摘要读取，部分长输出截断后补读核心段落，未声称所有测试源码全文验读。32项输入前后hash一致；27保守动作，核验2026-10-03T00:27:36Z至00:30:23Z；0新probe/模型/测试重跑/写入/网络/Agent。可见工具输出约5万余token且有截断，实际模型usage未知。"
+    ]
+  }
+}

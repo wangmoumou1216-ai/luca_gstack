@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "probe_id": "P01",
+  "kind": "native-cli-filesystem-boundary",
+  "status": "REGISTERED",
+  "issued_by": "root-coordinator",
+  "registered_at": "2026-10-02T18:24:14.519167+00:00",
+  "pool": "additional-capability",
+  "run_id": "u007-p01-native-fs-r1",
+  "model_calls": 0,
+  "purpose": "Check actual native command filesystem enforcement on owned synthetic sentinels, including child and symlink. Does not establish app-server/hooks/MCP boundaries.",
+  "argv": [
+    "/Users/luca/.local/bin/codex",
+    "sandbox",
+    "-P",
+    "u007-p01",
+    "-C",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace",
+    "-c",
+    "permissions.u007-p01.filesystem={\":root\" = \"deny\", \":minimal\" = \"read\", \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace\" = \"read\", \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace/scratch\" = \"write\"}",
+    "-c",
+    "permissions.u007-p01.network.enabled=false",
+    "--",
+    "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace/check.py",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/outside"
+  ],
+  "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace",
+  "instance_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v",
+  "limits": {
+    "wall_seconds": 20,
+    "tool_actions": 10,
+    "model_calls": 0
+  },
+  "input_sha256": {
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace/check.py": "92872e967baaa1695d23f7183f85d5bb004d1476a581914400d22b9805e3a908",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/workspace/allowed.txt": "857e24d31b5302925a43cdb2a82effe0a551c97659b4ff378671e68f7f57e1bb",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p01-hdzszf6v/outside/denied.txt": "faf0d1c904e1e1a181fa85e2b7af57017b988daf3a5038519171ccb8b50523c6"
+  },
+  "assertions": [
+    "allowed-read succeeds with exact marker",
+    "outside-read denied",
+    "symlink-escape-read denied",
+    "approved scratch write succeeds",
+    "read-only workspace write denied",
+    "outside write denied",
+    "child process inherits read denial",
+    "parent confirms source marker unchanged and denied writes absent"
+  ],
+  "stop_conditions": [
+    "stop on 20 second absolute deadline; terminate process group and retain logs",
+    "no retry inside same registered attempt",
+    "never use real private or project files as sentinels"
+  ],
+  "evidence_files": {
+    "stdout": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p01-native-fs.stdout",
+    "stderr": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p01-native-fs.stderr",
+    "result": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p01-native-fs-result.json"
+  },
+  "limits_of_claim": [
+    "No model or native hook invocation",
+    "No app-server effective profile proof",
+    "No MCP/Apps isolation proof",
+    "No actual read-range adoption proof",
+    "No network attempt performed"
+  ]
+}

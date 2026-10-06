@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u013-plan-coverage-20261003-r1",
+  "subject": {
+    "skill": "U013-plan-coverage",
+    "topic": "三体系总计划与模块计划落实及条件式采用",
+    "scene": "unknown",
+    "input_summary": "独立只读核验冻结总计划、执行v4、三个原模块计划、持续开发责任及两补充、候选manifest；核对28文件与cd0cff1一致，读取定向源码diff、原始回归日志、P08真实返回及H原生记录。不运行新测试、模型或探针，不读隐藏答案及旧root最终结论。",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/f351/luca_gstack",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u013-review-input-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 5,
+    "findings": [
+      "C1 PASS，blocking-for-adoption=false：完整读取总计划343行、执行v4 402行、三子计划135/149/133行及持续责任和addendum。前10项冻结输入hash匹配；U-005—012及三模块要求可映射到产物、规则和明确缺口。可追溯不等于全部已通过。",
+      "C2 PASS，blocking-for-adoption=false，仅限定已批准开发合同的源码落实：28候选文件的工作树及HEAD内容均匹配u012-final-candidate-manifest.json。AGENTS K2/K4/K10落实有界入口和已选方法；orchestrator.md:207、235及work-agent-template.md:155落实有效授权、实际句柄、失败依赖和验后完成；long-session.md:9—23、office/SKILL.md:174—175、handoff-protocol.md:135—142落实原目标、最新更正、完整required与不重复效果。此PASS不认证所有模型消费或生产迁移。",
+      "C3 FAIL，blocking-for-adoption=true：u012-normal-commit-r3.log:145原记录PASS=114 FAIL=0 WARN=0 DELEGATED=1，r3-result exit0绑定cd0cff1；routing unknown-green.json及stdout末行证实257/0。这些均为既有程序日志，非本次重跑。u008-results.md:3明确正式开发/隐藏0/0，无同题同trial同质量比较。P08原始payload 8.json的hash匹配、exit1且baseline-active-rules PermissionError；comparison-manifest.json:3为HOLD。原始H记录source_line14先回答页面不可知性，15才读取root/index，22/25才读luca-app，违反读取时点；未取得终版复验。",
+      "C4 PASS，blocking-for-adoption=false：u008-results及三owner evidence-limits保留P08 INVALID、H FAIL、未知净收益及旧路径；J19限定N-A/N-D/N-B/N-C，明确不外推真实双Agent、自动hook、CLI、compact、完整14用途和旧在途迁移。模型采用回执缺失不单独阻断，亦未声称身份等价。",
+      "C5 FAIL，blocking-for-adoption=true：总计划P4/P6和执行v4 U008/U011/U012/G-P6要求同任务可比价值及拟切换范围的实际迁移证据；R44—R46与持续开发addendum允许提前可回退开发，未取消最终采用验证。保留旧路径是合理评估出口，但不能满足用户现在无问题且相比旧版更有价值才推广main的条件。",
+      "U-005矩阵：implementation PASS；verification UNKNOWN；blocking-for-adoption=false（非当前决定性阻断）。u005-independent-design.md:62—90定义M1请求交付、M2依赖回执、M3有效状态；freeze前5项实际hash全部匹配，u007-first-unblind.json记录双方冻结后解盲。本次未全文审计285KB中性输入及全部访问历史，不重新认证完整独立性。U-006矩阵：implementation PASS；verification UNKNOWN；blocking-for-adoption=true仅针对拟改变但未验用途。u006-current-use-evidence.md:33—52保留14项用途，真实pin、并行、领域消费和恢复多行明确未证；不能将静态用途账作为行为通过。",
+      "U-007矩阵：implementation PASS；verification FAIL；blocking-for-adoption=true。四条件IMPLEMENTED_NOT_RELEASED，真实P08规则加载失败、协议未完成且预算中断。U-008矩阵：implementation PASS限评估设施；verification UNKNOWN；blocking-for-adoption=true。正式开发0、隐藏0，条件胜负、资源与净收益未知；无须花满144，但至少需要足以支撑相对价值的合格比较证据。",
+      "U-009矩阵：implementation PASS；verification PASS限独立双向反证交付；blocking-for-adoption=false。允许读取的J20保留四组竞争解释及局部修复不等于净收益的限制，不能把其路由3/4改成全PASS。U-010矩阵：implementation UNKNOWN限本次可见终版闭合；verification FAIL；blocking-for-adoption=true。H原始时点违例未有本票可见修复复验；最小补证是同候选适用owner在任何页面结论前实际读完的定向记录，不需要新增确认门或扩大权限。",
+      "U-011矩阵：implementation PASS限建议材料；verification UNKNOWN；blocking-for-adoption=true。三owner evidence-limits逐用途列最小替代、增量及成本未知，未证明B/S同质量净收益。U-012矩阵：implementation PASS限候选责任分工和保旧约束；verification UNKNOWN；blocking-for-adoption=true。Context evidence-limits §5及编排报告切换风险表仍缺真实旧在途状态、正常/拒绝切换与失败后回旧路径；最小补证绑定实际拟采用风险组，不要求未改变领域全面重测。",
+      "模块矩阵：路由implementation PASS，verification FAIL（H）；已有257项hook回归及限定E/F/G观察不能证明自动入口、所有门或净收益。编排implementation PASS，verification UNKNOWN对完整模块采用；J19提供真实process终态/失败留存及跨chat恢复的限定证据，不是双Agent、失句柄、取消和完整父子成本。Context implementation PASS，verification UNKNOWN对完整模块采用；N-D全源处理不证明5K模型token压力，N-B/C不证明native compact或旧在途切换回退。三者阻断完整采用，但未测范围不是已观察机制失败。"
+    ]
+  }
+}

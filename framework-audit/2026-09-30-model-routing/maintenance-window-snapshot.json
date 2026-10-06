@@ -1,0 +1,93 @@
+{
+  "observed_at": "2026-09-30T07:13:08.994Z",
+  "kind": "READ_ONLY_POINT_IN_TIME_NOT_A_LOCK_OR_GRANT",
+  "roots": [
+    {
+      "owner": "routing",
+      "root_session_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "activation_id": "1b2de485-6d8c-404d-af18-296b721b858f",
+      "status": "active",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": [],
+      "latest_accepted": [
+        {
+          "invocation_id": "f6f7c0d6-b82a-43c3-990c-b78b48bf9764",
+          "task_id": "native:01a0f0ff-e1ce-74e3-9709-944fdbe9dc77:call_K3CW9R71btMrFEGXUslkmCOa",
+          "external_identity": {
+            "tool_use_id": "call_K3CW9R71btMrFEGXUslkmCOa",
+            "agent_type": "quality-gate",
+            "agent_id": "01a0f103-15d3-7170-8323-a4cccaa0e5cd"
+          },
+          "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T14-31-46-01a0f103-15d3-7170-8323-a4cccaa0e5cd.jsonl:01a0f103-1637-78f3-a222-9bc448eb50d1"
+        }
+      ]
+    },
+    {
+      "owner": "hook",
+      "root_session_id": "01a0f0fe-e6fa-7660-beb5-181b1a9b6444",
+      "activation_id": "74177d5b-6835-439b-84f4-492f8ff49196",
+      "status": "active",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": [],
+      "latest_accepted": [
+        {
+          "invocation_id": "5e3bdfdb-f96e-4f27-8d98-0ad4ce8fe5ae",
+          "task_id": "native:01a0f0ff-cc5d-7290-afe1-c7df781925e0:call_DNnuV1As2RDJHt8slSe7CHxn",
+          "external_identity": {
+            "tool_use_id": "call_DNnuV1As2RDJHt8slSe7CHxn",
+            "agent_type": "quality-gate",
+            "agent_id": "01a0f110-ec1c-7272-b58f-d7690d3e6e41"
+          },
+          "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T14-46-53-01a0f110-ec1c-7272-b58f-d7690d3e6e41.jsonl:01a0f110-ec7e-7970-81eb-26bb689d6211"
+        }
+      ]
+    },
+    {
+      "owner": "review_coordinator",
+      "root_session_id": "01a0f062-3813-7c52-9ad6-61aacf054d1c",
+      "activation_id": "b9ce3c04-21a7-4778-bde0-fc0b3e9999cc",
+      "status": "active",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": [
+        {
+          "invocation_id": "6a787d12-7d15-4253-b33d-1356baa8c7b5",
+          "task_id": "native:01a0f11c-bebc-7702-b9e8-123d7373331f:call_7Qh379JhKsaeRx0k0m1rOmaj",
+          "critical": true,
+          "external_identity": {
+            "tool_use_id": "call_7Qh379JhKsaeRx0k0m1rOmaj",
+            "agent_type": "quality-gate",
+            "agent_id": "01a0f128-1567-7622-acd2-9fbabefed8e1"
+          }
+        }
+      ],
+      "latest_accepted": [
+        {
+          "invocation_id": "2ed6ec49-4f19-419d-bbf0-b187e91cc030",
+          "task_id": "native:01a0f11c-bebc-7702-b9e8-123d7373331f:call_PW8OIPDB73djsTNCH37DmEez",
+          "external_identity": {
+            "tool_use_id": "call_PW8OIPDB73djsTNCH37DmEez",
+            "agent_type": "preflight-agent",
+            "agent_id": "01a0f122-21c5-7390-80e1-3e3f9777ae5d"
+          },
+          "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T15-05-41-01a0f122-21c5-7390-80e1-3e3f9777ae5d.jsonl:01a0f122-222c-7a73-bd5e-e50d1c44d822"
+        }
+      ]
+    },
+    {
+      "owner": "plan_author",
+      "root_session_id": "01a0ec5b-44d2-7042-a523-f634e1406260",
+      "activation_id": "82419be3-3622-4db8-83f0-7cd1f68d3ec0",
+      "status": "active",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": [],
+      "latest_accepted": []
+    }
+  ],
+  "maintenance_window": "NOT_YET_CONFIRMED",
+  "coordination_condition": "Author and coordinator must explicitly stop new dispatch; let any started judge complete and accepted evidence close; re-read pending preparation/invocation and source/manifest/trust at activation boundary. Empty snapshot is not an exclusive maintenance window.",
+  "mutation_scope": "local audit only; no production source, manifest, trust, route state or live judge mutation"
+}

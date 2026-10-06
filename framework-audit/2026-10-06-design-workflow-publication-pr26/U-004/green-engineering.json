@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "scripts/test-engineering-delivery-skills.mjs",
+    "--all"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "exit": 0,
+  "stdout": "PASS\tindependent-methods\nPASS\tfacade-owner-candidate\nPASS\tconversation-lineage-contract\nPASS\tdual-loader-parity\nPASS\ttrigger-contract\nPASS\tflow-and-owner-contract\nPASS\ttrigger-and-flow-contract\nPASS\tpersonal-collision-cutover\n",
+  "stderr": ""
+}

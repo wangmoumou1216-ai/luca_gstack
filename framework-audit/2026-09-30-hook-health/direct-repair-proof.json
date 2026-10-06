@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-09-30T09:01:28.932834+00:00",
+  "target_root": "/Users/luca/Desktop/项目/muse/lucagstack",
+  "codex_home": "/Users/luca/.luca/codex/aihub-direct",
+  "changed_exact_trust_entries": 11,
+  "official_script_non_target_layer_check": "PASS at trust write/readback",
+  "final_config_runtime_additions": [
+    "tui.model_availability_nux"
+  ],
+  "all_other_final_config_values_unchanged": true,
+  "backup": "/Users/luca/.luca/codex/aihub-direct/config.toml.bak-2026-09-30T08-53-07-476Z",
+  "backup_mode": "0o600",
+  "backup_sha256": "a92f63ec8fc5abc82df741eb3c3f4515dd3732cc0310ce7b7adc4b9d03ac18c3",
+  "readback_zero_pending": true,
+  "gui_new_chat": "PASS: trust error disappeared, Codex v0.159.2 reached input prompt",
+  "gui_warning": "embedded-mode startup notice only; no Hook warning",
+  "live_tool_call": "UNVERIFIED: no prompt sent to the new session"
+}

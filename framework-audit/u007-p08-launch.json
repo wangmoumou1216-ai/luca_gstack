@@ -1,0 +1,170 @@
+{
+  "probe_id": "P08",
+  "status": "completed",
+  "started_at": "2026-10-03T00:33:56.726039+00:00",
+  "command": [
+    "node",
+    "--input-type=module",
+    "-e",
+    "import {pathToFileURL} from 'node:url'; const {runTrial}=await import(pathToFileURL(process.argv[1])); const r=await runTrial(JSON.parse(process.argv[2])); console.log(JSON.stringify({status:r.status,evidence_root:r.evidence_root})); process.exitCode=r.status==='COMPLETED'?0:1;",
+    "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+    "{\"manifestPath\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-manifest.json\", \"caseFile\": \"/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-case.json\", \"caseId\": \"P08-native-trace-core-boundary\", \"conditionId\": \"T\", \"trial\": 1, \"outputRoot\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs\", \"codexCommand\": \"/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex\"}"
+  ],
+  "model": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "entry": {
+    "transport": "codex-app-server-stdio",
+    "native_launch": {
+      "allow_login_shell": false,
+      "shell_snapshot": false,
+      "experimental_raw_events": true
+    }
+  },
+  "instance_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi",
+  "port_bound_without_listening": 54757,
+  "registration_sha256": "e0ca6a31c406af813038f4e7ab75dec4ac880cbe3647c6cb4887a29a42aaff92",
+  "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence",
+  "cleanup_observation_errors": [],
+  "outer_cleanup": [],
+  "exit_code": 1,
+  "outer_timed_out": false,
+  "elapsed_seconds": 169.285,
+  "finished_at": "2026-10-03T00:36:46.009366+00:00",
+  "observed_owned_processes": [
+    {
+      "pid": 17516,
+      "parent": 17515,
+      "group": 17516,
+      "birth": "Sat Oct  3 08:33:56 2026    "
+    },
+    {
+      "pid": 17518,
+      "parent": 17516,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:56 2026    "
+    },
+    {
+      "pid": 17531,
+      "parent": 17518,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:56 2026    "
+    },
+    {
+      "pid": 17548,
+      "parent": 17518,
+      "group": 17548,
+      "birth": "Sat Oct  3 08:33:57 2026    "
+    },
+    {
+      "pid": 17549,
+      "parent": 17518,
+      "group": 17549,
+      "birth": "Sat Oct  3 08:33:57 2026    "
+    },
+    {
+      "pid": 17550,
+      "parent": 17518,
+      "group": 17550,
+      "birth": "Sat Oct  3 08:33:57 2026    "
+    },
+    {
+      "pid": 17551,
+      "parent": 17518,
+      "group": 17551,
+      "birth": "Sat Oct  3 08:33:57 2026    "
+    },
+    {
+      "pid": 17532,
+      "parent": 17531,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:56 2026    "
+    },
+    {
+      "pid": 17552,
+      "parent": 17549,
+      "group": 17549,
+      "birth": "Sat Oct  3 08:33:57 2026    "
+    },
+    {
+      "pid": 17533,
+      "parent": 17532,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:56 2026    "
+    },
+    {
+      "pid": 17586,
+      "parent": 17518,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:58 2026    "
+    },
+    {
+      "pid": 17587,
+      "parent": 17586,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:58 2026    "
+    },
+    {
+      "pid": 17588,
+      "parent": 17587,
+      "group": 17518,
+      "birth": "Sat Oct  3 08:33:58 2026    "
+    },
+    {
+      "pid": 17999,
+      "parent": 17518,
+      "group": 17999,
+      "birth": "Sat Oct  3 08:34:13 2026    "
+    },
+    {
+      "pid": 19528,
+      "parent": 17518,
+      "group": 19528,
+      "birth": "Sat Oct  3 08:36:04 2026    "
+    },
+    {
+      "pid": 19787,
+      "parent": 17518,
+      "group": 19787,
+      "birth": "Sat Oct  3 08:36:11 2026    "
+    },
+    {
+      "pid": 19811,
+      "parent": 19787,
+      "group": 19787,
+      "birth": "Sat Oct  3 08:36:11 2026    "
+    },
+    {
+      "pid": 20004,
+      "parent": 17518,
+      "group": 20004,
+      "birth": "Sat Oct  3 08:36:16 2026    "
+    },
+    {
+      "pid": 20297,
+      "parent": 17518,
+      "group": 20297,
+      "birth": "Sat Oct  3 08:36:21 2026    "
+    },
+    {
+      "pid": 20326,
+      "parent": 20297,
+      "group": 20297,
+      "birth": "Sat Oct  3 08:36:22 2026    "
+    },
+    {
+      "pid": 21180,
+      "parent": 17518,
+      "group": 21180,
+      "birth": "Sat Oct  3 08:36:43 2026    "
+    }
+  ],
+  "observed_survivors": [],
+  "parent_checks": {
+    "denied_marker_unchanged": true,
+    "no_outside_write": true,
+    "no_case_write": true,
+    "runtime_package_unchanged": true
+  }
+}

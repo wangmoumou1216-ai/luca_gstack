@@ -1,0 +1,22 @@
+{
+  "prepared_at": "2026-10-02T21:52:27.299491+00:00",
+  "status": "FROZEN_INTEGRATION_CANDIDATE_NOT_ROOT_COLLECTION",
+  "author_stability_evidence": "original orchestration latest live commentary: file stable,49/49 module tests; full report not yet delivered",
+  "source_owner": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval",
+  "destination": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w25-frozen-candidate-14vqcrzd",
+  "changed_files": {
+    "driver.mjs": "67c76f86f5614d8c79ec49f4007391eebf94a6d932003036c997223c95ea8d66",
+    "driver.test.mjs": "8338cba9c2dd3eced9798635076243a50f6e75ca12ff221083eaba962bf256d6"
+  },
+  "files": {
+    "case-protocol.mjs": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+    "case-protocol.test.mjs": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+    "conditions.mjs": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+    "conditions.test.mjs": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+    "driver.mjs": "67c76f86f5614d8c79ec49f4007391eebf94a6d932003036c997223c95ea8d66",
+    "driver.test.mjs": "8338cba9c2dd3eced9798635076243a50f6e75ca12ff221083eaba962bf256d6",
+    "integration.test.mjs": "fa583ca373a60d32e7172baec7690402e67e7e9d4ae3720a13a371dacabd3b57"
+  },
+  "source_manifest": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+  "purpose": "W26 can run GREEN against exact W25 driver plus R5 conditions/protocol without changing root or another owner."
+}

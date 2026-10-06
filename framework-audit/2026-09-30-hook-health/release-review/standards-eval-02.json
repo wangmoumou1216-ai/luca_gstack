@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-standards-20260930-02",
+  "subject": {
+    "skill": "code-review",
+    "topic": "hook-chain-release-standards-candidate-closure",
+    "scene": "unknown",
+    "input_summary": "Standards-only final candidate review. Both initial findings independently closed by read-only execution and in-memory mutations. Release/live status excluded UNKNOWN.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/standards-02.md"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": []
+  }
+}

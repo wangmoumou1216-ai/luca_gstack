@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "kind": "emergency-native-trust-frozen-source",
+  "framework_root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+  "framework_base": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "app_root": "/Users/luca/Desktop/项目/muse",
+  "app_base": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+  "files": [
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": ".claude/skill-os/runtime/project-session.md",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.claude/skill-os/runtime/project-session.md",
+      "sha256": "01c8ff729b28a9336610d8d12ee5929c0a8a353b399c45d2e6e808c1ed5b663f",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": ".codex/codex-hook-adapter.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/codex-hook-adapter.mjs",
+      "sha256": "26b3c104eaea56adb088dbcec7a886d91fd1184e7d049d3651c111b35dbe6e34",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": ".codex/hooks.json",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/hooks.json",
+      "sha256": "6ea4c6e05e3d61ced51b8cb785dcd04a9ce2acc94494a08e1be304fb42b1dfad",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": ".codex/host-launch-hook.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/host-launch-hook.mjs",
+      "sha256": "f1cf91ab00fac7e7c1b5484d31bbee9799039d09c41557117c20522a919f3109",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": ".codex/model-route-hook.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/model-route-hook.mjs",
+      "sha256": "2d5d65f7689cf8d1789a6ad7775cad6dd3c3b4f68d8a468200b24abfe0145be9",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "README.md",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/README.md",
+      "sha256": "64aca2cf76fea235ef70b37ddbf389d60acd2a1cd48247696faaa2c61c5b2a7a",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/codex-hook-health.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/codex-hook-health.mjs",
+      "sha256": "1f604566a6d701570252035f61a5f71fb9d80db2bd4be9b2a8895ca1f992f224",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/codex-trust-hooks.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/codex-trust-hooks.mjs",
+      "sha256": "3e90f66d9e3ba0b430544d6921584c137d810f7d7ba49fe69cc553490baf3cff",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/host-launch-broker.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/host-launch-broker.mjs",
+      "sha256": "0265bb4ceffbbfae5538cb85a917fe8b96be41e5a5c8d29d0c7f0f1e3b37cd35",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/model-route-host.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/model-route-host.mjs",
+      "sha256": "77b7f952bf39781d57a155e06fa69de8b6427d118c681f4cf1f80a220958bedc",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-codex-hook-health.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-hook-health.mjs",
+      "sha256": "1dfdbab7e0dd0c322a8c46f4fa9b53db38630716cf6f2833a6cb8cbcf7d2e5e4",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-codex-model-route-hook.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-model-route-hook.mjs",
+      "sha256": "17cc45d6f6c5b10ce5a48ce2bfee01678dccce8a8e56c0ec804cc4a72776a250",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-codex-trust-hooks.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-trust-hooks.mjs",
+      "sha256": "7a5fec6fcea144ad75a57e2048f41d7b99e567cb771285cfdaaf19ae84bb9310",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-controlled-change.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-controlled-change.mjs",
+      "sha256": "49fedacffb1f3118006188a4929c9162a1e15c8bbb985338bc45002b433d1192",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-hook-source-digests.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-hook-source-digests.mjs",
+      "sha256": "91d9a817d0c9849303c648ce740a5baf57d5ee15f4908563356dc425ed243b77",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-host-launch-control-plane.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-host-launch-control-plane.mjs",
+      "sha256": "6cb49bd6fde73937c4e9fa4f3062ae5ff4c7df8e239ed886025bb0bf2ecab488",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/test-host-launch.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-host-launch.mjs",
+      "sha256": "67cd164a8164b3f4454a49f324e671a8365b55e1352d3a4a9e2fa01ce8a4cddf",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "relative": "scripts/verify-codex-wiring.mjs",
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/verify-codex-wiring.mjs",
+      "sha256": "2cb81b329d268b992f396791440e6ab4562d218a656f517ab0af0c796edd62fd",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "relative": "app/host-hook-ready.js",
+      "path": "/Users/luca/Desktop/项目/muse/app/host-hook-ready.js",
+      "sha256": "95cdeb3446bf7d3ba8397da9d6292722dc926cf618a6deba6914f655c8f7d182",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "relative": "app/test-host-hook-ready.mjs",
+      "path": "/Users/luca/Desktop/项目/muse/app/test-host-hook-ready.mjs",
+      "sha256": "3a0fb1ab376e1a762f2877bebf5da4ceeb76d8f692dfb83a196a548a8ab7efa7",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "relative": "app/host-launch-client.js",
+      "path": "/Users/luca/Desktop/项目/muse/app/host-launch-client.js",
+      "sha256": "62e335822f6044f0f32565202572a99ad63dc2be75bc03cf60e6eb3bd429d467",
+      "mode": 420
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "relative": "app/test-host-launch-client.mjs",
+      "path": "/Users/luca/Desktop/项目/muse/app/test-host-launch-client.mjs",
+      "sha256": "348215acf6cf0138638ddd0d61f7acbb7cc00590c497c2b1b3b1903f9e4a4071",
+      "mode": 420
+    }
+  ],
+  "framework_diff_sha256": "9e5bca4d41239894d4f9c5afeb34798ec29323634fd031a93ee551f9e231a4b6",
+  "app_diff_sha256": "1dd249e1956f866922c4b0d4d33ddde296886b9c45cb6fdfcd86e8ed78d47bbc",
+  "protocol_sha256": "4045d37a195d19ab5a3f437f83cf500b24cd41868cf563b5f01790dc6945f476",
+  "user_disabled_framework_hooks_preserved": true,
+  "limitations": [
+    "Nondefault provider missing/paused activation and workflow-runner automatic recovery remain outside this emergency scope",
+    "Original cached sessions need normal reload; official new-process success does not prove cache refresh"
+  ],
+  "required_verification": {
+    "model_hook": "183 PASS",
+    "model_host": "138 PASS",
+    "native_health": "19/19 PASS",
+    "native_trust_tool": "20/20 PASS",
+    "app_affected": "22/22 PASS",
+    "strict_control_plane": "8/8 PASS",
+    "joint_cross_worktree_entry": "3/3 PASS",
+    "joint_negative_entry": "7/7 PASS",
+    "agent_context_repair": "check PASS;105/105 mutations PASS",
+    "mandatory_full": "raw first 103/4; four failures are repaired with actual targeted PASS; fresh ordinary pre-commit must pass before push",
+    "host_launch_all": "50/50 PASS",
+    "controlled_change_all": "PASS all cases"
+  },
+  "package_receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-DFtDa5/receipt.json",
+  "package_receipt_sha256": "90986696a6d3161d9ca2de4ec62ba61ee1b685715ba2daeeb80c7f6dd1a22bdf",
+  "supersedes": "EMERGENCY-FROZEN-SOURCE-01.json",
+  "migration_preparation": "normal FF 08ce->accd->f6e9 preserving user dirty; sourceguard artifacts are NOT_USABLE_AFTER_FF and will not be installed"
+}

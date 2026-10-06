@@ -1,0 +1,351 @@
+--- r6/driver.mjs
++++ r7/driver.mjs
+@@ -37,7 +37,8 @@
+   check(sha(bytes) === ref.sha256, 'PROBE_REGISTRATION_HASH_DRIFT');
+   const record = JSON.parse(bytes.toString('utf8'));
+   for (const [key, value] of Object.entries({schema_version: 1, kind: 'u007-capability-probe',
+-    status: 'REGISTERED', issued_by: 'root-coordinator', pool: 'additional-capability', capability_probe_limit: 6,
++    status: 'REGISTERED', issued_by: 'root-coordinator', pool: 'additional-capability',
++    capability_probe_limit: release.entry.native_launch ? 7 : 6,
+     probe_id: release.probe_id, run_id: release.run_id})) {
+     check(record?.[key] === value, `PROBE_REGISTRATION_MISMATCH:${key}`);
+   }
+@@ -158,6 +159,11 @@
+     check(['B', 'T', 'S', 'I'].includes(conditionId) && validText(caseId) && positive(trial), 'INVALID_RUN_ARGUMENTS');
+     check(validText(release.run_id) && /^[A-Za-z0-9_-]+$/.test(release.run_id), 'INVALID_RUN_ID');
+     check(release.entry?.transport === 'codex-app-server-stdio', 'INVALID_TRANSPORT');
++    const nativeLaunch = release.entry.native_launch;
++    if (Object.hasOwn(release.entry, 'native_launch')) {
++      check(isDeepStrictEqual(nativeLaunch, {allow_login_shell: false, shell_snapshot: false,
++        experimental_raw_events: true}), 'INVALID_NATIVE_LAUNCH');
++    }
+     const bindings = release.bindings;
+     check(bindings && release.run?.case_id === caseId && release.run?.condition_id === conditionId
+       && release.run?.trial === trial, 'RELEASE_IDENTITY_MISMATCH');
+@@ -516,6 +522,7 @@
+       if (Date.now() >= report.deadline_ms) fail('ABSOLUTE_DEADLINE');
+       if (fatal) throw fatal;
+       const args = ['app-server', '--listen', 'stdio://', '--disable', 'apps'];
++      if (nativeLaunch) args.push('-c', 'allow_login_shell=false', '--disable', 'shell_snapshot');
+       const permissionConfig = permissions ? {default_permissions: permissions.native.profile_id,
+         permissions: {[permissions.native.profile_id]: permissions.native.profile}} : {};
+       if (permissions) args.push('-c', `permissions.${permissions.native.profile_id}=${toml(permissions.native.profile)}`,
+@@ -523,6 +530,10 @@
+       report.invocation = {command: codexCommand, args, cwd: condition.root, model: release.model.name,
+         effort: release.model.effort, native_base_instructions_preserved: true,
+         parent_environment_inherited: true, permission_config: permissionConfig, native_injection: 'UNKNOWN_UNTIL_THREAD_RESPONSE'};
++      if (nativeLaunch) report.invocation.native_launch = {requested: {...nativeLaunch}, behavior_verified: false,
++        limitations: ['Process-local requests only; effective command startup and permission behavior remain unverified.',
++          'Raw Responses items are journaled, not counted as extra operations or proof of inner tool execution.',
++          'Fresh root requests repeat these settings; native child inheritance and whole-chain coverage remain unverified.']};
+       child = spawnProcess(codexCommand, args, {cwd: condition.root, env: {...process.env},
+         stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32'});
+       child.stdin.on('error', error => { if (!stopping) fail(error); });
+@@ -553,6 +564,7 @@
+           cwd: condition.root, ephemeral: true,
+           ...(permissions ? {permissions: permissions.native.profile_id} : {sandbox: 'read-only'}), approvalPolicy: 'never',
+           allowProviderModelFallback: false, dynamicTools: definitions,
++          ...(nativeLaunch ? {experimentalRawEvents: true} : {}),
+           config: {...permissionConfig, web_search: 'disabled', ...(release.model.effort ? {model_reasoning_effort: release.model.effort} : {})}}));
+         const threadId = response.thread?.id;
+         check(validText(threadId) && !knownThreads.has(threadId), 'THREAD_ID_REUSED_OR_MISSING');
+--- r6/driver.test.mjs
++++ r7/driver.test.mjs
+@@ -42,6 +42,9 @@
+   const hookPair = id => { hook(id, 'preToolUse'); hook(id, 'preToolUse', true);
+     hook(id, 'postToolUse'); hook(id, 'postToolUse', true); };
+   const startWork = () => {
++    if (mode.endsWith('-raw')) event('rawResponseItem/completed', {threadId: currentThread,
++      turnId: currentTurn, item: {type: 'function_call', name: 'exec', call_id: 'outer-wrapper',
++        arguments: 'FAKE RAW ONLY; not evidence of inner execution'}});
+     if (mode.startsWith('w25-')) {
+       // P06 RPC 61–64: pre/post hooks for this exact ID, with no tool item.
+       if (mode.startsWith('w25-p06')) hookPair('exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4');
+@@ -336,6 +339,91 @@
+       encoding: 'utf8', timeout: 10000, env: {...process.env, PATH: bin}});
+   }
+ 
++  const nativeLaunch = {allow_login_shell: false, shell_snapshot: false, experimental_raw_events: true};
++  const outbound = r => readFileSync(join(r.evidence_root, 'rpc.jsonl'), 'utf8').trim().split('\n')
++    .map(JSON.parse).filter(e => e.direction === 'outbound').map(e => e.message);
++  test('W28 absent native launch retains the R6 argv and thread defaults', async t => {
++    const f = probeFixture(t), r = await f.run();
++    assert.deepEqual(f.state.spawn.args, ['app-server', '--listen', 'stdio://', '--disable', 'apps']);
++    assert.equal(Object.hasOwn(r.invocation, 'native_launch'), false);
++    for (const m of outbound(r).filter(m => m.method === 'thread/start'))
++      assert.equal(Object.hasOwn(m.params, 'experimentalRawEvents'), false);
++    assert.equal(outbound(r).some(m => m.method === 'config/read'), false);
++  });
++  test('W28 exact launch applies only owned process flags and every fresh root request', async t => {
++    const f = fixture(t, 'fresh'); f.manifest.runtime_release.entry.native_launch = {...nativeLaunch};
++    const r = await f.run(); assert.equal(r.status, 'COMPLETED');
++    const args = f.state.spawn.args;
++    assert.deepEqual(args.slice(0, 9), ['app-server', '--listen', 'stdio://', '--disable', 'apps',
++      '-c', 'allow_login_shell=false', '--disable', 'shell_snapshot']);
++    assert.equal(args.filter(v => v === 'allow_login_shell=false').length, 1);
++    const starts = outbound(r).filter(m => m.method === 'thread/start');
++    assert.equal(starts.length, 2);
++    for (const {params} of starts) {
++      assert.equal(params.experimentalRawEvents, true);
++      assert.equal(params.model, 'offline-test-model'); assert.equal(params.config.model_reasoning_effort, 'high');
++      assert.deepEqual(params.config.permissions, {[f.native.profile_id]: f.native.profile});
++      assert.equal(Object.hasOwn(params.config, 'allow_login_shell'), false);
++    }
++    assert.equal(outbound(r).some(m => m.method === 'config/read'), false);
++    assert.deepEqual(r.invocation.native_launch.requested, nativeLaunch);
++    assert.equal(r.invocation.native_launch.behavior_verified, false);
++    assert.equal(r.tool_action_observability.whole_chain_coverage, 'UNKNOWN');
++  });
++  test('W28 malformed launch is rejected before any output directory or spawn', async t => {
++    for (const value of [null, false, [], {}, {allow_login_shell: false, shell_snapshot: false},
++      {...nativeLaunch, allow_login_shell: true}, {...nativeLaunch, shell_snapshot: true},
++      {...nativeLaunch, experimental_raw_events: false}, {...nativeLaunch, allow_login_shell: 'false'},
++      {...nativeLaunch, permission_override: 'danger-full-access'}]) {
++      const f = fixture(t); f.manifest.runtime_release.entry.native_launch = value;
++      await assert.rejects(f.run(), /INVALID_NATIVE_LAUNCH/);
++      assert.equal(f.launches(), 0); assert.equal(existsSync(f.options.outputRoot), false);
++    }
++  });
++  test('W28 launch is exactly bound to probe registration before side effects', async t => {
++    const f = probeFixture(t); f.manifest.runtime_release.entry.native_launch = {...nativeLaunch};
++    f.record.capability_probe_limit = 7; f.saveRegistration();
++    await assert.rejects(f.run(), /PROBE_REGISTRATION_MISMATCH:entry/);
++    assert.equal(f.launches(), 0); assert.equal(existsSync(f.options.outputRoot), false);
++    f.record.entry.native_launch = {...nativeLaunch}; f.saveRegistration();
++    const r = await f.run(); assert.equal(r.status, 'COMPLETED');
++    assert.deepEqual(r.invocation.native_launch.requested, nativeLaunch);
++    assert.equal(outbound(r).find(m => m.method === 'thread/start').params.experimentalRawEvents, true);
++  });
++  test('W28 registration cap is exactly seven for new launch and six for legacy launch', async t => {
++    for (const enabled of [false, true]) {
++      for (const cap of [0, 6, 7, 8, 100, '7', null]) {
++        const f = probeFixture(t);
++        if (enabled) f.manifest.runtime_release.entry.native_launch = {...nativeLaunch};
++        f.record.entry = structuredClone(f.manifest.runtime_release.entry);
++        f.record.capability_probe_limit = cap; f.saveRegistration();
++        if (cap === (enabled ? 7 : 6)) {
++          const r = await f.run(); assert.equal(r.status, 'COMPLETED');
++        } else {
++          await assert.rejects(f.run(), /PROBE_REGISTRATION_MISMATCH:capability_probe_limit/);
++          assert.equal(f.launches(), 0); assert.equal(existsSync(f.options.outputRoot), false);
++        }
++      }
++    }
++  });
++  test('W28 raw notification is retained without counting wrappers or clearing hooks and engine failure', async t => {
++    const f = fixture(t, 'w25-p06-raw'); f.manifest.runtime_release.entry.native_launch = {...nativeLaunch};
++    f.state.finalizeResult = {status: 'INVALID_RUN', failures: [{code: 'EIO', message: 'original error'}]};
++    const r = await f.run();
++    assert.equal(r.status, 'INVALID_RUN'); assert.equal(r.tool_actions, null); assert.equal(r.visible_tool_actions, 1);
++    assert.equal(r.tool_action_observability.unmapped_hook_calls.length, 1);
++    assert.equal(r.tool_action_observability.mapping_complete, false);
++    assert.equal(r.tool_action_observability.formal_comparison_eligible, false);
++    assert.equal(r.tool_action_observability.hard_limit_compliance, 'UNKNOWN');
++    assert.deepEqual(r.engine.failures, f.state.finalizeResult.failures);
++    const raw = readFileSync(join(r.evidence_root, 'rpc.jsonl'), 'utf8').trim().split('\n').map(JSON.parse)
++      .filter(e => e.direction === 'inbound').map(e => JSON.parse(e.raw))
++      .find(e => e.method === 'rawResponseItem/completed');
++    assert.equal(raw.params.item.call_id, 'outer-wrapper');
++    assert.equal(raw.params.item.arguments, 'FAKE RAW ONLY; not evidence of inner execution');
++    assert.equal(r.native_tools.some(e => e.item.type === 'commandExecution'), false);
++  });
++
+   for (const mode of ['w25-p06', 'w25-p06-budget', 'w25-opaque']) {
+     test(`W25 ${mode} keeps unmatched activity and invalidates comparison accounting`, async t => {
+       const f = fixture(t, mode), r = await f.run();
+--- r6/integration.test.mjs
++++ r7/integration.test.mjs
+@@ -18,6 +18,7 @@
+ const sourceHashes = Object.fromEntries(['driver', 'conditions', 'case-protocol'].map(name =>
+   [name, sha(readFileSync(join(moduleRoot, `${name}.mjs`)))]));
+ const offlineUserAgent = 'tri_system_eval/0.0.0-offline';
++const nativeLaunch = { allow_login_shell: false, shell_snapshot: false, experimental_raw_events: true };
+ const material = (path, content, stage = 'inputs_delivered') =>
+   ({ path, content, stage, encoding: 'utf-8', sha256: sha(content) });
+ const event = (id, checkpoint, extras = {}) => ({ id, kind: 'human_choice',
+@@ -44,12 +45,28 @@
+ 
+ // Only the stdio peer is simulated. Its script calls the real driver's dynamic
+ // tools; it cannot access the case runtime, write artifacts, or finalize it.
+-function fakeTransport(script, permissions) {
++function fakeTransport(script, permissions, launch) {
+   const transcript = [], scripts = [], terminalThreads = new Set();
+   let failure;
+   const spawnProcess = (_command, args, options) => {
+     assert.deepEqual(args.slice(0, 5), ['app-server', '--listen', 'stdio://', '--disable', 'apps']);
+-    if (permissions) {
++    if (launch) {
++      assert.ok(permissions, 'launch settings must not replace the permission profile');
++      assert.equal(args.length, 13, 'only two fixed launch settings may be added');
++      const pairs = [];
++      for (let i = 5; i < args.length; i += 2) pairs.push(args.slice(i, i + 2));
++      const toml = value => value && typeof value === 'object'
++        ? `{${Object.entries(value).map(([key, v]) => `${JSON.stringify(key)}=${toml(v)}`).join(',')}}` : JSON.stringify(value);
++      // Both documented spellings disable the same single feature. No other
++      // flag, environment override, permission expansion or duplicate is valid.
++      const normalized = pairs.map(pair => JSON.stringify(
++        pair[0] === '--disable' && pair[1] === 'shell_snapshot' ? ['-c', 'features.shell_snapshot=false'] : pair)).sort();
++      assert.deepEqual(normalized, [
++        ['-c', `permissions.${permissions.profile_id}=${toml(permissions.profile)}`],
++        ['-c', `default_permissions=${JSON.stringify(permissions.profile_id)}`],
++        ['-c', 'allow_login_shell=false'], ['-c', 'features.shell_snapshot=false'],
++      ].map(pair => JSON.stringify(pair)).sort());
++    } else if (permissions) {
+       assert.equal(args.length, 9);
+       assert.equal(args[5], '-c'); assert.equal(args[7], '-c');
+       const toml = value => value && typeof value === 'object'
+@@ -105,6 +122,7 @@
+       if (!request.method) { pending.get(request.id)?.(request.result); pending.delete(request.id); return; }
+       if (request.method === 'initialize') respond(request, { userAgent: offlineUserAgent });
+       else if (request.method === 'thread/start') {
++        assert.equal(request.params.experimentalRawEvents, launch ? true : undefined);
+         if (permissions) {
+           assert.equal(request.params.permissions, permissions.profile_id);
+           assert.equal(Object.hasOwn(request.params, 'sandbox'), false);
+@@ -206,6 +224,7 @@
+     bindings: { driver_sha256: sourceHashes.driver, conditions_sha256: sourceHashes.conditions,
+       case_protocol_sha256: sourceHashes['case-protocol'], cases_sha256: sha(readFileSync(caseFile)),
+       source_manifest_sha256: sha(readFileSync(sourceManifest)), condition_material_sha256: prepared.materialSha256 } } };
++  if (Object.hasOwn(options, 'nativeLaunch')) manifest.runtime_release.entry.native_launch = options.nativeLaunch;
+   if (options.permissions !== 'omit') {
+     const release = manifest.runtime_release;
+     const conditionRoot = join(temp, 'runs', release.run_id, 'condition');
+@@ -218,23 +237,27 @@
+     if (release.stage === 'probe') {
+       release.probe_id = 'OFFLINE-FIXTURE-NOT-A-LIVE-RELEASE';
+       const registrationPath = join(temp, 'synthetic-registration.json');
+-      writeFileSync(registrationPath, JSON.stringify({ schema_version: 1, kind: 'u007-capability-probe',
+-        status: 'REGISTERED', issued_by: 'root-coordinator', pool: 'additional-capability', capability_probe_limit: 6,
++      const registration = structuredClone({ schema_version: 1, kind: 'u007-capability-probe',
++        status: 'REGISTERED', issued_by: 'root-coordinator', pool: 'additional-capability',
++        capability_probe_limit: Object.hasOwn(options, 'nativeLaunch') ? 7 : 6,
+         ...Object.fromEntries(['probe_id', 'run_id', 'run', 'bindings', 'model', 'resources', 'entry', 'native_command_permissions'].map(k => [k, release[k]])),
+         case_file: { path: caseFile, sha256: release.bindings.cases_sha256 },
+         source_manifest: { path: sourceManifest, sha256: release.bindings.source_manifest_sha256 },
+         assertions: [{ id: 'offline', statement: 'Synthetic transport validates integration only; grants no live run.' }],
+-        stop_conditions: ['No actual native transport or model may be started.'], offline_fixture: true }));
++        stop_conditions: ['No actual native transport or model may be started.'], offline_fixture: true });
++      options.mutateRegistration?.(registration);
++      writeFileSync(registrationPath, JSON.stringify(registration));
+       release.registration = { path: registrationPath, sha256: sha(readFileSync(registrationPath)) };
+     }
+   }
+   const manifestPath = join(temp, 'fake-ready.json'); writeFileSync(manifestPath, JSON.stringify(manifest));
+-  const transport = fakeTransport(script, manifest.runtime_release.native_command_permissions);
++  const transport = fakeTransport(script, manifest.runtime_release.native_command_permissions, options.nativeLaunch);
+   const runner = createTrialRunner({ spawnProcess: transport.spawnProcess });
+   const args = { manifestPath, caseFile, caseId: data.id, conditionId, trial: 1, outputRoot: join(temp, 'runs') };
+   if (options.rejection) {
+     await assert.rejects(runner(args), options.rejection);
+     assert.equal(transport.transcript.length, 0);
++    if (options.noCaseEffects) assert.equal(existsSync(join(temp, 'runs', 'offline-integration', 'condition', 'case')), false);
+     return;
+   }
+   const report = await runner(args);
+@@ -430,6 +453,88 @@
+   } });
+ });
+ 
++for (const mode of ['mapped', 'unmapped', 'interrupted']) test(`W29: native launch records raw events with ${mode} observations without granting proof`, async t => {
++  const raw = { type: 'function_call', call_id: 'exec-raw-command', name: 'exec_command',
++    arguments: JSON.stringify({ cmd: 'FAKE ONLY; never executed', login: false }) };
++  await run(t, fixture(), 'T', async (api, root) => {
++    hookPair(api, root, raw.call_id);
++    // Raw attempts and duplicates are visibility only. A raw function call is
++    // not a completed native item and cannot heal an unmapped-hook gap.
++    for (let i = 0; i < 2; i++) api.notify('rawResponseItem/completed', { ...api.identity(root), item: raw });
++    api.notify('rawResponseItem/completed', { ...api.identity(root), item: {
++      type: 'custom_tool_call', call_id: 'outer-wrapper', name: 'exec', input: 'FAKE code-mode wrapper only' } });
++    if (mode === 'mapped') api.notify('item/completed', { ...api.identity(root), item: {
++      type: 'commandExecution', id: raw.call_id, command: 'FAKE ONLY; never executed', commandActions: [], exitCode: 2 } });
++    const id = 'exec-launch-checkpoint', args = { checkpoint: 'inputs_delivered' };
++    hookPair(api, root, id);
++    const result = await api.call(root, 'case_checkpoint', args, id);
++    assert.equal(result.success, true);
++    dynamicItem(api, root, id, args, result, { duplicate: true });
++    if (mode === 'interrupted') api.exhaustTokens(root);
++    else api.finish(root);
++  }, { stage: 'probe', permissions: 'unverified', nativeLaunch,
++    inspectObservation({ report, inbound, transport, data }) {
++      assert.equal(report.status, 'INVALID_RUN', 'unverified fake probe cannot become an accepted boundary proof');
++      const rawEvents = inbound.filter(e => e.method === 'rawResponseItem/completed');
++      assert.equal(rawEvents.length, 3);
++      assert.deepEqual(rawEvents.slice(0, 2).map(e => e.params.item), [raw, raw]);
++      assert.equal(rawEvents[2].params.item.call_id, 'outer-wrapper');
++      assert.equal(report.native_command_permissions.boundary_status, 'NATIVE_BOUNDARY_UNVERIFIED');
++      assert.equal(report.native_command_permissions.requested.effective_probe, null);
++      assert.equal(report.native_command_permissions.actual_read_scope, 'UNKNOWN');
++      const state = report.engine_snapshot;
++      assert.equal(state.stage, 'inputs_delivered');
++      assert.equal(state.writes.length, 0);
++      assert.equal(state.necessary_controls, 'NOT_EVALUATED');
++      assert.equal(state.artifacts.find(a => a.path === 'output/result.json').exists, false);
++      assert.equal(readFileSync(join(report.condition.root, 'case/input/records.json'), 'utf8'), data.initial_files[0].content);
++      const coverage = report.tool_action_observability;
++      assert.equal(coverage.whole_chain_coverage, 'UNKNOWN');
++      assert.equal(coverage.formal_comparison_eligible, false);
++      assert.equal(report.visible_tool_actions, mode === 'mapped' ? 2 : 1);
++      assert.equal(report.tool_actions, mode === 'mapped' ? 2 : null);
++      assert.equal(coverage.mapping_complete, mode === 'mapped');
++      assert.deepEqual(coverage.unmapped_hook_calls.map(c => c.call_id), mode === 'mapped' ? [] : [raw.call_id]);
++      if (mode === 'mapped') assert.ok(report.errors.some(e => e.native_tool_failure?.exitCode === 2));
++      else assert.ok(report.errors.some(e => e.message === 'INCOMPLETE_TOOL_ACTION_OBSERVABILITY'));
++      if (mode === 'interrupted') {
++        assert.ok(report.errors.some(e => e.message === 'OBSERVED_TOKEN_BUDGET'));
++        assert.ok(report.interruptions.some(i => i.confirmed && i.terminal.turn.status === 'interrupted'));
++      } else assert.ok(report.engine.protocol_errors.some(e => e.code === 'INCOMPLETE_PROTOCOL'));
++      assert.equal(transport.transcript.some(e => e.message.method === 'config/read'), false);
++    } });
++});
++
++for (const [label, invalid] of [
++  ['null', null], ['empty', {}], ['missing field', { allow_login_shell: false, shell_snapshot: false }],
++  ['login true', { ...nativeLaunch, allow_login_shell: true }], ['snapshot true', { ...nativeLaunch, shell_snapshot: true }],
++  ['raw false', { ...nativeLaunch, experimental_raw_events: false }], ['extra permissions', { ...nativeLaunch, permissions: 'bypass' }],
++]) test(`W29: invalid native_launch ${label} rejects before spawn and case effects`, async t => {
++  await run(t, fixture(), 'T', () => assert.fail('transport must not start'), {
++    stage: 'probe', permissions: 'unverified', nativeLaunch: invalid, noCaseEffects: true, rejection: /NATIVE.*LAUNCH/,
++    // Keep the legacy pool bound in this negative fixture: R6 must not get a
++    // coincidental early rejection for the new limit before exposing its bug.
++    mutateRegistration(registration) { registration.capability_probe_limit = 6; },
++  });
++});
++
++test('W29: registration entry drift rejects before spawn and case effects', async t => {
++  await run(t, fixture(), 'T', () => assert.fail('transport must not start'), {
++    stage: 'probe', permissions: 'unverified', nativeLaunch, noCaseEffects: true,
++    rejection: /PROBE_REGISTRATION_MISMATCH:entry/,
++    mutateRegistration(registration) { delete registration.entry.native_launch; },
++  });
++});
++
++for (const [withLaunch, limit] of [[true, 6], [false, 7], [true, 8], [false, 8]])
++  test(`W29: ${withLaunch ? 'new' : 'legacy'} launch rejects crossed or unsupported probe limit ${limit}`, async t => {
++    await run(t, fixture(), 'T', () => assert.fail('transport must not start'), {
++      stage: 'probe', permissions: 'unverified', ...(withLaunch ? { nativeLaunch } : {}), noCaseEffects: true,
++      rejection: /PROBE_REGISTRATION_MISMATCH:capability_probe_limit/,
++      mutateRegistration(registration) { registration.capability_probe_limit = limit; },
++    });
++  });
++
+ for (const condition of ['T', 'I']) test(`real ${condition} materialization, staged tools and finalization`, async t => {
+   const { report } = await run(t, fixture(), condition, async (api, root) => {
+     await begin(api, root); await copy(api, root); await finish(api, root);
+@@ -566,7 +671,7 @@
+   assert.equal(report.candidate_tool_errors.length, 2);
+ });
+ 
+-test('fresh waits for old root and child terminal events; new root retains checkpoint, failure and identities', async t => {
++for (const launch of [false, true]) test(`${launch ? 'W29: native launch ' : ''}fresh waits for old root and child terminal events; new root retains checkpoint, failure and identities`, async t => {
+   const data = fixture();
+   data.authorized_actions.write_paths.push('output/checkpoint.json');
+   data.authorized_actions.read_paths.push('input/current.txt');
+@@ -599,7 +704,7 @@
+       await checkpoint(api, root, 'decision_resolved', { acknowledgements: ['current-decision'] });
+       await copy(api, root); await finish(api, root);
+     }
+-  });
++  }, launch ? { stage: 'probe', permissions: 'unverified', nativeLaunch } : {});
+   assert.equal(report.interruptions.length, 2);
+   assert.ok(report.interruptions.every(r => r.confirmed && r.terminal.turn.status === 'interrupted'));
+   const messages = transport.transcript;

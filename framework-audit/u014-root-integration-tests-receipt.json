@@ -1,0 +1,30 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "scripts/tri-system-eval/integration.test.mjs",
+    "scripts/tri-system-eval/native-trace-integration.test.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/f351/luca_gstack",
+  "actual_exec_session_id": 9233,
+  "exit_code": 0,
+  "tests": 44,
+  "passed": 42,
+  "failed": 0,
+  "skipped": 2,
+  "log": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-integration-tests.log",
+  "sha256": "beb51ee7e1427bae9b82009baa01e26a5f1cd3fbe28d9d10d3860f9451c65ca2",
+  "model_runs": 0,
+  "scope": "deterministic integration only",
+  "skipped_case_followup": {
+    "actual_exec_session_id": 53780,
+    "exit_code": 0,
+    "tests": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "log": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-baseline-integration-tests.log",
+    "sha256": "275546ef68ebe0d3c283893cbdd049b9417431ac770c4f9ffed0b9a79d4569eb",
+    "source_manifest": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json"
+  }
+}

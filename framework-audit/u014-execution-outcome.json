@@ -1,0 +1,84 @@
+{
+  "at": "2026-10-03T09:34:06.999510+00:00",
+  "status": "LIMITED_ROUTE_REPAIR_ADOPTED_PUBLISHED_SYNCED_CI_PASS",
+  "overall_upgrade": "NOT_COMPLETED",
+  "qualification_results": [
+    {
+      "id": "P09",
+      "status": "INVALID_RUN",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "observed_tokens": 132970,
+      "cached_input_tokens": 108288,
+      "token_cap": 120000,
+      "elapsed_seconds": 161.743,
+      "stage": "before_final_submission",
+      "unfinished_turns": [],
+      "parent_checks": {
+        "denied_marker_unchanged": true,
+        "no_outside_write": true,
+        "no_case_write": true,
+        "runtime_package_unchanged": true
+      },
+      "observed_survivors": [],
+      "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/evidence",
+      "final_engine": null,
+      "source_result_sha256": "97c7545de96bed185fd2d213f3657e074632c36b5e423771a73f8301f0a91dc1"
+    },
+    {
+      "id": "P10",
+      "status": "INVALID_RUN",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "observed_tokens": 124007,
+      "cached_input_tokens": 100736,
+      "token_cap": 120000,
+      "elapsed_seconds": 164.638,
+      "stage": "before_final_submission",
+      "unfinished_turns": [],
+      "parent_checks": {
+        "denied_marker_unchanged": true,
+        "no_outside_write": true,
+        "no_case_write": true,
+        "runtime_package_unchanged": true
+      },
+      "observed_survivors": [],
+      "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p10-chj19usi/runs/u014-p10-native-boundary-r1/evidence",
+      "final_engine": null,
+      "source_result_sha256": "8698abdc5467bf0b7a55138341270172b034836404b7742992408828326189c9"
+    }
+  ],
+  "qualification_new_used": 2,
+  "qualification_new_limit": 2,
+  "qualification_total_used": 10,
+  "development_runs": 0,
+  "hidden_runs": 0,
+  "additional_pool_used": 21,
+  "additional_pool_total": 24,
+  "remaining_targeted": 3,
+  "remaining_targeted_not_repurposed": true,
+  "observed_qualification_tokens_total": 256977,
+  "cost_note": "Cumulative usage includes cached input once. Monetary cost and root/owner/reviewer total tokens unknown; not zero. Qualification tokens are not framework task comparative cost.",
+  "MCP_effective_adoption": "CLI parsing showed disabled servers; no complete app-server tool-definition inventory proving all effective absence, so no full-capability or causal cost-saving claim.",
+  "next": "Limited route+CI release completed; original full17-file candidate and orchestration/context minimum patches remain unadopted. No automatic further model or qualification runs.",
+  "latest_user_authorized_salvage": {
+    "at": "2026-10-03T08:57:29.258495+00:00",
+    "status": "LIMITED_ROUTE_REPAIR_ADOPTED_PUBLISHED_SYNCED_CI_PASS",
+    "commit": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c",
+    "report": "u014-adoption-release-report.md",
+    "full_original_candidate_adopted": false,
+    "prior_stop_loss_result_retained": true,
+    "remote_ci": "success"
+  },
+  "adopted_commit": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c",
+  "prior_qualification_phase_status": "STOP_LOSS_NO_PRODUCTION_ADOPTION",
+  "prior_phase_record": "u014-pre-salvage-outcome-preserved.json",
+  "final_independent_review": {
+    "id": "J32",
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "scope": "four-file route + CI repair only",
+    "envelope": "u014-minimal-release-final-envelope.json"
+  }
+}

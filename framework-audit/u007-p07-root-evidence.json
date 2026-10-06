@@ -1,0 +1,185 @@
+{
+  "recorded_at": "2026-10-02T23:07:38.835892+00:00",
+  "status": "ACTUAL_NATIVE_COMMAND_OBSERVED_BUT_PROBE_FAILED_NO_FORMAL_RELEASE",
+  "probe_id": "P07",
+  "run_id": "u007-p07-native-appserver-r1",
+  "files": {
+    "rpc.jsonl": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/evidence/rpc.jsonl",
+      "sha256": "4b5baa2231773d6d3cf806e2daf834abb8cc2ae451ef080f1f3f6051255d9ab3",
+      "bytes": 130049
+    },
+    "result.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/evidence/result.json",
+      "sha256": "cc2cdd86ecebc899927cd466ab680628cbca5287de780df1fc001261fa3cd0df",
+      "bytes": 39582
+    }
+  },
+  "launch": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-launch.json",
+    "sha256": "e5c5be96fdfe7011f21f33486c8938ee87d5bd0b3b36e2a66921fa0fcc5360e4",
+    "bytes": 6048
+  },
+  "native_command_window": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-native-command-window.json",
+    "sha256": "467df00587adafae6fafe7c8b58c99369c4686bedd21426882311b2bb12db484",
+    "bytes": 3502
+  },
+  "exit_code": 1,
+  "elapsed_seconds": 144.319,
+  "outer_timed_out": false,
+  "actual_threads": [
+    "01a0fed9-3ede-79c1-8b6e-b951d396f59e"
+  ],
+  "actual_turns": [
+    "01a0fed9-472f-7bd1-862b-f38256b12df2"
+  ],
+  "observed_total_tokens": 61934,
+  "visible_tool_actions": 2,
+  "tool_actions": null,
+  "errors": [
+    {
+      "at": 1790982093870,
+      "native": {
+        "error": {
+          "message": "Reconnecting... 2/5",
+          "codexErrorInfo": {
+            "responseStreamDisconnected": {
+              "httpStatusCode": null
+            }
+          },
+          "additionalDetails": "request timed out",
+          "misalignment": null
+        },
+        "willRetry": true,
+        "threadId": "01a0fed9-3ede-79c1-8b6e-b951d396f59e",
+        "turnId": "01a0fed9-472f-7bd1-862b-f38256b12df2"
+      }
+    },
+    {
+      "at": 1790982109253,
+      "native": {
+        "error": {
+          "message": "Reconnecting... 3/5",
+          "codexErrorInfo": {
+            "responseStreamDisconnected": {
+              "httpStatusCode": null
+            }
+          },
+          "additionalDetails": "request timed out",
+          "misalignment": null
+        },
+        "willRetry": true,
+        "threadId": "01a0fed9-3ede-79c1-8b6e-b951d396f59e",
+        "turnId": "01a0fed9-472f-7bd1-862b-f38256b12df2"
+      }
+    },
+    {
+      "at": 1790982125049,
+      "native": {
+        "error": {
+          "message": "Reconnecting... 4/5",
+          "codexErrorInfo": {
+            "responseStreamDisconnected": {
+              "httpStatusCode": null
+            }
+          },
+          "additionalDetails": "request timed out",
+          "misalignment": null
+        },
+        "willRetry": true,
+        "threadId": "01a0fed9-3ede-79c1-8b6e-b951d396f59e",
+        "turnId": "01a0fed9-472f-7bd1-862b-f38256b12df2"
+      }
+    },
+    {
+      "at": 1790982141524,
+      "native": {
+        "error": {
+          "message": "Reconnecting... 5/5",
+          "codexErrorInfo": {
+            "responseStreamDisconnected": {
+              "httpStatusCode": null
+            }
+          },
+          "additionalDetails": "request timed out",
+          "misalignment": null
+        },
+        "willRetry": true,
+        "threadId": "01a0fed9-3ede-79c1-8b6e-b951d396f59e",
+        "turnId": "01a0fed9-472f-7bd1-862b-f38256b12df2"
+      }
+    },
+    {
+      "at": 1790982187297,
+      "message": "OBSERVED_TOKEN_BUDGET"
+    },
+    {
+      "at": 1790982189305,
+      "message": "INCOMPLETE_TOOL_ACTION_OBSERVABILITY"
+    }
+  ],
+  "earliest_command_failure": {
+    "raw_wrapper_call_id": "call_vs537paFG5bMxCmfZBU5mvfp",
+    "hook_only_call_id": "exec-b2a3993e-be47-408a-b77a-0c7ec6137df0",
+    "relationship": "Chronologically corresponding native invocation; raw outer call ID is not asserted equal to hook inner ID.",
+    "native_exec_requested_parameters": {
+      "shell": "/bin/sh",
+      "login": false,
+      "tty": false,
+      "workdir": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/condition",
+      "cmd": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -B case/input/probe.py /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/outside 58503 /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/probe-runtime"
+    },
+    "returned_inner_chunk_id": "16cd62",
+    "returned_inner_exit_code": 1,
+    "evidence": "Script reaches probe.py line27 then subprocess.run(sys.executable, loader) raises PermissionError errno1 for /opt/homebrew/opt/python@3.14/bin/python3.14. Native Python command executed; no blanket native-start-failure claim.",
+    "alias_identity": [
+      {
+        "path": "/opt/homebrew/opt/python@3.14",
+        "is_symlink": true,
+        "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.5",
+        "link_target": "../Cellar/python@3.14/3.14.5"
+      },
+      {
+        "path": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "is_symlink": true,
+        "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "link_target": "../Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "sha256": "2477b47fa3ae65b9574eb18a15edb364e96948eaa1875ad3f1c80d780efc9c12"
+      },
+      {
+        "path": "/opt/homebrew/Cellar/python@3.14/3.14.5/bin/python3.14",
+        "is_symlink": true,
+        "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "link_target": "../Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "sha256": "2477b47fa3ae65b9574eb18a15edb364e96948eaa1875ad3f1c80d780efc9c12"
+      },
+      {
+        "path": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "is_symlink": false,
+        "resolved": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "sha256": "2477b47fa3ae65b9574eb18a15edb364e96948eaa1875ad3f1c80d780efc9c12"
+      }
+    ],
+    "root_cause_limit": "Same executable bytes via alternate lexical path established. Exact Seatbelt matching rule and whether canonicalizing argv alone fixes it are not runtime-proven."
+  },
+  "assertion_outcomes": {
+    "native_command_attempt_and_output": "OBSERVED",
+    "native_command_success": "FAIL_EXIT_1",
+    "eight_checks": "NOT_COMPLETED_NO_RESULT_JSON; reaching loader does not certify prior per-check passed flags",
+    "baseline_loader": "SUBPROCESS_START_DENIED",
+    "protocol": "INCOMPLETE_AT_INPUTS_DELIVERED; no output artifact",
+    "permissions": "Profile request retained; full eight-check effective proof absent",
+    "accounting": "UNKNOWN_TOTAL; two visible dynamic operations and one hook gap; raw wrapper provides extra command evidence but not full coverage",
+    "cleanup": "Transport exit0; interruption confirmed; no observed survivors or observation errors; unobserved descendants not proved absent"
+  },
+  "parent_checks": {
+    "denied_marker_unchanged": true,
+    "no_outside_write": true,
+    "no_case_write": true,
+    "runtime_package_unchanged": true
+  },
+  "observed_survivors": [],
+  "cleanup_observation_errors": [],
+  "next_action": "Read-only method-feasibility adjudication considering exact alias and existing observability/budget requirements; no automatic P08, permission change or budget increase."
+}

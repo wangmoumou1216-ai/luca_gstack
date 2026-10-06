@@ -1,0 +1,41 @@
+{
+  "source": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/evidence/rpc.jsonl",
+    "sha256": "4b5baa2231773d6d3cf806e2daf834abb8cc2ae451ef080f1f3f6051255d9ab3",
+    "bytes": 130049
+  },
+  "selection": "Exact first native exec wrapper call/output only; excludes hidden reasoning and unrelated startup messages",
+  "events": [
+    {
+      "source_line": 76,
+      "at": 1790982174605,
+      "thread_id": "01a0fed9-3ede-79c1-8b6e-b951d396f59e",
+      "turn_id": "01a0fed9-472f-7bd1-862b-f38256b12df2",
+      "type": "custom_tool_call",
+      "call_id": "call_vs537paFG5bMxCmfZBU5mvfp",
+      "name": "exec",
+      "input": "const result = await tools.exec_command({cmd:\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14 -B case/input/probe.py /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/outside 58503 /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/probe-runtime\",workdir:\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/condition\",shell:\"/bin/sh\",login:false,tty:false});\nstore(\"probeNativeResult\",result);text(result);\n",
+      "output": null
+    },
+    {
+      "source_line": 82,
+      "at": 1790982175127,
+      "thread_id": "01a0fed9-3ede-79c1-8b6e-b951d396f59e",
+      "turn_id": "01a0fed9-472f-7bd1-862b-f38256b12df2",
+      "type": "custom_tool_call_output",
+      "call_id": "call_vs537paFG5bMxCmfZBU5mvfp",
+      "name": null,
+      "input": null,
+      "output": [
+        {
+          "type": "input_text",
+          "text": "Script completed\nWall time 0.5 seconds\nOutput:\n"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"16cd62\",\"wall_time_seconds\":0,\"exit_code\":1,\"original_token_count\":366,\"output\":\"Traceback (most recent call last):\\n  File \\\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/condition/case/input/probe.py\\\", line 27, in <module>\\n    loaded = subprocess.run([sys.executable, '-B', str(loader), 'office', '*'], text=True, capture_output=True, timeout=10)\\n  File \\\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py\\\", line 555, in run\\n    with Popen(*popenargs, **kwargs) as process:\\n         ~~~~~^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py\\\", line 1039, in __init__\\n    self._execute_child(args, executable, preexec_fn, close_fds,\\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n                        pass_fds, cwd, env,\\n                        ^^^^^^^^^^^^^^^^^^^\\n    ...<5 lines>...\\n                        gid, gids, uid, umask,\\n                        ^^^^^^^^^^^^^^^^^^^^^^\\n                        start_new_session, process_group)\\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py\\\", line 1990, in _execute_child\\n    raise child_exception_type(errno_num, err_msg, err_filename)\\nPermissionError: [Errno 1] Operation not permitted: '/opt/homebrew/opt/python@3.14/bin/python3.14'\\n\"}"
+        }
+      ]
+    }
+  ]
+}

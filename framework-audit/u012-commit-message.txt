@@ -1,0 +1,9 @@
+fix: streamline framework routing and preserve task continuity
+
+Clarify explicit skill selection and conditional context loading, keep authorized
+work moving across phases, and preserve current authorization, failures, and
+effects during handoff. Align consumers and add targeted regression coverage.
+
+Include the tri-system evaluation runner and its tests. Formal comparison
+remains unqualified; bounded behavior evidence is not a net-value or production
+migration claim. Preserve the recorded first-response owner-timing failure.

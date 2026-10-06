@@ -1,0 +1,48 @@
+{
+  "thread_id": "01a0fe7d-b656-74d3-a194-99eadb6e3946",
+  "process_uuids": [
+    "pid:22338:3ced009e-c0e2-4d9b-a031-df6d77509a21"
+  ],
+  "ts_scope": [
+    1790976174,
+    1790976177
+  ],
+  "rows": [
+    {
+      "id": 54477836,
+      "ts": 1790976175,
+      "level": "WARN",
+      "target": "codex_sandboxing::violation",
+      "module_path": "codex_sandboxing::violation",
+      "file": "sandboxing/src/violation.rs",
+      "line": 210,
+      "thread_id": null,
+      "process_uuid": "pid:22338:3ced009e-c0e2-4d9b-a031-df6d77509a21",
+      "body": "code_mode.broker.invoke_tool{conversation.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 cell.id=1 runtime_tool_call_id=\"tool-1\" tool_name=\"exec_command\"}:handle_tool_call_with_source:dispatch_tool_call_with_code_mode_result{otel.name=exec_command tool_name=exec_command thread.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 call_id=\"exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4\" aborted=false}:dispatch_tool_call_with_state:unified_exec.exec_command{conversation.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 turn_id=\"01a0fe7d-be4c-7b11-8b1f-e75c00434ba0\" call_id=\"exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4\" unified_exec_process_id=3597 mode=\"resumable\"}:unified_exec.open_session: recorded sandbox violation: resource=filesystem backend=seatbelt reason=operation_not_permitted path=unknown"
+    },
+    {
+      "id": 54477839,
+      "ts": 1790976176,
+      "level": "INFO",
+      "target": "codex_code_mode::timing",
+      "module_path": "codex_core::tools::code_mode::telemetry",
+      "file": "core/src/tools/code_mode/telemetry.rs",
+      "line": 76,
+      "thread_id": "01a0fe7d-b656-74d3-a194-99eadb6e3946",
+      "process_uuid": "pid:22338:3ced009e-c0e2-4d9b-a031-df6d77509a21",
+      "body": "session_loop{thread_id=01a0fe7d-b656-74d3-a194-99eadb6e3946}:submission_dispatch{otel.name=\"op.dispatch.turn_input\" submission.id=\"01a0fe7d-be4c-7b11-8b1f-e75c00434ba0\" codex.op=\"turn_input\"}:turn{otel.name=\"session_task.turn\" thread.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 turn.id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 model=gpt-6-astra codex.turn.reasoning_effort=high}:session_task.run:run_turn:run_sampling_request{turn_id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 model=gpt-6-astra cwd=/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/condition}:try_run_sampling_request{turn_id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 model=gpt-6-astra}:receiving_stream:handle_responses{codex.request.reasoning_effort=high otel.name=\"custom_tool_call\" from=\"output_item_done\"}:handle_output_item_done:handle_tool_call_with_source:dispatch_tool_call_with_code_mode_result{otel.name=exec tool_name=exec thread.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 call_id=\"call_E96cxUr3Z46UqB5G0Jwh9tSM\" aborted=false}:dispatch_tool_call_with_state:code_mode.handler.execute{conversation.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 turn_id=\"01a0fe7d-be4c-7b11-8b1f-e75c00434ba0\" call_id=\"call_E96cxUr3Z46UqB5G0Jwh9tSM\" outcome=\"interrupted\" cell.id=\"1\"}: code-mode host operation completed event.name=\"codex.code_mode.host_timing\" conversation_id=01a0fe7d-b656-74d3-a194-99eadb6e3946 turn_id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 call_id=call_E96cxUr3Z46UqB5G0Jwh9tSM cell_id=\"1\" tool_name=\"exec\" code_mode_host_duration_ns=469447042"
+    },
+    {
+      "id": 54477840,
+      "ts": 1790976176,
+      "level": "INFO",
+      "target": "codex_core::tools::parallel",
+      "module_path": "codex_core::tools::parallel",
+      "file": "core/src/tools/parallel.rs",
+      "line": 434,
+      "thread_id": "01a0fe7d-b656-74d3-a194-99eadb6e3946",
+      "process_uuid": "pid:22338:3ced009e-c0e2-4d9b-a031-df6d77509a21",
+      "body": "session_loop{thread_id=01a0fe7d-b656-74d3-a194-99eadb6e3946}:submission_dispatch{otel.name=\"op.dispatch.turn_input\" submission.id=\"01a0fe7d-be4c-7b11-8b1f-e75c00434ba0\" codex.op=\"turn_input\"}:turn{otel.name=\"session_task.turn\" thread.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 turn.id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 model=gpt-6-astra codex.turn.reasoning_effort=high}:session_task.run:run_turn:run_sampling_request{turn_id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 model=gpt-6-astra cwd=/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/condition}:try_run_sampling_request{turn_id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 model=gpt-6-astra}:receiving_stream:handle_responses{codex.request.reasoning_effort=high otel.name=\"custom_tool_call\" from=\"output_item_done\"}:handle_output_item_done:handle_tool_call_with_source: tool call completed event.name=\"codex.tool_call\" trace_id= conversation.id=01a0fe7d-b656-74d3-a194-99eadb6e3946 turn_id=01a0fe7d-be4c-7b11-8b1f-e75c00434ba0 tool_name=exec call_id=call_E96cxUr3Z46UqB5G0Jwh9tSM tool_source=\"direct\" execution_started=true dispatch_duration_ms=0 handler_duration_ms=541 total_duration_ms=541"
+    }
+  ]
+}

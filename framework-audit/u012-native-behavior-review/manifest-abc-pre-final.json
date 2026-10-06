@@ -1,0 +1,116 @@
+{
+  "status": "N-A N-D N-B frozen; N-C not yet added",
+  "source_contract": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/manifest.json",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-thread.json",
+      "sha256": "4f7c001fe3694bcde1146f4a55af7d79da35792c51d0a74bf1109c22d38e3e5c",
+      "bytes": 140294
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nd-thread.json",
+      "sha256": "7383bf3dd89953e3bb98f15e0a8e3bde2926d4294938a70a793115f807f8fbed",
+      "bytes": 57303
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-thread.json",
+      "sha256": "fd9f8ebcc323eccc49f5d6bcb6d63d404acffe99dc4388eff7f2155fcdb30332",
+      "bytes": 140329
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-context-input-oracle.json",
+      "sha256": "09c96be1ce96b85282fe741cf3b3377cfd9c36e10cd5ff942bd6396797c8da25",
+      "bytes": 497
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nd-root-check.json",
+      "sha256": "9f0b95d3f616ab3df1bf4d03012d2c8cde9b48d17ab40539e0a4b413a6299b13",
+      "bytes": 422
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/alpha-effects.txt",
+      "sha256": "0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572",
+      "bytes": 19
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/source.json",
+      "sha256": "905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432",
+      "bytes": 153
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/beta.py",
+      "sha256": "50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99",
+      "bytes": 251
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/beta-attempts.txt",
+      "sha256": "0a9c76987691fab2d9dd07d602c84be3603985a5004a9a5d548597c1e8ed695d",
+      "bytes": 13
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/alpha-result.json",
+      "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+      "bytes": 151
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/luca-handoff-20261003-094437-178abe12.md",
+      "sha256": "8fb3d3f513866b2c80486755e8fc049d577c56a7d16ff94ce07b011bfdd8ae78",
+      "bytes": 8706
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/alpha.py",
+      "sha256": "d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f",
+      "bytes": 440
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-na-artifacts/native-process-evidence.json",
+      "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+      "bytes": 2420
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/alpha-effects.txt",
+      "sha256": "0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572",
+      "bytes": 19
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/source.json",
+      "sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+      "bytes": 156
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/beta-attempts.txt",
+      "sha256": "d23de3e4ba1f07785f3f03e299409de8cdce2293aa9a2939536fb02d90bc306a",
+      "bytes": 26
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/beta-result.json",
+      "sha256": "18ef9fde9d6fa4fc294b4c71300405fa5b2c94acac635565e0215872999c682a",
+      "bytes": 152
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/resume-evidence.json",
+      "sha256": "bfe2a79fbfdaf202d4221c2a3740b53aa58f72f8ab2775eb4096210affbc499d",
+      "bytes": 43016
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/alpha-result.json",
+      "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+      "bytes": 151
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/event-nb.json",
+      "sha256": "c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f",
+      "bytes": 1387
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nb-artifacts/native-process-evidence.json",
+      "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+      "bytes": 2420
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/nd-aggregate.json",
+      "sha256": "f08393077113f9d7791a16929f3d7bb17f69174ce3aed151b1216f59fe791ca2",
+      "bytes": 5902
+    }
+  ]
+}

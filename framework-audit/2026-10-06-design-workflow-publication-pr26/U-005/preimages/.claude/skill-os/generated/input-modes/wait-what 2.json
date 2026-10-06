@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "wait-what",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "previous_assistant_message"
+        ],
+        "optional": [
+          "conversation_context",
+          "focus_segment"
+        ]
+      }
+    },
+    "quality_gates": [
+      "missing_premise_restored",
+      "natural_chinese",
+      "project_vocabulary_reused_when_available",
+      "repitch_only",
+      "no_side_effects"
+    ],
+    "notes": "显式调用的对话修复覆盖层；只重讲上一条回复，不创建产物/handoff、不改 workflow state、不要求项目 pin。"
+  }
+}

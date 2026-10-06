@@ -1,0 +1,20 @@
+{
+  "checked_at": "2026-10-03T03:09:49.052026+00:00",
+  "commit": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "parent": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "tree": "c1736a557004361b99b36b0533af9b7f2ded8163",
+  "tree_equals_reviewed_staged_tree": true,
+  "exact_changed_files": 28,
+  "all_28_blob_sha256_match": true,
+  "working_tree_clean": true,
+  "branch": "codex/tri-system-evaluation",
+  "hooks_path": ".githooks",
+  "normal_commit_result": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-normal-commit-r3-result.json",
+  "verify": {
+    "pass": 114,
+    "fail": 0,
+    "warn": 0,
+    "delegated": 1
+  },
+  "pushed": false
+}

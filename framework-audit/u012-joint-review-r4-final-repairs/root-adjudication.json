@@ -1,0 +1,18 @@
+{
+  "id": "J18",
+  "format": "root summary; exact original report and envelope in native /root/a_gate transcript",
+  "eval_run_id": "tri-system-u012-final-repairs-20261003-r4",
+  "verdict": "PASS",
+  "passed": 4,
+  "total": 4,
+  "closed": [
+    "F3",
+    "F4"
+  ],
+  "scope": "static final repairs and joint consumer compatibility only",
+  "limits": [
+    "actual model behavior unverified",
+    "not adoption or fair B/S proof",
+    "P08 INVALID; probes8/8 unchanged"
+  ]
+}

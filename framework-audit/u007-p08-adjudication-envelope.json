@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u007-p08-adjudication-20261003",
+  "subject": {
+    "skill": "quality-gate",
+    "topic": "J14 P08 actual-result adjudication",
+    "scene": "unknown",
+    "input_summary": "只读核验冻结25项输入、原生tool_result、trace、RPC、协议journal、保留产物及launcher见证；复用J13未变合同。原分母3，未执行模型、探针、测试或写入。",
+    "output_paths": [],
+    "duration": "lightweight"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 3,
+    "total": 3,
+    "findings": [
+      "PASS criterion 1：trace.jsonl seq10/11将exec-7c6ac3a4-d08c-431c-9acc-1ec34d7423e1的真实调用与payloads/7.json、8.json绑定；handler code_mode_response.value给出chunk b79896、exit_code=1和8项JSON。case-engine/artifacts/1.utf8与原生output逐字节一致，SHA256=5b0e2e1b0ac9d3cd3f46ee79ba1c88cd219353d701fa1f7108942f4638cb98d4。允许读取及六类拒绝检查合计7/8通过；baseline-active-rules失败，子命令仍为/opt/homebrew/opt/python@3.14/bin/python3.14，PermissionError errno1，loader exit/stdout/stderr为null。不能推断resolve为何未产生期望路径，也不能声称PyYAML及真实规则加载成功。",
+      "PASS criterion 2：单一bundle/线程/turn的seq1至50连续，6项原生操作具有调用及结果引用；reader runtime_refs=[]、exit_code=null仅表示缺runtime投影，不能抹去handler原始exit1。RPC可见5项与原生6项是不同下界，不相加；tool_actions=null、whole_chain_coverage=UNKNOWN、formal_comparison_eligible=false。trace closed/completed不等于任务完成。",
+      "PASS criterion 2 continued：journal checkpoint_entered仅seq1/12/15三个阶段；seq20提交artifact={}，seq21/22及payload32/34为BAD_ARGUMENTS arguments.artifact.path missing。RPC36至39记录四条流重连；RPC234累计137276=136424 input+852 output，超过120000，91392 cached input未重复加；RPC236发送interrupt，239入站result={}，241终态interrupted。RPC150同数值id=4是反向工具响应，不属于interrupt确认。观察式预算发生超额停止，不能声称硬上限合规或全链完整。",
+      "PASS criterion 2 cleanup scope：result保留SIGTERM sent、后续SIGKILL ESRCH、transport exit0；launcher自身exit1、169.285秒、outer_timed_out=false、observed_survivors=[]、cleanup_observation_errors=[]。parent_checks四项true支持其所观察的标记未变、禁止写入未出现及runtime package未变；本票未另启动进程检查，不能扩为所有潜在后代均受完整观测的证明。",
+      "PASS criterion 3：可复用冻结同一实例中真实原生执行、七项边界、原始结果到artifact一致性、精确trace映射与本次中断的事实。OS子进程拒绝不证明Agent子线程/fresh/recovery覆盖；不得把7/8或本票3/3写成P08成功、完整U007通过、B/S优劣、采用或生命周期完成。B/S有效规则路径尚未运行成功，不能据此做公平正式比较；这不阻断已授权、可逆的三模块开发。",
+      "PASS criterion 3 next scope：capability额度8/8已耗尽，本票不授权P09、增额、扩权、正式比较或生产发布。下一实际工作是完成正在进行的三模块实现和消费者一致性；提交采用前按真实改动定向验证路由/必要控制、授权续行与真实等待、终态失败消费，以及最新授权恢复和已完成副作用不重放。采用范围内必要行为缺证据仍UNKNOWN/未完成；静态检查、作者自报或fixture不能代替实际行为。不新增普遍前置研究关卡，也不以报告或保留现状替代开发、验收、提交推送目标。",
+      "READ LIMIT：本票核对25项冻结输入哈希起止一致，读取指定原生payload、完整结构trace以及RPC/结果/journal相关字段；未读取隐藏推理、全局配置或无关日志，未重审全部代码，未重跑测试。结果大对象一次输出截断后，决定性字段已用定向读取补齐。"
+    ]
+  }
+}

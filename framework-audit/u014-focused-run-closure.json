@@ -1,0 +1,10 @@
+{
+  "closed_at": "2026-10-03T08:32:52.369977+00:00",
+  "F01": "completed Codex old 7 semantic decisions",
+  "F02": "completed Codex new 7 semantic decisions",
+  "F03": "invalid native Claude OAuth refresh failure; no model decision",
+  "F04": "NOT_STARTED same credential, avoid known repeated failure",
+  "no_retry": true,
+  "limits": "no new qualifications, no auth mutation, no cost/behavior parity claim",
+  "next": "J32 judge exact program fix and rule-consistency value separately, pending normal repo gate"
+}

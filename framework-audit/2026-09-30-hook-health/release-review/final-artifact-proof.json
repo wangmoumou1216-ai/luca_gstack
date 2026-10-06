@@ -1,0 +1,45 @@
+{
+  "revision": 3,
+  "patch_sha256": "3d90329de723ab5720769576e66f9a2c92ec0568a7920f8658a8da7ce8504729",
+  "candidate_sha256": "9902456b1333b1150b3fba23a61e7c7edf9e749deb348ecd53ea52f2a8b925a4",
+  "rollback_sha256": "43a70cd0a1b7f7374881fa907e1ae594e6d01e88f0211e2fd430200cbff2518b",
+  "helper_sha256": "b5305bffc7826970ae9d41782a90d7878c016396870548a70e20a06f21360912",
+  "scope_sha256": "f3271a935f013b987d2577ecaa8eb0def22040a8686c9be51f40ec941018d3ff",
+  "files": [
+    {
+      "path": "scripts/codex-hook-health.mjs",
+      "archive_candidate_and_baseline_match": true
+    },
+    {
+      "path": "scripts/codex-trust-hooks.mjs",
+      "archive_candidate_and_baseline_match": true
+    },
+    {
+      "path": "scripts/test-codex-hook-health.mjs",
+      "archive_candidate_and_baseline_match": true
+    },
+    {
+      "path": "scripts/test-codex-trust-hooks.mjs",
+      "archive_candidate_and_baseline_match": true
+    },
+    {
+      "path": "scripts/verify.sh",
+      "archive_candidate_and_baseline_match": true
+    },
+    {
+      "path": "README.md",
+      "archive_candidate_and_baseline_match": true
+    },
+    {
+      "path": ".codex/hooks.json",
+      "archive_candidate_and_baseline_match": true
+    }
+  ],
+  "production_source_unchanged": true,
+  "health_trust_cases": 32,
+  "source_guard_cases": 4,
+  "digest_gates": 11,
+  "activation_memory_cases": 3,
+  "mutations_caught": 4,
+  "native_cached_session": "UNVERIFIED"
+}

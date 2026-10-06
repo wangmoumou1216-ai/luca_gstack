@@ -1,0 +1,80 @@
+[
+  {
+    "source_path": ".claude/agents/quality-gate.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/agents/quality-gate.md",
+    "sha256": "4c16a87530af2b3c9b00f876b734b4807aea933c310d79d9e1f204e8222b7c69"
+  },
+  {
+    "source_path": ".claude/agents/preflight-agent.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/agents/preflight-agent.md",
+    "sha256": "4ae97467954b6958c0a230fe97438b3ff4eaeb841ba274d7b50bf777112bdb85"
+  },
+  {
+    "source_path": ".claude/skills/office/brainstorm/SKILL.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/brainstorm/SKILL.md",
+    "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d"
+  },
+  {
+    "source_path": ".claude/skills/office/ux-brainstorm/SKILL.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/ux-brainstorm/SKILL.md",
+    "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949"
+  },
+  {
+    "source_path": ".claude/skills/office/brainstorm/references/adversarial-review.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/brainstorm/references/adversarial-review.md",
+    "sha256": "9277609f8dafef5541480a2a7112a99580db14af91ffa852455483461026c6e9"
+  },
+  {
+    "source_path": ".claude/skills/office/ux-brainstorm/references/adversarial-review.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/ux-brainstorm/references/adversarial-review.md",
+    "sha256": "69c3f254e50e1c39f26032ff4617ce09694d4b4aa52e9f43ef2f42c8789d947d"
+  },
+  {
+    "source_path": ".claude/skills/office/auto/SKILL.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/auto/SKILL.md",
+    "sha256": "c887eb42f6e4f192de08cd7f520a8b5cc8e8dcff2a5a5af1efacf885f31a39a7"
+  },
+  {
+    "source_path": ".claude/skills/office/tech-spec/SKILL.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/tech-spec/SKILL.md",
+    "sha256": "c12f3f61942375551c72bea203f5c8d2d5e12573188da362fce33b7fe4050c90"
+  },
+  {
+    "source_path": ".claude/skills/office/task-plan/SKILL.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/task-plan/SKILL.md",
+    "sha256": "38e80538d73367b87ffac747aa2d6121e4088d0ecd90341d00c1652eba689d60"
+  },
+  {
+    "source_path": ".claude/skills/office/open-design/SKILL.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skills/office/open-design/SKILL.md",
+    "sha256": "60fe9c39cae30e77949ea7f88eb1cc28572199aada4d1a22ee3862b7f41b54d9"
+  },
+  {
+    "source_path": ".claude/skill-os/runtime/page-context.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skill-os/runtime/page-context.md",
+    "sha256": "772a63116b2be445602d109671abd2361ce55a2a2666201703d4bc15ddb8f5bc"
+  },
+  {
+    "source_path": ".claude/agents/references/plan-design-guidance.md",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/agents/references/plan-design-guidance.md",
+    "sha256": "71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f"
+  },
+  {
+    "source_path": ".claude/skill-os/input-modes.yaml",
+    "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+    "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/baseline-contracts/.claude/skill-os/input-modes.yaml",
+    "sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e"
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "kind": "luca-preserved-deployment-snapshot-delta",
+  "relative": ".claude/skill-os/evolution/report-2026-06.html",
+  "bytes": 14960,
+  "sha256": "945644b3d649c43ea950e7325a72c408741521dc3f4c4b49ecc3ddb27643a23f",
+  "mother_path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/evolution/report-2026-06.html",
+  "candidate_path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.claude/skill-os/evolution/report-2026-06.html",
+  "preserved_mother": true,
+  "copied_original_bytes": true,
+  "git_publication": false
+}

@@ -1,0 +1,119 @@
+diff --git a/.claude/hooks/route-guard.mjs b/.claude/hooks/route-guard.mjs
+--- a/.claude/hooks/route-guard.mjs
++++ b/.claude/hooks/route-guard.mjs
+@@ -1300,16 +1300,21 @@
+       ];
+     case 'STOP': {
+       if (decision.reason === 'retired_skill') return [`[route-guard] ⛔ RETIRED — ${decision.message}`];
++      const harness = actualHarness();
++      const routingOwner = harness === 'codex' ? 'AGENTS.md K2/K4'
++        : harness === 'claude' ? 'CLAUDE.md K2/K4' : '确认后的当前宿主入口 K2/K4';
++      const entryNotice = harness === 'codex' || harness === 'claude' ? ''
++        : '\n[route-guard] 当前宿主入口未确定；先确认适用入口，STOP 不授予执行权限。';
+       const softCandidates = decision.softCandidates || [];
+       const candidateHint = softCandidates.length
+         ? '\n基于语义推断，最可能的 skill：\n' +
+           softCandidates.map((c, i) =>
+             `  ${i + 1}. ${c.skill}（参考依据：${c.evidence.join('、')}）`
+           ).join('\n') +
+-          '\n语义映射清晰可按 CLAUDE.md「语义路由契约」直接路由；否则展示候选请用户确认或补充。'
+-        : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
++          `\n语义映射清晰可按 ${routingOwner} 路由；否则展示候选请用户确认或补充。`
++        : `\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 ${routingOwner} 路由（平凡任务豁免适用）。`;
+       // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
+-      // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
++      // 确定性提醒读当前宿主根的路由规则（别把 STOP 当"直接执行"）。
+       // 2026-07-28：研究轴与构建轴分文案。同一颗钉子，但"搞懂某事"和"做某事"该被提醒的
+       // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
+       // 2026-07-31：评审轴走共享 helper reviewAxisHint（STOP 与 PROJECT GATE 两路复用，见其上注释）。
+@@ -1317,11 +1322,11 @@
+       const reviewReminder = reviewAxisHint(decision);
+       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
+         ? (researchAxis
+-          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 CLAUDE.md「语义路由契约」在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
+-          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
++          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 ${routingOwner} 在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
++          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 ${routingOwner} 评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
+         : '';
+       return [
+-        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + reviewReminder + complexReminder,
++        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + entryNotice + candidateHint + reviewReminder + complexReminder,
+       ];
+     }
+     default:
+diff --git a/scripts/test-route-guard.mjs b/scripts/test-route-guard.mjs
+--- a/scripts/test-route-guard.mjs
++++ b/scripts/test-route-guard.mjs
+@@ -1531,6 +1531,60 @@
+ let passCount = 0;
+ let failCount = 0;
+ const failures = [];
++
++// The adapter declares the actual CLI while retaining Claude protocol fields.
++// Assert the real hint surface, not only the dry-run decision or source text.
++{
++  const sandbox = realpathSync(mkdtempSync(join(tmpdir(), 'route-root-owner-')));
++  mkdirSync(join(sandbox, '.claude', 'skill-os'), { recursive: true });
++  mkdirSync(join(sandbox, 'projects'));
++  writeFileSync(join(sandbox, '.claude', 'skill-os', 'skill-routing-map.yaml'),
++    readFileSync('.claude/skill-os/skill-routing-map.yaml'));
++  try {
++    for (const harness of ['codex', 'claude']) {
++      for (const prompt of ['PRD是啥', 'PRD是啥，规划一下', 'PRD是什么，了解其机制']) {
++        const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
++          cwd: process.cwd(), input: JSON.stringify({ prompt, prompt_id: 'protocol-field' }), encoding: 'utf8',
++          env: { ...baseEnv, CLAUDE_PROJECT_DIR: sandbox, LUCA_PROJECTS_ROOT: join(sandbox, 'projects'),
++            LUCA_ACTUAL_HARNESS: harness, ROUTE_GUARD_DRY_RUN: '0',
++            ROUTE_GUARD_PROJECTS: 'fixture', ROUTE_GUARD_CURRENT_PROJECT: 'fixture' },
++        });
++        assert.equal(result.status, 0, result.stderr);
++        assert.match(result.stdout, /❓ STOP/);
++        const expectedRoot = harness === 'codex' ? 'AGENTS.md' : 'CLAUDE.md';
++        const otherRoot = harness === 'codex' ? 'CLAUDE.md' : 'AGENTS.md';
++        assert.ok(result.stdout.includes(`${expectedRoot} K2/K4`), `${harness} hint points to the wrong root: ${result.stdout}`);
++        assert.ok(!result.stdout.includes(otherRoot), `${harness} hint requires a foreign root`);
++        assert.match(result.stdout, /确认或补充/, 'STOP must retain the unresolved-selection human gate');
++        assert.doesNotMatch(result.stdout, /project\.sh|--tx|PROJECT_SWITCH/, 'hint must not mint project authority');
++        if (prompt.includes('规划一下')) assert.match(result.stdout, /Plan Agent 5 条件/);
++        if (prompt.includes('了解其机制')) assert.match(result.stdout, /研究\/认知信号/);
++        console.log(`PASS ${harness} STOP hint uses its root owner: ${prompt}`);
++        passCount++;
++      }
++    }
++    const unknownEnv = { ...baseEnv, LUCA_PROJECTS_ROOT: join(sandbox, 'projects'),
++      ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: 'fixture', ROUTE_GUARD_CURRENT_PROJECT: 'fixture' };
++    for (const field of ['LUCA_ACTUAL_HARNESS', 'LUCA_HARNESS_ADAPTED', 'CLAUDE_PROJECT_DIR',
++      'CODEX_HOME', 'CODEX_SANDBOX', 'CODEX_SESSION_ID']) delete unknownEnv[field];
++    for (const prompt of ['PRD是啥', 'PRD是啥，规划一下']) {
++      const result = spawnSync('node', [join(process.cwd(), '.claude', 'hooks', 'route-guard.mjs')], {
++        cwd: sandbox, input: JSON.stringify({ prompt }), encoding: 'utf8', env: unknownEnv,
++      });
++      assert.equal(result.status, 0, result.stderr);
++      assert.match(result.stdout, /❓ STOP/);
++      assert.match(result.stdout, /当前宿主入口未确定/);
++      assert.doesNotMatch(result.stdout, /AGENTS\.md|CLAUDE\.md/, 'unknown identity cannot select a root');
++      assert.match(result.stdout, /确认或补充/);
++      assert.doesNotMatch(result.stdout, /project\.sh|--tx|PROJECT_SWITCH/);
++      if (prompt.includes('规划一下')) assert.match(result.stdout, /Plan Agent 5 条件/);
++      console.log(`PASS unknown STOP hint does not choose a root: ${prompt}`);
++      passCount++;
++    }
++  } finally {
++    rmSync(sandbox, { recursive: true, force: true });
++  }
++}
+ 
+ // Real hint surface (not dry-run JSON): this is what Claude/Codex actually receive.
+ // No session_id is supplied, so the hook cannot open or mutate project state.
+diff --git a/.claude/skill-os/capability-parity.json b/.claude/skill-os/capability-parity.json
+--- a/.claude/skill-os/capability-parity.json
++++ b/.claude/skill-os/capability-parity.json
+@@ -100,7 +100,7 @@
+     ],
+     ".claude/hooks/route-guard.mjs": [
+       "多功能需求",
+-      "语义路由契约」路由",
++      "语义映射清晰可按 ${routingOwner} 路由",
+       "命名即切换",
+       "nameMatchesIn"
+     ],

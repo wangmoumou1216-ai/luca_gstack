@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=W31|W32:",
+    "scripts/tri-system-eval/driver.test.mjs",
+    "scripts/tri-system-eval/integration.test.mjs"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 6.186,
+  "log": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-root-portability.tap",
+  "log_sha256": "ed0092effeba0e0c86c3b80f3de4a0003dda68c4641e10b6ed082bc605c76425",
+  "scope": "Only 11 affected tests after root packaging of the exact approved fixture and two path substitutions; no model/probe"
+}

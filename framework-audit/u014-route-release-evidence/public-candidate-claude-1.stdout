@@ -1,0 +1,5 @@
+[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。
+基于语义推断，最可能的 skill：
+  1. /brainstorm（参考依据：keyword matched but the prompt reads as a question *about* the term）
+语义映射清晰可按 CLAUDE.md K2/K4 路由；否则展示候选请用户确认或补充。
+[route-guard] 🧠 复杂度信号 3（规划意图）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md K2/K4 评估该命中的 skill/流程，并过 Plan Agent 5 条件。

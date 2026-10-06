@@ -1,0 +1,93 @@
+{
+  "steps": [
+    {
+      "step": "activation-patch-check",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/candidate.patch"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-health-before",
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {inspectHookHealth} from \"file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/codex-hook-health.mjs\";const r=inspectHookHealth(\"/Users/luca/Desktop/luca_gstack\");console.log(JSON.stringify(r));process.exitCode=r.ok?0:1;"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-window-readback",
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "\nimport {readActivation} from './scripts/model-route-host.mjs';\nconst ids = ['01a0f0fe-e6fa-7660-beb5-181b1a9b6444',\n  '01a0f062-3813-7c52-9ad6-61aacf054d1c',\n  '01a0ec5b-44d2-7042-a523-f634e1406260',\n  '01a0f05f-e05c-7693-b844-326c9eb66b75'];\nconst rows = ids.map(root_session_id => {\n  const s=readActivation({harness:'codex',root_session_id});\n  if(!s) throw new Error('Missing native activation: '+root_session_id);\n  return {root_session_id,activation_id:s.activation_id,critical_failure:s.critical_failure,\n    pending_preparations:Object.values(s.preparations||{}).filter(x=>x.status==='pending').map(x=>x.preparation_id),\n    pending_invocations:Object.values(s.invocations||{}).filter(x=>x.status==='pending').map(x=>({invocation_id:x.invocation_id,external_identity:x.external_identity}))};\n});\nconsole.log(JSON.stringify({observed_at:new Date().toISOString(),rows}));\nprocess.exitCode=rows.some(x=>x.critical_failure||x.pending_preparations.length||x.pending_invocations.length)?1:0;\n"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-patch-apply",
+      "argv": [
+        "git",
+        "apply",
+        "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/candidate.patch"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-source-install",
+      "argv": [
+        "node",
+        "scripts/install-codex-source-guard.mjs",
+        "--root",
+        "/Users/luca/Desktop/luca_gstack",
+        "--preserve-other-roots"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-trust-dry-run",
+      "argv": [
+        "node",
+        "scripts/codex-trust-hooks.mjs",
+        "--host-launch",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-trust-apply",
+      "argv": [
+        "node",
+        "scripts/codex-trust-hooks.mjs",
+        "--host-launch"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-trust-readback",
+      "argv": [
+        "node",
+        "scripts/codex-trust-hooks.mjs",
+        "--host-launch",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-health-after",
+      "argv": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {inspectHookHealth} from \"file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/codex-hook-health.mjs\";const r=inspectHookHealth(\"/Users/luca/Desktop/luca_gstack\");console.log(JSON.stringify(r));process.exitCode=r.ok?0:1;"
+      ],
+      "exit": 0
+    }
+  ]
+}

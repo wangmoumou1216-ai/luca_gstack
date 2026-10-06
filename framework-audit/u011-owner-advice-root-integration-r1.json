@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-02T20:30:57.869838+00:00",
+  "kind": "root integration of existing advice evidence, not final U011 or independent review",
+  "reports": [
+    {
+      "module": "routing",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-routing-evidence-limits.md",
+      "sha256": "e276a1ac7c82ecb1aee013e28f056622fdb31ea967e98b35922e584038ae7ef2",
+      "full_body_read": true,
+      "reading_evidence": [
+        "eadd25",
+        "fb50b4"
+      ],
+      "limitations": "Prior combined display truncation supplemented; source reports describe pre-W21/22/23 state and budgets, not current readiness."
+    },
+    {
+      "module": "orchestration",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-orchestration-evidence-limits.md",
+      "sha256": "7ada594caf3665953303c58740399e4f8fe369a90281fd6dd0e92575ef64d972",
+      "full_body_read": true,
+      "reading_evidence": [
+        "prior combined call original text",
+        "0c3ba3"
+      ],
+      "limitations": "Prior combined display truncation supplemented; source reports describe pre-W21/22/23 state and budgets, not current readiness."
+    },
+    {
+      "module": "context",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-context-evidence-limits.md",
+      "sha256": "0ab377349de7522b296ccaaab7686399bf72a1f98e40ee8d5f34abff5b73b371",
+      "full_body_read": true,
+      "reading_evidence": [
+        "464d4d",
+        "0c3ba3"
+      ],
+      "limitations": "Prior combined display truncation supplemented; source reports describe pre-W21/22/23 state and budgets, not current readiness."
+    }
+  ],
+  "agreed_scope": "All 14 USE IDs retain existing paths while replacement evidence is missing; three sets are one denominator, not 42 uses. No current net-value winner.",
+  "superseded_facts": [
+    "J05 driver permission omission and INVALID propagation now have W22/W23 offline fixes; independent J06 pending.",
+    "Preparation cap and consumed count are now23/23; review/advice8/29 includes J06; total31/52.",
+    "Current seven-file code version is R4, not R3.",
+    "Five applicable office active rules confirmed in two clean committed files omitted by frozen U002; gap diagnosis now concrete."
+  ],
+  "preserved_limits": [
+    "Formal development/hidden runs remain0; behavior5/144 and capability5/6.",
+    "No actual native command proof, complete B qualification, parent-child live accounting or paired outcome/cost evidence.",
+    "Offline assets are not production module implementation; migration and final commit/push remain unfinished."
+  ],
+  "authoritative_current_record": "u007-root-integration-r4.json",
+  "independent_review": "J06 /root/a_gate in progress; not yet adopted"
+}

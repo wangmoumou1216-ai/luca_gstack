@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-health-activation-helper-20260930-02",
+  "subject": {
+    "skill": "hook-health-activation-helper",
+    "topic": "Activation helper read-only preflight delta review",
+    "scene": "unknown",
+    "input_summary": "核对最小delta，独立运行默认成功与注入失败路径，两者文件SHA、mtime和集合均不变；其余四项既有保护逻辑未改。未运行apply。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/activate-reviewed.py"
+    ],
+    "duration": "lightweight"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": []
+  }
+}

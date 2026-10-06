@@ -1,0 +1,19 @@
+{
+  "status": "PREPARED_NOT_RELEASED",
+  "prepared_at": "2026-10-03T01:08:58.837012+00:00",
+  "test_data_root": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc",
+  "plan": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-verification.md",
+  "final_source_manifest": null,
+  "behavior_runs": 0,
+  "remaining_required_bindings": [
+    "final authority hashes",
+    "exact task/criteria per chain",
+    "verified actual runtime handles and independent assessment"
+  ],
+  "explicit_limits": [
+    "not automatic-loading proof",
+    "not B/S comparison",
+    "not cross-host parity",
+    "not P09"
+  ]
+}

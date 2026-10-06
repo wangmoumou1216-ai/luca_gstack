@@ -1,0 +1,68 @@
+{
+  "at": "2026-10-02T22:42:57.543910+00:00",
+  "status": "BOUND_DRAFT_ONLY_NOT_REGISTERED_NOT_RUN",
+  "root_integration": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r7.json",
+    "sha256": "a14cbecd66c16f5b63b7044be40898d28d974e7d50b87a09e98fffdc7fb46da5"
+  },
+  "originals": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/p07-pending/u007-p07-preparation.json",
+      "sha256": "ce2bbf04c3b9f9dd690fc2aa9f6c4e49ed4c94c33d7fbd8dfb7307f34e26f6f4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/p07-pending/u007-p07-case-draft.json",
+      "sha256": "9cfa23dee88cd24eb6abfdfa1f56e31273677ca136008bd86328eb361d8e85ec"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/p07-pending/u007-p07-registration-draft.json",
+      "sha256": "e65cbb4dd05fa10202226eab59f37f7459270997a0b9585b8575d1a9dc1ac6e0"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/p07-pending/u007-p07-manifest-draft.json",
+      "sha256": "c897c8dc8485e5ac0708faf72a432158a2eac3d44411d3b0fee1f18193b06e55"
+    }
+  ],
+  "finals": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-preparation.json",
+      "sha256": "507b8579e5ae5475be47afdafd859568848d73f13b573965b151035c20e5b3ae"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-case-draft.json",
+      "sha256": "9cfa23dee88cd24eb6abfdfa1f56e31273677ca136008bd86328eb361d8e85ec"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-registration-draft.json",
+      "sha256": "3cc586e237606a72108bcbfb2f7c8d56fe8f519f881d53d367dc603487201347"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-manifest-draft.json",
+      "sha256": "0730b14fcdb31af65f11552eff8d9b76a0f9a438f615b025233634935dcfad8a"
+    }
+  ],
+  "changed_paths": {
+    "u007-p07-preparation.json": [
+      "/draft_files/1/sha256",
+      "/draft_files/2/sha256",
+      "/final_driver_identity/bytes",
+      "/final_driver_identity/path",
+      "/final_driver_identity/reason",
+      "/final_driver_identity/root_integration",
+      "/final_driver_identity/sha256",
+      "/final_driver_identity/status",
+      "/root_integration"
+    ],
+    "u007-p07-case-draft.json": [],
+    "u007-p07-registration-draft.json": [
+      "/bindings/driver_sha256"
+    ],
+    "u007-p07-manifest-draft.json": [
+      "/runtime_release/bindings/driver_sha256",
+      "/runtime_release/registration/sha256",
+      "/runtime_release/status"
+    ]
+  },
+  "case_unchanged": true,
+  "note": "Mechanical root binding only; no new runtime or offline-check claim. Original W27 pending check remains valid only for archived original bytes."
+}

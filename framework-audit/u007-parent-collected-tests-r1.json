@@ -1,0 +1,31 @@
+{
+  "status": "OFFLINE_MODULE_TESTS_PASS_NOT_NATIVE_OR_INTEGRATION_ACCEPTANCE",
+  "recorded_at": "2026-10-02T18:18:45.904630+00:00",
+  "branch": "codex/tri-system-evaluation",
+  "cwd": "/Users/luca/.codex/worktrees/f351/luca_gstack",
+  "command": "U007_PUBLIC_CASES=/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/developer-cases.json node --test scripts/tri-system-eval/conditions.test.mjs scripts/tri-system-eval/case-protocol.test.mjs scripts/tri-system-eval/driver.test.mjs",
+  "exit_code": 0,
+  "tests": 60,
+  "pass": 60,
+  "fail": 0,
+  "skipped": 0,
+  "duration_ms": 8123.171417,
+  "tool_receipts": [
+    "049181",
+    "a44857",
+    "dfb1a6"
+  ],
+  "source_sha256": {
+    "conditions.mjs": "0337ed8b1d78805de5b2a3658623de00db87cd5c29aac29a3aa760c1dec63dc4",
+    "conditions.test.mjs": "9146af4df873a5a29028305a3a313d231e10ebed6b7c3cd9509bd738b5d4f1cd",
+    "driver.mjs": "f38bbed89b79f345a5a12ee7c4ee27cff0bbbc1a313e428a60d0b1ac77b3fe94",
+    "driver.test.mjs": "8f44d23052274f70933d0138675ed5210620b244e1e20f85363fc6e8c300a4c4",
+    "case-protocol.mjs": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+    "case-protocol.test.mjs": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af"
+  },
+  "limits": [
+    "Existing driver tests still use upstream stubs; W16 now tests real modules together.",
+    "No real model/case run or native baseline readiness.",
+    "Unit tests are not independent review or proof of net benefit."
+  ]
+}

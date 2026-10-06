@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "total": 128,
+  "source_integrity": {
+    "before": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127",
+      "idea": "9edf7bb83eb477124df6e1f4efbfb4b403adbff4316c674b8924e4d89ccc6114",
+      "challenge": "b30c4664b232c84e73a50caef74950472fa0990736117c2da8352048ecefa0c1",
+      "retro": "04df3f96de6a790b7ac1e8790684247d95be43798dfd971fb2206222f6a46ee6",
+      "figma-demo": "e8a8253a0b829e56db453a803ede287f7dbfd9085dc70fbf3be84229976fb1f9",
+      "evals": "62c89a27ac46af68a5cf59bf177e076b88df39cf39a4edc0f8237f39a326e9d6",
+      "open-design": "95c4709b1f79e192e953e8bb9bbdd7216449d5820d9894a481c4e0939fe4f738",
+      "html-prototype": "2dab4f3962d09ee4b802a61a07dece538df39df780dc9c5bcfd263b93bc7e878",
+      "redteam": "4b1b6554f5e1427a1cb41708bde04658a3d93ef40e706c5a7f94214b82a97420",
+      "ux-audit": "fdc74345da33fdf3b8c2e8b763b4fc7ea5a1a2139fb93d1d54d1b9171a65f792"
+    },
+    "after": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127",
+      "idea": "9edf7bb83eb477124df6e1f4efbfb4b403adbff4316c674b8924e4d89ccc6114",
+      "challenge": "b30c4664b232c84e73a50caef74950472fa0990736117c2da8352048ecefa0c1",
+      "retro": "04df3f96de6a790b7ac1e8790684247d95be43798dfd971fb2206222f6a46ee6",
+      "figma-demo": "e8a8253a0b829e56db453a803ede287f7dbfd9085dc70fbf3be84229976fb1f9",
+      "evals": "62c89a27ac46af68a5cf59bf177e076b88df39cf39a4edc0f8237f39a326e9d6",
+      "open-design": "95c4709b1f79e192e953e8bb9bbdd7216449d5820d9894a481c4e0939fe4f738",
+      "html-prototype": "2dab4f3962d09ee4b802a61a07dece538df39df780dc9c5bcfd263b93bc7e878",
+      "redteam": "4b1b6554f5e1427a1cb41708bde04658a3d93ef40e706c5a7f94214b82a97420",
+      "ux-audit": "fdc74345da33fdf3b8c2e8b763b4fc7ea5a1a2139fb93d1d54d1b9171a65f792"
+    },
+    "drift": false
+  },
+  "caller_failure_mutation": "0/9 RED \u2192 9/9 restored",
+  "A2": "both actual isolated suites PASS",
+  "evidence_sha256": {
+    "parent-current-green.json": "94df8ca4004d371d66e0c2f6cb91e9a09521c04c3b36afdbaa17327e757a1bef",
+    "proof-summary.json": "b8160ed2feb981e5aeecbbb58b96dd0aaa0a955efd1995e644b5481d1b21eb93",
+    "project-selection.json": "b68c91b7bfca87f42dd6c013ccd14c3c91507c6afd814e4fd4cd2864b06b9e53",
+    "project-gate-mutations.json": "0881578240ac1371f97dcf05c0fd4e51ed5924dc0cc891be3533bd2c07ed5cc9"
+  },
+  "actual_fixtures_removed": true,
+  "actual_runs": 128,
+  "retained_evidence_readback_sha256": "94df8ca4004d371d66e0c2f6cb91e9a09521c04c3b36afdbaa17327e757a1bef"
+}

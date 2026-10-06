@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "kind": "focused-ci-shell-commit",
+  "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "parent_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+  "changed_files": [
+    ".github/workflows/ci.yml"
+  ],
+  "delta": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-DEPENDENCY-RESUME-01.json",
+    "sha256": "e93faaa4b19f3e5f3503adb57ebac24338cfe805f0c325892d7c165c01ecbf51"
+  },
+  "precommit": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-shell-precommit-resume01.log",
+    "sha256": "a9f965748aa8b2316e1ff10a9ab54869753da1827c58563b410b37ede8c70e03"
+  },
+  "at": "2026-10-01T03:27:06.461820+00:00"
+}

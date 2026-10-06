@@ -1,0 +1,33 @@
+{
+  "prepared_at": "2026-10-02T22:10:23.843336+00:00",
+  "scope": "metadata only; initialize/config/read, no thread or turn",
+  "argv": [
+    "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+    "app-server",
+    "--listen",
+    "stdio://",
+    "-c",
+    "allow_login_shell=false",
+    "--disable",
+    "shell_snapshot"
+  ],
+  "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-launch-metadata-4cktma72",
+  "codex_sha256": "112fae7a5a1223e673c8a1791d32338f37df8b527ff1159bb8adac6c4dbf1b4b",
+  "model_runs": 0,
+  "command_probes": 0,
+  "global_config_writes": 0,
+  "effective_projection": {
+    "allow_login_shell": false,
+    "features": {
+      "shell_snapshot": false
+    }
+  },
+  "metadata_match": true,
+  "limitations": [
+    "Config response only; not actual command execution or permission-boundary proof.",
+    "No shell executable selection or underlying zsh-fork behavior established."
+  ],
+  "transport_exit": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

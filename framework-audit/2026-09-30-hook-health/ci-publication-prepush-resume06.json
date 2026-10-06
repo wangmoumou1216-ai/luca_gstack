@@ -1,0 +1,22 @@
+{
+  "status": "PREPUSH_PASS",
+  "at": "2026-10-01T03:57:37.660685+00:00",
+  "payload_sha256": "b1fde14557047369c5389e72ba5813987e507135d5814a1564e0bafe7b9d7652",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-publication-review-resume06.json",
+    "sha256": "cbe180034f24eb4285131cfc02e239460e6dc1d2c2aebe125ef0f8a85fe5d523"
+  },
+  "native_proof": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-publication-review-native-resume06.json",
+    "sha256": "a748b9aa901b2193ca75fd833caaf6538a211cba16c6d882152832f676f52c58"
+  },
+  "source_count": 17,
+  "preservation": "PASS preservation baseline 02; M/C/P HEAD, branch, index, status, dirty tuples match; public controlled-change inactive; only exact audit directory excluded\n",
+  "remote_sha": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+  "argv": [
+    "git",
+    "push",
+    "origin",
+    "d6acaf21e89e4c662289c716f7dcd4d3102751e0:refs/heads/main"
+  ]
+}

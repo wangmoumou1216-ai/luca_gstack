@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "git",
+    "commit",
+    "-F",
+    "/Users/luca/Desktop/luca_gstack/framework-audit/u012-commit-message.txt"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/f351/luca_gstack",
+  "started_at": "2026-10-03T02:26:36.969853+00:00",
+  "ended_at": "2026-10-03T02:26:38.689444+00:00",
+  "exit_code": 1,
+  "head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "log": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-normal-commit.log",
+  "fast_commit_removed": true
+}

@@ -1,0 +1,85 @@
+--- /Users/luca/.codex/worktrees/8812/luca_gstack/scripts/tri-system-eval/conditions.mjs
++++ /Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs
+@@ -215,7 +215,11 @@
+     if (owners.has(name) && owners.get(name) !== ownerRoot) fail('SKILL_ALIAS_COLLISION', name);
+     owners.set(name, ownerRoot);
+   }
+-  return [...owners].sort(([a], [b]) => a < b ? -1 : 1).map(([name, ownerRoot]) => ({
++  // Native discovery walks nested owners. Copy an owner tree only once: copying
++  // both office and office/auto made the same skill appear twice in skills/list.
++  return [...owners].filter(([, ownerRoot]) => ![...owners.values()].some(other =>
++    other !== ownerRoot && ownerRoot.startsWith(other + '/')))
++    .sort(([a], [b]) => a < b ? -1 : 1).map(([name, ownerRoot]) => ({
+     name, ownerRoot, path: `.agents/skills/${name}`,
+     files: files.filter(file => file.record.path.startsWith(ownerRoot + '/')),
+   }));
+--- /Users/luca/.codex/worktrees/8812/luca_gstack/scripts/tri-system-eval/conditions.test.mjs
++++ /Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs
+@@ -269,9 +269,13 @@
+     assert.equal(row.copyBytes, row.sourceBytes);
+     assert.equal(row.patch.originalAliasRead, false);
+   }
+-  assert.equal(readFileSync(join(b.root, '.agents/skills/sample/references/contract.md'), 'utf8'), 'original contract bytes\n');
+-  assert.ok(b.allowedReadPaths.includes('.agents/skills/sample/SKILL.md'));
+-  assert.ok(!b.allowedReadPaths.includes('.agents/skills/sample/helper.py'));
++  assert.equal(readFileSync(join(b.root, '.agents/skills/office/sample/references/contract.md'), 'utf8'), 'original contract bytes\n');
++  assert.ok(b.allowedReadPaths.includes('.agents/skills/office/sample/SKILL.md'));
++  assert.ok(!b.allowedReadPaths.includes('.agents/skills/office/sample/helper.py'));
++  assert.equal(existsSync(join(b.root, '.agents/skills/sample')), false);
++  const discoveredOwners = generated.filter(row => row.path.endsWith('/SKILL.md'));
++  assert.equal(new Set(discoveredOwners.map(row => row.source)).size, discoveredOwners.length,
++    'nested owner bodies must occur exactly once in the native discovery tree');
+   for (const path of ['.codex/hooks.json', '.codex/config.toml', '.agents/skills/foreign', 'memory/scripts/not-frozen-helper.py']) {
+     assert.equal(existsSync(join(b.root, path)), false);
+   }
+@@ -307,7 +311,7 @@
+   f.add('.claude/skills/office/magicpath/SKILL.md', 'frozen office wrapper\n'); f.save();
+   const result = await f.build('B');
+   assert.ok(result.complexity.omittedLinks.some(link => link.path === '.claude/skills/magicpath'));
+-  assert.equal(readFileSync(join(result.root, '.agents/skills/magicpath/SKILL.md'), 'utf8'), 'frozen office wrapper\n');
++  assert.equal(readFileSync(join(result.root, '.agents/skills/office/magicpath/SKILL.md'), 'utf8'), 'frozen office wrapper\n');
+   assert.equal(existsSync(join(result.root, '.claude/skills/magicpath')), false);
+   assert.ok(result.sourceBindings.every(row => !row.source.includes('/.agents/')));
+ });
+--- /Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.mjs
++++ /Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs
+@@ -519,7 +519,7 @@
+       const initialized = await bounded(rpc('initialize', {clientInfo: {name: 'tri_system_eval', version: '1'}, capabilities: {experimentalApi: true}}));
+       report.server_identity = initialized;
+       if (permissions?.proof) {
+-        const version = initialized.userAgent?.match(/(?:codex_cli_rs|codex)\/(\S+)/)?.[1];
++        const version = initialized.userAgent?.match(/^(?:tri_system_eval|codex_cli_rs|codex)\/(\S+)/)?.[1];
+         check(initialized.userAgent === permissions.proof.codex_user_agent && version === permissions.proof.codex_version,
+           'NATIVE_CODEX_VERSION_MISMATCH');
+       }
+--- /Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.test.mjs
++++ /Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs
+@@ -110,7 +110,9 @@
+       }
+       return;
+     }
+-    if (m.method === 'initialize') send({id: m.id, result: {userAgent: mode === 'wrong-version' ? 'codex_cli_rs/9.9.9' : 'codex_cli_rs/0.0.0-offline'}});
++    if (m.method === 'initialize') send({id: m.id, result: {userAgent: mode === 'actual-client-identity'
++      ? 'tri_system_eval/0.160.0 (Mac OS 26.7.0; arm64) dumb (tri_system_eval; 1)'
++      : mode === 'wrong-version' ? 'codex_cli_rs/9.9.9' : 'codex_cli_rs/0.0.0-offline'}});
+     if (m.method === 'thread/start') {
+       currentThread = `thread-${++threads}`;
+       send({id: m.id, result: {thread: {id: currentThread}, model: mode === 'wrong-model' ? 'foreign' : m.params.model,
+@@ -495,6 +497,17 @@
+     g.record.native_command_permissions.profile.network.enabled = true; g.saveRegistration();
+     await assert.rejects(g.run(), /PROBE_REGISTRATION_MISMATCH:native_command_permissions/); assert.equal(g.launches(), 0);
+   });
++  test('actual initialize client-name prefix accepts matching version and still rejects a changed version', async t => {
++    for (const version of ['0.160.0', '9.9.9']) {
++      const f = permissionFixture(t, 'actual-client-identity');
++      f.proof.codex_version = version;
++      f.proof.codex_user_agent = 'tri_system_eval/0.160.0 (Mac OS 26.7.0; arm64) dumb (tri_system_eval; 1)';
++      f.savePermissions();
++      const result = await f.run();
++      assert.equal(result.status, version === '0.160.0' ? 'COMPLETED' : 'INVALID_RUN');
++      if (version !== '0.160.0') assert.match(JSON.stringify(result.errors), /NATIVE_CODEX_VERSION_MISMATCH/);
++    }
++  });
+   test('permission profile rejects extensions, writes, broad roots, mismatched sets and noncanonical or symlink paths before dispatch', async t => {
+     const changes = [
+       f => { f.native.profile.extends = ':workspace'; },

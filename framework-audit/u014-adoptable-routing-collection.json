@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-03T08:15:14.357959+00:00",
+  "root": "/Users/luca/.codex/worktrees/tri-system-adoptable-fixes/luca_gstack",
+  "base": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "patch": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/minimal.patch",
+  "patch_sha256": "44c14615e876f8f32274492ab9875964cff7a0089bc323a7204bfcc490ec2aab",
+  "files": [
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "before": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c",
+      "after": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "before": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082",
+      "after": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "before": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f",
+      "after": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317"
+    }
+  ],
+  "status": "collected, independent final acceptance pending"
+}

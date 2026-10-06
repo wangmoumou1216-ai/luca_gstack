@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-release-refutation-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing-release-refutation",
+    "scene": "unknown",
+    "input_summary": "独立核验冻结13文件方案、公共角色边界、NO_PIN、冷审、关键准备与失败持久阻断。以源码核对、SHA重算和冻结代码纯内存执行反证；不修改文件或落账。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 6,
+    "total": 7,
+    "findings": [
+      "BLOCKING C6: critical preparation failure plus latch MODEL_ROUTE_STATE_BUSY leaves pending intent; subsequent SessionStart(source=compact) with changed root model calls updateRootAnchor and invalidates the intent without changing activation or setting critical_failure. Frozen native handlers/resolver/host memory probe then returns allow for both native spawn and runner entry. Locations: scripts/model-route-host.mjs:252 and .codex/model-route-hook.mjs:158. Preserve unresolved critical obligations across root-generation changes until a new activation.",
+      "WARN: This review used read-only inspection and memory-only execution, not filesystem durability tests or the separately assigned runtime suite; it does not establish OS failure resilience or exhaustive internal reroute observation."
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-e3-plan-v1",
+  "subject": {
+    "skill": "workflow-solution-review-v1",
+    "topic": "design-workflow-review",
+    "scene": "unknown",
+    "input_summary": "Independent adversarial review of frozen repair plan and finding dispositions against six criteria; 98 manifest hashes and source HEAD verified.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/PLAN.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/FINDINGS.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 5,
+    "total": 6,
+    "findings": [
+      "C3 MAJOR PLAN:56: draft-review admission, immutable subject identity and Oracle XML/envelope response contract are undefined; specify and test actual draft entry.",
+      "C3 MAJOR PLAN:58: BLOCKER/MAJOR guard is not mapped to Oracle critical/high severities; explicitly preserve blocking semantics and test persistent findings."
+    ]
+  }
+}

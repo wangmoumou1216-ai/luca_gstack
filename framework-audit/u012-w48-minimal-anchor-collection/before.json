@@ -1,0 +1,224 @@
+{
+  "_comment": "单真值源 parity 自检：保留关键能力 anchor tripwire；同时从 skill frontmatter + authority pointer 派生 Claude/Codex projection 语义。默认同源 symlink，显式 external delegation 仅存 reason/pointer/digest，不复制 obligation catalog。scripts/check-capability-parity.mjs；verify 门 S18/S40。",
+  "files": {
+    "CLAUDE.md": [
+      "<!-- K1:START -->",
+      "<!-- K10:END -->",
+      "agent-context-manifest.json",
+      "generated/skill-catalog.md",
+      "STATIC_FALLBACK:START"
+    ],
+    ".claude/skills/office/code-recon/SKILL.md": [
+      "Brownfield",
+      "native-first"
+    ],
+    "scripts/luca-sidebar.sh": [
+      "sidebar-spool",
+      "result.md"
+    ],
+    "scripts/luca-open.sh": [
+      "open-spool",
+      "--url"
+    ],
+    ".claude/agents/plan-agent.md": [
+      "块 1.6 — ASSERT/TEST-NNN 反向覆盖",
+      "行为级断言规则",
+      "model_tier",
+      "探索型长任务词汇",
+      "块 0 — 前提门",
+      "增量重规划（Replan Protocol",
+      "块 5 — 出门自检",
+      "open-design"
+    ],
+    ".claude/agents/orchestrator.md": [
+      "Step 3b 【合同回验",
+      "模型路由（强制传参",
+      "correction-attribution",
+      "不注册为 subagent",
+      "增量重规划"
+    ],
+    ".claude/agents/preflight-agent.md": [
+      "open-design",
+      "无专属检查行"
+    ],
+    ".claude/agents/quality-gate.md": [
+      "open-design",
+      "NEEDS_CONTEXT",
+      "record_eval"
+    ],
+    ".claude/agents/work-agent-template.md": [
+      "NEEDS_CONTEXT",
+      "不注册为 subagent"
+    ],
+    "scripts/check-agent-contracts.mjs": [
+      "OD-first",
+      "状态枚举",
+      "双重身份"
+    ],
+    ".claude/skill-os/extraction-bar.md": [
+      "correction-attribution"
+    ],
+    ".claude/skill-os/correction-attribution.md": [
+      "纠正归因阶梯",
+      "还会复现吗",
+      "L4 框架层"
+    ],
+    ".claude/skill-os/optional-workflow-graph.yaml": [
+      "execution_to_acceptance"
+    ],
+    ".claude/skill-os/model-routing.yaml": [
+      "core-execution",
+      "fable_whitelist",
+      "new_scenario_protocol",
+      "native_precedence",
+      "agents_no_pin"
+    ],
+    "memory/scripts/daily_governance.py": [
+      "check_loop_health",
+      "AUTHORITATIVE_MEMORY_ROOT",
+      "新场景待评估档位",
+      "Skill 评估消费",
+      "待批准晋升",
+      "GOVERNANCE_CALLER_ROOT",
+      "_write_marker_result",
+      "检索度量",
+      "check_upstream_drift"
+    ],
+    ".claude/skill-os/skill-authoring.md": [
+      "根德性：Predictability",
+      "六个失败模式",
+      "Leading word",
+      "修剪纪律"
+    ],
+    ".claude/skills/office/tech-spec/SKILL.md": [
+      "seam 前置步"
+    ],
+    ".claude/skills/office/quick-research/SKILL.md": [
+      "Defining constraint",
+      "primary source",
+      "升降级链"
+    ],
+    ".claude/hooks/route-guard.mjs": [
+      "多功能需求",
+      "语义路由契约」路由",
+      "命名即切换",
+      "nameMatchesIn"
+    ],
+    ".claude/hooks/project-scope-guard.mjs": [
+      "会话级项目隔离",
+      "updatedInput",
+      "已知误伤"
+    ],
+    ".claude/hooks/post-edit.mjs": [
+      "活动信号",
+      "并发隔离"
+    ],
+    ".claude/hooks/session-end.mjs": [
+      ".session-project-",
+      "fail-open"
+    ],
+    "scripts/test-hooks.mjs": [
+      "SETTINGS-002",
+      "STICKY-008c",
+      "SYNC-PIN-001"
+    ],
+    "memory/scripts/eval_routing.py": [
+      "keyword-layer",
+      "回归门不允许真空通过"
+    ],
+    "memory/evals/routing/fixtures.jsonl": [
+      "kw-multifeature-1"
+    ],
+    "scripts/verify.sh": [
+      "S20",
+      "S21",
+      "S22"
+    ],
+    "scripts/check-evolution-adjudication.mjs": [
+      "default-deny",
+      "权重分档",
+      "redteam null 兜底"
+    ],
+    ".claude/skill-os/routing-chain-check.md": [
+      "研究前置",
+      "OD-first",
+      "Ask 纪律",
+      "评审请求"
+    ],
+    ".claude/hooks/session-sync.mjs": [
+      "增量重拦",
+      "SESSION_SYNC_REARM",
+      "pin 优先",
+      "MEMORY_ROOT 仓"
+    ],
+    ".claude/workflows/framework-evolution-scout.js": [
+      "default-deny",
+      "GATE_WEIGHTS",
+      "prior_opportunities",
+      "AdoptionReview",
+      "addressed_recheck"
+    ],
+    ".claude/workflows/external-skill-scout.js": [
+      "FALLBACK_EXISTING",
+      "load:existing",
+      "default-deny"
+    ],
+    "scripts/evolution-bookkeep.mjs": [
+      "zero_yield_streak",
+      "bookkeep"
+    ],
+    ".claude/skill-os/evolution/BENCHMARK-RUNBOOK.md": [
+      "演进模式 2",
+      "GATE 逐项裁决",
+      "窗口复审",
+      "基线推进"
+    ],
+    ".claude/skill-os/evolution/benchmark-registry.yaml": [
+      "last_review",
+      "review_interval_days"
+    ],
+    ".claude/skill-os/evolution/FUSION-RUNBOOK.md": [
+      "FM-10",
+      "FM-11",
+      "installed-pins.yaml"
+    ],
+    ".claude/hooks/session-restore.mjs": [
+      "evolution-bookkeep.mjs",
+      "prior_opportunities_to_adjudicate",
+      "GOVERNANCE_CALLER_ROOT",
+      "认领后未完成"
+    ],
+    "memory/scripts/consolidate_memory.py": [
+      "reject_candidates",
+      "approved_stable",
+      "畸形行"
+    ],
+    "memory/scripts/search_memory.py": [
+      "_CJK_RE",
+      "MEMORY_SEARCH_SOURCE",
+      "keyword_score"
+    ],
+    "memory/scripts/review_candidates.py": [
+      "可补救状态"
+    ],
+    "memory/scripts/record_eval.py": [
+      "UTC 对齐全链"
+    ],
+    "memory/tests/test_memory_system.py": [
+      "MemoryReviewRound2026_07_15",
+      "digest_stale_commands_pass_target_argparse"
+    ],
+    ".claude/skill-os/external-skills/installed-pins.yaml": [
+      "watch_sha",
+      "superpowers",
+      "ack_sha"
+    ],
+    "AGENTS.md": [
+      "<!-- K1:START -->",
+      "<!-- K10:END -->",
+      "agent-context-manifest.json",
+      "generated/skill-catalog.md",
+      "STATIC_FALLBACK:START"
+    ]
+  }
+}

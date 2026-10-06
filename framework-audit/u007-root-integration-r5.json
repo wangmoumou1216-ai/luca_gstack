@@ -1,0 +1,107 @@
+{
+  "prepared_at": "2026-10-02T21:07:48.718744+00:00",
+  "status": "W24_COLLECTED_OFFLINE_VERIFIED_NOT_RUNTIME_RELEASE",
+  "files": {
+    "case-protocol.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    "case-protocol.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    "conditions.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "bytes": 24895
+    },
+    "conditions.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "bytes": 22755
+    },
+    "driver.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "ce5372b72266a8c99edd2c1b0a91f555cf34e99e04033ff7918a9d022550659f",
+      "bytes": 44384
+    },
+    "driver.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "9f0a32d28fb937224ab6aed5a00a31eb53f4d7ba031969c92f509af359bb97f2",
+      "bytes": 50143
+    },
+    "integration.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "fa583ca373a60d32e7172baec7690402e67e7e9d4ae3720a13a371dacabd3b57",
+      "bytes": 32357
+    }
+  },
+  "baseline_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r4",
+  "collection_record": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-w24-root-collection.json",
+    "sha256": "200f8df062c3e4f1270e7ac71232b75a27288c93c0f9048232c215ce5108d437"
+  },
+  "source_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+    "sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136",
+    "prior_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json",
+    "prior_sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9",
+    "unchanged_records": 541,
+    "added_records": [
+      {
+        "path": ".claude/observability/scripts/get_rules.py",
+        "kind": "file",
+        "bytes": 2195,
+        "sha256": "db87c92b97f6945c54846297eba5e57d0e373eb5c3237ec4b9fc1a37e5a3d020"
+      },
+      {
+        "path": ".claude/observability/rules.yaml",
+        "kind": "file",
+        "bytes": 9407,
+        "sha256": "98ff8956517f1bb9f1d6f093674ba68276f1c5ba9dd26e6310cb18b25359fbc2"
+      }
+    ]
+  },
+  "root_tests": [
+    {
+      "command": "node --test --test-name-pattern=W24 scripts/tri-system-eval/conditions.test.mjs",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "duration_ms": 694.053083,
+      "evidence_chunks": [
+        "112fa3"
+      ]
+    },
+    {
+      "command": "U007_SOURCE_MANIFEST=/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json node --test scripts/tri-system-eval/integration.test.mjs",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "duration_ms": 23642.704,
+      "evidence_chunks": [
+        "04fd73",
+        "7e71a3"
+      ],
+      "raw_output_limit": "Final displayed middle was truncated; TAP totals and process exit are visible; not a claim of full raw-log read."
+    }
+  ],
+  "limits": [
+    "Offline modules/fake transport are not native/model/quality evidence.",
+    "W24 proves unsandboxed source/B/S rule parity; native Python/PyYAML and actual rule consumption remain unverified.",
+    "P06 is not registered or executed. Formal dev/hidden 0; production modules unchanged."
+  ],
+  "resources": {
+    "work": 24,
+    "work_cap": 24,
+    "review": 8,
+    "review_cap": 28,
+    "behavior": 5,
+    "capability": 5,
+    "capability_cap": 6
+  }
+}

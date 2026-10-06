@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/adoption_value_audit",
+  "thread_id": "01a1007d-ad0a-7df1-98ca-73a8c40f47e5",
+  "source_rollout": "/Users/luca/.codex/sessions/2026/10/03/rollout-2026-10-03T14-39-58-01a1007d-ad0a-7df1-98ca-73a8c40f47e5.jsonl",
+  "native_final_text_sha256": "152e073fa7ef4668b93dc55e145b28a02d15816409baf485d3557c86e4357bd7",
+  "independent_non_author": true,
+  "reused_context_not_blind": true,
+  "recorded_at": "2026-10-03T09:34:43.895430+00:00"
+}

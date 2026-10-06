@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "deepresearch",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "research_topic"
+        ],
+        "optional": [
+          "scope_constraints"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "idea_artifact",
+          "prd_artifact"
+        ]
+      }
+    },
+    "quality_gates": [
+      "source_traceability",
+      "search_log",
+      "consensus_matrix"
+    ]
+  }
+}

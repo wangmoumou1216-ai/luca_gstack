@@ -1,0 +1,13 @@
+{
+  "id": "N-A",
+  "kind": "limited_desktop_explicit_rule_consumption",
+  "status": "released_pending_dispatch",
+  "actor_thread": "01a0fcca-6e8c-7833-ba45-f39e6992f11b",
+  "source_manifest": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/manifest.json",
+  "source_manifest_sha256": "9bef444129de360f7388c41bc78f9139245d72207e20a5fb5c249f349f4221b1",
+  "fixture_root": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+  "pool": "reserved_migration",
+  "is_capability_probe": false,
+  "limits": "controlled process dependencies; not two native agents, full framework/B/S or pristine harness proof",
+  "recorded_at": "2026-10-03T01:39:22.061425+00:00"
+}

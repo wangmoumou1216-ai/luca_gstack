@@ -1,0 +1,35 @@
+{
+  "status": "DONE",
+  "scope": "approved U001a-U006 with user core verification override",
+  "plan_sha256": "6e2ed3c76fb939468088800f3d82bb0925157be282fd2f7b573855f913f63f3a",
+  "source_files": 77,
+  "feature_head": "a7a0d535f25d82702083c78718d2c619ddfc778a",
+  "merge_commit": "faaab6aa418019d725648ac1fc8cf9c8da9cc8c1",
+  "pr": "https://github.com/wangmoumou1216-ai/luca_gstack/pull/26",
+  "precommit": {
+    "pass": 121,
+    "fail": 0,
+    "warn": 0,
+    "delegated": 1
+  },
+  "independent_reviews": {
+    "full_standards": "6/6 PASS",
+    "full_spec": "9/9 PASS",
+    "ci_delta_standards": "5/5 PASS",
+    "ci_delta_spec": "5/5 PASS"
+  },
+  "isolated_actual_commit": "PASS",
+  "remote_exact_head_ci": "6/6 SUCCESS including Required Checks",
+  "ci_run": 37437000226,
+  "desktop_ff_only": "PASS",
+  "protected_user_files": "unchanged",
+  "excluded_claims": [
+    "native CONV/HITL expansion",
+    "live OD",
+    "Claude native runs",
+    "draft fixture final PRD approval"
+  ],
+  "evidence_destination": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-publication-pr26",
+  "cleanup": "both task-created managed worktrees confirmed archived via list_artifacts",
+  "time": "2026-10-06T08:53:02.764575+00:00"
+}

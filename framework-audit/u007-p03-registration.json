@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "u007-capability-probe",
+  "status": "REGISTERED",
+  "issued_by": "root-coordinator",
+  "probe_id": "P03",
+  "run_id": "u007-p03-native-appserver-r1",
+  "run": {
+    "case_id": "P03-native-command-boundary",
+    "condition_id": "T",
+    "trial": 1
+  },
+  "bindings": {
+    "driver_sha256": "f766babd64996cb3b34e3856dfe0167e22c00a38778666f8697b396f128b12f1",
+    "conditions_sha256": "0337ed8b1d78805de5b2a3658623de00db87cd5c29aac29a3aa760c1dec63dc4",
+    "case_protocol_sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+    "cases_sha256": "31319c7f7b4ab528bbb224a56648ec65f8f49193c30e700b49cb4fd6012b36d6",
+    "source_manifest_sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9",
+    "condition_material_sha256": "66bee6476856dc260e2425e8b4785522db699e066d49fa8fd6d3f7ffba77d2e5"
+  },
+  "model": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "resources": {
+    "wall_seconds": 300,
+    "tool_actions": 20,
+    "observed_tokens": 40000
+  },
+  "entry": {
+    "transport": "codex-app-server-stdio"
+  },
+  "native_command_permissions": {
+    "profile_id": "u007-native-read-boundary",
+    "profile": {
+      "filesystem": {
+        ":root": "deny",
+        ":minimal": "read",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf/runs/u007-p03-native-appserver-r1/condition": "read",
+        "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14": "read",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf/probe-runtime": "read"
+      },
+      "network": {
+        "enabled": false
+      }
+    },
+    "runtime_read_roots": [
+      "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14",
+      "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf/probe-runtime"
+    ],
+    "effective_probe": null
+  },
+  "case_file": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p03-case.json",
+    "sha256": "31319c7f7b4ab528bbb224a56648ec65f8f49193c30e700b49cb4fd6012b36d6"
+  },
+  "source_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json",
+    "sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9"
+  },
+  "assertions": [
+    {
+      "id": "native-command",
+      "statement": "Actual app-server command executes the exact frozen synthetic script and retains raw output/exit."
+    },
+    {
+      "id": "effective-profile",
+      "statement": "Actual thread response names the requested profile, with no inheritance and no network access."
+    },
+    {
+      "id": "boundary",
+      "statement": "Allowed marker read succeeds; outside read, symlink escape, direct case/outside write and child read are denied."
+    },
+    {
+      "id": "network",
+      "statement": "Connect to a coordinator-reserved non-listening loopback port fails with a permission error, not merely connection refused."
+    },
+    {
+      "id": "dynamic",
+      "statement": "Actual dynamic case tools deliver material and persist the command result under protocol control."
+    },
+    {
+      "id": "parent-witness",
+      "statement": "Coordinator confirms denied marker unchanged and forbidden writes absent; all failures remain recorded."
+    }
+  ],
+  "stop_conditions": [
+    "One attempt only; driver whole-chain wall/action/token limits apply; no retry or permission expansion.",
+    "On driver exit or outer 325-second timeout retain stdout/stderr/RPC/result and actual cleanup."
+  ],
+  "pool": "additional-capability",
+  "capability_probe_limit": 6,
+  "registered_at": "2026-10-02T19:01:57.961546+00:00",
+  "instance_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf",
+  "probe_runtime_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf/probe-runtime",
+  "reserved_loopback_port": 50674,
+  "runtime_note": "The second exact read-only runtime root contains only the owned probe executable and a symlink to the owned denied marker. No other project/user data is exposed.",
+  "model_selection": "Resolve current user-selected CLI model/effort without changing the global config. Compare actual thread response; no provider-adoption claim beyond visible metadata."
+}

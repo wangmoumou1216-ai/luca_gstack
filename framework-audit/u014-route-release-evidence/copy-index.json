@@ -1,0 +1,680 @@
+[
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-red.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-red.stdout",
+    "sha256": "d7aac991b4303acb142e161b7eb0f667f28497760d7e571a69f9dbbc2328b1dd",
+    "bytes": 70
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-forward.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-forward.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-1.json",
+    "sha256": "79196d2f20f58b8f79c4ca6997fa4a6cdfc2cad166ec623b392d268e4c73f04b",
+    "bytes": 1913
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/source-manifest.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/source-manifest.json",
+    "sha256": "82063cdbf1090289afd564ee741a789bafddf0c23194837a433dacc046d5790e",
+    "bytes": 35202
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-parity.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-parity.stdout",
+    "sha256": "9a6dfd2ebb1863eb052e58bc7de7ced151e89b38a897744396c15175f135de79",
+    "bytes": 84
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-1.json",
+    "sha256": "b625ea469f60d02c65606dd5fb7b6cc4085615a2a455d4dc501236b476691087",
+    "bytes": 1953
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-unknown-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-routes.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-routes.json",
+    "sha256": "2f05520a66f52d8a6da4c8ff4c085f4a803f8c90cef9c748bb21c8b381ffab07",
+    "bytes": 1724
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-unknown-1.json",
+    "sha256": "5e906442b1bf5dc23e24d1be47920d0a9b40262031e8a14ecccb2216fb9da15f",
+    "bytes": 1617
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-2.stdout",
+    "sha256": "11c964e07a5579240c23ffa7057d2fa1a1ef2360d04a243d9b4bd830d8932eda",
+    "bytes": 903
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-1.json",
+    "sha256": "cc30f6f152903d52982ec1f596de4ec308e872d7777f3b5657ca04da200fdbf5",
+    "bytes": 1780
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-2.stdout",
+    "sha256": "bbac3b913607303dfa0ce815de67b8a2156f224e1442380cff0c9386532c8a9b",
+    "bytes": 849
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/handoff.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/handoff.json",
+    "sha256": "2916148966bdf50c15a9a36b52be6aa9cbc1036bc4526061f5debe8d3ca27518",
+    "bytes": 29508
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-1.json",
+    "sha256": "b90cbfb87f0c453ca9b725e69ebddb297200c8ad78c0b2535504b6fc7eb25698",
+    "bytes": 1910
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-2.stdout",
+    "sha256": "bbac3b913607303dfa0ce815de67b8a2156f224e1442380cff0c9386532c8a9b",
+    "bytes": 849
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-2.stdout",
+    "sha256": "1db917933592f18f3f0b32ede04714fe15c0c5cda15ede8498e8763ffc6b6885",
+    "bytes": 809
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-0.json",
+    "sha256": "e5d36680e1447a1a54600567a5a9addc15c3f5a203906bcb0e2fa3828e73855d",
+    "bytes": 1762
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-0.stdout",
+    "sha256": "81fb3b1140e27087948d13b18e3414937840b3e2cb4b4728e554bd2082cae7b5",
+    "bytes": 323
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-1.json",
+    "sha256": "2daddff444550e9ce16775850277824c50060e4c7a8b1c99e282cdbc8d5f01b0",
+    "bytes": 1777
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-unknown-1.stdout",
+    "sha256": "926f1f653600e2f0b9eadfc8be1401a7ad7547904c20756101c95c94a8a95bbb",
+    "bytes": 565
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-0.stdout",
+    "sha256": "45adcc2e67b092cc77af3e4903279bee610ac9844194077afb6dce040d763958",
+    "bytes": 346
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-0.json",
+    "sha256": "6ca2e13dbf101e19545736ed15473cdf85d998e46dfca3b9fd50d9f460435df7",
+    "bytes": 1895
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-1.stdout",
+    "sha256": "0f3492067c3c03f033374ab3bb3f200a84f555b44da84679fcbca14400f41860",
+    "bytes": 525
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-0.json",
+    "sha256": "4ffe1bbd1f3330e133808bd2f15899bb37aebf50cf226ae45474c9e3ba11348c",
+    "bytes": 1765
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-unknown-0.json",
+    "sha256": "39968716aee6178ae5d51bde136549dbb003c74fef56eaa1a2aaca6aad6a6079",
+    "bytes": 1602
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-routes.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-routes.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-0.json",
+    "sha256": "8df9babb7a886b17fab4200b7459fa0083a9ca2451a57e2135696e8b18c1af16",
+    "bytes": 1938
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-0.json",
+    "sha256": "47b28891aaacc0342ee9a6331c3c41a0565e709c7b07d5da6413808126fab3a0",
+    "bytes": 1898
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-0.stdout",
+    "sha256": "45adcc2e67b092cc77af3e4903279bee610ac9844194077afb6dce040d763958",
+    "bytes": 346
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-0.stdout",
+    "sha256": "73448762efc63d9c38c8ed7b3839520d3d965dcbae8e04e2be0e7d1fb159f119",
+    "bytes": 408
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-2.json",
+    "sha256": "4f179ceeb7416ce39e98acc227b43d0aa2979947bc551acdc2c35b3d3ae786ba",
+    "bytes": 1747
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-1.stdout",
+    "sha256": "c9bd3a8004df4e2b5f3d3a7172c233ea53eeb58d0f2316d492789c8d64a0b979",
+    "bytes": 525
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-routes.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-routes.stdout",
+    "sha256": "3e8b58f062ff733c9012358ca3521588d20bd258311db827bbe809eb7ec6be08",
+    "bytes": 17850
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/worktree-before.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/worktree-before.json",
+    "sha256": "0b323f8145ef651637bf75b8555b2f6029c35e7f057a5f77b32ce106baf348bc",
+    "bytes": 1603
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-2.stdout",
+    "sha256": "bbac3b913607303dfa0ce815de67b8a2156f224e1442380cff0c9386532c8a9b",
+    "bytes": 849
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-2.json",
+    "sha256": "cefb5beba8634025e86a2d77ac944880bb54df92c9f3b6c22e8bbb2d75b56198",
+    "bytes": 1877
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-2.json",
+    "sha256": "362e95e6cd12a966ed1db8959f16b13879cf827b824b850e72fd529d1b8b46f9",
+    "bytes": 1750
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-unknown-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/run-check.py",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/run-check.py",
+    "sha256": "136309baf6154c37688cff6f7e1e69270d4257f64412523aaff2a55fffe31327",
+    "bytes": 2405
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-1.stdout",
+    "sha256": "a2883d9010d711ca537c0cc79517f984d3c93093cd7578096f724d040ef3039d",
+    "bytes": 651
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-0.stdout",
+    "sha256": "45adcc2e67b092cc77af3e4903279bee610ac9844194077afb6dce040d763958",
+    "bytes": 346
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-forward.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-forward.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-red.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-red.stderr",
+    "sha256": "e9f5174ccce33fceb42a7fa8bc37f8ad38cdea7c1fbd4a039ca428897d12d92e",
+    "bytes": 1014
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-unknown-0.stdout",
+    "sha256": "fcb5e9b71ca917809dfafd265a3b3eae648458945fbf15f9a3a088ad15b346c5",
+    "bytes": 442
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-parity.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-parity.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-2.stdout",
+    "sha256": "ddc2c1d04b5b49b6a9cf9f65787b50326cd842120e7aab950f3b689a12851bc6",
+    "bytes": 809
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-0.json",
+    "sha256": "b764607670ccaa7afe50587e98c0cb90e582b09740240bc670a0bb619fad8a3f",
+    "bytes": 1729
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-0.json",
+    "sha256": "ecb5f0169b47304f05343c00ef7ad55406c57665d18ae27ed57f3ce85b06a707",
+    "bytes": 1856
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-reverse.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-reverse.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-unknown-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-original.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-original.stdout",
+    "sha256": "f6cf71eba7847b250328e388526f16eb1fae1c779a96121c46ec6550e9aa5560",
+    "bytes": 17334
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-semantic.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-semantic.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-1.stdout",
+    "sha256": "d76ec596cefc7c5974c4217e6390ce7ccb881b6fc1f770485236d49e08614cff",
+    "bytes": 611
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/entry-results.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/entry-results.json",
+    "sha256": "fd5a39ba06b81336a94c33a6df1599c0351c2f26f3d0a2c921cbc3acae8adf35",
+    "bytes": 8773
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-1.stdout",
+    "sha256": "926f1f653600e2f0b9eadfc8be1401a7ad7547904c20756101c95c94a8a95bbb",
+    "bytes": 565
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-original.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-original.json",
+    "sha256": "751e7ae213552e0cf88a2cad0328ebdf97665b099a6fc57dcafd5548c9b29ed2",
+    "bytes": 1692
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/verify-entry.py",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/verify-entry.py",
+    "sha256": "31e126595ab4a5f6b475c6619374c262dc28607ae221657b41d8e0930eff3914",
+    "bytes": 6023
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-semantic.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-semantic.json",
+    "sha256": "247725daa4cd78e7210d6bb8c5de8622772746db0bce6ae23c21871a4a737961",
+    "bytes": 1731
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-reverse.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-reverse.json",
+    "sha256": "4ff2aa8577a9814a3b9d51d91ad82c36d129c13c0872e265b740ea64c1a7863b",
+    "bytes": 1843
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-forward.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-forward.json",
+    "sha256": "eb422e65bc5d7b00c0d45fd6f63e9fe7edf4c8d840b8c0d54d2e91b28abe5964",
+    "bytes": 1790
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-1.json",
+    "sha256": "b85a151ae85bf96ee57ed36b965b11da0dcd7e0a5ff04cfb9a0a9fefa4018ea0",
+    "bytes": 1871
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-0.stdout",
+    "sha256": "ac3a52f4872538d69256a55e64d9fbe02823a6762a903e8602de531491089931",
+    "bytes": 323
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-1.stdout",
+    "sha256": "926f1f653600e2f0b9eadfc8be1401a7ad7547904c20756101c95c94a8a95bbb",
+    "bytes": 565
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-unknown-0.stdout",
+    "sha256": "45adcc2e67b092cc77af3e4903279bee610ac9844194077afb6dce040d763958",
+    "bytes": 346
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-parity.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-parity.json",
+    "sha256": "f415fb221ee0abd2727477d560bf5ee7db31eca9b362c510d9f604fc87d43130",
+    "bytes": 1730
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-1.stdout",
+    "sha256": "c9bd3a8004df4e2b5f3d3a7172c233ea53eeb58d0f2316d492789c8d64a0b979",
+    "bytes": 525
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-1.json",
+    "sha256": "c66b0eece6f49c796882edfe460f22d2c9d5f166532474b8a017326db77f7c49",
+    "bytes": 1744
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/scope-validation.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/scope-validation.json",
+    "sha256": "a49da74cae555ef0daced23fbac114630129d11c1c1a863255658bf3e79c03ba",
+    "bytes": 391
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-0.stdout",
+    "sha256": "b9f63c2387d17fc31fb9bb21fa0a92a7c6ee8626df4392221e3ffc537d872e08",
+    "bytes": 431
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-unknown-1.json",
+    "sha256": "e11262e7653c6f1ea9c8969b4ee860c714e07dfc54d22b74135a39247e17d4df",
+    "bytes": 1587
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-claude-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-claude-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-1.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-1.json",
+    "sha256": "d3e937fa7a48af303750c1c1c67f2a8b8dde83176941c9d5da4198004e7ce575",
+    "bytes": 1741
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-0.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-unknown-0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-2.json",
+    "sha256": "98b0d03a2713401148b2cef0dd40b3219cabe38f034efb7d83845418056c0d8b",
+    "bytes": 1783
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-claude-1.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-claude-1.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-0.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-0.stdout",
+    "sha256": "81fb3b1140e27087948d13b18e3414937840b3e2cb4b4728e554bd2082cae7b5",
+    "bytes": 323
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-original.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-original.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-2.json",
+    "sha256": "019e824a32a973abb94d3ace8181a59f9642c37bc46e4e15d8ebba7086ed1174",
+    "bytes": 1917
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-unknown-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-unknown-1.stdout",
+    "sha256": "0509a6c7b51af80786e16700568fea6db87f54cfc556a5be63fc0177437cc456",
+    "bytes": 665
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/minimal.patch",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/minimal.patch",
+    "sha256": "44c14615e876f8f32274492ab9875964cff7a0089bc323a7204bfcc490ec2aab",
+    "bytes": 9117
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-semantic.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-semantic.stdout",
+    "sha256": "271aabe230fbfa8d786825d968b980a8891f40acdf684df46d7190eac3f2c23c",
+    "bytes": 1476
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-2.stdout",
+    "sha256": "1db917933592f18f3f0b32ede04714fe15c0c5cda15ede8498e8763ffc6b6885",
+    "bytes": 809
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-1.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-1.stdout",
+    "sha256": "926f1f653600e2f0b9eadfc8be1401a7ad7547904c20756101c95c94a8a95bbb",
+    "bytes": 565
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-unknown-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-unknown-0.json",
+    "sha256": "ce968b164fd181846307970e526da6b441141902062cac2586091ddd8cfcb026",
+    "bytes": 1572
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-red.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-red.json",
+    "sha256": "1d6506ef151236f0e163a1482ad06849a0c7a15dcae8312b838951e944e537c0",
+    "bytes": 1681
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old-codex-0.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/old-codex-0.json",
+    "sha256": "f872956b24a66486bff44f65e8a727a684ef381494ccaaeaadc9e0753e4931ba",
+    "bytes": 1726
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-2.stdout",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-old-codex-2.stdout",
+    "sha256": "c92830b51d1c130aa1aa27ecaa85a0ca2cc7f80dd5af23add02a4bb630790d4f",
+    "bytes": 943
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-claude-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-claude-2.json",
+    "sha256": "029a1b6b77497f1f017282d3e76285c7151c48cc2fdb0674139c86d483d550f8",
+    "bytes": 1919
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-codex-2.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-codex-2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-candidate-codex-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/public-candidate-codex-2.json",
+    "sha256": "787789dc2676476840937ee41b61f94209b5f3c5f2fcecaf092895491319574b",
+    "bytes": 1959
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-reverse.stderr",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-reverse.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "source": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/candidate-claude-2.json",
+    "copy": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-evidence/candidate-claude-2.json",
+    "sha256": "638e37c646c215941fa3284f05aeb4734d5127b2dc314faec5d073b0074aabe8",
+    "bytes": 1786
+  }
+]

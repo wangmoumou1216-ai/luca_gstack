@@ -1,0 +1,1 @@
+PASS: original functional and UI-only contracts preserve legacy authorization; actual prototype bytes and closed evidence metadata travel in immutable scope; forged IDs, evidence tampering/omission, mixed profiles, stale authority and canceled runs rejected

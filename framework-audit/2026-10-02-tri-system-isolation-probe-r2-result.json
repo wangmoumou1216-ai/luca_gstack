@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "codex",
+    "exec",
+    "--cd",
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/tri-system-planning-yfglniro",
+    "--sandbox",
+    "read-only",
+    "--skip-git-repo-check",
+    "--json",
+    "--output-last-message",
+    "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe-r2.md",
+    "-"
+  ],
+  "exit_code": 0,
+  "event_log": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe-r2.jsonl",
+  "stderr": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe-r2.stderr",
+  "report": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe-r2.md",
+  "first_attempt": "No persisted events and child absent; parent process lifetime did not preserve detached child. No model behavior conclusion from attempt 1."
+}

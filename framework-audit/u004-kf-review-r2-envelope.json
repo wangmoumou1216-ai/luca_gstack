@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u004-kf-20261003-r2",
+  "subject": {
+    "skill": "U004-KF-readiness",
+    "topic": "K 1.2 与 F 当前受限静态输入复核",
+    "scene": "unknown",
+    "input_summary": "独立复核全部18题相对1.1的不同语义；复用J01完整原文审阅及源身份证据，核当前文件身份与中性F提取。仅判静态输入可用性，不判行为通过。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/manifest.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/developer-cases.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u004-native-neutral.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u002-neutral-protected-purpose.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": [
+      "J1 PASS：U002身份及中性投影未变；14用途仍是保护分母声明，未覆盖行为保留旧机制，不宣称行为证明。",
+      "J2 PASS：6开发/12隐藏、每层1/2、开发2简单4重和隐藏4简单8重；实际工作、依赖、故障与当前授权关系经语义复核。",
+      "J3 PASS：原受影响判据改为有可见依据的关系检查，未删除必要交付或独立控制。D04示例未含copy tokens，但request_fidelity、完整性和PROTOCOL-FACTS仍要求原请求；额外字段允许表达正确交付。示例不可作为完整满分金标准；私有同类非阻断缺口ID为H07。",
+      "J4 PASS：H07/H08/H11/H12具备区别于开发题的实际关系；未仅以标签或novelty_signature判定。历史版本及当前封存身份核实。私有边界为明确读取政策，不宣称操作系统隔离或完整访问审计。",
+      "J5 PASS：父级当前官方原始正文capture及J01实际公开help支持限定静态事实；不追认F作者历史读取。历史真实性及未独立证实的API/Claude事项维持UNKNOWN，不用作本机运行或净收益保证。",
+      "J6 PASS：current manifest v1.2 SHA256=231746d52c4fd4735d7fe2da73539f293481c2129ae14345feb97735c0b96ca2；开发集SHA256=8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c。",
+      "释放D静态输入：上述current公共开发集及同manifest绑定的README/coverage、原任务零节、中性F SHA256=07e59af85582f543fc7eb87e02e82903272de933d9df1c1f5da1e3ac17b1ac8a、中性U002投影 SHA256=16f7f5cdd338b1ce74bfdda625830d3986e206f18505ebf090c07bb0bf087279。D不得接收F工作附录、旧实现或隐藏材料。",
+      "释放三个A静态输入：同版本公共开发材料、限定F事实、U002基线与source-manifest，以及各自已授权源白名单；本票不扩大源读取权限。U002基线SHA256=0a29c67a76e2367062d036b87d6e63a088a22b7b763b457208653e7c3feb04d9；source-manifest SHA256=cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9。",
+      "不释放行为TEST、隐藏运行或生产改造；模型身份、取消、隔离、恢复与完整usage实际行为仍须U007。37产物/23事件/89节点等是结构核查，不是行为run或评分通过。",
+      "r1 tri-system-u004-kf-20261002-r1的FAIL 3/6及历史UNKNOWN永久保留；本票仅评价当前1.2与明确限定的当前证据。"
+    ]
+  }
+}
+

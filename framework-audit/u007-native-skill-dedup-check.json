@@ -1,0 +1,1748 @@
+{
+  "kind": "read-only native skills discovery metadata",
+  "source": "current root integration correction after W20",
+  "methods": [
+    "initialize",
+    "skills/list"
+  ],
+  "model_calls": 0,
+  "hook_calls": 0,
+  "records": [
+    {
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B",
+      "skills": [
+        {
+          "name": "auto",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/auto/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "brainstorm",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/brainstorm/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "careful",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/careful/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "challenge",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/challenge/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "code-hygiene",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/code-hygiene/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "code-recon",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/code-recon/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "code-review",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/code-review/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "codebase-design",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/codebase-design/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "compare",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/compare/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "deepresearch",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/deepresearch/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "design-brief",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/design-brief/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "diagnosing-bugs",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/diagnosing-bugs/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "domain-modeling",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/domain-modeling/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "evals",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/evals/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "figma-demo",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/figma-demo/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "grilling",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/grilling/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "handoff",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/handoff/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "html-prototype",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/html-prototype/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "idea",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/idea/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "implement",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/implement/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "insight-synthesis",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/insight-synthesis/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "issue-triage",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/issue-triage/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "loop-me",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/loop-me/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "magicpath",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/magicpath/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "motion-polish",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/motion-polish/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "muse-req-triage",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/muse-req-triage/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "muse-x-digest",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/muse-x-digest/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "office",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "open-design",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/open-design/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "quick-research",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/quick-research/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "redteam",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/redteam/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "references",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/references/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "research-kit",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/research-kit/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "resolving-merge-conflicts",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/resolving-merge-conflicts/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "retro",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/retro/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "setup-wizard",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/setup-wizard/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "task-plan",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/task-plan/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "tech-spec",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/tech-spec/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "to-spec",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/to-spec/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "to-tickets",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/to-tickets/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-audit",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/ux-audit/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-brainstorm",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/ux-brainstorm/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-research",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/ux-research/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-writing",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/ux-writing/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "wait-what",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/wait-what/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "wayfinder",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/wayfinder/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "writing-for-agents",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/writing-for-agents/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "writing-workshop",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/B/.agents/skills/office/writing-workshop/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "agent-browser",
+          "path": "/Users/luca/.agents/skills/agent-browser/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "capture-open-tabs",
+          "path": "/Users/luca/.agents/skills/capture-open-tabs/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "codebase-to-course",
+          "path": "/Users/luca/.agents/skills/codebase-to-course/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "documents:documents",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/documents/26.905.11957/skills/documents/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "documents@openai-primary-runtime"
+        },
+        {
+          "name": "docx",
+          "path": "/Users/luca/.agents/skills/docx/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "elon-musk-perspective",
+          "path": "/Users/luca/.agents/skills/elon-musk-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "extract-design-system",
+          "path": "/Users/luca/.agents/skills/extract-design-system/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "figma-generate-design",
+          "path": "/Users/luca/.agents/skills/figma-generate-design/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "figma:figma-code-connect",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-code-connect/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-create-new-file",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-create-new-file/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-design-to-code",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-design-to-code/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generate-design",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generate-design/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generate-diagram",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generate-diagram/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generate-library",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generate-library/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generative-plugins",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generative-plugins/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-implement-motion",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-implement-motion/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-shaders",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-shaders/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-swiftui",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-swiftui/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use-figjam",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use-figjam/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use-motion",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use-motion/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use-slides",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use-slides/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "find-skills",
+          "path": "/Users/luca/.agents/skills/find-skills/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "frontend-design:frontend-design",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/frontend-design/local/skills/frontend-design/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "frontend-design@claude-plugins-official"
+        },
+        {
+          "name": "frontend-slides",
+          "path": "/Users/luca/.agents/skills/frontend-slides/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "fx-icon-search",
+          "path": "/Users/luca/.agents/skills/fx-icon-search/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "guizang-ppt-skill",
+          "path": "/Users/luca/.agents/skills/guizang-ppt-skill/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "i18n-walkthrough",
+          "path": "/Users/luca/.codex/skills/i18n-walkthrough/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "icon-set-generator",
+          "path": "/Users/luca/.agents/skills/icon-set-generator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ilya-sutskever-perspective",
+          "path": "/Users/luca/.agents/skills/ilya-sutskever-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-base",
+          "path": "/Users/luca/.agents/skills/lark-base/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-calendar",
+          "path": "/Users/luca/.agents/skills/lark-calendar/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-contact",
+          "path": "/Users/luca/.agents/skills/lark-contact/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-doc",
+          "path": "/Users/luca/.agents/skills/lark-doc/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-drive",
+          "path": "/Users/luca/.agents/skills/lark-drive/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-event",
+          "path": "/Users/luca/.agents/skills/lark-event/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-im",
+          "path": "/Users/luca/.agents/skills/lark-im/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-mail",
+          "path": "/Users/luca/.agents/skills/lark-mail/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-minutes",
+          "path": "/Users/luca/.agents/skills/lark-minutes/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-openapi-explorer",
+          "path": "/Users/luca/.agents/skills/lark-openapi-explorer/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-shared",
+          "path": "/Users/luca/.agents/skills/lark-shared/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-sheets",
+          "path": "/Users/luca/.agents/skills/lark-sheets/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-skill-maker",
+          "path": "/Users/luca/.agents/skills/lark-skill-maker/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-task",
+          "path": "/Users/luca/.agents/skills/lark-task/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-vc",
+          "path": "/Users/luca/.agents/skills/lark-vc/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-whiteboard",
+          "path": "/Users/luca/.agents/skills/lark-whiteboard/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-wiki",
+          "path": "/Users/luca/.agents/skills/lark-wiki/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-workflow-meeting-summary",
+          "path": "/Users/luca/.agents/skills/lark-workflow-meeting-summary/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-workflow-standup-report",
+          "path": "/Users/luca/.agents/skills/lark-workflow-standup-report/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "magicpath",
+          "path": "/Users/luca/.codex/skills/magicpath/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "naval-perspective",
+          "path": "/Users/luca/.agents/skills/naval-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "pdf",
+          "path": "/Users/luca/.agents/skills/pdf/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "pdf:pdf",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/pdf/26.905.11957/skills/pdf/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "pdf@openai-primary-runtime"
+        },
+        {
+          "name": "playwright",
+          "path": "/Users/luca/.codex/skills/playwright/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "pptx",
+          "path": "/Users/luca/.agents/skills/pptx/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "presentations:Presentations",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/presentations/26.905.11957/skills/presentations/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "presentations@openai-primary-runtime"
+        },
+        {
+          "name": "report-html-generator",
+          "path": "/Users/luca/.codex/skills/report-html-generator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-creator",
+          "path": "/Users/luca/.agents/skills/skill-creator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-creator:skill-creator",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/skill-creator/local/skills/skill-creator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "skill-creator@claude-plugins-official"
+        },
+        {
+          "name": "spreadsheets:Spreadsheets",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.905.11957/skills/spreadsheets/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "spreadsheets@openai-primary-runtime"
+        },
+        {
+          "name": "spreadsheets:excel-live-control",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.905.11957/skills/excel-live-control/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "spreadsheets@openai-primary-runtime"
+        },
+        {
+          "name": "steve-jobs-perspective",
+          "path": "/Users/luca/.agents/skills/steve-jobs-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "systematic-debugging",
+          "path": "/Users/luca/.agents/skills/systematic-debugging/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "tdd",
+          "path": "/Users/luca/.agents/skills/tdd/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "template-creator:template-creator",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/template-creator/26.905.11957/skills/template-creator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "template-creator@openai-primary-runtime"
+        },
+        {
+          "name": "ui-ux-pro-max",
+          "path": "/Users/luca/.agents/skills/ui-ux-pro-max/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "visualize:visualize",
+          "path": "/Users/luca/.codex/plugins/cache/openai-bundled/visualize/1.0.45/skills/visualize/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "visualize@openai-bundled"
+        },
+        {
+          "name": "web-access",
+          "path": "/Users/luca/.agents/skills/web-access/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "xlsx",
+          "path": "/Users/luca/.agents/skills/xlsx/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "imagegen",
+          "path": "/Users/luca/.codex/skills/.system/imagegen/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "openai-docs",
+          "path": "/Users/luca/.codex/skills/.system/openai-docs/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "review-agent",
+          "path": "/Users/luca/.codex/skills/.system/review-agent/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-creator",
+          "path": "/Users/luca/.codex/skills/.system/skill-creator/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-installer",
+          "path": "/Users/luca/.codex/skills/.system/skill-installer/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        }
+      ],
+      "errors": [],
+      "repo_count": 48,
+      "repo_names": 48,
+      "duplicates": {},
+      "scope_counts": {
+        "repo": 48,
+        "user": 69,
+        "system": 5
+      }
+    },
+    {
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S",
+      "skills": [
+        {
+          "name": "auto",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/auto/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "brainstorm",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/brainstorm/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "careful",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/careful/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "challenge",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/challenge/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "code-hygiene",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/code-hygiene/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "code-recon",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/code-recon/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "code-review",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/code-review/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "codebase-design",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/codebase-design/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "compare",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/compare/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "deepresearch",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/deepresearch/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "design-brief",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/design-brief/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "diagnosing-bugs",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/diagnosing-bugs/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "domain-modeling",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/domain-modeling/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "evals",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/evals/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "figma-demo",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/figma-demo/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "grilling",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/grilling/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "handoff",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/handoff/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "html-prototype",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/html-prototype/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "idea",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/idea/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "implement",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/implement/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "insight-synthesis",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/insight-synthesis/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "issue-triage",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/issue-triage/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "loop-me",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/loop-me/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "magicpath",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/magicpath/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "motion-polish",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/motion-polish/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "muse-req-triage",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/muse-req-triage/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "muse-x-digest",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/muse-x-digest/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "office",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "open-design",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/open-design/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "quick-research",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/quick-research/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "redteam",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/redteam/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "references",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/references/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "research-kit",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/research-kit/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "resolving-merge-conflicts",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/resolving-merge-conflicts/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "retro",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/retro/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "setup-wizard",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/setup-wizard/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "task-plan",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/task-plan/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "tech-spec",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/tech-spec/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "to-spec",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/to-spec/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "to-tickets",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/to-tickets/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-audit",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/ux-audit/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-brainstorm",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/ux-brainstorm/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-research",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/ux-research/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ux-writing",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/ux-writing/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "wait-what",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/wait-what/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "wayfinder",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/wayfinder/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "writing-for-agents",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/writing-for-agents/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "writing-workshop",
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-dedup-materials-9NNGTj/S/.agents/skills/office/writing-workshop/SKILL.md",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "agent-browser",
+          "path": "/Users/luca/.agents/skills/agent-browser/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "capture-open-tabs",
+          "path": "/Users/luca/.agents/skills/capture-open-tabs/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "codebase-to-course",
+          "path": "/Users/luca/.agents/skills/codebase-to-course/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "documents:documents",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/documents/26.905.11957/skills/documents/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "documents@openai-primary-runtime"
+        },
+        {
+          "name": "docx",
+          "path": "/Users/luca/.agents/skills/docx/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "elon-musk-perspective",
+          "path": "/Users/luca/.agents/skills/elon-musk-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "extract-design-system",
+          "path": "/Users/luca/.agents/skills/extract-design-system/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "figma-generate-design",
+          "path": "/Users/luca/.agents/skills/figma-generate-design/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "figma:figma-code-connect",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-code-connect/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-create-new-file",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-create-new-file/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-design-to-code",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-design-to-code/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generate-design",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generate-design/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generate-diagram",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generate-diagram/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generate-library",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generate-library/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-generative-plugins",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-generative-plugins/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-implement-motion",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-implement-motion/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-shaders",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-shaders/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-swiftui",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-swiftui/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use-figjam",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use-figjam/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use-motion",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use-motion/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "figma:figma-use-slides",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/figma/2.2.120/skills/figma-use-slides/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "figma@claude-plugins-official"
+        },
+        {
+          "name": "find-skills",
+          "path": "/Users/luca/.agents/skills/find-skills/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "frontend-design:frontend-design",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/frontend-design/local/skills/frontend-design/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "frontend-design@claude-plugins-official"
+        },
+        {
+          "name": "frontend-slides",
+          "path": "/Users/luca/.agents/skills/frontend-slides/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "fx-icon-search",
+          "path": "/Users/luca/.agents/skills/fx-icon-search/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "guizang-ppt-skill",
+          "path": "/Users/luca/.agents/skills/guizang-ppt-skill/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "i18n-walkthrough",
+          "path": "/Users/luca/.codex/skills/i18n-walkthrough/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "icon-set-generator",
+          "path": "/Users/luca/.agents/skills/icon-set-generator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "ilya-sutskever-perspective",
+          "path": "/Users/luca/.agents/skills/ilya-sutskever-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-base",
+          "path": "/Users/luca/.agents/skills/lark-base/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-calendar",
+          "path": "/Users/luca/.agents/skills/lark-calendar/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-contact",
+          "path": "/Users/luca/.agents/skills/lark-contact/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-doc",
+          "path": "/Users/luca/.agents/skills/lark-doc/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-drive",
+          "path": "/Users/luca/.agents/skills/lark-drive/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-event",
+          "path": "/Users/luca/.agents/skills/lark-event/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-im",
+          "path": "/Users/luca/.agents/skills/lark-im/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-mail",
+          "path": "/Users/luca/.agents/skills/lark-mail/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-minutes",
+          "path": "/Users/luca/.agents/skills/lark-minutes/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-openapi-explorer",
+          "path": "/Users/luca/.agents/skills/lark-openapi-explorer/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-shared",
+          "path": "/Users/luca/.agents/skills/lark-shared/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-sheets",
+          "path": "/Users/luca/.agents/skills/lark-sheets/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-skill-maker",
+          "path": "/Users/luca/.agents/skills/lark-skill-maker/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-task",
+          "path": "/Users/luca/.agents/skills/lark-task/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-vc",
+          "path": "/Users/luca/.agents/skills/lark-vc/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-whiteboard",
+          "path": "/Users/luca/.agents/skills/lark-whiteboard/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-wiki",
+          "path": "/Users/luca/.agents/skills/lark-wiki/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-workflow-meeting-summary",
+          "path": "/Users/luca/.agents/skills/lark-workflow-meeting-summary/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "lark-workflow-standup-report",
+          "path": "/Users/luca/.agents/skills/lark-workflow-standup-report/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "magicpath",
+          "path": "/Users/luca/.codex/skills/magicpath/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "naval-perspective",
+          "path": "/Users/luca/.agents/skills/naval-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "pdf",
+          "path": "/Users/luca/.agents/skills/pdf/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "pdf:pdf",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/pdf/26.905.11957/skills/pdf/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "pdf@openai-primary-runtime"
+        },
+        {
+          "name": "playwright",
+          "path": "/Users/luca/.codex/skills/playwright/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "pptx",
+          "path": "/Users/luca/.agents/skills/pptx/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "presentations:Presentations",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/presentations/26.905.11957/skills/presentations/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "presentations@openai-primary-runtime"
+        },
+        {
+          "name": "report-html-generator",
+          "path": "/Users/luca/.codex/skills/report-html-generator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-creator",
+          "path": "/Users/luca/.agents/skills/skill-creator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-creator:skill-creator",
+          "path": "/Users/luca/.codex/plugins/cache/claude-plugins-official/skill-creator/local/skills/skill-creator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "skill-creator@claude-plugins-official"
+        },
+        {
+          "name": "spreadsheets:Spreadsheets",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.905.11957/skills/spreadsheets/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "spreadsheets@openai-primary-runtime"
+        },
+        {
+          "name": "spreadsheets:excel-live-control",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.905.11957/skills/excel-live-control/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "spreadsheets@openai-primary-runtime"
+        },
+        {
+          "name": "steve-jobs-perspective",
+          "path": "/Users/luca/.agents/skills/steve-jobs-perspective/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "systematic-debugging",
+          "path": "/Users/luca/.agents/skills/systematic-debugging/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "tdd",
+          "path": "/Users/luca/.agents/skills/tdd/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "template-creator:template-creator",
+          "path": "/Users/luca/.codex/plugins/cache/openai-primary-runtime/template-creator/26.905.11957/skills/template-creator/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "template-creator@openai-primary-runtime"
+        },
+        {
+          "name": "ui-ux-pro-max",
+          "path": "/Users/luca/.agents/skills/ui-ux-pro-max/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "visualize:visualize",
+          "path": "/Users/luca/.codex/plugins/cache/openai-bundled/visualize/1.0.45/skills/visualize/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": "visualize@openai-bundled"
+        },
+        {
+          "name": "web-access",
+          "path": "/Users/luca/.agents/skills/web-access/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "xlsx",
+          "path": "/Users/luca/.agents/skills/xlsx/SKILL.md",
+          "scope": "user",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "imagegen",
+          "path": "/Users/luca/.codex/skills/.system/imagegen/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "openai-docs",
+          "path": "/Users/luca/.codex/skills/.system/openai-docs/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "review-agent",
+          "path": "/Users/luca/.codex/skills/.system/review-agent/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-creator",
+          "path": "/Users/luca/.codex/skills/.system/skill-creator/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "skill-installer",
+          "path": "/Users/luca/.codex/skills/.system/skill-installer/SKILL.md",
+          "scope": "system",
+          "enabled": true,
+          "pluginId": null
+        }
+      ],
+      "errors": [],
+      "repo_count": 48,
+      "repo_names": 48,
+      "duplicates": {},
+      "scope_counts": {
+        "repo": 48,
+        "user": 69,
+        "system": 5
+      }
+    }
+  ]
+}

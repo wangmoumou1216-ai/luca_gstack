@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=W35: live trace starts",
+    "scripts/tri-system-eval/native-trace-integration.test.mjs"
+  ],
+  "exit_code": 0,
+  "seconds": 2.158,
+  "test_sha256": "a309fc9eb96b7bab117acbb7335f5b9f4dad94922c67970f6b74b61076585216",
+  "driver_sha256": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+  "tap_sha256": "612c8367c6f78f582ee80ecc2b7aee1d4cf228aec451283d586f1b8cf074ab88"
+}

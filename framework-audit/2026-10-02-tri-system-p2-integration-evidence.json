@@ -1,0 +1,162 @@
+{
+  "phase": "P2",
+  "original_denominator": [
+    "P2-a",
+    "P2-b",
+    "P2-c"
+  ],
+  "actual_execution_passed": 3,
+  "scope": "Planning execution and input provenance only; not P3 independence or behavioral validation",
+  "observations": [
+    {
+      "module": "routing",
+      "input_sha256": "3a2e738e1bdaa141ed65708fd556352bb6d16c0897b3e766a415db07ca04e302",
+      "plan_sha256": "f80c0f02273105a34364b9c10fc09160ad6df55c0559c201a7c0940420816674",
+      "events_sha256": "4a26492208836a853a7b9a6abba4a594bf3e83cb9818b990ef647f0ee10f262f",
+      "exit_code": 0,
+      "turn_completed": true,
+      "tool_events": 0,
+      "final_message_matches_file": true,
+      "reported_usage": {
+        "input_tokens": 29573,
+        "cached_input_tokens": 13184,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5319,
+        "reasoning_output_tokens": 510
+      },
+      "wall_seconds": 347.46,
+      "transport_errors_preserved": [
+        {
+          "type": "error",
+          "message": "Reconnecting... 2/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 3/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 4/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 5/5 (request timed out)"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "error",
+            "message": "Falling back from WebSockets to HTTPS transport. request timed out"
+          }
+        }
+      ]
+    },
+    {
+      "module": "orchestration",
+      "input_sha256": "e3648ccfce0161bb6af0073f98ad057023c4717f48d0f92361d53a258e39aa02",
+      "plan_sha256": "b9f8a64d7937bdcda8f369c8496ce8584e215927d29155af3d1e875500f55a95",
+      "events_sha256": "b36b23d60d991b5fe172d622f64e8af24eb03a6347e4449fec8a34f330ba4de4",
+      "exit_code": 0,
+      "turn_completed": true,
+      "tool_events": 0,
+      "final_message_matches_file": true,
+      "reported_usage": {
+        "input_tokens": 29573,
+        "cached_input_tokens": 13184,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5741,
+        "reasoning_output_tokens": 500
+      },
+      "wall_seconds": 353.23,
+      "transport_errors_preserved": [
+        {
+          "type": "error",
+          "message": "Reconnecting... 2/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 3/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 4/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 5/5 (request timed out)"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "error",
+            "message": "Falling back from WebSockets to HTTPS transport. request timed out"
+          }
+        }
+      ]
+    },
+    {
+      "module": "context",
+      "input_sha256": "b8f3c3dc3dddaddc10c686c79f4ebc53b860f06a84ade4b11364bfac90342952",
+      "plan_sha256": "b60c479a724bf31bac6a671abc0afc31750b6ee328ff0e895733e6af4fb3eee4",
+      "events_sha256": "6cbe5b623828b816a8bbe229b7332e107e2e89cf06fbe3bad95d8877ec4e7f85",
+      "exit_code": 0,
+      "turn_completed": true,
+      "tool_events": 0,
+      "final_message_matches_file": true,
+      "reported_usage": {
+        "input_tokens": 29563,
+        "cached_input_tokens": 13184,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5473,
+        "reasoning_output_tokens": 785
+      },
+      "wall_seconds": 345.5,
+      "transport_errors_preserved": [
+        {
+          "type": "error",
+          "message": "Reconnecting... 2/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 3/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 4/5 (request timed out)"
+        },
+        {
+          "type": "error",
+          "message": "Reconnecting... 5/5 (request timed out)"
+        },
+        {
+          "type": "item.completed",
+          "item": {
+            "id": "item_0",
+            "type": "error",
+            "message": "Falling back from WebSockets to HTTPS transport. request timed out"
+          }
+        }
+      ]
+    }
+  ],
+  "check_note": "Initial parent event-type assertion rejected a transport error as an unknown event. Corrected classification explicitly retains item.error; no child execution repeated.",
+  "parent_full_read_chunks": {
+    "routing": [
+      "7d6258"
+    ],
+    "orchestration": [
+      "19589c",
+      "32f715"
+    ],
+    "context": [
+      "c32352"
+    ]
+  },
+  "visible_chat_ownership": {
+    "routing": "01a0fcca-4899-79f3-9094-c9a9ea2bd186",
+    "orchestration": "01a0fcca-6e8c-7833-ba45-f39e6992f11b",
+    "context": "01a0fcca-8af9-7982-9d60-b49909a4b577"
+  }
+}

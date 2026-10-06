@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-03T07:28:09.575517+00:00",
+  "files": [
+    {
+      "path": "scripts/tri-system-eval/conditions.mjs",
+      "before_sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "after_sha256": "81b3cde5a44e6fb3d60145be7c14578098534a8444adc4d6d20c2b7d1b1edd4c",
+      "owner_source": "/Users/luca/.codex/worktrees/8812/luca_gstack/scripts/tri-system-eval/conditions.mjs"
+    },
+    {
+      "path": "scripts/tri-system-eval/conditions.test.mjs",
+      "before_sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "after_sha256": "cea5b35c866bd8c157685d9f7425d11365f894b817c6f382f24c5c43f27f718f",
+      "owner_source": "/Users/luca/.codex/worktrees/8812/luca_gstack/scripts/tri-system-eval/conditions.test.mjs"
+    }
+  ],
+  "readiness": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-routing-ready.json"
+}

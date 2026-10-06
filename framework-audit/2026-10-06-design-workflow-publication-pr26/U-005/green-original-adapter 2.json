@@ -1,0 +1,10 @@
+{
+  "command": [
+    "node",
+    "scripts/test-original-copy-handoff.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "exit": 0,
+  "stdout": "PASS: original functional and UI-only contracts preserve legacy authorization; actual prototype bytes and closed evidence metadata travel in immutable scope; forged IDs, evidence tampering/omission, mixed profiles, stale authority and canceled runs rejected\n",
+  "stderr": ""
+}

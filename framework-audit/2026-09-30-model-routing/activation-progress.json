@@ -1,0 +1,61 @@
+[
+  {
+    "step": "activation-patch-check",
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "activation-patch-apply",
+    "argv": [
+      "git",
+      "apply",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "activation-source-install",
+    "argv": [
+      "node",
+      "scripts/install-codex-source-guard.mjs",
+      "--root",
+      "/Users/luca/Desktop/luca_gstack",
+      "--preserve-other-roots"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "activation-trust-dry-run",
+    "argv": [
+      "node",
+      "scripts/codex-trust-hooks.mjs",
+      "--host-launch",
+      "--dry-run"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "activation-trust-apply",
+    "argv": [
+      "node",
+      "scripts/codex-trust-hooks.mjs",
+      "--host-launch"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "activation-trust-readback",
+    "argv": [
+      "node",
+      "scripts/codex-trust-hooks.mjs",
+      "--host-launch",
+      "--dry-run"
+    ],
+    "exit": 0
+  }
+]

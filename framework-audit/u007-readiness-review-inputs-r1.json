@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-02T19:31:31.985942+00:00",
+  "kind": "U007 code/readiness review snapshot",
+  "status": "REVIEW_PENDING; NOT_FORMAL_RUN_RELEASE",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-evaluation-execution-plan-v4.md",
+      "sha256": "f5cec5181287b1e5ed2549a42f92dd082c9744841da09e5b530406f5744fbc67",
+      "bytes": 63100
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-implementation-contract.md",
+      "sha256": "74c43c98dd2fc88df66c84d660c0f044deae35d7223e9a6c17b05ace22ec04a6",
+      "bytes": 16719
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-1.md",
+      "sha256": "953caf31e773b35bfc05c8993141f5d5f543b6202c30c8d6ccf7d1340073f70f",
+      "bytes": 3460
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-2.md",
+      "sha256": "1a308a1e849f67e10f5acb9ecae5a130b93c99d069b5a8bd0d15d1ff9e7a7830",
+      "bytes": 2293
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-3.md",
+      "sha256": "a73d065a3169231f48e0cac954f109b377f4fa206b748358f72b52103f2dbee6",
+      "bytes": 3268
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-4.md",
+      "sha256": "5ea1a081c26ed680969929cfa69898be0562e5d4e4bfc9452ef4706c13f1534a",
+      "bytes": 2588
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-5.md",
+      "sha256": "5727306f38a0b5779d0e18c51f0ff73ab5386bf3f6c2a5ddc252946ca106ed3a",
+      "bytes": 5815
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r3.json",
+      "sha256": "4e1247d854a8190593ac750e9467aab6d8950cda9609c38a52ce7ac06b566d83",
+      "bytes": 8610
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-skill-dedup-check.json",
+      "sha256": "6c97e6130419d599cdbd7e5e7775bf422ea162eb23bb115546bdb251cc1d487f",
+      "bytes": 63669
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-hook-layer-root-cause.json",
+      "sha256": "596b009f3c4dae92898caf2f0a0d6aa74684fee13adf739bacfdb0daf2076833",
+      "bytes": 13743
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p02-native-fs-result.json",
+      "sha256": "6ff3ddb2645059634fe37c516f13ec117d727cd1225902302263968dc4767c95",
+      "bytes": 1938
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p05-case.json",
+      "sha256": "65ed122b6c19f8543d0ef1a925274693cf71116038a2b0056068499af7f71ac0",
+      "bytes": 4890
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p05-registration.json",
+      "sha256": "83915cf5b6180465a520a9ef4822fbdb50dcbaa671b98b2e368e2a23835e24cc",
+      "bytes": 5168
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p05-manifest.json",
+      "sha256": "1775844a99ce31213aa4ae2a02d2cc67d27f538e2855ee03c60d6b6d93837527",
+      "bytes": 6003
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p05-launch.json",
+      "sha256": "39df1a87cc0b983ec0228f8ab4b5b62cc3df85ad6e0e380f6ed4f701dede604d",
+      "bytes": 1739
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "211c7d3530ccff80b589cb8f152e2f916c0a21d95c54d24755d26b5bde2cdf2f",
+      "bytes": 24320
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "30e75cff9be6573f618062d0ba854379103bd8a47d5eab2b334f5174bfe5b643",
+      "bytes": 19583
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "8b6152faeaf1cb29db7e9e32493939f37d7a022ec4eb34f3d2f06fd9e0a25dee",
+      "bytes": 44329
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "c91ad8d4a74f63adce1c0fc7a26dd5bc04b9c8d4d0c5308815d917c82f0e59d1",
+      "bytes": 44685
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "cf43047b371b8cecfa7646d3069d3807a4f86c7d912afa5a021245e82068105e",
+      "bytes": 27263
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p03-drxraovf/runs/u007-p03-native-appserver-r1/evidence/result.json",
+      "sha256": "9865180c6316fd74b6179f314cdf848613fd8d2315db2c82f49f8fd1200f1cef",
+      "bytes": 8917
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p04-3v_neg6p/runs/u007-p04-native-appserver-r1/evidence/result.json",
+      "sha256": "2a5425138237afd648c684d5ceceb4ae38ebf9e0fa85627e11744e4ec701bbc1",
+      "bytes": 9309
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p05-grh048va/runs/u007-p05-native-appserver-r1/evidence/result.json",
+      "sha256": "e5807c2752e7b6a0f1f7e0a23f1a78f46512a082af67eb3266ab12da11046317",
+      "bytes": 46267
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p05-grh048va/runs/u007-p05-native-appserver-r1/evidence/probe-registration.json",
+      "sha256": "83915cf5b6180465a520a9ef4822fbdb50dcbaa671b98b2e368e2a23835e24cc",
+      "bytes": 5168
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p05-grh048va/runs/u007-p05-native-appserver-r1/evidence/rpc.jsonl",
+      "sha256": "35829267ac4d1ab2e678ec12d63c70e9c963fda1c3cd7ca826ce8e758e07445f",
+      "bytes": 76299
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p05-grh048va/runs/u007-p05-native-appserver-r1/evidence/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p05-grh048va/runs/u007-p05-native-appserver-r1/evidence/stdout.log",
+      "sha256": "404f5e46a4c176cca60abd08d9acbbcb81e20ac42fe65417fd074462bfb3a40e",
+      "bytes": 52667
+    }
+  ],
+  "forbidden": [
+    "framework-audit/u004-cases/private and every private archive",
+    "production/global config mutation",
+    "new model runs",
+    "additional agents or messages to original owner chats"
+  ],
+  "note": "Frozen final implementation and requirements/evidence only. Owner drafting history is not needed. Root will not modify implementation during review."
+}

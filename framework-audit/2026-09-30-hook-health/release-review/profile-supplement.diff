@@ -1,0 +1,97 @@
+--- before/activate-reviewed.py
++++ after/activate-reviewed.py
+@@ -25,6 +25,7 @@
+     'scripts/test-codex-hook-health.mjs', 'scripts/test-codex-trust-hooks.mjs',
+     'scripts/verify.sh', 'README.md', '.codex/hooks.json'))
+ GUARD = Path.home() / '.codex/luca-child-project/source-guard'
++REVIEWED_CODEX_HOME = Path('/Users/luca/.codex')
+ parser = argparse.ArgumentParser(description=__doc__)
+ parser.add_argument('--apply', action='store_true')
+ args = parser.parse_args()
+@@ -35,6 +36,16 @@
+ def require(condition, message):
+     if not condition:
+         raise RuntimeError(message)
++
++# This package activates only the reviewed mother-root/system-profile pair.
++# A provider home has independent trust; inheriting one must never widen scope.
++codex_home_text = os.environ.get('CODEX_HOME') or str(REVIEWED_CODEX_HOME)
++require(codex_home_text == str(REVIEWED_CODEX_HOME),
++        'Reviewed CODEX_HOME changed; use the exact reviewed directory')
++codex_home = Path(codex_home_text)
++require(codex_home.resolve() == codex_home,
++        'Reviewed CODEX_HOME changed; review that root/profile pair separately')
++config_path = codex_home / 'config.toml'
+ 
+ steps = []
+ 
+@@ -91,7 +102,9 @@
+ before_manifest_bytes = (GUARD / 'manifest.json').read_bytes()
+ before_manifest = json.loads(before_manifest_bytes)
+ if not args.apply:
+-    print(json.dumps({'status': 'PREFLIGHT_PASS_NO_MUTATION', 'files': 7, 'steps': steps}))
++    print(json.dumps({'status': 'PREFLIGHT_PASS_NO_MUTATION', 'files': 7,
++        'source_root': str(ROOT), 'codex_home': str(codex_home),
++        'trust_scope': 'THIS_ROOT_PROFILE_PAIR_ONLY', 'steps': steps}))
+     raise SystemExit(0)
+ require(manifest.get('release_review_status') == 'PASS_CANDIDATE_ONLY_LIVE_PENDING',
+         'The exact candidate has not passed release review')
+@@ -120,7 +133,6 @@
+ # official trust script privately backs up the full config and protects its CAS.
+ (AUDIT / 'source-manifest-before-activation.json').write_bytes(before_manifest_bytes)
+ (AUDIT / 'source-manifest-before-activation.json').chmod(0o600)
+-config_path = Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))) / 'config.toml'
+ with config_path.open('rb') as config_file:
+     config = tomllib.load(config_file)
+ state = config.get('hooks', {}).get('state', {})
+@@ -157,9 +169,12 @@
+     save('activation-result.json', {'status': 'ACTIVATED_TRUST_VERIFIED_LIVE_SESSION_PENDING',
+         'activated_at': datetime.now(timezone.utc).isoformat(), 'patch_sha256': PATCH_SHA,
+         'source_digest': manifest['candidate_source_digest'], 'files': 7, 'trusted_hooks': 11,
++        'source_root': str(ROOT), 'codex_home': str(codex_home),
++        'trust_scope': 'THIS_ROOT_PROFILE_PAIR_ONLY',
+         'other_roots_preserved': len(before_others), 'manifest_sha256': sha((GUARD / 'manifest.json').read_bytes()),
+         'steps': steps, 'live_session': 'UNVERIFIED'})
+-    print('ACTIVATED: source/install/11 exact trusts verified; existing live sessions still require verification.')
++    print('ACTIVATED: source/install/11 exact trusts verified for ' + str(ROOT) + ' / '
++          + str(codex_home) + '; existing live sessions still require verification.')
+ except Exception as error:
+     # If installation committed before a later failure, preserve the new source:
+     # restoring only the source would break the newly installed manifest.
+--- before/test-activation-reviewed.py
++++ after/test-activation-reviewed.py
+@@ -37,7 +37,7 @@
+     data[str(AUDIT / 'candidate-manifest.json')] = json.dumps(manifest).encode()
+     guard = Path.home() / '.codex/luca-child-project/source-guard'
+     data[str(guard / 'manifest.json')] = b'{"roots":[]}'
+-    config = Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))) / 'config.toml'
++    config = Path(os.environ.get('CODEX_HOME') or str(Path.home() / '.codex')) / 'config.toml'
+     data[str(config)] = b'[hooks.state]\n'
+ 
+     class MemoryPath:
+@@ -90,6 +90,25 @@
+ 
+ 
+ class ActivationFailureTests(unittest.TestCase):
++    def test_unreviewed_profile_refused_before_subprocess_or_mutation(self):
++        for optimized in [False, True]:
++            for profile in ['/Users/luca/.luca/codex/aihub-direct', 'relative-home',
++                            '/Users/luca/Desktop/luca_gstack', '/Users/luca//.codex',
++                            '/Users/luca/./.codex', '/Users/luca/.codex/']:
++                with patch.dict(os.environ, {'CODEX_HOME': profile}):
++                    result = scenario(failure='patch', optimized=optimized)
++                self.assertIn('Reviewed CODEX_HOME changed', result.error)
++                self.assertEqual(result.calls, [])
++                self.assertEqual(result.writes, [])
++                self.assertEqual(result.deletes, [])
++
++    def test_empty_profile_uses_reviewed_default_and_reaches_original_failure(self):
++        for optimized in [False, True]:
++            with patch.dict(os.environ, {'CODEX_HOME': ''}):
++                result = scenario(failure='patch', optimized=optimized)
++            self.assertIn('activation-patch-apply failed', result.error)
++            self.assertEqual(result.deletes, [])
++
+     def test_malicious_target_and_new_metadata_refused_even_when_optimized(self):
+         for optimized in [False, True]:
+             for change in ['path', 'new', 'patch']:

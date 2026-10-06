@@ -1,0 +1,35 @@
+{
+  "patch_sha256": "9b2c53963b74f829af785b0167a0055fb35cad1fdf71668438f3bd8fdac54361",
+  "independent_cold_reviews": [
+    {
+      "eval_run_id": "route-atomic-refutation-20260930-01",
+      "session_id": "01a0f0df-9003-7eb3-8431-3a5fefce82fa",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T13-52-58-01a0f0df-9003-7eb3-8431-3a5fefce82fa.jsonl",
+      "turn_id": "01a0f0df-9068-7e52-974d-d12e49b5ced1",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "same_turn_complete": true,
+      "verdict": "PASS",
+      "passed": 7,
+      "total": 7
+    },
+    {
+      "eval_run_id": "route-atomic-final-20260930-01",
+      "session_id": "01a0f0de-fe21-7b01-b029-2a3c7e8edb6f",
+      "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "agent_role": "quality-gate",
+      "path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T13-52-21-01a0f0de-fe21-7b01-b029-2a3c7e8edb6f.jsonl",
+      "turn_id": "01a0f0de-fe84-7f40-a3e6-313f9aee3bf6",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "same_turn_complete": true,
+      "verdict": "PASS",
+      "passed": 7,
+      "total": 7
+    }
+  ],
+  "aggregate": "PASS",
+  "activated": false
+}

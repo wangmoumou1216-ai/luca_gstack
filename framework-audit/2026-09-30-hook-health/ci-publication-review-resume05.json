@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-cache-ci-publication-20261001-resume05",
+  "subject": {
+    "skill": "hook-cache-ci-publication-resume05",
+    "topic": "hook-cache-ci-publication",
+    "scene": "unknown",
+    "input_summary": "Readonly default-REFUTE review of frozen CI publication payload and seven criteria. Verified exact Git delta, original17 bytes, native completed source review envelopes, local receipt and actual remote head. Current controlled-state/preservation evidence and original CI shell-launch failure evidence remain unsupported.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-PUBLICATION-RESUME-01.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 5,
+    "total": 7,
+    "findings": [
+      "UNKNOWN C5: Frozen evidence lacks current public controlled-state readback and complete unrelated-user-work byte baseline; current App dirty set exceeds historical receipt, which proves neither preservation nor damage.",
+      "UNKNOWN C7: Exact five-line environment dependency insertion preserves all prior tests and safety assertions, but referenced evidence does not establish the original CI shell-launch null failure."
+    ]
+  }
+}

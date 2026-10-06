@@ -1,0 +1,5 @@
+[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。
+[route-guard] 当前宿主入口未确定；先确认适用入口，STOP 不授予执行权限。
+基于语义推断，最可能的 skill：
+  1. /brainstorm（参考依据：keyword matched but the prompt reads as a question *about* the term）
+语义映射清晰可按 确认后的当前宿主入口 K2/K4 路由；否则展示候选请用户确认或补充。

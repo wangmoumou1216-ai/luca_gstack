@@ -1,0 +1,57 @@
+--- a/.claude/agents/orchestrator.md
++++ b/.claude/agents/orchestrator.md
+@@ -197,7 +197,8 @@
+ 
+   2d  Supervisor/Hierarchical 模式：人工确认检查点
+       - 主 Agent 展示当前 Phase 的产出摘要 + 测试结果
+-      - 等待用户确认后继续下一 Phase
++      - 下一 Phase 已在有效执行授权范围内且无未决 Human Gate → 继续，不重复索取已有批准
++      - 缺授权、计划/范围变更或待决人类事项 → 等待真实用户确认；规划不授予执行权限
+ 
+ Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
+         Orchestrator 汇总并展示：PASS N / FAIL M / WARN K
+@@ -417,8 +418,9 @@
+ Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 找最后一个 DONE 的 node
+ Step 2  读该 node 的 handoff summary
+ Step 3  展示："上次完成了 <last_done>，核心决策：<D-001...>"
+-        "下一步是 <next_pending>，是否继续？"
+-Step 4  用户确认 → 进入 §3.4 执行循环
++        "下一步是 <next_pending>"
++Step 4  下一步在当前有效执行授权范围内且无未决 Human Gate → 进入 §3.4 执行循环
++        否则说明缺授权或待决事项，等待真实用户确认；状态文件本身不授予执行权限
+ ```
+ 
+ ---
+--- a/.claude/skills/office/auto/SKILL.md
++++ b/.claude/skills/office/auto/SKILL.md
+@@ -191,7 +191,7 @@
+ ```
+ 并行 Phase（‖）: 在同一条消息中并发启动所有 WA
+ 串行 Phase（→）: 等待前 Phase 所有 WA 完成 + handoff 写入后，再启动下一 Phase
+-质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 重试该 WA
++质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 按 W9 处理
+ ```
+ 
+ 派发前，主 Agent 必须把全部输入、`PRIMARY_OUTPUTS` 与 handoff 路径相对 `WORK_ROOT`
+@@ -207,14 +207,18 @@
+ OD headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢复」，这不是更换工具；
+ 该一次 retry 由 OD 路径计数，W9 不得通过重启 WA 重置它或重新进入已耗尽的 headless 路径。
+ 
++等待调用超时不等于任务终态。真实失败、取消和资源上限仍按原约束处置。
++重试前确认原 WA 已终止、收取在途结果并核对已完成效果；只按已有授权重试未完成部分。
++原任务仍在运行则沿原句柄等待；无法观察终态则暂停该依赖并报告缺口，不另开同一任务。
++
+ | WA 返回状态 | Orchestrator 动作 |
+ |------------|-----------------|
+ | `DONE` — 产出路径存在 | 继续下一 Phase |
+ | `DONE` — 但产出路径不存在 | 视为隐式 BLOCKED，执行重试 |
+-| `BLOCKED` — 首次 | **重试一次**（重新启动同一 WA，传入相同参数） |
++| `BLOCKED` — 首次 | 按上述终态与授权检查，**重试一次**；传入原 blockers 和已完成产物，不重放已完成效果 |
+ | `BLOCKED` — 重试后仍失败 | **停止当前 Pipeline**，向用户报告：阻塞 Phase、blockers 列表、建议操作（手动执行该 skill / 跳过该 Phase）|
+-| 超时无响应（> 5min） | 同 BLOCKED 首次处理 |
+-| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后重跑该 WA；不盲目重试 |
++| 等待超过 5min，尚无任务终态 | 告知进度，沿实际句柄继续等待/取状态；不因此标 BLOCKED 或重启 WA |
++| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后续做未完成部分；不盲目重试 |
+ 
+ **不允许无限重试**：单个 WA 最多重试 1 次，失败后必须上报，不得静默跳过。
+ 

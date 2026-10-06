@@ -1,0 +1,29 @@
+import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,realpathSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join,dirname} from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {installTestSourceGuard} from '/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/source-guard-test-fixture.mjs';
+import {inspectHookHealth} from '/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/codex-hook-health.mjs';
+import {registeredHostHooks} from '/Users/luca/Desktop/项目/muse/app/host-hook-ready.js';
+const root='/Users/luca/.codex/worktrees/hook-text-data/luca_gstack';
+assert.equal(realpathSync(root),root);
+const base=realpathSync(mkdtempSync(join(tmpdir(),'hook-cross-repo-')));
+const hookTestHome=join(base,'home');
+const guard=join(hookTestHome,'.codex/luca-child-project/source-guard');
+mkdirSync(dirname(guard),{recursive:true,mode:0o700});
+try {
+  const installed=installTestSourceGuard({roots:[root],destination:guard,directory:base});
+  assert.equal(installed.status,0,installed.stderr);
+  const health=inspectHookHealth(root,{guardRoot:guard});
+  assert.equal(health.ok,true,JSON.stringify(health));
+  assert.equal(registeredHostHooks(join(root,'.codex/hooks.json'),{gstackRoot:root,home:hookTestHome}),true,
+    'App must recognize actual installer snapshot and frozen stable command');
+  const verified=spawnSync(process.execPath,[join(root,'.codex/hook-source-integrity.mjs'),'--verify'],{
+    cwd:root,encoding:'utf8',input:'{"payload":"preserved"}',env:{...process.env,HOME:hookTestHome,NODE_ENV:'test',
+      LUCA_SOURCE_GUARD_TEST_ROOT:guard,LUCA_CHILD_SOURCE_ROOT:root,NODE_OPTIONS:`--import=${guard}/bootstrap.mjs`}});
+  assert.equal(verified.status,0,verified.stderr);assert.equal(verified.stdout,'');
+  console.log(JSON.stringify({status:'PASS',source_root:root,real_installer:true,full_health:true,
+    App_stable_registration:true,protected_cli:true,source_digest:health.registration.current_digest,
+    manifest_sha256:health.installation.manifest_sha256}));
+} finally {rmSync(base,{recursive:true,force:true});}

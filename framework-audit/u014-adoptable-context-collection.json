@@ -1,0 +1,23 @@
+{
+  "collected_at": "2026-10-03T08:25:22.874919+00:00",
+  "unit": "decision-state only",
+  "baseline": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "patch": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-context-adoptable-63biqba7/decision-state.patch",
+    "sha256": "5c1d6270cf0daceb1e9b4400991ef8fc77213c8333773cc37418b66c3cbf15bb",
+    "changed_paths": [
+      ".claude/skills/office/references/handoff-protocol.md"
+    ],
+    "postimages": {
+      ".claude/skills/office/references/handoff-protocol.md": "0ac7afe3bb49d3abc46a9a788b6f83ace5f745da82051c7a574737834ce8d03c"
+    }
+  },
+  "preimages": {
+    ".claude/skills/office/references/handoff-protocol.md": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+    ".claude/skills/office/SKILL.md": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377"
+  },
+  "excluded": [
+    "required-sources",
+    "combined"
+  ]
+}

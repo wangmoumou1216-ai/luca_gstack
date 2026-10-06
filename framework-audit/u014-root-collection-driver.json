@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-03T07:27:18.248972+00:00",
+  "files": [
+    {
+      "path": "scripts/tri-system-eval/driver.mjs",
+      "before_sha256": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+      "after_sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6",
+      "owner_source": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.mjs"
+    },
+    {
+      "path": "scripts/tri-system-eval/driver.test.mjs",
+      "before_sha256": "8b317c01dec819b682fea59a80821d250caa4358e87a344c63b3d4bbf6048f68",
+      "after_sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7",
+      "owner_source": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.test.mjs"
+    }
+  ],
+  "readiness": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-orchestration-ready.json",
+  "scope": "exact frozen two-file owner handover, no production policy changes"
+}

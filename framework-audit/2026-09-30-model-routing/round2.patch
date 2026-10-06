@@ -1,0 +1,932 @@
+--- a/.claude/agents/orchestrator.md
++++ b/.claude/agents/orchestrator.md
+@@ -169,7 +169,8 @@
+           追加 delta 行：MODIFIED: <原准则> → <新准则> (reason)
+         - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
+         - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
+-        - 模型：判定环节 dispatch quality-gate 时传 model: fable（fable_whitelist P0
++        - 模型：Codex quality-gate 按 common MR-004/peak，冷启动且关键失败不降级。
++          Claude 兼容路径 dispatch quality-gate 时传 model: fable（fable_whitelist P0
+           出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
+ ```
+ 
+@@ -382,9 +383,21 @@
+ 
+ ---
+ 
+-## 5. 模型路由（强制传参，2026-07-10 起非建议）
+-
+-真值源：`.claude/skill-os/model-routing.yaml`（能力档 + fable_whitelist + dispatch_rules；下表为速查快照，与真值源同步维护）。
++## 5. 模型路由（按 harness 分开执行）
++
++真值源：`.claude/skill-os/model-routing.yaml`。Codex native/runner 只消费顶层 common
++`model_routing`：正常执行/事实收集继承 anchor，已登记的关键审查身份使用 peak，机械任务
++使用已批准且确实更低的 light。模型名和相对顺序来自私有 binding，effort 保持用户设置；
++未知关系和关键采用证据失败均拒绝，不自动降级，也不由 caller 的 model 参数覆盖政策。
++独立审查一律 `fork_turns: none`，是否换模型不改变独立性要求。
++
++原生身份以 `dispatch.native_agent_types` 为准。当前 default/worker 走 MR-001，explorer
++走 MR-006，quality-gate 走 MR-004；未登记的 MR-002/003/005/007 原生用途不能靠 prompt
++或显式 model 参数宣称已接通。方案裁决可用现有 quality-gate 的 MR-004/peak；新增身份
++需单独登记、配置并验证。Workflow runner 按精确 workflow/phase 路由，没有 omit/inherit 豁免。
++
++下表和后面的 alias 传参/降级规则只描述延期的 Claude adapter 兼容合同，不证明 Claude
++具备 Codex 的运行时强制能力，也不能覆盖 Codex 关键场景政策。
+ 
+ | 能力档 | 任务类型 | 当前解析（2026-07-10） |
+ |---------|---------|---------|
+@@ -393,7 +406,7 @@
+ | guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
+ | mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
+ 
+-**Dispatch 规则（强制）：**
++**Claude 兼容 Dispatch 规则：**
+ 1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
+ 2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
+ 3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。
+--- a/.claude/agents/plan-agent.md
++++ b/.claude/agents/plan-agent.md
+@@ -3,8 +3,12 @@
+ **定位：** 主 Agent 在执行复杂任务前调用的规划能力。
+ **唯一职责：** 判前提 → 分析任务 → 拆分阶段 → 选择编排模式 → 输出断言列表。
+ **不执行任务。** 输出计划后，由 Orchestrator（Free Task Mode）负责执行。
+-**模型：** 被 spawn 为规划 subagent 时按 model-routing `fable_whitelist` P2（plan-mode 规划期）
+-显式传 `model: fable`（本文件无 pin，登记于 `agents_no_pin`；fable 不可用降级 opus 并告知）。
++**模型：** Codex 按 common `model_routing` 的已登记原生身份解析角色，effort 保持用户设置；
++仅填写 `model` 或在 prompt 中写“规划官”不会把 default/anchor 变成 peak。当前 MR-002
++没有独立的 native agent_type；default 子任务只可收集/组织规划输入，关键方案裁决必须
++通过已登记的 `quality-gate`（MR-004/peak）冷审。不得把输入整理称为 peak 规划裁决。
++Claude 兼容路径仍按 `fable_whitelist` P2 显式传 `model: fable`（无 pin，登记于
++`agents_no_pin`；该兼容路径的 opus 降级不适用于 Codex 关键场景）。
+ 
+ ---
+ 
+--- a/.claude/hooks/lib/codex-child-project.mjs
++++ b/.claude/hooks/lib/codex-child-project.mjs
+@@ -11,7 +11,7 @@
+ import { readActivation } from '../../../scripts/model-route-host.mjs';
+ import {
+   PROJECTS_ROOT, activeProjectAuthority, attestPendingProjectEvent,
+-  readProjectState, verifyProjectBinding,
++  readProjectState, validatedBindingForState, verifyProjectBinding,
+ } from './project-substrate.mjs';
+ 
+ const MAX_SOURCE_BYTES = 64 * 1024 * 1024;
+@@ -350,6 +350,14 @@
+ }
+ function parentRootAuthority({ gstackRoot, projectsRoot, parentSessionId, turnId, cwd, transcriptPath, codexHome }) {
+   const snapshot = readProjectState(gstackRoot, parentSessionId, projectsRoot).value;
++  // Project delegation is optional for framework work. Validate NO_PIN before
++  // returning no root authority; never consume an unrelated prompt candidate
++  // or mint a project receipt just to dispatch an unbound reviewer. The caller
++  // still checks any genuine inherited child association below.
++  if (snapshot.state === 'NO_PIN') {
++    validatedBindingForState(snapshot, projectsRoot);
++    return null;
++  }
+   if (snapshot.state !== 'TURN_ACTIVE' && !snapshot.event_control?.candidates?.length) return null;
+   const observed = attestPendingProjectEvent({
+     gstackRoot, projectsRoot, sessionId: parentSessionId, boundaryId: turnId,
+--- a/.claude/skill-os/model-routing.yaml
++++ b/.claude/skill-os/model-routing.yaml
+@@ -1,4 +1,6 @@
+ # 模型路由真值源（Single Source of Truth）
++# Codex native/runner 只执行顶层 model_routing 的 common-v2 角色政策。
++# 以下旧 tier/alias/fable 规则保留为延期的 Claude adapter 兼容合同，不能覆盖 Codex。
+ #
+ # 规则：
+ # 1. 按「能力档（tier）」定义路由，不写死模型版本号。resolves_to 是 Claude Code
+@@ -168,6 +170,8 @@
+ # ─── Dispatch 规则（执行层，2026-07-10 起为强制，非建议）───
+ dispatch_rules:
+   principle: |
++    本节只描述 Claude 兼容调度；Codex native/runner 执行顶层 model_routing，
++    不消费 tier/alias，不豁免 workflow，不接受关键场景的自动模型降级。
+     spawn 任何 subagent 时，调度方必须解析 tier→alias 并显式传 Agent tool 的
+     model 参数（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin，如 Step 3b
+     对 quality-gate 传 fable）。不确定归属 → 省略参数继承主循环，不得猜 fable。
+--- a/.codex/model-route-hook.mjs
++++ b/.codex/model-route-hook.mjs
+@@ -12,7 +12,7 @@
+ import {
+   acceptInvocationEvidence, bindInvocationExternalIdentity, findInvocationByExternalIdentity,
+   pauseActivation, prepareInvocation, readActivation, releaseDigestForPolicy, startActivation,
+-  updateRootAnchor,
++  updateRootAnchor, latchCriticalFailure,
+ } from '../scripts/model-route-host.mjs';
+ import {
+   bindCodexChildProject,
+@@ -75,35 +75,63 @@
+ function releaseFor(policy) {
+   return releaseDigestForPolicy(modelRoutingPolicyDigest(policy));
+ }
++const unresolvedCriticalWorkflow = state => Object.values(state.invocations).some(call =>
++  call.status === 'pending' && call.critical && call.route_harness === 'codex-cli');
++function latchRouteFailure(payload, state, critical, error) {
++  if (!critical || !state) return;
++  const reason = String(error?.message || error);
++  try {
++    const latched = latchCriticalFailure({
++      harness: 'codex', root_session_id: payload.session_id,
++      expected_activation_id: state.activation_id,
++      expected_root_generation: state.root_generation,
++      critical, reason, evidence_ref: `codex-pre-tool:${payload.turn_id}:${payload.tool_use_id}`,
++      state_root: STATE_ROOT,
++    });
++    if (!['LATCHED', 'UNCHANGED'].includes(latched.disposition)
++      || latched.critical_failure_latched !== true) {
++      throw new Error(latched.reason);
++    }
++  } catch (failure) {
++    throw new Error(`${reason}; critical failure persistence unavailable: ${failure?.message || failure}`);
++  }
++}
+ function routeForAgent(payload, agentType) {
+   const policy = readPolicy();
+   const scene = resolveDispatchScene(policy, {kind: 'native-agent', agent_type: agentType});
+   if (!scene) throw new Error('UNKNOWN_AGENT_TYPE');
+   const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
+   if (!state || state.status !== 'active') throw new Error('ACTIVATION_MISSING');
+-  const binding = readBindings();
+-  const route = resolveModelRoute({
+-    harness: 'codex-native', scene, role_config: policy,
+-    effective_config: {
+-      anchor: state.root_anchor,
+-      peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
+-      light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
+-      approved_order: binding.approved_order,
+-      security: {
+-        provider: 'openai', sandbox: 'inherit-parent',
+-        approval_policy: payload.permission_mode || 'inherit-parent', network: false,
++  if (state.critical_failure) throw new Error('CRITICAL_FAILURE_LATCHED');
++  if (unresolvedCriticalWorkflow(state)) throw new Error('CRITICAL_WORKFLOW_EVIDENCE_PENDING');
++  try {
++    const binding = readBindings();
++    const route = resolveModelRoute({
++      harness: 'codex-native', scene, role_config: policy,
++      effective_config: {
++        anchor: state.root_anchor,
++        peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
++        light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
++        approved_order: binding.approved_order,
++        security: {
++          provider: 'openai', sandbox: 'inherit-parent',
++          approval_policy: payload.permission_mode || 'inherit-parent', network: false,
++        },
+       },
+-    },
+-    runtime_capabilities: {
+-      explicit_model_override: true,
+-      adopted_model_evidence: true,
+-      preserves_safety: true,
+-      model_pin: null,
+-      evidence: {owner: 'codex-native-hooks', ref: 'PreToolUse+SubagentStop', harness: 'codex-native'},
+-    },
+-  }, {verifyCapability: () => true});
+-  if (route.disposition !== 'READY') throw new Error(route.diagnostic || route.reason);
+-  return {policy, state, route, release_digest: releaseFor(policy)};
++      runtime_capabilities: {
++        explicit_model_override: true,
++        adopted_model_evidence: true,
++        preserves_safety: true,
++        model_pin: null,
++        evidence: {owner: 'codex-native-hooks', ref: 'PreToolUse+SubagentStop', harness: 'codex-native'},
++      },
++    }, {verifyCapability: () => true});
++    if (route.disposition !== 'READY') throw new Error(route.diagnostic || route.reason);
++    return {policy, state, route, release_digest: releaseFor(policy)};
++  } catch (error) {
++    latchRouteFailure(payload, state, policy.scenes[scene].critical, error);
++    throw error;
++  }
+ }
+ 
+ function handleSessionStart(payload) {
+@@ -142,7 +170,9 @@
+     const command = payload.tool_input?.command;
+     if (!text(command) || !runnerCommand(command)) return {};
+     const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
+-    if (!state || state.status !== 'active' || state.critical_failure) return deny('model-route activation is not usable');
++    if (!state || state.status !== 'active' || state.critical_failure || unresolvedCriticalWorkflow(state)) {
++      return deny('model-route activation is not usable or critical workflow evidence is pending');
++    }
+     return allow({...payload.tool_input,
+       command: `LUCA_MODEL_ROUTE_ROOT_SESSION_ID=${shellQuote(payload.session_id)} ${command}`});
+   }
+@@ -151,8 +181,9 @@
+     return deny('model-route invocation identity is incomplete');
+   }
+   const agentType = text(payload.tool_input.agent_type) ? payload.tool_input.agent_type : 'default';
+-  try {
+-    const routed = routeForAgent(payload, agentType);
++  let routed, modelPreparationStarted = false;
++  try {
++    routed = routeForAgent(payload, agentType);
+     const unbound = Object.values(routed.state.invocations).some(call => call.status === 'pending'
+       && call.route_harness === 'codex-native' && !text(call.external_identity?.agent_id));
+     if (unbound) return deny('another native subagent is awaiting trusted agent-id correlation');
+@@ -169,27 +200,41 @@
+       transcriptPath: payload.transcript_path || '',
+       codexHome: process.env.CODEX_HOME || '',
+     });
++    modelPreparationStarted = true;
+     const prepared = prepareInvocation({
+       harness: 'codex', root_session_id: payload.session_id,
+       release_digest: routed.release_digest, route: routed.route,
+       task_id: `native:${payload.turn_id}:${payload.tool_use_id}`,
+       input_sha: inputDigest(payload.tool_input), state_root: STATE_ROOT,
+     });
+-    if (prepared.disposition !== 'READY') return deny(`model-route refused: ${prepared.reason}`);
++    if (prepared.disposition !== 'READY') {
++      latchRouteFailure(payload, routed.state, routed.route.critical, prepared.reason);
++      return deny(`model-route refused: ${prepared.reason}`);
++    }
+     for (const [field, value] of [['tool_use_id', payload.tool_use_id], ['agent_type', agentType]]) {
+       const bound = bindInvocationExternalIdentity({
+         harness: 'codex', root_session_id: payload.session_id,
+         invocation_id: prepared.envelope.invocation_id, field, value, state_root: STATE_ROOT,
+       });
+-      if (bound.disposition !== 'BOUND') return deny(`model-route correlation failed: ${bound.reason}`);
++      if (bound.disposition !== 'BOUND') {
++        latchRouteFailure(payload, routed.state, routed.route.critical, bound.reason);
++        return deny(`model-route correlation failed: ${bound.reason}`);
++      }
+     }
+     const {model: _ignoredModel, ...updated} = payload.tool_input;
+     if (routed.route.requested_model !== routed.state.root_anchor.model) {
+       updated.model = routed.route.requested_model;
+       if (!text(updated.fork_turns) || updated.fork_turns === 'all') updated.fork_turns = 'none';
+     }
++    // Review independence is required even when no model upgrade occurs.
++    // Numeric history forks also carry the producer's reasoning into review.
++    if (routed.route.independent_review_required) updated.fork_turns = 'none';
+     return allow(updated);
+   } catch (error) {
++    if (modelPreparationStarted && routed?.route.critical) {
++      try { latchRouteFailure(payload, routed.state, true, error); }
++      catch (failure) { error = failure; }
++    }
+     return deny(`model-route unavailable: ${(error && error.message) || error}`);
+   }
+ }
+--- a/.codex/workflow-runner.mjs
++++ b/.codex/workflow-runner.mjs
+@@ -45,7 +45,7 @@
+ import { fileURLToPath } from 'url';
+ import { modelRoutingPolicyDigest, resolve as resolveModelRoute, resolveDispatchScene } from '../scripts/model-route.mjs';
+ import {
+-  acceptInvocationEvidence, prepareInvocation, readActivation, releaseDigestForPolicy,
++  acceptInvocationEvidence, latchCriticalFailure, prepareInvocation, readActivation, releaseDigestForPolicy,
+ } from '../scripts/model-route-host.mjs';
+ 
+ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+@@ -112,14 +112,17 @@
+   return binding;
+ }
+ 
+-function routeForPhase(phaseName) {
+-  if (!ROOT_SESSION_ID) throw new Error('MODEL_ROUTE_ROOT_SESSION_MISSING');
++function dispatchForPhase(phaseName) {
+   const policy = readCommonPolicy();
+   const scene = resolveDispatchScene(policy, {kind: 'workflow', workflow_id: rawName, phase_id: phaseName});
+   if (!scene) throw new Error('MODEL_ROUTE_SCENE_UNKNOWN');
+-  const state = readActivation({
+-    harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+-  });
++  const critical = policy.scenes[scene].critical;
++  if (typeof critical !== 'boolean') throw new Error('MODEL_ROUTE_INVALID_SCENE_POLICY');
++  return {policy, scene, critical};
++}
++
++function routeForPhase({policy, scene}, state) {
++  if (!ROOT_SESSION_ID) throw new Error('MODEL_ROUTE_ROOT_SESSION_MISSING');
+   if (!state || state.status !== 'active') throw new Error('MODEL_ROUTE_ACTIVATION_MISSING');
+   const binding = readCodexBindings();
+   const route = resolveModelRoute({
+@@ -292,45 +295,85 @@
+ function runCodex(prompt, schema, phaseName) {
+   return new Promise((resolveP) => {
+     const id = ++agentSeq;
+-    let settled = false, child = null, timer = null, prepared = null, route = null;
++    let settled = false, child = null, timer = null, prepared = null, route = null, activation = null;
++    // Until exact dispatch identity is classified by the canonical policy, failure
++    // cannot be trusted as noncritical. This also covers errors before an envelope exists.
++    let critical = true;
+     let threadId = null, turnId = null, adoptedModel = null, rerouted = false;
+     const freeform = [];
+     const finish = (val, why, runtime = {}) => {
+       if (settled) return;
+       settled = true;
+-      if (timer) clearTimeout(timer);
+-      if (child?.pid) liveChildren.delete(child.pid);
+-      if (prepared?.envelope) {
+-        const accepted = acceptInvocationEvidence({
+-          harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
+-          evidence: {
+-            ...prepared.envelope,
+-            adopted_model: adoptedModel || '',
+-            status: runtime.completed === true ? 'completed' : 'failed',
+-            same_invocation_success: runtime.completed === true
+-              && runtime.thread_id === threadId && runtime.turn_id === turnId,
+-            rerouted,
+-            fallback: false,
+-            evidence_ref: `app-server:${threadId || 'unstarted'}:${turnId || `call-${id}`}`,
+-          },
+-        });
+-        if (accepted.disposition !== 'ACCEPT') val = null;
+-        if (route?.critical && accepted.disposition !== 'ACCEPT') runnerCriticalFailure = true;
++      // Refuse locally before touching state: persistence itself may be unavailable.
++      if (!val && critical) runnerCriticalFailure = true;
++      try {
++        if (prepared?.envelope) {
++          try {
++            const accepted = acceptInvocationEvidence({
++              harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
++              evidence: {
++                ...prepared.envelope,
++                adopted_model: adoptedModel || '',
++                status: runtime.completed === true ? 'completed' : 'failed',
++                same_invocation_success: runtime.completed === true
++                  && runtime.thread_id === threadId && runtime.turn_id === turnId,
++                rerouted,
++                fallback: false,
++                evidence_ref: `app-server:${threadId || 'unstarted'}:${turnId || `call-${id}`}`,
++              },
++            });
++            if (accepted.disposition !== 'ACCEPT') {
++              if (val) why = `MODEL_ROUTE_${accepted.reason}`;
++              val = null;
++            }
++          } catch (error) {
++            val = null;
++            why = `MODEL_ROUTE_EVIDENCE_IO_FAILED: ${error?.message || String(error)}`;
++          }
++        }
++        if (!val && critical) {
++          runnerCriticalFailure = true;
++          let persistence = 'ACTIVATION_UNAVAILABLE';
++          if (activation) {
++            try {
++              const latched = latchCriticalFailure({
++                harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
++                expected_activation_id: activation.activation_id,
++                expected_root_generation: activation.root_generation,
++                critical: true, reason: why,
++                evidence_ref: `runner:${rawName}:${phaseName}:call-${id}`,
++              });
++              persistence = latched.critical_failure_latched === true ? null : latched.reason;
++            } catch (error) { persistence = error?.message || String(error); }
++          }
++          if (persistence) {
++            process.stderr.write(`   ⚠ MODEL_ROUTE_CRITICAL_FAILURE_NOT_PERSISTED: ${persistence}\n`);
++          }
++        }
++        if (val) agentOk++; else {
++          agentFail++;
++          const disposition = runnerCriticalFailure ? '返回 null，阻断 workflow 可信输出' : '按契约返回 null 交给 workflow 降级';
++          process.stderr.write(`   ⚠ agent#${id} 失败(${why})——${disposition}\n`);
++        }
++      } finally {
++        // Never leave the workflow's Promise pending when evidence/latch I/O fails.
++        if (timer) clearTimeout(timer);
++        if (child && child.exitCode === null && child.signalCode === null) {
++          try { child.stdin.end(); } catch { }
++          try { child.kill('SIGTERM'); } catch { }
++        }
++        resolveP(val);
+       }
+-      if (val) agentOk++; else {
+-        agentFail++;
+-        process.stderr.write(`   ⚠ agent#${id} 失败(${why})——按契约返回 null 交给 workflow 降级\n`);
+-      }
+-      if (child && child.exitCode === null && child.signalCode === null) {
+-        try { child.stdin.end(); } catch { }
+-        try { child.kill('SIGTERM'); } catch { }
+-      }
+-      resolveP(val);
+     };
+ 
+     (async () => {
+       try {
+-        const routed = routeForPhase(phaseName);
++        const dispatch = dispatchForPhase(phaseName);
++        critical = dispatch.critical;
++        activation = ROOT_SESSION_ID ? readActivation({
++          harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT,
++        }) : null;
++        const routed = routeForPhase(dispatch, activation);
+         route = routed.route;
+         prepared = prepareInvocation({
+           harness: 'codex', root_session_id: ROOT_SESSION_ID,
+@@ -339,7 +382,10 @@
+           input_sha: modelRoutingPolicyDigest({prompt, schema: schema || null}),
+           state_root: STATE_ROOT,
+         });
+-        if (prepared.disposition !== 'READY') throw new Error(`MODEL_ROUTE_${prepared.reason}`);
++        if (prepared.disposition !== 'READY') {
++          if (prepared.reason === 'CRITICAL_FAILURE_LATCHED') runnerCriticalFailure = true;
++          throw new Error(`MODEL_ROUTE_${prepared.reason}`);
++        }
+         const outputSchema = schema ? strictifySchema(schema, freeform) : null;
+         // JSON serialization happens before the child starts so cyclic/BigInt schemas still obey
+         // the historical "failure is null, never a rejected workflow promise" contract.
+@@ -369,6 +415,7 @@
+         child.stderr.on('data', data => { if (stderr.length < 8000) stderr += String(data); });
+         child.on('error', () => failTransport('APP_SERVER_SPAWN_FAILED'));
+         child.on('exit', (code) => {
++          liveChildren.delete(child.pid);
+           if (!settled && code !== 0) failTransport(`APP_SERVER_EXIT_${code}`);
+         });
+         createInterface({input: child.stdout}).on('line', line => {
+@@ -404,6 +451,7 @@
+ 
+         await rpc('initialize', {clientInfo: {name: 'luca_model_route_runner', version: '2'}});
+         send({method: 'initialized', params: {}});
++        if (runnerCriticalFailure) throw new Error('MODEL_ROUTE_CRITICAL_FAILURE_LATCHED');
+         const started = await rpc('thread/start', {
+           model: route.requested_model,
+           modelProvider: 'openai',
+@@ -429,6 +477,7 @@
+           model: route.requested_model,
+           ...(outputSchema ? {outputSchema} : {}),
+         };
++        if (runnerCriticalFailure) throw new Error('MODEL_ROUTE_CRITICAL_FAILURE_LATCHED');
+         const startedTurn = await rpc('turn/start', turnParams);
+         turnId = startedTurn?.turn?.id || null;
+         if (!turnId) throw new Error('APP_SERVER_TURN_ID_MISSING');
+@@ -473,6 +522,7 @@
+ const agent = async (prompt, opts = {}) => {
+   const ph = opts.phase || currentPhase;
+   process.stderr.write(`   · agent ${opts.label || '(unlabeled)'} [model-route phase=${ph || '(unknown)'}]\n`);
++  if (cancellationRequested || runnerCriticalFailure) return null;
+   if (DRY) return null;                       // dry-run：不真调模型，走全 null 路径验降级
+   // 工作根是 scratch 而非仓库（见 SANDBOX 段），故须显式告知仓库绝对路径——否则脚本里
+   // 那些仓库相对路径（self-model.yaml 等）会解析到 scratch 而读不到。
+@@ -491,7 +541,7 @@
+   queuedWork += list.length;
+   const worker = async () => {
+     for (;;) {
+-      if (cancellationRequested) return;
++      if (cancellationRequested || runnerCriticalFailure) return;
+       const i = next++;
+       if (i >= list.length) return;
+       queuedWork--;
+@@ -546,6 +596,15 @@
+ const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
+ let result = null, failed = null;
+ try {
++  if (!DRY && ROOT_SESSION_ID) {
++    const entry = readActivation({harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT});
++    // Only tickets already pending at entry are unresolved across runs. Tickets
++    // this runner prepares later still support normal parallel critical dispatch.
++    if (Object.values(entry?.invocations || {}).some(call => call?.critical === true
++      && call.status === 'pending' && call.route_harness === 'codex-cli')) {
++      throw new Error('NEEDS_CONTEXT: MODEL_ROUTE_UNRESOLVED_CRITICAL_INVOCATION; prior workflow evidence is not closed');
++    }
++  }
+   // 不得把 meta 作为注入参数名 —— 脚本体内自己 `const meta = {...}`，同名会重复声明报错
+   const fn = new AsyncFunction('agent', 'phase', 'parallel', 'log', 'args', src);
+   result = await fn(agent, phase, parallel, log, ARGS_JSON);
+--- a/scripts/model-route-host.mjs
++++ b/scripts/model-route-host.mjs
+@@ -157,6 +157,37 @@
+   const file = statePath({harness, root_session_id, state_root});
+   const state = readJson(file);
+   return validState(state) ? structuredClone(state) : null;
++}
++
++// Trusted adapters call this when canonical critical dispatch fails before a ticket
++// exists, or when evidence I/O fails. Bind to their captured activation/generation;
++// a later activation must never inherit an earlier dispatch's failure.
++export function latchCriticalFailure({
++  harness, root_session_id, expected_activation_id, expected_root_generation,
++  critical, reason, evidence_ref, state_root,
++}) {
++  if (critical === false) return outcome('UNCHANGED', 'NONCRITICAL_FAILURE');
++  if (critical !== true || !supportedHarnesses.has(harness) || !text(root_session_id)
++    || !text(expected_activation_id) || !Number.isSafeInteger(expected_root_generation) || expected_root_generation < 0
++    || !text(reason) || !text(evidence_ref)) return outcome('REFUSE', 'INVALID_FAILURE_INPUT');
++  const file = statePath({harness, root_session_id, state_root});
++  // Missing state is not an invitation to create an activation or its directory.
++  if (!validState(readJson(file))) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
++  return withLock(file, () => {
++    const state = readJson(file);
++    if (!validState(state)) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');
++    if (state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation) {
++      return outcome('REFUSE', 'ACTIVATION_STATE_CHANGED');
++    }
++    if (state.critical_failure) {
++      return outcome('UNCHANGED', 'CRITICAL_FAILURE_LATCHED', {critical_failure_latched: true});
++    }
++    state.critical_failure = true;
++    state.critical_failure_evidence = {reason, evidence_ref};
++    invalidatePending(state, 'CRITICAL_FAILURE_LATCHED');
++    writeAtomic(file, state);
++    return outcome('LATCHED', 'CRITICAL_FAILURE_LATCHED', {critical_failure_latched: true});
++  });
+ }
+ 
+ export function pauseActivation({harness, root_session_id, state_root}) {
+--- a/scripts/test-codex-child-project.mjs
++++ b/scripts/test-codex-child-project.mjs
+@@ -119,6 +119,15 @@
+     root_anchor: { model: 'fixture-model', source: 'fixture' },
+     release_digest: 'a'.repeat(64), state_root: stateRoot });
+ 
++  check('pinned root still rejects a mismatched native candidate boundary', () => {
++    const stateFile = join(gstack, '.claude', `.session-project-${rootSid}`);
++    const before = readFileSync(stateFile);
++    assert.throws(() => prepareCodexChildProject({gstackRoot: gstack, projectsRoot: projects,
++      parentSessionId: rootSid, turnId: 'wrong-boundary', toolUseId,
++      agentType, taskName, cwd: gstack, codexHome}), {code: 'BOUNDARY_MISMATCH'});
++    assert.deepEqual(readFileSync(stateFile), before, 'refusal leaves the native candidate intact');
++    assert.equal(existsSync(receiptFolder(rootSid)), false, 'refusal creates no project receipt');
++  });
+   const prepared = prepareCodexChildProject({ gstackRoot: gstack, projectsRoot: projects,
+     parentSessionId: rootSid, turnId, toolUseId, agentType, taskName, cwd: gstack, codexHome });
+   check('prepare requires and freezes a native-attested parent turn', () => {
+--- a/scripts/test-codex-model-route-hook.mjs
++++ b/scripts/test-codex-model-route-hook.mjs
+@@ -2,11 +2,12 @@
+ import assert from 'node:assert/strict';
+ import {createHash} from 'node:crypto';
+ import {spawnSync} from 'node:child_process';
+-import {cpSync, existsSync, mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync} from 'node:fs';
++import {cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync} from 'node:fs';
+ import {tmpdir} from 'node:os';
+ import {dirname, join, resolve} from 'node:path';
+ import {fileURLToPath} from 'node:url';
+-import {readActivation} from './model-route-host.mjs';
++import {readActivation, stateFileForTest} from './model-route-host.mjs';
++import {queueProjectEventCandidate} from '../.claude/hooks/lib/project-substrate.mjs';
+ 
+ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+ const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'codex-model-route-hook.')));
+@@ -131,6 +132,53 @@
+   equal(existsSync(importMarker), false, 'native hook Python parser ignores workdir modules');
+   equal(state(isolatedSession).root_anchor.model, 'gpt-5.6-sol',
+     'native hook still parses policy with isolated Python import path');
++  const noPinSession = 'root-no-pin-forwarded';
++  start(noPinSession);
++  queueProjectEventCandidate({gstackRoot: ROOT, sessionId: noPinSession,
++    boundaryId: 'previous-human-turn', cwd: ROOT, harness: 'codex',
++    prompt: 'Earlier framework request', intent: {kind: 'turn'}});
++  const noPinFile = join(ROOT, '.claude', `.session-project-${noPinSession}`);
++  const noPinBefore = readFileSync(noPinFile, 'utf8');
++  const noPinPre = pre(noPinSession,
++    {task_name: 'framework_review', message: 'authorized framework review',
++      agent_type: 'quality-gate'}, 'tool-no-pin-review');
++  equal(noPinPre.hookSpecificOutput.permissionDecision, 'allow',
++    `NO_PIN framework review does not require project-event attestation: ${noPinPre.hookSpecificOutput.permissionDecisionReason}`);
++  equal(readFileSync(noPinFile, 'utf8'), noPinBefore,
++    'NO_PIN review neither consumes the candidate nor creates project authority');
++  equal(existsSync(join(childStore, createHash('sha256').update(ROOT).digest('hex'), noPinSession)),
++    false, 'NO_PIN review produces no child project receipt');
++  subStart(noPinSession, 'agent-no-pin-review', 'quality-gate');
++  equal(subStop(noPinSession, 'agent-no-pin-review', 'quality-gate', transcript({
++    sessionId: noPinSession, agentId: 'agent-no-pin-review', agentType: 'quality-gate',
++    model: 'gpt-6-astra',
++  })), {}, 'framework review still requires matching model adoption and same-call completion');
++  const invalidNoPinSession = 'root-invalid-no-pin';
++  start(invalidNoPinSession);
++  writeFileSync(join(ROOT, '.claude', `.session-project-${invalidNoPinSession}`),
++    JSON.stringify({schema_version: 2, state: 'NO_PIN', session_id: invalidNoPinSession,
++      binding: {project: 'forged'}}));
++  equal(pre(invalidNoPinSession, {task_name: 'bad_identity', message: 'review'}, 'tool-invalid-no-pin')
++    .hookSpecificOutput.permissionDecision, 'deny', 'NO_PIN carrying a project identity is refused');
++  equal(Object.keys(state(invalidNoPinSession).invocations).length, 0,
++    'invalid NO_PIN creates no pending model invocation');
++  const malformedNoPinSession = 'root-malformed-no-pin';
++  start(malformedNoPinSession);
++  const malformedNoPin = JSON.parse(noPinBefore);
++  malformedNoPin.session_id = malformedNoPinSession;
++  malformedNoPin.event_control.candidates[0].session_id = malformedNoPinSession;
++  malformedNoPin.event_control.candidates[0].boundary_id = '';
++  writeFileSync(join(ROOT, '.claude', `.session-project-${malformedNoPinSession}`),
++    JSON.stringify(malformedNoPin));
++  equal(pre(malformedNoPinSession, {task_name: 'malformed', message: 'review'}, 'tool-malformed-no-pin')
++    .hookSpecificOutput.permissionDecision, 'deny', 'malformed NO_PIN event control remains refused');
++  const scopeCheck = spawnSync(process.execPath, [join(repo, '.claude/hooks/project-scope-guard.mjs')], {
++    cwd: ROOT, encoding: 'utf8', env: {...env, CLAUDE_PROJECT_DIR: ROOT, LUCA_ACTUAL_HARNESS: 'claude'},
++    input: JSON.stringify({session_id: noPinSession, turn_id: 'turn-root', cwd: ROOT,
++      tool_name: 'Read', tool_input: {file_path: 'docs/private-project.md'}}),
++  });
++  equal(JSON.parse(scopeCheck.stdout).hookSpecificOutput.permissionDecision, 'deny',
++    'unbound framework reviewer still cannot access shared project paths');
+   const renewalSession = 'root-renewal';
+   start(renewalSession);
+   const oldActivationId = state(renewalSession).activation_id;
+@@ -192,6 +240,19 @@
+   equal(peakInput.model, 'gpt-6-astra', 'critical native scene selects peak model');
+   equal(peakInput.fork_turns, 'none', 'explicit cross-model child uses a supported fork mode');
+   equal(peakInput.reasoning_effort, 'high', 'routing never changes explicit effort');
++  for (const [suffix, rootModel, fork] of [
++    ['same-model', 'gpt-6-astra', 'all'],
++    ['numeric-history', 'gpt-5.6-sol', '3'],
++  ]) {
++    const session = `root-cold-${suffix}`;
++    start(session, rootModel);
++    const cold = pre(session, {task_name: 'cold_review', message: 'judge',
++      agent_type: 'quality-gate', fork_turns: fork, reasoning_effort: 'high'}, `tool-cold-${suffix}`);
++    equal(cold.hookSpecificOutput.updatedInput.fork_turns, 'none',
++      `critical review never inherits producer history (${suffix})`);
++    equal(cold.hookSpecificOutput.updatedInput.reasoning_effort, 'high',
++      `cold review preserves effort (${suffix})`);
++  }
+   subStart(peakSession, 'agent-peak', 'quality-gate');
+   const wrongStop = subStop(peakSession, 'agent-peak', 'quality-gate', transcript({
+     sessionId: peakSession, agentId: 'agent-peak', agentType: 'quality-gate', model: 'gpt-5.6-sol',
+@@ -239,6 +300,20 @@
+     true, 'runner command receives only the trusted root-session reference');
+   equal(pre(runnerSession, {command: 'node scripts/other.mjs'}, 'tool-other', 'Bash'), {},
+     'unrelated shell commands are untouched');
++  const unresolvedSession = 'root-unresolved-workflow';
++  start(unresolvedSession);
++  const unresolvedState = state(unresolvedSession);
++  unresolvedState.invocations['workflow-pending'] = {
++    status: 'pending', critical: true, route_harness: 'codex-cli',
++  };
++  writeFileSync(stateFileForTest({harness: 'codex', root_session_id: unresolvedSession, state_root: stateRoot}),
++    JSON.stringify(unresolvedState));
++  equal(pre(unresolvedSession, {task_name: 'after-io-failure', message: 'work'}, 'tool-unresolved-native')
++    .hookSpecificOutput.permissionDecision, 'deny',
++    'unresolved critical workflow evidence blocks later native dispatch');
++  equal(pre(unresolvedSession, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
++    'tool-unresolved-runner', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
++    'unresolved critical workflow evidence blocks the runner entry');
+ 
+   const effortA = 'root-effort-a', effortB = 'root-effort-b';
+   start(effortA); start(effortB);
+@@ -259,10 +334,22 @@
+   equal(deniedSeries.hookSpecificOutput.permissionDecision, 'deny', 'unlisted 6-series anchor fails closed');
+   equal(deniedSeries.hookSpecificOutput.permissionDecisionReason.includes('approved_order: gpt-6-sol'), true,
+     'missing model diagnostic identifies the private binding entry to approve');
++  equal(state(seriesSession).critical_failure, true,
++    'critical native preparation failure persists the host activation latch');
++  equal(pre(seriesSession, {task_name: 'after-critical-preparation', message: 'work'}, 'tool-six-latched')
++    .hookSpecificOutput.permissionDecision, 'deny',
++    'persisted preparation failure blocks later noncritical native dispatch');
++  equal(pre(seriesSession, {command: 'node .codex/workflow-runner.mjs external-skill-scout'},
++    'tool-six-runner-latched', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
++    'native preparation failure blocks the runner entry on the same activation');
+   writeFileSync(bindingsPath, `${JSON.stringify({schema_version: 1, harnesses: {codex: {
+     peak_model: 'gpt-6-astra', light_model: 'gpt-6-luna',
+     approved_order: ['gpt-6-luna', 'gpt-6-sol', 'gpt-6-astra'],
+   }}})}\n`, {mode: 0o600});
++  equal(pre(seriesSession, {task_name: 'still-latched', message: 'work'}, 'tool-six-repaired-still-latched')
++    .hookSpecificOutput.permissionDecision, 'deny', 'binding repair does not silently clear the critical failure');
++  start(seriesSession, 'gpt-6-sol', 'resume');
++  equal(state(seriesSession).critical_failure, false, 'normal new activation resets the failure latch');
+   const repairedSeries = pre(seriesSession,
+     {task_name: 'six-review', message: 'judge', agent_type: 'quality-gate', reasoning_effort: 'high'}, 'tool-six-approved');
+   equal(repairedSeries.hookSpecificOutput.updatedInput.model, 'gpt-6-astra', 'approved 6-series peak is selected after explicit repair');
+--- a/scripts/test-model-route-host.mjs
++++ b/scripts/test-model-route-host.mjs
+@@ -213,6 +213,49 @@
+     eq(noncriticalWrong.critical_failure_latched, false, 'noncritical mismatch does not latch critical failure');
+     eq(prepare(api, stateRoot, noncritical).disposition, 'READY', 'noncritical mismatch does not block later calls');
+ 
++    eq(typeof api.latchCriticalFailure, 'function', 'trusted host exposes preparation-failure latch API');
++    const preDispatch = fixture(api, stateRoot, 'pre-dispatch-failure');
++    const preDispatchBase = {harness: 'codex', root_session_id: preDispatch.root_session_id, state_root: stateRoot};
++    const failureArgs = {
++      ...preDispatchBase, expected_activation_id: preDispatch.activation.activation_id,
++      expected_root_generation: preDispatch.activation.root_generation, critical: true,
++      reason: 'UNKNOWN_MODEL_RELATION', evidence_ref: 'test://critical-preparation-failure',
++    };
++    eq(api.latchCriticalFailure({...failureArgs, critical: false}).reason, 'NONCRITICAL_FAILURE',
++      'noncritical preparation failure cannot latch activation');
++    eq(api.readActivation(preDispatchBase).critical_failure, false, 'noncritical preparation leaves activation usable');
++    eq(api.latchCriticalFailure({...failureArgs, expected_activation_id: 'superseded'}).reason,
++      'ACTIVATION_STATE_CHANGED', 'preparation latch refuses superseded activation');
++    eq(api.latchCriticalFailure({...failureArgs, expected_root_generation: 9}).reason,
++      'ACTIVATION_STATE_CHANGED', 'preparation latch refuses stale generation');
++    eq(api.readActivation(preDispatchBase).critical_failure, false, 'stale preparation failure cannot damage current activation');
++    const pendingAtFailure = prepare(api, stateRoot, preDispatch);
++    eq(api.latchCriticalFailure(failureArgs).disposition, 'LATCHED', 'critical preparation failure is persisted without envelope');
++    const failedState = api.readActivation(preDispatchBase);
++    eq(failedState.critical_failure, true, 'preparation failure latch survives a fresh state read');
++    eq(failedState.invocations[pendingAtFailure.envelope.invocation_id].status, 'invalidated',
++      'critical preparation latch terminates pending invocation evidence');
++    eq(prepare(api, stateRoot, preDispatch).reason, 'CRITICAL_FAILURE_LATCHED',
++      'persisted preparation failure blocks native dispatch');
++    eq(api.latchCriticalFailure({...failureArgs, reason: 'different-reason'}).disposition,
++      'UNCHANGED', 'critical preparation latch is monotonic');
++    eq(api.readActivation(preDispatchBase).critical_failure_evidence.reason, 'UNKNOWN_MODEL_RELATION',
++      'first preparation failure evidence remains intact');
++
++    const replacementAtFailure = api.startActivation({...preDispatchBase,
++      root_anchor: {model: 'anchor-model', source: 'root-session'}, release_digest: preDispatch.release_digest});
++    eq(api.latchCriticalFailure(failureArgs).reason, 'ACTIVATION_STATE_CHANGED',
++      'old preparation failure cannot latch restarted activation at same generation');
++    eq(api.readActivation(preDispatchBase).activation_id, replacementAtFailure.activation_id, 'replacement activation is retained');
++    eq(api.readActivation(preDispatchBase).critical_failure, false, 'replacement activation remains usable');
++
++    const absentBase = {...preDispatchBase, root_session_id: 'absent-preparation-failure', state_root: join(stateRoot, 'absent-root')};
++    const absentFile = api.stateFileForTest(absentBase);
++    eq(api.latchCriticalFailure({...failureArgs, ...absentBase}).reason, 'INVALID_ACTIVATION',
++      'preparation failure requires an existing activation');
++    eq(existsSync(absentFile), false, 'preparation failure never creates missing activation state');
++    eq(existsSync(dirname(absentFile)), false, 'preparation failure never creates missing state directory');
++
+     const forged = fixture(api, stateRoot, 'forged', {role: 'peak', requested_role: 'peak',
+       requested_model: 'peak-model', critical: true});
+     const forgedCall = prepare(api, stateRoot, forged);
+@@ -294,6 +337,14 @@
+       harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot,
+     }), /MODEL_ROUTE_STATE_BUSY/);
+     checks += 1;
++    assert.throws(() => api.latchCriticalFailure({
++      harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot,
++      expected_activation_id: busy.activation.activation_id, expected_root_generation: busy.activation.root_generation,
++      critical: true, reason: 'EVIDENCE_IO_FAILED', evidence_ref: 'test://occupied-lock',
++    }), /MODEL_ROUTE_STATE_BUSY/);
++    checks += 1;
++    eq(api.readActivation({harness: 'codex', root_session_id: busy.root_session_id, state_root: stateRoot})
++      .critical_failure, false, 'failed persistence cannot claim latch was stored');
+     rmSync(`${busyFile}.lock`);
+ 
+     return checks;
+@@ -305,6 +356,15 @@
+ async function runMutations() {
+   const source = readFileSync(hostPath, 'utf8');
+   const mutations = [
++    ['preparation failure accepts stale activation', 'state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation',
++      'false || state.root_generation !== expected_root_generation'],
++    ['preparation failure accepts stale generation', 'state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation',
++      'state.activation_id !== expected_activation_id || false'],
++    ['preparation latch removed', 'state.critical_failure = true;\n    state.critical_failure_evidence',
++      'state.critical_failure = false;\n    state.critical_failure_evidence'],
++    ['preparation failure leaves pending tickets', "invalidatePending(state, 'CRITICAL_FAILURE_LATCHED');", '/* mutation */'],
++    ['preparation failure creates missing directory', "if (!validState(readJson(file))) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');",
++      '/* mutation */'],
+     ['agent type incorrectly unique', "field !== 'agent_type' &&", 'true &&'],
+     ['duplicate identity accepted', 'if (duplicate) {', 'if (false) {'],
+     ['identity failure leaves pending ticket', "call.status = 'refused';\n      call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';",
+--- a/scripts/test-model-route.mjs
++++ b/scripts/test-model-route.mjs
+@@ -567,9 +567,12 @@
+   ];
+   try {
+     mkdirSync(join(scratch, 'scripts'));
++    mkdirSync(join(scratch, '.codex'));
+     mkdirSync(join(scratch, '.claude/skill-os'), {recursive: true});
+     mkdirSync(join(scratch, 'framework-audit/candidates'), {recursive: true});
+     writeFileSync(join(scratch, 'scripts/test-model-route.mjs'), readFileSync(fileURLToPath(import.meta.url)));
++    writeFileSync(join(scratch, '.codex/model-routing-bindings.example.json'),
++      readFileSync(join(root, '.codex/model-routing-bindings.example.json')));
+     writeFileSync(join(scratch, 'framework-audit/candidates/model-routing-v2.yaml'), candidatePolicySource);
+     const runCopy = () => spawnSync(process.execPath, [join(scratch, 'scripts/test-model-route.mjs')],
+       {encoding: 'utf8', timeout: 10000});
+--- a/scripts/test-workflow-runner-runtime.mjs
++++ b/scripts/test-workflow-runner-runtime.mjs
+@@ -8,7 +8,7 @@
+ import {dirname, join, resolve} from 'node:path';
+ import {fileURLToPath} from 'node:url';
+ import {modelRoutingPolicyDigest} from './model-route.mjs';
+-import {readActivation, releaseDigestForPolicy, startActivation} from './model-route-host.mjs';
++import {prepareInvocation, readActivation, releaseDigestForPolicy, startActivation, stateFileForTest} from './model-route-host.mjs';
+ import {prepareProjectSwitch, readProjectState} from '../.claude/hooks/lib/project-substrate.mjs';
+ 
+ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+@@ -68,6 +68,7 @@
+ function send(value) { process.stdout.write(JSON.stringify(value) + '\\n'); }
+ function save() { if (dump) fs.writeFileSync(dump, JSON.stringify({argv:process.argv.slice(2),record}, null, 2)); }
+ process.on('exit', save);
++if (process.env.FAKE_STARTS) fs.appendFileSync(process.env.FAKE_STARTS, String(process.pid) + '\\n');
+ if (mode === 'exit') { process.stderr.write('Invalid schema for response_format'); process.exit(1); }
+ if (mode === 'hang') {
+   spawn('sh',['-c','sleep 8; echo alive > "' + (process.env.FAKE_MARKER || '/tmp/no-marker') + '"'],{stdio:'ignore'});
+@@ -102,7 +103,9 @@
+       if (process.env.FAKE_RESPONSE) result=JSON.parse(process.env.FAKE_RESPONSE);
+       send({method:'item/completed',params:{threadId,turnId,item:{id:'a1',type:'agentMessage',text:JSON.stringify(result)}}});
+       const failed = mode === 'failed-turn';
++      if (mode === 'busy-evidence') fs.writeFileSync(process.env.FAKE_STATE_FILE + '.lock', 'occupied\\n', {mode:0o600});
+       send({method:'turn/completed',params:{threadId,turn:{id:turnId,status:failed?'failed':'completed',error:failed?{message:'failed'}:null}}});
++      if (mode === 'busy-evidence') setTimeout(()=>process.exit(0),100);
+     }
+   });
+ }
+@@ -110,12 +113,12 @@
+ chmodSync(fakeCodex, 0o755);
+ 
+ let sequence = 0;
+-function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol') {
++function runWF(scriptBody, extraEnv = {}, anchor = 'gpt-5.6-sol', options = {}) {
+   const name = '__rt_probe';
+   const workflow = join(WF_DIR, `${name}.js`);
+   writeFileSync(workflow, scriptBody);
+-  const rootSessionId = `runner-test-${process.pid}-${++sequence}`;
+-  startActivation({
++  const rootSessionId = options.rootSessionId || `runner-test-${process.pid}-${++sequence}`;
++  if (!options.rootSessionId) startActivation({
+     harness: 'codex', root_session_id: rootSessionId,
+     root_anchor: {model: anchor, source: 'test-root-session'},
+     release_digest: releaseDigest, state_root: stateRoot,
+@@ -131,6 +134,7 @@
+       LUCA_MODEL_ROUTE_BINDINGS_PATH: bindingsPath,
+       LUCA_MODEL_ROUTE_STATE_ROOT: stateRoot,
+       LUCA_MODEL_ROUTE_ROOT_SESSION_ID: rootSessionId,
++      FAKE_STATE_FILE: stateFileForTest({harness: 'codex', root_session_id: rootSessionId, state_root: stateRoot}),
+       ...extraEnv,
+     },
+   });
+@@ -278,6 +282,98 @@
+     runWF("phase('Verify'); const x=await agent('hi'); return {x}", {FAKE_DUMP: peakDump});
+     const peakCalls = parse(readFileSync(peakDump, 'utf8'))?.record || [];
+     ok('R2 critical review selects approved peak model', peakCalls.find(call => call.method === 'thread/start')?.params?.model === 'gpt-6-astra');
++  }
++
++  {
++    const stalePolicyPath = join(sandbox, 'stale-policy.json');
++    const stalePolicy = structuredClone(policy);
++    stalePolicy.scenes['MR-004'].trigger = 'changed-terminal-review';
++    writeFileSync(stalePolicyPath, JSON.stringify({model_routing: stalePolicy}), {mode: 0o600});
++    const cases = [
++      {name: 'unknown model relation', anchor: 'gpt-6-sol', diagnostic: /UNKNOWN_MODEL_RELATION/},
++      {name: 'missing bindings', env: {LUCA_MODEL_ROUTE_BINDINGS_PATH: join(sandbox, 'missing-bindings.json')}, diagnostic: /ENOENT/},
++      {name: 'missing activation', env: {LUCA_MODEL_ROUTE_ROOT_SESSION_ID: 'not-activated'}, diagnostic: /ACTIVATION_MISSING/},
++      {name: 'unprepared release mismatch', env: {LUCA_MODEL_ROUTE_POLICY_PATH: stalePolicyPath}, diagnostic: /RELEASE_MISMATCH/},
++    ];
++    for (const fixture of cases) {
++      const starts = join(sandbox, `pre-dispatch-${fixture.name.replaceAll(' ', '-')}.txt`);
++      const result = runWF("phase('Verify'); const x=await agent('hi'); phase('P'); const y=await agent('later'); return {x:x||{ok:true,fallback:true},y}",
++        {...fixture.env, FAKE_STARTS: starts}, fixture.anchor);
++      ok(`R4 critical pre-dispatch ${fixture.name} blocks fallback output`,
++        result.status !== 0 && String(result.stdout).trim() === '', `${result.status}: ${result.stdout}`);
++      ok(`R4b critical pre-dispatch ${fixture.name} keeps diagnostic`, fixture.diagnostic.test(String(result.stderr)),
++        String(result.stderr).slice(-400));
++      ok(`R4c critical pre-dispatch ${fixture.name} stops later agent dispatch`, !existsSync(starts));
++    }
++  }
++
++  {
++    const result = runWF("phase('P'); const x=await agent('Verify critical terminal review'); return x||{ok:true,fallback:true}",
++      {LUCA_MODEL_ROUTE_BINDINGS_PATH: join(sandbox, 'missing-noncritical-bindings.json')});
++    ok('R5 canonical noncritical pre-dispatch failure preserves null/fallback',
++      result.status === 0 && parse(result.stdout)?.fallback === true && result.state?.critical_failure === false);
++  }
++  for (const fixture of [
++    {name: 'unknown phase', body: "phase('unregistered'); return await agent('hi')||{ok:true,fallback:true}"},
++    {name: 'unreadable policy', body: "phase('P'); return await agent('hi')||{ok:true,fallback:true}",
++      env: {LUCA_MODEL_ROUTE_POLICY_PATH: join(sandbox, 'missing-policy.yaml')}},
++  ]) {
++    const result = runWF(fixture.body, fixture.env);
++    ok(`R6 unclassified ${fixture.name} refuses fallback output`, result.status !== 0 && String(result.stdout).trim() === '');
++  }
++
++  {
++    const queuedMarker = join(sandbox, 'critical-queued-thunk');
++    const starts = join(sandbox, 'critical-queue-starts.txt');
++    const result = runWF(`phase('Verify'); const xs=await parallel([
++()=>agent('critical'),
++async()=>{const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(queuedMarker)},'ran');return agent('later',{phase:'P'})}
++]); return {xs:xs.map(x=>x||{ok:true,fallback:true})}`,
++      {FAKE_MODE: 'wrong-model', FAKE_STARTS: starts, LUCA_WF_CONCURRENCY: '1'});
++    ok('R7 critical evidence failure stops queued workflow thunk', !existsSync(queuedMarker));
++    ok('R7b critical evidence failure starts only the first agent', readFileSync(starts, 'utf8').trim().split('\n').length === 1);
++    ok('R7c critical queue failure blocks fallback output', result.status !== 0 && String(result.stdout).trim() === '');
++  }
++
++  {
++    const first = runWF("phase('Verify'); return await agent('critical')||{ok:true,fallback:true}", {}, 'gpt-6-sol');
++    ok('R8 critical preparation failure persists activation latch', first.status === 1 && first.state?.critical_failure === true);
++    const native = prepareInvocation({
++      harness: 'codex', root_session_id: first.rootSessionId, release_digest: releaseDigest,
++      route: {disposition: 'READY', harness: 'codex-native', requested_role: 'anchor', requested_model: 'gpt-6-sol',
++        critical: false, policy_sha: modelRoutingPolicyDigest(policy), routing_config_sha: releaseDigest,
++        capability_evidence_sha: releaseDigest},
++      task_id: 'native-after-preparation-failure', input_sha: releaseDigest, state_root: stateRoot,
++    });
++    ok('R8b persisted critical preparation failure blocks native prepare', native.reason === 'CRITICAL_FAILURE_LATCHED');
++    const second = runWF("phase('P'); return await agent('later')||{ok:true,fallback:true}", {}, undefined,
++      {rootSessionId: first.rootSessionId});
++    ok('R8c same activation second runner refuses credible output', second.status === 1 && String(second.stdout).trim() === '');
++  }
++
++  {
++    const result = runWF("phase('Verify'); return await agent('critical')||{ok:true,fallback:true}", {FAKE_MODE: 'busy-evidence'});
++    ok('R9 evidence state lock failure settles runner with exit 1', result.status === 1 && String(result.stdout).trim() === '',
++      `${result.status}: ${String(result.stderr).slice(-600)}`);
++    ok('R9b evidence I/O failure reports unpersisted critical latch',
++      /MODEL_ROUTE_EVIDENCE_IO_FAILED.*MODEL_ROUTE_STATE_BUSY/.test(String(result.stderr))
++        && /MODEL_ROUTE_CRITICAL_FAILURE_NOT_PERSISTED.*MODEL_ROUTE_STATE_BUSY/.test(String(result.stderr)));
++    ok('R9c blocked evidence does not claim activation latch persisted', result.state?.critical_failure === false
++      && Object.values(result.state?.invocations || {}).some(call => call.status === 'pending'));
++    rmSync(`${stateFileForTest({harness: 'codex', root_session_id: result.rootSessionId, state_root: stateRoot})}.lock`);
++    const second = runWF("phase('P'); return await agent('later')||{ok:true,fallback:true}", {}, undefined,
++      {rootSessionId: result.rootSessionId});
++    ok('R9d unresolved critical ticket blocks second runner after lock is cleared',
++      second.status === 1 && String(second.stdout).trim() === ''
++        && /MODEL_ROUTE_UNRESOLVED_CRITICAL_INVOCATION/.test(String(second.stderr)));
++    ok('R9e unresolved-ticket refusal does not claim persistence succeeded', second.state?.critical_failure === false);
++  }
++
++  {
++    const result = runWF("phase('Verify'); const xs=await parallel([1,2,3].map(i=>()=>agent('review-'+i))); return {ran:xs.filter(Boolean).length}");
++    ok('R10 current runner critical agents retain normal parallel dispatch', result.status === 0 && parse(result.stdout)?.ran === 3);
++    ok('R10b parallel critical evidence is accepted independently',
++      Object.values(result.state?.invocations || {}).filter(call => call.critical && call.status === 'accepted').length === 3);
+   }
+ 
+   {

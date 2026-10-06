@@ -1,0 +1,139 @@
+--- r4/conditions.mjs
++++ r5/conditions.mjs
+@@ -28,6 +28,11 @@
+   'host-launch-hook.mjs', 'model-route-hook.mjs', 'model-routing-bindings.example.json',
+   'stop-integrity-failure.mjs', 'workflow-runner.mjs',
+ ].map(path => `.codex/${path}`);
++// The office preamble reads this exact pair. Observations and other governance
++// history are not inputs to get_rules.py and must not enter candidate materials.
++const ACTIVE_RULE_MATERIALS = [
++  '.claude/observability/scripts/get_rules.py', '.claude/observability/rules.yaml',
++];
+ const REQUIRED_MATERIALS = [
+   'AGENTS.md', 'CONTEXT.md', '.claude/skill-os/generated/context-index.md',
+   '.claude/skill-os/generated/skill-catalog.md', '.claude/agents/plan-agent.md',
+@@ -35,7 +40,7 @@
+   '.claude/skill-os/agent-context-manifest.json', 'scripts/build-agent-context.py',
+   'scripts/model-route.mjs', 'scripts/model-route-host.mjs',
+   'memory/semantic/promoted-facts.yaml', 'memory/semantic/static-fallback-allowlist.txt',
+-  ...MEMORY_HELPERS, ...CODEX_MATERIALS,
++  ...MEMORY_HELPERS, ...CODEX_MATERIALS, ...ACTIVE_RULE_MATERIALS,
+ ];
+ 
+ // These prompts compile the common contract and D's general §§2–4 only. They
+@@ -178,11 +183,12 @@
+   // are deliberately not candidate materials.
+   if (/^scripts\/(?:test-|run-|agent-context-branch-fixtures|baselines\/|install-|codex-trust-|source-guard-test-)/.test(path)) return false;
+   if (/^scripts\//.test(path)) return true;
+-  return MEMORY_HELPERS.includes(path) || CODEX_MATERIALS.includes(path);
++  return MEMORY_HELPERS.includes(path) || CODEX_MATERIALS.includes(path) || ACTIVE_RULE_MATERIALS.includes(path);
+ }
+ 
+ function isReadMaterial(path) {
+   return ['AGENTS.md', 'CONTEXT.md'].includes(path)
++    || path === '.claude/observability/rules.yaml'
+     || (/^(?:\.claude\/(?:agents|skills|skill-os)\/|\.agents\/skills\/|memory\/semantic\/)/.test(path)
+       && /\.(?:md|yaml|yml|json|txt)$/.test(path))
+     || path === '.codex/MODEL_ROUTING.md'
+@@ -391,7 +397,6 @@
+             limitation: 'Generated ordinary copies of frozen owners; existing local aliases were not read. Native discovery/adoption is unverified.' })),
+           missingFrozenCapabilities: [
+             '.claude/workflows/*.js and CLAUDE.md are absent from U002; workflow execution and Claude-root parity are not reproduced.',
+-            '.claude/observability/scripts/get_rules.py is not supplied by U002; office/skill preamble active-rule loading is not reproduced.',
+             'Private model bindings, global/personal memory, episodic/eval history and real project/session state are not supplied.',
+             'External MagicPath alias target is not followed; any generated magicpath skill uses only its frozen office owner.',
+           ],
+@@ -403,6 +408,7 @@
+         'Filesystem copying is not an OS read boundary. Driver isolation, native reads and child access require independent verification.',
+         ...(source ? [
+           'B/S includes frozen memory helpers, Codex backend sources and generated native skill materials. It does not install hook registrations, trust, project config or global memory.',
++          'B/S requires the frozen active-rule loader and complete rules.yaml. Python/PyYAML availability and rule consumption in the actual native sandbox remain unverified.',
+           'Current observed production metadata has 11 project hooks disabled; this is entry/time-specific evidence, not historical or all-host equivalence. No hook activation is required or performed by this builder.',
+           'Declared material dependencies and literal relative ESM imports are present. Computed paths, workflow bodies, runtime packages, native discovery, private state and actual permission enforcement remain unverified.',
+           'Excluded sources and unrepresented links are listed in complexity. A qualified B requires readiness review before relative comparison.',
+--- r4/conditions.test.mjs
++++ r5/conditions.test.mjs
+@@ -16,6 +16,7 @@
+   'CONTEXT.md', '.claude/skill-os/generated/context-index.md',
+   '.claude/skill-os/generated/skill-catalog.md', '.claude/agents/plan-agent.md',
+   '.claude/skill-os/runtime/project-session.md', '.claude/skills/office/SKILL.md',
++  '.claude/observability/scripts/get_rules.py', '.claude/observability/rules.yaml',
+   '.claude/skill-os/agent-context-manifest.json',
+   'scripts/build-agent-context.py', 'scripts/model-route.mjs', 'scripts/model-route-host.mjs',
+   'memory/semantic/promoted-facts.yaml', 'memory/semantic/static-fallback-allowlist.txt',
+@@ -132,6 +133,7 @@
+     '.claude/skill-os/hidden/secret.md', 'scripts/hidden-case.mjs',
+     '.claude/skill-os/fixtures.jsonl', 'scripts/answers.json',
+     '.claude/skill-os/developer-cases.json', '.claude/agents/private.md',
++    '.claude/observability/observations.yaml', '.claude/observability/scripts/other.py',
+     'scripts/test-example.mjs', 'scripts/run-agent-context-ab.mjs']) {
+     f.records.push({ path, kind: 'file', bytes: 6, sha256: digest('poison') });
+   }
+@@ -285,11 +287,63 @@
+     assert.equal(alias.bytes, entries.reduce((n, row) => n + row.copyBytes, 0));
+   }
+   assert.deepEqual(b.complexity.materialClosure, s.complexity.materialClosure);
+-  assert.equal(existsSync(join(b.root, '.claude/observability/scripts/get_rules.py')), false);
+-  assert.ok(b.complexity.materialClosure.missingFrozenCapabilities.some(value =>
+-    value.includes('.claude/observability/scripts/get_rules.py') && value.includes('active-rule')),
+-  'the office preamble cannot load active rules from the frozen materials; disclose this gap');
++  assert.ok(b.allowedReadPaths.includes('.claude/observability/rules.yaml'));
++  assert.ok(!b.allowedReadPaths.includes('.claude/observability/scripts/get_rules.py'));
+   assert.equal(b.materialSha256, (await f.build('B', 'replayed')).materialSha256);
++});
++
++test('W24 requires both active-rule inputs before creating B/S materials', async t => {
++  for (const path of ['.claude/observability/scripts/get_rules.py', '.claude/observability/rules.yaml']) {
++    const f = fixture(t);
++    f.records.splice(f.records.findIndex(row => row.path === path), 1); f.save();
++    for (const id of ['B', 'S']) {
++      await assert.rejects(f.build(id), error => error.code === 'MISSING_BASELINE' && error.message.includes(path));
++      assert.equal(existsSync(join(f.base, id)), false);
++    }
++  }
++});
++
++test('W24 copied loader preserves rule filtering, stdout, stderr and exit without source or copy writes', async t => {
++  const f = fixture(t);
++  const script = '.claude/observability/scripts/get_rules.py', data = '.claude/observability/rules.yaml';
++  const replace = (path, bytes) => {
++    writeFileSync(join(f.sourceRoot, path), bytes);
++    Object.assign(f.records.find(row => row.path === path), { bytes: Buffer.byteLength(bytes), sha256: digest(bytes) });
++  };
++  replace(script, readFileSync(new URL(`../../${script}`, import.meta.url)));
++  replace(data, `rules:
++  - {id: active-first, status: active, scope: {skills: [office, sample], scenes: [B]}, rule: First}
++  - {id: retired, status: retired, scope: {skills: [office, sample], scenes: ['*']}, rule: Retired}
++  - {id: superseded, status: superseded, scope: {skills: [office, sample], scenes: ['*']}, rule: Superseded}
++  - {id: active-second, status: active, scope: {skills: [office], scenes: ['*']}, rule: Second}
++`);
++  f.save();
++  const b = await f.build('B'), s = await f.build('S');
++  const roots = [f.sourceRoot, b.root, s.root];
++  const before = roots.map(root => independentDigest(root, root === f.sourceRoot));
++  for (const [args, expectedIds, status] of [
++    [['office', '*'], ['active-first', 'active-second'], 0],
++    [['sample', 'B'], ['active-first'], 0],
++    [['sample', 'A'], [], 0],
++    [['no-rules', '*'], [], 0],
++    [[], [], 2],
++  ]) {
++    const runs = roots.map(root => {
++      const run = spawnSync('python3', ['-B', join(root, script), ...args], {
++        cwd: root, encoding: 'utf8', timeout: 10000,
++      });
++      assert.ifError(run.error);
++      return { stdout: run.stdout, stderr: run.stderr, status: run.status };
++    });
++    assert.equal(runs[0].status, status);
++    if (status === 0) {
++      assert.equal(runs[0].stderr, '', 'missing PyYAML or invalid YAML must not masquerade as no rules');
++      assert.deepEqual([...runs[0].stdout.matchAll(/^- ([^ ]+) /gm)].map(match => match[1]), expectedIds);
++      if (!expectedIds.length) assert.match(runs[0].stdout, /: none\n$/);
++    } else assert.match(runs[0].stderr, /Usage: get_rules.py/);
++    assert.deepEqual(runs[1], runs[0]); assert.deepEqual(runs[2], runs[0]);
++  }
++  assert.deepEqual(roots.map(root => independentDigest(root, root === f.sourceRoot)), before);
+ });
+ 
+ test('missing required helper, transitive relative import and helper drift fail before any output', async t => {

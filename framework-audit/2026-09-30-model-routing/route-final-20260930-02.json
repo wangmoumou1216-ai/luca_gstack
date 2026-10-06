@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-final-20260930-02",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing",
+    "scene": "unknown",
+    "input_summary": "第二轮12文件冻结候选复审；复跑原准备失败及证据I/O反例、runtime66项，并构造同activation后续thunk入口反例。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 6,
+    "total": 7,
+    "findings": [
+      "FAIL criterion 4: workflow-runner entry checks unresolved pending critical CLI tickets but not persisted critical_failure. After UNKNOWN_MODEL_RELATION persisted latch=true, a second runner on the same activation executed a parallel thunk without agent(), wrote a scratch marker, exited 0 and emitted successful fallback JSON. Reject latched activation before workflow or thunk execution.",
+      "Previous preparation-failure and evidence-I/O counterexamples now pass; runtime regression independently reproduced PASS=66 FAIL=0. Evidence-I/O failure exits 1 and explicitly reports unpersisted failure without leaving an unsettled Promise.",
+      "WARN: full repository verify and candidate deployment remain unverified; native astra/high same-turn completion is not deployment evidence."
+    ]
+  }
+}

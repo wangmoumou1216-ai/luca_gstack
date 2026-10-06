@@ -1,0 +1,16 @@
+{
+  "head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "status": " M .claude/hooks/route-guard.mjs\n M .claude/skill-os/agent-context-manifest.json\n M .claude/skill-os/agent-root-kernel.json\n M .claude/skill-os/capability-parity.json\n M .claude/skill-os/generated/context-index.md\n M AGENTS.md\n M scripts/check-agent-context.mjs\n M scripts/test-agent-context-resolution.mjs\n M scripts/test-agent-context.mjs\n M scripts/test-route-guard.mjs\n?? scripts/tri-system-eval/\n",
+  "tracked_dirty": {
+    ".claude/hooks/route-guard.mjs": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a",
+    ".claude/skill-os/agent-context-manifest.json": "16f0d4aad8ca4dfabc278094db90a2e57b1b8b716a185ec7b50ac01995d586eb",
+    ".claude/skill-os/agent-root-kernel.json": "ef213983722c200cc0ba968b43d832e11016fbd85d4414b5ed4fb8714fef5760",
+    ".claude/skill-os/capability-parity.json": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317",
+    ".claude/skill-os/generated/context-index.md": "2b3f24a246f9730db5f14c5655eccc610ecaec33906da3464dff2824f758caee",
+    "AGENTS.md": "86581149518b00445a8e4abc5e3bb701b5b2f88d19a97379054cdbe59c6a1d1f",
+    "scripts/check-agent-context.mjs": "80de955c256440a7fe165d665b4f5b833be015afdb1b5a3f4866136063545a97",
+    "scripts/test-agent-context-resolution.mjs": "5b7478e73ba0fcf35bc4dc7cc6554a90146229c7ff6f23779704c50768568cf5",
+    "scripts/test-agent-context.mjs": "5610e8613b0fda90042ab78b4f29bf4231605f19ad34fdde3a3d52fa2b894bdd",
+    "scripts/test-route-guard.mjs": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144"
+  }
+}

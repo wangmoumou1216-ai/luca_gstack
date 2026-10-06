@@ -1,0 +1,61 @@
+{
+  "kind": "emergency-ordinary-publication",
+  "time": "2026-10-01T07:26:32.142798+00:00",
+  "scope_sha256": "166dc91ab74696d916e5eb5ed088d3ded4b83f8a54f0bb767d812bbf291f191d",
+  "native_reviews": [
+    {
+      "invocation_id": "930089f7-6608-475d-91be-ab239d43f1ae",
+      "activation_id": "5d276bbf-13b9-4cd9-baba-7fc254ddefe6",
+      "root_generation": 0,
+      "root_session_id": "01a0f646-42e8-7d92-9db1-b30b44c873d7",
+      "release_digest": "d929a9ee4201fb71cea3a55257978b572411861c17efbf6599b6113b1f71af12",
+      "requested_role": "peak",
+      "critical": true,
+      "route_harness": "codex-native",
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_kMAyTcJhBEqYeaVciDgZTtWm",
+        "agent_type": "quality-gate",
+        "agent_id": "01a0f64b-772a-7c80-9acf-e8e18e5c570e"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T15-08-56-01a0f64b-772a-7c80-9acf-e8e18e5c570e.jsonl:01a0f64b-77af-7703-bc0d-a7f349aea347"
+    },
+    {
+      "invocation_id": "c6cde775-db27-43ad-8a9b-225ce4109881",
+      "activation_id": "5d276bbf-13b9-4cd9-baba-7fc254ddefe6",
+      "root_generation": 0,
+      "root_session_id": "01a0f646-42e8-7d92-9db1-b30b44c873d7",
+      "release_digest": "d929a9ee4201fb71cea3a55257978b572411861c17efbf6599b6113b1f71af12",
+      "requested_role": "peak",
+      "critical": true,
+      "route_harness": "codex-native",
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_gvuybwkf7wwkFPHcdInyDJdK",
+        "agent_type": "quality-gate",
+        "agent_id": "01a0f653-1fff-7383-af01-9368a792cbbd"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T15-17-17-01a0f653-1fff-7383-af01-9368a792cbbd.jsonl:01a0f653-2063-7bb3-aa1a-a3446eb5ef4a"
+    }
+  ],
+  "native_coordinator_status_after_normal_exit": "paused",
+  "publications": [
+    {
+      "kind": "framework",
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "ref": "refs/heads/main",
+      "old_remote": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+      "published_sha": "a4e55b6dfada72e604a3ba9737e73710acdfec8c",
+      "exact_remote_readback": true
+    },
+    {
+      "kind": "app",
+      "root": "/Users/luca/Desktop/\u9879\u76ee/muse",
+      "ref": "refs/heads/refactor/claude-code-kernel",
+      "old_remote": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+      "published_sha": "c212b5c3c6d1c6f1e379a026625898ef6788a606",
+      "exact_remote_readback": true
+    }
+  ],
+  "local_installation": false
+}

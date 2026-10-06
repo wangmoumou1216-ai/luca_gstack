@@ -1,0 +1,63 @@
+{
+  "work_root": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "accepted_writer_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+  "source_before": {
+    "idea": "9edf7bb83eb477124df6e1f4efbfb4b403adbff4316c674b8924e4d89ccc6114",
+    "challenge": "b30c4664b232c84e73a50caef74950472fa0990736117c2da8352048ecefa0c1",
+    "retro": "04df3f96de6a790b7ac1e8790684247d95be43798dfd971fb2206222f6a46ee6",
+    "figma-demo": "e8a8253a0b829e56db453a803ede287f7dbfd9085dc70fbf3be84229976fb1f9",
+    "evals": "62c89a27ac46af68a5cf59bf177e076b88df39cf39a4edc0f8237f39a326e9d6",
+    "open-design": "95c4709b1f79e192e953e8bb9bbdd7216449d5820d9894a481c4e0939fe4f738",
+    "html-prototype": "2dab4f3962d09ee4b802a61a07dece538df39df780dc9c5bcfd263b93bc7e878",
+    "redteam": "4b1b6554f5e1427a1cb41708bde04658a3d93ef40e706c5a7f94214b82a97420",
+    "ux-audit": "fdc74345da33fdf3b8c2e8b763b4fc7ea5a1a2139fb93d1d54d1b9171a65f792",
+    "guard": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127"
+  },
+  "source_after": {
+    "idea": "9edf7bb83eb477124df6e1f4efbfb4b403adbff4316c674b8924e4d89ccc6114",
+    "challenge": "b30c4664b232c84e73a50caef74950472fa0990736117c2da8352048ecefa0c1",
+    "retro": "04df3f96de6a790b7ac1e8790684247d95be43798dfd971fb2206222f6a46ee6",
+    "figma-demo": "e8a8253a0b829e56db453a803ede287f7dbfd9085dc70fbf3be84229976fb1f9",
+    "evals": "62c89a27ac46af68a5cf59bf177e076b88df39cf39a4edc0f8237f39a326e9d6",
+    "open-design": "95c4709b1f79e192e953e8bb9bbdd7216449d5820d9894a481c4e0939fe4f738",
+    "html-prototype": "2dab4f3962d09ee4b802a61a07dece538df39df780dc9c5bcfd263b93bc7e878",
+    "redteam": "4b1b6554f5e1427a1cb41708bde04658a3d93ef40e706c5a7f94214b82a97420",
+    "ux-audit": "fdc74345da33fdf3b8c2e8b763b4fc7ea5a1a2139fb93d1d54d1b9171a65f792",
+    "guard": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127"
+  },
+  "production_sources_unchanged": true,
+  "green_exit": 0,
+  "final_exit": 0,
+  "final_passed": 128,
+  "final_total": 128,
+  "mutation": {
+    "original_sha256": {
+      "idea": "9edf7bb83eb477124df6e1f4efbfb4b403adbff4316c674b8924e4d89ccc6114",
+      "challenge": "b30c4664b232c84e73a50caef74950472fa0990736117c2da8352048ecefa0c1",
+      "retro": "04df3f96de6a790b7ac1e8790684247d95be43798dfd971fb2206222f6a46ee6",
+      "figma-demo": "e8a8253a0b829e56db453a803ede287f7dbfd9085dc70fbf3be84229976fb1f9",
+      "evals": "62c89a27ac46af68a5cf59bf177e076b88df39cf39a4edc0f8237f39a326e9d6",
+      "open-design": "95c4709b1f79e192e953e8bb9bbdd7216449d5820d9894a481c4e0939fe4f738",
+      "html-prototype": "2dab4f3962d09ee4b802a61a07dece538df39df780dc9c5bcfd263b93bc7e878",
+      "redteam": "4b1b6554f5e1427a1cb41708bde04658a3d93ef40e706c5a7f94214b82a97420",
+      "ux-audit": "fdc74345da33fdf3b8c2e8b763b4fc7ea5a1a2139fb93d1d54d1b9171a65f792"
+    },
+    "mutated_sha256": {
+      "idea": "854887aaa5459e6bcdb59dc520976f570a593e930c6f4dc2e47de47bc40febc4",
+      "challenge": "370904c7c9f83e7d97e4cdcac03f1388ca0aa55273b2c6d8e33c4568970e3fcc",
+      "retro": "8c4bc9cd3cef4fc0ffc520b4e2a15501d66058e793bf60a59a392ef675dab8aa",
+      "figma-demo": "64ffd5c0c0bf70d122317945b8ca1f85e876fd3adea73675de7fa4a65a28c3ec",
+      "evals": "1335b67f424485218b3fadb8dd805b512f19ac2ac7c008ada40f7cf709c7ca0a",
+      "open-design": "b3e8db76b412156558d1d0e1055d1a181fe245856bfb3cb75fc7d458f8b9ffa3",
+      "html-prototype": "b7eabca9ef4147deda7e2018f161d83f529d18b04d9e8196aff1b5d889b07476",
+      "redteam": "b582e9595a7fa0f19eb7c0496af0be8b42743f218a671f24128e4dc54e78c77b",
+      "ux-audit": "74741f1ad9d94b4c0760cf55a8943c0a33c390baf349a4a5703b621bf3f1216d"
+    },
+    "red_exit": 1,
+    "red_passed": 0,
+    "red_total": 9,
+    "restored_exit": 0,
+    "restored_passed": 9,
+    "temporary_removed": true
+  }
+}

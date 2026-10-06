@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "status": "READY_STATIC_A",
+  "prepared_at": "2026-10-02T16:41:32.850038+00:00",
+  "source_root": "/Users/luca/Desktop/luca_gstack",
+  "required_release": {
+    "eval_run_id": "tri-system-u004-kf-20261003-r2",
+    "result": "PASS 6/6 static inputs only",
+    "case_manifest_sha256": "231746d52c4fd4735d7fe2da73539f293481c2129ae14345feb97735c0b96ca2"
+  },
+  "shared_inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json",
+      "bytes": 111376,
+      "sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-baseline-and-protected-uses.md",
+      "bytes": 7929,
+      "sha256": "0a29c67a76e2367062d036b87d6e63a088a22b7b763b457208653e7c3feb04d9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-native-capability-facts.md",
+      "bytes": 26921,
+      "sha256": "6a5641ef108d3c8824142694b361f556844e3cbb59f6f78e29d35e8bc4e30b36"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-native-capability-facts.json",
+      "bytes": 54419,
+      "sha256": "3efe8b84797618104cbfb378a5d037cf983d42d29a9c6e6c31f4b7026151c64d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/manifest.json",
+      "bytes": 6795,
+      "sha256": "231746d52c4fd4735d7fe2da73539f293481c2129ae14345feb97735c0b96ca2"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/developer-cases.json",
+      "bytes": 360270,
+      "sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/README.md",
+      "bytes": 10540,
+      "sha256": "4e30421efdfc98fa824c2d7de9b2cf3e8ace3027998643ebbfbb3902ad4a4c36"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/coverage.md",
+      "bytes": 4875,
+      "sha256": "1c28eb739ddccf02e2a59d2057c8812361a11c239f2c046eec8e81180390fbfc"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-execution-owner-addendum.md",
+      "bytes": 2547,
+      "sha256": "00057691298c0750394d5aacbeffb1290e41f7b6eecdddece3fc3588dcf0e1e5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-final-review-r3.md",
+      "bytes": 3023,
+      "sha256": "74e87101d5f1019993385cda97896f55b4928b326efa5993acae5e82b4a918a9"
+    }
+  ],
+  "modules": [
+    {
+      "module": "routing",
+      "thread_id": "01a0fcca-4899-79f3-9094-c9a9ea2bd186",
+      "host_id": "local",
+      "scope": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-routing-source-scope.json",
+        "bytes": 5218,
+        "sha256": "b43e84a96b9ebf2a2c5af150eefaec41204853bccb849ce19f8443106f807acf"
+      },
+      "task": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-routing-dispatch.md",
+        "bytes": 10688,
+        "sha256": "4aea88a6fc4afd74163bdf58ab35d5704f96bff574aee2ebf352b0aeb7ef6044"
+      },
+      "plan": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-routing-execution-pack-v3.md",
+        "bytes": 54505,
+        "sha256": "6f136e47ea17bf82e34d2293dddcdd6fdf8047cb45e62a799e11e1e411be63fb"
+      },
+      "only_output": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-routing-use-evidence.md",
+      "source_identity_checks": 23
+    },
+    {
+      "module": "orchestration",
+      "thread_id": "01a0fcca-6e8c-7833-ba45-f39e6992f11b",
+      "host_id": "local",
+      "scope": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-orchestration-source-scope.json",
+        "bytes": 5767,
+        "sha256": "1ac7a919ee0a2261c9105916f908c4501d506b933ed9cdc1b4ebd05c218df200"
+      },
+      "task": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-orchestration-dispatch.md",
+        "bytes": 10403,
+        "sha256": "96a5a99c9489c30c5e2a0522757c1812de1c51dba3358233818e0459394e07d5"
+      },
+      "plan": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-orchestration-execution-pack-v3.md",
+        "bytes": 43767,
+        "sha256": "a588b7ba228df5c14376c6758a5b5798efeaf20081d5a57f3bba26f74521c92a"
+      },
+      "only_output": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-u006-orchestration-evidence.md",
+      "source_identity_checks": 26
+    },
+    {
+      "module": "context",
+      "thread_id": "01a0fcca-8af9-7982-9d60-b49909a4b577",
+      "host_id": "local",
+      "scope": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-context-source-scope.json",
+        "bytes": 5409,
+        "sha256": "5aa209e6cdc5a977447dfb48b028b8dee82455e7b3da17bbf6eb14cc648c3da6"
+      },
+      "task": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-context-dispatch.md",
+        "bytes": 10804,
+        "sha256": "4ff509da7726613e342d55dfd202099aeb76139639380c9fceed5f5de1bf334a"
+      },
+      "plan": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-context-execution-pack-v3.md",
+        "bytes": 44925,
+        "sha256": "5a5c3e5f845fe2e6a311e61eb9f86c661121b60c9192a9ace6fe2f6306ed13da"
+      },
+      "only_output": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-context-evidence.md",
+      "source_identity_checks": 24
+    }
+  ],
+  "authorization": "original three module chats execute approved A static audits after independent input release; no production edits or behavior runs",
+  "privacy": "private cases and D design forbidden; identity pointers do not grant read access",
+  "limits": {
+    "per_module_minutes": 45,
+    "per_module_actions": 90,
+    "per_module_observed_tokens": 120000,
+    "behavior_runs": 0,
+    "extra_agents": 0
+  },
+  "known_static_case_limitations": [
+    "D04 answers example omits copy tokens; use full request/owner/request_fidelity and completeness, never sample alone as gold standard. Schema/exact checks are partial."
+  ],
+  "released_at": "2026-10-02T16:49:51.778877+00:00",
+  "gate_evidence": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-kf-review-r2-envelope.json",
+    "sha256": "c84e453eae0576c174e114021c29ceb72618986ac6e60d7b47e7cd65019eea19",
+    "meaning": "authorizes only current scoped static A/D inputs; not behavior or production"
+  }
+}

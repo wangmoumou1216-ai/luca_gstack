@@ -1,0 +1,41 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "commit": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "origin_main": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "publication_method": "ordinary git push origin main",
+  "local_sync": "git pull --ff-only origin main: Already up to date",
+  "source_digest": "a229918d10266b91b6205ec46efb8ab65e3d612b3bd5458762caad617cecebf3",
+  "trusted_hooks": 11,
+  "live_adoption": "PASS 4/4",
+  "local_full_gate": {
+    "passed": 107,
+    "failed": 0,
+    "warnings": 0,
+    "delegated": 1
+  },
+  "remote_ci": {
+    "run_id": 36680226901,
+    "status": "completed",
+    "conclusion": "success",
+    "required_checks": "success",
+    "jobs_passed": 6,
+    "jobs_total": 6,
+    "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36680226901"
+  },
+  "unrelated_worktree_preserved": "## main...origin/main\n M .claude/observability/observations.jsonl\n M memory/evals/eval-log.jsonl\n M memory/retrieval-log.jsonl\n?? .workbuddy/\n?? framework-audit/2026-09-30-hook-health/\n?? framework-audit/2026-09-30-model-routing/\n?? framework-audit/2026-09-30-tri-system-assessment-master-plan.md\n",
+  "recorded_at": "2026-09-30T07:04:14.787454+00:00",
+  "remote_main": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "final_trust_readback": "11/11 trusted",
+  "installed_manifest_unchanged": true,
+  "publication_status": "DONE",
+  "known_cross_session_impact": [
+    {
+      "source": "/Users/luca/.codex/skill-adaptation-audits/2026-09-30-matt/reviews/R10-review-aggregation.md",
+      "observed": "R10 redteam evidence collection reports hook source integrity mismatch; historical turn interrupted, four UNKNOWN criteria, no recovered accepted completion receipt.",
+      "boundary": "The aggregation was read directly; per-file mutation-at-time causality is not proven. This is distinct from private model relation and NO_PIN candidate-boundary fixes.",
+      "required_followup": "Preserve original votes and UNKNOWNs. Do not transfer them to PASS after deployment or a new SHA. Author must freeze the updated plan on a stable framework/runtime baseline before a newly authorized cold dual review.",
+      "separate_plan_defect": "R10 execution expert accepted FAIL 6/7 with C4 MAJOR remains a plan-method issue; this routing publication does not close it."
+    }
+  ],
+  "remaining_publication_work": []
+}

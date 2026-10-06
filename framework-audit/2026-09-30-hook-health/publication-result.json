@@ -1,0 +1,71 @@
+{
+  "status": "CLOSED_PUBLISHED_CI_PASS",
+  "commit": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+  "branch": "main",
+  "remote_head": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+  "remote_matches": true,
+  "observed_at": "2026-09-30T09:48:14.346816+00:00",
+  "files": 7,
+  "local_verify": {
+    "PASS": 107,
+    "FAIL": 0,
+    "WARN": 0,
+    "DELEGATED": 1
+  },
+  "post_restart_native_tools": "PASS: actual current-session exec_command calls returned successfully",
+  "trust_readback": {
+    "root": "/Users/luca/Desktop/luca_gstack",
+    "codex_home": "/Users/luca/.codex",
+    "trusted": 11,
+    "pending": 0
+  },
+  "source_digest": "e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691",
+  "scope": "THIS_REVIEWED_ROOT_PROFILE_PAIR",
+  "direct_startup": "PASS_GUI_STARTUP_ONLY",
+  "new_native_child_after_activation": "NOT_EXERCISED; isolated source/child protection regressions passed",
+  "unrelated_work": "PRESERVED_UNSTAGED",
+  "ci": {
+    "run_id": 36698317713,
+    "head_sha": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+    "conclusion": "success",
+    "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36698317713",
+    "jobs": [
+      {
+        "name": "Validate YAML Files",
+        "conclusion": "success"
+      },
+      {
+        "name": "Validate Framework Logic",
+        "conclusion": "success"
+      },
+      {
+        "name": "Validate HTML Prototypes",
+        "conclusion": "success"
+      },
+      {
+        "name": "Validate Markdown",
+        "conclusion": "success"
+      },
+      {
+        "name": "Validate Skill Definitions",
+        "conclusion": "success"
+      },
+      {
+        "name": "Required Checks",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "closed_at": "2026-09-30T09:56:01.157412+00:00",
+  "coordination_final_notification": {
+    "delivered": false,
+    "reason": "Both coordination and successor chats are archived",
+    "threads": [
+      "01a0f062-3813-7c52-9ad6-61aacf054d1c",
+      "01a0f15b-003a-7111-8c7f-1b2610c16be4"
+    ],
+    "no_unarchive": true
+  },
+  "final_remote_head": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+  "final_checked_at": "2026-09-30T10:00:41.606352+00:00"
+}

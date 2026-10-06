@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-e1-facts-v1",
+  "subject": {
+    "skill": "workflow-reliability-confirmation",
+    "topic": "design-workflow-review",
+    "scene": "unknown",
+    "input_summary": "Independent default-REFUTE review of F1/F2 against Desktop d211bd3; actual CLI corruption probes and deterministically scheduled concurrent writer processes, caller error propagation and external-lock inspection. No native concurrent dispatch or production incident claimed.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/review-request.md"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 3,
+    "total": 3,
+    "findings": [
+      "F1 confirmed: malformed existing YAML is replaced and CLI reports success.",
+      "F2 narrowed: deterministic concurrent writer calls lose an update; live native dispatch concurrency remains unobserved.",
+      "Repair must propagate caller failures, preserve state, serialize complete transactions and commit atomically; broader guarantees require other state writers to participate."
+    ]
+  }
+}

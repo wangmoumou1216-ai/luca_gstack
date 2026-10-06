@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u009-routing-refutation-20261003-r1",
+  "subject": {
+    "skill": "J20",
+    "topic": "限定原生路由验收及U009独立双向反证",
+    "scene": "unknown",
+    "input_summary": "核验注册绑定的E/F/G/H全部原生调用、返回与答复，最终AGENTS及直接owner；完整读取三份冻结owner报告、U008及计划指定条款，复用J18/J19/P08亲验事实。路由原分母4项；U009为独立反证交付，不增加自评分母。",
+    "output_paths": [],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 4,
+    "findings": [
+      "N-E PASS：e-native-records.json源行11调用cat AGENTS.md和shasum，行14实际exit0，root输出完整并匹配注册SHA256 86581149518b00445a8e4abc5e3bb701b5b2f88d19a97379054cdbe59c6a1d1f。行19最终回答17×23=391。该完整选定记录仅有这一组setup调用/返回和最终回答，没有memory、CONTEXT、index、catalog全启动。显式读root是本例setup，不证明自动加载，也不构成同质量成本优势。",
+      "N-F PASS：f-native-records.json源行13/16核root；行18/22完成适用startup，并实际记录错误路径.claude/skills/handoff/SKILL.md不存在、exit1；行26/29随后从.agents/skills/handoff/SKILL.md取得完整正文至FILE_END，实际输出逐字匹配最终handoff authority SHA256 3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002。行34准确解释会话Markdown、os.tmpdir、无需项目pin及未执行。没有catalog发现、skill preamble、handoff生成或写入调用。一次错路径是已恢复的模型准备错误和实际成本，不能删去，也不应改称交接机制运行失败。",
+      "N-G PASS：g-native-records.json源行15/18核root，行20/24读取CONTEXT、context-index及完整skill-catalog，原始输出无截断，catalog逐字匹配SHA256 027a7ecbb53c9c5c65991ca3706bf396d6507f586237ea94d70798d46743637a并包含FILE_END。目录idea行明确原始语料结构化、不延展/推断/判断及原文依据。行29选择idea并给出精确.claude/skills/office/idea/SKILL.md authority，没有执行skill或加载执行材料。",
+      "N-H FAIL，仅限load_before时点：h-native-records.json源行14、2026-10-03T02:04:09.260Z的首条commentary已经回答当前页可知性：目前没有可读页面数据，不能判断当前页内容。此时尚未读取root/index或适用owner。行15/20才读root及index，行22/25才完整读luca-app；owner首段要求Load this file before answering a reference to the app...current page，index的load_before也为answering the reference。行28最终答复确实在读取后，且全程无页面猜测或UI操作；后到读取不能补成首条答复前已读。最小修正是让前置commentary只陈述拟读取动作，在owner读取完成后再给任何页面内容或不可知性结论；不需增加确认门或扩权限。本票不执行修复或重跑。",
+      "范围与读证：四份records和三份owner报告均核SHA256匹配冻结manifest；E/F/G/H实际工具输出均未发生真实截断，EOF判断依据完整返回正文和对应源字节匹配，不依赖hash/EOF自报。H owner实际输出匹配5b482a9872cb828c02e4ec39273ec253e74b7aad0a8f3479f01c950750adb86f。F/G的startup符合最终K10关于repository-contract问题的规定，不能将无需catalog发现误读为免除所有适用startup。H fixture已经明确没有页面或UI授权，因此拒绝猜测不能归因成框架自动保护收益。",
+      "U009四组双向反证已完成，结论不改变当前推荐。旧规则有保护作用与局部可精简可同时成立；独立审查抓到缺陷与协调成本抵消收益可同时成立；必要信息支持连续性与无关Context增加干扰可同时成立；架构限制和局部实现/配置/接线错误目前不能由P08单例区分。正文分别给出竞争解释、可推翻它的证据及决定影响。无同题同trial同质量配对，不宣称任何条件净收益；正式比较不可测也不能证明框架毫无价值。",
+      "归因边界：框架层可证的是合同、局部矛盾修复及限定消费者行为；模型层可证的是实际选择、读取、答复与H时点违例，不是通用能力或归因效应；宿主层可证的是实际工具/进程/终态及特定失败，不是所有入口自动接线。F错路径属局部执行准备错误；H首答时点属已有约束下的响应顺序未遵守；P08原生规则子进程PermissionError及协议/预算失效的根因仍未完整归因，不能仅canonicalize推定闭合，也不能宣布Skill-first等架构整体失效。",
+      "当前决定与停止：保留已实现候选和J18/J19及本票E/F/G的限域证据，H不能记PASS；不建议生产替换，未证用途及旧在途路径继续保留，禁用broker不恢复。真实多Agent、自动hook/CLI、完整14用途、项目workflow、长期记忆、领域交付、旧在途切换与失败回退均不能由这些题代验。若将来拟扩大采用范围，相应必要实际证据仍须成立；这些未测项不是本次已观察任务失败。当前没有会改变不替换决定的剩余争议，不申请新模型/探针/研究。P08 INVALID、probe8/8、B/S HOLD、全生命周期目标未完成均不变。",
+      "成本与来源：三报告保留一次性开发、评估、返修、协调及失败成本，缺失完整token/金额/维护频率保持UNKNOWN；测试数量、文件大小、工具等待片段均不能换算净收益。报告时点晚于/早于不同N例的作者观察范围分别保留，J19独立事实用于更新合并判断，不回填作者曾亲测。计划指定条款绑定文件SHA256 7a374a1c94941bad9d8023fb8de2966d848461334863b8efaec5bc49e6237b50；U008结果绑定387808db709a627a44b16752ac87f5d70e2d951ff069b9d780bca22a104b4352。本次只读及证据一致性计算，未运行模型、探针、测试、网络或文件写入，未读取private/archives/隐藏题。"
+    ]
+  }
+}

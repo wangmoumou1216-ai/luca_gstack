@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "task": "Aggregate every required source",
+  "status": "DONE",
+  "input_manifest": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/inputs.json",
+    "sha256": "4cc2f146931efb07cc8e8caaf45e1c0b0b9bd1c4eb8d331d47110efd072d23d2",
+    "required_source_count": 3
+  },
+  "context_rule_bindings": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skill-os/runtime/long-session.md",
+      "sha256": "43d88566e323994b532e9cfbe7fafc52c25eca55fd843a02216bf26e701ae312",
+      "verification": "MATCH_FROZEN_MANIFEST",
+      "read_status": "read through FILE_END, including previously truncated segment"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/handoff/SKILL.md",
+      "sha256": "3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002",
+      "verification": "MATCH_FROZEN_MANIFEST",
+      "read_status": "read through FILE_END, including previously truncated segment"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/references/handoff-protocol.md",
+      "sha256": "cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1",
+      "verification": "MATCH_FROZEN_MANIFEST",
+      "read_status": "read through FILE_END, including previously truncated segment"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r4-final-repairs/candidate/.claude/skills/office/SKILL.md",
+      "sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+      "verification": "MATCH_FROZEN_MANIFEST",
+      "read_status": "read through FILE_END, including previously truncated segment"
+    }
+  ],
+  "sources": [
+    {
+      "id": "R1",
+      "version": 1,
+      "declared_path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-1.csv",
+      "canonical_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-1.csv",
+      "required": true,
+      "sha256": "6747c291961f7813ff31424777822d85bdc1b9d996f8d147a686f38577440251",
+      "record_count": 300,
+      "quantity_sum": 14645,
+      "quantity_unit_value_sum": 391939,
+      "verification": {
+        "hash": "MATCH",
+        "version_basis": "inputs.json declaration bound to exact source SHA; CSV has no independent version field",
+        "full_file_read": true,
+        "all_csv_records_processed": true,
+        "numeric_fields": "all quantity/unit_value finite, exact Decimal arithmetic",
+        "bytes_read": 11388,
+        "bytes_are_not_model_tokens": true
+      }
+    },
+    {
+      "id": "R2",
+      "version": 1,
+      "declared_path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-2.csv",
+      "canonical_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-2.csv",
+      "required": true,
+      "sha256": "1d3f38d91fb7bde5ce15ca25dadc09a05b94fa530651d785c524b5b426f1d954",
+      "record_count": 300,
+      "quantity_sum": 14712,
+      "quantity_unit_value_sum": 392644,
+      "verification": {
+        "hash": "MATCH",
+        "version_basis": "inputs.json declaration bound to exact source SHA; CSV has no independent version field",
+        "full_file_read": true,
+        "all_csv_records_processed": true,
+        "numeric_fields": "all quantity/unit_value finite, exact Decimal arithmetic",
+        "bytes_read": 11388,
+        "bytes_are_not_model_tokens": true
+      }
+    },
+    {
+      "id": "R3",
+      "version": 1,
+      "declared_path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-3.csv",
+      "canonical_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-3.csv",
+      "required": true,
+      "sha256": "41bc371411c1e0409d6cd0a5625baf71c767353310893f7f7e78ed9a6691d67d",
+      "record_count": 300,
+      "quantity_sum": 14682,
+      "quantity_unit_value_sum": 394737,
+      "verification": {
+        "hash": "MATCH",
+        "version_basis": "inputs.json declaration bound to exact source SHA; CSV has no independent version field",
+        "full_file_read": true,
+        "all_csv_records_processed": true,
+        "numeric_fields": "all quantity/unit_value finite, exact Decimal arithmetic",
+        "bytes_read": 11386,
+        "bytes_are_not_model_tokens": true
+      }
+    }
+  ],
+  "totals": {
+    "source_count": 3,
+    "record_count": 900,
+    "quantity_sum": 44039,
+    "quantity_unit_value_sum": 1179320
+  },
+  "value_formula": "sum(quantity * unit_value), summed over every data record in each required source",
+  "gaps": [],
+  "verification": {
+    "readback": "VERIFIED",
+    "scope": "NO_PIN case-local temporary aggregation; not cross-project workflow equivalence",
+    "model_token_count": "not measured; file byte counts are not token counts",
+    "method": "Second actual tool pass reread aggregate and every source; csv.reader/integer sums matched prior DictReader/Decimal results exactly. Author verification, not independent review.",
+    "checks": [
+      "all three source identities/versions match input manifest",
+      "all current source SHA-256 match declared hashes",
+      "full record counts and both sums recomputed per source",
+      "overall totals equal all per-source totals",
+      "no missing required source or processing gap"
+    ],
+    "module_acceptance": "not claimed; subsequent actual handoff/resume validation remains"
+  }
+}

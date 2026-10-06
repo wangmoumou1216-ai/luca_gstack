@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "ux-audit",
+  "group": "governance_tools",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "screenshot_or_page_reference"
+        ],
+        "optional": [
+          "business_context"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "prototype_output",
+          "current_page_context"
+        ]
+      }
+    }
+  }
+}

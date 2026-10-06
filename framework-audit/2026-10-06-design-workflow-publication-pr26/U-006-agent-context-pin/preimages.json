@@ -1,0 +1,5 @@
+{
+  "scripts/check-agent-context.mjs": "c4261c7e95a159a6aaac583f0f2c7d87fc18fd62fa6de1682a330c63bbe55d19",
+  "scripts/test-agent-context.mjs": "2c2975fb847737408385a868f3e12484927c504ca2dedc825a3883818b1bc086",
+  ".claude/agents/references/plan-design-guidance.md": "2922306d1260eae30aaa362641e1d35a48bd80ca2187384cd4746aadb6d73b28"
+}

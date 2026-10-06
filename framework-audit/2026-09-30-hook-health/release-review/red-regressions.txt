@@ -1,0 +1,6 @@
+Before repair: node --test --test-name-pattern="complete registration|approved module|registration bytes" scripts/test-codex-hook-health.mjs scripts/test-codex-trust-hooks.mjs
+Exit1;0/3PASS.
+1 shell syntax invalid registration accepted ok:true.
+2 .mjs corrupted format accepted ok:true.
+3 registration-drift-trusted early return exited0 instead of refusing.
+Actual tool output preserved in parent transcript.

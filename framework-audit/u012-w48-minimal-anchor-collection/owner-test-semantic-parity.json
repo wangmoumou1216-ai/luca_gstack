@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "npm",
+    "run",
+    "test:semantic-parity",
+    "--silent"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+  "exit": 0,
+  "elapsed_seconds": 7.567
+}

@@ -1,0 +1,439 @@
+diff --git a/app/host-hook-ready.js b/app/host-hook-ready.js
+index 8d1a0f8..7951c1e 100644
+--- a/app/host-hook-ready.js
++++ b/app/host-hook-ready.js
+@@ -12,30 +12,44 @@ const TARGETS = Object.freeze({
+ const DEFAULT_MEMORY_ROOT = '/Users/luca/Desktop/luca_gstack';
+ const GUARD_HEAD = String.raw`cd "$(git rev-parse --show-toplevel)" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z "$links" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \( -name "*.mjs" -o -name "*.js" -o -name "*.py" -o -name "*.sh" \) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\n' "$lines" | /usr/bin/shasum -a 256) || h=invalid; h=$` + '{h%% *}' + String.raw`; case "$h" in `;
+ const GUARD_TAIL = String.raw`) ;; *) echo "[luca_gstack] hook source integrity mismatch" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; `;
++const STABLE_GUARD = String.raw`luca_hook_root=$(git rev-parse --show-toplevel) && [ -n "$luca_hook_root" ] && cd "$luca_hook_root" || exit 2; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; node "$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs" --verify || { echo "[luca_gstack] hook source integrity mismatch" >&2; exit 2; }; `;
+ const SOURCE_DIRS = ['.codex', '.claude/hooks', 'scripts', 'memory/scripts'];
+ const SOURCE_EXT = /\.(?:mjs|js|py|sh)$/;
+ const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+ 
+ function sourceIntegrityDigest(gstackRoot) {
+   const files = [];
++  const sourceFiles = {};
+   const walk = (relative) => {
+     const directory = fs.lstatSync(path.join(gstackRoot, relative));
+-    if (!directory.isDirectory() || directory.isSymbolicLink()) throw new Error('invalid source directory');
++    if (!directory.isDirectory() || directory.isSymbolicLink()
++        || !(directory.mode & 0o444) || !(directory.mode & 0o111)) throw new Error('invalid source directory');
+     for (const entry of fs.readdirSync(path.join(gstackRoot, relative), { withFileTypes: true })) {
+       const file = path.posix.join(relative, entry.name);
+       if (entry.isSymbolicLink()) throw new Error('symlink in source directory');
+       if (entry.isDirectory()) walk(file);
+-      else if (entry.isFile() && SOURCE_EXT.test(entry.name)) files.push(file);
++      else if (entry.isFile() && SOURCE_EXT.test(entry.name)) {
++        if (!(fs.lstatSync(path.join(gstackRoot, file)).mode & 0o444)) throw new Error('unreadable source file');
++        files.push(file);
++      }
++      else if (!entry.isFile()) throw new Error('special file in source directory');
+     }
+   };
+   SOURCE_DIRS.forEach(walk);
+   files.sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+-  return hash(files.map((file) => `${hash(fs.readFileSync(path.join(gstackRoot, file)))}  ${file}\n`).join(''));
++  const lines = files.map((file) => {
++    sourceFiles[file] = hash(fs.readFileSync(path.join(gstackRoot, file)));
++    const escaped = /[\\\n]/.test(file);
++    const name = file.replaceAll('\\', '\\\\').replaceAll('\n', '\\n');
++    return `${escaped ? '\\' : ''}${sourceFiles[file]}  ${name}`;
++  });
++  return { digest: hash(`${lines.join('\n')}\n`), sourceFiles };
+ }
+ 
+-function sourceGuardPrefix(command, suffix, digest) {
++function sourceGuardPrefix(command, suffix, digest, stableApproved) {
+   if (typeof command !== 'string' || !command.endsWith(suffix)) return null;
+   const prefix = command.slice(0, -suffix.length);
++  if (prefix === STABLE_GUARD) return stableApproved ? prefix : null;
+   if (!prefix.startsWith(GUARD_HEAD) || !prefix.endsWith(GUARD_TAIL)) return null;
+   const allowed = prefix.slice(GUARD_HEAD.length, -GUARD_TAIL.length);
+   if (!/^[0-9a-f]{64}(?:\|[0-9a-f]{64}){0,3}$/.test(allowed)
+@@ -44,6 +58,143 @@ function sourceGuardPrefix(command, suffix, digest) {
+   return prefix;
+ }
+ 
++const DIGEST = /^[a-f0-9]{64}$/;
++const isDigest = value => typeof value === 'string' && DIGEST.test(value);
++function exactKeys(value, names) {
++  return value && typeof value === 'object' && !Array.isArray(value)
++    && Object.keys(value).sort().join(',') === [...names].sort().join(',');
++}
++function canonicalJson(value) {
++  if (Array.isArray(value)) return value.map(canonicalJson);
++  if (value && typeof value === 'object') return Object.fromEntries(
++    Object.keys(value).sort().map(key => [key, canonicalJson(value[key])]));
++  return value;
++}
++function privateDirectory(directory, mask = 0o077) {
++  const stat = fs.lstatSync(directory);
++  if (!stat.isDirectory() || stat.isSymbolicLink() || fs.realpathSync(directory) !== directory
++      || stat.uid !== process.getuid() || (stat.mode & mask)) throw new Error('unsafe protected directory');
++}
++function protectedFile(file, limit = 64 * 1024 * 1024) {
++  const before = fs.lstatSync(file);
++  if (!before.isFile() || before.isSymbolicLink() || fs.realpathSync(file) !== file
++      || before.uid !== process.getuid() || (before.mode & 0o077) || before.size > limit) {
++    throw new Error('unsafe protected file');
++  }
++  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
++  try {
++    const opened = fs.fstatSync(fd);
++    if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino
++        || opened.uid !== process.getuid() || (opened.mode & 0o077) || opened.size > limit) throw new Error('protected file changed');
++    const bytes = fs.readFileSync(fd), after = fs.fstatSync(fd), named = fs.lstatSync(file);
++    if (bytes.length > limit || after.size !== opened.size || after.mtimeMs !== opened.mtimeMs
++        || named.ino !== opened.ino || named.dev !== opened.dev || named.isSymbolicLink()) throw new Error('protected file changed while reading');
++    return bytes;
++  } finally { fs.closeSync(fd); }
++}
++function relativeFile(file) {
++  return typeof file === 'string' && file && !path.isAbsolute(file) && !file.includes('\\')
++    && file.split('/').every(part => part && part !== '.' && part !== '..');
++}
++function reviewedMap(map, javascript = false) {
++  if (!map || typeof map !== 'object' || Array.isArray(map)) return false;
++  const names = Object.keys(map);
++  if (names.join('\0') !== [...names].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))).join('\0')) return false;
++  return Object.entries(map).every(([file, value]) => relativeFile(file) && (javascript
++    ? /\.(?:mjs|js)$/.test(file) && exactKeys(value, ['sha256', 'format']) && isDigest(value.sha256)
++      && ['module', 'commonjs'].includes(value.format)
++    : isDigest(value)));
++}
++// Stable commands authenticate the source approval selected by the protected
++// manifest; workspace registration JSON cannot grant itself approval.
++function stableSourceApproved(gstackRoot, home, digest, sourceFiles, hooksBytes) {
++  try {
++    if (!path.isAbsolute(gstackRoot) || path.resolve(gstackRoot) !== gstackRoot
++        || fs.realpathSync(gstackRoot) !== gstackRoot || fs.realpathSync(home) !== home) return false;
++    privateDirectory(home, 0o022);
++    const guard = path.join(home, '.codex/luca-child-project/source-guard');
++    for (const relative of ['.codex', '.codex/luca-child-project', '.codex/luca-child-project/source-guard',
++      '.codex/luca-child-project/source-guard/roots']) privateDirectory(path.join(home, relative));
++    const manifest = JSON.parse(protectedFile(path.join(guard, 'manifest.json'), 32 * 1024 * 1024));
++    if (!exactKeys(manifest, ['schema_version', 'loader_sha256', 'roots']) || manifest.schema_version !== 1
++        || !isDigest(manifest.loader_sha256) || !Array.isArray(manifest.roots) || !manifest.roots.length) return false;
++    const seen = new Set();
++    for (const row of manifest.roots) {
++      if (!exactKeys(row, ['root', 'snapshot', 'files']) || typeof row.root !== 'string'
++          || !path.isAbsolute(row.root) || path.resolve(row.root) !== row.root || seen.has(row.root)
++          || !/^[a-f0-9]{64}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(row.snapshot)
++          || row.snapshot.slice(0, 64) !== hash(row.root) || !row.files || Array.isArray(row.files)) return false;
++      seen.add(row.root);
++      for (const [file, value] of Object.entries(row.files)) {
++        if (!relativeFile(file) || !/\.(?:mjs|js)$/.test(file)
++            || !exactKeys(value, ['sha256', 'format']) || !isDigest(value.sha256)
++            || !['module', 'commonjs'].includes(value.format)) return false;
++      }
++    }
++    const selected = manifest.roots.find(row => row.root === gstackRoot);
++    if (!selected) return false;
++    const snapshot = path.join(guard, 'roots', selected.snapshot);
++    privateDirectory(snapshot); privateDirectory(path.join(snapshot, '.codex'));
++    const approval = JSON.parse(protectedFile(path.join(snapshot, '.codex/hook-source-approval.json')));
++    const artifactBytes = protectedFile(path.join(snapshot, '.codex/reviewed-install.json'));
++    const artifact = JSON.parse(artifactBytes);
++    if (!exactKeys(approval, ['schema_version', 'kind', 'root', 'algorithm', 'sha256', 'artifact_sha256'])
++        || approval.schema_version !== 1 || approval.kind !== 'luca-hook-source-approval'
++        || approval.root !== gstackRoot || approval.algorithm !== 'shell-source-scan-v2'
++        || !isDigest(approval.sha256) || approval.sha256 !== digest
++        || !isDigest(approval.artifact_sha256) || hash(artifactBytes) !== approval.artifact_sha256
++        || !exactKeys(artifact, ['schema_version', 'kind', 'bootstrap_sha256', 'loader_sha256', 'roots'])
++        || artifact.schema_version !== 1 || artifact.kind !== 'luca-source-guard-review'
++        || !isDigest(artifact.bootstrap_sha256) || artifact.loader_sha256 !== manifest.loader_sha256
++        || !Array.isArray(artifact.roots) || !artifact.roots.length) return false;
++    const artifactRoots = new Set();
++    for (const row of artifact.roots) {
++      if (!exactKeys(row, ['root', 'files', 'snapshot_files', 'source_files', 'source_sha256', 'hooks_sha256'])
++          || typeof row.root !== 'string' || !path.isAbsolute(row.root) || path.resolve(row.root) !== row.root
++          || artifactRoots.has(row.root) || !reviewedMap(row.files, true) || !reviewedMap(row.snapshot_files)
++          || !((row.source_files === null && row.source_sha256 === null && row.hooks_sha256 === null)
++            || (reviewedMap(row.source_files) && isDigest(row.source_sha256) && isDigest(row.hooks_sha256)))
++          || (row.source_files && Object.keys(row.source_files).some(file => !SOURCE_EXT.test(file)
++            || !SOURCE_DIRS.some(directory => file.startsWith(`${directory}/`))))) return false;
++      artifactRoots.add(row.root);
++    }
++    const reviewed = artifact.roots.find(row => row.root === gstackRoot);
++    if (!reviewed || reviewed.source_sha256 !== digest || reviewed.hooks_sha256 !== hash(hooksBytes)
++        || JSON.stringify(canonicalJson(reviewed.source_files)) !== JSON.stringify(canonicalJson(sourceFiles))
++        || JSON.stringify(canonicalJson(reviewed.files)) !== JSON.stringify(canonicalJson(selected.files))) return false;
++    if (hash(protectedFile(path.join(guard, 'bootstrap.mjs'))) !== artifact.bootstrap_sha256
++        || hash(protectedFile(path.join(guard, 'loader.mjs'))) !== artifact.loader_sha256
++        || hash(fs.readFileSync(path.join(gstackRoot, '.codex/codex-source-guard-loader.mjs'))) !== artifact.loader_sha256) return false;
++    for (const file of ['.codex/hook-source-integrity.mjs', '.codex/host-launch-hook.mjs',
++      ...Object.values(TARGETS).map(target => `.claude/hooks/${target}`)]) {
++      if (selected.files[file]?.format !== 'module'
++          || hash(fs.readFileSync(path.join(gstackRoot, file))) !== selected.files[file]?.sha256) return false;
++    }
++    for (const map of [reviewed.snapshot_files, reviewed.source_files]) {
++      if (!map || typeof map !== 'object' || Array.isArray(map)
++          || Object.entries(map).some(([file, value]) => !relativeFile(file) || !isDigest(value))) return false;
++    }
++    const snapshotFiles = {};
++    let visited = 0;
++    const walk = relative => {
++      if (++visited > 20000) throw new Error('snapshot inventory limit exceeded');
++      const directory = path.join(snapshot, relative);
++      privateDirectory(directory);
++      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
++        const file = relative ? `${relative}/${entry.name}` : entry.name;
++        if (entry.isDirectory()) walk(file);
++        else if (entry.isFile()) {
++          const bytes = protectedFile(path.join(snapshot, file));
++          if (!['.codex/hook-source-approval.json', '.codex/reviewed-install.json'].includes(file)) snapshotFiles[file] = hash(bytes);
++        } else throw new Error('unsafe snapshot entry');
++      }
++    };
++    walk('');
++    if (JSON.stringify(canonicalJson(snapshotFiles)) !== JSON.stringify(canonicalJson(reviewed.snapshot_files))) return false;
++    return true;
++  } catch { return false; }
++}
++
+ function installedBootstrapMatches(gstackRoot, home) {
+   try {
+     const source = path.join(gstackRoot, '.codex', 'codex-source-guard-bootstrap.mjs');
+@@ -65,10 +216,13 @@ export function expectedHostHookCommand(gstackRoot, target, memoryRoot = DEFAULT
+ function registeredHostCommands(hooksPath, { gstackRoot, memoryRoot = DEFAULT_MEMORY_ROOT,
+   home = os.homedir() } = {}) {
+   let source;
+-  try { source = JSON.parse(fs.readFileSync(hooksPath, 'utf8')); } catch { return null; }
++  let hooksBytes;
++  try { hooksBytes = fs.readFileSync(hooksPath); source = JSON.parse(hooksBytes); } catch { return null; }
+   if (!gstackRoot || !source?.hooks || !installedBootstrapMatches(gstackRoot, home)) return null;
+   let digest;
+-  try { digest = sourceIntegrityDigest(gstackRoot); } catch { return null; }
++  let sourceFiles;
++  try { ({ digest, sourceFiles } = sourceIntegrityDigest(gstackRoot)); } catch { return null; }
++  const stableApproved = stableSourceApproved(gstackRoot, home, digest, sourceFiles, hooksBytes);
+   const commands = {};
+   let commonPrefix = null;
+   for (const [event, target] of Object.entries(TARGETS)) {
+@@ -78,11 +232,11 @@ function registeredHostCommands(hooksPath, { gstackRoot, memoryRoot = DEFAULT_ME
+     const groups = source.hooks[key] || [];
+     const hooks = groups.flatMap((group) => (group.hooks || []).map((hook) => ({ hook, group })));
+     const matching = hooks.filter(({ hook }) => hook.type === 'command'
+-      && suffixes.some(suffix => sourceGuardPrefix(hook.command, suffix, digest)));
++      && suffixes.some(suffix => sourceGuardPrefix(hook.command, suffix, digest, stableApproved)));
+     if (matching.length !== 1
+         || hooks.filter(({ hook }) => String(hook.command || '').includes(`.claude/hooks/${target}`)).length !== 1
+         || (event === 'preToolUse' && !['^(Bash|apply_patch)$', '.*'].includes(matching[0].group.matcher))) return null;
+-    const prefix = suffixes.map(suffix => sourceGuardPrefix(matching[0].hook.command, suffix, digest)).find(Boolean);
++    const prefix = suffixes.map(suffix => sourceGuardPrefix(matching[0].hook.command, suffix, digest, stableApproved)).find(Boolean);
+     if (commonPrefix !== null && prefix !== commonPrefix) return null;
+     commonPrefix = prefix;
+     commands[event] = matching[0].hook.command;
+diff --git a/app/test-host-hook-ready.mjs b/app/test-host-hook-ready.mjs
+index 845958c..63f4d76 100644
+--- a/app/test-host-hook-ready.mjs
++++ b/app/test-host-hook-ready.mjs
+@@ -1,15 +1,16 @@
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { EventEmitter } from 'node:events';
+-import { mkdtempSync, writeFileSync, rmSync, mkdirSync, symlinkSync } from 'node:fs';
++import { mkdtempSync, writeFileSync, readFileSync, rmSync, mkdirSync, symlinkSync,
++  chmodSync, readdirSync, realpathSync } from 'node:fs';
+ import { createHash } from 'node:crypto';
+ import { tmpdir } from 'node:os';
+ import { join } from 'node:path';
+-import { fileURLToPath } from 'node:url';
++import { spawnSync } from 'node:child_process';
+ import { expectedHostHookCommand, registeredHostHooks, trustedHostHookList,
+   verifyHostHooks } from './host-hook-ready.js';
+ 
+-const projectGstack = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'lucagstack');
++const projectGstack = '/Users/luca/Desktop/luca_gstack';
+ const events = [
+   ['SessionStart', 'sessionStart', 'session-restore.mjs'],
+   ['UserPromptSubmit', 'userPromptSubmit', 'route-guard.mjs'],
+@@ -42,6 +43,69 @@ function fixture() {
+   return { dir, hooksPath, registrations, root, home };
+ }
+ 
++const stablePrefix = String.raw`luca_hook_root=$(git rev-parse --show-toplevel) && [ -n "$luca_hook_root" ] && cd "$luca_hook_root" || exit 2; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; node "$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs" --verify || { echo "[luca_gstack] hook source integrity mismatch" >&2; exit 2; }; `;
++const sha = bytes => createHash('sha256').update(bytes).digest('hex');
++function stableFixture() {
++  const f = fixture();
++  f.dir = realpathSync(f.dir); f.root = join(f.dir, 'repo'); f.home = join(f.dir, 'home');
++  for (const file of ['.codex/hook-source-integrity.mjs', '.codex/host-launch-hook.mjs',
++    '.codex/codex-source-guard-loader.mjs', ...events.map(([, , target]) => `.claude/hooks/${target}`)]) {
++    writeFileSync(join(f.root, file), 'export {};\n');
++  }
++  f.registrations = { hooks: Object.fromEntries(events.map(([name, , target]) =>
++    [name, [{ ...(name === 'PreToolUse' ? { matcher: '.*' } : {}),
++      hooks: [{ type: 'command', command: stablePrefix + expectedHostHookCommand(f.root, target) }] }]])) };
++  f.hooksPath = join(f.root, '.codex/hooks.json');
++  writeFileSync(f.hooksPath, JSON.stringify(f.registrations));
++  f.guard = join(f.home, '.codex/luca-child-project/source-guard');
++  for (const directory of [f.home, join(f.home, '.codex'), join(f.home, '.codex/luca-child-project'),
++    f.guard, join(f.guard, 'roots')]) {
++    mkdirSync(directory, { recursive: true, mode: 0o700 }); chmodSync(directory, 0o700);
++  }
++  f.approve = () => {
++    const files = {}, sourceFiles = {};
++    const walk = relative => {
++      for (const entry of readdirSync(join(f.root, relative), { withFileTypes: true })) {
++        const file = `${relative}/${entry.name}`;
++        if (entry.isDirectory()) walk(file);
++        else if (/\.(?:mjs|js|py|sh)$/.test(file)) {
++          sourceFiles[file] = sha(readFileSync(join(f.root, file)));
++          if (/\.(?:mjs|js)$/.test(file)) files[file] = { sha256: sourceFiles[file], format: 'module' };
++        }
++      }
++    };
++    ['.codex', '.claude/hooks', 'scripts', 'memory/scripts'].forEach(walk);
++    // Independent platform shasum serialization, including escaped filenames.
++    const digest = spawnSync('/bin/bash', ['-o', 'pipefail', '-c', String.raw`lines=$(find .codex .claude/hooks scripts memory/scripts -type f \( -name '*.mjs' -o -name '*.js' -o -name '*.py' -o -name '*.sh' \) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256) && printf '%s\n' "$lines" | /usr/bin/shasum -a 256`],
++      { cwd: f.root, encoding: 'utf8' });
++    assert.equal(digest.status, 0, digest.stderr);
++    const sourceSha = digest.stdout.slice(0, 64);
++    const snapshot = `${sha(f.root)}-00000000-0000-4000-8000-000000000001`;
++    f.snapshot = join(f.guard, 'roots', snapshot);
++    mkdirSync(join(f.snapshot, '.codex'), { recursive: true, mode: 0o700 });
++    writeFileSync(join(f.snapshot, 'CLAUDE.md'), 'fixture rules', { mode: 0o600 });
++    const sortedMap = map => Object.fromEntries(Object.entries(map).sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b))));
++    const approvedFiles = sortedMap(files);
++    const artifact = { schema_version: 1, kind: 'luca-source-guard-review',
++      bootstrap_sha256: sha(readFileSync(join(f.root, '.codex/codex-source-guard-bootstrap.mjs'))),
++      loader_sha256: sha(readFileSync(join(f.root, '.codex/codex-source-guard-loader.mjs'))),
++      roots: [{ root: f.root, files: approvedFiles, snapshot_files: { 'CLAUDE.md': sha('fixture rules') },
++        source_files: sortedMap(sourceFiles), source_sha256: sourceSha, hooks_sha256: sha(readFileSync(f.hooksPath)) }] };
++    const artifactBytes = Buffer.from(`${JSON.stringify(artifact)}\n`);
++    f.approvalPath = join(f.snapshot, '.codex/hook-source-approval.json');
++    writeFileSync(f.approvalPath, JSON.stringify({ schema_version: 1, kind: 'luca-hook-source-approval',
++      root: f.root, algorithm: 'shell-source-scan-v2', sha256: sourceSha,
++      artifact_sha256: sha(artifactBytes) }), { mode: 0o600 });
++    writeFileSync(join(f.snapshot, '.codex/reviewed-install.json'), artifactBytes, { mode: 0o600 });
++    writeFileSync(join(f.guard, 'loader.mjs'), 'export {};\n', { mode: 0o600 });
++    chmodSync(join(f.guard, 'bootstrap.mjs'), 0o600);
++    writeFileSync(join(f.guard, 'manifest.json'), JSON.stringify({ schema_version: 1,
++      loader_sha256: artifact.loader_sha256, roots: [{ root: f.root, snapshot, files: approvedFiles }] }), { mode: 0o600 });
++  };
++  f.approve();
++  return f;
++}
++
+ function commandOf(registrations, name, target) {
+   const found = registrations.hooks[name].flatMap((group) => group.hooks || [])
+     .filter((hook) => hook.command.includes(`.claude/hooks/${target}`));
+@@ -88,6 +152,117 @@ test('host hook gate requires exact registration and rejects legacy duplicate',
+   } finally { rmSync(f.dir, { recursive: true }); }
+ });
+ 
++test('stable host commands survive a reviewed source update without changing official trust identity', async () => {
++  const f = stableFixture();
++  try {
++    const before = expectedCommands(f.registrations);
++    const ready = () => registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home });
++    assert.equal(ready(), true);
++    writeFileSync(join(f.root, 'scripts/source with\nnewline.py'), 'version = 2\n');
++    assert.equal(ready(), false, 'unapproved Python addition must reject');
++    f.approve();
++    assert.equal(ready(), true, 'protected approval must match platform filename serialization');
++    assert.deepEqual(expectedCommands(f.registrations), before);
++    const observed = [];
++    await verifyHostHooks({ hooksPath: f.hooksPath, binary: '/fixture/codex', codexHome: '/fixture/direct',
++      gstackRoot: f.root, home: f.home, spawnProcess: fakeSpawn(listed(f.registrations), observed) });
++    assert.equal(observed.length, 1, 'verification performs only official hooks/list, no workspace command');
++    await assert.rejects(verifyHostHooks({ hooksPath: f.hooksPath, binary: '/fixture/codex',
++      codexHome: '/fixture/direct', gstackRoot: f.root, home: f.home,
++      spawnProcess: fakeSpawn(listed(f.registrations, 'modified'), []) }), /not trusted/);
++  } finally { rmSync(f.dir, { recursive: true }); }
++});
++
++test('stable host registrations reject altered grammar, duplicates and matcher changes', () => {
++  for (const kind of ['prefix', 'suffix', 'duplicate', 'matcher']) {
++    const f = stableFixture();
++    try {
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), true);
++      const hook = f.registrations.hooks.UserPromptSubmit[0].hooks[0];
++      if (kind === 'prefix') hook.command = hook.command.replace(' --verify', ' --verify; true');
++      if (kind === 'suffix') hook.command += '; true';
++      if (kind === 'duplicate') f.registrations.hooks.UserPromptSubmit[0].hooks.push({ ...hook });
++      if (kind === 'matcher') f.registrations.hooks.PreToolUse[0].matcher = '^Read$';
++      writeFileSync(f.hooksPath, JSON.stringify(f.registrations));
++      f.approve(); // A content approval cannot authorize a changed registration protocol.
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), false, kind);
++    } finally { rmSync(f.dir, { recursive: true }); }
++  }
++});
++
++test('stable host approvals reject private-path, schema, digest and snapshot damage', () => {
++  for (const kind of ['missing', 'unknown', 'root', 'digest', 'artifact', 'mode', 'link', 'snapshot', 'helper']) {
++    const f = stableFixture();
++    try {
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), true);
++      if (kind === 'missing') rmSync(f.approvalPath);
++      if (['unknown', 'root', 'digest'].includes(kind)) {
++        const value = JSON.parse(readFileSync(f.approvalPath));
++        if (kind === 'unknown') value.extra = true;
++        if (kind === 'root') value.root = `${f.root}-wrong`;
++        if (kind === 'digest') value.sha256 = '0'.repeat(64);
++        writeFileSync(f.approvalPath, JSON.stringify(value));
++      }
++      if (kind === 'artifact') writeFileSync(join(f.snapshot, '.codex/reviewed-install.json'), '{}');
++      if (kind === 'mode') chmodSync(f.approvalPath, 0o644);
++      if (kind === 'link') { rmSync(f.approvalPath); symlinkSync(f.hooksPath, f.approvalPath); }
++      if (kind === 'snapshot') writeFileSync(join(f.snapshot, 'CLAUDE.md'), 'changed rules');
++      if (kind === 'helper') writeFileSync(join(f.root, '.codex/hook-source-integrity.mjs'), 'throw 1;');
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), false, kind);
++    } finally { rmSync(f.dir, { recursive: true }); }
++  }
++});
++
++test('stable approvals reject non-string hashes consistently across manifest and artifact fields', () => {
++  const fields = ['manifest-file', 'artifact-file', 'bootstrap', 'loader', 'source', 'hooks',
++    'source-file', 'snapshot-file', 'approval-source', 'approval-artifact'];
++  for (const field of fields) for (const malformed of [value => [value], value => [[value]],
++    () => null, () => 1, value => ({ value })]) {
++    const f = stableFixture();
++    try {
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), true);
++      const artifactPath = join(f.snapshot, '.codex/reviewed-install.json');
++      const artifact = JSON.parse(readFileSync(artifactPath));
++      const manifestPath = join(f.guard, 'manifest.json');
++      const manifest = JSON.parse(readFileSync(manifestPath));
++      const approval = JSON.parse(readFileSync(f.approvalPath));
++      // This bootstrap is in the approved JS map, but is not a Host Launch target.
++      const file = '.codex/codex-source-guard-bootstrap.mjs';
++      if (field === 'manifest-file') {
++        manifest.roots[0].files[file].sha256 = malformed(manifest.roots[0].files[file].sha256);
++        artifact.roots[0].files[file].sha256 = manifest.roots[0].files[file].sha256;
++      }
++      if (field === 'artifact-file') artifact.roots[0].files[file].sha256 = malformed(artifact.roots[0].files[file].sha256);
++      if (field === 'bootstrap') artifact.bootstrap_sha256 = malformed(artifact.bootstrap_sha256);
++      if (field === 'loader') {
++        artifact.loader_sha256 = malformed(artifact.loader_sha256);
++        manifest.loader_sha256 = artifact.loader_sha256;
++      }
++      if (field === 'source') artifact.roots[0].source_sha256 = malformed(artifact.roots[0].source_sha256);
++      if (field === 'hooks') artifact.roots[0].hooks_sha256 = malformed(artifact.roots[0].hooks_sha256);
++      if (field === 'source-file') artifact.roots[0].source_files[file] = malformed(artifact.roots[0].source_files[file]);
++      if (field === 'snapshot-file') artifact.roots[0].snapshot_files['CLAUDE.md'] = malformed(artifact.roots[0].snapshot_files['CLAUDE.md']);
++      const bytes = Buffer.from(JSON.stringify(artifact));
++      approval.artifact_sha256 = sha(bytes);
++      if (field === 'approval-source') approval.sha256 = malformed(approval.sha256);
++      if (field === 'approval-artifact') approval.artifact_sha256 = malformed(approval.artifact_sha256);
++      writeFileSync(artifactPath, bytes);
++      writeFileSync(manifestPath, JSON.stringify(manifest));
++      writeFileSync(f.approvalPath, JSON.stringify(approval));
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), false,
++        `${field} must require a string hash: ${JSON.stringify(malformed('digest'))}`);
++    } finally { rmSync(f.dir, { recursive: true }); }
++  }
++});
++
++test('special files in guarded source directories reject stable registration', () => {
++  const f = stableFixture();
++  try {
++    assert.equal(spawnSync('mkfifo', [join(f.root, 'scripts/pipe.py')]).status, 0);
++    assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), false);
++  } finally { rmSync(f.dir, { recursive: true }); }
++});
++
+ test('source digest rejects symlinks in each guarded source directory', () => {
+   for (const folder of ['.codex', '.claude/hooks', 'scripts', 'memory/scripts']) {
+     const f = fixture();

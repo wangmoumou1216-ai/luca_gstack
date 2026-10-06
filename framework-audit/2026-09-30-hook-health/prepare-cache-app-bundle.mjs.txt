@@ -1,0 +1,281 @@
+// Run with: node --input-type=module - --scope <audit JSON> --scope-sha <SHA> < this-file
+// Default is read-only. --prepare writes one OS-temp package, never the installed app.
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { Readable } from 'node:stream';
+import { finished } from 'node:stream/promises';
+import { pathToFileURL } from 'node:url';
+
+const AUDIT='/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health';
+const APP_SOURCE='/Users/luca/Desktop/项目/muse/app';
+const INSTALLED='/Applications/luca.app';
+const ASAR_REL='Contents/Resources/app.asar';
+const UNPACKED_REL=`${ASAR_REL}.unpacked`;
+const INFO_REL='Contents/Info.plist';
+const HOST='host-hook-ready.js';
+const HELPER=path.join(AUDIT,'prepare-cache-app-bundle.mjs.txt');
+const SIDECAR='/Users/luca/.local/bin/codex-luca-aihub';
+const BASES=new Map([
+  ['/Users/luca/.codex/worktrees/hook-text-data/luca_gstack','54ef203b4dd77e23564d0cba22f773346d30dfec'],
+  ['/Users/luca/Desktop/项目/muse','0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e'],
+]);
+const FILES=[
+  ['.claude/skill-os/runtime/project-session.md','.codex/hooks.json','.codex/hook-source-integrity.mjs','README.md',
+    'scripts/codex-hook-health.mjs','scripts/install-codex-source-guard.mjs','scripts/source-guard-review.mjs',
+    'scripts/source-guard-test-fixture.mjs','scripts/test-codex-child-hook-integrity.mjs','scripts/test-codex-hook-health.mjs',
+    'scripts/test-codex-trust-hooks.mjs','scripts/test-controlled-change.mjs','scripts/test-hook-source-digests.mjs',
+    'scripts/test-prompt-attestation.mjs','scripts/test-source-guard-preserve.mjs'],
+  ['app/host-hook-ready.js','app/test-host-hook-ready.mjs'],
+];
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+const hex=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+const fail=message=>{throw new Error(message);};
+const normalize=value=>value&&typeof value==='object'?Array.isArray(value)?value.map(normalize):Object.fromEntries(Object.keys(value).sort().map(key=>[key,normalize(value[key])])):value;
+const equal=(a,b)=>JSON.stringify(normalize(a))===JSON.stringify(normalize(b));
+const ordered=names=>[...names].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));
+function within(child,parent){const rel=path.relative(parent,child);return rel===''||(!rel.startsWith('..')&&!path.isAbsolute(rel));}
+function safeName(name){return typeof name==='string'&&name&&!path.isAbsolute(name)&&!name.includes('\\')&&!name.includes('\0')&&!name.split('/').some(x=>!x||x==='.'||x==='..');}
+function keys(value,expected){return value&&typeof value==='object'&&!Array.isArray(value)&&equal(Object.keys(value).sort(),[...expected].sort());}
+function canonical(file){if(!path.isAbsolute(file)||path.resolve(file)!==file||fs.realpathSync(file)!==file)fail(`noncanonical path: ${file}`);return file;}
+function readBytes(file){
+  canonical(file);const before=fs.lstatSync(file);
+  if(!before.isFile()||before.isSymbolicLink()||before.size>512*1024*1024)fail(`unsafe file: ${file}`);
+  const fd=fs.openSync(file,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW||0));
+  try{
+    const opened=fs.fstatSync(fd);
+    if(!opened.isFile()||opened.dev!==before.dev||opened.ino!==before.ino)fail(`opening drift: ${file}`);
+    const bytes=fs.readFileSync(fd),after=fs.fstatSync(fd),named=fs.lstatSync(file);
+    if(bytes.length!==opened.size||after.size!==opened.size||after.mtimeMs!==opened.mtimeMs||after.dev!==opened.dev||after.ino!==opened.ino||named.dev!==opened.dev||named.ino!==opened.ino)fail(`reading drift: ${file}`);
+    return bytes;
+  }finally{fs.closeSync(fd);}
+}
+function run(command,args,options={}){
+  const result=spawnSync(command,args,{encoding:'utf8',maxBuffer:32*1024*1024,stdio:['ignore','pipe','pipe'],...options});
+  if(result.error||result.status!==0)fail(`${path.basename(command)} failed: ${(result.stderr||result.error?.message||'').trim()}`);
+  return `${result.stdout||''}${result.stderr||''}`;
+}
+function git(root,args){return run('/usr/bin/git',['-C',root,...args]);}
+function verifyScope(scopeFile,scopeSha){
+  canonical(scopeFile);
+  if(!within(scopeFile,AUDIT)||scopeFile===AUDIT)fail('scope must be an absolute file below the exact audit directory');
+  const bytes=readBytes(scopeFile);if(sha(bytes)!==scopeSha)fail('scope original byte SHA mismatch');
+  const scope=JSON.parse(bytes);
+  if(!keys(scope,['schema_version','kind','sets','plan','hooks','install_review','pending_live'])||scope.schema_version!==1||scope.kind!=='hook-cache-final-file-set'||!Array.isArray(scope.sets)||scope.sets.length!==2)fail('scope schema mismatch');
+  let hostFile=null;const currentHeads=[];
+  for(const [index,set]of scope.sets.entries()){
+    if(!keys(set,['root','base','files','diff_sha256'])||set.root!==[...BASES.keys()][index]||set.base!==BASES.get(set.root)||!hex(set.diff_sha256)||!Array.isArray(set.files)||set.files.length!==FILES[index].length)fail('scope root/base/file set mismatch');
+    canonical(set.root);
+    if(git(set.root,['rev-parse',`${set.base}^{commit}`]).trim()!==set.base)fail('scope base is not the exact baseline commit');
+    git(set.root,['merge-base','--is-ancestor',set.base,'HEAD']);
+    currentHeads.push({root:set.root,base:set.base,head:git(set.root,['rev-parse','HEAD']).trim()});
+    for(const [i,row]of set.files.entries()){
+      if(!keys(row,['path','relative','sha256','bytes','tracked'])||row.relative!==FILES[index][i]||row.path!==path.join(set.root,row.relative)||!hex(row.sha256)||!Number.isSafeInteger(row.bytes)||typeof row.tracked!=='boolean')fail('scope file record mismatch');
+      const actual=readBytes(row.path);
+      if(actual.length!==row.bytes||sha(actual)!==row.sha256)fail(`reviewed source drift: ${row.path}`);
+      if(row.relative==='app/host-hook-ready.js')hostFile=row;
+    }
+    if(sha(git(set.root,['diff',set.base,'--',...set.files.filter(row=>row.tracked).map(row=>row.relative)]))!==set.diff_sha256)fail('reviewed diff SHA drift');
+  }
+  for(const name of ['plan','hooks','install_review']){
+    const item=scope[name];
+    if(!keys(item,['path','sha256'])||!hex(item.sha256)||!within(item.path,AUDIT)||sha(readBytes(item.path))!==item.sha256)fail(`scope ${name} drift`);
+  }
+  if(!hostFile)fail('scope lacks the host module');
+  return {scope,bytes,hostFile,currentHeads};
+}
+function treeInventory(root){
+  canonical(root);const records={};
+  function visit(folder,rel){
+    const stat=fs.lstatSync(folder);if(!stat.isDirectory()||stat.isSymbolicLink())fail('unsafe inventory directory');
+    records[rel||'.']={type:'directory',mode:stat.mode&0o7777};
+    for(const name of ordered(fs.readdirSync(folder))){
+      const file=path.join(folder,name),key=rel?`${rel}/${name}`:name,entry=fs.lstatSync(file);
+      if(!safeName(key))fail('unsafe app inventory name');
+      if(entry.isDirectory())visit(file,key);
+      else if(entry.isFile())records[key]={type:'file',mode:entry.mode&0o7777,size:entry.size,sha256:sha(readBytes(file))};
+      else if(entry.isSymbolicLink()){
+        const target=fs.readlinkSync(file);
+        if(!within(path.resolve(path.dirname(file),target),root))fail(`app link escapes bundle: ${key}`);
+        records[key]={type:'link',mode:entry.mode&0o7777,target};
+      }else fail(`special app file: ${key}`);
+    }
+  }
+  visit(root,'');return records;
+}
+function plist(file){return JSON.parse(run('/usr/bin/plutil',['-convert','json','-o','-',file]));}
+function archiveInventory(asar,file){
+  asar.uncache(file);const names=asar.listPackage(file),records=[];
+  if(new Set(names).size!==names.length)fail('duplicate asar names');
+  for(const name of names){
+    if(!name.startsWith('/')||!safeName(name.slice(1)))fail('unsafe asar name');
+    const relative=name.slice(1),meta=asar.statFile(file,relative,false);
+    if('files'in meta)records.push({path:relative,type:'directory',unpacked:meta.unpacked===true,meta});
+    else if('link'in meta){if(!safeName(meta.link))fail('unsafe asar link');records.push({path:relative,type:'link',unpacked:meta.unpacked===true,meta});}
+    else{
+      const content=asar.extractFile(file,relative,false);
+      if(content.length!==meta.size)fail(`asar short read: ${relative}`);
+      records.push({path:relative,type:'file',unpacked:meta.unpacked===true,sha256:sha(content),size:content.length,meta});
+    }
+  }
+  return records;
+}
+function freezeInstalled(asar){
+  const inventory=treeInventory(INSTALLED),archive=path.join(INSTALLED,ASAR_REL),header=asar.getRawHeader(archive);
+  const modules=archiveInventory(asar,archive),info=plist(path.join(INSTALLED,INFO_REL));
+  const headerSha=sha(header.headerString),integrity=info.ElectronAsarIntegrity?.['Resources/app.asar'];
+  if(!keys(integrity,['algorithm','hash'])||integrity.algorithm!=='SHA256'||integrity.hash!==headerSha)fail('installed ElectronAsarIntegrity header mismatch');
+  const host=modules.find(row=>row.path===HOST&&row.type==='file');if(!host||host.unpacked)fail('installed host module must be a packed regular file');
+  const unpacked=treeInventory(path.join(INSTALLED,UNPACKED_REL));
+  const sidecar=fs.existsSync(SIDECAR)?{path:SIDECAR,sha256:sha(readBytes(SIDECAR)),mode:fs.lstatSync(SIDECAR).mode&0o7777}:null;
+  return {inventory,inventory_sha256:sha(JSON.stringify(inventory)),modules,module_inventory_sha256:sha(JSON.stringify(modules)),unpacked,unpacked_sha256:sha(JSON.stringify(unpacked)),info,asar_sha256:sha(readBytes(archive)),header_sha256:headerSha,host_sha256:host.sha256,info_sha256:sha(readBytes(path.join(INSTALLED,INFO_REL))),sidecar};
+}
+function toolingSnapshot(requireApp){
+  const entry=requireApp.resolve('@electron/asar'),moduleRoot=path.resolve(path.dirname(entry),'..');
+  const pkg=JSON.parse(readBytes(path.join(moduleRoot,'package.json')));
+  if(pkg.name!=='@electron/asar'||pkg.version!=='3.4.1')fail('official installed @electron/asar 3.4.1 is required');
+  const files={};
+  for(const name of ['package.json','lib/asar.js','lib/disk.js','lib/filesystem.js','lib/integrity.js','lib/pickle.js','lib/wrapped-fs.js'])files[path.join(moduleRoot,name)]=sha(readBytes(path.join(moduleRoot,name)));
+  files[path.join(APP_SOURCE,'macos-release.mjs')]=sha(readBytes(path.join(APP_SOURCE,'macos-release.mjs')));
+  return {entry,version:pkg.version,files};
+}
+function unchangedInstalled(asar,before){
+  const now=freezeInstalled(asar);
+  if(now.inventory_sha256!==before.inventory_sha256||now.asar_sha256!==before.asar_sha256||now.header_sha256!==before.header_sha256||now.info_sha256!==before.info_sha256||now.unpacked_sha256!==before.unpacked_sha256||!equal(now.sidecar,before.sidecar))fail('installed app/asar/plist/native/sidecar CAS drift');
+}
+function emptyBlockOnly(before,after){
+  if(!before||!after)return false;
+  const old={...before,blocks:undefined},next={...after,blocks:undefined};
+  return equal(old,next)&&equal(before.blocks,[])&&equal(after.blocks,[sha(Buffer.alloc(0))]);
+}
+function compareArchives(before,after,hostSha){
+  if(before.length!==after.length)fail('asar module count changed');
+  const changes=[],metadata=[];
+  for(let i=0;i<before.length;i++){
+    const a=before[i],b=after[i];
+    if(a.path!==b.path||a.type!==b.type||a.unpacked!==b.unpacked)fail(`asar order/type/unpacked flag changed: ${a.path}`);
+    if(a.type==='file'){
+      if(a.path===HOST){if(b.sha256!==hostSha)fail('prepared host module differs from reviewed source');if(a.sha256!==b.sha256)changes.push(a.path);}
+      else if(a.sha256!==b.sha256||a.size!==b.size)fail(`unreviewed module changed: ${a.path}`);
+      const old={...a.meta},next={...b.meta};delete old.offset;delete next.offset;
+      if(a.path===HOST){delete old.size;delete next.size;delete old.integrity;delete next.integrity;}
+      else if(a.size===0&&emptyBlockOnly(old.integrity,next.integrity)){metadata.push({path:a.path,reason:'official serializer normalizes empty blocks',before:old.integrity,after:next.integrity});delete old.integrity;delete next.integrity;}
+      if(!equal(old,next))fail(`asar metadata/flags changed: ${a.path}`);
+      if(b.meta.integrity?.algorithm!=='SHA256'||b.meta.integrity.hash!==b.sha256)fail(`asar integrity hash mismatch: ${a.path}`);
+    }else{
+      const old={...a.meta},next={...b.meta};delete old.files;delete next.files;
+      if(!equal(old,next))fail(`asar directory/link flags changed: ${a.path}`);
+    }
+  }
+  if(changes.length!==1||changes[0]!==HOST)fail('package must change exactly the reviewed host module');
+  return {changed_modules:changes,allowed_metadata_changes:metadata,offsets_recomputed:true,modules_read_back:after.length};
+}
+function assertTemp(file,root){if(!within(file,root)||file===root)fail('write escaped sole temporary package root');}
+function writeTemp(file,bytes,root){assertTemp(file,root);fs.writeFileSync(file,bytes,{flag:'wx',mode:0o600});}
+function thinMachOPayload(bytes){
+  // Resigning can change an embedded signature but may not change executable payload.
+  if(bytes.length<32||bytes.readUInt32LE(0)!==0xfeedfacf)return null;
+  const count=bytes.readUInt32LE(16),commands=bytes.readUInt32LE(20);if(count>10000||32+commands>bytes.length)return null;
+  const normalized=Buffer.from(bytes);let offset=32,signature=null;
+  for(let i=0;i<count;i++){
+    if(offset+8>32+commands)return null;const command=bytes.readUInt32LE(offset),size=bytes.readUInt32LE(offset+4);
+    if(size<8||offset+size>32+commands)return null;
+    if(command===0x1d){if(size!==16||signature)return null;signature={start:bytes.readUInt32LE(offset+8),length:bytes.readUInt32LE(offset+12)};normalized.fill(0,offset+8,offset+16);}
+    offset+=size;
+  }
+  if(!signature||signature.start+signature.length!==bytes.length||signature.start<32+commands)return null;
+  return normalized.subarray(0,signature.start);
+}
+function verifyBundleChanges(before,after,staged){
+  if(!equal(Object.keys(before),Object.keys(after)))fail('bundle file inventory changed');
+  const signatureChanges=[];
+  for(const name of Object.keys(before)){
+    const a=before[name],b=after[name];if(equal(a,b))continue;
+    if(a.type!==b.type||a.mode!==b.mode)fail(`bundle type/mode changed: ${name}`);
+    if(name===ASAR_REL||name===INFO_REL)continue;
+    if(name.includes('/_CodeSignature/')&&a.type==='file'){signatureChanges.push({path:name,before_sha256:a.sha256,after_sha256:b.sha256,kind:'signature seal'});continue;}
+    if(a.type==='file'&&b.type==='file'&&!name.startsWith(`${UNPACKED_REL}/`)){
+      const old=thinMachOPayload(readBytes(path.join(INSTALLED,name))),next=thinMachOPayload(readBytes(path.join(staged,name)));
+      if(old&&next&&old.equals(next)){signatureChanges.push({path:name,before_sha256:a.sha256,after_sha256:b.sha256,kind:'embedded signature only'});continue;}
+    }
+    fail(`unreviewed bundle bytes changed: ${name}`);
+  }
+  return signatureChanges;
+}
+
+async function main(){
+  const args=process.argv.slice(2);let scopeFile='',scopeSha='',prepare=false;
+  for(let i=0;i<args.length;i++){
+    if(args[i]==='--prepare'){if(prepare)fail('duplicate --prepare');prepare=true;}
+    else if(args[i]==='--scope'||args[i]==='--scope-sha'){
+      const key=args[i],value=args[++i];if(!value||value.startsWith('--'))fail(`incomplete ${key}`);
+      if(key==='--scope'){if(scopeFile)fail('duplicate --scope');scopeFile=value;}else{if(scopeSha)fail('duplicate --scope-sha');scopeSha=value;}
+    }else fail(`unknown argument: ${args[i]}`);
+  }
+  if(!scopeFile||!hex(scopeSha))fail('exact --scope and --scope-sha are required');
+  if(process.platform!=='darwin')fail('macOS is required');
+  const reviewed=verifyScope(scopeFile,scopeSha),requireApp=createRequire(path.join(APP_SOURCE,'package.json'));
+  const tools=toolingSnapshot(requireApp),asar=requireApp('@electron/asar');
+  const release=await import(pathToFileURL(path.join(APP_SOURCE,'macos-release.mjs')).href);
+  if(typeof asar.createPackageFromStreams!=='function'||typeof release.signMacLocal!=='function'||typeof release.verifyMacLocal!=='function')fail('official packaging/signing API missing');
+  release.verifyMacLocal(INSTALLED);
+  const before=freezeInstalled(asar),hostBytes=readBytes(reviewed.hostFile.path);
+  if(sha(hostBytes)!==reviewed.hostFile.sha256)fail('reviewed host bytes drift');
+  if(before.host_sha256===reviewed.hostFile.sha256)fail('installed host is already the reviewed bytes; no package change to prepare');
+  const preflight={schema_version:1,kind:'luca-hook-package-preflight',read_only:!prepare,scope:scopeFile,scope_sha256:scopeSha,helper_sha256:sha(readBytes(HELPER)),reviewed_files:17,heads:reviewed.currentHeads,tooling:tools,installed_baseline:{app:INSTALLED,asar_sha256:before.asar_sha256,header_sha256:before.header_sha256,host_sha256:before.host_sha256,info_sha256:before.info_sha256,bundle_inventory_sha256:before.inventory_sha256,module_inventory_sha256:before.module_inventory_sha256,unpacked_sha256:before.unpacked_sha256,sidecar:before.sidecar,signature_verified:true},target_host_sha256:reviewed.hostFile.sha256,prepare_requested:prepare};
+  if(!prepare){unchangedInstalled(asar,before);verifyScope(scopeFile,scopeSha);if(!equal(toolingSnapshot(requireApp),tools))fail('tooling drift');process.stdout.write(`${JSON.stringify(preflight,null,2)}\n`);return;}
+  // The only writable root is created after all read-only gates have passed.
+  const tempBase=fs.realpathSync(tmpdir()),root=fs.mkdtempSync(path.join(tempBase,'luca-hook-package-'));
+  canonical(root);if(path.dirname(root)!==tempBase||!path.basename(root).startsWith('luca-hook-package-'))fail('unexpected OS-temp root');
+  fs.chmodSync(root,0o700);
+  const staged=path.join(root,'luca.app'),candidateAsar=path.join(root,'candidate.asar'),receiptPath=path.join(root,'receipt.json');
+  try{
+    unchangedInstalled(asar,before);verifyScope(scopeFile,scopeSha);
+    assertTemp(staged,root);run('/bin/cp',['-pR','-X',INSTALLED,staged]);
+    if(!equal(treeInventory(staged),before.inventory))fail('installed baseline copy differs in bytes/flags/modes');
+    const originalAsar=path.join(INSTALLED,ASAR_REL);
+    const streams=before.modules.map(row=>{
+      if(row.type==='directory')return {type:'directory',path:row.path,unpacked:row.unpacked};
+      if(row.type==='link')return {type:'link',path:row.path,unpacked:row.unpacked,stat:{mode:0o777,size:0},symlink:path.relative(path.dirname(row.path),row.meta.link),streamGenerator:()=>Readable.from([])};
+      const bytes=row.path===HOST?hostBytes:asar.extractFile(originalAsar,row.path,false);
+      if(row.path!==HOST&&sha(bytes)!==row.sha256)fail(`original module drift during stream preparation: ${row.path}`);
+      const mode=row.unpacked?fs.lstatSync(path.join(INSTALLED,UNPACKED_REL,row.path)).mode:row.meta.executable?0o100755:0o100644;
+      return {type:'file',path:row.path,unpacked:row.unpacked,stat:{size:bytes.length,mode},streamGenerator:()=>Readable.from([bytes])};
+    });
+    assertTemp(candidateAsar,root);
+    const output=await asar.createPackageFromStreams(candidateAsar,streams);await finished(output);
+    fs.chmodSync(candidateAsar,fs.lstatSync(originalAsar).mode&0o7777);
+    const rebuilt=archiveInventory(asar,candidateAsar),comparison=compareArchives(before.modules,rebuilt,reviewed.hostFile.sha256);
+    // The serializer-generated unpacked tree is checked, but never replaces the complete baseline tree.
+    for(const row of rebuilt.filter(item=>item.type==='file'&&item.unpacked)){
+      const file=path.join(`${candidateAsar}.unpacked`,row.path),original=path.join(INSTALLED,UNPACKED_REL,row.path);
+      if(sha(readBytes(file))!==row.sha256||(fs.lstatSync(file).mode&0o7777)!==(fs.lstatSync(original).mode&0o7777))fail(`generated unpacked bytes/mode drift: ${row.path}`);
+    }
+    unchangedInstalled(asar,before);verifyScope(scopeFile,scopeSha);
+    const stagedAsar=path.join(staged,ASAR_REL);assertTemp(stagedAsar,root);fs.renameSync(candidateAsar,stagedAsar);
+    asar.uncache(stagedAsar);const newHeaderSha=sha(asar.getRawHeader(stagedAsar).headerString);
+    const infoPath=path.join(staged,INFO_REL);assertTemp(infoPath,root);
+    run('/usr/bin/plutil',['-replace','ElectronAsarIntegrity','-json',JSON.stringify({'Resources/app.asar':{algorithm:'SHA256',hash:newHeaderSha}}),infoPath]);
+    const expectedInfo=structuredClone(before.info);expectedInfo.ElectronAsarIntegrity={'Resources/app.asar':{algorithm:'SHA256',hash:newHeaderSha}};
+    if(!equal(plist(infoPath),expectedInfo))fail('plist changed outside ElectronAsarIntegrity');
+    if(!equal(treeInventory(path.join(staged,UNPACKED_REL)),before.unpacked))fail('complete original unpacked tree was not preserved');
+    const beforeSign=compareArchives(before.modules,archiveInventory(asar,stagedAsar),reviewed.hostFile.sha256);
+    release.signMacLocal(staged);release.verifyMacLocal(staged);
+    const afterSign=compareArchives(before.modules,archiveInventory(asar,stagedAsar),reviewed.hostFile.sha256);
+    if(!equal(beforeSign,afterSign)||!equal(comparison,afterSign))fail('module inventory changed while signing');
+    if(!equal(treeInventory(path.join(staged,UNPACKED_REL)),before.unpacked))fail('signing changed native/unpacked bytes or modes');
+    if(!equal(plist(infoPath),expectedInfo)||sha(asar.getRawHeader(stagedAsar).headerString)!==newHeaderSha)fail('signing changed plist or asar integrity');
+    const finalInventory=treeInventory(staged),signatureChanges=verifyBundleChanges(before.inventory,finalInventory,staged);
+    unchangedInstalled(asar,before);verifyScope(scopeFile,scopeSha);if(!equal(toolingSnapshot(requireApp),tools))fail('tooling drift');
+    const receipt={...preflight,kind:'luca-hook-package-prepared',read_only:false,prepared:true,installed:false,temp_root:root,app:staged,comparison:afterSign,signature_changes:signatureChanges,signature_verified:true,asar_sha256:sha(readBytes(stagedAsar)),header_sha256:newHeaderSha,info_sha256:sha(readBytes(infoPath)),bundle_inventory_sha256:sha(JSON.stringify(finalInventory)),unpacked_sha256:sha(JSON.stringify(before.unpacked)),artifacts:{receipt:receiptPath,baseline: path.join(root,'installed-baseline.json'),candidate:path.join(root,'candidate-bundle-inventory.json'),scope:path.join(root,'reviewed-scope.json'),serializer_unpacked:`${candidateAsar}.unpacked`}};
+    writeTemp(receipt.artifacts.baseline,Buffer.from(`${JSON.stringify({inventory:before.inventory,modules:before.modules,unpacked:before.unpacked},null,2)}\n`),root);
+    writeTemp(receipt.artifacts.candidate,Buffer.from(`${JSON.stringify(finalInventory,null,2)}\n`),root);
+    writeTemp(receipt.artifacts.scope,reviewed.bytes,root);
+    writeTemp(receiptPath,Buffer.from(`${JSON.stringify(receipt,null,2)}\n`),root);
+    process.stdout.write(`${JSON.stringify(receipt,null,2)}\n`);
+  }catch(error){process.stderr.write(`${JSON.stringify({prepared:false,installed:false,temp_root:root,error:error.message})}\n`);process.exitCode=1;}
+}
+try{await main();}catch(error){process.stderr.write(`${JSON.stringify({prepared:false,installed:false,error:error.message})}\n`);process.exitCode=1;}

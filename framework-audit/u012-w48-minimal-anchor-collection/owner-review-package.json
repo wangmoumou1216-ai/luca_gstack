@@ -1,0 +1,118 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "finding": "S18/S40 obsolete fixed STOP wording anchor",
+  "worktree": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+  "baseline_HEAD": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "delta": [
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "before_sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f",
+      "after_sha256": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317",
+      "bytes": 5976,
+      "snapshot": "/tmp/u012-routing-parity-zql82b2l/minimal/final/.claude/skill-os/capability-parity.json"
+    }
+  ],
+  "delta_file": "/tmp/u012-routing-parity-zql82b2l/minimal/delta.patch",
+  "delta_sha256": "fb8d4a3702bdb796f393bda6c350c77f491e047ff6434ef62c884dd4177743f2",
+  "protection": "Retain the semantic-routing reminder presence using its current live soft-candidate routingOwner phrase. All other anchors are unchanged. Real Codex/Claude/UNKNOWN hook behavior stays covered by existing 257/0 source-bound regression; this tripwire does not prove arbitrary source semantics.",
+  "unchanged_original_candidate_files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "86581149518b00445a8e4abc5e3bb701b5b2f88d19a97379054cdbe59c6a1d1f"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "sha256": "16f0d4aad8ca4dfabc278094db90a2e57b1b8b716a185ec7b50ac01995d586eb"
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "sha256": "ef213983722c200cc0ba968b43d832e11016fbd85d4414b5ed4fb8714fef5760"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "sha256": "2b3f24a246f9730db5f14c5655eccc610ecaec33906da3464dff2824f758caee"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "sha256": "80de955c256440a7fe165d665b4f5b833be015afdb1b5a3f4866136063545a97"
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "sha256": "5610e8613b0fda90042ab78b4f29bf4231605f19ad34fdde3a3d52fa2b894bdd"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "sha256": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "sha256": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144"
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "sha256": "5b7478e73ba0fcf35bc4dc7cc6554a90146229c7ff6f23779704c50768568cf5"
+    }
+  ],
+  "unchanged_semantic_test_sha256": "3ffd996ad62165754dfb5180996431cdd2f3d2c8c88c9e4579905f4657f093ed",
+  "tests": {
+    "check-capability-parity": {
+      "argv": [
+        "node",
+        "scripts/check-capability-parity.mjs"
+      ],
+      "cwd": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+      "exit": 0,
+      "elapsed_seconds": 1.912
+    },
+    "test-semantic-parity": {
+      "argv": [
+        "npm",
+        "run",
+        "test:semantic-parity",
+        "--silent"
+      ],
+      "cwd": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+      "exit": 0,
+      "elapsed_seconds": 7.567
+    }
+  },
+  "summaries": [
+    "PASS capability parity: anchors=133, shared-projections=47, delegated-projections=1",
+    "PASS semantic parity proof-it-bites 31/31"
+  ],
+  "checks": {
+    "diff-check": {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        ".claude/skill-os/capability-parity.json"
+      ],
+      "cwd": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+      "exit": 0,
+      "elapsed_seconds": 0.018
+    },
+    "delta-reverse-check": {
+      "argv": [
+        "git",
+        "apply",
+        "--reverse",
+        "--check",
+        "/tmp/u012-routing-parity-zql82b2l/minimal/delta.patch"
+      ],
+      "cwd": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+      "exit": 0,
+      "elapsed_seconds": 0.016
+    }
+  },
+  "historical_failed_check": "/tmp/u012-routing-parity-zql82b2l/before-check.json",
+  "superseded_overbroad_attempt": "/tmp/u012-routing-parity-zql82b2l/review-package.json",
+  "superseded_reason": "Removed only this repair's seven snapshot anchors and ten text-mutation cases after root minimality direction. Kept the historical logs; final delta is one anchor line, no test modification.",
+  "limits": [
+    "No route-guard behavior changed; original nine hashes unchanged",
+    "No unrelated green suites rerun; final existing parity suite rerun because final manifest changed",
+    "H/J20 limited timing FAIL remains; J21 joint acceptance and complete verify belong to root",
+    "No new agent/model/probe/network/production/config/commit/push"
+  ]
+}

@@ -1,0 +1,112 @@
+[
+  {
+    "path": "scripts/check-agent-context.mjs",
+    "saved_bytes": 0,
+    "old": "const expectedDesignGuidanceSha256 = '71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f';",
+    "new": "const expectedDesignGuidanceSha256 = '2922306d1260eae30aaa362641e1d35a48bd80ca2187384cd4746aadb6d73b28';"
+  },
+  {
+    "path": ".claude/skills/office/open-design/SKILL.md",
+    "saved_bytes": 240,
+    "old": "**2d. carrier profile（独立于设计系统）：** original_copy v1 先核 Phase 0 能力门，其原件动作\n采用 original-preserving-v1 或 original-ui-refinement-v1；不套下面普通静态 carrier 的默认 profile。\n普通 carrier： `structural_carrier` 只把不可变 base template 的 DOM、\n登记模块和内容结构作为实现载体；模板 CSS/token/assets 不构成视觉验收或 OD 设计系统输入。\n`visual_carrier` 只有用户明确选择，并同时给出 viewport、截图基线和允许差异阈值时才合法。当前\nPhase 1 合同默认/已确认的是 `structural_carrier + single`；实际每轮仍必须在 adoption/TAC hash 时\n确认相同 profile，不能根据 OD 输出偷偷切换。",
+    "new": "**2d. carrier profile（独立于设计系统）：** original_copy v1 先核 Phase 0 能力门，采用\noriginal-preserving-v1 或 original-ui-refinement-v1，不套普通静态默认 profile。\n普通 carrier 必须执行 Phase 1「设计系统」的 structural/visual 边界：默认/已确认\n`structural_carrier + single`；visual 必须有用户明确选择及 viewport、截图基线、允许差异阈值。\n每轮 adoption/TAC hash 仍确认相同 profile，不得按 OD 输出偷换。"
+  },
+  {
+    "path": ".claude/skills/office/open-design/SKILL.md",
+    "saved_bytes": 64,
+    "old": "**用户指定原模板时**，先通过 Phase 0 的 HEADLESS_ONLY 选择/授权门，再编译原件路径。\n交接的 base-template 必须与原件逐字节一致（含 CSS、脚本、资源、隐藏状态）；\n按 page-context 的 original-copy 门核验。没有原样适配能力就停住，不能生成简化影子页后声称用了模板。\n源复制不授权重设视觉或交互；用户要求保持的样式、结构和行为不得被 structural profile 或外部 DS 默认覆盖。",
+    "new": "**用户指定原模板时**，先过 Phase 0 HEADLESS_ONLY 选择/授权门，再编译。\n按 page-context original-copy 门核验 base-template 与原件逐字节一致（含 CSS、脚本、资源、隐藏状态）；\n无原样适配能力即停，禁止以简化影子页冒充模板。复制不授权重设视觉/交互；用户要求保持的样式、结构、行为\n不得被 structural profile 或外部 DS 默认覆盖。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 128,
+    "old": "`html-prototype` 支持 standalone 和 workflow 两种模式。不要把 `/design-brief` 当成全局强制前置。\n但在 workflow / traceable delivery 中，它必须消费 `design-brief` 内的\n`Design Generation Packet`；PRD、deepresearch、ux-research 只用于 traceability 校验，\n不得作为 HTML 直接设计输入。",
+    "new": "standalone 不全局强制 `/design-brief`；workflow / traceable delivery 必须消费其\n`Design Generation Packet`。PRD、deepresearch、ux-research 仅校验 traceability，不得直接设计 HTML。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 149,
+    "old": "**输出目标与平台消费：** 新版 design-brief 使用「输出目标」「目标平台与范围」「参考策略」\n「依据」「下游约束」（`output_target_platform_scope`）。按这些已确认字段和当前用户指令继续；\n`reference=none` 是有效参考策略，不是缺输入。用户已选择本地 HTML、平台和整页/局部范围时，\n在该范围内安排独立页面或局部实现，不因缺少旧「原型承载方式 / 母版」字段而再次强制选整页母版。\n若本次已选输出目标仍是 OD / Claude Design / MagicPath，交回相应交接入口，不自行改成本地实现。",
+    "new": "**输出目标与平台消费：** 按 design-brief 已确认的「输出目标」「目标平台与范围」「参考策略」\n「依据」「下游约束」（`output_target_platform_scope`）及当前指令继续；`reference=none` 有效。\n已选本地 HTML/平台/整页或局部范围，就在该范围实现；缺旧「原型承载方式 / 母版」字段不强制重选母版。\n目标仍为 OD / Claude Design / MagicPath 时交回相应入口，不自行改成本地实现。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 116,
+    "old": "□ 确认以下适用 reference 文件存在（此处只查存在性，不读取——lazy-load，2026-07-04 G5：\n  每份在其消费点已各自有\"必须读取\"强制，启动全量前读是重复税；挂载点见下方注）",
+    "new": "□ 仅查下列适用 reference 存在；到所列消费点再必须完整读取（lazy-load，2026-07-04 G5）："
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 153,
+    "old": "**历史输入兼容：** 若既有 design-brief 仅有旧 `component_mapping` / shadcn 组件映射表，\n只读提取其中的位置、交互职责、决策、状态、来源与验收语义，按 §7 核对覆盖；不要求补旧\nvariant/classes、token 或组件库资产，不重写历史文件。缺少承重语义时按当前模式补齐或报告缺口。\n\n**历史承载兼容：** 旧「原型承载方式 / 母版」仅在能追溯到用户明确选择、且仍适用于本次平台\n与范围时沿用；与新字段冲突时澄清冲突，不自动优先旧值。不补写或改写历史 design-brief。",
+    "new": "**历史输入/承载兼容：** 旧 `component_mapping` / shadcn 表只读提取位置、交互职责、决策、状态、来源、\n验收语义，按 §7 核覆盖；缺承重语义按当前模式补齐或报缺口，不补 variant/classes、token、组件库资产。\n旧「原型承载方式 / 母版」须可追溯真人选择且仍适用平台/范围；冲突先澄清，不优先旧值。\n历史 design-brief 及其他历史文件均不补写或改写。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 90,
+    "old": "注意：当前工程实际可用母版为 5 个。AI 速记入口页、\n录音工作页母版未随包提供；遇到这类需求时，\n可在已确认范围内使用独立整页或局部实现；不因没有对应母版而扩大需求或要求补建母版。",
+    "new": "当前只有 5 个母版；AI 速记入口页、录音工作页未提供，按已确认范围用独立整页/局部实现，\n不因此扩大需求或要求补建母版。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 86,
+    "old": "**来源借鉴：** ConardLi/web-design-skill 的核心方法论——\"先用 Markdown\n把设计系统说清楚，再写代码\"。\n**原因：** 不声明就直接写代码 → 颜色/字体/间距会随手写，不一致。",
+    "new": "**来源借鉴：** ConardLi/web-design-skill：先用 Markdown 声明设计系统，再写代码，避免颜色/字体/间距不一致。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 103,
+    "old": "**来源借鉴：** ConardLi 的 v0 draft 策略——尽早用低保真度草稿让用户纠偏，\n而不是黑箱交付完整代码。\n**原因：** 一次性写完整原型 → 发现方向错了只能推翻；先给骨架 → 节省\n80% 的返工时间。",
+    "new": "**来源借鉴：** ConardLi v0 draft：尽早用低保真骨架让用户纠偏，避免完整原型方向错误后推翻；预计节省 80% 返工时间。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 81,
+    "old": "**开发交接补全（仅下游=开发/场景1 时追加，非硬 QA 项）**：若原型将进自家开发链（tech-spec/task-plan），\n在 prototype-spec.md 追加一节，补 **组件 props / 响应式断点 / design token 清单 / 动效** 四维\n（从已产出 HTML 抽取，逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`）；\n下游=Figma（场景2）**不触发**。",
+    "new": "**开发交接补全（仅下游=开发/场景1，非硬 QA 项；Figma/场景2不触发）**：进入 tech-spec/task-plan 时，\n从实际 HTML 抽取 **组件 props / 响应式断点 / design token 清单 / 动效**，追加 prototype-spec.md；\n逐维方法见 `.claude/skills/office/references/dev-handoff-dimensions.md`。"
+  },
+  {
+    "path": ".claude/skills/office/open-design/SKILL.md",
+    "saved_bytes": 71,
+    "old": "**0c. Brief适配与最终 binding 的边界：** design-brief 里的 `CandidateHint` 是已整理需求阶段的内部、短期\n发现结果；Brief内已确认模板/位置及非绑定适配草稿可继承并重核版本，不重新定义产品或逼用户重述。草稿不能作为 page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1\n并冻结 Packet；正式绑定时完整读取 `.claude/skill-os/runtime/page-context.md`，运行其最终\n`carrier-binding` 验证、隔离预览和真人 adoption，才可进入 `carrier`。",
+    "new": "**0c. Brief适配与最终 binding 的边界：** `CandidateHint` 仅是需求整理阶段内部短期发现。\nBrief已确认模板/位置及非绑定草稿可继承并重核版本，不重定义产品或逼用户重述；草稿不作\npage adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1、冻结 Packet，再完整读取\n`.claude/skill-os/runtime/page-context.md`，执行最终 `carrier-binding` 验证、隔离预览、真人 adoption 才进入 `carrier`。"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 41,
+    "old": "如果检查结果有非 N/A 的 AI 专有状态，\n**必须额外生成**以下状态页（用状态切换 harness 切换，每个状态加\n`<!-- STATE: xxx -->` 注释和 `data-prototype-state`）：",
+    "new": "检查到非 N/A AI 专有状态时，**必须额外生成**下列状态页，用 harness 切换，并各加\n`<!-- STATE: xxx -->` 和 `data-prototype-state`："
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 77,
+    "old": "**主文件：** `docs/prototype/YYYY-MM-DD-<topic>/index.html`\n\n**规格文件（必须，来自 CLAUDE-prototype.md Step 4 交接块）：**\n`docs/prototype/YYYY-MM-DD-<topic>/prototype-spec.md`\n\n读取 SCHEMA.md 作为规格文件模版，填充。\n\n`prototype-spec.md` 必须包含：",
+    "new": "**主文件：** `docs/prototype/YYYY-MM-DD-<topic>/index.html`\n**规格文件（必须，CLAUDE-prototype.md Step 4 交接块）：** 同目录 `prototype-spec.md`。\n读取并填充 SCHEMA.md；必须包含："
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 9,
+    "old": "该脚本会输出：",
+    "new": "QA 输出："
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 13,
+    "old": "**任一不通过 → 返回修复。** 这是视觉层面的 AI Slop 防火墙。",
+    "new": "**任一不通过 → 返回修复（视觉 AI Slop 防火墙）。**"
+  },
+  {
+    "path": ".claude/skills/office/open-design/SKILL.md",
+    "saved_bytes": 59,
+    "old": "> （recover 入口照旧汇入 Phase 4 回收逻辑。）\n",
+    "new": "",
+    "reason": "duplicate routing/platform statement retained at its operative section"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "saved_bytes": 122,
+    "old": "以下速查表仅当目标平台为桌面 / 后台管理页时适用。移动端必须先按上方平台规则判断。\n\n",
+    "new": "",
+    "reason": "duplicate routing/platform statement retained at its operative section"
+  }
+]

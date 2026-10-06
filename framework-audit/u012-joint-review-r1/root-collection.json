@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-03T01:01:31.813009+00:00",
+  "source": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r1/manifest.json",
+  "note": "Frozen intermediate candidates; original owners continue in their separate worktrees. Not adoption or final acceptance.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "root_before_sha256": "6f603c20c0350045eb1c29ba6e0bdf9b29281e15d09479b19f8191fee46e9526",
+      "root_after_sha256": "6f603c20c0350045eb1c29ba6e0bdf9b29281e15d09479b19f8191fee46e9526",
+      "changed": false
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "root_before_sha256": "300d3eb50b55c51af4f4237700639b0344c2c778d55137bc060a401796810cfd",
+      "root_after_sha256": "6891cf4040ac5dee78cec5bfaed9b841b2bbc2e88631bb9d628b2a76a9d860de",
+      "changed": true
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "root_before_sha256": "2c2975fb847737408385a868f3e12484927c504ca2dedc825a3883818b1bc086",
+      "root_after_sha256": "261e1603f2bf7c3ff3de552b0cf132a0edd668715b6b3a0841d797c29a98e091",
+      "changed": true
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "root_before_sha256": "3db5eb53ed80c1c3a7f4fc9e4d142daa652ce2004160e1db81d14339fd1b8a31",
+      "root_after_sha256": "3db5eb53ed80c1c3a7f4fc9e4d142daa652ce2004160e1db81d14339fd1b8a31",
+      "changed": false
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "root_before_sha256": "05166c1d125badc4f1e85575e025d8e410d1c52a4876bc1dc268716e41176b99",
+      "root_after_sha256": "05166c1d125badc4f1e85575e025d8e410d1c52a4876bc1dc268716e41176b99",
+      "changed": false
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "root_before_sha256": "d94ee8042a88933d955d7d0612e3beae7948cc06eb69cb80d6d196f03f82c7d9",
+      "root_after_sha256": "d94ee8042a88933d955d7d0612e3beae7948cc06eb69cb80d6d196f03f82c7d9",
+      "changed": false
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "root_before_sha256": "68c83777974edbf8e9416c18b512192bc68a7a8e437f30498046bb4af6a31c8b",
+      "root_after_sha256": "171550920c487d4a6384ade982a73b77891c91a81df86528fb2b9bb40b5e37b4",
+      "changed": true
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "root_before_sha256": "a156e2340a8ec212ba7174635a7ca444582c1de3202a8f99057be7590b2ad7dc",
+      "root_after_sha256": "ed2b41e38882d89c70c021b4807a194a21e6f329fb87338b2fa785923918a9cd",
+      "changed": true
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "root_before_sha256": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078",
+      "root_after_sha256": "8b1dd8818a4f665534d93dccb235fa4cdd8277596e7376fc92ee82a413966d55",
+      "changed": true
+    },
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "root_before_sha256": "70e51b16461ab14ba55cb06af7db19c733c845cda6c50fb5342a0dc9120c4181",
+      "root_after_sha256": "70e51b16461ab14ba55cb06af7db19c733c845cda6c50fb5342a0dc9120c4181",
+      "changed": false
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "root_before_sha256": "c4ad4c5009e73b04625afbeb00a524df5be15341cfa8eba7fd91d2f4501e0a0d",
+      "root_after_sha256": "c4ad4c5009e73b04625afbeb00a524df5be15341cfa8eba7fd91d2f4501e0a0d",
+      "changed": false
+    }
+  ]
+}

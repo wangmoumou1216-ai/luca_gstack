@@ -1,0 +1,44 @@
+[
+  {
+    "slice_id": "P2-a",
+    "source_locator": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-routing-task.txt",
+    "source_sha256_or_version": "3a2e738e1bdaa141ed65708fd556352bb6d16c0897b3e766a415db07ca04e302",
+    "read_or_measure_range": "完整stdin任务包；不得额外读文件/网络；返回完整模块子计划",
+    "required_method": "仓库外新Codex CLI上下文；read-only sandbox；用户当前模型配置；不禁用hooks/rules；记录argv/exit/events/输入hash/完整最后输出",
+    "required_for_assertions": [
+      "P2-C1",
+      "P2-C2",
+      "P2-C4",
+      "P2-C5"
+    ],
+    "authority_ref": "本会话用户要求主协调按P0—P2推进及总计划U-004-a/b/c"
+  },
+  {
+    "slice_id": "P2-b",
+    "source_locator": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-orchestration-task.txt",
+    "source_sha256_or_version": "e3648ccfce0161bb6af0073f98ad057023c4717f48d0f92361d53a258e39aa02",
+    "read_or_measure_range": "完整stdin任务包；不得额外读文件/网络；返回完整模块子计划",
+    "required_method": "仓库外新Codex CLI上下文；read-only sandbox；用户当前模型配置；不禁用hooks/rules；记录argv/exit/events/输入hash/完整最后输出",
+    "required_for_assertions": [
+      "P2-C1",
+      "P2-C2",
+      "P2-C4",
+      "P2-C5"
+    ],
+    "authority_ref": "本会话用户要求主协调按P0—P2推进及总计划U-004-a/b/c"
+  },
+  {
+    "slice_id": "P2-c",
+    "source_locator": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-context-task.txt",
+    "source_sha256_or_version": "b8f3c3dc3dddaddc10c686c79f4ebc53b860f06a84ade4b11364bfac90342952",
+    "read_or_measure_range": "完整stdin任务包；不得额外读文件/网络；返回完整模块子计划",
+    "required_method": "仓库外新Codex CLI上下文；read-only sandbox；用户当前模型配置；不禁用hooks/rules；记录argv/exit/events/输入hash/完整最后输出",
+    "required_for_assertions": [
+      "P2-C1",
+      "P2-C2",
+      "P2-C4",
+      "P2-C5"
+    ],
+    "authority_ref": "本会话用户要求主协调按P0—P2推进及总计划U-004-a/b/c"
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "code_outside_STOP_unchanged": true,
+  "original_route_tests_verbatim_retained": true,
+  "parity_only_one_anchor": true,
+  "source_snapshot_hashes_unchanged": true,
+  "original_worktree_status_and_tracked_dirty_hashes_unchanged": true,
+  "HEAD": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "version_scope": "old 05120197 plus exactly three file delta; no root/startup/catalog patch"
+}

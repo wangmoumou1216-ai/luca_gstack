@@ -1,0 +1,42 @@
+[
+  {
+    "timestamp": "2026-10-06T05:29:11.173Z",
+    "ordinal": 78,
+    "type": "response_item",
+    "payload": {
+      "type": "function_call",
+      "id": "fc_0a055e86a11dd5b3016ac487221218819ab5b74a7be794e8d0",
+      "name": "send_message",
+      "namespace": "collaboration",
+      "arguments": "{\"target\":\"/root\",\"message\":\"gAAAAABqxIcn0GH-MOGfYYIUCp3jJw860-sEMCX23UMyFJUEerj5hrQSobTacddDnFYT342dInc0zALhGZOd14CvSwwuLBV6dLiZ29dUSKV7s6CQsGCRAjgW74tzsEF7pVG8xdiFZzS1GI1aFhv9CwW_7xLqGjV2z1en3lD5T8_mBpAsKxALyGi58wP6ynFBnMLUdLxu7VAzLTNMZkDdoGGS36Ck3PlbbCC9ms_T-Qi_2LVKX3XbViq7aSTF6owoTIDTYSTCsxn6Ly3puuDL9uw7CQsrsZn5-OM62yByC4inPezEDRKgyN1cMSUsvLnOrmG4wOOppCvQrXGRFsg4eOIsfx50UG0HX8jizKSGJCQhEsLUXg1Cial9o-wZQLxrLEk3yaIzcsczHc-YajLwFVlsHPZgurl81GGxDpMkP7kGr193OGed8Yt2RtD3wicZUC6o-ugeVAvENo0mug5_p4T1ak9xDcrck5u6-7to3PfzmF4aU1FPSylnP-_vSv99aD24qCHlFVqtDCtbbERF0fm2suop4PwKvikkdN92YXpPUgs3fF9yJMWCubIUTIo4A2ddXeH08F2GHn9Kw8rlaJ4pFtHamxwNBWESOsNKG6Z7kLTiCFwaDWC9AGDoFF9gd3vhHjAPCZyLvqN2O1GpO9JBq6ECqElnj9LZerLbSVPUGqDW889uNbeXqG2_3jaPWnXKJ1PHsaBGf2UZ57HnY3ayKrrwkHLD_PeHWcbQuzqiD3oR49cr5avGxOcm-7mMUlZzavBR-IQ7IH6VJCVVXXXM-_xyddbs7iIWpEEWQ3u8nsm4jGaI_s-CQ-vfxoy2Re4bTA2N45zh8h8-F13FNUqUdorE7Q51-cy6qAkoC4shwngZx4tDg_0RaX7t1e6S2Y3kltNSIBlwGcmxDUSrWd3M4dS4c8F6UiV3GzIH0r_kGWhlBGk-9g6F-mRURr9bdFS5SucGAKUygvoycOGfKq4JaasAcxWoytBSJxrDzDANvJlL-mPjzHcmF8jJc8wvM_HZ5y4jersQ_GDoXZQUjGXazaEfjh9l_KPIJcFJF_YNqt8nbjgidRYwilgPcXWhPlwKFY_yrJW-q-MKHWZI07m2D1GH5G3UbVxBJENjiTdCB-yZHIuCoHQRQhvoJCdYYzDj-m9xJrzZCm9McBkCTrjErGZGQ3nfXNV61h7t_k8yqMtV6EiXXio42nARyZVz4-i5FdmQRneb9K-lNoKbs7waW9mPy6rftr91bAZBQ3oiqnhD7omVSi_bEoyVLv1dfBX3Oun_IrvXKdKjNSHua3jHu-lv3dP6M4aoYc4Ck58LYnjJPdst4IfiAZ2lPkKKF6SP8O_5IhGq\"}",
+      "call_id": "call_365864611779436a816525a70a88647d",
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a10fae-3dd3-7833-aa72-af8abab39dd3",
+        "create_time": 1791264546.0867112
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "user_input_order": 3
+    }
+  },
+  {
+    "timestamp": "2026-10-06T05:29:11.502Z",
+    "ordinal": 81,
+    "type": "response_item",
+    "payload": {
+      "type": "function_call_output",
+      "id": "fco_01a10faf-f24e-7d23-8dd0-95fd1c4148aa",
+      "call_id": "call_365864611779436a816525a70a88647d",
+      "output": "",
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a10fae-3dd3-7833-aa72-af8abab39dd3",
+        "create_time": 1791264551.502358
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "fallback_token_limit_override": 12000
+    }
+  }
+]

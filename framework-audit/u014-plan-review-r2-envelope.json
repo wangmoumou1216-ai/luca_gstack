@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u014-value-first-plan-20261003-r2",
+  "subject": {
+    "skill": "U014-r2",
+    "topic": "价值优先方案三项WARN终版增量核对",
+    "scene": "unknown",
+    "input_summary": "仅对已审83行原稿与87行终稿执行完整diff和SHA256核对。三项修订均与上一票建议对应；复用原评估上下文，非新冷启动盲审。未重新审查历史或执行方案。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-value-first-replan.md"
+    ],
+    "duration": "lightweight"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 3,
+    "total": 3,
+    "findings": [
+      "PASS W1：U014-b新增先判断更简单现有入口，要求保留B/对照完整规则、权限、终态及成本可比性；无适用入口才定向修复P08。原资格上限、失败停止和禁止通用benchmark扩建均保留。",
+      "PASS W2：资源段新增开工前登记确切缺口、所影响采用决定、有限文件/工作范围与停止条件，并单列准备、评分及root协调成本。不能使公平比较成立的修复停止；未恢复普通开发的机械分钟/动作停点。",
+      "PASS W3：状态、U014-a和完成措辞改为非作者复审；末段明确新冷审调用受thread limit限制且未形成新票，本次复用已有评估上下文。没有冒称新的盲审或提升证据等级。",
+      "无退化或扩权：完整diff未修改原质量/控制判据、探索样本限域、隐藏验证门、真实旧状态迁移要求或条件式发布前门；本轮仅规划及新增额度不自动释放的边界仍保留。原C1—C5规划判定不变，本票分母仅为三项WARN闭合，不代表重新运行五项全面审查。",
+      "身份与操作：原稿SHA256为5c8cc404ad54bca9b2cad53f47ef1b4822d298a9ffcbad165106267d6ccc9930，终稿为aafe4581df4a1711de0cffa0d52c9c69832121bf5b9783317b48ae4412841796，均匹配派发。diff退出1表示两稿存在上述差异，不是验证失败。仅只读diff与hash，无文件写入、网络、试验、新Agent或Git变更。"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "c07-required-user-action-third-blocked-audit",
+  "at": "2026-10-01T04:44:48.622329+00:00",
+  "blocked_audit_goal_turn": 3,
+  "status": "BLOCKED_AUDIT_PASSED",
+  "same_blocking_condition": "Actual user normal Codex reload plus ordinary prompt in original named thread remains absent. C07 precedes Sidecar public settings/P03, and agent cannot substitute a CLI/API prompt or assume approval.",
+  "thread_id": "01a0f0f0-35db-7c21-bb53-4881b35a0972",
+  "release_at": "2026-10-01T04:21:15.091109+00:00",
+  "latest_rollout_timestamp": "2026-09-30T23:25:17.938Z",
+  "post_release_native_anchors": [],
+  "mother_head": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "local_activation_receipt_status": "ACTIVATED_APP_SOURCE_AND_THREE_PROFILE_TRUST_VERIFIED_LIVE_RELOAD_PENDING",
+  "question_still_pending": true,
+  "whole_goal_achieved": false
+}

@@ -1,0 +1,13 @@
+diff --git a/scripts/test-codex-model-route-hook.mjs b/scripts/test-codex-model-route-hook.mjs
+index b9dfc4a..2461d82 100644
+--- a/scripts/test-codex-model-route-hook.mjs
++++ b/scripts/test-codex-model-route-hook.mjs
+@@ -316,7 +316,7 @@ try {
+   for (const folder of [profileSessions, profileJournal, profileStore, profileChildHome]) {
+     mkdirSync(folder, {recursive: true, mode: 0o700});
+   }
+-  const profileEnv = {...env, CODEX_HOME: profileHome, LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT: '',
++  const profileEnv = {...env, TMPDIR: profileFixture, CODEX_HOME: profileHome, LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT: '',
+     LUCA_CHILD_PROJECT_STORE_ROOT: profileStore, LUCA_CHILD_PROJECT_TEST_CODEX_HOME: profileChildHome};
+   const profileRun = payload => {
+     const result = spawnSync(process.execPath, [join(profileRoot, '.codex/model-route-hook.mjs')],

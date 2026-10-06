@@ -1,0 +1,182 @@
+{
+  "writer": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py",
+  "writer_sha256": "d100c73a7628bafe4faec3b29b046d11786330ac05ee51aa0b6a4d5cdf010466",
+  "guard_sha256": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3",
+  "source_integrity": {
+    "before": {
+      "writer": "d100c73a7628bafe4faec3b29b046d11786330ac05ee51aa0b6a4d5cdf010466",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "after": {
+      "writer": "d100c73a7628bafe4faec3b29b046d11786330ac05ee51aa0b6a4d5cdf010466",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "drift": false
+  },
+  "started_at": "2026-10-06T05:52:34.664463+00:00",
+  "completed_at": "2026-10-06T05:52:34.828928+00:00",
+  "passed": 0,
+  "total": 3,
+  "exit_code": 1,
+  "outcomes": [
+    {
+      "case": "reject-corrupt-node",
+      "status": "FAIL",
+      "error": "AssertionError: invalid existing state accepted: exit=0, stdout='workflow-state updated: idea → DONE\\n'"
+    },
+    {
+      "case": "reject-corrupt-topic",
+      "status": "FAIL",
+      "error": "AssertionError: invalid existing state accepted: exit=0, stdout='topic set: new-topic, scene: A\\n'"
+    },
+    {
+      "case": "reject-corrupt-combined",
+      "status": "FAIL",
+      "error": "AssertionError: invalid existing state accepted: exit=0, stdout='topic set: new-topic, scene: A\\nworkflow-state updated: idea → DONE\\n'"
+    }
+  ],
+  "actual_runs": [
+    {
+      "case": "reject-corrupt-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-j5fumv1p",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "last_updated: '2026-10-06T05:52:34Z'\nnodes:\n  idea:\n    completed_at: '2026-10-06T05:52:34Z'\n    output: docs/idea/new.md\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+          ],
+          "pid": 85104,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-j5fumv1p",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-j5fumv1p",
+          "started_at": "2026-10-06T05:52:34.665925+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:34.718213+00:00",
+          "actual_identity": {
+            "pid": 85104,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-j5fumv1p",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-j5fumv1p",
+            "started_at": "2026-10-06T05:52:34.693776+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:34.719353+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gdv_vb3i",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "last_updated: '2026-10-06T05:52:34Z'\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+          ],
+          "pid": 85105,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gdv_vb3i",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gdv_vb3i",
+          "started_at": "2026-10-06T05:52:34.720217+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:34.773372+00:00",
+          "actual_identity": {
+            "pid": 85105,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gdv_vb3i",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gdv_vb3i",
+            "started_at": "2026-10-06T05:52:34.748230+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:34.774557+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-82uieyw3",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "last_updated: '2026-10-06T05:52:34Z'\nnodes:\n  idea:\n    completed_at: '2026-10-06T05:52:34Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+          ],
+          "pid": 85106,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-82uieyw3",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-82uieyw3",
+          "started_at": "2026-10-06T05:52:34.775340+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:34.827650+00:00",
+          "actual_identity": {
+            "pid": 85106,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-82uieyw3",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-82uieyw3",
+            "started_at": "2026-10-06T05:52:34.803056+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:34.828737+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    }
+  ]
+}

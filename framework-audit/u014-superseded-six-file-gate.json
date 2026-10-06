@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-03T08:36:47.308324+00:00",
+  "pid": 14067,
+  "group": 14067,
+  "reason": "J32 narrows adoption to route-only; stop only owned unpublished obsolete six-file commit gate before running final exact route-only gate. Not a test PASS/FAIL.",
+  "cwd": "/Users/luca/.codex/worktrees/tri-system-adoptable-fixes/luca_gstack",
+  "commit_created": false
+}

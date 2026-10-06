@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u007-readiness-20261003-r6",
+  "subject": {
+    "skill": "quality-gate",
+    "topic": "J10：R7 有限启动改动与单次 P07 就绪复核",
+    "scene": "unknown",
+    "input_summary": "有界复核 R6→R7、W29 真实 RED/GREEN、冻结 P07 准备及单次 launcher；复用此前未变证据，仅判断一次 P07 就绪，不放行正式比较或生产变更。",
+    "output_paths": [],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 4,
+    "total": 4,
+    "findings": [
+      {
+        "id": "J10-1",
+        "status": "pass",
+        "assertion": "R7 有限启动修改符合合同，具有真实且相关的 RED/GREEN，保留既有权限和计数约束。",
+        "evidence": [
+          "driver.mjs 的 native_launch 使用精确对象校验，发生在目录创建和进程启动之前；新启动注册上限为 7，旧路径保持 6。",
+          "新增启动参数仅为 -c allow_login_shell=false 与 --disable shell_snapshot；每次 thread/start 请求 experimentalRawEvents:true，包括 fresh-root 路径。",
+          "模型、reasoning effort、权限配置及环境继承未由此次改动扩大；invocation 明确保留 behavior_verified:false。",
+          "W29 使用相同最终 integration.test.mjs：R6 RED 为 16 项、3 pass、13 fail、exit 1；R7 targeted GREEN 为 16/16、exit 0；regression 为 35/35、exit 0。",
+          "已读取实际 RED/GREEN 元数据、TAP 结果和关键失败原因；未把报告中的 W28 全套结果当作本次独立重跑证据。",
+          "J09 未映射 hook 处理保持：tool_actions=null、可见计数单列、INVALID、全链 UNKNOWN、formal=false。"
+        ],
+        "identities": {
+          "driver_sha256": "c6db8f7d4612db1ce764159b5f8630dd9eebb9882906d4f3c66c66059d16abe0",
+          "driver_test_sha256": "b85bc427ebd9d7b8a29e248ee0c3520db946ae42bb4a8047a8c68136c5ace90e",
+          "integration_test_sha256": "4e0852c69944bcc869f666d306801bcc6cb479f2e4e434425abe802855ee6475",
+          "diff_sha256": "69bf50857134c655d63970d7adb69673d14f24323d7bc91f86a151900b575101",
+          "w29_evidence_directory": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6"
+        },
+        "limits": [
+          "离线测试不证明实际 Codex 启动采用这些设置，也不证明原生命令已经执行。",
+          "此前运行证明不能自动覆盖新启动组合。"
+        ]
+      },
+      {
+        "id": "J10-2",
+        "status": "pass",
+        "assertion": "P07 的精确准备与本次授权绑定，未提前登记或运行，检查及权限没有放宽。",
+        "evidence": [
+          "完整读取并核对 case、registration、manifest、preparation 和 root binding。",
+          "与 P06 比较，case 顶层仅 id、request 变化；四阶段协议、输入与嵌入脚本保持一致，保留八项检查。",
+          "请求明确原生命令路径 /bin/sh、login=false、tty=false；未替换为 standalone command/exec 或 unsandboxed thread shell。",
+          "权限与 P06 仅作实例及运行路径重绑定，network=false，effective proof 仍为 null。",
+          "精确预算为 300 秒、20 个可见动作、60,000 累计 token，capability probe 上限 7；未改变正式比较的其他预算。",
+          "实际 Python、Codex 二进制及 26 个 PyYAML 文件哈希匹配；包文件集合、父级 marker、逃逸符号链接和准备材料与记录一致。",
+          "正式 case、registration、manifest、attempt 和 launch 产物尚不存在，runs 尚未创建；当前草案保留未登记、未运行状态。",
+          "pending 原件与 root 绑定结果的差异仅限已声明身份和登记绑定字段。"
+        ],
+        "identities": {
+          "run_id": "u007-p07-native-appserver-r1",
+          "instance": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm",
+          "port": 58503,
+          "case_sha256": "9cfa23dee88cd24eb6abfdfa1f56e31273677ca136008bd86328eb361d8e85ec",
+          "registration_sha256": "3cc586e237606a72108bcbfb2f7c8d56fe8f519f881d53d367dc603487201347",
+          "manifest_sha256": "0730b14fcdb31af65f11552eff8d9b76a0f9a438f615b025233634935dcfad8a",
+          "preparation_sha256": "507b8579e5ae5475be47afdafd859568848d73f13b573965b151035c20e5b3ae",
+          "root_binding_sha256": "6063825bf4493bdd0e04cb9205b9b586e6970f50e55c15baf6ff3c8ceccd304b"
+        },
+        "limits": [
+          "端口直到 launcher 实际精确 bind 成功才算取得；本票没有预留端口。",
+          "规则 loader、PyYAML 和权限边界的真实运行结果仍为 UNKNOWN。",
+          "原准备失败记录得到保留，不计作模型运行成功。"
+        ]
+      },
+      {
+        "id": "J10-3",
+        "status": "pass",
+        "assertion": "冻结 launcher 保持已审草案语义，具有一次启动约束与限定自有进程的清理逻辑。",
+        "evidence": [
+          "launcher 核 root 决定、真实本票身份及哈希、全部冻结输入、模型投影、预算、启动参数、二进制与包身份。",
+          "启动前检查既有计数和产物缺席；精确 bind 58503 后以排他方式建立 attempt 标记，原字节复制 case，再机械登记和置 READY。",
+          "仅调用一次公开 runTrial；不注入伪造 commandExecution 或 proof，不修改 driver 或全局配置。",
+          "外层 325 秒后进入清理；使用自有 Node 会话及观察到的后代进程组，结合 PID、出生时间和进程组身份重新观察后发送信号。",
+          "清理记录 observation error、信号结果、存活观察和 parent witness；没有按进程名进行全局终止。",
+          "已审纯内存 selector 记录四类通过，明确 processes=0、signals=0；该记录仅支持选择器局部逻辑。"
+        ],
+        "identities": {
+          "launcher_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-launch.py",
+          "launcher_sha256": "9b320a97314e041010df535fd826b42ccaa7aa800c147fc434a3470d5f276a86"
+        },
+        "limits": [
+          "本次未执行 launcher、ps 或信号操作，未证明 OS 清理行为。",
+          "观察失败、未观察到的后代及实际 survivors 必须保留为 UNKNOWN 或失败；空的已观察 survivors 不能证明所有后代绝对不存在。",
+          "325 秒是触发外层终止与后续清理的阈值，不是所有清理操作已经完成的证明。"
+        ]
+      },
+      {
+        "id": "J10-4",
+        "status": "pass",
+        "assertion": "仅放行此冻结 P07 一次，并明确结果使用边界。",
+        "decision": "ALLOW_ONE_REVIEWED_P07",
+        "next_action": "root 原样保存本票并形成对应决定文件，由冻结 launcher 完成现有前置核验、机械登记和一次 P07；任何前置核验不符即停止。",
+        "boundaries": [
+          "仅适用于本票绑定的 R7、P07 case、registration、manifest、preparation 与 launcher。",
+          "实际结果须分别判断启动采用、原生命令执行、八项检查、规则 loader、协议、清理和计数证据。",
+          "有未映射 hook 时不得把可见工具数当作全链工具数；全链计数仍按既有规则保留 UNKNOWN。",
+          "该组合恢复检查不能单独归因于某一个启动参数。",
+          "不自动授权 P08、增加预算、扩大权限、正式比较或生产改造。",
+          "本票不将不可测报告或保留现状视为用户全生命周期目标完成。"
+        ]
+      }
+    ]
+  },
+  "review_scope": {
+    "task_sha256": "ff41c2f72f8ea6aca3f4739e22b6c695ec9d5cd679de236626d3135d1dac0e01",
+    "inputs_sha256": "8118526459a8bdaf88d689daf66ade03da52464066041843c32e46fe7f1a2248",
+    "frozen_input_count": 38,
+    "hash_verification": "开始及结束均匹配全部 38 项冻结输入",
+    "reuse": "复用 J07/J09 未变要求；没有重新全量加载旧材料",
+    "read_limits": "仅限本次冻结产物、精确差异、限定运行记录及可选 selector 记录；未读 private、archives、全局配置或 shell snapshots",
+    "writes": 0,
+    "model_or_probe_runs": 0,
+    "test_reruns": 0,
+    "network_calls": 0,
+    "new_agents": 0,
+    "owner_contacts": 0,
+    "conservative_actions": 17,
+    "observable_tokens_estimate": 48000,
+    "started_at_utc": "2026-10-02T22:49:01Z",
+    "verification_completed_at_utc": "2026-10-02T22:52:47Z",
+    "recording": "由父级保存本报告和 envelope；reviewer 未写 eval-log 或调用 recorder"
+  }
+}
+

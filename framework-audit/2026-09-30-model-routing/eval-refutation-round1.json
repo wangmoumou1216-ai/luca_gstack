@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-refutation-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing candidate independent refutation",
+    "scene": "unknown",
+    "input_summary": "冻结候选方案、NO_PIN权限、审查独立性、runner失败传播和报告边界的独立反证；仅只读与内存实验。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 5,
+    "total": 7,
+    "findings": [
+      "FAIL BLOCKING: Preparation failure only sets process-local runnerCriticalFailure; without an envelope host activation remains unlatched, so another runner sharing that activation is not refused. Persist the failure at host level and verify cross-runner behavior.",
+      "UNKNOWN: Production model adoption, same-invocation completion and effective effort were not independently verified in this review.",
+      "WARN: REPORT section 2 reverses actual hook ordering; routeForAgent precedes prepareCodexChildProject.",
+      "WARN: Already-started turns may complete after local failure; the tested guarantee is final runner output suppression and subsequent dispatch refusal, not cancellation of in-flight execution."
+    ]
+  }
+}

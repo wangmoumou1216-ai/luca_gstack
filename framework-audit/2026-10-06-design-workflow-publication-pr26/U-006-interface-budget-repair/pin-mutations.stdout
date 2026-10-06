@@ -1,0 +1,115 @@
+PASS clean compatibility fixture
+PASS complete operational projection is smaller than the manifest
+PASS mutation: explicit final prototype consumer pointer disappears
+PASS mutation: prototype delivery conditional owner disappears
+PASS mutation: index drops a semantic condition
+PASS mutation: index moves the consumption deadline
+PASS mutation: index drops a failure posture
+PASS mutation: index omits a conditional entry
+PASS mutation: index permits partial authority reads
+PASS mutation: index drops a non-default truth owner
+PASS mutation: root loses the generated index loader
+PASS mutation: new manifest field cannot silently disappear from projection
+PASS mutation: root mistakes three reads for a Plan trigger
+PASS mutation: workflow manifest bypasses the static-view owner
+PASS mutation: selected input-mode view disappears
+PASS mutation: extra input-mode view expands the approved set
+PASS mutation: selected input-mode contract loses nested semantics
+PASS mutation: selected input-mode view lies about source binding
+PASS mutation: input-mode source adds an unapproved key
+PASS mutation: input-mode source accepts an ambiguous duplicate group
+PASS mutation: root drops selected input-mode loading
+PASS mutation: office restores whole-table default loading
+PASS mutation: office drops the learning action owner
+PASS mutation: plan drops conditional design guidance
+PASS mutation: plan design guidance drops mandatory design-output gate
+PASS mutation: plan appends an optional design-output contradiction outside the normative block
+PASS mutation: plan hides the exact mandatory gate in an obsolete note outside the normative block
+PASS mutation: plan hides the entire exact ordered chain in an obsolete HTML comment
+PASS mutation: plan hides the entire exact ordered chain in a Markdown code fence
+PASS mutation: plan hides the ordered chain in a three-space-indented CommonMark fence
+PASS mutation: plan uses an unlike fence marker to fake closure before the ordered chain
+PASS mutation: plan hides the ordered chain in a CommonMark script raw HTML block
+PASS mutation: plan uses a spaced fake script closer before the ordered chain
+PASS mutation: plan composes a cross-tag type-1 closer with a blank-terminated HTML block
+PASS mutation: plan uses a CRLF-normalized end-of-line script opener
+PASS mutation: plan injects a non-Markdown C0 control character before the ordered chain
+PASS mutation: plan uses Unicode LINE SEPARATOR as a false Markdown line boundary
+PASS mutation: plan uses Unicode PARAGRAPH SEPARATOR as a false Markdown line boundary
+PASS mutation: plan hides the ordered-chain heading after a type-7 tag with quoted greater-than
+PASS mutation: plan hides the ordered-chain heading in a blank-terminated raw HTML block
+PASS mutation: plan uses NBSP as a false CommonMark blank line
+PASS mutation: plan uses EM SPACE as a false CommonMark blank line
+PASS mutation: plan turns the ordered-chain heading into indented code
+PASS mutation: plan keeps no-skip sentence but permits direct implementation
+PASS mutation: plan keeps no-skip sentence but starts implementation directly from design-brief
+PASS mutation: plan keeps no-skip sentence but allows implementation immediately after design-brief
+PASS mutation: plan keeps no-skip sentence but makes design-output optional before implementation
+PASS mutation: plan keeps no-skip sentence but uses an imperative straight-to-implementation bypass
+PASS mutation: CONTEXT loses live investigation discipline
+PASS mutation: retirement rejects invalid replacement ""
+PASS mutation: retirement rejects invalid replacement "none"
+PASS mutation: retirement rejects invalid replacement "missing-skill"
+PASS mutation: retirement rejects malformed local decision ID
+PASS single projection writer updates generated + both roots consistently
+PASS real projection writer preserves literal backslashes in both roots and generated fallback
+PASS real promotion writer separates memory root from projection checkout
+PASS injected projection install failure restores promoted fact and all projection preimages
+PASS mutation: delete K10
+PASS mutation: delete pointer target
+PASS mutation: delete pointer trigger
+PASS mutation: delete FILE_END
+PASS mutation: canonical SF changes without projection
+PASS mutation: one root SF projection drifts
+PASS mutation: Codex fixed preflight effort restores minimal
+PASS mutation: common policy version drifts
+PASS mutation: common policy is paused
+PASS mutation: common policy scope becomes Codex-only
+PASS mutation: light role disappears
+PASS mutation: mechanical scene stops using light
+PASS mutation: native quality gate mapping drifts
+PASS mutation: workflow Redteam mapping drifts
+PASS mutation: effort re-enters routing inputs
+PASS mutation: Codex regains a nested model policy
+PASS mutation: Codex regains tier-to-effort routing
+PASS mutation: Codex root routes by reasoning effort again
+PASS mutation: Plan condition disappears
+PASS mutation: catalog loses a skill
+PASS mutation: retirement tombstone metadata disappears
+PASS mutation: generated catalog loses retirement tombstone
+PASS mutation: pointer cycle
+PASS mutation: second-hop runtime module
+PASS mutation: mega-module
+PASS mutation: root loses catalog loader
+PASS mutation: root loses bounded classification loading
+PASS mutation: office graph loading becomes unconditional
+PASS mutation: office wizard loading becomes unconditional
+PASS mutation: office wizard loses Codex native invocation
+PASS mutation: office wizard loses explicit natural-language invocation
+PASS mutation: office wizard appends a contradictory unconditional rule
+PASS mutation: office wizard contradiction reworded with a different quantifier
+PASS mutation: office wizard contradiction written in English
+PASS mutation: office wizard contradiction without backticks or an obligation verb
+PASS mutation: office wizard mention drops the references/ prefix
+PASS mutation: office wizard review path is rewritten from conditional to unconditional
+PASS mutation: office wizard review rule is gutted while its anchor phrase survives as a decoy
+PASS mutation: office wizard invocation gate is negated but the gate word is left in place
+PASS mutation: open-design handoff drops requirement bodies
+PASS mutation: CandidateHint is allowed into Packet truth
+PASS mutation: NO_HINT blocks rather than continuing design-brief
+PASS mutation: reference_only is renamed as a template derivative
+PASS mutation: recover is allowed to enumerate project HTML
+PASS mutation: Codex carrier is claimed before its probe
+PASS mutation: page decision skips its contract owner
+PASS mutation: restore unconditional root cross-read
+PASS mutation: one root loses HITL approval obligation
+PASS mutation: STOP discovery stops before naming the skill
+PASS mutation: HITL wording keeps tokens but reverses the decision
+PASS mutation: framework wording keeps tokens but permits edits
+PASS mutation: approval wording keeps tokens but bypasses approval
+PASS commit gate validates staged index, not worktree
+PASS mutation: restore missing CRM pointer in CONTEXT.md
+PASS mutation: restore missing CRM pointer in .claude/skill-os/crm-profile.md
+PASS mutation: CRM rule decision resumes design-asset reads
+PASS mutation: CRM design silently ignores missing mapping input
+PASS agent-context proof-it-bites 107/107 mutations + projection rollback + staged-index/merge gate

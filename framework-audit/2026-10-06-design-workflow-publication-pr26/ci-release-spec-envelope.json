@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-ci-release-spec",
+  "subject": {
+    "skill": "code-hygiene:Spec",
+    "topic": "CI checkout credential delta review",
+    "scene": "unknown",
+    "input_summary": "Read-only independent review of the frozen 77-file release and sole ci.yml credential persistence delta against PLAN U-006; original five criteria retained.",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.github/workflows/ci.yml"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": []
+  }
+}

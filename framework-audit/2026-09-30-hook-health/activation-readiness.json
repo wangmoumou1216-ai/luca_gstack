@@ -1,0 +1,12 @@
+{
+  "status": "REVIEW_COMPLETE_AWAITING_ACTIVATION_AUTHORITY",
+  "candidate_revision": 3,
+  "standards": "PASS5/5",
+  "spec": "PASS8/8",
+  "source_unchanged": true,
+  "patch_sha256": "3d90329de723ab5720769576e66f9a2c92ec0568a7920f8658a8da7ce8504729",
+  "maintenance_window": "RECHECK_REQUIRED_AT_APPLY_BOUNDARY",
+  "activation": "NOT_EXECUTED",
+  "fresh_new_hook_trust": "UNVERIFIED",
+  "old_cached_session_and_native_acceptance": "UNVERIFIED"
+}

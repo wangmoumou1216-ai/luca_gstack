@@ -1,0 +1,73 @@
+{
+  "kind": "official-process-scoped-enabled-readback",
+  "user_config_unchanged": true,
+  "user_config_sha256": "bf4df1c2fffa936d73ba02faee485a775e20c3a66ba19bd723bfec01211857b1",
+  "rows": [
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:b76c71f865c02eebaea4f22ed490d946ca130d91e7868b14853a47013771aa43"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:1:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:9398c2fc8e4b5a2bd76c20d100552ff7013dfee705e40fd01fc404c0f10c62ae"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:post_tool_use:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:be660d1225821edf2746ac9d5536e7c701410dfe6b5f9b8c578482f964d01f94"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:496eb6ee2d11f249d1eacffda4b36d19748e3b17b77ab3c4d972dec8da7457d0"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:1:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:a79bea26489d95ebf9c3a057344d70cf782cdb08942a814b53fb261ffbfb5497"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:d3ad8fdfd64db9789370869df5f09e19db77a9598d381af862ecd3c753d04b27"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:1:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:76924b26a0f3fd50ac749a4c84f278dac2d69205ab7c57cb44ad1d1b23e71807"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:user_prompt_submit:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:ef9fcd5e051f3bb619735ae10e67349e60be759c3e6251197286a88bf286eb23"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_start:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:885e2952595ef35631f150e311580d7a17c85d0cdc2e8d164a6b591fa48b95ec"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_stop:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:47b1f2de4a96f42d8843ea545afc14d6a67d88328d7bb039d900c58f943b6487"
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:stop:0:0",
+      "enabled": true,
+      "trustStatus": "trusted",
+      "currentHash": "sha256:addbb02e1f3e5ca25e5ba92cb50a010865db2db774505ece41d0a70b5a94b15f"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-atomic-final-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing ROUND6 atomic acceptance",
+    "scene": "unknown",
+    "input_summary": "NO_PIN 独立冷验收：冻结13文件补丁；个人临时副本行为与mutation测试；原生adoption日志、注册gates及同SHA完整验证核验。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 7,
+    "total": 7,
+    "findings": []
+  }
+}

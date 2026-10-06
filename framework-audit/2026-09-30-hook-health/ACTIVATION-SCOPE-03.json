@@ -1,0 +1,26 @@
+{
+  "scope": "one-off source/install/three profile activation verification",
+  "target_commit": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/activate-text-target-03.py",
+      "sha256": "d9bff93e096f72e45419111346536e31cd0011dcee250acdad2193301145c979"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/text-target-maintenance-window.json",
+      "sha256": "74492c1e187901b2cd90828bdaed61ddc9d5431f89b65a73cbd3014adeb04c4a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/followup-review/SCOPE-03.json",
+      "sha256": "d256e1d30863704cfd2f35ee57a948c6e9e75986b4242671459e0799f767fed4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/followup-review/standards-03.json",
+      "sha256": "07f95b4f06b595e132952dd39513bbb8cbb40a5ba1184619976829fe3069c8a5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/followup-review/spec-03.json",
+      "sha256": "1f68861610c7627ec58f8e8310c1713dad1368619f24d0b7129ff89449edc0ce"
+    }
+  ]
+}

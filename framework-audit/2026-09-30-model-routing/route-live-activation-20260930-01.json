@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-live-activation-20260930-01",
+  "subject": {
+    "skill": "deployment-activation",
+    "topic": "model-routing",
+    "scene": "unknown",
+    "input_summary": "只读部署验收：冻结候选13文件哈希、安装回执和已安装manifest、原终审及完整gate回执、本次原生启动与只读执行。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/activation-result.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/source-manifest-before-activation.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/final-review-evidence.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/full-verify-result.json"
+    ],
+    "duration": "lightweight"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 4,
+    "total": 4,
+    "findings": []
+  }
+}

@@ -1,0 +1,364 @@
+{
+  "writer": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py",
+  "writer_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+  "guard_sha256": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3",
+  "source_integrity": {
+    "before": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "after": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "drift": false
+  },
+  "started_at": "2026-10-06T05:52:35.723373+00:00",
+  "completed_at": "2026-10-06T05:52:37.923057+00:00",
+  "passed": 4,
+  "total": 4,
+  "exit_code": 0,
+  "outcomes": [
+    {
+      "case": "concurrency-different-node",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-topic-node",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-same-node",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-topic-topic",
+      "status": "PASS"
+    }
+  ],
+  "actual_runs": [
+    {
+      "case": "concurrency-different-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:52:36Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:52:36Z'\n    first: true\n    output: docs/idea/new.md\n    status: DONE\n  redteam:\n    completed_at: '2026-10-06T05:52:36Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85123,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+          "started_at": "2026-10-06T05:52:35.724998+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "{\"first\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:36.232041+00:00",
+          "actual_identity": {
+            "pid": 85123,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+            "started_at": "2026-10-06T05:52:35.752423+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85124,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+          "started_at": "2026-10-06T05:52:35.774724+00:00",
+          "input": {
+            "_NODE": "redteam",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: redteam → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:36.271587+00:00",
+          "actual_identity": {
+            "pid": 85124,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4x1vy0tl",
+            "started_at": "2026-10-06T05:52:35.800819+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:36.275914+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-topic-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:52:36Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  redteam:\n    completed_at: '2026-10-06T05:52:36Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85125,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+          "started_at": "2026-10-06T05:52:36.276906+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:36.781642+00:00",
+          "actual_identity": {
+            "pid": 85125,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+            "started_at": "2026-10-06T05:52:36.307167+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85126,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+          "started_at": "2026-10-06T05:52:36.328989+00:00",
+          "input": {
+            "_NODE": "redteam",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: redteam → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:36.824515+00:00",
+          "actual_identity": {
+            "pid": 85126,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4ylctyi5",
+            "started_at": "2026-10-06T05:52:36.354597+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:36.827054+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-same-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:52:37Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:52:37Z'\n    first: true\n    output: second.md\n    second: true\n    status: BLOCKED\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85129,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+          "started_at": "2026-10-06T05:52:36.827818+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "{\"first\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:37.348539+00:00",
+          "actual_identity": {
+            "pid": 85129,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+            "started_at": "2026-10-06T05:52:36.854979+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85130,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+          "started_at": "2026-10-06T05:52:36.879578+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "BLOCKED",
+            "_OUTPUT": "second.md",
+            "_EXTRA_JSON": "{\"second\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → BLOCKED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:37.371598+00:00",
+          "actual_identity": {
+            "pid": 85130,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bgww2v6u",
+            "started_at": "2026-10-06T05:52:36.904881+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:37.374626+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-topic-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:52:37Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:52:37Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: C\ntopic: second-topic\n",
+      "topic_after": "second-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85131,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+          "started_at": "2026-10-06T05:52:37.375531+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:37.886857+00:00",
+          "actual_identity": {
+            "pid": 85131,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+            "started_at": "2026-10-06T05:52:37.403995+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+          ],
+          "pid": 85132,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+          "started_at": "2026-10-06T05:52:37.427712+00:00",
+          "input": {
+            "_TOPIC": "second-topic",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: second-topic, scene: C\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:52:37.919516+00:00",
+          "actual_identity": {
+            "pid": 85132,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-lock-98zd3vm1/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-617umlu2",
+            "started_at": "2026-10-06T05:52:37.452872+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:37.922776+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    }
+  ]
+}

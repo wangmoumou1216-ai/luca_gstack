@@ -1,0 +1,35 @@
+{
+  "collected_at": "2026-10-02T20:53:10.773774+00:00",
+  "source_report": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-routing-active-rules-repair-report.md",
+  "report_sha256": "335d7da1fe3e22c47e37d2b0aec74c0a487ea44e4a67ea741552ed87ae264ed1",
+  "report_full_read": "8ded9d",
+  "diff_full_read": "8d1150",
+  "source_hashes": {
+    "conditions.mjs": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+    "conditions.test.mjs": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920"
+  },
+  "prior_r4_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r4",
+  "destination": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval",
+  "source_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+    "sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136",
+    "prior_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json",
+    "prior_sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9",
+    "unchanged_records": 541,
+    "added_records": [
+      {
+        "path": ".claude/observability/scripts/get_rules.py",
+        "kind": "file",
+        "bytes": 2195,
+        "sha256": "db87c92b97f6945c54846297eba5e57d0e373eb5c3237ec4b9fc1a37e5a3d020"
+      },
+      {
+        "path": ".claude/observability/rules.yaml",
+        "kind": "file",
+        "bytes": 9407,
+        "sha256": "98ff8956517f1bb9f1d6f093674ba68276f1c5ba9dd26e6310cb18b25359fbc2"
+      }
+    ]
+  },
+  "scope": "two owner code files only; new source manifest remains separately versioned; no behavior release"
+}

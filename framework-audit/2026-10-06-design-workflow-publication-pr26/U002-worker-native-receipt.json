@@ -1,0 +1,24 @@
+{
+  "release_digest": "5d5d4a87ea45a9f9b9a4ef93feaa24e7470943f4eae4742db7416b0c5539cd1a",
+  "activation_id": "654f33c5-33bf-4001-9736-02dc275258d4",
+  "root_session_id": "01a10eac-b920-7303-af95-dc419099c22b",
+  "root_generation": 4,
+  "invocation_id": "51a8a1bd-6be0-4141-9f37-552a91a795e7",
+  "route_id": "38dba0a1-da1e-4f33-9abb-e247455a94d3",
+  "task_id": "native:01a10fb6-4f49-79d0-92ec-9b243fd0e8e1:call_MSYswd9GHdBFzyxukW6Ht7jZ",
+  "input_sha": "c73625e8586b4e47541f8d6447a1fc785c3f3f01e80ce7c4ad29973281b257c1",
+  "requested_role": "anchor",
+  "requested_model": "gpt-6.1-sol",
+  "route_harness": "codex-native",
+  "critical": false,
+  "policy_sha": "5cb7ff0d30c8cf139878f143df51dbcaa89612a5adb076f8e1b58d8c7f66bc34",
+  "routing_config_sha": "1b8192ec0e4a37c7466250ae16a972319dc29f15258f76e123c96aea2f8db7ab",
+  "capability_evidence_sha": "ea6e0553747090859540ebc557801ce11a9e431af4da25f8da874719ac350069",
+  "status": "accepted",
+  "external_identity": {
+    "tool_use_id": "call_MSYswd9GHdBFzyxukW6Ht7jZ",
+    "agent_type": "worker",
+    "agent_id": "01a10fbb-2f30-7ce2-b538-312ac3764bf4"
+  },
+  "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/06/rollout-2026-10-06T13-41-28-01a10fbb-2f30-7ce2-b538-312ac3764bf4.jsonl:01a10fbb-2f90-7273-8b2a-c136440a45b9"
+}

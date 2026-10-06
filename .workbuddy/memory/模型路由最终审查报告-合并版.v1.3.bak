@@ -1,0 +1,161 @@
+# luca_gstack 模型路由逻辑 · 最终审查报告（合并版 v1.1）
+
+- 日期：2026-09-16
+- **审查范围（luca 2026-09-16 13:34 确认）：仅 Claude Code 与 Codex 两个 harness**——本套模型路由只在这两个环境运行，本报告的发现、定级与修复动议全部且仅针对这两侧；不涉及任何第三 harness 的扩展性评估（known_lineup 的「会话兜底」活规则也只指这两个环境内的阵容变化）。
+- 审查对象：`.claude/skill-os/model-routing.yaml`（真值源）及其全部投影与消费点
+- 审查累计：历经四阶段流程（首轮会审+红队 3 轮、二阶复核+辩证 3 轮、需求考古、本轮合并会审+红队 3 轮），投入十余个独立 agent 视角
+- 证据标准：default-REFUTE（本仓 routing-chain-check.md R4）；所有发现均经至少两轮独立取证；被证伪/撤销/改判项均如实记录
+
+> **TL;DR（30 秒版 · v1.3 已按「Codex 为主力环境」重算）**
+> 这套路由解决「fable 配额稀缺 × 高杠杆判定不能降档」的矛盾，设计思想先进（能力档相对序 + 白名单手术刀 + 拒绝写死模型名）。**Codex 是主力使用环境**，而 Codex 侧恰是守护最薄弱的一侧：**F3（P0 判官升档缺失，主力环境下常态触发）与 F2（runner 双写无对账）为最重 MAJOR，F1（fable dispatch 零机检）为 MAJOR 弱**，其余 6 项 MINOR。全部为「自称强制的规则缺检查侧落点」型缺口，不动架构即可修，修复动议见 §五（v1.3 优先序：F3 提至第 1）。另发现主力环境新事实：用户级 `~/.codex/config.toml` 主会话写死 `gpt-5.6-sol` + 全局 `xhigh`，见 §三 F10。
+
+---
+
+## 一、需求底层逻辑：这套系统为什么存在
+
+### 1.1 三句话本质
+
+1. **配额经济学**：fable 配额稀缺昂贵，而高杠杆判定（出门前裁决/对抗/翻案复审）不能降档——系统的存在根源是把最贵模型精确滴灌到「单次 5-30k token、判断杠杆极高」的点位（yaml:40-42 评估维度：token 量级 × 判断杠杆 × 错判代价）。
+2. **以相对序换零维护**：以「能力档相对序」为不变量（Claude 侧 fable>opus>sonnet>haiku；Codex 侧 xhigh>high>medium>low），换取模型换代、订阅失效、跨 harness 三种环境剧变下的零维护——档内升级（Opus 4.7→4.8）自动跟随，档位语义不丢（yaml:126-129）。
+3. **代价**：路由正确性至今主要靠 prose 纪律而非机检——全部 MAJOR 级发现都是「自称强制的规则缺检查侧落点」型缺口（见 §四）。
+
+### 1.2 演进时间线：每个版本解决什么问题
+
+| 时间 | 节点 | 解决的问题 | 证据 |
+|---|---|---|---|
+| 2026-06-10 | v1 诞生（三档）（yaml 首次入库 60aba9a，06-21） | 用户裁决 opus→fable：**为质量付 2× 成本**——高杠杆判定必须最强档 | v1 yaml `updated`；v1 note「成本约 2×」 |
+| 2026-06-24 | registry 入 CI | 路由成为受治理资产（机检化第一步） | commit 90722a4 |
+| 2026-07-10 | **Fable 手术刀** | 痛点：v1 让 deepresearch/brainstorm 等**整场交互 skill 常驻 fable**，大 token 低杠杆烧配额。收严为 P0/P1/P2 白名单，**设计预期降幅 80-95%（见 note，未实测复核）**；同时判官升档 opus（验证不对称：判官上下文小/杠杆大/错判代价高） | commit 085e0f5；yaml:38-53, 180-181 |
+| 2026-08-03 | 哲学实例化 | 「收掉自觉懒惰的许可证」——纪律向确定性下沉 | commit 48d9032 |
+| 2026-08-05 | Codex 投影 | 痛点：gpt-5.6-sol 写死被订阅失效拒绝——「绑模型名=绑一张会过期的凭证」，改落 effort | commit db2e6c4；yaml:130-135（段内注 08-04） |
+| 2026-08-05 | minimal 实测 | 枚举必须取自**真实模型接受集**而非 config 报错（minimal config 层合法但模型恒 400） | commit 1a14fdd；yaml:136-148 |
+| 2026-08-31 | 工程交付 skill 纳入定档 | new_scenario_protocol 实际运转 | commit 6aaa1c6 |
+
+### 1.3 治理哲学边界（本仓宪法）
+
+- **宪法总纲**：机检管静态一致性、纪律管创建时定档；凡自称强制的规则必须在检查侧有落点，否则降级为建议。框架本身只读（MEMORY.md 红线 / CONTEXT.md SF-002）——本报告 §五 全部为待 luca 裁决的动议，本报告不执行。
+- **机检面**：静态一致性——每日 governance、S8b/S8c、tripwire 扫未定档场景。原则：「检测自动化，重映射判断留给人」（yaml:11-12）。
+- **纪律面**：创建时定档——「机械兜底，创建时纪律为主路径；不做实时 hook——新增场景是低频事件，为其加每-prompt hook 不符合复杂度自证」（yaml:175-178）；「拿不准就选更强档，不猜最强档；档位变更须用户批准」（AGENTS.md:428）。用户控制权（/model 主权 yaml:116-119、白名单批准制、native_precedence 让位条款）是纪律面与治理面的下位原则：控制权归用户、框架可退位。
+- **边界判据 = 频率 × 复杂度自证**：低频（新增场景定档）靠纪律+每日兜底；高频（dispatch 每次 spawn）按宪法就该机检——这正是 F1 定级 MAJOR 弱的哲学依据（辩证 R1 裁定：低频豁免罩不住高频强制）。
+
+### 1.4 三约束的实证优先级
+
+06-10 质量优先（甘付 2× 成本）→ 07-10 成本纠偏（保质量前提下砍量，设计预期 80-95%）→ **维护性是贯穿红线**（别名化/拒绝写死模型名/native_precedence 让位条款均为维护性而生）。
+
+---
+
+## 二、被审体系速览
+
+真值源 `model-routing.yaml`（v2, 2026-07-10）定义 4 档：`reasoning-heavy→fable`、`core-execution→opus`、`guided-execution→sonnet`、`mechanical→haiku`；`fable_whitelist`（P0 出门前裁决/P1 对抗判定/P2 复审与规划）是 fable 使用唯一授权；`codex:` 段（2026-08-04）为 Codex 侧唯一解析表：`tier_to_effort` 四档→`xhigh/high/medium/low`、`model_reasoning_effort` 落档、`model` 字段省略继承父会话、绝不写死模型名。
+
+投影链（投影点 → 守护机制 → 风险状态）：
+
+| 投影点 | 守护机制 | 风险状态 |
+|---|---|---|
+| CLAUDE.md 速查表 | S33（check-model-table.mjs） | 守护中（alias 子串匹配，宽松） |
+| orchestrator.md 速查表 | 每日 governance | 延迟守护 |
+| 40 个 SKILL.md frontmatter | 每日 governance + fusion-preflight | 延迟守护 |
+| .codex/agents/*.toml（3 个） | S8b（一致性+禁硬编码 model） | 守护中 |
+| .codex/workflow-runner.mjs | 仅 S8c 查禁用值 | **无映射对账（F2）** |
+| AGENTS.md §4.8.2/§11 | check-agents-parity 锚点 | 锚点级（内容可漂） |
+
+**核心设计优点**：按能力档而非模型版本定义路由；fable 白名单手术刀（设计预期配额降 80-95%）；相对序不变量；拒绝写死模型名（订阅失效实证）；S8c 把实测禁用值硬编码在检查侧防 yaml 松动；枚举以真实模型接受集为准（minimal 教训）。
+
+---
+
+## 三、最终发现清单（经全部对抗轮次收敛）
+
+### MAJOR（2 项维持 + 1 项弱）
+
+**F2 · workflow-runner 双写无对账 — MAJOR**
+- 证据：`.codex/workflow-runner.mjs:74-76` `TIER_TO_EFFORT`/`PHASE_TIER` 硬编码，自称「真值源是 yaml 的 codex.tier_to_effort」实为复制；S8c 只查拒绝集（minimal）不查映射一致性；治理三触发路径（launchd 每日/fusion-preflight/S33）无一校验 codex 段↔runner。
+- 影响：改 yaml codex 段后 runner 静默漂移；Redteam phase 若降档，框架演进红队审查静默变弱。
+- 需求视角：双 harness 平价自 08-04 立法即停留在纪律层，这是「只补一侧」历史状态的延续（parity_note yaml:157-159 自设规则被违反）。
+
+**F3 · Codex 侧 P0 升档规则缺失 — MAJOR（v1.3 上调：Codex 主力环境下与 F2 并列最重；此前「三者中最弱」基于「Codex 非主力」假设，该假设已被 luca 2026-09-16 13:36 推翻）**
+- 证据：yaml:88 Claude 侧 quality-gate「由调用方参数升 fable（P0）」；codex 段（yaml:154）与 quality-gate.toml 静态钉死 `high`，无 effort 覆盖通道；code-hygiene（codex-viability.yaml:48 tier-2）review 段在 Codex 派 quality-gate 的路径真实存在。
+- 影响（v1.3 重算）：**Codex 是主力使用环境时，「判官恒 high」是日常态而非边缘场景**——每次 code-hygiene/code-review 类审查在 Codex 上运行，验证不对称原则都被抹平；触发频率从「假设性边缘」升为「主力环境常态」。
+- 需求视角：「判官≥执行者」的验证不对称原则在主力环境被系统性抹平——这是配额经济学三句话本质的第 2 句（高杠杆判定不能降档）在 Codex 侧的失守。
+- **附注（辩证 R2 恢复的撤销项）**：workflow 定档行为未入档——yaml:115 workflow_tool 豁免字面只承诺「omit/inherit」（不定档），而 runner:76 对未注册 phase 主动定档 guided-execution；Claude 侧 workflow agent() 11 处调用从不传 model（纯 omit/inherit），两侧行为不对等，与 F3 同型 parity 违例；且 runner fallback 默认 guided 与 yaml:107 task_execution「默认 core-execution」不一致。（该点曾作为独立发现被撤销，撤销理由「豁免覆盖」经辩证认定为扩张解释，故降为附注保留。）
+
+**F1 · fable dispatch 机检缺失、零审计 — MAJOR 弱**
+- 证据：`fable_whitelist` 为自然语言条目（yaml:73-84）；daily_governance.check_model_routing 不解析该段；`.claude/settings.json` PreToolUse matcher 不含 Task/Agent（PostToolUse 已含，settings.json:53——管道半存在）；observability 目录 grep "fable" 零命中。
+- 定性（经辩证 R1 改写）：`dispatch_rules:100 自称「起为强制，非建议」却检查侧零落点——连自证式门禁都未建立`。
+- 需求视角：手术刀解决了宏观整场占用，但微观 dispatch 越权零执法零审计——「配额降 80-95%」的剩余 5-20% 处于无观测盲区。
+- 降半级理由：PostToolUse matcher 已含 Task/Agent，缺的是最后一公里（model 校验+落盘），修复一行式。
+
+### MINOR（5 项）
+
+**F4 · writable_roots 与「仓库只读/硬拦」宣称矛盾 — MINOR 偏下**
+- 证据：AGENTS.md:375-379「仓库写入被沙箱硬拦」、runner:93/255-258、test-workflow-runner.mjs:78+W4b 断言标签同源错宣称（共 5 处）；但 config.toml:45 writable_roots 首条即仓库（MEMORY_ROOT 记忆写入功能必需，08-06 实证缺它记忆路径全断）；config.toml:39「仓库…无需列出」与 L45 自供矛盾。
+- 定性：写入是有意配置非漏洞；本质是 **08-05 过时宣称被 08-06 配置静默作废**=文档 bug。残留真实风险：external-skill-scout Discover phase 把外部 README 拉进 prompt（L196/204/248，injection 入口真实），错误「硬拦」认知会误导未来安全设计前提——故高于纯措辞级。
+- 需求视角：与宪法「框架只读、memory/ 按自身协议读写」的记忆例外同构——例外被配置承认了，但宣称没跟上。
+
+**F9 · evals 体系档位层零度量 — MINOR（二阶新增）**
+- 证据：memory/evals 的 routing eval 仅测「意图→skill」（eval-schema.yaml:79-100）；skill→tier→model 档位层零 fixture 零度量；fixtures.jsonl grep tier/model/fable 仅 1 处命中（L21 note 文本提及 "fable review"，系注释非档位断言）。
+- 需求视角：dispatch_rules 自称强制但 eval 体系完全不测档位正确性——执法（F1）与度量（F9）两面皆空。
+
+**F5** AGENTS.md:855（§11）枚举混入被拒的 minimal、漏 max，与 :403 及 yaml:142 自相矛盾（按错值用会 400 fail-loud 自暴露，非静默）。
+**F6** yaml:128 principle 段仍用已否决的 minimal 作序关系示意（`xhigh>high>medium>minimal`），与 L142 取值表漂移。
+**F7** daily_governance.py:193 无 frontmatter 的 agent 文件直接 continue——新增无-frontmatter agent 无存在性告警（当前 3 个无 frontmatter 文件恰都在 agents_no_pin，通道性缺口）。
+**F8** 速查表守护只查 alias 子串——降级链文案「（不可用→降级 Opus）」可无痕剥离（刻意宽松设计的代价）。
+
+**F10 · 用户级 Codex config 写死模型名 + 全局 xhigh（主力环境新发现，v1.3）— MAJOR 弱**
+- 证据（2026-09-16 13:37 实测）：`~/.codex/config.toml` L1 `model = "gpt-5.6-sol"`、L2 `model_reasoning_effort = "xhigh"`——主会话写死模型名，正是 yaml `why_not_model_names`（L130-135）明文反对的模式：「绑模型名=绑一张会过期的凭证」，且该名字正是 08-04 订阅失效实证中被服务端拒绝的三个名字之一。
+- 影响分析（需诚实区分两面）：
+  - **对配置哲学**：仓库侧纪律（toml 省略 model、档位落 effort）守护的是 `.codex/agents/*.toml` 与 runner；**用户级 config 是 luca 私有配置、在守护网之外**——下一次订阅/模型变动时，主会话将以「服务端 400 拒绝」的形式 fail-loud 断裂（不是静默，但主会话全停直到手工改）。
+  - **对档位语义的扭曲**：全局 `model_reasoning_effort = "xhigh"` 意味着**所有子 agent 默认继承 xhigh**——toml 里 preflight-agent 的 `low`、muse-proto-judge/quality-gate 的 `high` 是显式声明、会覆盖继承，故 judge/mechanical 档仍按档执行；但**任何省略 effort 的派发点**（如临时 `codex exec` 调用、未写 effort 的新 toml）将静默落在 xhigh——mechanical 活干在最强档，「配额经济学」被主会话默认值架空（向贵档漂移，与 fable 手术刀方向相反）。
+- 定级理由：触发=下次订阅/模型变动（时间不确定但必然）+ 每次省略 effort 的派发；无感知=高（继承链不透明）；半径=主会话断裂或机械活恒 xhigh。因属用户级配置非框架文件、修复是 luca 一行决定，定 MAJOR 弱而非 MAJOR。
+- 需求视角：这是「拒绝写死模型名」原则只落到仓库层、未落到主力环境主会话的缺口——框架管不到的地方恰是主力日常。
+- 修复动议（待 luca 裁决）：`~/.codex/config.toml` 删 `model =` 行（继承 Codex 默认模型）或改用档位中性的写法；全局 effort 改 `high`（core-execution 承重档）或移除，让子 agent 档位完全由显式声明决定。
+
+### 对抗中撤销/改判的项（诚实记录）
+
+- **撤销**：「runner 默认档与 task_execution 矛盾」独立项——workflow_tool 豁免扩张解释下撤销；**辩证 R2 又恢复为 F3 附注**（字面不覆盖主动定档）。
+- **撤销**：「降级链无代码实现是缺陷」——prompt-driven 架构本意（AI 行为合同），Codex 侧订阅失效已有机器处理（runner:238）。
+- **改判**：F1 MAJOR→MAJOR 弱；F4 MAJOR→MINOR 偏下；「≤7 天治理窗口」改写为三路触发但无一覆盖 codex 段对账（并入 F2）。
+- **驳回的降级理由**（辩证 R1）：「与降级链项同构」不成立（事后行为 vs 事前越权不同构）；「yaml:177 低频豁免」张冠李戴（罩不住高频 dispatch）；「AI 是合作方」不成立（本仓是信任但验证文化）。
+
+---
+
+## 四、总评
+
+| 维度 | 评级 | 说明 |
+|---|---|---|
+| 设计思想 | ★★★★★ | 配额经济学+相对序不变量+白名单手术刀+拒绝写死模型名——自洽先进 |
+| Claude 侧守护 | ★★★★☆ | S33/S8b/S8c+每日治理，提交即时+每日兜底 |
+| **Codex 侧守护（主力环境）** | ★★☆☆☆（v1.3 下调） | 机检只到 toml 层；runner 是事实第二真值源；P0 升档缺失；用户级 config 写死模型名+全局 xhigh（F10）——**主力环境的守护密度与使用权重倒挂** |
+| 执法与度量 | ★★☆☆☆ | fable 白名单纯 prose；evals 档位层零覆盖——两面皆空 |
+
+**系统性模式**：全部 MAJOR 都是「**文档纪律存在、机械对账缺失**」型——这不是偶然，是「双 harness 平价停在纪律层」这个历史状态的必然投影。v1.3 追加：**守护投入与使用权重倒挂**——Codex 是主力环境，但治理工具链（每日 governance、check-model-table、S33）全部锚在 Claude 侧文件上，Codex 侧只有 S8b/S8c 两个静态断言 + 一个无对账的 runner。
+
+**一句话终局（v1.3）**：设计思想先进、Claude 侧扎实；但**主力环境恰是 Codex、而 Codex 侧恰是守护最薄的一侧**——F3（P0 判官升档缺失，主力环境常态触发）与 F2（runner 双写无对账）为最重缺口，F10（用户级 config 写死模型名+全局 xhigh）是主力环境的私有配置缺口，F1/F9 是执法与度量双空白。全部为「自称强制的规则缺检查侧落点」型，不动架构即可修，修复动议见 §五。
+
+---
+
+## 五、修复动议与优先序
+
+> 均为待 luca 裁决的动议，未实施。全部不动架构。**v1.3 优先序按「Codex 为主力环境」重排**：F3/F2/F10（主力环境缺口）优先于 F1（Claude 侧执法）与杂项。
+
+1. **F3（Codex P0 升档 + 定档入档）— v1.3 升至第 1**：主力环境下判官降档是常态触发。yaml codex 段补「P0 场景 effort 升 xhigh」规则；quality-gate 调用方合同写明 `-c model_reasoning_effort` 覆盖通道；workflow 定档行为（PHASE_TIER+fallback 语义）入档契约。跨 harness 行为对齐，成本最高但收益最直接。
+   验收：`node scripts/verify-codex-wiring.mjs && grep -n "model_reasoning_effort" AGENTS.md`（升档通道已入契约）。
+2. **F2（S8d 单向包含断言）**：verify-codex-wiring.mjs 加 S8d——`yaml codex.tier_to_effort ⊆ runner TIER_TO_EFFORT` + `PHASE_TIER 值域 ⊆ tier 名集合`。纯静态、无订阅依赖、S34 路径即达。**不用逐值相等**（会误伤 runner 未来加降级链——runner 当前无 fallback，模型不可用直接 done(null)，与 yaml Claude 侧 fallback: opus 不对称）。
+   验收：`node scripts/verify-codex-wiring.mjs --static`（含新 S8d 通过）。
+3. **F10（用户级 config 模型名/effort 清理）— v1.3 新增**：luca 私有配置一行决定——`~/.codex/config.toml` 删 `model = "gpt-5.6-sol"` 行（继承 Codex 默认，消除下次订阅变动的 fail-loud 断裂点）；全局 `model_reasoning_effort` 从 `xhigh` 改 `high`（core-execution 承重档，消除「省略 effort 的派发静默落最强档」的贵档漂移）或直接移除。**注意：这是 luca 的个人配置，改前应确认 luca 对主会话档位的偏好**（若 luca 有意让主会话常驻 xhigh，则保留 effort 只删 model 行——档位主权在 luca）。
+   验收：`grep -c "^model" ~/.codex/config.toml` = 0（或 luca 明确保留）。
+4. **F1（PreToolUse Task matcher）**：加 Task/Agent 进 matcher，hook 校验 `tool_input.model ∈ 合法别名集` + 落盘审计 jsonl。**三个必要语义**：model 缺省须放行（继承是 yaml:105 合法路径）；hook 只能校验别名集、场景判断仍靠纪律（机械兜底+纪律主路径的正确分工）；**别名集运行时读 model-routing.yaml（沿 route-guard.mjs:89 loadRoutes 的 readFileSync 读 yaml 先例），禁硬编码副本**——否则制造第三真值源，与 F2 批评的双写同罪。**注：此修复守护的是 Claude 侧 dispatch；Codex 侧 subagent 档位已由 toml 显式声明+本项 F3 入档覆盖，无需 Codex 侧对应 hook（Codex 无 per-call 覆盖检查点）**。
+   验收：`node scripts/test-hooks.mjs`（新增断言后通过）。
+5. **F9+F4+F7（杂项班车）**：fixture 加 expected_tier 一行断言；5 处过时宣称统一改「默认拦+显式白名单放行」（AGENTS.md:375-379、runner:93/255-258、test-workflow-runner.mjs:78+W4b）；daily_governance.py:193 对无 frontmatter agent 补存在性告警（约 3 行）。**writable_roots 本身不动**（动=重造记忆断裂事故）。
+   验收：`grep -rn "硬拦" AGENTS.md .codex/ scripts/`（0 命中）；`python3 memory/scripts/daily_governance.py` 无新增 issue。
+6. **F5/F6/F8（杂项收尾）**：枚举按 harness 分册各定全集（模型侧拒绝 minimal、config 层合法、补 max）；yaml:128 示意改现行值；F8 维持现状记录在案。
+   验收：`node scripts/verify-codex-wiring.mjs --static`（S8c 仍绿）。
+
+---
+
+*v1.3（09-16 13:36，luca 确认 Codex 为主力使用环境）：①F3 从「三者中最弱」上调为与 F2 并列最重（「Codex 非主力」假设被推翻，判官降档从边缘场景变主力常态）；②新增 F10——用户级 `~/.codex/config.toml` 写死 `gpt-5.6-sol`+全局 `xhigh`（13:37 实测），违反「拒绝写死模型名」原则且贵档漂移，MAJOR 弱；③总评 Codex 侧守护 ★★★→★★☆（守护投入与使用权重倒挂）；④修复优先序重排：F3→F2→F10→F1→班车。*
+
+*v1.2（09-16）：按 luca 指示补显式范围声明——仅 Claude Code + Codex 双 harness（经机械核查报告零越界内容，声明为防未来读者误解，发现/定级/动议均不变）。*
+
+*v1.1 勘误（09-16）：日期/计数/引文/编号 10 处校对（db2e6c4 实为 08-05、agent() 11 处、引文补「就」、视角计数改模糊表述、F9 措辞精确化、F7 归位、补验收命令与别名集先例锚点），结论与定级不变。*
+
+*方法链全记录：首轮会审 3 专家 → 红队 R1 证伪（撤 2 降 5）→ R2 复核（恢复 2 MAJOR）→ R3 攻击修复方向 → 二阶：事实核查 13 项+漏报扫描 10 区+三要素定级重算 → 辩证 R1（F1/F4 攻防 5 攻 5 裁）→ R2（撤销追溯/新漏报/优先序）→ R3（六点终局校验）→ 需求考古（CHANGELOG/commit 史/哲学表述）→ 本轮合并会审（正确性/需求逻辑/交付质量 3 专家）+ 红队 R1（攻击会审建议+残余缺陷）→ R2（最小清单完备性验证）→ R3（10 条目标文本终验）。所有行号引用经至少两轮独立取证。*

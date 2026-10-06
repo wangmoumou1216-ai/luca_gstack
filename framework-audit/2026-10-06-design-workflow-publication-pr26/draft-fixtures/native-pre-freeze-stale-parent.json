@@ -1,0 +1,47 @@
+{
+  "unit": "U002",
+  "scope": "NO_PIN exact authorized audit/framework files",
+  "source": {
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/brainstorm/SKILL.md": {
+      "sha256": "7151364c3cb8785c80cfefaf328fd899e104b7f28c11d4aac52e160326ce296f",
+      "bytes": 43605
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/ux-brainstorm/SKILL.md": {
+      "sha256": "c3d97b8b62a321de113d2bb402f4c76458a4d4589dc8f9d4ea65b3896b66dbdf",
+      "bytes": 38560
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/brainstorm/references/adversarial-review.md": {
+      "sha256": "bcdeda78f299848d99f12f4e6dab692f2fe5ed2ec5fbd4910f6e94b368eeafdf",
+      "bytes": 13323
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/ux-brainstorm/references/adversarial-review.md": {
+      "sha256": "43e7f372aa8c46dbb6e8df352d74901b97051def3cf3eab0ac10e627199dc5a4",
+      "bytes": 8838
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skill-os/codex-viability.yaml": {
+      "sha256": "611813287972b50a27c63ee7d984bb19b05a6daeb514ee884cafe5f85f06fe3d",
+      "bytes": 6410
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/agents/quality-gate.md": {
+      "sha256": "11078c693bff65123d7ded36362b1e8f92a6e957e42913aba04ec366df3b60ff",
+      "bytes": 27250
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/scripts/test-design-workflow-contract.mjs": {
+      "sha256": "b6137c9db8e2775390fb387c5f687abf99d3d38c7c350f758ccbac8766d2392c",
+      "bytes": 11447
+    }
+  },
+  "fixtures": {
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/standard-input.json": "d94f977712d090ccadf4e1c1caa5d945bbb9ddb31c7f1ab3f00610cece592c04",
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/draft-fixtures/lightweight-input.json": "ea9b5d02e5edf7691828cb7405155282587f5610419b8a049be539c48f6244a3"
+  },
+  "expected": [
+    "B1 valid Standard nofinalhandoff entersactualnativeQG",
+    "B2 legalLightweight withoutwrittenapproaches",
+    "invaliddraft/source/criteria STOP",
+    "absenceindependentcapability STOP",
+    "corrupt/mismatchedresponse STOP",
+    "persistenthigh round2 STOP",
+    "changedhash invalidatesvote"
+  ]
+}

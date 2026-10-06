@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "kind": "luca-hook-focused-publication-resume",
+  "status": "PREPARED_REVIEW_REQUIRED",
+  "scope": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+    "sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97"
+  },
+  "source_reviews": {
+    "standards": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-final-standards-02.json",
+      "sha256": "df041744f6c2a0df1a1e33a35d67d60c6ae3a3a50386cb473685a02956a8f208",
+      "eval_run_id": "hook-cache-final-standards-20261001-02",
+      "invocation_id": "93eb73b8-f014-468d-b697-5f8ae51d2c88",
+      "agent_id": "01a0f4ed-50df-7f23-ae04-6e8429612006",
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T08-46-28-01a0f4ed-50df-7f23-ae04-6e8429612006.jsonl:01a0f4ed-514a-70b3-af91-8fcd326a9f9f"
+    },
+    "spec": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-final-spec-02.json",
+      "sha256": "179eaa96dc66e241660fbafe5e77912ddbde07671b70c7b44c8df4fdf43133ba",
+      "eval_run_id": "hook-cache-final-spec-20261001-02",
+      "invocation_id": "f37230bf-4a77-47b6-9fb6-c346529e1590",
+      "agent_id": "01a0f4f2-9785-7ad1-a9cd-d3ac37580b60",
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T08-52-14-01a0f4f2-9785-7ad1-a9cd-d3ac37580b60.jsonl:01a0f4f2-97eb-77f3-b052-6d9b43637cd7"
+    }
+  },
+  "source_native_proof": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-source-native-review-proof-02.json",
+    "sha256": "916cf6266c453477868257e6a32e5389a4b10795ba23e6c2abeeb8be8f7cea47"
+  },
+  "framework_commit_receipt": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-framework-focused-commit-receipt-resume02.json",
+    "sha256": "205451fe8ec73985b21c75cad5d6dfde2f64b97f25524b7cc36e4034315c789b"
+  },
+  "app_commit_receipt": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-app-focused-commit-receipt.json",
+    "sha256": "69bcb49debdbfdcc39897cf758a70b0ad7c577670dc144db1ec4ee623390ab6a"
+  },
+  "actions": [
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "origin": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+      "expected_remote_commit": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+      "target_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+      "ref": "refs/heads/main",
+      "argv": [
+        "git",
+        "push",
+        "origin",
+        "689444174a9a32b1a3fcf92e492cf446e284e4b0:refs/heads/main"
+      ]
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "origin": "https://github.com/wangmoumou1216-ai/muse.git",
+      "expected_remote_commit": "0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e",
+      "target_commit": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+      "ref": "refs/heads/refactor/claude-code-kernel",
+      "argv": [
+        "git",
+        "push",
+        "origin",
+        "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd:refs/heads/refactor/claude-code-kernel"
+      ]
+    }
+  ],
+  "required_gate": "Fresh independent native accepted/peak same-invocation publication vote; source votes do not authorize treating the prior FAIL publication verdict as PASS. Recheck exact local/remote heads and controlled state before effects.",
+  "channel_blocker": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/resume-native-review-channel-20261001.json",
+    "sha256": "7495988e9c4ae60b94289fa2fb5dd7893809326c7dd202a624aa4f89c8a6e89c"
+  },
+  "local_activation_preparation": {
+    "controller": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/activate-stable-cache.py",
+      "sha256": "af0b6fcedd926b0008c45a4001f0586a68ec9aa3de08870b0bb6330ffa52ed5f"
+    },
+    "installed_app": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-app-already-installed.json",
+      "sha256": "003bd6f3127f01479ed2f1746ecdfad976c3cec76b55706b042dbc875b180919"
+    },
+    "mode": "schema_version=2/app_mode=already-installed",
+    "status": "PREPARED_NOT_REVIEWED_OR_APPLIED"
+  },
+  "limits": [
+    "Ordinary fast-forward publication only; no force or history rewriting",
+    "This payload authorizes no App installation, mother merge, protected installation, trust/settings write, cross-chat message or live prompt",
+    "No framework local activation before exact published-head CI and a separate independent local release gate",
+    "Preserve every unrelated dirty file and old package; verify already-installed App module/signature instead of installing stale package",
+    "Source, tests, trust and native live reload evidence are separate acceptance gates"
+  ]
+}

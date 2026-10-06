@@ -1,0 +1,77 @@
+{
+  "status": "LOCAL_RELEASE_POSTCHECK_PASS_LIVE_GATES_PENDING",
+  "at": "2026-10-01T04:26:44.413458+00:00",
+  "activation_receipt": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-cache-activation-result.json",
+    "sha256": "06065b5afa41e60e159cd18a7dc8280501b4374dabfec5b30e1a0621f66fd55c"
+  },
+  "baseline_sha256": "0bc3d78af3c98191c46615be75e631590064f0a13d945fcda4ac3993c7721570",
+  "roots": [
+    {
+      "root": "/Users/luca/Desktop/luca_gstack",
+      "label": "M",
+      "preserved_dirty_paths": 84,
+      "git_after": {
+        "HEAD": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+        "branch": "main",
+        "git_common_dir": "/Users/luca/Desktop/luca_gstack/.git",
+        "index_path": "/Users/luca/Desktop/luca_gstack/.git/index",
+        "index": {
+          "type": "file",
+          "mode": "100644",
+          "permission_mode": "0644",
+          "sha256": "ee201909dab0b28c2d9a5f14b37651efa3e089687ec46844206be0cb07861115",
+          "bytes": 179044
+        }
+      },
+      "expected_git_change": "main ff-only to exact reviewed d6 commit; index tree equals HEAD, no staged work",
+      "controlled": "inactive"
+    },
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "label": "C",
+      "preserved_dirty_paths": 0,
+      "git_after": {
+        "HEAD": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+        "branch": "codex/hook-text-data",
+        "git_common_dir": "/Users/luca/Desktop/luca_gstack/.git",
+        "index_path": "/Users/luca/Desktop/luca_gstack/.git/worktrees/luca_gstack/index",
+        "index": {
+          "type": "file",
+          "mode": "100644",
+          "permission_mode": "0644",
+          "sha256": "33ed50213d9edefbcc29af1ea6b8a5c9f8f060cb7bb0e757690fa882e6fce13c",
+          "bytes": 179044
+        }
+      },
+      "expected_git_change": "none",
+      "controlled": "inactive"
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "label": "P",
+      "preserved_dirty_paths": 25,
+      "git_after": {
+        "HEAD": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+        "branch": "refactor/claude-code-kernel",
+        "git_common_dir": "/Users/luca/Desktop/项目/muse/.git",
+        "index_path": "/Users/luca/Desktop/项目/muse/.git/index",
+        "index": {
+          "type": "file",
+          "mode": "100644",
+          "permission_mode": "0644",
+          "sha256": "0ee0b48f52d5fbf0f0ab66eb820c5bc2c6aa2ed684a7fb6259c90e24ea0800f8",
+          "bytes": 35061
+        }
+      },
+      "expected_git_change": "none",
+      "controlled": "inactive"
+    }
+  ],
+  "source_count": 17,
+  "profile_trust_count": 33,
+  "receipt_status": "ACTIVATED_APP_SOURCE_AND_THREE_PROFILE_TRUST_VERIFIED_LIVE_RELOAD_PENDING",
+  "manifest_sha256": "19a59b22eecf632ccca081e03f2764128feb8772c5b90bc4a8bcdbd7a628c7c0",
+  "source_sha256": "5b26da2683c9ce7c67eacd65b7ef1fcc4e0d5db8477998a724105b853c7fe2cc",
+  "live": "UNVERIFIED: normal App/desktop reload and real user prompt required"
+}

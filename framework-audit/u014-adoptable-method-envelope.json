@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u014-adoptable-delta-method",
+  "subject": {
+    "skill": "U014-adoptable-delta-method",
+    "topic": "J30 R-U014-3 incremental adoption method and P10 actual outcome",
+    "scene": "unknown",
+    "input_summary": "Read-only reused non-author assessment of R-U014-3, execution outcome, P10 actual launch/result/native payload and saved artifact. Five method assertions assessed; unknown patches and publication are not preapproved.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-value-first-replan.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-execution-outcome.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-launch.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": [
+      "Method only: no unknown patch, comparative benefit or production release is approved by this verdict. Each included delta still requires exact-version old-failure/new-pass evidence and independent acceptance.",
+      "P09 and P10 remain INVALID_RUN; qualification allocation is exhausted. Do not relabel another qualification attempt as one of the six remaining targeted runs.",
+      "P10 native output and saved artifact match exactly and contain eight passing checks, but 124007 observed tokens exceeded 120000. before_final_submission was reached; the model turn was interrupted and engine remained null.",
+      "P10 cleanup evidence reports no observed surviving owned processes, no observation errors and four passing parent checks. This does not establish complete effective MCP absence or causal cost savings.",
+      "Publication must include only accepted minimal dependency closures, preserve human gates and unverified candidate slices, rebind any main drift, verify remote/local/accepted commit equality, and preserve user dirty work."
+    ]
+  }
+}

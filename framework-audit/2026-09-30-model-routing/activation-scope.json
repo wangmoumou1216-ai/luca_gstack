@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "status": "READY_FOR_HUMAN_ACTIVATION",
+  "patch_sha256": "9b2c53963b74f829af785b0167a0055fb35cad1fdf71668438f3bd8fdac54361",
+  "target_root": "/Users/luca/Desktop/luca_gstack",
+  "source_digest": "a229918d10266b91b6205ec46efb8ab65e3d612b3bd5458762caad617cecebf3",
+  "files": [
+    ".claude/agents/orchestrator.md",
+    ".claude/agents/plan-agent.md",
+    ".claude/hooks/lib/codex-child-project.mjs",
+    ".claude/skill-os/model-routing.yaml",
+    ".codex/hooks.json",
+    ".codex/model-route-hook.mjs",
+    ".codex/workflow-runner.mjs",
+    "scripts/model-route-host.mjs",
+    "scripts/test-codex-child-project.mjs",
+    "scripts/test-codex-model-route-hook.mjs",
+    "scripts/test-model-route-host.mjs",
+    "scripts/test-model-route.mjs",
+    "scripts/test-workflow-runner-runtime.mjs"
+  ],
+  "hook_keys": [
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:0:0",
+      "event": "SessionStart",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:1:0",
+      "event": "SessionStart",
+      "group": 1,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:user_prompt_submit:0:0",
+      "event": "UserPromptSubmit",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:0:0",
+      "event": "PreToolUse",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:1:0",
+      "event": "PreToolUse",
+      "group": 1,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:post_tool_use:0:0",
+      "event": "PostToolUse",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:stop:0:0",
+      "event": "Stop",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_start:0:0",
+      "event": "SubagentStart",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_stop:0:0",
+      "event": "SubagentStop",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:0:0",
+      "event": "SessionEnd",
+      "group": 0,
+      "hook": 0
+    },
+    {
+      "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:1:0",
+      "event": "SessionEnd",
+      "group": 1,
+      "hook": 0
+    }
+  ],
+  "operations": [
+    "verify frozen preimages and review result",
+    "apply the 13-file frozen patch",
+    "update only this root reviewed source manifest with --preserve-other-roots",
+    "obtain official currentHash and trust only exact 11 event/key/full-command matches",
+    "validate registered gates and effective adoption after activation"
+  ],
+  "excluded": [
+    "Git commit/push",
+    "third-party hook trust",
+    "other approved roots",
+    "downstream projects",
+    "private model changes beyond the user-approved binding"
+  ],
+  "review_ids": [
+    "route-atomic-refutation-20260930-01",
+    "route-atomic-final-20260930-01"
+  ]
+}

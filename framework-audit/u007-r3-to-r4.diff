@@ -1,0 +1,391 @@
+--- r3/conditions.mjs
++++ r4/conditions.mjs
+@@ -391,6 +391,7 @@
+             limitation: 'Generated ordinary copies of frozen owners; existing local aliases were not read. Native discovery/adoption is unverified.' })),
+           missingFrozenCapabilities: [
+             '.claude/workflows/*.js and CLAUDE.md are absent from U002; workflow execution and Claude-root parity are not reproduced.',
++            '.claude/observability/scripts/get_rules.py is not supplied by U002; office/skill preamble active-rule loading is not reproduced.',
+             'Private model bindings, global/personal memory, episodic/eval history and real project/session state are not supplied.',
+             'External MagicPath alias target is not followed; any generated magicpath skill uses only its frozen office owner.',
+           ],
+--- r3/conditions.test.mjs
++++ r4/conditions.test.mjs
+@@ -285,6 +285,10 @@
+     assert.equal(alias.bytes, entries.reduce((n, row) => n + row.copyBytes, 0));
+   }
+   assert.deepEqual(b.complexity.materialClosure, s.complexity.materialClosure);
++  assert.equal(existsSync(join(b.root, '.claude/observability/scripts/get_rules.py')), false);
++  assert.ok(b.complexity.materialClosure.missingFrozenCapabilities.some(value =>
++    value.includes('.claude/observability/scripts/get_rules.py') && value.includes('active-rule')),
++  'the office preamble cannot load active rules from the frozen materials; disclose this gap');
+   assert.equal(b.materialSha256, (await f.build('B', 'replayed')).materialSha256);
+ });
+ 
+--- r3/driver.mjs
++++ r4/driver.mjs
+@@ -179,7 +179,7 @@
+     check(cap && ['wall_seconds', 'tool_actions', 'observed_tokens'].every(k => positive(resources?.[k])
+       && positive(cap[k]) && resources[k] <= cap[k]), 'RELEASE_BUDGET_REQUIRED_OR_EXCEEDED');
+     const registration = release.stage === 'probe' ? readProbeRegistration(release, caseFile, manifest.source_manifest) : null;
+-    if (release.native_command_permissions !== undefined && release.stage !== 'probe') {
++    if (release.stage !== 'probe') {
+       check(release.native_command_permissions?.effective_probe != null, 'NATIVE_EFFECTIVE_PROOF_REQUIRED');
+     }
+     const budgets = {...resources, wall_ms: resources.wall_seconds * 1000};
+@@ -587,7 +587,8 @@
+         check(activeTurns.size === 0, 'UNFINISHED_CHILD_TURN');
+         check([...activeFamily].map(id => knownThreads.get(id)).filter(t => t.parent).every(t => t.status === 'completed'), 'CHILD_NOT_COMPLETED');
+         report.engine = await bounded(Promise.resolve(runtime.finalize({terminalMessage})));
+-        report.status = 'COMPLETED';
++        report.status = report.engine?.status === 'INVALID_RUN' || report.engine?.invalid_run === true
++          ? 'INVALID_RUN' : 'COMPLETED';
+         break;
+       }
+     } catch (error) {
+--- r3/driver.test.mjs
++++ r4/driver.test.mjs
+@@ -2,7 +2,7 @@
+ import assert from 'node:assert/strict';
+ import {spawn, spawnSync} from 'node:child_process';
+ import {createHash} from 'node:crypto';
+-import {mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, rmSync, symlinkSync, readdirSync, realpathSync} from 'node:fs';
++import {mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, rmSync, symlinkSync, readdirSync, realpathSync, chmodSync} from 'node:fs';
+ import {tmpdir} from 'node:os';
+ import {dirname, join} from 'node:path';
+ import {fileURLToPath} from 'node:url';
+@@ -139,7 +139,7 @@
+ if (process.argv[2] === '--fake-server') {
+   fakeServer(process.argv[3], process.argv[4]);
+ } else {
+-  function fixture(t, mode = 'normal') {
++  function bareFixture(t, mode = 'normal') {
+     const root = realpathSync(mkdtempSync(join(tmpdir(), 'tri-driver-test-')));
+     t.after(() => rmSync(root, {recursive: true, force: true}));
+     const cases = join(root, 'cases.json'), source = join(root, 'source.json'), manifestPath = join(root, 'manifest.json');
+@@ -202,17 +202,23 @@
+               if (call.name === 'case_read') { state.failures.push('original dependency failure'); return {text: state.failures[0], isError: true, control: null}; }
+               return {text: 'write recorded', isError: false, control: null};
+             },
+-            snapshot: () => structuredClone(state), finalize: async ({terminalMessage}) => { state.finalized = true; return {terminalMessage, failures: [...state.failures]}; }};
++            snapshot: () => structuredClone(state), finalize: async ({terminalMessage}) => { state.finalized = true; return {terminalMessage, failures: [...state.failures], ...state.finalizeResult}; }};
+         }})});
+     const save = () => writeFileSync(manifestPath, JSON.stringify(manifest));
+     const options = {manifestPath, caseFile: cases, caseId: 'example', conditionId: 'T', trial: 1, outputRoot: join(root, 'out')};
+     return {root, manifest, options, state, save, launches: () => launches, run: async () => { save(); return runner(options); }};
++  }
++
++  // Normal formal trials must have explicit proof. Only negative cases and
++  // separately registered probes may use the bare fixture.
++  function fixture(t, mode = 'normal') {
++    return permissionFixture(t, mode);
+   }
+ 
+   // These registrations are confined to fixture-owned temporary paths and the
+   // injected fake-server transport above. They never authorize a codex launch.
+   function probeFixture(t, mode = 'normal') {
+-    const f = fixture(t, mode), release = f.manifest.runtime_release;
++    const f = bareFixture(t, mode), release = f.manifest.runtime_release;
+     release.stage = 'probe'; release.probe_id = 'offline-probe';
+     const path = join(f.root, 'registration.json');
+     const record = {schema_version: 1, kind: 'u007-capability-probe', status: 'REGISTERED',
+@@ -232,7 +238,7 @@
+   }
+ 
+   function permissionFixture(t, mode = 'native-read', {proof = true, stage = 'development'} = {}) {
+-    const f = stage === 'probe' ? probeFixture(t, mode) : fixture(t, mode);
++    const f = stage === 'probe' ? probeFixture(t, mode) : bareFixture(t, mode);
+     const release = f.manifest.runtime_release;
+     release.stage = stage;
+     const conditionRoot = join(f.options.outputRoot, release.run_id, 'condition');
+@@ -263,6 +269,82 @@
+     return {...f, native, proof: record, conditionRoot, savePermissions};
+   }
+ 
++  function runFakeCli(f, finalResult) {
++    const bundle = join(f.root, 'cli-bundle'), bin = join(f.root, 'fake-bin');
++    mkdirSync(bundle); mkdirSync(bin);
++    const copy = join(bundle, 'driver.mjs'); writeFileSync(copy, readFileSync(driverPath));
++    const conditions = join(bundle, 'conditions.mjs'), protocol = join(bundle, 'case-protocol.mjs');
++    writeFileSync(conditions, `import {mkdirSync,writeFileSync} from 'node:fs';
++      import {join} from 'node:path';
++      export function materializeCondition({conditionId,destination}) {
++        mkdirSync(destination); writeFileSync(join(destination,'AGENTS.md'),'Same synthetic owner; no fixture answers.');
++        return {id:conditionId,root:destination,allowedReadPaths:['AGENTS.md'],instructionFiles:['AGENTS.md'],
++          materialSha256:${JSON.stringify(f.manifest.runtime_release.bindings.condition_material_sha256)}};
++      }`);
++    writeFileSync(protocol, `const finalResult=${JSON.stringify(finalResult)};
++      export const TOOL_DEFINITIONS=['case_read','case_write','case_checkpoint','case_question'].map(name=>
++        ({type:'function',name,description:'fake only',inputSchema:{type:'object'}}));
++      export function createCaseRuntime(){return {registerThread:()=>({ok:true}),initialMessage:()=> 'fake CLI task',
++        snapshot:()=>finalResult,finalize:()=>finalResult};}`);
++    // A fixture-owned executable handles the public CLI's "codex" command.
++    // It imports only this file's fake-server branch; no real binary is invoked.
++    const fakeCodex = join(bin, 'codex');
++    writeFileSync(fakeCodex, `#!${process.execPath}\nprocess.argv=[process.execPath,${JSON.stringify(filename)},'--fake-server','normal'];\nimport(${JSON.stringify(import.meta.url)});\n`);
++    chmodSync(fakeCodex, 0o700);
++    f.manifest.runtime_release.bindings.conditions_sha256 = digest(readFileSync(conditions));
++    f.manifest.runtime_release.bindings.case_protocol_sha256 = digest(readFileSync(protocol));
++    f.save();
++    return spawnSync(process.execPath, [copy, '--manifest', f.options.manifestPath, '--cases', f.options.caseFile,
++      '--case', 'example', '--condition', 'T', '--trial', '1', '--out', f.options.outputRoot], {
++      encoding: 'utf8', timeout: 10000, env: {...process.env, PATH: bin}});
++  }
++
++  for (const stage of ['development', 'hidden']) {
++    test(`W22 formal ${stage} missing entire permissions object rejects before spawn`, async t => {
++      const f = fixture(t); f.manifest.runtime_release.stage = stage;
++      delete f.manifest.runtime_release.native_command_permissions;
++      await assert.rejects(f.run(), /NATIVE_EFFECTIVE_PROOF_REQUIRED/);
++      assert.equal(f.launches(), 0);
++    });
++  }
++  for (const invalid of [{status: 'INVALID_RUN'}, {status: 'RECORDED', invalid_run: true}]) {
++    const identity = invalid.invalid_run ? 'invalid_run flag' : 'INVALID_RUN status';
++    test(`W22 engine ${identity} propagates to top-level and preserves original failure`, async t => {
++      const f = permissionFixture(t, 'normal');
++      f.state.finalizeResult = {...invalid, failures: [{code: 'EACCES', message: 'original fixture I/O failure'}]};
++      const r = await f.run();
++      assert.equal(r.status, 'INVALID_RUN');
++      assert.deepEqual(r.engine.failures, f.state.finalizeResult.failures);
++      assert.deepEqual(JSON.parse(readFileSync(join(r.evidence_root, 'result.json'))).engine, r.engine);
++    });
++    test(`W22 public CLI exits nonzero for engine ${identity}`, t => {
++      const f = permissionFixture(t, 'normal');
++      const result = runFakeCli(f, {...invalid, failures: [{code: 'EIO', message: 'original fake engine failure'}]});
++      assert.equal(result.error, undefined);
++      assert.equal(result.status, 1, result.stdout + result.stderr);
++      const summary = JSON.parse(result.stdout);
++      assert.equal(summary.status, 'INVALID_RUN');
++      const report = JSON.parse(readFileSync(join(summary.evidence_root, 'result.json')));
++      assert.equal(report.engine.failures[0].code, 'EIO');
++    });
++  }
++  test('W22 candidate tool and semantic failures remain recorded valid trials, not infrastructure INVALID', async t => {
++    const finalResult = {status: 'RECORDED', invalid_run: false, protocol_complete: false,
++      protocol_errors: [{code: 'INCOMPLETE_PROTOCOL'}], completion_claim_verified: false};
++    const f = fixture(t, 'tools'); f.state.finalizeResult = finalResult;
++    const report = await f.run();
++    assert.equal(report.status, 'COMPLETED');
++    assert.equal(report.candidate_tool_errors.length, 1);
++    assert.equal(report.engine.failures[0], 'original dependency failure');
++    assert.deepEqual(report.engine.protocol_errors, finalResult.protocol_errors);
++    assert.equal(report.engine.completion_claim_verified, false);
++    const g = fixture(t); const cli = runFakeCli(g, finalResult);
++    assert.equal(cli.error, undefined); assert.equal(cli.status, 0, cli.stdout + cli.stderr);
++    const summary = JSON.parse(cli.stdout);
++    assert.equal(summary.status, 'COMPLETED');
++    assert.equal(JSON.parse(readFileSync(join(summary.evidence_root, 'result.json'))).engine.protocol_complete, false);
++  });
++
+   test('BUILD_ONLY rejects before loading absent modules or spawning a model; CLI is nonzero', async t => {
+     const f = fixture(t); f.manifest.runtime_release.status = 'BUILD_ONLY'; f.save();
+     await assert.rejects(runTrial(f.options), /BUILD_ONLY/);
+@@ -332,7 +414,7 @@
+     }
+   });
+   test('unknown native read scope is contamination, child failure and usage remain attributable', async t => {
+-    const f = fixture(t, 'native-read'); const r = await f.run();
++    const f = probeFixture(t, 'native-read'); const r = await f.run();
+     assert.equal(r.status, 'INVALID_RUN'); assert.ok(r.limitations.some(x => x.startsWith('UNKNOWN_NATIVE_READ_SCOPE')));
+     const g = fixture(t, 'child'); const c = await g.run();
+     assert.equal(c.status, 'INVALID_RUN'); assert.equal(c.usage.per_thread_cumulative.child.totalTokens, 8);
+@@ -341,8 +423,9 @@
+   });
+   test('successful B startup shell and read-only MCP hints cannot prove native access scope', async t => {
+     for (const mode of ['native-startup', 'native-mcp-read', 'native-mcp-unknown']) {
+-      const f = fixture(t, mode);
++      const f = probeFixture(t, mode);
+       f.options.conditionId = 'B'; f.manifest.runtime_release.run.condition_id = 'B';
++      f.record.run.condition_id = 'B'; f.saveRegistration();
+       const r = await f.run(); assert.equal(r.status, 'INVALID_RUN');
+       assert.ok(r.limitations.some(x => x.startsWith('UNKNOWN_NATIVE_READ_SCOPE')));
+       assert.equal(r.native_tools.length, 1);
+--- r3/integration.test.mjs
++++ r4/integration.test.mjs
+@@ -4,7 +4,7 @@
+ import { EventEmitter } from 'node:events';
+ import { PassThrough } from 'node:stream';
+ import { createInterface } from 'node:readline';
+-import { existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
++import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+ import { dirname, join, resolve } from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+@@ -17,6 +17,7 @@
+ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+ const sourceHashes = Object.fromEntries(['driver', 'conditions', 'case-protocol'].map(name =>
+   [name, sha(readFileSync(join(moduleRoot, `${name}.mjs`)))]));
++const offlineUserAgent = 'tri_system_eval/0.0.0-offline';
+ const material = (path, content, stage = 'inputs_delivered') =>
+   ({ path, content, stage, encoding: 'utf-8', sha256: sha(content) });
+ const event = (id, checkpoint, extras = {}) => ({ id, kind: 'human_choice',
+@@ -93,7 +94,7 @@
+     createInterface({ input: child.stdin }).on('line', line => {
+       const request = JSON.parse(line); transcript.push({ direction: 'client', message: request });
+       if (!request.method) { pending.get(request.id)?.(request.result); pending.delete(request.id); return; }
+-      if (request.method === 'initialize') respond(request, {});
++      if (request.method === 'initialize') respond(request, { userAgent: offlineUserAgent });
+       else if (request.method === 'thread/start') {
+         if (permissions) {
+           assert.equal(request.params.permissions, permissions.profile_id);
+@@ -151,6 +152,31 @@
+ }
+ async function finish(api, thread) { await checkpoint(api, thread, 'before_final_submission'); api.finish(thread); }
+ 
++// These records test binding and consumption ONLY. They are created in an
++// exclusive temporary fixture and used solely with the injected fake transport.
++// No command, native boundary probe, reviewer, or real approval is represented.
++function offlineProof(temp, release, conditionRoot) {
++  const native = release.native_command_permissions;
++  const evidence = id => {
++    const path = join(temp, `FAKE-ONLY-${id}.json`);
++    writeFileSync(path, JSON.stringify({ id, fake_transport_only: true, no_live_authority: true }));
++    return { path, sha256: sha(readFileSync(path)) };
++  };
++  const proof = { schema_version: 1, kind: 'u007-app-server-native-command-boundary', status: 'ACCEPTED',
++    issued_by: 'root-coordinator', offline_fixture: true, no_live_authority: true,
++    j_review: { decision: 'ACCEPTED', evidence: evidence('synthetic-review') },
++    driver_sha256: release.bindings.driver_sha256, codex_version: '0.0.0-offline', codex_user_agent: offlineUserAgent,
++    condition_root: conditionRoot, profile: structuredClone(native.profile), runtime_read_roots: [],
++    active_permission_profile: { id: native.profile_id, extends: null },
++    effective_config: { default_permissions: native.profile_id, permissions: { [native.profile_id]: structuredClone(native.profile) } },
++    checks: ['app_server_command', 'allowed_read', 'outside_read_denied', 'symlink_escape_denied', 'write_denied', 'child_inherits_denial']
++      .map(id => ({ id, passed: true, command: `FAKE ONLY: ${id}; never executed`, exit_code: 0, evidence: evidence(id) })),
++    unmeasured: ['No live command, sandbox, model, child, MCP, image, or semantic consumption is verified.'] };
++  const path = join(temp, 'FAKE-ONLY-boundary-proof.json');
++  writeFileSync(path, JSON.stringify(proof));
++  return { path, sha256: sha(readFileSync(path)) };
++}
++
+ async function run(t, data, conditionId, script, options = {}) {
+   const temp = realpathSync(mkdtempSync(join(tmpdir(), 'u007-real-integration-')));
+   t.after(() => rmSync(temp, { recursive: true, force: true }));
+@@ -165,19 +191,20 @@
+   const caseFile = join(temp, 'synthetic-case.json'); writeFileSync(caseFile, JSON.stringify(data));
+   const resources = { wall_seconds: 15, tool_actions: 80, observed_tokens: 1000 };
+   const manifest = { source_root: sourceRoot, source_manifest: sourceManifest, budgets: { simple: resources }, runtime_release: {
+-    status: 'READY', stage: 'development', run_id: 'offline-integration',
++    status: 'READY', stage: options.stage || 'development', run_id: 'offline-integration',
+     entry: { transport: 'codex-app-server-stdio' }, run: { case_id: data.id, condition_id: conditionId, trial: 1 },
+     model: { name: 'offline-fixture-no-model', effort: 'high' }, resources,
+     bindings: { driver_sha256: sourceHashes.driver, conditions_sha256: sourceHashes.conditions,
+       case_protocol_sha256: sourceHashes['case-protocol'], cases_sha256: sha(readFileSync(caseFile)),
+       source_manifest_sha256: sha(readFileSync(sourceManifest)), condition_material_sha256: prepared.materialSha256 } } };
+-  if (options.permissions) {
++  if (options.permissions !== 'omit') {
+     const release = manifest.runtime_release;
+     const conditionRoot = join(temp, 'runs', release.run_id, 'condition');
+-    release.stage = options.stage || 'probe';
+     release.native_command_permissions = { profile_id: 'offline_integration',
+       profile: { filesystem: { ':root': 'deny', ':minimal': 'read', [conditionRoot]: 'read' }, network: { enabled: false } },
+       runtime_read_roots: [], effective_probe: null };
++    if (options.permissions !== 'unverified')
++      release.native_command_permissions.effective_probe = offlineProof(temp, release, conditionRoot);
+     options.mutatePermissions?.(release.native_command_permissions, temp);
+     if (release.stage === 'probe') {
+       release.probe_id = 'OFFLINE-FIXTURE-NOT-A-LIVE-RELEASE';
+@@ -209,12 +236,22 @@
+     return;
+   }
+   await transport.settle();
+-  assert.equal(report.status, options.permissions ? 'INVALID_RUN' : 'COMPLETED', JSON.stringify(report.errors));
+-  if (options.permissions) {
++  t.diagnostic(JSON.stringify({ stage: manifest.runtime_release.stage, observed_status: report.status,
++    engine_status: report.engine?.status, engine_invalid_run: report.engine?.invalid_run,
++    protocol_errors: report.engine?.protocol_errors.map(e => e.code), sourceHashes }));
++  if (options.engineInvalid) {
++    // Check the real engine fault before testing its top-level propagation.
++    assert.equal(report.engine.invalid_run, true);
++    assert.equal(report.engine.status, 'INVALID_RUN');
++    assert.ok(report.engine.protocol_errors.some(e => e.code === 'EACCES'));
++    assert.ok(report.engine.tool_receipts.some(r => r.isError && JSON.parse(r.text).error === 'EACCES'));
++  }
++  assert.equal(report.status, options.permissions === 'unverified' || options.engineInvalid ? 'INVALID_RUN' : 'COMPLETED', JSON.stringify(report.errors));
++  if (options.permissions !== 'omit') {
+     const permission = report.native_command_permissions;
+-    assert.equal(permission.boundary_status, 'NATIVE_BOUNDARY_UNVERIFIED');
++    assert.equal(permission.boundary_status, options.permissions === 'unverified' ? 'NATIVE_BOUNDARY_UNVERIFIED' : 'BOUND_TO_ACCEPTED_PROBE');
+     assert.equal(permission.actual_read_scope, 'UNKNOWN');
+-    assert.ok(report.limitations.includes('NATIVE_BOUNDARY_UNVERIFIED'));
++    assert.equal(report.limitations.includes('NATIVE_BOUNDARY_UNVERIFIED'), options.permissions === 'unverified');
+     assert.deepEqual(permission.requested.profile.filesystem,
+       { ':root': 'deny', ':minimal': 'read', [report.condition.root]: 'read' });
+     // caseRoot is inside the only task read root; evidence, original case and
+@@ -222,13 +259,14 @@
+     for (const denied of [report.evidence_root, caseFile, sourceManifest])
+       assert.equal(denied.startsWith(report.condition.root + '/'), false);
+   }
+-  assert.equal(report.engine.protocol_complete, true);
++  assert.equal(report.engine.protocol_complete, !options.candidateIncomplete);
+   assert.equal(report.engine.finalized, true);
+-  assert.equal(report.engine.status, 'RECORDED');
++  assert.equal(report.engine.status, options.engineInvalid ? 'INVALID_RUN' : 'RECORDED');
++  assert.equal(report.engine.invalid_run, !!options.engineInvalid);
+   assert.equal(report.engine.completion_claim_verified, false);
+   assert.equal(report.engine.semantic_quality, 'NOT_EVALUATED');
+-  assert.deepEqual(report.engine.checkpoints, data.driver_protocol.mandatory_checkpoints);
+-  assert.deepEqual(report.errors, []);
++  assert.deepEqual(report.engine.checkpoints, options.candidateIncomplete ? ['request_delivered'] : data.driver_protocol.mandatory_checkpoints);
++  if (!options.engineInvalid) assert.deepEqual(report.errors, []);
+   assert.deepEqual(report.unfinished_turns, []);
+   assert.equal(report.usage.complete, true);
+   assert.equal(report.condition.materialSha256, prepared.materialSha256);
+@@ -236,7 +274,9 @@
+   assert.deepEqual(JSON.parse(readFileSync(finalEvidencePath)), finalRecord);
+   const result = JSON.parse(readFileSync(join(report.evidence_root, 'result.json')));
+   assert.deepEqual(result, report);
+-  assert.equal(readFileSync(join(report.condition.root, 'case/output/result.json'), 'utf8'), data.initial_files[0].content);
++  const output = join(report.condition.root, 'case/output/result.json');
++  if (options.candidateIncomplete) assert.equal(existsSync(output), false);
++  else assert.equal(readFileSync(output, 'utf8'), data.initial_files[0].content);
+   t.diagnostic(JSON.stringify({ moduleRoot, sourceHashes, conditionId, tool_actions: report.tool_actions,
+     simulated_tokens: report.usage.observed_total_tokens, candidate_errors: report.candidate_tool_errors.length,
+     failures: report.engine.failures.length, threads: report.threads.length }));
+@@ -295,12 +335,45 @@
+ 
+ test('configured permissions cannot start development without an accepted native proof', async t => {
+   await run(t, fixture(), 'T', () => assert.fail('transport must not start'),
+-    { permissions: true, stage: 'development', rejection: /NATIVE_EFFECTIVE_PROOF_REQUIRED/ });
++    { permissions: 'unverified', stage: 'development', rejection: /NATIVE_EFFECTIVE_PROOF_REQUIRED/ });
+ });
+ 
++for (const stage of ['development', 'hidden']) test(`J05: missing permissions object rejects ${stage} before transport startup`, async t => {
++  await run(t, fixture(), 'T', async (api, root) => {
++    // The vulnerable driver actually completes this script. The repaired one
++    // must reject before spawn; a callback failure is not accepted as refusal.
++    await begin(api, root); await copy(api, root); await finish(api, root);
++  }, { permissions: 'omit', stage, rejection: /NATIVE_.*(?:PERMISSION|PROOF)/ });
++});
++
++test('J05: real engine EACCES remains INVALID_RUN at the driver and persisted result', async t => {
++  await run(t, fixture(), 'T', async (api, root) => {
++    await begin(api, root); await copy(api, root);
++    const input = join(api.conditionRoot, 'case/input/records.json');
++    // Only the test harness induces the OS fault in its own disposable fixture.
++    // The real case_read must hit fs EACCES; no runtime/module stub is injected.
++    chmodSync(input, 0o000);
++    try { await invoke(api, root, 'case_read', { path: 'input/records.json' }, 'EACCES'); }
++    finally { chmodSync(input, 0o600); }
++    await finish(api, root);
++  }, { engineInvalid: true });
++});
++
++test('candidate omission stays a recorded quality failure, not an infrastructure INVALID_RUN', async t => {
++  const { report } = await run(t, fixture(), 'T', (api, root) => api.finish(root), { candidateIncomplete: true });
++  assert.deepEqual(report.engine.protocol_errors.map(e => e.code), ['INCOMPLETE_PROTOCOL']);
++  assert.equal(report.engine.writes.length, 0);
++});
++
++test('registered fake probe without accepted proof remains boundary-unverified and INVALID_RUN', async t => {
++  await run(t, fixture(), 'T', async (api, root) => {
++    await begin(api, root); await copy(api, root); await finish(api, root);
++  }, { permissions: 'unverified', stage: 'probe' });
++});
++
+ test('registered offline probe rejects granting the run parent containing case-engine evidence', async t => {
+   await run(t, fixture(), 'T', () => assert.fail('transport must not start'), {
+-    permissions: true, driverFailure: 'NATIVE_FILESYSTEM_MISMATCH',
++    permissions: 'unverified', stage: 'probe', driverFailure: 'NATIVE_FILESYSTEM_MISMATCH',
+     mutatePermissions(permission, temp) { permission.profile.filesystem[join(temp, 'runs', 'offline-integration')] = 'read'; },
+   });
+ });

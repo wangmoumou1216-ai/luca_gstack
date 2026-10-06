@@ -1,0 +1,91 @@
+{
+  "prepared_at": "2026-10-02T23:50:19.323132+00:00",
+  "status": "R8_COLLECTED_OFFLINE_TESTED_NOT_RUNTIME_RELEASED",
+  "files": {
+    "case-protocol.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    "case-protocol.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    "conditions.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "bytes": 24895
+    },
+    "conditions.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "bytes": 22755
+    },
+    "driver.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "1bf9c49969f5ca91591d82c18b29b117c39b6925598b4142ce61b67508144a82",
+      "bytes": 51441
+    },
+    "driver.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "6833ff42eb749e4150de57036044df14c3b6b539307a61d19fd9382b76a0a52f",
+      "bytes": 67410
+    },
+    "integration.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "7815ed8008c9481b2acfc613c3ce7c7df08db5d5b36afd02ec865b1da9bf2d6f",
+      "bytes": 57741
+    },
+    "fixtures/p07-replay.json": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/fixtures/p07-replay.json",
+      "sha256": "58242ba647aeac8a49d565dfbaf7fd032e491200794a680d8ec468cb4ae7115c",
+      "bytes": 23435
+    }
+  },
+  "probe_program": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-probe-program-r8.py",
+    "sha256": "56fa4f358c982813f736244d543c3f17468d09aae80cb04d1a5fe6eac5b1d2a4",
+    "bytes": 6075
+  },
+  "probe_test": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-probe-program-r8.test.py",
+    "sha256": "1f9dfb91f87bfb49ce72193f90ac1c3eb9e2ba02ca83f61411824d84bca055e8",
+    "bytes": 12368
+  },
+  "baseline_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r7",
+  "diff": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r7-r8.diff",
+    "sha256": "bb466bf17e8990569b377445c30f18b8e1d5ab0f04b65cb8a3af19f482544595",
+    "bytes": 23628
+  },
+  "author_reports": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-probe-repair-report.md",
+      "sha256": "ac73cc3500d00d0f909f2fded48092d204c9fbf17e9934b4ab623616100fbb2f",
+      "bytes": 2958
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-driver-repair-report.md",
+      "sha256": "6b1bf59b7666621f987c3e9de0f8f121bff2070a0d22c795974e8ca736dfcf91",
+      "bytes": 3056
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-integration-report.md",
+      "sha256": "523d2d41cb1907115c7a36c4d413a11f443c5771f22d880b4b42018578e01444",
+      "bytes": 2754
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-runtime-obligations.md",
+      "sha256": "65bcdb48025c29d591dc0055a0c35b111125223752f17a97712f527e3f86d01f",
+      "bytes": 8883
+    }
+  ],
+  "root_authored_delta": "Exact copy of already approved P07 replay fixture to repository fixtures/p07-replay.json, plus two default path substitutions in tests. No observer/probe semantics changed by root.",
+  "root_validation": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r8-root-portability.json",
+    "sha256": "14787a9497c922596e2dbbeee4118a9a70c031dc5a8734f73d584a80a7e1c5fd",
+    "bytes": 533
+  },
+  "limits": "Offline repair only. P07 failure and native boundary/whole-chain UNKNOWN retained. No new run or production release."
+}

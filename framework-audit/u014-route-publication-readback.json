@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-03T09:33:00.076467+00:00",
+  "commit": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c",
+  "local_heads": {
+    "/Users/luca/Desktop/luca_gstack": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c",
+    "/Users/luca/.codex/worktrees/tri-system-adoptable-fixes/luca_gstack": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c"
+  },
+  "production_branch": "main",
+  "protected_dirty": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/observations.jsonl",
+      "expected": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "actual": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/evals/eval-log.jsonl",
+      "expected": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "actual": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/retrieval-log.jsonl",
+      "expected": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "actual": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "unchanged": true
+    }
+  ],
+  "production_tracked_dirty": [
+    ".claude/observability/observations.jsonl",
+    "memory/evals/eval-log.jsonl",
+    "memory/retrieval-log.jsonl"
+  ],
+  "fix_clean": true,
+  "push_exit": 0,
+  "push_note": "Normal non-force supplemental push accepted; server noted Required Checks expected. Awaiting actual new CI37112632596 rather than counting acceptance as CI pass.",
+  "production_sync": "fetch origin main + merge --ff-only origin/main, both successful",
+  "remote_readback": {
+    "command": "git ls-remote origin refs/heads/main",
+    "sha": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c",
+    "matches_accepted_commit": true,
+    "at": "2026-10-03T09:34:06.997921+00:00",
+    "post_ci_confirmed": true
+  },
+  "ci_status": "success",
+  "ci_url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37112632596",
+  "prior_failed_ci": "u014-route-first-ci-failure.json",
+  "ci_evidence": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-final-ci-success.json",
+    "sha256": "05ed8839b8621ab1ade20280965e5deec7c4a91f4dd9aa92020724cee9361388",
+    "all_six_jobs_success": true
+  }
+}

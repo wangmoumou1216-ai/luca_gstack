@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "kind": "luca-ci-shell-focused-publication",
+  "status": "PREPARED_REVIEW_REQUIRED",
+  "ci_environment": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-DEPENDENCY-RESUME-01.json",
+    "sha256": "e93faaa4b19f3e5f3503adb57ebac24338cfe805f0c325892d7c165c01ecbf51"
+  },
+  "source_scope": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+    "sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97"
+  },
+  "source_reviews": {
+    "standards": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-final-standards-02.json",
+      "sha256": "df041744f6c2a0df1a1e33a35d67d60c6ae3a3a50386cb473685a02956a8f208",
+      "eval_run_id": "hook-cache-final-standards-20261001-02",
+      "invocation_id": "93eb73b8-f014-468d-b697-5f8ae51d2c88",
+      "agent_id": "01a0f4ed-50df-7f23-ae04-6e8429612006",
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T08-46-28-01a0f4ed-50df-7f23-ae04-6e8429612006.jsonl:01a0f4ed-514a-70b3-af91-8fcd326a9f9f"
+    },
+    "spec": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-final-spec-02.json",
+      "sha256": "179eaa96dc66e241660fbafe5e77912ddbde07671b70c7b44c8df4fdf43133ba",
+      "eval_run_id": "hook-cache-final-spec-20261001-02",
+      "invocation_id": "f37230bf-4a77-47b6-9fb6-c346529e1590",
+      "agent_id": "01a0f4f2-9785-7ad1-a9cd-d3ac37580b60",
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T08-52-14-01a0f4f2-9785-7ad1-a9cd-d3ac37580b60.jsonl:01a0f4f2-97eb-77f3-b052-6d9b43637cd7"
+    }
+  },
+  "source_native_proof": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-source-native-review-proof-02.json",
+    "sha256": "916cf6266c453477868257e6a32e5389a4b10795ba23e6c2abeeb8be8f7cea47"
+  },
+  "original_publication_receipt": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-publication-receipt-resume04.json",
+    "sha256": "ebb85d67117b2cb0cbee9a59fa90f9d4374bdd91a414ded8f760c57ec5eea694"
+  },
+  "commit_receipt": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-shell-focused-commit-resume01.json",
+    "sha256": "6d9a10debacbbfa563c2d78d7e58b0e6547e22babee641b487d7b809ad848bbc"
+  },
+  "precommit": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-shell-precommit-resume01.log",
+    "sha256": "a9f965748aa8b2316e1ff10a9ab54869753da1827c58563b410b37ede8c70e03"
+  },
+  "action": {
+    "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+    "origin": "https://github.com/wangmoumou1216-ai/luca_gstack.git",
+    "expected_remote_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+    "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+    "ref": "refs/heads/main",
+    "argv": [
+      "git",
+      "push",
+      "origin",
+      "d6acaf21e89e4c662289c716f7dcd4d3102751e0:refs/heads/main"
+    ]
+  },
+  "limits": [
+    "Only ordinary exact one-file direct-descendant CI commit publication; no force/history rewrite",
+    "Original seventeen source files/source approval/protocol hash unchanged; completed source reviews accepted even if normally paused",
+    "No local activation until this exact published-head CI and a separate final local gate",
+    "Preserve unrelated mother/App dirty files; no other effects or chat messages"
+  ],
+  "current_preservation": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CURRENT-PRESERVATION-RESUME-02.json",
+    "sha256": "0bc3d78af3c98191c46615be75e631590064f0a13d945fcda4ac3993c7721570"
+  },
+  "failed_ci": {
+    "target_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+    "run_id": 36808542052,
+    "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36808542052",
+    "log": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-36808542052-failed.log",
+      "sha256": "4d332eeb63dd3af48e0267de0251220bac25657a9834a2e76c6942c6d0cb2cde"
+    },
+    "observation": "Actual /bin/zsh/git-error/SessionStart spawnSync status null, expected2, at test-hook-source-digests.mjs:99. Log does not include result.error/errno; explicit zsh install is the narrow environment hypothesis to validate in new exact-head CI."
+  },
+  "preservation_contract": "Freeze current complete unrelated dirty/untracked byte baseline; preserve it across the single bounded ordinary push. The audit output directory alone is excluded. Do not claim retrospective completeness from original publication receipt. Recheck current baseline and inactive public state before effect; drift stops effect."
+}

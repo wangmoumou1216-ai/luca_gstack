@@ -1,0 +1,78 @@
+{
+  "unit": "U-002",
+  "gate": "STATIC_READY_NATIVE_PENDING",
+  "created_at": "2026-10-06T06:24:07.361285+00:00",
+  "work_root": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "original_denominator": 135,
+  "original_sources": {
+    ".claude/skills/office/brainstorm/SKILL.md": {
+      "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d",
+      "bytes": 41854
+    },
+    ".claude/skills/office/ux-brainstorm/SKILL.md": {
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949",
+      "bytes": 38006
+    },
+    ".claude/skills/office/brainstorm/references/adversarial-review.md": {
+      "sha256": "9277609f8dafef5541480a2a7112a99580db14af91ffa852455483461026c6e9",
+      "bytes": 12223
+    },
+    ".claude/skills/office/ux-brainstorm/references/adversarial-review.md": {
+      "sha256": "69c3f254e50e1c39f26032ff4617ce09694d4b4aa52e9f43ef2f42c8789d947d",
+      "bytes": 7272
+    },
+    ".claude/skill-os/codex-viability.yaml": {
+      "sha256": "05718cc213e45ada0d1a28e306c7486aa5075f4ea6aadce6d50d49d8132ac7ba",
+      "bytes": 6096
+    },
+    ".claude/agents/quality-gate.md": {
+      "sha256": "4c16a87530af2b3c9b00f876b734b4807aea933c310d79d9e1f204e8222b7c69",
+      "bytes": 20319
+    }
+  },
+  "current_sources": {
+    ".claude/skills/office/brainstorm/SKILL.md": {
+      "sha256": "9a92eb459013e3931ecb7e7e82d45095714b4ea2d8a092610455ab9344d7eac3",
+      "bytes": 43782
+    },
+    ".claude/skills/office/ux-brainstorm/SKILL.md": {
+      "sha256": "fda273a42fe3c2e24976988bd55d2ba73eb7478bd4adf4684a547674fd149769",
+      "bytes": 38738
+    },
+    ".claude/skills/office/brainstorm/references/adversarial-review.md": {
+      "sha256": "bcdeda78f299848d99f12f4e6dab692f2fe5ed2ec5fbd4910f6e94b368eeafdf",
+      "bytes": 13323
+    },
+    ".claude/skills/office/ux-brainstorm/references/adversarial-review.md": {
+      "sha256": "43e7f372aa8c46dbb6e8df352d74901b97051def3cf3eab0ac10e627199dc5a4",
+      "bytes": 8838
+    },
+    ".claude/skill-os/codex-viability.yaml": {
+      "sha256": "611813287972b50a27c63ee7d984bb19b05a6daeb514ee884cafe5f85f06fe3d",
+      "bytes": 6410
+    },
+    ".claude/agents/quality-gate.md": {
+      "sha256": "11078c693bff65123d7ded36362b1e8f92a6e957e42913aba04ec366df3b60ff",
+      "bytes": 27250
+    },
+    "scripts/test-design-workflow-contract.mjs": {
+      "sha256": "b6137c9db8e2775390fb387c5f687abf99d3d38c7c350f758ccbac8766d2392c",
+      "bytes": 11447
+    }
+  },
+  "actual_restored_run": {
+    "pid": 12088,
+    "command": [
+      "node",
+      "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/scripts/test-design-workflow-contract.mjs",
+      "--root",
+      "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+    "started_at": "2026-10-06T06:23:20.914085+00:00",
+    "finished_at": "2026-10-06T06:23:20.958556+00:00",
+    "exit_code": 0
+  },
+  "fixture_cleanup": "five owned mutation source trees absent; every retained JSON read back after cleanup",
+  "native_B1_B2": "UNKNOWN_NOT_RUN_BY_WORKER"
+}

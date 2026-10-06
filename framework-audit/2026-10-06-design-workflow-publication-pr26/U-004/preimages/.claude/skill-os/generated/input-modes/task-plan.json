@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "task-plan",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "tech_spec_handoff",
+          "design_brief_handoff"
+        ],
+        "optional": []
+      },
+      "workflow": {
+        "required": [
+          "tech_spec_handoff",
+          "design_brief_handoff"
+        ],
+        "optional": []
+      }
+    },
+    "quality_gates": [
+      "upstream_handoff_verdicts",
+      "brief_prd_end_to_end_gate",
+      "exact_current_sources",
+      "l0_index",
+      "l1_source_index",
+      "l2_node_index",
+      "assertion_matrix",
+      "task_cards",
+      "design_decision_coverage",
+      "state_coverage",
+      "coverage_gate"
+    ],
+    "output_path": "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md",
+    "handoff_path": "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
+  }
+}

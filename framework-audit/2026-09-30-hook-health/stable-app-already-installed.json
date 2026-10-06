@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "luca-hook-already-installed-proof",
+  "app": "/Applications/luca.app",
+  "scope": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+    "sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97"
+  },
+  "host_relative": "host-hook-ready.js",
+  "host_sha256": "e143d1eb07aa18b58e0cb607fdca442cebf158ccb65febcd143c36f68bbfdceb",
+  "asar_sha256": "c37006952486488286c1c8d70fc25d4aeafcee0b79d72c6c20305de3a3e0cda6",
+  "header_sha256": "7f6711289e6c4c484c240d1d199c168375c75ae70f8db7cef9fced80101bf718",
+  "info_sha256": "fd80301f927a000a338e64fe603acc376c56b9e7028d00e127ef51d8fc70f3a6",
+  "signature_verified": true
+}

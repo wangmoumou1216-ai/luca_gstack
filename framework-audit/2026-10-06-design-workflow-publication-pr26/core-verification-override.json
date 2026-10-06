@@ -1,0 +1,18 @@
+{
+  "time": "2026-10-06T06:38:31.165195+00:00",
+  "actual_user_instruction": "这次验证做核心验证。token没有那么多",
+  "implementation_scope": "same approved U001a→U006, publication included",
+  "verification_override": "core behavior and required release gates; stop additional draft quality polishing/native branch expansion/repeated broad reviews",
+  "retained_core": [
+    "state writer/callers actual128 + mutation/A2 alreadyPASS",
+    "actualDESIGN_DRAFT standard admitted twice; genuineFAIL consumed and blocked; legal2approaches evidenced",
+    "targeted staticdesign/engineering/original-copy contract tests",
+    "one coreCONV lineage→implementcompile native probe if needed",
+    "final fullverify once + CI exacthead + separateStandards/Spec releaseclosure"
+  ],
+  "excluded_extra": [
+    "Lightweight additional native probe canceled at user budget instruction; no vote claimed",
+    "all-case nativeinvalidinput/caller/HITL/profile expansion",
+    "extraStandarddraftfixture polishing; its semanticFAIL retained, nofinalPRD requested"
+  ]
+}

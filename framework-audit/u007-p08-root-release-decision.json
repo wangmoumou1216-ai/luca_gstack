@@ -1,0 +1,27 @@
+{
+  "decision": "ALLOW_ONE_REVIEWED_P08",
+  "at": "2026-10-03T00:33:56.305133+00:00",
+  "authority": "Existing full lifecycle user authorization; latest user core-only preflight; root applies J13 exact conditional scope.",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r9-envelope.json",
+    "sha256": "6bcf5d316d3596052bb9c9a889e362705f60e76058837ccfee23180c3d00509b"
+  },
+  "review_inputs": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-inputs-r9.json",
+    "sha256": "89be31af0e9f05b42b62a8e21be5f6448be3166f20a766090233ea157391fcab"
+  },
+  "model_projection": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "integration": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r9-root-tests/final-integration.json",
+    "sha256": "77b502046ab348adbff70fef03de15fbb9dd1457a5561959fc5a6ed79a6ee7d1"
+  },
+  "test_fixture_fix": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r9-root-integration-fix.json",
+    "sha256": "02eddfb6b515856d75c4b83d004fe7f447cc923818cf95d6d19563703ccbc662"
+  },
+  "scope": "One root-only core attempt; no child/fresh/formal/production release. Preserve every failure; no automatic retry.",
+  "conditions": "W35 original 5/6 failure retained; root changed only test fixture enum according to official source, not reviewed core. Final joint44/44 passed; all32 J13 input identities rechecked."
+}

@@ -1,0 +1,694 @@
+{
+  "status": "ACTIVATED_APP_SOURCE_AND_THREE_PROFILE_TRUST_VERIFIED_LIVE_RELOAD_PENDING",
+  "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "app_commit": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+  "release_sha256": "561d386794cbece4ab5e2c7a1acfd2d041991b0cdb51f1e911c55c8ca9cac611",
+  "app_mode": "already-installed",
+  "installed_app_sha256": "003bd6f3127f01479ed2f1746ecdfad976c3cec76b55706b042dbc875b180919",
+  "ci_environment": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-DEPENDENCY-RESUME-01.json",
+    "sha256": "e93faaa4b19f3e5f3503adb57ebac24338cfe805f0c325892d7c165c01ecbf51"
+  },
+  "local_approval": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-local-release-gate-01.json",
+    "sha256": "22190d409490bcae0e91c39065eac171136c46e217b89553a439212d3f87a858"
+  },
+  "app_receipt": {
+    "status": "ALREADY_INSTALLED_SIGNATURE_AND_BYTE_READBACK_VERIFIED_LIVE_RESTART_PENDING",
+    "proof": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-app-already-installed.json",
+      "sha256": "003bd6f3127f01479ed2f1746ecdfad976c3cec76b55706b042dbc875b180919"
+    },
+    "app": "/Applications/luca.app",
+    "app_install_performed": false,
+    "host_sha256": "e143d1eb07aa18b58e0cb607fdca442cebf158ccb65febcd143c36f68bbfdceb",
+    "asar_sha256": "c37006952486488286c1c8d70fc25d4aeafcee0b79d72c6c20305de3a3e0cda6",
+    "header_sha256": "7f6711289e6c4c484c240d1d199c168375c75ae70f8db7cef9fced80101bf718",
+    "info_sha256": "fd80301f927a000a338e64fe603acc376c56b9e7028d00e127ef51d8fc70f3a6",
+    "signature_verified": true
+  },
+  "ci": {
+    "databaseId": 36812894375,
+    "headSha": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+    "headBranch": "main",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375",
+    "jobs": [
+      {
+        "databaseId": 110211619531,
+        "name": "Validate Skill Definitions",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375/job/110211619531"
+      },
+      {
+        "databaseId": 110211619712,
+        "name": "Validate HTML Prototypes",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375/job/110211619712"
+      },
+      {
+        "databaseId": 110211619726,
+        "name": "Validate Framework Logic",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375/job/110211619726"
+      },
+      {
+        "databaseId": 110211619729,
+        "name": "Validate YAML Files",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375/job/110211619729"
+      },
+      {
+        "databaseId": 110211619810,
+        "name": "Validate Markdown",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375/job/110211619810"
+      },
+      {
+        "databaseId": 110213159585,
+        "name": "Required Checks",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/36812894375/job/110213159585"
+      }
+    ]
+  },
+  "artifact_sha256": "5e2b94932405678b79ea4f38a6b5ca588e94669a9f2e8f4547df694813b4dd02",
+  "manifest_sha256": "19a59b22eecf632ccca081e03f2764128feb8772c5b90bc4a8bcdbd7a628c7c0",
+  "source_sha256": "5b26da2683c9ce7c67eacd65b7ef1fcc4e0d5db8477998a724105b853c7fe2cc",
+  "homes": [
+    "/Users/luca/.codex",
+    "/Users/luca/.codex-aihub-test",
+    "/Users/luca/.luca/codex/aihub-direct"
+  ],
+  "steps": [
+    {
+      "step": "candidate-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-parent",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-source-parent",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-source-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-commit-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-mode-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-mode-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-mode-target",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-base-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-postimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-patch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-original-diff",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-2",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-3",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-4",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-5",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-6",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-7",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-8",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-9",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-10",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-11",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-12",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-13",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-14",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-parent",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-commit-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-original-diff",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-blob-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-blob-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-branch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-index",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-3",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-4",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-5",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-8",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-9",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-10",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-11",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-12",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-13",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-14",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-ci-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-ci-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-report-untracked",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-report-ignored",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-report-untracked",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-report-ignored",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-preflight-signature-before",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-preflight-signature-after",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-branch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-remote-head-origin",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-remote-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "review-standards-native",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "review-spec-native",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "official-ci-live",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "remote-head-origin",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "remote-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "controlled-state",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "health-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "trust-preimage-0",
+      "exit": 0,
+      "home": "/Users/luca/.codex"
+    },
+    {
+      "step": "trust-preimage-1",
+      "exit": 0,
+      "home": "/Users/luca/.codex-aihub-test"
+    },
+    {
+      "step": "trust-preimage-2",
+      "exit": 0,
+      "home": "/Users/luca/.luca/codex/aihub-direct"
+    },
+    {
+      "step": "installer-process-preflight",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "local-release-review-native",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-before-source-signature-before",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-before-source-signature-after",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-remote-before-source-origin",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-remote-before-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-head-before-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "official-ci-before-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "remote-before-source-origin",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "remote-before-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-head-before-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-source-fence-signature-before",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-source-fence-signature-after",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-mode-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-mode-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-mode-target",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-base-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-postimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-patch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-branch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-index",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-3",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-4",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-5",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-8",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-9",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-10",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-11",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-12",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-13",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-14",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-ci-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-ci-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "main-fast-forward",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "source-install",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "health-readback",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "trust-apply-0",
+      "exit": 0,
+      "home": "/Users/luca/.codex"
+    },
+    {
+      "step": "trust-readback-0",
+      "exit": 0,
+      "home": "/Users/luca/.codex"
+    },
+    {
+      "step": "trust-apply-1",
+      "exit": 0,
+      "home": "/Users/luca/.codex-aihub-test"
+    },
+    {
+      "step": "trust-readback-1",
+      "exit": 0,
+      "home": "/Users/luca/.codex-aihub-test"
+    },
+    {
+      "step": "trust-apply-2",
+      "exit": 0,
+      "home": "/Users/luca/.luca/codex/aihub-direct"
+    },
+    {
+      "step": "trust-readback-2",
+      "exit": 0,
+      "home": "/Users/luca/.luca/codex/aihub-direct"
+    },
+    {
+      "step": "three-consumer-readback",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-final-readback-signature-before",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "app-installed-final-readback-signature-after",
+      "exit": 0,
+      "home": null
+    }
+  ],
+  "live": "UNVERIFIED: normal App/desktop reload and real user prompt required",
+  "at": "2026-10-01T04:21:15.091109+00:00"
+}
